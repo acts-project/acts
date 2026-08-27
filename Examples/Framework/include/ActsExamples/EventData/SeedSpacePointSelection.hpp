@@ -10,6 +10,7 @@
 
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -28,17 +29,25 @@ enum class SeedSpacePointSelection {
   All,
 };
 
-/// Pick the space points that seed a candidate track. The triplet selections go
-/// by layer, not by space point.
+/// Pick the space points that seed a candidate track. The triplet selections
+/// pick three, go by layer, not by space point, and skip candidates closer than
+/// @p minTransverseDistance to any already picked one. The distance is
+/// transverse rather than radial because that is what keeps the track parameter
+/// estimation well defined.
 ///
 /// @param spacePoints is the event space point container
 /// @param candidates are the candidate space points, in track order
 ///        (innermost first); they are not sorted internally
 /// @param selection picks which of them are used
-/// @return the selected space points, empty if the selection cannot be made
-std::vector<SpacePointIndex> selectSeedSpacePoints(
+/// @param minTransverseDistance is the minimum transverse distance between the
+///        selected space points. Only the triplet selections apply it;
+///        @c SeedSpacePointSelection::FirstThree and
+///        @c SeedSpacePointSelection::All take the candidates as given.
+/// @return the selected space points, at least three of them, or nothing if
+///         the selection cannot be made
+std::optional<std::vector<SpacePointIndex>> selectSeedSpacePoints(
     const SpacePointContainer& spacePoints,
     std::span<const SpacePointIndex> candidates,
-    SeedSpacePointSelection selection);
+    SeedSpacePointSelection selection, double minTransverseDistance);
 
 }  // namespace ActsExamples

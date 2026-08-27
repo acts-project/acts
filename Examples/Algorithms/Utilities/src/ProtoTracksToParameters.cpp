@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <algorithm>
+#include <optional>
 #include <tuple>
 
 using namespace Acts;
@@ -143,16 +144,17 @@ ProcessCode ProtoTracksToParameters::execute(
     const float t = sps.at(tmpSps.front()).r() - m * sps.at(tmpSps.front()).z();
     const float vertexZ = -t / m;
 
-    const std::vector<SpacePointIndex> selected =
-        selectSeedSpacePoints(sps, tmpSps, m_cfg.spacePointSelection);
-    if (selected.size() < 3) {
+    const std::optional<std::vector<SpacePointIndex>> selected =
+        selectSeedSpacePoints(sps, tmpSps, m_cfg.spacePointSelection,
+                              m_cfg.minTransverseDistance);
+    if (!selected.has_value()) {
       ACTS_DEBUG("Cannot seed because no space point selection could be made");
       skippedTracks++;
       continue;
     }
 
     auto seed = seeds.createSeed();
-    seed.assignSpacePointIndices(selected);
+    seed.assignSpacePointIndices(*selected);
     seed.vertexZ() = vertexZ;
 
     // Compute parameters
@@ -190,12 +192,20 @@ ProcessCode ProtoTracksToParameters::execute(
     // Estimate the track parameters from seed
     Acts::Result<Acts::BoundVector> boundParams =
         Acts::estimateTrackParamsFromSeed(
-            ctx.geoContext, *bottomSurface, bottomSpVec,
+            ctx.recoGeoContext, *bottomSurface, bottomSpVec,
             std::isnan(bottomSp.time()) ? 0.0 : bottomSp.time(), middleSpVec,
             topSpVec, field);
     if (!boundParams.ok()) {
       ACTS_WARNING("Failed to estimate track parameters from seed: "
                    << boundParams.error().message());
+      continue;
+    }
+    // Degenerate space points, e.g. a bottom and a middle space point at the
+    // same transverse position, make the estimate not a number rather than
+    // merely wrong
+    if (!boundParams->allFinite()) {
+      ACTS_WARNING(
+          "Track parameter estimate is not a number, skip this proto track");
       continue;
     }
 

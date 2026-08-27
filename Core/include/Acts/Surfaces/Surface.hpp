@@ -117,6 +117,14 @@ class Surface : public virtual GeometryObject,
   explicit Surface(const GeometryContext& gctx, const Surface& other,
                    const Transform3& shift) noexcept;
 
+  /// Assignment operator
+  /// @note copy construction invalidates the association
+  /// to detector element and layer
+  ///
+  /// @param other Source surface for the assignment
+  /// @return Reference to this surface after assignment
+  Surface& operator=(const Surface& other) noexcept = default;
+
  public:
   ~Surface() noexcept override;
 
@@ -151,14 +159,6 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return The shared pointer
   std::shared_ptr<const Surface> getSharedPtr() const;
-
-  /// Assignment operator
-  /// @note copy construction invalidates the association
-  /// to detector element and layer
-  ///
-  /// @param other Source surface for the assignment
-  /// @return Reference to this surface after assignment
-  Surface& operator=(const Surface& other) noexcept = default;
 
   /// Comparison (equality) operator
   /// The strategy for comparison is

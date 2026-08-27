@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <iostream>
 #include <unordered_map>
 
 namespace Acts::Experimental::detail {
@@ -324,7 +323,7 @@ using BinConnections =
 
 GbtsGeometry::GbtsGeometry(
     const std::vector<GbtsLayerDescription>& layerDescriptions,
-    const GbtsLayerConnectionMap& layerConnections)
+    const GbtsLayerConnectionMap& layerConnections, const Logger& logger)
     : m_etaBinWidth(layerConnections.etaBinWidth) {
   // TODO configurable z0 range
   const float minZ0 = -168.0f;
@@ -348,11 +347,11 @@ GbtsGeometry::GbtsGeometry(
       const detail::GbtsLayer* pL1 = layerById(dst);
       const detail::GbtsLayer* pL2 = layerById(src);
       if (pL1 == nullptr) {
-        std::cout << " skipping invalid dst layer " << dst << std::endl;
+        ACTS_WARNING("Skipping invalid dst layer " << dst);
         continue;
       }
       if (pL2 == nullptr) {
-        std::cout << " skipping invalid src layer " << src << std::endl;
+        ACTS_WARNING("Skipping invalid src layer " << src);
         continue;
       }
 

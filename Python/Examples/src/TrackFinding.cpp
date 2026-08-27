@@ -121,13 +121,13 @@ void addTrackFinding(py::module& mex) {
     alg.def_static("inverseRadiusPowerWeight", &Alg::inverseRadiusPowerWeight,
                    py::arg("exponent"));
 
-    ACTS_PYTHON_STRUCT(c, inputSeeds, inputProtoTracks, inputParticleHypotheses,
-                       outputTrackParameters, outputSeeds, outputProtoTracks,
-                       trackingGeometry, magneticField, bFieldMin,
-                       spacePointSelection, geometricRefineIterations,
-                       spacePointWeight, initialSigmas, initialSigmaQoverPt,
-                       initialSigmaPtRel, initialVarInflation,
-                       noTimeVarInflation, particleHypothesis);
+    ACTS_PYTHON_STRUCT(
+        c, inputSeeds, inputProtoTracks, inputParticleHypotheses,
+        outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
+        magneticField, bFieldMin, spacePointSelection, minTransverseDistance,
+        geometricRefineIterations, spacePointWeight, initialSigmas,
+        initialSigmaQoverPt, initialSigmaPtRel, initialVarInflation,
+        noTimeVarInflation, particleHypothesis);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(

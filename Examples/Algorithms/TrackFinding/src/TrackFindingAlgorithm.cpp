@@ -138,7 +138,7 @@ class SeedCoverage {
   /// Flag every seed whose measurements the track covers.
   ///
   /// @param track The track that was found.
-  void cover(const TrackProxy& track) {
+  void addCoverageFrom(const TrackProxy& track) {
     for (const auto& trackState : track.trackStatesReversed()) {
       if (!trackState.hasUncalibratedSourceLink()) {
         continue;
@@ -359,7 +359,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
           &trackStateCreator);
   extensions.mixtureReducer.connect<&Acts::reduceMixtureWithKLDistance>();
 
-  Acts::PropagatorPlainOptions firstPropOptions(ctx.geoContext,
+  Acts::PropagatorPlainOptions firstPropOptions(ctx.recoGeoContext,
                                                 ctx.magFieldContext);
   firstPropOptions.maxSteps = m_cfg.maxSteps;
   firstPropOptions.direction = m_cfg.reverseSearch ? Acts::Direction::Backward()
@@ -367,7 +367,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   firstPropOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
   firstPropOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
-  Acts::PropagatorPlainOptions secondPropOptions(ctx.geoContext,
+  Acts::PropagatorPlainOptions secondPropOptions(ctx.recoGeoContext,
                                                  ctx.magFieldContext);
   secondPropOptions.maxSteps = m_cfg.maxSteps;
   secondPropOptions.direction = firstPropOptions.direction.invert();
@@ -375,7 +375,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   secondPropOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
   // Set the CombinatorialKalmanFilter options
-  TrackFinderOptions firstOptions(ctx.geoContext, ctx.magFieldContext,
+  TrackFinderOptions firstOptions(ctx.recoGeoContext, ctx.magFieldContext,
                                   ctx.calibContext, extensions,
                                   firstPropOptions);
 
@@ -385,7 +385,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       std::make_shared<Acts::AtlasBetheHeitlerApprox>(
           Acts::makeDefaultBetheHeitlerApprox());
 
-  TrackFinderOptions secondOptions(ctx.geoContext, ctx.magFieldContext,
+  TrackFinderOptions secondOptions(ctx.recoGeoContext, ctx.magFieldContext,
                                    ctx.calibContext, extensions,
                                    secondPropOptions);
   secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
@@ -409,7 +409,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                       logger().cloneWithSuffix("Navigator")),
       logger().cloneWithSuffix("Propagator"));
 
-  ExtrapolatorOptions extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
+  ExtrapolatorOptions extrapolationOptions(ctx.recoGeoContext,
+                                           ctx.magFieldContext);
   extrapolationOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
   extrapolationOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
@@ -454,7 +455,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
 
     // flag seeds which are covered by the track
-    seedCoverage.cover(track);
+    seedCoverage.addCoverageFrom(track);
 
     ++m_nSelectedTracks;
 
@@ -528,7 +529,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       trackCandidate.copyFrom(firstTrack);
 
       Acts::Result<void> firstSmoothingResult{
-          Acts::smoothTrack(ctx.geoContext, trackCandidate, logger())};
+          Acts::smoothTrack(ctx.recoGeoContext, trackCandidate, logger())};
       if (!firstSmoothingResult.ok()) {
         m_nFailedSmoothing++;
         ACTS_ERROR("First smoothing for seed "
@@ -625,8 +626,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               } else {
                 // smooth the full track and extrapolate to the reference
 
-                auto secondSmoothingResult =
-                    Acts::smoothTrack(ctx.geoContext, trackCandidate, logger());
+                auto secondSmoothingResult = Acts::smoothTrack(
+                    ctx.recoGeoContext, trackCandidate, logger());
                 if (!secondSmoothingResult.ok()) {
                   m_nFailedSmoothing++;
                   ACTS_ERROR("Second smoothing for seed "

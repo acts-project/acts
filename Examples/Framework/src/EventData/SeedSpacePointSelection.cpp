@@ -10,23 +10,37 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
-#include <array>
-#include <cmath>
+#include <algorithm>
 #include <cstddef>
+#include <optional>
+#include <span>
+#include <vector>
 
 namespace ActsExamples {
 
 namespace {
 
-/// The first space point of each layer, in the given order.
+double transverseDistance(const ConstSpacePointProxy& a,
+                          const ConstSpacePointProxy& b) {
+  return Acts::fastHypot(a.x() - b.x(), a.y() - b.y());
+}
+
+/// The first space point of each layer, in the given order, at most @p limit of
+/// them, keeping every pick at least @p minTransverseDistance away from all the
+/// previous ones.
 std::vector<SpacePointIndex> onePerLayer(
     const SpacePointContainer& spacePoints,
-    std::span<const SpacePointIndex> candidates) {
+    std::span<const SpacePointIndex> candidates, std::size_t limit,
+    double minTransverseDistance) {
   std::vector<SpacePointIndex> perLayer;
   std::vector<Acts::GeometryIdentifier> layers;
   for (const SpacePointIndex index : candidates) {
+    if (perLayer.size() == limit) {
+      break;
+    }
     const ConstSpacePointProxy sp = spacePoints.at(index);
     if (sp.sourceLinks().empty()) {
       continue;
@@ -37,6 +51,17 @@ std::vector<SpacePointIndex> onePerLayer(
     if (Acts::rangeContainsValue(layers, layer)) {
       continue;
     }
+    // a new layer does not imply a new transverse position, e.g. a forward
+    // track crosses successive endcap disks at nearly the same one, and a
+    // curling track comes back to where it started
+    const bool tooClose =
+        std::ranges::any_of(perLayer, [&](const SpacePointIndex picked) {
+          return transverseDistance(sp, spacePoints.at(picked)) <
+                 minTransverseDistance;
+        });
+    if (tooClose) {
+      continue;
+    }
     layers.push_back(layer);
     perLayer.push_back(index);
   }
@@ -45,38 +70,40 @@ std::vector<SpacePointIndex> onePerLayer(
 
 }  // namespace
 
-std::vector<SpacePointIndex> selectSeedSpacePoints(
-    const SpacePointContainer& spacePoints,
-    std::span<const SpacePointIndex> candidates,
-    SeedSpacePointSelection selection) {
+}  // namespace ActsExamples
+
+std::optional<std::vector<ActsExamples::SpacePointIndex>>
+ActsExamples::selectSeedSpacePoints(const SpacePointContainer& spacePoints,
+                                    std::span<const SpacePointIndex> candidates,
+                                    SeedSpacePointSelection selection,
+                                    double minTransverseDistance) {
   if (candidates.size() < 3) {
-    return {};
+    return std::nullopt;
   }
 
   switch (selection) {
     case SeedSpacePointSelection::FirstThree:
-      return {candidates.begin(), candidates.begin() + 3};
+      return std::vector{candidates[0], candidates[1], candidates[2]};
     case SeedSpacePointSelection::InnermostTriplet: {
-      const std::vector<SpacePointIndex> perLayer =
-          onePerLayer(spacePoints, candidates);
+      std::vector<SpacePointIndex> perLayer =
+          onePerLayer(spacePoints, candidates, 3, minTransverseDistance);
       if (perLayer.size() < 3) {
-        return {};
+        return std::nullopt;
       }
-      return {perLayer.begin(), perLayer.begin() + 3};
+      return perLayer;
     }
     case SeedSpacePointSelection::SpreadTriplet: {
-      const std::vector<SpacePointIndex> perLayer =
-          onePerLayer(spacePoints, candidates);
+      const std::vector<SpacePointIndex> perLayer = onePerLayer(
+          spacePoints, candidates, candidates.size(), minTransverseDistance);
       if (perLayer.size() < 3) {
-        return {};
+        return std::nullopt;
       }
-      return {perLayer.front(), perLayer[perLayer.size() / 2], perLayer.back()};
+      return std::vector{perLayer.front(), perLayer[perLayer.size() / 2],
+                         perLayer.back()};
     }
     case SeedSpacePointSelection::All:
-      return {candidates.begin(), candidates.end()};
+      return std::vector<SpacePointIndex>{candidates.begin(), candidates.end()};
   }
 
-  return {};
+  return std::nullopt;
 }
-
-}  // namespace ActsExamples

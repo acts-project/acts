@@ -410,10 +410,16 @@ def addSeeding(
         )
         seeds = None
         perSeedParticleHypothesis = None
+        # proto tracks the estimation has to filter alongside the seeds
+        unestimatedProtoTracks = None
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
             logger.info("Using truth track finding from space points for seeding")
-            seeds, perSeedParticleHypothesis = addTruthEstimatedSeeding(
+            (
+                seeds,
+                perSeedParticleHypothesis,
+                unestimatedProtoTracks,
+            ) = addTruthEstimatedSeeding(
                 s,
                 spacePoints,
                 selectedParticles,
@@ -529,6 +535,14 @@ def addSeeding(
             trackingGeometry=trackingGeometry,
             magneticField=field,
             **acts.examples.defaultKWArgs(
+                # a seed without an estimate drops its proto track too, so the
+                # truth fitters keep a parameter set per proto track
+                inputProtoTracks=unestimatedProtoTracks,
+                outputProtoTracks=(
+                    "truth_particle_tracks"
+                    if unestimatedProtoTracks is not None
+                    else None
+                ),
                 spacePointSelection=paramEstimationSpacePoints,
                 geometricRefineIterations=paramEstimationRefineIterations,
                 spacePointWeight=paramEstimationWeight,
@@ -762,7 +776,7 @@ def addTruthEstimatedSeeding(
         inputSimHits="simhits",
         inputMeasurementSimHitsMap="measurement_simhits_map",
         outputParticles="truth_seeded_particles",
-        outputProtoTracks="truth_particle_tracks",
+        outputProtoTracks="truth_seeded_particle_tracks",
         outputSeeds="seeds",
         outputParticleHypotheses="seed_particle_hypotheses",
         **acts.examples.defaultKWArgs(
@@ -771,7 +785,11 @@ def addTruthEstimatedSeeding(
     )
     sequence.addAlgorithm(truthSeeding)
 
-    return truthSeeding.config.outputSeeds, truthSeeding.config.outputParticleHypotheses
+    return (
+        truthSeeding.config.outputSeeds,
+        truthSeeding.config.outputParticleHypotheses,
+        truthSeeding.config.outputProtoTracks,
+    )
 
 
 def addSpacePointsMaking(

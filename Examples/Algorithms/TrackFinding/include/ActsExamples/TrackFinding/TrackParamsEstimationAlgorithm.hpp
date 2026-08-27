@@ -81,6 +81,9 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// selection cannot be made are skipped.
     SeedSpacePointSelection spacePointSelection =
         SeedSpacePointSelection::FirstThree;
+    /// Minimum transverse distance between the selected space points. Only the
+    /// triplet selections apply it.
+    double minTransverseDistance = 10 * Acts::UnitConstants::mm;
     /// Geometric refinement iterations of the circle fit. Only used with more
     /// than three space points.
     std::size_t geometricRefineIterations = 0;

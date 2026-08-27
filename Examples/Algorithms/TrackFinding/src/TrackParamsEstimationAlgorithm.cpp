@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -21,6 +22,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
+#include <array>
 #include <cstddef>
 #include <optional>
 #include <ostream>
@@ -110,8 +112,7 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
 
   const SpacePointContainer& spacePoints = seeds.spacePointContainer();
 
-  // reused across seeds by the space point selection and the helix fit
-  std::vector<SpacePointIndex> candidates;
+  // reused across seeds by the helix fit
   std::vector<Acts::Vector3> positions;
   std::vector<double> weights;
   std::size_t nZeroQOverP = 0;
@@ -124,19 +125,17 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
       continue;
     }
 
-    candidates.clear();
-    for (const ConstSpacePointProxy& sp : seed.spacePoints()) {
-      candidates.push_back(sp.index());
-    }
-    const std::vector<SpacePointIndex> selected = selectSeedSpacePoints(
-        spacePoints, candidates, m_cfg.spacePointSelection);
-    if (selected.size() < 3) {
+    const std::optional<std::vector<SpacePointIndex>> selected =
+        selectSeedSpacePoints(spacePoints, seed.spacePointIndices(),
+                              m_cfg.spacePointSelection,
+                              m_cfg.minTransverseDistance);
+    if (!selected.has_value()) {
       ACTS_DEBUG("Seed " << iseed << " has no space point selection, skip");
       continue;
     }
 
     // Get the bottom space point and its reference surface
-    const ConstSpacePointProxy bottomSp = spacePoints.at(selected[0]);
+    const ConstSpacePointProxy bottomSp = spacePoints.at((*selected)[0]);
     if (bottomSp.sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in the space point");
       continue;
@@ -170,31 +169,45 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
 
     // three space points determine a helix exactly, more are fitted
     Acts::Result<Acts::BoundVector> boundParams = [&] {
-      if (selected.size() == 3) {
-        const ConstSpacePointProxy middleSp = spacePoints.at(selected[1]);
-        const ConstSpacePointProxy topSp = spacePoints.at(selected[2]);
+      if (selected->size() == 3) {
+        const ConstSpacePointProxy middleSp = spacePoints.at((*selected)[1]);
+        const ConstSpacePointProxy topSp = spacePoints.at((*selected)[2]);
         return Acts::estimateTrackParamsFromSeed(
-            ctx.geoContext, *bottomSurface, bottomSpVec, t0,
+            ctx.recoGeoContext, *bottomSurface, bottomSpVec, t0,
             Acts::Vector3{middleSp.x(), middleSp.y(), middleSp.z()},
             Acts::Vector3{topSp.x(), topSp.y(), topSp.z()}, field);
       }
 
       positions.clear();
       weights.clear();
-      for (const SpacePointIndex index : selected) {
+      for (const SpacePointIndex index : *selected) {
         const ConstSpacePointProxy sp = spacePoints.at(index);
         positions.emplace_back(sp.x(), sp.y(), sp.z());
         if (m_cfg.spacePointWeight) {
           weights.push_back(m_cfg.spacePointWeight(positions.back()));
         }
       }
-      return Acts::estimateTrackParamsFromSpacePoints(
-          ctx.geoContext, *bottomSurface, positions, field, t0,
-          m_cfg.geometricRefineIterations, weights);
+      const Acts::Result<Acts::FreeVector> freeParams =
+          Acts::estimateTrackParamsFromSpacePoints(
+              positions, field, t0, m_cfg.geometricRefineIterations, weights);
+      if (!freeParams.ok()) {
+        return Acts::Result<Acts::BoundVector>::failure(freeParams.error());
+      }
+      return Acts::transformFreeToBoundParameters(*freeParams, *bottomSurface,
+                                                  ctx.recoGeoContext);
     }();
     if (!boundParams.ok()) {
       ACTS_WARNING("Failed to estimate track parameters from seed: "
                    << boundParams.error().message());
+      continue;
+    }
+    // Degenerate space points, e.g. a bottom and a middle space point at the
+    // same transverse position, make the estimate not a number rather than
+    // merely wrong
+    if (!boundParams->allFinite()) {
+      ACTS_WARNING("Seed " << iseed
+                           << " gave a track parameter estimate that is not a "
+                              "number, skip");
       continue;
     }
     // a straight line fit leaves q/p at zero, an infinite momentum

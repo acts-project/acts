@@ -96,11 +96,11 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                           clusters);
 
   TrackFitterFunction::GeneralFitterOptions options{
-      ctx.geoContext,
+      ctx.recoGeoContext,
       ctx.magFieldContext,
       ctx.calibContext,
       pSurface.get(),
-      Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext),
+      Acts::PropagatorPlainOptions(ctx.recoGeoContext, ctx.magFieldContext),
       false};
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
@@ -133,7 +133,7 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
 
     ACTS_VERBOSE("Initial 4 position: "
-                 << initialParams.fourPosition(ctx.geoContext).transpose());
+                 << initialParams.fourPosition(ctx.recoGeoContext).transpose());
     ACTS_VERBOSE(
         "Initial direction: " << initialParams.direction().transpose());
     ACTS_VERBOSE("Initial momentum: " << initialParams.absoluteMomentum());

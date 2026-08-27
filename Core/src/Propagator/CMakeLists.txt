@@ -14,6 +14,7 @@ target_sources(
         detail/JacobianEngine.cpp
         detail/SympyCovarianceEngine.cpp
         detail/SympyJacobianEngine.cpp
+        detail/SympyStepperDenseStep.cpp
 )
 
 include(ActsCodegen)
