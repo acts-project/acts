@@ -677,7 +677,7 @@ struct matrix {
 
   // All KSM matrices are friends. <3
   template <class, class>
-  friend class matrix;
+  friend struct matrix;
 };
 }  // namespace detray::ksm
 
