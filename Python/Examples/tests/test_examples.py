@@ -796,13 +796,8 @@ def test_pypi_finding_fitting_demo(tmp_path, generic_detector_config):
         finderHistograms = perfWriterFinder.histograms()
         fitterHistograms = perfWriterFitter.histograms()
 
-        assert len(finderHistograms) == 79, (
-            f"expected 79 finder histograms, got {len(finderHistograms)}: "
-            f"{sorted(finderHistograms)}"
-        )
-        assert (
-            len(fitterHistograms) == 236
-        ), f"expected 236 fitter histograms, got {len(fitterHistograms)}"
+        assert len(finderHistograms) == 79
+        assert len(fitterHistograms) == 236
 
         expectedKeys = {
             "nStates_vs_eta",
