@@ -90,7 +90,6 @@ void Acts::EventDataView3D::drawTrack(IVisualization3D& helper,
   auto& rs = track.referenceSurface();
   auto tglobpos = rs.localToGlobal(gctx, tlocpos, tlocdir);
 
-  // auto previouspos = tglobpos;
   bool first = true;
   Vector3 previouspos;
 

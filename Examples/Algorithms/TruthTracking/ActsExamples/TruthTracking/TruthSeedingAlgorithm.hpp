@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -26,7 +25,8 @@
 
 namespace ActsExamples {
 
-/// Construct track seeds from particles.
+/// Construct track seeds from particles. Each seed holds every space point of
+/// its particle's track, in track order.
 class TruthSeedingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
@@ -52,15 +52,6 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
 
     /// Optional particle hypothesis override.
     std::optional<Acts::ParticleHypothesis> particleHypothesis = std::nullopt;
-
-    /// Minimum deltaR between space points in a seed
-    float deltaRMin = 10 * Acts::UnitConstants::mm;
-    /// Maximum deltaR between space points in a seed
-    float deltaRMax = 200 * Acts::UnitConstants::mm;
-    /// Minimum absDeltaZMin between space points in a seed
-    float absDeltaZMin = 0 * Acts::UnitConstants::mm;
-    /// Maximum absDeltaZMax between space points in a seed
-    float absDeltaZMax = 500 * Acts::UnitConstants::mm;
   };
 
   /// Construct the truth seeding algorithm.

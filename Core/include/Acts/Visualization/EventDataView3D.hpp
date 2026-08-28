@@ -319,8 +319,7 @@ struct EventDataView3D {
   /// @param gctx The geometry context for which it is drawn
   static void drawTrack(IVisualization3D& helper,
                         const AnyConstTrackProxy& track,
-                        const GeometryContext& gctx =
-                            GeometryContext::dangerouslyDefaultConstruct());
+                        const GeometryContext& gctx);
 };
 
 }  // namespace Acts

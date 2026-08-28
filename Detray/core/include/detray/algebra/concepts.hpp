@@ -126,6 +126,7 @@ template <typename T>
 concept transform3D = requires(T trf) {
   // Local type definitions
   requires scalar<typename T::scalar_type>;
+  requires vector2D<typename T::vector2>;
   requires vector3D<typename T::vector3>;
   requires point2D<typename T::point2>;
   requires point3D<typename T::point3>;
@@ -133,8 +134,10 @@ concept transform3D = requires(T trf) {
   // Methods
   trf.rotation();
   trf.translation();
+  trf.point_to_global(typename T::vector2());
   trf.point_to_global(typename T::vector3());
   trf.point_to_local(typename T::vector3());
+  trf.vector_to_global(typename T::vector2());
   trf.vector_to_global(typename T::vector3());
   trf.vector_to_local(typename T::vector3());
 };
