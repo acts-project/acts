@@ -5,6 +5,7 @@ acts_add_library(
     src/MillePedeSolver.cpp
     src/MillePedeError.cpp
     src/runChildProcess.cpp
+    src/MillePedeResultReader.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
