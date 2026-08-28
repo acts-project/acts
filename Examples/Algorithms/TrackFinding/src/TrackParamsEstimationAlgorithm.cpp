@@ -49,14 +49,15 @@ using SeedPropagator =
 using SeedPropagatorOptions = SeedPropagator::Options<>;
 
 Acts::Result<Acts::FreeVector> estimateFreeParams(
-    std::span<const Acts::Vector3> positions, std::span<const double> weights,
-    const Acts::Vector3& bField, double t0, std::size_t refineIterations) {
+    std::span<const Acts::Vector3> positions, const Acts::Vector3& bField,
+    double t0, std::span<const double> weights, std::size_t refineIterations) {
   // three positions determine a helix exactly, more are fitted
   if (positions.size() == 3) {
     return Acts::Result<Acts::FreeVector>::success(
         Acts::estimateTrackParamsFromSeed(positions[0], t0, positions[1],
                                           positions[2], bField));
   }
+
   return Acts::estimateTrackParamsFromSpacePoints(positions, bField, t0,
                                                   refineIterations, weights);
 }
@@ -103,7 +104,7 @@ TrackParamsEstimationAlgorithm::SpacePointWeight
 TrackParamsEstimationAlgorithm::inverseRadiusPowerWeight(double exponent) {
   return [exponent](const Acts::Vector3& position) {
     const double r = Acts::VectorHelpers::perp(position);
-    if (!(r > 0)) {
+    if (r <= 0) {
       return 1.;
     }
     return std::pow(r, -exponent);
@@ -192,6 +193,7 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
                                                 ctx.magFieldContext);
 
   // reused across seeds by the helix fit
+  std::array<SpacePointIndex, 3> triplet{};
   std::vector<Acts::Vector3> positions;
   std::vector<double> weights;
 
@@ -214,17 +216,16 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
       continue;
     }
 
-    // the triplet selections pick three space points, `All` takes the seed as
-    // it is
-    std::array<SpacePointIndex, 3> triplet{};
     std::span<const SpacePointIndex> selected = seed.spacePointIndices();
+
+    // the triplet selections pick three space points
     if (m_cfg.spacePointSelection != SeedSpacePointSelection::All) {
       const std::optional<std::array<SpacePointIndex, 3>> selectedTriplet =
           selectSeedSpacePoints(spacePoints, seed.spacePointIndices(),
                                 m_cfg.spacePointSelection,
                                 m_cfg.minTransverseDistance);
       if (!selectedTriplet.has_value()) {
-        ACTS_DEBUG("Seed " << iseed << " has no space point selection, skip");
+        ACTS_DEBUG("Seed " << iseed << " failed space point selection, skip");
         ++skipped.selection;
         continue;
       }
@@ -264,30 +265,30 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     }
 
     positions.clear();
-    weights.clear();
     for (const SpacePointIndex index : selected) {
       const ConstSpacePointProxy sp = spacePoints.at(index);
       positions.emplace_back(sp.x(), sp.y(), sp.z());
-      if (m_cfg.spacePointWeight) {
-        weights.push_back(m_cfg.spacePointWeight(positions.back()));
+    }
+
+    if (m_cfg.spacePointWeight) {
+      weights.clear();
+      for (const Acts::Vector3& position : positions) {
+        weights.emplace_back(m_cfg.spacePointWeight(position));
       }
     }
 
     const double t0 = std::isnan(bottomSp.time()) ? 0.0 : bottomSp.time();
 
     const Acts::Result<Acts::FreeVector> freeParams = estimateFreeParams(
-        positions, weights, field, t0, m_cfg.geometricRefineIterations);
+        positions, field, t0, weights, m_cfg.geometricRefineIterations);
     if (!freeParams.ok()) {
       ACTS_DEBUG("Seed " << iseed << " could not be fitted: "
                          << freeParams.error().message());
       ++skipped.fit;
       continue;
     }
-    // Degenerate space points, e.g. a bottom and a middle space point at the
-    // same transverse position, make the estimate not a number rather than
-    // merely wrong. A straight line fit instead leaves q/p at zero, an
-    // infinite momentum, which makes the time part of the covariance transport
-    // not a number further down the line.
+    // degenerate space points make the estimate not a number, a straight line
+    // fit leaves q/p at zero, which the covariance transport cannot take
     if (!freeParams->allFinite() || (*freeParams)[Acts::eFreeQOverP] == 0) {
       ACTS_DEBUG("Seed " << iseed << " has a degenerate estimate, skip");
       ++skipped.degenerate;

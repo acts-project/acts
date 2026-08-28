@@ -30,16 +30,10 @@
 
 namespace ActsExamples {
 
-/// Estimate track parameters for track seeds.
+/// Estimate track parameters from the space points of a seed.
 ///
-/// The algorithm takes the either directly the seeds or indirectly the proto
-/// tracks and space points, and source links container as input. The proto
-/// track is basically a seed and its space points info could be retrieved from
-/// the space point container. The source links container is necessary to
-/// retrieve the geometry identifier of the module at which a space point is
-/// located. It creates two additional container to the event store, i.e. the
-/// estimated track parameters container and the proto tracks container storing
-/// only those proto tracks with track parameters estimated.
+/// Seeds without an estimate are dropped. Optional input seeds and proto
+/// tracks are written back out filtered the same way.
 class TrackParamsEstimationAlgorithm final : public IAlgorithm {
  public:
   /// Relative weight of a space point at a global position in the helix fit.
