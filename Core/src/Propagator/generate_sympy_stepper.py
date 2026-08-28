@@ -324,11 +324,23 @@ _B2F_LIVE_COLUMNS = _by_column(_B2F_LIVE)
 #     M[i, 4] = dFree_i/dlog|qop| = qop * (dFree_i/dqop_0) / (dqop/dqop_0)
 #     M[7, 4] = dqop/dqop_0, kept plain -- it converts between the two
 #
-# The plain row makes the conversion exact, and in this form each field term
-# reduces to a stage's bend-linear part (see _field_contrib). qop and M[7, 4]
-# are constant across a vacuum step, which therefore preserves the form;
-# rk4_dense changes q/p and converts around its M update.
+# The plain row makes the conversion exact both ways, and in this form each
+# field term is a stage's bend-linear part (see _field_contrib). A vacuum step
+# preserves it; rk4_dense moves q/p and converts around its M update.
+# Derivation in docs/groups/sympy_codegen.md.
 _B2F_QOP_COLUMN = 4
+_B2F_QOP_ROW = 7
+
+
+def _scale_qop_column(v, factor):
+    """Scale the free rows of a q/p column, leaving its q/p row alone.
+
+    That row is the same number in both conventions (see _B2F_QOP_COLUMN).
+    """
+    out = v.copy()
+    for i in range(_B2F_QOP_ROW):
+        out[i, 0] = v[i, 0] * factor
+    return out
 
 
 def b2f_step_update(D, live, qop_in=None, qop_out=None):
@@ -338,9 +350,9 @@ def b2f_step_update(D, live, qop_in=None, qop_out=None):
     the products sparse.  The vacuum kernel folds this into the RK recursion
     instead, and never builds D at all.
 
-    A step that changes q/p changes what the q/p column differentiates by (see
-    _B2F_QOP_COLUMN); qop_in and qop_out convert it to the plain column and
-    back. Without them every column is treated as plain.
+    qop_in and qop_out convert the q/p column to plain and back, which a step
+    that moves q/p needs (see _B2F_QOP_COLUMN). Without them every column is
+    treated as plain.
     """
     assert (qop_in is None) == (qop_out is None)
     out = []
@@ -348,15 +360,12 @@ def b2f_step_update(D, live, qop_in=None, qop_out=None):
         v = _B2F.matrix[:, c]
         scaled = c == _B2F_QOP_COLUMN and qop_in is not None
         if scaled:
-            # plain[i] = scaled[i] * row / qop_in, the row itself being plain
-            f = v[7, 0] / qop_in
-            v = Matrix([[v[i, 0] * f] if i < 7 else [v[i, 0]] for i in range(8)])
+            # to plain: undo the log factor qop_in, redo the chain rule row
+            v = _scale_qop_column(v, v[_B2F_QOP_ROW, 0] / qop_in)
         new_v = D * v
         if scaled:
-            g = qop_out / new_v[7, 0]
-            new_v = Matrix(
-                [[new_v[i, 0] * g] if i < 7 else [new_v[i, 0]] for i in range(8)]
-            )
+            # back again, against the row and the q/p the step leaves behind
+            new_v = _scale_qop_column(new_v, qop_out / new_v[_B2F_QOP_ROW, 0])
         out.extend([new_v[i, 0]] for i, col in live if col == c)
     return Matrix(out)
 
@@ -391,7 +400,7 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm=False):
         `with_field` is False for a column with no q/p component, which picks
         up nothing from the bend vectors' own q/p dependence. The q/p column is
         read in its scaled form (see _B2F_QOP_COLUMN), where each field term is
-        the stage's bend-linear part, already computed by the value path.
+        a stage quantity the value path already computed.
         """
         tan_in = col(c, (4, 5, 6))
         pos_fac, dir_fac = h_third.name, third.name

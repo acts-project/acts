@@ -126,7 +126,8 @@ The kernel is handed the bound-to-free Jacobian @f$M@f$ and updates it in place,
 never forming the 8×8 free-to-free step Jacobian @f$D@f$. Each live column is
 pushed through *the same recursion as the state*, which is why the tangent block
 mirrors the value block line for line — as ATLAS' `d2A`/`d3A`/`d4A` block
-mirrors its `A0`..`A6`.
+mirrors its `A0`..`A6`; see @ref sympy_codegen_naming for the two sets of
+names.
 
 Rows are the eight free parameters @f$x_i@f$ **now**, columns the six bound
 parameters @f$b_j@f$ **at the start surface**,
@@ -146,19 +147,15 @@ off it.
 
 ### The @f$q/p@f$ column
 
-Two structural facts single the @f$\lambda@f$ column out:
+@f$\lambda@f$ enters the recursion only through the bend vector
+@f$\vec H = (h\lambda/2)\,\vec B@f$, so the @f$\lambda@f$ column is the only one
+with a term from the field's own @f$\lambda@f$ dependence: one 3-vector at each
+of the four stages that use a bend vector. Stored plainly, each of the four
+carries a factor @f$M_{\lambda\lambda}@f$, and the column has to be scaled by
+@f$\lambda@f$ into the recursion and unscaled out of it.
 
-- @f$\lambda@f$ reaches the recursion only through the bend vector
-  @f$\vec H = (h\lambda/2)\,\vec B@f$, so this is the only column with a term
-  from the field's own @f$\lambda@f$ dependence.
-- Nothing but @f$\lambda_0@f$ can change @f$\lambda@f$, so
-  @f$M_{\lambda\lambda}@f$ alone is the whole chain rule between
-  @f$\partial/\partial\lambda_0@f$ and @f$\partial/\partial\lambda@f$.
-
-The second fact permits a change of variable: the column is stored
-differentiated by @f$\log|\lambda|@f$ of the *current* @f$\lambda@f$, with
-@f$M_{\lambda\lambda}@f$ itself kept plain so the conversion is exact in both
-directions.
+Storing it differentiated by @f$\log|\lambda|@f$ of the *current*
+@f$\lambda@f$, with the @f$\lambda@f$ row kept plain, removes both:
 
 @f[
   M_{i\lambda} \;\equiv\; \frac{\partial x_i}{\partial \log|\lambda|}
@@ -167,28 +164,34 @@ directions.
     \qquad i < 7 .
 @f]
 
-The division changes the variable to @f$\lambda@f$, the factor to
-@f$\log|\lambda|@f$. @f$\vec H@f$ is homogeneous of degree one in @f$\lambda@f$,
-so @f$\partial\vec H/\partial\log|\lambda| = \vec H@f$: each stage's field term
-is its bend-linear part, a quantity the value recursion already names, rather
-than a fresh cross product weighted by @f$M_{\lambda\lambda}@f$. This identity
-is the one step of the recursion that is not a plain application of the chain
-rule, so the generator forms the chain-rule product as well and checks the two
-agree (`Derivation.check_same`).
+This is exact because nothing but @f$\lambda_0@f$ can change @f$\lambda@f$, so
+@f$M_{\lambda\lambda}@f$ is the whole chain rule from
+@f$\partial/\partial\lambda_0@f$ to @f$\partial/\partial\lambda@f$: the division
+applies it, the factor carries on to the log, and the plain row inverts both.
 
-No per-step conversion is needed: @f$\lambda@f$ and @f$M_{\lambda\lambda}@f$ are
-constant across a vacuum step, so the recursion carries the scaled form into
-itself. The scaled form is what the stepper *state* holds, not a kernel
-internal; `detail::sympy::toScaledBoundToFree` and its inverse convert at the
-boundaries where the covariance engine wants the plain Jacobian. `rk4_dense`
-moves @f$\lambda@f$ and converts both ways explicitly. The convention is
-singular at @f$\lambda = 0@f$, where the plain column already is.
+It is cheaper because @f$\vec H@f$ is homogeneous of degree one in
+@f$\lambda@f$, so @f$\partial\vec H/\partial\log|\lambda| = \vec H@f$. Each
+stage's field term is then that stage's bend-linear part, with no
+@f$M_{\lambda\lambda}@f$ factor and no scaling around the recursion: nineteen
+multiplications and a division fewer per step, 395 floating-point operations
+with covariance transport instead of 415, against ATLAS' 394.
 
-ATLAS' `pVector[40]` block is the @f$M_{\lambda\lambda} = 1@f$ case of the same
-convention: with no dense material the row stays one, and the block stays
-permanently scaled by @f$\lambda@f$.
+That identity is the one place the recursion departs from the plain chain rule,
+so the generator forms the chain-rule product as well and checks the two agree
+(`Derivation.check_same`).
 
-## Naming
+@f$\lambda@f$ and @f$M_{\lambda\lambda}@f$ are constant across a vacuum step, so
+it carries the scaled form into itself; `rk4_dense` moves @f$\lambda@f$ and
+converts explicitly. The stepper state holds the scaled form, and
+`detail::sympy::toScaledBoundToFree` and its inverse convert where the
+covariance engine wants the plain Jacobian. The convention is singular at
+@f$\lambda = 0@f$, where the plain column already is.
+
+ATLAS' `pVector[40]` block is the @f$M_{\lambda\lambda} = 1@f$ case: without
+dense material the row stays one, and the block stays permanently scaled by
+@f$\lambda@f$.
+
+## Naming {#sympy_codegen_naming}
 
 The kernels were originally transcribed with ATLAS' variable names, which are
 positional rather than descriptive and are not defined in any published note —

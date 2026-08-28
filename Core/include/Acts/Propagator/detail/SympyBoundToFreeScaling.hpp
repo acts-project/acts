@@ -14,25 +14,20 @@ namespace Acts::detail::sympy {
 
 // Scaling convention for the q/p column of the bound-to-free jacobian.
 //
-// The plain column differentiates the free parameters by the *starting* q/p.
-// While stepping, the sympy stepper differentiates them by the log of the
-// *current* q/p:
+// While stepping, the sympy stepper differentiates the free parameters by the
+// log of the *current* q/p rather than by the starting q/p:
 //
 //     scaled(i, eBoundQOverP) = d(free_i) / d(log|q/p|)
 //                             = qOverP * plain(i, eBoundQOverP)
 //                                      / plain(eFreeQOverP, eBoundQOverP)
 //
-// The division is the chain rule to the current q/p -- no other bound parameter
-// reaches q/p -- and the factor carries it on to the log. The q/p row itself
-// stays plain, so the conversion is exact both ways. It makes the column cheap
-// to transport: each Runge-Kutta stage's field term becomes the stage's
-// bend-linear part, which the value path already computes. Derivation in
-// @ref sympy_codegen.
+// The q/p row itself stays plain, which is what makes the conversion exact both
+// ways. Why the stepper wants this form: @ref sympy_codegen.
 //
 // A freshly initialized surface jacobian has e_qop as its q/p column, so
-// scaling it is a no-op; code that writes such a jacobian into the state
-// directly (LoopComponentProxy::update) satisfies the convention without
-// converting. Singular at q/p == 0, as log q/p is.
+// scaling it is a no-op; code that writes one into the state directly
+// (LoopComponentProxy::update) needs no conversion. Singular at q/p == 0, as
+// the plain column already is.
 
 /// Convert a plain bound-to-free jacobian to the scaled form.
 ///
