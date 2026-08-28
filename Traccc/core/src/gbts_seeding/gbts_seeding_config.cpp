@@ -28,8 +28,10 @@ bool gbts_seedfinder_config::setLinkingSchemeFromGbtsGeo(
   for (unsigned int index = 0; index < gbtsGeo->numLayers(); ++index) {
     const Acts::Experimental::detail::GbtsLayer layer =
         gbtsGeo->layerByIndex(static_cast<int>(index));
-    layerInfo.addLayer(extraLayerInfo.at(index), static_cast<unsigned int>(layer.bins()[0]),
-                       static_cast<unsigned int>(layer.numOfBins()), layer.minEta(), layer.etaBin());
+    layerInfo.addLayer(extraLayerInfo.at(index),
+                       static_cast<unsigned int>(layer.bins()[0]),
+                       static_cast<unsigned int>(layer.numOfBins()),
+                       layer.minEta(), layer.etaBin());
   }
   return setLinkingScheme(gbtsGeo->binGroups(), layerInfo, detrayGeoIDBinning,
                           minPt, std::move(callers_logger));
