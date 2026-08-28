@@ -64,14 +64,24 @@ class TrackVisualizerAlg(acts.examples.IAlgorithm):
 
 class PyVisualization2D(acts.VisualizationBuffer):
 
+    # Creates 2D visualization of the detector using matplotlib
     def plot(
         self,
         projection,
+        filename,
         linewidth=None,
         linestyle=None,
         drawHitSensitives=True,
         **kwargs,
     ):
+        """
+        projection: type=string, 2D projection of the detector that is to be drawn, e.g. xy, rz
+        filename: type=string, name under which the figure is saved
+        linewidth: type=float, optional parameter do set linewidth for tracks to be drawn
+        linestyle: type=char or string, choose from matplotlibs options
+        drawHitSensitives: type=boolean, if True, sensitive surfaces crossed by a track are highlighted if in drawing range
+        **kwargs: key = [float0, float1], option to set coordinate ranges for which the detector is drawn; So far x,y,z,r and phi are possible
+        """
         import matplotlib.pyplot as plt
 
         plt.rcParams["figure.figsize"] = (12, 10)
@@ -139,6 +149,7 @@ class PyVisualization2D(acts.VisualizationBuffer):
                 [computeProjection(proj2D[0], v), computeProjection(proj2D[1], v)]
                 for v in surface
             ]
+            for surface in surfaces
         ]
 
         poly_patches = [
@@ -155,19 +166,19 @@ class PyVisualization2D(acts.VisualizationBuffer):
         ax.set_xticks(np.linspace(-1000, 1000, 5))
 
         ax.add_collection(poly_collection)
-
-        if polyArea(face) < 1e-8:
-            ax.plot(
-                [item[0] for item in face],
-                [item[1] for item in face],
-                color=(
-                    self.faceColors[n_face][0] / 255,
-                    self.faceColors[n_face][1] / 255,
-                    self.faceColors[n_face][2] / 255,
-                    0.5,
-                ),
-                lw=1,
-            )
+        for n_face, face in enumerate(surfaces2D):
+            if polyArea(face) < 1e-8:
+                ax.plot(
+                    [item[0] for item in face],
+                    [item[1] for item in face],
+                    color=(
+                        self.faceColors[n_face][0] / 255,
+                        self.faceColors[n_face][1] / 255,
+                        self.faceColors[n_face][2] / 255,
+                        0.5,
+                    ),
+                    lw=1,
+                )
 
         # Check if there is a track to be drawn
         print(len(self.segments))
@@ -190,6 +201,7 @@ class PyVisualization2D(acts.VisualizationBuffer):
             )
             line_collection.set_color(self.lineColor / 255)
             ax.add_collection(line_collection)
+
             if drawHitSensitives == True:
                 from matplotlib.path import Path
 
@@ -201,9 +213,12 @@ class PyVisualization2D(acts.VisualizationBuffer):
                         for segment in line_segments
                     )
                 ]
+
                 hit_patches = [Polygon(face, closed=True) for face in hitSensitives]
                 hit_collection = PatchCollection(hit_patches, alpha=0.5)
                 hit_collection.set_facecolor("red")
+
+                ax.add_collection(hit_collection)
 
                 for n_face, face in enumerate(hitSensitives):
                     if polyArea(face) < 1e-8:
