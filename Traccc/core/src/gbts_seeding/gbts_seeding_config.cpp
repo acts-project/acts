@@ -17,30 +17,42 @@ namespace traccc {
 // the layerInfo should really be calculated from the geoIDBinning
 // GeoIDBinning pair is detray geo ID and bin index (corrisponding to the
 // layers in layerInfo) minPt in MeV
-bool gbts_seedfinder_config::setLinkingScheme(
+bool gbts_seedfinder_config::setLinkingSchemeFromGbtsGeo(
     Acts::Experimental::GbtsGeometry* gbtsGeo,
     std::vector<std::pair<uint64_t, short>> detrayGeoIDBinning,
-    std::vector<char> detailedLayerInfo, const float minPt = 900.0f,
+    std::vector<char>& extraLayerInfo, const float minPt = 900.0f,
     std::unique_ptr<const traccc::Logger> callers_logger =
         getDummyLogger().clone()) {
-  TRACCC_LOCAL_LOGGER(std::move(callers_logger));
-  // unroll binTables
-  for (std::pair<unsigned int, std::vector<unsigned int>> binPairs :
-       gbtsGeo->binGroups()) {
-    for (unsigned int bin2 : binPairs.second) {
-      binTables.push_back(std::make_pair(binPairs.first, bin2));
-    }
-  }
-
   // convert layers info to SoA
   layerInfo.reserve(gbtsGeo->numLayers());
   for (unsigned int index = 0; index < gbtsGeo->numLayers(); ++index) {
     const Acts::Experimental::detail::GbtsLayer layer =
         gbtsGeo->layerByIndex(index);
-    layerInfo.addLayer(detailedLayerInfo.at(index), layer.bins()[0],
+    layerInfo.addLayer(extraLayerInfo.at(index), layer.bins()[0],
                        layer.numOfBins(), layer.minEta(), layer.etaBin());
   }
+  return setLinkingScheme(gbtsGeo->binGroups(), layerInfo, detrayGeoIDBinning,
+                          minPt, std::move(callers_logger));
+}
 
+bool gbts_seedfinder_config::setLinkingScheme(
+    const std::vector<std::pair<unsigned int, std::vector<unsigned int>>>&
+        input_binTables,
+    const device::gbts_layerInfo input_layerInfo,
+    std::vector<std::pair<uint64_t, short>>& detrayGeoIDBinning,
+    const float minPt = 900.0f,
+    std::unique_ptr<const traccc::Logger> callers_logger =
+        getDummyLogger().clone()) {
+  TRACCC_LOCAL_LOGGER(std::move(callers_logger));
+
+  // unroll binTables
+  for (std::pair<unsigned int, std::vector<unsigned int>> binPairs :
+       input_binTables) {
+    for (unsigned int bin2 : binPairs.second) {
+      binTables.push_back(std::make_pair(binPairs.first, bin2));
+    }
+  }
+  layerInfo = input_layerInfo;
   for (std::pair<unsigned int, unsigned int> lI : layerInfo.info)
     n_eta_bins = std::max(n_eta_bins, lI.first + lI.second);
 
