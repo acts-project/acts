@@ -249,7 +249,8 @@ struct gbts_seedfinder_config {
   bool setLinkingScheme(
       Acts::Experimental::GbtsGeometry* gbtsGeo,
       std::vector<std::pair<uint64_t, int16_t>> detrayGeoIDBinning,
-      const float minPt, std::unique_ptr<const traccc::Logger> logger);
+      std::vector<char> detailedLayerInfo, const float minPt,
+      std::unique_ptr<const traccc::Logger> logger);
 
   // layer linking and geometry
   std::vector<std::pair<unsigned int, unsigned int>> binTables{};

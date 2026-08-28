@@ -32,7 +32,9 @@ class GbtsLayer final {
 
   /// Get number of bins
   /// @return Number of bins
-  std::int32_t numOfBins() const { return m_bins.size(); }
+  std::int32_t numOfBins() const {
+    return static_cast<std::int32_t>(m_bins.size());
+  }
 
   /// Get bins
   /// @return Vector of bin indices

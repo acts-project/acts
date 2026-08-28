@@ -59,7 +59,7 @@ class GbtsGeometry final {
 
   /// Get number of layers
   /// @return Number of layers
-  std::size_t numLayers() const { return m_layers.size(); }
+  std::uint32_t numLayers() const { return m_layers.size(); }
 
   /// Get layer by ID
   /// @param id Layer ID
