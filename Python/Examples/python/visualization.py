@@ -66,7 +66,7 @@ class TrackVisualizerAlg(acts.examples.IAlgorithm):
         print(f"Event {context.eventNumber}: {len(tracks)} tracks")
         for track in tracks:
             acts.EventDataView3D.drawTrack(
-                self._vis, track, context.geoContext
+                self._vis, track, context.simGeoContext
             )  # draw track not a free function
 
         return acts.examples.ProcessCode.SUCCESS
@@ -77,8 +77,6 @@ class PyVisualization2D(acts.VisualizationBuffer):
     def plot(
         self, projection, filename, interpolate=False, linewidth=None, linestyle=None
     ):
-        import matplotlib.pyplot as plt
-
         # Reduce font size and complexity to avoid raster overflow
         plt.rcParams["font.size"] = 8
         plt.rcParams["figure.figsize"] = (12, 10)
@@ -154,13 +152,13 @@ class PyVisualization2D(acts.VisualizationBuffer):
                 ]
                 for segment in self.segments
             ]
+            print(line_segments)
 
             if interpolate == True:
                 line_segments = np.asarray(line_segments)
                 points = line_segments[:, 0:]
                 shape = points.shape
                 points = points.reshape(shape[0] * shape[1], -1)
-                print(points)
                 interp_x, interp_y = interpolateCurve(points)
                 ax.plot(
                     interp_x, interp_y, color=self.lineColor[0] / 255, linewidth=width
