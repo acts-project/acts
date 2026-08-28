@@ -338,8 +338,7 @@ def _scale_qop_column(v, factor):
     That row is the same number in both conventions (see _B2F_QOP_COLUMN).
     """
     out = v.copy()
-    for i in range(_B2F_QOP_ROW):
-        out[i, 0] = v[i, 0] * factor
+    out[:_B2F_QOP_ROW, 0] = v[:_B2F_QOP_ROW, 0] * factor
     return out
 
 
