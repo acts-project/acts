@@ -42,7 +42,7 @@ class TrackVisualizerAlg(acts.examples.IAlgorithm):
         print(f"Event {context.eventNumber}: {len(tracks)} tracks")
         for track in tracks:
             acts.EventDataView3D.drawTrack(
-                self._vis, track, context.geoContext
+                self._vis, track, context.simGeoContext
             )  # draw track not a free function
             if drawCluster == True:
                 acts.EventDataView3D.drawCluster(self._vis, track, context.geoContext)
