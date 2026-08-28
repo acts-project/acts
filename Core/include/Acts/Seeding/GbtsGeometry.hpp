@@ -74,7 +74,7 @@ class GbtsGeometry final {
   /// Get layer ID by index
   /// @param idx Layer index
   /// @return Layer ID
-  std::uint32_t layerIdByIndex(std::uint32_t idx) const {
+  std::int32_t layerIdByIndex(std::uint32_t idx) const {
     return m_layers.at(idx).layerDescription().id;
   }
 

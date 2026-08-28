@@ -24,12 +24,12 @@ bool gbts_seedfinder_config::setLinkingSchemeFromGbtsGeo(
     std::unique_ptr<const traccc::Logger> callers_logger =
         getDummyLogger().clone()) {
   // convert layers info to SoA
-  layerInfo.reserve(gbtsGeo->numLayers());
+  layerInfo.reserve(static_cast<unsigned int>(gbtsGeo->numLayers()));
   for (unsigned int index = 0; index < gbtsGeo->numLayers(); ++index) {
     const Acts::Experimental::detail::GbtsLayer layer =
-        gbtsGeo->layerByIndex(index);
-    layerInfo.addLayer(extraLayerInfo.at(index), layer.bins()[0],
-                       layer.numOfBins(), layer.minEta(), layer.etaBin());
+        gbtsGeo->layerByIndex(static_cast<int>(index));
+    layerInfo.addLayer(extraLayerInfo.at(index), static_cast<unsigned int>(layer.bins()[0]),
+                       static_cast<unsigned int>(layer.numOfBins()), layer.minEta(), layer.etaBin());
   }
   return setLinkingScheme(gbtsGeo->binGroups(), layerInfo, detrayGeoIDBinning,
                           minPt, std::move(callers_logger));
