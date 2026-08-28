@@ -68,6 +68,9 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// selection cannot be made are skipped.
     SeedSpacePointSelection spacePointSelection =
         SeedSpacePointSelection::FirstThree;
+    /// Minimum transverse distance between the selected space points. Only the
+    /// triplet selections apply it.
+    double minTransverseDistance = 10 * Acts::UnitConstants::mm;
 
     /// Initial sigmas for the track parameters.
     std::array<double, 6> initialSigmas = {
