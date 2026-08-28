@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <algorithm>
+#include <array>
 #include <optional>
 #include <tuple>
 
@@ -36,6 +37,9 @@ ProtoTracksToParameters::ProtoTracksToParameters(
   }
   if (m_cfg.magneticField == nullptr) {
     throw std::invalid_argument("No magnetic field given");
+  }
+  if (m_cfg.spacePointSelection == SeedSpacePointSelection::All) {
+    throw std::invalid_argument("The seeds made here are triplets");
   }
 
   // Set up the track parameters covariance (the same for all tracks)
@@ -144,7 +148,7 @@ ProcessCode ProtoTracksToParameters::execute(
     const float t = sps.at(tmpSps.front()).r() - m * sps.at(tmpSps.front()).z();
     const float vertexZ = -t / m;
 
-    const std::optional<std::vector<SpacePointIndex>> selected =
+    const std::optional<std::array<SpacePointIndex, 3>> selected =
         selectSeedSpacePoints(sps, tmpSps, m_cfg.spacePointSelection,
                               m_cfg.minTransverseDistance);
     if (!selected.has_value()) {

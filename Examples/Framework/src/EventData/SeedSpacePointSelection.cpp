@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <optional>
 #include <span>
@@ -72,7 +73,7 @@ std::vector<SpacePointIndex> onePerLayer(
 
 }  // namespace ActsExamples
 
-std::optional<std::vector<ActsExamples::SpacePointIndex>>
+std::optional<std::array<ActsExamples::SpacePointIndex, 3>>
 ActsExamples::selectSeedSpacePoints(const SpacePointContainer& spacePoints,
                                     std::span<const SpacePointIndex> candidates,
                                     SeedSpacePointSelection selection,
@@ -83,14 +84,14 @@ ActsExamples::selectSeedSpacePoints(const SpacePointContainer& spacePoints,
 
   switch (selection) {
     case SeedSpacePointSelection::FirstThree:
-      return std::vector{candidates[0], candidates[1], candidates[2]};
+      return std::array{candidates[0], candidates[1], candidates[2]};
     case SeedSpacePointSelection::InnermostTriplet: {
-      std::vector<SpacePointIndex> perLayer =
+      const std::vector<SpacePointIndex> perLayer =
           onePerLayer(spacePoints, candidates, 3, minTransverseDistance);
       if (perLayer.size() < 3) {
         return std::nullopt;
       }
-      return perLayer;
+      return std::array{perLayer[0], perLayer[1], perLayer[2]};
     }
     case SeedSpacePointSelection::SpreadTriplet: {
       const std::vector<SpacePointIndex> perLayer = onePerLayer(
@@ -98,11 +99,12 @@ ActsExamples::selectSeedSpacePoints(const SpacePointContainer& spacePoints,
       if (perLayer.size() < 3) {
         return std::nullopt;
       }
-      return std::vector{perLayer.front(), perLayer[perLayer.size() / 2],
-                         perLayer.back()};
+      return std::array{perLayer.front(), perLayer[perLayer.size() / 2],
+                        perLayer.back()};
     }
     case SeedSpacePointSelection::All:
-      return std::vector<SpacePointIndex>{candidates.begin(), candidates.end()};
+      // no triplet to pick
+      return std::nullopt;
   }
 
   return std::nullopt;

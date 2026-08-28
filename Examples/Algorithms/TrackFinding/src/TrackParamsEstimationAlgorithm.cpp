@@ -19,7 +19,6 @@
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -43,23 +42,12 @@ namespace ActsExamples {
 
 namespace {
 
-/// Moves the estimate onto the surface of its first space point. That is at
-/// most the distance of a space point from its own module, so there is nothing
-/// in between to navigate.
+// the step is at most a space point's distance from its own module, so there is
+// nothing in between to navigate
 using SeedPropagator =
     Acts::Propagator<Acts::SympyStepper, Acts::VoidNavigator>;
 using SeedPropagatorOptions = SeedPropagator::Options<>;
 
-/// Fit a helix through the given positions and express it at the first of them.
-///
-/// @param positions the global positions in track order, innermost first
-/// @param weights relative weights of the positions, empty for uniform. Only
-///        the fit of more than three positions uses them.
-/// @param bField the magnetic field vector at the first position
-/// @param t0 the time at the first position
-/// @param refineIterations geometric refinement iterations of the circle fit
-///
-/// @return the free parameters at the first position
 Acts::Result<Acts::FreeVector> estimateFreeParams(
     std::span<const Acts::Vector3> positions, std::span<const double> weights,
     const Acts::Vector3& bField, double t0, std::size_t refineIterations) {
@@ -73,27 +61,15 @@ Acts::Result<Acts::FreeVector> estimateFreeParams(
                                                   refineIterations, weights);
 }
 
-/// Express free parameters on a surface.
-///
-/// The parameters are propagated to the surface, which is a no-op if they are
-/// already on it. A space point does not have to be on the surface of its
-/// source link: a strip space point can sit between the two modules it was
-/// built from, and either of them can be behind it.
-///
-/// @param propagator the propagator to transport with
-/// @param options the propagation options, direction is overridden
-/// @param freeParams the free parameters to express
-/// @param surface the surface to express them on
-/// @param hypothesis the particle hypothesis of the parameters
-///
-/// @return the bound parameters on the surface
+// a no-op if the parameters are already on the surface, which a space point
+// does not have to be
 Acts::Result<Acts::BoundVector> transportToSurface(
     const SeedPropagator& propagator, const SeedPropagatorOptions& options,
     const Acts::FreeVector& freeParams, const Acts::Surface& surface,
     const Acts::ParticleHypothesis& hypothesis) {
   const Acts::Vector3 direction = freeParams.segment<3>(Acts::eFreeDir0);
 
-  // only for the direction to propagate in, so the bounds do not matter here
+  // only for the direction to propagate in, so the bounds do not matter
   const Acts::Intersection3D intersection =
       surface
           .intersect(options.geoContext, freeParams.segment<3>(Acts::eFreePos0),
@@ -149,6 +125,12 @@ TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   }
   if (!m_cfg.magneticField) {
     throw std::invalid_argument("Missing magnetic field");
+  }
+  if (m_cfg.spacePointSelection != SeedSpacePointSelection::All &&
+      (m_cfg.spacePointWeight || m_cfg.geometricRefineIterations > 0)) {
+    throw std::invalid_argument(
+        "Space point weights and circle fit refinement only apply to the fit "
+        "of all space points of a seed");
   }
 
   m_inputSeeds.initialize(m_cfg.inputSeeds);
@@ -232,18 +214,26 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
       continue;
     }
 
-    const std::optional<std::vector<SpacePointIndex>> selected =
-        selectSeedSpacePoints(spacePoints, seed.spacePointIndices(),
-                              m_cfg.spacePointSelection,
-                              m_cfg.minTransverseDistance);
-    if (!selected.has_value()) {
-      ACTS_DEBUG("Seed " << iseed << " has no space point selection, skip");
-      ++skipped.selection;
-      continue;
+    // the triplet selections pick three space points, `All` takes the seed as
+    // it is
+    std::array<SpacePointIndex, 3> triplet{};
+    std::span<const SpacePointIndex> selected = seed.spacePointIndices();
+    if (m_cfg.spacePointSelection != SeedSpacePointSelection::All) {
+      const std::optional<std::array<SpacePointIndex, 3>> selectedTriplet =
+          selectSeedSpacePoints(spacePoints, seed.spacePointIndices(),
+                                m_cfg.spacePointSelection,
+                                m_cfg.minTransverseDistance);
+      if (!selectedTriplet.has_value()) {
+        ACTS_DEBUG("Seed " << iseed << " has no space point selection, skip");
+        ++skipped.selection;
+        continue;
+      }
+      triplet = *selectedTriplet;
+      selected = triplet;
     }
 
     // Get the bottom space point and its reference surface
-    const ConstSpacePointProxy bottomSp = spacePoints.at((*selected)[0]);
+    const ConstSpacePointProxy bottomSp = spacePoints.at(selected.front());
     if (bottomSp.sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in the space point");
       continue;
@@ -275,7 +265,7 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
 
     positions.clear();
     weights.clear();
-    for (const SpacePointIndex index : *selected) {
+    for (const SpacePointIndex index : selected) {
       const ConstSpacePointProxy sp = spacePoints.at(index);
       positions.emplace_back(sp.x(), sp.y(), sp.z());
       if (m_cfg.spacePointWeight) {
