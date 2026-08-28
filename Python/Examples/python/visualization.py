@@ -77,7 +77,6 @@ class PyVisualization2D(acts.VisualizationBuffer):
     def plot(
         self, projection, filename, interpolate=False, linewidth=None, linestyle=None
     ):
-        import matplotlib.pyplot as plt
 
         # Reduce font size and complexity to avoid raster overflow
         plt.rcParams["font.size"] = 8
