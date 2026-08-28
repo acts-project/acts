@@ -22,6 +22,7 @@ def computeProjection(char, vector3):
         return vector3[2]
     elif char == "r":
         return np.sqrt(vector3[0] ** 2 + vector3[1] ** 2)
+
     elif char == "phi":
         x = vector3[0]
         y = vector3[1]
@@ -66,7 +67,6 @@ class PyVisualization2D(acts.VisualizationBuffer):
     def plot(
         self,
         projection,
-        filename,
         linewidth=None,
         linestyle=None,
         drawHitSensitives=True,
@@ -74,8 +74,6 @@ class PyVisualization2D(acts.VisualizationBuffer):
     ):
         import matplotlib.pyplot as plt
 
-        # Reduce font size and complexity to avoid raster overflow
-        plt.rcParams["font.size"] = 8
         plt.rcParams["figure.figsize"] = (12, 10)
 
         fig, ax = plt.subplots()
@@ -141,7 +139,6 @@ class PyVisualization2D(acts.VisualizationBuffer):
                 [computeProjection(proj2D[0], v), computeProjection(proj2D[1], v)]
                 for v in surface
             ]
-            for surface in surfaces
         ]
 
         poly_patches = [
@@ -156,25 +153,21 @@ class PyVisualization2D(acts.VisualizationBuffer):
         ax.set_ylabel(proj2D[1])
         ax.ticklabel_format(useOffset=False, style="plain")
         ax.set_xticks(np.linspace(-1000, 1000, 5))
-        ax.set_yticks(np.linspace(-1000, 1000, 5))
 
         ax.add_collection(poly_collection)
 
-        ax.autoscale()
-
-        for n_face, face in enumerate(surfaces2D):
-            if polyArea(face) < 1e-8:
-                ax.plot(
-                    [item[0] for item in face],
-                    [item[1] for item in face],
-                    color=(
-                        self.faceColors[n_face][0] / 255,
-                        self.faceColors[n_face][1] / 255,
-                        self.faceColors[n_face][2] / 255,
-                        0.5,
-                    ),
-                    lw=1,
-                )
+        if polyArea(face) < 1e-8:
+            ax.plot(
+                [item[0] for item in face],
+                [item[1] for item in face],
+                color=(
+                    self.faceColors[n_face][0] / 255,
+                    self.faceColors[n_face][1] / 255,
+                    self.faceColors[n_face][2] / 255,
+                    0.5,
+                ),
+                lw=1,
+            )
 
         # Check if there is a track to be drawn
         print(len(self.segments))
@@ -211,7 +204,6 @@ class PyVisualization2D(acts.VisualizationBuffer):
                 hit_patches = [Polygon(face, closed=True) for face in hitSensitives]
                 hit_collection = PatchCollection(hit_patches, alpha=0.5)
                 hit_collection.set_facecolor("red")
-                ax.add_collection(hit_collection)
 
                 for n_face, face in enumerate(hitSensitives):
                     if polyArea(face) < 1e-8:
