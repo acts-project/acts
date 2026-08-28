@@ -211,7 +211,9 @@ std::filesystem::path MillePedeSolver::copyIfRequested(
   } else if (userLoc.empty()) {
     return originalLoc;
   } else {
-    if (!std::filesystem::copy_file(originalLoc, userLoc)) {
+    if (!std::filesystem::copy_file(
+            originalLoc, userLoc,
+            std::filesystem::copy_options::overwrite_existing)) {
       ACTS_WARNING(" Failed to copy output file " << originalLoc << " to "
                                                   << userLoc);
       return originalLoc;
