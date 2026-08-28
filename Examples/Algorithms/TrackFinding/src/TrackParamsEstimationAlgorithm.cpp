@@ -20,6 +20,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
+#include <array>
 #include <cstddef>
 #include <optional>
 #include <ostream>
@@ -96,23 +97,29 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
 
   IndexSourceLink::SurfaceAccessor surfaceAccessor{*m_cfg.trackingGeometry};
 
+  const SpacePointContainer& spacePoints = seeds.spacePointContainer();
+
   // Loop over all found seeds to estimate track parameters
   for (std::size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
     if (seed.spacePoints().size() < 3) {
       ACTS_WARNING("Seed " << iseed << " has less than 3 space points, skip");
       continue;
-    } else if (seed.spacePoints().size() > 3) {
-      ACTS_DEBUG(
-          "Seed "
-          << iseed
-          << " has more than 3 space points, only the first 3 will be used");
+    }
+
+    const std::optional<std::array<SpacePointIndex, 3>> selected =
+        selectSeedSpacePoints(spacePoints, seed.spacePointIndices(),
+                              m_cfg.spacePointSelection,
+                              m_cfg.minTransverseDistance);
+    if (!selected.has_value()) {
+      ACTS_DEBUG("Seed " << iseed << " has no space point selection, skip");
+      continue;
     }
 
     // Get the bottom space point and its reference surface
-    const ConstSpacePointProxy bottomSp = seed.spacePoints()[0];
-    const ConstSpacePointProxy middleSp = seed.spacePoints()[1];
-    const ConstSpacePointProxy topSp = seed.spacePoints()[2];
+    const ConstSpacePointProxy bottomSp = spacePoints.at((*selected)[0]);
+    const ConstSpacePointProxy middleSp = spacePoints.at((*selected)[1]);
+    const ConstSpacePointProxy topSp = spacePoints.at((*selected)[2]);
     if (bottomSp.sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in the space point");
       continue;
@@ -147,12 +154,21 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     // Estimate the track parameters from seed
     Acts::Result<Acts::BoundVector> boundParams =
         Acts::estimateTrackParamsFromSeed(
-            ctx.geoContext, *bottomSurface, bottomSpVec,
+            ctx.recoGeoContext, *bottomSurface, bottomSpVec,
             std::isnan(bottomSp.time()) ? 0.0 : bottomSp.time(), middleSpVec,
             topSpVec, field);
     if (!boundParams.ok()) {
       ACTS_WARNING("Failed to estimate track parameters from seed: "
                    << boundParams.error().message());
+      continue;
+    }
+    // Degenerate space points, e.g. a bottom and a middle space point at the
+    // same transverse position, make the estimate not a number rather than
+    // merely wrong
+    if (!boundParams->allFinite()) {
+      ACTS_WARNING("Seed " << iseed
+                           << " gave a track parameter estimate that is not a "
+                              "number, skip");
       continue;
     }
 

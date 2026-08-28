@@ -1,7 +1,8 @@
 import pytest
+import warnings
 from pathlib import Path
 
-from helpers import dd4hepEnabled, geant4Enabled
+from helpers import dd4hepEnabled, geant4Enabled, rootEnabled
 
 import acts.examples
 
@@ -188,6 +189,84 @@ def test_tgeo_config_volume(monkeypatch):
 
         v = Volume(**{key: (4, None)})
         assert getattr(v, key) == Interval(4, None)
+
+
+@pytest.mark.skipif(not rootEnabled, reason="ROOT not set up")
+def test_tgeo_detector_aligned_element_factory():
+    import acts.examples.tgeo as tgeo
+    from acts.examples.tgeo import TGeoDetector
+
+    u = acts.UnitConstants
+    Volume = TGeoDetector.Config.Volume
+    LayerTriplet = TGeoDetector.Config.LayerTriplet
+    equidistant = TGeoDetector.Config.BinningType.equidistant
+
+    root_file = (
+        Path(__file__).parent.parent.parent.parent / "Tests" / "Data" / "panda.root"
+    )
+    assert root_file.exists()
+
+    # Select the pixel barrel layer out of the panda.root geometry, same
+    # selection as the `TGeoLayerBuilderTests` C++ unit test (`b0Config`).
+    volume = Volume(
+        name="Pixels",
+        layers=LayerTriplet(negative=False, central=True, positive=False),
+        subVolumeName=LayerTriplet(central="*"),
+        sensitiveNames=LayerTriplet(
+            central=[
+                "PixelActiveo2",
+                "PixelActiveo4",
+                "PixelActiveo5",
+                "PixelActiveo6",
+            ]
+        ),
+        sensitiveAxes=LayerTriplet(central="XYZ"),
+        rRange=LayerTriplet(central=(0.0, 40 * u.mm)),
+        zRange=LayerTriplet(central=(-60 * u.mm, 15 * u.mm)),
+        splitTolR=LayerTriplet(central=-1.0),
+        splitTolZ=LayerTriplet(central=-1.0),
+        # A single entry with count <= 0 requests auto-binning; leaving this
+        # unset defaults to an empty vector, which `TGeoLayerBuilder` then
+        # indexes out of bounds.
+        binning0=LayerTriplet(central=[(0, equidistant)]),
+        binning1=LayerTriplet(central=[(0, equidistant)]),
+    )
+
+    cfg = TGeoDetector.Config(
+        fileName=str(root_file),
+        unitScalor=1 * u.cm,  # panda.root stores lengths in ROOT's native cm
+        volumes=[volume],
+        detectorElementFactory=tgeo.alignedTGeoDetectorElementFactory,
+    )
+
+    # The setter dispatches on identity to a native C++ function pointer
+    # rather than storing the assigned python object, so the getter always
+    # reports None.
+    assert cfg.detectorElementFactory is None
+
+    # (Re-)building a TGeoManager from a ROOT file can emit routine,
+    # benign ROOT diagnostics (e.g. about registered matrices being
+    # replaced) that are not test failures.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        detector = TGeoDetector(cfg)
+        trackingGeometry = detector.trackingGeometry()
+
+    assert trackingGeometry is not None
+    assert count_surfaces(trackingGeometry) == 14
+
+
+@pytest.mark.skipif(not rootEnabled, reason="ROOT not set up")
+def test_tgeo_detector_element_factory_invalid():
+    from acts.examples.tgeo import TGeoDetector
+
+    cfg = TGeoDetector.Config()
+
+    with pytest.raises(ValueError):
+        cfg.detectorElementFactory = lambda *args: None
+
+    # None is accepted and leaves the default (non-aligned) factory in place
+    cfg.detectorElementFactory = None
 
 
 def test_coordinate_converter(trk_geo):

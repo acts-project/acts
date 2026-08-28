@@ -26,7 +26,7 @@ namespace traccc::device {
 template <typename propagator_t, typename bfield_t>
 TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
     const global_index_t globalIndex, const finding_config& cfg,
-    const typename propagator_t::detector_type::const_view_type& det_data,
+    const typename propagator_t::detector_type* const det_data_ptr,
     const bfield_t& field_data,
     const propagate_to_next_surface_payload& payload) {
   using algebra_t = typename propagator_t::detector_type::algebra_type;
@@ -57,9 +57,6 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
   vecmem::device_vector<unsigned int> tips(payload.tips_view);
   vecmem::device_vector<unsigned int> tip_lengths(payload.tip_lengths_view);
 
-  // Detector
-  typename propagator_t::detector_type det(det_data);
-
   // Parameters
   bound_track_parameters_collection_types::device params(payload.params_view);
 
@@ -74,9 +71,9 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
   propagator_t propagator(cfg.propagation);
 
   // Create propagator state
-  typename propagator_t::state propagation(in_par, field_data, det);
+  typename propagator_t::state propagation(in_par, field_data, *det_data_ptr);
   propagation.set_particle(
-      detail::correct_particle_hypothesis(cfg.ptc_hypothesis, in_par));
+      traccc::detail::correct_particle_hypothesis(cfg.ptc_hypothesis, in_par));
   propagation.stepping()
       .template set_constraint<detray::step::constraint::e_accuracy>(
           cfg.propagation.stepping.step_constraint);

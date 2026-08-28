@@ -311,7 +311,7 @@ endif()
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
-set(_acts_actsvg_version 0.4.56)
+set(_acts_actsvg_version 0.4.57)
 set(_acts_boost_version 1.78.0)
 set(_acts_dd4hep_version 1.26)
 set(_acts_geant4_version 11.1.3)
@@ -334,7 +334,7 @@ set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 3.0.1)
 set(_acts_traccc_version 1.4.0)
 set(_acts_covfie_version 0.15.2)
-set(_acts_vecmem_version 1.25.0)
+set(_acts_vecmem_version 1.27.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)
 set(_acts_arrow_version 21.0.0)

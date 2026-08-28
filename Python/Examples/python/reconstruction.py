@@ -111,14 +111,6 @@ SeedingAlgorithmConfigArg = namedtuple(
     defaults=[None] * 5,
 )
 
-TruthEstimatedSeedingAlgorithmConfigArg = namedtuple(
-    "TruthSeederConfig",
-    [
-        "deltaR",  # (min,max)
-    ],
-    defaults=[(None, None)],
-)
-
 TrackSelectorConfig = namedtuple(
     "TrackSelectorConfig",
     [
@@ -270,7 +262,6 @@ class VertexFinder(Enum):
     seedingAlgorithmConfigArg=SeedingAlgorithmConfigArg,
     hashingTrainingConfigArg=HashingTrainingConfigArg,
     hashingAlgorithmConfigArg=HashingAlgorithmConfigArg,
-    truthEstimatedSeedingAlgorithmConfigArg=TruthEstimatedSeedingAlgorithmConfigArg,
     logLevel=acts.logging.Level,
 )
 def addSeeding(
@@ -303,14 +294,15 @@ def addSeeding(
     hashingAlgorithmConfigArg: Optional[
         HashingAlgorithmConfigArg
     ] = HashingAlgorithmConfigArg(),
-    truthEstimatedSeedingAlgorithmConfigArg: TruthEstimatedSeedingAlgorithmConfigArg = TruthEstimatedSeedingAlgorithmConfigArg(),
     particleHypothesis: Optional[
         acts.ParticleHypothesis
     ] = acts.ParticleHypothesis.pion,
     inputParticles: str = "particles",
     selectedParticles: str = "particles_selected",
+    paramEstimationSpacePoints: Optional[acts.examples.SeedSpacePointSelection] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
+    trackParameterPerformance: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     prefix: str = "",
@@ -355,16 +347,21 @@ def addSeeding(
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/HashingPrototypeSeedingAlgorithm.hpp
     hashingAlgorithmConfigArg : HashingAlgorithmConfigArg(bucketSize, zBins, phiBins)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/HashingPrototypeSeedingAlgorithm.hpp
-    truthEstimatedSeedingAlgorithmConfigArg : TruthEstimatedSeedingAlgorithmConfigArg(deltaR)
-        Currently only deltaR=(min,max) range specified here.
     particleHypothesis : Optional[acts.ParticleHypothesis]
         The hypothesis used for track finding. Defaults to pion.
     inputParticles : str, "particles"
         input particles name in the WhiteBoard
     selectedParticles : str, "particles_selected"
         selected particles name in the WhiteBoard
+    paramEstimationSpacePoints : acts.examples.SeedSpacePointSelection, None
+        which space points of a seed estimate its track parameters, None keeps
+        the algorithm default
     outputDirRoot : Path|str, path, None
         the output folder for ROOT output, None triggers no output
+    trackParameterPerformance : bool, False
+        additionally write residual/pull performance of the seed-estimated
+        track parameters at the perigee, see
+        `addTrackParameterPerformanceWriter`
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     rnd : RandomNumbers, None
@@ -406,14 +403,19 @@ def addSeeding(
         )
         seeds = None
         perSeedParticleHypothesis = None
+        # proto tracks the estimation has to filter alongside the seeds
+        unestimatedProtoTracks = None
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
             logger.info("Using truth track finding from space points for seeding")
-            seeds, perSeedParticleHypothesis = addTruthEstimatedSeeding(
+            (
+                seeds,
+                perSeedParticleHypothesis,
+                unestimatedProtoTracks,
+            ) = addTruthEstimatedSeeding(
                 s,
                 spacePoints,
                 selectedParticles,
-                truthEstimatedSeedingAlgorithmConfigArg,
                 particleHypothesis=particleHypothesis,
                 logLevel=logLevel,
             )
@@ -526,6 +528,15 @@ def addSeeding(
             trackingGeometry=trackingGeometry,
             magneticField=field,
             **acts.examples.defaultKWArgs(
+                # a seed without an estimate drops its proto track too, so the
+                # truth fitters keep a parameter set per proto track
+                inputProtoTracks=unestimatedProtoTracks,
+                outputProtoTracks=(
+                    "truth_particle_tracks"
+                    if unestimatedProtoTracks is not None
+                    else None
+                ),
+                spacePointSelection=paramEstimationSpacePoints,
                 initialSigmas=initialSigmas,
                 initialSigmaQoverPt=initialSigmaQoverPt,
                 initialSigmaPtRel=initialSigmaPtRel,
@@ -580,6 +591,34 @@ def addSeeding(
                 logLevel,
                 prefix=prefix,
             )
+
+            if trackParameterPerformance:
+                # the estimate sits on the bottom space point's sensor and has
+                # to be moved to a common surface to be comparable to truth.
+                # `first` because only the innermost state carries parameters.
+                extrapolatedTracks = f"{prefix}seed-tracks-perigee"
+                s.addAlgorithm(
+                    acts.examples.TrackExtrapolationAlgorithm(
+                        level=logLevel,
+                        inputTracks=tracks,
+                        outputTracks=extrapolatedTracks,
+                        targetSurface=acts.Surface.createPerigee(acts.Vector3(0, 0, 0)),
+                        trackingGeometry=trackingGeometry,
+                        magneticField=field,
+                        strategy=acts.examples.TrackExtrapolationStrategy.first,
+                    )
+                )
+
+                addTrackParameterPerformanceWriter(
+                    s,
+                    outputDirRoot,
+                    tracks=extrapolatedTracks,
+                    particles=selectedParticles,
+                    trackParticleMatching=f"{prefix}seed_particle_matching",
+                    outputName="seedparams",
+                    logLevel=logLevel,
+                    prefix=prefix,
+                )
 
         if outputDirCsv is not None:
             outputDirCsv = Path(outputDirCsv)
@@ -712,7 +751,6 @@ def addTruthEstimatedSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     inputParticles: str,
-    TruthEstimatedSeedingAlgorithmConfigArg: TruthEstimatedSeedingAlgorithmConfigArg,
     particleHypothesis: Optional[acts.ParticleHypothesis] = None,
     logLevel: acts.logging.Level = None,
 ):
@@ -729,18 +767,20 @@ def addTruthEstimatedSeeding(
         inputSimHits="simhits",
         inputMeasurementSimHitsMap="measurement_simhits_map",
         outputParticles="truth_seeded_particles",
-        outputProtoTracks="truth_particle_tracks",
+        outputProtoTracks="truth_seeded_particle_tracks",
         outputSeeds="seeds",
         outputParticleHypotheses="seed_particle_hypotheses",
         **acts.examples.defaultKWArgs(
-            deltaRMin=TruthEstimatedSeedingAlgorithmConfigArg.deltaR[0],
-            deltaRMax=TruthEstimatedSeedingAlgorithmConfigArg.deltaR[1],
             particleHypothesis=particleHypothesis,
         ),
     )
     sequence.addAlgorithm(truthSeeding)
 
-    return truthSeeding.config.outputSeeds, truthSeeding.config.outputParticleHypotheses
+    return (
+        truthSeeding.config.outputSeeds,
+        truthSeeding.config.outputParticleHypotheses,
+        truthSeeding.config.outputProtoTracks,
+    )
 
 
 def addSpacePointsMaking(
@@ -750,13 +790,28 @@ def addSpacePointsMaking(
     stripGeoSelectionConfigFile: Union[Path, str],
     logLevel: acts.logging.Level = None,
     prefix: str = "",
+    stripVertex: acts.Vector3 = None,
+    stripLengthTolerance: float = None,
+    stripLengthGapTolerance: float = None,
 ):
     """adds space points making
     For parameters description see addSeeding
+
+    stripVertex, stripLengthTolerance and stripLengthGapTolerance configure the
+    strip space point formation; see Acts::StripSpacePointBuilder.
     """
     import acts.examples.json
 
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    stripOptions = {
+        name: value
+        for name, value in (
+            ("stripVertex", stripVertex),
+            ("stripLengthTolerance", stripLengthTolerance),
+            ("stripLengthGapTolerance", stripLengthGapTolerance),
+        )
+        if value is not None
+    }
     spAlg = acts.examples.SpacePointMaker(
         level=logLevel,
         inputMeasurements=f"{prefix}measurement_subset",
@@ -770,6 +825,7 @@ def addSpacePointsMaking(
             if stripGeoSelectionConfigFile
             else []
         ),
+        **stripOptions,
     )
     sequence.addAlgorithm(spAlg)
     return spAlg.config.outputSpacePoints
@@ -940,6 +996,9 @@ def addGridTripletSeeding(
     spacePointGridConfigArg: SpacePointGridConfigArg,
     logLevel: acts.logging.Level = None,
     outputSeeds: str = "seeds",
+    inputVertices: str = "",
+    vertexZNSigma: float = 3.0,
+    vertexZMargin: float = 0.0,
 ):
     """adds grid triplet seeding
     For parameters description see addSeeding
@@ -950,6 +1009,9 @@ def addGridTripletSeeding(
         level=logLevel,
         inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,
+        inputVertices=inputVertices,
+        vertexZNSigma=vertexZNSigma,
+        vertexZMargin=vertexZMargin,
         **acts.examples.defaultKWArgs(
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
             minPt=seedFinderConfigArg.minPt,
@@ -1428,6 +1490,57 @@ def addSeedPerformanceWriters(
             inputMeasurementSimHitsMap="measurement_simhits_map",
             filePath=str(outputDirRoot / f"{prefix}estimatedparams.root"),
             treeName="estimatedparams",
+        )
+    )
+
+
+def addTrackParameterPerformanceWriter(
+    sequence: acts.examples.Sequencer,
+    outputDirRoot: Union[Path, str],
+    tracks: str,
+    particles: str,
+    trackParticleMatching: str,
+    resPlotToolConfig=None,
+    outputName: str = "trackparams",
+    logLevel: acts.logging.Level = None,
+    prefix: str = "",
+):
+    """Writes residual/pull performance of the track parameters against truth.
+
+    The tracks are expected to be truth matched and to carry their parameters
+    on a common surface already, typically a perigee. A seed estimate sits on
+    the bottom space point's sensor and has to be moved there first, see
+    `acts.examples.TrackExtrapolationAlgorithm`; comparing on the sensor
+    instead would mean expressing the truth particle by a straight-line
+    intersection that ignores the bending in between.
+
+    Parameters
+    ----------
+    trackParticleMatching : str
+        Truth matching of `tracks`, e.g. from `acts.examples.TrackTruthMatcher`.
+    resPlotToolConfig : Optional[acts.examples.root.ResPlotToolConfig]
+        Residual and pull binning. The defaults are cut for fitted tracks, so a
+        seed estimate usually needs wider residual axes.
+    """
+    customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
+    RootTrackParameterPerformanceWriter = acts.examples._tryImportRoot(
+        "RootTrackParameterPerformanceWriter"
+    )
+
+    outputDirRoot = Path(outputDirRoot)
+    if not outputDirRoot.exists():
+        outputDirRoot.mkdir()
+
+    sequence.addWriter(
+        RootTrackParameterPerformanceWriter(
+            level=customLogLevel(),
+            inputTracks=tracks,
+            inputParticles=particles,
+            inputTrackParticleMatching=trackParticleMatching,
+            filePath=str(outputDirRoot / f"performance_{prefix}{outputName}.root"),
+            **acts.examples.defaultKWArgs(
+                resPlotToolConfig=resPlotToolConfig,
+            ),
         )
     )
 
