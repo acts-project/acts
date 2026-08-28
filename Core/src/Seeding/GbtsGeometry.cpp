@@ -427,7 +427,7 @@ GbtsGeometry::GbtsGeometry(
             break;
           }
           // in the barrel, potential for 1->2->1, we want both links
-          // in the endcap only 1->1 since bins are separated in radius
+          // in the endcap only 1->2 since bins are separated in radius
           linkCircle = bl.first == bin2 ||
                        binLayerMap[bl.first]->layerDescription().type ==
                            GbtsLayerType::Barrel;

@@ -43,7 +43,6 @@ bool gbts_seedfinder_config::setLinkingScheme(
 
   for (std::pair<unsigned int, unsigned int> lI : layerInfo.info)
     n_eta_bins = std::max(n_eta_bins, lI.first + lI.second);
-  TRACCC_INFO(n_eta_bins << "  " << gbtsGeo->numBins());
 
   // bin by volume
   std::ranges::sort(detrayGeoIDBinning, [](const std::pair<uint64_t, short> a,
