@@ -793,8 +793,27 @@ def test_pypi_finding_fitting_demo(tmp_path, generic_detector_config):
         )
         s.run()
 
-        assert len(perfWriterFinder.histograms()) > 0, "no finder histograms produced"
-        assert len(perfWriterFitter.histograms()) > 0, "no fitter histograms produced"
+        finderHistograms = perfWriterFinder.histograms()
+        fitterHistograms = perfWriterFitter.histograms()
+
+        assert len(finderHistograms) == 79, (
+            f"expected 79 finder histograms, got {len(finderHistograms)}: "
+            f"{sorted(finderHistograms)}"
+        )
+        assert (
+            len(fitterHistograms) == 236
+        ), f"expected 236 fitter histograms, got {len(fitterHistograms)}"
+
+        expectedKeys = {
+            "nStates_vs_eta",
+            "pixel_nStates_vs_eta",
+            "sstrip_nStates_vs_eta",
+            "lstrip_nStates_vs_eta",
+        }
+        assert expectedKeys <= set(finderHistograms), (
+            f"missing per-subdetector histograms: "
+            f"{expectedKeys - set(finderHistograms)}"
+        )
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
