@@ -14,8 +14,10 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
+#include <cstdint>
 #include <map>
 #include <memory>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -60,6 +62,16 @@ class ResPlotTool {
          BoostRegularAxis(100, -0.1, 0.1, "r_{rel q/pT} [%]")}};
   };
 
+  /// Quantities the histograms are binned in. Each `fill` overload derives
+  /// them from its own inputs to avoid lossy conversions.
+  struct Binning {
+    double eta;
+    double phi;
+    double pt;
+    double charge;
+    double absCharge;
+  };
+
   /// @param cfg Configuration struct
   /// @param level Message level declaration
   ResPlotTool(const Config& cfg, Acts::Logging::Level lvl);
@@ -77,6 +89,22 @@ class ResPlotTool {
   /// @param fittedParameters the fitted parameters
   void fill(const Acts::BoundTrackParameters& truthParameters,
             const Acts::BoundTrackParameters& fittedParameters);
+
+  /// Fill the residual and pull of a subset of the bound parameters.
+  ///
+  /// For references that constrain only part of the parameters, e.g. a
+  /// measurement. Parameters outside @p indices are left untouched, and the
+  /// derived `q/pT` histograms are never filled since they need theta and
+  /// q/p.
+  ///
+  /// @param binning the quantities to bin the histograms in
+  /// @param indices the bound indices to fill
+  /// @param residuals the residual per bound index; only @p indices are read
+  /// @param residualCovariance the covariance of @p residuals; only the
+  ///        diagonal entries of @p indices are read
+  void fill(const Binning& binning, std::span<const std::uint8_t> indices,
+            const Acts::BoundVector& residuals,
+            const Acts::BoundMatrix& residualCovariance);
 
   const std::map<std::string, Histogram1>& res() const { return m_res; }
   const std::map<std::string, Histogram2>& resVsEta() const {
@@ -104,16 +132,6 @@ class ResPlotTool {
   }
 
  private:
-  /// Truth quantities the histograms are binned in. Each `fill` overload
-  /// derives them from its own truth source to avoid lossy conversions.
-  struct TruthBinning {
-    double eta;
-    double phi;
-    double pt;
-    double charge;
-    double absCharge;
-  };
-
   Config m_cfg;
 
   std::unique_ptr<const Acts::Logger> m_logger;
@@ -140,8 +158,7 @@ class ResPlotTool {
   /// Pull vs eta-pT scatter plot
   std::map<std::string, Histogram3> m_pullVsEtaPt;
 
-  void fill(const Acts::BoundVector& truthVector,
-            const TruthBinning& truthBinning,
+  void fill(const Acts::BoundVector& truthVector, const Binning& binning,
             const Acts::BoundTrackParameters& fittedParameters);
 
   void fillResidual(const std::string& paramName, double residual,

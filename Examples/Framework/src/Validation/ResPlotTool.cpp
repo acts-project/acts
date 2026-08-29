@@ -15,6 +15,7 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
+#include <cstdint>
 #include <format>
 #include <stdexcept>
 
@@ -158,10 +159,9 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
   // bin on the particle, not the bound parameters, which would round-trip the
   // direction through phi/theta
   fill(truthParameters,
-       TruthBinning{eta(truthParticle.direction()),
-                    phi(truthParticle.direction()),
-                    truthParticle.transverseMomentum(), truthParticle.charge(),
-                    truthParticle.absoluteCharge()},
+       Binning{eta(truthParticle.direction()), phi(truthParticle.direction()),
+               truthParticle.transverseMomentum(), truthParticle.charge(),
+               truthParticle.absoluteCharge()},
        fittedParamters);
 }
 
@@ -179,21 +179,21 @@ void ResPlotTool::fill(const Acts::BoundTrackParameters& truthParameters,
 
   const double truthCharge = truthParameters.charge();
   fill(truthParameters.parameters(),
-       TruthBinning{eta(truthParameters.direction()),
-                    phi(truthParameters.direction()),
-                    truthParameters.transverseMomentum(), truthCharge,
-                    std::abs(truthCharge)},
+       Binning{eta(truthParameters.direction()),
+               phi(truthParameters.direction()),
+               truthParameters.transverseMomentum(), truthCharge,
+               std::abs(truthCharge)},
        fittedParameters);
 }
 
 void ResPlotTool::fill(const Acts::BoundVector& truthVector,
-                       const TruthBinning& truthBinning,
+                       const Binning& binning,
                        const Acts::BoundTrackParameters& fittedParameters) {
   using enum Acts::BoundIndices;
 
-  const double truthEta = truthBinning.eta;
-  const double truthPhi = truthBinning.phi;
-  const double truthPt = truthBinning.pt;
+  const double truthEta = binning.eta;
+  const double truthPhi = binning.phi;
+  const double truthPt = binning.pt;
 
   // get the fitted parameter and its error
   const Acts::BoundVector& trackParameters = fittedParameters.parameters();
@@ -215,8 +215,8 @@ void ResPlotTool::fill(const Acts::BoundVector& truthVector,
 
   // `reco(q/pT)` and `true(pT/q) * reco(q/pT)` residual and pull
   {
-    const double truthQoverPt = truthBinning.charge / truthPt;
-    const double truthPtOverAbsQ = truthPt / truthBinning.absCharge;
+    const double truthQoverPt = binning.charge / truthPt;
+    const double truthPtOverAbsQ = truthPt / binning.absCharge;
     const double recoQoverPt =
         trackParameters[eBoundQOverP] / std::sin(trackParameters[eBoundTheta]);
     const double residualQoverPt = recoQoverPt - truthQoverPt;
@@ -248,6 +248,24 @@ void ResPlotTool::fill(const Acts::BoundVector& truthVector,
             ? residualRelQoverPt / std::sqrt(covarianceRelQoverPt)
             : nan;
     fillPull(m_cfg.relQoverPtName, pullRelQoverPt, truthEta, truthPhi, truthPt);
+  }
+}
+
+void ResPlotTool::fill(const Binning& binning,
+                       std::span<const std::uint8_t> indices,
+                       const Acts::BoundVector& residuals,
+                       const Acts::BoundMatrix& residualCovariance) {
+  for (const std::uint8_t index : indices) {
+    const std::string& parName = m_cfg.paramNames.at(index);
+
+    const double residual = residuals[index];
+    fillResidual(parName, residual, binning.eta, binning.phi, binning.pt);
+
+    // a residual covariance can legitimately be non-positive, e.g. `V - HPH^T`
+    // for parameters that used the measurement, in which case there is no pull
+    const double var = residualCovariance(index, index);
+    const double pull = var > 0 ? residual / std::sqrt(var) : nan;
+    fillPull(parName, pull, binning.eta, binning.phi, binning.pt);
   }
 }
 

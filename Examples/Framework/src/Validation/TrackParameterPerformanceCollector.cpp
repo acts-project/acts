@@ -13,6 +13,7 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
+#include <cmath>
 #include <stdexcept>
 #include <utility>
 
@@ -33,6 +34,22 @@ TrackParameterPerformanceCollector::TrackParameterPerformanceCollector(
         "parameter source");
   }
 
+  if (m_cfg.reference == TrackParameterReference::Measurement) {
+    if (m_cfg.parameterSource != TrackParameterSource::TrackState) {
+      throw std::invalid_argument(
+          "The Measurement reference only applies to the TrackState parameter "
+          "source");
+    }
+    if (!m_cfg.parameterType.has_value()) {
+      // the residual covariance is `V + HPH^T` for parameters that do not use
+      // the state's own measurement and `V - HPH^T` for those that do. without
+      // an explicit type the pick is per state, which would mix both
+      // conventions into the same histogram with nothing to tell them apart.
+      throw std::invalid_argument(
+          "The Measurement reference requires an explicit parameter type");
+    }
+  }
+
   std::vector<Acts::GeometryHierarchyMap<unsigned int>::InputElement> elements;
   elements.reserve(m_cfg.geometrySelection.size());
   for (const Acts::GeometryIdentifier& geoId : m_cfg.geometrySelection) {
@@ -48,6 +65,11 @@ void TrackParameterPerformanceCollector::fill(
     const TrackParticleMatching& trackParticleMatching,
     const SimHitContainer* simHits,
     const MeasurementSimHitsMap* measurementSimHitsMap) {
+  if (m_cfg.reference != TrackParameterReference::Truth) {
+    throw std::invalid_argument(
+        "This fill overload requires the Truth reference");
+  }
+
   // with the track-state source the comparison happens per measurement state
   // on the surface that state sits on, so the track itself needs no reference
   // surface, but the simulated hits behind the measurements are required
@@ -100,7 +122,9 @@ void TrackParameterPerformanceCollector::fill(
     reconParticleIds.push_back(ip->particleId());
 
     if (fromTrackStates) {
-      fillTrackStates(geoContext, track, *ip, *simHits, *measurementSimHitsMap);
+      const TrackStateTruth truth{geoContext, *ip, *simHits,
+                                  *measurementSimHitsMap};
+      fillTrackStates(track, &truth);
       continue;
     }
 
@@ -144,10 +168,25 @@ void TrackParameterPerformanceCollector::fill(
   }
 }
 
+void TrackParameterPerformanceCollector::fill(
+    const ConstTrackContainer& tracks) {
+  if (m_cfg.reference != TrackParameterReference::Measurement) {
+    throw std::invalid_argument(
+        "This fill overload requires the Measurement reference");
+  }
+
+  for (const auto& track : tracks) {
+    ++m_stats.nTotalTracks;
+
+    fillTrackStates(track, nullptr);
+  }
+}
+
 void TrackParameterPerformanceCollector::fillTrackStates(
-    const Acts::GeometryContext& geoContext, const ConstTrackProxy& track,
-    const SimParticle& particle, const SimHitContainer& simHits,
-    const MeasurementSimHitsMap& measurementSimHitsMap) {
+    const ConstTrackProxy& track, const TrackStateTruth* truth) {
+  using Acts::VectorHelpers::eta;
+  using Acts::VectorHelpers::phi;
+
   for (const auto& state : track.trackStatesReversed()) {
     if (!state.typeFlags().isMeasurement() || state.typeFlags().isOutlier()) {
       continue;
@@ -171,6 +210,26 @@ void TrackParameterPerformanceCollector::fillTrackStates(
       continue;
     }
 
+    if (truth == nullptr) {
+      const std::optional<MeasurementResidual> residual =
+          measurementResidual(state, reco.value(), m_cfg.parameterType.value());
+      if (!residual.has_value()) {
+        ++m_stats.nMissingStateMeasurement;
+        continue;
+      }
+
+      // without truth the binning has to come off the reconstructed side,
+      // which is also all that is available on data
+      const double recoCharge = reco->charge();
+      const ResPlotTool::Binning binning{
+          eta(reco->direction()), phi(reco->direction()),
+          reco->transverseMomentum(), recoCharge, std::abs(recoCharge)};
+
+      m_resPlotTool.fill(binning, residual->subspace.indices(),
+                         residual->residual, residual->covariance);
+      continue;
+    }
+
     // the source link must outlive the pointer into it
     const Acts::SourceLink sourceLink = state.getUncalibratedSourceLink();
     const auto* indexSourceLink = sourceLink.getPtr<IndexSourceLink>();
@@ -179,25 +238,31 @@ void TrackParameterPerformanceCollector::fillTrackStates(
       continue;
     }
 
-    const std::optional<Acts::BoundTrackParameters> truth =
-        truthParametersOnSurface(geoContext, surface, indexSourceLink->index(),
-                                 particle, simHits, measurementSimHitsMap,
+    const std::optional<Acts::BoundTrackParameters> truthParameters =
+        truthParametersOnSurface(truth->geoContext, surface,
+                                 indexSourceLink->index(), truth->particle,
+                                 truth->simHits, truth->measurementSimHitsMap,
                                  logger());
-    if (!truth.has_value()) {
+    if (!truthParameters.has_value()) {
       ++m_stats.nMissingStateTruth;
       continue;
     }
 
-    m_resPlotTool.fill(truth.value(), reco.value());
+    m_resPlotTool.fill(truthParameters.value(), reco.value());
   }
 }
 
 void TrackParameterPerformanceCollector::logSummary() const {
+  const bool againstTruth = m_cfg.reference == TrackParameterReference::Truth;
+
   ACTS_INFO("=== Track Parameter Performance Summary ===");
   ACTS_INFO("Total tracks: " << m_stats.nTotalTracks);
-  ACTS_INFO("Total matched tracks: " << m_stats.nTotalMatchedTracks);
-  ACTS_INFO("Total particles: " << m_stats.nTotalParticles);
-  ACTS_INFO("Total matched particles: " << m_stats.nTotalMatchedParticles);
+  // the matching counters are only filled when there is truth to match against
+  if (againstTruth) {
+    ACTS_INFO("Total matched tracks: " << m_stats.nTotalMatchedTracks);
+    ACTS_INFO("Total particles: " << m_stats.nTotalParticles);
+    ACTS_INFO("Total matched particles: " << m_stats.nTotalMatchedParticles);
+  }
 
   if (m_cfg.parameterSource == TrackParameterSource::TrackState) {
     // a state counts here when it does not carry the requested parameters at
@@ -205,11 +270,16 @@ void TrackParameterPerformanceCollector::logSummary() const {
     // a single state, e.g. seeding output, skips every other state of a track
     ACTS_INFO("Skipped states without the requested parameters: "
               << m_stats.nMissingStateParameters);
-    ACTS_INFO(
-        "Skipped states without truth hits: " << m_stats.nMissingStateTruth);
+    if (againstTruth) {
+      ACTS_INFO(
+          "Skipped states without truth hits: " << m_stats.nMissingStateTruth);
+    } else {
+      ACTS_INFO("Skipped states without a calibrated measurement: "
+                << m_stats.nMissingStateMeasurement);
+    }
   }
 
-  if (m_stats.nTotalTracks > 0) {
+  if (againstTruth && m_stats.nTotalTracks > 0) {
     double efficiency =
         static_cast<double>(m_stats.nTotalMatchedTracks) / m_stats.nTotalTracks;
     ACTS_INFO("Track efficiency: " << efficiency * 100 << "%");

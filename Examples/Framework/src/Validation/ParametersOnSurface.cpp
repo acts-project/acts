@@ -106,3 +106,56 @@ std::optional<Acts::BoundTrackParameters> ActsExamples::recoParametersOnSurface(
                                     stateParameters->first,
                                     stateParameters->second, hypothesis);
 }
+
+bool ActsExamples::parametersUseOwnMeasurement(
+    TrackParameterType parameterType) {
+  using enum TrackParameterType;
+
+  return parameterType == Filtered || parameterType == Smoothed;
+}
+
+std::optional<ActsExamples::MeasurementResidual>
+ActsExamples::measurementResidual(const ConstTrackStateProxy& state,
+                                  const Acts::BoundTrackParameters& parameters,
+                                  TrackParameterType parameterType) {
+  if (!state.hasCalibrated() || !state.hasProjector()) {
+    return std::nullopt;
+  }
+
+  const Acts::VariableBoundSubspaceHelper subspace =
+      state.projectorSubspaceHelper();
+  if (subspace.empty()) {
+    return std::nullopt;
+  }
+
+  // the projector only selects bound indices, so `H x` is `x(subspace)` and
+  // `H P H^T` is `P(subspace, subspace)`. no matrix products needed.
+  const Acts::DynamicVector measurement = state.effectiveCalibrated();
+  const Acts::DynamicMatrix measurementCovariance =
+      state.effectiveCalibratedCovariance();
+
+  const Acts::BoundVector& parameterVector = parameters.parameters();
+  const Acts::BoundMatrix parameterCovariance =
+      parameters.covariance().value_or(Acts::BoundMatrix::Zero());
+
+  // parameters that used the measurement are pulled towards it, so their
+  // covariance is correlated with the measurement and has to be subtracted
+  // instead of added
+  const double sign = parametersUseOwnMeasurement(parameterType) ? -1. : 1.;
+
+  const std::size_t size = subspace.size();
+  Acts::DynamicVector residual(size);
+  Acts::DynamicMatrix covariance = measurementCovariance;
+  for (std::size_t i = 0; i < size; ++i) {
+    // the reference is subtracted from the reconstructed value, matching the
+    // convention of the truth residuals
+    residual[i] = parameterVector[subspace[i]] - measurement[i];
+
+    for (std::size_t j = 0; j < size; ++j) {
+      covariance(i, j) += sign * parameterCovariance(subspace[i], subspace[j]);
+    }
+  }
+
+  return MeasurementResidual{subspace, subspace.expandVector(residual),
+                             subspace.expandMatrix(covariance)};
+}

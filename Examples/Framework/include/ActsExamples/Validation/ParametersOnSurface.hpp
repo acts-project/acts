@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/BoundTrackParameters.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -76,5 +77,48 @@ std::optional<Acts::BoundTrackParameters> recoParametersOnSurface(
     const ConstTrackStateProxy& state,
     std::optional<TrackParameterType> parameterType,
     const Acts::ParticleHypothesis& hypothesis);
+
+/// Whether parameters of the given type were obtained using the track state's
+/// own measurement.
+///
+/// @param parameterType The parameter type
+/// @return True for `Filtered` and `Smoothed`, false otherwise
+bool parametersUseOwnMeasurement(TrackParameterType parameterType);
+
+/// The residual of track state parameters against the state's own calibrated
+/// measurement.
+struct MeasurementResidual {
+  /// The bound parameters the measurement constrains.
+  Acts::VariableBoundSubspaceHelper subspace;
+  /// `reco - measurement`, expanded into the full bound space. Components
+  /// outside @c subspace are zero.
+  Acts::BoundVector residual;
+  /// The covariance of @c residual, expanded into the full bound space.
+  /// Components outside @c subspace are zero.
+  Acts::BoundMatrix covariance;
+};
+
+/// Compute the residual of track state parameters against the calibrated
+/// measurement of that same state.
+///
+/// Both live in the local frame of the state's surface, so this needs no
+/// geometry context and, more importantly, no truth information.
+///
+/// The residual covariance is @f$ V + HPH^T @f$ for parameters that do not
+/// use the state's own measurement and @f$ V - HPH^T @f$ for those that do,
+/// with @f$ V @f$ the measurement covariance, @f$ P @f$ the parameter
+/// covariance, and @f$ H @f$ the projector. The subtracted form is not
+/// positive definite in general; the caller has to handle a non-positive
+/// variance.
+///
+/// @param state The track state holding the measurement
+/// @param parameters The reconstructed parameters on the state's surface
+/// @param parameterType Which parameters @p parameters are, which decides the
+///        sign of the parameter covariance in the residual covariance
+/// @return The residual, or nullopt if the state carries no measurement
+std::optional<MeasurementResidual> measurementResidual(
+    const ConstTrackStateProxy& state,
+    const Acts::BoundTrackParameters& parameters,
+    TrackParameterType parameterType);
 
 }  // namespace ActsExamples

@@ -37,8 +37,19 @@ enum class TrackParameterSource {
   /// output as delivered.
   Track,
   /// The parameters of the individual track states, on the surface they sit
-  /// on. Compared against the simulated hits of the state's measurement.
+  /// on.
   TrackState,
+};
+
+/// What the reconstructed parameters are compared against.
+enum class TrackParameterReference {
+  /// The truth particle, or the simulated hits behind the measurements.
+  Truth,
+  /// The calibrated measurement of the track state itself. Constrains only
+  /// the local parameters, but needs no truth information at all and
+  /// therefore also works on data, which is what makes alignment monitoring
+  /// possible. `TrackState` source only.
+  Measurement,
 };
 
 /// Collects performance histograms of the track parameters, without any file
@@ -50,8 +61,12 @@ enum class TrackParameterSource {
 ///
 /// With `parameterSource = Track` the track parameters at the track reference
 /// surface are compared to the truth particle. With `TrackState` every
-/// selected measurement state is compared to the truth on its own surface,
-/// which is what makes per-sensor estimates, e.g. from a seed, measurable.
+/// selected measurement state is compared on its own surface, which is what
+/// makes per-sensor estimates, e.g. from a seed, measurable.
+///
+/// `reference` picks what a track state is compared against: the truth behind
+/// its measurement, or the measurement itself. The latter constrains only the
+/// local parameters but needs no truth, so it also runs on data.
 ///
 /// @note The caller must ensure exclusive access (e.g. hold a mutex) when
 ///       calling fill(). This class applies no locking of its own.
@@ -64,6 +79,9 @@ class TrackParameterPerformanceCollector {
 
     /// Where to take the reconstructed parameters from.
     TrackParameterSource parameterSource = TrackParameterSource::Track;
+    /// What to compare the reconstructed parameters against. `Measurement` is
+    /// `TrackState` source only and requires an explicit @c parameterType.
+    TrackParameterReference reference = TrackParameterReference::Truth;
     /// Which track-state parameters to use. If not set, the best available
     /// ones (smoothed, filtered, or predicted). `TrackState` source only.
     std::optional<TrackParameterType> parameterType;
@@ -101,12 +119,25 @@ class TrackParameterPerformanceCollector {
   ///        required for `TrackState`
   ///
   /// @note The caller must ensure exclusive access (e.g. hold a mutex).
+  /// @note Only valid with `reference = Truth`.
   void fill(const Acts::GeometryContext& geoContext,
             const ConstTrackContainer& tracks,
             const SimParticleContainer& particles,
             const TrackParticleMatching& trackParticleMatching,
             const SimHitContainer* simHits = nullptr,
             const MeasurementSimHitsMap* measurementSimHitsMap = nullptr);
+
+  /// Fill histograms for one event without any truth information.
+  ///
+  /// The measurement residuals live in the local frame of the state's own
+  /// surface, so neither a geometry context nor any truth input is needed.
+  /// The efficiency and track summary plots stay empty in this mode.
+  ///
+  /// @param tracks the input tracks
+  ///
+  /// @note The caller must ensure exclusive access (e.g. hold a mutex).
+  /// @note Only valid with `reference = Measurement`.
+  void fill(const ConstTrackContainer& tracks);
 
   /// Summary count statistics accumulated across all filled events.
   struct Stats {
@@ -119,6 +150,8 @@ class TrackParameterPerformanceCollector {
     std::size_t nMissingStateParameters = 0;
     /// Track states skipped for lack of truth hits.
     std::size_t nMissingStateTruth = 0;
+    /// Track states skipped for lack of a calibrated measurement.
+    std::size_t nMissingStateMeasurement = 0;
   };
 
   /// Return accumulated event counts.
@@ -154,13 +187,22 @@ class TrackParameterPerformanceCollector {
  private:
   const Acts::Logger& logger() const { return *m_logger; }
 
-  /// Fill the residuals of the selected measurement states of one track
-  /// against the truth on their own surfaces.
-  void fillTrackStates(const Acts::GeometryContext& geoContext,
-                       const ConstTrackProxy& track,
-                       const SimParticle& particle,
-                       const SimHitContainer& simHits,
-                       const MeasurementSimHitsMap& measurementSimHitsMap);
+  /// The truth inputs needed to compare track states against the truth.
+  struct TrackStateTruth {
+    const Acts::GeometryContext& geoContext;
+    const SimParticle& particle;
+    const SimHitContainer& simHits;
+    const MeasurementSimHitsMap& measurementSimHitsMap;
+  };
+
+  /// Fill the residuals of the selected measurement states of one track on
+  /// their own surfaces.
+  ///
+  /// @param track the track to take the states from
+  /// @param truth the truth inputs for the `Truth` reference; a null pointer
+  ///        selects the `Measurement` reference
+  void fillTrackStates(const ConstTrackProxy& track,
+                       const TrackStateTruth* truth);
 
   /// Fit every histogram in @p histMap and append the resulting mean/width
   /// profiles to @p out, warning on excessive fit failures.

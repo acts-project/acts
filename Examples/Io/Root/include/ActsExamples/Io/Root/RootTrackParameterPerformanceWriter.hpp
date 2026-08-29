@@ -40,6 +40,11 @@ namespace ActsExamples {
 /// reference surface, optionally restricted to a geometry region. That needs
 /// `inputSimHits` and `inputMeasurementSimHitsMap` for the truth.
 ///
+/// With `reference = Measurement` those states are compared against their own
+/// calibrated measurement rather than the truth. That only constrains the
+/// local parameters, but it needs no truth input at all and therefore also
+/// runs on data, which is what makes alignment monitoring possible.
+///
 /// A common file can be provided for the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
@@ -50,13 +55,15 @@ class RootTrackParameterPerformanceWriter final
   struct Config {
     /// Input track collection.
     std::string inputTracks;
-    /// Input particles collection.
+    /// Input particles collection. `Truth` reference only.
     std::string inputParticles;
-    /// Input track-particle matching.
+    /// Input track-particle matching. `Truth` reference only.
     std::string inputTrackParticleMatching;
-    /// Input simulated hits collection. `TrackState` source only.
+    /// Input simulated hits collection. `TrackState` source and `Truth`
+    /// reference only.
     std::string inputSimHits;
-    /// Input measurement to simulated hits map. `TrackState` source only.
+    /// Input measurement to simulated hits map. `TrackState` source and
+    /// `Truth` reference only.
     std::string inputMeasurementSimHitsMap;
     /// Output filename.
     std::string filePath = "performance_track_parameters.root";
@@ -67,6 +74,9 @@ class RootTrackParameterPerformanceWriter final
 
     /// Where to take the reconstructed parameters from.
     TrackParameterSource parameterSource = TrackParameterSource::Track;
+    /// What to compare the reconstructed parameters against. `Measurement` is
+    /// `TrackState` source only and requires an explicit @c parameterType.
+    TrackParameterReference reference = TrackParameterReference::Truth;
     /// Which track-state parameters to use. If not set, the best available
     /// ones (smoothed, filtered, or predicted). `TrackState` source only.
     std::optional<TrackParameterType> parameterType;
