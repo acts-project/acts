@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
 
   ObjVisualization3D vis;
 
-  trackingGeometry->visualize(vis, gctx, {}, {});
+  trackingGeometry->visualize(vis, gctx);
 
   vis.write("api_test_container.obj");
 

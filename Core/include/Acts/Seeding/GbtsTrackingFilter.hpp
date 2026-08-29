@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/detail/GbtsFilterTypes.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -57,8 +58,11 @@ class GbtsTrackingFilter final {
 
   /// @param config Configuration for seed finder
   /// @param geometry GBTS geometry for layer information
+  /// @param logger Logging instance
   GbtsTrackingFilter(const Config& config,
-                     const std::shared_ptr<const GbtsGeometry>& geometry);
+                     const std::shared_ptr<const GbtsGeometry>& geometry,
+                     std::unique_ptr<const Logger> logger = getDefaultLogger(
+                         "GbtsTrackingFilter", Logging::Level::INFO));
 
  private:
   // Only the seeder walks the edge graph.
@@ -82,6 +86,13 @@ class GbtsTrackingFilter final {
 
   /// GBTS geometry for layer information
   std::shared_ptr<const GbtsGeometry> m_geometry;
+
+  /// Logging instance
+  std::unique_ptr<const Logger> m_logger;
+
+  /// Access the logging instance
+  /// @return Logger reference
+  const Logger& logger() const { return *m_logger; }
 
   /// Propagate edge state
   /// @param state Tracking filter state

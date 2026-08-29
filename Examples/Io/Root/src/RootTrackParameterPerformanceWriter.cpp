@@ -11,14 +11,14 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
+#include "ActsPlugins/Root/RootHistogramFit.hpp"
 
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 #include <TEfficiency.h>
 #include <TFile.h>
-#include <TFitResult.h>
-#include <TFitResultPtr.h>
 #include <TH1.h>
 #include <TH2.h>
 #include <TH3.h>
@@ -28,17 +28,35 @@ using ActsPlugins::toRoot;
 
 namespace ActsExamples {
 
+namespace {
+
+/// Translate the writer configuration into the collector configuration.
+TrackParameterPerformanceCollector::Config collectorConfig(
+    const RootTrackParameterPerformanceWriter::Config& cfg) {
+  TrackParameterPerformanceCollector::Config collectorCfg;
+  collectorCfg.resPlotToolConfig = cfg.resPlotToolConfig;
+  collectorCfg.effPlotToolConfig = cfg.effPlotToolConfig;
+  collectorCfg.trackSummaryPlotToolConfig = cfg.trackSummaryPlotToolConfig;
+  collectorCfg.parameterSource = cfg.parameterSource;
+  collectorCfg.parameterType = cfg.parameterType;
+  collectorCfg.geometrySelection = cfg.geometrySelection;
+  collectorCfg.fitFunction = ActsPlugins::RootHistogramFit();
+  collectorCfg.fitMinEntries = cfg.fitMinEntries;
+  collectorCfg.fitSigmaRange = cfg.fitSigmaRange;
+  collectorCfg.fitIterations = cfg.fitIterations;
+  collectorCfg.warningThresholdFitFailureFraction =
+      cfg.warningThresholdFitFailureFraction;
+  return collectorCfg;
+}
+
+}  // namespace
+
 RootTrackParameterPerformanceWriter::RootTrackParameterPerformanceWriter(
     RootTrackParameterPerformanceWriter::Config config,
     Acts::Logging::Level level)
     : WriterT(config.inputTracks, "RootTrackParameterPerformanceWriter", level),
       m_cfg(std::move(config)),
-      m_collector(
-          TrackParameterPerformanceCollector::Config{
-              m_cfg.resPlotToolConfig, m_cfg.effPlotToolConfig,
-              m_cfg.trackSummaryPlotToolConfig, m_cfg.fitMinEntries,
-              m_cfg.fitSigmaRange, m_cfg.fitIterations},
-          logger().clone()) {
+      m_collector(collectorConfig(m_cfg), logger().clone()) {
   // trajectories collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
@@ -52,6 +70,18 @@ RootTrackParameterPerformanceWriter::RootTrackParameterPerformanceWriter(
 
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
+
+  if (m_cfg.parameterSource == TrackParameterSource::TrackState) {
+    if (m_cfg.inputSimHits.empty()) {
+      throw std::invalid_argument("Missing simulated hits input collection");
+    }
+    if (m_cfg.inputMeasurementSimHitsMap.empty()) {
+      throw std::invalid_argument("Missing measurement to simulated hits map");
+    }
+
+    m_inputSimHits.initialize(m_cfg.inputSimHits);
+    m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
+  }
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
@@ -80,45 +110,21 @@ ProcessCode RootTrackParameterPerformanceWriter::finalize() {
   const auto& effPlotTool = m_collector.effPlotTool();
   const auto& trackSummaryPlotTool = m_collector.trackSummaryPlotTool();
 
-  // Helper lambda to write 2D histogram and extract mean/width profiles
-  const auto writeWithRefinement = [this](auto& hist,
-                                          const std::string& meanPrefix,
-                                          const std::string& widthPrefix) {
-    hist.Write();
-
-    // Get the histogram name and extract the suffix (e.g., "_d0_vs_eta")
-    const std::string baseName = hist.GetName();
-    const std::string suffix = baseName.substr(baseName.find('_'));
-
-    auto [meanHist, widthHist, fitFailureFraction] =
-        ActsPlugins::extractMeanWidthProfiles(
-            hist, meanPrefix + suffix, widthPrefix + suffix,
-            m_cfg.fitMinEntries, m_cfg.fitSigmaRange, m_cfg.fitIterations,
-            logger());
-    if (fitFailureFraction >= m_cfg.warningThresholdFitFailureFraction) {
-      ACTS_WARNING("Fit failures for " << baseName << ": "
-                                       << fitFailureFraction * 100 << "%");
-    }
-
-    meanHist->Write();
-    widthHist->Write();
-  };
-
   // Write residual histograms
   for (const auto& [name, hist] : resPlotTool.res()) {
     toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.resVsEta()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.resVsPt()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.resVsEtaPhi()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.resVsEtaPt()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    toRoot(hist)->Write();
   }
 
   // Write pull histograms
@@ -126,16 +132,25 @@ ProcessCode RootTrackParameterPerformanceWriter::finalize() {
     toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.pullVsEta()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.pullVsPt()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.pullVsEtaPhi()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : resPlotTool.pullVsEtaPt()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    toRoot(hist)->Write();
+  }
+
+  // Write the fitted mean/width profiles
+  const auto profiles = m_collector.fitProfiles();
+  for (const auto& profile : profiles.profiles1) {
+    toRoot(profile)->Write();
+  }
+  for (const auto& profile : profiles.profiles2) {
+    toRoot(profile)->Write();
   }
 
   // Write efficiency histograms
@@ -172,10 +187,18 @@ ProcessCode RootTrackParameterPerformanceWriter::writeT(
   const auto& particles = m_inputParticles(ctx);
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
 
+  const SimHitContainer* simHits = nullptr;
+  const MeasurementSimHitsMap* measurementSimHitsMap = nullptr;
+  if (m_cfg.parameterSource == TrackParameterSource::TrackState) {
+    simHits = &m_inputSimHits(ctx);
+    measurementSimHitsMap = &m_inputMeasurementSimHitsMap(ctx);
+  }
+
   // Exclusive access to the histograms while filling
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
-  m_collector.fill(ctx.geoContext, tracks, particles, trackParticleMatching);
+  m_collector.fill(ctx.recoGeoContext, tracks, particles, trackParticleMatching,
+                   simHits, measurementSimHitsMap);
 
   return ProcessCode::SUCCESS;
 }

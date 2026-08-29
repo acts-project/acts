@@ -61,6 +61,22 @@ if(DETRAY_BUILD_TEST_UTILS OR DETRAY_BUILD_BENCHMARKS)
     )
 
     unset(_detray_test_common_headers)
+
+    if(DETRAY_BUILD_CUDA)
+        message(STATUS "Building 'detray::test_common_cuda' component")
+        file(
+            GLOB _detray_test_common_cuda_headers
+            RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+            "include/detray/test/common/device/cuda*.hpp"
+        )
+
+        detray_add_library(detray_test_common_cuda test_common_cuda "${_detray_test_common_cuda_headers}")
+
+        target_link_libraries(
+            detray_test_common_cuda
+            INTERFACE vecmem::cuda covfie::cuda detray::test_common
+        )
+    endif()
 endif()
 
 # Lightweight test utils library without external dependencies

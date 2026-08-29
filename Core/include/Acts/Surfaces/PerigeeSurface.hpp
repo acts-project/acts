@@ -55,6 +55,8 @@ class PerigeeSurface : public LineSurface {
                  const Transform3& shift);
 
  public:
+  ~PerigeeSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other is the source surface to be assigned

@@ -13,7 +13,7 @@
 #include "detray/detectors/toy_metadata.hpp"
 
 // Detray test include(s)
-#include "detray/test/device/cuda/bfield.hpp"
+#include "detray/test/common/device/cuda/bfield.hpp"
 #include "detray/test/device/propagator_test.hpp"
 
 // Vecmem include(s)
