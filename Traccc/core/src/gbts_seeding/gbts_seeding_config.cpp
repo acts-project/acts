@@ -14,7 +14,6 @@
 namespace traccc {
 
 // binTables contains pairs of linked layer-eta bins
-// the layerInfo should really be calculated from the geoIDBinning
 // GeoIDBinning pair is detray geo ID and bin index (corrisponding to the
 // layers in layerInfo) minPt in MeV
 bool gbts_seedfinder_config::setLinkingSchemeFromGbtsGeo(
