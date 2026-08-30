@@ -221,7 +221,9 @@ struct EigenStepperDefaultExtension {
 
     dGdL = h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
 
-    D(3, 7) = h * m * m * qop / dtds;
+    // d(t)/d(q/p) = h m^2 (q/p) / (q^2 dt/ds), with the q^2 folded into p via
+    // p = |q| / |q/p|.
+    D(3, 7) = h * m * m / (p * p * qop * dtds);
     return true;
   }
 };

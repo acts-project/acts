@@ -14,6 +14,8 @@
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <algorithm>
+#include <array>
+#include <optional>
 #include <tuple>
 
 using namespace Acts;
@@ -142,16 +144,18 @@ ProcessCode ProtoTracksToParameters::execute(
                     (sps.at(tmpSps.back()).z() - sps.at(tmpSps.front()).z());
     const float t = sps.at(tmpSps.front()).r() - m * sps.at(tmpSps.front()).z();
     const float vertexZ = -t / m;
-    const std::size_t s = tmpSps.size();
+
+    const std::optional<std::array<SpacePointIndex, 3>> selected =
+        selectSeedSpacePoints(sps, tmpSps, m_cfg.spacePointSelection,
+                              m_cfg.minTransverseDistance);
+    if (!selected.has_value()) {
+      ACTS_DEBUG("Cannot seed because no space point selection could be made");
+      skippedTracks++;
+      continue;
+    }
 
     auto seed = seeds.createSeed();
-    if (m_cfg.buildTightSeeds) {
-      seed.assignSpacePointIndices(
-          std::array{tmpSps.at(0), tmpSps.at(1), tmpSps.at(2)});
-    } else {
-      seed.assignSpacePointIndices(
-          std::array{tmpSps.at(0), tmpSps.at(s / 2), tmpSps.at(s - 1)});
-    }
+    seed.assignSpacePointIndices(*selected);
     seed.vertexZ() = vertexZ;
 
     // Compute parameters
@@ -189,12 +193,20 @@ ProcessCode ProtoTracksToParameters::execute(
     // Estimate the track parameters from seed
     Acts::Result<Acts::BoundVector> boundParams =
         Acts::estimateTrackParamsFromSeed(
-            ctx.geoContext, *bottomSurface, bottomSpVec,
+            ctx.recoGeoContext, *bottomSurface, bottomSpVec,
             std::isnan(bottomSp.time()) ? 0.0 : bottomSp.time(), middleSpVec,
             topSpVec, field);
     if (!boundParams.ok()) {
       ACTS_WARNING("Failed to estimate track parameters from seed: "
                    << boundParams.error().message());
+      continue;
+    }
+    // Degenerate space points, e.g. a bottom and a middle space point at the
+    // same transverse position, make the estimate not a number rather than
+    // merely wrong
+    if (!boundParams->allFinite()) {
+      ACTS_WARNING(
+          "Track parameter estimate is not a number, skip this proto track");
       continue;
     }
 

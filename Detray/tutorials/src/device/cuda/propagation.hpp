@@ -18,7 +18,7 @@
 #include "detray/tracks/tracks.hpp"
 
 // Detray test include(s)
-#include "detray/test/device/cuda/bfield.hpp"
+#include "detray/test/common/device/cuda/bfield.hpp"
 
 // Tutorial include(s)
 #include "detray/tutorial/types.hpp"

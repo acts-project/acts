@@ -91,7 +91,12 @@ option(
     "Build the traccc::cuda_utils library"
     ${TRACCC_BUILD_CUDA}
 )
-option(TRACCC_BUILD_HIP "Build the HIP sources included in traccc" FALSE)
+option(TRACCC_BUILD_HIP "Build the traccc::hip library" FALSE)
+option(
+    TRACCC_BUILD_HIP_UTILS
+    "Build the traccc::hip_utils library"
+    ${TRACCC_BUILD_HIP}
+)
 option(TRACCC_BUILD_SYCL "Build the traccc::sycl library" FALSE)
 option(
     TRACCC_BUILD_SYCL_UTILS
@@ -320,7 +325,9 @@ if(TRACCC_SETUP_DPL)
     # compile flags that OneDPL sets.
     set_target_properties(
         oneDPL
-        PROPERTIES INTERFACE_COMPILE_OPTIONS "" INTERFACE_LINK_LIBRARIES ""
+        PROPERTIES
+            INTERFACE_COMPILE_OPTIONS ""
+            INTERFACE_LINK_LIBRARIES TBB::tbb
     )
 endif()
 
@@ -417,6 +424,9 @@ if(TRACCC_BUILD_CUDA_UTILS)
 endif()
 if(TRACCC_BUILD_CUDA)
     add_subdirectory(device/cuda)
+endif()
+if(TRACCC_BUILD_HIP_UTILS)
+    add_subdirectory(device/hip_utils)
 endif()
 if(TRACCC_BUILD_HIP)
     add_subdirectory(device/hip)

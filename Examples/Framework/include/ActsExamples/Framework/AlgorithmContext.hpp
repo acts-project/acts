@@ -44,9 +44,15 @@ struct AlgorithmContext {
   std::size_t algorithmNumber;  ///< Unique algorithm identifier
   std::size_t eventNumber;      ///< Unique event identifier
   WhiteBoard& eventStore;       ///< Per-event data store
-  Acts::GeometryContext geoContext{
-      Acts::GeometryContext::
-          dangerouslyDefaultConstruct()};  ///< Per-event geometry context
+  /// Per-event geometry reconstruction assumes, i.e. the alignment hypothesis
+  Acts::GeometryContext recoGeoContext{
+      Acts::GeometryContext::dangerouslyDefaultConstruct()};
+  /// Per-event geometry the detector is built with, i.e. what simulation
+  /// transports through
+  ///
+  /// @note Geant4 is not context aware and cannot be misaligned this way
+  Acts::GeometryContext simGeoContext{
+      Acts::GeometryContext::dangerouslyDefaultConstruct()};
   Acts::MagneticFieldContext
       magFieldContext;                    ///< Per-event magnetic Field context
   Acts::CalibrationContext calibContext;  ///< Per-event calibration context

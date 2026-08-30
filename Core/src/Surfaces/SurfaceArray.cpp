@@ -159,7 +159,9 @@ struct SingleElementLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   const Surface* surfaceRepresentation() const override { return nullptr; }
 
   void fill(const GeometryContext& /*gctx*/,
-            std::span<const Surface* const> /*surfaces*/) override {}
+            std::span<const Surface* const> /*surfaces*/) override {
+    // no-op: the single element is already fixed at construction time
+  }
 
   bool isValidBin(std::size_t bin) const override { return bin == 0; }
 
