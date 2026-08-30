@@ -39,6 +39,8 @@
 #include <edm4hep/MutableTrack.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/Track.h>
+#include <edm4hep/Constants.h>
+#include <edm4hep/CovMatrix6f.h>
 #include <edm4hep/TrackState.h>
 #include <edm4hep/TrackerHit.h>
 #include <edm4hep/Vector4f.h>
@@ -85,8 +87,23 @@ Acts::SquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz);
 Acts::SquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
                                           double Bz);
 
-void unpackCovariance(const float* from, Acts::SquareMatrix<6>& to);
-void packCovariance(const Acts::SquareMatrix<6>& from, float* to);
+/// Unpack an EDM4hep track state covariance into the parameter order used by
+/// @c Parameters::values (d0, z0, phi, tanLambda, omega, time).
+void unpackCovariance(const edm4hep::CovMatrix6f& from,
+                      Acts::SquareMatrix<6>& to);
+/// Pack a covariance in @c Parameters::values order into an EDM4hep track
+/// state covariance. The element placement is delegated to
+/// @c edm4hep::CovMatrix6f::setValue, so the on-disk layout always follows the
+/// EDM4hep parameter order (@c edm4hep::TrackParams), which is a different
+/// permutation from the internal one.
+void packCovariance(const Acts::SquareMatrix<6>& from,
+                    edm4hep::CovMatrix6f& to);
+
+/// Look up the local magnetic field z-component at @p position.
+/// @throws std::runtime_error if the field lookup fails
+double localBz(const Acts::MagneticFieldProvider& magneticField,
+               Acts::MagneticFieldProvider::Cache& fieldCache,
+               const Acts::Vector3& position, const Acts::Logger& logger);
 
 Parameters convertTrackParametersToEdm4hep(
     const Acts::GeometryContext& gctx, double Bz,
@@ -112,6 +129,56 @@ edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit);
 /// @param particle The MCParticle to set
 void setParticle(edm4hep::MutableSimTrackerHit& hit,
                  const edm4hep::MCParticle& particle);
+
+/// Convert a single set of bound track parameters into an EDM4hep track state.
+///
+/// The EDM4hep track state uses a perigee parametrization
+/// (D0, Z0, phi, tanLambda, omega, time) defined relative to a reference point.
+/// If @p params are not already expressed on a perigee surface they are
+/// re-expressed at an ad-hoc perigee created at their global position,
+/// transporting both parameters and covariance, and the state's
+/// @c referencePoint is set to that perigee centre. The curvature @c omega
+/// depends on the local field, which is evaluated at the position of @p params.
+///
+/// This is the per-state building block used by @ref writeTrack. It is exposed
+/// so that track states which do not come from a fitted track - a seed, or an
+/// extrapolation to the calorimeter face - can be produced with exactly the
+/// same conversion instead of a private reimplementation.
+///
+/// @param gctx The geometry context
+/// @param location The EDM4hep track state location, e.g.
+///                 @c edm4hep::TrackState::AtIP
+/// @param params The bound track parameters to convert
+/// @param magneticField The magnetic field provider
+/// @param fieldCache Field lookup cache, reused across calls
+/// @param logger The logger instance
+/// @return The converted EDM4hep track state
+edm4hep::TrackState writeTrackState(
+    const Acts::GeometryContext& gctx, std::int32_t location,
+    const Acts::BoundTrackParameters& params,
+    const Acts::MagneticFieldProvider& magneticField,
+    Acts::MagneticFieldProvider::Cache& fieldCache,
+    const Acts::Logger& logger = Acts::getDummyLogger());
+
+/// Convert a single set of bound track parameters into an EDM4hep track state.
+///
+/// Convenience overload of @ref writeTrackState that creates its own field
+/// cache from @p mctx. Prefer the cache-taking overload when converting many
+/// states in a row.
+///
+/// @param gctx The geometry context
+/// @param mctx The magnetic field context
+/// @param location The EDM4hep track state location, e.g.
+///                 @c edm4hep::TrackState::AtIP
+/// @param params The bound track parameters to convert
+/// @param magneticField The magnetic field provider
+/// @param logger The logger instance
+/// @return The converted EDM4hep track state
+edm4hep::TrackState writeTrackState(
+    const Acts::GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+    std::int32_t location, const Acts::BoundTrackParameters& params,
+    const Acts::MagneticFieldProvider& magneticField,
+    const Acts::Logger& logger = Acts::getDummyLogger());
 
 /// Callback resolving the EDM4hep tracker hit associated with a measurement
 /// track state.
@@ -159,16 +226,6 @@ void writeTrack(const Acts::GeometryContext& gctx,
   to.setNholes(static_cast<std::int32_t>(track.nHoles()));
 
   auto fieldCache = magneticField.makeCache(mctx);
-  auto bzAtPosition = [&](const Acts::Vector3& position) {
-    auto field = magneticField.getField(position, fieldCache);
-    if (!field.ok()) {
-      ACTS_ERROR("Magnetic field lookup failed at "
-                 << position.transpose() << ": " << field.error().message());
-      throw std::runtime_error{"Magnetic field lookup failed: " +
-                               field.error().message()};
-    }
-    return (*field).z();
-  };
 
   std::vector<edm4hep::TrackState> outTrackStates;
   outTrackStates.reserve(track.nTrackStates());
@@ -176,21 +233,6 @@ void writeTrack(const Acts::GeometryContext& gctx,
   // outTrackStates so both can be emitted in the final order below.
   std::vector<std::optional<edm4hep::TrackerHit>> outHits;
   outHits.reserve(track.nTrackStates());
-
-  auto setParameters = [](edm4hep::TrackState& trackState,
-                          const detail::Parameters& params) {
-    trackState.D0 = static_cast<float>(params.values[0]);
-    trackState.Z0 = static_cast<float>(params.values[1]);
-    trackState.phi = static_cast<float>(params.values[2]);
-    trackState.tanLambda = static_cast<float>(params.values[3]);
-    trackState.omega = static_cast<float>(params.values[4]);
-    trackState.time = static_cast<float>(params.values[5]);
-
-    if (params.covariance) {
-      detail::packCovariance(params.covariance.value(),
-                             trackState.covMatrix.data());
-    }
-  };
 
   ACTS_VERBOSE("Converting " << track.nTrackStates() << " track states");
 
@@ -207,35 +249,14 @@ void writeTrack(const Acts::GeometryContext& gctx,
     }
     outHits.push_back(hit);
 
-    edm4hep::TrackState& trackState = outTrackStates.emplace_back();
-    trackState.location = edm4hep::TrackState::AtOther;
-
     Acts::BoundTrackParameters params{state.referenceSurface().getSharedPtr(),
                                       state.parameters(), state.covariance(),
                                       track.particleHypothesis()};
 
-    // Evaluate the local field at the global position of this state
-    double Bz = bzAtPosition(params.position(gctx));
-
-    // Convert to LCIO track parametrization expected by EDM4hep
-    detail::Parameters converted =
-        detail::convertTrackParametersToEdm4hep(gctx, Bz, params);
-
-    // Write the converted parameters to the EDM4hep track state
-    setParameters(trackState, converted);
-    ACTS_VERBOSE("- parameters: " << state.parameters().transpose() << " -> "
-                                  << converted.values.transpose());
-    ACTS_VERBOSE("- covariance: \n"
-                 << state.covariance() << "\n->\n"
-                 << converted.covariance.value());
-
-    // Converted parameters are relative to an ad-hoc perigee surface created at
-    // the hit location
-    auto center = converted.surface->center(gctx);
-    trackState.referencePoint.x = static_cast<float>(center.x());
-    trackState.referencePoint.y = static_cast<float>(center.y());
-    trackState.referencePoint.z = static_cast<float>(center.z());
-    ACTS_VERBOSE("- ref surface ctr: " << center.transpose());
+    outTrackStates.push_back(writeTrackState(gctx,
+                                             edm4hep::TrackState::AtOther,
+                                             params, magneticField, fieldCache,
+                                             logger));
   }
   // At this point the measurement states are ordered outside-in (last hit
   // first, first hit last), following Acts' reverse track state iteration.
@@ -244,39 +265,17 @@ void writeTrack(const Acts::GeometryContext& gctx,
     outTrackStates.back().location = edm4hep::TrackState::AtFirstHit;
   }
 
-  // Track state that represents the IP parameters
-  edm4hep::TrackState ipState;
-
-  // Convert the track parameters at the IP
+  // Track state that represents the IP parameters. The reference point ends up
+  // at the track's own reference surface, or at an ad-hoc perigee created at
+  // its position if that surface is not already a perigee.
   Acts::BoundTrackParameters trackParams{
       track.referenceSurface().getSharedPtr(), track.parameters(),
       track.covariance(), track.particleHypothesis()};
 
-  // Evaluate the local field at the track reference (perigee) position
-  double ipBz = bzAtPosition(trackParams.position(gctx));
-
-  // Convert to LCIO track parametrization expected by EDM4hep
-  auto converted =
-      detail::convertTrackParametersToEdm4hep(gctx, ipBz, trackParams);
-  setParameters(ipState, converted);
-  ipState.location = edm4hep::TrackState::AtIP;
   ACTS_VERBOSE("Writing track level quantities as IP track state");
-  ACTS_VERBOSE("- parameters: " << track.parameters().transpose());
-  ACTS_VERBOSE("           -> " << converted.values.transpose());
-  ACTS_VERBOSE("- covariance: \n"
-               << track.covariance() << "\n->\n"
-               << converted.covariance.value());
-
-  // Write the converted parameters to the EDM4hep track state
-  // The reference point is at the location of the reference surface of the
-  // track itself, but if that's not a perigee surface, another ad-hoc perigee
-  // at the position will be created.
-  auto center = converted.surface->center(gctx);
-  ipState.referencePoint.x = static_cast<float>(center.x());
-  ipState.referencePoint.y = static_cast<float>(center.y());
-  ipState.referencePoint.z = static_cast<float>(center.z());
-
-  ACTS_VERBOSE("- ref surface ctr: " << center.transpose());
+  edm4hep::TrackState ipState =
+      writeTrackState(gctx, edm4hep::TrackState::AtIP, trackParams,
+                      magneticField, fieldCache, logger);
 
   // Emit track states following the EDM4hep/LCIO convention used by
   // k4ActsTracking: the IP state first, then the measurement states ordered
@@ -343,14 +342,7 @@ void readTrack(const Acts::MagneticFieldContext& mctx,
 
   auto fieldCache = magneticField.makeCache(mctx);
   auto bzAtPosition = [&](const Acts::Vector3& position) {
-    auto field = magneticField.getField(position, fieldCache);
-    if (!field.ok()) {
-      ACTS_ERROR("Magnetic field lookup failed at "
-                 << position.transpose() << ": " << field.error().message());
-      throw std::runtime_error{"Magnetic field lookup failed: " +
-                               field.error().message()};
-    }
-    return (*field).z();
+    return detail::localBz(magneticField, fieldCache, position, logger);
   };
 
   std::optional<edm4hep::TrackState> ipState;
@@ -369,8 +361,7 @@ void readTrack(const Acts::MagneticFieldContext& mctx,
     detail::Parameters params;
     params.covariance = BoundMatrix::Zero();
     params.values = BoundVector::Zero();
-    detail::unpackCovariance(trackState.covMatrix.data(),
-                             params.covariance.value());
+    detail::unpackCovariance(trackState.covMatrix, params.covariance.value());
     params.values[0] = trackState.D0;
     params.values[1] = trackState.Z0;
     params.values[2] = trackState.phi;

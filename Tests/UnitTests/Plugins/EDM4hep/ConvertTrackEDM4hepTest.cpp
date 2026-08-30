@@ -26,10 +26,13 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
+#include <array>
 #include <numbers>
 #include <random>
 
+#include <edm4hep/Constants.h>
 #include <edm4hep/TrackCollection.h>
+#include <edm4hep/TrackState.h>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -252,14 +255,51 @@ BOOST_AUTO_TEST_CASE(CovariancePacking) {
        6, 6, 6, 6, 6, 6;
   // clang-format on
 
-  std::array<float, 21> values{};
-  EDM4hepUtil::detail::packCovariance(m, values.data());
+  edm4hep::CovMatrix6f values{};
+  EDM4hepUtil::detail::packCovariance(m, values);
 
   BoundMatrix m2;
   m2.setZero();
-  EDM4hepUtil::detail::unpackCovariance(values.data(), m2);
+  EDM4hepUtil::detail::unpackCovariance(values, m2);
 
   CHECK_CLOSE_ABS(m, m2, 1e-9);
+}
+
+// The packed covariance has to follow the EDM4hep parameter order
+// (edm4hep::TrackParams: d0, phi, omega, z0, tanLambda, time), which is a
+// different permutation from the order used internally by
+// detail::Parameters::values (d0, z0, phi, tanLambda, omega, time). A
+// pack/unpack round trip cannot catch a mismatch here, since it would be
+// symmetric, so check the absolute slots against EDM4hep's own accessor.
+BOOST_AUTO_TEST_CASE(CovariancePackingConvention) {
+  // values index -> edm4hep parameter it represents
+  constexpr std::array<edm4hep::TrackParams, 6> params{
+      edm4hep::TrackParams::d0,         // values[0]
+      edm4hep::TrackParams::z0,         // values[1]
+      edm4hep::TrackParams::phi,        // values[2]
+      edm4hep::TrackParams::tanLambda,  // values[3]
+      edm4hep::TrackParams::omega,      // values[4]
+      edm4hep::TrackParams::time,       // values[5]
+  };
+
+  // Distinct, symmetric entries so every slot is identifiable
+  SquareMatrix<6> m;
+  for (std::size_t i = 0; i < 6; ++i) {
+    for (std::size_t j = 0; j < 6; ++j) {
+      m(i, j) = 10. * std::min(i, j) + std::max(i, j);
+    }
+  }
+
+  edm4hep::TrackState trackState{};
+  EDM4hepUtil::detail::packCovariance(m, trackState.covMatrix);
+
+  for (std::size_t i = 0; i < 6; ++i) {
+    for (std::size_t j = 0; j < 6; ++j) {
+      BOOST_TEST_INFO_SCOPE("values index (" << i << ", " << j << ")");
+      BOOST_CHECK_EQUAL(trackState.getCovMatrix(params.at(i), params.at(j)),
+                        static_cast<float>(m(i, j)));
+    }
+  }
 }
 
 BOOST_AUTO_TEST_CASE(RoundTripTests) {
