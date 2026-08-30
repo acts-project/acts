@@ -131,8 +131,6 @@ using TrackerHitLookup = std::function<std::optional<edm4hep::TrackerHit>(
 /// state per measurement plus a dedicated @c AtIP state. The perigee
 /// conversion of each state evaluates the local field via @p magneticField at
 /// the global position of that state, which supports spatially varying fields
-/// and makes this a drop-in replacement for bespoke ACTS->EDM4hep converters
-/// (e.g. k4ActsTracking's @c ACTS2edm4hep_track).
 ///
 /// @note Resolving tracker hits requires application-specific
 ///       source-link/hit-container knowledge, so it is delegated to the
