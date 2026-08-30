@@ -320,21 +320,54 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
              logger);
 }
 
-/// Read an EDM4hep track into Acts format
+/// Read an EDM4hep track into Acts format, using a magnetic field provider.
+///
+/// This is the general form of @ref readTrack, and the inverse of the
+/// corresponding @ref writeTrack overload. The perigee conversion of each track
+/// state evaluates the local field via @p magneticField at that state's
+/// reference point, which supports spatially varying fields. The reference
+/// point is where @ref writeTrack placed the state's perigee surface, so the
+/// two evaluate the field at the same position and round-trip consistently.
+///
+/// @param mctx The magnetic field context
 /// @param from The EDM4hep track to read
 /// @param track The Acts track proxy to fill
-/// @param Bz The magnetic field z-component
+/// @param magneticField The magnetic field provider, evaluated at each state
 /// @param logger The logger instance
 template <Acts::TrackProxyConcept track_proxy_t>
-void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
+void readTrack(const Acts::MagneticFieldContext& mctx,
+               const edm4hep::Track& from, track_proxy_t& track,
+               const Acts::MagneticFieldProvider& magneticField,
                const Acts::Logger& logger = Acts::getDummyLogger()) {
   using namespace Acts;
   ACTS_VERBOSE("Reading track from EDM4hep");
   TrackStatePropMask mask = TrackStatePropMask::Smoothed;
 
+  auto fieldCache = magneticField.makeCache(mctx);
+  auto bzAtPosition = [&](const Acts::Vector3& position) {
+    auto field = magneticField.getField(position, fieldCache);
+    if (!field.ok()) {
+      ACTS_ERROR("Magnetic field lookup failed at "
+                 << position.transpose() << ": " << field.error().message());
+      throw std::runtime_error{"Magnetic field lookup failed: " +
+                               field.error().message()};
+    }
+    return (*field).z();
+  };
+
   std::optional<edm4hep::TrackState> ipState;
 
-  auto unpack = [](const edm4hep::TrackState& trackState) {
+  // Global position the track state is expressed relative to. This is also
+  // where the local field is evaluated.
+  auto referencePoint = [](const edm4hep::TrackState& trackState) {
+    return Vector3{
+        trackState.referencePoint.x,
+        trackState.referencePoint.y,
+        trackState.referencePoint.z,
+    };
+  };
+
+  auto unpack = [&referencePoint](const edm4hep::TrackState& trackState) {
     detail::Parameters params;
     params.covariance = BoundMatrix::Zero();
     params.values = BoundVector::Zero();
@@ -347,12 +380,8 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
     params.values[4] = trackState.omega;
     params.values[5] = trackState.time;
 
-    Vector3 center = {
-        trackState.referencePoint.x,
-        trackState.referencePoint.y,
-        trackState.referencePoint.z,
-    };
-    params.surface = Acts::Surface::makeShared<PerigeeSurface>(center);
+    params.surface =
+        Acts::Surface::makeShared<PerigeeSurface>(referencePoint(trackState));
 
     return params;
   };
@@ -375,7 +404,9 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
     auto ts = track.appendTrackState(mask);
     ts.typeFlags().setIsMeasurement();
 
-    auto converted = detail::convertTrackParametersFromEdm4hep(Bz, params);
+    // Evaluate the local field at the reference point of this state
+    auto converted = detail::convertTrackParametersFromEdm4hep(
+        bzAtPosition(referencePoint(trackState)), params);
 
     ts.smoothed() = converted.parameters();
     ts.smoothedCovariance() =
@@ -390,7 +421,9 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
 
   detail::Parameters params = unpack(ipState.value());
 
-  auto converted = detail::convertTrackParametersFromEdm4hep(Bz, params);
+  // Evaluate the local field at the reference point of the IP state
+  auto converted = detail::convertTrackParametersFromEdm4hep(
+      bzAtPosition(referencePoint(ipState.value())), params);
 
   ACTS_VERBOSE("IP state parameters: " << converted.parameters().transpose());
   ACTS_VERBOSE("-> covariance:\n"
@@ -403,6 +436,24 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
   track.chi2() = from.getChi2();
   track.nDoF() = from.getNdf();
   track.nMeasurements() = track.nTrackStates();
+}
+
+/// Read an EDM4hep track into Acts format, using a uniform magnetic field.
+///
+/// Convenience overload of @ref readTrack for the common case of a constant
+/// solenoidal field. Delegates to the @c Acts::MagneticFieldProvider form with
+/// an @c Acts::ConstantBField.
+///
+/// @param from The EDM4hep track to read
+/// @param track The Acts track proxy to fill
+/// @param Bz The (uniform) magnetic field z-component in Acts native units
+/// @param logger The logger instance
+template <Acts::TrackProxyConcept track_proxy_t>
+void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
+               const Acts::Logger& logger = Acts::getDummyLogger()) {
+  Acts::ConstantBField magneticField{Acts::Vector3{0, 0, Bz}};
+  Acts::MagneticFieldContext mctx{};
+  readTrack(mctx, from, track, magneticField, logger);
 }
 
 /// @brief Helper class for associating simulation hits between EDM4hep and internal indices
