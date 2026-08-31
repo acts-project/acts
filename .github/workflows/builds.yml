@@ -1152,7 +1152,8 @@ jobs:
               -GNinja \
               -DACTS_BUILD_EXAMPLES=ON \
               -DACTS_BUILD_FATRAS=ON \
-              -DACTS_BUILD_PLUGIN_DD4HEP=ON
+              -DACTS_BUILD_PLUGIN_DD4HEP=ON \
+              -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON
             echo "::endgroup::"
             echo "::group::Acts build phase"
             cmake --build build
