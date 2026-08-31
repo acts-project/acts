@@ -22,7 +22,6 @@
 #include <numbers>
 
 #include <edm4hep/Constants.h>
-#include <edm4hep/EDM4hepVersion.h>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
 #include <edm4hep/MutableVertex.h>
@@ -334,8 +333,6 @@ edm4hep::TrackState writeTrackState(const GeometryContext& gctx,
                          logger);
 }
 
-#if EDM4HEP_VERSION_MAJOR >= 1 || \
-    (EDM4HEP_VERSION_MAJOR == 0 && EDM4HEP_VERSION_MINOR == 99)
 edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit) {
   return hit.getParticle();
 }
@@ -344,16 +341,6 @@ void setParticle(edm4hep::MutableSimTrackerHit& hit,
                  const edm4hep::MCParticle& particle) {
   hit.setParticle(particle);
 }
-#else
-edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit) {
-  return hit.getMCParticle();
-}
-
-void setParticle(edm4hep::MutableSimTrackerHit& hit,
-                 const edm4hep::MCParticle& particle) {
-  hit.setMCParticle(particle);
-}
-#endif
 
 std::size_t SimHitAssociation::size() const {
   return m_internalToEdm4hep.size();

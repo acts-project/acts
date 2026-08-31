@@ -133,14 +133,12 @@ Acts::BoundTrackParameters convertTrackParametersFromEdm4hep(
 /// @addtogroup edm4hep_plugin
 /// @{
 
-/// Get the particle from a SimTrackerHit (compatibility with EDM4hep < 0.99 and
-/// >= 0.99)
+/// Get the particle from a SimTrackerHit
 /// @param hit The SimTrackerHit
 /// @return The associated MCParticle
 edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit);
 
-/// Set the particle for a MutableSimTrackerHit (compatibility with EDM4hep <
-/// 0.99 and >= 0.99)
+/// Set the particle for a MutableSimTrackerHit
 /// @param hit The MutableSimTrackerHit
 /// @param particle The MCParticle to set
 void setParticle(edm4hep::MutableSimTrackerHit& hit,
