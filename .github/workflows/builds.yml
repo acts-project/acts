@@ -870,7 +870,6 @@ jobs:
     # v88 is where expat-devel arrives, which the dev4 leg needs: that view's
     # Geant4 wants EXPAT >= 2.5.0 and the view neither ships nor exposes it.
     container: registry.cern.ch/ghcr.io/acts-project/alma9-base:88
-    continue-on-error: ${{ matrix.allow_failure }}
 
     strategy:
       # A view that breaks must not cancel the others: knowing *which*
@@ -909,6 +908,10 @@ jobs:
             view: dev4/latest
             tests: false
             # Nightly views break frequently and are not release-blocking.
+            # Applied per-step below rather than as a job-level
+            # continue-on-error: that only masks the *workflow run*
+            # conclusion, while the job's own check run still reports
+            # "failure", which is what merge-sentinel's gate keys off.
             allow_failure: true
 
     env:
@@ -954,6 +957,7 @@ jobs:
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.tag }}-
 
       - name: Configure
+        continue-on-error: ${{ matrix.allow_failure }}
         run: >
           source "${LCG_VIEW}/setup.sh" &&
           ccache -z &&
@@ -962,6 +966,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
       - name: Build
+        continue-on-error: ${{ matrix.allow_failure }}
         run: >
           source "${LCG_VIEW}/setup.sh" &&
           cmake --build build
@@ -980,12 +985,14 @@ jobs:
 
       - name: Unit tests
         if: matrix.tests
+        continue-on-error: ${{ matrix.allow_failure }}
         run: >
           source "${LCG_VIEW}/setup.sh" &&
           ctest --test-dir build -j$(nproc)
 
       - name: Install
         if: matrix.tests
+        continue-on-error: ${{ matrix.allow_failure }}
         # Redirected: the install file list is long and drowns the log.
         run: >
           source "${LCG_VIEW}/setup.sh" &&
@@ -993,6 +1000,7 @@ jobs:
 
       - name: Python level tests
         if: matrix.tests
+        continue-on-error: ${{ matrix.allow_failure }}
         shell: bash
         run: |
           source "${LCG_VIEW}/setup.sh"
