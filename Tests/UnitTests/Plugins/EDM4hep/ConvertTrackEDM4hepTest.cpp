@@ -375,6 +375,67 @@ BOOST_AUTO_TEST_CASE(HitLookupInvocationOrder) {
   }
 }
 
+namespace {
+/// Bz grows with |z|, so the field at a track's point of closest approach
+/// differs from the field at its perigee reference point.
+class ZGradientField : public MagneticFieldProvider {
+ public:
+  explicit ZGradientField(double b0) : m_b0(b0) {}
+
+  Cache makeCache(const MagneticFieldContext& /*mctx*/) const override {
+    return Cache(std::in_place_type<int>, 0);
+  }
+
+  Result<Vector3> getField(const Vector3& position,
+                           Cache& /*cache*/) const override {
+    return Result<Vector3>::success(
+        Vector3{0, 0, m_b0 * (1 + 0.001 * std::abs(position.z()))});
+  }
+
+ private:
+  double m_b0;
+};
+}  // namespace
+
+// The field is sampled at the point of closest approach, which for parameters
+// already on a perigee is d0/z0 away from the reference point. Both sides have
+// to sample at the same place, or q/p comes back biased in a non-uniform field.
+BOOST_AUTO_TEST_CASE(NonUniformFieldRoundTrip) {
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext mctx{};
+  ZGradientField field{2_T};
+
+  BoundVector par;
+  par << 50_mm, 300_mm, 0.7, 1.1, 1. / 2_GeV, 0;
+  BoundMatrix cov = BoundMatrix::Identity() * 1e-6;
+
+  TrackContainer tracks(std::make_shared<VectorTrackContainer>(),
+                        std::make_shared<VectorMultiTrajectory>());
+  auto track = tracks.makeTrack();
+  track.parameters() = par;
+  track.covariance() = cov;
+  track.setReferenceSurface(
+      Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 0}));
+
+  auto ts = track.appendTrackState(TrackStatePropMask::Smoothed);
+  ts.typeFlags().setIsMeasurement();
+  ts.smoothed() = par;
+  ts.smoothedCovariance() = cov;
+  ts.setReferenceSurface(
+      Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 300_mm}));
+
+  edm4hep::TrackCollection edm4hepTracks;
+  auto to = edm4hepTracks.create();
+  EDM4hepUtil::writeTrack(gctx, mctx, track, to, field);
+
+  TrackContainer readTracks(std::make_shared<VectorTrackContainer>(),
+                            std::make_shared<VectorMultiTrajectory>());
+  auto read = readTracks.makeTrack();
+  EDM4hepUtil::readTrack(gctx, mctx, to, read, field);
+
+  CHECK_CLOSE_OR_SMALL(track.parameters(), read.parameters(), 1e-5, 1e-8);
+}
+
 BOOST_AUTO_TEST_CASE(RoundTripTests) {
   auto trackContainer = std::make_shared<VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<VectorMultiTrajectory>();
@@ -481,7 +542,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
 
   for (const auto edm4hepTrack : edm4hepTracksConst) {
     auto track = readTracks.makeTrack();
-    EDM4hepUtil::readTrack(edm4hepTrack, track, Bz, *logger);
+    EDM4hepUtil::readTrack(gctx, edm4hepTrack, track, Bz, *logger);
   }
 
   BOOST_CHECK_EQUAL(tracks.size(), readTracks.size());

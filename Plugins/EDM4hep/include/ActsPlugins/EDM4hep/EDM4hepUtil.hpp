@@ -113,6 +113,14 @@ Acts::Vector3 referencePoint(const edm4hep::TrackState& trackState);
 /// including an ad-hoc perigee surface placed at its reference point.
 Parameters unpackTrackState(const edm4hep::TrackState& trackState);
 
+/// Global position of the point of closest approach described by an unpacked
+/// EDM4hep track state, i.e. where the particle actually is, as opposed to the
+/// reference point the parameters are expressed relative to. The two differ by
+/// d0/z0. This is the position @ref writeTrackState evaluates the local
+/// magnetic field at, so the read side has to use it as well.
+Acts::Vector3 pointOfClosestApproach(const Acts::GeometryContext& gctx,
+                                     const Parameters& params);
+
 Parameters convertTrackParametersToEdm4hep(
     const Acts::GeometryContext& gctx, double Bz,
     const Acts::BoundTrackParameters& params);
@@ -334,18 +342,22 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
 ///
 /// This is the general form of @ref readTrack, and the inverse of the
 /// corresponding @ref writeTrack overload. The perigee conversion of each track
-/// state evaluates the local field via @p magneticField at that state's
-/// reference point, which supports spatially varying fields. The reference
-/// point is where @ref writeTrack placed the state's perigee surface, so the
-/// two evaluate the field at the same position and round-trip consistently.
+/// state evaluates the local field via @p magneticField at that state's point
+/// of closest approach, which supports spatially varying fields. That is the
+/// same position @ref writeTrackState samples the field at, so the two
+/// round-trip consistently. Note this is not in general the state's
+/// @c referencePoint: for parameters expressed on a perigee the two differ by
+/// d0/z0.
 ///
+/// @param gctx The geometry context
 /// @param mctx The magnetic field context
 /// @param from The EDM4hep track to read
 /// @param track The Acts track proxy to fill
 /// @param magneticField The magnetic field provider, evaluated at each state
 /// @param logger The logger instance
 template <Acts::TrackProxyConcept track_proxy_t>
-void readTrack(const Acts::MagneticFieldContext& mctx,
+void readTrack(const Acts::GeometryContext& gctx,
+               const Acts::MagneticFieldContext& mctx,
                const edm4hep::Track& from, track_proxy_t& track,
                const Acts::MagneticFieldProvider& magneticField,
                const Acts::Logger& logger = Acts::getDummyLogger()) {
@@ -378,9 +390,10 @@ void readTrack(const Acts::MagneticFieldContext& mctx,
     auto ts = track.appendTrackState(mask);
     ts.typeFlags().setIsMeasurement();
 
-    // Evaluate the local field at the reference point of this state
+    // Evaluate the local field where the particle actually is, matching what
+    // writeTrackState does
     auto converted = detail::convertTrackParametersFromEdm4hep(
-        bzAtPosition(detail::referencePoint(trackState)), params);
+        bzAtPosition(detail::pointOfClosestApproach(gctx, params)), params);
 
     ts.smoothed() = converted.parameters();
     ts.smoothedCovariance() =
@@ -395,9 +408,10 @@ void readTrack(const Acts::MagneticFieldContext& mctx,
 
   detail::Parameters params = detail::unpackTrackState(ipState.value());
 
-  // Evaluate the local field at the reference point of the IP state
+  // Evaluate the local field where the particle actually is, matching what
+  // writeTrackState does
   auto converted = detail::convertTrackParametersFromEdm4hep(
-      bzAtPosition(detail::referencePoint(ipState.value())), params);
+      bzAtPosition(detail::pointOfClosestApproach(gctx, params)), params);
 
   ACTS_VERBOSE("IP state parameters: " << converted.parameters().transpose());
   ACTS_VERBOSE("-> covariance:\n"
@@ -419,16 +433,18 @@ void readTrack(const Acts::MagneticFieldContext& mctx,
 /// solenoidal field. Delegates to the @c Acts::MagneticFieldProvider form with
 /// an @c Acts::ConstantBField.
 ///
+/// @param gctx The geometry context
 /// @param from The EDM4hep track to read
 /// @param track The Acts track proxy to fill
 /// @param Bz The (uniform) magnetic field z-component in Acts native units
 /// @param logger The logger instance
 template <Acts::TrackProxyConcept track_proxy_t>
-void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
+void readTrack(const Acts::GeometryContext& gctx, const edm4hep::Track& from,
+               track_proxy_t& track, double Bz,
                const Acts::Logger& logger = Acts::getDummyLogger()) {
   Acts::ConstantBField magneticField{Acts::Vector3{0, 0, Bz}};
   Acts::MagneticFieldContext mctx{};
-  readTrack(mctx, from, track, magneticField, logger);
+  readTrack(gctx, mctx, from, track, magneticField, logger);
 }
 
 /// @brief Helper class for associating simulation hits between EDM4hep and internal indices

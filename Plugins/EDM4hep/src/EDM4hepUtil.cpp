@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsPodioEdm/TrackerHitLocalCollection.h"
 #include "ActsPodioEdm/TrackerHitLocalSimTrackerHitLinkCollection.h"
@@ -184,6 +185,16 @@ Parameters unpackTrackState(const edm4hep::TrackState& trackState) {
       Surface::makeShared<PerigeeSurface>(referencePoint(trackState));
 
   return params;
+}
+
+Vector3 pointOfClosestApproach(const GeometryContext& gctx,
+                               const Parameters& params) {
+  // theta and phi are available without knowing the field, so this does not
+  // depend on the q/p conversion that needs Bz.
+  const double theta = std::numbers::pi / 2. - std::atan(params.values[3]);
+  const Vector3 direction = makeDirectionFromPhiTheta(params.values[2], theta);
+  return params.surface->localToGlobal(
+      gctx, Vector2{params.values[0], params.values[1]}, direction);
 }
 
 Parameters convertTrackParametersToEdm4hep(const GeometryContext& gctx,
