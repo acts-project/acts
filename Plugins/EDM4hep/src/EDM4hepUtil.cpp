@@ -21,7 +21,6 @@
 #include <numbers>
 
 #include <edm4hep/Constants.h>
-
 #include <edm4hep/EDM4hepVersion.h>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
@@ -161,6 +160,32 @@ double localBz(const MagneticFieldProvider& magneticField,
   return (*field).z();
 }
 
+Vector3 referencePoint(const edm4hep::TrackState& trackState) {
+  return Vector3{
+      trackState.referencePoint.x,
+      trackState.referencePoint.y,
+      trackState.referencePoint.z,
+  };
+}
+
+Parameters unpackTrackState(const edm4hep::TrackState& trackState) {
+  Parameters params;
+  params.covariance = BoundMatrix::Zero();
+  params.values = BoundVector::Zero();
+  unpackCovariance(trackState.covMatrix, params.covariance.value());
+  params.values[0] = trackState.D0;
+  params.values[1] = trackState.Z0;
+  params.values[2] = trackState.phi;
+  params.values[3] = trackState.tanLambda;
+  params.values[4] = trackState.omega;
+  params.values[5] = trackState.time;
+
+  params.surface =
+      Surface::makeShared<PerigeeSurface>(referencePoint(trackState));
+
+  return params;
+}
+
 Parameters convertTrackParametersToEdm4hep(const GeometryContext& gctx,
                                            double Bz,
                                            const BoundTrackParameters& params) {
@@ -237,11 +262,12 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
 
 }  // namespace detail
 
-edm4hep::TrackState writeTrackState(
-    const GeometryContext& gctx, std::int32_t location,
-    const BoundTrackParameters& params,
-    const MagneticFieldProvider& magneticField,
-    MagneticFieldProvider::Cache& fieldCache, const Logger& logger) {
+edm4hep::TrackState writeTrackState(const GeometryContext& gctx,
+                                    std::int32_t location,
+                                    const BoundTrackParameters& params,
+                                    const MagneticFieldProvider& magneticField,
+                                    MagneticFieldProvider::Cache& fieldCache,
+                                    const Logger& logger) {
   // The curvature depends on the local field, so evaluate it where the
   // parameters actually are.
   const double Bz =
@@ -277,7 +303,8 @@ edm4hep::TrackState writeTrackState(
                                 << converted.values.transpose());
   if (converted.covariance) {
     ACTS_VERBOSE("- covariance: \n"
-                 << params.covariance().value_or(BoundMatrix::Zero()) << "\n->\n"
+                 << params.covariance().value_or(BoundMatrix::Zero())
+                 << "\n->\n"
                  << converted.covariance.value());
   }
   ACTS_VERBOSE("- ref surface ctr: " << center.transpose());

@@ -34,13 +34,13 @@
 #include <stdexcept>
 #include <vector>
 
+#include <edm4hep/Constants.h>
+#include <edm4hep/CovMatrix6f.h>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
 #include <edm4hep/MutableTrack.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/Track.h>
-#include <edm4hep/Constants.h>
-#include <edm4hep/CovMatrix6f.h>
 #include <edm4hep/TrackState.h>
 #include <edm4hep/TrackerHit.h>
 #include <edm4hep/Vector4f.h>
@@ -104,6 +104,14 @@ void packCovariance(const Acts::SquareMatrix<6>& from,
 double localBz(const Acts::MagneticFieldProvider& magneticField,
                Acts::MagneticFieldProvider::Cache& fieldCache,
                const Acts::Vector3& position, const Acts::Logger& logger);
+
+/// Global position an EDM4hep track state is expressed relative to. This is
+/// also the position at which the local magnetic field is evaluated.
+Acts::Vector3 referencePoint(const edm4hep::TrackState& trackState);
+
+/// Unpack an EDM4hep track state into the internal parameter representation,
+/// including an ad-hoc perigee surface placed at its reference point.
+Parameters unpackTrackState(const edm4hep::TrackState& trackState);
 
 Parameters convertTrackParametersToEdm4hep(
     const Acts::GeometryContext& gctx, double Bz,
@@ -253,8 +261,7 @@ void writeTrack(const Acts::GeometryContext& gctx,
                                       state.parameters(), state.covariance(),
                                       track.particleHypothesis()};
 
-    outTrackStates.push_back(writeTrackState(gctx,
-                                             edm4hep::TrackState::AtOther,
+    outTrackStates.push_back(writeTrackState(gctx, edm4hep::TrackState::AtOther,
                                              params, magneticField, fieldCache,
                                              logger));
   }
@@ -347,34 +354,6 @@ void readTrack(const Acts::MagneticFieldContext& mctx,
 
   std::optional<edm4hep::TrackState> ipState;
 
-  // Global position the track state is expressed relative to. This is also
-  // where the local field is evaluated.
-  auto referencePoint = [](const edm4hep::TrackState& trackState) {
-    return Vector3{
-        trackState.referencePoint.x,
-        trackState.referencePoint.y,
-        trackState.referencePoint.z,
-    };
-  };
-
-  auto unpack = [&referencePoint](const edm4hep::TrackState& trackState) {
-    detail::Parameters params;
-    params.covariance = BoundMatrix::Zero();
-    params.values = BoundVector::Zero();
-    detail::unpackCovariance(trackState.covMatrix, params.covariance.value());
-    params.values[0] = trackState.D0;
-    params.values[1] = trackState.Z0;
-    params.values[2] = trackState.phi;
-    params.values[3] = trackState.tanLambda;
-    params.values[4] = trackState.omega;
-    params.values[5] = trackState.time;
-
-    params.surface =
-        Acts::Surface::makeShared<PerigeeSurface>(referencePoint(trackState));
-
-    return params;
-  };
-
   ACTS_VERBOSE("Reading " << from.trackStates_size()
                           << " track states (including IP state)");
   // Track states are written IP-first, followed by the measurement states
@@ -388,14 +367,14 @@ void readTrack(const Acts::MagneticFieldContext& mctx,
       continue;
     }
 
-    auto params = unpack(trackState);
+    auto params = detail::unpackTrackState(trackState);
 
     auto ts = track.appendTrackState(mask);
     ts.typeFlags().setIsMeasurement();
 
     // Evaluate the local field at the reference point of this state
     auto converted = detail::convertTrackParametersFromEdm4hep(
-        bzAtPosition(referencePoint(trackState)), params);
+        bzAtPosition(detail::referencePoint(trackState)), params);
 
     ts.smoothed() = converted.parameters();
     ts.smoothedCovariance() =
@@ -408,11 +387,11 @@ void readTrack(const Acts::MagneticFieldContext& mctx,
     throw std::runtime_error{"Did not find IP state in edm4hep input"};
   }
 
-  detail::Parameters params = unpack(ipState.value());
+  detail::Parameters params = detail::unpackTrackState(ipState.value());
 
   // Evaluate the local field at the reference point of the IP state
   auto converted = detail::convertTrackParametersFromEdm4hep(
-      bzAtPosition(referencePoint(ipState.value())), params);
+      bzAtPosition(detail::referencePoint(ipState.value())), params);
 
   ACTS_VERBOSE("IP state parameters: " << converted.parameters().transpose());
   ACTS_VERBOSE("-> covariance:\n"
@@ -424,6 +403,7 @@ void readTrack(const Acts::MagneticFieldContext& mctx,
 
   track.chi2() = from.getChi2();
   track.nDoF() = from.getNdf();
+  track.nHoles() = static_cast<unsigned int>(from.getNholes());
   track.nMeasurements() = track.nTrackStates();
 }
 

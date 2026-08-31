@@ -426,6 +426,11 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     BOOST_CHECK_EQUAL(orig.referenceSurface().center(gctx),
                       read.referenceSurface().center(gctx));
 
+    // Track summary quantities have to survive the round trip as well
+    CHECK_CLOSE_OR_SMALL(orig.chi2(), read.chi2(), 1e-5, 1e-8);
+    BOOST_CHECK_EQUAL(orig.nDoF(), read.nDoF());
+    BOOST_CHECK_EQUAL(orig.nHoles(), read.nHoles());
+
     auto origTsIt = orig.trackStatesReversed().begin();
     auto readTsIt = read.trackStatesReversed().begin();
 
