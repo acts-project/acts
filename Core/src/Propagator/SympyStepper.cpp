@@ -14,6 +14,7 @@
 #include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 #include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
 #include "Acts/Propagator/detail/SympyStepperDenseStep.hpp"
+#include "Acts/Propagator/detail/SympyStepperStatus.hpp"
 
 #include <cmath>
 #include <span>
@@ -248,7 +249,7 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
     ++state.statistics.nAttemptedSteps;
 
     // For details about the factor 4 see ATL-SOFT-PUB-2009-001
-    bool accepted = false;
+    detail::Rk4Status status{};
     std::error_code fieldError;
     const std::span<const double, 3> startPos(pos.data(), 3);
     const std::span<const double, 3> startDir(dir.data(), 3);
@@ -262,31 +263,24 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
                                                state.jacToGlobal.size())
                            : std::span<double>();
     if (!state.options.doDense || material == nullptr) {
-      // A status code rather than a `Result<bool>`: a variant returned across
-      // the kernel boundary goes through the stack on the accepted path.
-      const Rk4Status status = rk4_vacuum(
-          startPos, startDir, t, h, qop, m, pabs,
-          std::span<const double, 3>(state.field->data(), 3), getB,
-          errorEstimate, 4 * stepTolerance, fieldError, endPos,
-          state.pars[eFreeTime], endDir,
-          std::span<double, 3>(lastField.data(), 3), derivative, jac);
-      if (status == Rk4Status::FieldError) {
-        return fieldError;
-      }
-      accepted = status == Rk4Status::Accepted;
+      status = rk4_vacuum(startPos, startDir, t, h, qop, m, pabs,
+                          std::span<const double, 3>(state.field->data(), 3),
+                          getB, errorEstimate, 4 * stepTolerance, fieldError,
+                          endPos, state.pars[eFreeTime], endDir,
+                          std::span<double, 3>(lastField.data(), 3), derivative,
+                          jac);
     } else {
-      Result<bool> res =
+      status =
           detail::sympyDenseStep(*this, state, *material, h, 4 * stepTolerance,
-                                 errorEstimate, lastField, jac);
-      if (!res.ok()) {
-        return res.error();
-      }
-      accepted = *res;
+                                 errorEstimate, lastField, fieldError, jac);
+    }
+    if (status == detail::Rk4Status::FieldError) {
+      return fieldError;
     }
     // Protect against division by zero
     errorEstimate = std::max(1e-20, errorEstimate);
 
-    if (accepted) {
+    if (status == detail::Rk4Status::Accepted) {
       break;
     }
 

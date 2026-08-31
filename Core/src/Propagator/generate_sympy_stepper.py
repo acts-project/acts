@@ -755,6 +755,22 @@ def rk4_dense_tangentexpr() -> list[NamedExpr]:
     return rk4_dense_derivation().name_exprs
 
 
+#: the enum the generated kernels report their outcome with
+STATUS = "Acts::detail::Rk4Status"
+
+
+def _sample_field(stage: int) -> str:
+    """Look the field up at a stage point, bailing out on a lookup failure."""
+    return (
+        f"const auto B{stage}res = getB(std::span<const T, 3>(pos{stage}));\n"
+        f"  if (!B{stage}res.ok()) {{\n"
+        f"    fieldErr = B{stage}res.error();\n"
+        f"    return {STATUS}::FieldError;\n"
+        f"  }}\n"
+        f"  const auto B{stage} = *B{stage}res;"
+    )
+
+
 # Preconditions the derivations rely on but the signatures cannot express.
 # p_abs is zero for a neutral, which makes dt/ds infinite.
 INPUT_ASSERTS = """\
@@ -786,7 +802,7 @@ def print_rk4_vacuum_b2f(name_exprs: list[NamedExpr], run_cse: bool = False) -> 
 
     lines.append(
         "template <typename T, typename GetB>\n"
-        "Rk4Status rk4_vacuum(std::span<const T, 3> pos,"
+        f"{STATUS} rk4_vacuum(std::span<const T, 3> pos,"
         " std::span<const T, 3> dir, const T time, const T h, const T qop, const T mass,"
         " const T p_abs, std::span<const T, 3> B1, GetB getB, T& err,"
         " const T errTol, std::error_code& fieldErr,"
@@ -809,13 +825,13 @@ def print_rk4_vacuum_b2f(name_exprs: list[NamedExpr], run_cse: bool = False) -> 
 
     def post_expr_hook(var):
         if str(var) == "pos2":
-            return "const auto B2res = getB(std::span<const T, 3>(pos2));\n  if (!B2res.ok()) {\n    fieldErr = B2res.error();\n    return Rk4Status::FieldError;\n  }\n  const auto B2 = *B2res;"
+            return _sample_field(2)
         if str(var) == "pos3":
-            return "const auto B3res = getB(std::span<const T, 3>(pos3));\n  if (!B3res.ok()) {\n    fieldErr = B3res.error();\n    return Rk4Status::FieldError;\n  }\n  const auto B3 = *B3res;"
+            return _sample_field(3)
         if str(var) == "err":
-            return "if (err > errTol) {\n  return Rk4Status::Rejected;\n}"
+            return f"if (err > errTol) {{\n  return {STATUS}::Rejected;\n}}"
         if str(var) == "new_dir":
-            return "if (M.empty()) {\n  return Rk4Status::Accepted;\n}"
+            return f"if (M.empty()) {{\n  return {STATUS}::Accepted;\n}}"
         for name, group in _B2F_LIVE_COLUMNS:
             if str(var) == name:
                 return "\n".join(
@@ -834,7 +850,7 @@ def print_rk4_vacuum_b2f(name_exprs: list[NamedExpr], run_cse: bool = False) -> 
     )
     lines.extend([f"  {line}" for line in code.split("\n")])
 
-    lines.append("  return Rk4Status::Accepted;")
+    lines.append(f"  return {STATUS}::Accepted;")
 
     lines.append("}")
 
@@ -866,10 +882,11 @@ def print_rk4_dense(name_exprs: list[NamedExpr], run_cse: bool = True) -> str:
 
     lines.append(
         "template <typename T, typename GetB, typename GetG>\n"
-        "Acts::Result<bool> rk4_dense(std::span<const T, 3> pos,"
+        f"{STATUS} rk4_dense(std::span<const T, 3> pos,"
         " std::span<const T, 3> dir, const T time, const T h, const T qop, const T mass,"
         " const T charge, const T p_abs, std::span<const T, 3> B1, GetB getB,"
-        " GetG getG, T& err, const T errTol, std::span<T, 3> new_pos, T& new_time,"
+        " GetG getG, T& err, const T errTol, std::error_code& fieldErr,"
+        " std::span<T, 3> new_pos, T& new_time,"
         " std::span<T, 3> new_dir, T& new_qop, std::span<T, 3> new_B,"
         " std::span<T, 8> path_derivatives, std::span<T> M) {"
     )
@@ -891,9 +908,9 @@ def print_rk4_dense(name_exprs: list[NamedExpr], run_cse: bool = True) -> str:
 
     def post_expr_hook(var):
         if str(var) == "pos2":
-            return "const auto B2res = getB(std::span<const T, 3>(pos2));\n  if (!B2res.ok()) {\n    return Acts::Result<bool>::failure(B2res.error());\n  }\n  const auto B2 = *B2res;"
+            return _sample_field(2)
         if str(var) == "pos3":
-            return "const auto B3res = getB(std::span<const T, 3>(pos3));\n  if (!B3res.ok()) {\n    return Acts::Result<bool>::failure(B3res.error());\n  }\n  const auto B3 = *B3res;"
+            return _sample_field(3)
         if str(var) == "qop2":
             return "const auto dEds2 = getG(std::span<const T, 3>(pos2), qop2);"
         if str(var) == "qop3":
@@ -901,13 +918,11 @@ def print_rk4_dense(name_exprs: list[NamedExpr], run_cse: bool = True) -> str:
         if str(var) == "qop4":
             return "const auto dEds4 = getG(std::span<const T, 3>(pos3), qop4);"
         if str(var) == "err":
-            return (
-                "if (err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
-            )
+            return f"if (err > errTol) {{\n  return {STATUS}::Rejected;\n}}"
         if str(var) == "new_qop":
             # new_qop carries the energy loss, so it belongs to the step and
             # has to be written before the jacobian-only part is skipped
-            return "if (M.empty()) {\n  return Acts::Result<bool>::success(true);\n}"
+            return f"if (M.empty()) {{\n  return {STATUS}::Accepted;\n}}"
         if str(var) == "new_M":
             return "\n".join(
                 f"M[{_B2F.flat_index(i, j)}] = new_M[{k}];"
@@ -925,7 +940,7 @@ def print_rk4_dense(name_exprs: list[NamedExpr], run_cse: bool = True) -> str:
     )
     lines.extend([f"  {line}" for line in code.split("\n")])
 
-    lines.append("  return Acts::Result<bool>::success(true);")
+    lines.append(f"  return {STATUS}::Accepted;")
 
     lines.append("}")
 
@@ -1249,23 +1264,13 @@ HEADER = """\
 
 #pragma once
 
-#include "Acts/Utilities/Result.hpp"
+#include "Acts/Propagator/detail/SympyStepperStatus.hpp"
 
 #include <array>
 #include <cassert>
 #include <cmath>
 #include <span>
 #include <system_error>
-
-/// Outcome of one attempted Runge-Kutta step.
-enum class Rk4Status {
-  /// the error estimate exceeded the tolerance; nothing was written
-  Rejected,
-  /// the step was taken and the outputs written
-  Accepted,
-  /// a field lookup failed; the error is in the `fieldErr` output
-  FieldError,
-};
 """
 
 
