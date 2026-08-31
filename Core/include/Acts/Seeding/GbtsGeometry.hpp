@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/detail/GbtsLayer.hpp"
@@ -23,15 +24,26 @@ class GbtsNodeStorage;
 class GbtsTrackingFilter;
 class GraphBasedTrackSeeder;
 
+/// z0 range two eta bins must share a trajectory within, which fixes the bin
+/// table. A separate cut from `GraphBasedTrackSeeder::Config::minZ0`.
+struct GbtsZ0Range final {
+  /// Minimum z0.
+  float min = -168.0f * UnitConstants::mm;
+  /// Maximum z0.
+  float max = 168.0f * UnitConstants::mm;
+};
+
 /// Geometry helper built from layers and connectors.
 class GbtsGeometry final {
  public:
   /// Constructor
   /// @param layerDescriptions Layer descriptions for the layers
   /// @param layerConnections Layer connections map
+  /// @param z0Range z0 range the bin table is built against
   /// @param logger Logging instance, only used during construction
   GbtsGeometry(const std::vector<GbtsLayerDescription>& layerDescriptions,
                const GbtsLayerConnectionMap& layerConnections,
+               const GbtsZ0Range& z0Range = {},
                const Logger& logger = getDummyLogger());
 
  private:

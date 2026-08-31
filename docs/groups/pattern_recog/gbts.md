@@ -234,7 +234,7 @@ The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrac
 | `matchBeforeCreate`, `tauRatioPrecut` | @ref gbts-graph | require a compatible incoming edge before creating one |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
 | `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |
-| `addTriplets`, `maxAbsEtaAddTripelts` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
+| `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `useClusterWidthCuts`, `lutInputFile` | @ref gbts-ml | cluster-width based @f$\tau@f$ windows |
 | `maxEndcapClusterWidth`, `moduleHalfLengthY`, `moduleEdgeTolerance` | @ref gbts-ml | cluster-width acceptance and module-edge handling |
 | `lrtMode` | all | Large Radius Tracking: strip layers instead of pixel, looser cuts, shorter minimum chain |

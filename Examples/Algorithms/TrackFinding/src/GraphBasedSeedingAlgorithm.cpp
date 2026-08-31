@@ -56,7 +56,7 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // initialise the object that holds all the geometry information needed for
   // the algorithm
   auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
-      layerGeometry, layerConnectionMap, this->logger());
+      layerGeometry, layerConnectionMap, m_cfg.gbtsZ0Range, this->logger());
 
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
@@ -405,7 +405,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("useAdaptiveCuts: " << cfg1.useAdaptiveCuts);
   ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
   ACTS_DEBUG("tauRatioCorr: " << cfg1.tauRatioCorr);
-  ACTS_DEBUG("maxAbsEtaAddTripelts: " << cfg1.maxAbsEtaAddTripelts);
+  ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
   ACTS_DEBUG("d0Max: " << cfg1.d0Max);
   ACTS_DEBUG("cutDPhiMax: " << cfg1.cutDPhiMax);
   ACTS_DEBUG("cutDCurvMax: " << cfg1.cutDCurvMax);
