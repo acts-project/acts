@@ -39,12 +39,16 @@ class MillePedeSolver {
     std::vector<std::string> extraOpts = {};  /// extra CLI options
     std::string resFileName =
         "";  /// destination for result file - if empty, keep original
+    std::string redirectStdout = "";  /// destination for the cout/cerr printout
+                                      /// from pede - if empty, send to parent
     std::string logFileName =
         "";  /// destination for the log file - if empty, keep original
     std::string histoFileName =
         "";  /// destination for the histogram file - if empty, keep original
     std::string evFileName =
         "";  /// destination for the eigenvector file - if empty, keep original
+    std::filesystem::path customPedeInstall =
+        "";  // if set, override the location of the `pede` program.
   };
 
   /// @brief package the result of the alignment fit
