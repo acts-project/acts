@@ -13,15 +13,26 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <cstdint>
 #include <format>
+#include <numbers>
 #include <stdexcept>
 
 namespace ActsExamples {
 
 static constexpr double nan = std::numeric_limits<double>::quiet_NaN();
+
+/// Reduce a residual of one bound parameter to its minimal equivalent value,
+/// which only matters for the periodic phi.
+static double wrapResidual(std::size_t index, double residual) {
+  if (index != Acts::eBoundPhi) {
+    return residual;
+  }
+  return Acts::detail::difference_periodic(residual, 0., 2 * std::numbers::pi);
+}
 
 ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
                          Acts::Logging::Level lvl)
@@ -203,7 +214,8 @@ void ResPlotTool::fill(const Acts::BoundVector& truthVector,
   for (unsigned int paramId = 0; paramId < Acts::eBoundSize; paramId++) {
     const std::string& parName = m_cfg.paramNames.at(paramId);
 
-    const double residual = trackParameters[paramId] - truthVector[paramId];
+    const double residual =
+        wrapResidual(paramId, trackParameters[paramId] - truthVector[paramId]);
     fillResidual(parName, residual, truthEta, truthPhi, truthPt);
 
     const double var = trackCovariance(paramId, paramId);
@@ -257,7 +269,7 @@ void ResPlotTool::fill(const Binning& binning,
   for (const std::uint8_t index : subspace) {
     const std::string& parName = m_cfg.paramNames.at(index);
 
-    const double residual = residuals[index];
+    const double residual = wrapResidual(index, residuals[index]);
     fillResidual(parName, residual, binning.eta, binning.phi, binning.pt);
 
     // `V - HPH^T` is not positive definite, so there is not always a pull
