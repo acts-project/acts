@@ -9,10 +9,20 @@
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Mille/MillePedeError.hpp"
 #include "ActsPlugins/Mille/MillePedeSolver.hpp"
 
-#include <fstream>
+#include <string_view>
+
+/// get pede from cmake if we are using the
+namespace {
+#ifdef ACTS_PEDE_EXECUTABLE
+constexpr std::string_view s_pede = ACTS_PEDE_EXECUTABLE;
+#else
+constexpr std::string_view s_pede = "";
+#endif
+}  // namespace
 
 using namespace ActsPlugins::ActsToMille;
 
@@ -23,7 +33,6 @@ BOOST_AUTO_TEST_CASE(CatchMissingSteer) {
   MillePedeSolver::Config testSolverCfg;
   testSolverCfg.steeringFile = "doesNotExist.txt";
   testSolverCfg.workDir = "mpTest";
-
   MillePedeSolver solver;
   auto res = solver.solve(testSolverCfg);
   BOOST_CHECK(!res.ok());
@@ -35,7 +44,12 @@ BOOST_AUTO_TEST_CASE(BuiltInSiTracker) {
   MillePedeSolver::Config testSolverCfg;
   // this tells the solver we do not use a steering file
   testSolverCfg.steeringFile = "";
+  if (!s_pede.empty()) {
+    std::cout << " FOUND PEDE!! " << s_pede << std::endl;
+    testSolverCfg.customPedeInstall = s_pede;
+  }
   testSolverCfg.workDir = "mpTest";
+  testSolverCfg.redirectStdout = "mpStdout.txt";
   // this triggers the built-in test case
   testSolverCfg.extraOpts = {" -t=BRLF"};
 

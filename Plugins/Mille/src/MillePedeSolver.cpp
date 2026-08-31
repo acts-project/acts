@@ -59,8 +59,10 @@ Acts::Result<MillePedeSolver::mpResult> MillePedeSolver::solve(
 
   ACTS_INFO(" Calling pede, this may take a while depending on problem size");
   // now run the fit
-  childProcessStatus pedeProcessStatus =
-      runChildProcess("pede", mpArgs, workDir, "");
+  childProcessStatus pedeProcessStatus = runChildProcess(
+      (!cfg.customPedeInstall.empty() ? cfg.customPedeInstall.string()
+                                      : "pede"),
+      mpArgs, workDir, cfg.redirectStdout);
   if (pedeProcessStatus == childProcessStatus::progNotFound) {
     ACTS_ERROR("Pede executable could not be found, aborting!");
     return Result<mpResult>::failure(MillePedeError::InstallationNotFound);
