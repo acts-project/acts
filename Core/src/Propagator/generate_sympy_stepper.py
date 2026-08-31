@@ -83,13 +83,13 @@ class Rk4Step:
     #: its derivative after the step
     new_ydot: NamedExpr
     #: the four stage slopes
-    k: tuple[NamedExpr, NamedExpr, NamedExpr, NamedExpr]
+    ks: tuple[NamedExpr, NamedExpr, NamedExpr, NamedExpr]
     #: d(new_y) / d(y, ydot)
     dy: NamedExpr
     #: d(new_ydot) / d(y, ydot)
     dydot: NamedExpr
     #: d(k_i) / d(y, ydot)
-    dk: tuple[NamedExpr, NamedExpr, NamedExpr, NamedExpr]
+    dks: tuple[NamedExpr, NamedExpr, NamedExpr, NamedExpr]
     #: the stage points, kept because the kernels sample the field at them
     x2: NamedExpr
     y2: NamedExpr
@@ -106,7 +106,7 @@ class Rk4Step:
         before the ones whose bodies mention it.
         """
         return [
-            *self.k,
+            *self.ks,
             self.x2,
             self.y2,
             self.ydot2,
@@ -116,7 +116,7 @@ class Rk4Step:
             self.ydot4,
             self.new_y,
             self.new_ydot,
-            *self.dk,
+            *self.dks,
             self.dy,
             self.dydot,
         ]
@@ -182,10 +182,10 @@ def rk4_subexpr(eom, x, y, ydot, h):
     return Rk4Step(
         new_y=new_y,
         new_ydot=new_ydot,
-        k=(k1, k2, k3, k4),
+        ks=(k1, k2, k3, k4),
         dy=dy_dstate,
         dydot=dydot_dstate,
-        dk=(dk1_dstate, dk2_dstate, dk3_dstate, dk4_dstate),
+        dks=(dk1_dstate, dk2_dstate, dk3_dstate, dk4_dstate),
         x2=x2,
         y2=y2,
         ydot2=ydot2,
@@ -542,19 +542,18 @@ def rk4_vacuum_b2f_atlasexpr(taylor_norm: bool = False) -> list[NamedExpr]:
     return deriv.name_exprs
 
 
-# The naive reference: equations of motion, plain RK4, chain-rule derivatives.
-# Both kernels are the same derivation with a different right hand side.
-#
-# The state is split the way a second order ODE wants it, laid out to match
-# FreeVector so the generated code takes the parameter vector as it stands:
+# The equations of motion, as the generic `rk4_subexpr` wants them: one right
+# hand side d(ydot)/ds per medium, taking (stage, x, y, ydot), of which neither
+# uses x or y. The split matches FreeVector, so the generated code takes the
+# parameter vector as it stands:
 #
 #   y    = (pos, time)          -> free indices 0,1,2 and 3
 #   ydot = (dir, dt/ds, q/p)    -> free indices 4,5,6 and 7, plus dt/ds
 #
-# dt/ds rides in `ydot` because the dense right hand side evolves it, but it is
-# not independent: dtds = sqrt(1 + mass^2 qop^2 / charge^2). Every derivative
-# with respect to q/p therefore picks up the path through it, which is what
-# `free_param_seed` carries.
+# dt/ds is carried in `ydot` because the dense side evolves it, but it is not
+# independent: dtds = sqrt(1 + mass^2 qop^2 / charge^2), so every derivative
+# with respect to q/p picks up the path through it. See
+# `free_to_state_jacobian`.
 
 
 def eom_vacuum(i, x, y, ydot):
@@ -597,26 +596,26 @@ def propagate_tangent(
     """Push one tangent vector through the Runge-Kutta recursion.
 
     The chain rule `rk4_subexpr` uses for the full derivative blocks,
-    contracted with a vector at every stage instead of carried as a matrix. A
-    column of the bound-to-free jacobian is such a vector, so this transports
-    it without ever forming the 8x8 step jacobian.
+    contracted with a vector at every stage rather than carried as a matrix,
+    so a column of the bound-to-free jacobian is transported without ever
+    forming the 8x8 step jacobian.
 
     @param tag prefixes the stage tangent names, one set per column
-    @param u is the seed tangent, in (y, ydot) space
+    @param u is the incoming tangent, in (y, ydot) space
     @return the tangents of the new state and of its new derivative
     """
-    k = step.k
+    ks = step.ks
     ts = []
     for i in range(4):
-        contrib = k[i].expr.jacobian([y, ydot]) * u
+        contrib = ks[i].expr.jacobian([y, ydot]) * u
         if i > 0:
-            contrib = contrib + k[i].expr.jacobian(k[i - 1].name) * ts[i - 1]
+            contrib = contrib + ks[i].expr.jacobian(ks[i - 1].name) * ts[i - 1]
         ts.append(explicit(deriv.add(f"{tag}k{i + 1}", contrib).name))
 
     def combine(out):
         total = out.expr.as_explicit().jacobian([y, ydot]) * u
         for i in range(4):
-            block = out.expr.as_explicit().jacobian(k[i].name)
+            block = out.expr.as_explicit().jacobian(ks[i].name)
             if any(e != 0 for e in block):
                 total = total + block * ts[i]
         return total
@@ -651,7 +650,7 @@ def rk4_dense_derivation() -> DenseDerivation:
         h,
     )
 
-    k1, k2, k3, k4 = step.k
+    k1, k2, k3, k4 = step.ks
     new_y, new_ydot = step.new_y, step.new_ydot
 
     pos2 = name_expr("pos2", step.y2.expr[0:3, 0])
@@ -692,7 +691,7 @@ def rk4_dense_derivation() -> DenseDerivation:
 
     y = Matrix.vstack(position, Matrix([time, qop_integral]))
     ydot = Matrix.vstack(direction, Matrix([dtds.name, qop]))
-    seed = free_param_seed()
+    free_to_state = free_to_state_jacobian()
 
     columns = []
     for tag, c in (("dphi", 2), ("dtheta", 3), ("dqop", _B2F_QOP_COLUMN)):
@@ -702,7 +701,9 @@ def rk4_dense_derivation() -> DenseDerivation:
             # to plain: undo the log factor qop, redo the chain rule row
             v = _scale_qop_column(v, v[_B2F_QOP_ROW, 0] / qop)
 
-        tan_y, tan_ydot = propagate_tangent(deriv, tag, step, y, ydot, seed * v)
+        tan_y, tan_ydot = propagate_tangent(
+            deriv, tag, step, y, ydot, free_to_state * v
+        )
         new_v = Matrix([tan_y[0:4, 0], tan_ydot[0:3, 0], Matrix([tan_ydot[4, 0]])])
         if scaled:
             # back again, against the row and the q/p the step leaves behind
@@ -756,7 +757,7 @@ def rk4_dense_tangentexpr() -> list[NamedExpr]:
 
 
 #: the enum the generated kernels report their outcome with
-STATUS = "Acts::detail::Rk4Status"
+STATUS_TYPE = "Acts::detail::Rk4Status"
 
 
 def _sample_field(stage: int) -> str:
@@ -765,7 +766,7 @@ def _sample_field(stage: int) -> str:
         f"const auto B{stage}res = getB(std::span<const T, 3>(pos{stage}));\n"
         f"  if (!B{stage}res.ok()) {{\n"
         f"    fieldErr = B{stage}res.error();\n"
-        f"    return {STATUS}::FieldError;\n"
+        f"    return {STATUS_TYPE}::FieldError;\n"
         f"  }}\n"
         f"  const auto B{stage} = *B{stage}res;"
     )
@@ -802,7 +803,7 @@ def print_rk4_vacuum_b2f(name_exprs: list[NamedExpr], run_cse: bool = False) -> 
 
     lines.append(
         "template <typename T, typename GetB>\n"
-        f"{STATUS} rk4_vacuum(std::span<const T, 3> pos,"
+        f"{STATUS_TYPE} rk4_vacuum(std::span<const T, 3> pos,"
         " std::span<const T, 3> dir, const T time, const T h, const T qop, const T mass,"
         " const T p_abs, std::span<const T, 3> B1, GetB getB, T& err,"
         " const T errTol, std::error_code& fieldErr,"
@@ -829,9 +830,9 @@ def print_rk4_vacuum_b2f(name_exprs: list[NamedExpr], run_cse: bool = False) -> 
         if str(var) == "pos3":
             return _sample_field(3)
         if str(var) == "err":
-            return f"if (err > errTol) {{\n  return {STATUS}::Rejected;\n}}"
+            return f"if (err > errTol) {{\n  return {STATUS_TYPE}::Rejected;\n}}"
         if str(var) == "new_dir":
-            return f"if (M.empty()) {{\n  return {STATUS}::Accepted;\n}}"
+            return f"if (M.empty()) {{\n  return {STATUS_TYPE}::Accepted;\n}}"
         for name, group in _B2F_LIVE_COLUMNS:
             if str(var) == name:
                 return "\n".join(
@@ -850,7 +851,7 @@ def print_rk4_vacuum_b2f(name_exprs: list[NamedExpr], run_cse: bool = False) -> 
     )
     lines.extend([f"  {line}" for line in code.split("\n")])
 
-    lines.append(f"  return {STATUS}::Accepted;")
+    lines.append(f"  return {STATUS_TYPE}::Accepted;")
 
     lines.append("}")
 
@@ -882,7 +883,7 @@ def print_rk4_dense(name_exprs: list[NamedExpr], run_cse: bool = True) -> str:
 
     lines.append(
         "template <typename T, typename GetB, typename GetG>\n"
-        f"{STATUS} rk4_dense(std::span<const T, 3> pos,"
+        f"{STATUS_TYPE} rk4_dense(std::span<const T, 3> pos,"
         " std::span<const T, 3> dir, const T time, const T h, const T qop, const T mass,"
         " const T charge, const T p_abs, std::span<const T, 3> B1, GetB getB,"
         " GetG getG, T& err, const T errTol, std::error_code& fieldErr,"
@@ -918,11 +919,11 @@ def print_rk4_dense(name_exprs: list[NamedExpr], run_cse: bool = True) -> str:
         if str(var) == "qop4":
             return "const auto dEds4 = getG(std::span<const T, 3>(pos3), qop4);"
         if str(var) == "err":
-            return f"if (err > errTol) {{\n  return {STATUS}::Rejected;\n}}"
+            return f"if (err > errTol) {{\n  return {STATUS_TYPE}::Rejected;\n}}"
         if str(var) == "new_qop":
             # new_qop carries the energy loss, so it belongs to the step and
             # has to be written before the jacobian-only part is skipped
-            return f"if (M.empty()) {{\n  return {STATUS}::Accepted;\n}}"
+            return f"if (M.empty()) {{\n  return {STATUS_TYPE}::Accepted;\n}}"
         if str(var) == "new_M":
             return "\n".join(
                 f"M[{_B2F.flat_index(i, j)}] = new_M[{k}];"
@@ -940,7 +941,7 @@ def print_rk4_dense(name_exprs: list[NamedExpr], run_cse: bool = True) -> str:
     )
     lines.extend([f"  {line}" for line in code.split("\n")])
 
-    lines.append(f"  return {STATUS}::Accepted;")
+    lines.append(f"  return {STATUS_TYPE}::Accepted;")
 
     lines.append("}")
 
@@ -953,7 +954,7 @@ def naive_rk4(eom) -> tuple[Derivation, Rk4Step]:
     The reference the optimised forms are checked against: no named stage
     shortcuts, no reuse identities, no scaled field.
 
-    @param eom is the right hand side, `f(stage, x, y, ydot) -> d(ydot)/ds`
+    @param eom is the equations of motion, `f(stage, x, y, ydot) -> d(ydot)/ds`
     @return the Derivation every name resolves through, and the step
     """
     dtds_sym = Symbol("dtds", real=True, positive=True)
@@ -992,7 +993,7 @@ def check_atlas_matches_naive() -> None:
         return explicit(atlas.resolve(find_by_name(atlas.name_exprs, name)[1]))
 
     # the naive stage slopes, for the quantities ATLAS expresses over them
-    naive_k = [explicit(naive.resolve(k.expr))[0:3, 0] for k in naive_step.k]
+    naive_ks = [explicit(naive.resolve(k.expr))[0:3, 0] for k in naive_step.ks]
 
     checks = [
         ("new_pos", resolved("new_pos"), naive_y[0:3, 0]),
@@ -1005,13 +1006,13 @@ def check_atlas_matches_naive() -> None:
             "err vector",
             (resolved("dir_half_sum") + resolved("kick4"))
             - (resolved("dir3") + resolved("dir4")),
-            (h / 2) * (naive_k[0] - naive_k[1] - naive_k[2] + naive_k[3]),
+            (h / 2) * (naive_ks[0] - naive_ks[1] - naive_ks[2] + naive_ks[3]),
         ),
         # the path derivatives ATLAS reaches through two_over_h*kick4 are just k4
         (
             "path_derivatives (dir rows)",
             resolved("path_derivatives")[4:7, 0],
-            naive_k[3],
+            naive_ks[3],
         ),
     ]
     for what, atlas, naive_expr in checks:
@@ -1022,30 +1023,28 @@ def check_atlas_matches_naive() -> None:
             )
 
 
-def free_param_seed(at: dict | None = None) -> Matrix:
-    """Map derivatives against (y, ydot) onto derivatives against free params.
+def free_to_state_jacobian(at: dict | None = None) -> Matrix:
+    """d(y, ydot) / d(free parameters), the chain rule factor between the two.
 
     `rk4_subexpr` differentiates against (pos, time, qop_integral) and
-    (dir, dt/ds, q/p). Two things have to happen to reach the eight free
-    parameters:
+    (dir, dt/ds, q/p). Two of those ten are not free parameters:
 
-    - `qop_integral`, the dummy that pads y to ydot's length, is not one, so its
-      column goes;
-    - `dt/ds` is not independent of q/p, so its column folds into the q/p one
-      weighted by d(dt/ds)/d(q/p).
+    - `qop_integral`, the dummy that pads y to ydot's length, is nothing's
+      derivative, so its row is zero;
+    - `dt/ds` is not independent of q/p, so its row is d(dt/ds)/d(q/p).
 
-    @param at optionally evaluates the seed at a point
-    @return the 10 x 8 map
+    @param at optionally evaluates it at a point
+    @return the 10 x 8 jacobian
     """
     dtds_sym = Symbol("dtds", real=True, positive=True)
-    seed = sym.zeros(10, 8)
+    J = sym.zeros(10, 8)
     for i in range(4):  # pos, time
-        seed[i, i] = 1
+        J[i, i] = 1
     for i in range(3):  # dir
-        seed[5 + i, 4 + i] = 1
-    seed[8, 7] = mass**2 * qop / (charge**2 * dtds_sym)  # d(dt/ds)/d(q/p)
-    seed[9, 7] = 1
-    return seed if at is None else seed.subs(at)
+        J[5 + i, 4 + i] = 1
+    J[8, 7] = mass**2 * qop / (charge**2 * dtds_sym)  # d(dt/ds)/d(q/p)
+    J[9, 7] = 1
+    return J if at is None else J.subs(at)
 
 
 #: the point every check evaluates at
@@ -1099,14 +1098,11 @@ def sample_point(seed: int = SAMPLE_SEED) -> dict:
 def naive_free_step_jacobian(eom, at_key: int | None = None) -> Matrix:
     """The free-to-free step jacobian D, straight from the chain rule.
 
-    `free_param_seed` maps the (y, ydot) derivatives `rk4_subexpr` produces
-    onto the eight free parameters. The direction rows are the *unnormalised*
-    direction's, matching what every stepper here transports.
+    The direction rows are the *unnormalised* direction's, matching what every
+    stepper here transports. Cached, since several checks want the same matrix
+    and it is the expensive part of all of them.
 
-    Cached, since several checks want the same matrix and it is the expensive
-    part of all of them.
-
-    @param eom is the right hand side, as `eom_vacuum` or `eom_dense`
+    @param eom is the equations of motion, `eom_vacuum` or `eom_dense`
     @param at_key is a `sample_point` seed, or None to stay symbolic
     @return the 8x8 step jacobian over (pos, time, dir, q/p)
     """
@@ -1115,26 +1111,25 @@ def naive_free_step_jacobian(eom, at_key: int | None = None) -> Matrix:
     dy = explicit(deriv.resolve(step.dy.expr, at))
     dydot = explicit(deriv.resolve(step.dydot.expr, at))
 
-    seed = free_param_seed(at)
+    free_to_state = free_to_state_jacobian(at)
 
     D = sym.zeros(8, 8)
-    D[0:4, :] = dy[0:4, :] * seed  # position and time
-    D[4:7, :] = dydot[0:3, :] * seed  # direction, unnormalised
-    D[7, :] = dydot[4, :] * seed  # q/p
+    D[0:4, :] = dy[0:4, :] * free_to_state  # position and time
+    D[4:7, :] = dydot[0:3, :] * free_to_state  # direction, unnormalised
+    D[7, :] = dydot[4, :] * free_to_state  # q/p
     return D
 
 
 def _check_transport_matches_naive(what, got, eom, live, qop_out) -> None:
     """Assert transported bound-to-free columns equal D times M.
 
-    Neither kernel builds D; both contract the columns through the same
-    Runge-Kutta recursion as the state, which is not obviously the same
-    operation as the matrix product. Settled at a rational point, since the
-    closed forms of the derivative blocks run to megabytes.
+    Neither kernel builds D; both contract the columns through the Runge-Kutta
+    recursion instead, which is not obviously the same operation. Settled at a
+    rational point, since the closed forms run to megabytes.
 
     @param what names the kernel, for the error message
     @param got the transported columns the kernel emits, at the point
-    @param eom the right hand side, to build the naive D from
+    @param eom the equations of motion, to build the naive D from
     @param live the entries the kernel writes back
     @param qop_out q/p after the step, which the column rescaling undoes with
     """
@@ -1174,9 +1169,8 @@ def check_jacobian_matches_naive() -> None:
 def check_dense_jacobian_matches_naive() -> None:
     """Assert the dense kernel's transported columns equal D times M.
 
-    The only place the q/p column's rescaling is exercised against a q/p the
-    step itself moved. SympyStepperTests runs the dense kernel on vacuum
-    material, where the rescaling is the identity.
+    The only place the q/p column's rescaling meets a q/p the step moved;
+    SympyStepperTests runs the dense kernel on vacuum material.
     """
     at = sample_point()
     dense = rk4_dense_derivation()
@@ -1193,23 +1187,21 @@ def check_dense_jacobian_matches_naive() -> None:
 def check_dropped_rows_stay_zero() -> None:
     """Assert the rows the bound-to-free update drops can never be populated.
 
-    _B2F declares the time and q/p rows of the phi and theta columns zero and
-    the update reads them as literal zeros. With those rows zero on the way
-    in, (D M)[3, c] is the sum over j not in {3, 7} of D[3, j] M[j, c], so it
-    vanishes for arbitrary M only if the time and q/p rows of D have support
-    nowhere but the time and q/p columns.
+    With the time and q/p rows zero on the way in, (D M)[3, c] is the sum over
+    j not in {3, 7} of D[3, j] M[j, c], which vanishes for arbitrary M only if
+    those rows of D reach no further than the same two columns.
     """
     # the free rows _B2F holds at zero in the phi and theta columns
     zero_rows = sorted({row for row, col in _B2F.entries(0) if col in (2, 3)})
     at = sample_point()
-    seed = free_param_seed(at)
+    free_to_state = free_to_state_jacobian(at)
     for what, eom in (("vacuum", eom_vacuum), ("dense", eom_dense)):
         deriv, step = naive_rk4(eom)
         # only the time and q/p rows are needed; the direction rows are the
         # expensive part of the jacobian and have nothing to do with this
         rows = {
-            3: explicit(deriv.resolve(step.dy.expr[3, :], at)) * seed,
-            7: explicit(deriv.resolve(step.dydot.expr[4, :], at)) * seed,
+            3: explicit(deriv.resolve(step.dy.expr[3, :], at)) * free_to_state,
+            7: explicit(deriv.resolve(step.dydot.expr[4, :], at)) * free_to_state,
         }
         assert sorted(rows) == zero_rows
         for row, values in rows.items():

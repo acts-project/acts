@@ -96,16 +96,9 @@ class Derivation:
     def resolve(self, expr: Basic, at: dict | None = None) -> Basic:
         """Substitute every named intermediate away, down to the inputs.
 
-        Without @p at the definitions are walked backwards, which resolves
-        everything in one pass since they are in dependency order. A fixpoint
-        loop over the whole substitution list costs minutes on the dense
-        derivation for the same answer.
-
-        With @p at the walk goes *forwards* and each definition collapses to a
-        number as it is reached, so no expression is ever larger than one
-        definition. Backwards at a point is not enough: the body substituted
-        in still mentions the names before it, so the expression grows just as
-        it does symbolically and only collapses at the end.
+        Backwards without @p at, which the dependency order makes a single
+        pass; forwards with it, so each definition collapses to a number as it
+        is reached and no expression grows past one definition.
 
         @param at optionally evaluates every definition at that point
         @return the closed form of @p expr, or its value at @p at
@@ -506,7 +499,7 @@ def my_function_print(
     params = [input_param(input) for input in inputs] + [
         output_param(output) for output in outputs
     ]
-    head = f"template<typename T> void {name}({", ".join(params)}) {{"
+    head = f"template<typename T> void {name}({', '.join(params)}) {{"
 
     lines.append(head)
 

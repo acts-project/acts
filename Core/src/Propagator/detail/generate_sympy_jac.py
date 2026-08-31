@@ -7,28 +7,27 @@ from sympy import MatrixSymbol
 
 from codegen.sympy_common import (
     NamedExpr,
-    explicit,
     name_expr,
     find_by_name,
     cxx_printer,
     my_expression_print,
 )
 
-step_path_derivatives = explicit(
-    MatrixSymbol("step_path_derivatives", 8, 1)
-).as_mutable()
+step_path_derivatives = (
+    MatrixSymbol("step_path_derivatives", 8, 1).as_explicit().as_mutable()
+)
 step_path_derivatives[7, 0] = 0  # qop
 
-surface_path_derivatives = explicit(
-    MatrixSymbol("surface_path_derivatives", 1, 8)
-).as_mutable()
+surface_path_derivatives = (
+    MatrixSymbol("surface_path_derivatives", 1, 8).as_explicit().as_mutable()
+)
 surface_path_derivatives[0, 3] = 0
 surface_path_derivatives[0, 7] = 0
 
 # M is the bound-to-free jacobian transported to the current point.  loc0 and
 # loc1 stay position only, phi and theta pick up a direction part (position too
 # on a line surface), q/p picks up all three, and time stays exactly e_time.
-J_bf = explicit(MatrixSymbol("M", 8, 6)).as_mutable()
+J_bf = MatrixSymbol("M", 8, 6).as_explicit().as_mutable()
 tmp = sym.zeros(8, 6)
 tmp[0:3, 0:2] = J_bf[0:3, 0:2]
 tmp[0:3, 2:5] = J_bf[0:3, 2:5]
@@ -38,7 +37,7 @@ tmp[7, 4] = J_bf[7, 4]
 tmp[3, 5] = 1
 J_bf = tmp
 
-J_fb = explicit(MatrixSymbol("J_fb", 6, 8)).as_mutable()
+J_fb = MatrixSymbol("J_fb", 6, 8).as_explicit().as_mutable()
 tmp = sym.zeros(6, 8)
 tmp[0:2, 0:3] = J_fb[0:2, 0:3]
 tmp[2:4, 4:7] = J_fb[2:4, 4:7]
@@ -57,9 +56,9 @@ def full_transport_jacobian_generic() -> list[NamedExpr]:
 
 
 def full_transport_jacobian_curvilinear(direction: MatrixSymbol) -> list[NamedExpr]:
-    surface_path_derivatives = explicit(
-        MatrixSymbol("surface_path_derivatives", 1, 8)
-    ).as_mutable()
+    surface_path_derivatives = (
+        MatrixSymbol("surface_path_derivatives", 1, 8).as_explicit().as_mutable()
+    )
     surface_path_derivatives[0, 0:3] = -direction.as_explicit().transpose()
     surface_path_derivatives[0, 3:8] = sym.zeros(1, 5)
 
@@ -129,19 +128,16 @@ def my_full_transport_jacobian_curvilinear_function_print(name_exprs, run_cse=Tr
 def check_curvilinear_is_generic_specialised() -> None:
     """Assert the curvilinear jacobian is the generic one at a curvilinear surface.
 
-    The two are printed as separate functions, so nothing otherwise stops them
-    drifting apart. A curvilinear surface is just one whose path derivatives
-    are -direction for the position part and zero elsewhere, so substituting
-    that into the generic form has to reproduce the specialised one exactly.
-
-    Raises AssertionError if they disagree.
+    They are printed as two functions, so nothing else keeps them in step. A
+    curvilinear surface has path derivatives -direction over the position part
+    and zero elsewhere.
     """
     direction = MatrixSymbol("dir", 3, 1)
     generic = full_transport_jacobian_generic()[0].expr
     curvilinear = full_transport_jacobian_curvilinear(direction)[0].expr
 
-    spd = explicit(MatrixSymbol("surface_path_derivatives", 1, 8))
-    at_curvilinear = {spd[0, i]: -explicit(direction)[i, 0] for i in range(3)}
+    spd = MatrixSymbol("surface_path_derivatives", 1, 8).as_explicit()
+    at_curvilinear = {spd[0, i]: -direction.as_explicit()[i, 0] for i in range(3)}
     at_curvilinear.update({spd[0, i]: 0 for i in range(3, 8)})
 
     diff = sym.expand(generic.subs(at_curvilinear) - curvilinear)
