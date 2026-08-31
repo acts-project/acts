@@ -133,10 +133,14 @@ jobs:
               flavor: rocm7
             build: RelWithDebInfo
           # Same leg at Release, so -O3 stays covered.
+          #
+          # Clang-hosted: alpaka's HIP backend wants a clang *host* compiler,
+          # and #5877's ICE reproduces only against the gcc-hosted lockfile.
           - platform:
               name: "HIP"
-              container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset hip-fp32-ci -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20
+              container: ghcr.io/acts-project/ubuntu2604_clang22:91
+              compiler: clang++-22
+              options: --preset hip-fp32-ci -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20 -DCMAKE_C_COMPILER=clang-22 -DCMAKE_CXX_COMPILER=clang++-22
               run_tests: false
               flavor: rocm7
             build: Release
@@ -159,7 +163,7 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/dependencies
         with:
-          compiler: g++
+          compiler: ${{ matrix.platform.compiler || 'g++' }}
           flavor: ${{ matrix.platform.flavor }}
           # Ahead of the repo default: flavors need v24.0.0 or newer.
           DEPENDENCY_TAG: v24.1.0
