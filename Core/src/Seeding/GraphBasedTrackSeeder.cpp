@@ -51,26 +51,23 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
   m_tauLut = parseTauLookupTable(m_cfg.lutInputFile);
 }
 
-GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage(
-    const std::vector<bool>& isPixelLayer) const {
+GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
   GbtsNodeStorage::Config config;
-  config.isPixelLayer = isPixelLayer;
   config.useClusterWidthCuts = m_cfg.useClusterWidthCuts;
   config.maxEndcapClusterWidth = m_cfg.maxEndcapClusterWidth;
   config.moduleHalfLengthY = m_cfg.moduleHalfLengthY;
   config.moduleEdgeTolerance = m_cfg.moduleEdgeTolerance;
   config.phiSliceWidth = m_cfg.phiSliceWidth;
 
-  return GbtsNodeStorage(std::move(config), m_geometry, m_tauLut);
+  return GbtsNodeStorage(config, m_geometry, m_tauLut);
 }
 
 void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& spacePoints,
                                         const GbtsRoiDescriptor& roi,
-                                        const std::vector<bool>& isPixelLayer,
                                         const GbtsTrackingFilter& filter,
                                         const Options& options,
                                         SeedContainer& outputSeeds) const {
-  GbtsNodeStorage nodeStorage = makeNodeStorage(isPixelLayer);
+  GbtsNodeStorage nodeStorage = makeNodeStorage();
 
   const auto layerColumn = spacePoints.column<std::uint32_t>("layerId");
   const auto clusterWidthColumn = spacePoints.column<float>("clusterWidth");
@@ -248,7 +245,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
     const std::uint32_t layerId1 = B1.layerId;
 
-    const bool isBarrel1 = (layerId1 / 10000) == 8;
+    const bool isBarrel1 = B1.type == GbtsLayerType::Barrel;
+    const bool isPixel1 = B1.technology == GbtsLayerTechnology::Pixel;
 
     // prepare a sliding window for each non-empty bin2 in the group
 
@@ -285,11 +283,9 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
       window.numPhiNodes = static_cast<std::uint32_t>(B2.phiNodes.size());
       window.deltaPhi = deltaPhi;
       window.layerId = B2.layerId;
-      window.isPixel = B2.isPixel;
+      window.type = B2.type;
+      window.technology = B2.technology;
     }
-
-    // a property of the bin, so the strip path costs nothing per pair
-    const bool isPixel1 = B1.isPixel;
 
     // in GBTSv3 the outer loop goes over n1 nodes in the Layer 1 bin
     for (SpacePointIndex n1Idx = B1.nodes.first; n1Idx < B1.nodes.second;
@@ -323,9 +319,9 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
       for (auto& slw : phiSlidingWindow) {
         const std::uint32_t lk2 = slw.layerId;
 
-        const bool isBarrel2 = (lk2 / 10000) == 8;
+        const bool isBarrel2 = slw.type == GbtsLayerType::Barrel;
 
-        const bool isPixel2 = slw.isPixel;
+        const bool isPixel2 = slw.technology == GbtsLayerTechnology::Pixel;
         const bool stripPair = calibrate && (!isPixel1 || !isPixel2);
 
         const float deltaPhi = slw.deltaPhi;
@@ -507,7 +503,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float dPhi1 = curv * r1c;
 
           if (nEdges < m_cfg.nMaxEdges) {
-            edgeStorage.emplace_back(n1Idx, n2Idx, lk2, expEta, curv,
+            edgeStorage.emplace_back(n1Idx, n2Idx, lk2, slw.type, expEta, curv,
                                      phi1 + dPhi1);
 
             ++numCreatedEdges;
@@ -536,7 +532,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               const std::uint32_t lk3 = pS->n2LayerId;
 
-              const bool isBarrel3 = (lk3 / 10000) == 8;
+              const bool isBarrel3 = pS->n2Type == GbtsLayerType::Barrel;
 
               float addTauRatioCorr = 0;
 

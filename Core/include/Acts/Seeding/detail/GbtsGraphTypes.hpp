@@ -90,9 +90,10 @@ struct GbtsEtaBinInfo final {
   float maxRadius{};
   std::uint32_t layerId{0};
 
-  /// Whether the layer this bin belongs to is a pixel layer. Constant over a
-  /// bin, so the strip path is taken per bin rather than per node.
-  bool isPixel{true};
+  /// Type of the layer this bin belongs to.
+  GbtsLayerType type{};
+  /// Technology of the layer this bin belongs to.
+  GbtsLayerTechnology technology{};
 
   /// Check if bin is empty
   /// @return True if bin has no nodes
@@ -184,15 +185,17 @@ struct GbtsEdge final {
   /// @param n1_ Inner node index
   /// @param n2_ Outer node index
   /// @param n2LayerId_ GBTS layer ID of the outer node
+  /// @param n2Type_ Layer type of the outer node
   /// @param p1_ First fit parameter
   /// @param p2_ Second fit parameter
   /// @param p3_ Third fit parameter
   GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_, std::uint32_t n2LayerId_,
-           float p1_, float p2_, float p3_)
+           GbtsLayerType n2Type_, float p1_, float p2_, float p3_)
       : n1{n1_},
         n2{n2_},
         level{1},
         next{1},
+        n2Type{n2Type_},
         p{p1_, p2_, p3_},
         n2LayerId{n2LayerId_} {}
 
@@ -205,6 +208,11 @@ struct GbtsEdge final {
   std::int8_t next{-1};
 
   std::uint8_t nNei{0};
+
+  /// Layer type of the outer node. Cached so the innermost neighbour loop does
+  /// not have to chase the node's bin.
+  GbtsLayerType n2Type{};
+
   std::array<float, 3> p{};
 
   /// GBTS layer ID of the outer node. Cached next to the fit parameters so the

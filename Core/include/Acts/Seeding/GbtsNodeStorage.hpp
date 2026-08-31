@@ -130,8 +130,6 @@ class GbtsNodeStorage final {
 
   /// Configuration for node loading.
   struct Config {
-    /// Per-layer flag marking pixel layers. Indexed by dense layer index.
-    std::vector<bool> isPixelLayer;
     /// Enable the cluster width cuts: wide endcap rejection and tau narrowing.
     bool useClusterWidthCuts = false;
     /// Maximum endcap cluster width, applied to pixel endcap nodes when
@@ -150,7 +148,8 @@ class GbtsNodeStorage final {
   /// @param config Node loading configuration
   /// @param geometry Shared pointer to GBTS geometry
   /// @param tauLut Per-cluster-width tau bounds
-  GbtsNodeStorage(Config config, std::shared_ptr<const GbtsGeometry> geometry,
+  GbtsNodeStorage(const Config& config,
+                  std::shared_ptr<const GbtsGeometry> geometry,
                   detail::GbtsTauLookupTable tauLut);
 
   /// Get eta bin info by index
