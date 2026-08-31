@@ -314,6 +314,10 @@ void writeTrack(const Acts::GeometryContext& gctx,
 /// @param hitLookup Optional callback mapping a measurement track state to its
 ///                  EDM4hep tracker hit (defaults to writing no tracker hits)
 /// @param logger The logger instance
+// NOLINTBEGIN(performance-unnecessary-value-param)
+// `to` is a podio handle and is passed by value throughout this interface, to
+// match the signature of the overload it forwards to. clang-tidy only sees it
+// forwarded here, not mutated.
 template <Acts::TrackProxyConcept track_proxy_t>
 void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
                 edm4hep::MutableTrack to, double Bz,
@@ -324,6 +328,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
   writeTrack(gctx, mctx, std::move(track), to, magneticField, hitLookup,
              logger);
 }
+// NOLINTEND(performance-unnecessary-value-param)
 
 /// Read an EDM4hep track into Acts format, using a magnetic field provider.
 ///
