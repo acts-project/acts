@@ -21,6 +21,8 @@ find_package(HIPToolkit REQUIRED)
 add_library(
     traccc_hip_device
     OBJECT
+    # Utility code.
+    "src/utils/magnetic_field_types.hpp"
     # Clusterization code.
     "include/traccc/hip/clusterization/clusterization_algorithm.hpp"
     "src/clusterization/clusterization_algorithm.hip"
@@ -30,6 +32,12 @@ add_library(
     "src/clusterization/kernels/reify_cluster_data.hip"
     "include/traccc/hip/clusterization/measurement_sorting_algorithm.hpp"
     "src/clusterization/measurement_sorting_algorithm.hip"
+    # Track fitting code.
+    "include/traccc/hip/fitting/kalman_fitting_algorithm.hpp"
+    "src/fitting/kalman_fitting_algorithm_fit_backward_kernel.hip"
+    "src/fitting/kalman_fitting_algorithm_fit_forward_kernel.hip"
+    "src/fitting/kalman_fitting_algorithm_fit_prelude_kernel.hip"
+    "src/fitting/kalman_fitting_algorithm_prepare_track_fit_order.hip"
 )
 target_include_directories(
     traccc_hip_device
@@ -37,7 +45,7 @@ target_include_directories(
 )
 target_link_libraries(
     traccc_hip_device
-    PUBLIC traccc::core traccc::hip_utils vecmem::core
+    PUBLIC traccc::core traccc::hip_utils vecmem::core covfie::core covfie::hip
     PRIVATE HIP::hiprt traccc::device_common
 )
 set_target_properties(
@@ -58,6 +66,8 @@ elseif("${CMAKE_HIP_PLATFORM}" STREQUAL "nvidia")
 endif()
 
 traccc_add_library( traccc_hip hip TYPE SHARED
+   # Track fitting code.
+   "src/fitting/kalman_fitting_algorithm.cpp"
    # Utility code.
    "include/traccc/hip/utils/algorithm_base.hpp"
    "src/utils/algorithm_base.cpp"

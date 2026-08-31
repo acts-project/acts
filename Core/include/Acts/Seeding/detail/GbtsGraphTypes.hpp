@@ -40,6 +40,7 @@ using GbtsTauLookupTable = std::vector<GbtsTauBounds>;
 /// Maximum number of neighbouring edges recorded per graph edge
 static constexpr std::uint32_t kGbtsMaxEdgeNeighbours = 6;
 
+//! [gbts node params]
 /// Per-node parameters used while building the graph.
 ///
 /// All five values are read together in the innermost doublet loop, so they sit
@@ -57,7 +58,9 @@ struct GbtsNodeParams final {
   /// Global z coordinate.
   float z{};
 };
+//! [gbts node params]
 
+//! [gbts node edge info]
 /// Per-node graph bookkeeping, written while the graph is built.
 ///
 /// The three fields are read together in the innermost doublet loop, so they
@@ -71,7 +74,9 @@ struct GbtsNodeEdgeInfo final {
   /// connected to the previously built graph.
   std::uint16_t isConnected{};
 };
+//! [gbts node edge info]
 
+//! [gbts eta bin info]
 /// Constant per-eta-bin data.
 struct GbtsEtaBinInfo final {
   /// Range of node indices belonging to this bin.
@@ -93,6 +98,7 @@ struct GbtsEtaBinInfo final {
   /// @return True if bin has no nodes
   bool empty() const { return nodes.first == nodes.second; }
 };
+//! [gbts eta bin info]
 
 class GbtsNodeProxy;
 
@@ -169,6 +175,7 @@ inline GbtsNodeProxy GbtsNodeView::operator[](SpacePointIndex index) const {
   return GbtsNodeProxy(*this, index);
 }
 
+//! [gbts edge]
 /// Edge between two GBTS nodes with fit parameters.
 struct GbtsEdge final {
   GbtsEdge() = default;
@@ -206,5 +213,6 @@ struct GbtsEdge final {
 
   std::array<std::uint32_t, kGbtsMaxEdgeNeighbours> vNei{};
 };
+//! [gbts edge]
 
 }  // namespace Acts::Experimental::detail

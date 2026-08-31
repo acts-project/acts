@@ -233,10 +233,12 @@ set_option_if(
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
 set_option_if(ACTS_BUILD_TRACCC ACTS_BUILD_PLUGIN_TRACCC)
-set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_TRACCC)
+# Required for traccc
 set_option_if(ACTS_SETUP_DETRAY ACTS_BUILD_TRACCC)
-set_option_if(ACTS_SETUP_VECMEM ACTS_SETUP_DETRAY)
 set_option_if(ACTS_SETUP_COVFIE ACTS_SETUP_DETRAY)
+# Required for detray
+set_option_if(ACTS_SETUP_VECMEM ACTS_SETUP_DETRAY)
+set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_SETUP_DETRAY)
 
 # feature tests
 include(CheckCXXSourceCompiles)
@@ -446,6 +448,18 @@ endmacro()
 # find packages explicitly for each component even if this means searching for
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
+
+# nlohmann_json has to be resolved before any other package, because its config
+# file defines a non-namespaced `nlohmann_json` compatibility target whenever it
+# is searched for without a version. That target clashes with the one the
+# bundled build creates, so we have to claim the name first.
+if(ACTS_BUILD_PLUGIN_JSON)
+    if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
+        find_package(nlohmann_json ${_acts_nlohmanjson_version} REQUIRED CONFIG)
+    else()
+        add_subdirectory(thirdparty/nlohmann_json)
+    endif()
+endif()
 if(ACTS_BUILD_PYTHON_BINDINGS)
     find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
     if(ACTS_USE_SYSTEM_PYBIND11)
@@ -479,13 +493,6 @@ if(ACTS_BUILD_PLUGIN_DD4HEP)
         CONFIG
         COMPONENTS DDCore DDDetectors
     )
-endif()
-if(ACTS_BUILD_PLUGIN_JSON)
-    if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
-        find_package(nlohmann_json ${_acts_nlohmanjson_version} REQUIRED CONFIG)
-    else()
-        add_subdirectory(thirdparty/nlohmann_json)
-    endif()
 endif()
 if(ACTS_BUILD_PLUGIN_GBL)
     if(ACTS_USE_SYSTEM_GBL)
@@ -648,15 +655,35 @@ endif()
 if(ACTS_SETUP_DETRAY)
     # HACK: Temporary logic (aka technical debt) to make the detray component
     # work in traccc.
+
+    # Let ACTS set up all of the dependencies
     option(DETRAY_SETUP_VECMEM "" FALSE)
     option(DETRAY_SETUP_NLOHMANN "" FALSE)
     option(DETRAY_SETUP_EIGEN3 "" FALSE)
     option(DETRAY_SETUP_ACTSVG "" FALSE)
     option(DETRAY_SETUP_COVFIE "" FALSE)
     option(DETRAY_SETUP_PYBIND11 "" FALSE)
-    option(DETRAY_SVG_DISPLAY "" TRUE)
+
+    # Enable optional components depending on ACTS configuration
+    set_option_if(DETRAY_BUILD_CUDA ACTS_ENABLE_CUDA)
+    set_option_if(DETRAY_BUILD_UNIT_TESTS ACTS_BUILD_UNITTESTS)
+    set_option_if(DETRAY_BUILD_INTEGRATION_TESTS ACTS_BUILD_INTEGRATIONTESTS)
+    set_option_if(DETRAY_BUILD_BENCHMARKS ACTS_BUILD_BENCHMARKS)
+    set_option_if(DETRAY_BUILD_TUTORIALS ACTS_BUILD_EXAMPLES)
+    set_option_if(DETRAY_SVG_DISPLAY ACTS_BUILD_PLUGIN_ACTSVG)
+
+    # Enable dependencies of ACTS Detray plugin unit tests
+    set_option_if(DETRAY_BUILD_TEST_UTILS ACTS_BUILD_EXAMPLES_UNITTESTS)
+
     if(ACTS_BUILD_TRACCC)
-        option(DETRAY_BUILD_TEST_UTILS "" TRUE)
+        # Some detray validation tools are used in optional traccc libraries
+        set_option_if(
+            DETRAY_BUILD_VALIDATION_TOOLS
+            TRACCC_BUILD_PERFORMANCE
+            OR
+            TRACCC_BUILD_TESTING
+        )
+
         set(DETRAY_GENERATE_METADATA
             "itk_metadata"
             CACHE STRING

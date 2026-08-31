@@ -14,8 +14,6 @@
 #include "traccc/gbts_seeding/device/gbts_bin_spacepoints.hpp"
 #include "traccc/gbts_seeding/device/gbts_compress_graph.hpp"
 #include "traccc/gbts_seeding/device/gbts_convert_seeds.hpp"
-#include "traccc/gbts_seeding/device/gbts_count_eta_phi_bins.hpp"
-#include "traccc/gbts_seeding/device/gbts_count_spacepoints_by_layer.hpp"
 #include "traccc/gbts_seeding/device/gbts_count_terminus_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_fill_path_store.hpp"
 #include "traccc/gbts_seeding/device/gbts_find_minmax_radius.hpp"
@@ -23,7 +21,6 @@
 #include "traccc/gbts_seeding/device/gbts_link_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_make_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_match_graph_edges.hpp"
-#include "traccc/gbts_seeding/device/gbts_prefix_sum_eta_phi_bins.hpp"
 #include "traccc/gbts_seeding/device/gbts_rebid_seeds_for_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_reindex_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_reset_edge_bids.hpp"
@@ -102,33 +99,12 @@ class gbts_seeding_algorithm
   /// the payload types are defined in the per-function device headers.
   /// @{
 
-  /// Spacepoint-by-layer counting kernel launcher
-  ///
-  /// @param payload The payload for the kernel
-  ///
-  virtual void gbts_count_spacepoints_by_layer_kernel(
-      const gbts_count_spacepoints_by_layer_payload& payload) const = 0;
-
   /// Spacepoint-binning kernel launcher
   ///
   /// @param payload The payload for the kernel
   ///
   virtual void gbts_bin_spacepoints_kernel(
       const gbts_bin_spacepoints_payload& payload) const = 0;
-
-  /// Eta-phi counting kernel launcher
-  ///
-  /// @param payload The payload for the kernel
-  ///
-  virtual void gbts_count_eta_phi_bins_kernel(
-      const gbts_count_eta_phi_bins_payload& payload) const = 0;
-
-  /// Eta-phi prefix-sum kernel launcher
-  ///
-  /// @param payload The payload for the kernel
-  ///
-  virtual void gbts_prefix_sum_eta_phi_bins_kernel(
-      const gbts_prefix_sum_eta_phi_bins_payload& payload) const = 0;
 
   /// Node sorting kernel launcher
   ///

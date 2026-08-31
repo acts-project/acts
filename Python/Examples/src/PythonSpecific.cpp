@@ -38,6 +38,18 @@ using namespace ActsExamples;
 
 namespace {
 
+/// Insert @p obj into @p d under @p name, throwing if the name is already
+/// present. Histogram names are expected to be unique; a collision indicates
+/// a bug in the plot-tool configuration rather than an intentional overwrite.
+template <typename T>
+void insertUniqueHistogram(py::dict& d, const std::string& name, const T& obj) {
+  py::str key(name);
+  if (d.contains(key)) {
+    throw std::runtime_error("Duplicate histogram name: " + name);
+  }
+  d[key] = py::cast(obj, py::return_value_policy::copy);
+}
+
 /// A ROOT-free writer that collects pattern-recognition performance histograms
 /// and exposes them to Python via histograms() after s.run().
 class PythonPatternRecognitionPerformanceWriter final
@@ -113,43 +125,43 @@ class PythonPatternRecognitionPerformanceWriter final
     const auto& coll = m_collector;
 
     for (const auto& [name, eff] : coll.effPlotTool().efficiencies1D()) {
-      d[py::str(name)] = py::cast(eff, py::return_value_policy::copy);
+      insertUniqueHistogram(d, name, eff);
     }
     for (const auto& [name, eff] : coll.effPlotTool().efficiencies2D()) {
-      d[py::str(name)] = py::cast(eff, py::return_value_policy::copy);
+      insertUniqueHistogram(d, name, eff);
     }
     for (const auto& eff : coll.effPlotTool().trackEffVsEtaInPtRanges()) {
-      d[py::str(eff.name())] = py::cast(eff, py::return_value_policy::copy);
+      insertUniqueHistogram(d, eff.name(), eff);
     }
     for (const auto& eff : coll.effPlotTool().trackEffVsPtInAbsEtaRanges()) {
-      d[py::str(eff.name())] = py::cast(eff, py::return_value_policy::copy);
+      insertUniqueHistogram(d, eff.name(), eff);
     }
 
     for (const auto& [name, hist] : coll.fakePlotTool().histograms()) {
-      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+      insertUniqueHistogram(d, name, hist);
     }
     for (const auto& [name, eff] : coll.fakePlotTool().efficiencies()) {
-      d[py::str(name)] = py::cast(eff, py::return_value_policy::copy);
+      insertUniqueHistogram(d, name, eff);
     }
 
     for (const auto& [name, prof] : coll.duplicationPlotTool().profiles()) {
-      d[py::str(name)] = py::cast(prof, py::return_value_policy::copy);
+      insertUniqueHistogram(d, name, prof);
     }
     for (const auto& [name, eff] : coll.duplicationPlotTool().efficiencies()) {
-      d[py::str(name)] = py::cast(eff, py::return_value_policy::copy);
+      insertUniqueHistogram(d, name, eff);
     }
 
     for (const auto& [name, prof] : coll.trackSummaryPlotTool().profiles()) {
-      d[py::str(name)] = py::cast(prof, py::return_value_policy::copy);
+      insertUniqueHistogram(d, name, prof);
     }
     for (const auto& [key, tool] : coll.subDetectorSummaryTools()) {
       for (const auto& [name, prof] : tool.profiles()) {
-        d[py::str(name)] = py::cast(prof, py::return_value_policy::copy);
+        insertUniqueHistogram(d, prof.name(), prof);
       }
     }
 
     for (const auto& [name, prof] : coll.trackQualityPlotTool().profiles()) {
-      d[py::str(name)] = py::cast(prof, py::return_value_policy::copy);
+      insertUniqueHistogram(d, name, prof);
     }
 
     return d;
@@ -258,66 +270,64 @@ class PythonTrackParameterPerformanceWriter final
 
     // Residual histograms
     for (const auto& [name, hist] : coll.resPlotTool().res()) {
-      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+      insertUniqueHistogram(d, "res_" + name, hist);
     }
     for (const auto& [name, hist] : coll.resPlotTool().resVsEta()) {
-      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+      insertUniqueHistogram(d, "resVsEta_" + name, hist);
     }
     for (const auto& [name, hist] : coll.resPlotTool().resVsPt()) {
-      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+      insertUniqueHistogram(d, "resVsPt_" + name, hist);
     }
     for (const auto& [name, hist] : coll.resPlotTool().resVsEtaPhi()) {
-      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+      insertUniqueHistogram(d, "resVsEtaPhi_" + name, hist);
     }
     for (const auto& [name, hist] : coll.resPlotTool().resVsEtaPt()) {
-      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+      insertUniqueHistogram(d, "resVsEtaPt_" + name, hist);
     }
 
     // Pull histograms
     for (const auto& [name, hist] : coll.resPlotTool().pull()) {
-      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+      insertUniqueHistogram(d, "pull_" + name, hist);
     }
     for (const auto& [name, hist] : coll.resPlotTool().pullVsEta()) {
-      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+      insertUniqueHistogram(d, "pullVsEta_" + name, hist);
     }
     for (const auto& [name, hist] : coll.resPlotTool().pullVsPt()) {
-      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+      insertUniqueHistogram(d, "pullVsPt_" + name, hist);
     }
     for (const auto& [name, hist] : coll.resPlotTool().pullVsEtaPhi()) {
-      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+      insertUniqueHistogram(d, "pullVsEtaPhi_" + name, hist);
     }
     for (const auto& [name, hist] : coll.resPlotTool().pullVsEtaPt()) {
-      d[py::str(name)] = py::cast(hist, py::return_value_policy::copy);
+      insertUniqueHistogram(d, "pullVsEtaPt_" + name, hist);
     }
 
     // Efficiency histograms
     for (const auto& [name, eff] : coll.effPlotTool().efficiencies1D()) {
-      d[py::str(name)] = py::cast(eff, py::return_value_policy::copy);
+      insertUniqueHistogram(d, name, eff);
     }
     for (const auto& [name, eff] : coll.effPlotTool().efficiencies2D()) {
-      d[py::str(name)] = py::cast(eff, py::return_value_policy::copy);
+      insertUniqueHistogram(d, name, eff);
     }
     for (const auto& eff : coll.effPlotTool().trackEffVsEtaInPtRanges()) {
-      d[py::str(eff.name())] = py::cast(eff, py::return_value_policy::copy);
+      insertUniqueHistogram(d, eff.name(), eff);
     }
     for (const auto& eff : coll.effPlotTool().trackEffVsPtInAbsEtaRanges()) {
-      d[py::str(eff.name())] = py::cast(eff, py::return_value_policy::copy);
+      insertUniqueHistogram(d, eff.name(), eff);
     }
 
     // Track summary histograms
     for (const auto& [name, prof] : coll.trackSummaryPlotTool().profiles()) {
-      d[py::str(name)] = py::cast(prof, py::return_value_policy::copy);
+      insertUniqueHistogram(d, name, prof);
     }
 
     // Fitted mean/width profiles
     const auto fittedProfiles = coll.fitProfiles();
     for (const auto& profile : fittedProfiles.profiles1) {
-      d[py::str(profile.name())] =
-          py::cast(profile, py::return_value_policy::copy);
+      insertUniqueHistogram(d, profile.name(), profile);
     }
     for (const auto& profile : fittedProfiles.profiles2) {
-      d[py::str(profile.name())] =
-          py::cast(profile, py::return_value_policy::copy);
+      insertUniqueHistogram(d, profile.name(), profile);
     }
 
     return d;
