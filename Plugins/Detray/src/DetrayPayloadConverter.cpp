@@ -907,10 +907,19 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
           detrayGrid->owner_link.link = volPayload.index.link;
 
           // Add the surface grid to the payload
-          surfaceGrids->grids[volPayload.index.link].push_back(*detrayGrid);
+          if (!surfaceGrids.has_value()) {
+            surfaceGrids.emplace();
+          }
+
+          // per volume, we have a VECTOR of grids: detray volumes can have
+          // multiple grids
+          if (surfaceGrids->grids.contains(volPayload.index.link)) {
+            surfaceGrids->grids.at(volPayload.index.link)
+                .push_back(*detrayGrid);
+          } else {
+            surfaceGrids->grids[volPayload.index.link] = {*detrayGrid};
+          }
         }
-        // per volume, we have a VECTOR of grids: detray volumes can have
-        // multiple grids
       }
     }
   });
