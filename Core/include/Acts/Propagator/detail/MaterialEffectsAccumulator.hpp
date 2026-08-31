@@ -18,9 +18,8 @@ class MaterialEffectsAccumulator {
  public:
   /// Whether nothing has been accumulated yet
   ///
-  /// Cached rather than derived from @c m_accumulatedMaterial: every vacuum
-  /// step asks this, and reaching into the MaterialSlab for it costs a float
-  /// load from a cold corner of the stepper state plus a compare.
+  /// Cached rather than read back off @c m_accumulatedMaterial, which every
+  /// vacuum step would otherwise touch.
   /// @return true if no material has been accumulated
   bool isVacuum() const { return m_isVacuum; }
 

@@ -40,12 +40,7 @@ def find_by_name(name_exprs: Sequence[NamedExpr], name: str) -> NamedExpr | None
 
 
 def explicit(x: Basic) -> Basic:
-    """Explicit matrix view of a MatrixSymbol, passing anything else through.
-
-    A named matrix expression is referred to by its ``MatrixSymbol`` elsewhere
-    in a derivation, but has to be expanded into its elements to be
-    differentiated or multiplied out.
-    """
+    """Explicit matrix view of a MatrixSymbol, passing anything else through."""
     return x.as_explicit() if hasattr(x, "as_explicit") else x
 
 
@@ -64,15 +59,11 @@ def _collapse(x: Basic) -> Basic:
 
 
 class Derivation:
-    """An ordered derivation of named intermediate expressions.
+    """A straight-line sequence of named intermediate expressions.
 
-    Generators build a straight-line sequence of named quantities, each in
-    terms of the ones before it, which is what the printer later turns into
-    C++ locals. Collecting them here rather than in a bare list buys
-    ``check_same``: a hand-derived shortcut can be resolved back to closed
-    form and compared against what the plain chain rule produces, so an
-    algebraic simplification is verified before it is allowed into generated
-    code rather than trusted.
+    Each is in terms of the ones before it, which is what the printer turns
+    into C++ locals. Keeping them here rather than in a bare list buys
+    ``resolve`` and ``check_same``.
     """
 
     def __init__(self) -> None:
@@ -84,7 +75,6 @@ class Derivation:
         """Name an expression and append it to the derivation.
 
         @param name is the C++ identifier the expression will be emitted as
-        @param expr is the sympy expression it stands for
         @return the NamedExpr, whose ``.name`` refers to it downstream
         """
         if isinstance(expr, Matrix):
@@ -97,10 +87,6 @@ class Derivation:
     def record(self, named_expr: NamedExpr) -> NamedExpr:
         """Adopt an already-built NamedExpr, so `resolve` can see through it.
 
-        For derivations assembled elsewhere -- `rk4_subexpr` hands back its own
-        named intermediates -- that still need resolving back to closed form.
-
-        @param named_expr is the pair to adopt
         @return the same pair, for chaining
         """
         self.name_exprs.append(named_expr)
@@ -110,22 +96,17 @@ class Derivation:
     def resolve(self, expr: Basic, at: dict | None = None) -> Basic:
         """Substitute every named intermediate away, down to the inputs.
 
-        Without @p at this walks the definitions backwards, which resolves
-        everything in a single pass: they are already in dependency order, so
-        by the time a name is substituted every name its body mentions is
-        still ahead of it. A fixpoint loop over the whole substitution list
-        instead costs minutes on the dense derivation for the same answer.
+        Without @p at the definitions are walked backwards, which resolves
+        everything in one pass since they are in dependency order. A fixpoint
+        loop over the whole substitution list costs minutes on the dense
+        derivation for the same answer.
 
-        With @p at the walk goes *forwards* instead and each definition is
-        collapsed to a number as it is reached, so no expression is ever
-        larger than one definition. Backwards at a point is not enough: the
-        body substituted in still mentions the names before it, so the
-        expression grows exactly as it does symbolically and only collapses at
-        the end. An identity that holds symbolically holds at every point, so
-        the cheap direction is the one to take wherever the closed form is not
-        wanted for its own sake.
+        With @p at the walk goes *forwards* and each definition collapses to a
+        number as it is reached, so no expression is ever larger than one
+        definition. Backwards at a point is not enough: the body substituted
+        in still mentions the names before it, so the expression grows just as
+        it does symbolically and only collapses at the end.
 
-        @param expr is the expression to expand
         @param at optionally evaluates every definition at that point
         @return the closed form of @p expr, or its value at @p at
         """
@@ -151,8 +132,6 @@ class Derivation:
         """Fail unless two expressions agree once fully resolved.
 
         @param what names the shortcut, for the error message
-        @param expr_a is one form, typically the shortcut
-        @param expr_b is the other, typically the plain chain rule
         """
         diff = sym.simplify(sym.expand(self.resolve(expr_a) - self.resolve(expr_b)))
         if any(e != 0 for e in diff):
@@ -475,9 +454,8 @@ def my_expression_print(
         code = printer.doprint(Assignment(var, expr))
         if var not in outputs:
             if hasattr(expr, "shape"):
-                # std::array rather than a C array: same layout and the same
-                # `x[i]` access in every expression the printer emits, but it
-                # carries its own size and cannot decay to a pointer.
+                # std::array: same layout and the same `x[i]` access, but it
+                # carries its own size and cannot decay to a pointer
                 lines.append(f"std::array<T, {np.prod(expr.shape)}> {var}{{}};")
                 lines.extend(code.split("\n"))
             else:
@@ -505,10 +483,9 @@ def my_function_print(
 ) -> str:
     """Emit a whole function, signature included, in the ACTS dialect.
 
-    The detray backend spells its own signatures in ``gen_cxx_code``; this is
-    the equivalent for buffers indexed flatly. Matrices are passed as sized
-    spans and scalars by reference, so a caller cannot silently hand over the
-    wrong extent and the callee cannot decay one.
+    Matrices are passed as sized spans and scalars by reference, so a caller
+    cannot hand over the wrong extent. The detray backend spells its own
+    signatures in ``gen_cxx_code``.
     """
 
     def extent(sym):

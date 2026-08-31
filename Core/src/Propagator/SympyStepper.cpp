@@ -263,18 +263,17 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
                            : std::span<double>();
     if (!state.options.doDense || material == nullptr) {
       // A status code rather than a `Result<bool>`: a variant returned across
-      // the kernel boundary is read back through the stack on the accepted
-      // path, which is every path that matters.
-      const int status = rk4_vacuum(
+      // the kernel boundary goes through the stack on the accepted path.
+      const Rk4Status status = rk4_vacuum(
           startPos, startDir, t, h, qop, m, pabs,
           std::span<const double, 3>(state.field->data(), 3), getB,
           errorEstimate, 4 * stepTolerance, fieldError, endPos,
           state.pars[eFreeTime], endDir,
           std::span<double, 3>(lastField.data(), 3), derivative, jac);
-      if (status == 2) {
+      if (status == Rk4Status::FieldError) {
         return fieldError;
       }
-      accepted = status != 0;
+      accepted = status == Rk4Status::Accepted;
     } else {
       Result<bool> res =
           detail::sympyDenseStep(*this, state, *material, h, 4 * stepTolerance,
