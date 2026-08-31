@@ -41,9 +41,8 @@ namespace ActsExamples {
 /// `inputSimHits` and `inputMeasurementSimHitsMap` for the truth.
 ///
 /// With `reference = Measurement` those states are compared against their own
-/// calibrated measurement rather than the truth. That only constrains the
-/// local parameters, but it needs no truth input at all and therefore also
-/// runs on data, which is what makes alignment monitoring possible.
+/// calibrated measurement instead. That only constrains the local parameters,
+/// but it needs no truth input and therefore also runs on data.
 ///
 /// A common file can be provided for the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing file

@@ -13,6 +13,7 @@
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
+#include <cstdint>
 #include <utility>
 
 std::optional<Acts::BoundTrackParameters>
@@ -128,34 +129,32 @@ ActsExamples::measurementResidual(const ConstTrackStateProxy& state,
     return std::nullopt;
   }
 
-  // the projector only selects bound indices, so `H x` is `x(subspace)` and
-  // `H P H^T` is `P(subspace, subspace)`. no matrix products needed.
-  const Acts::DynamicVector measurement = state.effectiveCalibrated();
-  const Acts::DynamicMatrix measurementCovariance =
-      state.effectiveCalibratedCovariance();
+  const auto measurement = state.effectiveCalibrated();
+  const auto measurementCovariance = state.effectiveCalibratedCovariance();
 
   const Acts::BoundVector& parameterVector = parameters.parameters();
   const Acts::BoundMatrix parameterCovariance =
       parameters.covariance().value_or(Acts::BoundMatrix::Zero());
 
-  // parameters that used the measurement are pulled towards it, so their
-  // covariance is correlated with the measurement and has to be subtracted
-  // instead of added
+  // parameters that used the measurement are correlated with it, so their
+  // covariance subtracts instead of adding
   const double sign = parametersUseOwnMeasurement(parameterType) ? -1. : 1.;
 
-  const std::size_t size = subspace.size();
-  Acts::DynamicVector residual(size);
-  Acts::DynamicMatrix covariance = measurementCovariance;
-  for (std::size_t i = 0; i < size; ++i) {
-    // the reference is subtracted from the reconstructed value, matching the
-    // convention of the truth residuals
-    residual[i] = parameterVector[subspace[i]] - measurement[i];
+  // the projector only selects bound indices, so `H x` is `x(subspace)` and
+  // `H P H^T` is `P(subspace, subspace)`, which writes straight into the full
+  // bound space without any matrix products
+  Acts::BoundVector residual = Acts::BoundVector::Zero();
+  Acts::BoundMatrix covariance = Acts::BoundMatrix::Zero();
+  for (std::size_t i = 0; i < subspace.size(); ++i) {
+    const std::uint8_t iBound = subspace[i];
+    residual[iBound] = parameterVector[iBound] - measurement[i];
 
-    for (std::size_t j = 0; j < size; ++j) {
-      covariance(i, j) += sign * parameterCovariance(subspace[i], subspace[j]);
+    for (std::size_t j = 0; j < subspace.size(); ++j) {
+      const std::uint8_t jBound = subspace[j];
+      covariance(iBound, jBound) = measurementCovariance(i, j) +
+                                   sign * parameterCovariance(iBound, jBound);
     }
   }
 
-  return MeasurementResidual{subspace, subspace.expandVector(residual),
-                             subspace.expandMatrix(covariance)};
+  return MeasurementResidual{subspace, residual, covariance};
 }

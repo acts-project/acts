@@ -9,15 +9,14 @@
 #pragma once
 
 #include "Acts/EventData/BoundTrackParameters.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
-#include <cstdint>
 #include <map>
 #include <memory>
-#include <span>
 #include <string>
 #include <vector>
 
@@ -68,8 +67,6 @@ class ResPlotTool {
     double eta;
     double phi;
     double pt;
-    double charge;
-    double absCharge;
   };
 
   /// @param cfg Configuration struct
@@ -93,16 +90,17 @@ class ResPlotTool {
   /// Fill the residual and pull of a subset of the bound parameters.
   ///
   /// For references that constrain only part of the parameters, e.g. a
-  /// measurement. Parameters outside @p indices are left untouched, and the
+  /// measurement. Parameters outside @p subspace are left untouched, and the
   /// derived `q/pT` histograms are never filled since they need theta and
   /// q/p.
   ///
   /// @param binning the quantities to bin the histograms in
-  /// @param indices the bound indices to fill
-  /// @param residuals the residual per bound index; only @p indices are read
+  /// @param subspace the bound parameters to fill
+  /// @param residuals the residual per bound index; only @p subspace is read
   /// @param residualCovariance the covariance of @p residuals; only the
-  ///        diagonal entries of @p indices are read
-  void fill(const Binning& binning, std::span<const std::uint8_t> indices,
+  ///        diagonal entries of @p subspace are read
+  void fill(const Binning& binning,
+            const Acts::VariableBoundSubspaceHelper& subspace,
             const Acts::BoundVector& residuals,
             const Acts::BoundMatrix& residualCovariance);
 
@@ -159,6 +157,7 @@ class ResPlotTool {
   std::map<std::string, Histogram3> m_pullVsEtaPt;
 
   void fill(const Acts::BoundVector& truthVector, const Binning& binning,
+            double truthCharge, double truthAbsCharge,
             const Acts::BoundTrackParameters& fittedParameters);
 
   void fillResidual(const std::string& paramName, double residual,

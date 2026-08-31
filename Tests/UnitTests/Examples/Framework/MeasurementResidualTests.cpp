@@ -21,8 +21,9 @@
 #include "ActsExamples/Validation/ParametersOnSurface.hpp"
 
 #include <array>
+#include <cstdint>
 #include <memory>
-#include <vector>
+#include <span>
 
 using namespace Acts;
 using namespace ActsExamples;
@@ -63,7 +64,8 @@ BoundTrackParameters makeParameters(
                               ParticleHypothesis::pion());
 }
 
-/// Holds a one-state track container so the proxies stay valid.
+/// Holds the container backing the single track state under test, so the
+/// returned proxy stays valid for the lifetime of the fixture.
 struct Fixture {
   VectorTrackContainer trackBackend;
   VectorMultiTrajectory trajectory;
@@ -73,25 +75,32 @@ struct Fixture {
 
   std::shared_ptr<PlaneSurface> surface = makeSurface();
 
-  /// Add a state carrying a measurement of @p indices.
+  /// Make the single track state.
   ///
-  /// @param indices the bound indices the measurement constrains
+  /// @param indices the bound indices the measurement constrains; an empty
+  ///        range leaves the state without a measurement
   /// @return the state as a const proxy
-  ConstTrackStateProxy addState(std::span<const std::uint8_t> indices) {
+  ConstTrackStateProxy makeState(std::span<const std::uint8_t> indices) {
+    // a second state would invalidate the proxy returned for the first
+    BOOST_REQUIRE(constContainer == nullptr);
+
     auto state = container.trackStateContainer().makeTrackState();
     state.setReferenceSurface(surface);
-    state.setProjectorSubspaceIndices(indices);
 
-    state.allocateCalibrated(indices.size());
-    auto calibrated = state.effectiveCalibrated();
-    auto calibratedCovariance = state.effectiveCalibratedCovariance();
-    calibratedCovariance.setZero();
+    if (!indices.empty()) {
+      state.setProjectorSubspaceIndices(indices);
 
-    const std::array<double, 2> values{measLoc0, measLoc1};
-    const std::array<double, 2> variances{measVar0, measVar1};
-    for (std::size_t i = 0; i < indices.size(); ++i) {
-      calibrated[i] = values.at(i);
-      calibratedCovariance(i, i) = variances.at(i);
+      state.allocateCalibrated(indices.size());
+      auto calibrated = state.effectiveCalibrated();
+      auto calibratedCovariance = state.effectiveCalibratedCovariance();
+      calibratedCovariance.setZero();
+
+      const std::array<double, 2> values{measLoc0, measLoc1};
+      const std::array<double, 2> variances{measVar0, measVar1};
+      for (std::size_t i = 0; i < indices.size(); ++i) {
+        calibrated[i] = values.at(i);
+        calibratedCovariance(i, i) = variances.at(i);
+      }
     }
 
     constContainer = std::make_unique<ConstTrackContainer>(
@@ -121,7 +130,7 @@ BOOST_AUTO_TEST_CASE(UseOwnMeasurement) {
 BOOST_AUTO_TEST_CASE(TwoDimensionalMeasurement) {
   Fixture fixture;
   const std::array<std::uint8_t, 2> indices{eBoundLoc0, eBoundLoc1};
-  const ConstTrackStateProxy state = fixture.addState(indices);
+  const ConstTrackStateProxy state = fixture.makeState(indices);
 
   const auto residual = measurementResidual(
       state, makeParameters(fixture.surface), TrackParameterType::Predicted);
@@ -149,7 +158,7 @@ BOOST_AUTO_TEST_CASE(TwoDimensionalMeasurement) {
 BOOST_AUTO_TEST_CASE(SmoothedParametersSubtractTheCovariance) {
   Fixture fixture;
   const std::array<std::uint8_t, 2> indices{eBoundLoc0, eBoundLoc1};
-  const ConstTrackStateProxy state = fixture.addState(indices);
+  const ConstTrackStateProxy state = fixture.makeState(indices);
 
   const auto residual = measurementResidual(
       state, makeParameters(fixture.surface), TrackParameterType::Smoothed);
@@ -168,7 +177,7 @@ BOOST_AUTO_TEST_CASE(SmoothedParametersSubtractTheCovariance) {
 BOOST_AUTO_TEST_CASE(OneDimensionalMeasurement) {
   Fixture fixture;
   const std::array<std::uint8_t, 1> indices{eBoundLoc0};
-  const ConstTrackStateProxy state = fixture.addState(indices);
+  const ConstTrackStateProxy state = fixture.makeState(indices);
 
   const auto residual = measurementResidual(
       state, makeParameters(fixture.surface), TrackParameterType::Predicted);
@@ -190,16 +199,9 @@ BOOST_AUTO_TEST_CASE(OneDimensionalMeasurement) {
 
 BOOST_AUTO_TEST_CASE(NoMeasurement) {
   Fixture fixture;
-  auto state = fixture.container.trackStateContainer().makeTrackState();
-  state.setReferenceSurface(fixture.surface);
+  const ConstTrackStateProxy state = fixture.makeState({});
 
-  const ConstTrackContainer constContainer(
-      std::make_shared<ConstVectorTrackContainer>(fixture.trackBackend),
-      std::make_shared<ConstVectorMultiTrajectory>(fixture.trajectory));
-  const ConstTrackStateProxy constState =
-      constContainer.trackStateContainer().getTrackState(state.index());
-
-  BOOST_CHECK(!measurementResidual(constState, makeParameters(fixture.surface),
+  BOOST_CHECK(!measurementResidual(state, makeParameters(fixture.surface),
                                    TrackParameterType::Predicted)
                    .has_value());
 }

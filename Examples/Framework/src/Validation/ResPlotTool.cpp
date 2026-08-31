@@ -160,9 +160,8 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
   // direction through phi/theta
   fill(truthParameters,
        Binning{eta(truthParticle.direction()), phi(truthParticle.direction()),
-               truthParticle.transverseMomentum(), truthParticle.charge(),
-               truthParticle.absoluteCharge()},
-       fittedParamters);
+               truthParticle.transverseMomentum()},
+       truthParticle.charge(), truthParticle.absoluteCharge(), fittedParamters);
 }
 
 void ResPlotTool::fill(const Acts::BoundTrackParameters& truthParameters,
@@ -181,13 +180,13 @@ void ResPlotTool::fill(const Acts::BoundTrackParameters& truthParameters,
   fill(truthParameters.parameters(),
        Binning{eta(truthParameters.direction()),
                phi(truthParameters.direction()),
-               truthParameters.transverseMomentum(), truthCharge,
-               std::abs(truthCharge)},
-       fittedParameters);
+               truthParameters.transverseMomentum()},
+       truthCharge, std::abs(truthCharge), fittedParameters);
 }
 
 void ResPlotTool::fill(const Acts::BoundVector& truthVector,
-                       const Binning& binning,
+                       const Binning& binning, double truthCharge,
+                       double truthAbsCharge,
                        const Acts::BoundTrackParameters& fittedParameters) {
   using enum Acts::BoundIndices;
 
@@ -215,8 +214,8 @@ void ResPlotTool::fill(const Acts::BoundVector& truthVector,
 
   // `reco(q/pT)` and `true(pT/q) * reco(q/pT)` residual and pull
   {
-    const double truthQoverPt = binning.charge / truthPt;
-    const double truthPtOverAbsQ = truthPt / binning.absCharge;
+    const double truthQoverPt = truthCharge / truthPt;
+    const double truthPtOverAbsQ = truthPt / truthAbsCharge;
     const double recoQoverPt =
         trackParameters[eBoundQOverP] / std::sin(trackParameters[eBoundTheta]);
     const double residualQoverPt = recoQoverPt - truthQoverPt;
@@ -252,17 +251,16 @@ void ResPlotTool::fill(const Acts::BoundVector& truthVector,
 }
 
 void ResPlotTool::fill(const Binning& binning,
-                       std::span<const std::uint8_t> indices,
+                       const Acts::VariableBoundSubspaceHelper& subspace,
                        const Acts::BoundVector& residuals,
                        const Acts::BoundMatrix& residualCovariance) {
-  for (const std::uint8_t index : indices) {
+  for (const std::uint8_t index : subspace) {
     const std::string& parName = m_cfg.paramNames.at(index);
 
     const double residual = residuals[index];
     fillResidual(parName, residual, binning.eta, binning.phi, binning.pt);
 
-    // a residual covariance can legitimately be non-positive, e.g. `V - HPH^T`
-    // for parameters that used the measurement, in which case there is no pull
+    // `V - HPH^T` is not positive definite, so there is not always a pull
     const double var = residualCovariance(index, index);
     const double pull = var > 0 ? residual / std::sqrt(var) : nan;
     fillPull(parName, pull, binning.eta, binning.phi, binning.pt);

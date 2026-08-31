@@ -13,17 +13,63 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
-#include <cmath>
+#include <algorithm>
+#include <array>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <utility>
 
 namespace ActsExamples {
+
+namespace {
+
+/// The `ResPlotTool` config to plot the given source with.
+///
+/// On a sensor surface the first two bound parameters are local coordinates,
+/// not the perigee `d0`/`z0` the `ResPlotTool` defaults are named for, so
+/// rename them along with their residual axis. Names the caller picked itself
+/// are left alone.
+ResPlotTool::Config resPlotToolConfig(
+    const TrackParameterPerformanceCollector::Config& cfg) {
+  if (cfg.parameterSource != TrackParameterSource::TrackState) {
+    return cfg.resPlotToolConfig;
+  }
+
+  ResPlotTool::Config plotCfg = cfg.resPlotToolConfig;
+  constexpr std::array<std::pair<std::string_view, std::string_view>, 2>
+      renames{{{"d0", "loc0"}, {"z0", "loc1"}}};
+
+  for (const auto& [from, to] : renames) {
+    const auto name = std::ranges::find(plotCfg.paramNames, from);
+    if (name == plotCfg.paramNames.end()) {
+      continue;
+    }
+    *name = to;
+
+    auto axis = plotCfg.varBinning.extract(std::string("Residual_") +
+                                           std::string(from));
+    if (axis.empty()) {
+      continue;
+    }
+    axis.key() = std::string("Residual_") + std::string(to);
+    std::string& title = axis.mapped().metadata();
+    if (const auto pos = title.find(from); pos != std::string::npos) {
+      title.replace(pos, from.size(), to);
+    }
+    plotCfg.varBinning.insert(std::move(axis));
+  }
+
+  return plotCfg;
+}
+
+}  // namespace
 
 TrackParameterPerformanceCollector::TrackParameterPerformanceCollector(
     Config cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(std::move(cfg)),
       m_logger(std::move(logger)),
-      m_resPlotTool(m_cfg.resPlotToolConfig, m_logger->level()),
+      m_resPlotTool(resPlotToolConfig(m_cfg), m_logger->level()),
       m_effPlotTool(m_cfg.effPlotToolConfig, m_logger->level()),
       m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig,
                              m_logger->level()) {
@@ -41,10 +87,8 @@ TrackParameterPerformanceCollector::TrackParameterPerformanceCollector(
           "source");
     }
     if (!m_cfg.parameterType.has_value()) {
-      // the residual covariance is `V + HPH^T` for parameters that do not use
-      // the state's own measurement and `V - HPH^T` for those that do. without
-      // an explicit type the pick is per state, which would mix both
-      // conventions into the same histogram with nothing to tell them apart.
+      // the sign of `HPH^T` in the residual covariance depends on the type, so
+      // picking it per state would mix both conventions into one histogram
       throw std::invalid_argument(
           "The Measurement reference requires an explicit parameter type");
     }
@@ -218,15 +262,13 @@ void TrackParameterPerformanceCollector::fillTrackStates(
         continue;
       }
 
-      // without truth the binning has to come off the reconstructed side,
-      // which is also all that is available on data
-      const double recoCharge = reco->charge();
-      const ResPlotTool::Binning binning{
-          eta(reco->direction()), phi(reco->direction()),
-          reco->transverseMomentum(), recoCharge, std::abs(recoCharge)};
+      // without truth the binning comes off the reconstructed side
+      const ResPlotTool::Binning binning{eta(reco->direction()),
+                                         phi(reco->direction()),
+                                         reco->transverseMomentum()};
 
-      m_resPlotTool.fill(binning, residual->subspace.indices(),
-                         residual->residual, residual->covariance);
+      m_resPlotTool.fill(binning, residual->subspace, residual->residual,
+                         residual->covariance);
       continue;
     }
 
@@ -257,7 +299,6 @@ void TrackParameterPerformanceCollector::logSummary() const {
 
   ACTS_INFO("=== Track Parameter Performance Summary ===");
   ACTS_INFO("Total tracks: " << m_stats.nTotalTracks);
-  // the matching counters are only filled when there is truth to match against
   if (againstTruth) {
     ACTS_INFO("Total matched tracks: " << m_stats.nTotalMatchedTracks);
     ACTS_INFO("Total particles: " << m_stats.nTotalParticles);

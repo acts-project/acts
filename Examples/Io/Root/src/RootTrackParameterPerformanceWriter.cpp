@@ -63,8 +63,7 @@ RootTrackParameterPerformanceWriter::RootTrackParameterPerformanceWriter(
     throw std::invalid_argument("Missing output filename");
   }
 
-  // the measurement reference compares each state against its own measurement
-  // and therefore needs no truth input whatsoever
+  // the measurement reference needs no truth input
   if (m_cfg.reference == TrackParameterReference::Truth) {
     if (m_cfg.inputParticles.empty()) {
       throw std::invalid_argument("Missing particles input collection");

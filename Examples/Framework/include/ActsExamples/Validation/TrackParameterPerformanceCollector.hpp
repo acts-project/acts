@@ -46,9 +46,8 @@ enum class TrackParameterReference {
   /// The truth particle, or the simulated hits behind the measurements.
   Truth,
   /// The calibrated measurement of the track state itself. Constrains only
-  /// the local parameters, but needs no truth information at all and
-  /// therefore also works on data, which is what makes alignment monitoring
-  /// possible. `TrackState` source only.
+  /// the local parameters, but needs no truth and therefore also runs on
+  /// data. `TrackState` source only.
   Measurement,
 };
 
@@ -62,11 +61,12 @@ enum class TrackParameterReference {
 /// With `parameterSource = Track` the track parameters at the track reference
 /// surface are compared to the truth particle. With `TrackState` every
 /// selected measurement state is compared on its own surface, which is what
-/// makes per-sensor estimates, e.g. from a seed, measurable.
+/// makes per-sensor estimates, e.g. from a seed, measurable. The first two
+/// bound parameters are local coordinates there, so the histograms are named
+/// `loc0`/`loc1` instead of the perigee `d0`/`z0`.
 ///
 /// `reference` picks what a track state is compared against: the truth behind
-/// its measurement, or the measurement itself. The latter constrains only the
-/// local parameters but needs no truth, so it also runs on data.
+/// its measurement, or the measurement itself.
 ///
 /// @note The caller must ensure exclusive access (e.g. hold a mutex) when
 ///       calling fill(). This class applies no locking of its own.
@@ -129,8 +129,6 @@ class TrackParameterPerformanceCollector {
 
   /// Fill histograms for one event without any truth information.
   ///
-  /// The measurement residuals live in the local frame of the state's own
-  /// surface, so neither a geometry context nor any truth input is needed.
   /// The efficiency and track summary plots stay empty in this mode.
   ///
   /// @param tracks the input tracks

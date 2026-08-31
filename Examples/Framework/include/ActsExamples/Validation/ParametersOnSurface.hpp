@@ -90,31 +90,29 @@ bool parametersUseOwnMeasurement(TrackParameterType parameterType);
 struct MeasurementResidual {
   /// The bound parameters the measurement constrains.
   Acts::VariableBoundSubspaceHelper subspace;
-  /// `reco - measurement`, expanded into the full bound space. Components
-  /// outside @c subspace are zero.
+  /// `reco - measurement` in the full bound space, zero outside @c subspace.
   Acts::BoundVector residual;
-  /// The covariance of @c residual, expanded into the full bound space.
-  /// Components outside @c subspace are zero.
+  /// The covariance of @c residual, zero outside @c subspace.
   Acts::BoundMatrix covariance;
 };
 
 /// Compute the residual of track state parameters against the calibrated
 /// measurement of that same state.
 ///
-/// Both live in the local frame of the state's surface, so this needs no
-/// geometry context and, more importantly, no truth information.
+/// Both live in the local frame of the state's surface, so this needs neither
+/// a geometry context nor truth information.
 ///
 /// The residual covariance is @f$ V + HPH^T @f$ for parameters that do not
 /// use the state's own measurement and @f$ V - HPH^T @f$ for those that do,
 /// with @f$ V @f$ the measurement covariance, @f$ P @f$ the parameter
 /// covariance, and @f$ H @f$ the projector. The subtracted form is not
-/// positive definite in general; the caller has to handle a non-positive
+/// positive definite in general, so the caller has to handle a non-positive
 /// variance.
 ///
 /// @param state The track state holding the measurement
 /// @param parameters The reconstructed parameters on the state's surface
-/// @param parameterType Which parameters @p parameters are, which decides the
-///        sign of the parameter covariance in the residual covariance
+/// @param parameterType Which parameters @p parameters are, deciding the sign
+///        of @f$ HPH^T @f$
 /// @return The residual, or nullopt if the state carries no measurement
 std::optional<MeasurementResidual> measurementResidual(
     const ConstTrackStateProxy& state,
