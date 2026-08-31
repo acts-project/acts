@@ -23,7 +23,6 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -37,8 +36,9 @@ class GraphBasedTrackSeeder {
     /// Enable beam spot correction.
     bool beamSpotCorrection = false;
 
-    /// Look-up table input file path.
-    std::string lutInputFile;
+    /// Accepted tau range per cluster width bin, needed by the cluster width
+    /// cuts and ignored without them.
+    detail::GbtsTauLookupTable tauLookupTable;
 
     /// Take the strip-to-strip layer connections from the connector file
     /// instead of the pixel-to-pixel ones. Read where the file is loaded, not
@@ -329,18 +329,10 @@ class GraphBasedTrackSeeder {
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
 
-  detail::GbtsTauLookupTable m_tauLut;
-
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
 
   const Acts::Logger& logger() const { return *m_logger; }
-
-  /// Parse the tau lookup table from file.
-  /// @param lutInputFile Path to the lookup table input file
-  /// @return Parsed tau lookup table
-  detail::GbtsTauLookupTable parseTauLookupTable(
-      const std::string& lutInputFile) const;
 
   /// Build doublet graph from nodes.
   /// @param roi Region of interest descriptor

@@ -110,8 +110,7 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
 }
 
 ProcessCode GbtsTrainingAlgorithm::finalize() {
-  const auto layerTable =
-      m_layerConnectionTool->createConnectionTable(m_cfg.outputFileDir);
+  const auto layerTable = m_layerConnectionTool->createConnectionTable();
 
   // define output text file
   std::ofstream outputFile(m_cfg.outputFileDir);

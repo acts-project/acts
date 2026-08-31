@@ -14,7 +14,6 @@
 #include <memory>
 #include <optional>
 #include <span>
-#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -112,10 +111,8 @@ class GbtsLayerConnectionTool {
   void addTrack(std::span<const HitCoordinates> track);
 
   /// Creates the connection table
-  /// @param outputFileLocation the location for the layer connection table
   /// @return layer pairs
-  GbtsLayerConnectionTool::LayerIdPairs createConnectionTable(
-      const std::string& outputFileLocation) const;
+  GbtsLayerConnectionTool::LayerIdPairs createConnectionTable() const;
 
  private:
   /// returns the Acts logger

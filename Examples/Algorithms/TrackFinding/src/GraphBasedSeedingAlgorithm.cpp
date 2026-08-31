@@ -14,6 +14,7 @@
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
+#include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <algorithm>
@@ -107,6 +108,36 @@ ConnectorTable readConnectorTable(const std::string &path,
   return table;
 }
 
+/// Read an ATLAS GBTS tau lookup table: per line a cluster width, the bulk tau
+/// bounds and the near-edge ones. The width is dropped - a row is located by
+/// index, one row per `tauLutBinWidth` of cluster width, never searched.
+///
+/// @param path Path to the lookup table file
+Acts::Experimental::detail::GbtsTauLookupTable readTauLookupTable(
+    const std::string &path) {
+  std::ifstream inStream(path);
+  if (!inStream) {
+    throw std::runtime_error("Cannot open GBTS tau lookup table '" + path +
+                             "'");
+  }
+
+  Acts::Experimental::detail::GbtsTauLookupTable tauLut;
+
+  float clusterWidth{};
+  Acts::Experimental::detail::GbtsTauBounds bounds;
+  while (inStream >> clusterWidth >> bounds.minTau >> bounds.maxTau >>
+         bounds.minTauNearEdge >> bounds.maxTauNearEdge) {
+    tauLut.push_back(bounds);
+  }
+
+  if (!inStream.eof()) {
+    // ended on a parse error, not on a clean EOF
+    throw std::runtime_error("Malformed GBTS tau lookup table '" + path + "'");
+  }
+
+  return tauLut;
+}
+
 }  // namespace
 
 GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
@@ -123,6 +154,12 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // read which layers may be connected
   const ConnectorTable connectorTable = readConnectorTable(
       m_cfg.connectorInputFile, m_cfg.seedFinderConfig.useStripConnections);
+
+  // the cluster width cuts are the only user of the tau lookup table
+  if (m_cfg.seedFinderConfig.useClusterWidthCuts) {
+    m_cfg.seedFinderConfig.tauLookupTable =
+        readTauLookupTable(m_cfg.lutInputFile);
+  }
 
   // create the TrigInDetSiLayers (Logical Layers),
   // as well as a map that tracks there index in m_layerGeometry
@@ -465,11 +502,11 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("===== GraphBasedSeedingAlgorithm =====");
   ACTS_DEBUG("layerMappingFile: " << m_cfg.layerMappingFile);
   ACTS_DEBUG("connectorInputFile: " << m_cfg.connectorInputFile);
+  ACTS_DEBUG("lutInputFile: " << m_cfg.lutInputFile);
   ACTS_DEBUG("etaBinWidthOverride: " << m_cfg.etaBinWidthOverride);
   ACTS_DEBUG("===== GraphBasedTrackSeeder =====");
   const auto &cfg1 = m_cfg.seedFinderConfig;
   ACTS_DEBUG("BeamSpotCorrection: " << cfg1.beamSpotCorrection);
-  ACTS_DEBUG("lutInputFile: " << cfg1.lutInputFile);
   ACTS_DEBUG("useStripConnections: " << cfg1.useStripConnections);
   ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
   ACTS_DEBUG("matchBeforeCreate: " << cfg1.matchBeforeCreate);

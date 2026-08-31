@@ -16,7 +16,6 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
-#include <fstream>
 #include <memory>
 #include <numbers>
 #include <stdexcept>
@@ -53,7 +52,11 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
         "GraphBasedTrackSeeder: phiSortBuckets exceeds the maximum");
   }
 
-  m_tauLut = parseTauLookupTable(m_cfg.lutInputFile);
+  if (m_cfg.useClusterWidthCuts && m_cfg.tauLookupTable.empty()) {
+    throw std::invalid_argument(
+        "GraphBasedTrackSeeder: the cluster width cuts need a tau lookup "
+        "table");
+  }
 }
 
 GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
@@ -67,7 +70,7 @@ GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
   config.phiSortBuckets = m_cfg.phiSortBuckets;
   config.tauLutBinWidth = m_cfg.tauLutBinWidth;
 
-  return GbtsNodeStorage(config, m_geometry, m_tauLut);
+  return GbtsNodeStorage(config, m_geometry, m_cfg.tauLookupTable);
 }
 
 void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& spacePoints,
@@ -127,40 +130,6 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
     newSeed.assignSpacePointIndices(seed.spacePoints);
     newSeed.quality() = seed.seedQuality;
   }
-}
-
-detail::GbtsTauLookupTable GraphBasedTrackSeeder::parseTauLookupTable(
-    const std::string& lutInputFile) const {
-  if (!m_cfg.useClusterWidthCuts) {
-    return {};
-  }
-  if (lutInputFile.empty()) {
-    throw std::runtime_error("Cannot find tau lookup table file");
-  }
-
-  std::ifstream ifs(std::string(lutInputFile).c_str());
-  if (!ifs.is_open()) {
-    throw std::runtime_error("Failed to open tau lookup table file");
-  }
-
-  detail::GbtsTauLookupTable tauLut;
-  tauLut.reserve(100);
-
-  // per line: cluster width, bulk tau bounds, near-edge tau bounds. The width
-  // is dropped - rows are located by index, never searched.
-  float clusterWidth{};
-  detail::GbtsTauBounds bounds;
-  while (ifs >> clusterWidth >> bounds.minTau >> bounds.maxTau >>
-         bounds.minTauNearEdge >> bounds.maxTauNearEdge) {
-    tauLut.push_back(bounds);
-  }
-
-  if (!ifs.eof()) {
-    // ended if parse error present, not clean EOF
-    throw std::runtime_error("Stopped reading LUT file due to parse error");
-  }
-
-  return tauLut;
 }
 
 std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(

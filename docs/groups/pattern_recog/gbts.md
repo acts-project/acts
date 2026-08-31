@@ -211,10 +211,12 @@ the angle. Wide clusters in the pixel endcap are dropped entirely
 (`maxEndcapClusterWidth`).
 
 > [!note]
-> The lookup table is only consulted for pixel barrel layers, and the ACTS
-> examples framework does not currently provide cluster widths or local
-> positions, so this path is exercised only by experiment-side integrations that
-> supply them through `insert`.
+> The seeder takes the table itself as `tauLookupTable`, not a path to it;
+> `ActsExamples::GraphBasedSeedingAlgorithm` parses it from ATLAS' text format.
+> It is only consulted for pixel barrel layers, and the ACTS examples framework
+> does not currently provide cluster widths or local positions, so this path is
+> exercised only by experiment-side integrations that supply them through
+> `insert`.
 
 ## Configuration {#gbts-configuration}
 
@@ -236,7 +238,7 @@ The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrac
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
 | `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |
 | `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
-| `useClusterWidthCuts`, `lutInputFile` | @ref gbts-ml | cluster-width based @f$\tau@f$ windows |
+| `useClusterWidthCuts`, `tauLookupTable` | @ref gbts-ml | cluster-width based @f$\tau@f$ windows |
 | `maxEndcapClusterWidth`, `moduleHalfLengthY`, `moduleEdgeTolerance` | @ref gbts-ml | cluster-width acceptance and module-edge handling |
 
 There is no large radius tracking mode. LRT is these options set to the values
