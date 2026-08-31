@@ -62,8 +62,7 @@ Acts::Result<Acts::FreeVector> estimateFreeParams(
                                                   refineIterations, weights);
 }
 
-// a no-op if the parameters are already on the surface, which a space point
-// does not have to be
+// a space point does not have to lie on the surface of its own measurement
 Acts::Result<Acts::BoundVector> transportToSurface(
     const SeedPropagator& propagator, const SeedPropagatorOptions& options,
     const Acts::FreeVector& freeParams, const Acts::Surface& surface,
@@ -126,12 +125,6 @@ TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   }
   if (!m_cfg.magneticField) {
     throw std::invalid_argument("Missing magnetic field");
-  }
-  if (m_cfg.spacePointSelection != SeedSpacePointSelection::All &&
-      (m_cfg.spacePointWeight || m_cfg.geometricRefineIterations > 0)) {
-    throw std::invalid_argument(
-        "Space point weights and circle fit refinement only apply to the fit "
-        "of all space points of a seed");
   }
 
   m_inputSeeds.initialize(m_cfg.inputSeeds);

@@ -78,11 +78,11 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// Minimum transverse distance between the selected space points. Only the
     /// triplet selections apply it.
     double minTransverseDistance = 10 * Acts::UnitConstants::mm;
-    /// Geometric refinement iterations of the circle fit. Requires
-    /// @c SeedSpacePointSelection::All, a triplet is fitted exactly.
+    /// Geometric refinement iterations of the circle fit. Only
+    /// @c SeedSpacePointSelection::All fits a circle, a triplet is exact.
     std::size_t geometricRefineIterations = 0;
     /// Optional space point weight. Unset weights every point the same and,
-    /// like the refinement, it requires @c SeedSpacePointSelection::All.
+    /// like the refinement, only @c SeedSpacePointSelection::All reads it.
     SpacePointWeight spacePointWeight;
 
     /// Initial sigmas for the track parameters.
