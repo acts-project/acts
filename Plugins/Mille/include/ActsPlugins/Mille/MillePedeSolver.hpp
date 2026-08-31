@@ -47,8 +47,6 @@ class MillePedeSolver {
         "";  /// destination for the histogram file - if empty, keep original
     std::string evFileName =
         "";  /// destination for the eigenvector file - if empty, keep original
-    std::filesystem::path customPedeInstall =
-        "";  // if set, override the location of the `pede` program.
   };
 
   /// @brief package the result of the alignment fit
