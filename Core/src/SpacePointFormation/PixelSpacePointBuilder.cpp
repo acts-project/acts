@@ -21,22 +21,25 @@ SquareMatrix2 PixelSpacePointBuilder::computeCovarianceZR(
   // longitudinal position. reduce computations by transforming the
   // covariance directly from local to z/r.
   //
-  // compute Jacobian from global coordinates to z/r
+  // the Jacobian from global coordinates to z/r is
   //
   //       dz/dz = 1
   //           r = sqrt(x² + y²)
   //   dr/d{x,y} = {x,y} / r
   //
+  // and is applied to the reference frame directly rather than multiplied out,
+  // since three of its six entries are structurally zero.
   const double x = spacePoint.x();
   const double y = spacePoint.y();
   const double scale = 1 / fastHypot(x, y);
-  Matrix<2, 3> jacXyzToZr = Matrix<2, 3>::Zero();
-  jacXyzToZr(0, 2) = 1;
-  jacXyzToZr(1, 0) = scale * x;
-  jacXyzToZr(1, 1) = scale * y;
 
-  // compute Jacobian from local coordinates to z/r
-  const SquareMatrix2 jac = jacXyzToZr * rotLocalToGlobal.topLeftCorner<3, 2>();
+  // Jacobian from the two local coordinates to z/r: dz/dl is the z component
+  // of the local axis, dr/dl its radial component
+  SquareMatrix2 jac;
+  jac(0, 0) = rotLocalToGlobal(2, 0);
+  jac(0, 1) = rotLocalToGlobal(2, 1);
+  jac(1, 0) = scale * (x * rotLocalToGlobal(0, 0) + y * rotLocalToGlobal(1, 0));
+  jac(1, 1) = scale * (x * rotLocalToGlobal(0, 1) + y * rotLocalToGlobal(1, 1));
 
   return jac * localCov * jac.transpose();
 }
@@ -48,7 +51,7 @@ Vector2 PixelSpacePointBuilder::computeVarianceZR(
   const RotationMatrix3 rotLocalToGlobal =
       surface.referenceFrame(gctx, spacePoint, Vector3::Zero());
 
-  return computeCovarianceZR(rotLocalToGlobal, spacePoint, localCov).diagonal();
+  return computeVarianceZR(rotLocalToGlobal, spacePoint, localCov);
 }
 
 }  // namespace Acts

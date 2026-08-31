@@ -8,12 +8,12 @@
 #pragma once
 
 // Local include(s).
-#include "traccc/cuda/utils/algorithm_base.hpp"
+#include "traccc/hip/utils/algorithm_base.hpp"
 
 // Project include(s).
 #include "traccc/seeding/device/silicon_pixel_spacepoint_formation_algorithm.hpp"
 
-namespace traccc::cuda {
+namespace traccc::hip {
 
 /// Algorithm forming space points out of measurements
 ///
@@ -22,14 +22,14 @@ namespace traccc::cuda {
 ///
 class silicon_pixel_spacepoint_formation_algorithm
     : public device::silicon_pixel_spacepoint_formation_algorithm,
-      public cuda::algorithm_base {
+      public hip::algorithm_base {
  public:
   /// Constructor for the spacepoint formation algorithm
   ///
   /// @param mr The memory resource(s) to use in the algorithm
   /// @param copy The copy object to use for copying data between device
   ///             and host memory blocks
-  /// @param str The CUDA stream to use
+  /// @param str The HIP stream to use
   /// @param logger The logger instance to use
   ///
   silicon_pixel_spacepoint_formation_algorithm(
@@ -42,20 +42,6 @@ class silicon_pixel_spacepoint_formation_algorithm
   /// @c traccc::device::silicon_pixel_spacepoint_formation_algorithm
   /// @{
 
-  /// Launch the spacepoint counting kernel
-  ///
-  /// @param payload The payload for the kernel
-  ///
-  void count_spacepoints_kernel(
-      const count_spacepoints_kernel_payload& payload) const override;
-
-  /// Turn the spacepoint flags into a prefix sum, in place
-  ///
-  /// @param spacepoint_flags The flags to scan
-  ///
-  void scan_spacepoint_flags(
-      vecmem::data::vector_view<unsigned int>& spacepoint_flags) const override;
-
   /// Launch the spacepoint formation kernel
   ///
   /// @param payload The payload for the kernel
@@ -67,4 +53,4 @@ class silicon_pixel_spacepoint_formation_algorithm
 
 };  // class silicon_pixel_spacepoint_formation_algorithm
 
-}  // namespace traccc::cuda
+}  // namespace traccc::hip

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 
@@ -89,6 +90,10 @@ struct GbtsEtaBinInfo final {
   float maxRadius{};
   std::uint32_t layerId{0};
 
+  /// Whether the layer this bin belongs to is a pixel layer. Constant over a
+  /// bin, so the strip path is taken per bin rather than per node.
+  bool isPixel{true};
+
   /// Check if bin is empty
   /// @return True if bin has no nodes
   bool empty() const { return nodes.first == nodes.second; }
@@ -96,6 +101,10 @@ struct GbtsEtaBinInfo final {
 //! [gbts eta bin info]
 
 class GbtsNodeProxy;
+
+/// What a node's entry in `GbtsNodeView::stripIndex` holds when it carries no
+/// stereo pair, i.e. when it is a pixel node.
+constexpr std::uint32_t kNoStrip = std::numeric_limits<std::uint32_t>::max();
 
 /// Read-only view of the node attributes needed outside the graph builder.
 ///
@@ -106,11 +115,27 @@ struct GbtsNodeView final {
   std::span<const std::array<float, 4>> positions;
   /// Dense layer index per node.
   std::span<const std::uint16_t> layers;
+  /// Stereo pairs of the strip nodes, reached through `stripIndex`.
+  std::span<const OuterStripSpacePointCalibrationDetailsDerived> strips;
+  /// Index into `strips` per node, `kNoStrip` where a node carries none.
+  /// Empty when nothing does.
+  std::span<const std::uint32_t> stripIndex;
 
   /// Handle on a single node.
   /// @param index Index of the node
   /// @return Proxy for the node
   GbtsNodeProxy operator[](SpacePointIndex index) const;
+
+  /// The stereo pair a node was formed from.
+  /// @param index Index of the node
+  /// @return The pair, or null for a pixel node
+  const OuterStripSpacePointCalibrationDetailsDerived* strip(
+      SpacePointIndex index) const {
+    if (stripIndex.empty() || stripIndex[index] == kNoStrip) {
+      return nullptr;
+    }
+    return &strips[stripIndex[index]];
+  }
 };
 
 /// Read-only handle on a single graph node.

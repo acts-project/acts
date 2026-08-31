@@ -18,8 +18,6 @@
 #include "traccc/gbts_seeding/device/gbts_bin_spacepoints.hpp"
 #include "traccc/gbts_seeding/device/gbts_compress_graph.hpp"
 #include "traccc/gbts_seeding/device/gbts_convert_seeds.hpp"
-#include "traccc/gbts_seeding/device/gbts_count_eta_phi_bins.hpp"
-#include "traccc/gbts_seeding/device/gbts_count_spacepoints_by_layer.hpp"
 #include "traccc/gbts_seeding/device/gbts_count_terminus_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_fill_path_store.hpp"
 #include "traccc/gbts_seeding/device/gbts_find_minmax_radius.hpp"
@@ -27,7 +25,6 @@
 #include "traccc/gbts_seeding/device/gbts_link_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_make_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_match_graph_edges.hpp"
-#include "traccc/gbts_seeding/device/gbts_prefix_sum_eta_phi_bins.hpp"
 #include "traccc/gbts_seeding/device/gbts_rebid_seeds_for_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_reindex_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_reset_edge_bids.hpp"
@@ -45,6 +42,7 @@
 // Thrust include(s).
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
+#include <thrust/sort.h>
 
 namespace traccc::cuda {
 
@@ -58,28 +56,10 @@ using int2 = traccc::int2;
 // Stage 1 — nodes-making kernels
 // ---------------------------------------------------------------------------
 
-/// CUDA kernel for running @c traccc::device::gbts_count_spacepoints_by_layer
-__global__ void gbts_count_spacepoints_by_layer(
-    const device::gbts_count_spacepoints_by_layer_payload payload) {
-  device::gbts_count_spacepoints_by_layer(details::thread_id1{}, payload);
-}
-
 /// CUDA kernel for running @c traccc::device::gbts_bin_spacepoints
 __global__ void gbts_bin_spacepoints(
     const device::gbts_bin_spacepoints_payload payload) {
   device::gbts_bin_spacepoints(details::thread_id1{}, payload);
-}
-
-/// CUDA kernel for running @c traccc::device::gbts_count_eta_phi_bins
-__global__ void gbts_count_eta_phi_bins(
-    const device::gbts_count_eta_phi_bins_payload payload) {
-  device::gbts_count_eta_phi_bins(details::thread_id1{}, payload);
-}
-
-/// CUDA kernel for running @c traccc::device::gbts_prefix_sum_eta_phi_bins
-__global__ void gbts_prefix_sum_eta_phi_bins(
-    const device::gbts_prefix_sum_eta_phi_bins_payload payload) {
-  device::gbts_prefix_sum_eta_phi_bins(details::thread_id1{}, payload);
 }
 
 /// CUDA kernel for running @c traccc::device::gbts_sort_nodes
@@ -216,61 +196,33 @@ gbts_seeding_algorithm::gbts_seeding_algorithm(
     : device::gbts_seeding_algorithm(cfg, mr, copy, std::move(logger)),
       cuda::algorithm_base{str} {}
 
-void gbts_seeding_algorithm::gbts_count_spacepoints_by_layer_kernel(
-    const device::gbts_count_spacepoints_by_layer_payload& payload) const {
-  const unsigned int n_threads = 128;
-  const unsigned int n_blocks = 1 + (payload.nSp - 1) / n_threads;
-  kernels::gbts_count_spacepoints_by_layer<<<n_blocks, n_threads, 0,
-                                             details::get_stream(stream())>>>(
-      payload);
-  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());  //
-  vecmem::device_vector<unsigned int> d_layer_sums(payload.layerCounts);
-  thrust::inclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream())),
-      d_layer_sums.begin(), d_layer_sums.end(), d_layer_sums.begin());
-}
-
 void gbts_seeding_algorithm::gbts_bin_spacepoints_kernel(
     const device::gbts_bin_spacepoints_payload& payload) const {
   const unsigned int n_threads = 128;
   const unsigned int n_blocks = 1 + (payload.nSp - 1) / n_threads;
   kernels::gbts_bin_spacepoints<<<n_blocks, n_threads, 0,
                                   details::get_stream(stream())>>>(payload);
-  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());  //
-}
-
-void gbts_seeding_algorithm::gbts_count_eta_phi_bins_kernel(
-    const device::gbts_count_eta_phi_bins_payload& payload) const {
-  const unsigned int n_threads = 128;
-  const unsigned int n_blocks = 1 + (payload.nEtaBins - 1) / n_threads;
-  kernels::gbts_count_eta_phi_bins<<<n_blocks, n_threads, 0,
-                                     details::get_stream(stream())>>>(payload);
-  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());  //
-  vecmem::device_vector<unsigned int> d_eta_sums(payload.eta_node_counter);
-  thrust::inclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream())),
-      d_eta_sums.begin(), d_eta_sums.end(), d_eta_sums.begin());
-}
-
-void gbts_seeding_algorithm::gbts_prefix_sum_eta_phi_bins_kernel(
-    const device::gbts_prefix_sum_eta_phi_bins_payload& payload) const {
-  const unsigned int n_threads = 128;
-  const unsigned int n_blocks = 1 + (payload.nEtaBins - 1) / n_threads;
-  kernels::gbts_prefix_sum_eta_phi_bins<<<n_blocks, n_threads, 0,
-                                          details::get_stream(stream())>>>(
-      payload);
-  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());  //
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
 void gbts_seeding_algorithm::gbts_sort_nodes_kernel(
     const device::gbts_sort_nodes_payload& payload) const {
+  // Order the nodes by their (eta bin, phi, spacepoint index bits) keys,
+  // carrying the full spacepoint index along as the value.
+  vecmem::device_vector<unsigned long long int> d_sort_keys(payload.sort_keys);
+  vecmem::device_vector<unsigned int> d_sort_values(payload.sort_values);
+  thrust::sort_by_key(
+      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+          .on(details::get_stream(stream())),
+      d_sort_keys.begin(),
+      d_sort_keys.begin() + static_cast<int>(payload.nNodes),
+      d_sort_values.begin());
+
   const unsigned int n_threads = 256;
   const unsigned int n_blocks = 1 + (payload.nNodes - 1) / n_threads;
   kernels::gbts_sort_nodes<<<n_blocks, n_threads, 0,
                              details::get_stream(stream())>>>(payload);
-  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());  //
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
 void gbts_seeding_algorithm::gbts_find_minmax_radius_kernel(
