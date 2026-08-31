@@ -283,7 +283,7 @@ class GraphBasedTrackSeeder {
   /// @param lutInputFile Path to the lookup table input file
   /// @return Parsed tau lookup table
   detail::GbtsTauLookupTable parseTauLookupTable(
-      const std::string& lutInputFile);
+      const std::string& lutInputFile) const;
 
   /// Build doublet graph from nodes.
   /// @param roi Region of interest descriptor

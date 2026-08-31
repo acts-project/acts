@@ -122,7 +122,7 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
 }
 
 detail::GbtsTauLookupTable GraphBasedTrackSeeder::parseTauLookupTable(
-    const std::string& lutInputFile) {
+    const std::string& lutInputFile) const {
   if (!m_cfg.useClusterWidthCuts) {
     return {};
   }
@@ -682,7 +682,7 @@ std::int32_t GraphBasedTrackSeeder::runCCA(
       for (std::uint32_t nIdx = 0; nIdx < pS->nNei; ++nIdx) {
         const std::uint32_t nextEdgeIdx = pS->vNei[nIdx];
 
-        detail::GbtsEdge* pN = &(edgeStorage[nextEdgeIdx]);
+        const detail::GbtsEdge* pN = &(edgeStorage[nextEdgeIdx]);
 
         if (pS->level == pN->level) {
           nextLevel = pS->level + 1;
