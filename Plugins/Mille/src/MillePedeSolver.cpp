@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsPlugins/Mille/MillePedeError.hpp"
+#include "ActsPlugins/Mille/detail/runChildProcess.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -18,30 +19,14 @@
 #include <string>
 #include <tuple>
 
-#include <boost/asio/io_context.hpp>
-#include <boost/process/v2/environment.hpp>
-#include <boost/process/v2/process.hpp>
-#include <boost/process/v2/start_dir.hpp>
-#include <boost/process/v2/stdio.hpp>
-
 using namespace ActsPlugins::ActsToMille;
 
 using Acts::Result;
-using boost::process::v2::process;
-using boost::process::v2::process_start_dir;
-using boost::process::v2::process_stdio;
-using boost::process::v2::environment::find_executable;
 using std::filesystem::path;
+
 Acts::Result<MillePedeSolver::mpResult> MillePedeSolver::solve(
     Config cfg) const {
   ACTS_INFO("=== Proceeding to run Millepede-II alignment fit ===");
-
-  // find the pede installation
-  auto thePede = find_executable("pede");
-  if (thePede.empty()) {
-    ACTS_ERROR("Pede executable could not be found, aborting!");
-    return Result<mpResult>::failure(MillePedeError::InstallationNotFound);
-  }
 
   // determine where the user wishes to run
   std::filesystem::path workDir = std::filesystem::current_path();
@@ -72,14 +57,14 @@ Acts::Result<MillePedeSolver::mpResult> MillePedeSolver::solve(
     mpArgs.push_back(steerPath);
   }
 
-  boost::asio::io_context io;
-
   ACTS_INFO(" Calling pede, this may take a while depending on problem size");
   // now run the fit
-  process pedeProcess(io, thePede, mpArgs, process_start_dir(workDir.string()));
-  pedeProcess.wait();
-
-  if (pedeProcess.exit_code() != 0) {
+  childProcessStatus pedeProcessStatus =
+      runChildProcess("pede", mpArgs, workDir, "");
+  if (pedeProcessStatus == childProcessStatus::progNotFound) {
+    ACTS_ERROR("Pede executable could not be found, aborting!");
+    return Result<mpResult>::failure(MillePedeError::InstallationNotFound);
+  } else if (pedeProcessStatus != childProcessStatus::ok) {
     ACTS_ERROR("Pede invocation failed. Did not run alignment.");
     return Result<mpResult>::failure(MillePedeError::SolverCrash);
   }
