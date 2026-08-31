@@ -373,7 +373,7 @@ if(ACTS_SETUP_BOOST)
             Boost
             ${_acts_boost_version}
             REQUIRED
-            COMPONENTS program_options unit_test_framework process
+            COMPONENTS program_options unit_test_framework
         )
     else()
         find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
