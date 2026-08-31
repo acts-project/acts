@@ -860,6 +860,16 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
     permissions:
       contents: read
+      # For the "Report nightly LCG view failure" step below, dev4 leg only.
+      issues: write
+    # The dev4 leg tracks a moving nightly view rather than anything tied to
+    # a PR's diff, so running it on every PR just burns husk capacity on
+    # noise. Restrict it to pushes on main, where its failures are actually
+    # actionable (see "Report nightly LCG view failure" below); the other
+    # legs still run everywhere.
+    if: >-
+      matrix.tag != 'dev4_alma9_gcc15' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
     # Spelled out rather than built from a matrix field: CI/bump_versions.py only
     # rewrites tags it can see literally, which is how linux_ubuntu_extra's
     # templated image drifted a tag behind. Every leg is alma9 today anyway.
@@ -957,6 +967,7 @@ jobs:
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.tag }}-
 
       - name: Configure
+        id: configure
         continue-on-error: ${{ matrix.allow_failure }}
         run: >
           source "${LCG_VIEW}/setup.sh" &&
@@ -966,6 +977,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
       - name: Build
+        id: build
         continue-on-error: ${{ matrix.allow_failure }}
         run: >
           source "${LCG_VIEW}/setup.sh" &&
@@ -1009,6 +1021,70 @@ jobs:
           # plotting tests with mplhep fail because an ancient mplhep version in
           # LCG overrides the mplhep version in our venv
           pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
+
+      # github-script rather than the gh CLI: it runs as a JS action (like
+      # actions/checkout above), so it does not depend on gh being present in
+      # the alma9-base image. Mirrors the open-or-comment pattern the
+      # external-linkcheck job in docs.yml uses for its own failures.
+      - name: Report nightly LCG view failure
+        if: >-
+          always() && matrix.allow_failure &&
+          (steps.configure.outcome == 'failure' || steps.build.outcome == 'failure')
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const label = "ci-nightly-lcg";
+            const title = "CI: LCG dev4 nightly view build is failing";
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              "The LCG `dev4` nightly-view build failed on `main`.",
+              "",
+              `Run: ${runUrl}`,
+              "",
+              "This view tracks a moving nightly LCG release and is expected to break",
+              "periodically upstream. If this looks like a real regression in ACTS,",
+              "please investigate; otherwise this can stay open until the nightly",
+              "view recovers on its own.",
+            ].join("\n");
+
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+                color: "B60205",
+                description: "The LCG dev4 nightly view build is failing",
+              });
+            } catch (err) {
+              if (err.status !== 422) throw err;
+            }
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              labels: label,
+            });
+
+            if (existing.data.length > 0) {
+              const issue = existing.data[0];
+              core.notice(`Updating existing issue #${issue.number}`);
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body,
+              });
+            } else {
+              core.notice("Opening new issue");
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: [label],
+              });
+            }
 
   macos:
     runs-on: macos-26
