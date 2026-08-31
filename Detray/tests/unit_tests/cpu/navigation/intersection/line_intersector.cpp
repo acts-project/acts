@@ -8,7 +8,8 @@
 
 // Project include(s)
 #include "detray/geometry/mask.hpp"
-#include "detray/geometry/shapes/line.hpp"
+#include "detray/geometry/shapes/line_circular.hpp"
+#include "detray/geometry/shapes/line_square.hpp"
 #include "detray/geometry/surface_descriptor.hpp"
 #include "detray/navigation/intersection/intersection.hpp"
 #include "detray/navigation/intersection/ray_intersector.hpp"

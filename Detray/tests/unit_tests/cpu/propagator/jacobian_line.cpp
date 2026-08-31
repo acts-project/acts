@@ -10,7 +10,7 @@
 #include "detray/propagator/detail/jacobian_line.hpp"
 
 #include "detray/geometry/mask.hpp"
-#include "detray/geometry/shapes/line.hpp"
+#include "detray/geometry/shapes/line_circular.hpp"
 #include "detray/propagator/detail/jacobian_engine.hpp"
 #include "detray/tracks/tracks.hpp"
 
@@ -33,7 +33,7 @@ constexpr scalar isclose{1e-5f};
 
 const scalar r{2.f};
 const scalar hz{50.f};
-const mask<line<>, test_algebra> ln{0u, r, hz};
+const mask<line_circular, test_algebra> ln{0u, r, hz};
 
 GTEST_TEST(detray_propagator, jacobian_line2D_case1) {
   using jac_engine = detail::jacobian_engine<test_algebra>;
