@@ -209,9 +209,11 @@ using TrackerHitLookup = std::function<std::optional<edm4hep::TrackerHit>(
 ///
 /// @note Resolving tracker hits requires application-specific
 ///       source-link/hit-container knowledge, so it is delegated to the
-///       optional @p hitLookup callback. It is invoked once per measurement
-///       track state, in the same order the states are written. Returned hits
-///       are attached via @c addToTrackerHits.
+///       optional @p hitLookup callback. It is invoked exactly once per
+///       measurement track state, in the order the states are emitted, i.e.
+///       inside-out from @c AtFirstHit to @c AtLastHit, so a stateful callback
+///       sees the same order as the output. Returned hits are attached via
+///       @c addToTrackerHits.
 ///
 /// @param gctx The geometry context
 /// @param mctx The magnetic field context
@@ -237,10 +239,10 @@ void writeTrack(const Acts::GeometryContext& gctx,
 
   std::vector<edm4hep::TrackState> outTrackStates;
   outTrackStates.reserve(track.nTrackStates());
-  // Tracker hits resolved for each measurement state, kept in parallel with
-  // outTrackStates so both can be emitted in the final order below.
-  std::vector<std::optional<edm4hep::TrackerHit>> outHits;
-  outHits.reserve(track.nTrackStates());
+  // Source track states kept in parallel with outTrackStates, so that the hit
+  // lookup below can be run in the same order the states are emitted.
+  std::vector<Acts::AnyConstTrackStateProxy> outStates;
+  outStates.reserve(track.nTrackStates());
 
   ACTS_VERBOSE("Converting " << track.nTrackStates() << " track states");
 
@@ -249,13 +251,7 @@ void writeTrack(const Acts::GeometryContext& gctx,
       continue;
     }
 
-    // Resolve the associated tracker hit for this measurement (if any). Stored
-    // in parallel with the track state and attached below in output order.
-    std::optional<edm4hep::TrackerHit> hit;
-    if (hitLookup) {
-      hit = hitLookup(Acts::AnyConstTrackStateProxy{state});
-    }
-    outHits.push_back(hit);
+    outStates.push_back(Acts::AnyConstTrackStateProxy{state});
 
     Acts::BoundTrackParameters params{state.referenceSurface().getSharedPtr(),
                                       state.parameters(), state.covariance(),
@@ -289,13 +285,18 @@ void writeTrack(const Acts::GeometryContext& gctx,
   // inside-out (first hit ... last hit). Reverse the outside-in buffers so the
   // measurement states, and their tracker hits, come out in that order.
   std::reverse(outTrackStates.begin(), outTrackStates.end());
-  std::reverse(outHits.begin(), outHits.end());
+  std::reverse(outStates.begin(), outStates.end());
 
   to.addToTrackStates(ipState);
   for (std::size_t i = 0; i < outTrackStates.size(); ++i) {
     to.addToTrackStates(outTrackStates[i]);
-    if (outHits[i].has_value()) {
-      to.addToTrackerHits(outHits[i].value());
+    // Resolve the tracker hit here rather than in the loop above, so that the
+    // callback is invoked in the same order the states are emitted.
+    if (hitLookup) {
+      if (std::optional<edm4hep::TrackerHit> hit = hitLookup(outStates[i]);
+          hit.has_value()) {
+        to.addToTrackerHits(hit.value());
+      }
     }
   }
 }

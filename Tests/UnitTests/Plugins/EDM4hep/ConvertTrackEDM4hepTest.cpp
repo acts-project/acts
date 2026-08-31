@@ -33,6 +33,7 @@
 #include <edm4hep/Constants.h>
 #include <edm4hep/TrackCollection.h>
 #include <edm4hep/TrackState.h>
+#include <edm4hep/TrackerHit3DCollection.h>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -299,6 +300,78 @@ BOOST_AUTO_TEST_CASE(CovariancePackingConvention) {
       BOOST_CHECK_EQUAL(trackState.getCovMatrix(params.at(i), params.at(j)),
                         static_cast<float>(m(i, j)));
     }
+  }
+}
+
+// The hit lookup has to be invoked in the order the track states are emitted
+// (inside-out), not in the outside-in order they are iterated internally: a
+// stateful callback would otherwise associate its hits with the wrong states.
+BOOST_AUTO_TEST_CASE(HitLookupInvocationOrder) {
+  TrackContainer tracks(std::make_shared<VectorTrackContainer>(),
+                        std::make_shared<VectorMultiTrajectory>());
+  auto track = tracks.makeTrack();
+
+  BoundVector par;
+  par << 1_mm, 5_mm, 0.1, std::numbers::pi / 2. * 0.9, -1 / 1_GeV, 5_ns;
+  track.parameters() = par;
+  track.covariance() = BoundMatrix::Identity();
+  track.setReferenceSurface(
+      Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 0}));
+
+  // Appended innermost first, so the internal reverse iteration visits them
+  // outermost first.
+  const std::array<double, 3> zs{100, 200, 300};
+  for (double z : zs) {
+    auto ts = track.appendTrackState(TrackStatePropMask::Smoothed);
+    ts.typeFlags().setIsMeasurement();
+    ts.smoothed() = par;
+    ts.smoothedCovariance() = BoundMatrix::Identity();
+    ts.setReferenceSurface(
+        Surface::makeShared<PerigeeSurface>(Vector3{0, 0, z}));
+  }
+
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext mctx{};
+  ConstantBField field{Vector3{0, 0, 2_T}};
+
+  edm4hep::TrackerHit3DCollection hitCollection;
+  std::vector<edm4hep::TrackerHit3D> hitByZ;
+  for (double z : zs) {
+    auto hit = hitCollection.create();
+    hit.setPosition({0, 0, z});
+    hitByZ.push_back(hit);
+  }
+
+  std::vector<double> seen;
+  EDM4hepUtil::TrackerHitLookup lookup =
+      [&](const AnyConstTrackStateProxy& state)
+      -> std::optional<edm4hep::TrackerHit> {
+    double z = state.referenceSurface().center(gctx).z();
+    seen.push_back(z);
+    for (std::size_t i = 0; i < zs.size(); ++i) {
+      if (std::abs(z - zs[i]) < 1e-6) {
+        return hitByZ[i];
+      }
+    }
+    return std::nullopt;
+  };
+
+  edm4hep::TrackCollection outTracks;
+  auto to = outTracks.create();
+  EDM4hepUtil::writeTrack(gctx, mctx, track, to, field, lookup);
+
+  // Invoked once per measurement state, inside-out
+  BOOST_REQUIRE_EQUAL(seen.size(), zs.size());
+  for (std::size_t i = 0; i < zs.size(); ++i) {
+    BOOST_TEST_INFO_SCOPE("lookup call #" << i);
+    CHECK_CLOSE_ABS(seen[i], zs[i], 1e-6);
+  }
+
+  // ... and the hits are attached in that same order
+  BOOST_REQUIRE_EQUAL(to.trackerHits_size(), zs.size());
+  for (std::size_t i = 0; i < zs.size(); ++i) {
+    BOOST_TEST_INFO_SCOPE("tracker hit #" << i);
+    CHECK_CLOSE_ABS(to.getTrackerHits(i).getPosition().z, zs[i], 1e-6);
   }
 }
 
