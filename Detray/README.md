@@ -56,7 +56,6 @@ The following cmake options are available and can also be specified explicitly f
 | DETRAY_SET_LOGGING  | Set log level (NONE, WARN, INFO, VERBOSE, DEBUG) | INFO |
 | DETRAY_BUILD_CUDA  | Build the CUDA sources included in detray | ON (if available) |
 | DETRAY_BUILD_SYCL  | Build the SYCL sources included in detray | OFF |
-| DETRAY_BUILD_TEST_UTILS  | Build the detray test utilities library (contains e.g. test detectors) | OFF |
 | DETRAY_BUILD_UNITTESTS  | Build the detray unit tests | OFF |
 | DETRAY_BUILD_INTEGRATIONTESTS  | Build the detray integration tests | OFF |
 | DETRAY_BUILD_ALL_TESTS  | Build the detray unit and integration tests | OFF |
@@ -72,6 +71,8 @@ The following cmake options are available and can also be specified explicitly f
 | DETRAY_SMATRIX_PLUGIN | Build ROOT/SMatrix math plugin | OFF |
 | DETRAY_VC_AOS_PLUGIN | Build Vc based AoS math plugin | OFF |
 | DETRAY_VC_SOA_PLUGIN | Build Vc based SoA math plugin (currently only supports the ray-surface intersectors) | OFF |
+| DETRAY_BUILD_TEST_UTILS  | Build the detray test utilities library (contains e.g. test detectors) | OFF |
+| DETRAY_BUILD_VALIDATION_TOOLS | Build detray validation suite | OFF |
 | DETRAY_SVG_DISPLAY | Build ActSVG display module | OFF |
 
 ## Tutorials
