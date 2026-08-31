@@ -20,8 +20,6 @@
 #include "traccc/gbts_seeding/device/gbts_bin_spacepoints.hpp"
 #include "traccc/gbts_seeding/device/gbts_compress_graph.hpp"
 #include "traccc/gbts_seeding/device/gbts_convert_seeds.hpp"
-#include "traccc/gbts_seeding/device/gbts_count_eta_phi_bins.hpp"
-#include "traccc/gbts_seeding/device/gbts_count_spacepoints_by_layer.hpp"
 #include "traccc/gbts_seeding/device/gbts_count_terminus_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_fill_path_store.hpp"
 #include "traccc/gbts_seeding/device/gbts_find_minmax_radius.hpp"
@@ -29,7 +27,6 @@
 #include "traccc/gbts_seeding/device/gbts_link_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_make_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_match_graph_edges.hpp"
-#include "traccc/gbts_seeding/device/gbts_prefix_sum_eta_phi_bins.hpp"
 #include "traccc/gbts_seeding/device/gbts_rebid_seeds_for_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_reindex_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_reset_edge_bids.hpp"
@@ -52,16 +49,6 @@ namespace kernels {
 // Stage 1 — nodes-making kernels
 // ---------------------------------------------------------------------------
 
-/// Alpaka kernel for running @c traccc::device::gbts_count_spacepoints_by_layer
-struct gbts_count_spacepoints_by_layer {
-  template <typename TAcc>
-  ALPAKA_FN_ACC void operator()(
-      TAcc const& acc,
-      const device::gbts_count_spacepoints_by_layer_payload payload) const {
-    device::gbts_count_spacepoints_by_layer(details::thread_id1{acc}, payload);
-  }
-};
-
 /// Alpaka kernel for running @c traccc::device::gbts_bin_spacepoints
 struct gbts_bin_spacepoints {
   template <typename TAcc>
@@ -69,26 +56,6 @@ struct gbts_bin_spacepoints {
       TAcc const& acc,
       const device::gbts_bin_spacepoints_payload payload) const {
     device::gbts_bin_spacepoints(details::thread_id1{acc}, payload);
-  }
-};
-
-/// Alpaka kernel for running @c traccc::device::gbts_count_eta_phi_bins
-struct gbts_count_eta_phi_bins {
-  template <typename TAcc>
-  ALPAKA_FN_ACC void operator()(
-      TAcc const& acc,
-      const device::gbts_count_eta_phi_bins_payload payload) const {
-    device::gbts_count_eta_phi_bins(details::thread_id1{acc}, payload);
-  }
-};
-
-/// Alpaka kernel for running @c traccc::device::gbts_prefix_sum_eta_phi_bins
-struct gbts_prefix_sum_eta_phi_bins {
-  template <typename TAcc>
-  ALPAKA_FN_ACC void operator()(
-      TAcc const& acc,
-      const device::gbts_prefix_sum_eta_phi_bins_payload payload) const {
-    device::gbts_prefix_sum_eta_phi_bins(details::thread_id1{acc}, payload);
   }
 };
 
@@ -292,19 +259,6 @@ gbts_seeding_algorithm::gbts_seeding_algorithm(
     : device::gbts_seeding_algorithm(cfg, mr, copy, std::move(logger)),
       alpaka::algorithm_base{q} {}
 
-void gbts_seeding_algorithm::gbts_count_spacepoints_by_layer_kernel(
-    const device::gbts_count_spacepoints_by_layer_payload& payload) const {
-  const unsigned int n_threads = 128;
-  const unsigned int n_blocks = 1 + (payload.nSp - 1) / n_threads;
-  ::alpaka::exec<Acc>(details::get_queue(queue()),
-                      makeWorkDiv<Acc>(n_blocks, n_threads),
-                      kernels::gbts_count_spacepoints_by_layer{}, payload);
-  vecmem::device_vector<unsigned int> d_layer_sums(payload.layerCounts);
-  details::inclusive_scan(details::get_queue(queue()), mr(),
-                          d_layer_sums.begin(), d_layer_sums.end(),
-                          d_layer_sums.begin());
-}
-
 void gbts_seeding_algorithm::gbts_bin_spacepoints_kernel(
     const device::gbts_bin_spacepoints_payload& payload) const {
   const unsigned int n_threads = 128;
@@ -314,29 +268,14 @@ void gbts_seeding_algorithm::gbts_bin_spacepoints_kernel(
                       kernels::gbts_bin_spacepoints{}, payload);
 }
 
-void gbts_seeding_algorithm::gbts_count_eta_phi_bins_kernel(
-    const device::gbts_count_eta_phi_bins_payload& payload) const {
-  const unsigned int n_threads = 128;
-  const unsigned int n_blocks = 1 + (payload.nEtaBins - 1) / n_threads;
-  ::alpaka::exec<Acc>(details::get_queue(queue()),
-                      makeWorkDiv<Acc>(n_blocks, n_threads),
-                      kernels::gbts_count_eta_phi_bins{}, payload);
-  vecmem::device_vector<unsigned int> d_eta_sums(payload.eta_node_counter);
-  details::inclusive_scan(details::get_queue(queue()), mr(), d_eta_sums.begin(),
-                          d_eta_sums.end(), d_eta_sums.begin());
-}
-
-void gbts_seeding_algorithm::gbts_prefix_sum_eta_phi_bins_kernel(
-    const device::gbts_prefix_sum_eta_phi_bins_payload& payload) const {
-  const unsigned int n_threads = 128;
-  const unsigned int n_blocks = 1 + (payload.nEtaBins - 1) / n_threads;
-  ::alpaka::exec<Acc>(details::get_queue(queue()),
-                      makeWorkDiv<Acc>(n_blocks, n_threads),
-                      kernels::gbts_prefix_sum_eta_phi_bins{}, payload);
-}
-
 void gbts_seeding_algorithm::gbts_sort_nodes_kernel(
     const device::gbts_sort_nodes_payload& payload) const {
+  // Order the nodes by their (eta bin, phi, spacepoint index bits) keys,
+  // carrying the full spacepoint index along as the value.
+  details::sort_by_key(
+      details::get_queue(queue()), mr(), payload.sort_keys.ptr(),
+      payload.sort_keys.ptr() + payload.nNodes, payload.sort_values.ptr());
+
   const unsigned int n_threads = 256;
   const unsigned int n_blocks = 1 + (payload.nNodes - 1) / n_threads;
   ::alpaka::exec<Acc>(details::get_queue(queue()),

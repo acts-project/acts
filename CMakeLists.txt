@@ -448,6 +448,18 @@ endmacro()
 # find packages explicitly for each component even if this means searching for
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
+
+# nlohmann_json has to be resolved before any other package, because its config
+# file defines a non-namespaced `nlohmann_json` compatibility target whenever it
+# is searched for without a version. That target clashes with the one the
+# bundled build creates, so we have to claim the name first.
+if(ACTS_BUILD_PLUGIN_JSON)
+    if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
+        find_package(nlohmann_json ${_acts_nlohmanjson_version} REQUIRED CONFIG)
+    else()
+        add_subdirectory(thirdparty/nlohmann_json)
+    endif()
+endif()
 if(ACTS_BUILD_PYTHON_BINDINGS)
     find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
     if(ACTS_USE_SYSTEM_PYBIND11)
@@ -481,13 +493,6 @@ if(ACTS_BUILD_PLUGIN_DD4HEP)
         CONFIG
         COMPONENTS DDCore DDDetectors
     )
-endif()
-if(ACTS_BUILD_PLUGIN_JSON)
-    if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
-        find_package(nlohmann_json ${_acts_nlohmanjson_version} REQUIRED CONFIG)
-    else()
-        add_subdirectory(thirdparty/nlohmann_json)
-    endif()
 endif()
 if(ACTS_BUILD_PLUGIN_GBL)
     if(ACTS_USE_SYSTEM_GBL)
