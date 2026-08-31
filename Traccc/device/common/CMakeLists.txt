@@ -43,6 +43,8 @@ traccc_add_library( traccc_device_common device_common
    "include/traccc/seeding/device/populate_grid.hpp"
    "include/traccc/seeding/device/impl/populate_grid.ipp"
    # Seed finding code.
+   "include/traccc/seeding/device/count_spacepoints.hpp"
+   "include/traccc/seeding/device/impl/count_spacepoints.ipp"
    "include/traccc/seeding/device/form_spacepoints.hpp"
    "include/traccc/seeding/device/impl/form_spacepoints.ipp"
    "include/traccc/seeding/device/count_doublets.hpp"
