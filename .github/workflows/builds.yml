@@ -860,16 +860,6 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
     permissions:
       contents: read
-      # For the "Report nightly LCG view failure" step below, dev4 leg only.
-      issues: write
-    # The dev4 leg tracks a moving nightly view rather than anything tied to
-    # a PR's diff, so running it on every PR just burns husk capacity on
-    # noise. Restrict it to pushes on main, where its failures are actually
-    # actionable (see "Report nightly LCG view failure" below); the other
-    # legs still run everywhere.
-    if: >-
-      matrix.tag != 'dev4_alma9_gcc15' ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
     # Spelled out rather than built from a matrix field: CI/bump_versions.py only
     # rewrites tags it can see literally, which is how linux_ubuntu_extra's
     # templated image drifted a tag behind. Every leg is alma9 today anyway.
@@ -893,7 +883,6 @@ jobs:
             repo: sft.cern.ch
             view: LCG_108
             tests: false
-            allow_failure: false
 
           - tag: 109_alma9_gcc15
             platform: el9
@@ -901,7 +890,6 @@ jobs:
             repo: sft.cern.ch
             view: LCG_109
             tests: true
-            allow_failure: false
 
           - tag: 109_alma9_clang19
             platform: el9
@@ -909,20 +897,6 @@ jobs:
             repo: sft.cern.ch
             view: LCG_109
             tests: true
-            allow_failure: false
-
-          - tag: dev4_alma9_gcc15
-            platform: el9
-            compiler: gcc15
-            repo: sft-nightlies.cern.ch
-            view: dev4/latest
-            tests: false
-            # Nightly views break frequently and are not release-blocking.
-            # Applied per-step below rather than as a job-level
-            # continue-on-error: that only masks the *workflow run*
-            # conclusion, while the job's own check run still reports
-            # "failure", which is what merge-sentinel's gate keys off.
-            allow_failure: true
 
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
@@ -967,8 +941,6 @@ jobs:
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.tag }}-
 
       - name: Configure
-        id: configure
-        continue-on-error: ${{ matrix.allow_failure }}
         run: >
           source "${LCG_VIEW}/setup.sh" &&
           ccache -z &&
@@ -977,8 +949,6 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
       - name: Build
-        id: build
-        continue-on-error: ${{ matrix.allow_failure }}
         run: >
           source "${LCG_VIEW}/setup.sh" &&
           cmake --build build
@@ -997,14 +967,12 @@ jobs:
 
       - name: Unit tests
         if: matrix.tests
-        continue-on-error: ${{ matrix.allow_failure }}
         run: >
           source "${LCG_VIEW}/setup.sh" &&
           ctest --test-dir build -j$(nproc)
 
       - name: Install
         if: matrix.tests
-        continue-on-error: ${{ matrix.allow_failure }}
         # Redirected: the install file list is long and drowns the log.
         run: >
           source "${LCG_VIEW}/setup.sh" &&
@@ -1012,7 +980,6 @@ jobs:
 
       - name: Python level tests
         if: matrix.tests
-        continue-on-error: ${{ matrix.allow_failure }}
         shell: bash
         run: |
           source "${LCG_VIEW}/setup.sh"
@@ -1022,14 +989,84 @@ jobs:
           # LCG overrides the mplhep version in our venv
           pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
 
-      # github-script rather than the gh CLI: it runs as a JS action (like
-      # actions/checkout above), so it does not depend on gh being present in
-      # the alma9-base image. Mirrors the open-or-comment pattern the
-      # external-linkcheck job in docs.yml uses for its own failures.
+  # This moving nightly view is independent of PR changes. Keep it separate
+  # from the release-view matrix so it can run only on main without referring
+  # to the matrix context from a job-level condition (which GitHub evaluates
+  # before expanding the matrix).
+  lcg_dev4:
+    name: lcg_dev4_alma9_gcc15
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
+    permissions:
+      contents: read
+      issues: write
+    container: registry.cern.ch/ghcr.io/acts-project/alma9-base:88
+    env:
+      INSTALL_DIR: ${{ github.workspace }}/install
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
+      ROOT_HASH_CHECKS: "off"
+      LCG_REPO: sft-nightlies.cern.ch
+      LCG_VIEW: /cvmfs/sft-nightlies.cern.ch/lcg/views/dev4/latest/x86_64-el9-gcc15-opt
+
+    steps:
+      - name: Check CVMFS
+        continue-on-error: true
+        id: cvmfs
+        run: |
+          ls -l /cvmfs/
+          test -d "/cvmfs/${LCG_REPO}/lcg/views" || { echo "${LCG_REPO} not mounted"; exit 1; }
+          test -f "${LCG_VIEW}/setup.sh" || { echo "no such view: ${LCG_VIEW}"; exit 1; }
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        id: configure
+        continue-on-error: true
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          ccache -z &&
+          cmake -B build -S .
+          --preset=github-ci-lcg
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+
+      - name: Build
+        id: build
+        continue-on-error: true
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          cmake --build build
+
+      - name: ccache stats
+        if: always() && steps.configure.outcome == 'success'
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always() && steps.configure.outcome == 'success'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      # github-script runs as a JS action, so it does not depend on gh being
+      # installed in the alma9-base image. This mirrors the open-or-comment
+      # pattern used by the external-linkcheck job in docs.yml.
       - name: Report nightly LCG view failure
         if: >-
-          always() && matrix.allow_failure &&
-          (steps.configure.outcome == 'failure' || steps.build.outcome == 'failure')
+          always() && (steps.cvmfs.outcome == 'failure' ||
+          steps.configure.outcome == 'failure' || steps.build.outcome == 'failure')
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
