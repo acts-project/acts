@@ -1125,7 +1125,7 @@ jobs:
               try {
                 state = { ...state, ...JSON.parse(previous[1]) };
               } catch {
-                core.warning("Unparseable state marker, restarting the count");
+                core.warning("Unparsable state marker, restarting the count");
               }
             }
             state.runs += 1;
