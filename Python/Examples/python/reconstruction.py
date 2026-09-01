@@ -2024,6 +2024,43 @@ def addGx2fTracks(
     return s
 
 
+def addTrackTruthMatching(
+    s: acts.examples.Sequencer,
+    tracks: str,
+    prefix: str,
+    inputParticles: str = "particles",
+    logLevel: Optional[acts.logging.Level] = None,
+) -> acts.examples.Sequencer:
+    """Truth-match `tracks` and publish the result under the standard
+    `track_particle_matching` / `particle_track_matching` aliases.
+
+    A `TrackParticleMatching` is keyed by track index, so any algorithm that
+    emits a new track container -- `TrackSelectorAlgorithm` above all -- leaves
+    an earlier matching pointing at the wrong tracks and must be followed by a
+    fresh matching.
+    """
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    matchAlg = acts.examples.TrackTruthMatcher(
+        level=customLogLevel(),
+        inputTracks=tracks,
+        inputParticles=inputParticles,
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputTrackParticleMatching=f"{prefix}track_particle_matching",
+        outputParticleTrackMatching=f"{prefix}particle_track_matching",
+        doubleMatching=True,
+    )
+    s.addAlgorithm(matchAlg)
+    s.addWhiteboardAlias(
+        "track_particle_matching", matchAlg.config.outputTrackParticleMatching
+    )
+    s.addWhiteboardAlias(
+        "particle_track_matching", matchAlg.config.outputParticleTrackMatching
+    )
+
+    return s
+
+
 def addTrackWriters(
     s: acts.examples.Sequencer,
     name: str,

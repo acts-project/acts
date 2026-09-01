@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -24,6 +25,9 @@
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
 #include <algorithm>
+#include <array>
+#include <cstdint>
+#include <memory>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
@@ -85,6 +89,10 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                           Acts::SquareMatrix2::Zero());
   }
 
+  // Defaults to (loc0, loc0), which would constrain d0 twice and z0 never.
+  beamSpotTrackState.setProjectorSubspaceIndices(
+      std::array<std::uint8_t, 2>{Acts::eBoundLoc0, Acts::eBoundLoc1});
+
   Acts::SourceLink testSL{42};
   beamSpotTrackState.setUncalibratedSourceLink(std::move(testSL));
 
@@ -123,9 +131,13 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
         Acts::PropagatorPlainOptions(ctx.recoGeoContext, ctx.magFieldContext),
         true};
 
+    // The fitter matches measurements by surface pointer, so with a beamspot
+    // constraint the fit has to start on the very surface that carries it.
     Acts::BoundTrackParameters initialParams(
-        track.referenceSurface().getSharedPtr(), track.parameters(),
-        track.covariance(), track.particleHypothesis());
+        m_cfg.beamSpotConstraint.has_value()
+            ? std::shared_ptr<const Acts::Surface>(perigeeSurface)
+            : track.referenceSurface().getSharedPtr(),
+        track.parameters(), track.covariance(), track.particleHypothesis());
 
     if (initialParams.covariance()) {
       for (auto i = 0ul; i < m_cfg.initialVarInflation.size(); ++i) {
@@ -156,7 +168,6 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
       RefittingCalibrator::RefittingSourceLink beamSpotSL{
           beamSpotConstTrackState};
       trackSourceLinks.emplace_back(Acts::SourceLink{beamSpotSL});
-      surfSequence.push_back(perigeeSurface.get());
     }
 
     std::ranges::reverse(surfSequence);
