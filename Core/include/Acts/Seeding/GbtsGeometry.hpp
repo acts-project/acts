@@ -17,10 +17,6 @@
 #include <map>
 #include <vector>
 
-namespace traccc {
-struct gbts_seedfinder_config;
-}
-
 namespace Acts::Experimental {
 
 class GbtsNodeStorage;
@@ -38,17 +34,7 @@ class GbtsGeometry final {
                const GbtsLayerConnectionMap& layerConnections,
                const Logger& logger = getDummyLogger());
 
- private:
-  // The layer binning is shared only with the classes that build the graph.
-  // Or reuse this for config setup
-  friend class GbtsNodeStorage;
-  friend class GbtsTrackingFilter;
-  friend class GraphBasedTrackSeeder;
-  friend struct traccc::gbts_seedfinder_config;
-
-  /// Get number of eta bins
-  /// @return Number of eta bins
-  std::uint32_t numBins() const { return m_nEtaBins; }
+  // Used to setup gpu-gbts config
 
   /// Get bin groups
   /// @return Bin groups vector
@@ -61,15 +47,25 @@ class GbtsGeometry final {
   /// @return Number of layers
   std::size_t numLayers() const { return m_layers.size(); }
 
-  /// Get layer by ID
-  /// @param id Layer ID
-  /// @return Pointer to layer or nullptr
-  const detail::GbtsLayer* layerById(std::uint32_t id) const;
-
   /// Get layer by index
   /// @param idx Layer index
   /// @return Reference to layer
   const detail::GbtsLayer& layerByIndex(std::int32_t idx) const;
+
+ private:
+  // The layer binning is shared only with the classes that build the graph.
+  friend class GbtsNodeStorage;
+  friend class GbtsTrackingFilter;
+  friend class GraphBasedTrackSeeder;
+
+  /// Get number of eta bins
+  /// @return Number of eta bins
+  std::uint32_t numBins() const { return m_nEtaBins; }
+
+  /// Get layer by ID
+  /// @param id Layer ID
+  /// @return Pointer to layer or nullptr
+  const detail::GbtsLayer* layerById(std::uint32_t id) const;
 
   /// Get layer ID by index
   /// @param idx Layer index
