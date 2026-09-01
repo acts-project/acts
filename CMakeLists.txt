@@ -154,10 +154,26 @@ option(ACTS_ENABLE_CPU_PROFILING "Enable CPU profiling using gperftools" OFF)
 option(ACTS_ENABLE_MEMORY_PROFILING "Enable memory profiling using gperftools" OFF)
 set(ACTS_GPERF_INSTALL_DIR "" CACHE STRING "Hint to help find gperf if profiling is enabled")
 
-option(ACTS_ENABLE_LOG_FAILURE_THRESHOLD "Enable failing on log messages with level above certain threshold" OFF)
-set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Deprecated. Seeds the process-wide default log failure threshold; the ACTS_LOG_FAILURE_THRESHOLD environment variable and per-logger thresholds override it. Implies ACTS_ENABLE_LOG_FAILURE_THRESHOLD.")
 option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # gersemi: on
+
+# Removed options: warn and drop them from the cache.
+foreach(
+    _removedOption
+    IN
+    ITEMS ACTS_ENABLE_LOG_FAILURE_THRESHOLD ACTS_LOG_FAILURE_THRESHOLD
+)
+    if(DEFINED ${_removedOption})
+        message(
+            WARNING
+            "${_removedOption} was removed. The log failure threshold is a property "
+            "of Acts::Logger now, seeded from the ACTS_LOG_FAILURE_THRESHOLD "
+            "environment variable. Set that variable instead, or arm an individual "
+            "logger with Acts::Logger::withFailureThreshold()."
+        )
+        unset(${_removedOption} CACHE)
+    endif()
+endforeach()
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees

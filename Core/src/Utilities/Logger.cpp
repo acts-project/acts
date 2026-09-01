@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/Diagnostics.hpp"
 
-#include <algorithm>
 #include <atomic>
 #include <cstdlib>
 #include <optional>
@@ -19,8 +18,6 @@
 namespace Acts {
 
 namespace Logging {
-
-#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
 
 namespace {
 
@@ -62,28 +59,19 @@ void setDefaultFailureThreshold(Level level) {
 
 namespace {
 
-// Seeds the default from the build-time option and the environment during
-// dynamic initialisation. Given the earliest available init priority so that it
-// runs ahead of ordinary dynamic initialisers that might log.
+// Seeds the default from the environment during dynamic initialisation. Given
+// the earliest available init priority so that it runs ahead of ordinary
+// dynamic initialisers that might log.
 struct DefaultFailureThresholdSeeder {
   DefaultFailureThresholdSeeder() {
-    Level level = Level::MAX;
-#ifdef ACTS_LOG_FAILURE_THRESHOLD
-    // Seeded from the deprecated CMake option. Unlike before this is only a
-    // default, overridable through Acts::Logging::setFailureThreshold.
-    level = Level::ACTS_LOG_FAILURE_THRESHOLD;
-#endif
-    if (const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
-        envvar != nullptr) {
-      if (std::optional<Level> parsed = parseFailureThreshold(envvar);
-          parsed.has_value()) {
-        // The environment may tighten a pinned build but never loosen it: the
-        // point of pinning at build time is that the job cannot be disarmed
-        // from the outside.
-        level = std::min(level, *parsed);
-      }
+    const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
+    if (envvar == nullptr) {
+      return;
     }
-    detail::setDefaultFailureThreshold(level);
+    if (std::optional<Level> parsed = parseFailureThreshold(envvar);
+        parsed.has_value()) {
+      detail::setDefaultFailureThreshold(*parsed);
+    }
   }
 };
 
@@ -93,19 +81,6 @@ struct DefaultFailureThresholdSeeder {
 const DefaultFailureThresholdSeeder s_defaultFailureThresholdSeeder;
 
 }  // namespace
-
-#else
-
-namespace detail {
-
-void setDefaultFailureThreshold(Level /*level*/) {
-  // ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF: this build can never be armed from
-  // the outside, so setting the process-wide default has no effect.
-}
-
-}  // namespace detail
-
-#endif
 
 ACTS_PUSH_IGNORE_DEPRECATED()
 

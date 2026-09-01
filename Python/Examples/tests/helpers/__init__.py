@@ -160,19 +160,7 @@ else:
 def failure_threshold(level: acts.logging.Level, enabled: bool = True):
     prev = acts.logging.getFailureThreshold()
     if enabled and prev != level:
-        # setFailureThreshold is a no-op in a build configured with
-        # ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF, so check that it took effect
-        # rather than relying on it to raise.
         acts.logging.setFailureThreshold(level)
-        if acts.logging.getFailureThreshold() != level:
-            raise RuntimeError(
-                "Log failure threshold could not be set; it is "
-                f"`{acts.logging.getFailureThreshold().name}`. This build was "
-                "probably configured with "
-                "`ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`. "
-                "The pytest test-suite will not work in this configuration."
-            )
-
         yield
         acts.logging.setFailureThreshold(prev)
     else:

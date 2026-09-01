@@ -21,14 +21,14 @@ if (
         "Log failure threshold is given in environment variable "
         f"`ACTS_LOG_FAILURE_THRESHOLD={os.environ['ACTS_LOG_FAILURE_THRESHOLD']}`, "
         f"but the effective threshold is `{logging.getFailureThreshold().name}`. "
-        "This build was probably configured with "
-        "`ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`, which ignores the environment."
+        "The value is probably misspelled; the accepted ones are the "
+        "`acts.logging.Level` names."
     )
     if "PYTEST_CURRENT_TEST" in os.environ:
         # test environment, fail hard
         raise RuntimeError(error)
     else:
-        warnings.warn(error + "\nThe compile-time threshold will be used in this case!")
+        warnings.warn(error + "\nNo threshold will be applied in this case!")
 
 
 def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):

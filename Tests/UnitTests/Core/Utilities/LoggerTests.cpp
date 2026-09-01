@@ -213,20 +213,8 @@ BOOST_AUTO_TEST_CASE(FailureThresholdFallback_test) {
   const Logging::Level previous = Logging::detail::getDefaultFailureThreshold();
   Logging::detail::setDefaultFailureThreshold(Logging::WARNING);
 
-  const bool enabled =
-#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
-      true;
-#else
-      false;
-#endif
-
-  if (enabled) {
-    BOOST_CHECK_THROW(deferring->log(Logging::ERROR, "deferred"),
-                      Logging::ThresholdFailure);
-  } else {
-    // the default can never be armed in this build
-    BOOST_CHECK_NO_THROW(deferring->log(Logging::ERROR, "deferred"));
-  }
+  BOOST_CHECK_THROW(deferring->log(Logging::ERROR, "deferred"),
+                    Logging::ThresholdFailure);
 
   // an explicit threshold on the logger wins over the default, in both
   // directions

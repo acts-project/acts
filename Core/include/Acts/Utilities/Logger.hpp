@@ -231,11 +231,6 @@ inline std::string_view levelName(Level level) {
 ///       job, and it applies to every @ref Acts::OutputPrintPolicy rather than
 ///       only to @ref Acts::Logging::DefaultPrintPolicy.
 ///
-/// @note If `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF` (the default) the
-///       environment variable is ignored and the process-wide default is
-///       always unset, so no build can be turned into a throwing one from the
-///       outside. Explicitly arming an individual logger still works.
-///
 /// @{
 
 /// Custom exception class so threshold failures can be caught
@@ -244,8 +239,6 @@ class ThresholdFailure : public std::runtime_error {
 };
 
 namespace detail {
-
-#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
 
 /// @brief The process-wide default failure threshold; @ref Level::MAX if unset
 ///
@@ -277,25 +270,6 @@ inline Level getDefaultFailureThreshold() {
 /// @brief Set the process-wide default failure threshold
 /// @param level The new default, or @ref Level::MAX to unset it
 void setDefaultFailureThreshold(Level level);
-
-#else
-
-/// @brief Get the process-wide default failure threshold
-///
-/// This build has `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`, so the default is
-/// always unset and the environment is not consulted.
-///
-/// @return @ref Level::MAX
-constexpr Level getDefaultFailureThreshold() {
-  return Level::MAX;
-}
-
-/// @brief Set the process-wide default failure threshold
-///
-/// No-op in a build with `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`.
-void setDefaultFailureThreshold(Level /*level*/);
-
-#endif
 
 /// @brief Resolve the effective failure threshold for a log message
 ///

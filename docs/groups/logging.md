@@ -192,6 +192,6 @@ The failure threshold is a property of the logger:
 @ref Acts::Logging::setFailureThreshold and
 @ref Acts::Logging::ScopedFailureThreshold still work, and a logger with no
 threshold of its own defers to them, but they are global mutable state and will
-be removed. So will the `ACTS_ENABLE_LOG_FAILURE_THRESHOLD` and
-`ACTS_LOG_FAILURE_THRESHOLD` CMake options: use the
+be removed. The `ACTS_ENABLE_LOG_FAILURE_THRESHOLD` and
+`ACTS_LOG_FAILURE_THRESHOLD` CMake options are gone already: use the
 `ACTS_LOG_FAILURE_THRESHOLD` environment variable to arm a job.
