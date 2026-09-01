@@ -16,6 +16,7 @@
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
+#include "ActsExamples/Framework/LogFailureThreshold.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -84,7 +85,8 @@ Sequencer::Sequencer(const Sequencer::Config& cfg)
     : m_cfg(cfg),
       m_taskArena((m_cfg.numThreads < 0) ? tbb::task_arena::automatic
                                          : m_cfg.numThreads),
-      m_logger(Acts::getDefaultLogger("Sequencer", m_cfg.logLevel)) {
+      m_logger(Acts::getDefaultLogger("Sequencer", m_cfg.logLevel, &std::cout,
+                                      getLogFailureThreshold())) {
   if (m_cfg.numThreads < -1 || m_cfg.numThreads == 0) {
     ACTS_ERROR("Number of threads must be -1 (automatic) or positive");
     throw std::invalid_argument(
@@ -494,7 +496,8 @@ int Sequencer::run() {
             // Use per-event store
             WhiteBoard eventStore(
                 Acts::getDefaultLogger("EventStore#" + std::to_string(event),
-                                       m_cfg.logLevel),
+                                       m_cfg.logLevel, &std::cout,
+                                       getLogFailureThreshold()),
                 m_whiteboardObjectAliases);
             // If we ever wanted to run algorithms in parallel, this needs to
             // be changed to Algorithm context copies

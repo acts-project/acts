@@ -1,8 +1,5 @@
 from pathlib import Path
-from typing import Callable, TypeVar, Union
-import os
-import warnings
-import functools
+from typing import Union
 
 
 from .ActsPythonBindings import *
@@ -12,24 +9,6 @@ from .ActsPythonBindings import _testing
 from . import ActsPythonBindings
 from ._adapter import _patch_config
 from .histogram import _patch_histogram_types
-
-# Applied on import, before any logger exists: a logger copies the threshold
-# when it is built.
-if (_threshold := os.environ.get("ACTS_LOG_FAILURE_THRESHOLD")) is not None:
-    _level = getattr(logging, _threshold, None)
-    if isinstance(_level, logging.Level):
-        logging.setFailureThreshold(_level)
-    else:
-        _names = ", ".join(lvl.name for lvl in logging.Level.__members__.values())
-        _error = (
-            f"`ACTS_LOG_FAILURE_THRESHOLD={_threshold}` is not a log level. "
-            f"Expected one of: {_names}."
-        )
-        if "PYTEST_CURRENT_TEST" in os.environ:
-            # test environment, fail hard
-            raise RuntimeError(_error)
-        else:
-            warnings.warn(_error + "\nNo failure threshold will be applied.")
 
 
 def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):
@@ -44,22 +23,6 @@ def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):
 
 _patch_config(ActsPythonBindings)
 _patch_histogram_types(ActsPythonBindings)
-
-
-T = TypeVar("T")
-
-
-class with_log_threshold:
-    def __init__(self, level: logging.Level):
-        self.level = level
-
-    def __call__(self, func: Callable[..., T]) -> Callable[..., T]:
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> T:
-            with logging.ScopedFailureThreshold(self.level):
-                return func(*args, **kwargs)
-
-        return wrapper
 
 
 @staticmethod

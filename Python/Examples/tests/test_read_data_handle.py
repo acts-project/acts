@@ -102,7 +102,7 @@ def test_wrong_key_raises():
 
     # The scope has to cover construction: loggers copy the threshold there.
     with (
-        acts.logging.ScopedFailureThreshold(acts.logging.FATAL),
+        acts.examples.ScopedFailureThreshold(acts.logging.FATAL),
         pytest.raises(
             RuntimeError,
             match="Sequence configuration error: Missing data handle for key 'wrong_key'",

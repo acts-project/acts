@@ -201,46 +201,28 @@ BOOST_AUTO_TEST_CASE(FailureThreshold_test) {
   BOOST_CHECK_NO_THROW(Acts::getDummyLogger().log(Logging::FATAL, "ignored"));
 }
 
-/// @brief getDefaultLogger copies the process-wide default at construction
+/// @brief Core arms nothing on its own
 ///
-/// The default is job configuration, read once when a logger is built. It is
-/// deliberately not consulted again, so it cannot arm or disarm a logger that
-/// already exists.
-BOOST_AUTO_TEST_CASE(FailureThresholdDefault_test) {
+/// There is no process-wide default in Core: a logger is armed only by whoever
+/// builds it.
+BOOST_AUTO_TEST_CASE(NotArmedByDefault_test) {
   std::ostringstream out;
 
-  const Logging::Level previous = Logging::detail::getDefaultFailureThreshold();
-  Logging::detail::setDefaultFailureThreshold(Logging::WARNING);
+  auto plain = Acts::getDefaultLogger("Plain", Logging::VERBOSE, &out);
+  BOOST_CHECK(plain->failureThreshold() == Logging::MAX);
+  BOOST_CHECK_NO_THROW(plain->log(Logging::FATAL, "not armed"));
 
-  auto seeded = Acts::getDefaultLogger("Seeded", Logging::VERBOSE, &out);
-  BOOST_CHECK(seeded->failureThreshold() == Logging::WARNING);
-  BOOST_CHECK_THROW(seeded->log(Logging::ERROR, "seeded"),
-                    Logging::ThresholdFailure);
-
-  // an explicit argument wins over the default, in both directions
   BOOST_CHECK(
-      Acts::getDefaultLogger("Explicit", Logging::VERBOSE, &out, Logging::MAX)
-          ->failureThreshold() == Logging::MAX);
-  BOOST_CHECK(
-      Acts::getDefaultLogger("Explicit", Logging::VERBOSE, &out, Logging::INFO)
+      Acts::getDefaultLogger("Armed", Logging::VERBOSE, &out, Logging::INFO)
           ->failureThreshold() == Logging::INFO);
 
-  // moving the default afterwards leaves an existing logger alone
-  Logging::detail::setDefaultFailureThreshold(Logging::MAX);
-  BOOST_CHECK(seeded->failureThreshold() == Logging::WARNING);
-  BOOST_CHECK_THROW(seeded->log(Logging::ERROR, "still armed"),
-                    Logging::ThresholdFailure);
-
-  // and a logger built directly from policies is never armed by the default,
-  // so an experiment bridging ACTS logging into its own framework cannot
-  // inherit a threshold it did not ask for
-  Logging::detail::setDefaultFailureThreshold(Logging::WARNING);
+  // a logger built directly from policies is not armed either, so an
+  // experiment bridging ACTS logging into its own framework cannot inherit a
+  // threshold it did not ask for
   Logger direct{std::make_unique<CountingPrintPolicy>(),
                 std::make_unique<DefaultFilterPolicy>(Logging::VERBOSE)};
   BOOST_CHECK(direct.failureThreshold() == Logging::MAX);
   BOOST_CHECK_NO_THROW(direct.log(Logging::FATAL, "not armed"));
-
-  Logging::detail::setDefaultFailureThreshold(previous);
 }
 
 /// @brief instrumentation must never be able to fail the job

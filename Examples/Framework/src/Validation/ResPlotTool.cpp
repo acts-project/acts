@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/Framework/LogFailureThreshold.hpp"
 
 #include <cmath>
 #include <format>
@@ -24,7 +25,9 @@ static constexpr double nan = std::numeric_limits<double>::quiet_NaN();
 
 ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
                          Acts::Logging::Level lvl)
-    : m_cfg(cfg), m_logger(Acts::getDefaultLogger("ResPlotTool", lvl)) {
+    : m_cfg(cfg),
+      m_logger(Acts::getDefaultLogger("ResPlotTool", lvl, &std::cout,
+                                      getLogFailureThreshold())) {
   // `varBinning.at` would only report the key type, not the missing key
   const auto binning = [this](const std::string& key) -> const AxisVariant& {
     const auto it = m_cfg.varBinning.find(key);

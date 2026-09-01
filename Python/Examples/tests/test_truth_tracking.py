@@ -85,7 +85,7 @@ def test_python_track_access(generic_detector_config, tmp_path):
     # The scope has to cover construction: loggers copy the threshold there.
     with (
         generic_detector_config.detector,
-        acts.logging.ScopedFailureThreshold(acts.logging.ERROR),
+        acts.examples.ScopedFailureThreshold(acts.logging.ERROR),
     ):
         from truth_tracking_kalman import runTruthTrackingKalman
 
@@ -303,7 +303,7 @@ def test_python_track_state_access(generic_detector_config, tmp_path):
 
         seq.addAlgorithm(TrackStateAccess())
 
-        with acts.logging.ScopedFailureThreshold(acts.logging.ERROR):
+        with acts.examples.ScopedFailureThreshold(acts.logging.ERROR):
             seq.run()
 
 

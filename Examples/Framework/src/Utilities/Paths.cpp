@@ -9,6 +9,7 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/LogFailureThreshold.hpp"
 
 #include <algorithm>
 #include <charconv>
@@ -59,8 +60,9 @@ std::pair<std::size_t, std::size_t> ActsExamples::determineEventFilesRange(
   using std::filesystem::directory_iterator;
   using std::filesystem::path;
 
-  ACTS_LOCAL_LOGGER(
-      Acts::getDefaultLogger("EventFilesRange", Acts::Logging::INFO));
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("EventFilesRange",
+                                           Acts::Logging::INFO, &std::cout,
+                                           getLogFailureThreshold()));
 
   // ensure directory path is valid
   auto dir_path = dir.empty() ? current_path() : path(dir);

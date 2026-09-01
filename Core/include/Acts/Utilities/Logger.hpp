@@ -215,12 +215,10 @@ inline std::string_view levelName(Level level) {
 /// A logger carries the threshold it was built with; nothing is consulted when
 /// a message is logged.
 ///
-/// @ref Acts::getDefaultLogger arms the loggers it builds at
-/// @ref Acts::Logging::detail::getDefaultFailureThreshold. A @ref Acts::Logger
-/// built directly from a print and a filter policy is not armed.
-///
-/// Core does not read the environment; the `ACTS_LOG_FAILURE_THRESHOLD`
-/// environment variable is applied by the Python bindings on import.
+/// Core holds no process-wide threshold: a logger is armed only by whoever
+/// builds it. @ref ActsExamples arms the loggers of a job from
+/// @ref ActsExamples::getLogFailureThreshold, which the Python bindings set
+/// from the `ACTS_LOG_FAILURE_THRESHOLD` environment variable.
 ///
 /// @note The check happens before the level filter, so a coarse filter level
 ///       cannot hide a message that should fail the job, and it applies to
@@ -232,20 +230,6 @@ inline std::string_view levelName(Level level) {
 class ThresholdFailure : public std::runtime_error {
   using std::runtime_error::runtime_error;
 };
-
-namespace detail {
-
-/// @brief Get the threshold @ref Acts::getDefaultLogger arms new loggers at
-/// @return the default, or @ref Level::MAX for "do not arm"
-Level getDefaultFailureThreshold();
-
-/// @brief Set the threshold @ref Acts::getDefaultLogger arms new loggers at
-///
-/// @warning Global state, and only reaches loggers built after the call.
-/// @param level The new default, or @ref Level::MAX for "do not arm"
-void setDefaultFailureThreshold(Level level);
-
-}  // namespace detail
 
 /// @}
 
@@ -822,16 +806,14 @@ class Logger {
 /// - debug level
 ///
 /// @param [in] failureThreshold level at or above which a message raises
-///                               @ref Acts::Logging::ThresholdFailure, or
-///                               `std::nullopt` to take the process-wide
-///                               default from
-///                               @ref Acts::Logging::detail::getDefaultFailureThreshold
+///                               @ref Acts::Logging::ThresholdFailure;
+///                               @ref Acts::Logging::Level::MAX never fails
 ///
 /// @return pointer to logging instance
 std::unique_ptr<const Logger> getDefaultLogger(
     const std::string& name, const Logging::Level& lvl,
     std::ostream* log_stream = &std::cout,
-    std::optional<Logging::Level> failureThreshold = std::nullopt);
+    Logging::Level failureThreshold = Logging::Level::MAX);
 
 /// Get a dummy logger that discards all output
 /// @return Reference to dummy logger instance

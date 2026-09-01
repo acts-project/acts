@@ -101,10 +101,10 @@ class FuncAlg(acts.examples.IAlgorithm):
 
 @pytest.fixture(autouse=True)
 def disable_log_threshold():
-    prev = acts.logging.getFailureThreshold()
-    acts.logging.setFailureThreshold(acts.logging.MAX)
+    prev = acts.examples.getLogFailureThreshold()
+    acts.examples.setLogFailureThreshold(acts.logging.MAX)
     yield
-    acts.logging.setFailureThreshold(prev)
+    acts.examples.setLogFailureThreshold(prev)
 
 
 def test_notrackfpe():

@@ -170,42 +170,12 @@ void addUtilities(py::module_& m) {
     m.def(
         "getDefaultLogger",
         [](const std::string& name, Logging::Level level,
-           std::optional<Logging::Level> failureThreshold) {
+           Logging::Level failureThreshold) {
           return getDefaultLogger(name, level, &std::cout, failureThreshold);
         },
         py::arg("name"), py::arg("level") = Logging::INFO,
-        py::arg("failureThreshold") = py::none(),
+        py::arg("failureThreshold") = Logging::Level::MAX,
         py::return_value_policy::take_ownership);
-
-    // The threshold that getDefaultLogger arms new loggers at.
-    logging.def("setFailureThreshold",
-                &Logging::detail::setDefaultFailureThreshold);
-    logging.def("getFailureThreshold",
-                &Logging::detail::getDefaultFailureThreshold);
-
-    struct ScopedFailureThresholdContextManager {
-      Logging::Level m_level;
-      Logging::Level m_previous = Logging::Level::MAX;
-
-      explicit ScopedFailureThresholdContextManager(Logging::Level level)
-          : m_level(level) {}
-
-      void enter() {
-        m_previous = Logging::detail::getDefaultFailureThreshold();
-        Logging::detail::setDefaultFailureThreshold(m_level);
-      }
-
-      void exit(const py::object& /*exc_type*/, const py::object& /*exc_value*/,
-                const py::object& /*traceback*/) {
-        Logging::detail::setDefaultFailureThreshold(m_previous);
-      }
-    };
-
-    py::class_<ScopedFailureThresholdContextManager>(logging,
-                                                     "ScopedFailureThreshold")
-        .def(py::init<Logging::Level>(), "level"_a)
-        .def("__enter__", &ScopedFailureThresholdContextManager::enter)
-        .def("__exit__", &ScopedFailureThresholdContextManager::exit);
 
     static py::exception<Logging::ThresholdFailure> exc(
         logging, "ThresholdFailure", PyExc_RuntimeError);

@@ -9,6 +9,7 @@
 #include "ActsExamples/Validation/FakePlotTool.hpp"
 
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/Framework/LogFailureThreshold.hpp"
 
 #include <format>
 
@@ -33,7 +34,9 @@ namespace ActsExamples {
 
 FakePlotTool::FakePlotTool(const FakePlotTool::Config& cfg,
                            Acts::Logging::Level lvl)
-    : m_cfg(cfg), m_logger(Acts::getDefaultLogger("FakePlotTool", lvl)) {
+    : m_cfg(cfg),
+      m_logger(Acts::getDefaultLogger("FakePlotTool", lvl, &std::cout,
+                                      getLogFailureThreshold())) {
   ACTS_DEBUG("Initialize the histograms for fake ratio plots");
 
   std::string lt = capitalize(m_cfg.label);

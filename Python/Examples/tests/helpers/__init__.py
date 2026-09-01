@@ -162,13 +162,13 @@ def failure_threshold(level: acts.logging.Level, enabled: bool = True):
 
     Has to enclose the construction of the algorithms, not just ``run``.
     """
-    prev = acts.logging.getFailureThreshold()
+    prev = acts.examples.getLogFailureThreshold()
     if enabled and prev != level:
-        acts.logging.setFailureThreshold(level)
+        acts.examples.setLogFailureThreshold(level)
         try:
             yield
         finally:
-            acts.logging.setFailureThreshold(prev)
+            acts.examples.setLogFailureThreshold(prev)
     else:
         yield
 

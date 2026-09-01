@@ -9,6 +9,7 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/LogFailureThreshold.hpp"
 
 #include <utility>
 
@@ -17,9 +18,10 @@ namespace ActsExamples {
 IAlgorithm::IAlgorithm(const std::string& name,
                        std::unique_ptr<const Acts::Logger> logger)
     : m_name(name),
-      m_logger(logger != nullptr
-                   ? std::move(logger)
-                   : Acts::getDefaultLogger(name, Acts::Logging::INFO)) {}
+      m_logger(logger != nullptr ? std::move(logger)
+                                 : Acts::getDefaultLogger(
+                                       name, Acts::Logging::INFO, &std::cout,
+                                       getLogFailureThreshold())) {}
 
 std::string IAlgorithm::name() const {
   return m_name;

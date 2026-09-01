@@ -1,5 +1,6 @@
 import acts
+import acts.examples
 
 # The pytest suite drives whole Sequencer jobs whose loggers it cannot reach
 # individually, so it arms the process-wide default instead.
-acts.logging.setFailureThreshold(acts.logging.WARNING)
+acts.examples.setLogFailureThreshold(acts.logging.WARNING)

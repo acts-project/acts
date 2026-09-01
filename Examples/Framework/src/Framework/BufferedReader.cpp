@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/LogFailureThreshold.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <random>
@@ -18,7 +19,9 @@
 namespace ActsExamples {
 
 BufferedReader::BufferedReader(const Config &config, Acts::Logging::Level level)
-    : m_cfg(config), m_logger(Acts::getDefaultLogger(name(), level)) {
+    : m_cfg(config),
+      m_logger(Acts::getDefaultLogger(name(), level, &std::cout,
+                                      getLogFailureThreshold())) {
   if (!m_cfg.upstreamReader) {
     throw std::invalid_argument("No upstream reader provided!");
   }

@@ -12,6 +12,7 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
+#include "ActsExamples/Framework/LogFailureThreshold.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
@@ -252,6 +253,34 @@ void trigger_invalid() {
 
 namespace ActsPython {
 void addFramework(py::module& mex) {
+  // The threshold the framework arms the loggers of a job at. Sequence
+  // elements build their own loggers, so a job cannot hand them one.
+  mex.def("setLogFailureThreshold", &ActsExamples::setLogFailureThreshold);
+  mex.def("getLogFailureThreshold", &ActsExamples::getLogFailureThreshold);
+
+  struct ScopedLogFailureThreshold {
+    Acts::Logging::Level m_level;
+    Acts::Logging::Level m_previous = Acts::Logging::Level::MAX;
+
+    explicit ScopedLogFailureThreshold(Acts::Logging::Level level)
+        : m_level(level) {}
+
+    void enter() {
+      m_previous = ActsExamples::getLogFailureThreshold();
+      ActsExamples::setLogFailureThreshold(m_level);
+    }
+
+    void exit(const py::object& /*exc_type*/, const py::object& /*exc_value*/,
+              const py::object& /*traceback*/) {
+      ActsExamples::setLogFailureThreshold(m_previous);
+    }
+  };
+
+  py::class_<ScopedLogFailureThreshold>(mex, "ScopedFailureThreshold")
+      .def(py::init<Acts::Logging::Level>(), "level"_a)
+      .def("__enter__", &ScopedLogFailureThreshold::enter)
+      .def("__exit__", &ScopedLogFailureThreshold::exit);
+
   py::class_<IWriter, std::shared_ptr<IWriter>>(mex, "IWriter");
 
   py::class_<IContextDecorator, std::shared_ptr<IContextDecorator>>(

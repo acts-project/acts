@@ -8,33 +8,11 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
-#include <atomic>
 #include <string>
 
 namespace Acts {
 
 namespace Logging {
-
-namespace {
-
-// constinit so a read during static initialisation reports MAX. Atomic because
-// a write may race a read, although the intended use is a single write at
-// startup.
-constinit std::atomic<Level> s_defaultFailureThreshold{Level::MAX};
-
-}  // namespace
-
-namespace detail {
-
-Level getDefaultFailureThreshold() {
-  return s_defaultFailureThreshold.load(std::memory_order_relaxed);
-}
-
-void setDefaultFailureThreshold(Level level) {
-  s_defaultFailureThreshold.store(level, std::memory_order_relaxed);
-}
-
-}  // namespace detail
 
 namespace {
 class NeverFilterPolicy final : public OutputFilterPolicy {
@@ -78,7 +56,7 @@ std::unique_ptr<const Logger> makeDummyLogger() {
 
 std::unique_ptr<const Logger> getDefaultLogger(
     const std::string& name, const Logging::Level& lvl,
-    std::ostream* log_stream, std::optional<Logging::Level> failureThreshold) {
+    std::ostream* log_stream, Logging::Level failureThreshold) {
   using namespace Logging;
   auto output = std::make_unique<LevelOutputDecorator>(
       std::make_unique<NamedOutputDecorator>(
@@ -86,9 +64,8 @@ std::unique_ptr<const Logger> getDefaultLogger(
               std::make_unique<DefaultPrintPolicy>(log_stream)),
           name));
   auto print = std::make_unique<DefaultFilterPolicy>(lvl);
-  return std::make_unique<const Logger>(
-      std::move(output), std::move(print),
-      failureThreshold.value_or(Logging::detail::getDefaultFailureThreshold()));
+  return std::make_unique<const Logger>(std::move(output), std::move(print),
+                                        failureThreshold);
 }
 
 const Logger& getDummyLogger() {
