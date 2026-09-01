@@ -177,26 +177,27 @@ void addUtilities(py::module_& m) {
         py::arg("failureThreshold") = py::none(),
         py::return_value_policy::take_ownership);
 
-    // The bindings below deliberately keep the deprecated global threshold API
-    // alive for the Python test suite, which drives whole Sequencer jobs whose
-    // loggers it cannot reach individually.
-    ACTS_PUSH_IGNORE_DEPRECATED()
-    logging.def("setFailureThreshold", &Logging::setFailureThreshold);
-    logging.def("getFailureThreshold", &Logging::getFailureThreshold);
+    // The threshold that getDefaultLogger arms new loggers at.
+    logging.def("setFailureThreshold",
+                &Logging::detail::setDefaultFailureThreshold);
+    logging.def("getFailureThreshold",
+                &Logging::detail::getDefaultFailureThreshold);
 
     struct ScopedFailureThresholdContextManager {
-      std::optional<Logging::ScopedFailureThreshold> m_scopedFailureThreshold =
-          std::nullopt;
       Logging::Level m_level;
+      Logging::Level m_previous = Logging::Level::MAX;
 
       explicit ScopedFailureThresholdContextManager(Logging::Level level)
           : m_level(level) {}
 
-      void enter() { m_scopedFailureThreshold.emplace(m_level); }
+      void enter() {
+        m_previous = Logging::detail::getDefaultFailureThreshold();
+        Logging::detail::setDefaultFailureThreshold(m_level);
+      }
 
       void exit(const py::object& /*exc_type*/, const py::object& /*exc_value*/,
                 const py::object& /*traceback*/) {
-        m_scopedFailureThreshold.reset();
+        Logging::detail::setDefaultFailureThreshold(m_previous);
       }
     };
 
@@ -205,8 +206,6 @@ void addUtilities(py::module_& m) {
         .def(py::init<Logging::Level>(), "level"_a)
         .def("__enter__", &ScopedFailureThresholdContextManager::enter)
         .def("__exit__", &ScopedFailureThresholdContextManager::exit);
-
-    ACTS_POP_IGNORE_DEPRECATED()
 
     static py::exception<Logging::ThresholdFailure> exc(
         logging, "ThresholdFailure", PyExc_RuntimeError);

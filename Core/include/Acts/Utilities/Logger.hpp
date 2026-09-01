@@ -225,6 +225,12 @@ inline std::string_view levelName(Level level) {
 /// logs an error *on purpose* -- typically a test exercising an error path --
 /// passes a disarmed logger to the code under test.
 ///
+/// Core does not read the environment. The `ACTS_LOG_FAILURE_THRESHOLD`
+/// environment variable is handled by the Python bindings, which apply it on
+/// import, before any logger exists. A C++ entry point that wants the same
+/// thing calls @ref Acts::Logging::detail::setDefaultFailureThreshold itself.
+///
+///
 /// A @ref Acts::Logger constructed directly from a print and a filter policy is
 /// **not** armed. An experiment that bridges ACTS logging into its own
 /// framework therefore never inherits a threshold it did not ask for; it can
@@ -263,21 +269,23 @@ void setDefaultFailureThreshold(Level level);
 
 }  // namespace detail
 
-/// @brief Get the process-wide default failure threshold
+/// @brief Get the threshold @ref Acts::getDefaultLogger arms new loggers at
 ///
 /// @deprecated The failure threshold is a property of @ref Acts::Logger. Read
 ///             it with @ref Acts::Logger::failureThreshold instead.
-/// @return The default threshold, or @ref Level::MAX if unset
+/// @return The default threshold, or @ref Level::MAX for "do not arm"
 [[deprecated(
     "Global log failure thresholds are deprecated; use "
     "Acts::Logger::failureThreshold() instead")]]
 Level getFailureThreshold();
 
-/// @brief Set the process-wide default failure threshold
+/// @brief Set the threshold @ref Acts::getDefaultLogger arms new loggers at
 ///
 /// @deprecated The failure threshold is a property of @ref Acts::Logger. Arm a
 ///             logger with @ref Acts::Logger::withFailureThreshold instead.
-/// @warning This is **global state** and therefore **not threadsafe**.
+/// @warning This is **global state** and therefore **not threadsafe**. It only
+///          reaches loggers built after the call; ones that already exist keep
+///          the threshold they were built with.
 /// @param level Log level above which exceptions will be thrown
 [[deprecated(
     "Global log failure thresholds are deprecated; use "
@@ -286,6 +294,9 @@ void setFailureThreshold(Level level);
 
 /// Helper class that changes the process-wide default failure threshold for
 /// the duration of its lifetime.
+///
+/// @warning This only affects loggers *built* inside the scope. It cannot arm
+///          or disarm a logger that already exists.
 ///
 /// @deprecated Pass a logger armed or disarmed with
 ///             @ref Acts::Logger::withFailureThreshold /

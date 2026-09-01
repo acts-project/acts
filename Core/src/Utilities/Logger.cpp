@@ -11,8 +11,6 @@
 #include "Acts/Utilities/Diagnostics.hpp"
 
 #include <atomic>
-#include <cstdlib>
-#include <optional>
 #include <string>
 
 namespace Acts {
@@ -21,37 +19,11 @@ namespace Logging {
 
 namespace {
 
-std::optional<Level> parseFailureThreshold(const char* value) {
-  const std::string level = value;
-  if (level == "VERBOSE") {
-    return Level::VERBOSE;
-  } else if (level == "DEBUG") {
-    return Level::DEBUG;
-  } else if (level == "INFO") {
-    return Level::INFO;
-  } else if (level == "WARNING") {
-    return Level::WARNING;
-  } else if (level == "ERROR") {
-    return Level::ERROR;
-  } else if (level == "FATAL") {
-    return Level::FATAL;
-  } else if (level == "MAX") {
-    return Level::MAX;
-  }
-  std::cerr << "ACTS_LOG_FAILURE_THRESHOLD is set to unknown value: " << level
-            << std::endl;
-  return std::nullopt;
-}
-
-}  // namespace
-
-namespace {
-
 // Read when a logger is built, not when a message is logged, so this is off
 // every hot path. constinit so that a read during static initialisation --
-// before the seeder below has run -- reports MAX rather than an indeterminate
-// value. Atomic because a write from one thread may race a read from another,
-// even though the intended use is a single write at startup.
+// before a job has had the chance to set it -- reports MAX rather than an
+// indeterminate value. Atomic because a write from one thread may race a read
+// from another, even though the intended use is a single write at startup.
 constinit std::atomic<Level> s_defaultFailureThreshold{Level::MAX};
 
 }  // namespace
@@ -67,31 +39,6 @@ void setDefaultFailureThreshold(Level level) {
 }
 
 }  // namespace detail
-
-namespace {
-
-// Seeds the default from the environment during dynamic initialisation. Given
-// the earliest available init priority so that it runs ahead of ordinary
-// dynamic initialisers that might log.
-struct DefaultFailureThresholdSeeder {
-  DefaultFailureThresholdSeeder() {
-    const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
-    if (envvar == nullptr) {
-      return;
-    }
-    if (std::optional<Level> parsed = parseFailureThreshold(envvar);
-        parsed.has_value()) {
-      detail::setDefaultFailureThreshold(*parsed);
-    }
-  }
-};
-
-#if defined(__GNUC__) || defined(__clang__)
-[[gnu::init_priority(101)]]
-#endif
-const DefaultFailureThresholdSeeder s_defaultFailureThresholdSeeder;
-
-}  // namespace
 
 ACTS_PUSH_IGNORE_DEPRECATED()
 

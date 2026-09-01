@@ -190,8 +190,9 @@ The failure threshold is a property of the logger:
 
 @deprecated The process-wide @ref Acts::Logging::getFailureThreshold,
 @ref Acts::Logging::setFailureThreshold and
-@ref Acts::Logging::ScopedFailureThreshold still work, and a logger with no
-threshold of its own defers to them, but they are global mutable state and will
-be removed. The `ACTS_ENABLE_LOG_FAILURE_THRESHOLD` and
-`ACTS_LOG_FAILURE_THRESHOLD` CMake options are gone already: use the
-`ACTS_LOG_FAILURE_THRESHOLD` environment variable to arm a job.
+@ref Acts::Logging::ScopedFailureThreshold still work, and set the threshold
+that @ref Acts::getDefaultLogger arms new loggers at, but they are global
+mutable state and will be removed. The `ACTS_ENABLE_LOG_FAILURE_THRESHOLD` and
+`ACTS_LOG_FAILURE_THRESHOLD` CMake options are gone already: set the
+`ACTS_LOG_FAILURE_THRESHOLD` environment variable to arm a job that runs
+through the Python bindings.
