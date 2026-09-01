@@ -39,6 +39,10 @@ BOOST_AUTO_TEST_SUITE(NavigationSuite)
 auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 auto logger = getDefaultLogger("NavigationPolicyTests", Logging::VERBOSE);
 
+// For test cases that provoke an error on purpose: same logger, but it
+// must not fail the job when that expected error is logged.
+auto quietLogger = logger->withoutFailureThreshold();
+
 struct APolicy : public INavigationPolicy {
   APolicy(const GeometryContext& /*gctx*/, const TrackingVolume& /*volume*/,
           const Logger& /*logger*/) {}
@@ -874,8 +878,7 @@ BOOST_AUTO_TEST_CASE(CylinderPolicyZeroInnerRadiusTest) {
   // CylinderNavigationPolicy constructor should throw std::invalid_argument
   // for volumes with zero inner radius
   {
-    Acts::Logging::ScopedFailureThreshold log{Logging::FATAL};
-    BOOST_CHECK_THROW(CylinderNavigationPolicy(gctx, *cylVolume, *logger),
+    BOOST_CHECK_THROW(CylinderNavigationPolicy(gctx, *cylVolume, *quietLogger),
                       std::invalid_argument);
   }
 }

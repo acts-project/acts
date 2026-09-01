@@ -55,6 +55,10 @@ namespace ActsTests {
 
 auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
+// For test cases that provoke an error on purpose: same logger, but it
+// must not fail the job when that expected error is logged.
+auto quietLogger = logger->withoutFailureThreshold();
+
 auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 auto nameLookup(const TrackingGeometry& geo) {
@@ -83,11 +87,9 @@ std::size_t countVolumes(const TrackingGeometry& geo) {
 BOOST_AUTO_TEST_SUITE(GeometrySuite);
 
 BOOST_AUTO_TEST_CASE(InvalidRoot) {
-  Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
-
   Blueprint::Config cfg;
   Blueprint root{cfg};
-  BOOST_CHECK_THROW(root.construct({}, gctx, *logger), std::logic_error);
+  BOOST_CHECK_THROW(root.construct({}, gctx, *quietLogger), std::logic_error);
 
   // More than one child is also invalid
   auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 100_mm);
@@ -98,7 +100,7 @@ BOOST_AUTO_TEST_CASE(InvalidRoot) {
       std::make_unique<StaticBlueprintNode>(std::make_unique<TrackingVolume>(
           Transform3::Identity(), cylBounds, "child2")));
 
-  BOOST_CHECK_THROW(root.construct({}, gctx, *logger), std::logic_error);
+  BOOST_CHECK_THROW(root.construct({}, gctx, *quietLogger), std::logic_error);
 }
 
 class DummyNode : public BlueprintNode {

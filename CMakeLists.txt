@@ -155,7 +155,7 @@ option(ACTS_ENABLE_MEMORY_PROFILING "Enable memory profiling using gperftools" O
 set(ACTS_GPERF_INSTALL_DIR "" CACHE STRING "Hint to help find gperf if profiling is enabled")
 
 option(ACTS_ENABLE_LOG_FAILURE_THRESHOLD "Enable failing on log messages with level above certain threshold" OFF)
-set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an exception should be automatically thrown. If ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set and this is unset, this will enable a runtime check of the log level.")
+set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Deprecated. Seeds the process-wide default log failure threshold; the ACTS_LOG_FAILURE_THRESHOLD environment variable and per-logger thresholds override it. Implies ACTS_ENABLE_LOG_FAILURE_THRESHOLD.")
 option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # gersemi: on
 

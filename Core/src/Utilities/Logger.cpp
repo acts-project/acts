@@ -8,61 +8,104 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
-#include <algorithm>
+#include "Acts/Utilities/Diagnostics.hpp"
+
 #include <cstdlib>
+#include <optional>
+#include <string>
 
 namespace Acts {
 
 namespace Logging {
 
-#if defined(ACTS_ENABLE_LOG_FAILURE_THRESHOLD) and \
-    not defined(ACTS_LOG_FAILURE_THRESHOLD)
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+
 namespace {
-Level& getFailureThresholdMutable() {
-  static Level _level = []() {
-    Level level = Level::MAX;
 
-    const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
-    if (envvar == nullptr) {
-      return level;
-    }
+std::optional<Level> parseFailureThreshold(const char* value) {
+  const std::string level = value;
+  if (level == "VERBOSE") {
+    return Level::VERBOSE;
+  } else if (level == "DEBUG") {
+    return Level::DEBUG;
+  } else if (level == "INFO") {
+    return Level::INFO;
+  } else if (level == "WARNING") {
+    return Level::WARNING;
+  } else if (level == "ERROR") {
+    return Level::ERROR;
+  } else if (level == "FATAL") {
+    return Level::FATAL;
+  } else if (level == "MAX") {
+    return Level::MAX;
+  }
+  std::cerr << "ACTS_LOG_FAILURE_THRESHOLD is set to unknown value: " << level
+            << std::endl;
+  return std::nullopt;
+}
 
-    std::string slevel = envvar;
-    if (slevel == "VERBOSE") {
-      level = std::min(level, Level::VERBOSE);
-    } else if (slevel == "DEBUG") {
-      level = std::min(level, Level::DEBUG);
-    } else if (slevel == "INFO") {
-      level = std::min(level, Level::INFO);
-    } else if (slevel == "WARNING") {
-      level = std::min(level, Level::WARNING);
-    } else if (slevel == "ERROR") {
-      level = std::min(level, Level::ERROR);
-    } else if (slevel == "FATAL") {
-      level = std::min(level, Level::FATAL);
-    } else {
-      std::cerr << "ACTS_LOG_FAILURE_THRESHOLD environment variable is set to "
-                   "unknown value: "
-                << slevel << std::endl;
+std::optional<Level>& defaultFailureThresholdMutable() {
+  static std::optional<Level> s_level = []() -> std::optional<Level> {
+#ifdef ACTS_LOG_FAILURE_THRESHOLD
+    // Seeded from the deprecated CMake option. Unlike before, this is only a
+    // default: it can still be overridden at runtime.
+    std::optional<Level> level = Level::ACTS_LOG_FAILURE_THRESHOLD;
+#else
+    std::optional<Level> level = std::nullopt;
+#endif
+    if (const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
+        envvar != nullptr) {
+      if (std::optional<Level> parsed = parseFailureThreshold(envvar);
+          parsed.has_value()) {
+        level = parsed;
+      }
     }
     return level;
   }();
 
-  return _level;
+  return s_level;
 }
+
 }  // namespace
 
+namespace detail {
+
+std::optional<Level> getDefaultFailureThreshold() {
+  return defaultFailureThresholdMutable();
+}
+
+void setDefaultFailureThreshold(std::optional<Level> level) {
+  defaultFailureThresholdMutable() = level;
+}
+
+}  // namespace detail
+
+#else
+
+namespace detail {
+
+void setDefaultFailureThreshold(std::optional<Level> /*level*/) {
+  // ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF: this build can never be armed from
+  // the outside, so setting the process-wide default has no effect.
+}
+
+}  // namespace detail
+
+#endif
+
+ACTS_PUSH_IGNORE_DEPRECATED()
+
 Level getFailureThreshold() {
-  return getFailureThresholdMutable();
+  return detail::getDefaultFailureThreshold().value_or(Level::MAX);
 }
 
 void setFailureThreshold(Level level) {
-  getFailureThresholdMutable() = level;
+  detail::setDefaultFailureThreshold(level);
 }
 
 ScopedFailureThreshold::~ScopedFailureThreshold() noexcept {
   try {
-    setFailureThreshold(m_previousLevel);
+    detail::setDefaultFailureThreshold(m_previousLevel);
   } catch (const std::bad_alloc&) {
     // bad alloc can be thrown when initializing the global static variable
     std::cerr << "Failed to reset log failure threshold (bad_alloc)"
@@ -71,19 +114,7 @@ ScopedFailureThreshold::~ScopedFailureThreshold() noexcept {
   }
 }
 
-#else
-
-void setFailureThreshold(Level /*lvl*/) {
-  throw std::logic_error{
-      "Compile-time log failure threshold defined (ACTS_LOG_FAILURE_THRESHOLD "
-      "is set or ACTS_ENABLE_LOG_FAILURE_THRESHOLD is OFF), unable to "
-      "override. See "
-      "https://cern.ch/acts-log-thresh"};
-}
-
-ScopedFailureThreshold::~ScopedFailureThreshold() noexcept = default;
-
-#endif
+ACTS_POP_IGNORE_DEPRECATED()
 
 namespace {
 class NeverFilterPolicy final : public OutputFilterPolicy {
@@ -118,15 +149,16 @@ std::unique_ptr<const Logger> makeDummyLogger() {
   using namespace Logging;
   auto output = std::make_unique<DummyPrintPolicy>();
   auto print = std::make_unique<NeverFilterPolicy>();
-  return std::make_unique<const Logger>(std::move(output), std::move(print));
+  return std::make_unique<const Logger>(std::move(output), std::move(print),
+                                        Level::MAX);
 }
 
 }  // namespace
 }  // namespace Logging
 
-std::unique_ptr<const Logger> getDefaultLogger(const std::string& name,
-                                               const Logging::Level& lvl,
-                                               std::ostream* log_stream) {
+std::unique_ptr<const Logger> getDefaultLogger(
+    const std::string& name, const Logging::Level& lvl,
+    std::ostream* log_stream, std::optional<Logging::Level> failureThreshold) {
   using namespace Logging;
   auto output = std::make_unique<LevelOutputDecorator>(
       std::make_unique<NamedOutputDecorator>(
@@ -134,7 +166,8 @@ std::unique_ptr<const Logger> getDefaultLogger(const std::string& name,
               std::make_unique<DefaultPrintPolicy>(log_stream)),
           name));
   auto print = std::make_unique<DefaultFilterPolicy>(lvl);
-  return std::make_unique<const Logger>(std::move(output), std::move(print));
+  return std::make_unique<const Logger>(std::move(output), std::move(print),
+                                        failureThreshold);
 }
 
 const Logger& getDummyLogger() {

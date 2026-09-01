@@ -22,20 +22,20 @@
 #include <podio/CollectionBase.h>
 
 using namespace ActsExamples;
-using Acts::Logging::ScopedFailureThreshold;
 
 namespace ActsTests {
 
 namespace {
+// This suite provokes configuration errors on purpose, so the logger it hands
+// to the code under test must not fail the job when they are logged.
 static const auto logger =
-    Acts::getDefaultLogger("PodioHandleTest", Acts::Logging::VERBOSE);
+    Acts::getDefaultLogger("PodioHandleTest", Acts::Logging::VERBOSE)
+        ->withoutFailureThreshold();
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(PodioCollectionDataHandleSuite)
 
 BOOST_AUTO_TEST_CASE(EmulationCompatibility) {
-  ScopedFailureThreshold st(Acts::Logging::Level::FATAL);
-
   DummySequenceElement dummyElement;
 
   DataHandleBase::StateMapType state;

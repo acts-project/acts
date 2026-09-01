@@ -169,6 +169,10 @@ void addUtilities(py::module_& m) {
         py::arg("name"), py::arg("level") = Logging::INFO,
         py::return_value_policy::take_ownership);
 
+    // The bindings below deliberately keep the deprecated global threshold API
+    // alive for the Python test suite, which drives whole Sequencer jobs whose
+    // loggers it cannot reach individually.
+    ACTS_PUSH_IGNORE_DEPRECATED()
     logging.def("setFailureThreshold", &Logging::setFailureThreshold);
     logging.def("getFailureThreshold", &Logging::getFailureThreshold);
 
@@ -187,6 +191,7 @@ void addUtilities(py::module_& m) {
         m_scopedFailureThreshold.reset();
       }
     };
+    ACTS_POP_IGNORE_DEPRECATED()
 
     py::class_<ScopedFailureThresholdContextManager>(logging,
                                                      "ScopedFailureThreshold")
@@ -202,13 +207,8 @@ void addUtilities(py::module_& m) {
         if (p) {
           std::rethrow_exception(p);
         }
-      } catch (const std::exception& e) {
-        std::string what = e.what();
-        if (what.find("ACTS_LOG_FAILURE_THRESHOLD") != std::string::npos) {
-          py::set_error(exc, e.what());
-        } else {
-          std::rethrow_exception(p);
-        }
+      } catch (const Logging::ThresholdFailure& e) {
+        py::set_error(exc, e.what());
       }
     });
 

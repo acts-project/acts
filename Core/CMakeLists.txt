@@ -55,8 +55,15 @@ endif()
 
 if(ACTS_LOG_FAILURE_THRESHOLD)
     message(
+        DEPRECATION
+        "ACTS_LOG_FAILURE_THRESHOLD is deprecated and will be removed. It now "
+        "only seeds the process-wide default, which the ACTS_LOG_FAILURE_THRESHOLD "
+        "environment variable and Acts::Logger both still override. Set the "
+        "environment variable instead."
+    )
+    message(
         STATUS
-        "Enable log failure threshold, set to ${ACTS_LOG_FAILURE_THRESHOLD}"
+        "Enable log failure threshold, default set to ${ACTS_LOG_FAILURE_THRESHOLD}"
     )
     target_compile_definitions(
         ActsCore

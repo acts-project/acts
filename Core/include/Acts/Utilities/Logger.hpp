@@ -208,90 +208,133 @@ inline std::string_view levelName(Level level) {
 /// specific circumstances. To solve this, ACTS implements an optional log
 /// *threshold* mechanism.
 ///
-/// The threshold mechanism is steered via two CMake options:
-/// `ACTS_ENABLE_LOG_FAILURE_THRESHOLD` and `ACTS_LOG_FAILURE_THRESHOLD`.
-/// Depending on their configuration, the logging can operate in three modes:
+/// The failure threshold is a property of the @ref Acts::Logger itself. A logger
+/// can be
 ///
-/// 1. **No log failure threshold** exists, log levels are informative only.
-/// This is
-///    the default behavior.
-/// 2. A **compile-time log failure threshold** is set. If
-///    `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON` and
-///    `ACTS_LOG_FAILURE_THRESHOLD=<LEVEL>` are set, the logger code will
-///    compile in a fixed check if the log level of a particular message exceeds
-///    `<LEVEL>`.
-///    If that is the case, an exception of type @ref Acts::Logging::ThresholdFailure is
-///    thrown.
-/// 3. A **runtime log failure threshold** is set. If only
-///    `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON` and no fixed threshold level is
-///    set, the logger code will compile in a check of a global runtime
-///    threshold variable.
+/// - **armed** at a level: any message at or above that level is printed and
+///   then raises @ref Acts::Logging::ThresholdFailure,
+/// - **disarmed** (armed at @ref Acts::Logging::Level::MAX): log levels are
+///   informative only,
+/// - **unset** (the default): the logger defers to the process-wide default,
+///   which is seeded from the `ACTS_LOG_FAILURE_THRESHOLD` environment
+///   variable.
 ///
-/// @note If only `ACTS_LOG_FAILURE_THRESHOLD` is set,
-/// `ACTS_ENABLE_LOG_FAILURE_THRESHOLD` will be set automatically, i.e. a
-/// compile-time threshold will be set.
+/// Deferring to the environment is what makes the mechanism usable from CI:
+/// export `ACTS_LOG_FAILURE_THRESHOLD=WARNING`, run the job, and any code that
+/// logs a warning or worse fails it. Code that logs an error *on purpose* --
+/// typically a unit test exercising an error path -- passes a disarmed logger
+/// instead of reaching for global state.
+///
+/// @note The check happens before the level filter, so raising a logger's
+///       filter level can no longer hide a message that should have failed the
+///       job, and it applies to every @ref Acts::OutputPrintPolicy rather than
+///       only to @ref Acts::Logging::DefaultPrintPolicy.
+///
+/// @note If `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF` (the default) the
+///       environment variable is ignored and the process-wide default is
+///       always unset, so no build can be turned into a throwing one from the
+///       outside. Explicitly arming an individual logger still works.
 ///
 /// @{
-
-#ifdef DOXYGEN
-/// @brief Get debug level above which an exception will be thrown after logging
-///
-/// All messages with a debug level equal or higher than the return value of
-/// this function will cause an exception to be thrown after log emission.
-///
-/// @note Depending on preprocessor settings @c ACTS_ENABLE_LOG_FAILURE_THRESHOLD
-///       and @c ACTS_LOG_FAILURE_THRESHOLD, this operations is either constexpr
-///       or a runtime operation.
-/// @return The log level threshold for failure
-Level getFailureThreshold();
-
-#else
-
-#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
-#ifdef ACTS_LOG_FAILURE_THRESHOLD
-// We have a fixed compile time log failure threshold
-constexpr Level getFailureThreshold() {
-  return Level::ACTS_LOG_FAILURE_THRESHOLD;
-}
-#else
-Level getFailureThreshold();
-#endif
-#else
-constexpr Level getFailureThreshold() {
-  // Default "NO" failure threshold
-  return Level::MAX;
-}
-#endif
-
-#endif
-
-/// @brief Set debug level above which an exception will be thrown after logging
-///
-/// All messages with a debug level equal or higher than @p level will
-/// cause an exception to be thrown after log emission.
-///
-/// @warning The runtime log failure threshold is **global state**, therefore
-///          this function is  **not threadsafe**. The intention is that this
-///          level is set once, before multi-threaded execution begins, and then
-///          not modified before the end of the job.
-/// @note This function is only available if @c ACTS_LOG_FAILURE_THRESHOLD is
-///       unset, i.e. no compile-time threshold is used. Otherwise an
-///       exception is thrown.
-/// @param level Log level above which exceptions will be thrown
-void setFailureThreshold(Level level);
 
 /// Custom exception class so threshold failures can be caught
 class ThresholdFailure : public std::runtime_error {
   using std::runtime_error::runtime_error;
 };
 
-/// Helper class that changes the failure threshold for the duration of its
-/// lifetime.
-class ScopedFailureThreshold {
+namespace detail {
+
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+
+/// @brief Get the process-wide default failure threshold
+///
+/// Loggers constructed without an explicit failure threshold defer to this
+/// value. It is seeded once from the `ACTS_LOG_FAILURE_THRESHOLD` environment
+/// variable and is unset if that variable is absent or unparsable.
+///
+/// @return The process-wide default, or `std::nullopt` if unset
+std::optional<Level> getDefaultFailureThreshold();
+
+/// @brief Set the process-wide default failure threshold
+///
+/// @warning This is **global state** and therefore **not threadsafe**. The
+///          intention is that it is set once, before multi-threaded execution
+///          begins, and not modified before the end of the job. Prefer arming
+///          an individual @ref Acts::Logger instead.
+/// @param level The new default, or `std::nullopt` to unset it
+void setDefaultFailureThreshold(std::optional<Level> level);
+
+#else
+
+/// @brief Get the process-wide default failure threshold
+///
+/// This build has `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`, so the default is
+/// always unset and the environment is not consulted.
+///
+/// @return `std::nullopt`
+constexpr std::optional<Level> getDefaultFailureThreshold() {
+  return std::nullopt;
+}
+
+/// @brief Set the process-wide default failure threshold
+///
+/// No-op in a build with `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`.
+void setDefaultFailureThreshold(std::optional<Level> /*level*/);
+
+#endif
+
+/// @brief Resolve the effective failure threshold for a log message
+///
+/// @param own The failure threshold of the logger, if it has one
+/// @param lvl The level of the message being logged
+/// @return @c true if the message should raise @ref ThresholdFailure
+inline bool exceedsFailureThreshold(const std::optional<Level>& own,
+                                    Level lvl) {
+  const std::optional<Level>& threshold =
+      own.has_value() ? own : getDefaultFailureThreshold();
+  return threshold.has_value() && lvl >= *threshold;
+}
+
+}  // namespace detail
+
+/// @brief Get the process-wide default failure threshold
+///
+/// @deprecated The failure threshold is a property of @ref Acts::Logger. Read
+///             it with @ref Acts::Logger::failureThreshold instead.
+/// @return The default threshold, or @ref Level::MAX if unset
+[[deprecated(
+    "Global log failure thresholds are deprecated; use "
+    "Acts::Logger::failureThreshold() instead")]]
+Level getFailureThreshold();
+
+/// @brief Set the process-wide default failure threshold
+///
+/// @deprecated The failure threshold is a property of @ref Acts::Logger. Arm a
+///             logger with @ref Acts::Logger::withFailureThreshold instead.
+/// @warning This is **global state** and therefore **not threadsafe**.
+/// @param level Log level above which exceptions will be thrown
+[[deprecated(
+    "Global log failure thresholds are deprecated; use "
+    "Acts::Logger::withFailureThreshold() instead")]]
+void setFailureThreshold(Level level);
+
+/// Helper class that changes the process-wide default failure threshold for
+/// the duration of its lifetime.
+///
+/// @deprecated Pass a logger armed or disarmed with
+///             @ref Acts::Logger::withFailureThreshold /
+///             @ref Acts::Logger::withoutFailureThreshold to the code under
+///             test instead of mutating global state.
+class [[deprecated(
+    "Global log failure thresholds are deprecated; pass a logger from "
+    "Acts::Logger::withoutFailureThreshold() to the code under test "
+    "instead")]] ScopedFailureThreshold {
  public:
   /// Constructor that sets the failure threshold for the scope
   /// @param level The logging level to set as failure threshold
-  explicit ScopedFailureThreshold(Level level) { setFailureThreshold(level); }
+  explicit ScopedFailureThreshold(Level level) {
+    detail::setDefaultFailureThreshold(level);
+  }
   ScopedFailureThreshold(const ScopedFailureThreshold&) = delete;
   ScopedFailureThreshold& operator=(const ScopedFailureThreshold&) = delete;
   ScopedFailureThreshold(ScopedFailureThreshold&&) = delete;
@@ -300,7 +343,7 @@ class ScopedFailureThreshold {
   ~ScopedFailureThreshold() noexcept;
 
  private:
-  Level m_previousLevel{getFailureThreshold()};
+  std::optional<Level> m_previousLevel{detail::getDefaultFailureThreshold()};
 };
 
 /// @}
@@ -367,16 +410,7 @@ class DefaultFilterPolicy final : public OutputFilterPolicy {
   /// @brief constructor
   ///
   /// @param [in] lvl threshold debug level
-  explicit DefaultFilterPolicy(Level lvl) : m_level(lvl) {
-    if (lvl > getFailureThreshold()) {
-      throw ThresholdFailure(
-          "Requested debug level is incompatible with "
-          "the ACTS_LOG_FAILURE_THRESHOLD=" +
-          std::string{levelName(getFailureThreshold())} +
-          " configuration. See "
-          "https://cern.ch/acts-log-thresh");
-    }
-  }
+  explicit DefaultFilterPolicy(Level lvl) : m_level(lvl) {}
 
   /// virtual default destructor
   ~DefaultFilterPolicy() override = default;
@@ -637,7 +671,7 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   ///
   /// @param [in] lvl   debug level of debug message
   /// @param [in] input text of debug message
-  void flush(const Level& lvl, const std::string& input) final {
+  void flush(const Level& /*lvl*/, const std::string& input) final {
     // Mutex to serialize access to std::cout
     static std::mutex s_stdoutMutex;
     std::unique_lock lock{s_stdoutMutex,
@@ -648,15 +682,6 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
     }
 
     (*m_out) << input << std::endl;
-    if (lvl >= getFailureThreshold()) {
-      throw ThresholdFailure(
-          "Previous debug message exceeds the "
-          "ACTS_LOG_FAILURE_THRESHOLD=" +
-          std::string{levelName(getFailureThreshold())} +
-          " configuration, bailing out. See "
-          "https://acts.readthedocs.io/en/latest/core/misc/"
-          "logging.html#logging-thresholds");
-    }
   }
 
   /// Fulfill @c OutputPrintPolicy interface. This policy doesn't actually have a
@@ -699,27 +724,54 @@ class Logger {
   ///
   /// @param [in] pPrint  policy for printing debug messages
   /// @param [in] pFilter policy for filtering debug messages
+  /// @param [in] failureThreshold level at or above which a message raises
+  ///                               @ref Logging::ThresholdFailure, or
+  ///                               `std::nullopt` to defer to the process-wide
+  ///                               default
   Logger(std::unique_ptr<Logging::OutputPrintPolicy> pPrint,
-         std::unique_ptr<Logging::OutputFilterPolicy> pFilter)
-      : m_printPolicy(std::move(pPrint)), m_filterPolicy(std::move(pFilter)) {}
+         std::unique_ptr<Logging::OutputFilterPolicy> pFilter,
+         std::optional<Logging::Level> failureThreshold = std::nullopt)
+      : m_printPolicy(std::move(pPrint)),
+        m_filterPolicy(std::move(pFilter)),
+        m_failureThreshold(failureThreshold) {}
 
   /// @brief decide whether a message with a given debug level has to be printed
+  ///
+  /// A message that exceeds the failure threshold is always printed, so that
+  /// the message which fails the job is visible regardless of the filter level.
   ///
   /// @param [in] lvl debug level of debug message
   ///
   /// @return @c true if debug message should be printed, otherwise @c false
   bool doPrint(const Logging::Level& lvl) const {
-    return m_filterPolicy->doPrint(lvl);
+    return m_filterPolicy->doPrint(lvl) || exceedsFailureThreshold(lvl);
   }
 
   /// @brief log a debug message
   ///
   /// @param [in] lvl debug level of debug message
   /// @param [in] input text of debug message
+  /// @throws Logging::ThresholdFailure if @p lvl is at or above the failure
+  ///         threshold of this logger
   void log(const Logging::Level& lvl, const std::string& input) const {
     if (doPrint(lvl)) {
       m_printPolicy->flush(lvl, input);
     }
+    if (exceedsFailureThreshold(lvl)) {
+      throw Logging::ThresholdFailure(
+          "Log message at level " + std::string{Logging::levelName(lvl)} +
+          " exceeds the failure threshold of logger '" + name() +
+          "', bailing out. See https://cern.ch/acts-log-thresh");
+    }
+  }
+
+  /// @brief The failure threshold of this logger
+  ///
+  /// @return the level at or above which messages raise
+  ///         @ref Logging::ThresholdFailure, or `std::nullopt` if this logger
+  ///         defers to the process-wide default
+  std::optional<Logging::Level> failureThreshold() const {
+    return m_failureThreshold;
   }
 
   /// Return the print policy for this logger
@@ -751,7 +803,27 @@ class Logger {
       const std::optional<Logging::Level>& _level = std::nullopt) const {
     return std::make_unique<Logger>(
         m_printPolicy->clone(_name.value_or(name())),
-        m_filterPolicy->clone(_level.value_or(level())));
+        m_filterPolicy->clone(_level.value_or(level())), m_failureThreshold);
+  }
+
+  /// Make a copy of this logger with a different failure threshold.
+  /// @param _failureThreshold the level at or above which messages should raise
+  ///        @ref Logging::ThresholdFailure, or `std::nullopt` to defer to the
+  ///        process-wide default
+  /// @return Unique pointer to a cloned logger
+  std::unique_ptr<Logger> withFailureThreshold(
+      std::optional<Logging::Level> _failureThreshold) const {
+    return std::make_unique<Logger>(m_printPolicy->clone(name()),
+                                    m_filterPolicy->clone(level()),
+                                    _failureThreshold);
+  }
+
+  /// Make a copy of this logger that never raises @ref
+  /// Logging::ThresholdFailure. Use this for code paths that log an error on
+  /// purpose, such as a unit test exercising an error path.
+  /// @return Unique pointer to a cloned logger
+  std::unique_ptr<Logger> withoutFailureThreshold() const {
+    return withFailureThreshold(Logging::Level::MAX);
   }
 
   /// Make a copy of the logger, with a new level. Convenience function for
@@ -779,11 +851,20 @@ class Logger {
   const Logger& operator()() const { return *this; }
 
  private:
+  /// @brief whether a message at @p lvl trips this logger's failure threshold
+  bool exceedsFailureThreshold(Logging::Level lvl) const {
+    return Logging::detail::exceedsFailureThreshold(m_failureThreshold, lvl);
+  }
+
   /// policy object for printing debug messages
   std::unique_ptr<Logging::OutputPrintPolicy> m_printPolicy;
 
   /// policy object for filtering debug messages
   std::unique_ptr<Logging::OutputFilterPolicy> m_filterPolicy;
+
+  /// level at or above which a message raises Logging::ThresholdFailure;
+  /// unset means defer to the process-wide default
+  std::optional<Logging::Level> m_failureThreshold;
 };
 
 /// @brief get default debug output logger
@@ -798,10 +879,16 @@ class Logger {
 /// - name of logging instance
 /// - debug level
 ///
+/// @param [in] failureThreshold level at or above which a message raises
+///                               @ref Acts::Logging::ThresholdFailure, or
+///                               `std::nullopt` to defer to the process-wide
+///                               default
+///
 /// @return pointer to logging instance
 std::unique_ptr<const Logger> getDefaultLogger(
     const std::string& name, const Logging::Level& lvl,
-    std::ostream* log_stream = &std::cout);
+    std::ostream* log_stream = &std::cout,
+    std::optional<Logging::Level> failureThreshold = std::nullopt);
 
 /// Get a dummy logger that discards all output
 /// @return Reference to dummy logger instance

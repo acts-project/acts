@@ -17,13 +17,19 @@
 
 using namespace Acts;
 using namespace ActsExamples;
-using Logging::ScopedFailureThreshold;
 
 // Global logger instance for all tests
 const Logger& logger() {
   static const auto logger =
       getDefaultLogger("DataHandleTest", Logging::VERBOSE);
   return *logger;
+}
+
+// For the checks below that provoke a configuration error on purpose: the same
+// logger, but it must not fail the job when that expected error is logged.
+const Logger& quietLogger() {
+  static const auto quiet = logger().withoutFailureThreshold();
+  return *quiet;
 }
 
 namespace ActsTests {
@@ -275,8 +281,7 @@ BOOST_AUTO_TEST_CASE(EmulateStateConsistency) {
     auto& readHandle = *readHandles.emplace_back(
         std::make_unique<ReadDataHandle<int>>(&dummyElement, "test"));
     readHandle.initialize("test_key");
-    ScopedFailureThreshold st(Logging::Level::FATAL);
-    BOOST_CHECK_THROW(readHandle.emulate(state, aliases, logger()),
+    BOOST_CHECK_THROW(readHandle.emulate(state, aliases, quietLogger()),
                       SequenceConfigurationException);
   }
 
@@ -287,8 +292,7 @@ BOOST_AUTO_TEST_CASE(EmulateStateConsistency) {
     auto& readHandle = *readHandles.emplace_back(
         std::make_unique<ReadDataHandle<int>>(&dummyElement, "test"));
     readHandle.initialize("missing_key");
-    ScopedFailureThreshold st(Logging::Level::FATAL);
-    BOOST_CHECK_THROW(readHandle.emulate(state, aliases, logger()),
+    BOOST_CHECK_THROW(readHandle.emulate(state, aliases, quietLogger()),
                       SequenceConfigurationException);
   }
 
@@ -304,8 +308,7 @@ BOOST_AUTO_TEST_CASE(EmulateStateConsistency) {
     auto& writeHandle2 = *writeHandles.emplace_back(
         std::make_unique<WriteDataHandle<int>>(&dummyElement, "test2"));
     writeHandle2.initialize("duplicate_key");
-    ScopedFailureThreshold st(Logging::Level::FATAL);
-    BOOST_CHECK_THROW(writeHandle2.emulate(state, aliases, logger()),
+    BOOST_CHECK_THROW(writeHandle2.emulate(state, aliases, quietLogger()),
                       SequenceConfigurationException);
   }
 
@@ -377,8 +380,7 @@ BOOST_AUTO_TEST_CASE(ConsumeDataHandleTest) {
     auto& consumeHandle2 = *readHandles.emplace_back(
         std::make_unique<ConsumeDataHandle<int>>(&dummyElement, "test2"));
     consumeHandle2.initialize("consume_key");
-    ScopedFailureThreshold st(Logging::Level::FATAL);
-    BOOST_CHECK_THROW(consumeHandle2.emulate(state, aliases, logger()),
+    BOOST_CHECK_THROW(consumeHandle2.emulate(state, aliases, quietLogger()),
                       SequenceConfigurationException);
   }
 

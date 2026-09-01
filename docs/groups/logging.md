@@ -180,7 +180,18 @@ There are two approaches to logger integration:
 
 @copydetails logging_thresholds
 
-Two main functions exist to interact with the failure threshold:
+The failure threshold is a property of the logger:
 
-- @ref Acts::Logging::getFailureThreshold
-- @ref Acts::Logging::setFailureThreshold
+- @ref Acts::Logger::failureThreshold reads it
+- @ref Acts::Logger::withFailureThreshold returns a copy armed at a level
+- @ref Acts::Logger::withoutFailureThreshold returns a copy that never fails,
+  which is what a test exercising an error path should pass to the code under
+  test
+
+@deprecated The process-wide @ref Acts::Logging::getFailureThreshold,
+@ref Acts::Logging::setFailureThreshold and
+@ref Acts::Logging::ScopedFailureThreshold still work, and a logger with no
+threshold of its own defers to them, but they are global mutable state and will
+be removed. So will the `ACTS_ENABLE_LOG_FAILURE_THRESHOLD` and
+`ACTS_LOG_FAILURE_THRESHOLD` CMake options: use the
+`ACTS_LOG_FAILURE_THRESHOLD` environment variable to arm a job.
