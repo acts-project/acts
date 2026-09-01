@@ -63,6 +63,14 @@ GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
     if (m_layerDescription.type == GbtsLayerType::Barrel) {
       m_minRadius.push_back(m_layerDescription.refCoord - 2.0f);
       m_maxRadius.push_back(m_layerDescription.refCoord + 2.0f);
+      m_minBinCoord.push_back(m_layerDescription.minBound);
+      m_maxBinCoord.push_back(m_layerDescription.maxBound);
+    } else if (m_layerDescription.type == GbtsLayerType::Endcap) {
+      m_minRadius.push_back(m_layerDescription.minBound - 2.0f);
+      m_maxRadius.push_back(m_layerDescription.maxBound + 2.0f);
+      m_minBinCoord.push_back(m_layerDescription.minBound);
+      m_maxBinCoord.push_back(m_layerDescription.maxBound);
+    } else {
       throw std::runtime_error("invalid layer type");
     }
   } else {
@@ -73,7 +81,8 @@ GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
     }
 
     m_etaBin = deltaEta / m_nBins;
-    -if (m_nBins == 1) {
+
+    if (m_nBins == 1) {
       m_bins.push_back(binCounter++);
       if (m_layerDescription.type == GbtsLayerType::Barrel) {
         m_minRadius.push_back(m_layerDescription.refCoord - 2.0f);
@@ -84,13 +93,11 @@ GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
         m_minRadius.push_back(m_layerDescription.minBound - 2.0f);
         m_maxRadius.push_back(m_layerDescription.maxBound + 2.0f);
         m_minBinCoord.push_back(m_layerDescription.minBound);
-        simplify bin linking logic m_maxBinCoord.push_back(
-            m_layerDescription.maxBound);
+        m_maxBinCoord.push_back(m_layerDescription.maxBound);
       } else {
         throw std::runtime_error("invalid layer type");
       }
-    }
-    else {
+    } else {
       float eta = m_minEta + 0.5f * m_etaBin;
 
       for (std::uint32_t i = 1; i <= m_nBins; ++i) {
@@ -124,418 +131,421 @@ GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
         eta += m_etaBin;
       }
     }
+  }
+}
 
-    bool GbtsLayer::checkCompatibility(
-        const GbtsLayer& otherLayer, const std::uint32_t b1,
-        const std::uint32_t b2, const float minZ0, const float maxZ0) const {
-      const float z1min = m_minBinCoord.at(b1);
-      const float z1max = m_maxBinCoord.at(b1);
-      const float r1 = m_layerDescription.refCoord;
+bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
+                                   const std::uint32_t b1,
+                                   const std::uint32_t b2, const float minZ0,
+                                   const float maxZ0) const {
+  const float z1min = m_minBinCoord.at(b1);
+  const float z1max = m_maxBinCoord.at(b1);
+  const float r1 = m_layerDescription.refCoord;
 
-      const float tol = 5.0f;
+  const float tol = 5.0f;
 
-      if (m_layerDescription.type == GbtsLayerType::Barrel &&
-          otherLayer.m_layerDescription.type == GbtsLayerType::Barrel) {
-        const float minB2 = otherLayer.m_minBinCoord.at(b2);
-        const float maxB2 = otherLayer.m_maxBinCoord.at(b2);
+  if (m_layerDescription.type == GbtsLayerType::Barrel &&
+      otherLayer.m_layerDescription.type == GbtsLayerType::Barrel) {
+    const float minB2 = otherLayer.m_minBinCoord.at(b2);
+    const float maxB2 = otherLayer.m_maxBinCoord.at(b2);
 
-        const float r2 = otherLayer.m_layerDescription.refCoord;
+    const float r2 = otherLayer.m_layerDescription.refCoord;
 
-        // for same layer links use layer width
-        float A = r2 / (2.0f * m_layerDescription.halfRefWidth);
-        float B = r1 / (2.0f * m_layerDescription.halfRefWidth);
-        if (r2 != r1) {
-          A = r2 / (r2 - r1);
-          B = r1 / (r2 - r1);
-        }
+    // for same layer links use layer width
+    float A = r2 / (2.0f * m_layerDescription.halfRefWidth);
+    float B = r1 / (2.0f * m_layerDescription.halfRefWidth);
+    if (r2 != r1) {
+      A = r2 / (r2 - r1);
+      B = r1 / (r2 - r1);
+    }
 
-        const float z0Min = z1min * A - maxB2 * B;
-        const float z0Max = z1max * A - minB2 * B;
+    const float z0Min = z1min * A - maxB2 * B;
+    const float z0Max = z1max * A - minB2 * B;
 
-        if (z0Max < minZ0 - tol || z0Min > maxZ0 + tol) {
-          return false;
-        }
+    if (z0Max < minZ0 - tol || z0Min > maxZ0 + tol) {
+      return false;
+    }
 
-        return true;
-      }
+    return true;
+  }
 
-      if (m_layerDescription.type == GbtsLayerType::Barrel &&
-          otherLayer.m_layerDescription.type == GbtsLayerType::Endcap) {
-        const float z2 = otherLayer.m_layerDescription.refCoord;
-        const float r2max = otherLayer.m_maxBinCoord.at(b2);
-        float r2min = otherLayer.m_minBinCoord.at(b2);
+  if (m_layerDescription.type == GbtsLayerType::Barrel &&
+      otherLayer.m_layerDescription.type == GbtsLayerType::Endcap) {
+    const float z2 = otherLayer.m_layerDescription.refCoord;
+    const float r2max = otherLayer.m_maxBinCoord.at(b2);
+    float r2min = otherLayer.m_minBinCoord.at(b2);
 
-        if (r2max <= r1) {
-          return false;
-        }
+    if (r2max <= r1) {
+      return false;
+    }
 
-        if (r2min <= r1) {
-          r2min = r1 + 1e-3f;
-        }
+    if (r2min <= r1) {
+      r2min = r1 + 1e-3f;
+    }
 
-        float z0Max = 0;
-        float z0Min = 0;
+    float z0Max = 0;
+    float z0Min = 0;
 
-        if (z2 > 0) {
-          z0Max = (z1max * r2max - z2 * r1) / (r2max - r1);
-          z0Min = (z1min * r2min - z2 * r1) / (r2min - r1);
-        } else {
-          z0Max = (z1max * r2min - z2 * r1) / (r2min - r1);
-          z0Min = (z1min * r2max - z2 * r1) / (r2max - r1);
-        }
+    if (z2 > 0) {
+      z0Max = (z1max * r2max - z2 * r1) / (r2max - r1);
+      z0Min = (z1min * r2min - z2 * r1) / (r2min - r1);
+    } else {
+      z0Max = (z1max * r2min - z2 * r1) / (r2min - r1);
+      z0Min = (z1min * r2max - z2 * r1) / (r2max - r1);
+    }
 
-        if (z0Max < minZ0 - tol || z0Min > maxZ0 + tol) {
-          return false;
-        }
-        return true;
-      }
+    if (z0Max < minZ0 - tol || z0Min > maxZ0 + tol) {
+      return false;
+    }
+    return true;
+  }
 
-      if (m_layerDescription.type == GbtsLayerType::Endcap &&
-          otherLayer.m_layerDescription.type == GbtsLayerType::Endcap) {
-        const float z2 = otherLayer.m_layerDescription.refCoord;
-        const float z1 = m_layerDescription.refCoord;
-        const float r2max = otherLayer.m_maxBinCoord.at(b2);
-        const float r2min = otherLayer.m_minBinCoord.at(b2);
-        const float r1max = m_maxBinCoord.at(b1);
-        const float r1min = m_minBinCoord.at(b1);
+  if (m_layerDescription.type == GbtsLayerType::Endcap &&
+      otherLayer.m_layerDescription.type == GbtsLayerType::Endcap) {
+    const float z2 = otherLayer.m_layerDescription.refCoord;
+    const float z1 = m_layerDescription.refCoord;
+    const float r2max = otherLayer.m_maxBinCoord.at(b2);
+    const float r2min = otherLayer.m_minBinCoord.at(b2);
+    const float r1max = m_maxBinCoord.at(b1);
+    const float r1min = m_minBinCoord.at(b1);
 
-        if (r1min >= r2max) {
-          return false;
-        }
-        float dz = z2 - z1;
-        if (z2 == z1) {  // self link
-          dz = 2.0f * m_layerDescription.halfRefWidth;
-        }
-        if (z2 > 0) {  // positive endcap
+    if (r1min >= r2max) {
+      return false;
+    }
+    float dz = z2 - z1;
+    if (z2 == z1) {  // self link
+      dz = 2.0f * m_layerDescription.halfRefWidth;
+    }
+    if (z2 > 0) {  // positive endcap
 
-          const float z0Max = z1 - r1min * dz / (r2max - r1min);
+      const float z0Max = z1 - r1min * dz / (r2max - r1min);
 
-          if (z0Max < minZ0 - tol) {
-            return false;
-          }
-
-          if (r2min > r1max) {
-            const float z0Min = z1 - r1max * dz / (r2min - r1max);
-
-            if (z0Min > maxZ0 + tol) {
-              return false;
-            }
-          }
-        } else {  // negative endcap
-          const float z0Min = z1 - r1min * dz / (r2max - r1min);
-
-          if (z0Min > maxZ0 + tol) {
-            return false;
-          }
-
-          if (r2min > r1max) {
-            const float z0Max = z1 - r1max * dz / (r2min - r1max);
-
-            if (z0Max < minZ0 - tol) {
-              return false;
-            }
-          }
-        }
-        return true;
-      }
-
-      if (m_layerDescription.type == GbtsLayerType::Endcap &&
-          otherLayer.m_layerDescription.type == GbtsLayerType::Barrel) {
-        const float z1 = m_layerDescription.refCoord;
-        const float r1max = m_maxBinCoord.at(b1);
-        const float r1min = m_minBinCoord.at(b1);
-
-        const float z2min = otherLayer.m_minBinCoord.at(b2);
-        const float z2max = otherLayer.m_maxBinCoord.at(b2);
-        const float r2 = otherLayer.m_layerDescription.refCoord;
-
-        if (r2 < r1min) {
-          return false;
-        }
-
-        // interval 1
-
-        float z0Min = z1 - (z2max - z1) / (r2 / r1max - 1);
-        float z0Max = z1 - (z2max - z1) / (r2 / r1min - 1);
-
-        if (z0Min > z0Max) {
-          std::swap(z0Min, z0Max);
-        }
-
-        bool beyondRange = (z0Max < minZ0 - tol || z0Min > maxZ0 + tol);
-
-        if (!beyondRange) {
-          return true;
-        }
-
-        // interval 2
-
-        z0Min = z1 - (z2min - z1) / (r2 / r1max - 1);
-        z0Max = z1 - (z2min - z1) / (r2 / r1min - 1);
-
-        if (z0Min > z0Max) {
-          std::swap(z0Min, z0Max);
-        }
-
-        beyondRange = (z0Max < minZ0 - tol || z0Min > maxZ0 + tol);
-
-        if (!beyondRange) {
-          return true;
-        }
-
+      if (z0Max < minZ0 - tol) {
         return false;
       }
 
+      if (r2min > r1max) {
+        const float z0Min = z1 - r1max * dz / (r2min - r1max);
+
+        if (z0Min > maxZ0 + tol) {
+          return false;
+        }
+      }
+    } else {  // negative endcap
+      const float z0Min = z1 - r1min * dz / (r2max - r1min);
+
+      if (z0Min > maxZ0 + tol) {
+        return false;
+      }
+
+      if (r2min > r1max) {
+        const float z0Max = z1 - r1max * dz / (r2min - r1max);
+
+        if (z0Max < minZ0 - tol) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  if (m_layerDescription.type == GbtsLayerType::Endcap &&
+      otherLayer.m_layerDescription.type == GbtsLayerType::Barrel) {
+    const float z1 = m_layerDescription.refCoord;
+    const float r1max = m_maxBinCoord.at(b1);
+    const float r1min = m_minBinCoord.at(b1);
+
+    const float z2min = otherLayer.m_minBinCoord.at(b2);
+    const float z2max = otherLayer.m_maxBinCoord.at(b2);
+    const float r2 = otherLayer.m_layerDescription.refCoord;
+
+    if (r2 < r1min) {
+      return false;
+    }
+
+    // interval 1
+
+    float z0Min = z1 - (z2max - z1) / (r2 / r1max - 1);
+    float z0Max = z1 - (z2max - z1) / (r2 / r1min - 1);
+
+    if (z0Min > z0Max) {
+      std::swap(z0Min, z0Max);
+    }
+
+    bool beyondRange = (z0Max < minZ0 - tol || z0Min > maxZ0 + tol);
+
+    if (!beyondRange) {
       return true;
     }
 
-    std::int32_t GbtsLayer::getEtaBin(const float zh, const float rh) const {
-      if (m_bins.size() == 1) {
-        return m_bins.at(0);
-      }
+    // interval 2
 
-      const float t1 = zh / rh;
-      const float eta = -std::log(fastHypot(1, t1) - t1);
+    z0Min = z1 - (z2min - z1) / (r2 / r1max - 1);
+    z0Max = z1 - (z2min - z1) / (r2 / r1min - 1);
 
-      std::int32_t idx = static_cast<std::int32_t>((eta - m_minEta) / m_etaBin);
-      if (idx < 0) {
-        idx = 0;
-      } else if (idx >= static_cast<std::int32_t>(m_bins.size())) {
-        idx = static_cast<std::int32_t>(m_bins.size()) - 1;
-      }
-
-      // index in the global storage
-      return m_bins.at(idx);
+    if (z0Min > z0Max) {
+      std::swap(z0Min, z0Max);
     }
 
-  }  // namespace Acts::Experimental::detail
+    beyondRange = (z0Max < minZ0 - tol || z0Min > maxZ0 + tol);
 
-  namespace Acts::Experimental {
-
-  namespace {
-  // key: bin. value: (outgoing, incoming) bins it connects to.
-  using BinConnections =
-      std::unordered_map<std::uint32_t, std::pair<std::vector<std::uint32_t>,
-                                                  std::vector<std::uint32_t>>>;
-  }  // namespace
-
-  GbtsGeometry::GbtsGeometry(
-      const std::vector<GbtsLayerDescription>& layerDescriptions,
-      const GbtsLayerConnectionMap& layerConnections, const Logger& logger)
-      : m_etaBinWidth(layerConnections.etaBinWidth) {
-    // TODO configurable z0 range
-    const float minZ0 = -168.0f;
-    const float maxZ0 = 168.0f;
-
-    for (const GbtsLayerDescription& layer : layerDescriptions) {
-      const detail::GbtsLayer& pL = createLayer(layer, m_nEtaBins);
-      m_nEtaBins += pL.numOfBins();
+    if (!beyondRange) {
+      return true;
     }
 
-    // calculating bin tables in the connector...
-    // calculate bin pairs for graph edge building
+    return false;
+  }
 
-    std::vector<const detail::GbtsLayer*> binLayerMap;
-    binLayerMap.resize(m_nEtaBins);
-    std::int32_t lastBin1 = -1;
-    for (const auto& [layer, vConn] : layerConnections.connectionMap) {
-      for (const auto& connection : vConn) {
-        const std::uint32_t src = connection->src;  // n2 : the new connectors
-        const std::uint32_t dst = connection->dst;  // n1
+  return true;
+}
 
-        const detail::GbtsLayer* pL1 = layerById(dst);
-        const detail::GbtsLayer* pL2 = layerById(src);
-        if (pL1 == nullptr) {
-          ACTS_WARNING("Skipping invalid dst layer " << dst);
-          continue;
-        }
-        if (pL2 == nullptr) {
-          ACTS_WARNING("Skipping invalid src layer " << src);
-          continue;
-        }
+std::int32_t GbtsLayer::getEtaBin(const float zh, const float rh) const {
+  if (m_bins.size() == 1) {
+    return m_bins.at(0);
+  }
 
-        const std::uint32_t nSrcBins = pL2->numOfBins();
-        const std::uint32_t nDstBins = pL1->numOfBins();
+  const float t1 = zh / rh;
+  const float eta = -std::log(fastHypot(1, t1) - t1);
 
-        connection->binTable.resize(nSrcBins * nDstBins, 0);
-        // loop over bins in Layer 1
-        for (std::uint32_t b1 = 0; b1 < nDstBins; ++b1) {
-          // loop over bins in Layer 2
-          for (std::uint32_t b2 = 0; b2 < nSrcBins; ++b2) {
-            if (!pL1->checkCompatibility(*pL2, b1, b2, minZ0, maxZ0)) {
-              continue;
-            }
-            const std::uint32_t address = b1 + b2 * nDstBins;
-            connection->binTable.at(address) = 1;
+  std::int32_t idx = static_cast<std::int32_t>((eta - m_minEta) / m_etaBin);
+  if (idx < 0) {
+    idx = 0;
+  } else if (idx >= static_cast<std::int32_t>(m_bins.size())) {
+    idx = static_cast<std::int32_t>(m_bins.size()) - 1;
+  }
 
-            const std::int32_t bin1Idx = pL1->bins().at(b1);
-            const std::int32_t bin2Idx = pL2->bins().at(b2);
+  // index in the global storage
+  return m_bins.at(idx);
+}
 
-            binLayerMap[bin1Idx] = pL1;
-            binLayerMap[bin2Idx] = pL2;
+}  // namespace Acts::Experimental::detail
 
-            if (bin1Idx != lastBin1) {
-              // adding a new group
-              m_binGroups.emplace_back(bin1Idx,
-                                       std::vector<std::uint32_t>(1, bin2Idx));
-              lastBin1 = bin1Idx;
-            } else {
-              // extend the last group
-              m_binGroups.back().second.push_back(bin2Idx);
-            }
-          }
-        }
+namespace Acts::Experimental {
+
+namespace {
+// key: bin. value: (outgoing, incoming) bins it connects to.
+using BinConnections =
+    std::unordered_map<std::uint32_t, std::pair<std::vector<std::uint32_t>,
+                                                std::vector<std::uint32_t>>>;
+}  // namespace
+
+GbtsGeometry::GbtsGeometry(
+    const std::vector<GbtsLayerDescription>& layerDescriptions,
+    const GbtsLayerConnectionMap& layerConnections, const Logger& logger)
+    : m_etaBinWidth(layerConnections.etaBinWidth) {
+  // TODO configurable z0 range
+  const float minZ0 = -168.0f;
+  const float maxZ0 = 168.0f;
+
+  for (const GbtsLayerDescription& layer : layerDescriptions) {
+    const detail::GbtsLayer& pL = createLayer(layer, m_nEtaBins);
+    m_nEtaBins += pL.numOfBins();
+  }
+
+  // calculating bin tables in the connector...
+  // calculate bin pairs for graph edge building
+
+  std::vector<const detail::GbtsLayer*> binLayerMap;
+  binLayerMap.resize(m_nEtaBins);
+  std::int32_t lastBin1 = -1;
+  for (const auto& [layer, vConn] : layerConnections.connectionMap) {
+    for (const auto& connection : vConn) {
+      const std::uint32_t src = connection->src;  // n2 : the new connectors
+      const std::uint32_t dst = connection->dst;  // n1
+
+      const detail::GbtsLayer* pL1 = layerById(dst);
+      const detail::GbtsLayer* pL2 = layerById(src);
+      if (pL1 == nullptr) {
+        ACTS_WARNING("Skipping invalid dst layer " << dst);
+        continue;
       }
-    }
-    // find stages of eta-bin pairs using the graph ablation algorithm
-
-    BinConnections binMap;
-
-    // 1. create a map of bin-to-bin connections
-
-    // initialize with empty links
-
-    for (const auto& [bin1, bin2s] : m_binGroups) {
-      // add to the map
-
-      auto& bin1Links = binMap[bin1];
-
-      for (const auto& bin2 : bin2s) {
-        auto& bin2Links = binMap[bin2];
-
-        bin1Links.second.push_back(bin2);  // incoming link bin1 <- bin2
-        bin2Links.first.push_back(bin1);   // outgoing link bin2 -> bin1
-      }
-    }
-
-    // copy bin map as original is still needed
-    const BinConnections originalBinMap = binMap;
-
-    // 2. find stages starting from the last one (i.e. bin1 with no outgoing
-    // connections)
-
-    // data for all stages
-    std::vector<std::uint32_t> stageData;
-    // defines the start and end of stage contents
-    std::vector<std::size_t> stageOffsets;
-
-    stageOffsets.reserve(51);  // 50 stages -> offsets needs +1
-    stageOffsets.push_back(0);
-
-    std::vector<std::uint32_t> exitBins;
-    while (!binMap.empty()) {
-      exitBins.clear();
-
-      // 2a. find all bins with zero outgoing links or if
-      // remaining links form an intra-layer link circle
-
-      for (const auto& bl : binMap) {
-        auto& binLinks = bl.second;
-        auto& outLinks = binLinks.first;
-        if (!outLinks.empty()) {
-          bool linkCircle = true;
-          for (auto bin2 : outLinks) {
-            if (binLayerMap[bl.first] != binLayerMap[bin2]) {
-              linkCircle = false;
-              break;
-            }
-            // in the barrel, potential for 1->2->1, we want both links
-            // in the endcap only 1->2 since bins are separated in radius
-            linkCircle = bl.first == bin2 ||
-                         binLayerMap[bl.first]->layerDescription().type ==
-                             GbtsLayerType::Barrel;
-          }
-          if (!linkCircle)
-            continue;
-        }
-        exitBins.push_back(bl.first);
+      if (pL2 == nullptr) {
+        ACTS_WARNING("Skipping invalid src layer " << src);
+        continue;
       }
 
-      // order exit bins (important for graph building)
-      std::sort(exitBins.begin(), exitBins.end());
+      const std::uint32_t nSrcBins = pL2->numOfBins();
+      const std::uint32_t nDstBins = pL1->numOfBins();
 
-      // 2b. add a new stage: vector of bin1
-
-      stageData.insert(stageData.end(), exitBins.begin(), exitBins.end());
-      stageOffsets.push_back(stageData.size());
-
-      // 2c. remove links : graph ablation
-
-      for (const std::uint32_t& bin1Key : exitBins) {
-        auto p1 = binMap.find(bin1Key);
-        if (p1 == binMap.end()) {
-          continue;
-        }
-        auto& bin1Links = p1->second;
-
-        for (const std::uint32_t bin2Key : bin1Links.second) {
-          const auto p2 = binMap.find(bin2Key);
-          if (p2 == binMap.end()) {
+      connection->binTable.resize(nSrcBins * nDstBins, 0);
+      // loop over bins in Layer 1
+      for (std::uint32_t b1 = 0; b1 < nDstBins; ++b1) {
+        // loop over bins in Layer 2
+        for (std::uint32_t b2 = 0; b2 < nSrcBins; ++b2) {
+          if (!pL1->checkCompatibility(*pL2, b1, b2, minZ0, maxZ0)) {
             continue;
           }
+          const std::uint32_t address = b1 + b2 * nDstBins;
+          connection->binTable.at(address) = 1;
 
-          auto& binLinks = p2->second;
-          std::vector<std::uint32_t>& links = binLinks.first;
+          const std::int32_t bin1Idx = pL1->bins().at(b1);
+          const std::int32_t bin2Idx = pL2->bins().at(b2);
 
-          std::erase(links, bin1Key);
+          binLayerMap[bin1Idx] = pL1;
+          binLayerMap[bin2Idx] = pL2;
+
+          if (bin1Idx != lastBin1) {
+            // adding a new group
+            m_binGroups.emplace_back(bin1Idx,
+                                     std::vector<std::uint32_t>(1, bin2Idx));
+            lastBin1 = bin1Idx;
+          } else {
+            // extend the last group
+            m_binGroups.back().second.push_back(bin2Idx);
+          }
         }
       }
+    }
+  }
+  // find stages of eta-bin pairs using the graph ablation algorithm
 
-      // 2d. finally, remove all exit bin1s from the map
+  BinConnections binMap;
 
-      for (auto bin1Key : exitBins) {
-        binMap.erase(bin1Key);
+  // 1. create a map of bin-to-bin connections
+
+  // initialize with empty links
+
+  for (const auto& [bin1, bin2s] : m_binGroups) {
+    // add to the map
+
+    auto& bin1Links = binMap[bin1];
+
+    for (const auto& bin2 : bin2s) {
+      auto& bin2Links = binMap[bin2];
+
+      bin1Links.second.push_back(bin2);  // incoming link bin1 <- bin2
+      bin2Links.first.push_back(bin1);   // outgoing link bin2 -> bin1
+    }
+  }
+
+  // copy bin map as original is still needed
+  const BinConnections originalBinMap = binMap;
+
+  // 2. find stages starting from the last one (i.e. bin1 with no outgoing
+  // connections)
+
+  // data for all stages
+  std::vector<std::uint32_t> stageData;
+  // defines the start and end of stage contents
+  std::vector<std::size_t> stageOffsets;
+
+  stageOffsets.reserve(51);  // 50 stages -> offsets needs +1
+  stageOffsets.push_back(0);
+
+  std::vector<std::uint32_t> exitBins;
+  while (!binMap.empty()) {
+    exitBins.clear();
+
+    // 2a. find all bins with zero outgoing links or if
+    // remaining links form an intra-layer link circle
+
+    for (const auto& bl : binMap) {
+      auto& binLinks = bl.second;
+      auto& outLinks = binLinks.first;
+      if (!outLinks.empty()) {
+        bool linkCircle = true;
+        for (auto bin2 : outLinks) {
+          if (binLayerMap[bl.first] != binLayerMap[bin2]) {
+            linkCircle = false;
+            break;
+          }
+          // in the barrel, potential for 1->2->1, we want both links
+          // in the endcap only 1->2 since bins are separated in radius
+          linkCircle = bl.first == bin2 ||
+                       binLayerMap[bl.first]->layerDescription().type ==
+                           GbtsLayerType::Barrel;
+        }
+        if (!linkCircle)
+          continue;
       }
+      exitBins.push_back(bl.first);
     }
 
-    // 3. Refill binGroups with staged bin pair collections.
+    // order exit bins (important for graph building)
+    std::sort(exitBins.begin(), exitBins.end());
 
-    m_binGroups.clear();
+    // 2b. add a new stage: vector of bin1
 
-    // number of stages:
-    const std::size_t nStages = stageOffsets.size() - 1;
+    stageData.insert(stageData.end(), exitBins.begin(), exitBins.end());
+    stageOffsets.push_back(stageData.size());
 
-    // reverse order filling
-    for (std::size_t stageIndex = nStages; stageIndex-- > 0;) {
-      const std::size_t begin = stageOffsets[stageIndex];
-      const std::size_t end = stageOffsets[stageIndex + 1];
+    // 2c. remove links : graph ablation
 
-      for (std::size_t k = begin; k < end; ++k) {
-        const std::uint32_t bin1Idx = stageData[k];
+    for (const std::uint32_t& bin1Key : exitBins) {
+      auto p1 = binMap.find(bin1Key);
+      if (p1 == binMap.end()) {
+        continue;
+      }
+      auto& bin1Links = p1->second;
 
-        const auto p = originalBinMap.find(bin1Idx);
-        if (p == originalBinMap.end()) {
+      for (const std::uint32_t bin2Key : bin1Links.second) {
+        const auto p2 = binMap.find(bin2Key);
+        if (p2 == binMap.end()) {
           continue;
         }
 
-        const auto& binLists = p->second;
-        const std::vector<std::uint32_t>& bin2List = binLists.second;
+        auto& binLinks = p2->second;
+        std::vector<std::uint32_t>& links = binLinks.first;
 
-        // store the group
-        m_binGroups.emplace_back(bin1Idx, std::vector<std::uint32_t>(bin2List));
+        std::erase(links, bin1Key);
       }
     }
-  }
 
-  const detail::GbtsLayer* GbtsGeometry::layerById(std::uint32_t id) const {
-    if (const auto it = m_layerFromUserIdMap.find(id);
-        it != m_layerFromUserIdMap.end()) {
-      return &m_layers.at(it->second);
+    // 2d. finally, remove all exit bin1s from the map
+
+    for (auto bin1Key : exitBins) {
+      binMap.erase(bin1Key);
     }
-    return nullptr;
   }
 
-  const detail::GbtsLayer& GbtsGeometry::layerByIndex(std::int32_t idx) const {
-    return m_layers.at(idx);
-  }
+  // 3. Refill binGroups with staged bin pair collections.
 
-  const detail::GbtsLayer& GbtsGeometry::createLayer(
-      const GbtsLayerDescription& layerDescription, std::uint32_t bin0) {
-    const std::uint32_t layerIndex = m_layers.size();
-    detail::GbtsLayer& ref =
-        m_layers.emplace_back(layerDescription, m_etaBinWidth, bin0);
-    m_layerFromUserIdMap.try_emplace(layerDescription.id, layerIndex);
-    return ref;
-  }
+  m_binGroups.clear();
 
-  }  // namespace Acts::Experimental
+  // number of stages:
+  const std::size_t nStages = stageOffsets.size() - 1;
+
+  // reverse order filling
+  for (std::size_t stageIndex = nStages; stageIndex-- > 0;) {
+    const std::size_t begin = stageOffsets[stageIndex];
+    const std::size_t end = stageOffsets[stageIndex + 1];
+
+    for (std::size_t k = begin; k < end; ++k) {
+      const std::uint32_t bin1Idx = stageData[k];
+
+      const auto p = originalBinMap.find(bin1Idx);
+      if (p == originalBinMap.end()) {
+        continue;
+      }
+
+      const auto& binLists = p->second;
+      const std::vector<std::uint32_t>& bin2List = binLists.second;
+
+      // store the group
+      m_binGroups.emplace_back(bin1Idx, std::vector<std::uint32_t>(bin2List));
+    }
+  }
+}
+
+const detail::GbtsLayer* GbtsGeometry::layerById(std::uint32_t id) const {
+  if (const auto it = m_layerFromUserIdMap.find(id);
+      it != m_layerFromUserIdMap.end()) {
+    return &m_layers.at(it->second);
+  }
+  return nullptr;
+}
+
+const detail::GbtsLayer& GbtsGeometry::layerByIndex(std::int32_t idx) const {
+  return m_layers.at(idx);
+}
+
+const detail::GbtsLayer& GbtsGeometry::createLayer(
+    const GbtsLayerDescription& layerDescription, std::uint32_t bin0) {
+  const std::uint32_t layerIndex = m_layers.size();
+  detail::GbtsLayer& ref =
+      m_layers.emplace_back(layerDescription, m_etaBinWidth, bin0);
+  m_layerFromUserIdMap.try_emplace(layerDescription.id, layerIndex);
+  return ref;
+}
+
+}  // namespace Acts::Experimental
