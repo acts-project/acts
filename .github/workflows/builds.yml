@@ -1061,33 +1061,99 @@ jobs:
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       # github-script runs as a JS action, so it does not depend on gh being
-      # installed in the alma9-base image. This mirrors the open-or-comment
-      # pattern used by the external-linkcheck job in docs.yml.
-      - name: Report nightly LCG view failure
-        if: >-
-          always() && (steps.cvmfs.outcome == 'failure' ||
-          steps.configure.outcome == 'failure' || steps.build.outcome == 'failure')
+      # installed in the alma9-base image.
+      #
+      # Sticky issue: one issue per failure episode, edited in place by every
+      # subsequent failing run and closed again as soon as the view builds. The
+      # earlier open-or-comment version left a comment per nightly run, which
+      # buries the tracker for a view that can stay broken upstream for weeks.
+      - name: Report nightly LCG view status
+        if: always()
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          # Passed as JSON rather than pre-digested in a YAML expression so the
+          # issue body can name the stage that broke.
+          OUTCOMES: >-
+            {"CVMFS check": "${{ steps.cvmfs.outcome }}",
+             "Configure": "${{ steps.configure.outcome }}",
+             "Build": "${{ steps.build.outcome }}"}
         with:
           script: |
             const label = "ci-nightly-lcg";
             const title = "CI: LCG dev4 nightly view build is failing";
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const marker = "lcg-dev4-state:";
+            const { owner, repo } = context.repo;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+
+            const outcomes = JSON.parse(process.env.OUTCOMES);
+            const failed = Object.entries(outcomes)
+              .filter(([, outcome]) => outcome === "failure")
+              .map(([step]) => step);
+            // A cancelled or half-run job says nothing about the view: leave
+            // whatever the last conclusive run recorded untouched.
+            if (failed.length === 0 &&
+                Object.values(outcomes).some((outcome) => outcome !== "success")) {
+              core.notice("Inconclusive run, leaving the tracking issue alone");
+              return;
+            }
+
+            // A label query can also match pull requests; those are never ours.
+            const open = await github.rest.issues.listForRepo({
+              owner, repo, state: "open", labels: label,
+            });
+            const issue = open.data.find((candidate) => !candidate.pull_request);
+
+            if (failed.length === 0) {
+              if (!issue) return;
+              core.notice(`Closing #${issue.number}: the view builds again`);
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issue.number,
+                body: `The \`dev4\` view builds again as of ${runUrl}. Closing.`,
+              });
+              await github.rest.issues.update({
+                owner, repo, issue_number: issue.number,
+                state: "closed", state_reason: "completed",
+              });
+              return;
+            }
+
+            // Run counters live in a hidden marker in the body: the issue is
+            // rewritten every run, so it is the only place to carry them.
+            let state = { since: new Date().toISOString().slice(0, 10), runs: 0 };
+            const previous = /<!-- lcg-dev4-state: (.*?) -->/.exec(issue?.body ?? "");
+            if (previous) {
+              try {
+                state = { ...state, ...JSON.parse(previous[1]) };
+              } catch {
+                core.warning("Unparseable state marker, restarting the count");
+              }
+            }
+            state.runs += 1;
+
             const body = [
-              "The LCG `dev4` nightly-view build failed on `main`.",
+              `Failing since ${state.since} (${state.runs} nightly run(s)).`,
               "",
-              `Run: ${runUrl}`,
+              `Latest failure: ${runUrl} — failed at: ${failed.join(", ")}.`,
               "",
               "This view tracks a moving nightly LCG release and is expected to break",
               "periodically upstream. If this looks like a real regression in ACTS,",
-              "please investigate; otherwise this can stay open until the nightly",
-              "view recovers on its own.",
+              "please investigate; otherwise leave it: the issue is rewritten by each",
+              "failing run and closes itself once the view recovers.",
+              "",
+              `<!-- ${marker} ${JSON.stringify(state)} -->`,
             ].join("\n");
+
+            if (issue) {
+              core.notice(`Updating existing issue #${issue.number}`);
+              await github.rest.issues.update({
+                owner, repo, issue_number: issue.number, body,
+              });
+              return;
+            }
 
             try {
               await github.rest.issues.createLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
+                owner, repo,
                 name: label,
                 color: "B60205",
                 description: "The LCG dev4 nightly view build is failing",
@@ -1095,33 +1161,10 @@ jobs:
             } catch (err) {
               if (err.status !== 422) throw err;
             }
-
-            const existing = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: "open",
-              labels: label,
+            core.notice("Opening new issue");
+            await github.rest.issues.create({
+              owner, repo, title, body, labels: [label],
             });
-
-            if (existing.data.length > 0) {
-              const issue = existing.data[0];
-              core.notice(`Updating existing issue #${issue.number}`);
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                body,
-              });
-            } else {
-              core.notice("Opening new issue");
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title,
-                body,
-                labels: [label],
-              });
-            }
 
   macos:
     runs-on: macos-26
