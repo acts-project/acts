@@ -603,6 +603,10 @@ jobs:
       options: --gpus all
     env:
       MODEL_STORAGE: ${{ github.workspace }}/ci_models
+      # TF32 GEMMs on the pool's A4000 (absent on its T4) drift the GNN
+      # classifier output and the ntuple_finding_gnn.root hash; disabling
+      # TF32 makes both cards agree.
+      NVIDIA_TF32_OVERRIDE: "0"
 
     steps:
       - name: Fix up PATH
