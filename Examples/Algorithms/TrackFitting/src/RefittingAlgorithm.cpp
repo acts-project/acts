@@ -122,6 +122,21 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
       continue;
     }
 
+    // Reusing the track parameters on the beam spot perigee is only valid if
+    // the track is already expressed with respect to it.
+    const auto& refSurface = track.referenceSurface();
+    bool useBeamSpotConstraint = m_cfg.beamSpotConstraint.has_value();
+    if (useBeamSpotConstraint &&
+        (refSurface.type() != Acts::Surface::Perigee ||
+         !refSurface.localToGlobalTransform(ctx.recoGeoContext)
+              .isApprox(Acts::Transform3::Identity()))) {
+      ACTS_WARNING("Track "
+                   << itrack
+                   << " is not parametrized on a perigee surface at the origin"
+                      ", skipping the beam spot constraint");
+      useBeamSpotConstraint = false;
+    }
+
     TrackFitterFunction::GeneralFitterOptions options{
         ctx.recoGeoContext,
         ctx.magFieldContext,
@@ -133,7 +148,7 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     // The fitter matches measurements by surface pointer, so with a beamspot
     // constraint the fit has to start on the very surface that carries it.
     Acts::BoundTrackParameters initialParams(
-        m_cfg.beamSpotConstraint.has_value()
+        useBeamSpotConstraint
             ? std::shared_ptr<const Acts::Surface>(perigeeSurface)
             : track.referenceSurface().getSharedPtr(),
         track.parameters(), track.covariance(), track.particleHypothesis());
@@ -163,7 +178,7 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
       continue;
     }
 
-    if (m_cfg.beamSpotConstraint.has_value()) {
+    if (useBeamSpotConstraint) {
       RefittingCalibrator::RefittingSourceLink beamSpotSL{
           beamSpotConstTrackState};
       trackSourceLinks.emplace_back(Acts::SourceLink{beamSpotSL});
