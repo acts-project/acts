@@ -778,6 +778,25 @@ class Logger {
     }
   }
 
+  /// @brief log a message without the failure-threshold check
+  ///
+  /// For call sites that must not throw, in particular destructors, where a
+  /// @ref Logging::ThresholdFailure would terminate the process. The message is
+  /// emitted exactly as @ref log would emit it, but it can never fail the job.
+  ///
+  /// @param [in] lvl debug level of debug message
+  /// @param [in] input text of debug message
+  void logWithoutFailure(const Logging::Level& lvl,
+                         const std::string& input) const noexcept {
+    try {
+      if (m_filterPolicy->doPrint(lvl)) {
+        m_printPolicy->flush(lvl, input);
+      }
+    } catch (const std::exception&) {
+      // a print policy that throws must not take the process down either
+    }
+  }
+
   /// @brief The failure threshold of this logger
   ///
   /// Three states are possible:

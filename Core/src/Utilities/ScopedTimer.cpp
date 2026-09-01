@@ -23,10 +23,13 @@ ScopedTimer::~ScopedTimer() {
   auto end = clock_type::now();
   auto duration =
       std::chrono::duration_cast<std::chrono::microseconds>(end - m_start);
-  if (m_logger->doPrint(m_lvl)) {
+  // A timer must never decide whether the job lives: this runs in a destructor,
+  // where a ThresholdFailure would terminate. Gate on the filter alone, since
+  // doPrint also reports true for a message that would trip the threshold.
+  if (m_logger->filterPolicy().doPrint(m_lvl)) {
     std::ostringstream oss;
     oss << m_name << " took " << (duration.count() * 1e-3) << " ms";
-    m_logger->log(m_lvl, oss.str());
+    m_logger->logWithoutFailure(m_lvl, oss.str());
   }
 }
 
@@ -66,7 +69,8 @@ AveragingScopedTimer::Sample::~Sample() {
 }
 
 AveragingScopedTimer::~AveragingScopedTimer() {
-  if (m_logger->doPrint(m_lvl)) {
+  // See the note in ~ScopedTimer: instrumentation must not fail the job.
+  if (m_logger->filterPolicy().doPrint(m_lvl)) {
     const double sumDuration = m_sumDuration.load(std::memory_order_relaxed);
     const double sumDurationSquared =
         m_sumDurationSquared.load(std::memory_order_relaxed);
@@ -82,7 +86,7 @@ AveragingScopedTimer::~AveragingScopedTimer() {
       oss << m_name << " took " << (sumDuration * 1e-6)
           << " ms total (no samples)";
     }
-    m_logger->log(m_lvl, oss.str());
+    m_logger->logWithoutFailure(m_lvl, oss.str());
   }
 }
 

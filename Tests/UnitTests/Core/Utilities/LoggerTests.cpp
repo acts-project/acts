@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ScopedTimer.hpp"
 
 #include <cstddef>
 #include <fstream>
@@ -241,6 +242,39 @@ BOOST_AUTO_TEST_CASE(FailureThresholdFallback_test) {
   BOOST_CHECK(redeferred->failureThreshold() == std::nullopt);
 
   Logging::detail::setDefaultFailureThreshold(previous);
+}
+
+/// @brief instrumentation must never be able to fail the job
+///
+/// ScopedTimer and AveragingScopedTimer log from their destructors, where a
+/// ThresholdFailure would call std::terminate rather than fail the job cleanly.
+BOOST_AUTO_TEST_CASE(LogWithoutFailure_test) {
+  std::ostringstream out;
+  auto armed = Acts::getDefaultLogger("Armed", Logging::VERBOSE, &out,
+                                      Logging::Level::WARNING);
+
+  // the message is emitted, but never raises
+  BOOST_CHECK_NO_THROW(armed->logWithoutFailure(Logging::ERROR, "instrument"));
+  BOOST_CHECK(out.str().find("instrument") != std::string::npos);
+
+  // the level filter still applies
+  auto filtered = Acts::getDefaultLogger("Filtered", Logging::ERROR, &out,
+                                         Logging::Level::WARNING);
+  const std::size_t before = out.str().size();
+  BOOST_CHECK_NO_THROW(filtered->logWithoutFailure(Logging::INFO, "dropped"));
+  BOOST_CHECK_EQUAL(out.str().size(), before);
+
+  // the timers themselves: destructing these at a level at or above the
+  // failure threshold must not terminate
+  {
+    BOOST_CHECK_NO_THROW(
+        (Acts::ScopedTimer{"timed block", *armed, Logging::ERROR}));
+    Acts::AveragingScopedTimer averaging{"averaged block", *armed,
+                                         Logging::ERROR};
+    auto sample = averaging.sample();
+  }
+  BOOST_CHECK(out.str().find("timed block") != std::string::npos);
+  BOOST_CHECK(out.str().find("averaged block") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
