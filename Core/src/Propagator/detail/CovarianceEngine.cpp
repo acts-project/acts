@@ -223,7 +223,7 @@ Result<BoundTrackParameters> detail::boundToBoundConversion(
     FreeVector freeToPathDerivatives = FreeVector::Zero();
     freeToPathDerivatives.head<3>() = freePars.segment<3>(eFreeDir0);
 
-    freeToPathDerivatives.segment<3>(eFreeDir0) = freePars[eFreeQOverP] * 
+    freeToPathDerivatives.segment<3>(eFreeDir0) = -freePars[eFreeQOverP] * 
         bField.cross(freePars.segment<3>(eFreeDir0));
 
     BoundMatrix boundToBoundJac;
