@@ -201,33 +201,44 @@ BOOST_AUTO_TEST_CASE(FailureThreshold_test) {
   BOOST_CHECK_NO_THROW(Acts::getDummyLogger().log(Logging::FATAL, "ignored"));
 }
 
-/// @brief a logger without a threshold of its own defers to the process default
+/// @brief getDefaultLogger copies the process-wide default at construction
 ///
-/// This is the deprecated back-compat bridge: existing code that steers the
-/// threshold globally, including through the environment, must keep working.
-BOOST_AUTO_TEST_CASE(FailureThresholdFallback_test) {
+/// The default is job configuration, read once when a logger is built. It is
+/// deliberately not consulted again, so it cannot arm or disarm a logger that
+/// already exists.
+BOOST_AUTO_TEST_CASE(FailureThresholdDefault_test) {
   std::ostringstream out;
-  auto deferring = Acts::getDefaultLogger("Deferring", Logging::VERBOSE, &out);
-  BOOST_CHECK(deferring->failureThreshold() == std::nullopt);
 
   const Logging::Level previous = Logging::detail::getDefaultFailureThreshold();
   Logging::detail::setDefaultFailureThreshold(Logging::WARNING);
 
-  BOOST_CHECK_THROW(deferring->log(Logging::ERROR, "deferred"),
+  auto seeded = Acts::getDefaultLogger("Seeded", Logging::VERBOSE, &out);
+  BOOST_CHECK(seeded->failureThreshold() == Logging::WARNING);
+  BOOST_CHECK_THROW(seeded->log(Logging::ERROR, "seeded"),
                     Logging::ThresholdFailure);
 
-  // an explicit threshold on the logger wins over the default, in both
-  // directions
-  BOOST_CHECK_NO_THROW(
-      deferring->withoutFailureThreshold()->log(Logging::ERROR, "quiet"));
-  BOOST_CHECK_THROW(
-      deferring->withFailureThreshold(Logging::INFO)->log(Logging::INFO, "arm"),
-      Logging::ThresholdFailure);
+  // an explicit argument wins over the default, in both directions
+  BOOST_CHECK(
+      Acts::getDefaultLogger("Explicit", Logging::VERBOSE, &out, Logging::MAX)
+          ->failureThreshold() == Logging::MAX);
+  BOOST_CHECK(
+      Acts::getDefaultLogger("Explicit", Logging::VERBOSE, &out, Logging::INFO)
+          ->failureThreshold() == Logging::INFO);
 
-  // and handing back std::nullopt returns the logger to deferring
-  auto redeferred = deferring->withFailureThreshold(Logging::MAX)
-                        ->withFailureThreshold(std::nullopt);
-  BOOST_CHECK(redeferred->failureThreshold() == std::nullopt);
+  // moving the default afterwards leaves an existing logger alone
+  Logging::detail::setDefaultFailureThreshold(Logging::MAX);
+  BOOST_CHECK(seeded->failureThreshold() == Logging::WARNING);
+  BOOST_CHECK_THROW(seeded->log(Logging::ERROR, "still armed"),
+                    Logging::ThresholdFailure);
+
+  // and a logger built directly from policies is never armed by the default,
+  // so an experiment bridging ACTS logging into its own framework cannot
+  // inherit a threshold it did not ask for
+  Logging::detail::setDefaultFailureThreshold(Logging::WARNING);
+  Logger direct{std::make_unique<CountingPrintPolicy>(),
+                std::make_unique<DefaultFilterPolicy>(Logging::VERBOSE)};
+  BOOST_CHECK(direct.failureThreshold() == Logging::MAX);
+  BOOST_CHECK_NO_THROW(direct.log(Logging::FATAL, "not armed"));
 
   Logging::detail::setDefaultFailureThreshold(previous);
 }

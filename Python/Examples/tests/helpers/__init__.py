@@ -158,11 +158,17 @@ else:
 
 @contextlib.contextmanager
 def failure_threshold(level: acts.logging.Level, enabled: bool = True):
+    """Set the threshold that loggers built inside this block are armed at.
+
+    Has to enclose the construction of the algorithms, not just ``run``.
+    """
     prev = acts.logging.getFailureThreshold()
     if enabled and prev != level:
         acts.logging.setFailureThreshold(level)
-        yield
-        acts.logging.setFailureThreshold(prev)
+        try:
+            yield
+        finally:
+            acts.logging.setFailureThreshold(prev)
     else:
         yield
 

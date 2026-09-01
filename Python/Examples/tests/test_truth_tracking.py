@@ -82,7 +82,11 @@ def test_truth_tracking_kalman(
 
 
 def test_python_track_access(generic_detector_config, tmp_path):
-    with generic_detector_config.detector:
+    # The scope has to cover construction: loggers copy the threshold there.
+    with (
+        generic_detector_config.detector,
+        acts.logging.ScopedFailureThreshold(acts.logging.ERROR),
+    ):
         from truth_tracking_kalman import runTruthTrackingKalman
 
         field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
@@ -195,8 +199,7 @@ def test_python_track_access(generic_detector_config, tmp_path):
 
         seq.addAlgorithm(TrackAccess())
 
-        with acts.logging.ScopedFailureThreshold(acts.logging.ERROR):
-            seq.run()
+        seq.run()
 
 
 def test_python_track_state_access(generic_detector_config, tmp_path):
@@ -457,7 +460,9 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
         fp = tmp_path / fn
         assert not fp.exists()
 
-    with detector_config.detector:
+    # See https://github.com/acts-project/acts/issues/1300
+    # The scope has to cover construction: loggers copy the threshold there.
+    with detector_config.detector, failure_threshold(acts.logging.FATAL):
         runTruthTrackingGsf(
             trackingGeometry=detector_config.trackingGeometry,
             decorators=detector_config.decorators,
@@ -467,9 +472,7 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
             s=seq,
         )
 
-        # See https://github.com/acts-project/acts/issues/1300
-        with failure_threshold(acts.logging.FATAL):
-            seq.run()
+        seq.run()
 
     for fn, tn in root_files:
         fp = tmp_path / fn
@@ -523,7 +526,8 @@ def test_measurement_access(tmp_path, generic_detector_config):
         numThreads=1,
     )
 
-    with generic_detector_config.detector:
+    # The scope has to cover construction: loggers copy the threshold there.
+    with generic_detector_config.detector, failure_threshold(acts.logging.ERROR):
         runTruthTrackingKalman(
             trackingGeometry=generic_detector_config.trackingGeometry,
             field=field,
@@ -623,8 +627,7 @@ def test_measurement_access(tmp_path, generic_detector_config):
 
         seq.addAlgorithm(MeasurementAccess())
 
-        with failure_threshold(acts.logging.ERROR):
-            seq.run()
+        seq.run()
 
 
 def test_measurement_creation():

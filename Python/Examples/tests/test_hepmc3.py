@@ -585,18 +585,19 @@ def test_hepmc3_reader_explicit_num_events_too_large(
     s.run()
     actual_path = handle_path(out, compression)
 
-    s = Sequencer(numThreads=10)
-
-    s.addReader(
-        HepMC3Reader(
-            acts.logging.DEBUG,
-            inputPath=actual_path,
-            outputEvent="hepmc3_event",
-            numEvents=nevents + 10,
-        )
-    )
-
+    # The scope has to cover construction: loggers copy the threshold there.
     with ScopedFailureThreshold(acts.logging.MAX):
+        s = Sequencer(numThreads=10)
+
+        s.addReader(
+            HepMC3Reader(
+                acts.logging.DEBUG,
+                inputPath=actual_path,
+                outputEvent="hepmc3_event",
+                numEvents=nevents + 10,
+            )
+        )
+
         with pytest.raises(RuntimeError) as excinfo:
             s.run()
 

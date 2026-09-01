@@ -45,14 +45,25 @@ std::optional<Level> parseFailureThreshold(const char* value) {
 
 }  // namespace
 
+namespace {
+
+// Read when a logger is built, not when a message is logged, so this is off
+// every hot path. constinit so that a read during static initialisation --
+// before the seeder below has run -- reports MAX rather than an indeterminate
+// value. Atomic because a write from one thread may race a read from another,
+// even though the intended use is a single write at startup.
+constinit std::atomic<Level> s_defaultFailureThreshold{Level::MAX};
+
+}  // namespace
+
 namespace detail {
 
-// constinit to MAX so that a read during static initialisation -- before the
-// seeder below has run -- reports "unset" rather than an indeterminate value.
-constinit std::atomic<Level> g_defaultFailureThreshold{Level::MAX};
+Level getDefaultFailureThreshold() {
+  return s_defaultFailureThreshold.load(std::memory_order_relaxed);
+}
 
 void setDefaultFailureThreshold(Level level) {
-  g_defaultFailureThreshold.store(level, std::memory_order_relaxed);
+  s_defaultFailureThreshold.store(level, std::memory_order_relaxed);
 }
 
 }  // namespace detail
@@ -148,8 +159,11 @@ std::unique_ptr<const Logger> getDefaultLogger(
               std::make_unique<DefaultPrintPolicy>(log_stream)),
           name));
   auto print = std::make_unique<DefaultFilterPolicy>(lvl);
-  return std::make_unique<const Logger>(std::move(output), std::move(print),
-                                        failureThreshold);
+  // The process-wide default is resolved here, once, and copied into the
+  // logger. Nothing reads it again afterwards.
+  return std::make_unique<const Logger>(
+      std::move(output), std::move(print),
+      failureThreshold.value_or(Logging::detail::getDefaultFailureThreshold()));
 }
 
 const Logger& getDummyLogger() {
