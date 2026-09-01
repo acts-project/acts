@@ -18,11 +18,11 @@ if (
     and os.environ["ACTS_LOG_FAILURE_THRESHOLD"] != logging.getFailureThreshold().name
 ):
     error = (
-        "Runtime log failure threshold is given in environment variable "
-        f"`ACTS_LOG_FAILURE_THRESHOLD={os.environ['ACTS_LOG_FAILURE_THRESHOLD']}`"
-        "However, a compile-time value is set via CMake, i.e. "
-        f"`ACTS_LOG_FAILURE_THRESHOLD={logging.getFailureThreshold().name}`. "
-        "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`, which disables runtime thresholds."
+        "Log failure threshold is given in environment variable "
+        f"`ACTS_LOG_FAILURE_THRESHOLD={os.environ['ACTS_LOG_FAILURE_THRESHOLD']}`, "
+        f"but the effective threshold is `{logging.getFailureThreshold().name}`. "
+        "This build was probably configured with "
+        "`ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`, which ignores the environment."
     )
     if "PYTEST_CURRENT_TEST" in os.environ:
         # test environment, fail hard

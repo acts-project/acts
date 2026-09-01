@@ -18,6 +18,7 @@
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <cmath>
+#include <iostream>
 #include <random>
 #include <sstream>
 #include <type_traits>
@@ -155,7 +156,12 @@ void addUtilities(py::module_& m) {
                   py::overload_cast<Logging::Level>(&Logger::clone, py::const_),
                   py::arg("level"))
               .def("cloneWithSuffix", &Logger::cloneWithSuffix,
-                   py::arg("suffix"), py::arg("level") = py::none());
+                   py::arg("suffix"), py::arg("level") = py::none())
+              .def_property_readonly("failureThreshold",
+                                     &Logger::failureThreshold)
+              .def("withFailureThreshold", &Logger::withFailureThreshold,
+                   py::arg("level"))
+              .def("withoutFailureThreshold", &Logger::withoutFailureThreshold);
     }
 
     static std::unordered_map<std::string, std::unique_ptr<const Logger>>
@@ -163,10 +169,12 @@ void addUtilities(py::module_& m) {
 
     m.def(
         "getDefaultLogger",
-        [](const std::string& name, Logging::Level level) {
-          return getDefaultLogger(name, level);
+        [](const std::string& name, Logging::Level level,
+           std::optional<Logging::Level> failureThreshold) {
+          return getDefaultLogger(name, level, &std::cout, failureThreshold);
         },
         py::arg("name"), py::arg("level") = Logging::INFO,
+        py::arg("failureThreshold") = py::none(),
         py::return_value_policy::take_ownership);
 
     // The bindings below deliberately keep the deprecated global threshold API
@@ -191,13 +199,14 @@ void addUtilities(py::module_& m) {
         m_scopedFailureThreshold.reset();
       }
     };
-    ACTS_POP_IGNORE_DEPRECATED()
 
     py::class_<ScopedFailureThresholdContextManager>(logging,
                                                      "ScopedFailureThreshold")
         .def(py::init<Logging::Level>(), "level"_a)
         .def("__enter__", &ScopedFailureThresholdContextManager::enter)
         .def("__exit__", &ScopedFailureThresholdContextManager::exit);
+
+    ACTS_POP_IGNORE_DEPRECATED()
 
     static py::exception<Logging::ThresholdFailure> exc(
         logging, "ThresholdFailure", PyExc_RuntimeError);

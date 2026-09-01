@@ -160,15 +160,16 @@ else:
 def failure_threshold(level: acts.logging.Level, enabled: bool = True):
     prev = acts.logging.getFailureThreshold()
     if enabled and prev != level:
-        try:
-            acts.logging.setFailureThreshold(level)
-        except RuntimeError:
-            # Repackage with different error string
+        # setFailureThreshold is a no-op in a build configured with
+        # ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF, so check that it took effect
+        # rather than relying on it to raise.
+        acts.logging.setFailureThreshold(level)
+        if acts.logging.getFailureThreshold() != level:
             raise RuntimeError(
-                "Runtime log failure threshold could not be set. "
-                "Compile-time value is probably set via CMake, i.e. "
-                f"`ACTS_LOG_FAILURE_THRESHOLD={acts.logging.getFailureThreshold().name}` is set, "
-                "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`. "
+                "Log failure threshold could not be set; it is "
+                f"`{acts.logging.getFailureThreshold().name}`. This build was "
+                "probably configured with "
+                "`ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`. "
                 "The pytest test-suite will not work in this configuration."
             )
 

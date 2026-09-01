@@ -14,7 +14,6 @@
 #include <fstream>
 #include <memory>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -79,18 +78,13 @@ void debug_level_test(const char* output_file, Logging::Level lvl) {
     // Set up local logger
     ACTS_LOCAL_LOGGER(std::move(log));
 
-    // Test logging at a certain debug level
-    auto test_logging = [](auto&& test_operation, Logging::Level /*test_lvl*/) {
-      test_operation();
-    };
-
     // Test logging at all debug levels
-    test_logging([&] { ACTS_FATAL("fatal level"); }, FATAL);
-    test_logging([&] { ACTS_ERROR("error level"); }, ERROR);
-    test_logging([&] { ACTS_WARNING("warning level"); }, WARNING);
-    test_logging([&] { ACTS_INFO("info level"); }, INFO);
-    test_logging([&] { ACTS_DEBUG("debug level"); }, DEBUG);
-    test_logging([&] { ACTS_VERBOSE("verbose level"); }, VERBOSE);
+    ACTS_FATAL("fatal level");
+    ACTS_ERROR("error level");
+    ACTS_WARNING("warning level");
+    ACTS_INFO("info level");
+    ACTS_DEBUG("debug level");
+    ACTS_VERBOSE("verbose level");
     logfile.close();
 
     std::string padded_name = name;
@@ -191,6 +185,8 @@ BOOST_AUTO_TEST_CASE(FailureThreshold_test) {
                                       Logging::Level::WARNING);
   BOOST_CHECK_THROW(quiet->log(Logging::ERROR, "not hidden"),
                     Logging::ThresholdFailure);
+  // the point of checking before the filter: the message is still emitted
+  BOOST_CHECK(out.str().find("not hidden") != std::string::npos);
 
   // the check does not depend on the print policy, so an experiment-supplied
   // one is covered too
@@ -202,6 +198,49 @@ BOOST_AUTO_TEST_CASE(FailureThreshold_test) {
 
   // the dummy logger discards everything and never throws
   BOOST_CHECK_NO_THROW(Acts::getDummyLogger().log(Logging::FATAL, "ignored"));
+}
+
+/// @brief a logger without a threshold of its own defers to the process default
+///
+/// This is the deprecated back-compat bridge: existing code that steers the
+/// threshold globally, including through the environment, must keep working.
+BOOST_AUTO_TEST_CASE(FailureThresholdFallback_test) {
+  std::ostringstream out;
+  auto deferring = Acts::getDefaultLogger("Deferring", Logging::VERBOSE, &out);
+  BOOST_CHECK(deferring->failureThreshold() == std::nullopt);
+
+  const Logging::Level previous = Logging::detail::getDefaultFailureThreshold();
+  Logging::detail::setDefaultFailureThreshold(Logging::WARNING);
+
+  const bool enabled =
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+      true;
+#else
+      false;
+#endif
+
+  if (enabled) {
+    BOOST_CHECK_THROW(deferring->log(Logging::ERROR, "deferred"),
+                      Logging::ThresholdFailure);
+  } else {
+    // the default can never be armed in this build
+    BOOST_CHECK_NO_THROW(deferring->log(Logging::ERROR, "deferred"));
+  }
+
+  // an explicit threshold on the logger wins over the default, in both
+  // directions
+  BOOST_CHECK_NO_THROW(
+      deferring->withoutFailureThreshold()->log(Logging::ERROR, "quiet"));
+  BOOST_CHECK_THROW(
+      deferring->withFailureThreshold(Logging::INFO)->log(Logging::INFO, "arm"),
+      Logging::ThresholdFailure);
+
+  // and handing back std::nullopt returns the logger to deferring
+  auto redeferred = deferring->withFailureThreshold(Logging::MAX)
+                        ->withFailureThreshold(std::nullopt);
+  BOOST_CHECK(redeferred->failureThreshold() == std::nullopt);
+
+  Logging::detail::setDefaultFailureThreshold(previous);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

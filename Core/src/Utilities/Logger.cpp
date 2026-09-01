@@ -10,6 +10,8 @@
 
 #include "Acts/Utilities/Diagnostics.hpp"
 
+#include <algorithm>
+#include <atomic>
 #include <cstdlib>
 #include <optional>
 #include <string>
@@ -48,35 +50,47 @@ std::optional<Level> parseFailureThreshold(const char* value) {
 
 namespace detail {
 
-// Constant-initialised to MAX so that reading it during static initialisation,
-// before the initialiser below has run, reports "unset".
-Level g_defaultFailureThreshold = Level::MAX;
+// constinit to MAX so that a read during static initialisation -- before the
+// seeder below has run -- reports "unset" rather than an indeterminate value.
+constinit std::atomic<Level> g_defaultFailureThreshold{Level::MAX};
 
 void setDefaultFailureThreshold(Level level) {
-  g_defaultFailureThreshold = level;
+  g_defaultFailureThreshold.store(level, std::memory_order_relaxed);
 }
 
 }  // namespace detail
 
 namespace {
 
-// Seed the default from the build-time option and the environment. Runs during
-// dynamic initialisation of this translation unit.
-[[maybe_unused]] const bool s_defaultFailureThresholdSeeded = []() {
+// Seeds the default from the build-time option and the environment during
+// dynamic initialisation. Given the earliest available init priority so that it
+// runs ahead of ordinary dynamic initialisers that might log.
+struct DefaultFailureThresholdSeeder {
+  DefaultFailureThresholdSeeder() {
+    Level level = Level::MAX;
 #ifdef ACTS_LOG_FAILURE_THRESHOLD
-  // Seeded from the deprecated CMake option. Unlike before, this is only a
-  // default: it can still be overridden at runtime.
-  detail::g_defaultFailureThreshold = Level::ACTS_LOG_FAILURE_THRESHOLD;
+    // Seeded from the deprecated CMake option. Unlike before this is only a
+    // default, overridable through Acts::Logging::setFailureThreshold.
+    level = Level::ACTS_LOG_FAILURE_THRESHOLD;
 #endif
-  if (const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
-      envvar != nullptr) {
-    if (std::optional<Level> parsed = parseFailureThreshold(envvar);
-        parsed.has_value()) {
-      detail::g_defaultFailureThreshold = *parsed;
+    if (const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
+        envvar != nullptr) {
+      if (std::optional<Level> parsed = parseFailureThreshold(envvar);
+          parsed.has_value()) {
+        // The environment may tighten a pinned build but never loosen it: the
+        // point of pinning at build time is that the job cannot be disarmed
+        // from the outside.
+        level = std::min(level, *parsed);
+      }
     }
+    detail::setDefaultFailureThreshold(level);
   }
-  return true;
-}();
+};
+
+#if defined(__GNUC__) || defined(__clang__)
+[[gnu::init_priority(101)]]
+#endif
+const DefaultFailureThresholdSeeder s_defaultFailureThresholdSeeder;
 
 }  // namespace
 

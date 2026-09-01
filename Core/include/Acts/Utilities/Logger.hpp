@@ -9,6 +9,7 @@
 #pragma once
 
 // STL include(s)
+#include <atomic>
 #include <ctime>
 #include <iomanip>
 #include <iostream>
@@ -253,21 +254,24 @@ namespace detail {
 /// environment variable.
 ///
 /// This is read on every log statement, including the ones the level filter
-/// discards, so it is deliberately a plain variable rather than a function
-/// call: the propagator and navigator inner loops are full of `ACTS_VERBOSE`.
-/// It is constant-initialised to @ref Level::MAX, so reading it during static
-/// initialisation -- before the environment has been consulted -- reports
-/// "unset" rather than garbage.
+/// discards, so it is deliberately a variable rather than a function call: the
+/// propagator and navigator inner loops are full of `ACTS_VERBOSE`. Relaxed
+/// atomic, because those reads race with any write from another thread; on the
+/// platforms ACTS targets a relaxed load is a plain load.
 ///
-/// @warning Mutable global state, and therefore **not threadsafe** to write.
-///          The intention is that it is set once, before multi-threaded
-///          execution begins. Prefer arming an individual @ref Acts::Logger.
-extern Level g_defaultFailureThreshold;
+/// It is `constinit` to @ref Level::MAX, so a read during static initialisation
+/// -- before the environment has been consulted -- reports "unset".
+///
+/// @warning Writing it is still global state with no ordering guarantees for
+///          readers. The intention is that it is set once, before
+///          multi-threaded execution begins. Prefer arming an individual
+///          @ref Acts::Logger.
+extern std::atomic<Level> g_defaultFailureThreshold;
 
 /// @brief Get the process-wide default failure threshold
 /// @return the default, or @ref Level::MAX if unset
 inline Level getDefaultFailureThreshold() {
-  return g_defaultFailureThreshold;
+  return g_defaultFailureThreshold.load(std::memory_order_relaxed);
 }
 
 /// @brief Set the process-wide default failure threshold
@@ -298,8 +302,7 @@ void setDefaultFailureThreshold(Level /*level*/);
 /// @param own The failure threshold of the logger, if it has one
 /// @param lvl The level of the message being logged
 /// @return @c true if the message should raise @ref ThresholdFailure
-inline bool exceedsFailureThreshold(const std::optional<Level>& own,
-                                    Level lvl) {
+inline bool exceedsFailureThreshold(std::optional<Level> own, Level lvl) {
   return lvl >= (own.has_value() ? *own : getDefaultFailureThreshold());
 }
 
@@ -762,22 +765,31 @@ class Logger {
   /// @throws Logging::ThresholdFailure if @p lvl is at or above the failure
   ///         threshold of this logger
   void log(const Logging::Level& lvl, const std::string& input) const {
-    if (doPrint(lvl)) {
+    const bool fail = exceedsFailureThreshold(lvl);
+    if (fail || m_filterPolicy->doPrint(lvl)) {
       m_printPolicy->flush(lvl, input);
     }
-    if (exceedsFailureThreshold(lvl)) {
+    if (fail) {
       throw Logging::ThresholdFailure(
           "Log message at level " + std::string{Logging::levelName(lvl)} +
-          " exceeds the failure threshold of logger '" + name() +
-          "', bailing out. See https://cern.ch/acts-log-thresh");
+          " exceeds the ACTS_LOG_FAILURE_THRESHOLD of logger '" +
+          diagnosticName() + "', bailing out. See " +
+          "https://cern.ch/acts-log-thresh");
     }
   }
 
   /// @brief The failure threshold of this logger
   ///
-  /// @return the level at or above which messages raise
-  ///         @ref Logging::ThresholdFailure, or `std::nullopt` if this logger
-  ///         defers to the process-wide default
+  /// Three states are possible:
+  /// - `std::nullopt`: this logger defers to the deprecated process-wide
+  ///   default, so whether it can fail depends on global state,
+  /// - @ref Logging::Level::MAX: this logger never fails,
+  /// - any other level: messages at or above it raise
+  ///   @ref Logging::ThresholdFailure.
+  ///
+  /// A `std::nullopt` return therefore does not mean "cannot fail".
+  ///
+  /// @return the threshold, or `std::nullopt` if this logger defers
   std::optional<Logging::Level> failureThreshold() const {
     return m_failureThreshold;
   }
@@ -810,18 +822,23 @@ class Logger {
       const std::optional<std::string>& _name = std::nullopt,
       const std::optional<Logging::Level>& _level = std::nullopt) const {
     return std::make_unique<Logger>(
-        m_printPolicy->clone(_name.value_or(name())),
-        m_filterPolicy->clone(_level.value_or(level())), m_failureThreshold);
+        m_printPolicy->clone(_name.has_value() ? *_name : name()),
+        m_filterPolicy->clone(_level.has_value() ? *_level : level()),
+        m_failureThreshold);
   }
 
   /// Make a copy of this logger with a different failure threshold.
+  ///
+  /// @note Like @ref clone this copies the policy objects, so a stateful print
+  ///       policy starts over in the copy.
+  ///
   /// @param _failureThreshold the level at or above which messages should raise
-  ///        @ref Logging::ThresholdFailure, or `std::nullopt` to defer to the
-  ///        process-wide default
+  ///        @ref Logging::ThresholdFailure, @ref Logging::Level::MAX to never
+  ///        fail, or `std::nullopt` to defer to the process-wide default
   /// @return Unique pointer to a cloned logger
   std::unique_ptr<Logger> withFailureThreshold(
       std::optional<Logging::Level> _failureThreshold) const {
-    return std::make_unique<Logger>(m_printPolicy->clone(name()),
+    return std::make_unique<Logger>(m_printPolicy->clone(diagnosticName()),
                                     m_filterPolicy->clone(level()),
                                     _failureThreshold);
   }
@@ -829,6 +846,10 @@ class Logger {
   /// Make a copy of this logger that never raises @ref
   /// Logging::ThresholdFailure. Use this for code paths that log an error on
   /// purpose, such as a unit test exercising an error path.
+  ///
+  /// @note Like @ref clone this copies the policy objects, so a stateful print
+  ///       policy starts over in the copy.
+  ///
   /// @return Unique pointer to a cloned logger
   std::unique_ptr<Logger> withoutFailureThreshold() const {
     return withFailureThreshold(Logging::Level::MAX);
@@ -862,6 +883,19 @@ class Logger {
   /// @brief whether a message at @p lvl trips this logger's failure threshold
   bool exceedsFailureThreshold(Logging::Level lvl) const {
     return Logging::detail::exceedsFailureThreshold(m_failureThreshold, lvl);
+  }
+
+  /// @brief best-effort name for diagnostics
+  ///
+  /// @ref name is allowed to throw when the print policy chain carries no name,
+  /// so neither the failure message nor a clone may depend on it succeeding.
+  /// @return the logger name, or a placeholder
+  std::string diagnosticName() const {
+    try {
+      return name();
+    } catch (const std::exception&) {
+      return "<unnamed>";
+    }
   }
 
   /// policy object for printing debug messages
