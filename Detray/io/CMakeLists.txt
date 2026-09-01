@@ -85,50 +85,14 @@ detray_add_library( detray_csv_io csv_io
 )
 target_link_libraries(detray_csv_io INTERFACE detray::io_utils)
 
-# Test the public headers of the detray I/O libraries.
-if(BUILD_TESTING AND DETRAY_BUILD_TESTING)
-    string(
-        REPLACE "include/"
-        ""
-        _detray_io_utils_public_headers
-        "${_detray_io_utils_public_headers}"
-    )
-
-    string(
-        REPLACE "include/"
-        ""
-        _detray_io_public_headers
-        "${_detray_io_public_headers}"
-    )
-    detray_test_public_headers(detray_io_array
-      ${_detray_io_public_headers}
-    )
-    if(DETRAY_EIGEN_PLUGIN)
-        detray_test_public_headers(detray_io_eigen
-         ${_detray_io_public_headers}
-        )
-    endif()
-    if(DETRAY_SMATRIX_PLUGIN)
-        detray_test_public_headers(detray_io_smatrix
-         ${_detray_io_public_headers}
-        )
-    endif()
-    if(DETRAY_VC_AOS_PLUGIN)
-        detray_test_public_headers(detray_io_vc_aos
-         ${_detray_io_public_headers}
-        )
-    endif()
-
-    string(
-        REPLACE "include/"
-        ""
-        _detray_csv_io_public_headers
-        "${_detray_csv_io_public_headers}"
-    )
-endif()
-
-# Compile all headers (including the ones under detail/) one-by-one.
-detray_compile_headers(io detray::io_array "include/detray/io/**/*.hpp")
+# Compile all headers (including the ones under detail/) one-by-one, against
+# std::array only, for the reason given in core/CMakeLists.txt.
+detray_compile_headers(
+    io_array
+    detray::io_array
+    "include/detray/io/*.hpp"
+    "include/detray/io/**/*.hpp"
+)
 
 # Clean up.
 unset(_detray_io_public_headers)

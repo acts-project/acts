@@ -82,9 +82,11 @@ jobs:
                  -DDETRAY_GENERATE_METADATA="default_metadata;itk_metadata;odd_metadata;toy_metadata;wire_chamber_metadata"
                  -S ${{ github.workspace }}/Detray -B build
                  -G "${{ matrix.PLATFORM.GENERATOR }}"
-    # Perform the build.
+    # Perform the build. The per-header TU targets are EXCLUDE_FROM_ALL, so
+    # `detray_headers` has to be asked for by name.
     - name: Build
-      run: cmake --build build --config ${{ matrix.BUILD_TYPE }} -- -j 2
+      run: cmake --build build --config ${{ matrix.BUILD_TYPE }}
+                 --target all detray_headers -- -j 2
 
   # Containerised build jobs.
   host-container:
@@ -139,11 +141,12 @@ jobs:
           ${{ matrix.PLATFORM.OPTIONS }} \
           -S ${GITHUB_WORKSPACE}/Detray \
           -B build
-    # Perform the build.
+    # Perform the build. The per-header TU targets are EXCLUDE_FROM_ALL, so
+    # `detray_headers` has to be asked for by name.
     - name: Build
       run: |
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
-        cmake --build build -- -j $(nproc)
+        cmake --build build --target all detray_headers -- -j $(nproc)
     # Run the unit test(s).
     - name: Full Test
       if: "matrix.BUILD_TYPE == 'Release'"
@@ -213,11 +216,12 @@ jobs:
           ${{ matrix.PLATFORM.OPTIONS }} \
           -S ${GITHUB_WORKSPACE}/Detray \
           -B build
-    # Perform the build.
+    # Perform the build. The per-header TU targets are EXCLUDE_FROM_ALL, so
+    # `detray_headers` has to be asked for by name.
     - name: Build
       run: |
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
-        cmake --build build
+        cmake --build build --target all detray_headers
 
   # ─────────────────────────────────────────────────────────────────────
   # CUDA build on an ordinary CPU runner, handing the build tree to `cuda-test`
@@ -279,8 +283,10 @@ jobs:
           -S ${GITHUB_WORKSPACE}/Detray \
           -B build
 
+    # The per-header TU targets are EXCLUDE_FROM_ALL, so `detray_headers` has
+    # to be asked for by name.
     - name: Build
-      run: cmake --build build
+      run: cmake --build build --target all detray_headers
 
     - name: ccache stats
       run: ccache -s
