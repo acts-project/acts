@@ -89,7 +89,6 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                           Acts::SquareMatrix2::Zero());
   }
 
-  // Defaults to (loc0, loc0), which would constrain d0 twice and z0 never.
   beamSpotTrackState.setProjectorSubspaceIndices(
       std::array<std::uint8_t, 2>{Acts::eBoundLoc0, Acts::eBoundLoc1});
 
