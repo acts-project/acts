@@ -8,8 +8,6 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
-#include "Acts/Utilities/Diagnostics.hpp"
-
 #include <atomic>
 #include <string>
 
@@ -19,11 +17,9 @@ namespace Logging {
 
 namespace {
 
-// Read when a logger is built, not when a message is logged, so this is off
-// every hot path. constinit so that a read during static initialisation --
-// before a job has had the chance to set it -- reports MAX rather than an
-// indeterminate value. Atomic because a write from one thread may race a read
-// from another, even though the intended use is a single write at startup.
+// constinit so a read during static initialisation reports MAX. Atomic because
+// a write may race a read, although the intended use is a single write at
+// startup.
 constinit std::atomic<Level> s_defaultFailureThreshold{Level::MAX};
 
 }  // namespace
@@ -39,22 +35,6 @@ void setDefaultFailureThreshold(Level level) {
 }
 
 }  // namespace detail
-
-ACTS_PUSH_IGNORE_DEPRECATED()
-
-Level getFailureThreshold() {
-  return detail::getDefaultFailureThreshold();
-}
-
-void setFailureThreshold(Level level) {
-  detail::setDefaultFailureThreshold(level);
-}
-
-ScopedFailureThreshold::~ScopedFailureThreshold() noexcept {
-  detail::setDefaultFailureThreshold(m_previousLevel);
-}
-
-ACTS_POP_IGNORE_DEPRECATED()
 
 namespace {
 class NeverFilterPolicy final : public OutputFilterPolicy {
@@ -106,8 +86,6 @@ std::unique_ptr<const Logger> getDefaultLogger(
               std::make_unique<DefaultPrintPolicy>(log_stream)),
           name));
   auto print = std::make_unique<DefaultFilterPolicy>(lvl);
-  // The process-wide default is resolved here, once, and copied into the
-  // logger. Nothing reads it again afterwards.
   return std::make_unique<const Logger>(
       std::move(output), std::move(print),
       failureThreshold.value_or(Logging::detail::getDefaultFailureThreshold()));

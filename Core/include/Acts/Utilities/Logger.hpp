@@ -208,38 +208,23 @@ inline std::string_view levelName(Level level) {
 /// specific circumstances. To solve this, ACTS implements an optional log
 /// *threshold* mechanism.
 ///
-/// The failure threshold is a property of the @ref Acts::Logger itself: a
-/// message at or above it is printed and then raises
-/// @ref Acts::Logging::ThresholdFailure. @ref Acts::Logging::Level::MAX, the
-/// default, means the logger never fails.
+/// The failure threshold is a property of the @ref Acts::Logger: a message at
+/// or above it is printed and then raises @ref Acts::Logging::ThresholdFailure.
+/// @ref Acts::Logging::Level::MAX, the default, never fails.
 ///
-/// A logger carries the threshold it was built with. Nothing is consulted when
-/// a message is logged, so no process-wide state can arm or disarm a logger
-/// after the fact, and a logger handed to a component behaves the same wherever
-/// that component runs.
+/// A logger carries the threshold it was built with; nothing is consulted when
+/// a message is logged.
 ///
-/// @ref Acts::getDefaultLogger arms the loggers it builds at the process-wide
-/// default from @ref Acts::Logging::detail::getDefaultFailureThreshold, which a
-/// job sets once at startup. That is what makes the mechanism usable from CI:
-/// arm the job, and any code that logs a warning or worse fails it. Code that
-/// logs an error *on purpose* -- typically a test exercising an error path --
-/// passes a disarmed logger to the code under test.
+/// @ref Acts::getDefaultLogger arms the loggers it builds at
+/// @ref Acts::Logging::detail::getDefaultFailureThreshold. A @ref Acts::Logger
+/// built directly from a print and a filter policy is not armed.
 ///
-/// Core does not read the environment. The `ACTS_LOG_FAILURE_THRESHOLD`
-/// environment variable is handled by the Python bindings, which apply it on
-/// import, before any logger exists. A C++ entry point that wants the same
-/// thing calls @ref Acts::Logging::detail::setDefaultFailureThreshold itself.
+/// Core does not read the environment; the `ACTS_LOG_FAILURE_THRESHOLD`
+/// environment variable is applied by the Python bindings on import.
 ///
-///
-/// A @ref Acts::Logger constructed directly from a print and a filter policy is
-/// **not** armed. An experiment that bridges ACTS logging into its own
-/// framework therefore never inherits a threshold it did not ask for; it can
-/// still arm a logger explicitly if it wants one.
-///
-/// @note The check happens before the level filter, so raising a logger's
-///       filter level can no longer hide a message that should have failed the
-///       job, and it applies to every @ref Acts::OutputPrintPolicy rather than
-///       only to @ref Acts::Logging::DefaultPrintPolicy.
+/// @note The check happens before the level filter, so a coarse filter level
+///       cannot hide a message that should fail the job, and it applies to
+///       every @ref Acts::OutputPrintPolicy.
 ///
 /// @{
 
@@ -251,77 +236,16 @@ class ThresholdFailure : public std::runtime_error {
 namespace detail {
 
 /// @brief Get the threshold @ref Acts::getDefaultLogger arms new loggers at
-///
-/// This is process-wide configuration, read once when a logger is built. It is
-/// not consulted when a message is logged, so it cannot change the behaviour
-/// of a logger that already exists.
-///
 /// @return the default, or @ref Level::MAX for "do not arm"
 Level getDefaultFailureThreshold();
 
 /// @brief Set the threshold @ref Acts::getDefaultLogger arms new loggers at
 ///
-/// @warning This is global state. It is meant to be set once, at the start of
-///          a job, before any logger is built. Loggers already constructed
-///          keep the threshold they were built with.
+/// @warning Global state, and only reaches loggers built after the call.
 /// @param level The new default, or @ref Level::MAX for "do not arm"
 void setDefaultFailureThreshold(Level level);
 
 }  // namespace detail
-
-/// @brief Get the threshold @ref Acts::getDefaultLogger arms new loggers at
-///
-/// @deprecated The failure threshold is a property of @ref Acts::Logger. Read
-///             it with @ref Acts::Logger::failureThreshold instead.
-/// @return The default threshold, or @ref Level::MAX for "do not arm"
-[[deprecated(
-    "Global log failure thresholds are deprecated; use "
-    "Acts::Logger::failureThreshold() instead")]]
-Level getFailureThreshold();
-
-/// @brief Set the threshold @ref Acts::getDefaultLogger arms new loggers at
-///
-/// @deprecated The failure threshold is a property of @ref Acts::Logger. Arm a
-///             logger with @ref Acts::Logger::withFailureThreshold instead.
-/// @warning This is **global state** and therefore **not threadsafe**. It only
-///          reaches loggers built after the call; ones that already exist keep
-///          the threshold they were built with.
-/// @param level Log level above which exceptions will be thrown
-[[deprecated(
-    "Global log failure thresholds are deprecated; use "
-    "Acts::Logger::withFailureThreshold() instead")]]
-void setFailureThreshold(Level level);
-
-/// Helper class that changes the process-wide default failure threshold for
-/// the duration of its lifetime.
-///
-/// @warning This only affects loggers *built* inside the scope. It cannot arm
-///          or disarm a logger that already exists.
-///
-/// @deprecated Pass a logger armed or disarmed with
-///             @ref Acts::Logger::withFailureThreshold /
-///             @ref Acts::Logger::withoutFailureThreshold to the code under
-///             test instead of mutating global state.
-class [[deprecated(
-    "Global log failure thresholds are deprecated; pass a logger from "
-    "Acts::Logger::withoutFailureThreshold() to the code under test "
-    "instead")]] ScopedFailureThreshold {
- public:
-  /// Constructor that sets the failure threshold for the scope
-  /// @param level The logging level to set as failure threshold
-  explicit ScopedFailureThreshold(Level level) {
-    detail::setDefaultFailureThreshold(level);
-  }
-  ScopedFailureThreshold(const ScopedFailureThreshold&) = delete;
-  ScopedFailureThreshold& operator=(const ScopedFailureThreshold&) = delete;
-  ScopedFailureThreshold(ScopedFailureThreshold&&) = delete;
-  ScopedFailureThreshold& operator=(ScopedFailureThreshold&&) = delete;
-
-  ~ScopedFailureThreshold() noexcept;
-
- private:
-  Level m_previousLevel{detail::getDefaultFailureThreshold()};
-};
 
 /// @}
 
