@@ -227,8 +227,6 @@ Result<BoundTrackParameters> detail::boundToBoundConversion(
     freeToPathDerivatives.segment<3>(eFreeDir0) =
         -freePars[eFreeQOverP] * bField.cross(freePars.segment<3>(eFreeDir0));
 
-    // dt/ds = 1/v = 1/(beta * c) = sqrt(1 + m^2/p^2) with the mass m and the
-    // momentum p
     const double mass = boundParameters.particleHypothesis().mass();
     const double absMomentum = boundParameters.absoluteMomentum();
     freeToPathDerivatives[eFreeTime] = fastHypot(1, mass / absMomentum);
