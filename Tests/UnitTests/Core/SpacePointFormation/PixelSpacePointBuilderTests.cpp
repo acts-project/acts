@@ -144,6 +144,31 @@ BOOST_AUTO_TEST_CASE(InclinedModuleAgainstNumericJacobian) {
   BOOST_CHECK_CLOSE(varZR[1], expected[1], 1e-3);
 }
 
+/// The variance overload is the diagonal of the covariance, including for a
+/// correlated local covariance on a module inclined against both axes
+BOOST_AUTO_TEST_CASE(VarianceMatchesCovarianceDiagonal) {
+  const double phi = 2.4;
+  const double r = 90_mm;
+  const Vector3 position(r * std::cos(phi), r * std::sin(phi), 400_mm);
+  const Vector3 loc0 = Vector3(0.6, -0.5, 0.62).normalized();
+  const Vector3 loc1 = loc0.cross(Vector3(0.3, 0.8, 0.35)).normalized();
+
+  auto surface = makePlane(position, loc0, loc1);
+
+  SquareMatrix2 cov = localCov();
+  cov(0, 1) = cov(1, 0) = 0.4 * sigmaLoc0 * sigmaLoc1;
+
+  const RotationMatrix3 rot = referenceFrame(*surface);
+  const Vector2 variance =
+      PixelSpacePointBuilder::computeVarianceZR(rot, position, cov);
+  const Vector2 expected =
+      PixelSpacePointBuilder::computeCovarianceZR(rot, position, cov)
+          .diagonal();
+
+  BOOST_CHECK_CLOSE(variance[0], expected[0], 1e-9);
+  BOOST_CHECK_CLOSE(variance[1], expected[1], 1e-9);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
