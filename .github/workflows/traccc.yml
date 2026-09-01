@@ -171,10 +171,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      # vecmem, covfie and alpaka come from spack on every leg: the host
+      # vecmem, covfie, alpaka and TBB come from spack on every leg: the host
       # lockfile carries them and each flavor overlays its own build, so no
       # per-leg gating is needed. TRACCC_USE_SYSTEM_ALPAKA is unconditional
       # because traccc only acts on it under TRACCC_SETUP_ALPAKA.
+      #
+      # TBB defaults to a FetchContent build of oneTBB, whose IPO is on by
+      # default; under a clang host that is ThinLTO, and the resulting bitcode
+      # outlives any linker the ROCm toolchain provides. Taking the flavor's
+      # intel-tbb sidesteps that and drops a from-source build from every leg.
 
       - name: Configure
         run: |
@@ -190,6 +195,7 @@ jobs:
             -DTRACCC_USE_SYSTEM_VECMEM=ON \
             -DTRACCC_USE_SYSTEM_COVFIE=ON \
             -DTRACCC_USE_SYSTEM_ALPAKA=ON \
+            -DTRACCC_USE_SYSTEM_TBB=ON \
             -DDETRAY_USE_SYSTEM_NLOHMANN=ON \
             -DDETRAY_USE_SYSTEM_GOOGLETEST=ON \
             -DTRACCC_USE_SYSTEM_GOOGLETEST_DEFAULT=ON \
