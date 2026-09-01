@@ -40,6 +40,10 @@ using GbtsTauLookupTable = std::vector<GbtsTauBounds>;
 /// Maximum number of neighbouring edges recorded per graph edge
 static constexpr std::uint32_t kGbtsMaxEdgeNeighbours = 6;
 
+/// Bins of the per-node z0 histogram, which is kept as a bit mask in
+/// GbtsNodeEdgeInfo::isConnected and so may not exceed its width.
+static constexpr std::int32_t kGbtsZ0HistogramBins = 16;
+
 //! [gbts node params]
 /// Per-node parameters used while building the graph.
 ///

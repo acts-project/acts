@@ -200,10 +200,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
   std::uint32_t nEdges = 0;
 
   // scale factor to get indexes of binned beamspot
-  // assuming 16-bit z0 bitmask
-
-  const std::uint32_t zBins = 16;
-  const float z0HistoCoeff = zBins / (m_cfg.maxZ0 - m_cfg.minZ0 + 1e-6);
+  const float z0HistoCoeff =
+      detail::kGbtsZ0HistogramBins / (m_cfg.maxZ0 - m_cfg.minZ0 + 1e-6);
 
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
   const std::span<const detail::GbtsNodeParams> params =
@@ -301,7 +299,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
       bool isConnected = false;
 
-      std::array<std::uint8_t, 16> z0Histo = {};
+      std::array<std::uint8_t, detail::kGbtsZ0HistogramBins> z0Histo = {};
 
       const detail::GbtsNodeParams& n1pars = params[n1Idx];
 
@@ -608,12 +606,15 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               isConnected = true;  // there is at least one good match
 
-              // edge confirmed - update z0 histogram
+              // edge confirmed - update z0 histogram. Only doubletFilterRZ
+              // holds z0 to the histogram range, and it is optional.
+              const auto z0BinIndex =
+                  static_cast<std::int32_t>(z0HistoCoeff * (z0 - m_cfg.minZ0));
 
-              const std::uint32_t z0BinIndex =
-                  static_cast<std::uint32_t>(z0HistoCoeff * (z0 - m_cfg.minZ0));
-
-              ++z0Histo[z0BinIndex];
+              if (z0BinIndex >= 0 &&
+                  z0BinIndex < detail::kGbtsZ0HistogramBins) {
+                ++z0Histo[z0BinIndex];
+              }
 
               nConnections++;
             }
@@ -628,7 +629,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
       if (isConnected) {
         std::uint16_t z0BitMask = 0x0;
 
-        for (std::uint32_t bIdx = 0; bIdx < 16; ++bIdx) {
+        for (std::int32_t bIdx = 0; bIdx < detail::kGbtsZ0HistogramBins;
+             ++bIdx) {
           if (z0Histo[bIdx] == 0) {
             continue;
           }
@@ -1026,10 +1028,17 @@ bool GraphBasedTrackSeeder::checkZ0BitMask(const std::uint16_t z0BitMask,
     return true;
   }
 
+  // z0 is not yet range checked here -- doubletFilterRZ runs after this -- so
+  // a bin outside the histogram is reachable and must not reach the shift.
+  const auto isSet = [z0BitMask](const std::int32_t bin) {
+    return bin >= 0 && bin < detail::kGbtsZ0HistogramBins &&
+           ((z0BitMask >> bin) & 1) != 0;
+  };
+
   const float dz = z0 - minZ0;
   const std::int32_t z0BinIndex = static_cast<std::int32_t>(z0HistoCoeff * dz);
 
-  if (((z0BitMask >> z0BinIndex) & 1) != 0) {
+  if (isSet(z0BinIndex)) {
     return true;
   }
 
@@ -1041,20 +1050,16 @@ bool GraphBasedTrackSeeder::checkZ0BitMask(const std::uint16_t z0BitMask,
 
   std::int32_t nextBin = static_cast<std::int32_t>(z0HistoCoeff * dzm);
 
-  if (nextBin >= 0 && nextBin != z0BinIndex) {
-    if (((z0BitMask >> nextBin) & 1) != 0) {
-      return true;
-    }
+  if (nextBin != z0BinIndex && isSet(nextBin)) {
+    return true;
   }
 
   const float dzp = dz + z0Resolution;
 
   nextBin = static_cast<std::int32_t>(z0HistoCoeff * dzp);
 
-  if (nextBin < 16 && nextBin != z0BinIndex) {
-    if (((z0BitMask >> nextBin) & 1) != 0) {
-      return true;
-    }
+  if (nextBin != z0BinIndex && isSet(nextBin)) {
+    return true;
   }
 
   return false;
