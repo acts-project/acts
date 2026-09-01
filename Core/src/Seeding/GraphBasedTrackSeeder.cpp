@@ -245,8 +245,11 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
     const std::uint32_t layerId1 = B1.layerId;
 
-    const bool isBarrel1 = B1.type == GbtsLayerType::Barrel;
     const bool isPixel1 = B1.technology == GbtsLayerTechnology::Pixel;
+    // The adaptive tau corrections and the triplet validation below were tuned
+    // on the pixel barrel and are keyed on it, which is what ATLAS's
+    // (layerId / 10000) == 8 selects: its strip barrel is numbered 13xxx.
+    const bool isPixelBarrel1 = isPixel1 && B1.type == GbtsLayerType::Barrel;
 
     // prepare a sliding window for each non-empty bin2 in the group
 
@@ -319,9 +322,10 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
       for (auto& slw : phiSlidingWindow) {
         const std::uint32_t lk2 = slw.layerId;
 
-        const bool isBarrel2 = slw.type == GbtsLayerType::Barrel;
-
         const bool isPixel2 = slw.technology == GbtsLayerTechnology::Pixel;
+        const bool isPixelBarrel2 =
+            isPixel2 && slw.type == GbtsLayerType::Barrel;
+
         const bool stripPair = calibrate && (!isPixel1 || !isPixel2);
 
         const float deltaPhi = slw.deltaPhi;
@@ -503,8 +507,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float dPhi1 = curv * r1c;
 
           if (nEdges < m_cfg.nMaxEdges) {
-            edgeStorage.emplace_back(n1Idx, n2Idx, lk2, slw.type, expEta, curv,
-                                     phi1 + dPhi1);
+            edgeStorage.emplace_back(n1Idx, n2Idx, lk2, isPixelBarrel2, expEta,
+                                     curv, phi1 + dPhi1);
 
             ++numCreatedEdges;
 
@@ -532,12 +536,12 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               const std::uint32_t lk3 = pS->n2LayerId;
 
-              const bool isBarrel3 = pS->n2Type == GbtsLayerType::Barrel;
+              const bool isPixelBarrel3 = pS->n2PixelBarrel;
 
               float addTauRatioCorr = 0;
 
               if (m_cfg.useAdaptiveCuts) {
-                if (isBarrel1 && isBarrel2 && isBarrel3) {
+                if (isPixelBarrel1 && isPixelBarrel2 && isPixelBarrel3) {
                   const bool noGap =
                       ((lk3 - lk2) == 1000) && ((lk2 - layerId1) == 1000);
 
@@ -546,7 +550,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                     addTauRatioCorr = m_cfg.tauRatioCorr;
                   }
                 } else {
-                  bool mixedTriplet = isBarrel1 && isBarrel2 && !isBarrel3;
+                  bool mixedTriplet =
+                      isPixelBarrel1 && isPixelBarrel2 && !isPixelBarrel3;
                   if (mixedTriplet) {
                     addTauRatioCorr = m_cfg.tauRatioCorr;
                   }
@@ -586,8 +591,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               // final check: cuts on pT and d0
               if (m_cfg.validateTriplets) {
-                // Pixel barrel
-                if (isBarrel1 && isBarrel2 && isBarrel3) {
+                if (isPixelBarrel1 && isPixelBarrel2 && isPixelBarrel3) {
                   const std::array<SpacePointIndex, 3> candidateTriplet = {
                       n1Idx, n2Idx, pS->n2};
 

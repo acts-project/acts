@@ -185,17 +185,17 @@ struct GbtsEdge final {
   /// @param n1_ Inner node index
   /// @param n2_ Outer node index
   /// @param n2LayerId_ GBTS layer ID of the outer node
-  /// @param n2Type_ Layer type of the outer node
+  /// @param n2PixelBarrel_ Whether the outer node is on a pixel barrel layer
   /// @param p1_ First fit parameter
   /// @param p2_ Second fit parameter
   /// @param p3_ Third fit parameter
   GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_, std::uint32_t n2LayerId_,
-           GbtsLayerType n2Type_, float p1_, float p2_, float p3_)
+           bool n2PixelBarrel_, float p1_, float p2_, float p3_)
       : n1{n1_},
         n2{n2_},
         level{1},
         next{1},
-        n2Type{n2Type_},
+        n2PixelBarrel{n2PixelBarrel_},
         p{p1_, p2_, p3_},
         n2LayerId{n2LayerId_} {}
 
@@ -209,9 +209,11 @@ struct GbtsEdge final {
 
   std::uint8_t nNei{0};
 
-  /// Layer type of the outer node. Cached so the innermost neighbour loop does
-  /// not have to chase the node's bin.
-  GbtsLayerType n2Type{};
+  /// Whether the outer node is on a pixel barrel layer, the only thing the
+  /// innermost neighbour loop asks about it. Cached so that loop does not have
+  /// to chase the node's bin, and in what was padding so the edge does not
+  /// grow.
+  bool n2PixelBarrel{};
 
   std::array<float, 3> p{};
 

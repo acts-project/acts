@@ -167,8 +167,9 @@ void GbtsNodeStorage::finalize() {
     binInfo.nodes.second = m_nodes.size();
     binInfo.minRadius = minRadius;
     binInfo.maxRadius = maxRadius;
+    // every node in a bin is on the same layer, so any of them will do
     const GbtsLayerDescription& description =
-        m_geometry->layerDescriptionByIndex(m_staged[sorted.front()].layer);
+        m_geometry->layerDescriptionByIndex(m_staged[staged.front()].layer);
     binInfo.layerId = static_cast<std::uint32_t>(description.id);
     binInfo.type = description.type;
     binInfo.technology = description.technology;
