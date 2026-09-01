@@ -19,6 +19,7 @@
 // System include(s).
 #include <cstdint>
 #include <filesystem>
+#include <stdexcept>
 
 namespace detray::io::csv {
 
