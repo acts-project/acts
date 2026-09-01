@@ -11,29 +11,24 @@
 #include "traccc/definitions/math.hpp"
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/device/concepts/thread_id.hpp"
+#include "traccc/gbts_seeding/device/gbts_bin_spacepoints.hpp"
 #include "traccc/gbts_seeding/gbts_seeding_config.hpp"
 #include "traccc/gbts_seeding/gbts_types.hpp"
 
 // VecMem include(s).
 #include <vecmem/containers/device_vector.hpp>
-#include <vecmem/memory/device_atomic_ref.hpp>
 
 namespace traccc::device {
 
 template <concepts::thread_id1 thread_id_t>
 TRACCC_HOST_DEVICE inline void gbts_sort_nodes(
     const thread_id_t& thread_id, const gbts_sort_nodes_payload& payload) {
-  const vecmem::device_vector<const float4> d_sp_params(payload.sp_params);
-  const vecmem::device_vector<const unsigned int> d_node_eta_index(
-      payload.node_eta_index);
-  const vecmem::device_vector<const unsigned int> d_node_phi_index(
-      payload.node_phi_index);
-  vecmem::device_vector<unsigned int> d_phi_cusums(payload.phi_cusums);
+  const vecmem::device_vector<const float4> d_reducedSP(payload.reducedSP);
+  const vecmem::device_vector<const unsigned int> d_sort_values(
+      payload.sort_values);
   vecmem::device_vector<float4> d_node_params(payload.node_params);
   vecmem::device_vector<float> d_node_phi(payload.node_phi);
   vecmem::device_vector<unsigned int> d_node_index(payload.node_index);
-  const vecmem::device_vector<const unsigned int> d_original_sp_idx(
-      payload.original_sp_idx);
   const vecmem::device_vector<const float> d_tau_lut(payload.tau_lut);
 
   const gbts_sort_nodes_params& ap = payload.gbts_sort_nodes_params;
@@ -44,7 +39,8 @@ TRACCC_HOST_DEVICE inline void gbts_sort_nodes(
 
   for (unsigned int globalIndex = globalIdx; globalIndex < payload.nNodes;
        globalIndex += blockDimX * gridDimX) {
-    const float4 sp = d_sp_params[globalIndex];
+    const unsigned int srcIdx = d_sort_values[globalIndex];
+    const float4 sp = d_reducedSP[srcIdx];
 
     const float Phi = math::atan2(sp.y, sp.x);
     const float r = math::sqrt(sp.x * sp.x + sp.y * sp.y);
@@ -80,17 +76,9 @@ TRACCC_HOST_DEVICE inline void gbts_sort_nodes(
       }
     }
 
-    const unsigned int eta_index = d_node_eta_index[globalIndex];
-    const unsigned int histo_bin =
-        d_node_phi_index[globalIndex] + payload.nPhiBins * eta_index;
-
-    const unsigned int pos =
-        vecmem::device_atomic_ref<unsigned int>(d_phi_cusums[histo_bin])
-            .fetch_add(1);
-
-    d_node_params[pos] = float4{min_tau, max_tau, r, z};
-    d_node_phi[pos] = Phi;
-    d_node_index[pos] = d_original_sp_idx[globalIndex];
+    d_node_params[globalIndex] = float4{min_tau, max_tau, r, z};
+    d_node_phi[globalIndex] = Phi;
+    d_node_index[globalIndex] = srcIdx;
   }
 }
 

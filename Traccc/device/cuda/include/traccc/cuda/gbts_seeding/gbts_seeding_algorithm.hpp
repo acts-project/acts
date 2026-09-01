@@ -42,16 +42,8 @@ class gbts_seeding_algorithm : public device::gbts_seeding_algorithm,
   /// traccc::device::gbts_seeding_algorithm
   /// @{
 
-  void gbts_count_spacepoints_by_layer_kernel(
-      const device::gbts_count_spacepoints_by_layer_payload& payload)
-      const override;
   void gbts_bin_spacepoints_kernel(
       const device::gbts_bin_spacepoints_payload& payload) const override;
-  void gbts_count_eta_phi_bins_kernel(
-      const device::gbts_count_eta_phi_bins_payload& payload) const override;
-  void gbts_prefix_sum_eta_phi_bins_kernel(
-      const device::gbts_prefix_sum_eta_phi_bins_payload& payload)
-      const override;
   void gbts_sort_nodes_kernel(
       const device::gbts_sort_nodes_payload& payload) const override;
   void gbts_find_minmax_radius_kernel(

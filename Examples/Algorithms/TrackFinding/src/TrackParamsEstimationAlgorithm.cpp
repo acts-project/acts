@@ -109,7 +109,8 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
 
     const std::optional<std::array<SpacePointIndex, 3>> selected =
         selectSeedSpacePoints(spacePoints, seed.spacePointIndices(),
-                              m_cfg.spacePointSelection);
+                              m_cfg.spacePointSelection,
+                              m_cfg.minTransverseDistance);
     if (!selected.has_value()) {
       ACTS_DEBUG("Seed " << iseed << " has no space point selection, skip");
       continue;
@@ -159,6 +160,15 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     if (!boundParams.ok()) {
       ACTS_WARNING("Failed to estimate track parameters from seed: "
                    << boundParams.error().message());
+      continue;
+    }
+    // Degenerate space points, e.g. a bottom and a middle space point at the
+    // same transverse position, make the estimate not a number rather than
+    // merely wrong
+    if (!boundParams->allFinite()) {
+      ACTS_WARNING("Seed " << iseed
+                           << " gave a track parameter estimate that is not a "
+                              "number, skip");
       continue;
     }
 
