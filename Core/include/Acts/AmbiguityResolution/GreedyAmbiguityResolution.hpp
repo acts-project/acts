@@ -74,8 +74,7 @@ class GreedyAmbiguityResolution {
   /// @param logger Logger for diagnostic output
   explicit GreedyAmbiguityResolution(
       const Config& cfg,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("GreedyAmbiguityResolution", Logging::INFO))
+      std::unique_ptr<const Logger> logger = makeDummyLogger())
       : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
   /// Computes the initial state for the input data. This function accumulates

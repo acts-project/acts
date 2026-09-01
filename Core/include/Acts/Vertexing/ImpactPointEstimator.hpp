@@ -82,10 +82,9 @@ class ImpactPointEstimator {
   ///
   /// @param cfg Configuration object
   /// @param logger Logging instance
-  explicit ImpactPointEstimator(const Config& cfg,
-                                std::unique_ptr<const Logger> logger =
-                                    getDefaultLogger("ImpactPointEstimator",
-                                                     Logging::INFO))
+  explicit ImpactPointEstimator(
+      const Config& cfg,
+      std::unique_ptr<const Logger> logger = makeDummyLogger())
       : m_cfg(cfg), m_logger(std::move(logger)) {}
 
   /// @brief Copy constructor to clone logger (class owns a unique pointer to it,

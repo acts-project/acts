@@ -60,8 +60,7 @@ struct GaussianSumFitter {
   /// @param _logger Logger for diagnostic output
   GaussianSumFitter(propagator_t&& propagator,
                     std::shared_ptr<const BetheHeitlerApprox> bha,
-                    std::unique_ptr<const Logger> _logger =
-                        getDefaultLogger("GSF", Logging::INFO))
+                    std::unique_ptr<const Logger> _logger = makeDummyLogger())
       : m_propagator(std::move(propagator)),
         m_betheHeitlerApproximation(std::move(bha)),
         m_logger{std::move(_logger)},

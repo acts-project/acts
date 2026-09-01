@@ -91,8 +91,7 @@ class NumericalTrackLinearizer {
   /// @param _logger Logging instance
   explicit NumericalTrackLinearizer(
       const Config& config,
-      std::unique_ptr<const Logger> _logger = getDefaultLogger("NumTrkLinProp",
-                                                               Logging::INFO))
+      std::unique_ptr<const Logger> _logger = makeDummyLogger())
       : m_cfg(config), m_logger{std::move(_logger)} {}
 
   /// @brief Function that linearizes BoundTrackParameters at

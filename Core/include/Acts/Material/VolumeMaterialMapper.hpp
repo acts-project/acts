@@ -139,9 +139,9 @@ class VolumeMaterialMapper {
   [[deprecated(
       "Material mapping with propagation is deprecated. Use MaterialMapper "
       "instead.")]]
-  VolumeMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
-                       std::unique_ptr<const Logger> slogger = getDefaultLogger(
-                           "VolumeMaterialMapper", Logging::INFO));
+  VolumeMaterialMapper(
+      const Config& cfg, StraightLinePropagator propagator,
+      std::unique_ptr<const Logger> slogger = makeDummyLogger());
 
   /// @brief helper method that creates the cache for the mapping
   ///

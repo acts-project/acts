@@ -171,8 +171,7 @@ std::shared_ptr<TrackingVolume> CuboidVolumeBuilder::buildVolume(
   // Build layer array
   std::pair<double, double> minMax = binningRange(gctx, cfg);
   LayerArrayCreator::Config lacCnf;
-  LayerArrayCreator layArrCreator(
-      lacCnf, getDefaultLogger("LayerArrayCreator", Logging::INFO));
+  LayerArrayCreator layArrCreator(lacCnf, makeDummyLogger());
   std::unique_ptr<const LayerArray> layArr(
       layArrCreator.layerArray(gctx, layVec, minMax.first, minMax.second,
                                BinningType::arbitrary, cfg.binningDimension));

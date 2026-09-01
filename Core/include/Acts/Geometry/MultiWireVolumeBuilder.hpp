@@ -49,8 +49,7 @@ class MultiWireVolumeBuilder {
   /// @param logger The logger instance for screen output
   explicit MultiWireVolumeBuilder(
       const Config& config,
-      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
-          "MultiWireVolumeBuilder", Acts::Logging::INFO));
+      std::unique_ptr<const Acts::Logger> logger = makeDummyLogger());
 
   /// @brief Constructs the tracking volume with the wrapped surfaces
   /// @return a unique ptr of the tracking volume

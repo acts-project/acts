@@ -819,4 +819,13 @@ std::unique_ptr<const Logger> getDefaultLogger(
 /// @return Reference to dummy logger instance
 const Logger& getDummyLogger();
 
+/// @brief Get an owning logger that discards all output
+///
+/// The counterpart to @ref getDummyLogger for the places that need to own a
+/// logger, in particular a constructor taking a
+/// `std::unique_ptr<const Logger>`.
+///
+/// @return a logger that prints nothing and never fails
+std::unique_ptr<const Logger> makeDummyLogger();
+
 }  // namespace Acts

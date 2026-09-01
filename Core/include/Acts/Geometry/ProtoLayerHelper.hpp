@@ -38,10 +38,9 @@ class ProtoLayerHelper {
   /// Constructor with explicit config
   ///
   /// @param logger logging instance
-  explicit ProtoLayerHelper(const Config& /*config*/,
-                            std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("ProtoLayerHelper",
-                                                 Logging::INFO))
+  explicit ProtoLayerHelper(
+      const Config& /*config*/,
+      std::unique_ptr<const Logger> logger = makeDummyLogger())
       : m_logger(std::move(logger)) {}
   ~ProtoLayerHelper() = default;
 

@@ -46,8 +46,7 @@ class BinnedSurfaceMaterialAccumulator final
   /// @param mlogger the logger
   explicit BinnedSurfaceMaterialAccumulator(
       const Config& cfg,
-      std::unique_ptr<const Logger> mlogger =
-          getDefaultLogger("BinnedSurfaceMaterialAccumulator", Logging::INFO));
+      std::unique_ptr<const Logger> mlogger = makeDummyLogger());
 
   /// Factory for creating the state
   /// @param gctx is the geometry context

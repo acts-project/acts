@@ -1024,10 +1024,9 @@ class BlueprintBuilder {
   ///             backend constructor.
   /// @param logger_ Optional logger; defaults to an `INFO`-level logger named
   ///                `"BlueprintBuilder"`.
-  explicit BlueprintBuilder(const typename Backend::Config& cfg,
-                            std::unique_ptr<const Acts::Logger> logger_ =
-                                Acts::getDefaultLogger("BlueprintBuilder",
-                                                       Acts::Logging::INFO));
+  explicit BlueprintBuilder(
+      const typename Backend::Config& cfg,
+      std::unique_ptr<const Acts::Logger> logger_ = makeDummyLogger());
 
   /// @brief Create a @ref LayerBlueprintNode from a single detector element.
   ///

@@ -172,11 +172,9 @@ class GraphBasedTrackSeeder {
   /// @param config Configuration for the seed finder
   /// @param geometry GBTS geometry
   /// @param logger Logging instance
-  GraphBasedTrackSeeder(const DerivedConfig& config,
-                        std::shared_ptr<GbtsGeometry> geometry,
-                        std::unique_ptr<const Acts::Logger> logger =
-                            Acts::getDefaultLogger("Finder",
-                                                   Acts::Logging::Level::INFO));
+  GraphBasedTrackSeeder(
+      const DerivedConfig& config, std::shared_ptr<GbtsGeometry> geometry,
+      std::unique_ptr<const Acts::Logger> logger = makeDummyLogger());
 
   /// Create an empty node storage matching this seeder's configuration.
   ///
@@ -275,8 +273,7 @@ class GraphBasedTrackSeeder {
 
   detail::GbtsTauLookupTable m_tauLut;
 
-  std::unique_ptr<const Acts::Logger> m_logger =
-      Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
+  std::unique_ptr<const Acts::Logger> m_logger = makeDummyLogger();
 
   const Acts::Logger& logger() const { return *m_logger; }
 

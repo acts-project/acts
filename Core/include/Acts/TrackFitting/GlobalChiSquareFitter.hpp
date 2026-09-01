@@ -718,8 +718,7 @@ class Gx2Fitter {
   /// @param pPropagator The propagator instance for track propagation
   /// @param _logger Logger instance for debugging output (optional)
   explicit Gx2Fitter(const propagator_t& pPropagator,
-                     std::unique_ptr<const Logger> _logger =
-                         getDefaultLogger("Gx2Fitter", Logging::INFO))
+                     std::unique_ptr<const Logger> _logger = makeDummyLogger())
       : m_propagator(pPropagator),
         m_logger{std::move(_logger)},
         m_actorLogger{m_logger->cloneWithSuffix("Actor")},

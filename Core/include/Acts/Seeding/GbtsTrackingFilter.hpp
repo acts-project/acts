@@ -65,8 +65,7 @@ class GbtsTrackingFilter final {
   /// @param logger Logging instance
   GbtsTrackingFilter(const Config& config,
                      const std::shared_ptr<const GbtsGeometry>& geometry,
-                     std::unique_ptr<const Logger> logger = getDefaultLogger(
-                         "GbtsTrackingFilter", Logging::Level::INFO));
+                     std::unique_ptr<const Logger> logger = makeDummyLogger());
 
  private:
   // Only the seeder walks the edge graph.

@@ -61,8 +61,7 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
   /// @param [in] logger logging instance
   explicit TrackingGeometryBuilder(
       const Config& cgbConfig,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("TrackingGeometryBuilder", Logging::INFO));
+      std::unique_ptr<const Logger> logger = makeDummyLogger());
 
   /// Destructor
   ~TrackingGeometryBuilder() override = default;

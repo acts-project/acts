@@ -262,9 +262,9 @@ class KalmanFitter {
   /// Constructor with propagator and logger
   /// @param pPropagator Propagator instance for track propagation
   /// @param _logger Logger for diagnostic output
-  explicit KalmanFitter(propagator_t pPropagator,
-                        std::unique_ptr<const Logger> _logger =
-                            getDefaultLogger("KalmanFitter", Logging::INFO))
+  explicit KalmanFitter(
+      propagator_t pPropagator,
+      std::unique_ptr<const Logger> _logger = makeDummyLogger())
       : m_propagator(std::move(pPropagator)),
         m_logger{std::move(_logger)},
         m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}

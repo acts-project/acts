@@ -43,6 +43,9 @@ class DummyPrintPolicy final : public OutputPrintPolicy {
   }
 };
 
+}  // namespace
+}  // namespace Logging
+
 std::unique_ptr<const Logger> makeDummyLogger() {
   using namespace Logging;
   auto output = std::make_unique<DummyPrintPolicy>();
@@ -50,9 +53,6 @@ std::unique_ptr<const Logger> makeDummyLogger() {
   return std::make_unique<const Logger>(std::move(output), std::move(print),
                                         Level::MAX);
 }
-
-}  // namespace
-}  // namespace Logging
 
 std::unique_ptr<const Logger> getDefaultLogger(
     const std::string& name, const Logging::Level& lvl,
@@ -69,8 +69,7 @@ std::unique_ptr<const Logger> getDefaultLogger(
 }
 
 const Logger& getDummyLogger() {
-  static const std::unique_ptr<const Logger> logger =
-      Logging::makeDummyLogger();
+  static const std::unique_ptr<const Logger> logger = makeDummyLogger();
 
   return *logger;
 }

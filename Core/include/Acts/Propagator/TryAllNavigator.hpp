@@ -163,9 +163,8 @@ class TryAllNavigator final {
   ///
   /// @param cfg The navigator configuration
   /// @param logger a logger instance
-  explicit TryAllNavigator(Config cfg, std::unique_ptr<const Logger> logger =
-                                           getDefaultLogger("TryAllNavigator",
-                                                            Logging::INFO))
+  explicit TryAllNavigator(
+      Config cfg, std::unique_ptr<const Logger> logger = makeDummyLogger())
       : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {}
 
   /// Creates a new navigator state

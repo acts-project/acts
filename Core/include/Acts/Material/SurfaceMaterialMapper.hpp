@@ -146,10 +146,9 @@ class SurfaceMaterialMapper {
   [[deprecated(
       "Material mapping with propagation is deprecated. Use MaterialMapper "
       "instead.")]]
-  SurfaceMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
-                        std::unique_ptr<const Logger> slogger =
-                            getDefaultLogger("SurfaceMaterialMapper",
-                                             Logging::INFO));
+  SurfaceMaterialMapper(
+      const Config& cfg, StraightLinePropagator propagator,
+      std::unique_ptr<const Logger> slogger = makeDummyLogger());
 
   /// @brief helper method that creates the cache for the mapping
   ///

@@ -655,9 +655,7 @@ template <detail::BlueprintBackend BackendT>
 BlueprintBuilder<BackendT>::BlueprintBuilder(
     const typename Backend::Config& cfg,
     std::unique_ptr<const Acts::Logger> logger_)
-    : m_logger(logger_ ? std::move(logger_)
-                       : Acts::getDefaultLogger("BlueprintBuilder",
-                                                Acts::Logging::INFO)),
+    : m_logger(logger_ ? std::move(logger_) : makeDummyLogger()),
       m_backend(cfg, *m_logger) {}
 
 template <detail::BlueprintBackend BackendT>

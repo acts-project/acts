@@ -144,9 +144,8 @@ class DirectNavigator {
 
   /// Constructor with optional logger
   /// @param _logger Logger instance for navigation messages
-  explicit DirectNavigator(std::unique_ptr<const Logger> _logger =
-                               getDefaultLogger("DirectNavigator",
-                                                Logging::INFO))
+  explicit DirectNavigator(
+      std::unique_ptr<const Logger> _logger = makeDummyLogger())
       : m_logger{std::move(_logger)} {}
 
   /// Create a new navigation state from options

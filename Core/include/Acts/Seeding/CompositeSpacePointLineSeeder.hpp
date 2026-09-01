@@ -238,8 +238,7 @@ class CompositeSpacePointLineSeeder {
   /// @param logger Logger object used for debug print out
   explicit CompositeSpacePointLineSeeder(
       const Config& cfg,
-      std::unique_ptr<const Logger> logger = getDefaultLogger(
-          "CompositeSpacePointLineSeeder", Logging::Level::INFO));
+      std::unique_ptr<const Logger> logger = makeDummyLogger());
   /// Return the configuration object of the seeder
   /// @return Configuration object
   const Config& config() const { return m_cfg; }

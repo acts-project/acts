@@ -48,8 +48,7 @@ class IntersectionMaterialAssigner final : public IAssignmentFinder {
   /// @param mlogger is the logger
   explicit IntersectionMaterialAssigner(
       const Config& cfg,
-      std::unique_ptr<const Logger> mlogger =
-          getDefaultLogger("IntersectionMaterialAssigner", Logging::INFO))
+      std::unique_ptr<const Logger> mlogger = makeDummyLogger())
       : m_cfg(cfg), m_logger(std::move(mlogger)) {}
 
   /// @brief Method for generating assignment candidates for the

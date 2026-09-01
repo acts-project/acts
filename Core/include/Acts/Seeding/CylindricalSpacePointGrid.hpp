@@ -103,8 +103,7 @@ class CylindricalSpacePointGrid
   /// @param logger Optional logger instance for debugging output
   explicit CylindricalSpacePointGrid(
       const Config& config,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("CylindricalSpacePointGrid", Logging::Level::INFO));
+      std::unique_ptr<const Logger> logger = makeDummyLogger());
 
   using GridBase::binIndex;
   /// Get the bin index for a space point given its azimuthal angle, radial

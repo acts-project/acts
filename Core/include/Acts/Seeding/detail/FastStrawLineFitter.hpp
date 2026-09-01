@@ -69,10 +69,9 @@ class FastStrawLineFitter {
   /// Constructor of the fast straw line fitter
   /// @param cfg: Reference to the fitter's configuration object
   /// @param logger: Optional overwrite of the logging object
-  explicit FastStrawLineFitter(const Config& cfg,
-                               std::unique_ptr<const Logger> logger =
-                                   getDefaultLogger("FastStrawLineFitter",
-                                                    Logging::Level::INFO));
+  explicit FastStrawLineFitter(
+      const Config& cfg,
+      std::unique_ptr<const Logger> logger = makeDummyLogger());
 
   /// Helper struct to pack the result of the straw line fit
   struct FitResult {
