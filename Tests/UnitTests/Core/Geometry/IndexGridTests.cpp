@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 using namespace Acts;
 
@@ -47,7 +48,7 @@ Logging::Level logLevel = Logging::VERBOSE;
 BOOST_AUTO_TEST_SUITE(NavigationSuite)
 
 BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("*** Test 0", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("*** Test 0", logLevel));
   ACTS_INFO("Testing X-Y grid.");
   ACTS_INFO("Testing one surface with center generator, should lead to 1 bin.");
 
@@ -68,7 +69,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
 
   // The Filler instance and a center based generator
   IndexGridFiller filler{{}};
-  filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::VERBOSE);
+  filler.oLogger = getTestLogger("IndexGridFiller", Logging::VERBOSE);
   CenterReferenceGenerator generator;
   std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
 
@@ -82,7 +83,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("*** Test 1", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("*** Test 1", logLevel));
   ACTS_INFO("Testing X-Y grid.");
   ACTS_INFO(
       "Testing one surface with bin value generator, should lead to 1 bin.");
@@ -104,7 +105,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
 
   // The Filler instance and a center based generator
   IndexGridFiller filler{{}};
-  filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::VERBOSE);
+  filler.oLogger = getTestLogger("IndexGridFiller", Logging::VERBOSE);
 
   AxisDirectionReferenceGenerator<AxisDirection::AxisX> generator;
   std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
@@ -118,7 +119,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("*** Test 2", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("*** Test 2", logLevel));
   ACTS_INFO("Testing X-Y grid.");
   ACTS_INFO(
       "Testing one surface with polyhedron generator without expansion, should "
@@ -141,7 +142,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
 
   // The Filler instance and a center based generator
   IndexGridFiller filler{{0u, 0u}};
-  filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
+  filler.oLogger = getTestLogger("IndexGridFiller", Logging::DEBUG);
 
   PolyhedronReferenceGenerator generator;
   std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
@@ -155,7 +156,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("*** Test 3", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("*** Test 3", logLevel));
   ACTS_INFO("Testing X-Y grid.");
   ACTS_INFO(
       "Testing one surface with polyhedron generator and expansion, should "
@@ -178,7 +179,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
 
   // The Filler instance and a center based generator
   IndexGridFiller filler{{1u, 1u}};
-  filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
+  filler.oLogger = getTestLogger("IndexGridFiller", Logging::DEBUG);
 
   PolyhedronReferenceGenerator generator;
   std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
@@ -192,7 +193,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("*** Test 4", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("*** Test 4", logLevel));
   ACTS_INFO("Testing Phi-Z grid.");
   ACTS_INFO(
       "Testing one surface with polyhedron generator without expansion, should "
@@ -215,7 +216,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
 
   // The Filler instance and a center based generator
   IndexGridFiller filler{{0u, 0u}};
-  filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
+  filler.oLogger = getTestLogger("IndexGridFiller", Logging::DEBUG);
 
   PolyhedronReferenceGenerator generator;
   std::vector<std::shared_ptr<Surface>> surfaces = {cSurface};
@@ -230,7 +231,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("*** Test 4", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("*** Test 4", logLevel));
   ACTS_INFO("Testing Phi-Z grid.");
   ACTS_INFO(
       "Testing one surface at std::numbers::pi jump, with polyhedron "
@@ -254,7 +255,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
 
   // The Filler instance and a center based generator
   IndexGridFiller filler{{0u, 0u}};
-  filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::DEBUG);
+  filler.oLogger = getTestLogger("IndexGridFiller", Logging::DEBUG);
 
   PolyhedronReferenceGenerator generator;
   std::vector<std::shared_ptr<Surface>> surfaces = {cSurface};

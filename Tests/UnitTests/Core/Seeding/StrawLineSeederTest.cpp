@@ -8,6 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
+
 #include <set>
 
 #include "StrawHitGeneratorHelper.hpp"
@@ -17,7 +19,7 @@
 constexpr auto logLvl = Acts::Logging::Level::INFO;
 constexpr std::size_t nEvents = 5;
 
-ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineSeederTest", logLvl));
+ACTS_LOCAL_LOGGER(ActsTests::getTestLogger("StrawLineSeederTest", logLvl));
 
 #define DECLARE_BRANCH(dTYPE, NAME) \
   dTYPE NAME{};                     \
@@ -46,7 +48,7 @@ void testSeeder(RandomEngine& engine, TFile& outFile) {
   CompositeSpacePointLineSeeder::Config seederCfg{};
   seederCfg.busyLayerLimit = 20;
   const CompositeSpacePointLineSeeder seeder{
-      seederCfg, getDefaultLogger("StrawLineSeederTest", logLvl)};
+      seederCfg, ActsTests::getTestLogger("StrawLineSeederTest", logLvl)};
 
   for (std::size_t evt = 0; evt < nEvents; ++evt) {
     if (evt % 100 == 0) {

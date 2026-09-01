@@ -25,6 +25,7 @@
 #include "ActsFatras/Selectors/ParticleSelectors.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <algorithm>
 #include <random>
@@ -171,10 +172,10 @@ BOOST_DATA_TEST_CASE(FatrasSimulationCase, dataset, pdg, phi, eta, p,
   // construct the simulator
   ChargedSimulation simulatorCharged(
       std::move(chargedPropagator),
-      getDefaultLogger("ChargedSimulation", logLevel));
+      getTestLogger("ChargedSimulation", logLevel));
   NeutralSimulation simulatorNeutral(
       std::move(neutralPropagator),
-      getDefaultLogger("NeutralSimulation", logLevel));
+      getTestLogger("NeutralSimulation", logLevel));
   FatrasSimulation simulator(std::move(simulatorCharged),
                              std::move(simulatorNeutral));
 

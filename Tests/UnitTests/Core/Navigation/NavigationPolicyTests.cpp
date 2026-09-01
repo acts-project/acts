@@ -25,6 +25,7 @@
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -37,7 +38,7 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(NavigationSuite)
 
 auto gctx = GeometryContext::dangerouslyDefaultConstruct();
-auto logger = getDefaultLogger("NavigationPolicyTests", Logging::VERBOSE);
+auto logger = getTestLogger("NavigationPolicyTests", Logging::VERBOSE);
 
 // For test cases that provoke an error on purpose: same logger, but it
 // must not fail the job when that expected error is logged.

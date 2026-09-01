@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/detail/Polynomials.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include "StrawHitGeneratorHelper.hpp"
 
@@ -36,7 +37,7 @@ constexpr auto logLvl = Logging::Level::INFO;
 constexpr std::size_t nEvents = 500;
 constexpr double tolerance = 1.e-3;
 
-ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineResidualTest", logLvl));
+ACTS_LOCAL_LOGGER(ActsTests::getTestLogger("StrawLineResidualTest", logLvl));
 
 namespace ActsTests {
 
@@ -108,12 +109,12 @@ void testResidual(const Pars_t& linePars, const FitTestSpacePoint& testPoint) {
                      << ", theta: " << (theta(line.direction()) / 1._degree)
                      << ", phi: " << (phi(line.direction())) / 1._degree);
 
-  CompSpacePointAuxiliaries resCalc{resCfg,
-                                    Acts::getDefaultLogger("testRes", logLvl)};
+  CompSpacePointAuxiliaries resCalc{
+      resCfg, ActsTests::getTestLogger("testRes", logLvl)};
   CompSpacePointAuxiliaries resCalcUp{
-      resCfg, Acts::getDefaultLogger("testResUp", logLvl)};
+      resCfg, ActsTests::getTestLogger("testResUp", logLvl)};
   CompSpacePointAuxiliaries resCalcDn{
-      resCfg, Acts::getDefaultLogger("testResDn", logLvl)};
+      resCfg, ActsTests::getTestLogger("testResDn", logLvl)};
 
   resCalc.updateSpatialResidual(line, testPoint);
   ACTS_INFO(__func__ << "() - " << __LINE__ << ": Test residual w.r.t. "
@@ -286,8 +287,8 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
                       << toString(line.direction()) << " with t0: " << timeT0
                       << ".");
 
-  CompSpacePointAuxiliaries resCalc{resCfg,
-                                    Acts::getDefaultLogger("timeRes", logLvl)};
+  CompSpacePointAuxiliaries resCalc{
+      resCfg, ActsTests::getTestLogger("timeRes", logLvl)};
   resCalc.updateFullResidual(line, timeT0, sp);
 
   const Vector3 planeIsect =
@@ -309,9 +310,9 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
   Line_t lineUp{}, lineDn{};
   for (const auto partial : resCfg.parsToUse) {
     CompSpacePointAuxiliaries resCalcUp{
-        resCfg, Acts::getDefaultLogger("timeResUp", logLvl)};
+        resCfg, ActsTests::getTestLogger("timeResUp", logLvl)};
     CompSpacePointAuxiliaries resCalcDn{
-        resCfg, Acts::getDefaultLogger("timeResDn", logLvl)};
+        resCfg, ActsTests::getTestLogger("timeResDn", logLvl)};
 
     Pars_t lineParsUp{linePars}, lineParsDn{linePars};
 
@@ -398,12 +399,12 @@ BOOST_AUTO_TEST_CASE(StrawsWithT0Constraint) {
   resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta,
                       ParIdx::t0};
 
-  CompSpacePointAuxiliaries resCalc{resCfg,
-                                    Acts::getDefaultLogger("testRes", logLvl)};
+  CompSpacePointAuxiliaries resCalc{
+      resCfg, ActsTests::getTestLogger("testRes", logLvl)};
   CompSpacePointAuxiliaries resCalcUp{
-      resCfg, Acts::getDefaultLogger("testResUp", logLvl)};
+      resCfg, ActsTests::getTestLogger("testResUp", logLvl)};
   CompSpacePointAuxiliaries resCalcDn{
-      resCfg, Acts::getDefaultLogger("testResDn", logLvl)};
+      resCfg, ActsTests::getTestLogger("testResDn", logLvl)};
 
   MeasurementGenerator::Config genCfg{};
   genCfg.createStraws = true;
@@ -583,7 +584,7 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
   using ResCalc_t = CompSpacePointAuxiliaries;
   using ChiSq_t = ResCalc_t::ChiSqWithDerivatives;
 
-  ResCalc_t resCalc{resCfg, Acts::getDefaultLogger("chiSquareTest", logLvl)};
+  ResCalc_t resCalc{resCfg, ActsTests::getTestLogger("chiSquareTest", logLvl)};
 
   ChiSq_t chi2{};
   ChiSq_t chi2Up{};
@@ -770,7 +771,7 @@ BOOST_AUTO_TEST_CASE(HessianCalc) {
   resCfg.parsToUse = {ParIdx::y0, ParIdx::theta};
 
   CompSpacePointAuxiliaries resCalc{
-      resCfg, Acts::getDefaultLogger("ResidualCalcTwin", logLvl)};
+      resCfg, ActsTests::getTestLogger("ResidualCalcTwin", logLvl)};
   RandomEngine rndEngine{1167};
 
   using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
@@ -812,7 +813,7 @@ BOOST_AUTO_TEST_CASE(HessianCalcT0) {
   resCfg.parsToUse = {ParIdx::y0, ParIdx::theta, ParIdx::t0};
 
   CompSpacePointAuxiliaries resCalc{
-      resCfg, Acts::getDefaultLogger("ResidualCalcTwin", logLvl)};
+      resCfg, ActsTests::getTestLogger("ResidualCalcTwin", logLvl)};
   RandomEngine rndEngine{1167};
 
   using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
@@ -861,7 +862,7 @@ BOOST_AUTO_TEST_CASE(HessianCalcTwin) {
   resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta};
 
   CompSpacePointAuxiliaries resCalc{
-      resCfg, Acts::getDefaultLogger("ResidualCalcTwin", logLvl)};
+      resCfg, ActsTests::getTestLogger("ResidualCalcTwin", logLvl)};
   RandomEngine rndEngine{1066};
 
   using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
@@ -903,7 +904,7 @@ BOOST_AUTO_TEST_CASE(HessianCalcStrawStrip) {
   resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta};
 
   CompSpacePointAuxiliaries resCalc{
-      resCfg, Acts::getDefaultLogger("ResidualCalcStrawStrip", logLvl)};
+      resCfg, ActsTests::getTestLogger("ResidualCalcStrawStrip", logLvl)};
   RandomEngine rndEngine{1905};
 
   using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
@@ -944,7 +945,7 @@ BOOST_AUTO_TEST_CASE(HessianCalcStripOnly) {
   resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta};
 
   CompSpacePointAuxiliaries resCalc{
-      resCfg, Acts::getDefaultLogger("ResidualCalcStrip", logLvl)};
+      resCfg, ActsTests::getTestLogger("ResidualCalcStrip", logLvl)};
   RandomEngine rndEngine{1492};
 
   using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;

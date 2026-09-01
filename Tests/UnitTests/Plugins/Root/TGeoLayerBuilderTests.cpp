@@ -21,6 +21,7 @@
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsPlugins/Root/TGeoLayerBuilder.hpp"
 #include "ActsTests/CommonHelpers/DataDirectory.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <array>
 #include <cstddef>
@@ -83,21 +84,21 @@ BOOST_AUTO_TEST_CASE(TGeoLayerBuilderTests) {
   tglbConfig.layerConfigurations[2] = pConfigs;
 
   auto surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>(
-      getDefaultLogger("SurfaceArrayCreator", Logging::VERBOSE));
+      getTestLogger("SurfaceArrayCreator", Logging::VERBOSE));
 
   LayerCreator::Config lcConfig;
   lcConfig.surfaceArrayCreator = surfaceArrayCreator;
   auto layerCreator = std::make_shared<const LayerCreator>(
-      lcConfig, getDefaultLogger("LayerCreator", Logging::VERBOSE));
+      lcConfig, getTestLogger("LayerCreator", Logging::VERBOSE));
   tglbConfig.layerCreator = layerCreator;
 
   ProtoLayerHelper::Config plhConfig;
   auto protoLayerHelper = std::make_shared<const ProtoLayerHelper>(
-      plhConfig, getDefaultLogger("ProtoLayerHelper", Logging::VERBOSE));
+      plhConfig, getTestLogger("ProtoLayerHelper", Logging::VERBOSE));
   tglbConfig.protoLayerHelper = protoLayerHelper;
 
   TGeoLayerBuilder tglb(tglbConfig,
-                        getDefaultLogger("TGeoLayerBuilder", Logging::VERBOSE));
+                        getTestLogger("TGeoLayerBuilder", Logging::VERBOSE));
 
   ObjVisualization3D objVis;
 

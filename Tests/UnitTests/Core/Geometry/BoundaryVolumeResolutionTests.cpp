@@ -23,6 +23,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <memory>
 #include <optional>
@@ -34,7 +35,7 @@ namespace ActsTests {
 
 namespace {
 
-auto logger = getDefaultLogger("UnitTests", Logging::INFO);
+auto logger = getTestLogger("UnitTests", Logging::INFO);
 auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 const TrackingVolume* findVolumeByName(const TrackingGeometry& trackingGeometry,

@@ -31,6 +31,7 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <iostream>
 #include <map>
@@ -48,7 +49,7 @@ namespace ActsTests {
 using Acts::VectorHelpers::makeVector4;
 
 // Set up logger
-ACTS_LOCAL_LOGGER(getDefaultLogger("AMVFitterTests", Logging::INFO))
+ACTS_LOCAL_LOGGER(getTestLogger("AMVFitterTests", Logging::INFO))
 
 using Covariance = BoundMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;

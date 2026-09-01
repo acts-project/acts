@@ -13,6 +13,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 #include "ActsTests/CommonHelpers/WhiteBoardUtilities.hpp"
 
 using namespace Acts;
@@ -21,7 +22,7 @@ using namespace ActsExamples;
 // Global logger instance for all tests
 const Logger& logger() {
   static const auto logger =
-      getDefaultLogger("DataHandleTest", Logging::VERBOSE);
+      ActsTests::getTestLogger("DataHandleTest", Logging::VERBOSE);
   return *logger;
 }
 

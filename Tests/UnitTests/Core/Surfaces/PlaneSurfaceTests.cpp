@@ -36,6 +36,7 @@
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cmath>
 #include <memory>
@@ -390,7 +391,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
 
 BOOST_AUTO_TEST_SUITE(PlaneSurfaceMerging)
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = getTestLogger("UnitTests", Acts::Logging::VERBOSE);
 
 // Create a test context
 GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();

@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/HoughAccumulatorSection.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <functional>
 #include <map>
@@ -20,7 +21,7 @@ using namespace Acts::Experimental;
 
 namespace ActsTests {
 
-auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
+auto logger = getTestLogger("UnitTests", Logging::VERBOSE);
 
 /// @brief Structure representing test parameters for a line in the accumulator space: y
 /// = slope * x + intercept

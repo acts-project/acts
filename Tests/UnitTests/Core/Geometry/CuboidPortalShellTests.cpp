@@ -23,6 +23,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cstddef>
 #include <initializer_list>
@@ -49,7 +50,7 @@ auto makeVolume(auto&&... pars) {
   return vol;
 };
 
-auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
+auto logger = getTestLogger("UnitTests", Logging::VERBOSE);
 
 BOOST_AUTO_TEST_SUITE(GeometrySuite)
 

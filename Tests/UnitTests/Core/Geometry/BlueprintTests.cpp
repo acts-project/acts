@@ -36,6 +36,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <memory>
 #include <stdexcept>
@@ -53,7 +54,7 @@ using Acts::StaticBlueprintNode;
 
 namespace ActsTests {
 
-auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
+auto logger = getTestLogger("UnitTests", Logging::VERBOSE);
 
 // For test cases that provoke an error on purpose: same logger, but it
 // must not fail the job when that expected error is logged.

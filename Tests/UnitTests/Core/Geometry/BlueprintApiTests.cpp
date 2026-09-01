@@ -35,6 +35,7 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <fstream>
 #include <random>
@@ -49,7 +50,7 @@ using Acts::MaterialDesignatorBlueprintNode;
 
 namespace ActsTests {
 
-auto logger = getDefaultLogger("UnitTests", Logging::DEBUG);
+auto logger = getTestLogger("UnitTests", Logging::DEBUG);
 
 // For test cases that provoke an error on purpose: same logger, but it
 // must not fail the job when that expected error is logged.

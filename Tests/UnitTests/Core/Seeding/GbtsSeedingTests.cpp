@@ -16,6 +16,7 @@
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <algorithm>
 #include <array>
@@ -383,8 +384,9 @@ SeederSetup makeSeeder(const ToyDetector& detector,
   auto geometry = makeGeometry(detector);
 
   const auto makeLogger = [quiet]() -> std::unique_ptr<const Logger> {
-    return quiet ? getDummyLogger().clone()
-                 : getDefaultLogger("GbtsTest", Logging::Level::WARNING);
+    return quiet
+               ? getDummyLogger().clone()
+               : ActsTests::getTestLogger("GbtsTest", Logging::Level::WARNING);
   };
 
   const auto numLayers = static_cast<std::uint32_t>(detector.layers.size());

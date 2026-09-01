@@ -36,6 +36,7 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cmath>
 #include <memory>
@@ -48,7 +49,7 @@ using namespace Acts::UnitLiterals;
 namespace ActsTests {
 // Create a test context
 GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = getTestLogger("UnitTests", Acts::Logging::VERBOSE);
 
 // For test cases that provoke an error on purpose: same logger, but it
 // must not fail the job when that expected error is logged.

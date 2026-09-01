@@ -23,6 +23,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cmath>
 #include <limits>
@@ -141,7 +142,7 @@ BOOST_DATA_TEST_CASE(
   auto initialLimit = pathLimit.internalLimit;
 
   detail::setupLoopProtection(pState, pStepper, pathLimit, false,
-                              *getDefaultLogger("LoopProt", Logging::INFO));
+                              *getTestLogger("LoopProt", Logging::INFO));
 
   auto updatedLimit =
       pState.options.abortList.get<PathLimitReached>().internalLimit;

@@ -14,6 +14,7 @@
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsTests/CommonHelpers/AlignmentHelpers.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <string>
 
@@ -32,13 +33,13 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   const auto geometry = detector();
 
   // reconstruction propagator and fitter
-  auto kfLogger = getDefaultLogger("KalmanFilter", Logging::INFO);
+  auto kfLogger = getTestLogger("KalmanFilter", Logging::INFO);
   const auto kfZeroPropagator =
       makeConstantFieldPropagator(geometry, 0_T, std::move(kfLogger));
   auto kfZero = KalmanFitterType(kfZeroPropagator);
 
   // alignment
-  auto alignLogger = getDefaultLogger("Alignment", Logging::INFO);
+  auto alignLogger = getTestLogger("Alignment", Logging::INFO);
   const auto alignZero =
       ActsAlignment::Alignment(std::move(kfZero), std::move(alignLogger));
 

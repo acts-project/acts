@@ -30,6 +30,7 @@
 #include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <iterator>
 
@@ -97,8 +98,8 @@ auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Acts::Navigator navigator(
-      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::INFO));
+  Acts::Navigator navigator(cfg,
+                            getTestLogger("Navigator", Acts::Logging::INFO));
   Acts::StraightLineStepper stepper;
   return Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>(
       stepper, std::move(navigator));
@@ -112,8 +113,8 @@ auto makeConstantFieldPropagator(
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Acts::Navigator navigator(
-      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::INFO));
+  Acts::Navigator navigator(cfg,
+                            getTestLogger("Navigator", Acts::Logging::INFO));
   auto field =
       std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, bz));
   stepper_t stepper(std::move(field));

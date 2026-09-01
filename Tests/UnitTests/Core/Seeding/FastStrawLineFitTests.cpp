@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <format>
 #include <random>
@@ -33,7 +34,7 @@ constexpr auto logLvl = Logging::Level::INFO;
 
 namespace ActsTests {
 
-ACTS_LOCAL_LOGGER(getDefaultLogger("FastStrawLineFitTests", logLvl));
+ACTS_LOCAL_LOGGER(getTestLogger("FastStrawLineFitTests", logLvl));
 
 class StrawTestPoint;
 using TestStrawCont_t = std::vector<std::unique_ptr<StrawTestPoint>>;
@@ -322,7 +323,7 @@ void testSimpleStrawFit(RandomEngine& engine, TFile& outFile) {
   DECLARE_BRANCH(std::size_t, nIter);
 
   FastStrawLineFitter::Config cfg{};
-  FastStrawLineFitter fastFitter{cfg, getDefaultLogger("FitterNoT0", logLvl)};
+  FastStrawLineFitter fastFitter{cfg, getTestLogger("FitterNoT0", logLvl)};
   ACTS_INFO("Start simple straw fit test.");
   for (std::size_t n = 0; n < nTrials; ++n) {
     if ((n + 1) % 1000 == 0) {
@@ -398,7 +399,7 @@ void testFitWithT0(RandomEngine& engine, TFile& outFile) {
 
   FastStrawLineFitter::Config cfg{};
   cfg.maxIter = 500;
-  FastStrawLineFitter fastFitter{cfg, getDefaultLogger("FitterWithT0", logLvl)};
+  FastStrawLineFitter fastFitter{cfg, getTestLogger("FitterWithT0", logLvl)};
   StrawTestCalibrator calibrator{};
   CalibrationContext cctx{};
   ACTS_INFO("Start straw fit with t0 test.");
@@ -502,7 +503,7 @@ void testStripFit(RandomEngine& engine, TFile& outFile) {
   DECLARE_BRANCH(std::size_t, nIter);
 
   FastStrawLineFitter::Config cfg{};
-  FastStrawLineFitter fastFitter{cfg, getDefaultLogger("StripFitter", logLvl)};
+  FastStrawLineFitter fastFitter{cfg, getTestLogger("StripFitter", logLvl)};
   ACTS_INFO("Start strip fit test.");
   for (std::size_t n = 0; n < nTrials; ++n) {
     if ((n + 1) % 1000 == 0) {

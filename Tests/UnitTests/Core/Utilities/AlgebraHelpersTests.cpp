@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <Eigen/Dense>
 
@@ -23,7 +24,7 @@ BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_SUITE(SafeInverse)
 
-ACTS_LOCAL_LOGGER(getDefaultLogger("SafeInverse", logLevel))
+ACTS_LOCAL_LOGGER(getTestLogger("SafeInverse", logLevel))
 
 BOOST_AUTO_TEST_CASE(SafeInverseSmallMatrix) {
   Eigen::Matrix<double, 2, 2> m;
@@ -121,7 +122,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(SafeExp)
 
-ACTS_LOCAL_LOGGER(getDefaultLogger("SafeExp", logLevel))
+ACTS_LOCAL_LOGGER(getTestLogger("SafeExp", logLevel))
 
 BOOST_AUTO_TEST_CASE(safeExpDouble) {
   using FloatType = double;

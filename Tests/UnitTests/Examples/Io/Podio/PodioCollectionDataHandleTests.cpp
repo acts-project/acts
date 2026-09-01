@@ -13,6 +13,7 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 #include "ActsTests/CommonHelpers/WhiteBoardUtilities.hpp"
 
 #include <memory>
@@ -29,7 +30,7 @@ namespace {
 // This suite provokes configuration errors on purpose, so the logger it hands
 // to the code under test must not fail the job when they are logged.
 static const auto logger =
-    Acts::getDefaultLogger("PodioHandleTest", Acts::Logging::VERBOSE)
+    getTestLogger("PodioHandleTest", Acts::Logging::VERBOSE)
         ->withoutFailureThreshold();
 }  // namespace
 

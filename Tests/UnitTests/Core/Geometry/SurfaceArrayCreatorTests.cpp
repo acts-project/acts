@@ -27,6 +27,7 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -62,7 +63,7 @@ struct SurfaceArrayCreatorFixture {
 
   SurfaceArrayCreatorFixture()
       : m_SAC(SurfaceArrayCreator::Config(),
-              getDefaultLogger("SurfaceArrayCreator", Logging::VERBOSE)) {
+              getTestLogger("SurfaceArrayCreator", Logging::VERBOSE)) {
     BOOST_TEST_MESSAGE("setup fixture");
   }
   ~SurfaceArrayCreatorFixture() { BOOST_TEST_MESSAGE("teardown fixture"); }

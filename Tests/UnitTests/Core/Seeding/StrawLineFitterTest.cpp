@@ -8,6 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
+
 #include <chrono>
 #include <format>
 #include <future>
@@ -32,7 +34,7 @@ const unsigned nThreads = std::min(logLvl != Acts::Logging::Level::INFO
                                    1u);
 std::mutex writeMutex{};
 
-ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
+ACTS_LOCAL_LOGGER(ActsTests::getTestLogger("StrawLineFitterTest", logLvl));
 
 namespace ActsTests {
 
@@ -109,7 +111,7 @@ long int runFitTest(Fitter_t::Config fitCfg, GenCfg_t genCfg,
   DECLARE_BRANCH(char, converged);
 
   RandomEngine engine{seed};
-  Fitter_t fitter{fitCfg, getDefaultLogger(
+  Fitter_t fitter{fitCfg, ActsTests::getTestLogger(
                               std::format("LineFitter_{:}", testName), logLvl)};
 
   TimePoint_t start = std::chrono::system_clock::now();

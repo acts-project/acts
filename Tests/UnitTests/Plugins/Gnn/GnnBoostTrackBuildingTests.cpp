@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsPlugins/Gnn/BoostTrackBuilding.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <algorithm>
 #include <numeric>
@@ -58,7 +59,7 @@ BOOST_AUTO_TEST_CASE(test_track_building) {
             1.f);
 
   // Run Track building
-  auto logger = getDefaultLogger("TestLogger", Logging::ERROR);
+  auto logger = getTestLogger("TestLogger", Logging::ERROR);
   BoostTrackBuilding trackBuilder({}, std::move(logger));
 
   auto testTracks = trackBuilder({std::move(dummyNodes), std::move(edgeTensor),

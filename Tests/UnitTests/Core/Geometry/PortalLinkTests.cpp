@@ -27,6 +27,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cstdio>
 #include <iostream>
@@ -42,7 +43,7 @@ namespace ActsTests {
 // These suites exercise error paths throughout, so the logger they hand to
 // the code under test must not fail the job on an expected error.
 auto logger =
-    getDefaultLogger("UnitTests", Logging::VERBOSE)->withoutFailureThreshold();
+    getTestLogger("UnitTests", Logging::VERBOSE)->withoutFailureThreshold();
 
 std::shared_ptr<TrackingVolume> makeDummyVolume() {
   return std::make_shared<TrackingVolume>(

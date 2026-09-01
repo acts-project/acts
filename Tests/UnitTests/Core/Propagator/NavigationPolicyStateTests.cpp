@@ -34,6 +34,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <atomic>
 #include <cmath>
@@ -298,7 +299,7 @@ BOOST_AUTO_TEST_SUITE(NavigationPolicyStateSuite)
 
 BOOST_AUTO_TEST_CASE(AlternatingInvalidPolicy_StraightLine) {
   TemporaryDirectory tmp{};
-  auto logger = getDefaultLogger("AlternatingTest", Logging::VERBOSE);
+  auto logger = getTestLogger("AlternatingTest", Logging::VERBOSE);
 
   // Build geometry with AlternatingInvalidPolicy on all volumes
   BlueprintOptions opts;
@@ -384,7 +385,7 @@ BOOST_AUTO_TEST_CASE(AlternatingInvalidPolicy_StraightLine) {
 
 BOOST_AUTO_TEST_CASE(ConeValidityPolicy_MagneticField) {
   TemporaryDirectory tmp{};
-  auto logger = getDefaultLogger("ConeTest", Logging::VERBOSE);
+  auto logger = getTestLogger("ConeTest", Logging::VERBOSE);
 
   const double coneAngle = 10.0 * std::numbers::pi / 180.0;
 

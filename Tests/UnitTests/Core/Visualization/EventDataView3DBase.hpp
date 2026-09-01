@@ -33,6 +33,7 @@
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cmath>
 #include <optional>
@@ -332,7 +333,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
 
   KalmanFitter kFitter(rPropagator);
 
-  auto logger = getDefaultLogger("KalmanFilter", Logging::WARNING);
+  auto logger = ActsTests::getTestLogger("KalmanFilter", Logging::WARNING);
 
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
