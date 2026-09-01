@@ -44,47 +44,47 @@ std::optional<Level> parseFailureThreshold(const char* value) {
   return std::nullopt;
 }
 
-std::optional<Level>& defaultFailureThresholdMutable() {
-  static std::optional<Level> s_level = []() -> std::optional<Level> {
-#ifdef ACTS_LOG_FAILURE_THRESHOLD
-    // Seeded from the deprecated CMake option. Unlike before, this is only a
-    // default: it can still be overridden at runtime.
-    std::optional<Level> level = Level::ACTS_LOG_FAILURE_THRESHOLD;
-#else
-    std::optional<Level> level = std::nullopt;
-#endif
-    if (const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
-        envvar != nullptr) {
-      if (std::optional<Level> parsed = parseFailureThreshold(envvar);
-          parsed.has_value()) {
-        level = parsed;
-      }
-    }
-    return level;
-  }();
-
-  return s_level;
-}
-
 }  // namespace
 
 namespace detail {
 
-std::optional<Level> getDefaultFailureThreshold() {
-  return defaultFailureThresholdMutable();
-}
+// Constant-initialised to MAX so that reading it during static initialisation,
+// before the initialiser below has run, reports "unset".
+Level g_defaultFailureThreshold = Level::MAX;
 
-void setDefaultFailureThreshold(std::optional<Level> level) {
-  defaultFailureThresholdMutable() = level;
+void setDefaultFailureThreshold(Level level) {
+  g_defaultFailureThreshold = level;
 }
 
 }  // namespace detail
+
+namespace {
+
+// Seed the default from the build-time option and the environment. Runs during
+// dynamic initialisation of this translation unit.
+[[maybe_unused]] const bool s_defaultFailureThresholdSeeded = []() {
+#ifdef ACTS_LOG_FAILURE_THRESHOLD
+  // Seeded from the deprecated CMake option. Unlike before, this is only a
+  // default: it can still be overridden at runtime.
+  detail::g_defaultFailureThreshold = Level::ACTS_LOG_FAILURE_THRESHOLD;
+#endif
+  if (const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
+      envvar != nullptr) {
+    if (std::optional<Level> parsed = parseFailureThreshold(envvar);
+        parsed.has_value()) {
+      detail::g_defaultFailureThreshold = *parsed;
+    }
+  }
+  return true;
+}();
+
+}  // namespace
 
 #else
 
 namespace detail {
 
-void setDefaultFailureThreshold(std::optional<Level> /*level*/) {
+void setDefaultFailureThreshold(Level /*level*/) {
   // ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF: this build can never be armed from
   // the outside, so setting the process-wide default has no effect.
 }
@@ -96,7 +96,7 @@ void setDefaultFailureThreshold(std::optional<Level> /*level*/) {
 ACTS_PUSH_IGNORE_DEPRECATED()
 
 Level getFailureThreshold() {
-  return detail::getDefaultFailureThreshold().value_or(Level::MAX);
+  return detail::getDefaultFailureThreshold();
 }
 
 void setFailureThreshold(Level level) {
@@ -104,14 +104,7 @@ void setFailureThreshold(Level level) {
 }
 
 ScopedFailureThreshold::~ScopedFailureThreshold() noexcept {
-  try {
-    detail::setDefaultFailureThreshold(m_previousLevel);
-  } catch (const std::bad_alloc&) {
-    // bad alloc can be thrown when initializing the global static variable
-    std::cerr << "Failed to reset log failure threshold (bad_alloc)"
-              << std::endl;
-    std::terminate();
-  }
+  detail::setDefaultFailureThreshold(m_previousLevel);
 }
 
 ACTS_POP_IGNORE_DEPRECATED()

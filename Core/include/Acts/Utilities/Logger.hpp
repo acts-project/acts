@@ -246,23 +246,33 @@ namespace detail {
 
 #ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
 
-/// @brief Get the process-wide default failure threshold
+/// @brief The process-wide default failure threshold; @ref Level::MAX if unset
 ///
 /// Loggers constructed without an explicit failure threshold defer to this
-/// value. It is seeded once from the `ACTS_LOG_FAILURE_THRESHOLD` environment
-/// variable and is unset if that variable is absent or unparsable.
+/// value, which is seeded once from the `ACTS_LOG_FAILURE_THRESHOLD`
+/// environment variable.
 ///
-/// @return The process-wide default, or `std::nullopt` if unset
-std::optional<Level> getDefaultFailureThreshold();
+/// This is read on every log statement, including the ones the level filter
+/// discards, so it is deliberately a plain variable rather than a function
+/// call: the propagator and navigator inner loops are full of `ACTS_VERBOSE`.
+/// It is constant-initialised to @ref Level::MAX, so reading it during static
+/// initialisation -- before the environment has been consulted -- reports
+/// "unset" rather than garbage.
+///
+/// @warning Mutable global state, and therefore **not threadsafe** to write.
+///          The intention is that it is set once, before multi-threaded
+///          execution begins. Prefer arming an individual @ref Acts::Logger.
+extern Level g_defaultFailureThreshold;
+
+/// @brief Get the process-wide default failure threshold
+/// @return the default, or @ref Level::MAX if unset
+inline Level getDefaultFailureThreshold() {
+  return g_defaultFailureThreshold;
+}
 
 /// @brief Set the process-wide default failure threshold
-///
-/// @warning This is **global state** and therefore **not threadsafe**. The
-///          intention is that it is set once, before multi-threaded execution
-///          begins, and not modified before the end of the job. Prefer arming
-///          an individual @ref Acts::Logger instead.
-/// @param level The new default, or `std::nullopt` to unset it
-void setDefaultFailureThreshold(std::optional<Level> level);
+/// @param level The new default, or @ref Level::MAX to unset it
+void setDefaultFailureThreshold(Level level);
 
 #else
 
@@ -271,15 +281,15 @@ void setDefaultFailureThreshold(std::optional<Level> level);
 /// This build has `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`, so the default is
 /// always unset and the environment is not consulted.
 ///
-/// @return `std::nullopt`
-constexpr std::optional<Level> getDefaultFailureThreshold() {
-  return std::nullopt;
+/// @return @ref Level::MAX
+constexpr Level getDefaultFailureThreshold() {
+  return Level::MAX;
 }
 
 /// @brief Set the process-wide default failure threshold
 ///
 /// No-op in a build with `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`.
-void setDefaultFailureThreshold(std::optional<Level> /*level*/);
+void setDefaultFailureThreshold(Level /*level*/);
 
 #endif
 
@@ -290,9 +300,7 @@ void setDefaultFailureThreshold(std::optional<Level> /*level*/);
 /// @return @c true if the message should raise @ref ThresholdFailure
 inline bool exceedsFailureThreshold(const std::optional<Level>& own,
                                     Level lvl) {
-  const std::optional<Level>& threshold =
-      own.has_value() ? own : getDefaultFailureThreshold();
-  return threshold.has_value() && lvl >= *threshold;
+  return lvl >= (own.has_value() ? *own : getDefaultFailureThreshold());
 }
 
 }  // namespace detail
@@ -343,7 +351,7 @@ class [[deprecated(
   ~ScopedFailureThreshold() noexcept;
 
  private:
-  std::optional<Level> m_previousLevel{detail::getDefaultFailureThreshold()};
+  Level m_previousLevel{detail::getDefaultFailureThreshold()};
 };
 
 /// @}
