@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import Callable, Optional, Union, List
 from enum import Enum
 from collections import namedtuple
 
@@ -300,6 +300,8 @@ def addSeeding(
     inputParticles: str = "particles",
     selectedParticles: str = "particles_selected",
     paramEstimationSpacePoints: Optional[acts.examples.SeedSpacePointSelection] = None,
+    paramEstimationRefineIterations: Optional[int] = None,
+    paramEstimationWeight: Optional[Callable] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     trackParameterPerformance: bool = False,
@@ -356,6 +358,13 @@ def addSeeding(
     paramEstimationSpacePoints : acts.examples.SeedSpacePointSelection, None
         which space points of a seed estimate its track parameters, None keeps
         the algorithm default
+    paramEstimationRefineIterations : int, None
+        geometric refinement iterations of the circle fit, requires
+        `SeedSpacePointSelection.All`
+    paramEstimationWeight : Callable, None
+        relative weight of a space point in the fit, requires
+        `SeedSpacePointSelection.All`, see
+        `TrackParamsEstimationAlgorithm.inverseRadiusPowerWeight`
     outputDirRoot : Path|str, path, None
         the output folder for ROOT output, None triggers no output
     trackParameterPerformance : bool, False
@@ -537,6 +546,8 @@ def addSeeding(
                     else None
                 ),
                 spacePointSelection=paramEstimationSpacePoints,
+                geometricRefineIterations=paramEstimationRefineIterations,
+                spacePointWeight=paramEstimationWeight,
                 initialSigmas=initialSigmas,
                 initialSigmaQoverPt=initialSigmaQoverPt,
                 initialSigmaPtRel=initialSigmaPtRel,
