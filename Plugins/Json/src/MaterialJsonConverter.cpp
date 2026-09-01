@@ -492,6 +492,7 @@ void Acts::from_json(const nlohmann::json& j,
   Acts::BinUtility bUtility;
   Acts::MaterialSlabMatrix mpMatrix;
   Acts::MappingType mapType = Acts::MappingType::Default;
+  std::vector<std::vector<unsigned int>> binCounts{};
   for (auto& [key, value] : jMaterial.items()) {
     if (key == Acts::jsonKey().binkey && !value.empty()) {
       from_json(value, bUtility);
@@ -509,7 +510,8 @@ void Acts::from_json(const nlohmann::json& j,
   } else if (bUtility.bins() == 1) {
     material = new Acts::HomogeneousSurfaceMaterial(mpMatrix[0][0], 1, mapType);
   } else {
-    material = new Acts::BinnedSurfaceMaterial(bUtility, mpMatrix, 1, mapType);
+    material = new Acts::BinnedSurfaceMaterial(bUtility, mpMatrix, 1, binCounts,
+                                               mapType);
   }
 }
 

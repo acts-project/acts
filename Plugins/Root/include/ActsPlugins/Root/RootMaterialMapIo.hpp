@@ -61,6 +61,8 @@ class RootMaterialMapIo {
     std::string maxRangeHistName = "max";
     /// The thickness histogram name
     std::string thicknessHistName = "t";
+    /// The bin count histogram name
+    std::string binCountsHistName = "binCounts";
     /// The x0 histogram name
     std::string x0HistName = "x0";
     /// The l0 histogram name
