@@ -88,18 +88,6 @@
             "isolated": true,
             "python_version": "3.13"
         },
-        "Detray/core/detray/propagator/detail/codegen/transport_jacobian.hpp": {
-            "script": "Detray/codegen/detray-sympy/gen_transport_jacobian_types.py",
-            "output": "detray/propagator/detail/codegen/transport_jacobian.hpp",
-            "with_requirements": [
-                "codegen/requirements.txt"
-            ],
-            "with": [
-                "codegen"
-            ],
-            "isolated": true,
-            "python_version": "3.13"
-        },
         "Detray/core/detray/propagator/detail/codegen/update_rk_transport_jacobian.hpp": {
             "script": "Detray/codegen/detray-sympy/gen_update_rk_transport_jacobian_impl.py",
             "output": "detray/propagator/detail/codegen/update_rk_transport_jacobian.hpp",
