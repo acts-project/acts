@@ -151,8 +151,13 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
 
     const float r2 = otherLayer.m_layerDescription.refCoord;
 
-    const float A = r2 / (r2 - r1);
-    const float B = r1 / (r2 - r1);
+    // for same layer links use layer width
+    float A = r2 / (2.0f * m_layerDescription.halfRefWidth);
+    float B = r1 / (2.0f * m_layerDescription.halfRefWidth);
+    if (r2 != r1) {
+      A = r2 / (r2 - r1);
+      B = r1 / (r2 - r1);
+    }
 
     const float z0Min = z1min * A - maxB2 * B;
     const float z0Max = z1max * A - minB2 * B;
@@ -207,31 +212,34 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
     if (r1min >= r2max) {
       return false;
     }
-
+    float dz = z2 - z1;
+    if (z2 == z1) {  // self link
+      dz = 2.0f * m_layerDescription.halfRefWidth;
+    }
     if (z2 > 0) {  // positive endcap
 
-      const float z0Max = z1 - r1min * (z2 - z1) / (r2max - r1min);
+      const float z0Max = z1 - r1min * dz / (r2max - r1min);
 
       if (z0Max < minZ0 - tol) {
         return false;
       }
 
       if (r2min > r1max) {
-        const float z0Min = z1 - r1max * (z2 - z1) / (r2min - r1max);
+        const float z0Min = z1 - r1max * dz / (r2min - r1max);
 
         if (z0Min > maxZ0 + tol) {
           return false;
         }
       }
     } else {  // negative endcap
-      const float z0Min = z1 - r1min * (z2 - z1) / (r2max - r1min);
+      const float z0Min = z1 - r1min * dz / (r2max - r1min);
 
       if (z0Min > maxZ0 + tol) {
         return false;
       }
 
       if (r2min > r1max) {
-        const float z0Max = z1 - r1max * (z2 - z1) / (r2min - r1max);
+        const float z0Max = z1 - r1max * dz / (r2min - r1max);
 
         if (z0Max < minZ0 - tol) {
           return false;
@@ -337,8 +345,9 @@ GbtsGeometry::GbtsGeometry(
   // calculating bin tables in the connector...
   // calculate bin pairs for graph edge building
 
+  std::vector<const detail::GbtsLayer*> binLayerMap;
+  binLayerMap.resize(m_nEtaBins);
   std::int32_t lastBin1 = -1;
-
   for (const auto& [layer, vConn] : layerConnections.connectionMap) {
     for (const auto& connection : vConn) {
       const std::uint32_t src = connection->src;  // n2 : the new connectors
@@ -371,6 +380,9 @@ GbtsGeometry::GbtsGeometry(
 
           const std::int32_t bin1Idx = pL1->bins().at(b1);
           const std::int32_t bin2Idx = pL2->bins().at(b2);
+
+          binLayerMap[bin1Idx] = pL1;
+          binLayerMap[bin2Idx] = pL2;
 
           if (bin1Idx != lastBin1) {
             // adding a new group
@@ -424,16 +436,28 @@ GbtsGeometry::GbtsGeometry(
   while (!binMap.empty()) {
     exitBins.clear();
 
-    // 2a. find all bins with zero outgoing links
+    // 2a. find all bins with zero outgoing links or if
+    // remaining links form an intra-layer link circle
 
     for (const auto& bl : binMap) {
       auto& binLinks = bl.second;
       auto& outLinks = binLinks.first;
-
       if (!outLinks.empty()) {
-        continue;
+        bool linkCircle = true;
+        for (auto bin2 : outLinks) {
+          if (binLayerMap[bl.first] != binLayerMap[bin2]) {
+            linkCircle = false;
+            break;
+          }
+          // in the barrel, potential for 1->2->1, we want both links
+          // in the endcap only 1->2 since bins are separated in radius
+          linkCircle = bl.first == bin2 ||
+                       binLayerMap[bl.first]->layerDescription().type ==
+                           GbtsLayerType::Barrel;
+        }
+        if (!linkCircle)
+          continue;
       }
-
       exitBins.push_back(bl.first);
     }
 

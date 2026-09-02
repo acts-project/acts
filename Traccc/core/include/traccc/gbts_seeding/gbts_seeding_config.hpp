@@ -12,6 +12,10 @@
 #include <memory>
 
 // Project include(s).
+#include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
+#include "Acts/Seeding/detail/GbtsLayer.hpp"
+
 #include "traccc/definitions/common.hpp"
 #include "traccc/definitions/primitives.hpp"
 #include "traccc/definitions/qualifiers.hpp"
@@ -242,6 +246,12 @@ struct gbts_count_spacepoints_by_layer_params {
 
 // Main configuration struct for the GBTS seeding algorithm.
 struct gbts_seedfinder_config {
+  bool setLinkingSchemeFromGbtsGeo(
+      Acts::Experimental::GbtsGeometry* gbtsGeo,
+      std::vector<std::pair<uint64_t, int16_t>> detrayGeoIDBinning,
+      std::vector<char>& extraLayerInfo, const float minPt,
+      std::unique_ptr<const traccc::Logger> logger);
+
   bool setLinkingScheme(
       const std::vector<std::pair<unsigned int, std::vector<unsigned int>>>&
           binTables,

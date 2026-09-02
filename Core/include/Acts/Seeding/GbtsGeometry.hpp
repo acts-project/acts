@@ -34,6 +34,24 @@ class GbtsGeometry final {
                const GbtsLayerConnectionMap& layerConnections,
                const Logger& logger = getDummyLogger());
 
+  // Used to setup gpu-gbts config
+
+  /// Get bin groups
+  /// @return Bin groups vector
+  const std::vector<std::pair<std::uint32_t, std::vector<std::uint32_t>>>&
+  binGroups() const {
+    return m_binGroups;
+  }
+
+  /// Get number of layers
+  /// @return Number of layers
+  std::size_t numLayers() const { return m_layers.size(); }
+
+  /// Get layer by index
+  /// @param idx Layer index
+  /// @return Reference to layer
+  const detail::GbtsLayer& layerByIndex(std::int32_t idx) const;
+
  private:
   // The layer binning is shared only with the classes that build the graph.
   friend class GbtsNodeStorage;
@@ -44,27 +62,15 @@ class GbtsGeometry final {
   /// @return Number of eta bins
   std::uint32_t numBins() const { return m_nEtaBins; }
 
-  /// Get bin groups
-  /// @return Bin groups vector
-  const std::vector<std::pair<std::uint32_t, std::vector<std::uint32_t>>>&
-  binGroups() const {
-    return m_binGroups;
-  }
-
   /// Get layer by ID
   /// @param id Layer ID
   /// @return Pointer to layer or nullptr
   const detail::GbtsLayer* layerById(std::uint32_t id) const;
 
-  /// Get layer by index
-  /// @param idx Layer index
-  /// @return Reference to layer
-  const detail::GbtsLayer& layerByIndex(std::int32_t idx) const;
-
   /// Get layer ID by index
   /// @param idx Layer index
   /// @return Layer ID
-  std::uint32_t layerIdByIndex(std::uint32_t idx) const {
+  std::int32_t layerIdByIndex(std::uint32_t idx) const {
     return m_layers.at(idx).layerDescription().id;
   }
 
