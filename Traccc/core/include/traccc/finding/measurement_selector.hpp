@@ -231,7 +231,7 @@ struct measurement_selector {
     TRACCC_VERBOSE_HOST_DEVICE("Have %d measurement(s) on surface %d...",
                                up - lo, sf_idx);
 
-    // Find the best fitting measurement by prediced chi2
+    // Find the best fitting measurement by predicted chi2
     // TODO: Load balancing
     for (unsigned int meas_idx = lo; meas_idx < up; meas_idx++) {
       TRACCC_VERBOSE_HOST_DEVICE("-> measurement %d:", meas_idx);

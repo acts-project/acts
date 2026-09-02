@@ -68,7 +68,7 @@ TRACCC_HOST inline std::istream &operator>>(std::istream &is,
 
 /// Configuration struct for track finding
 struct finding_config {
-  /// Maxmimum number of branches per seed
+  /// Maximum number of branches per seed
   unsigned int max_num_branches_per_seed = 10;
 
   /// Maximum number of branches per surface

@@ -25,7 +25,7 @@
 
 namespace traccc::host::details {
 
-/// Triplet finding to search the compatible combintations of two doublets which
+/// Triplet finding to search the compatible combinations of two doublets which
 /// share same middle spacepoint
 struct triplet_finding : public messaging {
   /// Constructor for the triplet finding

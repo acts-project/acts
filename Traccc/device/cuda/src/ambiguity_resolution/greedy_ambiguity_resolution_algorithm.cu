@@ -262,7 +262,7 @@ greedy_ambiguity_resolution_algorithm::operator()(
     m_stream.synchronize();
   }
 
-  // Retreive the counting vector to host for the size allocation of
+  // Retrieve the counting vector to host for the size allocation of
   // tracks_per_measurement
   std::vector<std::size_t> unique_meas_counts;
   m_copy
@@ -390,7 +390,7 @@ greedy_ambiguity_resolution_algorithm::operator()(
   m_copy.get().setup(is_updated_buffer)->ignore();
   m_copy.get().memset(is_updated_buffer, 0)->ignore();
 
-  // Count track id apperance during removal process
+  // Count track id appearance during removal process
   vecmem::data::vector_buffer<int> track_count_buffer{n_tracks, m_mr.main};
   m_copy.get().setup(track_count_buffer)->ignore();
   m_copy.get().memset(track_count_buffer, 0)->ignore();
@@ -578,12 +578,12 @@ greedy_ambiguity_resolution_algorithm::operator()(
     // The three kernels (block_inclusive_scan, scan_block_offsets, and
     // add_block_offset) work together to compute the prefix sum of track
     // IDs, with respect to the number of updated tracks, based on the
-    // indices of sorted_ids. The kernels are splitted as it is not
+    // indices of sorted_ids. The kernels are split as it is not
     // efficient to calculate this in a single kernel. This prefix sums are
     // used during the insertion sorting in rearrange_tracks to precisely
     // calculate the new index of updated tracks
 
-    // Caculate the prefix sum of the number of updated tracks block-wisely.
+    // Calculate the prefix sum of the number of updated tracks block-wisely.
     // block_offset is the last element of block-wise prefix sums, which is
     // used to get the real prefix sum later
     kernels::block_inclusive_scan<<<nBlocks_scan, nThreads_scan,

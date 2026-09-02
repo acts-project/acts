@@ -60,7 +60,7 @@ track_propagation::track_propagation()
       "accumulated-noise-factor",
       po::value(&(m_config.navigation.accumulated_error))
           ->default_value(m_config.navigation.accumulated_error),
-      "Scale factor on the total track path length to model accumualted "
+      "Scale factor on the total track path length to model accumulated "
       "noise [%]");
 
   m_desc.add_options()(
@@ -85,7 +85,7 @@ track_propagation::track_propagation()
       "accumulated-noise-factor",
       po::value(&(m_config.navigation.accumulated_error))
           ->default_value(m_config.navigation.accumulated_error),
-      "Scale factor on the total track path length to model accumualted "
+      "Scale factor on the total track path length to model accumulated "
       "noise [%]");
 
   m_desc.add_options()(

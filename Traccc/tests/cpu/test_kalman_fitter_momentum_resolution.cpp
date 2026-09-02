@@ -66,7 +66,7 @@ TEST_P(KalmanFittingMomentumResolutionTests, Run) {
 
   // Memory resources used by the application.
   vecmem::host_memory_resource host_mr;
-  // Copy obejct
+  // Copy object
   vecmem::copy copy;
 
   // Read back detector file
@@ -162,7 +162,7 @@ TEST_P(KalmanFittingMomentumResolutionTests, Run) {
     // n_trakcs = 100
     ASSERT_EQ(track_candidates.tracks.size(), n_truth_tracks);
 
-    // The nubmer of track candidates per track should be equal to the
+    // The number of track candidates per track should be equal to the
     // number of planes
     for (std::size_t i_trk = 0; i_trk < n_truth_tracks; i_trk++) {
       ASSERT_EQ(track_candidates.tracks.at(i_trk).constituent_links().size(),
