@@ -11,6 +11,7 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/LogFailureThreshold.hpp"
 
 #include <format>
 #include <limits>
@@ -31,7 +32,9 @@ namespace ActsExamples {
 
 EffPlotTool::EffPlotTool(const EffPlotTool::Config& cfg,
                          Acts::Logging::Level lvl)
-    : m_cfg(cfg), m_logger(Acts::getDefaultLogger("EffPlotTool", lvl)) {
+    : m_cfg(cfg),
+      m_logger(Acts::getDefaultLogger("EffPlotTool", lvl, &std::cout,
+                                      getLogFailureThreshold())) {
   ACTS_DEBUG("Initialize the histograms for efficiency plots");
 
   const std::string effTitlePtCut =

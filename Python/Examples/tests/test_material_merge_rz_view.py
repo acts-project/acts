@@ -48,7 +48,7 @@ def _build_marker_geometry(gctx):
     return root.construct(options, gctx, level=acts.logging.WARNING)
 
 
-@acts.with_log_threshold(acts.logging.FATAL)
+@acts.examples.with_log_threshold(acts.logging.FATAL)
 def test_rz_view_with_markers(tmp_path):
     pytest.importorskip("matplotlib")
     from acts.json import TrackingGeometryJsonConverter
@@ -75,7 +75,7 @@ def test_rz_view_with_markers(tmp_path):
 # Construction may legitimately emit keep-going WARNINGs (e.g. when ODD has a
 # material-on-merged-face clash), which would otherwise trip the test harness'
 # ACTS_LOG_FAILURE_THRESHOLD.
-@acts.with_log_threshold(acts.logging.FATAL)
+@acts.examples.with_log_threshold(acts.logging.FATAL)
 def test_rz_view_odd_gen3(tmp_path, odd_detector_gen3):
     pytest.importorskip("matplotlib")
     from acts.json import TrackingGeometryJsonConverter

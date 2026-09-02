@@ -9,6 +9,7 @@
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/Framework/LogFailureThreshold.hpp"
 
 #include <format>
 
@@ -35,7 +36,9 @@ ProfileHistogram1 makeProfile(const DuplicationPlotTool::Config& cfg,
 
 DuplicationPlotTool::DuplicationPlotTool(const DuplicationPlotTool::Config& cfg,
                                          Acts::Logging::Level lvl)
-    : m_cfg(cfg), m_logger(Acts::getDefaultLogger("DuplicationPlotTool", lvl)) {
+    : m_cfg(cfg),
+      m_logger(Acts::getDefaultLogger("DuplicationPlotTool", lvl, &std::cout,
+                                      getLogFailureThreshold())) {
   ACTS_DEBUG("Initialize the histograms for duplication ratio plots");
 
   std::string dupTitle =

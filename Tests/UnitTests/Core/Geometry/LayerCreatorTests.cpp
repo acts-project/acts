@@ -28,6 +28,7 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cstddef>
 #include <fstream>
@@ -92,11 +93,11 @@ struct LayerCreatorFixture {
   LayerCreatorFixture() {
     p_SAC = std::make_shared<const SurfaceArrayCreator>(
         SurfaceArrayCreator::Config(),
-        getDefaultLogger("SurfaceArrayCreator", Logging::VERBOSE));
+        getTestLogger("SurfaceArrayCreator", Logging::VERBOSE));
     LayerCreator::Config cfg;
     cfg.surfaceArrayCreator = p_SAC;
     p_LC = std::make_shared<LayerCreator>(
-        cfg, getDefaultLogger("LayerCreator", Logging::VERBOSE));
+        cfg, getTestLogger("LayerCreator", Logging::VERBOSE));
   }
 
   bool checkBinContentSize(const SurfaceArray* sArray, std::size_t n) {

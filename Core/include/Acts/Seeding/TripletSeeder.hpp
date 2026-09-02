@@ -42,9 +42,8 @@ class TripletSeeder {
 
   /// Construct a TripletSeeder with optional logger.
   /// @param logger Logger instance for debug output (defaults to INFO level)
-  explicit TripletSeeder(std::unique_ptr<const Logger> logger =
-                             getDefaultLogger("TripletSeeder",
-                                              Logging::Level::INFO));
+  explicit TripletSeeder(
+      std::unique_ptr<const Logger> logger = makeDummyLogger());
 
   /// Create all possible seeds from bottom, middle, and top space points.
   ///

@@ -239,18 +239,17 @@ class MultiStepperLoop final {
   /// TODO this requires that every stepper can be constructed like this...
   /// @param bField Magnetic field provider to use for propagation
   /// @param logger Logger instance for debugging output
-  explicit MultiStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField,
-                            std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("GSF", Logging::INFO))
+  explicit MultiStepperLoop(
+      std::shared_ptr<const MagneticFieldProvider> bField,
+      std::unique_ptr<const Logger> logger = makeDummyLogger())
       : m_singleStepper(std::move(bField)), m_logger(std::move(logger)) {}
 
   /// Constructor from a configuration and optionally provided Logger
   /// @param config Configuration object containing stepper settings
   /// @param logger Logger instance for debugging output
-  explicit MultiStepperLoop(const Config& config,
-                            std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("MultiStepperLoop",
-                                                 Logging::INFO))
+  explicit MultiStepperLoop(
+      const Config& config,
+      std::unique_ptr<const Logger> logger = makeDummyLogger())
       : m_singleStepper(config),
         m_stepLimitAfterFirstComponentOnSurface(
             config.stepLimitAfterFirstComponentOnSurface),

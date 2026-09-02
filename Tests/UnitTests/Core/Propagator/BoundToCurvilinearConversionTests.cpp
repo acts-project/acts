@@ -23,6 +23,7 @@
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cmath>
 #include <cstdlib>
@@ -258,7 +259,7 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       // Use propagator with small step size to compute parameters in
       // curvilinear parameterisation
       Propagator propagator(std::move(stepper), VoidNavigator(),
-                            getDefaultLogger("Propagator", log_level));
+                            getTestLogger("Propagator", log_level));
       auto result =
           propagator.propagate(params, null_propagation_options, true);
       {

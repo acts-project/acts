@@ -282,8 +282,7 @@ class Navigator final {
   /// @param cfg The navigator configuration
   /// @param _logger a logger instance
   explicit Navigator(Config cfg,
-                     std::shared_ptr<const Logger> _logger =
-                         getDefaultLogger("Navigator", Logging::Level::INFO));
+                     std::shared_ptr<const Logger> _logger = makeDummyLogger());
 
   /// Create a navigation state from options
   /// @param options The navigation options

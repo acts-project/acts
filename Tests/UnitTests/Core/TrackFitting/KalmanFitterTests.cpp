@@ -21,6 +21,7 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <functional>
 #include <memory>
@@ -73,7 +74,7 @@ Acts::BoundTrackParameters makeParameters() {
 const FitterTester tester;
 
 // reconstruction propagator and fitter
-auto kfLogger = getDefaultLogger("KalmanFilter", Logging::INFO);
+auto kfLogger = getTestLogger("KalmanFilter", Logging::INFO);
 const auto kfZeroPropagator =
     makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry, 0_T);
 const auto kfZero = KalmanFitter(kfZeroPropagator, std::move(kfLogger));

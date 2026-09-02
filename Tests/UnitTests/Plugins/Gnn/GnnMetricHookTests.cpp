@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "ActsPlugins/Gnn/TruthGraphMetricsHook.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cassert>
 
@@ -19,7 +20,7 @@ void testTruthTestGraph(std::vector<std::int64_t> &truthGraph,
                         std::vector<std::int64_t> &testGraph,
                         const std::string &resStr) {
   std::stringstream ss;
-  auto logger = getDefaultLogger("Test", Logging::INFO, &ss);
+  auto logger = getTestLogger("Test", Logging::INFO, &ss);
 
   TruthGraphMetricsHook hook(truthGraph, std::move(logger));
 

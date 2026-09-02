@@ -9,11 +9,12 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ScopedTimer.hpp"
 
 #include <cstddef>
 #include <fstream>
 #include <memory>
-#include <stdexcept>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -22,6 +23,29 @@ using namespace Acts;
 using namespace Acts::Logging;
 
 namespace ActsTests {
+
+namespace {
+/// Stand-in for an experiment-supplied print policy, which never carried the
+/// failure-threshold check itself.
+class CountingPrintPolicy final : public OutputPrintPolicy {
+ public:
+  void flush(const Level& /*lvl*/, const std::string& /*input*/) override {
+    ++m_count;
+  }
+  const std::string& name() const override {
+    static const std::string s_name = "Counting";
+    return s_name;
+  }
+  std::unique_ptr<OutputPrintPolicy> clone(
+      const std::string& /*name*/) const override {
+    return std::make_unique<CountingPrintPolicy>();
+  }
+  std::size_t count() const { return m_count; }
+
+ private:
+  std::size_t m_count = 0;
+};
+}  // namespace
 
 /// @cond
 namespace detail {
@@ -32,7 +56,10 @@ std::unique_ptr<const Logger> create_logger(const std::string& logger_name,
       std::make_unique<NamedOutputDecorator>(
           std::make_unique<DefaultPrintPolicy>(logfile), logger_name, 30));
   auto print = std::make_unique<DefaultFilterPolicy>(lvl);
-  return std::make_unique<const Logger>(std::move(output), std::move(print));
+  // Disarmed: this test is about output formatting and must behave the same
+  // whether or not the job as a whole is armed.
+  return std::make_unique<const Logger>(std::move(output), std::move(print),
+                                        Logging::Level::MAX);
 }
 
 }  // namespace detail
@@ -48,34 +75,17 @@ void debug_level_test(const char* output_file, Logging::Level lvl) {
   // Logs will go to this file
   std::ofstream logfile(output_file);
 
-  // If fail-on-error is enabled, then the logger will not, and should not,
-  // tolerate being set up with a coarser debug level.
-  if (lvl > Logging::getFailureThreshold()) {
-    BOOST_CHECK_THROW(detail::create_logger("TestLogger", &logfile, lvl),
-                      std::runtime_error);
-    return;
-  }
-
   auto test = [&](std::unique_ptr<const Logger> log, const std::string& name) {
     // Set up local logger
     ACTS_LOCAL_LOGGER(std::move(log));
 
-    // Test logging at a certain debug level
-    auto test_logging = [](auto&& test_operation, Logging::Level test_lvl) {
-      if (test_lvl >= Logging::getFailureThreshold()) {
-        BOOST_CHECK_THROW(test_operation(), std::runtime_error);
-      } else {
-        test_operation();
-      }
-    };
-
     // Test logging at all debug levels
-    test_logging([&] { ACTS_FATAL("fatal level"); }, FATAL);
-    test_logging([&] { ACTS_ERROR("error level"); }, ERROR);
-    test_logging([&] { ACTS_WARNING("warning level"); }, WARNING);
-    test_logging([&] { ACTS_INFO("info level"); }, INFO);
-    test_logging([&] { ACTS_DEBUG("debug level"); }, DEBUG);
-    test_logging([&] { ACTS_VERBOSE("verbose level"); }, VERBOSE);
+    ACTS_FATAL("fatal level");
+    ACTS_ERROR("error level");
+    ACTS_WARNING("warning level");
+    ACTS_INFO("info level");
+    ACTS_DEBUG("debug level");
+    ACTS_VERBOSE("verbose level");
     logfile.close();
 
     std::string padded_name = name;
@@ -145,6 +155,107 @@ BOOST_AUTO_TEST_CASE(DEBUG_test) {
 /// @brief unit test for VERBOSE debug level
 BOOST_AUTO_TEST_CASE(VERBOSE_test) {
   debug_level_test("verbose_log.txt", VERBOSE);
+}
+
+/// @brief the failure threshold is a property of the logger
+BOOST_AUTO_TEST_CASE(FailureThreshold_test) {
+  std::ostringstream out;
+
+  auto armed = Acts::getDefaultLogger("Armed", Logging::VERBOSE, &out,
+                                      Logging::Level::WARNING);
+  BOOST_CHECK(armed->failureThreshold() == Logging::Level::WARNING);
+  BOOST_CHECK_THROW(armed->log(Logging::ERROR, "boom"),
+                    Logging::ThresholdFailure);
+  BOOST_CHECK_NO_THROW(armed->log(Logging::INFO, "fine"));
+
+  // the message that fails the job is emitted before the throw
+  BOOST_CHECK(out.str().find("boom") != std::string::npos);
+
+  // clones inherit the threshold, so child loggers stay armed
+  auto child = armed->cloneWithSuffix("::child");
+  BOOST_CHECK(child->failureThreshold() == Logging::Level::WARNING);
+  BOOST_CHECK_THROW(child->log(Logging::ERROR, "boom"),
+                    Logging::ThresholdFailure);
+
+  // an explicitly disarmed logger never throws
+  auto disarmed = armed->withoutFailureThreshold();
+  BOOST_CHECK_NO_THROW(disarmed->log(Logging::FATAL, "expected"));
+
+  // a coarse filter level cannot hide a message that should fail the job
+  auto quiet = Acts::getDefaultLogger("Quiet", Logging::FATAL, &out,
+                                      Logging::Level::WARNING);
+  BOOST_CHECK_THROW(quiet->log(Logging::ERROR, "not hidden"),
+                    Logging::ThresholdFailure);
+  // the point of checking before the filter: the message is still emitted
+  BOOST_CHECK(out.str().find("not hidden") != std::string::npos);
+
+  // the check does not depend on the print policy, so an experiment-supplied
+  // one is covered too
+  Logger custom{std::make_unique<CountingPrintPolicy>(),
+                std::make_unique<DefaultFilterPolicy>(Logging::VERBOSE),
+                Logging::Level::WARNING};
+  BOOST_CHECK_THROW(custom.log(Logging::ERROR, "custom"),
+                    Logging::ThresholdFailure);
+
+  // the dummy logger discards everything and never throws
+  BOOST_CHECK_NO_THROW(Acts::getDummyLogger().log(Logging::FATAL, "ignored"));
+}
+
+/// @brief Core arms nothing on its own
+///
+/// There is no process-wide default in Core: a logger is armed only by whoever
+/// builds it.
+BOOST_AUTO_TEST_CASE(NotArmedByDefault_test) {
+  std::ostringstream out;
+
+  auto plain = Acts::getDefaultLogger("Plain", Logging::VERBOSE, &out);
+  BOOST_CHECK(plain->failureThreshold() == Logging::MAX);
+  BOOST_CHECK_NO_THROW(plain->log(Logging::FATAL, "not armed"));
+
+  BOOST_CHECK(
+      Acts::getDefaultLogger("Armed", Logging::VERBOSE, &out, Logging::INFO)
+          ->failureThreshold() == Logging::INFO);
+
+  // a logger built directly from policies is not armed either, so an
+  // experiment bridging ACTS logging into its own framework cannot inherit a
+  // threshold it did not ask for
+  Logger direct{std::make_unique<CountingPrintPolicy>(),
+                std::make_unique<DefaultFilterPolicy>(Logging::VERBOSE)};
+  BOOST_CHECK(direct.failureThreshold() == Logging::MAX);
+  BOOST_CHECK_NO_THROW(direct.log(Logging::FATAL, "not armed"));
+}
+
+/// @brief instrumentation must never be able to fail the job
+///
+/// ScopedTimer and AveragingScopedTimer log from their destructors, where a
+/// ThresholdFailure would call std::terminate rather than fail the job cleanly.
+BOOST_AUTO_TEST_CASE(LogWithoutFailure_test) {
+  std::ostringstream out;
+  auto armed = Acts::getDefaultLogger("Armed", Logging::VERBOSE, &out,
+                                      Logging::Level::WARNING);
+
+  // the message is emitted, but never raises
+  BOOST_CHECK_NO_THROW(armed->logWithoutFailure(Logging::ERROR, "instrument"));
+  BOOST_CHECK(out.str().find("instrument") != std::string::npos);
+
+  // the level filter still applies
+  auto filtered = Acts::getDefaultLogger("Filtered", Logging::ERROR, &out,
+                                         Logging::Level::WARNING);
+  const std::size_t before = out.str().size();
+  BOOST_CHECK_NO_THROW(filtered->logWithoutFailure(Logging::INFO, "dropped"));
+  BOOST_CHECK_EQUAL(out.str().size(), before);
+
+  // the timers themselves: destructing these at a level at or above the
+  // failure threshold must not terminate
+  {
+    BOOST_CHECK_NO_THROW(
+        (Acts::ScopedTimer{"timed block", *armed, Logging::ERROR}));
+    Acts::AveragingScopedTimer averaging{"averaged block", *armed,
+                                         Logging::ERROR};
+    auto sample = averaging.sample();
+  }
+  BOOST_CHECK(out.str().find("timed block") != std::string::npos);
+  BOOST_CHECK(out.str().find("averaged block") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

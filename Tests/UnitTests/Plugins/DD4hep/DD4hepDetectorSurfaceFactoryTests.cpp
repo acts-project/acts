@@ -16,6 +16,7 @@
 #include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -302,7 +303,7 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesDefault) {
   DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
   auto surfaceFactory = DD4hepDetectorSurfaceFactory(
       sFactoryConfig,
-      getDefaultLogger("DD4hepDetectorSurfaceFactory", Logging::VERBOSE));
+      getTestLogger("DD4hepDetectorSurfaceFactory", Logging::VERBOSE));
 
   DD4hepDetectorSurfaceFactory::Cache sFactoryCache;
   DD4hepDetectorSurfaceFactory::Options sFactoryOptions;
@@ -347,7 +348,7 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
   sFactoryConfig.detectorElementFactory = extendedFactory;
   auto surfaceFactory = DD4hepDetectorSurfaceFactory(
       sFactoryConfig,
-      getDefaultLogger("DD4hepDetectorSurfaceFactory", Logging::VERBOSE));
+      getTestLogger("DD4hepDetectorSurfaceFactory", Logging::VERBOSE));
 
   DD4hepDetectorSurfaceFactory::Cache sFactoryCache;
   DD4hepDetectorSurfaceFactory::Options sFactoryOptions;

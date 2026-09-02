@@ -24,6 +24,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <stdexcept>
 #include <string>
@@ -47,7 +48,7 @@ auto makeVolume(auto&&... pars) {
   return vol;
 };
 
-auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
+auto logger = getTestLogger("UnitTests", Logging::VERBOSE);
 
 BOOST_AUTO_TEST_SUITE(GeometrySuite)
 

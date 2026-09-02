@@ -38,6 +38,7 @@
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -128,7 +129,7 @@ Logging::Level logLevel = Logging::INFO;
 BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("NavigatorTest", logLevel));
 
   // position and direction vector
   Vector3 position = Vector3::Zero();
@@ -259,7 +260,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
 }
 
 BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("NavigatorTest", logLevel));
 
   // create a navigator
   Navigator::Config navCfg;
@@ -522,7 +523,7 @@ createDenseTelescope(const GeometryContext& geoCtx) {
 }
 
 BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("NavigatorTest", logLevel));
 
   auto [detector, surfaces] = createDenseTelescope(tgContext);
   BOOST_CHECK_EQUAL(surfaces.size(), 2ul);
@@ -668,7 +669,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
 }
 
 BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
-  auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
+  auto logger = getTestLogger("UnitTests", Logging::VERBOSE);
 
   Blueprint::Config cfg;
   cfg.envelope = ExtentEnvelope{{
@@ -812,7 +813,7 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
 // propagation direction, otherwise candidates in the entered volume are
 // missed.
 BOOST_AUTO_TEST_CASE(NavigationStartOnPortalGen3) {
-  auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
+  auto logger = getTestLogger("UnitTests", Logging::VERBOSE);
 
   Blueprint::Config cfg;
   cfg.envelope[AxisDirection::AxisX] = {20_mm, 20_mm};
@@ -888,7 +889,7 @@ BOOST_AUTO_TEST_CASE(NavigationStartOnPortalGen3) {
 // Same as above for a Gen1 geometry: starting on a boundary surface glued
 // between two volumes
 BOOST_AUTO_TEST_CASE(NavigationStartOnBoundaryGen1) {
-  auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
+  auto logger = getTestLogger("UnitTests", Logging::VERBOSE);
 
   CubicTrackingGeometry geometryBuilder{tgContext};
   std::shared_ptr<const TrackingGeometry> trackingGeometry = geometryBuilder();

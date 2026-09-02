@@ -27,6 +27,7 @@
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cassert>
 #include <initializer_list>
@@ -37,21 +38,14 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsTests {
 
-auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
+// These suites exercise error paths throughout, so the logger they hand to
+// the code under test must not fail the job on an expected error.
+auto logger =
+    getTestLogger("UnitTests", Logging::VERBOSE)->withoutFailureThreshold();
 
 const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
-struct Fixture {
-  Logging::Level m_level;
-  Fixture() {
-    m_level = Logging::getFailureThreshold();
-    Logging::setFailureThreshold(Logging::FATAL);
-  }
-
-  ~Fixture() { Logging::setFailureThreshold(m_level); }
-};
-
-BOOST_FIXTURE_TEST_SUITE(GeometrySuite, Fixture)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 static const std::vector<VolumeAttachmentStrategy> strategies = {
     VolumeAttachmentStrategy::Gap,

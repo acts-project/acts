@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <memory>
 #include <numbers>
@@ -35,7 +36,7 @@ constexpr double halfZ = 250.0;
 namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(NavigationSuite)
-auto logger = getDefaultLogger("MultiWireNavigationTests", Logging::VERBOSE);
+auto logger = getTestLogger("MultiWireNavigationTests", Logging::VERBOSE);
 
 // a function that constructs and returns detector elements for straw surfaces
 void generateStrawSurfaces(

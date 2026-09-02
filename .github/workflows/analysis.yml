@@ -39,7 +39,6 @@ env:
   # rate collapses, which is what a too-small ceiling looks like.
   CCACHE_MAXSIZE: 1G
   CCACHE_KEY_SUFFIX: r2
-  ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job

@@ -14,7 +14,6 @@ def test_get_default_logger_default_level():
     assert logger.level == acts.logging.INFO
 
 
-@acts.with_log_threshold(acts.logging.FATAL)
 def test_get_default_logger_different_levels():
     for level in (
         acts.logging.VERBOSE,
@@ -27,7 +26,6 @@ def test_get_default_logger_different_levels():
         assert logger.level == level
 
 
-@acts.with_log_threshold(acts.logging.MAX)
 def test_get_default_logger_log_methods(capfd):
     logger = acts.getDefaultLogger("test_log_methods", acts.logging.VERBOSE)
     logger.verbose("verbose message")
@@ -68,24 +66,6 @@ def test_get_default_logger_level_filtering(capfd):
     assert "filtered out" not in captured.out
 
 
-def test_logging_threshold():
-    assert acts.logging.getFailureThreshold() == acts.logging.WARNING
-
-
-def test_logging_threshold_context_manager():
-    with acts.logging.ScopedFailureThreshold(acts.logging.ERROR):
-        assert acts.logging.getFailureThreshold() == acts.logging.ERROR
-    assert acts.logging.getFailureThreshold() == acts.logging.WARNING
-
-
-def test_logging_threshold_context_manager_exception():
-    with pytest.raises(RuntimeError):
-        with acts.logging.ScopedFailureThreshold(level=acts.logging.ERROR):
-            assert acts.logging.getFailureThreshold() == acts.logging.ERROR
-            raise RuntimeError("test")
-    assert acts.logging.getFailureThreshold() == acts.logging.WARNING
-
-
 def test_consum_logger_function(capfd):
     logger = acts.getDefaultLogger("test_consum_logger_function", acts.logging.VERBOSE)
     acts.logging._consumeLoggerFunction(logger)
@@ -116,7 +96,6 @@ def test_clone_with_new_level():
     assert cloned.level == acts.logging.DEBUG
 
 
-@acts.with_log_threshold(acts.logging.FATAL)
 def test_clone_with_name_and_level():
     logger = acts.getDefaultLogger("original", acts.logging.INFO)
     cloned = logger.clone(name="new_name", level=acts.logging.ERROR)

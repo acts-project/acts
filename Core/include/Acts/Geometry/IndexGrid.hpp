@@ -279,8 +279,7 @@ struct IndexGridFiller {
   std::vector<double> referenceExpansion = {};
 
   /// Screen output logger
-  std::unique_ptr<const Logger> oLogger =
-      getDefaultLogger("IndexGridFiller", Logging::INFO);
+  std::unique_ptr<const Logger> oLogger = makeDummyLogger();
 
   /// @brief This method takes a collection of objects and fills them
   /// into an index grid - it uses a reference generator for grid query points

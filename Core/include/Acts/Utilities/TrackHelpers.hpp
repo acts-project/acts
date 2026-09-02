@@ -114,10 +114,10 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
 /// @return The result of the smoothing
 template <TrackProxyConcept track_proxy_t,
           typename smoother_t = GainMatrixSmoother>
-Result<void> smoothTrack(
-    const GeometryContext &geoContext, track_proxy_t &track,
-    const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO),
-    smoother_t smoother = GainMatrixSmoother()) {
+Result<void> smoothTrack(const GeometryContext &geoContext,
+                         track_proxy_t &track,
+                         const Logger &logger = *makeDummyLogger(),
+                         smoother_t smoother = GainMatrixSmoother()) {
   auto &trackContainer = track.container();
   auto &trackStateContainer = trackContainer.trackStateContainer();
 
@@ -149,9 +149,9 @@ Result<void> smoothTrack(
 ///
 /// @return The result of the smoothing
 template <TrackContainerFrontend track_container_t>
-Result<void> smoothTracks(
-    const GeometryContext &geoContext, const track_container_t &trackContainer,
-    const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO)) {
+Result<void> smoothTracks(const GeometryContext &geoContext,
+                          const track_container_t &trackContainer,
+                          const Logger &logger = *makeDummyLogger()) {
   Result<void> result = Result<void>::success();
 
   for (const auto &track : trackContainer) {
@@ -180,11 +180,11 @@ Result<void> smoothTracks(
 ///         and the distance to the reference surface
 template <TrackProxyConcept track_proxy_t>
 Result<std::pair<typename track_proxy_t::ConstTrackStateProxy, double>>
-findTrackStateForExtrapolation(
-    const GeometryContext &geoContext, const track_proxy_t &track,
-    const Surface &referenceSurface, TrackExtrapolationStrategy strategy,
-    const Logger &logger = *getDefaultLogger("TrackExtrapolation",
-                                             Logging::INFO)) {
+findTrackStateForExtrapolation(const GeometryContext &geoContext,
+                               const track_proxy_t &track,
+                               const Surface &referenceSurface,
+                               TrackExtrapolationStrategy strategy,
+                               const Logger &logger = *makeDummyLogger()) {
   using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
 
   // Intersect the reference surface with the trajectory at a track state.
@@ -340,8 +340,7 @@ Result<void> extrapolateTrackToReferenceSurface(
     track_proxy_t &track, const Surface &referenceSurface,
     const propagator_t &propagator, propagator_options_t options,
     TrackExtrapolationStrategy strategy,
-    const Logger &logger = *getDefaultLogger("TrackExtrapolation",
-                                             Logging::INFO)) {
+    const Logger &logger = *makeDummyLogger()) {
   auto findResult = findTrackStateForExtrapolation(
       options.geoContext, track, referenceSurface, strategy, logger);
 
@@ -396,8 +395,7 @@ Result<void> extrapolateTracksToReferenceSurface(
     const track_container_t &trackContainer, const Surface &referenceSurface,
     const propagator_t &propagator, propagator_options_t options,
     TrackExtrapolationStrategy strategy,
-    const Logger &logger = *getDefaultLogger("TrackExtrapolation",
-                                             Logging::INFO)) {
+    const Logger &logger = *makeDummyLogger()) {
   Result<void> result = Result<void>::success();
 
   for (const auto &track : trackContainer) {

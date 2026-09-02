@@ -47,6 +47,7 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cmath>
 #include <limits>
@@ -622,8 +623,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Build stepper and propagator
   auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
   Stepper es(bField);
-  Propagator prop(es, naviMat,
-                  getDefaultLogger("Propagator", Logging::VERBOSE));
+  Propagator prop(es, naviMat, getTestLogger("Propagator", Logging::VERBOSE));
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();

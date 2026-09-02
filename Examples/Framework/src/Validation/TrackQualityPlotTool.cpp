@@ -9,6 +9,7 @@
 #include "ActsExamples/Validation/TrackQualityPlotTool.hpp"
 
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/Framework/LogFailureThreshold.hpp"
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
@@ -35,7 +36,8 @@ ProfileHistogram1 makeProfile(const TrackQualityPlotTool::Config& cfg,
 TrackQualityPlotTool::TrackQualityPlotTool(const Config& cfg,
                                            Acts::Logging::Level lvl)
     : m_cfg(cfg),
-      m_logger(Acts::getDefaultLogger("TrackQualityPlotTool", lvl)) {
+      m_logger(Acts::getDefaultLogger("TrackQualityPlotTool", lvl, &std::cout,
+                                      getLogFailureThreshold())) {
   ACTS_DEBUG("Initialize the histograms for track quality plots");
 
   m_profiles.insert({"completeness_vs_pT",

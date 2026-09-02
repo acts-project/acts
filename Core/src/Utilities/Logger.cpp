@@ -8,82 +8,11 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
-#include <algorithm>
-#include <cstdlib>
+#include <string>
 
 namespace Acts {
 
 namespace Logging {
-
-#if defined(ACTS_ENABLE_LOG_FAILURE_THRESHOLD) and \
-    not defined(ACTS_LOG_FAILURE_THRESHOLD)
-namespace {
-Level& getFailureThresholdMutable() {
-  static Level _level = []() {
-    Level level = Level::MAX;
-
-    const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
-    if (envvar == nullptr) {
-      return level;
-    }
-
-    std::string slevel = envvar;
-    if (slevel == "VERBOSE") {
-      level = std::min(level, Level::VERBOSE);
-    } else if (slevel == "DEBUG") {
-      level = std::min(level, Level::DEBUG);
-    } else if (slevel == "INFO") {
-      level = std::min(level, Level::INFO);
-    } else if (slevel == "WARNING") {
-      level = std::min(level, Level::WARNING);
-    } else if (slevel == "ERROR") {
-      level = std::min(level, Level::ERROR);
-    } else if (slevel == "FATAL") {
-      level = std::min(level, Level::FATAL);
-    } else {
-      std::cerr << "ACTS_LOG_FAILURE_THRESHOLD environment variable is set to "
-                   "unknown value: "
-                << slevel << std::endl;
-    }
-    return level;
-  }();
-
-  return _level;
-}
-}  // namespace
-
-Level getFailureThreshold() {
-  return getFailureThresholdMutable();
-}
-
-void setFailureThreshold(Level level) {
-  getFailureThresholdMutable() = level;
-}
-
-ScopedFailureThreshold::~ScopedFailureThreshold() noexcept {
-  try {
-    setFailureThreshold(m_previousLevel);
-  } catch (const std::bad_alloc&) {
-    // bad alloc can be thrown when initializing the global static variable
-    std::cerr << "Failed to reset log failure threshold (bad_alloc)"
-              << std::endl;
-    std::terminate();
-  }
-}
-
-#else
-
-void setFailureThreshold(Level /*lvl*/) {
-  throw std::logic_error{
-      "Compile-time log failure threshold defined (ACTS_LOG_FAILURE_THRESHOLD "
-      "is set or ACTS_ENABLE_LOG_FAILURE_THRESHOLD is OFF), unable to "
-      "override. See "
-      "https://cern.ch/acts-log-thresh"};
-}
-
-ScopedFailureThreshold::~ScopedFailureThreshold() noexcept = default;
-
-#endif
 
 namespace {
 class NeverFilterPolicy final : public OutputFilterPolicy {
@@ -114,19 +43,20 @@ class DummyPrintPolicy final : public OutputPrintPolicy {
   }
 };
 
+}  // namespace
+}  // namespace Logging
+
 std::unique_ptr<const Logger> makeDummyLogger() {
   using namespace Logging;
   auto output = std::make_unique<DummyPrintPolicy>();
   auto print = std::make_unique<NeverFilterPolicy>();
-  return std::make_unique<const Logger>(std::move(output), std::move(print));
+  return std::make_unique<const Logger>(std::move(output), std::move(print),
+                                        Level::MAX);
 }
 
-}  // namespace
-}  // namespace Logging
-
-std::unique_ptr<const Logger> getDefaultLogger(const std::string& name,
-                                               const Logging::Level& lvl,
-                                               std::ostream* log_stream) {
+std::unique_ptr<const Logger> getDefaultLogger(
+    const std::string& name, const Logging::Level& lvl,
+    std::ostream* log_stream, Logging::Level failureThreshold) {
   using namespace Logging;
   auto output = std::make_unique<LevelOutputDecorator>(
       std::make_unique<NamedOutputDecorator>(
@@ -134,12 +64,12 @@ std::unique_ptr<const Logger> getDefaultLogger(const std::string& name,
               std::make_unique<DefaultPrintPolicy>(log_stream)),
           name));
   auto print = std::make_unique<DefaultFilterPolicy>(lvl);
-  return std::make_unique<const Logger>(std::move(output), std::move(print));
+  return std::make_unique<const Logger>(std::move(output), std::move(print),
+                                        failureThreshold);
 }
 
 const Logger& getDummyLogger() {
-  static const std::unique_ptr<const Logger> logger =
-      Logging::makeDummyLogger();
+  static const std::unique_ptr<const Logger> logger = makeDummyLogger();
 
   return *logger;
 }

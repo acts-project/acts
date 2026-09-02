@@ -35,6 +35,7 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <fstream>
 #include <random>
@@ -49,7 +50,11 @@ using Acts::MaterialDesignatorBlueprintNode;
 
 namespace ActsTests {
 
-auto logger = getDefaultLogger("UnitTests", Logging::DEBUG);
+auto logger = getTestLogger("UnitTests", Logging::DEBUG);
+
+// For test cases that provoke an error on purpose: same logger, but it
+// must not fail the job when that expected error is logged.
+auto quietLogger = logger->withoutFailureThreshold();
 
 auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
@@ -508,9 +513,8 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalThrows) {
   // involved, and explain that material was placed on a merged face.
   bool thrown = false;
   {
-    Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
     try {
-      root->construct({}, gctx, *logger);
+      root->construct({}, gctx, *quietLogger);
     } catch (const PortalMergingException& e) {
       thrown = true;
       std::string msg = e.what();
@@ -559,9 +563,8 @@ BOOST_AUTO_TEST_CASE(MaterialOnMergedPortalKeepGoing) {
 
   std::unique_ptr<const TrackingGeometry> trackingGeometry;
   {
-    Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
     BOOST_REQUIRE_NO_THROW(trackingGeometry =
-                               root->construct(options, gctx, *logger));
+                               root->construct(options, gctx, *quietLogger));
   }
   BOOST_REQUIRE(trackingGeometry != nullptr);
 
@@ -726,8 +729,8 @@ BOOST_AUTO_TEST_CASE(PortalTagDuplicateThrows) {
     });
   });
 
-  Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
-  BOOST_CHECK_THROW(root->construct({}, gctx, *logger), std::invalid_argument);
+  BOOST_CHECK_THROW(root->construct({}, gctx, *quietLogger),
+                    std::invalid_argument);
 }
 
 // Same as PortalTagLookup, but for a cuboid x-stack: VolumeA's PositiveXFace is

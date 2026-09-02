@@ -17,6 +17,7 @@
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 using namespace Acts;
 using namespace UnitLiterals;
@@ -42,8 +43,8 @@ std::vector<double> xPositionsOfPassedSurfaces(Navigator::Config navCfg,
   navCfg.trackingGeometry = cubicBuilder();
   Stepper stepper(std::move(magField));
   TestPropagator propagator(
-      stepper, Navigator(navCfg, getDefaultLogger("nav", Logging::VERBOSE)),
-      getDefaultLogger("nav", Logging::VERBOSE));
+      stepper, Navigator(navCfg, getTestLogger("nav", Logging::VERBOSE)),
+      getTestLogger("nav", Logging::VERBOSE));
 
   // Start with a slightly tilted direction that does not hit the surfaces at
   // x=2000 with 0 B-Field

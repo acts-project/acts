@@ -29,6 +29,7 @@
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <format>
 #include <fstream>
@@ -664,7 +665,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
 
   // Final step
   auto gctx = GeometryContext::dangerouslyDefaultConstruct();
-  auto logger = getDefaultLogger("Geo", Logging::VERBOSE);
+  auto logger = getTestLogger("Geo", Logging::VERBOSE);
   auto trackingGeometry = blueprint->construct({}, gctx, *logger);
 
   BOOST_REQUIRE_NE(&world, nullptr);

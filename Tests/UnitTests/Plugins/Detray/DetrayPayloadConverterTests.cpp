@@ -34,6 +34,7 @@
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <memory>
 #include <numbers>
@@ -60,7 +61,7 @@
 
 #include "detray/geometry/tracking_volume.hpp"
 
-auto logger = Acts::getDefaultLogger("Test", Acts::Logging::INFO);
+auto logger = getTestLogger("Test", Acts::Logging::INFO);
 
 using namespace Acts;
 using namespace ActsPlugins;
@@ -578,7 +579,7 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
 
 BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   auto gctx = GeometryContext::dangerouslyDefaultConstruct();
-  auto geoLogger = getDefaultLogger("Geo", Logging::VERBOSE);
+  auto geoLogger = getTestLogger("Geo", Logging::VERBOSE);
 
   CylindricalTrackingGeometry cGeometry(gctx, true);
   auto tGeometry = cGeometry(*geoLogger);
@@ -599,7 +600,7 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
     }
   });
 
-  auto logger = getDefaultLogger("Cnv", Logging::DEBUG);
+  auto logger = getTestLogger("Cnv", Logging::DEBUG);
   DetrayPayloadConverter converter(cfg, std::move(logger));
   auto payloads = converter.convertTrackingGeometry(gctx, *tGeometry);
 

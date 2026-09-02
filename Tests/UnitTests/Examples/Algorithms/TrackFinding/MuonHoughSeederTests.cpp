@@ -19,6 +19,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <algorithm>
 #include <array>
@@ -147,7 +148,7 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity) {
   cfg.dumpVisualization = false;
 
   ActsExamples::MuonHoughSeeder seeder{
-      cfg, Acts::getDefaultLogger("MuonHoughSeederTest", Acts::Logging::INFO)};
+      cfg, getTestLogger("MuonHoughSeederTest", Acts::Logging::INFO)};
 
   ActsExamples::WhiteBoard eventStore{};
   ActsExamples::AlgorithmContext ctx{0, 0, eventStore, 0};
@@ -213,7 +214,7 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity_phi_disabled) {
   cfg.dumpVisualization = false;
 
   ActsExamples::MuonHoughSeeder seeder{
-      cfg, Acts::getDefaultLogger("MuonHoughSeederTest", Acts::Logging::INFO)};
+      cfg, getTestLogger("MuonHoughSeederTest", Acts::Logging::INFO)};
 
   ActsExamples::WhiteBoard eventStore{};
   ActsExamples::AlgorithmContext ctx{0, 0, eventStore, 0};

@@ -44,6 +44,7 @@
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <random>
 #include <string>
@@ -163,8 +164,7 @@ struct TelescopeDetector {
 
     Acts::LayerArrayCreator::Config lacConfig;
     Acts::LayerArrayCreator layArrCreator(
-        lacConfig,
-        Acts::getDefaultLogger("LayerArrayCreator", Acts::Logging::INFO));
+        lacConfig, getTestLogger("LayerArrayCreator", Acts::Logging::INFO));
     Acts::LayerVector layVec;
     for (unsigned int i = 0; i < nLayers; i++) {
       layVec.push_back(layers[i]);

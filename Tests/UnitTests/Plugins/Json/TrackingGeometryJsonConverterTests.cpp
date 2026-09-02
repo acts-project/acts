@@ -40,6 +40,7 @@
 #include "ActsPlugins/Json/TrackingGeometryJsonConverter.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cstddef>
 #include <fstream>
@@ -182,7 +183,7 @@ void checkHierarchy(const GeometryContext& gctx,
   }
 }
 
-auto logger = getDefaultLogger("UnitTests", Logging::INFO);
+auto logger = getTestLogger("UnitTests", Logging::INFO);
 
 BOOST_AUTO_TEST_SUITE(JsonSuite)
 
@@ -431,8 +432,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   sourceNavCfg.resolveMaterial = true;
   sourceNavCfg.resolvePassive = false;
   Navigator sourceNavigator{
-      sourceNavCfg,
-      Acts::getDefaultLogger("SourceNavigator", Acts::Logging::INFO)};
+      sourceNavCfg, getTestLogger("SourceNavigator", Acts::Logging::INFO)};
   ConstantFieldPropagator sourcePropagator(stepper, sourceNavigator);
 
   auto sourceRes = sourcePropagator.propagate(start, options).value();
@@ -444,8 +444,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   decodedNavCfg.resolveMaterial = true;
   decodedNavCfg.resolvePassive = false;
   Navigator decodedNavigator{
-      sourceNavCfg,
-      Acts::getDefaultLogger("DecodedNavigator", Acts::Logging::INFO)};
+      sourceNavCfg, getTestLogger("DecodedNavigator", Acts::Logging::INFO)};
   ConstantFieldPropagator decodedPropagator(stepper, decodedNavigator);
 
   auto decodedRes = decodedPropagator.propagate(start, options).value();
@@ -521,8 +520,7 @@ auto makeMultiLayerPolicy(const GeometryContext& gctx,
 
 BOOST_AUTO_TEST_CASE(MultiLayerNavigationPolicyToJson) {
   auto tContext = GeometryContext::dangerouslyDefaultConstruct();
-  auto tLogger =
-      Acts::getDefaultLogger("MultiLayerNavigationJsonTest", Logging::INFO);
+  auto tLogger = getTestLogger("MultiLayerNavigationJsonTest", Logging::INFO);
 
   auto tVolume = makeMultiLayerVolume();
   auto policy = makeMultiLayerPolicy(tContext, *tVolume, *tLogger);
@@ -542,8 +540,7 @@ BOOST_AUTO_TEST_CASE(MultiLayerNavigationPolicyToJson) {
 
 BOOST_AUTO_TEST_CASE(MultiLayerNavigationPolicyRoundTrip) {
   auto tContext = GeometryContext::dangerouslyDefaultConstruct();
-  auto tLogger =
-      Acts::getDefaultLogger("MultiLayerNavigationJsonTest", Logging::INFO);
+  auto tLogger = getTestLogger("MultiLayerNavigationJsonTest", Logging::INFO);
 
   auto tVolume = makeMultiLayerVolume();
   auto policy = makeMultiLayerPolicy(tContext, *tVolume, *tLogger);

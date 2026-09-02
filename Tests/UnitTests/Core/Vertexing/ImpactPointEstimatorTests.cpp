@@ -34,6 +34,7 @@
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cmath>
 #include <limits>
@@ -94,7 +95,7 @@ Estimator makeEstimator(double bZ) {
   Estimator::Config cfg(field,
                         std::make_shared<Propagator>(
                             std::move(stepper), VoidNavigator(),
-                            getDefaultLogger("Prop", Logging::Level::WARNING)));
+                            getTestLogger("Prop", Logging::Level::WARNING)));
   return Estimator(cfg);
 }
 

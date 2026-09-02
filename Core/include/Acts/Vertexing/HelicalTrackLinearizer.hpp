@@ -62,8 +62,7 @@ class HelicalTrackLinearizer {
   /// @param _logger a logger instance
   explicit HelicalTrackLinearizer(
       const Config& config,
-      std::unique_ptr<const Logger> _logger = getDefaultLogger("HelTrkLinProp",
-                                                               Logging::INFO))
+      std::unique_ptr<const Logger> _logger = makeDummyLogger())
       : m_cfg(config), m_logger{std::move(_logger)} {
     if (!m_cfg.propagator) {
       throw std::invalid_argument("HelicalTrackLinearizer: propagator is null");

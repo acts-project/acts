@@ -57,8 +57,7 @@ class MaterialMapper {
   /// @param mlogger the logger instance
   explicit MaterialMapper(
       const Config& cfg,
-      std::unique_ptr<const Logger> mlogger =
-          getDefaultLogger("BinnedSurfaceMaterialAccumulator", Logging::INFO));
+      std::unique_ptr<const Logger> mlogger = makeDummyLogger());
 
   /// @brief Factory for creating the state
   /// @param gctx the geometry context

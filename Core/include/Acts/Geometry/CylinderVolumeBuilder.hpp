@@ -518,10 +518,9 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   ///
   /// @param [in] cvbConfig is the configuration struct to steer the builder
   /// @param [in] logger logging instance
-  explicit CylinderVolumeBuilder(const Config& cvbConfig,
-                                 std::unique_ptr<const Logger> logger =
-                                     getDefaultLogger("CylinderVolumeBuilder",
-                                                      Logging::INFO));
+  explicit CylinderVolumeBuilder(
+      const Config& cvbConfig,
+      std::unique_ptr<const Logger> logger = makeDummyLogger());
 
   /// Destructor
   ~CylinderVolumeBuilder() override;

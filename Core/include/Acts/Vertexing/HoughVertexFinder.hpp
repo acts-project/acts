@@ -96,9 +96,7 @@ class HoughVertexFinder {
   /// @param cfg Configuration object
   /// @param lgr Logging instance
   explicit HoughVertexFinder(
-      Config cfg,
-      std::unique_ptr<const Logger> lgr = getDefaultLogger("HoughVertexFinder",
-                                                           Logging::INFO));
+      Config cfg, std::unique_ptr<const Logger> lgr = makeDummyLogger());
 
   /// Const access to the config
   /// @return Const reference to the configuration object

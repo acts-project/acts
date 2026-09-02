@@ -18,6 +18,7 @@
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <cstddef>
 #include <string>
@@ -37,7 +38,7 @@ BOOST_AUTO_TEST_SUITE(GeometrySuite)
 BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   ProtoLayerHelper::Config plhConfig;
   ProtoLayerHelper plHelper(
-      plhConfig, getDefaultLogger("ProtoLayerHelper", Logging::VERBOSE));
+      plhConfig, getTestLogger("ProtoLayerHelper", Logging::VERBOSE));
 
   GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 

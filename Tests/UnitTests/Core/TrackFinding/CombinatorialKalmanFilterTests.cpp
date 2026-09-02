@@ -53,6 +53,7 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -204,7 +205,7 @@ struct Fixture {
   explicit Fixture(double bz)
       : detector(geoCtx),
         ckf(makeConstantFieldPropagator(detector.geometry, bz)),
-        logger(getDefaultLogger("CkfTest", Logging::INFO)) {
+        logger(getTestLogger("CkfTest", Logging::INFO)) {
     // construct initial parameters
     // create common covariance matrix from reasonable standard deviations
     BoundVector stddev;
@@ -732,11 +733,11 @@ BOOST_AUTO_TEST_CASE(MaterialStatesSkippedSmoothingAgrees) {
     auto trackRecorded = tcRecorded.getTrack(0);
     auto trackSkipped = tcSkipped.getTrack(0);
     BOOST_REQUIRE(smoothTrack(fRecorded.geoCtx, trackRecorded,
-                              *getDefaultLogger("smoother", Logging::INFO),
+                              *getTestLogger("smoother", Logging::INFO),
                               smoother)
                       .ok());
     BOOST_REQUIRE(smoothTrack(fSkipped.geoCtx, trackSkipped,
-                              *getDefaultLogger("smoother", Logging::INFO),
+                              *getTestLogger("smoother", Logging::INFO),
                               smoother)
                       .ok());
 

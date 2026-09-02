@@ -193,8 +193,7 @@ class CompositeSpacePointLineFitter {
   /// @param logger Logger object used for debug print out
   explicit CompositeSpacePointLineFitter(
       const Config& cfg,
-      std::unique_ptr<const Logger> logger = getDefaultLogger(
-          "CompositeSpacePointLineFitter", Logging::Level::INFO));
+      std::unique_ptr<const Logger> logger = makeDummyLogger());
   /// Returns the instantiated configuration object
   /// @return The configuration object
   const Config& config() const { return m_cfg; }

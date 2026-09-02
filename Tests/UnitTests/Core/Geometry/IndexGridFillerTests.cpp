@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/IndexGrid.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <vector>
 
@@ -41,7 +42,7 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(DetectorSuite)
 
 BOOST_AUTO_TEST_CASE(BinSequence) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("*** Pre-Test", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("*** Pre-Test", logLevel));
   ACTS_INFO("Testing bin sequence generators.");
 
   // Test standard bound local bin sequence

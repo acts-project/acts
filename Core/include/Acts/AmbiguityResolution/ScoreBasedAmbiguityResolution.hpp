@@ -177,8 +177,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param logger Logger instance for output, defaults to INFO level
   explicit ScoreBasedAmbiguityResolution(
       const Config& cfg,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("ScoreBasedAmbiguityResolution", Logging::INFO))
+      std::unique_ptr<const Logger> logger = makeDummyLogger())
       : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
   /// Compute the initial state of the tracks.

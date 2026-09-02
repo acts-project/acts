@@ -27,6 +27,7 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <tuple>
 #include <vector>
@@ -52,8 +53,7 @@ BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 /// Unit tests for Cone Surfaces
 BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
-  ACTS_LOCAL_LOGGER(
-      Acts::getDefaultLogger("PolyhedronSurfacesTests", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("PolyhedronSurfacesTests", logLevel));
   ACTS_INFO("Test: ConeSurfacePolyhedrons");
 
   const double hzPos = 35_mm;
@@ -167,8 +167,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
 
 /// Unit tests for Cylinder Surfaces
 BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
-  ACTS_LOCAL_LOGGER(
-      Acts::getDefaultLogger("PolyhedronSurfacesTests", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("PolyhedronSurfacesTests", logLevel));
   ACTS_INFO("Test: CylinderSurfacePolyhedrons");
 
   const double r = 25_mm;
@@ -230,8 +229,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
 
 /// Unit tests for Disc Surfaces
 BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
-  ACTS_LOCAL_LOGGER(
-      Acts::getDefaultLogger("PolyhedronSurfacesTests", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("PolyhedronSurfacesTests", logLevel));
   ACTS_INFO("Test: DiscSurfacePolyhedrons");
 
   const double innerR = 10_mm;
@@ -383,8 +381,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
 
 /// Unit tests for Plane Surfaces
 BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
-  ACTS_LOCAL_LOGGER(
-      Acts::getDefaultLogger("PolyhedronSurfacesTests", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("PolyhedronSurfacesTests", logLevel));
   ACTS_INFO("Test: PlaneSurfacePolyhedrons");
 
   for (const auto& mode : testModes) {
@@ -560,8 +557,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
 
 /// Unit tests shifted plane
 BOOST_AUTO_TEST_CASE(ShiftedSurfacePolyhedrons) {
-  ACTS_LOCAL_LOGGER(
-      Acts::getDefaultLogger("PolyhedronSurfacesTests", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("PolyhedronSurfacesTests", logLevel));
   ACTS_INFO("Test: ShiftedSurfacePolyhedrons");
 
   const double shiftY = 50_mm;

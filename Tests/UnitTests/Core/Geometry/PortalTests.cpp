@@ -27,6 +27,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <stdexcept>
 
@@ -35,17 +36,10 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsTests {
 
-auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
-
-struct Fixture {
-  Logging::Level m_level;
-  Fixture() {
-    m_level = Logging::getFailureThreshold();
-    Logging::setFailureThreshold(Logging::FATAL);
-  }
-
-  ~Fixture() { Logging::setFailureThreshold(m_level); }
-};
+// These suites exercise error paths throughout, so the logger they hand to
+// the code under test must not fail the job on an expected error.
+auto logger =
+    getTestLogger("UnitTests", Logging::VERBOSE)->withoutFailureThreshold();
 
 std::shared_ptr<TrackingVolume> makeDummyVolume() {
   return std::make_shared<TrackingVolume>(
@@ -55,7 +49,7 @@ std::shared_ptr<TrackingVolume> makeDummyVolume() {
 
 auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
-BOOST_FIXTURE_TEST_SUITE(GeometrySuite, Fixture)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_SUITE(Portals)
 BOOST_AUTO_TEST_SUITE(Merging)

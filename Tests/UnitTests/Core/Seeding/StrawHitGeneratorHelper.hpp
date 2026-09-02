@@ -17,6 +17,7 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/Polynomials.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <random>
 #include <ranges>
@@ -276,12 +277,12 @@ class SpCalibrator {
  public:
   explicit SpCalibrator(
       Acts::Logging::Level logLvl = Acts::Logging::Level::INFO)
-      : m_logger{getDefaultLogger("Calibrator", logLvl)} {}
+      : m_logger{getTestLogger("Calibrator", logLvl)} {}
   explicit SpCalibrator(
       const Acts::Transform3& localToGlobal,
       Acts::Logging::Level logLvl = Acts::Logging::Level::INFO)
       : m_localToGlobal{localToGlobal},
-        m_logger{getDefaultLogger("Calibrator", logLvl)} {}
+        m_logger{getTestLogger("Calibrator", logLvl)} {}
 
   /// @brief Provide a fast estimate of the time of flight of the particle. Used in the Fast Fitter.
   /// @param measurement: measurement. It should be a straw measurement

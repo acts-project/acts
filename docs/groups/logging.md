@@ -180,7 +180,14 @@ There are two approaches to logger integration:
 
 @copydetails logging_thresholds
 
-Two main functions exist to interact with the failure threshold:
+The failure threshold is a property of the logger:
 
-- @ref Acts::Logging::getFailureThreshold
-- @ref Acts::Logging::setFailureThreshold
+- @ref Acts::Logger::failureThreshold reads it
+- @ref Acts::Logger::withFailureThreshold returns a copy armed at a level
+- @ref Acts::Logger::withoutFailureThreshold returns a copy that never fails,
+  which is what a test exercising an error path should pass to the code under
+  test
+
+A job sets the threshold that @ref Acts::getDefaultLogger arms new loggers at
+once at startup. Through the Python bindings that is the
+`ACTS_LOG_FAILURE_THRESHOLD` environment variable, applied on import.

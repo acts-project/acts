@@ -22,6 +22,7 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "ActsPlugins/Json/IndexGridNavigationJsonConverter.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <fstream>
 #include <numbers>
@@ -37,7 +38,7 @@ CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 CylindricalTrackingGeometry::DetectorStore dStore;
 
 auto tLogger =
-    getDefaultLogger("IndexGridNavigationJsonConverterTests", Logging::INFO);
+    getTestLogger("IndexGridNavigationJsonConverterTests", Logging::INFO);
 
 BOOST_AUTO_TEST_SUITE(JsonSuite)
 

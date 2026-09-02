@@ -20,6 +20,7 @@
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <functional>
 #include <memory>
@@ -48,27 +49,27 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
   // configure surface array creator
   SurfaceArrayCreator::Config sacConfig;
   auto surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>(
-      sacConfig, getDefaultLogger("SurfaceArrayCreator", surfaceLLevel));
+      sacConfig, getTestLogger("SurfaceArrayCreator", surfaceLLevel));
   // configure the layer creator that uses the surface array creator
   LayerCreator::Config lcConfig;
   lcConfig.surfaceArrayCreator = surfaceArrayCreator;
   auto layerCreator = std::make_shared<const LayerCreator>(
-      lcConfig, getDefaultLogger("LayerCreator", layerLLevel));
+      lcConfig, getTestLogger("LayerCreator", layerLLevel));
   // configure the layer array creator
   LayerArrayCreator::Config lacConfig;
   auto layerArrayCreator = std::make_shared<const LayerArrayCreator>(
-      lacConfig, getDefaultLogger("LayerArrayCreator", layerLLevel));
+      lacConfig, getTestLogger("LayerArrayCreator", layerLLevel));
 
   // tracking volume array creator
   TrackingVolumeArrayCreator::Config tvacConfig;
   auto tVolumeArrayCreator = std::make_shared<const TrackingVolumeArrayCreator>(
-      tvacConfig, getDefaultLogger("TrackingVolumeArrayCreator", volumeLLevel));
+      tvacConfig, getTestLogger("TrackingVolumeArrayCreator", volumeLLevel));
   // configure the cylinder volume helper
   CylinderVolumeHelper::Config cvhConfig;
   cvhConfig.layerArrayCreator = layerArrayCreator;
   cvhConfig.trackingVolumeArrayCreator = tVolumeArrayCreator;
   auto cylinderVolumeHelper = std::make_shared<const CylinderVolumeHelper>(
-      cvhConfig, getDefaultLogger("CylinderVolumeHelper", volumeLLevel));
+      cvhConfig, getTestLogger("CylinderVolumeHelper", volumeLLevel));
 
   // ----------------- build a beam pipe -----------------------------------
   PassiveLayerBuilder::Config bplConfig;
@@ -77,7 +78,7 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
   bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 40_mm);
   bplConfig.centralLayerThickness = std::vector<double>(1, 0.8_mm);
   auto beamPipeBuilder = std::make_shared<const PassiveLayerBuilder>(
-      bplConfig, getDefaultLogger("BeamPipeLayerBuilder", layerLLevel));
+      bplConfig, getTestLogger("BeamPipeLayerBuilder", layerLLevel));
   // create the volume for the beam pipe
   CylinderVolumeBuilder::Config bpvConfig;
   bpvConfig.trackingVolumeHelper = cylinderVolumeHelper;
@@ -86,7 +87,7 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
   bpvConfig.layerEnvelopeR = {1_mm, 1_mm};
   bpvConfig.buildToRadiusZero = true;
   auto beamPipeVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
-      bpvConfig, getDefaultLogger("BeamPipeVolumeBuilder", volumeLLevel));
+      bpvConfig, getTestLogger("BeamPipeVolumeBuilder", volumeLLevel));
 
   PassiveLayerBuilder::Config layerBuilderConfig;
   layerBuilderConfig.layerIdentification = "CentralBarrel";
@@ -94,8 +95,7 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
   layerBuilderConfig.centralLayerHalflengthZ = {40_mm, 40_mm, 40_mm};
   layerBuilderConfig.centralLayerThickness = {1_mm, 1_mm, 1_mm};
   auto layerBuilder = std::make_shared<const PassiveLayerBuilder>(
-      layerBuilderConfig,
-      getDefaultLogger("CentralBarrelBuilder", layerLLevel));
+      layerBuilderConfig, getTestLogger("CentralBarrelBuilder", layerLLevel));
   // create the volume for the central barrel
   CylinderVolumeBuilder::Config cvbConfig;
   cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
   cvbConfig.layerEnvelopeR = {1_mm, 1_mm};
   cvbConfig.buildToRadiusZero = false;
   auto centralVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
-      cvbConfig, getDefaultLogger("CentralVolumeBuilder", volumeLLevel));
+      cvbConfig, getTestLogger("CentralVolumeBuilder", volumeLLevel));
 
   // Make the TrackingGeometry Builder
   TrackingGeometryBuilder::Config tgbConfig;

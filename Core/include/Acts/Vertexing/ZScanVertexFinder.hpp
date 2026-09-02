@@ -72,10 +72,9 @@ class ZScanVertexFinder final : public IVertexFinder {
   ///
   /// @param cfg Configuration object
   /// @param logger Logging instance
-  explicit ZScanVertexFinder(const Config& cfg,
-                             std::unique_ptr<const Logger> logger =
-                                 getDefaultLogger("ZScanVertexFinder",
-                                                  Logging::INFO));
+  explicit ZScanVertexFinder(
+      const Config& cfg,
+      std::unique_ptr<const Logger> logger = makeDummyLogger());
 
   /// @brief Function that determines single vertex,
   /// based on z0 values of input tracks,

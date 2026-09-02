@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/LogFailureThreshold.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -52,7 +53,9 @@ class WhiteBoard {
 
   explicit WhiteBoard(std::unique_ptr<const Acts::Logger> logger =
                           Acts::getDefaultLogger("WhiteBoard",
-                                                 Acts::Logging::INFO),
+                                                 Acts::Logging::INFO,
+                                                 &std::cout,
+                                                 getLogFailureThreshold()),
                       AliasMapType objectAliases = {});
 
   WhiteBoard(const WhiteBoard& other) = delete;

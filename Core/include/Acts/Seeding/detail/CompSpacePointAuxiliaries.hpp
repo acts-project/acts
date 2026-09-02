@@ -121,8 +121,7 @@ class CompSpacePointAuxiliaries {
   /// @param logger: New logging object for debugging
   explicit CompSpacePointAuxiliaries(
       const Config& cfg,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("CompSpacePointAuxiliaries", Logging::Level::INFO));
+      std::unique_ptr<const Logger> logger = makeDummyLogger());
 
   /// Returns the config object
   const Config& config() const { return m_cfg; }

@@ -158,22 +158,17 @@ else:
 
 @contextlib.contextmanager
 def failure_threshold(level: acts.logging.Level, enabled: bool = True):
-    prev = acts.logging.getFailureThreshold()
-    if enabled and prev != level:
-        try:
-            acts.logging.setFailureThreshold(level)
-        except RuntimeError:
-            # Repackage with different error string
-            raise RuntimeError(
-                "Runtime log failure threshold could not be set. "
-                "Compile-time value is probably set via CMake, i.e. "
-                f"`ACTS_LOG_FAILURE_THRESHOLD={acts.logging.getFailureThreshold().name}` is set, "
-                "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`. "
-                "The pytest test-suite will not work in this configuration."
-            )
+    """Set the threshold that loggers built inside this block are armed at.
 
-        yield
-        acts.logging.setFailureThreshold(prev)
+    Has to enclose the construction of the algorithms, not just ``run``.
+    """
+    prev = acts.examples.getLogFailureThreshold()
+    if enabled and prev != level:
+        acts.examples.setLogFailureThreshold(level)
+        try:
+            yield
+        finally:
+            acts.examples.setLogFailureThreshold(prev)
     else:
         yield
 

@@ -1,8 +1,5 @@
 from pathlib import Path
-from typing import Callable, TypeVar, Union
-import os
-import warnings
-import functools
+from typing import Union
 
 
 from .ActsPythonBindings import *
@@ -12,23 +9,6 @@ from .ActsPythonBindings import _testing
 from . import ActsPythonBindings
 from ._adapter import _patch_config
 from .histogram import _patch_histogram_types
-
-if (
-    "ACTS_LOG_FAILURE_THRESHOLD" in os.environ
-    and os.environ["ACTS_LOG_FAILURE_THRESHOLD"] != logging.getFailureThreshold().name
-):
-    error = (
-        "Runtime log failure threshold is given in environment variable "
-        f"`ACTS_LOG_FAILURE_THRESHOLD={os.environ['ACTS_LOG_FAILURE_THRESHOLD']}`"
-        "However, a compile-time value is set via CMake, i.e. "
-        f"`ACTS_LOG_FAILURE_THRESHOLD={logging.getFailureThreshold().name}`. "
-        "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`, which disables runtime thresholds."
-    )
-    if "PYTEST_CURRENT_TEST" in os.environ:
-        # test environment, fail hard
-        raise RuntimeError(error)
-    else:
-        warnings.warn(error + "\nThe compile-time threshold will be used in this case!")
 
 
 def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):
@@ -43,22 +23,6 @@ def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):
 
 _patch_config(ActsPythonBindings)
 _patch_histogram_types(ActsPythonBindings)
-
-
-T = TypeVar("T")
-
-
-class with_log_threshold:
-    def __init__(self, level: logging.Level):
-        self.level = level
-
-    def __call__(self, func: Callable[..., T]) -> Callable[..., T]:
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> T:
-            with logging.ScopedFailureThreshold(self.level):
-                return func(*args, **kwargs)
-
-        return wrapper
 
 
 @staticmethod

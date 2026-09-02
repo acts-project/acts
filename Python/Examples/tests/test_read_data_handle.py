@@ -95,19 +95,20 @@ def test_wrong_key_raises():
         def execute(self, context):
             return acts.examples.ProcessCode.SUCCESS
 
-    s = _make_sequencer(events=3)
     inspector = WrongKeyInspector()
     with pytest.raises(KeyError, match="does not exist"):
         wb = acts.examples.WhiteBoard(acts.logging.WARNING)
         inspector.particles(wb)
 
+    # The scope has to cover construction: loggers copy the threshold there.
     with (
-        acts.logging.ScopedFailureThreshold(acts.logging.FATAL),
+        acts.examples.ScopedFailureThreshold(acts.logging.FATAL),
         pytest.raises(
             RuntimeError,
             match="Sequence configuration error: Missing data handle for key 'wrong_key'",
         ),
     ):
+        s = _make_sequencer(events=3)
         s.addAlgorithm(inspector)
 
 

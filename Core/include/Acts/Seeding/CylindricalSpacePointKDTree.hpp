@@ -118,8 +118,7 @@ class CylindricalSpacePointKDTree {
   /// @param tree KD tree
   /// @param logger Optional logger
   explicit CylindricalSpacePointKDTree(
-      Tree tree, std::unique_ptr<const Logger> logger = getDefaultLogger(
-                     "CylindricalSpacePointKDTree", Logging::Level::INFO));
+      Tree tree, std::unique_ptr<const Logger> logger = makeDummyLogger());
 
   /// @brief Return the number of space points in the tree
   /// @return Number of space points
@@ -187,8 +186,7 @@ class CylindricalSpacePointKDTreeBuilder {
   /// and an optional logger.
   /// @param logger Optional logger instance
   explicit CylindricalSpacePointKDTreeBuilder(
-      std::unique_ptr<const Logger> logger = getDefaultLogger(
-          "CylindricalSpacePointKDTree", Logging::Level::INFO));
+      std::unique_ptr<const Logger> logger = makeDummyLogger());
 
   /// Get the number of space points in the grid.
   /// @return The number of space points in the grid

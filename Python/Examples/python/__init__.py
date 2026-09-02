@@ -14,6 +14,43 @@ _patch_config(ActsExamplesPythonBindings)
 
 import warnings
 
+import functools
+from typing import Callable, TypeVar
+
+# Applied on import, before any logger exists: a logger copies the threshold
+# when it is built.
+if (_threshold := os.environ.get("ACTS_LOG_FAILURE_THRESHOLD")) is not None:
+    _level = getattr(acts.logging, _threshold, None)
+    if isinstance(_level, acts.logging.Level):
+        setLogFailureThreshold(_level)
+    else:
+        _names = ", ".join(lvl.name for lvl in acts.logging.Level.__members__.values())
+        _error = (
+            f"`ACTS_LOG_FAILURE_THRESHOLD={_threshold}` is not a log level. "
+            f"Expected one of: {_names}."
+        )
+        if "PYTEST_CURRENT_TEST" in os.environ:
+            # test environment, fail hard
+            raise RuntimeError(_error)
+        else:
+            warnings.warn(_error + "\nNo failure threshold will be applied.")
+
+
+_T = TypeVar("_T")
+
+
+class with_log_threshold:
+    def __init__(self, level: acts.logging.Level):
+        self.level = level
+
+    def __call__(self, func: Callable[..., _T]) -> Callable[..., _T]:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs) -> _T:
+            with ScopedFailureThreshold(self.level):
+                return func(*args, **kwargs)
+
+        return wrapper
+
 
 class PythonTrackFinderPerformanceWriter(PythonPatternRecognitionPerformanceWriter):
     """Deprecated alias for :class:`PythonPatternRecognitionPerformanceWriter`."""

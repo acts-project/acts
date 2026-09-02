@@ -19,10 +19,11 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <detray/io/frontend/payloads.hpp>
 
-auto logger = Acts::getDefaultLogger("Test", Acts::Logging::INFO);
+auto logger = getTestLogger("Test", Acts::Logging::INFO);
 
 using namespace Acts;
 using namespace ActsPlugins;
@@ -53,8 +54,8 @@ auto materialSlab109876 =
 // We can only test material slabs via the homogeneous material conversion
 // because we don't (want to) export the material slab conversion in core
 BOOST_AUTO_TEST_CASE(MaterialSlabTest) {
-  auto logger = Acts::getDefaultLogger("DetrayMaterialConverterTests",
-                                       Acts::Logging::INFO);
+  auto logger =
+      getTestLogger("DetrayMaterialConverterTests", Acts::Logging::INFO);
 
   HomogeneousSurfaceMaterial slab(materialSlab12345);
   auto detrayMaterial =

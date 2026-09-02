@@ -24,6 +24,7 @@
 #include "Acts/Utilities/TrackHelpers.hpp"
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <algorithm>
 #include <numbers>
@@ -343,7 +344,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
 
   double Bz = 3_T;
 
-  auto logger = getDefaultLogger("EDM4hep", Logging::INFO);
+  auto logger = getTestLogger("EDM4hep", Logging::INFO);
 
   for (const auto& track : tracks) {
     auto to = edm4hepTracks.create();

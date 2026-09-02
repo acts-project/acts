@@ -20,6 +20,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <numbers>
 
@@ -109,7 +110,7 @@ BOOST_AUTO_TEST_CASE(MaterialValidatorFlowTest) {
   mvConfig.materialAssigner = materialAssinger;
 
   auto materialValidator = MaterialValidator(
-      mvConfig, getDefaultLogger("MaterialValidator", Logging::VERBOSE));
+      mvConfig, getTestLogger("MaterialValidator", Logging::VERBOSE));
 
   // Test one central ray
   auto [posDir, rMaterial] = materialValidator.recordMaterial(

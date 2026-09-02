@@ -27,6 +27,7 @@
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <memory>
 #include <numbers>
@@ -37,7 +38,7 @@ using namespace Acts;
 
 auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 
-auto tLogger = getDefaultLogger("IndexGridNavigation", Logging::VERBOSE);
+auto tLogger = getTestLogger("IndexGridNavigation", Logging::VERBOSE);
 
 BOOST_AUTO_TEST_SUITE(NavigationSuite)
 

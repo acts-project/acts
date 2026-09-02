@@ -24,6 +24,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <array>
 #include <memory>
@@ -51,7 +52,7 @@ inline bool isSame(const Acts::Transform3& a, const Acts::Transform3& b) {
 
 const Acts::Logger& logger() {
   static const auto logObj =
-      Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+      ActsTests::getTestLogger("UnitTests", Acts::Logging::VERBOSE);
   return *logObj;
 }
 

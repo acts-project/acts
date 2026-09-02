@@ -32,6 +32,7 @@
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <numbers>
 #include <vector>
@@ -44,7 +45,7 @@ using namespace Acts::UnitLiterals;
 using namespace Acts::detail::Test;
 
 Logging::Level logLevel = Logging::VERBOSE;
-const auto gx2fLogger = getDefaultLogger("Gx2f", logLevel);
+const auto gx2fLogger = ActsTests::getTestLogger("Gx2f", logLevel);
 
 namespace ActsTests {
 
@@ -218,7 +219,7 @@ struct Detector {
 
 BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
-ACTS_LOCAL_LOGGER(getDefaultLogger("Gx2fTests", logLevel))
+ACTS_LOCAL_LOGGER(ActsTests::getTestLogger("Gx2fTests", logLevel))
 
 // Context objects
 const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();

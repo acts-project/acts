@@ -19,6 +19,7 @@
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <functional>
 #include <vector>
@@ -113,7 +114,7 @@ ActsTests::CubicTrackingGeometry::operator()() {
 
   LayerArrayCreator::Config lacConfig;
   LayerArrayCreator layArrCreator(
-      lacConfig, getDefaultLogger("LayerArrayCreator", Logging::INFO));
+      lacConfig, getTestLogger("LayerArrayCreator", Logging::INFO));
 
   LayerVector layVec;
   layVec.push_back(layers[0]);

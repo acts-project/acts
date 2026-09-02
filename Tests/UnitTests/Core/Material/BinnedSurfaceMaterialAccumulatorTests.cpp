@@ -22,6 +22,7 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MultiAxisSpec.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <numbers>
 #include <utility>
@@ -58,7 +59,7 @@ BOOST_AUTO_TEST_CASE(InvalidSetupTest) {
 
   BinnedSurfaceMaterialAccumulator bsma(
       bsmaConfig,
-      getDefaultLogger("BinnedSurfaceMaterialAccumulator", Logging::VERBOSE));
+      getTestLogger("BinnedSurfaceMaterialAccumulator", Logging::VERBOSE));
 
   // Generate the state - this throws because the second surface has no
   // material assigned.
@@ -106,7 +107,7 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
 
   BinnedSurfaceMaterialAccumulator bsma(
       bsmaConfig,
-      getDefaultLogger("BinnedSurfaceMaterialAccumulator", Logging::VERBOSE));
+      getTestLogger("BinnedSurfaceMaterialAccumulator", Logging::VERBOSE));
 
   // Generate the state
   auto state = bsma.createState(tContext);
@@ -249,7 +250,7 @@ BOOST_AUTO_TEST_CASE(ProtoGridResolutionTest) {
 
   BinnedSurfaceMaterialAccumulator bsma(
       bsmaConfig,
-      getDefaultLogger("BinnedSurfaceMaterialAccumulator", Logging::VERBOSE));
+      getTestLogger("BinnedSurfaceMaterialAccumulator", Logging::VERBOSE));
 
   auto state = bsma.createState(tContext);
   auto cState =

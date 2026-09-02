@@ -23,6 +23,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <algorithm>
 #include <numbers>
@@ -345,26 +346,25 @@ TestEigenStepper estepper(bField);
 
 StraightLinePropagator slpropagator(slstepper,
                                     Navigator({tGeometry, true, true, false},
-                                              getDefaultLogger("sl_nav",
-                                                               Logging::INFO)),
-                                    getDefaultLogger("sl_prop", Logging::INFO));
+                                              getTestLogger("sl_nav",
+                                                            Logging::INFO)),
+                                    getTestLogger("sl_prop", Logging::INFO));
 EigenPropagator epropagator(estepper,
                             Navigator({tGeometry, true, true, false},
-                                      getDefaultLogger("e_nav", Logging::INFO)),
-                            getDefaultLogger("e_prop", Logging::INFO));
+                                      getTestLogger("e_nav", Logging::INFO)),
+                            getTestLogger("e_prop", Logging::INFO));
 
 ReferenceStraightLinePropagator refslpropagator(
     slstepper,
     Experimental::TryAllNavigator({tGeometry, true, true, false},
-                                  getDefaultLogger("ref_sl_nav",
-                                                   Logging::INFO)),
-    getDefaultLogger("ref_sl_prop", Logging::INFO));
+                                  getTestLogger("ref_sl_nav", Logging::INFO)),
+    getTestLogger("ref_sl_prop", Logging::INFO));
 ReferenceEigenPropagator refepropagator(
     estepper,
     Experimental::TryAllNavigator({tGeometry, true, true, false,
                                    BoundaryTolerance::Infinite()},
-                                  getDefaultLogger("ref_e_nav", Logging::INFO)),
-    getDefaultLogger("ref_e_prop", Logging::INFO));
+                                  getTestLogger("ref_e_nav", Logging::INFO)),
+    getTestLogger("ref_e_prop", Logging::INFO));
 
 auto eventGen =
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
@@ -392,7 +392,7 @@ BoundTrackParameters createStartParameters(double pT, double phi, double theta,
 BOOST_DATA_TEST_CASE(NavigatorStraightLineSelfConsistency,
                      eventGen ^ bdata::xrange(nTestsSelfConsistency), pT, phi,
                      theta, charge, index) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("NavigatorTest", logLevel));
 
   BoundTrackParameters start = createStartParameters(pT, phi, theta, charge);
 
@@ -407,7 +407,7 @@ BOOST_DATA_TEST_CASE(NavigatorStraightLineSelfConsistency,
 BOOST_DATA_TEST_CASE(NavigatorEigenSelfConsistency,
                      eventGen ^ bdata::xrange(nTestsSelfConsistency), pT, phi,
                      theta, charge, index) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("NavigatorTest", logLevel));
 
   BoundTrackParameters start = createStartParameters(pT, phi, theta, charge);
 
@@ -422,7 +422,7 @@ BOOST_DATA_TEST_CASE(NavigatorEigenSelfConsistency,
 BOOST_DATA_TEST_CASE(NavigatorRefStraightLineConsistency,
                      eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
                      theta, charge, index) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("NavigatorTest", logLevel));
 
   BoundTrackParameters start = createStartParameters(pT, phi, theta, charge);
 
@@ -437,7 +437,7 @@ BOOST_DATA_TEST_CASE(NavigatorRefStraightLineConsistency,
 BOOST_DATA_TEST_CASE(NavigatorRefEigenConsistency,
                      eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
                      theta, charge, index) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
+  ACTS_LOCAL_LOGGER(getTestLogger("NavigatorTest", logLevel));
 
   BoundTrackParameters start = createStartParameters(pT, phi, theta, charge);
 

@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
+#include "ActsExamples/Framework/LogFailureThreshold.hpp"
 
 #include <limits>
 #include <memory>
@@ -80,7 +81,8 @@ WriterT<write_data_t>::WriterT(std::string objectName, std::string writerName,
                                Acts::Logging::Level level)
     : m_objectName(std::move(objectName)),
       m_writerName(std::move(writerName)),
-      m_logger(Acts::getDefaultLogger(m_writerName, level)) {
+      m_logger(Acts::getDefaultLogger(m_writerName, level, &std::cout,
+                                      getLogFailureThreshold())) {
   if (m_objectName.empty()) {
     throw std::invalid_argument("Missing input collection");
   } else if (m_writerName.empty()) {

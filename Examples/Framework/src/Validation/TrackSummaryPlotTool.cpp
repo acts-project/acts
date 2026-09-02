@@ -9,6 +9,7 @@
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/Framework/LogFailureThreshold.hpp"
 
 #include <format>
 
@@ -37,7 +38,8 @@ namespace ActsExamples {
 TrackSummaryPlotTool::TrackSummaryPlotTool(
     const TrackSummaryPlotTool::Config& cfg, Acts::Logging::Level lvl)
     : m_cfg(cfg),
-      m_logger(Acts::getDefaultLogger("TrackSummaryPlotTool", lvl)) {
+      m_logger(Acts::getDefaultLogger("TrackSummaryPlotTool", lvl, &std::cout,
+                                      getLogFailureThreshold())) {
   ACTS_DEBUG(
       "Initialize the histograms for track info plots"
       << (m_cfg.prefix.empty() ? "" : ", use prefix '" + m_cfg.prefix + "'"));

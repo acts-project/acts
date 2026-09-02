@@ -14,7 +14,7 @@ import acts.examples
 from acts.examples import Sequencer
 from acts import UnitConstants as u
 
-ScopedFailureThreshold = acts.logging.ScopedFailureThreshold
+ScopedFailureThreshold = acts.examples.ScopedFailureThreshold
 
 from helpers import (
     dd4hepEnabled,
@@ -489,7 +489,7 @@ def test_hepmc3_reader(common_writer, rng, compression, format):
     # use multiple threads to test if seeking to the right event works
     s = Sequencer(numThreads=10)
 
-    with acts.logging.ScopedFailureThreshold(acts.logging.ERROR):
+    with acts.examples.ScopedFailureThreshold(acts.logging.ERROR):
         # We expect a warning about missing input event count
         s.addReader(
             HepMC3Reader(
@@ -585,18 +585,19 @@ def test_hepmc3_reader_explicit_num_events_too_large(
     s.run()
     actual_path = handle_path(out, compression)
 
-    s = Sequencer(numThreads=10)
-
-    s.addReader(
-        HepMC3Reader(
-            acts.logging.DEBUG,
-            inputPath=actual_path,
-            outputEvent="hepmc3_event",
-            numEvents=nevents + 10,
-        )
-    )
-
+    # The scope has to cover construction: loggers copy the threshold there.
     with ScopedFailureThreshold(acts.logging.MAX):
+        s = Sequencer(numThreads=10)
+
+        s.addReader(
+            HepMC3Reader(
+                acts.logging.DEBUG,
+                inputPath=actual_path,
+                outputEvent="hepmc3_event",
+                numEvents=nevents + 10,
+            )
+        )
+
         with pytest.raises(RuntimeError) as excinfo:
             s.run()
 
@@ -618,7 +619,7 @@ def test_hepmc3_reader_skip_events(common_writer, rng, compression, format):
     skip = 100
     s = Sequencer(numThreads=5, skip=skip, events=nevents - skip)
 
-    with acts.logging.ScopedFailureThreshold(acts.logging.ERROR):
+    with acts.examples.ScopedFailureThreshold(acts.logging.ERROR):
         # We expect a warning about missing input event count
         s.addReader(
             HepMC3Reader(
@@ -738,7 +739,7 @@ def test_hepmc3_writer_compression_consistency(tmp_path):
 
     # Path says .gz (zlib) but config says bzip2 - should fail
     with (
-        acts.logging.ScopedFailureThreshold(acts.logging.MAX),
+        acts.examples.ScopedFailureThreshold(acts.logging.MAX),
         pytest.raises(ValueError) as excinfo,
     ):
         HepMC3Writer(
@@ -813,7 +814,7 @@ def test_hepmc3_writer_root_compression_error(tmp_path):
     out.parent.mkdir(parents=True, exist_ok=True)
 
     with (
-        acts.logging.ScopedFailureThreshold(acts.logging.MAX),
+        acts.examples.ScopedFailureThreshold(acts.logging.MAX),
         pytest.raises(ValueError) as excinfo,
     ):
         HepMC3Writer(

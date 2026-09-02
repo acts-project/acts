@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Seeding/HoughTransformUtils.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <array>
 #include <format>
@@ -22,7 +23,7 @@ using namespace Acts;
 
 namespace ActsTests {
 
-auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
+auto logger = getTestLogger("UnitTests", Logging::VERBOSE);
 
 struct DriftCircle {
   double y{0.};

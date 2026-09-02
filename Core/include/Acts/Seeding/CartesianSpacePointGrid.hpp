@@ -84,8 +84,7 @@ class CartesianSpacePointGrid
   /// @param logger Optional logger instance for debugging output
   explicit CartesianSpacePointGrid(
       const Config& config,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("CartesianSpacePointGrid", Logging::Level::INFO));
+      std::unique_ptr<const Logger> logger = makeDummyLogger());
 
   using GridBase::binIndex;
   /// Get the bin index for a space point given its x-, y-, and z-coordinate.

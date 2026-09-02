@@ -37,10 +37,9 @@ class MaterialValidator {
   /// Constructor
   /// @param cfg The configuration struct carrying the used tools
   /// @param mlogger The logging object
-  explicit MaterialValidator(const Config& cfg,
-                             std::unique_ptr<const Logger> mlogger =
-                                 getDefaultLogger("MaterialValidator",
-                                                  Logging::INFO));
+  explicit MaterialValidator(
+      const Config& cfg,
+      std::unique_ptr<const Logger> mlogger = makeDummyLogger());
 
   /// Method to record the material along a ray
   /// @param gctx the geometry context

@@ -30,6 +30,7 @@
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
+#include "ActsTests/CommonHelpers/TestLogger.hpp"
 
 #include <array>
 #include <cmath>
@@ -103,7 +104,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
   std::array<double, 3> thetaArray = {80._degree, 90.0_degree, 100._degree};
   std::array<double, 2> qArray = {1, -1};
 
-  auto logger = getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO);
+  auto logger = getTestLogger("estimateTrackParamsFromSeed", Logging::INFO);
 
   for (const auto& p : pArray) {
     for (const auto& phi : phiArray) {

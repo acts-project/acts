@@ -53,7 +53,6 @@ jobs:
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
-      ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -311,7 +310,6 @@ jobs:
     container: registry.cern.ch/ghcr.io/acts-project/${{ matrix.image }}:86
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
-      ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -1007,7 +1005,6 @@ jobs:
     container: registry.cern.ch/ghcr.io/acts-project/alma9-base:88
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
-      ACTS_LOG_FAILURE_THRESHOLD: WARNING
       ROOT_HASH_CHECKS: "off"
       LCG_REPO: sft-nightlies.cern.ch
       LCG_VIEW: /cvmfs/sft-nightlies.cern.ch/lcg/views/dev4/latest/x86_64-el9-gcc15-opt
@@ -1137,7 +1134,6 @@ jobs:
       packages: read
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
-      ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
