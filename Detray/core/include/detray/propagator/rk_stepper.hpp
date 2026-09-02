@@ -13,12 +13,12 @@
 #include "detray/algebra/common/ksm/substructures/transport_jacobian.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
+#include "detray/definitions/track_parametrization.hpp"
 #include "detray/definitions/units.hpp"
 #include "detray/material/interaction.hpp"
 #include "detray/material/material.hpp"
 #include "detray/navigation/policies.hpp"
 #include "detray/propagator/base_stepper.hpp"
-#include "detray/propagator/detail/codegen/update_rk_transport_jacobian.hpp"
 #include "detray/tracks/tracks.hpp"
 
 namespace detray {
@@ -624,6 +624,16 @@ class rk_stepper final
       const material<scalar_type>* vol_mat_ptr) const {
     DETRAY_VERBOSE_HOST_DEVICE("-> Advance Jacobian...");
 
+    // First, we declare the matrix type that we are going to use to
+    // accumulate the transport Jacobian update.
+    using matrix_d_type = ksm::matrix<
+        ksm::transport_jacobian_substructure<
+            (flags_v & static_cast<std::uint32_t>(
+                           rk_stepper_flags::e_allow_field_gradient)) != 0u>,
+        scalar_type>;
+
+    matrix_d_type transport_jacobian_update{matrix_d_type::identity()};
+
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of
     /// the Jacobian matrix is requires only the calculation of eq. 17
     /// and 18. Since the terms of eq. 18 are currently 0, this matrix is
@@ -746,16 +756,10 @@ class rk_stepper final
      *  d(dqop4/ds)/dqop1 = d(dqop4/ds)/dqop4 * (1 + h * d(dqop3/ds)/dqop1)
     ---------------------------------------------------------------------------*/
 
-    scalar_type dqopqop;
-    vector3_type dFdqop;
-    vector3_type dGdqop;
-
     {
       darray<scalar_type, 4u> dqopn_dqop{1.f, 1.f, 1.f, 1.f};
 
-      if (!cfg.use_eloss_gradient) {
-        dqopqop = 1.f;
-      } else {
+      if (cfg.use_eloss_gradient) {
         // Pre-calculate dqop_n/dqop1
         const scalar_type d2qop1dsdqop1 =
             stepping.d2qopdsdqop(sd.qop[0u], vol_mat_ptr);
@@ -777,8 +781,8 @@ class rk_stepper final
         /*-----------------------------------------------------------------
          * Calculate the first terms of d(dqop_n/ds)/dqop1
         -------------------------------------------------------------------*/
-
-        dqopqop =
+        getter::element<e_free_qoverp, e_free_qoverp>(
+            transport_jacobian_update) =
             1.f + h_6 * (d2qop1dsdqop1 + 2.f * (d2qop2dsdqop1 + d2qop3dsdqop1) +
                          d2qop4dsdqop1);
       }
@@ -807,10 +811,15 @@ class rk_stepper final
         dkndqop[3u] = dqopn_dqop[3u] * vector::cross(sd.t[3u], sd.b_last) +
                       sd.qop[3u] * h * vector::cross(dkndqop[2u], sd.b_last);
 
-        // Set dF/dqop1 and dG/dqop1
-        dFdqop = h * h_6 * (dkndqop[0u] + dkndqop[1u] + dkndqop[2u]);
-        dGdqop = h_6 * (dkndqop[0u] + 2.f * (dkndqop[1u] + dkndqop[2u]) +
-                        dkndqop[3u]);
+        // Compute dFdqop
+        transport_jacobian_update
+            .template copy_from<e_free_pos0, e_free_qoverp>(
+                h * h_6 * (dkndqop[0u] + dkndqop[1u] + dkndqop[2u]));
+        // Compute dGdqop
+        transport_jacobian_update
+            .template copy_from<e_free_dir0, e_free_qoverp>(
+                h_6 * (dkndqop[0u] + 2.f * (dkndqop[1u] + dkndqop[2u]) +
+                       dkndqop[3u]));
       }
     }
 
@@ -818,9 +827,6 @@ class rk_stepper final
      * Calculate the first terms of dk_n/dt1
     -------------------------------------------------------------------*/
     // Set dF/dt1 and dG/dt1
-    auto dFdt = matrix::identity<matrix_type<3, 3>>();
-    auto dGdt = matrix::identity<matrix_type<3, 3>>();
-
     {
       const auto I33 = matrix::identity<matrix_type<3, 3>>();
       darray<matrix_type<3u, 3u>, 4u> dkndt{I33, I33, I33, I33};
@@ -842,16 +848,20 @@ class rk_stepper final
       dkndt[3u] = dkndt[3u] + h * dkndt[2u];
       dkndt[3u] = sd.qop[3u] * matrix::column_wise_cross(dkndt[3u], sd.b_last);
 
-      dFdt = dFdt + h_6 * (dkndt[0u] + dkndt[1u] + dkndt[2u]);
-      dFdt = h * dFdt;
-      dGdt =
-          dGdt + h_6 * (dkndt[0u] + 2.f * (dkndt[1u] + dkndt[2u]) + dkndt[3u]);
+      // Compute dFdt
+      // Spell the identity out here rather than reuse I33: the KSM write
+      // folds its structural zeros into the individual cells, while a
+      // materialised I33 forces a dense 3x3 add.
+      transport_jacobian_update.template copy_from<e_free_pos0, e_free_dir0>(
+          h * (matrix::identity<matrix_type<3, 3>>() +
+               h_6 * (dkndt[0u] + dkndt[1u] + dkndt[2u])));
+      // Compute dGdt
+      transport_jacobian_update.template copy_from<e_free_dir0, e_free_dir0>(
+          matrix::identity<matrix_type<3, 3>>() +
+          h_6 * (dkndt[0u] + 2.f * (dkndt[1u] + dkndt[2u]) + dkndt[3u]));
     }
 
     // Calculate dkndr in case of considering B field gradient
-    auto dFdr = matrix::identity<matrix_type<3, 3>>();
-    auto dGdr = matrix::zero<matrix_type<3, 3>>();
-
     if constexpr ((flags_v & static_cast<std::uint32_t>(
                                  rk_stepper_flags::e_allow_field_gradient)) !=
                   0u) {
@@ -902,29 +912,20 @@ class rk_stepper final
                         matrix::column_wise_cross(
                             dBdr_fin * (I33 + h2 * 0.5f * dkndr[2u]), sd.t[3u]);
 
-        // Set dF/dr1 and dG/dr1
-        dFdr = dFdr + h * h_6 * (dkndr[0u] + dkndr[1u] + dkndr[2u]);
-        dGdr = h_6 * (dkndr[0u] + 2.f * (dkndr[1u] + dkndr[2u]) + dkndr[3u]);
+        // Compute dFdr
+        transport_jacobian_update.template copy_from<e_free_pos0, e_free_pos0>(
+            matrix::identity<matrix_type<3, 3>>() +
+            h * h_6 * (dkndr[0u] + dkndr[1u] + dkndr[2u]));
+        // Compute dGdr
+        transport_jacobian_update.template copy_from<e_free_dir0, e_free_pos0>(
+            h_6 * (dkndr[0u] + 2.f * (dkndr[1u] + dkndr[2u]) + dkndr[3u]));
       }
     } else {
       assert(!cfg.use_field_gradient);
     }
 
-    const auto old_jacobian = stepping.internal_transport_jacobian();
-
-    if constexpr ((flags_v & static_cast<std::uint32_t>(
-                                 rk_stepper_flags::e_allow_field_gradient)) !=
-                  0u) {
-      detail::update_transport_jacobian_with_gradient_impl(
-          old_jacobian, dFdt, dGdt, dFdr, dGdr, dFdqop, dGdqop, dqopqop,
-          stepping.internal_transport_jacobian());
-    } else {
-      assert(!cfg.use_field_gradient);
-
-      detail::update_transport_jacobian_without_gradient_impl(
-          old_jacobian, dFdt, dGdt, dFdqop, dGdqop, dqopqop,
-          stepping.internal_transport_jacobian());
-    }
+    stepping.internal_transport_jacobian() =
+        transport_jacobian_update * stepping.internal_transport_jacobian();
   }
 
   DETRAY_HOST_DEVICE
