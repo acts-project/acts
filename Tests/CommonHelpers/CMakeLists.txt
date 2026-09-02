@@ -5,6 +5,7 @@ add_library(
     ActsTestsCommonHelpers
     SHARED
     src/DataDirectory.cpp
+    src/FailureThresholdFromEnvironment.cpp
     src/DetectorElementStub.cpp
     src/CubicTrackingGeometry.cpp
     src/CylindricalTrackingGeometry.cpp

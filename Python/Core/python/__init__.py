@@ -13,22 +13,23 @@ from . import ActsPythonBindings
 from ._adapter import _patch_config
 from .histogram import _patch_histogram_types
 
-if (
-    "ACTS_LOG_FAILURE_THRESHOLD" in os.environ
-    and os.environ["ACTS_LOG_FAILURE_THRESHOLD"] != logging.getFailureThreshold().name
-):
-    error = (
-        "Log failure threshold is given in environment variable "
-        f"`ACTS_LOG_FAILURE_THRESHOLD={os.environ['ACTS_LOG_FAILURE_THRESHOLD']}`, "
-        f"but the effective threshold is `{logging.getFailureThreshold().name}`. "
-        "The value is probably misspelled; the accepted ones are the "
-        "`acts.logging.Level` names."
-    )
-    if "PYTEST_CURRENT_TEST" in os.environ:
-        # test environment, fail hard
-        raise RuntimeError(error)
+# Core does not read the environment, so the bindings apply the variable here,
+# on import and before any logger exists.
+if (_threshold := os.environ.get("ACTS_LOG_FAILURE_THRESHOLD")) is not None:
+    _level = logging.Level.__members__.get(_threshold)
+    if _level is not None:
+        logging.setFailureThreshold(_level)
     else:
-        warnings.warn(error + "\nNo failure threshold will be applied.")
+        _names = ", ".join(logging.Level.__members__)
+        _error = (
+            f"`ACTS_LOG_FAILURE_THRESHOLD={_threshold}` is not a log level. "
+            f"Expected one of: {_names}."
+        )
+        if "PYTEST_CURRENT_TEST" in os.environ:
+            # test environment, fail hard
+            raise RuntimeError(_error)
+        else:
+            warnings.warn(_error + "\nNo failure threshold will be applied.")
 
 
 def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):

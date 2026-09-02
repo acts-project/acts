@@ -184,3 +184,6 @@ Two main functions exist to interact with the failure threshold:
 
 - @ref Acts::Logging::getFailureThreshold
 - @ref Acts::Logging::setFailureThreshold
+
+To arm a job that runs through the Python bindings, or a unit test executable,
+set the `ACTS_LOG_FAILURE_THRESHOLD` environment variable to a level name.

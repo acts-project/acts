@@ -208,11 +208,16 @@ inline std::string_view levelName(Level level) {
 /// specific circumstances. To solve this, ACTS implements an optional log
 /// *threshold* mechanism.
 ///
-/// The threshold is a process-wide level, seeded from the
-/// `ACTS_LOG_FAILURE_THRESHOLD` environment variable and settable with
+/// The threshold is a process-wide level, set with
 /// @ref Acts::Logging::setFailureThreshold. A message at or above it raises
 /// @ref Acts::Logging::ThresholdFailure after it has been emitted. It defaults
 /// to @ref Acts::Logging::Level::MAX, which never fails.
+///
+/// Core never sets it by itself, in particular not from the environment: an
+/// experiment that embeds ACTS cannot be armed by a stray variable. Arming is
+/// the entry point's job. The Python bindings read
+/// `ACTS_LOG_FAILURE_THRESHOLD` on import, and the unit test helpers read it
+/// when a test executable starts.
 ///
 /// @{
 
