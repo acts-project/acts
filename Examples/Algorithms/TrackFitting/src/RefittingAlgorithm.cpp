@@ -59,8 +59,9 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
   TrackContainer tracks(trackContainer, trackStateContainer);
 
-  auto perigeeSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-      Acts::Vector3{0., 0., 0.});
+  std::shared_ptr<const Acts::Surface> perigeeSurface =
+      Acts::Surface::makeShared<Acts::PerigeeSurface>(
+          Acts::Vector3{0., 0., 0.});
 
   // The following code is only necessary if a beamspot constraint is in use but
   // unguarded for lifetime and simplicity reasons. The Core KF does not support
@@ -125,17 +126,18 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     // Reusing the track parameters on the beam spot perigee is only valid if
     // the track is already expressed with respect to it.
     const auto& refSurface = track.referenceSurface();
-    bool useBeamSpotConstraint = m_cfg.beamSpotConstraint.has_value();
-    if (useBeamSpotConstraint &&
-        (refSurface.type() != Acts::Surface::Perigee ||
-         !refSurface.localToGlobalTransform(ctx.recoGeoContext)
-              .isApprox(Acts::Transform3::Identity()))) {
-      ACTS_WARNING("Track "
-                   << itrack
-                   << " is not parametrized on a perigee surface at the origin"
-                      ", skipping the beam spot constraint");
-      useBeamSpotConstraint = false;
+    const bool useBeamSpotConstraint = m_cfg.beamSpotConstraint.has_value();
+    if (useBeamSpotConstraint && *perigeeSurface != refSurface) {
+      ACTS_ERROR("Track " << itrack
+                          << " is not parametrized on the beam spot perigee "
+                             "surface, cannot apply the beam spot constraint");
+      return ProcessCode::ABORT;
     }
+
+    // The fitter matches measurements by surface pointer, so with a beamspot
+    // constraint the fit has to start on the very surface that carries it.
+    const std::shared_ptr<const Acts::Surface> initialSurface =
+        useBeamSpotConstraint ? perigeeSurface : refSurface.getSharedPtr();
 
     TrackFitterFunction::GeneralFitterOptions options{
         ctx.recoGeoContext,
@@ -145,13 +147,9 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
         Acts::PropagatorPlainOptions(ctx.recoGeoContext, ctx.magFieldContext),
         true};
 
-    // The fitter matches measurements by surface pointer, so with a beamspot
-    // constraint the fit has to start on the very surface that carries it.
-    Acts::BoundTrackParameters initialParams(
-        useBeamSpotConstraint
-            ? std::shared_ptr<const Acts::Surface>(perigeeSurface)
-            : track.referenceSurface().getSharedPtr(),
-        track.parameters(), track.covariance(), track.particleHypothesis());
+    Acts::BoundTrackParameters initialParams(initialSurface, track.parameters(),
+                                             track.covariance(),
+                                             track.particleHypothesis());
 
     if (initialParams.covariance()) {
       for (auto i = 0ul; i < m_cfg.initialVarInflation.size(); ++i) {
