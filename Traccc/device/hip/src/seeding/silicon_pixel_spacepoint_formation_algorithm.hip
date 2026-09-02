@@ -6,24 +6,25 @@
  */
 
 // Local include(s).
-#include "../utils/cuda_error_handling.hpp"
 #include "../utils/global_index.hpp"
+#include "../utils/hip_error_handling.hpp"
 #include "../utils/utils.hpp"
-#include "traccc/cuda/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
+#include "traccc/hip/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
 
 // Project include(s).
 #include "traccc/geometry/detector.hpp"
 #include "traccc/seeding/device/count_spacepoints.hpp"
 #include "traccc/seeding/device/form_spacepoints.hpp"
 
-// Thrust include(s).
+// (Roc)Thrust include(s).
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
 
 // System include(s).
+#include <cassert>
 #include <memory_resource>
 
-namespace traccc::cuda {
+namespace traccc::hip {
 namespace kernels {
 
 /// Kernel wrapping @c device::count_spacepoints
@@ -56,28 +57,40 @@ silicon_pixel_spacepoint_formation_algorithm::
         const stream_wrapper& str, std::unique_ptr<const Logger> logger)
     : device::silicon_pixel_spacepoint_formation_algorithm(mr, copy,
                                                            std::move(logger)),
-      cuda::algorithm_base(str) {}
+      hip::algorithm_base(str) {}
 
 void silicon_pixel_spacepoint_formation_algorithm::count_spacepoints_kernel(
     const count_spacepoints_kernel_payload& payload) const {
   const unsigned int n_threads = warp_size() * 8;
   const unsigned int n_blocks =
       (payload.n_measurements + n_threads - 1) / n_threads;
-  kernels::count_spacepoints<<<n_blocks, n_threads, 0,
-                               details::get_stream(stream())>>>(
-      payload.measurements, payload.spacepoint_flags);
-  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+  hipLaunchKernelGGL(kernels::count_spacepoints, n_blocks, n_threads, 0,
+                     details::get_stream(stream()), payload.measurements,
+                     payload.spacepoint_flags);
+  TRACCC_HIP_ERROR_CHECK(hipGetLastError());
 }
 
 void silicon_pixel_spacepoint_formation_algorithm::scan_spacepoint_flags(
     vecmem::data::vector_view<unsigned int>& spacepoint_flags) const {
   assert(spacepoint_flags.size_ptr() == nullptr);
-  thrust::inclusive_scan(
+
+// Set up the Thrust execution policy. Unfortunately this has to be done in
+// a backend specific way. :-(
+#if defined(__HIP_PLATFORM_AMD__)
+  auto policy =
+      thrust::hip::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+          .on(details::get_stream(stream()));
+#elif defined(__HIP_PLATFORM_NVIDIA__)
+  auto policy =
       thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream())),
-      spacepoint_flags.ptr(),
-      spacepoint_flags.ptr() + spacepoint_flags.capacity(),
-      spacepoint_flags.ptr());
+          .on(details::get_stream(stream()));
+#else
+#error "Unrecognised HIP platform."
+#endif
+
+  thrust::inclusive_scan(policy, spacepoint_flags.ptr(),
+                         spacepoint_flags.ptr() + spacepoint_flags.capacity(),
+                         spacepoint_flags.ptr());
 }
 
 void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
@@ -88,15 +101,15 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
   detector_buffer_visitor<detector_type_list>(
       payload.detector, [&]<typename detector_traits_t>(
                             const typename detector_traits_t::view& det) {
-        kernels::form_spacepoints<detector_traits_t>
-            <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(
-                det, payload.measurements, payload.spacepoint_index,
-                payload.spacepoints);
+        hipLaunchKernelGGL(
+            kernels::form_spacepoints<detector_traits_t>, n_blocks, n_threads,
+            0, details::get_stream(stream()), det, payload.measurements,
+            payload.spacepoint_index, payload.spacepoints);
       });
-  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+  TRACCC_HIP_ERROR_CHECK(hipGetLastError());
   // The base class destroys the prefix sum buffer right after this call, so
   // the kernel must finish before returning.
   stream().synchronize();
 }
 
-}  // namespace traccc::cuda
+}  // namespace traccc::hip
