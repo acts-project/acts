@@ -70,28 +70,37 @@ std::unordered_map<std::uint64_t, json> load_geometry_file(
       const auto& geo_id_obj = entry["value"]["geo_id"];
 
       if (geo_id_obj.contains("volume") && !geo_id_obj["volume"].is_null()) {
-        uint32_t volume = static_cast<uint32_t>(geo_id_obj["volume"].get<double>());
+        std::uint32_t volume = static_cast<std::uint32_t>(
+            geo_id_obj["volume"].get<std::uint32_t>());
         gid_value |= (static_cast<std::uint64_t>(volume) & 0xFF) << 56;
       }
-      if (geo_id_obj.contains("boundary") && !geo_id_obj["boundary"].is_null()) {
-        uint32_t boundary = static_cast<uint32_t>(geo_id_obj["boundary"].get<double>());
+      if (geo_id_obj.contains("boundary") &&
+          !geo_id_obj["boundary"].is_null()) {
+        std::uint32_t boundary = static_cast<std::uint32_t>(
+            geo_id_obj["boundary"].get<std::uint32_t>());
         gid_value |= (static_cast<std::uint64_t>(boundary) & 0xFF) << 48;
       }
       if (geo_id_obj.contains("layer") && !geo_id_obj["layer"].is_null()) {
-        uint32_t layer = static_cast<uint32_t>(geo_id_obj["layer"].get<double>());
+        std::uint32_t layer = static_cast<std::uint32_t>(
+            geo_id_obj["layer"].get<std::uint32_t>());
         gid_value |= (static_cast<std::uint64_t>(layer) & 0xFFF) << 36;
       }
-      if (geo_id_obj.contains("approach") && !geo_id_obj["approach"].is_null()) {
-        uint32_t approach = static_cast<uint32_t>(geo_id_obj["approach"].get<double>());
+      if (geo_id_obj.contains("approach") &&
+          !geo_id_obj["approach"].is_null()) {
+        std::uint32_t approach = static_cast<std::uint32_t>(
+            geo_id_obj["approach"].get<std::uint32_t>());
         gid_value |= (static_cast<std::uint64_t>(approach) & 0xFF) << 28;
       }
-      if (geo_id_obj.contains("sensitive") && !geo_id_obj["sensitive"].is_null()) {
-        uint32_t sensitive = static_cast<uint32_t>(geo_id_obj["sensitive"].get<double>());
+      if (geo_id_obj.contains("sensitive") &&
+          !geo_id_obj["sensitive"].is_null()) {
+        std::uint32_t sensitive = static_cast<std::uint32_t>(
+            geo_id_obj["sensitive"].get<std::uint32_t>());
         gid_value |= (static_cast<std::uint64_t>(sensitive) & 0x0FFFFFFF);
       }
       gid = gid_value;
     } else {
-      std::cerr << "WARNING: Unknown geo_id format in geometry file." << std::endl;
+      std::cerr << "WARNING: Unknown geo_id format in geometry file."
+                << std::endl;
       continue;
     }
     surface_bounds[gid] = entry["value"]["bounds"];
