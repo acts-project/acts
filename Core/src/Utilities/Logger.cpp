@@ -15,7 +15,6 @@ namespace Acts {
 
 namespace Logging {
 
-#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
 namespace {
 Level& getFailureThresholdMutable() {
   static Level _level = []() {
@@ -69,19 +68,6 @@ ScopedFailureThreshold::~ScopedFailureThreshold() noexcept {
     std::terminate();
   }
 }
-
-#else
-
-void setFailureThreshold(Level /*lvl*/) {
-  throw std::logic_error{
-      "The log failure threshold is not compiled in "
-      "(ACTS_ENABLE_LOG_FAILURE_THRESHOLD is OFF), unable to override. See "
-      "https://cern.ch/acts-log-thresh"};
-}
-
-ScopedFailureThreshold::~ScopedFailureThreshold() noexcept = default;
-
-#endif
 
 namespace {
 class NeverFilterPolicy final : public OutputFilterPolicy {

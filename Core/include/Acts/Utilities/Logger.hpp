@@ -208,46 +208,21 @@ inline std::string_view levelName(Level level) {
 /// specific circumstances. To solve this, ACTS implements an optional log
 /// *threshold* mechanism.
 ///
-/// The threshold mechanism is steered via the CMake option
-/// `ACTS_ENABLE_LOG_FAILURE_THRESHOLD`, so the logging operates in one of two
-/// modes:
-///
-/// 1. **No log failure threshold** exists, log levels are informative only.
-///    This is the default behavior.
-/// 2. A **runtime log failure threshold** is available. With
-///    `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON` the logger code compiles in a
-///    check against a global threshold variable, seeded from the
-///    `ACTS_LOG_FAILURE_THRESHOLD` environment variable and settable with
-///    @ref Acts::Logging::setFailureThreshold. A message at or above it raises
-///    @ref Acts::Logging::ThresholdFailure after it has been emitted. The
-///    threshold defaults to @ref Acts::Logging::Level::MAX, so an enabled build
-///    with no threshold set behaves like a disabled one.
+/// The threshold is a process-wide level, seeded from the
+/// `ACTS_LOG_FAILURE_THRESHOLD` environment variable and settable with
+/// @ref Acts::Logging::setFailureThreshold. A message at or above it raises
+/// @ref Acts::Logging::ThresholdFailure after it has been emitted. It defaults
+/// to @ref Acts::Logging::Level::MAX, which never fails.
 ///
 /// @{
 
-#ifdef DOXYGEN
 /// @brief Get debug level above which an exception will be thrown after logging
 ///
 /// All messages with a debug level equal or higher than the return value of
 /// this function will cause an exception to be thrown after log emission.
 ///
-/// @note Depending on the preprocessor setting @c ACTS_ENABLE_LOG_FAILURE_THRESHOLD
-///       this operation is either constexpr or a runtime operation.
 /// @return The log level threshold for failure
 Level getFailureThreshold();
-
-#else
-
-#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
-Level getFailureThreshold();
-#else
-constexpr Level getFailureThreshold() {
-  // Default "NO" failure threshold
-  return Level::MAX;
-}
-#endif
-
-#endif
 
 /// @brief Set debug level above which an exception will be thrown after logging
 ///
@@ -258,8 +233,6 @@ constexpr Level getFailureThreshold() {
 ///          this function is  **not threadsafe**. The intention is that this
 ///          level is set once, before multi-threaded execution begins, and then
 ///          not modified before the end of the job.
-/// @note This function is only available if @c ACTS_ENABLE_LOG_FAILURE_THRESHOLD
-///       is set. Otherwise an exception is thrown.
 /// @param level Log level above which exceptions will be thrown
 void setFailureThreshold(Level level);
 
