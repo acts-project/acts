@@ -56,14 +56,15 @@ std::unordered_map<std::uint64_t, json> load_geometry_file(
   std::unordered_map<std::uint64_t, json> surface_bounds;
   const auto& entries = geom["Surfaces"]["entries"];
   for (const auto& entry : entries) {
-    // Handle both old (uint64_t) and new (object with component fields) formats
+    // Handle both old (std::uint64_t) and new (object with component fields)
+    // formats
     std::uint64_t gid;
     if (entry["value"]["geo_id"].is_number()) {
-      // Specification: geo_id is a simple uint64_t
+      // Specification: geo_id is a simple std::uint64_t
       gid = entry["value"]["geo_id"].get<std::uint64_t>();
     } else if (entry["value"]["geo_id"].is_object()) {
       // Specification: geo_id is an object with component fields
-      // Reconstruct the uint64_t from individual components
+      // Reconstruct the std::uint64_t from individual components
       // Layout: volume (bits 56-63), boundary (bits 48-55), layer (bits 36-47),
       //         approach (bits 28-35), sensitive (bits 0-27)
       std::uint64_t gid_value = 0;
