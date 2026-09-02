@@ -11,8 +11,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Material.hpp"
 
-#include <iostream>
-
 #include "GeoModelKernel/GeoMaterial.h"
 #include "GeoModelKernel/Units.h"
 
@@ -33,10 +31,6 @@ Material ActsPlugins::GeoModel::geoMaterialConverter(const GeoMaterial& gm,
   double x0 = gm.getRadLength();
   double l0 = gm.getIntLength();
   double massDensity = gm.getDensity() * s_massDensitryCnvFactor;
-  std::cout << "density before the conversion:" << gm.getDensity() << std::endl;
-  std::cout << "density after the conversion: " << massDensity << std::endl;
-  std::cout << "density conversion factor: " << s_massDensitryCnvFactor
-            << std::endl;
   double A = 0.;
   double Z = 0.;
   // Get number elements
