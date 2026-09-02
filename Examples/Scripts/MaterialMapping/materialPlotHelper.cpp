@@ -95,7 +95,11 @@ std::unordered_map<std::uint64_t, json> load_geometry_file(
           !geo_id_obj["sensitive"].is_null()) {
         std::uint32_t sensitive = static_cast<std::uint32_t>(
             geo_id_obj["sensitive"].get<std::uint32_t>());
-        gid_value |= (static_cast<std::uint64_t>(sensitive) & 0x0FFFFFFF);
+        gid_value |= (static_cast<std::uint64_t>(sensitive) & 0xFFFFF) << 8;
+      }
+      if (geo_id_obj.contains("extra") && !geo_id_obj["extra"].is_null()) {
+        std::uint64_t extra = geo_id_obj["extra"].get<std::uint64_t>();
+        gid_value |= (extra & 0xFF);
       }
       gid = gid_value;
     } else {
