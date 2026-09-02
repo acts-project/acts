@@ -141,6 +141,22 @@ class PadBlueprintNode final : public StaticBlueprintNode {
       Centering centering = Centering::Centered,
       const Logger& logger = Acts::getDummyLogger());
 
+  /// Overload keeping the pre-reference-axis call signature source compatible,
+  /// i.e. padding in the child's own frame with @ref Centering::Centered.
+  /// @param gctx The geometry context
+  /// @param inner The volume to enclose
+  /// @param envelope The envelope to add to the bounds of @p inner
+  /// @param name The name of the padded volume
+  /// @param logger The logger to use
+  /// @return The padded volume enclosing @p inner
+  /// @throws std::logic_error if @p inner has unsupported bounds, or if the
+  ///         envelope is asymmetric where it must not be
+  static std::unique_ptr<TrackingVolume> padded(const GeometryContext& gctx,
+                                                const Volume& inner,
+                                                const ExtentEnvelope& envelope,
+                                                const std::string& name,
+                                                const Logger& logger);
+
  private:
   ExtentEnvelope m_envelope;
   std::string m_name;

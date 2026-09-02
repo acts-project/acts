@@ -58,6 +58,14 @@ PadBlueprintNode::PadBlueprintNode(const std::string &name,
 std::unique_ptr<TrackingVolume> PadBlueprintNode::padded(
     const GeometryContext &gctx, const Volume &inner,
     const ExtentEnvelope &envelope, const std::string &name,
+    const Logger &logger) {
+  return padded(gctx, inner, envelope, name, std::nullopt, Centering::Centered,
+                logger);
+}
+
+std::unique_ptr<TrackingVolume> PadBlueprintNode::padded(
+    const GeometryContext &gctx, const Volume &inner,
+    const ExtentEnvelope &envelope, const std::string &name,
     const std::optional<Transform3> &referenceAxis, Centering centering,
     const Logger &logger) {
   using enum AxisDirection;

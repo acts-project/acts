@@ -158,9 +158,8 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   // minus registering itself with a parent (the world *is* the parent).
   const Volume &top = child.build(options, gctx, logger);
 
-  std::unique_ptr<TrackingVolume> world = PadBlueprintNode::padded(
-      gctx, top, m_cfg.envelope, s_worldName, std::nullopt,
-      PadBlueprintNode::Centering::Centered, logger);
+  std::unique_ptr<TrackingVolume> world =
+      PadBlueprintNode::padded(gctx, top, m_cfg.envelope, s_worldName, logger);
 
   ACTS_DEBUG(prefix() << "New root volume bounds are: "
                       << world->volumeBounds());

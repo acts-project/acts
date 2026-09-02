@@ -1317,6 +1317,29 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeCylinder) {
                     30_mm + 20_mm);
 }
 
+BOOST_AUTO_TEST_CASE(PadBlueprintNodeLegacyPaddedOverload) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+
+  Volume child(Transform3::Identity(),
+               std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm));
+
+  // Pin the pre-reference-axis signature: the logger in fifth position must
+  // keep resolving, so downstream call sites do not need touching.
+  auto world =
+      PadBlueprintNode::padded(gctx, child, cfg.envelope, "World", *logger);
+
+  BOOST_CHECK_EQUAL(world->volumeName(), "World");
+  const auto& worldCyl =
+      dynamic_cast<const CylinderVolumeBounds&>(world->volumeBounds());
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMinR), 10_mm - 1_mm);
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eMaxR), 20_mm + 2_mm);
+  BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eHalfLengthZ),
+                    30_mm + 20_mm);
+  BOOST_CHECK_SMALL(world->center(gctx).norm(), 1e-9);
+}
+
 BOOST_AUTO_TEST_CASE(PadBlueprintNodeCuboid) {
   Blueprint::Config cfg;
   cfg.envelope[AxisDirection::AxisX] = {3_mm, 3_mm};
