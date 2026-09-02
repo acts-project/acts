@@ -378,7 +378,11 @@ class DoubletSeedFinder {
   /// @param middleSp Space point candidate to be used as middle SP in a seed
   /// @param middleSpInfo Information about the middle space point
   /// @param candidateSps Subset of space points to be used as candidates for
-  ///   middle SP in a seed
+  ///   middle SP in a seed. In-out: if the configuration declares the space
+  ///   points sorted by radius, the subset is advanced past the candidates
+  ///   that are out of radius range on return, so that a subsequent call with
+  ///   a larger middle radius does not look at them again. Pass a fresh view
+  ///   to start over.
   /// @param compatibleDoublets Output container for compatible doublets
   virtual void createDoublets(
       const ConstSpacePointProxy& middleSp, const MiddleSpInfo& middleSpInfo,
@@ -391,7 +395,7 @@ class DoubletSeedFinder {
   /// @param middleSp Space point candidate to be used as middle SP in a seed
   /// @param middleSpInfo Information about the middle space point
   /// @param candidateSps Range of space points to be used as candidates for
-  ///   middle SP in a seed
+  ///   middle SP in a seed. In-out, see the subset overload above.
   /// @param compatibleDoublets Output container for compatible doublets
   virtual void createDoublets(
       const ConstSpacePointProxy& middleSp, const MiddleSpInfo& middleSpInfo,

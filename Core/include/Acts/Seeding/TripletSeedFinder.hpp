@@ -211,7 +211,12 @@ class TripletSeedFinder {
   /// @param spacePoints Space point container
   /// @param spM Space point candidate to be used as middle SP in a seed
   /// @param bottomDoublet Bottom doublet to be used for triplet creation
-  /// @param topDoublets Top doublets to be used for triplet creation
+  /// @param topDoublets Top doublets to be used for triplet creation. In-out:
+  ///   if the configuration declares the doublets sorted by cotTheta, the view
+  ///   is advanced past the top doublets that can no longer be compatible with
+  ///   any subsequent (larger cotTheta) bottom doublet, so the caller has to
+  ///   pass the doublets of one middle space point in ascending bottom
+  ///   cotTheta order and start over with a fresh view for the next one.
   /// @param tripletTopCandidates Cache for triplet top candidates
   virtual void createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
@@ -224,7 +229,8 @@ class TripletSeedFinder {
   /// @param spacePoints Space point container
   /// @param spM Space point candidate to be used as middle SP in a seed
   /// @param bottomDoublet Bottom doublet to be used for triplet creation
-  /// @param topDoublets Top doublets to be used for triplet creation
+  /// @param topDoublets Top doublets to be used for triplet creation. In-out,
+  ///   see the range overload above.
   /// @param tripletTopCandidates Cache for triplet top candidates
   virtual void createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
@@ -237,7 +243,8 @@ class TripletSeedFinder {
   /// @param spacePoints Space point container
   /// @param spM Space point candidate to be used as middle SP in a seed
   /// @param bottomDoublet Bottom doublet to be used for triplet creation
-  /// @param topDoublets Top doublets to be used for triplet creation
+  /// @param topDoublets Top doublets to be used for triplet creation. In-out,
+  ///   see the range overload above.
   /// @param tripletTopCandidates Cache for triplet top candidates
   virtual void createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,

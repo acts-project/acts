@@ -119,10 +119,9 @@ void TripletSeeder::createSeedsFromGroup(
     Cache& cache, const DoubletSeedFinder& bottomFinder,
     const DoubletSeedFinder& topFinder, const TripletSeedFinder& tripletFinder,
     const ITripletSeedFilter& filter, const SpacePointContainer& spacePoints,
-    SpacePointContainer::ConstSubset& bottomSps,
+    SpacePointContainer::ConstSubset bottomSps,
     const ConstSpacePointProxy& middleSp,
-    SpacePointContainer::ConstSubset& topSps,
-    SeedContainer& outputSeeds) const {
+    SpacePointContainer::ConstSubset topSps, SeedContainer& outputSeeds) const {
   assert((bottomFinder.config().spacePointsSortedByRadius ==
           topFinder.config().spacePointsSortedByRadius) &&
          "Inconsistent space point sorting");
