@@ -98,7 +98,7 @@ def runMaterialMapping(
         elif "cbor" in outputMapFormats:
             writeFormat = JsonFormat.Cbor
         else:
-            throw RuntimeError("Unknown output map format: " + str(outputMapFormats))
+            raise RuntimeError("Unknown output map format: " + str(outputMapFormats))
         materialMapWriters.append(
             JsonMaterialWriter(
                 level=loglevel,
