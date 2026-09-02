@@ -225,7 +225,7 @@ Result<BoundTrackParameters> detail::boundToBoundConversion(
     freeToPathDerivatives.head<3>() = freePars.segment<3>(eFreeDir0);
 
     freeToPathDerivatives.segment<3>(eFreeDir0) =
-        -freePars[eFreeQOverP] * bField.cross(freePars.segment<3>(eFreeDir0));
+        freePars[eFreeQOverP] * freePars.segment<3>(eFreeDir0).cross(bField);
 
     const double mass = boundParameters.particleHypothesis().mass();
     const double absMomentum = boundParameters.absoluteMomentum();
