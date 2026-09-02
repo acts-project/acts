@@ -86,7 +86,9 @@ def runMaterialMapping(
     # json map writer
     jsonOutputMapFormatsDict = {"json": JsonFormat.Json, "cbor": JsonFormat.Cbor}
     jsonOutputMapFormats = [
-        jsonOutputMapFormatsDict[f] for f in outputMapFormats if f in jsonOutputMapFormatsDict
+        jsonOutputMapFormatsDict[f]
+        for f in outputMapFormats
+        if f in jsonOutputMapFormatsDict
     ]
     if jsonOutputMapFormats:
         jmConverterCfg = MaterialMapJsonConverter.Config(
