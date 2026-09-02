@@ -63,9 +63,9 @@ class TripletSeeder {
                             const TripletSeedFinder& tripletFinder,
                             const ITripletSeedFilter& filter,
                             const SpacePointContainer& spacePoints,
-                            SpacePointContainer::ConstSubset bottomSps,
+                            SpacePointContainer::ConstSubset& bottomSps,
                             const ConstSpacePointProxy& middleSp,
-                            SpacePointContainer::ConstSubset topSps,
+                            SpacePointContainer::ConstSubset& topSps,
                             SeedContainer& outputSeeds) const;
 
   /// Create all possible seeds from bottom, middle, and top space points.
