@@ -312,6 +312,30 @@ if [ -n "${CI:-}" ]; then
   spack config get mirrors
   end_section
 
+  start_section "Authenticate github.com fetches"
+  # Anonymous git reads leave the runners on a shared egress IP, so GitHub
+  # eventually answers one with a 401. Git turns that into a credential prompt
+  # ("could not read Username for 'https://github.com'"), which is a hard
+  # failure a retry cannot ride out. Authenticating moves us off the per-IP
+  # anonymous quota; the fork-PR GITHUB_TOKEN is enough for reads of a public
+  # repo (unlike GHCR, which needs a `packages: read` fork PRs never get).
+  #
+  # The rewrite is a literal prefix substitution on "https://github.com/" that
+  # carries host and path over untouched, so it only prepends credentials --
+  # every other host, and the ssh form, is left alone. It also reaches git only;
+  # the tarball and OCI fetches elsewhere in the install never consult it.
+  # --replace-all keeps it idempotent: insteadOf is multi-valued, and a cached
+  # spack install can run this more than once.
+  if [ -n "${GITHUB_TOKEN:-}" ]; then
+    git config --global --replace-all \
+      "url.https://x-access-token:${GITHUB_TOKEN}@github.com/.insteadOf" \
+      "https://github.com/"
+    echo "Rewriting https://github.com/ fetches to use GITHUB_TOKEN"
+  else
+    echo "GITHUB_TOKEN not set: github.com fetches stay anonymous"
+  fi
+  end_section
+
   start_section "Add ACTS package repository"
   if ! spack repo list | grep -q "acts"; then
     echo "Adding ACTS package repository from ci-dependencies"

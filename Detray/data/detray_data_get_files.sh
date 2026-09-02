@@ -80,12 +80,15 @@ done
 # Go into the target directory.
 cd "${DETRAY_DATA_DIRECTORY}"
 
-# Download the TGZ and MD5 files.
-"${DETRAY_CURL_EXECUTABLE}" --retry 5 --retry-delay 10 \
-   --output "${DETRAY_DATA_NAME}.tar.gz"               \
+# Download the TGZ and MD5 files. --retry on its own only covers timeouts and
+# 429/5xx responses, so a connection the server drops mid-body ("curl: (18)
+# transfer closed with N bytes remaining to read") is a hard failure.
+# --retry-all-errors covers it.
+"${DETRAY_CURL_EXECUTABLE}" --retry 5 --retry-delay 10 --retry-all-errors \
+   --output "${DETRAY_DATA_NAME}.tar.gz"                                  \
    "${DETRAY_WEB_DIRECTORY}/${DETRAY_DATA_NAME}.tar.gz"
-"${DETRAY_CURL_EXECUTABLE}" --retry 5 --retry-delay 10 \
-   --output "${DETRAY_DATA_NAME}.md5"                  \
+"${DETRAY_CURL_EXECUTABLE}" --retry 5 --retry-delay 10 --retry-all-errors \
+   --output "${DETRAY_DATA_NAME}.md5"                                     \
    "${DETRAY_WEB_DIRECTORY}/${DETRAY_DATA_NAME}.md5"
 
 # Verify that the download succeeded.
