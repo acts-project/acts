@@ -11,6 +11,13 @@
 #   - Acts_COMMIT_HASH
 #   - Acts_COMMIT_HASH_SHORT
 
+# This file uses `if(... IN_LIST ...)`, which needs policy CMP0057 set to NEW.
+# find_package gives this file its own policy scope, inherited from the calling
+# project, so a client with an older cmake_minimum_required would otherwise fail
+# here. The upper bound keeps the policy version at the CMake that generated the
+# config, matching the Acts*Targets.cmake files included below.
+cmake_minimum_required(VERSION 3.10...@CMAKE_VERSION@)
+
 @PACKAGE_INIT@
 
 set(Acts_COMPONENTS @_components@)
