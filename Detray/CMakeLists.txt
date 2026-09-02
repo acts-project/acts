@@ -139,6 +139,16 @@ option(DETRAY_BUILD_TEST_UTILS "Build the test utility library of Detray" OFF)
 option(DETRAY_BUILD_VALIDATION_TOOLS "Build the validation tools of Detray" OFF)
 option(DETRAY_BUILD_BENCHMARKS "Build the benchmark tests" OFF)
 option(DETRAY_BUILD_TUTORIALS "Build the tutorial executables of Detray" OFF)
+# The known-substructure matrix test sweeps the cartesian product of its
+# substructure list, so its template instantiation cost grows as the square of
+# the list length: by far the most expensive translation unit in the suite
+# (order 80 s, against a couple of seconds for a typical one). Too much to pay
+# on every build of the unit tests, so it is opt-in and gets its own target.
+option(
+    DETRAY_BUILD_KNOWN_SUBSTRUCTURE_MATRIX_TEST
+    "Build the (very slow to compile) known-substructure matrix unit test"
+    OFF
+)
 
 #
 # Resolve build options and option inter-dependencies
