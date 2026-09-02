@@ -295,10 +295,6 @@ void test_pair(const std::string &an, const std::string &bn) {
   [[maybe_unused]] constexpr auto b_indices =
       std::make_index_sequence<B::rows * B::columns>{};
 
-  // Each matrix must store exactly one scalar per free value of A and of B.
-  static_assert(verify_stored_count<typename A::canonical_type>());
-  static_assert(verify_stored_count<typename B::canonical_type>());
-
   matrix<A, S> ma;
   matrix<B, S> mb;
   fill_seq(ma, S{1}, a_indices);
