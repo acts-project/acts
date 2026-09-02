@@ -59,7 +59,7 @@ std::unordered_map<std::uint64_t, json> load_geometry_file(
     // Handle both old (uint64_t) and new (object with component fields) formats
     std::uint64_t gid;
     if (entry["value"]["geo_id"].is_number()) {
-      // Specification: geo_id is a simple uint64_t (
+      // Specification: geo_id is a simple uint64_t
       gid = entry["value"]["geo_id"].get<std::uint64_t>();
     } else if (entry["value"]["geo_id"].is_object()) {
       // Specification: geo_id is an object with component fields
