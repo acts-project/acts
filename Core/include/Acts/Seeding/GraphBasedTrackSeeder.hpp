@@ -182,9 +182,8 @@ class GraphBasedTrackSeeder {
   ///
   /// Fill it through GbtsNodeStorage::insert, then call
   /// GbtsNodeStorage::finalize before handing it to createSeeds.
-  /// @param isPixelLayer Information on if a layer is pixel or strip
   /// @return An empty node storage
-  GbtsNodeStorage makeNodeStorage(const std::vector<bool>& isPixelLayer) const;
+  GbtsNodeStorage makeNodeStorage() const;
 
   /// Create seeds from an ACTS space point container in a region of interest.
   ///
@@ -193,13 +192,11 @@ class GraphBasedTrackSeeder {
   /// columns.
   /// @param spacePoints Space point container
   /// @param roi Region of interest descriptor
-  /// @param isPixelLayer Information on if a layer is pixel or strip
   /// @param filter Tracking filter to be applied
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
   void createSeeds(const SpacePointContainer& spacePoints,
                    const GbtsRoiDescriptor& roi,
-                   const std::vector<bool>& isPixelLayer,
                    const GbtsTrackingFilter& filter, const Options& options,
                    SeedContainer& outputSeeds) const;
 
@@ -266,8 +263,10 @@ class GraphBasedTrackSeeder {
     float deltaPhi{};
     /// GBTS layer ID of the bin
     std::uint32_t layerId{};
-    /// whether the bin's layer is a pixel layer, hoisted out of the node loop
-    bool isPixel{true};
+    /// Type of the bin's layer.
+    GbtsLayerType type{};
+    /// Technology of the bin's layer.
+    GbtsLayerTechnology technology{};
   };
   DerivedConfig m_cfg;
 
@@ -284,7 +283,7 @@ class GraphBasedTrackSeeder {
   /// @param lutInputFile Path to the lookup table input file
   /// @return Parsed tau lookup table
   detail::GbtsTauLookupTable parseTauLookupTable(
-      const std::string& lutInputFile);
+      const std::string& lutInputFile) const;
 
   /// Build doublet graph from nodes.
   /// @param roi Region of interest descriptor
