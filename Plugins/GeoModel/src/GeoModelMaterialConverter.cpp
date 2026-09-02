@@ -8,14 +8,23 @@
 
 #include "ActsPlugins/GeoModel/GeoModelMaterialConverter.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Material.hpp"
+
+#include <iostream>
 
 #include "GeoModelKernel/GeoMaterial.h"
 #include "GeoModelKernel/Units.h"
 
 namespace {
-constexpr double s_densityCnvFactor = 1. / GeoModelKernelUnits::gram;
-}
+
+constexpr double s_massDensitryCnvFactor =
+    (GeoModelKernelUnits::cm3 * Acts::UnitConstants::g) /
+    (GeoModelKernelUnits::gram * Acts::UnitConstants::cm3);
+// Avogadro constant
+constexpr double kAvogadro = 6.02214076e23 / Acts::UnitConstants::mol;
+
+}  // namespace
 
 using namespace Acts;
 
@@ -23,7 +32,11 @@ Material ActsPlugins::GeoModel::geoMaterialConverter(const GeoMaterial& gm,
                                                      bool useMolarDensity) {
   double x0 = gm.getRadLength();
   double l0 = gm.getIntLength();
-  double density = gm.getDensity() * s_densityCnvFactor;
+  double massDensity = gm.getDensity() * s_massDensitryCnvFactor;
+  std::cout << "density before the conversion:" << gm.getDensity() << std::endl;
+  std::cout << "density after the conversion: " << massDensity << std::endl;
+  std::cout << "density conversion factor: " << s_massDensitryCnvFactor
+            << std::endl;
   double A = 0.;
   double Z = 0.;
   // Get number elements
@@ -36,8 +49,10 @@ Material ActsPlugins::GeoModel::geoMaterialConverter(const GeoMaterial& gm,
     Z += fraction * geoEl->getZ();
   }
   if (useMolarDensity) {
-    return Material::fromMolarDensity(x0, l0, A, Z, density);
+    const double molarDensity =
+        massDensity / (A * Acts::UnitConstants::u * kAvogadro);
+    return Material::fromMolarDensity(x0, l0, A, Z, molarDensity);
   } else {
-    return Material::fromMassDensity(x0, l0, A, Z, density);
+    return Material::fromMassDensity(x0, l0, A, Z, massDensity);
   }
 }
