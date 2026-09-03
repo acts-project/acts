@@ -18,6 +18,7 @@
 #include "detray/tracks/ray.hpp"
 
 // System include(s)
+#include <tuple>
 #include <type_traits>
 
 namespace detray {
@@ -89,35 +90,98 @@ struct ray_intersector_impl<concentric_cylindrical2D<algebra_t>, algebra_t,
 
     // ...otherwise, two solutions should exist, if the descriminator is
     // greater than zero
-    const scalar_t ro_perp_2{ro[0] * ro[0] + ro[1] * ro[1]};
+    //
+    // rad_diff here is defined as:
+    //
+    // r * r - (ro[0] * ro[0] + ro[1] * ro[1])
+    //
+    // But this runs an enormous risk of catastrophic cancellation, which we
+    // would like to avoid.
+    //
+    // To compute this as accurately as possible without using any double
+    // precision operations, we'll use two core ideas:
+    //
+    // 1. The Sterbenz lemma: if x and y are floats of the same sign and
+    //    y/2 <= x <= 2y, then x - y is exact and has no rounding error.
+    // 2. FMA hardware has no rounding error internally, so if we compute
+    //    a = x * y we get a normal, rounded result. If we then compute
+    //    e = x * y - a using fma(x, y, -a), we get the exact error of a.
+    //
+    // We can use 2) to define an exact squaring algorithm, where to square x
+    // we compute first a = x * x and then the error e = fma(x, x, -a).
+    // Clearly, the exact square of x is then just a + e. We'll call this
+    // procedure a, e = fma_square(x).
+    //
+    // To compute rad_diff, we can thus compute:
+    //
+    // rsq_a, rsq_e = fma_square(r)
+    // ro0sq_a, ro0sq_e = fma_square(ro[0])
+    // ro1sq_a, ro1sq_e = fma_square(ro[1])
+    //
+    // Such that:
+    //
+    // rad_diff = (rsq_a + rsq_e) - ((ro0sq_a + ro0sq_e) + (ro1sq_a + ro1sq_e))
+    //
+    // rad_diff = (rsq_a + rsq_e) - (ro0sq_a + ro0sq_e) - (ro1sq_a + ro1sq_e)
+    //
+    // However, this is not exact by the Sterbenz lemma 1). Full exactness is
+    // not possible, but we can still try to minimize error. We know that the
+    // magnitudes of the errors will be much smaller than the magnitudes of the
+    // approximated squares, so we can first rearrange:
+    //
+    // rad_diff = (rsq_a - ro0sq_a - ro1sq_a) + (rsq_e - ro0sq_e - ro1sq_e)
+    //
+    // What matters now is the way we associate the subtractions inside the
+    // two sets of brackets. Arguing informally, we are more likely to get
+    // exact (or at least less erroneous) results if the scale of the two
+    // numbers are as close as possible, so we will first find the bigger
+    // and the smaller value of ro:
+    //
+    // robig = max(ro[0], ro[1])
+    // rosmall = min(ro[0], ro[1])
+    //
+    // Such that we can express the most accurate result possible:
+    //
+    // rad_diff = ((rsq_a - robigsq_a) - rosmallsq_a) +
+    //            ((rsq_e - robigsq_e) - rosmallsq_e)
+    const auto fma_square = [](const scalar_t x) {
+      scalar_t a = x * x;
+      scalar_t e = math::fma(x, x, -a);
+      return std::tuple<scalar_t, scalar_t>(a, e);
+    };
+
+    const auto [rsq_a, rsq_e] = fma_square(r);
+    const auto [robigsq_a, robigsq_e] =
+        fma_square(math::max(math::abs(ro[0]), math::abs(ro[1])));
+    const auto [rosmlsq_a, rosmlsq_e] =
+        fma_square(math::min(math::abs(ro[0]), math::abs(ro[1])));
+
+    const scalar_t rad_diff =
+        ((rsq_a - robigsq_a) - rosmlsq_a) + ((rsq_e - robigsq_e) - rosmlsq_e);
 
     // Only calculate the path, when not already on surface
-    // 'rad_diff' leads to numerical instabilites in single precision on GPU
-    if (const double rad_diff{r * r - ro_perp_2};
-        math::fabs(rad_diff) > 1.f * unit<scalar_t>::um) {
+    if (math::fabs(rad_diff) > 1.f * unit<scalar_t>::um) {
       const scalar_t rd_perp_inv_2{1.f / rd_perp_2};
       const scalar_t k{-rd_perp_inv_2 * (ro[0] * rd[0] + ro[1] * rd[1])};
-      const auto discr{static_cast<scalar_t>(rd_perp_inv_2 * rad_diff + k * k)};
+      const scalar_t c{rd_perp_inv_2 * rad_diff};
+      const scalar_t discr{c + k * k};
 
       // No intersection found
       if (discr < 0.f) [[unlikely]] {
         return {};
       }
 
+      // The options are k +- sqrt(discr). Clearly the square root of the
+      // discriminant is always positive. This means that if k is positive,
+      // then k + sqrt(discr) will have a greater absolute value than
+      // k - sqrt(discr). If k is negative, the logic is reversed.
       const scalar_t sqrt_discr{math::sqrt(discr)};
-      const scalar_t s1{k + sqrt_discr};
-      const scalar_t s2{k - sqrt_discr};
+      const scalar_t sfar{k + math::copysign(sqrt_discr, k)};
+      const scalar_t snear{sfar != 0.f ? -c / sfar : sfar};
 
-      // Take the nearest solution
-      path = (math::fabs(s1) < math::fabs(s2)) ? s1 : s2;
-
-      // If the near solution is outside the overstepping tolerance, take
-      // the far solution (if it exists)
-      if (path < overstep_tol && sqrt_discr > 0.f) {
-        path = (math::fabs(s1) >= math::fabs(s2)) ? s1 : s2;
-      }
+      path = snear >= overstep_tol ? snear : sfar;
     } else {
-      path = static_cast<scalar_t>(rad_diff);
+      path = rad_diff;
     }
 
     if (path < overstep_tol) {
