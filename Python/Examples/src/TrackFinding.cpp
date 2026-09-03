@@ -164,11 +164,33 @@ void addTrackFinding(py::module& mex) {
                std::shared_ptr<Alg::TrackFinderFunction>>(
         alg, "TrackFinderFunction");
 
+    py::class_<ActsExamples::TrackStateSelectionCuts>(mex,
+                                                      "TrackStateSelectionCuts")
+        .def(py::init<>())
+        .def(py::init([](double chi2CutOffMeasurement, double chi2CutOffOutlier,
+                         std::size_t maxBranchesPerSurface) {
+               return ActsExamples::TrackStateSelectionCuts{
+                   chi2CutOffMeasurement, chi2CutOffOutlier,
+                   maxBranchesPerSurface};
+             }),
+             py::arg("chi2CutOffMeasurement") = 15.,
+             py::arg("chi2CutOffOutlier") = 25.,
+             py::arg("maxBranchesPerSurface") = 1)
+        .def_readwrite(
+            "chi2CutOffMeasurement",
+            &ActsExamples::TrackStateSelectionCuts::chi2CutOffMeasurement)
+        .def_readwrite(
+            "chi2CutOffOutlier",
+            &ActsExamples::TrackStateSelectionCuts::chi2CutOffOutlier)
+        .def_readwrite(
+            "maxBranchesPerSurface",
+            &ActsExamples::TrackStateSelectionCuts::maxBranchesPerSurface);
+
     ACTS_PYTHON_STRUCT(
         c, inputMeasurements, inputInitialTrackParameters, inputSeeds,
         outputTracks, trackingGeometry, magneticField, findTracks,
-        findTracksBrem, measurementSelectorCfg, trackSelectorCfg, maxSteps,
-        twoWay, reverseSearch, seedDeduplication, stayOnSeed, pixelVolumeIds,
+        findTracksBrem, trackStateSelection, trackSelectorCfg, maxSteps, twoWay,
+        reverseSearch, seedDeduplication, stayOnSeed, pixelVolumeIds,
         stripVolumeIds, maxPixelHoles, maxStripHoles, trimTracks,
         recordMaterialStates, useJosephFormulation, constrainToVolumeIds,
         endOfWorldVolumeIds);
