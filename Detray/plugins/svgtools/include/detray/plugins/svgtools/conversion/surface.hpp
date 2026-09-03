@@ -24,6 +24,7 @@
 // System include(s)
 #include <algorithm>
 #include <iterator>
+#include <limits>
 
 namespace detray::svgtools::conversion {
 
