@@ -12,6 +12,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -81,6 +82,9 @@ ProcessCode ArrowTrackOutputConverter::execute(
   arrow::ListBuilder tList(pool, std::make_shared<arrow::FloatBuilder>(pool));
   arrow::ListBuilder majIdList(pool,
                                std::make_shared<arrow::UInt64Builder>(pool));
+  arrow::ListBuilder measIdsList(
+      pool, std::make_shared<arrow::ListBuilder>(
+                pool, std::make_shared<arrow::UInt32Builder>(pool)));
   arrow::ListBuilder hitIdsList(
       pool, std::make_shared<arrow::ListBuilder>(
                 pool, std::make_shared<arrow::UInt32Builder>(pool)));
@@ -100,7 +104,15 @@ ProcessCode ArrowTrackOutputConverter::execute(
     check(tList.AppendNull(), "append null t list");
   }
   check(majIdList.Append(), "open majority_particle_id list");
-  check(hitIdsList.Append(), "open hit_ids outer list");
+  check(measIdsList.Append(), "open measurement_ids outer list");
+  if (measToSimHits != nullptr) {
+    check(hitIdsList.Append(), "open hit_ids outer list");
+  } else {
+    // Whole-list null: encodes "no truth information" with one definition-level
+    // entry instead of N per-track empty lists, which a consumer could not
+    // distinguish from tracks without hits.
+    check(hitIdsList.AppendNull(), "append null hit_ids list");
+  }
   check(trackIdList.Append(), "open track_id list");
 
   auto* d0V = static_cast<arrow::FloatBuilder*>(d0List.value_builder());
@@ -110,6 +122,10 @@ ProcessCode ArrowTrackOutputConverter::execute(
   auto* qopV = static_cast<arrow::FloatBuilder*>(qopList.value_builder());
   auto* tV = static_cast<arrow::FloatBuilder*>(tList.value_builder());
   auto* majIdV = static_cast<arrow::UInt64Builder*>(majIdList.value_builder());
+  auto* measIdsInner =
+      static_cast<arrow::ListBuilder*>(measIdsList.value_builder());
+  auto* measIdsV =
+      static_cast<arrow::UInt32Builder*>(measIdsInner->value_builder());
   auto* hitIdsInner =
       static_cast<arrow::ListBuilder*>(hitIdsList.value_builder());
   auto* hitIdsV =
@@ -174,32 +190,39 @@ ProcessCode ArrowTrackOutputConverter::execute(
     }
     majIdV->UnsafeAppend(majId);
 
-    check(hitIdsInner->Append(), "open hit_ids inner list");
-    // Without a measurement→sim-hit map we leave the inner list empty rather
-    // than silently emit measurement indices, which would alias mismatched
-    // ids into a downstream sim-hit table.
+    // `trackStatesReversed()` walks outermost→innermost (the only direct
+    // iteration the MultiTrajectory proxy offers); buffer and reverse so the
+    // per-track lists come out inner→outer along the trajectory, which is what
+    // downstream consumers expect.
+    std::vector<Index> measIndices;
+    for (const auto& state : track.trackStatesReversed()) {
+      if (!state.hasUncalibratedSourceLink()) {
+        continue;
+      }
+      const auto sl =
+          state.getUncalibratedSourceLink().template get<IndexSourceLink>();
+      measIndices.push_back(static_cast<Index>(sl.index()));
+    }
+    std::ranges::reverse(measIndices);
+
+    check(measIdsInner->Append(), "open measurement_ids inner list");
+    for (const auto measIdx : measIndices) {
+      check(measIdsV->Append(static_cast<std::uint32_t>(measIdx)),
+            "append measurement_id");
+    }
+
+    // Sim-hit indices need the measurement→sim-hit map; without it the whole
+    // column is null (see above) and there are no inner lists to fill.
     if (measToSimHits != nullptr) {
-      // `trackStatesReversed()` walks outermost→innermost (the only direct
-      // iteration the MultiTrajectory proxy offers); buffer and reverse so
-      // the per-track list comes out inner→outer along the trajectory, which
-      // is what downstream consumers expect.
-      std::vector<std::uint32_t> hitIds;
-      for (const auto& state : track.trackStatesReversed()) {
-        if (!state.hasUncalibratedSourceLink()) {
-          continue;
-        }
-        const auto sl =
-            state.getUncalibratedSourceLink().template get<IndexSourceLink>();
-        const auto measIdx = static_cast<Index>(sl.index());
+      check(hitIdsInner->Append(), "open hit_ids inner list");
+      for (const auto measIdx : measIndices) {
         // One measurement may map to multiple sim hits (clustering merged
         // them); flatten them into the per-track list.
         auto range = measToSimHits->equal_range(measIdx);
         for (auto it = range.first; it != range.second; ++it) {
-          hitIds.push_back(static_cast<std::uint32_t>(it->second));
+          check(hitIdsV->Append(static_cast<std::uint32_t>(it->second)),
+                "append hit_id");
         }
-      }
-      for (auto rit = hitIds.rbegin(); rit != hitIds.rend(); ++rit) {
-        check(hitIdsV->Append(*rit), "append hit_id");
       }
     }
 
@@ -213,9 +236,10 @@ ProcessCode ArrowTrackOutputConverter::execute(
   };
 
   std::vector<std::shared_ptr<arrow::Array>> arrays = {
-      finish(d0List),     finish(z0List),      finish(phiList),
-      finish(thetaList),  finish(qopList),     finish(majIdList),
-      finish(hitIdsList), finish(trackIdList), finish(tList),
+      finish(d0List),      finish(z0List),     finish(phiList),
+      finish(thetaList),   finish(qopList),    finish(majIdList),
+      finish(measIdsList), finish(hitIdsList), finish(trackIdList),
+      finish(tList),
   };
 
   auto table =
