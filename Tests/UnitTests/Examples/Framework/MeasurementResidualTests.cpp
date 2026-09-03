@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <memory>
 #include <span>
+#include <utility>
 
 using namespace Acts;
 using namespace ActsExamples;
@@ -116,17 +117,6 @@ struct Fixture {
 
 BOOST_AUTO_TEST_SUITE(ValidationMeasurementResidual)
 
-BOOST_AUTO_TEST_CASE(UseOwnMeasurement) {
-  using enum TrackParameterType;
-
-  // only the parameters that consumed the state's own measurement are biased
-  // towards it
-  BOOST_CHECK(!parametersUseOwnMeasurement(Predicted));
-  BOOST_CHECK(parametersUseOwnMeasurement(Filtered));
-  BOOST_CHECK(parametersUseOwnMeasurement(Smoothed));
-  BOOST_CHECK(!parametersUseOwnMeasurement(Unbiased));
-}
-
 BOOST_AUTO_TEST_CASE(TwoDimensionalMeasurement) {
   Fixture fixture;
   const std::array<std::uint8_t, 2> indices{eBoundLoc0, eBoundLoc1};
@@ -155,23 +145,36 @@ BOOST_AUTO_TEST_CASE(TwoDimensionalMeasurement) {
   BOOST_CHECK_EQUAL(residual->covariance(eBoundTheta, eBoundTheta), 0.);
 }
 
-BOOST_AUTO_TEST_CASE(SmoothedParametersSubtractTheCovariance) {
+BOOST_AUTO_TEST_CASE(CovarianceSignFollowsTheParameterType) {
+  using enum TrackParameterType;
+
   Fixture fixture;
   const std::array<std::uint8_t, 2> indices{eBoundLoc0, eBoundLoc1};
   const ConstTrackStateProxy state = fixture.makeState(indices);
 
-  const auto residual = measurementResidual(
-      state, makeParameters(fixture.surface), TrackParameterType::Smoothed);
-  BOOST_REQUIRE(residual.has_value());
+  // only the parameters that consumed the state's own measurement are
+  // correlated with it, so only their covariance subtracts
+  constexpr std::array<std::pair<TrackParameterType, bool>, 4> cases{
+      {{Predicted, false},
+       {Filtered, true},
+       {Smoothed, true},
+       {Unbiased, false}}};
 
-  // smoothed parameters used the measurement and are correlated with it
-  BOOST_CHECK_CLOSE(residual->covariance(eBoundLoc0, eBoundLoc0),
-                    measVar0 - recoVar0, 1e-9);
-  BOOST_CHECK_CLOSE(residual->covariance(eBoundLoc1, eBoundLoc1),
-                    measVar1 - recoVar1, 1e-9);
+  for (const auto& [parameterType, correlated] : cases) {
+    const auto residual = measurementResidual(
+        state, makeParameters(fixture.surface), parameterType);
+    BOOST_REQUIRE(residual.has_value());
 
-  // the residual itself does not depend on the parameter type
-  BOOST_CHECK_CLOSE(residual->residual[eBoundLoc0], recoLoc0 - measLoc0, 1e-9);
+    const double sign = correlated ? -1. : 1.;
+    BOOST_CHECK_CLOSE(residual->covariance(eBoundLoc0, eBoundLoc0),
+                      measVar0 + sign * recoVar0, 1e-9);
+    BOOST_CHECK_CLOSE(residual->covariance(eBoundLoc1, eBoundLoc1),
+                      measVar1 + sign * recoVar1, 1e-9);
+
+    // the residual itself does not depend on the parameter type
+    BOOST_CHECK_CLOSE(residual->residual[eBoundLoc0], recoLoc0 - measLoc0,
+                      1e-9);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(OneDimensionalMeasurement) {

@@ -45,6 +45,14 @@ double inRangeEntries(const ResPlotTool::Histogram1& histogram) {
   return sum;
 }
 
+/// The default config with the perigee parameter names filled in, which the
+/// tool leaves to its caller.
+ResPlotTool::Config makeConfig() {
+  ResPlotTool::Config cfg;
+  cfg.paramNames = {"d0", "z0", "phi", "theta", "qop", "t"};
+  return cfg;
+}
+
 BoundTrackParameters makeParameters(
     const std::shared_ptr<const Surface>& surface, double phi) {
   BoundVector parameters = BoundVector::Zero();
@@ -64,7 +72,7 @@ BOOST_AUTO_TEST_SUITE(ValidationResPlotTool)
 // a track pointing along -x has truth and reco phi on opposite sides of the
 // wrap, where the naive difference is almost a full turn
 BOOST_AUTO_TEST_CASE(PhiResidualWrapsAround) {
-  ResPlotTool tool(ResPlotTool::Config{}, Acts::Logging::INFO);
+  ResPlotTool tool(makeConfig(), Acts::Logging::INFO);
 
   const auto surface = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
   const double delta = 0.00105;
@@ -81,7 +89,7 @@ BOOST_AUTO_TEST_CASE(PhiResidualWrapsAround) {
 
 // the same fill away from the wrap must be untouched by it
 BOOST_AUTO_TEST_CASE(PhiResidualAwayFromTheWrap) {
-  ResPlotTool tool(ResPlotTool::Config{}, Acts::Logging::INFO);
+  ResPlotTool tool(makeConfig(), Acts::Logging::INFO);
 
   const auto surface = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
   const double delta = 0.00105;

@@ -35,9 +35,12 @@ class ResPlotTool {
 
   /// @brief Nested configuration struct
   struct Config {
-    /// Track parameter names
-    std::vector<std::string> paramNames = {"d0",    "z0",  "phi",
-                                           "theta", "qop", "t"};
+    /// Track parameter names, one per bound parameter.
+    ///
+    /// Empty by default because the first two depend on the surface the
+    /// parameters are expressed on: `d0`/`z0` on a perigee, `loc0`/`loc1` on
+    /// a sensor. The caller has to fill them in.
+    std::vector<std::string> paramNames;
 
     std::string qOverPtName = "qopt";
     std::string relQoverPtName = "qopt_rel";
@@ -51,6 +54,8 @@ class ResPlotTool {
         {"Pull", BoostRegularAxis(100, -5, 5, "pull")},
         {"Residual_d0", BoostRegularAxis(100, -0.5, 0.5, "r_{d0} [mm]")},
         {"Residual_z0", BoostRegularAxis(100, -0.5, 0.5, "r_{z0} [mm]")},
+        {"Residual_loc0", BoostRegularAxis(100, -0.5, 0.5, "r_{loc0} [mm]")},
+        {"Residual_loc1", BoostRegularAxis(100, -0.5, 0.5, "r_{loc1} [mm]")},
         {"Residual_phi", BoostRegularAxis(100, -0.01, 0.01, "r_{#phi} [rad]")},
         {"Residual_theta",
          BoostRegularAxis(100, -0.01, 0.01, "r_{#theta} [rad]")},

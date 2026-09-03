@@ -62,8 +62,8 @@ enum class TrackParameterReference {
 /// surface are compared to the truth particle. With `TrackState` every
 /// selected measurement state is compared on its own surface, which is what
 /// makes per-sensor estimates, e.g. from a seed, measurable. The first two
-/// bound parameters are local coordinates there, so the histograms are named
-/// `loc0`/`loc1` instead of the perigee `d0`/`z0`.
+/// bound parameters are local coordinates there, so unnamed parameters are
+/// named `loc0`/`loc1` instead of the perigee `d0`/`z0`.
 ///
 /// `reference` picks what a track state is compared against: the truth behind
 /// its measurement, or the measurement itself.
@@ -73,6 +73,8 @@ enum class TrackParameterReference {
 class TrackParameterPerformanceCollector {
  public:
   struct Config {
+    /// Empty @c ResPlotTool::Config::paramNames are filled in from
+    /// @c parameterSource.
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;

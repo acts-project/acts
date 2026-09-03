@@ -54,7 +54,8 @@ ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
 
   if (m_cfg.paramNames.size() != Acts::eBoundSize) {
     throw std::invalid_argument(
-        "ResPlotTool: expected one name per bound parameter");
+        "ResPlotTool: expected one name per bound parameter, the caller has to "
+        "fill in the empty default");
   }
 
   ACTS_DEBUG("Initialize the histograms for residual and pull plots");

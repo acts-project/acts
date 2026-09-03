@@ -108,13 +108,6 @@ std::optional<Acts::BoundTrackParameters> ActsExamples::recoParametersOnSurface(
                                     stateParameters->second, hypothesis);
 }
 
-bool ActsExamples::parametersUseOwnMeasurement(
-    TrackParameterType parameterType) {
-  using enum TrackParameterType;
-
-  return parameterType == Filtered || parameterType == Smoothed;
-}
-
 std::optional<ActsExamples::MeasurementResidual>
 ActsExamples::measurementResidual(const ConstTrackStateProxy& state,
                                   const Acts::BoundTrackParameters& parameters,
@@ -138,7 +131,10 @@ ActsExamples::measurementResidual(const ConstTrackStateProxy& state,
 
   // parameters that used the measurement are correlated with it, so their
   // covariance subtracts instead of adding
-  const double sign = parametersUseOwnMeasurement(parameterType) ? -1. : 1.;
+  using enum TrackParameterType;
+  const bool usesOwnMeasurement =
+      parameterType == Filtered || parameterType == Smoothed;
+  const double sign = usesOwnMeasurement ? -1. : 1.;
 
   // the projector only selects bound indices, so `H x` is `x(subspace)` and
   // `H P H^T` is `P(subspace, subspace)`, which writes straight into the full

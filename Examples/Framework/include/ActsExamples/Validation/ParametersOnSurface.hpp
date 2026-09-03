@@ -78,13 +78,6 @@ std::optional<Acts::BoundTrackParameters> recoParametersOnSurface(
     std::optional<TrackParameterType> parameterType,
     const Acts::ParticleHypothesis& hypothesis);
 
-/// Whether parameters of the given type were obtained using the track state's
-/// own measurement.
-///
-/// @param parameterType The parameter type
-/// @return True for `Filtered` and `Smoothed`, false otherwise
-bool parametersUseOwnMeasurement(TrackParameterType parameterType);
-
 /// The residual of track state parameters against the state's own calibrated
 /// measurement.
 struct MeasurementResidual {

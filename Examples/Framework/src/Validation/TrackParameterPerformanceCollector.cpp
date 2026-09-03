@@ -13,11 +13,7 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
-#include <algorithm>
-#include <array>
 #include <stdexcept>
-#include <string>
-#include <string_view>
 #include <utility>
 
 namespace ActsExamples {
@@ -26,40 +22,24 @@ namespace {
 
 /// The `ResPlotTool` config to plot the given source with.
 ///
-/// On a sensor surface the first two bound parameters are local coordinates,
-/// not the perigee `d0`/`z0` the `ResPlotTool` defaults are named for, so
-/// rename them along with their residual axis. Names the caller picked itself
-/// are left alone.
+/// Empty parameter names are filled in from the surface the parameters are
+/// expressed on: a perigee for the reference parameters of a track, a sensor
+/// for a track state, where the first two bound parameters are plain local
+/// coordinates.
 ResPlotTool::Config resPlotToolConfig(
     const TrackParameterPerformanceCollector::Config& cfg) {
-  if (cfg.parameterSource != TrackParameterSource::TrackState) {
-    return cfg.resPlotToolConfig;
-  }
-
   ResPlotTool::Config plotCfg = cfg.resPlotToolConfig;
-  constexpr std::array<std::pair<std::string_view, std::string_view>, 2>
-      renames{{{"d0", "loc0"}, {"z0", "loc1"}}};
-
-  for (const auto& [from, to] : renames) {
-    const auto name = std::ranges::find(plotCfg.paramNames, from);
-    if (name == plotCfg.paramNames.end()) {
-      continue;
-    }
-    *name = to;
-
-    auto axis = plotCfg.varBinning.extract(std::string("Residual_") +
-                                           std::string(from));
-    if (axis.empty()) {
-      continue;
-    }
-    axis.key() = std::string("Residual_") + std::string(to);
-    std::string& title = axis.mapped().metadata();
-    if (const auto pos = title.find(from); pos != std::string::npos) {
-      title.replace(pos, from.size(), to);
-    }
-    plotCfg.varBinning.insert(std::move(axis));
+  if (!plotCfg.paramNames.empty()) {
+    return plotCfg;
   }
 
+  const bool perigee = cfg.parameterSource == TrackParameterSource::Track;
+  plotCfg.paramNames = {perigee ? "d0" : "loc0",
+                        perigee ? "z0" : "loc1",
+                        "phi",
+                        "theta",
+                        "qop",
+                        "t"};
   return plotCfg;
 }
 
