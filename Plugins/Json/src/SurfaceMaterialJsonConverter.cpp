@@ -35,6 +35,9 @@ namespace {
 
 using namespace Acts;
 
+using EncodeContext = SurfaceMaterialJsonConverter::EncodeContext;
+using DecodeContext = SurfaceMaterialJsonConverter::DecodeContext;
+
 /// Payload type tags, shared between the encoder and the decoder
 constexpr const char* kHomogeneousTag = "homogeneous";
 constexpr const char* kBinnedTag = "binned";
@@ -48,7 +51,8 @@ constexpr const char* kGridAccessorTag = "grid";
 constexpr const char* kIndexedAccessorTag = "indexed";
 constexpr const char* kGloballyIndexedAccessorTag = "globally_indexed";
 
-nlohmann::json homogeneousToJson(const HomogeneousSurfaceMaterial& material) {
+nlohmann::json homogeneousToJson(const HomogeneousSurfaceMaterial& material,
+                                 EncodeContext& /*ctx*/) {
   nlohmann::json jMaterial;
   jMaterial[jsonKey().typekey] = kHomogeneousTag;
   jMaterial[jsonKey().maptype] = nlohmann::json(material.mappingType());
@@ -62,7 +66,8 @@ nlohmann::json homogeneousToJson(const HomogeneousSurfaceMaterial& material) {
   return jMaterial;
 }
 
-nlohmann::json binnedToJson(const BinnedSurfaceMaterial& material) {
+nlohmann::json binnedToJson(const BinnedSurfaceMaterial& material,
+                            EncodeContext& /*ctx*/) {
   nlohmann::json jMaterial;
   jMaterial[jsonKey().typekey] = kBinnedTag;
   jMaterial[jsonKey().maptype] = nlohmann::json(material.mappingType());
@@ -81,7 +86,8 @@ nlohmann::json binnedToJson(const BinnedSurfaceMaterial& material) {
   return jMaterial;
 }
 
-nlohmann::json protoToJson(const ProtoSurfaceMaterial& material) {
+nlohmann::json protoToJson(const ProtoSurfaceMaterial& material,
+                           EncodeContext& /*ctx*/) {
   nlohmann::json jMaterial;
   jMaterial[jsonKey().typekey] = kProtoTag;
   jMaterial[jsonKey().maptype] = nlohmann::json(material.mappingType());
@@ -98,7 +104,8 @@ nlohmann::json protoToJson(const ProtoSurfaceMaterial& material) {
   return jMaterial;
 }
 
-nlohmann::json protoGridToJson(const ProtoGridSurfaceMaterial& material) {
+nlohmann::json protoGridToJson(const ProtoGridSurfaceMaterial& material,
+                               EncodeContext& /*ctx*/) {
   nlohmann::json jMaterial;
   jMaterial[jsonKey().typekey] = kProtoGridTag;
   jMaterial[jsonKey().maptype] = nlohmann::json(material.mappingType());
@@ -108,7 +115,8 @@ nlohmann::json protoGridToJson(const ProtoGridSurfaceMaterial& material) {
   return jMaterial;
 }
 
-nlohmann::json mergedMarkerToJson(const MergedMaterialMarker& /*material*/) {
+nlohmann::json mergedMarkerToJson(const MergedMaterialMarker& /*material*/,
+                                  EncodeContext& /*ctx*/) {
   nlohmann::json jMaterial;
   jMaterial[jsonKey().typekey] = kMergedMarkerTag;
   // Flag as "mapped" so the reader does not discard it
@@ -155,11 +163,20 @@ nlohmann::json gridToJson(const IGrid& grid,
   return jGrid;
 }
 
+nlohmann::json slabsToJson(const std::vector<MaterialSlab>& slabs) {
+  nlohmann::json jSlabs = nlohmann::json::array();
+  for (const auto& msl : slabs) {
+    jSlabs.push_back(nlohmann::json(msl));
+  }
+  return jSlabs;
+}
+
 /// Encoder for the whole grid material family: the concrete grid shape and
 /// the accessor type are resolved at runtime through the abstract base.
 template <typename value_t>
 nlohmann::json gridMaterialToJson(const IGridSurfaceMaterial<value_t>& material,
-                                  const std::string& accessorType) {
+                                  const std::string& accessorType,
+                                  EncodeContext& ctx) {
   nlohmann::json jMaterial;
   jMaterial[jsonKey().typekey] = kGridTag;
   jMaterial[jsonKey().mapkey] = true;
@@ -169,11 +186,23 @@ nlohmann::json gridMaterialToJson(const IGridSurfaceMaterial<value_t>& material,
   if (accessorType == kIndexedAccessorTag) {
     const auto& accessor = dynamic_cast<const IndexedMaterialAccessor&>(
         material.materialAccessor());
-    nlohmann::json jStorage = nlohmann::json::array();
-    for (const auto& msl : accessor.material) {
-      jStorage.push_back(nlohmann::json(msl));
+    jAccessor["storage_vector"] = slabsToJson(accessor.material);
+  } else if (accessorType == kGloballyIndexedAccessorTag) {
+    const auto& accessor = dynamic_cast<const GloballyIndexedMaterialAccessor&>(
+        material.materialAccessor());
+    if (accessor.slabStore == nullptr) {
+      throw std::invalid_argument(
+          "SurfaceMaterialJsonConverter: globally indexed material without a "
+          "slab store");
     }
-    jAccessor["storage_vector"] = std::move(jStorage);
+    jAccessor["shared_entries"] = accessor.sharedEntries;
+    if (ctx.storeTableEnabled()) {
+      // The store lives once in the document, the entry only references it
+      jAccessor["store"] = ctx.storeId(accessor.slabStore);
+    } else {
+      // Standalone payload, inline the store to keep it self-contained
+      jAccessor["storage_vector"] = slabsToJson(*accessor.slabStore);
+    }
   }
   jAccessor["grid"] =
       gridToJson<value_t>(material.grid(), material.gridConstView());
@@ -187,22 +216,22 @@ nlohmann::json gridMaterialToJson(const IGridSurfaceMaterial<value_t>& material,
 }
 
 nlohmann::json slabGridMaterialToJson(
-    const IGridSurfaceMaterial<MaterialSlab>& material) {
-  return gridMaterialToJson<MaterialSlab>(material, kGridAccessorTag);
+    const IGridSurfaceMaterial<MaterialSlab>& material, EncodeContext& ctx) {
+  return gridMaterialToJson<MaterialSlab>(material, kGridAccessorTag, ctx);
 }
 
 nlohmann::json indexGridMaterialToJson(
-    const IGridSurfaceMaterial<std::size_t>& material) {
+    const IGridSurfaceMaterial<std::size_t>& material, EncodeContext& ctx) {
   // Both index-based accessors share the grid value type, they are told
   // apart by the accessor instance
   const IGridMaterialAccessor& accessor = material.materialAccessor();
   if (dynamic_cast<const IndexedMaterialAccessor*>(&accessor) != nullptr) {
-    return gridMaterialToJson<std::size_t>(material, kIndexedAccessorTag);
+    return gridMaterialToJson<std::size_t>(material, kIndexedAccessorTag, ctx);
   }
   if (dynamic_cast<const GloballyIndexedMaterialAccessor*>(&accessor) !=
       nullptr) {
     return gridMaterialToJson<std::size_t>(material,
-                                           kGloballyIndexedAccessorTag);
+                                           kGloballyIndexedAccessorTag, ctx);
   }
   throw std::invalid_argument(
       "SurfaceMaterialJsonConverter: unknown index grid material accessor");
@@ -218,7 +247,7 @@ MappingType readMappingType(const nlohmann::json& jMaterial) {
 }
 
 std::unique_ptr<const ISurfaceMaterial> homogeneousFromJson(
-    const nlohmann::json& jMaterial) {
+    const nlohmann::json& jMaterial, const DecodeContext& /*ctx*/) {
   MaterialSlabMatrix matrix;
   from_json(jMaterial.at(jsonKey().datakey), matrix);
   if (matrix.empty() || matrix[0].empty()) {
@@ -230,7 +259,7 @@ std::unique_ptr<const ISurfaceMaterial> homogeneousFromJson(
 }
 
 std::unique_ptr<const ISurfaceMaterial> binnedFromJson(
-    const nlohmann::json& jMaterial) {
+    const nlohmann::json& jMaterial, const DecodeContext& /*ctx*/) {
   BinUtility bUtility;
   from_json(jMaterial.at(jsonKey().binkey), bUtility);
   MaterialSlabMatrix matrix;
@@ -240,7 +269,7 @@ std::unique_ptr<const ISurfaceMaterial> binnedFromJson(
 }
 
 std::unique_ptr<const ISurfaceMaterial> protoFromJson(
-    const nlohmann::json& jMaterial) {
+    const nlohmann::json& jMaterial, const DecodeContext& /*ctx*/) {
   BinUtility bUtility;
   if (jMaterial.contains(jsonKey().binkey) &&
       !jMaterial.at(jsonKey().binkey).is_null()) {
@@ -251,7 +280,7 @@ std::unique_ptr<const ISurfaceMaterial> protoFromJson(
 }
 
 std::unique_ptr<const ISurfaceMaterial> protoGridFromJson(
-    const nlohmann::json& jMaterial) {
+    const nlohmann::json& jMaterial, const DecodeContext& /*ctx*/) {
   MultiAxisSpec spec =
       MultiAxisSpecJsonConverter::fromJson(jMaterial.at("axis_specs"));
   if (spec.size() != 2u) {
@@ -266,7 +295,7 @@ std::unique_ptr<const ISurfaceMaterial> protoGridFromJson(
 }
 
 std::unique_ptr<const ISurfaceMaterial> mergedMarkerFromJson(
-    const nlohmann::json& /*jMaterial*/) {
+    const nlohmann::json& /*jMaterial*/, const DecodeContext& /*ctx*/) {
   return std::make_unique<const MergedMaterialMarker>();
 }
 
@@ -341,29 +370,43 @@ std::unique_ptr<const ISurfaceMaterial> createGridMaterial(
       "supported");
 }
 
+std::vector<MaterialSlab> slabsFromJson(const nlohmann::json& jSlabs) {
+  std::vector<MaterialSlab> slabs;
+  slabs.reserve(jSlabs.size());
+  for (const auto& jSlab : jSlabs) {
+    MaterialSlab slab = MaterialSlab::Nothing();
+    from_json(jSlab, slab);
+    slabs.push_back(slab);
+  }
+  return slabs;
+}
+
 std::unique_ptr<const ISurfaceMaterial> gridFromJson(
-    const nlohmann::json& jMaterial) {
+    const nlohmann::json& jMaterial, const DecodeContext& ctx) {
   const nlohmann::json& jAccessor = jMaterial.at("accessor");
   const nlohmann::json& jGrid = jAccessor.at("grid");
   std::string accessorType = jAccessor.at("type").get<std::string>();
 
   if (accessorType == kIndexedAccessorTag) {
-    std::vector<MaterialSlab> storage;
-    for (const auto& jSlab : jAccessor.at("storage_vector")) {
-      MaterialSlab slab = MaterialSlab::Nothing();
-      from_json(jSlab, slab);
-      storage.push_back(slab);
-    }
-    return createGridMaterial(jMaterial, jGrid,
-                              IndexedMaterialAccessor{std::move(storage)},
-                              std::size_t{0u});
-  }
-  if (accessorType == kGloballyIndexedAccessorTag) {
-    // The global material vector is owned and filled elsewhere
     return createGridMaterial(
         jMaterial, jGrid,
-        GloballyIndexedMaterialAccessor{
-            std::make_shared<std::vector<MaterialSlab>>()},
+        IndexedMaterialAccessor{slabsFromJson(jAccessor.at("storage_vector"))},
+        std::size_t{0u});
+  }
+  if (accessorType == kGloballyIndexedAccessorTag) {
+    bool sharedEntries = jAccessor.value("shared_entries", false);
+    MaterialSlabStore store;
+    if (jAccessor.contains("store")) {
+      // Resolved through the document store table, so that grids referencing
+      // the same id keep sharing one allocation
+      store = ctx.store(jAccessor.at("store").get<std::size_t>());
+    } else {
+      store = std::make_shared<std::vector<MaterialSlab>>(
+          slabsFromJson(jAccessor.at("storage_vector")));
+    }
+    return createGridMaterial(
+        jMaterial, jGrid,
+        GloballyIndexedMaterialAccessor{std::move(store), sharedEntries},
         std::size_t{0u});
   }
   if (accessorType == kGridAccessorTag) {
@@ -408,19 +451,35 @@ Acts::SurfaceMaterialJsonConverter::defaultConfig() {
 }
 
 nlohmann::json Acts::SurfaceMaterialJsonConverter::toJson(
+    const ISurfaceMaterial& material, EncodeContext& context,
+    const Config& config) {
+  return config.encoder(material, context);
+}
+
+nlohmann::json Acts::SurfaceMaterialJsonConverter::toJson(
     const ISurfaceMaterial& material, const Config& config) {
-  return config.encoder(material);
+  // A context without a store table makes the encoders inline their stores
+  EncodeContext context;
+  return toJson(material, context, config);
 }
 
 std::unique_ptr<const Acts::ISurfaceMaterial>
 Acts::SurfaceMaterialJsonConverter::fromJson(const nlohmann::json& jMaterial,
+                                             const DecodeContext& context,
                                              const Config& config) {
   // Surfaces that are flagged out of the mapping carry no material
   if (jMaterial.contains(jsonKey().mapkey) &&
       jMaterial.at(jsonKey().mapkey) == false) {
     return nullptr;
   }
-  return config.decoder(jMaterial);
+  return config.decoder(jMaterial, context);
+}
+
+std::unique_ptr<const Acts::ISurfaceMaterial>
+Acts::SurfaceMaterialJsonConverter::fromJson(const nlohmann::json& jMaterial,
+                                             const Config& config) {
+  const DecodeContext context;
+  return fromJson(jMaterial, context, config);
 }
 
 void Acts::to_json(nlohmann::json& j,

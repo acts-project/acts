@@ -106,20 +106,21 @@ struct IndexedMaterialAccessor : public IGridMaterialAccessor {
 /// @brief  This is an accessor for cases where the material is filled in a global
 /// material vector that is accessed from the different material grids.
 struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
-  /// Constructor with global material vector
-  /// @param gMaterial Shared pointer to global material vector
+  /// Constructor with the shared slab store
+  /// @param store Shared pointer to the slab store this grid indexes into
   /// @param shared Whether material entries are shared across grid points
   explicit GloballyIndexedMaterialAccessor(
-      std::shared_ptr<std::vector<MaterialSlab>> gMaterial, bool shared = false)
+      std::shared_ptr<std::vector<MaterialSlab>> store, bool shared = false)
       : IGridMaterialAccessor(),
-        globalMaterial(std::move(gMaterial)),
+        slabStore(std::move(store)),
         sharedEntries(shared) {}
 
   /// Broadcast the grid_value_type
   using grid_value_type = std::size_t;
 
-  /// @brief The internal storage of the material
-  std::shared_ptr<std::vector<MaterialSlab>> globalMaterial = nullptr;
+  /// @brief The slab store this grid indexes into, potentially shared
+  /// with other grids
+  std::shared_ptr<std::vector<MaterialSlab>> slabStore = nullptr;
 
   /// Indicate if you have entries bins across different grids, e.g. by
   /// running a compression/clustering algorithm.
@@ -131,7 +132,7 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
   ///
   /// @tparam grid_type the type of the grid, also defines the point type
   ///
-  /// @param grid the grid holding the indices into the global material vector
+  /// @param grid the grid holding the indices into the slab store
   /// @param point the lookup point (already casted from global, or filled from local)
   ///
   /// @return the material slab from the grid bin associated to the lookup point
@@ -139,12 +140,12 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
   inline const MaterialSlab& slab(
       const grid_type& grid, const typename grid_type::point_t& point) const {
     auto index = grid.atPosition(point);
-    return (*globalMaterial)[index];
+    return (*slabStore)[index];
   }
 
   /// @brief Scale the material (by scaling the thickness)
   ///
-  /// @param grid the grid holding the indices into the global material vector
+  /// @param grid the grid holding the indices into the slab store
   /// @param scale the amount of the scaling
   ///
   /// @note this will scale only the bins touched by this grid, however,
@@ -161,7 +162,7 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
     // Loop through the grid bins, get the indices and scale the material
     for (std::size_t ib = 0; ib < grid.size(); ++ib) {
       auto index = grid.at(ib);
-      (*globalMaterial)[index].scaleThickness(static_cast<float>(scale));
+      (*slabStore)[index].scaleThickness(static_cast<float>(scale));
     }
   }
 };
