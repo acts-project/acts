@@ -59,6 +59,9 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// be GBTS
     std::string layerMappingFile;
 
+    /// z0 range the eta bin table is built against
+    Acts::Experimental::GbtsZ0Range gbtsZ0Range;
+
     /// holds detector information, used to make the geometry objects used by
     /// GBTS
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;

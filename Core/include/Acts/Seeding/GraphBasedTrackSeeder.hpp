@@ -45,22 +45,29 @@ class GraphBasedTrackSeeder {
     /// Look-up table input file path.
     std::string lutInputFile;
 
-    /// Enable Large Radius Tracking mode.
-    bool lrtMode = false;
+    /// Take the strip-to-strip layer connections from the connector file
+    /// instead of the pixel-to-pixel ones. Read where the file is loaded, not
+    /// by the seeder itself.
+    bool useStripConnections = false;
     /// Enable the cluster width cuts: wide endcap rejection and tau narrowing.
     bool useClusterWidthCuts = false;
     /// Match seeds before creating them.
     bool matchBeforeCreate = false;
-    /// Use legacy tuning parameters.
-    bool useOldTunings = false;
-    /// optional validation for abrrel triplets
+    /// Bound the curvature by the pT the triplet has to reach in the actual
+    /// field, times `oldTuningsCurvature*Fraction`, instead of the tuned
+    /// `maxCurvature*Eta` constants.
+    bool useOldTuningsCurvature = false;
+    /// Open the phi window as `minDeltaPhi` plus a fraction of that same
+    /// curvature bound, instead of the two-slope `phiWindow*` model.
+    bool useOldTuningsPhiWindow = false;
+    /// optional validation for barrel triplets
     bool validateTriplets = true;
     /// widens allowed variation in tau ratio
     /// if layer is missed in edge connecting
     bool useAdaptiveCuts = true;
-    /// optionally add 3 sp seeds within a cirtain eta range
+    /// optionally add 3 sp seeds within a certain eta range
     ///
-    /// @note Worth little until `maxAbsEtaAddTripelts` is opened past
+    /// @note Worth little until `maxAbsEtaAddTriplets` is opened past
     ///       `edgeMaskMinEta`; matters most where there are few layers.
     bool addTriplets = false;
     /// Tau ratio cut threshold.
@@ -76,7 +83,7 @@ class GraphBasedTrackSeeder {
     float tauRatioCorrStrip = 0.03f;
     /// the maximum allowed eta value in which
     /// three spacepoint seeds are passed through
-    float maxAbsEtaAddTripelts = 1.5;
+    float maxAbsEtaAddTriplets = 1.5;
     /// Eta bin width override (0 uses default from connection file).
     /// specify non-zero to override eta bin width from connection file (default
     /// 0.2 in createLinkingScheme.py)
@@ -86,6 +93,9 @@ class GraphBasedTrackSeeder {
     float nMaxPhiSlice = 53;  // used to calculate phi slices
     /// Minimum transverse momentum.
     float minPt = 1.0f * UnitConstants::GeV;
+    /// Fraction of `minPt` a triplet may fall to, allowing for three-point
+    /// pT resolution.
+    float tripletPtFraction = 0.8f;
 
     // graph building options
     /// Use eta binning from geometry structure.
@@ -105,25 +115,74 @@ class GraphBasedTrackSeeder {
     float cutDPhiMax = 0.012f;
     /// Maximum allowed curvature tolerance for candidate edge connections
     float cutDCurvMax = 0.001f;
-    /// Minimum z0 value, set as optionl as if in pixel mode,
-    /// The value is picked from the ROI
+    /// Minimum z0 value. In pixel mode the value is picked from the RoI.
     float minZ0 = -600;
-    /// Minimum z0 value, set as optionl as if in pixel mode,
-    /// The value is picked from the ROI
+    /// Maximum z0 value. In pixel mode the value is picked from the RoI.
     float maxZ0 = 600;
-    /// When old tunings are used, this defines the minimum phi window used
+    /// Offset of the phi window under `useOldTuningsPhiWindow`.
     float minDeltaPhi = 0.001f;
+
+    /// pT the default cut coefficients were tuned at; they scale by
+    /// `tuningPt / minPt`.
+    float tuningPt = 0.9f * UnitConstants::GeV;
+    /// Maximum |curvature| above `curvatureSplitAbsTau`, before that scaling.
+    float maxCurvatureHighEta = 4.75e-4f / UnitConstants::mm;
+    /// Maximum |curvature| below `curvatureSplitAbsTau`, before that scaling.
+    float maxCurvatureLowEta = 3.75e-4f / UnitConstants::mm;
+    /// |cot(theta)| separating the two curvature cuts, |eta| of about 2.1.
+    float curvatureSplitAbsTau = 4.0f;
+    /// Squared fraction of the pT-derived curvature bound cut at above
+    /// `curvatureSplitAbsTau`, under `useOldTuningsCurvature`. Large radius
+    /// tracking cuts at the bound itself, so 1.
+    float oldTuningsCurvatureHighEtaFraction = 0.8f;
+    /// Squared fraction of the same below `curvatureSplitAbsTau`.
+    float oldTuningsCurvatureLowEtaFraction = 0.6f;
+    /// Fraction of the same the phi window opens by, per unit of radial
+    /// separation, under `useOldTuningsPhiWindow`.
+    float oldTuningsPhiWindowFraction = 0.68f;
+    /// Radial separation splitting the two phi window slopes below.
+    float phiWindowSplitDeltaRadius = 60.0f * UnitConstants::mm;
+    /// Phi window below `phiWindowSplitDeltaRadius`, as offset plus slope times
+    /// the radial separation.
+    float phiWindowNearOffset = 0.002f;
+    /// Slope of the near phi window, per unit radial separation. Scaled by
+    /// `tuningPt / minPt`.
+    float phiWindowNearSlope = 4.33e-4f / UnitConstants::mm;
+    /// Phi window above `phiWindowSplitDeltaRadius`, in the same form.
+    float phiWindowFarOffset = 0.015f;
+    /// Slope of the far phi window, per unit radial separation. Scaled by
+    /// `tuningPt / minPt`.
+    float phiWindowFarSlope = 2.2e-4f / UnitConstants::mm;
+    /// Incoming edge count below which a node is accepted without a tau match.
+    std::uint32_t matchBeforeCreateMaxEdges = 2;
+    /// Layers whose nodes are cut against the z0 histogram of their outer
+    /// neighbourhood, and whose isolated nodes are skipped.
+    std::vector<std::uint32_t> z0HistogramLayerIds{80000};
+    /// Layers `matchBeforeCreate` applies to, when it is enabled.
+    std::vector<std::uint32_t> matchBeforeCreateLayerIds{80000, 81000};
+    /// Half-width of the z0 window a node is matched against in the histogram.
+    float z0Resolution = 2.5f * UnitConstants::mm;
     /// Maximum radius of pixel detector
     float maxOuterRadius = 550.0f;
 
     /// Resolve a doublet's strip endpoints against its own direction before
     /// cutting on them. Nothing is written back; the correction is the pair's.
     bool calibrateStrips = true;
-    /// How far outside its strips a crossing may still be recovered, as a
-    /// multiple of the strip half-length.
-    float stripLengthTolerance = 1.1f;
+    /// How far along a strip a crossing may land and still be recovered, as a
+    /// multiple of the strip half-length, so 1 is the strip itself. The same
+    /// quantity as `TripletSeedFinder::Config::toleranceParam`.
+    float maxStripLengthFraction = 1.1f;
 
     // Seed extraction options
+    /// Maximum number of connected-component iterations.
+    std::uint32_t ccaMaxIterations = 15;
+    /// Chain length a seed candidate must reach: a triplet plus one
+    /// confirmation. Large radius tracking asks for the triplet alone, so 2.
+    std::uint32_t minSeedLevel = 3;
+    /// Smallest seed size that is split into drop-out candidates.
+    std::uint32_t minSplitSeedSize = 4;
+    /// Largest seed size that is split.
+    std::uint32_t maxSplitSeedSize = 5;
     /// Minimum eta for edge masking.
     float edgeMaskMinEta = 1.5;
     /// Threshold for hit sharing between seeds.
@@ -141,6 +200,14 @@ class GraphBasedTrackSeeder {
     /// Distance to the module edge below which a cluster may be shortened,
     /// which switches to the tau lookup table's near-edge bounds.
     float moduleEdgeTolerance = 0.3 * Acts::UnitConstants::mm;
+    /// Cluster width covered by one bin of the tau lookup table.
+    float tauLutBinWidth = 0.05 * Acts::UnitConstants::mm;
+    /// Multiples of the phi slice width duplicated either side of the
+    /// wrap-around, so a sliding window never has to wrap.
+    float phiIndexMargin = 1.5f;
+    /// Buckets used to sort an eta bin by phi, at most
+    /// `GbtsNodeStorage::kMaxPhiSortBuckets`.
+    std::uint32_t phiSortBuckets = 31;
   };
 
   /// Derived configuration struct that contains calculated parameters based on
@@ -319,10 +386,9 @@ class GraphBasedTrackSeeder {
   /// beamspot
   /// @param z0BitMask Sets allowed bins of allowed z value
   /// @param z0 Estimated z0 of segments z value at beamspot
-  /// @param minZ0 Minimum value of beam spot z coordinate
   /// @param z0HistoCoeff Scalfactor that converts z coodindate into bin index
   /// @return Whether segment is within beamspot range
-  bool checkZ0BitMask(std::uint16_t z0BitMask, float z0, float minZ0,
+  bool checkZ0BitMask(std::uint16_t z0BitMask, float z0,
                       float z0HistoCoeff) const;
 
   /// Estimate the inverse radius of the circle through three nodes.

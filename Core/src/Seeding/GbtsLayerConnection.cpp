@@ -20,7 +20,7 @@
 namespace Acts::Experimental {
 
 GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
-    std::istream& inStream, bool lrtMode) {
+    std::istream& inStream, bool stripConnections) {
   GbtsLayerConnectionMap connectionMap;
 
   std::uint32_t nLinks{};
@@ -53,7 +53,7 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
 
     bool srcIsStrip = (srcvol_id == 13 || srcvol_id == 12 || srcvol_id == 14);
     bool dstIsStrip = (dstvol_id == 13 || dstvol_id == 12 || dstvol_id == 14);
-    if (lrtMode) {
+    if (stripConnections) {
       if (!srcIsStrip || !dstIsStrip) {
         continue;
       }
@@ -189,9 +189,9 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
 }
 
 GbtsLayerConnectionMap GbtsLayerConnectionMap::fromFile(std::string& inFile,
-                                                        bool lrtMode) {
+                                                        bool stripConnections) {
   std::ifstream inputStream(inFile.c_str());
-  return fromStream(inputStream, lrtMode);
+  return fromStream(inputStream, stripConnections);
 }
 
 }  // namespace Acts::Experimental

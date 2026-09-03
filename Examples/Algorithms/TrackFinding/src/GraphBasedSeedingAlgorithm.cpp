@@ -41,7 +41,7 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   Acts::Experimental::GbtsLayerConnectionMap layerConnectionMap =
       Acts::Experimental::GbtsLayerConnectionMap::fromFile(
           m_cfg.seedFinderConfig.connectorInputFile,
-          m_cfg.seedFinderConfig.lrtMode);
+          m_cfg.seedFinderConfig.useStripConnections);
 
   // create the TrigInDetSiLayers (Logical Layers),
   // as well as a map that tracks there index in m_layerGeometry
@@ -56,7 +56,7 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // initialise the object that holds all the geometry information needed for
   // the algorithm
   auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
-      layerGeometry, layerConnectionMap, this->logger());
+      layerGeometry, layerConnectionMap, m_cfg.gbtsZ0Range, this->logger());
 
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
@@ -385,10 +385,11 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("BeamSpotCorrection: " << cfg1.beamSpotCorrection);
   ACTS_DEBUG("connectorInputFile: " << cfg1.connectorInputFile);
   ACTS_DEBUG("lutInputFile: " << cfg1.lutInputFile);
-  ACTS_DEBUG("lrtMode: " << cfg1.lrtMode);
+  ACTS_DEBUG("useStripConnections: " << cfg1.useStripConnections);
   ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
   ACTS_DEBUG("matchBeforeCreate: " << cfg1.matchBeforeCreate);
-  ACTS_DEBUG("useOldTunings: " << cfg1.useOldTunings);
+  ACTS_DEBUG("useOldTuningsCurvature: " << cfg1.useOldTuningsCurvature);
+  ACTS_DEBUG("useOldTuningsPhiWindow: " << cfg1.useOldTuningsPhiWindow);
   ACTS_DEBUG("tauRatioCut: " << cfg1.tauRatioCut);
   ACTS_DEBUG("tauRatioPrecut: " << cfg1.tauRatioPrecut);
   ACTS_DEBUG("etaBinWidthOverride: " << cfg1.etaBinWidthOverride);
@@ -405,7 +406,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("useAdaptiveCuts: " << cfg1.useAdaptiveCuts);
   ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
   ACTS_DEBUG("tauRatioCorr: " << cfg1.tauRatioCorr);
-  ACTS_DEBUG("maxAbsEtaAddTripelts: " << cfg1.maxAbsEtaAddTripelts);
+  ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
   ACTS_DEBUG("d0Max: " << cfg1.d0Max);
   ACTS_DEBUG("cutDPhiMax: " << cfg1.cutDPhiMax);
   ACTS_DEBUG("cutDCurvMax: " << cfg1.cutDCurvMax);
