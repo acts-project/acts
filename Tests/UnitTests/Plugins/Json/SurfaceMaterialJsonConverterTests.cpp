@@ -26,6 +26,7 @@
 #include <array>
 #include <memory>
 #include <numbers>
+#include <stdexcept>
 #include <variant>
 #include <vector>
 
@@ -253,6 +254,7 @@ BOOST_AUTO_TEST_CASE(GloballyIndexedGridMaterialRoundTrip) {
   // The store travels with the payload, so this reads back standalone. The
   // free-function reader on main refuses this case outright.
   BOOST_CHECK(jMaterial["accessor"].contains("storage_vector"));
+  BOOST_CHECK(!jMaterial["accessor"].contains("store"));
 
   auto read = roundTrip(*gism);
   BOOST_REQUIRE(read != nullptr);
@@ -268,6 +270,92 @@ BOOST_AUTO_TEST_CASE(GloballyIndexedGridMaterialRoundTrip) {
     CHECK_CLOSE_ABS(typed->materialSlab(lp).thickness(),
                     gism->materialSlab(lp).thickness(), 1e-5);
   }
+}
+
+BOOST_AUTO_TEST_CASE(GloballyIndexedSharedStoreThroughContext) {
+  auto store = std::make_shared<std::vector<MaterialSlab>>(testSlabs());
+  auto first = makeGloballyIndexed(store);
+  auto second = makeGloballyIndexed(store);
+
+  auto encodeContext =
+      SurfaceMaterialJsonConverter::EncodeContext::withStoreTable();
+  nlohmann::json jFirst =
+      SurfaceMaterialJsonConverter::toJson(*first, encodeContext);
+  nlohmann::json jSecond =
+      SurfaceMaterialJsonConverter::toJson(*second, encodeContext);
+
+  // One table entry, referenced by both surfaces
+  BOOST_REQUIRE_EQUAL(encodeContext.stores().size(), 1u);
+  BOOST_CHECK(encodeContext.stores()[0] == store);
+  BOOST_CHECK_EQUAL(jFirst["accessor"]["store"], 0u);
+  BOOST_CHECK_EQUAL(jSecond["accessor"]["store"], 0u);
+  BOOST_CHECK(!jFirst["accessor"].contains("storage_vector"));
+  BOOST_CHECK(!jSecond["accessor"].contains("storage_vector"));
+
+  SurfaceMaterialJsonConverter::DecodeContext decodeContext;
+  decodeContext.setStores(
+      {std::make_shared<std::vector<MaterialSlab>>(testSlabs())});
+
+  auto readFirst =
+      SurfaceMaterialJsonConverter::fromJson(jFirst, decodeContext);
+  auto readSecond =
+      SurfaceMaterialJsonConverter::fromJson(jSecond, decodeContext);
+  BOOST_REQUIRE(readFirst != nullptr);
+  BOOST_REQUIRE(readSecond != nullptr);
+
+  const auto& globalFirst = std::get<GridSurfaceMaterial::GloballyIndexed>(
+      dynamic_cast<const GridSurfaceMaterial&>(*readFirst).storage());
+  const auto& globalSecond = std::get<GridSurfaceMaterial::GloballyIndexed>(
+      dynamic_cast<const GridSurfaceMaterial&>(*readSecond).storage());
+  // The sharing must survive the round trip
+  BOOST_CHECK(globalFirst.material == globalSecond.material);
+  BOOST_CHECK(globalFirst.material == decodeContext.store(0u));
+}
+
+BOOST_AUTO_TEST_CASE(DistinctStoresGetSequentialIds) {
+  auto storeA = std::make_shared<std::vector<MaterialSlab>>(testSlabs());
+  // Same content, different allocation: stores are keyed on identity
+  auto storeB = std::make_shared<std::vector<MaterialSlab>>(testSlabs());
+
+  auto ctx = SurfaceMaterialJsonConverter::EncodeContext::withStoreTable();
+  nlohmann::json jA =
+      SurfaceMaterialJsonConverter::toJson(*makeGloballyIndexed(storeA), ctx);
+  nlohmann::json jB =
+      SurfaceMaterialJsonConverter::toJson(*makeGloballyIndexed(storeB), ctx);
+  nlohmann::json jA2 =
+      SurfaceMaterialJsonConverter::toJson(*makeGloballyIndexed(storeA), ctx);
+
+  BOOST_CHECK_EQUAL(jA["accessor"]["store"], 0u);
+  BOOST_CHECK_EQUAL(jB["accessor"]["store"], 1u);
+  BOOST_CHECK_EQUAL(jA2["accessor"]["store"], 0u);
+  BOOST_REQUIRE_EQUAL(ctx.stores().size(), 2u);
+  BOOST_CHECK(ctx.stores()[0] == storeA);
+  BOOST_CHECK(ctx.stores()[1] == storeB);
+}
+
+BOOST_AUTO_TEST_CASE(StoreReferenceWithoutTableThrows) {
+  auto store = std::make_shared<std::vector<MaterialSlab>>(testSlabs());
+  auto ctx = SurfaceMaterialJsonConverter::EncodeContext::withStoreTable();
+  nlohmann::json jMaterial =
+      SurfaceMaterialJsonConverter::toJson(*makeGloballyIndexed(store), ctx);
+
+  // A default decode context has no table at all
+  BOOST_CHECK_THROW(SurfaceMaterialJsonConverter::fromJson(jMaterial),
+                    std::invalid_argument);
+
+  // A table that does not reach the referenced id
+  SurfaceMaterialJsonConverter::DecodeContext empty;
+  empty.setStores({});
+  BOOST_CHECK_THROW(SurfaceMaterialJsonConverter::fromJson(jMaterial, empty),
+                    std::invalid_argument);
+
+  nlohmann::json jOutOfRange = jMaterial;
+  jOutOfRange["accessor"]["store"] = 7u;
+  SurfaceMaterialJsonConverter::DecodeContext oneEntry;
+  oneEntry.setStores({store});
+  BOOST_CHECK_THROW(
+      SurfaceMaterialJsonConverter::fromJson(jOutOfRange, oneEntry),
+      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(DirectGridMaterialRoundTrip) {
