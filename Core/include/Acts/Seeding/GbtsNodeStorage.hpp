@@ -124,6 +124,12 @@ class GbtsNodeStorage final {
     return m_nodes.copiedFromIndexColumn()[node];
   }
 
+  /// Whether any node carries a stereo pair, i.e. whether the graph has a
+  /// strip path to take. A caller that fed strip space points in can check
+  /// here that their pairs arrived.
+  /// @return Whether there are any
+  bool hasStrips() const { return !m_strips.empty(); }
+
  private:
   // Only the seeder builds one and walks the graph inside it.
   friend class GraphBasedTrackSeeder;
@@ -199,11 +205,6 @@ class GbtsNodeStorage final {
            "node carries no stereo pair");
     return m_strips[m_stripIndex[node]];
   }
-
-  /// Whether any node carries a stereo pair, i.e. whether the graph has a
-  /// strip path to take.
-  /// @return Whether there are any
-  bool hasStrips() const { return !m_strips.empty(); }
 
   /// A node as recorded by `insert`, before sorting.
   struct StagedNode {
