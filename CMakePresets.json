@@ -2,12 +2,19 @@
     "version": 4,
     "configurePresets": [
         {
+            "name": "ccache",
+            "hidden": true,
+            "description": "Use ccache as the compiler launcher. Kept separate from `common` so that the local presets do not require ccache to be installed. Inherit it alongside another preset to turn it back on.",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache"
+            }
+        },
+        {
             "name": "common",
             "hidden": true,
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_CXX_STANDARD": "20",
-                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "OFF",
                 "ACTS_BUILD_FATRAS": "ON",
@@ -56,7 +63,10 @@
         {
             "name": "ci-common",
             "hidden": true,
-            "inherits": "common",
+            "inherits": [
+                "common",
+                "ccache"
+            ],
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
@@ -183,7 +193,10 @@
             "displayName": "GitHub-CI Gnn",
             "description": "GNN build for the gnn_build job. Warnings are errors, as everywhere else in CI. Only the Plugins/Gnn unit tests are ever run from this build, so the Core and Examples suites and the integration tests are switched off; Tests/UnitTests/CMakeLists.txt adds Plugins unconditionally, so the GNN ones survive. ODD, DD4hep and ROOT stay on because the `-k gpu` python tests need a detector and read back ROOT output.",
             "generator": "Ninja",
-            "inherits": "common",
+            "inherits": [
+                "common",
+                "ccache"
+            ],
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
