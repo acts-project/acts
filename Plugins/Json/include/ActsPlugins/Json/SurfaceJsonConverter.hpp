@@ -73,8 +73,20 @@ class SurfaceJsonConverter {
       TypeDispatcher<Surface,
                      nlohmann::json(const GeometryContext&, const Options&)>;
 
-  /// Deccoder type for the surfaces
-  using SurfaceDecoder = JsonKindDispatcher<std::shared_ptr<Surface>>;
+  /// Decoder type for the surface bounds
+  ///
+  /// Keyed on the serialized SurfaceBounds::BoundsType, independently of the
+  /// surface carrying them. Returns nullptr for boundless surfaces.
+  using SurfaceBoundsDecoder =
+      JsonKindDispatcher<std::shared_ptr<const SurfaceBounds>>;
+
+  /// Decoder type for the surfaces
+  ///
+  /// Keyed on the serialized Surface::SurfaceType and handed the already
+  /// decoded bounds, which it narrows to the type it stores.
+  using SurfaceDecoder =
+      JsonKindDispatcher<std::shared_ptr<Surface>,
+                         std::shared_ptr<const SurfaceBounds>>;
 
   /// Configuration struct
   struct Config {
@@ -84,7 +96,9 @@ class SurfaceJsonConverter {
     SurfaceBoundsEncoder surfaceBoundsEncoder{};
 
     /// Decoder for the surfaces
-    SurfaceDecoder surfaceDecoder{};
+    SurfaceDecoder surfaceDecoder{"type", "surface"};
+    /// Decoder for the surface bounds
+    SurfaceBoundsDecoder surfaceBoundsDecoder{"type", "surface bounds"};
 
     /// Default configuration construction
     ///
