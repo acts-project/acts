@@ -45,14 +45,21 @@ class GraphBasedTrackSeeder {
     /// Look-up table input file path.
     std::string lutInputFile;
 
-    /// Enable Large Radius Tracking mode.
-    bool lrtMode = false;
+    /// Take the strip-to-strip layer connections from the connector file
+    /// instead of the pixel-to-pixel ones. Read where the file is loaded, not
+    /// by the seeder itself.
+    bool useStripConnections = false;
     /// Enable the cluster width cuts: wide endcap rejection and tau narrowing.
     bool useClusterWidthCuts = false;
     /// Match seeds before creating them.
     bool matchBeforeCreate = false;
-    /// Use legacy tuning parameters.
-    bool useOldTunings = false;
+    /// Bound the curvature by the pT the triplet has to reach in the actual
+    /// field, times `oldTuningsCurvature*Fraction`, instead of the tuned
+    /// `maxCurvature*Eta` constants.
+    bool useOldTuningsCurvature = false;
+    /// Open the phi window as `minDeltaPhi` plus a fraction of that same
+    /// curvature bound, instead of the two-slope `phiWindow*` model.
+    bool useOldTuningsPhiWindow = false;
     /// optional validation for barrel triplets
     bool validateTriplets = true;
     /// widens allowed variation in tau ratio
@@ -112,7 +119,7 @@ class GraphBasedTrackSeeder {
     float minZ0 = -600;
     /// Maximum z0 value. In pixel mode the value is picked from the RoI.
     float maxZ0 = 600;
-    /// When old tunings are used, this defines the minimum phi window used
+    /// Offset of the phi window under `useOldTuningsPhiWindow`.
     float minDeltaPhi = 0.001f;
 
     /// pT the default cut coefficients were tuned at; they scale by
@@ -124,13 +131,14 @@ class GraphBasedTrackSeeder {
     float maxCurvatureLowEta = 3.75e-4f / UnitConstants::mm;
     /// |cot(theta)| separating the two curvature cuts, |eta| of about 2.1.
     float curvatureSplitAbsTau = 4.0f;
-    /// Squared fraction of the maximum curvature the old tunings cut at above
-    /// `curvatureSplitAbsTau`.
+    /// Squared fraction of the pT-derived curvature bound cut at above
+    /// `curvatureSplitAbsTau`, under `useOldTuningsCurvature`. Large radius
+    /// tracking cuts at the bound itself, so 1.
     float oldTuningsCurvatureHighEtaFraction = 0.8f;
     /// Squared fraction of the same below `curvatureSplitAbsTau`.
     float oldTuningsCurvatureLowEtaFraction = 0.6f;
-    /// Fraction of the maximum curvature the old tunings open the phi window
-    /// by, per unit of radial separation.
+    /// Fraction of the same the phi window opens by, per unit of radial
+    /// separation, under `useOldTuningsPhiWindow`.
     float oldTuningsPhiWindowFraction = 0.68f;
     /// Radial separation splitting the two phi window slopes below.
     float phiWindowSplitDeltaRadius = 60.0f * UnitConstants::mm;
@@ -169,10 +177,8 @@ class GraphBasedTrackSeeder {
     /// Maximum number of connected-component iterations.
     std::uint32_t ccaMaxIterations = 15;
     /// Chain length a seed candidate must reach: a triplet plus one
-    /// confirmation.
+    /// confirmation. Large radius tracking asks for the triplet alone, so 2.
     std::uint32_t minSeedLevel = 3;
-    /// Chain length required in large radius tracking mode.
-    std::uint32_t lrtMinSeedLevel = 2;
     /// Smallest seed size that is split into drop-out candidates.
     std::uint32_t minSplitSeedSize = 4;
     /// Largest seed size that is split.

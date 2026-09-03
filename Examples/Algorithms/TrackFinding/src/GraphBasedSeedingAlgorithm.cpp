@@ -41,7 +41,7 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   Acts::Experimental::GbtsLayerConnectionMap layerConnectionMap =
       Acts::Experimental::GbtsLayerConnectionMap::fromFile(
           m_cfg.seedFinderConfig.connectorInputFile,
-          m_cfg.seedFinderConfig.lrtMode);
+          m_cfg.seedFinderConfig.useStripConnections);
 
   // create the TrigInDetSiLayers (Logical Layers),
   // as well as a map that tracks there index in m_layerGeometry
@@ -385,10 +385,11 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("BeamSpotCorrection: " << cfg1.beamSpotCorrection);
   ACTS_DEBUG("connectorInputFile: " << cfg1.connectorInputFile);
   ACTS_DEBUG("lutInputFile: " << cfg1.lutInputFile);
-  ACTS_DEBUG("lrtMode: " << cfg1.lrtMode);
+  ACTS_DEBUG("useStripConnections: " << cfg1.useStripConnections);
   ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
   ACTS_DEBUG("matchBeforeCreate: " << cfg1.matchBeforeCreate);
-  ACTS_DEBUG("useOldTunings: " << cfg1.useOldTunings);
+  ACTS_DEBUG("useOldTuningsCurvature: " << cfg1.useOldTuningsCurvature);
+  ACTS_DEBUG("useOldTuningsPhiWindow: " << cfg1.useOldTuningsPhiWindow);
   ACTS_DEBUG("tauRatioCut: " << cfg1.tauRatioCut);
   ACTS_DEBUG("tauRatioPrecut: " << cfg1.tauRatioPrecut);
   ACTS_DEBUG("etaBinWidthOverride: " << cfg1.etaBinWidthOverride);

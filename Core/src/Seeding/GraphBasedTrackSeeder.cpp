@@ -178,23 +178,16 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
   const float maxCurv = options.ptCoeff / tripletPtMin;
 
-  float curvatureCutHighEta =
-      m_cfg.lrtMode
-          ? maxCurv
-          : std::sqrt(m_cfg.oldTuningsCurvatureHighEtaFraction) * maxCurv;
-  float curvatureCutLowEta =
-      m_cfg.lrtMode
-          ? maxCurv
-          : std::sqrt(m_cfg.oldTuningsCurvatureLowEtaFraction) * maxCurv;
+  const float curvatureCutHighEta =
+      m_cfg.useOldTuningsCurvature
+          ? std::sqrt(m_cfg.oldTuningsCurvatureHighEtaFraction) * maxCurv
+          : m_cfg.maxCurvatureHighEta * ptScale;
+  const float curvatureCutLowEta =
+      m_cfg.useOldTuningsCurvature
+          ? std::sqrt(m_cfg.oldTuningsCurvatureLowEtaFraction) * maxCurv
+          : m_cfg.maxCurvatureLowEta * ptScale;
 
-  // new settings for curvature cuts
-  if (!m_cfg.useOldTunings && !m_cfg.lrtMode) {
-    curvatureCutHighEta = m_cfg.maxCurvatureHighEta * ptScale;
-    curvatureCutLowEta = m_cfg.maxCurvatureLowEta * ptScale;
-  }
-
-  const float dPhiCoeff =
-      m_cfg.lrtMode ? maxCurv : m_cfg.oldTuningsPhiWindowFraction * maxCurv;
+  const float dPhiCoeff = m_cfg.oldTuningsPhiWindowFraction * maxCurv;
 
   // the loosest tau ratio threshold the triplet matching can apply
   const float maxTauRatioCut =
@@ -286,7 +279,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
       // override the default window width
       if (m_cfg.useEtaBinning) {
         const float absDr = std::fabs(rb2 - rb1);
-        if (m_cfg.useOldTunings) {
+        if (m_cfg.useOldTuningsPhiWindow) {
           deltaPhi = m_cfg.minDeltaPhi + dPhiCoeff * absDr;
         } else if (absDr < m_cfg.phiWindowSplitDeltaRadius) {
           deltaPhi = m_cfg.phiWindowNearOffset +
@@ -744,8 +737,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     std::vector<OutputSeedProperties>& vOutputSeeds,
     const GbtsTrackingFilter& filter) const {
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
-  const auto minLevel = static_cast<std::uint8_t>(
-      m_cfg.lrtMode ? m_cfg.lrtMinSeedLevel : m_cfg.minSeedLevel);
+  const auto minLevel = static_cast<std::uint8_t>(m_cfg.minSeedLevel);
 
   if (maxLevel < minLevel) {
     return;
@@ -758,7 +750,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
     detail::GbtsEdge* pS = &edgeStorage[edgeIndex];
 
-    if (m_cfg.lrtMode || !m_cfg.addTriplets) {
+    if (!m_cfg.addTriplets) {
       if (pS->level < minLevel) {
         continue;
       }
@@ -816,7 +808,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     const std::uint32_t chainLength = static_cast<std::uint32_t>(rs.vs.size());
 
-    if (m_cfg.lrtMode || !m_cfg.addTriplets) {
+    if (!m_cfg.addTriplets) {
       if (chainLength < minLevel) {
         continue;
       }
