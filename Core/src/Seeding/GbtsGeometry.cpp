@@ -322,8 +322,8 @@ using BinConnections =
 }  // namespace
 
 GbtsGeometry::GbtsGeometry(
-    const std::vector<GbtsLayerDescription>& layerDescriptions,
-    const std::vector<GbtsLayerConnection>& layerConnections,
+    std::span<const GbtsLayerDescription> layerDescriptions,
+    std::span<const GbtsLayerConnection> layerConnections,
     const float etaBinWidth, const GbtsZ0Range& z0Range, const Logger& logger)
     : m_etaBinWidth(etaBinWidth) {
   const float minZ0 = z0Range.min;
