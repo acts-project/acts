@@ -22,6 +22,7 @@
 // System include(s)
 #include <limits>
 #include <ostream>
+#include <stdexcept>
 #include <string_view>
 
 namespace detray {

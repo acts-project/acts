@@ -26,6 +26,7 @@
 
 // System include(s)
 #include <algorithm>
+#include <array>
 #include <optional>
 #include <string>
 #include <vector>

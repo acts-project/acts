@@ -61,11 +61,11 @@ class GbtsGeometry final {
   /// @return Reference to layer
   const detail::GbtsLayer& layerByIndex(std::int32_t idx) const;
 
-  /// Get layer ID by index
+  /// Get the description of a layer by index
   /// @param idx Layer index
-  /// @return Layer ID
-  std::uint32_t layerIdByIndex(std::uint32_t idx) const {
-    return m_layers.at(idx).layerDescription().id;
+  /// @return Reference to the layer description
+  const GbtsLayerDescription& layerDescriptionByIndex(std::int32_t idx) const {
+    return layerByIndex(idx).layerDescription();
   }
 
   /// @param layerDescription Layer description for the layer

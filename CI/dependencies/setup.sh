@@ -63,6 +63,13 @@ TRANSIENT_ERROR_PATTERNS=(
   "toomanyrequests"
   "Too Many Requests"
   "rate limit"
+  # GitHub sheds anonymous load with "GitHub is temporarily limiting some
+  # unauthenticated downloads to protect the stability of the platform. Please
+  # retry later or authenticate." github_auth.sh keeps us off that quota, but
+  # the message is explicitly a "try again" and must not be a hard failure.
+  "temporarily limiting"
+  "unauthenticated download"
+  "Please retry later"
   "HTTP Error 429"
   "HTTP Error 5[0-9][0-9]"
   "50[0-9] (Internal Server Error|Bad Gateway|Service Unavailable|Gateway Time-out)"
@@ -255,6 +262,12 @@ if [ -n "${GITLAB_CI:-}" ]; then
 else
     _spack_folder=${PWD}/spack
 fi
+
+start_section "Authenticate github.com fetches"
+# Before anything reaches github.com: setup_spack.sh clones spack itself, and
+# the builtin package repo is fetched right after it.
+"${SCRIPT_DIR}/github_auth.sh"
+end_section
 
 start_section "Install spack if not already installed"
 if ! command -v spack &> /dev/null; then
