@@ -20,11 +20,12 @@
 
 namespace Acts::detail {
 
-Result<bool> sympyDenseStep(const SympyStepper& stepper,
-                            SympyStepper::State& state,
-                            const IVolumeMaterial& material, double h,
-                            double errTol, double& errorEstimate,
-                            Vector3& lastField, std::span<double> jac) {
+Rk4Status sympyDenseStep(const SympyStepper& stepper,
+                         SympyStepper::State& state,
+                         const IVolumeMaterial& material, double h,
+                         double errTol, double& errorEstimate,
+                         Vector3& lastField, std::error_code& fieldErr,
+                         std::span<double> jac) {
   const Vector3 pos = stepper.position(state);
   const Vector3 dir = stepper.direction(state);
   const double t = stepper.time(state);
@@ -62,7 +63,7 @@ Result<bool> sympyDenseStep(const SympyStepper& stepper,
       std::span<const double, 3>(pos.data(), 3),
       std::span<const double, 3>(dir.data(), 3), t, h, qop, m, q, pabs,
       std::span<const double, 3>(state.field->data(), 3), getB, getG,
-      errorEstimate, errTol,
+      errorEstimate, errTol, fieldErr,
       std::span<double, 3>(state.pars.segment<3>(eFreePos0).data(), 3),
       state.pars[eFreeTime],
       std::span<double, 3>(state.pars.segment<3>(eFreeDir0).data(), 3),
