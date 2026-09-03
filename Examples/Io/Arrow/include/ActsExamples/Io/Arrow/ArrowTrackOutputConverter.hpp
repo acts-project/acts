@@ -43,11 +43,9 @@ class ACTS_ARROW_EXPORT ArrowTrackOutputConverter final
     /// the @c ArrowParticleOutputConverter consumes for that table — leaving
     /// it empty disables index resolution and forces the unmatched sentinel.
     std::string inputParticles;
-    /// Optional measurement → sim-hit map. When set, each track-state's
-    /// measurement index is additionally translated to one or more sim-hit
-    /// indices (the row indices of the corresponding hits parquet table) in
-    /// the @c hit_ids column; without it that column is null. The
-    /// @c measurement_ids column is written either way.
+    /// Optional measurement → sim-hit map. When set, @c hit_ids holds the
+    /// row indices of the hits parquet table; without it that column is null.
+    /// @c measurement_ids is written either way.
     std::string inputMeasurementSimHitsMap;
     /// Output whiteboard key for the resulting @c arrow::Table.
     std::string outputTable = "tracks";

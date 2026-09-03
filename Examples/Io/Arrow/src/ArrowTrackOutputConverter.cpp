@@ -108,9 +108,8 @@ ProcessCode ArrowTrackOutputConverter::execute(
   if (measToSimHits != nullptr) {
     check(hitIdsList.Append(), "open hit_ids outer list");
   } else {
-    // Whole-list null: encodes "no truth information" with one definition-level
-    // entry instead of N per-track empty lists, which a consumer could not
-    // distinguish from tracks without hits.
+    // Null column, not N empty lists: lets a consumer tell "no truth
+    // available" from "track has no hits".
     check(hitIdsList.AppendNull(), "append null hit_ids list");
   }
   check(trackIdList.Append(), "open track_id list");
@@ -190,11 +189,10 @@ ProcessCode ArrowTrackOutputConverter::execute(
     }
     majIdV->UnsafeAppend(majId);
 
-    // `trackStatesReversed()` walks outermost→innermost (the only direct
-    // iteration the MultiTrajectory proxy offers); buffer and reverse so the
-    // per-track lists come out inner→outer along the trajectory, which is what
-    // downstream consumers expect.
+    // `trackStatesReversed()` is the only iteration the proxy garantuees;
+    // reverse so the lists come out inner→outer, as consumers expect.
     std::vector<Index> measIndices;
+    measIndices.reserve(track.nMeasurements());
     for (const auto& state : track.trackStatesReversed()) {
       if (!state.hasUncalibratedSourceLink()) {
         continue;
@@ -211,8 +209,6 @@ ProcessCode ArrowTrackOutputConverter::execute(
             "append measurement_id");
     }
 
-    // Sim-hit indices need the measurement→sim-hit map; without it the whole
-    // column is null (see above) and there are no inner lists to fill.
     if (measToSimHits != nullptr) {
       check(hitIdsInner->Append(), "open hit_ids inner list");
       for (const auto measIdx : measIndices) {
