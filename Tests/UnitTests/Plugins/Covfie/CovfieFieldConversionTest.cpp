@@ -214,6 +214,46 @@ BOOST_AUTO_TEST_CASE(SolenoidBField1) {
   checkMagneticFieldEqual(actsField, cache, view, points, 0.0001);
 }
 
+BOOST_AUTO_TEST_CASE(AsymmetricRangesZAxis) {
+  auto localToGlobalBin_xyz = [](std::array<std::size_t, 3> binsXYZ,
+                                 std::array<std::size_t, 3> nBinsXYZ) {
+    return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2)) +
+            binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
+  };
+
+  std::vector<double> xPos = {0., 1., 2., 3.};
+  std::vector<double> yPos = {0., 1., 2., 3.};
+  std::vector<double> zPos = {0., 2., 4., 6.};
+
+  std::vector<Vector3> bField_xyz;
+  for (int i = 0; i < 64; i++) {
+    bField_xyz.push_back(Vector3(i, i * 0.5, i * 2));
+  }
+
+  MagneticFieldContext fieldContext;
+  auto actsField = fieldMapXYZ(localToGlobalBin_xyz, xPos, yPos, zPos,
+                               bField_xyz, 1, 1, false);
+  MagneticFieldProvider::Cache cache = actsField.makeCache(fieldContext);
+
+  Covfie::InterpolatedField field = Covfie::covfieField(actsField);
+  typename Covfie::InterpolatedField::view_t view(field);
+
+  std::array<std::array<float, 3>, 10> points = {{
+      {0.f, 0.f, 0.f},
+      {1.f, 1.f, 1.f},
+      {2.f, 2.f, 2.f},
+      {1.f, 1.f, 4.f},
+      {1.f, 1.f, 5.f},
+      {1.5f, 2.5f, 5.5f},
+      {0.5f, 0.5f, 3.5f},
+      {2.5f, 1.5f, 4.5f},
+      {1.0f, 2.0f, 5.9f},
+      {2.9f, 2.9f, 5.9f},
+  }};
+
+  checkMagneticFieldEqual(actsField, cache, view, points, 0.0001f);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

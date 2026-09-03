@@ -43,9 +43,9 @@
 #include "ActsPlugins/Json/GridJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
+#include "ActsPlugins/Json/detail/JsonIo.hpp"
 
 #include <filesystem>
-#include <fstream>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -1205,28 +1205,33 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
   return std::shared_ptr<TrackingVolume>(std::move(root));
 }
 
+void Acts::TrackingGeometryJsonConverter::toFile(
+    const GeometryContext& gctx, const TrackingGeometry& geometry,
+    const std::filesystem::path& path, const Options& options) const {
+  ACTS_DEBUG("Writing TrackingGeometry to '" << path.string() << "'");
+  detail::writeJsonFile(path, toJson(gctx, geometry, options),
+                        options.indentation, options.compressionLevel);
+}
+
+std::shared_ptr<Acts::TrackingGeometry>
+Acts::TrackingGeometryJsonConverter::fromFile(const GeometryContext& gctx,
+                                              const std::filesystem::path& path,
+                                              const Options& options) const {
+  ACTS_DEBUG("Reading TrackingGeometry from '" << path.string() << "'");
+  return fromJson(gctx, detail::readJsonFile(path), options);
+}
+
 std::shared_ptr<Acts::TrackingGeometry>
 Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
                                               const std::filesystem::path& path,
                                               const Options& options) const {
-  if (!std::filesystem::exists(path)) {
-    throw std::invalid_argument(std::format(
-        "TrackingGeometryJsonConverter() - JSON file {:} does not exist",
-        path.native()));
-  }
-  std::ifstream istr{path};
-  if (!istr.good()) {
-    throw std::invalid_argument(std::format(
-        "TrackingGeometryJsonConverter() - Cannot open '{:}'", path.native()));
-  }
-  nlohmann::json encoded{};
-  istr >> encoded;
-  return fromJsonPayload(gctx, encoded, options);
+  return fromFile(gctx, path, options);
 }
+
 std::shared_ptr<Acts::TrackingGeometry>
-Acts::TrackingGeometryJsonConverter::fromJsonPayload(
-    const GeometryContext& gctx, const nlohmann::json& encoded,
-    const Options& options) const {
+Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
+                                              const nlohmann::json& encoded,
+                                              const Options& options) const {
   ACTS_DEBUG("Reconstructing TrackingGeometry from JSON");
   auto world = trackingVolumeFromJson(gctx, encoded, options);
 

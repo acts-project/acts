@@ -793,8 +793,22 @@ def test_pypi_finding_fitting_demo(tmp_path, generic_detector_config):
         )
         s.run()
 
-        assert len(perfWriterFinder.histograms()) > 0, "no finder histograms produced"
-        assert len(perfWriterFitter.histograms()) > 0, "no fitter histograms produced"
+        finderHistograms = perfWriterFinder.histograms()
+        fitterHistograms = perfWriterFitter.histograms()
+
+        assert len(finderHistograms) == 79
+        assert len(fitterHistograms) == 236
+
+        expectedKeys = {
+            "nStates_vs_eta",
+            "pixel_nStates_vs_eta",
+            "sstrip_nStates_vs_eta",
+            "lstrip_nStates_vs_eta",
+        }
+        assert expectedKeys <= set(finderHistograms), (
+            f"missing per-subdetector histograms: "
+            f"{expectedKeys - set(finderHistograms)}"
+        )
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
@@ -973,7 +987,7 @@ def assert_gnn_output(output_dir: Path):
 
 @pytest.mark.parametrize("hardware", ["cpu", "gpu"])
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
-def test_gnn_metric_learning(tmp_path, trk_geo, field, hardware):
+def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, hardware):
     """Test GNN track finding with metric learning graph construction"""
     if hardware == "cpu":
         pytest.skip("CPU not yet supported")
@@ -1018,6 +1032,8 @@ def test_gnn_metric_learning(tmp_path, trk_geo, field, hardware):
         raise
 
     assert_gnn_output(tmp_path)
+    for f in root_files:
+        assert_root_hash(f, tmp_path / f)
 
 
 @pytest.mark.odd
@@ -1083,7 +1099,7 @@ def test_gnn_shrink_nodes_same_output(tmp_path, hardware):
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
 @pytest.mark.parametrize("backend", ["torch", "onnx"])
 @pytest.mark.parametrize("hardware", ["gpu"])
-def test_gnn_module_map(tmp_path, backend, hardware):
+def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
     """Test GNN track finding with module map graph construction on ODD"""
     from gnn_module_map_odd import runGnnModuleMap
     from acts.examples.odd import getOpenDataDetector
@@ -1137,6 +1153,10 @@ def test_gnn_module_map(tmp_path, backend, hardware):
 
     # Verify output
     assert_gnn_output(tmp_path)
+    assert_root_hash("ntuple_finding_gnn.root", tmp_path / "ntuple_finding_gnn.root")
+    assert_root_hash(
+        "performance_finding_gnn.root", tmp_path / "performance_finding_gnn.root"
+    )
 
 
 @pytest.mark.odd

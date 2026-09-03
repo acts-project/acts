@@ -111,9 +111,13 @@ runs:
       if: steps.cache-restore.outputs.cache-hit != 'true'
       shell: bash
       env:
+        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
         SPACK_VERSION: ${{ inputs.spack_version }}
         SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
       run: |
+        # This step clones spack and the builtin package repo itself, i.e.
+        # before setup.sh gets a chance to authenticate github.com fetches.
+        CI/dependencies/github_auth.sh
         CI/dependencies/setup_spack.sh ${PWD}/spack
         # Pin the builtin package repo *before* anything clones it. Spack clones
         # it shallow (depth 2) the first time only, and clones the pinned commit

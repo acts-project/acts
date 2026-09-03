@@ -699,7 +699,8 @@ void addEventData(py::module& mex) {
   py::enum_<SeedSpacePointSelection>(mex, "SeedSpacePointSelection")
       .value("FirstThree", SeedSpacePointSelection::FirstThree)
       .value("InnermostTriplet", SeedSpacePointSelection::InnermostTriplet)
-      .value("SpreadTriplet", SeedSpacePointSelection::SpreadTriplet);
+      .value("SpreadTriplet", SeedSpacePointSelection::SpreadTriplet)
+      .value("All", SeedSpacePointSelection::All);
 }
 
 }  // namespace ActsPython

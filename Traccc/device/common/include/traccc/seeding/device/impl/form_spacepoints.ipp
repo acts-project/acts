@@ -10,6 +10,9 @@
 // Project include(s).
 #include "traccc/seeding/detail/spacepoint_formation.hpp"
 
+// VecMem include(s).
+#include <vecmem/containers/device_vector.hpp>
+
 // System include(s).
 #include <cassert>
 
@@ -19,10 +22,13 @@ template <typename detector_t>
 TRACCC_HOST_DEVICE inline void form_spacepoints(
     const global_index_t globalIndex, typename detector_t::view det_view,
     const edm::measurement_collection::const_view& measurements_view,
+    const vecmem::data::vector_view<const unsigned int>& spacepoint_index_view,
     edm::spacepoint_collection::view spacepoints_view) {
   // Set up the input container(s).
   const edm::measurement_collection::const_device measurements(
       measurements_view);
+  const vecmem::device_vector<const unsigned int> spacepoint_index(
+      spacepoint_index_view);
 
   // Check if anything needs to be done
   if (globalIndex >= measurements.size()) {
@@ -39,8 +45,11 @@ TRACCC_HOST_DEVICE inline void form_spacepoints(
 
   // Fill the spacepoint using the common function.
   if (traccc::details::is_valid_measurement(meas)) {
+    // The prefix sum is inclusive, so the index of this spacepoint is one
+    // less than the value that belongs to this measurement.
     const edm::spacepoint_collection::device::size_type i =
-        spacepoints.push_back_default();
+        spacepoint_index.at(globalIndex) - 1u;
+    assert(i < spacepoints.size());
     edm::spacepoint sp = spacepoints.at(i);
     traccc::details::fill_pixel_spacepoint(sp, det, meas);
     sp.measurement_index_1() = globalIndex;

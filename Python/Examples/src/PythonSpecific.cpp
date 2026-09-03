@@ -156,7 +156,7 @@ class PythonPatternRecognitionPerformanceWriter final
     }
     for (const auto& [key, tool] : coll.subDetectorSummaryTools()) {
       for (const auto& [name, prof] : tool.profiles()) {
-        insertUniqueHistogram(d, name, prof);
+        insertUniqueHistogram(d, prof.name(), prof);
       }
     }
 
