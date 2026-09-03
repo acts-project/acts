@@ -38,6 +38,7 @@
 #include "ActsPlugins/Json/IVolumeMaterialJsonDecorator.hpp"
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
+#include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/VolumeJsonConverter.hpp"
 
 #include <algorithm>
@@ -74,9 +75,10 @@ inline void decorateJson<Acts::IVolumeMaterial>(
   }
 }
 template <>
-inline void decorateJson<Acts::ISurfaceMaterial>(
+inline void decorateJson<std::shared_ptr<const Acts::ISurfaceMaterial>>(
     const IVolumeMaterialJsonDecorator* decorator,
-    const Acts::ISurfaceMaterial* src, nlohmann::json& dest) {
+    const std::shared_ptr<const Acts::ISurfaceMaterial>& src,
+    nlohmann::json& dest) {
   if (decorator != nullptr && src != nullptr) {
     decorator->decorate(*src, dest);
   }
@@ -259,13 +261,14 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   nlohmann::json materialVolume =
       m_volumeMaterialConverter.toJson(hierarchyVolumeMap, decorator);
   SurfaceMaterialMaps surfaceMap = maps.first;
-  std::vector<std::pair<GeometryIdentifier, const ISurfaceMaterial*>>
+  std::vector<
+      std::pair<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>>
       mapSurfaceInit;
   for (const auto& [key, value] : surfaceMap) {
-    mapSurfaceInit.push_back({key, value.get()});
+    mapSurfaceInit.push_back({key, value});
   }
-  GeometryHierarchyMap<const ISurfaceMaterial*> hierarchySurfaceMap(
-      mapSurfaceInit);
+  GeometryHierarchyMap<std::shared_ptr<const ISurfaceMaterial>>
+      hierarchySurfaceMap(mapSurfaceInit);
   nlohmann::json materialSurface =
       m_surfaceMaterialConverter.toJson(hierarchySurfaceMap, decorator);
   nlohmann::json materialMap;
@@ -287,13 +290,13 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
     volumeMap.insert({hierarchyVolumeMap.idAt(i), std::move(volumePointer)});
   }
   nlohmann::json materialSurface = materialmap["Surfaces"];
-  GeometryHierarchyMap<const ISurfaceMaterial*> hierarchySurfaceMap =
-      m_surfaceMaterialConverter.fromJson(materialSurface);
+  GeometryHierarchyMap<std::shared_ptr<const ISurfaceMaterial>>
+      hierarchySurfaceMap =
+          m_surfaceMaterialConverter.fromJson(materialSurface);
   SurfaceMaterialMaps surfaceMap;
   for (std::size_t i = 0; i < hierarchySurfaceMap.size(); i++) {
-    std::shared_ptr<const ISurfaceMaterial> surfacePointer(
-        hierarchySurfaceMap.valueAt(i));
-    surfaceMap.insert({hierarchySurfaceMap.idAt(i), std::move(surfacePointer)});
+    surfaceMap.insert(
+        {hierarchySurfaceMap.idAt(i), hierarchySurfaceMap.valueAt(i)});
   }
 
   Acts::TrackingGeometryMaterial maps = {surfaceMap, volumeMap};
