@@ -11,11 +11,13 @@
 // Project include(s)
 #include "detray/builders/detector_builder.hpp"
 #include "detray/io/backend/concepts.hpp"
+#include "detray/io/backend/detail/basic_converter.hpp"
 #include "detray/io/frontend/reader_interface.hpp"
 #include "detray/io/frontend/writer_interface.hpp"
 #include "detray/io/json/json.hpp"
 #include "detray/io/json/json_io.hpp"
 #include "detray/io/utils/file_handle.hpp"
+#include "detray/io/utils/io_metadata.hpp"
 
 // System include(s)
 #include <ios>
@@ -24,43 +26,60 @@
 
 namespace detray::io {
 
-/// @brief Class that adds converts io payloads to json and back
-template <class detector_t, class backend_t>
-class json_converter {};
-
-/// @brief Class that adds json functionality to backend reader types.
+/// @brief Class that reads json data from file and converts it to a detector
+/// payload (single component per file)
 ///
-/// Assemble the json readers from the backend reader types, which handle the
-/// volume builders, and this class, which provides the payload data from the
-/// json stream. It also includes the respective @c to_json and @c from_json
-/// functions for the payloads ("json_serializers").
+/// This class provides the payload data from the json stream and adds it to the
+/// sub-payload of the detector component that is tagged in the file
 ///
-/// @note The resulting reader types will fulfill @c reader_interface
-template <class detector_t, class backend_t>
-  requires concepts::reader_backend<detector_t, backend_t>
-class json_converter<detector_t, backend_t> final
-    : public reader_interface<detector_t> {
-  using io_backend = backend_t;
-
+/// @note The class fulfills the @c input_file_converter_interface and
+/// can be added to the @c detector_components_converter
+class json_input_converter final : public input_file_converter_interface {
  public:
   /// Set json file extension
-  json_converter() : reader_interface<detector_t>(".json") {}
+  json_input_converter() : input_file_converter_interface(".json") {}
 
-  /// Writes the geometry to file with a given name
-  void read(detector_builder<typename detector_t::metadata, volume_builder>&
-                det_builder,
-            const std::string& file_name) override {
-    // Read json from file
-    io::file_handle file{file_name, std::ios_base::in | std::ios_base::binary};
-
+  /// Reads json detector data from @param file and adds it to a detector
+  /// @param payload object
+  void add_from_file(io::file_handle& file,
+                     detector_payload& payload) override {
     // Reads the data from file and returns the corresponding io payloads
     nlohmann::json in_json;
     *file >> in_json;
 
-    // Add the data from the payload to the detray detector builder
-    io_backend::template from_payload<detector_t>(det_builder, in_json["data"]);
+    // Peek at the header to determine the kind of payload is in the file
+    const tagged_header_payload header = in_json["header"];
+    // If not already done, add common header information to detector payload
+    if (payload.header.version.empty()) {
+      payload.detector_name = header.detector;
+      payload.header = header;
+    }
+
+    if (header.tag < io::detail::minimal_io_version) {
+      DETRAY_WARN_HOST("File was generated with a different detray version");
+    }
+
+    nlohmann::json& json_payload = in_json["data"];
+    if (header.tag == "geometry") {
+      payload.geometry = json_payload;
+    } else if (header.tag == "homogeneous_material") {
+      payload.homogeneous_material = json_payload;
+    } else if (header.tag == "material_maps") {
+      payload.material_maps = json_payload;
+    } else if (header.tag == "surface_grids") {
+      payload.surface_grids = json_payload;
+    } else {
+      std::stringstream err_stream{};
+      err_stream << "Unsupported file tag '" << header.tag << "' in input file";
+      DETRAY_FATAL_HOST(err_stream.str());
+      throw std::invalid_argument(err_stream.str());
+    }
   }
 };
+
+/// @brief Class that adds converts io payloads to json and back
+template <class detector_t, class backend_t>
+class json_converter {};
 
 /// @brief Class that adds json functionality to backend writer types.
 ///
@@ -83,6 +102,7 @@ class json_converter<detector_t, backend_t> final
   /// Writes the geometry to file with a given name
   std::string write(const detector_t& det,
                     const typename detector_t::name_map& names,
+                    const std::string& source,
                     const std::ios_base::openmode mode = std::ios::out |
                                                          std::ios::binary,
                     const std::filesystem::path& file_path = {"./"}) override {
@@ -102,7 +122,10 @@ class json_converter<detector_t, backend_t> final
 
     // Write some general information
     nlohmann::ordered_json out_json;
-    out_json["header"] = io_backend::header_to_payload(det, det_name);
+    out_json["header"] = io_backend::to_header_payload(det);
+    out_json["header"]["common"] =
+        io::detail::basic_converter::to_header_payload<detector_t>(
+            det_name, std::string(io_backend::tag), source);
 
     // Write the detector data into the json stream by using the
     // conversion functions defined in "detray/io/json/json_io.hpp"

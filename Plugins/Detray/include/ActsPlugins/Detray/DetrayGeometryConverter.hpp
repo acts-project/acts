@@ -18,12 +18,8 @@
 #include <memory>
 #include <string>
 
-#include <detray/builders/detector_builder.hpp>
-#include <detray/core/concepts.hpp>
-#include <detray/io/backend/geometry_reader.hpp>
-#include <detray/io/backend/homogeneous_material_reader.hpp>
-#include <detray/io/backend/material_map_reader.hpp>
-#include <detray/io/backend/surface_grid_reader.hpp>
+#include <detray/io/frontend/detector_reader.hpp>
+#include <detray/io/frontend/detector_reader_config.hpp>
 #include <vecmem/memory/memory_resource.hpp>
 
 namespace ActsPlugins {
@@ -46,12 +42,6 @@ class DetrayGeometryConverter {
     /// payload conversion (e.g. the beampipe volume, sensitive surface
     /// strategy or the navigation/material dispatchers).
     std::shared_ptr<const DetrayPayloadConverter> payloadConverter;
-
-    /// Whether to convert material information from ACTS to detray
-    bool convertMaterial = true;
-
-    /// Whether to convert surface grid information from ACTS to detray
-    bool convertSurfaceGrids = true;
   };
 
   /// @brief Combined result of a geometry conversion
@@ -114,74 +104,18 @@ class DetrayGeometryConverter {
     auto payloads = m_cfg.payloadConverter->convertTrackingGeometry(
         gctx, *trackingGeometry);
 
-    // ── Build detray detector from payloads ───────────────────────────────
-    detray::detector_builder<metadata_t> detectorBuilder{};
-
-    detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
-                                                          *payloads.detector);
-
-    if (m_cfg.convertMaterial) {
-      if (!payloads.homogeneousMaterial) {
-        ACTS_DEBUG("No homogeneous material payload found, skipping");
-      } else {
-        const auto& materialVolumes = payloads.homogeneousMaterial->volumes;
-        ACTS_DEBUG("Found homogeneous material payload with "
-                   << materialVolumes.size() << " volumes");
-
-        auto hasMaterialType =
-            [&materialVolumes](detray::io::material_id type) {
-              return std::ranges::any_of(
-                  materialVolumes, [type](const auto& volume) {
-                    return std::ranges::any_of(
-                        volume.surface_mat,
-                        [type](const auto& sm) { return sm.type == type; });
-                  });
-            };
-
-        if (hasMaterialType(detray::io::material_id::slab) &&
-            !detray::concepts::has_material_slabs<detector_t>) {
-          throw std::invalid_argument(
-              "DetrayGeometryConverter: the tracking geometry contains "
-              "homogeneous material slabs, but the target Detray metadata "
-              "type does not support material slabs");
-        }
-        if (hasMaterialType(detray::io::material_id::rod) &&
-            !detray::concepts::has_material_rods<detector_t>) {
-          throw std::invalid_argument(
-              "DetrayGeometryConverter: the tracking geometry contains "
-              "homogeneous material rods, but the target Detray metadata "
-              "type does not support material rods");
-        }
-
-        if constexpr (detray::concepts::has_material_slabs<detector_t> ||
-                      detray::concepts::has_material_rods<detector_t>) {
-          detray::io::homogeneous_material_reader::from_payload<detector_t>(
-              detectorBuilder, *payloads.homogeneousMaterial);
-        }
-      }
-
-      detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
-          from_payload<detector_t>(detectorBuilder,
-                                   std::move(*payloads.materialGrids));
-    }
-
-    if (m_cfg.convertSurfaceGrids) {
-      detray::io::surface_grid_reader<typename detector_t::surface_type,
-                                      std::integral_constant<std::size_t, 0>,
-                                      std::integral_constant<std::size_t, 2>>::
-          template from_payload<detector_t>(detectorBuilder,
-                                            *payloads.surfaceGrids);
-    }
-
     if (!detectorName.empty()) {
-      detectorBuilder.set_name(detectorName);
-    } else if (payloads.names.contains(0)) {
-      detectorBuilder.set_name(payloads.names.at(0));
+      payloads.detector_name = detectorName;
     }
+
+    // ── Build detray detector from payloads ───────────────────────────────
+    auto readerCfg = detray::io::detector_reader_config{}.do_check(true);
+    auto [detector, names] =
+        detray::io::read_detector<detector_t>(mr, readerCfg, payloads);
 
     DetrayGeometry<metadata_t> result{};
-    result.detector =
-        std::make_shared<detector_t>(detectorBuilder.build(mr, result.names));
+    result.detector = std::make_shared<detector_t>(std::move(detector));
+    result.names = std::move(names);
 
     return result;
   }

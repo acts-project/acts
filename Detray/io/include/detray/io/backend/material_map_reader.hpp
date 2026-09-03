@@ -16,6 +16,7 @@
 #include "detray/io/backend/detail/type_info.hpp"
 #include "detray/io/backend/homogeneous_material_reader.hpp"
 #include "detray/io/frontend/payloads.hpp"
+#include "detray/io/frontend/reader_interface.hpp"
 #include "detray/material/material_slab.hpp"
 #include "detray/utils/type_list.hpp"
 
@@ -30,9 +31,10 @@ namespace detray::io {
 /// @brief Material map reader backend
 ///
 /// Fills a @c detector_builder from a material @c detector_grids_payload
-template <typename DIM = std::integral_constant<std::size_t, 2u>>
-class material_map_reader {
-  using material_reader_t = homogeneous_material_reader;
+template <typename detector_t,
+          typename DIM = std::integral_constant<std::size_t, 2u>>
+class material_map_reader final : public reader_interface<detector_t> {
+  using material_reader_t = homogeneous_material_reader<detector_t>;
 
  public:
   static constexpr std::size_t dim{DIM()};
@@ -44,14 +46,16 @@ class material_map_reader {
   using bin_index_type = axis::multi_bin<dim>;
 
   /// Tag the reader as "material_maps"
-  static constexpr std::string_view tag = "material_maps";
+  static constexpr std::string_view s_tag = "material_maps";
+
+  /// @returns the tag of the reader: "material_maps"
+  std::string_view tag() const override { return s_tag; }
 
   /// Convert the material grids @param grids_data from their IO
   /// payload
-  template <typename detector_t>
-  static void from_payload(detector_builder<typename detector_t::metadata,
-                                            volume_builder> &det_builder,
-                           payload_type &&grids_data) {
+  void from_payload(detector_builder<typename detector_t::metadata,
+                                     volume_builder> &det_builder,
+                    const detector_payload &det_data) const override {
     DETRAY_VERBOSE_HOST("Reading payload object...");
 
     using scalar_t = dscalar<typename detector_t::algebra_type>;
@@ -67,6 +71,14 @@ class material_map_reader {
                    types::size<mat_registry_t> > 0) ||
                   (types::contains<mat_registry_t, io::detail::unknown_type> &&
                    types::size<mat_registry_t> > 1));
+
+    if (!det_data.material_maps.has_value()) {
+      std::string err_str{"No data in material maps payload"};
+      DETRAY_FATAL_HOST(err_str);
+      throw std::invalid_argument(err_str);
+    }
+
+    const payload_type &grids_data = *det_data.material_maps;
 
     DETRAY_VERBOSE_HOST("Converting material grids for "
                         << grids_data.grids.size() << " volumes");
@@ -110,7 +122,7 @@ class material_map_reader {
                             << grid_data.owner_link.link);
 
         mat_id map_id =
-            from_payload<mat_registry_t, detector_t>(grid_data.grid_link.type);
+            from_payload_impl<mat_registry_t>(grid_data.grid_link.type);
         DETRAY_VERBOSE_HOST("-> Type id: " << map_id);
 
         DETRAY_VERBOSE_HOST("-> Reading axis bins: Dims = " << dim);
@@ -153,7 +165,8 @@ class material_map_reader {
           // Add the material slab per bin
           for (const auto &slab_data : bin_data.content) {
             mat_data.append(
-                material_reader_t::template from_payload<scalar_t>(slab_data));
+                material_reader_t::template from_payload_impl<scalar_t>(
+                    slab_data));
           }
         }
 
@@ -174,8 +187,8 @@ class material_map_reader {
 
  private:
   /// Get the detector material id from the payload material type id
-  template <typename mat_registry_t, typename detector_t, std::size_t I = 0u>
-  static typename detector_t::material::id from_payload(
+  template <typename mat_registry_t, std::size_t I = 0u>
+  static typename detector_t::material::id from_payload_impl(
       io::material_id type_id) {
     // Get the next mask shape type
     using frame_t = types::at<mat_registry_t, I>;
@@ -199,7 +212,7 @@ class material_map_reader {
     }
     // Test next material type id
     if constexpr (I < types::size<mat_registry_t> - 1u) {
-      return from_payload<mat_registry_t, detector_t, I + 1u>(type_id);
+      return from_payload_impl<mat_registry_t, I + 1u>(type_id);
     } else {
       return detector_t::material::id::e_none;
     }

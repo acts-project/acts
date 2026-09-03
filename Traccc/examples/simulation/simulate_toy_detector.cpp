@@ -114,6 +114,7 @@ int simulate(const traccc::opts::generation& generation_opts,
   // Create detector file
   auto writer_cfg = detray::io::detector_writer_config{}
                         .format(detray::io::format::json)
+                        .source("detray native")
                         .replace_files(true);
   detray::io::write_detector(det, name_map, writer_cfg);
 

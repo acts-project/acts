@@ -10,8 +10,8 @@
 #include "detray/core/detector.hpp"
 
 // Detray IO include(s)
-#include "detray/io/frontend/detector_reader.hpp"
 #include "detray/io/frontend/detector_reader_config.hpp"
+#include "detray/io/json/detector_reader.hpp"
 
 // Detray algebra plugin + detector metadata
 #include "algebra/array.hpp"
@@ -53,7 +53,7 @@ std::string to_string(const T &obj) {
 /// the returned detector object.
 std::pair<py::object, detray::name_map> read_detector(
     std::shared_ptr<vecmem::memory_resource> mr, const reader_config_t &cfg) {
-  auto [det, names] = detray::io::read_detector<detector_t>(*mr, cfg);
+  auto [det, names] = detray::io::read_detector_json<detector_t>(*mr, cfg);
 
   py::object detector = py::cast(std::move(det));
   py::detail::keep_alive_impl(detector, py::cast(std::move(mr)));

@@ -47,14 +47,19 @@ inline typed_link_payload<type_id> to_payload(const type_id id,
 /// Convert the common header information using the detector name
 /// @param det_name and the file tag @param tag that describes the data file
 /// content
-inline common_header_payload to_payload(const std::string_view det_name,
-                                        const std::string_view tag) {
-  common_header_payload header_data;
+template <typename detector_t>
+inline tagged_header_payload to_header_payload(const std::string_view det_name,
+                                               const std::string_view tag,
+                                               const std::string_view source) {
+  tagged_header_payload header_data;
 
   header_data.version = io::detail::get_detray_version();
+  header_data.date = io::detail::get_current_date();
+  header_data.metadata =
+      detray::types::get_name<typename detector_t::metadata>();
+  header_data.source = source;
   header_data.detector = det_name;
   header_data.tag = tag;
-  header_data.date = io::detail::get_current_date();
 
   return header_data;
 }
