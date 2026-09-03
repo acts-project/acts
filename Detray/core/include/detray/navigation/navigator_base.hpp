@@ -60,7 +60,9 @@ class navigator_base {
       const bool resolve_overstepping = false) const {
     // Run local navigation in the current volume
     navigation::local_navigation(track, navigation, cfg, ctx,
-                                 resolve_overstepping);
+                                 resolve_overstepping
+                                     ? cfg.intersection.overstep_tolerance
+                                     : -cfg.intersection.path_tolerance);
 
     DETRAY_VERBOSE_HOST("Status: " << navigation.status() << " (next sf.: "
                                    << navigation.next_surface().index() << ")");
@@ -126,7 +128,27 @@ class navigator_base {
     if (navigation.trust_level() != navigation::trust_level::e_full ||
         navigation.cache_exhausted()) {
       is_init = true;
-      navigation::init_loose_cfg(track, navigation, cfg, ctx);
+      if (navigation.trust_level() != navigation::trust_level::e_full) {
+        DETRAY_VERBOSE_HOST_DEVICE("Full trust could not be restored!");
+      } else if (navigation.cache_exhausted()) {
+        DETRAY_VERBOSE_HOST_DEVICE("Cache exhausted!");
+      }
+      DETRAY_VERBOSE_HOST_DEVICE(
+          "RESCURE MODE: Run init with large tolerances");
+
+      // Use the max mask tolerance in case a track leaves the volume
+      // when a sf is 'sticking' out of the portals due to the tol
+      const auto new_overstep_tol{
+          math::min(100.f * cfg.intersection.overstep_tolerance,
+                    -10.f * cfg.intersection.max_mask_tolerance)};
+
+      local_navigation(track, navigation, cfg, ctx, new_overstep_tol);
+
+      // Unrecoverable
+      if (navigation.trust_level() != navigation::trust_level::e_full ||
+          navigation.cache_exhausted()) [[unlikely]] {
+        navigation.abort("No reachable surfaces");
+      }
 
       navigation.run_inspector(cfg, track.pos(), track.dir(), "Re-init: ");
     }

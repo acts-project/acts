@@ -181,7 +181,7 @@ DETRAY_HOST_DEVICE
                                     navigation_state_t &navigation,
                                     const navigation::config &cfg,
                                     const context_t &ctx,
-                                    const bool resolve_overstepping = true) {
+                                    const float overstep_tolerance) {
   DETRAY_VERBOSE_HOST_DEVICE("-> (Re-)initialize detector volume (idx: %d)",
                              navigation.volume());
 
@@ -199,9 +199,7 @@ DETRAY_HOST_DEVICE
   // Overstepping resolution needed? (if not, make sure full tolerance band is
   // observed around surface)
   intersection::config intr_cfg{cfg.intersection};
-  intr_cfg.overstep_tolerance = resolve_overstepping
-                                    ? cfg.intersection.overstep_tolerance
-                                    : -cfg.intersection.path_tolerance;
+  intr_cfg.overstep_tolerance = overstep_tolerance;
 
   using detector_t = typename navigation_state_t::detector_type;
   using algebra_t = typename detector_t::algebra_type;
@@ -272,55 +270,14 @@ DETRAY_HOST_DEVICE DETRAY_INLINE constexpr void volume_switch(
   // Check valid volume index
   assert(navigation.volume() < navigation.detector().volumes().size());
 
-  // Initialize new volume. Still on portal: No need to observe overstepping
-  local_navigation(track, navigation, cfg, ctx);
+  // Initialize new volume.
+  local_navigation(track, navigation, cfg, ctx,
+                   cfg.intersection.overstep_tolerance);
 
   // Fresh initialization, reset trust even though we are on [inner] portal
   navigation.trust_level(navigation::trust_level::e_full);
 
   DETRAY_VERBOSE_HOST_DEVICE("-> Switched to volume %d", navigation.volume());
-}
-
-/// @brief Initialize the volume with loose configuration.
-///
-/// If trust cannot be established and/or no surfaces can be found in the
-/// current volume anymore, try to save the navigation stream by looking
-/// for candidates further behind the track position.
-///
-/// @tparam track_t type of track, needs to provide pos() and dir() methods
-/// @tparam navigation_state_t the state type of the navigation stream
-/// @tparam context_t the type of geometry context
-///
-/// @param track access to the track parameters
-/// @param navigation the current navigation state
-/// @param loose_cfg the navigation configuration (copy on function stack)
-/// @param ctx the geometry context
-template <typename track_t, typename navigation_state_t, typename context_t>
-DETRAY_HOST_DEVICE DETRAY_INLINE constexpr void init_loose_cfg(
-    const track_t &track, navigation_state_t &navigation,
-    navigation::config loose_cfg, const context_t &ctx) {
-  if (navigation.trust_level() != navigation::trust_level::e_full) {
-    DETRAY_VERBOSE_HOST_DEVICE("Full trust could not be restored!");
-  } else if (navigation.cache_exhausted()) {
-    DETRAY_VERBOSE_HOST_DEVICE("Cache exhausted!");
-  }
-  DETRAY_VERBOSE_HOST_DEVICE("RESCURE MODE: Run init with large tolerances");
-
-  // Use the max mask tolerance in case a track leaves the volume
-  // when a sf is 'sticking' out of the portals due to the tol
-  const auto new_overstep_tol{
-      math::min(100.f * loose_cfg.intersection.overstep_tolerance,
-                -10.f * loose_cfg.intersection.max_mask_tolerance)};
-  loose_cfg.intersection.overstep_tolerance = new_overstep_tol;
-
-  constexpr bool resolve_overstepping{true};
-  local_navigation(track, navigation, loose_cfg, ctx, resolve_overstepping);
-
-  // Unrecoverable
-  if (navigation.trust_level() != navigation::trust_level::e_full ||
-      navigation.cache_exhausted()) [[unlikely]] {
-    navigation.abort("No reachable surfaces");
-  }
 }
 
 }  // namespace detray::navigation

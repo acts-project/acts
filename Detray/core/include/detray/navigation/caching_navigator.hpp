@@ -91,7 +91,7 @@ class caching_navigator
     template <typename track_t, typename state_t, typename ctx_t>
     friend constexpr void navigation::local_navigation(
         const track_t &, state_t &, const navigation::config &, const ctx_t &,
-        const bool);
+        const float);
 
     template <typename track_t, typename state_t, typename ctx_t>
     friend constexpr void navigation::volume_switch(const track_t &, state_t &,
@@ -347,9 +347,8 @@ class caching_navigator
     if (navigation.trust_level() == navigation::trust_level::e_no_trust) {
       DETRAY_VERBOSE_HOST_DEVICE("Called 'update()' - no trust");
 
-      constexpr bool resolve_overstepping{true};
       navigation::local_navigation(track, navigation, cfg, ctx,
-                                   resolve_overstepping);
+                                   cfg.intersection.overstep_tolerance);
       return is_init;
     }
 
