@@ -155,9 +155,21 @@ option(ACTS_ENABLE_MEMORY_PROFILING "Enable memory profiling using gperftools" O
 set(ACTS_GPERF_INSTALL_DIR "" CACHE STRING "Hint to help find gperf if profiling is enabled")
 
 option(ACTS_ENABLE_LOG_FAILURE_THRESHOLD "Enable failing on log messages with level above certain threshold" OFF)
-set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an exception should be automatically thrown. If ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set and this is unset, this will enable a runtime check of the log level.")
 option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # gersemi: on
+
+# Removed option: warn and drop it from the cache. Setting it used to imply
+# ACTS_ENABLE_LOG_FAILURE_THRESHOLD, so ignoring it silently would leave a
+# downstream that set only this one with no threshold at all.
+if(DEFINED ACTS_LOG_FAILURE_THRESHOLD)
+    message(
+        WARNING
+        "ACTS_LOG_FAILURE_THRESHOLD was removed. Set "
+        "ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON and pass the level in the "
+        "ACTS_LOG_FAILURE_THRESHOLD environment variable instead."
+    )
+    unset(ACTS_LOG_FAILURE_THRESHOLD CACHE)
+endif()
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
@@ -448,6 +460,18 @@ endmacro()
 # find packages explicitly for each component even if this means searching for
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
+
+# nlohmann_json has to be resolved before any other package, because its config
+# file defines a non-namespaced `nlohmann_json` compatibility target whenever it
+# is searched for without a version. That target clashes with the one the
+# bundled build creates, so we have to claim the name first.
+if(ACTS_BUILD_PLUGIN_JSON)
+    if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
+        find_package(nlohmann_json ${_acts_nlohmanjson_version} REQUIRED CONFIG)
+    else()
+        add_subdirectory(thirdparty/nlohmann_json)
+    endif()
+endif()
 if(ACTS_BUILD_PYTHON_BINDINGS)
     find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
     if(ACTS_USE_SYSTEM_PYBIND11)
@@ -481,13 +505,6 @@ if(ACTS_BUILD_PLUGIN_DD4HEP)
         CONFIG
         COMPONENTS DDCore DDDetectors
     )
-endif()
-if(ACTS_BUILD_PLUGIN_JSON)
-    if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
-        find_package(nlohmann_json ${_acts_nlohmanjson_version} REQUIRED CONFIG)
-    else()
-        add_subdirectory(thirdparty/nlohmann_json)
-    endif()
 endif()
 if(ACTS_BUILD_PLUGIN_GBL)
     if(ACTS_USE_SYSTEM_GBL)

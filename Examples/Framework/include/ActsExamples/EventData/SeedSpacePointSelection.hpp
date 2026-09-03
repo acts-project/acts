@@ -25,6 +25,9 @@ enum class SeedSpacePointSelection {
   InnermostTriplet,
   /// The innermost, the middle and the outermost layer.
   SpreadTriplet,
+  /// Every space point. Not a triplet, so it is up to the caller to take the
+  /// candidates as they are.
+  All,
 };
 
 /// Pick the three space points that seed a candidate track. The triplet
@@ -42,7 +45,7 @@ enum class SeedSpacePointSelection {
 ///        @c SeedSpacePointSelection::FirstThree, which takes the candidates as
 ///        given.
 /// @return the three selected space points, or nothing if the selection cannot
-///         be made
+///         be made, which includes @c SeedSpacePointSelection::All
 std::optional<std::array<SpacePointIndex, 3>> selectSeedSpacePoints(
     const SpacePointContainer& spacePoints,
     std::span<const SpacePointIndex> candidates,

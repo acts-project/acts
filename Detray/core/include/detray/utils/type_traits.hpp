@@ -12,6 +12,7 @@
 #include "detray/definitions/indexing.hpp"
 
 // System include(s)
+#include <limits>
 #include <type_traits>
 
 namespace detray::detail {

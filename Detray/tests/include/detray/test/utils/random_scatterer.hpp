@@ -29,6 +29,7 @@
 #include "detray/test/utils/scattering_helper.hpp"
 
 // System include(s).
+#include <limits>
 #include <random>
 
 namespace detray::actor {

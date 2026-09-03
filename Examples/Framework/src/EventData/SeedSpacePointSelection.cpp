@@ -102,6 +102,9 @@ ActsExamples::selectSeedSpacePoints(const SpacePointContainer& spacePoints,
       return std::array{perLayer.front(), perLayer[perLayer.size() / 2],
                         perLayer.back()};
     }
+    case SeedSpacePointSelection::All:
+      // no triplet to pick
+      return std::nullopt;
   }
 
   return std::nullopt;

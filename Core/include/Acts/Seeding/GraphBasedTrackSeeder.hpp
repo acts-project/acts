@@ -59,6 +59,9 @@ class GraphBasedTrackSeeder {
     /// if layer is missed in edge connecting
     bool useAdaptiveCuts = true;
     /// optionally add 3 sp seeds within a cirtain eta range
+    ///
+    /// @note Worth little until `maxAbsEtaAddTripelts` is opened past
+    ///       `edgeMaskMinEta`; matters most where there are few layers.
     bool addTriplets = false;
     /// Tau ratio cut threshold.
     float tauRatioCut = 0.007;
@@ -67,6 +70,10 @@ class GraphBasedTrackSeeder {
     /// correction applied to tau acceptance
     /// if a layer is missed during edge connecting
     float tauRatioCorr = 0.006;
+    /// The same for a triplet any of whose three nodes a strip module made,
+    /// whose two doublets resolved the shared node's along-strip coordinate
+    /// separately. Reaches nothing without a strip in the triplet.
+    float tauRatioCorrStrip = 0.03f;
     /// the maximum allowed eta value in which
     /// three spacepoint seeds are passed through
     float maxAbsEtaAddTripelts = 1.5;
@@ -108,6 +115,13 @@ class GraphBasedTrackSeeder {
     float minDeltaPhi = 0.001f;
     /// Maximum radius of pixel detector
     float maxOuterRadius = 550.0f;
+
+    /// Resolve a doublet's strip endpoints against its own direction before
+    /// cutting on them. Nothing is written back; the correction is the pair's.
+    bool calibrateStrips = true;
+    /// How far outside its strips a crossing may still be recovered, as a
+    /// multiple of the strip half-length.
+    float stripLengthTolerance = 1.1f;
 
     // Seed extraction options
     /// Minimum eta for edge masking.
@@ -168,9 +182,8 @@ class GraphBasedTrackSeeder {
   ///
   /// Fill it through GbtsNodeStorage::insert, then call
   /// GbtsNodeStorage::finalize before handing it to createSeeds.
-  /// @param isPixelLayer Information on if a layer is pixel or strip
   /// @return An empty node storage
-  GbtsNodeStorage makeNodeStorage(const std::vector<bool>& isPixelLayer) const;
+  GbtsNodeStorage makeNodeStorage() const;
 
   /// Create seeds from an ACTS space point container in a region of interest.
   ///
@@ -179,13 +192,11 @@ class GraphBasedTrackSeeder {
   /// columns.
   /// @param spacePoints Space point container
   /// @param roi Region of interest descriptor
-  /// @param isPixelLayer Information on if a layer is pixel or strip
   /// @param filter Tracking filter to be applied
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
   void createSeeds(const SpacePointContainer& spacePoints,
                    const GbtsRoiDescriptor& roi,
-                   const std::vector<bool>& isPixelLayer,
                    const GbtsTrackingFilter& filter, const Options& options,
                    SeedContainer& outputSeeds) const;
 
@@ -252,6 +263,10 @@ class GraphBasedTrackSeeder {
     float deltaPhi{};
     /// GBTS layer ID of the bin
     std::uint32_t layerId{};
+    /// Type of the bin's layer.
+    GbtsLayerType type{};
+    /// Technology of the bin's layer.
+    GbtsLayerTechnology technology{};
   };
   DerivedConfig m_cfg;
 
@@ -268,7 +283,7 @@ class GraphBasedTrackSeeder {
   /// @param lutInputFile Path to the lookup table input file
   /// @return Parsed tau lookup table
   detail::GbtsTauLookupTable parseTauLookupTable(
-      const std::string& lutInputFile);
+      const std::string& lutInputFile) const;
 
   /// Build doublet graph from nodes.
   /// @param roi Region of interest descriptor

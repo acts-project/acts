@@ -32,6 +32,13 @@ add_library(
     "src/clusterization/kernels/reify_cluster_data.hip"
     "include/traccc/hip/clusterization/measurement_sorting_algorithm.hpp"
     "src/clusterization/measurement_sorting_algorithm.hip"
+    # Seed finding code.
+    "include/traccc/hip/seeding/seed_parameter_estimation_algorithm.hpp"
+    "src/seeding/seed_parameter_estimation_algorithm.hip"
+    "include/traccc/hip/seeding/triplet_seeding_algorithm.hpp"
+    "src/seeding/triplet_seeding_algorithm.hip"
+    "include/traccc/hip/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
+    "src/seeding/silicon_pixel_spacepoint_formation_algorithm.hip"
     # Track fitting code.
     "include/traccc/hip/fitting/kalman_fitting_algorithm.hpp"
     "src/fitting/kalman_fitting_algorithm_fit_backward_kernel.hip"

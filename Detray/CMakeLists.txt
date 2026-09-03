@@ -211,6 +211,17 @@ if(BUILD_TESTING AND (DETRAY_BUILD_UNITTESTS OR DETRAY_BUILD_INTEGRATIONTESTS))
     set(DETRAY_BUILD_TESTING ON)
 endif()
 
+# detray_compile_headers() delegates to ACTS' acts_compile_headers(), which is
+# already defined when detray is built via add_subdirectory from ACTS. When
+# detray is configured standalone inside the ACTS tree, pull the module in by
+# relative path, as the codegen setup does. ACTS gates the header targets on an
+# option a standalone build does not have, so tie them to detray's own testing
+# switch there -- that is what used to guard the per-header executables.
+if(NOT COMMAND acts_compile_headers)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsFunctions.cmake)
+    set(ACTS_COMPILE_HEADERS ${DETRAY_BUILD_TESTING})
+endif()
+
 # Validation utilities are needed for integration tests and tutorials
 if(DETRAY_BUILD_TESTING OR DETRAY_BUILD_TUTORIALS)
     set(DETRAY_BUILD_VALIDATION_TOOLS ON)

@@ -37,6 +37,10 @@ class GbtsTrackingFilter final {
     /// Measurement uncertainty in y direction.
     float sigmaY = 0.25 * Acts::UnitConstants::mm;
 
+    /// Across the strips only. The along-strip resolution is not configured:
+    /// it is derived per node from the node's own strip. See `update`.
+    float sigmaXStrip = 0.03 * Acts::UnitConstants::mm;
+
     /// Measurement weight in x direction.
     float weightX = 0.5;
     /// Measurement weight in y direction.
