@@ -16,7 +16,13 @@ namespace Acts::detail {
 
 class MaterialEffectsAccumulator {
  public:
-  bool isVacuum() const { return m_accumulatedMaterial.isVacuum(); }
+  /// Whether nothing has been accumulated yet
+  ///
+  /// Cached rather than derived from @c m_accumulatedMaterial: every vacuum
+  /// step asks this, and reaching into the MaterialSlab for it costs a float
+  /// load from a cold corner of the stepper state plus a compare.
+  /// @return true if no material has been accumulated
+  bool isVacuum() const { return m_isVacuum; }
 
   void reset() { *this = MaterialEffectsAccumulator(); }
 
@@ -37,6 +43,7 @@ class MaterialEffectsAccumulator {
   double m_initialMomentum = 0;
 
   MaterialSlab m_accumulatedMaterial;
+  bool m_isVacuum = true;
 
   double m_varAngle = 0;
   double m_varPosition = 0;

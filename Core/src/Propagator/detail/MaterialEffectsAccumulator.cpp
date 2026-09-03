@@ -52,6 +52,7 @@ void MaterialEffectsAccumulator::accumulate(const Material& material,
 
     m_accumulatedMaterial =
         MaterialSlab::combine(m_accumulatedMaterial, material, substep);
+    m_isVacuum = m_accumulatedMaterial.isVacuum();
 
     const double theta0out = computeMultipleScatteringTheta0(
         m_accumulatedMaterial, absPdg, mass, qOverPmean, absQ);
