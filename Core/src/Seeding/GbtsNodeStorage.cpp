@@ -20,10 +20,10 @@
 
 namespace Acts::Experimental {
 
-GbtsNodeStorage::GbtsNodeStorage(Config config,
+GbtsNodeStorage::GbtsNodeStorage(const Config& config,
                                  std::shared_ptr<const GbtsGeometry> geometry,
                                  detail::GbtsTauLookupTable tauLut)
-    : m_cfg(std::move(config)),
+    : m_cfg(config),
       m_geometry(std::move(geometry)),
       m_tauLut(std::move(tauLut)),
       m_nodes(SpacePointColumns::CopiedFromIndex |
@@ -48,14 +48,12 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
     const float clusterWidth, const float localPositionY,
     const OuterStripSpacePointCalibrationDetails* strip) {
   const detail::GbtsLayer& layer = m_geometry->layerByIndex(layerIndex);
-
-  const bool isBarrel = layer.layerDescription().type == GbtsLayerType::Barrel;
+  const GbtsLayerDescription& description = layer.layerDescription();
 
   // wide pixel endcap clusters are dropped when the width cuts are on
-  if (m_cfg.useClusterWidthCuts && !isBarrel &&
-      clusterWidth > m_cfg.maxEndcapClusterWidth &&
-      layerIndex < m_cfg.isPixelLayer.size() &&
-      m_cfg.isPixelLayer[layerIndex]) {
+  if (m_cfg.useClusterWidthCuts && description.type == GbtsLayerType::Endcap &&
+      description.technology == GbtsLayerTechnology::Pixel &&
+      clusterWidth > m_cfg.maxEndcapClusterWidth) {
     return std::nullopt;
   }
 
@@ -67,10 +65,10 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
   const auto bin = static_cast<std::uint32_t>(binIndex);
 
   std::uint32_t stripIndex = detail::kNoStrip;
-  // A pair on a layer the configuration calls a pixel layer would never be
-  // read, the strip path being taken per bin rather than per node.
-  if (strip != nullptr && layerIndex < m_cfg.isPixelLayer.size() &&
-      !m_cfg.isPixelLayer[layerIndex]) {
+  // A strip pair on a pixel layer is never read: the seeder takes the strip
+  // path per bin.
+  if (strip != nullptr &&
+      description.technology == GbtsLayerTechnology::Strip) {
     stripIndex = static_cast<std::uint32_t>(m_strips.size());
     // Derived once here rather than once per pair in the graph: it is six
     // cross products and a node takes part in many pairs.
@@ -169,11 +167,12 @@ void GbtsNodeStorage::finalize() {
     binInfo.nodes.second = m_nodes.size();
     binInfo.minRadius = minRadius;
     binInfo.maxRadius = maxRadius;
-    const std::uint16_t layer = m_staged[sorted.front()].layer;
-    binInfo.layerId = m_geometry->layerIdByIndex(layer);
-    // constant over a bin, a bin belonging to one layer
-    binInfo.isPixel =
-        layer >= m_cfg.isPixelLayer.size() || m_cfg.isPixelLayer[layer];
+    // every node in a bin is on the same layer, so any of them will do
+    const GbtsLayerDescription& description =
+        m_geometry->layerDescriptionByIndex(m_staged[staged.front()].layer);
+    binInfo.layerId = static_cast<std::uint32_t>(description.id);
+    binInfo.type = description.type;
+    binInfo.technology = description.technology;
   }
 
   // Created now that the container has its final size, so that each column is
@@ -223,13 +222,12 @@ void GbtsNodeStorage::finalize() {
 
 void GbtsNodeStorage::applyTauCuts(const StagedNode& staged,
                                    detail::GbtsNodeParams& params) const {
-  const detail::GbtsLayer& layer = m_geometry->layerByIndex(staged.layer);
+  const GbtsLayerDescription& description =
+      m_geometry->layerDescriptionByIndex(staged.layer);
 
-  // skip strips volumes: layers in range [1200X-1400X]
-  if (layer.layerDescription().id < 20000) {
-    return;
-  }
-  if (layer.layerDescription().type != GbtsLayerType::Barrel) {
+  // the table is trained on pixel barrel clusters
+  if (description.technology != GbtsLayerTechnology::Pixel ||
+      description.type != GbtsLayerType::Barrel) {
     return;
   }
 

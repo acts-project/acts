@@ -48,9 +48,6 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
-  // as all layers in examples are pixel, we set entire vector to true
-  m_isPixelLayer.resize(layerGeometry.size(), true);
-
   // option that allows for adding custom eta binning (default is at 0.2)
   if (m_cfg.seedFinderConfig.etaBinWidthOverride != 0.0f) {
     layerConnectionMap.etaBinWidth = m_cfg.seedFinderConfig.etaBinWidthOverride;
@@ -92,8 +89,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // The node storage is filled straight from the input space points. It takes
   // plain scalars, so no intermediate space point container is needed and the
   // seeds come back indexed into the input container directly.
-  Acts::Experimental::GbtsNodeStorage nodeStorage =
-      m_finder->makeNodeStorage(m_isPixelLayer);
+  Acts::Experimental::GbtsNodeStorage nodeStorage = m_finder->makeNodeStorage();
 
   std::uint32_t nUnmapped = 0;
 
@@ -333,9 +329,14 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
 
     } else {  // end so doesn't exists
       // make new if one with Gbts ID doesn't exist:
-      Acts::Experimental::GbtsLayerDescription newGbtsId(
-          combinedId, barrelEc, rc, minBound, maxBound);
-      inputVector.push_back(newGbtsId);
+      // every layer the examples framework feeds GBTS is a pixel layer
+      inputVector.push_back(Acts::Experimental::GbtsLayerDescription{
+          .id = combinedId,
+          .type = barrelEc,
+          .technology = Acts::Experimental::GbtsLayerTechnology::Pixel,
+          .refCoord = rc,
+          .minBound = minBound,
+          .maxBound = maxBound});
       // so the element exists and not divinding by 0
       countVector.push_back(1);
 

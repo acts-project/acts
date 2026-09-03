@@ -8,8 +8,10 @@ name: Traccc
 
 on:
   push:
-    # The release branches (keep in sync with release.yml) and the merge
-    # queue's temp ref carry a tree that has already been built.
+    # The release branches (keep in sync with release.yml) carry a tree the
+    # merge queue has already built. The queue's own temp ref triggers
+    # merge_group below; a push run there shares its concurrency group and
+    # evicts the PR from the queue.
     branches-ignore:
       - 'releases'
       - 'release/**'
@@ -25,10 +27,19 @@ on:
       - "Traccc/**"
       - "Detray/**"
       - ".github/workflows/traccc.yml"
+  # merge_group does not support path filters, so this runs on every queue
+  # entry targeting main, not just ones touching Traccc/ or Detray/. Only
+  # required via merge-sentinel's "Traccc / *" pattern, which is itself
+  # path-gated, so a non-Traccc entry running this wastes compute but doesn't
+  # block merging.
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
+  # Never cancel a merge_group run: it's a required check for a queue entry,
+  # and a cancellation reads as a failure to the queue, ejecting the PR.
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 jobs:
   containers:
