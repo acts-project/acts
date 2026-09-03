@@ -20,6 +20,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -632,6 +633,57 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
 // the lowest number of surfaces should be used for the bin count or
 // as basis for the variable edge procedure
 // double filling will make sure no surfaces are dropped
+// Every point on a module has to be reachable from the bin it falls into, not
+// only the bins whose centre lands on the module.
+BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_discFillCoversModuleFootprint,
+                        SurfaceArrayCreatorFixture) {
+  constexpr std::size_t nPhi = 24;
+  constexpr double rMin = 30.;
+  constexpr double rMax = 100.;
+  constexpr double z = 500.;
+
+  // One ring of rectangular modules spanning a wide range in r, so the angular
+  // width of a module grows towards the inner radius
+  SrfVec surfaces;
+  const double halfPhi = std::numbers::pi / nPhi;
+  auto bounds = std::make_shared<const RectangleBounds>(
+      rMax * std::tan(halfPhi), 0.5 * (rMax - rMin));
+  for (std::size_t ip = 0; ip < nPhi; ++ip) {
+    const double phiPos = 2 * std::numbers::pi * ip / nPhi;
+    Transform3 trans = Transform3::Identity();
+    trans *= AngleAxis3(phiPos, Vector3::UnitZ());
+    trans *= Translation3(0.5 * (rMin + rMax), 0., z);
+    // local x across phi, local y along r
+    trans *= AngleAxis3(std::numbers::pi / 2., Vector3::UnitZ());
+    surfaces.push_back(Surface::makeShared<PlaneSurface>(trans, bounds));
+  }
+  auto surfacesRaw = unpackSmartPointers(surfaces);
+  ProtoLayer pl(tgContext, surfacesRaw);
+  pl.envelope[AxisDirection::AxisZ] = {1., 1.};
+
+  // one r bin per ring and a phi grid fine enough that a module spans several
+  // bins
+  SurfaceArray sa = m_SAC.surfaceArrayOnDisc(tgContext, surfaces, 1, 4 * nPhi,
+                                             pl, Transform3::Identity());
+
+  std::size_t unreachable = 0;
+  for (const auto& surface : surfaces) {
+    const auto* planar = dynamic_cast<const PlanarBounds*>(&surface->bounds());
+    BOOST_REQUIRE(planar != nullptr);
+    for (const Vector2& local : planar->vertices(1)) {
+      // pull the sample just inside the module
+      const Vector2 inside = local * 0.98;
+      const Vector3 global =
+          surface->localToGlobal(tgContext, inside, Vector3::UnitZ());
+      const auto content = sa.at(tgContext, global, Vector3::UnitZ());
+      if (std::ranges::find(content, surface.get()) == content.end()) {
+        ++unreachable;
+      }
+    }
+  }
+  BOOST_CHECK_EQUAL(unreachable, 0u);
+}
+
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_dependentBinCounts,
                         SurfaceArrayCreatorFixture) {
   auto ringA = fullPhiTestSurfacesEC(10, 0, 0, 10, 2, 3);
@@ -683,7 +735,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
     Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
     auto binContent = sa.at(tgContext, ctr, ctr.normalized());
 
-    BOOST_CHECK(binContent.size() <= 2u);
+    // the bin a surface's own centre falls into has to hold it
+    BOOST_CHECK(std::ranges::find(binContent, srf.get()) != binContent.end());
   }
 }
 
@@ -712,7 +765,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning_newFactory,
   for (const auto& srf : brl) {
     Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
     auto binContent = sa.at(tgContext, ctr, ctr.normalized());
-    BOOST_CHECK(binContent.size() <= 2u);
+    // the bin a surface's own centre falls into has to hold it
+    BOOST_CHECK(std::ranges::find(binContent, srf.get()) != binContent.end());
   }
 }
 
@@ -751,13 +805,12 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
     Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
     auto binContent = sa.at(tgContext, ctr, ctr.normalized());
-    // the grid is aligned to the module centres, so the centre's bin holds
-    // exactly that module's stagger pair
-    BOOST_CHECK_EQUAL(binContent.size(), 2u);
     std::set<const Surface*> act(binContent.begin(), binContent.end());
 
+    // the bin the module centre falls into holds that module's stagger pair,
+    // plus every neighbour whose footprint reaches into the same bin
     std::set<const Surface*> exp({A, B});
-    BOOST_CHECK(act == exp);
+    BOOST_CHECK(std::ranges::includes(act, exp));
   }
 
   // VARIABLE
@@ -811,7 +864,6 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
       Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
       auto binContent = sa2.at(tgContext, ctr, ctr.normalized());
-      BOOST_CHECK_EQUAL(binContent.size(), 4u);
       std::set<const Surface*> act(binContent.begin(), binContent.end());
 
       std::set<const Surface*> exp({A, B});
