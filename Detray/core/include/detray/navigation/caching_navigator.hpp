@@ -255,17 +255,41 @@ class caching_navigator
     if (navigation.trust_level() == navigation::trust_level::e_high) {
       DETRAY_VERBOSE_HOST_DEVICE("Called 'update()' - high trust");
 
-      // Update next candidate: If not reachable, 'high trust' is broken
-      if (!navigation::update_candidate(navigation.target(), tangential, det,
-                                        cfg.intersection,
-                                        navigation.external_tol(), ctx)) {
-        DETRAY_VERBOSE_HOST_DEVICE(
-            "-> Candidate not reachable! High trust broken:");
+      // The high trust update runs @c update_candidate on the current
+      // candidate and then again on the target that @c update_status moved
+      // to. Both updates share this one call site, because the mask visitor
+      // inside @c update_candidate is fully inlined and a second call site
+      // would duplicate it.
+      bool is_done{false};
 
-        navigation.status(navigation::status::e_unknown);
-        // This will run into the fair trust case below.
-        navigation.set_fair_trust();
-      } else {
+      for (unsigned int pass = 0u; pass < 2u; ++pass) {
+        // Update next candidate: If not reachable, 'high trust' is broken
+        const bool is_reachable = navigation::update_candidate(
+            navigation.target(), tangential, det, cfg.intersection,
+            navigation.external_tol(), ctx);
+
+        if (!is_reachable) {
+          if (pass == 0u) {
+            DETRAY_VERBOSE_HOST_DEVICE(
+                "-> Candidate not reachable! High trust broken:");
+
+            navigation.status(navigation::status::e_unknown);
+          } else {
+            DETRAY_VERBOSE_HOST_DEVICE(
+                "-> Next candidate no longer reachable: High trust broken");
+          }
+          break;
+        }
+
+        if (pass == 1u) {
+          DETRAY_VERBOSE_HOST_DEVICE(
+              "-> On non-portal surface (idx %d) and next candidate "
+              "in cache is reachable",
+              navigation.current_surface().index());
+          is_done = true;
+          break;
+        }
+
         // Update navigation flow on the new candidate information
         navigation::update_status(navigation, cfg);
 
@@ -283,29 +307,27 @@ class caching_navigator
             DETRAY_VERBOSE_HOST_DEVICE("-> On portal: idx %d",
                                        navigation.current_surface().index());
           }
-          return !is_init;
+          is_done = true;
+          break;
         }
         // Else (if full trust): Track is on non-portal surface and
         // cache is not exhausted. Ready the next target
-        if (navigation.trust_level() == navigation::trust_level::e_full &&
-            navigation::update_candidate(navigation.target(), tangential, det,
-                                         cfg.intersection,
-                                         navigation.external_tol(), ctx)) {
+        if (navigation.trust_level() != navigation::trust_level::e_full) {
           DETRAY_VERBOSE_HOST_DEVICE(
-              "-> On non-portal surface (idx %d) and next candidate "
-              "in cache is reachable",
-              navigation.current_surface().index());
-          return !is_init;
+              "-> Next candidate no longer reachable: High trust broken");
+          break;
         }
-        DETRAY_VERBOSE_HOST_DEVICE(
-            "-> Next candidate no longer reachable: High trust broken");
-
-        // If next candidate is not reachable, don't 'return', but
-        // escalate the trust level.
-        // This will run into the fair trust case below or the no trust
-        // case if the cache is broken
-        navigation.set_fair_trust();
       }
+
+      if (is_done) {
+        return !is_init;
+      }
+
+      // If next candidate is not reachable, don't 'return', but
+      // escalate the trust level.
+      // This will run into the fair trust case below or the no trust
+      // case if the cache is broken
+      navigation.set_fair_trust();
     }
     // Re-evaluate all currently available candidates and sort again
     // - do this when your navigation state is stale, but not invalid
