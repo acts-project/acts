@@ -154,8 +154,9 @@ class MaterialMapJsonConverter {
   /// Name of the surface hierarchy
   std::string m_surfaceName = "Material Surface Map";
   /// Geometry hierarchy writer for surface material.
-  Acts::GeometryHierarchyMapJsonConverter<const ISurfaceMaterial*,
-                                          Acts::IVolumeMaterialJsonDecorator>
+  Acts::GeometryHierarchyMapJsonConverter<
+      std::shared_ptr<const ISurfaceMaterial>,
+      Acts::IVolumeMaterialJsonDecorator>
       m_surfaceMaterialConverter;
   /// Geometry hierarchy writer for surface.
   Acts::GeometryHierarchyMapJsonConverter<Acts::SurfaceAndMaterialWithContext,
