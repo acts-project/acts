@@ -1327,8 +1327,10 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeLegacyPaddedOverload) {
 
   // Pin the pre-reference-axis signature: the logger in fifth position must
   // keep resolving, so downstream call sites do not need touching.
+  ACTS_PUSH_IGNORE_DEPRECATED()
   auto world =
       PadBlueprintNode::padded(gctx, child, cfg.envelope, "World", *logger);
+  ACTS_POP_IGNORE_DEPRECATED()
 
   BOOST_CHECK_EQUAL(world->volumeName(), "World");
   const auto& worldCyl =

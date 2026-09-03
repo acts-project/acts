@@ -143,6 +143,9 @@ class PadBlueprintNode final : public StaticBlueprintNode {
 
   /// Overload keeping the pre-reference-axis call signature source compatible,
   /// i.e. padding in the child's own frame with @ref Centering::Centered.
+  /// @deprecated Pass the reference axis and centering explicitly, i.e.
+  ///             `padded(gctx, inner, envelope, name, std::nullopt,
+  ///             Centering::Centered, logger)`.
   /// @param gctx The geometry context
   /// @param inner The volume to enclose
   /// @param envelope The envelope to add to the bounds of @p inner
@@ -151,6 +154,9 @@ class PadBlueprintNode final : public StaticBlueprintNode {
   /// @return The padded volume enclosing @p inner
   /// @throws std::logic_error if @p inner has unsupported bounds, or if the
   ///         envelope is asymmetric where it must not be
+  [[deprecated(
+      "Pass the reference axis and centering explicitly: padded(gctx, inner, "
+      "envelope, name, std::nullopt, Centering::Centered, logger)")]]
   static std::unique_ptr<TrackingVolume> padded(const GeometryContext& gctx,
                                                 const Volume& inner,
                                                 const ExtentEnvelope& envelope,
