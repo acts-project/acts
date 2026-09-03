@@ -2,6 +2,9 @@ acts_add_library(
     PluginMille
     src/Helpers.cpp
     src/ActsToMille.cpp
+    src/MillePedeSolver.cpp
+    src/MillePedeError.cpp
+    src/runChildProcess.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
@@ -12,6 +15,6 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(ActsPluginMille PUBLIC ActsAlignment Mille2)
+target_link_libraries(ActsPluginMille PUBLIC ActsAlignment Mille2 Boost::boost)
 
 acts_compile_headers(PluginMille GLOB include/**/*.hpp)
