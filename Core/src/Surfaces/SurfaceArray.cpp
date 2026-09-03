@@ -17,14 +17,17 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Ranges.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/MultiAxisHelper.hpp"
 #include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
+#include <algorithm>
 #include <iomanip>
 #include <limits>
 #include <map>
 #include <ranges>
 #include <set>
+#include <stdexcept>
 #include <utility>
 
 namespace Acts {
@@ -56,11 +59,12 @@ struct SurfaceArray::ISurfaceGridLookup {
   /// Get all surfaces in bin given by local grid indices and neighbor
   /// distance.
   /// @param gridIndices the local grid indices
-  /// @param neighborDistance the neighbor distance to include in the lookup
+  /// @param neighborDistance the neighbor distance to include in the lookup,
+  ///        per axis
   /// @return span of surface pointers of the bin at that position and its neighbors
   virtual std::span<const Surface* const> neighbors(
       std::array<std::size_t, 2> gridIndices,
-      std::uint8_t neighborDistance) const = 0;
+      std::array<std::uint8_t, 2> neighborDistance) const = 0;
 
   /// Performs a lookup at @c pos, but returns neighbors as well
   /// @param gctx The current geometry context object, e.g. alignment
@@ -106,10 +110,10 @@ struct SurfaceArray::ISurfaceGridLookup {
   /// @return Array of number of local bins in each dimension
   virtual std::array<std::size_t, 2> numLocalBins() const = 0;
 
-  /// Get the maximum neighbor distance that is supported by this lookup. This
-  /// is used to determine how many neighbors to include in neighbor lookups.
-  /// @return Maximum neighbor distance
-  virtual std::uint8_t maxNeighborDistance() const = 0;
+  /// Get the bounds on the neighbor window this lookup serves. The window
+  /// itself is derived per axis from the crossing angle and clamped to them.
+  /// @return Neighbor window bounds per axis
+  virtual SurfaceArray::NeighborWindow neighborWindow() const = 0;
 };
 
 namespace {
@@ -134,9 +138,9 @@ struct SingleElementLookupImpl final : SurfaceArray::ISurfaceGridLookup {
 
   std::span<const Surface* const> neighbors(
       std::array<std::size_t, 2> gridIndices,
-      std::uint8_t neighborDistance) const override {
+      std::array<std::uint8_t, 2> neighborDistance) const override {
     if (gridIndices != std::array<std::size_t, 2>{0, 0} ||
-        neighborDistance != 0) {
+        neighborDistance != std::array<std::uint8_t, 2>{0, 0}) {
       throw std::out_of_range(
           "SingleElementLookupImpl only contains one bin with zero neighbor "
           "distance");
@@ -169,7 +173,9 @@ struct SingleElementLookupImpl final : SurfaceArray::ISurfaceGridLookup {
 
   std::array<std::size_t, 2> numLocalBins() const override { return {1, 1}; }
 
-  std::uint8_t maxNeighborDistance() const override { return 0; }
+  SurfaceArray::NeighborWindow neighborWindow() const override {
+    return {.min = {0, 0}, .max = {0, 0}};
+  }
 
  private:
   std::vector<const Surface*> m_element;
@@ -180,12 +186,16 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   SurfaceGridLookupImpl(std::shared_ptr<RegularSurface> representative,
                         double tolerance, std::tuple<Axis1, Axis2> axes,
                         std::vector<AxisDirection> binValues = {},
-                        std::uint8_t maxNeighborDistance = 1)
+                        SurfaceArray::NeighborWindow neighborWindow = {})
       : m_representative(std::move(representative)),
         m_tolerance(tolerance),
         m_axes(std::move(axes)),
         m_binValues(std::move(binValues)),
-        m_maxNeighborDistance(maxNeighborDistance) {
+        m_neighborWindow(neighborWindow) {
+    if (m_neighborWindow.min[0] > m_neighborWindow.max[0] ||
+        m_neighborWindow.min[1] > m_neighborWindow.max[1]) {
+      throw std::invalid_argument("neighbor window floor exceeds its bound");
+    }
     m_fillingGrid.resize(size());
   }
 
@@ -219,15 +229,13 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     if (!localBins.has_value()) {
       return {};
     }
-    const std::size_t globalBin = globalBinFromLocalBins3D(*localBins, 0);
-    return m_neighborSurfacePacks.at(globalBin);
+    return surfacePack(neighborPackIndex(*localBins, {0, 0}));
   }
 
   std::span<const Surface* const> neighbors(
       std::array<std::size_t, 2> gridIndices,
-      std::uint8_t neighborDistance) const override {
-    return m_neighborSurfacePacks.at(
-        globalBinFromLocalBins3D(gridIndices, neighborDistance));
+      std::array<std::uint8_t, 2> neighborDistance) const override {
+    return surfacePack(neighborPackIndex(gridIndices, neighborDistance));
   }
 
   std::span<const Surface* const> neighbors(
@@ -242,20 +250,10 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     const GridPoint gridLocal = surfaceToGridLocal(*surfaceLocal);
     const GridIndex localBins = localBinsFromPosition2D(gridLocal);
 
-    const Vector3 normal = m_representative->normal(gctx, *surfaceLocal);
-    // using 1e-6 to avoid division by zero, the actual value does not matter as
-    // long as it is small compared to the angles we want to distinguish
-    const double neighborDistanceReal = std::min<double>(
-        m_maxNeighborDistance,
-        std::max<double>(1, 1 / (1e-6 + std::abs(normal.dot(direction)))));
-    // clamp value to range before converting to std::uint8_t to avoid overflow
-    const std::uint8_t neighborDistance =
-        clampValue<std::uint8_t>(neighborDistanceReal);
+    const GridDistance neighborDistance =
+        crossingNeighborDistance(gctx, *surfaceLocal, direction, localBins);
 
-    const std::size_t globalBin =
-        globalBinFromLocalBins3D(localBins, neighborDistance);
-
-    return m_neighborSurfacePacks.at(globalBin);
+    return surfacePack(neighborPackIndex(localBins, neighborDistance));
   }
 
   std::size_t size() const override {
@@ -291,29 +289,41 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     return numLocalBins2D();
   }
 
-  std::uint8_t maxNeighborDistance() const override {
-    return m_maxNeighborDistance;
+  SurfaceArray::NeighborWindow neighborWindow() const override {
+    return m_neighborWindow;
   }
 
  private:
   using GridIndex = std::array<std::size_t, 2>;
   using GridPoint = std::array<double, 2>;
+  /// Neighbor window half width in bins, per axis
+  using GridDistance = std::array<std::uint8_t, 2>;
+  /// Offset into @c m_surfacePacks and number of surfaces
+  using SurfacePackRange = std::pair<std::uint32_t, std::uint32_t>;
 
   std::shared_ptr<RegularSurface> m_representative;
   double m_tolerance{};
   // needs to be a tuple for the grid_helper functions
   std::tuple<Axis1, Axis2> m_axes;
   std::vector<AxisDirection> m_binValues;
-  std::uint8_t m_maxNeighborDistance{};
+  SurfaceArray::NeighborWindow m_neighborWindow{};
 
   // legacy grid for filling and for deprecated lookup methods.
   // TODO: remove this once deprecated lookup methods are removed and filling is
   // done directly into the neighbor cache
   std::vector<std::vector<const Surface*>> m_fillingGrid;
 
-  // containers to store the surfaces in the custom grid
+  // containers to store the surfaces in the custom grid. the packs are indexed
+  // per (bin, distance along axis 0, distance along axis 1), so the index array
+  // grows with the square of the maximum distance - it holds ranges rather than
+  // spans to keep that affordable.
   std::vector<const Surface*> m_surfacePacks;
-  std::vector<std::span<const Surface* const>> m_neighborSurfacePacks;
+  std::vector<SurfacePackRange> m_neighborSurfacePacks;
+
+  std::span<const Surface* const> surfacePack(std::size_t packIndex) const {
+    const SurfacePackRange& range = m_neighborSurfacePacks.at(packIndex);
+    return {m_surfacePacks.data() + range.first, range.second};
+  }
 
   bool isValidBin(const GridIndex& indices) const {
     const GridIndex nBins = numLocalBins2D();
@@ -344,11 +354,17 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
                                                               m_axes);
   }
 
-  std::size_t globalBinFromLocalBins3D(const GridIndex& localBins,
-                                       std::uint8_t neighborDistance) const {
+  std::size_t neighborDistanceStride(std::size_t axis) const {
+    return static_cast<std::size_t>(m_neighborWindow.max.at(axis)) + 1;
+  }
+
+  std::size_t neighborPackIndex(const GridIndex& localBins,
+                                const GridDistance& neighborDistance) const {
     const std::size_t globalGridBin =
         detail::MultiAxisHelper::getGlobalBinFromLocalBins(localBins, m_axes);
-    return globalGridBin * (m_maxNeighborDistance + 1) + neighborDistance;
+    return (globalGridBin * neighborDistanceStride(0) + neighborDistance[0]) *
+               neighborDistanceStride(1) +
+           neighborDistance[1];
   }
 
   GridPoint binCenter(const GridIndex& localBins) const {
@@ -366,6 +382,82 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
       return std::nullopt;
     }
     return surfaceToGridLocal(*surfaceLocal);
+  }
+
+  /// Whether the axis wraps, so bin distances have to be taken the short way
+  /// around.
+  bool axisIsClosed(std::size_t axis) const {
+    return axis == 0 ? std::get<0>(m_axes).getBoundaryType() ==
+                           AxisBoundaryType::Closed
+                     : std::get<1>(m_axes).getBoundaryType() ==
+                           AxisBoundaryType::Closed;
+  }
+
+  /// Distance in bins between two local bins along one axis. Under- and
+  /// overflow are clamped to the edge bin, which is as far as a window can
+  /// usefully reach.
+  std::uint8_t axisBinDistance(std::size_t axis, std::size_t from,
+                               std::size_t to) const {
+    const std::size_t nBins = numLocalBins2D().at(axis);
+    const std::size_t a = std::clamp<std::size_t>(from, 1, nBins);
+    const std::size_t b = std::clamp<std::size_t>(to, 1, nBins);
+    std::size_t distance = a > b ? a - b : b - a;
+    if (axisIsClosed(axis)) {
+      distance = std::min(distance, nBins - distance);
+    }
+    return clampValue<std::uint8_t>(distance);
+  }
+
+  /// Below this the track is treated as running along the layer and the window
+  /// is opened all the way. Any smaller incidence needs more bins than the
+  /// cache can hold anyway.
+  static constexpr double s_minIncidence = 1e-4;
+
+  /// How many bins the track can move along each axis while it is inside the
+  /// layer.
+  ///
+  /// The lookup happens where the track crosses the representative surface, but
+  /// a surface is registered where it projects onto that surface. In between,
+  /// the track traverses the layer thickness and slides along the layer by the
+  /// crossing angle - on a barrel almost entirely in z. The window has to cover
+  /// the bins that displacement spans, and per axis, because widening the other
+  /// one only multiplies the candidate count. The result is clamped to the
+  /// configured window bounds.
+  GridDistance crossingNeighborDistance(const GeometryContext& gctx,
+                                        const Vector2& surfaceLocal,
+                                        const Vector3& direction,
+                                        const GridIndex& localBins) const {
+    const GridDistance maximum = m_neighborWindow.max;
+
+    const Vector3 normal = m_representative->normal(gctx, surfaceLocal);
+    const double incidence = std::abs(normal.dot(direction));
+    if (incidence < s_minIncidence) {
+      return maximum;
+    }
+
+    const Vector3 crossing =
+        m_representative->localToGlobal(gctx, surfaceLocal);
+    const double halfPath = m_tolerance / incidence;
+
+    GridDistance neighborDistance{};
+    for (const double side : {-1., 1.}) {
+      const std::optional<GridPoint> edge =
+          projectToGrid(gctx, crossing + side * halfPath * direction);
+      if (!edge.has_value()) {
+        return maximum;
+      }
+      const GridIndex edgeBins = localBinsFromPosition2D(*edge);
+      for (std::size_t axis = 0; axis < neighborDistance.size(); ++axis) {
+        neighborDistance.at(axis) = std::max(
+            neighborDistance.at(axis),
+            axisBinDistance(axis, localBins.at(axis), edgeBins.at(axis)));
+      }
+    }
+
+    return {std::clamp(neighborDistance[0], m_neighborWindow.min[0],
+                       m_neighborWindow.max[0]),
+            std::clamp(neighborDistance[1], m_neighborWindow.min[1],
+                       m_neighborWindow.max[1])};
   }
 
   /// Register a surface in every bin its projection onto the representative
@@ -438,14 +530,13 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     }
   }
 
-  /// calculate neighbors for every bin and store in map
+  /// calculate neighbors for every bin and window size and store in map
   void populateNeighborCache() {
     m_surfacePacks.clear();
     m_neighborSurfacePacks.clear();
 
-    using SurfacePackRange = std::pair<std::size_t, std::size_t>;
-    std::vector<SurfacePackRange> neighborSurfacePacks;
-    neighborSurfacePacks.resize(size() * (m_maxNeighborDistance + 1));
+    m_neighborSurfacePacks.assign(
+        size() * neighborDistanceStride(0) * neighborDistanceStride(1), {0, 0});
 
     std::vector<const Surface*> surfacePack;
     std::map<std::vector<const Surface*>, SurfacePackRange> surfacesToPackRange;
@@ -457,50 +548,52 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
         continue;
       }
 
-      for (std::uint8_t neighborDistance = 0;
-           neighborDistance <= m_maxNeighborDistance; ++neighborDistance) {
-        surfacePack.clear();
+      for (std::uint8_t distance0 = 0; distance0 <= m_neighborWindow.max[0];
+           ++distance0) {
+        for (std::uint8_t distance1 = 0; distance1 <= m_neighborWindow.max[1];
+             ++distance1) {
+          surfacePack.clear();
 
-        for (const std::size_t idx :
-             detail::MultiAxisHelper::neighborHoodIndices(
-                 indices, neighborDistance, m_axes)) {
-          const std::vector<const Surface*>& binContent = m_fillingGrid.at(idx);
-          std::copy(binContent.begin(), binContent.end(),
-                    std::back_inserter(surfacePack));
-        }
+          const auto span0 = std::get<0>(m_axes).neighborHoodIndices(
+              indices[0], std::pair<int, int>{-distance0, distance0});
+          const auto span1 = std::get<1>(m_axes).neighborHoodIndices(
+              indices[1], std::pair<int, int>{-distance1, distance1});
+          for (const std::size_t bin0 : span0) {
+            for (const std::size_t bin1 : span1) {
+              const std::vector<const Surface*>& binContent =
+                  m_fillingGrid.at(globalBinFromLocalBins2D({bin0, bin1}));
+              std::copy(binContent.begin(), binContent.end(),
+                        std::back_inserter(surfacePack));
+            }
+          }
 
-        std::ranges::sort(surfacePack);
-        const auto last = std::ranges::unique(surfacePack);
-        surfacePack.erase(last.begin(), last.end());
+          std::ranges::sort(surfacePack);
+          const auto last = std::ranges::unique(surfacePack);
+          surfacePack.erase(last.begin(), last.end());
 
-        const std::size_t outputGlobalBin =
-            globalBinFromLocalBins3D(indices, neighborDistance);
+          const std::size_t packIndex =
+              neighborPackIndex(indices, {distance0, distance1});
 
-        if (const auto it = surfacesToPackRange.find(surfacePack);
-            it != surfacesToPackRange.end()) {
-          neighborSurfacePacks[outputGlobalBin] = it->second;
-        } else {
-          const SurfacePackRange surfacePackRange = {
-              m_surfacePacks.size(),
-              m_surfacePacks.size() + surfacePack.size()};
-          m_surfacePacks.insert(m_surfacePacks.end(), surfacePack.begin(),
-                                surfacePack.end());
-          surfacesToPackRange[surfacePack] = surfacePackRange;
-          neighborSurfacePacks[outputGlobalBin] = surfacePackRange;
+          if (const auto it = surfacesToPackRange.find(surfacePack);
+              it != surfacesToPackRange.end()) {
+            m_neighborSurfacePacks[packIndex] = it->second;
+          } else {
+            throw_assert(m_surfacePacks.size() + surfacePack.size() <=
+                             std::numeric_limits<std::uint32_t>::max(),
+                         "surface pack storage exceeds the 32 bit index range");
+            const SurfacePackRange surfacePackRange = {
+                static_cast<std::uint32_t>(m_surfacePacks.size()),
+                static_cast<std::uint32_t>(surfacePack.size())};
+            m_surfacePacks.insert(m_surfacePacks.end(), surfacePack.begin(),
+                                  surfacePack.end());
+            surfacesToPackRange[surfacePack] = surfacePackRange;
+            m_neighborSurfacePacks[packIndex] = surfacePackRange;
+          }
         }
       }
     }
 
     m_surfacePacks.shrink_to_fit();
-
-    m_neighborSurfacePacks.reserve(neighborSurfacePacks.size());
-    std::ranges::transform(neighborSurfacePacks,
-                           std::back_inserter(m_neighborSurfacePacks),
-                           [this](const SurfacePackRange& range) {
-                             return std::span<const Surface* const>(
-                                 m_surfacePacks.data() + range.first,
-                                 m_surfacePacks.data() + range.second);
-                           });
   }
 
   void checkGrid(std::span<const Surface* const> surfaces) {
@@ -584,7 +677,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
 std::unique_ptr<SurfaceArray::ISurfaceGridLookup> makeSurfaceGridLookup(
     std::shared_ptr<RegularSurface> representative, double tolerance,
     std::tuple<const IAxis&, const IAxis&> axes,
-    std::uint8_t maxNeighborDistance) {
+    SurfaceArray::NeighborWindow neighborWindow) {
   const auto& [iAxisA, iAxisB] = axes;
 
   return iAxisA.visit([&]<typename axis_a_t>(const axis_a_t& axisA) {
@@ -594,7 +687,7 @@ std::unique_ptr<SurfaceArray::ISurfaceGridLookup> makeSurfaceGridLookup(
           return std::make_unique<SurfaceGridLookupImpl<axis_a_t, axis_b_t>>(
               std::move(representative), tolerance,
               std::tuple<axis_a_t, axis_b_t>{axisA, axisB},
-              std::vector<AxisDirection>(), maxNeighborDistance);
+              std::vector<AxisDirection>(), neighborWindow);
         });
   });
 }
@@ -612,9 +705,9 @@ SurfaceArray::SurfaceArray(const GeometryContext& gctx,
                            std::shared_ptr<RegularSurface> representative,
                            double tolerance,
                            std::tuple<const IAxis&, const IAxis&> axes,
-                           std::uint8_t maxNeighborDistance) {
+                           NeighborWindow neighborWindow) {
   m_gridLookup = makeSurfaceGridLookup(std::move(representative), tolerance,
-                                       axes, maxNeighborDistance);
+                                       axes, neighborWindow);
   m_surfaces = std::move(surfaces);
   m_surfacesRawPointers =
       m_surfaces |
@@ -643,6 +736,13 @@ std::span<const Surface* const> SurfaceArray::at(
 std::span<const Surface* const> SurfaceArray::neighbors(
     std::array<std::size_t, 2> gridIndices,
     std::uint8_t neighborDistance) const {
+  return m_gridLookup->neighbors(gridIndices,
+                                 {neighborDistance, neighborDistance});
+}
+
+std::span<const Surface* const> SurfaceArray::neighbors(
+    std::array<std::size_t, 2> gridIndices,
+    std::array<std::uint8_t, 2> neighborDistance) const {
   return m_gridLookup->neighbors(gridIndices, neighborDistance);
 }
 
@@ -720,8 +820,8 @@ std::array<std::size_t, 2> SurfaceArray::numLocalBins() const {
   return m_gridLookup->numLocalBins();
 }
 
-std::uint8_t SurfaceArray::maxNeighborDistance() const {
-  return m_gridLookup->maxNeighborDistance();
+SurfaceArray::NeighborWindow SurfaceArray::neighborWindow() const {
+  return m_gridLookup->neighborWindow();
 }
 
 }  // namespace Acts
