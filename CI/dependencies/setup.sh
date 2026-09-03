@@ -63,6 +63,13 @@ TRANSIENT_ERROR_PATTERNS=(
   "toomanyrequests"
   "Too Many Requests"
   "rate limit"
+  # GitHub sheds anonymous load with "GitHub is temporarily limiting some
+  # unauthenticated downloads to protect the stability of the platform. Please
+  # retry later or authenticate." github_auth.sh keeps us off that quota, but
+  # the message is explicitly a "try again" and must not be a hard failure.
+  "temporarily limiting"
+  "unauthenticated download"
+  "Please retry later"
   "HTTP Error 429"
   "HTTP Error 5[0-9][0-9]"
   "50[0-9] (Internal Server Error|Bad Gateway|Service Unavailable|Gateway Time-out)"
@@ -256,6 +263,12 @@ else
     _spack_folder=${PWD}/spack
 fi
 
+start_section "Authenticate github.com fetches"
+# Before anything reaches github.com: setup_spack.sh clones spack itself, and
+# the builtin package repo is fetched right after it.
+"${SCRIPT_DIR}/github_auth.sh"
+end_section
+
 start_section "Install spack if not already installed"
 if ! command -v spack &> /dev/null; then
   "${SCRIPT_DIR}/setup_spack.sh" "${_spack_folder}"
@@ -310,30 +323,6 @@ if [ -n "${CI:-}" ]; then
   # not the secret value, so this is safe to print).
   spack mirror list
   spack config get mirrors
-  end_section
-
-  start_section "Authenticate github.com fetches"
-  # Anonymous git reads leave the runners on a shared egress IP, so GitHub
-  # eventually answers one with a 401. Git turns that into a credential prompt
-  # ("could not read Username for 'https://github.com'"), which is a hard
-  # failure a retry cannot ride out. Authenticating moves us off the per-IP
-  # anonymous quota; the fork-PR GITHUB_TOKEN is enough for reads of a public
-  # repo (unlike GHCR, which needs a `packages: read` fork PRs never get).
-  #
-  # The rewrite is a literal prefix substitution on "https://github.com/" that
-  # carries host and path over untouched, so it only prepends credentials --
-  # every other host, and the ssh form, is left alone. It also reaches git only;
-  # the tarball and OCI fetches elsewhere in the install never consult it.
-  # --replace-all keeps it idempotent: insteadOf is multi-valued, and a cached
-  # spack install can run this more than once.
-  if [ -n "${GITHUB_TOKEN:-}" ]; then
-    git config --global --replace-all \
-      "url.https://x-access-token:${GITHUB_TOKEN}@github.com/.insteadOf" \
-      "https://github.com/"
-    echo "Rewriting https://github.com/ fetches to use GITHUB_TOKEN"
-  else
-    echo "GITHUB_TOKEN not set: github.com fetches stay anonymous"
-  fi
   end_section
 
   start_section "Add ACTS package repository"
