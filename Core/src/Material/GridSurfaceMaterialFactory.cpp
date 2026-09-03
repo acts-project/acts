@@ -8,164 +8,100 @@
 
 #include "Acts/Material/GridSurfaceMaterialFactory.hpp"
 
-#include "Acts/Utilities/Diagnostics.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
+
+#include <array>
 
 namespace Acts {
 
-std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>>
-GridSurfaceMaterialFactory::create(
-    const IAxis& axis, GridMaterialAccessor&& materialAccessor,
-    GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
-    const std::vector<MaterialSlab>& payload) {
-  return create1D<GridMaterialAccessor>(axis, std::move(materialAccessor),
-                                        std::move(boundToGridLocal),
-                                        std::move(globalToGridLocal), payload);
+namespace {
+
+/// @brief Capture a pair of axes as a fully specified 2D binning spec
+MultiAxisSpec2D multiAxisSpecFromAxes(const IAxis& axis0, const IAxis& axis1) {
+  std::array<AxisSpec, 2> specs{AxisSpec::FromAxis(axis0),
+                                AxisSpec::FromAxis(axis1)};
+  return MultiAxisSpec2D(specs);
 }
 
-std::unique_ptr<IGridSurfaceMaterial<IndexedMaterialAccessor::grid_value_type>>
-GridSurfaceMaterialFactory::create(
-    const IAxis& axis, IndexedMaterialAccessor&& materialAccessor,
-    GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
-    const std::vector<IndexedMaterialAccessor::grid_value_type>& payload) {
-  return create1D<IndexedMaterialAccessor>(
-      axis, std::move(materialAccessor), std::move(boundToGridLocal),
-      std::move(globalToGridLocal), payload);
+/// @brief Flatten a column-major (regular-bin only) 2D payload into a
+/// per-global-bin vector, including under-/overflow bins
+template <typename value_t>
+std::vector<value_t> flattenPayload2D(
+    const IMultiAxis2D& multiAxis,
+    const std::vector<std::vector<value_t>>& payload) {
+  std::vector<value_t> flat(multiAxis.getNTotalBins(true));
+  IMultiAxis2D::LocalBins nBins = multiAxis.getNBins();
+  for (std::size_t i0 = 0; i0 < nBins[0]; ++i0) {
+    for (std::size_t i1 = 0; i1 < nBins[1]; ++i1) {
+      IMultiAxis2D::LocalBins lbin{i0 + 1, i1 + 1};
+      flat[multiAxis.getGlobalBinFromLocalBins(lbin)] = payload[i0][i1];
+    }
+  }
+  return flat;
 }
 
-std::unique_ptr<
-    IGridSurfaceMaterial<GloballyIndexedMaterialAccessor::grid_value_type>>
-GridSurfaceMaterialFactory::create(
-    const IAxis& axis, GloballyIndexedMaterialAccessor&& materialAccessor,
-    GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
-    const std::vector<GloballyIndexedMaterialAccessor::grid_value_type>&
-        payload) {
-  return create1D<GloballyIndexedMaterialAccessor>(
-      axis, std::move(materialAccessor), std::move(boundToGridLocal),
-      std::move(globalToGridLocal), payload);
-}
+}  // namespace
 
-std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>>
-GridSurfaceMaterialFactory::create(
+namespace GridSurfaceMaterialFactory {
+
+std::unique_ptr<GridSurfaceMaterial> createDirect(
     const IAxis& axis0, const IAxis& axis1,
-    GridMaterialAccessor&& materialAccessor,
-    GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
     const std::vector<std::vector<MaterialSlab>>& payload) {
-  return create2D<GridMaterialAccessor>(
-      axis0, axis1, std::move(materialAccessor), std::move(boundToGridLocal),
-      std::move(globalToGridLocal), payload);
+  MultiAxisSpec2D binning = multiAxisSpecFromAxes(axis0, axis1);
+  auto multiAxis = binning.buildMultiAxis();
+  GridSurfaceMaterial::Direct storage = flattenPayload2D(*multiAxis, payload);
+  return std::make_unique<GridSurfaceMaterial>(std::move(binning),
+                                               std::move(storage));
 }
 
-std::unique_ptr<IGridSurfaceMaterial<IndexedMaterialAccessor::grid_value_type>>
-GridSurfaceMaterialFactory::create(
-    const IAxis& axis0, const IAxis& axis1,
-    IndexedMaterialAccessor&& materialAccessor,
-    GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
-    const std::vector<std::vector<IndexedMaterialAccessor::grid_value_type>>&
-        payload) {
-  return create2D<IndexedMaterialAccessor>(
-      axis0, axis1, std::move(materialAccessor), std::move(boundToGridLocal),
-      std::move(globalToGridLocal), payload);
-}
-
-std::unique_ptr<
-    IGridSurfaceMaterial<GloballyIndexedMaterialAccessor::grid_value_type>>
-GridSurfaceMaterialFactory::create(
-    const IAxis& axis0, const IAxis& axis1,
-    GloballyIndexedMaterialAccessor&& materialAccessor,
-    GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
-    const std::vector<
-        std::vector<GloballyIndexedMaterialAccessor::grid_value_type>>&
-        payload) {
-  return create2D<GloballyIndexedMaterialAccessor>(
-      axis0, axis1, std::move(materialAccessor), std::move(boundToGridLocal),
-      std::move(globalToGridLocal), payload);
-}
-
-// Unlike the declarations, the definitions of the deprecated overloads do not
-// carry the deprecation attribute themselves, so they need the suppression
-ACTS_PUSH_IGNORE_DEPRECATED()
-
-std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>>
-GridSurfaceMaterialFactory::create(
-    const ProtoAxis& pAxis, GridMaterialAccessor&& materialAccessor,
-    GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
-    const std::vector<MaterialSlab>& payload) {
-  return create1D<GridMaterialAccessor>(
-      pAxis.getAxis(), std::move(materialAccessor), std::move(boundToGridLocal),
-      std::move(globalToGridLocal), payload);
-}
-
-std::unique_ptr<IGridSurfaceMaterial<IndexedMaterialAccessor::grid_value_type>>
-GridSurfaceMaterialFactory::create(
-    const ProtoAxis& pAxis, IndexedMaterialAccessor&& materialAccessor,
-    GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
-    const std::vector<IndexedMaterialAccessor::grid_value_type>& payload) {
-  return create1D<IndexedMaterialAccessor>(
-      pAxis.getAxis(), std::move(materialAccessor), std::move(boundToGridLocal),
-      std::move(globalToGridLocal), payload);
-}
-
-std::unique_ptr<
-    IGridSurfaceMaterial<GloballyIndexedMaterialAccessor::grid_value_type>>
-GridSurfaceMaterialFactory::create(
-    const ProtoAxis& pAxis, GloballyIndexedMaterialAccessor&& materialAccessor,
-    GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
-    const std::vector<GloballyIndexedMaterialAccessor::grid_value_type>&
-        payload) {
-  return create1D<GloballyIndexedMaterialAccessor>(
-      pAxis.getAxis(), std::move(materialAccessor), std::move(boundToGridLocal),
-      std::move(globalToGridLocal), payload);
-}
-
-std::unique_ptr<IGridSurfaceMaterial<MaterialSlab>>
-GridSurfaceMaterialFactory::create(
-    const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
-    GridMaterialAccessor&& materialAccessor,
-    GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
+std::unique_ptr<GridSurfaceMaterial> createDirect(
+    const MultiAxisSpec2D& binning, const Surface& surface,
     const std::vector<std::vector<MaterialSlab>>& payload) {
-  return create2D<GridMaterialAccessor>(
-      pAxis0.getAxis(), pAxis1.getAxis(), std::move(materialAccessor),
-      std::move(boundToGridLocal), std::move(globalToGridLocal), payload);
+  auto axes = resolveMultiAxis(binning, surface);
+  return createDirect(axes->getAxis(0), axes->getAxis(1), payload);
 }
 
-std::unique_ptr<IGridSurfaceMaterial<IndexedMaterialAccessor::grid_value_type>>
-GridSurfaceMaterialFactory::create(
-    const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
-    IndexedMaterialAccessor&& materialAccessor,
-    GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
-    const std::vector<std::vector<IndexedMaterialAccessor::grid_value_type>>&
-        payload) {
-  return create2D<IndexedMaterialAccessor>(
-      pAxis0.getAxis(), pAxis1.getAxis(), std::move(materialAccessor),
-      std::move(boundToGridLocal), std::move(globalToGridLocal), payload);
+std::unique_ptr<GridSurfaceMaterial> createIndexed(
+    const IAxis& axis0, const IAxis& axis1, std::vector<MaterialSlab> material,
+    const std::vector<std::vector<std::size_t>>& payload) {
+  MultiAxisSpec2D binning = multiAxisSpecFromAxes(axis0, axis1);
+  auto multiAxis = binning.buildMultiAxis();
+  GridSurfaceMaterial::Indexed storage{flattenPayload2D(*multiAxis, payload),
+                                       std::move(material)};
+  return std::make_unique<GridSurfaceMaterial>(std::move(binning),
+                                               std::move(storage));
 }
 
-std::unique_ptr<
-    IGridSurfaceMaterial<GloballyIndexedMaterialAccessor::grid_value_type>>
-GridSurfaceMaterialFactory::create(
-    const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
-    GloballyIndexedMaterialAccessor&& materialAccessor,
-    GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
-    const std::vector<
-        std::vector<GloballyIndexedMaterialAccessor::grid_value_type>>&
-        payload) {
-  return create2D<GloballyIndexedMaterialAccessor>(
-      pAxis0.getAxis(), pAxis1.getAxis(), std::move(materialAccessor),
-      std::move(boundToGridLocal), std::move(globalToGridLocal), payload);
+std::unique_ptr<GridSurfaceMaterial> createIndexed(
+    const MultiAxisSpec2D& binning, const Surface& surface,
+    std::vector<MaterialSlab> material,
+    const std::vector<std::vector<std::size_t>>& payload) {
+  auto axes = resolveMultiAxis(binning, surface);
+  return createIndexed(axes->getAxis(0), axes->getAxis(1), std::move(material),
+                       payload);
 }
 
-ACTS_POP_IGNORE_DEPRECATED()
+std::unique_ptr<GridSurfaceMaterial> createGloballyIndexed(
+    const IAxis& axis0, const IAxis& axis1,
+    std::shared_ptr<std::vector<MaterialSlab>> material,
+    const std::vector<std::vector<std::size_t>>& payload) {
+  MultiAxisSpec2D binning = multiAxisSpecFromAxes(axis0, axis1);
+  auto multiAxis = binning.buildMultiAxis();
+  GridSurfaceMaterial::GloballyIndexed storage{
+      flattenPayload2D(*multiAxis, payload), std::move(material)};
+  return std::make_unique<GridSurfaceMaterial>(std::move(binning),
+                                               std::move(storage));
+}
+
+std::unique_ptr<GridSurfaceMaterial> createGloballyIndexed(
+    const MultiAxisSpec2D& binning, const Surface& surface,
+    std::shared_ptr<std::vector<MaterialSlab>> material,
+    const std::vector<std::vector<std::size_t>>& payload) {
+  auto axes = resolveMultiAxis(binning, surface);
+  return createGloballyIndexed(axes->getAxis(0), axes->getAxis(1),
+                               std::move(material), payload);
+}
+
+}  // namespace GridSurfaceMaterialFactory
 
 }  // namespace Acts

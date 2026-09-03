@@ -9,6 +9,7 @@ from acts import (
     MaterialMapper,
     IntersectionMaterialAssigner,
     BinnedSurfaceMaterialAccumulator,
+    GridSurfaceMaterialAccumulator,
     logging,
     GeometryContext,
 )
@@ -43,6 +44,8 @@ def runMaterialMapping(
     loglevel: acts.logging.Level = acts.logging.INFO,
     outputMaterialTracks: str = "material_tracks",
     treeName: str = "material_tracks",
+    accumulationType: str = "binned",
+    gridStorageKind: str = "indexed",
 ):
     # Create a sequencer
     print("Creating the sequencer with 1 thread (inter event information needed)")
@@ -68,12 +71,26 @@ def runMaterialMapping(
     materialAssingerConfig.surfaces = surfaces
     materialAssinger = IntersectionMaterialAssigner(materialAssingerConfig, loglevel)
 
-    # Accumulation setup : Binned surface material accumulator
-    materialAccumulatorConfig = BinnedSurfaceMaterialAccumulator.Config()
-    materialAccumulatorConfig.materialSurfaces = surfaces
-    materialAccumulator = BinnedSurfaceMaterialAccumulator(
-        materialAccumulatorConfig, loglevel
-    )
+    # Accumulation setup : either the legacy BinUtility-based accumulator, or
+    # the modern grid-based one producing GridSurfaceMaterial maps
+    if accumulationType == "binned":
+        materialAccumulatorConfig = BinnedSurfaceMaterialAccumulator.Config()
+        materialAccumulatorConfig.materialSurfaces = surfaces
+        materialAccumulator = BinnedSurfaceMaterialAccumulator(
+            materialAccumulatorConfig, loglevel
+        )
+    elif accumulationType == "grid":
+        materialAccumulatorConfig = GridSurfaceMaterialAccumulator.Config()
+        materialAccumulatorConfig.materialSurfaces = surfaces
+        materialAccumulatorConfig.storageKind = {
+            "direct": GridSurfaceMaterialAccumulator.StorageKind.Direct,
+            "indexed": GridSurfaceMaterialAccumulator.StorageKind.Indexed,
+        }[gridStorageKind]
+        materialAccumulator = GridSurfaceMaterialAccumulator(
+            materialAccumulatorConfig, loglevel
+        )
+    else:
+        raise ValueError(f"Unknown accumulation type '{accumulationType}'")
 
     # Mapper setup
     materialMapperConfig = MaterialMapper.Config()
@@ -176,6 +193,24 @@ if "__main__" == __name__:
         help="Input material track collection name",
     )
 
+    p.add_argument(
+        "--accumulation-type",
+        type=str,
+        default="binned",
+        choices=["binned", "grid"],
+        help="Surface material accumulator: legacy BinnedSurfaceMaterial "
+        "('binned') or the modern GridSurfaceMaterial ('grid')",
+    )
+
+    p.add_argument(
+        "--grid-storage-kind",
+        type=str,
+        default="indexed",
+        choices=["direct", "indexed"],
+        help="Storage backend for the finalized GridSurfaceMaterial maps, "
+        "only used when --accumulation-type=grid",
+    )
+
     args = p.parse_args()
     logLevel = logging.INFO
 
@@ -196,4 +231,6 @@ if "__main__" == __name__:
         loglevel=logLevel,
         outputMaterialTracks=args.material_tracks_name,
         treeName=args.tree_name,
+        accumulationType=args.accumulation_type,
+        gridStorageKind=args.grid_storage_kind,
     ).run()
