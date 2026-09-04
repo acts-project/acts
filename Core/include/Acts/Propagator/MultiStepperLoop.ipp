@@ -12,6 +12,9 @@
 
 #include "Acts/Propagator/MultiStepperError.hpp"
 
+#include <algorithm>
+#include <vector>
+
 namespace Acts {
 
 template <Concepts::SingleStepper S, typename R>
@@ -21,8 +24,10 @@ auto MultiStepperLoop<S, R>::boundState(
     -> Result<BoundState> {
   assert(!state.components.empty());
 
-  std::vector<std::tuple<double, BoundVector, Covariance>> cmps;
-  cmps.reserve(numberComponents(state));
+  MultiComponentBoundTrackParameters params(
+      surface.getSharedPtr(), transportCov, state.particleHypothesis);
+  params.reserve(numberComponents(state));
+
   double accumulatedPathLength = 0.0;
 
   for (auto i = 0ul; i < numberComponents(state); ++i) {
@@ -43,46 +48,45 @@ auto MultiStepperLoop<S, R>::boundState(
             .closest()
             .position();
 
-    auto bs = SingleStepper::boundState(cmpState, surface, transportCov,
-                                        freeToBoundCorrection);
+    auto bs = m_singleStepper.boundState(cmpState, surface, transportCov,
+                                         freeToBoundCorrection);
 
     if (bs.ok()) {
       const auto& btp = std::get<BoundTrackParameters>(*bs);
-      cmps.emplace_back(
-          state.components[i].weight, btp.parameters(),
-          btp.covariance().value_or(Acts::BoundSquareMatrix::Zero()));
+      params.pushComponent(state.components[i].weight, btp.parameters(),
+                           btp.covariance());
       accumulatedPathLength +=
           std::get<double>(*bs) * state.components[i].weight;
     }
   }
 
-  if (cmps.empty()) {
+  if (params.empty()) {
     return MultiStepperError::AllComponentsConversionToBoundFailed;
   }
 
-  return BoundState{MultiComponentBoundTrackParameters(
-                        surface.getSharedPtr(), cmps, state.particleHypothesis),
-                    Jacobian::Zero(), accumulatedPathLength};
+  params.normalizeWeights();
+
+  return BoundState{params, Jacobian::Zero(), accumulatedPathLength};
 }
 
 template <Concepts::SingleStepper S, typename R>
-auto MultiStepperLoop<S, R>::curvilinearState(
-    State& state, bool transportCov) const -> BoundState {
+auto MultiStepperLoop<S, R>::curvilinearState(State& state,
+                                              bool transportCov) const
+    -> BoundState {
   assert(!state.components.empty());
 
-  std::vector<std::tuple<double, Vector4, Vector3, double, BoundSquareMatrix>>
-      cmps;
+  std::vector<std::tuple<double, Vector4, Vector3, double, BoundMatrix>> cmps;
   cmps.reserve(numberComponents(state));
   double accumulatedPathLength = 0.0;
 
   for (auto i = 0ul; i < numberComponents(state); ++i) {
-    const auto [cp, jac, pl] = SingleStepper::curvilinearState(
+    const auto [cp, jac, pl] = m_singleStepper.curvilinearState(
         state.components[i].state, transportCov);
 
     cmps.emplace_back(state.components[i].weight,
                       cp.fourPosition(state.options.geoContext), cp.direction(),
                       cp.qOverP(),
-                      cp.covariance().value_or(BoundSquareMatrix::Zero()));
+                      cp.covariance().value_or(BoundMatrix::Zero()));
     accumulatedPathLength += state.components[i].weight * pl;
   }
 
@@ -111,6 +115,7 @@ Result<double> MultiStepperLoop<S, R>::step(
     // surface, reweight the components, perform no step and return 0
     if (*state.stepCounterAfterFirstComponentOnSurface >=
         m_stepLimitAfterFirstComponentOnSurface) {
+      //! [step limit]
       for (auto& cmp : components) {
         if (cmp.status != Status::onSurface) {
           cmp.status = Status::unreachable;
@@ -125,6 +130,7 @@ Result<double> MultiStepperLoop<S, R>::step(
 
       removeMissedComponents(state);
       reweightComponents(state);
+      //! [step limit]
 
       ACTS_VERBOSE(components.size()
                    << " components left after removing missed components");
@@ -141,9 +147,9 @@ Result<double> MultiStepperLoop<S, R>::step(
   // If at least one component is on a surface, we can remove all missed
   // components before the step. If not, we must keep them for the case that all
   // components miss and we need to retarget
-  const auto cmpsOnSurface = std::count_if(
-      components.cbegin(), components.cend(),
-      [&](auto& cmp) { return cmp.status == IntersectionStatus::onSurface; });
+  const auto cmpsOnSurface = std::ranges::count_if(components, [&](auto& cmp) {
+    return cmp.status == IntersectionStatus::onSurface;
+  });
 
   if (cmpsOnSurface > 0) {
     removeMissedComponents(state);
@@ -168,7 +174,7 @@ Result<double> MultiStepperLoop<S, R>::step(
     }
 
     results.emplace_back(
-        SingleStepper::step(component.state, propDir, material));
+        m_singleStepper.step(component.state, propDir, material));
 
     if (results.back()->ok()) {
       accumulatedPathLength += component.weight * results.back()->value();
@@ -181,9 +187,8 @@ Result<double> MultiStepperLoop<S, R>::step(
   };
 
   // Loop over components and remove errorous components
-  components.erase(
-      std::remove_if(components.begin(), components.end(), errorInStep),
-      components.end());
+  const auto removedTail = std::ranges::remove_if(components, errorInStep);
+  components.erase(removedTail.begin(), removedTail.end());
 
   // Reweight if necessary
   if (reweightNecessary) {

@@ -19,15 +19,20 @@
 
 namespace Acts {
 
+/// @addtogroup material
+/// @{
+
 /// @brief Struct for mapping global 3D positions to material values
 ///
 /// Global 3D positions are transformed into a @c DIM_POS Dimensional vector
 /// which is used to look up the material classification value in the
 /// underlying material map.
 template <typename G>
-struct MaterialMapper {
+struct MaterialMapLookup {
  public:
+  /// Type alias for material grid
   using Grid_t = G;
+  /// Dimensionality of the position space for material interpolation
   static constexpr std::size_t DIM_POS = Grid_t::DIM;
 
   /// @brief Struct representing smallest grid unit in material grid
@@ -50,11 +55,10 @@ struct MaterialMapper {
     ///                         each Dimension)
     /// @param [in] materialValues Material classification values at the hyper
     /// box corners sorted in the canonical order defined in Acts::interpolate
-    MaterialCell(
-        std::function<ActsVector<DIM_POS>(const Vector3&)> transformPos,
-        std::array<double, DIM_POS> lowerLeft,
-        std::array<double, DIM_POS> upperRight,
-        std::array<Material::ParametersVector, N> materialValues)
+    MaterialCell(std::function<Vector<DIM_POS>(const Vector3&)> transformPos,
+                 std::array<double, DIM_POS> lowerLeft,
+                 std::array<double, DIM_POS> upperRight,
+                 std::array<Material::ParametersVector, N> materialValues)
         : m_transformPos(std::move(transformPos)),
           m_lowerLeft(std::move(lowerLeft)),
           m_upperRight(std::move(upperRight)),
@@ -90,7 +94,7 @@ struct MaterialMapper {
 
    private:
     /// Geometric transformation applied to global 3D positions
-    std::function<ActsVector<DIM_POS>(const Vector3&)> m_transformPos;
+    std::function<Vector<DIM_POS>(const Vector3&)> m_transformPos;
 
     /// Generalized lower-left corner of the confining hyper-box
     std::array<double, DIM_POS> m_lowerLeft;
@@ -110,9 +114,8 @@ struct MaterialMapper {
   /// @param [in] transformPos Mapping of global 3D coordinates (cartesian)
   /// onto grid space
   /// @param [in] grid Grid storing material classification values
-  MaterialMapper(
-      std::function<ActsVector<DIM_POS>(const Vector3&)> transformPos,
-      Grid_t grid)
+  MaterialMapLookup(std::function<Vector<DIM_POS>(const Vector3&)> transformPos,
+                    Grid_t grid)
       : m_transformPos(std::move(transformPos)), m_grid(std::move(grid)) {}
 
   /// @brief Retrieve binned material at given position
@@ -123,8 +126,9 @@ struct MaterialMapper {
   /// @pre The given @c position must lie within the range of the underlying
   /// map.
   Material material(const Vector3& position) const {
-    return Material(m_grid.atLocalBins(
-        m_grid.localBinsFromLowerLeftEdge(m_transformPos(position))));
+    return Material(
+        m_grid.atLocalBins(m_grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+            m_transformPos(position))));
   }
 
   /// @brief Retrieve interpolated material at given position
@@ -147,15 +151,16 @@ struct MaterialMapper {
   /// map.
   MaterialCell getMaterialCell(const Vector3& position) const {
     const auto& gridPosition = m_transformPos(position);
-    std::size_t bin = m_grid.globalBinFromPosition(gridPosition);
-    const auto& indices = m_grid.localBinsFromPosition(bin);
-    const auto& lowerLeft = m_grid.lowerLeftBinEdge(indices);
-    const auto& upperRight = m_grid.upperRightBinEdge(indices);
+    std::size_t bin = m_grid.multiAxis().getGlobalBinFromPoint(gridPosition);
+    const auto& indices = m_grid.multiAxis().getLocalBinsFromGlobalBin(bin);
+    const auto& lowerLeft = m_grid.multiAxis().getLowerLeftBinEdge(indices);
+    const auto& upperRight = m_grid.multiAxis().getUpperRightBinEdge(indices);
 
     // Loop through all corner points
     constexpr std::size_t nCorners = 1 << DIM_POS;
-    std::array<Material::ParametersVector, nCorners> neighbors;
-    const auto& cornerIndices = m_grid.closestPointsIndices(gridPosition);
+    std::array<Material::ParametersVector, nCorners> neighbors{};
+    const auto& cornerIndices =
+        m_grid.multiAxis().getClosestPointsIndices(gridPosition);
 
     std::size_t i = 0;
     for (std::size_t index : cornerIndices) {
@@ -170,7 +175,7 @@ struct MaterialMapper {
   ///
   /// @return Vector returning number of bins for all map axes
   std::vector<std::size_t> getNBins() const {
-    auto nBinsArray = m_grid.numLocalBins();
+    auto nBinsArray = m_grid.multiAxis().getNBins();
     return std::vector<std::size_t>(nBinsArray.begin(), nBinsArray.end());
   }
 
@@ -178,7 +183,7 @@ struct MaterialMapper {
   ///
   /// @return Vector returning the minima of all map axes
   std::vector<double> getMin() const {
-    auto minArray = m_grid.minPosition();
+    auto minArray = m_grid.multiAxis().getMinPoint();
     return std::vector<double>(minArray.begin(), minArray.end());
   }
 
@@ -186,7 +191,7 @@ struct MaterialMapper {
   ///
   /// @return Vector returning the maxima of all map axes
   std::vector<double> getMax() const {
-    auto maxArray = m_grid.maxPosition();
+    auto maxArray = m_grid.multiAxis().getMaxPoint();
     return std::vector<double>(maxArray.begin(), maxArray.end());
   }
 
@@ -196,7 +201,7 @@ struct MaterialMapper {
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
   bool isInside(const Vector3& position) const {
-    return m_grid.isInside(m_transformPos(position));
+    return m_grid.multiAxis().isInside(m_transformPos(position));
   }
 
   /// @brief Get a const reference on the underlying grid structure
@@ -206,12 +211,11 @@ struct MaterialMapper {
 
  private:
   /// Geometric transformation applied to global 3D positions
-  std::function<ActsVector<DIM_POS>(const Vector3&)> m_transformPos;
+  std::function<Vector<DIM_POS>(const Vector3&)> m_transformPos;
   /// Grid storing material values
   Grid_t m_grid;
 };
 
-/// @ingroup Material
 /// @brief Interpolate material classification values from material values on a
 /// given grid
 ///
@@ -298,7 +302,7 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @note Currently the derivative is not calculated
   /// @todo return derivative
   Material getMaterialGradient(const Vector3& position,
-                               ActsMatrix<5, 5>& /*derivative*/) const {
+                               Matrix<5, 5>& /*derivative*/) const {
     return m_mapper.getMaterial(position);
   }
 
@@ -311,7 +315,7 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @note Cache is not used currently
   /// @todo return derivative
   Material getMaterialGradient(const Vector3& position,
-                               ActsMatrix<5, 5>& /*derivative*/,
+                               Matrix<5, 5>& /*derivative*/,
                                Cache& /*cache*/) const {
     return m_mapper.getMaterial(position);
   }
@@ -330,11 +334,13 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   }
 
   /// Return the BinUtility
+  /// @return Const reference to the bin utility for the material map
   const BinUtility& binUtility() const { return m_binUtility; }
 
   /// Output Method for std::ostream
   ///
   /// @param sl The outoput stream
+  /// @return Reference to the output stream for method chaining
   std::ostream& toStream(std::ostream& sl) const override {
     sl << "Acts::InterpolatedMaterialMap : " << std::endl;
     sl << "   - Number of Material bins [0,1] : " << m_binUtility.max(0) + 1
@@ -365,4 +371,6 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
 
   BinUtility m_binUtility{};
 };
+
+/// @}
 }  // namespace Acts

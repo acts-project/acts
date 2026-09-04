@@ -8,7 +8,6 @@
 
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
-#include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
@@ -29,6 +28,7 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -135,7 +135,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
   LayerBuilder::Config plbConfig;
   plbConfig.layerCreator = layerCreator;
   plbConfig.layerIdentification = "Pixel";
-  // material concentration alsways outside the modules
+  // material concentration always outside the modules
   plbConfig.centralProtoLayers = pplCreator.centralProtoLayers(gctx);
   plbConfig.centralLayerMaterialConcentration = {1, 1, 1, 1};
   plbConfig.centralLayerMaterial = {
@@ -331,13 +331,13 @@ class Gen3GenericDetectorBuilder : public GenericDetectorBuilder {
       const Acts::GeometryContext& gctx,
       std::optional<std::filesystem::path> graphvizFile);
 
-  void buildPixel(Acts::Experimental::BlueprintNode& parent,
+  void buildPixel(Acts::BlueprintNode& parent,
                   const Acts::GeometryContext& gctx);
 
-  void buildShortStrip(Acts::Experimental::BlueprintNode& parent,
+  void buildShortStrip(Acts::BlueprintNode& parent,
                        const Acts::GeometryContext& gctx);
 
-  void buildLongStrip(Acts::Experimental::BlueprintNode& parent,
+  void buildLongStrip(Acts::BlueprintNode& parent,
                       const Acts::GeometryContext& gctx);
 
   static std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> asHomogeneous(
@@ -358,8 +358,7 @@ class Gen3GenericDetectorBuilder : public GenericDetectorBuilder {
       std::pair<std::size_t, std::size_t> bins = {0, 0}) const {
     using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
     return Acts::NavigationPolicyFactory{}
-        .add<Acts::TryAllNavigationPolicy>(
-            Acts::TryAllNavigationPolicy::Config{.sensitives = false})
+        .add<Acts::CylinderNavigationPolicy>()
         .add<SrfArrayNavPol>(
             SrfArrayNavPol::Config{.layerType = layerType, .bins = bins})
         .asUniquePtr();
@@ -372,7 +371,7 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
     std::optional<std::filesystem::path> graphvizFile) {
   using enum Acts::AxisDirection;
   using namespace Acts::UnitLiterals;
-  using namespace Acts::Experimental;
+  using namespace Acts;
   using enum Acts::AxisBoundaryType;
   using enum Acts::CylinderVolumeBounds::Face;
   ACTS_INFO("GenericDetector construction in  Gen3 mode");
@@ -415,11 +414,10 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
   return trackingGeometry;
 }
 
-void Gen3GenericDetectorBuilder::buildPixel(
-    Acts::Experimental::BlueprintNode& parent,
-    const Acts::GeometryContext& gctx) {
+void Gen3GenericDetectorBuilder::buildPixel(Acts::BlueprintNode& parent,
+                                            const Acts::GeometryContext& gctx) {
   using enum Acts::AxisDirection;
-  using namespace Acts::Experimental;
+  using namespace Acts;
   using namespace Acts::UnitLiterals;
   using enum Acts::CylinderVolumeBounds::Face;
   using AttachmentStrategy = Acts::VolumeAttachmentStrategy;
@@ -531,10 +529,9 @@ void Gen3GenericDetectorBuilder::buildPixel(
 }
 
 void Gen3GenericDetectorBuilder::buildShortStrip(
-    Acts::Experimental::BlueprintNode& parent,
-    const Acts::GeometryContext& gctx) {
+    Acts::BlueprintNode& parent, const Acts::GeometryContext& gctx) {
   using enum Acts::AxisDirection;
-  using namespace Acts::Experimental;
+  using namespace Acts;
   using namespace Acts::UnitLiterals;
   using enum Acts::CylinderVolumeBounds::Face;
   using AttachmentStrategy = Acts::VolumeAttachmentStrategy;
@@ -635,10 +632,9 @@ void Gen3GenericDetectorBuilder::buildShortStrip(
 }
 
 void Gen3GenericDetectorBuilder::buildLongStrip(
-    Acts::Experimental::BlueprintNode& parent,
-    const Acts::GeometryContext& gctx) {
+    Acts::BlueprintNode& parent, const Acts::GeometryContext& gctx) {
   using enum Acts::AxisDirection;
-  using namespace Acts::Experimental;
+  using namespace Acts;
   using namespace Acts::UnitLiterals;
   using enum Acts::CylinderVolumeBounds::Face;
   using AttachmentStrategy = Acts::VolumeAttachmentStrategy;
@@ -743,7 +739,8 @@ void Gen3GenericDetectorBuilder::buildLongStrip(
 GenericDetector::GenericDetector(const Config& cfg)
     : Detector(Acts::getDefaultLogger("GenericDetector", cfg.logLevel)),
       m_cfg(cfg) {
-  m_nominalGeometryContext = Acts::GeometryContext();
+  m_nominalGeometryContext =
+      Acts::GeometryContext::dangerouslyDefaultConstruct();
   auto detectorElementFactory =
       [this](const Acts::Transform3& transform,
              std::shared_ptr<const Acts::PlanarBounds> bounds, double thickness,

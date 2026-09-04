@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Csv/CsvMuonSpacePointReader.hpp"
 
-#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
@@ -19,6 +18,7 @@
 #include "CsvOutputData.hpp"
 
 namespace ActsExamples {
+
 CsvMuonSpacePointReader::CsvMuonSpacePointReader(const Config& config,
                                                  Acts::Logging::Level level)
     : m_cfg{config},
@@ -48,7 +48,7 @@ ProcessCode CsvMuonSpacePointReader::read(const AlgorithmContext& ctx) {
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
 
-  NamedTupleCsvReader<MuonSpacePointData> reader(path);
+  BoostDescribeCsvReader<MuonSpacePointData> reader(path);
 
   MuonSpacePointData data{};
 
@@ -88,7 +88,7 @@ ProcessCode CsvMuonSpacePointReader::read(const AlgorithmContext& ctx) {
     newSpacePoint.setRadius(data.driftR);
 
     newSpacePoint.setCovariance(data.covX, data.covY, data.covT);
-    ACTS_VERBOSE("New spacepoint loaded: " << newSpacePoint);
+    ACTS_VERBOSE("New space point loaded: " << newSpacePoint);
   }
 
   // write the ordered data to the EventStore (according to geometry_id).

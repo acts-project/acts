@@ -16,13 +16,16 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <numbers>
 #include <stdexcept>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 const double rMin = 1.;
 const double rMax = 5.;
@@ -147,6 +150,22 @@ BOOST_AUTO_TEST_CASE(RadialBoundsCenter) {
   BOOST_CHECK_EQUAL(centerOffset.y(), avgPhi);
 }
 
+BOOST_AUTO_TEST_CASE(RadialBoundsCoversFullAzimuth) {
+  // The default sector is the full azimuth
+  BOOST_CHECK(RadialBounds(rMin, rMax).coversFullAzimuth());
+  BOOST_CHECK(RadialBounds(rMin, rMax, std::numbers::pi).coversFullAzimuth());
+
+  // A half sector that is only rounded away from pi still counts as full,
+  // matching CylinderBounds
+  BOOST_CHECK(RadialBounds(rMin, rMax, std::nextafter(std::numbers::pi, 0.))
+                  .coversFullAzimuth());
+
+  // Genuine sectors do not
+  BOOST_CHECK(!RadialBounds(rMin, rMax, halfPhiSector).coversFullAzimuth());
+  BOOST_CHECK(
+      !RadialBounds(rMin, rMax, std::numbers::pi / 2.).coversFullAzimuth());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

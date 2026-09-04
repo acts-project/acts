@@ -11,12 +11,9 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/EventData/Vertex.hpp"
 
 #include <algorithm>
-#include <memory>
 #include <vector>
 
 namespace ActsExamples {
@@ -47,7 +44,7 @@ inline std::vector<Acts::InputTrack> makeInputTracks(
 /// case the behaviour is undefined.
 inline ProtoVertexContainer makeProtoVertices(
     const std::vector<Acts::InputTrack>& inputTracks,
-    const std::vector<Acts::Vertex>& vertices) {
+    const VertexContainer& vertices) {
   ProtoVertexContainer protoVertices;
   protoVertices.reserve(vertices.size());
 

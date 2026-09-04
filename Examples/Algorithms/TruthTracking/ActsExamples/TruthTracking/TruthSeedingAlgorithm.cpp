@@ -8,26 +8,25 @@
 
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 
-#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
-#include <array>
-#include <cmath>
 #include <cstddef>
-#include <limits>
 #include <ostream>
 #include <stdexcept>
-#include <unordered_map>
 #include <utility>
 
 namespace ActsExamples {
 
-TruthSeedingAlgorithm::TruthSeedingAlgorithm(Config cfg,
-                                             Acts::Logging::Level lvl)
-    : IAlgorithm("TruthSeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
+TruthSeedingAlgorithm::TruthSeedingAlgorithm(
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TruthSeedingAlgorithm", std::move(logger)),
+      m_cfg(std::move(cfg)) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }
@@ -38,19 +37,6 @@ TruthSeedingAlgorithm::TruthSeedingAlgorithm(Config cfg,
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing seeds or space point collection");
   }
-
-  for (const auto& spName : m_cfg.inputSpacePoints) {
-    if (spName.empty()) {
-      throw std::invalid_argument("Invalid space point input collection");
-    }
-
-    auto& handle = m_inputSpacePoints.emplace_back(
-        std::make_unique<ReadDataHandle<SimSpacePointContainer>>(
-            this,
-            "InputSpacePoints#" + std::to_string(m_inputSpacePoints.size())));
-    handle->initialize(spName);
-  }
-
   if (m_cfg.outputParticles.empty()) {
     throw std::invalid_argument("Missing output particles collection");
   }
@@ -60,55 +46,54 @@ TruthSeedingAlgorithm::TruthSeedingAlgorithm(Config cfg,
   if (m_cfg.outputProtoTracks.empty()) {
     throw std::invalid_argument("Missing proto tracks output collections");
   }
+  if (m_cfg.inputSimHits.empty()) {
+    throw std::invalid_argument("Missing input simulated hits collection");
+  }
+  if (m_cfg.inputMeasurementSimHitsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing input simulated hits measurements map");
+  }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputParticleMeasurementsMap.initialize(m_cfg.inputParticleMeasurementsMap);
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
+  m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputParticles.initialize(m_cfg.outputParticles);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
+  m_outputParticleHypotheses.maybeInitialize(m_cfg.outputParticleHypotheses);
 }
 
 ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
   // prepare input collections
   const auto& particles = m_inputParticles(ctx);
   const auto& particleMeasurementsMap = m_inputParticleMeasurementsMap(ctx);
-
-  // construct the combined input container of space point pointers from all
-  // configured input sources.
-  // pre-compute the total size required so we only need to allocate once
-  std::size_t nSpacePoints = 0;
-  for (const auto& isp : m_inputSpacePoints) {
-    nSpacePoints += (*isp)(ctx).size();
-  }
-
-  std::vector<const SimSpacePoint*> spacePointPtrs;
-  spacePointPtrs.reserve(nSpacePoints);
-  for (const auto& isp : m_inputSpacePoints) {
-    for (const auto& spacePoint : (*isp)(ctx)) {
-      // since the event store owns the space points, their pointers should be
-      // stable and we do not need to create local copies.
-      spacePointPtrs.push_back(&spacePoint);
-    }
-  }
+  const auto& simHits = m_inputSimHits(ctx);
+  const auto& measurementSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
+  const auto& spacePoints = m_inputSpacePoints(ctx);
 
   SimParticleContainer seededParticles;
-  SimSeedContainer seeds;
+  SeedContainer seeds;
+  seeds.assignSpacePointContainer(spacePoints);
   ProtoTrackContainer tracks;
+  std::vector<Acts::ParticleHypothesis> particleHypotheses;
 
   seededParticles.reserve(particles.size());
   seeds.reserve(particles.size());
   tracks.reserve(particles.size());
+  particleHypotheses.reserve(particles.size());
 
-  std::unordered_map<Index, const SimSpacePoint*> spMap;
+  std::unordered_map<Index, SpacePointIndex> spMap;
 
-  for (const auto& spp : spacePointPtrs) {
-    if (spp->sourceLinks().empty()) {
+  for (const ConstSpacePointProxy& sp : spacePoints) {
+    if (sp.sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in space point");
       continue;
     }
-    for (const auto& slink : spp->sourceLinks()) {
+    for (const Acts::SourceLink& slink : sp.sourceLinks()) {
       const IndexSourceLink& islink = slink.get<IndexSourceLink>();
-      spMap.emplace(islink.index(), spp);
+      spMap.emplace(islink.index(), sp.index());
     }
   }
 
@@ -119,8 +104,34 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     // fill measurement indices to create the proto track
     ProtoTrack track;
     track.reserve(measurements.size());
-    for (const auto& measurement : measurements) {
-      track.push_back(measurement.second);
+
+    std::vector<std::pair<const SimHit*, Index>> hits;
+    hits.reserve(measurements.size());
+
+    for (const auto& [barcode, index] : measurements) {
+      const auto simHitMapIt = measurementSimHitsMap.find(index);
+      if (simHitMapIt == measurementSimHitsMap.end()) {
+        ACTS_WARNING("No sim hit found for measurement index " << index);
+        continue;
+      }
+
+      const auto simHitIt = simHits.nth(simHitMapIt->second);
+      if (simHitIt == simHits.end()) {
+        ACTS_WARNING("No sim hit found for index " << simHitMapIt->second);
+        continue;
+      }
+
+      const auto& simHit = *simHitIt;
+
+      hits.emplace_back(&simHit, index);
+    }
+
+    std::sort(hits.begin(), hits.end(), [](const auto& a, const auto& b) {
+      return a.first->time() < b.first->time();
+    });
+
+    for (const auto& [hit, index] : hits) {
+      track.push_back(index);
     }
 
     // The list of measurements and the initial start parameters
@@ -129,60 +140,37 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       continue;
     }
     // Space points on the proto track
-    std::vector<const SimSpacePoint*> spacePointsOnTrack;
+    std::vector<SpacePointIndex> spacePointsOnTrack;
     spacePointsOnTrack.reserve(track.size());
     // Loop over the measurement index on the proto track to find the space
     // points
     for (const auto& measurementIndex : track) {
       auto it = spMap.find(measurementIndex);
-      if (it != spMap.end()) {
-        spacePointsOnTrack.push_back(it->second);
+      if (it == spMap.end()) {
+        continue;
       }
+      // a space point can carry several measurements, e.g. the two sides of a
+      // strip module, and must not enter the seed twice
+      if (Acts::rangeContainsValue(spacePointsOnTrack, it->second)) {
+        continue;
+      }
+      spacePointsOnTrack.push_back(it->second);
     }
     // At least three space points are required
     if (spacePointsOnTrack.size() < 3) {
       continue;
     }
-    // Sort the space points
-    std::ranges::sort(spacePointsOnTrack, {}, [](const SimSpacePoint* s) {
-      return std::hypot(s->r(), s->z());
-    });
 
-    // Loop over the found space points to find the seed with maximum deltaR
-    // between the bottom and top space point
-    // @todo add the check of deltaZ
-    bool seedFound = false;
-    std::array<std::size_t, 3> bestSPIndices{};
-    double maxDeltaR = std::numeric_limits<double>::min();
-    for (std::size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
-      for (std::size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
-        for (std::size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
-          double bmDeltaR = std::abs(spacePointsOnTrack[im]->r() -
-                                     spacePointsOnTrack[ib]->r());
-          double mtDeltaR = std::abs(spacePointsOnTrack[it]->r() -
-                                     spacePointsOnTrack[im]->r());
-          if (bmDeltaR >= m_cfg.deltaRMin && bmDeltaR <= m_cfg.deltaRMax &&
-              mtDeltaR >= m_cfg.deltaRMin && mtDeltaR <= m_cfg.deltaRMax &&
-              (bmDeltaR + mtDeltaR) > maxDeltaR) {
-            maxDeltaR = bmDeltaR + mtDeltaR;
-            bestSPIndices = {ib, im, it};
-            seedFound = true;
-          }
-        }
-      }
-    }
+    // the seed is the whole track, see SeedSpacePointSelection
+    auto seed = seeds.createSeed();
+    seed.assignSpacePointIndices(spacePointsOnTrack);
 
-    if (seedFound) {
-      SimSeed seed{*spacePointsOnTrack[bestSPIndices[0]],
-                   *spacePointsOnTrack[bestSPIndices[1]],
-                   *spacePointsOnTrack[bestSPIndices[2]]};
-      seed.setVertexZ(
-          static_cast<float>(spacePointsOnTrack[bestSPIndices[1]]->z()));
+    Acts::ParticleHypothesis hypothesis =
+        m_cfg.particleHypothesis.value_or(particle.hypothesis());
 
-      seededParticles.insert(particle);
-      seeds.emplace_back(seed);
-      tracks.emplace_back(std::move(track));
-    }
+    seededParticles.insert(particle);
+    tracks.emplace_back(std::move(track));
+    particleHypotheses.emplace_back(hypothesis);
   }
 
   ACTS_VERBOSE("Found " << seeds.size() << " seeds");
@@ -190,6 +178,9 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
   m_outputParticles(ctx, std::move(seededParticles));
   m_outputProtoTracks(ctx, std::move(tracks));
   m_outputSeeds(ctx, std::move(seeds));
+  if (m_outputParticleHypotheses.isInitialized()) {
+    m_outputParticleHypotheses(ctx, std::move(particleHypotheses));
+  }
 
   return ProcessCode::SUCCESS;
 }

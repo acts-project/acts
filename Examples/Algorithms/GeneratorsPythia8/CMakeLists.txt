@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesGeneratorsPythia8
-    SHARED
     ActsExamples/Generators/Pythia8ProcessGenerator.cpp
 )
 target_include_directories(

@@ -34,7 +34,7 @@ namespace Acts::VolumeView3DTest {
 
 static inline std::string run(IVisualization3D& helper, bool triangulate,
                               const std::string& tag) {
-  auto gctx = GeometryContext();
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   auto identity = Transform3::Identity();
   std::stringstream cStream;
 
@@ -150,7 +150,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
 
   //----------------------------------------------------
   // Trapezoid volume section
-  std::array<Vector3, 8> vertices;
+  std::array<Vector3, 8> vertices{};
   vertices = {{{0, 0, 0},
                {2, 0, 0},
                {2, 1, 0},

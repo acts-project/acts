@@ -20,6 +20,7 @@ namespace Acts {
 ///
 /// @param phi is the direction angle in the x-y plane.
 /// @param eta is the pseudorapidity towards the z-axis.
+/// @return A normalized 3D direction vector constructed from phi and eta
 ///
 /// @note The input arguments intentionally use the same template type so that
 ///       a compile error occurs if inconsistent input types are used. Avoids
@@ -39,6 +40,7 @@ inline Eigen::Matrix<T, 3, 1> makeDirectionFromPhiEta(T phi, T eta) {
 ///
 /// @param phi is the direction angle in radian in the x-y plane.
 /// @param theta is the polar angle in radian towards the z-axis.
+/// @return A normalized 3D direction vector constructed from phi and theta
 ///
 /// @note The input arguments intentionally use the same template type so that
 ///       a compile error occurs if inconsistent input types are used. Avoids
@@ -58,6 +60,7 @@ inline Eigen::Matrix<T, 3, 1> makeDirectionFromPhiTheta(T phi, T theta) {
 ///
 /// @param tanAlpha Tangent of the x-axis to the z-axis
 /// @param tanBeta Tangent of the y-axis to the z-axis
+/// @return A normalized 3D direction vector constructed from the axis tangents
 template <typename T>
 inline Eigen::Matrix<T, 3, 1> makeDirectionFromAxisTangents(T tanAlpha,
                                                             T tanBeta) {
@@ -67,6 +70,7 @@ inline Eigen::Matrix<T, 3, 1> makeDirectionFromAxisTangents(T tanAlpha,
 /// Construct a phi and theta angle from a direction vector.
 ///
 /// @param unitDir 3D vector indicating a direction
+/// @return A 2D vector containing phi and theta angles [phi, theta]
 ///
 template <typename T>
 inline Eigen::Matrix<T, 2, 1> makePhiThetaFromDirection(

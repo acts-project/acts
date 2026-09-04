@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepMaterialHelpers.hpp"
 
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 
 #include <cstddef>
 #include <numbers>
@@ -22,7 +22,9 @@
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
 
-std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
+using namespace Acts;
+
+std::shared_ptr<ProtoSurfaceMaterial> ActsPlugins::createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
     const std::vector<std::pair<const std::string, BinningOption> >& binning,
     const Logger& logger) {
@@ -50,7 +52,7 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
   return std::make_shared<ProtoSurfaceMaterial>(bu);
 }
 
-void Acts::addLayerProtoMaterial(
+void ActsPlugins::addLayerProtoMaterial(
     const dd4hep::rec::VariantParameters& params, Layer& layer,
     const std::vector<std::pair<const std::string, BinningOption> >& binning,
     const Logger& logger) {
@@ -88,9 +90,9 @@ void Acts::addLayerProtoMaterial(
   }
 }
 
-void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
-                                         Layer& cylinderLayer,
-                                         const Logger& logger) {
+void ActsPlugins::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
+                                                Layer& cylinderLayer,
+                                                const Logger& logger) {
   ACTS_VERBOSE(
       "Translating DD4hep material into Acts material for CylinderLayer : "
       << detElement.name());
@@ -105,8 +107,9 @@ void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
   }
 }
 
-void Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
-                                     Layer& discLayer, const Logger& logger) {
+void ActsPlugins::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
+                                            Layer& discLayer,
+                                            const Logger& logger) {
   ACTS_VERBOSE("Translating DD4hep material into Acts material for DiscLayer : "
                << detElement.name());
 

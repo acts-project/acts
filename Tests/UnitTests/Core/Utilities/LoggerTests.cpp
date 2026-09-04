@@ -18,9 +18,10 @@
 #include <utility>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::Logging;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 /// @cond
 namespace detail {
@@ -42,7 +43,7 @@ std::unique_ptr<const Logger> create_logger(const std::string& logger_name,
 /// This test checks for the expected output when using the
 /// specified debug level as threshold. It also tests
 /// - #ACTS_LOCAL_LOGGER
-/// - Acts::getDefaultLogger
+/// - getDefaultLogger
 void debug_level_test(const char* output_file, Logging::Level lvl) {
   // Logs will go to this file
   std::ofstream logfile(output_file);
@@ -114,6 +115,8 @@ void debug_level_test(const char* output_file, Logging::Level lvl) {
   test(std::move(log), "TestLogger");
 }
 
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
+
 /// @brief unit test for FATAL debug level
 BOOST_AUTO_TEST_CASE(FATAL_test) {
   debug_level_test("fatal_log.txt", FATAL);
@@ -143,4 +146,7 @@ BOOST_AUTO_TEST_CASE(DEBUG_test) {
 BOOST_AUTO_TEST_CASE(VERBOSE_test) {
   debug_level_test("verbose_log.txt", VERBOSE);
 }
-}  // namespace Acts::Test
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

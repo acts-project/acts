@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <limits>
@@ -25,7 +25,9 @@ namespace {
 constexpr auto eps = 128 * std::numeric_limits<double>::epsilon();
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(FatrasKinematicCasts)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SelectorsSuite)
 
 BOOST_AUTO_TEST_CASE(BackwardParticle) {
   const auto& particle = Dataset::backwardPion;
@@ -70,3 +72,5 @@ BOOST_AUTO_TEST_CASE(ForwardParticle) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

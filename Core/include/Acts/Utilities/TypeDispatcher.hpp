@@ -31,15 +31,21 @@ namespace Acts {
 template <typename base_t, typename signature_t>
 class TypeDispatcher;
 
+/// Type dispatcher specialization for function signature
 template <typename base_t, typename return_t, typename... args_t>
 class TypeDispatcher<base_t, return_t(args_t...)> {
  public:
-  // Type aliases for frequently used template parameters
+  /// Base class type
   using base_type = base_t;
+  /// Function return type
   using return_type = return_t;
+  /// Self type
   using self_type = TypeDispatcher<base_type, return_type(args_t...)>;
-
+  /// Function signature type
   using function_signature = return_t(const base_t&, args_t...);
+  /// Function pointer type
+  using function_pointer_type = return_t (*)(args_t...);
+  /// Function wrapper type
   using function_type = std::function<function_signature>;
 
   /// Default constructor
@@ -59,6 +65,7 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
   /// Register a free function with explicit derived type
   /// @tparam derived_t The derived type to associate the function with
   /// @param func The function pointer
+  /// @return Reference to this dispatcher for chaining
   template <typename derived_t>
     requires std::is_base_of_v<base_t, derived_t>
   self_type& registerFunction(return_t (*func)(const derived_t&, args_t...)) {
@@ -93,13 +100,13 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
     };
 
     // Wrap the function in a lambda that performs the dynamic cast
-    m_functions[typeIdx] = [func](const base_t& base,
-                                  args_t... args) -> return_t {
+    m_functions[typeIdx] = [func]<typename... Ts>(const base_t& base,
+                                                  Ts&&... args) -> return_t {
       const auto* derived = dynamic_cast<const derived_t*>(&base);
       if (derived == nullptr) {
         throw std::bad_cast();
       }
-      return func(*derived, std::forward<args_t>(args)...);
+      return func(*derived, std::forward<Ts>(args)...);
     };
 
     return *this;
@@ -109,7 +116,10 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
   /// @param obj The object to dispatch on
   /// @param args Additional arguments to pass to the function
   /// @return The return value from the registered function
-  return_t operator()(const base_t& obj, args_t... args) const {
+  template <typename... func_args_t>
+  return_t operator()(const base_t& obj, func_args_t&&... args) const
+    requires std::invocable<function_pointer_type, func_args_t...>
+  {
     std::vector<std::type_index> compatibleTypes;
 
     // Find all registered functions that can handle this object type
@@ -142,7 +152,7 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
     // Exactly one compatible function found
     auto funcIt = m_functions.find(compatibleTypes[0]);
     if (funcIt != m_functions.end()) {
-      return funcIt->second(obj, std::forward<args_t>(args)...);
+      return funcIt->second(obj, std::forward<func_args_t>(args)...);
     }
 
     // This should never happen if our data structures are consistent
@@ -180,6 +190,7 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
   }
 
   /// Get the number of registered functions
+  /// @return Number of registered functions
   std::size_t size() const { return m_functions.size(); }
 
  private:

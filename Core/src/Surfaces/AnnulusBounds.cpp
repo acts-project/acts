@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
@@ -214,7 +215,7 @@ bool AnnulusBounds::inside(const Vector2& lposition) const {
   // calculate R in MODULE SYSTEM to evaluate R-bounds
   // don't need R, can use R^2
   double r_mod2 = m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
-                  2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]);
+                  2 * m_shiftPC[0] * rLoc * std::cos(phiLoc - m_shiftPC[1]);
 
   if (r_mod2 < get(eMinR) * get(eMinR) || r_mod2 > get(eMaxR) * get(eMaxR)) {
     return false;
@@ -372,7 +373,6 @@ Vector2 AnnulusBounds::closestPoint(const Vector2& lposition,
     double currentDist =
         squaredNorm(lpositionModulePC - currentClosest, metricModulePC);
     if (currentDist < minDist) {
-      minDist = currentDist;
       closest = m_rotationStripPC.inverse() * modulePCToStripPC(currentClosest);
     }
   }
@@ -409,14 +409,13 @@ Vector2 AnnulusBounds::center() const {
 }
 
 std::ostream& AnnulusBounds::toStream(std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(7);
+  detail::OstreamStateGuard guard{sl};
+  sl << std::fixed << std::setprecision(7);
   sl << "Acts::AnnulusBounds:  (innerRadius, outerRadius, minPhi, maxPhi) = ";
   sl << "(" << get(eMinR) << ", " << get(eMaxR) << ", " << phiMin() << ", "
      << phiMax() << ")" << '\n';
   sl << " - shift xy = " << m_shiftXY.x() << ", " << m_shiftXY.y() << '\n';
   sl << " - shift pc = " << m_shiftPC.x() << ", " << m_shiftPC.y() << '\n';
-  sl << std::setprecision(-1);
   return sl;
 }
 

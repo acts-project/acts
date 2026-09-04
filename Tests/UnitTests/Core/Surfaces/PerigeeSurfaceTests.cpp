@@ -14,15 +14,20 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <iomanip>
 #include <memory>
+#include <sstream>
 #include <string>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
-BOOST_AUTO_TEST_SUITE(PerigeeSurfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
+
 /// Unit test for creating compliant/non-compliant PerigeeSurface object
 BOOST_AUTO_TEST_CASE(PerigeeSurfaceConstruction) {
   /// Test default construction
@@ -73,6 +78,27 @@ BOOST_AUTO_TEST_CASE(PerigeeSurfaceProperties) {
      Center position  (x, y, z) = (1.0000000, 1.0000000, 1.0000000)"));
 }
 
+BOOST_AUTO_TEST_CASE(PerigeeSurfaceToStreamPreservesStreamState) {
+  std::ostringstream stream;
+  stream << std::scientific << std::showpos << std::setfill('#')
+         << std::setprecision(3);
+  stream.width(17);
+
+  const auto flags = stream.flags();
+  const auto precision = stream.precision();
+  const auto width = stream.width();
+  const auto fill = stream.fill();
+
+  auto perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(Vector3{1., 1., 1.});
+  stream << perigeeSurface->toStream(tgContext);
+
+  BOOST_CHECK(stream.flags() == flags);
+  BOOST_CHECK_EQUAL(stream.precision(), precision);
+  BOOST_CHECK_EQUAL(stream.width(), width);
+  BOOST_CHECK_EQUAL(stream.fill(), fill);
+}
+
 BOOST_AUTO_TEST_CASE(EqualityOperators) {
   Vector3 unitXYZ{1., 1., 1.};
   Vector3 invalidPosition{0., 0., 0.};
@@ -92,4 +118,4 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Acts::Test
+}  // namespace ActsTests

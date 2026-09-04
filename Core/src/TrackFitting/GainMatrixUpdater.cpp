@@ -8,28 +8,22 @@
 
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/TrackFitting/KalmanFitterError.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <type_traits>
-#include <utility>
-
-#include <Eigen/src/Core/MatrixBase.h>
 
 namespace Acts {
 
-std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
-    InternalTrackState trackState, const Logger& logger) const {
+Result<void> GainMatrixUpdater::visitMeasurement(
+    AnyMutableTrackStateProxy trackState, const Logger& logger) const {
   // default-constructed error represents success, i.e. an invalid error code
 
   return visit_measurement(
-      trackState.calibratedSize,
-      [&, this]<std::size_t N>(std::integral_constant<std::size_t, N>)
-          -> std::tuple<double, std::error_code> {
+      trackState.calibratedSize(),
+      [&, this]<std::size_t N>(
+          std::integral_constant<std::size_t, N>) -> Result<void> {
         return visitMeasurementImpl<N>(trackState, logger);
       });
 }

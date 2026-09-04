@@ -16,16 +16,15 @@
 
 #include <algorithm>
 #include <numeric>
+#include <sstream>
 #include <stdexcept>
-
-#include <boost/algorithm/string/join.hpp>
 
 namespace Acts {
 
 void CylinderPortalShell::fill(TrackingVolume& volume) {
   for (Face face : {PositiveDisc, NegativeDisc, OuterCylinder, InnerCylinder,
                     NegativePhiPlane, PositivePhiPlane}) {
-    const auto& portalAtFace = portalPtr(face);
+    const auto& portalAtFace = portal(face);
     if (portalAtFace != nullptr) {
       portalAtFace->fill(volume);
       volume.addPortal(portalAtFace);
@@ -33,7 +32,8 @@ void CylinderPortalShell::fill(TrackingVolume& volume) {
   }
 }
 
-SingleCylinderPortalShell::SingleCylinderPortalShell(TrackingVolume& volume)
+SingleCylinderPortalShell::SingleCylinderPortalShell(
+    const GeometryContext& gctx, TrackingVolume& volume)
     : m_volume{&volume} {
   if (m_volume->volumeBounds().type() != VolumeBounds::BoundsType::eCylinder) {
     throw std::invalid_argument(
@@ -44,7 +44,7 @@ SingleCylinderPortalShell::SingleCylinderPortalShell(TrackingVolume& volume)
       dynamic_cast<const CylinderVolumeBounds&>(m_volume->volumeBounds());
 
   std::vector<OrientedSurface> orientedSurfaces =
-      bounds.orientedSurfaces(m_volume->transform());
+      bounds.orientedSurfaces(m_volume->localToGlobalTransform(gctx));
 
   auto handle = [&](Face face, std::size_t from) {
     const auto& source = orientedSurfaces.at(from);
@@ -84,18 +84,21 @@ SingleCylinderPortalShell::SingleCylinderPortalShell(TrackingVolume& volume)
   }
 }
 
-Portal* SingleCylinderPortalShell::portal(Face face) {
-  return portalPtr(face).get();
-}
-
-std::shared_ptr<Portal> SingleCylinderPortalShell::portalPtr(Face face) {
+std::shared_ptr<Portal> SingleCylinderPortalShell::portal(Face face) {
   return m_portals.at(toUnderlying(face));
 }
 
 void SingleCylinderPortalShell::setPortal(std::shared_ptr<Portal> portal,
                                           Face face) {
-  assert(portal != nullptr);
-  assert(portal->isValid());
+  if (portal == nullptr) {
+    throw std::invalid_argument(
+        "SingleCylinderPortalShell::setPortal: portal "
+        "cannot be null");
+  }
+  if (!portal->isValid()) {
+    throw std::invalid_argument(
+        "SingleCylinderPortalShell::setPortal: portal is invalid");
+  }
   m_portals.at(toUnderlying(face)) = std::move(portal);
 }
 
@@ -135,7 +138,8 @@ std::string SingleCylinderPortalShell::label() const {
 
 CylinderStackPortalShell::CylinderStackPortalShell(
     const GeometryContext& gctx, std::vector<CylinderPortalShell*> shells,
-    AxisDirection direction, const Logger& logger)
+    AxisDirection direction, const Logger& logger,
+    PortalMaterialMergePolicy materialPolicy)
     : m_direction{direction}, m_shells{std::move(shells)} {
   ACTS_VERBOSE("Making cylinder stack shell in " << m_direction
                                                  << " direction");
@@ -154,24 +158,46 @@ CylinderStackPortalShell::CylinderStackPortalShell(
   }
 
   auto merge = [&](Face face) {
+    ACTS_VERBOSE("Merging portals at " << face);
     std::vector<std::shared_ptr<Portal>> portals;
-    std::ranges::transform(
-        m_shells, std::back_inserter(portals),
-        [face](auto* shell) { return shell->portalPtr(face); });
+    std::ranges::transform(m_shells, std::back_inserter(portals),
+                           [face](auto* shell) { return shell->portal(face); });
+    ACTS_VERBOSE("Portals at " << face << ": " << portals.size());
 
-    auto merged = std::accumulate(
-        std::next(portals.begin()), portals.end(), portals.front(),
-        [&](const auto& aPortal,
-            const auto& bPortal) -> std::shared_ptr<Portal> {
-          assert(aPortal != nullptr);
-          assert(bPortal != nullptr);
+    std::shared_ptr<Portal> merged;
+    try {
+      merged = std::accumulate(
+          std::next(portals.begin()), portals.end(), portals.front(),
+          [&](const auto& aPortal,
+              const auto& bPortal) -> std::shared_ptr<Portal> {
+            if (aPortal == nullptr || bPortal == nullptr) {
+              throw std::invalid_argument(
+                  "CylinderStackPortalShell: null portal in merge");
+            }
 
-          return std::make_shared<Portal>(
-              Portal::merge(gctx, *aPortal, *bPortal, direction, logger));
-        });
+            return std::make_shared<Portal>(Portal::merge(
+                gctx, *aPortal, *bPortal, direction, logger, materialPolicy));
+          });
+    } catch (const PortalMergingException& e) {
+      std::stringstream ss;
+      ss << "Failed to merge portals at face " << face << " while building "
+         << label() << " (stacking in " << m_direction << "). Shells involved:";
+      for (const auto* shell : m_shells) {
+        ss << "\n  - " << shell->label();
+      }
+      ss << "\nUnderlying error: " << e.what();
+      ACTS_ERROR(ss.str());
+      throw PortalMergingException{ss.str()};
+    }
 
-    assert(merged != nullptr);
-    assert(merged->isValid());
+    if (merged == nullptr) {
+      throw std::runtime_error(
+          "CylinderStackPortalShell: merged portal is null");
+    }
+    if (!merged->isValid()) {
+      throw std::runtime_error(
+          "CylinderStackPortalShell: merged portal is invalid");
+    }
 
     // reset merged portal on all shells
     for (auto& shell : m_shells) {
@@ -186,20 +212,34 @@ CylinderStackPortalShell::CylinderStackPortalShell(
       ACTS_VERBOSE("Fusing " << shellA->label() << " and " << shellB->label());
 
       auto fused = std::make_shared<Portal>(Portal::fuse(
-          gctx, *shellA->portalPtr(faceA), *shellB->portalPtr(faceB), logger));
+          gctx, *shellA->portal(faceA), *shellB->portal(faceB), logger));
 
-      assert(fused != nullptr && "Invalid fused portal");
-      assert(fused->isValid() && "Fused portal is invalid");
+      if (fused == nullptr) {
+        throw std::runtime_error(
+            "CylinderStackPortalShell: fused portal is null");
+      }
+      if (!fused->isValid()) {
+        throw std::runtime_error(
+            "CylinderStackPortalShell: fused portal is invalid");
+      }
 
       shellA->setPortal(fused, faceA);
       shellB->setPortal(fused, faceB);
 
-      assert(shellA->isValid() && "Shell A is not valid after fusing");
-      assert(shellB->isValid() && "Shell B is not valid after fusing");
+      if (!shellA->isValid()) {
+        throw std::runtime_error(
+            "CylinderStackPortalShell: shell A is not valid after fusing");
+      }
+      if (!shellB->isValid()) {
+        throw std::runtime_error(
+            "CylinderStackPortalShell: shell B is not valid after fusing");
+      }
     }
   };
 
   if (direction == AxisDirection::AxisR) {
+    m_hasInnerCylinder = (m_shells.front()->portal(InnerCylinder) != nullptr);
+
     ACTS_VERBOSE("Merging portals at positive and negative discs");
     merge(PositiveDisc);
     merge(NegativeDisc);
@@ -223,44 +263,67 @@ CylinderStackPortalShell::CylinderStackPortalShell(
 
     ACTS_VERBOSE("Merging portals at outer cylinders");
     merge(OuterCylinder);
-    assert(isValid() && "Shell is not valid after outer merging");
+    if (!isValid()) {
+      throw std::runtime_error(
+          "CylinderStackPortalShell: shell is not valid after outer merging");
+    }
 
     if (m_hasInnerCylinder) {
       ACTS_VERBOSE("Merging portals at inner cylinders");
       merge(InnerCylinder);
-      assert(isValid() && "Shell is not valid after inner merging");
+      if (!isValid()) {
+        throw std::runtime_error(
+            "CylinderStackPortalShell: shell is not valid after inner merging");
+      }
     }
 
     ACTS_VERBOSE("Fusing portals at positive and negative discs");
     fuse(PositiveDisc, NegativeDisc);
-    assert(isValid() && "Shell is not valid after disc fusing");
+    if (!isValid()) {
+      throw std::runtime_error(
+          "CylinderStackPortalShell: shell is not valid after disc fusing");
+    }
 
   } else {
     throw std::invalid_argument("Invalid direction");
   }
 
-  assert(isValid() && "Shell is not valid after construction");
+  if (!isValid()) {
+    throw std::runtime_error(
+        "CylinderStackPortalShell: shell is not valid after construction");
+  }
 }
 
 std::size_t CylinderStackPortalShell::size() const {
   return m_hasInnerCylinder ? 4 : 3;
 }
 
-Portal* CylinderStackPortalShell::portal(Face face) {
-  return portalPtr(face).get();
+std::vector<CylinderStackPortalShell::Face>
+CylinderStackPortalShell::mergedFaces(AxisDirection direction) {
+  using enum CylinderVolumeBounds::Face;
+  switch (direction) {
+    case AxisDirection::AxisR:
+      // Discs are merged, cylinders are fused
+      return {PositiveDisc, NegativeDisc};
+    case AxisDirection::AxisZ:
+      // Cylinders are merged, discs are fused
+      return {OuterCylinder, InnerCylinder};
+    default:
+      return {};
+  }
 }
 
-std::shared_ptr<Portal> CylinderStackPortalShell::portalPtr(Face face) {
+std::shared_ptr<Portal> CylinderStackPortalShell::portal(Face face) {
   if (m_direction == AxisDirection::AxisR) {
     switch (face) {
       case NegativeDisc:
-        return m_shells.front()->portalPtr(NegativeDisc);
+        return m_shells.front()->portal(NegativeDisc);
       case PositiveDisc:
-        return m_shells.front()->portalPtr(PositiveDisc);
+        return m_shells.front()->portal(PositiveDisc);
       case OuterCylinder:
-        return m_shells.back()->portalPtr(OuterCylinder);
+        return m_shells.back()->portal(OuterCylinder);
       case InnerCylinder:
-        return m_shells.front()->portalPtr(InnerCylinder);
+        return m_shells.front()->portal(InnerCylinder);
       case NegativePhiPlane:
         [[fallthrough]];
       case PositivePhiPlane:
@@ -274,13 +337,13 @@ std::shared_ptr<Portal> CylinderStackPortalShell::portalPtr(Face face) {
   } else {
     switch (face) {
       case NegativeDisc:
-        return m_shells.front()->portalPtr(NegativeDisc);
+        return m_shells.front()->portal(NegativeDisc);
       case PositiveDisc:
-        return m_shells.back()->portalPtr(PositiveDisc);
+        return m_shells.back()->portal(PositiveDisc);
       case OuterCylinder:
         [[fallthrough]];
       case InnerCylinder:
-        return m_shells.front()->portalPtr(face);
+        return m_shells.front()->portal(face);
       case NegativePhiPlane:
         [[fallthrough]];
       case PositivePhiPlane:
@@ -295,7 +358,10 @@ std::shared_ptr<Portal> CylinderStackPortalShell::portalPtr(Face face) {
 
 void CylinderStackPortalShell::setPortal(std::shared_ptr<Portal> portal,
                                          Face face) {
-  assert(portal != nullptr);
+  if (portal == nullptr) {
+    throw std::invalid_argument(
+        "CylinderStackPortalShell::setPortal: portal cannot be null");
+  }
 
   if (m_direction == AxisDirection::AxisR) {
     switch (face) {
@@ -349,20 +415,22 @@ void CylinderStackPortalShell::setPortal(std::shared_ptr<Portal> portal,
 
 bool CylinderStackPortalShell::isValid() const {
   return std::ranges::all_of(m_shells, [](const auto* shell) {
-    assert(shell != nullptr);
+    if (shell == nullptr) {
+      throw std::invalid_argument(
+          "CylinderStackPortalShell::isValid: shell pointer is null");
+    }
     return shell->isValid();
   });
 }
 
 std::string CylinderStackPortalShell::label() const {
+  // Deliberately shallow: only describe this shell, not the whole subtree.
+  // Expanding child labels recursively makes error messages for non-trivial
+  // geometries unreadable. The immediate children are reported separately where
+  // relevant (e.g. in merge-failure messages).
   std::stringstream ss;
-  ss << "CylinderStackShell(dir=" << m_direction << ", children=";
-
-  std::vector<std::string> labels;
-  std::ranges::transform(m_shells, std::back_inserter(labels),
-                         [](const auto* shell) { return shell->label(); });
-  ss << boost::algorithm::join(labels, "|");
-  ss << ")";
+  ss << "CylinderStackShell(dir=" << m_direction << ", " << m_shells.size()
+     << " children)";
   return ss.str();
 }
 

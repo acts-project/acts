@@ -38,7 +38,7 @@ find_package_handle_standard_args(
     ZSTD_INCLUDE_DIR
 )
 
-if(ZSTD_FOUND)
+if(ZSTD_FOUND AND NOT TARGET ZSTD::ZSTD)
     add_library(ZSTD UNKNOWN IMPORTED)
     set_target_properties(ZSTD PROPERTIES IMPORTED_LOCATION ${ZSTD_LIBRARY})
     target_include_directories(ZSTD INTERFACE ${ZSTD_INCLUDE_DIR})

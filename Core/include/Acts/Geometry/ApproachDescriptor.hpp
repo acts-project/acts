@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 
 #include <vector>
 
@@ -46,7 +46,7 @@ class ApproachDescriptor {
   /// @param farLimit The maximum distance for an intersection to be considered
   ///
   /// @return is a surface intersection
-  virtual SurfaceIntersection approachSurface(
+  virtual NavigationTarget approachSurface(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
       double nearLimit, double farLimit) const = 0;
@@ -56,6 +56,7 @@ class ApproachDescriptor {
   virtual const std::vector<const Surface*>& containedSurfaces() const = 0;
 
   /// Non-const version
+  /// @return Mutable reference to all contained surfaces of this approach descriptor
   virtual std::vector<const Surface*>& containedSurfaces() = 0;
 };
 

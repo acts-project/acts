@@ -13,38 +13,44 @@
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/LineSurfaceStub.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <cmath>
 #include <memory>
 #include <numbers>
 #include <optional>
-#include <tuple>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 /// Unit test for creating compliant/non-compliant LineSurface object
 BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test) {
@@ -117,7 +123,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   // intersection
   {
     const Vector3 direction{0., 1., 2.};
-    auto sfIntersection =
+    Intersection3D sfIntersection =
         line.intersect(tgContext, {0., 0., 0.}, direction.normalized(),
                        BoundaryTolerance::Infinite())
             .closest();
@@ -125,7 +131,6 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
     Vector3 expectedIntersection(0, 1., 2.);
     CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersection,
                     1e-6);  // need more tests..
-    BOOST_CHECK_EQUAL(&sfIntersection.surface(), &line);
   }
 
   // isOnSurface
@@ -235,7 +240,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   const auto& loc3DToLocBound =
       line.localCartesianToBoundLocalDerivative(tgContext, globalPosition);
   // Check if the result is as expected
-  ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> expLoc3DToLocBound = Matrix<2, 3>::Zero();
   expLoc3DToLocBound << 1 / std::numbers::sqrt2, 1 / std::numbers::sqrt2, 0, 0,
       0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
@@ -245,7 +250,8 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTrip) {
   LineSurfaceStub surface(Transform3::Identity());
 
   auto roundTrip = [&surface](const Vector3& pos, const Vector3& dir) {
-    auto intersection = surface.intersect(tgContext, pos, dir).closest();
+    Intersection3D intersection =
+        surface.intersect(tgContext, pos, dir).closest();
     Vector3 global = intersection.position();
     Vector2 local = *surface.globalToLocal(tgContext, global, dir);
     Vector3 global2 = surface.localToGlobal(tgContext, local, dir);
@@ -282,7 +288,8 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTripEtaStability) {
     Vector3 dir = makeDirectionFromPhiEta(std::numbers::pi / 2., eta);
     Vector3 pos = pca + dir;
 
-    auto intersection = surface.intersect(tgContext, pos, dir).closest();
+    Intersection3D intersection =
+        surface.intersect(tgContext, pos, dir).closest();
 
     Vector3 global = intersection.position();
     Vector2 local = *surface.globalToLocal(tgContext, global, dir);
@@ -330,7 +337,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
     displacedParameters = result.value().endParameters.value();
   }
 
-  auto intersection =
+  Intersection3D intersection =
       surface
           ->intersect(tgContext, displacedParameters.position(tgContext),
                       displacedParameters.direction())
@@ -355,6 +362,49 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   CHECK_CLOSE_ABS(initialParams.parameters(), endParameters.parameters(), eps);
 }
 
+BOOST_AUTO_TEST_CASE(LineSurfaceMaterialAssignment) {
+  LineSurfaceStub surface(Transform3::Identity(), 1., 100.);
+  MaterialSlab slab(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
+
+  // HomogeneousSurfaceMaterial is always valid
+  auto homMat = std::make_shared<HomogeneousSurfaceMaterial>(slab);
+  BOOST_CHECK_NO_THROW(surface.assignSurfaceMaterial(homMat));
+  BOOST_CHECK_NE(surface.surfaceMaterial(), nullptr);
+
+  // nullptr clears the material
+  BOOST_CHECK_NO_THROW(surface.assignSurfaceMaterial(nullptr));
+  BOOST_CHECK_EQUAL(surface.surfaceMaterial(), nullptr);
+
+  // 1D AxisR - valid for line surface
+  BinUtility buR(10, 0.f, 1.f, Acts::open, AxisDirection::AxisR);
+  auto matR = std::make_shared<BinnedSurfaceMaterial>(
+      buR, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface.assignSurfaceMaterial(matR));
+
+  // 1D AxisZ - valid for line surface
+  BinUtility buZ(10, -100.f, 100.f, Acts::open, AxisDirection::AxisZ);
+  auto matZ = std::make_shared<BinnedSurfaceMaterial>(
+      buZ, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface.assignSurfaceMaterial(matZ));
+
+  // 2D {AxisR, AxisZ} - valid for line surface
+  BinUtility bu2D(5, 0.f, 1.f, Acts::open, AxisDirection::AxisR);
+  bu2D += BinUtility(3, -100.f, 100.f, Acts::open, AxisDirection::AxisZ);
+  auto mat2D = std::make_shared<BinnedSurfaceMaterial>(
+      bu2D, MaterialSlabMatrix(3, MaterialSlabVector(5, slab)));
+  BOOST_CHECK_NO_THROW(surface.assignSurfaceMaterial(mat2D));
+
+  // Wrong axis directions - should throw
+  for (auto badDir : {AxisDirection::AxisRPhi, AxisDirection::AxisPhi,
+                      AxisDirection::AxisX, AxisDirection::AxisY}) {
+    BinUtility buBad(10, 0.f, 10.f, Acts::open, badDir);
+    auto matBad = std::make_shared<BinnedSurfaceMaterial>(
+        buBad, MaterialSlabVector(10, slab));
+    BOOST_CHECK_THROW(surface.assignSurfaceMaterial(matBad),
+                      std::invalid_argument);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

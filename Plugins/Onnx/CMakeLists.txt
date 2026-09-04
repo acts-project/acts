@@ -1,10 +1,9 @@
 acts_add_library(
     PluginOnnx
-    SHARED
     # source files
     src/OnnxRuntimeBase.cpp
     src/MLTrackClassifier.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 target_include_directories(
@@ -15,3 +14,5 @@ target_include_directories(
 )
 
 target_link_libraries(ActsPluginOnnx PUBLIC Acts::Core onnxruntime::onnxruntime)
+
+acts_compile_headers(PluginOnnx GLOB include/**/*.hpp)

@@ -8,13 +8,15 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsFatras/Utilities/detail/FpeSafeGammaDistribution.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
 #include <random>
 
-BOOST_AUTO_TEST_SUITE(FatrasFpeSafeGammaDistribution)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 // Test if the standard-library gamma distribution gives the same results as
 // underflow-safe  FpeSafeGammaDistribution
@@ -85,3 +87,5 @@ BOOST_AUTO_TEST_CASE(FpeSafeGammaDistributionSequence) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

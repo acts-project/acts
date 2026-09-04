@@ -20,7 +20,9 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsTests {
 
 ///  helper function to create a cylinder
 TrackingVolumePtr constructCylinderVolume(
@@ -57,7 +59,8 @@ TrackingVolumePtr constructCylinderVolume(
   SurfaceArrayCreator::Config sacConfig;
   SurfaceArrayCreator sac{sacConfig};
 
-  auto bArray = sac.surfaceArrayOnCylinder(gctx, surfaces_only);
+  auto bArray = std::make_unique<SurfaceArray>(
+      sac.surfaceArrayOnCylinder(gctx, surfaces_only));
 
   ///  now create the Layer
   auto layer0bounds = std::make_shared<const CylinderBounds>(surfaceR, bUmax);
@@ -106,4 +109,5 @@ MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
   // return the container
   return hVolume;
 }
-}  // namespace Acts
+
+}  // namespace ActsTests

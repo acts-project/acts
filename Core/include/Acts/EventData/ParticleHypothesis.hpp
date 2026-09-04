@@ -8,10 +8,13 @@
 
 #pragma once
 
+#include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/GenericParticleHypothesis.hpp"
+#include "Acts/EventData/ChargeHypothesis.hpp"
+
+#include <cassert>
+#include <iostream>
 
 namespace Acts {
 
@@ -19,188 +22,291 @@ namespace Acts {
 // instance which would avoid copying the particle hypothesis and potentially
 // save some memory. But constexpr+static seems to require C++2b extension.
 
-/// Specialized particle hypothesis for singly charged particles.
+/// @ingroup eventdata
+/// @defgroup eventdata-particlehypothesis Particle hypothesis for track reconstruction
+/// @{
+
+/// @brief Particle hypothesis used in reconstruction
 ///
-/// @note This serves as a factory for common singly charge particles.
-class SinglyChargedParticleHypothesis
-    : public GenericParticleHypothesis<SinglyCharged> {
+/// The reconstruction hypothesis consists of absolute PDG code, mass and
+/// absolute charge.
+class ParticleHypothesis final {
  public:
-  constexpr SinglyChargedParticleHypothesis(PdgParticle absPdg, float mass)
-      : GenericParticleHypothesis(absPdg, mass, {}) {}
-
-  explicit SinglyChargedParticleHypothesis(PdgParticle absPdg)
-      : GenericParticleHypothesis(absPdg) {}
-
-  template <typename other_charge_t>
-  explicit constexpr SinglyChargedParticleHypothesis(
-      const GenericParticleHypothesis<other_charge_t>& other)
-      : GenericParticleHypothesis(other) {}
-
-  static SinglyChargedParticleHypothesis muon() {
-    static const SinglyChargedParticleHypothesis cache(PdgParticle::eMuon);
+  /// Create a muon particle hypothesis
+  /// @return Muon particle hypothesis with any charge type
+  [[nodiscard]] static ParticleHypothesis muon() {
+    static const ParticleHypothesis cache(PdgParticle::eMuon);
     return cache;
   }
-  static SinglyChargedParticleHypothesis pion() {
-    static const SinglyChargedParticleHypothesis cache(PdgParticle::ePionPlus);
+  /// Create a charged pion particle hypothesis
+  /// @return Charged pion particle hypothesis with any charge type
+  [[nodiscard]] static ParticleHypothesis pion() {
+    static const ParticleHypothesis cache(PdgParticle::ePionPlus);
     return cache;
   }
-  static SinglyChargedParticleHypothesis electron() {
-    static const SinglyChargedParticleHypothesis cache(PdgParticle::eElectron);
+  /// Create an electron particle hypothesis
+  /// @return Electron particle hypothesis with any charge type
+  [[nodiscard]] static ParticleHypothesis electron() {
+    static const ParticleHypothesis cache(PdgParticle::eElectron);
     return cache;
   }
-  static SinglyChargedParticleHypothesis kaon() {
-    static const SinglyChargedParticleHypothesis cache(PdgParticle::eKaonPlus);
+  /// Create a charged kaon particle hypothesis
+  /// @return Charged kaon particle hypothesis with any charge type
+  [[nodiscard]] static ParticleHypothesis kaon() {
+    static const ParticleHypothesis cache(PdgParticle::eKaonPlus);
     return cache;
   }
-  static SinglyChargedParticleHypothesis proton() {
-    static const SinglyChargedParticleHypothesis cache(PdgParticle::eProton);
-    return cache;
-  }
-
-  static SinglyChargedParticleHypothesis chargedGeantino() {
-    static const SinglyChargedParticleHypothesis cache(PdgParticle::eInvalid,
-                                                       0);
-    return cache;
-  }
-};
-
-/// Specialized particle hypothesis for neutral particles.
-///
-/// @note This serves as a factory for common neutral particles.
-class NeutralParticleHypothesis : public GenericParticleHypothesis<Neutral> {
- public:
-  constexpr NeutralParticleHypothesis(PdgParticle absPdg, float mass)
-      : GenericParticleHypothesis(absPdg, mass, {}) {}
-  explicit NeutralParticleHypothesis(PdgParticle absPdg)
-      : GenericParticleHypothesis(absPdg) {}
-
-  template <typename other_charge_t>
-  explicit constexpr NeutralParticleHypothesis(
-      const GenericParticleHypothesis<other_charge_t>& other)
-      : GenericParticleHypothesis(other) {}
-
-  static NeutralParticleHypothesis photon() {
-    static const NeutralParticleHypothesis cache(PdgParticle::eGamma);
-    return cache;
-  }
-  static NeutralParticleHypothesis pion0() {
-    static const NeutralParticleHypothesis cache(PdgParticle::ePionZero);
+  /// Create a proton particle hypothesis
+  /// @return Proton particle hypothesis with any charge type
+  [[nodiscard]] static ParticleHypothesis proton() {
+    static const ParticleHypothesis cache(PdgParticle::eProton);
     return cache;
   }
 
-  static NeutralParticleHypothesis geantino() {
-    static const NeutralParticleHypothesis cache(PdgParticle::eInvalid, 0);
+  /// Create a photon particle hypothesis
+  /// @return Photon particle hypothesis with any charge type
+  [[nodiscard]] static ParticleHypothesis photon() {
+    static const ParticleHypothesis cache(PdgParticle::eGamma);
     return cache;
   }
-};
-
-/// Specialized particle hypothesis for non-neutral particles.
-///
-/// @note This serves as a factory for common non-neutral particles.
-class NonNeutralChargedParticleHypothesis
-    : public GenericParticleHypothesis<NonNeutralCharge> {
- public:
-  constexpr NonNeutralChargedParticleHypothesis(PdgParticle absPdg, float mass,
-                                                NonNeutralCharge chargeType)
-      : GenericParticleHypothesis(absPdg, mass, chargeType) {}
-  explicit NonNeutralChargedParticleHypothesis(PdgParticle absPdg)
-      : GenericParticleHypothesis(absPdg) {}
-
-  template <typename other_charge_t>
-  explicit constexpr NonNeutralChargedParticleHypothesis(
-      const GenericParticleHypothesis<other_charge_t>& other)
-      : GenericParticleHypothesis(other) {}
-
-  static NonNeutralChargedParticleHypothesis muon() {
-    return NonNeutralChargedParticleHypothesis{
-        SinglyChargedParticleHypothesis::muon()};
-  }
-  static NonNeutralChargedParticleHypothesis pion() {
-    return NonNeutralChargedParticleHypothesis{
-        SinglyChargedParticleHypothesis::pion()};
-  }
-  static NonNeutralChargedParticleHypothesis electron() {
-    return NonNeutralChargedParticleHypothesis{
-        SinglyChargedParticleHypothesis::electron()};
-  }
-  static NonNeutralChargedParticleHypothesis kaon() {
-    return NonNeutralChargedParticleHypothesis{
-        SinglyChargedParticleHypothesis::kaon()};
-  }
-  static NonNeutralChargedParticleHypothesis proton() {
-    return NonNeutralChargedParticleHypothesis{
-        SinglyChargedParticleHypothesis::proton()};
-  }
-
-  static NonNeutralChargedParticleHypothesis pionLike(float absQ) {
-    return NonNeutralChargedParticleHypothesis(
-        pion().absolutePdg(), pion().mass(), NonNeutralCharge{absQ});
-  }
-
-  static NonNeutralChargedParticleHypothesis chargedGeantino() {
-    static const auto cache = chargedGeantino(Acts::UnitConstants::e);
+  /// Create a neutral pion particle hypothesis
+  /// @return Neutral pion particle hypothesis with any charge type
+  [[nodiscard]] static ParticleHypothesis pion0() {
+    static const ParticleHypothesis cache(PdgParticle::ePionZero);
     return cache;
   }
-  static NonNeutralChargedParticleHypothesis chargedGeantino(float absQ) {
-    return NonNeutralChargedParticleHypothesis(PdgParticle::eInvalid, 0,
-                                               NonNeutralCharge{absQ});
-  }
-};
 
-/// Specialized particle hypothesis for any kind of charged particles.
-///
-/// @note This serves as a factory for common particles with any kind of charge.
-class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
- public:
+  /// Create a pion-like particle hypothesis with custom charge
+  /// @param absoluteCharge The absolute charge value
+  /// @return Pion-like particle hypothesis with any charge type
+  [[nodiscard]] static ParticleHypothesis pionLike(float absoluteCharge) {
+    return pion().withAlteredAbsoluteCharge(absoluteCharge);
+  }
+
+  /// Create a neutral geantino particle hypothesis (massless neutral particle)
+  /// @return Neutral geantino particle hypothesis with any charge type
+  [[nodiscard]] static ParticleHypothesis geantino() {
+    static const ParticleHypothesis cache(PdgParticle::eInvalid, 0,
+                                          ChargeHypothesis{0});
+    return cache;
+  }
+  /// Create a charged geantino particle hypothesis with unit charge
+  /// @return Charged geantino particle hypothesis with any charge type
+  [[nodiscard]] static ParticleHypothesis chargedGeantino() {
+    return geantino().withAlteredAbsoluteCharge(1 * UnitConstants::e);
+  }
+  /// Create a charged geantino particle hypothesis with custom charge
+  /// @param absoluteCharge The absolute charge value
+  /// @return Charged geantino particle hypothesis with any charge type
+  [[nodiscard]] static ParticleHypothesis chargedGeantino(
+      float absoluteCharge) {
+    return geantino().withAlteredAbsoluteCharge(absoluteCharge);
+  }
+
+  /// Creates a particle hypothesis using absolute PDG, mass and the charge
+  /// type.
+  ///
+  /// @param absPdg the absolute PDG
+  /// @param mass the particle mass
+  /// @param absCharge the absolute charge
+  /// @param momentum the optional particle momentum
+  constexpr ParticleHypothesis(PdgParticle absPdg, float mass, float absCharge,
+                               std::optional<double> momentum = std::nullopt)
+      : m_absPdg{absPdg},
+        m_mass{mass},
+        m_charge{absCharge},
+        m_momentum{momentum} {
+    assert(absPdg == makeAbsolutePdgParticle(absPdg) &&
+           "pdg is expected to be absolute");
+  }
+
+  /// Creates a particle hypothesis using absolute PDG, mass and the charge
+  /// type.
+  ///
+  /// @param absPdg the absolute PDG
+  /// @param mass the particle mass
+  /// @param charge the charge type
+  /// @param momentum the optional particle momentum
   constexpr ParticleHypothesis(PdgParticle absPdg, float mass,
-                               AnyCharge chargeType)
-      : GenericParticleHypothesis(absPdg, mass, chargeType) {}
-  explicit ParticleHypothesis(PdgParticle absPdg)
-      : GenericParticleHypothesis(absPdg) {}
-
-  template <typename other_charge_t>
-  explicit constexpr ParticleHypothesis(
-      const GenericParticleHypothesis<other_charge_t>& other)
-      : GenericParticleHypothesis(other) {}
-
-  static ParticleHypothesis muon() {
-    return ParticleHypothesis{SinglyChargedParticleHypothesis::muon()};
-  }
-  static ParticleHypothesis pion() {
-    return ParticleHypothesis{SinglyChargedParticleHypothesis::pion()};
-  }
-  static ParticleHypothesis electron() {
-    return ParticleHypothesis{SinglyChargedParticleHypothesis::electron()};
-  }
-  static ParticleHypothesis kaon() {
-    return ParticleHypothesis{SinglyChargedParticleHypothesis::kaon()};
-  }
-  static ParticleHypothesis proton() {
-    return ParticleHypothesis{SinglyChargedParticleHypothesis::proton()};
+                               ChargeHypothesis charge,
+                               std::optional<double> momentum = std::nullopt)
+      : m_absPdg{absPdg}, m_mass{mass}, m_charge{charge}, m_momentum{momentum} {
+    assert(absPdg == makeAbsolutePdgParticle(absPdg) &&
+           "pdg is expected to be absolute");
   }
 
-  static ParticleHypothesis photon() {
-    return ParticleHypothesis{NeutralParticleHypothesis::photon()};
-  }
-  static ParticleHypothesis pion0() {
-    return ParticleHypothesis{NeutralParticleHypothesis::pion0()};
+  /// Creates a particle hypothesis using the absolute PDG.
+  /// The mass and charge is looked up using @ref findMass and @ref findCharge.
+  /// If the lookup fails an exception is thrown.
+  ///
+  /// @param absPdg the absolute PDG
+  /// @param momentum the optional particle momentum
+  explicit ParticleHypothesis(PdgParticle absPdg,
+                              std::optional<double> momentum = std::nullopt)
+      : m_absPdg{absPdg},
+        m_mass{findMass(absPdg).value()},
+        m_charge{std::abs(findCharge(absPdg).value())},
+        m_momentum{momentum} {
+    assert(absPdg == makeAbsolutePdgParticle(absPdg) &&
+           "pdg is expected to be absolute");
   }
 
-  static ParticleHypothesis pionLike(float absQ) {
-    return ParticleHypothesis(pion().absolutePdg(), pion().mass(),
-                              AnyCharge{absQ});
+  /// Create a new particle hypothesis with the same mass and charge but a
+  /// different absolute PDG.
+  /// @param absPdg The new absolute PDG value
+  /// @return A new ParticleHypothesis with the updated absolute PDG
+  [[nodiscard]] ParticleHypothesis withAlteredPdg(PdgParticle absPdg) const {
+    return ParticleHypothesis(absPdg, mass(), absoluteCharge(), m_momentum);
   }
 
-  static ParticleHypothesis geantino() {
-    return ParticleHypothesis{NeutralParticleHypothesis::geantino()};
+  /// Create a new particle hypothesis with the same absolute PDG and charge but
+  /// a different mass.
+  /// @param mass The new mass value
+  /// @return A new ParticleHypothesis with the updated mass
+  [[nodiscard]] ParticleHypothesis withAlteredMass(float mass) const {
+    return ParticleHypothesis(absolutePdg(), mass, absoluteCharge(),
+                              m_momentum);
   }
-  static ParticleHypothesis chargedGeantino() {
-    static const auto cache = chargedGeantino(Acts::UnitConstants::e);
-    return cache;
+
+  /// Create a new particle hypothesis with the same absolute PDG and mass but a
+  /// different charge.
+  /// @param absoluteCharge The new absolute charge value
+  /// @return A new ParticleHypothesis with the updated charge
+  [[nodiscard]] ParticleHypothesis withAlteredAbsoluteCharge(
+      float absoluteCharge) const {
+    return ParticleHypothesis(absolutePdg(), mass(), absoluteCharge,
+                              m_momentum);
   }
-  static ParticleHypothesis chargedGeantino(float absQ) {
-    return ParticleHypothesis(PdgParticle::eInvalid, 0, AnyCharge{absQ});
+
+  /// Create a new particle hypothesis with the same absolute PDG and mass but a
+  /// different momentum hypothesis.
+  /// @param momentum The new momentum hypothesis value
+  /// @return A new ParticleHypothesis with the updated momentum
+  [[nodiscard]] ParticleHypothesis withMomentumHypothesis(
+      double momentum) const {
+    return ParticleHypothesis(absolutePdg(), mass(), absoluteCharge(),
+                              momentum);
   }
+
+  /// Create a new particle hypothesis with the same absolute PDG and mass but a
+  /// different momentum hypothesis.
+  /// @param momentum The new optional momentum hypothesis value
+  /// @return A new ParticleHypothesis with the updated momentum
+  [[nodiscard]] ParticleHypothesis withMomentumHypothesis(
+      std::optional<double> momentum) const {
+    return ParticleHypothesis(absolutePdg(), mass(), absoluteCharge(),
+                              momentum);
+  }
+
+  /// Create a new particle hypothesis with the same absolute PDG and mass but
+  /// no momentum hypothesis.
+  /// @return A new ParticleHypothesis with no momentum hypothesis
+  [[nodiscard]] ParticleHypothesis withoutMomentumHypothesis() const {
+    return ParticleHypothesis(absolutePdg(), mass(), absoluteCharge(),
+                              std::nullopt);
+  }
+
+  /// Get the hypothesized absolute PDG.
+  /// @return The absolute PDG particle identifier
+  [[nodiscard]] constexpr PdgParticle absolutePdg() const noexcept {
+    return m_absPdg;
+  }
+
+  /// Get the hypothesized mass.
+  /// @return The particle mass
+  [[nodiscard]] constexpr float mass() const noexcept { return m_mass; }
+
+  /// Get the hypothesized absolute charge.
+  /// @return The absolute charge magnitude
+  [[nodiscard]] float absoluteCharge() const noexcept {
+    return m_charge.absoluteCharge();
+  }
+
+  /// Check if the particle hypothesis has a hypothesized momentum.
+  /// @return True if a momentum hypothesis is present, false otherwise
+  [[nodiscard]] bool hasMomentumHypothesis() const noexcept {
+    return m_momentum.has_value();
+  }
+
+  /// Get the hypothesized momentum.
+  /// @return The particle momentum
+  [[nodiscard]] double momentumHypothesis() const { return m_momentum.value(); }
+
+  /// Extracts the signed charge from the `q over p` track parameter using the
+  /// charge hypothesis.
+  ///
+  /// @param qOverP the `q over p` track parameter.
+  /// @return The extracted signed charge
+  [[nodiscard]] constexpr float extractCharge(double qOverP) const noexcept {
+    return m_charge.extractCharge(qOverP);
+  }
+
+  /// Extracts the particle momentum from the `q over p` track parameter using
+  /// the charge hypothesis.
+  ///
+  /// @param qOverP the `q over p` track parameter.
+  /// @return The extracted absolute momentum
+  [[nodiscard]] constexpr double extractMomentum(double qOverP) const noexcept {
+    if (m_momentum.has_value()) {
+      return *m_momentum;
+    }
+    return m_charge.extractMomentum(qOverP);
+  }
+
+  /// Calculate the `q over p` track parameter with the given absolute momentum
+  /// and charge.
+  ///
+  /// @param momentum the absolute momentum.
+  /// @param signedQ the signed charge.
+  /// @return The calculated charge over momentum ratio
+  [[nodiscard]] constexpr double qOverP(double momentum,
+                                        float signedQ) const noexcept {
+    return m_charge.qOverP(momentum, signedQ);
+  }
+
+  /// Get the hypothesized charge.
+  /// @return Reference to the charge type object
+  [[nodiscard]] constexpr const ChargeHypothesis& charge() const noexcept {
+    return m_charge;
+  }
+
+  /// Output stream representation of the particle hypothesis
+  /// @param os Output stream to write to
+  /// @return Modified output stream for chaining\n
+  std::ostream& toStream(std::ostream& os) const {
+    os << "ParticleHypothesis{absPdg=";
+    if (auto shortString = pdgToShortAbsString(absolutePdg())) {
+      os << *shortString;
+    } else {
+      os << absolutePdg();
+    }
+    os << ", mass=" << mass() << ", absCharge=" << absoluteCharge();
+    if (hasMomentumHypothesis()) {
+      os << ", momentum=" << momentumHypothesis();
+    }
+    os << "}";
+    return os;
+  }
+
+  /// Output stream operator for particle hypothesis
+  /// @param os Output stream to write to
+  /// @param particleHypothesis The particle hypothesis to output
+  /// @return Reference to output stream for chaining
+  friend std::ostream& operator<<(
+      std::ostream& os, const ParticleHypothesis& particleHypothesis) {
+    return particleHypothesis.toStream(os);
+  }
+
+ private:
+  PdgParticle m_absPdg{PdgParticle::eInvalid};
+  float m_mass{0};
+  ChargeHypothesis m_charge;
+  std::optional<double> m_momentum;
+
+  friend bool operator==(const ParticleHypothesis& lhs,
+                         const ParticleHypothesis& rhs) = default;
 };
+
+/// @}
 
 }  // namespace Acts

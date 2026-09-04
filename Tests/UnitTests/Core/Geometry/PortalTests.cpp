@@ -20,6 +20,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -29,20 +30,21 @@
 
 #include <stdexcept>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
 struct Fixture {
   Logging::Level m_level;
   Fixture() {
-    m_level = Acts::Logging::getFailureThreshold();
-    Acts::Logging::setFailureThreshold(Acts::Logging::FATAL);
+    m_level = Logging::getFailureThreshold();
+    Logging::setFailureThreshold(Logging::FATAL);
   }
 
-  ~Fixture() { Acts::Logging::setFailureThreshold(m_level); }
+  ~Fixture() { Logging::setFailureThreshold(m_level); }
 };
 
 std::shared_ptr<TrackingVolume> makeDummyVolume() {
@@ -51,9 +53,9 @@ std::shared_ptr<TrackingVolume> makeDummyVolume() {
       std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
 }
 
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
-BOOST_FIXTURE_TEST_SUITE(Geometry, Fixture)
+BOOST_FIXTURE_TEST_SUITE(GeometrySuite, Fixture)
 
 BOOST_AUTO_TEST_SUITE(Portals)
 BOOST_AUTO_TEST_SUITE(Merging)
@@ -335,6 +337,23 @@ BOOST_AUTO_TEST_CASE(Disc) {
   BOOST_CHECK_THROW(
       Portal::merge(gctx, portal1, portal2, AxisDirection::AxisR, *logger),
       PortalMergingException);
+
+  // In "keep going" mode, the same merge succeeds: the material is discarded
+  // and the merged surface is tagged with a MergedMaterialMarker.
+  portal1 = Portal{
+      gctx, {.alongNormal = {disc1, *vol1}, .oppositeNormal = {disc1, *vol2}}};
+  portal2 = Portal{
+      gctx, {.alongNormal = {disc2, *vol3}, .oppositeNormal = {disc2, *vol4}}};
+  Portal mergedKeepGoing =
+      Portal::merge(gctx, portal1, portal2, AxisDirection::AxisR, *logger,
+                    PortalMaterialMergePolicy::eDiscardAndMark);
+  BOOST_CHECK(mergedKeepGoing.isValid());
+  BOOST_REQUIRE(mergedKeepGoing.surface().surfaceMaterial() != nullptr);
+  BOOST_CHECK(dynamic_cast<const MergedMaterialMarker*>(
+                  mergedKeepGoing.surface().surfaceMaterial()) != nullptr);
+  // The marker carries no physical material
+  BOOST_CHECK(mergedKeepGoing.surface().surfaceMaterial()->materialSlab(
+                  Vector2{0., 0.}) == MaterialSlab::Nothing());
 }
 
 BOOST_AUTO_TEST_SUITE_END()  // Merging
@@ -660,4 +679,4 @@ BOOST_AUTO_TEST_SUITE_END()  // Portals
 
 BOOST_AUTO_TEST_SUITE_END()  // Geometry
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

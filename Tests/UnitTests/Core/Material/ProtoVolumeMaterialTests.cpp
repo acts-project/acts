@@ -14,7 +14,11 @@
 
 #include <utility>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(ProtoVolumeMaterial_construction_test) {
@@ -30,4 +34,6 @@ BOOST_AUTO_TEST_CASE(ProtoVolumeMaterial_construction_test) {
   ProtoVolumeMaterial vmpCopyMoved(std::move(vmpCopy));
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

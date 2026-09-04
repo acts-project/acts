@@ -11,13 +11,17 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
+#include <cassert>
 #include <limits>
+#include <numbers>
 
 #include "Eigen/Dense"
-
 namespace Acts::VectorHelpers {
 
 /// Calculate phi (transverse plane angle) from compatible Eigen types with
@@ -139,6 +143,20 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept
   }
 }
 
+/// Calculate the pseudo rapdity from anything implementing a method
+/// like `theta()` returning anything convertible to `double`.
+/// @tparam T anything that has a theta method
+/// @param v Any type that implements a theta method
+/// @return The pseudo rapidity value
+template <typename T>
+double eta(const T& v) noexcept
+  requires requires {
+    { v.theta() } -> std::floating_point;
+  }
+{
+  return Acts::AngleHelpers::etaFromTheta(v.theta());
+}
+
 /// @brief Fast evaluation of trigonomic functions.
 ///
 /// @param direction for this evaluatoin
@@ -150,7 +168,7 @@ inline std::array<double, 4> evaluateTrigonomics(const Vector3& direction) {
   const double z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
   const double cosTheta = z;
-  const double sinTheta = std::sqrt(1 - z * z);
+  const double sinTheta = fastCathetus(1, z);
   assert(sinTheta != 0 &&
          "VectorHelpers: Vector is parallel to the z-axis "
          "which leads to division by zero");
@@ -251,6 +269,23 @@ inline std::pair<double, double> incidentAngles(
   double phi = std::atan2(trfDir[2], trfDir[0]);
   double theta = std::atan2(trfDir[2], trfDir[1]);
   return {phi, theta};
+}
+
+/// Calculate the deltaR between two vectors.
+/// @note DeltaR is defined as sqrt(deltaPhi^2 + deltaEta^2)
+/// @tparam Derived Eigen derived concrete type
+/// @param v1 First vector
+/// @param v2 Second vector
+/// @return The deltaR value
+template <typename Derived>
+double deltaR(const Eigen::MatrixBase<Derived>& v1,
+              const Eigen::MatrixBase<Derived>& v2)
+  requires(Eigen::MatrixBase<Derived>::RowsAtCompileTime == 3)
+{
+  const double dphi =
+      detail::difference_periodic(phi(v1), phi(v2), 2 * std::numbers::pi);
+  const double deta = eta(v1) - eta(v2);
+  return fastHypot(dphi, deta);
 }
 
 }  // namespace Acts::VectorHelpers

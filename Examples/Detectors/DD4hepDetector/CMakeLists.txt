@@ -1,8 +1,8 @@
 acts_add_library(
     ExamplesDetectorDD4hep
-    SHARED
     src/DD4hepDetector.cpp
     src/AlignedDD4hepDetectorElement.cpp
+    src/OpenDataDetector.cpp
 )
 
 target_include_directories(

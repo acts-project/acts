@@ -2,11 +2,24 @@ name: Devcontainer CI
 
 on:
   push:
+    # The release branches (keep in sync with release.yml) and the merge
+    # queue's temp ref carry a tree that has already been built.
+    branches-ignore:
+      - 'releases'
+      - 'release/**'
+      - 'gh-readonly-queue/**'
   pull_request:
     branches:
       - main
       - 'release/**'
       - 'develop/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   devcontainer-build:
@@ -14,9 +27,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         submodules: recursive
+        persist-credentials: false
 
     - name: Install devcontainer CLI
       run: |

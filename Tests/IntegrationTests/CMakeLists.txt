@@ -24,6 +24,9 @@ macro(add_integrationtest _name)
             Boost::unit_test_framework
             ${integrationtest_extra_libraries}
     )
+    if(ACTS_TESTS_HAS_WNO_C2Y_EXTENSIONS)
+        target_compile_options(${_target} PRIVATE -Wno-c2y-extensions)
+    endif()
     # register as integration test executable
     set(_run "RunIntegrationTest${_name}")
     add_custom_target(${_run} COMMAND ${_target})

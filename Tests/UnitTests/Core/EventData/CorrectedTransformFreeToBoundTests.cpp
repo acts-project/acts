@@ -16,18 +16,14 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <numbers>
 #include <optional>
-#include <ostream>
-#include <string>
 #include <tuple>
 
 using namespace Acts;
@@ -37,8 +33,12 @@ namespace {
 constexpr double eps = 0.01;
 }
 
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
+
 BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
   const auto loc0 = 0.0;
   const auto loc1 = 0.0;
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   sBoundParams << loc0, loc1, phi, theta, qOverP, t;
 
   // the bound parameters covariance at the starting  plane
-  BoundSquareMatrix sBoundCov = BoundSquareMatrix::Zero();
+  BoundMatrix sBoundCov = BoundMatrix::Zero();
   sBoundCov(eBoundLoc0, eBoundLoc0) = resLoc0 * resLoc0;
   sBoundCov(eBoundLoc1, eBoundLoc1) = resLoc1 * resLoc1;
   sBoundCov(eBoundPhi, eBoundPhi) = resPhi * resPhi;
@@ -76,12 +76,12 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   // the intersection of the track with the end surface
-  SurfaceIntersection intersection =
+  Intersection3D intersection =
       eSurface
           ->intersect(geoCtx, Vector3(0, 0, 0), dir, BoundaryTolerance::None())
           .closest();
   Vector3 tpos = intersection.position();
-  auto s = intersection.pathLength();
+  double s = intersection.pathLength();
 
   BOOST_CHECK_EQUAL(s, distance * std::numbers::sqrt2);
 
@@ -103,11 +103,9 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   transportJac(eFreePos2, eFreeDir2) = s;
 
   // the free covariance at the start position
-  FreeSquareMatrix sFreeCov =
-      boundToFreeJac * sBoundCov * boundToFreeJac.transpose();
+  FreeMatrix sFreeCov = boundToFreeJac * sBoundCov * boundToFreeJac.transpose();
   // the free covariance at the end position
-  FreeSquareMatrix eFreeCov =
-      transportJac * sFreeCov * transportJac.transpose();
+  FreeMatrix eFreeCov = transportJac * sFreeCov * transportJac.transpose();
 
   // convert free parameters to bound parameters with non-linear correction
 
@@ -125,8 +123,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   BOOST_CHECK(correctedRes.has_value());
   auto correctedValue = correctedRes.value();
   BoundVector eCorrectedBoundParams = std::get<BoundVector>(correctedValue);
-  BoundSquareMatrix eCorrectedBoundCov =
-      std::get<BoundSquareMatrix>(correctedValue);
+  BoundMatrix eCorrectedBoundCov = std::get<BoundMatrix>(correctedValue);
 
   // the loc0, phi are the same as that without correction
   BOOST_CHECK_EQUAL(eCorrectedBoundParams[eBoundLoc0], loc0);
@@ -142,3 +139,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   CHECK_CLOSE_REL(eCorrectedBoundCov(eBoundLoc0, eBoundLoc0), std::pow(2.5, 2),
                   eps);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

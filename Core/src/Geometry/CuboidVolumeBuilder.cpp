@@ -47,6 +47,7 @@ std::shared_ptr<const Surface> CuboidVolumeBuilder::buildSurface(
     surface = Surface::makeShared<PlaneSurface>(
         cfg.rBounds,
         *(cfg.detElementConstructor(trafo, cfg.rBounds, cfg.thickness)));
+    surface->assignThickness(cfg.thickness);
   } else {
     surface = Surface::makeShared<PlaneSurface>(trafo, cfg.rBounds);
   }
@@ -65,14 +66,14 @@ std::shared_ptr<const Layer> CuboidVolumeBuilder::buildLayer(
   // Build the surface
   if (cfg.surfaces.empty()) {
     for (const auto& sCfg : cfg.surfaceCfg) {
-      cfg.surfaces.push_back(buildSurface(gctx, sCfg));
+      cfg.surfaces.emplace_back(buildSurface(gctx, sCfg));
     }
   }
   // Build transformation centered at the surface position
   Vector3 centroid{0., 0., 0.};
 
   for (const auto& surface : cfg.surfaces) {
-    centroid += surface->transform(gctx).translation();
+    centroid += surface->localToGlobalTransform(gctx).translation();
   }
 
   centroid /= cfg.surfaces.size();
@@ -85,7 +86,8 @@ std::shared_ptr<const Layer> CuboidVolumeBuilder::buildLayer(
   if (cfg.rotation) {
     trafo.linear() = *cfg.rotation;
   } else {
-    trafo.linear() = cfg.surfaces.front()->transform(gctx).rotation();
+    trafo.linear() =
+        cfg.surfaces.front()->localToGlobalTransform(gctx).rotation();
   }
 
   LayerCreator::Config lCfg;
@@ -102,7 +104,6 @@ std::shared_ptr<const Layer> CuboidVolumeBuilder::buildLayer(
 std::pair<double, double> CuboidVolumeBuilder::binningRange(
     const GeometryContext& gctx,
     const CuboidVolumeBuilder::VolumeConfig& cfg) const {
-  using namespace UnitLiterals;
   // Construct return value
   std::pair<double, double> minMax = std::make_pair(
       std::numeric_limits<double>::max(), -std::numeric_limits<double>::max());
@@ -158,12 +159,12 @@ std::shared_ptr<TrackingVolume> CuboidVolumeBuilder::buildVolume(
     cfg.layers.reserve(cfg.layerCfg.size());
 
     for (auto& layerCfg : cfg.layerCfg) {
-      cfg.layers.push_back(buildLayer(gctx, layerCfg));
-      layVec.push_back(cfg.layers.back());
+      cfg.layers.emplace_back(buildLayer(gctx, layerCfg));
+      layVec.emplace_back(cfg.layers.back());
     }
   } else {
     for (auto& lay : cfg.layers) {
-      layVec.push_back(lay);
+      layVec.emplace_back(lay);
     }
   }
 
@@ -179,7 +180,7 @@ std::shared_ptr<TrackingVolume> CuboidVolumeBuilder::buildVolume(
   // Build confined volumes
   if (cfg.trackingVolumes.empty()) {
     for (VolumeConfig vc : cfg.volumeCfg) {
-      cfg.trackingVolumes.push_back(buildVolume(gctx, vc));
+      cfg.trackingVolumes.emplace_back(buildVolume(gctx, vc));
     }
   }
 
@@ -205,12 +206,13 @@ MutableTrackingVolumePtr CuboidVolumeBuilder::trackingVolume(
   std::vector<std::shared_ptr<TrackingVolume>> volumes;
   volumes.reserve(m_cfg.volumeCfg.size());
   for (VolumeConfig volCfg : m_cfg.volumeCfg) {
-    volumes.push_back(buildVolume(gctx, volCfg));
+    volumes.emplace_back(buildVolume(gctx, volCfg));
   }
 
   // Sort the volumes vectors according to the center location, otherwise the
   // binning boundaries will fail
-  std::ranges::sort(volumes, {}, [](const auto& v) { return v->center().x(); });
+  std::ranges::sort(volumes, {},
+                    [&](const auto& v) { return v->center(gctx).x(); });
 
   // Glue volumes
   for (unsigned int i = 0; i < volumes.size() - 1; i++) {
@@ -234,16 +236,16 @@ MutableTrackingVolumePtr CuboidVolumeBuilder::trackingVolume(
   std::vector<std::pair<TrackingVolumePtr, Vector3>> tapVec;
   tapVec.reserve(m_cfg.volumeCfg.size());
   for (auto& tVol : volumes) {
-    tapVec.push_back(std::make_pair(tVol, tVol->center()));
+    tapVec.emplace_back(tVol, tVol->center(gctx));
   }
 
   // Set bin boundaries along binning
   std::vector<float> binBoundaries;
-  binBoundaries.push_back(volumes[0]->center().x() -
-                          m_cfg.volumeCfg[0].length.x() * 0.5);
+  binBoundaries.emplace_back(volumes[0]->center(gctx).x() -
+                             m_cfg.volumeCfg[0].length.x() * 0.5);
   for (std::size_t i = 0; i < volumes.size(); i++) {
-    binBoundaries.push_back(volumes[i]->center().x() +
-                            m_cfg.volumeCfg[i].length.x() * 0.5);
+    binBoundaries.emplace_back(volumes[i]->center(gctx).x() +
+                               m_cfg.volumeCfg[i].length.x() * 0.5);
   }
 
   // Build binning

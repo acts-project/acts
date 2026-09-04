@@ -45,10 +45,12 @@ std::vector<double> detail::VerticesHelper::phiSegments(
     double phiExt =
         -std::numbers::pi + i * 2 * std::numbers::pi / (4 * quarterSegments);
     if (phiExt > phiMin && phiExt < phiMax &&
-        std::ranges::none_of(phiSegments, [&phiExt](double phi) {
-          return std::abs(phi - phiExt) <
-                 std::numeric_limits<double>::epsilon();
-        })) {
+        std::ranges::none_of(
+            phiSegments,
+            [&phiExt](double phi) {
+              return std::abs(phi - phiExt) <
+                     std::numeric_limits<double>::epsilon();
+            })) {
       phiSegments.push_back(phiExt);
     }
   }
@@ -146,7 +148,7 @@ Vector2 detail::VerticesHelper::computeClosestPointOnPolygon(
 
   // calculate the closest position on the segment between `ll0` and `ll1` to
   // the point as measured by the metric induced by the metric matrix
-  auto closestOnSegment = [&](auto&& ll0, auto&& ll1) {
+  auto closestOnSegment = [&](const auto& ll0, const auto& ll1) {
     // normal vector and position of the closest point along the normal
     auto n = ll1 - ll0;
     auto n_transformed = metric * n;

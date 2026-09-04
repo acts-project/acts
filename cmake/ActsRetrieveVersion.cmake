@@ -10,21 +10,13 @@
 file(READ "version_number" _acts_version)
 string(STRIP "${_acts_version}" _acts_version)
 
-# read commit hash from git
-include(GetGitRevisionDescription)
-get_git_head_revision(_git_refspec _git_hash)
-string(SUBSTRING "${_git_hash}" 0 9 _git_hash_short)
-git_local_changes(_git_local_changes)
-if(_git_local_changes STREQUAL "CLEAN")
-    set(_acts_commit_hash "${_git_hash}")
-    set(_acts_commit_hash_short "${_git_hash_short}")
+# check if source is in a git repository
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+    set(_acts_is_git_repo TRUE)
 else()
-    set(_acts_commit_hash "${_git_hash}-dirty")
-    set(_acts_commit_hash_short "${_git_hash_short}-dirty")
+    set(_acts_is_git_repo FALSE)
 endif()
 
-# remove temporary variables
-unset(_git_refspec)
-unset(_git_hash)
-unset(_git_hash_short)
-unset(_git_local_changes)
+# set empty hash values by default (no git dependency at configure time)
+set(_acts_commit_hash "std::nullopt")
+set(_acts_commit_hash_short "std::nullopt")

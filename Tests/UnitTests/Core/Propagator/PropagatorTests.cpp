@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -29,9 +28,9 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -44,17 +43,19 @@
 #include <utility>
 
 namespace bdata = boost::unit_test::data;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 using Acts::VectorHelpers::perp;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 /// An observer that measures the perpendicular distance
 struct PerpendicularMeasure {
@@ -83,6 +84,12 @@ struct SurfaceObserver {
   // the tolerance for intersection
   double tolerance = 1e-5;
 
+  // TODO https://github.com/acts-project/acts/issues/2738
+  /// Distance limit to discard intersections "behind us"
+  /// @note this is only necessary because some surfaces have more than one
+  ///       intersection
+  double nearLimit = -100 * UnitConstants::um;
+
   /// Simple result struct to be returned
   struct this_result {
     std::size_t surfaces_passed = 0;
@@ -93,33 +100,51 @@ struct SurfaceObserver {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& /*navigator*/, result_type& result,
-           const Logger& /*logger*/) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& /*navigator*/, result_type& result,
+                   const Logger& logger) const {
     if (surface == nullptr || result.surfaces_passed != 0) {
-      return;
+      return Result<void>::success();
     }
 
-    // calculate the distance to the surface
-    const double distance =
-        surface
-            ->intersect(state.geoContext, stepper.position(state.stepping),
-                        stepper.direction(state.stepping),
-                        BoundaryTolerance::None())
-            .closest()
-            .pathLength();
+    // calculate the intersections with the surface
+    const auto multiIntersection = surface->intersect(
+        state.geoContext, stepper.position(state.stepping),
+        state.options.direction * stepper.direction(state.stepping),
+        BoundaryTolerance::None());
 
-    // Adjust the step size so that we cannot cross the target surface
-    state.stepping.stepSize.release(ConstrainedStep::Type::Actor);
-    state.stepping.stepSize.update(distance * state.options.direction,
-                                   ConstrainedStep::Type::Actor);
+    const double farLimit = std::numeric_limits<double>::max();
 
-    // return true if you fall below tolerance
-    if (std::abs(distance) <= tolerance) {
-      ++result.surfaces_passed;
-      result.surface_passed_r = perp(stepper.position(state.stepping));
+    if (const auto intersectionIt = std::ranges::find_if(
+            multiIntersection,
+            [&](const auto& intersection) {
+              return intersection.isValid() &&
+                     detail::checkPathLength(intersection.pathLength(),
+                                             nearLimit, farLimit, logger);
+            });
+        intersectionIt != multiIntersection.end()) {
+      // Adjust the step size so that we cannot cross the target surface
       state.stepping.stepSize.release(ConstrainedStep::Type::Actor);
+      state.stepping.stepSize.update(intersectionIt->pathLength(),
+                                     ConstrainedStep::Type::Actor);
+
+      // return true if we fall below tolerance
+      if (std::abs(intersectionIt->pathLength()) <= tolerance) {
+        ++result.surfaces_passed;
+        result.surface_passed_r = perp(stepper.position(state.stepping));
+        state.stepping.stepSize.release(ConstrainedStep::Type::Actor);
+      }
     }
+
+    return Result<void>::success();
+  }
+
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                  const navigator_t& /*navigator*/, result_type& result,
+                  const Logger& /*logger*/) const {
+    return result.surfaces_passed != 0;
   }
 };
 
@@ -131,8 +156,7 @@ using EigenPropagatorType = Propagator<EigenStepperType>;
 const double Bz = 2_T;
 auto bField = std::make_shared<BFieldType>(Vector3{0, 0, Bz});
 EigenStepperType estepper(bField);
-EigenPropagatorType epropagator(std::move(estepper), VoidNavigator(),
-                                getDefaultLogger("prop", Logging::VERBOSE));
+EigenPropagatorType epropagator(std::move(estepper), VoidNavigator());
 
 auto mCylinder = std::make_shared<CylinderBounds>(10_mm, 1000_mm);
 auto mSurface =
@@ -142,6 +166,8 @@ auto cSurface =
     Surface::makeShared<CylinderSurface>(Transform3::Identity(), cCylinder);
 
 const int ntests = 5;
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 // This tests the Options
 BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
@@ -176,7 +202,7 @@ BOOST_DATA_TEST_CASE(
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   using CylinderObserver = SurfaceObserver<CylinderSurface>;
   using ActorList = ActorList<CylinderObserver>;
@@ -196,9 +222,9 @@ BOOST_DATA_TEST_CASE(
   double x = 0;
   double y = 0;
   double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
+  double px = pT * std::cos(phi);
+  double py = pT * std::sin(phi);
+  double pz = pT / std::tan(theta);
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
@@ -206,7 +232,7 @@ BOOST_DATA_TEST_CASE(
       makeVector4(pos, time), mom.normalized(), q / mom.norm(), std::nullopt,
       ParticleHypothesis::pion());
   // propagate to the cylinder surface
-  const auto& result = epropagator.propagate(start, *cSurface, options).value();
+  const auto& result = epropagator.propagate(start, options).value();
   auto& sor = result.get<so_result>();
 
   BOOST_CHECK_EQUAL(sor.surfaces_passed, 1u);
@@ -236,7 +262,7 @@ BOOST_DATA_TEST_CASE(
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   // setup propagation options - the tow step options
   EigenPropagatorType::Options<> options_2s(tgContext, mfContext);
@@ -247,9 +273,9 @@ BOOST_DATA_TEST_CASE(
   double x = 0;
   double y = 0;
   double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
+  double px = pT * std::cos(phi);
+  double py = pT * std::sin(phi);
+  double pz = pT / std::tan(theta);
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
@@ -316,7 +342,7 @@ BOOST_DATA_TEST_CASE(
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
+  static_cast<void>(index);
 
   // setup propagation options - 2 setp options
   EigenPropagatorType::Options<> options_2s(tgContext, mfContext);
@@ -327,9 +353,9 @@ BOOST_DATA_TEST_CASE(
   double x = 0;
   double y = 0;
   double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
+  double px = pT * std::cos(phi);
+  double py = pT * std::sin(phi);
+  double pz = pT / std::tan(theta);
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
@@ -397,7 +423,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
       Vector4::Zero(), Vector3::UnitX(), 1. / 1_GeV, std::nullopt,
       ParticleHypothesis::pion());
 
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext mctx;
 
   {
@@ -477,4 +503,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
                   "Propagator unexpectedly inherits from BasePropagator");
   }
 }
-}  // namespace Acts::Test
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -12,7 +12,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -31,9 +31,11 @@
 // averagePhi)
 // - Local coords are z, rphi
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 const double alpha = std::numbers::pi / 8.;
 const double zMin = 3.;
@@ -99,6 +101,11 @@ BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
   // Exception for negative half sector phi
   BOOST_CHECK_THROW(ConeBounds(alpha, zMin, zMax, -halfPhi, averagePhi),
                     std::logic_error);
+
+  // Exception for a half sector phi beyond pi
+  BOOST_CHECK_THROW(
+      ConeBounds(alpha, zMin, zMax, std::numbers::pi + 0.1, averagePhi),
+      std::logic_error);
 
   // Exception for out of range phi positioning
   BOOST_CHECK_THROW(
@@ -173,4 +180,4 @@ BOOST_AUTO_TEST_CASE(ConeBoundsCenter) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -16,12 +16,16 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <numbers>
 #include <stdexcept>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 const double minRadius = 7.2;
 const double maxRadius = 12.0;
@@ -312,6 +316,28 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsCenter) {
   BOOST_CHECK(rotatedCenter.x() <= maxRadius);
 }
 
+BOOST_AUTO_TEST_CASE(AnnulusBoundsCoversFullAzimuth) {
+  // A typical stereo module sector does not cover the full azimuth
+  BOOST_CHECK(!AnnulusBounds(minRadius, maxRadius, minPhi, maxPhi, offset)
+                   .coversFullAzimuth());
+
+  // radian_sym wraps into [-pi, pi), so the widest annulus spans from -pi to
+  // just below pi
+  BOOST_CHECK(AnnulusBounds(minRadius, maxRadius, -std::numbers::pi,
+                            std::numbers::pi - 1e-12, offset)
+                  .coversFullAzimuth());
+
+  // A gap wider than the tolerance is not the full azimuth
+  BOOST_CHECK(!AnnulusBounds(minRadius, maxRadius, -std::numbers::pi,
+                             std::numbers::pi - 1e-8, offset)
+                   .coversFullAzimuth());
+
+  // Half a turn is not the full azimuth either
+  BOOST_CHECK(!AnnulusBounds(minRadius, maxRadius, -std::numbers::pi / 2.,
+                             std::numbers::pi / 2., offset)
+                   .coversFullAzimuth());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

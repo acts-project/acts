@@ -10,29 +10,29 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <optional>
 #include <utility>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
+
+BOOST_AUTO_TEST_SUITE(VertexingSuite)
 
 BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   // Define the size of the grids
@@ -306,4 +306,6 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
   BOOST_CHECK_NE(width, 0.);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

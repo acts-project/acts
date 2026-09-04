@@ -28,7 +28,6 @@
 #include <string>
 
 namespace Acts {
-class DetectorElementBase;
 
 /// @class CylinderSurface
 ///
@@ -66,12 +65,17 @@ class CylinderSurface : public RegularSurface {
   CylinderSurface(const Transform3& transform,
                   std::shared_ptr<const CylinderBounds> cbounds);
 
-  /// Constructor from DetectorElementBase: Element proxy
+  /// Constructor from SurfacePlacementBase: Element proxy
   ///
   /// @param cbounds are the provided cylinder bounds (shared)
-  /// @param detelement is the linked detector element to this surface
+  /// @param placement Reference to the surface placement
+  /// @note The Surface does not take any ownership over the
+  ///       `SurfacePlacementBase` it is expected that the user
+  ///        ensures the life-time of the `SurfacePlacementBase`
+  ///        and that the `Surface` is actually owned by
+  ///        the `SurfacePlacementBase` instance
   CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
-                  const DetectorElementBase& detelement);
+                  const SurfacePlacementBase& placement);
 
   /// Copy constructor
   ///
@@ -87,9 +91,12 @@ class CylinderSurface : public RegularSurface {
                   const Transform3& shift);
 
  public:
+  ~CylinderSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other is the source cylinder for the copy
+  /// @return Reference to this CylinderSurface after assignment
   CylinderSurface& operator=(const CylinderSurface& other);
 
   /// The binning position method - is overloaded for r-type binning
@@ -114,6 +121,7 @@ class CylinderSurface : public RegularSurface {
                                  const Vector3& direction) const final;
 
   /// Return the surface type
+  /// @return Surface type identifier
   SurfaceType type() const override;
 
   /// Return method for surface normal information
@@ -153,7 +161,16 @@ class CylinderSurface : public RegularSurface {
   virtual Vector3 rotSymmetryAxis(const GeometryContext& gctx) const;
 
   /// This method returns the CylinderBounds by reference
+  /// @return Reference to the cylinder bounds
   const CylinderBounds& bounds() const final;
+
+  /// This method returns the shared_ptr to the CylinderBounds
+  /// @return Shared pointer to the cylinder bounds
+  const std::shared_ptr<const CylinderBounds>& boundsPtr() const;
+
+  /// Overwrite the existing surface bounds with new ones
+  /// @param newBounds: Pointer to the new bounds
+  void assignSurfaceBounds(std::shared_ptr<const CylinderBounds> newBounds);
 
   /// Local to global transformation
   ///
@@ -187,7 +204,7 @@ class CylinderSurface : public RegularSurface {
   /// If possible returns both solutions for the cylinder
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
-  SurfaceMultiIntersection intersect(
+  MultiIntersection3D intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
@@ -205,6 +222,7 @@ class CylinderSurface : public RegularSurface {
                         const Vector3& direction) const final;
 
   /// Return method for properly formatted output string
+  /// @return String representation of the class name
   std::string name() const override;
 
   /// Return a Polyhedron for a cylinder
@@ -246,7 +264,7 @@ class CylinderSurface : public RegularSurface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+  Matrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
   /// Merge two cylinder surfaces into a single one.
@@ -264,10 +282,25 @@ class CylinderSurface : public RegularSurface {
       const CylinderSurface& other, AxisDirection direction,
       bool externalRotation, const Logger& logger = getDummyLogger()) const;
 
+  /// @copydoc Surface::assignSurfaceMaterial
+  void assignSurfaceMaterial(
+      std::shared_ptr<const ISurfaceMaterial> material) override;
+
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
 
+  /// @copydoc Surface::localAxes
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisRPhi, AxisDirection::AxisZ};
+  }
+
+  /// @copydoc Surface::transformSurfaceLocalToMaterialLocal
+  Vector2 transformSurfaceLocalToMaterialLocal(
+      const Vector2& surfaceLocal) const override;
+
  private:
+  bool m_scaleMaterialAxis = false;
+
   /// Implementation of the intersection solver
   ///
   ///  <b>mathematical motivation:</b>

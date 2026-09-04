@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
+from typing import Optional
 
 import acts
 import acts.examples
+from acts.examples.root import (
+    RootTrackStatesWriter,
+    RootTrackSummaryWriter,
+    RootTrackParameterPerformanceWriter,
+)
 
 from truth_tracking_kalman import runTruthTrackingKalman
 
@@ -15,22 +21,41 @@ def runRefittingGsf(
     field: acts.MagneticFieldProvider,
     digiConfigFile: Path,
     outputDir: Path,
+    reverseFilteringCovarianceScaling=100.0,
+    inputParticlePath: Optional[Path] = None,
+    inputSimHitsPath: Optional[Path] = None,
+    decorators=[],
     s: acts.examples.Sequencer = None,
 ):
+    outputDir = Path(outputDir)
+
+    # Run Kalman tracking to produce initial tracks for refitting
     s = runTruthTrackingKalman(
         trackingGeometry,
         field,
         digiConfigFile=digiConfigFile,
         outputDir=outputDir,
-        reverseFilteringMomThreshold=0.0,
-        reverseFilteringCovarianceScaling=1.0,
+        inputParticlePath=inputParticlePath,
+        inputHitsPath=inputSimHitsPath,
+        decorators=decorators,
+        generatedParticleType=acts.PdgParticle.eElectron,
+        reverseFilteringMomThreshold=0 * u.GeV,  # use direct smoothing
+        reverseFilteringCovarianceScaling=reverseFilteringCovarianceScaling,
         s=s,
     )
 
     # NOTE we specify clampToRange as True to silence warnings in the test about
     # queries to the loss distribution outside the specified range, since no dedicated
     # approximation for the ODD is done yet.
-    bha = acts.examples.AtlasBetheHeitlerApprox.makeDefault(clampToRange=True)
+    bha = acts.examples.loadBetheHeitlerApproxFromJson(
+        str(
+            Path(__file__).resolve().parent.parent.parent.parent
+            / "Examples/Configs/betheHeitler_geantSim_cdf_nC6_O5.json"
+        ),
+        clamp_to_range=True,
+        no_change_limit=0.0001,
+        single_gaussian_limit=0.002,
+    )
 
     gsfOptions = {
         "betheHeitlerApprox": bha,
@@ -38,14 +63,14 @@ def runRefittingGsf(
         "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
         "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
         "weightCutoff": 1.0e-4,
-        "reverseFilteringCovarianceScaling": 100.0,
+        "reverseFilteringCovarianceScaling": reverseFilteringCovarianceScaling,
         "level": acts.logging.INFO,
     }
 
     s.addAlgorithm(
         acts.examples.RefittingAlgorithm(
             acts.logging.INFO,
-            inputTracks="kf_tracks",
+            inputTracks="tracks",
             outputTracks="gsf_refit_tracks",
             initialVarInflation=6 * [100.0],
             fit=acts.examples.makeGsfFitterFunction(
@@ -66,7 +91,7 @@ def runRefittingGsf(
     )
 
     s.addWriter(
-        acts.examples.RootTrackStatesWriter(
+        RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="gsf_refit_tracks",
             inputParticles="particles_selected",
@@ -78,7 +103,7 @@ def runRefittingGsf(
     )
 
     s.addWriter(
-        acts.examples.RootTrackSummaryWriter(
+        RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="gsf_refit_tracks",
             inputParticles="particles_selected",
@@ -88,7 +113,7 @@ def runRefittingGsf(
     )
 
     s.addWriter(
-        acts.examples.TrackFitterPerformanceWriter(
+        RootTrackParameterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="gsf_refit_tracks",
             inputParticles="particles_selected",

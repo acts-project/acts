@@ -82,9 +82,12 @@ class ConeSurface : public RegularSurface {
               const Transform3& shift);
 
  public:
+  ~ConeSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other is the source surface for the assignment
+  /// @return Reference to this ConeSurface after assignment
   ConeSurface& operator=(const ConeSurface& other);
 
   /// The binning position method - is overloaded for r-type binning
@@ -97,6 +100,7 @@ class ConeSurface : public RegularSurface {
                             AxisDirection aDir) const final;
 
   /// Return the surface type
+  /// @return Surface type identifier
   SurfaceType type() const override;
 
   /// Return the measurement frame - this is needed for alignment, in particular
@@ -133,11 +137,18 @@ class ConeSurface : public RegularSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   ///
-  // @return This returns the local z axis
+  /// @return The local z axis vector
   virtual Vector3 rotSymmetryAxis(const GeometryContext& gctx) const;
 
   /// This method returns the ConeBounds by reference
+  /// @return Reference to the cone bounds
   const ConeBounds& bounds() const final;
+  /// This method returns the shared_ptr to the ConeBounds
+  /// @return Shared pointer to the cone bounds
+  const std::shared_ptr<const ConeBounds>& boundsPtr() const;
+  /// Overwrite the existing surface bounds with new ones
+  /// @param newBounds: Pointer to the new bounds
+  void assignSurfaceBounds(std::shared_ptr<const ConeBounds> newBounds);
 
   /// Local to global transformation
   ///
@@ -175,8 +186,8 @@ class ConeSurface : public RegularSurface {
   ///
   /// If possible returns both solutions for the cylinder
   ///
-  /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
-  SurfaceMultiIntersection intersect(
+  /// @return @c MultiIntersection3D object (contains intersection & surface)
+  MultiIntersection3D intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
@@ -207,6 +218,7 @@ class ConeSurface : public RegularSurface {
       unsigned int quarterSegments = 2u) const override;
 
   /// Return properly formatted class name for screen output
+  /// @return String representation of the class name
   std::string name() const override;
 
   /// Calculate the derivative of path length at the geometry constraint or
@@ -231,11 +243,16 @@ class ConeSurface : public RegularSurface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+  Matrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
  protected:
   std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
+
+  /// @copydoc Surface::localAxes
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisRPhi, AxisDirection::AxisZ};
+  }
 
  private:
   /// Implementation of the intersection solver

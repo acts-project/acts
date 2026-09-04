@@ -6,16 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/detail/GeoPolygonConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoPolygonConverter.hpp"
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
 #include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
 
 #include <algorithm>
 
@@ -25,14 +25,16 @@
 #include <GeoModelKernel/GeoShape.h>
 #include <GeoModelKernel/Units.h>
 
-Acts::Result<Acts::GeoModelSensitiveSurface>
-Acts::detail::GeoPolygonConverter::operator()(
+using namespace Acts;
+
+Result<ActsPlugins::GeoModelSensitiveSurface>
+ActsPlugins::detail::GeoPolygonConverter::operator()(
     const PVConstLink& geoPV, const GeoSimplePolygonBrep& polygon,
     const Transform3& absTransform, SurfaceBoundFactory& boundFactory,
     bool sensitive) const {
   /// auto-calculate the unit length conversion
   static constexpr double unitLength =
-      Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
+      UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
   // Create the surface transform
   Transform3 transform = Transform3::Identity();
@@ -51,7 +53,7 @@ Acts::detail::GeoPolygonConverter::operator()(
     double hlxnegy = std::abs(vertices[0][0] - vertices[1][0]) / 2;
     double hlxposy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
     double hly = std::abs(vertices[0][1] - vertices[3][1]) / 2;
-    std::vector<double> halfLengths = {hlxnegy, hlxposy, hly};
+    std::array<double, 3> halfLengths = {hlxnegy, hlxposy, hly};
 
     // Create the surface
     Vector3 colX = rotation.col(0);
@@ -65,8 +67,8 @@ Acts::detail::GeoPolygonConverter::operator()(
     double halfXnegY = unitLength * halfLengths[0];
     double halfXposY = unitLength * halfLengths[1];
     double halfY = unitLength * halfLengths[2];
-    auto trapBounds = boundFactory.makeBounds<Acts::TrapezoidBounds>(
-        halfXnegY, halfXposY, halfY);
+    auto trapBounds =
+        boundFactory.makeBounds<TrapezoidBounds>(halfXnegY, halfXposY, halfY);
     if (!sensitive) {
       auto surface = Surface::makeShared<PlaneSurface>(transform, trapBounds);
       return std::make_tuple(nullptr, surface);
@@ -83,7 +85,7 @@ Acts::detail::GeoPolygonConverter::operator()(
     double hlxzeroy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
     double hlxposy = std::abs(vertices[4][0] - vertices[5][0]) / 2;
     double hly = std::abs(vertices[0][1] - vertices[4][1]) / 2;
-    std::vector<double> halfLengths = {hlxnegy, hlxzeroy, hlxposy, hly, hly};
+    std::array<double, 5> halfLengths = {hlxnegy, hlxzeroy, hlxposy, hly, hly};
 
     // Create the surface
 
@@ -102,7 +104,7 @@ Acts::detail::GeoPolygonConverter::operator()(
     double halfYnegX = unitLength * halfLengths[3];
     double halfYposX = unitLength * halfLengths[4];
 
-    auto diamondBounds = boundFactory.makeBounds<Acts::DiamondBounds>(
+    auto diamondBounds = boundFactory.makeBounds<DiamondBounds>(
         halfXnegY, halfXzeroY, halfXposY, halfYnegX, halfYposX);
     if (!sensitive) {
       auto surface =

@@ -30,10 +30,12 @@ from acts.examples.reconstruction import (
 )
 
 from physmon_common import makeSetup
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
 setup = makeSetup()
+odd_dir = getOpenDataDetectorDirectory()
 
 
 with tempfile.TemporaryDirectory() as temp:
@@ -155,8 +157,7 @@ with tempfile.TemporaryDirectory() as temp:
         ),
         tracks="ckf_tracks",
         outputDirRoot=tp,
-        onnxModelFile=Path(__file__).resolve().parent.parent.parent.parent
-        / "thirdparty/OpenDataDetector/data/duplicateClassifier.onnx",
+        onnxModelFile=odd_dir / "data/duplicateClassifier.onnx",
     )
 
     addAmbiguityResolution(
@@ -184,8 +185,10 @@ with tempfile.TemporaryDirectory() as temp:
         tracks="tracks",
         trackParameters="trackParameters",
         outputProtoVertices="amvf_gauss_notime_protovertices",
-        outputVertices="amvf_gauss_notime_fittedVertices",
-        seeder=acts.VertexSeedFinder.GaussianSeeder,
+        outputVertices="amvf_gauss_notime_vertices",
+        outputVertexTruthMatching="amvf_gauss_notime_vertex_truth_matching",
+        outputTruthVertexMatching="amvf_gauss_notime_truth_vertex_matching",
+        seeder=acts.examples.VertexSeedFinder.GaussianSeeder,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_gauss_notime",
         writeTrackInfo=True,
@@ -197,8 +200,10 @@ with tempfile.TemporaryDirectory() as temp:
         tracks="tracks",
         trackParameters="trackParameters",
         outputProtoVertices="amvf_grid_time_protovertices",
-        outputVertices="amvf_grid_time_fittedVertices",
-        seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
+        outputVertices="amvf_grid_time_vertices",
+        outputVertexTruthMatching="amvf_grid_time_vertex_truth_matching",
+        outputTruthVertexMatching="amvf_grid_time_truth_vertex_matching",
+        seeder=acts.examples.VertexSeedFinder.AdaptiveGridSeeder,
         useTime=True,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_grid_time",

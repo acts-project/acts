@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <cstdint>
@@ -20,7 +20,6 @@ class TFile;
 class TTree;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out seeds as a flat TTree.
 ///
@@ -30,7 +29,7 @@ struct AlgorithmContext;
 /// Safe to use from multiple writer threads. To avoid thread-safety issues,
 /// the writer must be the sole owner of the underlying file. Thus, the
 /// output file pointer can not be given from the outside.
-class RootSeedWriter final : public WriterT<SimSeedContainer> {
+class RootSeedWriter final : public WriterT<SeedContainer> {
  public:
   struct Config {
     /// Input particle collection to write.
@@ -66,7 +65,7 @@ class RootSeedWriter final : public WriterT<SimSeedContainer> {
   /// @param[in] ctx is the algorithm context
   /// @param[in] seeds are the seeds to be written
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimSeedContainer& seeds) final;
+                     const SeedContainer& seeds) final;
 
  private:
   Config m_cfg;

@@ -9,6 +9,7 @@
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 
 #include "Acts/Propagator/PropagatorOptions.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
@@ -29,7 +30,7 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection =
+  Intersection3D intersection =
       perigeeSurface
           .intersect(gctx, params.position(gctx), params.direction(),
                      BoundaryTolerance::Infinite())
@@ -63,7 +64,7 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
     pca[ePos2] = pos[ePos2];
     pca[eTime] = endParams.time();
   }
-  BoundSquareMatrix parCovarianceAtPCA = endParams.covariance().value();
+  BoundMatrix parCovarianceAtPCA = endParams.covariance().value();
 
   // Extracting Perigee parameters and compute functions of them for later
   // usage
@@ -103,8 +104,8 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
   double Bz = (*field)[eZ];
 
   // Complete Jacobian (consists of positionJacobian and momentumJacobian)
-  ActsMatrix<eBoundSize, eLinSize> completeJacobian =
-      ActsMatrix<eBoundSize, eLinSize>::Zero(eBoundSize, eLinSize);
+  Matrix<eBoundSize, eLinSize> completeJacobian =
+      Matrix<eBoundSize, eLinSize>::Zero(eBoundSize, eLinSize);
 
   // The particle moves on a straight trajectory if its charge is 0 or if there
   // is no B field. Conversely, if it has a charge and the B field is constant,
@@ -195,9 +196,9 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
   }
 
   // Extracting positionJacobian and momentumJacobian from the complete Jacobian
-  ActsMatrix<eBoundSize, eLinPosSize> positionJacobian =
+  Matrix<eBoundSize, eLinPosSize> positionJacobian =
       completeJacobian.block<eBoundSize, eLinPosSize>(0, 0);
-  ActsMatrix<eBoundSize, eLinMomSize> momentumJacobian =
+  Matrix<eBoundSize, eLinMomSize> momentumJacobian =
       completeJacobian.block<eBoundSize, eLinMomSize>(0, eLinPosSize);
 
   // const term in Taylor expansion from Eq. 5.38 in Ref. (1)
@@ -205,7 +206,7 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
       paramsAtPCA - positionJacobian * pca - momentumJacobian * momentumAtPCA;
 
   // The parameter weight
-  BoundSquareMatrix weightAtPCA = parCovarianceAtPCA.inverse();
+  BoundMatrix weightAtPCA = parCovarianceAtPCA.inverse();
 
   Vector4 linPoint;
   linPoint.head<3>() = perigeeSurface.center(gctx);

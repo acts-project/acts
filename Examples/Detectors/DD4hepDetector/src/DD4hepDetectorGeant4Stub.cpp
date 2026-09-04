@@ -11,7 +11,7 @@
 namespace ActsExamples {
 
 std::unique_ptr<G4VUserDetectorConstruction>
-DD4hepDetector::buildGeant4DetectorConstruction(
+DD4hepDetectorBase::buildGeant4DetectorConstruction(
     const Geant4ConstructionOptions& /*options*/) const {
   throw std::runtime_error("Geant4 is not enabled");
 }

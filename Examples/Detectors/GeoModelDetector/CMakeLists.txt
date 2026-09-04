@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesDetectorGeoModel
-    SHARED
     src/GeoModelDetector.cpp
     src/AlignedGeoModelDetectorElement.cpp
     src/GeoModelMuonMockupBuilder.cpp

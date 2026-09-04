@@ -8,70 +8,145 @@
 
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Seeding/TrackParamsEstimationError.hpp"
+#include "Acts/Seeding/detail/CircleFit.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
+#include <cassert>
+#include <cmath>
+#include <limits>
 #include <numbers>
+#include <optional>
+#include <span>
+#include <vector>
 
-Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
-                                                   const Vector3& sp1,
-                                                   const Vector3& sp2,
-                                                   const Vector3& bField) {
+#include <Eigen/Eigenvalues>
+
+namespace Acts {
+
+namespace {
+
+Transform3 estimationFrameLocalToGlobal(const Vector3& sp0, const Vector3& sp1,
+                                        const Vector3& bField) {
   // Define a new coordinate frame with its origin at the bottom space point, z
   // axis long the magnetic field direction and y axis perpendicular to vector
   // from the bottom to middle space point. Hence, the projection of the middle
   // space point on the transverse plane will be located at the x axis of the
   // new frame.
-  Vector3 relVec = sp1 - sp0;
-  Vector3 newZAxis = bField.normalized();
-  Vector3 newYAxis = newZAxis.cross(relVec).normalized();
-  Vector3 newXAxis = newYAxis.cross(newZAxis);
+  //
+  // A vanishing field falls back to global z, a reference along the field to
+  // any orthogonal y.
+  const Vector3 relVec = sp1 - sp0;
+  const double bMag = bField.norm();
+  const Vector3 newZAxis = (bMag > std::numeric_limits<double>::epsilon())
+                               ? Vector3(bField / bMag)
+                               : Vector3(Vector3::UnitZ());
+  Vector3 newYAxis = newZAxis.cross(relVec);
+  if (newYAxis.norm() < std::numeric_limits<double>::epsilon()) {
+    newYAxis = newZAxis.unitOrthogonal();
+  }
+  newYAxis.normalize();
+  const Vector3 newXAxis = newYAxis.cross(newZAxis);
   RotationMatrix3 rotation;
   rotation.col(0) = newXAxis;
   rotation.col(1) = newYAxis;
   rotation.col(2) = newZAxis;
   // The center of the new frame is at the bottom space point
-  Translation3 trans(sp0);
+  const Translation3 translation(sp0);
   // The transform which constructs the new frame
-  Transform3 transform(trans * rotation);
+  return translation * rotation;
+}
 
-  // The coordinate of the middle and top space point in the new frame
-  Vector3 local1 = transform.inverse() * sp1;
-  Vector3 local2 = transform.inverse() * sp2;
+double computeDzDs(double A, double B, const Vector3& local0,
+                   const Vector3& local2) {
+  const auto computeLocalPhi = [&](const Vector2& local) -> double {
+    // Scaled radius vector from circle center
+    const Vector2 r = 2 * B * local - Vector2(-A, 1);
 
-  // In the new frame the bottom sp is at the origin, while the middle
-  // sp in along the x axis. As such, the x-coordinate of the circle is
-  // at: x-middle / 2.
-  // The y coordinate can be found by using the straight line passing
-  // between the mid point between the middle and top sp and perpendicular to
-  // the line connecting them
-  Vector2 circleCenter;
-  circleCenter(0) = 0.5 * local1(0);
+    return std::atan2(r.y(), r.x());
+  };
 
-  double deltaX21 = local2(0) - local1(0);
-  double sumX21 = local2(0) + local1(0);
-  // straight line connecting the two points
-  // y = a * x + c (we don't care about c right now)
-  // we simply need the slope
-  // we compute 1./a since this is what we need for the following computation
-  double ia = deltaX21 / local2(1);
-  // Perpendicular line is then y = -1/a *x + b
-  // we can evaluate b given we know a already by imposing
-  // the line passes through P = (0.5 * (x2 + x1), 0.5 * y2)
-  double b = 0.5 * (local2(1) + ia * sumX21);
-  circleCenter(1) = -ia * circleCenter(0) + b;
-  // Radius is a signed distance between circleCenter and first sp, which is at
-  // (0, 0) in the new frame. Sign depends on the slope a (positive vs negative)
-  int sign = ia > 0 ? -1 : 1;
-  const double R = circleCenter.norm();
-  double invTanTheta =
-      local2.z() / (2 * R * std::asin(local2.head<2>().norm() / (2 * R)));
-  // The momentum direction in the new frame (the center of the circle has the
-  // coordinate (-1.*A/(2*B), 1./(2*B)))
-  double A = -circleCenter(0) / circleCenter(1);
-  Vector3 transDirection(1., A, fastHypot(1, A) * invTanTheta);
-  // Transform it back to the original frame
-  Vector3 direction = rotation * transDirection.normalized();
+  const double localPhi0 = computeLocalPhi(local0.head<2>());
+  const double localPhi2 = computeLocalPhi(local2.head<2>());
+
+  const double dZ = local2.z() - local0.z();
+  const double dPhi = localPhi2 - localPhi0;
+
+  // Apply the sinc correction to account for the fact that the particle do not
+  // follow a straight line in the R-Z plane. This is especially important for
+  // high delta phi and/or strongly bent tracks.
+  const double sincCorrection = sinc(dPhi / 2);
+
+  const double dzds =
+      sincCorrection * dZ / (local2.head<2>() - local0.head<2>()).norm();
+
+  return dzds;
+}
+
+struct ConformalMappingResult {
+  Vector2 uv1;
+  Vector2 uv2;
+  Vector2 duv;
+  double A;
+  double B;
+  double bOverS;
+  double dzds;
+};
+
+ConformalMappingResult performConformalMapping(const Vector3& local1,
+                                               const Vector3& local2) {
+  ConformalMappingResult r{};
+  r.uv1 = local1.head<2>() / local1.head<2>().squaredNorm();
+  r.uv2 = local2.head<2>() / local2.head<2>().squaredNorm();
+  r.duv = r.uv2 - r.uv1;
+  r.A = r.duv.y() / r.duv.x();
+  r.B = r.uv1.y() - r.A * r.uv1.x();
+  r.bOverS = (r.uv1.y() * r.uv2.x() - r.uv2.y() * r.uv1.x()) / r.duv.norm();
+  r.dzds = computeDzDs(r.A, r.B, local1, local2);
+  return r;
+}
+
+Vector3 computeLocalTangent(const ConformalMappingResult& cm,
+                            const Vector2& local) {
+  // Scaled radius vector from circle center
+  const Vector2 r = 2 * cm.B * local - Vector2(-cm.A, 1);
+
+  // Tangent perpendicular to radius
+  const Vector3 t(-r.y(), r.x(), r.norm() * cm.dzds);
+
+  return t.normalized();
+}
+
+}  // namespace
+
+}  // namespace Acts
+
+Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
+                                                   const Vector3& sp1,
+                                                   const Vector3& sp2,
+                                                   const Vector3& bField) {
+  return estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField);
+}
+
+Acts::FreeVector Acts::estimateTrackParamsFromSeed(
+    const Vector3& sp0, const double t0, const Vector3& sp1, const Vector3& sp2,
+    const Vector3& bField, Vector3* tangent0, Vector3* tangent1,
+    Vector3* tangent2) {
+  const Transform3 transform = estimationFrameLocalToGlobal(sp0, sp1, bField);
+
+  // Local coordinates
+  const Vector3 local0 = Vector3::Zero();
+  const Vector3 local1 = transform.inverse() * sp1;
+  const Vector3 local2 = transform.inverse() * sp2;
+
+  // Conformal mapping
+  const ConformalMappingResult cm = performConformalMapping(local1, local2);
+
+  // The tangent vector at the bottom space point
+  const Vector3 direction =
+      transform.linear() * computeLocalTangent(cm, local0.head<2>());
 
   // Initialize the free parameters vector
   FreeVector params = FreeVector::Zero();
@@ -84,11 +159,33 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
 
   // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
   // momentum on the transverse plane of the new frame)
-  double qOverPt = sign / (bField.norm() * R);
+  const double qOverPt = 2 * cm.bOverS / bField.norm();
   // The estimated q/p in [GeV/c]^-1
-  params[eFreeQOverP] = qOverPt / fastHypot(1., invTanTheta);
+  params[eFreeQOverP] = qOverPt / fastHypot(1, cm.dzds);
+
+  // The time parameter is set to the time of the bottom space point
+  params[eFreeTime] = t0;
+
+  if (tangent0 != nullptr) {
+    *tangent0 = direction;
+  }
+  if (tangent1 != nullptr) {
+    *tangent1 = transform.linear() * computeLocalTangent(cm, local1.head<2>());
+  }
+  if (tangent2 != nullptr) {
+    *tangent2 = transform.linear() * computeLocalTangent(cm, local2.head<2>());
+  }
 
   return params;
+}
+
+Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSeed(
+    const GeometryContext& gctx, const Surface& surface, const Vector3& sp0,
+    const double t0, const Vector3& sp1, const Vector3& sp2,
+    const Vector3& bField) {
+  const FreeVector freeParams =
+      estimateTrackParamsFromSeed(sp0, t0, sp1, sp2, bField);
+  return transformFreeToBoundParameters(freeParams, surface, gctx);
 }
 
 Acts::BoundMatrix Acts::estimateTrackParamCovariance(
@@ -97,7 +194,7 @@ Acts::BoundMatrix Acts::estimateTrackParamCovariance(
   assert((params[eBoundTheta] > 0 && params[eBoundTheta] < std::numbers::pi) &&
          "Theta must be in the range (0, pi)");
 
-  BoundSquareMatrix result = BoundSquareMatrix::Zero();
+  BoundMatrix result = BoundMatrix::Zero();
 
   for (std::size_t i = eBoundLoc0; i < eBoundSize; ++i) {
     double sigma = config.initialSigmas[i];
@@ -132,4 +229,159 @@ Acts::BoundMatrix Acts::estimateTrackParamCovariance(
   }
 
   return result;
+}
+
+Acts::Result<Acts::FreeVector> Acts::estimateTrackParamsFromSpacePoints(
+    std::span<const Vector3> spacePoints, const Vector3& bField, double t0,
+    std::size_t geometricRefineIterations, std::span<const double> weights,
+    std::size_t referenceIndex) {
+  if (spacePoints.size() < 3) {
+    return Result<FreeVector>::failure(
+        TrackParamsEstimationError::NotEnoughSpacePoints);
+  }
+  assert((weights.empty() || weights.size() == spacePoints.size()) &&
+         "weights must be empty or match the space points");
+  assert(referenceIndex < spacePoints.size() &&
+         "reference index must point into the space points");
+
+  const auto w = [&](std::size_t i) {
+    return weights.empty() ? 1 : weights[i];
+  };
+
+  const Vector3& reference = spacePoints[referenceIndex];
+
+  // Estimation frame: field along local +z, fixed by the first two points. It
+  // is anchored to the seed rather than to the reference point, so that the
+  // fitted helix does not depend on where the parameters are reported.
+  const Transform3 transform =
+      estimationFrameLocalToGlobal(spacePoints.front(), spacePoints[1], bField);
+  const Transform3 toLocal = transform.inverse();
+  std::vector<Vector3> local;
+  local.reserve(spacePoints.size());
+  for (const Vector3& sp : spacePoints) {
+    local.push_back(toLocal * sp);
+  }
+
+  FreeVector params = FreeVector::Zero();
+  params.segment<3>(eFreePos0) = reference;
+  params[eFreeTime] = t0;
+
+  const double bMag = bField.norm();
+
+  std::optional<detail::CircleFit> circle =
+      detail::fitCircleTaubin(local, weights);
+  if (circle.has_value() && geometricRefineIterations > 0) {
+    circle = detail::refineCircleGeometric(*circle, local,
+                                           geometricRefineIterations, weights);
+  }
+
+  if (!circle.has_value()) {
+    // Straight-line limit: the direction is the principal axis, q/p stays zero.
+    double sumW = 0;
+    Vector3 mean = Vector3::Zero();
+    for (std::size_t i = 0; i < local.size(); ++i) {
+      sumW += w(i);
+      mean += w(i) * local[i];
+    }
+    if (sumW <= 0) {
+      return Result<FreeVector>::failure(
+          TrackParamsEstimationError::DegenerateFit);
+    }
+    mean /= sumW;
+    SquareMatrix3 cov = SquareMatrix3::Zero();
+    for (std::size_t i = 0; i < local.size(); ++i) {
+      const Vector3 d = local[i] - mean;
+      cov += w(i) * d * d.transpose();
+    }
+    Eigen::SelfAdjointEigenSolver<SquareMatrix3> solver(cov);
+    // A non-positive largest eigenvalue means the points coincide.
+    if (solver.info() != Eigen::Success || (solver.eigenvalues()[2] <= 0)) {
+      return Result<FreeVector>::failure(
+          TrackParamsEstimationError::DegenerateFit);
+    }
+    Vector3 localDir = solver.eigenvectors().col(2);
+    if (localDir.dot(local.back() - local.front()) < 0) {
+      localDir = -localDir;
+    }
+    localDir.normalize();
+    params.segment<3>(eFreeDir0) = transform.linear() * localDir;
+    return Result<FreeVector>::success(params);
+  }
+
+  const Vector2 center = circle->center;
+  const double radius = circle->radius;
+
+  const Vector2 firstXy = local.front().head<2>();
+  const Vector2 refXy = local[referenceIndex].head<2>();
+
+  // Sense of travel around the circle, +1 for counterclockwise. Taken from the
+  // first two points so that it does not depend on the reference point, which
+  // may be the last one and so have no successor.
+  const Vector2 firstRadial = firstXy - center;
+  const Vector2 firstCcwTangent(-firstRadial.y(), firstRadial.x());
+  const double rotSense =
+      (firstCcwTangent.dot(local[1].head<2>() - firstXy) >= 0) ? 1 : -1;
+
+  // Tangent at the reference: its radial vector rotated by +90 degrees,
+  // oriented along travel.
+  const Vector2 radial = refXy - center;
+  const Vector2 tangent =
+      (rotSense * Vector2(-radial.y(), radial.x())).normalized();
+
+  // q v x B points to the center; with B along local +z, v x B = (v_y, -v_x).
+  const double toCenterProj = tangent.y() * (center.x() - refXy.x()) -
+                              tangent.x() * (center.y() - refXy.y());
+  const double qSign = (toCenterProj >= 0) ? 1 : -1;
+
+  // z is linear in the arc length s = radius * turning angle. Consecutive
+  // points are assumed less than half a turn apart. The slope is invariant
+  // under a shift of s, so s is measured from the first point rather than from
+  // the reference, which keeps the unwrapping sequential for any reference.
+  const double phiFirst =
+      std::atan2(firstXy.y() - center.y(), firstXy.x() - center.x());
+  double phiPrev = phiFirst;
+  double sumW = 0;
+  double sumS = 0;
+  double sumZ = 0;
+  double sumSS = 0;
+  double sumSZ = 0;
+  for (std::size_t i = 0; i < local.size(); ++i) {
+    const Vector3& p = local[i];
+    double phi = std::atan2(p.y() - center.y(), p.x() - center.x());
+    while (phi - phiPrev > std::numbers::pi) {
+      phi -= 2 * std::numbers::pi;
+    }
+    while (phi - phiPrev < -std::numbers::pi) {
+      phi += 2 * std::numbers::pi;
+    }
+    phiPrev = phi;
+    const double wi = w(i);
+    const double s = rotSense * radius * (phi - phiFirst);
+    const double z = p.z();
+    sumW += wi;
+    sumS += wi * s;
+    sumZ += wi * z;
+    sumSS += wi * s * s;
+    sumSZ += wi * s * z;
+  }
+  const double denom = sumW * sumSS - sumS * sumS;
+  const double lambda =
+      (std::abs(denom) > std::numeric_limits<double>::epsilon())
+          ? (sumW * sumSZ - sumS * sumZ) / denom
+          : 0;
+
+  // s is the transverse arc length, so the local direction is (t_x, t_y,
+  // lambda).
+  Vector3 localDir(tangent.x(), tangent.y(), lambda);
+  localDir.normalize();
+  params.segment<3>(eFreeDir0) = transform.linear() * localDir;
+
+  // p_T = |B| * R, so q/p_T = qSign / (R * |B|). Without a field q/p stays
+  // zero.
+  if (bMag > std::numeric_limits<double>::epsilon()) {
+    const double qOverPt = qSign / (radius * bMag);
+    params[eFreeQOverP] = qOverPt / fastHypot(1, lambda);
+  }
+
+  return Result<FreeVector>::success(params);
 }

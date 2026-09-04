@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-
-#include <ostream>
+#include <iosfwd>
+#include <string>
+#include <vector>
 
 namespace Acts {
 
@@ -61,6 +61,18 @@ const std::string& axisDirectionName(AxisDirection aDir);
 /// @return the output stream
 std::ostream& operator<<(std::ostream& os, AxisDirection aDir);
 
+/// Get the name of a vector of binning values as a string
+/// @param manyDir is the vector of binning values
+/// @return the name of the binning value
+std::string axesDirectionName(const std::vector<AxisDirection>& manyDir);
+
+/// Output stream operator for a vector of @c AxisDirection
+/// @param os is the output stream
+/// @param manyDir is the vector of axis directions
+/// @return the output stream
+std::ostream& operator<<(std::ostream& os,
+                         const std::vector<AxisDirection>& manyDir);
+
 /// Enum which determines how the axis handle its outer boundaries
 /// possible values values
 enum class AxisBoundaryType {
@@ -81,25 +93,18 @@ template <AxisBoundaryType bdt>
 struct AxisBoundaryTypeTag {};
 
 /// Convenience typedefs for AxisBoundaryTypeTag
+/// Constant for open boundary type axis
 constexpr auto AxisOpen = AxisBoundaryTypeTag<AxisBoundaryType::Open>{};
+/// Constant for bound boundary type axis
 constexpr auto AxisBound = AxisBoundaryTypeTag<AxisBoundaryType::Bound>{};
+/// Constant for closed boundary type axis
 constexpr auto AxisClosed = AxisBoundaryTypeTag<AxisBoundaryType::Closed>{};
 
-inline std::ostream& operator<<(std::ostream& os, AxisBoundaryType bdt) {
-  using enum AxisBoundaryType;
-  switch (bdt) {
-    case Open:
-      os << "Open";
-      break;
-    case Bound:
-      os << "Bound";
-      break;
-    case Closed:
-      os << "Closed";
-      break;
-  }
-  return os;
-}
+/// Stream operator for AxisBoundaryType
+/// @param os Output stream
+/// @param bdt AxisBoundaryType to output
+/// @return Reference to output stream
+std::ostream& operator<<(std::ostream& os, AxisBoundaryType bdt);
 
 /// Enum which determines the binning type of the axis
 enum class AxisType {
@@ -109,17 +114,11 @@ enum class AxisType {
   Variable,
 };
 
-inline std::ostream& operator<<(std::ostream& os, AxisType type) {
-  switch (type) {
-    case AxisType::Equidistant:
-      os << "Equidistant";
-      break;
-    case AxisType::Variable:
-      os << "Variable";
-      break;
-  }
-  return os;
-}
+/// Stream operator for AxisType
+/// @param os Output stream
+/// @param type AxisType to output
+/// @return Reference to output stream
+std::ostream& operator<<(std::ostream& os, AxisType type);
 
 /// @brief calculate bin indices from a given binning structure
 ///
@@ -135,18 +134,30 @@ inline std::ostream& operator<<(std::ostream& os, AxisType type) {
 template <AxisType type, AxisBoundaryType bdt = AxisBoundaryType::Open>
 class Axis;
 
-Axis(double min, double max,
-     std::size_t bins) -> Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
+/// Deduction guide for equidistant axis with open boundaries
+/// @param min Minimum value
+/// @param max Maximum value
+/// @param bins Number of bins
+Axis(double min, double max, std::size_t bins)
+    -> Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
 
+/// Deduction guide for equidistant axis with specified boundary type
+/// @param min Minimum value
+/// @param max Maximum value
+/// @param bins Number of bins
 template <AxisBoundaryType bdt>
-Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, double min, double max,
-     std::size_t bins) -> Axis<AxisType::Equidistant, bdt>;
+Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, double min, double max, std::size_t bins)
+    -> Axis<AxisType::Equidistant, bdt>;
 
+/// Deduction guide for variable axis with open boundaries
+/// @param bins Vector of bin edges
 Axis(std::vector<double> bins)
     -> Axis<AxisType::Variable, AxisBoundaryType::Open>;
 
+/// Deduction guide for variable axis with specified boundary type
+/// @param bins Vector of bin edges
 template <AxisBoundaryType bdt>
-Axis(AxisBoundaryTypeTag<bdt> /*bdt*/,
-     std::vector<double> bins) -> Axis<AxisType::Variable, bdt>;
+Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, std::vector<double> bins)
+    -> Axis<AxisType::Variable, bdt>;
 
 }  // namespace Acts

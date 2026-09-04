@@ -27,12 +27,15 @@
 #include <utility>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 /// @brief Unit test for a three layer detector parameters
 /// Testing the Tool chain in the geometry building process
@@ -120,4 +123,7 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
 
   BOOST_CHECK(tGeometry != nullptr);
 }
-}  // namespace Acts::Test
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

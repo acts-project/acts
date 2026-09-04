@@ -4,24 +4,39 @@ import argparse
 
 import acts
 
-from acts.examples import CsvMuonSpacePointReader, CsvMuonSegmentReader, MuonHoughSeeder
-
-# from acts.examples.reconstruction import (
-#     addSeeding,
-#     addStandardSeeding,
-#     SeedingAlgorithm,
-# )
-
-# from acts.examples.itk import itkSeedingAlgConfig, InputSpacePointsType
+from acts.examples import (
+    CsvMuonSpacePointReader,
+    CsvMuonSegmentReader,
+    MuonHoughSeeder,
+    RootMuonSpacePointReader,
+)
 
 u = acts.UnitConstants
 rnd = acts.examples.RandomNumbers(seed=42)
 
 
-def runHoughFromCsv(inDir):
+def runHoughFromRoot(inFile: str, nEvents: int):
+    s = acts.examples.Sequencer(
+        events=nEvents, numThreads=1, logLevel=acts.logging.VERBOSE
+    )
+
+    # Read input space points from input csv files
+    evReader = RootMuonSpacePointReader(
+        filePath=inFile,
+        outputSpacePoints="MuonSpacePoints",
+        level=acts.logging.VERBOSE,
+    )
+    s.addReader(evReader)
+
+    s.run()
+
+
+def runHoughFromCsv(inDir: str, nEvents: int, etaOnly: bool):
     # create temporary file with pixel SPs and run the seeding
 
-    s = acts.examples.Sequencer(events=8, numThreads=1, logLevel=acts.logging.VERBOSE)
+    s = acts.examples.Sequencer(
+        events=nEvents, numThreads=1, logLevel=acts.logging.VERBOSE
+    )
 
     # Read input space points from input csv files
     evReader = CsvMuonSpacePointReader(
@@ -46,6 +61,7 @@ def runHoughFromCsv(inDir):
         inSpacePoints=evReader.config.outputSpacePoints,
         inTruthSegments=truthReader.config.outputSegments,
         outHoughMax="MuonHoughSeeds",
+        extendWithPhi=not etaOnly,
         level=acts.logging.VERBOSE,
     )
 
@@ -55,13 +71,27 @@ def runHoughFromCsv(inDir):
 
 if "__main__" == __name__:
     p = argparse.ArgumentParser(
-        description="Example script to run ITk seed finding based on CSV spacepoints",
+        description="Example script to run ITk seed finding based on CSV space points",
     )
     p.add_argument(
-        "indir",
-        help="Input directory containing the ITk standalone geometry. Get in touch if you don't have this.",
+        "--input",
+        help="Path to the script's input. By default it's assumed that a ROOT n-tuple is parsed. Otherwise, it's also possible to parse a CSV directory",
+    )
+    p.add_argument(
+        "--isCSV",
+        default=False,
+        action="store_true",
+        help="Flag toggling that the input is a CSV directory",
+    )
+    p.add_argument("--nEvents", default=100, help="Number of events to run", type=int)
+    p.add_argument(
+        "--eta-only",
+        action="store_true",
+        help="return Eta Hough maxima without applying the phi extension",
     )
 
     args = p.parse_args()
-
-    runHoughFromCsv(args.indir)
+    if args.isCSV:
+        runHoughFromCsv(inDir=args.input, nEvents=args.nEvents, etaOnly=args.eta_only)
+    else:
+        runHoughFromRoot(args.input, nEvents=args.nEvents)

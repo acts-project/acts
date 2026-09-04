@@ -9,6 +9,9 @@
 #include "ActsExamples/Io/HepMC3/HepMC3InputConverter.hpp"
 
 #include "Acts/Utilities/ScopedTimer.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+
+#include <unordered_set>
 
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/GenParticle.h>
@@ -31,9 +34,9 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-HepMC3InputConverter::HepMC3InputConverter(const Config& config,
-                                           Acts::Logging::Level level)
-    : IAlgorithm("HepMC3InputConverter", level), m_cfg(config) {
+HepMC3InputConverter::HepMC3InputConverter(
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("HepMC3InputConverter", std::move(logger)), m_cfg(config) {
   m_outputParticles.initialize(m_cfg.outputParticles);
   m_outputVertices.initialize(m_cfg.outputVertices);
   m_inputEvent.initialize(m_cfg.inputEvent);
@@ -78,7 +81,7 @@ std::string printListing(const auto& vertices, const auto& particles) {
   for (const auto& vertex : vertices) {
     ss << "Vtx:    " << vertex.vertexId() << " at "
        << vertex.position4.transpose() << "\n";
-    for (const auto& [idx, particleId] : enumerate(vertex.incoming)) {
+    for (const auto& [idx, particleId] : Acts::enumerate(vertex.incoming)) {
       const auto& particle = findParticle(particleId);
       if (idx == 0) {
         ss << " I:     ";
@@ -89,7 +92,7 @@ std::string printListing(const auto& vertices, const auto& particles) {
       ss << "\n";
     }
 
-    for (const auto& [idx, particleId] : enumerate(vertex.outgoing)) {
+    for (const auto& [idx, particleId] : Acts::enumerate(vertex.outgoing)) {
       const auto& particle = findParticle(particleId);
       if (idx == 0) {
         ss << " O:     ";
@@ -104,6 +107,70 @@ std::string printListing(const auto& vertices, const auto& particles) {
   return ss.str();
 };
 }  // namespace
+
+ActsExamples::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
+    const std::shared_ptr<const HepMC3::GenParticle>& particleToCheck) const {
+  std::vector<std::shared_ptr<const HepMC3::GenParticle>> st;
+  std::unordered_set<int> visited;
+  st.push_back(particleToCheck);
+
+  bool isFromCharm{false};
+  while (!st.empty()) {
+    const std::shared_ptr<const HepMC3::GenParticle> part = st.back();
+    st.pop_back();
+
+    if (!part) {
+      continue;
+    }
+
+    if (visited.count(part->id()) != 0u) {
+      continue;
+    }
+    visited.insert(part->id());
+
+    int pdgCode = std::abs(part->pid());
+    auto hadType = Acts::ParticleIdHelper::hadronType(
+        static_cast<Acts::PdgParticle>(pdgCode));
+
+    // --- beauty PDG IDs ---
+    if (hadType == Acts::HadronType::BottomMeson ||
+        hadType == Acts::HadronType::BottomBaryon ||
+        hadType == Acts::HadronType::BBbarMeson ||
+        (m_cfg.searchUpToHeavyFlavourQuark &&
+         static_cast<ActsExamples::HeavyFlavourOrigin>(pdgCode) ==
+             ActsExamples::HeavyFlavourOrigin::Bottom)) {
+      return ActsExamples::HeavyFlavourOrigin::Bottom;
+    }
+
+    // --- charm PDG IDs ---
+    if (hadType == Acts::HadronType::CharmedMeson ||
+        hadType == Acts::HadronType::CharmedBaryon ||
+        hadType == Acts::HadronType::CCbarMeson ||
+        (m_cfg.searchUpToHeavyFlavourQuark &&
+         static_cast<ActsExamples::HeavyFlavourOrigin>(pdgCode) ==
+             ActsExamples::HeavyFlavourOrigin::Charm)) {
+      // we do not return directly because
+      // B -> D -> X should be tagged as from beauty and not charm
+      isFromCharm = true;
+    }
+
+    // go to parents
+    const auto& vtx = part->production_vertex();
+    if (!vtx) {
+      continue;
+    }
+
+    for (const auto& parent : vtx->particles_in()) {
+      st.push_back(parent);
+    }
+  }
+
+  if (isFromCharm) {
+    return ActsExamples::HeavyFlavourOrigin::Charm;
+  }
+
+  return ActsExamples::HeavyFlavourOrigin::None;
+}
 
 void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
                                         SimVertex& vertex,
@@ -140,7 +207,7 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
         SimVertex secondaryVertex;
         nSecondaryVertices += 1;
         secondaryVertex.id =
-            SimVertexBarcode{vertex.id}.setVertexSecondary(nSecondaryVertices);
+            SimVertexBarcode{vertex.id}.withVertexSecondary(nSecondaryVertices);
         secondaryVertex.position4 = convertPosition(endVertex.position());
 
         handleVertex(endVertex, secondaryVertex, vertices, particles,
@@ -158,11 +225,12 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
                    << kUndecayedParticleStatus << ")");
       }
       // This particle is a final state particle
-      SimBarcode particleId{0u};
       nParticles += 1;
-      particleId.setVertexPrimary(vertex.vertexId().vertexPrimary())
-          .setVertexSecondary(vertex.vertexId().vertexSecondary())
-          .setParticle(nParticles);
+      SimBarcode particleId =
+          SimBarcode()
+              .withVertexPrimary(vertex.vertexId().vertexPrimary())
+              .withVertexSecondary(vertex.vertexId().vertexSecondary())
+              .withParticle(nParticles);
 
       Acts::PdgParticle pdg{particle->pdg_id()};
       double mass = 0.0;
@@ -193,6 +261,8 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
 
       SimParticle simParticle{particleId, pdg, charge, mass};
       simParticle.initialState().setPosition4(vertex.position4);
+      simParticle.setOrigParticleIdx(particle->id());
+      simParticle.setHeavyFlavourOrigin(deriveHeavyFlavourOrigin(particle));
 
       const HepMC3::FourVector& genMomentum = particle->momentum();
       Acts::Vector3 momentum{genMomentum.px() * 1_GeV, genMomentum.py() * 1_GeV,
@@ -314,7 +384,7 @@ void HepMC3InputConverter::convertHepMC3ToInternalEdm(
 
       nPrimaryVertices += 1;
       SimVertex primaryVertex;
-      primaryVertex.id = SimVertexBarcode{}.setVertexPrimary(nPrimaryVertices);
+      primaryVertex.id = SimVertexBarcode().withVertexPrimary(nPrimaryVertices);
       primaryVertex.position4 = convertPosition(cluster.at(0)->position());
 
       std::size_t nSecondaryVertices = 0;

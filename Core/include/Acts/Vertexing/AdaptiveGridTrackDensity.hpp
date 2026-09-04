@@ -9,7 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <boost/container/flat_map.hpp>  // TODO use flat unordered map
@@ -71,6 +72,8 @@ class AdaptiveGridTrackDensity {
     /// Optional minimal and maximal number of bins in time direction
     GridSizeRange temporalTrkGridSizeRange = {std::nullopt, std::nullopt};
 
+    /// Flag indicating whether to use time information in track density
+    /// calculation
     bool useTime = false;
 
     /// Do NOT use just the z-bin with the highest
@@ -88,6 +91,7 @@ class AdaptiveGridTrackDensity {
   };
 
   /// Constructor
+  /// @param cfg The configuration parameters
   explicit AdaptiveGridTrackDensity(const Config& cfg);
 
   /// @brief Returns the z and t coordinate of maximum (surrounding)

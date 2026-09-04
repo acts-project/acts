@@ -16,34 +16,42 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <memory>
 #include <numbers>
 #include <string>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 // Create a test context
-GeometryContext testContext = GeometryContext();
+GeometryContext testContext = GeometryContext::dangerouslyDefaultConstruct();
 
-BOOST_AUTO_TEST_SUITE(CylinderSurfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 /// Unit test for creating compliant/non-compliant CylinderSurface object
 BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
   /// Test default construction
@@ -202,7 +210,6 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   double pn = sfIntersection[0].pathLength();
   double pa = sfIntersection[1].pathLength();
   BOOST_CHECK_LT(std::abs(pn), std::abs(pa));
-  BOOST_CHECK_EQUAL(&sfIntersection.surface(), cylinderSurfaceObject.get());
 
   /// Test pathCorrection
   CHECK_CLOSE_REL(cylinderSurfaceObject->pathCorrection(testContext, offSurface,
@@ -302,7 +309,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceAlignment) {
       cylinderSurfaceObject->localCartesianToBoundLocalDerivative(
           testContext, globalPosition);
   // Check if the result is as expected
-  ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> expLoc3DToLocBound = Matrix<2, 3>::Zero();
   expLoc3DToLocBound << -1, 0, 0, 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }
@@ -488,12 +495,14 @@ BOOST_DATA_TEST_CASE(ZDirection,
 
   // Rotation in z depends on the ordering, the left side "wins"
   Transform3 expected12 = base * Translation3{Vector3::UnitZ() * 100_mm};
-  BOOST_CHECK_EQUAL(expected12.matrix(), cyl3->transform(testContext).matrix());
+  BOOST_CHECK_EQUAL(expected12.matrix(),
+                    cyl3->localToGlobalTransform(testContext).matrix());
 
   Transform3 expected21 = base * AngleAxis3(14_degree, Vector3::UnitZ()) *
                           Translation3{Vector3::UnitZ() * 100_mm};
-  CHECK_CLOSE_OR_SMALL(cyl3Reversed->transform(testContext).matrix(),
-                       expected21.matrix(), 1e-6, 1e-10);
+  CHECK_CLOSE_OR_SMALL(
+      cyl3Reversed->localToGlobalTransform(testContext).matrix(),
+      expected21.matrix(), 1e-6, 1e-10);
 
   auto cylPhi1 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
                                                       30_mm, 100_mm, 45_degree);
@@ -587,7 +596,8 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
     auto [cyl3, reversed] =
         cyl->mergedWith(*cyl2, Acts::AxisDirection::AxisRPhi, false, *logger);
     BOOST_REQUIRE_NE(cyl3, nullptr);
-    BOOST_CHECK_EQUAL(base.matrix(), cyl3->transform(testContext).matrix());
+    BOOST_CHECK_EQUAL(base.matrix(),
+                      cyl3->localToGlobalTransform(testContext).matrix());
     BOOST_CHECK(reversed);
 
     auto [cyl3Reversed, reversed2] =
@@ -612,7 +622,8 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
     auto [cyl45, reversed45] =
         cyl4->mergedWith(*cyl5, Acts::AxisDirection::AxisRPhi, false, *logger);
     BOOST_REQUIRE_NE(cyl45, nullptr);
-    BOOST_CHECK_EQUAL(base.matrix(), cyl45->transform(testContext).matrix());
+    BOOST_CHECK_EQUAL(base.matrix(),
+                      cyl45->localToGlobalTransform(testContext).matrix());
     BOOST_CHECK(reversed45);
 
     auto [cyl54, reversed54] =
@@ -637,12 +648,14 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
     auto [cyl67, reversed67] =
         cyl6->mergedWith(*cyl7, Acts::AxisDirection::AxisRPhi, false, *logger);
     BOOST_REQUIRE_NE(cyl67, nullptr);
-    BOOST_CHECK_EQUAL(base.matrix(), cyl67->transform(testContext).matrix());
+    BOOST_CHECK_EQUAL(base.matrix(),
+                      cyl67->localToGlobalTransform(testContext).matrix());
 
     auto [cyl76, reversed76] =
         cyl7->mergedWith(*cyl6, Acts::AxisDirection::AxisRPhi, false, *logger);
     BOOST_REQUIRE_NE(cyl76, nullptr);
-    BOOST_CHECK_EQUAL(base.matrix(), cyl76->transform(testContext).matrix());
+    BOOST_CHECK_EQUAL(base.matrix(),
+                      cyl76->localToGlobalTransform(testContext).matrix());
 
     // The ordering in this case is effectively arbitrary, you get the ordering
     // you put in
@@ -672,7 +685,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
     BOOST_REQUIRE_NE(cyl3, nullptr);
     Transform3 trfExpected12 =
         base * AngleAxis3(a(85_degree), Vector3::UnitZ());
-    CHECK_CLOSE_OR_SMALL(cyl3->transform(testContext).matrix(),
+    CHECK_CLOSE_OR_SMALL(cyl3->localToGlobalTransform(testContext).matrix(),
                          trfExpected12.matrix(), 1e-6, 1e-10);
     BOOST_CHECK(reversed);
 
@@ -691,7 +704,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
     BOOST_REQUIRE_NE(cyl45, nullptr);
     Transform3 trfExpected45 =
         base * AngleAxis3(a(180_degree), Vector3::UnitZ());
-    CHECK_CLOSE_OR_SMALL(cyl45->transform(testContext).matrix(),
+    CHECK_CLOSE_OR_SMALL(cyl45->localToGlobalTransform(testContext).matrix(),
                          trfExpected45.matrix(), 1e-6, 1e-10);
     BOOST_CHECK(reversed45);
 
@@ -717,14 +730,14 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
         cyl6->mergedWith(*cyl7, Acts::AxisDirection::AxisRPhi, true, *logger);
     BOOST_REQUIRE_NE(cyl67, nullptr);
     Transform3 expected67 = trf6 * AngleAxis3(90_degree, Vector3::UnitZ());
-    CHECK_CLOSE_OR_SMALL(cyl67->transform(testContext).matrix(),
+    CHECK_CLOSE_OR_SMALL(cyl67->localToGlobalTransform(testContext).matrix(),
                          expected67.matrix(), 1e-6, 1e-10);
 
     auto [cyl76, reversed76] =
         cyl7->mergedWith(*cyl6, Acts::AxisDirection::AxisRPhi, true, *logger);
     BOOST_REQUIRE_NE(cyl76, nullptr);
     Transform3 expected76 = trf7 * AngleAxis3(90_degree, Vector3::UnitZ());
-    CHECK_CLOSE_OR_SMALL(cyl76->transform(testContext).matrix(),
+    CHECK_CLOSE_OR_SMALL(cyl76->localToGlobalTransform(testContext).matrix(),
                          expected76.matrix(), 1e-6, 1e-10);
 
     // The ordering in this case is effectively arbitrary, you get the ordering
@@ -739,6 +752,57 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_CASE(CylinderSurfaceMaterialAssignment) {
+  auto surface =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 10., 100.);
+  MaterialSlab slab(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
+
+  // HomogeneousSurfaceMaterial is always valid
+  auto homMat = std::make_shared<HomogeneousSurfaceMaterial>(slab);
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(homMat));
+  BOOST_CHECK_NE(surface->surfaceMaterial(), nullptr);
+
+  // nullptr clears the material
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(nullptr));
+  BOOST_CHECK_EQUAL(surface->surfaceMaterial(), nullptr);
+
+  // 1D AxisRPhi - valid for cylinder
+  BinUtility buRPhi(10, 0.f, 62.8f, Acts::closed, AxisDirection::AxisRPhi);
+  auto matRPhi = std::make_shared<BinnedSurfaceMaterial>(
+      buRPhi, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matRPhi));
+
+  // 1D AxisPhi - valid for cylinder
+  BinUtility buPhi(10, 0.f, 1.f, Acts::closed, AxisDirection::AxisPhi);
+  auto matPhi = std::make_shared<BinnedSurfaceMaterial>(
+      buPhi, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matPhi));
+
+  // 1D AxisZ - valid for cylinder
+  BinUtility buZ(10, -100.f, 100.f, Acts::open, AxisDirection::AxisZ);
+  auto matZ = std::make_shared<BinnedSurfaceMaterial>(
+      buZ, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matZ));
+
+  // 2D {AxisRPhi, AxisZ} - valid for cylinder
+  BinUtility bu2D(5, 0.f, 62.8f, Acts::closed, AxisDirection::AxisRPhi);
+  bu2D += BinUtility(3, -100.f, 100.f, Acts::open, AxisDirection::AxisZ);
+  auto mat2D = std::make_shared<BinnedSurfaceMaterial>(
+      bu2D, MaterialSlabMatrix(3, MaterialSlabVector(5, slab)));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(mat2D));
+
+  // Wrong axis directions - should throw
+  for (auto badDir :
+       {AxisDirection::AxisR, AxisDirection::AxisX, AxisDirection::AxisY}) {
+    BinUtility buBad(10, 0.f, 10.f, Acts::open, badDir);
+    auto matBad = std::make_shared<BinnedSurfaceMaterial>(
+        buBad, MaterialSlabVector(10, slab));
+    BOOST_CHECK_THROW(surface->assignSurfaceMaterial(matBad),
+                      std::invalid_argument);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

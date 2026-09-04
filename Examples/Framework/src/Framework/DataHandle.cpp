@@ -12,6 +12,8 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 
 #include <regex>
+#include <typeindex>
+#include <typeinfo>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/core/demangle.hpp>
@@ -22,6 +24,14 @@ namespace {
 /// Shorten some common but lengthy C++ constructs
 std::string demangleAndShorten(std::string name) {
   name = boost::core::demangle(name.c_str());
+
+  // Normalize libc++ std::__1 namespace to std::
+  boost::algorithm::replace_all(name, "std::__1::", "std::");
+
+  // Remove default deleter from unique_ptr
+  const static std::regex unique_ptr_pattern(
+      R"??(std::unique_ptr<(.*),\s*std::default_delete<(\1\s*)>\s*>)??");
+  name = std::regex_replace(name, unique_ptr_pattern, "std::unique_ptr<$1>");
 
   // Remove std::allocator from vector
   const static std::regex vector_pattern(
@@ -73,8 +83,7 @@ void DataHandleBase::maybeInitialize(std::optional<std::string_view> key) {
 }
 
 bool WriteDataHandleBase::isCompatible(const DataHandleBase& other) const {
-  return dynamic_cast<const ReadDataHandleBase*>(&other) != nullptr &&
-         typeInfo() == other.typeInfo();
+  return typeHash() == other.typeHash();
 }
 
 void WriteDataHandleBase::emulate(StateMapType& state,
@@ -114,8 +123,7 @@ void ReadDataHandleBase::initialize(std::string_view key) {
 }
 
 bool ReadDataHandleBase::isCompatible(const DataHandleBase& other) const {
-  return dynamic_cast<const WriteDataHandleBase*>(&other) != nullptr &&
-         typeInfo() == other.typeInfo();
+  return typeHash() == other.typeHash();
 }
 
 void ReadDataHandleBase::emulate(StateMapType& state,

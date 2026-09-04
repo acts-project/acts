@@ -54,10 +54,12 @@ class Vertex {
 
   /// @return Returns 4-position
   const Vector4& fullPosition() const;
+  /// @return Returns mutable reference to 4-position
   Vector4& fullPosition();
 
   /// @return Returns 4D position of the vertex seed
   const Vector4& fullSeedPosition() const;
+  /// @return Returns mutable reference to 4D position of the vertex seed
   Vector4& fullSeedPosition();
 
   /// @return Returns position covariance
@@ -65,6 +67,7 @@ class Vertex {
 
   /// @return Returns 4x4 covariance
   const SquareMatrix4& fullCovariance() const;
+  /// @return Returns mutable reference to 4x4 covariance
   SquareMatrix4& fullCovariance();
 
   /// @return Returns vector of tracks associated with the vertex

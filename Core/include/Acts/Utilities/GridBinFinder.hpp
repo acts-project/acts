@@ -10,7 +10,7 @@
 
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <variant>
 #include <vector>
@@ -28,8 +28,10 @@ namespace Acts {
 template <std::size_t DIM>
 class GridBinFinder {
  public:
-  static constexpr std::size_t dimCubed = detail::ipow(3, DIM);
+  /// Number of neighbor bins in 3^DIM grid configuration
+  static constexpr std::size_t dimCubed = ipow(3, DIM);
 
+  /// Type alias for variant storing different bin finding configurations
   using stored_values_t =
       std::variant<int, std::pair<int, int>, std::vector<std::pair<int, int>>>;
 
@@ -38,7 +40,7 @@ class GridBinFinder {
   ///
   /// @param [in] vals The input parameters that define how many neighbours we need to find
   ///
-  /// @pre The provided paramers must be of type 'int', 'std::pair<int, int>' or 'std::vector<std::pair<int, int>>'
+  /// @pre The provided parameters must be of type 'int', 'std::pair<int, int>' or 'std::vector<std::pair<int, int>>'
   /// no other type is allowed. The order of these parameters must correspond to
   /// the same ordering of the axes in the grid
   template <typename... args>
@@ -58,6 +60,8 @@ class GridBinFinder {
   explicit GridBinFinder(std::array<stored_values_t, DIM> values)
       : m_values(std::move(values)) {}
 
+  /// Get the stored bin edge values for all dimensions
+  /// @return Array of bin edge values for each dimension
   const std::array<stored_values_t, DIM>& values() const { return m_values; }
 
   /// @brief Retrieve the neighbouring bins given a local position in the grid

@@ -8,11 +8,112 @@
 
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 
-Acts::AtlasBetheHeitlerApprox<6, 5> Acts::makeDefaultBetheHeitlerApprox(
-    bool clampToRange) {
+#include "Acts/Utilities/RangeXD.hpp"
+
+#include <algorithm>
+#include <stdexcept>
+
+namespace Acts {
+
+PolynomialBetheHeitlerApprox::PolynomialBetheHeitlerApprox(
+    std::vector<RangeData> ranges, bool clampToRange, double noChangeLimit,
+    double singleGaussianLimit)
+    : m_ranges(std::move(ranges)),
+      m_clampToRange(clampToRange),
+      m_noChangeLimit(noChangeLimit),
+      m_singleGaussianLimit(singleGaussianLimit) {
+  if (m_ranges.empty()) {
+    throw std::invalid_argument("At least one range is required");
+  }
+
+  // Sort ranges by minimum value
+  std::ranges::sort(m_ranges, {}, [](const auto &r) { return r.range.min(); });
+
+  // Validate that ranges don't overlap
+  for (std::size_t i = 1; i < m_ranges.size(); ++i) {
+    if (m_ranges[i - 1].range && m_ranges[i].range) {
+      throw std::invalid_argument(
+          "Overlapping ranges detected. Ranges must be non-overlapping.");
+    }
+  }
+}
+
+std::span<PolynomialBetheHeitlerApprox::Component>
+PolynomialBetheHeitlerApprox::mixture(
+    double xOverX0, const std::span<Component> mixture) const {
+  if (m_clampToRange) {
+    xOverX0 = std::clamp(xOverX0, 0.0, rangeMax());
+  }
+
+  // Evaluate polynomial at x
+  const auto poly = [](const double xx, const std::span<const double> coeffs) {
+    double sum{0.};
+    for (const auto c : coeffs) {
+      sum = xx * sum + c;
+    }
+    return sum;
+  };
+
+  // Lambda which builds the components for a single range
+  const auto make_mixture = [&](const Data &data, double xx,
+                                bool transform) -> std::span<Component> {
+    // Value initialization should guarantee that all is initialized to zero
+    double weight_sum = 0;
+    for (std::size_t i = 0; i < data.size(); ++i) {
+      // These transformations must be applied to the data according to ATHENA
+      // (TrkGaussianSumFilter/src/GsfCombinedMaterialEffects.cxx:79)
+      if (transform) {
+        mixture[i] = detail::inverseTransformComponent(
+            {poly(xx, data[i].weightCoeffs), poly(xx, data[i].meanCoeffs),
+             poly(xx, data[i].varCoeffs)});
+      } else {
+        mixture[i].weight = poly(xx, data[i].weightCoeffs);
+        mixture[i].mean = poly(xx, data[i].meanCoeffs);
+        mixture[i].var = poly(xx, data[i].varCoeffs);
+      }
+
+      weight_sum += mixture[i].weight;
+    }
+
+    for (std::size_t i = 0; i < data.size(); ++i) {
+      mixture[i].weight /= weight_sum;
+    }
+
+    return {mixture.data(), data.size()};
+  };
+
+  // Return no change
+  if (xOverX0 < m_noChangeLimit) {
+    mixture[0].weight = 1.0;
+    mixture[0].mean = 1.0;  // p_initial = p_final
+    mixture[0].var = 0.0;
+
+    return {mixture.data(), 1};
+  }
+
+  // Return single gaussian approximation
+  if (xOverX0 < m_singleGaussianLimit) {
+    BetheHeitlerApproxSingleCmp().mixture(xOverX0, mixture);
+    return {mixture.data(), 1};
+  }
+
+  // Find the appropriate range and return mixture for that range
+  for (const auto &[range, data, transform] : m_ranges) {
+    if (range.contains(xOverX0)) {
+      return make_mixture(data, xOverX0, transform);
+    }
+  }
+
+  // Should not reach here if validXOverX0 is called first
+  // But return the last range's mixture as fallback
+  const auto &[lastRange, lastData, lastTransform] = m_ranges.back();
+  return make_mixture(lastData, lastRange.max(), lastTransform);
+}
+
+PolynomialBetheHeitlerApprox makeDefaultBetheHeitlerApprox(bool clampToRange) {
   // Tracking/TrkFitter/TrkGaussianSumFilterUtils/Data/BetheHeitler_cdf_nC6_O5.par
   // clang-format off
-  constexpr static AtlasBetheHeitlerApprox<6, 5>::Data cdf_cmps6_order5_data = {{
+  static PolynomialBetheHeitlerApprox::Data cdf_cmps6_order5_data = {{
       // Component #1
       {
           {{3.74397e+004,-1.95241e+004, 3.51047e+003,-2.54377e+002, 1.81080e+001,-3.57643e+000}},
@@ -52,7 +153,11 @@ Acts::AtlasBetheHeitlerApprox<6, 5> Acts::makeDefaultBetheHeitlerApprox(
   }};
   // clang-format on
 
-  return AtlasBetheHeitlerApprox<6, 5>(cdf_cmps6_order5_data,
-                                       cdf_cmps6_order5_data, true, true, 0.2,
-                                       0.2, clampToRange);
+  std::vector<PolynomialBetheHeitlerApprox::RangeData> ranges = {
+      {Range1D<double>{0.0, 0.2}, cdf_cmps6_order5_data, true}};
+
+  return PolynomialBetheHeitlerApprox(std::move(ranges), clampToRange, 0.0001,
+                                      0.002);
 }
+
+}  // namespace Acts

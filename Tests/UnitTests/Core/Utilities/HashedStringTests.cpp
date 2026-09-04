@@ -13,9 +13,12 @@
 #include <string>
 #include <string_view>
 
+using namespace Acts;
 using namespace Acts::HashedStringLiteral;
 
-namespace Acts::Test {
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(string_hashes) {
   // compile time checks
@@ -34,4 +37,6 @@ BOOST_AUTO_TEST_CASE(string_hashes) {
   static_assert(hashString(sv) == 440920331, "Invalid");
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

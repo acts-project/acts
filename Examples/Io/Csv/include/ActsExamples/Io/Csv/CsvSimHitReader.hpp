@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -21,7 +20,6 @@
 #include <utility>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Read in a simhit collection in comma-separated-value format.
 ///
@@ -56,7 +54,7 @@ class CsvSimHitReader final : public IReader {
   std::pair<std::size_t, std::size_t> availableEvents() const override;
 
   /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) override;
+  ProcessCode read(const AlgorithmContext& ctx) override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

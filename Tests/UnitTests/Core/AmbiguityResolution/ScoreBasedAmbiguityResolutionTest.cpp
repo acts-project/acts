@@ -9,24 +9,20 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
-#include "Acts/EventData/detail/TestSourceLink.hpp"
-#include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 
 #include <map>
 
-using Acts::MultiTrajectoryTraits::IndexType;
+using namespace Acts;
+using IndexType = TrackIndexType;
+using enum TrackStateFlag;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(ScoreBasedAmbiguityResolutionTest)
+BOOST_AUTO_TEST_SUITE(AmbiguitesResolutionSuite)
 
 // Test fixture for ScoreBasedAmbiguityResolution
 struct Fixture {
@@ -62,7 +58,7 @@ auto createTestTrack(TrackContainer& tc, const FlagsPerState& flagsPerState) {
   for (const auto& flags : flagsPerState) {
     auto ts = t.appendTrackState();
     for (auto f : flags) {
-      ts.typeFlags().set(f);
+      ts.typeFlags().setUnchecked(f);
     }
   }
 
@@ -83,14 +79,14 @@ BOOST_FIXTURE_TEST_CASE(ComputeInitialStateTest, Fixture) {
   static_assert(!mutTc.ReadOnly, "Unexpectedly read only");
 
   auto t = createTestTrack(mutTc, std::vector<std::vector<TrackStateFlag>>{
-                                      {MeasurementFlag},
-                                      {OutlierFlag},
-                                      {MeasurementFlag, SharedHitFlag},
-                                      {HoleFlag},
-                                      {OutlierFlag},
-                                      {HoleFlag},
-                                      {MeasurementFlag, SharedHitFlag},
-                                      {OutlierFlag},
+                                      {HasMeasurement},
+                                      {HasMeasurement, IsOutlier},
+                                      {HasMeasurement, IsSharedHit},
+                                      {IsHole},
+                                      {HasMeasurement, IsOutlier},
+                                      {IsHole},
+                                      {HasMeasurement, IsSharedHit},
+                                      {HasMeasurement, IsOutlier},
                                   });
 
   BOOST_CHECK_EQUAL(t.nHoles(), 2);
@@ -132,14 +128,14 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
   static_assert(!mutTc.ReadOnly, "Unexpectedly read only");
 
   auto t = createTestTrack(mutTc, std::vector<std::vector<TrackStateFlag>>{
-                                      {MeasurementFlag},
-                                      {OutlierFlag},
-                                      {MeasurementFlag, SharedHitFlag},
-                                      {HoleFlag},
-                                      {OutlierFlag},
-                                      {HoleFlag},
-                                      {MeasurementFlag, SharedHitFlag},
-                                      {OutlierFlag},
+                                      {HasMeasurement},
+                                      {HasMeasurement, IsOutlier},
+                                      {HasMeasurement, IsSharedHit},
+                                      {IsHole},
+                                      {HasMeasurement, IsOutlier},
+                                      {IsHole},
+                                      {HasMeasurement, IsSharedHit},
+                                      {HasMeasurement, IsOutlier},
                                   });
 
   BOOST_CHECK_EQUAL(t.nHoles(), 2);
@@ -163,8 +159,7 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
   for (std::size_t iMeasurement = 1; const auto& track : ctc) {
     std::vector<std::size_t> measurementsPerTrack;
     for (auto ts : track.trackStatesReversed()) {
-      if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
-          ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (ts.typeFlags().isOutlier() || ts.typeFlags().isMeasurement()) {
         measurementsPerTrack.push_back(iMeasurement);
         if (nTracksPerMeasurement.find(iMeasurement) ==
             nTracksPerMeasurement.end()) {
@@ -191,4 +186,4 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -18,8 +18,8 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
 
 #include <cmath>
@@ -35,89 +35,95 @@
 
 namespace bdata = boost::unit_test::data;
 
-namespace ActsFatras {
+using namespace Acts;
+using namespace ActsFatras;
 
-BOOST_AUTO_TEST_SUITE(Digitization)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DigitizationSuite)
 
 BOOST_AUTO_TEST_CASE(SegmentizerCartesian) {
-  Acts::GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
-  auto rectangleBounds = std::make_shared<Acts::RectangleBounds>(1., 1.);
-  auto planeSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Transform3::Identity(), rectangleBounds);
+  auto rectangleBounds = std::make_shared<RectangleBounds>(1., 1.);
+  auto planeSurface = Surface::makeShared<PlaneSurface>(Transform3::Identity(),
+                                                        rectangleBounds);
 
   // The segmentation
-  Acts::BinUtility pixelated(20, -1., 1., Acts::open,
-                             Acts::AxisDirection::AxisX);
-  pixelated +=
-      Acts::BinUtility(20, -1., 1., Acts::open, Acts::AxisDirection::AxisY);
+  const auto segmentation = IMultiAxis::create(
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -1., 1., 20,
+                                AxisDirection::AxisX),
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -1., 1., 20,
+                                AxisDirection::AxisY));
 
   Segmentizer cl;
 
   // Test: Normal hit into the surface
-  Acts::Vector2 nPosition(0.37, 0.76);
+  Vector2 nPosition(0.37, 0.76);
   auto nSegments =
-      cl.segments(geoCtx, *planeSurface, pixelated, {nPosition, nPosition});
+      cl.segments(geoCtx, *planeSurface, *segmentation, {nPosition, nPosition});
   BOOST_CHECK_EQUAL(nSegments.size(), 1);
   BOOST_CHECK_EQUAL(nSegments[0].bin[0], 13);
   BOOST_CHECK_EQUAL(nSegments[0].bin[1], 17);
 
   // Test: Inclined hit into the surface - negative x direction
-  Acts::Vector2 ixPositionS(0.37, 0.76);
-  Acts::Vector2 ixPositionE(0.02, 0.73);
-  auto ixSegments =
-      cl.segments(geoCtx, *planeSurface, pixelated, {ixPositionS, ixPositionE});
+  Vector2 ixPositionS(0.37, 0.76);
+  Vector2 ixPositionE(0.02, 0.73);
+  auto ixSegments = cl.segments(geoCtx, *planeSurface, *segmentation,
+                                {ixPositionS, ixPositionE});
   BOOST_CHECK_EQUAL(ixSegments.size(), 4);
 
   // Test: Inclined hit into the surface - positive y direction
-  Acts::Vector2 iyPositionS(0.37, 0.76);
-  Acts::Vector2 iyPositionE(0.39, 0.91);
-  auto iySegments =
-      cl.segments(geoCtx, *planeSurface, pixelated, {iyPositionS, iyPositionE});
+  Vector2 iyPositionS(0.37, 0.76);
+  Vector2 iyPositionE(0.39, 0.91);
+  auto iySegments = cl.segments(geoCtx, *planeSurface, *segmentation,
+                                {iyPositionS, iyPositionE});
   BOOST_CHECK_EQUAL(iySegments.size(), 3);
 
   // Test: Inclined hit into the surface - x/y direction
-  Acts::Vector2 ixyPositionS(-0.27, 0.76);
-  Acts::Vector2 ixyPositionE(-0.02, -0.73);
-  auto ixySegments = cl.segments(geoCtx, *planeSurface, pixelated,
+  Vector2 ixyPositionS(-0.27, 0.76);
+  Vector2 ixyPositionE(-0.02, -0.73);
+  auto ixySegments = cl.segments(geoCtx, *planeSurface, *segmentation,
                                  {ixyPositionS, ixyPositionE});
   BOOST_CHECK_EQUAL(ixySegments.size(), 18);
 }
 
 BOOST_AUTO_TEST_CASE(SegmentizerPolarRadial) {
-  Acts::GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
-  auto radialBounds =
-      std::make_shared<const Acts::RadialBounds>(5., 10., 0.25, 0.);
-  auto radialDisc = Acts::Surface::makeShared<Acts::DiscSurface>(
-      Acts::Transform3::Identity(), radialBounds);
+  auto radialBounds = std::make_shared<const RadialBounds>(5., 10., 0.25, 0.);
+  auto radialDisc =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), radialBounds);
 
   // The segmentation
-  Acts::BinUtility strips(2, 5., 10., Acts::open, Acts::AxisDirection::AxisR);
-  strips += Acts::BinUtility(250, -0.25, 0.25, Acts::open,
-                             Acts::AxisDirection::AxisPhi);
+  const auto segmentation = IMultiAxis::create(
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, 5., 10., 2,
+                                AxisDirection::AxisR),
+      *IAxis::createEquidistant(AxisBoundaryType::Bound, -0.25, 0.25, 250,
+                                AxisDirection::AxisPhi));
 
   Segmentizer cl;
 
   // Test: Normal hit into the surface
-  Acts::Vector2 nPosition(6.76, 0.5);
+  Vector2 nPosition(6.76, 0.5);
   auto nSegments =
-      cl.segments(geoCtx, *radialDisc, strips, {nPosition, nPosition});
+      cl.segments(geoCtx, *radialDisc, *segmentation, {nPosition, nPosition});
   BOOST_CHECK_EQUAL(nSegments.size(), 1);
   BOOST_CHECK_EQUAL(nSegments[0].bin[0], 0);
   BOOST_CHECK_EQUAL(nSegments[0].bin[1], 161);
 
   // Test: now opver more phi strips
-  Acts::Vector2 sPositionS(6.76, 0.5);
-  Acts::Vector2 sPositionE(7.03, -0.3);
+  Vector2 sPositionS(6.76, 0.5);
+  Vector2 sPositionE(7.03, -0.3);
   auto sSegment =
-      cl.segments(geoCtx, *radialDisc, strips, {sPositionS, sPositionE});
+      cl.segments(geoCtx, *radialDisc, *segmentation, {sPositionS, sPositionE});
   BOOST_CHECK_EQUAL(sSegment.size(), 59);
 
   // Test: jump over R boundary, but stay in phi bin
-  sPositionS = Acts::Vector2(6.76, 0.);
-  sPositionE = Acts::Vector2(7.83, 0.);
-  sSegment = cl.segments(geoCtx, *radialDisc, strips, {sPositionS, sPositionE});
+  sPositionS = Vector2(6.76, 0.);
+  sPositionE = Vector2(7.83, 0.);
+  sSegment =
+      cl.segments(geoCtx, *radialDisc, *segmentation, {sPositionS, sPositionE});
   BOOST_CHECK_EQUAL(sSegment.size(), 2);
 }
 
@@ -138,7 +144,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(0., 1.))) ^
         bdata::xrange(25),
     startR0, startR1, endR0, endR1, index) {
-  Acts::GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   Segmentizer cl;
 
   // Test beds with random numbers generated inside
@@ -159,47 +165,45 @@ BOOST_DATA_TEST_CASE(
       const auto centerXY = surface->center(geoCtx).segment<2>(0);
       // 0 - write the shape
       shape.open("Segmentizer" + name + "Borders.csv");
-      if (surface->type() == Acts::Surface::Plane) {
+      if (surface->type() == Surface::Plane) {
         const auto* pBounds =
-            static_cast<const Acts::PlanarBounds*>(&(surface->bounds()));
+            static_cast<const PlanarBounds*>(&(surface->bounds()));
         csvHelper.writePolygon(shape, pBounds->vertices(1), -centerXY);
-      } else if (surface->type() == Acts::Surface::Disc) {
+      } else if (surface->type() == Surface::Disc) {
         const auto* dBounds =
-            static_cast<const Acts::DiscBounds*>(&(surface->bounds()));
+            static_cast<const DiscBounds*>(&(surface->bounds()));
         csvHelper.writePolygon(shape, dBounds->vertices(72), -centerXY);
       }
       // 1 - write the grid
       grid.open("Segmentizer" + name + "Grid.csv");
-      if (segmentation.binningData()[0].binvalue ==
-              Acts::AxisDirection::AxisX &&
-          segmentation.binningData()[1].binvalue ==
-              Acts::AxisDirection::AxisY) {
-        double bxmin = segmentation.binningData()[0].min;
-        double bxmax = segmentation.binningData()[0].max;
-        double bymin = segmentation.binningData()[1].min;
-        double bymax = segmentation.binningData()[1].max;
-        const auto& xboundaries = segmentation.binningData()[0].boundaries();
-        const auto& yboundaries = segmentation.binningData()[1].boundaries();
-        for (const auto xval : xboundaries) {
+      const IAxis& axis0 = segmentation->getAxis(0);
+      const IAxis& axis1 = segmentation->getAxis(1);
+      if (axis0.getDirection() == AxisDirection::AxisX &&
+          axis1.getDirection() == AxisDirection::AxisY) {
+        double bxmin = axis0.getMin();
+        double bxmax = axis0.getMax();
+        double bymin = axis1.getMin();
+        double bymax = axis1.getMax();
+        const std::vector<double> xboundaries = axis0.getBinEdges();
+        const std::vector<double> yboundaries = axis1.getBinEdges();
+        for (const double xval : xboundaries) {
           csvHelper.writeLine(grid, {xval, bymin}, {xval, bymax});
         }
-        for (const auto yval : yboundaries) {
+        for (const double yval : yboundaries) {
           csvHelper.writeLine(grid, {bxmin, yval}, {bxmax, yval});
         }
-      } else if (segmentation.binningData()[0].binvalue ==
-                     Acts::AxisDirection::AxisR &&
-                 segmentation.binningData()[1].binvalue ==
-                     Acts::AxisDirection::AxisPhi) {
-        double brmin = segmentation.binningData()[0].min;
-        double brmax = segmentation.binningData()[0].max;
-        double bphimin = segmentation.binningData()[1].min;
-        double bphimax = segmentation.binningData()[1].max;
-        const auto& rboundaries = segmentation.binningData()[0].boundaries();
-        const auto& phiboundaries = segmentation.binningData()[1].boundaries();
-        for (const auto r : rboundaries) {
+      } else if (axis0.getDirection() == AxisDirection::AxisR &&
+                 axis1.getDirection() == AxisDirection::AxisPhi) {
+        double brmin = axis0.getMin();
+        double brmax = axis0.getMax();
+        double bphimin = axis1.getMin();
+        double bphimax = axis1.getMax();
+        const std::vector<double> rboundaries = axis0.getBinEdges();
+        const std::vector<double> phiboundaries = axis1.getBinEdges();
+        for (const double r : rboundaries) {
           csvHelper.writeArc(grid, r, bphimin, bphimax);
         }
-        for (const auto phi : phiboundaries) {
+        for (const double phi : phiboundaries) {
           double cphi = std::cos(phi);
           double sphi = std::sin(phi);
           csvHelper.writeLine(grid, {brmin * cphi, brmin * sphi},
@@ -220,7 +224,7 @@ BOOST_DATA_TEST_CASE(
                  ".csv");
 
     /// Run the Segmentizer
-    auto cSegments = cl.segments(geoCtx, *surface, segmentation, {start, end});
+    auto cSegments = cl.segments(geoCtx, *surface, *segmentation, {start, end});
 
     for (const auto& cs : cSegments) {
       csvHelper.writeLine(segments, cs.path2D[0], cs.path2D[1]);
@@ -233,4 +237,4 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace ActsFatras
+}  // namespace ActsTests

@@ -14,11 +14,16 @@ def runTruthTrackingKalman(
     field: acts.MagneticFieldProvider,
     digiConfigFile: Path,
     outputDir: Path,
+    pyVis=None,
     inputParticlePath: Optional[Path] = None,
     inputHitsPath: Optional[Path] = None,
     decorators=[],
+    generatedParticleType: acts.PdgParticle = acts.PdgParticle.eMuon,
     reverseFilteringMomThreshold=0 * u.GeV,
-    reverseFilteringCovarianceScaling=1,
+    reverseFilteringCovarianceScaling=100.0,
+    numParticles=1,
+    linkForward: bool = False,
+    useJosephFormulation: bool = False,
     s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import (
@@ -32,9 +37,19 @@ def runTruthTrackingKalman(
         ParticleSelectorConfig,
         addDigiParticleSelection,
     )
+
+    from acts.examples.root import (
+        RootParticleReader,
+        RootSimHitReader,
+        RootTrackStatesWriter,
+        RootTrackSummaryWriter,
+        RootTrackParameterPerformanceWriter,
+    )
+
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
+        TrackSmearingSigmas,
         addKalmanTracks,
     )
 
@@ -48,12 +63,21 @@ def runTruthTrackingKalman(
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
 
-    logger = acts.logging.getLogger("Truth tracking example")
+    logger = acts.getDefaultLogger("Truth tracking example", acts.logging.INFO)
+
+    if pyVis is not None:
+        context = acts.GeometryContext.dangerouslyDefaultConstruct()
+        trackingGeometry.visualize(
+            pyVis,
+            context,
+        )
 
     if inputParticlePath is None:
         addParticleGun(
             s,
-            ParticleConfig(num=1, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
+            ParticleConfig(
+                num=numParticles, pdg=generatedParticleType, randomizeCharge=True
+            ),
             EtaConfig(-3.0, 3.0, uniform=True),
             MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
             PhiConfig(0.0, 360.0 * u.degree),
@@ -65,10 +89,10 @@ def runTruthTrackingKalman(
             rnd=rnd,
         )
     else:
-        logger.info("Reading particles from %s", inputParticlePath.resolve())
+        logger.info("Reading particles from {}", inputParticlePath.resolve())
         assert inputParticlePath.exists()
         s.addReader(
-            acts.examples.RootParticleReader(
+            RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 outputParticles="particles_generated",
@@ -85,15 +109,16 @@ def runTruthTrackingKalman(
             enableInteractions=True,
         )
     else:
-        logger.info("Reading hits from %s", inputHitsPath.resolve())
+        logger.info("Reading hits from {}", inputHitsPath.resolve())
         assert inputHitsPath.exists()
         s.addReader(
-            acts.examples.RootSimHitReader(
+            RootSimHitReader(
                 level=acts.logging.INFO,
                 filePath=str(inputHitsPath.resolve()),
                 outputSimHits="simhits",
             )
         )
+        s.addWhiteboardAlias("particles_simulated_selected", "particles_generated")
 
     addDigitization(
         s,
@@ -101,6 +126,7 @@ def runTruthTrackingKalman(
         field,
         digiConfigFile=digiConfigFile,
         rnd=rnd,
+        logLevel=acts.logging.DEBUG,
     )
 
     addDigiParticleSelection(
@@ -120,7 +146,32 @@ def runTruthTrackingKalman(
         rnd=rnd,
         inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
+        trackSmearingSigmas=TrackSmearingSigmas(
+            # zero everything so the KF has a chance to find the measurements
+            loc0=0,
+            loc0PtA=0,
+            loc0PtB=0,
+            loc1=0,
+            loc1PtA=0,
+            loc1PtB=0,
+            time=0,
+            phi=0,
+            theta=0,
+            ptRel=0,
+        ),
         particleHypothesis=acts.ParticleHypothesis.muon,
+        initialSigmas=[
+            1 * u.mm,
+            1 * u.mm,
+            1 * u.degree,
+            1 * u.degree,
+            0 / u.GeV,
+            1 * u.ns,
+        ],
+        initialSigmaQoverPt=0.1 / u.GeV,
+        initialSigmaPtRel=0.1,
+        initialVarInflation=[1e0, 1e0, 1e0, 1e0, 1e0, 1e0],
+        logLevel=acts.logging.INFO,
     )
 
     addKalmanTracks(
@@ -129,7 +180,17 @@ def runTruthTrackingKalman(
         field,
         reverseFilteringMomThreshold,
         reverseFilteringCovarianceScaling,
+        linkForward=linkForward,
+        useJosephFormulation=useJosephFormulation,
+        logLevel=acts.logging.INFO,
     )
+
+    if pyVis is not None:
+        from acts.examples.visualization import TrackVisualizerAlg
+
+        s.addAlgorithm(
+            TrackVisualizerAlg("TrackVisualizerAlg", acts.logging.INFO, pyVis)
+        )
 
     s.addAlgorithm(
         acts.examples.TrackSelectorAlgorithm(
@@ -144,7 +205,7 @@ def runTruthTrackingKalman(
     s.addWhiteboardAlias("tracks", "selected-tracks")
 
     s.addWriter(
-        acts.examples.RootTrackStatesWriter(
+        RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",
@@ -156,7 +217,7 @@ def runTruthTrackingKalman(
     )
 
     s.addWriter(
-        acts.examples.RootTrackSummaryWriter(
+        RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",
@@ -166,7 +227,7 @@ def runTruthTrackingKalman(
     )
 
     s.addWriter(
-        acts.examples.TrackFitterPerformanceWriter(
+        RootTrackParameterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",
@@ -183,10 +244,12 @@ if "__main__" == __name__:
 
     # ODD
     from acts.examples.odd import getOpenDataDetector
+    from acts.examples.visualization import PyVisualization2D
 
-    detector = getOpenDataDetector()
+    detector = getOpenDataDetector(gen3=True)
     trackingGeometry = detector.trackingGeometry()
-    digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
+    decorators = detector.contextDecorators()
+    digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config-gen3.json"
 
     ## GenericDetector
     # detector = acts.examples.GenericDetector()
@@ -197,10 +260,15 @@ if "__main__" == __name__:
     # )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
-    runTruthTrackingKalman(
+    vis = PyVisualization2D()
+    s = runTruthTrackingKalman(
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
+        pyVis=vis,
         outputDir=Path.cwd(),
-    ).run()
+    )
+
+    s.run()
+
+    vis.plot(projection="xy", filename="truth_tracking_kalman_visualization.pdf")

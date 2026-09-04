@@ -23,6 +23,7 @@
 #include <vector>
 
 namespace ActsExamples {
+
 template <CsvBFieldWriter::CoordinateType Coord, bool Grid>
 void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
                           Acts::Logging::Level level) {
@@ -31,7 +32,7 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
   // Some helper typedefs, which will make our life easier down the line.
   using ConfigType = std::decay_t<decltype(config)>;
   using FieldType = typename decltype(ConfigType::bField)::element_type;
-  using Vector = Acts::ActsVector<ConfigType::NDims>;
+  using Vector = Acts::Vector<ConfigType::NDims>;
 
   FieldType& field = *config.bField;
 
@@ -242,4 +243,5 @@ template void CsvBFieldWriter::run<CsvBFieldWriter::CoordinateType::XYZ, false>(
     const Config<CoordinateType::XYZ, false>&, Acts::Logging::Level);
 template void CsvBFieldWriter::run<CsvBFieldWriter::CoordinateType::RZ, false>(
     const Config<CoordinateType::RZ, false>&, Acts::Logging::Level);
+
 }  // namespace ActsExamples

@@ -14,13 +14,16 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"  //to get s_noBounds
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
+#include <iomanip>
 #include <memory>
+#include <sstream>
 
 #include "SurfaceStub.hpp"
 
@@ -42,12 +45,14 @@ class MockTrack {
 };
 }  // namespace Acts
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 /// todo: make test fixture; separate out different cases
 
@@ -77,14 +82,14 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   Vector3 reference{0., 1., 2.};
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
-  auto pLayer = PlaneLayer::create(pTransform, pPlanarBound);
+  auto pLayer = PlaneLayer::create(pTransform, pPlanarBound, nullptr);
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement{pTransform, pPlanarBound, 0.2, pMaterial};
   SurfaceStub surface(detElement);
 
   // associatedDetectorElement
-  BOOST_CHECK_EQUAL(surface.associatedDetectorElement(), &detElement);
+  BOOST_CHECK_EQUAL(surface.surfacePlacement(), &detElement);
 
   // test associatelayer, associatedLayer
   surface.associateLayer(*pLayer);
@@ -134,9 +139,33 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   surface.assignSurfaceMaterial(pNewMaterial);
   BOOST_CHECK_EQUAL(surface.surfaceMaterial(), pNewMaterial.get());
 
-  CHECK_CLOSE_OR_SMALL(surface.transform(tgContext), pTransform, 1e-6, 1e-9);
+  CHECK_CLOSE_OR_SMALL(surface.localToGlobalTransform(tgContext), pTransform,
+                       1e-6, 1e-9);
 
   // type() is pure virtual
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceToStreamPreservesStreamState) {
+  std::ostringstream stream;
+  stream << std::scientific << std::showpos << std::setfill('#')
+         << std::setprecision(3);
+  stream.width(17);
+
+  const auto flags = stream.flags();
+  const auto precision = stream.precision();
+  const auto width = stream.width();
+  const auto fill = stream.fill();
+
+  auto bounds = std::make_shared<const RectangleBounds>(5., 10.);
+  auto surface =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
+
+  stream << surface->toStream(tgContext);
+
+  BOOST_CHECK(stream.flags() == flags);
+  BOOST_CHECK_EQUAL(stream.precision(), precision);
+  BOOST_CHECK_EQUAL(stream.width(), width);
+  BOOST_CHECK_EQUAL(stream.fill(), fill);
 }
 
 BOOST_AUTO_TEST_CASE(EqualityOperators) {
@@ -152,7 +181,7 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   // build a planeSurface to be compared
   auto planeSurface =
       Surface::makeShared<PlaneSurface>(pTransform1, pPlanarBound);
-  auto pLayer = PlaneLayer::create(pTransform1, pPlanarBound);
+  auto pLayer = PlaneLayer::create(pTransform1, pPlanarBound, nullptr);
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement1{pTransform1, pPlanarBound, 0.2, pMaterial};
@@ -179,4 +208,4 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

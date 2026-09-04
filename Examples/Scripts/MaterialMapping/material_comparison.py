@@ -11,8 +11,8 @@ PlotRecord = namedtuple(
 
 # The file records
 fileRecords = [
-    FileRecord("geant4_material_tracks.root", "material-tracks", "Geant4", "blue", 3),
-    FileRecord("acts_material_tracks.root", "material-tracks", "Acts", "orange", 4),
+    FileRecord("geant4_material_tracks.root", "material_tracks", "Geant4", "blue", 3),
+    FileRecord("acts_material_tracks.root", "material_tracks", "Acts", "orange", 4),
 ]
 
 

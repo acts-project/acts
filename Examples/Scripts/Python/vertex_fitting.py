@@ -14,6 +14,10 @@ from acts.examples.reconstruction import (
     addVertexFitting,
     VertexFinder,
 )
+from acts.examples.root import (
+    RootParticleReader,
+    RootTrackSummaryReader,
+)
 
 u = acts.UnitConstants
 
@@ -29,7 +33,7 @@ def runVertexFitting(
 ):
     s = s or Sequencer(events=100, numThreads=-1)
 
-    logger = acts.logging.getLogger("VertexFittingExample")
+    logger = acts.getDefaultLogger("VertexFittingExample", acts.logging.INFO)
 
     rnd = acts.examples.RandomNumbers(seed=42)
 
@@ -38,10 +42,10 @@ def runVertexFitting(
         logger.info("Generating particles using Pythia8")
         addPythia8(s, rnd)
     else:
-        logger.info("Reading particles from %s", inputParticlePath.resolve())
+        logger.info("Reading particles from {}", inputParticlePath.resolve())
         assert inputParticlePath.exists()
         s.addReader(
-            acts.examples.RootParticleReader(
+            RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 outputParticles=inputParticles,
@@ -84,7 +88,7 @@ def runVertexFitting(
         logger.info("Reading track summary from %s", inputTrackSummary.resolve())
         assert inputTrackSummary.exists()
         associatedParticles = "associatedTruthParticles"
-        trackSummaryReader = acts.examples.RootTrackSummaryReader(
+        trackSummaryReader = RootTrackSummaryReader(
             level=acts.logging.VERBOSE,
             outputTracks=trackParameters,
             outputParticles=associatedParticles,

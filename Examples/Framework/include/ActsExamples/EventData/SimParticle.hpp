@@ -10,7 +10,7 @@
 
 #include "ActsExamples/Utilities/GroupBy.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <boost/container/flat_set.hpp>
 
@@ -21,6 +21,27 @@ using SimBarcodeContainer = ::boost::container::flat_set<SimBarcode>;
 
 using SimParticleState = ::ActsFatras::Particle;
 
+/// Encodes hadron heavy-flavour origin classification
+/// the enum values correspond to the quark flavour numbering scheme (from PDG)
+enum class HeavyFlavourOrigin : std::uint8_t {
+  /// None: no heavy-flavour origin, depending on the criterion regulated
+  ///       by the searchUpToHeavyFlavourQuark flag
+  None = 0,
+  /// Charm: decay product of a charmed hadron, or particle originate
+  ///        in the fragmentation of a charm quark depending
+  ///        on the searchUpToHeavyFlavourQuark flag
+  Charm = 4,
+  /// Bottom: decay product of a bottomed hadron (it can also be B->D->X),
+  ///         or particle originate in the fragmentation of a bottom quark
+  ///         depending on the searchUpToHeavyFlavourQuark flag
+  Bottom = 5
+};
+
+/// Print heavy-flavour origin outcome to output stream
+/// @param os Output stream
+/// @param outcome Heavy-flavour origin outcome to print
+/// @return Output stream
+std::ostream& operator<<(std::ostream& os, HeavyFlavourOrigin outcome);
 class SimParticle final {
  public:
   /// Construct a default particle with invalid identity.
@@ -49,8 +70,9 @@ class SimParticle final {
   SimParticle(SimBarcode particleId, Acts::PdgParticle pdg)
       : m_initial(particleId, pdg), m_final(particleId, pdg) {}
 
-  SimParticle(const SimParticleState& initial, const SimParticleState& final)
-      : m_initial(initial), m_final(final) {
+  SimParticle(const SimParticleState& initial,
+              const SimParticleState& finalState)
+      : m_initial(initial), m_final(finalState) {
     if (m_initial.particleId() != m_final.particleId()) {
       throw std::invalid_argument("Particle id mismatch");
     }
@@ -68,12 +90,14 @@ class SimParticle final {
   ///       is used to identify the whole particle. Setting it on an existing
   ///       particle is usually a mistake.
   SimParticle withParticleId(SimBarcode particleId) const {
-    return SimParticle(initialState().withParticleId(particleId),
-                       finalState().withParticleId(particleId));
+    SimParticle copy(initialState().withParticleId(particleId),
+                     finalState().withParticleId(particleId));
+    copy.setParentParticleId(parentParticleId());
+    return copy;
   }
 
   /// Set the process type that generated this particle.
-  SimParticle& setProcess(ActsFatras::ProcessType proc) {
+  SimParticle& setProcess(ActsFatras::GenerationProcess proc) {
     initialState().setProcess(proc);
     finalState().setProcess(proc);
     return *this;
@@ -102,11 +126,40 @@ class SimParticle final {
     finalState().setParticleId(barcode);
     return *this;
   }
+  /// Set the parent particle id on both initial and final state.
+  SimParticle& setParentParticleId(SimBarcode parentId) {
+    initialState().setParentParticleId(parentId);
+    finalState().setParentParticleId(parentId);
+    return *this;
+  }
+  /// Original particle index (to match HepMC).
+  SimParticle& setOrigParticleIdx(std::uint32_t idx) {
+    initialState().setOrigParticleIdx(idx);
+    finalState().setOrigParticleIdx(idx);
+    return *this;
+  }
+  /// Particle heavy-flavour origin (0->none, 4->charm, 5->beauty)
+  SimParticle& setHeavyFlavourOrigin(HeavyFlavourOrigin origin) {
+    m_hfOrigin = origin;
+    return *this;
+  }
 
   /// Particle identifier within an event.
   SimBarcode particleId() const { return initialState().particleId(); }
+  /// Parent particle id, or default-constructed @c SimBarcode if unknown.
+  SimBarcode parentParticleId() const {
+    return initialState().parentParticleId();
+  }
+  /// Original particle index (to match HepMC)
+  std::uint32_t origParticleIdx() const {
+    return initialState().origParticleIdx();
+  }
+  /// Particle heavy-flavour origin (0->none, 4->charm, 5->beauty)
+  HeavyFlavourOrigin heavyFlavourOrigin() const { return m_hfOrigin; }
   /// Which type of process generated this particle.
-  ActsFatras::ProcessType process() const { return initialState().process(); }
+  ActsFatras::GenerationProcess process() const {
+    return initialState().process();
+  }
   /// PDG particle number that identifies the type.
   Acts::PdgParticle pdg() const { return initialState().pdg(); }
   /// Absolute PDG particle number that identifies the type.
@@ -169,11 +222,15 @@ class SimParticle final {
   std::uint32_t numberOfHits() const { return finalState().numberOfHits(); }
 
   /// Particle outcome.
-  ActsFatras::ParticleOutcome outcome() const { return finalState().outcome(); }
+  ActsFatras::SimulationOutcome outcome() const {
+    return finalState().outcome();
+  }
 
  private:
   SimParticleState m_initial;
   SimParticleState m_final;
+  /// particle origin (0->none, 4->charm, 5->beauty)
+  HeavyFlavourOrigin m_hfOrigin = HeavyFlavourOrigin::None;
 };
 
 std::ostream& operator<<(std::ostream& os, const SimParticle& particle);
@@ -203,24 +260,24 @@ struct CompareParticleId {
 };
 struct PrimaryVertexIdGetter {
   SimBarcode operator()(const SimParticleState& particle) const {
-    return SimBarcode(0u).setVertexPrimary(
+    return SimBarcode().withVertexPrimary(
         particle.particleId().vertexPrimary());
   }
   SimBarcode operator()(const SimParticle& particle) const {
-    return SimBarcode(0u).setVertexPrimary(
+    return SimBarcode().withVertexPrimary(
         particle.particleId().vertexPrimary());
   }
 };
 struct SecondaryVertexIdGetter {
   SimBarcode operator()(const SimParticleState& particle) const {
-    return SimBarcode(0u)
-        .setVertexPrimary(particle.particleId().vertexPrimary())
-        .setVertexSecondary(particle.particleId().vertexSecondary());
+    return SimBarcode()
+        .withVertexPrimary(particle.particleId().vertexPrimary())
+        .withVertexSecondary(particle.particleId().vertexSecondary());
   }
   SimBarcode operator()(const SimParticle& particle) const {
-    return SimBarcode(0u)
-        .setVertexPrimary(particle.particleId().vertexPrimary())
-        .setVertexSecondary(particle.particleId().vertexSecondary());
+    return SimBarcode()
+        .withVertexPrimary(particle.particleId().vertexPrimary())
+        .withVertexSecondary(particle.particleId().vertexSecondary());
   }
 };
 struct VertexIdGetter {

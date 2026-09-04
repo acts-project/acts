@@ -9,6 +9,18 @@
     - any-glob-to-any-file:
       - Core/**
       - Tests/UnitTests/Core/**
+'Component - Detray':
+  - changed-files:
+    - any-glob-to-any-file:
+      - Detray/**
+      - Plugins/Detray/**
+      - .github/detray.yml
+'Component - Traccc':
+  - changed-files:
+    - any-glob-to-any-file:
+      - Traccc/**
+      - Plugins/Traccc/**
+      - .github/traccc.yml
 'Component - Examples':
   - changed-files:
     - any-glob-to-any-file:
@@ -32,8 +44,8 @@
 'Changes Performance':
   - changed-files:
     - any-glob-to-any-file:
-      - CI/physmon/reference/**
-      - Examples/Python/tests/root_file_hashes.txt
+      - CI/physmon/reference.sha256
+      - Python/Examples/tests/root_file_hashes.txt
 'Event Data Model':
   - changed-files:
     - any-glob-to-any-file:

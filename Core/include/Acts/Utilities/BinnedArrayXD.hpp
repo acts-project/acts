@@ -39,9 +39,8 @@ class BinnedArrayXD : public BinnedArray<T> {
 
  public:
   /// Constructor for single object
-  ///
-  /// @tparam object is the single object
-  explicit BinnedArrayXD(T object)
+  /// @param object The single object to store
+  explicit BinnedArrayXD(const T& object)
       : BinnedArray<T>(),
         m_objectGrid(
             1, std::vector<std::vector<T>>(1, std::vector<T>(1, nullptr))),

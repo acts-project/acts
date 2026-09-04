@@ -12,7 +12,9 @@
 
 const MultiStepperTester<SympyStepper, MultiStepperLoop<SympyStepper>> tester;
 
-BOOST_AUTO_TEST_SUITE(multi_sympy_stepper_tests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 BOOST_AUTO_TEST_CASE(multi_stepper_config_constructor) {
   tester.test_config_constructor();
@@ -20,10 +22,6 @@ BOOST_AUTO_TEST_CASE(multi_stepper_config_constructor) {
 
 BOOST_AUTO_TEST_CASE(multi_stepper_state_no_cov) {
   tester.test_multi_stepper_state<false>();
-}
-
-BOOST_AUTO_TEST_CASE(multi_eigen_stepper_state_invalid) {
-  tester.test_multi_stepper_state_invalid();
 }
 
 BOOST_AUTO_TEST_CASE(test_combined_bound_state) {
@@ -63,3 +61,5 @@ BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -2,18 +2,20 @@
 set -e
 set -u
 
-PYTHON_VERSION=3.13
+SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+
+# Must match the floor used by .github/workflows/update-pip-requirements.yml,
+# otherwise this hook and the weekly workflow would rewrite the same lockfile
+# with different pins.
+PYTHON_VERSION=$("${SCRIPT_DIR}/supported_python_versions.py" --floor)
 
 input=$1
-input_abs=$(realpath "$input")
-input_rel=$(basename "$input_abs")
-dir=$(dirname "$input_abs")
-output=requirements.txt
+dir=$(dirname "$input")
+output="$dir/requirements.txt"
 
-uv python install $PYTHON_VERSION
-pushd "$dir"
+uv python install "$PYTHON_VERSION"
 uv pip compile \
-  --python-version $PYTHON_VERSION \
-  "$input_rel" \
+  --universal \
+  --python-version "$PYTHON_VERSION" \
+  "$input" \
   -o "$output"
-popd

@@ -85,6 +85,8 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// @param values iw the bound values
   explicit CuboidVolumeBounds(const std::array<double, eSize>& values);
 
+  /// Constructor with initializer list of key-value pairs
+  /// @param keyValues List of bound value identifiers and their corresponding values
   CuboidVolumeBounds(
       std::initializer_list<std::pair<BoundValues, double>> keyValues);
 
@@ -96,6 +98,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// Assignment operator
   ///
   /// @param bobo is the source volume bounds to be assigned
+  /// @return Reference to this object after assignment
   CuboidVolumeBounds& operator=(const CuboidVolumeBounds& bobo) = default;
 
   ~CuboidVolumeBounds() override = default;
@@ -112,6 +115,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   ///
   /// @param pos is the position in volume frame to be checked
   /// @param tol is the absolute tolerance to be applied
+  /// @return True if the position is inside the cuboid bounds
   bool inside(const Vector3& pos, double tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
@@ -155,6 +159,7 @@ class CuboidVolumeBounds : public VolumeBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return The requested bound value
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Set a bound value
@@ -169,6 +174,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// Convert axis direction to a corresponding bound value
   /// in local coordinate convention
   /// @param direction the axis direction to convert
+  /// @return The bound value corresponding to the axis direction
   static BoundValues boundsFromAxisDirection(AxisDirection direction);
 
   /// Convert axis direction to a set of corresponding cuboid faces
@@ -184,6 +190,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// Output Method for std::ostream
   ///
   /// @param os is ostream operator to be dumped into
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& os) const override;
 
  private:

@@ -9,23 +9,19 @@
 #include "ActsExamples/Utilities/TrackSelectorAlgorithm.hpp"
 
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 
-#include <cmath>
 #include <memory>
 #include <stdexcept>
 #include <utility>
 
 namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
-ActsExamples::TrackSelectorAlgorithm::TrackSelectorAlgorithm(
-    const Config& config, Acts::Logging::Level level)
-    : IAlgorithm("TrackSelector", level),
+TrackSelectorAlgorithm::TrackSelectorAlgorithm(
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackSelector", std::move(logger)),
       m_cfg(config),
       m_selector(config.selectorConfig) {
   if (m_cfg.inputTracks.empty()) {
@@ -40,8 +36,7 @@ ActsExamples::TrackSelectorAlgorithm::TrackSelectorAlgorithm(
   m_outputTrackContainer.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackSelectorAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackSelectorAlgorithm::execute(const AlgorithmContext& ctx) const {
   ACTS_VERBOSE("Reading tracks from: " << m_cfg.inputTracks);
 
   const auto& inputTracks = m_inputTrackContainer(ctx);
@@ -74,3 +69,5 @@ ActsExamples::ProcessCode ActsExamples::TrackSelectorAlgorithm::execute(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

@@ -27,12 +27,13 @@
 
 #include "TrackingVolumeCreation.hpp"
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 TrackingGeometry makeTrackingGeometry(const GeometryIdentifierHook& hook) {
   /// we test a two-level hierarchy
@@ -98,6 +99,8 @@ TrackingGeometry makeTrackingGeometry(const GeometryIdentifierHook& hook) {
   TrackingGeometry tGeometry(volume, nullptr, hook);
   return tGeometry;
 }
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test) {
   GeometryIdentifierHook hook{};
@@ -191,14 +194,13 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test) {
 }
 
 template <typename Callable>
-struct CallableHook : public Acts::GeometryIdentifierHook {
+struct CallableHook : public GeometryIdentifierHook {
   Callable callable;
 
   explicit CallableHook(const Callable& c) : callable(c) {}
 
-  Acts::GeometryIdentifier decorateIdentifier(
-      Acts::GeometryIdentifier identifier,
-      const Acts::Surface& surface) const override {
+  GeometryIdentifier decorateIdentifier(GeometryIdentifier identifier,
+                                        const Surface& surface) const override {
     return callable(identifier, surface);
   }
 };
@@ -346,4 +348,6 @@ BOOST_AUTO_TEST_CASE(TrackingGeometry_testVisitSurfaces) {
   BOOST_CHECK(lambdaVolumeCalled);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

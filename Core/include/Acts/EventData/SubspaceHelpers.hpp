@@ -14,6 +14,8 @@
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <ranges>
 
 #include <boost/container/static_vector.hpp>
@@ -47,7 +49,8 @@ inline static bool checkSubspaceIndices(const index_range_t& indexRange,
       return false;
     }
     ++it;
-    if (std::find(it, indexRange.end(), index) != indexRange.end()) {
+    if (const auto tail = std::ranges::subrange(it, indexRange.end());
+        std::ranges::find(tail, index) != tail.end()) {
       return false;
     }
   }
@@ -105,7 +108,9 @@ class SubspaceHelperBase {
  public:
   static constexpr std::size_t kFullSize = FullSize;
 
-  using FullSquareMatrix = ActsSquareMatrix<kFullSize>;
+  using FullSquareMatrix = SquareMatrix<kFullSize>;
+
+  using size_type = std::size_t;
 
   bool empty() const { return self().empty(); }
   std::size_t size() const { return self().size(); }
@@ -116,17 +121,21 @@ class SubspaceHelperBase {
   auto end() const { return self().end(); }
 
   bool contains(std::uint8_t index) const {
-    return std::find(begin(), end(), index) != end();
+    const auto r = std::ranges::subrange(begin(), end());
+    return std::ranges::find(r, index) != r.end();
   }
   std::size_t indexOf(std::uint8_t index) const {
-    auto it = std::find(begin(), end(), index);
-    return it != end() ? std::distance(begin(), it) : kFullSize;
+    const auto r = std::ranges::subrange(begin(), end());
+    const auto it = std::ranges::find(r, index);
+    return it != r.end()
+               ? static_cast<std::size_t>(std::ranges::distance(r.begin(), it))
+               : kFullSize;
   }
 
   template <typename EigenDerived>
-  ActsVector<kFullSize> expandVector(
+  Vector<kFullSize> expandVector(
       const Eigen::DenseBase<EigenDerived>& vector) const {
-    ActsVector<kFullSize> result = ActsVector<kFullSize>::Zero();
+    Vector<kFullSize> result = Vector<kFullSize>::Zero();
     for (auto [i, index] : enumerate(*this)) {
       result(index) = vector(i);
     }
@@ -182,27 +191,48 @@ class VariableSubspaceHelper
     : public detail::SubspaceHelperBase<
           VariableSubspaceHelper<FullSize, index_t>, FullSize> {
  public:
+  /// Size of the full parameter space
   static constexpr std::size_t kFullSize = FullSize;
 
+  /// Type alias for index type
   using IndexType = index_t;
+  /// Type alias for container holding subspace indices
   using Container = boost::container::static_vector<IndexType, FullSize>;
 
+  /// Construct a variable subspace helper with specified indices
+  ///
+  /// @tparam other_index_range_t Type of the index range
+  /// @param indices Range of indices defining the subspace
   template <std::ranges::sized_range other_index_range_t>
   explicit VariableSubspaceHelper(const other_index_range_t& indices) {
     assert(checkSubspaceIndices(indices, kFullSize, indices.size()) &&
            "Invalid indices");
     m_indices.resize(indices.size());
-    std::transform(indices.begin(), indices.end(), m_indices.begin(),
-                   [](auto index) { return static_cast<IndexType>(index); });
+    std::ranges::transform(indices, m_indices.begin(), [](auto index) {
+      return static_cast<IndexType>(index);
+    });
   }
 
+  /// Check if the subspace is empty
+  /// @return True if the subspace contains no indices
   bool empty() const { return m_indices.empty(); }
+  /// Get the size of the subspace
+  /// @return Number of indices in the subspace
   std::size_t size() const { return m_indices.size(); }
+  /// Get the container of subspace indices
+  /// @return Reference to the container holding the indices
   const Container& indices() const { return m_indices; }
 
+  /// Access subspace index at position i
+  /// @param i Position index
+  /// @return The subspace index at position i
   IndexType operator[](std::size_t i) const { return m_indices[i]; }
 
+  /// Get iterator to beginning of indices
+  /// @return Iterator to the first index
   auto begin() const { return m_indices.begin(); }
+  /// Get iterator to end of indices
+  /// @return Iterator past the last index
   auto end() const { return m_indices.end(); }
 
  private:
@@ -220,39 +250,72 @@ class FixedSubspaceHelper
     : public detail::SubspaceHelperBase<
           FixedSubspaceHelper<FullSize, SubspaceSize, index_t>, FullSize> {
  public:
+  /// Size of the full parameter space
   static constexpr std::size_t kFullSize = FullSize;
+  /// Size of the subspace parameter space
   static constexpr std::size_t kSubspaceSize = SubspaceSize;
   static_assert(kSubspaceSize <= kFullSize, "Invalid subspace size");
 
-  using Projector = ActsMatrix<kSubspaceSize, kFullSize>;
-  using Expander = ActsMatrix<kFullSize, kSubspaceSize>;
-  using Vector = ActsVector<kSubspaceSize>;
-  using SquareMatrix = ActsSquareMatrix<kSubspaceSize>;
+  /// Type alias for projection matrix (subspace x full)
+  using Projector = Matrix<kSubspaceSize, kFullSize>;
+  /// Type alias for expansion matrix (full x subspace)
+  using Expander = Matrix<kFullSize, kSubspaceSize>;
+  /// Type alias for subspace vector
+  using VectorD = Vector<kSubspaceSize>;
+  /// Type alias for subspace square matrix
+  using SquareMatrixD = SquareMatrix<kSubspaceSize>;
+  /// Type alias for left application result matrix
   template <std::size_t K>
-  using ApplyLeftResult = ActsMatrix<kSubspaceSize, kSubspaceSize>;
+  using ApplyLeftResult = Matrix<kSubspaceSize, kSubspaceSize>;
+  /// Type alias for right application result matrix
   template <std::size_t N>
-  using ApplyRightResult = ActsMatrix<kSubspaceSize, kSubspaceSize>;
+  using ApplyRightResult = Matrix<kSubspaceSize, kSubspaceSize>;
 
+  /// Type alias for index type used to specify subspace indices
   using IndexType = index_t;
+  /// Type alias for container storing subspace indices
   using Container = std::array<IndexType, kSubspaceSize>;
 
+  /// Type alias for size type
+  using size_type = std::size_t;
+
+  /// Construct a fixed subspace helper with specified indices
+  ///
+  /// @tparam other_index_range_t Type of the index range
+  /// @param indices Range of indices defining the subspace, must match SubspaceSize
   template <std::ranges::sized_range other_index_range_t>
   explicit FixedSubspaceHelper(const other_index_range_t& indices) {
     assert(checkSubspaceIndices(indices, kFullSize, kSubspaceSize) &&
            "Invalid indices");
-    std::transform(indices.begin(), indices.end(), m_indices.begin(),
-                   [](auto index) { return static_cast<IndexType>(index); });
+    std::ranges::transform(indices, m_indices.begin(), [](auto index) {
+      return static_cast<IndexType>(index);
+    });
   }
 
+  /// Check if the subspace is empty
+  /// @return True if the subspace contains no indices (always false for fixed subspaces)
   bool empty() const { return m_indices.empty(); }
+  /// Get the size of the subspace
+  /// @return Number of indices in the subspace (always SubspaceSize)
   std::size_t size() const { return m_indices.size(); }
+  /// Get the container of subspace indices
+  /// @return Reference to the array holding the indices
   const Container& indices() const { return m_indices; }
 
+  /// Access subspace index at position i
+  /// @param i Position index
+  /// @return The subspace index at position i
   IndexType operator[](std::uint32_t i) const { return m_indices[i]; }
 
+  /// Get iterator to beginning of indices
+  /// @return Iterator to the first index
   auto begin() const { return m_indices.begin(); }
+  /// Get iterator to end of indices
+  /// @return Iterator past the last index
   auto end() const { return m_indices.end(); }
 
+  /// Create a projection matrix from full space to subspace
+  /// @return Matrix that projects from full space to subspace dimensions
   Projector projector() const {
     Projector result = Projector::Zero();
     for (auto [i, index] : enumerate(*this)) {
@@ -261,6 +324,8 @@ class FixedSubspaceHelper
     return result;
   }
 
+  /// Create an expansion matrix from subspace to full space
+  /// @return Matrix that expands from subspace to full space dimensions
   Expander expander() const {
     Expander result = Expander::Zero();
     for (auto [i, index] : enumerate(*this)) {
@@ -269,6 +334,11 @@ class FixedSubspaceHelper
     return result;
   }
 
+  /// Apply subspace projection on the left side of a matrix
+  /// @tparam K Number of columns in the input matrix
+  /// @tparam Derived Eigen matrix type
+  /// @param matrix Input matrix with rows matching full space size
+  /// @return Matrix with subspace rows and K columns
   template <std::size_t K, typename Derived>
   ApplyLeftResult<K> applyLeftOf(
       const Eigen::DenseBase<Derived>& matrix) const {
@@ -282,6 +352,11 @@ class FixedSubspaceHelper
     return result;
   }
 
+  /// Apply subspace projection on the right side of a matrix
+  /// @tparam N Number of rows in the input matrix
+  /// @tparam Derived Eigen matrix type
+  /// @param matrix Input matrix with columns matching subspace size
+  /// @return Matrix with N rows and subspace columns
   template <std::size_t N, typename Derived>
   ApplyRightResult<N> applyRightOf(
       const Eigen::DenseBase<Derived>& matrix) const {
@@ -295,22 +370,30 @@ class FixedSubspaceHelper
     return result;
   }
 
+  /// Project a full-space vector to subspace
+  /// @tparam Derived Eigen vector type
+  /// @param fullVector Input vector with full space dimensions
+  /// @return Vector projected to subspace dimensions
   template <typename Derived>
-  Vector projectVector(const Eigen::DenseBase<Derived>& fullVector) const {
+  VectorD projectVector(const Eigen::DenseBase<Derived>& fullVector) const {
     assert(fullVector.size() == kFullSize && "Invalid full vector size");
-    Vector result = Vector::Zero();
+    VectorD result = VectorD::Zero();
     for (auto [i, index] : enumerate(*this)) {
       result(i) = fullVector(index);
     }
     return result;
   }
 
+  /// Project a full-space square matrix to subspace
+  /// @tparam Derived Eigen matrix type
+  /// @param fullMatrix Input square matrix with full space dimensions
+  /// @return Square matrix projected to subspace dimensions
   template <typename Derived>
-  SquareMatrix projectMatrix(
+  SquareMatrixD projectMatrix(
       const Eigen::DenseBase<Derived>& fullMatrix) const {
     assert(fullMatrix.rows() == kFullSize && fullMatrix.cols() == kFullSize &&
            "Invalid full matrix size");
-    SquareMatrix result = SquareMatrix::Zero();
+    SquareMatrixD result = SquareMatrixD::Zero();
     for (auto [i, indexI] : enumerate(*this)) {
       for (auto [j, indexJ] : enumerate(*this)) {
         result(i, j) = fullMatrix(indexI, indexJ);
@@ -323,9 +406,16 @@ class FixedSubspaceHelper
   Container m_indices{};
 };
 
+/// @brief Helper type for fixed-size bound parameter subspaces
+/// @details Provides utilities for working with fixed-size subspaces of bound track parameters
 template <std::size_t SubspaceSize>
 using FixedBoundSubspaceHelper =
     FixedSubspaceHelper<Acts::eBoundSize, SubspaceSize, std::uint8_t>;
+
+/// @typedef VariableBoundSubspaceHelper
+/// Helper type for variable-size bound parameter subspaces.
+/// Provides utilities for working with variable-size subspaces of bound track
+/// parameters.
 using VariableBoundSubspaceHelper =
     VariableSubspaceHelper<Acts::eBoundSize, std::uint8_t>;
 

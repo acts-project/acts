@@ -77,7 +77,7 @@ if "__main__" == __name__:
         cOptions = DD4hepDetectorOptions(logLevel=acts.logging.INFO, emulateToGraph="")
 
         # Context and options
-        geoContext = acts.GeometryContext()
+        geoContext = acts.GeometryContext.dangerouslyDefaultConstruct()
         [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
         runGeant4(detector, detector, field, Path.cwd()).run()
     else:

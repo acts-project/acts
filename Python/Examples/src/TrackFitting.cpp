@@ -1,0 +1,168 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
+#include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
+#include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
+#include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
+#include "ActsPlugins/Json/BetheHeitlerApproxJsonConverter.hpp"
+#include "ActsPython/Utilities/Macros.hpp"
+
+#include <cstddef>
+#include <memory>
+#include <utility>
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+namespace py = pybind11;
+
+using namespace ActsExamples;
+using namespace Acts;
+using namespace py::literals;
+
+namespace ActsPython {
+
+void addTrackFitting(py::module& mex) {
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      TrackFittingAlgorithm, mex, "TrackFittingAlgorithm", inputMeasurements,
+      inputProtoTracks, inputInitialTrackParameters, inputClusters,
+      outputTracks, fit, pickTrack, calibrator, linkForward);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(RefittingAlgorithm, mex, "RefittingAlgorithm",
+                                inputTracks, outputTracks, fit, pickTrack,
+                                initialVarInflation, beamSpotConstraint);
+
+  {
+    py::class_<TrackFitterFunction, std::shared_ptr<TrackFitterFunction>>(
+        mex, "TrackFitterFunction");
+
+    mex.def(
+        "makeKalmanFitterFunction",
+        [](std::shared_ptr<const TrackingGeometry> trackingGeometry,
+           std::shared_ptr<const MagneticFieldProvider> magneticField,
+           bool multipleScattering, bool energyLoss,
+           double reverseFilteringMomThreshold,
+           double reverseFilteringCovarianceScaling,
+           const FreeToBoundCorrection& freeToBoundCorrection, double chi2Cut,
+           bool useJosephFormulation, Logging::Level level) {
+          return makeKalmanFitterFunction(
+              std::move(trackingGeometry), std::move(magneticField),
+              multipleScattering, energyLoss, reverseFilteringMomThreshold,
+              reverseFilteringCovarianceScaling, freeToBoundCorrection, chi2Cut,
+              useJosephFormulation, *getDefaultLogger("Kalman", level));
+        },
+        "trackingGeometry"_a, "magneticField"_a, "multipleScattering"_a,
+        "energyLoss"_a, "reverseFilteringMomThreshold"_a,
+        "reverseFilteringCovarianceScaling"_a, "freeToBoundCorrection"_a,
+        "chi2Cut"_a, "useJosephFormulation"_a, "level"_a);
+
+    mex.def(
+        "makeKalmanReferenceTrajectoryFitterFunction",
+        [](std::shared_ptr<const TrackingGeometry> trackingGeometry,
+           std::shared_ptr<const MagneticFieldProvider> magneticField,
+           bool multipleScattering, bool energyLoss,
+           const FreeToBoundCorrection& freeToBoundCorrection,
+           bool useJosephFormulation, Logging::Level level) {
+          return makeKalmanReferenceTrajectoryFitterFunction(
+              std::move(trackingGeometry), std::move(magneticField),
+              multipleScattering, energyLoss, freeToBoundCorrection,
+              useJosephFormulation, *getDefaultLogger("Kalman", level));
+        },
+        "trackingGeometry"_a, "magneticField"_a, "multipleScattering"_a,
+        "energyLoss"_a, "freeToBoundCorrection"_a, "useJosephFormulation"_a,
+        "level"_a);
+
+    py::class_<MeasurementCalibrator, std::shared_ptr<MeasurementCalibrator>>(
+        mex, "MeasurementCalibrator");
+
+    mex.def("makePassThroughCalibrator",
+            []() -> std::shared_ptr<MeasurementCalibrator> {
+              return std::make_shared<PassThroughCalibrator>();
+            });
+
+    py::enum_<ComponentMergeMethod>(mex, "ComponentMergeMethod")
+        .value("mean", ComponentMergeMethod::eMean)
+        .value("maxWeight", ComponentMergeMethod::eMaxWeight);
+
+    py::enum_<MixtureReductionAlgorithm>(mex, "MixtureReductionAlgorithm")
+        .value("weightCut", MixtureReductionAlgorithm::weightCut)
+        .value("KLDistance", MixtureReductionAlgorithm::KLDistance)
+        .value("KLDistanceNaive", MixtureReductionAlgorithm::KLDistanceNaive);
+
+    py::class_<BetheHeitlerApprox, std::shared_ptr<BetheHeitlerApprox>>(
+        mex, "BetheHeitlerApprox");
+    py::class_<PolynomialBetheHeitlerApprox, BetheHeitlerApprox,
+               std::shared_ptr<PolynomialBetheHeitlerApprox>>(
+        mex, "PolynomialBetheHeitlerApprox");
+
+    mex.def(
+        "loadBetheHeitlerApproxFromJson",
+        [](const std::string& filepath, bool clampToRange, double noChangeLimit,
+           double singleGaussianLimit) {
+          return std::make_shared<PolynomialBetheHeitlerApprox>(
+              Acts::loadBetheHeitlerApproxFromJson(
+                  filepath, clampToRange, noChangeLimit, singleGaussianLimit));
+        },
+        "filepath"_a, "clamp_to_range"_a, "no_change_limit"_a,
+        "single_gaussian_limit"_a);
+
+    mex.def(
+        "makeGsfFitterFunction",
+        [](std::shared_ptr<const TrackingGeometry> trackingGeometry,
+           std::shared_ptr<const MagneticFieldProvider> magneticField,
+           const std::shared_ptr<const BetheHeitlerApprox>& betheHeitlerApprox,
+           std::size_t maxComponents, double weightCutoff,
+           ComponentMergeMethod componentMergeMethod,
+           MixtureReductionAlgorithm mixtureReductionAlgorithm,
+           double reverseFilteringCovarianceScaling, Logging::Level level) {
+          return makeGsfFitterFunction(
+              std::move(trackingGeometry), std::move(magneticField),
+              betheHeitlerApprox, maxComponents, weightCutoff,
+              componentMergeMethod, mixtureReductionAlgorithm,
+              reverseFilteringCovarianceScaling,
+              *getDefaultLogger("GSFFunc", level));
+        },
+        "trackingGeometry"_a, "magneticField"_a, "betheHeitlerApprox"_a,
+        "maxComponents"_a, "weightCutoff"_a, "componentMergeMethod"_a,
+        "mixtureReductionAlgorithm"_a, "reverseFilteringCovarianceScaling"_a,
+        "level"_a);
+
+    mex.def(
+        "makeGlobalChiSquareFitterFunction",
+        [](std::shared_ptr<const TrackingGeometry> trackingGeometry,
+           std::shared_ptr<const MagneticFieldProvider> magneticField,
+           bool multipleScattering, bool energyLoss,
+           const FreeToBoundCorrection& freeToBoundCorrection,
+           std::size_t nUpdateMax, double relChi2changeCutOff,
+           Logging::Level level) {
+          return makeGlobalChiSquareFitterFunction(
+              std::move(trackingGeometry), std::move(magneticField),
+              multipleScattering, energyLoss, freeToBoundCorrection, nUpdateMax,
+              relChi2changeCutOff, *getDefaultLogger("Gx2f", level));
+        },
+        py::arg("trackingGeometry"), py::arg("magneticField"),
+        py::arg("multipleScattering"), py::arg("energyLoss"),
+        py::arg("freeToBoundCorrection"), py::arg("nUpdateMax"),
+        py::arg("relChi2changeCutOff"), py::arg("level"));
+  }
+
+  {
+    py::class_<FreeToBoundCorrection>(mex, "FreeToBoundCorrection")
+        .def(py::init<>())
+        .def(py::init<bool>(), py::arg("apply") = false)
+        .def(py::init<bool, double, double>(), py::arg("apply") = false,
+             py::arg("alpha") = 0.1, py::arg("beta") = 2);
+  }
+}
+
+}  // namespace ActsPython

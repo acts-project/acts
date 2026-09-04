@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 
@@ -41,6 +40,11 @@ class TelescopeDetector : public Detector {
 
   std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
       const Geant4ConstructionOptions& options) const override;
+
+ protected:
+  struct NoBuildTag {};
+  explicit TelescopeDetector(
+      const Config& cfg, NoBuildTag /*unused*/);  // used for aligned version
 
  private:
   Config m_cfg;

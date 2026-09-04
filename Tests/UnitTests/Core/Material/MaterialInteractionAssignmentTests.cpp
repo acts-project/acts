@@ -23,11 +23,13 @@
 
 #include <limits>
 
-namespace Acts::Test {
+using namespace Acts;
 
-auto tContext = GeometryContext();
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(MaterialInteractionAssignmentSuite)
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 BOOST_AUTO_TEST_CASE(AssignToClosest) {
   // Create a vector of surfaces
@@ -308,4 +310,4 @@ BOOST_AUTO_TEST_CASE(AssignWithPathLength) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

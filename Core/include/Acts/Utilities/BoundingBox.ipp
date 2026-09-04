@@ -10,6 +10,8 @@
 
 #include "Acts/Utilities/BoundingBox.hpp"
 
+#include <algorithm>
+
 template <typename entity_t, typename value_t, std::size_t DIM>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::AxisAlignedBoundingBox(
     const entity_t* entity, const VertexType& vmin, const VertexType& vmax)
@@ -92,8 +94,8 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::wrap(
   assert(boxes.size() > 1);
   std::vector<const self_t*> box_ptrs;
   box_ptrs.reserve(boxes.size());
-  std::transform(boxes.begin(), boxes.end(), std::back_inserter(box_ptrs),
-                 [](const auto* box) { return box; });
+  std::ranges::transform(boxes, std::back_inserter(box_ptrs),
+                         [](const auto* box) { return box; });
   return wrap(box_ptrs, envelope);
 }
 
@@ -106,8 +108,8 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::wrap(
   assert(boxes.size() > 1);
   std::vector<const self_t*> box_ptrs;
   box_ptrs.reserve(boxes.size());
-  std::transform(boxes.begin(), boxes.end(), std::back_inserter(box_ptrs),
-                 [](auto& box) { return &box; });
+  std::ranges::transform(boxes, std::back_inserter(box_ptrs),
+                         [](auto& box) { return &box; });
   return wrap(box_ptrs, envelope);
 }
 

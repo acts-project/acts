@@ -6,16 +6,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/RootMaterialTrackIo.hpp"
+#include "ActsPlugins/Root/RootMaterialTrackIo.hpp"
 
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <TChain.h>
 #include <TTree.h>
 
-void Acts::RootMaterialTrackIo::connectForRead(TChain& materialChain) {
+using namespace Acts;
+
+namespace ActsPlugins {
+
+std::uint32_t RootMaterialTrackIo::eventId() const {
+  return m_eventId;
+}
+
+void RootMaterialTrackIo::connectForRead(TTree& materialChain) {
   materialChain.SetBranchAddress("event_id", &m_eventId);
   materialChain.SetBranchAddress("v_x", &m_summaryPayload.vX);
   materialChain.SetBranchAddress("v_y", &m_summaryPayload.vY);
@@ -40,6 +48,8 @@ void Acts::RootMaterialTrackIo::connectForRead(TChain& materialChain) {
   materialChain.SetBranchAddress("mat_A", &m_stepPayload.stepMatAPtr);
   materialChain.SetBranchAddress("mat_Z", &m_stepPayload.stepMatZPtr);
   materialChain.SetBranchAddress("mat_rho", &m_stepPayload.stepMatRhoPtr);
+  materialChain.SetBranchAddress("elements", &m_stepPayload.stepElementZPtr);
+  materialChain.SetBranchAddress("fraction", &m_stepPayload.stepFractionPtr);
   if (m_cfg.surfaceInfo) {
     materialChain.SetBranchAddress("sur_id", &m_surfacePayload.surfaceIdPtr);
     materialChain.SetBranchAddress("sur_x", &m_surfacePayload.surfaceXPtr);
@@ -50,7 +60,7 @@ void Acts::RootMaterialTrackIo::connectForRead(TChain& materialChain) {
   }
 }
 
-void Acts::RootMaterialTrackIo::connectForWrite(TTree& materialTree) {
+void RootMaterialTrackIo::connectForWrite(TTree& materialTree) {
   // This sets the branch addresses for the material track
   // Set the branches
   materialTree.Branch("event_id", &m_eventId);
@@ -77,6 +87,8 @@ void Acts::RootMaterialTrackIo::connectForWrite(TTree& materialTree) {
   materialTree.Branch("mat_A", &m_stepPayload.stepMatA);
   materialTree.Branch("mat_Z", &m_stepPayload.stepMatZ);
   materialTree.Branch("mat_rho", &m_stepPayload.stepMatRho);
+  materialTree.Branch("elements", &m_stepPayload.stepElementZ);
+  materialTree.Branch("fraction", &m_stepPayload.stepFraction);
 
   if (m_cfg.prePostStepInfo) {
     materialTree.Branch("mat_sx", &m_stepPayload.stepXs);
@@ -101,9 +113,9 @@ void Acts::RootMaterialTrackIo::connectForWrite(TTree& materialTree) {
   }
 }
 
-void Acts::RootMaterialTrackIo::write(
-    const GeometryContext& gctx, std::uint32_t eventNum,
-    const RecordedMaterialTrack& materialTrack) {
+void RootMaterialTrackIo::write(const GeometryContext& gctx,
+                                std::uint32_t eventNum,
+                                const RecordedMaterialTrack& materialTrack) {
   m_eventId = eventNum;
   // Clearing the vector first
   m_stepPayload.stepXs.clear();
@@ -125,6 +137,8 @@ void Acts::RootMaterialTrackIo::write(
   m_stepPayload.stepMatA.clear();
   m_stepPayload.stepMatZ.clear();
   m_stepPayload.stepMatRho.clear();
+  m_stepPayload.stepElementZ.clear();
+  m_stepPayload.stepFraction.clear();
 
   m_surfacePayload.surfaceId.clear();
   m_surfacePayload.surfaceX.clear();
@@ -159,6 +173,8 @@ void Acts::RootMaterialTrackIo::write(
   m_stepPayload.stepMatA.reserve(mints);
   m_stepPayload.stepMatZ.reserve(mints);
   m_stepPayload.stepMatRho.reserve(mints);
+  m_stepPayload.stepElementZ.reserve(mints);
+  m_stepPayload.stepFraction.reserve(mints);
 
   m_surfacePayload.surfaceId.reserve(mints);
   m_surfacePayload.surfaceX.reserve(mints);
@@ -203,10 +219,8 @@ void Acts::RootMaterialTrackIo::write(
     m_stepPayload.stepDz.push_back(direction.z());
 
     if (m_cfg.prePostStepInfo) {
-      Acts::Vector3 prePos =
-          mint.position - 0.5 * mint.pathCorrection * direction;
-      Acts::Vector3 posPos =
-          mint.position + 0.5 * mint.pathCorrection * direction;
+      Vector3 prePos = mint.position - 0.5 * mint.pathCorrection * direction;
+      Vector3 posPos = mint.position + 0.5 * mint.pathCorrection * direction;
 
       m_stepPayload.stepXs.push_back(prePos.x());
       m_stepPayload.stepYs.push_back(prePos.y());
@@ -218,7 +232,7 @@ void Acts::RootMaterialTrackIo::write(
 
     // Store surface information
     if (m_cfg.surfaceInfo) {
-      const Acts::Surface* surface = mint.surface;
+      const Surface* surface = mint.surface;
       if (mint.intersectionID.value() != 0) {
         m_surfacePayload.surfaceId.push_back(mint.intersectionID.value());
         m_surfacePayload.surfacePathCorrection.push_back(mint.pathCorrection);
@@ -230,10 +244,10 @@ void Acts::RootMaterialTrackIo::write(
         m_surfacePayload.surfaceDistance.push_back(
             (mint.position - mint.intersection).norm());
       } else if (surface != nullptr) {
-        auto sfIntersection =
+        Intersection3D sfIntersection =
             surface
                 ->intersect(gctx, mint.position, mint.direction,
-                            Acts::BoundaryTolerance::None())
+                            BoundaryTolerance::None())
                 .closest();
         m_surfacePayload.surfaceId.push_back(surface->geometryId().value());
         m_surfacePayload.surfacePathCorrection.push_back(1.0);
@@ -241,8 +255,7 @@ void Acts::RootMaterialTrackIo::write(
         m_surfacePayload.surfaceY.push_back(sfIntersection.position().y());
         m_surfacePayload.surfaceZ.push_back(sfIntersection.position().z());
       } else {
-        m_surfacePayload.surfaceId.push_back(
-            Acts::GeometryIdentifier().value());
+        m_surfacePayload.surfaceId.push_back(GeometryIdentifier().value());
         m_surfacePayload.surfaceX.push_back(0);
         m_surfacePayload.surfaceY.push_back(0);
         m_surfacePayload.surfaceZ.push_back(0);
@@ -252,7 +265,7 @@ void Acts::RootMaterialTrackIo::write(
 
     // store volume information
     if (m_cfg.volumeInfo) {
-      Acts::GeometryIdentifier vlayerID;
+      GeometryIdentifier vlayerID;
       if (!mint.volume.empty()) {
         vlayerID = mint.volume.geometryId();
         m_volumePayload.volumeId.push_back(vlayerID.value());
@@ -274,6 +287,8 @@ void Acts::RootMaterialTrackIo::write(
     m_stepPayload.stepMatA.push_back(mprops.material().Ar());
     m_stepPayload.stepMatZ.push_back(mprops.material().Z());
     m_stepPayload.stepMatRho.push_back(mprops.material().massDensity());
+    m_stepPayload.stepElementZ.push_back(mint.elementZ);
+    m_stepPayload.stepFraction.push_back(mint.elementFrac);
     // re-calculate if defined to do so
     if (m_cfg.recalculateTotals) {
       m_summaryPayload.tX0 += mprops.thicknessInX0();
@@ -282,13 +297,13 @@ void Acts::RootMaterialTrackIo::write(
   }
 }
 
-Acts::RecordedMaterialTrack Acts::RootMaterialTrackIo::read() const {
-  Acts::RecordedMaterialTrack rmTrack;
+RecordedMaterialTrack RootMaterialTrackIo::read() const {
+  RecordedMaterialTrack rmTrack;
   // Fill the position and momentum
-  rmTrack.first.first = Acts::Vector3(m_summaryPayload.vX, m_summaryPayload.vY,
-                                      m_summaryPayload.vZ);
-  rmTrack.first.second = Acts::Vector3(
-      m_summaryPayload.vPx, m_summaryPayload.vPy, m_summaryPayload.vPz);
+  rmTrack.first.first =
+      Vector3(m_summaryPayload.vX, m_summaryPayload.vY, m_summaryPayload.vZ);
+  rmTrack.first.second =
+      Vector3(m_summaryPayload.vPx, m_summaryPayload.vPy, m_summaryPayload.vPz);
 
   // Fill the individual steps
   std::size_t msteps = m_stepPayload.stepLength.size();
@@ -308,32 +323,38 @@ Acts::RecordedMaterialTrack Acts::RootMaterialTrackIo::read() const {
     rmTrack.second.materialInX0 += s / mX0;
     rmTrack.second.materialInL0 += s / mL0;
     /// Fill the position & the material
-    Acts::MaterialInteraction mInteraction;
+    MaterialInteraction mInteraction;
     mInteraction.position =
-        Acts::Vector3(m_stepPayload.stepX[is], m_stepPayload.stepY[is],
-                      m_stepPayload.stepZ[is]);
+        Vector3(m_stepPayload.stepX[is], m_stepPayload.stepY[is],
+                m_stepPayload.stepZ[is]);
     mInteraction.direction =
-        Acts::Vector3(m_stepPayload.stepDx[is], m_stepPayload.stepDy[is],
-                      m_stepPayload.stepDz[is]);
-    mInteraction.materialSlab = Acts::MaterialSlab(
-        Acts::Material::fromMassDensity(mX0, mL0, m_stepPayload.stepMatA[is],
-                                        m_stepPayload.stepMatZ[is],
-                                        m_stepPayload.stepMatRho[is]),
+        Vector3(m_stepPayload.stepDx[is], m_stepPayload.stepDy[is],
+                m_stepPayload.stepDz[is]);
+    mInteraction.materialSlab = MaterialSlab(
+        Material::fromMassDensity(mX0, mL0, m_stepPayload.stepMatA[is],
+                                  m_stepPayload.stepMatZ[is],
+                                  m_stepPayload.stepMatRho[is]),
         s);
+    /// adding the element vectors and fractions
+    if (is < m_stepPayload.stepElementZ.size()) {
+      mInteraction.elementZ = m_stepPayload.stepElementZ[is];
+      mInteraction.elementFrac = m_stepPayload.stepFraction[is];
+    }
     if (m_cfg.surfaceInfo) {
       // add the surface information to the interaction this allows the
       // mapping to be speed up
       mInteraction.intersectionID =
-          Acts::GeometryIdentifier(m_surfacePayload.surfaceId[is]);
-      mInteraction.intersection = Acts::Vector3(m_surfacePayload.surfaceX[is],
-                                                m_surfacePayload.surfaceY[is],
-                                                m_surfacePayload.surfaceZ[is]);
+          GeometryIdentifier(m_surfacePayload.surfaceId[is]);
+      mInteraction.intersection =
+          Vector3(m_surfacePayload.surfaceX[is], m_surfacePayload.surfaceY[is],
+                  m_surfacePayload.surfaceZ[is]);
       mInteraction.pathCorrection = m_surfacePayload.surfacePathCorrection[is];
     } else {
-      mInteraction.intersectionID = Acts::GeometryIdentifier();
-      mInteraction.intersection = Acts::Vector3(0, 0, 0);
+      mInteraction.intersectionID = GeometryIdentifier();
+      mInteraction.intersection = Vector3(0, 0, 0);
     }
     rmTrack.second.materialInteractions.push_back(std::move(mInteraction));
   }
   return rmTrack;
 }
+}  // namespace ActsPlugins

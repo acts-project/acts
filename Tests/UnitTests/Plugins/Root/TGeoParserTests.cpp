@@ -9,12 +9,12 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Root/TGeoParser.hpp"
-#include "Acts/Plugins/Root/TGeoSurfaceConverter.hpp"
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "ActsPlugins/Root/TGeoParser.hpp"
+#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
+#include "ActsTests/CommonHelpers/DataDirectory.hpp"
 
 #include <memory>
 #include <string>
@@ -23,19 +23,24 @@
 
 #include "TGeoManager.h"
 
-namespace Acts::Test {
+using namespace Acts;
+using namespace ActsPlugins;
+
+namespace ActsTests {
 
 /// @brief struct to load the global geometry
 struct RootGeometry {
   RootGeometry() {
-    auto path = Acts::Test::getDataPath("panda.root");
+    auto path = getDataPath("panda.root");
     TGeoManager::Import(path.c_str());
   }
 };
 
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 RootGeometry rGeometry = RootGeometry();
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 /// @brief Unit test Parsing a TGeo geometry
 BOOST_AUTO_TEST_CASE(TGeoParser_Pixel) {
@@ -45,7 +50,7 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel) {
     tgpOptions.volumeNames = {volumeName};
     tgpOptions.targetNames = {"PixelActiveo2", "PixelActiveo4", "PixelActiveo5",
                               "PixelActiveo6"};
-    std::string axes = "XYZ";
+    TGeoAxes axes = "XYZ";
     double scale = 10.;
 
     TGeoParser::State tgpState;
@@ -82,7 +87,7 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
     tgpOptions.parseRanges.push_back({AxisDirection::AxisZ, {-60., 15.}});
     tgpOptions.unit = 10.;
 
-    std::string axes = "XYZ";
+    TGeoAxes axes = "XYZ";
 
     TGeoParser::State tgpState;
     tgpState.volume = gGeoManager->GetTopVolume();
@@ -106,4 +111,6 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

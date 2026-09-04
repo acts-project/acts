@@ -99,6 +99,7 @@ class PassiveLayerBuilder : public ILayerBuilder {
   void setConfiguration(const Config& plConfig);
 
   /// Get configuration method
+  /// @return Copy of the current configuration object
   Config getConfiguration() const;
 
   /// Set logging instance

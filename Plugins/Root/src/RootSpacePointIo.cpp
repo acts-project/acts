@@ -6,20 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/RootSpacePointIo.hpp"
+#include "ActsPlugins/Root/RootSpacePointIo.hpp"
 
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
 
 #include <TChain.h>
 #include <TTree.h>
 
-namespace Acts {
+using namespace Acts;
 
-void RootSpacePointIo::connectForRead(
-    TChain& tchain, const Experimental::SpacePointContainer2& spacePoints) {
-  using enum Experimental::SpacePointColumns;
+namespace ActsPlugins {
+
+void RootSpacePointIo::connectForRead(TChain& tchain,
+                                      const SpacePointContainer& spacePoints) {
+  using enum SpacePointColumns;
 
   if (spacePoints.hasColumns(X)) {
     tchain.SetBranchAddress("x", &m_x);
@@ -47,9 +49,9 @@ void RootSpacePointIo::connectForRead(
   }
 }
 
-void RootSpacePointIo::connectForWrite(
-    TTree& ttree, const Experimental::SpacePointContainer2& spacePoints) {
-  using enum Experimental::SpacePointColumns;
+void RootSpacePointIo::connectForWrite(TTree& ttree,
+                                       const SpacePointContainer& spacePoints) {
+  using enum SpacePointColumns;
 
   if (spacePoints.hasColumns(X)) {
     ttree.Branch("x", &m_x);
@@ -77,9 +79,8 @@ void RootSpacePointIo::connectForWrite(
   }
 }
 
-void RootSpacePointIo::write(
-    const Experimental::ConstSpacePointProxy2& spacePoint) {
-  using enum Experimental::SpacePointColumns;
+void RootSpacePointIo::write(const ConstSpacePointProxy& spacePoint) {
+  using enum SpacePointColumns;
 
   if (spacePoint.container().hasColumns(X)) {
     m_x = spacePoint.x();
@@ -107,19 +108,19 @@ void RootSpacePointIo::write(
   }
 }
 
-void RootSpacePointIo::write(
-    const Experimental::SpacePointContainer2& spacePoints, TTree& ttree) {
+void RootSpacePointIo::write(const SpacePointContainer& spacePoints,
+                             TTree& ttree) {
   connectForWrite(ttree, spacePoints);
 
-  for (Experimental::ConstSpacePointProxy2 spacePoint : spacePoints) {
+  for (ConstSpacePointProxy spacePoint : spacePoints) {
     write(spacePoint);
     ttree.Fill();
   }
 }
 
-void RootSpacePointIo::read(Experimental::MutableSpacePointProxy2& spacePoint,
-                            Experimental::SpacePointIndex2 index) {
-  using enum Experimental::SpacePointColumns;
+void RootSpacePointIo::read(MutableSpacePointProxy& spacePoint,
+                            SpacePointIndex index) {
+  using enum SpacePointColumns;
 
   if (spacePoint.container().hasColumns(SourceLinks)) {
     spacePoint.assignSourceLinks(std::array<SourceLink, 1>{SourceLink(index)});
@@ -151,8 +152,7 @@ void RootSpacePointIo::read(Experimental::MutableSpacePointProxy2& spacePoint,
   }
 }
 
-void RootSpacePointIo::read(TChain& tchain,
-                            Experimental::SpacePointContainer2& spacePoints) {
+void RootSpacePointIo::read(TChain& tchain, SpacePointContainer& spacePoints) {
   connectForRead(tchain, spacePoints);
 
   std::size_t nEntries = tchain.GetEntries();
@@ -160,8 +160,8 @@ void RootSpacePointIo::read(TChain& tchain,
     tchain.GetEntry(i);
 
     auto spacePoint = spacePoints.createSpacePoint();
-    read(spacePoint, static_cast<Experimental::SpacePointIndex2>(i));
+    read(spacePoint, static_cast<SpacePointIndex>(i));
   }
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

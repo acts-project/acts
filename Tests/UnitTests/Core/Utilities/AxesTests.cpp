@@ -8,15 +8,17 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <cstddef>
 #include <vector>
 
-namespace Acts::Test {
-BOOST_AUTO_TEST_SUITE(Axes)
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(equidistant_axis) {
   Axis a(0.0, 10.0, 10u);
@@ -650,7 +652,7 @@ BOOST_AUTO_TEST_CASE(Output) {
 
   ss << a;
 
-  BOOST_CHECK_EQUAL(ss.str(), "Axis<Equidistant, Bound>(0, 10, 10)");
+  BOOST_CHECK_EQUAL(ss.str(), "Axis<Equidistant, Bound>(0, 10, 10, Undefined)");
 
   ss.str("");
 
@@ -658,13 +660,13 @@ BOOST_AUTO_TEST_CASE(Output) {
 
   ss << ia;
 
-  BOOST_CHECK_EQUAL(ss.str(), "Axis<Equidistant, Bound>(0, 10, 10)");
+  BOOST_CHECK_EQUAL(ss.str(), "Axis<Equidistant, Bound>(0, 10, 10, Undefined)");
 
   ss.str("");
 
   ss << b;
 
-  BOOST_CHECK_EQUAL(ss.str(), "Axis<Variable, Bound>(0, 10, 11)");
+  BOOST_CHECK_EQUAL(ss.str(), "Axis<Variable, Bound>({0, 10, 11}, Undefined)");
 }
 
 BOOST_AUTO_TEST_CASE(Equality) {
@@ -687,4 +689,4 @@ BOOST_AUTO_TEST_CASE(Equality) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

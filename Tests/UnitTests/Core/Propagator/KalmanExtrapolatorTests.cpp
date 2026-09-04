@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -19,9 +18,9 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -34,15 +33,16 @@ class Logger;
 struct EndOfWorldReached;
 }  // namespace Acts
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using Jacobian = BoundMatrix;
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 ///
 /// @brief the bound state propagation
@@ -72,12 +72,12 @@ struct StepWiseActor {
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& /*logger*/) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, result_type& result,
+                   const Logger& /*logger*/) const {
     // Listen to the surface and create bound state where necessary
     auto surface = navigator.currentSurface(state.navigation);
-    if (surface && surface->associatedDetectorElement()) {
+    if (surface && surface->isSensitive()) {
       // Create a bound state and log the jacobian
       auto boundState = stepper.boundState(state.stepping, *surface).value();
       result.jacobians.push_back(std::move(std::get<Jacobian>(boundState)));
@@ -92,8 +92,11 @@ struct StepWiseActor {
       // Remember that you finalized this
       result.finalized = true;
     }
+    return Result<void>::success();
   }
 };
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 ///
 /// @brief Unit test for Kalman fitter propagation
@@ -176,4 +179,6 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   CHECK_CLOSE_OR_SMALL(pJacobian, accJacobian, 1e-6, 1e-9);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

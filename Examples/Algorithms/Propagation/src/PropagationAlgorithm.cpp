@@ -18,8 +18,9 @@
 namespace ActsExamples {
 
 PropagationAlgorithm::PropagationAlgorithm(
-    const PropagationAlgorithm::Config& config, Acts::Logging::Level level)
-    : IAlgorithm("PropagationAlgorithm", level), m_cfg(config) {
+    const PropagationAlgorithm::Config& config,
+    std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("PropagationAlgorithm", std::move(logger)), m_cfg(config) {
   if (!m_cfg.propagatorImpl) {
     throw std::invalid_argument("Config needs to contain a propagator");
   }
@@ -67,7 +68,7 @@ ProcessCode PropagationAlgorithm::execute(
     PropagationOutput& propagationOutput = propagationResult.value();
 
     // Position / momentum for the output writing
-    Acts::Vector3 position = parameters.position(context.geoContext);
+    Acts::Vector3 position = parameters.position(context.recoGeoContext);
     Acts::Vector3 direction = parameters.direction();
 
     // Record the propagator steps

@@ -5,6 +5,7 @@ target_sources(
         MultiStepperError.cpp
         NavigatorError.cpp
         SympyStepper.cpp
+        NavigationTarget.cpp
         PropagatorError.cpp
         StraightLineStepper.cpp
         detail/MaterialEffectsAccumulator.cpp
@@ -13,33 +14,22 @@ target_sources(
         detail/JacobianEngine.cpp
         detail/SympyCovarianceEngine.cpp
         detail/SympyJacobianEngine.cpp
+        detail/SympyStepperDenseStep.cpp
 )
 
 include(ActsCodegen)
 
 acts_code_generation(
     ADD_TO_TARGET ActsCore
-    PYTHON detail/generate_sympy_cov.py
-    WITH_REQUIREMENTS ${CMAKE_SOURCE_DIR}/codegen/requirements.txt
-    WITH ${CMAKE_SOURCE_DIR}/codegen
-    ISOLATED
-    OUTPUT codegen/sympy_cov_math.hpp
+    KEY Core/src/Propagator/codegen/sympy_cov_math.hpp
 )
 
 acts_code_generation(
     ADD_TO_TARGET ActsCore
-    PYTHON generate_sympy_stepper.py
-    WITH_REQUIREMENTS ${CMAKE_SOURCE_DIR}/codegen/requirements.txt
-    WITH ${CMAKE_SOURCE_DIR}/codegen
-    ISOLATED
-    OUTPUT codegen/sympy_stepper_math.hpp
+    KEY Core/src/Propagator/codegen/sympy_stepper_math.hpp
 )
 
 acts_code_generation(
     ADD_TO_TARGET ActsCore
-    PYTHON detail/generate_sympy_jac.py
-    WITH_REQUIREMENTS ${CMAKE_SOURCE_DIR}/codegen/requirements.txt
-    WITH ${CMAKE_SOURCE_DIR}/codegen
-    ISOLATED
-    OUTPUT codegen/sympy_jac_math.hpp
+    KEY Core/src/Propagator/codegen/sympy_jac_math.hpp
 )

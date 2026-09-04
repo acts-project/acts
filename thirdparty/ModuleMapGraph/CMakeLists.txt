@@ -17,15 +17,15 @@ message(STATUS "Building ModuleMapGraph as part of the Acts project")
 # Declare where to get traccc from.
 FetchContent_Declare(
     ModuleMapGraph
-    GIT_REPOSITORY https://gitlab.cern.ch/gnn4itkteam/ModuleMapGraph
-    GIT_TAG v1.0.10
+    SYSTEM
+    ${ACTS_MODULEMAPGRAPH_SOURCE}
     OVERRIDE_FIND_PACKAGE
 )
 
-set(USE_MPI OFF)
-set(USE_CUDA ON)
-set(WITH_NUMPY_EXPORT OFF)
-set(WITH_PYTORCH_EXPORT OFF)
+set(MMG_USE_MPI OFF)
+set(MMG_USE_CUDA ON)
+set(MMG_WITH_NUMPY_EXPORT OFF)
+set(MMG_WITH_PYTORCH_EXPORT OFF)
 set(CMAKE_CUDA_STANDARD 20)
 
 # Now set up its build.

@@ -24,12 +24,13 @@
 
 #include "TrackingVolumeCreation.hpp"
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 ///  create three cylinder surfaces
 ///  the surface radius (will also be the layer radius)
@@ -57,6 +58,8 @@ auto iVolume = constructCylinderVolume(
     tgContext, iVsurfaceHalfLengthZ, iVsurfaceR, iVsurfaceRstagger,
     iVsurfaceZoverlap, iVlayerEnvelope, iVvolumeEnvelope, 0., iVvolumeR,
     "InnerVolume");
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(GeometryIdentifier_innervolume_test) {
   BOOST_CHECK_EQUAL(0ul, iVolume->geometryId().value());
@@ -137,4 +140,6 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_containervolume_test) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

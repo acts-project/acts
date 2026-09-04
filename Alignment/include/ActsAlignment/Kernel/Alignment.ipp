@@ -12,15 +12,22 @@
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/detail/EigenCompat.hpp"
+#include "ActsAlignment/Kernel/AlignmentError.hpp"
+#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
+
+#include <queue>
 
 template <typename fitter_t>
-template <typename source_link_t, typename start_parameters_t,
-          typename fit_options_t>
+template <typename source_link_t, typename fit_options_t>
 Acts::Result<ActsAlignment::detail::TrackAlignmentState>
 ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
     const Acts::GeometryContext& gctx,
     const std::vector<source_link_t>& sourceLinks,
-    const start_parameters_t& sParameters, const fit_options_t& fitOptions,
+    const Acts::BoundTrackParameters& sParameters,
+    const fit_options_t& fitOptions,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
         idxedAlignSurfaces,
     const ActsAlignment::AlignmentMask& alignMask) const {
@@ -35,7 +42,7 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
   auto fitRes = m_fitter.fit(begin, end, sParameters, fitOptions, tracks);
 
   if (!fitRes.ok()) {
-    ACTS_WARNING("Fit failure");
+    ACTS_WARNING("Fit failure: " << fitRes.error().message());
     return fitRes.error();
   }
   // The fit results
@@ -71,12 +78,6 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   // The total alignment degree of freedom
   alignResult.alignmentDof =
       alignResult.idxedAlignSurfaces.size() * Acts::eAlignmentSize;
-  // Initialize derivative of chi2 w.r.t. alignment parameters for all tracks
-  Acts::ActsDynamicVector sumChi2Derivative =
-      Acts::ActsDynamicVector::Zero(alignResult.alignmentDof);
-  Acts::ActsDynamicMatrix sumChi2SecondDerivative =
-      Acts::ActsDynamicMatrix::Zero(alignResult.alignmentDof,
-                                    alignResult.alignmentDof);
   // Copy the fit options
   fit_options_t fitOptionsWithRefSurface = fitOptions;
   // Calculate contribution to chi2 derivatives from all input trajectories
@@ -84,7 +85,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   alignResult.chi2 = 0;
   alignResult.measurementDim = 0;
   alignResult.numTracks = trajectoryCollection.size();
-  double sumChi2ONdf = 0;
+  std::vector<detail::TrackAlignmentState> alignmentStates;
   for (unsigned int iTraj = 0; iTraj < trajectoryCollection.size(); iTraj++) {
     const auto& sourceLinks = trajectoryCollection.at(iTraj);
     const auto& sParameters = startParametersCollection.at(iTraj);
@@ -100,74 +101,73 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
       continue;
     }
     const auto& alignState = evaluateRes.value();
-    for (const auto& [rowSurface, rows] : alignState.alignedSurfaces) {
-      const auto& [dstRow, srcRow] = rows;
-      // Fill the results into full chi2 derivative matrix
-      sumChi2Derivative.segment<Acts::eAlignmentSize>(dstRow *
-                                                      Acts::eAlignmentSize) +=
-          alignState.alignmentToChi2Derivative.segment(
-              srcRow * Acts::eAlignmentSize, Acts::eAlignmentSize);
+    alignmentStates.push_back(alignState);
+  }
+  return calculateAlignmentParameters(alignmentStates, alignResult);
+}
 
-      for (const auto& [colSurface, cols] : alignState.alignedSurfaces) {
-        const auto& [dstCol, srcCol] = cols;
-        sumChi2SecondDerivative
-            .block<Acts::eAlignmentSize, Acts::eAlignmentSize>(
-                dstRow * Acts::eAlignmentSize, dstCol * Acts::eAlignmentSize) +=
-            alignState.alignmentToChi2SecondDerivative.block(
-                srcRow * Acts::eAlignmentSize, srcCol * Acts::eAlignmentSize,
-                Acts::eAlignmentSize, Acts::eAlignmentSize);
-      }
+template <typename fitter_t>
+void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
+    const std::vector<detail::TrackAlignmentState>& trackAlignmentStates,
+    AlignmentResult& alignResult) const {
+  // Delegate to the out-of-line, fitter-independent implementation so its Eigen
+  // algebra is not re-instantiated for every Alignment<fitter_t>.
+  detail::solveAlignmentParameters(trackAlignmentStates, alignResult, logger());
+}
+
+template <typename fitter_t>
+double ActsAlignment::Alignment<fitter_t>::decompositionAnalysis(
+    const AlignmentResult& res, std::ostream& out) {
+  if (res.sumChi2SecondDerivative.cols() == 0) {
+    ACTS_ERROR(
+        "Please run Alignment::calculateAlignmentParameters before calling "
+        "Alignment::decompositionAnalysis.");
+    return -1;
+  }
+  Eigen::SelfAdjointEigenSolver<Acts::DynamicMatrix> eigenSolver(
+      res.sumChi2SecondDerivative);
+  if (eigenSolver.info() != Eigen::Success) {
+    std::cout << " FAILED to find decompose correlation term" << std::endl;
+    return -1;
+  }
+  const Acts::DynamicVector eigenVals = eigenSolver.eigenvalues();
+  const Acts::DynamicMatrix eigenVecs = eigenSolver.eigenvectors();
+
+  std::map<double, int> sortedEV;
+  for (int k = 0; k < eigenVals.size(); ++k) {
+    sortedEV.emplace(eigenVals(k), k);
+  }
+  double firstEV = -1, lastEV = -1;
+  for (auto& [EV, index] : sortedEV) {
+    if (EV > 0 && firstEV < 0) {
+      firstEV = EV;
     }
-    alignResult.chi2 += alignState.chi2;
-    alignResult.measurementDim += alignState.measurementDim;
-    sumChi2ONdf += alignState.chi2 / alignState.measurementDim;
+    lastEV = EV;
+    out << " Eigenvector " << index << " has eigenvalue " << EV << std::endl;
+    for (Eigen::Index row = 0; row < eigenVecs.rows(); ++row) {
+      out << "        " << std::setw(12) << "  " << std::setw(3) << row + 1
+          << "  " << std::setw(12) << eigenVecs(row, index) << std::endl;
+    }
+    out << std::endl;
   }
-  alignResult.averageChi2ONdf = sumChi2ONdf / alignResult.numTracks;
-
-  // Get the inverse of chi2 second derivative matrix (we need this to
-  // calculate the covariance of the alignment parameters)
-  // @Todo: use more stable method for solving the inverse
-  std::size_t alignDof = alignResult.alignmentDof;
-  Acts::ActsDynamicMatrix sumChi2SecondDerivativeInverse =
-      Acts::ActsDynamicMatrix::Zero(alignDof, alignDof);
-  sumChi2SecondDerivativeInverse = sumChi2SecondDerivative.inverse();
-  if (sumChi2SecondDerivativeInverse.hasNaN()) {
-    ACTS_DEBUG("Chi2 second derivative inverse has NaN");
-    // return AlignmentError::AlignmentParametersUpdateFailure;
-  }
-
-  // Initialize the alignment results
-  alignResult.deltaAlignmentParameters =
-      Acts::ActsDynamicVector::Zero(alignDof);
-  alignResult.alignmentCovariance =
-      Acts::ActsDynamicMatrix::Zero(alignDof, alignDof);
-  // Solve the linear equation to get alignment parameters change
-  alignResult.deltaAlignmentParameters =
-      -sumChi2SecondDerivative.fullPivLu().solve(sumChi2Derivative);
-  ACTS_VERBOSE("sumChi2SecondDerivative = \n" << sumChi2SecondDerivative);
-  ACTS_VERBOSE("sumChi2Derivative = \n" << sumChi2Derivative);
-  ACTS_VERBOSE("alignResult.deltaAlignmentParameters \n");
-
-  // Alignment parameters covariance
-  alignResult.alignmentCovariance = 2 * sumChi2SecondDerivativeInverse;
-  // chi2 change
-  alignResult.deltaChi2 = 0.5 * sumChi2Derivative.transpose() *
-                          alignResult.deltaAlignmentParameters;
+  return lastEV / firstEV;
 }
 
 template <typename fitter_t>
 Acts::Result<void>
 ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
     const Acts::GeometryContext& gctx,
-    const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
-    const ActsAlignment::AlignedTransformUpdater& alignedTransformUpdater,
+    const std::vector<Acts::SurfacePlacementBase*>& alignedDetElements,
+    const ActsAlignment::AlignedTransformUpdaterConcept auto&
+        alignedTransformUpdater,
     ActsAlignment::AlignmentResult& alignResult) const {
   // Update the aligned transform
   Acts::AlignmentVector deltaAlignmentParam = Acts::AlignmentVector::Zero();
   for (const auto& [surface, index] : alignResult.idxedAlignSurfaces) {
     // 1. The original transform
     const Acts::Vector3& oldCenter = surface->center(gctx);
-    const Acts::Transform3& oldTransform = surface->transform(gctx);
+    const Acts::Transform3& oldTransform =
+        surface->localToGlobalTransform(gctx);
 
     // 2. The delta transform
     deltaAlignmentParam = alignResult.deltaAlignmentParameters.segment(
@@ -309,12 +309,13 @@ ActsAlignment::Alignment<fitter_t>::align(
     for (const auto& det : alignOptions.alignedDetElements) {
       const auto& surface = &det->surface();
       const auto& transform =
-          det->transform(alignOptions.fitOptions.geoContext);
+          det->localToGlobalTransform(alignOptions.fitOptions.geoContext);
       // write it to the result
       alignResult.alignedParameters.emplace(det, transform);
       const auto& translation = transform.translation();
       const auto& rotation = transform.rotation();
-      const Acts::Vector3 rotAngles = rotation.eulerAngles(2, 1, 0);
+      const Acts::Vector3 rotAngles =
+          Acts::detail::EigenCompat::canonicalEulerAngles(rotation, 2, 1, 0);
       ACTS_VERBOSE("Detector element with surface "
                    << surface->geometryId()
                    << " has aligned geometry position as below:");

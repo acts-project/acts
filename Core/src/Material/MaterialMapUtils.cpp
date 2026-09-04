@@ -32,7 +32,7 @@ auto Acts::materialMapperRZ(
         materialVectorToGridMapper,
     std::vector<double> rPos, std::vector<double> zPos,
     const std::vector<Acts::Material>& material, double lengthUnit)
-    -> MaterialMapper<
+    -> MaterialMapLookup<
         Grid<Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
              Axis<Acts::AxisType::Equidistant>>> {
   // [1] Decompose material
@@ -79,7 +79,7 @@ auto Acts::materialMapperRZ(
   };
 
   // [5] Create the mapper & BField Service create material mapping
-  return MaterialMapper(transformPos, std::move(grid));
+  return MaterialMapLookup(transformPos, std::move(grid));
 }
 
 auto Acts::materialMapperXYZ(
@@ -89,7 +89,7 @@ auto Acts::materialMapperXYZ(
     std::vector<double> xPos, std::vector<double> yPos,
     std::vector<double> zPos, const std::vector<Material>& material,
     double lengthUnit)
-    -> MaterialMapper<Grid<
+    -> MaterialMapLookup<Grid<
         Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
         Axis<Acts::AxisType::Equidistant>, Axis<Acts::AxisType::Equidistant>>> {
   // [1] Decompose material
@@ -137,5 +137,5 @@ auto Acts::materialMapperXYZ(
   auto transformPos = [](const Vector3& pos) { return pos; };
 
   // [5] Create the mapper & BField Service create material mapping
-  return MaterialMapper(transformPos, std::move(grid));
+  return MaterialMapLookup(transformPos, std::move(grid));
 }

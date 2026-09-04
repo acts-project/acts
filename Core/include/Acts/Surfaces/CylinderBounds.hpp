@@ -47,6 +47,8 @@ namespace Acts {
 ///
 class CylinderBounds : public SurfaceBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues : int {
     eR = 0,
     eHalfLengthZ = 1,
@@ -64,12 +66,13 @@ class CylinderBounds : public SurfaceBounds {
   /// @param halfPhi The half opening angle
   /// @param avgPhi (optional) The phi value from which the opening angle spans
   /// @param bevelMinZ (optional) The bevel on the negative z side
-  /// @param bevelMaxZ (optional) The bevel on the positive z sid The bevel on the positive z side
+  /// @param bevelMaxZ (optional) The bevel on the positive z side
   CylinderBounds(double r, double halfZ, double halfPhi = std::numbers::pi,
                  double avgPhi = 0., double bevelMinZ = 0.,
                  double bevelMaxZ = 0.) noexcept(false)
       : m_values({r, halfZ, halfPhi, avgPhi, bevelMinZ, bevelMaxZ}),
-        m_closed(std::abs(halfPhi - std::numbers::pi) < s_epsilon) {
+        m_closed(std::abs(halfPhi - std::numbers::pi) <
+                 s_fullAzimuthTolerance) {
     checkConsistency();
   }
 
@@ -79,7 +82,7 @@ class CylinderBounds : public SurfaceBounds {
       false)
       : m_values(values),
         m_closed(std::abs(values[eHalfPhiSector] - std::numbers::pi) <
-                 s_epsilon) {
+                 s_fullAzimuthTolerance) {
     checkConsistency();
   }
 
@@ -116,9 +119,11 @@ class CylinderBounds : public SurfaceBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return Value of the specified bound parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Returns true for full phi coverage
+  /// @return True if the cylinder covers full azimuthal range
   bool coversFullAzimuth() const { return m_closed; }
 
   /// Create the bow/circle vertices on either side of the cylinder
@@ -139,6 +144,8 @@ class CylinderBounds : public SurfaceBounds {
   Vector2 center() const final;
 
   /// Output Method for std::ostream
+  /// @param sl The output stream to write to
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& sl) const final;
 
  private:

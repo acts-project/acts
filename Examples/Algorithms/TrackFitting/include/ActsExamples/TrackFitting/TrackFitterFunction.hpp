@@ -11,6 +11,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -38,6 +39,19 @@ class TrackFitterFunction {
     const Acts::Surface* referenceSurface = nullptr;
     Acts::PropagatorPlainOptions propOptions;
     bool doRefit = false;
+
+    GeneralFitterOptions(const Acts::GeometryContext& gCtx,
+                         const Acts::MagneticFieldContext& mCtx,
+                         const Acts::CalibrationContext& cCtx,
+                         const Acts::Surface* refSurface,
+                         const Acts::PropagatorPlainOptions& pOptions,
+                         bool refit)
+        : geoContext(gCtx),
+          magFieldContext(mCtx),
+          calibrationContext(cCtx),
+          referenceSurface(refSurface),
+          propOptions(pOptions),
+          doRefit(refit) {}
   };
 
   virtual ~TrackFitterFunction() = default;
@@ -63,19 +77,29 @@ std::shared_ptr<TrackFitterFunction> makeKalmanFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering = true, bool energyLoss = true,
     double reverseFilteringMomThreshold = 0.0,
-    double reverseFilteringCovarianceScaling = 1.0,
-    Acts::FreeToBoundCorrection freeToBoundCorrection =
+    double reverseFilteringCovarianceScaling = 100.0,
+    const Acts::FreeToBoundCorrection& freeToBoundCorrection =
         Acts::FreeToBoundCorrection(),
     double chi2Cut = std::numeric_limits<double>::infinity(),
+    bool useJosephFormulation = false,
     const Acts::Logger& logger = *Acts::getDefaultLogger("Kalman",
                                                          Acts::Logging::INFO));
 
-/// This type is used in the Examples framework for the Bethe-Heitler
-/// approximation
-using BetheHeitlerApprox = Acts::AtlasBetheHeitlerApprox<6, 5>;
+/// Makes a reference trajectory fitter function object using the Kalman Filter
+///
+std::shared_ptr<TrackFitterFunction>
+makeKalmanReferenceTrajectoryFitterFunction(
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+    bool multipleScattering = true, bool energyLoss = true,
+    const Acts::FreeToBoundCorrection& freeToBoundCorrection =
+        Acts::FreeToBoundCorrection(),
+    bool useJosephFormulation = false,
+    const Acts::Logger& logger = *Acts::getDefaultLogger(
+        "KalmanReferenceTrajectory", Acts::Logging::INFO));
 
 /// Available algorithms for the mixture reduction
-enum class MixtureReductionAlgorithm { weightCut, KLDistance };
+enum class MixtureReductionAlgorithm { weightCut, KLDistance, KLDistanceNaive };
 
 /// Makes a fitter function object for the GSF
 ///
@@ -94,8 +118,9 @@ enum class MixtureReductionAlgorithm { weightCut, KLDistance };
 std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    double weightCutoff, Acts::ComponentMergeMethod componentMergeMethod,
+    const std::shared_ptr<const Acts::BetheHeitlerApprox>& betheHeitlerApprox,
+    std::size_t maxComponents, double weightCutoff,
+    Acts::ComponentMergeMethod componentMergeMethod,
     MixtureReductionAlgorithm mixtureReductionAlgorithm,
     double reverseFilteringCovarianceScaling, const Acts::Logger& logger);
 
@@ -105,7 +130,7 @@ std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
 /// @param magneticField the magnetic field for the propagator
 /// @param multipleScattering bool
 /// @param energyLoss bool
-/// @param freeToBoundCorrection bool
+/// @param freeToBoundCorrection the correction for free to bound state transformations
 /// @param nUpdateMax max number of iterations during the fit
 /// @param relChi2changeCutOff Check for convergence (abort condition). Set to 0 to skip.
 /// @param logger a logger instance
@@ -113,7 +138,7 @@ std::shared_ptr<TrackFitterFunction> makeGlobalChiSquareFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering = true, bool energyLoss = true,
-    Acts::FreeToBoundCorrection freeToBoundCorrection =
+    const Acts::FreeToBoundCorrection& freeToBoundCorrection =
         Acts::FreeToBoundCorrection(),
     std::size_t nUpdateMax = 5, double relChi2changeCutOff = 1e-7,
     const Acts::Logger& logger = *Acts::getDefaultLogger("Gx2f",

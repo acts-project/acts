@@ -6,23 +6,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ActSVG/LayerSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/LayerSvgConverter.hpp"
 
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Plugins/ActSVG/SurfaceArraySvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "ActsPlugins/ActSVG/SurfaceArraySvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
 
-#include <set>
-#include <sstream>
+#include <stdexcept>
 
-std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
+using namespace Acts;
+
+std::vector<actsvg::svg::object> ActsPlugins::Svg::LayerConverter::convert(
     const GeometryContext& gctx, const Layer& layer,
     const LayerConverter::Options& cOptions) {
   // The sheets
   std::vector<actsvg::svg::object> sheets;
 
   // The volume
-  Acts::Svg::ProtoVolume volume;
+  ActsPlugins::Svg::ProtoVolume volume;
   volume._name = cOptions.name;
 
   /// Convert the surface array into proto surfaces and a grid structure
@@ -36,36 +38,19 @@ std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
     volume._grid_associations = {associations};
   }
 
-  // The sheet
+  // The sheet. module_sheet and grid_sheet stay undefined: actsvg 0.4.57
+  // removed the displays that filled them, and every consumer already skips
+  // undefined sheets, which is what the moduleInfo/gridInfo options produced
+  // when switched off.
   actsvg::svg::object module_sheet;
   actsvg::svg::object grid_sheet;
   actsvg::svg::object xy_layer;
   actsvg::svg::object zr_layer;
 
-  // The module / grid information
-  const auto& layerSurface = layer.surfaceRepresentation();
-  if (layerSurface.type() == Acts::Surface::Disc) {
-    if (cOptions.moduleInfo) {
-      module_sheet = actsvg::display::endcap_sheet(
-          cOptions.name + "_modules", volume, {800, 800},
-          actsvg::display::e_module_info);
-    }
-    if (cOptions.gridInfo) {
-      grid_sheet = actsvg::display::endcap_sheet(cOptions.name + "_grid",
-                                                 volume, {800, 800},
-                                                 actsvg::display::e_grid_info);
-    }
-  } else if (layerSurface.type() == Acts::Surface::Cylinder) {
-    if (cOptions.moduleInfo) {
-      module_sheet = actsvg::display::barrel_sheet(
-          cOptions.name + "_modules", volume, {800, 800},
-          actsvg::display::e_module_info);
-    }
-    if (cOptions.gridInfo) {
-      grid_sheet = actsvg::display::barrel_sheet(cOptions.name + "_grid",
-                                                 volume, {800, 800},
-                                                 actsvg::display::e_grid_info);
-    }
+  if (cOptions.moduleInfo || cOptions.gridInfo) {
+    throw std::invalid_argument(
+        "LayerConverter: the module and grid sheets were removed in actsvg "
+        "0.4.57 and cannot be produced");
   }
 
   // The z_r view of things
@@ -85,26 +70,25 @@ std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
 
     for (const auto& sf : layer.surfaceArray()->surfaces()) {
       // Surface center
-      const Acts::Vector3 rCenter =
-          sf->referencePosition(gctx, Acts::AxisDirection::AxisR);
-      const Acts::Vector3 sfCenter = sf->center(gctx);
-      double radius = Acts::VectorHelpers::perp(rCenter);
-      double phi = Acts::VectorHelpers::phi(rCenter);
+      const Vector3 rCenter = sf->referencePosition(gctx, AxisDirection::AxisR);
+      const Vector3 sfCenter = sf->center(gctx);
+      double radius = VectorHelpers::perp(rCenter);
+      double phi = VectorHelpers::phi(rCenter);
       double z = sfCenter.z();
       // Get the average radius
       avgRadius += radius;
       // Raw display surfaces for projections
-      actsvg::proto::surface<std::vector<Acts::Vector3>> projSurface;
+      actsvg::proto::surface<std::vector<Vector3>> projSurface;
       projSurface._vertices = sf->polyhedronRepresentation(gctx, 1u).vertices;
       // Draw only if they fall into the range restriction - for phi
       if (phi >= cOptions.phiRange[0] && phi <= cOptions.phiRange[1]) {
         std::string m_zr_id = std::string("zr_") + std::to_string(m++);
-        zr_layer.add_object(Acts::Svg::View::zr(projSurface, m_zr_id));
+        zr_layer.add_object(ActsPlugins::Svg::View::zr(projSurface, m_zr_id));
       }
       // for z
       if (z >= cOptions.zRange[0] && z <= cOptions.zRange[1]) {
         std::string m_xy_id = std::string("xy_") + std::to_string(m++);
-        xy_layer.add_object(Acts::Svg::View::xy(projSurface, m_xy_id));
+        xy_layer.add_object(ActsPlugins::Svg::View::xy(projSurface, m_xy_id));
       }
     }
     // Do the average

@@ -8,17 +8,19 @@
 
 #pragma once
 
-#include <Acts/Plugins/Gnn/detail/CudaUtils.hpp>
-#include <Acts/Utilities/Logger.hpp>
+#include "Acts/Utilities/Logger.hpp"
+#ifdef ACTS_GNN_WITH_CUDA
+#include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
+#endif
 
-#ifndef ACTS_GNN_CPUONLY
+#ifdef ACTS_GNN_WITH_CUDA
 #include <cuda_runtime_api.h>
 #endif
 
 namespace {
 
 inline void printCudaMemInfo(const Acts::Logger& logger) {
-#ifndef ACTS_GNN_CPUONLY
+#ifdef ACTS_GNN_WITH_CUDA
   if (logger.level() == Acts::Logging::VERBOSE) {
     constexpr float kb = 1024;
     constexpr float mb = kb * kb;
@@ -31,12 +33,12 @@ inline void printCudaMemInfo(const Acts::Logger& logger) {
     ACTS_VERBOSE("Current CUDA device: " << device);
     ACTS_VERBOSE("Memory (used / total) [in MB]: " << (total - free) / mb
                                                    << " / " << total / mb);
-  } else {
-    ACTS_VERBOSE("No memory info, CUDA disabled");
+    return;
   }
-#else
-  ACTS_VERBOSE("No memory info, CUDA disabled");
 #endif
+  // Nothing to report: CUDA is compiled out, or the level would discard the
+  // query above anyway.
+  ACTS_VERBOSE("No memory info, CUDA disabled");
 }
 
 }  // namespace

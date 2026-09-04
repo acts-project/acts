@@ -22,9 +22,11 @@
 #include <iostream>
 #include <limits>
 
-namespace Acts::Test {
+using namespace Acts;
 
-GeometryContext gctx;
+namespace ActsTests {
+
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 std::size_t matrixResolution = 80;
 
@@ -65,8 +67,10 @@ std::pair<Vector2, Vector2> boundingBox(const RegularSurface& surface,
   min = min - relMargin * size;
   max = max + relMargin * size;
 
-  Vector3 min3 = surface.transform(gctx) * Vector3{min[0], min[1], 0};
-  Vector3 max3 = surface.transform(gctx) * Vector3{max[0], max[1], 0};
+  Vector3 min3 =
+      surface.localToGlobalTransform(gctx) * Vector3{min[0], min[1], 0};
+  Vector3 max3 =
+      surface.localToGlobalTransform(gctx) * Vector3{max[0], max[1], 0};
 
   return {min3.head<2>(), max3.head<2>()};
 }
@@ -209,7 +213,7 @@ boost::test_tools::predicate_result checkMatrices(const TestMatrix& val,
   return res;
 }
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 BOOST_AUTO_TEST_CASE(Rectangle) {
   auto bounds = std::make_shared<RectangleBounds>(10, 20);
@@ -1847,4 +1851,4 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

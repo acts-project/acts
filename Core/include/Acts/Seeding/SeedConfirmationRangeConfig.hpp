@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 
+#include <cstddef>
 #include <limits>
 
 namespace Acts {

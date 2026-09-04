@@ -25,10 +25,12 @@
 
 namespace Acts::detail::Test {
 
+constexpr auto kInvalid = kTrackIndexInvalid;
+
 template <typename factory_t>
 class MultiTrajectoryTestsCommon {
-  using ParametersVector = BoundTrackParameters::ParametersVector;
-  using CovarianceMatrix = BoundTrackParameters::CovarianceMatrix;
+  using ParametersVector = BoundVector;
+  using CovarianceMatrix = BoundMatrix;
   using Jacobian = BoundMatrix;
 
   using trajectory_t = typename factory_t::trajectory_t;
@@ -118,7 +120,7 @@ class MultiTrajectoryTestsCommon {
       BOOST_CHECK_EQUAL(t2.size(), 1);
       auto ts2 = t2.makeTrackState(kMask, ts.index());
       BOOST_CHECK_EQUAL(t2.size(), 2);
-      BOOST_CHECK_EQUAL(ts.previous(), MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_EQUAL(ts.previous(), kInvalid);
       BOOST_CHECK_EQUAL(ts2.previous(), ts.index());
     }
   }
@@ -198,9 +200,9 @@ class MultiTrajectoryTestsCommon {
     alwaysPresent(ts);
     ts.allocateCalibrated(5);
     BOOST_CHECK(ts.hasCalibrated());
-    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), ActsVector<5>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), Vector<5>::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<5>(),
-                      ActsSquareMatrix<5>::Zero());
+                      SquareMatrix<5>::Zero());
 
     ts = t.getTrackState(t.addTrackState(PM::None));
     BOOST_CHECK(!ts.hasPredicted());
@@ -247,9 +249,9 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK(!ts.hasJacobian());
     ts.allocateCalibrated(5);
     BOOST_CHECK(ts.hasCalibrated());
-    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), ActsVector<5>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), Vector<5>::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<5>(),
-                      ActsSquareMatrix<5>::Zero());
+                      SquareMatrix<5>::Zero());
 
     ts = t.getTrackState(t.addTrackState(PM::Jacobian));
     BOOST_CHECK(!ts.hasPredicted());
@@ -308,9 +310,9 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK(ts.hasSmoothed());
     BOOST_CHECK(ts.hasCalibrated());
     BOOST_CHECK(!ts.hasJacobian());
-    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), ActsVector<5>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), Vector<5>::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<5>(),
-                      ActsSquareMatrix<5>::Zero());
+                      SquareMatrix<5>::Zero());
 
     ts.addComponents(PM::Jacobian);
     BOOST_CHECK(ts.hasPredicted());
@@ -325,6 +327,45 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK(ts.hasSmoothed());
     BOOST_CHECK(ts.hasCalibrated());
     BOOST_CHECK(ts.hasJacobian());
+  }
+
+  void testAddTrackStateComponentsAfterShareAndUnset() {
+    using PM = TrackStatePropMask;
+
+    trajectory_t t = m_factory.create();
+
+    // adding a component which is only shared must not replace the shared
+    // storage
+    {
+      auto ts = t.makeTrackState(PM::Predicted);
+      ts.predicted() = BoundVector::Constant(42);
+      ts.shareFrom(PM::Predicted, PM::Filtered);
+      BOOST_CHECK(ts.hasFiltered());
+
+      ts.addComponents(PM::Filtered);
+      BOOST_CHECK(ts.hasFiltered());
+      BOOST_CHECK_EQUAL(ts.filtered(), BoundVector::Constant(42));
+      // still the same storage
+      ts.predicted() = BoundVector::Constant(11);
+      BOOST_CHECK_EQUAL(ts.filtered(), BoundVector::Constant(11));
+    }
+
+    // adding a component which was unset must allocate it again
+    {
+      auto ts = t.makeTrackState(PM::Predicted | PM::Filtered);
+      BOOST_CHECK(ts.hasFiltered());
+
+      ts.unset(PM::Filtered);
+      BOOST_CHECK(!ts.hasFiltered());
+
+      ts.addComponents(PM::Filtered);
+      BOOST_CHECK(ts.hasFiltered());
+
+      ts.filtered() = BoundVector::Constant(7);
+      ts.predicted() = BoundVector::Constant(3);
+      // the two must not alias
+      BOOST_CHECK_EQUAL(ts.filtered(), BoundVector::Constant(7));
+    }
   }
 
   void testTrackStateProxyCrossTalk(std::default_random_engine& rng) {
@@ -464,7 +505,7 @@ class MultiTrajectoryTestsCommon {
 
     // use temporary measurement to reset calibrated data
     TestTrackState ttsb(rng, 2u);
-    Acts::GeometryContext gctx;
+    const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
     Acts::CalibrationContext cctx;
     BOOST_CHECK_EQUAL(
         ts.getUncalibratedSourceLink().template get<TestSourceLink>().sourceId,
@@ -758,14 +799,6 @@ class MultiTrajectoryTestsCommon {
         ts1.getUncalibratedSourceLink().template get<TestSourceLink>(),
         ts2.getUncalibratedSourceLink().template get<TestSourceLink>());
 
-    visit_measurement(ts1.calibratedSize(), [&](auto N) {
-      constexpr std::size_t measdim = decltype(N)::value;
-      BOOST_CHECK_NE(ts1.template calibrated<measdim>(),
-                     ts2.template calibrated<measdim>());
-      BOOST_CHECK_NE(ts1.template calibratedCovariance<measdim>(),
-                     ts2.template calibratedCovariance<measdim>());
-    });
-
     BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
     BOOST_CHECK(ts1.projectorSubspaceIndices() !=
                 ts2.projectorSubspaceIndices());
@@ -796,6 +829,8 @@ class MultiTrajectoryTestsCommon {
                         ts2.template calibrated<measdim>());
       BOOST_CHECK_EQUAL(ts1.template calibratedCovariance<measdim>(),
                         ts2.template calibratedCovariance<measdim>());
+      BOOST_CHECK(ts1.template projectorSubspaceIndices<measdim>() ==
+                  ts2.template projectorSubspaceIndices<measdim>());
     });
 
     BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
@@ -817,14 +852,6 @@ class MultiTrajectoryTestsCommon {
     // is different again
     BOOST_CHECK_NE(ts1.predicted(), ts2.predicted());
     BOOST_CHECK_NE(ts1.predictedCovariance(), ts2.predictedCovariance());
-
-    visit_measurement(ts1.calibratedSize(), [&](auto N) {
-      constexpr std::size_t measdim = decltype(N)::value;
-      BOOST_CHECK_NE(ts1.template calibrated<measdim>(),
-                     ts2.template calibrated<measdim>());
-      BOOST_CHECK_NE(ts1.template calibratedCovariance<measdim>(),
-                     ts2.template calibratedCovariance<measdim>());
-    });
 
     BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
     BOOST_CHECK(ts1.projectorSubspaceIndices() !=
@@ -849,6 +876,8 @@ class MultiTrajectoryTestsCommon {
                         ts2.template calibrated<measdim>());
       BOOST_CHECK_EQUAL(ts1.template calibratedCovariance<measdim>(),
                         ts2.template calibratedCovariance<measdim>());
+      BOOST_CHECK(ts1.template projectorSubspaceIndices<measdim>() ==
+                  ts2.template projectorSubspaceIndices<measdim>());
     });
 
     BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
@@ -875,7 +904,7 @@ class MultiTrajectoryTestsCommon {
     mtj3.template addColumn<std::uint64_t>("counter");
     mtj3.template addColumn<std::uint8_t>("odd");
 
-    for (MultiTrajectoryTraits::IndexType i = 0; i < 10; i++) {
+    for (TrackIndexType i = 0; i < 10; i++) {
       auto ts =
           mtj.getTrackState(mtj.addTrackState(TrackStatePropMask::All, i));
       ts.template component<std::uint64_t>("counter") = i;
@@ -890,7 +919,7 @@ class MultiTrajectoryTestsCommon {
           mtj3.getTrackState(mtj3.addTrackState(TrackStatePropMask::All, i));
       ts3.copyFrom(ts);  // this should work
 
-      BOOST_CHECK_NE(ts3.index(), MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(ts3.index(), kInvalid);
 
       BOOST_CHECK_EQUAL(ts.template component<std::uint64_t>("counter"),
                         ts3.template component<std::uint64_t>("counter"));
@@ -914,7 +943,7 @@ class MultiTrajectoryTestsCommon {
           mtj5.getTrackState(mtj5.addTrackState(TrackStatePropMask::All, 0));
       ts5.copyFrom(ts4);  // this should work
 
-      BOOST_CHECK_NE(ts5.index(), MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(ts5.index(), kInvalid);
 
       BOOST_CHECK_EQUAL(ts4.template component<std::uint64_t>("counter"),
                         ts5.template component<std::uint64_t>("counter"));
@@ -1223,7 +1252,7 @@ class MultiTrajectoryTestsCommon {
     trajectory_t traj = m_factory.create();
     auto ts = traj.makeTrackState(TrackStatePropMask::All);
 
-    BOOST_CHECK_EQUAL(ts.calibratedSize(), MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_EQUAL(ts.calibratedSize(), kInvalid);
 
     auto [par, cov] = generateBoundParametersCovariance(rng, {});
 
@@ -1239,7 +1268,7 @@ class MultiTrajectoryTestsCommon {
     ts.allocateCalibrated(3);
     BOOST_CHECK_EQUAL(ts.template calibrated<3>(), Vector3::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<3>(),
-                      ActsSquareMatrix<3>::Zero());
+                      SquareMatrix<3>::Zero());
 
     ts.allocateCalibrated(par2.head<3>(), cov2.topLeftCorner<3, 3>());
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 3);

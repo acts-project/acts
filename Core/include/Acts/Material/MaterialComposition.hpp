@@ -19,6 +19,8 @@ namespace Acts {
 
 /// Memory-efficient storage of the relative fraction of an element.
 ///
+/// @ingroup material
+///
 /// This can be used to define materials that are compounds of multiple elements
 /// with varying fractions. The element is identified by its atomic number
 /// stored as a single byte (allows up to 256 elements; more than we need).
@@ -58,15 +60,23 @@ class ElementFraction {
 
   /// Must always be created with valid data.
   ElementFraction() = delete;
+  /// Move constructor
   ElementFraction(ElementFraction&&) = default;
+  /// Copy constructor
   ElementFraction(const ElementFraction&) = default;
   ~ElementFraction() = default;
+  /// Move assignment operator
+  /// @return Reference to this element fraction after move assignment
   ElementFraction& operator=(ElementFraction&&) = default;
+  /// Copy assignment operator
+  /// @return Reference to this element fraction after copy assignment
   ElementFraction& operator=(const ElementFraction&) = default;
 
   /// The element atomic number.
+  /// @return The atomic number of the element
   constexpr std::uint8_t element() const { return m_element; }
   /// The relative fraction of this element.
+  /// @return The relative fraction as a float in [0,1]
   constexpr float fraction() const {
     return static_cast<float>(m_fraction) /
            std::numeric_limits<std::uint8_t>::max();
@@ -106,6 +116,7 @@ class MaterialComposition {
   /// Constructor from element fractions.
   ///
   /// Rescales the fractions so they all add up to unity within the accuracy.
+  /// @param elements Vector of element fractions that define the composition
   explicit MaterialComposition(std::vector<ElementFraction> elements)
       : m_elements(std::move(elements)) {
     std::ranges::sort(m_elements, std::less<ElementFraction>{});
@@ -122,19 +133,29 @@ class MaterialComposition {
     }
   }
 
+  /// Move constructor
   MaterialComposition(MaterialComposition&&) = default;
+  /// Copy constructor
   MaterialComposition(const MaterialComposition&) = default;
   ~MaterialComposition() = default;
+  /// Move assignment operator
+  /// @return Reference to this material composition after move assignment
   MaterialComposition& operator=(MaterialComposition&&) = default;
+  /// Copy assignment operator
+  /// @return Reference to this material composition after copy assignment
   MaterialComposition& operator=(const MaterialComposition&) = default;
 
-  // Support range-based iteration over contained elements.
+  /// Support range-based iteration over contained elements.
+  /// @return Iterator to the first element
   auto begin() const { return m_elements.begin(); }
+  /// Get iterator to end of elements
+  /// @return Iterator past the last element
   auto end() const { return m_elements.end(); }
 
   /// Check if the composed material is valid, i.e. it is not vacuum.
   explicit operator bool() const { return !m_elements.empty(); }
   /// Return the number of elements.
+  /// @return The number of elements in the composition
   std::size_t size() const { return m_elements.size(); }
 
  private:

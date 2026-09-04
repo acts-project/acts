@@ -14,7 +14,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/Grid.hpp"
 
 #include <iostream>
 #include <numbers>
@@ -101,7 +100,9 @@ std::unique_ptr<GridPortalLink> GridPortalLink::make(
   return grid;
 }
 
-void GridPortalLink::checkConsistency(const CylinderSurface& cyl) const {
+void GridPortalLink::checkConsistency(const IGrid& grid,
+                                      AxisDirection direction,
+                                      const CylinderSurface& cyl) {
   if (cyl.bounds().get(CylinderBounds::eAveragePhi) != 0) {
     throw std::invalid_argument(
         "GridPortalLink: CylinderBounds: only average phi == 0 is "
@@ -147,22 +148,24 @@ void GridPortalLink::checkConsistency(const CylinderSurface& cyl) const {
     }
   };
 
-  if (dim() == 1) {
-    const IAxis& axisLoc0 = *grid().axes().front();
-    if (direction() == AxisDirection::AxisRPhi) {
+  if (grid.dimensions() == 1) {
+    const IAxis& axisLoc0 = grid.multiAxisAny().getAxis(0);
+    if (direction == AxisDirection::AxisRPhi) {
       checkRPhi(axisLoc0);
     } else {
       checkZ(axisLoc0);
     }
   } else {  // DIM == 2
-    const auto& axisLoc0 = *grid().axes().front();
-    const auto& axisLoc1 = *grid().axes().back();
+    const auto& axisLoc0 = grid.multiAxisAny().getAxis(0);
+    const auto& axisLoc1 = grid.multiAxisAny().getAxis(1);
     checkRPhi(axisLoc0);
     checkZ(axisLoc1);
   }
 }
 
-void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
+void GridPortalLink::checkConsistency(const IGrid& grid,
+                                      AxisDirection direction,
+                                      const DiscSurface& disc) {
   constexpr auto tolerance = s_onSurfaceTolerance;
   auto same = [](auto a, auto b) { return std::abs(a - b) < tolerance; };
 
@@ -209,22 +212,24 @@ void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
     }
   };
 
-  if (dim() == 1) {
-    const IAxis& axisLoc0 = *grid().axes().front();
-    if (direction() == AxisDirection::AxisR) {
+  if (grid.dimensions() == 1) {
+    const IAxis& axisLoc0 = grid.multiAxisAny().getAxis(0);
+    if (direction == AxisDirection::AxisR) {
       checkR(axisLoc0);
     } else {
       checkPhi(axisLoc0);
     }
   } else {  // DIM == 2
-    const auto& axisLoc0 = *grid().axes().front();
-    const auto& axisLoc1 = *grid().axes().back();
+    const auto& axisLoc0 = grid.multiAxisAny().getAxis(0);
+    const auto& axisLoc1 = grid.multiAxisAny().getAxis(1);
     checkR(axisLoc0);
     checkPhi(axisLoc1);
   }
 }
 
-void GridPortalLink::checkConsistency(const PlaneSurface& plane) const {
+void GridPortalLink::checkConsistency(const IGrid& grid,
+                                      AxisDirection direction,
+                                      const PlaneSurface& plane) {
   constexpr auto tolerance = s_onSurfaceTolerance;
   auto same = [](auto a, auto b) { return std::abs(a - b) < tolerance; };
 
@@ -246,19 +251,19 @@ void GridPortalLink::checkConsistency(const PlaneSurface& plane) const {
     }
   };
 
-  if (dim() == 1) {
-    const IAxis& axisLoc0 = *grid().axes().front();
-    check(axisLoc0, direction());
+  if (grid.dimensions() == 1) {
+    const IAxis& axisLoc0 = grid.multiAxisAny().getAxis(0);
+    check(axisLoc0, direction);
   } else {  // DIM == 2
-    const auto& axisLoc0 = *grid().axes().front();
-    const auto& axisLoc1 = *grid().axes().back();
+    const auto& axisLoc0 = grid.multiAxisAny().getAxis(0);
+    const auto& axisLoc1 = grid.multiAxisAny().getAxis(1);
     check(axisLoc0, AxisDirection::AxisX);
     check(axisLoc1, AxisDirection::AxisY);
   }
 }
 
 void GridPortalLink::printContents(std::ostream& os) const {
-  std::size_t dim = grid().axes().size();
+  std::size_t dim = grid().dimensions();
   os << "----- GRID " << dim << "d -----" << std::endl;
   os << grid() << " along " << direction() << std::endl;
 
@@ -294,7 +299,7 @@ void GridPortalLink::printContents(std::ostream& os) const {
   AnyGridConstView<const TrackingVolume*> view(grid());
 
   if (dim == 1) {
-    auto loc = grid().numLocalBinsAny();
+    auto loc = grid().multiAxisAny().getNBinsAny();
 
     if (flipped) {
       os << lpad(loc1, 4) << " > " << lpad("i=0", 10) << " ";
@@ -329,7 +334,7 @@ void GridPortalLink::printContents(std::ostream& os) const {
     }
 
   } else {
-    auto loc = grid().numLocalBinsAny();
+    auto loc = grid().multiAxisAny().getNBinsAny();
     os << rpad("v " + loc0 + "|" + loc1 + " >", 14) + "j=0 ";
     for (std::size_t j = 1; j <= loc.at(1) + 1; j++) {
       os << lpad("j=" + std::to_string(j), 13) << " ";
@@ -353,8 +358,8 @@ void GridPortalLink::printContents(std::ostream& os) const {
 void GridPortalLink::fillGrid1dTo2d(FillDirection dir,
                                     const GridPortalLink& grid1d,
                                     GridPortalLink& grid2d) {
-  const auto locSource = grid1d.grid().numLocalBinsAny();
-  const auto locDest = grid2d.grid().numLocalBinsAny();
+  const auto locSource = grid1d.grid().multiAxisAny().getNBinsAny();
+  const auto locDest = grid2d.grid().multiAxisAny().getNBinsAny();
   assert(grid1d.grid().dimensions() == 1);
   assert(grid2d.grid().dimensions() == 2);
   assert(locSource.size() == 1);

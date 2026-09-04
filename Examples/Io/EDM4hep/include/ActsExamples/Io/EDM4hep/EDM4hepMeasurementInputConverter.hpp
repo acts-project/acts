@@ -12,45 +12,42 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepInputConverter.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsExamples/Io/Podio/PodioInputConverter.hpp"
 
+#include <memory>
 #include <string>
-
-namespace podio {
-class Frame;
-}
 
 namespace ActsExamples {
 
-/// Read in a measurement cluster collection as EDM4hep from a @c podio::Frame.
-///
-/// Inpersistent information:
-/// - hit index
-/// - 1D local coords?
-/// - segment path
-///
-/// Known issues:
-/// - cluster channels are read from inappropriate fields
-/// - local 2D coordinates and time are read from position
-class EDM4hepMeasurementInputConverter final : public EDM4hepInputConverter {
+class DD4hepDetector;
+
+/// Read in a measurement collection from EDM4hep TrackerHitLocal format.
+class EDM4hepMeasurementInputConverter final : public PodioInputConverter {
  public:
   struct Config {
     /// Where to read the input frame from.
     std::string inputFrame;
+    /// Name of the input tracker hit local collection.
+    std::string inputTrackerHitsLocal;
     /// Output measurement collection.
     std::string outputMeasurements;
     /// Output measurement to sim hit collection.
     std::string outputMeasurementSimHitsMap;
     /// Output cluster collection (optional).
     std::string outputClusters;
+
+    /// DD4hep detector for cellID to geometry identifier resolution.
+    std::shared_ptr<DD4hepDetector> dd4hepDetector;
   };
 
   /// Construct the cluster reader.
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  EDM4hepMeasurementInputConverter(const Config& config,
-                                   Acts::Logging::Level level);
+  explicit EDM4hepMeasurementInputConverter(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Read out data from the input stream.
   ProcessCode convert(const AlgorithmContext& ctx,
@@ -62,12 +59,12 @@ class EDM4hepMeasurementInputConverter final : public EDM4hepInputConverter {
  private:
   Config m_cfg;
 
-  ReadDataHandle<podio::Frame> m_inputFrame{this, "InputFrame"};
+  EDM4hepUtil::MapGeometryIdFrom m_geometryMapper;
 
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
 
-  WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
+  WriteDataHandle<MeasurementSimHitsMap> m_outputMeasurementSimHitsMap{
       this, "OutputMeasurementSimHitsMap"};
 
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -14,40 +14,46 @@
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 
-Acts::GeoModelDetectorElement::GeoModelDetectorElement(
+using namespace Acts;
+
+ActsPlugins::GeoModelDetectorElement::GeoModelDetectorElement(
     PVConstLink geoPhysVol, std::shared_ptr<Surface> surface,
     const Transform3& sfTransform, double thickness)
     : m_geoPhysVol(std::move(geoPhysVol)),
       m_surface(std::move(surface)),
       m_surfaceTransform(sfTransform),
-      m_thickness(thickness) {}
+      m_thickness(thickness) {
+  if (m_surface) {
+    attachSurface(std::move(m_surface));
+  }
+}
 
-const Acts::Transform3& Acts::GeoModelDetectorElement::transform(
+const Transform3& ActsPlugins::GeoModelDetectorElement::localToGlobalTransform(
     const GeometryContext& /*gctx*/) const {
   return m_surfaceTransform;
 }
 
-const Acts::Transform3& Acts::GeoModelDetectorElement::nominalTransform()
+const Transform3& ActsPlugins::GeoModelDetectorElement::nominalTransform()
     const {
   return m_surfaceTransform;
 }
 
-const Acts::Surface& Acts::GeoModelDetectorElement::surface() const {
+const Surface& ActsPlugins::GeoModelDetectorElement::surface() const {
   return *m_surface;
 }
 
-Acts::Surface& Acts::GeoModelDetectorElement::surface() {
+Surface& ActsPlugins::GeoModelDetectorElement::surface() {
   return *m_surface;
 }
 
-double Acts::GeoModelDetectorElement::thickness() const {
+double ActsPlugins::GeoModelDetectorElement::thickness() const {
   return m_thickness;
 }
 
-PVConstLink Acts::GeoModelDetectorElement::physicalVolume() const {
+PVConstLink ActsPlugins::GeoModelDetectorElement::physicalVolume() const {
   return m_geoPhysVol;
 }
 
-const std::string& Acts::GeoModelDetectorElement::logVolName() const {
+const std::string& ActsPlugins::GeoModelDetectorElement::logVolName() const {
   return m_geoPhysVol->getLogVol()->getName();
 }

@@ -44,7 +44,7 @@ struct EigenStepperDefaultExtension {
          const double h = 0., const Vector3& kprev = Vector3::Zero())
     requires(i >= 0 && i <= 3)
   {
-    (void)volumeMaterial;
+    static_cast<void>(volumeMaterial);
 
     auto qop = stepper.qOverP(state);
     // First step does not rely on previous data
@@ -72,7 +72,7 @@ struct EigenStepperDefaultExtension {
   template <typename stepper_t>
   bool finalize(typename stepper_t::State& state, const stepper_t& stepper,
                 const IVolumeMaterial* volumeMaterial, const double h) const {
-    (void)volumeMaterial;
+    static_cast<void>(volumeMaterial);
 
     propagateTime(state, stepper, h);
     return true;
@@ -95,7 +95,7 @@ struct EigenStepperDefaultExtension {
   bool finalize(typename stepper_t::State& state, const stepper_t& stepper,
                 const IVolumeMaterial* volumeMaterial, const double h,
                 FreeMatrix& D) const {
-    (void)volumeMaterial;
+    static_cast<void>(volumeMaterial);
 
     propagateTime(state, stepper, h);
     return transportMatrix(state, stepper, h, D);
@@ -117,7 +117,7 @@ struct EigenStepperDefaultExtension {
     /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
     auto m = stepper.particleHypothesis(state).mass();
     auto p = stepper.absoluteMomentum(state);
-    auto dtds = std::sqrt(1 + m * m / (p * p));
+    auto dtds = fastHypot(1, m / p);
     state.pars[eFreeTime] += h * dtds;
     if (state.covTransport) {
       state.derivative(3) = dtds;
@@ -162,13 +162,13 @@ struct EigenStepperDefaultExtension {
     auto dir = stepper.direction(state);
     auto qop = stepper.qOverP(state);
     auto p = stepper.absoluteMomentum(state);
-    auto dtds = std::sqrt(1 + m * m / (p * p));
+    auto dtds = fastHypot(1, m / p);
 
     D = FreeMatrix::Identity();
 
     double half_h = h * 0.5;
     // This sets the reference to the sub matrices
-    // dFdx is already initialised as (3x3) idendity
+    // dFdx is already initialised as (3x3) identity
     auto dFdT = D.block<3, 3>(0, 4);
     auto dFdL = D.block<3, 1>(0, 7);
     // dGdx is already initialised as (3x3) zero
@@ -221,7 +221,9 @@ struct EigenStepperDefaultExtension {
 
     dGdL = h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
 
-    D(3, 7) = h * m * m * qop / dtds;
+    // d(t)/d(q/p) = h m^2 (q/p) / (q^2 dt/ds), with the q^2 folded into p via
+    // p = |q| / |q/p|.
+    D(3, 7) = h * m * m / (p * p * qop * dtds);
     return true;
   }
 };

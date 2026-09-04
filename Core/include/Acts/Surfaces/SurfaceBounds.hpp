@@ -44,7 +44,8 @@ class SurfaceBounds {
     eConvexPolygon = 10,
     eAnnulus = 11,
     eBoundless = 12,
-    eOther = 13
+    ePoint = 13,
+    eOther = 14
   };
 
   virtual ~SurfaceBounds() = default;
@@ -132,6 +133,7 @@ class SurfaceBounds {
 
   /// Output Method for std::ostream, to be overloaded by child classes
   /// @param os is the outstream in which the string dump is done
+  /// @return Modified ostream for chaining
   virtual std::ostream& toStream(std::ostream& os) const = 0;
 
   friend bool operator==(const SurfaceBounds& lhs, const SurfaceBounds& rhs) {

@@ -3,7 +3,6 @@
 import acts
 import acts.examples
 
-
 s = acts.examples.Sequencer(events=1000, numThreads=10, logLevel=acts.logging.VERBOSE)
 
 

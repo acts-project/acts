@@ -20,11 +20,12 @@
 #include <utility>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(VolumeBounds)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(ConeVolumeBoundsTests) {
   // Single solid Cone
@@ -89,14 +90,14 @@ BOOST_AUTO_TEST_CASE(ConeVolumeBoundsSurfaceOrientation) {
   auto cvbOrientedSurfaces = hcone.orientedSurfaces(Transform3::Identity());
   BOOST_CHECK_EQUAL(cvbOrientedSurfaces.size(), 4);
 
-  auto geoCtx = GeometryContext();
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   Vector3 xaxis(1., 0., 0.);
   Vector3 yaxis(0., 1., 0.);
   Vector3 zaxis(0., 0., 1.);
 
   for (auto& os : cvbOrientedSurfaces) {
     // Test the orientation of the boundary surfaces
-    auto rot = os.surface->transform(geoCtx).rotation();
+    auto rot = os.surface->localToGlobalTransform(geoCtx).rotation();
     BOOST_CHECK(rot.col(0).isApprox(xaxis));
     BOOST_CHECK(rot.col(1).isApprox(yaxis));
     BOOST_CHECK(rot.col(2).isApprox(zaxis));
@@ -105,4 +106,4 @@ BOOST_AUTO_TEST_CASE(ConeVolumeBoundsSurfaceOrientation) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

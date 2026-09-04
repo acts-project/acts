@@ -6,12 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/Tensor.hpp"
-#include "Acts/Plugins/Gnn/detail/CudaUtils.hpp"
+#include "ActsPlugins/Gnn/Tensor.hpp"
+#include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
 
 #include <thrust/copy.h>
 #include <thrust/count.h>
 #include <thrust/execution_policy.h>
+#include <thrust/iterator/counting_iterator.h>
+
+#include "DeviceOps.hpp"
 
 namespace {
 
@@ -34,9 +37,82 @@ __global__ void applyCut(std::size_t size, float cutoff, const float *array,
   mask[i] = array[i] > cutoff;
 }
 
+/// Gather rows from src into dst using a device-side index list.
+/// One thread per output row; cols are iterated in a short inner loop.
+/// Assumes nCols is small (e.g. node/edge feature count) — not suitable for
+/// large nCols since the inner loop becomes the bottleneck.
+template <typename T>
+__global__ void gatherRowsKernel(const std::size_t *indices, std::size_t nOut,
+                                 std::size_t nCols, const T *src, T *dst) {
+  const std::size_t k = blockIdx.x * blockDim.x + threadIdx.x;
+  if (k >= nOut) {
+    return;
+  }
+  const std::size_t srcRow = indices[k];
+  for (std::size_t j = 0; j < nCols; ++j) {
+    dst[k * nCols + j] = src[srcRow * nCols + j];
+  }
+}
+
+/// Gather columns from src into dst using a device-side column index list.
+/// One thread per output column; rows are iterated in a short inner loop.
+/// Assumes nRows is small (e.g. 2 for an edge index tensor) — not suitable for
+/// large nRows since the inner loop becomes the bottleneck.
+template <typename T>
+__global__ void gatherColsKernel(const std::size_t *indices, std::size_t nRows,
+                                 std::size_t nColsSrc, std::size_t nColsDst,
+                                 const T *src, T *dst) {
+  const std::size_t col = blockIdx.x * blockDim.x + threadIdx.x;
+  if (col >= nColsDst) {
+    return;
+  }
+  for (std::size_t row = 0; row < nRows; ++row) {
+    dst[row * nColsDst + col] = src[row * nColsSrc + indices[col]];
+  }
+}
+
+/// Multiply each column of src with the corresponding scale value.
+/// dst[r,n] = src[r,n] * scales[n]
+/// This is one thread per element with col computed from the linear index.
+
+template <typename T>
+__global__ void mulPerColKernel(std::size_t total, std::size_t cols,
+                                const T *src, const T *scales, T *dst) {
+  std::size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx >= total) {
+    return;
+  }
+  const std::size_t col = idx % cols;
+  dst[idx] = src[idx] * scales[col];
+}
+
 }  // namespace
 
-namespace Acts::detail {
+namespace ActsPlugins::detail {
+
+TensorPtr cudaCreateTensorMemory(std::size_t nbytes,
+                                 const ExecutionContext &ctx) {
+  assert(ctx.stream.has_value());
+  auto stream = *ctx.stream;
+  void *ptr{};
+  ACTS_CUDA_CHECK(cudaMallocAsync(&ptr, nbytes, stream));
+  return TensorPtr(
+      ptr, [stream](void *p) { ACTS_CUDA_CHECK(cudaFreeAsync(p, stream)); });
+}
+
+void cudaCopyTensorMemory(void *dst, const void *src, std::size_t nbytes,
+                          Device from, const ExecutionContext &to) {
+  assert(to.stream.has_value());
+  cudaMemcpyKind kind = cudaMemcpyHostToHost;
+  if (from.isCuda() && to.device.isCuda()) {
+    kind = cudaMemcpyDeviceToDevice;
+  } else if (from.isCpu() && to.device.isCuda()) {
+    kind = cudaMemcpyHostToDevice;
+  } else if (from.isCuda() && to.device.isCpu()) {
+    kind = cudaMemcpyDeviceToHost;
+  }
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(dst, src, nbytes, kind, *to.stream));
+}
 
 void cudaSigmoid(Tensor<float> &tensor, cudaStream_t stream) {
   dim3 blockDim = 1024;
@@ -45,42 +121,137 @@ void cudaSigmoid(Tensor<float> &tensor, cudaStream_t stream) {
   ACTS_CUDA_CHECK(cudaGetLastError());
 }
 
-std::pair<Tensor<float>, Tensor<std::int64_t>> cudaApplyScoreCut(
-    const Tensor<float> &scores, const Tensor<std::int64_t> &edgeIndex,
-    float cut, cudaStream_t stream) {
+Tensor<bool> cudaScoreMask(const Tensor<float> &scores, float cut,
+                           cudaStream_t stream) {
+  ExecutionContext execContext{scores.device(), stream};
+  auto mask = Tensor<bool>::Create(scores.shape(), execContext);
+
   dim3 blockDim = 1024;
   dim3 gridDim = (scores.size() + blockDim.x - 1) / blockDim.x;
-  ExecutionContext execContext{scores.device(), stream};
-
-  bool *mask{};
-  ACTS_CUDA_CHECK(cudaMallocAsync(&mask, scores.size() * sizeof(bool), stream));
-
   applyCut<<<gridDim, blockDim, 0, stream>>>(scores.size(), cut, scores.data(),
-                                             mask);
+                                             mask.data());
   ACTS_CUDA_CHECK(cudaGetLastError());
-
-  const std::size_t nEdgesAfter = thrust::count(thrust::device.on(stream), mask,
-                                                mask + scores.size(), true);
-
-  auto outputScores = Tensor<float>::Create({nEdgesAfter, 1}, execContext);
-  auto outputEdgeIndex =
-      Tensor<std::int64_t>::Create({2, nEdgesAfter}, execContext);
-
-  auto pred = [] __device__(bool x) { return x; };
-  thrust::copy_if(thrust::device.on(stream), scores.data(),
-                  scores.data() + scores.size(), mask, outputScores.data(),
-                  pred);
-
-  const auto edgesBefore = edgeIndex.size() / 2;
-  thrust::copy_if(thrust::device.on(stream), edgeIndex.data(),
-                  edgeIndex.data() + edgesBefore, mask, outputEdgeIndex.data(),
-                  pred);
-  thrust::copy_if(thrust::device.on(stream), edgeIndex.data() + edgesBefore,
-                  edgeIndex.data() + 2 * edgesBefore, mask,
-                  outputEdgeIndex.data() + nEdgesAfter, pred);
-
-  ACTS_CUDA_CHECK(cudaFreeAsync(mask, *execContext.stream));
-  return {std::move(outputScores), std::move(outputEdgeIndex)};
+  return mask;
 }
 
-}  // namespace Acts::detail
+template <typename T>
+Tensor<T> cudaSelectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
+                         const ExecutionContext &execContext) {
+  const auto nCols = tensor.shape()[1];
+  const auto nRows = tensor.shape()[0];
+  const auto stream = execContext.stream.value();
+
+  auto pred = [] __device__(bool x) { return x; };
+  const std::size_t nSelected = thrust::count(
+      thrust::device.on(stream), mask.data(), mask.data() + nRows, true);
+
+  auto result = Tensor<T>::Create({nSelected, nCols}, execContext);
+
+  if (nSelected == 0) {
+    return result;
+  }
+
+  if (nCols == 1) {
+    // Fast path: direct element selection via thrust stencil
+    thrust::copy_if(thrust::device.on(stream), tensor.data(),
+                    tensor.data() + nRows, mask.data(), result.data(), pred);
+  } else {
+    // General path: collect surviving row indices, then gather rows
+    std::size_t *devRowIndices{};
+    ACTS_CUDA_CHECK(cudaMallocAsync(&devRowIndices,
+                                    nSelected * sizeof(std::size_t), stream));
+    thrust::copy_if(thrust::device.on(stream),
+                    thrust::make_counting_iterator<std::size_t>(0),
+                    thrust::make_counting_iterator<std::size_t>(nRows),
+                    mask.data(), devRowIndices, pred);
+
+    dim3 blockDim = 1024;
+    dim3 gridDim = (nSelected + blockDim.x - 1) / blockDim.x;
+    gatherRowsKernel<<<gridDim, blockDim, 0, stream>>>(
+        devRowIndices, nSelected, nCols, tensor.data(), result.data());
+    ACTS_CUDA_CHECK(cudaGetLastError());
+
+    ACTS_CUDA_CHECK(cudaFreeAsync(devRowIndices, stream));
+  }
+
+  return result;
+}
+
+template <typename T>
+Tensor<T> cudaSelectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
+                         const ExecutionContext &execContext) {
+  const auto nRows = tensor.shape()[0];
+  const auto nColsSrc = tensor.shape()[1];
+  const auto stream = execContext.stream.value();
+
+  auto pred = [] __device__(bool x) { return x; };
+  const std::size_t nSelected = thrust::count(
+      thrust::device.on(stream), mask.data(), mask.data() + nColsSrc, true);
+
+  auto result = Tensor<T>::Create({nRows, nSelected}, execContext);
+
+  if (nSelected == 0) {
+    return result;
+  }
+
+  // Collect surviving column indices on device, then use gather kernel
+  std::size_t *devColIndices{};
+  ACTS_CUDA_CHECK(
+      cudaMallocAsync(&devColIndices, nSelected * sizeof(std::size_t), stream));
+  thrust::copy_if(thrust::device.on(stream),
+                  thrust::make_counting_iterator<std::size_t>(0),
+                  thrust::make_counting_iterator<std::size_t>(nColsSrc),
+                  mask.data(), devColIndices, pred);
+
+  dim3 blockDim = 1024;
+  dim3 gridDim = (nSelected + blockDim.x - 1) / blockDim.x;
+  gatherColsKernel<<<gridDim, blockDim, 0, stream>>>(
+      devColIndices, nRows, nColsSrc, nSelected, tensor.data(), result.data());
+  ACTS_CUDA_CHECK(cudaGetLastError());
+
+  ACTS_CUDA_CHECK(cudaFreeAsync(devColIndices, stream));
+  return result;
+}
+
+template <typename T>
+Tensor<T> cudaMulPerColumn(const Tensor<T> &src, const Tensor<T> &scales,
+                           const ExecutionContext &execContext) {
+  const auto rows = src.shape()[0];
+  const auto cols = src.shape()[1];
+  const auto total = rows * cols;
+  const auto stream = execContext.stream.value();
+
+  auto result = Tensor<T>::Create({rows, cols}, execContext);
+
+  if (total == 0) {
+    return result;
+  }
+
+  dim3 blockDim = 256;
+  dim3 gridDim = (total + blockDim.x - 1) / blockDim.x;
+  mulPerColKernel<<<gridDim, blockDim, 0, stream>>>(
+      total, cols, src.data(), scales.data(), result.data());
+  ACTS_CUDA_CHECK(cudaGetLastError());
+  return result;
+}
+
+template Tensor<float> cudaSelectRows(const Tensor<float> &,
+                                      const Tensor<bool> &,
+                                      const ExecutionContext &);
+template Tensor<std::int64_t> cudaSelectRows(const Tensor<std::int64_t> &,
+                                             const Tensor<bool> &,
+                                             const ExecutionContext &);
+template Tensor<float> cudaSelectCols(const Tensor<float> &,
+                                      const Tensor<bool> &,
+                                      const ExecutionContext &);
+template Tensor<std::int64_t> cudaSelectCols(const Tensor<std::int64_t> &,
+                                             const Tensor<bool> &,
+                                             const ExecutionContext &);
+template Tensor<float> cudaMulPerColumn(const Tensor<float> &,
+                                        const Tensor<float> &,
+                                        const ExecutionContext &);
+template Tensor<std::int64_t> cudaMulPerColumn(const Tensor<std::int64_t> &,
+                                               const Tensor<std::int64_t> &,
+                                               const ExecutionContext &);
+
+}  // namespace ActsPlugins::detail

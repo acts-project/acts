@@ -8,54 +8,60 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/SeedSpacePointSelection.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <array>
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
 
-namespace Acts {
-class TrackingGeometry;
-class MagneticFieldProvider;
-}  // namespace Acts
-
 namespace ActsExamples {
-struct AlgorithmContext;
 
-/// Estimate track parameters for track seeds.
+/// Estimate track parameters from the space points of a seed.
 ///
-/// The algorithm takes the either directly the seeds or indirectly the proto
-/// tracks and space points, and source links container as input. The proto
-/// track is basically a seed and its space points info could be retrieved from
-/// the space point container. The source links container is necessary to
-/// retrieve the geometry identifier of the module at which a space point is
-/// located. It creates two additional container to the event store, i.e. the
-/// estimated track parameters container and the proto tracks container storing
-/// only those proto tracks with track parameters estimated.
+/// Seeds without an estimate are dropped. Optional input seeds and proto
+/// tracks are written back out filtered the same way.
 class TrackParamsEstimationAlgorithm final : public IAlgorithm {
  public:
+  /// Relative weight of a space point at a global position in the helix fit.
+  /// Only ratios matter.
+  using SpacePointWeight = std::function<double(const Acts::Vector3&)>;
+
+  /// Weight a space point by `1 / r^exponent`.
+  ///
+  /// @param exponent the power of the radius to divide by
+  /// @return the weight function
+  static SpacePointWeight inverseRadiusPowerWeight(double exponent);
+
   struct Config {
     /// Input seeds collection.
     std::string inputSeeds;
-    /// Input prototracks (optional)
-    std::string inputProtoTracks;
+    /// Input proto tracks (optional).
+    std::optional<std::string> inputProtoTracks;
+    /// Input particle hypothesis (optional). If not given, the static particle
+    /// hypothesis from the config is used.
+    std::optional<std::string> inputParticleHypotheses;
     /// Output estimated track parameters collection.
     std::string outputTrackParameters;
     /// Output seed collection - only seeds with successful parameter estimation
     /// are propagated (optional)
-    std::string outputSeeds;
-    /// Output prototrack collection - only tracks with successful parameter
+    std::optional<std::string> outputSeeds;
+    /// Output proto track collection - only tracks with successful parameter
     /// estimation are propagated (optional)
-    std::string outputProtoTracks;
+    std::optional<std::string> outputProtoTracks;
 
     /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
@@ -64,6 +70,20 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
 
     /// The minimum magnetic field to trigger the track parameters estimation
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
+
+    /// Which space points of the seed feed the estimate. Seeds for which the
+    /// selection cannot be made are skipped.
+    SeedSpacePointSelection spacePointSelection =
+        SeedSpacePointSelection::FirstThree;
+    /// Minimum transverse distance between the selected space points. Only the
+    /// triplet selections apply it.
+    double minTransverseDistance = 10 * Acts::UnitConstants::mm;
+    /// Geometric refinement iterations of the circle fit. Only
+    /// @c SeedSpacePointSelection::All fits a circle, a triplet is exact.
+    std::size_t geometricRefineIterations = 0;
+    /// Optional space point weight. Unset weights every point the same and,
+    /// like the refinement, only @c SeedSpacePointSelection::All reads it.
+    SpacePointWeight spacePointWeight;
 
     /// Initial sigmas for the track parameters.
     std::array<double, 6> initialSigmas = {
@@ -94,7 +114,8 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TrackParamsEstimationAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  explicit TrackParamsEstimationAlgorithm(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the track parameters making algorithm.
   ///
@@ -108,12 +129,14 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
+  ReadDataHandle<SeedContainer> m_inputSeeds{this, "InputSeeds"};
   ReadDataHandle<ProtoTrackContainer> m_inputTracks{this, "InputTracks"};
+  ReadDataHandle<std::vector<Acts::ParticleHypothesis>>
+      m_inputParticleHypotheses{this, "InputParticleHypotheses"};
 
   WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
       this, "OutputTrackParameters"};
-  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
   WriteDataHandle<ProtoTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 

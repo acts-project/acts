@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 
 import acts
+import acts.examples.root
 from acts.examples.simulation import (
     addFatras,
     addGeant4,
@@ -73,7 +74,7 @@ with tempfile.TemporaryDirectory() as temp:
     )
 
     s.addWriter(
-        acts.examples.RootParticleWriter(
+        acts.examples.root.RootParticleWriter(
             level=acts.logging.INFO,
             inputParticles="particles_generated",
             filePath=tp / "particles.root",

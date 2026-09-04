@@ -13,11 +13,17 @@
 
 namespace Acts {
 
+/// Error codes for portal operations
+/// @ingroup errors
 enum class PortalError {
   // ensure all values are non-zero
+  /// Position not on any of the composite child portal links
   PositionNotOnAnyChildPortalLink = 1,
 };
 
+/// Create error code from PortalError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(Acts::PortalError e);
 
 }  // namespace Acts

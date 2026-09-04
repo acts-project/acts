@@ -20,3 +20,14 @@ ActsFatras::makeStandardChargedElectroMagneticInteractions(
       minimumAbsMomentum;
   return pl;
 }
+
+ActsFatras::StandardNeutralElectroMagneticInteractions
+ActsFatras::makeStandardNeutralElectroMagneticInteractions(
+    double minimumAbsMomentum) {
+  StandardNeutralElectroMagneticInteractions pl;
+  pl.get<detail::StandardPhotonConversion>().selectOutputParticle.valMin =
+      minimumAbsMomentum;
+  pl.get<detail::StandardPhotonConversion>().selectChildParticle.valMin =
+      minimumAbsMomentum;
+  return pl;
+}

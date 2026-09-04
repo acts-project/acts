@@ -25,6 +25,9 @@
 /// @param color the color
 template <typename hist_t>
 void setHistStyle(hist_t* hist, short color = 1) {
+  if (hist == nullptr) {
+    return;
+  }
   hist->GetXaxis()->SetTitleSize(0.04);
   hist->GetYaxis()->SetTitleSize(0.04);
   hist->GetXaxis()->SetLabelSize(0.04);
@@ -338,7 +341,7 @@ struct PtResidualAccessor {
       float p = 1. / std::abs(qop_value->at(entry));
       float theta = theta_value->at(entry);
       float pt_true = reference_pt->at(entry);
-      return (p * sin(theta) - pt_true);
+      return (p * std::sin(theta) - pt_true);
     }
     return std::numeric_limits<float>::infinity();
   }

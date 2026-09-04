@@ -8,10 +8,8 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -20,10 +18,8 @@
 #include <limits>
 #include <memory>
 #include <string>
-#include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write track parameters in comma-separated-value format.
 ///

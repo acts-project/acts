@@ -19,6 +19,8 @@ namespace Acts {
 /// Ownership enum for @c Delegate
 enum class DelegateType { Owning, NonOwning };
 
+/// Tag type to select a compile-time callable for Delegate.
+/// @tparam C Callable value used for binding.
 template <auto C>
 struct DelegateFuncTag {
   explicit constexpr DelegateFuncTag() = default;
@@ -45,15 +47,21 @@ class Delegate;
 template <typename R, typename H, DelegateType O, typename... Args>
 class Delegate<R(Args...), H, O> {
  public:
+  /// Delegate ownership type indicating resource management strategy
   static constexpr DelegateType kOwnership = O;
 
   /// Alias of the return type
   using return_type = R;
+  /// Type alias for holder type used to store instance pointer
   using holder_type = H;
+  /// Type alias for function pointer type with holder parameter
   using function_type = return_type (*)(const holder_type *, Args...);
+  /// Type alias for plain function pointer type without holder
   using function_ptr_type = return_type (*)(Args...);
+  /// Type alias for function signature
   using signature_type = R(Args...);
 
+  /// Type alias for deleter function pointer used for cleanup
   using deleter_type = void (*)(const holder_type *);
 
  private:
@@ -75,9 +83,15 @@ class Delegate<R(Args...), H, O> {
  public:
   Delegate() = default;
 
+  /// Move constructor
   Delegate(Delegate &&) noexcept = default;
+  /// Move assignment operator
+  /// @return Reference to this Delegate after moving
   Delegate &operator=(Delegate &&) noexcept = default;
+  /// Copy constructor
   Delegate(const Delegate &) noexcept = default;
+  /// Copy assignment operator
+  /// @return Reference to this Delegate after copying
   Delegate &operator=(const Delegate &) noexcept = default;
 
   /// @cond
@@ -214,6 +228,10 @@ class Delegate<R(Args...), H, O> {
   }
   /// @endcond
 
+  /// Connect a runtime callable with an instance pointer
+  /// @tparam Type The type of the instance
+  /// @param callable The runtime callable function
+  /// @param instance The instance pointer to be passed as first argument
   template <typename Type>
   void connect(function_type callable, const Type *instance)
     requires(kOwnership == DelegateType::NonOwning)
@@ -295,6 +313,8 @@ class Delegate<R(Args...), H, O> {
     m_function = nullptr;
   }
 
+  /// Get the stored instance pointer
+  /// @return Pointer to the stored instance, or nullptr if none
   const holder_type *instance() const
     requires(!std::same_as<holder_type, void>)
   {
@@ -348,10 +368,15 @@ class OwningDelegate<R(Args...), H>
     : public Delegate<R(Args...), H, DelegateType::Owning> {
  public:
   OwningDelegate() = default;
+  /// Construct OwningDelegate from owning Delegate
+  /// @param delegate The owning delegate to move from
   explicit OwningDelegate(
       Delegate<R(Args...), H, DelegateType::Owning> &&delegate)
       : Delegate<R(Args...), H, DelegateType::Owning>(std::move(delegate)) {}
 
+  /// Move assignment from owning Delegate
+  /// @param delegate The owning delegate to move from
+  /// @return Reference to this OwningDelegate
   OwningDelegate &operator=(
       Delegate<R(Args...), H, DelegateType::Owning> &&delegate) {
     *this = OwningDelegate{std::move(delegate)};

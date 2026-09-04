@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerArrayCreator.hpp"
@@ -28,6 +27,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
@@ -38,7 +38,7 @@
 std::unique_ptr<const Acts::TrackingGeometry>
 ActsExamples::buildTelescopeDetector(
     const Acts::GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
+    std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>>&
         detectorStore,
     const std::vector<double>& positions,
     const std::vector<double>& stereoAngles,
@@ -91,15 +91,21 @@ ActsExamples::buildTelescopeDetector(
 
     // Create the detector element
     std::shared_ptr<TelescopeDetectorElement> detElement = nullptr;
+
+    const auto id =
+        static_cast<TelescopeDetectorElement::Identifier>(detectorStore.size());
+
     if (surfaceType == TelescopeSurfaceType::Plane) {
       detElement = std::make_shared<TelescopeDetectorElement>(
-          std::make_shared<const Acts::Transform3>(trafo), pBounds, 1._um,
+          id, std::make_shared<Acts::Transform3>(trafo), pBounds, 1._um,
           surfaceMaterial);
     } else {
       detElement = std::make_shared<TelescopeDetectorElement>(
-          std::make_shared<const Acts::Transform3>(trafo), rBounds, 1._um,
+          id, std::make_shared<Acts::Transform3>(trafo), rBounds, 1._um,
           surfaceMaterial);
     }
+    detectorStore.push_back(detElement);
+
     // Get the surface
     auto surface = detElement->surface().getSharedPtr();
     // Add the detector element to the detector store

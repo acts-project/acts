@@ -8,10 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Propagator/MaterialInteractor.hpp"
-#include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -26,7 +23,6 @@
 namespace ActsExamples {
 
 class PropagatorInterface;
-struct AlgorithmContext;
 
 /// @brief this test algorithm performs test propagation
 /// within the Acts::Propagator
@@ -66,13 +62,14 @@ class PropagationAlgorithm : public IAlgorithm {
   /// Constructor
   /// @param [in] config is the configuration struct
   /// @param [in] loglevel is the logging level
-  PropagationAlgorithm(const Config& config, Acts::Logging::Level level);
+  explicit PropagationAlgorithm(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Framework execute method
   /// @param [in] the algorithm context for event consistency
   /// @return is a process code indicating success or not
-  ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const override;
+  ProcessCode execute(const AlgorithmContext& context) const override;
 
   /// Get const access to the config
   const Config& config() const { return m_cfg; }

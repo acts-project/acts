@@ -6,11 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
+#include "ActsPlugins/Root/TGeoPrimitivesHelper.hpp"
 
 #include <algorithm>
 
-bool Acts::TGeoPrimitivesHelper::match(const char* first, const char* second) {
+bool ActsPlugins::TGeoPrimitivesHelper::match(const char* first,
+                                              const char* second) {
   // If we reach at the end of both strings, we are done
   if (*first == '\0' && *second == '\0') {
     return true;
@@ -38,8 +39,8 @@ bool Acts::TGeoPrimitivesHelper::match(const char* first, const char* second) {
   return false;
 }
 
-bool Acts::TGeoPrimitivesHelper::match(const std::vector<std::string>& first,
-                                       const char* second) {
+bool ActsPlugins::TGeoPrimitivesHelper::match(
+    const std::vector<std::string>& first, const char* second) {
   return std::ranges::any_of(
       first, [&](const std::string& f) { return match(f.c_str(), second); });
 }

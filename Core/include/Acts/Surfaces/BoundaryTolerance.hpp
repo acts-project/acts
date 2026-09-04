@@ -52,31 +52,47 @@ class BoundaryTolerance {
 
   struct NoneParams {};
 
+  /// Parameters for absolute Euclidean boundary tolerance.
   struct AbsoluteEuclideanParams {
+    /// Tolerance value
     double tolerance{};
   };
 
+  /// Parameters for chi2 boundary tolerance in bound coordinates.
   struct Chi2BoundParams {
+    /// Maximum chi2 value
     double maxChi2{};
+    /// Weight matrix stored as flat array
     std::array<double, 4> weight{};
 
+    /// Get weight matrix as Eigen matrix
+    /// @return Mapped weight matrix
     Eigen::Map<SquareMatrix2> weightMatrix() {
       return Eigen::Map<SquareMatrix2>(weight.data());
     }
 
+    /// Get weight matrix as const Eigen matrix
+    /// @return Mapped weight matrix
     Eigen::Map<const SquareMatrix2> weightMatrix() const {
       return Eigen::Map<const SquareMatrix2>(weight.data());
     }
   };
 
+  /// Parameters for chi2 boundary tolerance in Cartesian coordinates.
   struct Chi2CartesianParams {
+    /// Maximum chi2 value
     double maxChi2{};
+    /// Weight matrix stored as flat array
     std::array<double, 4> weight{};
 
+    /// Get weight matrix as Eigen matrix
+    /// @return Mapped weight matrix
     Eigen::Map<SquareMatrix2> weightMatrix() {
       return Eigen::Map<SquareMatrix2>(weight.data());
     }
 
+    /// Get weight matrix as const Eigen matrix
+    /// @return Mapped weight matrix
     Eigen::Map<const SquareMatrix2> weightMatrix() const {
       return Eigen::Map<const SquareMatrix2>(weight.data());
     }
@@ -96,21 +112,28 @@ class BoundaryTolerance {
 
  public:
   /// Infinite tolerance i.e. no boundary check
+  /// @return BoundaryTolerance configured for infinite tolerance
   constexpr static auto Infinite() noexcept {
     return BoundaryTolerance{InfiniteParams{}};
   }
 
   /// No tolerance i.e. exact boundary check
+  /// @return BoundaryTolerance configured for no tolerance (exact checking)
   constexpr static auto None() noexcept {
     return BoundaryTolerance{NoneParams{}};
   }
 
   /// Absolute tolerance in Euclidean distance
+  /// @param tolerance The tolerance value in Euclidean distance
+  /// @return BoundaryTolerance configured for absolute Euclidean tolerance
   constexpr static auto AbsoluteEuclidean(double tolerance) noexcept {
     return BoundaryTolerance{AbsoluteEuclideanParams{tolerance}};
   }
 
   /// Chi2 tolerance in bound coordinates
+  /// @param weight The weight matrix for the chi2 calculation
+  /// @param maxChi2 The maximum chi2 value allowed
+  /// @return BoundaryTolerance configured for chi2 tolerance in bound coordinates
   static auto Chi2Bound(const SquareMatrix2& weight, double maxChi2) noexcept {
     Chi2BoundParams tolerance{maxChi2, {}};
     tolerance.weightMatrix() = weight;
@@ -118,6 +141,9 @@ class BoundaryTolerance {
   }
 
   /// Chi2 tolerance in Cartesian coordinates
+  /// @param weight The weight matrix for the chi2 calculation
+  /// @param maxChi2 The maximum chi2 value allowed
+  /// @return BoundaryTolerance configured for chi2 tolerance in Cartesian coordinates
   static auto Chi2Cartesian(const SquareMatrix2& weight,
                             double maxChi2) noexcept {
     Chi2CartesianParams tolerance{maxChi2, {}};
@@ -125,12 +151,24 @@ class BoundaryTolerance {
     return BoundaryTolerance{tolerance};
   }
 
+  /// Copy constructor
+  /// @param other The BoundaryTolerance object to copy
   BoundaryTolerance(const BoundaryTolerance& other) noexcept = default;
+  /// Copy assignment operator
+  /// @param other The BoundaryTolerance object to copy
+  /// @return Reference to this BoundaryTolerance after copying
   BoundaryTolerance& operator=(const BoundaryTolerance& other) noexcept =
       default;
+  /// Move constructor
+  /// @param other The BoundaryTolerance object to move
   BoundaryTolerance(BoundaryTolerance&& other) noexcept = default;
+  /// Move assignment operator
+  /// @param other The BoundaryTolerance object to move
+  /// @return Reference to this BoundaryTolerance after moving
   BoundaryTolerance& operator=(BoundaryTolerance&& other) noexcept = default;
 
+  /// @enum ToleranceMode
+  /// Enumeration defining how tolerance should be applied to boundaries
   enum class ToleranceMode {
     Extend,  //< Extend the boundary
     None,    //< No tolerance
@@ -138,39 +176,51 @@ class BoundaryTolerance {
   };
 
   /// Check if the tolerance is infinite.
+  /// @return True if configured for infinite tolerance, false otherwise
   constexpr bool isInfinite() const { return holdsVariant<InfiniteParams>(); }
   /// Check if the is no tolerance.
+  /// @return True if configured for no tolerance (exact checking), false otherwise
   constexpr bool isNone() const { return holdsVariant<NoneParams>(); }
   /// Check if the tolerance is absolute with Euclidean distance.
+  /// @return True if configured for absolute Euclidean tolerance, false otherwise
   constexpr bool hasAbsoluteEuclidean() const {
     return holdsVariant<AbsoluteEuclideanParams>();
   }
   /// Check if the tolerance is chi2 with bound coordinates.
+  /// @return True if configured for chi2 tolerance in bound coordinates, false otherwise
   constexpr bool hasChi2Bound() const {
     return holdsVariant<Chi2BoundParams>();
   }
   /// Check if the tolerance is chi2 with Cartesian coordinates.
+  /// @return True if configured for chi2 tolerance in Cartesian coordinates, false otherwise
   constexpr bool hasChi2Cartesian() const {
     return holdsVariant<Chi2CartesianParams>();
   }
 
   /// Get the tolerance mode.
+  /// @return ToleranceMode indicating how the tolerance should be applied
   ToleranceMode toleranceMode() const;
 
   /// Get the tolerance as absolute Euclidean.
+  /// @return Reference to the absolute Euclidean tolerance parameters
   constexpr const AbsoluteEuclideanParams& asAbsoluteEuclidean() const {
     return getVariant<AbsoluteEuclideanParams>();
   }
   /// Get the tolerance as chi2 bound.
+  /// @return Reference to the chi2 bound tolerance parameters
   constexpr const Chi2BoundParams& asChi2Bound() const {
     return getVariant<Chi2BoundParams>();
   }
   /// Get the tolerance as chi2 Cartesian.
+  /// @return Reference to the chi2 Cartesian tolerance parameters
   constexpr const Chi2CartesianParams& asChi2Cartesian() const {
     return getVariant<Chi2CartesianParams>();
   }
 
   /// Check if the bound position delta is tolerated.
+  /// @param boundDelta The delta in bound coordinates
+  /// @param boundToCartesian The transformation matrix from bound to Cartesian
+  /// @return True if the delta is within tolerance, false otherwise
   bool isTolerated(const Vector2& boundDelta,
                    const SquareMatrix2& boundToCartesian) const;
 

@@ -11,31 +11,37 @@
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// @class MultiWireVolumeBuilder
 /// @brief A class to build multiwire tracking volumes (e.g wire chambers)
 class MultiWireVolumeBuilder {
  public:
-  /// The axis configuration for the binning
-  using Binning = std::tuple<DirectedProtoAxis, std::size_t>;
+  /// The axis configuration for the binning: a fully specified equidistant
+  /// axis spec with a direction, plus the bin expansion
+  using Binning = std::tuple<AxisSpec, std::size_t>;
   /// Configuration Struct
   struct Config {
     /// The name of the tracking volume
     std::string name = "undefined";
 
-    // The surfaces to be wrapped from the tracking volume
+    /// The surfaces to be wrapped from the tracking volume
     std::vector<std::shared_ptr<Surface>> mlSurfaces = {};
 
-    /// The transform of the tracking volume
+    /// The local -> global transform of the tracking volume
     Transform3 transform = Transform3::Identity();
+
+    /// Connect the tracking geometry with an alignable volume placement
+    /// Used instead of the transform if set
+    VolumePlacementBase* alignablePlacement{};
 
     /// The bounds of the tracking volume
     std::shared_ptr<Acts::VolumeBounds> bounds = nullptr;
 
+    /// Binning configuration for multi-wire volume
     std::vector<Binning> binning = {};
   };
   /// Constructor
@@ -52,6 +58,7 @@ class MultiWireVolumeBuilder {
 
   /// @brief Creates a multilayer navigation policy factory that can be used for the trackingVolume
   /// or attached to a blueprint node
+  /// @return Unique pointer to the created navigation policy factory
   std::unique_ptr<NavigationPolicyFactory> createNavigationPolicyFactory()
       const;
 
@@ -63,4 +70,14 @@ class MultiWireVolumeBuilder {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace Acts::Experimental
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use @ref Acts::MultiWireVolumeBuilder instead. This
+///             alias is kept for backward compatibility and will be removed.
+using MultiWireVolumeBuilder
+    [[deprecated("Acts::Experimental::MultiWireVolumeBuilder moved to "
+                 "Acts::MultiWireVolumeBuilder")]] =
+        Acts::MultiWireVolumeBuilder;
+}  // namespace Experimental
+
+}  // namespace Acts

@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
@@ -33,7 +32,7 @@ class TrackDensityVertexFinder final : public IVertexFinder {
  public:
   /// @brief The Config struct
   struct Config {
-    // The track density estimator
+    /// The track density estimator for vertex finding
     GaussianTrackDensity trackDensityEstimator;
   };
 

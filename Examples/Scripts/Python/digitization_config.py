@@ -3,13 +3,12 @@ from pathlib import Path
 
 import acts
 from acts.examples import (
-    readDigiConfigFromJson,
     DigitizationConfigurator,
-    writeDigiConfigToJson,
     GenericDetector,
     DigiConfigContainer,
 )
 
+from acts.examples.json import readDigiConfigFromJson, writeDigiConfigToJson
 
 u = acts.UnitConstants
 

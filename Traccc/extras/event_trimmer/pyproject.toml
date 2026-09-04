@@ -1,0 +1,10 @@
+[project]
+name = "traccc-event-trimmer"
+version = "0.1.0"
+description = "Tool for slimming down events"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "black>=25.9.0",
+    "pandas>=2.3.2",
+]

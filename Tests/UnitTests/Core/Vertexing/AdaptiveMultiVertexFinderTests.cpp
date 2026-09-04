@@ -9,20 +9,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
@@ -36,14 +31,12 @@
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-#include <algorithm>
 #include <array>
 #include <chrono>
 #include <cmath>
-#include <functional>
 #include <iostream>
-#include <map>
 #include <memory>
 #include <numbers>
 #include <string>
@@ -54,19 +47,49 @@
 
 #include "VertexingDataHelper.hpp"
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 const std::string toolString = "AMVF";
+
+class FixedVertexSeedFinder final : public IVertexFinder {
+ public:
+  struct State {};
+
+  explicit FixedVertexSeedFinder(std::vector<Vertex> seeds)
+      : m_seeds(std::move(seeds)) {}
+
+  Result<std::vector<Vertex>> find(
+      const std::vector<InputTrack>& /*trackVector*/,
+      const VertexingOptions& /*vertexingOptions*/,
+      IVertexFinder::State& /*state*/) const override {
+    return m_seeds;
+  }
+
+  IVertexFinder::State makeState(
+      const MagneticFieldContext& /*mctx*/) const override {
+    return IVertexFinder::State{State{}};
+  }
+
+  void setTracksToRemove(
+      IVertexFinder::State& /*state*/,
+      const std::vector<InputTrack>& /*removedTracks*/) const override {}
+
+ private:
+  std::vector<Vertex> m_seeds;
+};
+
+BOOST_AUTO_TEST_SUITE(VertexingSuite)
 
 /// @brief AMVF test with Gaussian seed finder
 BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
@@ -675,4 +698,80 @@ BOOST_AUTO_TEST_CASE(
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_removes_rejected_seed) {
+  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 2_T));
+
+  EigenStepper<> stepper(bField);
+  auto propagator = std::make_shared<Propagator>(stepper);
+
+  ImpactPointEstimator::Config ipEstCfg(bField, propagator);
+  ImpactPointEstimator ipEst(ipEstCfg);
+
+  std::vector<double> temperatures{
+      8., 4., 2., std::numbers::sqrt2, std::sqrt(3. / 2.), 1.};
+  AnnealingUtility::Config annealingConfig;
+  annealingConfig.setOfTemperatures = temperatures;
+  AnnealingUtility annealingUtility(annealingConfig);
+
+  using Fitter = AdaptiveMultiVertexFitter;
+
+  Fitter::Config fitterCfg(ipEst);
+  fitterCfg.annealingTool = annealingUtility;
+
+  Linearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
+  Linearizer linearizer(ltConfig);
+
+  fitterCfg.doSmoothing = true;
+  fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
+
+  Fitter fitter(fitterCfg);
+
+  auto csvData = readTracksAndVertexCSV(toolString);
+  auto tracks = std::get<TracksData>(csvData);
+  auto verticesInfo = std::get<VerticesData>(csvData);
+  BOOST_REQUIRE_GE(verticesInfo.size(), 2u);
+
+  std::vector<Vertex> seeds;
+  seeds.emplace_back(verticesInfo[0].position);
+  seeds.back().setCovariance(verticesInfo[0].covariance);
+  seeds.emplace_back(verticesInfo[1].position);
+  seeds.back().setCovariance(verticesInfo[1].covariance);
+
+  auto seedFinder = std::make_shared<FixedVertexSeedFinder>(std::move(seeds));
+
+  AdaptiveMultiVertexFinder::Config finderConfig(
+      std::move(fitter), std::move(seedFinder), ipEst, bField);
+  finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
+  finderConfig.maxMergeVertexSignificance = 1e9;
+  finderConfig.maxIterations = 1;
+
+  AdaptiveMultiVertexFinder finder(std::move(finderConfig));
+  IVertexFinder::State state = finder.makeState(magFieldContext);
+
+  std::vector<InputTrack> inputTracks;
+  for (const auto& trk : tracks) {
+    inputTracks.emplace_back(&trk);
+  }
+
+  VertexingOptions vertexingOptions(geoContext, magFieldContext,
+                                    std::get<BeamSpotData>(csvData));
+
+  auto findResult = finder.find(inputTracks, vertexingOptions, state);
+
+  if (!findResult.ok()) {
+    std::cout << findResult.error().message() << std::endl;
+  }
+
+  BOOST_REQUIRE(findResult.ok());
+
+  std::vector<Vertex> allVertices = *findResult;
+  BOOST_CHECK_EQUAL(allVertices.size(), 1u);
+  BOOST_CHECK_GT(allVertices.front().tracks().size(), 1u);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

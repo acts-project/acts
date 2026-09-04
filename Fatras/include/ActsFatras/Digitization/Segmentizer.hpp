@@ -16,7 +16,7 @@
 #include <vector>
 
 namespace Acts {
-class BinUtility;
+class IMultiAxis;
 class Surface;
 }  // namespace Acts
 
@@ -56,6 +56,7 @@ struct Segmentizer {
     /// Smaller operator for sorting the ChannelStep objects.
     ///
     /// @param cstep The other ChannelStep to be compared
+    /// @return true if this ChannelStep has smaller path distance than cstep
     ///
     /// The ChannelStep objects can be compared with its path distance
     /// from the start (surface segment origin)
@@ -67,9 +68,9 @@ struct Segmentizer {
     /// The bin of this segment
     Bin2D bin = {0, 0};
     /// The segment start, end points
-    Segment2D path2D;
+    Segment2D path2D = {Acts::Vector2::Zero(), Acts::Vector2::Zero()};
     /// The (clipped) value (uncorrected: path length)
-    double activation = 0.;
+    double activation = 0;
 
     /// Constructor with arguments
     ///
@@ -97,7 +98,7 @@ struct Segmentizer {
   /// @return a vector of ChannelSegment objects
   std::vector<ChannelSegment> segments(const Acts::GeometryContext& geoCtx,
                                        const Acts::Surface& surface,
-                                       const Acts::BinUtility& segmentation,
+                                       const Acts::IMultiAxis& segmentation,
                                        const Segment2D& segment) const;
 };
 

@@ -8,7 +8,6 @@
 
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"

@@ -35,7 +35,7 @@ class RangeXD {
     Type* element;
 
     Type& operator[](std::size_t i) {
-      (void)i;
+      static_cast<void>(i);
       assert(i == 0);
 
       return *element;
@@ -406,18 +406,22 @@ class RangeXD {
 
   /// @brief Return the minimum value of the range @p i (inclusive)
   /// @param i The index of the dimension to access
+  /// @return Reference to the minimum value for modification
   Type& min(std::size_t i) { return m_minima[i]; }
 
   /// @brief Return the maximum value of the range @p i (inclusive)
   /// @param i The index of the dimension to access
+  /// @return Reference to the maximum value for modification
   Type& max(std::size_t i) { return m_maxima[i]; }
 
   /// @brief Return the minimum value of the range @p i (inclusive)
   /// @param i The index of the dimension to access
+  /// @return The minimum value of the specified dimension
   Type min(std::size_t i) const { return m_minima[i]; }
 
   /// @brief Return the maximum value of the range @p i (inclusive)
   /// @param i The index of the dimension to access
+  /// @return The maximum value of the specified dimension
   Type max(std::size_t i) const { return m_maxima[i]; }
 
   /// Methods for manipulating a range of dimension 1
@@ -564,6 +568,7 @@ class RangeXD {
   }
 
   /// @brief Return the minimum value of the range (inclusive)
+  /// @return The minimum value of the one-dimensional range
   Type min() const
     requires(Dims == 1)
   {
@@ -571,6 +576,7 @@ class RangeXD {
   }
 
   /// @brief Return the minimum value of the range (inclusive)
+  /// @return Reference to the minimum value for modification
   Type& min()
     requires(Dims == 1)
   {
@@ -578,6 +584,7 @@ class RangeXD {
   }
 
   /// @brief Return the maximum value of the range (inclusive)
+  /// @return The maximum value of the one-dimensional range
   Type max() const
     requires(Dims == 1)
   {
@@ -585,6 +592,7 @@ class RangeXD {
   }
 
   /// @brief Return the maximum value of the range (inclusive)
+  /// @return Reference to the maximum value for modification
   Type& max()
     requires(Dims == 1)
   {
@@ -631,6 +639,10 @@ class RangeXD {
   Vector<Type, Dims> m_maxima{};
 };
 
+/// @brief Type alias for a one-dimensional range
+/// @details Specialization of RangeXD for one-dimensional ranges
+/// @tparam Type The value type of the range
+/// @tparam Vector The container type template used to store the range bounds
 template <typename Type,
           template <typename, std::size_t> typename Vector = std::array>
 using Range1D = RangeXD<1, Type, Vector>;

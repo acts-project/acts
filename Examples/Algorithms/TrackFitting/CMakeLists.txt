@@ -1,9 +1,9 @@
 acts_add_library(
     ExamplesTrackFitting
-    SHARED
     src/RefittingCalibrator.cpp
     src/TrackFittingAlgorithm.cpp
     src/KalmanFitterFunction.cpp
+    src/KalmanReferenceTrajectoryFitterFunction.cpp
     src/RefittingAlgorithm.cpp
     src/GsfFitterFunction.cpp
     src/GlobalChiSquareFitterFunction.cpp

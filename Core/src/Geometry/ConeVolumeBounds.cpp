@@ -20,10 +20,12 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <iomanip>
 #include <numbers>
 #include <stdexcept>
 #include <utility>
@@ -106,14 +108,12 @@ std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
     auto innerConeTrans = transform * Translation3(0., 0., -get(eInnerOffsetZ));
     auto innerCone =
         Surface::makeShared<ConeSurface>(innerConeTrans, m_innerConeBounds);
-    oSurfaces.push_back(
-        OrientedSurface{std::move(innerCone), Direction::AlongNormal()});
+    oSurfaces.emplace_back(std::move(innerCone), Direction::AlongNormal());
   } else if (m_innerCylinderBounds != nullptr) {
     // Or alternatively the inner Cylinder
     auto innerCylinder =
         Surface::makeShared<CylinderSurface>(transform, m_innerCylinderBounds);
-    oSurfaces.push_back(
-        OrientedSurface{std::move(innerCylinder), Direction::AlongNormal()});
+    oSurfaces.emplace_back(std::move(innerCylinder), Direction::AlongNormal());
   }
 
   // Create an outer Cone
@@ -121,14 +121,13 @@ std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
     auto outerConeTrans = transform * Translation3(0., 0., -get(eOuterOffsetZ));
     auto outerCone =
         Surface::makeShared<ConeSurface>(outerConeTrans, m_outerConeBounds);
-    oSurfaces.push_back(
-        OrientedSurface{std::move(outerCone), Direction::OppositeNormal()});
+    oSurfaces.emplace_back(std::move(outerCone), Direction::OppositeNormal());
   } else if (m_outerCylinderBounds != nullptr) {
     // or alternatively an outer Cylinder
     auto outerCylinder =
         Surface::makeShared<CylinderSurface>(transform, m_outerCylinderBounds);
-    oSurfaces.push_back(
-        OrientedSurface{std::move(outerCylinder), Direction::OppositeNormal()});
+    oSurfaces.emplace_back(std::move(outerCylinder),
+                           Direction::OppositeNormal());
   }
 
   // Set a disc at Zmin
@@ -137,16 +136,14 @@ std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
         transform * Translation3(0., 0., -get(eHalfLengthZ));
     auto negativeDisc = Surface::makeShared<DiscSurface>(negativeDiscTrans,
                                                          m_negativeDiscBounds);
-    oSurfaces.push_back(
-        OrientedSurface{std::move(negativeDisc), Direction::AlongNormal()});
+    oSurfaces.emplace_back(std::move(negativeDisc), Direction::AlongNormal());
   }
 
   // Set a disc at Zmax
   auto positiveDiscTrans = transform * Translation3(0., 0., get(eHalfLengthZ));
   auto positiveDisc =
       Surface::makeShared<DiscSurface>(positiveDiscTrans, m_positiveDiscBounds);
-  oSurfaces.push_back(
-      OrientedSurface{std::move(positiveDisc), Direction::OppositeNormal()});
+  oSurfaces.emplace_back(std::move(positiveDisc), Direction::OppositeNormal());
 
   if (m_sectorBounds) {
     RotationMatrix3 sectorRotation;
@@ -160,8 +157,7 @@ std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
     auto negSectorAbsTrans = transform * negSectorRelTrans;
     auto negSectorPlane =
         Surface::makeShared<PlaneSurface>(negSectorAbsTrans, m_sectorBounds);
-    oSurfaces.push_back(
-        OrientedSurface{std::move(negSectorPlane), Direction::AlongNormal()});
+    oSurfaces.emplace_back(std::move(negSectorPlane), Direction::AlongNormal());
 
     Transform3 posSectorRelTrans{sectorRotation};
     posSectorRelTrans.prerotate(
@@ -170,8 +166,8 @@ std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
     auto posSectorPlane =
         Surface::makeShared<PlaneSurface>(posSectorAbsTrans, m_sectorBounds);
 
-    oSurfaces.push_back(OrientedSurface{std::move(posSectorPlane),
-                                        Direction::OppositeNormal()});
+    oSurfaces.emplace_back(std::move(posSectorPlane),
+                           Direction::OppositeNormal());
   }
   return oSurfaces;
 }
@@ -295,8 +291,8 @@ void ConeVolumeBounds::buildSurfaceBounds() {
 }
 
 std::ostream& ConeVolumeBounds::toStream(std::ostream& os) const {
-  os << std::setiosflags(std::ios::fixed);
-  os << std::setprecision(5);
+  detail::OstreamStateGuard guard{os};
+  os << std::fixed << std::setprecision(5);
   os << "Acts::ConeVolumeBounds : (innerAlpha, innerOffsetZ, outerAlpha,";
   os << "  outerOffsetZ, halflenghZ, averagePhi, halfPhiSector) = ";
   os << get(eInnerAlpha) << ", " << get(eInnerOffsetZ) << ", ";

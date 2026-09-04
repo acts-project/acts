@@ -16,7 +16,7 @@
 
 namespace Acts {
 
-/// @class HomogeneousSurfaceMaterial
+/// @ingroup material
 ///
 /// It extends the ISurfaceMaterial virtual base class to describe
 /// a simple homogeneous material on a surface
@@ -50,12 +50,14 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// Assignment operator
   ///
   /// @param hsm is the source material
+  /// @return Reference to this material after assignment
   HomogeneousSurfaceMaterial& operator=(const HomogeneousSurfaceMaterial& hsm) =
       default;
 
   /// Assignment Move operator
   ///
   /// @param hsm is the source material
+  /// @return Reference to this material after move assignment
   HomogeneousSurfaceMaterial& operator=(HomogeneousSurfaceMaterial&& hsm) =
       default;
 
@@ -63,28 +65,42 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// - it is effectively a thickness scaling
   ///
   /// @param factor is the scale factor
+  /// @return Reference to this scaled material
   HomogeneousSurfaceMaterial& scale(double factor) final;
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   ///
   /// @note the input parameter is ignored
-  const MaterialSlab& materialSlab(const Vector2& lp) const final;
+  const MaterialSlab& materialSlab(const Vector2& lp = Vector2{0.,
+                                                               0.}) const final;
+
+  /// @copydoc ISurfaceMaterial::localAxisDirections() const
+  std::vector<AxisDirection> localAxisDirections() const final;
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   ///
   /// @note the input parameter is ignored
-  const MaterialSlab& materialSlab(const Vector3& gp = Vector3{0., 0.,
-                                                               0.}) const final;
+  /// @deprecated Use materialSlab(const Vector2&) with a prior
+  ///             Surface::globalToLocal() call instead.
+  [[deprecated(
+      "Use materialSlab(const Vector2& lp) with a prior "
+      "Surface::globalToLocal() call instead")]] const MaterialSlab&
+  materialSlab(const Vector3& gp) const final;
 
-  /// The inherited methods - for MaterialSlab access
+  // Inherit additional materialSlab overloads from base class
   using ISurfaceMaterial::materialSlab;
 
   /// The inherited methods - for scale access
+  ///
+  /// @param pDir Direction through the surface
+  /// @param mode Material update directive
+  /// @return The scaling factor for the material
   using ISurfaceMaterial::factor;
 
   /// Output Method for std::ostream
   ///
   /// @param sl The outoput stream
+  /// @return Reference to the output stream for chaining
   std::ostream& toStream(std::ostream& sl) const final;
 
  private:

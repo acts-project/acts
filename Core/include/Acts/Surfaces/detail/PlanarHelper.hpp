@@ -28,7 +28,7 @@ inline Intersection3D intersectPlane(const Vector3& linePos,
   ///  --> lambda = (C - <A,N>)/ <N, B> */
   const double normDot = planeNorm.dot(lineDir);
   if (std::abs(normDot) < std::numeric_limits<double>::epsilon()) {
-    return Intersection3D::invalid();
+    return Intersection3D::Invalid();
   }
   const double path = (offset - linePos.dot(planeNorm)) / normDot;
   return Intersection3D{linePos + path * lineDir, path,
@@ -62,17 +62,18 @@ inline Intersection3D intersect(const Transform3& transform,
   const Vector3 pcenter = tMatrix.block<3, 1>(0, 3).transpose();
   // It is solvable, so go on
   double denom = direction.dot(pnormal);
-  if (denom != 0.0) {
-    // Translate that into a path
-    double path = (pnormal.dot((pcenter - position))) / (denom);
-    // Is valid hence either on surface or reachable
-    IntersectionStatus status = std::abs(path) < std::abs(tolerance)
-                                    ? IntersectionStatus::onSurface
-                                    : IntersectionStatus::reachable;
-    // Return the intersection
-    return Intersection3D{(position + path * direction), path, status};
+  if (denom == 0) {
+    // The line is parallel to the plane, hence no intersection
+    return Intersection3D::Invalid();
   }
-  return Intersection3D::invalid();
+  // Translate that into a path
+  double path = (pnormal.dot((pcenter - position))) / (denom);
+  // Is valid hence either on surface or reachable
+  IntersectionStatus status = std::abs(path) < std::abs(tolerance)
+                                  ? IntersectionStatus::onSurface
+                                  : IntersectionStatus::reachable;
+  // Return the intersection
+  return Intersection3D{(position + path * direction), path, status};
 }
 
 }  // namespace Acts::PlanarHelper

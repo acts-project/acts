@@ -11,20 +11,19 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Root/TGeoSurfaceConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
+#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -36,13 +35,18 @@
 #include "TGeoVolume.h"
 #include "TView.h"
 
-namespace Acts::Test {
+using namespace Acts;
+using namespace ActsPlugins;
 
-GeometryContext tgContext = GeometryContext();
+namespace ActsTests {
+
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 ViewConfig red{.color = {200, 0, 0}};
 ViewConfig green{.color = {0, 200, 0}};
 ViewConfig blue{.color = {0, 0, 200}};
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 /// @brief Unit test to convert a TGeoTrd2 into a Plane
 ///
@@ -65,7 +69,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
   gGeoManager->CloseGeometry();
 
   // Check the 4 possible ways
-  std::vector<std::string> axesTypes = {"XZ*", "xZ*", "xz*", "Xz*"};
+  std::vector<TGeoAxes> axesTypes = {"XZY", "xZY", "xzY", "XzY"};
 
   std::size_t itrd = 0;
   for (const auto &axes : axesTypes) {
@@ -86,7 +90,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
     CHECK_CLOSE_ABS(hy, hY, s_epsilon);
 
     // Check if the surface is the (negative) identity
-    auto transform = plane->transform(tgContext);
+    auto transform = plane->localToGlobalTransform(tgContext);
     auto rotation = transform.rotation();
     const Vector3 offset{(-5.5 + (itrd++) * 2.5) * hxmax, 0., 0.};
     GeometryView3D::drawSurface(objVis, *plane, tgContext,
@@ -103,7 +107,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
   objVis.write("TGeoConversion_TGeoTrd2_xz_PlaneSurface");
 
   // Check exceptions for not allowed axis definition
-  std::vector<std::string> notAllowed = {"XY*", "xy*", "Xy*", "xY*"};
+  std::vector<TGeoAxes> notAllowed = {"XYZ", "xyZ", "XyZ", "xYZ"};
   for (const auto &naxis : notAllowed) {
     BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                       *gGeoIdentity, naxis, 1),
@@ -132,7 +136,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
   gGeoManager->CloseGeometry();
 
   // Check the 4 possible ways
-  std::vector<std::string> axesTypes = {"YZ*", "yZ*", "yz*", "Yz*"};
+  std::vector<TGeoAxes> axesTypes = {"YZX", "yZX", "yzX", "YzX"};
 
   std::size_t itrd = 0;
   for (const auto &axes : axesTypes) {
@@ -153,7 +157,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
     CHECK_CLOSE_ABS(hy, hY, s_epsilon);
 
     // Check if the surface is the (negative) identity
-    auto transform = plane->transform(tgContext);
+    auto transform = plane->localToGlobalTransform(tgContext);
     auto rotation = transform.rotation();
     const Vector3 offset{(-5.5 + (itrd++) * 2.5) * hxmax, 0., 0.};
     GeometryView3D::drawSurface(objVis, *plane, tgContext,
@@ -170,7 +174,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
   objVis.write("TGeoConversion_TGeoTrd2_yz_PlaneSurface");
 
   // Check exceptions for not allowed axis definition
-  std::vector<std::string> notAllowed = {"YX*", "yx*", "yX*", "Yx*"};
+  std::vector<TGeoAxes> notAllowed = {"YXZ", "yxZ", "yXZ", "YxZ"};
   for (const auto &naxis : notAllowed) {
     BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                       *gGeoIdentity, naxis, 1),
@@ -178,4 +182,6 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

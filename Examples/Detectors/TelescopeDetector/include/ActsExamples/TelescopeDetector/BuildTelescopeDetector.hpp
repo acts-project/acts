@@ -15,10 +15,6 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
-class TrackingGeometry;
-}  // namespace Acts
-
 namespace ActsExamples {
 
 /// The telescope detector surface type
@@ -30,6 +26,7 @@ enum class TelescopeSurfaceType {
 /// Global method to build the telescope tracking geometry
 ///
 /// @param gctx is the detector element dependent geometry context
+/// @param factory is the factory responsible for creating the detector elements
 /// @param detectorStore is the store for the detector element
 /// @param positions are the positions of different layers in the longitudinal
 ///                  direction
@@ -45,7 +42,7 @@ enum class TelescopeSurfaceType {
 /// parallel to
 std::unique_ptr<const Acts::TrackingGeometry> buildTelescopeDetector(
     const Acts::GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
+    std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>>&
         detectorStore,
     const std::vector<double>& positions,
     const std::vector<double>& stereoAngles,

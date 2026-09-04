@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include "Acts/Utilities/HashCombine.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 namespace ActsExamples {
@@ -20,7 +21,8 @@ RandomEngine RandomNumbers::spawnGenerator(
 }
 
 RandomSeed RandomNumbers::generateSeed(const AlgorithmContext& context) const {
-  return m_cfg.seed + context.eventNumber;
+  return Acts::hashMixAndCombine(m_cfg.seed, context.eventNumber,
+                                 context.algorithmNumber);
 }
 
 }  // namespace ActsExamples

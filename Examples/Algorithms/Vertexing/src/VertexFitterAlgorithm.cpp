@@ -9,25 +9,23 @@
 #include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
-#include "Acts/Propagator/VoidNavigator.hpp"
-#include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <ostream>
 #include <stdexcept>
-#include <system_error>
 
-#include "VertexingHelpers.hpp"
+namespace ActsExamples {
 
-ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
-    const Config& cfg, Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("VertexFit", lvl), m_cfg(cfg) {
+VertexFitterAlgorithm::VertexFitterAlgorithm(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("VertexFit", std::move(logger)), m_cfg(cfg) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing input track parameter collection");
   }
@@ -40,8 +38,7 @@ ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
   m_outputVertices.initialize(m_cfg.outputVertices);
 }
 
-ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode VertexFitterAlgorithm::execute(const AlgorithmContext& ctx) const {
   using Propagator = Acts::Propagator<Acts::SympyStepper>;
   using PropagatorOptions = Propagator::Options<>;
   using Linearizer = Acts::HelicalTrackLinearizer;
@@ -61,7 +58,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
 
-  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
+  PropagatorOptions propagatorOpts(ctx.recoGeoContext, ctx.magFieldContext);
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
   vertexFitterCfg.extractParameters
@@ -105,7 +102,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     }
 
     if (!m_cfg.doConstrainedFit) {
-      VertexFitterOptions vfOptions(ctx.geoContext, ctx.magFieldContext);
+      VertexFitterOptions vfOptions(ctx.recoGeoContext, ctx.magFieldContext);
 
       auto fitRes = vertexFitter.fit(inputTracks, vfOptions, fieldCache);
       if (fitRes.ok()) {
@@ -121,8 +118,8 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       theConstraint.setFullPosition(m_cfg.constraintPos);
 
       // Vertex fitter options
-      VertexFitterOptions vfOptionsConstr(ctx.geoContext, ctx.magFieldContext,
-                                          theConstraint);
+      VertexFitterOptions vfOptionsConstr(ctx.recoGeoContext,
+                                          ctx.magFieldContext, theConstraint);
 
       auto fitRes = vertexFitter.fit(inputTracks, vfOptionsConstr, fieldCache);
       if (fitRes.ok()) {
@@ -146,3 +143,5 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   m_outputVertices(ctx, std::move(fittedVertices));
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

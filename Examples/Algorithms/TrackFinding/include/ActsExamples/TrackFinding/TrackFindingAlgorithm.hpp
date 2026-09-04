@@ -18,9 +18,8 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -40,20 +39,18 @@
 #include <tbb/combinable.h>
 #pragma GCC diagnostic pop
 
-namespace Acts {
-class MagneticFieldProvider;
-class TrackingGeometry;
-}  // namespace Acts
-
 namespace ActsExamples {
-struct AlgorithmContext;
 
 class TrackFindingAlgorithm final : public IAlgorithm {
  public:
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
+  /// The type-erased options carry the full (bremsstrahlung) configuration.
+  /// The plain single-component finder binds to its base slice, the
+  /// multi-component finder uses it whole; the runtime switch happens in the
+  /// algorithm.
   using TrackFinderOptions =
-      Acts::CombinatorialKalmanFilterOptions<TrackContainer>;
+      Acts::BremCombinatorialKalmanFilterOptions<TrackContainer>;
   using TrackFinderResult =
       Acts::Result<std::vector<TrackContainer::TrackProxy>>;
 
@@ -69,10 +66,13 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   };
 
   /// Create the track finder function implementation.
-  ///
-  /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyway.
   static std::shared_ptr<TrackFinderFunction> makeTrackFinderFunction(
+      std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      const Acts::Logger& logger);
+
+  /// Create the bremstrahlung track finder function implementation.
+  static std::shared_ptr<TrackFinderFunction> makeBremTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
       const Acts::Logger& logger);
@@ -95,6 +95,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
+    /// Type erased track finder with brem recovery function.
+    std::shared_ptr<TrackFinderFunction> findTracksBrem;
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
     /// Track selector config
@@ -122,6 +124,15 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     bool computeSharedHits = false;
     /// Whether to trim the tracks
     bool trimTracks = true;
+    /// Whether to record track states on material-only surfaces. Disabling this
+    /// is faster but leaves those surfaces out of the track, which a refit with
+    /// the `DirectNavigator` needs. Not applied to the bremsstrahlung finder,
+    /// which does not support it.
+    bool recordMaterialStates = true;
+
+    /// Whether to use the Joseph formulation for the Kalman filter update. This
+    /// is typically more stable but also more computationally expensive.
+    bool useJosephFormulation = false;
 
     // Pixel and strip volume ids to be used for maxPixel/StripHoles cuts
     std::vector<std::uint32_t> pixelVolumeIds;
@@ -141,33 +152,33 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   ///
   /// @param config is the config struct to configure the algorithm
   /// @param level is the logging level
-  TrackFindingAlgorithm(Config config, Acts::Logging::Level level);
+  explicit TrackFindingAlgorithm(
+      Config config, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Framework execute method of the track finding algorithm
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algorithm flow
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
  private:
   void computeSharedHits(TrackContainer& tracks,
-                         const MeasurementContainer& measurements) const;
+                         const MeasurementSubset& measurements) const;
 
-  ActsExamples::ProcessCode finalize() override;
+  ProcessCode finalize() override;
 
  private:
   Config m_cfg;
   std::optional<Acts::TrackSelector> m_trackSelector;
 
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                           "InputMeasurements"};
+  ReadDataHandle<MeasurementSubset> m_inputMeasurements{this,
+                                                        "InputMeasurements"};
   ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
       this, "InputInitialTrackParameters"};
-  ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
+  ReadDataHandle<SeedContainer> m_inputSeeds{this, "InputSeeds"};
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 

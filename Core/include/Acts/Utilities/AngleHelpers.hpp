@@ -16,21 +16,35 @@ namespace Acts::AngleHelpers {
 template <typename Scalar>
 struct EtaThetaConversionTraits {};
 
+/// Conversion limits for `float` eta/theta calculations.
+///
+/// Defines safe min/max theta and eta values for `float` precision.
 template <>
 struct EtaThetaConversionTraits<float> {
+  /// Minimum theta value for float precision
   static constexpr float minTheta = 1e-6f;
+  /// Maximum theta value for float precision
   static constexpr float maxTheta = std::numbers::pi_v<float> - minTheta;
 
+  /// Maximum eta value for float precision
   static constexpr float maxEta = 80.0f;
+  /// Minimum eta value for float precision
   static constexpr float minEta = -maxEta;
 };
 
+/// Conversion limits for `double` eta/theta calculations.
+///
+/// Defines safe min/max theta and eta values for `double` precision.
 template <>
 struct EtaThetaConversionTraits<double> {
+  /// Minimum theta value for double precision
   static constexpr double minTheta = 1e-12;
+  /// Maximum theta value for double precision
   static constexpr double maxTheta = std::numbers::pi - minTheta;
 
+  /// Maximum eta value for double precision
   static constexpr double maxEta = 700.0;
+  /// Minimum eta value for double precision
   static constexpr double minEta = -maxEta;
 };
 

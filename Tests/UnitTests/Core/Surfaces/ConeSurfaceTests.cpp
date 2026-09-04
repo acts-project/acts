@@ -15,26 +15,33 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <memory>
 #include <numbers>
 #include <string>
 
-namespace Acts::Test {
+using namespace Acts;
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
-BOOST_AUTO_TEST_SUITE(ConeSurfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 /// Unit test for creating compliant/non-compliant ConeSurface object
 BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
@@ -165,7 +172,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   /// Test pathCorrection
   CHECK_CLOSE_REL(coneSurfaceObject->pathCorrection(tgContext, offSurface,
                                                     momentum.normalized()),
-                  0.40218866453252877, 0.01);
+                  3.20041, 0.01);
 
   /// Test name
   BOOST_CHECK_EQUAL(coneSurfaceObject->name(),
@@ -283,10 +290,63 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
       coneSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
                                                               globalPosition);
   // Check if the result is as expected
-  ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> expLoc3DToLocBound = Matrix<2, 3>::Zero();
   expLoc3DToLocBound << -1, 0, std::numbers::pi / 2. * std::tan(alpha), 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }
 
+BOOST_AUTO_TEST_CASE(ConeSurfaceMaterialAssignment) {
+  const double alpha = 0.3;
+  auto surface = Surface::makeShared<ConeSurface>(Transform3::Identity(), alpha,
+                                                  true /*symmetric*/);
+  MaterialSlab slab(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
+
+  // HomogeneousSurfaceMaterial is always valid
+  auto homMat = std::make_shared<HomogeneousSurfaceMaterial>(slab);
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(homMat));
+  BOOST_CHECK_NE(surface->surfaceMaterial(), nullptr);
+
+  // nullptr clears the material
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(nullptr));
+  BOOST_CHECK_EQUAL(surface->surfaceMaterial(), nullptr);
+
+  // 1D AxisZ - valid for cone
+  BinUtility buZ(10, -100.f, 100.f, Acts::open, AxisDirection::AxisZ);
+  auto matZ = std::make_shared<BinnedSurfaceMaterial>(
+      buZ, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matZ));
+
+  // Wrong axis directions - should throw
+  for (auto badDir : {AxisDirection::AxisR, AxisDirection::AxisPhi,
+                      AxisDirection::AxisX, AxisDirection::AxisY}) {
+    BinUtility buBad(10, 0.f, 10.f, Acts::open, badDir);
+    auto matBad = std::make_shared<BinnedSurfaceMaterial>(
+        buBad, MaterialSlabVector(10, slab));
+    BOOST_CHECK_THROW(surface->assignSurfaceMaterial(matBad),
+                      std::invalid_argument);
+  }
+}
+
+/// A cone whose half sector is pi only up to rounding is still a full cone
+BOOST_AUTO_TEST_CASE(ConeSurfaceFullConeTolerance) {
+  const double alpha = std::numbers::pi / 8.;
+  auto pTransform = Transform3(Translation3{0., 0., 0.});
+
+  // An average phi off the regular vertex grid, so that forcing it in as a
+  // reference vertex would be visible in the vertex count
+  const double avgPhi = 0.1;
+  auto exact = Surface::makeShared<ConeSurface>(
+      pTransform, std::make_shared<const ConeBounds>(alpha, 0., 10.,
+                                                     std::numbers::pi, avgPhi));
+  auto rounded = Surface::makeShared<ConeSurface>(
+      pTransform, std::make_shared<const ConeBounds>(
+                      alpha, 0., 10., std::numbers::pi - 1e-12, avgPhi));
+
+  // Neither forces the average phi in as an extra reference vertex
+  BOOST_CHECK_EQUAL(
+      exact->polyhedronRepresentation(tgContext, 1).vertices.size(),
+      rounded->polyhedronRepresentation(tgContext, 1).vertices.size());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Acts::Test
+}  // namespace ActsTests

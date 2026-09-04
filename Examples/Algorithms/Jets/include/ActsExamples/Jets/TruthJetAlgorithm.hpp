@@ -9,35 +9,65 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Jets.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <string>
 
+#include <fastjet/JetDefinition.hh>
+#include <fastjet/PseudoJet.hh>
+
 namespace fastjet {
 class PseudoJet;
 }
 
 namespace ActsExamples {
-struct AlgorithmContext;
+
+using TruthJetContainer = std::vector<ActsExamples::TruthJet>;
 
 class TruthJetAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input particles collection.
     std::string inputTruthParticles;
+    /// Input tracks collection.
+    std::string inputTracks;
     /// Output jets collection.
     std::string outputJets;
     /// Minimum jet pT.
-    double jetPtMin;
+    double jetPtMin = 20 * Acts::UnitConstants::GeV;
+    /// Jet eta range a pair of doubles defaulted to -inf/+inf
+    std::pair<double, double> jetEtaRange = {
+        -std::numeric_limits<double>::infinity(),
+        std::numeric_limits<double>::infinity()};
+    /// Jet clustering radius
+    double jetClusteringRadius = 0.4;
+    /// Only cluster HS particles
+    bool clusterHSParticlesOnly = true;
+    /// Do jet labeling
+    bool doJetLabeling = true;
+    /// Delta R for labeling
+    double jetLabelingDeltaR = 0.4;
+    /// Minimum hadron pT for labeling
+    double jetLabelingHadronPtMin = 5 * Acts::UnitConstants::GeV;
+    /// Only label HS hadrons
+    bool jetLabelingHSHadronsOnly = true;
+    /// Enable track-jet matching
+    bool doTrackJetMatching = false;
   };
 
-  TruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
+  explicit TruthJetAlgorithm(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
   ProcessCode finalize() override;
+
+  void trackJetMatching(const ConstTrackContainer& tracks,
+                        TruthJetContainer& jets) const;
 
   const Config& config() const { return m_cfg; }
 
@@ -45,8 +75,8 @@ class TruthJetAlgorithm final : public IAlgorithm {
   Config m_cfg;
   ReadDataHandle<SimParticleContainer> m_inputTruthParticles{
       this, "inputTruthParticles"};
-  WriteDataHandle<std::vector<fastjet::PseudoJet>> m_outputJets{this,
-                                                                "outputJets"};
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "inputTracks"};
+  WriteDataHandle<TruthJetContainer> m_outputJets{this, "outputJets"};
 };
 
 }  // namespace ActsExamples

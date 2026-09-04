@@ -9,9 +9,6 @@
 #pragma once
 
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
-
-#include <type_traits>
 
 namespace Acts {
 
@@ -53,13 +50,17 @@ class AnyGridView {
   }
 
   /// Copy constructor
+  /// @param other The AnyGridView to copy from
   AnyGridView(const AnyGridView& other) = default;
   /// Copy assignment operator
+  /// @param other The AnyGridView to copy from
+  /// @return Reference to this AnyGridView after copying
   AnyGridView& operator=(const AnyGridView& other) = default;
 
   /// Move constructor
   AnyGridView(AnyGridView&&) noexcept = default;
   /// Move assignment operator
+  /// @return Reference to this AnyGridView after moving
   AnyGridView& operator=(AnyGridView&&) noexcept = default;
 
   /// @brief Access value at given local bin indices with mutable access
@@ -87,31 +88,50 @@ class AnyGridView {
   /// @return The number of dimensions
   std::size_t dimensions() const { return m_grid->dimensions(); }
 
+  /// Get the multi-axis object for the grid
+  /// @return The multi-axis object for the grid
+  const IMultiAxis& multiAxisAny() const { return m_grid->multiAxisAny(); }
+
   /// @brief Get the center position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The center position of the bin
+  /// @deprecated Use view.multiAxisAny().getBinCenterAny(indices) instead
+  [[deprecated("Use view.multiAxisAny().getBinCenterAny(indices) instead")]]
   AnyPointType binCenter(const IGrid::AnyIndexType& indices) const {
-    return m_grid->binCenterAny(indices);
+    return multiAxisAny().getBinCenterAny(indices);
   }
 
   /// @brief Get the lower left edge position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The lower left edge position of the bin
+  /// @deprecated Use view.multiAxisAny().getLowerLeftBinEdgeAny(indices)
+  ///             instead
+  [[deprecated(
+      "Use view.multiAxisAny().getLowerLeftBinEdgeAny(indices) instead")]]
   AnyPointType lowerLeftBinEdge(const IGrid::AnyIndexType& indices) const {
-    return m_grid->lowerLeftBinEdgeAny(indices);
+    return multiAxisAny().getLowerLeftBinEdgeAny(indices);
   }
 
   /// @brief Get the upper right edge position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The upper right edge position of the bin
+  /// @deprecated Use view.multiAxisAny().getUpperRightBinEdgeAny(indices)
+  ///             instead
+  [[deprecated(
+      "Use view.multiAxisAny().getUpperRightBinEdgeAny(indices) instead")]]
   AnyPointType upperRightBinEdge(const IGrid::AnyIndexType& indices) const {
-    return m_grid->upperRightBinEdgeAny(indices);
+    return multiAxisAny().getUpperRightBinEdgeAny(indices);
   }
 
   /// @brief Get the number of bins along each axis
   /// @return Vector containing the number of bins for each axis
-  AnyIndexType numLocalBins() const { return m_grid->numLocalBinsAny(); }
+  /// @deprecated Use view.multiAxisAny().getNBinsAny() instead
+  [[deprecated("Use view.multiAxisAny().getNBinsAny() instead")]]
+  AnyIndexType numLocalBins() const {
+    return multiAxisAny().getNBinsAny();
+  }
 
+ private:
   /// @brief Check if the grid's value type matches the template parameter T
   /// @throws std::invalid_argument if there's a type mismatch
   void checkType() {
@@ -120,12 +140,14 @@ class AnyGridView {
     }
   }
 
+  /// Type-erased pointer to the underlying grid
   GridPointerType m_grid;
 };
 
 /// @brief Deduction guide for AnyGridView from Grid
 /// @tparam T Type of values stored in the grid
 /// @tparam Axes Parameter pack of axis types defining the grid
+/// @param grid The grid to create a view for
 template <typename T, typename... Axes>
 AnyGridView(Grid<T, Axes...>& grid) -> AnyGridView<T>;
 
@@ -181,31 +203,50 @@ class AnyGridConstView {
   /// @return The number of dimensions
   std::size_t dimensions() const { return m_grid->dimensions(); }
 
+  /// Get the multi-axis object for the grid
+  /// @return The multi-axis object for the grid
+  const IMultiAxis& multiAxisAny() const { return m_grid->multiAxisAny(); }
+
   /// @brief Get the center position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The center position of the bin
+  /// @deprecated Use view.multiAxisAny().getBinCenterAny(indices) instead
+  [[deprecated("Use view.multiAxisAny().getBinCenterAny(indices) instead")]]
   AnyPointType binCenter(const IGrid::AnyIndexType& indices) const {
-    return m_grid->binCenterAny(indices);
+    return multiAxisAny().getBinCenterAny(indices);
   }
 
   /// @brief Get the lower left edge position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The lower left edge position of the bin
+  /// @deprecated Use view.multiAxisAny().getLowerLeftBinEdgeAny(indices)
+  ///             instead
+  [[deprecated(
+      "Use view.multiAxisAny().getLowerLeftBinEdgeAny(indices) instead")]]
   AnyPointType lowerLeftBinEdge(const IGrid::AnyIndexType& indices) const {
-    return m_grid->lowerLeftBinEdgeAny(indices);
+    return multiAxisAny().getLowerLeftBinEdgeAny(indices);
   }
 
   /// @brief Get the upper right edge position of a bin for given indices
   /// @param indices The local bin indices
   /// @return The upper right edge position of the bin
+  /// @deprecated Use view.multiAxisAny().getUpperRightBinEdgeAny(indices)
+  ///             instead
+  [[deprecated(
+      "Use view.multiAxisAny().getUpperRightBinEdgeAny(indices) instead")]]
   AnyPointType upperRightBinEdge(const IGrid::AnyIndexType& indices) const {
-    return m_grid->upperRightBinEdgeAny(indices);
+    return multiAxisAny().getUpperRightBinEdgeAny(indices);
   }
 
   /// @brief Get the number of bins along each axis
   /// @return Vector containing the number of bins for each axis
-  AnyIndexType numLocalBins() const { return m_grid->numLocalBinsAny(); }
+  /// @deprecated Use view.multiAxisAny().getNBinsAny() instead
+  [[deprecated("Use view.multiAxisAny().getNBinsAny() instead")]]
+  AnyIndexType numLocalBins() const {
+    return multiAxisAny().getNBinsAny();
+  }
 
+ private:
   /// @brief Check if the grid's value type matches the template parameter T
   /// @throws std::invalid_argument if there's a type mismatch
   void checkType() {
@@ -214,12 +255,14 @@ class AnyGridConstView {
     }
   }
 
+  /// Type-erased pointer to the underlying const grid
   GridPointerType m_grid;
 };
 
 /// @brief Deduction guide for AnyGridConstView from const Grid
 /// @tparam T Type of values stored in the grid
 /// @tparam Axes Parameter pack of axis types defining the grid
+/// @param grid The const grid to create a view for
 template <typename T, typename... Axes>
 AnyGridConstView(const Grid<T, Axes...>& grid) -> AnyGridConstView<T>;
 

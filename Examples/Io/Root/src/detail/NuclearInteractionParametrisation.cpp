@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/Root/detail/NuclearInteractionParametrisation.hpp"
 
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <cmath>
 #include <iterator>
@@ -57,10 +58,10 @@ float gaussianValue(TH1F const* histo, const float mom) {
 /// @return The invariant mass
 float invariantMass(const Acts::Vector4& fourVector1,
                     const Acts::Vector4& fourVector2) {
-  Acts::Vector4 sum = fourVector1 + fourVector2;
+  const Acts::Vector4 sum = fourVector1 + fourVector2;
   const double energy = sum[Acts::eEnergy];
-  double momentum = sum.template segment<3>(Acts::eMom0).norm();
-  return std::sqrt(energy * energy - momentum * momentum);
+  const double momentum = sum.template segment<3>(Acts::eMom0).norm();
+  return Acts::fastCathetus(energy, momentum);
 }
 
 }  // namespace
@@ -139,7 +140,7 @@ EventProperties prepareMomenta(const EventCollection& events,
       std::vector<float> momenta;
       momenta.reserve(multiplicity + 1);
       // Fill the vector with the scaled momenta
-      for (const ActsExamples::SimParticle& p : event.finalParticles) {
+      for (const SimParticle& p : event.finalParticles) {
         sum += p.absoluteMomentum();
         momenta.push_back(p.absoluteMomentum() / initialMomentum);
       }
@@ -224,7 +225,7 @@ EventProperties prepareInvariantMasses(const EventCollection& events,
       std::vector<float> invariantMasses;
       invariantMasses.reserve(multiplicity);
       // Fill the vector with the invariant masses
-      for (const ActsExamples::SimParticle& p : event.finalParticles) {
+      for (const SimParticle& p : event.finalParticles) {
         const auto fourVector = p.fourMomentum();
         invariantMasses.push_back(invariantMass(fourVectorBefore, fourVector));
       }

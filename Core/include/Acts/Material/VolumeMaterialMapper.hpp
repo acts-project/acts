@@ -38,9 +38,13 @@ class TrackingGeometry;
 //
 /// @brief VolumeMaterialMapper
 ///
-/// This is the main feature tool to map material information
-/// from a 3D geometry onto the TrackingGeometry with its surface
-/// material description.
+/// This maps material information from a 3D geometry onto the TrackingGeometry
+/// with its volume material description, driven by a propagation through the
+/// geometry.
+///
+/// @deprecated Use @ref Acts::MaterialMapper instead, composed with an
+/// @ref Acts::IAssignmentFinder and an @ref Acts::ISurfaceMaterialAccumulator.
+/// See @ref material_mapping for the current, navigation-independent procedure.
 ///
 /// The process runs as such:
 ///
@@ -58,9 +62,11 @@ class TrackingGeometry;
 ///          Additional step are created along the track direction.
 ///
 ///  3) Each 'hit' bin per event is counted and averaged at the end of the run
-
+///
+/// @ingroup material_mapping
 class VolumeMaterialMapper {
  public:
+  /// Type alias for straight line propagator used in material mapping
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
   /// @struct Config
@@ -76,6 +82,8 @@ class VolumeMaterialMapper {
   /// Nested State struct which is used for the mapping prococess
   struct State {
     /// Constructor of the State with contexts
+    /// @param gctx Geometry context for volume material mapping
+    /// @param mctx Magnetic field context for volume material mapping
     State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : geoContext(gctx), magFieldContext(mctx) {}
 
@@ -126,6 +134,11 @@ class VolumeMaterialMapper {
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator
   /// @param slogger The logger
+  /// @deprecated Material mapping with propagation is deprecated. Use
+  ///             MaterialMapper instead.
+  [[deprecated(
+      "Material mapping with propagation is deprecated. Use MaterialMapper "
+      "instead.")]]
   VolumeMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
                        std::unique_ptr<const Logger> slogger = getDefaultLogger(
                            "VolumeMaterialMapper", Logging::INFO));
@@ -139,6 +152,7 @@ class VolumeMaterialMapper {
   /// This method takes a TrackingGeometry,
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
+  /// @return State object configured for volume material mapping
   State createState(const GeometryContext& gctx,
                     const MagneticFieldContext& mctx,
                     const TrackingGeometry& tGeometry) const;
@@ -154,12 +168,14 @@ class VolumeMaterialMapper {
 
   /// Process/map a single track
   ///
-  /// @param mState The current state map
-  /// @param mTrack The material track to be mapped
-  ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+  ///
+  /// @param mState The current state map
+  /// @param mTrack The material track to be mapped
+  /// @return Result of the mapping process
+  Result<void> mapMaterialTrack(State& mState,
+                                RecordedMaterialTrack& mTrack) const;
 
  private:
   /// selector for finding surface
@@ -171,9 +187,7 @@ class VolumeMaterialMapper {
 
   /// selector for finding
   struct MaterialVolumeSelector {
-    bool operator()(const TrackingVolume& vf) const {
-      return (vf.volumeMaterial() != nullptr);
-    }
+    bool operator()(const TrackingVolume& vf) const { return vf.hasMaterial(); }
   };
 
   /// @brief finds all surfaces with ProtoVolumeMaterial of a volume

@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -20,6 +19,7 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <numeric>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -27,9 +27,10 @@
 
 namespace ActsExamples {
 
-DigitizationAlgorithm::DigitizationAlgorithm(Config config,
-                                             Acts::Logging::Level level)
-    : IAlgorithm("DigitizationAlgorithm", level), m_cfg(std::move(config)) {
+DigitizationAlgorithm::DigitizationAlgorithm(
+    Config config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("DigitizationAlgorithm", std::move(logger)),
+      m_cfg(std::move(config)) {
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
@@ -68,6 +69,7 @@ DigitizationAlgorithm::DigitizationAlgorithm(Config config,
     }
 
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+    m_outputMeasurementSubset.initialize(m_cfg.outputMeasurementSubset);
     m_outputClusters.initialize(m_cfg.outputClusters);
     m_outputMeasurementParticlesMap.initialize(
         m_cfg.outputMeasurementParticlesMap);
@@ -96,6 +98,11 @@ DigitizationAlgorithm::DigitizationAlgorithm(Config config,
 
     const auto& digiCfg = m_cfg.digitizationConfigs.valueAt(i);
     geoCfg = digiCfg.geometricDigiConfig;
+
+    if (!geoCfg.indices.empty() && geoCfg.segmentation == nullptr) {
+      throw std::invalid_argument(
+          "Geometric digitization requires a segmentation");
+    }
     // Copy so we can sort in-place
     SmearingConfig smCfg = digiCfg.smearingDigiConfig;
 
@@ -111,7 +118,7 @@ DigitizationAlgorithm::DigitizationAlgorithm(Config config,
 
     auto dup = std::adjacent_find(indices.begin(), indices.end());
     if (dup != indices.end()) {
-      std::invalid_argument(
+      throw std::invalid_argument(
           "Digitization configuration contains duplicate parameter indices");
     }
 
@@ -149,8 +156,8 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
   MeasurementContainer measurements;
   ClusterContainer clusters;
 
-  IndexMultimap<SimBarcode> measurementParticlesMap;
-  IndexMultimap<Index> measurementSimHitsMap;
+  MeasurementParticlesMap measurementParticlesMap;
+  MeasurementSimHitsMap measurementSimHitsMap;
   measurements.reserve(simHits.size());
   measurementParticlesMap.reserve(simHits.size());
   measurementSimHitsMap.reserve(simHits.size());
@@ -221,8 +228,8 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
               const auto& cfg = digitizer.geometric;
               Acts::Vector3 driftDir = cfg.drift(simHit.position(), rng);
               auto channelsRes = m_channelizer.channelize(
-                  simHit, *surfacePtr, ctx.geoContext, driftDir,
-                  cfg.segmentation, cfg.thickness);
+                  simHit, *surfacePtr, ctx.simGeoContext, driftDir,
+                  *cfg.segmentation, cfg.thickness);
               if (!channelsRes.ok() || channelsRes->empty()) {
                 ACTS_DEBUG(
                     "Geometric channelization did not work, skipping this "
@@ -233,6 +240,10 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
                                         << " channels for this hit.");
               dParameters =
                   localParameters(digitizer.geometric, *channelsRes, rng);
+              if (dParameters.cluster.channels.empty()) {
+                ACTS_DEBUG("All channels below threshold, skipping this hit.");
+                continue;
+              }
             }
 
             // Smearing part - (optionally) rest
@@ -240,8 +251,8 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
               ACTS_VERBOSE("Configured to smear "
                            << digitizer.smearing.indices.size()
                            << " parameters.");
-              auto res =
-                  digitizer.smearing(rng, simHit, *surfacePtr, ctx.geoContext);
+              auto res = digitizer.smearing(rng, simHit, *surfacePtr,
+                                            ctx.simGeoContext);
               if (!res.ok()) {
                 ++skippedHits;
                 ACTS_DEBUG("Problem in hit smearing, skip hit ("
@@ -284,9 +295,12 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
             for (auto& [dParameters, simHitsIdxs] : digitizeParametersResult) {
               auto measurement =
                   createMeasurement(measurements, moduleGeoId, dParameters);
+
+              dParameters.cluster.globalPosition = measurementGlobalPosition(
+                  dParameters, *surfacePtr, ctx.simGeoContext);
               clusters.emplace_back(std::move(dParameters.cluster));
 
-              for (auto [i, simHitIdx] : Acts::enumerate(simHitsIdxs)) {
+              for (auto simHitIdx : simHitsIdxs) {
                 measurementParticlesMap.emplace_hint(
                     measurementParticlesMap.end(), measurement.index(),
                     simHits.nth(simHitIdx)->particleId());
@@ -307,7 +321,20 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
   }
 
   if (m_cfg.doClusterization) {
-    m_outputMeasurements(ctx, std::move(measurements));
+    ACTS_DEBUG("Created " << measurements.size() << " measurements, "
+                          << clusters.size() << " clusters" << " from "
+                          << simHits.size() << " sim hits.");
+
+    const auto& storedMeasurements =
+        m_outputMeasurements(ctx, std::move(measurements));
+
+    // Build initial full subset: all measurements, indices in original space.
+    std::vector<MeasurementContainer::Index> allIndices(
+        storedMeasurements.size());
+    std::iota(allIndices.begin(), allIndices.end(), Index{0});
+    m_outputMeasurementSubset(
+        ctx, MeasurementSubset(storedMeasurements, std::move(allIndices)));
+
     m_outputClusters(ctx, std::move(clusters));
 
     // invert them before they are moved
@@ -333,8 +360,6 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
     RandomEngine& rng) const {
   DigitizedParameters dParameters;
 
-  const auto& binningData = geoCfg.segmentation.binningData();
-
   // For digital readout, the weight needs to be split in x and y
   std::array<double, 2u> pos = {0., 0.};
   std::array<double, 2u> totalWeight = {0., 0.};
@@ -353,16 +378,19 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
     if (charge > geoCfg.threshold) {
       double weight = geoCfg.digital ? 1. : charge;
       for (std::size_t ib = 0; ib < 2; ++ib) {
+        // Cell bins are zero-based while the axis bin indices start at one
+        const double binCenter =
+            geoCfg.segmentation->getAxis(ib).getBinCenter(bin[ib] + 1);
         if (geoCfg.digital && geoCfg.componentDigital) {
           // only fill component of this row/column if not yet filled
           if (!componentChannels[ib].contains(bin[ib])) {
             totalWeight[ib] += weight;
-            pos[ib] += weight * binningData[ib].center(bin[ib]);
+            pos[ib] += weight * binCenter;
             componentChannels[ib].insert(bin[ib]);
           }
         } else {
           totalWeight[ib] += weight;
-          pos[ib] += weight * binningData[ib].center(bin[ib]);
+          pos[ib] += weight * binCenter;
         }
         // min max channels
         bmin[ib] = std::min(bmin[ib], static_cast<std::size_t>(bin[ib]));

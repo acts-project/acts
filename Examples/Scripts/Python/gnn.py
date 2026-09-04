@@ -4,24 +4,37 @@ from pathlib import Path
 import os
 import sys
 
-import acts.examples
 import acts
-from acts.examples.reconstruction import addGnn, GnnBackend
+import acts.examples
+import acts.examples.gnn
+import acts.gnn
+from acts.examples.simulation import addDigiParticleSelection, ParticleSelectorConfig
+from acts.examples.reconstruction import addGnn, addSpacePointsMaking
+from acts.gnn import (
+    TorchMetricLearning,
+    TorchEdgeClassifier,
+    BoostTrackBuilding,
+    Device,
+)
+from acts.examples.gnn import NodeFeature
 from acts import UnitConstants as u
 
 from digitization import runDigitization
 
 
-def runGNNTrackFinding(
+def runGnnMetricLearning(
     trackingGeometry,
     field,
     outputDir,
     digiConfigFile,
     geometrySelection,
-    backend,
-    modelDir,
+    embedModelPath,
+    filterModelPath,
+    gnnModelPath,
+    device=None,
     outputRoot=False,
     outputCsv=False,
+    shrinkNodes=False,
     s=None,
 ):
     s = runDigitization(
@@ -35,27 +48,117 @@ def runGNNTrackFinding(
         s=s,
     )
 
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-3.0, 3.0),
+            measurements=(7, None),
+            removeNeutral=True,
+        ),
+    )
+
+    addSpacePointsMaking(
+        s,
+        geoSelectionConfigFile=geometrySelection,
+        stripGeoSelectionConfigFile=None,
+        trackingGeometry=trackingGeometry,
+        logLevel=acts.logging.INFO,
+    )
+
+    graphConstructorConfig = {
+        "level": acts.logging.INFO,
+        "modelPath": str(embedModelPath),
+        "embeddingDim": 8,
+        "rVal": 1.6,
+        "knnVal": 100,
+        "selectedFeatures": [0, 1, 2],  # R, Phi, Z
+        "device": device,
+    }
+    graphConstructor = TorchMetricLearning(**graphConstructorConfig)
+
+    filterConfig = {
+        "level": acts.logging.INFO,
+        "modelPath": str(filterModelPath),
+        "cut": 0.01,
+    }
+    gnnConfig = {
+        "level": acts.logging.INFO,
+        "modelPath": str(gnnModelPath),
+        "cut": 0.5,
+    }
+
+    edgeClassifiers = []
+
+    if filterModelPath.suffix == ".pt":
+        edgeClassifiers.append(
+            TorchEdgeClassifier(
+                **filterConfig,
+                nChunks=5,
+                undirected=False,
+                selectedFeatures=[0, 1, 2],
+                device=device,
+            )
+        )
+    elif filterModelPath.suffix == ".onnx":
+        from acts.gnn import OnnxEdgeClassifier
+
+        filterConfig["device"] = device
+        edgeClassifiers.append(OnnxEdgeClassifier(**filterConfig))
+    else:
+        raise ValueError(f"Unsupported model format: {filterModelPath.suffix}")
+
+    if gnnModelPath.suffix == ".pt":
+        edgeClassifiers.append(
+            TorchEdgeClassifier(
+                **gnnConfig,
+                undirected=True,
+                selectedFeatures=[0, 1, 2],
+                device=device,
+            )
+        )
+    elif gnnModelPath.suffix == ".onnx":
+        from acts.gnn import OnnxEdgeClassifier
+
+        gnnConfig["device"] = device
+        edgeClassifiers.append(
+            OnnxEdgeClassifier(**gnnConfig),
+        )
+    else:
+        raise ValueError(f"Unsupported model format: {filterModelPath.suffix}")
+
+    # Stage 3: CPU track building
+    trackBuilderConfig = {
+        "level": acts.logging.INFO,
+    }
+    trackBuilder = BoostTrackBuilding(**trackBuilderConfig)
+
+    # Node features: Standard 3 features (R, Phi, Z)
+    nodeFeatures = [
+        NodeFeature.R,
+        NodeFeature.Phi,
+        NodeFeature.Z,
+    ]
+    featureScales = [1.0, 1.0, 1.0]
+
+    # Add GNN tracking
     addGnn(
         s,
-        trackingGeometry,
-        geometrySelection,
-        modelDir,
-        backend=backend,
+        graphConstructor=graphConstructor,
+        edgeClassifiers=edgeClassifiers,
+        trackBuilder=trackBuilder,
+        nodeFeatures=nodeFeatures,
+        featureScales=featureScales,
         outputDirRoot=outputDir if outputRoot else None,
+        device=device,
+        shrinkNodes=shrinkNodes,
+        logLevel=acts.logging.INFO,
     )
 
     s.run()
 
 
 if "__main__" == __name__:
-
-    backend = GnnBackend.Torch
-
-    if "onnx" in sys.argv:
-        backend = GnnBackend.Onnx
-    if "torch" in sys.argv:
-        backend = GnnBackend.Torch
-
     detector = acts.examples.GenericDetector()
     trackingGeometry = detector.trackingGeometry()
 
@@ -69,16 +172,19 @@ if "__main__" == __name__:
     digiConfigFile = srcdir / "Examples/Configs/generic-digi-smearing-config.json"
     assert digiConfigFile.exists()
 
-    if backend == GnnBackend.Torch:
-        modelDir = Path.cwd() / "torchscript_models"
-        assert (modelDir / "embed.pt").exists()
-        assert (modelDir / "filter.pt").exists()
-        assert (modelDir / "gnn.pt").exists()
-    else:
-        modelDir = Path.cwd() / "onnx_models"
-        assert (modelDir / "embedding.onnx").exists()
-        assert (modelDir / "filtering.onnx").exists()
-        assert (modelDir / "gnn.onnx").exists()
+    # Model paths from MODEL_STORAGE environment variable
+    model_storage = os.environ.get("MODEL_STORAGE")
+    assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
+    ci_models = Path(model_storage)
+
+    # These models are chosen as they work without the torch-scatter dependency
+    embedModelPath = ci_models / "torchscript_models/embed.pt"
+    filterModelPath = ci_models / "torchscript_models/filter.pt"
+    gnnModelPath = ci_models / "onnx_models/gnn.onnx"
+
+    device = (
+        Device.Cpu() if os.environ.get("CUDA_VISIBLE_DEVICES") == "" else Device.Cuda()
+    )
 
     s = acts.examples.Sequencer(events=2, numThreads=1)
     s.config.logLevel = acts.logging.INFO
@@ -86,14 +192,16 @@ if "__main__" == __name__:
     rnd = acts.examples.RandomNumbers()
     outputDir = Path(os.getcwd())
 
-    runGNNTrackFinding(
+    runGnnMetricLearning(
         trackingGeometry,
         field,
         outputDir,
         digiConfigFile,
         geometrySelection,
-        backend,
-        modelDir,
+        embedModelPath,
+        filterModelPath,
+        gnnModelPath,
+        device=device,
         outputRoot=True,
         outputCsv=False,
         s=s,

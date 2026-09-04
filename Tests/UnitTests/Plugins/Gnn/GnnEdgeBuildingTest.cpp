@@ -8,9 +8,9 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Gnn/detail/CantorEdge.hpp"
-#include "Acts/Plugins/Gnn/detail/TensorVectorConversion.hpp"
-#include "Acts/Plugins/Gnn/detail/buildEdges.hpp"
+#include "ActsPlugins/Gnn/detail/CantorEdge.hpp"
+#include "ActsPlugins/Gnn/detail/TensorVectorConversion.hpp"
+#include "ActsPlugins/Gnn/detail/buildEdges.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -19,7 +19,10 @@
 #include <Eigen/Core>
 #include <torch/torch.h>
 
-using CantorPair = Acts::detail::CantorEdge<int>;
+using namespace ActsPlugins;
+using namespace ActsPlugins::detail;
+
+using CantorPair = CantorEdge<int>;
 
 #define PRINT 0
 
@@ -109,6 +112,10 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
                          edges_ref_cantor.begin()));
 }
 
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GnnSuite)
+
 BOOST_AUTO_TEST_CASE(test_cantor_pair_functions) {
   int a = 345;
   int b = 23;
@@ -140,7 +147,7 @@ BOOST_AUTO_TEST_CASE(test_random_graph_edge_building_cuda,
 
   auto cudaEdgeBuilder = [](auto &features, auto radius, auto k) {
     auto features_cuda = features.to(torch::kCUDA);
-    return Acts::detail::buildEdgesFRNN(features_cuda, radius, k);
+    return buildEdgesFRNN(features_cuda, radius, k);
   };
 
   test_random_graph(emb_dim, n_nodes, r, knn, cudaEdgeBuilder);
@@ -151,7 +158,7 @@ BOOST_AUTO_TEST_CASE(test_random_graph_edge_building_kdtree) {
 
   auto cpuEdgeBuilder = [](auto &features, auto radius, auto k) {
     auto features_cpu = features.to(torch::kCPU);
-    return Acts::detail::buildEdgesKDTree(features_cpu, radius, k);
+    return buildEdgesKDTree(features_cpu, radius, k);
   };
 
   test_random_graph(emb_dim, n_nodes, r, knn, cpuEdgeBuilder);
@@ -174,7 +181,7 @@ BOOST_AUTO_TEST_CASE(test_self_loop_removal) {
           .transpose(0, 1);
 
   const auto withoutSelfLoops =
-      Acts::detail::postprocessEdgeTensor(edgeTensor, true, false, false)
+      postprocessEdgeTensor(edgeTensor, true, false, false)
           .transpose(1, 0)
           .flatten();
 
@@ -209,10 +216,9 @@ BOOST_AUTO_TEST_CASE(test_duplicate_removal) {
                        opts)
           .transpose(0, 1);
 
-  const auto withoutDups =
-      Acts::detail::postprocessEdgeTensor(edgeTensor, false, true, false)
-          .transpose(1, 0)
-          .flatten();
+  const auto withoutDups = postprocessEdgeTensor(edgeTensor, false, true, false)
+                               .transpose(1, 0)
+                               .flatten();
 
   const std::vector<std::int64_t> postEdges(
       withoutDups.data_ptr<std::int64_t>(),
@@ -247,10 +253,9 @@ BOOST_AUTO_TEST_CASE(test_random_flip) {
                        opts)
           .transpose(0, 1);
 
-  const auto flipped =
-      Acts::detail::postprocessEdgeTensor(edgeTensor, false, false, true)
-          .transpose(0, 1)
-          .flatten();
+  const auto flipped = postprocessEdgeTensor(edgeTensor, false, false, true)
+                           .transpose(0, 1)
+                           .flatten();
 
   const std::vector<std::int64_t> postEdges(
       flipped.data_ptr<std::int64_t>(),
@@ -271,3 +276,7 @@ BOOST_AUTO_TEST_CASE(test_random_flip) {
     BOOST_CHECK_EQUAL(found, 1);
   }
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

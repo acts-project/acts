@@ -1,0 +1,63 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#include <boost/test/unit_test.hpp>
+
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ReferenceGenerators.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+
+#include <memory>
+#include <utility>
+#include <vector>
+
+using namespace Acts;
+
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+
+auto rBounds = std::make_shared<RectangleBounds>(10, 20);
+auto sTransform = Transform3::Identity();
+auto pSurface = Surface::makeShared<PlaneSurface>(
+    sTransform.pretranslate(Vector3(20., 20., 100.)), std::move(rBounds));
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DetectorSuite)
+
+BOOST_AUTO_TEST_CASE(CenterReference) {
+  // Simply return the cetner
+  auto center = CenterReferenceGenerator{}.references(tContext, *pSurface);
+  BOOST_CHECK_EQUAL(center.size(), 1u);
+  BOOST_CHECK(center.front().isApprox(Vector3(20., 20., 100.)));
+}
+
+BOOST_AUTO_TEST_CASE(BinningPositionReference) {
+  // Simply return binning position, we test only the behavior of the generator
+  // not the output
+  auto referencePosition =
+      AxisDirectionReferenceGenerator<AxisDirection::AxisZ>{}.references(
+          tContext, *pSurface);
+  BOOST_CHECK_EQUAL(referencePosition.size(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(PolyhedronReference) {
+  // Simply return binning position, we test only the behavior of the generator
+  // not the output
+  auto referencePositions =
+      PolyhedronReferenceGenerator{}.references(tContext, *pSurface);
+  // 4 corners without center of gravity
+  BOOST_CHECK_EQUAL(referencePositions.size(), 4u);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

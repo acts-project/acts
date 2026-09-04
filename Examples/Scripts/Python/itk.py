@@ -2,20 +2,23 @@
 from pathlib import Path
 import argparse
 
+import acts
+import acts.examples
+from acts.json import MaterialMapJsonConverter
+
 from acts.examples import (
     WhiteBoard,
     AlgorithmContext,
     ProcessCode,
     CsvTrackingGeometryWriter,
     ObjTrackingGeometryWriter,
+)
+
+from acts.examples.json import (
     JsonSurfacesWriter,
     JsonMaterialWriter,
     JsonFormat,
 )
-
-import acts
-
-from acts import MaterialMapJsonConverter
 
 
 def runITk(
@@ -78,7 +81,7 @@ def runITk(
                 processBoundaries=True,
                 processVolumes=True,
                 processNonMaterial=True,
-                context=context.geoContext,
+                context=context.recoGeoContext,
             )
 
             outname = "material-map"

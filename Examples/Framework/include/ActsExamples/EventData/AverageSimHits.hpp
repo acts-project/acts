@@ -9,8 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -38,8 +36,6 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
     const SimHitContainer& simHits, const HitSimHitsRange& hitSimHitsRange,
     const Acts::Logger& logger) {
-  using namespace Acts::UnitLiterals;
-
   Acts::Vector2 avgLocal = Acts::Vector2::Zero();
   Acts::Vector4 avgPos4 = Acts::Vector4::Zero();
   Acts::Vector3 avgDir = Acts::Vector3::Zero();
@@ -52,13 +48,11 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     // check their validity again.
     const auto& simHit = *simHits.nth(simHitIdx);
 
-    // We use the thickness of the detector element as tolerance, because Geant4
+    // We use the thickness of the surface as tolerance, because Geant4
     // treats the Surfaces as volumes and thus it is not ensured, that each hit
     // lies exactly on the Acts::Surface
-    const auto tolerance =
-        surface.associatedDetectorElement() != nullptr
-            ? surface.associatedDetectorElement()->thickness()
-            : Acts::s_onSurfaceTolerance;
+    const double tolerance = surface.isSensitive() ? surface.thickness()
+                                                   : Acts::s_onSurfaceTolerance;
 
     // transforming first to local positions and average that ensures that the
     // averaged position is still on the surface. the averaged global position

@@ -11,8 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/PointSurface.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -39,21 +40,25 @@ Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
   if (!trkParams->covariance().has_value()) {
     return VertexingError::NoCovariance;
   }
-  ActsSquareMatrix<nDim - 1> subCovMat;
+  SquareMatrix<nDim - 1> subCovMat;
   if constexpr (nDim == 3) {
     subCovMat = trkParams->spatialImpactParameterCovariance().value();
   } else {
     subCovMat = trkParams->impactParameterCovariance().value();
   }
-  ActsSquareMatrix<nDim - 1> weight = subCovMat.inverse();
+  SquareMatrix<nDim - 1> weight = subCovMat.inverse();
 
-  // Orientation of the surface (i.e., axes of the corresponding coordinate
-  // system)
-  RotationMatrix3 surfaceAxes =
-      trkParams->referenceSurface().transform(gctx).rotation();
+  // Orientation of the surface (i.e., axes of the measurement frame in which
+  // the track's local coordinates are expressed). We use referenceFrame rather
+  // than the transform rotation because the PointSurface (used by
+  // estimate3DImpactParameters) has a direction-dependent measurement frame
+  // that is not stored in its transform. For direction-independent surfaces
+  // (e.g. PlaneSurface) referenceFrame returns the transform rotation, so this
+  // is behavior-preserving there.
+  RotationMatrix3 surfaceAxes = trkParams->referenceSurface().referenceFrame(
+      gctx, trkParams->position(gctx), trkParams->direction());
   // Origin of the surface coordinate system
-  Vector3 surfaceOrigin =
-      trkParams->referenceSurface().transform(gctx).translation();
+  Vector3 surfaceOrigin = trkParams->referenceSurface().center(gctx);
 
   // x- and y-axis of the surface coordinate system
   Vector3 xAxis = surfaceAxes.col(0);
@@ -68,11 +73,11 @@ Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
 
   // x-, y-, and possibly time-coordinate of the vertex and the track in the
   // surface coordinate system
-  ActsVector<nDim - 1> localVertexCoords;
+  Vector<nDim - 1> localVertexCoords;
   localVertexCoords.template head<2>() =
       Vector2(originToVertex.dot(xAxis), originToVertex.dot(yAxis));
 
-  ActsVector<nDim - 1> localTrackCoords;
+  Vector<nDim - 1> localTrackCoords;
   localTrackCoords.template head<2>() =
       Vector2(trkParams->parameters()[eX], trkParams->parameters()[eY]);
 
@@ -83,7 +88,7 @@ Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
   }
 
   // residual
-  ActsVector<nDim - 1> residual = localTrackCoords - localVertexCoords;
+  Vector<nDim - 1> residual = localTrackCoords - localVertexCoords;
 
   // return chi2
   return residual.dot(weight * residual);
@@ -197,7 +202,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
         (vtxPos.template head<3>() - positionOnTrack).dot(momDirStraightTrack);
 
     // 3D PCA
-    ActsVector<nDim> pcaStraightTrack;
+    Vector<nDim> pcaStraightTrack;
     pcaStraightTrack.template head<3>() =
         positionOnTrack + distanceToPca * momDirStraightTrack;
     if constexpr (nDim == 4) {
@@ -271,7 +276,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
   // 3D PCA (point P' in the reference). Note that the prefix "3D" does not
   // refer to the dimension of the pca variable. Rather, it indicates that we
   // minimized the 3D distance between the track and the reference point.
-  ActsVector<nDim> pca;
+  Vector<nDim> pca;
   pca.template head<3>() =
       helixCenter + rho * Vector3(-sinPhi, cosPhi, -cotTheta * phi);
 
@@ -314,74 +319,43 @@ Result<double> ImpactPointEstimator::calculateDistance(
 Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const BoundTrackParameters& trkParams, const Vector3& vtxPos,
-    State& state) const {
-  auto res = getDistanceAndMomentumImpl(gctx, trkParams, vtxPos, m_cfg, state,
-                                        *m_logger);
-
-  if (!res.ok()) {
-    return res.error();
-  }
-
-  // Vector pointing from vertex to 3D PCA
-  Vector3 deltaR = res.value().first.head<3>();
-
-  // Get corresponding unit vector
-  deltaR.normalize();
-
-  // Momentum direction at vtxPos
-  Vector3 momDir = res.value().second;
-
-  // To understand why deltaR and momDir are not orthogonal, let us look at the
-  // x-y-plane. Since we computed the 3D PCA, the 2D distance between the vertex
-  // and the PCA is not necessarily minimal (see Fig. 4.2 in the reference). As
-  // a consequence, the momentum and the vector connecting the vertex and the
-  // PCA are not orthogonal to each other.
-  Vector3 orthogonalDeltaR = deltaR - (deltaR.dot(momDir)) * momDir;
-
-  // Vector perpendicular to momDir and orthogonalDeltaR
-  Vector3 perpDir = momDir.cross(orthogonalDeltaR);
-
-  // Cartesian coordinate system with:
-  // -) origin at the vertex position
-  // -) z-axis in momentum direction
-  // -) x-axis approximately in direction of the 3D PCA (slight deviations
-  // because it was modified to make if orthogonal to momDir)
-  // -) y-axis is calculated to be orthogonal to x- and z-axis
-  // The transformation is represented by a 4x4 matrix with 0 0 0 1 in the last
-  // row.
-  Transform3 coordinateSystem;
-  // First three columns correspond to coordinate system axes
-  coordinateSystem.matrix().block<3, 1>(0, 0) = orthogonalDeltaR;
-  coordinateSystem.matrix().block<3, 1>(0, 1) = perpDir;
-  coordinateSystem.matrix().block<3, 1>(0, 2) = momDir;
-  // Fourth column corresponds to origin of the coordinate system
-  coordinateSystem.matrix().block<3, 1>(0, 3) = vtxPos;
-
-  // Surface with normal vector in direction of the z axis of coordinateSystem
-  std::shared_ptr<PlaneSurface> planeSurface =
-      Surface::makeShared<PlaneSurface>(coordinateSystem);
-
-  auto intersection =
-      planeSurface
-          ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
-                      BoundaryTolerance::Infinite())
-          .closest();
+    State& /*state*/) const {
+  // A PointSurface at the vertex represents the point of closest approach to
+  // the vertex: its measurement-plane normal always equals the local track
+  // momentum direction, so propagating the track onto it converges exactly to
+  // the 3D PCA (the point where the momentum is perpendicular to the
+  // vertex-to-track residual).
+  //
+  // This replaces the previous two-step approach, which estimated the 3D PCA
+  // analytically (Newton method for helical tracks) and then propagated to an
+  // approximate plane surface oriented along that estimate. That plane was a
+  // hand-built point surface with a fixed normal, and was only exact when the
+  // vertex-to-PCA vector happened to be orthogonal to the momentum. Propagating
+  // directly to a PointSurface removes that approximation.
+  std::shared_ptr<PointSurface> pointSurface =
+      Surface::makeShared<PointSurface>(vtxPos);
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
+
+  // Use a straight-line intersection to decide the propagation direction
+  Intersection3D intersection =
+      pointSurface
+          ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
+                      BoundaryTolerance::Infinite())
+          .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
-  // Propagate to the surface; intersection corresponds to an estimate of the 3D
-  // PCA. If deltaR and momDir were orthogonal the calculation would be exact.
+  // Propagate to the point surface; the resulting parameters are at the 3D PCA
   auto result =
-      m_cfg.propagator->propagateToSurface(trkParams, *planeSurface, pOptions);
+      m_cfg.propagator->propagateToSurface(trkParams, *pointSurface, pOptions);
   if (result.ok()) {
     return *result;
   } else {
     ACTS_ERROR("Error during propagation in estimate3DImpactParameters.");
     ACTS_DEBUG(
-        "The plane surface to which we tried to propagate has its origin at\n"
+        "The point surface to which we tried to propagate has its origin at\n"
         << vtxPos);
     return result.error();
   }
@@ -389,7 +363,7 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
 
 Result<double> ImpactPointEstimator::getVertexCompatibility(
     const GeometryContext& gctx, const BoundTrackParameters* trkParams,
-    Eigen::Map<const ActsDynamicVector> vertexPos) const {
+    Eigen::Map<const DynamicVector> vertexPos) const {
   if (vertexPos.size() == 3) {
     return getVertexCompatibilityImpl(gctx, trkParams,
                                       vertexPos.template head<3>());
@@ -404,7 +378,7 @@ Result<double> ImpactPointEstimator::getVertexCompatibility(
 Result<std::pair<Acts::Vector4, Acts::Vector3>>
 ImpactPointEstimator::getDistanceAndMomentum(
     const GeometryContext& gctx, const BoundTrackParameters& trkParams,
-    Eigen::Map<const ActsDynamicVector> vtxPos, State& state) const {
+    Eigen::Map<const DynamicVector> vtxPos, State& state) const {
   if (vtxPos.size() == 3) {
     return getDistanceAndMomentumImpl(
         gctx, trkParams, vtxPos.template head<3>(), m_cfg, state, *m_logger);
@@ -425,7 +399,7 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
-  auto intersection =
+  Intersection3D intersection =
       perigeeSurface
           ->intersect(gctx, track.position(gctx), track.direction(),
                       BoundaryTolerance::Infinite())

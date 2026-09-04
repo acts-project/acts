@@ -8,9 +8,12 @@
 
 #include "ActsExamples/GenericDetector/AlignedGenericDetector.hpp"
 
-ActsExamples::AlignedGenericDetector::AlignedGenericDetector(const Config& cfg)
+namespace ActsExamples {
+
+AlignedGenericDetector::AlignedGenericDetector(const Config& cfg)
     : GenericDetector(cfg, GenericDetector::NoBuildTag{}) {
-  m_nominalGeometryContext = Acts::GeometryContext();
+  m_nominalGeometryContext =
+      Acts::GeometryContext::dangerouslyDefaultConstruct();
 
   // Set the detector element factory
   auto alignedDetectorElementFactory =
@@ -26,3 +29,5 @@ ActsExamples::AlignedGenericDetector::AlignedGenericDetector(const Config& cfg)
       };
   buildTrackingGeometry(alignedDetectorElementFactory);
 }
+
+}  // namespace ActsExamples

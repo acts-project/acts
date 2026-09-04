@@ -9,23 +9,20 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Vertexing/HoughVertexFinder.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
+#include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 class HoughVertexFinderAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    /// Optional. Input spacepoints container.
-    std::string inputSpacepoints;
+    /// Optional. Input space points container.
+    std::string inputSpacePoints;
     /// Output vertex collection
     std::string outputVertices;
 
@@ -38,9 +35,10 @@ class HoughVertexFinderAlgorithm final : public IAlgorithm {
     Acts::Vector3 defVtxPosition{0., 0., 0.};
   };
 
-  HoughVertexFinderAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
+  explicit HoughVertexFinderAlgorithm(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
-  /// @brief Find a vertex using spacepoints
+  /// @brief Find a vertex using space points
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
@@ -52,10 +50,10 @@ class HoughVertexFinderAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacepoints{this,
-                                                            "spacepoints"};
-  WriteDataHandle<std::vector<Acts::Vertex>> m_outputVertices{
-      this, "OutputHoughVertices"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
+  WriteDataHandle<VertexContainer> m_outputVertices{this,
+                                                    "OutputHoughVertices"};
 };
 
 }  // namespace ActsExamples

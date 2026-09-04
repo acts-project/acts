@@ -6,12 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/TorchMetricLearning.hpp"
+#include "ActsPlugins/Gnn/TorchMetricLearning.hpp"
 
-#include "Acts/Plugins/Gnn/detail/TensorVectorConversion.hpp"
-#include "Acts/Plugins/Gnn/detail/buildEdges.hpp"
+#include "ActsPlugins/Gnn/detail/TensorVectorConversion.hpp"
+#include "ActsPlugins/Gnn/detail/buildEdges.hpp"
 
-#ifndef ACTS_GNN_CPUONLY
+#ifdef ACTS_GNN_WITH_CUDA
 #include <c10/cuda/CUDAGuard.h>
 #endif
 
@@ -24,7 +24,9 @@
 
 using namespace torch::indexing;
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 TorchMetricLearning::TorchMetricLearning(const Config &cfg,
                                          std::unique_ptr<const Logger> _logger)
@@ -32,27 +34,24 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
   c10::InferenceMode guard(true);
   torch::Device device = torch::kCPU;
 
-  if (!torch::cuda::is_available()) {
-    ACTS_DEBUG("Running on CPU...");
-  } else {
-    if (cfg.deviceID >= 0 &&
-        static_cast<std::size_t>(cfg.deviceID) < torch::cuda::device_count()) {
-      ACTS_DEBUG("GPU device " << cfg.deviceID << " is being used.");
-      device = torch::Device(torch::kCUDA, cfg.deviceID);
-    } else {
-      ACTS_WARNING("GPU device " << cfg.deviceID
-                                 << " not available, falling back to CPU.");
+  if (cfg.device.isCuda()) {
+    if (!torch::cuda::is_available()) {
+      throw std::runtime_error(
+          "CUDA device requested but CUDA is not available");
     }
+    if (cfg.device.index >=
+        static_cast<std::size_t>(torch::cuda::device_count())) {
+      throw std::runtime_error(
+          "CUDA device index " + std::to_string(cfg.device.index) +
+          " is out of range (" + std::to_string(torch::cuda::device_count()) +
+          " devices available)");
+    }
+    device = torch::Device(torch::kCUDA, cfg.device.index);
   }
 
   ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
                                     << TORCH_VERSION_MINOR << "."
                                     << TORCH_VERSION_PATCH);
-#ifndef ACTS_GNN_CPUONLY
-  if (!torch::cuda::is_available()) {
-    ACTS_INFO("CUDA not available, falling back to CPU");
-  }
-#endif
 
   try {
     m_model = std::make_unique<torch::jit::Module>();
@@ -70,14 +69,14 @@ PipelineTensors TorchMetricLearning::operator()(
     const std::vector<std::uint64_t> & /*moduleIds*/,
     const ExecutionContext &execContext) {
   const auto device =
-      execContext.device.type == Acts::Device::Type::eCUDA
+      execContext.device.type == Device::Type::eCUDA
           ? torch::Device(torch::kCUDA, execContext.device.index)
           : torch::kCPU;
   ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
 
   // add a protection to avoid calling for kCPU
-#ifdef ACTS_GNN_CPUONLY
+#ifndef ACTS_GNN_WITH_CUDA
   assert(device == torch::Device(torch::kCPU));
 #else
   std::optional<c10::cuda::CUDAGuard> device_guard;
@@ -88,8 +87,8 @@ PipelineTensors TorchMetricLearning::operator()(
 
   const std::int64_t numAllFeatures = inputValues.size() / numNodes;
 
-  // printout the r,phi,z of the first spacepoint
-  ACTS_VERBOSE("First spacepoint information: " << [&]() {
+  // printout the r,phi,z of the first space point
+  ACTS_VERBOSE("First space point information: " << [&]() {
     std::stringstream ss;
     for (int i = 0; i < numAllFeatures; ++i) {
       ss << inputValues[i] << "  ";
@@ -151,4 +150,4 @@ PipelineTensors TorchMetricLearning::operator()(
           detail::torchToActsTensor<std::int64_t>(edgeList, execContext),
           std::nullopt, std::nullopt};
 }
-}  // namespace Acts
+}  // namespace ActsPlugins

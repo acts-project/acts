@@ -15,6 +15,7 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include <cstddef>
 #include <vector>
@@ -22,6 +23,16 @@
 namespace Acts {
 
 using VectorHelpers::phi;
+
+std::shared_ptr<CylinderLayer> CylinderLayer::create(
+    const Transform3& transform,
+    const std::shared_ptr<const CylinderBounds>& cbounds,
+    std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
+    std::unique_ptr<ApproachDescriptor> ad, LayerType laytyp) {
+  return std::shared_ptr<CylinderLayer>(
+      new CylinderLayer(transform, cbounds, std::move(surfaceArray), thickness,
+                        std::move(ad), laytyp));
+}
 
 CylinderLayer::CylinderLayer(
     const Transform3& transform,
@@ -62,10 +73,13 @@ void CylinderLayer::buildApproachDescriptor() {
 
   // take the boundary surfaces of the representving volume if they exist
   if (m_representingVolume != nullptr) {
+    // The representing volume is built by the cylinder layer itself.
+    /// @todo Think whether the geometry context needs to be wired
+    const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
     // get the boundary surfaces
     std::vector<OrientedSurface> bSurfaces =
         m_representingVolume->volumeBounds().orientedSurfaces(
-            m_representingVolume->transform());
+            m_representingVolume->localToGlobalTransform(gctx));
 
     // fill in the surfaces into the vector
     std::vector<std::shared_ptr<const Surface>> aSurfaces;

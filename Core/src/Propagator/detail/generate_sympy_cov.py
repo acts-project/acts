@@ -1,4 +1,7 @@
+import argparse
+import contextlib
 import sys
+
 import numpy as np
 
 import sympy as sym
@@ -12,36 +15,54 @@ from codegen.sympy_common import (
     my_expression_print,
 )
 
-
-output = sys.stdout
-if len(sys.argv) > 1:
-    output = open(sys.argv[1], "w")
-
-
 C = MatrixSymbol("C", 6, 6).as_explicit().as_mutable()
 for indices in np.ndindex(C.shape):
     C[indices] = C[tuple(sorted(indices))]
 
-J_full = MatrixSymbol("J_full", 6, 6).as_explicit().as_mutable()
-tmp = sym.eye(6)
-tmp[0:4, 0:5] = J_full[0:4, 0:5]
-tmp[5:6, 0:5] = J_full[5:6, 0:5]
-J_full = tmp
+# The bound-to-bound jacobian's shape, as generate_sympy_jac.py asserts it:
+# nothing depends on time, and q/p depends on nothing but itself. Its q/p
+# diagonal is one in vacuum -- the step kernel's live set stops at row 6, so it
+# never writes that entry -- but not through material, where energy loss moves
+# it. So each case gets its own transport, and the vacuum one folds the
+# diagonal away as a literal.
 
 
-def covariance_transport_generic():
-    new_C = name_expr("new_C", J_full * C * J_full.T)
+def bound_to_bound_jacobian(qop_diagonal: bool):
+    """The masked bound-to-bound jacobian.
 
-    return [new_C]
+    @param qop_diagonal keeps d(q/p)/d(q/p) as a live entry rather than one
+    @return the 6x6 jacobian with everything structurally fixed substituted
+    """
+    J = MatrixSymbol("J_full", 6, 6).as_explicit().as_mutable()
+    tmp = sym.eye(6)
+    tmp[0:4, 0:5] = J[0:4, 0:5]
+    if qop_diagonal:
+        tmp[4, 4] = J[4, 4]
+    tmp[5:6, 0:5] = J[5:6, 0:5]
+    return tmp
 
 
-def my_covariance_transport_generic_function_print(name_exprs, run_cse=True):
+def covariance_transport_generic(qop_diagonal: bool = False):
+    """C -> J C J^T for the bound covariance.
+
+    @param qop_diagonal keeps d(q/p)/d(q/p) live, for a step through material
+    @return the named expressions to print
+    """
+    J = bound_to_bound_jacobian(qop_diagonal)
+    return [name_expr("new_C", J * C * J.T)]
+
+
+def my_covariance_transport_generic_function_print(name_exprs, name, run_cse=True):
     printer = cxx_printer
     outputs = [find_by_name(name_exprs, name)[0] for name in ["new_C"]]
 
     lines = []
 
-    head = "template <typename T> void transportCovarianceToBoundImpl(const T* C, const T* J_full, T* new_C) {"
+    head = (
+        f"template <typename T> void {name}("
+        "std::span<const T, 36> C, std::span<const T, 36> J_full,"
+        " std::span<T, 36> new_C) {"
+    )
     lines.append(head)
 
     code = my_expression_print(
@@ -57,8 +78,7 @@ def my_covariance_transport_generic_function_print(name_exprs, run_cse=True):
     return "\n".join(lines)
 
 
-output.write(
-    """// This file is part of the ACTS project.
+HEADER = """// This file is part of the ACTS project.
 //
 // Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
@@ -72,15 +92,70 @@ output.write(
 #pragma once
 
 #include <cmath>
+#include <span>
 """
-)
 
-all_name_exprs = covariance_transport_generic()
-code = my_covariance_transport_generic_function_print(
-    all_name_exprs,
-    run_cse=True,
-)
-output.write(code + "\n")
 
-if output is not sys.stdout:
-    output.close()
+def check_vacuum_is_dense_at_unit_diagonal() -> None:
+    """Assert the vacuum transport is the dense one at d(q/p)/d(q/p) == 1.
+
+    They are printed as two functions, so nothing else keeps them in step.
+
+    Raises AssertionError if they disagree.
+    """
+    dense = covariance_transport_generic(qop_diagonal=True)[0].expr
+    vacuum = covariance_transport_generic(qop_diagonal=False)[0].expr
+    J = MatrixSymbol("J_full", 6, 6).as_explicit()
+    diff = sym.expand(dense.subs({J[4, 4]: 1}) - vacuum)
+    if any(e != 0 for e in diff):
+        bad = [
+            (i, j)
+            for i in range(diff.rows)
+            for j in range(diff.cols)
+            if diff[i, j] != 0
+        ]
+        raise AssertionError(
+            f"vacuum covariance transport is not the dense one at d(q/p)/d(q/p) "
+            f"== 1, at {bad}"
+        )
+
+
+def main(argv: list[str]) -> None:
+    """Generate the covariance transports.
+
+    @param argv is the command line, argv[0] being the program name
+    """
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "output",
+        nargs="?",
+        help="file to write the generated transports to; stdout if omitted",
+    )
+    parser.add_argument(
+        "--no-check", action="store_true", help="skip the symbolic assertions"
+    )
+    args = parser.parse_args(argv[1:])
+
+    if not args.no_check:
+        check_vacuum_is_dense_at_unit_diagonal()
+
+    with (
+        open(args.output, "w") if args.output else contextlib.nullcontext(sys.stdout)
+    ) as out:
+        out.write(HEADER)
+        for name, qop_diagonal in (
+            ("transportCovarianceToBoundVacuumImpl", False),
+            ("transportCovarianceToBoundDenseImpl", True),
+        ):
+            out.write(
+                my_covariance_transport_generic_function_print(
+                    covariance_transport_generic(qop_diagonal),
+                    name,
+                    run_cse=True,
+                )
+                + "\n"
+            )
+
+
+if __name__ == "__main__":
+    main(sys.argv)

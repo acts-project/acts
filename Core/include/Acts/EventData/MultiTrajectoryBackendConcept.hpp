@@ -48,19 +48,7 @@ concept CommonMultiTrajectoryBackend =
 
       { cv.referenceSurface_impl(istate) } -> std::same_as<const Surface*>;
 
-      { cv.parameters_impl(istate) } -> std::same_as<detail::ConstParameters>;
-
-      { cv.covariance_impl(istate) } -> std::same_as<detail::ConstCovariance>;
-
       { cv.jacobian_impl(istate) } -> std::same_as<detail::ConstCovariance>;
-
-      {
-        cv.template calibrated_impl<2>(istate)
-      } -> std::same_as<Eigen::Map<const Vector2>>;
-
-      {
-        cv.template calibratedCovariance_impl<2>(istate)
-      } -> std::same_as<Eigen::Map<const ActsSquareMatrix<2>>>;
 
       { cv.has_impl(key, istate) } -> std::same_as<bool>;
 
@@ -90,7 +78,7 @@ concept ConstMultiTrajectoryBackend =
 
       {
         v.template calibratedCovariance_impl<2>(istate)
-      } -> std::same_as<Eigen::Map<const ActsSquareMatrix<2>>>;
+      } -> std::same_as<Eigen::Map<const SquareMatrix<2>>>;
     };
 
 template <typename T>
@@ -111,9 +99,11 @@ concept MutableMultiTrajectoryBackend =
 
       {
         v.template calibratedCovariance_impl<2>(istate)
-      } -> std::same_as<Eigen::Map<ActsSquareMatrix<2>>>;
+      } -> std::same_as<Eigen::Map<SquareMatrix<2>>>;
 
       { v.addTrackState_impl() } -> std::same_as<TrackIndexType>;
+
+      { v.addTrackStateComponents_impl(istate, mask) };
 
       { v.shareFrom_impl(istate, istate, mask, mask) };
 
@@ -130,14 +120,11 @@ concept MutableMultiTrajectoryBackend =
       { v.template addColumn_impl<float>(col) };
       { v.template addColumn_impl<double>(col) };
 
-      {
-        v.allocateCalibrated_impl(istate, ActsVector<1>{},
-                                  ActsSquareMatrix<1>{})
-      };
+      { v.allocateCalibrated_impl(istate, Vector<1>{}, SquareMatrix<1>{}) };
       // Assuming intermediate values also work
       {
-        v.allocateCalibrated_impl(istate, ActsVector<eBoundSize>{},
-                                  ActsSquareMatrix<eBoundSize>{})
+        v.allocateCalibrated_impl(istate, Vector<eBoundSize>{},
+                                  SquareMatrix<eBoundSize>{})
       };
 
       { v.setUncalibratedSourceLink_impl(istate, std::move(sl)) };
@@ -146,5 +133,4 @@ concept MutableMultiTrajectoryBackend =
 
       { v.copyDynamicFrom_impl(istate, key, std::declval<const std::any&>()) };
     };
-
 }  // namespace Acts

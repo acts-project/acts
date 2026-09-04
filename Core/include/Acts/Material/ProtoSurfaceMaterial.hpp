@@ -12,14 +12,16 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 
 #include <iosfwd>
 #include <vector>
 
 namespace Acts {
 
-/// @class ProtoSurfaceMaterial
+/// @addtogroup material
+/// @{
+
 ///
 /// @brief proxy to SurfaceMaterial hand over BinUtility or other suitable
 /// binning description
@@ -59,22 +61,26 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// Assignment operator
   ///
   /// @param smproxy The source proxy
+  /// @return Reference to this object
   ProtoSurfaceMaterialT<BinningType>& operator=(
       const ProtoSurfaceMaterialT<BinningType>& smproxy) = default;
 
   /// Assignment move operator
   ///
   /// @param smproxy The source proxy
+  /// @return Reference to this object
   ProtoSurfaceMaterialT<BinningType>& operator=(
       ProtoSurfaceMaterialT<BinningType>&& smproxy) noexcept = default;
 
   /// Scale operation - dummy implementation
   ///
+  /// @return Reference to this object
   ProtoSurfaceMaterialT<BinningType>& scale(double /*factor*/) final {
     return (*this);
   }
 
   /// Return the BinUtility
+  /// @return Reference to the binning
   const BinningType& binning() const { return (m_binning); }
 
   /// Return method for full material description of the Surface - from local
@@ -85,17 +91,28 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
     return (m_materialSlab);
   }
 
+  /// @copydoc ISurfaceMaterial::localAxisDirections() const
+  std::vector<AxisDirection> localAxisDirections() const final { return {}; }
+
   /// Return method for full material description of the Surface - from the
   /// global coordinates
   ///
   /// @return will return dummy material
-  const MaterialSlab& materialSlab(const Vector3& /*gp*/) const final {
+  /// @deprecated Use materialSlab(const Vector2&) with a prior
+  ///             Surface::globalToLocal() call instead.
+  [[deprecated(
+      "Use materialSlab(const Vector2& lp) with a prior "
+      "Surface::globalToLocal() call instead")]] const MaterialSlab&
+  materialSlab(const Vector3& /*gp*/) const final {
     return (m_materialSlab);
   }
+
+  using ISurfaceMaterial::materialSlab;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the output stream
+  /// @return The output stream
   std::ostream& toStream(std::ostream& sl) const final {
     sl << "Acts::ProtoSurfaceMaterial : " << std::endl;
     sl << m_binning << std::endl;
@@ -110,9 +127,16 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   MaterialSlab m_materialSlab = MaterialSlab::Nothing();
 };
 
+/// @brief Type alias for a prototype surface material using BinUtility
+/// A surface material implementation that uses BinUtility for binning
 using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
 
-using ProtoGridSurfaceMaterial =
-    ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>;
+/// @brief Type alias for a prototype surface material using a multi-axis
+/// binning description
+/// A surface material implementation that carries a MultiAxisSpec2D whose
+/// deferred axes are resolved against the surface during material mapping
+using ProtoGridSurfaceMaterial = ProtoSurfaceMaterialT<MultiAxisSpec2D>;
+
+/// @}
 
 }  // namespace Acts

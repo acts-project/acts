@@ -25,10 +25,10 @@ class SteppingActionList : public G4UserSteppingAction {
 
   explicit SteppingActionList(const Config &cfg) : m_cfg(cfg) {}
 
-  void UserSteppingAction(const G4Step *step) override {
+  void UserSteppingAction(const G4Step *stepPtr) override {
     for (const auto &action : m_cfg.actions) {
-      if (action) {
-        action->UserSteppingAction(step);
+      if (action != nullptr) {
+        action->UserSteppingAction(stepPtr);
       }
     }
   }

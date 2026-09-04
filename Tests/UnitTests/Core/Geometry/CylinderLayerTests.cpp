@@ -19,16 +19,18 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-namespace Acts::Test::Layers {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Layers)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 /// Unit test for creating compliant/non-compliant CylinderLayer object
 BOOST_AUTO_TEST_CASE(CylinderLayerConstruction) {
@@ -57,10 +59,10 @@ BOOST_AUTO_TEST_CASE(CylinderLayerConstruction) {
   // construct with thickness:
   auto pCylinderLayerWithThickness =
       CylinderLayer::create(pTransform, pCylinder, nullptr, thickness);
-  CHECK_CLOSE_REL(pCylinderLayerWithThickness->thickness(), thickness, 1e-6);
+  CHECK_CLOSE_REL(pCylinderLayerWithThickness->layerThickness(), thickness,
+                  1e-6);
   // with an approach descriptor...
-  std::unique_ptr<ApproachDescriptor> ad(
-      new GenericApproachDescriptor(aSurfaces));
+  auto ad(std::make_unique<GenericApproachDescriptor>(aSurfaces));
   auto adPtr = ad.get();
   auto pCylinderLayerWithApproachDescriptor = CylinderLayer::create(
       pTransform, pCylinder, nullptr, thickness, std::move(ad));
@@ -89,4 +91,4 @@ BOOST_AUTO_TEST_CASE(CylinderLayerProperties) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test::Layers
+}  // namespace ActsTests

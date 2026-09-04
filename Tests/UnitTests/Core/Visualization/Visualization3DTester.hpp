@@ -15,7 +15,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-namespace Acts::Test {
+namespace ActsTests {
 
 /// This is a test function that tests the validity of an obj stream
 /// It tests for special characters that are not allowed to be contained
@@ -222,4 +222,4 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
   return errorStrings;
 }
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

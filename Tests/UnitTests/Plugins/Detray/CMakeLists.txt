@@ -1,4 +1,8 @@
 set(unittest_extra_libraries ActsPluginDetray)
-add_unittest(DetrayConverter DetrayConverterTests.cpp)
-add_unittest(DetrayGeometryConverter DetrayGeometryConverterTests.cpp)
-add_unittest(DetrayMaterialConverter DetrayMaterialConverterTests.cpp)
+add_unittest(DetrayPayloadConverter DetrayPayloadConverterTests.cpp)
+target_link_libraries(
+    ActsUnitTestDetrayPayloadConverter
+    PUBLIC detray::svgtools
+)
+
+add_unittest(DetrayMaterialConversion DetrayMaterialConversionTests.cpp)

@@ -19,7 +19,7 @@ cmake -B <build> -S <source> \
 This plugin is known to build without errors with (as of September 2022)
 
 - [GCC](https://gcc.gnu.org) versions 8 and 9
-- [CUDA](https://developer.nvidia.com/cuda-zone) v11.5.1
+- [CUDA](https://developer.nvidia.com/cuda) v11.5.1
 - [libtorch](https://pytorch.org/) v1.10.2 for CUDA version 10.2 and cxx-11-abi ([download](https://download.pytorch.org/libtorch/cu102/libtorch-cxx11-abi-shared-with-deps-1.10.2%2Bcu102.zip))
 
 *For the ONNX backend:*

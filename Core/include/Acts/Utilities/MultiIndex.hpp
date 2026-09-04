@@ -37,9 +37,11 @@ class MultiIndex {
 
   /// The type of their underlying storage value.
   using Value = T;
+  /// Number of levels in the multi-index hierarchy
   static constexpr std::size_t kNumLevels = sizeof...(BitsPerLevel);
 
   /// Construct a MultiIndex with all levels set to zero.
+  /// @return MultiIndex with all levels initialized to zero
   static constexpr MultiIndex Zeros() { return MultiIndex(0u); }
   /// Construct a MultiIndex from values for multiple level.
   ///
@@ -48,6 +50,8 @@ class MultiIndex {
   /// as a regular constructor, constructing a MultiIndex from a single
   /// encoded value and encoding only the first level would have the same
   /// signature and could not be distinguished.
+  /// @param us Values for each index level to encode
+  /// @return MultiIndex encoded with the provided level values
   template <typename... Us>
   static constexpr MultiIndex Encode(Us&&... us) {
     static_assert(sizeof...(Us) <= kNumLevels,
@@ -62,27 +66,42 @@ class MultiIndex {
   }
 
   /// Construct a MultiIndex from an already encoded value.
+  /// @param encoded Pre-encoded multi-index value
   explicit constexpr MultiIndex(Value encoded) : m_value(encoded) {}
   /// Construct a default MultiIndex with undefined values for each level.
   MultiIndex() = default;
+  /// @brief Copy constructor
   MultiIndex(const MultiIndex&) = default;
+  /// @brief Non-const copy constructor
   MultiIndex(MultiIndex&) = default;
+  /// @brief Copy assignment operator
+  /// @return Reference to this MultiIndex
   MultiIndex& operator=(const MultiIndex&) = default;
+  /// @brief Move assignment operator
+  /// @return Reference to this MultiIndex
   MultiIndex& operator=(MultiIndex&&) noexcept = default;
   /// Allow setting the MultiIndex from an already encoded value.
+  /// @param encoded Pre-encoded multi-index value to assign
+  /// @return Reference to this MultiIndex for chaining
   constexpr MultiIndex& operator=(Value encoded) {
     m_value = encoded;
     return *this;
   }
 
   /// Get the encoded value of all index levels.
+  /// @return The complete encoded multi-index value
   constexpr Value value() const { return m_value; }
   /// Get the value for the index level.
+  /// @param lvl Level index to retrieve
+  /// @return Value stored at the specified level
   constexpr Value level(std::size_t lvl) const {
     assert((lvl < kNumLevels) && "Index level outside allowed range");
     return (m_value >> shift(lvl)) & mask(lvl);
   }
   /// Set the value of the index level.
+  /// @param lvl Level index to set
+  /// @param val Value to set for the specified level
+  /// @return Reference to this MultiIndex for chaining
   constexpr MultiIndex& set(std::size_t lvl, Value val) {
     assert((lvl < kNumLevels) && "Index level outside allowed range");
     if (val > maxValue(lvl)) {
@@ -100,13 +119,17 @@ class MultiIndex {
     return *this;
   }
 
-  // Return the maximum allowed value for this level
+  /// @brief Return the maximum allowed value for a specific index level
+  /// @param lvl Level index to query maximum value for
+  /// @return Maximum value that can be stored at the specified level
   constexpr std::size_t maxValue(std::size_t lvl) const {
     assert((lvl < kNumLevels) && "Index level outside allowed range");
     return (1 << s_bits.at(lvl)) - 1;
   }
 
   /// Create index with the selected level increased and levels below zeroed.
+  /// @param lvl Level to increment for creating the sibling
+  /// @return New MultiIndex with the next sibling at the specified level
   constexpr MultiIndex makeNextSibling(std::size_t lvl) const {
     assert((lvl < kNumLevels) && "Index level outside allowed range");
     // remove lower levels by shifting the upper levels to the left edge
@@ -115,6 +138,8 @@ class MultiIndex {
     return MultiIndex{(upper + 1u) << shift(lvl)};
   }
   /// Create index with every level below the selected level maximized.
+  /// @param lvl Level below which all levels are maximized
+  /// @return New MultiIndex representing the last descendant
   constexpr MultiIndex makeLastDescendant(std::size_t lvl) const {
     assert((lvl < kNumLevels) && "Index level outside allowed range");
     // mask everything below the selected level
@@ -124,6 +149,8 @@ class MultiIndex {
   }
 
   /// Get the number of bits for the associated level
+  /// @param lvl Level index to query
+  /// @return Number of bits allocated for the specified level
   static constexpr std::size_t bits(std::size_t lvl) {
     assert((lvl < kNumLevels) && "Index level outside allowed range");
     return s_bits[lvl];

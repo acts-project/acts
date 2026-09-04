@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Geant4/Geant4Converters.hpp"
+#include "ActsPlugins/Geant4/Geant4Converters.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -24,13 +24,13 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <iterator>
 #include <numbers>
 #include <stdexcept>
 #include <utility>
-#include <vector>
 
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"
@@ -44,7 +44,9 @@
 #include "G4VPhysicalVolume.hh"
 #include "G4VSolid.hh"
 
-Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
+using namespace Acts;
+
+Transform3 ActsPlugins::Geant4AlgebraConverter::transform(
     const G4ThreeVector& g4Trans) {
   Transform3 gTransform = Transform3::Identity();
   Vector3 scaledTrans =
@@ -53,7 +55,7 @@ Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
   return gTransform;
 }
 
-Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
+Transform3 ActsPlugins::Geant4AlgebraConverter::transform(
     const G4RotationMatrix& g4Rot, const G4ThreeVector& g4Trans) {
   // Create the translation
   Vector3 translation(scale * g4Trans[0], scale * g4Trans[1],
@@ -68,14 +70,14 @@ Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
   return transform;
 }
 
-Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
+Transform3 ActsPlugins::Geant4AlgebraConverter::transform(
     const G4Transform3D& g4Trf) {
   auto g4Rot = g4Trf.getRotation();
   auto g4Trans = g4Trf.getTranslation();
   return transform(g4Rot, g4Trans);
 }
 
-Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
+Transform3 ActsPlugins::Geant4AlgebraConverter::transform(
     const G4VPhysicalVolume& g4PhysVol) {
   // Get Rotation and translation
   auto g4Translation = g4PhysVol.GetTranslation();
@@ -89,9 +91,9 @@ Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
   return transform(g4Transform);
 }
 
-std::tuple<std::shared_ptr<Acts::CylinderBounds>, double>
-Acts::Geant4ShapeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
-  using B = Acts::CylinderBounds;
+std::tuple<std::shared_ptr<CylinderBounds>, double>
+ActsPlugins::Geant4ShapeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
+  using B = CylinderBounds;
 
   std::array<double, B::eSize> tArray = {};
   tArray[B::eR] =
@@ -114,9 +116,9 @@ Acts::Geant4ShapeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
   return {std::move(cBounds), thickness};
 }
 
-std::tuple<std::shared_ptr<Acts::RadialBounds>, double>
-Acts::Geant4ShapeConverter::radialBounds(const G4Tubs& g4Tubs) {
-  using B = Acts::RadialBounds;
+std::tuple<std::shared_ptr<RadialBounds>, double>
+ActsPlugins::Geant4ShapeConverter::radialBounds(const G4Tubs& g4Tubs) {
+  using B = RadialBounds;
 
   std::array<double, B::eSize> tArray = {};
   tArray[B::eMinR] = static_cast<double>(g4Tubs.GetInnerRadius());
@@ -137,18 +139,18 @@ Acts::Geant4ShapeConverter::radialBounds(const G4Tubs& g4Tubs) {
   return {std::move(rBounds), thickness};
 }
 
-std::shared_ptr<Acts::LineBounds> Acts::Geant4ShapeConverter::lineBounds(
+std::shared_ptr<LineBounds> ActsPlugins::Geant4ShapeConverter::lineBounds(
     const G4Tubs& g4Tubs) {
   auto r = static_cast<double>(g4Tubs.GetOuterRadius());
   auto hlZ = static_cast<double>(g4Tubs.GetZHalfLength());
   return std::make_shared<LineBounds>(r, hlZ);
 }
 
-std::tuple<std::shared_ptr<Acts::RectangleBounds>, std::array<int, 2u>, double>
-Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
-  std::vector<double> hG4XYZ = {static_cast<double>(g4Box.GetXHalfLength()),
-                                static_cast<double>(g4Box.GetYHalfLength()),
-                                static_cast<double>(g4Box.GetZHalfLength())};
+std::tuple<std::shared_ptr<RectangleBounds>, std::array<int, 2u>, double>
+ActsPlugins::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
+  std::array<double, 3> hG4XYZ = {static_cast<double>(g4Box.GetXHalfLength()),
+                                  static_cast<double>(g4Box.GetYHalfLength()),
+                                  static_cast<double>(g4Box.GetZHalfLength())};
 
   auto minAt = std::min_element(hG4XYZ.begin(), hG4XYZ.end());
   std::size_t minPos = std::distance(hG4XYZ.begin(), minAt);
@@ -177,8 +179,8 @@ Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
   return {std::move(rBounds), rAxes, thickness};
 }
 
-std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>, double>
-Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
+std::tuple<std::shared_ptr<TrapezoidBounds>, std::array<int, 2u>, double>
+ActsPlugins::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
   // primary parameters
   double hlX0 = static_cast<double>(g4Trd.GetXHalfLength1());
   double hlX1 = static_cast<double>(g4Trd.GetXHalfLength2());
@@ -186,7 +188,7 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
   double hlY1 = static_cast<double>(g4Trd.GetYHalfLength2());
   double hlZ = static_cast<double>(g4Trd.GetZHalfLength());
 
-  std::vector<double> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5, hlZ};
+  std::array<double, 3> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5, hlZ};
 
   auto minAt = std::min_element(dXYZ.begin(), dXYZ.end());
   std::size_t minPos = std::distance(dXYZ.begin(), minAt);
@@ -230,8 +232,8 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
   return {std::move(tBounds), rAxes, thickness};
 }
 
-std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>, double>
-Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trap& g4Trap) {
+std::tuple<std::shared_ptr<TrapezoidBounds>, std::array<int, 2u>, double>
+ActsPlugins::Geant4ShapeConverter::trapezoidBounds(const G4Trap& g4Trap) {
   // primary parameters
   auto y1 = static_cast<double>(g4Trap.GetYHalfLength1());
   auto y2 = static_cast<double>(g4Trap.GetYHalfLength2());
@@ -244,12 +246,12 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trap& g4Trap) {
   auto z = static_cast<double>(g4Trap.GetZHalfLength());
 
   double hlX0 = (x1 + x2) * 0.5;
-  double hlX1 = 2 * z * tan(theta) * cos(phi) + (x3 + x4) * 0.5;
+  double hlX1 = 2 * z * std::tan(theta) * std::cos(phi) + (x3 + x4) * 0.5;
   double hlY0 = y1;
-  double hlY1 = y2 + 2 * z * tan(theta) * sin(phi);
+  double hlY1 = y2 + 2 * z * std::tan(theta) * std::sin(phi);
   double hlZ = z;
 
-  std::vector<double> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5, hlZ};
+  std::array<double, 3> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5, hlZ};
 
   auto minAt = std::ranges::min_element(dXYZ);
   std::size_t minPos = std::distance(dXYZ.begin(), minAt);
@@ -296,8 +298,8 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trap& g4Trap) {
   return std::make_tuple(std::move(tBounds), rAxes, thickness);
 }
 
-std::tuple<std::shared_ptr<Acts::PlanarBounds>, std::array<int, 2u>, double>
-Acts::Geant4ShapeConverter::planarBounds(const G4VSolid& g4Solid) {
+std::tuple<std::shared_ptr<PlanarBounds>, std::array<int, 2u>, double>
+ActsPlugins::Geant4ShapeConverter::planarBounds(const G4VSolid& g4Solid) {
   const G4Box* box = dynamic_cast<const G4Box*>(&g4Solid);
   if (box != nullptr) {
     auto [rBounds, axes, thickness] = rectangleBounds(*box);
@@ -310,40 +312,40 @@ Acts::Geant4ShapeConverter::planarBounds(const G4VSolid& g4Solid) {
     return {std::move(tBounds), axes, thickness};
   }
 
-  std::shared_ptr<Acts::PlanarBounds> pBounds = nullptr;
+  std::shared_ptr<PlanarBounds> pBounds = nullptr;
   std::array<int, 2u> rAxes = {};
   double rThickness = 0.;
   return {std::move(pBounds), rAxes, rThickness};
 }
 
 namespace {
-Acts::Transform3 axesOriented(const Acts::Transform3& toGlobalOriginal,
-                              const std::array<int, 2u>& axes) {
+Transform3 axesOriented(const Transform3& toGlobalOriginal,
+                        const std::array<int, 2u>& axes) {
   auto originalRotation = toGlobalOriginal.rotation();
   auto colX = originalRotation.col(std::abs(axes[0u]));
   auto colY = originalRotation.col(std::abs(axes[1u]));
-  colX *= std::copysign(1, axes[0u]);
-  colY *= std::copysign(1, axes[1u]);
-  Acts::Vector3 colZ = colX.cross(colY);
+  colX *= std::copysign(1., axes[0u]);
+  colY *= std::copysign(1., axes[1u]);
+  Vector3 colZ = colX.cross(colY);
 
-  Acts::Transform3 orientedTransform = Acts::Transform3::Identity();
-  orientedTransform.matrix().block(0, 0, 3, 1) = colX;
-  orientedTransform.matrix().block(0, 1, 3, 1) = colY;
-  orientedTransform.matrix().block(0, 2, 3, 1) = colZ;
-  orientedTransform.matrix().block(0, 3, 3, 1) = toGlobalOriginal.translation();
+  Transform3 orientedTransform = Transform3::Identity();
+  orientedTransform.matrix().block<3, 1>(0, 0) = colX;
+  orientedTransform.matrix().block<3, 1>(0, 1) = colY;
+  orientedTransform.matrix().block<3, 1>(0, 2) = colZ;
+  orientedTransform.matrix().block<3, 1>(0, 3) = toGlobalOriginal.translation();
 
   return orientedTransform;
 }
 }  // namespace
 
-std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
+std::shared_ptr<Surface> ActsPlugins::Geant4PhysicalVolumeConverter::surface(
     const G4VPhysicalVolume& g4PhysVol, const Transform3& toGlobal,
     bool convertMaterial, double compressed) {
   // Get the logical volume
   auto g4LogVol = g4PhysVol.GetLogicalVolume();
   auto g4Solid = g4LogVol->GetSolid();
 
-  auto assignMaterial = [&](Acts::Surface& sf, double moriginal,
+  auto assignMaterial = [&](Surface& sf, double moriginal,
                             double mcompressed) -> void {
     auto g4Material = g4LogVol->GetMaterial();
     if (convertMaterial && g4Material != nullptr) {
@@ -367,8 +369,8 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
       auto [bounds, axes, original] =
           Geant4ShapeConverter{}.rectangleBounds(*g4Box);
       auto orientedToGlobal = axesOriented(toGlobal, axes);
-      surface = Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
-                                                        std::move(bounds));
+      surface = Surface::makeShared<PlaneSurface>(orientedToGlobal,
+                                                  std::move(bounds));
       assignMaterial(*surface, original, compressed);
       return surface;
     } else {
@@ -384,8 +386,8 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
       auto [bounds, axes, original] =
           Geant4ShapeConverter{}.trapezoidBounds(*g4Trd);
       auto orientedToGlobal = axesOriented(toGlobal, axes);
-      surface = Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
-                                                        std::move(bounds));
+      surface = Surface::makeShared<PlaneSurface>(orientedToGlobal,
+                                                  std::move(bounds));
       assignMaterial(*surface, original, compressed);
       return surface;
     } else {
@@ -401,8 +403,8 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
       auto [bounds, axes, original] =
           Geant4ShapeConverter{}.trapezoidBounds(*g4Trap);
       auto orientedToGlobal = axesOriented(toGlobal, axes);
-      surface = Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
-                                                        std::move(bounds));
+      surface = Surface::makeShared<PlaneSurface>(orientedToGlobal,
+                                                  std::move(bounds));
       assignMaterial(*surface, original, compressed);
       return surface;
     } else {
@@ -421,18 +423,16 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
         (diffR < diffZ && forcedType == Surface::SurfaceType::Other)) {
       auto [bounds, originalT] = Geant4ShapeConverter{}.cylinderBounds(*g4Tubs);
       original = originalT;
-      surface = Acts::Surface::makeShared<CylinderSurface>(toGlobal,
-                                                           std::move(bounds));
+      surface =
+          Surface::makeShared<CylinderSurface>(toGlobal, std::move(bounds));
     } else if (forcedType == Surface::SurfaceType::Disc ||
                forcedType == Surface::SurfaceType::Other) {
       auto [bounds, originalT] = Geant4ShapeConverter{}.radialBounds(*g4Tubs);
       original = originalT;
-      surface =
-          Acts::Surface::makeShared<DiscSurface>(toGlobal, std::move(bounds));
+      surface = Surface::makeShared<DiscSurface>(toGlobal, std::move(bounds));
     } else if (forcedType == Surface::SurfaceType::Straw) {
       auto bounds = Geant4ShapeConverter{}.lineBounds(*g4Tubs);
-      surface =
-          Acts::Surface::makeShared<StrawSurface>(toGlobal, std::move(bounds));
+      surface = Surface::makeShared<StrawSurface>(toGlobal, std::move(bounds));
 
     } else {
       throw std::runtime_error("Can not convert 'G4Tubs' into forced shape.");
@@ -444,7 +444,7 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
   return nullptr;
 }
 
-Acts::Material Acts::Geant4MaterialConverter::material(
+Material ActsPlugins::Geant4MaterialConverter::material(
     const G4Material& g4Material, double compression) {
   auto X0 = g4Material.GetRadlen();
   auto L0 = g4Material.GetNuclearInterLength();
@@ -471,18 +471,17 @@ Acts::Material Acts::Geant4MaterialConverter::material(
                                    compression * Rho);
 }
 
-std::shared_ptr<Acts::HomogeneousSurfaceMaterial>
-Acts::Geant4MaterialConverter::surfaceMaterial(const G4Material& g4Material,
-                                               double original,
-                                               double compressed) {
+std::shared_ptr<HomogeneousSurfaceMaterial>
+ActsPlugins::Geant4MaterialConverter::surfaceMaterial(
+    const G4Material& g4Material, double original, double compressed) {
   double compression = original / compressed;
   return std::make_shared<HomogeneousSurfaceMaterial>(
       MaterialSlab(material(g4Material, compression), compressed));
 }
 
-std::shared_ptr<Acts::CylinderVolumeBounds>
-Acts::Geant4VolumeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
-  using C = Acts::CylinderVolumeBounds;
+std::shared_ptr<CylinderVolumeBounds>
+ActsPlugins::Geant4VolumeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
+  using C = CylinderVolumeBounds;
 
   std::array<double, C::eSize> tArray = {};
   tArray[C::eMinR] = static_cast<double>(g4Tubs.GetInnerRadius());

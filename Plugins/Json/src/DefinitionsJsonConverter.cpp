@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/DefinitionsJsonConverter.hpp"
+#include "ActsPlugins/Json/DefinitionsJsonConverter.hpp"
 
 void Acts::to_json(nlohmann::json& j, const Direction& direction) {
   j = direction.sign();

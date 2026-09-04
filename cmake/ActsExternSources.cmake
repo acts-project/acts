@@ -1,44 +1,23 @@
 set(ACTS_ACTSVG_SOURCE
-    "URL;https://github.com/acts-project/actsvg/archive/refs/tags/v${_acts_actsvg_version}.tar.gz;URL_HASH;SHA256=75944cbc4444d3099764f19f6fa5fbf9f2b81e3ac776b5874746add74a7cd0f8"
+    "URL;https://github.com/acts-project/actsvg/archive/refs/tags/v${_acts_actsvg_version}.tar.gz;URL_HASH;SHA256=0f428fba284abbed60614633a68ea2e7e490bedf8f7ec9b2f3cb7c14caa70107"
     CACHE STRING
     "Source to take ACTSVG from"
 )
 mark_as_advanced(ACTS_ACTSVG_SOURCE)
 
 set(ACTS_VECMEM_SOURCE
-    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v${_acts_vecmem_version}.tar.gz;URL_HASH;SHA256=6032279e8fc8bdb48d39c4ac19ffe561bcc53576e36f71ee2ed3ed75835f1af9"
+    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v${_acts_vecmem_version}.tar.gz;URL_HASH;SHA256=af8c125edf83637f92c43dade7ffc64e8f611c79c77804286a56c9de5cadaa90"
     CACHE STRING
     "Source to take VECMEM from"
 )
 mark_as_advanced(ACTS_VECMEM_SOURCE)
 
-set(ACTS_ALGEBRAPLUGINS_SOURCE
-    "URL;https://github.com/acts-project/algebra-plugins/archive/refs/tags/v${_acts_algebraplugins_version}.tar.gz;URL_HASH;SHA256=c2081b399b7f4e004bebd5bf8250ed9596b113002fe445bca7fdac24d2c5932c"
-    CACHE STRING
-    "Source to take ALGEBRAPLUGINS from"
-)
-mark_as_advanced(ACTS_ALGEBRAPLUGINS_SOURCE)
-
 set(ACTS_COVFIE_SOURCE
-    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v${_acts_covfie_version}.tar.gz;URL_HASH;SHA256=e9cd0546c7bc9539f440273bbad303c97215ccd87403cedb4aa387a313938d57"
+    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v${_acts_covfie_version}.tar.gz;URL_HASH;SHA256=6eff65e05118d3007c689e3529a62bb1674348ac1b0f0f32afd953c62d1b8890"
     CACHE STRING
     "Source to take COVFIE from"
 )
 mark_as_advanced(ACTS_COVFIE_SOURCE)
-
-set(ACTS_DETRAY_SOURCE
-    "URL;https://github.com/acts-project/detray/archive/refs/tags/v${_acts_detray_version}.tar.gz;URL_HASH;SHA256=f13db54da9b888258ab73a963d5a4bc08b655cc4aef47935e486b7cbe43e0965"
-    CACHE STRING
-    "Source to take DETRAY from"
-)
-mark_as_advanced(ACTS_DETRAY_SOURCE)
-
-set(ACTS_TRACCC_SOURCE
-    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v${_acts_traccc_version}.tar.gz;URL_HASH;SHA256=e283bffbb8057b24a40b063f91db0efa7438d89fa6d822d22709a06b6b0f9124"
-    CACHE STRING
-    "Source to take TRACCC from"
-)
-mark_as_advanced(ACTS_TRACCC_SOURCE)
 
 set(ACTS_FRNN_SOURCE
     "GIT_REPOSITORY;https://github.com/hrzhao76/FRNN/;GIT_TAG;5f8a48b0022300cd2863119f5646a5f31373e0c8"
@@ -48,11 +27,37 @@ set(ACTS_FRNN_SOURCE
 mark_as_advanced(ACTS_FRNN_SOURCE)
 
 set(ACTS_NLOHMANNJSON_SOURCE
-    "URL;https://github.com/nlohmann/json/archive/refs/tags/v${_acts_nlohmanjson_version}.tar.gz;URL_HASH;SHA256=5daca6ca216495edf89d167f808d1d03c4a4d929cef7da5e10f135ae1540c7e4"
+    "URL;https://github.com/nlohmann/json/archive/refs/tags/v${_acts_nlohmanjson_version}.tar.gz;URL_HASH;SHA256=0d8ef5af7f9794e3263480193c491549b2ba6cc74bb018906202ada498a79406"
     CACHE STRING
     "Source to take nlohmann_json from"
 )
 mark_as_advanced(ACTS_NLOHMANN_JSON_SOURCE)
+
+# translate version string to the historical Mille release naming convention
+string(REPLACE "." "-" _acts_mille_release_string ${_acts_mille_version})
+set(ACTS_MILLE_SOURCE
+    "URL;https://github.com/millepede-project/mille/archive/refs/tags/V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=2dec8402201938c7b2d7680db30aff19fd06dd06a420dbde45f57de2ce50d2ff"
+    CACHE STRING
+    "Source to take Mille from"
+)
+mark_as_advanced(ACTS_MILLE_SOURCE)
+
+# translate version string to the historical GBL release naming convention
+string(REPLACE "." "-" _acts_gbl_release_string ${_acts_gbl_version})
+set(ACTS_GBL_SOURCE
+    "URL;https://github.com/GeneralBrokenLines/GeneralBrokenLines/archive/refs/tags/V${_acts_gbl_release_string}.tar.gz;URL_HASH;SHA256=d3e574b1838a9d28d52ce0b206c73ec8dc57e5a3b81257571e39556d0d18bb82"
+    CACHE STRING
+    "Source to take General Broken Lines (GBL) from"
+)
+mark_as_advanced(ACTS_GBL_SOURCE)
+# translate version string to the historical Millepede release naming convention
+string(REPLACE "." "-" _acts_mp2_release_string ${_acts_mp2_version})
+set(ACTS_MP2_SOURCE
+    "URL;https://github.com/millepede-project/millepede-ii/archive/refs/tags/V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=037bbfcd3aca2d6497a5609f35bc4a96258d285290996468241dcedd9aa9d172"
+    CACHE STRING
+    "Source to take Millepede-II from"
+)
+mark_as_advanced(ACTS_MP2_SOURCE)
 
 set(ACTS_EIGEN3_SOURCE
     "URL;https://gitlab.com/libeigen/eigen/-/archive/${_acts_eigen3_version}/${_acts_eigen3_version}.tar.gz;URL_HASH;SHA256=ba6ef66ba2d319e0a871a267889411c550d4bdf5bc7c62f86c60276913f3f4ba"
@@ -74,3 +79,17 @@ set(ACTS_ANNOY_SOURCE
     "Source to take Annoy from"
 )
 mark_as_advanced(ACTS_ANNOY_SOURCE)
+
+set(ACTS_ODD_SOURCE
+    "GIT_REPOSITORY;https://github.com/OpenDataDetector/OpenDataDetector.git;GIT_TAG;v6.0.2"
+    CACHE STRING
+    "Source to take OpenDataDetector from"
+)
+mark_as_advanced(ACTS_ODD_SOURCE)
+
+set(ACTS_MODULEMAPGRAPH_SOURCE
+    "GIT_REPOSITORY;https://gitlab.cern.ch/gnn4itkteam/ModuleMapGraph;GIT_TAG;1.4.1"
+    CACHE STRING
+    "Source to take ModuleMapGraph from"
+)
+mark_as_advanced(ACTS_MODULEMAPGRAPH_SOURCE)

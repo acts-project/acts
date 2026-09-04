@@ -17,9 +17,15 @@ from acts.examples import (
     WhiteBoard,
     AlgorithmContext,
     ProcessCode,
+    MaterialMapping,
+)
+
+from acts.examples.root import (
     RootMaterialTrackReader,
     RootMaterialTrackWriter,
-    MaterialMapping,
+)
+
+from acts.examples.json import (
     JsonMaterialWriter,
     JsonFormat,
 )
@@ -53,7 +59,7 @@ def runMaterialMapping(
     s.addReader(
         RootMaterialTrackReader(
             level=acts.logging.INFO,
-            outputMaterialTracks="material-tracks",
+            outputMaterialTracks="material_tracks",
             fileList=[
                 os.path.join(
                     inputDir,
@@ -66,9 +72,9 @@ def runMaterialMapping(
 
     stepper = StraightLineStepper()
 
-    mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
+    mmAlgCfg = MaterialMapping.Config(context.recoGeoContext, context.magFieldContext)
     mmAlgCfg.trackingGeometry = trackingGeometry
-    mmAlgCfg.inputMaterialTracks = "material-tracks"
+    mmAlgCfg.inputMaterialTracks = "material_tracks"
 
     if mapSurface:
         navigator = Navigator(
@@ -88,7 +94,7 @@ def runMaterialMapping(
         processRepresenting=True,
         processBoundaries=True,
         processVolumes=True,
-        context=context.geoContext,
+        context=context.recoGeoContext,
     )
 
     jmw = JsonMaterialWriter(

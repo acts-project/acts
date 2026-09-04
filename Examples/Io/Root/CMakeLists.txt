@@ -1,8 +1,6 @@
 acts_add_library(
     ExamplesIoRoot
-    SHARED
     src/RootMeasurementWriter.cpp
-    src/RootMaterialDecorator.cpp
     src/RootMaterialWriter.cpp
     src/RootMaterialTrackReader.cpp
     src/RootMaterialTrackWriter.cpp
@@ -13,7 +11,8 @@ acts_add_library(
     src/RootSeedWriter.cpp
     src/RootSimHitWriter.cpp
     src/RootSimHitReader.cpp
-    src/RootSpacepointWriter.cpp
+    src/RootSpacePointPerformanceWriter.cpp
+    src/RootSpacePointWriter.cpp
     src/RootTrackParameterWriter.cpp
     src/RootTrackStatesWriter.cpp
     src/RootTrackSummaryReader.cpp
@@ -23,12 +22,17 @@ acts_add_library(
     src/RootVertexReader.cpp
     src/RootVertexWriter.cpp
     src/RootAthenaDumpReader.cpp
+    src/RootAthenaDumpWriter.cpp
     src/RootNuclearInteractionParametersWriter.cpp
     src/detail/NuclearInteractionParametrisation.cpp
-    src/TrackFinderPerformanceWriter.cpp
-    src/TrackFinderNTupleWriter.cpp
-    src/TrackFitterPerformanceWriter.cpp
-    src/VertexNTupleWriter.cpp
+    src/RootPatternRecognitionPerformanceWriter.cpp
+    src/RootTrackFinderNTupleWriter.cpp
+    src/RootTrackParameterPerformanceWriter.cpp
+    src/RootVertexNTupleWriter.cpp
+    src/RootMuonSpacePointWriter.cpp
+    src/RootMuonSpacePointReader.cpp
+    src/RootMeasurementPerformanceWriter.cpp
+    src/RootFileHasher.cpp
 )
 target_include_directories(
     ActsExamplesIoRoot
@@ -44,8 +48,23 @@ target_link_libraries(
         Acts::ExamplesTruthTracking
         Acts::ExamplesMaterialMapping
         Threads::Threads
-    PRIVATE ROOT::Core ROOT::Hist ROOT::Tree
+    PRIVATE ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer
 )
+
+# RootFileHasher prefers Boost.Hash2 (SHA-256), which is available from Boost
+# 1.86 onwards. On older Boost it falls back to ROOT's TMD5 (MD5).
+if(Boost_VERSION VERSION_GREATER_EQUAL "1.86.0")
+    target_compile_definitions(
+        ActsExamplesIoRoot
+        PRIVATE ACTS_ROOT_FILE_HASHER_USE_BOOST_HASH2
+    )
+    target_link_libraries(ActsExamplesIoRoot PRIVATE Boost::boost)
+else()
+    message(
+        WARNING
+        "Boost ${Boost_VERSION} < 1.86.0: RootFileHasher falls back to MD5 (ROOT TMD5) instead of SHA-256 (Boost.Hash2)."
+    )
+endif()
 
 root_generate_dictionary(
   ActsExamplesIoRootDict MODULE ActsExamplesIoRoot LINKDEF LinkDef.hpp

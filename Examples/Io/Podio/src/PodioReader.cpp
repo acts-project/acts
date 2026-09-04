@@ -8,9 +8,9 @@
 
 #include "ActsExamples/Io/Podio/PodioReader.hpp"
 
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 
 #include <filesystem>
 
@@ -19,11 +19,9 @@
 
 namespace ActsExamples {
 
-namespace detail {
-
-class PodioReaderImpl {
+class PodioReader::Impl {
  public:
-  explicit PodioReaderImpl(PodioReader::Config cfg, PodioReader& parent)
+  explicit Impl(PodioReader::Config cfg, PodioReader& parent)
       : m_frameWriteHandle(&parent, "EDM4hepFrameOutput"),
         m_cfg(std::move(cfg)) {
     m_eventsRange = std::make_pair(0, reader().getEntries("events"));
@@ -40,7 +38,7 @@ class PodioReaderImpl {
     m_frameWriteHandle.initialize(m_cfg.outputFrame);
   }
 
-  Acts::PodioUtil::ROOTReader& reader() {
+  ActsPlugins::PodioUtil::ROOTReader& reader() {
     bool exists = false;
     auto& reader = m_reader.local(exists);
     if (!exists) {
@@ -53,14 +51,12 @@ class PodioReaderImpl {
   WriteDataHandle<podio::Frame> m_frameWriteHandle;
   std::pair<std::size_t, std::size_t> m_eventsRange;
 
-  tbb::enumerable_thread_specific<Acts::PodioUtil::ROOTReader> m_reader;
+  tbb::enumerable_thread_specific<ActsPlugins::PodioUtil::ROOTReader> m_reader;
   PodioReader::Config m_cfg;
 };
 
-}  // namespace detail
-
 PodioReader::PodioReader(const Config& config, Acts::Logging::Level level)
-    : m_impl(std::make_unique<detail::PodioReaderImpl>(config, *this)),
+    : m_impl(std::make_unique<Impl>(config, *this)),
       m_logger(Acts::getDefaultLogger("PodioReader", level)) {}
 
 PodioReader::~PodioReader() = default;

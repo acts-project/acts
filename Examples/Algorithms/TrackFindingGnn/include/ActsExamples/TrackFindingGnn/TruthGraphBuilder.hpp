@@ -8,26 +8,24 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Graph.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 namespace ActsExamples {
 
 /// Algorithm to create a truth graph for computing truth metrics
-/// Requires spacepoints and particles collection
+/// Requires space points and particles collection
 /// Either provide a measurements particles map, or a measurement simhit map +
 /// simhits
 class TruthGraphBuilder final : public IAlgorithm {
  public:
   struct Config {
-    /// Input spacepoint collection
+    /// Input space point collection
     std::string inputSpacePoints;
     /// Input particles collection
     std::string inputParticles;
@@ -47,12 +45,12 @@ class TruthGraphBuilder final : public IAlgorithm {
     bool uniqueModules = false;
   };
 
-  TruthGraphBuilder(Config cfg, Acts::Logging::Level lvl);
+  explicit TruthGraphBuilder(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ~TruthGraphBuilder() override = default;
 
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   const Config& config() const { return m_cfg; }
 
@@ -60,22 +58,22 @@ class TruthGraphBuilder final : public IAlgorithm {
   Config m_cfg;
 
   std::vector<std::int64_t> buildFromMeasurements(
-      const SimSpacePointContainer& spacepoints,
+      const SpacePointContainer& spacePoints,
       const SimParticleContainer& particles,
-      const IndexMultimap<ActsFatras::Barcode>& measPartMap) const;
+      const MeasurementParticlesMap& measPartMap) const;
 
   std::vector<std::int64_t> buildFromSimhits(
-      const SimSpacePointContainer& spacepoints,
-      const IndexMultimap<Index>& measHitMap, const SimHitContainer& simhits,
+      const SpacePointContainer& spacePoints,
+      const MeasurementSimHitsMap& measHitMap, const SimHitContainer& simhits,
       const SimParticleContainer& particles) const;
 
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
-                                                            "InputSpacePoints"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<IndexMultimap<ActsFatras::Barcode>> m_inputMeasParticlesMap{
+  ReadDataHandle<MeasurementParticlesMap> m_inputMeasParticlesMap{
       this, "InputMeasParticlesMap"};
   ReadDataHandle<SimHitContainer> m_inputSimhits{this, "InputSimhits"};
-  ReadDataHandle<IndexMultimap<Index>> m_inputMeasSimhitMap{
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasSimhitMap{
       this, "InputMeasSimhitMap"};
 
   WriteDataHandle<Graph> m_outputGraph{this, "OutputGraph"};

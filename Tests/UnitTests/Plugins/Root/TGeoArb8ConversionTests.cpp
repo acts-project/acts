@@ -10,13 +10,13 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Root/TGeoSurfaceConverter.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
+#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -32,13 +32,18 @@
 #include "TGeoVolume.h"
 #include "TView.h"
 
-namespace Acts::Test {
+using namespace Acts;
+using namespace ActsPlugins;
 
-GeometryContext tgContext = GeometryContext();
+namespace ActsTests {
+
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 ViewConfig red{.color = {200, 0, 0}};
 ViewConfig green{.color = {0, 200, 0}};
 ViewConfig blue{.color = {0, 0, 200}};
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 /// @brief Unit test to convert a TGeoTrd2 into a Plane
 ///
@@ -69,8 +74,8 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   gGeoManager->CloseGeometry();
 
   // Check the 4 possible ways
-  std::vector<std::string> allowedAxes = {"XY*", "xy*", "Xy*", "xY*",
-                                          "YX*", "yx*", "Yx*", "yX*"};
+  std::vector<TGeoAxes> allowedAxes = {"XYZ", "xyZ", "XyZ", "xYZ",
+                                       "YXZ", "yxZ", "YxZ", "yXZ"};
 
   std::size_t iarb8 = 0;
   for (const auto &axes : allowedAxes) {
@@ -85,7 +90,7 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
     BOOST_CHECK_NE(bounds, nullptr);
 
     // Check if the surface is the (negative) identity
-    auto transform = plane->transform(tgContext);
+    auto transform = plane->localToGlobalTransform(tgContext);
     auto rotation = transform.rotation();
     GeometryView3D::drawSurface(objVis, *plane, tgContext);
     const Vector3 center = plane->center(tgContext);
@@ -102,9 +107,9 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   }
 
   // Check exceptions for not allowed axis definition
-  std::vector<std::string> notAllowed = {
-      "XZ*", "xz*", "xZ*", "Xz*", "ZX*", "zx*", "zX*", "Zx*",
-      "YZ*", "yz*", "yZ*", "Yz*", "ZY*", "zy*", "Zy*", "zY*"};
+  std::vector<TGeoAxes> notAllowed = {"XZY", "xzY", "xZY", "XzY", "ZXY", "zxY",
+                                      "zXY", "ZxY", "YZX", "yzX", "yZX", "YzX",
+                                      "ZYX", "zyX", "ZyX", "zYX"};
   for (const auto &naxis : notAllowed) {
     BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                       *gGeoIdentity, naxis, 1),
@@ -112,4 +117,6 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

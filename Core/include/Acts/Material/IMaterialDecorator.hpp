@@ -15,6 +15,8 @@ class TrackingVolume;
 
 /// @class IMaterialDecorator
 ///
+/// @ingroup material
+///
 /// Virtual base class for decorators that allow to load
 /// material onto a TrackingGeometry. The geometry allows material
 /// to be assigned either to surfaces or to volumes, hence there are

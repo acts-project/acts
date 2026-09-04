@@ -18,6 +18,8 @@ namespace Acts {
 
 /// @class HomogeneousVolumeMaterial
 ///
+/// @ingroup material
+///
 /// It extends the IVolumeMaterial base class to describe a simple
 /// homogeneous material in a volume
 class HomogeneousVolumeMaterial : public IVolumeMaterial {
@@ -43,6 +45,7 @@ class HomogeneousVolumeMaterial : public IVolumeMaterial {
   /// Assignment operator
   ///
   /// @param hvm is the source material
+  /// @return Reference to this object for assignment chaining
   HomogeneousVolumeMaterial& operator=(const HomogeneousVolumeMaterial& hvm) =
       default;
 
@@ -51,11 +54,13 @@ class HomogeneousVolumeMaterial : public IVolumeMaterial {
   /// @param position is the request position for the material call
   /// @note @p position is ignored
   /// @todo interface to change including 'cell'
+  /// @return The homogeneous material properties at any position
   const Material material(const Vector3& position) const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl The outoput stream
+  /// @return Reference to the output stream for method chaining
   std::ostream& toStream(std::ostream& sl) const final;
 
  private:

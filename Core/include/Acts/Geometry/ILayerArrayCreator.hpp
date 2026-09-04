@@ -29,7 +29,7 @@ using LayerVector = std::vector<LayerPtr>;
 ///
 /// Interface class ILayerArrayCreators, it inherits from IAlgTool.
 ///
-/// It receives the LayerVector and creaets an array with NaivgationLayer
+/// It receives the LayerVector and creates an array with NaivgationLayer
 /// objects
 /// filled in between.
 class ILayerArrayCreator {

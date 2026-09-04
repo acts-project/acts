@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Plugins/Root/RootMaterialTrackIo.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsPlugins/Root/RootMaterialTrackIo.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -38,9 +38,9 @@ class RootMaterialTrackReader : public IReader {
   /// @brief The nested configuration struct
   struct Config {
     /// material collection to read
-    std::string outputMaterialTracks = "material-tracks";
+    std::string outputMaterialTracks = "material_tracks";
     /// name of the output tree
-    std::string treeName = "material-tracks";
+    std::string treeName = "material_tracks";
     /// List of input files
     std::vector<std::string> fileList;
 
@@ -65,7 +65,7 @@ class RootMaterialTrackReader : public IReader {
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(const ActsExamples::AlgorithmContext& context) override;
+  ProcessCode read(const AlgorithmContext& context) override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -99,7 +99,7 @@ class RootMaterialTrackReader : public IReader {
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  Acts::RootMaterialTrackIo m_accessor;
+  ActsPlugins::RootMaterialTrackIo m_accessor;
 };
 
 }  // namespace ActsExamples

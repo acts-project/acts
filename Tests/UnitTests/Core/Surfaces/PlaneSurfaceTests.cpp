@@ -18,31 +18,40 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <memory>
 #include <numbers>
 #include <string>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
-BOOST_AUTO_TEST_SUITE(PlaneSurfaces)
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
+
 /// Unit test for creating compliant/non-compliant PlaneSurface object
 BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
   /// Test default construction
@@ -167,17 +176,17 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 
   /// Test intersection
   Vector3 direction{0., 0., 1.};
-  auto sfIntersection = planeSurfaceObject
-                            ->intersect(tgContext, offSurface, direction,
-                                        BoundaryTolerance::None())
-                            .closest();
+  Intersection3D sfIntersection =
+      planeSurfaceObject
+          ->intersect(tgContext, offSurface, direction,
+                      BoundaryTolerance::None())
+          .closest();
   Intersection3D expectedIntersect{Vector3{0, 1, 2}, 4.,
                                    IntersectionStatus::reachable};
   BOOST_CHECK(sfIntersection.isValid());
   BOOST_CHECK_EQUAL(sfIntersection.position(), expectedIntersect.position());
   BOOST_CHECK_EQUAL(sfIntersection.pathLength(),
                     expectedIntersect.pathLength());
-  BOOST_CHECK_EQUAL(&sfIntersection.surface(), planeSurfaceObject.get());
 
   /// Test pathCorrection
   CHECK_CLOSE_REL(planeSurfaceObject->pathCorrection(tgContext, offSurface,
@@ -356,7 +365,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
       planeSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
                                                                globalPosition);
   // For plane surface, this should be identity matrix
-  CHECK_CLOSE_ABS(loc3DToLocBound, (ActsMatrix<2, 3>::Identity()), 1e-10);
+  CHECK_CLOSE_ABS(loc3DToLocBound, (Matrix<2, 3>::Identity()), 1e-10);
 
   // (c) Test the derivative of bound parameters (only test loc0, loc1 here)
   // w.r.t. alignment parameters
@@ -384,7 +393,7 @@ BOOST_AUTO_TEST_SUITE(PlaneSurfaceMerging)
 auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 // Create a test context
-GeometryContext gctx = GeometryContext();
+GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 auto rBounds = std::make_shared<const RectangleBounds>(1., 2.);
 
@@ -542,6 +551,52 @@ BOOST_AUTO_TEST_CASE(XYDirection) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_CASE(PlaneSurfaceMaterialAssignment) {
+  auto rBounds = std::make_shared<RectangleBounds>(100., 100.);
+  auto surface =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds);
+  MaterialSlab slab(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
+
+  // HomogeneousSurfaceMaterial is always valid
+  auto homMat = std::make_shared<HomogeneousSurfaceMaterial>(slab);
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(homMat));
+  BOOST_CHECK_NE(surface->surfaceMaterial(), nullptr);
+
+  // nullptr clears the material
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(nullptr));
+  BOOST_CHECK_EQUAL(surface->surfaceMaterial(), nullptr);
+
+  // 1D AxisX - valid for plane
+  BinUtility buX(10, -100.f, 100.f, Acts::open, AxisDirection::AxisX);
+  auto matX = std::make_shared<BinnedSurfaceMaterial>(
+      buX, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matX));
+
+  // 1D AxisY - valid for plane
+  BinUtility buY(10, -100.f, 100.f, Acts::open, AxisDirection::AxisY);
+  auto matY = std::make_shared<BinnedSurfaceMaterial>(
+      buY, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matY));
+
+  // 2D {AxisX, AxisY} - valid for plane
+  BinUtility bu2D(5, -100.f, 100.f, Acts::open, AxisDirection::AxisX);
+  bu2D += BinUtility(3, -100.f, 100.f, Acts::open, AxisDirection::AxisY);
+  auto mat2D = std::make_shared<BinnedSurfaceMaterial>(
+      bu2D, MaterialSlabMatrix(3, MaterialSlabVector(5, slab)));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(mat2D));
+
+  // Wrong axis directions - should throw
+  for (auto badDir : {AxisDirection::AxisRPhi, AxisDirection::AxisZ,
+                      AxisDirection::AxisR, AxisDirection::AxisPhi}) {
+    BinUtility buBad(10, 0.f, 10.f, Acts::open, badDir);
+    auto matBad = std::make_shared<BinnedSurfaceMaterial>(
+        buBad, MaterialSlabVector(10, slab));
+    BOOST_CHECK_THROW(surface->assignSurfaceMaterial(matBad),
+                      std::invalid_argument);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

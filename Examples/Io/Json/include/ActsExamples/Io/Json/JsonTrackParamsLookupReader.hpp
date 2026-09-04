@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupReader.hpp"
+#include "ActsPlugins/Json/GridJsonConverter.hpp"
 
 #include <fstream>
 

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
+#include "ActsPlugins/DD4hep/DD4hepLayerBuilder.hpp"
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
@@ -17,14 +17,14 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
-#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepMaterialHelpers.hpp"
+#include "ActsPlugins/Root/TGeoPrimitivesHelper.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -43,7 +43,9 @@
 #include <TGeoMatrix.h>
 #include <boost/algorithm/string.hpp>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 DD4hepLayerBuilder::DD4hepLayerBuilder(const DD4hepLayerBuilder::Config& config,
                                        std::unique_ptr<const Logger> logger)
@@ -131,27 +133,24 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
         // extract the boundaries
         double rMin = tube->GetRmin() * UnitConstants::cm;
         double rMax = tube->GetRmax() * UnitConstants::cm;
-        double zMin =
-            (transform.translation() -
-             transform.rotation().col(2) * tube->GetDz() * UnitConstants::cm)
-                .z();
-        double zMax =
-            (transform.translation() +
-             transform.rotation().col(2) * tube->GetDz() * UnitConstants::cm)
-                .z();
-        if (zMin > zMax) {
-          std::swap(zMin, zMax);
-        }
+
+        // For disc layers, since ProtoLayer uses local coordinates,
+        // we can simply use ±dz directly in local coordinates
+        double dz = tube->GetDz() * UnitConstants::cm;
+        double zMin = -dz;
+        double zMax = +dz;
+
         // check if layer has surfaces
         if (layerSurfaces.empty()) {
           ACTS_VERBOSE(" Disc layer has no sensitive surfaces.");
           // in case no surfaces are handed over the layer thickness will be
           // set to a default value to allow attaching material layers
-          double z = (zMin + zMax) * 0.5;
-          // create layer without surfaces
-          // manually create a proto layer
-          double eiz = (z != 0.) ? z - m_cfg.defaultThickness : 0.;
-          double eoz = (z != 0.) ? z + m_cfg.defaultThickness : 0.;
+          double eiz = (transform.translation().z() != 0.)
+                           ? -m_cfg.defaultThickness
+                           : 0.;
+          double eoz = (transform.translation().z() != 0.)
+                           ? +m_cfg.defaultThickness
+                           : 0.;
           pl.extent.range(AxisDirection::AxisZ).set(eiz, eoz);
           pl.extent.range(AxisDirection::AxisR).set(rMin, rMax);
           pl.envelope[AxisDirection::AxisR] = {0., 0.};
@@ -198,7 +197,7 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
       // In case the layer is sensitive
       if (detElement.volume().isSensitive()) {
         // Create the sensitive surface
-        auto sensitiveSurf = createSensitiveSurface(detElement, true);
+        auto sensitiveSurf = createSensitiveSurface(detElement);
         // Create the surfaceArray
         auto sArray = std::make_unique<SurfaceArray>(sensitiveSurf);
 
@@ -387,7 +386,7 @@ void DD4hepLayerBuilder::resolveSensitive(
       dd4hep::DetElement childDetElement = child.second;
       if (childDetElement.volume().isSensitive()) {
         // create the surface
-        surfaces.push_back(createSensitiveSurface(childDetElement, false));
+        surfaces.push_back(createSensitiveSurface(childDetElement));
       }
       resolveSensitive(childDetElement, surfaces);
     }
@@ -395,12 +394,12 @@ void DD4hepLayerBuilder::resolveSensitive(
 }
 
 std::shared_ptr<const Surface> DD4hepLayerBuilder::createSensitiveSurface(
-    const dd4hep::DetElement& detElement, bool isDisc) const {
-  std::string detAxis =
-      getParamOr<std::string>("axis_definitions", detElement, "XYZ");
+    const dd4hep::DetElement& detElement) const {
+  auto detAxis = TGeoAxes::parse(
+      getParamOr<std::string>("axis_definitions", detElement, "XYZ"));
   // Create the corresponding detector element !- memory leak --!
   auto dd4hepDetElement = m_cfg.detectorElementFactory(
-      detElement, detAxis, UnitConstants::cm, isDisc, nullptr);
+      detElement, detAxis, UnitConstants::cm, nullptr);
 
   detElement.addExtension<DD4hepDetectorElementExtension>(
       new dd4hep::rec::StructExtension(
@@ -426,11 +425,10 @@ Transform3 DD4hepLayerBuilder::convertTransform(
 
 std::shared_ptr<DD4hepDetectorElement>
 DD4hepLayerBuilder::defaultDetectorElementFactory(
-    const dd4hep::DetElement& detElement, const std::string& detAxis,
-    double thickness, bool isDisc,
+    const dd4hep::DetElement& detElement, TGeoAxes detAxis, double scale,
     std::shared_ptr<const ISurfaceMaterial> surfaceMaterial) {
-  return std::make_shared<DD4hepDetectorElement>(
-      detElement, detAxis, thickness, isDisc, std::move(surfaceMaterial));
+  return std::make_shared<DD4hepDetectorElement>(detElement, detAxis, scale,
+                                                 std::move(surfaceMaterial));
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesAmbiguityResolution
-    SHARED
     src/GreedyAmbiguityResolutionAlgorithm.cpp
     src/ScoreBasedAmbiguityResolutionAlgorithm.cpp
 )

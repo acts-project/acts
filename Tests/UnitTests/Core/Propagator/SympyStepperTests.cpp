@@ -13,23 +13,29 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
+#include "Acts/Propagator/detail/SympyBoundToFreeScaling.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
+#include <array>
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -39,17 +45,18 @@
 #include <utility>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 static constexpr auto eps = 3 * std::numeric_limits<double>::epsilon();
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 /// @brief Aborter for the case that a particle leaves the detector or reaches
@@ -125,6 +132,8 @@ struct StepCollector {
   }
 };
 
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
+
 /// These tests are aiming to test whether the state setup is working properly
 BOOST_AUTO_TEST_CASE(sympy_stepper_state_test) {
   // Set up some variables
@@ -149,7 +158,6 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_state_test) {
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_CHECK_EQUAL(esState.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
   BOOST_CHECK(!esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
@@ -253,13 +261,13 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   es.transportCovarianceToCurvilinear(esState);
   BOOST_CHECK_NE(esState.cov, cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
 
   // Perform a step without and with covariance transport
   esState.cov = cov;
 
   esState.covTransport = false;
+  const BoundToFreeMatrix jacToGlobalBefore = esState.jacToGlobal;
   es.step(esState, navDir, nullptr).value();
   CHECK_CLOSE_COVARIANCE(esState.cov, cov, eps);
   BOOST_CHECK_NE(es.position(esState).norm(), newPos.norm());
@@ -267,7 +275,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   BOOST_CHECK_EQUAL(es.charge(esState), charge);
   BOOST_CHECK_LT(es.time(esState), newTime);
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
-  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
+  BOOST_CHECK_EQUAL(esState.jacToGlobal, jacToGlobalBefore);
 
   esState.covTransport = true;
   es.step(esState, navDir, nullptr).value();
@@ -277,7 +285,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   BOOST_CHECK_EQUAL(es.charge(esState), charge);
   BOOST_CHECK_LT(es.time(esState), newTime);
   BOOST_CHECK_NE(esState.derivative, FreeVector::Zero());
-  BOOST_CHECK_NE(esState.jacTransport, FreeMatrix::Identity());
+  BOOST_CHECK_NE(esState.jacToGlobal, jacToGlobalBefore);
 
   /// Test the state reset
   // Construct the parameters
@@ -286,7 +294,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   double time2 = 7.5;
   double absMom2 = 8.5;
   double charge2 = 1.;
-  BoundSquareMatrix cov2 = 8.5 * Covariance::Identity();
+  BoundMatrix cov2 = 8.5 * Covariance::Identity();
   BoundTrackParameters cp2 = BoundTrackParameters::createCurvilinear(
       makeVector4(pos2, time2), dir2, charge2 / absMom2, cov2,
       ParticleHypothesis::pion());
@@ -303,7 +311,6 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
     copy.cov = state.cov;
     copy.jacobian = state.jacobian;
     copy.jacToGlobal = state.jacToGlobal;
-    copy.jacTransport = state.jacTransport;
     copy.derivative = state.derivative;
     copy.pathAccumulated = state.pathAccumulated;
     copy.stepSize = state.stepSize;
@@ -324,7 +331,6 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   // Test all components
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, esState.jacToGlobal);
-  BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
   BOOST_CHECK(esStateCopy.covTransport);
   BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
@@ -360,23 +366,24 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::Type::Navigator),
                   navDir * 2., eps);
 
+  const auto getNavigationTarget = [&](const Surface& s,
+                                       const BoundaryTolerance& bt) {
+    auto [intersection, intersectionIndex] =
+        s.intersect(tgContext, es.position(esState),
+                    navDir * es.direction(esState), bt)
+            .closestWithIndex();
+    return NavigationTarget(intersection, intersectionIndex, s, bt);
+  };
+
   // Test the step size modification in the context of a surface
   es.updateStepSize(
-      esState,
-      targetSurface
-          ->intersect(tgContext, es.position(esState),
-                      navDir * es.direction(esState), BoundaryTolerance::None())
-          .closest(),
+      esState, getNavigationTarget(*targetSurface, BoundaryTolerance::None()),
       navDir, ConstrainedStep::Type::Navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
   esState.stepSize.setUser(navDir * stepSize);
   es.releaseStepSize(esState, ConstrainedStep::Type::Navigator);
   es.updateStepSize(
-      esState,
-      targetSurface
-          ->intersect(tgContext, es.position(esState),
-                      navDir * es.direction(esState), BoundaryTolerance::None())
-          .closest(),
+      esState, getNavigationTarget(*targetSurface, BoundaryTolerance::None()),
       navDir, ConstrainedStep::Type::Navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 
@@ -397,7 +404,6 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   es.transportCovarianceToBound(esState, *plane);
   BOOST_CHECK_NE(esState.cov, cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
 
   // Update in context of a surface
@@ -416,8 +422,211 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   // Test a case where no step size adjustment is required
   esState.options.stepTolerance = 2. * 4.4258e+09;
   double h0 = esState.stepSize.value();
-  es.step(esState, Direction::Forward(), nullptr);
+  BOOST_CHECK(es.step(esState, Direction::Forward(), nullptr).ok());
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
 }
 
-}  // namespace Acts::Test
+/// Checks d(time)/d(q/p) against a central difference of the free time. Zero
+/// field makes every step exactly `h`, so the difference is taken at fixed path
+/// length, as the jacobian assumes. The charge is varied because the derivative
+/// scales with 1/q^2.
+BOOST_AUTO_TEST_CASE(sympy_stepper_time_qop_derivative) {
+  auto bField = std::make_shared<ConstantBField>(Vector3::Zero());
+  SympyStepper stepper(bField);
+
+  constexpr double h = 100_mm;
+
+  auto stepOnce = [&](double qop, const ParticleHypothesis& particle) {
+    SympyStepper::Options options(tgContext, mfContext);
+    options.maxStepSize = h;
+    options.initialStepSize = h;
+    auto start = BoundTrackParameters::createCurvilinear(
+        Vector4::Zero(), 0.4, 0.9, qop, Covariance::Identity(), particle);
+    SympyStepper::State state = stepper.makeState(options);
+    stepper.initialize(state, start);
+    BOOST_REQUIRE(stepper.step(state, Direction::Forward(), nullptr).ok());
+    BOOST_REQUIRE_EQUAL(state.pathAccumulated, h);
+    return state;
+  };
+
+  // qop scales with the charge to keep p = |q| / |q/p| at 1 GeV.
+  for (const float absQ : {1.f, 2.f, 3.f}) {
+    const ParticleHypothesis particle = ParticleHypothesis::pionLike(absQ);
+    const double qop = absQ / 1_GeV;
+    const double dqop = 1e-6 * qop;
+
+    // The start is curvilinear, so the q/p column begins as e_qop and after
+    // one step its time row is d(t)/d(q/p), once the storage scaling is undone.
+    SympyStepper::State state = stepOnce(qop, particle);
+    detail::sympy::fromScaledBoundToFree(state.jacToGlobal,
+                                         state.pars[eFreeQOverP]);
+    const double dtdqop = state.jacToGlobal(eFreeTime, eBoundQOverP);
+    const double difference = (stepOnce(qop + dqop, particle).pars[eFreeTime] -
+                               stepOnce(qop - dqop, particle).pars[eFreeTime]) /
+                              (2 * dqop);
+
+    CHECK_CLOSE_REL(dtdqop, difference, 1e-8);
+  }
+}
+
+/// The transport jacobian has to be accumulated as `D * jacTransport`. In a
+/// constant field the direction sub-block commutes, so the wrong order only
+/// shows up in the q/p column after several steps. Hence the comparison
+/// against the EigenStepper over a long chain of steps.
+BOOST_AUTO_TEST_CASE(sympy_stepper_covariance_matches_eigen) {
+  auto bField = std::make_shared<ConstantBField>(Vector3(0.3_T, 0, 2_T));
+  SympyStepper sympyStepper(bField);
+  EigenStepper<> eigenStepper(bField);
+
+  SympyStepper::Options sympyOptions(tgContext, mfContext);
+  sympyOptions.maxStepSize = 100_mm;
+  sympyOptions.initialStepSize = 30_mm;
+  EigenStepper<>::Options eigenOptions(tgContext, mfContext);
+  eigenOptions.maxStepSize = 100_mm;
+  eigenOptions.initialStepSize = 30_mm;
+
+  Covariance cov = Covariance::Identity();
+  cov(eBoundLoc0, eBoundLoc0) = 10_mm;
+  cov(eBoundLoc1, eBoundLoc1) = 10_mm;
+  cov(eBoundQOverP, eBoundQOverP) = 1e-4;
+
+  // d(time)/d(q/p) scales with 1/q^2, so the charge has to vary for this
+  // comparison to constrain the time row at all.
+  const std::array particles = {ParticleHypothesis::pion(),
+                                ParticleHypothesis::pionLike(2.f)};
+
+  for (int track = 0; track < 4; ++track) {
+    const double phi = 0.3 * track;
+    const double theta = 0.7 + 0.25 * track;
+    const double qop = (track % 2 == 0 ? 1. : -1.) / ((1. + track) * 1_GeV);
+    const ParticleHypothesis& particle = particles.at(track % particles.size());
+
+    auto start = BoundTrackParameters::createCurvilinear(
+        Vector4::Zero(), phi, theta, qop, cov, particle);
+
+    auto sympyState = sympyStepper.makeState(sympyOptions);
+    sympyStepper.initialize(sympyState, start);
+    auto eigenState = eigenStepper.makeState(eigenOptions);
+    eigenStepper.initialize(eigenState, start);
+
+    for (int i = 0; i < 150; ++i) {
+      BOOST_REQUIRE(
+          sympyStepper.step(sympyState, Direction::Forward(), nullptr).ok());
+      BOOST_REQUIRE(
+          eigenStepper.step(eigenState, Direction::Forward(), nullptr).ok());
+    }
+
+    const Covariance sympyCov =
+        *std::get<0>(sympyStepper.curvilinearState(sympyState)).covariance();
+    const Covariance eigenCov =
+        *std::get<0>(eigenStepper.curvilinearState(eigenState)).covariance();
+    // the tolerance scales with sqrt(var_i * var_j) which makes the small q/p
+    // correlations comparable at all. both steppers agree to ~1e-12 here while
+    // the wrong jacobian order deviates by ~1e-2.
+    CHECK_CLOSE_COVARIANCE(sympyCov, eigenCov, 1e-9);
+  }
+}
+
+/// A dense step applies the energy loss with and without covariance transport.
+BOOST_AUTO_TEST_CASE(sympy_stepper_dense_energy_loss_without_covariance) {
+  auto bField = std::make_shared<ConstantBField>(Vector3(0, 0, 2_T));
+  SympyStepper stepper(bField);
+  const HomogeneousVolumeMaterial silicon(makeSilicon());
+
+  const double qop0 = 1. / 1_GeV;
+  auto run = [&](bool withCovariance) {
+    SympyStepper::Options options(tgContext, mfContext);
+    options.maxStepSize = 20_mm;
+    options.initialStepSize = 20_mm;
+    options.doDense = true;
+
+    std::optional<Covariance> cov;
+    if (withCovariance) {
+      cov = Covariance::Identity();
+    }
+    auto state = stepper.makeState(options);
+    stepper.initialize(state, BoundTrackParameters::createCurvilinear(
+                                  Vector4::Zero(), 0.4, 0.7, qop0, cov,
+                                  ParticleHypothesis::pion()));
+    for (int i = 0; i < 10; ++i) {
+      BOOST_REQUIRE(stepper.step(state, Direction::Forward(), &silicon).ok());
+    }
+    return stepper.qOverP(state);
+  };
+
+  // 200 mm of silicon is a few percent of a 1 GeV pion's momentum
+  BOOST_CHECK_GT(run(false), qop0);
+  CHECK_CLOSE_REL(run(false), run(true), 1e-12);
+}
+
+/// Backward propagation gives the energy back, following the convention of
+/// `PointwiseMaterialInteraction`.
+BOOST_AUTO_TEST_CASE(sympy_stepper_dense_energy_loss_reverses) {
+  auto bField = std::make_shared<ConstantBField>(Vector3(0, 0, 2_T));
+  SympyStepper stepper(bField);
+  const HomogeneousVolumeMaterial silicon(makeSilicon());
+
+  const double qop0 = 1. / 1_GeV;
+  SympyStepper::Options options(tgContext, mfContext);
+  options.maxStepSize = 20_mm;
+  options.initialStepSize = 20_mm;
+  options.doDense = true;
+
+  auto state = stepper.makeState(options);
+  stepper.initialize(
+      state, BoundTrackParameters::createCurvilinear(
+                 Vector4::Zero(), 0.4, 0.7, qop0, Covariance::Identity(),
+                 ParticleHypothesis::pion()));
+  for (int i = 0; i < 10; ++i) {
+    BOOST_REQUIRE(stepper.step(state, Direction::Forward(), &silicon).ok());
+  }
+  BOOST_CHECK_GT(stepper.qOverP(state), qop0);
+  for (int i = 0; i < 10; ++i) {
+    BOOST_REQUIRE(stepper.step(state, Direction::Backward(), &silicon).ok());
+  }
+  CHECK_SMALL(state.pathAccumulated, 1e-9);
+  // the residual is RK truncation error; the sign bug would be percents
+  CHECK_CLOSE_REL(stepper.qOverP(state), qop0, 1e-7);
+}
+
+/// The dense and the vacuum kernel transport the jacobian independently.
+/// Driving the dense kernel with vacuum material makes the two comparable.
+BOOST_AUTO_TEST_CASE(sympy_stepper_dense_kernel_matches_vacuum_kernel) {
+  auto bField = std::make_shared<ConstantBField>(Vector3(0.3_T, 0, 2_T));
+  SympyStepper stepper(bField);
+  const HomogeneousVolumeMaterial vacuum(Material::Vacuum());
+
+  // mode 0 is the vacuum kernel, 1 the dense kernel, 2 alternates
+  auto run = [&](int track, int mode) {
+    SympyStepper::Options options(tgContext, mfContext);
+    options.maxStepSize = 20_mm;
+    options.initialStepSize = 20_mm;
+    options.doDense = mode != 0;
+
+    Covariance cov = Covariance::Identity();
+    cov(eBoundQOverP, eBoundQOverP) = 1e-4;
+    auto state = stepper.makeState(options);
+    stepper.initialize(
+        state, BoundTrackParameters::createCurvilinear(
+                   Vector4::Zero(), 0.4 + 0.6 * track, 0.7 + 0.35 * track,
+                   (track % 2 == 0 ? 1. : -1.) / ((1. + track) * 1_GeV), cov,
+                   ParticleHypothesis::pion()));
+    for (int i = 0; i < 60; ++i) {
+      const IVolumeMaterial* material =
+          (mode == 1 || (mode == 2 && i % 2 == 0)) ? &vacuum : nullptr;
+      BOOST_REQUIRE(stepper.step(state, Direction::Forward(), material).ok());
+    }
+    return std::get<1>(stepper.curvilinearState(state, true));
+  };
+
+  for (int track = 0; track < 4; ++track) {
+    const BoundMatrix reference = run(track, 0);
+    for (int mode : {1, 2}) {
+      CHECK_CLOSE_OR_SMALL(run(track, mode), reference, 1e-11, 1e-12);
+    }
+  }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

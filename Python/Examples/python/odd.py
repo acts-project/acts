@@ -1,0 +1,187 @@
+import os
+import sys
+import math
+from pathlib import Path
+from typing import Optional
+import acts
+import acts.examples
+import warnings
+
+
+def getOpenDataDetectorDirectory():
+    odd_dir = os.environ.get("ODD_PATH")
+    if odd_dir is None:
+        raise RuntimeError("ODD_PATH environment variable not set")
+    odd_dir = Path(odd_dir)
+    return odd_dir
+
+
+_defaultMaterialDecoratorCache = {}
+
+
+def _defaultMaterialDecorator(odd_dir: Path, customLogLevel):
+    """Default ODD material decorator, memoized per material map file.
+
+    Building one costs ~50MB that is not released when the decorator (or the
+    detector it decorated) goes away, so a process that constructs the ODD a
+    few dozen times -- the python test suite -- pays that every time. The
+    decorator is only read from during decoration, so one instance can back
+    any number of detectors.
+    """
+    import acts.root
+
+    fileName = str(odd_dir / "data/odd-material-maps.root")
+    if fileName not in _defaultMaterialDecoratorCache:
+        _defaultMaterialDecoratorCache[fileName] = acts.root.RootMaterialDecorator(
+            fileName=fileName,
+            level=customLogLevel(minLevel=acts.logging.WARNING),
+        )
+    return _defaultMaterialDecoratorCache[fileName]
+
+
+def getOpenDataDetector(
+    materialDecorator=None,
+    misaligned=False,
+    odd_dir: Optional[Path] = None,
+    logLevel=acts.logging.INFO,
+    gen3=False,
+    constructionMethod=None,
+    buildTracker=True,
+    buildCalorimeter=True,
+    buildMuonSystem=False,
+):
+    """This function sets up the open data detector. Requires DD4hep.
+    Parameters
+    ----------
+    materialDecorator: Material Decorator, take RootMaterialDecorator if non is given
+    odd_dir: if not given, try to get via ODD_PATH environment variable
+    logLevel: logging level
+    constructionMethod: Gen3 conversion method enum value of
+      OpenDataDetector.Config.ConstructionMethod
+      use `ConstructionMethod.TGeo` for the TGeo-backed Gen3 path
+    buildTracker: build the silicon tracker (beam pipe, pixels, strips, solenoid)
+    buildCalorimeter: build the calorimeter, added in ODD v6
+    buildMuonSystem: build the muon system, added in ODD v6
+    """
+    import acts.examples.dd4hep
+
+    customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)
+
+    if odd_dir is None:
+        odd_dir = getOpenDataDetectorDirectory()
+    if not odd_dir.exists():
+        raise RuntimeError(f"OpenDataDetector not found at {odd_dir}")
+
+    # ODD v6 splits the detector into composable XML files. The shared
+    # definitions are always needed; the subsystems are opt-out. Only the
+    # tracker contributes to the ACTS tracking geometry, so simulation-only
+    # workflows can drop the calorimeter and muon system to avoid paying for
+    # geometry that is subsequently discarded.
+    odd_xml_dir = odd_dir / "xml"
+    xml_files = [odd_xml_dir / "OpenDataDetectorDefs.xml"]
+    if buildTracker:
+        xml_files.append(odd_xml_dir / "OpenDataDetectorTracker.xml")
+    if buildCalorimeter:
+        xml_files.append(odd_xml_dir / "OpenDataDetectorCalorimeter.xml")
+    if buildMuonSystem:
+        xml_files.append(odd_xml_dir / "OpenDataDetectorMuonSystem.xml")
+
+    for xml_file in xml_files:
+        if not xml_file.exists():
+            raise RuntimeError(f"OpenDataDetector XML not found at {xml_file}")
+    xml_files = [str(xml_file) for xml_file in xml_files]
+
+    env_vars = []
+    map_name = "libOpenDataDetector.components"
+    lib_name = None
+    if sys.platform == "linux":
+        env_vars = ["LD_LIBRARY_PATH"]
+        lib_name = "libOpenDataDetector.so"
+    elif sys.platform == "darwin":
+        env_vars = ["DYLD_LIBRARY_PATH", "DD4HEP_LIBRARY_PATH"]
+        lib_name = "libOpenDataDetector.dylib"
+
+    if lib_name is not None and len(env_vars) > 0:
+        found = False
+        for env_var in env_vars:
+            for lib_dir in os.environ.get(env_var, "").split(":"):
+                lib_dir = Path(lib_dir)
+                if (lib_dir / map_name).exists() and (lib_dir / lib_name).exists():
+                    found = True
+                    break
+        if not found:
+            msg = (
+                "Unable to find OpenDataDetector factory library. "
+                f"You might need to point {'/'.join(env_vars)} to the ODD install location."
+                f"It might be at {odd_dir / 'factory'}"
+            )
+            raise RuntimeError(msg)
+
+    if materialDecorator is None:
+        materialDecorator = _defaultMaterialDecorator(odd_dir, customLogLevel)
+
+    if gen3:
+        if misaligned:
+            raise InvalidArgumentError(
+                "Gen3 ODD currently does not support misalignment"
+            )
+
+        oddConfig = acts.examples.dd4hep.OpenDataDetector.Config(
+            xmlFileNames=xml_files,
+            name="OpenDataDetector",
+            logLevel=customLogLevel(),
+            dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
+        )
+        if constructionMethod is not None:
+            oddConfig.constructionMethod = constructionMethod
+        # Use default constructed geometry context. This will have to change if DD4hep gains alignment awareness.
+        gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            detector = acts.examples.dd4hep.OpenDataDetector(
+                config=oddConfig, gctx=gctx
+            )
+
+        return detector
+    else:
+        volumeRadiusCutsMap = {
+            28: [850.0],  # LStrip negative z
+            30: [850.0],  # LStrip positive z
+            23: [400.0, 550.0],  # SStrip negative z
+            25: [400.0, 550.0],  # SStrip positive z
+            16: [100.0],  # Pixels negative z
+            18: [100.0],  # Pixels positive z
+        }
+
+        def geoid_hook(geoid, surface):
+            gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+            if geoid.volume in volumeRadiusCutsMap:
+                r = math.sqrt(
+                    surface.center(gctx)[0] ** 2 + surface.center(gctx)[1] ** 2
+                )
+
+                geoid.extra = 1
+                for cut in volumeRadiusCutsMap[geoid.volume]:
+                    if r > cut:
+                        geoid.extra += 1
+
+            return geoid
+
+        dd4hepConfig = acts.examples.dd4hep.DD4hepDetector.Config(
+            xmlFileNames=xml_files,
+            name="OpenDataDetector",
+            logLevel=customLogLevel(),
+            dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
+            geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
+            materialDecorator=materialDecorator,
+        )
+
+        if misaligned:
+            dd4hepConfig.detectorElementFactory = (
+                acts.examples.dd4hep.alignedDD4hepDetectorElementFactory
+            )
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
+        return detector

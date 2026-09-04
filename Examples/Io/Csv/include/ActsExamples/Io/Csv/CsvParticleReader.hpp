@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include <Acts/Utilities/Logger.hpp>
 
 #include <cstddef>
 #include <memory>
@@ -20,7 +20,6 @@
 #include <utility>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Read particles in the TrackML comma-separated-value format.
 ///
@@ -55,7 +54,7 @@ class CsvParticleReader final : public IReader {
   std::pair<std::size_t, std::size_t> availableEvents() const override;
 
   /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) override;
+  ProcessCode read(const AlgorithmContext& ctx) override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

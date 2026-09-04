@@ -17,9 +17,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Intersection.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cstddef>
 #include <limits>
@@ -29,12 +27,14 @@
 #include "../Surfaces/SurfaceStub.hpp"
 #include "LayerStub.hpp"
 
-namespace Acts::Test::Layers {
+using namespace Acts;
+
+namespace ActsTests {
 
 // Build a default context for testing
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
-BOOST_AUTO_TEST_SUITE(Layers)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 /// Unit test for creating compliant/non-compliant GenericApproachDescriptor
 /// object
@@ -72,10 +72,10 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
   // registerLayer()
   BOOST_CHECK_NO_THROW(approachDescriptor.registerLayer(aLayer));
   // approachSurface
-  SurfaceIntersection surfIntersection = approachDescriptor.approachSurface(
+  NavigationTarget navigationTarget = approachDescriptor.approachSurface(
       tgContext, origin, zDir, boundaryTolerance, nearLimit, farLimit);
   double expectedIntersection = 20.0;  // property of SurfaceStub
-  CHECK_CLOSE_REL(surfIntersection.pathLength(), expectedIntersection, 1e-6);
+  CHECK_CLOSE_REL(navigationTarget.pathLength(), expectedIntersection, 1e-6);
   // containedSurfaces()
   BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().size(),
                     someSurfaces.size());
@@ -103,9 +103,9 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
 
   GenericApproachDescriptor gad(approachSurface);
 
-  auto sfIntersection =
-      gad.approachSurface(GeometryContext(), origin, direction,
-                          boundaryTolerance, nearLimit, farLimit);
+  auto sfIntersection = gad.approachSurface(
+      GeometryContext::dangerouslyDefaultConstruct(), origin, direction,
+      boundaryTolerance, nearLimit, farLimit);
 
   // No overstepping allowed, the preferred solution should be the forward one
   CHECK_CLOSE_ABS(sfIntersection.pathLength(), 10.5, s_epsilon);
@@ -115,4 +115,4 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Acts::Test::Layers
+}  // namespace ActsTests

@@ -83,7 +83,7 @@ struct EigenStepperDenseExtension {
     const auto& particleHypothesis = stepper.particleHypothesis(state);
     float mass = particleHypothesis.mass();
 
-    // i = 0 is used for setup and evaluation of k
+    // i = 0 is used for set up and evaluation of k
     if constexpr (i == 0) {
       // Set up for energy loss
       Vector3 position = stepper.position(state);

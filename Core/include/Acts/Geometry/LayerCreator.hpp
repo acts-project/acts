@@ -12,7 +12,6 @@
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -22,12 +21,14 @@
 #include <optional>
 #include <vector>
 
-namespace Acts {
-
-namespace Test {
+namespace ActsTests {
 struct LayerCreatorFixture;
 }
+
+namespace Acts {
+
 class Surface;
+class SurfaceArray;
 class SurfaceArrayCreator;
 class Layer;
 
@@ -40,10 +41,10 @@ using MutableLayerPtr = std::shared_ptr<Layer>;
 ///
 class LayerCreator {
  public:
-  friend Acts::Test::LayerCreatorFixture;
+  friend ActsTests::LayerCreatorFixture;
   ///  @struct Config
   ///  Configuration for the LayerCreator
-  ///  This is the nexted configuration struct for the LayerCreator class
+  ///  This is the nested configuration struct for the LayerCreator class
   struct Config {
     /// surface array helper
     std::shared_ptr<const SurfaceArrayCreator> surfaceArrayCreator = nullptr;
@@ -80,6 +81,7 @@ class LayerCreator {
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr cylinderLayer(
@@ -87,7 +89,8 @@ class LayerCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
       std::size_t binsZ, std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// returning a cylindrical layer
   ///
@@ -104,6 +107,7 @@ class LayerCreator {
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr cylinderLayer(
@@ -112,7 +116,8 @@ class LayerCreator {
       BinningType bTypePhi, BinningType bTypeZ,
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// returning a disc layer
   ///
@@ -129,6 +134,7 @@ class LayerCreator {
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr discLayer(
@@ -136,7 +142,8 @@ class LayerCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
       std::size_t binsPhi, std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// returning a disc layer
   ///
@@ -153,6 +160,7 @@ class LayerCreator {
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr discLayer(
@@ -161,7 +169,8 @@ class LayerCreator {
       BinningType bTypePhi,
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// returning a plane layer
   ///
@@ -182,6 +191,7 @@ class LayerCreator {
   /// @param [in] ad possibility to hand over a specific ApproachDescriptor,
   /// which is needed for material mapping. Otherwise the default
   /// ApproachDescriptor will be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr planeLayer(
@@ -190,13 +200,15 @@ class LayerCreator {
       std::size_t bins2, AxisDirection aDir,
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// Set the configuration object
   /// @param lcConfig is the configuration struct
   void setConfiguration(const Config& lcConfig);
 
-  /// Access th configuration object
+  /// Access the configuration object
+  /// @return Copy of the current configuration object
   Config getConfiguration() const;
 
   /// set logging instance
@@ -204,17 +216,10 @@ class LayerCreator {
   void setLogger(std::unique_ptr<const Logger> newLogger);
 
   /// associate surfaces contained by this layer to this layer
+  /// @param layer Layer to associate surfaces with
   void associateSurfacesToLayer(Layer& layer) const;
 
  private:
-  /// Validates that all the sensitive surfaces are actually accessible through
-  /// the binning
-  ///
-  /// @param gctx Geometry context to work with
-  /// @param sArray @c SurfaceArray instance to check
-  bool checkBinning(const GeometryContext& gctx,
-                    const SurfaceArray& sArray) const;
-
   /// configuration object
   Config m_cfg;
 

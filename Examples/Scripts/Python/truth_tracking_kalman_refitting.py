@@ -4,6 +4,11 @@ from pathlib import Path
 
 import acts
 import acts.examples
+from acts.examples.root import (
+    RootTrackStatesWriter,
+    RootTrackSummaryWriter,
+    RootTrackParameterPerformanceWriter,
+)
 
 from truth_tracking_kalman import runTruthTrackingKalman
 
@@ -17,8 +22,9 @@ def runRefittingKf(
     outputDir: Path,
     multipleScattering: bool = True,
     energyLoss: bool = True,
-    reverseFilteringMomThreshold=0 * u.GeV,
-    reverseFilteringCovarianceScaling=1.0,
+    reverseFilteringMomThreshold=float("inf"),
+    reverseFilteringCovarianceScaling=100.0,
+    useJosephFormulation: bool = False,
     s: acts.examples.Sequencer = None,
 ):
     s = runTruthTrackingKalman(
@@ -26,8 +32,9 @@ def runRefittingKf(
         field,
         digiConfigFile=digiConfigFile,
         outputDir=outputDir,
-        reverseFilteringMomThreshold=reverseFilteringMomThreshold,
+        reverseFilteringMomThreshold=0 * u.GeV,  # use direct smoothing
         reverseFilteringCovarianceScaling=reverseFilteringCovarianceScaling,
+        useJosephFormulation=useJosephFormulation,
         s=s,
     )
 
@@ -39,6 +46,7 @@ def runRefittingKf(
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": acts.logging.INFO,
         "chi2Cut": float("inf"),
+        "useJosephFormulation": useJosephFormulation,
     }
 
     s.addAlgorithm(
@@ -65,7 +73,7 @@ def runRefittingKf(
     )
 
     s.addWriter(
-        acts.examples.RootTrackStatesWriter(
+        RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",
@@ -77,7 +85,7 @@ def runRefittingKf(
     )
 
     s.addWriter(
-        acts.examples.RootTrackSummaryWriter(
+        RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",
@@ -87,7 +95,7 @@ def runRefittingKf(
     )
 
     s.addWriter(
-        acts.examples.TrackFitterPerformanceWriter(
+        RootTrackParameterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",

@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -31,12 +30,11 @@
 
 #include "FitterTestsCommon.hpp"
 
-namespace {
-
 using namespace Acts;
-using namespace Acts::Test;
 using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
+
+namespace ActsTests {
 
 using StraightPropagator =
     Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
@@ -64,7 +62,7 @@ Acts::BoundTrackParameters makeParameters() {
   stddev[Acts::eBoundPhi] = 2_degree;
   stddev[Acts::eBoundTheta] = 2_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-  Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  Acts::BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
   return Acts::BoundTrackParameters::createCurvilinear(
@@ -85,7 +83,7 @@ std::default_random_engine rng(42);
 auto makeDefaultKalmanFitterOptions() {
   KalmanFitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
-      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+      .connect<&testSourceLinkCalibratorStrict<VectorMultiTrajectory>>();
   extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
       &kfUpdater);
   extensions.smoother
@@ -99,9 +97,58 @@ auto makeDefaultKalmanFitterOptions() {
       PropagatorPlainOptions(tester.geoCtx, tester.magCtx));
 }
 
-}  // namespace
+/// Checks that the calibrator is never handed a track state whose "best
+/// available" parameters have not been computed yet, see
+/// https://github.com/acts-project/acts/issues/5777
+struct CalibratorContractChecker {
+  mutable std::size_t nCalls = 0;
 
-BOOST_AUTO_TEST_SUITE(TrackFittingKalmanFitter)
+  template <typename trajectory_t>
+  void operator()(const GeometryContext& gctx, const CalibrationContext& cctx,
+                  const SourceLink& sourceLink,
+                  typename trajectory_t::TrackStateProxy trackState) const {
+    // filtering and smoothing have not happened yet, so the corresponding
+    // components must not be allocated
+    BOOST_CHECK(!trackState.hasFiltered());
+    BOOST_CHECK(!trackState.hasSmoothed());
+    // consequently the best available parameters are the predicted ones. we
+    // compare the storage addresses to make sure no copy is involved
+    BOOST_REQUIRE(trackState.hasPredicted());
+    BOOST_CHECK_EQUAL(trackState.parameters().data(),
+                      trackState.predicted().data());
+    BOOST_CHECK_EQUAL(trackState.covariance().data(),
+                      trackState.predictedCovariance().data());
+    BOOST_CHECK(trackState.parameters().allFinite());
+    BOOST_CHECK(trackState.covariance().allFinite());
+
+    ++nCalls;
+
+    testSourceLinkCalibrator<trajectory_t>(gctx, cctx, sourceLink, trackState);
+  }
+};
+
+BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
+
+// The calibrator must see valid parameters. Before
+// https://github.com/acts-project/acts/issues/5777 the filtered parameters
+// were allocated up front, so `parameters()` returned uninitialized memory.
+BOOST_AUTO_TEST_CASE(CalibratorSeesValidParameters) {
+  auto start = makeParameters();
+  auto kfOptions = makeDefaultKalmanFitterOptions();
+
+  CalibratorContractChecker checker;
+  kfOptions.extensions.calibrator
+      .connect<&CalibratorContractChecker::operator()<VectorMultiTrajectory>>(
+          &checker);
+
+  bool expected_reversed = false;
+  bool expected_smoothed = true;
+  tester.test_ZeroFieldNoSurfaceForward(kfZero, kfOptions, start, rng,
+                                        expected_reversed, expected_smoothed,
+                                        true);
+
+  BOOST_CHECK_GT(checker.nCalls, 0u);
+}
 
 BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto start = makeParameters();
@@ -119,7 +166,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
   // regular smoothing
-  kfOptions.reversedFiltering = false;
+  kfOptions.reverseFiltering = false;
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
@@ -127,8 +174,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
                                           true);
 
   // reverse filtering instead of smoothing
-  kfOptions.reversedFiltering = true;
-  kfOptions.reversedFilteringCovarianceScaling = 100.0;
+  kfOptions.reverseFiltering = true;
+  kfOptions.reverseFilteringCovarianceScaling = 100.0;
   expected_reversed = true;
   expected_smoothed = false;
   tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
@@ -141,7 +188,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
   // regular smoothing
-  kfOptions.reversedFiltering = false;
+  kfOptions.reverseFiltering = false;
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldWithSurfaceBackward(kfZero, kfOptions, start, rng,
@@ -149,8 +196,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
                                            true);
 
   // reverse filtering instead of smoothing
-  kfOptions.reversedFiltering = true;
-  kfOptions.reversedFilteringCovarianceScaling = 100.0;
+  kfOptions.reverseFiltering = true;
+  kfOptions.reverseFilteringCovarianceScaling = 100.0;
   expected_reversed = true;
   expected_smoothed = false;
   tester.test_ZeroFieldWithSurfaceBackward(kfZero, kfOptions, start, rng,
@@ -218,8 +265,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
         .connect<&TestReverseFilteringLogic::operator()<VectorMultiTrajectory>>(
             &trfl);
 
-    kfOptions.reversedFiltering = reverse;
-    kfOptions.reversedFilteringCovarianceScaling = 100.0;
+    kfOptions.reverseFiltering = reverse;
+    kfOptions.reverseFilteringCovarianceScaling = 100.0;
 
     tester.test_ZeroFieldWithReverseFiltering(kfZero, kfOptions, start, rng,
                                               expected_reversed,
@@ -249,3 +296,5 @@ BOOST_AUTO_TEST_CASE(GlobalCovariance) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

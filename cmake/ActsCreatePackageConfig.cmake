@@ -17,6 +17,16 @@ configure_package_config_file(
     INSTALL_DESTINATION ${install_package_config_dir}
     PATH_VARS CMAKE_INSTALL_BINDIR CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR
 )
+configure_file(
+    ${CMAKE_CURRENT_LIST_DIR}/ActsGeometryModuleHelpers.cmake
+    ${PROJECT_BINARY_DIR}/ActsGeometryModuleHelpers.cmake
+    COPYONLY
+)
+configure_file(
+    ${CMAKE_CURRENT_LIST_DIR}/ActsDD4hepGeometryModuleHelpers.cmake
+    ${PROJECT_BINARY_DIR}/ActsDD4hepGeometryModuleHelpers.cmake
+    COPYONLY
+)
 
 # install cmake package configs
 install(
@@ -26,11 +36,70 @@ install(
     DESTINATION ${install_package_config_dir}
 )
 
+# For git repositories, patch ActsConfig.cmake at install time with fresh git hash
+if(_acts_is_git_repo)
+    install(
+        CODE
+            "
+        # Get git hash at install time
+        execute_process(
+            COMMAND git rev-parse HEAD
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE _install_git_hash
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET
+        )
+        execute_process(
+            COMMAND git rev-parse --short HEAD
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE _install_git_hash_short
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET
+        )
+        execute_process(
+            COMMAND git diff-index --quiet HEAD --
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            RESULT_VARIABLE _git_is_dirty
+            ERROR_QUIET
+        )
+
+        if(NOT _git_is_dirty EQUAL 0)
+            set(_install_git_hash \"\${_install_git_hash}-dirty\")
+            set(_install_git_hash_short \"\${_install_git_hash_short}-dirty\")
+        endif()
+
+        # Read the installed ActsConfig.cmake
+        set(_config_file \"\${CMAKE_INSTALL_PREFIX}/${install_package_config_dir}/ActsConfig.cmake\")
+        file(READ \"\${_config_file}\" _config_content)
+
+        # Replace the commit hash lines
+        string(REGEX REPLACE
+            \"set\\\\(Acts_COMMIT_HASH \\\"[^\\\"]*\\\"\\\\)\"
+            \"set(Acts_COMMIT_HASH \\\"\${_install_git_hash}\\\")\"
+            _config_content \"\${_config_content}\")
+        string(REGEX REPLACE
+            \"set\\\\(Acts_COMMIT_HASH_SHORT \\\"[^\\\"]*\\\"\\\\)\"
+            \"set(Acts_COMMIT_HASH_SHORT \\\"\${_install_git_hash_short}\\\")\"
+            _config_content \"\${_config_content}\")
+
+        # Write back the patched content
+        file(WRITE \"\${_config_file}\" \"\${_config_content}\")
+        "
+    )
+endif()
+
 # install third party FindXXX.cmake files
 file(GLOB_RECURSE _pckg_find_files "${CMAKE_CURRENT_LIST_DIR}/Find*.cmake")
 install(
     FILES ${_pckg_find_files}
     DESTINATION ${install_package_config_dir}/Modules
+)
+
+install(
+    FILES
+        ${CMAKE_CURRENT_LIST_DIR}/ActsGeometryModuleHelpers.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/ActsDD4hepGeometryModuleHelpers.cmake
+    DESTINATION ${install_package_config_dir}
 )
 
 # install target configs for all available components

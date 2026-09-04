@@ -14,18 +14,17 @@ from acts.examples.reconstruction import (
 
 from acts.examples.itk import itkSeedingAlgConfig, InputSpacePointsType
 
-
 s = acts.examples.Sequencer(events=1, numThreads=1, outputDir="output")
 
 # loggingLevel = acts.logging.INFO
 loggingLevel = acts.logging.DEBUG
 
 s.addReader(
-    acts.examples.RootAthenaDumpReader(
+    acts.examples.root.RootAthenaDumpReader(
         level=loggingLevel,
         treename="GNN4ITk",
         inputfile="Dump_GNN4Itk.root",
-        onlySpacepoints=True,
+        onlySpacePoints=True,
         outputPixelSpacePoints="pixel_spacepoints",
         outputStripSpacePoints="strip_spacepoints",
         outputSpacePoints="spacepoints",
@@ -41,7 +40,7 @@ seeding_pixel = addStandardSeeding(
         InputSpacePointsType.PixelSpacePoints, highOccupancyConfig=True
     ),
     logLevel=loggingLevel,
-    outputSeeds="pixel_seeds"
+    outputSeeds="pixel_seeds",
 )
 
 
@@ -51,7 +50,7 @@ seeding_strip = addStandardSeeding(
     "strip_spacepoints",
     *acts.examples.itk.itkSeedingAlgConfig(InputSpacePointsType.StripSpacePoints),
     logLevel=acts.logging.DEBUG,
-    outputSeeds="strip_seeds"
+    outputSeeds="strip_seeds",
 )
 
 

@@ -22,30 +22,32 @@
 namespace {
 
 namespace ds = ActsTests::PropagationDatasets;
-using namespace Acts::UnitLiterals;
 
-using MagneticField = Acts::ConstantBField;
-using EigenStepper = Acts::EigenStepper<>;
-using EigenPropagator = Acts::Propagator<EigenStepper>;
-using StraightLineStepper = Acts::StraightLineStepper;
-using StraightLinePropagator = Acts::Propagator<StraightLineStepper>;
+using namespace Acts;
+using namespace UnitLiterals;
+
+using MagneticField = ConstantBField;
+using EigenStepper = EigenStepper<>;
+using EigenPropagator = Propagator<EigenStepper>;
+using StraightLineStepper = StraightLineStepper;
+using StraightLinePropagator = Propagator<StraightLineStepper>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 1_um;
+constexpr auto epsTime = 1_um;
 constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
 // relative covariance tolerance
 constexpr auto epsCov = 0.00125;
 
-const Acts::GeometryContext geoCtx;
-const Acts::MagneticFieldContext magCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+const MagneticFieldContext magCtx;
 
 constexpr auto bz = 2_T;
 
-const auto magFieldZero =
-    std::make_shared<MagneticField>(Acts::Vector3::Zero());
+const auto magFieldZero = std::make_shared<MagneticField>(Vector3::Zero());
 const auto magFieldNonZero =
-    std::make_shared<MagneticField>(Acts::Vector3::UnitZ() * bz);
+    std::make_shared<MagneticField>(Vector3::UnitZ() * bz);
 const EigenPropagator eigenPropagatorZero{EigenStepper(magFieldZero)};
 const EigenPropagator eigenPropagatorNonZero{EigenStepper(magFieldNonZero)};
 const StraightLinePropagator straightPropagator{StraightLineStepper()};
@@ -60,7 +62,7 @@ BOOST_DATA_TEST_CASE(NeutralZeroMagneticField,
   runForwardComparisonTest(eigenPropagatorZero, straightPropagator, geoCtx,
                            magCtx,
                            makeParametersCurvilinearNeutral(phi, theta, p), s,
-                           epsPos, epsDir, epsMom, epsCov);
+                           epsPos, epsTime, epsDir, epsMom, epsCov);
 }
 
 // TODO https://github.com/acts-project/acts/issues/4375
@@ -70,8 +72,8 @@ BOOST_DATA_TEST_CASE(NeutralZeroMagneticField,
 //                      ds::pathLength, phi, theta, p, s) {
 //   runForwardComparisonTest(
 //       eigenPropagatorNonZero, straightPropagator, geoCtx, magCtx,
-//       makeParametersCurvilinearNeutral(phi, theta, p), s, epsPos, epsDir,
-//       epsMom, epsCov, CovarianceCheck::Full);
+//       makeParametersCurvilinearNeutral(phi, theta, p), s, epsPos, epsTime,
+//       epsDir, epsMom, epsCov, CovarianceCheck::Full);
 // }
 
 BOOST_DATA_TEST_CASE(ChargedZeroMagneticField,
@@ -80,7 +82,7 @@ BOOST_DATA_TEST_CASE(ChargedZeroMagneticField,
                      phi, theta, p, q, s) {
   runForwardComparisonTest(eigenPropagatorZero, straightPropagator, geoCtx,
                            magCtx, makeParametersCurvilinear(phi, theta, p, q),
-                           s, epsPos, epsDir, epsMom, epsCov);
+                           s, epsPos, epsTime, epsDir, epsMom, epsCov);
 }
 
 // TODO add comparison tests between the straight line and eigen propagator for

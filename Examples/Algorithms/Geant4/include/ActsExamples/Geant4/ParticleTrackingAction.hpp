@@ -16,7 +16,6 @@
 #include <optional>
 #include <string>
 
-#include <G4Track.hh>
 #include <G4UserTrackingAction.hh>
 
 class G4Track;
@@ -43,19 +42,18 @@ class ParticleTrackingAction : public G4UserTrackingAction {
       const Config& cfg,
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
           "ParticleTrackingAction", Acts::Logging::INFO));
-  ~ParticleTrackingAction() override = default;
 
   /// Action before the track is processed in the
   /// the simulation, this will record the initial particle
   ///
-  /// @param aTrack the current Geant4 track
-  void PreUserTrackingAction(const G4Track* aTrack) final;
+  /// @param trackPtr the current Geant4 track
+  void PreUserTrackingAction(const G4Track* trackPtr) final;
 
   /// Action after the track is processed in the
   /// the simulation, this will record the final particle
   ///
-  /// @param aTrack the current Geant4 track
-  void PostUserTrackingAction(const G4Track* aTrack) final;
+  /// @param trackPtr the current Geant4 track
+  void PostUserTrackingAction(const G4Track* trackPtr) final;
 
  protected:
   Config m_cfg;
@@ -63,10 +61,10 @@ class ParticleTrackingAction : public G4UserTrackingAction {
  private:
   /// Convert a G4Track to a SimParticleState
   ///
-  /// @param aTrack the current Geant4 track
+  /// @param track the current Geant4 track
   /// @param particleId the particle ID the particle will have
   /// @return SimParticleState the converted particle state
-  SimParticleState convert(const G4Track& aTrack, SimBarcode particleId) const;
+  SimParticleState convert(const G4Track& track, SimBarcode particleId) const;
 
   /// Make the particle id
   std::optional<SimBarcode> makeParticleId(G4int trackId, G4int parentId) const;

@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Detector/Detector.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -41,8 +40,8 @@ struct TestSourceLink final {
   std::size_t sourceId = 0u;
   // use eBoundSize to indicate unused indices
   std::array<BoundIndices, 2> indices = {eBoundSize, eBoundSize};
-  Acts::Vector2 parameters;
-  Acts::ActsSquareMatrix<2> covariance;
+  Acts::Vector2 parameters{};
+  Acts::SquareMatrix<2> covariance{};
 
   /// Construct a source link for a 1d measurement.
   TestSourceLink(BoundIndices idx, double val, double var,
@@ -55,8 +54,7 @@ struct TestSourceLink final {
         covariance(Acts::Vector2(var, 0).asDiagonal()) {}
   /// Construct a source link for a 2d measurement.
   TestSourceLink(BoundIndices idx0, BoundIndices idx1,
-                 const Acts::Vector2& params,
-                 const Acts::ActsSquareMatrix<2>& cov,
+                 const Acts::Vector2& params, const Acts::SquareMatrix<2>& cov,
                  GeometryIdentifier gid = GeometryIdentifier(),
                  std::size_t sid = 0u)
       : m_geometryId(gid),
@@ -101,19 +99,6 @@ struct TestSourceLinkSurfaceAccessor {
   }
 };
 
-namespace Experimental {
-
-struct TestSourceLinkSurfaceAccessor {
-  const Acts::Experimental::Detector& geometry;
-
-  const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
-    const auto& testSourceLink = sourceLink.get<TestSourceLink>();
-    return geometry.findSurface(testSourceLink.m_geometryId);
-  }
-};
-
-}  // namespace Experimental
-
 inline std::ostream& operator<<(std::ostream& os,
                                 const TestSourceLink& sourceLink) {
   return sourceLink.print(os);
@@ -149,6 +134,36 @@ void testSourceLinkCalibrator(
     throw std::runtime_error(
         "Tried to extract measurement from invalid TestSourceLink");
   }
+}
+
+/// Same as @ref testSourceLinkCalibrator, but additionally checks that the
+/// fitter does not expose unwritten parameters to the calibrator.
+///
+/// Filtering has not happened yet when the calibrator runs, so the filtered
+/// component must not be allocated. Otherwise `parameters()` and
+/// `covariance()` would hand out uninitialized memory, see
+/// https://github.com/acts-project/acts/issues/5777
+///
+/// @note This deliberately does not check `hasSmoothed`: the GX2F keeps its
+///       current parameter estimate in the smoothed component and writes it
+///       before calling the calibrator.
+///
+/// @param gctx Geometry context, forwarded
+/// @param cctx Calibration context, forwarded
+/// @param sourceLink The source link to calibrate
+/// @param trackState TrackState to calibrate
+template <typename trajectory_t>
+void testSourceLinkCalibratorStrict(
+    const GeometryContext& gctx, const CalibrationContext& cctx,
+    const SourceLink& sourceLink,
+    typename trajectory_t::TrackStateProxy trackState) {
+  if (trackState.hasFiltered()) {
+    throw std::runtime_error(
+        "calibrator was called on a track state which already has filtered "
+        "parameters allocated");
+  }
+
+  testSourceLinkCalibrator<trajectory_t>(gctx, cctx, sourceLink, trackState);
 }
 
 }  // namespace Acts::detail::Test

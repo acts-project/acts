@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/TGeoParser.hpp"
+#include "ActsPlugins/Root/TGeoParser.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsPlugins/Root/TGeoPrimitivesHelper.hpp"
 
 #include "RtypesCore.h"
 #include "TCollection.h"
@@ -20,9 +20,12 @@
 #include "TObjArray.h"
 #include "TObject.h"
 
-void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
-                              const Acts::TGeoParser::Options& options,
-                              const TGeoMatrix& gmatrix) {
+using namespace Acts;
+
+void ActsPlugins::TGeoParser::select(
+    ActsPlugins::TGeoParser::State& state,
+    const ActsPlugins::TGeoParser::Options& options,
+    const TGeoMatrix& gmatrix) {
   // Volume is present
   if (state.volume != nullptr) {
     std::string volumeName = state.volume->GetName();
@@ -72,15 +75,15 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
         if (auto* shape =
                 dynamic_cast<TGeoBBox*>(state.node->GetVolume()->GetShape());
             shape != nullptr) {
-          // @TODO this should be replace by a proper TGeo to Acts::VolumeBounds
-          // and vertices converision which would make a more appropriate
-          // parsomg
+          // @TODO this should be replaced by a proper TGeo to VolumeBounds
+          // and vertices conversion which would make a more appropriate
+          // parsing
           double dx = options.unit * shape->GetDX();
           double dy = options.unit * shape->GetDY();
           double dz = options.unit * shape->GetDZ();
-          for (auto x : std::vector<double>{-dx, dx}) {
-            for (auto y : std::vector<double>{-dy, dy}) {
-              for (auto z : std::vector<double>{-dz, dz}) {
+          for (auto x : {-dx, dx}) {
+            for (auto y : {-dy, dy}) {
+              for (auto z : {-dz, dz}) {
                 Vector3 edge = etrf * Vector3(x, y, z);
                 for (auto& [axisDir, checkRange] : options.parseRanges) {
                   double val = VectorHelpers::cast(edge, axisDir);
@@ -111,8 +114,8 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
 }
 
 // Function to recursively find the node by volume name
-TGeoNode* Acts::TGeoParser::findNodeRecursive(TGeoNode* currentNode,
-                                              const char* volumeName) {
+TGeoNode* ActsPlugins::TGeoParser::findNodeRecursive(TGeoNode* currentNode,
+                                                     const char* volumeName) {
   // Check if the current node's volume matches the name
   if (std::strcmp(currentNode->GetVolume()->GetName(), volumeName) == 0) {
     return currentNode;

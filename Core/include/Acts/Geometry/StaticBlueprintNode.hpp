@@ -13,7 +13,7 @@
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// The static blueprint node wraps a single already-constructred @c TrackingVolume.
 /// The node will present this volume to its hierarchy. The volume is given as
@@ -49,19 +49,36 @@ class StaticBlueprintNode : public BlueprintNode {
                 TrackingVolume& parent,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
+  /// Set the navigation policy factory for this node
+  /// @param navigationPolicyFactory Shared pointer to navigation policy factory
+  /// @return Reference to this node for chaining
   virtual StaticBlueprintNode& setNavigationPolicyFactory(
       std::shared_ptr<NavigationPolicyFactory> navigationPolicyFactory);
 
+  /// Get the navigation policy factory for this node
+  /// @return Pointer to the navigation policy factory (may be nullptr)
   const NavigationPolicyFactory* navigationPolicyFactory() const;
 
  protected:
   void addToGraphviz(std::ostream& os) const override;
 
+  /// The wrapped tracking volume managed by this blueprint node
   std::unique_ptr<TrackingVolume> m_volume;
 
+  /// Portal shell representation for geometry connection
   std::unique_ptr<PortalShellBase> m_shell;
 
+  /// Factory for creating navigation policies for this volume
   std::shared_ptr<NavigationPolicyFactory> m_navigationPolicyFactory;
 };
 
-}  // namespace Acts::Experimental
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use @ref Acts::StaticBlueprintNode instead. This
+///             alias is kept for backward compatibility and will be removed.
+using StaticBlueprintNode
+    [[deprecated("Acts::Experimental::StaticBlueprintNode moved to "
+                 "Acts::StaticBlueprintNode")]] = Acts::StaticBlueprintNode;
+}  // namespace Experimental
+
+}  // namespace Acts

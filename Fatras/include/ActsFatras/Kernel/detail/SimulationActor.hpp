@@ -8,13 +8,12 @@
 
 #pragma once
 
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/Kernel/SimulationResult.hpp"
+#include "ActsFatras/Kernel/SingleParticleSimulationResult.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -37,7 +36,7 @@ namespace ActsFatras::detail {
 template <typename generator_t, typename decay_t, typename interactions_t,
           typename hit_surface_selector_t>
 struct SimulationActor {
-  using result_type = SimulationResult;
+  using result_type = SingleParticleSimulationResult;
 
   /// Random number generator used for the simulation.
   generator_t *generator = nullptr;
@@ -64,9 +63,9 @@ struct SimulationActor {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t &state, stepper_t &stepper,
-           navigator_t &navigator, result_type &result,
-           const Acts::Logger &logger) const {
+  Acts::Result<void> act(propagator_state_t &state, stepper_t &stepper,
+                         navigator_t &navigator, result_type &result,
+                         const Acts::Logger &logger) const {
     assert(generator != nullptr && "The generator pointer must be valid");
 
     if (state.stage == Acts::PropagatorStage::prePropagation) {
@@ -76,18 +75,18 @@ struct SimulationActor {
           makeParticle(initialParticle, state, stepper, navigator);
       result.properTimeLimit =
           decay.generateProperTimeLimit(*generator, initialParticle);
-      return;
+      return Acts::Result<void>::success();
     }
 
     // actors are called once more after the propagation terminated
     if (!result.isAlive) {
-      return;
+      return Acts::Result<void>::success();
     }
 
     if (Acts::EndOfWorldReached{}.checkAbort(state, stepper, navigator,
                                              logger)) {
       result.isAlive = false;
-      return;
+      return Acts::Result<void>::success();
     }
 
     // update the particle state first. this also computes the proper time which
@@ -105,7 +104,7 @@ struct SimulationActor {
         result.generatedParticles.emplace_back(descendant);
       }
       result.isAlive = false;
-      return;
+      return Acts::Result<void>::success();
     }
 
     // Regulate the step size
@@ -135,11 +134,11 @@ struct SimulationActor {
 
     // If we are on target, everything should have been done
     if (state.stage == Acts::PropagatorStage::postPropagation) {
-      return;
+      return Acts::Result<void>::success();
     }
     // If we are not on a surface, there is nothing further for us to do
     if (!navigator.currentSurface(state.navigation)) {
-      return;
+      return Acts::Result<void>::success();
     }
     const Acts::Surface &surface = *navigator.currentSurface(state.navigation);
 
@@ -148,16 +147,15 @@ struct SimulationActor {
     const Particle before = result.particle;
 
     // interactions only make sense if there is material to interact with.
-    if (surface.surfaceMaterial()) {
+    if (surface.hasMaterial()) {
       // TODO is this the right thing to do when globalToLocal fails?
       //   it should in principle never happen, so probably it would be best
       //   to change to a model using transform() directly
       auto lpResult = surface.globalToLocal(state.geoContext, before.position(),
                                             before.direction());
       if (lpResult.ok()) {
-        Acts::Vector2 local = lpResult.value();
-        Acts::MaterialSlab slab =
-            surface.surfaceMaterial()->materialSlab(local);
+        const Acts::Vector2 local = lpResult.value();
+        Acts::MaterialSlab slab = surface.materialSlab(local);
         // again: interact only if there is valid material to interact with
         if (!slab.isVacuum()) {
           // adapt material for non-zero incidence
@@ -188,12 +186,14 @@ struct SimulationActor {
 
     if (after.absoluteMomentum() == 0.0) {
       result.isAlive = false;
-      return;
+      return Acts::Result<void>::success();
     }
 
     // continue the propagation with the modified parameters
     stepper.update(state.stepping, after.position(), after.direction(),
                    after.qOverP(), after.time());
+
+    return Acts::Result<void>::success();
   }
 
   template <typename propagator_state_t, typename stepper_t,

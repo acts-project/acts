@@ -8,13 +8,15 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Json/GeometryIdentifierJsonConverter.hpp"
+#include "ActsPlugins/Json/GeometryIdentifierJsonConverter.hpp"
 
 #include <nlohmann/json.hpp>
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(GeometryIdentifierJsonConverterTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(ReadingWritingFull) {
   GeometryIdentifier geoId = GeometryIdentifier()
@@ -87,3 +89,5 @@ BOOST_AUTO_TEST_CASE(ReadingWritingCompact) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

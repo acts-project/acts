@@ -6,17 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/TruthGraphMetricsHook.hpp"
+#include "ActsPlugins/Gnn/TruthGraphMetricsHook.hpp"
 
 #include <algorithm>
 
+using namespace Acts;
+
 namespace {
 
-auto cantorize(std::vector<std::int64_t> edgeIndex,
-               const Acts::Logger& logger) {
+auto cantorize(std::vector<std::int64_t> edgeIndex, const Logger& logger) {
   // Use cantor pairing to store truth graph, so we can easily use set
   // operations to compute efficiency and purity
-  std::vector<Acts::detail::CantorEdge<std::int64_t>> cantorEdgeIndex;
+  std::vector<ActsPlugins::detail::CantorEdge<std::int64_t>> cantorEdgeIndex;
   cantorEdgeIndex.reserve(edgeIndex.size() / 2);
 
   for (auto it = edgeIndex.begin(); it != edgeIndex.end(); it += 2) {
@@ -24,7 +25,7 @@ auto cantorize(std::vector<std::int64_t> edgeIndex,
   }
 
   std::ranges::sort(cantorEdgeIndex,
-                    std::less<Acts::detail::CantorEdge<std::int64_t>>{});
+                    std::less<ActsPlugins::detail::CantorEdge<std::int64_t>>{});
 
   auto new_end = std::unique(cantorEdgeIndex.begin(), cantorEdgeIndex.end());
   if (new_end != cantorEdgeIndex.end()) {
@@ -39,14 +40,14 @@ auto cantorize(std::vector<std::int64_t> edgeIndex,
 
 }  // namespace
 
-Acts::TruthGraphMetricsHook::TruthGraphMetricsHook(
+ActsPlugins::TruthGraphMetricsHook::TruthGraphMetricsHook(
     const std::vector<std::int64_t>& truthGraph,
-    std::unique_ptr<const Acts::Logger> l)
+    std::unique_ptr<const Logger> l)
     : m_logger(std::move(l)) {
   m_truthGraphCantor = cantorize(truthGraph, logger());
 }
 
-void Acts::TruthGraphMetricsHook::operator()(
+void ActsPlugins::TruthGraphMetricsHook::operator()(
     const PipelineTensors& tensors, const ExecutionContext& execCtx) const {
   auto edgeIndexTensor =
       tensors.edgeIndex.clone({Device::Cpu(), execCtx.stream});
@@ -68,7 +69,7 @@ void Acts::TruthGraphMetricsHook::operator()(
   auto predGraphCantor = cantorize(edgeIndexTransposed, logger());
 
   // Calculate intersection
-  std::vector<Acts::detail::CantorEdge<std::int64_t>> intersection;
+  std::vector<ActsPlugins::detail::CantorEdge<std::int64_t>> intersection;
   intersection.reserve(
       std::max(predGraphCantor.size(), m_truthGraphCantor.size()));
 

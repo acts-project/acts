@@ -1,6 +1,7 @@
 target_sources(
     ActsCore
     PRIVATE
+        AlignablePortalVisitor.cpp
         ConeLayer.cpp
         ConeVolumeBounds.cpp
         CuboidVolumeBounds.cpp
@@ -11,11 +12,12 @@ target_sources(
         CylinderVolumeBuilder.cpp
         CylinderVolumeHelper.cpp
         Extent.cpp
-        KDTreeTrackingGeometryBuilder.cpp
         DiscLayer.cpp
         GenericApproachDescriptor.cpp
         GenericCuboidVolumeBounds.cpp
         GeometryIdentifier.cpp
+        GeometryModuleHelper.cpp
+        GeometryModuleLoader.cpp
         GlueVolumesDescriptor.cpp
         Layer.cpp
         LayerArrayCreator.cpp
@@ -26,12 +28,14 @@ target_sources(
         Polyhedron.cpp
         ProtoLayer.cpp
         ProtoLayerHelper.cpp
+        VolumePlacementBase.cpp
         SurfaceArrayCreator.cpp
         TrackingGeometry.cpp
         TrackingGeometryBuilder.cpp
         TrackingVolume.cpp
         TrackingVolumeArrayCreator.cpp
         TrapezoidVolumeBounds.cpp
+        DiamondVolumeBounds.cpp
         Volume.cpp
         VolumeBounds.cpp
         CylinderVolumeStack.cpp
@@ -43,6 +47,7 @@ target_sources(
         CompositePortalLink.cpp
         PortalLinkBase.cpp
         PortalError.cpp
+        PortalShell.cpp
         CylinderPortalShell.cpp
         CuboidPortalShell.cpp
         BlueprintNode.cpp
@@ -50,14 +55,21 @@ target_sources(
         BlueprintOptions.cpp
         StaticBlueprintNode.cpp
         LayerBlueprintNode.cpp
+        PadBlueprintNode.cpp
+        IndexGrid.cpp
         MaterialDesignatorBlueprintNode.cpp
+        PortalDesignatorBlueprintNode.cpp
         VolumeAttachmentStrategy.cpp
         VolumeResizeStrategy.cpp
         GeometryIdentifierBlueprintNode.cpp
         TrackingGeometryVisitor.cpp
         TrapezoidPortalShell.cpp
+        DiamondPortalShell.cpp
         VolumeStack.cpp
         ContainerBlueprintNode.cpp
         MultiWireVolumeBuilder.cpp
-        detail/TrackingGeometryPrintVisitor.cpp
+        ReferenceGenerators.cpp
+        TrackingGeometryPrintVisitor.cpp
+        BoundDeduplicator.cpp
+        PortalPlacement.cpp
 )

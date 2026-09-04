@@ -11,15 +11,15 @@
 // In order to avoid conflicts with declarations in Geomodel that is fixed in
 // v3.5
 //  clang-formal off
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 // clang-formal on
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
@@ -27,6 +27,11 @@
 #include <GeoModelKernel/GeoTrap.h>
 #include <GeoModelKernel/GeoTube.h>
 #include <GeoModelKernel/GeoVPhysVol.h>
+
+using namespace Acts;
+using namespace ActsPlugins;
+
+namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 
@@ -42,19 +47,19 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   auto physTube = make_intrusive<GeoFullPhysVol>(logTube);
 
   // create pars for conversion
-  Acts::GeoModelDetectorObjectFactory::Config gmConfig;
+  GeoModelDetectorObjectFactory::Config gmConfig;
   gmConfig.convertBox = {"Tube"};
-  Acts::GeometryContext gContext;
-  Acts::GeoModelDetectorObjectFactory::Cache gmCache;
+  auto gContext = GeometryContext::dangerouslyDefaultConstruct();
+  GeoModelDetectorObjectFactory::Cache gmCache;
 
   // create factory instance
-  Acts::GeoModelDetectorObjectFactory factory(gmConfig);
+  GeoModelDetectorObjectFactory factory(gmConfig);
 
   factory.convertFpv("Tube", physTube, gmCache, gContext);
   BOOST_CHECK(!gmCache.volumeBoxFPVs.empty());
   const auto& volumeTube = gmCache.volumeBoxFPVs[0].volume;
-  const auto* bounds = dynamic_cast<const Acts::CylinderVolumeBounds*>(
-      &volumeTube->volumeBounds());
+  const auto* bounds =
+      dynamic_cast<const CylinderVolumeBounds*>(&volumeTube->volumeBounds());
   std::vector<double> convDims = bounds->values();
   for (std::size_t i = 0; i < dims.size(); i++) {
     BOOST_CHECK(dims[i] == convDims[i]);
@@ -62,3 +67,5 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

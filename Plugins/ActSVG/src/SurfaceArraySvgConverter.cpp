@@ -6,17 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ActSVG/SurfaceArraySvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SurfaceArraySvgConverter.hpp"
 
-#include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
 
 #include <algorithm>
 #include <numbers>
 
-Acts::Svg::ProtoIndexedSurfaceGrid Acts::Svg::SurfaceArrayConverter::convert(
+using namespace Acts;
+
+ActsPlugins::Svg::ProtoIndexedSurfaceGrid
+ActsPlugins::Svg::SurfaceArrayConverter::convert(
     const GeometryContext& gctx, const SurfaceArray& surfaceArray,
     const SurfaceArrayConverter::Options& cOptions) {
   // Prepare the return objects
@@ -96,7 +99,7 @@ Acts::Svg::ProtoIndexedSurfaceGrid Acts::Svg::SurfaceArrayConverter::convert(
   for (const auto& sf : surfaces) {
     // Get bounds and check them
     const SurfaceBounds& sBounds = sf->bounds();
-    radius += Acts::VectorHelpers::perp(sf->center(gctx));
+    radius += VectorHelpers::perp(sf->center(gctx));
 
     // Helper to find bounds
     auto sameBounds = [&](const SurfaceBounds* test) {
@@ -141,7 +144,8 @@ Acts::Svg::ProtoIndexedSurfaceGrid Acts::Svg::SurfaceArrayConverter::convert(
       sOptions.style = *sfStyle;
     }
     // Convert the surface from ACTS to actsvg
-    auto cSurface = Acts::Svg::SurfaceConverter::convert(gctx, *sf, sOptions);
+    auto cSurface =
+        ActsPlugins::Svg::SurfaceConverter::convert(gctx, *sf, sOptions);
     cSurface._name = "Module_n_" + std::to_string(pSurfaces.size());
 
     cSurface._aux_info["grid_info"] = {
@@ -151,7 +155,7 @@ Acts::Svg::ProtoIndexedSurfaceGrid Acts::Svg::SurfaceArrayConverter::convert(
     if (vType == planar || vType == polar) {
       // Get the transform and estimate the rotation of phi
       // Assumes x/y view
-      const auto& sTransform = sf->transform(gctx);
+      const auto& sTransform = sf->localToGlobalTransform(gctx);
       Vector3 localA = sTransform.rotation().col(0);
       Vector3 localZ = sTransform.rotation().col(2);
       // Find out orientation w.r.t. global transform
@@ -174,18 +178,19 @@ Acts::Svg::ProtoIndexedSurfaceGrid Acts::Svg::SurfaceArrayConverter::convert(
   for (unsigned int il0 = 1; il0 < pGrid._edges_0.size(); ++il0) {
     double p0 = 0.5 * (pGrid._edges_0[il0] + pGrid._edges_0[il0 - 1]);
     for (unsigned int il1 = 1; il1 < pGrid._edges_1.size(); ++il1) {
-      double p1 = 0.5 * (pGrid._edges_1[il1] + pGrid._edges_1[il1 - 1]);
+      const double p1 = 0.5 * (pGrid._edges_1[il1] + pGrid._edges_1[il1 - 1]);
       // Create the fitting bin center estimates
       Vector3 bCenter;
+      const Vector3 bDirection = Vector3(std::sin(p1), -std::cos(p1), 0.);
       if (vType == polar) {
         bCenter = Vector3(p0 * std::cos(p1), p0 * std::sin(p1), 0.);
       } else if (vType == cylinder) {
         bCenter = Vector3(radius * std::cos(p1), radius * std::sin(p1), p0);
       }
       // Get all the bin entries and members
-      auto bSurfaces = surfaceArray.neighbors(bCenter);
+      const auto bSurfaces = surfaceArray.neighbors(gctx, bCenter, bDirection);
       std::vector<std::size_t> binnAssoc;
-      for (const auto& bs : bSurfaces) {
+      for (const Surface* bs : bSurfaces) {
         auto candidate = std::ranges::find(surfaces, bs);
         if (candidate != surfaces.end()) {
           binnAssoc.push_back(std::distance(surfaces.begin(), candidate));

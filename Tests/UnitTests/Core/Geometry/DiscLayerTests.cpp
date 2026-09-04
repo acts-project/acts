@@ -25,9 +25,11 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Test::Layers {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Layers)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 /// Unit test for creating compliant/non-compliant DiscLayer object
 BOOST_AUTO_TEST_CASE(DiscLayerConstruction) {
@@ -54,10 +56,9 @@ BOOST_AUTO_TEST_CASE(DiscLayerConstruction) {
   // construct with thickness:
   auto pDiscLayerWithThickness =
       DiscLayer::create(pTransform, pDisc, nullptr, thickness);
-  BOOST_CHECK_EQUAL(pDiscLayerWithThickness->thickness(), thickness);
+  BOOST_CHECK_EQUAL(pDiscLayerWithThickness->layerThickness(), thickness);
   // with an approach descriptor...
-  std::unique_ptr<ApproachDescriptor> ad(
-      new GenericApproachDescriptor(aSurfaces));
+  auto ad(std::make_unique<GenericApproachDescriptor>(aSurfaces));
   auto adPtr = ad.get();
   auto pDiscLayerWithApproachDescriptor =
       DiscLayer::create(pTransform, pDisc, nullptr, thickness, std::move(ad));
@@ -83,4 +84,4 @@ BOOST_AUTO_TEST_CASE(DiscLayerProperties) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test::Layers
+}  // namespace ActsTests

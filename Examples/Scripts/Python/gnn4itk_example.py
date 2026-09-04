@@ -1,9 +1,29 @@
+#!/usr/bin/env python3
+
+"""
+Example: GNN track finding with module maps on ATLAS ITk data.
+
+Demonstrates reading pre-simulated ATLAS data and running GNN with module map
+(geometry-based) graph construction. Typical workflow for ATLAS ITk.
+
+All parameters are hardcoded except file paths. Users should copy and modify this script
+for their specific needs.
+"""
+
 from pathlib import Path
 import argparse
 
 import acts
 import acts.examples
-from acts.examples.reconstruction import addTrackSelection, TrackSelectorConfig
+from acts.examples.reconstruction import addGnn
+from acts.examples.simulation import ParticleSelectorConfig, addDigiParticleSelection
+from acts.gnn import (
+    ModuleMapCuda,
+    CudaTrackBuilding,
+    DWalkTrackBuilding,
+    EdgeLayerConnector,
+)
+from acts.examples.gnn import NodeFeature
 
 u = acts.UnitConstants
 
@@ -12,180 +32,228 @@ def runGNN4ITk(
     inputRootDump: Path,
     moduleMapPath: str,
     gnnModel: Path,
+    outputDir: Path = Path.cwd(),
     events: int = 1,
+    bufferEvents: int | None = None,
+    useEdgeLayerConnector: bool = False,
+    trackBuilder: str = "junctionremoval",
+    edgeClassifierCut: float | None = None,
     logLevel=acts.logging.INFO,
 ):
-    assert inputRootDump.exists()
-    assert Path(moduleMapPath + ".doublets.root").exists()
-    assert Path(moduleMapPath + ".triplets.root").exists()
-    assert gnnModel.exists()
+    """
+    Run GNN tracking with module maps on ATLAS Athena dumps.
 
+    This example shows reading pre-simulated ATLAS data and running GNN with
+    geometry-based graph construction. All GNN parameters hardcoded.
+
+    Args:
+        inputRootDump: Path to input ROOT file (ATLAS Athena dump format)
+        moduleMapPath: Path prefix for module map files
+                      (will load .doublets.root and .triplets.root)
+        gnnModel: Path to trained model (.pt, .onnx, or .engine)
+        outputDir: Output directory for performance files
+        events: Number of events to process
+        useEdgeLayerConnector: Use EdgeLayerConnector instead of CudaTrackBuilding
+        trackBuilder: Track builder to run: junctionremoval, edgelayerconnector, or dwalk
+        edgeClassifierCut: Optional edge classifier cut. Defaults to 0.01 for D-WALK and
+                           0.5 for the other builders.
+        logLevel: Logging level
+    """
+    # Validate inputs
+    assert inputRootDump.exists(), f"Input file not found: {inputRootDump}"
+    assert Path(
+        moduleMapPath + ".doublets.root"
+    ).exists(), f"Module map not found: {moduleMapPath}.doublets.root"
+    assert Path(
+        moduleMapPath + ".triplets.root"
+    ).exists(), f"Module map not found: {moduleMapPath}.triplets.root"
+    assert gnnModel.exists(), f"Model file not found: {gnnModel}"
+
+    # Avoid an expensive recursive source-tree scan for automatic FPE masks on
+    # large CFS-mounted ACTS workspaces.
+    acts.examples.Sequencer._autoFpeMasks = []
+    s = acts.examples.Sequencer(
+        events=events,
+        numThreads=1,
+    )
+
+    # Read ATLAS Athena ROOT dump
+    reader = acts.examples.root.RootAthenaDumpReader(
+        level=logLevel,
+        treename="GNN4ITk",
+        inputfiles=[str(inputRootDump)],
+        outputSpacePoints="spacepoints",
+        outputClusters="clusters",
+        outputMeasurements="measurements",
+        outputMeasurementSubset="measurement_subset",
+        outputMeasurementParticlesMap="measurement_particles_map",
+        outputParticleMeasurementsMap="particle_measurements_map",
+        outputParticles="particles",
+        skipOverlapSPsPhi=True,
+        skipOverlapSPsEta=False,
+        absBoundaryTolerance=0.01 * u.mm,
+    )
+
+    if bufferEvents is not None:
+        s.addReader(
+            acts.examples.BufferedReader(
+                level=logLevel,
+                upstreamReader=reader,
+                bufferSize=min(bufferEvents, events),
+            )
+        )
+    else:
+        s.addReader(reader)
+
+    # Select primary particles with minimum 7 hits and 1 GeV pT for efficiency evaluation
+    s.addWhiteboardAlias("particles_simulated_selected", "particles")
+    particleSelectorConfig = ParticleSelectorConfig(
+        pt=(1.0 * u.GeV, None),
+        hits=(7, None),
+        removeSecondaries=True,
+    )
+    addDigiParticleSelection(s, particleSelectorConfig, logLevel=logLevel)
+
+    # Configure GNN stages for module map workflow
+    # All parameters hardcoded based on ITk configuration
+
+    # Stage 1: Graph construction via module map
     moduleMapConfig = {
         "level": logLevel,
         "moduleMapPath": moduleMapPath,
         "rScale": 1000.0,
         "phiScale": 3.141592654,
         "zScale": 1000.0,
+        "etaScale": 1.0,
         "gpuDevice": 0,
         "gpuBlocks": 512,
-        "moreParallel": True,
     }
+    graphConstructor = ModuleMapCuda(**moduleMapConfig)
 
-    gnnConfig = {
+    if useEdgeLayerConnector:
+        trackBuilder = "edgelayerconnector"
+    trackBuilder = trackBuilder.lower()
+    if trackBuilder not in {"junctionremoval", "edgelayerconnector", "dwalk"}:
+        raise ValueError(f"Unsupported track builder: {trackBuilder}")
+
+    defaultEdgeClassifierCut = 0.01 if trackBuilder == "dwalk" else 0.5
+    resolvedEdgeClassifierCut = (
+        defaultEdgeClassifierCut if edgeClassifierCut is None else edgeClassifierCut
+    )
+
+    # Stage 2: Single-stage edge classification (auto-detect backend)
+    gnnModel = Path(gnnModel)
+    edgeClassifierConfig = {
         "level": logLevel,
-        "cut": 0.5,
         "modelPath": str(gnnModel),
-        "useEdgeFeatures": True,
+        "cut": resolvedEdgeClassifierCut,
     }
 
-    builderCfg = {
-        "level": logLevel,
-        "useOneBlockImplementation": False,
-        "doJunctionRemoval": True,
-    }
-
-    graphConstructor = acts.examples.ModuleMapCuda(**moduleMapConfig)
     if gnnModel.suffix == ".pt":
-        edgeClassifier = acts.examples.TorchEdgeClassifier(**gnnConfig)
+        edgeClassifierConfig["useEdgeFeatures"] = True
+        from acts.gnn import TorchEdgeClassifier
+
+        edgeClassifiers = [TorchEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".onnx":
-        del gnnConfig["useEdgeFeatures"]
-        edgeClassifier = acts.examples.OnnxEdgeClassifier(**gnnConfig)
+        from acts.gnn import OnnxEdgeClassifier
+
+        edgeClassifiers = [OnnxEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".engine":
-        edgeClassifier = acts.examples.TensorRTEdgeClassifier(**gnnConfig)
-    trackBuilder = acts.examples.CudaTrackBuilding(**builderCfg)
+        from acts.gnn import TensorRTEdgeClassifier
 
-    s = acts.examples.Sequencer(
-        events=events,
-        numThreads=1,
-    )
+        edgeClassifiers = [TensorRTEdgeClassifier(**edgeClassifierConfig)]
+    else:
+        raise ValueError(f"Unsupported model format: {gnnModel.suffix}")
 
-    s.addReader(
-        acts.examples.RootAthenaDumpReader(
+    # Stage 3: Track building
+    if trackBuilder == "edgelayerconnector":
+        trackBuilderObj = EdgeLayerConnector(
             level=logLevel,
-            treename="GNN4ITk",
-            inputfiles=[str(inputRootDump)],
-            outputSpacePoints="spacepoints",
-            outputClusters="clusters",
-            outputMeasurements="measurements",
-            outputMeasurementParticlesMap="measurement_particles_map",
-            outputParticleMeasurementsMap="particle_measurements_map",
-            outputParticles="particles",
-            skipOverlapSPsPhi=True,
-            skipOverlapSPsEta=False,
-            absBoundaryTolerance=0.01 * u.mm,
+            blockSize=512,
+            maxHitsPerTrack=30,
+            minHits=3,
+            weightsCut=0.01,
         )
-    )
-
-    e = acts.examples.NodeFeature
-    s.addAlgorithm(
-        acts.examples.TrackFindingAlgorithmGnn(
+    elif trackBuilder == "dwalk":
+        trackBuilderObj = DWalkTrackBuilding(
             level=logLevel,
-            graphConstructor=graphConstructor,
-            edgeClassifiers=[edgeClassifier],
-            trackBuilder=trackBuilder,
-            nodeFeatures=[
-                e.R,
-                e.Phi,
-                e.Z,
-                e.Eta,
-                e.Cluster1R,
-                e.Cluster1Phi,
-                e.Cluster1Z,
-                e.Cluster1Eta,
-                e.Cluster2R,
-                e.Cluster2Phi,
-                e.Cluster2Z,
-                e.Cluster2Eta,
-            ],
-            featureScales=[1000.0, 3.14159265359, 1000.0, 1.0] * 3,
-            inputSpacePoints="spacepoints",
-            inputClusters="clusters",
-            outputProtoTracks="prototracks",
+            thMin=0.1,
+            thAdd=0.6,
+            minCandidateSize=3,
+            radialFeatureIndex=0,
+            pathMetric="score_weighted_length",
         )
-    )
-
-    s.addAlgorithm(
-        acts.examples.PrototracksToTracks(
+    else:
+        trackBuilderObj = CudaTrackBuilding(
             level=logLevel,
-            inputProtoTracks="prototracks",
-            inputMeasurements="measurements",
-            outputTracks="gnn_only_tracks",
+            useOneBlockImplementation=False,
+            doJunctionRemoval=True,
         )
-    )
 
-    s.addAlgorithm(
-        acts.examples.ParticleSelector(
-            level=logLevel,
-            ptMin=1 * u.GeV,
-            rhoMax=26 * u.cm,
-            measurementsMin=7,
-            removeSecondaries=True,
-            removeNeutral=True,
-            excludeAbsPdgs=[
-                11,
-            ],
-            inputParticles="particles",
-            outputParticles="particles_selected",
-            inputParticleMeasurementsMap="particle_measurements_map",
-        )
-    )
+    # Node features: ITk 12-feature configuration (space point + 2 clusters)
+    e = NodeFeature
+    nodeFeatures = [
+        e.R,
+        e.Phi,
+        e.Z,
+        e.Eta,
+        e.Cluster1R,
+        e.Cluster1Phi,
+        e.Cluster1Z,
+        e.Cluster1Eta,
+        e.Cluster2R,
+        e.Cluster2Phi,
+        e.Cluster2Z,
+        e.Cluster2Eta,
+    ]
+    featureScales = [1000.0, 3.141592654, 1000.0, 1.0] * 3
 
-    addTrackSelection(
+    # Add GNN tracking (space points already created by reader, so no trackingGeometry)
+    addGnn(
         s,
-        TrackSelectorConfig(nMeasurementsMin=7, requireReferenceSurface=False),
-        inputTracks="gnn_only_tracks",
-        outputTracks="gnn_only_tracks_selected",
+        graphConstructor=graphConstructor,
+        edgeClassifiers=edgeClassifiers,
+        trackBuilder=trackBuilderObj,
+        nodeFeatures=nodeFeatures,
+        featureScales=featureScales,
+        inputSpacePoints="spacepoints",
+        inputClusters="clusters",
+        outputDirRoot=str(outputDir),
         logLevel=logLevel,
     )
 
-    # NOTE: This is not standard ATLAS matching
-    s.addAlgorithm(
-        acts.examples.TrackTruthMatcher(
-            level=logLevel,
-            inputTracks="gnn_only_tracks_selected",
-            inputParticles="particles_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            outputTrackParticleMatching="tpm",
-            outputParticleTrackMatching="ptm",
-            doubleMatching=True,
-        )
-    )
-
-    s.addWriter(
-        acts.examples.TrackFinderPerformanceWriter(
-            level=logLevel,
-            inputParticles="particles_selected",
-            inputParticleMeasurementsMap="particle_measurements_map",
-            inputTrackParticleMatching="tpm",
-            inputParticleTrackMatching="ptm",
-            inputTracks="gnn_only_tracks_selected",
-            filePath="performance_gnn4itk.root",
-        )
-    )
-
     s.run()
+    return s
 
 
 if __name__ == "__main__":
-    argparser = argparse.ArgumentParser(description="Run the GNN4ITk example")
+    argparser = argparse.ArgumentParser(
+        description="Run GNN track finding with module maps on ATLAS data"
+    )
 
     argparser.add_argument(
         "--inputRootDump",
         type=Path,
         required=True,
-        help="Path to the input ROOT dump file",
+        help="Path to the input ROOT dump file (ATLAS Athena format)",
     )
     argparser.add_argument(
         "--moduleMapPath",
         type=str,
         required=True,
-        help="Path to the module map file (without .doublets.root or .triplets.root suffixes)",
+        help="Path prefix for module map files (without .doublets.root/.triplets.root)",
     )
     argparser.add_argument(
         "--gnnModel",
         type=Path,
         required=True,
-        help="Path to the GNN model file (ONNX or Torch)",
+        help="Path to the GNN model file (.pt, .onnx, or .engine)",
+    )
+    argparser.add_argument(
+        "--outputDir",
+        type=Path,
+        default=Path.cwd(),
+        help="Output directory for performance files",
     )
     argparser.add_argument(
         "--events",
@@ -193,6 +261,31 @@ if __name__ == "__main__":
         default=1,
         help="Number of events to process",
     )
+    argparser.add_argument(
+        "--bufferEvents",
+        type=int,
+        default=None,
+        help="Number of events to buffer (improves I/O performance)",
+    )
+    argparser.add_argument(
+        "--useEdgeLayerConnector",
+        action="store_true",
+        default=False,
+        help="Use EdgeLayerConnector instead of CudaTrackBuilding for track building",
+    )
+    argparser.add_argument(
+        "--trackBuilder",
+        choices=["junctionremoval", "edgelayerconnector", "dwalk"],
+        default="junctionremoval",
+        help="Track builder to use for graph segmentation",
+    )
+    argparser.add_argument(
+        "--edgeClassifierCut",
+        type=float,
+        default=None,
+        help="Override the edge classifier score cut",
+    )
+    argparser.add_argument("--debug", action="store_true")
 
     args = argparser.parse_args()
 
@@ -200,5 +293,11 @@ if __name__ == "__main__":
         inputRootDump=args.inputRootDump,
         moduleMapPath=args.moduleMapPath,
         gnnModel=args.gnnModel,
+        outputDir=args.outputDir,
         events=args.events,
+        bufferEvents=args.bufferEvents,
+        useEdgeLayerConnector=args.useEdgeLayerConnector,
+        trackBuilder=args.trackBuilder,
+        edgeClassifierCut=args.edgeClassifierCut,
+        logLevel=acts.logging.DEBUG if args.debug else acts.logging.INFO,
     )

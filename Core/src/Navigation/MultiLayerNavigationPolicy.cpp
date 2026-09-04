@@ -8,53 +8,83 @@
 
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 
-namespace Acts::Experimental {
+#include "Acts/Geometry/ReferenceGenerators.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
+#include "Acts/Utilities/GridAccessHelpers.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
+namespace {
+std::string printCandidates(const std::vector<const Acts::Surface*>& surfaces) {
+  std::stringstream sstr{};
+  for (const auto* surf : surfaces) {
+    sstr << " --- " << surf->geometryId() << std::endl;
+  }
+  return sstr.str();
+}
+}  // namespace
+
+namespace Acts {
 
 MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
     const GeometryContext& gctx, const TrackingVolume& volume,
     const Logger& logger, const Config& config, IndexedUpdatorType grid)
-    : m_volume(volume), m_indexedGrid(std::move(grid)) {
+    : m_volume(volume), m_indexedGrid(std::move(grid)), m_config(config) {
   ACTS_VERBOSE("Constructing MultiLayerNavigationPolicy for volume "
                << m_volume.volumeName());
 
   // Fill the grid with surfaces
   std::vector<std::shared_ptr<const Surface>> surfaces = {};
   for (const auto& surface : m_volume.surfaces()) {
-    if (surface.associatedDetectorElement() == nullptr) {
+    if (!surface.isSensitive()) {
       continue;
     }
     surfaces.push_back(surface.getSharedPtr());
   }
 
-  Experimental::detail::CenterReferenceGenerator rGenerator;
-  Experimental::detail::IndexedGridFiller filler{config.binExpansion};
+  CenterReferenceGenerator rGenerator;
+  IndexGridFiller filler{config.binExpansion};
   filler.fill(gctx, m_indexedGrid, surfaces, rGenerator, {});
 }
 
 void MultiLayerNavigationPolicy::initializeCandidates(
-    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
+    const GeometryContext& gctx, const NavigationArguments& args,
+    NavigationPolicyState& /*state*/, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
-  ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates initialization for volume"
-               << m_volume.volumeName());
-  const Transform3& itransform = m_volume.itransform();
+  const Transform3& itransform = m_volume.globalToLocalTransform(gctx);
   const Vector3 locPosition = itransform * args.position;
-  const Vector3 locDirection = itransform * args.direction;
+  const Vector3 locDirection = itransform.linear() * args.direction;
+  ACTS_VERBOSE(
+      "MultiLayerNavigationPolicy() - Candidate initialization for volume "
+      << m_volume.volumeName() << ", " << m_volume.volumeBounds() << " @ "
+      << toString(m_volume.localToGlobalTransform(gctx))
+      << "\ntrack local position " << toString(locPosition)
+      << ", direction: " << toString(locDirection)
+      << ", inside: " << m_volume.volumeBounds().inside(locPosition));
 
   std::vector<Vector2> path = generatePath(locPosition, locDirection);
+  ACTS_VERBOSE("MultiLayerNavigationPolicy() - Created "
+               << path.size() << " points along the path.");
 
   const auto& surfaces = m_volume.surfaces();
   std::vector<const Surface*> surfCandidates = {};
   surfCandidates.reserve(surfaces.size());
 
-  for (const auto& pos : path) {
-    std::vector<std::size_t> indices = m_indexedGrid.grid.atPosition(pos);
+  for (const Vector2& pos : path) {
+    // Local access
 
+    std::vector<std::size_t> fAccessor = {0u, 1u};
+    const auto& indices = m_indexedGrid.grid.atPosition(
+        GridAccessHelpers::accessLocal<GridType>(pos, fAccessor));
+    ACTS_VERBOSE("MultiLayerNavigationPolicy() - Fetch "
+                 << indices.size() << " candidates for point "
+                 << toString(pos));
     std::ranges::transform(indices, std::back_inserter(surfCandidates),
-                           [&](const auto& i) { return &surfaces[i]; });
+                           [&](const std::size_t i) { return &surfaces[i]; });
   }
 
-  ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates reported"
-               << surfCandidates.size() << " candidates");
+  ACTS_VERBOSE("MultiLayerNavigationPolicy() - reported "
+               << surfCandidates.size() << " candidates. "
+               << "\n " << printCandidates(surfCandidates));
 
   // fill the navigation stream with the container
   for (const auto* surf : surfCandidates) {
@@ -66,18 +96,24 @@ std::vector<Vector2> MultiLayerNavigationPolicy::generatePath(
     const Vector3& startPosition, const Vector3& direction) const {
   std::vector<Vector2> path;
 
-  auto maxXIndex = m_indexedGrid.grid.numLocalBins()[0];
-  auto maxYIndex = m_indexedGrid.grid.numLocalBins()[1];
+  auto maxXIndex = m_indexedGrid.grid.multiAxis().getNBins()[0];
+  auto maxYIndex = m_indexedGrid.grid.multiAxis().getNBins()[1];
   Vector3 unitDir = direction.normalized();
 
+  // cast the starting position and direction to the correct axis
+  Vector2 startPoint{
+      VectorHelpers::cast(startPosition, m_indexedGrid.casts[0]),
+      VectorHelpers::cast(startPosition, m_indexedGrid.casts[1])};
+  Vector2 startDir{VectorHelpers::cast(unitDir, m_indexedGrid.casts[0]),
+                   VectorHelpers::cast(unitDir, m_indexedGrid.casts[1])};
+
   for (std::size_t i = 0; i < maxYIndex; i++) {
-    auto v1 = m_indexedGrid.grid.lowerLeftBinEdge({1, i + 1});
-    auto v2 = m_indexedGrid.grid.upperRightBinEdge({maxXIndex, i + 1});
+    auto v1 = m_indexedGrid.grid.multiAxis().getLowerLeftBinEdge({1, i + 1});
+    auto v2 =
+        m_indexedGrid.grid.multiAxis().getUpperRightBinEdge({maxXIndex, i + 1});
 
     auto intersection = Acts::detail::IntersectionHelper2D::intersectSegment(
-        Vector2(v1[0], v1[1]), Vector2(v2[0], v2[1]),
-        startPosition.template block<2, 1>(0, 0),
-        unitDir.template block<2, 1>(0, 0));
+        Vector2(v1[0], v1[1]), Vector2(v2[0], v2[1]), startPoint, startDir);
     if (!intersection.isValid()) {
       continue;
     }
@@ -87,4 +123,4 @@ std::vector<Vector2> MultiLayerNavigationPolicy::generatePath(
   return path;
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

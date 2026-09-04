@@ -10,7 +10,12 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
-namespace Acts::Test {
+#include <format>
+#include <sstream>
+
+using namespace Acts;
+
+namespace ActsTests {
 
 BOOST_AUTO_TEST_CASE(GeometryIdentifier_construct_default) {
   GeometryIdentifier id;
@@ -105,4 +110,54 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_order) {
                  vol1.withSensitive(2u).withExtra(1u));
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_CASE(GeometryIdentifier_format) {
+  // Test formatting of undefined identifier
+  {
+    GeometryIdentifier id;
+    std::string formatted = std::format("{}", id);
+    BOOST_CHECK_EQUAL(formatted, "undefined");
+  }
+
+  // Test formatting with only volume
+  {
+    GeometryIdentifier id = GeometryIdentifier().withVolume(42);
+    std::string formatted = std::format("{}", id);
+    BOOST_CHECK_EQUAL(formatted, "vol=42");
+  }
+
+  // Test formatting with multiple components
+  {
+    GeometryIdentifier id = GeometryIdentifier()
+                                .withVolume(1)
+                                .withLayer(14)
+                                .withSensitive(5)
+                                .withExtra(42);
+    std::string formatted = std::format("{}", id);
+    BOOST_CHECK_EQUAL(formatted, "vol=1|lay=14|sen=5|ext=42");
+  }
+
+  // Test formatting with all components
+  {
+    GeometryIdentifier id = GeometryIdentifier()
+                                .withVolume(1)
+                                .withBoundary(2)
+                                .withLayer(3)
+                                .withApproach(4)
+                                .withSensitive(5)
+                                .withExtra(6);
+    std::string formatted = std::format("{}", id);
+    BOOST_CHECK_EQUAL(formatted, "vol=1|bnd=2|lay=3|apr=4|sen=5|ext=6");
+  }
+
+  // Test that formatted output matches stream output
+  {
+    GeometryIdentifier id =
+        GeometryIdentifier().withVolume(10).withLayer(20).withSensitive(30);
+    std::string formatted = std::format("{}", id);
+    std::ostringstream os;
+    os << id;
+    BOOST_CHECK_EQUAL(formatted, os.str());
+  }
+}
+
+}  // namespace ActsTests

@@ -20,6 +20,7 @@ namespace Acts {
 
 /// @brief Interface for the material mapping that seeks the possible
 /// assignment candidates for the material interactiosn
+/// @ingroup material_mapping
 class IAssignmentFinder {
  public:
   /// Virtual destructor
@@ -31,7 +32,7 @@ class IAssignmentFinder {
     const Surface* surface = nullptr;
     /// Position of the assignment
     Vector3 position = Vector3::Zero();
-    // Direction of the assignment
+    /// Direction of the assignment
     Vector3 direction = Vector3::Zero();
   };
 

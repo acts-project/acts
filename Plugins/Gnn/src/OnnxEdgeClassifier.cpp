@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/OnnxEdgeClassifier.hpp"
+#include "ActsPlugins/Gnn/OnnxEdgeClassifier.hpp"
 
 #include <boost/container/static_vector.hpp>
 #include <onnxruntime_cxx_api.h>
@@ -16,19 +16,9 @@ namespace bc = boost::container;
 namespace {
 
 template <typename T>
-Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor,
+Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, ActsPlugins::Tensor<T> &tensor,
                   std::size_t rank = 2) {
   assert(rank == 1 || rank == 2);
-  ONNXTensorElementDataType onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
-
-  if constexpr (std::is_same_v<T, float>) {
-    onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT;
-  } else if constexpr (std::is_same_v<T, std::int64_t>) {
-    onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64;
-  } else {
-    throw std::runtime_error(
-        "Cannot convert Acts::Tensor to Ort::Value (datatype)");
-  }
 
   bc::static_vector<std::int64_t, 2> shape;
   for (auto size : tensor.shape()) {
@@ -39,13 +29,15 @@ Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, Acts::Tensor<T> &tensor,
   }
 
   assert(shape.size() == rank);
-  return Ort::Value::CreateTensor(memoryInfo, tensor.data(), tensor.nbytes(),
-                                  shape.data(), shape.size(), onnxType);
+  return Ort::Value::CreateTensor<T>(memoryInfo, tensor.data(), tensor.size(),
+                                     shape.data(), shape.size());
 }
 
 }  // namespace
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
                                        std::unique_ptr<const Logger> _logger)
@@ -54,22 +46,22 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
 
   OrtLoggingLevel onnxLevel = ORT_LOGGING_LEVEL_WARNING;
   switch (m_logger->level()) {
-    case Acts::Logging::VERBOSE:
+    case Logging::VERBOSE:
       onnxLevel = ORT_LOGGING_LEVEL_VERBOSE;
       break;
-    case Acts::Logging::DEBUG:
+    case Logging::DEBUG:
       onnxLevel = ORT_LOGGING_LEVEL_INFO;
       break;
-    case Acts::Logging::INFO:
+    case Logging::INFO:
       onnxLevel = ORT_LOGGING_LEVEL_WARNING;
       break;
-    case Acts::Logging::WARNING:
+    case Logging::WARNING:
       onnxLevel = ORT_LOGGING_LEVEL_WARNING;
       break;
-    case Acts::Logging::ERROR:
+    case Logging::ERROR:
       onnxLevel = ORT_LOGGING_LEVEL_ERROR;
       break;
-    case Acts::Logging::FATAL:
+    case Logging::FATAL:
       onnxLevel = ORT_LOGGING_LEVEL_FATAL;
       break;
     default:
@@ -82,13 +74,16 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
   sessionOptions.SetIntraOpNumThreads(1);
   sessionOptions.SetGraphOptimizationLevel(
       GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
+  sessionOptions.SetExecutionMode(ORT_SEQUENTIAL);
 
-#ifndef ACTS_GNN_CPUONLY
-  ACTS_INFO("Try to add ONNX execution provider for CUDA");
-  OrtCUDAProviderOptions cuda_options;
-  cuda_options.device_id = 0;
-  sessionOptions.AppendExecutionProvider_CUDA(cuda_options);
-#endif
+  if (m_cfg.device.isCuda()) {
+    ACTS_INFO("Try to add ONNX execution provider for CUDA");
+    OrtCUDAProviderOptions cuda_options;
+    cuda_options.device_id = m_cfg.device.index;
+    sessionOptions.AppendExecutionProvider_CUDA(cuda_options);
+  } else {
+    ACTS_INFO("Using CPU execution provider for ONNX");
+  }
 
   m_model = std::make_unique<Ort::Session>(*m_env, m_cfg.modelPath.c_str(),
                                            sessionOptions);
@@ -117,37 +112,105 @@ OnnxEdgeClassifier::~OnnxEdgeClassifier() {}
 
 PipelineTensors OnnxEdgeClassifier::operator()(
     PipelineTensors tensors, const ExecutionContext &execContext) {
-  const char *deviceStr = "Cpu";
-  if (execContext.device.type == Acts::Device::Type::eCUDA) {
-    deviceStr = "Cuda";
-  }
-
-  ACTS_DEBUG("Create ORT memory info (" << deviceStr << ")");
-  Ort::MemoryInfo memoryInfo(deviceStr, OrtArenaAllocator,
-                             execContext.device.index, OrtMemTypeDefault);
+  auto memoryInfo =
+      tensors.nodeFeatures.device().isCpu()
+          ? Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault)
+          : Ort::MemoryInfo("Cuda", OrtArenaAllocator, execContext.device.index,
+                            OrtMemTypeDefault);
 
   bc::static_vector<Ort::Value, 3> inputTensors;
   bc::static_vector<const char *, 3> inputNames;
 
+  // Apply feature selection if configured
+  std::optional<Tensor<float>> selectedNodeFeatures;
+  ActsPlugins::Tensor<float> *nodeFeatures = &tensors.nodeFeatures;
+
+  if (!m_cfg.selectedFeatures.empty()) {
+    std::size_t numAllFeatures = tensors.nodeFeatures.shape()[1];
+
+    // Create feature mask on CPU (and clone to device)
+    auto maskCpu =
+        Tensor<bool>::Create({numAllFeatures, 1ul}, ExecutionContext{});
+    auto *maskCpuData = maskCpu.data();
+    std::fill_n(maskCpuData, numAllFeatures, false);
+
+    for (std::size_t j = 0; j < m_cfg.selectedFeatures.size(); ++j) {
+      int featureIdx = m_cfg.selectedFeatures[j];
+      if (featureIdx < 0 || featureIdx >= static_cast<int>(numAllFeatures)) {
+        throw std::runtime_error("Selected feature index out of range");
+      }
+      maskCpuData[static_cast<std::size_t>(featureIdx)] = true;
+    }
+
+    // Clone if inputs not on CPU
+    Tensor<bool> mask = tensors.nodeFeatures.device().isCpu()
+                            ? std::move(maskCpu)
+                            : maskCpu.clone(execContext);
+
+    // Select features
+    selectedNodeFeatures.emplace(
+        selectCols(tensors.nodeFeatures, mask, execContext));
+    nodeFeatures = &(*selectedNodeFeatures);
+  }
+
+  // Scale node features if featureScales is given in cfg.
+  // using device-aware mulPerColumn with inverse scales
+  if (!m_cfg.featureScales.empty()) {
+    if (m_cfg.featureScales.size() !=
+        static_cast<std::size_t>(nodeFeatures->shape()[1])) {
+      throw std::runtime_error(
+          "featureScales size must match the number of input features");
+    }
+
+    // Compute inverse scales (1 / featureScales) for division
+    std::vector<float> inverseScales(m_cfg.featureScales.size());
+    for (std::size_t f = 0; f < m_cfg.featureScales.size(); ++f) {
+      if (m_cfg.featureScales[f] == 0.f) {
+        throw std::runtime_error(
+            "featureScales contains zero: division by zero");
+      }
+      inverseScales[f] = 1.f / m_cfg.featureScales[f];
+    }
+
+    // Apply scales to node features
+    auto scaledFeatures =
+        mulPerColumn(*nodeFeatures, inverseScales, execContext);
+    selectedNodeFeatures.emplace(std::move(scaledFeatures));
+    nodeFeatures = &(*selectedNodeFeatures);
+  }
+
   // Node tensor
-  inputTensors.push_back(toOnnx(memoryInfo, tensors.nodeFeatures));
+  inputTensors.push_back(toOnnx(memoryInfo, *nodeFeatures));
   inputNames.push_back(m_inputNames.at(0).c_str());
+  ACTS_DEBUG("Node features shape: (" << nodeFeatures->shape()[0] << ", "
+                                      << nodeFeatures->shape()[1] << ")");
 
   // Edge tensor
   inputTensors.push_back(toOnnx(memoryInfo, tensors.edgeIndex));
   inputNames.push_back(m_inputNames.at(1).c_str());
+  ACTS_DEBUG("Edge index shape: (" << tensors.edgeIndex.shape()[0] << ", "
+                                   << tensors.edgeIndex.shape()[1] << ")");
+
+  // If the model has three inputs, we require edge features, otherwise throw
+  if (m_inputNames.size() == 3 && !tensors.edgeFeatures.has_value()) {
+    throw std::invalid_argument(
+        "ONNX edge classifier model has three inputs, but no edge features "
+        "provided!");
+  }
 
   // Edge feature tensor
-  std::optional<Acts::Tensor<float>> edgeFeatures;
   if (m_inputNames.size() == 3 && tensors.edgeFeatures.has_value()) {
     inputTensors.push_back(toOnnx(memoryInfo, *tensors.edgeFeatures));
     inputNames.push_back(m_inputNames.at(2).c_str());
+    ACTS_DEBUG("Edge features shape: ("
+               << tensors.edgeFeatures->shape()[0] << ", "
+               << tensors.edgeFeatures->shape()[1] << ")");
   }
 
   // Output score tensor
   ACTS_DEBUG("Create score tensor");
-  auto scores = Acts::Tensor<float>::Create({tensors.edgeIndex.shape()[1], 1ul},
-                                            execContext);
+  auto scores =
+      Tensor<float>::Create({tensors.edgeIndex.shape()[1], 1ul}, execContext);
 
   std::vector<Ort::Value> outputTensors;
   auto outputRank = m_model->GetOutputTypeInfo(0)
@@ -163,20 +226,24 @@ PipelineTensors OnnxEdgeClassifier::operator()(
                outputNames.size());
 
   sigmoid(scores, execContext.stream);
-  auto [newScores, newEdgeIndex] =
-      applyScoreCut(scores, tensors.edgeIndex, m_cfg.cut, execContext.stream);
+  auto mask = scoreMask(scores, m_cfg.cut, execContext.stream);
+  auto newScores = selectRows(scores, mask, execContext);
+  auto newEdgeIndex = selectCols(tensors.edgeIndex, mask, execContext);
+  std::optional<Tensor<float>> newEdgeFeatures;
+  if (tensors.edgeFeatures.has_value()) {
+    newEdgeFeatures.emplace(
+        selectRows(*tensors.edgeFeatures, mask, execContext));
+  }
 
   ACTS_DEBUG("Finished edge classification, after cut: "
              << newEdgeIndex.shape()[1] << " edges.");
 
   if (newEdgeIndex.shape()[1] == 0) {
-    throw Acts::NoEdgesError{};
+    throw NoEdgesError{};
   }
 
-  return {std::move(tensors.nodeFeatures),
-          std::move(newEdgeIndex),
-          {},
-          std::move(newScores)};
+  return {std::move(tensors.nodeFeatures), std::move(newEdgeIndex),
+          std::move(newEdgeFeatures), std::move(newScores)};
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

@@ -10,33 +10,39 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-#include <cmath>
 #include <limits>
 
 using Acts::PdgParticle;
 using ActsFatras::Barcode;
 using ActsFatras::Particle;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
+using namespace ActsFatras;
 
 namespace {
 constexpr auto eps = std::numeric_limits<double>::epsilon();
 }
 
-BOOST_AUTO_TEST_SUITE(FatrasParticle)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(Construct) {
-  const auto pid = Barcode().setVertexPrimary(1).setParticle(42);
+  const auto pid = Barcode().withVertexPrimary(1).withParticle(42);
   const auto particle = Particle(pid, PdgParticle::eProton, 1_e, 1_GeV);
 
   BOOST_CHECK_EQUAL(particle.particleId(), pid);
   BOOST_CHECK_EQUAL(particle.pdg(), PdgParticle::eProton);
   // particle is at rest at the origin
-  BOOST_CHECK_EQUAL(particle.fourPosition(), Acts::Vector4::Zero());
-  BOOST_CHECK_EQUAL(particle.position(), Acts::Vector3::Zero());
+  BOOST_CHECK_EQUAL(particle.fourPosition(), Vector4::Zero());
+  BOOST_CHECK_EQUAL(particle.position(), Vector3::Zero());
   BOOST_CHECK_EQUAL(particle.time(), 0.);
   BOOST_CHECK_EQUAL(particle.fourPosition().x(), particle.position().x());
   BOOST_CHECK_EQUAL(particle.fourPosition().y(), particle.position().y());
@@ -46,14 +52,12 @@ BOOST_AUTO_TEST_CASE(Construct) {
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
   BOOST_CHECK_EQUAL(particle.transverseMomentum(), 0.);
   BOOST_CHECK_EQUAL(particle.absoluteMomentum(), 0.);
-  // particle is created at rest and thus not alive
-  BOOST_CHECK(!particle.isAlive());
 }
 
 BOOST_AUTO_TEST_CASE(CorrectEnergy) {
-  const auto pid = Barcode().setVertexPrimary(1).setParticle(42);
+  const auto pid = Barcode().withVertexPrimary(1).withParticle(42);
   auto particle = Particle(pid, PdgParticle::eProton, 1_e, 1_GeV)
-                      .setDirection(Acts::Vector3::UnitX())
+                      .setDirection(Vector3::UnitX())
                       .setAbsoluteMomentum(2_GeV);
 
   BOOST_CHECK_EQUAL(particle.mass(), 1_GeV);
@@ -61,48 +65,44 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   BOOST_CHECK_EQUAL(particle.fourMomentum().x(), 2_GeV);
   BOOST_CHECK_EQUAL(particle.fourMomentum().y(), 0_GeV);
   BOOST_CHECK_EQUAL(particle.fourMomentum().z(), 0_GeV);
-  BOOST_CHECK_EQUAL(particle.fourMomentum().w(), std::hypot(1_GeV, 2_GeV));
+  BOOST_CHECK_EQUAL(particle.fourMomentum().w(), Acts::fastHypot(1_GeV, 2_GeV));
   BOOST_CHECK_EQUAL(particle.transverseMomentum(), 2_GeV);
   BOOST_CHECK_EQUAL(particle.absoluteMomentum(), 2_GeV);
-  BOOST_CHECK_EQUAL(particle.energy(), std::hypot(1_GeV, 2_GeV));
+  BOOST_CHECK_EQUAL(particle.energy(), Acts::fastHypot(1_GeV, 2_GeV));
   // particle direction must be normalized
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
 
   // lose some energy
-  particle.correctEnergy(-100_MeV);
+  particle.loseEnergy(100_MeV);
   BOOST_CHECK_LT(particle.transverseMomentum(), 2_GeV);
+  BOOST_CHECK_GT(particle.transverseMomentum(), 0_GeV);
   BOOST_CHECK_LT(particle.absoluteMomentum(), 2_GeV);
-  BOOST_CHECK_EQUAL(particle.energy(), std::hypot(1_GeV, 2_GeV) - 100_MeV);
+  BOOST_CHECK_GT(particle.absoluteMomentum(), 0_GeV);
+  CHECK_CLOSE_REL(particle.energy(), Acts::fastHypot(1_GeV, 2_GeV) - 100_MeV,
+                  eps);
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
-  // particle is still alive
-  BOOST_CHECK(particle.isAlive());
 
   // lose some more energy
-  particle.correctEnergy(-200_MeV);
+  particle.loseEnergy(200_MeV);
   BOOST_CHECK_LT(particle.transverseMomentum(), 2_GeV);
+  BOOST_CHECK_GT(particle.transverseMomentum(), 0_GeV);
   BOOST_CHECK_LT(particle.absoluteMomentum(), 2_GeV);
-  BOOST_CHECK_EQUAL(particle.energy(), std::hypot(1_GeV, 2_GeV) - 300_MeV);
+  BOOST_CHECK_GT(particle.absoluteMomentum(), 0_GeV);
+  CHECK_CLOSE_REL(particle.energy(), Acts::fastHypot(1_GeV, 2_GeV) - 300_MeV,
+                  eps);
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
-  // particle is still alive
-  BOOST_CHECK(particle.isAlive());
 
-  // lose a lot of energy
-  particle.correctEnergy(-3_GeV);
-  BOOST_CHECK_EQUAL(particle.transverseMomentum(), 0.);
-  BOOST_CHECK_EQUAL(particle.absoluteMomentum(), 0.);
-  BOOST_CHECK_EQUAL(particle.energy(), particle.mass());
-  CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
-  // particle is not alive anymore
-  BOOST_CHECK(!particle.isAlive());
+  // lose too much energy without a stopping strategy
+  BOOST_CHECK_THROW(particle.loseEnergy(10_GeV), std::invalid_argument);
 
-  // losing even more energy does nothing
-  particle.correctEnergy(-10_GeV);
-  BOOST_CHECK_EQUAL(particle.transverseMomentum(), 0.);
-  BOOST_CHECK_EQUAL(particle.absoluteMomentum(), 0.);
-  BOOST_CHECK_EQUAL(particle.energy(), particle.mass());
+  // lose too much energy with a stopping strategy
+  particle.loseEnergy(10_GeV, SimulationOutcome::KilledInteraction);
+  BOOST_CHECK_GT(particle.transverseMomentum(), 0.);
+  BOOST_CHECK_GT(particle.absoluteMomentum(), 0.);
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
-  // particle is still not alive
-  BOOST_CHECK(!particle.isAlive());
+  BOOST_CHECK_EQUAL(particle.outcome(), SimulationOutcome::KilledInteraction);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests
