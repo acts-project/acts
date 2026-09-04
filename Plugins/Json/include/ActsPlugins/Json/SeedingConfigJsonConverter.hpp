@@ -31,14 +31,6 @@ void to_json(nlohmann::json& j, const SeedConfirmationRangeConfig& config);
 /// @param config Destination SeedConfirmationRangeConfig to populate
 void from_json(const nlohmann::json& j, SeedConfirmationRangeConfig& config);
 
-/// @}
-}  // namespace Acts
-
-namespace Acts::Experimental {
-
-/// @ingroup json_plugin
-/// @{
-
 /// Convert DoubletSeedFinder::Config to JSON
 /// @param j Destination JSON object
 /// @param config Source DoubletSeedFinder::Config to convert
@@ -95,4 +87,4 @@ void from_json(const nlohmann::json& j,
 
 /// @}
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

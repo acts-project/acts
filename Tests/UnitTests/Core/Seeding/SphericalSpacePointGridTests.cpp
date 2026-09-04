@@ -34,8 +34,6 @@ Acts::Experimental::SphericalSpacePointGrid::Config makeConfig() {
   cfg.etaMax = 3.f;
   cfg.etaBinEdges = {-3.f, -1.f, 0.f, 1.f, 3.f};
   cfg.rBinEdges = {0.f, 100.f, 200.f};
-  cfg.bottomBinFinder.emplace(1, 1, 0);
-  cfg.topBinFinder.emplace(1, 1, 0);
   return cfg;
 }
 
@@ -90,12 +88,12 @@ BOOST_AUTO_TEST_CASE(OutOfAcceptanceHasNoBin) {
 }
 
 // When etaBinEdges is empty the grid builds equidistant eta bins from
-// etaMin/etaMax with deltaEtaMax width (the default production path). It must
+// etaMin/etaMax with etaBinSize width (the default production path). It must
 // still bin in eta.
 BOOST_AUTO_TEST_CASE(UniformEtaFallback) {
   auto cfg = makeConfig();
   cfg.etaBinEdges.clear();
-  cfg.deltaEtaMax = 0.5f;  // etaMin=-3 .. etaMax=3 -> 12 bins
+  cfg.etaBinSize = 0.5f;  // etaMin=-3 .. etaMax=3 -> 12 bins
   Acts::Experimental::SphericalSpacePointGrid grid(cfg);
 
   BOOST_CHECK_GT(grid.numberOfBins(), 0u);
