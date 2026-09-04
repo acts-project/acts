@@ -32,7 +32,7 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
  public:
   using ActsIDs = std::array<std::uint64_t, 2>;
 
-  /// One ACTS module's entry in the layer mapping file, with the geometry
+  /// One module's entry in the layer mapping file, with the geometry
   /// index resolved from it.
   struct GbtsIDs {
     /// GBTS layer id, before the eta module is folded in
