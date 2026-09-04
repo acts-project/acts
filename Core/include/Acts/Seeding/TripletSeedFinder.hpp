@@ -208,15 +208,24 @@ class TripletSeedFinder {
 
   /// Create triplets from the bottom, middle, and top space points.
   ///
+  /// @note If the configuration declares the doublets sorted by cotTheta, the
+  ///   returned view is the input advanced past the top doublets that can no
+  ///   longer be compatible with any bottom doublet of a larger cotTheta. A
+  ///   caller sweeping the bottom doublets in ascending cotTheta has to feed
+  ///   the returned view to the next call, and start over from the full
+  ///   collection for the next middle space point.
+  ///
   /// @param spacePoints Space point container
   /// @param spM Space point candidate to be used as middle SP in a seed
   /// @param bottomDoublet Bottom doublet to be used for triplet creation
   /// @param topDoublets Top doublets to be used for triplet creation
   /// @param tripletTopCandidates Cache for triplet top candidates
-  virtual void createTripletTopCandidates(
+  /// @return The top doublets that can still be compatible with a subsequent
+  ///   bottom doublet, see the note above
+  [[nodiscard]] virtual DoubletsForMiddleSp::Range createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      DoubletsForMiddleSp::Range& topDoublets,
+      DoubletsForMiddleSp::Range topDoublets,
       TripletTopCandidates& tripletTopCandidates) const = 0;
 
   /// Create triplets from the bottom, middle, and top space points.
@@ -226,10 +235,12 @@ class TripletSeedFinder {
   /// @param bottomDoublet Bottom doublet to be used for triplet creation
   /// @param topDoublets Top doublets to be used for triplet creation
   /// @param tripletTopCandidates Cache for triplet top candidates
-  virtual void createTripletTopCandidates(
+  /// @return The top doublets that can still be compatible with a subsequent
+  ///   bottom doublet, see the note above
+  [[nodiscard]] virtual DoubletsForMiddleSp::Subset createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      DoubletsForMiddleSp::Subset& topDoublets,
+      DoubletsForMiddleSp::Subset topDoublets,
       TripletTopCandidates& tripletTopCandidates) const = 0;
 
   /// Create triplets from the bottom, middle, and top space points.
@@ -239,10 +250,12 @@ class TripletSeedFinder {
   /// @param bottomDoublet Bottom doublet to be used for triplet creation
   /// @param topDoublets Top doublets to be used for triplet creation
   /// @param tripletTopCandidates Cache for triplet top candidates
-  virtual void createTripletTopCandidates(
+  /// @return The top doublets that can still be compatible with a subsequent
+  ///   bottom doublet, see the note above
+  [[nodiscard]] virtual DoubletsForMiddleSp::Subset2 createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      DoubletsForMiddleSp::Subset2& topDoublets,
+      DoubletsForMiddleSp::Subset2 topDoublets,
       TripletTopCandidates& tripletTopCandidates) const = 0;
 };
 
