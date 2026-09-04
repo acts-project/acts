@@ -40,15 +40,14 @@ description: a flat list of `GbtsLayer` logical layers, each subdivided into
 **eta bins**.
 
 @ref Acts::Experimental::GbtsLayerDescription gives a layer its ID, its type
-(barrel or endcap) and its extent. For a barrel layer `refCoord` is the radius
-and the bounds are in @f$z@f$; for an endcap it is the other way round. The layer
-ID encodes the subdetector: `id / 10000 == 8` marks a pixel barrel layer, and IDs
-in the `12000`–`14000` range mark strip volumes.
+(barrel or endcap), its sensor technology and its extent. For a barrel layer
+`refCoord` is the radius and the bounds are in @f$z@f$; for an endcap it is the
+other way round. The ID is the caller's own numbering and is never decoded.
 
-Which layer pairs may be joined by an edge comes from a **connector file** parsed
-by @ref Acts::Experimental::GbtsLayerConnectionMap::fromStream, listing source
-(outer) and destination (inner) layer pairs. @ref Acts::Experimental::GbtsGeometry
-combines the layer descriptions with that map and precomputes, for every pair of
+Which layer pairs may be joined by an edge is a list of
+@ref Acts::Experimental::GbtsLayerConnection, each naming a source (outer) and a
+destination (inner) layer. @ref Acts::Experimental::GbtsGeometry combines the
+layer descriptions with those connections and precomputes, for every pair of
 connected layers, which *eta bin* pairs are geometrically compatible with the
 allowed @f$z_0@f$ range. The result is a **bin group** list — one inner bin
 together with all outer bins it may connect to — which is kept internal to the
@@ -56,10 +55,12 @@ geometry and serves as the graph builder's iteration schedule, ordered so that
 outer bins are processed before the inner bins that depend on them.
 
 > [!note]
-> The connection table is trained offline rather than written by hand.
+> The connections are trained offline rather than written by hand.
 > @ref Acts::Experimental::GbtsLayerConnectionTool accumulates layer-pair
 > statistics from simulated tracks; the
 > `Examples/Scripts/Python/gbts_layer_connection_training.py` script drives it.
+> `ActsExamples::GraphBasedSeedingAlgorithm` reads the resulting table, in
+> ATLAS' connector file format, and hands the pairs it lists to the geometry.
 
 ## Graph nodes {#gbts-nodes}
 
@@ -221,10 +222,10 @@ The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrac
 
 | Option | Stage | Effect |
 | --- | --- | --- |
-| `connectorInputFile` | @ref gbts-geometry | layer connection table; defines which layer pairs may form edges |
-| `etaBinWidthOverride` | @ref gbts-geometry | override the eta bin width from the connector file (default 0.2) |
+| `useStripConnections` | @ref gbts-geometry | take the strip layer connections from the connector file instead of the pixel ones |
 | `minPt` | @ref gbts-graph | drives the curvature and @f$\phi@f$-window bounds |
 | `nMaxPhiSlice` | @ref gbts-graph | sets the base @f$\phi@f$ sliding-window width |
+| `useOldTuningsCurvature`, `useOldTuningsPhiWindow` | @ref gbts-graph | bound the curvature and the @f$\phi@f$ window by the pT the triplet has to reach, rather than by the tuned constants |
 | `minDeltaRadius`, `maxAbsTau` | @ref gbts-graph | doublet acceptance |
 | `minZ0`, `maxZ0`, `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet |
 | `tauRatioCut`, `cutDPhiMax`, `cutDCurvMax` | @ref gbts-graph | edge-to-edge linking tolerances |
@@ -234,10 +235,13 @@ The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrac
 | `matchBeforeCreate`, `tauRatioPrecut` | @ref gbts-graph | require a compatible incoming edge before creating one |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
 | `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |
-| `addTriplets`, `maxAbsEtaAddTripelts` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
+| `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `useClusterWidthCuts`, `lutInputFile` | @ref gbts-ml | cluster-width based @f$\tau@f$ windows |
 | `maxEndcapClusterWidth`, `moduleHalfLengthY`, `moduleEdgeTolerance` | @ref gbts-ml | cluster-width acceptance and module-edge handling |
-| `lrtMode` | all | Large Radius Tracking: strip layers instead of pixel, looser cuts, shorter minimum chain |
+
+There is no large radius tracking mode. LRT is these options set to the values
+it needs: `useStripConnections`, `useOldTuningsCurvature` with both
+`oldTuningsCurvature*Fraction` at 1, and `minSeedLevel = 2`.
 
 @ref Acts::Experimental::GbtsTrackingFilter "GbtsTrackingFilter::Config"
 separately controls the chain-following filter of @ref gbts-extraction "seed extraction":
@@ -257,7 +261,7 @@ separately controls the chain-following filter of @ref gbts-extraction "seed ext
   holds - `GbtsNodeParams`, `GbtsNodeEdgeInfo`, `GbtsEtaBinInfo`, `GbtsEdge` -
   is internal and lives in `Acts/Seeding/detail/GbtsGraphTypes.hpp`.
 - Geometry: @ref Acts::Experimental::GbtsGeometry,
-  @ref Acts::Experimental::GbtsLayerConnectionMap, and the internal `GbtsLayer`.
+  @ref Acts::Experimental::GbtsLayerConnection, and the internal `GbtsLayer`.
 - Chain following: @ref Acts::Experimental::GbtsTrackingFilter and its internal
   `GbtsEdgeState`.
 - Region of interest: @ref Acts::Experimental::GbtsRoiDescriptor.

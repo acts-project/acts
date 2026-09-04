@@ -16,15 +16,98 @@
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <numbers>
 #include <sstream>
+#include <stdexcept>
 #include <vector>
 
 namespace ActsExamples {
+
+namespace {
+
+/// What the ATLAS connector file has to say: the eta bin width its layers were
+/// trained with, and the layer pairs the seeder may connect.
+struct ConnectorTable {
+  float etaBinWidth{};
+  std::vector<Acts::Experimental::GbtsLayerConnection> connections;
+};
+
+/// Read an ATLAS GBTS connector file: a `nLinks etaBinWidth` header, then per
+/// link a `index stage src dst height width nEntries` line followed by a
+/// height x width bin table. Only the layer ids survive - GbtsGeometry derives
+/// the bin table from the layer geometry, and the stages from the connections.
+///
+/// @param path Path to the connector file
+/// @param stripConnections Keep the strip connections instead of the pixel ones
+ConnectorTable readConnectorTable(const std::string &path,
+                                  bool stripConnections) {
+  std::ifstream inStream(path);
+  if (!inStream) {
+    throw std::runtime_error("Cannot open GBTS connector file '" + path + "'");
+  }
+
+  ConnectorTable table;
+
+  std::uint32_t nLinks{};
+  inStream >> nLinks >> table.etaBinWidth;
+
+  // the file's own stage column, which only fixes the order the connections
+  // are handed over in
+  std::vector<std::pair<std::uint32_t, Acts::Experimental::GbtsLayerConnection>>
+      staged;
+  staged.reserve(nLinks);
+
+  for (std::uint32_t l = 0; l < nLinks; l++) {
+    std::uint32_t lIdx{};
+    std::uint32_t stage{};
+    std::uint32_t src{};
+    std::uint32_t dst{};
+    std::uint32_t height{};
+    std::uint32_t width{};
+    std::uint32_t nEntries{};
+
+    inStream >> lIdx >> stage >> src >> dst >> height >> width >> nEntries;
+
+    std::uint32_t dummy{};
+    for (std::uint32_t i = 0; i < height * width; ++i) {
+      inStream >> dummy;
+    }
+
+    // ATLAS ITk volume ids: 12, 13 and 14 are the strip subdetectors. The
+    // table holds both technologies and only one of them is ever seeded.
+    const auto isStrip = [](std::uint32_t layerId) {
+      const std::uint32_t volumeId = layerId / 1000;
+      return volumeId == 12 || volumeId == 13 || volumeId == 14;
+    };
+    if (isStrip(src) != stripConnections || isStrip(dst) != stripConnections) {
+      continue;
+    }
+
+    staged.emplace_back(stage,
+                        Acts::Experimental::GbtsLayerConnection{src, dst});
+  }
+
+  if (!inStream) {
+    throw std::runtime_error("Malformed GBTS connector file '" + path + "'");
+  }
+
+  std::ranges::stable_sort(staged, {},
+                           [](const auto &entry) { return entry.first; });
+
+  table.connections.reserve(staged.size());
+  for (const auto &[stage, connection] : staged) {
+    table.connections.push_back(connection);
+  }
+
+  return table;
+}
+
+}  // namespace
 
 GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
     const Config &cfg, std::unique_ptr<const Acts::Logger> logger)
@@ -37,11 +120,9 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // parse the mapping file and turn into map
   m_actsGbtsMap = makeActsGbtsMap();
 
-  // create the connection objects
-  Acts::Experimental::GbtsLayerConnectionMap layerConnectionMap =
-      Acts::Experimental::GbtsLayerConnectionMap::fromFile(
-          m_cfg.seedFinderConfig.connectorInputFile,
-          m_cfg.seedFinderConfig.lrtMode);
+  // read which layers may be connected
+  const ConnectorTable connectorTable = readConnectorTable(
+      m_cfg.connectorInputFile, m_cfg.seedFinderConfig.useStripConnections);
 
   // create the TrigInDetSiLayers (Logical Layers),
   // as well as a map that tracks there index in m_layerGeometry
@@ -49,14 +130,15 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
   // option that allows for adding custom eta binning (default is at 0.2)
-  if (m_cfg.seedFinderConfig.etaBinWidthOverride != 0.0f) {
-    layerConnectionMap.etaBinWidth = m_cfg.seedFinderConfig.etaBinWidthOverride;
-  }
+  const float etaBinWidth = m_cfg.etaBinWidthOverride != 0.0f
+                                ? m_cfg.etaBinWidthOverride
+                                : connectorTable.etaBinWidth;
 
   // initialise the object that holds all the geometry information needed for
   // the algorithm
   auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
-      layerGeometry, layerConnectionMap, this->logger());
+      layerGeometry, connectorTable.connections, etaBinWidth, m_cfg.gbtsZ0Range,
+      this->logger());
 
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
@@ -380,18 +462,21 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
 }
 
 void GraphBasedSeedingAlgorithm::printConfig() const {
+  ACTS_DEBUG("===== GraphBasedSeedingAlgorithm =====");
+  ACTS_DEBUG("layerMappingFile: " << m_cfg.layerMappingFile);
+  ACTS_DEBUG("connectorInputFile: " << m_cfg.connectorInputFile);
+  ACTS_DEBUG("etaBinWidthOverride: " << m_cfg.etaBinWidthOverride);
   ACTS_DEBUG("===== GraphBasedTrackSeeder =====");
   const auto &cfg1 = m_cfg.seedFinderConfig;
   ACTS_DEBUG("BeamSpotCorrection: " << cfg1.beamSpotCorrection);
-  ACTS_DEBUG("connectorInputFile: " << cfg1.connectorInputFile);
   ACTS_DEBUG("lutInputFile: " << cfg1.lutInputFile);
-  ACTS_DEBUG("lrtMode: " << cfg1.lrtMode);
+  ACTS_DEBUG("useStripConnections: " << cfg1.useStripConnections);
   ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
   ACTS_DEBUG("matchBeforeCreate: " << cfg1.matchBeforeCreate);
-  ACTS_DEBUG("useOldTunings: " << cfg1.useOldTunings);
+  ACTS_DEBUG("useOldTuningsCurvature: " << cfg1.useOldTuningsCurvature);
+  ACTS_DEBUG("useOldTuningsPhiWindow: " << cfg1.useOldTuningsPhiWindow);
   ACTS_DEBUG("tauRatioCut: " << cfg1.tauRatioCut);
   ACTS_DEBUG("tauRatioPrecut: " << cfg1.tauRatioPrecut);
-  ACTS_DEBUG("etaBinWidthOverride: " << cfg1.etaBinWidthOverride);
   ACTS_DEBUG("nMaxPhiSlice: " << cfg1.nMaxPhiSlice);
   ACTS_DEBUG("minPt: " << cfg1.minPt);
   ACTS_DEBUG("useEtaBinning: " << cfg1.useEtaBinning);
@@ -405,7 +490,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("useAdaptiveCuts: " << cfg1.useAdaptiveCuts);
   ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
   ACTS_DEBUG("tauRatioCorr: " << cfg1.tauRatioCorr);
-  ACTS_DEBUG("maxAbsEtaAddTripelts: " << cfg1.maxAbsEtaAddTripelts);
+  ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
   ACTS_DEBUG("d0Max: " << cfg1.d0Max);
   ACTS_DEBUG("cutDPhiMax: " << cfg1.cutDPhiMax);
   ACTS_DEBUG("cutDCurvMax: " << cfg1.cutDCurvMax);

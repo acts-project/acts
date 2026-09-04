@@ -21,7 +21,9 @@
 namespace Acts::Experimental::detail {
 
 void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
-                                       const detail::GbtsNodeView& nodeView) {
+                                       const detail::GbtsNodeView& nodeView,
+                                       const std::array<float, 3>& varianceX,
+                                       const std::array<float, 2>& varianceY) {
   initialized = true;
 
   j = 0;
@@ -58,13 +60,13 @@ void detail::GbtsEdgeState::initialize(const detail::GbtsEdge& pS,
   y[1] = (n1.z() - n2.z()) / (n1.r() - n2.r());
 
   cx = {};
-  cx[0][0] = 0.25f;
-  cx[1][1] = 0.001f;
-  cx[2][2] = 0.001f;
+  cx[0][0] = varianceX[0];
+  cx[1][1] = varianceX[1];
+  cx[2][2] = varianceX[2];
 
   cy = {};
-  cy[0][0] = 1.5f;
-  cy[1][1] = 0.001f;
+  cy[0][0] = varianceY[0];
+  cy[1][1] = varianceY[1];
 }
 
 }  // namespace Acts::Experimental::detail
@@ -92,7 +94,8 @@ detail::GbtsEdgeState GbtsTrackingFilter::followTrack(
       state.stateStore[state.globalStateCounter];
   ++state.globalStateCounter;
 
-  pInitState.initialize(pS, nodeView);
+  pInitState.initialize(pS, nodeView, m_cfg.initialVarianceX,
+                        m_cfg.initialVarianceY);
 
   state.stateVec.clear();
 

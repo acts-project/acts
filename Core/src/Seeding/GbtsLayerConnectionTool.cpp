@@ -49,8 +49,7 @@ GbtsLayerConnectionTool::GbtsLayerConnectionTool(
   }
 }
 
-void GbtsLayerConnectionTool::addTrack(
-    const std::vector<HitCoordinates>& track) {
+void GbtsLayerConnectionTool::addTrack(std::span<const HitCoordinates> track) {
   if (track.size() < 2) {
     ACTS_WARNING("Track only has one measurement, skipping");
     return;

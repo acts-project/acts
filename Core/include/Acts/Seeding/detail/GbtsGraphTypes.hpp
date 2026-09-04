@@ -43,6 +43,8 @@ static constexpr std::uint32_t kGbtsMaxEdgeNeighbours = 6;
 /// Bins of the per-node z0 histogram, which is kept as a bit mask in
 /// GbtsNodeEdgeInfo::isConnected and so may not exceed its width.
 static constexpr std::int32_t kGbtsZ0HistogramBins = 16;
+static_assert(kGbtsZ0HistogramBins <=
+              std::numeric_limits<std::uint16_t>::digits);
 
 //! [gbts node params]
 /// Per-node parameters used while building the graph.

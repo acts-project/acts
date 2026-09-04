@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -108,7 +109,7 @@ class GbtsLayerConnectionTool {
 
   /// converts layer hits to layer transitions
   /// @param track the layer hits of a particle
-  void addTrack(const std::vector<HitCoordinates>& track);
+  void addTrack(std::span<const HitCoordinates> track);
 
   /// Creates the connection table
   /// @param outputFileLocation the location for the layer connection table

@@ -98,9 +98,10 @@ void GbtsNodeStorage::extend(
 
 std::vector<std::uint32_t> GbtsNodeStorage::sortBinByPhi(
     const std::vector<std::uint32_t>& staged) const {
-  // TODO config
-  constexpr std::uint32_t nBuckets = 31;
-  std::array<std::vector<std::pair<float, std::uint32_t>>, 32> phiBuckets;
+  const std::uint32_t nBuckets = m_cfg.phiSortBuckets;
+  std::array<std::vector<std::pair<float, std::uint32_t>>,
+             kMaxPhiSortBuckets + 1>
+      phiBuckets;
 
   for (const std::uint32_t stagedIdx : staged) {
     const float phi = m_staged[stagedIdx].phi;
@@ -110,14 +111,14 @@ std::vector<std::uint32_t> GbtsNodeStorage::sortBinByPhi(
   }
 
   // Nodes with identical phi are ordered by insertion index.
-  for (auto& bucket : phiBuckets) {
-    std::ranges::sort(bucket);
+  for (std::uint32_t bucket = 0; bucket <= nBuckets; ++bucket) {
+    std::ranges::sort(phiBuckets[bucket]);
   }
 
   std::vector<std::uint32_t> sorted;
   sorted.reserve(staged.size());
-  for (const auto& bucket : phiBuckets) {
-    for (const auto& [phi, stagedIdx] : bucket) {
+  for (std::uint32_t bucket = 0; bucket <= nBuckets; ++bucket) {
+    for (const auto& [phi, stagedIdx] : phiBuckets[bucket]) {
       sorted.push_back(stagedIdx);
     }
   }
@@ -212,7 +213,7 @@ void GbtsNodeStorage::finalize() {
 
   m_strips = std::move(strips);
 
-  generatePhiIndexing(1.5f * m_cfg.phiSliceWidth);
+  generatePhiIndexing(m_cfg.phiIndexMargin * m_cfg.phiSliceWidth);
 
   m_staged.clear();
   m_staged.shrink_to_fit();
@@ -231,9 +232,12 @@ void GbtsNodeStorage::applyTauCuts(const StagedNode& staged,
     return;
   }
 
-  // lut bin width is 0.05 mm
+  // by the reciprocal, not the division: 1/0.05f is exactly 20, the division
+  // is not, and the difference lands on the bin edges
   const auto lutBinIdx =
-      static_cast<std::int32_t>(std::floor(20 * staged.clusterWidth)) - 1;
+      static_cast<std::int32_t>(
+          std::floor(staged.clusterWidth * (1.0f / m_cfg.tauLutBinWidth))) -
+      1;
 
   if (lutBinIdx < 0 ||
       lutBinIdx >= static_cast<std::int32_t>(m_tauLut.size())) {

@@ -9,67 +9,17 @@
 #pragma once
 
 #include <cstdint>
-#include <iosfwd>
-#include <map>
-#include <memory>
-#include <vector>
 
 namespace Acts::Experimental {
 
-/// Connection between two GBTS layers with binning information.
+/// A pair of layers the seeder may build a graph edge between. Edges are made
+/// outside-in, so a hit on @c src is the outer end of the doublet and a hit on
+/// @c dst the inner one.
 struct GbtsLayerConnection {
-  /// @param src_ Source layer index
-  /// @param dst_ Destination layer index
-  GbtsLayerConnection(std::uint32_t src_, std::uint32_t dst_)
-      : src(src_), dst(dst_) {};
-
-  /// Source and destination layer indices
+  /// Outer layer id.
   std::uint32_t src{};
-  /// Destination layer index
+  /// Inner layer id.
   std::uint32_t dst{};
-
-  /// Binning table for the connection
-  std::vector<std::int32_t> binTable;
-};
-
-/// Loader and container for GBTS layer connection data.
-struct GbtsLayerConnectionMap {
- public:
-  /// Create a GbtsLayerConnectionMap from an input stream
-  /// @param inStream Input stream containing the connection data
-  /// @param lrtMode Enable LRT (Large Radius Tracking) mode
-  /// @return A GbtsLayerConnectionMap instance populated with the data from the stream
-  static GbtsLayerConnectionMap fromStream(std::istream& inStream,
-                                           bool lrtMode);
-  /// Create a GbtsLayerConnectionMap from a file
-  /// @param inFile Input configuration file path
-  /// @param lrtMode Enable LRT (Large Radius Tracking) mode
-  /// @return A GbtsLayerConnectionMap instance populated with the data from the file
-  static GbtsLayerConnectionMap fromFile(std::string& inFile, bool lrtMode);
-
-  /// Group of connections targeting a destination layer.
-  struct LayerGroup {
-    /// @param dst_ Destination layer key
-    /// @param sources_ Vector of source connections
-    LayerGroup(std::uint32_t dst_,
-               const std::vector<const GbtsLayerConnection*>& sources_)
-        : dst(dst_), sources(sources_) {};
-
-    /// The target layer of the group
-    std::uint32_t dst{};
-
-    /// The source layers of the group
-    std::vector<const GbtsLayerConnection*> sources;
-  };
-
-  /// Eta bin width
-  float etaBinWidth{};
-
-  /// Map of layer groups indexed by layer
-  std::map<std::int32_t, std::vector<LayerGroup>> layerGroups;
-  /// Map of connections indexed by layer
-  std::map<std::int32_t, std::vector<std::unique_ptr<GbtsLayerConnection>>>
-      connectionMap;
 };
 
 }  // namespace Acts::Experimental
