@@ -1435,7 +1435,6 @@ def addGbtsSeeding(
     seedFinderConfig = acts.examples.GraphBasedSeedingConfig(
         **acts.examples.defaultKWArgs(
             minPt=seedFinderConfigArg.minPt,
-            connectorInputFile=connectorInputFileStr,
             lutInputFile=lutInputConfigFileStr,
         ),
     )
@@ -1446,6 +1445,7 @@ def addGbtsSeeding(
         outputSeeds="seeds",
         seedFinderConfig=seedFinderConfig,
         layerMappingFile=layerMappingFile,
+        connectorInputFile=connectorInputFileStr,
         trackingGeometry=trackingGeometry,
         fillModuleCsv=False,
         inputClusters="clusters",

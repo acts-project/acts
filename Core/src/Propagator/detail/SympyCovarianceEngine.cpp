@@ -27,11 +27,13 @@ namespace {
 /// @param [out] out the transported covariance
 void applyBoundCovarianceTransport(const BoundMatrix& jacobian,
                                    const BoundMatrix& in, BoundMatrix& out) {
+  const auto j = std::span<const double, 36>(jacobian.data(), 36);
+  const auto c = std::span<const double, 36>(in.data(), 36);
+  const auto o = std::span<double, 36>(out.data(), 36);
   if (jacobian(eBoundQOverP, eBoundQOverP) == 1) {
-    transportCovarianceToBoundVacuumImpl(in.data(), jacobian.data(),
-                                         out.data());
+    transportCovarianceToBoundVacuumImpl(c, j, o);
   } else {
-    transportCovarianceToBoundDenseImpl(in.data(), jacobian.data(), out.data());
+    transportCovarianceToBoundDenseImpl(c, j, o);
   }
 }
 
