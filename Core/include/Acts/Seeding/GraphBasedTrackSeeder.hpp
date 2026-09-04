@@ -50,25 +50,16 @@ class GraphBasedTrackSeeder {
     bool matchBeforeCreate = false;
     /// optional validation for barrel triplets
     bool validateTriplets = true;
-    /// widens allowed variation in tau ratio
-    /// if layer is missed in edge connecting
-    bool useAdaptiveCuts = true;
     /// optionally add 3 sp seeds within a certain eta range
     ///
     /// @note Worth little until `maxAbsEtaAddTriplets` is opened past
     ///       `edgeMaskMinEta`; matters most where there are few layers.
     bool addTriplets = false;
-    /// Tau ratio cut threshold.
+    /// Tau ratio scale the high-pT check of `validateTriplets` cuts at. The
+    /// cut on the triplet itself comes from its two layer pairs, not from here.
     float tauRatioCut = 0.007;
     /// Tau ratio precut threshold.
     float tauRatioPrecut = 0.009f;
-    /// correction applied to tau acceptance
-    /// if a layer is missed during edge connecting
-    float tauRatioCorr = 0.006;
-    /// The same for a triplet any of whose three nodes a strip module made,
-    /// whose two doublets resolved the shared node's along-strip coordinate
-    /// separately. Reaches nothing without a strip in the triplet.
-    float tauRatioCorrStrip = 0.03f;
     /// the maximum allowed eta value in which
     /// three spacepoint seeds are passed through
     float maxAbsEtaAddTriplets = 1.5;
@@ -295,8 +286,8 @@ class GraphBasedTrackSeeder {
     std::uint32_t firstIt{};
     /// window half-width;
     float deltaPhi{};
-    /// GBTS layer ID of the bin
-    GbtsExperimentLayerId layerId{};
+    /// Cut the layer pair this bin's doublets belong to carries
+    float tauRatioCut{};
     /// Type of the bin's layer.
     GbtsLayerType type{};
     /// Technology of the bin's layer.

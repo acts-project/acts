@@ -53,9 +53,15 @@ constexpr float kDiscMaxR = 220.f;
 /// createLinkingScheme.py.
 constexpr float kEtaBinWidth = 0.2f;
 
+/// Tau ratio tolerances the toy detector puts on its layer pairs, matching the
+/// constants GBTS was tuned with.
+constexpr float kTauRatioCut = 0.007f;
+constexpr float kTauRatioCorr = 0.006f;
+constexpr float kTauRatioCorrStrip = 0.03f;
+
 /// One layer of the toy detector. The ids follow ATLAS, which the seeder still
-/// keys on: 80000 is the innermost barrel layer (extra z0 cuts) and barrel ids
-/// 1000 apart are adjacent.
+/// keys on for its per-layer cuts: 80000 is the innermost barrel layer, which
+/// gets the extra z0 cuts.
 struct LayerSpec {
   Experimental::GbtsExperimentLayerId id{};
   GbtsLayerType type{};
@@ -150,11 +156,29 @@ std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
     layers.push_back(layer);
   }
 
+  // the tolerances an ATLAS-like experiment would put on its own pairs: one
+  // leaving the pixel barrel scatters more, and one with a strip at either end
+  // more again, since its two doublets resolve the shared node separately
+  const auto layerOf = [&detector](Experimental::GbtsExperimentLayerId id) {
+    return *std::ranges::find(detector.layers, id, &LayerSpec::id);
+  };
+  const auto isPixelBarrel = [&](Experimental::GbtsExperimentLayerId id) {
+    const LayerSpec& layer = layerOf(id);
+    return layer.technology == GbtsLayerTechnology::Pixel &&
+           layer.type == GbtsLayerType::Barrel;
+  };
+  const auto isStrip = [&](Experimental::GbtsExperimentLayerId id) {
+    return layerOf(id).technology == GbtsLayerTechnology::Strip;
+  };
+
   std::vector<Experimental::GbtsLayerConnection> connections;
   connections.reserve(detector.links.size());
   for (const auto& [src, dst] : detector.links) {
-    connections.push_back(
-        {static_cast<std::uint32_t>(src), static_cast<std::uint32_t>(dst)});
+    const float cut =
+        kTauRatioCut +
+        ((isPixelBarrel(dst) && !isPixelBarrel(src)) ? kTauRatioCorr : 0.f) +
+        ((isStrip(src) || isStrip(dst)) ? kTauRatioCorrStrip : 0.f);
+    connections.push_back({src, dst, cut});
   }
 
   return std::make_shared<Experimental::GbtsGeometry>(layers, connections,

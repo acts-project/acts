@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
+#include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 #include "Acts/Seeding/detail/GbtsLayer.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -66,7 +67,7 @@ class GbtsGeometry final {
 
   /// Get bin groups
   /// @return Bin groups vector
-  const std::vector<std::pair<std::uint32_t, std::vector<std::uint32_t>>>&
+  const std::vector<std::pair<std::uint32_t, std::vector<detail::GbtsBinLink>>>&
   binGroups() const {
     return m_binGroups;
   }
@@ -106,7 +107,8 @@ class GbtsGeometry final {
   std::uint32_t m_nEtaBins{};
 
   /// Bin groups
-  std::vector<std::pair<std::uint32_t, std::vector<std::uint32_t>>> m_binGroups;
+  std::vector<std::pair<std::uint32_t, std::vector<detail::GbtsBinLink>>>
+      m_binGroups;
 };
 
 }  // namespace Acts::Experimental

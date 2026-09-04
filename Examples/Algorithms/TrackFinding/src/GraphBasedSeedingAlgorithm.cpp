@@ -22,6 +22,8 @@
 #include <iostream>
 #include <map>
 #include <numbers>
+#include <ranges>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -108,6 +110,72 @@ ConnectorTable readConnectorTable(const std::string &path,
   return table;
 }
 
+/// Restate, per layer pair, the tau ratio tolerance the seeder used to derive
+/// per triplet. A pair is widened when it steps over a layer between two pixel
+/// barrel layers or when it leaves the pixel barrel, and again when either end
+/// is a strip layer.
+///
+/// A pair steps over a layer when the connections themselves offer a way round
+/// it, so the table has to carry the direct pairs for this to see anything.
+///
+/// @param connections The layer pairs, whose cuts are filled in
+/// @param layers The layer descriptions, for technology and type
+/// @param base Tolerance of a pair that is widened by nothing
+/// @param corr Widening of a pair that steps over a layer or leaves the barrel
+/// @param corrStrip Widening of a pair with a strip layer at either end
+void assignTauRatioCuts(
+    std::vector<Acts::Experimental::GbtsLayerConnection> &connections,
+    const std::vector<Acts::Experimental::GbtsLayerDescription> &layers,
+    float base, float corr, float corrStrip) {
+  std::map<Acts::Experimental::GbtsExperimentLayerId,
+           const Acts::Experimental::GbtsLayerDescription *>
+      byId;
+  for (const auto &layer : layers) {
+    byId[layer.id] = &layer;
+  }
+
+  std::set<std::pair<Acts::Experimental::GbtsExperimentLayerId,
+                     Acts::Experimental::GbtsExperimentLayerId>>
+      pairs;
+  for (const auto &connection : connections) {
+    pairs.emplace(connection.src, connection.dst);
+  }
+
+  const auto isPixelBarrel =
+      [&byId](Acts::Experimental::GbtsExperimentLayerId id) {
+        const auto it = byId.find(id);
+        return it != byId.end() &&
+               it->second->technology ==
+                   Acts::Experimental::GbtsLayerTechnology::Pixel &&
+               it->second->type == Acts::Experimental::GbtsLayerType::Barrel;
+      };
+  const auto isStrip = [&byId](Acts::Experimental::GbtsExperimentLayerId id) {
+    const auto it = byId.find(id);
+    return it != byId.end() &&
+           it->second->technology ==
+               Acts::Experimental::GbtsLayerTechnology::Strip;
+  };
+
+  for (auto &connection : connections) {
+    const bool pixelBarrelSrc = isPixelBarrel(connection.src);
+    const bool pixelBarrelDst = isPixelBarrel(connection.dst);
+
+    const bool stepsOver =
+        pixelBarrelSrc && pixelBarrelDst &&
+        std::ranges::any_of(layers, [&](const auto &middle) {
+          return pairs.contains({connection.src, middle.id}) &&
+                 pairs.contains({middle.id, connection.dst});
+        });
+
+    const bool leavesBarrel = pixelBarrelDst && !pixelBarrelSrc;
+
+    connection.tauRatioCut =
+        base + ((stepsOver || leavesBarrel) ? corr : 0.f) +
+        ((isStrip(connection.src) || isStrip(connection.dst)) ? corrStrip
+                                                              : 0.f);
+  }
+}
+
 }  // namespace
 
 GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
@@ -122,13 +190,20 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   m_actsGbtsMap = makeActsGbtsMap();
 
   // read which layers may be connected
-  const ConnectorTable connectorTable = readConnectorTable(
+  ConnectorTable connectorTable = readConnectorTable(
       m_cfg.connectorInputFile, m_cfg.seedFinderConfig.useStripConnections);
 
   // create the TrigInDetSiLayers (Logical Layers),
   // as well as a map that tracks there index in m_layerGeometry
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
+
+  // the seeder cuts a triplet on what its two layer pairs carry, so the
+  // tolerances are worked out here rather than there
+  assignTauRatioCuts(connectorTable.connections, layerGeometry,
+                     m_cfg.seedFinderConfig.tauRatioCut,
+                     m_cfg.useAdaptiveCuts ? m_cfg.tauRatioCorr : 0.f,
+                     m_cfg.tauRatioCorrStrip);
 
   // option that allows for adding custom eta binning (default is at 0.2)
   const float etaBinWidth = m_cfg.etaBinWidthOverride != 0.0f
@@ -497,9 +572,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("hitShareThreshold: " << cfg1.hitShareThreshold);
   ACTS_DEBUG("maxEndcapClusterWidth: " << cfg1.maxEndcapClusterWidth);
   ACTS_DEBUG("validateTriplets: " << cfg1.validateTriplets);
-  ACTS_DEBUG("useAdaptiveCuts: " << cfg1.useAdaptiveCuts);
   ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
-  ACTS_DEBUG("tauRatioCorr: " << cfg1.tauRatioCorr);
   ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
   ACTS_DEBUG("d0Max: " << cfg1.d0Max);
   ACTS_DEBUG("cutDPhiMax: " << cfg1.cutDPhiMax);

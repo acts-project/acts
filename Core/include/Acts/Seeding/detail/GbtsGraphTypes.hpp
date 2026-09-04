@@ -82,6 +82,15 @@ struct GbtsNodeEdgeInfo final {
 };
 //! [gbts node edge info]
 
+/// One outer eta bin reachable from an inner one, with the cut the layer pair
+/// they belong to carries.
+struct GbtsBinLink final {
+  /// The outer eta bin.
+  std::uint32_t bin{};
+  /// GbtsLayerConnection::tauRatioCut of the pair this link came from.
+  float tauRatioCut{};
+};
+
 //! [gbts eta bin info]
 /// Constant per-eta-bin data.
 struct GbtsEtaBinInfo final {
@@ -190,21 +199,20 @@ struct GbtsEdge final {
   /// Constructor
   /// @param n1_ Inner node index
   /// @param n2_ Outer node index
-  /// @param n2LayerId_ GBTS layer ID of the outer node
+  /// @param tauRatioCut_ Cut the layer pair of this doublet carries
   /// @param n2PixelBarrel_ Whether the outer node is on a pixel barrel layer
   /// @param p1_ First fit parameter
   /// @param p2_ Second fit parameter
   /// @param p3_ Third fit parameter
-  GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_,
-           GbtsExperimentLayerId n2LayerId_, bool n2PixelBarrel_, float p1_,
-           float p2_, float p3_)
+  GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_, float tauRatioCut_,
+           bool n2PixelBarrel_, float p1_, float p2_, float p3_)
       : n1{n1_},
         n2{n2_},
         level{1},
         next{1},
         n2PixelBarrel{n2PixelBarrel_},
         p{p1_, p2_, p3_},
-        n2LayerId{n2LayerId_} {}
+        tauRatioCut{tauRatioCut_} {}
 
   /// Inner node of the edge
   SpacePointIndex n1{kSpacePointIndexInvalid};
@@ -224,9 +232,10 @@ struct GbtsEdge final {
 
   std::array<float, 3> p{};
 
-  /// GBTS layer ID of the outer node. Cached next to the fit parameters so the
-  /// innermost neighbour loop does not have to chase the node.
-  GbtsExperimentLayerId n2LayerId{0};
+  /// GbtsLayerConnection::tauRatioCut of this doublet's layer pair. Cached
+  /// next to the fit parameters so the innermost neighbour loop does not have
+  /// to chase the pair.
+  float tauRatioCut{};
 
   std::array<std::uint32_t, kGbtsMaxEdgeNeighbours> vNei{};
 };

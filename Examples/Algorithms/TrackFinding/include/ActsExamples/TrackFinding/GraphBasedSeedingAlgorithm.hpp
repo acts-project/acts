@@ -78,6 +78,15 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// connector file carries, 0.2 in ATLAS' createLinkingScheme.py)
     float etaBinWidthOverride = 0.0f;
 
+    /// Widen the tau ratio tolerance of a layer pair that steps over a layer,
+    /// or that leaves the pixel barrel. The seeder reads the resulting
+    /// per-pair tolerance and no longer derives this itself.
+    bool useAdaptiveCuts = true;
+    /// How much such a pair is widened by
+    float tauRatioCorr = 0.006f;
+    /// How much a pair with a strip layer at either end is widened by, on top
+    float tauRatioCorrStrip = 0.03f;
+
     /// z0 range the eta bin table is built against
     Acts::Experimental::GbtsZ0Range gbtsZ0Range;
 
