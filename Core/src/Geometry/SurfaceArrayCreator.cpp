@@ -588,14 +588,15 @@ std::unique_ptr<const IAxis> SurfaceArrayCreator::createEquidistantAxis(
             return phi(s->referencePosition(gctx, AxisR));
           });
 
-      // rotate to max phi module plus one half step
-      // this should make sure that phi wrapping at +- pi
-      // never falls on a module center
+      // Rotate the highest-phi module centre onto the last bin centre, so the
+      // wrap-around at +-pi never falls on a module centre. @p transform is
+      // the representative surface's local-to-global map, so the lookup sees
+      // `localPhi = globalPhi - angle`.
       const double surfaceMax = phi(maxElem->referencePosition(gctx, AxisR));
       const double gridStep =
           2 * std::numbers::pi / static_cast<double>(binNumber);
       const double gridMax = std::numbers::pi - 0.5 * gridStep;
-      const double angle = gridMax - surfaceMax;
+      const double angle = surfaceMax - gridMax;
 
       // replace given transform ref
       transform = transform * AngleAxis3(angle, Vector3::UnitZ());
