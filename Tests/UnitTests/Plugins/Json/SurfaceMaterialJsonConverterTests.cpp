@@ -21,6 +21,7 @@
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/MultiAxisSpec.hpp"
 #include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
+#include "ActsPlugins/Json/detail/MaterialJsonContext.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
@@ -113,7 +114,8 @@ std::shared_ptr<const IndexedSurfaceMaterial<IndexEqGrid>> makeIndexed1D() {
 }
 
 std::shared_ptr<const GloballyIndexedSurfaceMaterial<IndexEqGrid>>
-makeGloballyIndexed1D(MaterialSlabStore store = nullptr, bool shared = false) {
+makeGloballyIndexed1D(detail::MaterialSlabStore store = nullptr,
+                      bool shared = false) {
   using Material_t = GloballyIndexedSurfaceMaterial<IndexEqGrid>;
   if (store == nullptr) {
     store = std::make_shared<std::vector<MaterialSlab>>(testSlabs());
@@ -341,8 +343,8 @@ BOOST_AUTO_TEST_CASE(GloballyIndexedSurfaceMaterialRoundTrip) {
   BOOST_REQUIRE(accessor != nullptr);
   BOOST_CHECK(accessor->sharedEntries);
   // The inlined store used to come back empty
-  BOOST_REQUIRE(accessor->slabStore != nullptr);
-  BOOST_CHECK_EQUAL(accessor->slabStore->size(), testSlabs().size());
+  BOOST_REQUIRE(accessor->globalMaterial != nullptr);
+  BOOST_CHECK_EQUAL(accessor->globalMaterial->size(), testSlabs().size());
 
   auto gridView = typed->gridConstView();
   for (std::size_t ib = 1; ib <= 5; ++ib) {
@@ -364,10 +366,11 @@ BOOST_AUTO_TEST_CASE(GloballyIndexedSharedStoreThroughContext) {
 
   auto encodeContext =
       SurfaceMaterialJsonConverter::EncodeContext::withStoreTable();
+  const auto& config = SurfaceMaterialJsonConverter::Config::defaultConfig();
   nlohmann::json jFirst =
-      SurfaceMaterialJsonConverter::toJson(*first, encodeContext);
+      SurfaceMaterialJsonConverter::toJson(*first, config, &encodeContext);
   nlohmann::json jSecond =
-      SurfaceMaterialJsonConverter::toJson(*second, encodeContext);
+      SurfaceMaterialJsonConverter::toJson(*second, config, &encodeContext);
 
   // One table entry, referenced by both surfaces
   BOOST_REQUIRE_EQUAL(encodeContext.stores().size(), 1u);
@@ -382,9 +385,9 @@ BOOST_AUTO_TEST_CASE(GloballyIndexedSharedStoreThroughContext) {
       {std::make_shared<std::vector<MaterialSlab>>(testSlabs())});
 
   auto readFirst =
-      SurfaceMaterialJsonConverter::fromJson(jFirst, decodeContext);
+      SurfaceMaterialJsonConverter::fromJson(jFirst, config, &decodeContext);
   auto readSecond =
-      SurfaceMaterialJsonConverter::fromJson(jSecond, decodeContext);
+      SurfaceMaterialJsonConverter::fromJson(jSecond, config, &decodeContext);
   BOOST_REQUIRE(readFirst != nullptr);
   BOOST_REQUIRE(readSecond != nullptr);
 
@@ -399,8 +402,8 @@ BOOST_AUTO_TEST_CASE(GloballyIndexedSharedStoreThroughContext) {
   BOOST_REQUIRE(accessorFirst != nullptr);
   BOOST_REQUIRE(accessorSecond != nullptr);
   // The sharing must survive the round trip
-  BOOST_CHECK(accessorFirst->slabStore == accessorSecond->slabStore);
-  BOOST_CHECK(accessorFirst->slabStore == decodeContext.store(0u));
+  BOOST_CHECK(accessorFirst->globalMaterial == accessorSecond->globalMaterial);
+  BOOST_CHECK(accessorFirst->globalMaterial == decodeContext.store(0u));
 }
 
 BOOST_AUTO_TEST_CASE(DistinctStoresGetSequentialIds) {
@@ -409,12 +412,13 @@ BOOST_AUTO_TEST_CASE(DistinctStoresGetSequentialIds) {
   auto storeB = std::make_shared<std::vector<MaterialSlab>>(testSlabs());
 
   auto ctx = SurfaceMaterialJsonConverter::EncodeContext::withStoreTable();
-  nlohmann::json jA =
-      SurfaceMaterialJsonConverter::toJson(*makeGloballyIndexed1D(storeA), ctx);
-  nlohmann::json jB =
-      SurfaceMaterialJsonConverter::toJson(*makeGloballyIndexed1D(storeB), ctx);
-  nlohmann::json jA2 =
-      SurfaceMaterialJsonConverter::toJson(*makeGloballyIndexed1D(storeA), ctx);
+  const auto& config = SurfaceMaterialJsonConverter::Config::defaultConfig();
+  nlohmann::json jA = SurfaceMaterialJsonConverter::toJson(
+      *makeGloballyIndexed1D(storeA), config, &ctx);
+  nlohmann::json jB = SurfaceMaterialJsonConverter::toJson(
+      *makeGloballyIndexed1D(storeB), config, &ctx);
+  nlohmann::json jA2 = SurfaceMaterialJsonConverter::toJson(
+      *makeGloballyIndexed1D(storeA), config, &ctx);
 
   BOOST_CHECK_EQUAL(jA["accessor"]["store"], 0u);
   BOOST_CHECK_EQUAL(jB["accessor"]["store"], 1u);
@@ -427,8 +431,9 @@ BOOST_AUTO_TEST_CASE(DistinctStoresGetSequentialIds) {
 BOOST_AUTO_TEST_CASE(StoreReferenceWithoutTableThrows) {
   auto store = std::make_shared<std::vector<MaterialSlab>>(testSlabs());
   auto ctx = SurfaceMaterialJsonConverter::EncodeContext::withStoreTable();
-  nlohmann::json jMaterial =
-      SurfaceMaterialJsonConverter::toJson(*makeGloballyIndexed1D(store), ctx);
+  const auto& config = SurfaceMaterialJsonConverter::Config::defaultConfig();
+  nlohmann::json jMaterial = SurfaceMaterialJsonConverter::toJson(
+      *makeGloballyIndexed1D(store), config, &ctx);
 
   // A default decode context has no table at all
   BOOST_CHECK_THROW(SurfaceMaterialJsonConverter::fromJson(jMaterial),
@@ -437,15 +442,16 @@ BOOST_AUTO_TEST_CASE(StoreReferenceWithoutTableThrows) {
   // A table that does not reach the referenced id
   SurfaceMaterialJsonConverter::DecodeContext empty;
   empty.setStores({});
-  BOOST_CHECK_THROW(SurfaceMaterialJsonConverter::fromJson(jMaterial, empty),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(
+      SurfaceMaterialJsonConverter::fromJson(jMaterial, config, &empty),
+      std::invalid_argument);
 
   nlohmann::json jOutOfRange = jMaterial;
   jOutOfRange["accessor"]["store"] = 7u;
   SurfaceMaterialJsonConverter::DecodeContext oneEntry;
   oneEntry.setStores({store});
   BOOST_CHECK_THROW(
-      SurfaceMaterialJsonConverter::fromJson(jOutOfRange, oneEntry),
+      SurfaceMaterialJsonConverter::fromJson(jOutOfRange, config, &oneEntry),
       std::invalid_argument);
 }
 
@@ -469,7 +475,7 @@ BOOST_AUTO_TEST_CASE(GridSurfaceMaterialRoundTrip) {
 }
 
 BOOST_AUTO_TEST_CASE(EncoderCoversAllSurfaceMaterials) {
-  const auto& cfg = SurfaceMaterialJsonConverter::defaultConfig();
+  const auto& cfg = SurfaceMaterialJsonConverter::Config::defaultConfig();
 
   std::vector<std::shared_ptr<const ISurfaceMaterial>> materials;
   materials.push_back(std::make_shared<const HomogeneousSurfaceMaterial>(

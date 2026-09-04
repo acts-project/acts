@@ -185,7 +185,10 @@ std::shared_ptr<Acts::Surface> surfaceFromJsonT(const nlohmann::json& j) {
 void Acts::to_json(nlohmann::json& j,
                    const Acts::SurfaceAndMaterialWithContext& surface) {
   toJson(j, std::get<0>(surface), std::get<2>(surface));
-  to_json(j, std::get<1>(surface));
+  const auto& material = std::get<1>(surface);
+  if (material != nullptr) {
+    j[jsonKey().materialkey] = SurfaceMaterialJsonConverter::toJson(*material);
+  }
 }
 
 void Acts::to_json(nlohmann::json& j, const Acts::Surface& surface) {
