@@ -14,9 +14,12 @@
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
+#include <cstddef>
 #include <iosfwd>
 #include <stdexcept>
 #include <tuple>
+#include <utility>
+#include <vector>
 
 namespace Acts::detail::Gsf {
 
@@ -54,6 +57,7 @@ struct CyclicRadiusAngle {
 };
 
 /// A compile time map to provide angle descriptions for different surfaces
+//! [angle description]
 template <Surface::SurfaceType type_t>
 struct AngleDescription {
   using Desc = std::tuple<CyclicAngle<eBoundPhi>>;
@@ -69,6 +73,7 @@ struct AngleDescription<Surface::Cylinder> {
   using Desc =
       std::tuple<CyclicRadiusAngle<eBoundLoc0>, CyclicAngle<eBoundPhi>>;
 };
+//! [angle description]
 
 /// Helper function that encapsulates a switch-case to select the correct angle
 /// description dependent on the surface
@@ -119,6 +124,7 @@ BoundVector mergeGaussianMixtureMean(const component_range_t &cmps,
   // For normal values, just keep the real values. For angles, use the complex
   // phase. Weighting then transparently happens by multiplying a real-valued
   // weight.
+  //! [circular mean]
   using CVec = Eigen::Matrix<std::complex<double>, eBoundSize, 1>;
   CVec cMean = CVec::Zero();
   double sumOfWeights = 0;
@@ -144,6 +150,7 @@ BoundVector mergeGaussianMixtureMean(const component_range_t &cmps,
     mean[desc.idx] = desc.constant * std::arg(cMean[desc.idx]);
   };
   std::apply([&](auto... dsc) { (getArg(dsc), ...); }, angleDesc);
+  //! [circular mean]
 
   return mean;
 }
@@ -346,37 +353,46 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
 }
 
 /// @brief Class representing a symmetric distance matrix
+///
+/// Pairwise KL distances are kept in a flat lower-triangular array over the
+/// currently *active* components. Removing a component via
+/// @ref maskAssociatedDistances swaps its row/column with the last active
+/// one and shrinks the active count, so scans only touch present components.
+/// All public methods use original indices; the swap-based compaction is an
+/// internal detail.
 class SymmetricKLDistanceMatrix {
   using Array = Eigen::Array<double, Eigen::Dynamic, 1>;
-  using Mask = Eigen::Array<bool, Eigen::Dynamic, 1>;
 
   Array m_distances;
-  Mask m_mask;
   std::vector<std::pair<std::size_t, std::size_t>> m_mapToPair;
+  std::vector<std::size_t> m_activeToOriginal;
+  std::vector<std::size_t> m_originalToActive;
   std::size_t m_numberComponents{};
+  std::size_t m_numberActive{};
 
-  template <typename array_t, typename setter_t>
-  void setAssociated(std::size_t n, array_t &array, const setter_t &setter) {
-    const std::size_t indexConst = (n - 1) * n / 2;
+  static std::size_t triangularIndex(std::size_t i, std::size_t j) {
+    return i * (i - 1) / 2 + j;
+  }
+
+  template <typename setter_t>
+  void setAssociated(std::size_t n, const setter_t &setter) {
     // Rows
     for (std::size_t i = 0ul; i < n; ++i) {
-      array[indexConst + i] = setter(n, i);
+      m_distances[triangularIndex(n, i)] = setter(n, i);
     }
     // Columns
-    for (std::size_t i = n + 1; i < m_numberComponents; ++i) {
-      array[(i - 1) * i / 2 + n] = setter(n, i);
+    for (std::size_t i = n + 1; i < m_numberActive; ++i) {
+      m_distances[triangularIndex(i, n)] = setter(i, n);
     }
   }
 
  public:
   explicit SymmetricKLDistanceMatrix(std::span<const GsfComponent> cmps);
 
-  double at(std::size_t i, std::size_t j) const;
-
-  void recomputeAssociatedDistances(std::size_t n,
+  void recomputeAssociatedDistances(std::size_t originalIdx,
                                     std::span<const GsfComponent> cmps);
 
-  void maskAssociatedDistances(std::size_t n);
+  void maskAssociatedDistances(std::size_t originalIdx);
 
   std::pair<std::size_t, std::size_t> minDistancePair() const;
 

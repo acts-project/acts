@@ -166,8 +166,8 @@ void CompositeSpacePointLineSeeder::SeedingState<
   ostr << "upperLayer " << m_upperLayer.value_or(nStraw - 1ul) << " lowerLayer "
        << m_lowerLayer.value_or(0u) << " upperHitIndex " << m_upperHitIndex
        << " lower layer hit index " << m_lowerHitIndex << " sign combo index "
-       << toString(encodeAmbiguity(s_signCombo[m_signComboIndex][0],
-                                   s_signCombo[m_signComboIndex][1]))
+       << encodeAmbiguity(s_signCombo[m_signComboIndex][0],
+                          s_signCombo[m_signComboIndex][1])
        << "\n";
   ostr << "Number of seeds " << nGenSeeds() << " nStrawCut " << m_nStrawCut
        << "\n";
@@ -282,7 +282,7 @@ CompositeSpacePointLineSeeder::nextSeed(
 
   Selector_t<UncalibCont_t> selector{};
   selector.template connect<&Delegate_t::goodCandidate>(&state);
-  /// The layer hast not yet been initialized
+  /// The layer has not yet been initialized
   if (!state.m_upperLayer || !state.m_lowerLayer) {
     state.m_nStrawCut = m_cfg.nStrawHitCut;
     /// Check whether the seeding can start with the external pattern
@@ -455,7 +455,7 @@ CompositeSpacePointLineSeeder::buildSeed(
   const auto& lowerHit =
       *strawLayers.at(state.m_lowerLayer.value()).at(state.m_lowerHitIndex);
   const auto ambi{static_cast<TangentAmbi>(state.m_signComboIndex)};
-  ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - " << toString(ambi)
+  ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - " << ambi
                         << "\n   Top seed hit: " << Acts::toString(upperHit)
                         << "\n   Bottom seed hit:" << Acts::toString(lowerHit)
                         << ".");
@@ -479,16 +479,27 @@ CompositeSpacePointLineSeeder::buildSeed(
     ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Reject seed.");
     return std::nullopt;
   }
+
+  const Line_t tangentSeed{seedPars.y0 * Vector3::UnitY(),
+                           makeDirection(lowerHit, seedPars.theta)};
+
+  const auto& [seedPos, seedDir] = tangentSeed;
+
+  if constexpr (detail::CompositeSpacePointSeedSelector<Delegate_t>) {
+    ACTS_VERBOSE(__func__ << "() " << __LINE__
+                          << " - Check with the seeding state the orientation");
+    if (!state.goodForSeeding(seedPos, seedDir)) {
+      ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Reject seed.");
+      return std::nullopt;
+    }
+  }
+
   /// Continue to construct a new solution
   const double t0 = state.initialParameters()[toUnderlying(ParIdx::t0)];
   SeedSolution<UncalibCont_t, Delegate_t> newSolution{seedPars, state};
 
   ACTS_DEBUG(__func__ << "() " << __LINE__
                       << " - Start looking for compatible hits");
-
-  const Line_t tangentSeed{seedPars.y0 * Vector3::UnitY(),
-                           makeDirection(lowerHit, seedPars.theta)};
-  const auto& [seedPos, seedDir] = tangentSeed;
   const double maxPullSq{Acts::square(m_cfg.hitPullCut)};
   constexpr auto covIdx = Acts::toUnderlying(CovIdx::bending);
 

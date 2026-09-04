@@ -24,7 +24,11 @@
 #include "detray/propagator/detail/print_stepper_state.hpp"
 #include "detray/propagator/stepping_config.hpp"
 #include "detray/tracks/ray.hpp"
+#include "detray/utils/logging.hpp"
 #include "detray/utils/tuple_helpers.hpp"
+
+// Test include(s)
+#include "detray/test/utils/data_record.hpp"
 
 // System include(s)
 #include <iomanip>
@@ -123,53 +127,12 @@ struct aggregate_inspector {
 
 namespace navigation {
 
-namespace detail {
-
-/// Record of a surface intersection along a track
-template <typename intersetion_t>
-struct candidate_record {
-  using algebra_type = typename intersetion_t::algebra_type;
-  using scalar_type = dscalar<algebra_type>;
-  using point3_type = dpoint3D<algebra_type>;
-  using vector3_type = dvector3D<algebra_type>;
-  using intersection_type = intersetion_t;
-
-  constexpr candidate_record() = default;
-
-  /// The particle charge is not known in the navigation, but might be
-  /// provided in a different context
-  DETRAY_HOST_DEVICE
-  constexpr candidate_record(
-      const point3_type &position, const vector3_type &direction,
-      const intersection_type &intr,
-      const scalar_type q = detray::detail::invalid_value<scalar_type>(),
-      const scalar_type p = detray::detail::invalid_value<scalar_type>())
-      : pos{position},
-        dir{direction},
-        intersection{intr},
-        charge{q},
-        p_mag{p} {}
-
-  /// Current global track position
-  point3_type pos{0.f, 0.f, 0.f};
-  /// Current global track direction
-  vector3_type dir{0.f, 0.f, 1.f};
-  /// The intersection result
-  intersetion_t intersection{};
-  /// Charge hypothesis of the particle (invalid value if not known)
-  scalar_type charge{detray::detail::invalid_value<scalar_type>()};
-  /// Current momentum magnitude of the particle
-  scalar_type p_mag{1.f};
-};
-
-}  // namespace detail
-
 /// A navigation inspector that relays information about the encountered
 /// objects whenever the navigator reaches one or more status flags
-template <typename candidate_t, template <typename...> class vector_t = dvector,
+template <typename detector_t, template <typename...> class vector_t = dvector,
           status... navigation_status>
 struct object_tracer {
-  using candidate_record_t = detail::candidate_record<candidate_t>;
+  using candidate_record_t = intersection_record<detector_t>;
   using scalar_t = typename candidate_record_t::scalar_type;
 
   using view_type = dvector_view<candidate_record_t>;
@@ -199,8 +162,11 @@ struct object_tracer {
                                      const point3_t &pos, const vector3_t &dir,
                                      const char * /*message*/,
                                      Args &&.../*unused*/) {
+    DETRAY_VERBOSE_HOST_DEVICE("Actor: Check navigation status...");
+
     // Record the candidate of an encountered object
     if ((is_status(state.status(), navigation_status) || ...)) {
+      DETRAY_VERBOSE_HOST_DEVICE("Actor: ...Status matched:");
       // Reached a new position: log it
       // Also log volume switches that happen without position update
       const bool first_obj{(last_pos == point3_t{inv_pos, inv_pos, inv_pos}) &&
@@ -210,6 +176,9 @@ struct object_tracer {
           object_trace.empty() || first_obj ||
           state.current().surface().identifier() !=
               object_trace.back().intersection.surface().identifier()) {
+        DETRAY_VERBOSE_HOST_DEVICE("Actor: -> Record surface %d",
+                                   state.current_surface().index());
+
         object_trace.push_back({pos, dir, state.current()});
         last_pos = pos;
         last_dir = dir;

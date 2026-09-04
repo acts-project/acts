@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <memory>
 #include <sstream>
@@ -184,6 +185,21 @@ RegularSurface& Portal::surface() {
   return *m_surface;
 }
 
+void Portal::addTag(std::string tag) {
+  if (std::ranges::find(m_tags, tag) != m_tags.end()) {
+    throw std::invalid_argument("Portal already has tag: " + tag);
+  }
+  m_tags.push_back(std::move(tag));
+}
+
+std::span<const std::string> Portal::tags() const {
+  return m_tags;
+}
+
+// Note: tags are intentionally *not* propagated through merge/fuse. These
+// operations build new portals, and portal tagging is a post-stacking operation
+// (applied in the finalize phase of the blueprint construction, after all
+// merging and fusing has happened), so there is nothing to carry over here.
 Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
                      Portal& bPortal, AxisDirection direction,
                      const Logger& logger,

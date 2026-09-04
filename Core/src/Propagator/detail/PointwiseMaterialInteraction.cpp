@@ -66,6 +66,7 @@ detail::PointwiseMaterialEffects detail::computeMaterialEffects(
 
   if (covTransport) {
     if (multipleScattering) {
+      //! [scattering variance]
       const double theta0 =
           computeMultipleScatteringTheta0(slab, absPdg, mass, qOverP, absQ);
       // sigmaPhi = theta0 / sin(theta)
@@ -74,11 +75,14 @@ detail::PointwiseMaterialEffects detail::computeMaterialEffects(
       result.variancePhi = sigmaPhi * sigmaPhi;
       // sigmaTheta = theta0
       result.varianceTheta = theta0 * theta0;
+      //! [scattering variance]
     }
     if (energyLoss) {
+      //! [energy loss variance]
       const double sigmaQoverP =
           computeEnergyLossLandauSigmaQOverP(slab, mass, qOverP, absQ);
       result.varianceQoverP = sigmaQoverP * sigmaQoverP;
+      //! [energy loss variance]
     }
   }
 

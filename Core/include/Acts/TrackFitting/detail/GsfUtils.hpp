@@ -179,6 +179,7 @@ void computePosteriorWeights(const traj_t &mt,
                                       }))
           .chi2();
 
+  //! [posterior weights]
   // Loop over the tips and compute new weights
   for (auto tip : tips) {
     const auto state = mt.getTrackState(tip);
@@ -202,6 +203,7 @@ void computePosteriorWeights(const traj_t &mt,
 
     weights.at(tip) *= factor;
   }
+  //! [posterior weights]
 }
 
 /// Enumeration type to allow templating on the state we want to project on with
@@ -324,14 +326,8 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
 
     auto cmp = stepper.addComponent(state.stepping, std::move(bound), weight);
 
-    auto freeParams = cmp.pars();
-    cmp.jacToGlobal() = surface.boundToFreeJacobian(
-        state.geoContext, freeParams.template segment<3>(eFreePos0),
-        freeParams.template segment<3>(eFreeDir0));
+    // the component starts here, but on the trajectory the multi state is on
     cmp.pathAccumulated() = state.stepping.pathAccumulated;
-    cmp.jacobian() = BoundMatrix::Identity();
-    cmp.derivative() = FreeVector::Zero();
-    cmp.jacTransport() = FreeMatrix::Identity();
   }
 }
 
@@ -343,39 +339,6 @@ double applyBetheHeitler(
     double weightCutoff, std::vector<GsfComponent> &componentCache,
     std::size_t &nInvalidBetheHeitler, double &maxPathXOverX0,
     const Logger &logger);
-
-template <typename traj_t, typename propagator_state_t, typename stepper_t>
-void convoluteComponents(
-    propagator_state_t &state, const stepper_t &stepper,
-    const TemporaryStates<traj_t> &tmpStates,
-    const BetheHeitlerApprox &betheHeitlerApprox,
-    std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
-    double weightCutoff, std::vector<GsfComponent> &componentCache,
-    std::size_t &nInvalidBetheHeitler, double &maxPathXOverX0,
-    double &sumPathXOverX0, const Logger &logger) {
-  const GeometryContext &geoContext = state.options.geoContext;
-  const Direction direction = state.options.direction;
-
-  double pathXOverX0 = 0.0;
-  auto cmps = stepper.componentIterable(state.stepping);
-  for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
-    auto proxy = tmpStates.traj.getTrackState(idx);
-    const Surface &surface = proxy.referenceSurface();
-
-    BoundTrackParameters bound(surface.getSharedPtr(), proxy.filtered(),
-                               proxy.filteredCovariance(),
-                               stepper.particleHypothesis(state.stepping));
-
-    pathXOverX0 += applyBetheHeitler(
-        geoContext, surface, direction, bound, tmpStates.weights.at(idx),
-        betheHeitlerApprox, betheHeitlerCache, weightCutoff, componentCache,
-        nInvalidBetheHeitler, maxPathXOverX0, logger);
-  }
-
-  // Store average material seen by the components
-  // Should not be too broadly distributed
-  sumPathXOverX0 += pathXOverX0 / tmpStates.tips.size();
-}
 
 /// Apply the multiple scattering to the state
 template <typename propagator_state_t, typename stepper_t>

@@ -93,7 +93,7 @@ ProcessCode TrackParamsLookupEstimation::execute(
 
       // Get the local position of the hit
       auto localPos = refSurface
-                          ->globalToLocal(ctx.geoContext, hit->position(),
+                          ->globalToLocal(ctx.recoGeoContext, hit->position(),
                                           Acts::Vector3{0, 1, 0})
                           .value();
 

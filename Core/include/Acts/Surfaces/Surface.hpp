@@ -23,6 +23,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/CloneablePtr.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/OstreamFormatter.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
@@ -69,13 +70,14 @@ class Surface : public virtual GeometryObject,
     Plane = 4,
     Straw = 5,
     Curvilinear = 6,
-    Other = 7
+    Point = 7,
+    Other = 8
   };
 
   /// Helper strings for screen output
   static constexpr std::array<std::string_view, Surface::SurfaceType::Other + 1>
-      s_surfaceTypeNames = {"Cone",  "Cylinder", "Disc",        "Perigee",
-                            "Plane", "Straw",    "Curvilinear", "Other"};
+      s_surfaceTypeNames = {"Cone",  "Cylinder",    "Disc",  "Perigee", "Plane",
+                            "Straw", "Curvilinear", "Point", "Other"};
 
   friend std::ostream& operator<<(std::ostream& os, SurfaceType type);
 
@@ -115,6 +117,14 @@ class Surface : public virtual GeometryObject,
   explicit Surface(const GeometryContext& gctx, const Surface& other,
                    const Transform3& shift) noexcept;
 
+  /// Assignment operator
+  /// @note copy construction invalidates the association
+  /// to detector element and layer
+  ///
+  /// @param other Source surface for the assignment
+  /// @return Reference to this surface after assignment
+  Surface& operator=(const Surface& other) noexcept = default;
+
  public:
   ~Surface() noexcept override;
 
@@ -149,14 +159,6 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return The shared pointer
   std::shared_ptr<const Surface> getSharedPtr() const;
-
-  /// Assignment operator
-  /// @note copy construction invalidates the association
-  /// to detector element and layer
-  ///
-  /// @param other Source surface for the assignment
-  /// @return Reference to this surface after assignment
-  Surface& operator=(const Surface& other) noexcept = default;
 
   /// Comparison (equality) operator
   /// The strategy for comparison is
@@ -206,6 +208,10 @@ class Surface : public virtual GeometryObject,
   /// Return method for SurfaceBounds
   /// @return SurfaceBounds by reference
   virtual const SurfaceBounds& bounds() const = 0;
+
+  /// Local axes of the surface
+  /// @return An array of local axes directions
+  virtual std::array<AxisDirection, 2> localAxes() const = 0;
 
   /// Return the associated surface placement if there is any
   /// @return Pointer to the surface placement, can be nullptr
@@ -563,10 +569,6 @@ class Surface : public virtual GeometryObject,
   virtual std::ostream& toStreamImpl(const GeometryContext& gctx,
                                      std::ostream& sl) const;
 
-  /// Local axes of the surface
-  /// @return An array of local axes directions
-  virtual std::array<AxisDirection, 2> localAxes() const = 0;
-
   /// Transform surface local coordinates to material local coordinates
   /// @param surfaceLocal The local coordinates on the surface
   /// @return The corresponding local coordinates for material lookup
@@ -617,3 +619,5 @@ class Surface : public virtual GeometryObject,
 };
 
 }  // namespace Acts
+
+ACTS_OSTREAM_FORMATTER(Acts::Surface::SurfaceType);

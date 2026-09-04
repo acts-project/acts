@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -99,6 +98,11 @@ DigitizationAlgorithm::DigitizationAlgorithm(
 
     const auto& digiCfg = m_cfg.digitizationConfigs.valueAt(i);
     geoCfg = digiCfg.geometricDigiConfig;
+
+    if (!geoCfg.indices.empty() && geoCfg.segmentation == nullptr) {
+      throw std::invalid_argument(
+          "Geometric digitization requires a segmentation");
+    }
     // Copy so we can sort in-place
     SmearingConfig smCfg = digiCfg.smearingDigiConfig;
 
@@ -212,49 +216,47 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
             DigitizedParameters dParameters;
 
             if (simHit.depositedEnergy() < m_cfg.minEnergyDeposit) {
-              ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::VERBOSE,
-                                   "Skip hit because energy deposit to small");
+              ACTS_VERBOSE("Skip hit because energy deposit to small");
               continue;
             }
 
             // Geometric part - 0, 1, 2 local parameters are possible
             if (!digitizer.geometric.indices.empty()) {
-              ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::VERBOSE,
-                                   "Configured to geometric digitize "
-                                       << digitizer.geometric.indices.size()
-                                       << " parameters.");
+              ACTS_VERBOSE("Configured to geometric digitize "
+                           << digitizer.geometric.indices.size()
+                           << " parameters.");
               const auto& cfg = digitizer.geometric;
               Acts::Vector3 driftDir = cfg.drift(simHit.position(), rng);
               auto channelsRes = m_channelizer.channelize(
-                  simHit, *surfacePtr, ctx.geoContext, driftDir,
-                  cfg.segmentation, cfg.thickness);
+                  simHit, *surfacePtr, ctx.simGeoContext, driftDir,
+                  *cfg.segmentation, cfg.thickness);
               if (!channelsRes.ok() || channelsRes->empty()) {
-                ACTS_LOG_WITH_LOGGER(
-                    this->logger(), Acts::Logging::DEBUG,
+                ACTS_DEBUG(
                     "Geometric channelization did not work, skipping this "
                     "hit.");
                 continue;
               }
-              ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::VERBOSE,
-                                   "Activated " << channelsRes->size()
-                                                << " channels for this hit.");
+              ACTS_VERBOSE("Activated " << channelsRes->size()
+                                        << " channels for this hit.");
               dParameters =
                   localParameters(digitizer.geometric, *channelsRes, rng);
+              if (dParameters.cluster.channels.empty()) {
+                ACTS_DEBUG("All channels below threshold, skipping this hit.");
+                continue;
+              }
             }
 
             // Smearing part - (optionally) rest
             if (!digitizer.smearing.indices.empty()) {
-              ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::VERBOSE,
-                                   "Configured to smear "
-                                       << digitizer.smearing.indices.size()
-                                       << " parameters.");
-              auto res =
-                  digitizer.smearing(rng, simHit, *surfacePtr, ctx.geoContext);
+              ACTS_VERBOSE("Configured to smear "
+                           << digitizer.smearing.indices.size()
+                           << " parameters.");
+              auto res = digitizer.smearing(rng, simHit, *surfacePtr,
+                                            ctx.simGeoContext);
               if (!res.ok()) {
                 ++skippedHits;
-                ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                                     "Problem in hit smearing, skip hit ("
-                                         << res.error().message() << ")");
+                ACTS_DEBUG("Problem in hit smearing, skip hit ("
+                           << res.error().message() << ")");
                 continue;
               }
               const auto& [par, cov] = res.value();
@@ -267,8 +269,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
 
             // Check on success - threshold could have eliminated all channels
             if (dParameters.values.empty()) {
-              ACTS_LOG_WITH_LOGGER(
-                  this->logger(), Acts::Logging::VERBOSE,
+              ACTS_VERBOSE(
                   "Parameter digitization did not yield a measurement.");
               continue;
             }
@@ -296,7 +297,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
                   createMeasurement(measurements, moduleGeoId, dParameters);
 
               dParameters.cluster.globalPosition = measurementGlobalPosition(
-                  dParameters, *surfacePtr, ctx.geoContext);
+                  dParameters, *surfacePtr, ctx.simGeoContext);
               clusters.emplace_back(std::move(dParameters.cluster));
 
               for (auto simHitIdx : simHitsIdxs) {
@@ -359,8 +360,6 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
     RandomEngine& rng) const {
   DigitizedParameters dParameters;
 
-  const auto& binningData = geoCfg.segmentation.binningData();
-
   // For digital readout, the weight needs to be split in x and y
   std::array<double, 2u> pos = {0., 0.};
   std::array<double, 2u> totalWeight = {0., 0.};
@@ -379,16 +378,19 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
     if (charge > geoCfg.threshold) {
       double weight = geoCfg.digital ? 1. : charge;
       for (std::size_t ib = 0; ib < 2; ++ib) {
+        // Cell bins are zero-based while the axis bin indices start at one
+        const double binCenter =
+            geoCfg.segmentation->getAxis(ib).getBinCenter(bin[ib] + 1);
         if (geoCfg.digital && geoCfg.componentDigital) {
           // only fill component of this row/column if not yet filled
           if (!componentChannels[ib].contains(bin[ib])) {
             totalWeight[ib] += weight;
-            pos[ib] += weight * binningData[ib].center(bin[ib]);
+            pos[ib] += weight * binCenter;
             componentChannels[ib].insert(bin[ib]);
           }
         } else {
           totalWeight[ib] += weight;
-          pos[ib] += weight * binningData[ib].center(bin[ib]);
+          pos[ib] += weight * binCenter;
         }
         // min max channels
         bmin[ib] = std::min(bmin[ib], static_cast<std::size_t>(bin[ib]));

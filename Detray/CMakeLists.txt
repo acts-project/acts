@@ -113,6 +113,18 @@ option(DETRAY_SMATRIX_PLUGIN "Build ROOT/SMatrix math plugin" OFF)
 option(DETRAY_VC_AOS_PLUGIN "Build Vc based AoS math plugin" OFF)
 option(DETRAY_VC_SOA_PLUGIN "Build Vc based SoA math plugin" OFF)
 
+# Python related options
+option(
+    DETRAY_BUILD_PYTHON_BINDINGS
+    "Build python bindings for all enabled components"
+    OFF
+)
+option(
+    DETRAY_GENERATE_PYTHON_STUBS
+    "Generate Python stub files (.pyi) using pybind11-stubgen"
+    OFF
+)
+
 # Test and benchmark suite
 include(CTest)
 
@@ -199,6 +211,17 @@ if(BUILD_TESTING AND (DETRAY_BUILD_UNITTESTS OR DETRAY_BUILD_INTEGRATIONTESTS))
     set(DETRAY_BUILD_TESTING ON)
 endif()
 
+# detray_compile_headers() delegates to ACTS' acts_compile_headers(), which is
+# already defined when detray is built via add_subdirectory from ACTS. When
+# detray is configured standalone inside the ACTS tree, pull the module in by
+# relative path, as the codegen setup does. ACTS gates the header targets on an
+# option a standalone build does not have, so tie them to detray's own testing
+# switch there -- that is what used to guard the per-header executables.
+if(NOT COMMAND acts_compile_headers)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsFunctions.cmake)
+    set(ACTS_COMPILE_HEADERS ${DETRAY_BUILD_TESTING})
+endif()
+
 # Validation utilities are needed for integration tests and tutorials
 if(DETRAY_BUILD_TESTING OR DETRAY_BUILD_TUTORIALS)
     set(DETRAY_BUILD_VALIDATION_TOOLS ON)
@@ -235,9 +258,9 @@ option(
     ${DETRAY_USE_SYSTEM_LIBS}
 )
 if(DETRAY_SETUP_VECMEM)
-    set(DETRAY_VECMEM_VERSION 1.23.0)
+    set(DETRAY_VECMEM_VERSION 1.27.0)
     set(DETRAY_VECMEM_DIGEST
-        c4b87f88856b5273b89373d880bdc0fd
+        30ef85b2a9326c08d291f4fea949e097
         CACHE STRING
         "MD5 digest of the downloaded zip"
     )
@@ -468,6 +491,28 @@ if(DETRAY_SETUP_COVFIE)
         find_package(covfie ${DETRAY_COVFIE_VERSION} REQUIRED)
     else()
         add_subdirectory(extern/covfie)
+    endif()
+endif()
+
+# Set up pybind11.
+option(
+    DETRAY_SETUP_PYBIND11
+    "Set up the pybind11 target(s) explicitly"
+    ${DETRAY_BUILD_PYTHON_BINDINGS}
+)
+option(
+    DETRAY_USE_SYSTEM_PYBIND11
+    "Pick up an existing installation of pybind11 from the build environment"
+    ${DETRAY_USE_SYSTEM_LIBS}
+)
+if(DETRAY_SETUP_PYBIND11)
+    set(DETRAY_PYBIND11_VERSION 3.0.1)
+
+    find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
+    if(DETRAY_USE_SYSTEM_PYBIND11)
+        find_package(pybind11 CONFIG REQUIRED)
+    else()
+        add_subdirectory(extern/pybind11)
     endif()
 endif()
 

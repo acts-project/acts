@@ -9,6 +9,8 @@
 #pragma once
 
 // Project include(s)
+#include "detray/definitions/geometry.hpp"
+#include "detray/geometry/identifier.hpp"
 #include "detray/io/csv/dfe.hpp"
 #include "detray/io/utils/create_path.hpp"
 #include "detray/navigation/intersection/intersection.hpp"
@@ -17,6 +19,7 @@
 // System include(s).
 #include <cstdint>
 #include <filesystem>
+#include <stdexcept>
 
 namespace detray::io::csv {
 
@@ -38,9 +41,10 @@ struct intersection2D {
   int direction = 0;
   int status = 0;
 
-  DFE_NAMEDTUPLE(intersection2D, track_id, identifier, type, transform_index,
-                 mask_id, mask_index, material_id, material_index, loc_0, loc_1,
-                 path, volume_link, direction, status);
+  DETRAY_DFE_NAMEDTUPLE(intersection2D, track_id, identifier, type,
+                        transform_index, mask_id, mask_index, material_id,
+                        material_index, loc_0, loc_1, path, volume_link,
+                        direction, status);
 };
 
 /// Read intersections from csv file

@@ -38,20 +38,23 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Json/TrackingGeometryJsonConverter.hpp"
+#include "ActsPlugins/Json/detail/JsonIo.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
 
 #include <cstddef>
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <memory>
+#include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
 namespace ActsTests {
 
 using namespace Acts;
-using namespace Experimental;
 using namespace UnitLiterals;
 using enum CylinderVolumeBounds::Face;
 using enum AxisDirection;
@@ -369,7 +372,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   }
   BOOST_CHECK(sharedPortalPreserved);
 
-  auto decodedGeometry = converter.fromJson(gctx, encodedFromFile);
+  auto decodedGeometry = converter.fromFile(gctx, jsonPath);
   BOOST_REQUIRE(decodedGeometry != nullptr);
   BOOST_REQUIRE(decodedGeometry->highestTrackingVolume() != nullptr);
   BOOST_CHECK_EQUAL(decodedGeometry->highestTrackingVolume()->volumeName(),
@@ -408,21 +411,14 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   TrackingGeometryJsonConverter converter;
   nlohmann::json encoded = converter.toJson(gctx, *sourceGeometry);
   // TemporaryDirectory tmpDir{};
-  auto jsonPath = "tracking_geometry_roundtrip.json";
+  std::string jsonPath = "tracking_geometry_roundtrip.json";
   {
     std::ofstream out(jsonPath);
     BOOST_REQUIRE(out.good());
     out << encoded.dump(2);
   }
 
-  nlohmann::json encodedFromFile;
-  {
-    std::ifstream in(jsonPath);
-    BOOST_REQUIRE(in.good());
-    in >> encodedFromFile;
-  }
-
-  auto decodedGeometry = converter.fromJson(gctx, encodedFromFile);
+  auto decodedGeometry = converter.fromFile(gctx, jsonPath);
 
   const auto* htvSource = sourceGeometry->highestTrackingVolume();
   const auto* htvDecoded = decodedGeometry->highestTrackingVolume();
@@ -516,13 +512,13 @@ auto makeMultiLayerPolicy(const GeometryContext& gctx,
   Acts::Grid gridXY(Acts::Type<std::vector<std::size_t>>, std::move(axisX),
                     std::move(axisY));
 
-  Experimental::MultiLayerNavigationPolicy::IndexedUpdatorType indexedGrid(
-      std::move(gridXY), {AxisX, AxisY});
+  MultiLayerNavigationPolicy::IndexedUpdatorType indexedGrid(std::move(gridXY),
+                                                             {AxisX, AxisY});
 
-  Experimental::MultiLayerNavigationPolicy::Config cfg;
+  MultiLayerNavigationPolicy::Config cfg;
   cfg.binExpansion = {1u, 1u};
-  return Experimental::MultiLayerNavigationPolicy(gctx, volume, logger, cfg,
-                                                  std::move(indexedGrid));
+  return MultiLayerNavigationPolicy(gctx, volume, logger, cfg,
+                                    std::move(indexedGrid));
 }
 
 }  // namespace
@@ -561,8 +557,7 @@ BOOST_AUTO_TEST_CASE(MultiLayerNavigationPolicyRoundTrip) {
 
   auto policyPtr =
       conv.navigationPolicyFromJson(tContext, j, *tVolume, *tLogger);
-  auto& restored =
-      dynamic_cast<Experimental::MultiLayerNavigationPolicy&>(*policyPtr);
+  auto& restored = dynamic_cast<MultiLayerNavigationPolicy&>(*policyPtr);
 
   const auto& origGrid = policy.indexedGrid().grid;
   const auto& restGrid = restored.indexedGrid().grid;
@@ -581,6 +576,101 @@ BOOST_AUTO_TEST_CASE(MultiLayerNavigationPolicyRoundTrip) {
                     restored.indexedGrid().casts[1]);
 
   BOOST_CHECK(policy.config().binExpansion == restored.config().binExpansion);
+}
+
+// Every format toFile() can write must survive a round trip through
+// fromFile(), which detects the format from the content rather than the name.
+BOOST_AUTO_TEST_CASE(TrackingGeometryFileFormatRoundTrip) {
+  using namespace Acts;
+
+  GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+  CylindricalTrackingGeometry cylindricalGeometryBuilder(gctx, true);
+  auto sourceGeometry = cylindricalGeometryBuilder();
+
+  TrackingGeometryJsonConverter converter;
+  TemporaryDirectory tmpDir{};
+
+  std::vector<std::string> names{"geometry.json", "geometry.cbor"};
+  if (detail::zstdSupported()) {
+    names.emplace_back("geometry.json.zst");
+    names.emplace_back("geometry.cbor.zst");
+  }
+
+  for (const auto& name : names) {
+    BOOST_TEST_CONTEXT("format " << name) {
+      auto path = tmpDir.path() / name;
+      converter.toFile(gctx, *sourceGeometry, path);
+      BOOST_REQUIRE(std::filesystem::exists(path));
+
+      auto decoded = converter.fromFile(gctx, path);
+      BOOST_REQUIRE(decoded != nullptr);
+      BOOST_REQUIRE(decoded->highestTrackingVolume() != nullptr);
+      BOOST_CHECK(*sourceGeometry->highestTrackingVolume() ==
+                  *decoded->highestTrackingVolume());
+    }
+  }
+}
+
+// The compact and compressed encodings should actually be smaller, otherwise
+// the format plumbing is silently writing plain text.
+BOOST_AUTO_TEST_CASE(TrackingGeometryFileFormatSizes) {
+  using namespace Acts;
+
+  GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+  CylindricalTrackingGeometry cylindricalGeometryBuilder(gctx, true);
+  auto sourceGeometry = cylindricalGeometryBuilder();
+
+  TrackingGeometryJsonConverter converter;
+  TemporaryDirectory tmpDir{};
+
+  auto writeAndSize = [&](const std::string& name) {
+    auto path = tmpDir.path() / name;
+    converter.toFile(gctx, *sourceGeometry, path);
+    return std::filesystem::file_size(path);
+  };
+
+  auto jsonSize = writeAndSize("geometry.json");
+  BOOST_CHECK_LT(writeAndSize("geometry.cbor"), jsonSize);
+
+  if (detail::zstdSupported()) {
+    BOOST_CHECK_LT(writeAndSize("geometry.json.zst"), jsonSize);
+  }
+}
+
+// The format is taken from the file name alone, so a name that does not name
+// a format has to be rejected rather than guessed at.
+BOOST_AUTO_TEST_CASE(TrackingGeometryFileFormatUnknownExtension) {
+  using namespace Acts;
+
+  GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+  CylindricalTrackingGeometry cylindricalGeometryBuilder(gctx, true);
+  auto sourceGeometry = cylindricalGeometryBuilder();
+
+  TrackingGeometryJsonConverter converter;
+  TemporaryDirectory tmpDir{};
+
+  BOOST_CHECK_THROW(
+      converter.toFile(gctx, *sourceGeometry, tmpDir.path() / "geometry.dat"),
+      std::invalid_argument);
+}
+
+// A file that is neither JSON nor CBOR must be reported as such, rather than
+// surfacing as a confusing parse error.
+BOOST_AUTO_TEST_CASE(TrackingGeometryFileFormatUndecodable) {
+  using namespace Acts;
+
+  GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+  TrackingGeometryJsonConverter converter;
+  TemporaryDirectory tmpDir{};
+
+  auto path = tmpDir.path() / "garbage.json";
+  {
+    std::ofstream out(path, std::ios::binary);
+    BOOST_REQUIRE(out.good());
+    out << "not a geometry";
+  }
+
+  BOOST_CHECK_THROW(converter.fromFile(gctx, path), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

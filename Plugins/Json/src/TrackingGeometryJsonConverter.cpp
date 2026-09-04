@@ -43,7 +43,9 @@
 #include "ActsPlugins/Json/GridJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
+#include "ActsPlugins/Json/detail/JsonIo.hpp"
 
+#include <filesystem>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -220,8 +222,7 @@ std::string getNavigationPolicyKind() {
     return "SurfaceArray";
   } else if (std::is_same_v<bounds_t, Acts::MultiNavigationPolicy>) {
     return "MultiNavigation";
-  } else if (std::is_same_v<bounds_t,
-                            Acts::Experimental::MultiLayerNavigationPolicy>) {
+  } else if (std::is_same_v<bounds_t, Acts::MultiLayerNavigationPolicy>) {
     return "MultiLayerNavigation";
   } else if (std::is_same_v<bounds_t, Acts::CylinderNavigationPolicy>) {
     return "Cylinder";
@@ -341,11 +342,11 @@ nlohmann::json encodeSurfaceArrayNavigationPolicy(
 }
 
 nlohmann::json encodeMultiLayerNavigationPolicy(
-    const Acts::Experimental::MultiLayerNavigationPolicy& policy,
+    const Acts::MultiLayerNavigationPolicy& policy,
     const Acts::TrackingGeometryJsonConverter& /*converter*/) {
   nlohmann::json jPolicy;
   jPolicy[kKindKey] =
-      getNavigationPolicyKind<Acts::Experimental::MultiLayerNavigationPolicy>();
+      getNavigationPolicyKind<Acts::MultiLayerNavigationPolicy>();
 
   const auto& grid = policy.indexedGrid();
   nlohmann::json jAxes;
@@ -376,21 +377,21 @@ std::unique_ptr<Acts::INavigationPolicy> decodeMultiLayerNavigationPolicy(
       range0[0], range0[1], bins0);
   Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound> axis1(
       range1[0], range1[1], bins1);
-  Acts::Experimental::MultiLayerNavigationPolicy::GridType grid(
-      std::move(axis0), std::move(axis1));
+  Acts::MultiLayerNavigationPolicy::GridType grid(std::move(axis0),
+                                                  std::move(axis1));
 
   std::vector<Acts::AxisDirection> castsVec =
       encoded.at("casts").get<std::vector<Acts::AxisDirection>>();
   std::array<Acts::AxisDirection, 2> casts = {castsVec.at(0), castsVec.at(1)};
 
-  Acts::Experimental::MultiLayerNavigationPolicy::IndexedUpdatorType
-      indexedGrid(std::move(grid), casts);
+  Acts::MultiLayerNavigationPolicy::IndexedUpdatorType indexedGrid(
+      std::move(grid), casts);
 
-  Acts::Experimental::MultiLayerNavigationPolicy::Config config;
+  Acts::MultiLayerNavigationPolicy::Config config;
   config.binExpansion =
       encoded.at("binExpansion").get<std::vector<std::size_t>>();
 
-  return std::make_unique<Acts::Experimental::MultiLayerNavigationPolicy>(
+  return std::make_unique<Acts::MultiLayerNavigationPolicy>(
       gctx, volume, logger, config, std::move(indexedGrid));
 }
 
@@ -409,25 +410,15 @@ std::unique_ptr<Acts::INavigationPolicy> decodeCylinderNavigationPolicy(
   return std::make_unique<Acts::CylinderNavigationPolicy>(gctx, volume, logger);
 }
 
-// -------------------------------------------------------------------
-// Portal link encoder/decoder
-
-std::shared_ptr<Acts::RegularSurface> regularSurfaceFromJson(
-    const nlohmann::json& jSurface) {
-  auto surface = Acts::SurfaceJsonConverter::fromJson(jSurface);
-  auto regular = std::dynamic_pointer_cast<Acts::RegularSurface>(surface);
-  if (regular == nullptr) {
-    throw std::invalid_argument("Portal link surface is not a RegularSurface");
-  }
-  return regular;
-}
-
 std::unique_ptr<Acts::GridPortalLink> makeGridPortalLink(
     const std::shared_ptr<Acts::RegularSurface>& surface,
     Acts::AxisDirection direction, const Acts::IAxis& axis0,
     const Acts::IAxis* axis1) {
   std::unique_ptr<Acts::GridPortalLink> grid;
-
+  if (!surface) {
+    throw std::invalid_argument(
+        "makeGridPortalLink() - Non regular surface was passed");
+  }
   if (axis1 == nullptr) {
     axis0.visit([&](const auto& a0) {
       using axis_t = std::remove_cvref_t<decltype(a0)>;
@@ -506,7 +497,7 @@ nlohmann::json encodeGridPortalLink(
   }
 
   Acts::AnyGridConstView<const Acts::TrackingVolume*> view(link.grid());
-  const auto nBins = view.numLocalBins();
+  const auto nBins = view.multiAxisAny().getNBinsAny();
   const auto dim = view.dimensions();
 
   jLink[kBinsKey] = nlohmann::json::array();
@@ -555,7 +546,16 @@ std::unique_ptr<Acts::PortalLinkBase> decodeTrivialPortalLink(
     const Acts::TrackingGeometryJsonConverter::VolumePointerLookup& volumes) {
   const auto linkSurfaceId = encoded.at(kSurfaceIdKey).get<std::size_t>();
   const auto targetVolumeId = encoded.at(kTargetVolumeIdKey).get<std::size_t>();
-  return std::make_unique<Acts::TrivialPortalLink>(surfaces.at(linkSurfaceId),
+  auto regularSurf = std::dynamic_pointer_cast<Acts::RegularSurface>(
+      surfaces.at(linkSurfaceId));
+  if (!regularSurf) {
+    throw std::invalid_argument(
+        std::format("decodeTrivialPortallink() - {:}Surface with geoID: {:} is "
+                    "not regular ",
+                    surfaces.at(linkSurfaceId)->type(),
+                    surfaces.at(linkSurfaceId)->geometryId()));
+  }
+  return std::make_unique<Acts::TrivialPortalLink>(regularSurf,
                                                    *volumes.at(targetVolumeId));
 }
 
@@ -589,9 +589,10 @@ std::unique_ptr<Acts::PortalLinkBase> decodeGridPortalLink(
     throw std::invalid_argument("GridPortalLink requires 1 or 2 axes");
   }
 
-  auto grid =
-      makeGridPortalLink(surfaces.at(linkSurfaceId), direction, *axes.at(0),
-                         axes.size() == 2u ? axes.at(1).get() : nullptr);
+  auto grid = makeGridPortalLink(
+      std::dynamic_pointer_cast<Acts::RegularSurface>(
+          surfaces.at(linkSurfaceId)),
+      direction, *axes.at(0), axes.size() == 2u ? axes.at(1).get() : nullptr);
 
   Acts::AnyGridView<const Acts::TrackingVolume*> view(grid->grid());
   const auto dim = view.dimensions();
@@ -839,9 +840,8 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
                     decodeSurfaceArrayNavigationPolicy)
       .registerKind(getNavigationPolicyKind<MultiNavigationPolicy>(),
                     decodeMultiNavigationPolicy)
-      .registerKind(
-          getNavigationPolicyKind<Experimental::MultiLayerNavigationPolicy>(),
-          decodeMultiLayerNavigationPolicy)
+      .registerKind(getNavigationPolicyKind<MultiLayerNavigationPolicy>(),
+                    decodeMultiLayerNavigationPolicy)
       .registerKind(getNavigationPolicyKind<CylinderNavigationPolicy>(),
                     decodeCylinderNavigationPolicy);
 
@@ -891,7 +891,7 @@ Acts::TrackingGeometryJsonConverter::navigationPolicyFromJson(
 
 nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
     const GeometryContext& gctx, const TrackingVolume& world,
-    const Options& /*options*/) const {
+    const Options& options) const {
   nlohmann::json encoded;
   encoded[kHeaderKey] = nlohmann::json::object();
   encoded[kHeaderKey][kVersionKey] = kFormatVersion;
@@ -921,8 +921,11 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
   encoded[kRootVolumeIdKey] = volumeIds.at(world);
 
   // Encode surfaces
+  const SurfaceJsonConverter::Options surfaceOptions{.writeMaterial =
+                                                         options.writeMaterial};
   for (const auto* surf : orderedSurfaces) {
-    nlohmann::json jSurface = SurfaceJsonConverter::toJson(gctx, *surf);
+    nlohmann::json jSurface =
+        SurfaceJsonConverter::toJson(gctx, *surf, surfaceOptions);
     jSurface[kSurfaceIdKey] = surfaceIds.at(*surf);
     encoded[kSurfacesKey].push_back(std::move(jSurface));
   }
@@ -1075,7 +1078,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
 
   // ---------------------------------------------------
   for (const auto& [surfaceId, record] : surfaceRecords) {
-    auto surface = regularSurfaceFromJson(record.payload);
+    auto surface = Acts::SurfaceJsonConverter::fromJson(record.payload);
     surfacePointers.emplace(surfaceId, surface);
   }
 
@@ -1200,6 +1203,29 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
   }
 
   return std::shared_ptr<TrackingVolume>(std::move(root));
+}
+
+void Acts::TrackingGeometryJsonConverter::toFile(
+    const GeometryContext& gctx, const TrackingGeometry& geometry,
+    const std::filesystem::path& path, const Options& options) const {
+  ACTS_DEBUG("Writing TrackingGeometry to '" << path.string() << "'");
+  detail::writeJsonFile(path, toJson(gctx, geometry, options),
+                        options.indentation, options.compressionLevel);
+}
+
+std::shared_ptr<Acts::TrackingGeometry>
+Acts::TrackingGeometryJsonConverter::fromFile(const GeometryContext& gctx,
+                                              const std::filesystem::path& path,
+                                              const Options& options) const {
+  ACTS_DEBUG("Reading TrackingGeometry from '" << path.string() << "'");
+  return fromJson(gctx, detail::readJsonFile(path), options);
+}
+
+std::shared_ptr<Acts::TrackingGeometry>
+Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
+                                              const std::filesystem::path& path,
+                                              const Options& options) const {
+  return fromFile(gctx, path, options);
 }
 
 std::shared_ptr<Acts::TrackingGeometry>

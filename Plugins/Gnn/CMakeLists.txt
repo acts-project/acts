@@ -1,6 +1,8 @@
 acts_add_library(
     PluginGnn
+    src/CudaUnavailable.cpp
     src/GnnPipeline.cpp
+    src/Stages.cpp
     src/Tensor.cpp
     src/BoostTrackBuilding.cpp
     src/TruthGraphMetricsHook.cpp
@@ -35,6 +37,14 @@ if(ACTS_GNN_ENABLE_TORCH)
             src/TorchMetricLearning.cpp
             src/buildEdges.cpp
     )
+    # FRNN edge building is CUDA-only. One of the two definitions of
+    # detail::buildEdgesFRNN is always linked, so buildEdges.cpp can call it
+    # unconditionally.
+    if(ACTS_ENABLE_CUDA)
+        target_sources(ActsPluginGnn PRIVATE src/buildEdgesFRNN.cpp)
+    else()
+        target_sources(ActsPluginGnn PRIVATE src/buildEdgesFRNNNoCuda.cpp)
+    endif()
 endif()
 
 if(ACTS_GNN_ENABLE_TENSORRT)
@@ -76,9 +86,18 @@ if(ACTS_ENABLE_CUDA)
     target_link_libraries(ActsPluginGnn PRIVATE CUDA::cudart CUDA::nvtx3)
     target_sources(
         ActsPluginGnn
-        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
+        PRIVATE
+            src/CudaTrackBuilding.cu
+            src/DWalkTrackBuilding.cu
+            src/JunctionRemoval.cu
+            src/Tensor.cu
+            src/Stages.cu
     )
 else()
+    # The other half of DeviceOps.hpp: every device entry point, defined to
+    # throw. Host code calls them unconditionally and dispatches on the runtime
+    # device, so nothing above needs a preprocessor branch.
+    target_sources(ActsPluginGnn PRIVATE src/DeviceOpsNoCuda.cpp)
 endif()
 
 if(ACTS_GNN_ENABLE_TORCH)

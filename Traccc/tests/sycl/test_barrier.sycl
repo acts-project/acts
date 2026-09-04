@@ -1,0 +1,164 @@
+/**
+ * traccc library, part of the ACTS project (R&D line)
+ *
+ * (c) 2024-2026 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+// SYCL include(s).
+#include <sycl/sycl.hpp>
+
+// Project include(s).
+#include "../../device/sycl/src/utils/barrier.hpp"
+
+// VecMem include(s).
+#include <vecmem/memory/sycl/shared_memory_resource.hpp>
+#include <vecmem/memory/unique_ptr.hpp>
+
+// GoogleTest include(s).
+#include <gtest/gtest.h>
+
+TEST(SYCLBarrier, BarrierAnd) {
+  vecmem::sycl::shared_memory_resource mr;
+
+  ::sycl::queue queue;
+  constexpr std::size_t n_bools = 4;
+
+  vecmem::unique_alloc_ptr<bool[]> out =
+      vecmem::make_unique_alloc<bool[]>(mr, n_bools);
+
+  ::sycl::nd_range test_range(::sycl::range<1>(128), ::sycl::range<1>(128));
+
+  queue
+      .submit([&, out = out.get()](::sycl::handler& h) {
+        h.parallel_for<class BarrierAndTest>(
+            test_range, [=](::sycl::nd_item<1> item) {
+              const traccc::sycl::details::barrier bar{item};
+
+              bool v;
+
+              v = bar.blockAnd(false);
+              if (item.get_local_id()[0] == 0) {
+                out[0] = v;
+              }
+
+              v = bar.blockAnd(true);
+              if (item.get_local_id()[0] == 0) {
+                out[1] = v;
+              }
+
+              v = bar.blockAnd(item.get_local_id()[0] % 2 == 0);
+              if (item.get_local_id()[0] == 0) {
+                out[2] = v;
+              }
+
+              v = bar.blockAnd(item.get_local_id()[0] < 32);
+              if (item.get_local_id()[0] == 0) {
+                out[3] = v;
+              }
+            });
+      })
+      .wait_and_throw();
+
+  EXPECT_FALSE(out.get()[0]);
+  EXPECT_TRUE(out.get()[1]);
+  EXPECT_FALSE(out.get()[2]);
+  EXPECT_FALSE(out.get()[3]);
+}
+
+TEST(SYCLBarrier, BarrierOr) {
+  vecmem::sycl::shared_memory_resource mr;
+
+  ::sycl::queue queue;
+  constexpr std::size_t n_bools = 4;
+
+  vecmem::unique_alloc_ptr<bool[]> out =
+      vecmem::make_unique_alloc<bool[]>(mr, n_bools);
+
+  ::sycl::nd_range test_range(::sycl::range<1>(128), ::sycl::range<1>(128));
+
+  queue
+      .submit([&, out = out.get()](::sycl::handler& h) {
+        h.parallel_for<class BarrierOrTest>(
+            test_range, [=](::sycl::nd_item<1> item) {
+              const traccc::sycl::details::barrier bar{item};
+
+              bool v;
+
+              v = bar.blockOr(false);
+              if (item.get_local_id()[0] == 0) {
+                out[0] = v;
+              }
+
+              v = bar.blockOr(true);
+              if (item.get_local_id()[0] == 0) {
+                out[1] = v;
+              }
+
+              v = bar.blockOr(item.get_local_id()[0] % 2 == 0);
+              if (item.get_local_id()[0] == 0) {
+                out[2] = v;
+              }
+
+              v = bar.blockOr(item.get_local_id()[0] < 32);
+              if (item.get_local_id()[0] == 0) {
+                out[3] = v;
+              }
+            });
+      })
+      .wait_and_throw();
+
+  EXPECT_FALSE(out.get()[0]);
+  EXPECT_TRUE(out.get()[1]);
+  EXPECT_TRUE(out.get()[2]);
+  EXPECT_TRUE(out.get()[3]);
+}
+
+TEST(SYCLBarrier, BarrierCount) {
+  vecmem::sycl::shared_memory_resource mr;
+
+  ::sycl::queue queue;
+  constexpr std::size_t n_ints = 4;
+
+  vecmem::unique_alloc_ptr<unsigned int[]> out =
+      vecmem::make_unique_alloc<unsigned int[]>(mr, n_ints);
+
+  ::sycl::nd_range test_range(::sycl::range<1>(128), ::sycl::range<1>(128));
+
+  queue
+      .submit([&, out = out.get()](::sycl::handler& h) {
+        h.parallel_for<class BarrierCountTest>(
+            test_range, [=](::sycl::nd_item<1> item) {
+              const traccc::sycl::details::barrier bar{item};
+
+              unsigned int v;
+
+              v = bar.blockCount(false);
+              if (item.get_local_id()[0] == 0) {
+                out[0] = v;
+              }
+
+              v = bar.blockCount(true);
+              if (item.get_local_id()[0] == 0) {
+                out[1] = v;
+              }
+
+              v = bar.blockCount(item.get_local_id()[0] % 2 == 0);
+              if (item.get_local_id()[0] == 0) {
+                out[2] = v;
+              }
+
+              v = bar.blockCount(item.get_local_id()[0] < 32);
+              if (item.get_local_id()[0] == 0) {
+                out[3] = v;
+              }
+            });
+      })
+      .wait_and_throw();
+
+  EXPECT_EQ(out.get()[0], 0);
+  EXPECT_EQ(out.get()[1], 128);
+  EXPECT_EQ(out.get()[2], 64);
+  EXPECT_EQ(out.get()[3], 32);
+}

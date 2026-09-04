@@ -118,12 +118,15 @@ def fetch_github(base_url: str, cache_dir: Optional[Path], cache_limit: int) -> 
     headers = {}
     token = os.environ.get("GITHUB_TOKEN")
 
-    # Only add auth header if we have retries left
-    if token is not None and token != "" and remaining_retries.get() > 0:
+    # Always authenticate when a token is available. Anonymous requests are
+    # subject to GitHub's much lower unauthenticated rate limit, so dropping the
+    # token on any attempt makes rate-limit failures *more* likely, not less.
+    if token:
         headers["Authorization"] = f"Bearer {token}"
 
     print(f"Remaining retries: {remaining_retries.get()} for {base_url}")
-    print(headers)
+    # Avoid printing the header values, which would leak the token into CI logs.
+    print(f"Authenticated: {'Authorization' in headers}")
 
     with contextlib.ExitStack() as stack:
         if cache_dir is not None:
@@ -204,6 +207,15 @@ def main():
         default=os.environ.get("CXXSTD", "20"),
         help="C++ standard (e.g. 20, 23). Defaults to CXXSTD env var or 20.",
     )
+    parser.add_argument(
+        "--flavor",
+        type=str,
+        default=os.environ.get("FLAVOR"),
+        help=(
+            "Accelerator flavor (e.g. cuda13, rocm-gfx90a). 'host' or unset "
+            "selects the plain CPU stack. Defaults to the FLAVOR env var."
+        ),
+    )
     args = parser.parse_args()
 
     # Normalize to cxxNN format used in lockfile names
@@ -213,9 +225,15 @@ def main():
         exit(1)
     args.cxx = f"cxx{cxx}"
 
+    # ci-dependencies spells the plain CPU stack as the flavor `host`, which
+    # produces a triplet with no flavor token at all. Normalise both spellings
+    # to None so everything downstream compares against the parsed token.
+    args.flavor = normalize_flavor(args.flavor)
+
     print("Fetching lockfiles for tag:", args.tag)
     print("Architecture:", args.arch)
     print("C++ standard variant:", args.cxx)
+    print("Flavor:", args.flavor or "host")
 
     base_url = f"https://api.github.com/repos/acts-project/ci-dependencies/releases/tags/{args.tag}"
 
@@ -227,7 +245,7 @@ def main():
     for arch, compilers in lockfiles.items():
         print(f"> {arch}:")
         for c, (n, _) in compilers.items():
-            print(f"  - {c}: {n}")
+            print(f"  - {c} [flavor: {extract_flavor(c) or 'host'}]: {n}")
 
     if args.arch not in lockfiles:
         print(f"No lockfile found for architecture {args.arch}")
@@ -245,7 +263,7 @@ def main():
     else:
         compiler = None
 
-    lockfile = select_lockfile(lockfiles, args.arch, compiler, args.cxx)
+    lockfile = select_lockfile(lockfiles, args.arch, compiler, args.cxx, args.flavor)
 
     print("Selected lockfile:", lockfile)
 
@@ -289,23 +307,73 @@ def parse_assets(data: Dict) -> Dict[str, Dict[str, Tuple[str, str]]]:
     return lockfiles
 
 
+def normalize_flavor(flavor: Optional[str]) -> Optional[str]:
+    """`host`, "" and None all mean the plain CPU stack, which has no token."""
+    flavor = flavor.strip() if flavor else ""
+    return None if flavor in ("", "host") else flavor
+
+
+def extract_flavor(spec: str) -> Optional[str]:
+    """Flavor token of a compiler spec, or None for the host stack.
+
+    Lockfiles are named `<arch>_<compiler>_cxx<std>[_<flavor>]`
+    (ci-dependencies flavors/README.md) and `parse_assets` strips the arch, so
+    the flavor is whatever follows `cxx<std>` -- rejoined, since a flavor name
+    may contain underscores. Pre-cxx specs (`gcc@13.3.0`, `default`) have none.
+    """
+    parts = spec.split("_")
+    for i, part in enumerate(parts):
+        if re.fullmatch(r"cxx\d+", part):
+            rest = "_".join(parts[i + 1 :])
+            return rest or None
+    return None
+
+
+def extract_cxx(spec: str) -> Optional[str]:
+    """`cxx<std>` token of a compiler spec, or None.
+
+    Not a suffix test: on a flavored spec it sits in the middle
+    (`gcc@15.2.0_cxx23_cuda13`), where `endswith("_cxx23")` silently misses.
+    """
+    for part in spec.split("_"):
+        if re.fullmatch(r"cxx\d+", part):
+            return part
+    return None
+
+
 def select_lockfile(
     lockfiles: Dict[str, Dict[str, Tuple[str, str]]],
     arch: str,
     compiler: Optional[str],
     cxx: str = "cxx20",
+    flavor: Optional[str] = None,
 ) -> str:
-    arch_lockfiles = lockfiles[arch]
+    # Filter first, so every rule below (family, version, cxx) stays inside one
+    # accelerator stack rather than falling back across them.
+    arch_lockfiles = {
+        comp: v for comp, v in lockfiles[arch].items() if extract_flavor(comp) == flavor
+    }
+
+    if not arch_lockfiles:
+        # Fail hard: a CUDA job handed the host lockfile fails much later, in a
+        # configure step, with an error pointing nowhere near here.
+        available = sorted({extract_flavor(c) or "host" for c in lockfiles[arch]})
+        print(
+            f"No lockfile found for flavor '{flavor or 'host'}' on {arch}; "
+            f"available flavors: {', '.join(available)}"
+        )
+        exit(1)
 
     # Resolve default lockfile (legacy format has "default", new format may not)
     if "default" in arch_lockfiles:
         _, lockfile = arch_lockfiles["default"]
     else:
-        # New format: no default, use first cxx20 variant when compiler unspecified
+        # New format: no default, use first matching cxx variant when compiler
+        # unspecified
         cxx_defaults = [
             (comp, url)
             for comp, (_, url) in arch_lockfiles.items()
-            if comp.endswith(f"_{cxx}")
+            if extract_cxx(comp) == cxx
         ]
         if cxx_defaults:
             _, lockfile = cxx_defaults[0]
@@ -355,8 +423,20 @@ def select_lockfile(
     }
 
     if not compiler_matches:
-        # No exact version match - use highest version of same family
-        highest = max(family_matches.keys(), key=extract_version)
+        # No exact version match: take the highest of the family, but keep the
+        # requested C++ standard if it publishes one. Without that second
+        # filter `max` breaks the tie in dict order, so an unknown compiler
+        # version (clang 22.1.7 -> 22.1.8) silently loses a cxx23 request too.
+        highest_version = max(map(extract_version, family_matches.keys()))
+        candidates = {
+            comp: v
+            for comp, v in family_matches.items()
+            if extract_version(comp) == highest_version
+        }
+        cxx_candidates = {
+            comp: v for comp, v in candidates.items() if extract_cxx(comp) == cxx
+        }
+        highest = next(iter(cxx_candidates or candidates))
         _, lockfile = family_matches[highest]
         print(
             f"No lockfile found for compiler '{compiler}', "
@@ -367,7 +447,7 @@ def select_lockfile(
     # Prefer cxx-specific variant; exact family name takes priority over alias
     # (compiler_matches already contains both clang and llvm aliases)
     cxx_matches = {
-        comp: v for comp, v in compiler_matches.items() if comp.endswith(f"_{cxx}")
+        comp: v for comp, v in compiler_matches.items() if extract_cxx(comp) == cxx
     }
     if cxx_matches:
         exact_family = next(
@@ -386,11 +466,13 @@ def select_lockfile(
         _, lockfile = compiler_matches[compiler]
         return lockfile
 
-    # Fallback: first available (e.g. different cxx variant)
+    # Fallback: first available. The normal path for the flavors, published at
+    # cxx23 only, so a cxx20 job asking for `cuda13` gets the cxx23 stack --
+    # deliberate; see the `flavor` input in .github/actions/dependencies.
     first_comp, (_, lockfile) = next(iter(compiler_matches.items()))
     print(
-        f"No lockfile found for compiler '{compiler}' with {cxx}, "
-        f"falling back to '{first_comp}': {lockfile}"
+        f"No lockfile found for compiler '{compiler}' with {cxx} "
+        f"(flavor '{flavor or 'host'}'), falling back to '{first_comp}': {lockfile}"
     )
     return lockfile
 

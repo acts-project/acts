@@ -21,7 +21,7 @@ CMake build procedures.
 
 ```shell
 git clone https://github.com/acts-project/acts.git
-cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -S Acts/Detray -B detray-build
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -S acts/Detray -B detray-build
 cmake --build detray-build
 ```
 
@@ -36,15 +36,15 @@ export DETRAY_BFIELD_FILE="${PWD}/odd-bfield_v0_9_0.cvf"
 
 A number of cmake preset configurations are provided and can be listed by:
 ```shell
-cmake -S Acts/Detray --list-presets
+cmake -S acts/Detray --list-presets
 ```
 For a developer build, the `detray-dev-fp32` and `detray-dev-fp64` configurations are available (`fp`: floating point precision):
 ```shell
-cmake -S Acts/Detray -B detray-build --preset detray-dev-fp32
+cmake -S acts/Detray -B detray-build --preset detray-dev-fp32
 ```
 The developer presets will build the components of detray that are most commonly used. The `prefetch` presets on the other hand will configure all possible dependencies, but not automatically trigger the build of the corresponding components. For example, in order to trigger the build of the unit tests with the `prefetch` preset, the corresponding option needs to be specified:
 ```shell
-cmake -S Acts/Detray -B detray-build --preset detray-prefetch-fp32 \
+cmake -S acts/Detray -B detray-build --preset detray-prefetch-fp32 \
 -DDETRAY_ARRAY_PLUGIN=ON -DDETRAY_BUILD_UNITTESTS=ON
 ```
 A full build, containing all components (e.g. tests and benchmarks), can be configured using the `detray-full-fp32` and `detray-full-fp64` presets.
@@ -56,13 +56,14 @@ The following cmake options are available and can also be specified explicitly f
 | DETRAY_SET_LOGGING  | Set log level (NONE, WARN, INFO, VERBOSE, DEBUG) | INFO |
 | DETRAY_BUILD_CUDA  | Build the CUDA sources included in detray | ON (if available) |
 | DETRAY_BUILD_SYCL  | Build the SYCL sources included in detray | OFF |
-| DETRAY_BUILD_TEST_UTILS  | Build the detray test utilities library (contains e.g. test detectors) | OFF |
 | DETRAY_BUILD_UNITTESTS  | Build the detray unit tests | OFF |
 | DETRAY_BUILD_INTEGRATIONTESTS  | Build the detray integration tests | OFF |
 | DETRAY_BUILD_ALL_TESTS  | Build the detray unit and integration tests | OFF |
 | DETRAY_BUILD_BENCHMARKS  | Build the detray benchmarks | OFF |
 | DETRAY_BUILD_CLI_TOOLS  | Build the detray command line tools | OFF |
 | DETRAY_BUILD_TUTORIALS  | Build the examples of detray | OFF |
+| DETRAY_BUILD_PYTHON_BINDINGS  | Build python bindings for all enabled components | OFF |
+| DETRAY_GENERATE_PYTHON_STUBS  | Generate Python stub files for Python bindings | OFF |
 | DETRAY_CUSTOM_SCALARTYPE | Floating point precision | float |
 | DETRAY_GENERATE_METADATA | List of metadata generator scripts (separated by semicolon) | empty |
 | DETRAY_EIGEN_PLUGIN | Build Eigen math plugin | OFF |
@@ -70,6 +71,8 @@ The following cmake options are available and can also be specified explicitly f
 | DETRAY_SMATRIX_PLUGIN | Build ROOT/SMatrix math plugin | OFF |
 | DETRAY_VC_AOS_PLUGIN | Build Vc based AoS math plugin | OFF |
 | DETRAY_VC_SOA_PLUGIN | Build Vc based SoA math plugin (currently only supports the ray-surface intersectors) | OFF |
+| DETRAY_BUILD_TEST_UTILS  | Build the detray test utilities library (contains e.g. test detectors) | OFF |
+| DETRAY_BUILD_VALIDATION_TOOLS | Build detray validation suite | OFF |
 | DETRAY_SVG_DISPLAY | Build ActSVG display module | OFF |
 
 ## Tutorials
@@ -82,9 +85,9 @@ extra navigation tracing information
 - Moving a detector to device
 - Host and device track propagation
 
-In order to define a custom detector geometry type (called a detector 'metadata'), please follow the instructions in `Acts/Detray/detectors/README.md`.
+In order to define a custom detector geometry type (called a detector 'metadata'), please follow the instructions in `acts/Detray/detectors/README.md`.
 
-Otherwise, the default detector metadata (`#include Acts/Detray/detectors/default_metadata.hpp`) can be used in most cases to define the detector type, however, incurring increased build times and likely also increased runtime of client algorithms.
+Otherwise, the default detector metadata (`#include <detray/detectors/default_metadata.hpp>`) can be used in most cases to define the detector type, however, incurring increased build times and likely also increased runtime of client algorithms.
 
 ## Detector Validation
 
@@ -92,11 +95,11 @@ Given a detray detector (and optionally also a grid and a material) json file, a
 ```shell
 detray-build/bin/detray_generate_toy_detector --write_material --write_grids
 ```
-All of the validation tools presented in the following can also be run as part of a corresponding [python script](https://github.com/acts-project/Acts/Detray/tests/tools/python) which takes the same arguments and will automatically create plots from the collected data. However, this requires Python 3, pandas, SciPy and NumPy, as well as Matplotlib to be available.
+All of the validation tools presented in the following can also be run as part of a corresponding [python script](https://github.com/acts-project/acts/tree/main/Detray/tests/tools/python) which takes the same arguments and will automatically create plots from the collected data. However, creating the plots requires Python 3, pandas, SciPy and NumPy, as well as Matplotlib to be available.
 
-The detector geometry can be visualized in SVG format with the following command:
+The detector geometry can be visualized in SVG format with the following command, which requires the python bindings (`-DDETRAY_BUILD_PYTHON_BINDINGS=ON -DDETRAY_BUILD_UNITTESTS=ON`) to be built and set up via `detray-build/python/setup.sh`:
 ```shell
-detray-build/bin/detray_detector_display \
+python3 detray/tests/tools/python/detector_display.py \
    --geometry_file  ./toy_detector/toy_detector_geometry.json
 ```
 The tool can also display single volumes or surfaces, as well as the navigation grids and material maps (the corresponding json files need to loaded in this case). For an overview of all available options for the command-line tools add `--help`.
@@ -116,9 +119,9 @@ Note: The `search_window` option defines the size of lookup area of the grid acc
 
 ### Material Validation
 
-This tool checks whether the navigator picks up the material correctly by comparing the material found during a ray scan with the material collected during navigation by a specialized actor:
+This tool checks whether the navigator picks up the material correctly by comparing the material found during a ray scan with the material collected during navigation by a specialized actor. It requires the python bindings (`-DDETRAY_BUILD_PYTHON_BINDINGS=ON`) to be built and set up via `detray-build/python/setup.sh`:
 ```shell
-detray-build/bin/detray_material_validation \
+python3 detray/tests/tools/python/material_validation.py \
     --geometry_file ./toy_detector/toy_detector_geometry.json \
     --material_file ./toy_detector/toy_detector_homogeneous_material.json \
     --phi_steps 100 --eta_steps 100 --eta_range -4 4

@@ -8,6 +8,7 @@
 
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -286,6 +287,46 @@ std::vector<const TrivialPortalLink*> decomposeToTrivials(
 
   return trivials;
 }
+
+/// Build a portal mask for a trivial child surface, expressed in the frame of
+/// the parent (merged) portal surface. This allows a single detray portal
+/// surface to carry one mask per neighbour volume (multi-mask portal).
+///
+/// Only concentric cylinders (z-binning) and rings/discs (r-binning) can be
+/// folded onto a single shared transform; everything else returns nullopt so
+/// the caller can fall back to emitting one surface per trivial.
+///
+/// @param gctx the geometry context
+/// @param parent the merged portal surface that provides the shared transform
+/// @param child the trivial child surface whose sub-region is encoded
+/// @returns the mask payload in the parent frame, or nullopt if unsupported
+std::optional<detray::io::mask_payload> convertPortalMask(
+    const GeometryContext& gctx, const Surface& parent, const Surface& child) {
+  using enum detray::io::shape_id;
+
+  detray::io::mask_payload payload =
+      DetrayPayloadConverter::convertMask(child.bounds(), true);
+
+  if (payload.shape == portal_cylinder2) {
+    // The child z-range is centered on the child transform: shift it into the
+    // parent frame. The detray reader folds the (parent) surface-transform z
+    // back into every mask, so this reconstructs the correct global z-range.
+    using enum detray::concentric_cylinder2D::boundaries;
+    const double dz = (parent.localToGlobalTransform(gctx).inverse() *
+                       child.localToGlobalTransform(gctx))
+                          .translation()[eZ];
+    payload.boundaries.at(e_lower_z) += dz;
+    payload.boundaries.at(e_upper_z) += dz;
+    return payload;
+  } else if (payload.shape == ring2) {
+    // Ring boundaries are inner_r/outer_r only and frame-independent for
+    // coplanar r-split children.
+    return payload;
+  }
+
+  return std::nullopt;
+}
+
 /// Check compatibility between ACTS surface type and detray material_id
 /// @returns pair<is_compatible, expected_material_id>
 std::pair<bool, detray::io::material_id> isGridMaterialCompatible(
@@ -325,6 +366,56 @@ void DetrayPayloadConverter::handlePortalLink(
     ACTS_VERBOSE("At least one trivial link points at this volume ("
                  << volume.volumeName() << ") => skipping");
     return;
+  }
+
+  // Multi-mask portal: a single detray portal surface can carry one mask per
+  // neighbour volume. This is possible for concentric cylinders (z-binning)
+  // and rings/discs (r-binning), where all sub-regions share the parent
+  // surface transform. For everything else we fall back to one surface per
+  // trivial below.
+  const Surface& parentSurface = link.surface();
+  const bool canMultiMask =
+      trivials.size() > 1 &&
+      (parentSurface.type() == Surface::SurfaceType::Cylinder ||
+       parentSurface.type() == Surface::SurfaceType::Disc);
+
+  if (canMultiMask) {
+    std::vector<detray::io::mask_payload> masks;
+    masks.reserve(trivials.size());
+    bool ok = true;
+    for (const auto* trivial : trivials) {
+      auto mask = convertPortalMask(gctx, parentSurface, trivial->surface());
+      if (!mask.has_value()) {
+        ok = false;
+        break;
+      }
+      mask->volume_link.link = volumeLookup(&trivial->volume());
+      masks.push_back(*mask);
+    }
+
+    if (ok) {
+      ACTS_VERBOSE("Converting " << trivials.size()
+                                 << " trivial portal links into a single "
+                                    "multi-mask portal in volume "
+                                 << volume.volumeName());
+      // Reuse convertSurface for the parent transform / source / portal type,
+      // then replace its single mask with the per-trivial masks.
+      auto& srfPayload = volPayload.surfaces.emplace_back(
+          convertSurface(gctx, parentSurface, true));
+      srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
+      srfPayload.masks = std::move(masks);
+
+      // All trivial child surfaces map to this single detray surface index so
+      // that material assignment can resolve them later.
+      for (const auto* trivial : trivials) {
+        surfaceIndices[&trivial->surface()] = srfPayload.index_in_coll.value();
+      }
+      return;
+    }
+
+    ACTS_VERBOSE("Multi-mask portal conversion not possible for volume "
+                 << volume.volumeName()
+                 << " => falling back to one surface per trivial");
   }
 
   for (const auto* trivial : trivials) {
@@ -407,17 +498,6 @@ void DetrayPayloadConverter::handlePortal(
   }
 }
 
-namespace {
-
-constexpr static detray::io::surface_material_payload s_dummyMaterialSlab{
-    .type = detray::io::material_id::slab,
-    .index_in_coll = std::numeric_limits<std::size_t>::max(),
-    .thickness = 42,
-    .mat = {42, 42, 42, 42, 42, 42, 42},
-};
-
-}  // namespace
-
 std::pair<std::vector<detray::io::grid_payload<
               detray::io::surface_material_payload, detray::io::material_id>>,
           detray::io::material_volume_payload>
@@ -432,18 +512,6 @@ DetrayPayloadConverter::convertMaterial(
   detray::io::material_volume_payload homogeneous;
   homogeneous.volume_link.link = volPayload.index.link;
 
-  // @HACK: Detray does not like homoegeneous material only on SOME surfaces.
-  ACTS_INFO("Adding dummy material slabs to homogeneous collection for "
-            << volPayload.surfaces.size()
-            << " surfaces (detray "
-               "hack)");
-  for (const auto& surface : volPayload.surfaces) {
-    auto& slabPayload =
-        homogeneous.surface_mat.emplace_back(s_dummyMaterialSlab);
-    slabPayload.index_in_coll = surface.index_in_coll.value();
-    slabPayload.surface.link = surface.index_in_coll.value();
-  }
-
   std::map<std::size_t, const ISurfaceMaterial*> srfIdxToMaterial;
 
   auto assignMaterial = [&](const ISurfaceMaterial* material,
@@ -451,27 +519,32 @@ DetrayPayloadConverter::convertMaterial(
                             std::size_t srfIdx, const Surface& surface) {
     auto handleHomogeneous =
         [&](const detray::io::surface_material_payload& slab) {
-          // Given the pseudo slabs from before, we need to either update an
-          // existing slab or create a new one.
-
+          // A surface can be visited more than once (e.g. through decomposed
+          // portal links), so update an existing entry instead of duplicating.
+          //
+          // `index_in_coll` is deliberately left unset: it is the position in
+          // the detector's material collection, and forcing it to the surface
+          // index would make detray size that collection to the largest
+          // surface index and default-fill the gaps with invalid material.
+          // Leaving it unset packs the collection in payload order instead.
           auto it = std::ranges::find_if(
               homogeneous.surface_mat, [srfIdx](const auto& matslab) {
                 return matslab.surface.link == srfIdx;
               });
 
           if (it != homogeneous.surface_mat.end()) {
-            ACTS_VERBOSE("Adding slab to homogeneous material for surface "
+            ACTS_VERBOSE("Updating slab in homogeneous material for surface "
                          << srfIdx);
             auto& targetSlab = *it;
             targetSlab = slab;
-            targetSlab.index_in_coll = srfIdx;
+            targetSlab.index_in_coll.reset();
             targetSlab.surface.link = srfIdx;
           } else {
-            ACTS_VERBOSE("Updating slab in homogeneous material for surface "
+            ACTS_VERBOSE("Adding slab to homogeneous material for surface "
                          << srfIdx);
-            homogeneous.surface_mat.emplace_back(slab);
-            homogeneous.surface_mat.back().index_in_coll = srfIdx;
-            homogeneous.surface_mat.back().surface.link = srfIdx;
+            auto& newSlab = homogeneous.surface_mat.emplace_back(slab);
+            newSlab.index_in_coll.reset();
+            newSlab.surface.link = srfIdx;
           }
 
           auto sit = srfIdxToMaterial.find(srfIdx);
@@ -667,11 +740,6 @@ DetrayPayloadConverter::convertTrackingGeometry(
   payloads.detector = std::make_unique<detray::io::detector_payload>();
   detray::io::detector_payload& detPayload = *payloads.detector;
 
-  payloads.homogeneousMaterial =
-      std::make_unique<detray::io::detector_homogeneous_material_payload>();
-  detray::io::detector_homogeneous_material_payload& dthmPayload =
-      *payloads.homogeneousMaterial;
-
   payloads.materialGrids = std::make_unique<detray::io::detector_grids_payload<
       detray::io::surface_material_payload, detray::io::material_id>>();
 
@@ -763,7 +831,12 @@ DetrayPayloadConverter::convertTrackingGeometry(
       // NOTE: Currently, it'll always be populated by at least the homogeneous
       // NOTE: Volume association is internal to
       // `detray::io::material_volume_payload`
-      dthmPayload.volumes.emplace_back(std::move(homogeneous));
+      if (!payloads.homogeneousMaterial) {
+        payloads.homogeneousMaterial = std::make_unique<
+            detray::io::detector_homogeneous_material_payload>();
+      }
+      payloads.homogeneousMaterial->volumes.emplace_back(
+          std::move(homogeneous));
     }
 
     ACTS_DEBUG("Volume " << volume.volumeName()
@@ -792,6 +865,16 @@ DetrayPayloadConverter::convertTrackingGeometry(
       std::optional<DetraySurfaceGrid> detrayGrid = std::nullopt;
 
       navPolicy->visit([&](const INavigationPolicy& policy) {
+        auto grid = m_cfg.convertNavigationPolicy(policy, gctx, surfaceLookupFn,
+                                                  logger());
+        if (!grid.has_value()) {
+          // Policies without an explicit detray conversion (see
+          // NOOP_CONVERTER_IMPL) are not a conflict: a volume may legitimately
+          // combine e.g. a SurfaceArrayNavigationPolicy with a
+          // TryAllNavigationPolicy for passives and portals.
+          return;
+        }
+
         if (detrayGrid.has_value()) {
           ACTS_ERROR("Volume "
                      << volume.volumeName()
@@ -801,8 +884,7 @@ DetrayPayloadConverter::convertTrackingGeometry(
               "Multiple detray-compatible navigation policies"};
         }
 
-        detrayGrid = m_cfg.convertNavigationPolicy(policy, gctx,
-                                                   surfaceLookupFn, logger());
+        detrayGrid = std::move(grid);
       });
 
       if (detrayGrid.has_value()) {
@@ -846,7 +928,10 @@ DetrayPayloadConverter::convertTrackingGeometry(
     }
   }
 
-  {
+  if (payloads.homogeneousMaterial) {
+    ACTS_DEBUG("Adjusting homogeneous material entries after swapping");
+    auto& dthmPayload = *payloads.homogeneousMaterial;
+
     // Possibly swap homogeneous material entries in vector if they both exist
     auto find = [](std::size_t id) {
       return [id](const auto& vol) { return vol.volume_link.link == id; };
@@ -875,6 +960,8 @@ DetrayPayloadConverter::convertTrackingGeometry(
         mat.volume_link.link = beampipeIdx;
       }
     }
+  } else {
+    ACTS_DEBUG("No homogeneous material payload to adjust after swapping");
   }
 
   {

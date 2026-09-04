@@ -2,9 +2,9 @@ import sys
 import sympy
 from sympy.tensor.array.expressions import ArraySymbol
 
-from detray_sympy.common import name_expr
+from codegen.sympy_common import name_expr
+from codegen.detray_backend import gen_cxx_code
 from detray_sympy.output import write_out_file
-from detray_sympy.codegen import gen_cxx_code
 import detray_sympy.matrices
 
 

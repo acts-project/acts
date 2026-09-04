@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 
 import acts
+import acts.examples.root
 from acts.examples.simulation import (
     addFatras,
     addGeant4,

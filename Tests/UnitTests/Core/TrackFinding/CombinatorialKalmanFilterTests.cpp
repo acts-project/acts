@@ -20,28 +20,41 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
+#include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 #include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <functional>
@@ -288,7 +301,7 @@ inline auto makeTrackStateCreator(const source_link_accessor_t& slAccessor,
   trackStateCreator.sourceLinkAccessor
       .template connect<&source_link_accessor_t::range>(&slAccessor);
   trackStateCreator.calibrator.template connect<
-      &testSourceLinkCalibrator<TrackStateContainerBackend>>();
+      &testSourceLinkCalibratorStrict<TrackStateContainerBackend>>();
   trackStateCreator.measurementSelector.template connect<
       &MeasurementSelector::select<TrackStateContainerBackend>>(&measSel);
   return trackStateCreator;
@@ -431,6 +444,335 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     BOOST_CHECK_EQUAL(numHits, f.detector.numMeasurements);
     BOOST_CHECK_EQUAL(nummismatchedHits, 0u);
   }
+}
+
+/// Puts material on the layer approach and sensitive surfaces
+class ApproachMaterialDecorator final : public IMaterialDecorator {
+ public:
+  void decorate(Surface& surface) const override {
+    const GeometryIdentifier geoId = surface.geometryId();
+    if (geoId.approach() == 0 && geoId.sensitive() == 0) {
+      return;
+    }
+    surface.assignSurfaceMaterial(m_material);
+  }
+  void decorate(TrackingVolume& /*volume*/) const override {}
+
+ private:
+  std::shared_ptr<const ISurfaceMaterial> m_material =
+      std::make_shared<const HomogeneousSurfaceMaterial>(
+          MaterialSlab(makeSilicon(), 5_mm));
+};
+
+/// Telescope along x whose layer approach surfaces are material-only surfaces,
+/// which `CubicTrackingGeometry` does not have
+struct MaterialTelescope {
+  static constexpr std::size_t nSensitive = 4u;
+
+  std::shared_ptr<const TrackingGeometry> geometry;
+
+  explicit MaterialTelescope(const GeometryContext& geoCtx) {
+    const double halfSize = 1_m;
+    auto rBounds = std::make_shared<const RectangleBounds>(halfSize, halfSize);
+
+    // rotate the plane normals onto the x axis
+    RotationMatrix3 rotation = RotationMatrix3::Identity();
+    rotation.col(0) = Vector3(0., 0., 1.);
+    rotation.col(1) = Vector3(0., 1., 0.);
+    rotation.col(2) = Vector3(-1., 0., 0.);
+
+    std::vector<CuboidVolumeBuilder::LayerConfig> layerConfigs;
+    for (std::size_t i = 1; i <= nSensitive; ++i) {
+      CuboidVolumeBuilder::SurfaceConfig sCfg;
+      sCfg.position = {i * 1_m, 0., 0.};
+      sCfg.rotation = rotation;
+      sCfg.rBounds = rBounds;
+      sCfg.thickness = 1_um;
+      sCfg.detElementConstructor =
+          [](const Transform3& trafo,
+             const std::shared_ptr<const RectangleBounds>& bounds,
+             double thickness) {
+            return new DetectorElementStub(trafo, bounds, thickness);
+          };
+
+      CuboidVolumeBuilder::LayerConfig lCfg;
+      lCfg.surfaceCfg = {sCfg};
+      lCfg.active = true;
+      lCfg.envelopeX = {-1_mm, 1_mm};
+      lCfg.envelopeY = {-0.1_mm, 0.1_mm};
+      lCfg.envelopeZ = {-0.1_mm, 0.1_mm};
+      layerConfigs.push_back(lCfg);
+    }
+
+    const double length = (nSensitive + 1) * 1_m;
+    CuboidVolumeBuilder::VolumeConfig vCfg;
+    vCfg.length = {length, 2 * halfSize, 2 * halfSize};
+    vCfg.position = {length / 2, 0., 0.};
+    vCfg.layerCfg = layerConfigs;
+    vCfg.name = "MaterialTelescope";
+
+    CuboidVolumeBuilder cvb;
+    CuboidVolumeBuilder::Config cfg;
+    cfg.length = vCfg.length;
+    cfg.position = vCfg.position;
+    cfg.volumeCfg = {vCfg};
+    cvb.setConfig(cfg);
+
+    TrackingGeometryBuilder::Config tgbCfg;
+    tgbCfg.materialDecorator = std::make_shared<ApproachMaterialDecorator>();
+    tgbCfg.trackingVolumeBuilders.push_back(
+        [=](const auto& context, const auto& inner, const auto&) {
+          return cvb.trackingVolume(context, inner, nullptr);
+        });
+    geometry = TrackingGeometryBuilder(tgbCfg).trackingGeometry(geoCtx);
+  }
+};
+
+/// Fixture running the CKF over `MaterialTelescope` with a single track
+struct MaterialFixture {
+  using StraightPropagator = Fixture::StraightPropagator;
+  using ConstantFieldStepper = Fixture::ConstantFieldStepper;
+  using ConstantFieldPropagator = Fixture::ConstantFieldPropagator;
+  using KalmanUpdater = Fixture::KalmanUpdater;
+  using TestCombinatorialKalmanFilter = Fixture::TestCombinatorialKalmanFilter;
+  using TestSourceLinkContainer = Fixture::TestSourceLinkContainer;
+  using TestSourceLinkAccessor = Fixture::TestSourceLinkAccessor;
+
+  GeometryContext geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext magCtx;
+  CalibrationContext calCtx;
+
+  MaterialTelescope detector{geoCtx};
+
+  BoundTrackParameters startParameters =
+      BoundTrackParameters::createCurvilinear(
+          Vector4(0.1_m, 0., 0., 0.), 0_degree, 90_degree, 1_e / 1_GeV,
+          []() {
+            BoundVector stddev;
+            stddev[eBoundLoc0] = 100_um;
+            stddev[eBoundLoc1] = 100_um;
+            stddev[eBoundTime] = 25_ns;
+            stddev[eBoundPhi] = 2_degree;
+            stddev[eBoundTheta] = 2_degree;
+            stddev[eBoundQOverP] = 1 / 100_GeV;
+            return BoundMatrix(stddev.cwiseProduct(stddev).asDiagonal());
+          }(),
+          pion);
+
+  TestSourceLinkContainer sourceLinks;
+
+  KalmanUpdater kfUpdater;
+  MeasurementSelector::Config measurementSelectorCfg = {
+      {GeometryIdentifier(), {{}, {std::numeric_limits<double>::max()}, {1u}}},
+  };
+  MeasurementSelector measSel{measurementSelectorCfg};
+
+  TestCombinatorialKalmanFilter ckf;
+
+  static ConstantFieldPropagator makePropagator(
+      std::shared_ptr<const TrackingGeometry> geo) {
+    Navigator::Config cfg{std::move(geo)};
+    cfg.resolvePassive = false;
+    cfg.resolveMaterial = true;
+    cfg.resolveSensitive = true;
+    auto field = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
+    return ConstantFieldPropagator(ConstantFieldStepper(std::move(field)),
+                                   Navigator{cfg});
+  }
+
+  MaterialFixture() : ckf(makePropagator(detector.geometry)) {
+    MeasurementResolution res = {MeasurementType::eLoc01, {25_um, 50_um}};
+    MeasurementResolutionMap resolutions = {{GeometryIdentifier(), res}};
+
+    Navigator::Config navCfg{detector.geometry};
+    navCfg.resolvePassive = false;
+    navCfg.resolveMaterial = true;
+    navCfg.resolveSensitive = true;
+    StraightPropagator measPropagator(StraightLineStepper(), Navigator{navCfg});
+
+    std::default_random_engine rng(421235);
+    auto measurements = createMeasurements(
+        measPropagator, geoCtx, magCtx, startParameters, resolutions, rng, 0);
+    for (auto& sl : measurements.sourceLinks) {
+      sourceLinks.emplace(sl.m_geometryId, std::move(sl));
+    }
+  }
+
+  CombinatorialKalmanFilterExtensions<TrackContainer> getExtensions() {
+    CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
+    extensions.updater.template connect<
+        &KalmanUpdater::operator()<TrackStateContainerBackend>>(&kfUpdater);
+    return extensions;
+  }
+
+  /// Run the CKF once and return the container holding the single found track
+  TrackContainer find(bool recordMaterialStates) {
+    auto options = CombinatorialKalmanFilterOptions(
+        geoCtx, magCtx, calCtx, getExtensions(),
+        PropagatorPlainOptions(geoCtx, magCtx));
+    options.recordMaterialStates = recordMaterialStates;
+
+    TestSourceLinkAccessor slAccessor;
+    slAccessor.container = &sourceLinks;
+    auto trackStateCreator = makeTrackStateCreator(slAccessor, measSel);
+    options.extensions.createTrackStates
+        .template connect<&decltype(trackStateCreator)::createTrackStates>(
+            &trackStateCreator);
+
+    TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+    auto res = ckf.findTracks(startParameters, options, tc);
+    BOOST_REQUIRE(res.ok());
+    BOOST_REQUIRE_EQUAL(tc.size(), 1u);
+    return tc;
+  }
+};
+
+/// Product of the stored jacobians up to the last measurement, which is the
+/// last surface both runs have in common
+static BoundMatrix jacobianToLastMeasurement(const auto& track) {
+  std::vector<BoundMatrix> jacobians;
+  bool seenMeasurement = false;
+  for (const auto state : track.trackStatesReversed()) {
+    seenMeasurement = seenMeasurement || state.typeFlags().hasMeasurement();
+    if (seenMeasurement) {
+      jacobians.emplace_back(state.jacobian());
+    }
+  }
+  std::ranges::reverse(jacobians);
+
+  BoundMatrix product = BoundMatrix::Identity();
+  for (const auto& jacobian : jacobians) {
+    product = jacobian * product;
+  }
+  return product;
+}
+
+BOOST_AUTO_TEST_CASE(MaterialTelescopeGeometry) {
+  MaterialFixture f;
+  std::size_t nSensitive = 0;
+  std::size_t nMaterialOnly = 0;
+  f.detector.geometry->visitSurfaces(
+      [&](const Surface* surface) {
+        BOOST_TEST_MESSAGE("surface " << surface->geometryId()
+                                      << " sensitive=" << surface->isSensitive()
+                                      << " material=" << surface->hasMaterial()
+                                      << " center="
+                                      << surface->center(f.geoCtx).transpose());
+        if (surface->isSensitive()) {
+          ++nSensitive;
+        } else if (surface->hasMaterial()) {
+          ++nMaterialOnly;
+        }
+      },
+      /*restrictToSensitives=*/false);
+  BOOST_CHECK_EQUAL(nSensitive, MaterialTelescope::nSensitive);
+  BOOST_CHECK_GT(nMaterialOnly, 0u);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialStatesRecordedByDefault) {
+  MaterialFixture f;
+  auto tc = f.find(true);
+  const auto track = tc.getTrack(0);
+
+  BOOST_CHECK_EQUAL(track.nMeasurements(), MaterialTelescope::nSensitive);
+
+  std::size_t nMaterialOnly = 0;
+  for (const auto state : track.trackStatesReversed()) {
+    const auto flags = state.typeFlags();
+    if (!flags.hasMeasurement()) {
+      BOOST_CHECK(flags.isMaterial());
+      BOOST_CHECK(!flags.isHole());
+      BOOST_CHECK(!flags.isOutlier());
+      ++nMaterialOnly;
+    }
+  }
+  BOOST_CHECK_GT(nMaterialOnly, 0u);
+  BOOST_CHECK_EQUAL(track.nTrackStates(),
+                    MaterialTelescope::nSensitive + nMaterialOnly);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialStatesSkipped) {
+  MaterialFixture f;
+  auto tc = f.find(false);
+  const auto track = tc.getTrack(0);
+
+  BOOST_CHECK_EQUAL(track.nMeasurements(), MaterialTelescope::nSensitive);
+  BOOST_CHECK_EQUAL(track.nTrackStates(), MaterialTelescope::nSensitive);
+  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  BOOST_CHECK_EQUAL(track.nOutliers(), 0u);
+
+  for (const auto state : track.trackStatesReversed()) {
+    BOOST_CHECK(state.typeFlags().hasMeasurement());
+  }
+}
+
+// The transport must be the same whether or not the surfaces in between were
+// recorded
+BOOST_AUTO_TEST_CASE(MaterialStatesSkippedPreserveJacobianChain) {
+  MaterialFixture fRecorded;
+  MaterialFixture fSkipped;
+  auto tcRecorded = fRecorded.find(true);
+  auto tcSkipped = fSkipped.find(false);
+
+  const BoundMatrix recorded =
+      jacobianToLastMeasurement(tcRecorded.getTrack(0));
+  const BoundMatrix skipped = jacobianToLastMeasurement(tcSkipped.getTrack(0));
+
+  CHECK_CLOSE_ABS(recorded, skipped, 1e-6);
+}
+
+// Smoothing at the measurement surfaces must be unaffected
+BOOST_AUTO_TEST_CASE(MaterialStatesSkippedSmoothingAgrees) {
+  auto check = [](auto smoother) {
+    MaterialFixture fRecorded;
+    MaterialFixture fSkipped;
+    auto tcRecorded = fRecorded.find(true);
+    auto tcSkipped = fSkipped.find(false);
+
+    auto trackRecorded = tcRecorded.getTrack(0);
+    auto trackSkipped = tcSkipped.getTrack(0);
+    BOOST_REQUIRE(smoothTrack(fRecorded.geoCtx, trackRecorded,
+                              *getDefaultLogger("smoother", Logging::INFO),
+                              smoother)
+                      .ok());
+    BOOST_REQUIRE(smoothTrack(fSkipped.geoCtx, trackSkipped,
+                              *getDefaultLogger("smoother", Logging::INFO),
+                              smoother)
+                      .ok());
+
+    // only the measurement states exist in both tracks
+    struct Smoothed {
+      GeometryIdentifier geoId{};
+      BoundVector parameters = BoundVector::Zero();
+      BoundMatrix covariance = BoundMatrix::Zero();
+    };
+    auto measurementStates = [](const auto& track) {
+      std::vector<Smoothed> states;
+      for (const auto state : track.trackStatesReversed()) {
+        if (state.typeFlags().hasMeasurement()) {
+          states.push_back({state.referenceSurface().geometryId(),
+                            state.smoothed(), state.smoothedCovariance()});
+        }
+      }
+      return states;
+    };
+
+    const auto statesRecorded = measurementStates(trackRecorded);
+    const auto statesSkipped = measurementStates(trackSkipped);
+    BOOST_REQUIRE_EQUAL(statesRecorded.size(), statesSkipped.size());
+    BOOST_REQUIRE_EQUAL(statesRecorded.size(), MaterialTelescope::nSensitive);
+
+    for (std::size_t i = 0; i < statesRecorded.size(); ++i) {
+      BOOST_CHECK_EQUAL(statesRecorded[i].geoId, statesSkipped[i].geoId);
+      CHECK_CLOSE_ABS(statesRecorded[i].parameters, statesSkipped[i].parameters,
+                      1e-8);
+      CHECK_CLOSE_ABS(statesRecorded[i].covariance, statesSkipped[i].covariance,
+                      1e-8);
+    }
+  };
+
+  check(GainMatrixSmoother());
+  check(MbfSmoother());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

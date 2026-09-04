@@ -6,6 +6,7 @@ from pathlib import Path
 
 import acts
 import acts.examples
+import acts.examples.root
 
 from acts.examples.simulation import (
     addParticleGun,
@@ -120,7 +121,7 @@ with tempfile.TemporaryDirectory() as temp:
     )
 
     s.addWriter(
-        acts.examples.root.RootTrackFitterPerformanceWriter(
+        acts.examples.root.RootTrackParameterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="selected-tracks-gx2f",
             inputParticles="particles_selected",
@@ -148,7 +149,7 @@ with tempfile.TemporaryDirectory() as temp:
     )
 
     s.addWriter(
-        acts.examples.root.RootTrackFitterPerformanceWriter(
+        acts.examples.root.RootTrackParameterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="selected-tracks-kf",
             inputParticles="particles_selected",

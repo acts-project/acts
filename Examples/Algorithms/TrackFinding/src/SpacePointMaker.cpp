@@ -10,12 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/SpacePointFormation2/PixelSpacePointBuilder.hpp"
-#include "Acts/SpacePointFormation2/StripSpacePointBuilder.hpp"
+#include "Acts/SpacePointFormation/PixelSpacePointBuilder.hpp"
+#include "Acts/SpacePointFormation/StripSpacePointBuilder.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -60,7 +59,8 @@ void createPixelSpacePoint(
   const Acts::Vector3 global =
       surface.localToGlobal(gctx, local, Acts::Vector3::Zero());
   const Acts::Vector2 varZR = Acts::PixelSpacePointBuilder::computeVarianceZR(
-      gctx, surface, global, localCov);
+      surface.referenceFrame(gctx, global, Acts::Vector3::Zero()), global,
+      localCov);
 
   auto sp = spacePoints.createSpacePoint();
   sp.assignSourceLinks(std::array{Acts::SourceLink(sourceLink)});
@@ -112,13 +112,13 @@ Acts::Result<void> createStripSpacePoint(
     const ConstVariableBoundMeasurementProxy& measurement1,
     const ConstVariableBoundMeasurementProxy& measurement2,
     const IndexSourceLink& sourceLink1, const IndexSourceLink& sourceLink2,
+    const Acts::StripSpacePointBuilder::ConstrainedOptions& options,
     SpacePointContainer& spacePoints) {
   const Acts::StripSpacePointBuilder::StripEnds stripEnds1 =
       getStripEnds(gctx, surface1, measurement1);
   const Acts::StripSpacePointBuilder::StripEnds stripEnds2 =
       getStripEnds(gctx, surface2, measurement2);
 
-  const Acts::StripSpacePointBuilder::ConstrainedOptions options{};
   const Acts::Result<Acts::Vector3> spacePoint =
       Acts::StripSpacePointBuilder::computeConstrainedSpacePoint(
           stripEnds1, stripEnds2, options);
@@ -144,8 +144,11 @@ Acts::Result<void> createStripSpacePoint(
   const double theta = std::acos(
       innerStripHalfVector.normalized().dot(outerStripHalfVector.normalized()));
 
-  const Acts::Vector2 varZR = Acts::StripSpacePointBuilder::computeVarianceZR(
-      gctx, surface1, *spacePoint, var1, var2, theta);
+  const Acts::Vector2 varZR =
+      Acts::StripSpacePointBuilder::computeCovarianceZR(
+          surface1.referenceFrame(gctx, *spacePoint, Acts::Vector3::Zero()),
+          *spacePoint, var1, var2, theta)
+          .diagonal();
 
   auto sp = spacePoints.createSpacePoint();
   sp.assignSourceLinks(
@@ -157,14 +160,18 @@ Acts::Result<void> createStripSpacePoint(
   sp.time() = Acts::NoTime;
   sp.varianceZ() = varZR[0];
   sp.varianceR() = varZR[1];
-  Eigen::Map<Eigen::Vector3f>(sp.topStripVector().data()) =
-      outerStripHalfVector.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.bottomStripVector().data()) =
-      innerStripHalfVector.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.stripCenterDistance().data()) =
-      stripSeparation.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.topStripCenter().data()) =
+  Eigen::Map<Eigen::Vector3f>(
+      sp.outerStripCalibrationDetails().outerCenter.data()) =
       outerStripCenter.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(
+      sp.outerStripCalibrationDetails().innerToOuterSeparation.data()) =
+      stripSeparation.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(
+      sp.outerStripCalibrationDetails().outerHalfVector.data()) =
+      outerStripHalfVector.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(
+      sp.outerStripCalibrationDetails().innerHalfVector.data()) =
+      innerStripHalfVector.cast<float>();
 
   return Acts::Result<void>::success();
 }
@@ -251,7 +258,8 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
       SpacePointColumns::SourceLinks | SpacePointColumns::X |
       SpacePointColumns::Y | SpacePointColumns::Z | SpacePointColumns::R |
       SpacePointColumns::Time | SpacePointColumns::VarianceZ |
-      SpacePointColumns::VarianceR | SpacePointColumns::Strip);
+      SpacePointColumns::VarianceR |
+      SpacePointColumns::StripCalibrationDetails);
 
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
@@ -274,8 +282,8 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
           continue;
         }
 
-        createPixelSpacePoint(ctx.geoContext, surface, measurement, sourceLink,
-                              spacePoints);
+        createPixelSpacePoint(ctx.recoGeoContext, surface, measurement,
+                              sourceLink, spacePoints);
       }
     }
   }
@@ -352,9 +360,9 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
         }
 
         Acts::Vector2 local1 = measurement1.fullParameters().head<2>();
-        local1[1] = surface1.center(ctx.geoContext)[1];
+        local1[1] = surface1.center(ctx.recoGeoContext)[1];
         const Acts::Vector3 global1 = surface1.localToGlobal(
-            ctx.geoContext, local1, Acts::Vector3::Zero());
+            ctx.recoGeoContext, local1, Acts::Vector3::Zero());
 
         std::optional<double> minDistance;
         std::optional<IndexSourceLink> bestSourceLink2;
@@ -371,9 +379,9 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
           }
 
           Acts::Vector2 local2 = measurement2.fullParameters().head<2>();
-          local2[1] = surface2.center(ctx.geoContext)[1];
+          local2[1] = surface2.center(ctx.recoGeoContext)[1];
           const Acts::Vector3 global2 = surface1.localToGlobal(
-              ctx.geoContext, local2, Acts::Vector3::Zero());
+              ctx.recoGeoContext, local2, Acts::Vector3::Zero());
 
           const Acts::Result<double> distance =
               Acts::StripSpacePointBuilder::computeClusterPairDistance(
@@ -396,6 +404,11 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
       done.insert(mod1);
       done.insert(mod2);
     }
+
+    Acts::StripSpacePointBuilder::ConstrainedOptions constrainedOptions;
+    constrainedOptions.vertex = m_cfg.stripVertex;
+    constrainedOptions.stripLengthTolerance = m_cfg.stripLengthTolerance;
+    constrainedOptions.stripLengthGapTolerance = m_cfg.stripLengthGapTolerance;
 
     // Loop over the collected source link pairs
     for (const auto& [sourceLink1, sourceLink2] : stripSourceLinkPairs) {
@@ -420,9 +433,12 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
       const ConstVariableBoundMeasurementProxy measurement2 =
           measurements.getMeasurement(sourceLink2.index());
 
-      createStripSpacePoint(ctx.geoContext, surface1, surface2, measurement1,
-                            measurement2, sourceLink1, sourceLink2,
-                            spacePoints);
+      Acts::Result<void> spResult = createStripSpacePoint(
+          ctx.recoGeoContext, surface1, surface2, measurement1, measurement2,
+          sourceLink1, sourceLink2, constrainedOptions, spacePoints);
+      if (!spResult.ok()) {
+        ACTS_DEBUG("Skipping strip space point: " << spResult.error());
+      }
     }
 
     ACTS_DEBUG("Built " << spacePoints.size() - nSpacePointsBefore

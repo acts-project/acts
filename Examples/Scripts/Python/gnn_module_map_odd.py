@@ -47,6 +47,7 @@ def runGnnModuleMap(
     gnnModel,
     outputDir,
     events=100,
+    shrinkNodes=False,
     s=None,
 ):
     """
@@ -205,6 +206,7 @@ def runGnnModuleMap(
         featureScales=featureScales,
         inputClusters="clusters",
         outputDirRoot=str(outputDir),
+        shrinkNodes=shrinkNodes,
         logLevel=acts.logging.INFO,
     )
 

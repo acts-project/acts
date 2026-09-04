@@ -14,6 +14,8 @@
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
+#include <stdexcept>
+
 namespace Acts {
 
 class Surface;
@@ -115,9 +117,17 @@ namespace Sheet {
 /// @param identification is the to be translated id_ for actsvg
 ///
 /// @return an svg object that can be written out directly to disc
-static inline actsvg::svg::object xy(const ProtoSurface& pSurface,
-                                     const std::string& identification) {
-  return actsvg::display::surface_sheet_xy(identification, pSurface);
+///
+/// @deprecated actsvg 0.4.57 removed display::surface_sheet_xy and offers no
+/// replacement, so this always throws. Use View::xy for a plain projection.
+[[deprecated(
+    "actsvg removed the surface sheet display in 0.4.57; this always throws")]]
+static inline actsvg::svg::object xy(
+    [[maybe_unused]] const ProtoSurface& pSurface,
+    [[maybe_unused]] const std::string& identification) {
+  throw std::runtime_error(
+      "ActsPlugins::Svg::Sheet::xy: actsvg removed the surface sheet display "
+      "in 0.4.57 and offers no replacement");
 }
 
 }  // namespace Sheet

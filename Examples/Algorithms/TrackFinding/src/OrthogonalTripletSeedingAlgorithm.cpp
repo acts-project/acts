@@ -9,14 +9,14 @@
 #include "ActsExamples/TrackFinding/OrthogonalTripletSeedingAlgorithm.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/EventData/SeedContainer2.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SeedContainer.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
-#include "Acts/Seeding2/CylindricalSpacePointKDTree.hpp"
-#include "Acts/Seeding2/DoubletSeedFinder.hpp"
-#include "Acts/Seeding2/TripletSeedFinder.hpp"
+#include "Acts/Seeding/BroadTripletSeedFilter.hpp"
+#include "Acts/Seeding/CylindricalSpacePointKDTree.hpp"
+#include "Acts/Seeding/DoubletSeedFinder.hpp"
+#include "Acts/Seeding/TripletSeedFinder.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
@@ -30,8 +30,8 @@ namespace ActsExamples {
 namespace {
 
 static inline bool itkFastTrackingCuts(
-    const Acts::ConstSpacePointProxy2 & /*middle*/,
-    const Acts::ConstSpacePointProxy2 &other, float cotTheta,
+    const Acts::ConstSpacePointProxy & /*middle*/,
+    const Acts::ConstSpacePointProxy &other, float cotTheta,
     bool isBottomCandidate) {
   static float rMin = 45;
   static float cotThetaMax = 1.5;
@@ -102,11 +102,11 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
     const AlgorithmContext &ctx) const {
   const SpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
-  Acts::SpacePointContainer2 coreSpacePoints(
+  Acts::SpacePointContainer coreSpacePoints(
+      Acts::SpacePointColumns::CopiedFromIndex |
       Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
       Acts::SpacePointColumns::Phi | Acts::SpacePointColumns::VarianceZ |
-      Acts::SpacePointColumns::VarianceR |
-      Acts::SpacePointColumns::CopyFromIndex);
+      Acts::SpacePointColumns::VarianceR);
   coreSpacePoints.reserve(spacePoints.size());
 
   Acts::Experimental::CylindricalSpacePointKDTreeBuilder kdTreeBuilder;
@@ -122,8 +122,9 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
       continue;
     }
 
-    Acts::SpacePointIndex2 newSpIndex = coreSpacePoints.size();
+    Acts::SpacePointIndex newSpIndex = coreSpacePoints.size();
     auto newSp = coreSpacePoints.createSpacePoint();
+    newSp.copiedFromIndex() = sp.index();
     newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
                                       static_cast<float>(sp.y())};
     newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
@@ -131,7 +132,6 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
     newSp.phi() = static_cast<float>(std::atan2(sp.y(), sp.x()));
     newSp.varianceZ() = static_cast<float>(sp.varianceZ());
     newSp.varianceR() = static_cast<float>(sp.varianceR());
-    newSp.copyFromIndex() = sp.index();
 
     kdTreeBuilder.insert(newSpIndex, newSp.phi(), newSp.zr()[1], newSp.zr()[0]);
 
@@ -233,7 +233,7 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   static thread_local Acts::Experimental::CylindricalSpacePointKDTree::
       Candidates candidates;
 
-  Acts::SeedContainer2 seeds;
+  Acts::SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
   // Run the seeding algorithm by iterating over all the points in the tree
@@ -285,9 +285,9 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
     candidates.clear();
     kdTree.validTuples(lhOptions, hlOptions, spM, nTopSeedConf, candidates);
 
-    Acts::SpacePointContainer2::ConstSubset bottomSps =
+    Acts::SpacePointContainer::ConstSubset bottomSps =
         coreSpacePoints.subset(candidates.bottom_lh_v).asConst();
-    Acts::SpacePointContainer2::ConstSubset topSps =
+    Acts::SpacePointContainer::ConstSubset topSps =
         coreSpacePoints.subset(candidates.top_lh_v).asConst();
     m_seedFinder->createSeedsFromGroup(
         cache, *bottomDoubletFinder, *topDoubletFinder, *tripletFinder,
@@ -306,7 +306,7 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   // update seed space point indices to original space point container
   for (auto seed : seeds) {
     for (auto &spIndex : seed.spacePointIndices()) {
-      spIndex = coreSpacePoints.at(spIndex).copyFromIndex();
+      spIndex = coreSpacePoints.at(spIndex).copiedFromIndex();
     }
   }
 
