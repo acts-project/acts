@@ -97,7 +97,11 @@ void Acts::Experimental::addMeasurementToGx2fSumsBackend(
 
   const Eigen::VectorXd projPredicted = projector * predicted;
 
-  const Eigen::VectorXd residual = measurement - projPredicted;
+  Eigen::VectorXd residual = measurement - projPredicted;
+  if (covarianceMeasurement(0, 0) < 1) {
+    residual[0] = std::abs(measurement[0]) - std::abs(projPredicted[0]);
+    std::cout << "REMOVE SIGN" << std::endl;
+  }
 
   // Finally contribute to chi2sum, aMatrix, and bVector
   extendedSystem.chi2() +=
