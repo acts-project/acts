@@ -8,22 +8,26 @@
 
 #pragma once
 
+#include "Acts/Utilities/RangeXD.hpp"
+
 #include <cmath>
 #include <cstddef>
 #include <numbers>
+#include <ranges>
 #include <span>
-#include <string>
 #include <vector>
 
 namespace Acts {
 
 namespace detail {
 
+//! [gaussian component]
 struct GaussianComponent {
   double weight = 0;
   double mean = 0;
   double var = 0;
 };
+//! [gaussian component]
 
 /// Transform a gaussian component to a space where all values are defined from
 /// [-inf, inf]
@@ -60,6 +64,7 @@ class BetheHeitlerApprox {
 
   virtual ~BetheHeitlerApprox() = default;
 
+  //! [bethe heitler interface]
   /// Maximum number of components in the mixture
   /// @return Maximum number of components
   virtual std::size_t maxComponents() const = 0;
@@ -75,10 +80,11 @@ class BetheHeitlerApprox {
   /// @return Span of computed mixture components
   virtual std::span<Component> mixture(double xOverX0,
                                        std::span<Component> mixture) const = 0;
+  //! [bethe heitler interface]
 };
 
 /// This class approximates the Bethe-Heitler with only one component. This is
-/// mainly inside @ref AtlasBetheHeitlerApprox, but can also be used as the
+/// mainly inside @ref PolynomialBetheHeitlerApprox, but can also be used as the
 /// only component approximation (then probably for debugging)
 /// @ingroup material
 class BetheHeitlerApproxSingleCmp final : public BetheHeitlerApprox {
@@ -105,9 +111,11 @@ class BetheHeitlerApproxSingleCmp final : public BetheHeitlerApprox {
       const double xOverX0, const std::span<Component> mixture) const override {
     mixture[0].weight = 1.0;
 
+    //! [single component moments]
     const double c = xOverX0 / std::numbers::ln2;
     mixture[0].mean = std::pow(2, -c);
     mixture[0].var = std::pow(3, -c) - std::pow(4, -c);
+    //! [single component moments]
 
     return mixture;
   }
@@ -117,11 +125,8 @@ class BetheHeitlerApproxSingleCmp final : public BetheHeitlerApprox {
 /// mixture. To enable an approximation for continuous input variables, the
 /// weights, means and variances are internally parametrized as a Nth order
 /// polynomial.
-/// @todo This class is rather inflexible: It forces two data representations,
-/// making it a bit awkward to add a single parameterization. It would be good
-/// to generalize this at some point.
 /// @ingroup material
-class AtlasBetheHeitlerApprox : public BetheHeitlerApprox {
+class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
  public:
   /// Polynomial coefficient sets for a Gaussian mixture component.
   struct PolyData {
@@ -136,24 +141,43 @@ class AtlasBetheHeitlerApprox : public BetheHeitlerApprox {
   /// Type alias for array of polynomial data for all components
   using Data = std::vector<PolyData>;
 
-  /// Loads a parameterization from a file according to the Atlas file
-  /// description
+  /// Single x/x0 range with its data and transformation flag
+  struct RangeData {
+    /// The x/x0 range covered by this data
+    Range1D<double> range;
+    /// Polynomial data for all mixture components in this range
+    Data data;
+    /// Whether a log transformation is applied before evaluating polynomials
+    bool transform = false;
+
+    RangeData() = default;
+    /// Construct from an existing range object.
+    /// @param r The x/x0 range
+    /// @param d Component polynomial data
+    /// @param t Whether to apply a log transformation
+    RangeData(Range1D<double> r, Data d, bool t)
+        : range(r), data(std::move(d)), transform(t) {}
+    /// Construct from explicit lower and upper bounds.
+    /// @param l Lower bound of the x/x0 range
+    /// @param h Upper bound of the x/x0 range
+    /// @param d Component polynomial data
+    /// @param t Whether to apply a log transformation
+    RangeData(double l, double h, Data d, bool t)
+        : range(l, h), data(std::move(d)), transform(t) {}
+  };
+
+  /// Construct the Bethe-Heitler approximation description with N ranges.
+  /// Each range has its own data and transformation flag.
+  /// The ranges will be sorted by minimum value and validated for
+  /// non-overlapping.
   ///
-  /// @param low_parameters_path Path to the foo.par file that stores
-  /// the parameterization for low x/x0
-  /// @param high_parameters_path Path to the foo.par file that stores
-  /// the parameterization for high x/x0
-  /// @param lowLimit the upper limit for the low x/x0-data
-  /// @param highLimit the upper limit for the high x/x0-data
-  /// @param clampToRange forwarded to constructor
-  /// @param noChangeLimit forwarded to constructor
-  /// @param singleGaussianLimit forwarded to constructor
-  /// @return AtlasBetheHeitlerApprox instance loaded from parameter files
-  static AtlasBetheHeitlerApprox loadFromFiles(
-      const std::string &low_parameters_path,
-      const std::string &high_parameters_path, double lowLimit,
-      double highLimit, bool clampToRange, double noChangeLimit,
-      double singleGaussianLimit);
+  /// @param ranges Vector of range data
+  /// @param clampToRange whether to clamp the input x/x0 to the allowed range
+  /// @param noChangeLimit limit below which no change is applied
+  /// @param singleGaussianLimit limit below which a single Gaussian is used
+  PolynomialBetheHeitlerApprox(std::vector<RangeData> ranges, bool clampToRange,
+                               double noChangeLimit,
+                               double singleGaussianLimit);
 
   /// Construct the Bethe-Heitler approximation description with two
   /// parameterizations, one for lower ranges, one for higher ranges.
@@ -169,24 +193,25 @@ class AtlasBetheHeitlerApprox : public BetheHeitlerApprox {
   /// @param clampToRange whether to clamp the input x/x0 to the allowed range
   /// @param noChangeLimit limit below which no change is applied
   /// @param singleGaussianLimit limit below which a single Gaussian is used
-  AtlasBetheHeitlerApprox(const Data &lowData, const Data &highData,
-                          bool lowTransform, bool highTransform,
-                          double lowLimit, double highLimit, bool clampToRange,
-                          double noChangeLimit, double singleGaussianLimit)
-      : m_lowData(lowData),
-        m_highData(highData),
-        m_lowTransform(lowTransform),
-        m_highTransform(highTransform),
-        m_lowLimit(lowLimit),
-        m_highLimit(highLimit),
-        m_clampToRange(clampToRange),
-        m_noChangeLimit(noChangeLimit),
-        m_singleGaussianLimit(singleGaussianLimit) {}
+  /// @deprecated Use constructor taking std::vector<RangeData> instead
+  [[deprecated("Use constructor taking std::vector<RangeData> instead")]]
+  PolynomialBetheHeitlerApprox(const Data &lowData, const Data &highData,
+                               bool lowTransform, bool highTransform,
+                               double lowLimit, double highLimit,
+                               bool clampToRange, double noChangeLimit,
+                               double singleGaussianLimit)
+      : PolynomialBetheHeitlerApprox(
+            {{0.0, lowLimit, lowData, lowTransform},
+             {lowLimit, highLimit, highData, highTransform}},
+            clampToRange, noChangeLimit, singleGaussianLimit) {}
 
   /// Returns the number of components the returned mixture will have
   /// @return Number of components in the mixture
   std::size_t maxComponents() const override {
-    return std::max(m_lowData.size(), m_highData.size());
+    return std::ranges::max(m_ranges |
+                            std::views::transform([](const auto &range) {
+                              return range.data.size();
+                            }));
   }
 
   /// Checks if an input is valid for the parameterization
@@ -197,7 +222,7 @@ class AtlasBetheHeitlerApprox : public BetheHeitlerApprox {
     if (m_clampToRange) {
       return true;
     } else {
-      return xOverX0 < m_highLimit;
+      return xOverX0 < rangeMax();
     }
   }
 
@@ -211,25 +236,25 @@ class AtlasBetheHeitlerApprox : public BetheHeitlerApprox {
       double xOverX0, const std::span<Component> mixture) const override;
 
  private:
-  Data m_lowData;
-  Data m_highData;
-  bool m_lowTransform = false;
-  bool m_highTransform = false;
-  double m_lowLimit = 0;
-  double m_highLimit = 0;
+  double rangeMax() const { return m_ranges.back().range.max(); }
+
+  std::vector<RangeData> m_ranges;
   bool m_clampToRange = false;
   double m_noChangeLimit = 0;
   double m_singleGaussianLimit = 0;
 };
 
-/// Creates a @ref AtlasBetheHeitlerApprox object based on an ATLAS
-/// configuration, that are stored as static data in the source code.
-/// This may not be an optimal configuration, but should allow to run
-/// the GSF without the need to load files
+/// @deprecated Use PolynomialBetheHeitlerApprox instead
+using AtlasBetheHeitlerApprox = PolynomialBetheHeitlerApprox;
+
+/// Creates a @ref PolynomialBetheHeitlerApprox object based on a default
+/// configuration, stored as static data in the source code.
+/// This may not be an optimal configuration, but allows running
+/// the GSF without loading external files.
 /// @param clampToRange Whether to clamp values to the valid range
-/// @return AtlasBetheHeitlerApprox with default ATLAS configuration parameters
+/// @return PolynomialBetheHeitlerApprox with default configuration parameters
 /// @ingroup material
-AtlasBetheHeitlerApprox makeDefaultBetheHeitlerApprox(
+PolynomialBetheHeitlerApprox makeDefaultBetheHeitlerApprox(
     bool clampToRange = false);
 
 /// @}

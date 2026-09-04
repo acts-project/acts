@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
@@ -31,5 +33,21 @@ void addSeeding(py::module_& m) {
                        seedConfMaxZOrigin, minImpactSeedConf);
     patchKwargsConstructor(c);
   }
+
+  m.def(
+      "estimateTrackParamsFromSeed",
+      [](const Vector3& sp0, double t0, const Vector3& sp1, const Vector3& sp2,
+         const Vector3& bField)
+          -> std::pair<FreeVector, std::array<Vector3, 3>> {
+        Vector3 tangent0 = Vector3::Zero();
+        Vector3 tangent1 = Vector3::Zero();
+        Vector3 tangent2 = Vector3::Zero();
+        const FreeVector params = estimateTrackParamsFromSeed(
+            sp0, t0, sp1, sp2, bField, &tangent0, &tangent1, &tangent2);
+        return {params, {tangent0, tangent1, tangent2}};
+      },
+      py::arg("sp0"), py::arg("t0"), py::arg("sp1"), py::arg("sp2"),
+      py::arg("bField"));
 }
+
 }  // namespace ActsPython

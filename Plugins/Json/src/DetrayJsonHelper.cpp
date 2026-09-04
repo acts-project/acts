@@ -17,54 +17,6 @@
 
 namespace Acts::DetrayJsonHelper {
 
-std::tuple<unsigned int, std::vector<double>> maskFromBounds(
-    const Acts::SurfaceBounds& sBounds, bool portal) {
-  SurfaceBounds::BoundsType bType = sBounds.type();
-  std::vector<double> bValues = sBounds.values();
-  // Return value
-  unsigned int type = 13u;
-  std::vector<double> boundaries = bValues;
-  // Special treatment for some portals
-  if (portal && bType == SurfaceBounds::BoundsType::eCylinder) {
-    boundaries = {bValues.at(0u), -bValues.at(1u), bValues.at(1u)};
-    type = 4u;
-  } else {
-    switch (bType) {
-      case SurfaceBounds::BoundsType::eAnnulus: {
-        type = 0u;
-      } break;
-      case SurfaceBounds::BoundsType::eRectangle: {
-        type = 5u;
-        // ACTS: eMinX = 0, eMinY = 1, eMaxX = 2, eMaxY = 3,
-        // detray: e_half_x, e_half_y
-        boundaries = std::vector{0.5 * (bValues.at(2) - bValues.at(0)),
-                                 0.5 * (bValues.at(3) - bValues.at(1))};
-      } break;
-      case SurfaceBounds::BoundsType::eCylinder: {
-        boundaries =
-            std::vector{bValues.at(0u), -bValues.at(1u), bValues.at(1u)};
-        type = 2u;
-      } break;
-      case SurfaceBounds::BoundsType::eTrapezoid: {
-        type = 7u;
-        boundaries = std::vector{bValues.at(0u), bValues.at(1u), bValues.at(2u),
-                                 1 / (2 * bValues.at(2u))};
-      } break;
-      case SurfaceBounds::BoundsType::eDisc: {
-        boundaries = std::vector{bValues[0u], bValues[1u]};
-        type = 6u;
-      } break;
-      default:
-        break;
-    }
-  }
-  return {type, boundaries};
-}
-
-void addVolumeLink(nlohmann::json& jSurface, int vLink) {
-  jSurface["volume_link"] = vLink;
-}
-
 std::size_t accelerationLink(std::span<const AxisDirection> casts) {
   // Default is `brute_force`
   using enum AxisDirection;

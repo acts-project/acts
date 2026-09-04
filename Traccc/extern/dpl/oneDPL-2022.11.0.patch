@@ -1,0 +1,34 @@
+diff -ur oneDPL-oneDPL-2022.11.0-release-orig/include/oneapi/dpl/pstl/hetero/dpcpp/parallel_backend_sycl_utils.h oneDPL-oneDPL-2022.11.0-release-fixed/include/oneapi/dpl/pstl/hetero/dpcpp/parallel_backend_sycl_utils.h
+--- oneDPL-oneDPL-2022.11.0-release-orig/include/oneapi/dpl/pstl/hetero/dpcpp/parallel_backend_sycl_utils.h	2025-12-19 17:56:53.000000000 +0100
++++ oneDPL-oneDPL-2022.11.0-release-fixed/include/oneapi/dpl/pstl/hetero/dpcpp/parallel_backend_sycl_utils.h	2026-04-29 14:16:28.013957292 +0200
+@@ -736,7 +736,7 @@
+     std::size_t
+     __fill_data(_Args&&...) const
+     {
+-        assert(!"Unsupported return type");
++        assert(false && "Unsupported return type");
+         return 0;
+     }
+ 
+diff -ur oneDPL-oneDPL-2022.11.0-release-orig/include/oneapi/dpl/pstl/parallel_backend_utils.h oneDPL-oneDPL-2022.11.0-release-fixed/include/oneapi/dpl/pstl/parallel_backend_utils.h
+--- oneDPL-oneDPL-2022.11.0-release-orig/include/oneapi/dpl/pstl/parallel_backend_utils.h	2025-12-19 17:56:53.000000000 +0100
++++ oneDPL-oneDPL-2022.11.0-release-fixed/include/oneapi/dpl/pstl/parallel_backend_utils.h	2026-04-29 14:12:54.596311509 +0200
+@@ -390,14 +390,14 @@
+     get_for_current_thread()
+     {
+         const std::size_t __i = _Derived::get_thread_num();
+-        std::optional<_ValueType>& __local = __thread_specific_storage[__i];
+-        if (!__local)
++        std::optional<_ValueType>& __current = __thread_specific_storage[__i];
++        if (!__current)
+         {
+             // create temporary storage on first usage to avoid extra parallel region and unnecessary instantiation
+-            std::apply([&__local](_Args... __arg_pack) { __local.emplace(__arg_pack...); }, __args);
++            std::apply([&__current](_Args... __arg_pack) { __current.emplace(__arg_pack...); }, __args);
+             __num_elements.fetch_add(1, std::memory_order_relaxed);
+         }
+-        return *__local;
++        return *__current;
+     }
+ 
+     std::vector<std::optional<_ValueType>> __thread_specific_storage;

@@ -17,12 +17,19 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -819,6 +826,50 @@ BOOST_DATA_TEST_CASE(PhiDirection,
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_CASE(DiscSurfaceMaterialAssignment) {
+  auto surface =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 1., 100.);
+  MaterialSlab slab(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
+
+  // HomogeneousSurfaceMaterial is always valid
+  auto homMat = std::make_shared<HomogeneousSurfaceMaterial>(slab);
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(homMat));
+  BOOST_CHECK_NE(surface->surfaceMaterial(), nullptr);
+
+  // nullptr clears the material
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(nullptr));
+  BOOST_CHECK_EQUAL(surface->surfaceMaterial(), nullptr);
+
+  // 1D AxisR - valid for disc
+  BinUtility buR(10, 1.f, 100.f, Acts::open, AxisDirection::AxisR);
+  auto matR = std::make_shared<BinnedSurfaceMaterial>(
+      buR, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matR));
+
+  // 1D AxisPhi - valid for disc
+  BinUtility buPhi(10, -3.14f, 3.14f, Acts::closed, AxisDirection::AxisPhi);
+  auto matPhi = std::make_shared<BinnedSurfaceMaterial>(
+      buPhi, MaterialSlabVector(10, slab));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(matPhi));
+
+  // 2D {AxisR, AxisPhi} - valid for disc
+  BinUtility bu2D(5, 1.f, 100.f, Acts::open, AxisDirection::AxisR);
+  bu2D += BinUtility(3, -3.14f, 3.14f, Acts::closed, AxisDirection::AxisPhi);
+  auto mat2D = std::make_shared<BinnedSurfaceMaterial>(
+      bu2D, MaterialSlabMatrix(3, MaterialSlabVector(5, slab)));
+  BOOST_CHECK_NO_THROW(surface->assignSurfaceMaterial(mat2D));
+
+  // Wrong axis directions - should throw
+  for (auto badDir : {AxisDirection::AxisRPhi, AxisDirection::AxisZ,
+                      AxisDirection::AxisX, AxisDirection::AxisY}) {
+    BinUtility buBad(10, 0.f, 10.f, Acts::open, badDir);
+    auto matBad = std::make_shared<BinnedSurfaceMaterial>(
+        buBad, MaterialSlabVector(10, slab));
+    BOOST_CHECK_THROW(surface->assignSurfaceMaterial(matBad),
+                      std::invalid_argument);
+  }
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

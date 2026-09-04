@@ -10,7 +10,9 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
+#include <atomic>
 #include <chrono>
+#include <cstddef>
 
 namespace Acts {
 
@@ -124,10 +126,13 @@ class AveragingScopedTimer {
   /// @param duration Duration of the sample in nanoseconds
   void addSample(std::chrono::nanoseconds duration);
 
-  double m_sumDuration = 0;  ///< Sum of all sample durations
-  double m_sumDurationSquared =
-      0;  ///< Sum of squared durations for stddev calculation
-  std::size_t m_nSamples = 0;  ///< Number of samples recorded
+  /// Accumulators are atomic so samples can be recorded concurrently from
+  /// multiple threads. Relaxed ordering is sufficient since we only need
+  /// correct aggregate values at the point the dtor reads them.
+  std::atomic<double> m_sumDuration{0};  ///< Sum of all sample durations
+  std::atomic<double> m_sumDurationSquared{
+      0};  ///< Sum of squared durations for stddev calculation
+  std::atomic<std::size_t> m_nSamples{0};  ///< Number of samples recorded
 
   std::string m_name;      ///< Name of the timer for logging
   Logging::Level m_lvl;    ///< Logging level for output

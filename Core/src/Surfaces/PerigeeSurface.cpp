@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -48,13 +49,12 @@ std::string PerigeeSurface::name() const {
 
 std::ostream& PerigeeSurface::toStreamImpl(const GeometryContext& gctx,
                                            std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(7);
+  detail::OstreamStateGuard guard{sl};
+  sl << std::fixed << std::setprecision(7);
   sl << "Acts::PerigeeSurface:" << std::endl;
   const Vector3& sfCenter = center(gctx);
   sl << "     Center position  (x, y, z) = (" << sfCenter.x() << ", "
      << sfCenter.y() << ", " << sfCenter.z() << ")";
-  sl << std::setprecision(-1);
   return sl;
 }
 

@@ -110,22 +110,6 @@ class SurfaceJsonConverter {
           .writeMaterial = true,
           .portal = false});
 
-  /// Contextual conversion of a surface - Detray export
-  ///
-  /// @param gctx the geometry context for this
-  /// @param surface the surface to be converted
-  /// @param options the writing options for the surfaces
-  ///
-  /// @note reading back detray json is not supported and will fail
-  ///
-  /// @return a json object representing the surface
-  static nlohmann::json toJsonDetray(
-      const GeometryContext& gctx, const Surface& surface,
-      const Options& options = Options{
-          .transformOptions = Transform3JsonConverter::Options{},
-          .writeMaterial = true,
-          .portal = false});
-
   /// @brief The Surface converter from json
   ///
   /// @param jSurface the surface json object
@@ -154,6 +138,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
      {Surface::SurfaceType::Plane, "PlaneSurface"},
      {Surface::SurfaceType::Straw, "StrawSurface"},
      {Surface::SurfaceType::Curvilinear, "CurvilinearSurface"},
+     {Surface::SurfaceType::Point, "PointSurface"},
      {Surface::SurfaceType::Other, "Other"}})
 
 }  // namespace Acts

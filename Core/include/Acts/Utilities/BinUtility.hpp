@@ -12,15 +12,15 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <iostream>
-#include <iterator>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -96,55 +96,61 @@ class BinUtility {
     m_binningData.emplace_back(opt, value, bValues);
   }
 
-  /// Copy constructor
+  /// Create from a type-erased axis carrying its axis direction
   ///
-  /// @param sbu is the source bin utility
-  BinUtility(const BinUtility& sbu) = default;
+  /// @param axis the axis to be used, its direction must be set
+  explicit BinUtility(const IAxis& axis)
+      : m_binningData(),
+        m_transform(Transform3::Identity()),
+        m_itransform(Transform3::Identity()) {
+    m_binningData.reserve(3);
+    m_binningData.emplace_back(axis);
+  }
 
-  /// Move constructor
-  /// @param sbu is the source bin utility
-  BinUtility(BinUtility&& sbu) = default;
+  /// Create from a multi-axis, with the axes carrying their axis directions
+  ///
+  /// @param axes the multi-axis to be used, the axis directions must be set
+  explicit BinUtility(const IMultiAxis& axes)
+      : m_binningData(),
+        m_transform(Transform3::Identity()),
+        m_itransform(Transform3::Identity()) {
+    m_binningData.reserve(3);
+    for (const IAxis& axis : axes) {
+      m_binningData.emplace_back(axis);
+    }
+  }
 
   /// Create from a DirectedProtoAxis
   ///
   /// @param dpAxis the DirectedProtoAxis to be used
+  /// @deprecated Use BinUtility(const IAxis&) with a directed axis instead
+  [[deprecated("Use BinUtility(const IAxis&) with a directed axis instead")]]
   explicit BinUtility(const DirectedProtoAxis& dpAxis)
       : m_binningData(),
         m_transform(Transform3::Identity()),
         m_itransform(Transform3::Identity()) {
     m_binningData.reserve(3);
-    m_binningData.emplace_back(dpAxis);
+    m_binningData.emplace_back(dpAxis.getAxisDirection(), dpAxis.getAxis());
   }
 
+  // A deprecated declaration only silences directly named types, not the ones
+  // it names as template arguments
+  ACTS_PUSH_IGNORE_DEPRECATED()
   /// Create from several DirectedProtoAxis objects
   ///
   /// @param dpAxes the DirectedProtoAxis to be used with axis directions
+  /// @deprecated Use BinUtility(const IMultiAxis&) with directed axes instead
+  [[deprecated("Use BinUtility(const IMultiAxis&) with directed axes instead")]]
   explicit BinUtility(const std::vector<DirectedProtoAxis>& dpAxes)
       : m_binningData(),
         m_transform(Transform3::Identity()),
         m_itransform(Transform3::Identity()) {
     m_binningData.reserve(3);
     for (const auto& dpAxis : dpAxes) {
-      m_binningData.emplace_back(dpAxis);
+      m_binningData.emplace_back(dpAxis.getAxisDirection(), dpAxis.getAxis());
     }
   }
-
-  /// Assignment operator
-  ///
-  /// @param sbu is the source bin utility
-  /// @return Reference to this BinUtility after assignment
-  BinUtility& operator=(const BinUtility& sbu) {
-    if (this != &sbu) {
-      m_binningData = sbu.m_binningData;
-      m_transform = sbu.m_transform;
-      m_itransform = sbu.m_itransform;
-    }
-    return (*this);
-  }
-
-  /// Move assignment operator
-  /// @return Reference to this BinUtility after move assignment
-  BinUtility& operator=(BinUtility&&) = default;
+  ACTS_POP_IGNORE_DEPRECATED()
 
   /// Operator+= to make multidimensional BinUtility
   ///
@@ -161,9 +167,6 @@ class BinUtility {
     m_binningData.insert(m_binningData.end(), bData.begin(), bData.end());
     return (*this);
   }
-
-  /// Virtual Destructor
-  ~BinUtility() = default;
 
   /// Equality operator
   /// @param other The other BinUtility to compare with
@@ -215,23 +218,6 @@ class BinUtility {
     return bEval;
   }
 
-  /// Return the other direction for fast interlinking
-  ///
-  /// @param position is the global position for the next search
-  /// @param direction is the global position for the next search
-  /// @param ba is the bin accessor
-  ///
-  /// @todo the
-  ///
-  /// @return the next bin
-  int nextDirection(const Vector3& position, const Vector3& direction,
-                    std::size_t ba = 0) const {
-    if (ba >= m_binningData.size()) {
-      return 0;
-    }
-    return m_binningData[ba].nextDirection(position, direction);
-  }
-
   /// Bin from a 2D vector (following local parameters definitions)
   /// - no optional transform applied
   /// - USE WITH CARE !!
@@ -249,6 +235,42 @@ class BinUtility {
     }
     return m_binningData[ba].searchLocal(lposition);
   }
+
+  /// Bin from a scalar (following local parameters definitions)
+  /// - no optional transform applied
+  /// - USE WITH CARE !!
+  ///
+  /// You need to make sure that the local position is actually in the binning
+  /// frame of the BinUtility
+  ///
+  /// @param value is the scalar value to be evaluated
+  /// @param ba is the bin dimension
+  ///
+  /// @return bin calculated from local
+  std::size_t bin(float value, std::size_t ba = 0) const {
+    if (ba >= m_binningData.size()) {
+      return 0;
+    }
+    return m_binningData[ba].search(value);
+  }
+
+  /// Return the other direction for fast interlinking
+  ///
+  /// @param position is the global position for the next search
+  /// @param direction is the global position for the next search
+  /// @param ba is the bin accessor
+  ///
+  /// @todo the
+  ///
+  /// @return the next bin
+  int nextDirection(const Vector3& position, const Vector3& direction,
+                    std::size_t ba = 0) const {
+    if (ba >= m_binningData.size()) {
+      return 0;
+    }
+    return m_binningData[ba].nextDirection(position, direction);
+  }
+
   /// Check if bin is inside from Vector2 - optional transform applied
   ///
   /// @param position is the global position to be evaluated

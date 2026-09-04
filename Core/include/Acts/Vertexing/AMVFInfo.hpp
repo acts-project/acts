@@ -29,7 +29,8 @@ struct VertexInfo {
         oldPosition(pos),
         seedPosition(pos) {}
 
-  /// Vertex constraint for fitting procedure
+  /// Prior the fit restarts from in every iteration. If unset, the fitter
+  /// initializes it with the vertex state at the start of the fit.
   Acts::Vertex constraint;
 
   /// Point where all associated tracks are linearized

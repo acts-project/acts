@@ -1,0 +1,23 @@
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        "*": hash-pin
+  # These checkouts intentionally keep the persisted GITHUB_TOKEN credentials
+  # because a later step pushes commits back to the repository. Configured here
+  # (rather than via an inline comment) so dependabot version bumps don't drop
+  # the suppression.
+  artipacked:
+    ignore:
+      - release.yml
+      - update-pip-requirements.yml
+  # The devcontainer CLI is a one-off CI tool: adding a package.json and
+  # lockfile just to install it via `npm ci` is not worth it.
+  adhoc-packages:
+    ignore:
+      - devcontainer-ci.yml
+  # The lychee cache is only written by `external-linkcheck`, which never runs
+  # on the tag pushes that publish docs.
+  cache-poisoning:
+    ignore:
+      - docs.yml

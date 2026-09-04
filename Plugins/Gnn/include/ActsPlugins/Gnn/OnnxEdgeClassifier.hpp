@@ -17,6 +17,7 @@ namespace Ort {
 class Env;
 class Session;
 class Value;
+class MemoryInfo;
 }  // namespace Ort
 
 namespace ActsPlugins {
@@ -30,8 +31,14 @@ class OnnxEdgeClassifier final : public EdgeClassificationBase {
   struct Config {
     /// Path to the ONNX model file
     std::string modelPath;
+    /// Vector of selected node feature indices to use as input for the model
+    std::vector<int> selectedFeatures = {};
+    /// Vector of per-feature scale factors applied to selected features
+    std::vector<float> featureScales = {};
     /// Classification threshold cut
     float cut = 0.5;
+    /// Device to allocate the model on
+    Device device = Device::Cuda();
   };
 
   /// Constructor

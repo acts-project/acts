@@ -8,9 +8,8 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/TrackProxyCommon.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/Types.hpp"
@@ -18,7 +17,7 @@
 
 #include <any>
 #include <cassert>
-#include <cmath>
+#include <optional>
 #include <type_traits>
 
 namespace Acts {
@@ -62,6 +61,10 @@ class TrackHandlerConstBase {
   virtual unsigned int nTrackStates(const void* container,
                                     TrackIndexType index) const = 0;
 
+  /// Get a type-erased track state proxy at the given state index
+  virtual AnyConstTrackStateProxy trackStateAtIndex(
+      const void* container, TrackIndexType stateIndex) const = 0;
+
   /// Check if track has a specific dynamic column
   virtual bool hasColumn(const void* container, HashedString key) const = 0;
 
@@ -77,6 +80,11 @@ class TrackHandlerMutableBase : public TrackHandlerConstBase {
   using TrackHandlerConstBase::component;
   using TrackHandlerConstBase::covariance;
   using TrackHandlerConstBase::parameters;
+  using TrackHandlerConstBase::trackStateAtIndex;
+
+  /// Get a mutable type-erased track state proxy at the given state index
+  virtual AnyMutableTrackStateProxy trackStateAtIndex(
+      void* container, TrackIndexType stateIndex) const = 0;
 
   /// Get mutable parameter vector
   virtual ParametersMap parameters(void* container,
@@ -107,7 +115,7 @@ template <typename container_t,
 class TrackHandler;
 
 template <typename container_t>
-class TrackHandler<container_t, true> final : public TrackHandlerConstBase {
+class TrackHandler<container_t, true> /*final*/ : public TrackHandlerConstBase {
   using ContainerType = typename TrackHandlerTraits<container_t>::Container;
 
  public:
@@ -118,55 +126,63 @@ class TrackHandler<container_t, true> final : public TrackHandlerConstBase {
   }
 
   const Surface* referenceSurface(const void* container,
-                                  TrackIndexType index) const override {
+                                  TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return &tc->getTrack(index).referenceSurface();
   }
 
   bool hasReferenceSurface(const void* container,
-                           TrackIndexType index) const override {
+                           TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).hasReferenceSurface();
   }
 
   ParticleHypothesis particleHypothesis(const void* container,
-                                        TrackIndexType index) const override {
+                                        TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).particleHypothesis();
   }
 
   ConstParametersMap parameters(const void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).parameters();
   }
 
   ConstCovarianceMap covariance(const void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).covariance();
   }
 
   unsigned int nTrackStates(const void* container,
-                            TrackIndexType index) const override {
+                            TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).nTrackStates();
   }
 
-  bool hasColumn(const void* container, HashedString key) const override {
+  AnyConstTrackStateProxy trackStateAtIndex(
+      const void* container, TrackIndexType stateIndex) const final {
+    assert(container != nullptr);
+    const auto* tc = static_cast<const ContainerType*>(container);
+    auto ts = tc->trackStateContainer().getTrackState(stateIndex);
+    return AnyConstTrackStateProxy(ts);
+  }
+
+  bool hasColumn(const void* container, HashedString key) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->hasColumn(key);
   }
 
   std::any component(const void* container, TrackIndexType index,
-                     HashedString key) const override {
+                     HashedString key) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->container().component_impl(key, index);
@@ -177,7 +193,8 @@ class TrackHandler<container_t, true> final : public TrackHandlerConstBase {
 };
 
 template <typename container_t>
-class TrackHandler<container_t, false> final : public TrackHandlerMutableBase {
+class TrackHandler<container_t,
+                   false> /*final*/ : public TrackHandlerMutableBase {
   using ContainerType = typename TrackHandlerTraits<container_t>::Container;
 
  public:
@@ -188,76 +205,90 @@ class TrackHandler<container_t, false> final : public TrackHandlerMutableBase {
   }
 
   const Surface* referenceSurface(const void* container,
-                                  TrackIndexType index) const override {
+                                  TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return &tc->getTrack(index).referenceSurface();
   }
 
   bool hasReferenceSurface(const void* container,
-                           TrackIndexType index) const override {
+                           TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).hasReferenceSurface();
   }
 
   ParticleHypothesis particleHypothesis(const void* container,
-                                        TrackIndexType index) const override {
+                                        TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).particleHypothesis();
   }
 
   ConstParametersMap parameters(const void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).parameters();
   }
 
-  ParametersMap parameters(void* container,
-                           TrackIndexType index) const override {
+  ParametersMap parameters(void* container, TrackIndexType index) const final {
     assert(container != nullptr);
     auto* tc = static_cast<ContainerType*>(container);
     return tc->getTrack(index).parameters();
   }
 
   ConstCovarianceMap covariance(const void* container,
-                                TrackIndexType index) const override {
+                                TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).covariance();
   }
 
-  CovarianceMap covariance(void* container,
-                           TrackIndexType index) const override {
+  CovarianceMap covariance(void* container, TrackIndexType index) const final {
     assert(container != nullptr);
     auto* tc = static_cast<ContainerType*>(container);
     return tc->getTrack(index).covariance();
   }
 
   unsigned int nTrackStates(const void* container,
-                            TrackIndexType index) const override {
+                            TrackIndexType index) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->getTrack(index).nTrackStates();
   }
 
-  bool hasColumn(const void* container, HashedString key) const override {
+  AnyConstTrackStateProxy trackStateAtIndex(
+      const void* container, TrackIndexType stateIndex) const final {
+    assert(container != nullptr);
+    const auto* tc = static_cast<const ContainerType*>(container);
+    auto ts = tc->trackStateContainer().getTrackState(stateIndex);
+    return AnyConstTrackStateProxy(ts);
+  }
+
+  AnyMutableTrackStateProxy trackStateAtIndex(
+      void* container, TrackIndexType stateIndex) const final {
+    assert(container != nullptr);
+    auto* tc = static_cast<ContainerType*>(container);
+    auto ts = tc->trackStateContainer().getTrackState(stateIndex);
+    return AnyMutableTrackStateProxy(ts);
+  }
+
+  bool hasColumn(const void* container, HashedString key) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->hasColumn(key);
   }
 
   std::any component(const void* container, TrackIndexType index,
-                     HashedString key) const override {
+                     HashedString key) const final {
     assert(container != nullptr);
     const auto* tc = static_cast<const ContainerType*>(container);
     return tc->container().component_impl(key, index);
   }
 
   std::any component(void* container, TrackIndexType index,
-                     HashedString key) const override {
+                     HashedString key) const final {
     assert(container != nullptr);
     auto* tc = static_cast<ContainerType*>(container);
     return tc->container().component_impl(key, index);
@@ -477,6 +508,101 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
   /// @return The number of track states
   unsigned int nTrackStates() const {
     return constHandler()->nTrackStates(containerPtr(), m_index);
+  }
+
+  /// Return a const type-erased track state proxy to the outermost track state
+  /// @return The outermost track state proxy
+  AnyConstTrackStateProxy outermostTrackState() const {
+    return constHandler()->trackStateAtIndex(containerPtr(), this->tipIndex());
+  }
+
+  /// Return a mutable type-erased track state proxy to the outermost track
+  /// state
+  /// @return The outermost track state proxy
+  AnyMutableTrackStateProxy outermostTrackState()
+    requires(!ReadOnly)
+  {
+    return mutableHandler()->trackStateAtIndex(mutableContainerPtr(),
+                                               this->tipIndex());
+  }
+
+  /// Return a const type-erased track state proxy to the innermost track state
+  /// @note This is only available if the track is forward linked
+  /// @return The innermost track state proxy, or nullopt if not forward linked
+  std::optional<AnyConstTrackStateProxy> innermostTrackState() const {
+    TrackIndexType stem = this->stemIndex();
+    if (stem == kTrackIndexInvalid) {
+      return std::nullopt;
+    }
+    return constHandler()->trackStateAtIndex(containerPtr(), stem);
+  }
+
+  /// Return a mutable type-erased track state proxy to the innermost track
+  /// state
+  /// @note This is only available if the track is forward linked
+  /// @return The innermost track state proxy, or nullopt if not forward linked
+  std::optional<AnyMutableTrackStateProxy> innermostTrackState()
+    requires(!ReadOnly)
+  {
+    TrackIndexType stem = this->stemIndex();
+    if (stem == kTrackIndexInvalid) {
+      return std::nullopt;
+    }
+    return mutableHandler()->trackStateAtIndex(mutableContainerPtr(), stem);
+  }
+
+  /// Get a range over the track states of this track, from the outside inwards.
+  /// Compatible with range-based for loops. Const version.
+  /// @return Track state range to iterate over
+  detail_anytstate::AnyConstReverseTrackStateRange trackStatesReversed() const {
+    if (this->tipIndex() == kTrackIndexInvalid) {
+      return {};
+    }
+    return detail_anytstate::AnyConstReverseTrackStateRange{
+        outermostTrackState()};
+  }
+
+  /// Get a range over the track states of this track, from the outside inwards.
+  /// Compatible with range-based for loops. Mutable version.
+  /// @note Only available if the track proxy is not read-only
+  /// @return Track state range to iterate over
+  detail_anytstate::AnyMutableReverseTrackStateRange trackStatesReversed()
+    requires(!ReadOnly)
+  {
+    if (this->tipIndex() == kTrackIndexInvalid) {
+      return {};
+    }
+    return detail_anytstate::AnyMutableReverseTrackStateRange{
+        outermostTrackState()};
+  }
+
+  /// Get a range over the track states of this track, from the inside outwards.
+  /// Compatible with range-based for loops. Const version.
+  /// @warning This access direction is only possible if the track states are
+  ///          **forward-linked**. The range is empty otherwise.
+  /// @return Track state range to iterate over
+  detail_anytstate::AnyConstTrackStateRange trackStates() const {
+    std::optional<AnyConstTrackStateProxy> inner = innermostTrackState();
+    if (!inner.has_value()) {
+      return {};
+    }
+    return detail_anytstate::AnyConstTrackStateRange{*inner};
+  }
+
+  /// Get a range over the track states of this track, from the inside outwards.
+  /// Compatible with range-based for loops. Mutable version.
+  /// @note Only available if the track proxy is not read-only
+  /// @warning This access direction is only possible if the track states are
+  ///          **forward-linked**. The range is empty otherwise.
+  /// @return Track state range to iterate over
+  detail_anytstate::AnyMutableTrackStateRange trackStates()
+    requires(!ReadOnly)
+  {
+    std::optional<AnyMutableTrackStateProxy> inner = innermostTrackState();
+    if (!inner.has_value()) {
+      return {};
+    }
+    return detail_anytstate::AnyMutableTrackStateRange{*inner};
   }
 
   /// Check if the track has a specific dynamic column

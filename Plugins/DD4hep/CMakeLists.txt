@@ -12,6 +12,7 @@ acts_add_library(
     src/DD4hepFieldAdapter.cpp
     src/BlueprintBuilder.cpp
     src/OpenDataDetectorBuilder.cpp
+    src/OpenDataDetectorBuilderTGeo.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 

@@ -49,10 +49,15 @@ PYBIND11_MODULE(ActsFatrasPythonBindings, fatras) {
           [](Barcode& b, Barcode::SubParticleId id) {
             b = b.withSubParticle(id);
           })
-      .def("__repr__", [](const Barcode& b) {
-        std::ostringstream oss;
-        oss << b;
-        return oss.str();
+      .def("__repr__",
+           [](const Barcode& b) {
+             std::ostringstream oss;
+             oss << b;
+             return oss.str();
+           })
+      .def("__eq__", [](const Barcode& a, const Barcode& b) { return a == b; })
+      .def("__hash__", [](const Barcode& b) {
+        return std::hash<ActsFatras::Barcode>{}(b);
       });
 
   py::enum_<ActsFatras::GenerationProcess>(fatras, "GenerationProcess")

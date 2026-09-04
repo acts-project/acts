@@ -45,8 +45,12 @@ class TrackFindingAlgorithm final : public IAlgorithm {
  public:
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
+  /// The type-erased options carry the full (bremsstrahlung) configuration.
+  /// The plain single-component finder binds to its base slice, the
+  /// multi-component finder uses it whole; the runtime switch happens in the
+  /// algorithm.
   using TrackFinderOptions =
-      Acts::CombinatorialKalmanFilterOptions<TrackContainer>;
+      Acts::BremCombinatorialKalmanFilterOptions<TrackContainer>;
   using TrackFinderResult =
       Acts::Result<std::vector<TrackContainer::TrackProxy>>;
 
@@ -62,10 +66,13 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   };
 
   /// Create the track finder function implementation.
-  ///
-  /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyway.
   static std::shared_ptr<TrackFinderFunction> makeTrackFinderFunction(
+      std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      const Acts::Logger& logger);
+
+  /// Create the bremstrahlung track finder function implementation.
+  static std::shared_ptr<TrackFinderFunction> makeBremTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
       const Acts::Logger& logger);
@@ -88,6 +95,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
+    /// Type erased track finder with brem recovery function.
+    std::shared_ptr<TrackFinderFunction> findTracksBrem;
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
     /// Track selector config
@@ -115,6 +124,11 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     bool computeSharedHits = false;
     /// Whether to trim the tracks
     bool trimTracks = true;
+    /// Whether to record track states on material-only surfaces. Disabling this
+    /// is faster but leaves those surfaces out of the track, which a refit with
+    /// the `DirectNavigator` needs. Not applied to the bremsstrahlung finder,
+    /// which does not support it.
+    bool recordMaterialStates = true;
 
     /// Whether to use the Joseph formulation for the Kalman filter update. This
     /// is typically more stable but also more computationally expensive.
@@ -152,7 +166,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
  private:
   void computeSharedHits(TrackContainer& tracks,
-                         const MeasurementContainer& measurements) const;
+                         const MeasurementSubset& measurements) const;
 
   ProcessCode finalize() override;
 
@@ -160,8 +174,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   Config m_cfg;
   std::optional<Acts::TrackSelector> m_trackSelector;
 
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                           "InputMeasurements"};
+  ReadDataHandle<MeasurementSubset> m_inputMeasurements{this,
+                                                        "InputMeasurements"};
   ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
       this, "InputInitialTrackParameters"};
   ReadDataHandle<SeedContainer> m_inputSeeds{this, "InputSeeds"};

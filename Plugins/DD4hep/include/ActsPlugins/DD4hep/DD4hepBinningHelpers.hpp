@@ -11,7 +11,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 
@@ -83,14 +85,33 @@ inline std::vector<Acts::AxisDirection> stringToAxisDirections(
 namespace DD4hepBinningHelpers {
 /// @ingroup dd4hep_plugin
 
+/// @brief This method converts the DD4hep binning into Acts axis specs
+///
+/// Auto-range binnings convert to deferred equidistant specs whose
+/// range (and boundary type) is determined by the consumer, explicit binnings
+/// convert to fully specified specs.
+///
+/// @param dd4hepElement the element which has a binning description attached
+/// @param bname the binning base name, e.g. surface_binning, material_binning
+///
+/// @return a vector of axis specs with their bin expansions
+std::vector<std::tuple<Acts::AxisSpec, std::size_t>> convertAxisSpecs(
+    const dd4hep::DetElement &dd4hepElement, const std::string &bname);
+
+// A deprecated declaration only silences directly named types, not the ones it
+// names as template arguments
+ACTS_PUSH_IGNORE_DEPRECATED()
 /// @brief This method converts the DD4hep binning into the Acts ProtoAxis
 ///
 /// @param dd4hepElement the element which has a binning description attached
 /// @param bname the binning base name, e.g. surface_binning, material_binning
 ///
 /// @return a vector of proto binning descriptions
+/// @deprecated Use convertAxisSpecs instead
+[[deprecated("Use convertAxisSpecs instead")]]
 std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>> convertBinning(
     const dd4hep::DetElement &dd4hepElement, const std::string &bname);
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace DD4hepBinningHelpers
 /// @}

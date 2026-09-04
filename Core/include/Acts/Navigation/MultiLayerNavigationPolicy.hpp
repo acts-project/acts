@@ -14,7 +14,7 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// A navigation policy that uses grid based navigation for indexed surfaces
 /// Navigate through a multilayer structure by creating an artificial path on
@@ -74,14 +74,36 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   std::vector<Vector2> generatePath(const Vector3& startPosition,
                                     const Vector3& direction) const;
 
+  /// @brief Give const access to the indexed grid
+  /// @return The indexed grid
+  const IndexedUpdatorType& indexedGrid() const { return m_indexedGrid; }
+
+  /// @brief Access the configuration
+  /// @return The configuration
+  const Config& config() const { return m_config; }
+
  private:
   // The tracking volume
   const TrackingVolume& m_volume;
 
   // The grid that holds the indexed surfaces
   IndexedUpdatorType m_indexedGrid;
+
+  // The navigation configuration
+  Config m_config;
 };
 
 static_assert(NavigationPolicyConcept<MultiLayerNavigationPolicy>);
 
-}  // namespace Acts::Experimental
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use @ref Acts::MultiLayerNavigationPolicy instead.
+///             This alias is kept for backward compatibility and will be
+///             removed.
+using MultiLayerNavigationPolicy
+    [[deprecated("Acts::Experimental::MultiLayerNavigationPolicy moved to "
+                 "Acts::MultiLayerNavigationPolicy")]] =
+        Acts::MultiLayerNavigationPolicy;
+}  // namespace Experimental
+
+}  // namespace Acts

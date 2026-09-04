@@ -37,6 +37,7 @@
 
 #include <memory>
 #include <numbers>
+#include <set>
 
 #include <detray/io/backend/geometry_reader.hpp>
 #include <detray/io/backend/geometry_writer.hpp>
@@ -52,7 +53,7 @@
 #include <detray/plugins/svgtools/illustrator.hpp>
 #include <detray/plugins/svgtools/writer.hpp>
 #include <detray/utils/consistency_checker.hpp>
-#include <detray/utils/grid/detail/concepts.hpp>
+#include <detray/utils/grid/concepts.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
@@ -603,6 +604,7 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   auto payloads = converter.convertTrackingGeometry(gctx, *tGeometry);
 
   const auto& detector = *payloads.detector;
+  BOOST_REQUIRE_NE(payloads.homogeneousMaterial, nullptr);
   const auto& homogeneousMaterial = *payloads.homogeneousMaterial;
   auto& materialGrids = *payloads.materialGrids;
   const auto& surfaceGrids = *payloads.surfaceGrids;
@@ -618,26 +620,36 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   BOOST_CHECK_EQUAL(detector.volumes.at(4).name, "L2");
   BOOST_CHECK_EQUAL(detector.volumes.at(5).name, "L3");
 
-  // @HACK: At this time, the conversion introduces a number of dummy material slabs which
-  //        should ultimately not be there.
+  // Homogeneous material is sparse: only volumes that actually carry it are
+  // registered, and within them only the surfaces that have it.
+  BOOST_CHECK(!homogeneousMaterial.volumes.empty());
+  BOOST_CHECK_LE(homogeneousMaterial.volumes.size(), detector.volumes.size());
 
-  BOOST_CHECK_EQUAL(homogeneousMaterial.volumes.size(), 6);
-
-  for (const auto& volume : detector.volumes) {
-    auto it = std::ranges::find_if(
-        homogeneousMaterial.volumes, [&](const auto& hMat) {
-          return hMat.volume_link.link == volume.index.link;
+  for (const auto& hMat : homogeneousMaterial.volumes) {
+    auto volIt =
+        std::ranges::find_if(detector.volumes, [&](const auto& volume) {
+          return volume.index.link == hMat.volume_link.link;
         });
 
-    if (it == homogeneousMaterial.volumes.end()) {
-      BOOST_FAIL("No material slab found for volume: " + volume.name);
-      continue;
+    BOOST_REQUIRE(volIt != detector.volumes.end());
+    const auto& volume = *volIt;
+
+    // A volume is only registered when it has material to contribute
+    BOOST_CHECK(!hMat.surface_mat.empty());
+
+    // At most one material entry per surface, never more
+    BOOST_CHECK_LE(hMat.surface_mat.size(), volume.surfaces.size());
+
+    std::set<std::size_t> seenSurfaces;
+    for (const auto& slab : hMat.surface_mat) {
+      // Every entry points at a surface that exists in this volume...
+      BOOST_CHECK_LT(slab.surface.link, volume.surfaces.size());
+      // ...and does so exactly once
+      BOOST_CHECK(seenSurfaces.insert(slab.surface.link).second);
+      // The position in the detector material collection is left to the
+      // reader, so that it packs the collection densely
+      BOOST_CHECK(!slab.index_in_coll.has_value());
     }
-
-    auto& hMat = *it;
-
-    // Currently, we expect exactly one slab per surface!
-    BOOST_CHECK_EQUAL(volume.surfaces.size(), hMat.mat_slabs.size());
   }
 
   BOOST_CHECK_EQUAL(materialGrids.grids.size(), 2);
@@ -701,10 +713,10 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
     header_data.sub_header->n_slabs = 0;
 
     for (const auto& hVol : homogeneousMaterial.volumes) {
-      if (hVol.mat_rods.has_value()) {
-        header_data.sub_header->n_rods += hVol.mat_rods->size();
+      if (!hVol.surface_mat.empty()) {
+        header_data.sub_header->n_rods += hVol.surface_mat.size();
       }
-      header_data.sub_header->n_slabs += hVol.mat_slabs.size();
+      header_data.sub_header->n_slabs += hVol.surface_mat.size();
     }
 
     nlohmann::ordered_json out_json;
@@ -742,7 +754,18 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   // Checks and print
   detray::detail::check_consistency(detrayDetector);
 
-  detray::svgtools::illustrator illustrator(detrayDetector, payloads.names);
+  // Helper to convert std::map<unsigned int, std::string> to detray::name_map
+  auto toDetrayNameMap = [](const std::map<unsigned int, std::string>& src) {
+    detray::name_map result;
+    for (const auto& [idx, name] : src) {
+      result.emplace(static_cast<detray::dindex>(idx), name);
+    }
+    return result;
+  };
+
+  auto detrayNames = toDetrayNameMap(payloads.names);
+
+  detray::svgtools::illustrator illustrator(detrayDetector, detrayNames);
   illustrator.hide_eta_lines(true);
   illustrator.show_info(true);
 
@@ -750,10 +773,9 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   actsvg::style::stroke stroke_black = actsvg::style::stroke();
   auto zr_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
                                         stroke_black, "z", "r");
-  detray::svgtools::write_svg("test_svgtools_detector_zr", {
-                                                               zr_axis,
-                                                               svg_zr,
-                                                           });
+  detray::svgtools::write_svg(
+      "test_svgtools_detector_zr",
+      std::initializer_list<actsvg::svg::object>{zr_axis, svg_zr});
 
   const auto svg_xy = illustrator.draw_detector(actsvg::views::x_y{});
   auto xy_axis = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
@@ -770,7 +792,7 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   // std::cout << detray::utils::print_detector(detrayDetector, payloads.names)
   //           << std::endl;
 
-  detray::io::write_detector(detrayDetector, payloads.names, writer_cfg);
+  detray::io::write_detector(detrayDetector, detrayNames, writer_cfg);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

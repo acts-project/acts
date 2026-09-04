@@ -12,7 +12,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
 
 #include <iosfwd>
 #include <vector>
@@ -91,11 +91,19 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
     return (m_materialSlab);
   }
 
+  /// @copydoc ISurfaceMaterial::localAxisDirections() const
+  std::vector<AxisDirection> localAxisDirections() const final { return {}; }
+
   /// Return method for full material description of the Surface - from the
   /// global coordinates
   ///
   /// @return will return dummy material
-  const MaterialSlab& materialSlab(const Vector3& /*gp*/) const final {
+  /// @deprecated Use materialSlab(const Vector2&) with a prior
+  ///             Surface::globalToLocal() call instead.
+  [[deprecated(
+      "Use materialSlab(const Vector2& lp) with a prior "
+      "Surface::globalToLocal() call instead")]] const MaterialSlab&
+  materialSlab(const Vector3& /*gp*/) const final {
     return (m_materialSlab);
   }
 
@@ -123,11 +131,11 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 /// A surface material implementation that uses BinUtility for binning
 using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
 
-/// @brief Type alias for a prototype surface material using a grid of ProtoAxis
-/// A surface material implementation that uses a vector of ProtoAxis for
-/// grid-based binning
-using ProtoGridSurfaceMaterial =
-    ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>;
+/// @brief Type alias for a prototype surface material using a multi-axis
+/// binning description
+/// A surface material implementation that carries a MultiAxisSpec2D whose
+/// deferred axes are resolved against the surface during material mapping
+using ProtoGridSurfaceMaterial = ProtoSurfaceMaterialT<MultiAxisSpec2D>;
 
 /// @}
 

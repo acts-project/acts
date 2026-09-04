@@ -8,6 +8,7 @@ acts_add_library(
     src/EventData/MeasurementCalibration.cpp
     src/EventData/SimParticle.cpp
     src/EventData/Jets.cpp
+    src/EventData/SeedSpacePointSelection.cpp
     src/Framework/IAlgorithm.cpp
     src/Framework/SequenceElement.cpp
     src/Framework/WhiteBoard.cpp
@@ -19,13 +20,17 @@ acts_add_library(
     src/Utilities/Paths.cpp
     src/Utilities/Options.cpp
     src/Utilities/ParametricParticleGenerator.cpp
+    src/Utilities/StripModulePairing.cpp
     src/Utilities/VertexTruthUtility.cpp
     src/Validation/DuplicationPlotTool.cpp
     src/Validation/EffPlotTool.cpp
     src/Validation/FakePlotTool.cpp
+    src/Validation/HistogramFit.cpp
+    src/Validation/ParametersOnSurface.cpp
     src/Validation/ResPlotTool.cpp
     src/Validation/TrackClassification.cpp
-    src/Validation/TrackFinderPerformanceCollector.cpp
+    src/Validation/PatternRecognitionPerformanceCollector.cpp
+    src/Validation/TrackParameterPerformanceCollector.cpp
     src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
     ACTS_INCLUDE_FOLDER include/ActsExamples

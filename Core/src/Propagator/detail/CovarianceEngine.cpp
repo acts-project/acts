@@ -14,6 +14,7 @@
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <optional>
@@ -224,7 +225,11 @@ Result<BoundTrackParameters> detail::boundToBoundConversion(
     freeToPathDerivatives.head<3>() = freePars.segment<3>(eFreeDir0);
 
     freeToPathDerivatives.segment<3>(eFreeDir0) =
-        bField.cross(freePars.segment<3>(eFreeDir0));
+        freePars[eFreeQOverP] * freePars.segment<3>(eFreeDir0).cross(bField);
+
+    const double mass = boundParameters.particleHypothesis().mass();
+    const double absMomentum = boundParameters.absoluteMomentum();
+    freeToPathDerivatives[eFreeTime] = fastHypot(1, mass / absMomentum);
 
     BoundMatrix boundToBoundJac;
     FreeToBoundMatrix freeToBoundJacobian;

@@ -73,7 +73,7 @@ struct AccessorPositionXYZ {
 ///     event000000002-spacepoints.svg
 ///
 template <typename T, typename Acc = AccessorXYZ>
-class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
+class SvgPointWriter /*final*/ : public WriterT<GeometryIdMultiset<T>> {
  public:
   struct Config {
     std::string writerName = "PointWriter";  ///< the name of the writer
@@ -150,7 +150,7 @@ ProcessCode SvgPointWriter<T, Acc>::writeT(
   tgpOptions.trackingGeometryOptions = m_cfg.trackingGeometryOptions;
   auto [xyView, zrView] =
       ActsPlugins::Svg::TrackingGeometryProjections::convert(
-          context.geoContext, *m_cfg.trackingGeometry, tgpOptions);
+          context.recoGeoContext, *m_cfg.trackingGeometry, tgpOptions);
 
   // Fill the space points
   unsigned int id = 0;

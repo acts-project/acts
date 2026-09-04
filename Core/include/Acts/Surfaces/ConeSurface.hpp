@@ -82,6 +82,8 @@ class ConeSurface : public RegularSurface {
               const Transform3& shift);
 
  public:
+  ~ConeSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other is the source surface for the assignment
@@ -246,6 +248,11 @@ class ConeSurface : public RegularSurface {
 
  protected:
   std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
+
+  /// @copydoc Surface::localAxes
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisRPhi, AxisDirection::AxisZ};
+  }
 
  private:
   /// Implementation of the intersection solver

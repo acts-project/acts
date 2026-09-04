@@ -12,14 +12,17 @@
 #include "Acts/Utilities/StringHelpers.hpp"
 
 namespace {
+
 inline std::string whiteSpaces(const std::size_t n) {
   std::string str{};
   str.resize(n, ' ');
   return str;
 }
+
 }  // namespace
 
 namespace Acts::detail {
+
 TrackingGeometryPrintVisitor::TrackingGeometryPrintVisitor(
     const Acts::GeometryContext& gctx, std::size_t indentation)
     : m_gctx{gctx}, m_indentation{indentation} {}
@@ -27,9 +30,11 @@ TrackingGeometryPrintVisitor::~TrackingGeometryPrintVisitor() = default;
 std::stringstream& TrackingGeometryPrintVisitor::stream() {
   return m_printStream;
 }
+
 const std::stringstream& TrackingGeometryPrintVisitor::stream() const {
   return m_printStream;
 }
+
 void TrackingGeometryPrintVisitor::visitVolume(
     const Acts::TrackingVolume& volume) {
   updateDepth(volume);
@@ -42,6 +47,7 @@ void TrackingGeometryPrintVisitor::visitVolume(
                 << ", #portals: " << volume.portals().size()
                 << ", #sub-volumes: " << volume.volumes().size() << std::endl;
 }
+
 std::size_t TrackingGeometryPrintVisitor::volNumber(
     const TrackingVolume& trkVol) const {
   const TrackingVolume* parent = trkVol.motherVolume();
@@ -55,6 +61,7 @@ std::size_t TrackingGeometryPrintVisitor::volNumber(
                                         return &child == &trkVol;
                                       }));
 }
+
 void TrackingGeometryPrintVisitor::visitPortal(const Portal& portal) {
   const auto& surf = portal.surface();
   m_printStream << whiteSpaces(m_currentDepth + m_indentation) << " ++++ "
@@ -62,8 +69,7 @@ void TrackingGeometryPrintVisitor::visitPortal(const Portal& portal) {
 
       " portal  --- id: " << surf.geometryId() << ", bounds: " << surf.bounds()
                 << ", alignable: " << (surf.isAlignable() ? "yay" : "nay")
-                << ", material: "
-                << (surf.surfaceMaterial() != nullptr ? "yay" : "nay")
+                << ", material: " << (surf.hasMaterial() ? "yay" : "nay")
                 << std::endl;
 }
 
@@ -75,8 +81,7 @@ void TrackingGeometryPrintVisitor::visitSurface(const Surface& surface) {
                 << " --- id: " << surface.geometryId()
                 << ", sensitive: " << (surface.isSensitive() ? "yay" : "nay")
                 << ", alignable: " << (surface.isAlignable() ? "yay" : "nay")
-                << ", material: "
-                << (surface.surfaceMaterial() != nullptr ? "yay" : "nay")
+                << ", material: " << (surface.hasMaterial() ? "yay" : "nay")
                 << std::endl;
 }
 

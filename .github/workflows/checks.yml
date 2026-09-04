@@ -2,15 +2,31 @@ name: Checks
 
 on:
   push:
+    # The release branches (keep in sync with release.yml) carry a tree the
+    # merge queue has already built. The queue's own temp ref triggers
+    # merge_group below; a push run there shares its concurrency group and
+    # evicts the PR from the queue.
+    branches-ignore:
+      - 'releases'
+      - 'release/**'
+      - 'gh-readonly-queue/**'
   pull_request:
     branches:
       - main
       - 'release/**'
       - 'develop/**'
+  # Required directly ("lint") and via merge-sentinel's "Checks / *" pattern.
+  merge_group:
+    types: [checks_requested]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  # Never cancel a merge_group run: it's a required check for a queue entry,
+  # and a cancellation reads as a failure to the queue, ejecting the PR.
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
+
+permissions:
+  contents: read
 
 jobs:
   lint:
@@ -20,13 +36,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.14'
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ${{ env.PRE_COMMIT_HOME }}
@@ -41,8 +59,10 @@ jobs:
   smearing_config:
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.14'
       - name: Check
@@ -52,7 +72,9 @@ jobs:
   missing_includes:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install clang
         run: |
           sudo apt-get update
@@ -64,8 +86,10 @@ jobs:
   fpe_masks:
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.14'
       - name: Install dependencies
@@ -78,10 +102,152 @@ jobs:
   unused_files:
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.14'
       - name: Check
         run: >
           CI/check_unused_files.py
+
+  # The CI tooling's own self-tests, which otherwise have no feedback loop:
+  # broken tooling fails in some other job that already paid for a container
+  # pull. Grouped because they are pure python and run in seconds; separate
+  # steps so a failure names the suite. test_public_api_surface.py stays in
+  # `api_surface` -- it skips its drift check without doxygen on PATH.
+  self_tests:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+      - name: Dependency lockfile selection
+        run: >
+          CI/dependencies/test_select_lockfile.py
+      - name: Deprecated-docs checker
+        run: >
+          CI/public_api/test_check_deprecated_docs.py
+
+  codegen_prebuilt:
+    # Pre-generates the code the build would otherwise generate, then checks
+    # that CMake picks all of it up. Needs uv and CMake only: no compiler and
+    # none of the C++ dependencies a real ACTS configure requires, which is what
+    # keeps this cheap enough to run on every pull request. ubuntu-latest rather
+    # than ubuntu-slim only because it ships CMake.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          enable-cache: true
+      - name: Pre-generate code
+        run: >
+          uv run --no-project CI/pregenerate_codegen.py --output prebuilt-codegen
+      - name: Check CMake uses it
+        # ACTS_CODEGEN_REQUIRE_PREBUILT makes any fall back to running a
+        # generator a configure error, so a unit that is missing from the
+        # pre-generated output, or filed under a different key than CMake looks
+        # for, fails here rather than silently downloading uv in a real build.
+        run: |
+          cmake -S CI/codegen_prebuilt_check -B build-codegen-check \
+            -DACTS_CODEGEN_PREBUILT_DIR=$PWD/prebuilt-codegen
+          cmake --build build-codegen-check
+      - name: Check the source archive
+        # Builds the archive the same way the release does and checks it the way
+        # a consumer sees it: unpacked, with nothing pointing at the generated
+        # code, so the directory has to be found on its own next to the
+        # top-level CMakeLists.txt. Otherwise make_source_archive.sh would first
+        # run during a release, where a failure is most expensive.
+        run: |
+          CI/make_source_archive.sh --output acts-ci.tar.gz \
+            --prebuilt prebuilt-codegen --revision HEAD --prefix acts-ci
+          mkdir archive-check
+          tar xzf acts-ci.tar.gz -C archive-check
+          cmake -S archive-check/acts-ci/CI/codegen_prebuilt_check \
+            -B build-archive-check
+          cmake --build build-archive-check
+
+  api_surface:
+    runs-on: ubuntu-latest
+    env:
+      # Keep in sync with the docs job (.github/workflows/docs.yml)
+      DOXYGEN_VERSION: "1.15.0"
+      DOXYGEN_HASH: "0ec2e5b2c3cd82b7106d19cb42d8466450730b8cb7a9e85af712be38bf4523a1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # need the PR base commit for the surface diff
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+      - name: Install doxygen
+        run: |
+          curl -SL https://acts.web.cern.ch/ci/doxygen/doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz -o doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
+          echo "${{ env.DOXYGEN_HASH }}  doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz" | sha256sum -c -
+          tar xf doxygen-${{ env.DOXYGEN_VERSION }}.linux.bin.tar.gz
+          mv doxygen-${{ env.DOXYGEN_VERSION }}/bin/doxygen /usr/local/bin/doxygen
+          doxygen --version
+      - name: Self-test the surface tooling
+        # Here, not in `self_tests`: only this job has doxygen on PATH, and the
+        # drift check skips itself without it.
+        run: >
+          CI/public_api/test_public_api_surface.py
+      - name: Require @deprecated docs on [[deprecated]] declarations
+        # Every [[deprecated]] attribute must carry a Doxygen @deprecated command
+        # so the deprecation is visible in the published docs, not just at
+        # compile time. Dependency-free (no Doxygen needed).
+        run: >
+          CI/public_api/check_deprecated_docs.py
+          Core/include Plugins Fatras/include Alignment/include
+      - name: Measure public API surface (this ref)
+        run: >
+          CI/public_api/public_api_surface.py --run --roots-under .
+          --json api-surface.json
+          --markdown api-surface.md
+          --summary
+      - name: Diff public API surface against base
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          # Base = first parent of the checked-out refs/pull/N/merge, i.e. the
+          # commit GitHub merged into. Not pull_request.base.sha: that only
+          # advances on PR sync, so it drifts behind the merge ref and unrelated
+          # changes on the base branch get attributed to the PR.
+          if git rev-parse --verify --quiet HEAD^2 > /dev/null; then
+            BASE_SHA=$(git rev-parse HEAD^1)
+          else
+            # Not a merge ref: a checkout pinned to the head commit.
+            BASE_SHA=$(git merge-base HEAD "origin/${BASE_REF}")
+          fi
+          echo "Diffing public API surface against ${BASE_SHA}"
+          git worktree add --detach /tmp/base-tree "$BASE_SHA"
+          # Base measured with THIS ref's Doxyfile/scripts, over the base tree.
+          # No --summary here: it would duplicate the surface table.
+          CI/public_api/public_api_surface.py --run --roots-under /tmp/base-tree \
+            --json base-surface.json --markdown /dev/null
+          # Report only, for the job summary: this job runs with a PR's own
+          # workflow file and no restriction beyond `contents: read` and no
+          # secrets, so its classification isn't trusted for anything more
+          # than that. api-surface-label.yml (workflow_run) redoes the diff
+          # itself from a trusted checkout before labeling/commenting.
+          CI/public_api/public_api_diff.py \
+            --base base-surface.json --head api-surface.json \
+            --json api-surface-diff.json --markdown /dev/null --summary --fail-on none
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: api-surface
+          if-no-files-found: ignore
+          path: |
+            api-surface.json
+            api-surface.md
+            base-surface.json
+            api-surface-diff.json

@@ -136,15 +136,6 @@ class BoundTrackParameters {
     normalizePhiTheta();
   }
 
-  /// Convert this track parameter object to the general type-erased one
-  /// @return Type-erased bound track parameters
-  [[deprecated(
-      "You already have a universal bound track parameter at hand. You can "
-      "drop `toBound()`.")]]
-  BoundTrackParameters toBound() const {
-    return BoundTrackParameters{*this};
-  }
-
   /// Parameters vector.
   /// @return Mutable reference to the parameters vector
   BoundVector& parameters() { return m_params; }

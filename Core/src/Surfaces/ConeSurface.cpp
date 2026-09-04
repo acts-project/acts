@@ -204,7 +204,9 @@ Polyhedron ConeSurface::polyhedronRepresentation(
   double hPhiSec = bounds().get(ConeBounds::eHalfPhiSector);
   double avgPhi = bounds().get(ConeBounds::eAveragePhi);
   std::vector<double> refPhi = {};
-  if (bool fullCone = (hPhiSec == std::numbers::pi); !fullCone) {
+  if (bool fullCone =
+          std::abs(hPhiSec - std::numbers::pi) < s_fullAzimuthTolerance;
+      !fullCone) {
     refPhi = {avgPhi};
   }
 
@@ -391,11 +393,14 @@ Matrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
 
   return loc3DToLocBound;
 }
+
 const std::shared_ptr<const ConeBounds>& ConeSurface::boundsPtr() const {
   return m_bounds;
 }
+
 void ConeSurface::assignSurfaceBounds(
     std::shared_ptr<const ConeBounds> newBounds) {
   m_bounds = std::move(newBounds);
 }
+
 }  // namespace Acts

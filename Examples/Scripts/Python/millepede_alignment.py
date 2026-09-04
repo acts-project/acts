@@ -10,7 +10,6 @@ import acts.examples
 
 from acts.examples import (
     TelescopeDetector,
-    AlignedTelescopeDetector,
     Sequencer,
     StructureSelector,
     RandomNumbers,
@@ -70,18 +69,13 @@ from acts.examples.reconstruction import (
 #
 # In the alignment, at least 4 layers are expected (layer ID 8 will
 # be fixed as the alignment reference).
-def getTelescopeDetector(misaligned: bool = False):
+def getTelescopeDetector():
     bounds = [200, 200]
     positions = [30, 60, 90, 120, 150, 180, 210, 240, 270]
     stereos = [0] * len(positions)
-    if not misaligned:
-        detector = TelescopeDetector(
-            bounds=bounds, positions=positions, stereos=stereos, binValue=1
-        )
-    else:
-        detector = AlignedTelescopeDetector(
-            bounds=bounds, positions=positions, stereos=stereos, binValue=1
-        )
+    detector = TelescopeDetector(
+        bounds=bounds, positions=positions, stereos=stereos, binValue=1
+    )
 
     return detector
 
@@ -96,6 +90,9 @@ def addAlignmentSandbox(
     inputTracks: str = "ckf_tracks",
     logLevel: acts.logging.Level = acts.logging.INFO,
     milleOutput: str = "MilleBinary.root",
+    discardUnconstrainedTrackPar: bool = True,
+    outFileInternalSolving: str = "ActsInternalAlignment_Result.txt",
+    outFileDecomposition: str = "ActsInternalAlignment_Eigenvals.txt",
 ):
     sandbox = MillePedeAlignmentSandbox(
         level=logLevel,
@@ -105,6 +102,9 @@ def addAlignmentSandbox(
         trackingGeometry=trackingGeometry,
         magneticField=magField,
         fixModules=fixModules,
+        discardUnconstrainedTrackPar=discardUnconstrainedTrackPar,
+        outFileInternalSolving=outFileInternalSolving,
+        outFileDecomposition=outFileDecomposition,
     )
     s.addAlgorithm(sandbox)
     return s
@@ -117,6 +117,7 @@ def addSolverFromMille(
     fixModules: set,
     logLevel: acts.logging.Level = acts.logging.INFO,
     milleInput: str = "MilleBinary.root",
+    outFile: str = "ActsAlignmentViaMille.txt",
 ):
 
     solver = ActsSolverFromMille(
@@ -125,6 +126,7 @@ def addSolverFromMille(
         trackingGeometry=trackingGeometry,
         magneticField=magField,
         fixModules=fixModules,
+        outFile=outFile,
     )
     s.addAlgorithm(solver)
     return s
@@ -158,7 +160,7 @@ outputDir = args.output
 os.makedirs(outputDir, exist_ok=True)
 
 # Instantiate the telescope detector - with alignment enabled
-detector = getTelescopeDetector(misaligned=True)
+detector = getTelescopeDetector()
 trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()
 
@@ -179,13 +181,18 @@ alignDecoConfig.nominalStore = GeoIdAlignmentStore(
     )
 )
 alignDecoConfig.iovGenerators = [((0, 10000000), leShift)]
+alignDecoConfig.target = AlignmentDecorator.Target.eSim
 alignDeco = AlignmentDecorator(alignDecoConfig, acts.logging.WARNING)
 contextDecorators = [alignDeco]
 
 # decide on at least on detector module to fix in place
 # as a reference for the alignment.
 # By default, fix the innermost layer.
-fixModules = {acts.GeometryIdentifier(layer=2, volume=1, sensitive=1)}
+fixModules = {
+    acts.GeometryIdentifier(layer=2, volume=1, sensitive=1),
+    acts.GeometryIdentifier(layer=10, volume=1, sensitive=1),
+    acts.GeometryIdentifier(layer=18, volume=1, sensitive=1),
+}
 
 
 # More Boilerplate code - for setting up the sequence
@@ -198,8 +205,8 @@ s = Sequencer(
     outputDir=str(outputDir),
 )
 
-# Add a context with the alignment shift - sim, digi and
-# initial reco will "see" the distorted detector
+# Add a context with the alignment shift - sim and digi will "see" the
+# distorted detector, reconstruction will not
 s.addContextDecorator(alignDeco)
 
 # Run particle gun and fire some muons at our telescope

@@ -129,6 +129,9 @@ AdaptiveMultiVertexFinderAlgorithm::makeVertexSeeder() const {
     trkDensityCfg.spatialBinExtent = m_cfg.spatialBinExtent;
     // Bin extent in t-direction
     trkDensityCfg.temporalBinExtent = m_cfg.temporalBinExtent;
+    // (min,max) z and t windows for filling the density map
+    trkDensityCfg.spatialWindow = m_cfg.spatialWindow;
+    trkDensityCfg.temporalWindow = m_cfg.temporalWindow;
     trkDensityCfg.useTime = m_cfg.useTime;
     Acts::AdaptiveGridTrackDensity trkDensity(trkDensityCfg);
 
@@ -269,7 +272,7 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
   }
 
   // Default vertexing options, this is where e.g. a constraint could be set
-  Options finderOpts(ctx.geoContext, ctx.magFieldContext);
+  Options finderOpts(ctx.recoGeoContext, ctx.magFieldContext);
 
   VertexContainer vertices;
 

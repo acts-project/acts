@@ -213,15 +213,6 @@ class MultiComponentBoundTrackParameters {
   MultiComponentBoundTrackParameters& operator=(
       MultiComponentBoundTrackParameters&&) = default;
 
-  /// Comply with bound convertible, in this case return a copy
-  /// @return Copy of this multi-component track parameters
-  [[deprecated(
-      "You already have a universal bound track parameter at hand. You can "
-      "drop `toBound()`.")]]
-  MultiComponentBoundTrackParameters toBound() const {
-    return *this;
-  }
-
   /// Size of the multi-component parameters
   /// @return Number of components in the multi-component parameters
   std::size_t size() const { return m_weights.size(); }

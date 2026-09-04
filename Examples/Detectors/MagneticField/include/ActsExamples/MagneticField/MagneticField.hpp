@@ -9,20 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/MagneticField/NullBField.hpp"
-#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
-#include "ActsExamples/MagneticField/ScalableBField.hpp"
-
-#include <memory>
-#include <variant>
-#include <vector>
 
 namespace ActsExamples::detail {
 

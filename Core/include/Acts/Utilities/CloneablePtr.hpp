@@ -87,11 +87,10 @@ class CloneablePtr {
     requires(std::is_copy_constructible_v<T1> && std::is_base_of_v<T, T1>)
   {
     m_ptr = std::move(ptr);
-    if constexpr (!std::is_same_v<const T, const T1>) {
-      m_cloner = [](const T& obj) {
-        return std::make_unique<T1>(static_cast<const T1&>(obj));
-      };
-    }
+    m_cloner = [](const T& obj) {
+      return std::make_unique<T1>(static_cast<const T1&>(obj));
+    };
+
     return *this;
   }
 

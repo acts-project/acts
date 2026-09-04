@@ -9,6 +9,8 @@ acts_add_library(
     src/EDM4hepParticleOutputConverter.cpp
     src/EDM4hepSimHitOutputConverter.cpp
     src/EDM4hepUtil.cpp
+    src/PodioTrackOutputConverter.cpp
+    src/DD4hepPodioConversionHelper.cpp
 )
 
 acts_compile_headers(ExamplesIoEDM4hep GLOB include/**/*.hpp)

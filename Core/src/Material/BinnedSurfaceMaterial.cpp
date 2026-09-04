@@ -9,53 +9,104 @@
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <ostream>
 #include <utility>
 #include <vector>
 
-Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
-    const BinUtility& binUtility, MaterialSlabVector fullProperties,
-    double splitFactor, Acts::MappingType mappingType)
+namespace Acts {
+
+BinnedSurfaceMaterial::BinnedSurfaceMaterial(const BinUtility& binUtility,
+                                             MaterialSlabVector materialVector,
+                                             double splitFactor,
+                                             MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType), m_binUtility(binUtility) {
-  // fill the material with deep copy
-  m_fullMaterial.push_back(std::move(fullProperties));
+  if (binUtility.dimensions() != 1) {
+    throw std::invalid_argument(
+        "BinnedSurfaceMaterial with material vector only supports 1D binning.");
+  }
+  if (binUtility.binningData()[0].bins() != materialVector.size()) {
+    throw std::invalid_argument(
+        "BinnedSurfaceMaterial: number of material bins does not match the "
+        "number of provided material slabs.");
+  }
+  m_fullMaterial.push_back(std::move(materialVector));
 }
 
-Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
-    const BinUtility& binUtility, MaterialSlabMatrix fullProperties,
-    double splitFactor, Acts::MappingType mappingType)
+BinnedSurfaceMaterial::BinnedSurfaceMaterial(const BinUtility& binUtility,
+                                             MaterialSlabMatrix materialMatrix,
+                                             double splitFactor,
+                                             MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType),
       m_binUtility(binUtility),
-      m_fullMaterial(std::move(fullProperties)) {}
+      m_fullMaterial(std::move(materialMatrix)) {
+  if (binUtility.dimensions() != 1 && binUtility.dimensions() != 2) {
+    throw std::invalid_argument(
+        "BinnedSurfaceMaterial with material matrix only supports 1D and 2D "
+        "binning.");
+  }
+  if (binUtility.dimensions() == 1) {
+    if (m_fullMaterial.size() != 1) {
+      throw std::invalid_argument(
+          "BinnedSurfaceMaterial with material matrix only supports 1D binning "
+          "if the material matrix has exactly one row.");
+    }
+    if (binUtility.binningData()[0].bins() != m_fullMaterial[0].size()) {
+      throw std::invalid_argument(
+          "BinnedSurfaceMaterial: number of material bins does not match the "
+          "number of provided material slabs.");
+    }
+  } else if (binUtility.dimensions() == 2) {
+    if (binUtility.binningData()[1].bins() != m_fullMaterial.size()) {
+      throw std::invalid_argument(
+          "BinnedSurfaceMaterial: number of material bins in the first "
+          "dimension does not match the number of provided material rows.");
+    }
+    for (const auto& materialVector : m_fullMaterial) {
+      if (binUtility.binningData()[0].bins() != materialVector.size()) {
+        throw std::invalid_argument(
+            "BinnedSurfaceMaterial: number of material bins in the second "
+            "dimension does not match the number of provided material slabs in "
+            "each row.");
+      }
+    }
+  }
+}
 
-Acts::BinnedSurfaceMaterial& Acts::BinnedSurfaceMaterial::scale(double factor) {
+BinnedSurfaceMaterial& BinnedSurfaceMaterial::scale(double factor) {
   for (auto& materialVector : m_fullMaterial) {
     for (auto& materialBin : materialVector) {
       materialBin.scaleThickness(factor);
     }
   }
-  return (*this);
+  return *this;
 }
 
-const Acts::MaterialSlab& Acts::BinnedSurfaceMaterial::materialSlab(
+const MaterialSlab& BinnedSurfaceMaterial::materialSlab(
     const Vector2& lp) const {
-  // the first bin
-  std::size_t ibin0 = m_binUtility.bin(lp, 0);
-  std::size_t ibin1 = m_binUtility.max(1) != 0u ? m_binUtility.bin(lp, 1) : 0;
+  const std::size_t ibin0 = m_binUtility.bin(lp[0], 0);
+  const std::size_t ibin1 = m_binUtility.bin(lp[1], 1);
   return m_fullMaterial[ibin1][ibin0];
 }
 
-const Acts::MaterialSlab& Acts::BinnedSurfaceMaterial::materialSlab(
-    const Acts::Vector3& gp) const {
-  // the first bin
-  std::size_t ibin0 = m_binUtility.bin(gp, 0);
-  std::size_t ibin1 = m_binUtility.max(1) != 0u ? m_binUtility.bin(gp, 1) : 0;
+std::vector<AxisDirection> BinnedSurfaceMaterial::localAxisDirections() const {
+  std::vector<AxisDirection> axisDirs;
+  for (const auto& bd : m_binUtility.binningData()) {
+    axisDirs.push_back(bd.binvalue);
+  }
+  return axisDirs;
+}
+
+const MaterialSlab& BinnedSurfaceMaterial::materialSlab(
+    const Vector3& gp) const {
+  const std::size_t ibin0 = m_binUtility.bin(gp, 0);
+  const std::size_t ibin1 = m_binUtility.bin(gp, 1);
   return m_fullMaterial[ibin1][ibin0];
 }
 
-std::ostream& Acts::BinnedSurfaceMaterial::toStream(std::ostream& sl) const {
-  sl << "Acts::BinnedSurfaceMaterial : " << std::endl;
+std::ostream& BinnedSurfaceMaterial::toStream(std::ostream& sl) const {
+  sl << "BinnedSurfaceMaterial : " << std::endl;
   sl << "   - Number of Material bins [0,1] : " << m_binUtility.max(0) + 1
      << " / " << m_binUtility.max(1) + 1 << std::endl;
   sl << "   - Parse full update material    : " << std::endl;  //
@@ -73,3 +124,5 @@ std::ostream& Acts::BinnedSurfaceMaterial::toStream(std::ostream& sl) const {
   sl << "  - BinUtility: " << m_binUtility << std::endl;
   return sl;
 }
+
+}  // namespace Acts

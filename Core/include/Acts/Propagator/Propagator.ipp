@@ -20,7 +20,7 @@
 
 namespace Acts {
 
-template <StepperConcept S, typename N>
+template <StepperConcept S, NavigatorConcept N>
 template <typename propagator_state_t>
 Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
   ACTS_VERBOSE("Entering propagation.");
@@ -28,7 +28,14 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
   state.stage = PropagatorStage::prePropagation;
 
   // Pre-Propagation: call to the actor list, abort condition check
-  state.options.actorList.act(state, m_stepper, m_navigator, logger());
+  if (Result<void> preActResult =
+          state.options.actorList.act(state, m_stepper, m_navigator, logger());
+      !preActResult.ok()) {
+    ACTS_DEBUG("Pre-propagation actor call failed: "
+               << preActResult.error() << ": "
+               << preActResult.error().message());
+    return preActResult.error();
+  }
 
   if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
                                          logger())) {
@@ -202,7 +209,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
   return Result<void>::success();
 }
 
-template <StepperConcept S, typename N>
+template <StepperConcept S, NavigatorConcept N>
 template <typename propagator_options_t, typename path_aborter_t>
 auto Propagator<S, N>::propagate(const BoundParameters& start,
                                  const propagator_options_t& options,
@@ -224,7 +231,7 @@ auto Propagator<S, N>::propagate(const BoundParameters& start,
                     createFinalParameters, nullptr);
 }
 
-template <StepperConcept S, typename N>
+template <StepperConcept S, NavigatorConcept N>
 template <typename propagator_options_t, typename target_aborter_t,
           typename path_aborter_t>
 auto Propagator<S, N>::propagate(const BoundParameters& start,
@@ -249,7 +256,7 @@ auto Propagator<S, N>::propagate(const BoundParameters& start,
                     &target);
 }
 
-template <StepperConcept S, typename N>
+template <StepperConcept S, NavigatorConcept N>
 template <typename propagator_options_t, typename path_aborter_t>
 auto Propagator<S, N>::makeState(const propagator_options_t& options) const {
   // Expand the actor list with a path aborter
@@ -270,7 +277,7 @@ auto Propagator<S, N>::makeState(const propagator_options_t& options) const {
   return state;
 }
 
-template <StepperConcept S, typename N>
+template <StepperConcept S, NavigatorConcept N>
 template <typename propagator_options_t, typename target_aborter_t,
           typename path_aborter_t>
 auto Propagator<S, N>::makeState(const Surface& target,
@@ -296,7 +303,7 @@ auto Propagator<S, N>::makeState(const Surface& target,
   return state;
 }
 
-template <StepperConcept S, typename N>
+template <StepperConcept S, NavigatorConcept N>
 template <typename propagator_state_t, typename path_aborter_t>
 Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
                                           const BoundParameters& start) const {
@@ -326,7 +333,7 @@ Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
   return Result<void>::success();
 }
 
-template <StepperConcept S, typename N>
+template <StepperConcept S, NavigatorConcept N>
 template <typename propagator_state_t, typename propagator_options_t>
 auto Propagator<S, N>::makeResult(propagator_state_t state,
                                   Result<void> propagationResult,
@@ -380,7 +387,7 @@ auto Propagator<S, N>::makeResult(propagator_state_t state,
   return Result<ThisResultType>::success(std::move(result));
 }
 
-template <StepperConcept S, typename N>
+template <StepperConcept S, NavigatorConcept N>
 template <typename propagator_state_t, typename propagator_result_t>
 void Propagator<S, N>::moveStateToResult(propagator_state_t& state,
                                          propagator_result_t& result) const {
@@ -407,9 +414,11 @@ detail::BasePropagatorHelper<derived_t>::propagateToSurface(
   Result<DerivedResult> res =
       Result<DerivedResult>::failure(PropagatorError::Failure);
 
-  // Due to the geometry of the perigee surface the overstepping tolerance
-  // is sometimes not met.
-  if (target.type() == Surface::SurfaceType::Perigee) {
+  // Due to the geometry of the perigee and point surfaces (their intersection
+  // is a point of closest approach, which can sit behind the current step) the
+  // overstepping tolerance is sometimes not met.
+  if (target.type() == Surface::SurfaceType::Perigee ||
+      target.type() == Surface::SurfaceType::Point) {
     res = static_cast<const derived_t*>(this)
               ->template propagate<DerivedOptions, ForcedSurfaceReached,
                                    PathLimitReached>(start, target,

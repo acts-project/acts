@@ -77,32 +77,38 @@ class SympyStepper final {
     State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn)
         : options(optionsIn), fieldCache(std::move(fieldCacheIn)) {}
 
+    // Declaration order matters: members used by `step()` are kept in one
+    // contiguous run of cache lines, the rest come last.
+
     /// Configuration options for the stepper
     Options options;
 
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
 
-    /// Particle hypothesis
-    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
+    /// The propagation derivative
+    FreeVector derivative = FreeVector::Zero();
+
+    /// Bound-to-free jacobian from the last reference surface, transported
+    /// along with the track.
+    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
 
     /// Covariance matrix (and indicator)
     /// associated with the initial error on track parameters
     bool covTransport = false;
-    /// Covariance matrix for error propagation
-    Covariance cov = Covariance::Zero();
 
-    /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
+    /// Particle hypothesis
+    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
-    /// Jacobian from local to the global frame
-    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
+    /// Adaptive step size of the runge-kutta integration
+    ConstrainedStep stepSize;
 
-    /// Pure transport jacobian part from runge kutta integration
-    FreeMatrix jacTransport = FreeMatrix::Identity();
+    /// Last performed step (for overstep limit calculation)
+    double previousStepSize = 0.;
 
-    /// The propagation derivative
-    FreeVector derivative = FreeVector::Zero();
+    /// Magnetic field at the current position, reused as the next step's
+    /// first sample. Reset whenever the parameters are set from outside.
+    std::optional<Vector3> field;
 
     /// Accumulated path length state
     double pathAccumulated = 0.;
@@ -113,22 +119,24 @@ class SympyStepper final {
     /// Totoal number of attempted steps
     std::size_t nStepTrials = 0;
 
-    /// Adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize;
+    /// Statistics of the stepper
+    StepperStatistics statistics;
 
-    /// Last performed step (for overstep limit calculation)
-    double previousStepSize = 0.;
+    /// Accumulator for material effects along the trajectory
+    detail::MaterialEffectsAccumulator materialEffectsAccumulator;
 
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
     /// See step() code for details.
     MagneticFieldProvider::Cache fieldCache;
 
-    /// Statistics of the stepper
-    StepperStatistics statistics;
+    // Only used when transporting to a surface:
 
-    /// Accumulator for material effects along the trajectory
-    detail::MaterialEffectsAccumulator materialEffectsAccumulator;
+    /// Covariance matrix for error propagation
+    Covariance cov = Covariance::Zero();
+
+    /// The full jacobian of the transport entire transport
+    Jacobian jacobian = Jacobian::Identity();
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
@@ -411,12 +419,6 @@ class SympyStepper final {
   ///       propagation.
   Result<double> step(State& state, Direction propDir,
                       const IVolumeMaterial* material) const;
-
-  /// Method that reset the Jacobian to the Identity for when no bound state are
-  /// available
-  ///
-  /// @param [in,out] state State of the stepper
-  void setIdentityJacobian(State& state) const;
 
  protected:
   /// Magnetic field inside of the detector

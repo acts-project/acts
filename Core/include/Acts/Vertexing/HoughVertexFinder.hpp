@@ -10,8 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Axis.hpp"
-#include "Acts/Utilities/Grid.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -20,8 +19,6 @@
 
 namespace Acts {
 
-/// @class HoughVertexFinder
-///
 /// @brief Implements the vertex finder based on the space points using Hough transform
 /// For more information, see arXiv:2410.14494
 /// 0. Assumes there is only 1 vertex and that it has a high multiplicity
@@ -33,7 +30,6 @@ namespace Acts {
 /// position
 /// 5. Repeats 2-4 if necessary
 ///
-template <typename space_point_t>
 class HoughVertexFinder {
  public:
   /// Configuration struct
@@ -96,10 +92,6 @@ class HoughVertexFinder {
                            0. * UnitConstants::mm};
   };
 
-  /// Const access to the config
-  /// @return Const reference to the configuration object
-  const Config& config() const { return m_cfg; }
-
   /// @brief Constructor
   /// @param cfg Configuration object
   /// @param lgr Logging instance
@@ -108,18 +100,15 @@ class HoughVertexFinder {
       std::unique_ptr<const Logger> lgr = getDefaultLogger("HoughVertexFinder",
                                                            Logging::INFO));
 
-  /// Type alias for count values in Hough histogram bins
-  using HoughCount_t = std::uint16_t;
-  /// Type alias for equidistant axis used in Hough transform
-  using HoughAxis = Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
-  /// Type alias for 2D histogram used in Hough transform
-  using HoughHist = Grid<HoughCount_t, HoughAxis, HoughAxis>;
+  /// Const access to the config
+  /// @return Const reference to the configuration object
+  const Config& config() const { return m_cfg; }
 
   /// @brief Finds the vertex based on the provided space points
   /// @param spacePoints Vector of the input space points; they do not need to be sorted anyhow
   /// @return Position of the vertex
   Acts::Result<Acts::Vector3> find(
-      const std::vector<space_point_t>& spacePoints) const;
+      const SpacePointContainer& spacePoints) const;
 
  private:
   /// Configuration instance
@@ -130,15 +119,14 @@ class HoughVertexFinder {
   /// @param vtxOld Previous position of the vertex
   /// @param rangeZ Range in along Z around vtxOld_z to consider when looking for the new vertex
   /// @param numZBins Number of bins along Z axis
-  /// @param minCotTheta Minimum theta to consider for the space point
-  /// @param maxCotTheta Maximum theta to consider for the space point
+  /// @param minCotTheta Minimum theta to consider for the space points
+  /// @param maxCotTheta Maximum theta to consider for the space points
   /// @param numCotThetaBins Number of bins along cot(theta) axis
   /// @return Position of the vertex in (X,Y,Z)
   Acts::Result<Acts::Vector3> findHoughVertex(
-      const std::vector<space_point_t>& spacePoints,
-      const Acts::Vector3& vtxOld, double rangeZ, std::uint32_t numZBins,
-      double minCotTheta, double maxCotTheta,
-      std::uint32_t numCotThetaBins) const;
+      const SpacePointContainer& spacePoints, const Acts::Vector3& vtxOld,
+      double rangeZ, std::uint32_t numZBins, double minCotTheta,
+      double maxCotTheta, std::uint32_t numCotThetaBins) const;
 
   /// @brief Finds the peak in the Z axis projection of the Hough space
   /// @param houghZProjection Hough space projection after the cleaning procedure
@@ -156,5 +144,3 @@ class HoughVertexFinder {
 };
 
 }  // namespace Acts
-
-#include "HoughVertexFinder.ipp"

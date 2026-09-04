@@ -123,6 +123,13 @@ class Particle {
     m_particleId = barcode;
     return *this;
   }
+  /// Set the particle ID.
+  /// @param idx Original particle index (to match HepMC file)
+  /// @return Reference to this particle in HepMC file
+  Particle &setOrigParticleIdx(std::uint32_t idx) {
+    m_origParticleIdx = idx;
+    return *this;
+  }
   /// Set the space-time position four-vector.
   /// @param pos4 Four-vector containing spatial position and time
   /// @return Reference to this particle for method chaining
@@ -211,6 +218,9 @@ class Particle {
   /// Particle identifier within an event.
   /// @return The unique particle identifier barcode
   Barcode particleId() const { return m_particleId; }
+  /// Original particle index (to match HepMC)
+  /// @return The particle index
+  std::uint32_t origParticleIdx() const { return m_origParticleIdx; }
   /// Which type of process generated this particle.
   /// @return The process type that generated this particle
   GenerationProcess process() const { return m_process; }
@@ -237,7 +247,9 @@ class Particle {
   Acts::ParticleHypothesis hypothesis() const {
     return Acts::ParticleHypothesis(
         absolutePdg(), static_cast<float>(mass()),
-        Acts::ChargeHypothesis{static_cast<float>(absoluteCharge())});
+        Acts::ChargeHypothesis{static_cast<float>(absoluteCharge())},
+        charge() != 0 ? std::nullopt
+                      : std::optional<double>(absoluteMomentum()));
   }
   /// Particl qOverP.
   /// @return The charge over momentum ratio
@@ -387,6 +399,23 @@ class Particle {
   /// @return The number of hits associated with this particle
   std::uint32_t numberOfHits() const { return m_numberOfHits; }
 
+  /// Set the parent particle id.
+  ///
+  /// A default-constructed @c Barcode means "unknown parent". Populated by
+  /// input converters that have access to parent relationships (e.g. EDM4hep);
+  /// left at the default by simulation engines that don't track it.
+  ///
+  /// @param parentId Barcode identifying the parent particle
+  /// @return Reference to this particle for method chaining
+  Particle &setParentParticleId(Barcode parentId) {
+    m_parentParticleId = parentId;
+    return *this;
+  }
+
+  /// Parent particle id, or default-constructed @c Barcode if unknown.
+  /// @return The parent particle barcode
+  Barcode parentParticleId() const { return m_parentParticleId; }
+
   /// Set the outcome of particle.
   ///
   /// @param outcome outcome code
@@ -404,6 +433,8 @@ class Particle {
   // identity, i.e. things that do not change over the particle lifetime.
   /// Particle identifier within the event.
   Barcode m_particleId;
+  /// particle index to match the HepMC file
+  std::uint32_t m_origParticleIdx = 0;
   /// Process type specifier.
   GenerationProcess m_process = GenerationProcess::eUndefined;
   /// PDG particle number.
@@ -422,6 +453,8 @@ class Particle {
   double m_pathInL0 = 0;
   /// number of hits
   std::uint32_t m_numberOfHits = 0;
+  /// parent particle id (default-constructed = unknown)
+  Barcode m_parentParticleId{};
   /// reference surface
   const Acts::Surface *m_referenceSurface{nullptr};
   /// outcome

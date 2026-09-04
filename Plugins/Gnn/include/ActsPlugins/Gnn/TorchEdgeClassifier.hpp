@@ -17,10 +17,6 @@
 namespace torch::jit {
 class Module;
 }
-
-namespace c10 {
-enum class DeviceType : std::int8_t;
-}
 /// @endcond
 
 namespace ActsPlugins {
@@ -42,8 +38,8 @@ class TorchEdgeClassifier final : public EdgeClassificationBase {
     int nChunks = 1;  // NOTE for GNN use 1
     /// Whether to treat graph as undirected
     bool undirected = false;
-    /// CUDA device ID to use for inference
-    int deviceID = 0;
+    /// Device to run inference on
+    Device device = Device::Cuda();
     /// Whether to use edge features
     bool useEdgeFeatures = false;
   };

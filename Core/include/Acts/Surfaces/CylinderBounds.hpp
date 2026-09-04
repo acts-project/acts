@@ -66,12 +66,13 @@ class CylinderBounds : public SurfaceBounds {
   /// @param halfPhi The half opening angle
   /// @param avgPhi (optional) The phi value from which the opening angle spans
   /// @param bevelMinZ (optional) The bevel on the negative z side
-  /// @param bevelMaxZ (optional) The bevel on the positive z sid The bevel on the positive z side
+  /// @param bevelMaxZ (optional) The bevel on the positive z side
   CylinderBounds(double r, double halfZ, double halfPhi = std::numbers::pi,
                  double avgPhi = 0., double bevelMinZ = 0.,
                  double bevelMaxZ = 0.) noexcept(false)
       : m_values({r, halfZ, halfPhi, avgPhi, bevelMinZ, bevelMaxZ}),
-        m_closed(std::abs(halfPhi - std::numbers::pi) < s_epsilon) {
+        m_closed(std::abs(halfPhi - std::numbers::pi) <
+                 s_fullAzimuthTolerance) {
     checkConsistency();
   }
 
@@ -81,7 +82,7 @@ class CylinderBounds : public SurfaceBounds {
       false)
       : m_values(values),
         m_closed(std::abs(values[eHalfPhiSector] - std::numbers::pi) <
-                 s_epsilon) {
+                 s_fullAzimuthTolerance) {
     checkConsistency();
   }
 

@@ -11,3 +11,5 @@ numpy
 filelock
 mplhep
 hist
+pyarrow
+scipy

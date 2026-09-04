@@ -62,15 +62,17 @@ void checkParameters(const BoundTrackParameters& params, double l0, double l1,
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundTheta>(), theta, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundQOverP>(), qOverP, eps, eps);
   // convenience accessors
+  BOOST_CHECK_EQUAL(params.charge(), q);
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
-                       eps);
-  CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
-  BOOST_CHECK_EQUAL(params.charge(), q);
+  if (q != 0) {
+    CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
+    CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
+                         eps);
+    CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
+  }
 
   // reflection
   BoundTrackParameters reflectedParams = params;
@@ -104,7 +106,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     vector[eBoundTime] = time;
     vector[eBoundPhi] = phi;
     vector[eBoundTheta] = theta;
-    vector[eBoundQOverP] = 1 / p;
+    vector[eBoundQOverP] = 0;
     BoundTrackParameters params(surface, vector, std::nullopt,
                                 ParticleHypothesis::pion0());
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
@@ -183,7 +185,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // neutral parameters from global information
   {
     auto params =
-        BoundTrackParameters::create(geoCtx, surface, pos4, dir, 1 / p,
+        BoundTrackParameters::create(geoCtx, surface, pos4, dir, 0,
                                      std::nullopt, ParticleHypothesis::pion0())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
@@ -210,7 +212,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // neutral any parameters from global information
   {
     auto params =
-        BoundTrackParameters::create(geoCtx, surface, pos4, dir, 1 / p,
+        BoundTrackParameters::create(geoCtx, surface, pos4, dir, 0,
                                      std::nullopt, ParticleHypothesis::pion0())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);

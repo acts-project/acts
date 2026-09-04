@@ -95,6 +95,12 @@ class DiamondVolumeBounds : public VolumeBounds {
   DiamondVolumeBounds(double x1, double x2, double x3, double y1, double y2,
                       double halez) noexcept(false);
 
+  /// Constructor - from a vector of bound values
+  ///
+  /// @param values The bound values (eSize elements)
+  explicit DiamondVolumeBounds(
+      const std::array<double, eSize>& values) noexcept(false);
+
   /// Copy constructor
   /// @param other The other DiamondVolumeBounds to copy from
   DiamondVolumeBounds(const DiamondVolumeBounds& other) = default;

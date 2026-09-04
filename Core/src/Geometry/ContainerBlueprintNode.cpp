@@ -12,8 +12,14 @@
 #include "Acts/Geometry/CuboidVolumeStack.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
+#include "Acts/Geometry/Portal.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 
-namespace Acts::Experimental {
+#include <sstream>
+#include <string>
+#include <vector>
+
+namespace Acts {
 
 ContainerBlueprintNode::ContainerBlueprintNode(
     const std::string& name, AxisDirection axis,
@@ -35,9 +41,9 @@ const std::string& ContainerBlueprintNode::name() const {
   return m_name;
 }
 
-Volume& ContainerBlueprintNode::build(
-    const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
-    const Logger& logger) {
+Volume& ContainerBlueprintNode::build(const BlueprintOptions& options,
+                                      const GeometryContext& gctx,
+                                      const Logger& logger) {
   ACTS_DEBUG(prefix() << "container build (dir=" << m_direction << ")");
 
   if (m_stack != nullptr) {
@@ -63,9 +69,10 @@ Volume& ContainerBlueprintNode::build(
   return *m_stack;
 }
 
-void ContainerBlueprintNode::finalize(
-    const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
-    TrackingVolume& parent, const Logger& logger) {
+void ContainerBlueprintNode::finalize(const BlueprintOptions& options,
+                                      const GeometryContext& gctx,
+                                      TrackingVolume& parent,
+                                      const Logger& logger) {
   ACTS_DEBUG(prefix() << "Finalizing container");
 
   if (m_stack == nullptr) {
@@ -163,7 +170,7 @@ void ContainerBlueprintNode::addToGraphviz(std::ostream& os) const {
 
 template <typename BaseShell, typename SingleShell>
 std::vector<BaseShell*> ContainerBlueprintNode::collectChildShells(
-    const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
+    const BlueprintOptions& options, const GeometryContext& gctx,
     VolumeStack& stack, const std::string& prefix, const Logger& logger) {
   std::vector<BaseShell*> shells;
   ACTS_DEBUG(prefix << "Have " << m_childVolumes.size() << " child volumes");
@@ -211,7 +218,7 @@ std::vector<BaseShell*> ContainerBlueprintNode::collectChildShells(
 
 template <typename BaseShell, typename SingleShell, typename ShellStack>
 PortalShellBase& ContainerBlueprintNode::connectImpl(
-    const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
+    const BlueprintOptions& options, const GeometryContext& gctx,
     VolumeStack* stack, const std::string& prefix, const Logger& logger) {
   ACTS_DEBUG(prefix << "Container connect");
   if (stack == nullptr) {
@@ -240,10 +247,56 @@ PortalShellBase& ContainerBlueprintNode::connectImpl(
                    shells, [](const auto* shell) { return shell->isValid(); }),
                "Invalid shell");
 
+  // Detect (with a node-scoped message) if material has been designated on a
+  // portal face that will be *merged* during stacking. Such material cannot
+  // survive the merge and would otherwise trigger a deep, hard-to-trace failure
+  // inside the stack shell construction. Faces that are *fused* (e.g. the
+  // boundary between two stacked volumes) legitimately carry material and are
+  // not flagged here.  With only a single child there is no actual merge, so
+  // the check is skipped entirely to avoid false positives.
+  const PortalMaterialMergePolicy materialPolicy =
+      options.keepGoingOnMaterialMergeFailure
+          ? PortalMaterialMergePolicy::eDiscardAndMark
+          : PortalMaterialMergePolicy::eThrow;
+
+  // With a single child there is nothing to merge, so the "merged" faces are
+  // actually kept as-is. Skip the clash check to avoid false positives.
+  std::vector<std::string> materialClashes;
+  for (auto face : shells.size() > 1
+                       ? ShellStack::mergedFaces(direction())
+                       : std::vector<typename ShellStack::Face>{}) {
+    for (auto* shell : shells) {
+      auto portal = shell->portal(face);
+      if (portal != nullptr && portal->surface().hasMaterial()) {
+        std::stringstream ss;
+        ss << shell->label() << " carries material on face " << face;
+        materialClashes.push_back(ss.str());
+      }
+    }
+  }
+  if (!materialClashes.empty()) {
+    std::stringstream ss;
+    ss << prefix << "Material is designated on portal faces that are merged "
+       << "when stacking child volumes in " << direction() << " direction.";
+    for (const auto& clash : materialClashes) {
+      ss << "\n  - " << clash;
+    }
+    if (materialPolicy == PortalMaterialMergePolicy::eThrow) {
+      ss << "\nMove the material designation to a face that is not merged "
+            "(e.g. "
+            "the enclosing container's face).";
+      ACTS_ERROR(ss.str());
+      throw PortalMergingException{ss.str()};
+    }
+    ss << "\nContinuing anyway: this material will be discarded and the merged "
+          "surface tagged with a MergedMaterialMarker.";
+    ACTS_WARNING(ss.str());
+  }
+
   ACTS_DEBUG(prefix << "Producing merged stack shell in " << direction()
                     << " direction from " << shells.size() << " shells");
   m_shell = std::make_unique<ShellStack>(gctx, std::move(shells), direction(),
-                                         logger);
+                                         logger, materialPolicy);
 
   assert(m_shell != nullptr && "No shell was built at the end of connect");
   assert(m_shell->isValid() && "Shell is not valid at the end of connect");
@@ -251,7 +304,7 @@ PortalShellBase& ContainerBlueprintNode::connectImpl(
 }
 
 PortalShellBase& CylinderContainerBlueprintNode::connect(
-    const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
+    const BlueprintOptions& options, const GeometryContext& gctx,
     const Logger& logger) {
   return connectImpl<CylinderPortalShell, SingleCylinderPortalShell,
                      CylinderStackPortalShell>(options, gctx, m_stack.get(),
@@ -271,7 +324,7 @@ std::unique_ptr<VolumeStack> CylinderContainerBlueprintNode::makeStack(
 }
 
 PortalShellBase& CuboidContainerBlueprintNode::connect(
-    const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
+    const BlueprintOptions& options, const GeometryContext& gctx,
     const Logger& logger) {
   return connectImpl<CuboidPortalShell, SingleCuboidPortalShell,
                      CuboidStackPortalShell>(options, gctx, m_stack.get(),
@@ -290,4 +343,4 @@ std::unique_ptr<VolumeStack> CuboidContainerBlueprintNode::makeStack(
                                              m_resizeStrategies.first, logger);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

@@ -49,8 +49,8 @@ class ProtoTracksToTracks final : public IAlgorithm {
   Config m_cfg;
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                           "InputMeasurements"};
+  ReadDataHandle<MeasurementSubset> m_inputMeasurements{this,
+                                                        "InputMeasurements"};
   ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
       this, "InputTrackParameters"};
   ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,

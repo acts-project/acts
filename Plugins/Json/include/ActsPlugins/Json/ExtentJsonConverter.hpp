@@ -18,6 +18,16 @@ namespace Acts {
 /// @addtogroup json_plugin
 /// @{
 
+/// Convert ExtentEnvelope to JSON
+/// @param j Destination JSON object
+/// @param e Source ExtentEnvelope to convert
+void to_json(nlohmann::json& j, const ExtentEnvelope& e);
+
+/// Convert JSON to ExtentEnvelope
+/// @param j Source JSON object
+/// @param e Destination ExtentEnvelope to populate
+void from_json(const nlohmann::json& j, ExtentEnvelope& e);
+
 /// Convert Extent to JSON
 /// @param j Destination JSON object
 /// @param e Source Extent to convert

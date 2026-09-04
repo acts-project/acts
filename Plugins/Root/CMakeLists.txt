@@ -1,5 +1,6 @@
 acts_add_library(
     PluginRoot
+    src/BlueprintBuilder.cpp
     src/RootMaterialDecorator.cpp
     src/RootMaterialMapIo.cpp
     src/RootMaterialTrackIo.cpp
@@ -13,6 +14,7 @@ acts_add_library(
     src/TGeoPrimitivesHelper.cpp
     src/TGeoSurfaceConverter.cpp
     src/HistogramConverter.cpp
+    src/RootHistogramFit.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 

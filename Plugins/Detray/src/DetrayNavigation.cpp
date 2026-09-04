@@ -14,7 +14,6 @@
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
@@ -154,7 +153,7 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
     const auto dj = mapj(j);
 
     const std::span<const Acts::Surface* const> surfaces =
-        surfaceArray.at({i, j}, 0);
+        surfaceArray.neighbors({i, j}, 0);
 
     std::vector<std::size_t> surfaceIndices;
 
@@ -236,7 +235,6 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
 NOOP_CONVERTER_IMPL(TryAllNavigationPolicy)
 NOOP_CONVERTER_IMPL(MultiNavigationPolicy)
 NOOP_CONVERTER_IMPL(CylinderNavigationPolicy)
-NOOP_CONVERTER_IMPL_FULL(Experimental::MultiLayerNavigationPolicy,
-                         MultiLayerNavigationPolicy)
+NOOP_CONVERTER_IMPL_FULL(MultiLayerNavigationPolicy, MultiLayerNavigationPolicy)
 
 }  // namespace ActsPlugins

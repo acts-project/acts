@@ -6,6 +6,10 @@ on:
     # Runs every Sunday at 1:23 UTC
     - cron: '23 1 * * 0'
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   update-pip-requirements:
     # This action checks all monitored (specified in `folder_list` below) requirements.in
@@ -20,14 +24,20 @@ jobs:
       # This branch will receive updates each time the workflow runs
       # It doesn't matter if it's deleted when merged, it'll be re-created
       BRANCH_NAME: auto-dependency-upgrades
-      PYTHON_VERSION: "3.14"
     steps:
-      - uses: actions/checkout@v6
+      # persisted credentials are required for the push step below
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Lowest Python version the lockfiles must install on, taken from
+      # `requires-python` in pyproject.toml so it is defined in exactly one place
+      - name: Determine supported Python floor
+        id: floor
+        run: echo "version=$(CI/supported_python_versions.py --floor)" >> $GITHUB_OUTPUT
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ steps.floor.outputs.version }}
 
       - name: Install uv
         run: |
@@ -35,6 +45,8 @@ jobs:
           python -m pip install -U uv
 
       - name: Compile all requirements.txt
+        env:
+          PYTHON_VERSION: ${{ steps.floor.outputs.version }}
         run: |
           # Update this list after adding/removing requirements-files
           folder_list=(
@@ -50,16 +62,22 @@ jobs:
             input_in="${folder}/requirements.in"
             input_toml="${folder}/pyproject.toml"
 
-            rm "$output_txt"
-
             if [[ -f "$input_toml" ]]; then
-              uv pip compile --python-version "$PYTHON_VERSION" "$input_toml" -o "$output_txt"
+              input="$input_toml"
             elif [[ -f "$input_in" ]]; then
-              uv pip compile --python-version "$PYTHON_VERSION" "$input_in" -o "$output_txt"
+              input="$input_in"
             else
-              echo "No requirements.in or pyproject.toml in $folder."
+              echo "::error::No requirements.in or pyproject.toml in $folder."
+              exit 1
             fi
 
+            # Drop the old lockfile only once we know we can regenerate it, so a
+            # folder listed without an input file fails loudly instead of losing
+            # its requirements.txt. Removing it first also forces a fresh
+            # resolution rather than uv preferring the currently pinned versions.
+            rm -f "$output_txt"
+
+            uv pip compile --universal --python-version "$PYTHON_VERSION" "$input" -o "$output_txt"
           done
 
       - name: Detect changes
@@ -76,9 +94,10 @@ jobs:
           git config user.email github-actions@github.com
           git add .
           git commit -m "Weekly Update: Regenerate requirements.txt"
-          git push -f origin ${{ github.ref_name }}:$BRANCH_NAME
+          git push -f origin "$REF_NAME:$BRANCH_NAME"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF_NAME: ${{ github.ref_name }}
 
       - name: Open pull request if needed
         if: steps.changes.outputs.count > 0

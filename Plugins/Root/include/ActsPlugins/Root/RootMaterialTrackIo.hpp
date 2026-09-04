@@ -157,6 +157,12 @@ class RootMaterialTrackIo {
     /// step material rho
     std::vector<float> stepMatRho;
     std::vector<float>* stepMatRhoPtr = &stepMatRho;
+    /// step material element
+    std::vector<std::vector<unsigned int>> stepElementZ;
+    std::vector<std::vector<unsigned int>>* stepElementZPtr = &stepElementZ;
+    /// step material fraction of elements
+    std::vector<std::vector<float>> stepFraction;
+    std::vector<std::vector<float>>* stepFractionPtr = &stepFraction;
   };
 
   struct MaterialSurfacePayload {

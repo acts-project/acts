@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
-#include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -30,9 +29,11 @@
 
 using namespace Acts;
 
-void ActsPlugins::RootMaterialMapIo::write(
-    TFile& rFile, const GeometryIdentifier& geoID,
-    const ISurfaceMaterial& surfaceMaterial, const Options& options) {
+namespace ActsPlugins {
+
+void RootMaterialMapIo::write(TFile& rFile, const GeometryIdentifier& geoID,
+                              const ISurfaceMaterial& surfaceMaterial,
+                              const Options& options) {
   /// Change to the file
   rFile.cd();
 
@@ -137,9 +138,9 @@ void ActsPlugins::RootMaterialMapIo::write(
   }
 }
 
-void ActsPlugins::RootMaterialMapIo::write(
-    TFile& rFile, const TrackingGeometryMaterial& detectorMaterial,
-    const Options& options) {
+void RootMaterialMapIo::write(TFile& rFile,
+                              const TrackingGeometryMaterial& detectorMaterial,
+                              const Options& options) {
   const auto& [surfaceMaterials, volumeMaterials] = detectorMaterial;
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
     write(rFile, geoID, *sMaterial, options);
@@ -152,8 +153,8 @@ void ActsPlugins::RootMaterialMapIo::write(
   }
 }
 
-void ActsPlugins::RootMaterialMapIo::connectForWrite(
-    TTree& rTree, MaterialTreePayload& treePayload) {
+void RootMaterialMapIo::connectForWrite(TTree& rTree,
+                                        MaterialTreePayload& treePayload) {
   if (&treePayload == &m_homogenousMaterialTreePayload) {
     rTree.Branch("hGeoId", &treePayload.hGeoId);
   }
@@ -165,8 +166,8 @@ void ActsPlugins::RootMaterialMapIo::connectForWrite(
   rTree.Branch(m_cfg.rhoHistName.c_str(), &treePayload.hRho);
 }
 
-void ActsPlugins::RootMaterialMapIo::connectForRead(
-    TTree& rTree, MaterialTreePayload& treePayload) {
+void RootMaterialMapIo::connectForRead(TTree& rTree,
+                                       MaterialTreePayload& treePayload) {
   if (&treePayload == &m_homogenousMaterialTreePayload) {
     rTree.SetBranchAddress("hGeoId", &treePayload.hGeoId);
   }
@@ -178,8 +179,8 @@ void ActsPlugins::RootMaterialMapIo::connectForRead(
   rTree.SetBranchAddress(m_cfg.rhoHistName.c_str(), &treePayload.hRho);
 }
 
-void ActsPlugins::RootMaterialMapIo::fillMaterialSlab(
-    MaterialTreePayload& payload, const MaterialSlab& materialSlab) {
+void RootMaterialMapIo::fillMaterialSlab(MaterialTreePayload& payload,
+                                         const MaterialSlab& materialSlab) {
   payload.ht = materialSlab.thickness();
   payload.hX0 = materialSlab.material().X0();
   payload.hL0 = materialSlab.material().L0();
@@ -188,7 +189,7 @@ void ActsPlugins::RootMaterialMapIo::fillMaterialSlab(
   payload.hRho = materialSlab.material().massDensity();
 }
 
-void ActsPlugins::RootMaterialMapIo::fillBinnedSurfaceMaterial(
+void RootMaterialMapIo::fillBinnedSurfaceMaterial(
     const BinnedSurfaceMaterial& bsMaterial) {
   auto bins0 = static_cast<int>(bsMaterial.binUtility().bins(0));
   auto bins1 = static_cast<int>(bsMaterial.binUtility().bins(1));
@@ -234,7 +235,7 @@ void ActsPlugins::RootMaterialMapIo::fillBinnedSurfaceMaterial(
   rho.Write();
 }
 
-void ActsPlugins::RootMaterialMapIo::fillBinnedSurfaceMaterial(
+void RootMaterialMapIo::fillBinnedSurfaceMaterial(
     MaterialTreePayload& payload, const BinnedSurfaceMaterial& bsMaterial) {
   std::size_t bins0 = bsMaterial.binUtility().bins(0);
   std::size_t bins1 = bsMaterial.binUtility().bins(1);
@@ -256,8 +257,8 @@ void ActsPlugins::RootMaterialMapIo::fillBinnedSurfaceMaterial(
   idx.Write();
 }
 
-TrackingGeometryMaterial ActsPlugins::RootMaterialMapIo::read(
-    TFile& rFile, const Options& options) {
+TrackingGeometryMaterial RootMaterialMapIo::read(TFile& rFile,
+                                                 const Options& options) {
   TrackingGeometryMaterial detectorMaterial;
 
   auto& [surfaceMaterials, volumeMaterials] = detectorMaterial;
@@ -353,8 +354,9 @@ TrackingGeometryMaterial ActsPlugins::RootMaterialMapIo::read(
 }
 
 std::shared_ptr<const ISurfaceMaterial>
-ActsPlugins::RootMaterialMapIo::readTextureSurfaceMaterial(
-    TFile& rFile, const std::string& tdName, TTree* indexedMaterialTree) {
+RootMaterialMapIo::readTextureSurfaceMaterial(TFile& rFile,
+                                              const std::string& tdName,
+                                              TTree* indexedMaterialTree) {
   std::shared_ptr<const ISurfaceMaterial> texturedSurfaceMaterial = nullptr;
 
   // Construct the common names & get the common histograms
@@ -474,3 +476,5 @@ ActsPlugins::RootMaterialMapIo::readTextureSurfaceMaterial(
 
   return texturedSurfaceMaterial;
 }
+
+}  // namespace ActsPlugins

@@ -123,8 +123,9 @@ ActsExamples::makeGlobalChiSquareFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
-    Acts::FreeToBoundCorrection freeToBoundCorrection, std::size_t nUpdateMax,
-    double relChi2changeCutOff, const Acts::Logger& logger) {
+    const Acts::FreeToBoundCorrection& freeToBoundCorrection,
+    std::size_t nUpdateMax, double relChi2changeCutOff,
+    const Acts::Logger& logger) {
   // Stepper should be copied into the fitters
   const Stepper stepper(std::move(magneticField));
 

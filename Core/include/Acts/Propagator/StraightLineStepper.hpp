@@ -106,8 +106,6 @@ class StraightLineStepper final {
     bool covTransport = false;
     /// Covariance matrix for track parameter uncertainties
     Covariance cov = Covariance::Zero();
-    /// Additional free parameter covariance matrix
-    std::optional<FreeMatrix> additionalFreeCovariance = std::nullopt;
 
     /// accumulated path length state
     double pathAccumulated = 0.;
@@ -417,7 +415,7 @@ class StraightLineStepper final {
     const auto m = state.particleHypothesis.mass();
     const auto p = absoluteMomentum(state);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
-    const auto dtds = fastHypot(1., m / p);
+    const auto dtds = fastHypot(1, m / p);
     // Update the track parameters according to the equations of motion
     Vector3 dir = direction(state);
     state.pars.template segment<3>(eFreePos0) += h * dir;
@@ -429,8 +427,9 @@ class StraightLineStepper final {
       FreeMatrix D = FreeMatrix::Identity();
       D.block<3, 3>(0, 4) = SquareMatrix<3>::Identity() * h;
       // Extend the calculation by the time propagation
-      // Evaluate dt/dlambda
-      D(3, 7) = h * m * m * state.pars[eFreeQOverP] / dtds;
+      // d(t)/d(q/p) = h m^2 (q/p) / (q^2 dt/ds), with the q^2 folded into p
+      // via p = |q| / |q/p|.
+      D(3, 7) = h * m * m / (p * p * state.pars[eFreeQOverP] * dtds);
       // Set the derivative factor the time
       state.derivative(3) = dtds;
       // Update jacobian and derivative

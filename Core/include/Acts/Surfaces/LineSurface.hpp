@@ -82,6 +82,8 @@ class LineSurface : public Surface {
                        const Transform3& shift);
 
  public:
+  ~LineSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other is the source surface dor copying
@@ -308,6 +310,11 @@ class LineSurface : public Surface {
 
  protected:
   std::shared_ptr<const LineBounds> m_bounds;  ///< bounds (shared)
+
+  /// @copydoc Surface::localAxes
+  std::array<AxisDirection, 2> localAxes() const override {
+    return {AxisDirection::AxisR, AxisDirection::AxisZ};
+  }
 
  private:
   /// helper function to apply the globalToLocal with out transform

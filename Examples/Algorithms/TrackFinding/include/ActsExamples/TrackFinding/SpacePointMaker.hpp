@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -15,6 +16,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Utilities/StripModulePairing.hpp"
 
 #include <memory>
 #include <string>
@@ -43,7 +45,9 @@ namespace ActsExamples {
 class SpacePointMaker final : public IAlgorithm {
  public:
   struct Config {
-    /// Input measurements collection.
+    /// Input measurement subset (initial full subset from digitization for pass
+    /// 1; filtered subset from MeasurementFilterAlgorithm for subsequent
+    /// passes).
     std::string inputMeasurements;
     /// Output space points collection.
     std::string outputSpacePoints;
@@ -57,8 +61,14 @@ class SpacePointMaker final : public IAlgorithm {
     /// with all components set to zero selects all available measurements. The
     /// selection must not have duplicates.
     std::vector<Acts::GeometryIdentifier> geometrySelection;
-
+    /// Geometry selection for strip modules
     std::vector<Acts::GeometryIdentifier> stripGeometrySelection;
+    /// Assumed vertex position for the strip space point formation.
+    Acts::Vector3 stripVertex = Acts::Vector3::Zero();
+    /// Tolerance scaling factor on the strip detector element length.
+    double stripLengthTolerance = 0.01;
+    /// Tolerance on the gap between the two strip detector elements, in mm.
+    double stripLengthGapTolerance = 0.01;
   };
 
   /// Construct the space point maker.
@@ -74,23 +84,18 @@ class SpacePointMaker final : public IAlgorithm {
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
-  ProcessCode initialize() override;
-
   /// Const access to the config
   const Config& config() const { return m_cfg; }
 
  private:
-  void initializeStripPartners();
-
   Config m_cfg;
 
-  std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier>
-      m_stripPartner;
+  StripModulePairMap m_stripModulePairMap;
 
   std::optional<IndexSourceLink::SurfaceAccessor> m_slSurfaceAccessor;
 
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                           "InputMeasurements"};
+  ReadDataHandle<MeasurementSubset> m_inputMeasurements{this,
+                                                        "InputMeasurements"};
 
   WriteDataHandle<SpacePointContainer> m_outputSpacePoints{this,
                                                            "OutputSpacePoints"};

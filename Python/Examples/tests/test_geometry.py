@@ -1,6 +1,7 @@
 import pytest
 import acts
 import functools
+import matplotlib.pyplot as plt
 from acts.examples import GenericDetector
 from acts.examples.odd import getOpenDataDetector
 import json
@@ -56,10 +57,14 @@ def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
         decorators=decorators,
         events=events,
         outputDir=tmp_path,
+        # Serialising the ODD material map is ~9s and ~640MB of JSON, and it is
+        # already covered by test_writer.py::test_json_material_writer. This
+        # test is about the per-event csv/json/obj outputs.
+        outputMaterialMap=False,
     )
 
-    runGeometry(outputJson=True, **kwargs)
-    runGeometry(outputJson=False, **kwargs)
+    runGeometry(outputSurfacesJson=True, **kwargs)
+    runGeometry(outputSurfacesJson=False, **kwargs)
 
     assert len(list(obj_dir.iterdir())) == nobj
 
@@ -84,9 +89,6 @@ def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
             with f.open() as fh:
                 data = json.load(fh)
                 assert data
-        material_file = tmp_path / "geometry-map.json"
-        assert material_file.exists()
-        assert material_file.stat().st_size > 200
 
 
 class CountingVisitor(acts.TrackingGeometryMutableVisitor):
@@ -127,18 +129,17 @@ def test_geometry_visitor(trk_geo):
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.odd
-def test_odd_gen1():
-    with getOpenDataDetector(gen3=False) as detector:
-        trackingGeometry = detector.trackingGeometry()
+def test_odd_gen1(odd_detector):
+    trackingGeometry = odd_detector.trackingGeometry()
 
-        visitor = CountingVisitor()
-        trackingGeometry.apply(visitor)
+    visitor = CountingVisitor()
+    trackingGeometry.apply(visitor)
 
-        assert visitor.num_surfaces == 19264
-        assert visitor.num_layers == 142
-        assert visitor.num_volumes == 32
-        assert visitor.num_portals == 0  # Gen1: will have no portals
-        assert visitor.num_boundary_surfaces == 126  # Gen1: will have boundary surfaces
+    assert visitor.num_surfaces == 19264
+    assert visitor.num_layers == 142
+    assert visitor.num_volumes == 32
+    assert visitor.num_portals == 0  # Gen1: will have no portals
+    assert visitor.num_boundary_surfaces == 126  # Gen1: will have boundary surfaces
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
@@ -150,6 +151,7 @@ def test_odd_gen1():
         pytest.param("BarrelEndcap", id="barrel-endcap"),
         pytest.param("DirectLayer", id="direct-layer"),
         pytest.param("DirectLayerGrouped", id="direct-layer-grouped"),
+        pytest.param("TGeo", id="tgeo"),
     ],
 )
 def test_odd_gen3(constructionMethod):
@@ -177,3 +179,112 @@ def test_odd_gen3(constructionMethod):
         assert visitor.num_surfaces == 19261
         assert visitor.num_volumes == 109
         assert visitor.num_portals == 437
+
+
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.odd
+def test_odd_gen3_json_roundtrip(tmp_path, odd_detector_gen3):
+    from geometry import runGeometry
+    from acts.json import TrackingGeometryJsonConverter
+
+    json_dir = tmp_path / "json"
+    json_dir.mkdir()
+
+    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+
+    detector = odd_detector_gen3
+    trackingGeometry = detector.trackingGeometry()
+
+    original = CountingVisitor()
+    trackingGeometry.apply(original)
+
+    runGeometry(
+        trackingGeometry=trackingGeometry,
+        decorators=detector.contextDecorators(),
+        outputDir=tmp_path,
+        events=1,
+        outputObj=False,
+        outputPy=False,
+        outputCsv=False,
+        outputSurfacesJson=False,
+        serializeGeometryJson=True,
+    )
+
+    json_path = json_dir / "tracking-geometry.json"
+    assert json_path.exists()
+    assert json_path.stat().st_size > 0
+
+    converter = TrackingGeometryJsonConverter()
+    rebuilt_geometry = converter.fromFile(gctx, json_path.absolute())
+
+    rebuilt = CountingVisitor()
+    rebuilt_geometry.apply(rebuilt)
+
+    assert rebuilt.num_surfaces == original.num_surfaces
+    assert rebuilt.num_volumes == original.num_volumes
+    assert rebuilt.num_portals == original.num_portals
+    assert rebuilt.num_layers == 0
+    assert rebuilt.num_boundary_surfaces == 0
+
+    # Propagation comparison: identical seed → identical navigation results
+    import numpy as np
+    import uproot
+    from propagation import runPropagation
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+
+    def run_prop(geo, out_dir):
+        out_dir.mkdir(exist_ok=True)
+        s = acts.examples.Sequencer(
+            events=5, numThreads=1, logLevel=acts.logging.WARNING
+        )
+        runPropagation(geo, field, str(out_dir), s=s, sterileLogger=False).run()
+
+    orig_dir = tmp_path / "prop_original"
+    rebuilt_dir = tmp_path / "prop_rebuilt"
+    run_prop(trackingGeometry, orig_dir)
+    run_prop(rebuilt_geometry, rebuilt_dir)
+
+    branches = ["nSensitives", "nPortals", "nSuccessfulSteps", "pathLength"]
+    with uproot.open(orig_dir / "propagation_summary.root") as f:
+        orig = f["propagation_summary"].arrays(branches, library="np")
+    with uproot.open(rebuilt_dir / "propagation_summary.root") as f:
+        rebuilt_data = f["propagation_summary"].arrays(branches, library="np")
+
+    assert orig["nSensitives"].mean() > 0.0
+    assert orig["nPortals"].mean() > 0.0
+    assert orig["pathLength"].mean() > 0.0
+
+    np.testing.assert_array_equal(orig["nSensitives"], rebuilt_data["nSensitives"])
+    np.testing.assert_array_equal(orig["nPortals"], rebuilt_data["nPortals"])
+    np.testing.assert_array_equal(
+        orig["nSuccessfulSteps"], rebuilt_data["nSuccessfulSteps"]
+    )
+    np.testing.assert_allclose(
+        orig["pathLength"], rebuilt_data["pathLength"], rtol=1e-5
+    )
+
+
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.odd
+def test_geometry_python_visualization(tmp_path, odd_detector_gen3):
+    from geometry import runGeometry
+    from matplotlib.collections import PatchCollection
+
+    detector = odd_detector_gen3
+    trackingGeometry = detector.trackingGeometry()
+
+    runGeometry(
+        trackingGeometry=trackingGeometry,
+        decorators=detector.contextDecorators(),
+        outputDir=tmp_path,
+        events=1,
+        pyVisProjection="xy",
+        outputPy=True,
+        outputCsv=False,
+        outputSurfacesJson=False,
+        serializeGeometryJson=False,
+    )
+
+    ax = plt.gca()
+    assert any(isinstance(c, PatchCollection) for c in ax.collections)

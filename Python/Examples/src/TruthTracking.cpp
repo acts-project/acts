@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/TruthTracking/GbtsTrainingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/HitSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleTrackParamExtractor.hpp"
@@ -38,6 +39,23 @@ void addTruthTracking(py::module& mex) {
                                 inputParticles, inputParticleMeasurementsMap,
                                 inputMeasurements, inputSimHits,
                                 inputMeasurementSimHitsMap, outputProtoTracks);
+  {
+    using Config = Acts::Experimental::GbtsLayerConnectionTool::Config;
+
+    auto c = py::class_<Config>(mex, "GbtsLayerConnectionToolConfig")
+                 .def(py::init<>());
+
+    ACTS_PYTHON_STRUCT(c, zMinTol, zMaxTol, rMinTol, rMaxTol, doSymmetrization,
+                       probThreshold);
+
+    patchKwargsConstructor(c);
+  }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      GbtsTrainingAlgorithm, mex, "GbtsTrainingAlgorithm", inputParticles,
+      inputParticleMeasurementsMap, inputMeasurements, inputSimHits,
+      inputMeasurementSimHitsMap, gbtsLayerConnectionToolConfig,
+      geometryFileDir, outputFileDir, useOldFormatting);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ParticleTrackParamExtractor, mex,
                                 "ParticleTrackParamExtractor", inputParticles,
@@ -121,8 +139,7 @@ void addTruthTracking(py::module& mex) {
       TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm", inputParticles,
       inputParticleMeasurementsMap, inputSimHits, inputMeasurementSimHitsMap,
       inputSpacePoints, outputParticles, outputSeeds, outputProtoTracks,
-      outputParticleHypotheses, particleHypothesis, deltaRMin, deltaRMax,
-      absDeltaZMin, absDeltaZMax);
+      outputParticleHypotheses, particleHypothesis);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(HitSelector, mex, "HitSelector", inputHits,
                                 inputParticlesSelected, outputHits, minX, maxX,

@@ -186,7 +186,7 @@ struct GsfActor {
     const auto foundSourceLink =
         m_cfg.inputMeasurements->find(surface.geometryId());
     const bool haveMaterial =
-        surface.surfaceMaterial() && !m_cfg.disableAllMaterialHandling;
+        surface.hasMaterial() && !m_cfg.disableAllMaterialHandling;
     const bool haveMeasurement =
         foundSourceLink != m_cfg.inputMeasurements->end();
 
@@ -202,7 +202,14 @@ struct GsfActor {
       // No hole before first measurement
       if (result.processedStates > 0 && surface.isSensitive()) {
         TemporaryStates tmpStates;
-        noMeasurementUpdate(state, stepper, surface, result, tmpStates, true);
+        Result<void> res = noMeasurementUpdate(state, stepper, surface, result,
+                                               tmpStates, true);
+        if (!res.ok()) {
+          if (m_cfg.abortOnError) {
+            std::abort();
+          }
+          return res.error();
+        }
       }
       return Result<void>::success();
     }
@@ -223,17 +230,23 @@ struct GsfActor {
 
     if (m_cfg.multipleScattering && haveMaterial) {
       if (haveMeasurement) {
-        applyMultipleScattering(
+        const Result<void> materialInteractionRes = applyMultipleScattering(
             state, stepper, surface,
             determineMaterialUpdateMode(state, navigator,
                                         MaterialUpdateMode::PreUpdate),
             logger());
+        if (!materialInteractionRes.ok()) {
+          return materialInteractionRes.error();
+        }
       } else {
-        applyMultipleScattering(
+        const Result<void> materialInteractionRes = applyMultipleScattering(
             state, stepper, surface,
             determineMaterialUpdateMode(state, navigator,
                                         MaterialUpdateMode::FullUpdate),
             logger());
+        if (!materialInteractionRes.ok()) {
+          return materialInteractionRes.error();
+        }
       }
     }
 
@@ -281,11 +294,25 @@ struct GsfActor {
       std::vector<GsfComponent>& componentCache = result.componentCache;
       componentCache.clear();
 
-      convoluteComponents(
-          state, stepper, tmpStates, *m_cfg.bethe_heitler_approx,
-          result.betheHeitlerCache, m_cfg.weightCutoff, componentCache,
-          result.nInvalidBetheHeitler.tmp(), result.maxPathXOverX0.tmp(),
-          result.sumPathXOverX0.tmp(), logger());
+      double pathXOverX0 = 0.0;
+      for (const TrackIndexType idx : tmpStates.tips) {
+        auto proxy = tmpStates.traj.getTrackState(idx);
+
+        const BoundTrackParameters bound(
+            surface.getSharedPtr(), proxy.filtered(),
+            proxy.filteredCovariance(),
+            stepper.particleHypothesis(state.stepping));
+
+        pathXOverX0 += applyBetheHeitler(
+            state.options.geoContext, surface, state.options.direction, bound,
+            tmpStates.weights.at(idx), *m_cfg.bethe_heitler_approx,
+            result.betheHeitlerCache, m_cfg.weightCutoff, componentCache,
+            result.nInvalidBetheHeitler.tmp(), result.maxPathXOverX0.tmp(),
+            logger());
+      }
+      // Store average material seen by the components
+      // Should not be too broadly distributed
+      result.sumPathXOverX0.tmp() += pathXOverX0 / tmpStates.tips.size();
 
       if (componentCache.empty()) {
         ACTS_WARNING(
@@ -303,16 +330,19 @@ struct GsfActor {
 
       removeLowWeightComponents(componentCache, m_cfg.weightCutoff);
 
-      updateStepper(state, stepper, surface, componentCache, logger());
+      updateStepper(state, stepper, surface, componentCache);
     }
 
     // If we have only done preUpdate before, now do postUpdate
     if (m_cfg.multipleScattering && haveMaterial && haveMeasurement) {
-      applyMultipleScattering(
+      const Result<void> materialInteractionRes = applyMultipleScattering(
           state, stepper, surface,
           determineMaterialUpdateMode(state, navigator,
                                       MaterialUpdateMode::PostUpdate),
           logger());
+      if (!materialInteractionRes.ok()) {
+        return materialInteractionRes.error();
+      }
     }
 
     return Result<void>::success();
@@ -348,10 +378,14 @@ struct GsfActor {
       const auto& singleStepper = cmp.singleStepper(stepper);
 
       // Add a <mask> TrackState entry multi trajectory. This allocates storage
-      // for all components, which we will set later.
-      TrackStatePropMask mask =
-          TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
-          TrackStatePropMask::Jacobian | TrackStatePropMask::Calibrated;
+      // for all components, which we will set later. The filtered parameters
+      // are deliberately not allocated here: they are only added once the
+      // Kalman update is about to write them, so that the calibrator and the
+      // outlier finder cannot observe allocated but uninitialized filtered
+      // parameters via `parameters()`.
+      TrackStatePropMask mask = TrackStatePropMask::Predicted |
+                                TrackStatePropMask::Jacobian |
+                                TrackStatePropMask::Calibrated;
       typename traj_t::TrackStateProxy trackStateProxy =
           tmpStates.traj.makeTrackState(mask, kTrackIndexInvalid);
       typename traj_t::ConstTrackStateProxy trackStateProxyConst{
@@ -385,6 +419,8 @@ struct GsfActor {
                                   sourceLink, trackStateProxy);
 
       if (!m_cfg.extensions.outlierFinder(trackStateProxyConst)) {
+        // Allocate the filtered parameters right before they are written
+        trackStateProxy.addComponents(TrackStatePropMask::Filtered);
         // Run Kalman update
         auto updateRes = m_cfg.extensions.updater(state.geoContext,
                                                   trackStateProxy, logger());
@@ -431,13 +467,12 @@ struct GsfActor {
       ++result.measurementStates;
     }
 
-    updateMultiTrajectory(
-        result, tmpStates, surface,
-        TrackStateType()
-            .setHasParameters()
-            .setHasMaterial(surface.surfaceMaterial() != nullptr)
-            .setHasMeasurement()
-            .setIsOutlier(isOutlier));
+    updateMultiTrajectory(result, tmpStates, surface,
+                          TrackStateType()
+                              .setHasParameters()
+                              .setHasMaterial(surface.hasMaterial())
+                              .setHasMeasurement()
+                              .setIsOutlier(isOutlier));
 
     result.lastMeasurementTip = result.currentTip;
     result.lastMeasurementSurface = &surface;
@@ -515,12 +550,11 @@ struct GsfActor {
       ++result.measurementHoles;
     }
 
-    updateMultiTrajectory(
-        result, tmpStates, surface,
-        TrackStateType()
-            .setHasParameters()
-            .setHasMaterial(surface.surfaceMaterial() != nullptr)
-            .setIsHole(isHole));
+    updateMultiTrajectory(result, tmpStates, surface,
+                          TrackStateType()
+                              .setHasParameters()
+                              .setHasMaterial(surface.hasMaterial())
+                              .setIsHole(isHole));
 
     return Result<void>::success();
   }
@@ -541,11 +575,12 @@ struct GsfActor {
       const auto firstCmpProxy =
           tmpStates.traj.getTrackState(tmpStates.tips.front());
 
+      // Smoothed parameters are not allocated here but in the backward pass
+      // that computes them, so they are never left uninitialized
       auto combinedStateMask = TrackStatePropMask::Predicted;
       if (type.isMeasurement()) {
-        combinedStateMask |= TrackStatePropMask::Calibrated |
-                             TrackStatePropMask::Filtered |
-                             TrackStatePropMask::Smoothed;
+        combinedStateMask |=
+            TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered;
       } else if (type.isOutlier()) {
         combinedStateMask |= TrackStatePropMask::Calibrated;
       }
@@ -574,11 +609,6 @@ struct GsfActor {
             surface, m_cfg.mergeMethod);
         combinedState.filtered() = fltMean;
         combinedState.filteredCovariance() = fltCov;
-
-        // place sentinel values for smoothed parameters for now. they will be
-        // filled in the backward pass
-        combinedState.smoothed() = BoundVector::Constant(-2);
-        combinedState.smoothedCovariance() = BoundMatrix::Constant(-2);
       } else {
         combinedState.shareFrom(TrackStatePropMask::Predicted,
                                 TrackStatePropMask::Filtered);
@@ -595,12 +625,15 @@ struct GsfActor {
 
             result.surfacesVisitedBwdAgain.push_back(&surface);
 
-            if (trackState.hasSmoothed()) {
+            // The last forward measurement state already shares smoothed with
+            // filtered and is skipped as an already visited surface
+            if (trackState.typeFlags().isMeasurement()) {
               const auto [smtMean, smtCov] = mergeGaussianMixture(
                   tmpStates.tips,
                   FltProjector{tmpStates.traj, tmpStates.weights}, surface,
                   m_cfg.mergeMethod);
 
+              trackState.addComponents(TrackStatePropMask::Smoothed);
               trackState.smoothed() = smtMean;
               trackState.smoothedCovariance() = smtCov;
             }

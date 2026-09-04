@@ -17,13 +17,10 @@ namespace Acts {
 /// @defgroup eventdata-charge Charge hypothesis for track reconstruction
 ///
 /// Track parameters store a single coefficient that describes charge and
-/// momentum. This is either charge/momentum or 1/momentum, but the
-/// interpretation depends on what type of particle is described. In this code
-/// base this coefficient is always referred to as `qOverP` (or
-/// charge-over-momentum) even for uncharged particles. The following types are
-/// used to restrict the particle charge magnitude (at compile time) and support
-/// the umambigous extraction of charge and absolute momentum from said track
-/// parameter coefficient.
+/// momentum. This is always charge/momentum, even if the particle is neutral.
+/// The following types are used to restrict the particle charge magnitude (at
+/// compile time) and support the umambigous extraction of charge and absolute
+/// momentum from said track parameter coefficient.
 ///
 /// All types are designed to be interchangeable. Each one can be
 /// constructed with the input charge magnitude
@@ -77,8 +74,7 @@ class ChargeHypothesis final {
   /// @param qOverP Charge over momentum
   /// @return Momentum magnitude (handles both charged and neutral particles)
   constexpr double extractMomentum(double qOverP) const noexcept {
-    return (m_absoluteCharge != 0.0f) ? extractCharge(qOverP) / qOverP
-                                      : 1.0 / qOverP;
+    return extractCharge(qOverP) / qOverP;
   }
 
   /// Compute q/p from momentum and signed charge
@@ -87,7 +83,7 @@ class ChargeHypothesis final {
   /// @return Charge over momentum (handles both charged and neutral particles)
   constexpr double qOverP(double momentum, float signedQ) const noexcept {
     assert(std::abs(signedQ) == m_absoluteCharge && "inconsistent charge");
-    return (m_absoluteCharge != 0.0f) ? signedQ / momentum : 1.0 / momentum;
+    return signedQ / momentum;
   }
 
   /// Compare for equality.

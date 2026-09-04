@@ -30,6 +30,7 @@ const char* head_xml =
     </materials>
 
     <define>
+        <include ref="${DD4hepINSTALL}/DDDetectors/compact/detector_types.xml"/>
         <!--World-->
         <constant name="world_size" value="10.*m"/>
         <constant name="world_x" value="world_size"/>

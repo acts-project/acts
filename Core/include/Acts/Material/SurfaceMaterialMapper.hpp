@@ -39,9 +39,7 @@ struct MaterialSurface {
   /// Selection function for surfaces with material
   /// @param sf The surface to check
   /// @return True if surface has material, false otherwise
-  bool operator()(const Surface& sf) const {
-    return (sf.surfaceMaterial() != nullptr);
-  }
+  bool operator()(const Surface& sf) const { return sf.hasMaterial(); }
 };
 
 /// @brief selector for finding volume
@@ -49,16 +47,18 @@ struct MaterialVolume {
   /// Selection function for volumes with material
   /// @param vf The tracking volume to check
   /// @return True if volume has material, false otherwise
-  bool operator()(const TrackingVolume& vf) const {
-    return (vf.volumeMaterial() != nullptr);
-  }
+  bool operator()(const TrackingVolume& vf) const { return vf.hasMaterial(); }
 };
 
 /// @brief SurfaceMaterialMapper
 ///
-/// This is the main feature tool to map material information
-/// from a 3D geometry onto the TrackingGeometry with its surface
-/// material description.
+/// This maps material information from a 3D geometry onto the TrackingGeometry
+/// with its surface material description, driven by a propagation through the
+/// geometry.
+///
+/// @deprecated Use @ref Acts::MaterialMapper instead, composed with an
+/// @ref Acts::IAssignmentFinder and an @ref Acts::ISurfaceMaterialAccumulator.
+/// See @ref material_mapping for the current, navigation-independent procedure.
 ///
 /// The process runs as such:
 ///
@@ -80,6 +80,7 @@ struct MaterialVolume {
 ///
 ///  4) Each 'hit' bin per event is counted and averaged at the end of the run
 ///
+/// @ingroup material_mapping
 class SurfaceMaterialMapper {
  public:
   /// Type alias for straight line propagator used in material mapping
@@ -140,6 +141,8 @@ class SurfaceMaterialMapper {
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator
   /// @param slogger The logger
+  /// @deprecated Material mapping with propagation is deprecated. Use
+  ///             MaterialMapper instead.
   [[deprecated(
       "Material mapping with propagation is deprecated. Use MaterialMapper "
       "instead.")]]

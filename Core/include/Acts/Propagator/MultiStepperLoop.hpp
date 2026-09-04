@@ -282,6 +282,9 @@ class MultiStepperLoop final {
 
     const auto surface = par.referenceSurface().getSharedPtr();
 
+    state.components.clear();
+    state.components.reserve(par.size());
+
     for (std::size_t i = 0; i < par.size(); ++i) {
       const auto& [weight, singlePars] = par[i];
       auto& cmp = state.components.emplace_back(
@@ -425,15 +428,13 @@ class MultiStepperLoop final {
   /// @param [in] weight Weight of the component to add
   ///
   /// @note: It is not ensured that the weights are normalized afterwards
-  /// @note This function makes no garantuees about how new components are
-  /// initialized, it is up to the caller to ensure that all components are
-  /// valid in the end.
+  /// @note The component is initialized through the single stepper, so its
+  /// jacobians are set whenever @p pars carries a covariance.
   /// @note The returned component-proxy is only garantueed to be valid until
   /// the component number is again modified
   /// @return ComponentProxy for the newly added component or error
-  Result<ComponentProxy> addComponent(State& state,
-                                      const BoundTrackParameters& pars,
-                                      double weight) const {
+  ComponentProxy addComponent(State& state, const BoundTrackParameters& pars,
+                              double weight) const {
     auto& cmp =
         state.components.emplace_back(m_singleStepper.makeState(state.options),
                                       weight, IntersectionStatus::onSurface);

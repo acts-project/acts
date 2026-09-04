@@ -3,6 +3,7 @@ acts_add_library(
     src/RefittingCalibrator.cpp
     src/TrackFittingAlgorithm.cpp
     src/KalmanFitterFunction.cpp
+    src/KalmanReferenceTrajectoryFitterFunction.cpp
     src/RefittingAlgorithm.cpp
     src/GsfFitterFunction.cpp
     src/GlobalChiSquareFitterFunction.cpp

@@ -1,18 +1,26 @@
 name: Check PR labels
 
 on:
-  pull_request_target:
+  # pull_request_target is required so the labeler can apply labels to PRs from
+  # forks; the workflow does not check out or execute untrusted PR code.
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [opened, synchronize, reopened, labeled, unlabeled]
     branches:
       - main
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   check_pr_labels:
     runs-on: ubuntu-slim
 
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/labeler@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7.0.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           sync-labels: true

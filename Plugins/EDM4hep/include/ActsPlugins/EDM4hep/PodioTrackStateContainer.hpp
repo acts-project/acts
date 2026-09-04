@@ -14,6 +14,7 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Holders.hpp"
@@ -21,13 +22,15 @@
 #include "ActsPlugins/EDM4hep/PodioTrackContainer.hpp"
 #include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
+ACTS_DIAGNOSTIC_PUSH()
+ACTS_DIAGNOSTIC_IGNORE("-Wold-style-cast")
 #include "ActsPodioEdm/BoundParametersCollection.h"
 #include "ActsPodioEdm/JacobianCollection.h"
+#include "ActsPodioEdm/MutableTrackerHitLocal.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
+#include "ActsPodioEdm/TrackStateHitLinkCollection.h"
 #include "ActsPodioEdm/TrackStateInfo.h"
-#pragma GCC diagnostic pop
+ACTS_DIAGNOSTIC_POP()
 
 #include <any>
 #include <memory>
@@ -120,6 +123,44 @@ class PodioTrackStateContainerBase {
   using ConstCalibratedCovariance =
       typename Acts::detail_tsp::FixedSizeTypes<M, true>::CovarianceMap;
 
+  /// Collection name key for track states in a frame
+  /// @param prefix Base name (e.g. output collection name)
+  /// @return Frame key for the track states collection
+  static std::string trackStatesKey(const std::string& prefix) {
+    return prefix.empty() ? "trackStates" : prefix + "_trackStates";
+  }
+
+  /// Collection name key for track state parameters in a frame
+  /// @param prefix Base name
+  /// @return Frame key for the track state parameters collection
+  static std::string trackStateParametersKey(const std::string& prefix) {
+    return prefix.empty() ? "trackStateParameters"
+                          : prefix + "_trackStateParameters";
+  }
+
+  /// Collection name key for track state Jacobians in a frame
+  /// @param prefix Base name
+  /// @return Frame key for the track state Jacobians collection
+  static std::string trackStateJacobiansKey(const std::string& prefix) {
+    return prefix.empty() ? "trackStateJacobians"
+                          : prefix + "_trackStateJacobians";
+  }
+
+  /// Collection name key for tracker hits in a frame
+  /// @param prefix Base name
+  /// @return Frame key for the tracker hits collection
+  static std::string trackerHitsKey(const std::string& prefix) {
+    return prefix.empty() ? "trackerHits" : prefix + "_trackerHits";
+  }
+
+  /// Collection name key for track state–hit links in a frame
+  /// @param prefix Base name
+  /// @return Frame key for the track state hit links collection
+  static std::string trackStateHitLinksKey(const std::string& prefix) {
+    return prefix.empty() ? "trackStateHitLinks"
+                          : prefix + "_trackStateHitLinks";
+  }
+
  protected:
   /// Check if a component exists for a track state
   /// @param instance Container instance
@@ -149,7 +190,7 @@ class PodioTrackStateContainerBase {
       case "projector"_hash:
         return data.hasProjector;
       case "uncalibratedSourceLink"_hash:
-        return data.uncalibratedIdentifier != PodioUtil::kNoIdentifier;
+        return hasUncalibratedSourceLink_impl(instance, trackState);
       case "previous"_hash:
       case "next"_hash:
       case "measdim"_hash:
@@ -163,6 +204,60 @@ class PodioTrackStateContainerBase {
     }
 
     return false;
+  }
+
+  /// Check if a track state has an uncalibrated source link
+  /// @param instance Container instance
+  /// @param trackState The track state to check
+  /// @return True if the track state has an uncalibrated source link
+  template <typename T>
+  static bool hasUncalibratedSourceLink_impl(
+      T& instance, const ActsPodioEdm::TrackState& trackState) {
+    if (instance.storeUncalibrated()) {
+      for (const auto& link : *instance.m_links) {
+        if (link.getFrom() == trackState) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      return trackState.getData().uncalibratedIdentifier !=
+             PodioUtil::kNoIdentifier;
+    }
+  }
+
+  /// Get the uncalibrated source link for a track state
+  /// @param instance Container instance
+  /// @param istate Track state index
+  /// @return Uncalibrated source link
+  template <typename T>
+  static Acts::SourceLink getUncalibratedSourceLink_impl(
+      T& instance, Acts::TrackIndexType istate) {
+    auto trackState = instance.m_collection->at(istate);
+    if (instance.storeUncalibrated()) {
+      std::optional<ActsPodioEdm::TrackerHitLocal> hit;
+      for (const auto& link : *instance.m_links) {
+        if (link.getFrom() == trackState) {
+          if (hit.has_value()) {
+            throw std::invalid_argument(
+                "Track state has multiple links to hits");
+          }
+          hit = link.getTo();
+        }
+      }
+      if (!hit.has_value()) {
+        throw std::invalid_argument("Track state has no link to a hit");
+      }
+      return Acts::SourceLink(hit.value());
+    } else {
+      auto sl = instance.m_helper.get().identifierToSourceLink(
+          trackState.getData().uncalibratedIdentifier);
+      if (!sl.has_value()) {
+        throw std::invalid_argument(
+            "Helper could not convert identifier to source link");
+      }
+      return sl.value();
+    }
   }
 
   /// Get a component from a track state
@@ -279,20 +374,32 @@ class ConstPodioTrackStateContainer final
 
  public:
   /// Constructor from collections
+  ///
+  /// The @p links parameter selects the uncalibrated source-link storage mode:
+  ///   - Pass a valid collection pointer to use **link mode**: uncalibrated
+  ///     source links are stored as entries in a TrackStateHitLinkCollection,
+  ///     and @ref PodioUtil::ConversionHelper::sourceLinkToTrackerHitLocal is used.
+  ///   - Pass @c nullptr to use **identifier mode**: uncalibrated source links
+  ///     are stored as integer identifiers in the track-state data, and
+  ///     @ref PodioUtil::ConversionHelper::sourceLinkToIdentifier /
+  ///     @ref PodioUtil::ConversionHelper::identifierToSourceLink are used.
+  ///
   /// @param helper Conversion helper
   /// @param trackStates Track state collection
   /// @param params Parameters collection
   /// @param jacs Jacobian collection
+  /// @param links Track state–hit links collection (nullptr for identifier mode)
   ConstPodioTrackStateContainer(
       const PodioUtil::ConversionHelper& helper,
       holder_t<const ActsPodioEdm::TrackStateCollection> trackStates,
       holder_t<const ActsPodioEdm::BoundParametersCollection> params,
-      holder_t<const ActsPodioEdm::JacobianCollection> jacs)
+      holder_t<const ActsPodioEdm::JacobianCollection> jacs,
+      const ActsPodioEdm::TrackStateHitLinkCollection* links)
       : m_helper{helper},
         m_collection{std::move(trackStates)},
         m_params{std::move(params)},
-        m_jacs{std::move(jacs)} {
-    // Not much we can do to recover dynamic columns here
+        m_jacs{std::move(jacs)},
+        m_links{links} {
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
   }
 
@@ -325,14 +432,24 @@ class ConstPodioTrackStateContainer final
                  Acts::ConstRefHolder<const ActsPodioEdm::TrackStateCollection>>
       : m_helper{helper},
         m_collection{frame.get<ActsPodioEdm::TrackStateCollection>(
-            "trackStates" + (suffix.empty() ? suffix : "_" + suffix))},
+            PodioTrackStateContainerBase::trackStatesKey(suffix))},
         m_params{frame.get<ActsPodioEdm::BoundParametersCollection>(
-            "trackStateParameters" + (suffix.empty() ? suffix : "_" + suffix))},
+            PodioTrackStateContainerBase::trackStateParametersKey(suffix))},
         m_jacs{frame.get<ActsPodioEdm::JacobianCollection>(
-            "trackStateJacobians" + (suffix.empty() ? suffix : "_" + suffix))} {
-    std::string s = suffix.empty() ? suffix : "_" + suffix;
-    std::string trackStatesKey = "trackStates" + s;
-
+            PodioTrackStateContainerBase::trackStateJacobiansKey(suffix))} {
+    const std::string trackStatesKey =
+        PodioTrackStateContainerBase::trackStatesKey(suffix);
+    const std::string linksKey =
+        PodioTrackStateContainerBase::trackStateHitLinksKey(suffix);
+    const auto* linksColl = frame.get(linksKey);
+    if (linksColl != nullptr) {
+      const auto* links =
+          dynamic_cast<const ActsPodioEdm::TrackStateHitLinkCollection*>(
+              linksColl);
+      if (links != nullptr) {
+        m_links = links;
+      }
+    }
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
     podio_detail::recoverDynamicColumns(frame, trackStatesKey, m_dynamic);
   }
@@ -430,8 +547,8 @@ class ConstPodioTrackStateContainer final
   /// @param istate Track state index
   /// @return Uncalibrated source link
   Acts::SourceLink getUncalibratedSourceLink_impl(IndexType istate) const {
-    return m_helper.get().identifierToSourceLink(
-        m_collection->at(istate).getData().uncalibratedIdentifier);
+    return PodioTrackStateContainerBase::getUncalibratedSourceLink_impl(*this,
+                                                                        istate);
   }
 
   /// Get reference surface for a track state
@@ -444,6 +561,8 @@ class ConstPodioTrackStateContainer final
  private:
   friend class PodioTrackStateContainerBase;
 
+  bool storeUncalibrated() const { return m_links != nullptr; }
+
   std::reference_wrapper<const PodioUtil::ConversionHelper> m_helper;
   holder_t<const ActsPodioEdm::TrackStateCollection> m_collection;
   holder_t<const ActsPodioEdm::BoundParametersCollection> m_params;
@@ -454,6 +573,8 @@ class ConstPodioTrackStateContainer final
                      std::unique_ptr<podio_detail::ConstDynamicColumnBase>>
       m_dynamic;
   std::vector<Acts::HashedString> m_dynamicKeys;
+
+  const ActsPodioEdm::TrackStateHitLinkCollection* m_links = nullptr;
 };
 
 static_assert(Acts::IsReadOnlyMultiTrajectory<
@@ -481,38 +602,52 @@ class MutablePodioTrackStateContainer final
 
  public:
   /// Constructor
+  ///
+  /// The @p links parameter selects the uncalibrated source-link storage mode.
+  /// See ConstPodioTrackStateContainer for a full description of the two modes.
+  ///
   /// @param helper Conversion helper
   /// @param trackStates Track states collection
   /// @param params Parameters collection
   /// @param jacs Jacobians collection
+  /// @param links Track state–hit links collection (nullptr for identifier mode)
   explicit MutablePodioTrackStateContainer(
       PodioUtil::ConversionHelper& helper,
       holder_t<ActsPodioEdm::TrackStateCollection> trackStates,
       holder_t<ActsPodioEdm::BoundParametersCollection> params,
-      holder_t<ActsPodioEdm::JacobianCollection> jacs)
+      holder_t<ActsPodioEdm::JacobianCollection> jacs,
+      ActsPodioEdm::TrackStateHitLinkCollection* links)
       : m_helper{helper},
         m_collection{std::move(trackStates)},
         m_params{std::move(params)},
-        m_jacs{std::move(jacs)} {
+        m_jacs{std::move(jacs)},
+        m_links{links} {
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
   }
 
   /// Constructor from references (for RefHolder)
+  ///
+  /// The @p links parameter selects the uncalibrated source-link storage mode.
+  /// See ConstPodioTrackStateContainer for a full description of the two modes.
+  ///
   /// @param helper Conversion helper
   /// @param trackStates Track states collection reference
   /// @param params Parameters collection reference
   /// @param jacs Jacobians collection reference
+  /// @param links Track state–hit links collection (nullptr for identifier mode)
   explicit MutablePodioTrackStateContainer(
       PodioUtil::ConversionHelper& helper,
       ActsPodioEdm::TrackStateCollection& trackStates,
       ActsPodioEdm::BoundParametersCollection& params,
-      ActsPodioEdm::JacobianCollection& jacs)
+      ActsPodioEdm::JacobianCollection& jacs,
+      ActsPodioEdm::TrackStateHitLinkCollection* links)
     requires std::is_same_v<holder_t<ActsPodioEdm::TrackStateCollection>,
                             Acts::RefHolder<ActsPodioEdm::TrackStateCollection>>
       : m_helper{helper},
         m_collection{trackStates},
         m_params{params},
-        m_jacs{jacs} {
+        m_jacs{jacs},
+        m_links{links} {
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
   }
 
@@ -878,10 +1013,63 @@ class MutablePodioTrackStateContainer final
   /// @param sourceLink Source link to set
   void setUncalibratedSourceLink_impl(IndexType istate,
                                       const Acts::SourceLink& sourceLink) {
-    PodioUtil::Identifier id =
-        m_helper.get().sourceLinkToIdentifier(sourceLink);
-    auto& data = PodioUtil::getDataMutable(m_collection->at(istate));
-    data.uncalibratedIdentifier = id;
+    auto trackState = m_collection->at(istate);
+    if (storeUncalibrated()) {
+      // In this case, we assume the source link is a TrackerHitLocal
+      std::optional<ActsPodioEdm::TrackerHitLocal> hit;
+
+      if (auto* p = sourceLink.getPtr<ActsPodioEdm::TrackerHitLocal>();
+          p != nullptr) {
+        // The given source link is a TrackerHitLocal, so we can use it directly
+        hit = *p;
+      } else if (auto* mp =
+                     sourceLink.getPtr<ActsPodioEdm::MutableTrackerHitLocal>();
+                 mp != nullptr) {
+        // The given source link is a MutableTrackerHitLocal; convert to the
+        // immutable view via TrackerHitLocal's converting constructor
+        hit = *mp;
+      } else {
+        // The given source link is not a TrackerHitLocal, so we need to ask the
+        // helper to convert it to one
+        hit = m_helper.get().sourceLinkToTrackerHitLocal(sourceLink);
+      }
+
+      if (!hit.has_value()) {
+        throw std::invalid_argument(
+            "Source link could not be converted to a TrackerHitLocal");
+      }
+
+      // Check if this track state already has a link to this hit
+      std::optional<ActsPodioEdm::MutableTrackStateHitLink> existingLink;
+      for (const auto& link : *m_links) {
+        if (link.getFrom() == trackState) {
+          if (existingLink.has_value()) {
+            throw std::invalid_argument(
+                "Track state has multiple links to the same hit");
+          }
+          existingLink = link;
+        }
+      }
+
+      if (!existingLink.has_value()) {
+        // No link a new one
+        auto link = m_links->create();
+        link.setFrom(trackState);
+        link.setTo(hit.value());
+      } else {
+        // Update the existing link
+        existingLink->setTo(hit.value());
+      }
+    } else {
+      // Call out to helper to convert source link to identifier
+      auto id = m_helper.get().sourceLinkToIdentifier(sourceLink);
+      if (!id.has_value()) {
+        throw std::invalid_argument(
+            "Helper could not convert source link to identifier");
+      }
+      auto& data = PodioUtil::getDataMutable(trackState);
+      data.uncalibratedIdentifier = id.value();
+    }
   }
 
   /// Set the reference surface for a track state
@@ -906,8 +1094,8 @@ class MutablePodioTrackStateContainer final
   /// @param istate Track state index
   /// @return Uncalibrated source link
   Acts::SourceLink getUncalibratedSourceLink_impl(IndexType istate) const {
-    return m_helper.get().identifierToSourceLink(
-        m_collection->at(istate).getData().uncalibratedIdentifier);
+    return PodioTrackStateContainerBase::getUncalibratedSourceLink_impl(*this,
+                                                                        istate);
   }
 
   /// Get the reference surface for a track state
@@ -929,47 +1117,49 @@ class MutablePodioTrackStateContainer final
         std::is_same_v<holder_t<ActsPodioEdm::TrackStateCollection>,
                        std::shared_ptr<ActsPodioEdm::TrackStateCollection>>)
   {
-    std::string s = suffix;
-    if (!s.empty()) {
-      s = "_" + s;
-    }
+    const std::string trackStatesKey =
+        PodioTrackStateContainerBase::trackStatesKey(suffix);
+    const std::string trackStateParametersKey =
+        PodioTrackStateContainerBase::trackStateParametersKey(suffix);
+    const std::string trackStateJacobiansKey =
+        PodioTrackStateContainerBase::trackStateJacobiansKey(suffix);
 
     if constexpr (std::is_same_v<
                       holder_t<ActsPodioEdm::TrackStateCollection>,
                       std::unique_ptr<ActsPodioEdm::TrackStateCollection>>) {
-      frame.put(std::move(m_collection), "trackStates" + s);
-      frame.put(std::move(m_params), "trackStateParameters" + s);
-      frame.put(std::move(m_jacs), "trackStateJacobians" + s);
+      frame.put(std::move(m_collection), trackStatesKey);
+      frame.put(std::move(m_params), trackStateParametersKey);
+      frame.put(std::move(m_jacs), trackStateJacobiansKey);
     } else if constexpr (std::is_same_v<
                              holder_t<ActsPodioEdm::TrackStateCollection>,
                              std::shared_ptr<
                                  ActsPodioEdm::TrackStateCollection>>) {
       frame.put(std::unique_ptr<ActsPodioEdm::TrackStateCollection>(
                     m_collection.get()),
-                "trackStates" + s);
+                trackStatesKey);
       frame.put(std::unique_ptr<ActsPodioEdm::BoundParametersCollection>(
                     m_params.get()),
-                "trackStateParameters" + s);
+                trackStateParametersKey);
       frame.put(std::unique_ptr<ActsPodioEdm::JacobianCollection>(m_jacs.get()),
-                "trackStateJacobians" + s);
+                trackStateJacobiansKey);
       m_collection.reset();
       m_params.reset();
       m_jacs.reset();
     } else {
       frame.put(std::make_unique<ActsPodioEdm::TrackStateCollection>(
                     std::move(*m_collection)),
-                "trackStates" + s);
+                trackStatesKey);
       frame.put(std::make_unique<ActsPodioEdm::BoundParametersCollection>(
                     std::move(*m_params)),
-                "trackStateParameters" + s);
+                trackStateParametersKey);
       frame.put(std::make_unique<ActsPodioEdm::JacobianCollection>(
                     std::move(*m_jacs)),
-                "trackStateJacobians" + s);
+                trackStateJacobiansKey);
     }
     m_surfaces.clear();
 
     for (const auto& [key, col] : m_dynamic) {
-      col->releaseInto(frame, "trackStates" + s + "_extra__");
+      col->releaseInto(frame, trackStatesKey + "_extra__");
     }
 
     m_dynamic.clear();
@@ -998,6 +1188,8 @@ class MutablePodioTrackStateContainer final
   }
 
  private:
+  bool storeUncalibrated() const { return m_links != nullptr; }
+
   template <template <typename...> class other_holder_t>
   friend class ConstPodioTrackStateContainer;
   friend class PodioTrackStateContainerBase;
@@ -1006,6 +1198,9 @@ class MutablePodioTrackStateContainer final
   holder_t<ActsPodioEdm::TrackStateCollection> m_collection;
   holder_t<ActsPodioEdm::BoundParametersCollection> m_params;
   holder_t<ActsPodioEdm::JacobianCollection> m_jacs;
+
+  ActsPodioEdm::TrackStateHitLinkCollection* m_links = nullptr;
+
   std::vector<std::shared_ptr<const Acts::Surface>> m_surfaces;
 
   std::unordered_map<Acts::HashedString,
@@ -1027,7 +1222,8 @@ static_assert(Acts::MutableMultiTrajectoryBackend<
 MutablePodioTrackStateContainer(PodioUtil::ConversionHelper&,
                                 ActsPodioEdm::TrackStateCollection&,
                                 ActsPodioEdm::BoundParametersCollection&,
-                                ActsPodioEdm::JacobianCollection&)
+                                ActsPodioEdm::JacobianCollection&,
+                                ActsPodioEdm::TrackStateHitLinkCollection*)
     -> MutablePodioTrackStateContainer<Acts::RefHolder>;
 
 template <template <typename...> class holder_t>
@@ -1041,7 +1237,8 @@ inline ConstPodioTrackStateContainer<holder_t>::ConstPodioTrackStateContainer(
       m_collection{*other.m_collection},
       m_params{*other.m_params},
       m_jacs{*other.m_jacs},
-      m_surfaces{other.m_surfaces} {
+      m_surfaces{other.m_surfaces},
+      m_links{other.m_links} {
   for (const auto& [key, col] : other.m_dynamic) {
     m_dynamic.insert({key, col->asConst()});
   }
@@ -1057,7 +1254,8 @@ inline ConstPodioTrackStateContainer<holder_t>::ConstPodioTrackStateContainer(
       m_collection{std::move(other.m_collection)},
       m_params{std::move(other.m_params)},
       m_jacs{std::move(other.m_jacs)},
-      m_surfaces{std::move(other.m_surfaces)} {
+      m_surfaces{std::move(other.m_surfaces)},
+      m_links{other.m_links} {
   for (auto& [key, col] : other.m_dynamic) {
     m_dynamic.insert({key, std::move(col)});
   }

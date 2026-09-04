@@ -18,6 +18,21 @@
 #include <iterator>
 #include <vector>
 
+void Acts::to_json(nlohmann::json& j, const Acts::ExtentEnvelope& e) {
+  for (auto aDir : allAxisDirections()) {
+    if (e[aDir] != zeroEnvelope) {
+      j[axisDirectionName(aDir)] = Range1D<double>(e[aDir][0], e[aDir][1]);
+    }
+  }
+}
+
+void Acts::from_json(const nlohmann::json& j, Acts::ExtentEnvelope& e) {
+  for (const auto& [key, value] : j.items()) {
+    AxisDirection aDir = axisDirectionFromName(key);
+    e[aDir] = {value["min"].get<double>(), value["max"].get<double>()};
+  }
+}
+
 void Acts::to_json(nlohmann::json& j, const Acts::Extent& e) {
   {
     nlohmann::json jrange;

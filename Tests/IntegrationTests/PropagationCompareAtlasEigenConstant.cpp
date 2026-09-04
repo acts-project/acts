@@ -36,6 +36,7 @@ using EigenPropagator = Propagator<EigenStepper>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 1_um;
+constexpr auto epsTime = 1_um;
 constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
 // relative covariance tolerance
@@ -62,7 +63,7 @@ BOOST_DATA_TEST_CASE(Forward,
   runForwardComparisonTest(
       atlasPropagator, eigenPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s, epsPos,
-      epsDir, epsMom, epsCov);
+      epsTime, epsDir, epsMom, epsCov);
 }
 
 BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
@@ -73,7 +74,7 @@ BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
   runToSurfaceComparisonTest(
       atlasPropagator, eigenPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      ZCylinderSurfaceBuilder(), epsPos, epsTime, epsDir, epsMom, epsCov);
 }
 
 BOOST_DATA_TEST_CASE(
@@ -85,7 +86,7 @@ BOOST_DATA_TEST_CASE(
   runToSurfaceComparisonTest(
       atlasPropagator, eigenPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      DiscSurfaceBuilder(), epsPos, epsTime, epsDir, epsMom, epsCov);
 }
 
 BOOST_DATA_TEST_CASE(ToPlane,
@@ -96,7 +97,7 @@ BOOST_DATA_TEST_CASE(ToPlane,
   runToSurfaceComparisonTest(
       atlasPropagator, eigenPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      PlaneSurfaceBuilder(), epsPos, epsTime, epsDir, epsMom, epsCov);
 }
 
 BOOST_DATA_TEST_CASE(ToStrawAlongZ,
@@ -107,7 +108,7 @@ BOOST_DATA_TEST_CASE(ToStrawAlongZ,
   runToSurfaceComparisonTest(
       atlasPropagator, eigenPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
+      ZStrawSurfaceBuilder(), epsPos, epsTime, epsDir, epsMom, epsCov);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

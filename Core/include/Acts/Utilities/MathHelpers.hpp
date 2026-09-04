@@ -249,4 +249,31 @@ constexpr T binomial(const T n, const T k) {
   return product<T>(n - k + 1, n) / factorial<T>(k);
 }
 
+/// Calculate the sinc function, defined as sin(x)/x, with a special handling
+/// for x=0 to avoid numerical instability.
+/// @param x The input value for which to calculate the sinc function
+/// @return The value of sinc(x)
+inline double sinc(double x) {
+  // Numerical limit for double to get a different number than 1 from the first
+  // order Taylor expansion of sin(x)/x ~ 1-x*x/6 around x=0.
+  static const double eps =
+      std::sqrt(std::numeric_limits<double>::epsilon()) * 6;
+  if (std::abs(x) < eps) {
+    return 1.0;
+  }
+  // Otherwise std::sin(x) ~ x is stable for small x
+  return std::sin(x) / x;
+}
+
+/// Calculate the integer power of a number at compile time using recursion.
+/// @todo std::pow() will be constexpr in C++26 and this function can be removed
+/// @tparam T The type of the base number, which should support multiplication by itself
+/// @param num The base number to be raised to a power
+/// @param pow The exponent to which the base number is raised
+/// @return The result of num raised to the power of pow
+template <typename T>
+consteval T ipow(T num, unsigned int pow) {
+  return (pow == 0) ? 1 : num * ipow(num, pow - 1);
+}
+
 }  // namespace Acts

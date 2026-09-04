@@ -22,7 +22,7 @@ void Acts::to_json(
 
 void Acts::to_json(nlohmann::json& j, const Acts::TrackingVolume& volume) {
   j[Acts::jsonKey().namekey] = volume.volumeName();
-  if (volume.volumeMaterial() != nullptr) {
+  if (volume.hasMaterial()) {
     to_json(j, volume.volumeMaterial());
   }
   return;

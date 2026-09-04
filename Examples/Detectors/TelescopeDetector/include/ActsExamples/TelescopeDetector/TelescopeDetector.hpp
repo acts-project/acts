@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 

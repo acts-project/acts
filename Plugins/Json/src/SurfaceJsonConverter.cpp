@@ -11,8 +11,10 @@
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
+#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
@@ -20,6 +22,8 @@
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/PointBounds.hpp"
+#include "Acts/Surfaces/PointSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
@@ -45,6 +49,8 @@ std::string getSurfaceBoundsKind() {
     return "Rectangle";
   } else if (std::is_same_v<bounds_t, Acts::TrapezoidBounds>) {
     return "Trapezoid";
+  } else if (std::is_same_v<bounds_t, Acts::DiamondBounds>) {
+    return "Diamond";
   } else if (std::is_same_v<bounds_t, Acts::AnnulusBounds>) {
     return "Annulus";
   } else if (std::is_same_v<bounds_t, Acts::RadialBounds>) {
@@ -57,6 +63,13 @@ std::string getSurfaceBoundsKind() {
     return "Cone";
   } else if (std::is_same_v<bounds_t, Acts::LineBounds>) {
     return "Line";
+  } else if (std::is_same_v<bounds_t, Acts::PointBounds>) {
+    return "Point";
+  } else if (std::is_same_v<bounds_t, Acts::ConvexPolygonBoundsBase>) {
+    // Single kind for every Acts::ConvexPolygonBounds<N> specialization
+    // (including PolygonDynamic), routed via the abstract base class so the
+    // TypeDispatcher only needs one registration.
+    return "ConvexPolygon";
   } else if (std::is_same_v<bounds_t, Acts::SurfaceBounds>) {
     return "DefaultBounds";
   } else if (std::is_same_v<bounds_t, Acts::InfiniteBounds>) {
@@ -83,6 +96,8 @@ std::string getSurfaceKind() {
     return "Straw";
   } else if (std::is_same_v<surface_t, Acts::PerigeeSurface>) {
     return "Perigee";
+  } else if (std::is_same_v<surface_t, Acts::PointSurface>) {
+    return "Point";
   } else {
     throw std::invalid_argument("Unknown surface kind");
   }
@@ -123,7 +138,7 @@ nlohmann::json surfaceToJsonT(const surface_t& surface,
   jSurface["type"] = surface.type();
   jSurface["geo_id"] = nlohmann::json(surface.geometryId());
   jSurface["sensitive"] = surface.isSensitive();
-  if (surface.surfaceMaterial() != nullptr && opt.writeMaterial) {
+  if (surface.hasMaterial() && opt.writeMaterial) {
     jSurface["material"] =
         nlohmann::json(surface.surfaceMaterial())["material"];
   }
@@ -202,6 +217,7 @@ Acts::SurfaceJsonConverter::Config::defaultConfig() {
   cfg.surfaceEncoder.registerFunction(surfaceToJsonT<ConeSurface>);
   cfg.surfaceEncoder.registerFunction(surfaceToJsonT<StrawSurface>);
   cfg.surfaceEncoder.registerFunction(surfaceToJsonT<PerigeeSurface>);
+  cfg.surfaceEncoder.registerFunction(surfaceToJsonT<PointSurface>);
 
   cfg.surfaceBoundsEncoder.registerFunction(
       surfaceBoundsToJsonT<EllipseBounds>);
@@ -209,6 +225,8 @@ Acts::SurfaceJsonConverter::Config::defaultConfig() {
       surfaceBoundsToJsonT<RectangleBounds>);
   cfg.surfaceBoundsEncoder.registerFunction(
       surfaceBoundsToJsonT<TrapezoidBounds>);
+  cfg.surfaceBoundsEncoder.registerFunction(
+      surfaceBoundsToJsonT<DiamondBounds>);
   cfg.surfaceBoundsEncoder.registerFunction(
       surfaceBoundsToJsonT<AnnulusBounds>);
   cfg.surfaceBoundsEncoder.registerFunction(surfaceBoundsToJsonT<RadialBounds>);
@@ -218,8 +236,19 @@ Acts::SurfaceJsonConverter::Config::defaultConfig() {
       surfaceBoundsToJsonT<CylinderBounds>);
   cfg.surfaceBoundsEncoder.registerFunction(surfaceBoundsToJsonT<ConeBounds>);
   cfg.surfaceBoundsEncoder.registerFunction(surfaceBoundsToJsonT<LineBounds>);
+  cfg.surfaceBoundsEncoder.registerFunction(surfaceBoundsToJsonT<PointBounds>);
   cfg.surfaceBoundsEncoder.registerFunction(
       surfaceBoundsToJsonT<InfiniteBounds>);
+  // ConvexPolygonBounds is templated on the vertex count N. Registering the
+  // abstract ConvexPolygonBoundsBase lets a single encoder handle every
+  // specialization (ConvexPolygonBounds<3>, <4>, <6>, ..., <PolygonDynamic>);
+  // the runtime dynamic_cast inside TypeDispatcher resolves them all to the
+  // same handler. This fixes the regression introduced by PR #5195 where TGeo
+  // shapes that produce ConvexPolygonBounds<4> (e.g. TGeoTrap / TGeoArb8) made
+  // the JsonSurfacesWriter throw "No function registered for type:
+  // Acts::ConvexPolygonBounds<4>".
+  cfg.surfaceBoundsEncoder.registerFunction(
+      surfaceBoundsToJsonT<ConvexPolygonBoundsBase>);
 
   // Decoders
   cfg.surfaceDecoder.registerKind(
@@ -232,8 +261,39 @@ Acts::SurfaceJsonConverter::Config::defaultConfig() {
       getSurfaceKind<PlaneSurface>() + getSurfaceBoundsKind<TrapezoidBounds>(),
       surfaceFromJsonT<PlaneSurface, TrapezoidBounds>);
   cfg.surfaceDecoder.registerKind(
+      getSurfaceKind<PlaneSurface>() + getSurfaceBoundsKind<DiamondBounds>(),
+      surfaceFromJsonT<PlaneSurface, DiamondBounds>);
+  cfg.surfaceDecoder.registerKind(
       getSurfaceKind<PlaneSurface>() + getSurfaceBoundsKind<InfiniteBounds>(),
       surfaceFromJsonT<PlaneSurface>);
+  // Custom decoder for ConvexPolygonBounds: the number of vertices is encoded
+  // only via the size of the "values" array (2 doubles per vertex), so we
+  // build a dynamically-sized polygon. The kind string ("PlaneConvexPolygon")
+  // is the same one the encoder writes, since getSurfaceBoundsKind returns
+  // "ConvexPolygon" for any ConvexPolygonBounds<N>.
+  cfg.surfaceDecoder.registerKind(
+      getSurfaceKind<PlaneSurface>() +
+          getSurfaceBoundsKind<ConvexPolygonBoundsBase>(),
+      [](const nlohmann::json& j) -> std::shared_ptr<Surface> {
+        Transform3 sTransform =
+            Transform3JsonConverter::fromJson(j["transform"]);
+        std::vector<double> bVector = j["bounds"]["values"];
+        if (bVector.size() < 6 || bVector.size() % 2 != 0) {
+          throw std::invalid_argument(
+              "Invalid ConvexPolygonBounds 'values' array: need an even "
+              "number of entries (>= 6) encoding at least 3 (x, y) vertices");
+        }
+        std::vector<Vector2> vertices;
+        vertices.reserve(bVector.size() / 2);
+        for (std::size_t i = 0; i < bVector.size(); i += 2) {
+          vertices.emplace_back(bVector[i], bVector[i + 1]);
+        }
+        auto sBounds =
+            std::make_shared<const ConvexPolygonBounds<PolygonDynamic>>(
+                vertices);
+        return Surface::makeShared<PlaneSurface>(sTransform,
+                                                 std::move(sBounds));
+      });
 
   cfg.surfaceDecoder.registerKind(
       getSurfaceKind<DiscSurface>() + getSurfaceBoundsKind<AnnulusBounds>(),
@@ -260,6 +320,13 @@ Acts::SurfaceJsonConverter::Config::defaultConfig() {
   cfg.surfaceDecoder.registerKind(
       getSurfaceKind<PerigeeSurface>() + getSurfaceBoundsKind<InfiniteBounds>(),
       surfaceFromJsonT<PerigeeSurface>);
+
+  cfg.surfaceDecoder.registerKind(
+      getSurfaceKind<PointSurface>() + getSurfaceBoundsKind<PointBounds>(),
+      surfaceFromJsonT<PointSurface, PointBounds>);
+  cfg.surfaceDecoder.registerKind(
+      getSurfaceKind<PointSurface>() + getSurfaceBoundsKind<InfiniteBounds>(),
+      surfaceFromJsonT<PointSurface>);
   return cfg;
 }
 
@@ -297,26 +364,5 @@ nlohmann::json Acts::SurfaceJsonConverter::toJson(const GeometryContext& gctx,
   jSurface["bounds"] = jBounds;
   jSurface["kind"] =
       jSurface["kind"].get<std::string>() + jBounds["kind"].get<std::string>();
-  return jSurface;
-}
-
-nlohmann::json Acts::SurfaceJsonConverter::toJsonDetray(
-    const GeometryContext& gctx, const Surface& surface,
-    const Options& options) {
-  nlohmann::json jSurface;
-  const auto& sBounds = surface.bounds();
-  const auto sTransform = surface.localToGlobalTransform(gctx);
-
-  jSurface["transform"] =
-      Transform3JsonConverter::toJson(sTransform, options.transformOptions);
-
-  auto jMask =
-      SurfaceBoundsJsonConverter::toJsonDetray(sBounds, options.portal);
-  jSurface["mask"] = jMask;
-  jSurface["source"] = surface.geometryId().value();
-  jSurface["barcode"] = 0;
-  jSurface["type"] =
-      options.portal ? 0 : (surface.geometryId().sensitive() > 0 ? 1u : 2u);
-
   return jSurface;
 }

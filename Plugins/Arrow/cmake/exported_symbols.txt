@@ -1,0 +1,16 @@
+# macOS exported-symbols list for libActsPluginArrow (allowlist).
+#
+# Used by ld64 via -exported_symbols_list. Any symbol whose mangled name
+# matches a pattern here is exported from the .so; all others are hidden,
+# regardless of their origin.
+#
+# Pattern syntax: shell-style globs against the "linker symbol name",
+# which on macOS has an extra leading underscore (e.g., _ZN4Acts... appears
+# as __ZN4Acts in the symbol table).
+#
+# Anything whose mangled name contains "Acts" — covers all ACTS-related
+# namespaces (Acts::, ActsPlugins::, ActsExamples::) and any template,
+# vtable, typeinfo, or thunk parameterized on ACTS types.
+# C++ mangling is case-sensitive, so this does not match lowercase
+# "acts" or "ACTS".
+*Acts*

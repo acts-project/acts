@@ -62,3 +62,5 @@ foreach(f ${py_files})
         DESTINATION ${_acts_python_install_dir}/${_rel}
     )
 endforeach()
+
+acts_pybind_generate_stubs(acts ActsPythonBindings)

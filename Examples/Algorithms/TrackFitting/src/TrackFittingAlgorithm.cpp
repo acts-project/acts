@@ -96,11 +96,11 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                           clusters);
 
   TrackFitterFunction::GeneralFitterOptions options{
-      ctx.geoContext,
+      ctx.recoGeoContext,
       ctx.magFieldContext,
       ctx.calibContext,
       pSurface.get(),
-      Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext),
+      Acts::PropagatorPlainOptions(ctx.recoGeoContext, ctx.magFieldContext),
       false};
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
@@ -128,12 +128,12 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     // We can have empty tracks which must give empty fit results so the number
     // of entries in input and output containers matches.
     if (protoTrack.empty()) {
-      ACTS_WARNING("Empty proto track " << itrack << " found.");
+      ACTS_DEBUG("Empty proto track " << itrack << " found.");
       continue;
     }
 
     ACTS_VERBOSE("Initial 4 position: "
-                 << initialParams.fourPosition(ctx.geoContext).transpose());
+                 << initialParams.fourPosition(ctx.recoGeoContext).transpose());
     ACTS_VERBOSE(
         "Initial direction: " << initialParams.direction().transpose());
     ACTS_VERBOSE("Initial momentum: " << initialParams.absoluteMomentum());
@@ -166,9 +166,9 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
         ACTS_VERBOSE("No fitted parameters for track " << itrack);
       }
     } else {
-      ACTS_WARNING("Fit failed for track "
-                   << itrack << " with error: " << result.error() << ", "
-                   << result.error().message());
+      ACTS_DEBUG("Fit failed for track "
+                 << itrack << " with error: " << result.error() << ", "
+                 << result.error().message());
     }
   }
 

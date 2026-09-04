@@ -8,6 +8,7 @@ import functools
 from .ActsPythonBindings import *
 from .ActsPythonBindings import __version__
 from .ActsPythonBindings import _demo_histogram1, _demo_profile1, _demo_efficiency1
+from .ActsPythonBindings import _testing
 from . import ActsPythonBindings
 from ._adapter import _patch_config
 from .histogram import _patch_histogram_types
@@ -17,17 +18,18 @@ if (
     and os.environ["ACTS_LOG_FAILURE_THRESHOLD"] != logging.getFailureThreshold().name
 ):
     error = (
-        "Runtime log failure threshold is given in environment variable "
-        f"`ACTS_LOG_FAILURE_THRESHOLD={os.environ['ACTS_LOG_FAILURE_THRESHOLD']}`"
-        "However, a compile-time value is set via CMake, i.e. "
-        f"`ACTS_LOG_FAILURE_THRESHOLD={logging.getFailureThreshold().name}`. "
-        "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`, which disables runtime thresholds."
+        "Log failure threshold is given in environment variable "
+        f"`ACTS_LOG_FAILURE_THRESHOLD={os.environ['ACTS_LOG_FAILURE_THRESHOLD']}`, "
+        f"but the effective threshold is `{logging.getFailureThreshold().name}`. "
+        "Either the value is misspelled -- the accepted ones are the "
+        "`acts.logging.Level` names -- or this build was configured with "
+        "`ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`, which compiles the check out."
     )
     if "PYTEST_CURRENT_TEST" in os.environ:
         # test environment, fail hard
         raise RuntimeError(error)
     else:
-        warnings.warn(error + "\nThe compile-time threshold will be used in this case!")
+        warnings.warn(error + "\nNo failure threshold will be applied.")
 
 
 def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):
@@ -67,13 +69,9 @@ def _decoratorFromFile(file: Union[str, Path], **kwargs):
 
     kwargs.setdefault("level", ActsPythonBindings.logging.INFO)
 
-    from .ActsPluginsPythonBindingsJson import (
-        MaterialMapJsonConverter,
-        JsonMaterialDecorator,
-    )
-    from .ActsPluginsPythonBindingsRoot import RootMaterialDecorator
-
     if file.suffix in (".json", ".cbor"):
+        from .json import MaterialMapJsonConverter, JsonMaterialDecorator
+
         c = MaterialMapJsonConverter.Config()
         for k in kwargs.keys():
             if hasattr(c, k):
@@ -81,6 +79,8 @@ def _decoratorFromFile(file: Union[str, Path], **kwargs):
 
         return JsonMaterialDecorator(jFileName=str(file), rConfig=c, **kwargs)
     elif file.suffix == ".root":
+        from .root import RootMaterialDecorator
+
         return RootMaterialDecorator(fileName=str(file), **kwargs)
     else:
         raise ValueError(f"Unknown file type {file.suffix}")

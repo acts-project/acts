@@ -360,6 +360,10 @@ double DiscSurface::referencePositionValue(const GeometryContext& gctx,
   return GeometryObject::referencePositionValue(gctx, aDir);
 }
 
+RotationMatrix3 DiscSurface::referenceFrame(const GeometryContext& gctx) const {
+  return localToGlobalTransform(gctx).matrix().block<3, 3>(0, 0);
+}
+
 double DiscSurface::pathCorrection(const GeometryContext& gctx,
                                    const Vector3& /*position*/,
                                    const Vector3& direction) const {
@@ -540,6 +544,7 @@ std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
                                       axisDirectionName(direction));
   }
 }
+
 const std::shared_ptr<const DiscBounds>& DiscSurface::boundsPtr() const {
   return m_bounds;
 }

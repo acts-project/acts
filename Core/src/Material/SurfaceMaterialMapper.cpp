@@ -162,7 +162,7 @@ void SurfaceMaterialMapper::collectMaterialVolumes(
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
                                    << "' for material surfaces.");
   ACTS_VERBOSE("- Insert Volume ...");
-  if (tVolume.volumeMaterial() != nullptr) {
+  if (tVolume.hasMaterial()) {
     mState.volumeMaterial[tVolume.geometryId()] = tVolume.volumeMaterialPtr();
   }
 
@@ -437,15 +437,24 @@ Result<void> SurfaceMaterialMapper::mapInteraction(
     // but no material step was assigned to this surface
     for (auto& mSurface : mappingSurfaces) {
       auto mgID = mSurface.surface->geometryId();
+
+      auto lposition = mSurface.surface->globalToLocal(
+          mState.geoContext, mSurface.position, mSurface.direction);
+      if (!lposition.ok()) {
+        ACTS_WARNING("Failed to convert global to local position for surface "
+                     << mgID << ": " << lposition.error().message());
+        continue;
+      }
       // Count an empty hit only if the surface does not appear in the
       // list of assigned surfaces
       if (assignedMaterial[mgID] == 0) {
         auto missedMaterial = mState.accumulatedMaterial.find(mgID);
         if (m_cfg.computeVariance) {
+          // TODO local material position vs local surface position
           missedMaterial->second.trackVariance(
               mSurface.position,
               mState.inputSurfaceMaterial[currentID]->materialSlab(
-                  mSurface.position),
+                  lposition.value()),
               true);
         }
         missedMaterial->second.trackAverage(mSurface.position, true);
