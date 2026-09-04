@@ -13,9 +13,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <iostream>
+#include <unordered_map>
 
-namespace Acts::Experimental {
+namespace Acts::Experimental::detail {
 
 GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
                      const float etaBinWidth, const std::int32_t bin0)
@@ -310,16 +310,27 @@ std::int32_t GbtsLayer::getEtaBin(const float zh, const float rh) const {
   return m_bins.at(idx);
 }
 
+}  // namespace Acts::Experimental::detail
+
+namespace Acts::Experimental {
+
+namespace {
+// key: bin. value: (outgoing, incoming) bins it connects to.
+using BinConnections =
+    std::unordered_map<std::uint32_t, std::pair<std::vector<std::uint32_t>,
+                                                std::vector<std::uint32_t>>>;
+}  // namespace
+
 GbtsGeometry::GbtsGeometry(
-    const std::vector<GbtsLayerDescription>& layerDescriptions,
-    const GbtsLayerConnectionMap& layerConnections)
-    : m_etaBinWidth(layerConnections.etaBinWidth) {
-  // TODO configurable z0 range
-  const float minZ0 = -168.0f;
-  const float maxZ0 = 168.0f;
+    std::span<const GbtsLayerDescription> layerDescriptions,
+    std::span<const GbtsLayerConnection> layerConnections,
+    const float etaBinWidth, const GbtsZ0Range& z0Range, const Logger& logger)
+    : m_etaBinWidth(etaBinWidth) {
+  const float minZ0 = z0Range.min;
+  const float maxZ0 = z0Range.max;
 
   for (const GbtsLayerDescription& layer : layerDescriptions) {
-    const GbtsLayer& pL = createLayer(layer, m_nEtaBins);
+    const detail::GbtsLayer& pL = createLayer(layer, m_nEtaBins);
     m_nEtaBins += pL.numOfBins();
   }
 
@@ -328,48 +339,40 @@ GbtsGeometry::GbtsGeometry(
 
   std::int32_t lastBin1 = -1;
 
-  for (const auto& [layer, vConn] : layerConnections.connectionMap) {
-    for (const auto& connection : vConn) {
-      const std::uint32_t src = connection->src;  // n2 : the new connectors
-      const std::uint32_t dst = connection->dst;  // n1
+  for (const GbtsLayerConnection& connection : layerConnections) {
+    const detail::GbtsLayer* pL1 = layerById(connection.dst);  // n1
+    const detail::GbtsLayer* pL2 = layerById(connection.src);  // n2
+    if (pL1 == nullptr) {
+      ACTS_WARNING("Skipping invalid dst layer " << connection.dst);
+      continue;
+    }
+    if (pL2 == nullptr) {
+      ACTS_WARNING("Skipping invalid src layer " << connection.src);
+      continue;
+    }
 
-      const GbtsLayer* pL1 = layerById(dst);
-      const GbtsLayer* pL2 = layerById(src);
-      if (pL1 == nullptr) {
-        std::cout << " skipping invalid dst layer " << dst << std::endl;
-        continue;
-      }
-      if (pL2 == nullptr) {
-        std::cout << " skipping invalid src layer " << src << std::endl;
-        continue;
-      }
+    const std::uint32_t nSrcBins = pL2->numOfBins();
+    const std::uint32_t nDstBins = pL1->numOfBins();
 
-      const std::uint32_t nSrcBins = pL2->numOfBins();
-      const std::uint32_t nDstBins = pL1->numOfBins();
+    // loop over bins in Layer 1
+    for (std::uint32_t b1 = 0; b1 < nDstBins; ++b1) {
+      // loop over bins in Layer 2
+      for (std::uint32_t b2 = 0; b2 < nSrcBins; ++b2) {
+        if (!pL1->checkCompatibility(*pL2, b1, b2, minZ0, maxZ0)) {
+          continue;
+        }
 
-      connection->binTable.resize(nSrcBins * nDstBins, 0);
-      // loop over bins in Layer 1
-      for (std::uint32_t b1 = 0; b1 < nDstBins; ++b1) {
-        // loop over bins in Layer 2
-        for (std::uint32_t b2 = 0; b2 < nSrcBins; ++b2) {
-          if (!pL1->checkCompatibility(*pL2, b1, b2, minZ0, maxZ0)) {
-            continue;
-          }
-          const std::uint32_t address = b1 + b2 * nDstBins;
-          connection->binTable.at(address) = 1;
+        const std::int32_t bin1Idx = pL1->bins().at(b1);
+        const std::int32_t bin2Idx = pL2->bins().at(b2);
 
-          const std::int32_t bin1Idx = pL1->bins().at(b1);
-          const std::int32_t bin2Idx = pL2->bins().at(b2);
-
-          if (bin1Idx != lastBin1) {
-            // adding a new group
-            m_binGroups.emplace_back(bin1Idx,
-                                     std::vector<std::uint32_t>(1, bin2Idx));
-            lastBin1 = bin1Idx;
-          } else {
-            // extend the last group
-            m_binGroups.back().second.push_back(bin2Idx);
-          }
+        if (bin1Idx != lastBin1) {
+          // adding a new group
+          m_binGroups.emplace_back(bin1Idx,
+                                   std::vector<std::uint32_t>(1, bin2Idx));
+          lastBin1 = bin1Idx;
+        } else {
+          // extend the last group
+          m_binGroups.back().second.push_back(bin2Idx);
         }
       }
     }
@@ -492,7 +495,7 @@ GbtsGeometry::GbtsGeometry(
   }
 }
 
-const GbtsLayer* GbtsGeometry::layerById(std::uint32_t id) const {
+const detail::GbtsLayer* GbtsGeometry::layerById(std::uint32_t id) const {
   if (const auto it = m_layerFromUserIdMap.find(id);
       it != m_layerFromUserIdMap.end()) {
     return &m_layers.at(it->second);
@@ -500,14 +503,15 @@ const GbtsLayer* GbtsGeometry::layerById(std::uint32_t id) const {
   return nullptr;
 }
 
-const GbtsLayer& GbtsGeometry::layerByIndex(std::int32_t idx) const {
+const detail::GbtsLayer& GbtsGeometry::layerByIndex(std::int32_t idx) const {
   return m_layers.at(idx);
 }
 
-const GbtsLayer& GbtsGeometry::createLayer(
+const detail::GbtsLayer& GbtsGeometry::createLayer(
     const GbtsLayerDescription& layerDescription, std::uint32_t bin0) {
   const std::uint32_t layerIndex = m_layers.size();
-  GbtsLayer& ref = m_layers.emplace_back(layerDescription, m_etaBinWidth, bin0);
+  detail::GbtsLayer& ref =
+      m_layers.emplace_back(layerDescription, m_etaBinWidth, bin0);
   m_layerFromUserIdMap.try_emplace(layerDescription.id, layerIndex);
   return ref;
 }

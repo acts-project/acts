@@ -61,6 +61,22 @@ if(DETRAY_BUILD_TEST_UTILS OR DETRAY_BUILD_BENCHMARKS)
     )
 
     unset(_detray_test_common_headers)
+
+    if(DETRAY_BUILD_CUDA)
+        message(STATUS "Building 'detray::test_common_cuda' component")
+        file(
+            GLOB _detray_test_common_cuda_headers
+            RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+            "include/detray/test/common/device/cuda*.hpp"
+        )
+
+        detray_add_library(detray_test_common_cuda test_common_cuda "${_detray_test_common_cuda_headers}")
+
+        target_link_libraries(
+            detray_test_common_cuda
+            INTERFACE vecmem::cuda covfie::cuda detray::test_common
+        )
+    endif()
 endif()
 
 # Lightweight test utils library without external dependencies
@@ -78,6 +94,23 @@ if(DETRAY_BUILD_TEST_UTILS OR DETRAY_BUILD_VALIDATION_TOOLS)
     target_link_libraries(detray_test_utils INTERFACE vecmem::core detray::core)
 
     unset(_detray_test_utils_headers)
+
+    # Compile all headers one-by-one.
+    detray_compile_headers(
+        test_utils
+        detray::test_utils
+        "include/detray/test/utils/*.hpp"
+        "include/detray/test/utils/**/*.hpp"
+    )
+    if(TARGET detray_test_utils_HEADERS)
+        # The test utils headers need an algebra plugin to compile. They also
+        # reach detray/test/framework/types.hpp (and through it the detector
+        # metadata headers), which detray::test_utils does not declare.
+        target_link_libraries(
+            detray_test_utils_HEADERS
+            PRIVATE detray::core_array detray::detectors
+        )
+    endif()
 endif()
 
 # Build extended validation tools (actsvg and csv dependencies)

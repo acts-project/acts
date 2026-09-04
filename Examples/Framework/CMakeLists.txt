@@ -8,6 +8,7 @@ acts_add_library(
     src/EventData/MeasurementCalibration.cpp
     src/EventData/SimParticle.cpp
     src/EventData/Jets.cpp
+    src/EventData/SeedSpacePointSelection.cpp
     src/Framework/IAlgorithm.cpp
     src/Framework/SequenceElement.cpp
     src/Framework/WhiteBoard.cpp
@@ -24,6 +25,8 @@ acts_add_library(
     src/Validation/DuplicationPlotTool.cpp
     src/Validation/EffPlotTool.cpp
     src/Validation/FakePlotTool.cpp
+    src/Validation/HistogramFit.cpp
+    src/Validation/ParametersOnSurface.cpp
     src/Validation/ResPlotTool.cpp
     src/Validation/TrackClassification.cpp
     src/Validation/PatternRecognitionPerformanceCollector.cpp

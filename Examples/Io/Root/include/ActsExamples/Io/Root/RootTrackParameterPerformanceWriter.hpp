@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
@@ -21,7 +22,9 @@
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
 #include <mutex>
+#include <optional>
 #include <string>
+#include <vector>
 
 class TFile;
 class TTree;
@@ -31,6 +34,15 @@ namespace ActsExamples {
 /// Write out the residual and pull of track parameters and efficiency.
 ///
 /// Efficiency here is the fraction of smoothed tracks compared to all tracks.
+///
+/// With `parameterSource = TrackState` the residuals are taken from the
+/// individual measurement states on their own surfaces instead of the track
+/// reference surface, optionally restricted to a geometry region. That needs
+/// `inputSimHits` and `inputMeasurementSimHitsMap` for the truth.
+///
+/// With `reference = Measurement` those states are compared against their own
+/// calibrated measurement instead. That only constrains the local parameters,
+/// but it needs no truth input and therefore also runs on data.
 ///
 /// A common file can be provided for the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing file
@@ -42,16 +54,34 @@ class RootTrackParameterPerformanceWriter final
   struct Config {
     /// Input track collection.
     std::string inputTracks;
-    /// Input particles collection.
+    /// Input particles collection. `Truth` reference only.
     std::string inputParticles;
-    /// Input track-particle matching.
+    /// Input track-particle matching. `Truth` reference only.
     std::string inputTrackParticleMatching;
+    /// Input simulated hits collection. `TrackState` source and `Truth`
+    /// reference only.
+    std::string inputSimHits;
+    /// Input measurement to simulated hits map. `TrackState` source and
+    /// `Truth` reference only.
+    std::string inputMeasurementSimHitsMap;
     /// Output filename.
     std::string filePath = "performance_track_parameters.root";
     /// Plot tool configurations.
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
+
+    /// Where to take the reconstructed parameters from.
+    TrackParameterSource parameterSource = TrackParameterSource::Track;
+    /// What to compare the reconstructed parameters against. `Measurement` is
+    /// `TrackState` source only and requires an explicit @c parameterType.
+    TrackParameterReference reference = TrackParameterReference::Truth;
+    /// Which track-state parameters to use. If not set, the best available
+    /// ones (smoothed, filtered, or predicted). `TrackState` source only.
+    std::optional<TrackParameterType> parameterType;
+    /// If non-empty, only track states in these geometry regions are used.
+    /// `TrackState` source only.
+    std::vector<Acts::GeometryIdentifier> geometrySelection;
 
     /// Minimum number of entries in a bin for it to be included in the
     /// mean/width fit.
@@ -87,6 +117,9 @@ class RootTrackParameterPerformanceWriter final
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
+      this, "InputMeasurementSimHitsMap"};
 
   /// Mutex used to protect multi-threaded writes.
   std::mutex m_writeMutex;

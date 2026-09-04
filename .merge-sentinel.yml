@@ -1,7 +1,10 @@
 rules:
-  - required_checks:
-      - Lint PR / Validate PR title
-    required_pattern:
+  # Lint PR / Validate PR title only runs on pull_request_target, never on
+  # merge_group, so it can't be required here: merge-sentinel would sit
+  # pending on every merge-queue entry until the queue's check timeout
+  # evicts it. PR title format is still enforced continuously by that
+  # workflow pre-queue; this only skips re-verifying it at merge time.
+  - required_pattern:
       - "policy-bot: *"
 
   - branch_filter:
@@ -41,3 +44,18 @@ rules:
      - ".github/workflows/detray.yml"
     required_pattern:
      - "Detray / *"
+
+  # Without this the Traccc jobs run on a queue entry but do not gate it:
+  # pending only blocks when required, and they take ~25 minutes, so the
+  # aggregate would go green long before they report. A Detray-only change
+  # still runs them (traccc.yml triggers on Detray/** too) and a *failure*
+  # fails the gate whether required or not -- only the wait is missing there.
+  - branch_filter:
+     - "main"
+     - "develop/*"
+    paths:
+     - "Traccc/*"
+     - "Traccc/**/*"
+     - ".github/workflows/traccc.yml"
+    required_pattern:
+     - "Traccc / *"

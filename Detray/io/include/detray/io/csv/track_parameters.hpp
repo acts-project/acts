@@ -17,6 +17,7 @@
 
 // System include(s)
 #include <filesystem>
+#include <stdexcept>
 
 namespace detray::io::csv {
 

@@ -14,38 +14,44 @@
 
 namespace Acts {
 
-Vector2 PixelSpacePointBuilder::computeVarianceZR(
-    const GeometryContext& gctx, const Surface& surface,
-    const Vector3& spacePoint, const SquareMatrix2& localCov) {
+SquareMatrix2 PixelSpacePointBuilder::computeCovarianceZR(
+    const RotationMatrix3& rotLocalToGlobal, const Vector3& spacePoint,
+    const SquareMatrix2& localCov) {
   // the space point requires only the variance of the transverse and
   // longitudinal position. reduce computations by transforming the
   // covariance directly from local to z/r.
   //
-  // compute Jacobian from global coordinates to z/r
+  // the Jacobian from global coordinates to z/r is
   //
   //       dz/dz = 1
   //           r = sqrt(x² + y²)
-  //   dr/d{x,y} = (1 / sqrt(x² + y²)) * 2 * {x,y}
-  //             = 2 * {x,y} / r
+  //   dr/d{x,y} = {x,y} / r
   //
+  // and is applied to the reference frame directly rather than multiplied out,
+  // since three of its six entries are structurally zero.
   const double x = spacePoint.x();
   const double y = spacePoint.y();
-  const double scale = 2 / fastHypot(x, y);
-  Matrix<2, 3> jacXyzToZr = Matrix<2, 3>::Zero();
-  jacXyzToZr(0, 2) = 1;
-  jacXyzToZr(1, 0) = scale * x;
-  jacXyzToZr(1, 1) = scale * y;
+  const double scale = 1 / fastHypot(x, y);
 
+  // Jacobian from the two local coordinates to z/r: dz/dl is the z component
+  // of the local axis, dr/dl its radial component
+  SquareMatrix2 jac;
+  jac(0, 0) = rotLocalToGlobal(2, 0);
+  jac(0, 1) = rotLocalToGlobal(2, 1);
+  jac(1, 0) = scale * (x * rotLocalToGlobal(0, 0) + y * rotLocalToGlobal(1, 0));
+  jac(1, 1) = scale * (x * rotLocalToGlobal(0, 1) + y * rotLocalToGlobal(1, 1));
+
+  return jac * localCov * jac.transpose();
+}
+
+Vector2 PixelSpacePointBuilder::computeVarianceZR(
+    const GeometryContext& gctx, const Surface& surface,
+    const Vector3& spacePoint, const SquareMatrix2& localCov) {
   // using invalid direction vector, as it is usually not needed by the surface
-  SquareMatrix3 rotLocalToGlobal =
+  const RotationMatrix3 rotLocalToGlobal =
       surface.referenceFrame(gctx, spacePoint, Vector3::Zero());
 
-  // compute Jacobian from local coordinates to z/r
-  SquareMatrix2 jac = jacXyzToZr * rotLocalToGlobal.topLeftCorner<3, 2>();
-
-  // compute z/r variance
-  Vector2 result = (jac * localCov * jac.transpose()).diagonal();
-  return result;
+  return computeVarianceZR(rotLocalToGlobal, spacePoint, localCov);
 }
 
 }  // namespace Acts

@@ -24,6 +24,9 @@
 #include "detray/navigation/navigation_state.hpp"
 #include "detray/tracks/ray.hpp"
 
+// System include(s)
+#include <limits>
+
 namespace detray {
 
 template <typename detector_t, typename surface_t = void>

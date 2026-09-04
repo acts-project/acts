@@ -63,6 +63,13 @@ TRANSIENT_ERROR_PATTERNS=(
   "toomanyrequests"
   "Too Many Requests"
   "rate limit"
+  # GitHub sheds anonymous load with "GitHub is temporarily limiting some
+  # unauthenticated downloads to protect the stability of the platform. Please
+  # retry later or authenticate." github_auth.sh keeps us off that quota, but
+  # the message is explicitly a "try again" and must not be a hard failure.
+  "temporarily limiting"
+  "unauthenticated download"
+  "Please retry later"
   "HTTP Error 429"
   "HTTP Error 5[0-9][0-9]"
   "50[0-9] (Internal Server Error|Bad Gateway|Service Unavailable|Gateway Time-out)"
@@ -127,10 +134,13 @@ function retry_transient() {
 }
 
 # Parse command line arguments
-while getopts "c:t:d:e:s:fh" opt; do
+while getopts "c:t:d:e:s:F:fh" opt; do
   case ${opt} in
     c )
       compiler=$OPTARG
+      ;;
+    F )
+      flavor=$OPTARG
       ;;
     t )
       tag=$OPTARG
@@ -155,6 +165,7 @@ while getopts "c:t:d:e:s:fh" opt; do
       echo "  -d <destination> Specify install destination (defaults based on CI environment)"
       echo "  -e <env_file>    Specify environment file to output environments to"
       echo "  -s <cxx_std>     C++ standard for lockfile selection (e.g. 20, 23). Defaults to CXXSTD env var or 20."
+      echo "  -F <flavor>      Accelerator flavor (e.g. cuda13, rocm-gfx90a). Defaults to FLAVOR env var or the host stack."
       echo "  -f               Full dependency installation. Includes Geant4 datasets and Python packages."
       echo "  -h               Show this help message"
       exit 0
@@ -216,6 +227,14 @@ if [ -z "${cxx_std:-}" ]; then
   cxx_std="${CXXSTD:-20}"
 fi
 
+# `host` is the plain CPU stack, published with no flavor token: pass nothing.
+if [ -z "${flavor:-}" ]; then
+  flavor="${FLAVOR:-}"
+fi
+if [ "${flavor}" == "host" ]; then
+  flavor=""
+fi
+
 checkpoint "Create environment file $(realpath "$env_file")"
 echo "" > "$env_file"
 export env_file
@@ -243,6 +262,12 @@ if [ -n "${GITLAB_CI:-}" ]; then
 else
     _spack_folder=${PWD}/spack
 fi
+
+start_section "Authenticate github.com fetches"
+# Before anything reaches github.com: setup_spack.sh clones spack itself, and
+# the builtin package repo is fetched right after it.
+"${SCRIPT_DIR}/github_auth.sh"
+end_section
 
 start_section "Install spack if not already installed"
 if ! command -v spack &> /dev/null; then
@@ -334,6 +359,10 @@ cmd=(
 
 if [ "${compiler}" != "default" ]; then
     cmd+=("--compiler-binary" "${compiler}")
+fi
+
+if [ -n "${flavor}" ]; then
+    cmd+=("--flavor" "${flavor}")
 fi
 
 "${cmd[@]}"

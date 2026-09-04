@@ -41,9 +41,9 @@
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
 #include "ActsExamples/Root/MuonVisualization.hpp"
 #include "ActsExamples/Root/ScalingCalibrator.hpp"
+#include "ActsExamples/Validation/HistogramFit.hpp"
+#include "ActsPlugins/Root/RootHistogramFit.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-
-#include <filesystem>
 
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
@@ -104,42 +104,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
   // Output
   {
-    {
-      py::class_<EffPlotTool::Config>(root, "EffPlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("varBinning", &EffPlotTool::Config::varBinning)
-          .def_readwrite("minTruthPt", &EffPlotTool::Config::minTruthPt);
-
-      py::class_<FakePlotTool::Config>(root, "FakePlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("varBinning", &FakePlotTool::Config::varBinning)
-          .def_readwrite("recoVarBinning",
-                         &FakePlotTool::Config::recoVarBinning);
-
-      py::class_<DuplicationPlotTool::Config>(root, "DuplicationPlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("varBinning", &DuplicationPlotTool::Config::varBinning)
-          .def_readwrite("recoVarBinning",
-                         &DuplicationPlotTool::Config::recoVarBinning);
-
-      py::class_<ResPlotTool::Config>(root, "ResPlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("paramNames", &ResPlotTool::Config::paramNames)
-          .def_readwrite("varBinning", &ResPlotTool::Config::varBinning);
-
-      py::class_<TrackQualityPlotTool::Config>(root,
-                                               "TrackQualityPlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("varBinning",
-                         &TrackQualityPlotTool::Config::varBinning);
-
-      py::class_<TrackSummaryPlotTool::Config>(root,
-                                               "TrackSummaryPlotToolConfig")
-          .def(py::init<>())
-          .def_readwrite("varBinning",
-                         &TrackSummaryPlotTool::Config::varBinning);
-    }
-
     // ROOT WRITERS
     ACTS_PYTHON_DECLARE_WRITER(RootPropagationStepsWriter, root,
                                "RootPropagationStepsWriter", collection,
@@ -170,9 +134,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackParameterPerformanceWriter, root,
         "RootTrackParameterPerformanceWriter", inputTracks, inputParticles,
-        inputTrackParticleMatching, filePath, resPlotToolConfig,
-        effPlotToolConfig, trackSummaryPlotToolConfig, fitMinEntries,
-        fitSigmaRange, fitIterations, warningThresholdFitFailureFraction);
+        inputTrackParticleMatching, inputSimHits, inputMeasurementSimHitsMap,
+        filePath, resPlotToolConfig, effPlotToolConfig,
+        trackSummaryPlotToolConfig, parameterSource, reference, parameterType,
+        geometrySelection, fitMinEntries, fitSigmaRange, fitIterations,
+        warningThresholdFitFailureFraction);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackParameterWriter, root, "RootTrackParameterWriter",
@@ -354,5 +320,17 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         "sensitive to content changes, and (by default) invariant under "
         "reordering of tree entries. Not byte-compatible with the Python "
         "hash_root helper.");
+  }
+
+  // Track parameter performance fit backend
+  {
+    root.def(
+        "makeRootHistogramFitFunction",
+        [](const std::string& fitOptions)
+            -> ActsExamples::HistogramFitFunction {
+          return ActsPlugins::RootHistogramFit{
+              ActsPlugins::RootHistogramFit::Config{fitOptions}};
+        },
+        py::arg("fitOptions") = "SQ0");
   }
 }

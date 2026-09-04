@@ -59,6 +59,16 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// be GBTS
     std::string layerMappingFile;
 
+    /// the ATLAS connector file listing which layers may be connected
+    std::string connectorInputFile;
+
+    /// Eta bin width the layers are split into (0 takes the value the
+    /// connector file carries, 0.2 in ATLAS' createLinkingScheme.py)
+    float etaBinWidthOverride = 0.0f;
+
+    /// z0 range the eta bin table is built against
+    Acts::Experimental::GbtsZ0Range gbtsZ0Range;
+
     /// holds detector information, used to make the geometry objects used by
     /// GBTS
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
@@ -95,9 +105,6 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// used to assign LayerIds to the GbtsActsMap
   std::map<std::uint32_t, std::uint32_t> m_layerIdMap{};
 
-  /// used to tell if a layer is a strip or pixel layer
-  std::vector<bool> m_isPixelLayer{};
-
   /// used to define region of interest
   std::optional<Acts::Experimental::GbtsRoiDescriptor> m_internalRoi;
 
@@ -114,11 +121,10 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// make the map between ACTS geometry ID's and GBTS geometry ID's
   std::map<ActsIDs, GbtsIDs> makeActsGbtsMap() const;
 
-  /// make the container that holds space points that have been given
-  /// all the variables needed for GBTS algorithm to run
-  Acts::SpacePointContainer makeSpContainer(
-      const SpacePointContainer &spacePoints,
-      std::map<ActsIDs, GbtsIDs> map) const;
+  /// Resolve the dense GBTS layer index for a space point, or nullopt if it is
+  /// not part of the GBTS geometry.
+  std::optional<std::uint32_t> gbtsLayerIndex(
+      const ConstSpacePointProxy &spacePoint) const;
 
   /// makes the geometry objects used by GBTS that correspond to the objects in
   /// the connection table for ease these are sometimes called "logical layers"

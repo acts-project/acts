@@ -86,40 +86,22 @@ if(NOT COMMAND acts_code_generation)
     include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/ActsCodegen.cmake)
 endif()
 
-set(_detray_codegen_dir ${CMAKE_CURRENT_SOURCE_DIR}/../codegen/detray-sympy)
-set(_acts_codegen_pkg ${CMAKE_CURRENT_SOURCE_DIR}/../../codegen)
-
 detray_add_codegen_header(
     TARGET detray_core
-    CODEGEN_DIR ${_detray_codegen_dir}
-    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
-    SCRIPT gen_transport_covariance_to_bound_impl.py
-    OUTPUT detray/propagator/detail/codegen/covariance_transport.hpp
+    KEY Detray/core/detray/propagator/detail/codegen/covariance_transport.hpp
 )
 detray_add_codegen_header(
     TARGET detray_core
-    CODEGEN_DIR ${_detray_codegen_dir}
-    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
-    SCRIPT gen_full_jacobian.py
-    OUTPUT detray/propagator/detail/codegen/full_jacobian.hpp
+    KEY Detray/core/detray/propagator/detail/codegen/full_jacobian.hpp
 )
 detray_add_codegen_header(
     TARGET detray_core
-    CODEGEN_DIR ${_detray_codegen_dir}
-    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
-    SCRIPT gen_update_rk_transport_jacobian_impl.py
-    OUTPUT detray/propagator/detail/codegen/update_rk_transport_jacobian.hpp
+    KEY Detray/core/detray/propagator/detail/codegen/update_rk_transport_jacobian.hpp
 )
 detray_add_codegen_header(
     TARGET detray_core
-    CODEGEN_DIR ${_detray_codegen_dir}
-    ACTS_CODEGEN_PKG ${_acts_codegen_pkg}
-    SCRIPT gen_transport_jacobian_types.py
-    OUTPUT detray/propagator/detail/codegen/transport_jacobian.hpp
+    KEY Detray/core/detray/propagator/detail/codegen/transport_jacobian.hpp
 )
-
-unset(_detray_codegen_dir)
-unset(_acts_codegen_pkg)
 
 # Set up the libraries that use specific algebra plugins.
 detray_add_library( detray_core_array core_array )
@@ -168,33 +150,17 @@ if(DETRAY_VC_SOA_PLUGIN)
     )
 endif()
 
-# Test the public headers of the detray core libraries.
-if(BUILD_TESTING AND DETRAY_BUILD_TESTING)
-    string(
-        REPLACE "include/"
-        ""
-        _detray_core_public_headers
-        "${_detray_core_public_headers}"
-    )
-    detray_test_public_headers(detray_core_array
-      ${_detray_core_public_headers}
-    )
-    if(DETRAY_EIGEN_PLUGIN)
-        detray_test_public_headers(detray_core_eigen
-         ${_detray_core_public_headers}
-        )
-    endif()
-    if(DETRAY_SMATRIX_PLUGIN)
-        detray_test_public_headers(detray_core_smatrix
-         ${_detray_core_public_headers}
-        )
-    endif()
-    if(DETRAY_VC_AOS_PLUGIN)
-        detray_test_public_headers(detray_core_vc_aos
-         ${_detray_core_public_headers}
-        )
-    endif()
-endif()
+# Compile all headers (including the ones under detail/) one-by-one. Only
+# against std::array: the algebra is a template parameter everywhere, so a TU
+# that merely includes a header instantiates nothing, and repeating this per
+# plugin would only re-parse the same headers with a different algebra/*.hpp
+# pulled in -- which the algebra plugins compile themselves anyway.
+detray_compile_headers(
+    core_array
+    detray::core_array
+    "include/detray/*.hpp"
+    "include/detray/**/*.hpp"
+)
 
 # Clean up.
 unset(_detray_core_public_headers)

@@ -27,6 +27,10 @@ target_compile_definitions(
         DETRAY_ALGEBRA_VC_SOA
 )
 
-detray_test_public_headers( detray_algebra_vc_soa
-   "algebra/vc_soa.hpp"
+# Compile all headers one-by-one.
+detray_compile_headers(
+    algebra_vc_soa
+    detray::algebra_vc_soa
+    "include/algebra/*.hpp"
+    "include/algebra/**/*.hpp"
 )

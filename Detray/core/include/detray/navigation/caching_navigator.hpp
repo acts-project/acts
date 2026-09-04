@@ -24,6 +24,9 @@
 #include "detray/tracks/ray.hpp"
 #include "detray/utils/logging.hpp"
 
+// System include(s)
+#include <limits>
+
 namespace detray {
 
 namespace navigation {
@@ -166,7 +169,12 @@ class caching_navigator
                            new_candidate.path()) <= 1.f * unit<scalar_t>::um);
       };
 
-      // Do not add the same surface (intersection) multiple times
+      // Make sure that surfaces don't appear multiple times in the navigation
+      // cache. If the search window is opened on a grid that contains an entire
+      // neighbourhood in every bin, a neighbourhood lookup will result in
+      // surfaces appearing multiple times in the cache. If this appears too
+      // often, the cache can contain only this surface, leading to the
+      // navigator getting stuck on that surface.
       const auto is_clash_at_pos = [this, &new_candidate,
                                     &is_overlap_at_pos](std::size_t index) {
         return (this->candidates()[index].surface().identifier() ==
