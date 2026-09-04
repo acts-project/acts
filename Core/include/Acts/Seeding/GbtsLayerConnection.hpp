@@ -37,15 +37,16 @@ struct GbtsLayerConnectionMap {
  public:
   /// Create a GbtsLayerConnectionMap from an input stream
   /// @param inStream Input stream containing the connection data
-  /// @param lrtMode Enable LRT (Large Radius Tracking) mode
+  /// @param stripConnections Keep the strip-to-strip connections rather than the pixel-to-pixel ones
   /// @return A GbtsLayerConnectionMap instance populated with the data from the stream
   static GbtsLayerConnectionMap fromStream(std::istream& inStream,
-                                           bool lrtMode);
+                                           bool stripConnections);
   /// Create a GbtsLayerConnectionMap from a file
   /// @param inFile Input configuration file path
-  /// @param lrtMode Enable LRT (Large Radius Tracking) mode
+  /// @param stripConnections Keep the strip-to-strip connections rather than the pixel-to-pixel ones
   /// @return A GbtsLayerConnectionMap instance populated with the data from the file
-  static GbtsLayerConnectionMap fromFile(std::string& inFile, bool lrtMode);
+  static GbtsLayerConnectionMap fromFile(std::string& inFile,
+                                         bool stripConnections);
 
   /// Group of connections targeting a destination layer.
   struct LayerGroup {

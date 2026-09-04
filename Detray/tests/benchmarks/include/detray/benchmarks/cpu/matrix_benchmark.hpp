@@ -17,6 +17,7 @@
 
 // System include(s)
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace detray {
@@ -24,10 +25,10 @@ namespace detray {
 namespace algebra {
 
 template <detray::concepts::matrix matrix_t>
-void fill_random_matrix(std::vector<matrix_t>&);
+void fill_random_matrix(std::vector<matrix_t>& collection);
 
 template <detray::concepts::vector vector_t>
-void fill_random_vec(std::vector<vector_t>&);
+void fill_random_vec(std::vector<vector_t>& collection);
 
 }  // namespace algebra
 
@@ -46,7 +47,8 @@ struct matrix_bm : public benchmark_base {
   matrix_bm() = delete;
 
   /// Construct from an externally provided configuration @param cfg
-  explicit matrix_bm(benchmark_base::configuration cfg) : benchmark_base{cfg} {
+  explicit matrix_bm(const benchmark_base::configuration& cfg)
+      : benchmark_base{cfg} {
     const auto n_data{static_cast<std::size_t>(this->m_cfg.n_samples())};
 
     a.reserve(n_data);
@@ -74,7 +76,7 @@ struct matrix_unaryOP_bm : public matrix_bm<matrix_t> {
 
   matrix_unaryOP_bm() = delete;
   explicit matrix_unaryOP_bm(benchmark_base::configuration cfg)
-      : base_type{cfg} {}
+      : base_type{std::move(cfg)} {}
   matrix_unaryOP_bm(const matrix_unaryOP_bm& bm) = default;
   matrix_unaryOP_bm& operator=(matrix_unaryOP_bm& other) = default;
 
@@ -105,7 +107,7 @@ struct matrix_binaryOP_bm : public matrix_bm<matrix_t> {
 
   matrix_binaryOP_bm() = delete;
   explicit matrix_binaryOP_bm(benchmark_base::configuration cfg)
-      : base_type{cfg} {}
+      : base_type{std::move(cfg)} {}
   matrix_binaryOP_bm(const matrix_binaryOP_bm& bm) = default;
   matrix_binaryOP_bm& operator=(matrix_binaryOP_bm& other) = default;
 
@@ -137,7 +139,7 @@ struct matrix_vector_bm : public matrix_bm<matrix_t> {
 
   matrix_vector_bm() = delete;
   explicit matrix_vector_bm(benchmark_base::configuration cfg)
-      : base_type{cfg} {
+      : base_type{std::move(cfg)} {
     v.reserve(static_cast<std::size_t>(this->m_cfg.n_samples()));
 
     detray::algebra::fill_random_vec(v);

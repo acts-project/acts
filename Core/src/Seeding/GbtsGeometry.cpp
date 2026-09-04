@@ -323,11 +323,11 @@ using BinConnections =
 
 GbtsGeometry::GbtsGeometry(
     const std::vector<GbtsLayerDescription>& layerDescriptions,
-    const GbtsLayerConnectionMap& layerConnections, const Logger& logger)
+    const GbtsLayerConnectionMap& layerConnections, const GbtsZ0Range& z0Range,
+    const Logger& logger)
     : m_etaBinWidth(layerConnections.etaBinWidth) {
-  // TODO configurable z0 range
-  const float minZ0 = -168.0f;
-  const float maxZ0 = 168.0f;
+  const float minZ0 = z0Range.min;
+  const float maxZ0 = z0Range.max;
 
   for (const GbtsLayerDescription& layer : layerDescriptions) {
     const detail::GbtsLayer& pL = createLayer(layer, m_nEtaBins);
