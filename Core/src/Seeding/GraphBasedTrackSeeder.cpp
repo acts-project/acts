@@ -724,6 +724,9 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     const GbtsTrackingFilter& filter) const {
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
   const auto minLevel = static_cast<std::uint8_t>(m_cfg.minSeedLevel);
+  // `addTriplets` accepts a chain one level short. Signed: an uncollected
+  // edge sits at level -1 and `minSeedLevel` may be configured to 0.
+  const int minLevelAddTriplets = int{minLevel} - 1;
 
   if (maxLevel < minLevel) {
     return;
@@ -748,7 +751,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
           continue;
         }
       } else {
-        if (pS->level < minLevel - 1) {
+        if (pS->level < minLevelAddTriplets) {
           continue;
         }
       }
@@ -804,7 +807,8 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
           continue;
         }
       } else {
-        if (chainLength < static_cast<std::uint32_t>(minLevel) - 1u) {
+        if (minLevelAddTriplets > 0 &&
+            chainLength < static_cast<std::uint32_t>(minLevelAddTriplets)) {
           continue;
         }
       }
