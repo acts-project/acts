@@ -21,6 +21,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -64,7 +65,7 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
 
     /// the ATLAS lookup table of tau bounds per cluster width, needed by the
     /// cluster width cuts
-    std::string lutInputFile;
+    std::filesystem::path lutInputFile;
 
     /// Eta bin width the layers are split into (0 takes the value the
     /// connector file carries, 0.2 in ATLAS' createLinkingScheme.py)

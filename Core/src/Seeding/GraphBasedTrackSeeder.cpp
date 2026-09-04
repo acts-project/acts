@@ -174,7 +174,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
   // scale factor to get indexes of binned beamspot
   const float z0HistoCoeff =
-      detail::kGbtsZ0HistogramBins / (m_cfg.maxZ0 - m_cfg.minZ0 + 1e-6);
+      detail::kGbtsZ0HistogramBins / (m_cfg.maxZ0 - m_cfg.minZ0 + 1e-6f);
 
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
   const std::span<const detail::GbtsNodeParams> params =
@@ -417,10 +417,9 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
           const float z0 = z1c - r1c * tau;
 
-          if (useZ0Histogram) {  // check against non-empty z0 histogram
-            if (!checkZ0BitMask(nodeInfo, z0, z0HistoCoeff)) {
-              continue;
-            }
+          // check against a non-empty z0 histogram
+          if (useZ0Histogram && !checkZ0BitMask(nodeInfo, z0, z0HistoCoeff)) {
+            continue;
           }
 
           if (m_cfg.doubletFilterRZ) {
@@ -436,11 +435,10 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           }
 
           const float curv = (phi2 - phi1) / dr;
-          const float absCurv = std::abs(curv);
 
-          if (absCurv > (ftau < m_cfg.curvatureSplitAbsTau
-                             ? curvatureCutLowEta
-                             : curvatureCutHighEta)) {
+          if (std::abs(curv) > (ftau < m_cfg.curvatureSplitAbsTau
+                                    ? curvatureCutLowEta
+                                    : curvatureCutHighEta)) {
             continue;
           }
 
@@ -563,16 +561,14 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
               }
 
               // final check: cuts on pT and d0
-              if (m_cfg.validateTriplets) {
-                if (isPixelBarrel1 && isPixelBarrel2 && isPixelBarrel3) {
-                  const std::array<SpacePointIndex, 3> candidateTriplet = {
-                      n1Idx, n2Idx, pS->n2};
+              if (m_cfg.validateTriplets && isPixelBarrel1 && isPixelBarrel2 &&
+                  isPixelBarrel3) {
+                const std::array<SpacePointIndex, 3> candidateTriplet = {
+                    n1Idx, n2Idx, pS->n2};
 
-                  if (!validateTriplet(nodeView, candidateTriplet, tripletPtMin,
-                                       absTauRatio, m_cfg.tauRatioCut,
-                                       options)) {
-                    continue;
-                  }
+                if (!validateTriplet(nodeView, candidateTriplet, tripletPtMin,
+                                     absTauRatio, m_cfg.tauRatioCut, options)) {
+                  continue;
                 }
               }
 
@@ -583,10 +579,9 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               // edge confirmed - update z0 histogram. Only doubletFilterRZ
               // holds z0 to the histogram range, and it is optional.
-              const auto z0BinIndex =
-                  static_cast<std::int32_t>(z0HistoCoeff * (z0 - m_cfg.minZ0));
-
-              if (z0BinIndex >= 0 &&
+              if (const auto z0BinIndex = static_cast<std::int32_t>(
+                      z0HistoCoeff * (z0 - m_cfg.minZ0));
+                  z0BinIndex >= 0 &&
                   z0BinIndex < detail::kGbtsZ0HistogramBins) {
                 ++z0Histo[z0BinIndex];
               }

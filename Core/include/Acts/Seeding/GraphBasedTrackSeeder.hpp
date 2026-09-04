@@ -183,15 +183,15 @@ class GraphBasedTrackSeeder {
     float maxInvRadDiff = 0.7e-2 / UnitConstants::m;
     // GbtsNodeStorage options
     /// Maximum endcap cluster width.
-    float maxEndcapClusterWidth = 0.35 * Acts::UnitConstants::mm;
+    float maxEndcapClusterWidth = 0.35f * Acts::UnitConstants::mm;
     /// Half-length in local y of a pixel module, against which the distance of
     /// a cluster to the module edge is measured.
-    float moduleHalfLengthY = 10.0 * Acts::UnitConstants::mm;
+    float moduleHalfLengthY = 10.0f * Acts::UnitConstants::mm;
     /// Distance to the module edge below which a cluster may be shortened,
     /// which switches to the tau lookup table's near-edge bounds.
-    float moduleEdgeTolerance = 0.3 * Acts::UnitConstants::mm;
+    float moduleEdgeTolerance = 0.3f * Acts::UnitConstants::mm;
     /// Cluster width covered by one bin of the tau lookup table.
-    float tauLutBinWidth = 0.05 * Acts::UnitConstants::mm;
+    float tauLutBinWidth = 0.05f * Acts::UnitConstants::mm;
     /// Multiples of the phi slice width duplicated either side of the
     /// wrap-around, so a sliding window never has to wrap.
     float phiIndexMargin = 1.5f;

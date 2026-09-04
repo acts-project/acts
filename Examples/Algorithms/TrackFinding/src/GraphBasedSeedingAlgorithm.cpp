@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -114,11 +115,11 @@ ConnectorTable readConnectorTable(const std::string &path,
 ///
 /// @param path Path to the lookup table file
 Acts::Experimental::detail::GbtsTauLookupTable readTauLookupTable(
-    const std::string &path) {
+    const std::filesystem::path &path) {
   std::ifstream inStream(path);
   if (!inStream) {
-    throw std::runtime_error("Cannot open GBTS tau lookup table '" + path +
-                             "'");
+    throw std::runtime_error("Cannot open GBTS tau lookup table '" +
+                             path.string() + "'");
   }
 
   Acts::Experimental::detail::GbtsTauLookupTable tauLut;
@@ -132,7 +133,8 @@ Acts::Experimental::detail::GbtsTauLookupTable readTauLookupTable(
 
   if (!inStream.eof()) {
     // ended on a parse error, not on a clean EOF
-    throw std::runtime_error("Malformed GBTS tau lookup table '" + path + "'");
+    throw std::runtime_error("Malformed GBTS tau lookup table '" +
+                             path.string() + "'");
   }
 
   return tauLut;
