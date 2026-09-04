@@ -38,7 +38,14 @@ class EDM4hepMeasurementInputConverter final : public PodioInputConverter {
     std::string outputClusters;
 
     /// DD4hep detector for cellID to geometry identifier resolution.
+    /// Mutually exclusive with @p geometryMapper: exactly one of the two
+    /// must be set.
     std::shared_ptr<DD4hepDetector> dd4hepDetector;
+
+    /// Custom cellID to geometry identifier mapper, for use with tracking
+    /// geometries that are not backed by DD4hep. Mutually exclusive with
+    /// @p dd4hepDetector: exactly one of the two must be set.
+    EDM4hepUtil::MapGeometryIdFrom geometryMapper;
   };
 
   /// Construct the cluster reader.
