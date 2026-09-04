@@ -57,7 +57,7 @@ constexpr float kEtaBinWidth = 0.2f;
 /// keys on: 80000 is the innermost barrel layer (extra z0 cuts) and barrel ids
 /// 1000 apart are adjacent.
 struct LayerSpec {
-  std::int32_t id{};
+  Experimental::GbtsLayerId id{};
   GbtsLayerType type{};
   GbtsLayerTechnology technology{GbtsLayerTechnology::Pixel};
   /// r for a barrel layer, z for an endcap disc.
@@ -67,7 +67,7 @@ struct LayerSpec {
   float maxBound{};
 };
 
-constexpr LayerSpec barrelLayer(std::int32_t id, float radius) {
+constexpr LayerSpec barrelLayer(Experimental::GbtsLayerId id, float radius) {
   return {.id = id,
           .type = GbtsLayerType::Barrel,
           .refCoord = radius,
@@ -75,7 +75,7 @@ constexpr LayerSpec barrelLayer(std::int32_t id, float radius) {
           .maxBound = kBarrelHalfZ};
 }
 
-constexpr LayerSpec discLayer(std::int32_t id, float z) {
+constexpr LayerSpec discLayer(Experimental::GbtsLayerId id, float z) {
   return {.id = id,
           .type = GbtsLayerType::Endcap,
           .refCoord = z,
@@ -86,7 +86,8 @@ constexpr LayerSpec discLayer(std::int32_t id, float z) {
 /// Layers plus the connector links between them, outer (src) to inner (dst).
 struct ToyDetector {
   std::vector<LayerSpec> layers;
-  std::vector<std::pair<std::int32_t, std::int32_t>> links;
+  std::vector<std::pair<Experimental::GbtsLayerId, Experimental::GbtsLayerId>>
+      links;
   /// Outer radius bound used by the doublet rz filter.
   float maxOuterRadius{};
 };
@@ -106,18 +107,20 @@ ToyDetector forwardDetector() {
   ToyDetector detector = barrelDetector();
   detector.maxOuterRadius = 300.f;
 
-  for (const std::int32_t idBase : {90000, 70000}) {
+  for (const Experimental::GbtsLayerId idBase : {90000u, 70000u}) {
     const float sign = idBase == 90000 ? 1.f : -1.f;
-    std::int32_t previousId = 0;
+    Experimental::GbtsLayerId previousId = 0;
 
     for (std::size_t i = 0; i < discZ.size(); ++i) {
-      const std::int32_t id = idBase + 1000 * static_cast<std::int32_t>(i);
+      const Experimental::GbtsLayerId id =
+          idBase + 1000 * static_cast<Experimental::GbtsLayerId>(i);
       detector.layers.push_back(discLayer(id, sign * discZ[i]));
 
       if (i == 0) {
         // a track reaching the first disc still has hits in one of these
         // barrel layers, never in 83000
-        for (const std::int32_t innerId : {80000, 81000, 82000}) {
+        for (const Experimental::GbtsLayerId innerId :
+             {80000u, 81000u, 82000u}) {
           detector.links.emplace_back(id, innerId);
         }
       } else {
@@ -241,12 +244,14 @@ SpacePointContainer makeSpacePoints(const ToyDetector& detector,
                                 SpacePointColumns::Z | SpacePointColumns::R |
                                 SpacePointColumns::Phi);
 
-  auto layerColumn = container.createColumn<std::uint32_t>("layerId");
+  auto layerColumn =
+      container.createColumn<Experimental::GbtsLayerIndex>("layerId");
   auto clusterWidthColumn = container.createColumn<float>("clusterWidth");
   auto localPositionColumn = container.createColumn<float>("localPositionY");
   auto trackColumn = container.createColumn<std::uint32_t>("trackId");
 
-  container.reserve(tracks.size() * detector.layers.size());
+  container.reserve(
+      static_cast<std::uint32_t>(tracks.size() * detector.layers.size()));
 
   for (std::size_t track = 0; track < tracks.size(); ++track) {
     for (std::size_t layer = 0; layer < detector.layers.size(); ++layer) {
@@ -264,7 +269,7 @@ SpacePointContainer makeSpacePoints(const ToyDetector& detector,
       sp.phi() = tracks[track].phi;
       sp.copiedFromIndex() = sp.index();
       // the dense layer index, not the GBTS layer id
-      sp.extra(layerColumn) = static_cast<std::uint32_t>(layer);
+      sp.extra(layerColumn) = static_cast<Experimental::GbtsLayerIndex>(layer);
       sp.extra(clusterWidthColumn) = 0.f;
       sp.extra(localPositionColumn) = 0.f;
       sp.extra(trackColumn) = static_cast<std::uint32_t>(track);
@@ -294,12 +299,14 @@ SpacePointContainer makeStripSpacePoints(const ToyDetector& detector,
       SpacePointColumns::Y | SpacePointColumns::Z | SpacePointColumns::R |
       SpacePointColumns::Phi | SpacePointColumns::StripCalibrationDetails);
 
-  auto layerColumn = container.createColumn<std::uint32_t>("layerId");
+  auto layerColumn =
+      container.createColumn<Experimental::GbtsLayerIndex>("layerId");
   auto clusterWidthColumn = container.createColumn<float>("clusterWidth");
   auto localPositionColumn = container.createColumn<float>("localPositionY");
   auto trackColumn = container.createColumn<std::uint32_t>("trackId");
 
-  container.reserve(tracks.size() * detector.layers.size());
+  container.reserve(
+      static_cast<std::uint32_t>(tracks.size() * detector.layers.size()));
 
   for (std::size_t track = 0; track < tracks.size(); ++track) {
     const float cosPhi = std::cos(tracks[track].phi);
@@ -325,7 +332,7 @@ SpacePointContainer makeStripSpacePoints(const ToyDetector& detector,
       sp.phi() = tracks[track].phi;
       sp.copiedFromIndex() = sp.index();
       // the dense layer index, not the GBTS layer id
-      sp.extra(layerColumn) = static_cast<std::uint32_t>(layer);
+      sp.extra(layerColumn) = static_cast<Experimental::GbtsLayerIndex>(layer);
       sp.extra(clusterWidthColumn) = 0.f;
       sp.extra(localPositionColumn) = 0.f;
       sp.extra(trackColumn) = static_cast<std::uint32_t>(track);
@@ -338,18 +345,18 @@ SpacePointContainer makeStripSpacePoints(const ToyDetector& detector,
       const std::array<float, 3> across{sinPhi, -cosPhi, 0.f};
       const float half = 0.5f * kStereoAngle;
       OuterStripSpacePointCalibrationDetails details{};
-      for (int side = 0; side < 2; ++side) {
+      for (std::size_t side = 0; side < 2; ++side) {
         const float sign = side == 0 ? -1.f : 1.f;
         const std::array<float, 3> axis{sign * std::sin(half) * across[0],
                                         sign * std::sin(half) * across[1],
                                         std::cos(half)};
         std::array<float, 3>& halfVector =
             side == 0 ? details.innerHalfVector : details.outerHalfVector;
-        for (int i = 0; i < 3; ++i) {
+        for (std::size_t i = 0; i < 3; ++i) {
           halfVector[i] = axis[i] * kStripHalfLength;
         }
         if (side == 1) {
-          for (int i = 0; i < 3; ++i) {
+          for (std::size_t i = 0; i < 3; ++i) {
             // the crossing sits at the centre of its strip
             details.outerCenter[i] =
                 point[i] + 0.5f * kModuleGap * direction[i];
@@ -514,7 +521,8 @@ BOOST_AUTO_TEST_CASE(BarrelInputIsWellFormed) {
 
   BOOST_CHECK_EQUAL(spacePoints.size(), tracks.size() * detector.layers.size());
 
-  auto layerColumn = spacePoints.column<std::uint32_t>("layerId");
+  auto layerColumn =
+      spacePoints.column<Experimental::GbtsLayerIndex>("layerId");
   for (const auto& sp : spacePoints) {
     BOOST_CHECK_LT(sp.extra(layerColumn), detector.layers.size());
     BOOST_CHECK_LE(std::abs(sp.z()), kBarrelHalfZ);
@@ -534,7 +542,8 @@ BOOST_AUTO_TEST_CASE(SeedsFromCallerFilledNodeStorage) {
 
   // r and phi as stored, so both paths see the same numbers - deriving them
   // from x and y instead costs the last bits and the seed quality with it
-  auto layerColumn = spacePoints.column<std::uint32_t>("layerId");
+  auto layerColumn =
+      spacePoints.column<Experimental::GbtsLayerIndex>("layerId");
   for (const auto& sp : spacePoints) {
     const std::optional<std::uint32_t> bin =
         storage.insert(sp.index(), sp.x(), sp.y(), sp.z(), sp.r(), sp.phi(),
@@ -617,7 +626,8 @@ BOOST_AUTO_TEST_CASE(ForwardInputIsWellFormed) {
     BOOST_CHECK_GE(count, 4u);
   }
 
-  auto layerColumn = spacePoints.column<std::uint32_t>("layerId");
+  auto layerColumn =
+      spacePoints.column<Experimental::GbtsLayerIndex>("layerId");
   auto trackColumn = spacePoints.column<std::uint32_t>("trackId");
 
   std::vector<bool> hasBarrel(tracks.size(), false);

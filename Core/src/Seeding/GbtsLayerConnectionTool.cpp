@@ -17,7 +17,7 @@
 namespace Acts::Experimental {
 
 GbtsLayerConnectionTool::LayerDescription::LayerDescription(
-    float minR_, float maxR_, float minZ_, float maxZ_, std::int32_t gbtsId_)
+    float minR_, float maxR_, float minZ_, float maxZ_, GbtsLayerId gbtsId_)
     : minR(minR_), maxR(maxR_), minZ(minZ_), maxZ(maxZ_), gbtsId(gbtsId_) {}
 
 GbtsLayerConnectionTool::GbtsLayerConnectionTool(
@@ -28,7 +28,8 @@ GbtsLayerConnectionTool::GbtsLayerConnectionTool(
   }
 
   // reserves
-  const std::uint32_t pairReserve = m_cfg.detectorGeometry.size();
+  const auto pairReserve =
+      static_cast<std::uint32_t>(m_cfg.detectorGeometry.size());
   m_layerPairs.reserve(pairReserve * (pairReserve - 1));
 
   // create map linked pairs of GBTS ids with number of transitions between
@@ -56,7 +57,7 @@ void GbtsLayerConnectionTool::addTrack(std::span<const HitCoordinates> track) {
   }
 
   // container for gbts IDs of the track
-  std::vector<std::optional<std::int32_t>> layerGbtsIds{};
+  std::vector<std::optional<GbtsLayerId>> layerGbtsIds{};
   layerGbtsIds.reserve(track.size());
 
   // find GBTS ids for all measurements in a track
@@ -160,7 +161,7 @@ GbtsLayerConnectionTool::createConnectionTable(
   return tempPairs;
 }
 
-std::optional<std::int32_t> GbtsLayerConnectionTool::findGbtsIdByCoord(
+std::optional<GbtsLayerId> GbtsLayerConnectionTool::findGbtsIdByCoord(
     const HitCoordinates& hit) const {
   for (const auto& layer : m_cfg.detectorGeometry) {
     const float zMin = layer.minZ - m_cfg.zMinTol;
@@ -179,7 +180,7 @@ std::optional<std::int32_t> GbtsLayerConnectionTool::findGbtsIdByCoord(
 }
 
 std::uint32_t GbtsLayerConnectionTool::getIndexByGbtsId(
-    std::int32_t gbtsId) const {
+    GbtsLayerId gbtsId) const {
   for (std::uint32_t idx = 0; idx < m_cfg.detectorGeometry.size(); idx++) {
     if (gbtsId == m_cfg.detectorGeometry[idx].gbtsId) {
       return idx;
@@ -189,8 +190,8 @@ std::uint32_t GbtsLayerConnectionTool::getIndexByGbtsId(
   throw std::runtime_error("index not found for GBTS ID");
 }
 
-std::optional<std::int32_t> GbtsLayerConnectionTool::oppositeSideLayer(
-    std::int32_t layerId) const {
+std::optional<GbtsLayerId> GbtsLayerConnectionTool::oppositeSideLayer(
+    GbtsLayerId layerId) const {
   const std::uint32_t layerIndex = getIndexByGbtsId(layerId);
 
   const auto& layer = m_cfg.detectorGeometry[layerIndex];

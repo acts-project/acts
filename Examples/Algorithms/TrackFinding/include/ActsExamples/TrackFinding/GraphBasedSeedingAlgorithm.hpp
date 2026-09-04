@@ -30,6 +30,7 @@ namespace ActsExamples {
 class GraphBasedSeedingAlgorithm final : public IAlgorithm {
  public:
   using ActsIDs = std::array<std::uint64_t, 2>;
+  /// (GBTS layer id, eta module, dense GBTS layer index)
   using GbtsIDs = std::array<std::uint32_t, 3>;
 
   struct Config {
@@ -103,7 +104,8 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   std::map<ActsIDs, GbtsIDs> m_actsGbtsMap;
 
   /// used to assign LayerIds to the GbtsActsMap
-  std::map<std::uint32_t, std::uint32_t> m_layerIdMap{};
+  std::map<Acts::Experimental::GbtsLayerId, Acts::Experimental::GbtsLayerIndex>
+      m_layerIdMap{};
 
   /// used to define region of interest
   std::optional<Acts::Experimental::GbtsRoiDescriptor> m_internalRoi;

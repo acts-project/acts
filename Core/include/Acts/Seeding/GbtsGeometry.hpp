@@ -68,17 +68,18 @@ class GbtsGeometry final {
   /// Get layer by ID
   /// @param id Layer ID
   /// @return Pointer to layer or nullptr
-  const detail::GbtsLayer* layerById(std::uint32_t id) const;
+  const detail::GbtsLayer* layerById(GbtsLayerId id) const;
 
   /// Get layer by index
   /// @param idx Layer index
   /// @return Reference to layer
-  const detail::GbtsLayer& layerByIndex(std::int32_t idx) const;
+  const detail::GbtsLayer& layerByIndex(GbtsLayerIndex idx) const;
 
   /// Get the description of a layer by index
   /// @param idx Layer index
   /// @return Reference to the layer description
-  const GbtsLayerDescription& layerDescriptionByIndex(std::int32_t idx) const {
+  const GbtsLayerDescription& layerDescriptionByIndex(
+      GbtsLayerIndex idx) const {
     return layerByIndex(idx).layerDescription();
   }
 
@@ -94,7 +95,7 @@ class GbtsGeometry final {
   /// Layer array
   std::vector<detail::GbtsLayer> m_layers;
   /// Layer per user ID map
-  std::map<std::uint32_t, std::uint32_t> m_layerFromUserIdMap;
+  std::map<GbtsLayerId, GbtsLayerIndex> m_layerFromUserIdMap;
   /// Number of eta bins
   std::uint32_t m_nEtaBins{};
 

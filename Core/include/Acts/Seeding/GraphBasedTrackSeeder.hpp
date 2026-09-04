@@ -129,9 +129,9 @@ class GraphBasedTrackSeeder {
     std::uint32_t matchBeforeCreateMaxEdges = 2;
     /// Layers whose nodes are cut against the z0 histogram of their outer
     /// neighbourhood, and whose isolated nodes are skipped.
-    std::vector<std::uint32_t> z0HistogramLayerIds{80000};
+    std::vector<GbtsLayerId> z0HistogramLayerIds{80000};
     /// Layers `matchBeforeCreate` applies to, when it is enabled.
-    std::vector<std::uint32_t> matchBeforeCreateLayerIds{80000, 81000};
+    std::vector<GbtsLayerId> matchBeforeCreateLayerIds{80000, 81000};
     /// Half-width of the z0 window a node is matched against in the histogram.
     float z0Resolution = 2.5f * UnitConstants::mm;
     /// Maximum radius of pixel detector
@@ -249,12 +249,11 @@ class GraphBasedTrackSeeder {
   /// candidate seed metadata produced by the GBTS algorithm.
   struct SeedCandidateProperties {
     /// @param quality Seed quality score
-    /// @param clone Clone flag
+    /// @param clone Whether the candidate was rejected as a clone
     /// @param sps Vector of graph node indices
     /// @param splitFlag used to flag if seed needs to be split in two
-    SeedCandidateProperties(float quality, std::int32_t clone,
-                            std::vector<SpacePointIndex> sps,
-                            std::uint32_t splitFlag)
+    SeedCandidateProperties(float quality, bool clone,
+                            std::vector<SpacePointIndex> sps, bool splitFlag)
         : seedQuality(quality),
           isClone(clone),
           nodes(std::move(sps)),
@@ -263,11 +262,11 @@ class GraphBasedTrackSeeder {
     /// Seed quality score.
     float seedQuality{};
     /// Clone flag.
-    std::int32_t isClone{};
+    bool isClone{};
     /// Graph node indices.
     std::vector<SpacePointIndex> nodes;
     /// Flag for seed splitting.
-    std::uint32_t forSeedSplitting{};
+    bool forSeedSplitting{};
   };
 
   /// Output seed metadata
@@ -297,7 +296,7 @@ class GraphBasedTrackSeeder {
     /// window half-width;
     float deltaPhi{};
     /// GBTS layer ID of the bin
-    std::uint32_t layerId{};
+    GbtsLayerId layerId{};
     /// Type of the bin's layer.
     GbtsLayerType type{};
     /// Technology of the bin's layer.
@@ -325,17 +324,17 @@ class GraphBasedTrackSeeder {
   /// @param nodeStorage Data storage containing nodes
   /// @param edgeStorage Storage for generated edges
   /// @param options Event based options such as magnetic field strength
-  /// @return Pair of edge count and maximum level
-  std::pair<std::int32_t, std::int32_t> buildTheGraph(
+  /// @return Pair of edge count and edge link count
+  std::pair<std::uint32_t, std::uint32_t> buildTheGraph(
       const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
       std::vector<detail::GbtsEdge>& edgeStorage, const Options& options) const;
 
   /// Run connected component analysis on the graph.
   /// @param nEdges Number of edges in the graph
   /// @param edgeStorage Storage containing graph edges
-  /// @return Number of connected components found
-  std::int32_t runCCA(std::uint32_t nEdges,
-                      std::vector<detail::GbtsEdge>& edgeStorage) const;
+  /// @return The highest chain level any edge reached
+  std::uint32_t runCCA(std::uint32_t nEdges,
+                       std::vector<detail::GbtsEdge>& edgeStorage) const;
 
   /// Extract seed candidates from the graph.
   /// @param maxLevel Maximum level in the graph

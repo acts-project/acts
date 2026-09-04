@@ -24,6 +24,7 @@
 #include <numbers>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace ActsExamples {
@@ -230,16 +231,15 @@ GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
 
   // file in format ACTS_vol,ACTS_lay,ACTS_mod,gbtsId
   for (auto i : parsedCsv) {
-    std::uint32_t actsVol = stoi(i[0]);
-    std::uint32_t actsLay = stoi(i[1]);
-    std::uint32_t actsMod = stoi(i[2]);
-    std::uint32_t gbts = stoi(i[5]);
-    std::uint32_t etaMod = stoi(i[6]);
-    std::uint32_t actsJoint = actsVol * 100 + actsLay;
-    ActsIDs actsId{static_cast<std::uint64_t>(actsJoint),
-                   static_cast<std::uint64_t>(actsMod)};
-    GbtsIDs gbtsId{static_cast<std::uint32_t>(gbts),
-                   static_cast<std::uint32_t>(etaMod), 0};
+    const auto actsVol = static_cast<std::uint32_t>(std::stoul(i[0]));
+    const auto actsLay = static_cast<std::uint32_t>(std::stoul(i[1]));
+    const auto actsMod = static_cast<std::uint32_t>(std::stoul(i[2]));
+    const auto gbts =
+        static_cast<Acts::Experimental::GbtsLayerId>(std::stoul(i[5]));
+    const auto etaMod = static_cast<std::uint32_t>(std::stoul(i[6]));
+    const std::uint32_t actsJoint = actsVol * 100 + actsLay;
+    ActsIDs actsId{actsJoint, actsMod};
+    GbtsIDs gbtsId{gbts, etaMod, 0};
     actsToGbtsMap.insert({{actsId}, {gbtsId}});
   }
 
@@ -257,9 +257,12 @@ std::optional<std::uint32_t> GraphBasedSeedingAlgorithm::gbtsLayerIndex(
 
   const auto &indexSourceLink = sourceLink.front().get<IndexSourceLink>();
 
-  const std::uint32_t actsVolId = indexSourceLink.geometryId().volume();
-  const std::uint32_t actsLayId = indexSourceLink.geometryId().layer();
-  const std::uint32_t actsModId = indexSourceLink.geometryId().sensitive();
+  const auto actsVolId =
+      static_cast<std::uint32_t>(indexSourceLink.geometryId().volume());
+  const auto actsLayId =
+      static_cast<std::uint32_t>(indexSourceLink.geometryId().layer());
+  const auto actsModId =
+      static_cast<std::uint32_t>(indexSourceLink.geometryId().sensitive());
 
   // dont want strips or HGTD
   if (actsVolId == 2 || actsVolId == 22 || actsVolId == 23 || actsVolId == 24) {
@@ -268,16 +271,15 @@ std::optional<std::uint32_t> GraphBasedSeedingAlgorithm::gbtsLayerIndex(
 
   // Search for vol, lay and module=0, if doesn't esist (end) then search
   // for full thing vol*100+lay as first number in pair then 0 or mod id
-  const auto actsJointId = actsVolId * 100 + actsLayId;
+  const std::uint64_t actsJointId = std::uint64_t{actsVolId} * 100 + actsLayId;
 
   // here the key needs to be pair of(vol*100+lay, 0)
-  ActsIDs key{static_cast<std::uint64_t>(actsJointId), 0};
+  ActsIDs key{actsJointId, 0};
   auto find = m_actsGbtsMap.find(key);
 
   // if end then make new key of (vol*100+lay, modid)
   if (find == m_actsGbtsMap.end()) {
-    key = ActsIDs{static_cast<std::uint64_t>(actsJointId),
-                  static_cast<std::uint64_t>(actsModId)};  // mod ID
+    key = ActsIDs{actsJointId, actsModId};  // mod ID
     find = m_actsGbtsMap.find(key);
   }
 
@@ -395,13 +397,14 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
           "Invalid barrel/endcap assignment for GbtsLayer");
     }
 
-    std::int32_t combinedId = gbtsId * 1000 + etaMod;
+    const Acts::Experimental::GbtsLayerId combinedId = gbtsId * 1000 + etaMod;
 
     const auto currentIndex =
         find_if(inputVector.begin(), inputVector.end(),
                 [combinedId](auto n) { return n.id == combinedId; });
     if (currentIndex != inputVector.end()) {  // not end so does exist
-      std::size_t index = std::distance(inputVector.begin(), currentIndex);
+      const auto index = static_cast<std::size_t>(
+          std::distance(inputVector.begin(), currentIndex));
       inputVector[index].refCoord += rc;
       inputVector[index].minBound =
           std::min(inputVector[index].minBound, minBound);
@@ -425,7 +428,8 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
       // tracking the index of each GbtsLayerDescription as there added
 
       // so layer ID refers to actual index and not size of vector
-      std::uint32_t layerId = countVector.size() - 1;
+      const auto layerId = static_cast<Acts::Experimental::GbtsLayerIndex>(
+          countVector.size() - 1);
       std::get<2>(find->second) = layerId;
       m_layerIdMap.insert({combinedId, layerId});
     }
