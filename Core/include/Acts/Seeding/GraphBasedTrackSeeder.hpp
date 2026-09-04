@@ -37,11 +37,6 @@ class GraphBasedTrackSeeder {
     /// Enable beam spot correction.
     bool beamSpotCorrection = false;
 
-    // Path to the connector configuration file that defines the layer
-    // connections
-    /// Connector configuration file path.
-    std::string connectorInputFile;
-
     /// Look-up table input file path.
     std::string lutInputFile;
 
@@ -84,11 +79,6 @@ class GraphBasedTrackSeeder {
     /// the maximum allowed eta value in which
     /// three spacepoint seeds are passed through
     float maxAbsEtaAddTriplets = 1.5;
-    /// Eta bin width override (0 uses default from connection file).
-    /// specify non-zero to override eta bin width from connection file (default
-    /// 0.2 in createLinkingScheme.py)
-    float etaBinWidthOverride = 0.0f;
-
     /// Maximum number of phi slices.
     float nMaxPhiSlice = 53;  // used to calculate phi slices
     /// Minimum transverse momentum.

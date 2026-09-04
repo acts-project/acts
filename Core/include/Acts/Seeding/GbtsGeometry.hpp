@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <map>
+#include <span>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -38,12 +39,13 @@ class GbtsGeometry final {
  public:
   /// Constructor
   /// @param layerDescriptions Layer descriptions for the layers
-  /// @param layerConnections Layer connections map
+  /// @param layerConnections Pairs of layers the seeder may connect
+  /// @param etaBinWidth Width of the eta bins each layer is split into
   /// @param z0Range z0 range the bin table is built against
   /// @param logger Logging instance, only used during construction
-  GbtsGeometry(const std::vector<GbtsLayerDescription>& layerDescriptions,
-               const GbtsLayerConnectionMap& layerConnections,
-               const GbtsZ0Range& z0Range = {},
+  GbtsGeometry(std::span<const GbtsLayerDescription> layerDescriptions,
+               std::span<const GbtsLayerConnection> layerConnections,
+               float etaBinWidth, const GbtsZ0Range& z0Range = {},
                const Logger& logger = getDummyLogger());
 
  private:

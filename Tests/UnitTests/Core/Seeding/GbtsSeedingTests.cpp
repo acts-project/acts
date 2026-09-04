@@ -49,7 +49,8 @@ constexpr float kBarrelHalfZ = 150.f;
 constexpr float kDiscMinR = 30.f;
 constexpr float kDiscMaxR = 220.f;
 
-/// Eta bin width declared by the connector table, as in createLinkingScheme.py.
+/// Eta bin width the layers are split into, as in ATLAS'
+/// createLinkingScheme.py.
 constexpr float kEtaBinWidth = 0.2f;
 
 /// One layer of the toy detector. The ids follow ATLAS, which the seeder still
@@ -129,20 +130,6 @@ ToyDetector forwardDetector() {
   return detector;
 }
 
-/// Connector table for GbtsLayerConnectionMap::fromStream: `nLinks etaBinWidth`
-/// then `lIdx stage src dst height width nEntries` per link. height = width = 0
-/// leaves out the bin table and the stage column does not fix the processing
-/// order: GbtsGeometry rederives both from the layer geometry.
-std::string makeConnectorText(const ToyDetector& detector) {
-  std::ostringstream os;
-  os << detector.links.size() << " " << kEtaBinWidth << "\n";
-  for (std::size_t i = 0; i < detector.links.size(); ++i) {
-    const auto& [src, dst] = detector.links[i];
-    os << i << " " << i << " " << src << " " << dst << " 0 0 0\n";
-  }
-  return os.str();
-}
-
 std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
     const ToyDetector& detector) {
   std::vector<Experimental::GbtsLayerDescription> layers;
@@ -158,10 +145,15 @@ std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
     layers.push_back(layer);
   }
 
-  const std::string connectorText = makeConnectorText(detector);
-  std::istringstream stream{connectorText};
-  return std::make_shared<Experimental::GbtsGeometry>(
-      layers, Experimental::GbtsLayerConnectionMap::fromStream(stream, false));
+  std::vector<Experimental::GbtsLayerConnection> connections;
+  connections.reserve(detector.links.size());
+  for (const auto& [src, dst] : detector.links) {
+    connections.push_back(
+        {static_cast<std::uint32_t>(src), static_cast<std::uint32_t>(dst)});
+  }
+
+  return std::make_shared<Experimental::GbtsGeometry>(layers, connections,
+                                                      kEtaBinWidth);
 }
 
 /// Straight track from the origin: fixed phi, z = r * tau, tau = cot(theta).

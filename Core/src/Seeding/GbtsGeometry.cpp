@@ -322,10 +322,10 @@ using BinConnections =
 }  // namespace
 
 GbtsGeometry::GbtsGeometry(
-    const std::vector<GbtsLayerDescription>& layerDescriptions,
-    const GbtsLayerConnectionMap& layerConnections, const GbtsZ0Range& z0Range,
-    const Logger& logger)
-    : m_etaBinWidth(layerConnections.etaBinWidth) {
+    std::span<const GbtsLayerDescription> layerDescriptions,
+    std::span<const GbtsLayerConnection> layerConnections,
+    const float etaBinWidth, const GbtsZ0Range& z0Range, const Logger& logger)
+    : m_etaBinWidth(etaBinWidth) {
   const float minZ0 = z0Range.min;
   const float maxZ0 = z0Range.max;
 
@@ -339,48 +339,40 @@ GbtsGeometry::GbtsGeometry(
 
   std::int32_t lastBin1 = -1;
 
-  for (const auto& [layer, vConn] : layerConnections.connectionMap) {
-    for (const auto& connection : vConn) {
-      const std::uint32_t src = connection->src;  // n2 : the new connectors
-      const std::uint32_t dst = connection->dst;  // n1
+  for (const GbtsLayerConnection& connection : layerConnections) {
+    const detail::GbtsLayer* pL1 = layerById(connection.dst);  // n1
+    const detail::GbtsLayer* pL2 = layerById(connection.src);  // n2
+    if (pL1 == nullptr) {
+      ACTS_WARNING("Skipping invalid dst layer " << connection.dst);
+      continue;
+    }
+    if (pL2 == nullptr) {
+      ACTS_WARNING("Skipping invalid src layer " << connection.src);
+      continue;
+    }
 
-      const detail::GbtsLayer* pL1 = layerById(dst);
-      const detail::GbtsLayer* pL2 = layerById(src);
-      if (pL1 == nullptr) {
-        ACTS_WARNING("Skipping invalid dst layer " << dst);
-        continue;
-      }
-      if (pL2 == nullptr) {
-        ACTS_WARNING("Skipping invalid src layer " << src);
-        continue;
-      }
+    const std::uint32_t nSrcBins = pL2->numOfBins();
+    const std::uint32_t nDstBins = pL1->numOfBins();
 
-      const std::uint32_t nSrcBins = pL2->numOfBins();
-      const std::uint32_t nDstBins = pL1->numOfBins();
+    // loop over bins in Layer 1
+    for (std::uint32_t b1 = 0; b1 < nDstBins; ++b1) {
+      // loop over bins in Layer 2
+      for (std::uint32_t b2 = 0; b2 < nSrcBins; ++b2) {
+        if (!pL1->checkCompatibility(*pL2, b1, b2, minZ0, maxZ0)) {
+          continue;
+        }
 
-      connection->binTable.resize(nSrcBins * nDstBins, 0);
-      // loop over bins in Layer 1
-      for (std::uint32_t b1 = 0; b1 < nDstBins; ++b1) {
-        // loop over bins in Layer 2
-        for (std::uint32_t b2 = 0; b2 < nSrcBins; ++b2) {
-          if (!pL1->checkCompatibility(*pL2, b1, b2, minZ0, maxZ0)) {
-            continue;
-          }
-          const std::uint32_t address = b1 + b2 * nDstBins;
-          connection->binTable.at(address) = 1;
+        const std::int32_t bin1Idx = pL1->bins().at(b1);
+        const std::int32_t bin2Idx = pL2->bins().at(b2);
 
-          const std::int32_t bin1Idx = pL1->bins().at(b1);
-          const std::int32_t bin2Idx = pL2->bins().at(b2);
-
-          if (bin1Idx != lastBin1) {
-            // adding a new group
-            m_binGroups.emplace_back(bin1Idx,
-                                     std::vector<std::uint32_t>(1, bin2Idx));
-            lastBin1 = bin1Idx;
-          } else {
-            // extend the last group
-            m_binGroups.back().second.push_back(bin2Idx);
-          }
+        if (bin1Idx != lastBin1) {
+          // adding a new group
+          m_binGroups.emplace_back(bin1Idx,
+                                   std::vector<std::uint32_t>(1, bin2Idx));
+          lastBin1 = bin1Idx;
+        } else {
+          // extend the last group
+          m_binGroups.back().second.push_back(bin2Idx);
         }
       }
     }
