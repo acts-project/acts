@@ -23,12 +23,12 @@
 #include "SympyStepperStep.hpp"
 #include "codegen/sympy_stepper_math.hpp"
 
-namespace Acts::detail {
+namespace Acts {
 
-template <SympyStepMode Mode>
-Result<double> sympyStep(const SympyStepper& stepper,
-                         SympyStepper::State& state, Direction propDir,
-                         const IVolumeMaterial* material) {
+template <detail::SympyStepMode Mode>
+Result<double> detail::sympyStep(const SympyStepper& stepper,
+                                 SympyStepper::State& state, Direction propDir,
+                                 const IVolumeMaterial* material) {
   constexpr bool isDense = Mode == SympyStepMode::Dense;
 
   double h = state.stepSize.value() * propDir;
@@ -206,4 +206,4 @@ Result<double> sympyStep(const SympyStepper& stepper,
   return h;
 }
 
-}  // namespace Acts::detail
+}  // namespace Acts

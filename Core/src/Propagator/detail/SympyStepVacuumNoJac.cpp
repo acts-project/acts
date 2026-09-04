@@ -10,10 +10,10 @@
 
 #include "SympyStepperStepImpl.hpp"
 
-namespace Acts::detail {
+namespace Acts {
 
-template Result<double> sympyStep<SympyStepMode::VacuumNoJac>(
+template Result<double> detail::sympyStep<detail::SympyStepMode::VacuumNoJac>(
     const SympyStepper&, SympyStepper::State&, Direction,
     const IVolumeMaterial*);
 
-}  // namespace Acts::detail
+}  // namespace Acts
