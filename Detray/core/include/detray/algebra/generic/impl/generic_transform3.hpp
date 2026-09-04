@@ -19,7 +19,9 @@
 // System include(s)
 #include <cassert>
 #include <concepts>
+#include <cstdint>
 #include <limits>
+#include <type_traits>
 
 namespace detray::algebra::generic::math {
 
@@ -70,13 +72,9 @@ struct transform3 {
 
   /// @name Data objects
   /// @{
-  matrix44 _data{
+  alignas(16) matrix44 _data{
       generic::math::identity<matrix44>()};  ///< Local-to-global homogeneous
                                              ///< transformation matrix.
-  matrix44 _data_inv{
-      generic::math::identity<matrix44>()};  ///< Global-to-local homogeneous
-                                             ///< transformation matrix.
-
   /// @}
 
   /// Default constructor: identity
@@ -232,6 +230,27 @@ struct transform3 {
     return true;
   }
 
+  /// Read one column of a transform matrix
+  ///
+  /// @param m is the matrix
+  /// @param col is the column index
+  DETRAY_HOST_DEVICE
+  static constexpr array_type<4> column(const matrix44 &m, index_t col) {
+#if defined(__CUDA_ARCH__)
+    if constexpr (std::same_as<scalar_t, float> &&
+                  std::same_as<matrix44, array_t<array_type<4>, 4>>) {
+      if (!std::is_constant_evaluated()) {
+        const float4 *p = reinterpret_cast<const float4 *>(&m[col]);
+        assert((reinterpret_cast<std::uintptr_t>(p) & 15u) == 0u);
+        const float4 c = *p;
+        return {c.x, c.y, c.z, c.w};
+      }
+    }
+#endif
+    return {element_getter{}(m, 0, col), element_getter{}(m, 1, col),
+            element_getter{}(m, 2, col), element_getter{}(m, 3, col)};
+  }
+
   /// Rotate a vector into / from a frame
   ///
   /// @param m is the rotation matrix
@@ -239,21 +258,24 @@ struct transform3 {
   /// @return the rotated vector
   DETRAY_HOST_DEVICE
   static constexpr vector3 rotate(const matrix44 &m, const vector2 &v) {
+    const array_type<4> c0 = column(m, 0);
+    const array_type<4> c1 = column(m, 1);
+
     vector3 ret{0.f, 0.f, 0.f};
 
     element_getter{}(ret, 0) +=
-        element_getter{}(m, 0, 0) * element_getter{}(v, 0);
+        element_getter{}(c0, 0) * element_getter{}(v, 0);
     element_getter{}(ret, 1) +=
-        element_getter{}(m, 1, 0) * element_getter{}(v, 0);
+        element_getter{}(c0, 1) * element_getter{}(v, 0);
     element_getter{}(ret, 2) +=
-        element_getter{}(m, 2, 0) * element_getter{}(v, 0);
+        element_getter{}(c0, 2) * element_getter{}(v, 0);
 
     element_getter{}(ret, 0) +=
-        element_getter{}(m, 0, 1) * element_getter{}(v, 1);
+        element_getter{}(c1, 0) * element_getter{}(v, 1);
     element_getter{}(ret, 1) +=
-        element_getter{}(m, 1, 1) * element_getter{}(v, 1);
+        element_getter{}(c1, 1) * element_getter{}(v, 1);
     element_getter{}(ret, 2) +=
-        element_getter{}(m, 2, 1) * element_getter{}(v, 1);
+        element_getter{}(c1, 2) * element_getter{}(v, 1);
 
     return ret;
   }
@@ -265,28 +287,32 @@ struct transform3 {
   /// @return the rotated vector
   DETRAY_HOST_DEVICE
   static constexpr vector3 rotate(const matrix44 &m, const vector3 &v) {
+    const array_type<4> c0 = column(m, 0);
+    const array_type<4> c1 = column(m, 1);
+    const array_type<4> c2 = column(m, 2);
+
     vector3 ret{0.f, 0.f, 0.f};
 
     element_getter{}(ret, 0) +=
-        element_getter{}(m, 0, 0) * element_getter{}(v, 0);
+        element_getter{}(c0, 0) * element_getter{}(v, 0);
     element_getter{}(ret, 1) +=
-        element_getter{}(m, 1, 0) * element_getter{}(v, 0);
+        element_getter{}(c0, 1) * element_getter{}(v, 0);
     element_getter{}(ret, 2) +=
-        element_getter{}(m, 2, 0) * element_getter{}(v, 0);
+        element_getter{}(c0, 2) * element_getter{}(v, 0);
 
     element_getter{}(ret, 0) +=
-        element_getter{}(m, 0, 1) * element_getter{}(v, 1);
+        element_getter{}(c1, 0) * element_getter{}(v, 1);
     element_getter{}(ret, 1) +=
-        element_getter{}(m, 1, 1) * element_getter{}(v, 1);
+        element_getter{}(c1, 1) * element_getter{}(v, 1);
     element_getter{}(ret, 2) +=
-        element_getter{}(m, 2, 1) * element_getter{}(v, 1);
+        element_getter{}(c1, 2) * element_getter{}(v, 1);
 
     element_getter{}(ret, 0) +=
-        element_getter{}(m, 0, 2) * element_getter{}(v, 2);
+        element_getter{}(c2, 0) * element_getter{}(v, 2);
     element_getter{}(ret, 1) +=
-        element_getter{}(m, 1, 2) * element_getter{}(v, 2);
+        element_getter{}(c2, 1) * element_getter{}(v, 2);
     element_getter{}(ret, 2) +=
-        element_getter{}(m, 2, 2) * element_getter{}(v, 2);
+        element_getter{}(c2, 2) * element_getter{}(v, 2);
 
     return ret;
   }
@@ -302,32 +328,36 @@ struct transform3 {
   /// @return x-axis vector
   DETRAY_HOST_DEVICE
   constexpr point3 x() const {
-    return {element_getter{}(_data, 0, 0), element_getter{}(_data, 1, 0),
-            element_getter{}(_data, 2, 0)};
+    const array_type<4> c = column(_data, 0);
+    return {element_getter{}(c, 0), element_getter{}(c, 1),
+            element_getter{}(c, 2)};
   }
 
   /// This method retrieves y axis
   /// @return y-axis vector
   DETRAY_HOST_DEVICE
   constexpr point3 y() const {
-    return {element_getter{}(_data, 0, 1), element_getter{}(_data, 1, 1),
-            element_getter{}(_data, 2, 1)};
+    const array_type<4> c = column(_data, 1);
+    return {element_getter{}(c, 0), element_getter{}(c, 1),
+            element_getter{}(c, 2)};
   }
 
   /// This method retrieves z axis
   /// @return z-axis vector
   DETRAY_HOST_DEVICE
   constexpr point3 z() const {
-    return {element_getter{}(_data, 0, 2), element_getter{}(_data, 1, 2),
-            element_getter{}(_data, 2, 2)};
+    const array_type<4> c = column(_data, 2);
+    return {element_getter{}(c, 0), element_getter{}(c, 1),
+            element_getter{}(c, 2)};
   }
 
   /// This method retrieves the translation of a transform
   /// @return translation vector
   DETRAY_HOST_DEVICE
   constexpr point3 translation() const {
-    return {element_getter{}(_data, 0, 3), element_getter{}(_data, 1, 3),
-            element_getter{}(_data, 2, 3)};
+    const array_type<4> c = column(_data, 3);
+    return {element_getter{}(c, 0), element_getter{}(c, 1),
+            element_getter{}(c, 2)};
   }
 
   /// This method retrieves the 4x4 matrix of a transform
@@ -346,10 +376,11 @@ struct transform3 {
   /// @return the point in global coordinates
   DETRAY_HOST_DEVICE constexpr point3 point_to_global(const point2 &v) const {
     const vector3 rg = rotate(_data, v);
+    const array_type<4> t = column(_data, 3);
 
-    return {element_getter{}(rg, 0) + element_getter{}(_data, 0, 3),
-            element_getter{}(rg, 1) + element_getter{}(_data, 1, 3),
-            element_getter{}(rg, 2) + element_getter{}(_data, 2, 3)};
+    return {element_getter{}(rg, 0) + element_getter{}(t, 0),
+            element_getter{}(rg, 1) + element_getter{}(t, 1),
+            element_getter{}(rg, 2) + element_getter{}(t, 2)};
   }
 
   /// This method transform from a point from the local 3D cartesian frame to
@@ -358,10 +389,11 @@ struct transform3 {
   /// @return the point in global coordinates
   DETRAY_HOST_DEVICE constexpr point3 point_to_global(const point3 &v) const {
     const vector3 rg = rotate(_data, v);
+    const array_type<4> t = column(_data, 3);
 
-    return {element_getter{}(rg, 0) + element_getter{}(_data, 0, 3),
-            element_getter{}(rg, 1) + element_getter{}(_data, 1, 3),
-            element_getter{}(rg, 2) + element_getter{}(_data, 2, 3)};
+    return {element_getter{}(rg, 0) + element_getter{}(t, 0),
+            element_getter{}(rg, 1) + element_getter{}(t, 1),
+            element_getter{}(rg, 2) + element_getter{}(t, 2)};
   }
 
   /// Transform a global point to local coordinates.
@@ -369,10 +401,11 @@ struct transform3 {
   /// @return the point in local coordinates
   DETRAY_HOST_DEVICE constexpr point3 point_to_local(const point3 &v) const {
     const vector3 rg = rotate(_data_inv, v);
+    const array_type<4> t = column(_data_inv, 3);
 
-    return {element_getter{}(rg, 0) + element_getter{}(_data_inv, 0, 3),
-            element_getter{}(rg, 1) + element_getter{}(_data_inv, 1, 3),
-            element_getter{}(rg, 2) + element_getter{}(_data_inv, 2, 3)};
+    return {element_getter{}(rg, 0) + element_getter{}(t, 0),
+            element_getter{}(rg, 1) + element_getter{}(t, 1),
+            element_getter{}(rg, 2) + element_getter{}(t, 2)};
   }
 
   /// This method transform from a vector from the local 2D cartesian frame to
