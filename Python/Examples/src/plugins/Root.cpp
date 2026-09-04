@@ -11,6 +11,7 @@
 #include "ActsExamples/Io/Root/RootAthenaDumpWriter.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
+#include "ActsExamples/Io/Root/RootClusterWriter.hpp"
 #include "ActsExamples/Io/Root/RootFileHasher.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
@@ -180,9 +181,21 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
       auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
-      ACTS_PYTHON_STRUCT(c, inputMeasurements, inputClusters, inputSimHits,
+      ACTS_PYTHON_STRUCT(c, inputMeasurements, inputSimHits,
                          inputMeasurementSimHitsMap, filePath, fileMode,
                          surfaceByIdentifier);
+    }
+
+    {
+      using Writer = RootClusterWriter;
+      auto w = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
+                   root, "RootClusterWriter")
+                   .def(py::init<const Writer::Config&, Logging::Level>(),
+                        py::arg("config"), py::arg("level"));
+
+      auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
+
+      ACTS_PYTHON_STRUCT(c, inputClusters, filePath, fileMode, treeName);
     }
 
     {
