@@ -12,17 +12,7 @@
 #include "ActsPlugins/Gnn/Stages.hpp"
 
 #include <memory>
-#include <mutex>
-#include <semaphore>
 #include <vector>
-
-// TensorRT >=10 declares ILogger as a versioned type alias (`using ILogger =
-// class nvinfer1::v_1_0::ILogger;`) rather than a plain class, so hand-rolling
-// `class ILogger;` here conflicts with it once a .cpp includes the real
-// NvInfer.h. NvInferRuntimeBase.h is where that alias (and IRuntime,
-// ICudaEngine, IExecutionContext) is declared, but it static_asserts against
-// being included directly -- NvInferRuntime.h is the sanctioned entry point.
-#include <NvInferRuntime.h>
 
 namespace ActsPlugins {
 /// @addtogroup gnn_plugin
@@ -55,25 +45,12 @@ class TensorRTEdgeClassifier final : public EdgeClassificationBase {
                              const ExecutionContext &execContext = {}) override;
 
   /// Get the configuration
-  /// @return Copy of the configuration struct
-  Config config() const { return m_cfg; }
+  /// @return Reference to the configuration struct
+  const Config &config() const;
 
  private:
-  std::unique_ptr<const Acts::Logger> m_logger;
-  const auto &logger() const { return *m_logger; }
-
-  Config m_cfg;
-
-  std::unique_ptr<nvinfer1::IRuntime> m_runtime;
-  std::unique_ptr<nvinfer1::ICudaEngine> m_engine;
-  std::unique_ptr<nvinfer1::ILogger> m_trtLogger;
-
-  std::size_t m_maxEdges = 0;
-  std::size_t m_maxNodes = 0;
-
-  mutable std::optional<std::counting_semaphore<>> m_count;
-  mutable std::mutex m_contextMutex;
-  mutable std::vector<std::unique_ptr<nvinfer1::IExecutionContext>> m_contexts;
+  class Impl;
+  std::unique_ptr<Impl> m_impl;
 };
 
 /// @}
