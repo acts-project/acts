@@ -16,10 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts {
-
-/// @addtogroup json_plugin
-/// @{
+namespace Acts::detail {
 
 /// A store of material slabs that several index grids can share
 using MaterialSlabStore = std::shared_ptr<std::vector<MaterialSlab>>;
@@ -130,6 +127,4 @@ class MaterialJsonDecodeContext {
   std::vector<MaterialSlabStore> m_stores;
 };
 
-/// @}
-
-}  // namespace Acts
+}  // namespace Acts::detail

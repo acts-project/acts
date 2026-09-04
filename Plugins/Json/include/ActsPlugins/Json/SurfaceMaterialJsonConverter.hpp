@@ -13,13 +13,17 @@
 #include "ActsPlugins/Json/ActsJson.hpp"
 #include "ActsPlugins/Json/GeometryJsonKeys.hpp"
 #include "ActsPlugins/Json/JsonKindDispatcher.hpp"
-#include "ActsPlugins/Json/MaterialJsonContext.hpp"
 
 #include <memory>
 
 #include <nlohmann/json.hpp>
 
 namespace Acts {
+
+namespace detail {
+class MaterialJsonEncodeContext;
+class MaterialJsonDecodeContext;
+}  // namespace detail
 
 /// @addtogroup json_plugin
 /// @{
@@ -32,10 +36,10 @@ namespace Acts {
 class SurfaceMaterialJsonConverter {
  public:
   /// Context collecting the slab stores of the document being written
-  using EncodeContext = MaterialJsonEncodeContext;
+  using EncodeContext = detail::MaterialJsonEncodeContext;
 
   /// Context carrying the slab stores of the document being read
-  using DecodeContext = MaterialJsonDecodeContext;
+  using DecodeContext = detail::MaterialJsonDecodeContext;
 
   /// Encoder type for the surface material
   using Encoder =
@@ -53,77 +57,43 @@ class SurfaceMaterialJsonConverter {
     /// Decoder for the surface material, keyed on the payload type tag
     Decoder decoder{jsonKey().typekey, "surface material"};
 
-    /// Default configuration construction
+    /// Access the shared default configuration
     ///
-    /// @return default configuration
-    static Config defaultConfig();
+    /// @return the default configuration instance
+    static const Config& defaultConfig();
   };
 
   /// Delete the default constructor as the class is purely static
   SurfaceMaterialJsonConverter() = delete;
 
-  /// Access the shared default configuration
-  ///
-  /// @return the default configuration instance
-  static const Config& defaultConfig();
-
   /// Convert surface material into its json payload
   ///
   /// @param material the material to be converted
-  /// @param context the document context collecting the slab stores
   /// @param config the converter configuration
+  /// @param context the document context collecting the slab stores, or a
+  ///        nullptr to inline any slab store and keep the payload
+  ///        self-contained
   ///
   /// @return the json payload of the material, i.e. the value that goes
   ///         under the @c material key of a surface
   static nlohmann::json toJson(const ISurfaceMaterial& material,
-                               EncodeContext& context,
-                               const Config& config = defaultConfig());
-
-  /// Convert surface material into a self-contained json payload
-  ///
-  /// @param material the material to be converted
-  /// @param config the converter configuration
-  ///
-  /// @return the json payload of the material, with any slab store inlined
-  static nlohmann::json toJson(const ISurfaceMaterial& material,
-                               const Config& config = defaultConfig());
+                               const Config& config = Config::defaultConfig(),
+                               EncodeContext* context = nullptr);
 
   /// Convert a json payload back into surface material
   ///
   /// @param jMaterial the json payload of the material
-  /// @param context the document context holding the slab stores
   /// @param config the converter configuration
+  /// @param context the document context holding the slab stores, or a
+  ///        nullptr if the payload is expected to be self-contained
   ///
   /// @return the decoded material, or a nullptr if the payload is flagged
   ///         as not participating in the material mapping
   static std::unique_ptr<const ISurfaceMaterial> fromJson(
-      const nlohmann::json& jMaterial, const DecodeContext& context,
-      const Config& config = defaultConfig());
-
-  /// Convert a self-contained json payload back into surface material
-  ///
-  /// @param jMaterial the json payload of the material
-  /// @param config the converter configuration
-  ///
-  /// @return the decoded material, or a nullptr if the payload is flagged
-  ///         as not participating in the material mapping
-  static std::unique_ptr<const ISurfaceMaterial> fromJson(
-      const nlohmann::json& jMaterial, const Config& config = defaultConfig());
+      const nlohmann::json& jMaterial,
+      const Config& config = Config::defaultConfig(),
+      const DecodeContext* context = nullptr);
 };
-
-/// Convert surface material into the @c material entry of a json object
-///
-/// @param j Destination JSON object
-/// @param material Source material, may be a nullptr
-void to_json(nlohmann::json& j,
-             const std::shared_ptr<const ISurfaceMaterial>& material);
-
-/// Read surface material from the @c material entry of a json object
-///
-/// @param j Source JSON object
-/// @param material Destination material
-void from_json(const nlohmann::json& j,
-               std::shared_ptr<const ISurfaceMaterial>& material);
 
 /// @}
 

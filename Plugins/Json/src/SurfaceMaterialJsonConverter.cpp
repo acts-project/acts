@@ -21,6 +21,7 @@
 #include "ActsPlugins/Json/GridJsonConverter.hpp"
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
+#include "ActsPlugins/Json/detail/MaterialJsonContext.hpp"
 
 #include <array>
 #include <cstddef>
@@ -340,7 +341,7 @@ std::unique_ptr<const ISurfaceMaterial> gridFromJson(
         *axis0, *axis1, slabsFromJson(jAccessor.at("storage_vector")), indices);
   }
   if (accessorType == kGloballyIndexedAccessorTag) {
-    MaterialSlabStore store;
+    detail::MaterialSlabStore store;
     if (jAccessor.contains("store")) {
       // Resolved through the document store table, so that grids referencing
       // the same id keep sharing one allocation
@@ -357,10 +358,8 @@ std::unique_ptr<const ISurfaceMaterial> gridFromJson(
       accessorType);
 }
 
-}  // namespace
-
-Acts::SurfaceMaterialJsonConverter::Config
-Acts::SurfaceMaterialJsonConverter::Config::defaultConfig() {
+SurfaceMaterialJsonConverter::Config makeDefaultConfig() {
+  using Config = SurfaceMaterialJsonConverter::Config;
   Config cfg;
 
   cfg.encoder.registerFunction(homogeneousToJson);
@@ -382,60 +381,34 @@ Acts::SurfaceMaterialJsonConverter::Config::defaultConfig() {
   return cfg;
 }
 
+}  // namespace
+
 const Acts::SurfaceMaterialJsonConverter::Config&
-Acts::SurfaceMaterialJsonConverter::defaultConfig() {
-  static const Config cfg = Config::defaultConfig();
+Acts::SurfaceMaterialJsonConverter::Config::defaultConfig() {
+  static const Config cfg = makeDefaultConfig();
   return cfg;
 }
 
 nlohmann::json Acts::SurfaceMaterialJsonConverter::toJson(
-    const ISurfaceMaterial& material, EncodeContext& context,
-    const Config& config) {
-  return config.encoder(material, context);
-}
-
-nlohmann::json Acts::SurfaceMaterialJsonConverter::toJson(
-    const ISurfaceMaterial& material, const Config& config) {
+    const ISurfaceMaterial& material, const Config& config,
+    EncodeContext* context) {
   // Without a document context the encoders inline their slab stores
   EncodeContext inlineContext;
-  return toJson(material, inlineContext, config);
+  return config.encoder(material,
+                        context != nullptr ? *context : inlineContext);
 }
 
 std::unique_ptr<const Acts::ISurfaceMaterial>
 Acts::SurfaceMaterialJsonConverter::fromJson(const nlohmann::json& jMaterial,
-                                             const DecodeContext& context,
-                                             const Config& config) {
+                                             const Config& config,
+                                             const DecodeContext* context) {
   // Surfaces that are flagged out of the mapping carry no material
   if (jMaterial.contains(jsonKey().mapkey) &&
       jMaterial.at(jsonKey().mapkey) == false) {
     return nullptr;
   }
-  return config.decoder(jMaterial, context);
-}
-
-std::unique_ptr<const Acts::ISurfaceMaterial>
-Acts::SurfaceMaterialJsonConverter::fromJson(const nlohmann::json& jMaterial,
-                                             const Config& config) {
   // Without a document context a payload referencing a store is an error
   const DecodeContext emptyContext;
-  return fromJson(jMaterial, emptyContext, config);
-}
-
-void Acts::to_json(nlohmann::json& j,
-                   const std::shared_ptr<const ISurfaceMaterial>& material) {
-  if (material == nullptr) {
-    return;
-  }
-  j[jsonKey().materialkey] = SurfaceMaterialJsonConverter::toJson(*material);
-}
-
-void Acts::from_json(const nlohmann::json& j,
-                     std::shared_ptr<const ISurfaceMaterial>& material) {
-  material = nullptr;
-  if (!j.contains(jsonKey().materialkey) ||
-      j.at(jsonKey().materialkey).is_null()) {
-    return;
-  }
-  material =
-      SurfaceMaterialJsonConverter::fromJson(j.at(jsonKey().materialkey));
+  return config.decoder(jMaterial,
+                        context != nullptr ? *context : emptyContext);
 }

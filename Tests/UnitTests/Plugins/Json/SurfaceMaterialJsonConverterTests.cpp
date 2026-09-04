@@ -21,6 +21,7 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/MultiAxisSpec.hpp"
 #include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
+#include "ActsPlugins/Json/detail/MaterialJsonContext.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
@@ -279,10 +280,11 @@ BOOST_AUTO_TEST_CASE(GloballyIndexedSharedStoreThroughContext) {
 
   auto encodeContext =
       SurfaceMaterialJsonConverter::EncodeContext::withStoreTable();
+  const auto& config = SurfaceMaterialJsonConverter::Config::defaultConfig();
   nlohmann::json jFirst =
-      SurfaceMaterialJsonConverter::toJson(*first, encodeContext);
+      SurfaceMaterialJsonConverter::toJson(*first, config, &encodeContext);
   nlohmann::json jSecond =
-      SurfaceMaterialJsonConverter::toJson(*second, encodeContext);
+      SurfaceMaterialJsonConverter::toJson(*second, config, &encodeContext);
 
   // One table entry, referenced by both surfaces
   BOOST_REQUIRE_EQUAL(encodeContext.stores().size(), 1u);
@@ -297,9 +299,9 @@ BOOST_AUTO_TEST_CASE(GloballyIndexedSharedStoreThroughContext) {
       {std::make_shared<std::vector<MaterialSlab>>(testSlabs())});
 
   auto readFirst =
-      SurfaceMaterialJsonConverter::fromJson(jFirst, decodeContext);
+      SurfaceMaterialJsonConverter::fromJson(jFirst, config, &decodeContext);
   auto readSecond =
-      SurfaceMaterialJsonConverter::fromJson(jSecond, decodeContext);
+      SurfaceMaterialJsonConverter::fromJson(jSecond, config, &decodeContext);
   BOOST_REQUIRE(readFirst != nullptr);
   BOOST_REQUIRE(readSecond != nullptr);
 
@@ -318,12 +320,13 @@ BOOST_AUTO_TEST_CASE(DistinctStoresGetSequentialIds) {
   auto storeB = std::make_shared<std::vector<MaterialSlab>>(testSlabs());
 
   auto ctx = SurfaceMaterialJsonConverter::EncodeContext::withStoreTable();
-  nlohmann::json jA =
-      SurfaceMaterialJsonConverter::toJson(*makeGloballyIndexed(storeA), ctx);
-  nlohmann::json jB =
-      SurfaceMaterialJsonConverter::toJson(*makeGloballyIndexed(storeB), ctx);
-  nlohmann::json jA2 =
-      SurfaceMaterialJsonConverter::toJson(*makeGloballyIndexed(storeA), ctx);
+  const auto& config = SurfaceMaterialJsonConverter::Config::defaultConfig();
+  nlohmann::json jA = SurfaceMaterialJsonConverter::toJson(
+      *makeGloballyIndexed(storeA), config, &ctx);
+  nlohmann::json jB = SurfaceMaterialJsonConverter::toJson(
+      *makeGloballyIndexed(storeB), config, &ctx);
+  nlohmann::json jA2 = SurfaceMaterialJsonConverter::toJson(
+      *makeGloballyIndexed(storeA), config, &ctx);
 
   BOOST_CHECK_EQUAL(jA["accessor"]["store"], 0u);
   BOOST_CHECK_EQUAL(jB["accessor"]["store"], 1u);
@@ -336,8 +339,9 @@ BOOST_AUTO_TEST_CASE(DistinctStoresGetSequentialIds) {
 BOOST_AUTO_TEST_CASE(StoreReferenceWithoutTableThrows) {
   auto store = std::make_shared<std::vector<MaterialSlab>>(testSlabs());
   auto ctx = SurfaceMaterialJsonConverter::EncodeContext::withStoreTable();
-  nlohmann::json jMaterial =
-      SurfaceMaterialJsonConverter::toJson(*makeGloballyIndexed(store), ctx);
+  const auto& config = SurfaceMaterialJsonConverter::Config::defaultConfig();
+  nlohmann::json jMaterial = SurfaceMaterialJsonConverter::toJson(
+      *makeGloballyIndexed(store), config, &ctx);
 
   // A default decode context has no table at all
   BOOST_CHECK_THROW(SurfaceMaterialJsonConverter::fromJson(jMaterial),
@@ -346,15 +350,16 @@ BOOST_AUTO_TEST_CASE(StoreReferenceWithoutTableThrows) {
   // A table that does not reach the referenced id
   SurfaceMaterialJsonConverter::DecodeContext empty;
   empty.setStores({});
-  BOOST_CHECK_THROW(SurfaceMaterialJsonConverter::fromJson(jMaterial, empty),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(
+      SurfaceMaterialJsonConverter::fromJson(jMaterial, config, &empty),
+      std::invalid_argument);
 
   nlohmann::json jOutOfRange = jMaterial;
   jOutOfRange["accessor"]["store"] = 7u;
   SurfaceMaterialJsonConverter::DecodeContext oneEntry;
   oneEntry.setStores({store});
   BOOST_CHECK_THROW(
-      SurfaceMaterialJsonConverter::fromJson(jOutOfRange, oneEntry),
+      SurfaceMaterialJsonConverter::fromJson(jOutOfRange, config, &oneEntry),
       std::invalid_argument);
 }
 
@@ -380,7 +385,7 @@ BOOST_AUTO_TEST_CASE(DirectGridMaterialRoundTrip) {
 }
 
 BOOST_AUTO_TEST_CASE(EncoderCoversAllSurfaceMaterials) {
-  const auto& cfg = SurfaceMaterialJsonConverter::defaultConfig();
+  const auto& cfg = SurfaceMaterialJsonConverter::Config::defaultConfig();
 
   std::vector<std::shared_ptr<const ISurfaceMaterial>> materials;
   materials.push_back(std::make_shared<const HomogeneousSurfaceMaterial>(
