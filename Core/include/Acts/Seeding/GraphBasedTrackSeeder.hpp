@@ -129,9 +129,12 @@ class GraphBasedTrackSeeder {
     std::uint32_t matchBeforeCreateMaxEdges = 2;
     /// Layers whose nodes are cut against the z0 histogram of their outer
     /// neighbourhood, and whose isolated nodes are skipped.
-    std::vector<GbtsExperimentLayerId> z0HistogramLayerIds{80000};
+    std::vector<GbtsExperimentLayerId> z0HistogramLayerIds{};
     /// Layers `matchBeforeCreate` applies to, when it is enabled.
-    std::vector<GbtsExperimentLayerId> matchBeforeCreateLayerIds{80000, 81000};
+    std::vector<GbtsExperimentLayerId> matchBeforeCreateLayerIds{};
+    /// Pixel barrel layer IDs ordered from the innermost layer outwards.
+    /// Consecutive layers skip the extra scattering correction `tauRatioCorr`.
+    std::vector<GbtsExperimentLayerId> orderedBarrelLayerIds{};
     /// Half-width of the z0 window a node is matched against in the histogram.
     float z0Resolution = 2.5f * UnitConstants::mm;
     /// Maximum radius of pixel detector
@@ -292,8 +295,8 @@ class GraphBasedTrackSeeder {
     std::uint32_t firstIt{};
     /// window half-width;
     float deltaPhi{};
-    /// GBTS layer ID of the bin
-    GbtsExperimentLayerId layerId{};
+    /// Barrel order of the bin's layer, -1 when not a listed barrel layer.
+    std::int32_t barrelOrder{-1};
     /// Type of the bin's layer.
     GbtsLayerType type{};
     /// Technology of the bin's layer.
@@ -302,6 +305,10 @@ class GraphBasedTrackSeeder {
   DerivedConfig m_cfg;
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
+
+  /// Position of each eta bin's layer in `orderedBarrelLayerIds`, -1 for
+  /// endcap and unlisted layers.
+  std::vector<std::int32_t> m_binBarrelOrder;
 
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
