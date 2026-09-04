@@ -141,6 +141,8 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
       layerGeometry, connectorTable.connections, etaBinWidth, m_cfg.gbtsZ0Range,
       this->logger());
 
+  resolveLayerIndices(*geometry);
+
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
   // for pixel seeding, roi z bounds are used
@@ -177,7 +179,8 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   std::uint32_t nUnmapped = 0;
 
   for (const auto &spacePoint : spacePoints) {
-    const std::optional<std::uint32_t> layerIndex = gbtsLayerIndex(spacePoint);
+    const std::optional<Acts::Experimental::GbtsLayerIndex> layerIndex =
+        gbtsLayerIndex(spacePoint);
     if (!layerIndex.has_value()) {
       ++nUnmapped;
       continue;
@@ -234,19 +237,20 @@ GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
     const auto actsVol = static_cast<std::uint32_t>(std::stoul(i[0]));
     const auto actsLay = static_cast<std::uint32_t>(std::stoul(i[1]));
     const auto actsMod = static_cast<std::uint32_t>(std::stoul(i[2]));
-    const auto gbts =
-        static_cast<Acts::Experimental::GbtsLayerId>(std::stoul(i[5]));
+    const auto gbts = static_cast<Acts::Experimental::GbtsExperimentLayerId>(
+        std::stoul(i[5]));
     const auto etaMod = static_cast<std::uint32_t>(std::stoul(i[6]));
     const std::uint32_t actsJoint = actsVol * 100 + actsLay;
-    ActsIDs actsId{actsJoint, actsMod};
-    GbtsIDs gbtsId{gbts, etaMod, 0};
-    actsToGbtsMap.insert({{actsId}, {gbtsId}});
+    const ActsIDs actsId{actsJoint, actsMod};
+    const GbtsIDs gbtsId{.layerId = gbts, .etaModule = etaMod};
+    actsToGbtsMap.insert({actsId, gbtsId});
   }
 
   return actsToGbtsMap;
 }
 
-std::optional<std::uint32_t> GraphBasedSeedingAlgorithm::gbtsLayerIndex(
+std::optional<Acts::Experimental::GbtsLayerIndex>
+GraphBasedSeedingAlgorithm::gbtsLayerIndex(
     const ConstSpacePointProxy &spacePoint) const {
   const auto &sourceLink = spacePoint.sourceLinks();
 
@@ -290,18 +294,35 @@ std::optional<std::uint32_t> GraphBasedSeedingAlgorithm::gbtsLayerIndex(
     return std::nullopt;
   }
 
-  // now should be pixel with Gbts ID:
-  // new map the item is a pair so want first from it
-  if (std::get<0>(find->second) == 0) {
+  // now should be pixel with Gbts ID
+  if (find->second.layerId == 0) {
     ACTS_WARNING("No assigned Gbts ID for key for volume id: "
                  << actsVolId << " and layer id: " << actsLayId);
   }
 
-  return std::get<2>(find->second);
+  return find->second.layerIndex;
+}
+
+void GraphBasedSeedingAlgorithm::resolveLayerIndices(
+    const Acts::Experimental::GbtsGeometry &geometry) {
+  for (auto &[actsId, gbtsId] : m_actsGbtsMap) {
+    const Acts::Experimental::GbtsExperimentLayerId combinedId =
+        gbtsId.layerId * 1000 + gbtsId.etaModule;
+
+    const std::optional<Acts::Experimental::GbtsLayerIndex> index =
+        geometry.layerIndex(combinedId);
+
+    if (!index.has_value()) {
+      ACTS_WARNING("No GBTS layer for combined ID: " << combinedId);
+    }
+
+    gbtsId.layerIndex = index;
+  }
 }
 
 std::vector<Acts::Experimental::GbtsLayerDescription>
-GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
+GraphBasedSeedingAlgorithm::layerNumbering(
+    const Acts::GeometryContext &gctx) const {
   std::vector<Acts::Experimental::GbtsLayerDescription> inputVector;
   std::vector<std::size_t> countVector;
 
@@ -353,12 +374,13 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
       return;  // skip this surface in the visitor
     }
 
-    const std::uint32_t gbtsId = std::get<0>(find->second);
+    const Acts::Experimental::GbtsExperimentLayerId gbtsId =
+        find->second.layerId;
 
     Acts::Experimental::GbtsLayerType barrelEc =
         Acts::Experimental::GbtsLayerType::Barrel;  // a variable that says if
                                                     // barrrel, 0 = barrel
-    std::uint32_t etaMod = std::get<1>(find->second);
+    const std::uint32_t etaMod = find->second.etaModule;
 
     // assign barrelEc depending on Gbts_layer
     if (79 < gbtsId && gbtsId < 85) {  // 80s, barrel
@@ -397,7 +419,8 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
           "Invalid barrel/endcap assignment for GbtsLayer");
     }
 
-    const Acts::Experimental::GbtsLayerId combinedId = gbtsId * 1000 + etaMod;
+    const Acts::Experimental::GbtsExperimentLayerId combinedId =
+        gbtsId * 1000 + etaMod;
 
     const auto currentIndex =
         find_if(inputVector.begin(), inputVector.end(),
@@ -424,21 +447,6 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
           .maxBound = maxBound});
       // so the element exists and not divinding by 0
       countVector.push_back(1);
-
-      // tracking the index of each GbtsLayerDescription as there added
-
-      // so layer ID refers to actual index and not size of vector
-      const auto layerId = static_cast<Acts::Experimental::GbtsLayerIndex>(
-          countVector.size() - 1);
-      std::get<2>(find->second) = layerId;
-      m_layerIdMap.insert({combinedId, layerId});
-    }
-    // look up for every combined ID to see if it has a layer
-    if (auto findLayer = m_layerIdMap.find(combinedId);
-        findLayer == m_layerIdMap.end()) {
-      ACTS_WARNING("No assigned Layer ID for combined ID: " << combinedId);
-    } else {
-      std::get<2>(find->second) = findLayer->second;
     }
 
     // add to file each time,

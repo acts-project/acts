@@ -129,9 +129,9 @@ class GraphBasedTrackSeeder {
     std::uint32_t matchBeforeCreateMaxEdges = 2;
     /// Layers whose nodes are cut against the z0 histogram of their outer
     /// neighbourhood, and whose isolated nodes are skipped.
-    std::vector<GbtsLayerId> z0HistogramLayerIds{80000};
+    std::vector<GbtsExperimentLayerId> z0HistogramLayerIds{80000};
     /// Layers `matchBeforeCreate` applies to, when it is enabled.
-    std::vector<GbtsLayerId> matchBeforeCreateLayerIds{80000, 81000};
+    std::vector<GbtsExperimentLayerId> matchBeforeCreateLayerIds{80000, 81000};
     /// Half-width of the z0 window a node is matched against in the histogram.
     float z0Resolution = 2.5f * UnitConstants::mm;
     /// Maximum radius of pixel detector
@@ -223,8 +223,8 @@ class GraphBasedTrackSeeder {
   /// Create seeds from an ACTS space point container in a region of interest.
   ///
   /// Convenience wrapper that builds and finalizes the node storage itself. The
-  /// container must carry the `layerId`, `clusterWidth` and `localPositionY`
-  /// columns.
+  /// container must carry the `gbtsLayerIndex`, `clusterWidth` and
+  /// `localPositionY` columns.
   /// @param spacePoints Space point container
   /// @param roi Region of interest descriptor
   /// @param filter Tracking filter to be applied
@@ -296,7 +296,7 @@ class GraphBasedTrackSeeder {
     /// window half-width;
     float deltaPhi{};
     /// GBTS layer ID of the bin
-    GbtsLayerId layerId{};
+    GbtsExperimentLayerId layerId{};
     /// Type of the bin's layer.
     GbtsLayerType type{};
     /// Technology of the bin's layer.

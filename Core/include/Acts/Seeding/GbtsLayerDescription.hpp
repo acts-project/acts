@@ -12,14 +12,12 @@
 
 namespace Acts::Experimental {
 
-/// Identifier of a GBTS layer as the experiment numbers it, which is what the
-/// layer connection table is written in terms of. Sparse, and an index into
-/// nothing.
-using GbtsLayerId = std::uint32_t;
+/// Layer id as the experiment numbers it (80000, 81000, ...). Sparse, and an
+/// index into nothing.
+using GbtsExperimentLayerId = std::uint32_t;
 
-/// Position of a layer in the GBTS geometry, assigned in the order the layer
-/// descriptions are handed to it. This is what indexes the geometry and what a
-/// node carries.
+/// Position of a layer within one GbtsGeometry, dense from zero. Ask
+/// GbtsGeometry::layerIndex for it rather than deriving it.
 using GbtsLayerIndex = std::uint32_t;
 
 /// Where a GBTS layer sits, which fixes its coordinate convention.
@@ -31,7 +29,7 @@ enum class GbtsLayerTechnology : std::uint8_t { Pixel = 0, Strip = 1 };
 /// Lightweight layer description for GBTS geometry.
 struct GbtsLayerDescription final {
   /// Combined subdetector ID.
-  GbtsLayerId id{};
+  GbtsExperimentLayerId id{};
   /// Layer type (barrel or endcap).
   GbtsLayerType type{};
   /// Sensor technology of the layer.

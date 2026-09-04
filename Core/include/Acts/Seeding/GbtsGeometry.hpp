@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -48,6 +49,11 @@ class GbtsGeometry final {
                float etaBinWidth, const GbtsZ0Range& z0Range = {},
                const Logger& logger = getDummyLogger());
 
+  /// Resolve a layer id into the index GbtsNodeStorage::insert takes.
+  /// @param id Layer id, as the layer descriptions carry it
+  /// @return The layer's index, or nullopt if this geometry has no such layer
+  std::optional<GbtsLayerIndex> layerIndex(GbtsExperimentLayerId id) const;
+
  private:
   // The layer binning is shared only with the classes that build the graph.
   friend class GbtsNodeStorage;
@@ -68,7 +74,7 @@ class GbtsGeometry final {
   /// Get layer by ID
   /// @param id Layer ID
   /// @return Pointer to layer or nullptr
-  const detail::GbtsLayer* layerById(GbtsLayerId id) const;
+  const detail::GbtsLayer* layerById(GbtsExperimentLayerId id) const;
 
   /// Get layer by index
   /// @param idx Layer index
@@ -95,7 +101,7 @@ class GbtsGeometry final {
   /// Layer array
   std::vector<detail::GbtsLayer> m_layers;
   /// Layer per user ID map
-  std::map<GbtsLayerId, GbtsLayerIndex> m_layerFromUserIdMap;
+  std::map<GbtsExperimentLayerId, GbtsLayerIndex> m_layerFromUserIdMap;
   /// Number of eta bins
   std::uint32_t m_nEtaBins{};
 

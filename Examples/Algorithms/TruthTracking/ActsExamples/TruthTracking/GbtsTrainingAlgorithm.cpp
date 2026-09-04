@@ -47,7 +47,7 @@ static void geometryParser(
   float minZ{};
   float maxZ{};
 
-  Acts::Experimental::GbtsLayerId gbtsId{};
+  Acts::Experimental::GbtsExperimentLayerId gbtsId{};
 
   for (std::uint32_t l = 0; l < lines; l++) {
     inStream >> minR >> maxR >> minZ >> maxZ >> gbtsId;

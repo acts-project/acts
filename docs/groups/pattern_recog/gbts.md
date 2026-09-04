@@ -76,6 +76,17 @@ that already have @f$r@f$ and @f$\phi@f$, and for an
 @ref Acts::ConstSpacePointProxy together with the columns carrying the layer
 index, cluster width and local @f$y@f$ position.
 
+Two different layer numbers meet here, and they are separate types:
+
+| Type | What it is |
+| --- | --- |
+| `GbtsExperimentLayerId` | the layer id the experiment assigns (80000, 81000, ...). Sparse and structured -- the layer descriptions and connections are written in terms of it, and so are the seeder's per-layer cuts. |
+| `GbtsLayerIndex` | where that layer sits in one @ref Acts::Experimental::GbtsGeometry, dense from zero. It indexes the geometry, and it is what a node carries. |
+
+`insert` takes the **index**, because it is on the per-space-point path.
+@ref Acts::Experimental::GbtsGeometry::layerIndex hands it out. It is the
+geometry's own numbering and is not derivable from the id.
+
 `insert` assigns the node to an eta bin via `GbtsLayer::getEtaBin` and buffers
 it. `finalize` then sorts each bin by @f$\phi@f$ and materialises the nodes into
 a space point container ordered by eta bin and then by @f$\phi@f$, so that every

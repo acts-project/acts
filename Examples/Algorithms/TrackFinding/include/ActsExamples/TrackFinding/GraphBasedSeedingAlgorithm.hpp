@@ -22,6 +22,7 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -30,8 +31,18 @@ namespace ActsExamples {
 class GraphBasedSeedingAlgorithm final : public IAlgorithm {
  public:
   using ActsIDs = std::array<std::uint64_t, 2>;
-  /// (GBTS layer id, eta module, dense GBTS layer index)
-  using GbtsIDs = std::array<std::uint32_t, 3>;
+
+  /// One ACTS module's entry in the layer mapping file, with the geometry
+  /// index resolved from it.
+  struct GbtsIDs {
+    /// GBTS layer id, before the eta module is folded in
+    Acts::Experimental::GbtsExperimentLayerId layerId{};
+    /// eta module, which splits an endcap ring into GBTS layers
+    std::uint32_t etaModule{};
+    /// index of `layerId * 1000 + etaModule`, unset if the geometry has no
+    /// such layer
+    std::optional<Acts::Experimental::GbtsLayerIndex> layerIndex{};
+  };
 
   struct Config {
     /// this is used to initialise the handle that points to the container of
@@ -103,10 +114,6 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// used by GBTS
   std::map<ActsIDs, GbtsIDs> m_actsGbtsMap;
 
-  /// used to assign LayerIds to the GbtsActsMap
-  std::map<Acts::Experimental::GbtsLayerId, Acts::Experimental::GbtsLayerIndex>
-      m_layerIdMap{};
-
   /// used to define region of interest
   std::optional<Acts::Experimental::GbtsRoiDescriptor> m_internalRoi;
 
@@ -123,15 +130,19 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// make the map between ACTS geometry ID's and GBTS geometry ID's
   std::map<ActsIDs, GbtsIDs> makeActsGbtsMap() const;
 
-  /// Resolve the dense GBTS layer index for a space point, or nullopt if it is
-  /// not part of the GBTS geometry.
-  std::optional<std::uint32_t> gbtsLayerIndex(
+  /// Resolve the GBTS layer index for a space point, or nullopt if it is not
+  /// part of the GBTS geometry.
+  std::optional<Acts::Experimental::GbtsLayerIndex> gbtsLayerIndex(
       const ConstSpacePointProxy &spacePoint) const;
+
+  /// Fill in `GbtsIDs::layerIndex` for every mapped module from the geometry.
+  /// @param geometry The geometry the indices belong to
+  void resolveLayerIndices(const Acts::Experimental::GbtsGeometry &geometry);
 
   /// makes the geometry objects used by GBTS that correspond to the objects in
   /// the connection table for ease these are sometimes called "logical layers"
   std::vector<Acts::Experimental::GbtsLayerDescription> layerNumbering(
-      const Acts::GeometryContext &gctx);
+      const Acts::GeometryContext &gctx) const;
 
   void printConfig() const;
 };

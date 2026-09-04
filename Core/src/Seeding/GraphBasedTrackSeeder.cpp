@@ -75,7 +75,7 @@ void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& spacePoints,
                                         SeedContainer& outputSeeds) const {
   GbtsNodeStorage nodeStorage = makeNodeStorage();
 
-  const auto layerColumn = spacePoints.column<GbtsLayerIndex>("layerId");
+  const auto layerColumn = spacePoints.column<GbtsLayerIndex>("gbtsLayerIndex");
   const auto clusterWidthColumn = spacePoints.column<float>("clusterWidth");
   const auto localPositionColumn = spacePoints.column<float>("localPositionY");
 
@@ -233,7 +233,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
 
     const float rb1 = B1.minRadius;
 
-    const GbtsLayerId layerId1 = B1.layerId;
+    const GbtsExperimentLayerId layerId1 = B1.layerId;
 
     const bool isPixel1 = B1.technology == GbtsLayerTechnology::Pixel;
     // The adaptive tau corrections and the triplet validation below were tuned
@@ -241,9 +241,10 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
     // (layerId / 10000) == 8 selects: its strip barrel is numbered 13xxx.
     const bool isPixelBarrel1 = isPixel1 && B1.type == GbtsLayerType::Barrel;
 
-    const auto listed = [layerId1](const std::vector<GbtsLayerId>& ids) {
-      return std::ranges::find(ids, layerId1) != ids.end();
-    };
+    const auto listed =
+        [layerId1](const std::vector<GbtsExperimentLayerId>& ids) {
+          return std::ranges::find(ids, layerId1) != ids.end();
+        };
     const bool useZ0Histogram = listed(m_cfg.z0HistogramLayerIds);
     const bool useMatchBeforeCreate =
         m_cfg.matchBeforeCreate && listed(m_cfg.matchBeforeCreateLayerIds);
@@ -315,7 +316,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
 
       // the intermediate loop over sliding windows
       for (auto& slw : phiSlidingWindow) {
-        const GbtsLayerId lk2 = slw.layerId;
+        const GbtsExperimentLayerId lk2 = slw.layerId;
 
         const bool isPixel2 = slw.technology == GbtsLayerTechnology::Pixel;
         const bool isPixelBarrel2 =
@@ -524,7 +525,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
                 continue;
               }
 
-              const GbtsLayerId lk3 = pS->n2LayerId;
+              const GbtsExperimentLayerId lk3 = pS->n2LayerId;
 
               const bool isPixelBarrel3 = pS->n2PixelBarrel;
 

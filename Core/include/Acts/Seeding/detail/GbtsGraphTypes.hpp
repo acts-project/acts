@@ -94,7 +94,7 @@ struct GbtsEtaBinInfo final {
 
   float minRadius{};
   float maxRadius{};
-  GbtsLayerId layerId{0};
+  GbtsExperimentLayerId layerId{0};
 
   /// Type of the layer this bin belongs to.
   GbtsLayerType type{};
@@ -195,8 +195,9 @@ struct GbtsEdge final {
   /// @param p1_ First fit parameter
   /// @param p2_ Second fit parameter
   /// @param p3_ Third fit parameter
-  GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_, GbtsLayerId n2LayerId_,
-           bool n2PixelBarrel_, float p1_, float p2_, float p3_)
+  GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_,
+           GbtsExperimentLayerId n2LayerId_, bool n2PixelBarrel_, float p1_,
+           float p2_, float p3_)
       : n1{n1_},
         n2{n2_},
         level{1},
@@ -225,7 +226,7 @@ struct GbtsEdge final {
 
   /// GBTS layer ID of the outer node. Cached next to the fit parameters so the
   /// innermost neighbour loop does not have to chase the node.
-  GbtsLayerId n2LayerId{0};
+  GbtsExperimentLayerId n2LayerId{0};
 
   std::array<std::uint32_t, kGbtsMaxEdgeNeighbours> vNei{};
 };
