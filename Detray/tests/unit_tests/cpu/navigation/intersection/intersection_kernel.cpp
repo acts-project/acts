@@ -182,9 +182,9 @@ GTEST_TEST(detray_intersection, intersection_kernel_ray) {
   sfi_init.reserve(expected_points.size());
 
   for (const auto &surface : surfaces) {
-    mask_store.visit<detail::intersection_initialize<ray_intersector>>(
-        surface.mask(), sfi_init, detail::ray(track), surface, transform_store,
-        static_context, intr_cfg, external_tol);
+    detail::intersection_initialize<ray_intersector>(
+        mask_store, surface.mask(), sfi_init, detail::ray(track), surface,
+        transform_store, static_context, intr_cfg, external_tol);
   }
 
   EXPECT_EQ(expected_points.size(), sfi_init.size());
@@ -312,9 +312,9 @@ GTEST_TEST(detray_intersection, intersection_kernel_helix) {
 
   // Try the intersections - with automated dispatching via the kernel
   for (const auto [sf_idx, surface] : detray::views::enumerate(surfaces)) {
-    mask_store.visit<detail::intersection_initialize<helix_intersector>>(
-        surface.mask(), sfi_helix, h, surface, transform_store, static_context,
-        intr_cfg, scalar{0.f});
+    detail::intersection_initialize<helix_intersector>(
+        mask_store, surface.mask(), sfi_helix, h, surface, transform_store,
+        static_context, intr_cfg, scalar{0.f});
 
     vector3 global{0.f, 0.f, 0.f};
 

@@ -56,7 +56,6 @@ struct brute_force_scan {
 
     using intersection_t =
         typename intersection_record<detector_t>::intersection_type;
-    using intersection_kernel_t = detail::intersection_initialize<intersector>;
 
     constexpr scalar_t external_mask_tol{0.f};
     const intersection::config intr_cfg{
@@ -81,9 +80,9 @@ struct brute_force_scan {
       const auto sf = geometry::surface{detector, sf_desc};
       DETRAY_DEBUG_HOST("Intersecting sf: " << sf.identifier());
 
-      sf.template visit_mask<intersection_kernel_t>(
-          intersections, traj, sf_desc, trf_store, ctx, intr_cfg,
-          external_mask_tol);
+      detail::intersection_initialize<intersector>(
+          detector.mask_store(), sf_desc.mask(), intersections, traj, sf_desc,
+          trf_store, ctx, intr_cfg, external_mask_tol);
 
       // Candidate is invalid if it lies in the opposite direction
       const std::size_t n_records{intersection_trace.size()};

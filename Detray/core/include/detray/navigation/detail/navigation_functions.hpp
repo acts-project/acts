@@ -46,16 +46,15 @@ struct candidate_search {
       const typename detector_t::geometry_context &ctx,
       const traj_t &tangential, navigation_state_t &nav_state,
       const intersection::config &inter_cfg) const {
-    const auto sf = detray::geometry::surface{det, sf_descr};
+    [[maybe_unused]] const auto sf = detray::geometry::surface{det, sf_descr};
 
     DETRAY_DEBUG_HOST("--> Testing surface:\n" << sf);
 
     // Perform intersection and add result to the navigation cache via
     // @c nav_state.insert()
-    sf.template visit_mask<
-        detray::detail::intersection_initialize<ray_intersector>>(
-        nav_state, tangential, sf_descr, det.transform_store(), ctx, inter_cfg,
-        nav_state.external_tol());
+    detray::detail::intersection_initialize<ray_intersector>(
+        det.mask_store(), sf_descr.mask(), nav_state, tangential, sf_descr,
+        det.transform_store(), ctx, inter_cfg, nav_state.external_tol());
   }
 
   /// Test the volume links
