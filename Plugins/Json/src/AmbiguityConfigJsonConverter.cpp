@@ -113,13 +113,4 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
   p = std::make_pair(volumeMap, detectorConfigs);
 }
 
-void from_json(const nlohmann::json& j,
-               std::vector<std::string>* detectorNames) {
-  if (detectorNames) {
-    for (auto& [key, value] : j.items()) {
-      detectorNames->push_back(value["name"]);
-    }
-  }
-}
-
 }  // namespace Acts

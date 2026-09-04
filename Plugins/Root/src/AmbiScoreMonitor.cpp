@@ -6,8 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Root/AmbiScoreMonitor.hpp"
-
+#include "ActsPlugins/Root/AmbiScoreMonitor.hpp"
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 
 #include <TFile.h>

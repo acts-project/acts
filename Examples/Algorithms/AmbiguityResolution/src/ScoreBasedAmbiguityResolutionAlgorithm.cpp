@@ -9,11 +9,11 @@
 #include "ActsExamples/AmbiguityResolution/ScoreBasedAmbiguityResolutionAlgorithm.hpp"
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
-#include "Acts/Plugins/Root/AmbiScoreMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsPlugins/Json/AmbiguityConfigJsonConverter.hpp"
+#include "ActsPlugins/Root/AmbiScoreMonitor.hpp"
 
 #include <fstream>
 
@@ -139,7 +139,8 @@ ProcessCode ScoreBasedAmbiguityResolutionAlgorithm::execute(
     file >> json_file;
     file.close();
     auto prtDetectorNames = std::make_unique<std::vector<std::string>>();
-    Acts::from_json(json_file, prtDetectorNames.get());
+
+    json_file.at("detectorNames").get_to(*prtDetectorNames);
 
     // Save the score monitor data to a ROOT file
     Acts::saveScoreMonitor(scoreMonitor, m_cfg.monitorFile, *prtDetectorNames);
