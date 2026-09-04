@@ -31,9 +31,7 @@ GraphBasedTrackSeeder::DerivedConfig::DerivedConfig(const Config& config)
 }
 
 GraphBasedTrackSeeder::Options::Options(float bFieldInZ_)
-    : bFieldInZ(bFieldInZ_) {
-  ptCoeff = 0.5f * bFieldInZ * Acts::UnitConstants::m;
-}
+    : bFieldInZ(bFieldInZ_) {}
 
 GraphBasedTrackSeeder::GraphBasedTrackSeeder(
     const DerivedConfig& config, std::shared_ptr<GbtsGeometry> geometry,
@@ -176,18 +174,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
   const float ptScale = m_cfg.tuningPt / m_cfg.minPt;
 
-  const float maxCurv = options.ptCoeff / tripletPtMin;
-
-  const float curvatureCutHighEta =
-      m_cfg.useOldTuningsCurvature
-          ? std::sqrt(m_cfg.oldTuningsCurvatureHighEtaFraction) * maxCurv
-          : m_cfg.maxCurvatureHighEta * ptScale;
-  const float curvatureCutLowEta =
-      m_cfg.useOldTuningsCurvature
-          ? std::sqrt(m_cfg.oldTuningsCurvatureLowEtaFraction) * maxCurv
-          : m_cfg.maxCurvatureLowEta * ptScale;
-
-  const float dPhiCoeff = m_cfg.oldTuningsPhiWindowFraction * maxCurv;
+  const float curvatureCutHighEta = m_cfg.maxCurvatureHighEta * ptScale;
+  const float curvatureCutLowEta = m_cfg.maxCurvatureLowEta * ptScale;
 
   // the loosest tau ratio threshold the triplet matching can apply
   const float maxTauRatioCut =
@@ -279,9 +267,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
       // override the default window width
       if (m_cfg.useEtaBinning) {
         const float absDr = std::fabs(rb2 - rb1);
-        if (m_cfg.useOldTuningsPhiWindow) {
-          deltaPhi = m_cfg.minDeltaPhi + dPhiCoeff * absDr;
-        } else if (absDr < m_cfg.phiWindowSplitDeltaRadius) {
+        if (absDr < m_cfg.phiWindowSplitDeltaRadius) {
           deltaPhi = m_cfg.phiWindowNearOffset +
                      m_cfg.phiWindowNearSlope * ptScale * absDr;
         } else {

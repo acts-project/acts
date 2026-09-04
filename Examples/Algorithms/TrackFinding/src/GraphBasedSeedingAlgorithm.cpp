@@ -473,8 +473,6 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("useStripConnections: " << cfg1.useStripConnections);
   ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
   ACTS_DEBUG("matchBeforeCreate: " << cfg1.matchBeforeCreate);
-  ACTS_DEBUG("useOldTuningsCurvature: " << cfg1.useOldTuningsCurvature);
-  ACTS_DEBUG("useOldTuningsPhiWindow: " << cfg1.useOldTuningsPhiWindow);
   ACTS_DEBUG("tauRatioCut: " << cfg1.tauRatioCut);
   ACTS_DEBUG("tauRatioPrecut: " << cfg1.tauRatioPrecut);
   ACTS_DEBUG("nMaxPhiSlice: " << cfg1.nMaxPhiSlice);
@@ -496,7 +494,6 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("cutDCurvMax: " << cfg1.cutDCurvMax);
   ACTS_DEBUG("minZ0: " << cfg1.minZ0);
   ACTS_DEBUG("maxZ0: " << cfg1.maxZ0);
-  ACTS_DEBUG("minDeltaPhi: " << cfg1.minDeltaPhi);
   ACTS_DEBUG("maxOuterRadius: " << cfg1.maxOuterRadius);
   ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);
   ACTS_DEBUG("maxInvRadDiff: " << cfg1.maxInvRadDiff);

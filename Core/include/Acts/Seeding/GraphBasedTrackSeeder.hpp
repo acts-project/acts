@@ -48,13 +48,6 @@ class GraphBasedTrackSeeder {
     bool useClusterWidthCuts = false;
     /// Match seeds before creating them.
     bool matchBeforeCreate = false;
-    /// Bound the curvature by the pT the triplet has to reach in the actual
-    /// field, times `oldTuningsCurvature*Fraction`, instead of the tuned
-    /// `maxCurvature*Eta` constants.
-    bool useOldTuningsCurvature = false;
-    /// Open the phi window as `minDeltaPhi` plus a fraction of that same
-    /// curvature bound, instead of the two-slope `phiWindow*` model.
-    bool useOldTuningsPhiWindow = false;
     /// optional validation for barrel triplets
     bool validateTriplets = true;
     /// widens allowed variation in tau ratio
@@ -109,8 +102,6 @@ class GraphBasedTrackSeeder {
     float minZ0 = -600;
     /// Maximum z0 value. In pixel mode the value is picked from the RoI.
     float maxZ0 = 600;
-    /// Offset of the phi window under `useOldTuningsPhiWindow`.
-    float minDeltaPhi = 0.001f;
 
     /// pT the default cut coefficients were tuned at; they scale by
     /// `tuningPt / minPt`.
@@ -121,15 +112,6 @@ class GraphBasedTrackSeeder {
     float maxCurvatureLowEta = 3.75e-4f / UnitConstants::mm;
     /// |cot(theta)| separating the two curvature cuts, |eta| of about 2.1.
     float curvatureSplitAbsTau = 4.0f;
-    /// Squared fraction of the pT-derived curvature bound cut at above
-    /// `curvatureSplitAbsTau`, under `useOldTuningsCurvature`. Large radius
-    /// tracking cuts at the bound itself, so 1.
-    float oldTuningsCurvatureHighEtaFraction = 0.8f;
-    /// Squared fraction of the same below `curvatureSplitAbsTau`.
-    float oldTuningsCurvatureLowEtaFraction = 0.6f;
-    /// Fraction of the same the phi window opens by, per unit of radial
-    /// separation, under `useOldTuningsPhiWindow`.
-    float oldTuningsPhiWindowFraction = 0.68f;
     /// Radial separation splitting the two phi window slopes below.
     float phiWindowSplitDeltaRadius = 60.0f * UnitConstants::mm;
     /// Phi window below `phiWindowSplitDeltaRadius`, as offset plus slope times
@@ -167,7 +149,7 @@ class GraphBasedTrackSeeder {
     /// Maximum number of connected-component iterations.
     std::uint32_t ccaMaxIterations = 15;
     /// Chain length a seed candidate must reach: a triplet plus one
-    /// confirmation. Large radius tracking asks for the triplet alone, so 2.
+    /// confirmation.
     std::uint32_t minSeedLevel = 3;
     /// Smallest seed size that is split into drop-out candidates.
     std::uint32_t minSplitSeedSize = 4;
@@ -220,10 +202,6 @@ class GraphBasedTrackSeeder {
     /// Magnetic field in z
     /// units of GeV/(e*mm).
     float bFieldInZ{};
-
-    /// Transverse momentum coefficient (~0.3*B/2 - assumes nominal field of
-    /// 2*T).
-    double ptCoeff{};
   };
 
   /// @param config Configuration for the seed finder
