@@ -42,7 +42,15 @@ description: a flat list of `GbtsLayer` logical layers, each subdivided into
 @ref Acts::Experimental::GbtsLayerDescription gives a layer its ID, its type
 (barrel or endcap), its sensor technology and its extent. For a barrel layer
 `refCoord` is the radius and the bounds are in @f$z@f$; for an endcap it is the
-other way round. The ID is the caller's own numbering and is never decoded.
+other way round. The ID is the caller's own numbering and is very nearly never
+decoded.
+
+> [!note]
+> One reader of the ATLAS numbering survives: the adaptive @f$\tau@f$ correction
+> of @ref gbts-graph takes pixel barrel layers `1000` apart as adjacent. On a
+> detector numbered otherwise no triplet looks gapless, so the correction is
+> applied to all of them. The examples algorithm reads the numbering once more,
+> to pick the strip layers out of an ATLAS connection table.
 
 Which layer pairs may be joined by an edge is a list of
 @ref Acts::Experimental::GbtsLayerConnection, each naming a source (outer) and a
