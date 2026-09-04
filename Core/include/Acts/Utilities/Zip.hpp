@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <ranges>
 #include <tuple>
 
 namespace Acts {
@@ -26,10 +27,10 @@ namespace Acts {
 template <typename... R>
 auto zip(R &&...r) {
   struct It {
-    std::tuple<decltype(r.begin())...> iterators;
+    std::tuple<decltype(std::ranges::begin(r))...> iterators;
     static_assert(std::tuple_size_v<decltype(iterators)> > 0);
 
-    using reference = std::tuple<decltype(*r.begin())...>;
+    using reference = std::tuple<decltype(*std::ranges::begin(r))...>;
 
     auto operator++() {
       std::apply([](auto &...args) { (++args, ...); }, iterators);
@@ -53,8 +54,8 @@ auto zip(R &&...r) {
     auto end() { return e; }
   };
 
-  auto begin = std::make_tuple(r.begin()...);
-  auto end = std::make_tuple(r.end()...);
+  auto begin = std::make_tuple(std::ranges::begin(r)...);
+  auto end = std::make_tuple(std::ranges::end(r)...);
   return Zip{It{begin}, It{end}};
 }
 

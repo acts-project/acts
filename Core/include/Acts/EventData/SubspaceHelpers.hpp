@@ -40,16 +40,18 @@ inline static bool checkSubspaceIndices(const index_range_t& indexRange,
   if (subspaceSize > fullSize) {
     return false;
   }
-  if (static_cast<std::size_t>(indexRange.size()) != subspaceSize) {
+  if (static_cast<std::size_t>(std::ranges::size(indexRange)) != subspaceSize) {
     return false;
   }
-  for (auto it = indexRange.begin(); it != indexRange.end();) {
+  for (auto it = std::ranges::begin(indexRange);
+       it != std::ranges::end(indexRange);) {
     auto index = *it;
     if (index >= fullSize) {
       return false;
     }
     ++it;
-    if (const auto tail = std::ranges::subrange(it, indexRange.end());
+    if (const auto tail =
+            std::ranges::subrange(it, std::ranges::end(indexRange));
         std::ranges::find(tail, index) != tail.end()) {
       return false;
     }

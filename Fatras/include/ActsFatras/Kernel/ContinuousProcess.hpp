@@ -12,6 +12,10 @@
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
 
+#include <algorithm>
+#include <iterator>
+#include <vector>
+
 namespace ActsFatras {
 
 /// A continuous simulation process based on a physics model plus selectors.
@@ -72,8 +76,8 @@ struct ContinuousProcess {
     // modify particle according to the physics process
     auto children = physics(generator, slab, particle);
     // move selected child particles to the output container
-    std::copy_if(std::begin(children), std::end(children),
-                 std::back_inserter(generated), selectChildParticle);
+    std::ranges::copy_if(children, std::back_inserter(generated),
+                         selectChildParticle);
     // break condition is defined by whether the output particle is still valid
     // or not e.g. because it has fallen below a momentum threshold.
     return !selectOutputParticle(particle);

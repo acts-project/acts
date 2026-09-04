@@ -451,8 +451,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
              detail::MultiAxisHelper::neighborHoodIndices(
                  indices, neighborDistance, m_axes)) {
           const std::vector<const Surface*>& binContent = m_fillingGrid.at(idx);
-          std::copy(binContent.begin(), binContent.end(),
-                    std::back_inserter(surfacePack));
+          std::ranges::copy(binContent, std::back_inserter(surfacePack));
         }
 
         std::ranges::sort(surfacePack);
@@ -494,9 +493,8 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
                                                surfaces.end());
 
     std::set<const Surface*> seenSurface;
-    for (std::size_t globalBin = 0; globalBin < m_fillingGrid.size();
-         ++globalBin) {
-      for (const Surface* surface : m_fillingGrid.at(globalBin)) {
+    for (const std::vector<const Surface*>& binSurfaces : m_fillingGrid) {
+      for (const Surface* surface : binSurfaces) {
         seenSurface.insert(surface);
       }
     }

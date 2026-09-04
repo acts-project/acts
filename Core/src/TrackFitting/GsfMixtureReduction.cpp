@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <format>
 #include <iostream>
+#include <vector>
 
 using namespace Acts;
 
@@ -46,11 +47,8 @@ void reduceWithKLDistanceImpl(std::vector<GsfComponent> &cmpCache,
   }
 
   // Remove all components which are labeled with weight -1
-  std::ranges::sort(cmpCache, {}, [&](const auto &c) { return c.weight; });
-  cmpCache.erase(
-      std::remove_if(cmpCache.begin(), cmpCache.end(),
-                     [&](const auto &a) { return a.weight == -1.0; }),
-      cmpCache.end());
+  std::ranges::sort(cmpCache, {}, [](const auto &c) { return c.weight; });
+  std::erase_if(cmpCache, [](const auto &a) { return a.weight == -1.0; });
 
   assert(cmpCache.size() == maxCmpsAfterMerge && "size mismatch");
 }
@@ -66,9 +64,9 @@ void Acts::reduceMixtureLargestWeights(std::vector<GsfComponent> &cmpCache,
     return;
   }
 
-  std::nth_element(
-      cmpCache.begin(), cmpCache.begin() + maxCmpsAfterMerge, cmpCache.end(),
-      [](const auto &a, const auto &b) { return a.weight > b.weight; });
+  std::ranges::nth_element(cmpCache, cmpCache.begin() + maxCmpsAfterMerge,
+                           std::ranges::greater{},
+                           [](const auto &c) { return c.weight; });
   cmpCache.resize(maxCmpsAfterMerge);
 }
 

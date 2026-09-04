@@ -326,12 +326,13 @@ class MultiStepperLoop final {
       using iterator_category [[maybe_unused]] = std::forward_iterator_tag;
 
       typename decltype(state.components)::iterator it;
-      const State& s;
+      const State* s{};
 
       // clang-format off
       auto& operator++() { ++it; return *this; }
+      auto operator++(int) { auto copy = *this; ++it; return copy; }
       auto operator==(const Iterator& other) const { return it == other.it; }
-      auto operator*() const { return ComponentProxy(*it, s); }
+      auto operator*() const { return ComponentProxy(*it, *s); }
       // clang-format on
     };
 
@@ -339,8 +340,8 @@ class MultiStepperLoop final {
       State& s;
 
       // clang-format off
-      auto begin() { return Iterator{s.components.begin(), s}; }
-      auto end() { return Iterator{s.components.end(), s}; }
+      auto begin() { return Iterator{s.components.begin(), &s}; }
+      auto end() { return Iterator{s.components.end(), &s}; }
       // clang-format on
     };
 
@@ -362,10 +363,11 @@ class MultiStepperLoop final {
       using iterator_category [[maybe_unused]] = std::forward_iterator_tag;
 
       typename decltype(state.components)::const_iterator it;
-      const State& s;
+      const State* s{};
 
       // clang-format off
       auto& operator++() { ++it; return *this; }
+      auto operator++(int) { auto copy = *this; ++it; return copy; }
       auto operator==(const ConstIterator& other) const { return it == other.it; }
       auto operator*() const { return ConstComponentProxy{*it}; }
       // clang-format on
@@ -375,8 +377,8 @@ class MultiStepperLoop final {
       const State& s;
 
       // clang-format off
-      auto begin() const { return ConstIterator{s.components.cbegin(), s}; }
-      auto end() const { return ConstIterator{s.components.cend(), s}; }
+      auto begin() const { return ConstIterator{s.components.cbegin(), &s}; }
+      auto end() const { return ConstIterator{s.components.cend(), &s}; }
       // clang-format on
     };
 
