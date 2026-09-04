@@ -2,3 +2,6 @@ set(unittest_extra_libraries ActsPluginMille)
 
 add_unittest(ActsKalmanToMilleConsistency ActsKalmanToMilleConsistency.cpp)
 add_unittest(ActsMilleBasicCalls ActsMilleBasicCalls.cpp)
+add_unittest(MillePedeSolverBuiltIn MillePedeSolverBuiltIn.cpp)
+add_unittest(MillePedeResultReaderSimpleFile MillePedeResultReaderSimpleFile.cpp)
+add_unittest(MillePedeSteeringTests MillePedeSteeringTests.cpp)
