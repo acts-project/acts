@@ -129,6 +129,38 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
+  // Default the layer-keyed cuts of GBTS from the layer geometry:
+  // the pixel barrel layers ordered inside-out by radius, the innermost layer
+  // is used for z0 histogram and the two innermost for matchBeforeCreate.
+  std::vector<std::pair<float, std::uint32_t>> barrelLayers;
+  for (const Acts::Experimental::GbtsLayerDescription &layer : layerGeometry) {
+    if (layer.type == Acts::Experimental::GbtsLayerType::Barrel &&
+        layer.technology == Acts::Experimental::GbtsLayerTechnology::Pixel) {
+      barrelLayers.emplace_back(layer.refCoord,
+                                static_cast<std::uint32_t>(layer.id));
+    }
+  }
+  std::ranges::sort(barrelLayers);
+
+  if (m_cfg.seedFinderConfig.orderedBarrelLayerIds.empty()) {
+    for (const auto &[refCoord, id] : barrelLayers) {
+      m_cfg.seedFinderConfig.orderedBarrelLayerIds.push_back(id);
+    }
+  }
+  // the innermost layers follow the effective barrel ordering, so that an
+  // explicitly configured ordering and the derived lists always agree
+  const std::vector<std::uint32_t> &orderedBarrel =
+      m_cfg.seedFinderConfig.orderedBarrelLayerIds;
+  if (m_cfg.seedFinderConfig.z0HistogramLayerIds.empty() &&
+      !orderedBarrel.empty()) {
+    m_cfg.seedFinderConfig.z0HistogramLayerIds.push_back(orderedBarrel[0]);
+  }
+  if (m_cfg.seedFinderConfig.matchBeforeCreateLayerIds.empty() &&
+      orderedBarrel.size() >= 2) {
+    m_cfg.seedFinderConfig.matchBeforeCreateLayerIds = {orderedBarrel[0],
+                                                        orderedBarrel[1]};
+  }
+
   // option that allows for adding custom eta binning (default is at 0.2)
   const float etaBinWidth = m_cfg.etaBinWidthOverride != 0.0f
                                 ? m_cfg.etaBinWidthOverride

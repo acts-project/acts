@@ -54,6 +54,23 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
   }
 
   m_tauLut = parseTauLookupTable(m_cfg.lutInputFile);
+
+  // resolve each eta bin's position in the inside-out barrel ordering once,
+  // so the graph builder never searches the list.
+  m_binBarrelOrder.assign(m_geometry->numBins(), -1);
+  for (const detail::GbtsLayer& layer : m_geometry->m_layers) {
+    const auto it = std::ranges::find(
+        m_cfg.orderedBarrelLayerIds,
+        static_cast<std::uint32_t>(layer.layerDescription().id));
+    if (it == m_cfg.orderedBarrelLayerIds.end()) {
+      continue;
+    }
+    const auto order = static_cast<std::int32_t>(
+        std::distance(m_cfg.orderedBarrelLayerIds.begin(), it));
+    for (const std::int32_t bin : layer.bins()) {
+      m_binBarrelOrder.at(bin) = order;
+    }
+  }
 }
 
 GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
@@ -246,11 +263,11 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
     const float rb1 = B1.minRadius;
 
     const std::uint32_t layerId1 = B1.layerId;
+    const std::int32_t barrelOrder1 = m_binBarrelOrder[bg.first];
 
     const bool isPixel1 = B1.technology == GbtsLayerTechnology::Pixel;
     // The adaptive tau corrections and the triplet validation below were tuned
-    // on the pixel barrel and are keyed on it, which is what ATLAS's
-    // (layerId / 10000) == 8 selects: its strip barrel is numbered 13xxx.
+    // on the pixel barrel and are keyed on it.
     const bool isPixelBarrel1 = isPixel1 && B1.type == GbtsLayerType::Barrel;
 
     const auto listed = [layerId1](const std::vector<std::uint32_t>& ids) {
@@ -294,7 +311,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
       window.phiNodes = B2.phiNodes.data();
       window.numPhiNodes = static_cast<std::uint32_t>(B2.phiNodes.size());
       window.deltaPhi = deltaPhi;
-      window.layerId = B2.layerId;
+      window.barrelOrder = m_binBarrelOrder[b2Idx];
       window.type = B2.type;
       window.technology = B2.technology;
     }
@@ -329,7 +346,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
       // the intermediate loop over sliding windows
       for (auto& slw : phiSlidingWindow) {
-        const std::uint32_t lk2 = slw.layerId;
+        const std::int32_t barrelOrder2 = slw.barrelOrder;
 
         const bool isPixel2 = slw.technology == GbtsLayerTechnology::Pixel;
         const bool isPixelBarrel2 =
@@ -511,8 +528,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float dPhi1 = curv * r1c;
 
           if (nEdges < m_cfg.nMaxEdges) {
-            edgeStorage.emplace_back(n1Idx, n2Idx, lk2, isPixelBarrel2, expEta,
-                                     curv, phi1 + dPhi1);
+            edgeStorage.emplace_back(n1Idx, n2Idx, barrelOrder2, isPixelBarrel2,
+                                     expEta, curv, phi1 + dPhi1);
 
             ++numCreatedEdges;
 
@@ -538,7 +555,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                 continue;
               }
 
-              const std::uint32_t lk3 = pS->n2LayerId;
+              const std::int32_t barrelOrder3 = pS->n2BarrelOrder;
 
               const bool isPixelBarrel3 = pS->n2PixelBarrel;
 
@@ -546,8 +563,11 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               if (m_cfg.useAdaptiveCuts) {
                 if (isPixelBarrel1 && isPixelBarrel2 && isPixelBarrel3) {
-                  const bool noGap =
-                      ((lk3 - lk2) == 1000) && ((lk2 - layerId1) == 1000);
+                  // three radially consecutive barrel layers, no layer in
+                  // between
+                  const bool noGap = (barrelOrder1 >= 0) &&
+                                     ((barrelOrder2 - barrelOrder1) == 1) &&
+                                     ((barrelOrder3 - barrelOrder2) == 1);
 
                   // assume more scattering due to the layer in between
                   if (!noGap) {

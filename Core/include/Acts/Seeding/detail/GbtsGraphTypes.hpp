@@ -190,20 +190,21 @@ struct GbtsEdge final {
   /// Constructor
   /// @param n1_ Inner node index
   /// @param n2_ Outer node index
-  /// @param n2LayerId_ GBTS layer ID of the outer node
+  /// @param n2BarrelOrder_ Barrel order of the outer node's layer
   /// @param n2PixelBarrel_ Whether the outer node is on a pixel barrel layer
   /// @param p1_ First fit parameter
   /// @param p2_ Second fit parameter
   /// @param p3_ Third fit parameter
-  GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_, std::uint32_t n2LayerId_,
-           bool n2PixelBarrel_, float p1_, float p2_, float p3_)
+  GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_,
+           std::int32_t n2BarrelOrder_, bool n2PixelBarrel_, float p1_,
+           float p2_, float p3_)
       : n1{n1_},
         n2{n2_},
         level{1},
         next{1},
         n2PixelBarrel{n2PixelBarrel_},
         p{p1_, p2_, p3_},
-        n2LayerId{n2LayerId_} {}
+        n2BarrelOrder{n2BarrelOrder_} {}
 
   /// Inner node of the edge
   SpacePointIndex n1{kSpacePointIndexInvalid};
@@ -223,9 +224,9 @@ struct GbtsEdge final {
 
   std::array<float, 3> p{};
 
-  /// GBTS layer ID of the outer node. Cached next to the fit parameters so the
-  /// innermost neighbour loop does not have to chase the node.
-  std::uint32_t n2LayerId{0};
+  /// Position of the outer node's layer in the inside-out barrel ordering,
+  /// -1 when it is not a listed barrel layer.
+  std::int32_t n2BarrelOrder{-1};
 
   std::array<std::uint32_t, kGbtsMaxEdgeNeighbours> vNei{};
 };
