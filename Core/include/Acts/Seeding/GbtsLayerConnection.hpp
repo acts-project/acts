@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
+
 #include <cstdint>
 
 namespace Acts::Experimental {
@@ -17,9 +19,14 @@ namespace Acts::Experimental {
 /// @c dst the inner one.
 struct GbtsLayerConnection {
   /// Outer layer id.
-  std::uint32_t src{};
+  GbtsExperimentLayerId src{};
   /// Inner layer id.
-  std::uint32_t dst{};
+  GbtsExperimentLayerId dst{};
+  /// Largest |tau ratio| a triplet stepping through this pair may show. A
+  /// triplet spans two pairs and is cut at the larger of the two, so this is
+  /// the tolerance a triplet through this pair deserves, not a contribution to
+  /// one. Default as `GraphBasedTrackSeeder::Config::tauRatioCut`.
+  float tauRatioCut = 0.007f;
 };
 
 }  // namespace Acts::Experimental

@@ -82,6 +82,15 @@ struct GbtsNodeEdgeInfo final {
 };
 //! [gbts node edge info]
 
+/// One outer eta bin reachable from an inner one, with the cut the layer pair
+/// they belong to carries.
+struct GbtsBinLink final {
+  /// The outer eta bin.
+  std::uint32_t bin{};
+  /// GbtsLayerConnection::tauRatioCut of the pair this link came from.
+  float tauRatioCut{};
+};
+
 //! [gbts eta bin info]
 /// Constant per-eta-bin data.
 struct GbtsEtaBinInfo final {
@@ -94,7 +103,7 @@ struct GbtsEtaBinInfo final {
 
   float minRadius{};
   float maxRadius{};
-  std::uint32_t layerId{0};
+  GbtsExperimentLayerId layerId{0};
 
   /// Type of the layer this bin belongs to.
   GbtsLayerType type{};
@@ -120,7 +129,7 @@ constexpr std::uint32_t kNoStrip = std::numeric_limits<std::uint32_t>::max();
 struct GbtsNodeView final {
   /// Packed (x, y, z, r) per node.
   std::span<const std::array<float, 4>> positions;
-  /// Dense layer index per node.
+  /// Dense layer index per node, narrowed to 16 bits.
   std::span<const std::uint16_t> layers;
   /// Stereo pairs of the strip nodes, reached through `stripIndex`.
   std::span<const OuterStripSpacePointCalibrationDetailsDerived> strips;
@@ -167,7 +176,7 @@ class GbtsNodeProxy final {
   /// @return Transverse distance from the beamline
   float r() const { return position()[3]; }
   /// @return Dense layer index
-  std::uint16_t layer() const { return m_view->layers[m_index]; }
+  GbtsLayerIndex layer() const { return m_view->layers[m_index]; }
 
  private:
   const std::array<float, 4>& position() const {
@@ -190,12 +199,12 @@ struct GbtsEdge final {
   /// Constructor
   /// @param n1_ Inner node index
   /// @param n2_ Outer node index
-  /// @param n2LayerId_ GBTS layer ID of the outer node
+  /// @param tauRatioCut_ Cut the layer pair of this doublet carries
   /// @param n2PixelBarrel_ Whether the outer node is on a pixel barrel layer
   /// @param p1_ First fit parameter
   /// @param p2_ Second fit parameter
   /// @param p3_ Third fit parameter
-  GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_, std::uint32_t n2LayerId_,
+  GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_, float tauRatioCut_,
            bool n2PixelBarrel_, float p1_, float p2_, float p3_)
       : n1{n1_},
         n2{n2_},
@@ -203,7 +212,7 @@ struct GbtsEdge final {
         next{1},
         n2PixelBarrel{n2PixelBarrel_},
         p{p1_, p2_, p3_},
-        n2LayerId{n2LayerId_} {}
+        tauRatioCut{tauRatioCut_} {}
 
   /// Inner node of the edge
   SpacePointIndex n1{kSpacePointIndexInvalid};
@@ -223,9 +232,10 @@ struct GbtsEdge final {
 
   std::array<float, 3> p{};
 
-  /// GBTS layer ID of the outer node. Cached next to the fit parameters so the
-  /// innermost neighbour loop does not have to chase the node.
-  std::uint32_t n2LayerId{0};
+  /// GbtsLayerConnection::tauRatioCut of this doublet's layer pair. Cached
+  /// next to the fit parameters so the innermost neighbour loop does not have
+  /// to chase the pair.
+  float tauRatioCut{};
 
   std::array<std::uint32_t, kGbtsMaxEdgeNeighbours> vNei{};
 };

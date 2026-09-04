@@ -22,8 +22,11 @@
 #include <iostream>
 #include <map>
 #include <numbers>
+#include <ranges>
+#include <set>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace ActsExamples {
@@ -107,6 +110,72 @@ ConnectorTable readConnectorTable(const std::string &path,
   return table;
 }
 
+/// Restate, per layer pair, the tau ratio tolerance the seeder used to derive
+/// per triplet. A pair is widened when it steps over a layer between two pixel
+/// barrel layers or when it leaves the pixel barrel, and again when either end
+/// is a strip layer.
+///
+/// A pair steps over a layer when the connections themselves offer a way round
+/// it, so the table has to carry the direct pairs for this to see anything.
+///
+/// @param connections The layer pairs, whose cuts are filled in
+/// @param layers The layer descriptions, for technology and type
+/// @param base Tolerance of a pair that is widened by nothing
+/// @param corr Widening of a pair that steps over a layer or leaves the barrel
+/// @param corrStrip Widening of a pair with a strip layer at either end
+void assignTauRatioCuts(
+    std::vector<Acts::Experimental::GbtsLayerConnection> &connections,
+    const std::vector<Acts::Experimental::GbtsLayerDescription> &layers,
+    float base, float corr, float corrStrip) {
+  std::map<Acts::Experimental::GbtsExperimentLayerId,
+           const Acts::Experimental::GbtsLayerDescription *>
+      byId;
+  for (const auto &layer : layers) {
+    byId[layer.id] = &layer;
+  }
+
+  std::set<std::pair<Acts::Experimental::GbtsExperimentLayerId,
+                     Acts::Experimental::GbtsExperimentLayerId>>
+      pairs;
+  for (const auto &connection : connections) {
+    pairs.emplace(connection.src, connection.dst);
+  }
+
+  const auto isPixelBarrel =
+      [&byId](Acts::Experimental::GbtsExperimentLayerId id) {
+        const auto it = byId.find(id);
+        return it != byId.end() &&
+               it->second->technology ==
+                   Acts::Experimental::GbtsLayerTechnology::Pixel &&
+               it->second->type == Acts::Experimental::GbtsLayerType::Barrel;
+      };
+  const auto isStrip = [&byId](Acts::Experimental::GbtsExperimentLayerId id) {
+    const auto it = byId.find(id);
+    return it != byId.end() &&
+           it->second->technology ==
+               Acts::Experimental::GbtsLayerTechnology::Strip;
+  };
+
+  for (auto &connection : connections) {
+    const bool pixelBarrelSrc = isPixelBarrel(connection.src);
+    const bool pixelBarrelDst = isPixelBarrel(connection.dst);
+
+    const bool stepsOver =
+        pixelBarrelSrc && pixelBarrelDst &&
+        std::ranges::any_of(layers, [&](const auto &middle) {
+          return pairs.contains({connection.src, middle.id}) &&
+                 pairs.contains({middle.id, connection.dst});
+        });
+
+    const bool leavesBarrel = pixelBarrelDst && !pixelBarrelSrc;
+
+    connection.tauRatioCut =
+        base + ((stepsOver || leavesBarrel) ? corr : 0.f) +
+        ((isStrip(connection.src) || isStrip(connection.dst)) ? corrStrip
+                                                              : 0.f);
+  }
+}
+
 }  // namespace
 
 GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
@@ -121,13 +190,20 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   m_actsGbtsMap = makeActsGbtsMap();
 
   // read which layers may be connected
-  const ConnectorTable connectorTable = readConnectorTable(
+  ConnectorTable connectorTable = readConnectorTable(
       m_cfg.connectorInputFile, m_cfg.seedFinderConfig.useStripConnections);
 
   // create the TrigInDetSiLayers (Logical Layers),
   // as well as a map that tracks there index in m_layerGeometry
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
+
+  // the seeder cuts a triplet on what its two layer pairs carry, so the
+  // tolerances are worked out here rather than there
+  assignTauRatioCuts(connectorTable.connections, layerGeometry,
+                     m_cfg.seedFinderConfig.tauRatioCut,
+                     m_cfg.useAdaptiveCuts ? m_cfg.tauRatioCorr : 0.f,
+                     m_cfg.tauRatioCorrStrip);
 
   // option that allows for adding custom eta binning (default is at 0.2)
   const float etaBinWidth = m_cfg.etaBinWidthOverride != 0.0f
@@ -139,6 +215,8 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
       layerGeometry, connectorTable.connections, etaBinWidth, m_cfg.gbtsZ0Range,
       this->logger());
+
+  resolveLayerIndices(*geometry);
 
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
@@ -176,7 +254,8 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   std::uint32_t nUnmapped = 0;
 
   for (const auto &spacePoint : spacePoints) {
-    const std::optional<std::uint32_t> layerIndex = gbtsLayerIndex(spacePoint);
+    const std::optional<Acts::Experimental::GbtsLayerIndex> layerIndex =
+        gbtsLayerIndex(spacePoint);
     if (!layerIndex.has_value()) {
       ++nUnmapped;
       continue;
@@ -230,23 +309,23 @@ GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
 
   // file in format ACTS_vol,ACTS_lay,ACTS_mod,gbtsId
   for (auto i : parsedCsv) {
-    std::uint32_t actsVol = stoi(i[0]);
-    std::uint32_t actsLay = stoi(i[1]);
-    std::uint32_t actsMod = stoi(i[2]);
-    std::uint32_t gbts = stoi(i[5]);
-    std::uint32_t etaMod = stoi(i[6]);
-    std::uint32_t actsJoint = actsVol * 100 + actsLay;
-    ActsIDs actsId{static_cast<std::uint64_t>(actsJoint),
-                   static_cast<std::uint64_t>(actsMod)};
-    GbtsIDs gbtsId{static_cast<std::uint32_t>(gbts),
-                   static_cast<std::uint32_t>(etaMod), 0};
-    actsToGbtsMap.insert({{actsId}, {gbtsId}});
+    const auto actsVol = static_cast<std::uint32_t>(std::stoul(i[0]));
+    const auto actsLay = static_cast<std::uint32_t>(std::stoul(i[1]));
+    const auto actsMod = static_cast<std::uint32_t>(std::stoul(i[2]));
+    const auto gbts = static_cast<Acts::Experimental::GbtsExperimentLayerId>(
+        std::stoul(i[5]));
+    const auto etaMod = static_cast<std::uint32_t>(std::stoul(i[6]));
+    const std::uint32_t actsJoint = actsVol * 100 + actsLay;
+    const ActsIDs actsId{actsJoint, actsMod};
+    const GbtsIDs gbtsId{.layerId = gbts, .etaModule = etaMod};
+    actsToGbtsMap.insert({actsId, gbtsId});
   }
 
   return actsToGbtsMap;
 }
 
-std::optional<std::uint32_t> GraphBasedSeedingAlgorithm::gbtsLayerIndex(
+std::optional<Acts::Experimental::GbtsLayerIndex>
+GraphBasedSeedingAlgorithm::gbtsLayerIndex(
     const ConstSpacePointProxy &spacePoint) const {
   const auto &sourceLink = spacePoint.sourceLinks();
 
@@ -257,9 +336,12 @@ std::optional<std::uint32_t> GraphBasedSeedingAlgorithm::gbtsLayerIndex(
 
   const auto &indexSourceLink = sourceLink.front().get<IndexSourceLink>();
 
-  const std::uint32_t actsVolId = indexSourceLink.geometryId().volume();
-  const std::uint32_t actsLayId = indexSourceLink.geometryId().layer();
-  const std::uint32_t actsModId = indexSourceLink.geometryId().sensitive();
+  const auto actsVolId =
+      static_cast<std::uint32_t>(indexSourceLink.geometryId().volume());
+  const auto actsLayId =
+      static_cast<std::uint32_t>(indexSourceLink.geometryId().layer());
+  const auto actsModId =
+      static_cast<std::uint32_t>(indexSourceLink.geometryId().sensitive());
 
   // dont want strips or HGTD
   if (actsVolId == 2 || actsVolId == 22 || actsVolId == 23 || actsVolId == 24) {
@@ -268,16 +350,15 @@ std::optional<std::uint32_t> GraphBasedSeedingAlgorithm::gbtsLayerIndex(
 
   // Search for vol, lay and module=0, if doesn't esist (end) then search
   // for full thing vol*100+lay as first number in pair then 0 or mod id
-  const auto actsJointId = actsVolId * 100 + actsLayId;
+  const std::uint64_t actsJointId = std::uint64_t{actsVolId} * 100 + actsLayId;
 
   // here the key needs to be pair of(vol*100+lay, 0)
-  ActsIDs key{static_cast<std::uint64_t>(actsJointId), 0};
+  ActsIDs key{actsJointId, 0};
   auto find = m_actsGbtsMap.find(key);
 
   // if end then make new key of (vol*100+lay, modid)
   if (find == m_actsGbtsMap.end()) {
-    key = ActsIDs{static_cast<std::uint64_t>(actsJointId),
-                  static_cast<std::uint64_t>(actsModId)};  // mod ID
+    key = ActsIDs{actsJointId, actsModId};  // mod ID
     find = m_actsGbtsMap.find(key);
   }
 
@@ -288,18 +369,35 @@ std::optional<std::uint32_t> GraphBasedSeedingAlgorithm::gbtsLayerIndex(
     return std::nullopt;
   }
 
-  // now should be pixel with Gbts ID:
-  // new map the item is a pair so want first from it
-  if (std::get<0>(find->second) == 0) {
+  // now should be pixel with Gbts ID
+  if (find->second.layerId == 0) {
     ACTS_WARNING("No assigned Gbts ID for key for volume id: "
                  << actsVolId << " and layer id: " << actsLayId);
   }
 
-  return std::get<2>(find->second);
+  return find->second.layerIndex;
+}
+
+void GraphBasedSeedingAlgorithm::resolveLayerIndices(
+    const Acts::Experimental::GbtsGeometry &geometry) {
+  for (auto &[actsId, gbtsId] : m_actsGbtsMap) {
+    const Acts::Experimental::GbtsExperimentLayerId combinedId =
+        gbtsId.layerId * 1000 + gbtsId.etaModule;
+
+    const std::optional<Acts::Experimental::GbtsLayerIndex> index =
+        geometry.layerIndex(combinedId);
+
+    if (!index.has_value()) {
+      ACTS_WARNING("No GBTS layer for combined ID: " << combinedId);
+    }
+
+    gbtsId.layerIndex = index;
+  }
 }
 
 std::vector<Acts::Experimental::GbtsLayerDescription>
-GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
+GraphBasedSeedingAlgorithm::layerNumbering(
+    const Acts::GeometryContext &gctx) const {
   std::vector<Acts::Experimental::GbtsLayerDescription> inputVector;
   std::vector<std::size_t> countVector;
 
@@ -351,12 +449,13 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
       return;  // skip this surface in the visitor
     }
 
-    const std::uint32_t gbtsId = std::get<0>(find->second);
+    const Acts::Experimental::GbtsExperimentLayerId gbtsId =
+        find->second.layerId;
 
     Acts::Experimental::GbtsLayerType barrelEc =
         Acts::Experimental::GbtsLayerType::Barrel;  // a variable that says if
                                                     // barrrel, 0 = barrel
-    std::uint32_t etaMod = std::get<1>(find->second);
+    const std::uint32_t etaMod = find->second.etaModule;
 
     // assign barrelEc depending on Gbts_layer
     if (79 < gbtsId && gbtsId < 85) {  // 80s, barrel
@@ -395,13 +494,15 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
           "Invalid barrel/endcap assignment for GbtsLayer");
     }
 
-    std::int32_t combinedId = gbtsId * 1000 + etaMod;
+    const Acts::Experimental::GbtsExperimentLayerId combinedId =
+        gbtsId * 1000 + etaMod;
 
     const auto currentIndex =
         find_if(inputVector.begin(), inputVector.end(),
                 [combinedId](auto n) { return n.id == combinedId; });
     if (currentIndex != inputVector.end()) {  // not end so does exist
-      std::size_t index = std::distance(inputVector.begin(), currentIndex);
+      const auto index = static_cast<std::size_t>(
+          std::distance(inputVector.begin(), currentIndex));
       inputVector[index].refCoord += rc;
       inputVector[index].minBound =
           std::min(inputVector[index].minBound, minBound);
@@ -421,20 +522,6 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
           .maxBound = maxBound});
       // so the element exists and not divinding by 0
       countVector.push_back(1);
-
-      // tracking the index of each GbtsLayerDescription as there added
-
-      // so layer ID refers to actual index and not size of vector
-      std::uint32_t layerId = countVector.size() - 1;
-      std::get<2>(find->second) = layerId;
-      m_layerIdMap.insert({combinedId, layerId});
-    }
-    // look up for every combined ID to see if it has a layer
-    if (auto findLayer = m_layerIdMap.find(combinedId);
-        findLayer == m_layerIdMap.end()) {
-      ACTS_WARNING("No assigned Layer ID for combined ID: " << combinedId);
-    } else {
-      std::get<2>(find->second) = findLayer->second;
     }
 
     // add to file each time,
@@ -473,8 +560,6 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("useStripConnections: " << cfg1.useStripConnections);
   ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
   ACTS_DEBUG("matchBeforeCreate: " << cfg1.matchBeforeCreate);
-  ACTS_DEBUG("useOldTuningsCurvature: " << cfg1.useOldTuningsCurvature);
-  ACTS_DEBUG("useOldTuningsPhiWindow: " << cfg1.useOldTuningsPhiWindow);
   ACTS_DEBUG("tauRatioCut: " << cfg1.tauRatioCut);
   ACTS_DEBUG("tauRatioPrecut: " << cfg1.tauRatioPrecut);
   ACTS_DEBUG("nMaxPhiSlice: " << cfg1.nMaxPhiSlice);
@@ -487,16 +572,13 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("hitShareThreshold: " << cfg1.hitShareThreshold);
   ACTS_DEBUG("maxEndcapClusterWidth: " << cfg1.maxEndcapClusterWidth);
   ACTS_DEBUG("validateTriplets: " << cfg1.validateTriplets);
-  ACTS_DEBUG("useAdaptiveCuts: " << cfg1.useAdaptiveCuts);
   ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
-  ACTS_DEBUG("tauRatioCorr: " << cfg1.tauRatioCorr);
   ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
   ACTS_DEBUG("d0Max: " << cfg1.d0Max);
   ACTS_DEBUG("cutDPhiMax: " << cfg1.cutDPhiMax);
   ACTS_DEBUG("cutDCurvMax: " << cfg1.cutDCurvMax);
   ACTS_DEBUG("minZ0: " << cfg1.minZ0);
   ACTS_DEBUG("maxZ0: " << cfg1.maxZ0);
-  ACTS_DEBUG("minDeltaPhi: " << cfg1.minDeltaPhi);
   ACTS_DEBUG("maxOuterRadius: " << cfg1.maxOuterRadius);
   ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);
   ACTS_DEBUG("maxInvRadDiff: " << cfg1.maxInvRadDiff);

@@ -31,9 +31,7 @@ GraphBasedTrackSeeder::DerivedConfig::DerivedConfig(const Config& config)
 }
 
 GraphBasedTrackSeeder::Options::Options(float bFieldInZ_)
-    : bFieldInZ(bFieldInZ_) {
-  ptCoeff = 0.5f * bFieldInZ * Acts::UnitConstants::m;
-}
+    : bFieldInZ(bFieldInZ_) {}
 
 GraphBasedTrackSeeder::GraphBasedTrackSeeder(
     const DerivedConfig& config, std::shared_ptr<GbtsGeometry> geometry,
@@ -43,10 +41,6 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
       m_logger(std::move(logger)) {
   // buildTheGraph pre-computes the loosest tau ratio threshold it can apply,
   // which assumes the correction only ever widens the cut.
-  if (m_cfg.tauRatioCorr < 0) {
-    throw std::invalid_argument(
-        "GraphBasedTrackSeeder: tauRatioCorr must not be negative");
-  }
 
   if (m_cfg.phiSortBuckets > GbtsNodeStorage::kMaxPhiSortBuckets) {
     throw std::invalid_argument(
@@ -77,7 +71,7 @@ void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& spacePoints,
                                         SeedContainer& outputSeeds) const {
   GbtsNodeStorage nodeStorage = makeNodeStorage();
 
-  const auto layerColumn = spacePoints.column<std::uint32_t>("layerId");
+  const auto layerColumn = spacePoints.column<GbtsLayerIndex>("gbtsLayerIndex");
   const auto clusterWidthColumn = spacePoints.column<float>("clusterWidth");
   const auto localPositionColumn = spacePoints.column<float>("localPositionY");
 
@@ -98,7 +92,7 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
 
   std::vector<detail::GbtsEdge> edgeStorage;
 
-  std::pair<std::int32_t, std::int32_t> graphStats =
+  const std::pair<std::uint32_t, std::uint32_t> graphStats =
       buildTheGraph(roi, nodeStorage, edgeStorage, options);
 
   ACTS_DEBUG("Created graph with " << graphStats.first << " edges and "
@@ -108,7 +102,7 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
     ACTS_WARNING("Missing edges or edge connections");
   }
 
-  std::uint32_t maxLevel = runCCA(graphStats.first, edgeStorage);
+  const std::uint32_t maxLevel = runCCA(graphStats.first, edgeStorage);
 
   ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
 
@@ -163,7 +157,7 @@ detail::GbtsTauLookupTable GraphBasedTrackSeeder::parseTauLookupTable(
   return tauLut;
 }
 
-std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
+std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
     const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
     std::vector<detail::GbtsEdge>& edgeStorage, const Options& options) const {
   // used to calculate Z cut on doublets
@@ -176,23 +170,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
   const float ptScale = m_cfg.tuningPt / m_cfg.minPt;
 
-  const float maxCurv = options.ptCoeff / tripletPtMin;
-
-  const float curvatureCutHighEta =
-      m_cfg.useOldTuningsCurvature
-          ? std::sqrt(m_cfg.oldTuningsCurvatureHighEtaFraction) * maxCurv
-          : m_cfg.maxCurvatureHighEta * ptScale;
-  const float curvatureCutLowEta =
-      m_cfg.useOldTuningsCurvature
-          ? std::sqrt(m_cfg.oldTuningsCurvatureLowEtaFraction) * maxCurv
-          : m_cfg.maxCurvatureLowEta * ptScale;
-
-  const float dPhiCoeff = m_cfg.oldTuningsPhiWindowFraction * maxCurv;
-
-  // the loosest tau ratio threshold the triplet matching can apply
-  const float maxTauRatioCut =
-      m_cfg.tauRatioCut + (m_cfg.useAdaptiveCuts ? m_cfg.tauRatioCorr : 0.0f) +
-      (nodeStorage.hasStrips() ? m_cfg.tauRatioCorrStrip : 0.0f);
+  const float curvatureCutHighEta = m_cfg.maxCurvatureHighEta * ptScale;
+  const float curvatureCutLowEta = m_cfg.maxCurvatureLowEta * ptScale;
 
   // the default sliding window along phi
   const float deltaPhi0 = 0.5f * m_cfg.phiSliceWidth;
@@ -245,7 +224,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
     const float rb1 = B1.minRadius;
 
-    const std::uint32_t layerId1 = B1.layerId;
+    const GbtsExperimentLayerId layerId1 = B1.layerId;
 
     const bool isPixel1 = B1.technology == GbtsLayerTechnology::Pixel;
     // The adaptive tau corrections and the triplet validation below were tuned
@@ -253,9 +232,10 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
     // (layerId / 10000) == 8 selects: its strip barrel is numbered 13xxx.
     const bool isPixelBarrel1 = isPixel1 && B1.type == GbtsLayerType::Barrel;
 
-    const auto listed = [layerId1](const std::vector<std::uint32_t>& ids) {
-      return std::ranges::find(ids, layerId1) != ids.end();
-    };
+    const auto listed =
+        [layerId1](const std::vector<GbtsExperimentLayerId>& ids) {
+          return std::ranges::find(ids, layerId1) != ids.end();
+        };
     const bool useZ0Histogram = listed(m_cfg.z0HistogramLayerIds);
     const bool useMatchBeforeCreate =
         m_cfg.matchBeforeCreate && listed(m_cfg.matchBeforeCreateLayerIds);
@@ -265,8 +245,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
     phiSlidingWindow.clear();
 
     // loop over n2 eta-bins in L2 layers
-    for (const auto& b2Idx : bg.second) {
-      const detail::GbtsEtaBinInfo& B2 = nodeStorage.etaBin(b2Idx);
+    for (const detail::GbtsBinLink& link : bg.second) {
+      const detail::GbtsEtaBinInfo& B2 = nodeStorage.etaBin(link.bin);
 
       if (B2.empty()) {
         continue;
@@ -279,9 +259,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
       // override the default window width
       if (m_cfg.useEtaBinning) {
         const float absDr = std::fabs(rb2 - rb1);
-        if (m_cfg.useOldTuningsPhiWindow) {
-          deltaPhi = m_cfg.minDeltaPhi + dPhiCoeff * absDr;
-        } else if (absDr < m_cfg.phiWindowSplitDeltaRadius) {
+        if (absDr < m_cfg.phiWindowSplitDeltaRadius) {
           deltaPhi = m_cfg.phiWindowNearOffset +
                      m_cfg.phiWindowNearSlope * ptScale * absDr;
         } else {
@@ -294,7 +272,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
       window.phiNodes = B2.phiNodes.data();
       window.numPhiNodes = static_cast<std::uint32_t>(B2.phiNodes.size());
       window.deltaPhi = deltaPhi;
-      window.layerId = B2.layerId;
+      window.tauRatioCut = link.tauRatioCut;
       window.type = B2.type;
       window.technology = B2.technology;
     }
@@ -329,7 +307,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
       // the intermediate loop over sliding windows
       for (auto& slw : phiSlidingWindow) {
-        const std::uint32_t lk2 = slw.layerId;
+        const float tauRatioCut2 = slw.tauRatioCut;
 
         const bool isPixel2 = slw.technology == GbtsLayerTechnology::Pixel;
         const bool isPixelBarrel2 =
@@ -511,8 +489,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float dPhi1 = curv * r1c;
 
           if (nEdges < m_cfg.nMaxEdges) {
-            edgeStorage.emplace_back(n1Idx, n2Idx, lk2, isPixelBarrel2, expEta,
-                                     curv, phi1 + dPhi1);
+            edgeStorage.emplace_back(n1Idx, n2Idx, tauRatioCut2, isPixelBarrel2,
+                                     expEta, curv, phi1 + dPhi1);
 
             ++numCreatedEdges;
 
@@ -529,51 +507,17 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               const float absTauRatio = std::abs(pS->p[0] * uat2 - 1.0f);
 
-              // rejects most candidates before the layer bookkeeping below
-              if (absTauRatio > maxTauRatioCut) {
-                continue;
+              // the triplet spans two layer pairs and is held to the looser
+              // of the two tolerances they carry
+              if (absTauRatio > std::max(tauRatioCut2, pS->tauRatioCut)) {
+                continue;  // bad match
               }
 
               if (pS->nNei >= detail::kGbtsMaxEdgeNeighbours) {
                 continue;
               }
 
-              const std::uint32_t lk3 = pS->n2LayerId;
-
               const bool isPixelBarrel3 = pS->n2PixelBarrel;
-
-              float addTauRatioCorr = 0;
-
-              if (m_cfg.useAdaptiveCuts) {
-                if (isPixelBarrel1 && isPixelBarrel2 && isPixelBarrel3) {
-                  const bool noGap =
-                      ((lk3 - lk2) == 1000) && ((lk2 - layerId1) == 1000);
-
-                  // assume more scattering due to the layer in between
-                  if (!noGap) {
-                    addTauRatioCorr = m_cfg.tauRatioCorr;
-                  }
-                } else {
-                  bool mixedTriplet =
-                      isPixelBarrel1 && isPixelBarrel2 && !isPixelBarrel3;
-                  if (mixedTriplet) {
-                    addTauRatioCorr = m_cfg.tauRatioCorr;
-                  }
-                }
-              }
-              // The two doublets sharing a strip node resolved it separately,
-              // so a triplet through a strip may disagree on tau by more. Any
-              // of the three: the outer two carry their end's error into tau.
-              if (m_cfg.tauRatioCorrStrip > 0.f &&
-                  (!isPixel1 || !isPixel2 ||
-                   nodeView.strip(pS->n2) != nullptr)) {
-                addTauRatioCorr += m_cfg.tauRatioCorrStrip;
-              }
-
-              // bad match
-              if (absTauRatio > m_cfg.tauRatioCut + addTauRatioCorr) {
-                continue;
-              }
 
               float dPhi = phi2u - pS->p[2];
 
@@ -619,7 +563,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               if (z0BinIndex >= 0 &&
                   z0BinIndex < detail::kGbtsZ0HistogramBins) {
-                ++z0Histo[z0BinIndex];
+                ++z0Histo[static_cast<std::size_t>(z0BinIndex)];
               }
 
               nConnections++;
@@ -637,7 +581,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
         for (std::int32_t bIdx = 0; bIdx < detail::kGbtsZ0HistogramBins;
              ++bIdx) {
-          if (z0Histo[bIdx] == 0) {
+          if (z0Histo[static_cast<std::size_t>(bIdx)] == 0) {
             continue;
           }
 
@@ -659,10 +603,10 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
   return std::make_pair(nEdges, nConnections);
 }
 
-std::int32_t GraphBasedTrackSeeder::runCCA(
+std::uint32_t GraphBasedTrackSeeder::runCCA(
     const std::uint32_t nEdges,
     std::vector<detail::GbtsEdge>& edgeStorage) const {
-  std::int32_t maxLevel = 0;
+  std::uint32_t maxLevel = 0;
 
   std::uint32_t iter = 0;
 
@@ -713,9 +657,8 @@ std::int32_t GraphBasedTrackSeeder::runCCA(
       if (pS->next != pS->level) {
         nChanges++;
         pS->level = pS->next;
-        if (maxLevel < pS->level) {
-          maxLevel = pS->level;
-        }
+        // levels only grow from zero here, so the cast is safe
+        maxLevel = std::max(maxLevel, static_cast<std::uint32_t>(pS->level));
       }
     }
 
@@ -738,6 +681,9 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     const GbtsTrackingFilter& filter) const {
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
   const auto minLevel = static_cast<std::uint8_t>(m_cfg.minSeedLevel);
+  // `addTriplets` accepts a chain one level short. Signed: an uncollected
+  // edge sits at level -1 and `minSeedLevel` may be configured to 0.
+  const int minLevelAddTriplets = int{minLevel} - 1;
 
   if (maxLevel < minLevel) {
     return;
@@ -762,7 +708,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
           continue;
         }
       } else {
-        if (pS->level < minLevel - 1) {
+        if (pS->level < minLevelAddTriplets) {
           continue;
         }
       }
@@ -818,7 +764,8 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
           continue;
         }
       } else {
-        if (chainLength < static_cast<std::uint32_t>(minLevel) - 1u) {
+        if (minLevelAddTriplets > 0 &&
+            chainLength < static_cast<std::uint32_t>(minLevelAddTriplets)) {
           continue;
         }
       }
@@ -844,19 +791,16 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       continue;
     }
 
-    const std::uint32_t origSeedSize = vN.size();
+    const auto origSeedSize = static_cast<std::uint32_t>(vN.size());
 
     const float origSeedQuality = -rs.j / origSeedSize;
 
-    std::uint32_t seedSplitFlag =
-        (seedAbsEta < m_cfg.maxSeedSplitEta) &&
-                (origSeedSize >= m_cfg.minSplitSeedSize) &&
-                (origSeedSize <= m_cfg.maxSplitSeedSize)
-            ? 1
-            : 0;
+    bool seedSplitFlag = (seedAbsEta < m_cfg.maxSeedSplitEta) &&
+                         (origSeedSize >= m_cfg.minSplitSeedSize) &&
+                         (origSeedSize <= m_cfg.maxSplitSeedSize);
 
     // split the seed by dropping spacepoints
-    if (seedSplitFlag != 0) {
+    if (seedSplitFlag) {
       // 2. "drop-outs" and the original seed candidate
       std::array<std::array<SpacePointIndex, 3>, 3> triplets{};
 
@@ -899,11 +843,11 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
                              diffs[2] < m_cfg.maxInvRadDiff;
 
       if (confirmed) {
-        seedSplitFlag = 0;  // reset the flag
+        seedSplitFlag = false;  // reset the flag
       }
     }
 
-    vSeedCandidates.emplace_back(origSeedQuality, 0, vN, seedSplitFlag);
+    vSeedCandidates.emplace_back(origSeedQuality, false, vN, seedSplitFlag);
 
     vArgSort.emplace_back(origSeedQuality, seedCounter);
 
@@ -942,7 +886,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   for (const auto& args : vArgSort) {
     const auto& seed = vSeedCandidates[args.second].nodes;
 
-    const std::uint32_t nTotal = seed.size();
+    const auto nTotal = static_cast<std::uint32_t>(seed.size());
 
     std::uint32_t nOther = 0;
 
@@ -963,7 +907,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     if (nOther > m_cfg.hitShareThreshold * nTotal) {
       // reject
-      vSeedCandidates[args.second].isClone = -1;  // reject
+      vSeedCandidates[args.second].isClone = true;  // reject
     }
   }
   vOutputSeeds.reserve(vSeedCandidates.size());
@@ -973,13 +917,13 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   for (const auto& args : vArgSort) {
     const auto& seed = vSeedCandidates[args.second];
 
-    if (seed.isClone != 0) {
+    if (seed.isClone) {
       continue;  // identified as a clone of a better candidate
     }
 
     const auto& vN = seed.nodes;
 
-    if (seed.forSeedSplitting == 0) {
+    if (!seed.forSeedSplitting) {
       // add seed to output
 
       std::vector<std::uint32_t> vSpIdx;
@@ -997,7 +941,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     // seed split into "drop-out" seeds
 
-    const std::uint32_t seedSize = vN.size();
+    const auto seedSize = static_cast<std::uint32_t>(vN.size());
 
     const std::array<std::size_t, 2> indices2drop = {
         0, seedSize / 2ul};  // the first and the middle
