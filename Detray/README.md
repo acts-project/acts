@@ -91,9 +91,10 @@ Otherwise, the default detector metadata (`#include <detray/detectors/default_me
 
 ## Detector Validation
 
-Given a detray detector (and optionally also a grid and a material) json file, a number of validation test can be run from the command-line. For this, the library has to be built with the `-DDETRAY_BUILD_CLI_TOOLS=ON` option enabled. An example detector file can then be obtained using e.g.
+Given a detray detector (and optionally also a grid and a material) json file, a number of validation test can be run from the command-line. For this, the library has to be built with the `-DDETRAY_BUILD_CLI_TOOLS=ON` option enabled. An example detector file can then be obtained using the following command, which requires the python bindings (`-DDETRAY_BUILD_PYTHON_BINDINGS=ON -DDETRAY_BUILD_UNITTESTS=ON`) to be built and set up via `detray-build/python/setup.sh`:
 ```shell
-detray-build/bin/detray_generate_toy_detector --write_material --write_grids
+python3 detray/tests/tools/python/generate_toy_detector.py \
+   --write_material --write_grids
 ```
 All of the validation tools presented in the following can also be run as part of a corresponding [python script](https://github.com/acts-project/acts/tree/main/Detray/tests/tools/python) which takes the same arguments and will automatically create plots from the collected data. However, creating the plots requires Python 3, pandas, SciPy and NumPy, as well as Matplotlib to be available.
 

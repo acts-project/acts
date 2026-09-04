@@ -12,11 +12,14 @@
 // Detray IO include(s)
 #include "detray/io/frontend/detector_reader.hpp"
 #include "detray/io/frontend/detector_reader_config.hpp"
+#include "detray/io/frontend/detector_writer.hpp"
+#include "detray/io/frontend/detector_writer_config.hpp"
 
 // Detray algebra plugin + detector metadata
 #include "algebra/array.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/detectors/default_metadata.hpp"
+#include "detray/detectors/toy_metadata.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/memory_resource.hpp>
@@ -39,6 +42,8 @@ using reader_config_t = detray::io::detector_reader_config;
 using scalar_t = DETRAY_CUSTOM_SCALARTYPE;
 using algebra_t = detray::array<scalar_t>;
 using detector_t = detray::detector<detray::default_metadata<algebra_t>>;
+using writer_config_t = detray::io::detector_writer_config;
+using toy_detector_t = detray::detector<detray::toy_metadata<algebra_t>>;
 
 template <typename T>
 std::string to_string(const T &obj) {
@@ -47,7 +52,7 @@ std::string to_string(const T &obj) {
   return os.str();
 }
 
-/// Read a detector (default metadata) into @p mr as configured by @p cfg .
+/// Read a detector (default metadata) using @p mr as configured by @p cfg .
 ///
 /// The memory resource object is automatically kept alive at least as long as
 /// the returned detector object.
@@ -92,4 +97,40 @@ PYBIND11_MODULE(DetrayIoPythonBindings, m) {
         "Read a detector using the given memory resource as configured by a "
         "DetectorReaderConfig. The returned detector keeps the memory resource "
         "alive for as long as it is used");
+
+  py::class_<writer_config_t>(m, "DetectorWriterConfig")
+      .def(py::init<>())
+      .def_property(
+          "path", [](const writer_config_t &c) { return c.path(); },
+          [](writer_config_t &c, const std::string &p) { c.path(p); },
+          "Path to the output files")
+      .def_property(
+          "replaceFiles",
+          [](const writer_config_t &c) { return c.replace_files(); },
+          [](writer_config_t &c, bool b) { c.replace_files(b); },
+          "Replace files in case they already exist")
+      .def_property(
+          "compactifyJson",
+          [](const writer_config_t &c) { return c.compactify_json(); },
+          [](writer_config_t &c, bool b) { c.compactify_json(b); },
+          "Compactify the json output")
+      .def_property(
+          "writeMaterial",
+          [](const writer_config_t &c) { return c.write_material(); },
+          [](writer_config_t &c, bool b) { c.write_material(b); },
+          "Whether to write the material to file")
+      .def_property(
+          "writeGrids",
+          [](const writer_config_t &c) { return c.write_grids(); },
+          [](writer_config_t &c, bool b) { c.write_grids(b); },
+          "Whether to write the accelerator grids to file")
+      .def("__repr__", &to_string<writer_config_t>);
+
+  m.def(
+      "writeDetector",
+      [](toy_detector_t &det, const typename toy_detector_t::name_map &names,
+         writer_config_t &cfg) { detray::io::write_detector(det, names, cfg); },
+      py::arg("detector"), py::arg("names"), py::arg("config"),
+      "Write a detector to file as configured by a DetectorWriterConfig. The "
+      "config is modified in place if the detector carries no material");
 }
