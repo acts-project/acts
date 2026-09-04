@@ -539,9 +539,6 @@ std::unique_ptr<const IAxis> SurfaceArrayCreator::createEquidistantAxis(
     binNumber = nBins;
   }
 
-  // bind matcher & context with binning type
-  auto matcher = m_cfg.surfaceMatcher;
-
   // now check the binning value
   if (aDir == AxisPhi) {
     minimum = protoLayer.min(AxisPhi, true);
