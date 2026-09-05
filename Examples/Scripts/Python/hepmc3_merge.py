@@ -32,7 +32,7 @@ def main():
         help="If None, the HepMC3 will read the entire file to determine the number of available events.",
     )
     parser.add_argument(
-        "--pileup", "--pu", type=Path, help="Pileup file", required=True
+        "--pileup", "--pu", type=Path, help="Pileup file", required=False
     )
     parser.add_argument("--output", "-o", type=Path, help="Output file", required=True)
     parser.add_argument("--force", "-f", action="store_true", help="Force overwrite")
@@ -68,7 +68,7 @@ def main():
 
     if not args.hard_scatter.exists():
         raise FileNotFoundError(f"Hard scatter file {args.hard_scatter} does not exist")
-    if not args.pileup.exists():
+    if args.pileup is not None and not args.pileup.exists():
         raise FileNotFoundError(f"Pileup file {args.pileup} does not exist")
 
     extensions = {
@@ -98,12 +98,13 @@ def main():
 
     rng = acts.examples.RandomNumbers(seed=42)
     HepMC3Reader = acts.examples.hepmc3.HepMC3Reader
+    inputs = [HepMC3Reader.Input.Fixed(args.hard_scatter, 1)]
+    if args.pileup is not None:
+        inputs.append(HepMC3Reader.Input.Fixed(args.pileup, args.pileup_multiplicity))
+
     s.addReader(
         HepMC3Reader(
-            inputs=[
-                HepMC3Reader.Input.Fixed(args.hard_scatter, 1),
-                HepMC3Reader.Input.Fixed(args.pileup, args.pileup_multiplicity),
-            ],
+            inputs=inputs,
             level=acts.logging.INFO,
             outputEvent="hepmc3_event",
             checkEventNumber=False,  # This is not generally guaranteed for arbitrary inputs
