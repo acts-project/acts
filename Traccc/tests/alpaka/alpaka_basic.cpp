@@ -15,8 +15,15 @@
 #include <vecmem/containers/vector.hpp>
 
 // Alpaka include(s).
+//
+// alpaka's CUDA/HIP builtin vector-type aliases (e.g. ulonglong4) are
+// declared deprecated by newer toolkits; that warning is about alpaka's own
+// header, not traccc's code.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <alpaka/alpaka.hpp>
 #include <alpaka/example/ExampleDefaultAcc.hpp>
+#pragma GCC diagnostic pop
 
 // GoogleTest include(s).
 #include <gtest/gtest.h>

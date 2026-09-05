@@ -441,7 +441,20 @@ set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
 # need it on the search path too.
 set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib64:${view_dir}/lib/root"
 set_env DYLD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib64:${view_dir}/lib/root"
-set_env CMAKE_PREFIX_PATH "${venv_dir}:${view_dir}"
+# CUDA keeps CCCL's CMake package configs -- Thrust, CUB, libcudacxx -- under
+# targets/<arch>-linux/lib/cmake, which is not one of the directories CMake
+# searches below a prefix. spack knows this and appends it to the cuda package's
+# cmake_prefix_paths, but that only reaches packages spack builds itself; a
+# materialized view consumed through CMAKE_PREFIX_PATH never sees it, so
+# find_package(Thrust) fails on the cuda flavors. Add it explicitly. The glob
+# matches nothing on the flavorless stack, where the loop is a no-op.
+cmake_prefix_path="${venv_dir}:${view_dir}"
+for cuda_cmake_dir in "${view_dir}"/targets/*/lib/cmake; do
+  if [ -d "${cuda_cmake_dir}" ]; then
+    cmake_prefix_path="${cmake_prefix_path}:${cuda_cmake_dir}"
+  fi
+done
+set_env CMAKE_PREFIX_PATH "${cmake_prefix_path}"
 set_env ROOT_SETUP_SCRIPT "${view_dir}/bin/thisroot.sh"
 set_env ROOT_INCLUDE_PATH "${view_dir}/include"
 # cleanup setup-python mess
