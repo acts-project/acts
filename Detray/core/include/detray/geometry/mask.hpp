@@ -19,6 +19,7 @@
 // System include(s)
 #include <algorithm>
 #include <cassert>
+#include <limits>
 #include <ostream>
 #include <sstream>
 #include <string>

@@ -14,6 +14,7 @@
 #include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 #include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
 #include "Acts/Propagator/detail/SympyStepperDenseStep.hpp"
+#include "Acts/Propagator/detail/SympyStepperStatus.hpp"
 
 #include <cmath>
 #include <span>
@@ -248,7 +249,8 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
     ++state.statistics.nAttemptedSteps;
 
     // For details about the factor 4 see ATL-SOFT-PUB-2009-001
-    Result<bool> res = Result<bool>::success(false);
+    detail::Rk4Status status{};
+    std::error_code fieldError;
     const std::span<const double, 3> startPos(pos.data(), 3);
     const std::span<const double, 3> startDir(dir.data(), 3);
     const std::span<double, 3> endPos(
@@ -261,23 +263,24 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
                                                state.jacToGlobal.size())
                            : std::span<double>();
     if (!state.options.doDense || material == nullptr) {
-      res = rk4_vacuum(
-          startPos, startDir, t, h, qop, m, pabs,
-          std::span<const double, 3>(state.field->data(), 3), getB,
-          errorEstimate, 4 * stepTolerance, endPos, state.pars[eFreeTime],
-          endDir, std::span<double, 3>(lastField.data(), 3), derivative, jac);
+      status = rk4_vacuum(startPos, startDir, t, h, qop, m, pabs,
+                          std::span<const double, 3>(state.field->data(), 3),
+                          getB, errorEstimate, 4 * stepTolerance, fieldError,
+                          endPos, state.pars[eFreeTime], endDir,
+                          std::span<double, 3>(lastField.data(), 3), derivative,
+                          jac);
     } else {
-      res =
+      status =
           detail::sympyDenseStep(*this, state, *material, h, 4 * stepTolerance,
-                                 errorEstimate, lastField, jac);
+                                 errorEstimate, lastField, fieldError, jac);
     }
-    if (!res.ok()) {
-      return res.error();
+    if (status == detail::Rk4Status::FieldError) {
+      return fieldError;
     }
     // Protect against division by zero
     errorEstimate = std::max(1e-20, errorEstimate);
 
-    if (*res) {
+    if (status == detail::Rk4Status::Accepted) {
       break;
     }
 

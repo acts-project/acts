@@ -27,7 +27,7 @@ namespace detray {
 namespace algebra {
 
 template <concepts::vector vector_t>
-void fill_random_vec(std::vector<vector_t> &);
+void fill_random_vec(std::vector<vector_t> &collection);
 
 }  // namespace algebra
 
@@ -47,7 +47,8 @@ struct vector_bm : public benchmark_base {
   vector_bm() = delete;
 
   /// Construct from an externally provided configuration @param cfg
-  explicit vector_bm(benchmark_base::configuration cfg) : benchmark_base{cfg} {
+  explicit vector_bm(const benchmark_base::configuration &cfg)
+      : benchmark_base{cfg} {
     const auto n_data{static_cast<std::size_t>(this->m_cfg.n_samples())};
 
     a.reserve(n_data);
@@ -74,7 +75,7 @@ struct vector_unaryOP_bm : public vector_bm<vector_t<scalar_t>> {
   using base_type = vector_bm<vector_t<scalar_t>>;
 
   vector_unaryOP_bm() = delete;
-  explicit vector_unaryOP_bm(benchmark_base::configuration cfg)
+  explicit vector_unaryOP_bm(const benchmark_base::configuration &cfg)
       : base_type{cfg} {}
   vector_unaryOP_bm(const vector_unaryOP_bm &bm) = default;
   vector_unaryOP_bm &operator=(vector_unaryOP_bm &other) = default;
@@ -106,7 +107,7 @@ struct vector_binaryOP_bm : public vector_bm<vector_t<scalar_t>> {
   using base_type = vector_bm<vector_t<scalar_t>>;
 
   vector_binaryOP_bm() = delete;
-  explicit vector_binaryOP_bm(benchmark_base::configuration cfg)
+  explicit vector_binaryOP_bm(const benchmark_base::configuration &cfg)
       : base_type{cfg} {}
   vector_binaryOP_bm(const vector_binaryOP_bm &bm) = default;
   vector_binaryOP_bm &operator=(vector_binaryOP_bm &other) = default;

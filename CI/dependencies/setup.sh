@@ -63,6 +63,13 @@ TRANSIENT_ERROR_PATTERNS=(
   "toomanyrequests"
   "Too Many Requests"
   "rate limit"
+  # GitHub sheds anonymous load with "GitHub is temporarily limiting some
+  # unauthenticated downloads to protect the stability of the platform. Please
+  # retry later or authenticate." github_auth.sh keeps us off that quota, but
+  # the message is explicitly a "try again" and must not be a hard failure.
+  "temporarily limiting"
+  "unauthenticated download"
+  "Please retry later"
   "HTTP Error 429"
   "HTTP Error 5[0-9][0-9]"
   "50[0-9] (Internal Server Error|Bad Gateway|Service Unavailable|Gateway Time-out)"
@@ -158,7 +165,7 @@ while getopts "c:t:d:e:s:F:fh" opt; do
       echo "  -d <destination> Specify install destination (defaults based on CI environment)"
       echo "  -e <env_file>    Specify environment file to output environments to"
       echo "  -s <cxx_std>     C++ standard for lockfile selection (e.g. 20, 23). Defaults to CXXSTD env var or 20."
-      echo "  -F <flavor>      Accelerator flavor (e.g. cuda13, rocm-gfx90a). Defaults to FLAVOR env var or the host stack."
+      echo "  -F <flavor>      Accelerator flavor (e.g. cuda13, rocm7). Defaults to FLAVOR env var or the host stack."
       echo "  -f               Full dependency installation. Includes Geant4 datasets and Python packages."
       echo "  -h               Show this help message"
       exit 0
@@ -255,6 +262,12 @@ if [ -n "${GITLAB_CI:-}" ]; then
 else
     _spack_folder=${PWD}/spack
 fi
+
+start_section "Authenticate github.com fetches"
+# Before anything reaches github.com: setup_spack.sh clones spack itself, and
+# the builtin package repo is fetched right after it.
+"${SCRIPT_DIR}/github_auth.sh"
+end_section
 
 start_section "Install spack if not already installed"
 if ! command -v spack &> /dev/null; then
@@ -422,8 +435,12 @@ end_section
 
 start_section "Set environment variables"
 set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
-set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib/root"
-set_env DYLD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib/root"
+# lib64 carries CUDA's own libraries (e.g. cusparse): the view merges
+# packages' lib64/ trees there rather than into lib/, and prebuilt binaries
+# that dlopen them at runtime (rather than being linked with a baked RPATH)
+# need it on the search path too.
+set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib64:${view_dir}/lib/root"
+set_env DYLD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib64:${view_dir}/lib/root"
 set_env CMAKE_PREFIX_PATH "${venv_dir}:${view_dir}"
 set_env ROOT_SETUP_SCRIPT "${view_dir}/bin/thisroot.sh"
 set_env ROOT_INCLUDE_PATH "${view_dir}/include"

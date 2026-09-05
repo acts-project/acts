@@ -21,6 +21,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -59,6 +60,20 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// be GBTS
     std::string layerMappingFile;
 
+    /// the ATLAS connector file listing which layers may be connected
+    std::string connectorInputFile;
+
+    /// the ATLAS lookup table of tau bounds per cluster width, needed by the
+    /// cluster width cuts
+    std::filesystem::path lutInputFile;
+
+    /// Eta bin width the layers are split into (0 takes the value the
+    /// connector file carries, 0.2 in ATLAS' createLinkingScheme.py)
+    float etaBinWidthOverride = 0.0f;
+
+    /// z0 range the eta bin table is built against
+    Acts::Experimental::GbtsZ0Range gbtsZ0Range;
+
     /// holds detector information, used to make the geometry objects used by
     /// GBTS
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
@@ -94,9 +109,6 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
 
   /// used to assign LayerIds to the GbtsActsMap
   std::map<std::uint32_t, std::uint32_t> m_layerIdMap{};
-
-  /// used to tell if a layer is a strip or pixel layer
-  std::vector<bool> m_isPixelLayer{};
 
   /// used to define region of interest
   std::optional<Acts::Experimental::GbtsRoiDescriptor> m_internalRoi;

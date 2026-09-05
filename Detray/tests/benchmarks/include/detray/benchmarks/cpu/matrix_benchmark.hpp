@@ -24,10 +24,10 @@ namespace detray {
 namespace algebra {
 
 template <detray::concepts::matrix matrix_t>
-void fill_random_matrix(std::vector<matrix_t>&);
+void fill_random_matrix(std::vector<matrix_t>& collection);
 
 template <detray::concepts::vector vector_t>
-void fill_random_vec(std::vector<vector_t>&);
+void fill_random_vec(std::vector<vector_t>& collection);
 
 }  // namespace algebra
 
@@ -46,7 +46,8 @@ struct matrix_bm : public benchmark_base {
   matrix_bm() = delete;
 
   /// Construct from an externally provided configuration @param cfg
-  explicit matrix_bm(benchmark_base::configuration cfg) : benchmark_base{cfg} {
+  explicit matrix_bm(const benchmark_base::configuration& cfg)
+      : benchmark_base{cfg} {
     const auto n_data{static_cast<std::size_t>(this->m_cfg.n_samples())};
 
     a.reserve(n_data);
@@ -73,7 +74,7 @@ struct matrix_unaryOP_bm : public matrix_bm<matrix_t> {
   using base_type = matrix_bm<matrix_t>;
 
   matrix_unaryOP_bm() = delete;
-  explicit matrix_unaryOP_bm(benchmark_base::configuration cfg)
+  explicit matrix_unaryOP_bm(const benchmark_base::configuration& cfg)
       : base_type{cfg} {}
   matrix_unaryOP_bm(const matrix_unaryOP_bm& bm) = default;
   matrix_unaryOP_bm& operator=(matrix_unaryOP_bm& other) = default;
@@ -104,7 +105,7 @@ struct matrix_binaryOP_bm : public matrix_bm<matrix_t> {
   using base_type = matrix_bm<matrix_t>;
 
   matrix_binaryOP_bm() = delete;
-  explicit matrix_binaryOP_bm(benchmark_base::configuration cfg)
+  explicit matrix_binaryOP_bm(const benchmark_base::configuration& cfg)
       : base_type{cfg} {}
   matrix_binaryOP_bm(const matrix_binaryOP_bm& bm) = default;
   matrix_binaryOP_bm& operator=(matrix_binaryOP_bm& other) = default;
@@ -136,7 +137,7 @@ struct matrix_vector_bm : public matrix_bm<matrix_t> {
   std::vector<vector_t> v;
 
   matrix_vector_bm() = delete;
-  explicit matrix_vector_bm(benchmark_base::configuration cfg)
+  explicit matrix_vector_bm(const benchmark_base::configuration& cfg)
       : base_type{cfg} {
     v.reserve(static_cast<std::size_t>(this->m_cfg.n_samples()));
 

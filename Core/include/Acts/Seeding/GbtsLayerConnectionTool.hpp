@@ -13,7 +13,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <string>
+#include <span>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -108,13 +108,11 @@ class GbtsLayerConnectionTool {
 
   /// converts layer hits to layer transitions
   /// @param track the layer hits of a particle
-  void addTrack(const std::vector<HitCoordinates>& track);
+  void addTrack(std::span<const HitCoordinates> track);
 
   /// Creates the connection table
-  /// @param outputFileLocation the location for the layer connection table
   /// @return layer pairs
-  GbtsLayerConnectionTool::LayerIdPairs createConnectionTable(
-      const std::string& outputFileLocation) const;
+  GbtsLayerConnectionTool::LayerIdPairs createConnectionTable() const;
 
  private:
   /// returns the Acts logger

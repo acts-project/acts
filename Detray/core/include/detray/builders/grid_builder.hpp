@@ -24,6 +24,7 @@
 // System include(s)
 #include <algorithm>
 #include <cassert>
+#include <limits>
 #include <memory>
 #include <vector>
 

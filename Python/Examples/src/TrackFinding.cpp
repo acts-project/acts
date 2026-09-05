@@ -27,6 +27,7 @@
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 
@@ -84,14 +85,14 @@ void addTrackFinding(py::module& mex) {
     using Config = Acts::Experimental::GraphBasedTrackSeeder::Config;
     auto c =
         py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, minPt, connectorInputFile, nMaxPhiSlice,
-                       lutInputFile);
+    ACTS_PYTHON_STRUCT(c, minPt, nMaxPhiSlice);
     patchKwargsConstructor(c);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(GraphBasedSeedingAlgorithm, mex,
                                 "GraphBasedSeedingAlgorithm", inputSpacePoints,
                                 outputSeeds, seedFinderConfig, layerMappingFile,
+                                connectorInputFile, lutInputFile,
                                 trackingGeometry, fillModuleCsv, inputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
@@ -112,13 +113,23 @@ void addTrackFinding(py::module& mex) {
                                 nBinsTanTheta, nBinsY0, nBinsTanPhi, nBinsX0,
                                 dumpVisualization, visualizationFunction);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      TrackParamsEstimationAlgorithm, mex, "TrackParamsEstimationAlgorithm",
-      inputSeeds, inputProtoTracks, inputParticleHypotheses,
-      outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-      magneticField, bFieldMin, spacePointSelection, minTransverseDistance,
-      initialSigmas, initialSigmaQoverPt, initialSigmaPtRel,
-      initialVarInflation, noTimeVarInflation, particleHypothesis);
+  {
+    using Alg = TrackParamsEstimationAlgorithm;
+
+    auto [alg, c] = declareAlgorithm<Alg, IAlgorithm>(
+        mex, "TrackParamsEstimationAlgorithm");
+
+    alg.def_static("inverseRadiusPowerWeight", &Alg::inverseRadiusPowerWeight,
+                   py::arg("exponent"));
+
+    ACTS_PYTHON_STRUCT(
+        c, inputSeeds, inputProtoTracks, inputParticleHypotheses,
+        outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
+        magneticField, bFieldMin, spacePointSelection, minTransverseDistance,
+        geometricRefineIterations, spacePointWeight, initialSigmas,
+        initialSigmaQoverPt, initialSigmaPtRel, initialVarInflation,
+        noTimeVarInflation, particleHypothesis);
+  }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackParamsLookupEstimation, mex, "TrackParamsLookupEstimation",

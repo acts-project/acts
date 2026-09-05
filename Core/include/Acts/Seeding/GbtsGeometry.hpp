@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/detail/GbtsLayer.hpp"
@@ -15,6 +16,7 @@
 
 #include <cstdint>
 #include <map>
+#include <span>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -23,15 +25,27 @@ class GbtsNodeStorage;
 class GbtsTrackingFilter;
 class GraphBasedTrackSeeder;
 
+/// z0 range two eta bins must share a trajectory within, which fixes the bin
+/// table. A separate cut from `GraphBasedTrackSeeder::Config::minZ0`.
+struct GbtsZ0Range final {
+  /// Minimum z0.
+  float min = -168.0f * UnitConstants::mm;
+  /// Maximum z0.
+  float max = 168.0f * UnitConstants::mm;
+};
+
 /// Geometry helper built from layers and connectors.
 class GbtsGeometry final {
  public:
   /// Constructor
   /// @param layerDescriptions Layer descriptions for the layers
-  /// @param layerConnections Layer connections map
+  /// @param layerConnections Pairs of layers the seeder may connect
+  /// @param etaBinWidth Width of the eta bins each layer is split into
+  /// @param z0Range z0 range the bin table is built against
   /// @param logger Logging instance, only used during construction
-  GbtsGeometry(const std::vector<GbtsLayerDescription>& layerDescriptions,
-               const GbtsLayerConnectionMap& layerConnections,
+  GbtsGeometry(std::span<const GbtsLayerDescription> layerDescriptions,
+               std::span<const GbtsLayerConnection> layerConnections,
+               float etaBinWidth, const GbtsZ0Range& z0Range = {},
                const Logger& logger = getDummyLogger());
 
  private:
@@ -61,11 +75,11 @@ class GbtsGeometry final {
   /// @return Reference to layer
   const detail::GbtsLayer& layerByIndex(std::int32_t idx) const;
 
-  /// Get layer ID by index
+  /// Get the description of a layer by index
   /// @param idx Layer index
-  /// @return Layer ID
-  std::uint32_t layerIdByIndex(std::uint32_t idx) const {
-    return m_layers.at(idx).layerDescription().id;
+  /// @return Reference to the layer description
+  const GbtsLayerDescription& layerDescriptionByIndex(std::int32_t idx) const {
+    return layerByIndex(idx).layerDescription();
   }
 
   /// @param layerDescription Layer description for the layer
