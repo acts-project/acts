@@ -34,7 +34,7 @@ GbtsNodeStorage::GbtsNodeStorage(const Config& config,
 
 std::optional<std::uint32_t> GbtsNodeStorage::insert(
     const SpacePointIndex index, const float x, const float y, const float z,
-    const std::uint32_t layerIndex, const float clusterWidth,
+    const GbtsLayerIndex layerIndex, const float clusterWidth,
     const float localPositionY) {
   const float r = fastHypot(x, y);
   const float phi = std::atan2(y, x);
@@ -44,7 +44,7 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
 
 std::optional<std::uint32_t> GbtsNodeStorage::insert(
     const SpacePointIndex index, const float x, const float y, const float z,
-    const float r, const float phi, const std::uint32_t layerIndex,
+    const float r, const float phi, const GbtsLayerIndex layerIndex,
     const float clusterWidth, const float localPositionY,
     const OuterStripSpacePointCalibrationDetails* strip) {
   const detail::GbtsLayer& layer = m_geometry->layerByIndex(layerIndex);
@@ -57,12 +57,7 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
     return std::nullopt;
   }
 
-  const std::int32_t binIndex = layer.getEtaBin(z, r);
-  if (binIndex == -1) {
-    return std::nullopt;
-  }
-
-  const auto bin = static_cast<std::uint32_t>(binIndex);
+  const std::uint32_t bin = layer.getEtaBin(z, r);
 
   std::uint32_t stripIndex = detail::kNoStrip;
   // A strip pair on a pixel layer is never read: the seeder takes the strip
@@ -78,14 +73,14 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
 
   m_stagedPerBin.at(bin).push_back(static_cast<std::uint32_t>(m_staged.size()));
   m_staged.emplace_back(index, x, y, z, r, phi, clusterWidth, localPositionY,
-                        static_cast<std::uint16_t>(layerIndex), stripIndex);
+                        layerIndex, stripIndex);
 
   return bin;
 }
 
 void GbtsNodeStorage::extend(
     const SpacePointContainer& spacePoints,
-    const ConstSpacePointColumnProxy<std::uint32_t>& layerColumn,
+    const ConstSpacePointColumnProxy<GbtsLayerIndex>& layerColumn,
     const ConstSpacePointColumnProxy<float>& clusterWidthColumn,
     const ConstSpacePointColumnProxy<float>& localPositionYColumn) {
   const bool strips =
@@ -171,7 +166,7 @@ void GbtsNodeStorage::finalize() {
     // every node in a bin is on the same layer, so any of them will do
     const GbtsLayerDescription& description =
         m_geometry->layerDescription(m_staged[staged.front()].layer);
-    binInfo.layerId = static_cast<std::uint32_t>(description.id);
+    binInfo.layerId = description.id;
     binInfo.type = description.type;
     binInfo.technology = description.technology;
   }
@@ -244,7 +239,8 @@ void GbtsNodeStorage::applyTauCuts(const StagedNode& staged,
     return;
   }
 
-  const detail::GbtsTauBounds& bounds = m_tauLut[lutBinIdx];
+  const detail::GbtsTauBounds& bounds =
+      m_tauLut[static_cast<std::size_t>(lutBinIdx)];
 
   // close to the edge the cluster may be shortened, which the lookup table
   // covers with a separate pair of bounds

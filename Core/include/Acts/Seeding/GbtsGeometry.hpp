@@ -17,6 +17,7 @@
 
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -57,17 +58,22 @@ class GbtsGeometry final {
   /// @return The bin count
   std::uint32_t numBins() const { return m_nEtaBins; }
 
+  /// Resolve a layer id into the index GbtsNodeStorage::insert takes.
+  /// @param id Layer id, as the layer descriptions carry it
+  /// @return The layer's index, or nullopt if this geometry has no such layer
+  std::optional<GbtsLayerIndex> layerIndex(GbtsExperimentLayerId id) const;
+
   /// Get the description a layer was built from
   /// @param idx Layer index
   /// @return Reference to the layer description
-  const GbtsLayerDescription& layerDescription(std::uint32_t idx) const {
+  const GbtsLayerDescription& layerDescription(GbtsLayerIndex idx) const {
     return layerByIndex(idx).layerDescription();
   }
 
   /// Get the eta binning the geometry gave a layer
   /// @param idx Layer index
   /// @return Reference to the layer's binning
-  const GbtsLayerBinning& layerBinning(std::uint32_t idx) const {
+  const GbtsLayerBinning& layerBinning(GbtsLayerIndex idx) const {
     return layerByIndex(idx).binning();
   }
 
@@ -84,12 +90,12 @@ class GbtsGeometry final {
   /// Get layer by ID
   /// @param id Layer ID
   /// @return Pointer to layer or nullptr
-  const detail::GbtsLayer* layerById(std::uint32_t id) const;
+  const detail::GbtsLayer* layerById(GbtsExperimentLayerId id) const;
 
   /// Get layer by index
   /// @param idx Layer index
   /// @return Reference to layer
-  const detail::GbtsLayer& layerByIndex(std::uint32_t idx) const;
+  const detail::GbtsLayer& layerByIndex(GbtsLayerIndex idx) const;
 
   /// @param layerDescription Layer description for the layer
   /// @param bin0 Starting bin index
@@ -103,7 +109,7 @@ class GbtsGeometry final {
   /// Layer array
   std::vector<detail::GbtsLayer> m_layers;
   /// Layer per user ID map
-  std::map<std::uint32_t, std::uint32_t> m_layerFromUserIdMap;
+  std::map<GbtsExperimentLayerId, GbtsLayerIndex> m_layerFromUserIdMap;
   /// Number of eta bins
   std::uint32_t m_nEtaBins{};
 

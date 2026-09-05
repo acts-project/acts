@@ -270,16 +270,13 @@ std::uint32_t GbtsLayer::getEtaBin(const float zh, const float rh) const {
   const float eta = -std::log(fastHypot(1, t1) - t1);
 
   // signed: eta below the layer's range truncates negative, before the clamp
-  std::int32_t idx = static_cast<std::int32_t>((eta - m_binning.minEta) /
-                                               m_binning.etaBinWidth);
-  if (idx < 0) {
-    idx = 0;
-  } else if (idx >= static_cast<std::int32_t>(m_binning.numBins)) {
-    idx = static_cast<std::int32_t>(m_binning.numBins) - 1;
-  }
+  const auto rawIdx = static_cast<std::int32_t>((eta - m_binning.minEta) /
+                                                m_binning.etaBinWidth);
+  const auto idx = static_cast<std::uint32_t>(std::clamp<std::int32_t>(
+      rawIdx, 0, static_cast<std::int32_t>(m_binning.numBins) - 1));
 
   // index in the global storage
-  return m_binning.firstBin + static_cast<std::uint32_t>(idx);
+  return m_binning.firstBin + idx;
 }
 
 }  // namespace Acts::Experimental::detail
@@ -466,7 +463,17 @@ GbtsGeometry::GbtsGeometry(
   }
 }
 
-const detail::GbtsLayer* GbtsGeometry::layerById(std::uint32_t id) const {
+std::optional<GbtsLayerIndex> GbtsGeometry::layerIndex(
+    GbtsExperimentLayerId id) const {
+  if (const auto it = m_layerFromUserIdMap.find(id);
+      it != m_layerFromUserIdMap.end()) {
+    return it->second;
+  }
+  return std::nullopt;
+}
+
+const detail::GbtsLayer* GbtsGeometry::layerById(
+    GbtsExperimentLayerId id) const {
   if (const auto it = m_layerFromUserIdMap.find(id);
       it != m_layerFromUserIdMap.end()) {
     return &m_layers.at(it->second);
@@ -474,13 +481,13 @@ const detail::GbtsLayer* GbtsGeometry::layerById(std::uint32_t id) const {
   return nullptr;
 }
 
-const detail::GbtsLayer& GbtsGeometry::layerByIndex(std::uint32_t idx) const {
+const detail::GbtsLayer& GbtsGeometry::layerByIndex(GbtsLayerIndex idx) const {
   return m_layers.at(idx);
 }
 
 const detail::GbtsLayer& GbtsGeometry::createLayer(
     const GbtsLayerDescription& layerDescription, std::uint32_t bin0) {
-  const std::uint32_t layerIndex = m_layers.size();
+  const auto layerIndex = static_cast<GbtsLayerIndex>(m_layers.size());
   detail::GbtsLayer& ref =
       m_layers.emplace_back(layerDescription, m_etaBinWidth, bin0);
   m_layerFromUserIdMap.try_emplace(layerDescription.id, layerIndex);

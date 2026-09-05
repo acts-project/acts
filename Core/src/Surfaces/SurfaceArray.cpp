@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Axis.hpp"
@@ -23,6 +24,7 @@
 #include <limits>
 #include <map>
 #include <ranges>
+#include <set>
 #include <utility>
 
 namespace Acts {
@@ -190,13 +192,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   void fill(const GeometryContext& gctx,
             std::span<const Surface* const> surfaces) override {
     for (const Surface* surface : surfaces) {
-      const std::optional<std::size_t> globalBin =
-          fillSurfaceToBinMapping(gctx, *surface);
-      if (!globalBin.has_value()) {
-        continue;
-      }
-
-      fillBinToSurfaceMapping(gctx, *surface, *globalBin);
+      fillSurfaceFootprint(gctx, *surface);
     }
 
     for (std::vector<const Surface*>& binSurfaces : m_fillingGrid) {
@@ -359,68 +355,86 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     return detail::MultiAxisHelper::getBinCenter(localBins, m_axes);
   }
 
-  /// map surface center to grid
-  std::optional<std::size_t> fillSurfaceToBinMapping(
-      const GeometryContext& gctx, const Surface& surface) {
-    const Vector3 position =
-        surface.referencePosition(gctx, AxisDirection::AxisR);
+  /// Orthogonal projection of a global point onto the representative surface,
+  /// in grid coordinates.
+  std::optional<GridPoint> projectToGrid(const GeometryContext& gctx,
+                                         const Vector3& position) const {
     const Vector3 normal = m_representative->normal(gctx, position);
-    const std::optional<Vector2> surfaceLocal =
-        findSurfaceLocal(gctx, position, normal, m_tolerance);
+    const std::optional<Vector2> surfaceLocal = findSurfaceLocal(
+        gctx, position, normal, std::numeric_limits<double>::infinity());
     if (!surfaceLocal.has_value()) {
       return std::nullopt;
     }
-    const GridPoint gridLocal = surfaceToGridLocal(*surfaceLocal);
-    const GridIndex localBins = localBinsFromPosition2D(gridLocal);
-    const std::size_t globalBin = globalBinFromLocalBins2D(localBins);
-    m_fillingGrid.at(globalBin).push_back(&surface);
-    return globalBin;
+    return surfaceToGridLocal(*surfaceLocal);
   }
 
-  /// flood fill neighboring bins given a starting bin
-  void fillBinToSurfaceMapping(const GeometryContext& gctx,
-                               const Surface& surface, std::size_t startBin) {
-    const GridIndex startIndices = localBinsFromGlobalBin2D(startBin);
-    const auto startNeighborIndices =
-        detail::MultiAxisHelper::neighborHoodIndices(startIndices, 1u, m_axes);
+  /// Register a surface in every bin its projection onto the representative
+  /// surface overlaps. The projected outline gives the bins it passes through,
+  /// the interior is filled per column, which is exact for a convex outline.
+  void fillSurfaceFootprint(const GeometryContext& gctx,
+                            const Surface& surface) {
+    // the surface has to sit within the layer this grid represents
+    const Vector3 reference =
+        surface.referencePosition(gctx, AxisDirection::AxisR);
+    const Vector3 referenceNormal = m_representative->normal(gctx, reference);
+    if (!findSurfaceLocal(gctx, reference, referenceNormal, m_tolerance)
+             .has_value()) {
+      return;
+    }
 
-    std::set<std::size_t> visited({startBin});
-    std::vector<std::size_t> queue(startNeighborIndices.begin(),
-                                   startNeighborIndices.end());
+    // resolution of the outline: segments per quarter circle for curved
+    // bounds, and samples per segment, since a straight edge does not project
+    // to a straight line in grid coordinates
+    constexpr unsigned int nSamples = 32;
 
-    while (!queue.empty()) {
-      const std::size_t current = queue.back();
-      queue.pop_back();
+    const Polyhedron polyhedron =
+        surface.polyhedronRepresentation(gctx, nSamples);
 
-      // Skip overflow bins as they do not produce a valid bin center
-      if (!isValidBin(current)) {
-        continue;
+    // columns are keyed by the closed axis, if any, so that the span fill runs
+    // along an axis whose bins do not wrap
+    const bool firstAxisClosed =
+        std::get<0>(m_axes).getBoundaryType() == AxisBoundaryType::Closed;
+    const std::size_t iColumn = firstAxisClosed ? 0 : 1;
+    const std::size_t iSpan = firstAxisClosed ? 1 : 0;
+
+    // column bin -> [min, max] bin along the other axis
+    std::map<std::size_t, std::pair<std::size_t, std::size_t>> columns;
+    const auto addSample = [&](const Vector3& point) {
+      const std::optional<GridPoint> gridLocal = projectToGrid(gctx, point);
+      if (!gridLocal.has_value()) {
+        return;
       }
-      if (visited.contains(current)) {
-        continue;
+      const GridIndex indices = localBinsFromPosition2D(*gridLocal);
+      if (!isValidBin(indices)) {
+        return;
       }
-
-      const GridIndex currentIndices = localBinsFromGlobalBin2D(current);
-      visited.insert(current);
-
-      const GridPoint gridLocal = binCenter(currentIndices);
-      const Vector2 surfaceLocal = gridToSurfaceLocal(gridLocal);
-      const Vector3 normal = m_representative->normal(gctx, surfaceLocal);
-      const Vector3 global =
-          m_representative->localToGlobal(gctx, surfaceLocal, normal);
-
-      const Intersection3D intersection =
-          surface.intersect(gctx, global, normal, BoundaryTolerance::None())
-              .closest();
-      if (!intersection.isValid() ||
-          std::abs(intersection.pathLength()) > m_tolerance) {
-        continue;
+      const auto [it, inserted] =
+          columns.try_emplace(indices[iColumn], indices[iSpan], indices[iSpan]);
+      if (!inserted) {
+        it->second.first = std::min(it->second.first, indices[iSpan]);
+        it->second.second = std::max(it->second.second, indices[iSpan]);
       }
-      m_fillingGrid.at(current).push_back(&surface);
+    };
 
-      const auto neighborIndices = detail::MultiAxisHelper::neighborHoodIndices(
-          currentIndices, 1u, m_axes);
-      queue.insert(queue.end(), neighborIndices.begin(), neighborIndices.end());
+    for (const Polyhedron::FaceType& face : polyhedron.faces) {
+      for (std::size_t i = 0; i < face.size(); ++i) {
+        const Vector3& from = polyhedron.vertices.at(face.at(i));
+        const Vector3& to =
+            polyhedron.vertices.at(face.at((i + 1) % face.size()));
+        for (std::size_t k = 0; k < nSamples; ++k) {
+          const double t = static_cast<double>(k) / nSamples;
+          addSample(from + t * (to - from));
+        }
+      }
+    }
+
+    for (const auto& [column, span] : columns) {
+      for (std::size_t i = span.first; i <= span.second; ++i) {
+        GridIndex indices{};
+        indices[iColumn] = column;
+        indices[iSpan] = i;
+        m_fillingGrid.at(globalBinFromLocalBins2D(indices)).push_back(&surface);
+      }
     }
   }
 
