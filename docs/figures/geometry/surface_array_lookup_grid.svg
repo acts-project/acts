@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="300" viewBox="0 0 640 300" role="img"
+     aria-label="The same crossing on the (phi, z) grid: the crossing bin, the window opened along z only, and the registered footprint of the module the track hits">
+  <style>
+    text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; fill: #5b6473; }
+    .ink { fill: #131720; }
+    .acc { fill: #1f5fd0; }
+    .alert { fill: #bc3626; }
+    .idx { font-size: 9px; }
+  </style>
+  <defs>
+    <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#1f5fd0" stroke-opacity=".55" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="640" height="300" fill="#f8fafc"/>
+
+  <!-- the window: z distance 2, phi distance 0, around the crossing bin -->
+  <rect x="160" y="130" width="250" height="30" fill="#1f5fd0" fill-opacity=".12"/>
+  <rect x="260" y="130" width="50" height="30" fill="#1f5fd0" fill-opacity=".2"/>
+
+  <!-- registered footprint of the hit module: z bins 5 to 7, phi bin 3 -->
+  <rect x="310" y="130" width="150" height="30" fill="url(#hatch)"/>
+  <rect x="160" y="130" width="250" height="30" fill="none" stroke="#1f5fd0" stroke-width="1.2"/>
+
+  <!-- grid rules: 11 z bins by 7 phi bins -->
+  <g stroke="#ccd3de" stroke-width=".6" fill="none">
+    <line x1="60" y1="40" x2="60" y2="250"/>
+    <line x1="110" y1="40" x2="110" y2="250"/>
+    <line x1="160" y1="40" x2="160" y2="250"/>
+    <line x1="210" y1="40" x2="210" y2="250"/>
+    <line x1="260" y1="40" x2="260" y2="250"/>
+    <line x1="310" y1="40" x2="310" y2="250"/>
+    <line x1="360" y1="40" x2="360" y2="250"/>
+    <line x1="410" y1="40" x2="410" y2="250"/>
+    <line x1="460" y1="40" x2="460" y2="250"/>
+    <line x1="510" y1="40" x2="510" y2="250"/>
+    <line x1="560" y1="40" x2="560" y2="250"/>
+    <line x1="610" y1="40" x2="610" y2="250"/>
+    <line x1="60" y1="40" x2="610" y2="40"/>
+    <line x1="60" y1="70" x2="610" y2="70"/>
+    <line x1="60" y1="100" x2="610" y2="100"/>
+    <line x1="60" y1="130" x2="610" y2="130"/>
+    <line x1="60" y1="160" x2="610" y2="160"/>
+    <line x1="60" y1="190" x2="610" y2="190"/>
+    <line x1="60" y1="220" x2="610" y2="220"/>
+    <line x1="60" y1="250" x2="610" y2="250"/>
+  </g>
+
+  <!-- module outline: a rectangle on a cylinder projects to a rectangle in (phi, z) -->
+  <rect x="316" y="134" width="138" height="22" fill="none" stroke="#1f5fd0" stroke-width="1.6"/>
+  <text x="466" y="142" class="acc">footprint of</text>
+  <text x="466" y="154" class="acc">the hit module</text>
+
+  <!-- crossing, slide along z, hit -->
+  <line x1="305" y1="145" x2="369" y2="145" stroke="#131720" stroke-width="1" stroke-dasharray="3 2"/>
+  <circle cx="305" cy="145" r="3.5" fill="#1f5fd0"/>
+  <circle cx="369" cy="145" r="3.5" fill="#bc3626"/>
+  <text x="305" y="122" text-anchor="middle" class="acc">crossing bin</text>
+  <text x="369" y="122" text-anchor="middle" class="alert">hit</text>
+  <text x="160" y="182">window: 2 in z, 0 in phi</text>
+  <text x="160" y="206" class="ink">the crossing bin alone would miss the module; the window in z reaches it</text>
+
+  <!-- bin indices -->
+  <g class="idx" text-anchor="middle">
+    <text x="85" y="264">0</text>
+    <text x="135" y="264">1</text>
+    <text x="185" y="264">2</text>
+    <text x="235" y="264">3</text>
+    <text x="285" y="264">4</text>
+    <text x="335" y="264">5</text>
+    <text x="385" y="264">6</text>
+    <text x="435" y="264">7</text>
+    <text x="485" y="264">8</text>
+    <text x="535" y="264">9</text>
+    <text x="585" y="264">10</text>
+  </g>
+  <g class="idx" text-anchor="end">
+    <text x="52" y="58">6</text>
+    <text x="52" y="88">5</text>
+    <text x="52" y="118">4</text>
+    <text x="52" y="148">3</text>
+    <text x="52" y="178">2</text>
+    <text x="52" y="208">1</text>
+    <text x="52" y="238">0</text>
+  </g>
+  <text x="610" y="284" text-anchor="end">z bin (axis 1, Bound)</text>
+  <text x="60" y="284">phi bin (axis 0, Closed)</text>
+</svg>

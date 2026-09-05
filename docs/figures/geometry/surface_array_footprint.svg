@@ -1,0 +1,203 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="300" viewBox="0 0 640 300" role="img"
+     aria-label="A trapezoidal module projected onto the (phi, r) grid of a disc layer, with the bins the span fill registers">
+  <style>
+    text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; fill: #5b6473; }
+    .ink { fill: #131720; }
+    .acc { fill: #1f5fd0; }
+  </style>
+  <rect width="640" height="300" fill="#f8fafc"/>
+  <!-- registered bins: every bin of every column span -->
+  <g fill="#1f5fd0" fill-opacity=".17" stroke="#1f5fd0" stroke-opacity=".45" stroke-width=".8">
+    <rect x="336" y="176" width="40" height="35"/>
+    <rect x="336" y="141" width="40" height="35"/>
+    <rect x="336" y="106" width="40" height="35"/>
+    <rect x="336" y="71" width="40" height="35"/>
+    <rect x="336" y="36" width="40" height="35"/>
+    <rect x="376" y="176" width="40" height="35"/>
+    <rect x="376" y="141" width="40" height="35"/>
+    <rect x="376" y="106" width="40" height="35"/>
+    <rect x="376" y="71" width="40" height="35"/>
+    <rect x="376" y="36" width="40" height="35"/>
+    <rect x="416" y="176" width="40" height="35"/>
+    <rect x="416" y="141" width="40" height="35"/>
+    <rect x="416" y="106" width="40" height="35"/>
+    <rect x="416" y="71" width="40" height="35"/>
+    <rect x="416" y="36" width="40" height="35"/>
+    <rect x="56" y="211" width="40" height="35"/>
+    <rect x="56" y="176" width="40" height="35"/>
+    <rect x="56" y="141" width="40" height="35"/>
+    <rect x="56" y="106" width="40" height="35"/>
+    <rect x="576" y="211" width="40" height="35"/>
+    <rect x="576" y="176" width="40" height="35"/>
+    <rect x="576" y="141" width="40" height="35"/>
+    <rect x="576" y="106" width="40" height="35"/>
+  </g>
+  <!-- grid rules -->
+  <g stroke="#ccd3de" stroke-width=".6" fill="none">
+    <line x1="56" y1="36" x2="56" y2="246"/>
+    <line x1="96" y1="36" x2="96" y2="246"/>
+    <line x1="136" y1="36" x2="136" y2="246"/>
+    <line x1="176" y1="36" x2="176" y2="246"/>
+    <line x1="216" y1="36" x2="216" y2="246"/>
+    <line x1="256" y1="36" x2="256" y2="246"/>
+    <line x1="296" y1="36" x2="296" y2="246"/>
+    <line x1="336" y1="36" x2="336" y2="246"/>
+    <line x1="376" y1="36" x2="376" y2="246"/>
+    <line x1="416" y1="36" x2="416" y2="246"/>
+    <line x1="456" y1="36" x2="456" y2="246"/>
+    <line x1="496" y1="36" x2="496" y2="246"/>
+    <line x1="536" y1="36" x2="536" y2="246"/>
+    <line x1="576" y1="36" x2="576" y2="246"/>
+    <line x1="616" y1="36" x2="616" y2="246"/>
+    <line x1="56" y1="36" x2="616" y2="36"/>
+    <line x1="56" y1="71" x2="616" y2="71"/>
+    <line x1="56" y1="106" x2="616" y2="106"/>
+    <line x1="56" y1="141" x2="616" y2="141"/>
+    <line x1="56" y1="176" x2="616" y2="176"/>
+    <line x1="56" y1="211" x2="616" y2="211"/>
+    <line x1="56" y1="246" x2="616" y2="246"/>
+  </g>
+  <!-- the seam: the closed phi axis wraps here -->
+  <g stroke="#131720" stroke-width="1.2"><line x1="56" y1="32" x2="56" y2="250"/><line x1="616" y1="32" x2="616" y2="250"/></g>
+  <!-- bin centers: registration is by area overlap, not by the center -->
+  <g>
+    <circle cx="76.0" cy="228.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="76.0" cy="193.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="76.0" cy="158.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="76.0" cy="123.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="76.0" cy="88.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="76.0" cy="53.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="116.0" cy="228.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="116.0" cy="193.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="116.0" cy="158.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="116.0" cy="123.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="116.0" cy="88.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="116.0" cy="53.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="156.0" cy="228.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="156.0" cy="193.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="156.0" cy="158.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="156.0" cy="123.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="156.0" cy="88.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="156.0" cy="53.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="196.0" cy="228.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="196.0" cy="193.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="196.0" cy="158.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="196.0" cy="123.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="196.0" cy="88.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="196.0" cy="53.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="236.0" cy="228.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="236.0" cy="193.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="236.0" cy="158.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="236.0" cy="123.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="236.0" cy="88.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="236.0" cy="53.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="276.0" cy="228.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="276.0" cy="193.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="276.0" cy="158.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="276.0" cy="123.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="276.0" cy="88.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="276.0" cy="53.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="316.0" cy="228.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="316.0" cy="193.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="316.0" cy="158.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="316.0" cy="123.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="316.0" cy="88.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="316.0" cy="53.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="356.0" cy="228.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="356.0" cy="193.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="356.0" cy="158.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="356.0" cy="123.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="356.0" cy="88.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="356.0" cy="53.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="396.0" cy="228.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="396.0" cy="193.5" r="1.8" fill="#1f5fd0"/>
+    <circle cx="396.0" cy="158.5" r="1.8" fill="#1f5fd0"/>
+    <circle cx="396.0" cy="123.5" r="1.8" fill="#1f5fd0"/>
+    <circle cx="396.0" cy="88.5" r="1.8" fill="#1f5fd0"/>
+    <circle cx="396.0" cy="53.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="436.0" cy="228.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="436.0" cy="193.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="436.0" cy="158.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="436.0" cy="123.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="436.0" cy="88.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="436.0" cy="53.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="476.0" cy="228.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="476.0" cy="193.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="476.0" cy="158.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="476.0" cy="123.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="476.0" cy="88.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="476.0" cy="53.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="516.0" cy="228.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="516.0" cy="193.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="516.0" cy="158.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="516.0" cy="123.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="516.0" cy="88.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="516.0" cy="53.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="556.0" cy="228.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="556.0" cy="193.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="556.0" cy="158.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="556.0" cy="123.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="556.0" cy="88.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="556.0" cy="53.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="596.0" cy="228.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="596.0" cy="193.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="596.0" cy="158.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="596.0" cy="123.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="596.0" cy="88.5" r="1.1" fill="#ccd3de"/>
+    <circle cx="596.0" cy="53.5" r="1.1" fill="#ccd3de"/>
+  </g>
+  <!-- projected outlines, sampled along each straight edge -->
+  <g fill="none" stroke="#1f5fd0" stroke-width="1.6" stroke-linejoin="round">
+    <path d="M373.9,192.4 L377.4,195.5 L380.8,198.3 L384.4,200.6 L388.0,202.6 L391.7,204.1 L395.4,205.2 L399.1,205.9 L402.8,206.1 L406.6,205.9 L410.3,205.2 L414.0,204.1 L417.7,202.6 L421.3,200.6 L424.9,198.3 L428.3,195.5 L431.7,192.4 L431.7,183.8 L431.7,175.3 L431.6,166.7 L431.6,158.2 L431.6,149.6 L431.6,141.1 L431.5,132.5 L431.5,124.0 L431.5,115.4 L431.5,106.9 L431.5,98.3 L431.4,89.8 L431.4,81.2 L431.4,72.7 L431.4,64.1 L431.4,55.6 L428.0,60.2 L424.6,64.3 L421.1,67.8 L417.5,70.7 L413.9,73.0 L410.2,74.6 L406.5,75.6 L402.8,75.9 L399.2,75.6 L395.5,74.6 L391.8,73.0 L388.2,70.7 L384.6,67.8 L381.1,64.3 L377.7,60.2 L374.3,55.6 L374.3,64.1 L374.3,72.7 L374.3,81.2 L374.2,89.8 L374.2,98.3 L374.2,106.9 L374.2,115.4 L374.2,124.0 L374.1,132.5 L374.1,141.1 L374.1,149.6 L374.1,158.2 L374.0,166.7 L374.0,175.3 L374.0,183.8 Z"/>
+    <path d="M616.0,133.7 L614.1,133.6 L612.2,133.4 L610.3,133.0 L608.5,132.5 L606.6,131.8 L604.7,131.1 L602.9,130.1 L601.0,129.1 L601.1,135.1 L601.1,141.1 L601.2,147.1 L601.3,153.1 L601.3,159.2 L601.4,165.2 L601.4,171.2 L601.5,177.2 L601.6,183.2 L601.6,189.3 L601.7,195.3 L601.8,201.3 L601.9,207.3 L602.0,213.3 L602.1,219.4 L602.1,225.4 L603.9,226.0 L605.6,226.6 L607.3,227.1 L609.0,227.5 L610.8,227.8 L612.5,228.0 L614.3,228.1 L616.0,228.2"/>
+    <path d="M56.9,228.1 L58.6,228.1 L60.4,227.9 L62.1,227.6 L63.8,227.3 L65.6,226.8 L67.3,226.3 L69.0,225.7 L69.9,222.4 L70.0,216.3 L70.1,210.3 L70.2,204.3 L70.2,198.3 L70.3,192.3 L70.4,186.2 L70.5,180.2 L70.5,174.2 L70.6,168.2 L70.7,162.2 L70.7,156.2 L70.8,150.1 L70.8,144.1 L70.9,138.1 L70.9,132.1 L70.0,129.6 L68.2,130.6 L66.3,131.5 L64.5,132.2 L62.6,132.8 L60.7,133.2 L58.8,133.5 L56.9,133.6"/>
+  </g>
+  <g fill="#1f5fd0">
+    <circle cx="373.9" cy="192.4" r="1.6"/>
+    <circle cx="388.0" cy="202.6" r="1.6"/>
+    <circle cx="402.8" cy="206.1" r="1.6"/>
+    <circle cx="417.7" cy="202.6" r="1.6"/>
+    <circle cx="431.7" cy="192.4" r="1.6"/>
+    <circle cx="431.6" cy="158.2" r="1.6"/>
+    <circle cx="431.5" cy="124.0" r="1.6"/>
+    <circle cx="431.4" cy="89.8" r="1.6"/>
+    <circle cx="431.4" cy="55.6" r="1.6"/>
+    <circle cx="417.5" cy="70.7" r="1.6"/>
+    <circle cx="402.8" cy="75.9" r="1.6"/>
+    <circle cx="388.2" cy="70.7" r="1.6"/>
+    <circle cx="374.3" cy="55.6" r="1.6"/>
+    <circle cx="374.2" cy="89.8" r="1.6"/>
+    <circle cx="374.2" cy="124.0" r="1.6"/>
+    <circle cx="374.1" cy="158.2" r="1.6"/>
+    <circle cx="602.1" cy="225.4" r="1.6"/>
+    <circle cx="609.0" cy="227.5" r="1.6"/>
+    <circle cx="616.0" cy="228.2" r="1.6"/>
+    <circle cx="63.0" cy="227.5" r="1.6"/>
+    <circle cx="69.9" cy="225.4" r="1.6"/>
+    <circle cx="70.2" cy="201.3" r="1.6"/>
+    <circle cx="70.5" cy="177.2" r="1.6"/>
+    <circle cx="70.7" cy="153.1" r="1.6"/>
+    <circle cx="71.0" cy="129.1" r="1.6"/>
+    <circle cx="63.5" cy="132.5" r="1.6"/>
+    <circle cx="616.0" cy="133.7" r="1.6"/>
+    <circle cx="608.5" cy="132.5" r="1.6"/>
+    <circle cx="601.0" cy="129.1" r="1.6"/>
+    <circle cx="601.3" cy="153.1" r="1.6"/>
+    <circle cx="601.5" cy="177.2" r="1.6"/>
+    <circle cx="601.8" cy="201.3" r="1.6"/>
+  </g>
+  <!-- one span per phi column -->
+  <g stroke="#131720" stroke-width="1" fill="none"><line x1="462" y1="36" x2="462" y2="211"/><line x1="459" y1="36" x2="465" y2="36"/><line x1="459" y1="211" x2="465" y2="211"/></g>
+  <text x="469" y="122" class="ink">span of</text>
+  <text x="469" y="134" class="ink">column 9</text>
+  <text x="616" y="26" text-anchor="end" class="ink">seam</text>
+  <text x="403" y="26" text-anchor="middle" class="acc">projected module outline</text>
+  <text x="56" y="26" class="ink">seam: columns 0 and 13 hold their own spans</text>
+  <text x="56" y="262">-pi</text>
+  <text x="616" y="262" text-anchor="end">pi</text>
+  <text x="336" y="262" text-anchor="middle">phi (axis 1, Closed)</text>
+  <text x="50" y="40" text-anchor="end">400</text>
+  <text x="50" y="246" text-anchor="end">200</text>
+  <text x="50" y="144" text-anchor="end">r</text>
+  <text x="336" y="278" text-anchor="middle">tinted: bins the surface is registered in; dots: bin centers inside the outline</text>
+</svg>
