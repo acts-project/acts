@@ -13,13 +13,11 @@
 #include "Acts/Propagator/detail/SympyBoundToFreeScaling.hpp"
 #include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 #include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
-#include "Acts/Propagator/detail/SympyStepperDenseStep.hpp"
-#include "Acts/Propagator/detail/SympyStepperStatus.hpp"
 
 #include <cmath>
 #include <span>
 
-#include "codegen/sympy_stepper_math.hpp"
+#include "detail/SympyStepperStep.hpp"
 
 namespace Acts {
 
@@ -189,158 +187,19 @@ void SympyStepper::transportCovarianceToBound(
 
 Result<double> SympyStepper::step(State& state, Direction propDir,
                                   const IVolumeMaterial* material) const {
-  double h = state.stepSize.value() * propDir;
-
-  const double initialH = h;
-
-  const Vector3 pos = position(state);
-  const Vector3 dir = direction(state);
-  const double t = time(state);
-  const double qop = qOverP(state);
-  const double pabs = absoluteMomentum(state);
-  const double m = particleHypothesis(state).mass();
-
-  if (state.options.doDense && material != nullptr &&
-      pabs < state.options.dense.momentumCutOff) {
-    return EigenStepperError::StepInvalid;
-  }
-
-  const auto getB = [this, &state](std::span<const double, 3> p) {
-    return getField(state, {p[0], p[1], p[2]});
-  };
-
-  if (!state.field.has_value()) {
-    auto fieldRes = getField(state, pos);
-    if (!fieldRes.ok()) {
-      return fieldRes.error();
-    }
-    state.field = *fieldRes;
-  }
-  Vector3 lastField = *state.field;
-
-  // Read once: the kernel writes through spans that point into `state`, so a
-  // later read would be ordered behind all of its stores.
-  const double stepTolerance = state.options.stepTolerance;
-
-  const auto calcStepSizeScaling = [&](const double errorEstimate_) -> double {
-    // For details about these values see ATL-SOFT-PUB-2009-001
-    constexpr double lower = 0.25;
-    constexpr double upper = 4.0;
-    // This is given by the order of the Runge-Kutta method
-    constexpr double exponent = 0.25;
-
-    double x = stepTolerance / errorEstimate_;
-
-    if constexpr (exponent == 0.25) {
-      // This is 3x faster than std::pow
-      x = std::sqrt(std::sqrt(x));
-    } else {
-      x = std::pow(x, exponent);
-    }
-
-    return std::clamp(x, lower, upper);
-  };
-
-  std::size_t nStepTrials = 0;
-  double errorEstimate = 0.;
-
-  while (true) {
-    ++nStepTrials;
-    ++state.statistics.nAttemptedSteps;
-
-    // For details about the factor 4 see ATL-SOFT-PUB-2009-001
-    detail::Rk4Status status{};
-    std::error_code fieldError;
-    const std::span<const double, 3> startPos(pos.data(), 3);
-    const std::span<const double, 3> startDir(dir.data(), 3);
-    const std::span<double, 3> endPos(
-        state.pars.template segment<3>(eFreePos0).data(), 3);
-    const std::span<double, 3> endDir(
-        state.pars.template segment<3>(eFreeDir0).data(), 3);
-    const std::span<double, 8> derivative(state.derivative.data(), 8);
-    const std::span<double> jac =
-        state.covTransport ? std::span<double>(state.jacToGlobal.data(),
-                                               state.jacToGlobal.size())
-                           : std::span<double>();
-    if (!state.options.doDense || material == nullptr) {
-      status = rk4_vacuum(startPos, startDir, t, h, qop, m, pabs,
-                          std::span<const double, 3>(state.field->data(), 3),
-                          getB, errorEstimate, 4 * stepTolerance, fieldError,
-                          endPos, state.pars[eFreeTime], endDir,
-                          std::span<double, 3>(lastField.data(), 3), derivative,
-                          jac);
-    } else {
-      status =
-          detail::sympyDenseStep(*this, state, *material, h, 4 * stepTolerance,
-                                 errorEstimate, lastField, fieldError, jac);
-    }
-    if (status == detail::Rk4Status::FieldError) {
-      return fieldError;
-    }
-    // Protect against division by zero
-    errorEstimate = std::max(1e-20, errorEstimate);
-
-    if (status == detail::Rk4Status::Accepted) {
-      break;
-    }
-
-    ++state.statistics.nRejectedSteps;
-
-    const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
-    h *= stepSizeScaling;
-
-    // If step size becomes too small the particle remains at the initial
-    // place
-    if (std::abs(h) < std::abs(state.options.stepSizeCutOff)) {
-      // Not moving due to too low momentum needs an aborter
-      return EigenStepperError::StepSizeStalled;
-    }
-
-    // If the parameter is off track too much or given stepSize is not
-    // appropriate
-    if (nStepTrials > state.options.maxRungeKuttaStepTrials) {
-      // Too many trials, have to abort
-      return EigenStepperError::StepSizeAdjustmentFailed;
-    }
-  }
-
-  // O(h^3) away from the step end point, close enough to seed the next step
-  state.field = lastField;
-
-  state.pathAccumulated += h;
-  ++state.nSteps;
-  state.nStepTrials += nStepTrials;
-
-  ++state.statistics.nSuccessfulSteps;
-  if (propDir != Direction::fromScalarZeroAsPositive(initialH)) {
-    ++state.statistics.nReverseSteps;
-  }
-  state.statistics.pathLength += h;
-  state.statistics.absolutePathLength += std::abs(h);
-
-  const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
-  const double nextAccuracy = std::abs(h * stepSizeScaling);
-  const double previousAccuracy = std::abs(state.stepSize.accuracy());
-  const double initialStepLength = std::abs(initialH);
-  if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
-    state.stepSize.setAccuracy(nextAccuracy);
-  }
-
+  // Each mode is instantiated in a translation unit of its own; see
+  // detail/SympyStepperStep.hpp.
   if (state.options.doDense &&
       (material != nullptr || !state.materialEffectsAccumulator.isVacuum())) {
-    if (state.materialEffectsAccumulator.isVacuum()) {
-      state.materialEffectsAccumulator.initialize(
-          state.options.maxXOverX0Step, particleHypothesis(state), pabs);
-    }
-
-    Material mat =
-        material != nullptr ? material->material(pos) : Material::Vacuum();
-
-    state.materialEffectsAccumulator.accumulate(mat, propDir * h, qop,
-                                                qOverP(state));
+    return detail::sympyStep<detail::SympyStepMode::Dense>(*this, state,
+                                                           propDir, material);
   }
-
-  return h;
+  if (state.covTransport) {
+    return detail::sympyStep<detail::SympyStepMode::VacuumJac>(
+        *this, state, propDir, nullptr);
+  }
+  return detail::sympyStep<detail::SympyStepMode::VacuumNoJac>(
+      *this, state, propDir, nullptr);
 }
 
 }  // namespace Acts
