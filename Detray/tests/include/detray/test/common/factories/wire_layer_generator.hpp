@@ -16,7 +16,7 @@
 #include "detray/definitions/geometry.hpp"
 #include "detray/definitions/indexing.hpp"
 #include "detray/geometry/mask.hpp"
-#include "detray/geometry/shapes/line.hpp"
+#include "detray/geometry/shapes/line_square.hpp"
 #include "detray/utils/axis_rotation.hpp"
 #include "detray/utils/logging.hpp"
 #include "detray/utils/unit_vectors.hpp"

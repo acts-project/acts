@@ -418,18 +418,6 @@ class metadata_generator:
             for s in itertools.chain(*shapes.values())
         }
 
-        # Correct the header name for the line surfaces
-        add_line = False
-        if "line_circular" in shape_names:
-            shape_names.remove("line_circular")
-            add_line = True
-        if "line_square" in shape_names:
-            shape_names.remove("line_square")
-            add_line = True
-
-        if add_line and "line" not in shape_names:
-            shape_names.add("line")
-
         # Set of material class names
         mat_names = {
             self.__name_from_specifier(m.specifier)

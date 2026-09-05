@@ -13,8 +13,8 @@
 #include "traccc/utils/subspace.hpp"
 
 // Detray include(s).
+#include <detray/geometry/coordinates/line2D.hpp>
 #include <detray/geometry/shapes/annulus2D.hpp>
-#include <detray/geometry/shapes/line.hpp>
 
 // System include(s).
 #include <array>

@@ -19,7 +19,7 @@
 #include "detray/definitions/indexing.hpp"
 #include "detray/definitions/units.hpp"
 #include "detray/detectors/wire_chamber_metadata.hpp"
-#include "detray/geometry/shapes/line.hpp"
+#include "detray/geometry/shapes/line_square.hpp"
 #include "detray/material/predefined_materials.hpp"
 #include "detray/utils/consistency_checker.hpp"
 #include "detray/utils/print_detector.hpp"
