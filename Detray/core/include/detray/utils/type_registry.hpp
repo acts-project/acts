@@ -76,6 +76,19 @@ concept type_registry =
 
 namespace types {
 
+/// @brief The map from original type positions to the new ones, as an object
+/// with static storage duration.
+///
+/// @tparam orig_types_t the original type list
+/// @tparam type_selector_t how to select the new types from the original ones
+template <typename orig_types_t, class type_selector_t>
+#if defined(__CUDA_ARCH__)
+__constant__
+#endif
+    constexpr auto index_map_v =
+        detray::types::filtered_indices<orig_types_t, type_selector_t>(
+            detray::types::list{});
+
 /// @brief Select a number of types from another registry and map their IDs to a
 /// continuous range of new type indices.
 ///
@@ -134,20 +147,21 @@ class mapped_registry : public registry_t {
   /// index
   DETRAY_HOST_DEVICE
   static constexpr std::size_t mapped_index(const std::size_t orig_idx) {
-    return index_map()[orig_idx];
+    return index_map_v<orig_types, type_selector_t>[orig_idx];
   }
 
   /// @returns the filtered type index corresponding to the original type ID
   DETRAY_HOST_DEVICE
   static constexpr std::size_t mapped_index(const id orig_id) {
-    return index_map()[static_cast<std::size_t>(orig_id)];
+    return index_map_v<orig_types, type_selector_t>[static_cast<std::size_t>(
+        orig_id)];
   }
 
   /// @returns the original indexd given the new @param pos in the type list
   DETRAY_HOST_DEVICE
   static constexpr std::size_t original_index(const std::size_t pos) {
     std::size_t j{0u};
-    for (std::size_t i : index_map()) {
+    for (std::size_t i : index_map_v<orig_types, type_selector_t>) {
       if (i == pos) {
         assert(registry_t::is_valid(j));
         return j;
