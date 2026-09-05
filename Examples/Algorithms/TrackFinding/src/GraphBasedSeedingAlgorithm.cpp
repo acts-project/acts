@@ -68,8 +68,8 @@ ConnectorTable readConnectorTable(const std::string &path,
   for (std::uint32_t l = 0; l < nLinks; l++) {
     std::uint32_t lIdx{};
     std::uint32_t stage{};
-    std::uint32_t src{};
-    std::uint32_t dst{};
+    Acts::Experimental::GbtsExperimentLayerId src{};
+    Acts::Experimental::GbtsExperimentLayerId dst{};
     std::uint32_t height{};
     std::uint32_t width{};
     std::uint32_t nEntries{};
@@ -83,8 +83,8 @@ ConnectorTable readConnectorTable(const std::string &path,
 
     // ATLAS ITk volume ids: 12, 13 and 14 are the strip subdetectors. The
     // table holds both technologies and only one of them is ever seeded.
-    const auto isStrip = [](std::uint32_t layerId) {
-      const std::uint32_t volumeId = layerId / 1000;
+    const auto isStrip = [](Acts::Experimental::GbtsExperimentLayerId layerId) {
+      const auto volumeId = layerId / 1000;
       return volumeId == 12 || volumeId == 13 || volumeId == 14;
     };
     if (isStrip(src) != stripConnections || isStrip(dst) != stripConnections) {

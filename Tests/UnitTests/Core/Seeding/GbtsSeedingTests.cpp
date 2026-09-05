@@ -153,8 +153,7 @@ std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
   std::vector<Experimental::GbtsLayerConnection> connections;
   connections.reserve(detector.links.size());
   for (const auto& [src, dst] : detector.links) {
-    connections.push_back(
-        {static_cast<std::uint32_t>(src), static_cast<std::uint32_t>(dst)});
+    connections.push_back({src, dst});
   }
 
   return std::make_shared<Experimental::GbtsGeometry>(layers, connections,
