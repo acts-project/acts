@@ -20,6 +20,21 @@
 
 namespace Acts {
 
+/// Invert a transform that places something in space.
+///
+/// `Transform3` is an `Eigen::Affine`, so its own `inverse()` runs a general
+/// 3x3 inverse. A placement in ACTS is a rotation and a translation - scaling
+/// is not uniformly supported and is not used - and inverting one of those is
+/// a transpose and a rotated translation. The assertion holds callers to that.
+///
+/// @param transform The placement to invert, whose linear part must be a rotation
+/// @return The inverse transform
+inline Transform3 inverseTransform(const Transform3& transform) {
+  assert(transform.linear().isUnitary() &&
+         "a placement transform must not scale or shear");
+  return transform.inverse(Eigen::Isometry);
+}
+
 /// Convert a bitset to a matrix of integers, with each element set to the bit
 /// value.
 /// @note How the bits are assigned to matrix elements depends on the storage
