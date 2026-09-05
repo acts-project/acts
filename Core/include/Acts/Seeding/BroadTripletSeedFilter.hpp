@@ -18,7 +18,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
-#include <unordered_map>
 #include <vector>
 
 namespace Acts {
@@ -153,13 +152,14 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// Maximum radius for seed confirmation
     float rMaxSeedConf{};
 
-    /// Map to store the best seed quality for each space point.
-    /// This is used to avoid creating seeds with lower quality than the best
-    /// seed quality already found for that space point.
-    /// The key is the space point index, and the value is the best seed quality
-    /// found for that space point.
-    /// @note The index is the space point index, not the seed index.
-    std::unordered_map<SpacePointIndex, float> bestSeedQualityMap;
+    /// Best seed quality found so far for each space point, indexed directly by
+    /// the space point index. Space points that have not been part of a seed
+    /// yet hold std::numeric_limits<float>::lowest(). This is used to avoid
+    /// creating seeds with lower quality than the best already found for one of
+    /// their space points.
+    /// @note The index is the space point index, not the seed index. The
+    /// vector is sized to the number of space points on first use per event.
+    std::vector<float> bestSeedQuality;
   };
 
   /// Cache for intermediate results to avoid reallocations. No information is
