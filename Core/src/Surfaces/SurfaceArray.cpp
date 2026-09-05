@@ -13,6 +13,7 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -22,7 +23,6 @@
 #include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
 #include <algorithm>
-#include <cassert>
 #include <iomanip>
 #include <limits>
 #include <map>
@@ -112,8 +112,7 @@ struct SurfaceArray::ISurfaceGridLookup {
   /// @return Array of number of local bins in each dimension
   virtual std::array<std::size_t, 2> numLocalBins() const = 0;
 
-  /// Get the bounds on the neighbor window this lookup serves. The window
-  /// itself is derived per axis from the crossing angle and clamped to them.
+  /// Get the bounds on the neighbor window this lookup serves.
   /// @return Neighbor window bounds per axis
   virtual SurfaceArray::NeighborWindow neighborWindow() const = 0;
 };
@@ -199,8 +198,6 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
       throw std::invalid_argument("neighbor window floor exceeds its bound");
     }
 
-    // the axes and the window are fixed for the lifetime of the lookup, so
-    // everything derived from them is resolved once here rather than per query
     m_numLocalBins = {std::get<0>(m_axes).getNBins(),
                       std::get<1>(m_axes).getNBins()};
     m_numGridBins = (m_numLocalBins[0] + 2) * (m_numLocalBins[1] + 2);
@@ -260,8 +257,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   std::span<const Surface* const> neighbors(
       std::array<std::size_t, 2> gridIndices,
       std::array<std::uint8_t, 2> neighborDistance) const override {
-    // beyond the bound there is no cached pack, and the index would wrap into
-    // the next bin rather than run off the end
+    // past the bound the index wraps into the next bin's pack
     if (neighborDistance[0] > m_neighborWindow.max[0] ||
         neighborDistance[1] > m_neighborWindow.max[1]) {
       throw std::out_of_range(
@@ -342,10 +338,8 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   /// Bin contents while filling, before they become the zero-distance packs
   using FillingGrid = std::vector<std::vector<const Surface*>>;
 
-  /// Hash and equality for the dedup table, reading a pack through its range
-  /// into @c m_surfacePacks. The table therefore keys on packs it does not
-  /// store a second time; ranges stay valid as the storage grows because they
-  /// are offsets, and appending never rewrites what is already there.
+  /// Hash and equality over a pack read through its range, so the table keeps
+  /// no second copy. Ranges are offsets and survive the storage growing.
   struct PackLookup {
     using is_transparent = void;
 
@@ -395,14 +389,11 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   std::size_t m_packStride1{};
   std::size_t m_packStridePerBin{};
   bool m_windowIsFixed{};
-  // a cylinder is binned in the angle but measures the arc length, every other
-  // representative bins what it measures
+  // a cylinder is binned in the angle but measures the arc length
   double m_gridScale = 1.;
 
-  // containers to store the surfaces in the custom grid. the packs are indexed
-  // per (bin, distance along axis 0, distance along axis 1), so the index array
-  // grows with the square of the maximum distance - it holds ranges rather than
-  // spans to keep that affordable.
+  // packs are indexed per (bin, distance along axis 0, distance along axis 1),
+  // so the index array holds ranges rather than spans to stay affordable
   std::vector<const Surface*> m_surfacePacks;
   std::vector<SurfacePackRange> m_neighborSurfacePacks;
 
@@ -464,9 +455,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     return surfaceToGridLocal(crossing->local);
   }
 
-  /// Distance in bins between two local bins along one axis. Under- and
-  /// overflow are clamped to the edge bin, which is as far as a window can
-  /// usefully reach.
+  /// Distance in bins along one axis, under- and overflow clamped to the edge.
   std::uint8_t axisBinDistance(std::size_t axis, std::size_t from,
                                std::size_t to) const {
     const std::size_t nBins = m_numLocalBins[axis];
@@ -479,21 +468,12 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     return clampValue<std::uint8_t>(distance);
   }
 
-  /// Below this the track is treated as running along the layer and the window
-  /// is opened all the way. Any smaller incidence needs more bins than the
-  /// cache can hold anyway.
+  /// Below this the track runs along the layer and the window opens fully.
   static constexpr double s_minIncidence = 1e-4;
 
-  /// How many bins the track can move along each axis while it is inside the
-  /// layer.
-  ///
-  /// The lookup happens where the track crosses the representative surface, but
-  /// a surface is registered where it projects onto that surface. In between,
-  /// the track traverses the layer thickness and slides along the layer by the
-  /// crossing angle - on a barrel almost entirely in z. The window has to cover
-  /// the bins that displacement spans, and per axis, because widening the other
-  /// one only multiplies the candidate count. The result is clamped to the
-  /// configured window bounds.
+  /// How many bins the track moves along each axis while inside the layer.
+  /// The lookup sits where the track crosses the representative surface, a
+  /// module where it projects onto it; the window spans the difference.
   GridDistance crossingNeighborDistance(const GeometryContext& gctx,
                                         const Crossing& crossing,
                                         const Vector3& direction,
@@ -501,8 +481,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
                                         const GridIndex& localBins) const {
     const GridDistance maximum = m_neighborWindow.max;
 
-    // a window with no room between its floor and its bound does not depend on
-    // the crossing angle
+    // no room between floor and bound leaves nothing for the angle to decide
     if (m_windowIsFixed) {
       return maximum;
     }
@@ -513,26 +492,20 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
       return maximum;
     }
 
-    // the chord through the layer, with the part that only crosses the
-    // thickness taken out: what is left is the slide along the layer
+    // the part of the chord that slides along the layer rather than through it
     const double halfPath = m_tolerance / std::abs(incidence);
     const Vector3 slide = halfPath * (direction - incidence * normal);
 
-    // the surface turns that slide into a step in its own local coordinates.
-    // localCartesianToBoundLocalDerivative is exactly that metric - the
-    // reference frame with the curvilinear scaling folded in - so the grid
-    // axes need no special casing here
-    const Transform3& toGlobal = m_representative->localToGlobalTransform(gctx);
-    // a placed surface is rotated, not scaled, so the transpose inverts it.
-    // CylinderVolumeBounds does scale a beveled volume's end disc, but a
-    // representative surface never comes from there
-    assert(toGlobal.linear().isUnitary());
-    const Vector3 localSlide = toGlobal.linear().transpose() * slide;
+    // the surface's metric maps the slide into what the grid bins
+    const Vector3 localSlide =
+        inverseTransform(m_representative->localToGlobalTransform(gctx))
+            .linear() *
+        slide;
     const Vector2 boundSlide =
         m_representative->localCartesianToBoundLocalDerivative(
             gctx, crossing.global) *
         localSlide;
-    // linear in its argument, so it maps a step as well as a position
+    // linear, so it maps a step like a position
     const GridPoint gridSlide = surfaceToGridLocal(boundSlide);
 
     GridDistance neighborDistance{};
@@ -545,8 +518,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
             std::max(neighborDistance[axis],
                      axisBinDistance(axis, localBins[axis], edgeBins[axis]));
       }
-      // both ends can only widen the window further, so once it is at the
-      // bound on both axes the other end cannot change it
+      // the window only widens, so at the bound the far end cannot change it
       if (neighborDistance[0] >= maximum[0] &&
           neighborDistance[1] >= maximum[1]) {
         return maximum;
@@ -629,7 +601,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     }
   }
 
-  /// calculate neighbors for every bin and window size and store in map
+  /// Cache the surfaces reachable from every bin at every window size
   void populateNeighborCache(const FillingGrid& fillingGrid) {
     m_surfacePacks.clear();
     m_neighborSurfacePacks.assign(m_numGridBins * m_packStridePerBin, {0, 0});
@@ -725,9 +697,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     return {local[0] / m_gridScale, local[1]};
   }
 
-  /// Where a ray meets the representative surface, in both frames. The global
-  /// position falls out of the intersection, so callers that need it should
-  /// take it from here rather than transforming the local one back.
+  /// Where a ray meets the representative surface, in both frames.
   std::optional<Crossing> findCrossing(const GeometryContext& gctx,
                                        const Vector3& position,
                                        const Vector3& direction,
