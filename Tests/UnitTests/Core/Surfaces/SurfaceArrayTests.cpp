@@ -18,11 +18,14 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -240,20 +243,34 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   // a floor on the window serves at least that many bins even at normal
   // incidence, for lookups that cannot see the surfaces the fill saw
   SurfaceArray floored(tgContext, brl, cylinder, 1., std::tuple{phiAxis, zAxis},
-                       {.min = {1, 1}, .max = {1, 2}});
+                       {{1, 1}, {1, 2}});
   BOOST_CHECK(std::ranges::equal(
       floored.neighbors(tgContext, crossing, crossing.normalized()),
       floored.neighbors(crossingBins, {1, 1})));
-  BOOST_CHECK_THROW(
-      SurfaceArray(tgContext, brl, cylinder, 1., std::tuple{phiAxis, zAxis},
-                   {.min = {2, 2}, .max = {1, 2}}),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(SurfaceArray(tgContext, brl, cylinder, 1.,
+                                 std::tuple{phiAxis, zAxis}, {{2, 2}, {1, 2}}),
+                    std::invalid_argument);
 
   // no pack is cached past the bound, so asking for one is an error rather
   // than the next bin's pack
   BOOST_CHECK_THROW(floored.neighbors(crossingBins, {2, 0}), std::out_of_range);
   BOOST_CHECK_THROW(floored.neighbors(crossingBins, {0, 3}), std::out_of_range);
   BOOST_CHECK_THROW(floored.neighbors({10000, 0}, {0, 0}), std::out_of_range);
+
+  // a scalar bound converts to the isotropic window it used to describe: one
+  // bin unless the bound forbids it, at most the bound
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  const SurfaceArray scalarBound(tgContext, brl, cylinder, 1.,
+                                 std::tuple{phiAxis, zAxis}, std::uint8_t{1});
+  BOOST_CHECK_EQUAL(scalarBound.maxNeighborDistance(), 1u);
+  ACTS_POP_IGNORE_DEPRECATED()
+  const SurfaceArray::NeighborWindow scalarWindow =
+      scalarBound.neighborWindow();
+  BOOST_CHECK((scalarWindow.min == std::array<std::uint8_t, 2>{1, 1}));
+  BOOST_CHECK((scalarWindow.max == std::array<std::uint8_t, 2>{1, 1}));
+  BOOST_CHECK(std::ranges::equal(
+      scalarBound.neighbors(tgContext, crossing, crossing.normalized()),
+      scalarBound.neighbors(crossingBins, {1, 1})));
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {

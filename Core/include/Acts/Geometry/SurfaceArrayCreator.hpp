@@ -123,7 +123,7 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
       std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      SurfaceArray::NeighborWindow neighborWindow = {.max = {1, 2}}) const;
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {1, 2}}) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -150,7 +150,7 @@ class SurfaceArrayCreator {
       BinningType bTypePhi = equidistant, BinningType bTypeZ = equidistant,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      SurfaceArray::NeighborWindow neighborWindow = {.max = {1, 2}}) const;
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {1, 2}}) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a disc, binned in r, phi when extrema and
@@ -176,7 +176,7 @@ class SurfaceArrayCreator {
       std::size_t binsPhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      SurfaceArray::NeighborWindow neighborWindow = {.max = {2, 1}}) const;
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 1}}) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -207,7 +207,7 @@ class SurfaceArrayCreator {
       BinningType bTypePhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      SurfaceArray::NeighborWindow neighborWindow = {.max = {2, 1}}) const;
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 1}}) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
@@ -236,7 +236,7 @@ class SurfaceArrayCreator {
       std::size_t bins2, AxisDirection aDir,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      SurfaceArray::NeighborWindow neighborWindow = {.max = {2, 2}}) const;
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 2}}) const;
 
   /// Static check function for surface equivalent
   ///

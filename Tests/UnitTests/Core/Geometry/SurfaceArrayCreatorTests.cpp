@@ -551,9 +551,9 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_neighborWindowFollowsCrossingAngle,
     return missed;
   };
 
-  BOOST_CHECK_EQUAL(missedHits({.max = {1, 2}}), 0u);
+  BOOST_CHECK_EQUAL(missedHits({{0, 0}, {1, 2}}), 0u);
   // the fixed one-bin window this replaces cannot reach that far
-  BOOST_CHECK_GT(missedHits({.max = {1, 1}}), 0u);
+  BOOST_CHECK_GT(missedHits({{0, 0}, {1, 1}}), 0u);
 }
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,

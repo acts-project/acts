@@ -174,7 +174,7 @@ struct SingleElementLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   std::array<std::size_t, 2> numLocalBins() const override { return {1, 1}; }
 
   SurfaceArray::NeighborWindow neighborWindow() const override {
-    return {.min = {0, 0}, .max = {0, 0}};
+    return {{0, 0}, {0, 0}};
   }
 
  private:
@@ -834,6 +834,11 @@ std::array<std::size_t, 2> SurfaceArray::numLocalBins() const {
 
 SurfaceArray::NeighborWindow SurfaceArray::neighborWindow() const {
   return m_gridLookup->neighborWindow();
+}
+
+std::uint8_t SurfaceArray::maxNeighborDistance() const {
+  const NeighborWindow window = m_gridLookup->neighborWindow();
+  return std::max(window.max[0], window.max[1]);
 }
 
 }  // namespace Acts
