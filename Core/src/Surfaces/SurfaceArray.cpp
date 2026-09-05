@@ -22,6 +22,7 @@
 #include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <iomanip>
 #include <limits>
 #include <map>
@@ -521,9 +522,12 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     // localCartesianToBoundLocalDerivative is exactly that metric - the
     // reference frame with the curvilinear scaling folded in - so the grid
     // axes need no special casing here
-    const Vector3 localSlide =
-        m_representative->localToGlobalTransform(gctx).linear().transpose() *
-        slide;
+    const Transform3& toGlobal = m_representative->localToGlobalTransform(gctx);
+    // a placed surface is rotated, not scaled, so the transpose inverts it.
+    // CylinderVolumeBounds does scale a beveled volume's end disc, but a
+    // representative surface never comes from there
+    assert(toGlobal.linear().isUnitary());
+    const Vector3 localSlide = toGlobal.linear().transpose() * slide;
     const Vector2 boundSlide =
         m_representative->localCartesianToBoundLocalDerivative(
             gctx, crossing.global) *
