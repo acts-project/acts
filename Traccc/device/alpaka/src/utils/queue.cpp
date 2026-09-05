@@ -1,7 +1,7 @@
 /**
  * traccc library, part of the ACTS project (R&D line)
  *
- * (c) 2025 CERN for the benefit of the ACTS project
+ * (c) 2025-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -55,4 +55,8 @@ void queue::synchronize() {
   ::alpaka::wait(*m_impl->m_queue);
 }
 
+void queue::enqueue_callback(std::function<void()> func) const {
+  assert(m_impl->m_queue != nullptr);
+  ::alpaka::enqueue(*m_impl->m_queue, std::move(func));
+}
 }  // namespace traccc::alpaka
