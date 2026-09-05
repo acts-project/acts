@@ -248,6 +248,12 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
       SurfaceArray(tgContext, brl, cylinder, 1., std::tuple{phiAxis, zAxis},
                    {.min = {2, 2}, .max = {1, 2}}),
       std::invalid_argument);
+
+  // no pack is cached past the bound, so asking for one is an error rather
+  // than the next bin's pack
+  BOOST_CHECK_THROW(floored.neighbors(crossingBins, {2, 0}), std::out_of_range);
+  BOOST_CHECK_THROW(floored.neighbors(crossingBins, {0, 3}), std::out_of_range);
+  BOOST_CHECK_THROW(floored.neighbors({10000, 0}, {0, 0}), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
