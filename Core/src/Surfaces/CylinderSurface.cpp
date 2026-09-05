@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -135,7 +136,7 @@ Result<Vector2> CylinderSurface::globalToLocal(const GeometryContext& gctx,
     inttol = 0.01;
   }
   const Transform3& sfTransform = localToGlobalTransform(gctx);
-  Transform3 inverseTrans(sfTransform.inverse());
+  Transform3 inverseTrans(inverseTransform(sfTransform));
   Vector3 loc3Dframe(inverseTrans * position);
   if (std::abs(perp(loc3Dframe) - bounds().get(CylinderBounds::eR)) > inttol) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
@@ -159,7 +160,7 @@ Vector3 CylinderSurface::normal(const GeometryContext& gctx,
                                 const Vector3& position) const {
   const Transform3& sfTransform = localToGlobalTransform(gctx);
   // get it into the cylinder frame
-  Vector3 pos3D = sfTransform.inverse() * position;
+  Vector3 pos3D = inverseTransform(sfTransform) * position;
   // set the z coordinate to 0
   pos3D.z() = 0.;
   // normalize and rotate back into global
@@ -333,15 +334,15 @@ AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
 Matrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
-  using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = localToGlobalTransform(gctx);
   // calculate the transformation to local coordinates
-  const Vector3 localPos = sTransform.inverse() * position;
+  const Vector3 localPos = inverseTransform(sTransform) * position;
   const double lr = perp(localPos);
-  const double lphi = phi(localPos);
-  const double lcphi = std::cos(lphi);
-  const double lsphi = std::sin(lphi);
+  // cos and sin of the local azimuth are the normalised coordinates
+  // themselves, no need to go through the angle
+  const double lcphi = localPos.x() / lr;
+  const double lsphi = localPos.y() / lr;
   // Solve for radius R
   double R = bounds().get(CylinderBounds::eR);
   Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();
@@ -366,7 +367,7 @@ std::pair<std::shared_ptr<CylinderSurface>, bool> CylinderSurface::mergedWith(
 
   assert(m_transform != nullptr && other.m_transform != nullptr);
 
-  Transform3 otherLocal = m_transform->inverse() * *other.m_transform;
+  Transform3 otherLocal = inverseTransform(*m_transform) * *other.m_transform;
 
   constexpr auto tolerance = s_onSurfaceTolerance;
 

@@ -14,6 +14,7 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -39,6 +40,7 @@
 #include <iterator>
 #include <memory>
 #include <numbers>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -184,7 +186,7 @@ struct SurfaceArrayCreatorFixture {
   std::pair<SrfVec, std::vector<std::pair<const Surface*, const Surface*>>>
   makeBarrelStagger(int nPhi, int nZ, double shift = 0,
                     double incl = std::numbers::pi / 9., double w = 2,
-                    double h = 1.5) {
+                    double h = 1.5, double stagger = 0.1) {
     double z0 = -(nZ - 1) * w;
     SrfVec res;
     std::vector<std::pair<const Surface*, const Surface*>> pairs;
@@ -209,7 +211,7 @@ struct SurfaceArrayCreatorFixture {
 
         Vector3 nrm = srfA->normal(tgContext);
         Transform3 transB = trans;
-        transB.pretranslate(nrm * 0.1);
+        transB.pretranslate(nrm * stagger);
         std::shared_ptr<Surface> srfB =
             Surface::makeShared<PlaneSurface>(transB, bounds);
 
@@ -479,6 +481,79 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_phiAxisAlignsModuleCentres,
       CHECK_CLOSE_ABS(fractionInBin, 0.5, 1e-3);
     }
   }
+}
+
+// The lookup happens where the track crosses the representative cylinder, but
+// the module it hits sits at a different radius, so at a shallow angle the two
+// are far apart in z. A fixed one-bin window stops covering that as soon as the
+// grid is refined - which is exactly what a bin count multiplier does - so the
+// window has to follow the crossing angle instead.
+BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_neighborWindowFollowsCrossingAngle,
+                        SurfaceArrayCreatorFixture) {
+  constexpr int nPhi = 30;
+  constexpr int nZ = 20;
+  // 2 mm of radial stagger, so a shallow track really does travel along the
+  // layer between the representative surface and the module it hits
+  auto [surfaces, pairs] =
+      makeBarrelStagger(nPhi, nZ, 0., std::numbers::pi / 9., 2., 1.5, 2.);
+  auto surfacesRaw = unpackSmartPointers(surfaces);
+  ProtoLayer protoLayer(tgContext, surfacesRaw);
+
+  // the cylinder grid is binned (phi, z)
+  const auto missedHits = [&](SurfaceArray::NeighborWindow neighborWindow) {
+    // refined in z, where a bin is now much shorter than the displacement
+    const SurfaceArray surfaceArray = m_SAC.surfaceArrayOnCylinder(
+        tgContext, surfaces, nPhi, 6 * nZ, protoLayer, Transform3::Identity(),
+        neighborWindow);
+
+    std::size_t missed = 0;
+    for (const double eta : {0., 0.5, 1., 1.25, 1.5}) {
+      const double theta = 2 * std::atan(std::exp(-eta));
+      for (std::size_t i = 0; i < 128; ++i) {
+        const double rayPhi =
+            2 * std::numbers::pi * static_cast<double>(i) / 128.;
+        const Vector3 direction(std::sin(theta) * std::cos(rayPhi),
+                                std::sin(theta) * std::sin(rayPhi),
+                                std::cos(theta));
+
+        std::vector<const Surface*> crossed;
+        for (const Surface* surface : surfacesRaw) {
+          const Intersection3D intersection =
+              surface
+                  ->intersect(tgContext, Vector3::Zero(), direction,
+                              BoundaryTolerance::None())
+                  .closest();
+          if (intersection.isValid() && intersection.pathLength() > 0) {
+            crossed.push_back(surface);
+          }
+        }
+        if (crossed.empty()) {
+          continue;
+        }
+
+        // the navigator looks the layer up where the track crosses the
+        // representative surface, not where it crosses a module
+        const Intersection3D approach =
+            surfaceArray.surfaceRepresentation()
+                ->intersect(tgContext, Vector3::Zero(), direction,
+                            BoundaryTolerance::Infinite())
+                .closestForward();
+        const auto found =
+            surfaceArray.neighbors(tgContext, approach.position(), direction);
+
+        for (const Surface* surface : crossed) {
+          if (std::ranges::find(found, surface) == found.end()) {
+            ++missed;
+          }
+        }
+      }
+    }
+    return missed;
+  };
+
+  BOOST_CHECK_EQUAL(missedHits({{0, 0}, {1, 2}}), 0u);
+  // the fixed one-bin window this replaces cannot reach that far
+  BOOST_CHECK_GT(missedHits({{0, 0}, {1, 1}}), 0u);
 }
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
