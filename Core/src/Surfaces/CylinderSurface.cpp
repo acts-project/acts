@@ -333,15 +333,14 @@ AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
 Matrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
-  using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = localToGlobalTransform(gctx);
   // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
-  const double lphi = phi(localPos);
-  const double lcphi = std::cos(lphi);
-  const double lsphi = std::sin(lphi);
+  // the normalised coordinates are already cos and sin of the local azimuth
+  const double lcphi = localPos.x() / lr;
+  const double lsphi = localPos.y() / lr;
   // Solve for radius R
   double R = bounds().get(CylinderBounds::eR);
   Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();
