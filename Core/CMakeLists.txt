@@ -53,14 +53,6 @@ if(ACTS_SOURCELINK_SBO_SIZE)
     )
 endif()
 
-if(ACTS_ENABLE_LOG_FAILURE_THRESHOLD)
-    message(STATUS "Enable log failure threshold")
-    target_compile_definitions(
-        ActsCore
-        PUBLIC -DACTS_ENABLE_LOG_FAILURE_THRESHOLD
-    )
-endif()
-
 if(ACTS_ENABLE_CPU_PROFILING)
     message(STATUS "added lprofiler")
 

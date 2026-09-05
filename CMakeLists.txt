@@ -154,22 +154,26 @@ option(ACTS_ENABLE_CPU_PROFILING "Enable CPU profiling using gperftools" OFF)
 option(ACTS_ENABLE_MEMORY_PROFILING "Enable memory profiling using gperftools" OFF)
 set(ACTS_GPERF_INSTALL_DIR "" CACHE STRING "Hint to help find gperf if profiling is enabled")
 
-option(ACTS_ENABLE_LOG_FAILURE_THRESHOLD "Enable failing on log messages with level above certain threshold" OFF)
 option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # gersemi: on
 
-# Removed option: warn and drop it from the cache. Setting it used to imply
-# ACTS_ENABLE_LOG_FAILURE_THRESHOLD, so ignoring it silently would leave a
-# downstream that set only this one with no threshold at all.
-if(DEFINED ACTS_LOG_FAILURE_THRESHOLD)
-    message(
-        WARNING
-        "ACTS_LOG_FAILURE_THRESHOLD was removed. Set "
-        "ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON and pass the level in the "
-        "ACTS_LOG_FAILURE_THRESHOLD environment variable instead."
-    )
-    unset(ACTS_LOG_FAILURE_THRESHOLD CACHE)
-endif()
+# Removed options: warn and drop them from the cache, so a build that set either
+# does not silently get something other than what it asked for.
+foreach(
+    _removedOption
+    IN
+    ITEMS ACTS_ENABLE_LOG_FAILURE_THRESHOLD ACTS_LOG_FAILURE_THRESHOLD
+)
+    if(DEFINED ${_removedOption})
+        message(
+            WARNING
+            "${_removedOption} was removed. The log failure threshold is always "
+            "available now; set the level in the ACTS_LOG_FAILURE_THRESHOLD "
+            "environment variable, or call Acts::Logging::setFailureThreshold."
+        )
+        unset(${_removedOption} CACHE)
+    endif()
+endforeach()
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees

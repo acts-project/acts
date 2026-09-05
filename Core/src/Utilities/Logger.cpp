@@ -8,45 +8,16 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
-#include <algorithm>
-#include <cstdlib>
-
 namespace Acts {
 
 namespace Logging {
 
-#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
 namespace {
+// Not seeded from the environment: a library must not arm itself because of a
+// variable that happens to be exported. Entry points that want that behaviour
+// call setFailureThreshold themselves.
 Level& getFailureThresholdMutable() {
-  static Level _level = []() {
-    Level level = Level::MAX;
-
-    const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
-    if (envvar == nullptr) {
-      return level;
-    }
-
-    std::string slevel = envvar;
-    if (slevel == "VERBOSE") {
-      level = std::min(level, Level::VERBOSE);
-    } else if (slevel == "DEBUG") {
-      level = std::min(level, Level::DEBUG);
-    } else if (slevel == "INFO") {
-      level = std::min(level, Level::INFO);
-    } else if (slevel == "WARNING") {
-      level = std::min(level, Level::WARNING);
-    } else if (slevel == "ERROR") {
-      level = std::min(level, Level::ERROR);
-    } else if (slevel == "FATAL") {
-      level = std::min(level, Level::FATAL);
-    } else {
-      std::cerr << "ACTS_LOG_FAILURE_THRESHOLD environment variable is set to "
-                   "unknown value: "
-                << slevel << std::endl;
-    }
-    return level;
-  }();
-
+  static Level _level = Level::MAX;
   return _level;
 }
 }  // namespace
@@ -69,19 +40,6 @@ ScopedFailureThreshold::~ScopedFailureThreshold() noexcept {
     std::terminate();
   }
 }
-
-#else
-
-void setFailureThreshold(Level /*lvl*/) {
-  throw std::logic_error{
-      "The log failure threshold is not compiled in "
-      "(ACTS_ENABLE_LOG_FAILURE_THRESHOLD is OFF), unable to override. See "
-      "https://cern.ch/acts-log-thresh"};
-}
-
-ScopedFailureThreshold::~ScopedFailureThreshold() noexcept = default;
-
-#endif
 
 namespace {
 class NeverFilterPolicy final : public OutputFilterPolicy {

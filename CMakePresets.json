@@ -9,7 +9,6 @@
                 "CMAKE_CXX_STANDARD": "20",
                 "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "OFF",
                 "ACTS_BUILD_FATRAS": "ON",
                 "ACTS_BUILD_ODD": "ON",
                 "ACTS_BUILD_UNITTESTS": "ON",
@@ -38,7 +37,6 @@
             "inherits": "dev",
             "binaryDir": "build_devcontainer",
             "cacheVariables": {
-                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
                 "ACTS_USE_SYSTEM_PYBIND11": "ON"
             }
@@ -63,7 +61,6 @@
                 "CMAKE_CXX_SCAN_FOR_MODULES": "OFF",
                 "CMAKE_FIND_FRAMEWORK": "LAST",
                 "ACTS_FORCE_ASSERTIONS": "ON",
-                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_BENCHMARKS": "ON",
                 "ACTS_BUILD_ANALYSIS_APPS": "ON",
                 "ACTS_BUILD_ALIGNMENT": "ON",
@@ -190,7 +187,6 @@
                 "CMAKE_CUDA_ARCHITECTURES": "75;86",
                 "TORCH_CUDA_ARCH_LIST": "7.5;8.6",
                 "ACTS_FORCE_ASSERTIONS": "ON",
-                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_PYTHON_BINDINGS": "ON",
                 "ACTS_BUILD_PLUGIN_FPEMON": "ON",
                 "ACTS_BUILD_PLUGIN_GNN": "ON",
@@ -242,7 +238,6 @@
                 "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
                 "CMAKE_BUILD_TYPE": "Release",
                 "ACTS_FORCE_ASSERTIONS": "ON",
-                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_PYTHON_WHEEL": "ON",
                 "ACTS_BUILD_PYTHON_BINDINGS": "ON",
                 "ACTS_GENERATE_PYTHON_STUBS": "ON",
