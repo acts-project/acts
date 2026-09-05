@@ -16,7 +16,6 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
-#include <fstream>
 #include <memory>
 #include <numbers>
 #include <stdexcept>
@@ -51,7 +50,11 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
         "GraphBasedTrackSeeder: phiSortBuckets exceeds the maximum");
   }
 
-  m_tauLut = parseTauLookupTable(m_cfg.lutInputFile);
+  if (m_cfg.useClusterWidthCuts && m_cfg.tauLookupTable.empty()) {
+    throw std::invalid_argument(
+        "GraphBasedTrackSeeder: the cluster width cuts need a tau lookup "
+        "table");
+  }
 }
 
 GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
@@ -65,7 +68,7 @@ GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
   config.phiSortBuckets = m_cfg.phiSortBuckets;
   config.tauLutBinWidth = m_cfg.tauLutBinWidth;
 
-  return GbtsNodeStorage(config, m_geometry, m_tauLut);
+  return GbtsNodeStorage(config, m_geometry, m_cfg.tauLookupTable);
 }
 
 void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& spacePoints,
@@ -127,40 +130,6 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
   }
 }
 
-detail::GbtsTauLookupTable GraphBasedTrackSeeder::parseTauLookupTable(
-    const std::string& lutInputFile) const {
-  if (!m_cfg.useClusterWidthCuts) {
-    return {};
-  }
-  if (lutInputFile.empty()) {
-    throw std::runtime_error("Cannot find tau lookup table file");
-  }
-
-  std::ifstream ifs(std::string(lutInputFile).c_str());
-  if (!ifs.is_open()) {
-    throw std::runtime_error("Failed to open tau lookup table file");
-  }
-
-  detail::GbtsTauLookupTable tauLut;
-  tauLut.reserve(100);
-
-  // per line: cluster width, bulk tau bounds, near-edge tau bounds. The width
-  // is dropped - rows are located by index, never searched.
-  float clusterWidth{};
-  detail::GbtsTauBounds bounds;
-  while (ifs >> clusterWidth >> bounds.minTau >> bounds.maxTau >>
-         bounds.minTauNearEdge >> bounds.maxTauNearEdge) {
-    tauLut.push_back(bounds);
-  }
-
-  if (!ifs.eof()) {
-    // ended if parse error present, not clean EOF
-    throw std::runtime_error("Stopped reading LUT file due to parse error");
-  }
-
-  return tauLut;
-}
-
 std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
     const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
     std::vector<detail::GbtsEdge>& edgeStorage, const Options& options) const {
@@ -193,7 +162,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
 
   // scale factor to get indexes of binned beamspot
   const float z0HistoCoeff =
-      detail::kGbtsZ0HistogramBins / (m_cfg.maxZ0 - m_cfg.minZ0 + 1e-6);
+      detail::kGbtsZ0HistogramBins / (m_cfg.maxZ0 - m_cfg.minZ0 + 1e-6f);
 
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
   const std::span<const detail::GbtsNodeParams> params =
@@ -435,10 +404,9 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
 
           const float z0 = z1c - r1c * tau;
 
-          if (useZ0Histogram) {  // check against non-empty z0 histogram
-            if (!checkZ0BitMask(nodeInfo, z0, z0HistoCoeff)) {
-              continue;
-            }
+          // check against a non-empty z0 histogram
+          if (useZ0Histogram && !checkZ0BitMask(nodeInfo, z0, z0HistoCoeff)) {
+            continue;
           }
 
           if (m_cfg.doubletFilterRZ) {
@@ -454,11 +422,10 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
           }
 
           const float curv = (phi2 - phi1) / dr;
-          const float absCurv = std::abs(curv);
 
-          if (absCurv > (ftau < m_cfg.curvatureSplitAbsTau
-                             ? curvatureCutLowEta
-                             : curvatureCutHighEta)) {
+          if (std::abs(curv) > (ftau < m_cfg.curvatureSplitAbsTau
+                                    ? curvatureCutLowEta
+                                    : curvatureCutHighEta)) {
             continue;
           }
 
@@ -581,16 +548,14 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
               }
 
               // final check: cuts on pT and d0
-              if (m_cfg.validateTriplets) {
-                if (isPixelBarrel1 && isPixelBarrel2 && isPixelBarrel3) {
-                  const std::array<SpacePointIndex, 3> candidateTriplet = {
-                      n1Idx, n2Idx, pS->n2};
+              if (m_cfg.validateTriplets && isPixelBarrel1 && isPixelBarrel2 &&
+                  isPixelBarrel3) {
+                const std::array<SpacePointIndex, 3> candidateTriplet = {
+                    n1Idx, n2Idx, pS->n2};
 
-                  if (!validateTriplet(nodeView, candidateTriplet, tripletPtMin,
-                                       absTauRatio, m_cfg.tauRatioCut,
-                                       options)) {
-                    continue;
-                  }
+                if (!validateTriplet(nodeView, candidateTriplet, tripletPtMin,
+                                     absTauRatio, m_cfg.tauRatioCut, options)) {
+                  continue;
                 }
               }
 
@@ -601,10 +566,9 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               // edge confirmed - update z0 histogram. Only doubletFilterRZ
               // holds z0 to the histogram range, and it is optional.
-              const auto z0BinIndex =
-                  static_cast<std::int32_t>(z0HistoCoeff * (z0 - m_cfg.minZ0));
-
-              if (z0BinIndex >= 0 &&
+              if (const auto z0BinIndex = static_cast<std::int32_t>(
+                      z0HistoCoeff * (z0 - m_cfg.minZ0));
+                  z0BinIndex >= 0 &&
                   z0BinIndex < detail::kGbtsZ0HistogramBins) {
                 ++z0Histo[static_cast<std::size_t>(z0BinIndex)];
               }
