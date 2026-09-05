@@ -281,8 +281,8 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     const GridPoint gridLocal = surfaceToGridLocal(crossing->local);
     const GridIndex localBins = localBinsFromPosition2D(gridLocal);
 
-    const GridDistance neighborDistance =
-        crossingNeighborDistance(gctx, *crossing, direction, localBins);
+    const GridDistance neighborDistance = crossingNeighborDistance(
+        gctx, *crossing, direction, gridLocal, localBins);
 
     return surfacePack(neighborPackIndex(localBins, neighborDistance));
   }
@@ -488,6 +488,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   GridDistance crossingNeighborDistance(const GeometryContext& gctx,
                                         const Crossing& crossing,
                                         const Vector3& direction,
+                                        const GridPoint& gridLocal,
                                         const GridIndex& localBins) const {
     const GridDistance maximum = m_neighborWindow.max;
 
@@ -498,21 +499,35 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     }
 
     const Vector3 normal = m_representative->normal(gctx, crossing.local);
-    const double incidence = std::abs(normal.dot(direction));
-    if (incidence < s_minIncidence) {
+    const double incidence = normal.dot(direction);
+    if (std::abs(incidence) < s_minIncidence) {
       return maximum;
     }
 
-    const double halfPath = m_tolerance / incidence;
+    // the chord through the layer, with the part that only crosses the
+    // thickness taken out: what is left is the slide along the layer
+    const double halfPath = m_tolerance / std::abs(incidence);
+    const Vector3 slide = halfPath * (direction - incidence * normal);
+
+    // the surface turns that slide into a step in its own local coordinates.
+    // localCartesianToBoundLocalDerivative is exactly that metric - the
+    // reference frame with the curvilinear scaling folded in - so the grid
+    // axes need no special casing here
+    const Vector3 localSlide =
+        m_representative->localToGlobalTransform(gctx).linear().transpose() *
+        slide;
+    const Vector2 boundSlide =
+        m_representative->localCartesianToBoundLocalDerivative(
+            gctx, crossing.global) *
+        localSlide;
+    // linear in its argument, so it maps a step as well as a position
+    const GridPoint gridSlide = surfaceToGridLocal(boundSlide);
 
     GridDistance neighborDistance{};
     for (const double side : {-1., 1.}) {
-      const std::optional<GridPoint> edge =
-          projectToGrid(gctx, crossing.global + side * halfPath * direction);
-      if (!edge.has_value()) {
-        return maximum;
-      }
-      const GridIndex edgeBins = localBinsFromPosition2D(*edge);
+      const GridIndex edgeBins =
+          localBinsFromPosition2D({gridLocal[0] + side * gridSlide[0],
+                                   gridLocal[1] + side * gridSlide[1]});
       for (std::size_t axis = 0; axis < neighborDistance.size(); ++axis) {
         neighborDistance[axis] =
             std::max(neighborDistance[axis],
