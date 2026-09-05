@@ -10,6 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ISensorDesign.hpp"
+
+#include <memory>
 
 namespace Acts {
 class Surface;
@@ -59,5 +62,17 @@ class SurfacePlacementBase {
   //         a detector surface
   /// @return True if this is a sensitive surface
   virtual bool isSensitive() const = 0;
+
+  /// @brief  Returns a pointer to the sensor design associated with this placement
+  ///         element. If the placement is not associated with a sensor design,
+  ///         it returns a nullptr.
+  /// @return Pointer to the sensor design or nullptr
+  virtual const ISensorDesign* sensorDesign() const { return nullptr; }
+
+  /// @brief Assign a sensor design to this placement element.
+  ///        Default implementation is a no-op; override in subclasses
+  ///        that support design assignment.
+  virtual void assignSensorDesign(
+      const std::shared_ptr<const ISensorDesign>& /*design*/) const {}
 };
 }  // namespace Acts
