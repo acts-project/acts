@@ -116,6 +116,33 @@ using composite3 = composite_actor<example_actor_t, composite1>;
 // Implements example_actor through composite2<-composite3 with composite1 obs.
 using composite4 = composite_actor<example_actor_t, composite1>;
 
+template <int I>
+struct ordered_actor : public detray::base_actor {
+  struct state {};
+
+  using result = detray::actor::result;
+
+  template <typename propagator_state_t>
+  result operator()(state & /*actor_state*/,
+                    const propagator_state_t & /*p_state*/) const {
+    return {detray::actor::status::e_notify};
+  }
+
+  template <typename propagator_state_t, typename subj_result_t>
+  result operator()(state & /*actor_state*/,
+                    const propagator_state_t & /*p_state*/,
+                    const subj_result_t & /*subject_result*/) const {
+    return {detray::actor::status::e_notify};
+  }
+};
+
+using ordered_nested_observer =
+    composite_actor<ordered_actor<3>, ordered_actor<4>>;
+using ordered_composite_actor =
+    composite_actor<ordered_actor<0>, ordered_actor<1>, ordered_actor<2>,
+                    ordered_nested_observer>;
+using ordered_actor_chain = actor_chain<ordered_composite_actor>;
+
 /* Test chaining of multiple actors
  * The chain goes as follows (depth first):
  *                          example_actor1
@@ -146,6 +173,11 @@ GTEST_TEST(detray_propagator, actor_chain) {
   static_assert(detray::concepts::actor<observer_lvl3>);
   static_assert(detray::concepts::actor<observer_lvl2>);
   static_assert(detray::concepts::actor<observer_lvl1>);
+  static_assert(detray::concepts::actor<ordered_actor<0>>);
+  static_assert(detray::concepts::actor<ordered_actor<1>>);
+  static_assert(detray::concepts::actor<ordered_actor<2>>);
+  static_assert(detray::concepts::actor<ordered_actor<3>>);
+  static_assert(detray::concepts::actor<ordered_actor<4>>);
 
   static_assert(!detray::concepts::composite_actor<print_actor>);
   static_assert(!detray::concepts::composite_actor<example_actor_t>);
@@ -156,6 +188,18 @@ GTEST_TEST(detray_propagator, actor_chain) {
   static_assert(detray::concepts::composite_actor<observer_lvl3>);
   static_assert(detray::concepts::composite_actor<observer_lvl2>);
   static_assert(detray::concepts::composite_actor<observer_lvl1>);
+  static_assert(detray::concepts::composite_actor<ordered_nested_observer>);
+  static_assert(detray::concepts::composite_actor<ordered_composite_actor>);
+  static_assert(
+      std::same_as<typename ordered_actor_chain::state_tuple,
+                   dtuple<ordered_actor<0>::state, ordered_actor<1>::state,
+                          ordered_actor<2>::state, ordered_actor<3>::state,
+                          ordered_actor<4>::state>>);
+  static_assert(
+      std::same_as<typename ordered_actor_chain::state_ref_tuple,
+                   dtuple<ordered_actor<0>::state &, ordered_actor<1>::state &,
+                          ordered_actor<2>::state &, ordered_actor<3>::state &,
+                          ordered_actor<4>::state &>>);
 
   // The actor states (can be reused between actors)
   example_actor_t::state example_state{};
