@@ -62,7 +62,6 @@ jobs:
             container: ghcr.io/acts-project/ubuntu2604:91
             options: --preset host-fp32
             run_tests: true
-            enable_cuda: false
             flavor: ""
           # Distinct name because merge-sentinel deduplicates result items by
           # normalised name: two legs called CPU collapse into one check.
@@ -70,7 +69,6 @@ jobs:
             container: ghcr.io/acts-project/ubuntu2604:91
             options: --preset host-fp64
             run_tests: false
-            enable_cuda: false
             flavor: ""
         build:
           - Release
@@ -86,13 +84,17 @@ jobs:
           # tests strictly need: this leg pays for their device code either
           # way, and trimming would drop the toy-detector CKF tests from the
           # GPU run.
+          #
+          # TRACCC_BUILD_ALPAKA rides on top of the native CUDA build instead
+          # of a standalone alpaka-CUDA leg: alpaka's targets are gated on it
+          # alone, so nothing is lost and the baseline is built once. The
+          # flavor's alpaka is built `backend=serial,cuda`.
           - platform:
               name: CUDA
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset cuda-fp32
+              options: --preset cuda-fp32-ci -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_CUDA_ENABLE=ON
               run_tests: false
               upload_build: true
-              enable_cuda: true
               flavor: cuda13
             build: Release
           # Debug exists for the FP64 PTX check, which needs the `--keep` that
@@ -102,9 +104,8 @@ jobs:
           - platform:
               name: CUDA
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset cuda-fp32 -DTRACCC_BUILD_TESTING=FALSE
+              options: --preset cuda-fp32-ci -DTRACCC_BUILD_TESTING=FALSE
               run_tests: false
-              enable_cuda: true
               flavor: cuda13
             build: Debug
           # Distinct name for the sentinel dedup reason above -- as plain CUDA
@@ -114,31 +115,56 @@ jobs:
           - platform:
               name: CUDA_FP64
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset cuda-fp64 -DTRACCC_BUILD_TESTING=FALSE
+              options: --preset cuda-fp64-ci -DTRACCC_BUILD_TESTING=FALSE
               run_tests: false
-              enable_cuda: true
               flavor: cuda13
+            build: Release
+          # Compile check: no runner has an AMD GPU, but tests/hip is built.
+          # TRACCC_USE_SYSTEM_ROCTHRUST keeps Thrust matched to the flavor's
+          # hip; CMAKE_HIP_ARCHITECTURES narrows the gfx list to gfx90a.
+          #
+          # TRACCC_BUILD_ALPAKA is additive as on the CUDA leg above; the
+          # flavor's alpaka is built `backend=serial,hip`. This replaces
+          # #5774's ALPAKA_HIP job, whose alpaka_DISABLE_VENDOR_RNG, hip_std_20
+          # and RelWithDebInfo build carry over (ROCm 7 crashes at O3, #5877).
+          - platform:
+              name: "HIP"
+              container: ghcr.io/acts-project/ubuntu2604:91
+              options: --preset hip-fp32-ci -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20
+              run_tests: false
+              flavor: rocm7
+            build: RelWithDebInfo
+          # Same leg at Release, so -O3 stays covered: #5877's ICE is what
+          # keeps the leg above off it, and without this nothing builds HIP
+          # optimized any more. Renders as HIP-Release, distinct from
+          # HIP-RelWithDebInfo, so the sentinel sees both.
+          #
+          # Clang-hosted: alpaka's HIP backend needs the host compiler to be
+          # clang too, so this leg takes the llvm@22.1.8 rocm7 lockfile while
+          # the leg above keeps the gcc one.
+          #
+          # Still allowed to fail: #5877's ICE is intermittent, so no single
+          # green run confirms clang fixes it. Drop this once the leg has been
+          # green across many runs. Applied per-step below rather than as a
+          # job-level continue-on-error: that only masks the *workflow run*
+          # conclusion, while the job's own check run still reports "failure",
+          # which is what merge-sentinel's gate keys off.
+          - platform:
+              name: "HIP"
+              container: ghcr.io/acts-project/ubuntu2604_clang22:91
+              compiler: clang++-22
+              options: --preset hip-fp32-ci -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20 -DCMAKE_C_COMPILER=clang-22 -DCMAKE_CXX_COMPILER=clang++-22
+              run_tests: false
+              flavor: rocm7
+              allow_failure: true
             build: Release
           - platform:
               name: "ALPAKA_CPU"
               container: ghcr.io/acts-project/ubuntu2604:91
               options: --preset alpaka-fp32
               run_tests: true
-              enable_cuda: false
               flavor: ""
             build: Release
-          - platform:
-              name: "ALPAKA_CUDA"
-              container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset alpaka-fp32 -Dalpaka_ACC_GPU_CUDA_ENABLE=ON -DTRACCC_FAIL_ON_WARNINGS=OFF -DTRACCC_BUILD_CUDA_UTILS=ON
-              run_tests: false
-              enable_cuda: true
-              flavor: cuda13
-            build: Release
-          # ALPAKA_HIP is dropped here: it's still on the pre-spack
-          # ubuntu2404_rocm image (no `flavor`, so it never gets a dependency
-          # install this PR would touch), and the HIP alpaka migration lands
-          # in a later PR in this stack.
     # Use BASH as the shell from the images.
     defaults:
       run:
@@ -151,19 +177,25 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/dependencies
         with:
-          compiler: g++
+          compiler: ${{ matrix.platform.compiler || 'g++' }}
           flavor: ${{ matrix.platform.flavor }}
-          # Ahead of the repo default: flavors need v24.0.0 or newer.
+          # Flavors need v24.0.0 or newer.
           DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      # vecmem, covfie and alpaka come from spack on every leg: the host
+      # vecmem, covfie, alpaka and TBB come from spack on every leg: the host
       # lockfile carries them and each flavor overlays its own build, so no
       # per-leg gating is needed. TRACCC_USE_SYSTEM_ALPAKA is unconditional
       # because traccc only acts on it under TRACCC_SETUP_ALPAKA.
+      #
+      # TBB defaults to a FetchContent build of oneTBB, whose IPO is on by
+      # default; under a clang host that is ThinLTO, and the resulting bitcode
+      # outlives any linker the ROCm toolchain provides. Taking the flavor's
+      # intel-tbb sidesteps that and drops a from-source build from every leg.
 
       - name: Configure
+        continue-on-error: ${{ matrix.platform.allow_failure || false }}
         run: |
           source ${GITHUB_WORKSPACE}/.env
           source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
@@ -174,10 +206,10 @@ jobs:
             -DACTS_USE_SYSTEM_COVFIE=ON \
             -DACTS_USE_SYSTEM_VECMEM=ON \
             -DACTS_USE_SYSTEM_EIGEN3=ON \
-            -DACTS_ENABLE_CUDA=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }} \
             -DTRACCC_USE_SYSTEM_VECMEM=ON \
             -DTRACCC_USE_SYSTEM_COVFIE=ON \
             -DTRACCC_USE_SYSTEM_ALPAKA=ON \
+            -DTRACCC_USE_SYSTEM_TBB=ON \
             -DDETRAY_USE_SYSTEM_NLOHMANN=ON \
             -DDETRAY_USE_SYSTEM_GOOGLETEST=ON \
             -DTRACCC_USE_SYSTEM_GOOGLETEST_DEFAULT=ON \
@@ -187,6 +219,7 @@ jobs:
             -S ${GITHUB_WORKSPACE}/Traccc \
             -B build
       - name: Build
+        continue-on-error: ${{ matrix.platform.allow_failure || false }}
         run: |
           source ${GITHUB_WORKSPACE}/.env
           source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
