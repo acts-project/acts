@@ -58,9 +58,18 @@ destination (inner) layer. @ref Acts::Experimental::GbtsGeometry combines the
 layer descriptions with those connections and precomputes, for every pair of
 connected layers, which *eta bin* pairs are geometrically compatible with the
 allowed @f$z_0@f$ range. The result is a **bin group** list — one inner bin
-together with all outer bins it may connect to — which is kept internal to the
-geometry and serves as the graph builder's iteration schedule, ordered so that
-outer bins are processed before the inner bins that depend on them.
+together with all outer bins it may connect to — which serves as the graph
+builder's iteration schedule, ordered so that outer bins are processed before
+the inner bins that depend on them.
+
+The binning it worked out is readable back off the geometry, so a consumer that
+runs the same algorithm elsewhere does not have to recompute or pre-generate it:
+@ref Acts::Experimental::GbtsGeometry::layerBinning gives a layer's
+@ref Acts::Experimental::GbtsLayerBinning, the eta bins it owns in the global
+numbering, and @ref Acts::Experimental::GbtsGeometry::binGroups the schedule
+itself. Eta bins are numbered globally and a layer's are contiguous, so the
+layers tile the numbering in order. This is what the GPU implementation is
+configured from.
 
 > [!note]
 > The connections are trained offline rather than written by hand.
@@ -277,7 +286,8 @@ separately controls the chain-following filter of @ref gbts-extraction "seed ext
   holds - `GbtsNodeParams`, `GbtsNodeEdgeInfo`, `GbtsEtaBinInfo`, `GbtsEdge` -
   is internal and lives in `Acts/Seeding/detail/GbtsGraphTypes.hpp`.
 - Geometry: @ref Acts::Experimental::GbtsGeometry,
-  @ref Acts::Experimental::GbtsLayerConnection, and the internal `GbtsLayer`.
+  @ref Acts::Experimental::GbtsLayerConnection, the binning it hands back in
+  `Acts/Seeding/GbtsBinning.hpp`, and the internal `GbtsLayer`.
 - Chain following: @ref Acts::Experimental::GbtsTrackingFilter and its internal
   `GbtsEdgeState`.
 - Region of interest: @ref Acts::Experimental::GbtsRoiDescriptor.

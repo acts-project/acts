@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Seeding/GbtsBinning.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 
 #include <cstdint>
@@ -30,15 +31,9 @@ class GbtsLayer final {
   /// @return Eta bin index
   std::uint32_t getEtaBin(float zh, float rh) const;
 
-  /// Get number of bins
-  /// @return Number of bins
-  std::uint32_t numOfBins() const {
-    return static_cast<std::uint32_t>(m_bins.size());
-  }
-
-  /// Get bins
-  /// @return Vector of bin indices
-  const std::vector<std::uint32_t>& bins() const { return m_bins; }
+  /// Get the eta binning the geometry gave this layer
+  /// @return The layer's binning
+  const GbtsLayerBinning& binning() const { return m_binning; }
 
   /// Get the layer description
   /// @return Reference to the layer description
@@ -58,22 +53,12 @@ class GbtsLayer final {
 
  private:
   GbtsLayerDescription m_layerDescription;
+  GbtsLayerBinning m_binning;
 
-  std::vector<std::uint32_t> m_bins;
   std::vector<float> m_minRadius;
   std::vector<float> m_maxRadius;
   std::vector<float> m_minBinCoord;
   std::vector<float> m_maxBinCoord;
-
-  float m_minEta{};
-  float m_maxEta{};
-  /// Width of one eta bin.
-  float m_etaBin{};
-  float m_r1{};
-  float m_z1{};
-  float m_r2{};
-  float m_z2{};
-  std::uint32_t m_nBins{};
 };
 
 }  // namespace Acts::Experimental::detail
