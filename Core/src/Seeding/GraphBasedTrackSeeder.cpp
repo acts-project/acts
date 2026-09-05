@@ -29,9 +29,6 @@ GraphBasedTrackSeeder::DerivedConfig::DerivedConfig(const Config& config)
   phiSliceWidth = 2 * std::numbers::pi_v<float> / config.nMaxPhiSlice;
 }
 
-GraphBasedTrackSeeder::Options::Options(float bFieldInZ_)
-    : bFieldInZ(bFieldInZ_) {}
-
 GraphBasedTrackSeeder::GraphBasedTrackSeeder(
     const DerivedConfig& config, std::shared_ptr<GbtsGeometry> geometry,
     std::unique_ptr<const Acts::Logger> logger)

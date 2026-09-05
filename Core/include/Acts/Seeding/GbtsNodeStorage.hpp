@@ -226,8 +226,8 @@ class GbtsNodeStorage final {
     float phi{};
     float clusterWidth{};
     float localPositionY{};
-    /// Dense layer index, narrowed to 16 bits
-    std::uint16_t layer{};
+    /// Dense layer index
+    GbtsLayerIndex layer{};
     /// Index into the staged stereo pairs, `detail::kNoStrip` for a pixel node
     std::uint32_t strip{detail::kNoStrip};
   };
@@ -263,8 +263,8 @@ class GbtsNodeStorage final {
   std::optional<MutableSpacePointColumnProxy<detail::GbtsNodeEdgeInfo>>
       m_edgeInfoColumn;
 
-  /// Dense layer index per node, in node order, narrowed to 16 bits.
-  std::vector<std::uint16_t> m_layers;
+  /// Dense layer index per node, in node order.
+  std::vector<GbtsLayerIndex> m_layers;
 
   /// Stereo pairs of the strip nodes, in node order and compacted: too large
   /// to carry for every node of a mostly pixel detector.

@@ -207,8 +207,8 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // initialise input space points from handle and define new container
   const SpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
-  const Acts::Experimental::GraphBasedTrackSeeder::Options options(
-      m_cfg.bFieldInZ);
+  const Acts::Experimental::GraphBasedTrackSeeder::Options options{
+      .bFieldInZ = m_cfg.bFieldInZ};
 
   // The node storage is filled straight from the input space points. It takes
   // plain scalars, so no intermediate space point container is needed and the

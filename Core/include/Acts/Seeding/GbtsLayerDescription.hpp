@@ -18,7 +18,7 @@ using GbtsExperimentLayerId = std::uint32_t;
 
 /// Position of a layer within one GbtsGeometry, dense from zero. Ask
 /// GbtsGeometry::layerIndex for it rather than deriving it.
-using GbtsLayerIndex = std::uint32_t;
+using GbtsLayerIndex = std::uint16_t;
 
 /// Where a GBTS layer sits, which fixes its coordinate convention.
 enum class GbtsLayerType : std::uint8_t { Barrel = 0, Endcap = 1 };

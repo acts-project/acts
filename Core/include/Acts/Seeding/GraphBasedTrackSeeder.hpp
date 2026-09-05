@@ -196,9 +196,6 @@ class GraphBasedTrackSeeder {
   /// Optional inputs for variables passed in
   /// or derived during runtime.
   struct Options {
-    /// @param bFieldInZ_ the magnetic field in z
-    explicit Options(float bFieldInZ_);
-
     /// Magnetic field in z
     /// units of GeV/(e*mm).
     float bFieldInZ{};

@@ -120,8 +120,8 @@ constexpr std::uint32_t kNoStrip = std::numeric_limits<std::uint32_t>::max();
 struct GbtsNodeView final {
   /// Packed (x, y, z, r) per node.
   std::span<const std::array<float, 4>> positions;
-  /// Dense layer index per node, narrowed to 16 bits.
-  std::span<const std::uint16_t> layers;
+  /// Dense layer index per node.
+  std::span<const GbtsLayerIndex> layers;
   /// Stereo pairs of the strip nodes, reached through `stripIndex`.
   std::span<const OuterStripSpacePointCalibrationDetailsDerived> strips;
   /// Index into `strips` per node, `kNoStrip` where a node carries none.
