@@ -235,6 +235,18 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   std::span<const Surface* const> neighbors(
       std::array<std::size_t, 2> gridIndices,
       std::array<std::uint8_t, 2> neighborDistance) const override {
+    // beyond the bound there is no cached pack, and the index would wrap into
+    // the next bin rather than run off the end
+    if (neighborDistance[0] > m_neighborWindow.max[0] ||
+        neighborDistance[1] > m_neighborWindow.max[1]) {
+      throw std::out_of_range(
+          "neighbor distance exceeds the neighbor window bound");
+    }
+    // local bins run from the underflow bin 0 to the overflow bin nBins + 1
+    const GridIndex nBins = numLocalBins2D();
+    if (gridIndices[0] > nBins[0] + 1 || gridIndices[1] > nBins[1] + 1) {
+      throw std::out_of_range("local bin is outside the grid");
+    }
     return surfacePack(neighborPackIndex(gridIndices, neighborDistance));
   }
 
