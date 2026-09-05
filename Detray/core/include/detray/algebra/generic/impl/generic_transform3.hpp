@@ -62,8 +62,8 @@ struct transform3 {
 
   /// @name Data objects
   /// @{
-  matrix44 _data{generic::math::identity<matrix44>()};
-  matrix44 _data_inv{generic::math::identity<matrix44>()};
+  alignas(16) matrix44 _data{generic::math::identity<matrix44>()};
+  alignas(16) matrix44 _data_inv{generic::math::identity<matrix44>()};
 
   /// @}
 
