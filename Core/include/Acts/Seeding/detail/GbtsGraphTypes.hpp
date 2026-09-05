@@ -94,7 +94,7 @@ struct GbtsEtaBinInfo final {
 
   float minRadius{};
   float maxRadius{};
-  std::uint32_t layerId{0};
+  GbtsExperimentLayerId layerId{0};
 
   /// Type of the layer this bin belongs to.
   GbtsLayerType type{};
@@ -121,7 +121,7 @@ struct GbtsNodeView final {
   /// Packed (x, y, z, r) per node.
   std::span<const std::array<float, 4>> positions;
   /// Dense layer index per node.
-  std::span<const std::uint16_t> layers;
+  std::span<const GbtsLayerIndex> layers;
   /// Stereo pairs of the strip nodes, reached through `stripIndex`.
   std::span<const OuterStripSpacePointCalibrationDetailsDerived> strips;
   /// Index into `strips` per node, `kNoStrip` where a node carries none.
@@ -167,7 +167,7 @@ class GbtsNodeProxy final {
   /// @return Transverse distance from the beamline
   float r() const { return position()[3]; }
   /// @return Dense layer index
-  std::uint16_t layer() const { return m_view->layers[m_index]; }
+  GbtsLayerIndex layer() const { return m_view->layers[m_index]; }
 
  private:
   const std::array<float, 4>& position() const {
@@ -195,8 +195,9 @@ struct GbtsEdge final {
   /// @param p1_ First fit parameter
   /// @param p2_ Second fit parameter
   /// @param p3_ Third fit parameter
-  GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_, std::uint32_t n2LayerId_,
-           bool n2PixelBarrel_, float p1_, float p2_, float p3_)
+  GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_,
+           GbtsExperimentLayerId n2LayerId_, bool n2PixelBarrel_, float p1_,
+           float p2_, float p3_)
       : n1{n1_},
         n2{n2_},
         level{1},
@@ -225,7 +226,7 @@ struct GbtsEdge final {
 
   /// GBTS layer ID of the outer node. Cached next to the fit parameters so the
   /// innermost neighbour loop does not have to chase the node.
-  std::uint32_t n2LayerId{0};
+  GbtsExperimentLayerId n2LayerId{0};
 
   std::array<std::uint32_t, kGbtsMaxEdgeNeighbours> vNei{};
 };

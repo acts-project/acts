@@ -42,7 +42,15 @@ description: a flat list of `GbtsLayer` logical layers, each subdivided into
 @ref Acts::Experimental::GbtsLayerDescription gives a layer its ID, its type
 (barrel or endcap), its sensor technology and its extent. For a barrel layer
 `refCoord` is the radius and the bounds are in @f$z@f$; for an endcap it is the
-other way round. The ID is the caller's own numbering and is never decoded.
+other way round. The ID is the caller's own numbering and is very nearly never
+decoded.
+
+> [!note]
+> One reader of the ATLAS numbering survives: the adaptive @f$\tau@f$ correction
+> of @ref gbts-graph takes pixel barrel layers `1000` apart as adjacent. On a
+> detector numbered otherwise no triplet looks gapless, so the correction is
+> applied to all of them. The examples algorithm reads the numbering once more,
+> to pick the strip layers out of an ATLAS connection table.
 
 Which layer pairs may be joined by an edge is a list of
 @ref Acts::Experimental::GbtsLayerConnection, each naming a source (outer) and a
@@ -75,6 +83,17 @@ the storage straight from its own space point EDM. Overloads exist for callers
 that already have @f$r@f$ and @f$\phi@f$, and for an
 @ref Acts::ConstSpacePointProxy together with the columns carrying the layer
 index, cluster width and local @f$y@f$ position.
+
+Two different layer numbers meet here, and they are separate types:
+
+| Type | What it is |
+| --- | --- |
+| `GbtsExperimentLayerId` | the layer id the experiment assigns (80000, 81000, ...). Sparse and structured -- the layer descriptions and connections are written in terms of it, and so are the seeder's per-layer cuts. |
+| `GbtsLayerIndex` | where that layer sits in one @ref Acts::Experimental::GbtsGeometry, dense from zero. It indexes the geometry, and it is what a node carries. |
+
+`insert` takes the **index**, because it is on the per-space-point path.
+@ref Acts::Experimental::GbtsGeometry::layerIndex hands it out. It is the
+geometry's own numbering and is not derivable from the id.
 
 `insert` assigns the node to an eta bin via `GbtsLayer::getEtaBin` and buffers
 it. `finalize` then sorts each bin by @f$\phi@f$ and materialises the nodes into
@@ -227,7 +246,6 @@ The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrac
 | `useStripConnections` | @ref gbts-geometry | take the strip layer connections from the connector file instead of the pixel ones |
 | `minPt` | @ref gbts-graph | drives the curvature and @f$\phi@f$-window bounds |
 | `nMaxPhiSlice` | @ref gbts-graph | sets the base @f$\phi@f$ sliding-window width |
-| `useOldTuningsCurvature`, `useOldTuningsPhiWindow` | @ref gbts-graph | bound the curvature and the @f$\phi@f$ window by the pT the triplet has to reach, rather than by the tuned constants |
 | `minDeltaRadius`, `maxAbsTau` | @ref gbts-graph | doublet acceptance |
 | `minZ0`, `maxZ0`, `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet |
 | `tauRatioCut`, `cutDPhiMax`, `cutDCurvMax` | @ref gbts-graph | edge-to-edge linking tolerances |
@@ -240,10 +258,6 @@ The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrac
 | `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `useClusterWidthCuts`, `tauLookupTable` | @ref gbts-ml | cluster-width based @f$\tau@f$ windows |
 | `maxEndcapClusterWidth`, `moduleHalfLengthY`, `moduleEdgeTolerance` | @ref gbts-ml | cluster-width acceptance and module-edge handling |
-
-There is no large radius tracking mode. LRT is these options set to the values
-it needs: `useStripConnections`, `useOldTuningsCurvature` with both
-`oldTuningsCurvature*Fraction` at 1, and `minSeedLevel = 2`.
 
 @ref Acts::Experimental::GbtsTrackingFilter "GbtsTrackingFilter::Config"
 separately controls the chain-following filter of @ref gbts-extraction "seed extraction":
