@@ -118,7 +118,7 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
   /// Broadcast the grid_value_type
   using grid_value_type = std::size_t;
 
-  /// @brief The internal storage of the material
+  /// @brief The shared slab store that several grids index into
   std::shared_ptr<std::vector<MaterialSlab>> globalMaterial = nullptr;
 
   /// Indicate if you have entries bins across different grids, e.g. by

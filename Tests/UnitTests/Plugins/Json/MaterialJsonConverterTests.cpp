@@ -14,7 +14,7 @@
 #include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
-#include "ActsPlugins/Json/MaterialJsonConverter.hpp"
+#include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
@@ -66,30 +66,30 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial1DTests) {
       std::move(eqGrid), IndexedMaterialAccessor{std::move(material)},
       std::move(bToX), std::move(gToX));
 
-  nlohmann::json jMaterial = &ism;
+  nlohmann::json jMaterial = SurfaceMaterialJsonConverter::toJson(ism);
 
   // Run a few tests
-  BOOST_REQUIRE(jMaterial.find("material") != jMaterial.end());
+  BOOST_REQUIRE(jMaterial.contains("accessor"));
 
   // Read it back in
-  const ISurfaceMaterial* ismRead = nullptr;
-  from_json(jMaterial, ismRead);
+  auto ismRead = SurfaceMaterialJsonConverter::fromJson(jMaterial);
   BOOST_REQUIRE(ismRead != nullptr);
 
   // Check if it's the right type
-  const IndexedSurfaceMaterial<EqGrid>* ismReadTyped =
-      dynamic_cast<const IndexedSurfaceMaterial<EqGrid>*>(ismRead);
+  const auto* ismReadTyped =
+      dynamic_cast<const IGridSurfaceMaterial<std::size_t>*>(ismRead.get());
   BOOST_REQUIRE(ismReadTyped != nullptr);
 
-  const auto& gridRead = ismReadTyped->grid();
-  BOOST_CHECK(gridRead.atPosition(Point{0.5}) == 1u);  // material 1
-  BOOST_CHECK(gridRead.atPosition(Point{1.5}) == 0u);  // vacuum
-  BOOST_CHECK(gridRead.atPosition(Point{2.5}) == 2u);  // material 2
-  BOOST_CHECK(gridRead.atPosition(Point{3.5}) == 2u);  // material 2
-  BOOST_CHECK(gridRead.atPosition(Point{4.5}) == 3u);  // material 3
+  auto gridRead = ismReadTyped->gridConstView();
+  BOOST_CHECK(gridRead.atLocalBins({1u}) == 1u);  // material 1
+  BOOST_CHECK(gridRead.atLocalBins({2u}) == 0u);  // vacuum
+  BOOST_CHECK(gridRead.atLocalBins({3u}) == 2u);  // material 2
+  BOOST_CHECK(gridRead.atLocalBins({4u}) == 2u);  // material 2
+  BOOST_CHECK(gridRead.atLocalBins({5u}) == 3u);  // material 3
 
   // Check the accessor is there and the material is filled
-  const auto& accessorRead = ismReadTyped->materialAccessor();
+  const auto& accessorRead = dynamic_cast<const IndexedMaterialAccessor&>(
+      ismReadTyped->materialAccessor());
 
   auto materialRead = accessorRead.material;
   BOOST_REQUIRE(materialRead.size() == 4);
@@ -147,33 +147,28 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial2DTests) {
       std::move(eqeqGrid), IndexedMaterialAccessor{std::move(material)},
       std::move(bToZPhi), std::move(gToZphi));
 
-  nlohmann::json jMaterial = &ism;
+  nlohmann::json jMaterial = SurfaceMaterialJsonConverter::toJson(ism);
 
   // Run a few tests
-  BOOST_REQUIRE(jMaterial.find("material") != jMaterial.end());
+  BOOST_REQUIRE(jMaterial.contains("accessor"));
 
   // Read it back in
-  const ISurfaceMaterial* ismRead = nullptr;
-  from_json(jMaterial, ismRead);
+  auto ismRead = SurfaceMaterialJsonConverter::fromJson(jMaterial);
   BOOST_REQUIRE(ismRead != nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(MergedMaterialMarkerRoundTrip) {
   // The marker left behind by a lossy portal merge must survive a JSON
   // round-trip so it can be picked up by downstream tooling.
-  const ISurfaceMaterial* marker = new MergedMaterialMarker();
+  MergedMaterialMarker marker;
 
-  nlohmann::json jMaterial = marker;
-  BOOST_REQUIRE(jMaterial.find("material") != jMaterial.end());
-  BOOST_CHECK_EQUAL(jMaterial["material"]["type"], "merged-material-marker");
+  nlohmann::json jMaterial = SurfaceMaterialJsonConverter::toJson(marker);
+  BOOST_CHECK_EQUAL(jMaterial["type"], "merged-material-marker");
 
-  const ISurfaceMaterial* markerRead = nullptr;
-  from_json(jMaterial, markerRead);
+  auto markerRead = SurfaceMaterialJsonConverter::fromJson(jMaterial);
   BOOST_REQUIRE(markerRead != nullptr);
-  BOOST_CHECK(dynamic_cast<const MergedMaterialMarker*>(markerRead) != nullptr);
-
-  delete marker;
-  delete markerRead;
+  BOOST_CHECK(dynamic_cast<const MergedMaterialMarker*>(markerRead.get()) !=
+              nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
