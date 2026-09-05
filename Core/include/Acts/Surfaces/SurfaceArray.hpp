@@ -36,9 +36,8 @@ namespace Acts {
 /// externally and passed to @c SurfaceArray on construction.
 class SurfaceArray {
  public:
-  /// Bounds on the neighbor window the lookup derives from the crossing angle,
-  /// in bins per grid axis. The floor is for lookups that cannot see the
-  /// surfaces the fill saw, e.g. under an aligned geometry context.
+  /// Bounds on the neighbor window, in bins per grid axis. The floor serves
+  /// lookups that cannot see the surfaces the fill saw, e.g. under alignment.
   struct NeighborWindow {
     /// Fewest bins served in each direction, regardless of the crossing angle
     std::array<std::uint8_t, 2> min = {0, 0};
@@ -55,12 +54,10 @@ class SurfaceArray {
                              std::array<std::uint8_t, 2> windowMax)
         : min(windowMin), max(windowMax) {}
 
-    /// Isotropic window bounded by a single neighbor distance, so that a call
-    /// written against the scalar interface keeps the window it asked for: at
-    /// least one bin unless the bound itself forbids it, at most
-    /// @p maxNeighborDistance.
-    /// @deprecated Give the bounds per axis, the two axes of a layer grid are
-    ///             not equivalent. See @ref NeighborWindow.
+    /// Isotropic window: at least one bin unless the bound forbids it, at
+    /// most @p maxNeighborDistance.
+    /// @deprecated The two axes of a layer grid are not equivalent, give the
+    ///             bounds per axis.
     /// @param maxNeighborDistance Most bins served in each direction
     [[deprecated(
         "Pass an Acts::SurfaceArray::NeighborWindow with per-axis bounds "
@@ -84,8 +81,7 @@ class SurfaceArray {
   /// @param representative The surface which is used as representative
   /// @param tolerance The tolerance used for intersection checks
   /// @param axes The axes used for the grid
-  /// @param neighborWindow Bounds on the neighbor window the lookup derives
-  ///        from the crossing angle, in bins per grid axis
+  /// @param neighborWindow Bounds on the neighbor window, in bins per grid axis
   SurfaceArray(const GeometryContext& gctx,
                std::vector<std::shared_ptr<const Surface>> surfaces,
                std::shared_ptr<RegularSurface> representative, double tolerance,
@@ -206,14 +202,12 @@ class SurfaceArray {
   /// @return Array of number of local bins in each dimension
   std::array<std::size_t, 2> numLocalBins() const;
 
-  /// Get the bounds on the neighbor window this lookup serves. The window
-  /// itself is derived per axis from the crossing angle and clamped to them.
+  /// Get the bounds on the neighbor window this lookup serves.
   /// @return Neighbor window bounds per axis
   NeighborWindow neighborWindow() const;
 
   /// Get the maximum neighbor distance that is supported by this lookup.
-  /// @deprecated The window is bounded per axis, use @ref neighborWindow.
-  ///             This reports the larger of the two bounds.
+  /// @deprecated Use @ref neighborWindow; this reports the larger bound.
   /// @return Maximum neighbor distance over both axes
   [[deprecated(
       "Use Acts::SurfaceArray::neighborWindow(), the window is bounded per "
