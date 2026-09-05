@@ -62,7 +62,6 @@ jobs:
             container: ghcr.io/acts-project/ubuntu2604:91
             options: --preset host-fp32
             run_tests: true
-            enable_cuda: false
             flavor: ""
           # Distinct name because merge-sentinel deduplicates result items by
           # normalised name: two legs called CPU collapse into one check.
@@ -70,7 +69,6 @@ jobs:
             container: ghcr.io/acts-project/ubuntu2604:91
             options: --preset host-fp64
             run_tests: false
-            enable_cuda: false
             flavor: ""
         build:
           - Release
@@ -92,7 +90,6 @@ jobs:
               options: --preset cuda-fp32
               run_tests: false
               upload_build: true
-              enable_cuda: true
               flavor: cuda13
             build: Release
           # Debug exists for the FP64 PTX check, which needs the `--keep` that
@@ -104,7 +101,6 @@ jobs:
               container: ghcr.io/acts-project/ubuntu2604:91
               options: --preset cuda-fp32 -DTRACCC_BUILD_TESTING=FALSE
               run_tests: false
-              enable_cuda: true
               flavor: cuda13
             build: Debug
           # Distinct name for the sentinel dedup reason above -- as plain CUDA
@@ -116,23 +112,32 @@ jobs:
               container: ghcr.io/acts-project/ubuntu2604:91
               options: --preset cuda-fp64 -DTRACCC_BUILD_TESTING=FALSE
               run_tests: false
-              enable_cuda: true
               flavor: cuda13
+            build: Release
+          # Compile check: no runner has an AMD GPU, but tests/hip is built.
+          # TRACCC_USE_SYSTEM_ROCTHRUST keeps Thrust matched to the flavor's
+          # hip; CMAKE_HIP_ARCHITECTURES narrows the gfx list to gfx90a.
+          - platform:
+              name: "HIP"
+              container: ghcr.io/acts-project/ubuntu2604:91
+              options: --preset hip-fp32 -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON
+              run_tests: false
+              flavor: rocm7
             build: Release
           - platform:
               name: "ALPAKA_CPU"
               container: ghcr.io/acts-project/ubuntu2604:91
               options: --preset alpaka-fp32
               run_tests: true
-              enable_cuda: false
               flavor: ""
             build: Release
+          # ACTS_ENABLE_CUDA spelled out: this leg rides the alpaka preset,
+          # so it misses the cuda-* presets that carry it.
           - platform:
               name: "ALPAKA_CUDA"
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset alpaka-fp32 -Dalpaka_ACC_GPU_CUDA_ENABLE=ON -DTRACCC_FAIL_ON_WARNINGS=OFF -DTRACCC_BUILD_CUDA_UTILS=ON
+              options: --preset alpaka-fp32 -Dalpaka_ACC_GPU_CUDA_ENABLE=ON -DTRACCC_FAIL_ON_WARNINGS=OFF -DTRACCC_BUILD_CUDA_UTILS=ON -DACTS_ENABLE_CUDA=ON
               run_tests: false
-              enable_cuda: true
               flavor: cuda13
             build: Release
           # ALPAKA_HIP is dropped here: it's still on the pre-spack
@@ -174,7 +179,6 @@ jobs:
             -DACTS_USE_SYSTEM_COVFIE=ON \
             -DACTS_USE_SYSTEM_VECMEM=ON \
             -DACTS_USE_SYSTEM_EIGEN3=ON \
-            -DACTS_ENABLE_CUDA=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }} \
             -DTRACCC_USE_SYSTEM_VECMEM=ON \
             -DTRACCC_USE_SYSTEM_COVFIE=ON \
             -DTRACCC_USE_SYSTEM_ALPAKA=ON \
