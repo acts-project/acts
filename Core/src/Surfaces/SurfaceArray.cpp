@@ -210,6 +210,11 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     m_packStridePerBin =
         (static_cast<std::size_t>(m_neighborWindow.max[0]) + 1) * m_packStride1;
     m_windowIsFixed = m_neighborWindow.min == m_neighborWindow.max;
+    if (const auto* cylinder =
+            dynamic_cast<const CylinderBounds*>(&m_representative->bounds());
+        cylinder != nullptr) {
+      m_gridScale = cylinder->get(CylinderBounds::eR);
+    }
   }
 
   void fill(const GeometryContext& gctx,
@@ -389,6 +394,9 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   std::size_t m_packStride1{};
   std::size_t m_packStridePerBin{};
   bool m_windowIsFixed{};
+  // a cylinder is binned in the angle but measures the arc length, every other
+  // representative bins what it measures
+  double m_gridScale = 1.;
 
   // containers to store the surfaces in the custom grid. the packs are indexed
   // per (bin, distance along axis 0, distance along axis 1), so the index array
@@ -705,24 +713,12 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     }
   }
 
-  const CylinderBounds* getCylinderBounds() const {
-    return dynamic_cast<const CylinderBounds*>(&m_representative->bounds());
-  }
-
   Vector2 gridToSurfaceLocal(const GridPoint& gridLocal) const {
-    Vector2 surfaceLocal = {gridLocal[0], gridLocal[1]};
-    if (const CylinderBounds* bounds = getCylinderBounds(); bounds != nullptr) {
-      surfaceLocal[0] *= bounds->get(CylinderBounds::eR);
-    }
-    return surfaceLocal;
+    return {gridLocal[0] * m_gridScale, gridLocal[1]};
   }
 
   GridPoint surfaceToGridLocal(const Vector2& local) const {
-    GridPoint gridLocal = {local[0], local[1]};
-    if (const CylinderBounds* bounds = getCylinderBounds(); bounds != nullptr) {
-      gridLocal[0] /= bounds->get(CylinderBounds::eR);
-    }
-    return gridLocal;
+    return {local[0] / m_gridScale, local[1]};
   }
 
   /// Where a ray meets the representative surface, in both frames. The global
