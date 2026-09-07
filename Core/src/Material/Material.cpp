@@ -54,7 +54,7 @@ Material Material::fromMassDensity(float x0, float l0, float ar, float z,
   const double atomicMass = static_cast<double>(ar) * 1_u;
   float molarRho = static_cast<float>(
       massRho /
-      (atomicMass * (PhysicalConstants::kAvogadro / UnitConstants::mol)));
+      (atomicMass * PhysicalConstants::kAvogadro));
 
   return Material::fromMolarDensity(x0, l0, ar, z, molarRho);
 }

@@ -172,7 +172,6 @@ constexpr double Gauss = 1e-4 * T;
 constexpr double kGauss = 1e-1 * T;
 /// Amount of substance, native unit mol
 constexpr double mol = 1.0;
-
 }  // namespace UnitConstants
 
 /// @brief Namespace for user-defined literals for physical units. See @ref
@@ -240,7 +239,6 @@ constexpr double c = 1.0;
 /// Computed from CODATA 2018 constants to double precision.
 constexpr double hbar =
     6.582119569509066e-25 * UnitConstants::GeV * UnitConstants::s;
-
 /// Avogadro constant
 constexpr double kAvogadro = 6.02214076e23 / UnitConstants::mol;
 }  // namespace PhysicalConstants
