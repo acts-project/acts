@@ -96,7 +96,7 @@ float Material::massDensity() const {
   // perform computations in double precision to avoid loss of precision
   const double atomicMass = static_cast<double>(m_ar) * 1_u;
   const double numberDensity =
-      static_cast<double>(m_molarRho) * (PhysicalConstants::kAvogadro);
+      static_cast<double>(m_molarRho) * PhysicalConstants::kAvogadro;
   return atomicMass * numberDensity;
 }
 
