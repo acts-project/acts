@@ -66,7 +66,7 @@ inline void find_triplets(
 
   // Apply the conformal transformation to middle-bot doublet
   const traccc::lin_circle lb = doublet_finding_helper::transform_coordinates<
-      details::spacepoint_type::bottom>(spM, spB);
+      traccc::details::spacepoint_type::bottom>(spM, spB);
 
   // Calculate some physical quantities required for triplet compatibility
   // check
@@ -99,7 +99,7 @@ inline void find_triplets(
 
     // Apply the conformal transformation to middle-top doublet
     const traccc::lin_circle lt = doublet_finding_helper::transform_coordinates<
-        details::spacepoint_type::top>(spM, spT);
+        traccc::details::spacepoint_type::top>(spM, spT);
 
     // Check if mid-bot and mid-top doublets can form a triplet
     if (triplet_finding_helper::isCompatible(spM, lb, lt, config, iSinTheta2,

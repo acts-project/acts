@@ -71,12 +71,15 @@ done
 # Go into the target directory.
 cd "${TRACCC_DATA_DIRECTORY}"
 
-# Download the TGZ and MD5 files.
-"${TRACCC_CURL_EXECUTABLE}" --retry 5 --retry-delay 10 \
-   --output "${TRACCC_DATA_NAME}.tar.gz"               \
+# Download the TGZ and MD5 files. --retry on its own only covers timeouts and
+# 429/5xx responses, so a connection the server drops mid-body ("curl: (18)
+# transfer closed with N bytes remaining to read") is a hard failure -- the
+# common way this ~1.3 GB download breaks. --retry-all-errors covers it.
+"${TRACCC_CURL_EXECUTABLE}" --retry 5 --retry-delay 10 --retry-all-errors \
+   --output "${TRACCC_DATA_NAME}.tar.gz"                                  \
    "${TRACCC_WEB_DIRECTORY}/${TRACCC_DATA_NAME}.tar.gz"
-"${TRACCC_CURL_EXECUTABLE}" --retry 5 --retry-delay 10 \
-   --output "${TRACCC_DATA_NAME}.md5"                  \
+"${TRACCC_CURL_EXECUTABLE}" --retry 5 --retry-delay 10 --retry-all-errors \
+   --output "${TRACCC_DATA_NAME}.md5"                                     \
    "${TRACCC_WEB_DIRECTORY}/${TRACCC_DATA_NAME}.md5"
 
 # Verify that the download succeeded.

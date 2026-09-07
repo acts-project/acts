@@ -22,6 +22,7 @@ struct cylindrical2D {
   using scalar_type = dscalar<algebra_t>;
   using point2_type = dpoint2D<algebra_t>;
   using point3_type = dpoint3D<algebra_t>;
+  using vector2_type = dvector2D<algebra_t>;
   using vector3_type = dvector3D<algebra_t>;
   using transform3_type = dtransform3D<algebra_t>;
 
@@ -79,11 +80,9 @@ struct cylindrical2D {
   DETRAY_HOST_DEVICE static inline vector3_type normal(
       const transform3_type &trf, const point2_type &p, const mask_t &mask) {
     const scalar_type phi{p[0] / mask[mask_t::shape::e_r]};
-    const vector3_type local_normal{math::cos(phi), math::sin(phi),
-                                    static_cast<scalar_type>(0)};
 
     // normal vector in global coordinate
-    return trf.vector_to_global(local_normal);
+    return trf.vector_to_global(vector2_type{math::cos(phi), math::sin(phi)});
   }
 
   /// @returns the normal vector in global coordinates given a local position
@@ -91,11 +90,9 @@ struct cylindrical2D {
   DETRAY_HOST_DEVICE static inline vector3_type normal(
       const transform3_type &trf, const point3_type &p) {
     const scalar_type phi{p[0] / p[2]};
-    const vector3_type local_normal{math::cos(phi), math::sin(phi),
-                                    static_cast<scalar_type>(0)};
 
     // normal vector in global coordinate
-    return trf.vector_to_global(local_normal);
+    return trf.vector_to_global(vector2_type{math::cos(phi), math::sin(phi)});
   }
 
 };  // struct cylindrical2D

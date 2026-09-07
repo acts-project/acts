@@ -13,6 +13,7 @@
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
+#include <cstdint>
 #include <utility>
 
 std::optional<Acts::BoundTrackParameters>
@@ -105,4 +106,51 @@ std::optional<Acts::BoundTrackParameters> ActsExamples::recoParametersOnSurface(
   return Acts::BoundTrackParameters(state.referenceSurface().getSharedPtr(),
                                     stateParameters->first,
                                     stateParameters->second, hypothesis);
+}
+
+std::optional<ActsExamples::MeasurementResidual>
+ActsExamples::measurementResidual(const ConstTrackStateProxy& state,
+                                  const Acts::BoundTrackParameters& parameters,
+                                  TrackParameterType parameterType) {
+  if (!state.hasCalibrated() || !state.hasProjector()) {
+    return std::nullopt;
+  }
+
+  const Acts::VariableBoundSubspaceHelper subspace =
+      state.projectorSubspaceHelper();
+  if (subspace.empty()) {
+    return std::nullopt;
+  }
+
+  const auto measurement = state.effectiveCalibrated();
+  const auto measurementCovariance = state.effectiveCalibratedCovariance();
+
+  const Acts::BoundVector& parameterVector = parameters.parameters();
+  const Acts::BoundMatrix parameterCovariance =
+      parameters.covariance().value_or(Acts::BoundMatrix::Zero());
+
+  // parameters that used the measurement are correlated with it, so their
+  // covariance subtracts instead of adding
+  using enum TrackParameterType;
+  const bool usesOwnMeasurement =
+      parameterType == Filtered || parameterType == Smoothed;
+  const double sign = usesOwnMeasurement ? -1. : 1.;
+
+  // the projector only selects bound indices, so `H x` is `x(subspace)` and
+  // `H P H^T` is `P(subspace, subspace)`, which writes straight into the full
+  // bound space without any matrix products
+  Acts::BoundVector residual = Acts::BoundVector::Zero();
+  Acts::BoundMatrix covariance = Acts::BoundMatrix::Zero();
+  for (std::size_t i = 0; i < subspace.size(); ++i) {
+    const std::uint8_t iBound = subspace[i];
+    residual[iBound] = parameterVector[iBound] - measurement[i];
+
+    for (std::size_t j = 0; j < subspace.size(); ++j) {
+      const std::uint8_t jBound = subspace[j];
+      covariance(iBound, jBound) = measurementCovariance(i, j) +
+                                   sign * parameterCovariance(iBound, jBound);
+    }
+  }
+
+  return MeasurementResidual{subspace, residual, covariance};
 }

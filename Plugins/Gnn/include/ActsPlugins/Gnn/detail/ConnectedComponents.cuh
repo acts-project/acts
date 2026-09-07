@@ -22,6 +22,8 @@ namespace ActsPlugins::detail {
 /// Implementation of the FastSV algorithm as shown in
 /// https://arxiv.org/abs/1910.05971
 
+constexpr int kFastSvRoundsPerSync = 4;
+
 /// Hooking step of the FastSV algorithm
 template <typename TEdge, typename TLabel>
 __device__ void hookEdgesImpl(std::size_t i, const TEdge *sourceEdges,
@@ -31,11 +33,11 @@ __device__ void hookEdgesImpl(std::size_t i, const TEdge *sourceEdges,
   auto v = targetEdges[i];
 
   if (labels[u] == labels[labels[u]] && labels[v] < labels[u]) {
-    labelsNext[labels[u]] = labels[v];
+    atomicMin(labelsNext + labels[u], labels[v]);
     changed = true;
     //printf("Edge (%i,%i): set labelsNext[%i] = labels[%i] = %i\n", u, v, labels[u], v, labels[v]);
   } else if (labels[v] == labels[labels[v]] && labels[u] < labels[v]) {
-    labelsNext[labels[v]] = labels[u];
+    atomicMin(labelsNext + labels[v], labels[u]);
     changed = true;
     //printf("Edge (%i,%i): set labelsNext[%i] = labels[%i] = %i\n", u, v, labels[v], u, labels[u]);
   } else {
@@ -203,21 +205,27 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
     do {
       ACTS_CUDA_CHECK(cudaMemsetAsync(cudaChanged, 0, sizeof(int), stream));
 
-      // Hooking
-      hookEdges<<<gridDimEdges, blockDim, 0, stream>>>(
-          nEdges, sourceEdges, targetEdges, labels, tmpMemory, cudaChanged);
-      ACTS_CUDA_CHECK(cudaGetLastError());
-      ACTS_CUDA_CHECK(cudaMemcpyAsync(labels, tmpMemory,
-                                      nNodes * sizeof(TLabel),
-                                      cudaMemcpyDeviceToDevice, stream));
+      for (int round = 0; round < kFastSvRoundsPerSync; ++round) {
+        ACTS_CUDA_CHECK(cudaMemcpyAsync(tmpMemory, labels,
+                                        nNodes * sizeof(TLabel),
+                                        cudaMemcpyDeviceToDevice, stream));
+        hookEdges<<<gridDimEdges, blockDim, 0, stream>>>(
+            nEdges, sourceEdges, targetEdges, labels, tmpMemory, cudaChanged);
+        ACTS_CUDA_CHECK(cudaGetLastError());
+        ACTS_CUDA_CHECK(cudaMemcpyAsync(labels, tmpMemory,
+                                        nNodes * sizeof(TLabel),
+                                        cudaMemcpyDeviceToDevice, stream));
 
-      // Shortcutting
-      shortcut<<<gridDimNodes, blockDim, 0, stream>>>(
-          nNodes, sourceEdges, targetEdges, labels, tmpMemory, cudaChanged);
-      ACTS_CUDA_CHECK(cudaGetLastError());
-      ACTS_CUDA_CHECK(cudaMemcpyAsync(labels, tmpMemory,
-                                      nNodes * sizeof(TLabel),
-                                      cudaMemcpyDeviceToDevice, stream));
+        ACTS_CUDA_CHECK(cudaMemcpyAsync(tmpMemory, labels,
+                                        nNodes * sizeof(TLabel),
+                                        cudaMemcpyDeviceToDevice, stream));
+        shortcut<<<gridDimNodes, blockDim, 0, stream>>>(
+            nNodes, sourceEdges, targetEdges, labels, tmpMemory, cudaChanged);
+        ACTS_CUDA_CHECK(cudaGetLastError());
+        ACTS_CUDA_CHECK(cudaMemcpyAsync(labels, tmpMemory,
+                                        nNodes * sizeof(TLabel),
+                                        cudaMemcpyDeviceToDevice, stream));
+      }
 
       ACTS_CUDA_CHECK(cudaMemcpyAsync(&changed, cudaChanged, sizeof(int),
                                       cudaMemcpyDeviceToHost, stream));
@@ -239,26 +247,31 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
   makeLabelMask<<<gridDim, blockDim, 0, stream>>>(nNodes, labels, tmpMemory);
   ACTS_CUDA_CHECK(cudaGetLastError());
 
+  TLabel lastLabelMask;
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(&lastLabelMask, &tmpMemory[nNodes - 1],
+                                  sizeof(TLabel), cudaMemcpyDeviceToHost,
+                                  stream));
+
   // Exclusive prefix sum on the label mask
   // 0 1 2 3 4 5
   // 0 1 1 1 2 2
   thrust::exclusive_scan(thrust::device.on(stream), tmpMemory,
                          tmpMemory + nNodes, tmpMemory);
 
-  // Remap edge labels with values in prefix sum
-  // 0 -> 0, 3 -> 1, 5 -> 2
-  mapEdgeLabels<<<gridDim, blockDim, 0, stream>>>(nNodes, labels, tmpMemory);
-  ACTS_CUDA_CHECK(cudaGetLastError());
-
   TLabel nLabels;
   ACTS_CUDA_CHECK(cudaMemcpyAsync(&nLabels, &tmpMemory[nNodes - 1],
                                   sizeof(TLabel), cudaMemcpyDeviceToHost,
                                   stream));
 
+  // Remap edge labels with values in prefix sum
+  // 0 -> 0, 3 -> 1, 5 -> 2
+  mapEdgeLabels<<<gridDim, blockDim, 0, stream>>>(nNodes, labels, tmpMemory);
+  ACTS_CUDA_CHECK(cudaGetLastError());
+
   ACTS_CUDA_CHECK(cudaFreeAsync(tmpMemory, stream));
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
-  return nLabels;
+  return nLabels + lastLabelMask;
 }
 
 /// Kernel to compute the bounds for each label in the labels array.

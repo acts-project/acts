@@ -48,8 +48,6 @@ jobs:
       # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
-    # registry.cern.ch is a pull-through cache for ghcr.io. Husk jobs only —
-    # the ubuntu-latest jobs run outside CERN and gain nothing from it.
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
@@ -491,16 +489,10 @@ jobs:
       # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
 
     steps:
       # The image keeps build tooling in the sbin dirs, off a non-login PATH.
-      - name: Fix up PATH
-        run: |
-          echo "/usr/local/sbin" >> $GITHUB_PATH
-          echo "/usr/sbin" >> $GITHUB_PATH
-          echo "/sbin" >> $GITHUB_PATH
-
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -509,6 +501,9 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           compiler: g++
+          flavor: cuda13
+          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.0.6
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -552,8 +547,17 @@ jobs:
           cmake -B build -S .
           --preset=github-ci-gnn
 
+      # TEST: libtorch_cuda.so's own RPATH points into a pip layout that does
+      # not exist in the spack install tree, so resolving its transitive CUDA
+      # lib deps (e.g. cusparse) falls back to LD_LIBRARY_PATH -- which only
+      # .env sets. The pybind11-stubgen step below imports acts.gnn, which
+      # loads that chain, and failed with "libcusparse.so.12: cannot open
+      # shared object file" without this.
       - name: Build
-        run: cmake --build build
+        shell: bash
+        run: |
+          source ${GITHUB_WORKSPACE}/.env
+          cmake --build build
 
       - name: ccache stats
         run: ccache -s
@@ -594,23 +598,16 @@ jobs:
       contents: read
       packages: read
     container:
-      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:87
-      # Required. Without it the daemon never applies the nvidia runtime hook,
-      # so the driver bits are not injected: the image carries the CUDA toolkit
-      # but the container gets no device and no nvidia-smi. Confirmed by
-      # removing it, at which point the Check GPU step below failed with
-      # "nvidia-smi: command not found".
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
       options: --gpus all
     env:
       MODEL_STORAGE: ${{ github.workspace }}/ci_models
+      # TF32 GEMMs on the pool's A4000 (absent on its T4) drift the GNN
+      # classifier output and the ntuple_finding_gnn.root hash; disabling
+      # TF32 makes both cards agree.
+      NVIDIA_TF32_OVERRIDE: "0"
 
     steps:
-      - name: Fix up PATH
-        run: |
-          echo "/usr/local/sbin" >> $GITHUB_PATH
-          echo "/usr/sbin" >> $GITHUB_PATH
-          echo "/sbin" >> $GITHUB_PATH
-
       # Fails the job early if no device is visible, and puts the driver
       # version and GPU model in the log -- which is what you want to hand
       # someone when numerics differ between nodes.
@@ -625,6 +622,9 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           compiler: g++
+          flavor: cuda13
+          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.0.6
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -677,7 +677,7 @@ jobs:
       # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_tensorrt:87
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -688,6 +688,9 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           compiler: g++
+          flavor: cuda13
+          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.0.6
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -736,7 +739,7 @@ jobs:
       # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_cuda:87
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -753,6 +756,9 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           compiler: g++
+          flavor: cuda13
+          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.0.6
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -804,12 +810,7 @@ jobs:
       contents: read
       packages: read
     container:
-      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_cuda:87
-      # Required. Without it the daemon never applies the nvidia runtime hook,
-      # so the driver bits are not injected: the image carries the CUDA toolkit
-      # but the container gets no device and no nvidia-smi. Confirmed by
-      # removing it, at which point the Check GPU step below failed with
-      # "nvidia-smi: command not found".
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
       options: --gpus all
 
     steps:
@@ -829,6 +830,9 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           compiler: g++
+          flavor: cuda13
+          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.0.6
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -870,7 +874,6 @@ jobs:
     # v88 is where expat-devel arrives, which the dev4 leg needs: that view's
     # Geant4 wants EXPAT >= 2.5.0 and the view neither ships nor exposes it.
     container: registry.cern.ch/ghcr.io/acts-project/alma9-base:88
-    continue-on-error: ${{ matrix.allow_failure }}
 
     strategy:
       # A view that breaks must not cancel the others: knowing *which*
@@ -884,7 +887,6 @@ jobs:
             repo: sft.cern.ch
             view: LCG_108
             tests: false
-            allow_failure: false
 
           - tag: 109_alma9_gcc15
             platform: el9
@@ -892,7 +894,6 @@ jobs:
             repo: sft.cern.ch
             view: LCG_109
             tests: true
-            allow_failure: false
 
           - tag: 109_alma9_clang19
             platform: el9
@@ -900,16 +901,6 @@ jobs:
             repo: sft.cern.ch
             view: LCG_109
             tests: true
-            allow_failure: false
-
-          - tag: dev4_alma9_gcc15
-            platform: el9
-            compiler: gcc15
-            repo: sft-nightlies.cern.ch
-            view: dev4/latest
-            tests: false
-            # Nightly views break frequently and are not release-blocking.
-            allow_failure: true
 
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
@@ -1001,6 +992,183 @@ jobs:
           # plotting tests with mplhep fail because an ancient mplhep version in
           # LCG overrides the mplhep version in our venv
           pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
+
+  # This moving nightly view is independent of PR changes. Keep it separate
+  # from the release-view matrix so it can run only on main without referring
+  # to the matrix context from a job-level condition (which GitHub evaluates
+  # before expanding the matrix).
+  lcg_dev4:
+    name: lcg_dev4_alma9_gcc15
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
+    permissions:
+      contents: read
+      issues: write
+    container: registry.cern.ch/ghcr.io/acts-project/alma9-base:88
+    env:
+      INSTALL_DIR: ${{ github.workspace }}/install
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
+      ROOT_HASH_CHECKS: "off"
+      LCG_REPO: sft-nightlies.cern.ch
+      LCG_VIEW: /cvmfs/sft-nightlies.cern.ch/lcg/views/dev4/latest/x86_64-el9-gcc15-opt
+
+    steps:
+      - name: Check CVMFS
+        continue-on-error: true
+        id: cvmfs
+        run: |
+          ls -l /cvmfs/
+          test -d "/cvmfs/${LCG_REPO}/lcg/views" || { echo "${LCG_REPO} not mounted"; exit 1; }
+          test -f "${LCG_VIEW}/setup.sh" || { echo "no such view: ${LCG_VIEW}"; exit 1; }
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        id: configure
+        continue-on-error: true
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          ccache -z &&
+          cmake -B build -S .
+          --preset=github-ci-lcg
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+
+      - name: Build
+        id: build
+        continue-on-error: true
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          cmake --build build
+
+      - name: ccache stats
+        if: always() && steps.configure.outcome == 'success'
+        run: >
+          source "${LCG_VIEW}/setup.sh" &&
+          ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: always() && steps.configure.outcome == 'success'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      # github-script runs as a JS action, so it does not depend on gh being
+      # installed in the alma9-base image.
+      #
+      # Sticky issue: one issue per failure episode, edited in place by every
+      # subsequent failing run and closed again as soon as the view builds. The
+      # earlier open-or-comment version left a comment per nightly run, which
+      # buries the tracker for a view that can stay broken upstream for weeks.
+      - name: Report nightly LCG view status
+        if: always()
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          # Passed as JSON rather than pre-digested in a YAML expression so the
+          # issue body can name the stage that broke.
+          OUTCOMES: >-
+            {"CVMFS check": "${{ steps.cvmfs.outcome }}",
+             "Configure": "${{ steps.configure.outcome }}",
+             "Build": "${{ steps.build.outcome }}"}
+        with:
+          script: |
+            const label = "ci-nightly-lcg";
+            const title = "CI: LCG dev4 nightly view build is failing";
+            const marker = "lcg-dev4-state:";
+            const { owner, repo } = context.repo;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+
+            const outcomes = JSON.parse(process.env.OUTCOMES);
+            const failed = Object.entries(outcomes)
+              .filter(([, outcome]) => outcome === "failure")
+              .map(([step]) => step);
+            // A cancelled or half-run job says nothing about the view: leave
+            // whatever the last conclusive run recorded untouched.
+            if (failed.length === 0 &&
+                Object.values(outcomes).some((outcome) => outcome !== "success")) {
+              core.notice("Inconclusive run, leaving the tracking issue alone");
+              return;
+            }
+
+            // A label query can also match pull requests; those are never ours.
+            const open = await github.rest.issues.listForRepo({
+              owner, repo, state: "open", labels: label,
+            });
+            const issue = open.data.find((candidate) => !candidate.pull_request);
+
+            if (failed.length === 0) {
+              if (!issue) return;
+              core.notice(`Closing #${issue.number}: the view builds again`);
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issue.number,
+                body: `The \`dev4\` view builds again as of ${runUrl}. Closing.`,
+              });
+              await github.rest.issues.update({
+                owner, repo, issue_number: issue.number,
+                state: "closed", state_reason: "completed",
+              });
+              return;
+            }
+
+            // Run counters live in a hidden marker in the body: the issue is
+            // rewritten every run, so it is the only place to carry them.
+            let state = { since: new Date().toISOString().slice(0, 10), runs: 0 };
+            const previous = /<!-- lcg-dev4-state: (.*?) -->/.exec(issue?.body ?? "");
+            if (previous) {
+              try {
+                state = { ...state, ...JSON.parse(previous[1]) };
+              } catch {
+                core.warning("Unparsable state marker, restarting the count");
+              }
+            }
+            state.runs += 1;
+
+            const body = [
+              `Failing since ${state.since} (${state.runs} nightly run(s)).`,
+              "",
+              `Latest failure: ${runUrl} — failed at: ${failed.join(", ")}.`,
+              "",
+              "This view tracks a moving nightly LCG release and is expected to break",
+              "periodically upstream. If this looks like a real regression in ACTS,",
+              "please investigate; otherwise leave it: the issue is rewritten by each",
+              "failing run and closes itself once the view recovers.",
+              "",
+              `<!-- ${marker} ${JSON.stringify(state)} -->`,
+            ].join("\n");
+
+            if (issue) {
+              core.notice(`Updating existing issue #${issue.number}`);
+              await github.rest.issues.update({
+                owner, repo, issue_number: issue.number, body,
+              });
+              return;
+            }
+
+            try {
+              await github.rest.issues.createLabel({
+                owner, repo,
+                name: label,
+                color: "B60205",
+                description: "The LCG dev4 nightly view build is failing",
+              });
+            } catch (err) {
+              if (err.status !== 422) throw err;
+            }
+            core.notice("Opening new issue");
+            await github.rest.issues.create({
+              owner, repo, title, body, labels: [label],
+            });
 
   macos:
     runs-on: macos-26
@@ -1152,7 +1320,8 @@ jobs:
               -GNinja \
               -DACTS_BUILD_EXAMPLES=ON \
               -DACTS_BUILD_FATRAS=ON \
-              -DACTS_BUILD_PLUGIN_DD4HEP=ON
+              -DACTS_BUILD_PLUGIN_DD4HEP=ON \
+              -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON
             echo "::endgroup::"
             echo "::group::Acts build phase"
             cmake --build build

@@ -33,8 +33,8 @@ struct triplet_seeding_algorithm::data {
   /// @}
 
   /// Axes for the internal spacepoint grid
-  std::pair<details::spacepoint_grid_types::host::axis_p0_type,
-            details::spacepoint_grid_types::host::axis_p1_type>
+  std::pair<traccc::details::spacepoint_grid_types::host::axis_p0_type,
+            traccc::details::spacepoint_grid_types::host::axis_p1_type>
       m_axes;
 
 };  // struct triplet_seeding_algorithm::data
@@ -95,7 +95,7 @@ auto triplet_seeding_algorithm::operator()(
 
   // Create the spacepoint grid buffer and a prefix sum buffer that describes
   // it. (The latter is needed for the next few steps.)
-  details::spacepoint_grid_types::buffer grid_buffer(
+  traccc::details::spacepoint_grid_types::buffer grid_buffer(
       m_data->m_axes.first, m_data->m_axes.second,
       std::vector<unsigned int>(grid_capacities_host.begin(),
                                 grid_capacities_host.end()),

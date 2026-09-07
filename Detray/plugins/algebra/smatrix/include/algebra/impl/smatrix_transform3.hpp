@@ -37,12 +37,11 @@ struct transform3 {
   template <unsigned int N>
   using array_type = ROOT::Math::SVector<scalar_t, N>;
 
-  /// 3-element "vector" type
+  /// Vector and point types
+  using vector2 = array_type<2>;
   using vector3 = array_type<3>;
-  /// Point in 3D space
+  using point2 = vector2;
   using point3 = vector3;
-  /// Point in 2D space
-  using point2 = array_type<2>;
 
   /// 4x4 matrix type
   using matrix44 = ROOT::Math::SMatrix<scalar_type, 4, 4>;
@@ -218,6 +217,17 @@ struct transform3 {
   /// This method transform from a point from the local 3D cartesian frame to
   /// the global 3D cartesian frame
   DETRAY_HOST
+  constexpr point3 point_to_global(const point2 &v) const {
+    ROOT::Math::SVector<scalar_type, 4> vector_4;
+    vector_4.Place_at(v, 0);
+    vector_4[3] = static_cast<scalar_type>(1);
+    return ROOT::Math::SVector<scalar_type, 4>(_data * vector_4)
+        .template Sub<point3>(0);
+  }
+
+  /// This method transform from a point from the local 3D cartesian frame to
+  /// the global 3D cartesian frame
+  DETRAY_HOST
   constexpr point3 point_to_global(const point3 &v) const {
     ROOT::Math::SVector<scalar_type, 4> vector_4;
     vector_4.Place_at(v, 0);
@@ -234,6 +244,16 @@ struct transform3 {
     vector_4.Place_at(v, 0);
     vector_4[3] = static_cast<scalar_type>(1);
     return ROOT::Math::SVector<scalar_type, 4>(_data_inv * vector_4)
+        .template Sub<point3>(0);
+  }
+
+  /// This method transform from a vector from the local 2D cartesian frame to
+  /// the global 3D cartesian frame
+  DETRAY_HOST
+  constexpr point3 vector_to_global(const vector2 &v) const {
+    ROOT::Math::SVector<scalar_type, 4> vector_4;
+    vector_4.Place_at(v, 0);
+    return ROOT::Math::SVector<scalar_type, 4>(_data * vector_4)
         .template Sub<point3>(0);
   }
 

@@ -18,6 +18,7 @@
 #include "detray/geometry/identifier.hpp"
 
 // System include(s)
+#include <limits>
 #include <ostream>
 
 namespace detray {

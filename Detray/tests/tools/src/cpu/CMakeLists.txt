@@ -31,15 +31,6 @@ detray_add_executable(generate_telescope_detector
                       detray::io detray::test_common detray::test_utils detray::core_array
 )
 
-if(DETRAY_SVG_DISPLAY)
-    # Build the visualization executable.
-    detray_add_executable(detector_display
-                        "detector_display.cpp"
-                        LINK_LIBRARIES Boost::program_options detray::core_array detray::io detray::tools
-                        detray::svgtools
-    )
-endif()
-
 if(DETRAY_BUILD_TESTING)
     # Build the navigation validation executable.
     detray_add_executable(navigation_validation

@@ -198,7 +198,7 @@ TRACCC_HOST_DEVICE inline void find_tracks(
 
       if (n_tracks_per_seed.at(seed_idx) < cfg.max_num_branches_per_seed) {
         const detray::tracking_surface sf{det, in_par.surface_link()};
-        const bool is_line = detail::is_line(sf);
+        const bool is_line = traccc::detail::is_line(sf);
 
         const edm::measurement meas = measurements.at(meas_idx);
 

@@ -136,7 +136,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         "RootTrackParameterPerformanceWriter", inputTracks, inputParticles,
         inputTrackParticleMatching, inputSimHits, inputMeasurementSimHitsMap,
         filePath, resPlotToolConfig, effPlotToolConfig,
-        trackSummaryPlotToolConfig, parameterSource, parameterType,
+        trackSummaryPlotToolConfig, parameterSource, reference, parameterType,
         geometrySelection, fitMinEntries, fitSigmaRange, fitIterations,
         warningThresholdFitFailureFraction);
 

@@ -446,8 +446,50 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
     BOOST_CHECK_GT(vtxCov(i, i), 0.);
   }
 
-  // Check that the covariance matrix is approximately symmetric
-  CHECK_CLOSE_ABS(vtxCov - vtxCov.transpose(), SquareMatrix4::Zero(), 1e-5);
+  // Check that the covariance matrix is approximately symmetric. Its entries
+  // span several orders of magnitude, hence the relative tolerance.
+  CHECK_CLOSE_ABS(vtxCov - vtxCov.transpose(), SquareMatrix4::Zero(),
+                  1e-3 * vtxCov.cwiseAbs().maxCoeff());
+
+  // Every track must contribute exactly once: ndf is the sum of the track
+  // weights, 2 degrees of freedom each.
+  double sumTrackWeights = 0.;
+  for (const auto& trk : trks) {
+    sumTrackWeights +=
+        state.tracksAtVerticesMap.at(std::make_pair(InputTrack{&trk}, &vtx))
+            .trackWeight;
+  }
+  CHECK_CLOSE_ABS(vtx.fitQuality().second, 2 * sumTrackWeights, 1e-9);
+
+  // An unconstrained fit must equal a fit constrained to the initial vertex
+  // state
+  Vertex constrainedVtx(vtxSeedPos);
+  constrainedVtx.setFullCovariance(initialCovariance);
+
+  Vertex constraint(vtxSeedPos);
+  constraint.setFullCovariance(initialCovariance);
+
+  AdaptiveMultiVertexFitter::State constrainedState(*bField, magFieldContext);
+  VertexInfo& constrainedVtxInfo = constrainedState.vtxInfoMap[&constrainedVtx];
+  constrainedVtxInfo.constraint = constraint;
+
+  for (const auto& trk : trks) {
+    constrainedVtxInfo.trackLinks.push_back(InputTrack{&trk});
+    constrainedState.tracksAtVerticesMap.insert(
+        std::make_pair(std::make_pair(InputTrack{&trk}, &constrainedVtx),
+                       TrackAtVertex(1., trk, InputTrack{&trk})));
+  }
+
+  constrainedState.addVertexToMultiMap(constrainedVtx);
+
+  std::vector<Vertex*> constrainedVtxFitPtr = {&constrainedVtx};
+  auto constrainedRes = fitter.addVtxToFit(
+      constrainedState, constrainedVtxFitPtr, vertexingOptions);
+
+  BOOST_CHECK(constrainedRes.ok());
+
+  CHECK_CLOSE_ABS(constrainedVtx.fullPosition(), vtx.fullPosition(), 1e-9);
+  CHECK_CLOSE_ABS(constrainedVtx.fullCovariance(), vtx.fullCovariance(), 1e-9);
 }
 
 /// @brief Unit test for AdaptiveMultiVertexFitter

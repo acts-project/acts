@@ -18,6 +18,9 @@
 #include "traccc/utils/memory_resource.hpp"
 #include "traccc/utils/messaging.hpp"
 
+// VecMem include(s).
+#include <vecmem/containers/data/vector_view.hpp>
+
 namespace traccc::device {
 
 /// Algorithm forming space points out of measurements
@@ -58,6 +61,33 @@ class silicon_pixel_spacepoint_formation_algorithm
   /// @name Function(s) to be implemented by derived classes
   /// @{
 
+  /// Payload for the @c count_spacepoints_kernel function
+  struct count_spacepoints_kernel_payload {
+    /// The number of measurements in the event
+    edm::measurement_collection::const_view::size_type n_measurements;
+    /// The input measurements
+    const edm::measurement_collection::const_view& measurements;
+    /// One output flag for every measurement
+    vecmem::data::vector_view<unsigned int>& spacepoint_flags;
+  };
+
+  /// Launch the spacepoint counting kernel
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void count_spacepoints_kernel(
+      const count_spacepoints_kernel_payload& payload) const = 0;
+
+  /// Turn the spacepoint flags into a prefix sum, in place
+  ///
+  /// The scan must be inclusive, so that the last element of @c
+  /// spacepoint_flags holds the total number of spacepoints.
+  ///
+  /// @param spacepoint_flags The flags to scan
+  ///
+  virtual void scan_spacepoint_flags(
+      vecmem::data::vector_view<unsigned int>& spacepoint_flags) const = 0;
+
   /// Payload for the @c form_spacepoints_kernel function
   struct form_spacepoints_kernel_payload {
     /// The number of measurements in the event
@@ -66,6 +96,8 @@ class silicon_pixel_spacepoint_formation_algorithm
     const detector_buffer& detector;
     /// The input measurements
     const edm::measurement_collection::const_view& measurements;
+    /// The prefix sum giving every measurement its spacepoint index
+    const vecmem::data::vector_view<const unsigned int>& spacepoint_index;
     /// The output spacepoints
     edm::spacepoint_collection::view& spacepoints;
   };

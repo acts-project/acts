@@ -5,6 +5,7 @@ from .detector_io_options import (
     parse_detector_io_options,
     fill_reader_config,
 )
+from .display_options import display_options, parse_display_options
 from .propagation_options import propagation_options, fill_propagation_config
 from .track_generator_options import (
     random_track_generator_options,

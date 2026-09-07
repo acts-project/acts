@@ -17,6 +17,7 @@
 #include "detray/utils/type_list.hpp"
 
 // System include(s)
+#include <limits>
 #include <type_traits>
 #include <utility>
 

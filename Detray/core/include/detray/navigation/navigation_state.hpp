@@ -26,6 +26,9 @@
 #include "detray/utils/logging.hpp"
 #include "detray/utils/ranges.hpp"
 
+// System include(s)
+#include <limits>
+
 namespace detray::navigation {
 
 /// @brief A void inpector that does nothing.

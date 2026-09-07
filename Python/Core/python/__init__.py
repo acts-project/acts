@@ -18,17 +18,18 @@ if (
     and os.environ["ACTS_LOG_FAILURE_THRESHOLD"] != logging.getFailureThreshold().name
 ):
     error = (
-        "Runtime log failure threshold is given in environment variable "
-        f"`ACTS_LOG_FAILURE_THRESHOLD={os.environ['ACTS_LOG_FAILURE_THRESHOLD']}`"
-        "However, a compile-time value is set via CMake, i.e. "
-        f"`ACTS_LOG_FAILURE_THRESHOLD={logging.getFailureThreshold().name}`. "
-        "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`, which disables runtime thresholds."
+        "Log failure threshold is given in environment variable "
+        f"`ACTS_LOG_FAILURE_THRESHOLD={os.environ['ACTS_LOG_FAILURE_THRESHOLD']}`, "
+        f"but the effective threshold is `{logging.getFailureThreshold().name}`. "
+        "Either the value is misspelled -- the accepted ones are the "
+        "`acts.logging.Level` names -- or this build was configured with "
+        "`ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`, which compiles the check out."
     )
     if "PYTEST_CURRENT_TEST" in os.environ:
         # test environment, fail hard
         raise RuntimeError(error)
     else:
-        warnings.warn(error + "\nThe compile-time threshold will be used in this case!")
+        warnings.warn(error + "\nNo failure threshold will be applied.")
 
 
 def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):

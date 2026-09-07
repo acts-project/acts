@@ -513,6 +513,10 @@ void addFramework(py::module& mex) {
         .value("Track", TrackParameterSource::Track)
         .value("TrackState", TrackParameterSource::TrackState);
 
+    py::enum_<TrackParameterReference>(mex, "TrackParameterReference")
+        .value("Truth", TrackParameterReference::Truth)
+        .value("Measurement", TrackParameterReference::Measurement);
+
     py::enum_<TrackParameterType>(mex, "TrackParameterType")
         .value("Predicted", TrackParameterType::Predicted)
         .value("Filtered", TrackParameterType::Filtered)
