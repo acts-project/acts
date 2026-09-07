@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/ISensorDesign.hpp"
+#include "Acts/Geometry/detail/ISensorDesignHolder.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 
 #include <memory>
@@ -18,7 +19,8 @@ namespace ActsExamples {
 /// DD4hepDetectorElement extended with a sensor design pointer.
 /// Created by the custom factory below instead of the default one.
 class DD4hepDetectorElementWithDesign
-    : public ActsPlugins::DD4hepDetectorElement {
+    : public ActsPlugins::DD4hepDetectorElement,
+      public Acts::detail::ISensorDesignHolder {
  public:
   // Inherit constructors
   using ActsPlugins::DD4hepDetectorElement::DD4hepDetectorElement;

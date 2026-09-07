@@ -124,10 +124,6 @@ class DD4hepDetector final : public DD4hepDetectorBase {
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<const Acts::GeometryIdentifierHook>();
 
-    // /// Detector element factory
-    // ActsPlugins::DD4hepLayerBuilder::ElementFactory detectorElementFactory =
-    //     ActsPlugins::DD4hepLayerBuilder::defaultDetectorElementFactory;
-
     /// Detector element factory with design
     ActsPlugins::DD4hepLayerBuilder::ElementFactory detectorElementFactory =
         defaultDetectorElementFactoryWithDesign;

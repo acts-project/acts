@@ -129,21 +129,6 @@ class DigitizationAlgorithm final : public IAlgorithm {
       const std::vector<ActsFatras::Segmentizer::ChannelSegment>& channels,
       RandomEngine& rng) const;
 
-  //   /// Nested smearer struct that holds geometric digitizer and smearing
-  //   /// Support up to 4 dimensions.
-  //   template <std::size_t kSmearDIM>
-  //   struct CombinedDigitizer {
-  //     GeometricConfig geometric;
-  //     ActsFatras::BoundParametersSmearer<RandomEngine, kSmearDIM> smearing;
-  //   };
-
-  //   // Support max 4 digitization dimensions - either digital or smeared
-  //   using Digitizer = std::variant<CombinedDigitizer<0>,
-  //   CombinedDigitizer<1>,
-  //                                  CombinedDigitizer<2>,
-  //                                  CombinedDigitizer<3>,
-  //                                  CombinedDigitizer<4>>;
-
   /// Configuration of the Algorithm
   Config m_cfg;
   /// Digitizers within geometry hierarchy

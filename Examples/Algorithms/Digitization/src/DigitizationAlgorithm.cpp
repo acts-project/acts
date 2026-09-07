@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/detail/ISensorDesignHolder.hpp"
 #include "ActsExamples/Digitization/DigitizationDesign.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
@@ -157,8 +158,13 @@ DigitizationAlgorithm::DigitizationAlgorithm(
       continue;
     }
 
+    const auto* holder =
+        dynamic_cast<const Acts::detail::ISensorDesignHolder*>(placement);
+    if (holder == nullptr) {
+      continue;
+    }
     auto design = std::make_shared<DigitizationDesign>(&(*digitizerItr));
-    placement->assignSensorDesign(std::move(design));  // virtual dispatch
+    holder->assignSensorDesign(design);
   }
 }
 
@@ -212,16 +218,19 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
     const Digitizer* digitizerPtr = nullptr;
     const auto* placement = surfacePtr->surfacePlacement();
     if (placement != nullptr) {
-      if (const auto* sensorDes = placement->sensorDesign()) {
-        if (const auto* design =
-                dynamic_cast<const DigitizationDesign*>(sensorDes)) {
-          digitizerPtr = &design->digitizer();
+      const auto* holder =
+          dynamic_cast<const Acts::detail::ISensorDesignHolder*>(placement);
+      if (holder != nullptr) {
+        if (const auto* sensorDes = holder->sensorDesign()) {
+          if (const auto* design =
+                  dynamic_cast<const DigitizationDesign*>(sensorDes)) {
+            digitizerPtr = &design->digitizer();
+          }
         }
       }
     }
 
-    // Fallback: geometry-hierarchy map lookup.
-    // Used for the generic detector and any surface without an assigned design.
+    // Fallback for non-DD4hep surfaces (generic detector etc.)
     if (digitizerPtr == nullptr) {
       auto digitizerItr = m_digitizers.find(moduleGeoId);
       if (digitizerItr == m_digitizers.end()) {
