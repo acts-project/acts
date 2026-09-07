@@ -24,9 +24,6 @@ enum MaterialClassificationNumberIndices {
   eMolarDensity = 4,
 };
 
-// Avogadro constant
-constexpr double kAvogadro = 6.02214076e23 / UnitConstants::mol;
-
 constexpr float calculateMolarElectronDensity(float z, float molarRho) {
   return z * molarRho;
 }
@@ -55,7 +52,8 @@ Material Material::fromMassDensity(float x0, float l0, float ar, float z,
   //
   // perform computations in double precision to avoid loss of precision
   const double atomicMass = static_cast<double>(ar) * 1_u;
-  float molarRho = static_cast<float>(massRho / (atomicMass * kAvogadro));
+  float molarRho = static_cast<float>(
+      massRho / (atomicMass * (UnitConstants::kAvogadro / UnitConstants::mol)));
 
   return Material::fromMolarDensity(x0, l0, ar, z, molarRho);
 }
@@ -96,7 +94,8 @@ float Material::massDensity() const {
 
   // perform computations in double precision to avoid loss of precision
   const double atomicMass = static_cast<double>(m_ar) * 1_u;
-  const double numberDensity = static_cast<double>(m_molarRho) * kAvogadro;
+  const double numberDensity = static_cast<double>(m_molarRho) *
+                               (UnitConstants::kAvogadro / UnitConstants::mol);
   return atomicMass * numberDensity;
 }
 
