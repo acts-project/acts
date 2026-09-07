@@ -8,6 +8,12 @@ layer in a two-dimensional grid drawn on a representative surface and returns,
 for a position and a direction, the surfaces registered in the bins around the
 crossing point.
 
+The figures for the two things that decide whether that works - which bins hold
+a surface, and how far from the crossing bin the module it hits can be - are on
+a separate, interactive page:
+[filling and lookup, in figures](surface_array_figures.html). Everything below
+is the written description; the page carries the pictures and the measurements.
+
 ## Overview
 
 A layer holds its sensitive surfaces in a `SurfaceArray`, and navigation asks
@@ -84,12 +90,15 @@ surface at construction:
    surface in every bin of every column span.
 
 The span fill is exact when the projected outline is convex per column, which
-holds for the module shapes in use. Keying the columns by the axis that wraps
-means no span is ever reconstructed across the phi seam: a module straddling
-+-pi produces columns at both ends of the phi axis, each with its own span
-along the bound axis.
+holds for the module shapes in use; over-filling a concave part is the only way
+it can be wrong. Keying the columns by the axis that wraps means no span is
+ever reconstructed across the phi seam: a module straddling +-pi produces
+columns at both ends of the phi axis, each with its own span along the bound
+axis.
 
-![A trapezoidal disc module projected onto the (phi, r) grid: the sampled outline, the bins the span fill registers, and a second module split at the phi seam.](geometry/surface_array_footprint.svg){width=600px}
+[A module projected onto a disc grid](surface_array_figures.html#fill), the two
+point tests the footprint fill replaced, and what each of them costs in bins are
+in the figures.
 
 After all surfaces are filled the bin contents are sorted and deduplicated,
 `checkGrid` verifies that every input surface landed in at least one bin, and
@@ -112,14 +121,10 @@ returns the content of the crossing bin alone.
 
 ### Why a window
 
-The lookup happens where the track crosses the representative surface. A
-module is registered where it projects onto that surface. The two differ: a
-module sits at a radial offset from the representative surface, and between
-the surface and the module the track moves along the layer. The shallower the
-crossing, the further it moves. The window around the crossing bin spans that
-movement.
-
-![Lookup geometry in the r-z plane: staggered modules at two radii, the representative cylinder between them, an inclined track, and the slide in z between crossing the representative surface and reaching the module.](geometry/surface_array_lookup_rz.svg){width=640px}
+The lookup happens where the track crosses the representative surface; a module
+is registered where it projects onto that surface. Between the two the track
+moves along the layer, the further the shallower the crossing, and the window
+around the crossing bin spans that movement.
 
 `crossingNeighborDistance` derives the slide from the crossing geometry:
 
@@ -142,7 +147,9 @@ There is no case analysis on the surface type. The derivative supplies the
 local metric for any @ref Acts::RegularSurface, and the result is already in
 the quantities the grid is binned in.
 
-![The same crossing on the (phi, z) grid: the crossing bin, the window opened along z only, the registered footprint of the module the track hits, and where the track meets it.](geometry/surface_array_lookup_grid.svg){width=640px}
+[The same crossing, in r-z and on the bin
+grid](surface_array_figures.html#window), and the miss rate each window policy
+carries across the barrel, are in the figures.
 
 Below an incidence `|n . d|` of `1e-4` the track runs along the layer and the
 window opens to its bound.
@@ -198,7 +205,8 @@ The index array has `(n0 + 2) * (n1 + 2) * (max0 + 1) * (max1 + 1)` entries
 and is cheap. The pack contents are what cost memory: each pack lists the
 surfaces of up to `(2 max0 + 1) * (2 max1 + 1)` bins. On the generic detector
 at the default bounds the cache is 13.6 MB. A lookup on a toy barrel costs
-about 80 ns.
+about 80 ns; [what that is made of](surface_array_figures.html#cost) is in the
+figures.
 
 ## Evolution
 
