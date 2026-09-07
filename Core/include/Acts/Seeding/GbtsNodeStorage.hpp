@@ -57,7 +57,7 @@ class GbtsNodeStorage final {
   /// @param localPositionY Local y cluster position
   /// @return The eta bin the node was placed in, or nullopt if it was rejected
   std::optional<std::uint32_t> insert(SpacePointIndex index, float x, float y,
-                                      float z, std::uint32_t layerIndex,
+                                      float z, GbtsLayerIndex layerIndex,
                                       float clusterWidth = 0.f,
                                       float localPositionY = 0.f);
   //! [gbts insert]
@@ -76,7 +76,7 @@ class GbtsNodeStorage final {
   /// @return The eta bin the node was placed in, or nullopt if it was rejected
   std::optional<std::uint32_t> insert(
       SpacePointIndex index, float x, float y, float z, float r, float phi,
-      std::uint32_t layerIndex, float clusterWidth = 0.f,
+      GbtsLayerIndex layerIndex, float clusterWidth = 0.f,
       float localPositionY = 0.f,
       const OuterStripSpacePointCalibrationDetails* strip = nullptr);
 
@@ -89,7 +89,7 @@ class GbtsNodeStorage final {
   /// @return The eta bin the node was placed in, or nullopt if it was rejected
   std::optional<std::uint32_t> insert(
       const ConstSpacePointProxy& sp,
-      const ConstSpacePointColumnProxy<std::uint32_t>& layerColumn,
+      const ConstSpacePointColumnProxy<GbtsLayerIndex>& layerColumn,
       const ConstSpacePointColumnProxy<float>& clusterWidthColumn,
       const ConstSpacePointColumnProxy<float>& localPositionYColumn,
       bool strips = false) {
@@ -108,7 +108,7 @@ class GbtsNodeStorage final {
   /// @param clusterWidthColumn Column holding the pixel cluster width
   /// @param localPositionYColumn Column holding the local y cluster position
   void extend(const SpacePointContainer& spacePoints,
-              const ConstSpacePointColumnProxy<std::uint32_t>& layerColumn,
+              const ConstSpacePointColumnProxy<GbtsLayerIndex>& layerColumn,
               const ConstSpacePointColumnProxy<float>& clusterWidthColumn,
               const ConstSpacePointColumnProxy<float>& localPositionYColumn);
 
@@ -226,7 +226,8 @@ class GbtsNodeStorage final {
     float phi{};
     float clusterWidth{};
     float localPositionY{};
-    std::uint16_t layer{};
+    /// Dense layer index
+    GbtsLayerIndex layer{};
     /// Index into the staged stereo pairs, `detail::kNoStrip` for a pixel node
     std::uint32_t strip{detail::kNoStrip};
   };
@@ -263,7 +264,7 @@ class GbtsNodeStorage final {
       m_edgeInfoColumn;
 
   /// Dense layer index per node, in node order.
-  std::vector<std::uint16_t> m_layers;
+  std::vector<GbtsLayerIndex> m_layers;
 
   /// Stereo pairs of the strip nodes, in node order and compacted: too large
   /// to carry for every node of a mostly pixel detector.

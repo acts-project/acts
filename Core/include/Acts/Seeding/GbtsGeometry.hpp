@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <map>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -48,6 +49,11 @@ class GbtsGeometry final {
                float etaBinWidth, const GbtsZ0Range& z0Range = {},
                const Logger& logger = getDummyLogger());
 
+  /// Resolve a layer id into the index GbtsNodeStorage::insert takes.
+  /// @param id Layer id, as the layer descriptions carry it
+  /// @return The layer's index, or nullopt if this geometry has no such layer
+  std::optional<GbtsLayerIndex> layerIndex(GbtsExperimentLayerId id) const;
+
  private:
   // The layer binning is shared only with the classes that build the graph.
   friend class GbtsNodeStorage;
@@ -68,17 +74,18 @@ class GbtsGeometry final {
   /// Get layer by ID
   /// @param id Layer ID
   /// @return Pointer to layer or nullptr
-  const detail::GbtsLayer* layerById(std::uint32_t id) const;
+  const detail::GbtsLayer* layerById(GbtsExperimentLayerId id) const;
 
   /// Get layer by index
   /// @param idx Layer index
   /// @return Reference to layer
-  const detail::GbtsLayer& layerByIndex(std::int32_t idx) const;
+  const detail::GbtsLayer& layerByIndex(GbtsLayerIndex idx) const;
 
   /// Get the description of a layer by index
   /// @param idx Layer index
   /// @return Reference to the layer description
-  const GbtsLayerDescription& layerDescriptionByIndex(std::int32_t idx) const {
+  const GbtsLayerDescription& layerDescriptionByIndex(
+      GbtsLayerIndex idx) const {
     return layerByIndex(idx).layerDescription();
   }
 
@@ -94,7 +101,7 @@ class GbtsGeometry final {
   /// Layer array
   std::vector<detail::GbtsLayer> m_layers;
   /// Layer per user ID map
-  std::map<std::uint32_t, std::uint32_t> m_layerFromUserIdMap;
+  std::map<GbtsExperimentLayerId, GbtsLayerIndex> m_layerFromUserIdMap;
   /// Number of eta bins
   std::uint32_t m_nEtaBins{};
 

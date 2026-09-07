@@ -20,7 +20,6 @@
 #include <iostream>
 #include <string_view>
 #include <thread>
-#include <utility>
 #include <vector>
 
 namespace detray {
@@ -76,8 +75,8 @@ struct vector_unaryOP_bm : public vector_bm<vector_t<scalar_t>> {
   using base_type = vector_bm<vector_t<scalar_t>>;
 
   vector_unaryOP_bm() = delete;
-  explicit vector_unaryOP_bm(benchmark_base::configuration cfg)
-      : base_type{std::move(cfg)} {}
+  explicit vector_unaryOP_bm(const benchmark_base::configuration &cfg)
+      : base_type{cfg} {}
   vector_unaryOP_bm(const vector_unaryOP_bm &bm) = default;
   vector_unaryOP_bm &operator=(vector_unaryOP_bm &other) = default;
 
@@ -108,8 +107,8 @@ struct vector_binaryOP_bm : public vector_bm<vector_t<scalar_t>> {
   using base_type = vector_bm<vector_t<scalar_t>>;
 
   vector_binaryOP_bm() = delete;
-  explicit vector_binaryOP_bm(benchmark_base::configuration cfg)
-      : base_type{std::move(cfg)} {}
+  explicit vector_binaryOP_bm(const benchmark_base::configuration &cfg)
+      : base_type{cfg} {}
   vector_binaryOP_bm(const vector_binaryOP_bm &bm) = default;
   vector_binaryOP_bm &operator=(vector_binaryOP_bm &other) = default;
 

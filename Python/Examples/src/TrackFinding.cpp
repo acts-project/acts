@@ -27,6 +27,7 @@
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 
@@ -84,14 +85,15 @@ void addTrackFinding(py::module& mex) {
     using Config = Acts::Experimental::GraphBasedTrackSeeder::Config;
     auto c =
         py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, minPt, nMaxPhiSlice, lutInputFile);
+    ACTS_PYTHON_STRUCT(c, minPt, nMaxPhiSlice);
     patchKwargsConstructor(c);
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      GraphBasedSeedingAlgorithm, mex, "GraphBasedSeedingAlgorithm",
-      inputSpacePoints, outputSeeds, seedFinderConfig, layerMappingFile,
-      connectorInputFile, trackingGeometry, fillModuleCsv, inputClusters);
+  ACTS_PYTHON_DECLARE_ALGORITHM(GraphBasedSeedingAlgorithm, mex,
+                                "GraphBasedSeedingAlgorithm", inputSpacePoints,
+                                outputSeeds, seedFinderConfig, layerMappingFile,
+                                connectorInputFile, lutInputFile,
+                                trackingGeometry, fillModuleCsv, inputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,

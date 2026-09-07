@@ -23,7 +23,6 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -37,8 +36,9 @@ class GraphBasedTrackSeeder {
     /// Enable beam spot correction.
     bool beamSpotCorrection = false;
 
-    /// Look-up table input file path.
-    std::string lutInputFile;
+    /// Accepted tau range per cluster width bin, needed by the cluster width
+    /// cuts and ignored without them.
+    detail::GbtsTauLookupTable tauLookupTable;
 
     /// Take the strip-to-strip layer connections from the connector file
     /// instead of the pixel-to-pixel ones. Read where the file is loaded, not
@@ -48,13 +48,6 @@ class GraphBasedTrackSeeder {
     bool useClusterWidthCuts = false;
     /// Match seeds before creating them.
     bool matchBeforeCreate = false;
-    /// Bound the curvature by the pT the triplet has to reach in the actual
-    /// field, times `oldTuningsCurvature*Fraction`, instead of the tuned
-    /// `maxCurvature*Eta` constants.
-    bool useOldTuningsCurvature = false;
-    /// Open the phi window as `minDeltaPhi` plus a fraction of that same
-    /// curvature bound, instead of the two-slope `phiWindow*` model.
-    bool useOldTuningsPhiWindow = false;
     /// optional validation for barrel triplets
     bool validateTriplets = true;
     /// widens allowed variation in tau ratio
@@ -109,8 +102,6 @@ class GraphBasedTrackSeeder {
     float minZ0 = -600;
     /// Maximum z0 value. In pixel mode the value is picked from the RoI.
     float maxZ0 = 600;
-    /// Offset of the phi window under `useOldTuningsPhiWindow`.
-    float minDeltaPhi = 0.001f;
 
     /// pT the default cut coefficients were tuned at; they scale by
     /// `tuningPt / minPt`.
@@ -121,15 +112,6 @@ class GraphBasedTrackSeeder {
     float maxCurvatureLowEta = 3.75e-4f / UnitConstants::mm;
     /// |cot(theta)| separating the two curvature cuts, |eta| of about 2.1.
     float curvatureSplitAbsTau = 4.0f;
-    /// Squared fraction of the pT-derived curvature bound cut at above
-    /// `curvatureSplitAbsTau`, under `useOldTuningsCurvature`. Large radius
-    /// tracking cuts at the bound itself, so 1.
-    float oldTuningsCurvatureHighEtaFraction = 0.8f;
-    /// Squared fraction of the same below `curvatureSplitAbsTau`.
-    float oldTuningsCurvatureLowEtaFraction = 0.6f;
-    /// Fraction of the same the phi window opens by, per unit of radial
-    /// separation, under `useOldTuningsPhiWindow`.
-    float oldTuningsPhiWindowFraction = 0.68f;
     /// Radial separation splitting the two phi window slopes below.
     float phiWindowSplitDeltaRadius = 60.0f * UnitConstants::mm;
     /// Phi window below `phiWindowSplitDeltaRadius`, as offset plus slope times
@@ -147,9 +129,9 @@ class GraphBasedTrackSeeder {
     std::uint32_t matchBeforeCreateMaxEdges = 2;
     /// Layers whose nodes are cut against the z0 histogram of their outer
     /// neighbourhood, and whose isolated nodes are skipped.
-    std::vector<std::uint32_t> z0HistogramLayerIds{80000};
+    std::vector<GbtsExperimentLayerId> z0HistogramLayerIds{80000};
     /// Layers `matchBeforeCreate` applies to, when it is enabled.
-    std::vector<std::uint32_t> matchBeforeCreateLayerIds{80000, 81000};
+    std::vector<GbtsExperimentLayerId> matchBeforeCreateLayerIds{80000, 81000};
     /// Half-width of the z0 window a node is matched against in the histogram.
     float z0Resolution = 2.5f * UnitConstants::mm;
     /// Maximum radius of pixel detector
@@ -167,7 +149,7 @@ class GraphBasedTrackSeeder {
     /// Maximum number of connected-component iterations.
     std::uint32_t ccaMaxIterations = 15;
     /// Chain length a seed candidate must reach: a triplet plus one
-    /// confirmation. Large radius tracking asks for the triplet alone, so 2.
+    /// confirmation.
     std::uint32_t minSeedLevel = 3;
     /// Smallest seed size that is split into drop-out candidates.
     std::uint32_t minSplitSeedSize = 4;
@@ -183,15 +165,15 @@ class GraphBasedTrackSeeder {
     float maxInvRadDiff = 0.7e-2 / UnitConstants::m;
     // GbtsNodeStorage options
     /// Maximum endcap cluster width.
-    float maxEndcapClusterWidth = 0.35 * Acts::UnitConstants::mm;
+    float maxEndcapClusterWidth = 0.35f * Acts::UnitConstants::mm;
     /// Half-length in local y of a pixel module, against which the distance of
     /// a cluster to the module edge is measured.
-    float moduleHalfLengthY = 10.0 * Acts::UnitConstants::mm;
+    float moduleHalfLengthY = 10.0f * Acts::UnitConstants::mm;
     /// Distance to the module edge below which a cluster may be shortened,
     /// which switches to the tau lookup table's near-edge bounds.
-    float moduleEdgeTolerance = 0.3 * Acts::UnitConstants::mm;
+    float moduleEdgeTolerance = 0.3f * Acts::UnitConstants::mm;
     /// Cluster width covered by one bin of the tau lookup table.
-    float tauLutBinWidth = 0.05 * Acts::UnitConstants::mm;
+    float tauLutBinWidth = 0.05f * Acts::UnitConstants::mm;
     /// Multiples of the phi slice width duplicated either side of the
     /// wrap-around, so a sliding window never has to wrap.
     float phiIndexMargin = 1.5f;
@@ -214,16 +196,9 @@ class GraphBasedTrackSeeder {
   /// Optional inputs for variables passed in
   /// or derived during runtime.
   struct Options {
-    /// @param bFieldInZ_ the magnetic field in z
-    explicit Options(float bFieldInZ_);
-
     /// Magnetic field in z
     /// units of GeV/(e*mm).
     float bFieldInZ{};
-
-    /// Transverse momentum coefficient (~0.3*B/2 - assumes nominal field of
-    /// 2*T).
-    double ptCoeff{};
   };
 
   /// @param config Configuration for the seed finder
@@ -245,8 +220,8 @@ class GraphBasedTrackSeeder {
   /// Create seeds from an ACTS space point container in a region of interest.
   ///
   /// Convenience wrapper that builds and finalizes the node storage itself. The
-  /// container must carry the `layerId`, `clusterWidth` and `localPositionY`
-  /// columns.
+  /// container must carry the `gbtsLayerIndex`, `clusterWidth` and
+  /// `localPositionY` columns.
   /// @param spacePoints Space point container
   /// @param roi Region of interest descriptor
   /// @param filter Tracking filter to be applied
@@ -271,12 +246,11 @@ class GraphBasedTrackSeeder {
   /// candidate seed metadata produced by the GBTS algorithm.
   struct SeedCandidateProperties {
     /// @param quality Seed quality score
-    /// @param clone Clone flag
+    /// @param clone Whether the candidate was rejected as a clone
     /// @param sps Vector of graph node indices
     /// @param splitFlag used to flag if seed needs to be split in two
-    SeedCandidateProperties(float quality, std::int32_t clone,
-                            std::vector<SpacePointIndex> sps,
-                            std::uint32_t splitFlag)
+    SeedCandidateProperties(float quality, bool clone,
+                            std::vector<SpacePointIndex> sps, bool splitFlag)
         : seedQuality(quality),
           isClone(clone),
           nodes(std::move(sps)),
@@ -285,11 +259,11 @@ class GraphBasedTrackSeeder {
     /// Seed quality score.
     float seedQuality{};
     /// Clone flag.
-    std::int32_t isClone{};
+    bool isClone{};
     /// Graph node indices.
     std::vector<SpacePointIndex> nodes;
     /// Flag for seed splitting.
-    std::uint32_t forSeedSplitting{};
+    bool forSeedSplitting{};
   };
 
   /// Output seed metadata
@@ -319,7 +293,7 @@ class GraphBasedTrackSeeder {
     /// window half-width;
     float deltaPhi{};
     /// GBTS layer ID of the bin
-    std::uint32_t layerId{};
+    GbtsExperimentLayerId layerId{};
     /// Type of the bin's layer.
     GbtsLayerType type{};
     /// Technology of the bin's layer.
@@ -329,35 +303,27 @@ class GraphBasedTrackSeeder {
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
 
-  detail::GbtsTauLookupTable m_tauLut;
-
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
 
   const Acts::Logger& logger() const { return *m_logger; }
-
-  /// Parse the tau lookup table from file.
-  /// @param lutInputFile Path to the lookup table input file
-  /// @return Parsed tau lookup table
-  detail::GbtsTauLookupTable parseTauLookupTable(
-      const std::string& lutInputFile) const;
 
   /// Build doublet graph from nodes.
   /// @param roi Region of interest descriptor
   /// @param nodeStorage Data storage containing nodes
   /// @param edgeStorage Storage for generated edges
   /// @param options Event based options such as magnetic field strength
-  /// @return Pair of edge count and maximum level
-  std::pair<std::int32_t, std::int32_t> buildTheGraph(
+  /// @return Pair of edge count and edge link count
+  std::pair<std::uint32_t, std::uint32_t> buildTheGraph(
       const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
       std::vector<detail::GbtsEdge>& edgeStorage, const Options& options) const;
 
   /// Run connected component analysis on the graph.
   /// @param nEdges Number of edges in the graph
   /// @param edgeStorage Storage containing graph edges
-  /// @return Number of connected components found
-  std::int32_t runCCA(std::uint32_t nEdges,
-                      std::vector<detail::GbtsEdge>& edgeStorage) const;
+  /// @return The highest chain level any edge reached
+  std::uint32_t runCCA(std::uint32_t nEdges,
+                       std::vector<detail::GbtsEdge>& edgeStorage) const;
 
   /// Extract seed candidates from the graph.
   /// @param maxLevel Maximum level in the graph

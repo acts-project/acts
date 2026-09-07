@@ -22,21 +22,23 @@ class GbtsLayer final {
   /// @param etaBinWidth Eta bin width
   /// @param bin0 Starting bin index
   GbtsLayer(const GbtsLayerDescription& layerDescription, float etaBinWidth,
-            std::int32_t bin0);
+            std::uint32_t bin0);
 
   /// Get eta bin for given z and r coordinates
   /// @param zh Z coordinate
   /// @param rh Radius coordinate
   /// @return Eta bin index
-  std::int32_t getEtaBin(float zh, float rh) const;
+  std::uint32_t getEtaBin(float zh, float rh) const;
 
   /// Get number of bins
   /// @return Number of bins
-  std::int32_t numOfBins() const { return m_bins.size(); }
+  std::uint32_t numOfBins() const {
+    return static_cast<std::uint32_t>(m_bins.size());
+  }
 
   /// Get bins
   /// @return Vector of bin indices
-  const std::vector<std::int32_t>& bins() const { return m_bins; }
+  const std::vector<std::uint32_t>& bins() const { return m_bins; }
 
   /// Get the layer description
   /// @return Reference to the layer description
@@ -57,7 +59,7 @@ class GbtsLayer final {
  private:
   GbtsLayerDescription m_layerDescription;
 
-  std::vector<std::int32_t> m_bins;
+  std::vector<std::uint32_t> m_bins;
   std::vector<float> m_minRadius;
   std::vector<float> m_maxRadius;
   std::vector<float> m_minBinCoord;
