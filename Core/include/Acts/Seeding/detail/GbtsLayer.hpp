@@ -55,8 +55,6 @@ class GbtsLayer final {
   GbtsLayerDescription m_layerDescription;
   GbtsLayerBinning m_binning;
 
-  std::vector<float> m_minRadius;
-  std::vector<float> m_maxRadius;
   std::vector<float> m_minBinCoord;
   std::vector<float> m_maxBinCoord;
 };

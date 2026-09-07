@@ -64,13 +64,6 @@ GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
 
   if (numBins == 1) {
     // the single bin spans the layer, so it takes the layer's own bounds
-    if (m_layerDescription.type == GbtsLayerType::Barrel) {
-      m_minRadius.push_back(m_layerDescription.refCoord - 2.0f);
-      m_maxRadius.push_back(m_layerDescription.refCoord + 2.0f);
-    } else {
-      m_minRadius.push_back(m_layerDescription.minBound - 2.0f);
-      m_maxRadius.push_back(m_layerDescription.maxBound + 2.0f);
-    }
     m_minBinCoord.push_back(m_layerDescription.minBound);
     m_maxBinCoord.push_back(m_layerDescription.maxBound);
     return;
@@ -83,8 +76,6 @@ GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
     float e2 = eta + 0.5f * m_binning.etaBinWidth;
 
     if (m_layerDescription.type == GbtsLayerType::Barrel) {
-      m_minRadius.push_back(m_layerDescription.refCoord - 2.0f);
-      m_maxRadius.push_back(m_layerDescription.refCoord + 2.0f);
       m_minBinCoord.push_back(m_layerDescription.refCoord * std::sinh(e1));
       m_maxBinCoord.push_back(m_layerDescription.refCoord * std::sinh(e2));
     } else {
@@ -92,12 +83,8 @@ GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
       if (m_layerDescription.refCoord > 0) {
         std::swap(e1, e2);
       }
-      float r = m_layerDescription.refCoord / std::sinh(e1);
-      m_minBinCoord.push_back(r);
-      m_minRadius.push_back(r - 2.0f);
-      r = m_layerDescription.refCoord / std::sinh(e2);
-      m_maxBinCoord.push_back(r);
-      m_maxRadius.push_back(r + 2.0f);
+      m_minBinCoord.push_back(m_layerDescription.refCoord / std::sinh(e1));
+      m_maxBinCoord.push_back(m_layerDescription.refCoord / std::sinh(e2));
     }
 
     eta += m_binning.etaBinWidth;
