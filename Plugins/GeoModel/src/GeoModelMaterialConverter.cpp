@@ -43,8 +43,7 @@ Material ActsPlugins::GeoModel::geoMaterialConverter(const GeoMaterial& gm,
   if (useMolarDensity) {
     const double molarDensity =
         massDensity /
-        (A * Acts::UnitConstants::u *
-         (Acts::UnitConstants::kAvogadro / Acts::UnitConstants::mol));
+        (A * Acts::UnitConstants::u * (Acts::PhysicalConstants::kAvogadro));
     return Material::fromMolarDensity(x0, l0, A, Z, molarDensity);
   } else {
     return Material::fromMassDensity(x0, l0, A, Z, massDensity);
