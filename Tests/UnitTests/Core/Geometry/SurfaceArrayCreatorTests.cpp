@@ -483,17 +483,15 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_phiAxisAlignsModuleCentres,
   }
 }
 
-// The lookup happens where the track crosses the representative cylinder, but
-// the module it hits sits at a different radius, so at a shallow angle the two
-// are far apart in z. A fixed one-bin window stops covering that as soon as the
-// grid is refined - which is exactly what a bin count multiplier does - so the
-// window has to follow the crossing angle instead.
+// The lookup sits where the track crosses the representative cylinder, the
+// module it hits at a different radius, so a shallow track needs a window wider
+// than one bin, and wider still the finer the grid.
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_neighborWindowFollowsCrossingAngle,
                         SurfaceArrayCreatorFixture) {
   constexpr int nPhi = 30;
   constexpr int nZ = 20;
-  // 2 mm of radial stagger, so a shallow track really does travel along the
-  // layer between the representative surface and the module it hits
+  // 2 mm of radial stagger, so a shallow track travels along the layer between
+  // the representative surface and the module it hits
   auto [surfaces, pairs] =
       makeBarrelStagger(nPhi, nZ, 0., std::numbers::pi / 9., 2., 1.5, 2.);
   auto surfacesRaw = unpackSmartPointers(surfaces);
@@ -531,8 +529,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_neighborWindowFollowsCrossingAngle,
           continue;
         }
 
-        // the navigator looks the layer up where the track crosses the
-        // representative surface, not where it crosses a module
+        // the navigator looks the layer up at the representative surface,
+        // not at a module
         const Intersection3D approach =
             surfaceArray.surfaceRepresentation()
                 ->intersect(tgContext, Vector3::Zero(), direction,

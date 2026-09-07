@@ -471,9 +471,8 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   /// Below this the track runs along the layer and the window opens fully.
   static constexpr double s_minIncidence = 1e-4;
 
-  /// How many bins the track moves along each axis while inside the layer.
-  /// The lookup sits where the track crosses the representative surface, a
-  /// module where it projects onto it; the window spans the difference.
+  /// How many bins the track moves along each axis while inside the layer,
+  /// i.e. between the crossing the lookup uses and the module's projection.
   GridDistance crossingNeighborDistance(const GeometryContext& gctx,
                                         const Crossing& crossing,
                                         const Vector3& direction,

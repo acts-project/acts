@@ -221,15 +221,13 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   const std::array<std::size_t, 2> crossingBins{axes.at(0)->getBin(0.),
                                                 axes.at(1)->getBin(0.)};
 
-  // at normal incidence the track does not move along the layer at all, so the
-  // lookup is the bin itself
+  // at normal incidence the track does not slide, so the lookup is the bin
   BOOST_CHECK(std::ranges::equal(
       sa.neighbors(tgContext, crossing, crossing.normalized()),
       sa.neighbors(crossingBins, {0, 0})));
 
-  // a track inclined in z slides along z while it is inside the layer, and only
-  // along z - widening phi as well would only cost candidates. the tolerance is
-  // 1 and the z bins are 4 wide, so a slope of 3 reaches one bin and 7 two.
+  // an inclined track slides along z only, so only z widens. the z bins are 4
+  // wide against a tolerance of 1: a slope of 3 reaches one bin, 7 two.
   for (const auto& [slope, distance] :
        std::vector<std::pair<double, std::uint8_t>>{{3., 1}, {7., 2}}) {
     const Vector3 direction = Vector3(1, 0, slope).normalized();
@@ -240,8 +238,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
                             sa.neighbors(crossingBins, {distance, distance})));
   }
 
-  // a floor on the window serves at least that many bins even at normal
-  // incidence, for lookups that cannot see the surfaces the fill saw
+  // the floor is served regardless of the crossing angle
   SurfaceArray floored(tgContext, brl, cylinder, 1., std::tuple{phiAxis, zAxis},
                        {{1, 1}, {1, 2}});
   BOOST_CHECK(std::ranges::equal(
@@ -251,14 +248,12 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
                                  std::tuple{phiAxis, zAxis}, {{2, 2}, {1, 2}}),
                     std::invalid_argument);
 
-  // no pack is cached past the bound, so asking for one is an error rather
-  // than the next bin's pack
+  // nothing is cached past the bound, so asking for it is an error
   BOOST_CHECK_THROW(floored.neighbors(crossingBins, {2, 0}), std::out_of_range);
   BOOST_CHECK_THROW(floored.neighbors(crossingBins, {0, 3}), std::out_of_range);
   BOOST_CHECK_THROW(floored.neighbors({10000, 0}, {0, 0}), std::out_of_range);
 
-  // a scalar bound converts to the isotropic window it used to describe: one
-  // bin unless the bound forbids it, at most the bound
+  // a scalar bound is the isotropic window it used to describe
   ACTS_PUSH_IGNORE_DEPRECATED()
   const SurfaceArray scalarBound(tgContext, brl, cylinder, 1.,
                                  std::tuple{phiAxis, zAxis}, std::uint8_t{1});
