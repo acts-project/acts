@@ -35,7 +35,7 @@ ActsPlugins::detail::GeoBoxConverter::operator()(
   // Create the surface transform
   Transform3 transform = Transform3::Identity();
   transform.translation() = unitLength * absTransform.translation();
-  auto rotation = absTransform.rotation();
+  RotationMatrix3 rotation = absTransform.rotation();
   // Get the half lengths
   std::vector<double> halfLengths = {geoBox.getXHalfLength(),
                                      geoBox.getYHalfLength(),

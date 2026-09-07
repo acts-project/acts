@@ -116,7 +116,7 @@ std::vector<Surface*> CylindricalTrackingGeometry::surfacesCylinder(
     moduleRotation.col(1) = moduleLocalY;
     moduleRotation.col(2) = moduleLocalZ;
     // Get the moduleTransform
-    auto mModuleTransform = Transform3(Translation3(mCenter) * moduleRotation);
+    auto mModuleTransform = makeTransform3(moduleRotation, mCenter);
     // Create the detector element
     auto detElement = std::make_unique<DetectorElementStub>(
         mModuleTransform, mBounds, moduleThickness, moduleMaterialPtr);

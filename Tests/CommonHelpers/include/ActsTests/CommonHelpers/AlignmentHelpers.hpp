@@ -136,8 +136,8 @@ struct TelescopeDetector {
     std::vector<Acts::LayerPtr> layers(nLayers);
     for (unsigned int i = 0; i < nLayers; ++i) {
       // The transform
-      Acts::Translation3 trans(0., 0., positions[i]);
-      Acts::Transform3 trafo(rotation * trans);
+      Acts::Vector3 center = rotation * Acts::Vector3(0., 0., positions[i]);
+      Acts::Transform3 trafo = Acts::makeTransform3(rotation, center);
       auto detElement = std::make_shared<DetectorElementStub>(
           trafo, rBounds, 1._um, surfaceMaterial);
       // The surface is not right!!!
@@ -154,9 +154,9 @@ struct TelescopeDetector {
       mutableSurface->associateLayer(*layers[i]);
     }
 
-    // The volume transform
-    Acts::Translation3 transVol(0, 0, 0);
-    Acts::Transform3 trafoVol(rotation * transVol);
+    // The volume transform, centered at the origin
+    Acts::Transform3 trafoVol =
+        Acts::makeTransform3(rotation, Acts::Vector3::Zero());
     auto boundsVol = std::make_shared<Acts::CuboidVolumeBounds>(
         rBounds->halfLengthX() + 10._mm, rBounds->halfLengthY() + 10._mm,
         length + 10._mm);

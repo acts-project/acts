@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   rotation.col(0) = localX;
   rotation.col(1) = localY;
   rotation.col(2) = localZ;
-  transform = Transform3(Translation3(center) * rotation);
+  transform = makeTransform3(rotation, center);
   // Create the module surface
   auto trapeozidPlaneTransformed =
       Surface::makeShared<PlaneSurface>(transform, trapezoidBounds);
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   frotation.col(0) = flocalX;
   frotation.col(1) = localY;
   frotation.col(2) = flocalZ;
-  auto ftransform = Transform3(Translation3(center) * frotation);
+  auto ftransform = makeTransform3(frotation, center);
   // Create the module surface
   auto ftrapeozidPlaneTransformed =
       Surface::makeShared<PlaneSurface>(ftransform, trapezoidBounds);

@@ -53,10 +53,9 @@ Transform3 estimationFrameLocalToGlobal(const Vector3& sp0, const Vector3& sp1,
   rotation.col(0) = newXAxis;
   rotation.col(1) = newYAxis;
   rotation.col(2) = newZAxis;
-  // The center of the new frame is at the bottom space point
-  const Translation3 translation(sp0);
-  // The transform which constructs the new frame
-  return translation * rotation;
+  // The transform which constructs the new frame, centered at the bottom
+  // space point
+  return makeTransform3(rotation, sp0);
 }
 
 double computeDzDs(double A, double B, const Vector3& local0,

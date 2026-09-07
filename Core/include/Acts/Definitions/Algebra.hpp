@@ -23,6 +23,8 @@
 #include <Eigen/Geometry>
 #endif
 
+#include <cassert>
+
 namespace Acts {
 
 /// @defgroup algebra_types Algebra types
@@ -93,13 +95,63 @@ using RotationMatrix3 = SquareMatrix3;
 /// @brief Rotation defined by an angle around a rotation axis in 3D
 using AngleAxis3 = Eigen::AngleAxis<double>;
 
-/// @brief 2D affine transformation stored as a compact 2x3 matrix
-using Transform2 = Eigen::Transform<double, 2, Eigen::AffineCompact>;
-/// @brief 3D affine transformation stored as a 4x4 matrix
-using Transform3 = Eigen::Transform<double, 3, Eigen::Affine>;
+/// @brief 2D rigid transformation, see @ref Acts::Transform3
+using Transform2 = Eigen::Transform<double, 2, Eigen::Isometry>;
+/// @brief 3D rigid transformation (rotation/reflection plus translation)
+///
+/// The linear part is required to be orthogonal. This is what the geometry,
+/// navigation and propagation code assumes throughout: inverses are taken as
+/// transposes and local frame axes are read directly off the linear part.
+/// Scaling or shearing a @c Transform3 is therefore a compile error - use
+/// @ref Acts::AffineTransform3 where a general transformation is really meant.
+using Transform3 = Eigen::Transform<double, 3, Eigen::Isometry>;
+
+/// @brief 2D general affine transformation, see @ref Acts::AffineTransform3
+using AffineTransform2 = Eigen::Transform<double, 2, Eigen::Affine>;
+/// @brief 3D general affine transformation, allowing scaling and shearing
+///
+/// ACTS geometry cannot be built from these - they exist to name the
+/// transformations that arrive from external geometry sources, which have to
+/// be converted to a @ref Acts::Transform3 explicitly.
+using AffineTransform3 = Eigen::Transform<double, 3, Eigen::Affine>;
 
 /// Tolerance for transform equivalence checks
 constexpr double s_transformEquivalentTolerance = 1e-9;
+
+/// @brief Build a @ref Acts::Transform3 from a rotation and a translation
+///
+/// Maps a point as `p -> rotation * p + translation`, i.e. it rotates about
+/// the origin first and translates afterwards. The translation is **not**
+/// rotated - it is given in the frame that is mapped *into*, and ends up
+/// verbatim in @c transform.translation().
+///
+/// Read as a frame rather than as a sequence, which avoids the question
+/// entirely: the columns of @p rotation are the axes of the local frame and
+/// @p translation is its origin, both expressed in the target frame.
+///
+/// This is the Eigen product `Translation3(translation) * rotation`, which
+/// cannot be assigned to a @ref Acts::Transform3 because a plain matrix
+/// carries no orthogonality guarantee. This function makes that guarantee
+/// explicit and asserts it.
+///
+/// To translate along the *rotated* axes instead - the Eigen product
+/// `rotation * Translation3(translation)` - rotate the translation yourself:
+/// `makeTransform3(rotation, rotation * translation)`.
+///
+/// @param rotation The orthogonal linear part, i.e. the local frame axes
+/// @param translation The local frame origin, in the target frame
+/// @return The combined rigid transformation
+inline Transform3 makeTransform3(const RotationMatrix3& rotation,
+                                 const Vector3& translation) {
+  assert((rotation * rotation.transpose())
+             .isApprox(RotationMatrix3::Identity(),
+                       s_transformEquivalentTolerance) &&
+         "Transform3 requires an orthogonal rotation part");
+  Transform3 transform = Transform3::Identity();
+  transform.linear() = rotation;
+  transform.translation() = translation;
+  return transform;
+}
 
 /// @}
 

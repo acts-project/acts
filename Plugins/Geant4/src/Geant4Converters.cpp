@@ -321,20 +321,19 @@ ActsPlugins::Geant4ShapeConverter::planarBounds(const G4VSolid& g4Solid) {
 namespace {
 Transform3 axesOriented(const Transform3& toGlobalOriginal,
                         const std::array<int, 2u>& axes) {
-  auto originalRotation = toGlobalOriginal.rotation();
-  auto colX = originalRotation.col(std::abs(axes[0u]));
-  auto colY = originalRotation.col(std::abs(axes[1u]));
-  colX *= std::copysign(1., axes[0u]);
-  colY *= std::copysign(1., axes[1u]);
-  Vector3 colZ = colX.cross(colY);
+  const RotationMatrix3 originalRotation = toGlobalOriginal.rotation();
+  const Vector3 colX =
+      std::copysign(1., axes[0u]) * originalRotation.col(std::abs(axes[0u]));
+  const Vector3 colY =
+      std::copysign(1., axes[1u]) * originalRotation.col(std::abs(axes[1u]));
+  const Vector3 colZ = colX.cross(colY);
 
-  Transform3 orientedTransform = Transform3::Identity();
-  orientedTransform.matrix().block<3, 1>(0, 0) = colX;
-  orientedTransform.matrix().block<3, 1>(0, 1) = colY;
-  orientedTransform.matrix().block<3, 1>(0, 2) = colZ;
-  orientedTransform.matrix().block<3, 1>(0, 3) = toGlobalOriginal.translation();
+  RotationMatrix3 orientedRotation;
+  orientedRotation.col(0) = colX;
+  orientedRotation.col(1) = colY;
+  orientedRotation.col(2) = colZ;
 
-  return orientedTransform;
+  return makeTransform3(orientedRotation, toGlobalOriginal.translation());
 }
 }  // namespace
 

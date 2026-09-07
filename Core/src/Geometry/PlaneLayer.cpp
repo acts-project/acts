@@ -70,12 +70,10 @@ void PlaneLayer::buildApproachDescriptor() {
   const Vector3& lCenter = center(gctx);
   const Vector3& lVector = normal(gctx, lCenter);
   // create new surfaces
-  const Transform3 apnTransform = Transform3(
-      Translation3(lCenter - 0.5 * Layer::m_layerThickness * lVector) *
-      lRotation);
-  const Transform3 appTransform = Transform3(
-      Translation3(lCenter + 0.5 * Layer::m_layerThickness * lVector) *
-      lRotation);
+  const Transform3 apnTransform = makeTransform3(
+      lRotation, lCenter - 0.5 * Layer::m_layerThickness * lVector);
+  const Transform3 appTransform = makeTransform3(
+      lRotation, lCenter + 0.5 * Layer::m_layerThickness * lVector);
   // create the new surfaces
   aSurfaces.push_back(
       Surface::makeShared<PlaneSurface>(apnTransform, PlaneSurface::m_bounds));

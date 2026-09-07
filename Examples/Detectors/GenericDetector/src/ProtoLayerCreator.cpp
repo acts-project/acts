@@ -90,8 +90,8 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::centralProtoLayers(
         moduleRotation.col(1) = moduleLocalY;
         moduleRotation.col(2) = moduleLocalZ;
         // get the moduleTransform
-        Acts::Transform3 moduleTransform(Acts::Translation3(moduleCenter) *
-                                         moduleRotation);
+        Acts::Transform3 moduleTransform =
+            Acts::makeTransform3(moduleRotation, moduleCenter);
         // stereo angle if necessary
         if (!m_cfg.centralModuleFrontsideStereo.empty() &&
             m_cfg.centralModuleFrontsideStereo.at(icl) != 0.) {
@@ -112,8 +112,8 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::centralProtoLayers(
           Acts::Vector3 bsModuleCenter =
               moduleCenter +
               m_cfg.centralModuleBacksideGap.at(icl) * moduleLocalZ;
-          Acts::Transform3 bsModuleTransform(
-              Acts::Translation3(bsModuleCenter) * moduleRotation);
+          Acts::Transform3 bsModuleTransform =
+              Acts::makeTransform3(moduleRotation, bsModuleCenter);
           // apply the stereo
           if (!m_cfg.centralModuleBacksideStereo.empty()) {
             // twist by the stereo angle
@@ -245,8 +245,8 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::createProtoLayers(
           moduleRotation.col(1) = moduleLocalY;
           moduleRotation.col(2) = moduleLocalZ;
           // the transforms for the front module
-          const Acts::Transform3 moduleTransform(
-              Acts::Translation3(moduleCenter) * moduleRotation);
+          const Acts::Transform3 moduleTransform =
+              Acts::makeTransform3(moduleRotation, moduleCenter);
 
           // create the module
           auto moduleElement =
@@ -261,8 +261,8 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::createProtoLayers(
                 moduleCenter +
                 m_cfg.posnegModuleBacksideGap.at(ipnl).at(ipnR) * moduleLocalZ;
             // the backside transforms
-            Acts::Transform3 bsModuleTransform(
-                Acts::Translation3(moduleCenter) * moduleRotation);
+            Acts::Transform3 bsModuleTransform =
+                Acts::makeTransform3(moduleRotation, moduleCenter);
             // apply the stereo
             if (!m_cfg.posnegModuleBacksideStereo.empty()) {
               // twist by the stereo angle

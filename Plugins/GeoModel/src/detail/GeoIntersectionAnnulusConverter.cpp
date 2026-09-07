@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/AnnulusBoundsHelper.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoTransformConverter.hpp"
 
 #include <algorithm>
 
@@ -51,7 +52,7 @@ ActsPlugins::detail::GeoIntersectionAnnulusConverter::operator()(
     // Get the shift
     const GeoShapeShift* shapeShift = dynamic_cast<const GeoShapeShift*>(opB);
     if (shapeShift != nullptr) {
-      const Transform3& shift = shapeShift->getX();
+      const Transform3 shift = convertTransform(shapeShift->getX());
       const GeoGenericTrap* trap =
           dynamic_cast<const GeoGenericTrap*>(shapeShift->getOp());
       if (trap != nullptr) {
