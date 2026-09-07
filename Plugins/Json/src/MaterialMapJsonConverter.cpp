@@ -245,7 +245,7 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   std::vector<std::pair<GeometryIdentifier, const IVolumeMaterial*>>
       mapVolumeInit;
   for (const auto& [key, value] : volumeMap) {
-    mapVolumeInit.push_back({key, value.get()});
+    mapVolumeInit.emplace_back(key, value.get());
   }
   GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap(
       mapVolumeInit);
@@ -281,7 +281,7 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
   for (std::size_t i = 0; i < hierarchyVolumeMap.size(); i++) {
     std::shared_ptr<const IVolumeMaterial> volumePointer(
         hierarchyVolumeMap.valueAt(i));
-    volumeMap.insert({hierarchyVolumeMap.idAt(i), std::move(volumePointer)});
+    volumeMap.try_emplace(hierarchyVolumeMap.idAt(i), std::move(volumePointer));
   }
   GeometryHierarchyMap<nlohmann::json> hierarchySurfaceMap =
       m_surfaceMaterialConverter.fromJson(materialmap["Surfaces"]);
@@ -292,9 +292,9 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
         jEntry.at(jsonKey().materialkey).is_null()) {
       continue;
     }
-    surfaceMap.insert(
-        {hierarchySurfaceMap.idAt(i), SurfaceMaterialJsonConverter::fromJson(
-                                          jEntry.at(jsonKey().materialkey))});
+    surfaceMap.try_emplace(hierarchySurfaceMap.idAt(i),
+                           SurfaceMaterialJsonConverter::fromJson(
+                               jEntry.at(jsonKey().materialkey)));
   }
 
   Acts::TrackingGeometryMaterial maps = {surfaceMap, volumeMap};
