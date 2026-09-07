@@ -43,7 +43,7 @@ BoundTrackParameters unwrapPropagateToSurface(
     Result<BoundTrackParameters> res) {
   if (!res.ok()) {
     std::stringstream ss;
-    ss << "Propagation to surface failed with error: \"" << res.error() << "\"";
+    ss << "Propagation to surface failed with error: \"" << res.message() << "\"";
     throw std::runtime_error{ss.str()};
   }
   return *res;
