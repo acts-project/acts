@@ -191,7 +191,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
 
   // loop over bin groups
   for (const auto& bg : m_geometry->binGroups()) {
-    const detail::GbtsEtaBinInfo& B1 = nodeStorage.etaBin(bg.first);
+    const detail::GbtsEtaBinInfo& B1 = nodeStorage.etaBin(bg.bin);
 
     if (B1.empty()) {
       continue;
@@ -220,7 +220,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
     phiSlidingWindow.clear();
 
     // loop over n2 eta-bins in L2 layers
-    for (const auto& b2Idx : bg.second) {
+    for (const std::uint32_t b2Idx : bg.links) {
       const detail::GbtsEtaBinInfo& B2 = nodeStorage.etaBin(b2Idx);
 
       if (B2.empty()) {
