@@ -34,10 +34,6 @@ ActsPlugins::detail::GeoTrdConverter::operator()(
   static constexpr double unitLength =
       UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
-  // Create the surface transform
-  Transform3 transform = Transform3::Identity();
-  transform.translation() = unitLength * absTransform.translation();
-
   // GeoTrd coordinates: x is the extrusion direction, y is orthogonal to the
   // symmetry axis and z is along the symmetry axis
   double halfX1 = geoTrd.getXHalfLength1();
@@ -82,7 +78,9 @@ ActsPlugins::detail::GeoTrdConverter::operator()(
     trotation.col(1) = swapZ * absTransform.rotation().col(2);
     trotation.col(2) = swapZ * absTransform.rotation().col(0);
   }
-  transform.linear() = trotation;
+  // Create the surface transform
+  const Transform3 transform =
+      makeTransform3(trotation, unitLength * absTransform.translation());
 
   auto trapezoidBounds =
       boundFactory.makeBounds<TrapezoidBounds>(minHalfX, maxHalfX, halfZ);

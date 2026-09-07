@@ -37,9 +37,8 @@ ActsPlugins::detail::GeoPolygonConverter::operator()(
       UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
   // Create the surface transform
-  Transform3 transform = Transform3::Identity();
-  transform.translation() = unitLength * absTransform.translation();
-  RotationMatrix3 rotation = absTransform.rotation();
+  const Transform3 transform = makeTransform3(
+      absTransform.rotation(), unitLength * absTransform.translation());
   // Get the half lengths
   int nVertices = polygon.getNVertices();
   std::vector<std::vector<double>> vertices;
@@ -55,14 +54,6 @@ ActsPlugins::detail::GeoPolygonConverter::operator()(
     double hly = std::abs(vertices[0][1] - vertices[3][1]) / 2;
     std::array<double, 3> halfLengths = {hlxnegy, hlxposy, hly};
 
-    // Create the surface
-    Vector3 colX = rotation.col(0);
-    Vector3 colY = rotation.col(1);
-    Vector3 colZ = rotation.col(2);
-    rotation.col(0) = colX;
-    rotation.col(1) = colY;
-    rotation.col(2) = colZ;
-    transform.linear() = rotation;
     // Create the surface bounds
     double halfXnegY = unitLength * halfLengths[0];
     double halfXposY = unitLength * halfLengths[1];
@@ -86,16 +77,6 @@ ActsPlugins::detail::GeoPolygonConverter::operator()(
     double hlxposy = std::abs(vertices[4][0] - vertices[5][0]) / 2;
     double hly = std::abs(vertices[0][1] - vertices[4][1]) / 2;
     std::array<double, 5> halfLengths = {hlxnegy, hlxzeroy, hlxposy, hly, hly};
-
-    // Create the surface
-
-    Vector3 colX = rotation.col(0);
-    Vector3 colY = rotation.col(1);
-    Vector3 colZ = rotation.col(2);
-    rotation.col(0) = colX;
-    rotation.col(1) = colY;
-    rotation.col(2) = colZ;
-    transform.linear() = rotation;
 
     // Create the surface bounds
     double halfXnegY = unitLength * halfLengths[0];

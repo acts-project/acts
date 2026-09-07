@@ -333,6 +333,38 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(CylinderVolumeBeveledOrientedBoundaries) {
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+
+  const double halfZ = 20.;
+  const double bevelMinZ = std::numbers::pi / 6.;
+  const double bevelMaxZ = std::numbers::pi / 8.;
+  CylinderVolumeBounds cvb(5., 10., halfZ, std::numbers::pi, 0., bevelMinZ,
+                           bevelMaxZ);
+
+  auto oSurfaces = cvb.orientedSurfaces(Transform3::Identity());
+  BOOST_CHECK_EQUAL(oSurfaces.size(), 4);
+
+  // [0] is the negative z disc, [1] the positive z one
+  for (const auto& [index, bevel] :
+       {std::pair{0u, -bevelMinZ}, std::pair{1u, bevelMaxZ}}) {
+    const Transform3& transform =
+        oSurfaces[index].surface->localToGlobalTransform(geoCtx);
+    const RotationMatrix3 rotation = transform.rotation();
+
+    // The disc is tilted about the local x axis by the bevel angle ...
+    BOOST_CHECK(rotation.isApprox(
+        RotationMatrix3(AngleAxis3(bevel, Vector3::UnitX()))));
+    // ... and not scaled along any axis
+    CHECK_CLOSE_ABS(rotation.col(0).norm(), 1., 1e-12);
+    CHECK_CLOSE_ABS(rotation.col(1).norm(), 1., 1e-12);
+    CHECK_CLOSE_ABS(rotation.col(2).norm(), 1., 1e-12);
+
+    const double z = (index == 0u) ? -halfZ : halfZ;
+    CHECK_CLOSE_ABS(transform.translation().z(), z, 1e-12);
+  }
+}
+
 BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsSetValues) {
   CylinderVolumeBounds cyl(100, 300, 200);
 

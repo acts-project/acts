@@ -36,9 +36,8 @@ ActsPlugins::detail::GeoTubeConverter::operator()(
       UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
   // Create the surface transform
-  Transform3 transform = Transform3::Identity();
-  transform.translation() = unitLength * absTransform.translation();
-  transform.linear() = absTransform.rotation();
+  const Transform3 transform = makeTransform3(
+      absTransform.rotation(), unitLength * absTransform.translation());
 
   // Create the surface
   double innerRadius = unitLength * geoTube.getRMin();

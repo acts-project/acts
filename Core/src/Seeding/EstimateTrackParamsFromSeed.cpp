@@ -53,8 +53,7 @@ Transform3 estimationFrameLocalToGlobal(const Vector3& sp0, const Vector3& sp1,
   rotation.col(0) = newXAxis;
   rotation.col(1) = newYAxis;
   rotation.col(2) = newZAxis;
-  // The transform which constructs the new frame, centered at the bottom
-  // space point
+  // The new frame, centered at the bottom space point
   return makeTransform3(rotation, sp0);
 }
 

@@ -34,18 +34,22 @@ void Acts::to_json(nlohmann::json& j, const Acts::Transform3& t) {
 }
 
 void Acts::from_json(const nlohmann::json& j, Acts::Transform3& t) {
-  t = Acts::Transform3::Identity();
+  Acts::RotationMatrix3 rotation = Acts::RotationMatrix3::Identity();
+  Acts::Vector3 translation = Acts::Vector3::Zero();
   if (j.find("rotation") != j.end() && !j["rotation"].empty()) {
     std::array<double, 9> rdata = j["rotation"];
-    Acts::RotationMatrix3 rot;
-    rot << rdata[0], rdata[1], rdata[2], rdata[3], rdata[4], rdata[5], rdata[6],
-        rdata[7], rdata[8];
-    t.prerotate(rot);
+    rotation << rdata[0], rdata[1], rdata[2], rdata[3], rdata[4], rdata[5],
+        rdata[6], rdata[7], rdata[8];
+    // json is an external source, so this cannot rely on the debug assert
+    if (!Acts::isOrthogonal(rotation)) {
+      throw std::invalid_argument("Transform3 rotation is not orthogonal");
+    }
   }
   if (j.find("translation") != j.end() && !j["translation"].empty()) {
     std::array<double, 3> tdata = j["translation"];
-    t.pretranslate(Acts::Vector3(tdata[0], tdata[1], tdata[2]));
+    translation = Acts::Vector3(tdata[0], tdata[1], tdata[2]);
   }
+  t = Acts::makeTransform3(rotation, translation);
 }
 
 nlohmann::json Acts::Transform3JsonConverter::toJson(const Transform3& t,

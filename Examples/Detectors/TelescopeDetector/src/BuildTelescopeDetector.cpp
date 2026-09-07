@@ -79,7 +79,7 @@ ActsExamples::buildTelescopeDetector(
   std::size_t nLayers = positions.size();
   std::vector<Acts::LayerPtr> layers(nLayers);
   for (unsigned int i = 0; i < nLayers; ++i) {
-    // The layer center, rotated into the frame the telescope points along
+    // The layer center, rotated into the global frame
     Acts::Vector3 center =
         rotation * Acts::Vector3(offsets[0], offsets[1], positions[i]);
     Acts::Transform3 trafo = Acts::makeTransform3(rotation, center);

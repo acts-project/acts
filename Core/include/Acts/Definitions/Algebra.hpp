@@ -99,53 +99,49 @@ using AngleAxis3 = Eigen::AngleAxis<double>;
 using Transform2 = Eigen::Transform<double, 2, Eigen::Isometry>;
 /// @brief 3D rigid transformation (rotation/reflection plus translation)
 ///
-/// The linear part is required to be orthogonal. This is what the geometry,
-/// navigation and propagation code assumes throughout: inverses are taken as
-/// transposes and local frame axes are read directly off the linear part.
-/// Scaling or shearing a @c Transform3 is therefore a compile error - use
-/// @ref Acts::AffineTransform3 where a general transformation is really meant.
+/// The linear part is required to be orthogonal: geometry, navigation and
+/// propagation invert it by transposition and read the local frame axes off it
+/// directly. Scaling or shearing is therefore a compile error - use
+/// @ref Acts::AffineTransform3 for a general transformation.
 using Transform3 = Eigen::Transform<double, 3, Eigen::Isometry>;
 
-/// @brief 2D general affine transformation, see @ref Acts::AffineTransform3
-using AffineTransform2 = Eigen::Transform<double, 2, Eigen::Affine>;
 /// @brief 3D general affine transformation, allowing scaling and shearing
 ///
-/// ACTS geometry cannot be built from these - they exist to name the
-/// transformations that arrive from external geometry sources, which have to
-/// be converted to a @ref Acts::Transform3 explicitly.
+/// Names the transformations arriving from external geometry sources. They
+/// have to be converted to a @ref Acts::Transform3 explicitly before ACTS
+/// geometry can be built from them.
 using AffineTransform3 = Eigen::Transform<double, 3, Eigen::Affine>;
 
 /// Tolerance for transform equivalence checks
 constexpr double s_transformEquivalentTolerance = 1e-9;
 
+/// @brief Check whether a matrix is orthogonal, i.e. a rotation or reflection
+///
+/// This is the invariant @ref Acts::Transform3 relies on. Internal call sites
+/// use @ref Acts::makeTransform3, which asserts it; call this directly to
+/// reject a matrix coming from outside ACTS.
+///
+/// @param rotation The matrix to check
+/// @return Whether the matrix is orthogonal within
+///         @ref Acts::s_transformEquivalentTolerance
+inline bool isOrthogonal(const RotationMatrix3& rotation) {
+  return (rotation * rotation.transpose())
+      .isApprox(RotationMatrix3::Identity(), s_transformEquivalentTolerance);
+}
+
 /// @brief Build a @ref Acts::Transform3 from a rotation and a translation
 ///
-/// Maps a point as `p -> rotation * p + translation`, i.e. it rotates about
-/// the origin first and translates afterwards. The translation is **not**
-/// rotated - it is given in the frame that is mapped *into*, and ends up
-/// verbatim in @c transform.translation().
-///
-/// Read as a frame rather than as a sequence, which avoids the question
-/// entirely: the columns of @p rotation are the axes of the local frame and
-/// @p translation is its origin, both expressed in the target frame.
-///
-/// This is the Eigen product `Translation3(translation) * rotation`, which
-/// cannot be assigned to a @ref Acts::Transform3 because a plain matrix
-/// carries no orthogonality guarantee. This function makes that guarantee
-/// explicit and asserts it.
-///
-/// To translate along the *rotated* axes instead - the Eigen product
-/// `rotation * Translation3(translation)` - rotate the translation yourself:
-/// `makeTransform3(rotation, rotation * translation)`.
+/// Maps `p -> rotation * p + translation`, i.e. the columns of @p rotation are
+/// the local frame axes and @p translation its origin, both in the target
+/// frame. Replaces the Eigen product `Translation3(translation) * rotation`,
+/// which is affine and cannot be assigned to a @ref Acts::Transform3.
 ///
 /// @param rotation The orthogonal linear part, i.e. the local frame axes
 /// @param translation The local frame origin, in the target frame
 /// @return The combined rigid transformation
 inline Transform3 makeTransform3(const RotationMatrix3& rotation,
                                  const Vector3& translation) {
-  assert((rotation * rotation.transpose())
-             .isApprox(RotationMatrix3::Identity(),
-                       s_transformEquivalentTolerance) &&
+  assert(isOrthogonal(rotation) &&
          "Transform3 requires an orthogonal rotation part");
   Transform3 transform = Transform3::Identity();
   transform.linear() = rotation;
