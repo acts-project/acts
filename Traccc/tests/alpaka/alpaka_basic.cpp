@@ -15,8 +15,14 @@
 #include <vecmem/containers/vector.hpp>
 
 // Alpaka include(s).
+//
+// alpaka aliases CUDA/HIP builtin vector types (ulonglong4 and friends) that
+// newer toolkits deprecate: the warning is about alpaka's header, not ours.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <alpaka/alpaka.hpp>
 #include <alpaka/example/ExampleDefaultAcc.hpp>
+#pragma GCC diagnostic pop
 
 // GoogleTest include(s).
 #include <gtest/gtest.h>
