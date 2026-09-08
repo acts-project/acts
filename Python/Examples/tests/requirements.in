@@ -12,3 +12,4 @@ filelock
 mplhep
 hist
 pyarrow
+scipy

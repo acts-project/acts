@@ -556,8 +556,8 @@ void addEventData(py::module_& m) {
   // replicating what the whiteboard does, so proxy tether failures can be
   // tested without acts.examples.
   auto mt = m.def_submodule("_testing");
-  mt.def("consume_spacepoints", [](std::unique_ptr<SpacePointContainer>) {});
-  mt.def("consume_seeds", [](std::unique_ptr<SeedContainer>) {});
+  mt.def("consumeSpacePoints", [](std::unique_ptr<SpacePointContainer>) {});
+  mt.def("consumeSeeds", [](std::unique_ptr<SeedContainer>) {});
 }
 
 }  // namespace ActsPython

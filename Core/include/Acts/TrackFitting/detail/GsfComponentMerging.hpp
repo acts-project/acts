@@ -57,6 +57,7 @@ struct CyclicRadiusAngle {
 };
 
 /// A compile time map to provide angle descriptions for different surfaces
+//! [angle description]
 template <Surface::SurfaceType type_t>
 struct AngleDescription {
   using Desc = std::tuple<CyclicAngle<eBoundPhi>>;
@@ -72,6 +73,7 @@ struct AngleDescription<Surface::Cylinder> {
   using Desc =
       std::tuple<CyclicRadiusAngle<eBoundLoc0>, CyclicAngle<eBoundPhi>>;
 };
+//! [angle description]
 
 /// Helper function that encapsulates a switch-case to select the correct angle
 /// description dependent on the surface
@@ -122,6 +124,7 @@ BoundVector mergeGaussianMixtureMean(const component_range_t &cmps,
   // For normal values, just keep the real values. For angles, use the complex
   // phase. Weighting then transparently happens by multiplying a real-valued
   // weight.
+  //! [circular mean]
   using CVec = Eigen::Matrix<std::complex<double>, eBoundSize, 1>;
   CVec cMean = CVec::Zero();
   double sumOfWeights = 0;
@@ -147,6 +150,7 @@ BoundVector mergeGaussianMixtureMean(const component_range_t &cmps,
     mean[desc.idx] = desc.constant * std::arg(cMean[desc.idx]);
   };
   std::apply([&](auto... dsc) { (getArg(dsc), ...); }, angleDesc);
+  //! [circular mean]
 
   return mean;
 }

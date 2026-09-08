@@ -29,7 +29,7 @@ struct gbts_match_graph_edges_payload {
   traccc::gbts_match_graph_edges_params gbts_match_graph_edges_params;
   /// Packed per-edge [exp_eta, curv, phi_z, phi_w], from
   /// gbts_make_graph_edges
-  vecmem::data::vector_view<const float4> edge_params;
+  vecmem::data::vector_view<const short4> edge_params;
   /// (src, dst) node indices per edge
   vecmem::data::vector_view<const uint2> edge_nodes;
   /// Per-node prefix sum of incoming edges (used to locate candidates)
@@ -42,6 +42,8 @@ struct gbts_match_graph_edges_payload {
   vecmem::data::vector_view<unsigned int> neighbours;
   /// Output: per-edge "kept" flag, later compacted into a re-index
   vecmem::data::vector_view<int> reIndexer;
+  /// class for decoding short4 edge params to float4, bool
+  edge_params_converter edge_params_decoder;
   /// In/out: global atomic counter of total accepted connections
   unsigned int* nConnectionsCounter;
 };

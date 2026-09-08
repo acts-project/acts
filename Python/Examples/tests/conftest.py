@@ -6,7 +6,6 @@ import os
 import tempfile
 import shutil
 from typing import Dict
-import warnings
 import pytest_check as check
 from collections import namedtuple
 import filelock
@@ -96,10 +95,11 @@ def assert_root_hash(request, root_file_exp_hashes):
         gkey = f"{request.node.name}__{key}"
         act_hash = helpers.hash_root.hash_root_file(file)
         if not gkey in root_file_exp_hashes:
-            warnings.warn(
-                f'Hash lookup key "{key}" not found for test "{request.node.name}"'
+            check.equal(
+                act_hash,
+                "[MISSING]",
+                msg=f'Hash lookup key "{key}" not found for test "{request.node.name}"',
             )
-            check.equal(act_hash, "[MISSING]")
             exc = RootHashAssertionError(file, gkey, "[MISSING]", act_hash)
             hash_assertion_failures.append(exc)
 

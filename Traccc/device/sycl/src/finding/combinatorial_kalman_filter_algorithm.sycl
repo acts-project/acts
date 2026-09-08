@@ -35,12 +35,18 @@
 #include "traccc/finding/device/propagate_to_next_surface.hpp"
 #include "traccc/finding/device/remove_duplicates.hpp"
 #include "traccc/finding/device/update_tip_length_buffer.hpp"
+#include "traccc/geometry/detector_buffer.hpp"
 #include "traccc/geometry/detector_type_list.hpp"
 #include "traccc/utils/detector_buffer_bfield_visitor.hpp"
 #include "traccc/utils/propagation.hpp"
 
 // VecMem include(s).
 #include <vecmem/utils/sycl/local_accessor.hpp>
+
+// System include(s).
+#include <new>
+#include <type_traits>
+#include <utility>
 
 namespace traccc::sycl {
 namespace kernels {
@@ -61,6 +67,9 @@ struct progressive_kalman_filter {};
 
 template <typename detector_t, typename bfield_t>
 struct propagate_to_next_surface {};
+
+template <typename detector_t>
+struct create_device_detector {};
 
 struct gather_best_tips_per_measurement {};
 
@@ -327,7 +336,8 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_keys(
 
 void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
     unsigned int n_threads, const finding_config& config,
-    const detector_buffer& detector, const magnetic_field& field,
+    const detector_buffer& detector, const move_only_any& device_detector,
+    const magnetic_field& field,
     const device::propagate_to_next_surface_payload& payload) const {
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
@@ -335,13 +345,15 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
                                          sycl::bfield_type_list<scalar>>(
       detector, field,
       [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view& det,
+          const typename detector_traits_t::view&,
           const bfield_view_t& bfield) {
-        // Copy the detector data to device memory.
-        vecmem::data::vector_buffer<typename detector_traits_t::view>
-            device_det(1u, mr().main);
-        copy().setup(device_det)->ignore();
-        copy()({1u, &det}, device_det)->ignore();
+        // The detector was already built in global memory by
+        // create_device_detector, which dispatched over the same detector
+        // type list, so this is the type it stored there.
+        const vecmem::data::vector_buffer<typename detector_traits_t::device>&
+            device_detector_buffer =
+                device_detector.as<vecmem::data::vector_buffer<
+                    typename detector_traits_t::device>>();
 
         // Launch the kernel to propagate all active tracks to the next
         // surface.
@@ -350,15 +362,45 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
               detector_tag_selector_t<detector_traits_t>,
               bfield_tag_selector_t<typename bfield_view_t::backend_t>>>(
               details::calculate1DimNdRange(n_threads, warp_size() * 4),
-              [config, det = device_det.ptr(), bfield,
+              [config, det = device_detector_buffer.ptr(), bfield,
                payload](::sycl::nd_item<1> item) {
                 device::propagate_to_next_surface<
                     traccc::details::ckf_propagator_t<
                         typename detector_traits_t::device, bfield_view_t>,
-                    bfield_view_t>(details::global_index(item), config, *det,
+                    bfield_view_t>(details::global_index(item), config, det,
                                    bfield, payload);
               });
         });
+      });
+}
+
+move_only_any combinatorial_kalman_filter_algorithm::create_device_detector(
+    const detector_buffer& det) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  return detector_buffer_visitor<detector_type_list>(
+      det, [&]<typename detector_traits_t>(
+               const typename detector_traits_t::view& det_view) {
+        using device_detector_t = typename detector_traits_t::device;
+
+        static_assert(
+            std::is_trivially_destructible_v<device_detector_t>,
+            "the detector is placement-constructed and never destroyed, so it "
+            "must not need a destructor");
+
+        vecmem::data::vector_buffer<device_detector_t> buffer(1u, mr().main);
+
+        // Build the detector once, in global memory, rather than in every
+        // thread of every propagation kernel.
+        squeue.submit([&](::sycl::handler& h) {
+          h.single_task<kernels::create_device_detector<
+              detector_tag_selector_t<detector_traits_t>>>(
+              [det_view, out = buffer.ptr()]() {
+                new (out) device_detector_t(det_view);
+              });
+        });
+
+        return move_only_any{std::move(buffer)};
       });
 }
 
@@ -423,6 +465,10 @@ void combinatorial_kalman_filter_algorithm::build_tracks_kernel(
                                calib_cfg, payload);
         });
   });
+}
+
+void combinatorial_kalman_filter_algorithm::synchronize() const {
+  details::get_queue(queue()).wait_and_throw();
 }
 
 }  // namespace traccc::sycl

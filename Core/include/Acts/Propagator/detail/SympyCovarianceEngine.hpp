@@ -33,7 +33,6 @@ namespace Acts::detail::sympy {
 /// @param [in] geoContext The geometry context
 /// @param [in, out] boundCovariance The covariance matrix of the state
 /// @param [in, out] fullTransportJacobian Full jacobian since the last reset
-/// @param [in, out] freeTransportJacobian Global jacobian since the last reset
 /// @param [in, out] freeToPathDerivatives Path length derivatives of the free,
 ///        nominal parameters
 /// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
@@ -54,8 +53,7 @@ namespace Acts::detail::sympy {
 Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian,
+    FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
     FreeVector& freeParameters, const ParticleHypothesis& particleHypothesis,
     bool covTransport, double accumulatedPath,
@@ -67,7 +65,6 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
 ///
 /// @param [in, out] boundCovariance The covariance matrix of the state
 /// @param [in, out] fullTransportJacobian Full jacobian since the last reset
-/// @param [in, out] freeTransportJacobian Global jacobian since the last reset
 /// @param [in, out] freeToPathDerivatives Path length derivatives of the free,
 ///        nominal parameters
 /// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
@@ -84,8 +81,7 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
 ///   - and the path length (from start - for ordering)
 std::tuple<BoundTrackParameters, BoundMatrix, double> curvilinearState(
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeMatrix& transportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian,
+    FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
     const FreeVector& freeParameters,
     const ParticleHypothesis& particleHypothesis, bool covTransport,
@@ -98,7 +94,6 @@ std::tuple<BoundTrackParameters, BoundMatrix, double> curvilinearState(
 /// @param [in] surface is the surface to which the covariance is forwarded to
 /// @param [in, out] boundCovariance The covariance matrix of the state
 /// @param [in, out] fullTransportJacobian Full jacobian since the last reset
-/// @param [in, out] freeTransportJacobian Global jacobian since the last reset
 /// @param [in, out] freeToPathDerivatives Path length derivatives
 /// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
 ///        parametrisation to free parameters
@@ -111,8 +106,7 @@ std::tuple<BoundTrackParameters, BoundMatrix, double> curvilinearState(
 void transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian,
+    FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
     FreeVector& freeParameters,
     const FreeToBoundCorrection& freeToBoundCorrection);
@@ -122,7 +116,6 @@ void transportCovarianceToBound(
 ///
 /// @param [in, out] boundCovariance The covariance matrix of the state
 /// @param [in, out] fullTransportJacobian Full jacobian since the last reset
-/// @param [in, out] freeTransportJacobian Global jacobian since the last reset
 /// @param [in, out] freeToPathDerivatives Path length derivatives
 /// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
 ///        parametrisation to free parameters
@@ -130,8 +123,7 @@ void transportCovarianceToBound(
 ///
 void transportCovarianceToCurvilinear(
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian,
+    FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
     const Vector3& direction);
 

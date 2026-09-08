@@ -136,12 +136,26 @@ Result<void> Navigator::initialize(
   // @TODO: Implement fast initialization with Gen3. This requires the volume
   // lookup to work properly
 
-  // The start information is resolved into locals and only assigned to the
-  // state at the end, so that nothing left over from a previous run of this
-  // state can leak into the resolution.
+  // Resolved into locals and written to the state only once complete, so that
+  // a previous run of this state cannot leak into the resolution.
   const TrackingVolume* startVolume = args.startVolume;
   const Layer* startLayer = nullptr;
   const Surface* startSurface = args.startSurface;
+
+  // Validate that the propagation state is consistent with the start surface
+  // before it is used to resolve the start volume
+  if (startSurface != nullptr &&
+      !startSurface->isOnSurface(state.options.geoContext, position, direction,
+                                 BoundaryTolerance::Infinite(),
+                                 state.options.surfaceTolerance)) {
+    ACTS_DEBUG(volInfo(startVolume)
+               << "We did not end up on the expected surface. surface = "
+               << startSurface->geometryId()
+               << " position = " << position.transpose()
+               << " direction = " << direction.transpose());
+
+    return Result<void>::failure(NavigatorError::NotOnExpectedSurface);
+  }
 
   // Fast Navigation initialization for start condition:
   // - short-cut through object association, saves navigation in the
@@ -155,7 +169,8 @@ Result<void> Navigator::initialize(
 
     startLayer = startSurface->associatedLayer();
     startVolume = startLayer->trackingVolume();
-  } else if (m_geometryVersion == Gen1 && startVolume != nullptr) {
+  } else if (m_geometryVersion == Gen1 && startVolume != nullptr &&
+             startSurface == nullptr) {
     ACTS_VERBOSE(
         volInfo(startVolume)
         << "Fast start initialization through association from Volume.");
@@ -169,9 +184,27 @@ Result<void> Navigator::initialize(
                  << "Starting from position " << toString(position)
                  << " and direction " << toString(direction));
 
-    // current volume and layer search through global search
-    startVolume = m_cfg.trackingGeometry->lowestTrackingVolume(
-        state.options.geoContext, position);
+    // Current volume and layer search through global search. If the start
+    // surface is a boundary between volumes, the position alone does not
+    // determine the start volume: the volume actually being entered depends
+    // on the direction, so the start surface is passed along as a hint.
+    const auto resolved = m_cfg.trackingGeometry->resolveLowestTrackingVolume(
+        state.options.geoContext, position, direction, startSurface,
+        state.options.surfaceTolerance);
+    if (!resolved.ok()) {
+      // The start surface bounds the volume at the position, but the position
+      // is outside of them, e.g. when grazing a volume edge within the surface
+      // tolerance.
+      ACTS_DEBUG(volInfo(startVolume)
+                 << "Could not resolve the start volume through the start "
+                    "surface = "
+                 << startSurface->geometryId() << ": "
+                 << resolved.error().message());
+
+      state.navigationBreak = true;
+      return Result<void>::failure(resolved.error());
+    }
+    startVolume = *resolved;
 
     if (startVolume != nullptr) {
       startLayer =
@@ -210,18 +243,6 @@ Result<void> Navigator::initialize(
   if (startSurface != nullptr) {
     ACTS_VERBOSE(volInfo(startVolume)
                  << "Start surface resolved " << startSurface->geometryId());
-
-    if (!startSurface->isOnSurface(state.options.geoContext, position,
-                                   direction, BoundaryTolerance::Infinite(),
-                                   state.options.surfaceTolerance)) {
-      ACTS_DEBUG(volInfo(startVolume)
-                 << "We did not end up on the expected surface. surface = "
-                 << startSurface->geometryId()
-                 << " position = " << position.transpose()
-                 << " direction = " << direction.transpose());
-
-      return Result<void>::failure(NavigatorError::NotOnExpectedSurface);
-    }
   }
 
   state.startVolume = startVolume;
@@ -258,8 +279,10 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
 
   // We might have punched through a boundary and entered another volume
   // so we have to reinitialize
-  state.currentVolume = m_cfg.trackingGeometry->lowestTrackingVolume(
-      state.options.geoContext, position);
+  state.currentVolume =
+      m_cfg.trackingGeometry
+          ->resolveLowestTrackingVolume(state.options.geoContext, position)
+          .value();
 
   if (state.currentVolume == nullptr) {
     ACTS_VERBOSE(volInfo(state) << "No volume found, stop navigation.");

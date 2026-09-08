@@ -92,49 +92,50 @@ void VectorMultiTrajectory::addTrackStateComponents_impl(
   using PropMask = TrackStatePropMask;
 
   IndexData& p = m_index[istate];
-  PropMask currentMask = p.allocMask;
+
+  PropMask allocated = PropMask::None;
 
   assert(m_params.size() == m_cov.size());
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Predicted) &&
-      !ACTS_CHECK_BIT(currentMask, PropMask::Predicted)) {
+  if (ACTS_CHECK_BIT(mask, PropMask::Predicted) && p.ipredicted == kInvalid) {
     m_params.emplace_back();
     m_cov.emplace_back();
     p.ipredicted = static_cast<IndexType>(m_params.size() - 1);
+    allocated |= PropMask::Predicted;
   }
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Filtered) &&
-      !ACTS_CHECK_BIT(currentMask, PropMask::Filtered)) {
+  if (ACTS_CHECK_BIT(mask, PropMask::Filtered) && p.ifiltered == kInvalid) {
     m_params.emplace_back();
     m_cov.emplace_back();
     p.ifiltered = static_cast<IndexType>(m_params.size() - 1);
+    allocated |= PropMask::Filtered;
   }
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Smoothed) &&
-      !ACTS_CHECK_BIT(currentMask, PropMask::Smoothed)) {
+  if (ACTS_CHECK_BIT(mask, PropMask::Smoothed) && p.ismoothed == kInvalid) {
     m_params.emplace_back();
     m_cov.emplace_back();
     p.ismoothed = static_cast<IndexType>(m_params.size() - 1);
+    allocated |= PropMask::Smoothed;
   }
 
   assert(m_params.size() == m_cov.size());
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Jacobian) &&
-      !ACTS_CHECK_BIT(currentMask, PropMask::Jacobian)) {
+  if (ACTS_CHECK_BIT(mask, PropMask::Jacobian) && p.ijacobian == kInvalid) {
     m_jac.emplace_back();
     p.ijacobian = static_cast<IndexType>(m_jac.size() - 1);
+    allocated |= PropMask::Jacobian;
   }
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Calibrated) &&
-      !ACTS_CHECK_BIT(currentMask, PropMask::Calibrated)) {
+  if (ACTS_CHECK_BIT(mask, PropMask::Calibrated) && p.iprojector == kInvalid) {
     m_sourceLinks.emplace_back(std::nullopt);
     p.iCalibratedSourceLink = static_cast<IndexType>(m_sourceLinks.size() - 1);
 
     m_projectors.push_back(0);
     p.iprojector = static_cast<IndexType>(m_projectors.size() - 1);
+    allocated |= PropMask::Calibrated;
   }
 
-  p.allocMask |= mask;
+  p.allocMask |= allocated;
 }
 
 void VectorMultiTrajectory::shareFrom_impl(IndexType iself, IndexType iother,

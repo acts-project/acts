@@ -28,8 +28,15 @@ if [[ "$os" == *ubuntu* ]]; then
   # see that action (GitLab CI). Idempotent, so the double call is free.
   "$(dirname "${BASH_SOURCE[0]}")/apt_mirror.sh"
 
-  ${SUDO} apt-get update
-  ${SUDO} apt-get install -y libgl1-mesa-dev
+  # `apt-get update` alone costs ~10 s (the universe index is ~19 MB), and all we
+  # need out of apt is the headers under /usr. Skip the whole thing when the
+  # image already ships them, so this becomes free once the CI images do.
+  if dpkg-query -W -f='${Status}' libgl1-mesa-dev 2>/dev/null | grep -q "^install ok installed$"; then
+    echo "libgl1-mesa-dev already installed, skipping apt"
+  else
+    ${SUDO} apt-get update
+    ${SUDO} apt-get install -y --no-install-recommends libgl1-mesa-dev
+  fi
 
   if [[ "$os" == *ubuntu24* ]]; then
     version="4.6"

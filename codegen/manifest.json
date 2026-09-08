@@ -1,0 +1,116 @@
+{
+    "comment": [
+        "Every piece of code generated during the ACTS build, keyed by where the",
+        "generated file lives inside a pre-generated code directory.",
+        "",
+        "This file is the single source of truth. cmake/ActsCodegen.cmake reads it to",
+        "drive acts_code_generation, and CI/pregenerate_codegen.py reads it to produce",
+        "the files ahead of a build, so the two cannot disagree about what exists or",
+        "about where a given file belongs.",
+        "",
+        "All paths are relative to the ACTS source root.",
+        "",
+        "  script            generator to run; it is passed the output path as argv[1]",
+        "  output            path the compiler includes, relative to the generated",
+        "                    include root added to the consuming target",
+        "  with_requirements requirement files to install before running the script",
+        "  with              packages to install before running the script",
+        "  isolated          run the generator without inheriting the ambient",
+        "                    environment's packages",
+        "  python_version    interpreter to run the generator with"
+    ],
+    "units": {
+        "Core/src/Definitions/ParticleDataTable.hpp": {
+            "script": "Fatras/scripts/generate_particle_data_table.py",
+            "output": "ParticleDataTable.hpp",
+            "with_requirements": [],
+            "with": [],
+            "isolated": false,
+            "python_version": "3.13"
+        },
+        "Core/src/Propagator/codegen/sympy_cov_math.hpp": {
+            "script": "Core/src/Propagator/detail/generate_sympy_cov.py",
+            "output": "codegen/sympy_cov_math.hpp",
+            "with_requirements": [
+                "codegen/requirements.txt"
+            ],
+            "with": [
+                "codegen"
+            ],
+            "isolated": true,
+            "python_version": "3.13"
+        },
+        "Core/src/Propagator/codegen/sympy_jac_math.hpp": {
+            "script": "Core/src/Propagator/detail/generate_sympy_jac.py",
+            "output": "codegen/sympy_jac_math.hpp",
+            "with_requirements": [
+                "codegen/requirements.txt"
+            ],
+            "with": [
+                "codegen"
+            ],
+            "isolated": true,
+            "python_version": "3.13"
+        },
+        "Core/src/Propagator/codegen/sympy_stepper_math.hpp": {
+            "script": "Core/src/Propagator/generate_sympy_stepper.py",
+            "output": "codegen/sympy_stepper_math.hpp",
+            "with_requirements": [
+                "codegen/requirements.txt"
+            ],
+            "with": [
+                "codegen"
+            ],
+            "isolated": true,
+            "python_version": "3.13"
+        },
+        "Detray/core/detray/propagator/detail/codegen/covariance_transport.hpp": {
+            "script": "Detray/codegen/detray-sympy/gen_transport_covariance_to_bound_impl.py",
+            "output": "detray/propagator/detail/codegen/covariance_transport.hpp",
+            "with_requirements": [
+                "codegen/requirements.txt"
+            ],
+            "with": [
+                "codegen"
+            ],
+            "isolated": true,
+            "python_version": "3.13"
+        },
+        "Detray/core/detray/propagator/detail/codegen/full_jacobian.hpp": {
+            "script": "Detray/codegen/detray-sympy/gen_full_jacobian.py",
+            "output": "detray/propagator/detail/codegen/full_jacobian.hpp",
+            "with_requirements": [
+                "codegen/requirements.txt"
+            ],
+            "with": [
+                "codegen"
+            ],
+            "isolated": true,
+            "python_version": "3.13"
+        },
+        "Detray/core/detray/propagator/detail/codegen/transport_jacobian.hpp": {
+            "script": "Detray/codegen/detray-sympy/gen_transport_jacobian_types.py",
+            "output": "detray/propagator/detail/codegen/transport_jacobian.hpp",
+            "with_requirements": [
+                "codegen/requirements.txt"
+            ],
+            "with": [
+                "codegen"
+            ],
+            "isolated": true,
+            "python_version": "3.13"
+        },
+        "Detray/core/detray/propagator/detail/codegen/update_rk_transport_jacobian.hpp": {
+            "script": "Detray/codegen/detray-sympy/gen_update_rk_transport_jacobian_impl.py",
+            "output": "detray/propagator/detail/codegen/update_rk_transport_jacobian.hpp",
+            "with_requirements": [
+                "codegen/requirements.txt"
+            ],
+            "with": [
+                "codegen"
+            ],
+            "isolated": true,
+            "python_version": "3.13"
+        }
+    }
+}

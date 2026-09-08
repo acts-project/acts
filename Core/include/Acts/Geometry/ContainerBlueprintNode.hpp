@@ -318,10 +318,14 @@ using ContainerBlueprintNode
     [[deprecated("Acts::Experimental::ContainerBlueprintNode moved to "
                  "Acts::ContainerBlueprintNode")]] =
         Acts::ContainerBlueprintNode;
+/// @deprecated Acts::Experimental::CylinderContainerBlueprintNode moved to
+///             Acts::CylinderContainerBlueprintNode.
 using CylinderContainerBlueprintNode
     [[deprecated("Acts::Experimental::CylinderContainerBlueprintNode moved to "
                  "Acts::CylinderContainerBlueprintNode")]] =
         Acts::CylinderContainerBlueprintNode;
+/// @deprecated Acts::Experimental::CuboidContainerBlueprintNode moved to
+///             Acts::CuboidContainerBlueprintNode.
 using CuboidContainerBlueprintNode
     [[deprecated("Acts::Experimental::CuboidContainerBlueprintNode moved to "
                  "Acts::CuboidContainerBlueprintNode")]] =

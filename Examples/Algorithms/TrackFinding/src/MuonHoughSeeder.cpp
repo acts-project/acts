@@ -95,6 +95,13 @@ ProcessCode MuonHoughSeeder::execute(const AlgorithmContext& ctx) const {
     MuonHoughMaxContainer etaMaxima = constructEtaMaxima(ctx, bucket, etaPlane);
     ACTS_VERBOSE(__func__ << "() - " << __LINE__ << " Found "
                           << etaMaxima.size() << " eta maxima");
+    if (!m_cfg.extendWithPhi) {
+      outMaxima.insert(outMaxima.end(),
+                       std::make_move_iterator(etaMaxima.begin()),
+                       std::make_move_iterator(etaMaxima.end()));
+      continue;
+    }
+
     MuonHoughMaxContainer stationMaxima =
         extendMaximaWithPhi(ctx, std::move(etaMaxima), phiPlane);
     ACTS_VERBOSE(__func__ << "() - " << __LINE__ << " Extended the maxima to "
@@ -160,10 +167,13 @@ MuonHoughMaxContainer MuonHoughSeeder::constructEtaMaxima(
   }
   /** Create a measurement vector of the pure phi hits to be copied on all eta
    * maxima */
+
   MuonHoughMaximum::HitVec phiHits{};
-  for (const MuonSpacePoint& sp : bucket) {
-    if (!sp.id().measuresEta()) {
-      phiHits.emplace_back(&sp);
+  if (m_cfg.extendWithPhi) {
+    for (const MuonSpacePoint& sp : bucket) {
+      if (!sp.id().measuresEta()) {
+        phiHits.emplace_back(&sp);
+      }
     }
   }
   for (const Maximum_t& peakMax : maxima) {

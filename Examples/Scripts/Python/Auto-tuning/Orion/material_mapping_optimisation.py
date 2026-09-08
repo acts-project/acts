@@ -95,7 +95,7 @@ def runMaterialMappingNoTrack(
     )
 
     stepper = StraightLineStepper()
-    mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
+    mmAlgCfg = MaterialMapping.Config(context.recoGeoContext, context.magFieldContext)
     mmAlgCfg.trackingGeometry = trackingGeometry
     mmAlgCfg.inputMaterialTracks = "material_tracks"
 
@@ -126,7 +126,7 @@ def runMaterialMappingNoTrack(
         processRepresenting=True,
         processBoundaries=True,
         processVolumes=True,
-        context=context.geoContext,
+        context=context.recoGeoContext,
     )
 
     jmw = JsonMaterialWriter(
@@ -249,7 +249,7 @@ def runMaterialMappingVariance(
     )
     s.addReader(reader)
     stepper = StraightLineStepper()
-    mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
+    mmAlgCfg = MaterialMapping.Config(context.recoGeoContext, context.magFieldContext)
     mmAlgCfg.trackingGeometry = trackingGeometryVar
     mmAlgCfg.inputMaterialTracks = "material_tracks"
 

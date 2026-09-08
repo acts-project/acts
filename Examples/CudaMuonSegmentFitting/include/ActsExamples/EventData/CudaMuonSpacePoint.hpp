@@ -43,12 +43,31 @@ namespace ActsExamples {
 /// memory storage
 ///
 /// @param rawId -> Muon ID as given to MuonSpacePoint
-/// @return Layer number in range of 0..31
+/// @return Layer number in range of 0..15
 __host__ __device__ inline unsigned detLayer(std::uint32_t rawId) noexcept {
   static constexpr std::uint32_t fourBit = 0xFu;
   static constexpr std::uint32_t layerShift = 17u;
 
   return static_cast<unsigned>((rawId >> layerShift) & fourBit);
+}
+
+/// Return whether a raw MuonId identifies an MDT measurement.
+/// The bit-field logic follows MuonSpacePoint.cpp; see that file for the full
+/// MuonId encoding.
+__host__ __device__ inline bool muonIdIsMdt(std::uint32_t rawId) noexcept {
+  static constexpr std::uint32_t threeBit = 0x7u;
+  static constexpr std::uint32_t technologyShift = 5u;
+  static constexpr std::uint32_t mdtTechnology = 0u;
+  return ((rawId >> technologyShift) & threeBit) == mdtTechnology;
+}
+
+/// Return whether a raw MuonId measures the precision (Eta) coordinate.
+/// The bit-field logic follows MuonSpacePoint.cpp; see that file for the full
+/// MuonId encoding.
+__host__ __device__ inline bool muonIdMeasuresEta(
+    std::uint32_t rawId) noexcept {
+  static constexpr std::uint32_t etaFlag = 1u << 14u;
+  return (rawId & etaFlag) != 0u;
 }
 
 /// @brief Device-side raw structure-of-arrays view.
@@ -87,7 +106,7 @@ struct CudaMuonSpacePointArrays {
 };
 
 /// @brief This is the RAM copy of the data. The container copies this data to VRAM
-/// with moveToDevice() and copies it back with moveToHost().
+/// with moveToDevice(stream) and copies it back with moveToHost(stream).
 struct CudaMuonSpacePointHostData {
   std::vector<Acts::GeometryIdentifier::Value> geometryId;
   std::vector<std::uint32_t> muonId;
@@ -326,11 +345,13 @@ class CudaMuonSpacePointContainer {
   /// @param cov2 Time covariance component.
   void setCovariance(size_type index, double cov0, double cov1, double cov2);
 
-  /// @brief Copies all host columns to device memory.
-  void moveToDevice();
+  /// @brief Copies all host columns on a CUDA stream.
+  /// The method waits only for the supplied stream.
+  void moveToDevice(cudaStream_t stream);
 
-  /// @brief Copies all device columns back to host memory.
-  void moveToHost();
+  /// @brief Copies all device columns on a CUDA stream.
+  /// The method waits only for the supplied stream.
+  void moveToHost(cudaStream_t stream);
 
   /// @brief Releases all device memory.
   void clearDevice() noexcept;

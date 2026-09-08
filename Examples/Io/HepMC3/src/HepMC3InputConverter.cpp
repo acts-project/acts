@@ -9,6 +9,9 @@
 #include "ActsExamples/Io/HepMC3/HepMC3InputConverter.hpp"
 
 #include "Acts/Utilities/ScopedTimer.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+
+#include <unordered_set>
 
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/GenParticle.h>
@@ -105,6 +108,70 @@ std::string printListing(const auto& vertices, const auto& particles) {
 };
 }  // namespace
 
+ActsExamples::HeavyFlavourOrigin HepMC3InputConverter::deriveHeavyFlavourOrigin(
+    const std::shared_ptr<const HepMC3::GenParticle>& particleToCheck) const {
+  std::vector<std::shared_ptr<const HepMC3::GenParticle>> st;
+  std::unordered_set<int> visited;
+  st.push_back(particleToCheck);
+
+  bool isFromCharm{false};
+  while (!st.empty()) {
+    const std::shared_ptr<const HepMC3::GenParticle> part = st.back();
+    st.pop_back();
+
+    if (!part) {
+      continue;
+    }
+
+    if (visited.count(part->id()) != 0u) {
+      continue;
+    }
+    visited.insert(part->id());
+
+    int pdgCode = std::abs(part->pid());
+    auto hadType = Acts::ParticleIdHelper::hadronType(
+        static_cast<Acts::PdgParticle>(pdgCode));
+
+    // --- beauty PDG IDs ---
+    if (hadType == Acts::HadronType::BottomMeson ||
+        hadType == Acts::HadronType::BottomBaryon ||
+        hadType == Acts::HadronType::BBbarMeson ||
+        (m_cfg.searchUpToHeavyFlavourQuark &&
+         static_cast<ActsExamples::HeavyFlavourOrigin>(pdgCode) ==
+             ActsExamples::HeavyFlavourOrigin::Bottom)) {
+      return ActsExamples::HeavyFlavourOrigin::Bottom;
+    }
+
+    // --- charm PDG IDs ---
+    if (hadType == Acts::HadronType::CharmedMeson ||
+        hadType == Acts::HadronType::CharmedBaryon ||
+        hadType == Acts::HadronType::CCbarMeson ||
+        (m_cfg.searchUpToHeavyFlavourQuark &&
+         static_cast<ActsExamples::HeavyFlavourOrigin>(pdgCode) ==
+             ActsExamples::HeavyFlavourOrigin::Charm)) {
+      // we do not return directly because
+      // B -> D -> X should be tagged as from beauty and not charm
+      isFromCharm = true;
+    }
+
+    // go to parents
+    const auto& vtx = part->production_vertex();
+    if (!vtx) {
+      continue;
+    }
+
+    for (const auto& parent : vtx->particles_in()) {
+      st.push_back(parent);
+    }
+  }
+
+  if (isFromCharm) {
+    return ActsExamples::HeavyFlavourOrigin::Charm;
+  }
+
+  return ActsExamples::HeavyFlavourOrigin::None;
+}
+
 void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
                                         SimVertex& vertex,
                                         std::vector<SimVertex>& vertices,
@@ -194,6 +261,8 @@ void HepMC3InputConverter::handleVertex(const HepMC3::GenVertex& genVertex,
 
       SimParticle simParticle{particleId, pdg, charge, mass};
       simParticle.initialState().setPosition4(vertex.position4);
+      simParticle.setOrigParticleIdx(particle->id());
+      simParticle.setHeavyFlavourOrigin(deriveHeavyFlavourOrigin(particle));
 
       const HepMC3::FourVector& genMomentum = particle->momentum();
       Acts::Vector3 momentum{genMomentum.px() * 1_GeV, genMomentum.py() * 1_GeV,

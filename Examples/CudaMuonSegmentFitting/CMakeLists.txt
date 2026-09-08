@@ -1,5 +1,6 @@
 acts_add_library(
     ExamplesCudaMuonSegmentFitting
+    src/CudaMuonHoughMaximum.cpp
     src/CudaMuonSpacePoint.cpp
     ACTS_INCLUDE_FOLDER include/ActsExamples
 )

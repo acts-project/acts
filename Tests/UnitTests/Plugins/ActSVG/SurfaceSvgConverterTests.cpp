@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "ActsPlugins/ActSVG/SvgUtils.hpp"
 
@@ -57,12 +58,18 @@ void runPlanarTests(const Surface& surface, const Svg::Style& style,
                             static_cast<double>(xyObject._y_range[1]));
 
   Svg::toFile({xyObject, xyAxes}, xyObject._id + ".svg");
-  // As sheet
-  auto svgSheet = Svg::Sheet::xy(svgTemplate, identification + "_sheet");
-  Svg::toFile({svgSheet}, svgSheet._id + ".svg");
 }
 
 BOOST_AUTO_TEST_SUITE(ActSvg)
+
+// actsvg 0.4.57 removed the sheet displays; the entry point is kept as a
+// deprecated stub so callers get a diagnostic rather than a missing symbol.
+BOOST_AUTO_TEST_CASE(SurfaceSheetThrows) {
+  Svg::ProtoSurface pSurface;
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  BOOST_CHECK_THROW(Svg::Sheet::xy(pSurface, "sheet"), std::runtime_error);
+  ACTS_POP_IGNORE_DEPRECATED()
+}
 
 BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   // Planar style

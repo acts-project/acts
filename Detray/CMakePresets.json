@@ -168,8 +168,8 @@
             }
         },
         {
-            "name": "detray-gitlab-cuda-ci",
-            "displayName": "Gitlab CUDA CI Configuration",
+            "name": "detray-github-cuda-ci",
+            "displayName": "GitHub CUDA CI Configuration",
             "inherits": [
                 "detray-default-fp32",
                 "detray-cuda"

@@ -9,12 +9,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "ActsPlugins/Json/SurfaceBoundsJsonConverter.hpp"
 
 #include <algorithm>
 #include <fstream>
 #include <memory>
+#include <numbers>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -50,6 +53,24 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsRoundTripTests) {
       SurfaceBoundsJsonConverter::fromJson<RectangleBounds>(rectangleIn);
 
   BOOST_CHECK(rectangeRef->values() == rectangleTest->values());
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceBoundsValueCountTests) {
+  // CylinderBounds gained eBevelMinZ/eBevelMaxZ after this format was already
+  // in use, so payloads written before that carry four values, not six.
+  nlohmann::json jShort;
+  jShort["type"] = "CylinderBounds";
+  jShort["values"] = std::vector<double>{30., 200., std::numbers::pi, 0.};
+  BOOST_CHECK_THROW(
+      SurfaceBoundsJsonConverter::fromJson<CylinderBounds>(jShort),
+      std::invalid_argument);
+
+  nlohmann::json jLong;
+  jLong["type"] = "RectangleBounds";
+  jLong["values"] = std::vector<double>{-4., -6., 4., 6., 0.};
+  BOOST_CHECK_THROW(
+      SurfaceBoundsJsonConverter::fromJson<RectangleBounds>(jLong),
+      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

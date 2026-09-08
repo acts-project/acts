@@ -24,6 +24,7 @@ namespace Acts {
 class Surface;
 
 /// @brief Interface for the material mapping, this is the accumulation step
+/// @ingroup material_mapping
 class ISurfaceMaterialAccumulator {
  public:
   /// The state of the material accumulator, this is used

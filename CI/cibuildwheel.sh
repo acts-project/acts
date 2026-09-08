@@ -32,5 +32,9 @@ export CIBW_TEST_COMMAND="pytest {package}/Python/Examples/tests -m pypi -v"
 # libs (e.g. libzstd) it repairs, causing a segfault at import time. Force a
 # newer patchelf until manylinux ships a stable release with the fix.
 export CIBW_REPAIR_WHEEL_COMMAND_LINUX="pipx install --force --pip-args='--pre' patchelf==0.19.0.0rc1 && auditwheel repair -w {dest_dir} {wheel}"
+# spack's thrift links the python.org framework's openssl while Arrow links
+# spack's own, giving delocate two different libssl.3.dylib to vendor. The
+# wrapper collapses them onto spack's copy first; see the script for details.
+export CIBW_REPAIR_WHEEL_COMMAND_MACOS="bash {package}/CI/repair_wheel_macos.sh {wheel} {dest_dir} {delocate_archs}"
 
 uv tool run cibuildwheel==3.4.1 "$@"

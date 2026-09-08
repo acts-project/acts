@@ -125,6 +125,11 @@ BOOST_AUTO_TEST_CASE(AddTrackStateComponents) {
   ct.testAddTrackStateComponents();
 }
 
+BOOST_AUTO_TEST_CASE(AddTrackStateComponentsAfterShareAndUnset) {
+  CommonTests ct;
+  ct.testAddTrackStateComponentsAfterShareAndUnset();
+}
+
 // assert expected "cross-talk" between trackstate proxies
 BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
   CommonTests ct;

@@ -108,7 +108,7 @@ ProcessCode IterativeVertexFinderAlgorithm::execute(
   Finder finder(std::move(finderCfg), logger().clone());
   Acts::IVertexFinder::State state{std::in_place_type<Finder::State>,
                                    *m_cfg.bField, ctx.magFieldContext};
-  Options finderOpts(ctx.geoContext, ctx.magFieldContext);
+  Options finderOpts(ctx.recoGeoContext, ctx.magFieldContext);
 
   // find vertices
   auto result = finder.find(inputTracks, finderOpts, state);

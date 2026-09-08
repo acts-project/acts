@@ -124,6 +124,11 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     bool computeSharedHits = false;
     /// Whether to trim the tracks
     bool trimTracks = true;
+    /// Whether to record track states on material-only surfaces. Disabling this
+    /// is faster but leaves those surfaces out of the track, which a refit with
+    /// the `DirectNavigator` needs. Not applied to the bremsstrahlung finder,
+    /// which does not support it.
+    bool recordMaterialStates = true;
 
     /// Whether to use the Joseph formulation for the Kalman filter update. This
     /// is typically more stable but also more computationally expensive.

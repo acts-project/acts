@@ -80,6 +80,8 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   ///
   /// @note the input parameter is ignored
+  /// @deprecated Use materialSlab(const Vector2&) with a prior
+  ///             Surface::globalToLocal() call instead.
   [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "
       "Surface::globalToLocal() call instead")]] const MaterialSlab&

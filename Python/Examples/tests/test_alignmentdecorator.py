@@ -93,3 +93,79 @@ def test_alignmentdecorator_gen_mode(capfd):
     # Count that the alignment store is decorated 37 times
     out, err = capfd.readouterr()
     assert out.count("Decorating AlgorithmContext with alignment store") == 37
+
+
+def _meanResidualPerLayer(rootFile, layer):
+    """Mean smoothed local residual on one telescope layer, and on all others."""
+    import uproot
+    import numpy as np
+
+    tree = uproot.open(f"{rootFile}:trackstates")
+    data = tree.arrays(["volume_id", "layer_id", "res_eLOC1_smt"], library="np")
+    vol = np.concatenate(data["volume_id"])
+    lay = np.concatenate(data["layer_id"])
+    res = np.concatenate(data["res_eLOC1_smt"])
+
+    onLayer = (vol == 1) & (lay == layer) & np.isfinite(res)
+    elsewhere = (vol == 1) & (lay != layer) & np.isfinite(res)
+    assert onLayer.sum() > 50, "not enough track states on the misaligned layer"
+    return np.mean(res[onLayer]), np.mean(np.abs(res[elsewhere]))
+
+
+@pytest.mark.skipif(not alignmentEnabled, reason="Alignment module is not set up")
+@pytest.mark.parametrize("target", ["both", "sim"])
+def test_alignmentdecorator_sim_reco_split(tmp_path, target):
+    """Simulation and reconstruction can run on different module placements.
+
+    With target=eBoth the shift is known to reconstruction and residuals stay
+    centred. With target=eSim only simulation sees it and the shifted layer picks
+    up a bias.
+    """
+    pytest.importorskip("uproot")
+
+    from acts import UnitConstants as u
+    from acts.examples import RandomNumbers, Sequencer, TelescopeDetector
+    from acts.examples.alignment import AlignmentDecorator
+
+    from misaligned_simulation import (
+        LAYER_POSITIONS,
+        addMisalignment,
+        addTelescopeChain,
+    )
+
+    layer = 4
+    shift = 0.2 * u.mm
+
+    detector = TelescopeDetector(
+        bounds=[200, 200],
+        positions=LAYER_POSITIONS,
+        stereos=[0] * len(LAYER_POSITIONS),
+        binValue=1,
+    )
+    trackingGeometry = detector.trackingGeometry()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    s = Sequencer(events=300, numThreads=1, outputDir=str(tmp_path))
+    addMisalignment(
+        s,
+        trackingGeometry,
+        layer=layer,
+        shift=acts.Vector3(0, 0, shift),
+        target={
+            "sim": AlignmentDecorator.Target.eSim,
+            "both": AlignmentDecorator.Target.eBoth,
+        }[target],
+    )
+    addTelescopeChain(s, trackingGeometry, field, tmp_path, RandomNumbers(seed=42))
+    s.run()
+
+    onLayer, elsewhere = _meanResidualPerLayer(tmp_path / "trackstates_ckf.root", layer)
+
+    if target == "both":
+        # reconstruction knows where the layer is, nothing is biased
+        assert abs(onLayer) < 0.25 * shift
+    else:
+        # the fit absorbs part of the shift by tilting the track, so the bias on
+        # the shifted layer is a sizeable fraction of it rather than all of it
+        assert abs(onLayer) > 0.5 * shift
+        assert abs(onLayer) > 2 * elsewhere

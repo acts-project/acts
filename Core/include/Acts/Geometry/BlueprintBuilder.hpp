@@ -1192,20 +1192,27 @@ using ElementLayerAssembler
     [[deprecated("Acts::Experimental::ElementLayerAssembler moved to "
                  "Acts::ElementLayerAssembler")]] =
         Acts::ElementLayerAssembler<BackendT>;
+/// @deprecated Acts::Experimental::SensorLayerAssembler moved to
+///             Acts::SensorLayerAssembler.
 template <Acts::detail::BlueprintBackend BackendT>
 using SensorLayerAssembler
     [[deprecated("Acts::Experimental::SensorLayerAssembler moved to "
                  "Acts::SensorLayerAssembler")]] =
         Acts::SensorLayerAssembler<BackendT>;
+/// @deprecated Acts::Experimental::SensorLayer moved to Acts::SensorLayer.
 template <Acts::detail::BlueprintBackend BackendT>
 using SensorLayer [[deprecated(
     "Acts::Experimental::SensorLayer moved to Acts::SensorLayer")]] =
     Acts::SensorLayer<BackendT>;
+/// @deprecated Acts::Experimental::BarrelEndcapAssembler moved to
+///             Acts::BarrelEndcapAssembler.
 template <Acts::detail::BlueprintBackend BackendT>
 using BarrelEndcapAssembler
     [[deprecated("Acts::Experimental::BarrelEndcapAssembler moved to "
                  "Acts::BarrelEndcapAssembler")]] =
         Acts::BarrelEndcapAssembler<BackendT>;
+/// @deprecated Acts::Experimental::BlueprintBuilder moved to
+///             Acts::BlueprintBuilder.
 template <Acts::detail::BlueprintBackend BackendT>
 using BlueprintBuilder [[deprecated(
     "Acts::Experimental::BlueprintBuilder moved to Acts::BlueprintBuilder")]] =

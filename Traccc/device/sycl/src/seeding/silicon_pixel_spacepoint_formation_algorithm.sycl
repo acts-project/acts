@@ -12,10 +12,12 @@
 #include "../utils/calculate1DimNdRange.hpp"
 #include "../utils/get_queue.hpp"
 #include "../utils/global_index.hpp"
+#include "../utils/oneDPL.hpp"
 #include "traccc/sycl/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
 
 // Project include(s).
 #include "traccc/geometry/detector.hpp"
+#include "traccc/seeding/device/count_spacepoints.hpp"
 #include "traccc/seeding/device/form_spacepoints.hpp"
 
 namespace traccc::sycl {
@@ -27,6 +29,38 @@ silicon_pixel_spacepoint_formation_algorithm::
     : device::silicon_pixel_spacepoint_formation_algorithm(mr, copy,
                                                            std::move(logger)),
       sycl::algorithm_base(queue) {}
+
+void silicon_pixel_spacepoint_formation_algorithm::count_spacepoints_kernel(
+    const count_spacepoints_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  // The scan reads the flags that this kernel writes, so the kernel must
+  // finish before returning.
+  squeue
+      .submit([&](::sycl::handler& h) {
+        h.parallel_for(details::calculate1DimNdRange(payload.n_measurements,
+                                                     warp_size() * 8),
+                       [measurements = payload.measurements,
+                        spacepoint_flags =
+                            payload.spacepoint_flags](::sycl::nd_item<1> item) {
+                         device::count_spacepoints(details::global_index(item),
+                                                   measurements,
+                                                   spacepoint_flags);
+                       });
+      })
+      .wait_and_throw();
+}
+
+void silicon_pixel_spacepoint_formation_algorithm::scan_spacepoint_flags(
+    vecmem::data::vector_view<unsigned int>& spacepoint_flags) const {
+  assert(spacepoint_flags.size_ptr() == nullptr);
+  ::sycl::queue& squeue = details::get_queue(queue());
+  vecmem::device_vector<unsigned int> spacepoint_flags_vector(spacepoint_flags);
+  oneapi::dpl::inclusive_scan(oneapi::dpl::execution::device_policy{squeue},
+                              spacepoint_flags_vector.begin(),
+                              spacepoint_flags_vector.end(),
+                              spacepoint_flags_vector.begin());
+}
 
 void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
     const form_spacepoints_kernel_payload& payload) const {
@@ -45,18 +79,24 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
             device_det)
             ->ignore();
 
-        // Launch the kernel.
-        squeue.submit([&](::sycl::handler& h) {
-          h.parallel_for(
-              details::calculate1DimNdRange(payload.n_measurements,
-                                            warp_size() * 8),
-              [det_ptr = device_det.ptr(), measurements = payload.measurements,
-               spacepoints = payload.spacepoints](::sycl::nd_item<1> item) {
-                device::form_spacepoints<detector_traits_t>(
-                    details::global_index(item), *det_ptr, measurements,
-                    spacepoints);
-              });
-        });
+        // Launch the kernel. The base class destroys the prefix sum buffer,
+        // and this function destroys the detector view buffer, right after
+        // this call. So the kernel must finish before returning.
+        squeue
+            .submit([&](::sycl::handler& h) {
+              h.parallel_for(
+                  details::calculate1DimNdRange(payload.n_measurements,
+                                                warp_size() * 8),
+                  [det_ptr = device_det.ptr(),
+                   measurements = payload.measurements,
+                   spacepoint_index = payload.spacepoint_index,
+                   spacepoints = payload.spacepoints](::sycl::nd_item<1> item) {
+                    device::form_spacepoints<detector_traits_t>(
+                        details::global_index(item), *det_ptr, measurements,
+                        spacepoint_index, spacepoints);
+                  });
+            })
+            .wait_and_throw();
       });
 }
 

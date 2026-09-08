@@ -14,6 +14,8 @@
 #include <thrust/execution_policy.h>
 #include <thrust/iterator/counting_iterator.h>
 
+#include "DeviceOps.hpp"
+
 namespace {
 
 __global__ void sigmoidImpl(std::size_t size, float *array) {
@@ -87,6 +89,30 @@ __global__ void mulPerColKernel(std::size_t total, std::size_t cols,
 }  // namespace
 
 namespace ActsPlugins::detail {
+
+TensorPtr cudaCreateTensorMemory(std::size_t nbytes,
+                                 const ExecutionContext &ctx) {
+  assert(ctx.stream.has_value());
+  auto stream = *ctx.stream;
+  void *ptr{};
+  ACTS_CUDA_CHECK(cudaMallocAsync(&ptr, nbytes, stream));
+  return TensorPtr(
+      ptr, [stream](void *p) { ACTS_CUDA_CHECK(cudaFreeAsync(p, stream)); });
+}
+
+void cudaCopyTensorMemory(void *dst, const void *src, std::size_t nbytes,
+                          Device from, const ExecutionContext &to) {
+  assert(to.stream.has_value());
+  cudaMemcpyKind kind = cudaMemcpyHostToHost;
+  if (from.isCuda() && to.device.isCuda()) {
+    kind = cudaMemcpyDeviceToDevice;
+  } else if (from.isCpu() && to.device.isCuda()) {
+    kind = cudaMemcpyHostToDevice;
+  } else if (from.isCuda() && to.device.isCpu()) {
+    kind = cudaMemcpyDeviceToHost;
+  }
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(dst, src, nbytes, kind, *to.stream));
+}
 
 void cudaSigmoid(Tensor<float> &tensor, cudaStream_t stream) {
   dim3 blockDim = 1024;

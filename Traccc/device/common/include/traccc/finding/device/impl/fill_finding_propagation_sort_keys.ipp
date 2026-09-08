@@ -34,7 +34,8 @@ TRACCC_HOST_DEVICE inline void fill_finding_propagation_sort_keys(
    */
   keys_device.at(globalIndex) =
       device::get_sort_key(params.at(globalIndex)) +
-      (param_liveness.at(globalIndex) == 0u ? 10000.0f : 0);
+      (param_liveness.at(globalIndex) == 0u ? device::dead_track_sort_key_offset
+                                            : 0.f);
   ids_device.at(globalIndex) = globalIndex;
 }
 

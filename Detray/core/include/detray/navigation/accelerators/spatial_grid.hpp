@@ -23,6 +23,9 @@
 #include "detray/utils/grid/grid_bins.hpp"
 #include "detray/utils/grid/grid_collection.hpp"
 
+// System include(s)
+#include <limits>
+
 namespace detray {
 
 /// @brief An N-dimensional spatial grid for geometry object searches.

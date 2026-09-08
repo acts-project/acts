@@ -27,6 +27,7 @@
 #include "actsvg/styles/defaults.hpp"
 
 // System include(s)
+#include <array>
 #include <cstdlib>
 #include <vector>
 

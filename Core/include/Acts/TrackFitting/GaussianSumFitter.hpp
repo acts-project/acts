@@ -476,8 +476,7 @@ struct GaussianSumFitter {
       ACTS_DEBUG("Fwd and bwd measurement states do not match");
     }
 
-    // Go through the states and assign outliers / unset smoothed if surface not
-    // passed in backward pass
+    // Assign outliers to states whose surface the backward pass did not reach
     const auto& foundBwd = bwdGsfResult.surfacesVisitedBwdAgain;
     std::size_t measurementStatesFinal = 0;
 
@@ -487,7 +486,6 @@ struct GaussianSumFitter {
           rangeContainsValue(foundBwd, &state.referenceSurface());
       if (!found && state.typeFlags().isMeasurement()) {
         state.typeFlags().setIsOutlier();
-        state.unset(TrackStatePropMask::Smoothed);
       }
 
       measurementStatesFinal +=

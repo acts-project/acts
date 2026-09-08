@@ -121,8 +121,8 @@ DetrayPayloadConverter::convertProtoSurfaceMaterialBinUtility(
 }
 
 std::optional<DetraySurfaceMaterial>
-DetrayPayloadConverter::convertProtoSurfaceMaterialProtoAxes(
-    const ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>& /*material*/,
+DetrayPayloadConverter::convertProtoSurfaceMaterialAxisSpec(
+    const ProtoSurfaceMaterialT<Acts::MultiAxisSpec2D>& /*material*/,
     const Surface& /*surface*/) {
   return std::nullopt;
 }

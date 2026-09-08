@@ -70,7 +70,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
       const Acts::Logger& logger,
       const Acts::BoundTrackParameters& startParameters) const final {
     // Get the geometry context form the algorithm context
-    const auto& geoContext = context.geoContext;
+    const auto& geoContext = context.recoGeoContext;
     // Get the track information
     const Acts::Vector3 position = startParameters.position(geoContext);
     const Acts::Vector3 direction = startParameters.momentum().normalized();

@@ -67,7 +67,8 @@
 namespace traccc {
 
 template <typename FULL_CHAIN_ALG>
-int throughput_mt(std::string_view description, int argc, char* argv[]) {
+int throughput_mt(std::string_view description, int argc, char* argv[],
+                  vecmem::memory_resource* host_mr) {
   std::unique_ptr<const traccc::Logger> prelogger = traccc::getDefaultLogger(
       "ThroughputExample", traccc::Logging::Level::INFO);
 
@@ -100,11 +101,13 @@ int throughput_mt(std::string_view description, int argc, char* argv[]) {
   performance::timing_info times;
 
   // Memory resource to use in the test.
-  vecmem::host_memory_resource host_mr;
+  vecmem::host_memory_resource unpinned_host_mr;
+  vecmem::memory_resource& input_host_mr =
+      *(host_mr == nullptr ? &unpinned_host_mr : host_mr);
 
   // Construct the detector description object.
-  traccc::detector_design_description::host det_descr{host_mr};
-  traccc::detector_conditions_description::host det_cond{host_mr};
+  traccc::detector_design_description::host det_descr{input_host_mr};
+  traccc::detector_conditions_description::host det_cond{input_host_mr};
   traccc::io::read_detector_description(
       det_descr, det_cond, detector_opts.detector_file,
       detector_opts.digitization_file, detector_opts.conditions_file,
@@ -112,15 +115,15 @@ int throughput_mt(std::string_view description, int argc, char* argv[]) {
 
   // Construct a Detray detector object, if supported by the configuration.
   traccc::host_detector detector;
-  traccc::io::read_detector(detector, host_mr, detector_opts.detector_file,
-                            detector_opts.material_file,
-                            detector_opts.grid_file);
+  traccc::io::read_detector(
+      detector, input_host_mr, detector_opts.detector_file,
+      detector_opts.material_file, detector_opts.grid_file);
 
   // Construct the magnetic field object.
   const auto field = details::make_magnetic_field(bfield_opts);
 
   // Read in all input events into memory.
-  vecmem::vector<edm::silicon_cell_collection::host> input{&host_mr};
+  vecmem::vector<edm::silicon_cell_collection::host> input{&unpinned_host_mr};
   {
     performance::timer t{"File reading", times};
     // Set up the container for the input events.
@@ -128,7 +131,7 @@ int throughput_mt(std::string_view description, int argc, char* argv[]) {
     const std::size_t first_event = input_opts.skip;
     const std::size_t last_event = input_opts.skip + input_opts.events;
     for (std::size_t i = first_event; i < last_event; ++i) {
-      input.emplace_back(host_mr);
+      input.emplace_back(input_host_mr);
     }
     // Read the input cells into memory in parallel.
     tbb::parallel_for(tbb::blocked_range<std::size_t>{first_event, last_event},
@@ -170,7 +173,7 @@ int throughput_mt(std::string_view description, int argc, char* argv[]) {
   std::vector<FULL_CHAIN_ALG> algs;
   algs.reserve(threading_opts.threads + 1);
   for (std::size_t i = 0; i < threading_opts.threads + 1; ++i) {
-    algs.push_back({host_mr, clustering_cfg, seedfinder_config,
+    algs.push_back({unpinned_host_mr, clustering_cfg, seedfinder_config,
                     spacepoint_grid_config, seedfilter_config, gbts_config,
                     track_params_estimation_config, finding_cfg, fitting_cfg,
                     det_descr, det_cond, field, &detector, logger().clone(),

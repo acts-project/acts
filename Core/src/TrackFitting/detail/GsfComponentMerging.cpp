@@ -50,6 +50,8 @@ GsfComponent detail::Gsf::mergeTwoComponents(const GsfComponent &a,
 
 double detail::Gsf::computeSymmetricKlDivergence(const GsfComponent &a,
                                                  const GsfComponent &b) {
+  //! [kl divergence]
+  // Symmetric KL distance, evaluated on the q/p dimension only
   const double parsA = a.boundPars[eBoundQOverP];
   const double parsB = b.boundPars[eBoundQOverP];
   const double covA = a.boundCov(eBoundQOverP, eBoundQOverP);
@@ -62,6 +64,7 @@ double detail::Gsf::computeSymmetricKlDivergence(const GsfComponent &a,
 
   const double kl = covA * (1 / covB) + covB * (1 / covA) +
                     (parsA - parsB) * (1 / covA + 1 / covB) * (parsA - parsB);
+  //! [kl divergence]
 
   assert(kl >= 0.0 && "kl-divergence must be non-negative");
 

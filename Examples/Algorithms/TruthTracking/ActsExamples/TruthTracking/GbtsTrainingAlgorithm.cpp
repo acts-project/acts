@@ -47,7 +47,7 @@ static void geometryParser(
   float minZ{};
   float maxZ{};
 
-  std::int32_t gbtsId{};
+  Acts::Experimental::GbtsExperimentLayerId gbtsId{};
 
   for (std::uint32_t l = 0; l < lines; l++) {
     inStream >> minR >> maxR >> minZ >> maxZ >> gbtsId;
@@ -110,8 +110,7 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
 }
 
 ProcessCode GbtsTrainingAlgorithm::finalize() {
-  const auto layerTable =
-      m_layerConnectionTool->createConnectionTable(m_cfg.outputFileDir);
+  const auto layerTable = m_layerConnectionTool->createConnectionTable();
 
   // define output text file
   std::ofstream outputFile(m_cfg.outputFileDir);
@@ -205,7 +204,7 @@ ProcessCode GbtsTrainingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
 
     {
-      std::lock_guard<std::mutex> lock(m_gbtsTrainingToolMutex);
+      std::lock_guard<std::mutex> lock(m_gbtsLayerConnectionToolMutex);
       m_layerConnectionTool->addTrack(coords);
     }
   }

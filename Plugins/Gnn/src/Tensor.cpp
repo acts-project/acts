@@ -8,12 +8,10 @@
 
 #include "ActsPlugins/Gnn/Tensor.hpp"
 
-#ifdef ACTS_GNN_WITH_CUDA
-#include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
-#endif
-
 #include <cstring>
 #include <span>
+
+#include "DeviceOps.hpp"
 
 namespace ActsPlugins {
 
@@ -28,19 +26,8 @@ TensorPtr createTensorMemory(std::size_t nbytes,
     }
     return TensorPtr(ptr,
                      [](void *p) { delete[] static_cast<std::byte *>(p); });
-  } else {
-#ifdef ACTS_GNN_WITH_CUDA
-    assert(execContext.stream.has_value());
-    auto stream = *execContext.stream;
-    void *ptr{};
-    ACTS_CUDA_CHECK(cudaMallocAsync(&ptr, nbytes, stream));
-    return TensorPtr(
-        ptr, [stream](void *p) { ACTS_CUDA_CHECK(cudaFreeAsync(p, stream)); });
-#else
-    throw std::runtime_error(
-        "Cannot create CUDA tensor, library was not compiled with CUDA");
-#endif
   }
+  return cudaCreateTensorMemory(nbytes, execContext);
 }
 
 TensorPtr cloneTensorMemory(const TensorPtr &ptr, std::size_t nbytes,
@@ -49,54 +36,16 @@ TensorPtr cloneTensorMemory(const TensorPtr &ptr, std::size_t nbytes,
   if (devFrom.isCpu() && to.device.isCpu()) {
     std::memcpy(clone.get(), ptr.get(), nbytes);
   } else {
-#ifdef ACTS_GNN_WITH_CUDA
-    assert(to.stream.has_value());
-    if (devFrom.isCuda() && to.device.isCuda()) {
-      ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.get(), ptr.get(), nbytes,
-                                      cudaMemcpyDeviceToDevice, *to.stream));
-    } else if (devFrom.isCpu() && to.device.isCuda()) {
-      ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.get(), ptr.get(), nbytes,
-                                      cudaMemcpyHostToDevice, *to.stream));
-    } else if (devFrom.isCuda() && to.device.isCpu()) {
-      ACTS_CUDA_CHECK(cudaMemcpyAsync(clone.get(), ptr.get(), nbytes,
-                                      cudaMemcpyDeviceToHost, *to.stream));
-    }
-#else
-    throw std::runtime_error(
-        "Cannot clone CUDA tensor, library was not compiled with CUDA");
-#endif
+    cudaCopyTensorMemory(clone.get(), ptr.get(), nbytes, devFrom, to);
   }
   return clone;
 }
-
-void cudaSigmoid(Tensor<float> &tensor, cudaStream_t stream);
-
-Tensor<bool> cudaScoreMask(const Tensor<float> &scores, float cut,
-                           cudaStream_t stream);
-
-template <typename T>
-Tensor<T> cudaSelectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
-                         const ExecutionContext &execContext);
-
-template <typename T>
-Tensor<T> cudaSelectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
-                         const ExecutionContext &execContext);
-
-template <typename T>
-Tensor<T> cudaMulPerColumn(const Tensor<T> &src, const Tensor<T> &scales,
-                           const ExecutionContext &execContext);
 
 }  // namespace detail
 
 void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream) {
   if (tensor.device().type == Device::Type::eCUDA) {
-#ifdef ACTS_GNN_WITH_CUDA
-    return ActsPlugins::detail::cudaSigmoid(tensor, stream.value());
-#else
-    throw std::runtime_error(
-        "Cannot apply sigmoid to CUDA tensor, library was not compiled with "
-        "CUDA");
-#endif
+    return detail::cudaSigmoid(tensor, stream.value());
   }
 
   for (auto it = tensor.data(); it != tensor.data() + tensor.size(); ++it) {
@@ -153,33 +102,25 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
                 newEdgeFeatureTensor->data());
     }
   } else {
-#ifdef ACTS_GNN_WITH_CUDA
     ExecutionContext gpuCtx{edgeIndex.device(), stream};
+    const Device devFrom = edgeIndex.device();
 
     newEdgeIndexTensor = Tensor<std::int64_t>::Create({2, maxEdges}, gpuCtx);
-    ACTS_CUDA_CHECK(cudaMemcpyAsync(newEdgeIndexTensor->data(),
-                                    edgeIndex.data(),
-                                    maxEdges * sizeof(std::int64_t),
-                                    cudaMemcpyDeviceToDevice, stream.value()));
-    ACTS_CUDA_CHECK(cudaMemcpyAsync(newEdgeIndexTensor->data() + maxEdges,
-                                    edgeIndex.data() + nEdgesOld,
-                                    maxEdges * sizeof(std::int64_t),
-                                    cudaMemcpyDeviceToDevice, stream.value()));
+    detail::cudaCopyTensorMemory(newEdgeIndexTensor->data(), edgeIndex.data(),
+                                 maxEdges * sizeof(std::int64_t), devFrom,
+                                 gpuCtx);
+    detail::cudaCopyTensorMemory(
+        newEdgeIndexTensor->data() + maxEdges, edgeIndex.data() + nEdgesOld,
+        maxEdges * sizeof(std::int64_t), devFrom, gpuCtx);
 
     if (edgeFeatures.has_value()) {
       newEdgeFeatureTensor =
           Tensor<float>::Create({maxEdges, nEdgeFeatures}, gpuCtx);
 
-      ACTS_CUDA_CHECK(
-          cudaMemcpyAsync(newEdgeFeatureTensor->data(), edgeFeatures->data(),
-                          maxEdges * nEdgeFeatures * sizeof(float),
-                          cudaMemcpyDeviceToDevice, stream.value()));
+      detail::cudaCopyTensorMemory(
+          newEdgeFeatureTensor->data(), edgeFeatures->data(),
+          maxEdges * nEdgeFeatures * sizeof(float), devFrom, gpuCtx);
     }
-#else
-    throw std::runtime_error(
-        "Cannot apply edge limit to CUDA tensors, library was not compiled "
-        "with CUDA");
-#endif
   }
 
   return {std::move(newEdgeIndexTensor.value()),
@@ -194,13 +135,7 @@ Tensor<bool> scoreMask(const Tensor<float> &scores, float cut,
   ExecutionContext execContext{scores.device(), stream};
 
   if (scores.device().type == Device::Type::eCUDA) {
-#ifdef ACTS_GNN_WITH_CUDA
     return detail::cudaScoreMask(scores, cut, stream.value());
-#else
-    throw std::runtime_error(
-        "Cannot compute score mask on CUDA tensor, library was not compiled "
-        "with CUDA");
-#endif
   }
 
   auto mask = Tensor<bool>::Create(scores.shape(), execContext);
@@ -217,12 +152,7 @@ Tensor<T> selectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
   const auto nCols = tensor.shape()[1];
 
   if (tensor.device().type == Device::Type::eCUDA) {
-#ifdef ACTS_GNN_WITH_CUDA
     return detail::cudaSelectRows(tensor, mask, execContext);
-#else
-    throw std::runtime_error(
-        "Cannot selectRows on CUDA tensor, library was not compiled with CUDA");
-#endif
   }
 
   const std::size_t n =
@@ -247,12 +177,7 @@ Tensor<T> selectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
   const auto nColsSrc = tensor.shape()[1];
 
   if (tensor.device().type == Device::Type::eCUDA) {
-#ifdef ACTS_GNN_WITH_CUDA
     return detail::cudaSelectCols(tensor, mask, execContext);
-#else
-    throw std::runtime_error(
-        "Cannot selectCols on CUDA tensor, library was not compiled with CUDA");
-#endif
   }
 
   const std::size_t n =
@@ -280,19 +205,11 @@ Tensor<T> mulPerColumn(const Tensor<T> &src, const std::vector<T> &scales,
   }
 
   if (execContext.device.type == Device::Type::eCUDA) {
-#ifdef ACTS_GNN_WITH_CUDA
     // Move scales to device (as Tensor)
     auto scalesTensor = Tensor<T>::Create({cols, 1ul}, execContext);
-    assert(execContext.stream.has_value());
-    ACTS_CUDA_CHECK(cudaMemcpyAsync(scalesTensor.data(), scales.data(),
-                                    cols * sizeof(T), cudaMemcpyHostToDevice,
-                                    *execContext.stream));
+    detail::cudaCopyTensorMemory(scalesTensor.data(), scales.data(),
+                                 cols * sizeof(T), Device::Cpu(), execContext);
     return detail::cudaMulPerColumn(src, scalesTensor, execContext);
-#else
-    throw std::runtime_error(
-        "Cannot apply feature scales on CUDA tensor, library was not compiled "
-        "with CUDA");
-#endif
   }
 
   auto result = Tensor<T>::Create({rows, cols}, execContext);

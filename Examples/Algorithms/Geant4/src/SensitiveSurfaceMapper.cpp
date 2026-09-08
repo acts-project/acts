@@ -126,7 +126,7 @@ std::vector<const Acts::Surface*> SensitiveCandidates::queryPosition(
     }
     case Gen3: {
       const auto* refVolume =
-          m_trackingGeo->lowestTrackingVolume(gctx, position);
+          m_trackingGeo->resolveLowestTrackingVolume(gctx, position).value();
       if (refVolume != nullptr) {
         constexpr bool restrictToSensitives = true;
         refVolume->visitSurfaces(

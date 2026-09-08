@@ -32,10 +32,18 @@ class FakePlotTool {
 
   /// @brief The nested configuration struct
   struct Config {
+    std::string label = "track";
+    /// Truth-particle binning (used by nRecoTracks/nTruthMatched/nFake plots).
     std::map<std::string, AxisVariant> varBinning = {
-        {"Eta", BoostRegularAxis(40, -4, 4, "#eta")},
-        {"Phi", BoostRegularAxis(100, -3.15, 3.15, "#phi")},
-        {"Pt", BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Eta", BoostRegularAxis(40, -4, 4, "truth #eta")},
+        {"Phi", BoostRegularAxis(100, -3.15, 3.15, "truth #phi")},
+        {"Pt", BoostRegularAxis(40, 0, 100, "truth p_{T} [GeV/c]")},
+        {"Num", BoostRegularAxis(30, -0.5, 29.5, "N")}};
+    /// Reconstructed-track binning (used by fake-ratio plots).
+    std::map<std::string, AxisVariant> recoVarBinning = {
+        {"Eta", BoostRegularAxis(40, -4, 4, "reco #eta")},
+        {"Phi", BoostRegularAxis(100, -3.15, 3.15, "reco #phi")},
+        {"Pt", BoostRegularAxis(40, 0, 100, "reco p_{T} [GeV/c]")},
         {"Num", BoostRegularAxis(30, -0.5, 29.5, "N")}};
   };
 

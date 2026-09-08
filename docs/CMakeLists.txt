@@ -37,6 +37,7 @@ target_sources(
         examples/units.cpp
         examples/errors.cpp
         examples/geometry_module.cpp
+        examples/material_designation.cpp
 )
 target_link_libraries(docs-examples PRIVATE Acts::Core)
 

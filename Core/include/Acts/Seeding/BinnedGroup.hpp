@@ -37,7 +37,10 @@ class BinnedGroup {
   /// @param grid The grid to use for binning
   /// @param bottomFinder The bottom bin finder
   /// @param topFinder The top bin finder
-  /// @param navigation The navigation array for grid bins
+  /// @param navigation Per axis, the bins to visit and in which order, as
+  ///        1-based local bin indices in [1, nBins]. May be a subset to skip
+  ///        bins, but must not repeat one. Empty means all bins in order.
+  /// @throw std::invalid_argument on an out of range or repeated entry
   BinnedGroup(grid_t&& grid, const GridBinFinder<DIM>& bottomFinder,
               const GridBinFinder<DIM>& topFinder,
               std::array<std::vector<std::size_t>, DIM> navigation =
@@ -48,7 +51,9 @@ class BinnedGroup {
   /// @param mask Vector of boolean masks
   /// @param bottomFinder Bottom bin finder
   /// @param topFinder Top bin finder
-  /// @param navigation Navigation array (optional)
+  /// @param navigation Bins to visit per axis, see the constructor above
+  /// @throw std::invalid_argument if the mask does not match the grid, or on an
+  ///        out of range or repeated navigation entry
   BinnedGroup(grid_t&& grid, std::vector<bool> mask,
               const GridBinFinder<DIM>& bottomFinder,
               const GridBinFinder<DIM>& topFinder,
@@ -109,7 +114,8 @@ class BinnedGroup {
   const GridBinFinder<DIM>* m_bottomBinFinder{nullptr};
   /// @brief The Grid Bin Finder for top candidates
   const GridBinFinder<DIM>* m_topBinFinder{nullptr};
-  /// @brief Order of bins to loop over when searching for SPs
+  /// @brief Order of bins to loop over when searching for SPs, as 1-based
+  /// local bin indices
   std::array<std::vector<std::size_t>, DIM> m_bins{};
 };
 

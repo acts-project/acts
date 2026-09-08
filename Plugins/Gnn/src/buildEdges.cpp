@@ -19,16 +19,6 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#ifdef ACTS_GNN_WITH_CUDA
-#include <cuda.h>
-#include <cuda_runtime_api.h>
-#include <grid/counting_sort.h>
-#include <grid/find_nbrs.h>
-#include <grid/grid.h>
-#include <grid/insert_points.h>
-#include <grid/prefix_sum.h>
-#endif
-
 using namespace torch::indexing;
 
 using namespace Acts;
@@ -62,122 +52,6 @@ torch::Tensor ActsPlugins::detail::postprocessEdgeTensor(torch::Tensor edges,
   }
 
   return edges.toType(torch::kInt64);
-}
-
-torch::Tensor ActsPlugins::detail::buildEdgesFRNN(torch::Tensor &embedFeatures,
-                                                  float rVal, int kVal,
-                                                  bool flipDirections) {
-#ifdef ACTS_GNN_WITH_CUDA
-  const auto device = embedFeatures.device();
-
-  const std::int64_t numSpacePoints = embedFeatures.size(0);
-  const int dim = embedFeatures.size(1);
-
-  const int grid_params_size = 8;
-  const int grid_delta_idx = 3;
-  const int grid_total_idx = 7;
-  const int grid_max_res = 128;
-  const int grid_dim = 3;
-
-  if (dim < 3) {
-    throw std::runtime_error("DIM < 3 is not supported for now.\n");
-  }
-
-  const float radius_cell_ratio = 2.0;
-  const int batch_size = 1;
-  int G = -1;
-
-  // Set up grid properties
-  torch::Tensor grid_min;
-  torch::Tensor grid_max;
-  torch::Tensor grid_size;
-
-  torch::Tensor embedTensor = embedFeatures.reshape({1, numSpacePoints, dim});
-  torch::Tensor gridParamsCuda =
-      torch::zeros({batch_size, grid_params_size}, device).to(torch::kFloat32);
-  torch::Tensor r_tensor = torch::full({batch_size}, rVal, device);
-  torch::Tensor lengths = torch::full({batch_size}, numSpacePoints, device);
-
-  // build the grid
-  for (int i = 0; i < batch_size; i++) {
-    torch::Tensor allPoints =
-        embedTensor.index({i, Slice(None, lengths.index({i}).item().to<long>()),
-                           Slice(None, grid_dim)});
-    grid_min = std::get<0>(allPoints.min(0));
-    grid_max = std::get<0>(allPoints.max(0));
-    gridParamsCuda.index_put_({i, Slice(None, grid_delta_idx)}, grid_min);
-
-    grid_size = grid_max - grid_min;
-
-    float cell_size =
-        r_tensor.index({i}).item().to<float>() / radius_cell_ratio;
-
-    if (cell_size < (grid_size.min().item().to<float>() / grid_max_res)) {
-      cell_size = grid_size.min().item().to<float>() / grid_max_res;
-    }
-
-    gridParamsCuda.index_put_({i, grid_delta_idx}, 1 / cell_size);
-
-    gridParamsCuda.index_put_({i, Slice(1 + grid_delta_idx, grid_total_idx)},
-                              floor(grid_size / cell_size) + 1);
-
-    gridParamsCuda.index_put_(
-        {i, grid_total_idx},
-        gridParamsCuda.index({i, Slice(1 + grid_delta_idx, grid_total_idx)})
-            .prod());
-
-    if (G < gridParamsCuda.index({i, grid_total_idx}).item().to<int>()) {
-      G = gridParamsCuda.index({i, grid_total_idx}).item().to<int>();
-    }
-  }
-
-  torch::Tensor pc_grid_cnt =
-      torch::zeros({batch_size, G}, device).to(torch::kInt32);
-  torch::Tensor pc_grid_cell =
-      torch::full({batch_size, numSpacePoints}, -1, device).to(torch::kInt32);
-  torch::Tensor pc_grid_idx =
-      torch::full({batch_size, numSpacePoints}, -1, device).to(torch::kInt32);
-
-  // put space points into the grid
-  InsertPointsCUDA(embedTensor, lengths.to(torch::kInt64), gridParamsCuda,
-                   pc_grid_cnt, pc_grid_cell, pc_grid_idx, G);
-
-  torch::Tensor pc_grid_off =
-      torch::full({batch_size, G}, 0, device).to(torch::kInt32);
-  torch::Tensor grid_params = gridParamsCuda.to(torch::kCPU);
-
-  // for loop seems not to be necessary anymore
-  pc_grid_off = PrefixSumCUDA(pc_grid_cnt, grid_params);
-
-  torch::Tensor sorted_points =
-      torch::zeros({batch_size, numSpacePoints, dim}, device)
-          .to(torch::kFloat32);
-  torch::Tensor sorted_points_idxs =
-      torch::full({batch_size, numSpacePoints}, -1, device).to(torch::kInt32);
-
-  CountingSortCUDA(embedTensor, lengths.to(torch::kInt64), pc_grid_cell,
-                   pc_grid_idx, pc_grid_off, sorted_points, sorted_points_idxs);
-
-  auto [indices, distances] = FindNbrsCUDA(
-      sorted_points, sorted_points, lengths.to(torch::kInt64),
-      lengths.to(torch::kInt64), pc_grid_off.to(torch::kInt32),
-      sorted_points_idxs, sorted_points_idxs,
-      gridParamsCuda.to(torch::kFloat32), kVal, r_tensor, r_tensor * r_tensor);
-  torch::Tensor positiveIndices = indices >= 0;
-
-  torch::Tensor repeatRange = torch::arange(positiveIndices.size(1), device)
-                                  .repeat({1, positiveIndices.size(2), 1})
-                                  .transpose(1, 2);
-
-  torch::Tensor stackedEdges = torch::stack(
-      {repeatRange.index({positiveIndices}), indices.index({positiveIndices})});
-
-  return postprocessEdgeTensor(std::move(stackedEdges), true, true,
-                               flipDirections);
-#else
-  throw std::runtime_error(
-      "ACTS not compiled with CUDA, cannot run ActsPlugins::buildEdgesFRNN");
-#endif
 }
 
 /// This is a very unsophisticated span implementation to avoid data copies in
@@ -267,10 +141,8 @@ torch::Tensor ActsPlugins::detail::buildEdgesKDTree(
 torch::Tensor ActsPlugins::detail::buildEdges(torch::Tensor &embedFeatures,
                                               float rVal, int kVal,
                                               bool flipDirections) {
-#ifdef ACTS_GNN_WITH_CUDA
   if (embedFeatures.is_cuda()) {
     return detail::buildEdgesFRNN(embedFeatures, rVal, kVal, flipDirections);
   }
-#endif
   return detail::buildEdgesKDTree(embedFeatures, rVal, kVal, flipDirections);
 }

@@ -23,13 +23,13 @@ namespace traccc::device {
 
 // For each edge, find up to nMaxNei compatible neighbour edges sharing its
 // outer node, recording them and marking both edges as "kept". The edge
-// parameters are read from the packed float4 buffer ([exp_eta, curv, phi_z,
+// parameters are read from the packed short4 buffer ([eta, curv, phi_z,
 // phi_w]) and the cuts are evaluated in float.
 template <concepts::thread_id1 thread_id_t>
 TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
     const thread_id_t& thread_id,
     const gbts_match_graph_edges_payload& payload) {
-  const vecmem::device_vector<const float4> d_edge_params(payload.edge_params);
+  const vecmem::device_vector<const short4> d_edge_params(payload.edge_params);
   const vecmem::device_vector<const uint2> d_edge_nodes(payload.edge_nodes);
   const vecmem::device_vector<const unsigned int> d_num_outgoing_edges(
       payload.num_outgoing_edges);
@@ -42,8 +42,17 @@ TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
   const float cut_dphi_max = payload.gbts_match_graph_edges_params.cut_dphi_max;
   const float cut_dcurv_max =
       payload.gbts_match_graph_edges_params.cut_dcurv_max;
-  const float cut_tau_ratio_max =
-      payload.gbts_match_graph_edges_params.cut_tau_ratio_max;
+  const float cut_deta_max = payload.gbts_match_graph_edges_params.cut_deta_max;
+  const float cut_ratio_sum_max =
+      payload.gbts_match_graph_edges_params.cut_ratio_sum_max;
+  const float deta_inflation =
+      payload.gbts_match_graph_edges_params.deta_inflation;
+  const float less_scattering_curv =
+      payload.gbts_match_graph_edges_params.less_scattering_curv;
+  const float much_less_scattering_curv =
+      payload.gbts_match_graph_edges_params.much_less_scattering_curv;
+  const float high_pT_correction =
+      payload.gbts_match_graph_edges_params.high_pT_correction;
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
@@ -61,11 +70,14 @@ TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
       continue;
     }
 
-    const float4 params1 = d_edge_params[globalIndex];  // [exp_eta, curv,
-                                                        //  phi_z, phi_w]
-    const float uat_2 = 1.0f / params1.x;
-    const float Phi2 = params1.z;
-    const float curv2 = params1.y;
+    const std::pair<float4, bool> params1 =
+        payload.edge_params_decoder.decode_edge_params(
+            d_edge_params[globalIndex]);
+    // [exp_eta, curv, phi_z, phi_w], inflate cuts
+
+    const float eta2 = params1.first.x;
+    const float Phi2 = params1.first.z;
+    const float curv2 = params1.first.y;
 
     const unsigned int nei_pos = payload.nMaxNei * globalIndex;
 
@@ -79,20 +91,38 @@ TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
       }
       const unsigned int edge2_idx = d_edge_links[link_begin + k];
 
-      const float4 params2 = d_edge_params[edge2_idx];
+      const std::pair<float4, bool> params2 =
+          payload.edge_params_decoder.decode_edge_params(
+              d_edge_params[edge2_idx]);
 
-      const float tau_ratio = params2.x * uat_2 - 1.0f;
-      if (math::fabs(tau_ratio) > cut_tau_ratio_max) {  // bad match
+      // adaptive eta cut based on edge length and curvature
+      float deta_max =
+          cut_deta_max + deta_inflation * (params2.second || params1.second);
+      const float curv = 0.5f * math::fabs(curv2 + params2.first.y);
+      const float corr = static_cast<float>((curv < less_scattering_curv) +
+                                            (curv < much_less_scattering_curv));
+      deta_max *= 1.0f - high_pT_correction * corr;
+      const float deta_cut_ratio =
+          math::fabs(eta2 - params2.first.x) / deta_max;
+      if (deta_cut_ratio > 1.0f) {  // bad match
         continue;
       }
 
-      const float dPhi = traccc::detail::wrap_phi(Phi2 - params2.w);
-      if (math::fabs(dPhi) > cut_dphi_max) {
+      const float dPhi_cut_ratio =
+          math::fabs(traccc::detail::wrap_phi(Phi2 - params2.first.w)) /
+          cut_dphi_max;
+      if (dPhi_cut_ratio > 1.0f) {
         continue;
       }
 
-      const float dcurv = curv2 - params2.y;
-      if (math::fabs(dcurv) > cut_dcurv_max) {
+      const float dcurv_cut_ratio =
+          math::fabs(curv2 - params2.first.y) / cut_dcurv_max;
+      if (dcurv_cut_ratio > 1.0f) {
+        continue;
+      }
+
+      if (deta_cut_ratio + dPhi_cut_ratio + dcurv_cut_ratio >
+          cut_ratio_sum_max) {
         continue;
       }
 

@@ -12,6 +12,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/IMultiAxis.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
@@ -122,27 +123,34 @@ class BinUtility {
   /// Create from a DirectedProtoAxis
   ///
   /// @param dpAxis the DirectedProtoAxis to be used
+  /// @deprecated Use BinUtility(const IAxis&) with a directed axis instead
   [[deprecated("Use BinUtility(const IAxis&) with a directed axis instead")]]
   explicit BinUtility(const DirectedProtoAxis& dpAxis)
       : m_binningData(),
         m_transform(Transform3::Identity()),
         m_itransform(Transform3::Identity()) {
     m_binningData.reserve(3);
-    m_binningData.emplace_back(dpAxis);
+    m_binningData.emplace_back(dpAxis.getAxisDirection(), dpAxis.getAxis());
   }
 
+  // A deprecated declaration only silences directly named types, not the ones
+  // it names as template arguments
+  ACTS_PUSH_IGNORE_DEPRECATED()
   /// Create from several DirectedProtoAxis objects
   ///
   /// @param dpAxes the DirectedProtoAxis to be used with axis directions
+  /// @deprecated Use BinUtility(const IMultiAxis&) with directed axes instead
+  [[deprecated("Use BinUtility(const IMultiAxis&) with directed axes instead")]]
   explicit BinUtility(const std::vector<DirectedProtoAxis>& dpAxes)
       : m_binningData(),
         m_transform(Transform3::Identity()),
         m_itransform(Transform3::Identity()) {
     m_binningData.reserve(3);
     for (const auto& dpAxis : dpAxes) {
-      m_binningData.emplace_back(dpAxis);
+      m_binningData.emplace_back(dpAxis.getAxisDirection(), dpAxis.getAxis());
     }
   }
+  ACTS_POP_IGNORE_DEPRECATED()
 
   /// Operator+= to make multidimensional BinUtility
   ///

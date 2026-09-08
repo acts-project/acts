@@ -167,7 +167,29 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
 
   using VolumeMap_t = ActsPlugins::GeoModelTree::VolumePublisher::VolumeMap_t;
   VolumeMap_t publishedVol{};
-  for (const auto& [fpV, pubKey] : m_publisher->getPublishedFPV()) {
+  // Older GeoModel (e.g. 6.27) hands back a multimap<node, key>, while newer
+  // GeoModel (6.31) hands back a map<key, node>, i.e. the two pair elements are
+  // swapped. Detect which way round it is from the map's mapped_type.
+  using PublishedFPV_t = decltype(m_publisher->getPublishedFPV());
+  constexpr bool nodeIsMapped =
+      std::is_same_v<typename PublishedFPV_t::mapped_type, GeoVFullPhysVol*>;
+
+  for (const auto& published : m_publisher->getPublishedFPV()) {
+    auto* fpV = [&published]() {
+      if constexpr (nodeIsMapped) {
+        return published.second;
+      } else {
+        return published.first;
+      }
+    }();
+    const auto& pubKey = [&published]() -> const auto& {
+      if constexpr (nodeIsMapped) {
+        return published.first;
+      } else {
+        return published.second;
+      }
+    }();
+
     try {
       const std::string key = [](const auto& a) {
         if constexpr (std::is_same_v<std::remove_cvref_t<decltype(pubKey)>,

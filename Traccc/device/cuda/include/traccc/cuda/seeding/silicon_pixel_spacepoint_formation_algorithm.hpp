@@ -42,6 +42,20 @@ class silicon_pixel_spacepoint_formation_algorithm
   /// @c traccc::device::silicon_pixel_spacepoint_formation_algorithm
   /// @{
 
+  /// Launch the spacepoint counting kernel
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  void count_spacepoints_kernel(
+      const count_spacepoints_kernel_payload& payload) const override;
+
+  /// Turn the spacepoint flags into a prefix sum, in place
+  ///
+  /// @param spacepoint_flags The flags to scan
+  ///
+  void scan_spacepoint_flags(
+      vecmem::data::vector_view<unsigned int>& spacepoint_flags) const override;
+
   /// Launch the spacepoint formation kernel
   ///
   /// @param payload The payload for the kernel

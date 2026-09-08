@@ -333,11 +333,13 @@ GeoModelMuonMockupBuilder::buildChildChamber(
     }
     double tubeR = lineBounds->get(LineBounds::eR);
     mwCfg.binning = {
-        {{Acts::AxisDirection::AxisY, Acts::AxisBoundaryType::Bound, -halfY,
-          halfY, static_cast<std::size_t>(std::lround(1. * halfY / tubeR))},
+        {Acts::AxisSpec::Equidistant(
+             static_cast<std::size_t>(std::lround(1. * halfY / tubeR)), -halfY,
+             halfY, Acts::AxisBoundaryType::Bound, Acts::AxisDirection::AxisY),
          2},
-        {{Acts::AxisDirection::AxisZ, Acts::AxisBoundaryType::Bound, -halfZ,
-          halfZ, static_cast<std::size_t>(std::lround(1. * halfZ / tubeR))},
+        {Acts::AxisSpec::Equidistant(
+             static_cast<std::size_t>(std::lround(1. * halfZ / tubeR)), -halfZ,
+             halfZ, Acts::AxisBoundaryType::Bound, Acts::AxisDirection::AxisZ),
          1}};
 
     MultiWireVolumeBuilder mdtBuilder{mwCfg};

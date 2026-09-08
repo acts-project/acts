@@ -9,6 +9,8 @@
 #pragma once
 
 // Project include(s)
+#include "detray/definitions/geometry.hpp"
+#include "detray/geometry/identifier.hpp"
 #include "detray/io/csv/dfe.hpp"
 #include "detray/io/utils/create_path.hpp"
 #include "detray/navigation/intersection/intersection.hpp"
@@ -17,6 +19,7 @@
 // System include(s).
 #include <cstdint>
 #include <filesystem>
+#include <stdexcept>
 
 namespace detray::io::csv {
 

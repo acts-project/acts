@@ -428,9 +428,8 @@ class MultiStepperLoop final {
   /// @param [in] weight Weight of the component to add
   ///
   /// @note: It is not ensured that the weights are normalized afterwards
-  /// @note This function makes no garantuees about how new components are
-  /// initialized, it is up to the caller to ensure that all components are
-  /// valid in the end.
+  /// @note The component is initialized through the single stepper, so its
+  /// jacobians are set whenever @p pars carries a covariance.
   /// @note The returned component-proxy is only garantueed to be valid until
   /// the component number is again modified
   /// @return ComponentProxy for the newly added component or error

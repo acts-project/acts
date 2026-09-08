@@ -1289,6 +1289,7 @@ class AtlasStepper {
     std::size_t nStepTrials = 0;
     while (h != 0.) {
       nStepTrials++;
+      ++state.statistics.nAttemptedSteps;
 
       // PS2 is h/(2*momentum) in EigenStepper
       double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
@@ -1371,6 +1372,7 @@ class AtlasStepper {
              std::abs((C1 + C6) - (C3 + C4)));
       EST = std::max(1e-20, EST);
       if (!isErrorTolerable(EST)) {
+        ++state.statistics.nRejectedSteps;
         const double stepSizeScaling = calcStepSizeScaling(EST);
         h *= stepSizeScaling;
         // neutralize the sign of h again
@@ -1407,14 +1409,17 @@ class AtlasStepper {
       double momentum = absoluteMomentum(state);
 
       // Evaluate the time propagation
-      double dtds = std::sqrt(1 + mass * mass / (momentum * momentum));
+      const double mOverP = mass / momentum;
+      double dtds = std::sqrt(1 + mOverP * mOverP);
       state.pVector[3] += h * dtds;
       state.pVector[59] = dtds;
       state.field = f;
       state.newfield = false;
 
       if (Jac) {
-        double dtdl = h * mass * mass * qOverP(state) / dtds;
+        // d(t)/d(q/p) = h m^2 (q/p) / (q^2 dt/ds), with the q^2 folded into p
+        // via p = |q| / |q/p|.
+        double dtdl = h * mOverP * mOverP / (qOverP(state) * dtds);
         state.pVector[43] += dtdl;
 
         // Jacobian calculation
@@ -1511,6 +1516,13 @@ class AtlasStepper {
     state.pathAccumulated += h;
     ++state.nSteps;
     state.nStepTrials += nStepTrials;
+
+    ++state.statistics.nSuccessfulSteps;
+    if (propDir != Direction::fromScalarZeroAsPositive(initialH)) {
+      ++state.statistics.nReverseSteps;
+    }
+    state.statistics.pathLength += h;
+    state.statistics.absolutePathLength += std::abs(h);
 
     const double stepSizeScaling = calcStepSizeScaling(EST);
     const double nextAccuracy = std::abs(h * stepSizeScaling);

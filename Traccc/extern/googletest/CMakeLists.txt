@@ -11,6 +11,9 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building GoogleTest as part of the TRACCC project")
 
+# Disregard the global C++ flags, to avoid any unhelpful warnings.
+set(CMAKE_CXX_FLAGS)
+
 # Declare where to get GoogleTest from.
 set(TRACCC_GOOGLETEST_SOURCE
     "URL;https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz;URL_MD5;7e11f6cfcf6498324ac82d567dcb891e"

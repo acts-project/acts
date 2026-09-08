@@ -12,6 +12,86 @@ from acts._adapter import _patch_config
 
 _patch_config(ActsExamplesPythonBindings)
 
+import warnings
+
+
+class PythonTrackFinderPerformanceWriter(PythonPatternRecognitionPerformanceWriter):
+    """Deprecated alias for :class:`PythonPatternRecognitionPerformanceWriter`."""
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "PythonTrackFinderPerformanceWriter is deprecated, "
+            "use PythonPatternRecognitionPerformanceWriter instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
+
+
+class PythonTrackFitterPerformanceWriter(PythonTrackParameterPerformanceWriter):
+    """Deprecated alias for :class:`PythonTrackParameterPerformanceWriter`."""
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "PythonTrackFitterPerformanceWriter is deprecated, "
+            "use PythonTrackParameterPerformanceWriter instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
+
+
+_rootAliasesSetup = False
+
+
+def _setupRootAliases(root_module):
+    global _rootAliasesSetup
+    if _rootAliasesSetup:
+        return
+    _rootAliasesSetup = True
+
+    class RootTrackFinderPerformanceWriter(
+        root_module.RootPatternRecognitionPerformanceWriter
+    ):
+        """Deprecated alias for :class:`RootPatternRecognitionPerformanceWriter`."""
+
+        def __init__(self, *args, **kwargs):
+            warnings.warn(
+                "RootTrackFinderPerformanceWriter is deprecated, "
+                "use RootPatternRecognitionPerformanceWriter instead",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            super().__init__(*args, **kwargs)
+
+    RootTrackFinderPerformanceWriter.__module__ = "acts.examples.root"
+    setattr(
+        root_module,
+        "RootTrackFinderPerformanceWriter",
+        RootTrackFinderPerformanceWriter,
+    )
+
+    class RootTrackFitterPerformanceWriter(
+        root_module.RootTrackParameterPerformanceWriter
+    ):
+        """Deprecated alias for :class:`RootTrackParameterPerformanceWriter`."""
+
+        def __init__(self, *args, **kwargs):
+            warnings.warn(
+                "RootTrackFitterPerformanceWriter is deprecated, "
+                "use RootTrackParameterPerformanceWriter instead",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            super().__init__(*args, **kwargs)
+
+    RootTrackFitterPerformanceWriter.__module__ = "acts.examples.root"
+    setattr(
+        root_module,
+        "RootTrackFitterPerformanceWriter",
+        RootTrackFitterPerformanceWriter,
+    )
+
 
 def _tryImportRoot(*names: str):
     """
@@ -22,6 +102,8 @@ def _tryImportRoot(*names: str):
         import acts.examples.root as _root
     except ImportError as e:
         raise RuntimeError("ROOT output requested but ROOT is not available") from e
+
+    _setupRootAliases(_root)
 
     objs = tuple(getattr(_root, name) for name in names)
     return objs[0] if len(objs) == 1 else objs

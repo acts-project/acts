@@ -44,7 +44,7 @@ def runTruthTrackingGsf(
         RootParticleReader,
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
-        RootTrackFitterPerformanceWriter,
+        RootTrackParameterPerformanceWriter,
     )
 
     s = s or acts.examples.Sequencer(
@@ -197,7 +197,7 @@ def runTruthTrackingGsf(
     )
 
     s.addWriter(
-        RootTrackFitterPerformanceWriter(
+        RootTrackParameterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",

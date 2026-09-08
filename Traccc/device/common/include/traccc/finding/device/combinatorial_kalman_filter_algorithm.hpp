@@ -215,7 +215,8 @@ class combinatorial_kalman_filter_algorithm
   ///
   virtual void propagate_to_next_surface_kernel(
       unsigned int n_threads, const finding_config& config,
-      const detector_buffer& det, const magnetic_field& bfield,
+      const detector_buffer& det, const move_only_any& device_detector,
+      const magnetic_field& bfield,
       const device::propagate_to_next_surface_payload& payload) const = 0;
 
   /// Launch the @c gather_best_tips_per_measurement kernel
@@ -257,6 +258,12 @@ class combinatorial_kalman_filter_algorithm
       unsigned int n_threads, bool run_mbf_smoother,
       const measurement_selector::config& calib_cfg,
       const device::build_tracks_payload& payload) const = 0;
+
+  virtual move_only_any create_device_detector(
+      const detector_buffer& det) const = 0;
+
+  /// Wait for all work this algorithm enqueued to complete
+  virtual void synchronize() const = 0;
 
   /// @}
 

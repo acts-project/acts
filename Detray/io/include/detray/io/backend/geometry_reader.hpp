@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <cassert>
 #include <map>
+#include <stdexcept>
 #include <string_view>
 #include <utility>
 #include <vector>

@@ -11,6 +11,9 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building TBB as part of the TRACCC project")
 
+# Disregard the global C++ flags, to avoid any unhelpful warnings.
+set(CMAKE_CXX_FLAGS)
+
 # Declare where to get TBB from.
 set(TRACCC_TBB_SOURCE
     "URL;https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2022.0.0.tar.gz;URL_MD5;78ec44cecf3cd78c4984e61f1bb93134"

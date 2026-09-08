@@ -117,67 +117,59 @@ void freeDeviceData(ActsExamples::CudaMuonSpacePointArrays& device) noexcept {
 }
 
 void copyHostToDevice(ActsExamples::CudaMuonSpacePointArrays& device,
-                      const ActsExamples::CudaMuonSpacePointHostData& host) {
-  copyColumnToDevice(device.geometryId, host.geometryId);
-  copyColumnToDevice(device.muonId, host.muonId);
+                      const ActsExamples::CudaMuonSpacePointHostData& host,
+                      cudaStream_t stream) {
+  copyColumnToDevice(device.geometryId, host.geometryId, stream);
+  copyColumnToDevice(device.muonId, host.muonId, stream);
+  copyColumnToDevice(device.localPositionX, host.localPositionX, stream);
+  copyColumnToDevice(device.localPositionY, host.localPositionY, stream);
+  copyColumnToDevice(device.localPositionZ, host.localPositionZ, stream);
+  copyColumnToDevice(device.sensorDirectionX, host.sensorDirectionX, stream);
+  copyColumnToDevice(device.sensorDirectionY, host.sensorDirectionY, stream);
+  copyColumnToDevice(device.sensorDirectionZ, host.sensorDirectionZ, stream);
+  copyColumnToDevice(device.toNextSensorX, host.toNextSensorX, stream);
+  copyColumnToDevice(device.toNextSensorY, host.toNextSensorY, stream);
+  copyColumnToDevice(device.toNextSensorZ, host.toNextSensorZ, stream);
+  copyColumnToDevice(device.planeNormalX, host.planeNormalX, stream);
+  copyColumnToDevice(device.planeNormalY, host.planeNormalY, stream);
+  copyColumnToDevice(device.planeNormalZ, host.planeNormalZ, stream);
+  copyColumnToDevice(device.covariance0, host.covariance0, stream);
+  copyColumnToDevice(device.covariance1, host.covariance1, stream);
+  copyColumnToDevice(device.covariance2, host.covariance2, stream);
+  copyColumnToDevice(device.driftRadius, host.driftRadius, stream);
+  copyColumnToDevice(device.time, host.time, stream);
+  copyColumnToDevice(device.bucketStart, host.bucketStart, stream);
+  copyColumnToDevice(device.bucketEnd, host.bucketEnd, stream);
 
-  copyColumnToDevice(device.localPositionX, host.localPositionX);
-  copyColumnToDevice(device.localPositionY, host.localPositionY);
-  copyColumnToDevice(device.localPositionZ, host.localPositionZ);
-
-  copyColumnToDevice(device.sensorDirectionX, host.sensorDirectionX);
-  copyColumnToDevice(device.sensorDirectionY, host.sensorDirectionY);
-  copyColumnToDevice(device.sensorDirectionZ, host.sensorDirectionZ);
-
-  copyColumnToDevice(device.toNextSensorX, host.toNextSensorX);
-  copyColumnToDevice(device.toNextSensorY, host.toNextSensorY);
-  copyColumnToDevice(device.toNextSensorZ, host.toNextSensorZ);
-
-  copyColumnToDevice(device.planeNormalX, host.planeNormalX);
-  copyColumnToDevice(device.planeNormalY, host.planeNormalY);
-  copyColumnToDevice(device.planeNormalZ, host.planeNormalZ);
-
-  copyColumnToDevice(device.covariance0, host.covariance0);
-  copyColumnToDevice(device.covariance1, host.covariance1);
-  copyColumnToDevice(device.covariance2, host.covariance2);
-
-  copyColumnToDevice(device.driftRadius, host.driftRadius);
-  copyColumnToDevice(device.time, host.time);
-
-  copyColumnToDevice(device.bucketStart, host.bucketStart);
-  copyColumnToDevice(device.bucketEnd, host.bucketEnd);
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 }
 
 void copyDeviceToHost(ActsExamples::CudaMuonSpacePointHostData& host,
-                      const ActsExamples::CudaMuonSpacePointArrays& device) {
-  copyColumnToHost(host.geometryId, device.geometryId);
-  copyColumnToHost(host.muonId, device.muonId);
+                      const ActsExamples::CudaMuonSpacePointArrays& device,
+                      cudaStream_t stream) {
+  copyColumnToHost(host.geometryId, device.geometryId, stream);
+  copyColumnToHost(host.muonId, device.muonId, stream);
+  copyColumnToHost(host.localPositionX, device.localPositionX, stream);
+  copyColumnToHost(host.localPositionY, device.localPositionY, stream);
+  copyColumnToHost(host.localPositionZ, device.localPositionZ, stream);
+  copyColumnToHost(host.sensorDirectionX, device.sensorDirectionX, stream);
+  copyColumnToHost(host.sensorDirectionY, device.sensorDirectionY, stream);
+  copyColumnToHost(host.sensorDirectionZ, device.sensorDirectionZ, stream);
+  copyColumnToHost(host.toNextSensorX, device.toNextSensorX, stream);
+  copyColumnToHost(host.toNextSensorY, device.toNextSensorY, stream);
+  copyColumnToHost(host.toNextSensorZ, device.toNextSensorZ, stream);
+  copyColumnToHost(host.planeNormalX, device.planeNormalX, stream);
+  copyColumnToHost(host.planeNormalY, device.planeNormalY, stream);
+  copyColumnToHost(host.planeNormalZ, device.planeNormalZ, stream);
+  copyColumnToHost(host.covariance0, device.covariance0, stream);
+  copyColumnToHost(host.covariance1, device.covariance1, stream);
+  copyColumnToHost(host.covariance2, device.covariance2, stream);
+  copyColumnToHost(host.driftRadius, device.driftRadius, stream);
+  copyColumnToHost(host.time, device.time, stream);
+  copyColumnToHost(host.bucketStart, device.bucketStart, stream);
+  copyColumnToHost(host.bucketEnd, device.bucketEnd, stream);
 
-  copyColumnToHost(host.localPositionX, device.localPositionX);
-  copyColumnToHost(host.localPositionY, device.localPositionY);
-  copyColumnToHost(host.localPositionZ, device.localPositionZ);
-
-  copyColumnToHost(host.sensorDirectionX, device.sensorDirectionX);
-  copyColumnToHost(host.sensorDirectionY, device.sensorDirectionY);
-  copyColumnToHost(host.sensorDirectionZ, device.sensorDirectionZ);
-
-  copyColumnToHost(host.toNextSensorX, device.toNextSensorX);
-  copyColumnToHost(host.toNextSensorY, device.toNextSensorY);
-  copyColumnToHost(host.toNextSensorZ, device.toNextSensorZ);
-
-  copyColumnToHost(host.planeNormalX, device.planeNormalX);
-  copyColumnToHost(host.planeNormalY, device.planeNormalY);
-  copyColumnToHost(host.planeNormalZ, device.planeNormalZ);
-
-  copyColumnToHost(host.covariance0, device.covariance0);
-  copyColumnToHost(host.covariance1, device.covariance1);
-  copyColumnToHost(host.covariance2, device.covariance2);
-
-  copyColumnToHost(host.driftRadius, device.driftRadius);
-  copyColumnToHost(host.time, device.time);
-
-  copyColumnToHost(host.bucketStart, device.bucketStart);
-  copyColumnToHost(host.bucketEnd, device.bucketEnd);
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 }
 
 std::size_t countSpacePoints(
@@ -431,21 +423,21 @@ void CudaMuonSpacePointContainer::setCovariance(size_type index, double cov0,
   m_host.covariance2[index] = cov2;
 }
 
-void CudaMuonSpacePointContainer::moveToDevice() {
+void CudaMuonSpacePointContainer::moveToDevice(cudaStream_t stream) {
   clearDevice();
 
   allocateDeviceData(m_device, m_size, bucketCount());
-  copyHostToDevice(m_device, m_host);
+  copyHostToDevice(m_device, m_host, stream);
 
   m_onDevice = true;
 }
 
-void CudaMuonSpacePointContainer::moveToHost() {
+void CudaMuonSpacePointContainer::moveToHost(cudaStream_t stream) {
   if (!m_onDevice) {
     return;
   }
 
-  copyDeviceToHost(m_host, m_device);
+  copyDeviceToHost(m_host, m_device, stream);
 }
 
 void CudaMuonSpacePointContainer::clearDevice() noexcept {
