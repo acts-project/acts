@@ -748,6 +748,7 @@ def full_chain(args):
                 useAmbiguityScoring=False,
             ),
             ambiVolumeFile=args.ambi_config,
+            ambiMonitorFile=outputDirLessRoot / "scoreMonitor.root",
             **writeCovMat,
             outputDirRoot=outputDirLessRoot,
             outputDirCsv=outputDirLessCsv,
