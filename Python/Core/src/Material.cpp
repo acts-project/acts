@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/BinnedSurfaceMaterialAccumulator.hpp"
+#include "Acts/Material/GridSurfaceMaterialAccumulator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
@@ -128,6 +129,34 @@ void addMaterial(py::module_& m) {
         py::class_<BinnedSurfaceMaterialAccumulator::Config>(bsma, "Config")
             .def(py::init<>());
     ACTS_PYTHON_STRUCT(c, emptyBinCorrection, materialSurfaces);
+  }
+
+  {
+    auto gsma =
+        py::class_<GridSurfaceMaterialAccumulator, ISurfaceMaterialAccumulator,
+                   std::shared_ptr<GridSurfaceMaterialAccumulator>>(
+            m, "GridSurfaceMaterialAccumulator")
+            .def(py::init(
+                     [](const GridSurfaceMaterialAccumulator::Config& config,
+                        Logging::Level level) {
+                       return std::make_shared<GridSurfaceMaterialAccumulator>(
+                           config,
+                           getDefaultLogger("GridSurfaceMaterialAccumulator",
+                                            level));
+                     }),
+                 py::arg("config"), py::arg("level"))
+            .def("createState", &GridSurfaceMaterialAccumulator::createState)
+            .def("accumulate", &GridSurfaceMaterialAccumulator::accumulate)
+            .def("finalizeMaterial",
+                 &GridSurfaceMaterialAccumulator::finalizeMaterial);
+
+    py::enum_<GridSurfaceMaterialAccumulator::StorageKind>(gsma, "StorageKind")
+        .value("Direct", GridSurfaceMaterialAccumulator::StorageKind::Direct)
+        .value("Indexed", GridSurfaceMaterialAccumulator::StorageKind::Indexed);
+
+    auto c = py::class_<GridSurfaceMaterialAccumulator::Config>(gsma, "Config")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, emptyBinCorrection, materialSurfaces, storageKind);
   }
 
   {
