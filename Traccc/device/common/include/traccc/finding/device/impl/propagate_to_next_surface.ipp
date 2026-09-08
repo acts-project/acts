@@ -53,6 +53,10 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
   vecmem::device_vector<unsigned int> params_liveness(
       payload.params_liveness_view);
 
+  // MBF jacobians
+  vecmem::device_vector<bound_matrix<default_algebra>> tmp_jacobian(
+      payload.tmp_jacobian_view);
+
   // tips
   vecmem::device_vector<unsigned int> tips(payload.tips_view);
   vecmem::device_vector<unsigned int> tip_lengths(payload.tip_lengths_view);
@@ -99,13 +103,8 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
    * is set to the multiplicative identity.
    */
   if (cfg.run_smoother == smoother_type::e_mbf) {
-    assert(payload.tmp_jacobian_view.ptr() != nullptr);
-
-    vecmem::device_vector<bound_matrix<default_algebra>> tmp_jacobian(
-        payload.tmp_jacobian_view);
-    tmp_jacobian.at(param_id) =
-        matrix::identity<bound_matrix<default_algebra>>();
-    updater_state.set_full_jacobian(&(tmp_jacobian.at(param_id)));
+    assert(tmp_jacobian.size() != 0);
+    updater_state.reset_full_jacobian();
   }
 
   // Notify the KF and material interaction only at the first propagation
@@ -121,6 +120,10 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
   propagator.propagate(
       propagation, detray::tie(aborter_state, updater_state, interactor_state,
                                momentum_aborter_state, ckf_aborter_state));
+
+  if (ckf_aborter_state.success && updater_state.has_full_jacobian()) {
+    tmp_jacobian.at(param_id) = updater_state.full_jacobian();
+  }
 
   // If a surface found, add the parameter for the next step
   if (ckf_aborter_state.success) {

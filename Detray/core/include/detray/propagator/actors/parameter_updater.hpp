@@ -167,6 +167,8 @@ struct parameter_updater_state {
 /// Jacobian between two surfaces, as needed by the MBF smoother
 template <concepts::algebra algebra_t>
 struct parameter_updater_mbf_state : parameter_updater_state<algebra_t> {
+  enum class jacobian_state { e_not_set, e_identity, e_set };
+
   static constexpr bool stores_full_jacobian = true;
 
   using parameter_updater_state<algebra_t>::parameter_updater_state;
@@ -174,33 +176,46 @@ struct parameter_updater_mbf_state : parameter_updater_state<algebra_t> {
   /// @returns true if the full Jacobian matrix should be assembled.
   DETRAY_HOST_DEVICE
   constexpr bool has_full_jacobian() const {
-    return m_full_jacobian != nullptr;
+    return m_state != jacobian_state::e_not_set;
   }
 
   /// @returns the current full Jacbian.
   DETRAY_HOST_DEVICE
-  constexpr const bound_matrix<algebra_t>& full_jacobian() const {
+  constexpr bound_matrix<algebra_t> full_jacobian() const {
     assert(has_full_jacobian());
-    return *m_full_jacobian;
+    if (m_state == jacobian_state::e_identity) {
+      return matrix::identity<bound_matrix<algebra_t>>();
+    } else {
+      return m_full_jacobian;
+    }
   }
+
+  /// Set the jacobian to identity
+  DETRAY_HOST_DEVICE
+  constexpr void reset_full_jacobian() { m_state = jacobian_state::e_identity; }
 
   /// Set new full Jacbian.
   DETRAY_HOST_DEVICE
   constexpr void set_full_jacobian(const bound_matrix<algebra_t>& jac) {
-    assert(has_full_jacobian());
-    *m_full_jacobian = jac;
+    m_full_jacobian = jac;
+    m_state = jacobian_state::e_set;
   }
 
-  /// Set new full Jacbian.
   DETRAY_HOST_DEVICE
-  constexpr void set_full_jacobian(bound_matrix<algebra_t>* jac_ptr) {
-    assert(jac_ptr);
-    m_full_jacobian = jac_ptr;
+  constexpr void update_full_jacobian(const bound_matrix<algebra_t>& jac) {
+    if (m_state == jacobian_state::e_identity) {
+      m_full_jacobian = jac;
+    } else {
+      m_full_jacobian = jac * m_full_jacobian;
+    }
+    m_state = jacobian_state::e_set;
   }
 
  private:
+  /// The state of the Jacobian
+  jacobian_state m_state = jacobian_state::e_not_set;
   /// Full jacobian for up to the current destination surface
-  bound_matrix<algebra_t>* m_full_jacobian{nullptr};
+  bound_matrix<algebra_t> m_full_jacobian;
 };
 
 /// Result of the param. transporter: bound track parameters at dest. sf.
@@ -381,8 +396,7 @@ struct parameter_transporter_base : base_actor {
       if (math::fabs(stepping.path_length()) > 0.f) {
         if constexpr (state_t::stores_full_jacobian) {
           if (updater_state.has_full_jacobian()) {
-            updater_state.set_full_jacobian(propagation_step_jacobian *
-                                            updater_state.full_jacobian());
+            updater_state.update_full_jacobian(propagation_step_jacobian);
           }
         }
 
