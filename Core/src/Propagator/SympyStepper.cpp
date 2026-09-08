@@ -187,8 +187,6 @@ void SympyStepper::transportCovarianceToBound(
 
 Result<double> SympyStepper::step(State& state, Direction propDir,
                                   const IVolumeMaterial* material) const {
-  // Each mode is instantiated in a translation unit of its own; see
-  // detail/SympyStepperStep.hpp.
   if (state.options.doDense &&
       (material != nullptr || !state.materialEffectsAccumulator.isVacuum())) {
     return detail::sympyStep<detail::SympyStepMode::Dense>(*this, state,
