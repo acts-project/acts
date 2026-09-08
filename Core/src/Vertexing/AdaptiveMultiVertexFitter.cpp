@@ -256,7 +256,7 @@ Result<void> AdaptiveMultiVertexFitter::prepareVertexForFit(
       return res.error();
     }
     // Save 3D impact parameters of the track
-    scratch.impactParams3D.emplace(trk, res.value());
+    scratch.impactParams3D.try_emplace(trk, res.value());
   }
   return {};
 }
@@ -264,7 +264,7 @@ Result<void> AdaptiveMultiVertexFitter::prepareVertexForFit(
 Result<void> AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
     VertexFitProblem& problem, Vertex* vtx,
     const VertexingOptions& vertexingOptions, Cache& cache) const {
-  VertexFitCandidate& candidate = problem.candidates[vtx];
+  const VertexFitCandidate& candidate = problem.candidates[vtx];
   VertexScratch& scratch = scratchFor(problem, vtx, cache);
 
   // Loop over all tracks that are associated with vtx and estimate their
@@ -282,7 +282,7 @@ Result<void> AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
         return res.error();
       }
       // Set impactParams3D for current trackAtVertex
-      scratch.impactParams3D.emplace(trk, res.value());
+      scratch.impactParams3D.try_emplace(trk, res.value());
     }
     // Set compatibility with current vertex
     Result<double> compatibilityResult(0.);
@@ -454,7 +454,7 @@ void AdaptiveMultiVertexFitter::decomposeState(State& state,
     candidate.constraint = std::move(info.constraint);
     candidate.seedPosition = info.seedPosition;
     candidate.trackLinks = std::move(info.trackLinks);
-    problem.candidates.emplace(vtx, std::move(candidate));
+    problem.candidates.try_emplace(vtx, std::move(candidate));
 
     VertexScratch scratch;
     scratch.linPoint = info.linPoint;
@@ -463,7 +463,7 @@ void AdaptiveMultiVertexFitter::decomposeState(State& state,
     // swap rather than move-assign: the mapped type is const, so the map is
     // not assignable
     scratch.impactParams3D.swap(info.impactParams3D);
-    cache.vertexScratch.emplace(vtx, std::move(scratch));
+    cache.vertexScratch.try_emplace(vtx, std::move(scratch));
   }
 
   state.vtxInfoMap.clear();
@@ -500,7 +500,7 @@ void AdaptiveMultiVertexFitter::recomposeState(State& state,
       info.impactParams3D.swap(it->second.impactParams3D);
     }
 
-    state.vtxInfoMap.emplace(vtx, std::move(info));
+    state.vtxInfoMap.try_emplace(vtx, std::move(info));
   }
 }
 

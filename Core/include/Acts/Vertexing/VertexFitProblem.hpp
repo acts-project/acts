@@ -81,13 +81,8 @@ struct VertexFitProblem {
   /// Removes a vertex from @c trackToVertices
   /// @param vtx Vertex to remove from the multimap along with its track associations
   void removeVertexFromMultiMap(const Vertex& vtx) {
-    for (auto iter = trackToVertices.begin(); iter != trackToVertices.end();) {
-      if (iter->second == &vtx) {
-        iter = trackToVertices.erase(iter);
-      } else {
-        ++iter;
-      }
-    }
+    std::erase_if(trackToVertices,
+                  [&vtx](const auto& entry) { return entry.second == &vtx; });
   }
 
   /// Remove a vertex from the vertex collection
