@@ -280,7 +280,9 @@ using BinConnections =
 GbtsGeometry::GbtsGeometry(
     std::span<const GbtsLayerDescription> layerDescriptions,
     std::span<const GbtsLayerConnection> layerConnections,
-    const float etaBinWidth, const GbtsZ0Range& z0Range, const Logger& logger)
+    const float etaBinWidth, const GbtsZ0Range& z0Range,
+    std::span<const GbtsExperimentLayerId> orderedBarrelLayerIds,
+    const Logger& logger)
     : m_etaBinWidth(etaBinWidth) {
   const float minZ0 = z0Range.min;
   const float maxZ0 = z0Range.max;
@@ -288,6 +290,36 @@ GbtsGeometry::GbtsGeometry(
   for (const GbtsLayerDescription& layer : layerDescriptions) {
     const detail::GbtsLayer& pL = createLayer(layer, m_nEtaBins);
     m_nEtaBins += pL.binning().numBins;
+  }
+
+  // the inside-out pixel barrel ordering: as given, or by radius
+  if (orderedBarrelLayerIds.empty()) {
+    for (GbtsLayerIndex idx = 0; idx < m_layers.size(); ++idx) {
+      const GbtsLayerDescription& layer = m_layers[idx].layerDescription();
+      if (layer.type == GbtsLayerType::Barrel &&
+          layer.technology == GbtsLayerTechnology::Pixel) {
+        m_orderedBarrelLayers.push_back(idx);
+      }
+    }
+    std::ranges::sort(m_orderedBarrelLayers, {}, [this](GbtsLayerIndex idx) {
+      return m_layers[idx].layerDescription().refCoord;
+    });
+  } else {
+    for (const GbtsExperimentLayerId id : orderedBarrelLayerIds) {
+      const std::optional<GbtsLayerIndex> idx = layerIndex(id);
+      if (!idx.has_value()) {
+        ACTS_WARNING("Skipping unknown barrel layer " << id);
+        continue;
+      }
+      m_orderedBarrelLayers.push_back(*idx);
+    }
+  }
+  m_binBarrelOrder.assign(m_nEtaBins, -1);
+  for (std::size_t order = 0; order < m_orderedBarrelLayers.size(); ++order) {
+    const GbtsLayerBinning& binning =
+        m_layers[m_orderedBarrelLayers[order]].binning();
+    std::fill_n(m_binBarrelOrder.begin() + binning.firstBin, binning.numBins,
+                static_cast<std::int32_t>(order));
   }
 
   // calculating bin tables in the connector...

@@ -18,7 +18,7 @@
 #include <cstdint>
 #include <memory>
 #include <numbers>
-#include <optional>
+#include <span>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -54,21 +54,18 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
         "table");
   }
 
-  // resolve each eta bin's position in the inside-out barrel ordering once,
-  // so the graph builder never searches the list.
-  m_binBarrelOrder.assign(m_geometry->numBins(), -1);
-  for (std::size_t order = 0; order < m_cfg.orderedBarrelLayerIds.size();
-       ++order) {
-    const std::optional<GbtsLayerIndex> idx =
-        m_geometry->layerIndex(m_cfg.orderedBarrelLayerIds[order]);
-    if (!idx.has_value()) {
-      continue;
-    }
-    const GbtsLayerBinning& binning = m_geometry->layerBinning(*idx);
-    for (std::uint32_t bin = binning.firstBin;
-         bin < binning.firstBin + binning.numBins; ++bin) {
-      m_binBarrelOrder.at(bin) = static_cast<std::int32_t>(order);
-    }
+  // the layer-keyed cuts default to the innermost pixel barrel layers
+  const std::span<const GbtsLayerIndex> orderedBarrel =
+      m_geometry->orderedBarrelLayers();
+  const auto layerId = [this](const GbtsLayerIndex idx) {
+    return m_geometry->layerDescription(idx).id;
+  };
+  if (m_cfg.z0RangeLayerIds.empty() && !orderedBarrel.empty()) {
+    m_cfg.z0RangeLayerIds = {layerId(orderedBarrel[0])};
+  }
+  if (m_cfg.matchBeforeCreateLayerIds.empty() && orderedBarrel.size() >= 2) {
+    m_cfg.matchBeforeCreateLayerIds = {layerId(orderedBarrel[0]),
+                                       layerId(orderedBarrel[1])};
   }
 }
 
@@ -218,7 +215,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
     const float rb1 = B1.minRadius;
 
     const GbtsExperimentLayerId layerId1 = B1.layerId;
-    const std::int32_t barrelOrder1 = m_binBarrelOrder[bg.bin];
+    const std::int32_t barrelOrder1 = m_geometry->binBarrelOrder(bg.bin);
 
     const bool isPixel1 = B1.technology == GbtsLayerTechnology::Pixel;
     // The adaptive tau corrections and the triplet validation below were tuned
@@ -229,7 +226,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
         [layerId1](const std::vector<GbtsExperimentLayerId>& ids) {
           return std::ranges::find(ids, layerId1) != ids.end();
         };
-    const bool useZ0Histogram = listed(m_cfg.z0HistogramLayerIds);
+    const bool useZ0Histogram = listed(m_cfg.z0RangeLayerIds);
     const bool useMatchBeforeCreate =
         m_cfg.matchBeforeCreate && listed(m_cfg.matchBeforeCreateLayerIds);
 
@@ -265,7 +262,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
       window.phiNodes = B2.phiNodes.data();
       window.numPhiNodes = static_cast<std::uint32_t>(B2.phiNodes.size());
       window.deltaPhi = deltaPhi;
-      window.barrelOrder = m_binBarrelOrder[b2Idx];
+      window.barrelOrder = m_geometry->binBarrelOrder(b2Idx);
       window.type = B2.type;
       window.technology = B2.technology;
     }

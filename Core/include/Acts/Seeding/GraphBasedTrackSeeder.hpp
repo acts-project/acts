@@ -127,15 +127,14 @@ class GraphBasedTrackSeeder {
     float phiWindowFarSlope = 2.2e-4f / UnitConstants::mm;
     /// Incoming edge count below which a node is accepted without a tau match.
     std::uint32_t matchBeforeCreateMaxEdges = 2;
-    /// Layers whose nodes are cut against the z0 histogram of their outer
-    /// neighbourhood, and whose isolated nodes are skipped.
-    std::vector<GbtsExperimentLayerId> z0HistogramLayerIds{};
-    /// Layers `matchBeforeCreate` applies to, when it is enabled.
+    /// Layers whose nodes are cut against the z0 range of their outer
+    /// neighbourhood, and whose isolated nodes are skipped. Empty takes the
+    /// innermost pixel barrel layer of the geometry.
+    std::vector<GbtsExperimentLayerId> z0RangeLayerIds{};
+    /// Layers `matchBeforeCreate` applies to, when it is enabled. Empty takes
+    /// the two innermost pixel barrel layers of the geometry.
     std::vector<GbtsExperimentLayerId> matchBeforeCreateLayerIds{};
-    /// Pixel barrel layer IDs ordered from the innermost layer outwards.
-    /// Consecutive layers skip the extra scattering correction `tauRatioCorr`.
-    std::vector<GbtsExperimentLayerId> orderedBarrelLayerIds{};
-    /// Half-width of the z0 window a node is matched against in the histogram.
+    /// Half-width of the z0 window a node is matched against the z0 range.
     float z0Resolution = 2.5f * UnitConstants::mm;
     /// Maximum radius of pixel detector
     float maxOuterRadius = 550.0f;
@@ -305,10 +304,6 @@ class GraphBasedTrackSeeder {
   DerivedConfig m_cfg;
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
-
-  /// Position of each eta bin's layer in `orderedBarrelLayerIds`, -1 for
-  /// endcap and unlisted layers.
-  std::vector<std::int32_t> m_binBarrelOrder;
 
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);

@@ -86,6 +86,11 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// z0 range the eta bin table is built against
     Acts::Experimental::GbtsZ0Range gbtsZ0Range;
 
+    /// Pixel barrel layer ids from the innermost layer outwards (empty orders
+    /// the pixel barrel layers by radius)
+    std::vector<Acts::Experimental::GbtsExperimentLayerId>
+        orderedBarrelLayerIds;
+
     /// holds detector information, used to make the geometry objects used by
     /// GBTS
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
