@@ -79,23 +79,65 @@ concept point3D = point<V> && (traits::size<V> == 3);
 
 /// Matrix concepts
 /// @{
+///
+/// True iff the type is a matrix.
 template <typename M>
 concept matrix = traits::is_matrix<M>;
 
-template <typename M>
-concept square_matrix = matrix<M> && traits::is_square<M>;
+/// True iff the type is a matrix of the given shape and scalar type
+///
+/// Optionally takes a row, column, and scalar
+/// type argument; if ROWS is zero, any number of rows is accepted. If COLS is
+/// zero, any number of COLS is accepted. If S is void, then any scalar type
+/// is accepted. If any of these is a non-default value, the respective
+/// quantity or type is statically asserted.
+///
+/// @note This is defined in terms of @c matrix so that it subsumes it. Every
+/// concept below is in turn defined in terms of this one, which keeps the
+/// whole matrix hierarchy ordered for overload resolution.
+template <typename M, std::size_t ROWS = 0, std::size_t COLS = 0,
+          typename S = void>
+concept sized_matrix =
+    matrix<M> && (ROWS == 0 || traits::rows<M> == ROWS) &&
+    (COLS == 0 || traits::columns<M> == COLS) &&
+    (std::same_as<S, void> || std::same_as<traits::scalar_t<M>, S>);
 
-template <typename M>
-concept row_matrix = matrix<M> && (traits::rows<M> == 1);
+template <typename M, std::size_t ROWS = 0, typename S = void>
+concept square_matrix = sized_matrix<M, ROWS, ROWS, S> && traits::is_square<M>;
 
-template <typename M>
-concept row_matrix3D = row_matrix<M> && (traits::rows<M> == 3);
+/// True iff the matrix is symmetric
+///
+/// @note For types of which the symmetry cannot be determined, this is only
+/// a readability hint. The concept will be true, even if symmetry can only
+/// be determined at runtime.
+template <typename M, std::size_t ROWS = 0, typename S = void>
+concept symmetric_matrix =
+    square_matrix<M, ROWS, S> && (!traits::static_symmetric_assertable_v<M> ||
+                                  traits::static_symmetric_v<M>);
 
-template <typename M>
-concept column_matrix = matrix<M> && (traits::columns<M> == 1);
+/// True iff the matrix is diagonal
+///
+/// A diagonal matrix is also symmetric, so this refines @c symmetric_matrix.
+///
+/// @note For types of which the diagonality cannot be determined, this is only
+/// a readability hint. The concept will be true, even if diagonality can only
+/// be determined at runtime.
+template <typename M, std::size_t ROWS = 0, typename S = void>
+concept diagonal_matrix =
+    symmetric_matrix<M, ROWS, S> &&
+    (!traits::static_diagonal_assertable_v<M> || traits::static_diagonal_v<M>);
 
-template <typename M>
-concept column_matrix3D = column_matrix<M> && (traits::rows<M> == 3);
+template <typename M, std::size_t COLS = 0, typename S = void>
+concept row_matrix = sized_matrix<M, 1, COLS, S>;
+
+template <typename M, typename S = void>
+concept row_matrix3D = row_matrix<M, 3, S>;
+
+template <typename M, std::size_t ROWS = 0, typename S = void>
+concept column_matrix = sized_matrix<M, ROWS, 1, S>;
+
+template <typename M, typename S = void>
+concept column_matrix3D = column_matrix<M, 3, S>;
 
 template <typename MA, typename MB>
 concept matrix_compatible =

@@ -9,6 +9,8 @@
 #pragma once
 
 // Project include(s).
+#include "detray/algebra/common/known_substructure_matrix.hpp"
+#include "detray/algebra/common/ksm/substructures/transport_jacobian.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/units.hpp"
@@ -17,7 +19,6 @@
 #include "detray/navigation/policies.hpp"
 #include "detray/propagator/base_stepper.hpp"
 #include "detray/propagator/detail/codegen/update_rk_transport_jacobian.hpp"
-#include "detray/propagator/transport_jacobian.hpp"
 #include "detray/tracks/tracks.hpp"
 
 namespace detray {
@@ -62,10 +63,9 @@ class rk_stepper final
   using magnetic_field_type = magnetic_field_t;
   template <std::size_t ROWS, std::size_t COLS>
   using matrix_type = dmatrix<algebra_t, ROWS, COLS>;
-  using transport_jacobian_type = std::conditional_t<
-      uses_gradient,
-      detail::transport_jacobian_matrix_with_gradient<algebra_type>,
-      detail::transport_jacobian_matrix_without_gradient<algebra_type>>;
+  using transport_jacobian_type =
+      ksm::matrix<ksm::transport_jacobian_substructure<uses_gradient>,
+                  scalar_type>;
 
   rk_stepper() = default;
 
