@@ -30,7 +30,7 @@ AdaptiveMultiVertexFitter::AdaptiveMultiVertexFitter(
   }
 }
 
-VertexScratch& AdaptiveMultiVertexFitter::scratchFor(
+AdaptiveMultiVertexFitter::VertexScratch& AdaptiveMultiVertexFitter::scratchFor(
     const VertexFitProblem& problem, Vertex* vtx, Cache& cache) {
   auto [it, inserted] = cache.vertexScratch.try_emplace(vtx);
   if (inserted) {
