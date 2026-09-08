@@ -94,12 +94,19 @@ struct GbtsEtaBinInfo final {
 
   float minRadius{};
   float maxRadius{};
-  GbtsExperimentLayerId layerId{0};
+
+  /// Position of the bin's layer in the inside-out pixel barrel ordering,
+  /// -1 when it is not part of it.
+  std::int32_t barrelOrder{-1};
 
   /// Type of the layer this bin belongs to.
   GbtsLayerType type{};
   /// Technology of the layer this bin belongs to.
   GbtsLayerTechnology technology{};
+  /// Whether the bin's layer cuts on the z0 range of its outer neighbourhood.
+  bool cutOnZ0Range{false};
+  /// Whether `matchBeforeCreate` applies to the bin's layer.
+  bool matchBeforeCreate{false};
 
   /// Check if bin is empty
   /// @return True if bin has no nodes

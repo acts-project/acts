@@ -40,6 +40,14 @@ struct GbtsLayerDescription final {
   float minBound{};
   /// Maximum boundary coordinate.
   float maxBound{};
+  /// Position in the inside-out ordering of the pixel barrel layers.
+  std::int32_t barrelOrder{-1};
+  /// Cut the layer's nodes against the z0 range.
+  /// By default, only the innermost barrel layer.
+  bool cutOnZ0Range{false};
+  /// Apply `matchBeforeCreate` to the layer.
+  /// By default, the first two barrel layers.
+  bool matchBeforeCreate{false};
 };
 
 }  // namespace Acts::Experimental

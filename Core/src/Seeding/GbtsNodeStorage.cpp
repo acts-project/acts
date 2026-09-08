@@ -166,9 +166,11 @@ void GbtsNodeStorage::finalize() {
     // every node in a bin is on the same layer, so any of them will do
     const GbtsLayerDescription& description =
         m_geometry->layerDescription(m_staged[staged.front()].layer);
-    binInfo.layerId = description.id;
+    binInfo.barrelOrder = description.barrelOrder;
     binInfo.type = description.type;
     binInfo.technology = description.technology;
+    binInfo.cutOnZ0Range = description.cutOnZ0Range;
+    binInfo.matchBeforeCreate = description.matchBeforeCreate;
   }
 
   // Created now that the container has its final size, so that each column is

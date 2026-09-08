@@ -21,6 +21,13 @@ namespace Acts::Experimental::detail {
 GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
                      const float etaBinWidth, const std::uint32_t bin0)
     : m_layerDescription(layerDescription) {
+  // the layer cuts always apply on the innermost ordered barrel layers
+  m_layerDescription.cutOnZ0Range =
+      m_layerDescription.cutOnZ0Range || m_layerDescription.barrelOrder == 0;
+  m_layerDescription.matchBeforeCreate = m_layerDescription.matchBeforeCreate ||
+                                         m_layerDescription.barrelOrder == 0 ||
+                                         m_layerDescription.barrelOrder == 1;
+
   float r1{};
   float r2{};
   float z1{};
@@ -280,46 +287,43 @@ using BinConnections =
 GbtsGeometry::GbtsGeometry(
     std::span<const GbtsLayerDescription> layerDescriptions,
     std::span<const GbtsLayerConnection> layerConnections,
-    const float etaBinWidth, const GbtsZ0Range& z0Range,
-    std::span<const GbtsExperimentLayerId> orderedBarrelLayerIds,
-    const Logger& logger)
+    const float etaBinWidth, const GbtsZ0Range& z0Range, const Logger& logger)
     : m_etaBinWidth(etaBinWidth) {
   const float minZ0 = z0Range.min;
   const float maxZ0 = z0Range.max;
 
-  for (const GbtsLayerDescription& layer : layerDescriptions) {
-    const detail::GbtsLayer& pL = createLayer(layer, m_nEtaBins);
-    m_nEtaBins += pL.binning().numBins;
-  }
+  // local copies, so the barrel ordering can be resolved before the layers
+  // are built; the layers resolve the per-layer cut defaults themselves
+  std::vector<GbtsLayerDescription> layers(layerDescriptions.begin(),
+                                           layerDescriptions.end());
 
-  // the inside-out pixel barrel ordering: as given, or by radius
-  if (orderedBarrelLayerIds.empty()) {
-    for (GbtsLayerIndex idx = 0; idx < m_layers.size(); ++idx) {
-      const GbtsLayerDescription& layer = m_layers[idx].layerDescription();
-      if (layer.type == GbtsLayerType::Barrel &&
-          layer.technology == GbtsLayerTechnology::Pixel) {
-        m_orderedBarrelLayers.push_back(idx);
-      }
-    }
-    std::ranges::sort(m_orderedBarrelLayers, {}, [this](GbtsLayerIndex idx) {
-      return m_layers[idx].layerDescription().refCoord;
-    });
-  } else {
-    for (const GbtsExperimentLayerId id : orderedBarrelLayerIds) {
-      const std::optional<GbtsLayerIndex> idx = layerIndex(id);
-      if (!idx.has_value()) {
-        ACTS_WARNING("Skipping unknown barrel layer " << id);
+  const auto isPixelBarrel = [](const GbtsLayerDescription& layer) {
+    return layer.type == GbtsLayerType::Barrel &&
+           layer.technology == GbtsLayerTechnology::Pixel;
+  };
+
+  // Setting the pixel barrel order if not provided.
+  // The order is determined by the increasing radius of the layers.
+  if (std::ranges::none_of(
+          layers, [&isPixelBarrel](const GbtsLayerDescription& layer) {
+            return isPixelBarrel(layer) && layer.barrelOrder != -1;
+          })) {
+    for (GbtsLayerDescription& layer : layers) {
+      if (!isPixelBarrel(layer)) {
         continue;
       }
-      m_orderedBarrelLayers.push_back(*idx);
+      layer.barrelOrder = static_cast<std::int32_t>(std::ranges::count_if(
+          layers, [&isPixelBarrel, &layer](const GbtsLayerDescription& other) {
+            return isPixelBarrel(other) &&
+                   (other.refCoord < layer.refCoord ||
+                    (other.refCoord == layer.refCoord && other.id < layer.id));
+          }));
     }
   }
-  m_binBarrelOrder.assign(m_nEtaBins, -1);
-  for (std::size_t order = 0; order < m_orderedBarrelLayers.size(); ++order) {
-    const GbtsLayerBinning& binning =
-        m_layers[m_orderedBarrelLayers[order]].binning();
-    std::fill_n(m_binBarrelOrder.begin() + binning.firstBin, binning.numBins,
-                static_cast<std::int32_t>(order));
+
+  for (const GbtsLayerDescription& layer : layers) {
+    const detail::GbtsLayer& pL = createLayer(layer, m_nEtaBins);
+    m_nEtaBins += pL.binning().numBins;
   }
 
   // calculating bin tables in the connector...

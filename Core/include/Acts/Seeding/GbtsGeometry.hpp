@@ -44,15 +44,11 @@ class GbtsGeometry final {
   /// @param layerConnections Pairs of layers the seeder may connect
   /// @param etaBinWidth Width of the eta bins each layer is split into
   /// @param z0Range z0 range the bin table is built against
-  /// @param orderedBarrelLayerIds Pixel barrel layer ids from the innermost
-  ///        layer outwards. Empty orders the pixel barrel layers by radius.
   /// @param logger Logging instance, only used during construction
-  GbtsGeometry(
-      std::span<const GbtsLayerDescription> layerDescriptions,
-      std::span<const GbtsLayerConnection> layerConnections, float etaBinWidth,
-      const GbtsZ0Range& z0Range = {},
-      std::span<const GbtsExperimentLayerId> orderedBarrelLayerIds = {},
-      const Logger& logger = getDummyLogger());
+  GbtsGeometry(std::span<const GbtsLayerDescription> layerDescriptions,
+               std::span<const GbtsLayerConnection> layerConnections,
+               float etaBinWidth, const GbtsZ0Range& z0Range = {},
+               const Logger& logger = getDummyLogger());
 
   /// Get the number of layers the geometry was built from
   /// @return The layer count
@@ -85,20 +81,6 @@ class GbtsGeometry final {
   /// @return The bin groups
   std::span<const GbtsBinGroup> binGroups() const { return m_binGroups; }
 
-  /// Get the pixel barrel layers from the innermost layer outwards
-  /// @return The layer indices, innermost first
-  std::span<const GbtsLayerIndex> orderedBarrelLayers() const {
-    return m_orderedBarrelLayers;
-  }
-
-  /// Get the position of an eta bin's layer in the inside-out pixel barrel
-  /// ordering
-  /// @param bin Eta bin index
-  /// @return The position, or -1 if the bin is not on an ordered barrel layer
-  std::int32_t binBarrelOrder(std::uint32_t bin) const {
-    return m_binBarrelOrder[bin];
-  }
-
  private:
   // The layer object is shared only with the classes that build the graph.
   friend class GbtsNodeStorage;
@@ -130,12 +112,6 @@ class GbtsGeometry final {
   std::map<GbtsExperimentLayerId, GbtsLayerIndex> m_layerFromUserIdMap;
   /// Number of eta bins
   std::uint32_t m_nEtaBins{};
-
-  /// Pixel barrel layers from the innermost layer outwards
-  std::vector<GbtsLayerIndex> m_orderedBarrelLayers;
-  /// Position of each eta bin's layer in `m_orderedBarrelLayers`, -1 for the
-  /// rest, so the graph builder never resolves a layer
-  std::vector<std::int32_t> m_binBarrelOrder;
 
   /// Bin groups
   std::vector<GbtsBinGroup> m_binGroups;

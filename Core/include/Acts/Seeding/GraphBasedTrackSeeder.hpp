@@ -127,13 +127,6 @@ class GraphBasedTrackSeeder {
     float phiWindowFarSlope = 2.2e-4f / UnitConstants::mm;
     /// Incoming edge count below which a node is accepted without a tau match.
     std::uint32_t matchBeforeCreateMaxEdges = 2;
-    /// Layers whose nodes are cut against the z0 range of their outer
-    /// neighbourhood, and whose isolated nodes are skipped. Empty takes the
-    /// innermost pixel barrel layer of the geometry.
-    std::vector<GbtsExperimentLayerId> z0RangeLayerIds{};
-    /// Layers `matchBeforeCreate` applies to, when it is enabled. Empty takes
-    /// the two innermost pixel barrel layers of the geometry.
-    std::vector<GbtsExperimentLayerId> matchBeforeCreateLayerIds{};
     /// Half-width of the z0 window a node is matched against the z0 range.
     float z0Resolution = 2.5f * UnitConstants::mm;
     /// Maximum radius of pixel detector

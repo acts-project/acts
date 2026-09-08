@@ -178,7 +178,7 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // the algorithm
   auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
       layerGeometry, connectorTable.connections, etaBinWidth, m_cfg.gbtsZ0Range,
-      m_cfg.orderedBarrelLayerIds, this->logger());
+      this->logger());
 
   resolveLayerIndices(*geometry);
 

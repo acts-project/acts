@@ -53,20 +53,6 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
         "GraphBasedTrackSeeder: the cluster width cuts need a tau lookup "
         "table");
   }
-
-  // the layer-keyed cuts default to the innermost pixel barrel layers
-  const std::span<const GbtsLayerIndex> orderedBarrel =
-      m_geometry->orderedBarrelLayers();
-  const auto layerId = [this](const GbtsLayerIndex idx) {
-    return m_geometry->layerDescription(idx).id;
-  };
-  if (m_cfg.z0RangeLayerIds.empty() && !orderedBarrel.empty()) {
-    m_cfg.z0RangeLayerIds = {layerId(orderedBarrel[0])};
-  }
-  if (m_cfg.matchBeforeCreateLayerIds.empty() && orderedBarrel.size() >= 2) {
-    m_cfg.matchBeforeCreateLayerIds = {layerId(orderedBarrel[0]),
-                                       layerId(orderedBarrel[1])};
-  }
 }
 
 GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
@@ -214,21 +200,16 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
 
     const float rb1 = B1.minRadius;
 
-    const GbtsExperimentLayerId layerId1 = B1.layerId;
-    const std::int32_t barrelOrder1 = m_geometry->binBarrelOrder(bg.bin);
+    const std::int32_t barrelOrder1 = B1.barrelOrder;
 
     const bool isPixel1 = B1.technology == GbtsLayerTechnology::Pixel;
     // The adaptive tau corrections and the triplet validation below were tuned
     // on the pixel barrel and are keyed on it.
     const bool isPixelBarrel1 = isPixel1 && B1.type == GbtsLayerType::Barrel;
 
-    const auto listed =
-        [layerId1](const std::vector<GbtsExperimentLayerId>& ids) {
-          return std::ranges::find(ids, layerId1) != ids.end();
-        };
-    const bool useZ0Histogram = listed(m_cfg.z0RangeLayerIds);
+    const bool useZ0Histogram = B1.cutOnZ0Range;
     const bool useMatchBeforeCreate =
-        m_cfg.matchBeforeCreate && listed(m_cfg.matchBeforeCreateLayerIds);
+        m_cfg.matchBeforeCreate && B1.matchBeforeCreate;
 
     // prepare a sliding window for each non-empty bin2 in the group
 
@@ -262,7 +243,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
       window.phiNodes = B2.phiNodes.data();
       window.numPhiNodes = static_cast<std::uint32_t>(B2.phiNodes.size());
       window.deltaPhi = deltaPhi;
-      window.barrelOrder = m_geometry->binBarrelOrder(b2Idx);
+      window.barrelOrder = B2.barrelOrder;
       window.type = B2.type;
       window.technology = B2.technology;
     }
