@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
   // Filter out the google test flags
   ::testing::InitGoogleTest(&argc, argv);
 
-  using toy_detector_t = detector<test::toy_metadata>;
+  using toy_detector_t = host::detector<test::toy_metadata>;
   using test_algebra = typename toy_detector_t::algebra_type;
   using scalar = dscalar<test_algebra>;
 

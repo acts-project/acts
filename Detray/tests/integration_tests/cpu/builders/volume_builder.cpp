@@ -51,7 +51,7 @@ GTEST_TEST(detray_builders, tracking_volume_construction) {
   using namespace detray;
 
   using metadata_t = test::default_metadata;
-  using detector_t = detector<metadata_t>;
+  using detector_t = host::detector<metadata_t>;
   using transform3 = typename detector_t::transform3_type;
   using geo_obj_id = typename detector_t::geo_obj_ids;
   using mask_id = typename detector_t::masks::id;

@@ -26,8 +26,7 @@ __global__ void material_validation_kernel(
     vecmem::data::jagged_vector_view<
         material_record<typename detector_t::scalar_type>>
         mat_steps_view) {
-  using detector_device_t =
-      detector<typename detector_t::metadata, device_container_types>;
+  using detector_device_t = device::detector<typename detector_t::metadata>;
   using algebra_t = typename detector_device_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
 
@@ -105,16 +104,17 @@ void material_validation_device(
 }
 
 /// Macro declaring the template instantiations for the different detector types
-#define DECLARE_MATERIAL_VALIDATION(METADATA)                                  \
-                                                                               \
-  template void material_validation_device<detector<METADATA>>(                \
-      typename detector<METADATA>::view_type, const propagation::config &,     \
-      vecmem::data::vector_view<                                               \
-          free_track_parameters<typename detector<METADATA>::algebra_type>> &, \
-      vecmem::data::vector_view<material_validator::track_material<            \
-          typename detector<METADATA>::scalar_type>> &,                        \
-      vecmem::data::jagged_vector_view<                                        \
-          material_record<typename detector<METADATA>::scalar_type>> &);
+#define DECLARE_MATERIAL_VALIDATION(METADATA)                         \
+                                                                      \
+  template void material_validation_device<host::detector<METADATA>>( \
+      typename host::detector<METADATA>::view_type,                   \
+      const propagation::config &,                                    \
+      vecmem::data::vector_view<                                      \
+          free_track_parameters<typename METADATA::algebra_type>> &,  \
+      vecmem::data::vector_view<material_validator::track_material<   \
+          typename host::detector<METADATA>::scalar_type>> &,         \
+      vecmem::data::jagged_vector_view<                               \
+          material_record<typename host::detector<METADATA>::scalar_type>> &);
 
 DECLARE_MATERIAL_VALIDATION(test::default_metadata)
 DECLARE_MATERIAL_VALIDATION(test::toy_metadata)

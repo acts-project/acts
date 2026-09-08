@@ -22,8 +22,7 @@ __global__ void propagator_test_kernel(
     vecmem::data::vector_view<test_track> tracks_data,
     vecmem::data::jagged_vector_view<step_record<test_algebra>> steps_data) {
   int gid = threadIdx.x + blockIdx.x * blockDim.x;
-  using detector_device_t =
-      detector<typename detector_t::metadata, device_container_types>;
+  using detector_device_t = device::detector<typename detector_t::metadata>;
 
   static_assert(std::is_same_v<typename detector_t::view_type,
                                typename detector_device_t::view_type>,
@@ -89,10 +88,9 @@ void propagator_test(
 }
 
 /// Explicit instantiation for a constant magnetic field
-template void
-propagator_test<bfield::const_bknd_t<dscalar<test_algebra>>,
-                detector<toy_metadata<test_algebra>, host_container_types>>(
-    detector<toy_metadata<test_algebra>, host_container_types>::view_type,
+template void propagator_test<bfield::const_bknd_t<dscalar<test_algebra>>,
+                              host::detector<toy_metadata<test_algebra>>>(
+    host::detector<toy_metadata<test_algebra>>::view_type,
     const propagation::config&,
     covfie::field_view<bfield::const_bknd_t<dscalar<test_algebra>>>,
     vecmem::data::vector_view<test_track>&,
@@ -102,8 +100,8 @@ propagator_test<bfield::const_bknd_t<dscalar<test_algebra>>,
 /*
 template void
 propagator_test<bfield::hip::inhom_bknd_t,
-                detector<toy_metadata<test_algebra>, host_container_types>>(
-    detector<toy_metadata<test_algebra>, host_container_types>::view_type,
+                host::detector<toy_metadata<test_algebra>>>(
+    host::detector<toy_metadata<test_algebra>>::view_type,
     const propagation::config&, covfie::field_view<bfield::hip::inhom_bknd_t>,
     vecmem::data::vector_view<test_track>&,
     vecmem::data::jagged_vector_view<step_record<test_algebra>>&); */

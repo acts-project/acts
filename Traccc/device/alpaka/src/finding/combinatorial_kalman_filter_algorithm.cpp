@@ -33,6 +33,9 @@
 #include "traccc/geometry/detector_buffer.hpp"
 #include "traccc/utils/detector_buffer_bfield_visitor.hpp"
 
+// Detray include(s)
+#include <detray/core/concepts.hpp>
+
 // System include(s).
 #include <new>
 #include <type_traits>
@@ -252,7 +255,7 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
     const edm::measurement_collection::const_view::size_type n_measurements,
     const edm::measurement_collection::const_view& measurements) const {
   return detector_buffer_visitor<detector_type_list>(
-      detector, [&]<typename detector_traits_t>(
+      detector, [&]<detray::concepts::detector_traits detector_traits_t>(
                     const typename detector_traits_t::view& det) {
         // Construct an appropriate device detector object.
         typename detector_traits_t::device device_det{det};

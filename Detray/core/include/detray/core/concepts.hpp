@@ -113,6 +113,18 @@ concept detector = requires(const D& d) {
   } -> std::same_as<const typename D::accelerator_container&>;
 };
 
+/// Check if a type is a host (mutable) detector type
+template <typename D>
+concept host_detector =
+    detector<D> &&
+    std::same_as<typename D::container_types, host_container_types>;
+
+/// Check if a type is a device (immutable) detector type
+template <typename D>
+concept device_detector =
+    detector<D> &&
+    std::same_as<typename D::container_types, const_device_container_types>;
+
 /// Check for the the presence of any type of grids in a detector definition
 template <class D>
 concept has_grids =
@@ -145,5 +157,16 @@ concept has_homogeneous_material =
 template <class D>
 concept has_material_maps =
     detector<D> && detail::contains_material_maps_v<typename D::material>;
+
+/// Check that a type is a Draits instance
+template <typename T>
+concept detector_traits = requires {
+  requires metadata<typename T::metadata_type>;
+  requires device_view<typename T::view>;
+  requires device_buffer<typename T::buffer>;
+
+  requires detector<typename T::host>;
+  requires detector<typename T::device>;
+};
 
 }  // namespace detray::concepts

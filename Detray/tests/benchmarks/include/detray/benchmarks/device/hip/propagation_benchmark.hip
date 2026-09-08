@@ -22,8 +22,7 @@ __global__ void __launch_bounds__(256, 4) propagator_benchmark_kernel(
         free_track_parameters<typename propagator_t::algebra_type>>
         tracks_view) {
   using detector_device_t =
-      detector<typename propagator_t::detector_type::metadata,
-               device_container_types>;
+      device::detector<typename propagator_t::detector_type::metadata>;
   using algebra_t = typename detector_device_t::algebra_type;
   using actor_chain_t = typename propagator_t::actor_chain_type;
   using propagator_device_t =
@@ -118,12 +117,12 @@ void run_propagation_kernel(
                                                                             \
   template void                                                             \
   run_propagation_kernel<hip_propagator_type<METADATA, FIELD, CHAIN>, OPT>( \
-      const propagation::config &, detector<METADATA>::view_type,           \
+      const propagation::config &, host::detector<METADATA>::view_type,     \
       covfie::field_view<FIELD>,                                            \
       hip_propagator_type<METADATA, FIELD,                                  \
                           CHAIN>::actor_chain_type::state_tuple *,          \
       vecmem::data::vector_view<                                            \
-          free_track_parameters<detector<METADATA>::algebra_type>>,         \
+          free_track_parameters<METADATA::algebra_type>>,                   \
       const int);                                                           \
                                                                             \
   template hip_propagator_type<METADATA, FIELD,                             \

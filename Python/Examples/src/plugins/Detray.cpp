@@ -38,7 +38,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsDetray, detray) {
   {
     using DetrayMetaDataODD = detray::odd_metadata<detray::array<float>>;
 
-    using DetrayDetectorODD = detray::detector<DetrayMetaDataODD>;
+    using DetrayDetectorODD = detray::host::detector<DetrayMetaDataODD>;
 
     detray.def(
         "StraightLinePropagatorODD",
