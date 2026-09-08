@@ -124,22 +124,37 @@ void read_json_dd(traccc::detector_design_description::host& det_desc,
   // Construct a (temporary) Detray detector object from the geometry
   // configuration file.
   vecmem::host_memory_resource mr;
-  traccc::host_detector detector;
-  traccc::io::read_detector(detector, mr, geometry_file);
+
+  //
+  // TODO: Remove and reuse existing detector (for compiletime and runtime
+  // performance)
+  //
+  // Set up the detector reader configuration for the optional components
+  const auto cfg = detray::io::detector_reader_config{}.do_check(false);
+  detray::io::detector_payload payload{};
+  detray::io::convert_json_to_payload(
+      payload, {traccc::io::get_absolute_path(geometry_file)});
 
   // TODO: Implement detector visitor!
-  // Peek at the header to determine the kind of detector that is needed
-  const auto header = detray::io::detail::deserialize_json_header(
-      traccc::io::get_absolute_path(geometry_file));
-
-  if (header.detector == "Cylindrical detector from DD4hep blueprint") {
+  traccc::host_detector detector;
+  std::string_view det_name{payload.detector_name};
+  if (det_name == "Cylindrical detector from DD4hep blueprint") {
+    auto det =
+        detray::io::read_detector<traccc::odd_detector::host>(mr, cfg, payload);
+    detector.set<traccc::odd_detector>(std::move(det.first));
     read_json_dd_impl<traccc::odd_detector>(det_desc, det_cond, detector, digi,
                                             cond);
-  } else if (header.detector == "detray_detector") {
+  } else if (det_name == "detray_detector") {
+    auto det =
+        detray::io::read_detector<traccc::itk_detector::host>(mr, cfg, payload);
+    detector.set<traccc::itk_detector>(std::move(det.first));
     read_json_dd_impl<traccc::itk_detector>(det_desc, det_cond, detector, digi,
                                             cond);
   } else {
     // TODO: Warning here
+    auto det = detray::io::read_detector<traccc::default_detector::host>(
+        mr, cfg, payload);
+    detector.set<traccc::default_detector>(std::move(det.first));
     read_json_dd_impl<traccc::default_detector>(det_desc, det_cond, detector,
                                                 digi, cond);
   }

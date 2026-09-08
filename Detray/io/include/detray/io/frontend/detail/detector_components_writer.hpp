@@ -50,17 +50,17 @@ class detector_components_writer final {
   /// Writes the full detector data of @param det to file by calling the
   /// writers, while using the name map @param names for the detector
   void write(const detector_t& det, const typename detector_t::name_map& names,
-             const std::ios_base::openmode mode,
+             const std::string source, const std::ios_base::openmode mode,
              const std::filesystem::path& file_path) {
     // We have to at least write a geometry
     assert(!m_writers.empty() &&
            "No writers registered! Need at least a geometry writer");
 
     // Call the write method on all optional writers
-    std::ranges::for_each(
-        m_writers, [&det, &names, mode, &file_path](writer_ptr_t& writer) {
-          writer->write(det, names, mode, file_path);
-        });
+    std::ranges::for_each(m_writers, [&det, &names, &source, mode,
+                                      &file_path](writer_ptr_t& writer) {
+      writer->write(det, names, source, mode, file_path);
+    });
   }
 
  private:

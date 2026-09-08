@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
   vecmem::host_memory_resource host_mr;
 
   auto [host_det, names] =
-      detray::io::read_detector<host_detector_type>(host_mr, reader_cfg);
+      detray::io::read_detector_json<host_detector_type>(host_mr, reader_cfg);
 
   /***************************
    * Generate simulation data

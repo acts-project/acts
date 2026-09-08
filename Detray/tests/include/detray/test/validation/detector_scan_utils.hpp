@@ -133,7 +133,11 @@ inline dindex_range overlaps_removal(
 
     // This is not a case of oversized portals, treat as actual overlaps
     if (n_erased != 1u || pt_buckets.empty() || !is_all_portals) {
-      DETRAY_ERROR_HOST("Could not resolve exit portal in overlap correction");
+      DETRAY_ERROR_HOST(
+          "Portals extrude volumes: Could not resolve which portals to remove "
+          "from trace (correct exit portal has to be kept!).\n Overlapping "
+          "intersection indices: "
+          << first << " to " << last);
 
       overlap_idx = {static_cast<dindex>(first), static_cast<dindex>(last)};
     } else {

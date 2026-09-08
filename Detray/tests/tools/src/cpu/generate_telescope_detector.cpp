@@ -141,6 +141,7 @@ int main(int argc, char **argv) {
   writer_cfg.format(detray::io::format::json).replace_files(false);
   // Default output path
   writer_cfg.path("./telescope_detector/");
+  writer_cfg.source("detray native");
 
   // Parse options
   po::variables_map vm =

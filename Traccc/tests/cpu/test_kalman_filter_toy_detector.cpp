@@ -78,16 +78,15 @@ TEST_P(KF_integration_test_toy_detector, toy_detector) {
   WriteDetector(true, name);
 
   detray::io::detector_reader_config reader_cfg{};
-  reader_cfg.add_file((det_dir / "toy_detector_geometry.json").native())
-      .add_file((det_dir / "toy_detector_surface_grids.json").native())
-      .do_check(true);
+  reader_cfg.add_files((det_dir / "toy_detector_geometry.json").native(),
+                       (det_dir / "toy_detector_surface_grids.json").native());
   if (std::get<2>(GetParam())) {
     reader_cfg.add_file((det_dir / "toy_detector_material_maps.json").native());
   }
 
   auto [io_det, names] =
-      detray::io::read_detector<traccc::default_detector::host>(host_mr,
-                                                                reader_cfg);
+      detray::io::read_detector_json<traccc::default_detector::host>(
+          host_mr, reader_cfg);
   traccc::host_detector host_det{};
   host_det.template set<detector_traits<typename detector_t::metadata>>(
       std::move(io_det));
