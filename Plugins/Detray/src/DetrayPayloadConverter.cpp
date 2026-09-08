@@ -824,101 +824,95 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
 
     // Portals have produced surfaces and are added in volume payload, handle
     // material now
-    if (m_cfg.convertMaterial) {
-      auto [grids, homogeneous] =
-          convertMaterial(volume, surfaceIndices, volPayload);
+    auto [grids, homogeneous] =
+        convertMaterial(volume, surfaceIndices, volPayload);
 
-      ACTS_DEBUG("Volume " << volume.volumeName()
-                           << " (detray idx: " << volPayload.index.link
-                           << ") has " << homogeneous.surface_mat.size()
-                           << " material slabs");
+    ACTS_DEBUG("Volume " << volume.volumeName()
+                         << " (detray idx: " << volPayload.index.link
+                         << ") has " << homogeneous.surface_mat.size()
+                         << " material slabs");
 
-      // Only add if we have homogeneous material
-      if (!homogeneous.surface_mat.empty()) {
-        if (!dthmPayload.has_value()) {
-          dthmPayload.emplace();
-        }
-        // NOTE: Currently, it'll always be populated by at least the
-        // homogeneous NOTE: Volume association is internal to
-        // `detray::io::material_volume_payload`
-        dthmPayload->volumes.emplace_back(std::move(homogeneous));
+    // Only add if we have homogeneous material
+    if (!homogeneous.surface_mat.empty()) {
+      if (!dthmPayload.has_value()) {
+        dthmPayload.emplace();
       }
-
-      ACTS_DEBUG("Volume " << volume.volumeName()
-                           << " (detray idx: " << volPayload.index.link
-                           << ") has " << grids.size() << " material grids");
-      // Only add if we have grids
-      if (!grids.empty()) {
-        if (!materialGrids.has_value()) {
-          materialGrids.emplace();
-        }
-        // NOTE: Volume association is EXTERNAL, i.e. we need to fill a map
-        // keyed by the volume index
-        materialGrids->grids[volPayload.index.link] = std::move(grids);
-      }
+      // NOTE: Currently, it'll always be populated by at least the
+      // homogeneous NOTE: Volume association is internal to
+      // `detray::io::material_volume_payload`
+      dthmPayload->volumes.emplace_back(std::move(homogeneous));
     }
 
-    if (m_cfg.convertSurfaceGrids) {
-      // Look for navigation policies that we need to convert!
-      const auto* navPolicy = volume.navigationPolicy();
-      if (navPolicy != nullptr) {
-        // Create surface lookup function for this volume
-        auto surfaceLookupFn =
-            [&surfaceIndices](const Surface* surface) -> std::size_t {
-          auto it = surfaceIndices.find(surface);
-          if (it == surfaceIndices.end()) {
-            throw std::runtime_error(
-                "Surface not found in surface indices map");
-          }
-          return it->second;
-        };
+    ACTS_DEBUG("Volume " << volume.volumeName()
+                         << " (detray idx: " << volPayload.index.link
+                         << ") has " << grids.size() << " material grids");
+    // Only add if we have grids
+    if (!grids.empty()) {
+      if (!materialGrids.has_value()) {
+        materialGrids.emplace();
+      }
+      // NOTE: Volume association is EXTERNAL, i.e. we need to fill a map
+      // keyed by the volume index
+      materialGrids->grids[volPayload.index.link] = std::move(grids);
+    }
 
-        std::optional<DetraySurfaceGrid> detrayGrid = std::nullopt;
+    // Look for navigation policies that we need to convert!
+    const auto* navPolicy = volume.navigationPolicy();
+    if (navPolicy != nullptr) {
+      // Create surface lookup function for this volume
+      auto surfaceLookupFn =
+          [&surfaceIndices](const Surface* surface) -> std::size_t {
+        auto it = surfaceIndices.find(surface);
+        if (it == surfaceIndices.end()) {
+          throw std::runtime_error("Surface not found in surface indices map");
+        }
+        return it->second;
+      };
 
-        navPolicy->visit([&](const INavigationPolicy& policy) {
-          auto grid = m_cfg.convertNavigationPolicy(policy, gctx,
-                                                    surfaceLookupFn, logger());
-          if (!grid.has_value()) {
-            // Policies without an explicit detray conversion (see
-            // NOOP_CONVERTER_IMPL) are not a conflict: a volume may
-            // legitimately combine e.g. a SurfaceArrayNavigationPolicy with a
-            // TryAllNavigationPolicy for passives and portals.
-            return;
-          }
+      std::optional<DetraySurfaceGrid> detrayGrid = std::nullopt;
 
-          if (detrayGrid.has_value()) {
-            ACTS_ERROR("Volume "
-                       << volume.volumeName()
-                       << " has more than one detray-convertible navigation "
-                          "policy. This cannot currently be handled.");
-            throw std::runtime_error{
-                "Multiple detray-compatible navigation policies"};
-          }
-
-          detrayGrid = std::move(grid);
-        });
+      navPolicy->visit([&](const INavigationPolicy& policy) {
+        auto grid = m_cfg.convertNavigationPolicy(policy, gctx, surfaceLookupFn,
+                                                  logger());
+        if (!grid.has_value()) {
+          // Policies without an explicit detray conversion (see
+          // NOOP_CONVERTER_IMPL) are not a conflict: a volume may legitimately
+          // combine e.g. a SurfaceArrayNavigationPolicy with a
+          // TryAllNavigationPolicy for passives and portals.
+          return;
+        }
 
         if (detrayGrid.has_value()) {
-          ACTS_DEBUG("Volume " << volume.volumeName()
-                               << " (detray idx: " << volPayload.index.link
-                               << ") has navigation policy which produced "
-                               << detrayGrid->bins.size() << " populated bins");
+          ACTS_ERROR("Volume "
+                     << volume.volumeName()
+                     << " has more than one detray-convertible navigation "
+                        "policy. This cannot currently be handled.");
+          throw std::runtime_error{
+              "Multiple detray-compatible navigation policies"};
+        }
 
-          detrayGrid->owner_link.link = volPayload.index.link;
+        detrayGrid = std::move(grid);
+      });
 
-          // Add the surface grid to the payload
-          if (!surfaceGrids.has_value()) {
-            surfaceGrids.emplace();
-          }
+      if (detrayGrid.has_value()) {
+        ACTS_DEBUG("Volume " << volume.volumeName()
+                             << " (detray idx: " << volPayload.index.link
+                             << ") has navigation policy which produced "
+                             << detrayGrid->bins.size() << " populated bins");
 
-          // per volume, we have a VECTOR of grids: detray volumes can have
-          // multiple grids
-          if (surfaceGrids->grids.contains(volPayload.index.link)) {
-            surfaceGrids->grids.at(volPayload.index.link)
-                .push_back(*detrayGrid);
-          } else {
-            surfaceGrids->grids[volPayload.index.link] = {*detrayGrid};
-          }
+        detrayGrid->owner_link.link = volPayload.index.link;
+
+        // Add the surface grid to the payload
+        if (!surfaceGrids.has_value()) {
+          surfaceGrids.emplace();
+        }
+
+        // per volume, we have a VECTOR of grids: detray volumes can have
+        // multiple grids
+        if (surfaceGrids->grids.contains(volPayload.index.link)) {
+          surfaceGrids->grids.at(volPayload.index.link).push_back(*detrayGrid);
+        } else {
+          surfaceGrids->grids[volPayload.index.link] = {*detrayGrid};
         }
       }
     }
