@@ -17,8 +17,8 @@ namespace detray::tutorial {
 
 // Detector
 using metadata_t = detray::tutorial::toy_metadata;
-using detector_host_t = detector<metadata_t, host_container_types>;
-using detector_device_t = detector<metadata_t, device_container_types>;
+using detector_host_t = host::detector<metadata_t>;
+using detector_device_t = device::detector<metadata_t>;
 
 using mask_id = typename detector_host_t::masks::id;
 using acc_id = typename detector_host_t::accel::id;

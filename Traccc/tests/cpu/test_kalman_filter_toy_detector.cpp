@@ -89,10 +89,8 @@ TEST_P(KF_integration_test_toy_detector, toy_detector) {
       detray::io::read_detector<traccc::default_detector::host>(host_mr,
                                                                 reader_cfg);
   traccc::host_detector host_det{};
-  host_det.template set<detector_traits<typename detector_t::metadata>>(
-      std::move(io_det));
-  const auto& det = host_det.template as<
-      traccc::detector_traits<typename detector_t::metadata>>();
+  host_det.template set<detector_t>(std::move(io_det));
+  const auto& det = host_det.template as < detector_t >>();
 
   // Create B field
   traccc::magnetic_field field = traccc::construct_const_bfield(B);

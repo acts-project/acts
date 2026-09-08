@@ -24,8 +24,11 @@
 namespace detray {
 
 /// Container types used in device code
-using device_container_types =
-    container_types<compact_device_vector, vecmem::jagged_device_vector>;
+using device_container_types = container_types<compact_device_vector>;
+
+/// Container types used in device code
+using const_device_container_types =
+    const_container_types<compact_device_vector>;
 
 /// Specialized view for @c vecmem::vector containers
 template <typename T>
@@ -184,6 +187,12 @@ struct dmulti_view : public detail::dbase_view {
   dtuple<view_ts...> m_view;
 
   dmulti_view() = default;
+
+  /// Allow conversion of views (especially non-const to const)
+  template <concepts::device_view... other_view_ts>
+    requires(std::is_convertible_v<other_view_ts, view_ts> && ...)
+  dmulti_view(const dmulti_view<other_view_ts...>& other_view)
+      : m_view{detray::get<other_view_ts>(other_view.m_view)...} {}
 
   /// Tie multiple views together
   DETRAY_HOST_DEVICE

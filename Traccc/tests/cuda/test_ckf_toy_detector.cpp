@@ -73,9 +73,7 @@ TEST_P(CkfToyDetectorTests, Run) {
       detray::io::read_detector<traccc::default_detector::host>(host_mr,
                                                                 reader_cfg);
   traccc::host_detector detector{};
-  detector.template set<
-      traccc::detector_traits<traccc::default_detector::host::metadata>>(
-      std::move(io_det));
+  detector.template set<traccc::default_detector>(std::move(io_det));
 
   traccc::detector_buffer detector_buffer =
       traccc::buffer_from_host_detector(detector, mng_mr, host_copy);

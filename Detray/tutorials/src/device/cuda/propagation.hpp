@@ -27,8 +27,8 @@ namespace detray::tutorial {
 
 // Detector
 using metadata_t = detray::tutorial::toy_metadata;
-using detector_host_t = detector<metadata_t, host_container_types>;
-using detector_device_t = detector<metadata_t, device_container_types>;
+using detector_host_t = host::detector<metadata_t>;
+using detector_device_t = device::detector<metadata_t>;
 
 using algebra_t = metadata_t::algebra_type;
 using scalar = detray::tutorial::scalar;

@@ -47,10 +47,10 @@ void read_json_dd_impl(traccc::detector_design_description::host& det_desc,
                        const traccc::host_detector& detector,
                        const traccc::digitization_config& digi,
                        const traccc::conditions_config& cond)
-  requires(traccc::is_detector_traits<detector_traits_t>)
+  requires(detray::concepts::detector_traits<detector_traits_t>)
 {
   const typename detector_traits_t::host& detector_host =
-      detector.as<detector_traits_t>();
+      detector.as<detector_traits_t::host>();
 
   det_desc.reserve(digi.size());
   det_cond.reserve(detector_host.surfaces().size());

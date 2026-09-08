@@ -91,10 +91,8 @@ int main(int argc, char* argv[]) {
       detray::io::read_detector<detector_t>(host_mr, reader_cfg);
 
   traccc::host_detector host_det{};
-  host_det.template set<traccc::detector_traits<typename detector_t::metadata>>(
-      std::move(io_det));
-  const auto& det = host_det.template as<
-      traccc::detector_traits<typename detector_t::metadata>>();
+  host_det.template set < detector_t >> (std::move(io_det));
+  const auto& det = host_det.template as < detector_t >>();
 
   // Create B-field
   const vector3_t B{0.f, 0.f, 2.f * traccc::unit<traccc::scalar>::T};
