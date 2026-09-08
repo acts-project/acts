@@ -158,9 +158,9 @@ struct measurement_updater : detray::base_actor {
 
         auto& filtered_cov = bound_param.covariance();
         getter::element(filtered_cov, e_bound_loc0, e_bound_loc0) =
-            getter::element(V, 0, 0);
+            getter::element<0, 0>(V);
         getter::element(filtered_cov, e_bound_loc1, e_bound_loc1) =
-            getter::element(V, 1, 1);
+            getter::element<1, 1>(V);
 
         TRACCC_DEBUG_HOST("-> Updated track parameters:\n" << bound_param);
 

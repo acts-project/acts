@@ -23,7 +23,7 @@ TEST(subspace, init) {
   ASSERT_EQ(s.get_valid(0), true);
   ASSERT_EQ(s.get_valid(1), true);
 
-  const auto H = s.projector<2>();
+  const auto H = s.projector<2>().to_dense<default_algebra>();
 
   ASSERT_EQ(getter::element(H, 0, 0), 0);
   ASSERT_EQ(getter::element(H, 0, 1), 1);
@@ -79,7 +79,7 @@ TEST(subspace, set_index) {
   ASSERT_EQ(s.get_valid(0), true);
   ASSERT_EQ(s.get_valid(1), true);
 
-  const auto H = s.projector<2>();
+  const auto H = s.projector<2>().to_dense<default_algebra>();
 
   ASSERT_EQ(getter::element(H, 0, 0), 0);
   ASSERT_EQ(getter::element(H, 0, 1), 0);
@@ -117,7 +117,7 @@ TEST(subspace, set_sign) {
   ASSERT_EQ(s.get_valid(0), true);
   ASSERT_EQ(s.get_valid(1), true);
 
-  const auto H1 = s.projector<2>();
+  const auto H1 = s.projector<2>().to_dense<default_algebra>();
 
   ASSERT_EQ(getter::element(H1, 0, 0), 0);
   ASSERT_EQ(getter::element(H1, 0, 1), -1);
@@ -141,7 +141,7 @@ TEST(subspace, set_sign) {
   ASSERT_EQ(s.get_valid(0), true);
   ASSERT_EQ(s.get_valid(1), true);
 
-  const auto H2 = s.projector<2>();
+  const auto H2 = s.projector<2>().to_dense<default_algebra>();
 
   ASSERT_EQ(getter::element(H2, 0, 0), 0);
   ASSERT_EQ(getter::element(H2, 0, 1), 1);
@@ -168,7 +168,7 @@ TEST(subspace, set_invalid) {
   ASSERT_EQ(s.get_valid(0), true);
   ASSERT_EQ(s.get_valid(1), false);
 
-  const auto H1 = s.projector<2>();
+  const auto H1 = s.projector<2>().to_dense<default_algebra>();
 
   ASSERT_EQ(getter::element(H1, 0, 0), 0);
   ASSERT_EQ(getter::element(H1, 0, 1), 1);
@@ -192,7 +192,7 @@ TEST(subspace, set_invalid) {
   ASSERT_EQ(s.get_valid(0), true);
   ASSERT_EQ(s.get_valid(1), true);
 
-  const auto H2 = s.projector<2>();
+  const auto H2 = s.projector<2>().to_dense<default_algebra>();
 
   ASSERT_EQ(getter::element(H2, 0, 0), 0);
   ASSERT_EQ(getter::element(H2, 0, 1), 1);
