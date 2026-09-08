@@ -19,10 +19,14 @@ namespace ActsExamples {
 /// Jet labeling enum
 
 enum class JetLabel {
-  Unknown = 0,
+  OtherJet = 0,
   BJet = 5,
   CJet = 4,
   LightJet = 1,
+  MuonJet = 7,
+  ElectronJet = 8,
+  TauJet = 9,
+  Unknown = 10
 };
 
 /// Output stream operator for JetLabel
@@ -31,6 +35,9 @@ enum class JetLabel {
 /// @return The output stream
 inline std::ostream& operator<<(std::ostream& os, const JetLabel& label) {
   switch (label) {
+    case JetLabel::OtherJet:
+      os << "OtherJet";
+      break;
     case JetLabel::Unknown:
       os << "Unknown";
       break;
@@ -42,6 +49,15 @@ inline std::ostream& operator<<(std::ostream& os, const JetLabel& label) {
       break;
     case JetLabel::LightJet:
       os << "LightJet";
+      break;
+    case JetLabel::MuonJet:
+      os << "MuonJet";
+      break;
+    case JetLabel::ElectronJet:
+      os << "ElectronJet";
+      break;
+    case JetLabel::TauJet:
+      os << "TauJet";
       break;
     default:
       os << "InvalidJetLabel";
@@ -73,7 +89,7 @@ class Jet {
 
  private:
   Acts::Vector4 m_fourMomentum{Acts::Vector4::Zero()};
-  JetLabel m_jetLabel{JetLabel::Unknown};
+  JetLabel m_jetLabel{JetLabel::OtherJet};
   /// @brief Print the jet information
   friend std::ostream& operator<<(std::ostream& os, const Jet& jet) {
     os << "Jet 4-momentum: " << jet.fourMomentum().transpose() << std::endl;
