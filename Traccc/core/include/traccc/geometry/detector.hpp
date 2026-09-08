@@ -8,6 +8,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/core/detail/compact_device_vector.hpp"
 #include "traccc/definitions/primitives.hpp"
 
 // Detray include(s).
@@ -48,7 +49,7 @@ namespace details {
 struct device_detector_container_types {
   /// Vector type to use in device code
   template <typename T>
-  using vector_type = vecmem::device_vector<std::add_const_t<T>>;
+  using vector_type = detray::compact_device_vector<std::add_const_t<T>>;
 
 };  // struct device_detector_container_types
 
