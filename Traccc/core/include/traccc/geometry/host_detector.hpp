@@ -20,27 +20,24 @@ namespace traccc {
 /// Typeless, owning, host detector object
 class host_detector {
  public:
-  template <typename detector_traits_t>
-  void set(typename detector_traits_t::host&& obj)
-    requires(is_detector_traits<detector_traits_t>)
-  {
-    m_obj.set<typename detector_traits_t::host>(std::move(obj));
+  /// @tparam T either a detray metadata or detector type (checked by the trait)
+  template <typename T>
+  void set(typename detray::detector_traits<T>::host&& obj) {
+    m_obj.set<typename detray::detector_traits<T>::host>(std::move(obj));
   }
 
-  template <typename detector_traits_t>
-  bool is() const
-    requires(is_detector_traits<detector_traits_t>)
-  {
-    return (type() == typeid(typename detector_traits_t::host));
+  /// @tparam T either a detray metadata or detector type (checked by the trait)
+  template <typename T>
+  bool is() const {
+    return (type() == typeid(typename detray::detector_traits<T>::host));
   }
 
   const std::type_info& type() const { return m_obj.type(); }
 
-  template <typename detector_traits_t>
-  const typename detector_traits_t::host& as() const
-    requires(is_detector_traits<detector_traits_t>)
-  {
-    return m_obj.as<typename detector_traits_t::host>();
+  /// @tparam T either a detray metadata or detector type (checked by the trait)
+  template <typename T>
+  const typename detray::detector_traits<T>::host& as() const {
+    return m_obj.as<typename detray::detector_traits<T>::host>();
   }
 
  private:
@@ -48,18 +45,22 @@ class host_detector {
 };
 
 /// @brief Helper function for `host_detector_visitor`
-template <typename callable_t, typename detector_t, typename... detector_ts>
-auto host_detector_visitor_helper(const host_detector& host_detector,
-                                  callable_t&& callable,
-                                  std::tuple<detector_t, detector_ts...>*) {
-  if (host_detector.is<detector_t>()) {
-    return callable.template operator()<detector_t>(
-        host_detector.as<detector_t>());
+template <typename callable_t,
+          detray::concepts::detector_traits detector_traits_t,
+          detray::concepts::detector_traits... detector_traits_ts>
+auto host_detector_visitor_helper(
+    const host_detector& host_detector, callable_t&& callable,
+    std::tuple<detector_traits_t, detector_traits_ts...>*) {
+  using host_detector_t = typename detector_traits_t::host;
+
+  if (host_detector.is<host_detector_t>()) {
+    return callable.template operator()<detector_traits_t>(
+        host_detector.as<host_detector_t>());
   } else {
-    if constexpr (sizeof...(detector_ts) > 0) {
+    if constexpr (sizeof...(detector_traits_ts) > 0) {
       return host_detector_visitor_helper(
           host_detector, std::forward<callable_t>(callable),
-          static_cast<std::tuple<detector_ts...>*>(nullptr));
+          static_cast<std::tuple<detector_traits_ts...>*>(nullptr));
     } else {
       std::stringstream exception_message;
 

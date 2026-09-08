@@ -62,7 +62,7 @@ class DetrayGeometryConverter {
   template <detray::concepts::metadata metadata_t>
   struct DetrayGeometry {
     /// The built detray detector
-    std::shared_ptr<detray::detector<metadata_t>> detector;
+    std::shared_ptr<detray::host::detector<metadata_t>> detector;
 
     /// The detray volume and surface name map
     detray::name_map names;
@@ -103,7 +103,7 @@ class DetrayGeometryConverter {
       vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
       const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
       const std::string& detectorName = "") const {
-    using detector_t = detray::detector<metadata_t>;
+    using detector_t = detray::host::detector<metadata_t>;
 
     if (trackingGeometry == nullptr) {
       throw std::invalid_argument(

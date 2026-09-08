@@ -45,22 +45,20 @@ auto kalman_fitting_algorithm::prepare_fit_payload_helper(
         copy().setup(surfaces)->ignore();
 
         // Create the (templated) host payload.
-        device::fit_tpayload<
-            typename detector_traits_t::device::const_view_type, bfield_view_t,
-            typename detector_traits_t::device::surface_type>
+        device::fit_tpayload<typename detector_traits_t::view, bfield_view_t,
+                             typename detector_traits_t::device::surface_type>
             host_tpayload{
                 .det = detector, .field = bfield, .surfaces = surfaces};
 
         // Create the (templated) device payload buffer, and copy the host
         // payload into it.
         vecmem::data::vector_buffer<device::fit_tpayload<
-            typename detector_traits_t::device::const_view_type, bfield_view_t,
+            typename detector_traits_t::view, bfield_view_t,
             typename detector_traits_t::device::surface_type>>
             device_tpayload{1u, mr().main};
         copy().setup(device_tpayload)->ignore();
         copy()(vecmem::data::vector_view<device::fit_tpayload<
-                   typename detector_traits_t::device::const_view_type,
-                   bfield_view_t,
+                   typename detector_traits_t::view, bfield_view_t,
                    typename detector_traits_t::device::surface_type>>(
                    1u, &host_tpayload),
                device_tpayload)

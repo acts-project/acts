@@ -35,17 +35,17 @@ __global__ void __launch_bounds__(1024, 1) count_spacepoints(
 }
 
 /// Kernel wrapping @c device::form_spacepoints
-template <typename detector_t>
+template <typename detector_traits_t>
 __global__ void __launch_bounds__(1024, 1) form_spacepoints(
-    typename detector_t::view detector,
+    typename detector_traits_t::view detector,
     edm::measurement_collection::const_view measurements,
     vecmem::data::vector_view<const unsigned int> spacepoint_index,
     edm::spacepoint_collection::view spacepoints)
-  requires(traccc::is_detector_traits<detector_t>)
+  requires(detray::concepts::detector_traits<detector_traits_t>)
 {
-  device::form_spacepoints<detector_t>(details::global_index1(), detector,
-                                       measurements, spacepoint_index,
-                                       spacepoints);
+  device::form_spacepoints<detector_traits_t>(details::global_index1(),
+                                              detector, measurements,
+                                              spacepoint_index, spacepoints);
 }
 
 }  // namespace kernels

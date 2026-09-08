@@ -27,8 +27,8 @@ using metadata_t = test::toy_metadata;
 using test_algebra = metadata_t::algebra_type;
 using scalar = dscalar<test_algebra>;
 using point3 = dpoint3D<test_algebra>;
-using detector_host_t = detector<metadata_t, host_container_types>;
-using detector_device_t = detector<metadata_t, device_container_types>;
+using detector_host_t = host::detector<metadata_t>;
+using detector_device_t = device::detector<metadata_t>;
 
 using intersection_t =
     intersection2D<typename detector_device_t::surface_type, test_algebra>;
