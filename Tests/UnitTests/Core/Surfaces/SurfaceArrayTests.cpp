@@ -18,16 +18,20 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 #include <numbers>
+#include <ranges>
 #include <sstream>
 #include <string>
 #include <tuple>
@@ -212,9 +216,56 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
     BOOST_CHECK(std::ranges::find(binContent, srf.get()) != binContent.end());
   }
 
-  const auto neighbors = sa.neighbors(tgContext, itransform(Vector2(0, 0)),
-                                      itransform(Vector2(0, 0)).normalized());
-  BOOST_CHECK_EQUAL(neighbors.size(), 16u);
+  const Vector3 crossing = itransform(Vector2(0, 0));
+  const auto axes = sa.getAxes();
+  const std::array<std::size_t, 2> crossingBins{axes.at(0)->getBin(0.),
+                                                axes.at(1)->getBin(0.)};
+
+  // at normal incidence the track does not slide, so the lookup is the bin
+  BOOST_CHECK(std::ranges::equal(
+      sa.neighbors(tgContext, crossing, crossing.normalized()),
+      sa.neighbors(crossingBins, {0, 0})));
+
+  // an inclined track slides along z only, so only z widens. the z bins are 4
+  // wide against a tolerance of 1: a slope of 3 reaches one bin, 7 two.
+  for (const auto& [slope, distance] :
+       std::vector<std::pair<double, std::uint8_t>>{{3., 1}, {7., 2}}) {
+    const Vector3 direction = Vector3(1, 0, slope).normalized();
+    BOOST_CHECK(std::ranges::equal(sa.neighbors(tgContext, crossing, direction),
+                                   sa.neighbors(crossingBins, {0, distance})));
+    BOOST_CHECK(
+        !std::ranges::equal(sa.neighbors(tgContext, crossing, direction),
+                            sa.neighbors(crossingBins, {distance, distance})));
+  }
+
+  // the floor is served regardless of the crossing angle
+  SurfaceArray floored(tgContext, brl, cylinder, 1., std::tuple{phiAxis, zAxis},
+                       {{1, 1}, {1, 2}});
+  BOOST_CHECK(std::ranges::equal(
+      floored.neighbors(tgContext, crossing, crossing.normalized()),
+      floored.neighbors(crossingBins, {1, 1})));
+  BOOST_CHECK_THROW(SurfaceArray(tgContext, brl, cylinder, 1.,
+                                 std::tuple{phiAxis, zAxis}, {{2, 2}, {1, 2}}),
+                    std::invalid_argument);
+
+  // nothing is cached past the bound, so asking for it is an error
+  BOOST_CHECK_THROW(floored.neighbors(crossingBins, {2, 0}), std::out_of_range);
+  BOOST_CHECK_THROW(floored.neighbors(crossingBins, {0, 3}), std::out_of_range);
+  BOOST_CHECK_THROW(floored.neighbors({10000, 0}, {0, 0}), std::out_of_range);
+
+  // a scalar bound is the isotropic window it used to describe
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  const SurfaceArray scalarBound(tgContext, brl, cylinder, 1.,
+                                 std::tuple{phiAxis, zAxis}, std::uint8_t{1});
+  BOOST_CHECK_EQUAL(scalarBound.maxNeighborDistance(), 1u);
+  ACTS_POP_IGNORE_DEPRECATED()
+  const SurfaceArray::NeighborWindow scalarWindow =
+      scalarBound.neighborWindow();
+  BOOST_CHECK((scalarWindow.min == std::array<std::uint8_t, 2>{1, 1}));
+  BOOST_CHECK((scalarWindow.max == std::array<std::uint8_t, 2>{1, 1}));
+  BOOST_CHECK(std::ranges::equal(
+      scalarBound.neighbors(tgContext, crossing, crossing.normalized()),
+      scalarBound.neighbors(crossingBins, {1, 1})));
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {

@@ -15,6 +15,9 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cstdint>
 #include <iostream>
 #include <vector>
 
@@ -33,6 +36,39 @@ namespace Acts {
 /// externally and passed to @c SurfaceArray on construction.
 class SurfaceArray {
  public:
+  /// Bounds on the neighbor window, in bins per grid axis. The floor serves
+  /// lookups that cannot see the surfaces the fill saw, e.g. under alignment.
+  struct NeighborWindow {
+    /// Fewest bins served in each direction, regardless of the crossing angle
+    std::array<std::uint8_t, 2> min = {0, 0};
+    /// Most bins served in each direction; also sizes the neighbor cache
+    std::array<std::uint8_t, 2> max = {2, 2};
+
+    /// Default window: no floor, at most two bins per axis
+    constexpr NeighborWindow() = default;
+
+    /// Window with an explicit floor and bound per axis
+    /// @param windowMin Fewest bins served in each direction
+    /// @param windowMax Most bins served in each direction
+    constexpr NeighborWindow(std::array<std::uint8_t, 2> windowMin,
+                             std::array<std::uint8_t, 2> windowMax)
+        : min(windowMin), max(windowMax) {}
+
+    /// Isotropic window: at least one bin unless the bound forbids it, at
+    /// most @p maxNeighborDistance.
+    /// @deprecated The two axes of a layer grid are not equivalent, give the
+    ///             bounds per axis.
+    /// @param maxNeighborDistance Most bins served in each direction
+    [[deprecated(
+        "Pass an Acts::SurfaceArray::NeighborWindow with per-axis bounds "
+        "instead of a single neighbor distance")]]
+    constexpr NeighborWindow(  // NOLINT(google-explicit-constructor)
+        std::uint8_t maxNeighborDistance)
+        : min({std::min<std::uint8_t>(1, maxNeighborDistance),
+               std::min<std::uint8_t>(1, maxNeighborDistance)}),
+          max({maxNeighborDistance, maxNeighborDistance}) {}
+  };
+
   /// Constructor with a single surface
   /// @param srf The one and only surface
   explicit SurfaceArray(std::shared_ptr<const Surface> srf);
@@ -45,12 +81,12 @@ class SurfaceArray {
   /// @param representative The surface which is used as representative
   /// @param tolerance The tolerance used for intersection checks
   /// @param axes The axes used for the grid
-  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
+  /// @param neighborWindow Bounds on the neighbor window, in bins per grid axis
   SurfaceArray(const GeometryContext& gctx,
                std::vector<std::shared_ptr<const Surface>> surfaces,
                std::shared_ptr<RegularSurface> representative, double tolerance,
                std::tuple<const IAxis&, const IAxis&> axes,
-               std::uint8_t maxNeighborDistance = 1);
+               NeighborWindow neighborWindow = NeighborWindow{{0, 0}, {2, 2}});
 
   // non-copyable but movable due to unique_ptr member. deferred implementation
   // to source since the pimpl is not fully defined in the header.
@@ -88,11 +124,22 @@ class SurfaceArray {
   /// Get all surfaces in bin given by local grid indices and neighbor
   /// distance.
   /// @param gridIndices the local grid indices
-  /// @param neighborDistance the neighbor distance to include in the lookup
+  /// @param neighborDistance the neighbor distance to include in the lookup,
+  ///        the same along both axes
   /// @return span of surface pointers of the bin at that position and its neighbors
   std::span<const Surface* const> neighbors(
       std::array<std::size_t, 2> gridIndices,
       std::uint8_t neighborDistance) const;
+
+  /// Get all surfaces in bin given by local grid indices and a neighbor
+  /// distance per axis.
+  /// @param gridIndices the local grid indices
+  /// @param neighborDistance the neighbor distance to include in the lookup,
+  ///        per axis
+  /// @return span of surface pointers of the bin at that position and its neighbors
+  std::span<const Surface* const> neighbors(
+      std::array<std::size_t, 2> gridIndices,
+      std::array<std::uint8_t, 2> neighborDistance) const;
 
   /// Get all surfaces in bin at @p pos and its neighbors
   /// @param gctx The current geometry context object, e.g. alignment
@@ -155,9 +202,16 @@ class SurfaceArray {
   /// @return Array of number of local bins in each dimension
   std::array<std::size_t, 2> numLocalBins() const;
 
-  /// Get the maximum neighbor distance that is supported by this lookup. This
-  /// is used to determine how many neighbors to include in neighbor lookups.
-  /// @return Maximum neighbor distance
+  /// Get the bounds on the neighbor window this lookup serves.
+  /// @return Neighbor window bounds per axis
+  NeighborWindow neighborWindow() const;
+
+  /// Get the maximum neighbor distance that is supported by this lookup.
+  /// @deprecated Use @ref neighborWindow; this reports the larger bound.
+  /// @return Maximum neighbor distance over both axes
+  [[deprecated(
+      "Use Acts::SurfaceArray::neighborWindow(), the window is bounded per "
+      "axis")]]
   std::uint8_t maxNeighborDistance() const;
 
   /// Forward declaration of the internal lookup struct. The actual definition

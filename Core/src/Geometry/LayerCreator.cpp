@@ -49,7 +49,7 @@ MutableLayerPtr LayerCreator::cylinderLayer(
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
     std::size_t binsZ, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad,
-    std::uint8_t maxNeighborDistance) const {
+    SurfaceArray::NeighborWindow neighborWindow) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -101,7 +101,7 @@ MutableLayerPtr LayerCreator::cylinderLayer(
     sArray = std::make_unique<SurfaceArray>(
         m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
             gctx, std::move(surfaces), binsPhi, binsZ, protoLayer,
-            fullTransform, maxNeighborDistance));
+            fullTransform, neighborWindow));
   }
 
   // create the layer and push it back
@@ -127,7 +127,7 @@ MutableLayerPtr LayerCreator::cylinderLayer(
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad,
-    std::uint8_t maxNeighborDistance) const {
+    SurfaceArray::NeighborWindow neighborWindow) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -180,7 +180,7 @@ MutableLayerPtr LayerCreator::cylinderLayer(
     sArray = std::make_unique<SurfaceArray>(
         m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
             gctx, std::move(surfaces), bTypePhi, bTypeZ, protoLayer,
-            fullTransform, maxNeighborDistance));
+            fullTransform, neighborWindow));
   }
 
   // create the layer and push it back
@@ -206,7 +206,7 @@ MutableLayerPtr LayerCreator::discLayer(
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
     std::size_t binsPhi, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad,
-    std::uint8_t maxNeighborDistance) const {
+    SurfaceArray::NeighborWindow neighborWindow) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -249,7 +249,7 @@ MutableLayerPtr LayerCreator::discLayer(
     sArray = std::make_unique<SurfaceArray>(
         m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
             gctx, std::move(surfaces), binsR, binsPhi, protoLayer,
-            fullTransform, maxNeighborDistance));
+            fullTransform, neighborWindow));
   }
 
   // create the share disc bounds
@@ -277,7 +277,7 @@ MutableLayerPtr LayerCreator::discLayer(
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> _protoLayer,
     const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad,
-    std::uint8_t maxNeighborDistance) const {
+    SurfaceArray::NeighborWindow neighborWindow) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -320,7 +320,7 @@ MutableLayerPtr LayerCreator::discLayer(
     sArray = std::make_unique<SurfaceArray>(
         m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
             gctx, std::move(surfaces), bTypeR, bTypePhi, protoLayer,
-            fullTransform, maxNeighborDistance));
+            fullTransform, neighborWindow));
   }
 
   // create the shared disc bounds
@@ -346,7 +346,7 @@ MutableLayerPtr LayerCreator::planeLayer(
     std::size_t bins2, AxisDirection aDir,
     std::optional<ProtoLayer> _protoLayer, const Transform3& transform,
     std::unique_ptr<ApproachDescriptor> ad,
-    std::uint8_t maxNeighborDistance) const {
+    SurfaceArray::NeighborWindow neighborWindow) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -412,7 +412,7 @@ MutableLayerPtr LayerCreator::planeLayer(
     sArray = std::make_unique<SurfaceArray>(
         m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
             gctx, std::move(surfaces), bins1, bins2, aDir, protoLayer,
-            fullTransform, maxNeighborDistance));
+            fullTransform, neighborWindow));
   }
 
   // create the layer and push it back

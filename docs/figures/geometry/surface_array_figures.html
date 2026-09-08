@@ -1,0 +1,1879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Surface array: filling and lookup</title>
+
+<style>
+  :root {
+    --bg: #eef1f2;
+    --panel: #f9fbfb;
+    --panel-2: #e6ecec;
+    --ink: #101619;
+    --muted: #5a666c;
+    --rule: #ccd6d9;
+    --rule-soft: #dde4e6;
+    --served: #0f766e;
+    --served-fill: rgba(15, 118, 110, .16);
+    --served-line: rgba(15, 118, 110, .45);
+    --miss: #b0341f;
+    --miss-fill: rgba(176, 52, 31, .15);
+    --waste: #9a6a12;
+    --waste-fill: rgba(154, 106, 18, .16);
+    --shadow: 0 1px 2px rgba(16, 22, 25, .06), 0 6px 18px -10px rgba(16, 22, 25, .20);
+
+    --f-display: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --f-body: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --f-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1214;
+      --panel: #151c1f;
+      --panel-2: #1a2327;
+      --ink: #e3eaec;
+      --muted: #8d9aa0;
+      --rule: #263034;
+      --rule-soft: #1e272a;
+      --served: #5eccc0;
+      --served-fill: rgba(94, 204, 192, .20);
+      --served-line: rgba(94, 204, 192, .50);
+      --miss: #e8806e;
+      --miss-fill: rgba(232, 128, 110, .19);
+      --waste: #d3a34e;
+      --waste-fill: rgba(211, 163, 78, .18);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 8px 22px -12px rgba(0, 0, 0, .8);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0d1214;
+    --panel: #151c1f;
+    --panel-2: #1a2327;
+    --ink: #e3eaec;
+    --muted: #8d9aa0;
+    --rule: #263034;
+    --rule-soft: #1e272a;
+    --served: #5eccc0;
+    --served-fill: rgba(94, 204, 192, .20);
+    --served-line: rgba(94, 204, 192, .50);
+    --miss: #e8806e;
+    --miss-fill: rgba(232, 128, 110, .19);
+    --waste: #d3a34e;
+    --waste-fill: rgba(211, 163, 78, .18);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 8px 22px -12px rgba(0, 0, 0, .8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  img { max-width: 100%; }
+
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 40px 24px 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 42px;
+  }
+
+  .prose { max-width: 66ch; display: flex; flex-direction: column; gap: 14px; }
+  .prose p { margin: 0; }
+
+  a { color: var(--served); }
+
+  .back {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    margin: 0 0 26px;
+  }
+
+  header .note { margin-top: 14px; }
+
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: clamp(30px, 4.3vw, 44px);
+    line-height: 1.05;
+    letter-spacing: -.02em;
+    margin: 0 0 16px;
+    text-wrap: balance;
+  }
+
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: 21px;
+    letter-spacing: -.01em;
+    margin: 0 0 2px;
+    text-wrap: balance;
+  }
+
+  h3 { font-family: var(--f-display); font-weight: 600; font-size: 14px; margin: 0; }
+
+  .standfirst { font-size: 18px; color: var(--muted); max-width: 62ch; margin: 0; }
+
+  code, .mono { font-family: var(--f-mono); font-size: .87em; }
+  code { background: var(--panel-2); padding: .1em .34em; border-radius: 3px; }
+  strong { font-weight: 600; }
+
+  .instrument {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .rail {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px 26px;
+    padding: 17px 22px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--panel-2);
+  }
+
+  .ctl { display: flex; flex-direction: column; gap: 5px; min-width: 150px; flex: 1 1 150px; }
+
+  .ctl > label {
+    font-family: var(--f-mono);
+    font-size: 10.5px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .ctl output { color: var(--ink); font-variant-numeric: tabular-nums; }
+  input[type="range"] { width: 100%; accent-color: var(--served); margin: 0; }
+  input:focus-visible, button:focus-visible { outline: 2px solid var(--served); outline-offset: 2px; }
+
+  .stage { padding: 16px 22px 6px; }
+  .stage svg, .sweep svg { width: 100%; height: auto; display: block; }
+
+  /* --- three-way comparison of the fill, and the policy strips --- */
+
+  .panels, .policies {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+  }
+  .policies { border-top: 1px solid var(--rule); }
+  @media (max-width: 860px) { .panels, .policies { grid-template-columns: 1fr; } }
+
+  .panel, .policy { background: var(--panel); padding: 15px 18px 17px; display: flex; flex-direction: column; gap: 9px; }
+  .panel-head { display: flex; flex-direction: column; gap: 3px; }
+  .panel .sub, .policy .sub { font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); line-height: 1.5; margin: 0; }
+
+  .panel svg { width: 100%; height: auto; display: block; touch-action: none; cursor: grab; }
+  .panel svg:active { cursor: grabbing; }
+
+  .stats { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; font-family: var(--f-mono); font-size: 12px; }
+  .stats dt { color: var(--muted); }
+  .stats dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+  .ok, .good { color: var(--served); font-weight: 500; }
+  .bad { color: var(--miss); font-weight: 500; }
+  .warn { color: var(--waste); font-weight: 500; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 8px 22px;
+    padding: 12px 22px; border-top: 1px solid var(--rule);
+    background: var(--panel-2); font-family: var(--f-mono); font-size: 11.5px; color: var(--muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .swatch { width: 13px; height: 13px; border-radius: 2px; border: 1px solid var(--rule); flex: none; }
+
+  /* --- verdict block --- */
+
+  .verdict {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--panel);
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+  }
+  .verdict-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 18px; }
+  .vcell { display: flex; flex-direction: column; gap: 4px; }
+  .vcell .k { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .vcell .v { font-family: var(--f-display); font-size: 25px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .vcell .n { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+  .vcell .v.bad { color: var(--miss); }
+  .vcell .v.good { color: var(--served); }
+
+  /* --- side-by-side figure and table --- */
+
+  .sweep, .ring { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  @media (max-width: 780px) { .sweep, .ring { grid-template-columns: 1fr; } }
+  .ring svg { width: 100%; height: auto; display: block; }
+
+  table.data { border-collapse: collapse; font-family: var(--f-mono); font-size: 12.5px; width: 100%; }
+  table.data th, table.data td { padding: 6px 10px 6px 0; text-align: left; border-bottom: 1px solid var(--rule-soft); }
+  table.data th { font-weight: 500; color: var(--muted); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; }
+  table.data td:last-child, table.data th:last-child { text-align: right; padding-right: 0; font-variant-numeric: tabular-nums; }
+  .scroll { overflow-x: auto; }
+
+  .note { font-size: 14.5px; color: var(--muted); max-width: 66ch; margin: 0; }
+  hr.rule { border: 0; border-top: 1px solid var(--rule); margin: 0; }
+
+  .figrail { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+             padding: 12px 16px; background: var(--panel-2);
+             border: 1px solid var(--rule); border-radius: 8px; margin-bottom: -22px; }
+  .grouplabel { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .09em;
+                text-transform: uppercase; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-family: var(--f-mono); font-size: 11.5px; padding: 5px 10px; border-radius: 4px;
+          border: 1px solid var(--rule); background: var(--panel); color: var(--muted); cursor: pointer; }
+  .chip:hover { color: var(--ink); border-color: var(--served-line); }
+  .chip[aria-pressed="true"] { background: var(--served); border-color: var(--served); color: var(--panel); }
+  .verdict-inline { font-family: var(--f-mono); font-size: 11.5px; margin-left: auto; }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: 13.5px; color: var(--muted); line-height: 1.5; max-width: 62ch; }
+  .plate { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px;
+           box-shadow: var(--shadow); padding: 14px 16px; }
+  .pair { display: grid; grid-template-columns: 1fr; gap: 26px; }
+  @media (min-width: 900px) { .pair { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <p class="back"><a href="group__surface__array.html">&larr; Surface array reference</a></p>
+    <p class="eyebrow">ACTS &middot; Acts::SurfaceArray</p>
+    <h1>Filling a layer, and finding the module again</h1>
+    <p class="standfirst">A surface array bins the modules of one layer on a representative surface, and answers, for a track crossing it, which of them the track could hit. Two questions decide whether that works: which bins hold a surface, and how far from the crossing bin the module it hits can be.</p>
+    <p class="note">The figures below are live. The prose that surrounds them is deliberately thin &mdash; the written description of the class, its axes, its bounds and its cache is in the <a href="group__surface__array.html">reference page</a>.</p>
+  </header>
+
+  <hr class="rule">
+
+  <section class="prose">
+    <h2 id="fill">Which bins hold a surface</h2>
+    <p>Registration is an area question: does this module overlap this bin? The fill that preceded <code>fillSurfaceFootprint</code> answered it with two point tests. <strong>Surface&nbsp;&rarr;&nbsp;grid</strong>: project the module's reference position, register that one bin. <strong>Grid&nbsp;&rarr;&nbsp;surface</strong>: flood-fill outward from it, keeping every bin whose <em>centre</em> projects onto the module. One direction handles a module smaller than a bin; the other handles a module larger than a bin, and the intuition was that they covered each other.</p>
+    <p>They do not. The first samples one point of the module against the grid, the second samples one point of the bin against the module, and two point tests do not compose into a set-overlap test. What the flood fill computes is the true footprint <strong>eroded by up to half a bin</strong> on each axis &mdash; and a module can be smaller than a bin on one axis while spanning many bins on the other, which is where the erosion stops being a boundary ring and starts swallowing the surface whole.</p>
+  </section>
+
+  <section class="figrail">
+    <span class="grouplabel">how a bin qualifies</span>
+    <div class="chips" id="fstep">
+      <button class="chip" data-m="area" aria-pressed="true">area overlap</button>
+      <button class="chip" data-m="centre" aria-pressed="false">bin centre inside</button>
+    </div>
+    <span class="verdict-inline" id="fverdict"></span>
+  </section>
+
+  <section>
+    <figure>
+      <div class="plate"><svg class="figfoot" viewBox="0 0 640 300" role="img"
+     aria-label="A trapezoidal module projected onto the (phi, r) grid of a disc layer, with the bins the span fill registers">
+  <style>
+.figfoot text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; fill: var(--muted); }
+.figfoot .ink { fill: var(--ink); }
+.figfoot .acc { fill: var(--served); }
+</style>
+  <rect width="640" height="300" fill="var(--panel)"/>
+  <!-- registered bins: every bin of every column span -->
+  <g fill="var(--served)" fill-opacity=".17" stroke="var(--served)" stroke-opacity=".45" stroke-width=".8" data-w="fbins">
+    <rect x="336" y="176" width="40" height="35"/>
+    <rect x="336" y="141" width="40" height="35"/>
+    <rect x="336" y="106" width="40" height="35"/>
+    <rect x="336" y="71" width="40" height="35"/>
+    <rect x="336" y="36" width="40" height="35"/>
+    <rect x="376" y="176" width="40" height="35"/>
+    <rect x="376" y="141" width="40" height="35"/>
+    <rect x="376" y="106" width="40" height="35"/>
+    <rect x="376" y="71" width="40" height="35"/>
+    <rect x="376" y="36" width="40" height="35"/>
+    <rect x="416" y="176" width="40" height="35"/>
+    <rect x="416" y="141" width="40" height="35"/>
+    <rect x="416" y="106" width="40" height="35"/>
+    <rect x="416" y="71" width="40" height="35"/>
+    <rect x="416" y="36" width="40" height="35"/>
+    <rect x="56" y="211" width="40" height="35"/>
+    <rect x="56" y="176" width="40" height="35"/>
+    <rect x="56" y="141" width="40" height="35"/>
+    <rect x="56" y="106" width="40" height="35"/>
+    <rect x="576" y="211" width="40" height="35"/>
+    <rect x="576" y="176" width="40" height="35"/>
+    <rect x="576" y="141" width="40" height="35"/>
+    <rect x="576" y="106" width="40" height="35"/>
+  </g>
+  <!-- grid rules -->
+  <g stroke="var(--rule)" stroke-width=".6" fill="none">
+    <line x1="56" y1="36" x2="56" y2="246"/>
+    <line x1="96" y1="36" x2="96" y2="246"/>
+    <line x1="136" y1="36" x2="136" y2="246"/>
+    <line x1="176" y1="36" x2="176" y2="246"/>
+    <line x1="216" y1="36" x2="216" y2="246"/>
+    <line x1="256" y1="36" x2="256" y2="246"/>
+    <line x1="296" y1="36" x2="296" y2="246"/>
+    <line x1="336" y1="36" x2="336" y2="246"/>
+    <line x1="376" y1="36" x2="376" y2="246"/>
+    <line x1="416" y1="36" x2="416" y2="246"/>
+    <line x1="456" y1="36" x2="456" y2="246"/>
+    <line x1="496" y1="36" x2="496" y2="246"/>
+    <line x1="536" y1="36" x2="536" y2="246"/>
+    <line x1="576" y1="36" x2="576" y2="246"/>
+    <line x1="616" y1="36" x2="616" y2="246"/>
+    <line x1="56" y1="36" x2="616" y2="36"/>
+    <line x1="56" y1="71" x2="616" y2="71"/>
+    <line x1="56" y1="106" x2="616" y2="106"/>
+    <line x1="56" y1="141" x2="616" y2="141"/>
+    <line x1="56" y1="176" x2="616" y2="176"/>
+    <line x1="56" y1="211" x2="616" y2="211"/>
+    <line x1="56" y1="246" x2="616" y2="246"/>
+  </g>
+  <!-- the seam: the closed phi axis wraps here -->
+  <g stroke="var(--ink)" stroke-width="1.2"><line x1="56" y1="32" x2="56" y2="250"/><line x1="616" y1="32" x2="616" y2="250"/></g>
+  <!-- bin centers: registration is by area overlap, not by the center -->
+  <g data-w="fcentres">
+    <circle cx="76.0" cy="228.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="76.0" cy="193.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="76.0" cy="158.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="76.0" cy="123.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="76.0" cy="88.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="76.0" cy="53.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="116.0" cy="228.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="116.0" cy="193.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="116.0" cy="158.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="116.0" cy="123.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="116.0" cy="88.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="116.0" cy="53.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="156.0" cy="228.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="156.0" cy="193.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="156.0" cy="158.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="156.0" cy="123.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="156.0" cy="88.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="156.0" cy="53.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="196.0" cy="228.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="196.0" cy="193.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="196.0" cy="158.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="196.0" cy="123.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="196.0" cy="88.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="196.0" cy="53.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="236.0" cy="228.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="236.0" cy="193.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="236.0" cy="158.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="236.0" cy="123.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="236.0" cy="88.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="236.0" cy="53.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="276.0" cy="228.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="276.0" cy="193.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="276.0" cy="158.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="276.0" cy="123.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="276.0" cy="88.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="276.0" cy="53.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="316.0" cy="228.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="316.0" cy="193.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="316.0" cy="158.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="316.0" cy="123.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="316.0" cy="88.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="316.0" cy="53.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="356.0" cy="228.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="356.0" cy="193.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="356.0" cy="158.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="356.0" cy="123.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="356.0" cy="88.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="356.0" cy="53.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="396.0" cy="228.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="396.0" cy="193.5" r="1.8" fill="var(--served)"/>
+    <circle cx="396.0" cy="158.5" r="1.8" fill="var(--served)"/>
+    <circle cx="396.0" cy="123.5" r="1.8" fill="var(--served)"/>
+    <circle cx="396.0" cy="88.5" r="1.8" fill="var(--served)"/>
+    <circle cx="396.0" cy="53.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="436.0" cy="228.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="436.0" cy="193.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="436.0" cy="158.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="436.0" cy="123.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="436.0" cy="88.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="436.0" cy="53.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="476.0" cy="228.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="476.0" cy="193.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="476.0" cy="158.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="476.0" cy="123.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="476.0" cy="88.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="476.0" cy="53.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="516.0" cy="228.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="516.0" cy="193.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="516.0" cy="158.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="516.0" cy="123.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="516.0" cy="88.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="516.0" cy="53.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="556.0" cy="228.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="556.0" cy="193.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="556.0" cy="158.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="556.0" cy="123.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="556.0" cy="88.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="556.0" cy="53.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="596.0" cy="228.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="596.0" cy="193.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="596.0" cy="158.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="596.0" cy="123.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="596.0" cy="88.5" r="1.1" fill="var(--rule)"/>
+    <circle cx="596.0" cy="53.5" r="1.1" fill="var(--rule)"/>
+  </g>
+  <!-- projected outlines, sampled along each straight edge -->
+  <g fill="none" stroke="var(--served)" stroke-width="1.6" stroke-linejoin="round">
+    <path d="M373.9,192.4 L377.4,195.5 L380.8,198.3 L384.4,200.6 L388.0,202.6 L391.7,204.1 L395.4,205.2 L399.1,205.9 L402.8,206.1 L406.6,205.9 L410.3,205.2 L414.0,204.1 L417.7,202.6 L421.3,200.6 L424.9,198.3 L428.3,195.5 L431.7,192.4 L431.7,183.8 L431.7,175.3 L431.6,166.7 L431.6,158.2 L431.6,149.6 L431.6,141.1 L431.5,132.5 L431.5,124.0 L431.5,115.4 L431.5,106.9 L431.5,98.3 L431.4,89.8 L431.4,81.2 L431.4,72.7 L431.4,64.1 L431.4,55.6 L428.0,60.2 L424.6,64.3 L421.1,67.8 L417.5,70.7 L413.9,73.0 L410.2,74.6 L406.5,75.6 L402.8,75.9 L399.2,75.6 L395.5,74.6 L391.8,73.0 L388.2,70.7 L384.6,67.8 L381.1,64.3 L377.7,60.2 L374.3,55.6 L374.3,64.1 L374.3,72.7 L374.3,81.2 L374.2,89.8 L374.2,98.3 L374.2,106.9 L374.2,115.4 L374.2,124.0 L374.1,132.5 L374.1,141.1 L374.1,149.6 L374.1,158.2 L374.0,166.7 L374.0,175.3 L374.0,183.8 Z"/>
+    <path d="M616.0,133.7 L614.1,133.6 L612.2,133.4 L610.3,133.0 L608.5,132.5 L606.6,131.8 L604.7,131.1 L602.9,130.1 L601.0,129.1 L601.1,135.1 L601.1,141.1 L601.2,147.1 L601.3,153.1 L601.3,159.2 L601.4,165.2 L601.4,171.2 L601.5,177.2 L601.6,183.2 L601.6,189.3 L601.7,195.3 L601.8,201.3 L601.9,207.3 L602.0,213.3 L602.1,219.4 L602.1,225.4 L603.9,226.0 L605.6,226.6 L607.3,227.1 L609.0,227.5 L610.8,227.8 L612.5,228.0 L614.3,228.1 L616.0,228.2"/>
+    <path d="M56.9,228.1 L58.6,228.1 L60.4,227.9 L62.1,227.6 L63.8,227.3 L65.6,226.8 L67.3,226.3 L69.0,225.7 L69.9,222.4 L70.0,216.3 L70.1,210.3 L70.2,204.3 L70.2,198.3 L70.3,192.3 L70.4,186.2 L70.5,180.2 L70.5,174.2 L70.6,168.2 L70.7,162.2 L70.7,156.2 L70.8,150.1 L70.8,144.1 L70.9,138.1 L70.9,132.1 L70.0,129.6 L68.2,130.6 L66.3,131.5 L64.5,132.2 L62.6,132.8 L60.7,133.2 L58.8,133.5 L56.9,133.6"/>
+  </g>
+  <g fill="var(--served)">
+    <circle cx="373.9" cy="192.4" r="1.6"/>
+    <circle cx="388.0" cy="202.6" r="1.6"/>
+    <circle cx="402.8" cy="206.1" r="1.6"/>
+    <circle cx="417.7" cy="202.6" r="1.6"/>
+    <circle cx="431.7" cy="192.4" r="1.6"/>
+    <circle cx="431.6" cy="158.2" r="1.6"/>
+    <circle cx="431.5" cy="124.0" r="1.6"/>
+    <circle cx="431.4" cy="89.8" r="1.6"/>
+    <circle cx="431.4" cy="55.6" r="1.6"/>
+    <circle cx="417.5" cy="70.7" r="1.6"/>
+    <circle cx="402.8" cy="75.9" r="1.6"/>
+    <circle cx="388.2" cy="70.7" r="1.6"/>
+    <circle cx="374.3" cy="55.6" r="1.6"/>
+    <circle cx="374.2" cy="89.8" r="1.6"/>
+    <circle cx="374.2" cy="124.0" r="1.6"/>
+    <circle cx="374.1" cy="158.2" r="1.6"/>
+    <circle cx="602.1" cy="225.4" r="1.6"/>
+    <circle cx="609.0" cy="227.5" r="1.6"/>
+    <circle cx="616.0" cy="228.2" r="1.6"/>
+    <circle cx="63.0" cy="227.5" r="1.6"/>
+    <circle cx="69.9" cy="225.4" r="1.6"/>
+    <circle cx="70.2" cy="201.3" r="1.6"/>
+    <circle cx="70.5" cy="177.2" r="1.6"/>
+    <circle cx="70.7" cy="153.1" r="1.6"/>
+    <circle cx="71.0" cy="129.1" r="1.6"/>
+    <circle cx="63.5" cy="132.5" r="1.6"/>
+    <circle cx="616.0" cy="133.7" r="1.6"/>
+    <circle cx="608.5" cy="132.5" r="1.6"/>
+    <circle cx="601.0" cy="129.1" r="1.6"/>
+    <circle cx="601.3" cy="153.1" r="1.6"/>
+    <circle cx="601.5" cy="177.2" r="1.6"/>
+    <circle cx="601.8" cy="201.3" r="1.6"/>
+  </g>
+  <!-- one span per phi column -->
+  <g stroke="var(--ink)" stroke-width="1" fill="none"><line x1="462" y1="36" x2="462" y2="211"/><line x1="459" y1="36" x2="465" y2="36"/><line x1="459" y1="211" x2="465" y2="211"/></g>
+  <text x="469" y="122" class="ink">span of</text>
+  <text x="469" y="134" class="ink">column 9</text>
+  <text x="616" y="26" text-anchor="end" class="ink">seam</text>
+  <text x="403" y="26" text-anchor="middle" class="acc">projected module outline</text>
+  <text x="56" y="26" class="ink">seam: columns 0 and 13 hold their own spans</text>
+  <text x="56" y="262">-pi</text>
+  <text x="616" y="262" text-anchor="end">pi</text>
+  <text x="336" y="262" text-anchor="middle">phi (axis 1, Closed)</text>
+  <text x="50" y="40" text-anchor="end">400</text>
+  <text x="50" y="246" text-anchor="end">200</text>
+  <text x="50" y="144" text-anchor="end">r</text>
+  <text x="336" y="278" text-anchor="middle">tinted: bins the surface is registered in; dots: bin centers inside the outline</text>
+</svg></div>
+      <figcaption>A trapezoidal module on a disc layer, binned in <span class="mono">(r, phi)</span>: phi across, r up, the seam at &plusmn;pi ruled at both ends. The edges look curved because they are <em>straight in space</em> &mdash; a straight chord at perpendicular distance d from the beam line is <span class="mono">r = d / cos(phi &minus; phi&#8320;)</span> in these coordinates, so the inner and outer edges both bow toward smaller r at their midpoint. That is why the outline has to be sampled rather than taken from the vertices. Switch the test above: dashed red is a bin the module really overlaps that a bin-centre predicate throws away.</figcaption>
+    </figure>
+  </section>
+
+  <section class="prose">
+    <p>The three fills side by side, on the same module. Drag it inside any panel, or use the sliders; the presets walk through the three regimes.</p>
+  </section>
+
+  <section class="instrument">
+    <div class="rail">
+      <div class="ctl" style="min-width:210px;flex:0 0 auto">
+        <span class="grouplabel">Regime</span>
+        <div class="chips" id="preset">
+          <button class="chip" data-preset="normal" aria-pressed="true">several bins across</button>
+          <button class="chip" data-preset="small" aria-pressed="false">under one bin</button>
+          <button class="chip" data-preset="aniso" aria-pressed="false">thin in r, wide in phi</button>
+        </div>
+      </div>
+
+      <div class="ctl" style="min-width:150px;flex:0 0 auto">
+        <span class="grouplabel">Bounds</span>
+        <div class="chips" id="shape">
+          <button class="chip" data-shape="sector" aria-pressed="true">radial</button>
+          <button class="chip" data-shape="trapezoid" aria-pressed="false">disc trapezoid</button>
+        </div>
+      </div>
+
+      <div class="ctl">
+        <label for="rc"><span>centre radius</span><output id="rc-out"></output></label>
+        <input type="range" id="rc" min="45" max="155" step="1">
+      </div>
+
+      <div class="ctl">
+        <label for="hh"><span>half-length in r</span><output id="hh-out"></output></label>
+        <input type="range" id="hh" min="4" max="55" step="1">
+      </div>
+
+      <div class="ctl">
+        <label for="hw"><span>half-width</span><output id="hw-out"></output></label>
+        <input type="range" id="hw" min="3" max="60" step="1">
+      </div>
+
+      <div class="ctl" style="min-width:110px;flex:0 0 auto">
+        <label for="nr"><span>r bins</span><output id="nr-out"></output></label>
+        <input type="range" id="nr" min="4" max="12" step="1">
+      </div>
+
+      <div class="ctl" style="min-width:110px;flex:0 0 auto">
+        <label for="nphi"><span>phi bins in view</span><output id="nphi-out"></output></label>
+        <input type="range" id="nphi" min="8" max="22" step="1">
+      </div>
+    </div>
+
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-head">
+          <h3>1 &middot; Surface &rarr; grid</h3>
+          <p class="sub">fillSurfaceToBinMapping<br>the reference position's bin, and nothing else</p>
+        </div>
+        <div id="svg-a"></div>
+        <dl class="stats" id="stats-a"></dl>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>2 &middot; + grid &rarr; surface</h3>
+          <p class="sub">fillBinToSurfaceMapping<br>flood fill, keep bins whose centre is on the module</p>
+        </div>
+        <div id="svg-b"></div>
+        <dl class="stats" id="stats-b"></dl>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>3 &middot; Projected footprint</h3>
+          <p class="sub">fillSurfaceFootprint<br>sample the outline, span-fill each phi column</p>
+        </div>
+        <div id="svg-c"></div>
+        <dl class="stats" id="stats-c"></dl>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><i class="swatch" style="background:var(--served-fill);border-color:var(--served-line)"></i>registered, really overlapped</span>
+      <span><i class="swatch" style="background:var(--miss-fill);border-color:var(--miss)"></i>overlapped but not registered</span>
+      <span><i class="swatch" style="background:var(--waste-fill);border-color:var(--waste)"></i>registered without overlap</span>
+      <span><i class="swatch" style="background:transparent"></i>&middot; bin centre &nbsp; &#10011; reference position</span>
+    </div>
+  </section>
+
+  <section class="prose">
+    <p class="note">What this view simplifies: it shows a phi sector with hard edges, so a module pushed off the side is clipped. The real phi axis is <code>Closed</code> and a sample past &plusmn;pi wraps to the bin on the other side. The r axis is <code>Bound</code>, where the wrap clamps into the edge bin rather than dropping the sample, which is why dragging past the top or bottom leaves no holes.</p>
+  </section>
+
+  <section class="prose">
+    <h2>What &plusmn;1 at lookup time can and cannot repair</h2>
+    <p>A lookup that widens every query to the neighbouring bins repairs a half-bin erosion, because the lost bins are all one step from a kept one &mdash; and it charges 3&times;3 candidates on <em>every</em> query to do it. It cannot repair a gap deeper than the expansion, and in the anisotropic regime the gap is not one bin.</p>
+  </section>
+
+  <div class="verdict" id="verdict"></div>
+
+  <hr class="rule">
+
+  <section class="prose">
+    <h2>How finely the outline is sampled</h2>
+    <p>The footprint fill walks the surface's polyhedron. That polyhedron approximates a curved edge with straight segments on a <em>global</em> phi grid of <code>4 &times; quarterSegments</code> steps, so at <code>quarterSegments = 1</code> a full ring is a square inscribed in the circle and the fill loses everything outside it. Planar bounds &mdash; rectangle, trapezoid &mdash; ignore the argument entirely, which is why the generic detector never showed this.</p>
+  </section>
+
+  <section class="ring">
+    <div class="instrument" style="padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+      <div id="svg-ring"></div>
+      <div class="chips" id="qseg" style="justify-content:center">
+        <button class="chip" data-q="1" aria-pressed="true">1</button>
+        <button class="chip" data-q="2" aria-pressed="false">2</button>
+        <button class="chip" data-q="4" aria-pressed="false">4</button>
+        <button class="chip" data-q="8" aria-pressed="false">8</button>
+        <button class="chip" data-q="32" aria-pressed="false">32</button>
+      </div>
+      <p class="sub" style="font-family:var(--f-mono);font-size:11px;color:var(--muted);text-align:center;margin:0">quarterSegments &middot; full ring, r 200&ndash;300 mm, unrolled in phi</p>
+    </div>
+
+    <div>
+      <div class="scroll">
+        <table class="data">
+          <thead>
+            <tr><th>quarterSegments</th><th>outline falls short by</th></tr>
+          </thead>
+          <tbody id="qseg-table"></tbody>
+        </table>
+      </div>
+      <p class="note" style="font-size:13.5px;margin-top:14px">Measured against a converged outline, per phi, for a full ring of r&nbsp;200&ndash;300&nbsp;mm. A radial sector of &plusmn;0.15&nbsp;rad loses 0.84&nbsp;mm at <span class="mono">q&nbsp;=&nbsp;1</span> through <span class="mono">q&nbsp;=&nbsp;8</span> alike &mdash; its phi range contains no multiple of pi/2, so nothing is added until the global grid is fine enough to drop a point inside it.</p>
+    </div>
+  </section>
+
+  <section class="prose">
+    <p>The span fill is exact only while the projected outline is, per phi column, an unbroken interval in r. A genuinely non-convex projection would over-fill its concave part &mdash; amber in the panels above. That is a strictly better failure than dropping bins, and it is the assumption the approach rests on, not a hole in it.</p>
+    <p>On the generic detector, across all 48 layers against brute-force truth: hits lost at |eta|&nbsp;=&nbsp;3.5 go from <strong>4.9% to zero</strong>. With the &plusmn;1 expansion still in place that costs 9.0&nbsp;&rarr;&nbsp;25.0 candidates per query at eta&nbsp;=&nbsp;0. With the expansion switched off &mdash; which exact filling is what earns &mdash; the same scan gives <strong>3.9 candidates on the disc and 9.0 on the barrel with nothing lost</strong>: today's cost, for strictly better coverage.</p>
+  </section>
+
+  <hr class="rule">
+
+  <section class="prose">
+    <h2 id="window">How far the track slides</h2>
+    <p>A barrel layer is not a cylinder. Its modules sit staggered either side of one, and the array bins them by projecting each module radially onto the representative cylinder in between. A lookup intersects that same cylinder and reads the bin it lands in.</p>
+    <p>Those two points are not the same point. A track crossing at an angle enters the layer, travels a chord through its thickness and leaves somewhere else in z. At normal incidence the displacement is nothing; at <span class="mono">eta&nbsp;=&nbsp;3</span> the chord is ten times the layer half-thickness and the crossing bin no longer holds the module the track hits. The window around the crossing bin is what closes the gap, and the question is how wide it has to be.</p>
+    <p>Everything below is computed from the controls, not quoted: <span class="mono">z(r) = r&nbsp;sinh&nbsp;eta</span>, so the slide from the representative surface to a module offset by <span class="mono">&Delta;r</span> is <span class="mono">&Delta;r&nbsp;sinh&nbsp;eta</span>, and the chord the window is sized from is <span class="mono">tolerance&nbsp;&times;&nbsp;sinh&nbsp;eta</span>.</p>
+  </section>
+
+  <section class="figrail">
+    <span class="grouplabel">neighbor window on both views</span>
+    <div class="chips" id="wstep">
+      <button class="chip" data-d="0" aria-pressed="false">crossing bin only</button>
+      <button class="chip" data-d="1" aria-pressed="false">&plusmn;1 bin</button>
+      <button class="chip" data-d="2" aria-pressed="true">&plusmn;2 bins</button>
+    </div>
+    <span class="verdict-inline" id="wverdict"></span>
+  </section>
+
+  <section class="pair">
+    <figure>
+      <div class="plate"><svg class="figrz" viewBox="0 0 640 300" role="img"
+     aria-label="Lookup geometry in the r-z plane: staggered modules at two radii, the representative cylinder, an inclined track and the slide in z through the layer thickness">
+  <style>
+.figrz text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; fill: var(--muted); }
+.figrz .ink { fill: var(--ink); }
+.figrz .acc { fill: var(--served); }
+.figrz .alert { fill: var(--miss); }
+</style>
+  <defs>
+    <marker id="arrow-figrz" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0.5 L8,4 L0,7.5 Z" fill="var(--ink)"/>
+    </marker>
+  </defs>
+  <rect width="640" height="300" fill="var(--panel)"/>
+
+  <!-- z bins: the window the lookup serves, and the crossing bin inside it -->
+  <rect x="160" y="30" width="250" height="220" fill="var(--served)" fill-opacity=".09" data-w="rfill"/>
+  <rect x="260" y="30" width="50" height="220" fill="var(--served)" fill-opacity=".16"/>
+  <g stroke="var(--rule-soft)" stroke-width=".6">
+    <line x1="60" y1="30" x2="60" y2="250"/>
+    <line x1="110" y1="30" x2="110" y2="250"/>
+    <line x1="160" y1="30" x2="160" y2="250"/>
+    <line x1="210" y1="30" x2="210" y2="250"/>
+    <line x1="260" y1="30" x2="260" y2="250"/>
+    <line x1="310" y1="30" x2="310" y2="250"/>
+    <line x1="360" y1="30" x2="360" y2="250"/>
+    <line x1="410" y1="30" x2="410" y2="250"/>
+    <line x1="460" y1="30" x2="460" y2="250"/>
+    <line x1="510" y1="30" x2="510" y2="250"/>
+    <line x1="560" y1="30" x2="560" y2="250"/>
+    <line x1="610" y1="30" x2="610" y2="250"/>
+  </g>
+  <text x="285" y="44" text-anchor="middle" class="acc" data-w="rlabel">window: 2 bins each side</text>
+
+  <!-- layer thickness: the tolerance the array was built with -->
+  <g stroke="var(--muted)" stroke-width=".8" stroke-dasharray="3 3">
+    <line x1="60" y1="115" x2="610" y2="115"/>
+    <line x1="60" y1="165" x2="610" y2="165"/>
+  </g>
+  <g stroke="var(--muted)" stroke-width="1">
+    <line x1="74" y1="115" x2="74" y2="140"/>
+    <line x1="71" y1="115" x2="77" y2="115"/>
+    <line x1="71" y1="140" x2="77" y2="140"/>
+  </g>
+  <text x="80" y="131">tolerance</text>
+
+  <!-- representative cylinder at radius R -->
+  <line x1="60" y1="140" x2="610" y2="140" stroke="var(--served)" stroke-width="1.5"/>
+  <text x="608" y="134" text-anchor="end" class="acc">representative cylinder</text>
+
+  <!-- footprint of the hit module on the representative surface: bins 5, 6, 7 -->
+  <rect x="310" y="137" width="150" height="6" fill="var(--served)" fill-opacity=".35" data-w="rband"/>
+  <text x="385" y="156" text-anchor="middle" class="acc">registered footprint</text>
+
+  <!-- modules, staggered on two radii -->
+  <g fill="var(--muted)">
+    <rect x="60" y="157" width="80" height="6"/>
+    <rect x="250" y="157" width="110" height="6"/>
+    <rect x="420" y="157" width="110" height="6"/>
+    <rect x="130" y="117" width="130" height="6"/>
+    <rect x="520" y="117" width="90" height="6"/>
+  </g>
+  <rect x="320" y="117" width="110" height="6" fill="var(--served)" data-w="rmod"/>
+  <text x="608" y="181" text-anchor="end">modules at two radii</text>
+
+  <!-- the track, and the chord it cuts through the layer -->
+  <line x1="225" y1="165" x2="385" y2="115" stroke="var(--served)" stroke-opacity=".35" stroke-width="6"/>
+  <line x1="100" y1="204" x2="560" y2="60" stroke="var(--ink)" stroke-width="1.4" marker-end="url(#arrow-figrz)"/>
+  <text x="108" y="222" class="ink">track</text>
+  <text x="236" y="178" class="ink">half chord = tolerance / |n.d|</text>
+
+  <!-- crossing of the representative surface, and the hit -->
+  <circle cx="305" cy="140" r="3.5" fill="var(--served)"/>
+  <text x="298" y="134" text-anchor="end" class="acc">crossing</text>
+  <circle cx="369" cy="120" r="3.5" fill="var(--miss)"/>
+  <text x="376" y="111" class="alert">hit</text>
+
+  <!-- the slide: the chord without its component along the normal -->
+  <g stroke="var(--ink)" stroke-width="1">
+    <line x1="225" y1="232" x2="385" y2="232"/>
+    <line x1="225" y1="228" x2="225" y2="236"/>
+    <line x1="305" y1="228" x2="305" y2="236"/>
+    <line x1="385" y1="228" x2="385" y2="236"/>
+  </g>
+  <text x="265" y="246" text-anchor="middle" class="ink">slide</text>
+  <text x="345" y="246" text-anchor="middle" class="ink">slide</text>
+
+  <!-- axes -->
+  <text x="22" y="143">r</text>
+  <text x="610" y="270" text-anchor="end">z</text>
+  <text x="335" y="270" text-anchor="middle" data-w="rcaption">bins 2 to 6 are served; the module the track hits is registered in bins 5 to 7</text>
+</svg></div>
+      <figcaption>Staggered modules either side of the representative cylinder. The track crosses the cylinder in one bin and reaches the module it hits in another; the chord through the layer thickness is what separates them.</figcaption>
+    </figure>
+    <figure>
+      <div class="plate"><svg class="figgrid" viewBox="0 0 640 300" role="img"
+     aria-label="The same crossing on the (phi, z) grid: the crossing bin, the window opened along z only, and the registered footprint of the module the track hits">
+  <style>
+.figgrid text { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; fill: var(--muted); }
+.figgrid .ink { fill: var(--ink); }
+.figgrid .acc { fill: var(--served); }
+.figgrid .alert { fill: var(--miss); }
+.figgrid .idx { font-size: 9px; }
+</style>
+  <defs>
+    <pattern id="hatch-figgrid" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="var(--served)" stroke-opacity=".55" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="640" height="300" fill="var(--panel)"/>
+
+  <!-- the window: z distance 2, phi distance 0, around the crossing bin -->
+  <rect x="160" y="130" width="250" height="30" fill="var(--served)" fill-opacity=".12" data-w="gfill"/>
+  <rect x="260" y="130" width="50" height="30" fill="var(--served)" fill-opacity=".2"/>
+
+  <!-- registered footprint of the hit module: z bins 5 to 7, phi bin 3 -->
+  <rect x="310" y="130" width="150" height="30" fill="url(#hatch-figgrid)"/>
+  <rect x="160" y="130" width="250" height="30" fill="none" stroke="var(--served)" stroke-width="1.2" data-w="gline"/>
+
+  <!-- grid rules: 11 z bins by 7 phi bins -->
+  <g stroke="var(--rule)" stroke-width=".6" fill="none">
+    <line x1="60" y1="40" x2="60" y2="250"/>
+    <line x1="110" y1="40" x2="110" y2="250"/>
+    <line x1="160" y1="40" x2="160" y2="250"/>
+    <line x1="210" y1="40" x2="210" y2="250"/>
+    <line x1="260" y1="40" x2="260" y2="250"/>
+    <line x1="310" y1="40" x2="310" y2="250"/>
+    <line x1="360" y1="40" x2="360" y2="250"/>
+    <line x1="410" y1="40" x2="410" y2="250"/>
+    <line x1="460" y1="40" x2="460" y2="250"/>
+    <line x1="510" y1="40" x2="510" y2="250"/>
+    <line x1="560" y1="40" x2="560" y2="250"/>
+    <line x1="610" y1="40" x2="610" y2="250"/>
+    <line x1="60" y1="40" x2="610" y2="40"/>
+    <line x1="60" y1="70" x2="610" y2="70"/>
+    <line x1="60" y1="100" x2="610" y2="100"/>
+    <line x1="60" y1="130" x2="610" y2="130"/>
+    <line x1="60" y1="160" x2="610" y2="160"/>
+    <line x1="60" y1="190" x2="610" y2="190"/>
+    <line x1="60" y1="220" x2="610" y2="220"/>
+    <line x1="60" y1="250" x2="610" y2="250"/>
+  </g>
+
+  <!-- module outline: a rectangle on a cylinder projects to a rectangle in (phi, z) -->
+  <rect x="316" y="134" width="138" height="22" fill="none" stroke="var(--served)" stroke-width="1.6" data-w="gmod"/>
+  <text x="466" y="142" class="acc">footprint of</text>
+  <text x="466" y="154" class="acc">the hit module</text>
+
+  <!-- crossing, slide along z, hit -->
+  <line x1="305" y1="145" x2="369" y2="145" stroke="var(--ink)" stroke-width="1" stroke-dasharray="3 2"/>
+  <circle cx="305" cy="145" r="3.5" fill="var(--served)"/>
+  <circle cx="369" cy="145" r="3.5" fill="var(--miss)"/>
+  <text x="305" y="122" text-anchor="middle" class="acc">crossing bin</text>
+  <text x="369" y="122" text-anchor="middle" class="alert">hit</text>
+  <text x="160" y="182" data-w="glabel">window: 2 in z, 0 in phi</text>
+  <text x="160" y="206" class="ink" data-w="gverdict">the crossing bin alone would miss the module; the window in z reaches it</text>
+
+  <!-- bin indices -->
+  <g class="idx" text-anchor="middle">
+    <text x="85" y="264">0</text>
+    <text x="135" y="264">1</text>
+    <text x="185" y="264">2</text>
+    <text x="235" y="264">3</text>
+    <text x="285" y="264">4</text>
+    <text x="335" y="264">5</text>
+    <text x="385" y="264">6</text>
+    <text x="435" y="264">7</text>
+    <text x="485" y="264">8</text>
+    <text x="535" y="264">9</text>
+    <text x="585" y="264">10</text>
+  </g>
+  <g class="idx" text-anchor="end">
+    <text x="52" y="58">6</text>
+    <text x="52" y="88">5</text>
+    <text x="52" y="118">4</text>
+    <text x="52" y="148">3</text>
+    <text x="52" y="178">2</text>
+    <text x="52" y="208">1</text>
+    <text x="52" y="238">0</text>
+  </g>
+  <text x="610" y="284" text-anchor="end">z bin (axis 1, Bound)</text>
+  <text x="60" y="284">phi bin (axis 0, Closed)</text>
+</svg></div>
+      <figcaption>The same crossing on the bin grid. The window opens along z only &mdash; a straight track from the beam line barely moves in the angular coordinate, and widening that axis would only multiply candidates.</figcaption>
+    </figure>
+  </section>
+
+  <section class="prose">
+    <h2>Vary it</h2>
+    <p>Those two are one crossing at one angle. Below, the same geometry with the angle, the stagger, the binning and the module length in your hands, and three window policies scored against the modules the track actually crosses.</p>
+  </section>
+
+  <section class="instrument">
+    <div class="rail">
+      <div class="ctl">
+        <label for="eta"><span>pseudorapidity eta</span><output id="eta-out"></output></label>
+        <input type="range" id="eta" min="0" max="3.5" step="0.01">
+      </div>
+      <div class="ctl">
+        <label for="stag"><span>radial stagger</span><output id="stag-out"></output></label>
+        <input type="range" id="stag" min="0.5" max="6" step="0.1">
+      </div>
+      <div class="ctl">
+        <label for="bf"><span>bins per module</span><output id="bf-out"></output></label>
+        <input type="range" id="bf" min="1" max="8" step="1">
+      </div>
+      <div class="ctl">
+        <label for="hz"><span>module half-length in z</span><output id="hz-out"></output></label>
+        <input type="range" id="hz" min="10" max="45" step="1">
+      </div>
+    </div>
+
+    <div class="stage"><div id="svg-rz"></div></div>
+
+    <div class="policies">
+      <div class="policy">
+        <div>
+          <h3>Crossing bin only</h3>
+          <p class="sub">no window</p>
+        </div>
+        <div id="strip-0"></div>
+        <dl class="stats" id="stats-0"></dl>
+      </div>
+      <div class="policy">
+        <div>
+          <h3>Fixed &plusmn;1 bin</h3>
+          <p class="sub">what main serves &mdash; #5186's 1/|n&middot;d| term is capped at 1 by every caller, so it never fires</p>
+        </div>
+        <div id="strip-1"></div>
+        <dl class="stats" id="stats-1"></dl>
+      </div>
+      <div class="policy">
+        <div>
+          <h3>Sized by the slide</h3>
+          <p class="sub">bins spanned by &plusmn;tolerance&nbsp;sinh&nbsp;eta, clamped to NeighborWindow max 2 in z</p>
+        </div>
+        <div id="strip-2"></div>
+        <dl class="stats" id="stats-2"></dl>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><i class="swatch" style="background:var(--served-fill);border-color:var(--served-line)"></i>bin served by the lookup</span>
+      <span><i class="swatch" style="background:var(--waste-fill);border-color:var(--waste)"></i>served, holds nothing the track hits</span>
+      <span><i class="swatch" style="background:var(--miss-fill);border-color:var(--miss)"></i>holds the hit module, not served</span>
+      <span>&#9679; crossing &nbsp; &#9670; where the track meets the module</span>
+    </div>
+  </section>
+
+  <section class="prose">
+    <p class="note">The stagger and the tolerance are tied, as they are in the creator: <code>SurfaceArrayCreator</code> takes the tolerance from <code>protoLayer.range(AxisR) * 0.5</code>, so it is the stagger plus the module half-thickness. That is why the window always covers the slide it needs to &mdash; the same radial extent sets both.</p>
+  </section>
+
+  <hr class="rule">
+
+  <section class="prose">
+    <h2>Across the barrel</h2>
+    <p>One eta proves nothing. Sweeping the whole range at the current stagger and binning gives the miss rate each policy carries, and what it charges in candidates to get there.</p>
+  </section>
+
+  <section class="sweep">
+    <div class="instrument" style="padding:16px 18px 10px">
+      <div id="svg-sweep"></div>
+    </div>
+    <div>
+      <div class="scroll">
+        <table class="data">
+          <thead>
+            <tr><th>policy</th><th>misses</th><th>candidates</th></tr>
+          </thead>
+          <tbody id="sweep-table"></tbody>
+        </table>
+      </div>
+      <p class="note" style="font-size:13.5px;margin-top:14px">Miss rate over 400 eta samples from 0 to 3.5, mean candidates per query over the same. A miss is a track whose module is registered only in bins the lookup never reads &mdash; the hit is unrecoverable, no later stage sees it.</p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section class="prose">
+    <h2 id="cost">What it costs</h2>
+    <p>Measuring the slide is not free. As first written it went through two full <code>Surface::intersect</code> calls to project the ends of the chord, and that tripled the price of a lookup. Taking the same step from <code>localCartesianToBoundLocalDerivative</code> instead &mdash; the reference frame with the curvilinear metric already folded in &mdash; costs one Jacobian apply.</p>
+  </section>
+
+  <section class="instrument" style="padding:18px 22px 20px">
+    <div class="scroll">
+      <table class="data">
+        <thead>
+          <tr><th>variant</th><th>ns / lookup</th><th>surfaces returned</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>before, fixed &plusmn;1</td><td>76</td><td>14.2</td></tr>
+          <tr><td>window from two projections</td><td class="bad">245</td><td>3.14</td></tr>
+          <tr><td>window from the surface metric</td><td>128</td><td>3.14</td></tr>
+          <tr><td>+ Jacobian without the angle</td><td>110</td><td>3.14</td></tr>
+          <tr><td>+ grid scale resolved once</td><td>104</td><td>3.14</td></tr>
+          <tr><td>+ rigid placement inverses</td><td class="ok">80</td><td>3.14</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note" style="margin-top:14px">Toy barrel, 60 &times; 20 bins, 3.28M lookups, RelWithDebInfo with assertions forced on. The narrower window returns 4.5&times; fewer candidates, and each one it drops is an intersection the caller does not run &mdash; so even the 245 ns version paid for itself. The remaining 80 ns is roughly what the fixed window cost before any of this.</p>
+  </section>
+
+  <section class="prose">
+    <p class="note">What this simplifies: one phi slice, straight rays from the origin, and a barrel of identical modules on two radii. A real track curves and starts off-axis, which moves the angular axis too &mdash; the reason the window's phi bound is 1 rather than 0 even though a straight ray from the origin never needs it. The disc case swaps the axes: the slide runs in r, and the same metric returns <span class="mono">(dr, dphi)</span> without a per-surface-type case.</p>
+  </section>
+
+  <hr class="rule">
+
+  <p class="back"><a href="group__surface__array.html">&larr; Surface array reference</a></p>
+
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------------------------------------------------------------- geometry
+
+  const LAYER = { rLo: 30, rHi: 170, phiLo: -0.42, phiHi: 0.42 };
+
+  const S = {
+    shape: "sector",
+    rc: 100, hh: 32, hw: 14, pc: 0,
+    nR: 7, nPhi: 14,
+  };
+
+  // edges chosen to sit inside bins, not on their boundaries, so each regime
+  // shows its own erosion rather than a coincidence of the binning
+  const PRESETS = {
+    normal: { rc: 100, hh: 32, hw: 14, pc: 0,    nR: 7, nPhi: 14 },
+    small:  { rc: 100, hh: 5,  hw: 3,  pc: 0.03, nR: 7, nPhi: 14 },
+    aniso:  { rc: 90,  hh: 6,  hw: 20, pc: 0,    nR: 7, nPhi: 14 },
+  };
+
+  const edges = (lo, hi, n) => Array.from({ length: n + 1 }, (_, i) => lo + (hi - lo) * i / n);
+
+  // multiples of (pi/2)/q strictly inside [a,b], plus the ends — Acts::detail::VerticesHelper::phiSegments
+  function phiSegments(a, b, q) {
+    const out = [a, b];
+    const step = 2 * Math.PI / (4 * q);
+    for (let i = 0; i < 4 * q + 1; i++) {
+      const p = -Math.PI + i * step;
+      if (p > a && p < b && !out.some(x => Math.abs(x - p) < 1e-12)) out.push(p);
+    }
+    return out.sort((x, y) => x - y);
+  }
+
+  // cartesian outline vertices, the way polyhedronRepresentation would produce them
+  function polyhedron(q) {
+    if (S.shape === "trapezoid") {
+      // TrapezoidBounds::vertices ignores the segment count
+      const c = Math.cos(S.pc), s = Math.sin(S.pc);
+      return [[-S.hw, -S.hh], [S.hw, -S.hh], [S.hw, S.hh], [-S.hw, S.hh]]
+        // local y runs along r, local x tangentially, as a disc trapezoid does
+        .map(([lx, ly]) => { const r = ly + S.rc; return [c * r - s * lx, s * r + c * lx]; });
+    }
+    const half = Math.atan(S.hw / S.rc);
+    const rIn = Math.max(1, S.rc - S.hh), rOut = S.rc + S.hh;
+    const phis = phiSegments(S.pc - half, S.pc + half, q);
+    const out = [];
+    for (const p of phis) out.push([rOut * Math.cos(p), rOut * Math.sin(p)]);
+    for (let i = phis.length - 1; i >= 0; i--) {
+      const p = phis[i];
+      out.push([rIn * Math.cos(p), rIn * Math.sin(p)]);
+    }
+    return out;
+  }
+
+  // walk the outline in straight chords, mapping every sample into (phi, r)
+  function outlineInGrid(q, perChord) {
+    const v = polyhedron(q), out = [];
+    for (let i = 0; i < v.length; i++) {
+      const a = v[i], b = v[(i + 1) % v.length];
+      for (let k = 0; k < perChord; k++) {
+        const t = k / perChord;
+        const x = a[0] + t * (b[0] - a[0]), y = a[1] + t * (b[1] - a[1]);
+        out.push([Math.atan2(y, x), Math.hypot(x, y)]);
+      }
+    }
+    return out;
+  }
+
+  const truthPolygon = () => outlineInGrid(256, 8);
+
+  function pointInPolygon(px, py, poly) {
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const [xi, yi] = poly[i], [xj, yj] = poly[j];
+      if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  }
+
+  // Sutherland–Hodgman against an axis-aligned box; non-zero area means real overlap
+  function overlapsBox(poly, x0, x1, y0, y1) {
+    let cur = poly;
+    const clip = (pts, keep, cut) => {
+      const out = [];
+      for (let i = 0; i < pts.length; i++) {
+        const a = pts[(i + pts.length - 1) % pts.length], b = pts[i];
+        const ka = keep(a), kb = keep(b);
+        if (kb) { if (!ka) out.push(cut(a, b)); out.push(b); }
+        else if (ka) out.push(cut(a, b));
+      }
+      return out;
+    };
+    const lerpX = (a, b, x) => [x, a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0])];
+    const lerpY = (a, b, y) => [a[0] + (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]), y];
+    cur = clip(cur, p => p[0] >= x0, (a, b) => lerpX(a, b, x0));
+    if (!cur.length) return false;
+    cur = clip(cur, p => p[0] <= x1, (a, b) => lerpX(a, b, x1));
+    if (!cur.length) return false;
+    cur = clip(cur, p => p[1] >= y0, (a, b) => lerpY(a, b, y0));
+    if (!cur.length) return false;
+    cur = clip(cur, p => p[1] <= y1, (a, b) => lerpY(a, b, y1));
+    if (cur.length < 3) return false;
+    let area = 0;
+    for (let i = 0; i < cur.length; i++) {
+      const a = cur[i], b = cur[(i + 1) % cur.length];
+      area += a[0] * b[1] - b[0] * a[1];
+    }
+    return Math.abs(area) > 1e-9;
+  }
+
+  // ------------------------------------------------------------- the filling
+
+  function model() {
+    const pe = edges(LAYER.phiLo, LAYER.phiHi, S.nPhi);
+    const re = edges(LAYER.rLo, LAYER.rHi, S.nR);
+    const poly = truthPolygon();
+    const key = (i, j) => j * S.nPhi + i;
+
+    const truth = new Set();
+    for (let i = 0; i < S.nPhi; i++)
+      for (let j = 0; j < S.nR; j++)
+        if (overlapsBox(poly, pe[i], pe[i + 1], re[j], re[j + 1])) truth.add(key(i, j));
+
+    // 1 — the reference position's bin
+    const refPhi = S.pc, refR = S.rc;
+    const bi = Math.floor((refPhi - LAYER.phiLo) / (LAYER.phiHi - LAYER.phiLo) * S.nPhi);
+    const bj = Math.floor((refR - LAYER.rLo) / (LAYER.rHi - LAYER.rLo) * S.nR);
+    const centreSet = new Set();
+    const inView = bi >= 0 && bi < S.nPhi && bj >= 0 && bj < S.nR;
+    if (inView) centreSet.add(key(bi, bj));
+
+    // 2 — flood fill on the bin-centre predicate, seeded from that bin
+    const floodSet = new Set(centreSet);
+    if (inView) {
+      const seen = new Set([key(bi, bj)]);
+      const queue = [[bi, bj]];
+      while (queue.length) {
+        const [i, j] = queue.pop();
+        for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) {
+          const ni = i + di, nj = j + dj;
+          if (ni < 0 || nj < 0 || ni >= S.nPhi || nj >= S.nR) continue;
+          const k = key(ni, nj);
+          if (seen.has(k)) continue;
+          seen.add(k);
+          const cp = (pe[ni] + pe[ni + 1]) / 2, cr = (re[nj] + re[nj + 1]) / 2;
+          if (!pointInPolygon(cp, cr, poly)) continue;
+          floodSet.add(k);
+          queue.push([ni, nj]);
+        }
+      }
+    }
+
+    // 3 — outline samples, then a span per phi column
+    const cols = new Map();
+    for (const [p, r] of outlineInGrid(32, 32)) {
+      const i = Math.floor((p - LAYER.phiLo) / (LAYER.phiHi - LAYER.phiLo) * S.nPhi);
+      // the r axis is Bound, and Axis::wrapBin clamps a Bound index into
+      // [1, nBins] — a sample past the layer edge lands in the edge bin
+      const j = Math.min(S.nR - 1, Math.max(0,
+        Math.floor((r - LAYER.rLo) / (LAYER.rHi - LAYER.rLo) * S.nR)));
+      if (i < 0 || i >= S.nPhi) continue;
+      const span = cols.get(i);
+      if (!span) cols.set(i, [j, j]);
+      else { span[0] = Math.min(span[0], j); span[1] = Math.max(span[1], j); }
+    }
+    const footSet = new Set();
+    for (const [i, [lo, hi]] of cols) for (let j = lo; j <= hi; j++) footSet.add(key(i, j));
+
+    return { pe, re, poly, truth, centreSet, floodSet, footSet, key };
+  }
+
+  // Chebyshev distance from every truth bin to the nearest registered bin
+  function gapStats(reg, truth, key) {
+    let worst = 0, unreachable = 0;
+    for (const t of truth) {
+      if (reg.has(t)) continue;
+      const ti = t % S.nPhi, tj = Math.floor(t / S.nPhi);
+      let best = Infinity;
+      for (const r of reg) {
+        const ri = r % S.nPhi, rj = Math.floor(r / S.nPhi);
+        best = Math.min(best, Math.max(Math.abs(ti - ri), Math.abs(tj - rj)));
+      }
+      if (!isFinite(best)) unreachable++;
+      else worst = Math.max(worst, best);
+    }
+    return { worst, unreachable };
+  }
+
+  function recoveredAt(reg, truth, d) {
+    let n = 0;
+    for (const t of truth) {
+      const ti = t % S.nPhi, tj = Math.floor(t / S.nPhi);
+      for (const r of reg) {
+        const ri = r % S.nPhi, rj = Math.floor(r / S.nPhi);
+        if (Math.max(Math.abs(ti - ri), Math.abs(tj - rj)) <= d) { n++; break; }
+      }
+    }
+    return n;
+  }
+
+  // ------------------------------------------------------------------ canvas
+
+  const W = 300, H = 236, M = { l: 34, r: 10, t: 10, b: 26 };
+  const PW = W - M.l - M.r, PH = H - M.t - M.b;
+
+  const sx = p => M.l + (p - LAYER.phiLo) / (LAYER.phiHi - LAYER.phiLo) * PW;
+  const sy = r => M.t + PH - (r - LAYER.rLo) / (LAYER.rHi - LAYER.rLo) * PH;
+
+  const esc = n => Number(n).toFixed(2);
+
+  function drawPanel(m, reg) {
+    const { pe, re, poly, truth } = m;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="phi versus r bin grid with the module footprint">`;
+
+    for (let i = 0; i < S.nPhi; i++) for (let j = 0; j < S.nR; j++) {
+      const k = m.key(i, j), isTruth = truth.has(k), isReg = reg.has(k);
+      if (!isTruth && !isReg) continue;
+      const x = sx(pe[i]), y = sy(re[j + 1]);
+      const w = sx(pe[i + 1]) - x, h = sy(re[j]) - y;
+      let fill = "var(--served-fill)", stroke = "var(--served-line)";
+      if (isTruth && !isReg) { fill = "var(--miss-fill)"; stroke = "var(--miss)"; }
+      else if (!isTruth && isReg) { fill = "var(--waste-fill)"; stroke = "var(--waste)"; }
+      s += `<rect x="${esc(x)}" y="${esc(y)}" width="${esc(w)}" height="${esc(h)}" fill="${fill}" stroke="${stroke}" stroke-width=".8"/>`;
+    }
+
+    s += `<g stroke="var(--rule)" stroke-width=".5" fill="none">`;
+    for (let i = 0; i <= S.nPhi; i++) s += `<line x1="${esc(sx(pe[i]))}" y1="${M.t}" x2="${esc(sx(pe[i]))}" y2="${M.t + PH}"/>`;
+    for (let j = 0; j <= S.nR; j++) s += `<line x1="${M.l}" y1="${esc(sy(re[j]))}" x2="${M.l + PW}" y2="${esc(sy(re[j]))}"/>`;
+    s += `</g>`;
+
+    s += `<g fill="var(--muted)">`;
+    for (let i = 0; i < S.nPhi; i++) for (let j = 0; j < S.nR; j++) {
+      const cp = (pe[i] + pe[i + 1]) / 2, cr = (re[j] + re[j + 1]) / 2;
+      const on = pointInPolygon(cp, cr, poly);
+      s += `<circle cx="${esc(sx(cp))}" cy="${esc(sy(cr))}" r="${on ? 1.9 : 1}" fill="${on ? "var(--served)" : "var(--rule)"}"/>`;
+    }
+    s += `</g>`;
+
+    const d = poly.map((p, i) => `${i ? "L" : "M"}${esc(sx(p[0]))} ${esc(sy(p[1]))}`).join("") + "Z";
+    s += `<path d="${d}" fill="none" stroke="var(--served)" stroke-width="1.6" stroke-linejoin="round"/>`;
+
+    const cx = sx(S.pc), cy = sy(S.rc);
+    s += `<g stroke="var(--served)" stroke-width="1.2"><line x1="${esc(cx - 4)}" y1="${esc(cy)}" x2="${esc(cx + 4)}" y2="${esc(cy)}"/><line x1="${esc(cx)}" y1="${esc(cy - 4)}" x2="${esc(cx)}" y2="${esc(cy + 4)}"/></g>`;
+
+    s += `<g fill="var(--muted)" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="8">`;
+    s += `<text x="${M.l}" y="${H - 8}">φ ${LAYER.phiLo}</text>`;
+    s += `<text x="${M.l + PW}" y="${H - 8}" text-anchor="end">${LAYER.phiHi} rad</text>`;
+    s += `<text x="4" y="${M.t + 7}">${LAYER.rHi}</text>`;
+    s += `<text x="4" y="${M.t + PH}">${LAYER.rLo} mm</text>`;
+    s += `</g></svg>`;
+    return s;
+  }
+
+  function statsHTML(m, reg) {
+    const covered = [...m.truth].filter(k => reg.has(k)).length;
+    const missed = m.truth.size - covered;
+    const spurious = [...reg].filter(k => !m.truth.has(k)).length;
+    const { worst } = gapStats(reg, m.truth, m.key);
+    const pct = m.truth.size ? Math.round(100 * covered / m.truth.size) : 100;
+    return `
+      <dt>registered</dt><dd>${reg.size}</dd>
+      <dt>of ${m.truth.size} overlapped</dt><dd class="${pct === 100 ? "good" : "bad"}">${pct}%</dd>
+      <dt>missed</dt><dd class="${missed ? "bad" : ""}">${missed}</dd>
+      <dt>without overlap</dt><dd>${spurious}</dd>
+      <dt>deepest gap</dt><dd class="${worst > 1 ? "bad" : ""}">${missed ? worst + " bin" + (worst === 1 ? "" : "s") : "—"}</dd>`;
+  }
+
+  function verdictHTML(m) {
+    const need = d => recoveredAt(m.floodSet, m.truth, d) === m.truth.size;
+    let dNeed = 0;
+    while (dNeed < 12 && !need(dNeed)) dNeed++;
+    const at1 = recoveredAt(m.floodSet, m.truth, 1);
+    const lostAt1 = m.truth.size - at1;
+    const footOk = [...m.truth].every(k => m.footSet.has(k));
+
+    return `
+      <div class="verdict-grid">
+        <div class="vcell">
+          <span class="k">flood fill, ±1 expansion</span>
+          <span class="v ${lostAt1 ? "bad" : "good"}">${at1} / ${m.truth.size}</span>
+          <span class="n">${lostAt1 ? lostAt1 + " overlapped bin" + (lostAt1 === 1 ? "" : "s") + " still unreachable" : "the erosion is exactly one bin deep here"}</span>
+        </div>
+        <div class="vcell">
+          <span class="k">expansion it would need</span>
+          <span class="v ${dNeed > 1 ? "bad" : ""}">±${dNeed}</span>
+          <span class="n">${(2 * dNeed + 1) ** 2}× the candidates on every query, to repair a fill-time error</span>
+        </div>
+        <div class="vcell">
+          <span class="k">projected footprint</span>
+          <span class="v ${footOk ? "good" : "bad"}">±0</span>
+          <span class="n">${footOk ? "complete with no expansion at all" : "incomplete — the outline is not convex per column here"}</span>
+        </div>
+      </div>`;
+  }
+
+  // ------------------------------------------------------------- ring figure
+
+  const RING = { rLo: 200, rHi: 300, rIn: 200, rOut: 300, nR: 5, nPhi: 32 };
+  let ringQ = 1;
+
+  const RING_MEASURED = [
+    ["1", "88 mm"], ["2", "22.8 mm"], ["4", "5.76 mm"],
+    ["8", "1.44 mm"], ["16", "0.36 mm"], ["32", "0.089 mm"],
+  ];
+
+  function drawRing() {
+    const w = 460, h = 190, m = { l: 40, r: 12, t: 12, b: 26 };
+    const pw = w - m.l - m.r, ph = h - m.t - m.b;
+    const rx = p => m.l + (p + Math.PI) / (2 * Math.PI) * pw;
+    const ry = r => m.t + ph - (r - RING.rLo) / (RING.rHi - RING.rLo) * ph;
+    const pe = edges(-Math.PI, Math.PI, RING.nPhi);
+    const re = edges(RING.rLo, RING.rHi, RING.nR);
+
+    const phis = phiSegments(-Math.PI, Math.PI, ringQ);
+    const verts = [];
+    for (const p of phis) verts.push([RING.rOut * Math.cos(p), RING.rOut * Math.sin(p)]);
+    for (let i = phis.length - 1; i >= 0; i--) verts.push([RING.rIn * Math.cos(phis[i]), RING.rIn * Math.sin(phis[i])]);
+
+    const cols = new Map();
+    const trace = [];
+    for (let i = 0; i < verts.length; i++) {
+      const a = verts[i], b = verts[(i + 1) % verts.length];
+      for (let k = 0; k < 24; k++) {
+        const t = k / 24;
+        const x = a[0] + t * (b[0] - a[0]), y = a[1] + t * (b[1] - a[1]);
+        const p = Math.atan2(y, x), r = Math.hypot(x, y);
+        trace.push([p, r]);
+        const ci = Math.min(RING.nPhi - 1, Math.max(0, Math.floor((p + Math.PI) / (2 * Math.PI) * RING.nPhi)));
+        const cj = Math.floor((r - RING.rLo) / (RING.rHi - RING.rLo) * RING.nR);
+        if (cj < 0 || cj >= RING.nR) continue;
+        const span = cols.get(ci);
+        if (!span) cols.set(ci, [cj, cj]);
+        else { span[0] = Math.min(span[0], cj); span[1] = Math.max(span[1], cj); }
+      }
+    }
+
+    let s = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="full ring unrolled in phi, showing how coarsely the outline is sampled">`;
+    for (let i = 0; i < RING.nPhi; i++) for (let j = 0; j < RING.nR; j++) {
+      const truth = re[j + 1] > RING.rIn && re[j] < RING.rOut;
+      const span = cols.get(i);
+      const reg = span && j >= span[0] && j <= span[1];
+      if (!truth && !reg) continue;
+      const x = rx(pe[i]), y = ry(re[j + 1]);
+      const ww = rx(pe[i + 1]) - x, hh = ry(re[j]) - y;
+      const fill = truth && reg ? "var(--served-fill)" : truth ? "var(--miss-fill)" : "var(--waste-fill)";
+      const stroke = truth && reg ? "var(--served-line)" : truth ? "var(--miss)" : "var(--waste)";
+      s += `<rect x="${esc(x)}" y="${esc(y)}" width="${esc(ww)}" height="${esc(hh)}" fill="${fill}" stroke="${stroke}" stroke-width=".7"/>`;
+    }
+    s += `<g stroke="var(--rule)" stroke-width=".5" fill="none">`;
+    for (let i = 0; i <= RING.nPhi; i++) s += `<line x1="${esc(rx(pe[i]))}" y1="${m.t}" x2="${esc(rx(pe[i]))}" y2="${m.t + ph}"/>`;
+    for (let j = 0; j <= RING.nR; j++) s += `<line x1="${m.l}" y1="${esc(ry(re[j]))}" x2="${m.l + pw}" y2="${esc(ry(re[j]))}"/>`;
+    s += `</g>`;
+
+    let d = "";
+    let prev = null;
+    for (const [p, r] of trace) {
+      const yr = ry(Math.max(RING.rLo - 8, r));   // chords that leave the layer are cropped, not hidden
+      if (prev !== null && Math.abs(p - prev) > Math.PI) d += `M${esc(rx(p))} ${esc(yr)}`;
+      else d += `${d ? "L" : "M"}${esc(rx(p))} ${esc(yr)}`;
+      prev = p;
+    }
+    s += `<path d="${d}" fill="none" stroke="var(--served)" stroke-width="1.5" stroke-linejoin="round"/>`;
+
+    s += `<g fill="var(--muted)" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="8">`;
+    s += `<text x="${m.l}" y="${h - 8}">φ −π</text><text x="${m.l + pw}" y="${h - 8}" text-anchor="end">π</text>`;
+    s += `<text x="4" y="${esc(ry(RING.rOut) + 3)}">300</text><text x="4" y="${esc(ry(RING.rIn) + 3)}">200 mm</text>`;
+    s += `</g></svg>`;
+    return s;
+  }
+
+  // ------------------------------------------------------------------ render
+
+  const $ = id => document.getElementById(id);
+
+  function render() {
+    const m = model();
+    $("svg-a").innerHTML = drawPanel(m, m.centreSet);
+    $("svg-b").innerHTML = drawPanel(m, m.floodSet);
+    $("svg-c").innerHTML = drawPanel(m, m.footSet);
+    $("stats-a").innerHTML = statsHTML(m, m.centreSet);
+    $("stats-b").innerHTML = statsHTML(m, m.floodSet);
+    $("stats-c").innerHTML = statsHTML(m, m.footSet);
+    $("verdict").innerHTML = verdictHTML(m);
+
+    $("rc-out").textContent = S.rc + " mm";
+    $("hh-out").textContent = S.hh + " mm";
+    $("hw-out").textContent = S.hw + " mm";
+    $("nr-out").textContent = S.nR;
+    $("nphi-out").textContent = S.nPhi;
+    for (const k of ["rc", "hh", "hw"]) $(k).value = S[k];
+    $("nr").value = S.nR;
+    $("nphi").value = S.nPhi;
+  }
+
+  function showRing() {
+    $("svg-ring").innerHTML = drawRing();
+    $("qseg-table").innerHTML = RING_MEASURED
+      .map(([q, v]) => `<tr${String(ringQ) === q ? ' style="color:var(--served)"' : ""}><td>${q}</td><td>${v}</td></tr>`)
+      .join("");
+  }
+
+  // ------------------------------------------------------------------ events
+
+  for (const k of ["rc", "hh", "hw"]) $(k).addEventListener("input", e => { S[k] = +e.target.value; render(); });
+  $("nr").addEventListener("input", e => { S.nR = +e.target.value; render(); });
+  $("nphi").addEventListener("input", e => { S.nPhi = +e.target.value; render(); });
+
+  $("preset").addEventListener("click", e => {
+    const b = e.target.closest("[data-preset]");
+    if (!b) return;
+    Object.assign(S, PRESETS[b.dataset.preset]);
+    for (const c of $("preset").children) c.setAttribute("aria-pressed", String(c === b));
+    render();
+  });
+
+  $("shape").addEventListener("click", e => {
+    const b = e.target.closest("[data-shape]");
+    if (!b) return;
+    S.shape = b.dataset.shape;
+    for (const c of $("shape").children) c.setAttribute("aria-pressed", String(c === b));
+    render();
+  });
+
+  $("qseg").addEventListener("click", e => {
+    const b = e.target.closest("[data-q]");
+    if (!b) return;
+    ringQ = +b.dataset.q;
+    for (const c of $("qseg").children) c.setAttribute("aria-pressed", String(c === b));
+    showRing();
+  });
+
+  for (const id of ["svg-a", "svg-b", "svg-c"]) {
+    const host = $(id);
+    const move = ev => {
+      const svg = host.querySelector("svg");
+      if (!svg) return;
+      const box = svg.getBoundingClientRect();
+      const px = (ev.clientX - box.left) / box.width * W;
+      const py = (ev.clientY - box.top) / box.height * H;
+      const phi = LAYER.phiLo + (px - M.l) / PW * (LAYER.phiHi - LAYER.phiLo);
+      const r = LAYER.rLo + (M.t + PH - py) / PH * (LAYER.rHi - LAYER.rLo);
+      S.pc = Math.max(LAYER.phiLo, Math.min(LAYER.phiHi, phi));
+      S.rc = Math.round(Math.max(45, Math.min(155, r)));
+      render();
+    };
+    host.addEventListener("pointerdown", ev => {
+      ev.preventDefault();
+      const svg = host.querySelector("svg");
+      if (svg) svg.setPointerCapture(ev.pointerId);
+      move(ev);
+      const up = () => { host.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+      host.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+    });
+  }
+
+  render();
+  showRing();
+})();
+(() => {
+  "use strict";
+
+  const S = { eta: 2.2, stag: 2.5, bf: 5, hz: 30 };
+
+  const R = 100;          // representative cylinder radius, mm
+  const MODULE_T = 0.15;  // module half-thickness in r, mm
+  const ETA_MAX = 3.5;
+  const CAP_Z = 2;        // NeighborWindow max on the z axis
+  const VIEW_BINS = 13;   // bins either side of the crossing shown in r-z
+  const STRIP_BINS = 9;   // bins either side of the crossing shown in a strip
+
+  // ---------------------------------------------------------------- model
+
+  // a barrel of identical modules on two radii, tiled along z with a slight
+  // overlap, exactly the arrangement the stagger describes
+  // long enough that a track still crosses it at the top of the eta range,
+  // the way an ITk-scale barrel is
+  function layer(s, hz) {
+    const pitch = 2 * hz * 0.92;
+    const nMod = 2 * Math.ceil(R * Math.sinh(ETA_MAX + 0.1) / pitch) + 1;
+    const zHalf = nMod * pitch / 2;
+    const mods = [];
+    for (let i = 0; i < nMod; i++) {
+      const zc = (i - (nMod - 1) / 2) * pitch;
+      mods.push({ zc, z0: zc - hz, z1: zc + hz, r: R + (i % 2 === 0 ? -s : s) });
+    }
+    return { mods, zHalf, pitch, nMod };
+  }
+
+  function binning(L, bf) {
+    const n = Math.max(4, Math.round(L.nMod * bf));
+    return { n, lo: -L.zHalf, hi: L.zHalf, w: 2 * L.zHalf / n };
+  }
+
+  const binOf = (b, z) =>
+    Math.min(b.n - 1, Math.max(0, Math.floor((z - b.lo) / b.w)));
+
+  function state(eta, s, bf, hz) {
+    const L = layer(s, hz);
+    const b = binning(L, bf);
+    const sh = Math.sinh(eta);
+    const tolerance = s + MODULE_T;
+
+    const zCross = R * sh;
+    const inRange = Math.abs(zCross) < L.zHalf;
+    const bCross = binOf(b, zCross);
+
+    // bins each module is registered in: the projection onto the cylinder is
+    // radial, so it keeps the module's z span
+    for (const m of L.mods) {
+      m.b0 = binOf(b, m.z0);
+      m.b1 = binOf(b, m.z1);
+      // the track's z where it reaches this module's radius
+      m.zAt = m.r * sh;
+      m.hit = m.zAt >= m.z0 && m.zAt <= m.z1 && Math.abs(m.zAt) < L.zHalf;
+    }
+    // the rows overlap in z, so a track can cross one module on each radius.
+    // They slide in opposite directions and both have to stay reachable
+    const hits = L.mods.filter(m => m.hit);
+
+    // the chord through the layer, projected onto the layer: tolerance / |n.d|
+    // times the tangential part, which in this slice is tolerance * sinh(eta)
+    const slide = tolerance * sh;
+    const dSlide = Math.max(
+      Math.abs(binOf(b, zCross + slide) - bCross),
+      Math.abs(binOf(b, zCross - slide) - bCross));
+
+    const dists = [0, 1, Math.min(CAP_Z, dSlide)];
+
+    const policies = dists.map(d => {
+      const lo = Math.max(0, bCross - d), hi = Math.min(b.n - 1, bCross + d);
+      const served = new Set();
+      for (let i = lo; i <= hi; i++) served.add(i);
+      const reaches = m => {
+        for (let i = m.b0; i <= m.b1; i++) if (served.has(i)) return true;
+        return false;
+      };
+      const cand = L.mods.filter(reaches);
+      const reached = hits.filter(reaches);
+      return {
+        d, lo, hi, served,
+        cand: cand.length,
+        reached: reached.length,
+        covered: hits.length > 0 && reached.length === hits.length,
+        reaches,
+      };
+    });
+
+    return { L, b, sh, tolerance, zCross, bCross, inRange, hits, slide, dSlide, policies };
+  }
+
+  // sweep eta at the current geometry
+  function sweep(s, bf, hz) {
+    const N = 400, out = [[], [], []];
+    const miss = [0, 0, 0], cand = [0, 0, 0];
+    let n = 0;
+    for (let i = 0; i < N; i++) {
+      const eta = 3.5 * i / (N - 1);
+      const st = state(eta, s, bf, hz);
+      if (!st.hits.length || !st.inRange) continue;
+      n++;
+      st.policies.forEach((p, k) => {
+        if (!p.covered) miss[k]++;
+        cand[k] += p.cand;
+        out[k].push([eta, p.covered ? 0 : 1]);
+        void 0;
+      });
+    }
+    return {
+      n,
+      miss: miss.map(m => n ? m / n : 0),
+      cand: cand.map(c => n ? c / n : 0),
+      curves: out,
+    };
+  }
+
+  // ---------------------------------------------------------------- drawing
+
+  const f = (v) => Number(v).toFixed(2);
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+  const POLICY_COLOR = ["var(--muted)", "var(--waste)", "var(--served)"];
+
+  function drawRZ(st) {
+    const W = 1040, H = 300, M = { l: 46, r: 16, t: 22, b: 42 };
+    const pw = W - M.l - M.r, ph = H - M.t - M.b;
+    const { L, b } = st;
+    const rLo = R - S.stag - 14, rHi = R + S.stag + 14;
+    const sy = r => M.t + ph - (r - rLo) / (rHi - rLo) * ph;
+    // the layer runs metres in z, so the view follows the crossing. It has to
+    // hold the track's own traverse across the drawn r range as well as the
+    // window, or a shallow track leaves the frame immediately
+    const half = Math.max(VIEW_BINS * b.w, 0.6 * (rHi - rLo) * st.sh,
+                          2.5 * st.slide, 3 * S.hz);
+    const zLo = st.zCross - half, zHi = st.zCross + half;
+    const sx = z => M.l + (z - zLo) / (zHi - zLo) * pw;
+
+    const p = st.policies[2];
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Layer in the r-z plane with the track, the chord through the layer and the bins the window serves">`;
+
+    // served window
+    const wx0 = sx(b.lo + p.lo * b.w), wx1 = sx(b.lo + (p.hi + 1) * b.w);
+    s += `<rect x="${f(wx0)}" y="${M.t}" width="${f(wx1 - wx0)}" height="${ph}" fill="var(--served-fill)"/>`;
+
+    // bin rules, thinned when the view holds more than it can show
+    const iLo = Math.max(0, Math.floor((zLo - b.lo) / b.w));
+    const iHi = Math.min(b.n, Math.ceil((zHi - b.lo) / b.w));
+    const step = Math.max(1, Math.ceil((iHi - iLo) / 70));
+    s += `<g stroke="var(--rule)" stroke-width=".5" fill="none">`;
+    for (let i = iLo; i <= iHi; i += step) {
+      const x = sx(b.lo + i * b.w);
+      s += `<line x1="${f(x)}" y1="${M.t}" x2="${f(x)}" y2="${M.t + ph}"/>`;
+    }
+    s += `</g>`;
+
+    // tolerance band
+    s += `<rect x="${M.l}" y="${f(sy(R + st.tolerance))}" width="${pw}" height="${f(sy(R - st.tolerance) - sy(R + st.tolerance))}" fill="var(--served)" fill-opacity=".07"/>`;
+
+    // modules
+    for (const m of L.mods) {
+      if (m.z1 < zLo || m.z0 > zHi) continue;
+      const x = sx(m.z0), w = sx(m.z1) - sx(m.z0);
+      let fill = "var(--muted)", op = ".55";
+      if (m.hit) { fill = p.reaches(m) ? "var(--served)" : "var(--miss)"; op = "1"; }
+      s += `<rect x="${f(x)}" y="${f(sy(m.r) - 3)}" width="${f(w)}" height="6" rx="1" fill="${fill}" fill-opacity="${op}"/>`;
+    }
+
+    // representative cylinder
+    s += `<line x1="${M.l}" y1="${f(sy(R))}" x2="${M.l + pw}" y2="${f(sy(R))}" stroke="var(--served)" stroke-width="1.4"/>`;
+
+    // track
+    s += `<line x1="${f(sx(rLo * st.sh))}" y1="${f(sy(rLo))}" x2="${f(sx(rHi * st.sh))}" y2="${f(sy(rHi))}" stroke="var(--ink)" stroke-width="1.5"/>`;
+
+    // chord ends on the representative surface
+    const xc = sx(st.zCross);
+    s += `<line x1="${f(sx(st.zCross - st.slide))}" y1="${f(sy(R))}" x2="${f(sx(st.zCross + st.slide))}" y2="${f(sy(R))}" stroke="var(--served)" stroke-width="3.4" stroke-opacity=".55" stroke-linecap="round"/>`;
+    s += `<circle cx="${f(xc)}" cy="${f(sy(R))}" r="4" fill="var(--served)"/>`;
+
+    for (const h of st.hits) {
+      const hx = sx(h.zAt), hy = sy(h.r);
+      s += `<path d="M${f(hx)} ${f(hy - 5)}L${f(hx + 5)} ${f(hy)}L${f(hx)} ${f(hy + 5)}L${f(hx - 5)} ${f(hy)}Z" fill="${p.reaches(h) ? "var(--served)" : "var(--miss)"}"/>`;
+    }
+
+    // labels
+    s += `<g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="var(--muted)">`;
+    s += `<text x="${M.l}" y="${H - 24}">z = ${zLo.toFixed(0)} mm</text>`;
+    s += `<text x="${M.l + pw}" y="${H - 24}" text-anchor="end">${zHi.toFixed(0)} mm</text>`;
+    s += `<text x="8" y="${f(sy(R) + 3)}">r=${R}</text>`;
+    s += `<text x="${M.l + pw}" y="${M.t - 8}" text-anchor="end" fill="var(--served)">window: ${p.d} bin${p.d === 1 ? "" : "s"} each side</text>`;
+    s += `<text x="${f(xc)}" y="${M.t - 8}" text-anchor="middle" fill="var(--served)">crossing</text>`;
+    s += `<text x="${M.l}" y="${H - 8}">slide = tolerance &#215; sinh &#951; = ${f(st.slide)} mm = ${f(st.slide / b.w)} bins</text>`;
+    s += `</g></svg>`;
+    return s;
+  }
+
+  function drawStrip(st, k) {
+    const W = 320, H = 54, M = { l: 4, r: 4, t: 6, b: 18 };
+    const pw = W - M.l - M.r;
+    const { b } = st;
+    const p = st.policies[k];
+    const vLo = Math.max(0, st.bCross - STRIP_BINS);
+    const vHi = Math.min(b.n - 1, st.bCross + STRIP_BINS);
+    const nv = vHi - vLo + 1;
+    const sx = i => M.l + (i - vLo) / nv * pw;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="bins served along z around the crossing">`;
+
+    for (let i = vLo; i <= vHi; i++) {
+      const inServed = p.served.has(i);
+      const inHit = st.hits.some(h => i >= h.b0 && i <= h.b1);
+      let fill = "none", stroke = "var(--rule)";
+      if (inServed && inHit) { fill = "var(--served-fill)"; stroke = "var(--served-line)"; }
+      else if (inServed) { fill = "var(--waste-fill)"; stroke = "var(--waste)"; }
+      else if (inHit) { fill = "var(--miss-fill)"; stroke = "var(--miss)"; }
+      s += `<rect x="${f(sx(i))}" y="${M.t}" width="${f(pw / nv)}" height="${H - M.t - M.b}" fill="${fill}" stroke="${stroke}" stroke-width=".6"/>`;
+    }
+    const cx = sx(st.bCross) + pw / nv / 2;
+    s += `<circle cx="${f(cx)}" cy="${f(H - M.b + 5)}" r="3" fill="var(--served)"/>`;
+    s += `</svg>`;
+    return s;
+  }
+
+  function statsHTML(st, k) {
+    const p = st.policies[k];
+    const n = st.hits.length;
+    return `
+      <dt>bins served</dt><dd>${p.served.size}</dd>
+      <dt>candidates</dt><dd class="${p.cand > 4 ? "warn" : ""}">${p.cand}</dd>
+      <dt>modules crossed</dt><dd>${n}</dd>
+      <dt>of those reachable</dt><dd class="${p.covered ? "ok" : "bad"}">${p.reached} of ${n}</dd>
+      <dt>candidates wasted</dt><dd>${Math.max(0, p.cand - p.reached)}</dd>`;
+  }
+
+  function drawSweep(sw) {
+    const W = 560, H = 250, M = { l: 44, r: 14, t: 16, b: 34 };
+    const pw = W - M.l - M.r, ph = H - M.t - M.b;
+    const sx = e => M.l + e / 3.5 * pw;
+    const maxC = Math.max(4, ...sw.cand) * 1.15;
+    const sy = c => M.t + ph - c / maxC * ph;
+
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="mean candidates per query against pseudorapidity for each policy">`;
+    s += `<g stroke="var(--rule-soft)" stroke-width=".7">`;
+    for (let i = 0; i <= 4; i++) {
+      const y = M.t + ph * i / 4;
+      s += `<line x1="${M.l}" y1="${f(y)}" x2="${M.l + pw}" y2="${f(y)}"/>`;
+    }
+    s += `</g>`;
+
+    // candidate curves, recomputed per eta
+    const N = 90;
+    for (let k = 0; k < 3; k++) {
+      let d = "";
+      for (let i = 0; i < N; i++) {
+        const eta = 3.5 * i / (N - 1);
+        const st = state(eta, S.stag, S.bf, S.hz);
+        if (!st.inRange) continue;
+        const p = st.policies[k];
+        d += `${d ? "L" : "M"}${f(sx(eta))} ${f(sy(p.cand))}`;
+        if (!p.covered && st.hits.length) {
+          s += `<circle cx="${f(sx(eta))}" cy="${f(sy(p.cand))}" r="2.2" fill="var(--miss)"/>`;
+        }
+      }
+      s += `<path d="${d}" fill="none" stroke="${POLICY_COLOR[k]}" stroke-width="${k === 2 ? 2 : 1.4}" stroke-linejoin="round"/>`;
+    }
+
+    s += `<g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="var(--muted)">`;
+    for (let i = 0; i <= 4; i++) {
+      const y = M.t + ph * i / 4;
+      s += `<text x="${M.l - 7}" y="${f(y + 3)}" text-anchor="end">${f(maxC * (1 - i / 4))}</text>`;
+    }
+    for (let e = 0; e <= 3.5; e += 0.5) {
+      s += `<text x="${f(sx(e))}" y="${H - 14}" text-anchor="middle">${e.toFixed(1)}</text>`;
+    }
+    s += `<text x="${M.l}" y="${H - 2}">pseudorapidity &#951;</text>`;
+    s += `<text x="${M.l + pw}" y="${H - 2}" text-anchor="end">mean candidates per query &#183; red dot = miss</text>`;
+    s += `</g></svg>`;
+    return s;
+  }
+
+  // ---------------------------------------------------------------- render
+
+  const $ = id => document.getElementById(id);
+
+  function render() {
+    const st = state(S.eta, S.stag, S.bf, S.hz);
+    $("svg-rz").innerHTML = drawRZ(st);
+    for (let k = 0; k < 3; k++) {
+      $("strip-" + k).innerHTML = drawStrip(st, k);
+      $("stats-" + k).innerHTML = statsHTML(st, k);
+    }
+
+    const sw = sweep(S.stag, S.bf, S.hz);
+    $("svg-sweep").innerHTML = drawSweep(sw);
+    const names = ["crossing bin only", "fixed &plusmn;1", "sized by the slide"];
+    $("sweep-table").innerHTML = names.map((nm, k) => {
+      const pct = 100 * sw.miss[k];
+      const cls = pct > 0.001 ? "bad" : "ok";
+      return `<tr><td style="color:${POLICY_COLOR[k]}">${nm}</td>` +
+             `<td class="${cls}">${pct < 0.001 ? "0%" : pct.toFixed(1) + "%"}</td>` +
+             `<td>${sw.cand[k].toFixed(1)}</td></tr>`;
+    }).join("");
+
+    $("eta-out").textContent = S.eta.toFixed(2);
+    $("stag-out").textContent = S.stag.toFixed(1) + " mm";
+    $("bf-out").textContent = S.bf;
+    $("hz-out").textContent = S.hz + " mm";
+  }
+
+  // Open where the two windows part company. A module is registered over
+  // 2*hz of z and a bin is 1.84*hz/bf wide, so the crossing falls outside the
+  // module's bins once stagger*sinh(eta) passes one bin; two bins is where a
+  // fixed +-1 can no longer reach it.
+  (function pickEta() {
+    const guess = Math.asinh(2 * 1.84 * S.hz / (S.stag * S.bf));
+    const clamp = e => Math.min(3.5, Math.max(0, e));
+    S.eta = Math.round(clamp(guess) * 100) / 100;
+    for (let d = 0; d <= 60; d++) {
+      for (const sign of (d ? [-1, 1] : [0])) {
+        const eta = clamp(guess + sign * d / 100);
+        const st = state(eta, S.stag, S.bf, S.hz);
+        if (st.hits.length && st.inRange &&
+            !st.policies[1].covered && st.policies[2].covered) {
+          S.eta = Math.round(eta * 100) / 100;
+          return;
+        }
+      }
+    }
+  })();
+
+  for (const [id, key, num] of [["eta", "eta", parseFloat], ["stag", "stag", parseFloat],
+                                ["bf", "bf", parseInt], ["hz", "hz", parseInt]]) {
+    const el = $(id);
+    el.value = S[key];
+    el.addEventListener("input", e => { S[key] = num(e.target.value); render(); });
+  }
+
+  render();
+
+  // ---- the two static figures, driven --------------------------------------
+  // both were drawn on the same grid: 50px bins from x=60, crossing in bin 4,
+  // the hit module registered in bins 5 to 7
+  const FIG = { bin: 50, x0: 60, cross: 4, mod: [5, 7] };
+
+  function setWindow(d) {
+    const lo = FIG.cross - d, hi = FIG.cross + d;
+    const x = FIG.x0 + FIG.bin * lo, w = FIG.bin * (2 * d + 1);
+    const reaches = hi >= FIG.mod[0] && lo <= FIG.mod[1];
+    const tone = reaches ? "var(--served)" : "var(--miss)";
+
+    const q = r => document.querySelector(`[data-w="${r}"]`);
+    for (const r of ["gfill", "gline", "rfill"]) {
+      const el = q(r);
+      if (el) { el.setAttribute("x", x); el.setAttribute("width", w); }
+    }
+    for (const r of ["gline", "gfill", "rfill"]) {
+      const el = q(r);
+      if (!el) continue;
+      if (el.getAttribute("stroke")) el.setAttribute("stroke", tone);
+      else el.setAttribute("fill", tone);
+    }
+    for (const r of ["gmod", "rmod", "rband"]) {
+      const el = q(r);
+      if (!el) continue;
+      el.setAttribute(el.getAttribute("stroke") ? "stroke" : "fill", tone);
+    }
+    const gl = q("glabel"); if (gl) gl.textContent = `window: ${d} in z, 0 in phi`;
+    const rl = q("rlabel"); if (rl) rl.textContent = `window: ${d} bin${d === 1 ? "" : "s"} each side`;
+    const rc = q("rcaption");
+    if (rc) rc.textContent = `bins ${lo} to ${hi} are served; the module the track hits is registered in bins 5 to 7`;
+    const gv = q("gverdict");
+    if (gv) gv.textContent = reaches
+      ? "the window in z reaches the module the crossing bin alone would miss"
+      : "nothing served holds the module the track hits";
+
+    const out = document.getElementById("wverdict");
+    out.textContent = reaches ? "hit reachable" : "hit lost";
+    out.className = "verdict-inline " + (reaches ? "ok" : "bad");
+  }
+
+  document.getElementById("wstep").addEventListener("click", e => {
+    const b = e.target.closest("[data-d]");
+    if (!b) return;
+    for (const c of b.parentElement.children) {
+      c.setAttribute("aria-pressed", String(c === b));
+    }
+    setWindow(+b.dataset.d);
+  });
+
+  setWindow(2);
+
+  // ---- the footprint figure: which test decides a bin is registered --------
+  // the drawn bins are the area-overlap answer; the accent centre dots mark
+  // the bins a centre test would have kept
+  (function footprint() {
+    const bins = document.querySelector('[data-w="fbins"]');
+    const centres = document.querySelector('[data-w="fcentres"]');
+    if (!bins || !centres) return;
+
+    const inside = [...centres.querySelectorAll("circle")]
+      .filter(c => c.getAttribute("r") === "1.8")
+      .map(c => [+c.getAttribute("cx"), +c.getAttribute("cy")]);
+
+    const rects = [...bins.querySelectorAll("rect")].map(r => {
+      const cx = +r.getAttribute("x") + +r.getAttribute("width") / 2;
+      const cy = +r.getAttribute("y") + +r.getAttribute("height") / 2;
+      return {
+        el: r,
+        byCentre: inside.some(([X, Y]) => Math.abs(X - cx) < 1.5 && Math.abs(Y - cy) < 1.5),
+      };
+    });
+
+    const out = document.getElementById("fverdict");
+
+    function setMode(mode) {
+      let kept = 0;
+      for (const r of rects) {
+        const keep = mode === "area" || r.byCentre;
+        if (keep) kept++;
+        r.el.setAttribute("fill", keep ? "var(--served)" : "var(--miss)");
+        r.el.setAttribute("stroke", keep ? "var(--served)" : "var(--miss)");
+        r.el.setAttribute("fill-opacity", keep ? ".17" : ".13");
+        r.el.setAttribute("stroke-opacity", keep ? ".45" : ".8");
+        r.el.setAttribute("stroke-dasharray", keep ? "none" : "2 2");
+      }
+      const lost = rects.length - kept;
+      out.textContent = mode === "area"
+        ? `${kept} bins registered`
+        : `${kept} of ${rects.length} bins, ${lost} lost`;
+      out.className = "verdict-inline " + (lost ? "bad" : "ok");
+    }
+
+    document.getElementById("fstep").addEventListener("click", e => {
+      const b = e.target.closest("[data-m]");
+      if (!b) return;
+      for (const c of b.parentElement.children) {
+        c.setAttribute("aria-pressed", String(c === b));
+      }
+      setMode(b.dataset.m);
+    });
+
+    setMode("area");
+  })();
+})();
+</script>
+
+</body>
+</html>
