@@ -56,7 +56,6 @@ The following cmake options are available and can also be specified explicitly f
 | DETRAY_SET_LOGGING  | Set log level (NONE, WARN, INFO, VERBOSE, DEBUG) | INFO |
 | DETRAY_BUILD_CUDA  | Build the CUDA sources included in detray | ON (if available) |
 | DETRAY_BUILD_SYCL  | Build the SYCL sources included in detray | OFF |
-| DETRAY_BUILD_TEST_UTILS  | Build the detray test utilities library (contains e.g. test detectors) | OFF |
 | DETRAY_BUILD_UNITTESTS  | Build the detray unit tests | OFF |
 | DETRAY_BUILD_INTEGRATIONTESTS  | Build the detray integration tests | OFF |
 | DETRAY_BUILD_ALL_TESTS  | Build the detray unit and integration tests | OFF |
@@ -72,6 +71,8 @@ The following cmake options are available and can also be specified explicitly f
 | DETRAY_SMATRIX_PLUGIN | Build ROOT/SMatrix math plugin | OFF |
 | DETRAY_VC_AOS_PLUGIN | Build Vc based AoS math plugin | OFF |
 | DETRAY_VC_SOA_PLUGIN | Build Vc based SoA math plugin (currently only supports the ray-surface intersectors) | OFF |
+| DETRAY_BUILD_TEST_UTILS  | Build the detray test utilities library (contains e.g. test detectors) | OFF |
+| DETRAY_BUILD_VALIDATION_TOOLS | Build detray validation suite | OFF |
 | DETRAY_SVG_DISPLAY | Build ActSVG display module | OFF |
 
 ## Tutorials
@@ -94,11 +95,11 @@ Given a detray detector (and optionally also a grid and a material) json file, a
 ```shell
 detray-build/bin/detray_generate_toy_detector --write_material --write_grids
 ```
-All of the validation tools presented in the following can also be run as part of a corresponding [python script](https://github.com/acts-project/acts/tree/main/Detray/tests/tools/python) which takes the same arguments and will automatically create plots from the collected data. However, this requires Python 3, pandas, SciPy and NumPy, as well as Matplotlib to be available.
+All of the validation tools presented in the following can also be run as part of a corresponding [python script](https://github.com/acts-project/acts/tree/main/Detray/tests/tools/python) which takes the same arguments and will automatically create plots from the collected data. However, creating the plots requires Python 3, pandas, SciPy and NumPy, as well as Matplotlib to be available.
 
-The detector geometry can be visualized in SVG format with the following command:
+The detector geometry can be visualized in SVG format with the following command, which requires the python bindings (`-DDETRAY_BUILD_PYTHON_BINDINGS=ON -DDETRAY_BUILD_UNITTESTS=ON`) to be built and set up via `detray-build/python/setup.sh`:
 ```shell
-detray-build/bin/detray_detector_display \
+python3 detray/tests/tools/python/detector_display.py \
    --geometry_file  ./toy_detector/toy_detector_geometry.json
 ```
 The tool can also display single volumes or surfaces, as well as the navigation grids and material maps (the corresponding json files need to loaded in this case). For an overview of all available options for the command-line tools add `--help`.

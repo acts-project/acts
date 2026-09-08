@@ -11,6 +11,7 @@ set(py_files
     odd.py
     dataset.py
     uproot.py
+    visualization.py
     scipy.py
 )
 

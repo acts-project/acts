@@ -865,6 +865,16 @@ DetrayPayloadConverter::convertTrackingGeometry(
       std::optional<DetraySurfaceGrid> detrayGrid = std::nullopt;
 
       navPolicy->visit([&](const INavigationPolicy& policy) {
+        auto grid = m_cfg.convertNavigationPolicy(policy, gctx, surfaceLookupFn,
+                                                  logger());
+        if (!grid.has_value()) {
+          // Policies without an explicit detray conversion (see
+          // NOOP_CONVERTER_IMPL) are not a conflict: a volume may legitimately
+          // combine e.g. a SurfaceArrayNavigationPolicy with a
+          // TryAllNavigationPolicy for passives and portals.
+          return;
+        }
+
         if (detrayGrid.has_value()) {
           ACTS_ERROR("Volume "
                      << volume.volumeName()
@@ -874,8 +884,7 @@ DetrayPayloadConverter::convertTrackingGeometry(
               "Multiple detray-compatible navigation policies"};
         }
 
-        detrayGrid = m_cfg.convertNavigationPolicy(policy, gctx,
-                                                   surfaceLookupFn, logger());
+        detrayGrid = std::move(grid);
       });
 
       if (detrayGrid.has_value()) {

@@ -7,6 +7,9 @@
 
 #pragma once
 
+// Project include(s).
+#include "traccc/utils/detector_buffer_bfield_visitor.hpp"
+
 // System include(s).
 #include <cassert>
 

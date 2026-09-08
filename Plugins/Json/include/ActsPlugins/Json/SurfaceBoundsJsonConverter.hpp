@@ -15,6 +15,7 @@
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -49,8 +50,15 @@ nlohmann::json toJson(const SurfaceBounds& bounds);
 template <typename bounds_t>
 std::shared_ptr<const bounds_t> fromJson(const nlohmann::json& j) {
   const std::size_t kValues = bounds_t::BoundValues::eSize;
-  std::array<double, kValues> bValues{};
   std::vector<double> bVector = j["values"];
+  // Guard the copy_n below: a shorter payload would read past the vector. This
+  // is reachable for bounds that gained values after the format was in use.
+  if (bVector.size() != kValues) {
+    throw std::invalid_argument(
+        "Invalid number of values for surface bounds: expected " +
+        std::to_string(kValues) + ", got " + std::to_string(bVector.size()));
+  }
+  std::array<double, kValues> bValues{};
   std::copy_n(bVector.begin(), kValues, bValues.begin());
   return std::make_shared<const bounds_t>(bValues);
 }

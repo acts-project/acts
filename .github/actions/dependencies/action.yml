@@ -30,10 +30,11 @@ inputs:
     description: 'C++ standard for lockfile selection (e.g. 20, 23). Defaults to 20.'
     required: false
     default: '20'
-  # The flavors are published at cxx23 only, so setting this with cxx_std 20
-  # yields a C++23-built stack. Accepted for now; the selection logs it.
+  # The flavors are published at cxx20 only, so pairing this with cxx_std 23
+  # falls back to the C++20 stack. No job does that today; the selection logs
+  # it if one starts to.
   flavor:
-    description: 'Accelerator flavor for lockfile selection (e.g. cuda13, rocm-gfx90a). Defaults to the plain CPU stack.'
+    description: 'Accelerator flavor for lockfile selection (e.g. cuda13, rocm7). Defaults to the plain CPU stack.'
     required: false
     default: ''
   env_file:
@@ -111,9 +112,13 @@ runs:
       if: steps.cache-restore.outputs.cache-hit != 'true'
       shell: bash
       env:
+        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
         SPACK_VERSION: ${{ inputs.spack_version }}
         SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
       run: |
+        # This step clones spack and the builtin package repo itself, i.e.
+        # before setup.sh gets a chance to authenticate github.com fetches.
+        CI/dependencies/github_auth.sh
         CI/dependencies/setup_spack.sh ${PWD}/spack
         # Pin the builtin package repo *before* anything clones it. Spack clones
         # it shallow (depth 2) the first time only, and clones the pinned commit

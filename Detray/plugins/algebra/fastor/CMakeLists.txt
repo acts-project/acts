@@ -39,6 +39,10 @@ target_compile_options(
         "$<$<CONFIG:Debug>:-fexpensive-optimizations>"
 )
 
-detray_test_public_headers( detray_algebra_fastor
-   "algebra/fastor.hpp"
+# Compile all headers one-by-one.
+detray_compile_headers(
+    algebra_fastor
+    detray::algebra_fastor
+    "include/algebra/*.hpp"
+    "include/algebra/**/*.hpp"
 )

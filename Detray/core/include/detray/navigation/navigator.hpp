@@ -22,6 +22,9 @@
 #include "detray/tracks/ray.hpp"
 #include "detray/utils/logging.hpp"
 
+// System include(s)
+#include <limits>
+
 namespace detray {
 
 /// @brief The geometry navigation class.

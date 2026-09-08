@@ -38,9 +38,11 @@ void sympy::boundToBoundTransportJacobian(
   // pathCorrectionFactor(gloB))*jac(locA->gloB)
 
   boundToBoundTransportJacobianImpl(
-      freeToBoundJacobian.data(), boundToFreeJacobian.data(),
-      freeToPathDerivatives.data(), freeToPath.data(),
-      fullTransportJacobian.data());
+      std::span<const double, 48>(freeToBoundJacobian.data(), 48),
+      std::span<const double, 48>(boundToFreeJacobian.data(), 48),
+      std::span<const double, 8>(freeToPathDerivatives.data(), 8),
+      std::span<const double, 8>(freeToPath.data(), 8),
+      std::span<double, 36>(fullTransportJacobian.data(), 36));
 }
 
 void sympy::boundToCurvilinearTransportJacobian(
@@ -57,9 +59,11 @@ void sympy::boundToCurvilinearTransportJacobian(
   // pathCorrectionFactor(gloB))*jac(locA->gloB)
 
   boundToCurvilinearTransportJacobianImpl(
-      freeToBoundJacobian.data(), boundToFreeJacobian.data(),
-      freeToPathDerivatives.data(), direction.data(),
-      fullTransportJacobian.data());
+      std::span<const double, 48>(freeToBoundJacobian.data(), 48),
+      std::span<const double, 48>(boundToFreeJacobian.data(), 48),
+      std::span<const double, 8>(freeToPathDerivatives.data(), 8),
+      std::span<const double, 3>(direction.data(), 3),
+      std::span<double, 36>(fullTransportJacobian.data(), 36));
 }
 
 }  // namespace Acts::detail

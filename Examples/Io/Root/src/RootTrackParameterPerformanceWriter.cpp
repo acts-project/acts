@@ -38,6 +38,7 @@ TrackParameterPerformanceCollector::Config collectorConfig(
   collectorCfg.effPlotToolConfig = cfg.effPlotToolConfig;
   collectorCfg.trackSummaryPlotToolConfig = cfg.trackSummaryPlotToolConfig;
   collectorCfg.parameterSource = cfg.parameterSource;
+  collectorCfg.reference = cfg.reference;
   collectorCfg.parameterType = cfg.parameterType;
   collectorCfg.geometrySelection = cfg.geometrySelection;
   collectorCfg.fitFunction = ActsPlugins::RootHistogramFit();
@@ -58,29 +59,34 @@ RootTrackParameterPerformanceWriter::RootTrackParameterPerformanceWriter(
       m_cfg(std::move(config)),
       m_collector(collectorConfig(m_cfg), logger().clone()) {
   // trajectories collection name is already checked by base ctor
-  if (m_cfg.inputParticles.empty()) {
-    throw std::invalid_argument("Missing particles input collection");
-  }
-  if (m_cfg.inputTrackParticleMatching.empty()) {
-    throw std::invalid_argument("Missing input track particles matching");
-  }
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
 
-  m_inputParticles.initialize(m_cfg.inputParticles);
-  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
-
-  if (m_cfg.parameterSource == TrackParameterSource::TrackState) {
-    if (m_cfg.inputSimHits.empty()) {
-      throw std::invalid_argument("Missing simulated hits input collection");
+  // the measurement reference needs no truth input
+  if (m_cfg.reference == TrackParameterReference::Truth) {
+    if (m_cfg.inputParticles.empty()) {
+      throw std::invalid_argument("Missing particles input collection");
     }
-    if (m_cfg.inputMeasurementSimHitsMap.empty()) {
-      throw std::invalid_argument("Missing measurement to simulated hits map");
+    if (m_cfg.inputTrackParticleMatching.empty()) {
+      throw std::invalid_argument("Missing input track particles matching");
     }
 
-    m_inputSimHits.initialize(m_cfg.inputSimHits);
-    m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
+    m_inputParticles.initialize(m_cfg.inputParticles);
+    m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
+
+    if (m_cfg.parameterSource == TrackParameterSource::TrackState) {
+      if (m_cfg.inputSimHits.empty()) {
+        throw std::invalid_argument("Missing simulated hits input collection");
+      }
+      if (m_cfg.inputMeasurementSimHitsMap.empty()) {
+        throw std::invalid_argument(
+            "Missing measurement to simulated hits map");
+      }
+
+      m_inputSimHits.initialize(m_cfg.inputSimHits);
+      m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
+    }
   }
 
   // the output file can not be given externally since TFile accesses to the
@@ -183,6 +189,15 @@ ProcessCode RootTrackParameterPerformanceWriter::finalize() {
 
 ProcessCode RootTrackParameterPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
+  if (m_cfg.reference == TrackParameterReference::Measurement) {
+    // Exclusive access to the histograms while filling
+    std::lock_guard<std::mutex> lock(m_writeMutex);
+
+    m_collector.fill(tracks);
+
+    return ProcessCode::SUCCESS;
+  }
+
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
