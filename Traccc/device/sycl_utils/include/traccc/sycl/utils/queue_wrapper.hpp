@@ -1,11 +1,13 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022 CERN for the benefit of the ACTS project
+ * (c) 2022-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
 
 #pragma once
+
+#include <functional>
 
 namespace traccc::sycl {
 
@@ -36,6 +38,8 @@ class queue_wrapper {
   void* queue();
   /// Access a typeless pointer to the managed @c sycl::queue object
   const void* queue() const;
+
+  void enqueue_callback(std::function<void()> func) const;
 
  private:
   /// Bare pointer to the wrapped @c sycl::queue object

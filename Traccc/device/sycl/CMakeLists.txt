@@ -41,6 +41,8 @@ traccc_add_library( traccc_sycl sycl TYPE SHARED
   # Utilities.
   "include/traccc/sycl/utils/algorithm_base.hpp"
   "src/utils/algorithm_base.sycl"
+  "include/traccc/sycl/utils/await.hpp"
+  "src/utils/await.cpp"
   "src/utils/magnetic_field_types.hpp"
   "src/utils/barrier.hpp"
   "src/utils/calculate1DimNdRange.hpp"

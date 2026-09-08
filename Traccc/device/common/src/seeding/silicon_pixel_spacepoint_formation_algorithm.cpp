@@ -30,9 +30,9 @@ auto silicon_pixel_spacepoint_formation_algorithm::operator()(
   edm::measurement_collection::const_view::size_type n_measurements = 0u;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(measurements, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_measurements = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_measurements = size.unsafe_get();
   } else {
     n_measurements = copy().get_size(measurements);
   }
@@ -59,11 +59,14 @@ auto silicon_pixel_spacepoint_formation_algorithm::operator()(
   // wait for the scan here.
   assert(mr().host != nullptr);
   vecmem::vector<unsigned int> n_spacepoints_host(mr().host);
-  // TODO: Yield during this asynchronous copy.
-  copy()(vecmem::data::vector_view<const unsigned int>(
-             1u, spacepoint_flags_view.ptr() + n_measurements - 1u),
-         n_spacepoints_host)
-      ->wait();
+  {
+    auto copy_event =
+        copy()(vecmem::data::vector_view<const unsigned int>(
+                   1u, spacepoint_flags_view.ptr() + n_measurements - 1u),
+               n_spacepoints_host);
+    // Block or suspend execution until the copy is completed.
+    await(*copy_event);
+  }
   const unsigned int n_spacepoints = n_spacepoints_host.at(0);
 
   // If no measurement produces a spacepoint, return right away.

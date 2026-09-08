@@ -9,6 +9,7 @@
 
 // Local include(s).
 #include "traccc/alpaka/utils/algorithm_base.hpp"
+#include "traccc/alpaka/utils/await.hpp"
 
 // Project include(s).
 #include "traccc/seeding/device/silicon_pixel_spacepoint_formation_algorithm.hpp"
@@ -31,11 +32,13 @@ class silicon_pixel_spacepoint_formation_algorithm
   ///             and host memory blocks
   /// @param q The Alpaka queue to use
   /// @param logger The logger instance to use
+  /// @param await_func The function used to synchronize events
   ///
   silicon_pixel_spacepoint_formation_algorithm(
       const traccc::memory_resource& mr, const vecmem::copy& copy,
       alpaka::queue& q,
-      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
+      await_function_type await_func = await_sync_event);
 
  private:
   /// @name Function(s) inherited from
