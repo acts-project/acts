@@ -189,7 +189,11 @@ class NavigationTarget {
   constexpr const BoundaryTolerance& boundaryTolerance() const noexcept {
     return m_boundaryTolerance;
   }
-
+  /// Returns whether the target has been reached by the propagator.
+  /// @return the target passed flag
+  constexpr bool isReached() const noexcept { return m_reached; }
+  /// Marks the target as reached
+  constexpr void targetReached() noexcept { m_reached = true; }
   /// Returns whether the intersection was successful or not
   /// @return true if the intersection is valid
   constexpr bool isValid() const noexcept { return m_intersection.isValid(); }
@@ -279,11 +283,13 @@ class NavigationTarget {
   const Surface* m_surfaceRepresentation = nullptr;
   /// The boundary tolerance used for this intersection
   BoundaryTolerance m_boundaryTolerance = BoundaryTolerance::None();
+  /// State toggling whether the target has been reached by the propgator
+  bool m_reached{false};
 
   /// Default constructor creating a none target
   constexpr NavigationTarget() = default;
 
-  /// @brief print method
+  /// Print method
   /// @param ostr: Stream to which the object is printed
   void print(std::ostream& ostr) const;
 };
