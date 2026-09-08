@@ -609,15 +609,10 @@ Result<void> AdaptiveMultiVertexFinder::deleteLastVertex(
     return removeResult.error();
   }
 
-  for (auto it = fitProblem.tracksAtVertices.begin();
-       it != fitProblem.tracksAtVertices.end();) {
-    // Delete all track state for current (bad) vertex
-    if (it->first.second == vtxPtr) {
-      it = fitProblem.tracksAtVertices.erase(it);
-    } else {
-      ++it;
-    }
-  }
+  // Delete all track state for the rejected vertex.
+  std::erase_if(fitProblem.tracksAtVertices, [vtxPtr](const auto& entry) {
+    return entry.first.second == vtxPtr;
+  });
   fitProblem.candidates.erase(vtxPtr);
   // Drop the fitter scratch data as well. The vertex object is about to be
   // destroyed and a later allocation may reuse its address, which would
