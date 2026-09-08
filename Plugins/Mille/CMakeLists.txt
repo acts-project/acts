@@ -15,6 +15,9 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(ActsPluginMille PUBLIC ActsAlignment Mille2 Boost::boost)
+target_link_libraries(
+    ActsPluginMille
+    PUBLIC ActsAlignment Mille2 Boost::boost Boost::process
+)
 
 acts_compile_headers(PluginMille GLOB include/**/*.hpp)

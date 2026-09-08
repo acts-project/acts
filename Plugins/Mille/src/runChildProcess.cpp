@@ -8,145 +8,165 @@
 
 #include "ActsPlugins/Mille/detail/runChildProcess.hpp"
 
-#include <array>
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
 
+#include <boost/version.hpp>
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
+#if BOOST_VERSION >= 108800
+
+#include <boost/process/environment.hpp>
+#include <boost/process/process.hpp>
+#include <boost/process/start_dir.hpp>
+#include <boost/process/stdio.hpp>
+
+#else
+#include <boost/process.hpp>
+#endif
+
 using namespace ActsPlugins::ActsToMille;
 
-childProcessStatus ActsPlugins::ActsToMille::runChildProcess(
+namespace {
+
+/// @brief helper to wrap a file handle
+class wrappedFileHandle {
+ public:
+  explicit wrappedFileHandle(const std::filesystem::path& outf = "") {
+    if (!outf.empty()) {
+      m_handle = open(outf.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    }
+  }
+  ~wrappedFileHandle() {
+    if (m_handle >= 0) {
+      close(m_handle);
+    }
+  }
+  wrappedFileHandle(const wrappedFileHandle&) = delete;
+  wrappedFileHandle& operator=(const wrappedFileHandle&) = delete;
+
+  wrappedFileHandle(wrappedFileHandle&& other) noexcept
+      : m_handle(std::exchange(other.m_handle, -1)) {}
+
+  wrappedFileHandle& operator=(wrappedFileHandle&& other) noexcept {
+    if (this != &other) {
+      if (m_handle >= 0) {
+        ::close(m_handle);
+      }
+      m_handle = std::exchange(other.m_handle, -1);
+    }
+
+    return *this;
+  }
+  int operator()() const { return m_handle; }
+  bool isRedirected() const { return m_handle != -1; }
+
+ private:
+  int m_handle = -1;
+};
+
+#if BOOST_VERSION >= 108800
+// With boost v1.88+, the v2 process API is default
+ActsPlugins::ActsToMille::childProcessStatus runChildProcessBoost(
+    const std::string& program, const std::vector<std::string>& args,
+    const std::filesystem::path& runDir,
+    const wrappedFileHandle& outputHandle) {
+  using namespace boost::process;
+
+  // find the pede installation
+  auto thePede = environment::find_executable(program);
+  if (thePede.empty()) {
+    return ActsPlugins::ActsToMille::childProcessStatus::progNotFound;
+  }
+
+  boost::asio::io_context io;
+
+  process_stdio stdio{};
+  if (outputHandle.isRedirected()) {
+    stdio = process_stdio{{}, outputHandle(), outputHandle()};
+  }
+  // now run the fit
+  process theProcess(io, thePede, args, process_start_dir(runDir.string()),
+                     stdio);
+  theProcess.wait();
+  if (theProcess.exit_code() != 0) {
+    std::cout << theProcess.exit_code() << std::endl;
+    return childProcessStatus::failedRun;
+  }
+  return childProcessStatus::ok;
+}
+
+// earlier boost versions use the v1 API.
+#else
+
+#include <boost/process.hpp>
+
+ActsPlugins::ActsToMille::childProcessStatus runChildProcessBoost(
+    const std::string& program, const std::vector<std::string>& args,
+    const std::filesystem::path& runDir,
+    const wrappedFileHandle& outputHandle) {
+  using namespace boost::process;
+
+  // find the pede installation
+  auto thePede = search_path(program);
+  if (thePede.empty()) {
+    return ActsPlugins::ActsToMille::childProcessStatus::progNotFound;
+  }
+
+  std::unique_ptr<bp::child> theProcess = nullptr;
+  if (outputHandle.isRedirected) {
+    theProcess = std::make_unique<bp::child>(
+        thePede, args, bp::start_dir = workDir.string(),
+        bp::std_out > outputHandle(), bp::std_err > outputHandle());
+  } else {
+      theProcess = std::make_unique<bp::child>( thePede,
+        args,
+        bp::start_dir = workDir.string()
+  };
+
+  theProcess->wait();
+  if (theProcess->exit_code() != 0) {
+    return childProcessStatus::failedRun;
+  }
+  return childProcessStatus::ok;
+}
+
+#endif
+
+}  // namespace
+
+ActsPlugins::ActsToMille::childProcessStatus
+ActsPlugins::ActsToMille::runChildProcess(
     const std::string& program, const std::vector<std::string>& args,
     const std::filesystem::path& runDir,
     const std::filesystem::path& output_dest) {
-  // support for redirecting pede stdout
-  int stdout_fd = -1;
+  // determine where the user wishes to run
+  std::filesystem::path workDir = std::filesystem::current_path();
+
+  if (!runDir.empty()) {
+    workDir = runDir;
+  }
+  if (!std::filesystem::exists(workDir)) {
+    std::error_code e;
+    std::filesystem::create_directories(workDir, e);
+    if (e) {
+      return ActsPlugins::ActsToMille::childProcessStatus::failedWorkDir;
+    }
+  };
+
+  wrappedFileHandle outputHandle;  // defaults to "do not redirect"
+
   if (!output_dest.empty()) {
-    stdout_fd = ::open(output_dest.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
-    if (stdout_fd == -1) {
-      std::cerr << " Failed to redirect output to `" << output_dest << "`"
-                << std::endl;
-      return childProcessStatus::failedRedirectStdout;
+    outputHandle = wrappedFileHandle(output_dest);
+    if (outputHandle() < 0) {
+      return ActsPlugins::ActsToMille::childProcessStatus::failedRedirectStdout;
     }
   }
 
-  /// setup a pipe to pass error information
-  /// from the child to the parent
-  std::array<int, 2> errCodePipe{0, 0};
-
-  if (::pipe(errCodePipe.data()) == -1) {
-    std::cerr << " Failed to open pipe for error codes" << std::endl;
-    return childProcessStatus::failedFork;
-  }
-  // Make the write end close automatically if the call in our child succeeds
-  if (::fcntl(errCodePipe[1], F_SETFD, FD_CLOEXEC) == -1) {
-    ::close(errCodePipe[0]);
-    ::close(errCodePipe[1]);
-    std::cerr << " Failed to open pipe for error codes" << std::endl;
-    return childProcessStatus::failedFork;
-  }
-  // fork child process for pede
-  const pid_t pid = ::fork();
-
-  // fork failed
-  if (pid == -1) {
-    if (stdout_fd != -1) {
-      ::close(stdout_fd);
-    }
-    ::close(errCodePipe[0]);
-    ::close(errCodePipe[1]);
-    std::cerr << " Failed to fork child process with error " << errno
-              << std::endl;
-    return childProcessStatus::failedFork;
-  }
-
-  /// the pede child process
-  if (pid == 0) {
-    ::close(errCodePipe[0]);
-    // redirect I/O if configured by the user
-    if (stdout_fd != -1) {
-      if (::dup2(stdout_fd, STDOUT_FILENO) == -1 ||
-          ::dup2(stdout_fd, STDERR_FILENO) == -1) {
-        std::cerr << " Failed to redirect I/O " << std::endl;
-      }
-      ::close(stdout_fd);
-      stdout_fd = -1;
-      // intentionally continue, with output to standard streams
-    }
-
-    // change run directory
-    if (!runDir.empty()) {
-      std::cout << " try to CD into " << runDir << std::endl;
-      if (::chdir(runDir.c_str()) == -1) {
-        childProcessStatus fail = childProcessStatus::failedWorkDir;
-        (void)::write(errCodePipe[1], &fail, sizeof(fail));
-        ::_exit(999);
-      }
-    }
-
-    // build CLI arg list
-    std::vector<char*> argv;
-    argv.reserve(args.size() + 2);
-
-    argv.push_back(const_cast<char*>(program.data()));
-
-    for (const auto& arg : args) {
-      argv.push_back(const_cast<char*>(arg.c_str()));
-    }
-
-    argv.push_back(nullptr);
-
-    if (::execvp(argv[0], argv.data()) == -1) {
-      if (errno == ENOENT || errno == ENOEXEC) {
-        childProcessStatus fail = childProcessStatus::progNotFound;
-        (void)::write(errCodePipe[1], &fail, sizeof(fail));
-      } else {
-        childProcessStatus fail = childProcessStatus::failedRun;
-        (void)::write(errCodePipe[1], &fail, sizeof(fail));
-      }
-      ::_exit(999);
-    }
-  }
-
-  // Parent
-
-  ::close(errCodePipe[1]);
-  childProcessStatus childStat = childProcessStatus::ok;
-  const ssize_t nRead = ::read(errCodePipe[0], &childStat, sizeof(childStat));
-  ::close(errCodePipe[0]);
-
-  // wait for pede to finish
-  int status = 0;
-
-  if (::waitpid(pid, &status, 0) == -1) {
-    std::cerr << " Failed to run child " << std::endl;
-    return childProcessStatus::failedRun;
-  }
-  // close the targetr file for redirected output, if it exists
-  if (stdout_fd != -1) {
-    ::close(stdout_fd);
-  }
-  if (nRead == sizeof(childStat)) {
-    return childStat;
-  }
-
-  if (WIFEXITED(status)) {
-    return childProcessStatus::ok;
-  }
-
-  if (WIFSIGNALED(status)) {
-    std::cerr << "process terminated by signal " +
-                     std::to_string(WTERMSIG(status))
-              << std::endl;
-    return childProcessStatus::caughtSignal;
-  }
-
-  std::cerr << "Failed to run child" << std::endl;
-  return childProcessStatus::unknownError;
+  return runChildProcessBoost(program, args, workDir, outputHandle);
 }

@@ -23,10 +23,8 @@ enum class childProcessStatus {
   progNotFound = 1,
   failedRedirectStdout = 2,
   failedWorkDir = 3,
-  failedFork = 4,
-  failedRun = 5,
-  caughtSignal = 6,
-  unknownError = 7
+  failedRun = 4,
+  unknownError = 5
 };
 
 /// @brief attempt to run a program as a child process.

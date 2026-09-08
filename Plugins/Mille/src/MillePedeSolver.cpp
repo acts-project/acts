@@ -34,9 +34,6 @@ Acts::Result<MillePedeSolver::mpResult> MillePedeSolver::solve(
   if (!cfg.workDir.empty()) {
     workDir = cfg.workDir;
   }
-  if (!std::filesystem::exists(cfg.workDir)) {
-    std::filesystem::create_directories(cfg.workDir);
-  };
 
   ACTS_DEBUG("Will run the alignment fit in folder '"
              << std::filesystem::absolute(workDir) << "'");
