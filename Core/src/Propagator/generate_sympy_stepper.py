@@ -782,37 +782,55 @@ INPUT_ASSERTS = """\
 """
 
 
-def print_rk4_vacuum_b2f(name_exprs: list[NamedExpr], run_cse: bool = False) -> str:
+def print_rk4_vacuum_b2f(
+    name_exprs: list[NamedExpr], run_cse: bool = False, mode: str = "combined"
+) -> str:
+    """Print the vacuum kernel in one of three shapes.
+
+    - `jac`/`nojac`: specialised on covariance transport, for
+      `SympyStepper::step`.
+    - `combined`: transports the jacobian only for a non-empty `M`, for the
+      dense step's cold vacuum branch.
+
+    Do not give `nojac` its own CSE pass: sympy picks worse subexpressions when
+    it sees fewer uses of them.
+    """
     printer = cxx_printer
-    outputs = [
-        find_by_name(name_exprs, name)[0]
-        for name in [
-            "pos2",
-            "pos3",
-            "err",
-            "new_B",
-            "new_pos",
-            "new_time",
-            "new_dir",
-            "path_derivatives",
-            *[name for name, _ in _B2F_LIVE_COLUMNS],
-        ]
-    ]
+
+    jac = mode != "nojac"
+    output_names = ["pos2", "pos3", "err", "new_B", "new_pos", "new_time", "new_dir"]
+    if jac:
+        output_names += ["path_derivatives"]
+        output_names += [name for name, _ in _B2F_LIVE_COLUMNS]
+    outputs = [find_by_name(name_exprs, name)[0] for name in output_names]
 
     lines = []
 
+    # not `name`: the expression hooks below bind that in their own loops
+    fn_name = {
+        "combined": "rk4_vacuum",
+        "jac": "rk4_vacuum_jac",
+        "nojac": "rk4_vacuum_nojac",
+    }[mode]
+    jac_params = ", std::span<T, 8> path_derivatives, std::span<T> M" if jac else ""
+    # Clang stops inlining the kernel once it is reached through a template
+    # instantiation, which costs more than the specialisation saves. Not for
+    # `combined`, whose caller is the dense step's cold vacuum branch.
+    inline = "" if mode == "combined" else "inline __attribute__((always_inline)) "
     lines.append(
         "template <typename T, typename GetB>\n"
-        f"{STATUS_TYPE} rk4_vacuum(std::span<const T, 3> pos,"
+        f"{inline}{STATUS_TYPE} {fn_name}(std::span<const T, 3> pos,"
         " std::span<const T, 3> dir, const T time, const T h, const T qop, const T mass,"
         " const T p_abs, std::span<const T, 3> B1, GetB getB, T& err,"
         " const T errTol, std::error_code& fieldErr,"
         " std::span<T, 3> new_pos, T& new_time,"
-        " std::span<T, 3> new_dir, std::span<T, 3> new_B,"
-        " std::span<T, 8> path_derivatives, std::span<T> M) {"
+        " std::span<T, 3> new_dir, std::span<T, 3> new_B"
+        f"{jac_params}) {{"
     )
     lines.append(INPUT_ASSERTS)
-    lines.append(f"  assert(M.empty() || M.size() == {_B2F.size});")
+    if jac:
+        empty_ok = "M.empty() || " if mode == "combined" else ""
+        lines.append(f"  assert({empty_ok}M.size() == {_B2F.size});")
 
     def pre_expr_hook(var):
         if str(var) == "pos2":
@@ -831,7 +849,7 @@ def print_rk4_vacuum_b2f(name_exprs: list[NamedExpr], run_cse: bool = False) -> 
             return _sample_field(3)
         if str(var) == "err":
             return f"if (err > errTol) {{\n  return {STATUS_TYPE}::Rejected;\n}}"
-        if str(var) == "new_dir":
+        if str(var) == "new_dir" and mode == "combined":
             return f"if (M.empty()) {{\n  return {STATUS_TYPE}::Accepted;\n}}"
         for name, group in _B2F_LIVE_COLUMNS:
             if str(var) == name:
@@ -1301,8 +1319,10 @@ def main(argv: list[str]) -> None:
         out.write("\n")
         # taylor_norm and run_cse are off for the vacuum kernel: neither is
         # faster, and both obscure the correspondence to the ATLAS code.
-        out.write(print_rk4_vacuum_b2f(rk4_vacuum_b2f_atlasexpr(taylor_norm=False)))
-        out.write("\n\n")
+        vacuum_exprs = rk4_vacuum_b2f_atlasexpr(taylor_norm=False)
+        for vacuum_mode in ("combined", "jac", "nojac"):
+            out.write(print_rk4_vacuum_b2f(vacuum_exprs, mode=vacuum_mode))
+            out.write("\n\n")
         out.write(print_rk4_dense(rk4_dense_tangentexpr(), run_cse=True))
         out.write("\n")
 
