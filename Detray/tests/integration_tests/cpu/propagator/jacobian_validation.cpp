@@ -463,12 +463,12 @@ bound_getter<test_algebra>::state evaluate_bound_param(
   cfg.stepping.do_covariance_transport = do_covariance_transport;
   propagator_t p(cfg);
 
-  // Actor states. The full Jacobian is accumulated by the updater through the
-  // same pointer mechanism that downstream clients use.
+  // Actor states. The full Jacobian is accumulated by the updater in the same
+  // way as for downstream clients, and copied out after the propagation.
   actor::parameter_updater_mbf_state<test_algebra> updater_state{cfg,
                                                                  initial_param};
   if (full_jacobian != nullptr) {
-    updater_state.set_full_jacobian(full_jacobian);
+    updater_state.reset_full_jacobian();
   }
   bound_getter<test_algebra>::state bound_getter_state{};
   bound_getter_state.track_ID = trk_count;
@@ -489,6 +489,10 @@ bound_getter<test_algebra>::state evaluate_bound_param(
   state.navigation().set_direction(dir);
 
   p.propagate(state, actor_states);
+
+  if (full_jacobian != nullptr) {
+    *full_jacobian = updater_state.full_jacobian();
+  }
 
   return bound_getter_state;
 }
