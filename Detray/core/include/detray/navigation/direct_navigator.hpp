@@ -91,15 +91,7 @@ class direct_navigator {
       auto target = this->target();
       target.set_surface(next_external());
       this->set_target(target);
-
-      // The next candidate is always stored in the second cache entry
-      this->next_index(1u);
-      this->last_index(1u);
     }
-
-    /// @returns the direct navigator always has only one candidate
-    DETRAY_HOST_DEVICE
-    constexpr auto n_candidates() const -> dindex { return 1u; }
 
     /// @returns the externally provided mask tolerance - const
     DETRAY_HOST_DEVICE
@@ -157,11 +149,12 @@ class direct_navigator {
                                    this->target().surface().has_material())));
     }
 
-    /// Clear the state
+    /// Clear the state: the current candidate always occupies slot 0 and
+    /// the (single) target slot 1
     DETRAY_HOST_DEVICE constexpr void clear_cache() {
       base_type::clear_cache();
-      this->next_index(1);
-      this->last_index(1);
+      this->first_index(1);
+      this->n_candidates(1u);
     }
 
     /// @returns flag that indicates whether navigation was successful

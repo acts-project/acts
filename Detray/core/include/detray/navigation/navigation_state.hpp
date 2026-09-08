@@ -111,12 +111,16 @@ class base_state {
 
   /// Constructor using a given detector @param det
   DETRAY_HOST_DEVICE
-  constexpr explicit base_state(const detector_t &det) : m_detector(&det) {}
+  constexpr explicit base_state(const detector_t &det) : m_detector(&det) {
+    clear_cache();
+  }
 
   /// Construct from detector @param det and inspector view @param view
   template <concepts::device_view view_t>
   DETRAY_HOST_DEVICE constexpr base_state(const detector_t &det, view_t view)
-      : m_detector(&det), m_inspector(view) {}
+      : m_detector(&det), m_inspector(view) {
+    clear_cache();
+  }
 
   /// @returns a reference to the detector
   DETRAY_HOST_DEVICE
@@ -247,11 +251,20 @@ class base_state {
     m_volume_index = static_cast<nav_link_t>(v);
   }
 
-  /// @returns number of currently cached (reachable) candidates - const
+  /// @returns number of currently cached (reachable) candidates, i.e. the
+  /// target and everything behind it - const
   DETRAY_HOST_DEVICE
   constexpr auto n_candidates() const -> dindex {
-    assert(m_last - cast_impl().next_index() + 1 >= 0);
-    return static_cast<dindex>(m_last - cast_impl().next_index() + 1);
+    assert(m_n_valid >= static_cast<dindex>(m_first));
+    return m_n_valid - static_cast<dindex>(m_first);
+  }
+
+  /// Set the number of reachable candidates (the current candidate, if any,
+  /// stays valid)
+  DETRAY_HOST_DEVICE
+  constexpr void n_candidates(dindex n) {
+    m_n_valid = static_cast<dindex>(m_first) + n;
+    assert(m_n_valid <= static_cast<dindex>(usable_capacity()));
   }
 
   /// @returns true if there are no cached candidates left - const
@@ -264,15 +277,14 @@ class base_state {
   DETRAY_HOST_DEVICE
   constexpr auto current() const -> const candidate_t {
     assert(cast_impl().is_on_surface());
-    assert(m_next > 0);
-    return this->candidate_at(m_next - 1);
+    assert(m_first == 1);
+    return this->candidate_at(0);
   }
 
   /// @returns next object that we want to reach (current target) - const
   DETRAY_HOST_DEVICE
   constexpr auto target() const -> const candidate_t {
-    assert(m_next >= 0);
-    return this->candidate_at(m_next);
+    return (m_first == 0) ? this->candidate_at(0) : this->candidate_at(1);
   }
 
   /// @returns identifier of the detector surface the navigator is on
@@ -419,20 +431,46 @@ class base_state {
   }
 
  protected:
+  /// @returns the first valid cache slot: the current candidate is only
+  /// valid while the track is on its surface
   DETRAY_HOST_DEVICE
   constexpr std::size_t valid_begin() const {
-    const dist_t idx{next_index()};
-    return (is_on_surface() && (idx >= 1)) ? idx - 1 : idx;
+    return (is_on_surface() && (m_first == 1)) ? 0u : m_first;
   }
 
+  /// @returns the end of the valid cache range
   DETRAY_HOST_DEVICE
-  constexpr std::size_t valid_end() const { return m_last + 1; }
+  constexpr std::size_t valid_end() const { return m_n_valid; }
 
-  /// Set the next surface that we want to reach (update target)
+  /// Set the number of valid cache slots, counted from slot 0
+  DETRAY_HOST_DEVICE
+  constexpr void n_valid(dindex n) {
+    m_n_valid = n;
+    assert(m_n_valid <= static_cast<dindex>(usable_capacity()));
+  }
+
+  /// @returns the number of cache slots that can currently be used. Every
+  /// visited candidate beyond the current one is dropped from the cache but
+  /// keeps its slot reserved, so the usable depth shrinks by one per surface
+  /// until the next (re-)initialization
+  DETRAY_HOST_DEVICE
+  constexpr std::size_t usable_capacity() const {
+    return k_cache_capacity - static_cast<std::size_t>(m_n_dead);
+  }
+
+  /// Set the slot of the target: 0 if there is no current candidate, 1 if
+  /// the current candidate occupies slot 0
+  DETRAY_HOST_DEVICE
+  constexpr void first_index(dist_t pos) {
+    assert(pos == 0 || pos == 1);
+    m_first = pos;
+  }
+
+  /// Make the first valid candidate the target (may be the current one)
   DETRAY_HOST_DEVICE
   constexpr void set_next_to_begin() {
-    cast_impl().next_index(static_cast<dist_t>(valid_begin()));
-    assert(cast_impl().next_index() <= m_last + 1);
+    first_index(static_cast<dist_t>(valid_begin()));
+    assert(m_first <= static_cast<dist_t>(m_n_valid));
   }
 
   /// Helper to evict all unreachable/invalid candidates from the cache:
@@ -443,7 +481,7 @@ class base_state {
       return candidate.path() == std::numeric_limits<scalar_t>::max();
     };
 
-    std::size_t i = 0;
+    dindex i = 0;
 
     for (; i < k_cache_capacity; ++i) {
       if (not_reachable(this->candidate_at(i))) {
@@ -451,8 +489,7 @@ class base_state {
       }
     }
 
-    last_index(static_cast<dist_t>(i) - 1);
-    assert(m_last < static_cast<dist_t>(k_cache_capacity));
+    n_valid(i);
   }
 
   template <typename callable_t>
@@ -464,66 +501,48 @@ class base_state {
     }
   }
 
-  /// @returns the index to the target surface
-  DETRAY_HOST_DEVICE
-  constexpr dist_t next_index() const { return m_next; }
-
-  /// @returns the index to the target surface
-  DETRAY_HOST_DEVICE
-  constexpr dist_t last_index() const { return m_last; }
-
-  /// Set the next surface that we want to reach (update target)
-  DETRAY_HOST_DEVICE
-  constexpr void next_index(dist_t pos) {
-    m_next = pos;
-    assert(m_next >= 0);
-    assert(m_next < static_cast<dist_t>(k_cache_capacity) + 1);
-  }
-
-  /// Set the next surface that we want to reach (update target)
-  DETRAY_HOST_DEVICE
-  constexpr void last_index(dist_t pos) {
-    m_last = pos;
-    assert(m_last >= -1);
-    assert(m_last < static_cast<dist_t>(k_cache_capacity));
-  }
-
-  /// Set the next surface that we want to reach (update target)
+  /// The target has been reached: it becomes the current candidate (slot 0)
+  /// and the candidate behind it the new target (slot 1)
   DETRAY_HOST_DEVICE
   constexpr auto advance() -> void {
-    ++m_next;
-    assert(m_next < static_cast<dist_t>(k_cache_capacity) + 1);
-    assert(cast_impl().next_index() <= cast_impl().last_index() + 1);
+    assert(n_candidates() >= 1u);
+    if (m_first == 0) {
+      // The target is already in slot 0
+      m_first = 1;
+    } else {
+      // Drop the previous current candidate and move everything down
+      for (std::size_t i = 0u; i + 1u < k_cache_capacity; ++i) {
+        set_candidate_at(i, candidate_at(i + 1u));
+      }
+      auto last = candidate_at(k_cache_capacity - 1u);
+      last.set_path(std::numeric_limits<scalar_t>::max());
+      set_candidate_at(k_cache_capacity - 1u, last);
+      --m_n_valid;
+      // The dropped candidate keeps its slot reserved
+      ++m_n_dead;
+      assert(static_cast<std::size_t>(m_n_dead) < k_cache_capacity);
+    }
   }
 
   DETRAY_HOST_DEVICE
   constexpr void set_current(const candidate_t &c) {
-    assert(m_next >= 1);
-    m_candidates[m_next - 1] = c;
+    assert(m_first == 1);
+    m_candidates[0] = c;
   };
 
   DETRAY_HOST_DEVICE
-  constexpr void set_target(const candidate_t &c) { m_candidates[m_next] = c; };
+  constexpr void set_target(const candidate_t &c) {
+    if (m_first == 0) {
+      m_candidates[0] = c;
+    } else {
+      m_candidates[1] = c;
+    }
+  };
 
   DETRAY_HOST_DEVICE
   constexpr void set_candidate_at(std::size_t i, const candidate_t &c) {
     m_candidates[i] = c;
   };
-
-  /// @returns current/previous object that was reached
-  DETRAY_HOST_DEVICE
-  constexpr auto current() -> const candidate_t {
-    assert(cast_impl().is_on_surface());
-    assert(m_next > 0);
-    return this->candidate_at(m_next - 1);
-  }
-
-  /// @returns next object that we want to reach (current target)
-  DETRAY_HOST_DEVICE
-  constexpr auto target() -> const candidate_t {
-    assert(static_cast<std::size_t>(m_next) < k_cache_capacity);
-    return this->candidate_at(m_next);
-  }
 
   DETRAY_HOST_DEVICE
   constexpr auto candidate_at(std::size_t i) const -> const candidate_t {
@@ -553,8 +572,9 @@ class base_state {
       cand.set_path(std::numeric_limits<scalar_t>::max());
       this->set_candidate_at(i, cand);
     }
-    m_next = 0;
-    m_last = -1;
+    m_first = 0;
+    m_n_valid = 0;
+    m_n_dead = 0;
   }
 
   /// Call the navigation inspector
@@ -606,8 +626,10 @@ class base_state {
     return os;
   }
 
-  /// Our cache of candidates (intersections with any kind of surface)
-  candidate_cache_t m_candidates;
+  /// Our cache of candidates (intersections with any kind of surface).
+  /// Slot 0 holds the current candidate once one exists (m_first == 1),
+  /// the target sits in slot m_first, further candidates follow in order
+  candidate_cache_t m_candidates{};
 
   /// Detector pointer
   const detector_t *m_detector{nullptr};
@@ -625,13 +647,16 @@ class base_state {
   /// External mask tolerance, that models noise during track transport
   scalar_t m_external_mask_tol{0.f * unit<scalar_t>::mm};
 
-  /// The next best candidate (target): m_next <= m_last + 1.
-  /// m_next can be larger than m_last when the cache is exhausted
-  dist_t m_next{0};
+  /// The number of valid cache slots, counted from slot 0 (includes the
+  /// current candidate, if there is one): m_first <= m_n_valid
+  dindex m_n_valid{0};
 
-  /// The last reachable candidate: m_last < k_cache_capacity
-  /// Can never be advanced beyond the last element
-  dist_t m_last{-1};
+  /// Slot of the target: 0 while there is no current candidate, 1 afterwards
+  dist_t m_first{0};
+
+  /// Number of visited candidates that were dropped from the cache since the
+  /// last (re-)initialization; their slots stay reserved (usable_capacity())
+  dist_t m_n_dead{0};
 
   /// Index in the detector volume container of current navigation volume
   nav_link_t m_volume_index{0u};

@@ -175,7 +175,7 @@ class caching_navigator
       }
 
       // Candidate is too far away to be placed in cache
-      if (pos == k_cache_capacity) {
+      if (pos == this->usable_capacity()) {
         return;
       }
 
@@ -185,15 +185,12 @@ class caching_navigator
       // Insert the first candidate
       if (this->n_candidates() == 0) [[unlikely]] {
         this->set_target(new_candidate);
-        this->last_index(this->last_index() + 1);
-        assert(this->next_index() <= this->last_index() + 1);
-        assert(static_cast<std::size_t>(this->last_index()) < k_cache_capacity);
+        this->n_candidates(1u);
         return;
       }
 
       // Position where to insert the new candidate
-      auto idx{static_cast<dist_t>(pos)};
-      assert(idx >= 0);
+      auto idx{static_cast<dindex>(pos)};
 
       // Do not add the same surface (intersection) multiple times
       const auto is_overlap_at_pos = [this, &new_candidate](std::size_t index) {
@@ -214,7 +211,7 @@ class caching_navigator
                is_overlap_at_pos(index);
       };
 
-      const auto idxu{static_cast<std::size_t>(idx)};
+      const auto idxu{static_cast<dindex>(idx)};
       if (is_clash_at_pos(idxu) || ((idxu > 0u) && is_clash_at_pos(idxu - 1u)))
           [[unlikely]] {
         return;
@@ -222,8 +219,10 @@ class caching_navigator
 
       // Shift all following candidates and evict the last element,
       // if the cache is already full
-      constexpr auto shift_max{static_cast<dist_t>(k_cache_capacity - 2)};
-      const dist_t shift_begin{math::min(this->last_index(), shift_max)};
+      // The last valid slot that can still be shifted up by one
+      const auto shift_max{static_cast<dindex>(this->usable_capacity() - 1u)};
+      const auto shift_begin{
+          math::min(static_cast<dindex>(this->valid_end()), shift_max) - 1u};
 
       // In case of overlaps, prefer sensitives over portals and
       // direct hits over edge hits
@@ -235,25 +234,19 @@ class caching_navigator
         idx = idx > shift_begin ? shift_begin : idx;
       }
 
-      for (dist_t i = shift_begin; i >= idx; --i) {
-        const auto j{static_cast<std::size_t>(i)};
-        this->set_candidate_at(j + 1, this->candidate_at(j));
+      for (dindex i = shift_begin; i <= shift_begin && i >= idx; --i) {
+        this->set_candidate_at(i + 1, this->candidate_at(i));
       }
 
       // Now insert the new candidate and update candidate range
       this->set_candidate_at(static_cast<std::size_t>(idx), new_candidate);
-      this->last_index(math::min(static_cast<dist_t>(this->last_index() + 1),
-                                 static_cast<dist_t>(k_cache_capacity - 1)));
-
-      assert(this->next_index() <= this->last_index() + 1);
-      assert(static_cast<std::size_t>(this->last_index()) < k_cache_capacity);
+      this->n_valid(math::min(static_cast<dindex>(this->valid_end() + 1u),
+                              static_cast<dindex>(this->usable_capacity())));
     }
 
     /// Clear the state
     DETRAY_HOST_DEVICE constexpr void clear_cache() {
       base_type::clear_cache();
-      this->next_index(0);
-      this->last_index(-1);
     }
   };
 
