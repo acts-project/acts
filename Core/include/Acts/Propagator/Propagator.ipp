@@ -263,9 +263,8 @@ template <StepperConcept S, NavigatorConcept N>
 template <typename propagator_options_t, typename target_aborter_t,
           typename path_aborter_t>
 auto Propagator<S, N>::makeState(const propagator_options_t& options) const {
-  // Expand the actor list with a path aborter, and with a target aborter if
-  // the propagation has a target surface. The target surface itself is only
-  // known at initialization.
+  // Expand the actor list with a path aborter, and with a target aborter
+  // unless the propagation has no target surface
   path_aborter_t pathAborter;
   pathAborter.internalLimit = options.pathLimit;
 
@@ -297,7 +296,7 @@ Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
                                           const Surface* target) const {
   m_stepper.initialize(state.stepping, start);
 
-  // Hand the target surface to the aborter which stops the propagation there
+  // Hand the target surface to the aborter that stops the propagation there
   if constexpr (!std::is_same_v<target_aborter_t, NoTargetAborter>) {
     state.options.actorList.template get<target_aborter_t>().surface = target;
   }

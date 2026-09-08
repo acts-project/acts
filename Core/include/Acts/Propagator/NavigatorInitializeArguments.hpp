@@ -18,12 +18,8 @@ class TrackingVolume;
 
 /// Per-run inputs to the navigator initialization.
 ///
-/// In contrast to the navigator options, which are bound to the lifetime of a
-/// navigation state and have to be invariant across every run that state
-/// serves, these arguments are re-bound on every navigation run and never
-/// survive into the next one. Navigation states are reused - for example when
-/// the combinatorial track finder jumps to another branch - so anything that
-/// changes from run to run belongs here and not into the options.
+/// A navigation state can serve more than one run, so everything that changes
+/// from run to run is passed here instead of through the navigator options.
 struct NavigatorInitializeArguments {
   /// Position the navigation run starts at
   Vector3 position{};

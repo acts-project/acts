@@ -136,8 +136,8 @@ Result<void> Navigator::initialize(
   // @TODO: Implement fast initialization with Gen3. This requires the volume
   // lookup to work properly
 
-  // Resolved into locals and written to the state only once complete, so that
-  // a previous run of this state cannot leak into the resolution.
+  // Resolved into locals and written to the state only once complete, so a
+  // previous run cannot leak into the resolution
   const TrackingVolume* startVolume = args.startVolume;
   const Layer* startLayer = nullptr;
   const Surface* startSurface = args.startSurface;

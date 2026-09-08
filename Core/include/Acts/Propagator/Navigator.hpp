@@ -260,9 +260,8 @@ class Navigator final {
 
     /// Reset navigation state for renavigating within the same navigation run
     ///
-    /// @note This keeps the start and target information, which actors rely on
-    ///       for the whole run. Use @c resetForInitialization to start a new
-    ///       navigation run.
+    /// @note Keeps the start and target information, which actors rely on for
+    ///       the whole run.
     void resetForRenavigation() {
       resetAfterVolumeSwitch();
 
@@ -284,8 +283,7 @@ class Navigator final {
     /// Completely reset navigation state for a new navigation run
     ///
     /// In contrast to @c resetForRenavigation this also drops the start and
-    /// target information, so nothing of the previous run can leak into the
-    /// next one.
+    /// target information.
     void resetForInitialization() {
       resetForRenavigation();
 
@@ -347,8 +345,8 @@ class Navigator final {
   /// @brief Initialize the navigator state
   ///
   /// This function initializes the navigator state for a new propagation. All
-  /// inputs which are specific to this navigation run are passed here, so a
-  /// state can be reused for another run without carrying anything over.
+  /// inputs specific to this run are passed here, so a state can be reused
+  /// without carrying anything over.
   ///
   /// @param state The navigation state
   /// @param args The initialization arguments of this navigation run
@@ -494,9 +492,7 @@ class Navigator final {
 
   /// @brief Get volume info string for logging
   ///
-  /// Used where the volume is not (yet) reflected in the navigation state,
-  /// e.g. while the start information is still being resolved into locals in
-  /// @c initialize.
+  /// Used where the volume is not reflected in the navigation state yet.
   ///
   /// @param volume The volume to report on, may be nullptr
   /// @return String with volume name for logging

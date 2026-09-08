@@ -250,9 +250,8 @@ class Propagator final
   /// @brief Builds the propagator state object
   ///
   /// This function creates the propagator state object from the propagation
-  /// options. Only the types of the aborters are needed here, since they
-  /// determine the type of the state. The target surface itself is a per-run
-  /// input and is handed to @c initialize instead.
+  /// options. Only the aborter types are needed here since they determine the
+  /// state type; the target surface itself is handed to @c initialize.
   ///
   /// @tparam propagator_options_t Type of the propagator options
   /// @tparam target_aborter_t The target aborter type to be added, or
@@ -270,9 +269,8 @@ class Propagator final
   /// @brief Initialize the propagator state
   ///
   /// This function initializes the propagator state for a new propagation. The
-  /// target surface is handed over here rather than at state construction, so
-  /// that it reaches both the navigator and the target aborter from a single
-  /// place.
+  /// target surface is passed here so it reaches both the navigator and the
+  /// target aborter.
   ///
   /// @tparam propagator_state_t Type of the propagator state object
   /// @tparam target_aborter_t The target aborter type the state was built

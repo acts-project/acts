@@ -947,10 +947,12 @@ BOOST_AUTO_TEST_CASE(NavigationStartOnPortalGen3) {
   auto initializeOnPortal =
       [&](const Vector3& direction) -> const TrackingVolume* {
     Navigator::Options options(tgContext);
-    options.startSurface = &sharedPortal->surface();
     Navigator::State state = navigator.makeState(options);
-    Result<void> result =
-        navigator.initialize(state, position, direction, Direction::Forward());
+    Result<void> result = navigator.initialize(
+        state, {.position = position,
+                .direction = direction,
+                .propagationDirection = Direction::Forward(),
+                .startSurface = &sharedPortal->surface()});
     BOOST_REQUIRE(result.ok());
     return state.currentVolume;
   };
@@ -1000,10 +1002,12 @@ BOOST_AUTO_TEST_CASE(NavigationStartOnBoundaryGen1) {
   auto initializeOnBoundary =
       [&](const Vector3& direction) -> const TrackingVolume* {
     Navigator::Options options(tgContext);
-    options.startSurface = boundarySurface;
     Navigator::State state = navigator.makeState(options);
-    Result<void> result =
-        navigator.initialize(state, position, direction, Direction::Forward());
+    Result<void> result = navigator.initialize(
+        state, {.position = position,
+                .direction = direction,
+                .propagationDirection = Direction::Forward(),
+                .startSurface = boundarySurface});
     BOOST_REQUIRE(result.ok());
     return state.currentVolume;
   };
