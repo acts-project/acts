@@ -25,9 +25,10 @@ bool gbts_seedfinder_config::setLinkingSchemeFromGbtsGeo(
   // convert layers info to SoA
   layerInfo.reserve(static_cast<unsigned int>(gbtsGeo->numLayers()));
   for (unsigned int index = 0; index < gbtsGeo->numLayers(); ++index) {
-    Acts::Experimental::GbtsLayerBinning binning = gbtsGeo->layerBinning(index);
-    Acts::Experimental::GbtsLayerDescription desc =
-        gbtsGeo->layerDescription(index);
+    Acts::Experimental::GbtsLayerBinning binning = gbtsGeo->layerBinning(
+        static_cast<Acts::Experimental::GbtsLayerIndex>(index));
+    Acts::Experimental::GbtsLayerDescription desc = gbtsGeo->layerDescription(
+        static_cast<Acts::Experimental::GbtsLayerIndex>(index));
     char type = 0;
     if (desc.technology == Acts::Experimental::GbtsLayerTechnology::Strip) {
       type = 3;
