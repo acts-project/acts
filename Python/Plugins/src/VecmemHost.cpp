@@ -13,20 +13,23 @@
 #include <string>
 
 #include <vecmem/memory/host_memory_resource.hpp>
-#include <vecmem/memory/memory_resource.hpp>
+#include <vecmem/utils/copy.hpp>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(ActsPluginsPythonBindingsVecmem, vecmem) {
-  {
-    py::class_<vecmem::memory_resource,
-               std::shared_ptr<vecmem::memory_resource>>(vecmem,
-                                                         "MemoryResource");
+  auto host = vecmem.def_submodule("host", "CPU backend bindings");
 
-    py::class_<vecmem::host_memory_resource, vecmem::memory_resource,
-               std::shared_ptr<vecmem::host_memory_resource>>(
-        vecmem, "HostMemoryResource")
-        .def(py::init<>());
-  }
+  py::class_<vecmem::memory_resource, std::shared_ptr<vecmem::memory_resource>>(
+      host, "memory_resource");
+
+  py::class_<vecmem::copy, std::shared_ptr<vecmem::copy>>(vecmem, "copy");
+
+  py::class_<vecmem::host_memory_resource, vecmem::memory_resource,
+             std::shared_ptr<vecmem::host_memory_resource>>(
+      host, "host_memory_resource")
+      .def(py::init<>());
+  py::class_<vecmem::copy, std::shared_ptr<vecmem::copy>>(host, "copy")
+      .def(py::init<>());
 }
