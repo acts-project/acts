@@ -42,7 +42,10 @@
         {
             "name": "devcontainer",
             "displayName": "Devcontainer",
-            "inherits": "dev",
+            "inherits": [
+                "dev",
+                "ccache"
+            ],
             "binaryDir": "build_devcontainer",
             "cacheVariables": {
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
