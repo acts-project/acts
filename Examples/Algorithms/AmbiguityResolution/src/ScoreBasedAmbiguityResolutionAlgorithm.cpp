@@ -129,21 +129,11 @@ ProcessCode ScoreBasedAmbiguityResolutionAlgorithm::execute(
   }
 
   if (!scoreMonitor.empty()) {
-    // load  names of detectors from the json file
-    nlohmann::json json_file;
-    std::ifstream file(m_cfg.configFile);
-    if (!file.is_open()) {
-      std::cerr << "Error opening file: " << m_cfg.configFile << std::endl;
-      return {};
-    }
-    file >> json_file;
-    file.close();
-    auto prtDetectorNames = std::make_unique<std::vector<std::string>>();
 
-    json_file.at("detectorNames").get_to(*prtDetectorNames);
+    std::vector<std::string> prtDetectorNames = {"InnerPixels", "OuterPixels", "Strips"};
 
     // Save the score monitor data to a ROOT file
-    Acts::saveScoreMonitor(scoreMonitor, m_cfg.monitorFile, *prtDetectorNames);
+    Acts::saveScoreMonitor(scoreMonitor, m_cfg.monitorFile, prtDetectorNames);
   } else {
     ACTS_ERROR("No score monitor data available to save.");
   }
