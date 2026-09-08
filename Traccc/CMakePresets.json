@@ -42,7 +42,19 @@
             "cacheVariables": {
                 "TRACCC_BUILD_CUDA_UTILS": "TRUE",
                 "TRACCC_BUILD_CUDA": "TRUE",
-                "VECMEM_BUILD_CUDA_LIBRARY": "TRUE"
+                "VECMEM_BUILD_CUDA_LIBRARY": "TRUE",
+                "ACTS_ENABLE_CUDA": "TRUE"
+            }
+        },
+        {
+            "name": "cuda-fp32-ci",
+            "displayName": "CUDA FP32, dependencies from the environment",
+            "inherits": [
+                "cuda-fp32"
+            ],
+            "cacheVariables": {
+                "VECMEM_BUILD_CUDA_LIBRARY": null,
+                "TRACCC_USE_SYSTEM_THRUST": "TRUE"
             }
         },
         {
@@ -54,7 +66,19 @@
             "cacheVariables": {
                 "TRACCC_BUILD_CUDA_UTILS": "TRUE",
                 "TRACCC_BUILD_CUDA": "TRUE",
-                "VECMEM_BUILD_CUDA_LIBRARY": "TRUE"
+                "VECMEM_BUILD_CUDA_LIBRARY": "TRUE",
+                "ACTS_ENABLE_CUDA": "TRUE"
+            }
+        },
+        {
+            "name": "cuda-fp64-ci",
+            "displayName": "CUDA FP64, dependencies from the environment",
+            "inherits": [
+                "cuda-fp64"
+            ],
+            "cacheVariables": {
+                "VECMEM_BUILD_CUDA_LIBRARY": null,
+                "TRACCC_USE_SYSTEM_THRUST": "TRUE"
             }
         },
         {
@@ -67,6 +91,17 @@
                 "TRACCC_BUILD_HIP": "TRUE",
                 "VECMEM_BUILD_HIP_LIBRARY": "TRUE",
                 "TRACCC_SETUP_ROCTHRUST": "TRUE"
+            }
+        },
+        {
+            "name": "hip-fp32-ci",
+            "displayName": "HIP FP32, dependencies from the environment",
+            "inherits": [
+                "hip-fp32"
+            ],
+            "cacheVariables": {
+                "VECMEM_BUILD_HIP_LIBRARY": null,
+                "TRACCC_SETUP_THRUST": "FALSE"
             }
         },
         {
