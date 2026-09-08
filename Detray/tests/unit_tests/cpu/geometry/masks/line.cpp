@@ -7,11 +7,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Project include(s)
-#include "detray/geometry/shapes/line.hpp"
-
 #include "detray/definitions/units.hpp"
 #include "detray/geometry/concepts.hpp"
 #include "detray/geometry/mask.hpp"
+#include "detray/geometry/shapes/line_circular.hpp"
+#include "detray/geometry/shapes/line_square.hpp"
 
 // Detray test include(s)
 #include "detray/test/framework/types.hpp"

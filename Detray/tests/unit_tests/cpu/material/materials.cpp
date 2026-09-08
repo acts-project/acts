@@ -9,7 +9,7 @@
 // Project include(s)
 #include "detray/definitions/units.hpp"
 #include "detray/geometry/mask.hpp"
-#include "detray/geometry/shapes/line.hpp"
+#include "detray/geometry/shapes/line_circular.hpp"
 #include "detray/geometry/surface_descriptor.hpp"
 #include "detray/material/concepts.hpp"
 #include "detray/material/material.hpp"
