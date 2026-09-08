@@ -624,8 +624,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
           .value(),
   };
 
-  VertexFitProblem state;
-  AdaptiveMultiVertexFitter::Cache cache(*bField, magFieldContext);
+  // Preserve the historical scratch initialization through the legacy adapter.
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  AdaptiveMultiVertexFitter::State state(*bField, magFieldContext);
 
   // The constraint vertex position covariance
   SquareMatrix4 covConstr(SquareMatrix4::Identity());
@@ -637,28 +638,27 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   Vertex vtx1(vtxPos1);
 
   // Add to vertex list
-  state.vertices.push_back(&vtx1);
+  state.vertexCollection.push_back(&vtx1);
 
   // The constraint vtx for vtx1
   Vertex vtx1Constr(vtxPos1);
   vtx1Constr.setFullCovariance(covConstr);
   vtx1Constr.setFitQuality(0, -3);
 
-  // Prepare vtx candidate and scratch data for fitter
-  VertexFitCandidate vtxCand1;
-  VertexScratch vtxScratch1;
+  // Prepare vertex information for the legacy fitter interface
+  VertexInfo vtxInfo1;
   // Note: the seed position is deliberately left at zero here, reproducing the
   // original ordering of this test, where seedPosition was read off linPoint
   // before linPoint had been assigned. It is unused in this test because
   // oldPosition == linPoint, so no relinearization is triggered.
-  vtxScratch1.linPoint.setZero();
-  vtxScratch1.linPoint.head<3>() = vtxPos1;
-  vtxCand1.constraint = std::move(vtx1Constr);
-  vtxScratch1.oldPosition = vtxScratch1.linPoint;
+  vtxInfo1.linPoint.setZero();
+  vtxInfo1.linPoint.head<3>() = vtxPos1;
+  vtxInfo1.constraint = std::move(vtx1Constr);
+  vtxInfo1.oldPosition = vtxInfo1.linPoint;
 
   for (const auto& trk : params1) {
-    vtxCand1.trackLinks.push_back(InputTrack{&trk});
-    state.tracksAtVertices.insert(
+    vtxInfo1.trackLinks.push_back(InputTrack{&trk});
+    state.tracksAtVerticesMap.insert(
         std::make_pair(std::make_pair(InputTrack{&trk}, &vtx1),
                        TrackAtVertex(1.5, trk, InputTrack{&trk})));
   }
@@ -668,58 +668,56 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   Vertex vtx2(vtxPos2);
 
   // Add to vertex list
-  state.vertices.push_back(&vtx2);
+  state.vertexCollection.push_back(&vtx2);
 
   // The constraint vtx for vtx2
   Vertex vtx2Constr(vtxPos2);
   vtx2Constr.setFullCovariance(covConstr);
   vtx2Constr.setFitQuality(0, -3);
 
-  // Prepare vtx candidate and scratch data for fitter
-  VertexFitCandidate vtxCand2;
-  VertexScratch vtxScratch2;
-  vtxScratch2.linPoint.setZero();
-  vtxScratch2.linPoint.head<3>() = vtxPos2;
-  vtxCand2.constraint = std::move(vtx2Constr);
-  vtxScratch2.oldPosition = vtxScratch2.linPoint;
-  vtxCand2.seedPosition = vtxScratch2.linPoint;
+  // Prepare vertex information for the legacy fitter interface
+  VertexInfo vtxInfo2;
+  vtxInfo2.linPoint.setZero();
+  vtxInfo2.linPoint.head<3>() = vtxPos2;
+  vtxInfo2.constraint = std::move(vtx2Constr);
+  vtxInfo2.oldPosition = vtxInfo2.linPoint;
+  vtxInfo2.seedPosition = vtxInfo2.linPoint;
 
   for (const auto& trk : params2) {
-    vtxCand2.trackLinks.push_back(InputTrack{&trk});
-    state.tracksAtVertices.insert(
+    vtxInfo2.trackLinks.push_back(InputTrack{&trk});
+    state.tracksAtVerticesMap.insert(
         std::make_pair(std::make_pair(InputTrack{&trk}, &vtx2),
                        TrackAtVertex(1.5, trk, InputTrack{&trk})));
   }
 
-  state.candidates[&vtx1] = std::move(vtxCand1);
-  state.candidates[&vtx2] = std::move(vtxCand2);
-  cache.vertexScratch[&vtx1] = std::move(vtxScratch1);
-  cache.vertexScratch[&vtx2] = std::move(vtxScratch2);
+  state.vtxInfoMap[&vtx1] = std::move(vtxInfo1);
+  state.vtxInfoMap[&vtx2] = std::move(vtxInfo2);
 
   state.addVertexToMultiMap(vtx1);
   state.addVertexToMultiMap(vtx2);
 
   // Fit vertices
-  auto fitRes = fitter.fit(state, vertexingOptions, cache);
+  auto fitRes = fitter.fit(state, vertexingOptions);
   BOOST_CHECK(fitRes.ok());
 
-  auto vtx1Fitted = state.vertices.at(0);
+  auto vtx1Fitted = state.vertexCollection.at(0);
   auto vtx1PosFitted = vtx1Fitted->position();
   auto vtx1CovFitted = vtx1Fitted->covariance();
-  auto trks1 = state.candidates.at(vtx1Fitted).trackLinks;
+  auto trks1 = state.vtxInfoMap.at(vtx1Fitted).trackLinks;
   auto vtx1FQ = vtx1Fitted->fitQuality();
 
-  auto vtx2Fitted = state.vertices.at(1);
+  auto vtx2Fitted = state.vertexCollection.at(1);
   auto vtx2PosFitted = vtx2Fitted->position();
   auto vtx2CovFitted = vtx2Fitted->covariance();
-  auto trks2 = state.candidates.at(vtx2Fitted).trackLinks;
+  auto trks2 = state.vtxInfoMap.at(vtx2Fitted).trackLinks;
   auto vtx2FQ = vtx2Fitted->fitQuality();
 
   // Vertex 1
   ACTS_DEBUG("Vertex 1, position: " << vtx1PosFitted);
   ACTS_DEBUG("Vertex 1, covariance: " << vtx1CovFitted);
   for (const auto& trk : trks1) {
-    auto& trkAtVtx = state.tracksAtVertices.at(std::make_pair(trk, vtx1Fitted));
+    auto& trkAtVtx =
+        state.tracksAtVerticesMap.at(std::make_pair(trk, vtx1Fitted));
     ACTS_DEBUG("\tTrack weight:" << trkAtVtx.trackWeight);
   }
   ACTS_DEBUG("Vertex 1, chi2: " << vtx1FQ.first);
@@ -729,7 +727,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   ACTS_DEBUG("Vertex 2, position: " << vtx2PosFitted);
   ACTS_DEBUG("Vertex 2, covariance: " << vtx2CovFitted);
   for (const auto& trk : trks2) {
-    auto& trkAtVtx = state.tracksAtVertices.at(std::make_pair(trk, vtx2Fitted));
+    auto& trkAtVtx =
+        state.tracksAtVerticesMap.at(std::make_pair(trk, vtx2Fitted));
     ACTS_DEBUG("\tTrack weight:" << trkAtVtx.trackWeight);
   }
   ACTS_DEBUG("Vertex 2, chi2: " << vtx2FQ.first);
@@ -764,7 +763,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   CHECK_CLOSE_ABS(vtx1CovFitted, expVtx1Cov, 0.001_mm);
   int trkCount = 0;
   for (const auto& trk : trks1) {
-    auto& trkAtVtx = state.tracksAtVertices.at(std::make_pair(trk, vtx1Fitted));
+    auto& trkAtVtx =
+        state.tracksAtVerticesMap.at(std::make_pair(trk, vtx1Fitted));
     CHECK_CLOSE_ABS(trkAtVtx.trackWeight, expVtx1TrkWeights[trkCount], 0.001);
     trkCount++;
   }
@@ -776,12 +776,14 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   CHECK_CLOSE_ABS(vtx2CovFitted, expVtx2Cov, 0.001_mm);
   trkCount = 0;
   for (const auto& trk : trks2) {
-    auto& trkAtVtx = state.tracksAtVertices.at(std::make_pair(trk, vtx2Fitted));
+    auto& trkAtVtx =
+        state.tracksAtVerticesMap.at(std::make_pair(trk, vtx2Fitted));
     CHECK_CLOSE_ABS(trkAtVtx.trackWeight, expVtx2TrkWeights[trkCount], 0.001);
     trkCount++;
   }
   CHECK_CLOSE_ABS(vtx2FQ.first, expVtx2chi2, 0.001);
   CHECK_CLOSE_ABS(vtx2FQ.second, expVtx2ndf, 0.001);
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 /// @brief Unit test comparing the deprecated State based interface against the
@@ -923,6 +925,7 @@ BOOST_AUTO_TEST_CASE(deprecated_state_interface) {
     BOOST_CHECK_EQUAL(vtxNew.fullPosition(), vtxOld.fullPosition());
     BOOST_CHECK_EQUAL(vtxNew.fullCovariance(), vtxOld.fullCovariance());
     BOOST_CHECK_EQUAL(vtxNew.fitQuality().first, vtxOld.fitQuality().first);
+    BOOST_CHECK_EQUAL(vtxNew.fitQuality().second, vtxOld.fitQuality().second);
     BOOST_CHECK_EQUAL(vtxNew.tracks().size(), vtxOld.tracks().size());
 
     const VertexFitCandidate& candidate =
@@ -933,15 +936,6 @@ BOOST_AUTO_TEST_CASE(deprecated_state_interface) {
     BOOST_CHECK_EQUAL(candidate.trackLinks.size(), info.trackLinks.size());
     BOOST_CHECK_EQUAL(candidate.constraint.fullPosition(),
                       info.constraint.fullPosition());
-
-    // The scratch data the fit leaves behind is written back into the state
-    const VertexScratch& scratch =
-        cache.vertexScratch.at(&vtxListNew.at(vtxIdx));
-    BOOST_CHECK_EQUAL(scratch.linPoint, info.linPoint);
-    BOOST_CHECK_EQUAL(scratch.oldPosition, info.oldPosition);
-    BOOST_CHECK_EQUAL(scratch.relinearize, info.relinearize);
-    BOOST_CHECK_EQUAL(scratch.impactParams3D.size(),
-                      info.impactParams3D.size());
 
     for (const auto& trk : candidate.trackLinks) {
       const TrackAtVertex& trkAtVtxNew = problem.tracksAtVertices.at(

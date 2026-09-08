@@ -33,6 +33,39 @@ namespace Acts {
 ///   of a Higgs boson in the WH−−>lvbb¯ channel with the ATLAS experiment`
 ///
 class AdaptiveMultiVertexFitter {
+  /// @brief Per-vertex scratch data of the adaptive multi-vertex fitter
+  ///
+  /// This is the fitter-private counterpart of @c VertexFitCandidate: everything
+  /// here is regenerated during fitting and carries no meaning for a caller. It
+  /// lives in the fitter cache rather than in the fit problem.
+  ///
+  /// @note @c linPoint and @c oldPosition must be initialised to the seed
+  /// position of the corresponding vertex when the scratch entry is first
+  /// created. Starting them at zero would make the first iteration measure the
+  /// distance to the origin rather than to the seed, and spuriously trigger
+  /// relinearization for any displaced vertex. See
+  /// @c AdaptiveMultiVertexFitter::scratchFor.
+  struct VertexScratch {
+    VertexScratch() = default;
+
+    /// Construct scratch data seeded at @p pos
+    /// @param pos Initial linearization point and previous position
+    explicit VertexScratch(const Vector4& pos)
+        : linPoint(pos), oldPosition(pos) {}
+
+    /// Point where all associated tracks are linearized
+    Vector4 linPoint{Vector4::Zero()};
+
+    /// Vertex position from the last iteration of the fit
+    Vector4 oldPosition{Vector4::Zero()};
+
+    /// Flag indicating if associated tracks need relinearization
+    bool relinearize = true;
+
+    /// Map of 3D impact parameters for each associated track
+    std::map<InputTrack, const BoundTrackParameters> impactParams3D;
+  };
+
  public:
   /// @brief The fitter-private cache
   ///
@@ -49,6 +82,15 @@ class AdaptiveMultiVertexFitter {
         : ipState{field.makeCache(magContext)},
           fieldCache(field.makeCache(magContext)) {}
 
+    /// Drop the scratch data associated with @p vtx
+    ///
+    /// Must be called whenever a vertex's candidate description is re-seeded
+    /// after it has already been fitted, since the cached linearization point
+    /// and impact parameters then refer to a stale seed position.
+    /// @param vtx Vertex whose scratch data is to be discarded
+    void invalidate(const Vertex& vtx) { vertexScratch.erase(&vtx); }
+
+   private:
     /// Annealing state for thermodynamic track weighting
     AnnealingUtility::State annealingState;
 
@@ -61,15 +103,6 @@ class AdaptiveMultiVertexFitter {
     /// Per-vertex scratch data, lazily created by @c scratchFor
     std::map<const Vertex*, VertexScratch> vertexScratch;
 
-    /// Drop the scratch data associated with @p vtx
-    ///
-    /// Must be called whenever a vertex's candidate description is re-seeded
-    /// after it has already been fitted, since the cached linearization point
-    /// and impact parameters then refer to a stale seed position.
-    /// @param vtx Vertex whose scratch data is to be discarded
-    void invalidate(const Vertex& vtx) { vertexScratch.erase(&vtx); }
-
-   private:
     /// Construct a cache adopting an already existing impact point estimator
     /// state and magnetic field cache. Used by the deprecated @c State based
     /// entry points, which own those two caches themselves.
