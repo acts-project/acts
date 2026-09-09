@@ -55,7 +55,7 @@ using default_chain = actor_chain<actor::parameter_updater<
 
 using const_field_t = bfield::const_bknd_t<benchmarks::scalar>;
 
-template <typename metadata_t, typename bfield_t,
+template <concepts::metadata metadata_t, typename bfield_t,
           template <typename> class actor_chain_t>
 using hip_propagator_type =
     propagator<rk_stepper<covfie::field_view<bfield_t>,

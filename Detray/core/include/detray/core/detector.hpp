@@ -55,7 +55,8 @@ void set_transform(detector_t &det, const transform3_t &trf, unsigned int i) {
 ///
 /// @tparam metadata helper that defines collection and link types centrally
 /// @tparam container_t type collection of the underlying containers
-template <typename metadata_t, typename container_t = host_container_types>
+template <concepts::metadata metadata_t,
+          typename container_t = host_container_types>
 class detector {
   // Allow the building of the detector containers
   friend class volume_builder<detector<metadata_t, container_t>>;
