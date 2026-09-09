@@ -22,16 +22,6 @@ namespace Acts {
 
 namespace {
 
-// Returns `value + 1`, saturating at CandidatesForMiddleSp::kNoSize instead
-// of wrapping around when `value` is already the maximum representable
-// count.
-CandidatesForMiddleSp::Size incrementSaturating(unsigned int value) {
-  if (value >= CandidatesForMiddleSp::kNoSize - 1) {
-    return CandidatesForMiddleSp::kNoSize;
-  }
-  return static_cast<CandidatesForMiddleSp::Size>(value) + 1;
-}
-
 float getBestSeedQuality(
     const std::unordered_map<SpacePointIndex, float>& bestSeedQualityMap,
     SpacePointIndex sp) {
@@ -70,7 +60,17 @@ BroadTripletSeedFilter::BroadTripletSeedFilter(const Config& config,
   // true (see filterTripletTopCandidates), so without it the high-quality
   // budget is unused; maxSeedsPerSpM + 1 is the tightest low-quality budget
   // that keeps every seed the final maxSeedsPerSpM cut in
-  // filterTripletsMiddleFixed can accept.
+  // filterTripletsMiddleFixed can accept. The +1 saturates at
+  // CandidatesForMiddleSp::kNoSize instead of wrapping around when
+  // maxSeedsPerSpM is already the maximum representable count.
+  auto incrementSaturating =
+      [](unsigned int value) -> CandidatesForMiddleSp::Size {
+    if (value >= CandidatesForMiddleSp::kNoSize - 1) {
+      return CandidatesForMiddleSp::kNoSize;
+    }
+    return static_cast<CandidatesForMiddleSp::Size>(value) + 1;
+  };
+
   state.candidatesCollector =
       this->config().seedConfirmation
           ? CandidatesForMiddleSp(this->config().maxSeedsPerSpMConf,
