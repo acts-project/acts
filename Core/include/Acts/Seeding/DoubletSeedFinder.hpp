@@ -382,7 +382,7 @@ class DoubletSeedFinder {
   /// @param compatibleDoublets Output container for compatible doublets
   virtual void createDoublets(
       const ConstSpacePointProxy& middleSp, const MiddleSpInfo& middleSpInfo,
-      SpacePointContainer::ConstSubset& candidateSps,
+      SpacePointContainer::ConstSubset candidateSps,
       DoubletsForMiddleSp& compatibleDoublets) const = 0;
 
   /// Creates compatible dublets by applying a series of cuts that can be
@@ -395,7 +395,7 @@ class DoubletSeedFinder {
   /// @param compatibleDoublets Output container for compatible doublets
   virtual void createDoublets(
       const ConstSpacePointProxy& middleSp, const MiddleSpInfo& middleSpInfo,
-      SpacePointContainer::ConstRange& candidateSps,
+      SpacePointContainer::ConstRange candidateSps,
       DoubletsForMiddleSp& compatibleDoublets) const = 0;
 };
 

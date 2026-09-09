@@ -35,13 +35,12 @@ class Impl final : public DoubletSeedFinder {
   /// @param middleSp Space point candidate to be used as middle SP in a seed
   /// @param middleSpInfo Information about the middle space point
   /// @param candidateSps Range or subet of space points to be used as candidates
-  ///   for middle SP in a seed. In case of `sortedByR` - an offset will be
-  ///   applied based on the middle SP radius.
+  ///   for middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
   template <typename CandidateSps>
   void createDoubletsImpl(const ConstSpacePointProxy& middleSp,
                           const MiddleSpInfo& middleSpInfo,
-                          CandidateSps& candidateSps,
+                          CandidateSps candidateSps,
                           DoubletsForMiddleSp& compatibleDoublets) const {
     const float impactMax =
         isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
@@ -69,28 +68,6 @@ class Impl final : public DoubletSeedFinder {
       return iDeltaR2 * ((varianceZM + varianceZO) +
                          (cotTheta * cotTheta) * (varianceRM + varianceRO));
     };
-
-    if constexpr (sortedByR) {
-      // find the first SP inside the radius region of interest and update
-      // the iterator so we don't need to look at the other SPs again
-      std::uint32_t offset = 0;
-      for (ConstSpacePointProxy otherSp : candidateSps) {
-        if constexpr (isBottomCandidate) {
-          // if r-distance is too big, try next SP in bin
-          if (rM - otherSp.zr()[1] <= m_cfg.deltaRMax) {
-            break;
-          }
-        } else {
-          // if r-distance is too small, try next SP in bin
-          if (otherSp.zr()[1] - rM >= m_cfg.deltaRMin) {
-            break;
-          }
-        }
-
-        ++offset;
-      }
-      candidateSps = candidateSps.subrange(offset);
-    }
 
     const SpacePointContainer& container = candidateSps.container();
     for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
@@ -274,7 +251,7 @@ class Impl final : public DoubletSeedFinder {
 
   void createDoublets(const ConstSpacePointProxy& middleSp,
                       const MiddleSpInfo& middleSpInfo,
-                      SpacePointContainer::ConstSubset& candidateSps,
+                      SpacePointContainer::ConstSubset candidateSps,
                       DoubletsForMiddleSp& compatibleDoublets) const override {
     createDoubletsImpl(middleSp, middleSpInfo, candidateSps,
                        compatibleDoublets);
@@ -282,7 +259,7 @@ class Impl final : public DoubletSeedFinder {
 
   void createDoublets(const ConstSpacePointProxy& middleSp,
                       const MiddleSpInfo& middleSpInfo,
-                      SpacePointContainer::ConstRange& candidateSps,
+                      SpacePointContainer::ConstRange candidateSps,
                       DoubletsForMiddleSp& compatibleDoublets) const override {
     createDoubletsImpl(middleSp, middleSpInfo, candidateSps,
                        compatibleDoublets);
