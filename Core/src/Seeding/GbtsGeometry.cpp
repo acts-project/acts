@@ -25,13 +25,6 @@ namespace Acts::Experimental::detail {
 GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
                      const float etaBinWidth, const std::uint32_t bin0)
     : m_layerDescription(layerDescription) {
-  // the layer cuts always apply on the innermost ordered barrel layers
-  m_layerDescription.cutOnZ0Range =
-      m_layerDescription.cutOnZ0Range || m_layerDescription.barrelOrder == 0;
-  m_layerDescription.matchBeforeCreate = m_layerDescription.matchBeforeCreate ||
-                                         m_layerDescription.barrelOrder == 0 ||
-                                         m_layerDescription.barrelOrder == 1;
-
   float r1{};
   float r2{};
   float z1{};

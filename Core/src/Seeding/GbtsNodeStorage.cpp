@@ -169,8 +169,6 @@ void GbtsNodeStorage::finalize() {
     binInfo.barrelOrder = description.barrelOrder;
     binInfo.type = description.type;
     binInfo.technology = description.technology;
-    binInfo.cutOnZ0Range = description.cutOnZ0Range;
-    binInfo.matchBeforeCreate = description.matchBeforeCreate;
   }
 
   // Created now that the container has its final size, so that each column is

@@ -101,10 +101,6 @@ struct GbtsEtaBinInfo final {
   GbtsLayerType type{};
   /// Technology of the layer this bin belongs to.
   GbtsLayerTechnology technology{};
-  /// Whether the bin's layer cuts on the z0 range of its outer neighbourhood.
-  bool cutOnZ0Range{false};
-  /// Whether `matchBeforeCreate` applies to the bin's layer.
-  bool matchBeforeCreate{false};
 
   /// Check if bin is empty
   /// @return True if bin has no nodes
