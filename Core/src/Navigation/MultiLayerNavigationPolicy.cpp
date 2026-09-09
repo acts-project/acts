@@ -98,6 +98,12 @@ void MultiLayerNavigationPolicy::initializeCandidates(
     surfCandidates[writeIdx] = surfCandidates[readIdx];
     ++writeIdx;
   }
+  if (writeIdx != surfCandidates.size()) {
+    ACTS_VERBOSE("MultiLayerNavigationPolicy - Remove "
+                 << (surfCandidates.size() - writeIdx) << " candidates");
+    surfCandidates.erase(surfCandidates.begin() + writeIdx,
+                         surfCandidates.end());
+  }
 
   ACTS_VERBOSE("MultiLayerNavigationPolicy() - reported "
                << surfCandidates.size() << " candidates. "
