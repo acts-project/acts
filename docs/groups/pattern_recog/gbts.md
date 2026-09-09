@@ -42,15 +42,26 @@ description: a flat list of `GbtsLayer` logical layers, each subdivided into
 @ref Acts::Experimental::GbtsLayerDescription gives a layer its ID, its type
 (barrel or endcap), its sensor technology and its extent. For a barrel layer
 `refCoord` is the radius and the bounds are in @f$z@f$; for an endcap it is the
-other way round. The ID is the caller's own numbering and is very nearly never
-decoded.
+other way round. The ID is the caller's own numbering, and the algorithm never
+decodes it.
+
+A pixel barrel layer carries one more field, `barrelOrder`: the position of the
+layer in the inside-out ordering of the pixel barrel. Every other layer keeps
+the default `-1`, so the sign of the field also says whether a layer is a pixel
+barrel layer. If the caller leaves the field unset,
+@ref Acts::Experimental::GbtsGeometry sorts the pixel barrel layers by
+`refCoord` and fills it in. Set it on every pixel barrel layer or on none of
+them, because the constructor rejects a partial ordering.
+
+The cuts that were tuned on the pixel barrel read `barrelOrder` and nothing
+else. The adaptive @f$\tau@f$ correction of @ref gbts-graph asks whether three
+layers are radially consecutive, and the two innermost-layer cuts of the same
+section ask how deep a layer sits. GBTS therefore runs on any layer numbering.
 
 > [!note]
-> One reader of the ATLAS numbering survives: the adaptive @f$\tau@f$ correction
-> of @ref gbts-graph takes pixel barrel layers `1000` apart as adjacent. On a
-> detector numbered otherwise no triplet looks gapless, so the correction is
-> applied to all of them. The examples algorithm reads the numbering once more,
-> to pick the strip layers out of an ATLAS connection table.
+> One reader of the ATLAS numbering survives, and it sits outside the core
+> algorithm: the examples algorithm decodes the volume id, to pick the strip
+> layers out of an ATLAS connection table.
 
 Which layer pairs may be joined by an edge is a list of
 @ref Acts::Experimental::GbtsLayerConnection, each naming a source (outer) and a
@@ -97,7 +108,7 @@ Two different layer numbers meet here, and they are separate types:
 
 | Type | What it is |
 | --- | --- |
-| `GbtsExperimentLayerId` | the layer id the experiment assigns (80000, 81000, ...). Sparse and structured -- the layer descriptions and connections are written in terms of it, and so are the seeder's per-layer cuts. |
+| `GbtsExperimentLayerId` | the layer id the experiment assigns (80000, 81000, ...). Sparse and structured -- the layer descriptions and connections are written in terms of it. The algorithm treats it as an opaque key. |
 | `GbtsLayerIndex` | where that layer sits in one @ref Acts::Experimental::GbtsGeometry, dense from zero. It indexes the geometry, and it is what a node carries. |
 
 `insert` takes the **index**, because it is on the per-space-point path.
@@ -169,17 +180,19 @@ a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$. Each
 edge stores up to `kGbtsMaxEdgeNeighbours` (6) such neighbours.
 
 Two further cuts apply on the innermost pixel barrel layers, where the
-combinatorics are worst:
+combinatorics are worst. Each cut has its own depth limit on the `barrelOrder`
+of the inner layer, and a negative limit switches the cut off:
 
-- `matchBeforeCreate` (off by default) demands the @f$\tau@f$ half of the
+- `matchBeforeCreate` (off by default, limited by
+  `matchBeforeCreateMaxBarrelOrder`) demands the @f$\tau@f$ half of the
   triplet test *before* the edge exists: @f$n_2@f$ must already carry an
   incoming edge whose @f$\tau@f$ agrees with the candidate's within
   `tauRatioPrecut`. A node with two or fewer incoming edges passes
   unconditionally, there being too little evidence to reject it.
 - Every inner node accumulates a 16-bit @f$z_0@f$ **histogram bitmask** of its
-  confirmed edges. On the innermost layer that mask rejects candidates whose
-  @f$z_0@f$ falls in an empty bin, and nodes with no connections at all are
-  skipped outright.
+  confirmed edges. On the layers down to `z0HistogramMaxBarrelOrder` that mask
+  rejects candidates whose @f$z_0@f$ falls in an empty bin, and nodes with no
+  connections at all are skipped outright.
 
 ## Connected component analysis {#gbts-cca}
 
@@ -261,7 +274,8 @@ The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrac
 | `useAdaptiveCuts`, `tauRatioCorr` | @ref gbts-graph | widen the @f$\tau@f$ tolerance when a layer is skipped |
 | `validateTriplets`, `d0Max` | @ref gbts-graph | circle fit on pixel-barrel triplets |
 | `nMaxEdges` | @ref gbts-graph | hard cap on the edge array (2M by default); exceeding it costs efficiency |
-| `matchBeforeCreate`, `tauRatioPrecut` | @ref gbts-graph | require a compatible incoming edge before creating one |
+| `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxBarrelOrder` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
+| `z0HistogramMaxBarrelOrder`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that depth in the pixel barrel |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
 | `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |
 | `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
