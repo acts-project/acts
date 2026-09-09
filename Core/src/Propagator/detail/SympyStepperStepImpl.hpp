@@ -25,7 +25,7 @@
 
 namespace Acts {
 
-template <detail::SympyStepMode Mode>
+template <detail::SympyStepMode Mode, bool WithJac>
 Result<double> detail::sympyStep(const SympyStepper& stepper,
                                  SympyStepper::State& state, Direction propDir,
                                  const IVolumeMaterial* material) {
@@ -105,10 +105,11 @@ Result<double> detail::sympyStep(const SympyStepper& stepper,
     if constexpr (isDense) {
       const std::span<double, 8> derivative(state.derivative.data(), 8);
       const std::span<double> jac =
-          state.covTransport ? std::span<double>(state.jacToGlobal.data(),
-                                                 state.jacToGlobal.size())
-                             : std::span<double>();
+          WithJac ? std::span<double>(state.jacToGlobal.data(),
+                                      state.jacToGlobal.size())
+                  : std::span<double>();
       if (material == nullptr) {
+        // the combined kernel: this cold branch wants no more inlined into it
         status = rk4_vacuum(startPos, startDir, t, h, qop, m, pabs,
                             std::span<const double, 3>(state.field->data(), 3),
                             getB, errorEstimate, 4 * stepTolerance, fieldError,
@@ -116,10 +117,11 @@ Result<double> detail::sympyStep(const SympyStepper& stepper,
                             std::span<double, 3>(lastField.data(), 3),
                             derivative, jac);
       } else {
-        status = sympyDenseStep(stepper, state, *material, h, 4 * stepTolerance,
-                                errorEstimate, lastField, fieldError, jac);
+        status = sympyDenseStep<WithJac>(stepper, state, *material, h,
+                                         4 * stepTolerance, errorEstimate,
+                                         lastField, fieldError, jac);
       }
-    } else if constexpr (Mode == SympyStepMode::VacuumJac) {
+    } else if constexpr (WithJac) {
       status =
           rk4_vacuum_jac(startPos, startDir, t, h, qop, m, pabs,
                          std::span<const double, 3>(state.field->data(), 3),

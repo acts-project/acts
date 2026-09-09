@@ -189,14 +189,18 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
                                   const IVolumeMaterial* material) const {
   if (state.options.doDense &&
       (material != nullptr || !state.materialEffectsAccumulator.isVacuum())) {
-    return detail::sympyStep<detail::SympyStepMode::Dense>(*this, state,
-                                                           propDir, material);
+    if (state.covTransport) {
+      return detail::sympyStep<detail::SympyStepMode::Dense, true>(
+          *this, state, propDir, material);
+    }
+    return detail::sympyStep<detail::SympyStepMode::Dense, false>(
+        *this, state, propDir, material);
   }
   if (state.covTransport) {
-    return detail::sympyStep<detail::SympyStepMode::VacuumJac>(
+    return detail::sympyStep<detail::SympyStepMode::Vacuum, true>(
         *this, state, propDir, nullptr);
   }
-  return detail::sympyStep<detail::SympyStepMode::VacuumNoJac>(
+  return detail::sympyStep<detail::SympyStepMode::Vacuum, false>(
       *this, state, propDir, nullptr);
 }
 
