@@ -1591,6 +1591,12 @@ class Gx2Fitter {
 
       // set up the propagator
       PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
+      // Add the measurement surface as external surface to the navigator.
+      // We will try to hit those surface by ignoring boundary checks.
+      for (const auto& [surface, _] : inputMeasurements) {
+        propagatorOptions.navigation.appendExternalSurface(*surface);
+      }
+
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.multipleScattering = multipleScattering;

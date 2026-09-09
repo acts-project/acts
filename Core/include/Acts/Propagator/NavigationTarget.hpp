@@ -193,7 +193,7 @@ class NavigationTarget {
   /// @return the target passed flag
   constexpr bool isReached() const noexcept { return m_reached; }
   /// Marks the target as reached
-  constexpr void targetReached() noexcept { m_reached = true; }
+  constexpr void setTargetReached() noexcept { m_reached = true; }
   /// Returns whether the intersection was successful or not
   /// @return true if the intersection is valid
   constexpr bool isValid() const noexcept { return m_intersection.isValid(); }
@@ -297,5 +297,10 @@ class NavigationTarget {
 static_assert(std::is_trivially_copy_constructible_v<NavigationTarget>);
 static_assert(std::is_trivially_move_constructible_v<NavigationTarget>);
 static_assert(std::is_trivially_move_assignable_v<NavigationTarget>);
+
+std::ostream& operator<<(
+    std::ostream& ostr,
+    const std::span<const Acts::NavigationTarget>& candidates);
+
 
 }  // namespace Acts

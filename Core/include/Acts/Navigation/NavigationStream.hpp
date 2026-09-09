@@ -126,7 +126,7 @@ class NavigationStream {
   /// @return true if the stream is active, false indicates that there are no valid candidates
   bool initialize(const GeometryContext& gctx,
                   const NavigationStream::QueryPoint& queryPoint,
-                  const BoundaryTolerance& cTolerance,
+                  const Logger& logger,
                   double onSurfaceTolerance = s_onSurfaceTolerance,
                   bool candidatesAreUnique = false);
 
@@ -147,7 +147,10 @@ class NavigationStream {
   /// index.
   ///
   /// This clears the candidates vector and resets the current index to 0.
-  void reset();
+  /// @param keepUnreachedBoundless: Navigation targets with infinite bounds that
+  ///                                have not been reached yet are carried over to
+  ///                                the next state
+  void reset(bool keepUnreachedBoundless);
 
  private:
   /// The candidates of this navigation stream

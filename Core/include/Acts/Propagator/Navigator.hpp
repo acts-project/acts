@@ -112,6 +112,8 @@ class Navigator final {
     bool resolveMaterial = true;
     /// stop at every surface regardless what it is
     bool resolvePassive = false;
+    /// keep unreached external surfaces in the stream
+    bool keepUnreachedExternal = false;
   };
 
   /// The navigator options
@@ -273,7 +275,7 @@ class Navigator final {
                               freeSurface.second = false;
                             });
 
-      stream.reset();
+      stream.reset(false);
     }
   };
 
