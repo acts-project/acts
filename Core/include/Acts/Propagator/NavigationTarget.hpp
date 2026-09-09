@@ -302,5 +302,4 @@ std::ostream& operator<<(
     std::ostream& ostr,
     const std::span<const Acts::NavigationTarget>& candidates);
 
-
 }  // namespace Acts

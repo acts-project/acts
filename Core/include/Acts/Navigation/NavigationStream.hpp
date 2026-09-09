@@ -148,8 +148,8 @@ class NavigationStream {
   ///
   /// This clears the candidates vector and resets the current index to 0.
   /// @param keepUnreachedBoundless: Navigation targets with infinite bounds that
-  ///                                have not been reached yet are carried over to
-  ///                                the next state
+  ///                                have not been reached yet are carried over
+  ///                                to the next state
   void reset(bool keepUnreachedBoundless);
 
  private:
