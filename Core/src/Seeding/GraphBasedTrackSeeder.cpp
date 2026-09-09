@@ -204,7 +204,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
 
     const bool isPixel1 = B1.technology == GbtsLayerTechnology::Pixel;
     const bool isPixelBarrel1 = barrelOrder1 >= 0;
-    
+
     const bool useZ0Histogram =
         barrelOrder1 >= 0 && barrelOrder1 <= m_cfg.z0HistogramMaxBarrelOrder;
     const bool useMatchBeforeCreate =
