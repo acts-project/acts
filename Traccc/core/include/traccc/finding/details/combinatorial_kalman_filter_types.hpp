@@ -38,7 +38,8 @@ using ckf_interactor_t =
 /// Actor chain used in the Combinatorial Kalman Filter (CKF)
 using ckf_actor_chain_t = detray::actor_chain<
     detray::actor::pathlimit_aborter<traccc::scalar>,
-    detray::actor::parameter_updater<traccc::default_algebra, ckf_interactor_t>,
+    detray::actor::parameter_updater_mbf<traccc::default_algebra,
+                                         ckf_interactor_t>,
     detray::actor::momentum_aborter<traccc::scalar>, ckf_aborter>;
 
 /// Propagator type used in the Combinatorial Kalman Filter (CKF)
