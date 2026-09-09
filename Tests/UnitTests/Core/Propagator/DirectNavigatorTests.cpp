@@ -240,7 +240,6 @@ void runSimpleTest(const std::vector<const Surface*>& surfaces,
   DirectOptions pOptions(tgContext, mfContext);
   pOptions.direction = direction;
   pOptions.navigation.externalSurfaces = surfaces;
-  pOptions.navigation.startSurface = startSurface;
   auto& dCollector = pOptions.actorList.template get<SurfaceCollector<>>();
   dCollector.selector.selectSensitive = true;
   dCollector.selector.selectMaterial = true;

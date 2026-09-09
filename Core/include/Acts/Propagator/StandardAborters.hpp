@@ -61,6 +61,10 @@ struct PathLimitReached {
   }
 };
 
+/// Tag used in place of a target aborter type to build a propagator state for
+/// a propagation without a target surface
+struct NoTargetAborter {};
+
 /// This is the condition that the Surface has been reached it then triggers a
 /// propagation abort
 struct SurfaceReached {

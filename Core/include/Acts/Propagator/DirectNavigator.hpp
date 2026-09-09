@@ -14,6 +14,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
+#include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -82,6 +83,12 @@ class DirectNavigator {
 
     /// Propagation direction (forward or backward)
     Direction direction = Direction::Forward();
+
+    /// Surface where the navigation started
+    const Surface* startSurface = nullptr;
+
+    /// Surface that is the target of the navigation
+    const Surface* targetSurface = nullptr;
 
     /// Index of the next surface to try
     /// @note -1 means before the first surface in the sequence and size()
@@ -184,14 +191,14 @@ class DirectNavigator {
   /// @param state The navigation state
   /// @return Pointer to start surface, nullptr if none
   const Surface* startSurface(const State& state) const {
-    return state.options.startSurface;
+    return state.startSurface;
   }
 
   /// Get the target surface from the navigation state
   /// @param state The navigation state
   /// @return Pointer to target surface, nullptr if none
   const Surface* targetSurface(const State& state) const {
-    return state.options.targetSurface;
+    return state.targetSurface;
   }
 
   /// Check if the end of world has been reached (not applicable for
@@ -215,16 +222,10 @@ class DirectNavigator {
   /// This function initializes the navigator for a new propagation.
   ///
   /// @param state The navigation state
-  /// @param position The start position
-  /// @param direction The start direction
-  /// @param propagationDirection The propagation direction
+  /// @param args The initialization arguments of this navigation run
   /// @return Always returns success result as DirectNavigator initialization cannot fail
-  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
-                                        const Vector3& direction,
-                                        Direction propagationDirection) const {
-    static_cast<void>(position);
-    static_cast<void>(direction);
-
+  [[nodiscard]] Result<void> initialize(
+      State& state, const NavigatorInitializeArguments& args) const {
     ACTS_VERBOSE("Initialize. Surface sequence for navigation:");
     for (const Surface* surface : state.options.externalSurfaces) {
       ACTS_VERBOSE(surface->geometryId()
@@ -232,11 +233,14 @@ class DirectNavigator {
                    << surface->center(state.options.geoContext).transpose());
     }
 
-    state.direction = propagationDirection;
-    ACTS_VERBOSE("Navigation direction is " << propagationDirection);
+    state.direction = args.propagationDirection;
+    ACTS_VERBOSE("Navigation direction is " << args.propagationDirection);
+
+    state.startSurface = args.startSurface;
+    state.targetSurface = args.targetSurface;
 
     // We set the current surface to the start surface
-    state.currentSurface = state.options.startSurface;
+    state.currentSurface = state.startSurface;
     if (state.currentSurface != nullptr) {
       ACTS_VERBOSE("Current surface set to start surface "
                    << state.currentSurface->geometryId());
@@ -245,8 +249,8 @@ class DirectNavigator {
     }
 
     // Find initial index.
-    auto found = std::ranges::find(state.options.externalSurfaces,
-                                   state.options.startSurface);
+    auto found =
+        std::ranges::find(state.options.externalSurfaces, state.startSurface);
 
     if (found != state.options.externalSurfaces.end()) {
       // The index should be the index before the start surface, depending on
