@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
 
   // The off-central position - should yield no candidates
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position = Vector3(11., 11., 0.);
   navArgs.direction = Vector3(0., 0., 1.);
   centerNavigationPolicy.initializeCandidates(tContext, navArgs, policyState,
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
   IndexGridNavigationPolicy<decltype(gridXY)> expandedNavigationPolicy(
       tContext, tVolume, *tLogger, expandedConfig, indexedGridXY);
 
-  nStream.reset();
+  nStream.reset(false);
 
   // The bins are expanded in X - should yield a candidate
   navArgs.position = Vector3(11., 0., 0.);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
                                                 navStream, *tLogger);
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
   // They are not expanded in Y - should yield no candidate
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position = Vector3(0., 11., 0.);
   navArgs.direction = Vector3(0., 0., 1.);
   expandedNavigationPolicy.initializeCandidates(tContext, navArgs, policyState,
@@ -138,30 +138,30 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
 
   IndexGridNavigationPolicy<decltype(gridXY)> polyNavigationPolicy(
       tContext, tVolume, *tLogger, polyConfig, indexedGridXY);
-  nStream.reset();
+  nStream.reset(false);
   // Address central posision
   navArgs.position = Vector3(0., 0., 0.);
   polyNavigationPolicy.initializeCandidates(tContext, navArgs, policyState,
                                             navStream, *tLogger);
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
   // Through the polyhedron also the bins in y before/after are filled
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position = Vector3(0., -7., 0.);
   polyNavigationPolicy.initializeCandidates(tContext, navArgs, policyState,
                                             navStream, *tLogger);
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position = Vector3(0., 7., 0.);
   polyNavigationPolicy.initializeCandidates(tContext, navArgs, policyState,
                                             navStream, *tLogger);
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
   // However, the bins in x before/after are not filled
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position = Vector3(-7., 0., 0.);
   polyNavigationPolicy.initializeCandidates(tContext, navArgs, policyState,
                                             navStream, *tLogger);
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position = Vector3(7., 0., 0.);
   polyNavigationPolicy.initializeCandidates(tContext, navArgs, policyState,
                                             navStream, *tLogger);
@@ -176,30 +176,30 @@ BOOST_AUTO_TEST_CASE(RegularPlaneIndexGridTests) {
 
   IndexGridNavigationPolicy<decltype(gridXY)> polyExpandedNavigationPolicy(
       tContext, tVolume, *tLogger, polyExpandedConfig, indexedGridXY);
-  nStream.reset();
+  nStream.reset(false);
   // Address central posision - should still work
   navArgs.position = Vector3(0., 0., 0.);
   polyExpandedNavigationPolicy.initializeCandidates(
       tContext, navArgs, policyState, navStream, *tLogger);
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
   // Sunndenly all x bins +2/-2 are filled
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position = Vector3(-20., 0., 0.);
   polyExpandedNavigationPolicy.initializeCandidates(
       tContext, navArgs, policyState, navStream, *tLogger);
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position = Vector3(20., 0., 0.);
   polyExpandedNavigationPolicy.initializeCandidates(
       tContext, navArgs, policyState, navStream, *tLogger);
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
   // While the first bin is still out of reach
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position = Vector3(-30., 0., 0.);
   polyExpandedNavigationPolicy.initializeCandidates(
       tContext, navArgs, policyState, navStream, *tLogger);
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position = Vector3(30., 0., 0.);
   polyExpandedNavigationPolicy.initializeCandidates(
       tContext, navArgs, policyState, navStream, *tLogger);
@@ -273,14 +273,14 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
                                             navStream, *tLogger);
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
   // However, a position at (-R,0,0) should yield a candidate
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position = Vector3(-cylinderRadius, 0., 0.);
   navArgs.direction = Vector3(-1., 0., 0.);
   polyNavigationPolicy.initializeCandidates(tContext, navArgs, policyState,
                                             navStream, *tLogger);
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 1);
   // A candidate a off in phi - no results
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position =
       Vector3(cylinderRadius * std::cos(-std::numbers::pi + 0.8),
               cylinderRadius * std::sin(-std::numbers::pi + 0.8), 0.);
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
 
   // A candidate a off in z range - no result
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position = Vector3(-cylinderRadius, 0., 4.);
   polyNavigationPolicy.initializeCandidates(tContext, navArgs, policyState,
                                             navStream, *tLogger);
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
       tContext, tVolume, *tLogger, projectedConfig, indexedgridPhiZ);
 
   // A candidate a off in phi - still outside
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position =
       Vector3(cylinderRadius * std::cos(-std::numbers::pi + 0.8),
               cylinderRadius * std::sin(-std::numbers::pi + 0.8), 0.);
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
   BOOST_CHECK_EQUAL(nStream.candidates().size(), 0);
 
   // A candidate a off in z range - should now yield a candidate now
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position = Vector3(-cylinderRadius, 0., 4.);
   projectedNavigationPolicy.initializeCandidates(tContext, navArgs, policyState,
                                                  navStream, *tLogger);
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(RegularCylinderIndexGridTests) {
                                            projectedWithSurfaceConfig,
                                            indexedgridPhiZ);
   // A candidate a off in phi - we get the phi surface now as well
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position =
       Vector3(cylinderRadius * std::cos(-std::numbers::pi + 0.8),
               cylinderRadius * std::sin(-std::numbers::pi + 0.8), 0.);
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(RegularDiscIndexGridTests) {
   BOOST_CHECK(&nStream.currentCandidate().surface() == surface0.get());
   // Check the neighboring bin, which should not be filled by surface0 and
   // surface1
-  nStream.reset();
+  nStream.reset(false);
   navArgs.position = Vector3(7.5 * std::cos(1.1 * std::numbers::pi / 5),
                              7.5 * std::sin(1.1 * std::numbers::pi / 5), 0.);
   centerNavigationPolicy.initializeCandidates(tContext, navArgs, policyState,

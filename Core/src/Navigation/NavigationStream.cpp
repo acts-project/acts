@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
 
@@ -155,9 +156,21 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
 
 bool NavigationStream::update(const GeometryContext& gctx,
                               const QueryPoint& queryPoint,
-                              double onSurfaceTolerance) {
+                              const Logger& logger, double onSurfaceTolerance) {
   // Loop over the (currently valid) candidates and update
-  for (; m_currentIndex < m_candidates.size(); ++m_currentIndex) {
+  ACTS_VERBOSE("NavigationStream::update() "
+               << __LINE__ << " - Update with new query point "
+               << toString(queryPoint.position)
+               << ", direction: " << toString(queryPoint.direction));
+  if (m_currentIndex == std::nullopt) {
+    ACTS_VERBOSE("NavigationStream::update() - Initialize the index of the stream first");
+      m_currentIndex = 0;
+  }
+  if (!isValid()) {
+    ACTS_VERBOSE("NavigationStream::update() - No valid candidate is left in the stream");
+    return false;
+  }
+  do {
     // Get the candidate, and resolve the tuple
     NavigationTarget& candidate = currentCandidate();
     // Get the surface from the object intersection
@@ -176,26 +189,30 @@ bool NavigationStream::update(const GeometryContext& gctx,
       // Valid solution is either on surface or updates the distance
       if (intersection.isValid()) {
         candidate.intersection() = intersection;
+        ACTS_VERBOSE("NavigationStream::update() "
+                     << __LINE__ << " Update candidate " << candidate);
         return true;
       }
     }
-  }
+  } while (switchToNextCandidate());
   // No candidate was reachable
   return false;
 }
 
-void NavigationStream::reset(bool keepUnreachedBoundless) {
-  if (!keepUnreachedBoundless) {
+void NavigationStream::reset(const bool keepBoundLess) {
+  if (!keepBoundLess) {
     m_candidates.clear();
   } else {
+    if (m_currentIndex) {
+       m_candidates.erase(m_candidates.begin(), m_candidates.begin() + std::min(*m_currentIndex, m_candidates.size()));
+    }
     auto [begin, end] = std::ranges::remove_if(
         m_candidates, [](const NavigationTarget& target) {
-          return target.isReached() || target.pathLength() < 0. ||
-                 !target.boundaryTolerance().isInfinite();
+          return target.pathLength() < 0. || !target.boundaryTolerance().isInfinite();
         });
     m_candidates.erase(begin, end);
   }
-  m_currentIndex = 0;
+  m_currentIndex.reset();
 }
 
 void NavigationStream::addSurfaceCandidate(
