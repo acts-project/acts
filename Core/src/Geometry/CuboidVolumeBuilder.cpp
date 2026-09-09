@@ -81,14 +81,12 @@ std::shared_ptr<const Layer> CuboidVolumeBuilder::buildLayer(
   // In the case the layer configuration doesn't define the rotation of the
   // layer use the orientation of the first surface to define the layer rotation
   // in space.
-  Transform3 trafo = Transform3::Identity();
-  trafo.translation() = centroid;
-  if (cfg.rotation) {
-    trafo.linear() = *cfg.rotation;
-  } else {
-    trafo.linear() =
-        cfg.surfaces.front()->localToGlobalTransform(gctx).rotation();
-  }
+  const RotationMatrix3 rotation =
+      cfg.rotation.has_value()
+          ? *cfg.rotation
+          : RotationMatrix3(
+                cfg.surfaces.front()->localToGlobalTransform(gctx).rotation());
+  const Transform3 trafo = makeTransform3(rotation, centroid);
 
   LayerCreator::Config lCfg;
   lCfg.surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>();

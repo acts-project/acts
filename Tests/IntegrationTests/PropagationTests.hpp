@@ -274,8 +274,7 @@ inline Acts::Transform3 createCurvilinearTransform(
   rotation.col(0) = unitU;
   rotation.col(1) = unitV;
   rotation.col(2) = unitW;
-  Translation3 offset(params.position(geoCtx));
-  Transform3 toGlobal = offset * rotation;
+  Transform3 toGlobal = makeTransform3(rotation, params.position(geoCtx));
 
   return toGlobal;
 }

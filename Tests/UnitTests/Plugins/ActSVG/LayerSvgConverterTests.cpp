@@ -101,7 +101,7 @@ std::shared_ptr<Layer> generateDiscLayer(double rInner, double rOuter,
         rotation.col(0) = localX;
         rotation.col(1) = localY;
         rotation.col(2) = localZ;
-        Transform3 placement(Translation3(center) * rotation);
+        Transform3 placement = makeTransform3(rotation, center);
         // Create the module surface
         auto dModule = Surface::makeShared<PlaneSurface>(placement, tBounds);
         moduleSurfaces.push_back(dModule);

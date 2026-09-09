@@ -13,6 +13,7 @@
 #include "Acts/EventData/ParticleHypothesis.hpp"
 
 #include <format>
+#include <stdexcept>
 
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
@@ -297,10 +298,10 @@ void addDefinitions(py::module_& m) {
       }))
       .def(py::init([](const Vector3& translation,
                        const RotationMatrix3& rotation) -> Transform3 {
-        Transform3 t;
-        t.prerotate(rotation);
-        t.pretranslate(translation);
-        return t;
+        if (!isOrthogonal(rotation)) {
+          throw std::invalid_argument("Transform3 rotation is not orthogonal");
+        }
+        return makeTransform3(rotation, translation);
       }))
       .def_property_readonly(
           "translation",

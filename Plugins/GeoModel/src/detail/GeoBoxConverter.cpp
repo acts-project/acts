@@ -32,10 +32,7 @@ ActsPlugins::detail::GeoBoxConverter::operator()(
   static constexpr double unitLength =
       UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
-  // Create the surface transform
-  Transform3 transform = Transform3::Identity();
-  transform.translation() = unitLength * absTransform.translation();
-  auto rotation = absTransform.rotation();
+  const RotationMatrix3 originalRotation = absTransform.rotation();
   // Get the half lengths
   std::vector<double> halfLengths = {geoBox.getXHalfLength(),
                                      geoBox.getYHalfLength(),
@@ -46,13 +43,13 @@ ActsPlugins::detail::GeoBoxConverter::operator()(
   std::size_t yIndex = zIndex > 0u ? zIndex - 1u : 2u;
   std::size_t xIndex = yIndex > 0u ? yIndex - 1u : 2u;
 
-  Vector3 colX = rotation.col(xIndex);
-  Vector3 colY = rotation.col(yIndex);
-  Vector3 colZ = rotation.col(zIndex);
-  rotation.col(0) = colX;
-  rotation.col(1) = colY;
-  rotation.col(2) = colZ;
-  transform.linear() = rotation;
+  // Create the surface transform with the axes ordered by half length
+  RotationMatrix3 rotation;
+  rotation.col(0) = originalRotation.col(xIndex);
+  rotation.col(1) = originalRotation.col(yIndex);
+  rotation.col(2) = originalRotation.col(zIndex);
+  const Transform3 transform =
+      makeTransform3(rotation, unitLength * absTransform.translation());
 
   // Create the surface bounds
   double halfX = unitLength * halfLengths[xIndex];

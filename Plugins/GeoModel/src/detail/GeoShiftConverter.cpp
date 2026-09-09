@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
 #include "ActsPlugins/GeoModel/detail/GeoBoxConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoTransformConverter.hpp"
 #include "ActsPlugins/GeoModel/detail/GeoTrdConverter.hpp"
 #include "ActsPlugins/GeoModel/detail/GeoTubeConverter.hpp"
 
@@ -38,8 +39,9 @@ Result<GeoModelSensitiveSurface> impl(const PVConstLink& geoPV,
     return GeoModelConversionError::WrongShapeForConverter;
   }
 
-  return Converter{}(geoPV, *trd, absTransform * geoShift.getX(), boundFactory,
-                     sensitive);
+  return Converter{}(geoPV, *trd,
+                     absTransform * convertTransform(geoShift.getX()),
+                     boundFactory, sensitive);
 }
 
 }  // namespace

@@ -87,11 +87,11 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftEnhancedTests) {
   rotationMatrix.col(1) = localY;
   rotationMatrix.col(2) = localZ;
 
-  auto entryTransform = Transform3(
-      Translation3(cPosition - 0.5 * thickness * localZ) * rotationMatrix);
-  auto centralTransform = Transform3(Translation3(cPosition) * rotationMatrix);
-  auto exitTransform = Transform3(
-      Translation3(cPosition + 0.5 * thickness * localZ) * rotationMatrix);
+  auto entryTransform =
+      makeTransform3(rotationMatrix, cPosition - 0.5 * thickness * localZ);
+  auto centralTransform = makeTransform3(rotationMatrix, cPosition);
+  auto exitTransform =
+      makeTransform3(rotationMatrix, cPosition + 0.5 * thickness * localZ);
 
   // Create the entry and exit surface
   auto entrySurface = Surface::makeShared<PlaneSurface>(

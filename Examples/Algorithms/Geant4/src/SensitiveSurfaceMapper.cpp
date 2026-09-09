@@ -175,7 +175,8 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
       rotation << g4Rotation->xx(), g4Rotation->yx(), g4Rotation->zx(),
           g4Rotation->xy(), g4Rotation->yy(), g4Rotation->zy(),
           g4Rotation->xz(), g4Rotation->yz(), g4Rotation->zz();
-      localG4ToGlobal = motherTransform * (translation * rotation);
+      localG4ToGlobal =
+          motherTransform * Acts::makeTransform3(rotation, g4RelPosition);
     }
   }
 

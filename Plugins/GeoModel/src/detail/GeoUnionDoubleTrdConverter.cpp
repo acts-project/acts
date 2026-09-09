@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
 #include "ActsPlugins/GeoModel/detail/GeoShiftConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoTransformConverter.hpp"
 
 #include <GeoModelHelpers/GeoShapeUtils.h>
 
@@ -119,8 +120,8 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
       static_cast<const TrapezoidBounds &>(surfaceB->bounds());
 
   // First check now, if this actually is correct
-  const auto vtxsa = extactVertices(boundsA, shiftA->getX());
-  const auto vtxsb = extactVertices(boundsB, shiftB->getX());
+  const auto vtxsa = extactVertices(boundsA, convertTransform(shiftA->getX()));
+  const auto vtxsb = extactVertices(boundsB, convertTransform(shiftB->getX()));
 
   if (!trapezoidsAreMergeable(vtxsa, vtxsb)) {
     return GeoModelConversionError::WrongShapeForConverter;
@@ -149,7 +150,7 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
       boundFactory.makeBounds<TrapezoidBounds>(hlxpy, hlxny, halfLengthY);
   // Create transform from the transform of surfaceA and translate it in y
   // direction using the half length
-  auto transform = absTransform * shiftA->getX();
+  auto transform = absTransform * convertTransform(shiftA->getX());
   transform.translate(Vector3{
       0.f, boundsA.values()[TrapezoidBounds::eHalfLengthY] - halfLengthY, 0.f});
 

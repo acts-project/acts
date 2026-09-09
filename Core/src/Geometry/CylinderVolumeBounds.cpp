@@ -94,23 +94,19 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
 
   Translation3 vMinZ(0., 0., -get(eHalfLengthZ));
   Translation3 vMaxZ(0., 0., get(eHalfLengthZ));
-  // Set up transform for beveled edges if they are defined
+  // Set up transform for beveled edges if they are defined. The disc is only
+  // tilted, not stretched - the elliptical cut a bevel produces cannot be
+  // represented by disc bounds anyway.
   double bevelMinZ = get(eBevelMinZ);
   double bevelMaxZ = get(eBevelMaxZ);
   Transform3 transMinZ, transMaxZ;
   if (bevelMinZ != 0.) {
-    double sy = 1 - 1 / std::cos(bevelMinZ);
-    transMinZ = transform * vMinZ *
-                Eigen::AngleAxisd(-bevelMinZ, Eigen::Vector3d(1., 0., 0.)) *
-                Eigen::Scaling(1., 1. + sy, 1.);
+    transMinZ = transform * vMinZ * AngleAxis3(-bevelMinZ, Vector3::UnitX());
   } else {
     transMinZ = transform * vMinZ;
   }
   if (bevelMaxZ != 0.) {
-    double sy = 1 - 1 / std::cos(bevelMaxZ);
-    transMaxZ = transform * vMaxZ *
-                Eigen::AngleAxisd(bevelMaxZ, Eigen::Vector3d(1., 0., 0.)) *
-                Eigen::Scaling(1., 1. + sy, 1.);
+    transMaxZ = transform * vMaxZ * AngleAxis3(bevelMaxZ, Vector3::UnitX());
   } else {
     transMaxZ = transform * vMaxZ;
   }

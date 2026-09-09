@@ -310,7 +310,7 @@ void checkGlobalSubspaceTuple(const SubspactTuple& sstuple) {
       sstuple);
   BOOST_CHECK(good);
 
-  Transform3 tTransform;
+  Transform3 tTransform = Transform3::Identity();
   tTransform.pretranslate(Vector3{0., 0., 100.});
 
   // Test with transform
