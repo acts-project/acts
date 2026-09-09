@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <numeric>
 
 namespace Acts {
@@ -55,9 +56,27 @@ BroadTripletSeedFilter::BroadTripletSeedFilter(const Config& config,
                                                State& state, Cache& cache,
                                                const Logger& logger)
     : m_cfg(&config), m_state(&state), m_cache(&cache), m_logger(&logger) {
+  // High-quality candidates are only ever pushed when seedConfirmation is
+  // true (see filterTripletTopCandidates), so without it the high-quality
+  // budget is unused; maxSeedsPerSpM + 1 is the tightest low-quality budget
+  // that keeps every seed the final maxSeedsPerSpM cut in
+  // filterTripletsMiddleFixed can accept. The +1 saturates at
+  // CandidatesForMiddleSp::kNoSize instead of wrapping around when
+  // maxSeedsPerSpM is already the maximum representable count.
+  auto incrementSaturating =
+      [](unsigned int value) -> CandidatesForMiddleSp::Size {
+    if (value >= CandidatesForMiddleSp::kNoSize - 1) {
+      return CandidatesForMiddleSp::kNoSize;
+    }
+    return static_cast<CandidatesForMiddleSp::Size>(value) + 1;
+  };
+
   state.candidatesCollector =
-      CandidatesForMiddleSp(this->config().maxSeedsPerSpMConf,
-                            this->config().maxQualitySeedsPerSpMConf);
+      this->config().seedConfirmation
+          ? CandidatesForMiddleSp(this->config().maxSeedsPerSpMConf,
+                                  this->config().maxQualitySeedsPerSpMConf)
+          : CandidatesForMiddleSp(
+                incrementSaturating(this->config().maxSeedsPerSpM), 0);
 }
 
 bool BroadTripletSeedFilter::sufficientTopDoublets(
