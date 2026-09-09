@@ -13,19 +13,20 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Propagator/EigenStepperError.hpp"
 
 #include <cmath>
 
+#include "SympyStepperStepImpl.hpp"
 #include "codegen/sympy_stepper_math.hpp"
 
-namespace Acts::detail {
+namespace Acts {
 
-Rk4Status sympyDenseStep(const SympyStepper& stepper,
-                         SympyStepper::State& state,
-                         const IVolumeMaterial& material, double h,
-                         double errTol, double& errorEstimate,
-                         Vector3& lastField, std::error_code& fieldErr,
-                         std::span<double> jac) {
+detail::Rk4Status detail::sympyDenseStep(
+    const SympyStepper& stepper, SympyStepper::State& state,
+    const IVolumeMaterial& material, double h, double errTol,
+    double& errorEstimate, Vector3& lastField, std::error_code& fieldErr,
+    std::span<double> jac) {
   const Vector3 pos = stepper.position(state);
   const Vector3 dir = stepper.direction(state);
   const double t = stepper.time(state);
@@ -71,4 +72,8 @@ Rk4Status sympyDenseStep(const SympyStepper& stepper,
       std::span<double, 8>(state.derivative.data(), 8), jac);
 }
 
-}  // namespace Acts::detail
+template Result<double> detail::sympyStep<detail::SympyStepMode::Dense>(
+    const SympyStepper&, SympyStepper::State&, Direction,
+    const IVolumeMaterial*);
+
+}  // namespace Acts
