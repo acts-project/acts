@@ -14,10 +14,14 @@
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 namespace {
-std::string printCandidates(const std::vector<const Acts::Surface*>& surfaces) {
+std::string printCandidates(const std::vector<const Acts::Surface*>& surfaces,
+                            const std::size_t lastMark) {
   std::stringstream sstr{};
-  for (const auto* surf : surfaces) {
-    sstr << " --- " << surf->geometryId() << std::endl;
+  for (const auto [idx, surf] : Acts::enumerate(surfaces)) {
+    sstr << "  " << (idx + 1) << ") " << surf->geometryId()
+         << (idx + 1 == lastMark && idx + 1 != surfaces.size() ? " <-- last"
+                                                               : "")
+         << std::endl;
   }
   return sstr.str();
 }
@@ -100,14 +104,16 @@ void MultiLayerNavigationPolicy::initializeCandidates(
   }
   if (writeIdx != surfCandidates.size()) {
     ACTS_VERBOSE("MultiLayerNavigationPolicy - Remove "
-                 << (surfCandidates.size() - writeIdx) << " candidates");
+                 << (surfCandidates.size() - writeIdx)
+                 << " duplicate candidates\n"
+                 << printCandidates(surfCandidates, writeIdx));
     surfCandidates.erase(surfCandidates.begin() + writeIdx,
                          surfCandidates.end());
   }
 
-  ACTS_VERBOSE("MultiLayerNavigationPolicy() - reported "
-               << surfCandidates.size() << " candidates. "
-               << "\n " << printCandidates(surfCandidates));
+  ACTS_DEBUG("MultiLayerNavigationPolicy() - reported "
+             << surfCandidates.size() << " candidates. "
+             << "\n " << printCandidates(surfCandidates, writeIdx));
 
   // fill the navigation stream with the container
   for (const auto* surf : surfCandidates) {
