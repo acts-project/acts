@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 class TTree;
 class TFile;
@@ -25,6 +26,7 @@ class IVolumeMaterial;
 class HomogeneousSurfaceMaterial;
 class MaterialSlab;
 class BinnedSurfaceMaterial;
+class GridSurfaceMaterial;
 }  // namespace Acts
 
 namespace ActsPlugins {
@@ -73,13 +75,31 @@ class RootMaterialMapIo {
     std::string rhoHistName = "rho";
     /// The index histogram name
     std::string indexHistName = "i";
+    /// The material kind marker name: a 1-bin histogram holding a
+    /// @c RootMaterialMapIo::MaterialKind value, present only on directories
+    /// written by the current writer. Its presence also disambiguates
+    /// @c axisBoundaryTypeHistName's encoding on read (see @c MaterialKind);
+    /// its absence marks a directory written by the legacy
+    /// @c BinnedSurfaceMaterial writer, which never had this concept.
+    std::string materialKindHistName = "k";
   };
 
   /// Options for writing the material maps
   /// Folder names are optional as it allows to write more maps into one
   /// file, e.g. for the same detector with different configurations.
   struct Options {
-    /// The name of the homogeneous material tree
+    /// The storage backend a @c GridSurfaceMaterial is reconstructed with on
+    /// read - only used as a fallback for legacy @c BinnedSurfaceMaterial
+    /// data, which carries no persisted @c MaterialKind and is always
+    /// upgraded to a @c GridSurfaceMaterial. Directories carrying a
+    /// @c MaterialKind (i.e. written by the current writer) always
+    /// reconstruct that kind instead, ignoring this option.
+    enum class GridStorageKind { Direct, Indexed, GloballyIndexed };
+
+    /// The name of the homogeneous material tree - read-only, kept for
+    /// backward compatibility with files written before HomogeneousMaterial
+    /// was folded into the per-directory model (see @c MaterialKind); the
+    /// current writer never creates this tree.
     std::string homogeneousMaterialTreeName = "HomogeneousMaterial";
     /// The name of the indexed material tree
     std::string indexedMaterialTreeName = "IndexedMaterial";
@@ -89,6 +109,26 @@ class RootMaterialMapIo {
     std::string folderVolumeNameBase = "VolumeMaterial";
     /// Use an indexed material tree
     bool indexedMaterial = false;
+    /// The fallback storage backend for legacy BinnedSurfaceMaterial data.
+    /// Defaults to GloballyIndexed so that legacy-indexed files (i.e. ones
+    /// already carrying a shared material tree) are reconstructed sharing
+    /// one material vector across the whole file, same as a natively written
+    /// GloballyIndexed GridSurfaceMaterial would be. Legacy raw-histogram
+    /// data has no shared tree to begin with, so it gets one independent
+    /// vector per surface regardless of this setting.
+    GridStorageKind gridStorageKind = GridStorageKind::GloballyIndexed;
+  };
+
+  /// The concrete kind of surface material a directory holds, persisted
+  /// alongside its axis/index histograms so a directory is fully
+  /// self-describing: a GeometryIdentifier (via the directory name), a
+  /// histogram of indices into the single shared material storage, and this
+  /// indication of what to reconstruct from them.
+  enum class MaterialKind : int {
+    Homogeneous = 0,
+    Direct = 1,
+    Indexed = 2,
+    GloballyIndexed = 3
   };
 
   /// Payload structure for material tree data
@@ -170,16 +210,70 @@ class RootMaterialMapIo {
   void fillBinnedSurfaceMaterial(MaterialTreePayload& payload,
                                  const Acts::BinnedSurfaceMaterial& bsMaterial);
 
-  /// Read the a texture Surface material
-  /// @param rFile the file to read from
-  /// @param tdName the name of the texture directory
-  /// @param indexedMaterialTree the indexed material tree, if available
-  /// @return a shared pointer to the ISurfaceMaterial
-  std::shared_ptr<const Acts::ISurfaceMaterial> readTextureSurfaceMaterial(
-      TFile& rFile, const std::string& tdName,
-      TTree* indexedMaterialTree = nullptr);
+  /// Build the per-surface directory name from a geometry identifier
+  /// @param geoID the geometry identifier for the surface
+  /// @param options the options for writing/reading
+  /// @return the directory name
+  std::string surfaceDirectoryName(const Acts::GeometryIdentifier& geoID,
+                                   const Options& options) const;
 
-  /// Read the a grid Surface material
+  /// Write a GridSurfaceMaterial's axis description (n/v/o/min/max
+  /// histograms) into the current directory
+  /// @param gridMaterial the grid surface material whose axes to write
+  void writeGridAxisHistograms(const Acts::GridSurfaceMaterial& gridMaterial);
+
+  /// Write the material kind marker into the current directory
+  /// @param kind the material kind to record
+  void writeMaterialKind(MaterialKind kind);
+
+  /// Fill a GridSurfaceMaterial into the current directory: uniformly for
+  /// all three storage backends, an index histogram pointing into the
+  /// shared indexed material tree.
+  ///
+  /// A GridSurfaceMaterial's on-disk index values are always absolute row
+  /// numbers into the shared tree - this makes the file directly usable by
+  /// tooling that operates on "the" global material vector (e.g. clustering
+  /// similar slabs and re-indexing), without that tooling needing to know
+  /// about any per-surface offset.
+  ///
+  /// This requires GloballyIndexed storage to carry the *same* material
+  /// vector (checked by shared_ptr identity) for every surface in one write
+  /// session - that is the actual meaning of "globally" indexed. The first
+  /// GloballyIndexed surface encountered establishes that vector and writes
+  /// it once; later surfaces referencing the same vector reuse its row
+  /// offset for free.
+  ///
+  /// @param gridMaterial the grid surface material to write
+  /// @throws std::invalid_argument if a GloballyIndexed surface references a
+  ///         material vector different from the one already established in
+  ///         this write session - use Indexed storage for a per-surface,
+  ///         non-shared vector instead
+  void fillGridSurfaceMaterial(const Acts::GridSurfaceMaterial& gridMaterial);
+
+  /// Read a surface material from a surface directory
+  ///
+  /// Handles every on-disk shape transparently: natively written material of
+  /// any MaterialKind (including Homogeneous, folded into this same
+  /// per-directory model), legacy indexed BinnedSurfaceMaterial (same shape
+  /// as Direct/Indexed/GloballyIndexed, different axis boundary type
+  /// encoding) and legacy raw-histogram BinnedSurfaceMaterial (no shared
+  /// tree involved). A directory carrying a MaterialKind always reconstructs
+  /// that kind; one that does not (i.e. legacy BinnedSurfaceMaterial data)
+  /// falls back to @p legacyStorageKind.
+  ///
+  /// @param rFile the file to read from
+  /// @param tdName the name of the surface directory
+  /// @param globalMaterial the fully read-in shared indexed material tree,
+  ///        or nullptr if the file has none
+  /// @param legacyStorageKind the storage backend to reconstruct legacy
+  ///        BinnedSurfaceMaterial data with
+  /// @return a shared pointer to the surface material, or nullptr if the
+  ///         directory does not hold a (2D) grid or homogeneous material
+  std::shared_ptr<const Acts::ISurfaceMaterial> readSurfaceMaterial(
+      TFile& rFile, const std::string& tdName,
+      const std::shared_ptr<std::vector<Acts::MaterialSlab>>& globalMaterial,
+      Options::GridStorageKind legacyStorageKind);
+
   const Acts::Logger& logger() const { return *m_logger; }
 
   /// The configuration for the accessor
@@ -188,13 +282,22 @@ class RootMaterialMapIo {
   /// The logger for this accessor
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  /// The homogeneous material tree
-  TTree* m_hTree = nullptr;
+  /// Payload reused when reading a legacy HomogeneousMaterial tree, see
+  /// Options::homogeneousMaterialTreeName
   MaterialTreePayload m_homogenousMaterialTreePayload;
 
   /// The globally indexed material tree
   TTree* m_gTree = nullptr;
   MaterialTreePayload m_indexedMaterialTreePayload;
+
+  /// Identity (the shared_ptr's stored pointer) of the one GloballyIndexed
+  /// material vector written to m_gTree so far in this write session, or
+  /// nullptr if none has been written yet. There is only ever one: that is
+  /// the meaning of "globally" indexed, see fillGridSurfaceMaterial.
+  const void* m_globalMaterialIdentity = nullptr;
+
+  /// Row offset of m_globalMaterialIdentity's entries in m_gTree
+  std::size_t m_globalMaterialOffset = 0;
 };
 
 /// @}

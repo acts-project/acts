@@ -10,11 +10,24 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/GridSurfaceMaterial.hpp"
+#include "Acts/Material/GridSurfaceMaterialFactory.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/MultiAxisSpec.hpp"
+
+#include <algorithm>
+#include <array>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <unordered_map>
 
 #include <TFile.h>
 #include <TH1I.h>
@@ -31,45 +44,173 @@ using namespace Acts;
 
 namespace ActsPlugins {
 
+namespace {
+
+/// @brief Legacy `BinningOption` (open = 0, closed = 1), kept only to
+/// translate axis boundary types read back from files written before the
+/// GridSurfaceMaterial migration - it has no `Bound` counterpart.
+enum LegacyBinningOption { legacyOpen = 0, legacyClosed = 1 };
+
+/// @brief Translate a legacy `BinningOption` value into the corresponding
+/// `AxisBoundaryType` - `Bound` never appears in legacy files.
+AxisBoundaryType boundaryTypeFromLegacy(int legacyOption) {
+  switch (legacyOption) {
+    case LegacyBinningOption::legacyOpen:
+      return AxisBoundaryType::Open;
+    case LegacyBinningOption::legacyClosed:
+      return AxisBoundaryType::Closed;
+    default:
+      throw std::invalid_argument(
+          "RootMaterialMapIo: unknown legacy binning option " +
+          std::to_string(legacyOption));
+  }
+}
+
+using GridStorageKind = RootMaterialMapIo::Options::GridStorageKind;
+using MaterialKind = RootMaterialMapIo::MaterialKind;
+
+/// @brief The MaterialKind matching a GridSurfaceMaterial's storage backend
+MaterialKind materialKindOf(const GridSurfaceMaterial::Storage& storage) {
+  return std::visit(
+      [](const auto& s) {
+        using T = std::decay_t<decltype(s)>;
+        if constexpr (std::is_same_v<T, GridSurfaceMaterial::Direct>) {
+          return MaterialKind::Direct;
+        } else if constexpr (std::is_same_v<T, GridSurfaceMaterial::Indexed>) {
+          return MaterialKind::Indexed;
+        } else {
+          return MaterialKind::GloballyIndexed;
+        }
+      },
+      storage);
+}
+
+/// @brief Build a GridSurfaceMaterial from a dense (regular-bin only)
+/// material matrix - used for the legacy raw-histogram on-disk shape, which
+/// carries no natural index/dedup structure.
+std::shared_ptr<const GridSurfaceMaterial> buildFromMaterialPayload(
+    const IAxis& axis0, const IAxis& axis1,
+    const std::vector<std::vector<MaterialSlab>>& payload,
+    GridStorageKind storageKind) {
+  if (storageKind == GridStorageKind::Direct) {
+    return GridSurfaceMaterialFactory::createDirect(axis0, axis1, payload);
+  }
+  // Indexed / GloballyIndexed: one unique slab per bin, in bin order.
+  // This legacy raw-histogram shape carries no material shared across
+  // surfaces, so a requested GloballyIndexed reconstruction has nothing
+  // real to share - falls back to Indexed instead, to avoid fabricating a
+  // private per-surface vector that only pretends to be the (session-wide)
+  // canonical global one and would collide with every other surface's on
+  // write-back.
+  std::vector<MaterialSlab> material;
+  std::vector<std::vector<std::size_t>> indices(payload.size());
+  for (std::size_t i0 = 0; i0 < payload.size(); ++i0) {
+    indices[i0].resize(payload[i0].size());
+    for (std::size_t i1 = 0; i1 < payload[i0].size(); ++i1) {
+      indices[i0][i1] = material.size();
+      material.push_back(payload[i0][i1]);
+    }
+  }
+  return GridSurfaceMaterialFactory::createIndexed(
+      axis0, axis1, std::move(material), indices);
+}
+
+/// @brief Build a GridSurfaceMaterial from indices into an already read-in
+/// shared material vector - used for both the new and the legacy indexed
+/// on-disk shape, which are byte-for-byte identical.
+std::shared_ptr<const GridSurfaceMaterial> buildFromIndexPayload(
+    const IAxis& axis0, const IAxis& axis1,
+    const std::vector<std::vector<std::size_t>>& indexPayload,
+    const std::shared_ptr<std::vector<MaterialSlab>>& globalMaterial,
+    GridStorageKind storageKind) {
+  if (storageKind == GridStorageKind::GloballyIndexed) {
+    return GridSurfaceMaterialFactory::createGloballyIndexed(
+        axis0, axis1, globalMaterial, indexPayload);
+  }
+  if (storageKind == GridStorageKind::Direct) {
+    std::vector<std::vector<MaterialSlab>> payload(indexPayload.size());
+    for (std::size_t i0 = 0; i0 < indexPayload.size(); ++i0) {
+      payload[i0].resize(indexPayload[i0].size());
+      for (std::size_t i1 = 0; i1 < indexPayload[i0].size(); ++i1) {
+        payload[i0][i1] = globalMaterial->at(indexPayload[i0][i1]);
+      }
+    }
+    return GridSurfaceMaterialFactory::createDirect(axis0, axis1, payload);
+  }
+  // Indexed: compact the referenced rows into a locally owned vector,
+  // remapping indices
+  std::unordered_map<std::size_t, std::size_t> remap;
+  std::vector<MaterialSlab> material;
+  std::vector<std::vector<std::size_t>> localIndices(indexPayload.size());
+  for (std::size_t i0 = 0; i0 < indexPayload.size(); ++i0) {
+    localIndices[i0].resize(indexPayload[i0].size());
+    for (std::size_t i1 = 0; i1 < indexPayload[i0].size(); ++i1) {
+      std::size_t globalRow = indexPayload[i0][i1];
+      auto [it, inserted] = remap.try_emplace(globalRow, material.size());
+      if (inserted) {
+        material.push_back(globalMaterial->at(globalRow));
+      }
+      localIndices[i0][i1] = it->second;
+    }
+  }
+  return GridSurfaceMaterialFactory::createIndexed(
+      axis0, axis1, std::move(material), localIndices);
+}
+
+}  // namespace
+
 void RootMaterialMapIo::write(TFile& rFile, const GeometryIdentifier& geoID,
                               const ISurfaceMaterial& surfaceMaterial,
                               const Options& options) {
   /// Change to the file
   rFile.cd();
 
-  // Homogeneous surface material writing into one tree
+  // Homogeneous surface material writing - folded into the same
+  // per-directory, shared-tree model as grid material: a trivial 1x1 Direct
+  // grid whose MaterialKind marks it as Homogeneous, so the picture stays
+  // consistent (GeometryIdentifier + index histogram + kind) regardless of
+  // what kind of material a given surface carries or the order surfaces are
+  // written in.
   auto homogeneousMaterial =
       dynamic_cast<const HomogeneousSurfaceMaterial*>(&surfaceMaterial);
   if (homogeneousMaterial != nullptr) {
-    if (m_hTree == nullptr) {
-      m_hTree = new TTree(options.homogeneousMaterialTreeName.c_str(),
-                          "Homogeneous Material Tree");
-      connectForWrite(*m_hTree, m_homogenousMaterialTreePayload);
+    std::string tdName = surfaceDirectoryName(geoID, options);
+    rFile.mkdir(tdName.c_str());
+    rFile.cd(tdName.c_str());
+
+    // The axes are never used to reconstruct a HomogeneousSurfaceMaterial on
+    // read (only the MaterialKind is), so their range is an arbitrary but
+    // valid placeholder. Only the one regular bin ever reaches disk (see
+    // fillGridSurfaceMaterial), the under-/overflow entries just exist to
+    // satisfy GridSurfaceMaterial's storage-size invariant.
+    MultiAxisSpec2D binning(
+        {AxisSpec::Equidistant(1, 0., 1., AxisBoundaryType::Bound),
+         AxisSpec::Equidistant(1, 0., 1., AxisBoundaryType::Bound)});
+    auto trivialMultiAxis = binning.buildMultiAxis();
+    GridSurfaceMaterial::Direct storage(trivialMultiAxis->getNTotalBins(true),
+                                        homogeneousMaterial->materialSlab());
+    GridSurfaceMaterial temporaryGrid(std::move(binning), std::move(storage));
+
+    writeGridAxisHistograms(temporaryGrid);
+    writeMaterialKind(MaterialKind::Homogeneous);
+
+    if (m_gTree == nullptr) {
+      rFile.cd();
+      m_gTree = new TTree(options.indexedMaterialTreeName.c_str(),
+                          "Indexed Material Tree");
+      connectForWrite(*m_gTree, m_indexedMaterialTreePayload);
+      rFile.cd(tdName.c_str());
     }
-    fillMaterialSlab(m_homogenousMaterialTreePayload,
-                     homogeneousMaterial->materialSlab());
-    m_homogenousMaterialTreePayload.hGeoId = geoID.value();
-    m_hTree->Fill();
+    fillGridSurfaceMaterial(temporaryGrid);
     return;
   }
 
-  // Binned surface material writing
+  // Binned surface material writing - legacy format, kept for callers still
+  // producing BinnedSurfaceMaterial in memory
   auto bsMaterial =
       dynamic_cast<const BinnedSurfaceMaterial*>(&surfaceMaterial);
   if (bsMaterial != nullptr) {
-    // decode the geometryID
-    const auto gvolID = geoID.volume();
-    const auto gbouID = geoID.boundary();
-    const auto glayID = geoID.layer();
-    const auto gappID = geoID.approach();
-    const auto gsenID = geoID.sensitive();
-    // create the directory
-    std::string tdName = options.folderSurfaceNameBase.c_str();
-    tdName += m_cfg.volumePrefix + std::to_string(gvolID);
-    tdName += m_cfg.portalPrefix + std::to_string(gbouID);
-    tdName += m_cfg.layerPrefix + std::to_string(glayID);
-    tdName += m_cfg.passivePrefix + std::to_string(gappID);
-    tdName += m_cfg.sensitivePrefix + std::to_string(gsenID);
+    std::string tdName = surfaceDirectoryName(geoID, options);
     // create a new directory
     rFile.mkdir(tdName.c_str());
     rFile.cd(tdName.c_str());
@@ -136,6 +277,29 @@ void RootMaterialMapIo::write(TFile& rFile, const GeometryIdentifier& geoID,
     fillBinnedSurfaceMaterial(m_indexedMaterialTreePayload, *bsMaterial);
     return;
   }
+
+  // Grid surface material writing - always through the shared indexed
+  // material tree, regardless of the in-memory storage backend
+  auto gridMaterial =
+      dynamic_cast<const GridSurfaceMaterial*>(&surfaceMaterial);
+  if (gridMaterial != nullptr) {
+    std::string tdName = surfaceDirectoryName(geoID, options);
+    rFile.mkdir(tdName.c_str());
+    rFile.cd(tdName.c_str());
+
+    writeGridAxisHistograms(*gridMaterial);
+    writeMaterialKind(materialKindOf(gridMaterial->storage()));
+
+    if (m_gTree == nullptr) {
+      rFile.cd();
+      m_gTree = new TTree(options.indexedMaterialTreeName.c_str(),
+                          "Indexed Material Tree");
+      connectForWrite(*m_gTree, m_indexedMaterialTreePayload);
+      rFile.cd(tdName.c_str());
+    }
+    fillGridSurfaceMaterial(*gridMaterial);
+    return;
+  }
 }
 
 void RootMaterialMapIo::write(TFile& rFile,
@@ -145,19 +309,24 @@ void RootMaterialMapIo::write(TFile& rFile,
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
     write(rFile, geoID, *sMaterial, options);
   }
-  if (m_hTree != nullptr) {
-    m_hTree->Write();
-  }
   if (m_gTree != nullptr) {
     m_gTree->Write();
   }
 }
 
+std::string RootMaterialMapIo::surfaceDirectoryName(
+    const GeometryIdentifier& geoID, const Options& options) const {
+  std::string tdName = options.folderSurfaceNameBase;
+  tdName += m_cfg.volumePrefix + std::to_string(geoID.volume());
+  tdName += m_cfg.portalPrefix + std::to_string(geoID.boundary());
+  tdName += m_cfg.layerPrefix + std::to_string(geoID.layer());
+  tdName += m_cfg.passivePrefix + std::to_string(geoID.approach());
+  tdName += m_cfg.sensitivePrefix + std::to_string(geoID.sensitive());
+  return tdName;
+}
+
 void RootMaterialMapIo::connectForWrite(TTree& rTree,
                                         MaterialTreePayload& treePayload) {
-  if (&treePayload == &m_homogenousMaterialTreePayload) {
-    rTree.Branch("hGeoId", &treePayload.hGeoId);
-  }
   rTree.Branch(m_cfg.thicknessHistName.c_str(), &treePayload.ht);
   rTree.Branch(m_cfg.x0HistName.c_str(), &treePayload.hX0);
   rTree.Branch(m_cfg.l0HistName.c_str(), &treePayload.hL0);
@@ -257,6 +426,123 @@ void RootMaterialMapIo::fillBinnedSurfaceMaterial(
   idx.Write();
 }
 
+void RootMaterialMapIo::writeGridAxisHistograms(
+    const GridSurfaceMaterial& gridMaterial) {
+  const IMultiAxis2D& multiAxis = gridMaterial.multiAxis();
+
+  // The bin number/direction/boundary-type/range information, one bin per
+  // axis (always 2)
+  TH1F n(m_cfg.nBinsHistName.c_str(), "bins; bin", 2, -0.5, 1.5);
+  TH1F v(m_cfg.axisDirHistName.c_str(), "binning values; bin", 2, -0.5, 1.5);
+  TH1F o(m_cfg.axisBoundaryTypeHistName.c_str(), "binning options; bin", 2,
+         -0.5, 1.5);
+  TH1F rmin(m_cfg.minRangeHistName.c_str(), "min; bin", 2, -0.5, 1.5);
+  TH1F rmax(m_cfg.maxRangeHistName.c_str(), "max; bin", 2, -0.5, 1.5);
+
+  for (std::size_t ia = 0; ia < 2; ++ia) {
+    const IAxis& axis = multiAxis.getAxis(ia);
+    auto ib = static_cast<int>(ia) + 1;
+    n.SetBinContent(ib, static_cast<int>(axis.getNBins()));
+    // -1 marks "no direction known", since AxisDirection has no such value
+    v.SetBinContent(ib, axis.getDirection().has_value()
+                            ? static_cast<int>(axis.getDirection().value())
+                            : -1);
+    o.SetBinContent(ib, static_cast<int>(axis.getBoundaryType()));
+    rmin.SetBinContent(ib, axis.getMin());
+    rmax.SetBinContent(ib, axis.getMax());
+  }
+  n.Write();
+  v.Write();
+  o.Write();
+  rmin.Write();
+  rmax.Write();
+}
+
+void RootMaterialMapIo::writeMaterialKind(MaterialKind kind) {
+  TH1I k(m_cfg.materialKindHistName.c_str(), "material kind", 1, -0.5, 0.5);
+  k.SetBinContent(1, static_cast<int>(kind));
+  k.Write();
+}
+
+void RootMaterialMapIo::fillGridSurfaceMaterial(
+    const GridSurfaceMaterial& gridMaterial) {
+  const IMultiAxis2D& multiAxis = gridMaterial.multiAxis();
+  IMultiAxis2D::LocalBins nBins = multiAxis.getNBins();
+  auto n0 = static_cast<int>(nBins[0]);
+  auto n1 = static_cast<int>(nBins[1]);
+
+  TH2I idx(m_cfg.indexHistName.c_str(), "indices; bin0; bin1", n0, -0.5,
+           static_cast<float>(n0) - 0.5, n1, -0.5,
+           static_cast<float>(n1) - 0.5);
+
+  // Fill the index histogram over the regular bins, translating a local bin
+  // (i0, i1) to a global multi-axis bin and asking @p rowAt for the row in
+  // the shared material tree that global bin should point to.
+  auto fillIndexHist = [&](auto&& rowAt) {
+    for (int i0 = 0; i0 < n0; ++i0) {
+      for (int i1 = 0; i1 < n1; ++i1) {
+        IMultiAxis2D::LocalBins lbin{static_cast<std::size_t>(i0) + 1,
+                                     static_cast<std::size_t>(i1) + 1};
+        std::size_t bin = multiAxis.getGlobalBinFromLocalBins(lbin);
+        idx.SetBinContent(i0 + 1, i1 + 1, static_cast<float>(rowAt(bin)));
+      }
+    }
+  };
+
+  std::visit(
+      [&]<typename T>(const T& storage) {
+        if constexpr (std::is_same_v<T, GridSurfaceMaterial::Direct>) {
+          // No shared identity to dedup against - one fresh row per bin
+          fillIndexHist([&](std::size_t bin) {
+            auto row = static_cast<std::size_t>(m_gTree->GetEntries());
+            fillMaterialSlab(m_indexedMaterialTreePayload, storage.at(bin));
+            m_gTree->Fill();
+            return row;
+          });
+        } else if constexpr (std::is_same_v<T, GridSurfaceMaterial::Indexed>) {
+          // Indexed::material is owned per-instance, never shared across
+          // surfaces - always append fresh
+          auto offset = static_cast<std::size_t>(m_gTree->GetEntries());
+          for (const auto& slab : storage.material) {
+            fillMaterialSlab(m_indexedMaterialTreePayload, slab);
+            m_gTree->Fill();
+          }
+          fillIndexHist([&](std::size_t bin) {
+            return offset + storage.indices.at(bin);
+          });
+        } else {
+          // GloballyIndexed::material is the one canonical global vector
+          // for this write session: written once, every surface referencing
+          // it (by shared_ptr identity) reuses its row offset. A different
+          // vector showing up as GloballyIndexed is a caller error - use
+          // Indexed storage for a per-surface, non-shared vector instead.
+          const void* identity = storage.material.get();
+          if (m_globalMaterialIdentity == nullptr) {
+            m_globalMaterialIdentity = identity;
+            m_globalMaterialOffset =
+                static_cast<std::size_t>(m_gTree->GetEntries());
+            for (const auto& slab : *storage.material) {
+              fillMaterialSlab(m_indexedMaterialTreePayload, slab);
+              m_gTree->Fill();
+            }
+          } else if (identity != m_globalMaterialIdentity) {
+            throw std::invalid_argument(
+                "RootMaterialMapIo: a second, distinct GloballyIndexed "
+                "material vector was encountered in this write session - "
+                "only one canonical global material vector is supported per "
+                "session; use Indexed storage instead for a per-surface, "
+                "non-shared vector.");
+          }
+          fillIndexHist([&](std::size_t bin) {
+            return m_globalMaterialOffset + storage.indices.at(bin);
+          });
+        }
+      },
+      gridMaterial.storage());
+
+  idx.Write();
+}
+
 TrackingGeometryMaterial RootMaterialMapIo::read(TFile& rFile,
                                                  const Options& options) {
   TrackingGeometryMaterial detectorMaterial;
@@ -285,11 +571,25 @@ TrackingGeometryMaterial RootMaterialMapIo::read(TFile& rFile,
     }
   }
 
-  // Read the binned surface material, if there - connect it to the payload
+  // Read the shared indexed material tree, if there - once, in full, so it
+  // can be handed out as a single shared vector to every GloballyIndexed
+  // GridSurfaceMaterial reconstructed below
   auto indexedMaterialTree =
       dynamic_cast<TTree*>(rFile.Get(options.indexedMaterialTreeName.c_str()));
+  std::shared_ptr<std::vector<MaterialSlab>> globalMaterial;
   if (indexedMaterialTree != nullptr) {
     connectForRead(*indexedMaterialTree, m_indexedMaterialTreePayload);
+    globalMaterial = std::make_shared<std::vector<MaterialSlab>>();
+    auto nEntries = indexedMaterialTree->GetEntries();
+    globalMaterial->reserve(static_cast<std::size_t>(nEntries));
+    for (Long64_t i = 0; i < nEntries; ++i) {
+      indexedMaterialTree->GetEntry(i);
+      const auto material = Material::fromMassDensity(
+          m_indexedMaterialTreePayload.hX0, m_indexedMaterialTreePayload.hL0,
+          m_indexedMaterialTreePayload.hA, m_indexedMaterialTreePayload.hZ,
+          m_indexedMaterialTreePayload.hRho);
+      globalMaterial->emplace_back(material, m_indexedMaterialTreePayload.ht);
+    }
   }
 
   // Get the list of keys from the file
@@ -310,9 +610,6 @@ TrackingGeometryMaterial RootMaterialMapIo::read(TFile& rFile,
                boost::algorithm::first_finder(m_cfg.volumePrefix));
     // Surface Material
     if (splitNames[0] == options.folderSurfaceNameBase) {
-      // The surface material to be read in for this
-      std::shared_ptr<const ISurfaceMaterial> sMaterial = nullptr;
-
       boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
       GeometryIdentifier::Value volID = std::stoi(splitNames[0]);
       // boundary
@@ -345,19 +642,46 @@ TrackingGeometryMaterial RootMaterialMapIo::read(TFile& rFile,
 
       ACTS_VERBOSE("GeometryIdentifier re-constructed as " << geoID);
 
-      auto texturedSurfaceMaterial =
-          readTextureSurfaceMaterial(rFile, tdName, indexedMaterialTree);
-      surfaceMaterials.try_emplace(geoID, texturedSurfaceMaterial);
+      auto surfaceMaterial = readSurfaceMaterial(rFile, tdName, globalMaterial,
+                                                 options.gridStorageKind);
+      surfaceMaterials.try_emplace(geoID, surfaceMaterial);
     }
   }
   return detectorMaterial;
 }
 
-std::shared_ptr<const ISurfaceMaterial>
-RootMaterialMapIo::readTextureSurfaceMaterial(TFile& rFile,
-                                              const std::string& tdName,
-                                              TTree* indexedMaterialTree) {
-  std::shared_ptr<const ISurfaceMaterial> texturedSurfaceMaterial = nullptr;
+std::shared_ptr<const ISurfaceMaterial> RootMaterialMapIo::readSurfaceMaterial(
+    TFile& rFile, const std::string& tdName,
+    const std::shared_ptr<std::vector<MaterialSlab>>& globalMaterial,
+    Options::GridStorageKind legacyStorageKind) {
+  // The material kind marker: present only on directories written by the
+  // current writer. Its presence also settles the "o" histogram encoding
+  // (see boundaryTypeFromLegacy); its absence marks a legacy
+  // BinnedSurfaceMaterial directory.
+  std::string kindName = tdName + "/" + m_cfg.materialKindHistName;
+  auto kindHist = dynamic_cast<TH1I*>(rFile.Get(kindName.c_str()));
+  bool newFormat = kindHist != nullptr;
+
+  // An index histogram means this surface's material lives in the shared
+  // indexed material tree - true for every MaterialKind of the current
+  // writer, and for legacy indexed BinnedSurfaceMaterial
+  std::string indexName = tdName + "/" + m_cfg.indexHistName;
+  auto ih = dynamic_cast<TH2I*>(rFile.Get(indexName.c_str()));
+
+  if (newFormat &&
+      static_cast<MaterialKind>(static_cast<int>(kindHist->GetBinContent(1))) ==
+          MaterialKind::Homogeneous) {
+    if (ih == nullptr || globalMaterial == nullptr) {
+      ACTS_ERROR(
+          "Failed to read homogeneous surface material - missing index "
+          "histogram or shared indexed material tree for directory: "
+          << tdName);
+      return nullptr;
+    }
+    auto row = static_cast<std::size_t>(ih->GetBinContent(1, 1));
+    return std::make_shared<const HomogeneousSurfaceMaterial>(
+        globalMaterial->at(row));
+  }
 
   // Construct the common names & get the common histograms
   std::string nName = tdName + "/" + m_cfg.nBinsHistName;
@@ -376,105 +700,134 @@ RootMaterialMapIo::readTextureSurfaceMaterial(TFile& rFile,
   if (std::ranges::any_of(hists,
                           [](const auto* hist) { return hist == nullptr; })) {
     ACTS_ERROR(
-        "Failed to read all required histograms for textured surface "
+        "Failed to read all required histograms for grid surface "
         "material from file: "
         << rFile.GetName());
     return nullptr;
   }
+  if (n->GetNbinsX() != 2) {
+    ACTS_ERROR(
+        "RootMaterialMapIo: only 2D grid surface material is "
+        "supported, found "
+        << n->GetNbinsX() << " axes in " << tdName);
+    return nullptr;
+  }
 
-  // Now reconstruct the bin utilities
-  BinUtility bUtility;
-  for (int ib = 1; ib < n->GetNbinsX() + 1; ++ib) {
+  std::vector<AxisSpec> specs;
+  specs.reserve(2);
+  for (int ib = 1; ib <= 2; ++ib) {
     auto nbins = static_cast<std::size_t>(n->GetBinContent(ib));
-    auto val = static_cast<AxisDirection>(v->GetBinContent(ib));
-    auto opt = static_cast<BinningOption>(o->GetBinContent(ib));
-    auto rmin = static_cast<float>(minh->GetBinContent(ib));
-    auto rmax = static_cast<float>(maxh->GetBinContent(ib));
-    bUtility += BinUtility(nbins, rmin, rmax, opt, val);
-  }
-  ACTS_VERBOSE("Created " << bUtility);
-
-  /// Draw from histogram only source
-  if (indexedMaterialTree == nullptr) {
-    // Construct the names for histogram type storage
-    std::string tName = tdName + "/" + m_cfg.thicknessHistName;
-    std::string x0Name = tdName + "/" + m_cfg.x0HistName;
-    std::string l0Name = tdName + "/" + m_cfg.l0HistName;
-    std::string aName = tdName + "/" + m_cfg.aHistName;
-    std::string zName = tdName + "/" + m_cfg.zHistName;
-    std::string rhoName = tdName + "/" + m_cfg.rhoHistName;
-
-    // Get the histograms
-    auto t = dynamic_cast<TH2F*>(rFile.Get(tName.c_str()));
-    auto x0 = dynamic_cast<TH2F*>(rFile.Get(x0Name.c_str()));
-    auto l0 = dynamic_cast<TH2F*>(rFile.Get(l0Name.c_str()));
-    auto A = dynamic_cast<TH2F*>(rFile.Get(aName.c_str()));
-    auto Z = dynamic_cast<TH2F*>(rFile.Get(zName.c_str()));
-    auto rho = dynamic_cast<TH2F*>(rFile.Get(rhoName.c_str()));
-
-    hists = {t, x0, l0, A, Z, rho};
-
-    // Only go on when you have all histograms
-    if (std::ranges::all_of(hists,
-                            [](const auto* hist) { return hist != nullptr; })) {
-      // Get the number of bins
-      int nbins0 = t->GetNbinsX();
-      int nbins1 = t->GetNbinsY();
-      // The material matrix
-      MaterialSlabMatrix materialMatrix(
-          nbins1, MaterialSlabVector(nbins0, MaterialSlab::Nothing()));
-      // Fill the matrix from the histogram content
-      for (int ib0 = 1; ib0 <= nbins0; ++ib0) {
-        for (int ib1 = 1; ib1 <= nbins1; ++ib1) {
-          auto dt = static_cast<float>(t->GetBinContent(ib0, ib1));
-          if (dt > 0.) {
-            auto dx0 = static_cast<float>(x0->GetBinContent(ib0, ib1));
-            auto dl0 = static_cast<float>(l0->GetBinContent(ib0, ib1));
-            auto da = static_cast<float>(A->GetBinContent(ib0, ib1));
-            auto dz = static_cast<float>(Z->GetBinContent(ib0, ib1));
-            auto drho = static_cast<float>(rho->GetBinContent(ib0, ib1));
-            // Create material properties
-            const auto material =
-                Material::fromMassDensity(dx0, dl0, da, dz, drho);
-            materialMatrix[ib1 - 1][ib0 - 1] = MaterialSlab(material, dt);
-          }
-        }
-      }  // Construct the binned material with the right bin utility
-      texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
-          bUtility, std::move(materialMatrix));
+    auto rmin = static_cast<double>(minh->GetBinContent(ib));
+    auto rmax = static_cast<double>(maxh->GetBinContent(ib));
+    auto dirValue = static_cast<int>(v->GetBinContent(ib));
+    std::optional<AxisDirection> direction;
+    if (dirValue >= 0) {
+      direction = static_cast<AxisDirection>(dirValue);
     }
-  } else {
-    // Construct the names for histogram type storage
-    std::string indexName = tdName + "/" + m_cfg.indexHistName;
-    // Get the histograms
-    auto ih = dynamic_cast<TH2I*>(rFile.Get(indexName.c_str()));
-    if (ih != nullptr) {
-      // Get the number of bins
-      int nbins0 = ih->GetNbinsX();
-      int nbins1 = ih->GetNbinsY();
-      // The material matrix
-      MaterialSlabMatrix materialMatrix(
-          nbins1, MaterialSlabVector(nbins0, MaterialSlab::Nothing()));
-      // Fill the matrix from the tree entries
-      for (int ib0 = 1; ib0 <= nbins0; ++ib0) {
-        for (int ib1 = 1; ib1 <= nbins1; ++ib1) {
-          auto idx = static_cast<int>(ih->GetBinContent(ib0, ib1));
-          indexedMaterialTree->GetEntry(idx);
-          const auto material = Material::fromMassDensity(
-              m_indexedMaterialTreePayload.hX0,
-              m_indexedMaterialTreePayload.hL0, m_indexedMaterialTreePayload.hA,
-              m_indexedMaterialTreePayload.hZ,
-              m_indexedMaterialTreePayload.hRho);
-          materialMatrix[ib1 - 1][ib0 - 1] =
-              MaterialSlab(material, m_indexedMaterialTreePayload.ht);
-        }
-      }  // Construct the binned material with the right bin utility
-      texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
-          bUtility, std::move(materialMatrix));
+    auto legacyOrNewOption = static_cast<int>(o->GetBinContent(ib));
+    AxisBoundaryType boundaryType =
+        newFormat ? static_cast<AxisBoundaryType>(legacyOrNewOption)
+                  : boundaryTypeFromLegacy(legacyOrNewOption);
+    specs.push_back(
+        AxisSpec::Equidistant(nbins, rmin, rmax, boundaryType, direction));
+  }
+  std::array<AxisSpec, 2> axisSpecs{specs[0], specs[1]};
+  MultiAxisSpec2D binning(axisSpecs);
+  auto multiAxis = binning.buildMultiAxis();
+  const IAxis& axis0 = multiAxis->getAxis(0);
+  const IAxis& axis1 = multiAxis->getAxis(1);
+  auto nbins0 = axis0.getNBins();
+  auto nbins1 = axis1.getNBins();
+
+  ACTS_VERBOSE("Reconstructed grid material binning for " << tdName);
+
+  // A directory carrying a MaterialKind always reconstructs that kind,
+  // ignoring legacyStorageKind - a legacy BinnedSurfaceMaterial directory
+  // (no MaterialKind) falls back to it instead.
+  GridStorageKind storageKind = legacyStorageKind;
+  if (newFormat) {
+    switch (static_cast<MaterialKind>(
+        static_cast<int>(kindHist->GetBinContent(1)))) {
+      case MaterialKind::Direct:
+        storageKind = GridStorageKind::Direct;
+        break;
+      case MaterialKind::Indexed:
+        storageKind = GridStorageKind::Indexed;
+        break;
+      case MaterialKind::GloballyIndexed:
+        storageKind = GridStorageKind::GloballyIndexed;
+        break;
+      case MaterialKind::Homogeneous:
+        // handled above, before the axis histograms were even read
+        break;
     }
   }
 
-  return texturedSurfaceMaterial;
+  if (ih != nullptr) {
+    if (globalMaterial == nullptr) {
+      ACTS_ERROR(
+          "Found an index histogram but no shared indexed material tree in "
+          "file: "
+          << rFile.GetName());
+      return nullptr;
+    }
+    std::vector<std::vector<std::size_t>> indexPayload(
+        nbins0, std::vector<std::size_t>(nbins1));
+    for (std::size_t ib0 = 1; ib0 <= nbins0; ++ib0) {
+      for (std::size_t ib1 = 1; ib1 <= nbins1; ++ib1) {
+        indexPayload[ib0 - 1][ib1 - 1] = static_cast<std::size_t>(
+            ih->GetBinContent(static_cast<int>(ib0), static_cast<int>(ib1)));
+      }
+    }
+    return buildFromIndexPayload(axis0, axis1, indexPayload, globalMaterial,
+                                 storageKind);
+  }
+
+  // Otherwise fall back to the legacy raw-histogram storage
+  std::string tName = tdName + "/" + m_cfg.thicknessHistName;
+  std::string x0Name = tdName + "/" + m_cfg.x0HistName;
+  std::string l0Name = tdName + "/" + m_cfg.l0HistName;
+  std::string aName = tdName + "/" + m_cfg.aHistName;
+  std::string zName = tdName + "/" + m_cfg.zHistName;
+  std::string rhoName = tdName + "/" + m_cfg.rhoHistName;
+
+  auto t = dynamic_cast<TH2F*>(rFile.Get(tName.c_str()));
+  auto x0 = dynamic_cast<TH2F*>(rFile.Get(x0Name.c_str()));
+  auto l0 = dynamic_cast<TH2F*>(rFile.Get(l0Name.c_str()));
+  auto A = dynamic_cast<TH2F*>(rFile.Get(aName.c_str()));
+  auto Z = dynamic_cast<TH2F*>(rFile.Get(zName.c_str()));
+  auto rho = dynamic_cast<TH2F*>(rFile.Get(rhoName.c_str()));
+
+  std::vector<const TH1*> materialHists{t, x0, l0, A, Z, rho};
+  if (std::ranges::any_of(materialHists,
+                          [](const auto* hist) { return hist == nullptr; })) {
+    ACTS_ERROR(
+        "Failed to read grid surface material - neither an index histogram "
+        "nor raw material histograms found for directory: "
+        << tdName);
+    return nullptr;
+  }
+
+  std::vector<std::vector<MaterialSlab>> payload(
+      nbins0, std::vector<MaterialSlab>(nbins1, MaterialSlab::Nothing()));
+  for (std::size_t ib0 = 1; ib0 <= nbins0; ++ib0) {
+    for (std::size_t ib1 = 1; ib1 <= nbins1; ++ib1) {
+      auto i0 = static_cast<int>(ib0);
+      auto i1 = static_cast<int>(ib1);
+      auto dt = static_cast<float>(t->GetBinContent(i0, i1));
+      if (dt <= 0.) {
+        continue;
+      }
+      auto dx0 = static_cast<float>(x0->GetBinContent(i0, i1));
+      auto dl0 = static_cast<float>(l0->GetBinContent(i0, i1));
+      auto da = static_cast<float>(A->GetBinContent(i0, i1));
+      auto dz = static_cast<float>(Z->GetBinContent(i0, i1));
+      auto drho = static_cast<float>(rho->GetBinContent(i0, i1));
+      const auto material = Material::fromMassDensity(dx0, dl0, da, dz, drho);
+      payload[ib0 - 1][ib1 - 1] = MaterialSlab(material, dt);
+    }
+  }
+  return buildFromMaterialPayload(axis0, axis1, payload, storageKind);
 }
 
 }  // namespace ActsPlugins
