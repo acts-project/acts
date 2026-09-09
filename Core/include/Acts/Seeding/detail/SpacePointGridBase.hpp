@@ -134,6 +134,15 @@ class SpacePointGridBase {
 
   ~SpacePointGridBase() = default;
 
+  /// The binned group points at the bin finders owned by the derived class's
+  /// configuration, and `m_grid` points into the binned group. Copying or
+  /// moving would leave those pointers referring to the source object, so
+  /// neither is allowed.
+  SpacePointGridBase(const SpacePointGridBase&) = delete;
+  SpacePointGridBase(SpacePointGridBase&&) = delete;
+  SpacePointGridBase& operator=(const SpacePointGridBase&) = delete;
+  SpacePointGridBase& operator=(SpacePointGridBase&&) = delete;
+
   /// Take ownership of the fully constructed grid and set up the binned
   /// group. Has to be called exactly once by the derived constructor.
   /// @param grid The grid to take ownership of

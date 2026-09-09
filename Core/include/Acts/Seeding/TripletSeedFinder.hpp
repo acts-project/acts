@@ -134,10 +134,11 @@ class TripletSeedFinder {
   /// includes triplet cuts, steering switches, and assumptions about the space
   /// points.
   struct Config {
-    /// Delegates for accessors to detailed information on double strip
-    /// measurement that produced the space point. This is mainly referring to
-    /// space points produced when combining measurement from strips on
-    /// back-to-back modules. Enables setting of the following delegates.
+    /// Whether the space points carry detailed information on the double
+    /// strip measurement that produced them. This is mainly referring to space
+    /// points produced when combining measurements from strips on back-to-back
+    /// modules. If enabled, the triplet is formed from the strip coordinates
+    /// instead of the space point centers.
     bool useStripInfo = false;
 
     /// Whether the input doublets are sorted by cotTheta
@@ -169,8 +170,8 @@ class TripletSeedFinder {
 
     /// Maximum allowed difference in cot(theta) between the bottom and top
     /// doublets, applied as a pre-filter before the expensive strip
-    /// coordinate transformation. Only active when useStripInfo is true.
-    /// Set to infinity (default) to disable.
+    /// coordinate transformation. Only active when both `useStripInfo` and
+    /// `sortedByCotTheta` are true. Set to infinity (default) to disable.
     float cotThetaDiffMax = std::numeric_limits<float>::infinity();
   };
 

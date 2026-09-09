@@ -12,7 +12,6 @@
 #include "Acts/Seeding/CylindricalSpacePointGrid.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/TripletSeeder.hpp"
-#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
@@ -21,6 +20,7 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -90,9 +90,9 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     /// numPhiNeighbors (in the configuration of the BinFinders) is configured
     /// to return 1 neighbor on either side of the current phi-bin (and you want
     /// to cover the full phi-range of minPT), leave this at 1.
-    int phiBinDeflectionCoverage = 1;
+    std::uint32_t phiBinDeflectionCoverage = 1;
     /// maximum number of phi bins
-    int maxPhiBins = 10000;
+    std::uint32_t maxPhiBins = 10000;
 
     /// vector containing the map of z bins in the top and bottom layers
     std::vector<std::pair<int, int>> zBinNeighborsTop;
@@ -184,11 +184,11 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     /// Maximum number (minus one) of accepted seeds per middle space-point
     /// In dense environments many seeds may be found per middle space-point
     /// Only seeds with the highest weight will be kept if this limit is reached
-    unsigned int maxSeedsPerSpM = 5;
+    std::uint32_t maxSeedsPerSpM = 5;
     /// Maximum limit to number of compatible space-point used in score
     /// calculation. We increase by c1 the weight calculation for each
     /// compatible space-point until we reach compatSeedLimit
-    std::size_t compatSeedLimit = 2;
+    std::uint32_t compatSeedLimit = 2;
 
     /// Increment in seed weight if the number of compatible seeds is larger
     /// than numSeedIncrement, this is used in case of high occupancy scenarios
@@ -263,11 +263,9 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
   Config m_cfg;
   Acts::CylindricalSpacePointGrid::Config m_gridConfig;
 
-  std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};
-  std::unique_ptr<const Acts::GridBinFinder<3ul>> m_topBinFinder{nullptr};
   Acts::BroadTripletSeedFilter::Config m_filterConfig;
   std::unique_ptr<const Acts::Logger> m_filterLogger;
-  std::optional<Acts::TripletSeeder> m_seedFinder;
+  Acts::TripletSeeder m_seedFinder;
 
   Acts::Delegate<bool(const ConstSpacePointProxy&)> m_spacePointSelector;
 
