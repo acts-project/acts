@@ -137,12 +137,45 @@ class caching_navigator
     }
 
    private:
+    DETRAY_HOST_DEVICE
+    constexpr void sort_candidates() {
+      const std::size_t beg{this->valid_begin()};
+      const std::size_t end{this->valid_end()};
+
+      for (std::size_t i = beg; i + 1 < end; ++i) {
+        std::size_t k = i;
+        for (std::size_t j = i + 1; j < end; ++j) {
+          if (this->candidate_at(j) < this->candidate_at(k)) {
+            k = j;
+          }
+        }
+        if (k != i) {
+          const candidate_t tmp = this->candidate_at(i);
+          this->set_candidate_at(i, this->candidate_at(k));
+          this->set_candidate_at(k, tmp);
+        }
+      }
+    }
+
     /// Insert a new element @param new_candidate before position @param pos
     DETRAY_HOST_DEVICE
-    constexpr void insert(candidate_const_itr_t pos,
-                          const intersection_type &new_candidate) {
+    constexpr void insert(const intersection_type &new_candidate) {
+      const std::size_t beg{this->valid_begin()};
+      const std::size_t end{this->valid_end()};
+
+      // For just two candidates int the cache, the navigation state keeps
+      // the first as the previously visited candidate -> no sorting needed
+      std::size_t pos = beg;
+      if constexpr (k_cache_capacity > 2u) {
+        for (; pos < end; ++pos) {
+          if (this->candidate_at(pos) > new_candidate) {
+            break;
+          }
+        }
+      }
+
       // Candidate is too far away to be placed in cache
-      if (pos == this->candidates().end()) {
+      if (pos == this->usable_capacity()) {
         return;
       }
 
@@ -151,21 +184,17 @@ class caching_navigator
 
       // Insert the first candidate
       if (this->n_candidates() == 0) [[unlikely]] {
-        this->candidates()[0] = new_candidate;
-        this->last_index(this->last_index() + 1);
-        assert(this->next_index() <= this->last_index() + 1);
-        assert(static_cast<std::size_t>(this->last_index()) < k_cache_capacity);
+        this->set_target(new_candidate);
+        this->n_candidates(1u);
         return;
       }
 
       // Position where to insert the new candidate
-      auto idx{static_cast<dist_t>(
-          detray::ranges::distance(this->candidates().cbegin(), pos))};
-      assert(idx >= 0);
+      auto idx{static_cast<dindex>(pos)};
 
       // Do not add the same surface (intersection) multiple times
       const auto is_overlap_at_pos = [this, &new_candidate](std::size_t index) {
-        return (math::fabs(this->candidates()[index].path() -
+        return (math::fabs(this->candidate_at(index).path() -
                            new_candidate.path()) <= 1.f * unit<scalar_t>::um);
       };
 
@@ -177,12 +206,12 @@ class caching_navigator
       // navigator getting stuck on that surface.
       const auto is_clash_at_pos = [this, &new_candidate,
                                     &is_overlap_at_pos](std::size_t index) {
-        return (this->candidates()[index].surface().identifier() ==
+        return (this->candidate_at(index).surface().identifier() ==
                 new_candidate.surface().identifier()) &&
                is_overlap_at_pos(index);
       };
 
-      const auto idxu{static_cast<std::size_t>(idx)};
+      const auto idxu{static_cast<dindex>(idx)};
       if (is_clash_at_pos(idxu) || ((idxu > 0u) && is_clash_at_pos(idxu - 1u)))
           [[unlikely]] {
         return;
@@ -190,8 +219,10 @@ class caching_navigator
 
       // Shift all following candidates and evict the last element,
       // if the cache is already full
-      constexpr auto shift_max{static_cast<dist_t>(k_cache_capacity - 2)};
-      const dist_t shift_begin{math::min(this->last_index(), shift_max)};
+      // The last valid slot that can still be shifted up by one
+      const auto shift_max{static_cast<dindex>(this->usable_capacity() - 1u)};
+      const auto shift_begin{
+          math::min(static_cast<dindex>(this->valid_end()), shift_max) - 1u};
 
       // In case of overlaps, prefer sensitives over portals and
       // direct hits over edge hits
@@ -203,25 +234,19 @@ class caching_navigator
         idx = idx > shift_begin ? shift_begin : idx;
       }
 
-      for (dist_t i = shift_begin; i >= idx; --i) {
-        const auto j{static_cast<std::size_t>(i)};
-        this->candidates()[j + 1u] = this->candidates()[j];
+      for (dindex i = shift_begin; i <= shift_begin && i >= idx; --i) {
+        this->set_candidate_at(i + 1, this->candidate_at(i));
       }
 
       // Now insert the new candidate and update candidate range
-      this->candidates()[static_cast<std::size_t>(idx)] = new_candidate;
-      this->last_index(math::min(static_cast<dist_t>(this->last_index() + 1),
-                                 static_cast<dist_t>(k_cache_capacity - 1)));
-
-      assert(this->next_index() <= this->last_index() + 1);
-      assert(static_cast<std::size_t>(this->last_index()) < k_cache_capacity);
+      this->set_candidate_at(static_cast<std::size_t>(idx), new_candidate);
+      this->n_valid(math::min(static_cast<dindex>(this->valid_end() + 1u),
+                              static_cast<dindex>(this->usable_capacity())));
     }
 
     /// Clear the state
     DETRAY_HOST_DEVICE constexpr void clear_cache() {
       base_type::clear_cache();
-      this->next_index(0);
-      this->last_index(-1);
     }
   };
 
@@ -253,15 +278,22 @@ class caching_navigator
         track.pos(),
         static_cast<scalar_t>(navigation.direction()) * track.dir()};
 
+    const auto update_candidate = [&]() {
+      auto target = navigation.target();
+      const bool reachable = navigation::update_candidate(
+          target, tangential, det, cfg.intersection, navigation.external_tol(),
+          ctx);
+      navigation.set_target(target);
+      return reachable;
+    };
+
     // Update only the current candidate and the corresponding next target
     // - do this only when the navigation state is still coherent
     if (navigation.trust_level() == navigation::trust_level::e_high) {
       DETRAY_VERBOSE_HOST_DEVICE("Called 'update()' - high trust");
 
       // Update next candidate: If not reachable, 'high trust' is broken
-      if (!navigation::update_candidate(navigation.target(), tangential, det,
-                                        cfg.intersection,
-                                        navigation.external_tol(), ctx)) {
+      if (!update_candidate()) {
         DETRAY_VERBOSE_HOST_DEVICE(
             "-> Candidate not reachable! High trust broken:");
 
@@ -288,12 +320,11 @@ class caching_navigator
           }
           return !is_init;
         }
+
         // Else (if full trust): Track is on non-portal surface and
         // cache is not exhausted. Ready the next target
         if (navigation.trust_level() == navigation::trust_level::e_full &&
-            navigation::update_candidate(navigation.target(), tangential, det,
-                                         cfg.intersection,
-                                         navigation.external_tol(), ctx)) {
+            update_candidate()) {
           DETRAY_VERBOSE_HOST_DEVICE(
               "-> On non-portal surface (idx %d) and next candidate "
               "in cache is reachable",
@@ -316,7 +347,7 @@ class caching_navigator
         !navigation.cache_exhausted()) {
       DETRAY_VERBOSE_HOST_DEVICE("Called 'update()' - fair trust");
 
-      for (auto &candidate : navigation) {
+      navigation.for_each_valid([&](state::candidate_t &candidate) {
         // Disregard this candidate if it is not reachable
         if (!navigation::update_candidate(candidate, tangential, det,
                                           cfg.intersection,
@@ -324,12 +355,12 @@ class caching_navigator
           // Forcefully set dist to numeric max for sorting
           candidate.set_path(std::numeric_limits<scalar_t>::max());
         }
-      }
-      detray::sequential_sort(navigation.begin(), navigation.end());
+      });
+      navigation.sort_candidates();
       // Take the nearest (sorted) candidate first
-      navigation.set_next(navigation.begin());
+      navigation.set_next_to_begin();
       // Ignore unreachable elements (needed to determine exhaustion)
-      navigation.set_last(find_invalid(navigation.candidates()));
+      navigation.evict_invalid();
       // Update navigation flow on the new candidate information
       navigation::update_status(navigation, cfg);
 
@@ -354,23 +385,6 @@ class caching_navigator
     }
 
     return !is_init;
-  }
-
-  /// Helper to evict all unreachable/invalid candidates from the cache:
-  /// Finds the first unreachable candidate (has been invalidated during
-  /// update) in a sorted (!) cache.
-  ///
-  /// @param candidates the cache of candidates to be cleaned
-  ///
-  /// @returns iterator to the last reachable candidate
-  DETRAY_HOST_DEVICE constexpr auto find_invalid(
-      const typename state::candidate_cache_t &candidates) const {
-    // Depends on previous invalidation of unreachable candidates!
-    auto not_reachable = [](const intersection_type &candidate) {
-      return candidate.path() == std::numeric_limits<scalar_t>::max();
-    };
-
-    return detray::find_if(candidates.begin(), candidates.end(), not_reachable);
   }
 };
 

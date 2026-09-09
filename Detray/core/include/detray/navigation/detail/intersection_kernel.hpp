@@ -139,16 +139,7 @@ struct intersection_initialize {
   DETRAY_HOST_DEVICE void insert_sorted(
       const typename nav_state_t::value_type &sfi,
       nav_state_t &intersections) const {
-    auto itr_pos{intersections.cbegin()};
-
-    // For just two candidates int the cache, the navigation state keeps
-    // the first as the previously visited candidate -> no sorting needed
-    if constexpr (nav_state_t::capacity() > 2u) {
-      itr_pos = detray::upper_bound(intersections.cbegin(),
-                                    intersections.cend(), sfi);
-    }
-
-    intersections.insert(itr_pos, sfi);
+    intersections.insert(sfi);
   }
 };
 
