@@ -502,6 +502,7 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
       const Acts::Vector2& lp = localResult.value();
 
       DigitizedParameters dParams;
+      dParams.cluster.geometryId = geoId;
       dParams.cluster.globalPosition = globalPos;
       for (const auto& [idx, sigma] : sigmaIt->second) {
         dParams.indices.push_back(idx);

@@ -847,7 +847,6 @@ def addDigitization(
             outputDirRoot.mkdir()
         rmwConfig = acts.examples.root.RootMeasurementWriter.Config(
             inputMeasurements=digiAlg.config.outputMeasurements,
-            inputClusters=digiAlg.config.outputClusters,
             inputSimHits=digiAlg.config.inputSimHits,
             inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
             filePath=str(outputDirRoot / f"{digiAlg.config.outputMeasurements}.root"),
@@ -856,6 +855,11 @@ def addDigitization(
         s.addWriter(
             acts.examples.root.RootMeasurementWriter(rmwConfig, customLogLevel())
         )
+        rcwConfig = acts.examples.root.RootClusterWriter.Config(
+            inputClusters=digiAlg.config.outputClusters,
+            filePath=str(outputDirRoot / f"{digiAlg.config.outputClusters}.root"),
+        )
+        s.addWriter(acts.examples.root.RootClusterWriter(rcwConfig, customLogLevel()))
         rmpwConfig = acts.examples.root.RootMeasurementPerformanceWriter.Config(
             inputMeasurements=digiAlg.config.outputMeasurements,
             inputSimHits=digiAlg.config.inputSimHits,
