@@ -203,13 +203,13 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
     const std::int32_t barrelOrder1 = B1.barrelOrder;
 
     const bool isPixel1 = B1.technology == GbtsLayerTechnology::Pixel;
-    // The adaptive tau corrections and the triplet validation below were tuned
-    // on the pixel barrel and are keyed on it.
-    const bool isPixelBarrel1 = isPixel1 && B1.type == GbtsLayerType::Barrel;
-
-    const bool useZ0Histogram = B1.cutOnZ0Range;
+    const bool isPixelBarrel1 = barrelOrder1 >= 0;
+    
+    const bool useZ0Histogram =
+        barrelOrder1 >= 0 && barrelOrder1 <= m_cfg.z0HistogramMaxBarrelOrder;
     const bool useMatchBeforeCreate =
-        m_cfg.matchBeforeCreate && B1.matchBeforeCreate;
+        m_cfg.matchBeforeCreate && barrelOrder1 >= 0 &&
+        barrelOrder1 <= m_cfg.matchBeforeCreateMaxBarrelOrder;
 
     // prepare a sliding window for each non-empty bin2 in the group
 
@@ -281,8 +281,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
         const std::int32_t barrelOrder2 = slw.barrelOrder;
 
         const bool isPixel2 = slw.technology == GbtsLayerTechnology::Pixel;
-        const bool isPixelBarrel2 =
-            isPixel2 && slw.type == GbtsLayerType::Barrel;
+        const bool isPixelBarrel2 = barrelOrder2 >= 0;
 
         const bool stripPair = calibrate && (!isPixel1 || !isPixel2);
 
@@ -458,8 +457,8 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float dPhi1 = curv * r1c;
 
           if (nEdges < m_cfg.nMaxEdges) {
-            edgeStorage.emplace_back(n1Idx, n2Idx, barrelOrder2, isPixelBarrel2,
-                                     expEta, curv, phi1 + dPhi1);
+            edgeStorage.emplace_back(n1Idx, n2Idx, barrelOrder2, expEta, curv,
+                                     phi1 + dPhi1);
 
             ++numCreatedEdges;
 
@@ -487,17 +486,15 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               const std::int32_t barrelOrder3 = pS->n2BarrelOrder;
 
-              const bool isPixelBarrel3 = pS->n2PixelBarrel;
+              const bool isPixelBarrel3 = barrelOrder3 >= 0;
 
               float addTauRatioCorr = 0;
 
               if (m_cfg.useAdaptiveCuts) {
                 if (isPixelBarrel1 && isPixelBarrel2 && isPixelBarrel3) {
-                  // three radially consecutive barrel layers, no layer in
-                  // between
-                  const bool noGap = (barrelOrder1 >= 0) &&
-                                     ((barrelOrder2 - barrelOrder1) == 1) &&
-                                     ((barrelOrder3 - barrelOrder2) == 1);
+                  // three radially consecutive layers, none skipped
+                  const bool noGap = (barrelOrder2 - barrelOrder1) == 1 &&
+                                     (barrelOrder3 - barrelOrder2) == 1;
 
                   // assume more scattering due to the layer in between
                   if (!noGap) {

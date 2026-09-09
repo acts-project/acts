@@ -13,8 +13,12 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <iterator>
 #include <optional>
+#include <stdexcept>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace Acts::Experimental::detail {
 
@@ -292,33 +296,34 @@ GbtsGeometry::GbtsGeometry(
   const float minZ0 = z0Range.min;
   const float maxZ0 = z0Range.max;
 
-  // local copies, so the barrel ordering can be resolved before the layers
-  // are built; the layers resolve the per-layer cut defaults themselves
+  // The adaptive cuts key on where a pixel barrel layer sits radially. Derive
+  // that ordinal here so the seeder never has to read an experiment layer id.
   std::vector<GbtsLayerDescription> layers(layerDescriptions.begin(),
                                            layerDescriptions.end());
 
-  const auto isPixelBarrel = [](const GbtsLayerDescription& layer) {
-    return layer.type == GbtsLayerType::Barrel &&
-           layer.technology == GbtsLayerTechnology::Pixel;
-  };
-
-  // Setting the pixel barrel order if not provided.
-  // The order is determined by the increasing radius of the layers.
-  if (std::ranges::none_of(
-          layers, [&isPixelBarrel](const GbtsLayerDescription& layer) {
-            return isPixelBarrel(layer) && layer.barrelOrder != -1;
-          })) {
-    for (GbtsLayerDescription& layer : layers) {
-      if (!isPixelBarrel(layer)) {
-        continue;
-      }
-      layer.barrelOrder = static_cast<std::int32_t>(std::ranges::count_if(
-          layers, [&isPixelBarrel, &layer](const GbtsLayerDescription& other) {
-            return isPixelBarrel(other) &&
-                   (other.refCoord < layer.refCoord ||
-                    (other.refCoord == layer.refCoord && other.id < layer.id));
-          }));
+  std::vector<GbtsLayerDescription*> pixelBarrel;
+  for (GbtsLayerDescription& layer : layers) {
+    if (layer.type == GbtsLayerType::Barrel &&
+        layer.technology == GbtsLayerTechnology::Pixel) {
+      pixelBarrel.push_back(&layer);
     }
+  }
+
+  const auto numOrdered = std::ranges::count_if(
+      pixelBarrel,
+      [](const GbtsLayerDescription* l) { return l->barrelOrder >= 0; });
+  if (numOrdered == 0) {
+    // ties broken by id so the result does not depend on the input order
+    std::ranges::sort(pixelBarrel, {}, [](const GbtsLayerDescription* l) {
+      return std::pair{l->refCoord, l->id};
+    });
+    for (std::size_t i = 0; i < pixelBarrel.size(); ++i) {
+      pixelBarrel[i]->barrelOrder = static_cast<std::int32_t>(i);
+    }
+  } else if (numOrdered != std::ssize(pixelBarrel)) {
+    throw std::invalid_argument(
+        "GbtsGeometry: barrelOrder must be set on every pixel barrel layer or "
+        "on none of them");
   }
 
   for (const GbtsLayerDescription& layer : layers) {

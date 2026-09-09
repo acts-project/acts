@@ -94,9 +94,7 @@ struct GbtsEtaBinInfo final {
 
   float minRadius{};
   float maxRadius{};
-
-  /// Position of the bin's layer in the inside-out pixel barrel ordering,
-  /// -1 when it is not part of it.
+  /// Inside-out pixel barrel ordinal of the bin's layer, -1 for the rest.
   std::int32_t barrelOrder{-1};
 
   /// Type of the layer this bin belongs to.
@@ -197,19 +195,16 @@ struct GbtsEdge final {
   /// Constructor
   /// @param n1_ Inner node index
   /// @param n2_ Outer node index
-  /// @param n2BarrelOrder_ Barrel order of the outer node's layer
-  /// @param n2PixelBarrel_ Whether the outer node is on a pixel barrel layer
+  /// @param n2BarrelOrder_ Pixel barrel ordinal of the outer node's layer
   /// @param p1_ First fit parameter
   /// @param p2_ Second fit parameter
   /// @param p3_ Third fit parameter
   GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_,
-           std::int32_t n2BarrelOrder_, bool n2PixelBarrel_, float p1_,
-           float p2_, float p3_)
+           std::int32_t n2BarrelOrder_, float p1_, float p2_, float p3_)
       : n1{n1_},
         n2{n2_},
         level{1},
         next{1},
-        n2PixelBarrel{n2PixelBarrel_},
         p{p1_, p2_, p3_},
         n2BarrelOrder{n2BarrelOrder_} {}
 
@@ -223,16 +218,12 @@ struct GbtsEdge final {
 
   std::uint8_t nNei{0};
 
-  /// Whether the outer node is on a pixel barrel layer, the only thing the
-  /// innermost neighbour loop asks about it. Cached so that loop does not have
-  /// to chase the node's bin, and in what was padding so the edge does not
-  /// grow.
-  bool n2PixelBarrel{};
-
   std::array<float, 3> p{};
 
-  /// Position of the outer node's layer in the inside-out barrel ordering,
-  /// -1 when it is not a listed barrel layer.
+  /// Inside-out pixel barrel ordinal of the outer node's layer, -1 for the
+  /// rest. It is also the only thing the innermost neighbour loop asks about
+  /// the outer node's layer, so it is cached next to the fit parameters rather
+  /// than chased through the node's bin.
   std::int32_t n2BarrelOrder{-1};
 
   std::array<std::uint32_t, kGbtsMaxEdgeNeighbours> vNei{};

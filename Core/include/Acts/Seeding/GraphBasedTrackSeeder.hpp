@@ -127,7 +127,14 @@ class GraphBasedTrackSeeder {
     float phiWindowFarSlope = 2.2e-4f / UnitConstants::mm;
     /// Incoming edge count below which a node is accepted without a tau match.
     std::uint32_t matchBeforeCreateMaxEdges = 2;
-    /// Half-width of the z0 window a node is matched against the z0 range.
+    /// Highest pixel barrel layer, counted inside out, whose nodes are cut
+    /// against the z0 histogram of their outer neighbourhood and whose
+    /// isolated nodes are skipped. Negative disables the cut.
+    std::int32_t z0HistogramMaxBarrelOrder = 0;
+    /// Highest pixel barrel layer, counted inside out, `matchBeforeCreate`
+    /// applies to when it is enabled. Negative disables it.
+    std::int32_t matchBeforeCreateMaxBarrelOrder = 1;
+    /// Half-width of the z0 window a node is matched against in the histogram.
     float z0Resolution = 2.5f * UnitConstants::mm;
     /// Maximum radius of pixel detector
     float maxOuterRadius = 550.0f;
@@ -287,7 +294,7 @@ class GraphBasedTrackSeeder {
     std::uint32_t firstIt{};
     /// window half-width;
     float deltaPhi{};
-    /// Barrel order of the bin's layer, -1 when not a listed barrel layer.
+    /// Inside-out pixel barrel ordinal of the bin's layer, -1 for the rest.
     std::int32_t barrelOrder{-1};
     /// Type of the bin's layer.
     GbtsLayerType type{};
