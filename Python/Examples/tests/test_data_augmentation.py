@@ -7,7 +7,6 @@ from typing import Optional
 import acts
 import acts.examples
 from acts.examples.root import (
-    RootParticleReader,
     RootSimHitReader,
 )
 import uproot as ur
@@ -26,6 +25,7 @@ def runTruthTracking(
     inputSimHitsPath: Optional[Path] = None,
     decorators=[],
     s: acts.examples.Sequencer = None,
+    n_events: int = 10,
 ):
     from acts.examples.simulation import (
         addParticleGun,
@@ -46,11 +46,13 @@ def runTruthTracking(
     )
     from acts.examples.root import (
         RootParticleReader,
+        RootTrackStatesWriter,
         RootTrackSummaryWriter,
+        RootTrackParameterPerformanceWriter,
     )
 
     s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
+        events=n_events, numThreads=-1, logLevel=acts.logging.INFO
     )
 
     for d in decorators:
@@ -217,6 +219,7 @@ def readExampleRootData(outputDir: Path):
         firsts = ak.firsts(particles[field])
         arr = ak.to_numpy(firsts)
         arr = np.asarray(arr).squeeze()
+        # finite: numeric finite values (will be False for NaN/Inf)
         finite = np.isfinite(arr)
         combined = np.logical_and(nonempty, finite)
         masks.append(combined)
@@ -258,10 +261,9 @@ def sampleUniformPointsIn3D(x_offset: float, y_offset: float, z_offset: float, n
     return points[:n]
 
 
-def voidTrackPropagation(
+def vacuumTrackParameterAndBeamspotPropagation(
     beamspots,
-    particle_info,
-    return_beamspots=False,
+    truth_params,
 ):
     geo_context = acts.GeometryContext.dangerouslyDefaultConstruct()
     mag_field_context = acts.MagneticFieldContext()
@@ -275,9 +277,9 @@ def voidTrackPropagation(
     # hypothesis is used regardless of the true particle species.
     particle_hypothesis = acts.ParticleHypothesis(211, 0.13957 * u.GeV, 1.0)
 
-    n = particle_info.shape[0]
-    new_poca_paramters = np.empty((n, 5))
-    for i, truth_params_set in enumerate(particle_info):
+    n = truth_params.shape[0]
+    beamspot_pocas = np.empty((n, 5))
+    for i, truth_params_set in enumerate(truth_params):
         beamspot = beamspots[i]
         vtx = truth_params_set[:3]
         mom = truth_params_set[3:6]
@@ -288,20 +290,15 @@ def voidTrackPropagation(
         start = acts.BoundTrackParameters.createCurvilinear(
             pos4, acts.Vector3(*mom), qOverP, None, particle_hypothesis
         )
-        target = acts.Surface.createPerigee(
-            acts.Vector3(beamspot[0], beamspot[1], beamspot[2])
-        )
+        target = acts.Surface.createPerigee(acts.Vector3(beamspot[0], beamspot[1], 0.0))
         result = propagator.propagateToSurface(start, target, propagator_options)
-        new_poca_paramters[i] = np.array(result.parameters)[:5]
-    if return_beamspots:
-        return new_poca_paramters, beamspots
-    return new_poca_paramters
+        beamspot_pocas[i] = np.array(result.parameters)[:5]
+    return beamspot_pocas
 
 
-if "__main__" == __name__:
+def test_track_propagation_returns_values():
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    # ODD
     from acts.examples.odd import getOpenDataDetector
 
     detector = getOpenDataDetector()
@@ -311,17 +308,17 @@ if "__main__" == __name__:
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     outputDir = Path.cwd()
-    # Run a regular particle simulation
+    n = 100
     runTruthTracking(
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
         outputDir=outputDir,
+        n_events=n,
     ).run()
 
     simulation_data = readExampleRootData(outputDir)
-
-    particle_info = np.column_stack(
+    truth_params = np.column_stack(
         [
             simulation_data["vx"],
             simulation_data["vy"],
@@ -333,24 +330,14 @@ if "__main__" == __name__:
         ]
     )
 
-    # Create new reference beamspots in an ellipsoid within the offset limits
     x_offset = 0.1
     y_offset = 1.1
     z_offset = 10
-    beamspots = sampleUniformPointsIn3D(
-        x_offset, y_offset, z_offset, len(particle_info)
-    )
+    beamspots = sampleUniformPointsIn3D(x_offset, y_offset, z_offset, len(truth_params))
 
-    # Calculate the PCA parameters for the new reference beamspots
-    new_pcas = voidTrackPropagation(
+    augmented_perigees = vacuumTrackParameterAndBeamspotPropagation(
         beamspots,
-        particle_info,
-        return_beamspots=False,
+        truth_params,
     )
-    new_pcas = {
-        "d0": new_pcas[:, 0],
-        "z0": new_pcas[:, 1],
-        "phi": new_pcas[:, 2],
-        "theta": new_pcas[:, 3],
-        "qOverP": new_pcas[:, 4],
-    }
+    assert augmented_perigees.shape == (len(truth_params), 5)
+    assert np.all(np.isfinite(augmented_perigees))
