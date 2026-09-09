@@ -16,39 +16,6 @@ namespace traccc {
 // binTables contains pairs of linked layer-eta bins
 // GeoIDBinning pair is detray geo ID and bin index (corrisponding to the
 // layers in layerInfo) minPt in MeV
-bool gbts_seedfinder_config::setLinkingSchemeFromGbtsGeo(
-    Acts::Experimental::GbtsGeometry* gbtsGeo,
-    std::vector<std::pair<uint64_t, short>> detrayGeoIDBinning,
-    std::vector<bool>& doTauCut, const float minPt = 900.0f,
-    std::unique_ptr<const traccc::Logger> callers_logger =
-        getDummyLogger().clone()) {
-  // convert layers info to SoA
-  layerInfo.reserve(static_cast<unsigned int>(gbtsGeo->numLayers()));
-  for (unsigned int index = 0; index < gbtsGeo->numLayers(); ++index) {
-    Acts::Experimental::GbtsLayerBinning binning = gbtsGeo->layerBinning(
-        static_cast<Acts::Experimental::GbtsLayerIndex>(index));
-    Acts::Experimental::GbtsLayerDescription desc = gbtsGeo->layerDescription(
-        static_cast<Acts::Experimental::GbtsLayerIndex>(index));
-    char type = 0;
-    if (desc.technology == Acts::Experimental::GbtsLayerTechnology::Strip) {
-      type = 3;
-    } else if (!doTauCut[index]) {
-      type = 2;
-    } else if (desc.type == Acts::Experimental::GbtsLayerType::Endcap) {
-      type = 1;
-    }
-    layerInfo.addLayer(type, binning.firstBin, binning.numBins, binning.minEta,
-                       binning.etaBinWidth);
-  }
-  std::vector<std::pair<unsigned int, std::vector<unsigned int>>>
-      binTables_input;
-  for (Acts::Experimental::GbtsBinGroup groups : gbtsGeo->binGroups()) {
-    binTables_input.emplace_back(groups.bin, groups.links);
-  }
-  return setLinkingScheme(binTables_input, layerInfo, detrayGeoIDBinning, minPt,
-                          std::move(callers_logger));
-}
-
 bool gbts_seedfinder_config::setLinkingScheme(
     const std::vector<std::pair<unsigned int, std::vector<unsigned int>>>&
         input_binTables,
