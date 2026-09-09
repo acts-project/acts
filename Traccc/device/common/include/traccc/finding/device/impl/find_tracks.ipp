@@ -39,8 +39,8 @@
 
 namespace traccc::device {
 
-template <typename detector_t, concepts::thread_id1 thread_id_t,
-          concepts::barrier barrier_t>
+template <detray::concepts::detector detector_t,
+          concepts::thread_id1 thread_id_t, concepts::barrier barrier_t>
 TRACCC_HOST_DEVICE inline void find_tracks(
     const thread_id_t& thread_id, const barrier_t& barrier,
     const finding_config& cfg, typename detector_t::const_view_type det_data,

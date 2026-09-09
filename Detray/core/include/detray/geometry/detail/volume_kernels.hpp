@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/indexing.hpp"
@@ -74,8 +75,8 @@ struct apply_to_neighbourhood {
   /// Call operator that forwards the neighborhood search call in a volume
   /// to a surface finder data structure
   template <concepts::accelerator_collection accel_coll_t,
-            typename accel_index_t, typename detector_t, typename track_t,
-            typename window_size_t, typename... Args>
+            typename accel_index_t, concepts::detector detector_t,
+            typename track_t, typename window_size_t, typename... Args>
   DETRAY_HOST_DEVICE inline void operator()(
       const accel_coll_t &coll, const accel_index_t index,
       const detector_t &det, const typename detector_t::volume_type &volume,

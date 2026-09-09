@@ -12,6 +12,7 @@
 #include "detray/builders/detector_builder.hpp"
 #include "detray/builders/surface_factory.hpp"
 #include "detray/builders/volume_builder.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/indexing.hpp"
 #include "detray/io/backend/detail/basic_converter.hpp"
 #include "detray/io/backend/detail/type_info.hpp"
@@ -244,7 +245,8 @@ class geometry_reader {
   /// payload
   ///
   /// @return the corresponding surface factory.
-  template <typename shape_registry_t, typename detector_t, std::size_t I = 0u>
+  template <typename shape_registry_t, concepts::detector detector_t,
+            std::size_t I = 0u>
   static std::shared_ptr<surface_factory_interface<detector_t>> init_factory(
       const io_shape_id shape_id) {
     // Get the next mask shape type

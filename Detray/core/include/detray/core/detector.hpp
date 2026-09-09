@@ -14,6 +14,7 @@
 #include "detray/builders/homogeneous_volume_material_builder.hpp"
 #include "detray/builders/material_map_builder.hpp"
 #include "detray/builders/volume_builder.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/core/detail/container_buffers.hpp"
 #include "detray/core/detail/container_views.hpp"
 #include "detray/core/detail/surface_lookup.hpp"
@@ -60,12 +61,12 @@ template <concepts::metadata metadata_t,
 class detector {
   // Allow the building of the detector containers
   friend class volume_builder<detector<metadata_t, container_t>>;
-  template <typename, concepts::grid, typename, typename>
+  template <concepts::detector, concepts::grid, typename, typename>
   friend class grid_builder;
   friend class homogeneous_material_builder<detector<metadata_t, container_t>>;
   friend class homogeneous_volume_material_builder<
       detector<metadata_t, container_t>>;
-  template <typename, std::size_t, typename>
+  template <concepts::detector, std::size_t, typename>
   friend class material_map_builder;
   template <typename>
   friend class volume_accelerator_builder;

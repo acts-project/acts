@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
 #include "detray/tracks/tracks.hpp"
 #include "detray/utils/logging.hpp"
@@ -37,7 +38,7 @@ namespace detray::test {
 struct run_material_validation {
   static constexpr std::string_view name{"cpu"};
 
-  template <typename detector_t>
+  template <concepts::detector detector_t>
   auto operator()(
       vecmem::memory_resource *host_mr, vecmem::memory_resource * /*mr*/,
       const detector_t &det, const propagation::config &cfg,
@@ -76,7 +77,7 @@ struct run_material_validation {
 /// @brief Test class that runs the material validation for a given detector.
 ///
 /// @note The lifetime of the detector needs to be guaranteed outside this class
-template <typename detector_t, typename material_validator_t>
+template <concepts::detector detector_t, typename material_validator_t>
 class material_validation_impl : public test::fixture_base<> {
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
@@ -220,7 +221,7 @@ class material_validation_impl : public test::fixture_base<> {
   std::shared_ptr<test::whiteboard> m_whiteboard{nullptr};
 };
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 using material_validation =
     material_validation_impl<detector_t, run_material_validation>;
 

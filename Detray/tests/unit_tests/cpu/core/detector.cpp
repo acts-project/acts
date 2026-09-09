@@ -9,6 +9,7 @@
 // Project include(s)
 #include "detray/core/detector.hpp"
 
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/indexing.hpp"
 #include "detray/material/predefined_materials.hpp"
 
@@ -31,6 +32,19 @@ GTEST_TEST(detray_core, detector) {
   using mask_id = typename detector_t::masks::id;
   using material_id = typename detector_t::material::id;
   using finder_id = typename detector_t::accel::id;
+
+  // Check core concepts
+  static_assert(detray::concepts::metadata<metadata_t>);
+  static_assert(detray::concepts::viewable<detector_t>);
+  static_assert(detray::concepts::bufferable<detector_t>);
+  static_assert(detray::concepts::detector<detector_t>);
+
+  static_assert(detray::concepts::has_grids<detector_t>);
+  static_assert(detray::concepts::has_surface_grids<detector_t>);
+  static_assert(detray::concepts::has_material_slabs<detector_t>);
+  static_assert(detray::concepts::has_material_rods<detector_t>);
+  static_assert(detray::concepts::has_homogeneous_material<detector_t>);
+  static_assert(detray::concepts::has_material_maps<detector_t>);
 
   vecmem::host_memory_resource host_mr;
   detector_t d1(host_mr);

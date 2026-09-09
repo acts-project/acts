@@ -14,6 +14,7 @@
 #endif
 
 // Project include(s).
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/geometry.hpp"
 #include "detray/definitions/indexing.hpp"
@@ -32,7 +33,7 @@ namespace detray {
 /// so during geometry building, great care has to be taken to make sure that
 /// all components of a surface get sorted and linked into the containers
 /// together and associated with the correct surface.
-template <typename detector_t>
+template <concepts::detector detector_t>
 class surface_data {
  public:
   using boundary_coll_type = std::vector<typename detector_t::scalar_type>;
@@ -111,7 +112,7 @@ class surface_data {
 /// transforms.
 ///
 /// Can be hard coded surface generation or json reader.
-template <typename detector_t>
+template <concepts::detector detector_t>
 class surface_factory_interface {
  public:
   using navigation_link = typename detector_t::surface_type::navigation_link;
@@ -180,7 +181,7 @@ class surface_factory_interface {
 /// @brief Decorator for the surface factories.
 ///
 /// Delegates all mandatory method calls to the underlying surface factory
-template <typename detector_t>
+template <concepts::detector detector_t>
 class factory_decorator : public surface_factory_interface<detector_t> {
  public:
   DETRAY_HOST

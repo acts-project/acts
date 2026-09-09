@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
 #include "detray/definitions/pdg_particle.hpp"
 #include "detray/propagator/line_stepper.hpp"
@@ -48,7 +49,7 @@ namespace detray::cuda {
 /// @param[in] truth_intersection_traces_view vecemem view of the truth data
 /// @param[out] recorded_intersections_view vecemem view of the intersections
 ///                                         recorded by the navigator
-template <typename bfield_t, typename detector_t>
+template <typename bfield_t, concepts::detector detector_t>
 void navigation_validation_device(
     typename detector_t::view_type det_view, const propagation::config &cfg,
     pdg_particle<typename detector_t::scalar_type> ptc_hypo,
@@ -64,7 +65,7 @@ void navigation_validation_device(
         material_record<typename detector_t::scalar_type>> &mat_steps_view);
 
 /// Prepare data for device navigation run
-template <typename bfield_t, typename detector_t>
+template <typename bfield_t, concepts::detector detector_t>
 inline auto run_navigation_validation(
     vecmem::memory_resource *host_mr, vecmem::memory_resource *dev_mr,
     const detector_t &det, const propagation::config &cfg,
@@ -144,7 +145,7 @@ inline auto run_navigation_validation(
 /// on device.
 ///
 /// @note The lifetime of the detector needs to be guaranteed outside this class
-template <typename detector_t, template <typename> class scan_type>
+template <concepts::detector detector_t, template <typename> class scan_type>
 class navigation_validation : public test::fixture_base<> {
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
@@ -467,11 +468,11 @@ class navigation_validation : public test::fixture_base<> {
   std::shared_ptr<test::whiteboard> m_whiteboard{nullptr};
 };
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 using straight_line_navigation =
     detray::cuda::navigation_validation<detector_t, detray::ray_scan>;
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 using helix_navigation =
     detray::cuda::navigation_validation<detector_t, detray::helix_scan>;
 

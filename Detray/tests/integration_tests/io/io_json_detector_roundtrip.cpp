@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/utils/consistency_checker.hpp"
 #include "detray/utils/logging.hpp"
@@ -85,7 +86,7 @@ bool compare_files(const std::string& file_name1, const std::string& file_name2,
 
 /// Full IO round trip for a given detector
 /// @returns a detector read back in from the writer files
-template <std::size_t CAP = 0u, typename detector_t>
+template <std::size_t CAP = 0u, concepts::detector detector_t>
 auto test_detector_json_io(
     const detector_t& det, const typename detector_t::name_map& names,
     std::map<std::string, std::string, std::less<>>& file_names,

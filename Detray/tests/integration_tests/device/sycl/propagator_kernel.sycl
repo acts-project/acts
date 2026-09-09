@@ -7,13 +7,14 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Detray test include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/test/device/propagator_test.hpp"
 #include "propagator_sycl_kernel.hpp"
 
 namespace detray {
 
 /// Test function for propagator
-template <typename bfield_bknd_t, typename detector_t>
+template <typename bfield_bknd_t, concepts::detector detector_t>
 void propagator_test(
     typename detector_t::view_type det_data, const propagation::config& cfg,
     covfie::field_view<bfield_bknd_t> field_data,
