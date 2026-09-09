@@ -14,6 +14,18 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
+
+std::ostream& operator<<(
+    std::ostream& ostr,
+    const std::span<const Acts::NavigationTarget>& candidates) {
+  for (const auto& target : candidates) {
+    ostr << "\n  -- " << target;
+  }
+  return ostr;
+}
+
+
+
 void NavigationTarget::print(std::ostream& ostr) const {
   std::visit(
       [&](const auto& target) {
@@ -32,8 +44,11 @@ void NavigationTarget::print(std::ostream& ostr) const {
         }
       },
       m_target);
-  ostr << ", path length: " << pathLength()
-       << ", reached: " << (isReached() ? "yes" : "no") << ", "
-       << boundaryTolerance();
+  ostr 
+    <<", isValid: "<<(isValid() ? "yes" : "no")
+  <<", reached: "<<(isReached() ? "yes" : "no")
+  << ", path length: " << pathLength()
+
+  <<", "<<boundaryTolerance();
 }
 }  // namespace Acts

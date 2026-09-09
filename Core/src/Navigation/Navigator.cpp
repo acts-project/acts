@@ -41,14 +41,6 @@ bool skipPolicyState(const TrackingVolume& volume) {
 }
 }  // namespace
 
-std::ostream& operator<<(
-    std::ostream& ostr,
-    const std::span<const Acts::NavigationTarget>& candidates) {
-  for (const auto& target : candidates) {
-    ostr << "\n  -- " << target;
-  }
-  return ostr;
-}
 
 Navigator::Navigator(Config cfg, std::shared_ptr<const Logger> _logger)
     : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {
@@ -594,6 +586,7 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
   if (candidateIndex < candidates.size()) {
     ACTS_VERBOSE(volInfo(state)
                  << "Target set to next candidate " << state.navCandidate());
+    state.navCandidate().setTargetReached();
     return state.navCandidate();
   } else {
     ACTS_VERBOSE(volInfo(state) << "Candidate targets exhausted. Renavigate.");
@@ -655,7 +648,7 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   }
   ACTS_VERBOSE(volInfo(state) << "Searching for compatible candidates.");
 
-  state.stream.reset();
+  state.stream.reset(m_cfg.keepUnreachedExternal, logger());
   AppendOnlyNavigationStream appendOnly{state.stream};
   NavigationArguments args;
   args.position = position;
@@ -712,7 +705,7 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   const bool candidatesAreUnique =
       state.stream.candidates().size() == nPolicyCandidates;
   state.stream.initialize(state.options.geoContext, {position, direction},
-                          BoundaryTolerance::None(),
+                          logger(),    
                           state.options.surfaceTolerance, candidatesAreUnique);
 
   ACTS_VERBOSE(volInfo(state)
