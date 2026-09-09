@@ -25,9 +25,7 @@ namespace Acts::detail::sympy {
 // ways. Why the stepper wants this form: @ref sympy_codegen.
 //
 // A freshly initialized surface jacobian has e_qop as its q/p column, so
-// scaling it is a no-op; code that writes one into the state directly
-// (LoopComponentProxy::update) needs no conversion. Singular at q/p == 0, as
-// the plain column already is.
+// scaling it is a no-op. Singular at q/p == 0, as the plain column already is.
 
 /// Convert a plain bound-to-free jacobian to the scaled form.
 ///
