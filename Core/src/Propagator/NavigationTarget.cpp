@@ -24,8 +24,6 @@ std::ostream& operator<<(
   return ostr;
 }
 
-
-
 void NavigationTarget::print(std::ostream& ostr) const {
   std::visit(
       [&](const auto& target) {
@@ -44,11 +42,10 @@ void NavigationTarget::print(std::ostream& ostr) const {
         }
       },
       m_target);
-  ostr 
-    <<", isValid: "<<(isValid() ? "yes" : "no")
-  <<", reached: "<<(isReached() ? "yes" : "no")
-  << ", path length: " << pathLength()
+  ostr << ", isValid: " << (isValid() ? "yes" : "no")
+       << ", reached: " << (isReached() ? "yes" : "no")
+       << ", path length: " << pathLength()
 
-  <<", "<<boundaryTolerance();
+       << ", " << boundaryTolerance();
 }
 }  // namespace Acts

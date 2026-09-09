@@ -85,18 +85,18 @@ void MultiLayerNavigationPolicy::initializeCandidates(
   /// Remove duplicate surface candidates
   std::size_t writeIdx{0ul};
   for (std::size_t readIdx = 0ul; readIdx < surfCandidates.size(); ++readIdx) {
-     bool appended{false};
-     for (std::size_t check=0ul; check < writeIdx; ++check) {
-       if (surfCandidates[check] == surfCandidates[readIdx]) {
-          appended =true;
-          break;
-       }
-     }
-     if (appended) {
+    bool appended{false};
+    for (std::size_t check = 0ul; check < writeIdx; ++check) {
+      if (surfCandidates[check] == surfCandidates[readIdx]) {
+        appended = true;
+        break;
+      }
+    }
+    if (appended) {
       continue;
-     }
-     surfCandidates[writeIdx] = surfCandidates[readIdx];
-     ++writeIdx;
+    }
+    surfCandidates[writeIdx] = surfCandidates[readIdx];
+    ++writeIdx;
   }
 
   ACTS_VERBOSE("MultiLayerNavigationPolicy() - reported "

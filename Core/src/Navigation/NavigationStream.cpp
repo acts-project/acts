@@ -15,7 +15,6 @@
 
 #include <algorithm>
 
-
 namespace Acts {
 
 bool NavigationStream::initialize(const GeometryContext& gctx,
@@ -37,8 +36,9 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   // duplicate slip through regardless, the post-sort unique pass below still
   // removes it; only the first-wins tolerance selection is then not enforced.)
   if (!candidatesAreUnique) {
-    ACTS_VERBOSE("NavigationStream::initialize() "<<__LINE__<<" - Candidates not marked as unique\n"
-                <<m_candidates);
+    ACTS_VERBOSE("NavigationStream::initialize() "
+                 << __LINE__ << " - Candidates not marked as unique\n"
+                 << m_candidates);
     std::size_t writeIdx = 0;
     for (std::size_t readIdx = 0; readIdx < m_candidates.size(); ++readIdx) {
       const Surface* surface = &m_candidates[readIdx].surface();
@@ -47,7 +47,7 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
         if (&m_candidates[k].surface() == surface) {
           /// Ensure that the external surfaces survive the duplicate removal
           if (m_candidates[readIdx].boundaryTolerance().isInfinite()) {
-              std::swap(m_candidates[readIdx], m_candidates[k]);
+            std::swap(m_candidates[readIdx], m_candidates[k]);
           }
           alreadySeen = true;
           break;
@@ -71,8 +71,9 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
     // Get the surface from the object intersection
     const Surface& surface = candidate.surface();
     // Intersect the surface
-    auto multiIntersection = surface.intersect(gctx, position, direction,
-                                               candidate.boundaryTolerance(), onSurfaceTolerance);
+    auto multiIntersection =
+        surface.intersect(gctx, position, direction,
+                          candidate.boundaryTolerance(), onSurfaceTolerance);
 
     bool firstValid = multiIntersection.at(0).isValid();
     bool secondValid = multiIntersection.at(1).isValid();
@@ -121,8 +122,9 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
 
   // Sort the candidates by path length
   std::ranges::sort(m_candidates, NavigationTarget::pathLengthOrder);
-  ACTS_VERBOSE("NavigationStream::initialize() "<<__LINE__<<" - Sorted candidates before duplicate removal:\n"
-                  <<m_candidates);
+  ACTS_VERBOSE("NavigationStream::initialize() "
+               << __LINE__ << " - Sorted candidates before duplicate removal:\n"
+               << m_candidates);
 
   // If we have duplicates, we expect them to be close by in path length, so we
   // don't need to re-sort Remove duplicates on basis of the surface pointer
@@ -183,15 +185,14 @@ bool NavigationStream::update(const GeometryContext& gctx,
 }
 
 void NavigationStream::reset(bool keepUnreachedBoundless) {
-  
-
   if (!keepUnreachedBoundless) {
-  m_candidates.clear();
+    m_candidates.clear();
   } else {
-    auto [begin, end] = std::ranges::erase_if(m_candidates, [](const NavigationTarget& target) {
-        return target.isReached() || target.pathLength() < 0. ||
-               !target.boundaryTolerance().isInfinite();
-    });
+    auto [begin, end] = std::ranges::remove_if(
+        m_candidates, [](const NavigationTarget& target) {
+          return target.isReached() || target.pathLength() < 0. ||
+                 !target.boundaryTolerance().isInfinite();
+        });
     m_candidates.erase(begin, end);
   }
   m_currentIndex = 0;

@@ -41,7 +41,6 @@ bool skipPolicyState(const TrackingVolume& volume) {
 }
 }  // namespace
 
-
 Navigator::Navigator(Config cfg, std::shared_ptr<const Logger> _logger)
     : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {
   if (m_cfg.trackingGeometry == nullptr) {
@@ -705,8 +704,8 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   const bool candidatesAreUnique =
       state.stream.candidates().size() == nPolicyCandidates;
   state.stream.initialize(state.options.geoContext, {position, direction},
-                          logger(),    
-                          state.options.surfaceTolerance, candidatesAreUnique);
+                          logger(), state.options.surfaceTolerance,
+                          candidatesAreUnique);
 
   ACTS_VERBOSE(volInfo(state)
                << "Now " << state.stream.candidates().size()
