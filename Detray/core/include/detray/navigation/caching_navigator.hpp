@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algorithms.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/indexing.hpp"
@@ -47,7 +48,7 @@ static constexpr std::size_t default_cache_size{8u};
 /// @tparam inspector_t is a validation inspector that can record information
 ///         about the navigation state at different points of the nav. flow.
 /// @tparam intersection_t candidate type
-template <typename detector_t,
+template <concepts::detector detector_t,
           std::size_t k_cache_capacity = navigation::default_cache_size,
           typename inspector_t = navigation::void_inspector,
           typename intersection_t = intersection2D<

@@ -12,6 +12,7 @@
 #include "detray/builders/bin_fillers.hpp"
 #include "detray/builders/detector_builder.hpp"
 #include "detray/builders/grid_factory.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/indexing.hpp"
 #include "detray/io/backend/detail/basic_converter.hpp"
 #include "detray/io/backend/detail/type_info.hpp"
@@ -55,7 +56,8 @@ class grid_reader {
 
  public:
   /// Convert the detector grids @param grids_data from their IO payload
-  template <typename detector_t, typename content_t, typename grid_id_t>
+  template <concepts::detector detector_t, typename content_t,
+            typename grid_id_t>
   static void from_payload(
       detector_builder<typename detector_t::metadata, volume_builder>
           &det_builder,
@@ -114,7 +116,7 @@ class grid_reader {
   ///
   /// @param bound_ids runtime queue of bounds type ids (read from file)
   /// @param binning_ids runtime queue of binning type ids (read from file)
-  template <typename detector_t, typename bounds_ts = types::list<>,
+  template <concepts::detector detector_t, typename bounds_ts = types::list<>,
             typename binning_ts = types::list<>, typename... Ts>
   static void from_payload(std::queue<axis::bounds> &bound_ids,
                            std::queue<axis::binning> &binning_ids,
@@ -181,8 +183,8 @@ class grid_reader {
   ///         identified from the IO ids so far (start with empty list)
   ///
   /// @param binning_ids runtime queue of binning type ids (read from file)
-  template <typename detector_t, typename bounds_ts, typename binning_ts,
-            typename... Ts>
+  template <concepts::detector detector_t, typename bounds_ts,
+            typename binning_ts, typename... Ts>
     requires(types::size<bounds_ts> == dim)
   static void from_payload(std::queue<axis::binning> &binning_ids,
                            Ts &&...data) {
@@ -242,8 +244,8 @@ class grid_reader {
   ///
   /// @param grid_data grid IO payload (read from file)
   /// @param det_builder gather the grid data and build the final volume
-  template <typename detector_t, typename bounds_ts, typename binning_ts,
-            typename content_t>
+  template <concepts::detector detector_t, typename bounds_ts,
+            typename binning_ts, typename content_t>
     requires(types::size<bounds_ts> == dim) && (types::size<binning_ts> == dim)
   static void from_payload(
       const std::pair<dindex, grid_payload<content_t>> &grid_data,
@@ -341,8 +343,8 @@ class grid_reader {
   }
 
   /// @brief End of recursion: build the grid from the @param grid_data
-  template <typename detector_t, typename local_frame_t, typename content_t,
-            typename... bounds_ts, typename... binning_ts>
+  template <concepts::detector detector_t, typename local_frame_t,
+            typename content_t, typename... bounds_ts, typename... binning_ts>
     requires(sizeof...(bounds_ts) == dim) && (sizeof...(binning_ts) == dim)
   static void from_payload(
       const std::pair<dindex, grid_payload<content_t>> &grid_idx_and_data,

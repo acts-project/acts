@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/geometry/surface.hpp"
 #include "detray/navigation/detail/intersection_kernel.hpp"
@@ -42,7 +43,7 @@ struct brute_force_scan {
   using intersection_trace_type = dvector<intersection_record<D>>;
   using trajectory_type = trajectory_t;
 
-  template <typename detector_t>
+  template <concepts::detector detector_t>
   inline auto operator()(const typename detector_t::geometry_context ctx,
                          const detector_t &detector, const trajectory_t &traj,
                          const typename detector_t::scalar_type mask_tol = 0.f,
@@ -149,7 +150,7 @@ using helix_scan = brute_force_scan<detail::helix<algebra_t>>;
 /// Run a scan on detector object by shooting test particles through it
 namespace detector_scanner {
 
-template <template <typename> class scan_type, typename detector_t,
+template <template <typename> class scan_type, concepts::detector detector_t,
           typename trajectory_t, typename... Args>
 inline auto run(const typename detector_t::geometry_context gctx,
                 const detector_t &detector, const trajectory_t &traj,
@@ -189,7 +190,7 @@ inline auto run(const typename detector_t::geometry_context gctx,
 }
 
 /// Write the @param intersection_traces to file
-template <typename detector_t, typename allocator_t>
+template <concepts::detector detector_t, typename allocator_t>
 inline auto write_intersections(
     const std::string &intersection_file_name,
     const std::vector<dvector<intersection_record<detector_t>>, allocator_t>
@@ -214,7 +215,7 @@ inline auto write_intersections(
 }
 
 /// Write the @param intersection_traces to file
-template <typename detector_t, typename allocator_t>
+template <concepts::detector detector_t, typename allocator_t>
 inline auto write_tracks(
     const std::string &track_param_file_name,
     const std::vector<dvector<intersection_record<detector_t>>, allocator_t>
@@ -240,7 +241,7 @@ inline auto write_tracks(
 }
 
 /// Read the @param intersection_record from file
-template <typename detector_t, typename allocator_t>
+template <concepts::detector detector_t, typename allocator_t>
 inline auto read(
     const std::string &intersection_file_name,
     const std::string &track_param_file_name,

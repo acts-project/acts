@@ -6,12 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/detail/cuda_definitions.hpp"
 #include "navigation_validation.hpp"
 
 namespace detray::cuda {
 
-template <typename bfield_t, typename detector_t>
+template <typename bfield_t, concepts::detector detector_t>
 __global__ void navigation_validation_kernel(
     typename detector_t::view_type det_data, const propagation::config cfg,
     pdg_particle<typename detector_t::scalar_type> ptc_hypo,
@@ -129,7 +130,7 @@ __global__ void navigation_validation_kernel(
 }
 
 /// Launch the device kernel
-template <typename bfield_t, typename detector_t>
+template <typename bfield_t, concepts::detector detector_t>
 void navigation_validation_device(
     typename detector_t::view_type det_view, const propagation::config &cfg,
     pdg_particle<typename detector_t::scalar_type> ptc_hypo,

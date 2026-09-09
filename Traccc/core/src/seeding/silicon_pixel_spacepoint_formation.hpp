@@ -12,6 +12,9 @@
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/seeding/detail/spacepoint_formation.hpp"
 
+// Detray include(s)
+#include <detray/core/concepts.hpp>
+
 // VecMem include(s).
 #include <vecmem/memory/memory_resource.hpp>
 
@@ -27,7 +30,7 @@ namespace traccc::host::details {
 /// @param mr                The memory resource to create the output with
 /// @return A container of the created spacepoints
 ///
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 edm::spacepoint_collection::host silicon_pixel_spacepoint_formation(
     const detector_t& det,
     const edm::measurement_collection::const_view& measurements_view,

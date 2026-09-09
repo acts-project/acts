@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/navigation/volume_graph.hpp"
 #include "detray/utils/consistency_checker.hpp"
 #include "detray/utils/logging.hpp"
@@ -51,7 +52,7 @@ struct consistency_check_config
 /// @brief Test class that runs the consistency check on a given detector.
 ///
 /// @note The lifetime of the detector needs to be guaranteed.
-template <typename detector_t>
+template <concepts::detector detector_t>
 class consistency_check : public detray::test::fixture_base<> {
  public:
   using fixture_type = detray::test::fixture_base<>;

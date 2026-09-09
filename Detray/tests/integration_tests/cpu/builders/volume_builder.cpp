@@ -11,6 +11,7 @@
 
 #include "detray/builders/cuboid_portal_generator.hpp"
 #include "detray/builders/surface_factory.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
 #include "detray/definitions/indexing.hpp"
 #include "detray/geometry/mask.hpp"
@@ -32,8 +33,8 @@ using scalar = detray::test::scalar;
 using point3 = detray::test::point3;
 
 /// Check volume links for a collection of masks in a given detector
-template <typename detector_t,
-          typename detector_t::surface_type::mask_link::id_type mask_id>
+template <detray::concepts::detector detector_t,
+          typename detector_t::masks::id mask_id>
 inline void check_mask(const detector_t& d,
                        const std::vector<detray::dindex>& vol_links) {
   for (const auto [idx, mask] :

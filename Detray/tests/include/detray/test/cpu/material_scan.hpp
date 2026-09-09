@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/geometry/surface.hpp"
 #include "detray/tracks/ray.hpp"
 #include "detray/utils/logging.hpp"
@@ -36,7 +37,7 @@ namespace detray::test {
 /// @brief Test class that runs the material ray scan on a given detector.
 ///
 /// @note The lifetime of the detector needs to be guaranteed.
-template <typename detector_t>
+template <concepts::detector detector_t>
 class material_scan : public test::fixture_base<> {
   using algebra_t = typename detector_t::algebra_type;
   using point2_t = dpoint2D<algebra_t>;

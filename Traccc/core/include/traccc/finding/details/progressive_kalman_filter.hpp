@@ -48,7 +48,7 @@ namespace traccc::details {
 ///
 /// @return A struct that contains information about the found track
 ///
-template <typename detector_t, typename bfield_t>
+template <detray::concepts::detector detector_t, typename bfield_t>
 TRACCC_HOST_DEVICE inline track_stats<typename detector_t::scalar_type>
 progressive_kalman_filter(
     const detector_t& det, const bfield_t& field,

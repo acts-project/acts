@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/detail/cuda_definitions.hpp"
 #include "detray/propagator/actors.hpp"
 #include "detray/propagator/line_stepper.hpp"
@@ -13,7 +14,7 @@
 
 namespace detray::cuda {
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 __global__ void material_validation_kernel(
     typename detector_t::view_type det_data, const propagation::config cfg,
     vecmem::data::vector_view<
@@ -81,7 +82,7 @@ __global__ void material_validation_kernel(
 }
 
 /// Launch the device kernel
-template <typename detector_t>
+template <concepts::detector detector_t>
 void material_validation_device(
     typename detector_t::view_type det_view, const propagation::config &cfg,
     vecmem::data::vector_view<
