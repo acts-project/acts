@@ -286,7 +286,7 @@ def main():
                 ):
                     result_duplicate_rate = float(match.group(1))
                 else:
-                    raise ValueError("Dupliacate rate could not be parsed from stdout!")
+                    raise ValueError("Duplicate rate could not be parsed from stdout!")
 
                 if match := re.search(
                     r"Total track fake rate was (\d+(?:\.\d*)?)", stdout

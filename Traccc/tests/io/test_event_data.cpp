@@ -67,7 +67,7 @@ TEST(event_data, mock_data) {
    *
    * first particle: one hit, three cells
    * second particle: one hit, four cells
-   * thrid particle: one hit, three cells
+   * third particle: one hit, three cells
    *
    * [ ] [1] [ ] [ ] [ ] [ ] [ ] [ ]
    * [1][1,2][2] [ ] [ ] [ ] [ ] [ ]

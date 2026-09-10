@@ -40,11 +40,12 @@
 #include "nvtx3/nvToolsExt.h"
 
 namespace {
-uint32_t __attribute__((no_instrument_function)) djb2(const std::string &str) {
-  uint32_t hash = 5381u;
+std::uint32_t __attribute__((no_instrument_function)) djb2(
+    const std::string &str) {
+  std::uint32_t hash = 5381u;
 
   for (auto &chr : str) {
-    hash = 33u * hash + static_cast<uint32_t>(chr);
+    hash = 33u * hash + static_cast<std::uint32_t>(chr);
   }
 
   return hash;

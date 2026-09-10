@@ -69,7 +69,7 @@ class track_state : public BASE {
   TRACCC_HOST_DEVICE
   const auto& state() const { return BASE::template get<0>(); }
 
-  /// Chi^2 of the fitered parameters (non-const)
+  /// Chi^2 of the filtered parameters (non-const)
   ///
   /// @return A (non-const) vector of scalar values
   ///

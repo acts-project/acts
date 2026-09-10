@@ -55,7 +55,7 @@ GTEST_TEST(traccc_grid2, complete_populator) {
 }
 
 GTEST_TEST(traccc_grid2, attach_populator) {
-  // Attch populator without sorting
+  // Attach populator without sorting
   attach_populator<> attacher;
   attach_populator<>::store_value stored = {3u};
   attacher(stored, 2u);

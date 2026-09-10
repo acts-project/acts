@@ -98,7 +98,7 @@ void TripletFittingTests::p_value_tests(
                              std::string(file_name.data()) + "\"");
   }
 
-  // Contant function used for the fit.
+  // Constant function used for the fit.
   TF1 constant_func{"constant", "[0]", 0.f, 1.f};
 
   // Set the seed to the number of data points divided by the number of bins
@@ -117,7 +117,7 @@ void TripletFittingTests::p_value_tests(
 
   EXPECT_NEAR(pval_hist->GetMean(), 0.5f, 0.05f);
 
-  // Fitted constant check (5% errror)
+  // Fitted constant check (5% error)
   EXPECT_NEAR(fit_par[0], exp_par, exp_par * 0.05f)
       << " fitted constant does not make sense";
 
@@ -161,8 +161,8 @@ void TripletFittingTests::ndf_tests(
   ASSERT_FLOAT_EQ(static_cast<float>(track.ndf()),
                   static_cast<float>(dim_sum) - 5.f);
 
-  // The number of track states is supposed to be eqaul to the number
-  // of measurements unless KF failes in the middle of propagation
+  // The number of track states is supposed to be equal to the number
+  // of measurements unless KF fails in the middle of propagation
   if (n_effective_states == track.constituent_links().size()) {
     n_success++;
   }

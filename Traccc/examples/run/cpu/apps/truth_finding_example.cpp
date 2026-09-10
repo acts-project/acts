@@ -60,7 +60,7 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
 
   // Memory resources used by the application.
   vecmem::host_memory_resource host_mr;
-  // Copy obejct
+  // Copy object
   vecmem::copy copy;
 
   // Performance writer

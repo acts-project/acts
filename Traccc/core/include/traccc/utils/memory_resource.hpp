@@ -17,7 +17,7 @@ struct memory_resource {
   // device or shared memory resource
   vecmem::memory_resource& main;
 
-  // optional host accesible memory resource
+  // optional host accessible memory resource
   vecmem::memory_resource* host = nullptr;
 };
 

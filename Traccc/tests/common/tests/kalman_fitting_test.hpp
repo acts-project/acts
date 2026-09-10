@@ -56,7 +56,7 @@ class KalmanFittingTests {
       detray::detail::random_numbers<scalar,
                                      std::uniform_real_distribution<scalar>>;
 
-  /// Verify that pull distribtions follow the normal distribution
+  /// Verify that pull distributions follow the normal distribution
   ///
   /// @param file_name The name of the file holding the distributions
   /// @param hist_names The names of the histograms to process
@@ -64,7 +64,7 @@ class KalmanFittingTests {
   void pull_value_tests(std::string_view file_name,
                         const std::vector<std::string>& hist_names) const;
 
-  /// Verify that P value distribtions follow the uniform
+  /// Verify that P value distributions follow the uniform
   ///
   /// @param file_name The name of the file holding the distributions
   ///

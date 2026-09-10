@@ -12,7 +12,7 @@
 
 namespace traccc {
 
-/// Combinatorial Kalman Finding Test to Comapre CPU results
+/// Combinatorial Kalman Finding Test to Compare CPU results
 class CkfToyDetectorTests : public KalmanFittingToyDetectorTests {};
 
 }  // namespace traccc

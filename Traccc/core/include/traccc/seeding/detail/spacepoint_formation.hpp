@@ -14,7 +14,7 @@
 
 namespace traccc::details {
 
-/// Function helping with checking a measurement obejct for spacepoint creation
+/// Function helping with checking a measurement object for spacepoint creation
 ///
 /// @param[in]  measurement The input measurement
 template <typename measurement_backend_t>

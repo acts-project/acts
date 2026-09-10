@@ -87,7 +87,7 @@ TRACCC_HOST_DEVICE inline void gbts_run_cca_iteration(
         // flag as not terminus edge
         d_outgoing_paths[nextglobalIndex].y = -1;
       }
-      // flag as long enough segement to become a seed
+      // flag as long enough segment to become a seed
       d_outgoing_paths[globalIndex] = short2{
           out_paths, static_cast<short>((next_level >= payload.minLevel) - 1)};
     }

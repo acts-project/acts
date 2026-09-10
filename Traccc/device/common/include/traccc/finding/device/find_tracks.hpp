@@ -40,7 +40,7 @@ struct find_tracks_shared_payload {
   unsigned long long int* shared_insertion_mutex;
 
   /**
-   * @brief Shared-memory vector of measurement candidats with ID and
+   * @brief Shared-memory vector of measurement candidates with ID and
    * original track parameter identifier
    *
    * @note Length is always twice the block size
@@ -63,8 +63,8 @@ struct find_tracks_shared_payload {
 /// @param[in] cfg                Track finding config object
 /// @param[in] det_data           View object to the tracking detector
 ///                               description
-/// @param[inout] payload         The global memory payload
-/// @param[inout] shared_payload  The shared memory payload
+/// @param[in,out] payload         The global memory payload
+/// @param[in,out] shared_payload  The shared memory payload
 ///
 template <detray::concepts::detector detector_t,
           concepts::thread_id1 thread_id_t, concepts::barrier barrier_t>

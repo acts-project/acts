@@ -36,7 +36,7 @@ nlohmann::json module_digi_config_to_json(
   nlohmann::json entry;
 
   // Write geometry identifier fields — only write non-zero ones
-  // ie the top most value in geometry sructure
+  // ie the top most value in geometry structure
   if (geoId.volume() != 0)
     entry["volume"] = geoId.volume();
   if (geoId.layer() != 0)

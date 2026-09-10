@@ -8,8 +8,7 @@
  * (https://github.com/p-ranav/indicators).
  */
 
-#ifndef INDICATORS_PROGRESS_BAR
-#define INDICATORS_PROGRESS_BAR
+#pragma once
 
 #include <algorithm>
 #include <chrono>
@@ -210,5 +209,3 @@ class ProgressBar {
 };
 
 }  // namespace indicators
-
-#endif

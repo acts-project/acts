@@ -25,13 +25,13 @@ TEST(SYCLSort, BlockOddEvenSort) {
   vecmem::sycl::shared_memory_resource mr;
   ::sycl::queue queue;
 
-  uint32_t n = 2803;
-  vecmem::unique_alloc_ptr<uint32_t[]> arr =
-      vecmem::make_unique_alloc<uint32_t[]>(mr, n);
+  std::uint32_t n = 2803;
+  vecmem::unique_alloc_ptr<std::uint32_t[]> arr =
+      vecmem::make_unique_alloc<std::uint32_t[]>(mr, n);
 
   // As long as 13 and n_keys are coprime, this will generate a big,
   // non-sorted array containing every element.
-  for (uint32_t i = 0; i < n; i++) {
+  for (std::uint32_t i = 0; i < n; i++) {
     arr[i] = (13 * 500 * i) % n;
   }
 
@@ -44,12 +44,12 @@ TEST(SYCLSort, BlockOddEvenSort) {
               const traccc::sycl::details::thread_id thread_id{item};
               const traccc::sycl::details::barrier barrier{item};
               traccc::device::blockOddEvenSort(thread_id, barrier, keys, n,
-                                               std::less<uint32_t>());
+                                               std::less<std::uint32_t>());
             });
       })
       .wait_and_throw();
 
-  for (uint32_t i = 0; i < n; ++i) {
+  for (std::uint32_t i = 0; i < n; ++i) {
     ASSERT_EQ(arr[i], i);
   }
 }

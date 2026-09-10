@@ -5,6 +5,8 @@
  * Mozilla Public License Version 2.0
  */
 
+#pragma once
+
 // Project include(s).
 #include "traccc/bfield/magnetic_field.hpp"
 #include "traccc/definitions/primitives.hpp"

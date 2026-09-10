@@ -5,6 +5,8 @@
  * Mozilla Public License Version 2.0
  */
 
+#pragma once
+
 #include <covfie/core/algebra/affine.hpp>
 #include <covfie/core/backend/primitive/array.hpp>
 #include <covfie/core/backend/transformer/affine.hpp>

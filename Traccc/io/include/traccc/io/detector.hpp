@@ -7,7 +7,7 @@
 
 #pragma once
 
-// Turn off exessive detector building debug logs (only works with gcc!)
+// Turn off excessive detector building debug logs (only works with gcc!)
 // clang-format off
 #include <detray/utils/quiet_log_start.hpp>
 // clang-format on

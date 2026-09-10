@@ -23,7 +23,7 @@ def simplify_name(name):
             val = val + name[0]
             name = name[1:]
 
-    raise RuntimeError("An error occured in name simpliciation")
+    raise RuntimeError("An error occurred in name simpliciation")
 
 
 def map_name(name):

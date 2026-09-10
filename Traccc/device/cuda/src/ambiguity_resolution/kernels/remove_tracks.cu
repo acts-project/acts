@@ -26,13 +26,14 @@
 
 namespace traccc::cuda::kernels {
 
-__device__ __forceinline__ uint64_t pack_key(uint32_t meas, uint32_t thr) {
-  return (uint64_t(meas) << 32) | uint64_t(thr);
+__device__ __forceinline__ std::uint64_t pack_key(std::uint32_t meas,
+                                                  std::uint32_t thr) {
+  return (std::uint64_t(meas) << 32) | std::uint64_t(thr);
 }
-__device__ __forceinline__ void unpack_key(uint64_t k, uint32_t& meas,
-                                           uint32_t& thr) {
-  meas = uint32_t(k >> 32);
-  thr = uint32_t(k & 0xFFFFFFFFu);
+__device__ __forceinline__ void unpack_key(std::uint64_t k, std::uint32_t& meas,
+                                           std::uint32_t& thr) {
+  meas = std::uint32_t(k >> 32);
+  thr = std::uint32_t(k & 0xFFFFFFFFu);
 }
 
 __device__ void count_tracks(int tid, int* sh_n_meas, int n_tracks,
@@ -114,7 +115,7 @@ __launch_bounds__(512) __global__
   __shared__ int sh_buffer[512];
   __shared__ measurement_id_type sh_meas_ids[512];
   __shared__ unsigned int sh_threads[512];
-  __shared__ uint64_t sh_keys[512];
+  __shared__ std::uint64_t sh_keys[512];
   __shared__ unsigned int n_meas_total;
   __shared__ unsigned int bound;
   __shared__ unsigned int n_tracks_to_iterate;
@@ -208,9 +209,10 @@ __launch_bounds__(512) __global__
   const auto tid = threadIndex;
   // No early return: out-of-range threads carry a sentinel and only
   // sync/shuffle.
-  uint64_t key = (tid < N) ? pack_key(sh_meas_ids[tid], sh_threads[tid])
-                           : 0xFFFFFFFFFFFFFFFFull;  // sentinel that won't
-                                                     // affect in-range items
+  std::uint64_t key = (tid < N)
+                          ? pack_key(sh_meas_ids[tid], sh_threads[tid])
+                          : 0xFFFFFFFFFFFFFFFFull;  // sentinel that won't
+                                                    // affect in-range items
 
   for (int k = 2; k <= N; k <<= 1) {
     // Inter-warp (j >= 32): use shared + barriers
@@ -220,13 +222,13 @@ __launch_bounds__(512) __global__
 
       const int ixj = tid ^ j;
       // If partner is out-of-range, compare with self (no change).
-      uint64_t other = (ixj < N) ? sh_keys[ixj] : key;
+      std::uint64_t other = (ixj < N) ? sh_keys[ixj] : key;
 
       const bool dir = ((tid & k) == 0);    // ascending segment?
       const bool lower = ((tid & j) == 0);  // am I lower index?
 
-      const uint64_t mn = (key < other) ? key : other;
-      const uint64_t mx = (key < other) ? other : key;
+      const std::uint64_t mn = (key < other) ? key : other;
+      const std::uint64_t mx = (key < other) ? other : key;
 
       key = dir ? (lower ? mn : mx) : (lower ? mx : mn);
 
@@ -236,13 +238,13 @@ __launch_bounds__(512) __global__
     // Intra-warp (j < 32): warp shuffles only; no barriers
     for (int j = min(k >> 1, warpSize >> 1); j > 0; j >>= 1) {
       const unsigned mask = 0xFFFFFFFFu;
-      uint64_t other = __shfl_xor_sync(mask, key, j);
+      std::uint64_t other = __shfl_xor_sync(mask, key, j);
 
       const bool dir = ((tid & k) == 0);
       const bool lower = ((tid & j) == 0);
 
-      const uint64_t mn = (key < other) ? key : other;
-      const uint64_t mx = (key < other) ? other : key;
+      const std::uint64_t mn = (key < other) ? key : other;
+      const std::uint64_t mx = (key < other) ? other : key;
 
       key = dir ? (lower ? mn : mx) : (lower ? mx : mn);
     }
@@ -254,7 +256,7 @@ __launch_bounds__(512) __global__
 
   // Write back only in-range threads
   if (tid < N) {
-    uint32_t meas, thr;
+    std::uint32_t meas, thr;
     unpack_key(key, meas, thr);
     sh_meas_ids[tid] = meas;
     sh_threads[tid] = thr;

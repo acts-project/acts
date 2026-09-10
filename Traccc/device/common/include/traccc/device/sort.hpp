@@ -59,15 +59,15 @@ TRACCC_DEVICE void swap(T& a, T& b) {
 template <concepts::thread_id1 T, concepts::barrier B, std::movable K,
           std::strict_weak_order<K, K> C>
 TRACCC_DEVICE void blockOddEvenSort(const T& thread_id, const B& barrier,
-                                    K* keys, uint32_t num_keys,
+                                    K* keys, std::uint32_t num_keys,
                                     C&& comparison) {
   bool sorted;
 
   do {
     sorted = true;
 
-    for (uint32_t j =
-             2 * static_cast<uint32_t>(thread_id.getLocalThreadIdX()) + 1;
+    for (std::uint32_t j =
+             2 * static_cast<std::uint32_t>(thread_id.getLocalThreadIdX()) + 1;
          j < num_keys - 1; j += 2 * thread_id.getBlockDimX()) {
       if (comparison(keys[j + 1], keys[j])) {
         swap(keys[j + 1], keys[j]);
@@ -77,7 +77,8 @@ TRACCC_DEVICE void blockOddEvenSort(const T& thread_id, const B& barrier,
 
     barrier.blockBarrier();
 
-    for (uint32_t j = 2 * static_cast<uint32_t>(thread_id.getLocalThreadIdX());
+    for (std::uint32_t j =
+             2 * static_cast<std::uint32_t>(thread_id.getLocalThreadIdX());
          j < num_keys - 1; j += 2 * thread_id.getBlockDimX()) {
       if (comparison(keys[j + 1], keys[j])) {
         swap(keys[j + 1], keys[j]);

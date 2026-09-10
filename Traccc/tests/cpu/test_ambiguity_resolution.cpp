@@ -300,7 +300,7 @@ TEST(AmbiguitySolverTests, GreedyResolverTest4) {
     ASSERT_EQ(last, pattern.end());
     pattern.erase(last, pattern.end());
 
-    // Make sure that partern size is eqaul to the track length
+    // Make sure that partern size is equal to the track length
     ASSERT_EQ(pattern.size(), track_length);
 
     // Fill the pattern

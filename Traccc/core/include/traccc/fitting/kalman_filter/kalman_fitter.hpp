@@ -302,7 +302,7 @@ class kalman_fitter {
     TRACCC_VERBOSE_HOST_DEVICE("Run smoothing...");
 
     if (fitter_state.m_fit_actor_state.sequencer().overflow()) {
-      TRACCC_ERROR_HOST_DEVICE("Surface sequence overlow");
+      TRACCC_ERROR_HOST_DEVICE("Surface sequence overflow");
       return kalman_fitter_status::ERROR_GEOID_SEQUENCE_OVERFLOW;
     }
     if (fitter_state.m_fit_actor_state.sequencer().sequence().empty()) {
@@ -480,7 +480,7 @@ class kalman_fitter {
         return;
       }
 
-      // Check for propgation failure, otherwise assume fitter error
+      // Check for propagation failure, otherwise assume fitter error
       TRACCC_ERROR_HOST("Error during fitting: " << fitter_debug_msg{res_fw}());
       fit_res.fit_outcome() =
           res_fw == kalman_fitter_status::ERROR_PROPAGATION_FAILURE
@@ -499,7 +499,7 @@ class kalman_fitter {
         return;
       }
 
-      // Check for propgation failure, otherwise assume smoother error
+      // Check for propagation failure, otherwise assume smoother error
       TRACCC_ERROR_HOST(
           "Error during smoothing: " << fitter_debug_msg{res_bw}());
       fit_res.fit_outcome() =

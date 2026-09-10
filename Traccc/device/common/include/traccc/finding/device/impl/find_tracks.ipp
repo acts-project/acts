@@ -144,7 +144,7 @@ TRACCC_HOST_DEVICE inline void find_tracks(
      * The outer loop consists of three general components. The first
      * components is that each thread starts to fill a shared buffer of
      * measurements. The buffer is twice the size of the block to
-     * accomodate any overflow.
+     * accommodate any overflow.
      *
      * Threads insert their measurements into the shared buffer until they
      * either run out of measurements, or until the shared buffer is full.
@@ -159,7 +159,7 @@ TRACCC_HOST_DEVICE inline void find_tracks(
               .fetch_add(1u);
 
       /*
-       * The buffer elemements are tuples of the measurement index and
+       * The buffer elements are tuples of the measurement index and
        * the index of the thread that originally inserted that
        * measurement.
        */
@@ -338,7 +338,7 @@ TRACCC_HOST_DEVICE inline void find_tracks(
           /*
            * Attempt to CAS the mutex with the same value as before
            * but with the lock bit switched. If this succeeds (e.g.
-           * the return value is as we assumed) then we have succes
+           * the return value is as we assumed) then we have success
            * fully locked and we set the `index` variable, which
            * indicates that we have the lock.
            */

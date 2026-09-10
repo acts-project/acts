@@ -26,7 +26,7 @@ namespace traccc::device {
  * @warning This is a spinlock. Do not use when more efficient implementations
  * are available.
  */
-template <typename T = uint32_t>
+template <typename T = std::uint32_t>
 class mutex {
  public:
   /*

@@ -62,7 +62,7 @@ class select_device {
   /// selected before constructing this object.
   ~select_device();
 
-  /// Return the identifier for the device being seleced
+  /// Return the identifier for the device being selected
   int device() const;
 
  private:

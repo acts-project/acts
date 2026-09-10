@@ -68,7 +68,7 @@ class magnetic_field {
   const std::type_info& type() const { return m_field.type(); }
 
  private:
-  /// The actualy covfie b-field object
+  /// The actually covfie b-field object
   std::any m_field;
 
 };  // class magnetic_field

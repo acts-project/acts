@@ -84,7 +84,7 @@ TEST(seeding, case1) {
   // Run seeding
   auto seeds = sa(vecmem::get_data(spacepoints));
 
-  // The number of seeds should be eqaul to one
+  // The number of seeds should be equal to one
   ASSERT_EQ(seeds.size(), 1u);
 
   traccc::track_params_estimation_config track_params_estimation_config;
@@ -95,7 +95,7 @@ TEST(seeding, case1) {
       tp(vecmem::get_data(measurements), vecmem::get_data(spacepoints),
          vecmem::get_data(seeds), B);
 
-  // The number of bound track parameters should be eqaul to one
+  // The number of bound track parameters should be equal to one
   ASSERT_EQ(bound_params.size(), 1u);
 
   // Make sure that we have reasonable estimation on momentum
@@ -157,7 +157,7 @@ TEST(seeding, case2) {
   // Run seeding
   auto seeds = sa(vecmem::get_data(spacepoints));
 
-  // The number of seeds should be eqaul to one
+  // The number of seeds should be equal to one
   ASSERT_EQ(seeds.size(), 1u);
 
   traccc::track_params_estimation_config track_params_estimation_config;
@@ -168,7 +168,7 @@ TEST(seeding, case2) {
       tp(vecmem::get_data(measurements), vecmem::get_data(spacepoints),
          vecmem::get_data(seeds), B);
 
-  // The number of bound track parameters should be eqaul to one
+  // The number of bound track parameters should be equal to one
   ASSERT_EQ(bound_params.size(), 1u);
 
   // Make sure that we have reasonable estimation on momentum

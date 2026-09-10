@@ -66,7 +66,7 @@ struct measurement_updater : detray::base_actor {
     /// Statistics for the current track
     track_stats<scalar_t> m_stats{};
 
-    /// Congfig params
+    /// Config params
     float max_chi2{0.f};
     /// Max no. of track states this actor can accumulate
     std::uint_least16_t max_n_track_states{100u};

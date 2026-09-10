@@ -16,7 +16,7 @@ namespace traccc::io::csv {
 
 /// Type used in reading CSV particle data into memory
 struct particle {
-  uint64_t particle_id = 0;
+  std::uint64_t particle_id = 0;
   int particle_type = 0;
   int process = 0;
   float vx = 0.f;

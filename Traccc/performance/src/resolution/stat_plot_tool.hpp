@@ -25,7 +25,7 @@ class stat_plot_tool {
 #ifdef TRACCC_HAVE_ROOT
     // Histogram for the number of DoFs
     std::unique_ptr<TH1> ndf_hist;
-    // Histogram for the chi sqaure
+    // Histogram for the chi square
     std::unique_ptr<TH1> chi2_hist;
     // Histogram for the chi2/ndf
     std::unique_ptr<TH1> reduced_chi2_hist;

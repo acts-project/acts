@@ -92,7 +92,7 @@ function(traccc_add_alpaka_test name)
         target_link_libraries(${test_exe_name} PRIVATE ${ARG_LINK_LIBRARIES})
     endif()
 
-    # Discover all of the tests from the execuable, and set them up as individual
+    # Discover all of the tests from the executable, and set them up as individual
     # CTest tests. All the while ensuring that they would find their data files.
     gtest_discover_tests(
         ${test_exe_name}

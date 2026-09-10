@@ -12,7 +12,7 @@
 
 namespace traccc::sycl::details {
 
-/// Function that calculates 1 dim nd range for sycl kernel execution
+/// Function that calculates 1 dim nd-range for sycl kernel execution
 ///
 /// @param[in] globalSize       The global execution range of the kernel
 /// @param[in] localSize        Desired Work group size of the kernel

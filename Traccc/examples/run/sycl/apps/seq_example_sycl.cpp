@@ -144,15 +144,15 @@ int seq_run(const traccc::opts::detector& detector_opts,
       traccc::buffer_from_host_detector(host_det, device_mr, copy);
 
   // Output stats
-  uint64_t n_cells = 0;
-  // uint64_t n_clusters = 0;
-  uint64_t n_measurements = 0;
-  uint64_t n_spacepoints = 0;
-  uint64_t n_spacepoints_sycl = 0;
-  uint64_t n_seeds = 0;
-  uint64_t n_seeds_sycl = 0;
-  uint64_t n_found_tracks = 0;
-  uint64_t n_found_tracks_sycl = 0;
+  std::uint64_t n_cells = 0;
+  // std::uint64_t n_clusters = 0;
+  std::uint64_t n_measurements = 0;
+  std::uint64_t n_spacepoints = 0;
+  std::uint64_t n_spacepoints_sycl = 0;
+  std::uint64_t n_seeds = 0;
+  std::uint64_t n_seeds_sycl = 0;
+  std::uint64_t n_found_tracks = 0;
+  std::uint64_t n_found_tracks_sycl = 0;
 
   // Constant B field for the track finding and fitting
   const traccc::vector3 field_vec(seeding_opts);

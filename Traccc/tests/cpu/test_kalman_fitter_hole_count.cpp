@@ -58,7 +58,7 @@ TEST_P(KalmanFittingHoleCountTests, Run) {
 
   // Memory resources used by the application.
   vecmem::host_memory_resource host_mr;
-  // Copy obejct
+  // Copy object
   vecmem::copy copy;
 
   // Read back detector file
@@ -159,7 +159,7 @@ TEST_P(KalmanFittingHoleCountTests, Run) {
   cands.pop_back();
   cands.pop_back();
 
-  // A sanity check on the number of candidiates
+  // A sanity check on the number of candidates
   ASSERT_EQ(cands.size(), n_planes - 8u);
 
   // Run fitting
