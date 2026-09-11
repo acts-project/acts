@@ -12,8 +12,8 @@
 #include "traccc/geometry/detector.hpp"
 
 namespace traccc::cuda {
-template void create_device_detector<traccc::@DETECTOR_NAME@ ::device>(
+template void create_device_detector<detray::detector_device_t<traccc::@DETECTOR_NAME@>>(
     const cudaStream_t& stream,
-    traccc::@DETECTOR_NAME@ ::device::const_view_type in,
-    traccc::@DETECTOR_NAME@ ::device* out);
+    detray::detector_view_t<traccc::@DETECTOR_NAME@> in,
+    detray::detector_device_t<traccc::@DETECTOR_NAME@>* out);
 }  // namespace traccc::cuda

@@ -16,7 +16,7 @@ namespace detray {
 
 // cuda kernel to copy sub-detector objects
 __global__ void detector_test_kernel(
-    typename detector_host_t::view_type det_data,
+    typename host_detector_t::view_type det_data,
     vecmem::data::vector_view<det_volume_t> volumes_data,
     vecmem::data::vector_view<det_surface_t> surfaces_data,
     vecmem::data::vector_view<transform_t> transforms_data,
@@ -24,7 +24,7 @@ __global__ void detector_test_kernel(
     vecmem::data::vector_view<disc_t> discs_data,
     vecmem::data::vector_view<cylinder_t> cylinders_data) {
   // convert toy detector_data into detector w/ device vectors
-  detector_device_t det_device(det_data);
+  device_detector_t det_device(det_data);
 
   // convert subdetector data objects into objects w/ device vectors
   vecmem::device_vector<det_volume_t> volumes_device(volumes_data);
@@ -46,7 +46,7 @@ __global__ void detector_test_kernel(
 
   // copy objects - transforms
   auto& trfs = det_device.transform_store();
-  auto ctx = typename detector_host_t::geometry_context{};
+  auto ctx = typename host_detector_t::geometry_context{};
   for (unsigned int i = 0u; i < trfs.size(ctx); i++) {
     transforms_device[i] = trfs.at(i, ctx);
   }
@@ -54,18 +54,18 @@ __global__ void detector_test_kernel(
   // copy objects - masks
   auto& masks = det_device.mask_store();
   auto& rectangles =
-      masks.template get<detector_host_t::masks::id::e_rectangle2D>();
+      masks.template get<host_detector_t::masks::id::e_rectangle2D>();
   for (unsigned int i = 0u; i < rectangles.size(); i++) {
     rectangles_device[i] = rectangles[i];
   }
 
-  auto& discs = masks.template get<detector_host_t::masks::id::e_ring2D>();
+  auto& discs = masks.template get<host_detector_t::masks::id::e_ring2D>();
   for (unsigned int i = 0u; i < discs.size(); i++) {
     discs_device[i] = discs[i];
   }
 
   auto& cylinders =
-      masks.template get<detector_host_t::masks::id::e_concentric_cylinder2D>();
+      masks.template get<host_detector_t::masks::id::e_concentric_cylinder2D>();
   for (unsigned int i = 0u; i < cylinders.size(); i++) {
     cylinders_device[i] = cylinders[i];
   }
@@ -86,7 +86,7 @@ __global__ void detector_test_kernel(
 }
 
 /// implementation of the test function for detector
-void detector_test(typename detector_host_t::view_type det_data,
+void detector_test(typename host_detector_t::view_type det_data,
                    vecmem::data::vector_view<det_volume_t> volumes_data,
                    vecmem::data::vector_view<det_surface_t> surfaces_data,
                    vecmem::data::vector_view<transform_t> transforms_data,
@@ -109,15 +109,15 @@ void detector_test(typename detector_host_t::view_type det_data,
 // cuda kernel to extract surface transforms from two detector views - static
 // and misaligned - and to copy them into vectors
 __global__ void detector_alignment_test_kernel(
-    typename detector_host_t::view_type det_data_static,
-    typename detector_host_t::view_type det_data_aligned,
+    typename host_detector_t::view_type det_data_static,
+    typename host_detector_t::view_type det_data_aligned,
     vecmem::data::vector_view<transform_t> surfacexf_data_static,
     vecmem::data::vector_view<transform_t> surfacexf_data_aligned) {
-  auto ctx = typename detector_host_t::geometry_context{};
+  auto ctx = typename host_detector_t::geometry_context{};
 
   // two instances of device detectors
-  detector_device_t det_device_static(det_data_static);
-  detector_device_t det_device_aligned(det_data_aligned);
+  device_detector_t det_device_static(det_data_static);
+  device_detector_t det_device_aligned(det_data_aligned);
 
   // device vectors of surface transforms
   vecmem::device_vector<transform_t> surfacexf_device_static(
@@ -141,8 +141,8 @@ __global__ void detector_alignment_test_kernel(
 
 /// implementation of the alignment test function for detector
 void detector_alignment_test(
-    typename detector_host_t::view_type det_data_static,
-    typename detector_host_t::view_type det_data_aligned,
+    typename host_detector_t::view_type det_data_static,
+    typename host_detector_t::view_type det_data_aligned,
     vecmem::data::vector_view<transform_t> surfacexf_data_static,
     vecmem::data::vector_view<transform_t> surfacexf_data_aligned) {
   constexpr int block_dim = 1u;

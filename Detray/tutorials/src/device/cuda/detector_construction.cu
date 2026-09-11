@@ -14,7 +14,7 @@ namespace detray::tutorial {
 
 /// Kernel that runs the entire propagation loop
 __global__ void print_kernel(
-    typename detray::tutorial::detector_host_t::view_type det_data) {
+    typename detray::tutorial::host_detector_t::view_type det_data) {
   int gid = threadIdx.x + blockIdx.x * blockDim.x;
 
   if (gid > 0) {
@@ -22,7 +22,7 @@ __global__ void print_kernel(
   }
 
   // Setup of the device-side detector
-  detray::tutorial::detector_device_t det(det_data);
+  detray::tutorial::device_detector_t det(det_data);
 
   DETRAY_INFO_DEVICE("Number of volumes: %d", det.volumes().size());
   DETRAY_INFO_DEVICE("Number of transforms: %d", det.transform_store().size());
@@ -51,7 +51,7 @@ __global__ void print_kernel(
                          .size());
 }
 
-void print(typename detray::tutorial::detector_host_t::view_type det_data) {
+void print(typename detray::tutorial::host_detector_t::view_type det_data) {
   // run the tutorial kernel
   print_kernel<<<1, 1>>>(det_data);
 

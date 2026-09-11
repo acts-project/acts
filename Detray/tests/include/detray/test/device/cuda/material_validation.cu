@@ -26,12 +26,12 @@ __global__ void material_validation_kernel(
     vecmem::data::jagged_vector_view<
         material_record<typename detector_t::scalar_type>>
         mat_steps_view) {
-  using detector_device_t = device::detector<typename detector_t::metadata>;
-  using algebra_t = typename detector_device_t::algebra_type;
+  using device_detector_t = device::detector<typename detector_t::metadata>;
+  using algebra_t = typename device_detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
 
   using stepper_t = line_stepper<algebra_t>;
-  using navigator_t = caching_navigator<detector_device_t>;
+  using navigator_t = caching_navigator<device_detector_t>;
   // Propagator with full covariance transport, pathlimit aborter and
   // material tracer
   using material_tracer_t =
@@ -44,7 +44,7 @@ __global__ void material_validation_kernel(
                                material_tracer_t>>;
   using propagator_t = propagator<stepper_t, navigator_t, actor_chain_t>;
 
-  detector_device_t det(det_data);
+  device_detector_t det(det_data);
 
   vecmem::device_vector<free_track_parameters<algebra_t>> tracks(tracks_view);
   vecmem::device_vector<typename material_tracer_t::track_material_type>

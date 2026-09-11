@@ -393,4 +393,24 @@ struct detector_traits<detail::detector<metadata_t, container_t>> {
   using buffer = typename T::buffer;
 };
 
+/// Some predefined alias types
+/// @{
+
+template <typename D>
+using detector_metadata_t = typename detector_traits<D>::metadata_type;
+
+template <typename D>
+using detector_host_t = typename detector_traits<D>::host;
+
+template <typename D>
+using detector_device_t = typename detector_traits<D>::device;
+
+template <typename D>
+using detector_view_t = typename detector_traits<D>::view;
+
+template <typename D>
+using detector_buffer_t = typename detector_traits<D>::buffer;
+
+/// @}
+
 }  // namespace detray

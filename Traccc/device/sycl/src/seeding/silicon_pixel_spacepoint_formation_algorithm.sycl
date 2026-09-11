@@ -67,16 +67,15 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
   detector_buffer_visitor<detector_type_list>(
-      payload.detector, [&]<typename detector_traits_t>(
-                            const typename detector_traits_t::view& det) {
+      payload.detector, [&]<detray::concepts::detector detector_t>(
+                            const detray::detector_view_t<detector_t>& det) {
         // Put the detector view into device memory.
-        vecmem::data::vector_buffer<typename detector_traits_t::view>
+        vecmem::data::vector_buffer<detray::detector_view_t<detector_t>>
             device_det(1u, mr().main);
         copy().setup(device_det)->ignore();
-        copy()(
-            vecmem::data::vector_view<const typename detector_traits_t::view>(
-                1u, &det),
-            device_det)
+        copy()(vecmem::data::vector_view<
+                   const detray::detector_view_t<detector_t>>(1u, &det),
+               device_det)
             ->ignore();
 
         // Launch the kernel. The base class destroys the prefix sum buffer,
@@ -91,7 +90,7 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
                    measurements = payload.measurements,
                    spacepoint_index = payload.spacepoint_index,
                    spacepoints = payload.spacepoints](::sycl::nd_item<1> item) {
-                    device::form_spacepoints<detector_traits_t>(
+                    device::form_spacepoints<detector_t>(
                         details::global_index(item), *det_ptr, measurements,
                         spacepoint_index, spacepoints);
                   });

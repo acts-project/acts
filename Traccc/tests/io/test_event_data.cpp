@@ -24,7 +24,7 @@
 
 TEST(event_data, acts_odd) {
   /// Type declarations
-  using host_detector_type = traccc::default_detector::host;
+  using host_detector_type = traccc::default_detector_traits::host;
 
   vecmem::host_memory_resource resource;
 
@@ -86,7 +86,7 @@ TEST(event_data, mock_data) {
    */
 
   /// Type declarations
-  using host_detector_type = traccc::default_detector::host;
+  using host_detector_type = traccc::default_detector_traits::host;
 
   vecmem::host_memory_resource resource;
 

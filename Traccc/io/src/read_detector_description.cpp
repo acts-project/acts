@@ -41,16 +41,13 @@ void fill_digi_info(traccc::detector_design_description::host& det_desc,
                                        data.bin_edges[1].end());
 }
 
-template <typename detector_traits_t>
+template <detray::concepts::detector detector_t>
 void read_json_dd_impl(traccc::detector_design_description::host& det_desc,
                        traccc::detector_conditions_description::host& det_cond,
                        const traccc::host_detector& detector,
                        const traccc::digitization_config& digi,
-                       const traccc::conditions_config& cond)
-  requires(detray::concepts::detector_traits<detector_traits_t>)
-{
-  const typename detector_traits_t::host& detector_host =
-      detector.as<detector_traits_t::host>();
+                       const traccc::conditions_config& cond) {
+  const detector_t& detector_host = detector.as<detector_t>();
 
   det_desc.reserve(digi.size());
   det_cond.reserve(detector_host.surfaces().size());
@@ -79,7 +76,7 @@ void read_json_dd_impl(traccc::detector_design_description::host& det_desc,
     std::array<detray::dindex_type<traccc::default_algebra>, 2u> subspace = {0,
                                                                              1};
     using annulus_t = detray::mask<detray::annulus2D, traccc::default_algebra>;
-    using mask_registry_t = typename detector_traits_t::host::masks;
+    using mask_registry_t = typename detector_t::masks;
     if constexpr (detray::types::contains<mask_registry_t, annulus_t>) {
       if (surface_desc.mask().id() ==
           detray::types::id<mask_registry_t, annulus_t>) {

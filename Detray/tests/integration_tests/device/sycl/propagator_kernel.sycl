@@ -32,14 +32,14 @@ void propagator_test(
       ->submit([&](::sycl::handler& h) {
         h.parallel_for(ndrange, [det_data, cfg, field_data, tracks_data,
                                  steps_data](::sycl::nd_item<1> item) {
-          using detector_device_t =
+          using device_detector_t =
               device::detector<typename detector_t::metadata>;
 
           static_assert(std::is_same_v<typename detector_t::view_type,
-                                       typename detector_device_t::view_type>,
+                                       typename device_detector_t::view_type>,
                         "Host and device detector views do not match");
 
-          detector_device_t dev_det(det_data);
+          device_detector_t dev_det(det_data);
 
           vecmem::device_vector<test_track> tracks(tracks_data);
           vecmem::jagged_device_vector<step_record<test_algebra>> steps(
@@ -52,7 +52,7 @@ void propagator_test(
           }
 
           auto stepr = rk_stepper_t<covfie::field_view<bfield_bknd_t>>{};
-          auto nav = navigator_t<detector_device_t>{};
+          auto nav = navigator_t<device_detector_t>{};
 
           // Create propagator
           using propagator_device_t =

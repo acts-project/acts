@@ -35,12 +35,12 @@ void fill_track_containers(
     const traccc::scalar track_min_pT, const traccc::scalar track_max_rad,
     std::vector<traccc::free_track_parameters<traccc::default_algebra>>& tracks,
     std::vector<vecmem::vector<traccc::propagation_validator::candidate_type<
-        traccc::default_detector::host>>>& truth_traces,
+        traccc::default_detector_traits::host>>>& truth_traces,
     typename edm::measurement_collection::host& measurements,
     traccc::edm::track_container<traccc::default_algebra>::host&
         track_container) {
-  using algebra_t = traccc::default_algebra;
-  using detector_t = traccc::default_detector::host;
+  using host_detector_t = traccc::default_detector_traits::host;
+  using algebra_t = host_detector_t::algebra_type;
 
   TRACCC_LOCAL_LOGGER(std::move(ilogger));
 
@@ -48,10 +48,10 @@ void fill_track_containers(
   vecmem::host_memory_resource host_mr;
 
   // Geometry context
-  const traccc::default_detector::host::geometry_context ctx{};
+  const host_detector_t::geometry_context ctx{};
 
   // Retrieve detector
-  const detector_t& det = host_det->template as<traccc::default_detector>();
+  const host_detector_t& det = host_det->template as<host_detector_t>();
 
   tracks.reserve(n_events * 1000);
   truth_traces.reserve(tracks.capacity());
