@@ -12,11 +12,15 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/AnyTrackProxy.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/SpacePointFormation/StripSpacePointBuilder.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
@@ -320,6 +324,15 @@ struct EventDataView3D {
   static void drawTrack(IVisualization3D& helper,
                         const AnyConstTrackProxy& track,
                         const GeometryContext& gctx);
+
+  /// Helper method to draw clusters of a track from AnyTrackProxy
+  ///
+  /// @param helper [in, out] The visualization helper
+  /// @param track The track to be drawn
+  /// @param gctx The geometry context for which it is drawn
+  static void drawCluster(IVisualization3D& helper,
+                          const AnyConstTrackProxy& track,
+                          const GeometryContext& gctx);
 };
 
 }  // namespace Acts
