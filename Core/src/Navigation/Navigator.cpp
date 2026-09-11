@@ -574,16 +574,15 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
                        : "n/a")
                << ", candidates: " << state.stream.candidates().size());
 
-  if (state.stream.isValid()) {
-    while (!detail::checkPathLength(
-        state.stream.currentCandidate().pathLength(), state.options.nearLimit,
-        state.navCandidatesFarLimit, logger())) {
-      ACTS_VERBOSE(volInfo(state)
-                   << " Skip invalid navigation target: "
-                   << (state.stream.isValid() ? state.navCandidate()
-                                              : NavigationTarget::None()));
-      state.stream.switchToNextCandidate();
-    }
+  while (state.stream.isValid() &&
+         !detail::checkPathLength(state.stream.currentCandidate().pathLength(),
+                                  state.options.nearLimit,
+                                  state.navCandidatesFarLimit, logger())) {
+    ACTS_VERBOSE(volInfo(state)
+                 << " Skip invalid navigation target: "
+                 << (state.stream.isValid() ? state.navCandidate()
+                                            : NavigationTarget::None()));
+    state.stream.switchToNextCandidate();
   }
 
   if (state.stream.isValid()) {
