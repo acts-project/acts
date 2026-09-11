@@ -151,8 +151,9 @@ TRACCC_HOST_DEVICE inline void aggregate_cluster(
   out.local_position() = utils::to_float_array<default_algebra>(position);
   out.local_variance() = utils::to_float_array<default_algebra>(var);
   out.surface_link() = module_cd.geometry_id();
-  // Set a unique identifier for the measurement.
-  out.identifier() = link;
+  // Set a unique identifier for the measurement as the index
+  // of the first cell of the cluster.
+  out.identifier() = cid + start;
   // Set the dimensionality of the measurement.
   out.dimensions() = module_dd.dimensions();
   // Set the measurement's subspace.
