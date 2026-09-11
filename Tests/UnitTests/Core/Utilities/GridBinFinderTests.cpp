@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_ints) {
 
   for (const std::size_t neighbour : neighbours_1) {
     std::array<std::size_t, 1ul> neighboutLocPosition =
-        grid.localBinsFromGlobalBin(neighbour);
+        grid.multiAxis().getLocalBinsFromGlobalBin(neighbour);
     std::size_t distance = locPosition[0ul] <= neighboutLocPosition[0ul]
                                ? neighboutLocPosition[0ul] - locPosition[0ul]
                                : locPosition[0ul] - neighboutLocPosition[0ul];
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_ints) {
 
   for (const std::size_t neighbour : neighbours_2) {
     std::array<std::size_t, 1ul> neighboutLocPosition =
-        grid.localBinsFromGlobalBin(neighbour);
+        grid.multiAxis().getLocalBinsFromGlobalBin(neighbour);
     std::size_t distance = locPosition[0ul] <= neighboutLocPosition[0ul]
                                ? neighboutLocPosition[0ul] - locPosition[0ul]
                                : locPosition[0ul] - neighboutLocPosition[0ul];
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_ints) {
 
   for (const std::size_t neighbour : neighbours_1) {
     std::array<std::size_t, 2ul> neighboutLocPosition =
-        grid.localBinsFromGlobalBin(neighbour);
+        grid.multiAxis().getLocalBinsFromGlobalBin(neighbour);
     for (std::size_t dim(0ul); dim < 2ul; ++dim) {
       std::size_t distance = locPosition[dim] <= neighboutLocPosition[dim]
                                  ? neighboutLocPosition[dim] - locPosition[dim]
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_ints) {
 
   for (const std::size_t neighbour : neighbours_2) {
     std::array<std::size_t, 2ul> neighboutLocPosition =
-        grid.localBinsFromGlobalBin(neighbour);
+        grid.multiAxis().getLocalBinsFromGlobalBin(neighbour);
     for (std::size_t dim(0ul); dim < 2ul; ++dim) {
       std::size_t distance = locPosition[dim] <= neighboutLocPosition[dim]
                                  ? neighboutLocPosition[dim] - locPosition[dim]
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_3d_ints) {
 
   for (const std::size_t neighbour : neighbours) {
     std::array<std::size_t, 3ul> neighboutLocPosition =
-        grid.localBinsFromGlobalBin(neighbour);
+        grid.multiAxis().getLocalBinsFromGlobalBin(neighbour);
     for (std::size_t dim(0ul); dim < 3ul; ++dim) {
       std::size_t distance = locPosition[dim] <= neighboutLocPosition[dim]
                                  ? neighboutLocPosition[dim] - locPosition[dim]
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_pair) {
 
   for (const std::size_t neighbour : neighbours_1) {
     std::array<std::size_t, 1ul> neighboutLocPosition =
-        grid.localBinsFromGlobalBin(neighbour);
+        grid.multiAxis().getLocalBinsFromGlobalBin(neighbour);
     std::size_t distance = locPosition[0ul] <= neighboutLocPosition[0ul]
                                ? neighboutLocPosition[0ul] - locPosition[0ul]
                                : locPosition[0ul] - neighboutLocPosition[0ul];
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_pair) {
 
   for (const std::size_t neighbour : neighbours_2) {
     std::array<std::size_t, 1ul> neighboutLocPosition =
-        grid.localBinsFromGlobalBin(neighbour);
+        grid.multiAxis().getLocalBinsFromGlobalBin(neighbour);
     std::size_t distance = locPosition[0ul] <= neighboutLocPosition[0ul]
                                ? neighboutLocPosition[0ul] - locPosition[0ul]
                                : locPosition[0ul] - neighboutLocPosition[0ul];
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_pair) {
 
   for (const std::size_t neighbour : neighbours_1) {
     std::array<std::size_t, 2ul> neighboutLocPosition =
-        grid.localBinsFromGlobalBin(neighbour);
+        grid.multiAxis().getLocalBinsFromGlobalBin(neighbour);
     for (std::size_t dim(0ul); dim < 2ul; ++dim) {
       std::size_t distance = locPosition[dim] <= neighboutLocPosition[dim]
                                  ? neighboutLocPosition[dim] - locPosition[dim]
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_pair) {
 
   for (const std::size_t neighbour : neighbours_2) {
     std::array<std::size_t, 2ul> neighboutLocPosition =
-        grid.localBinsFromGlobalBin(neighbour);
+        grid.multiAxis().getLocalBinsFromGlobalBin(neighbour);
     for (std::size_t dim(0ul); dim < 2ul; ++dim) {
       std::size_t distance = locPosition[dim] <= neighboutLocPosition[dim]
                                  ? neighboutLocPosition[dim] - locPosition[dim]
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_pattern) {
   neighbours.push_back(std::make_pair(-2, 1));
   neighbours.push_back(std::make_pair(-1, 0));
 
-  BOOST_CHECK_EQUAL(neighbours.size(), grid.numLocalBins()[0ul]);
+  BOOST_CHECK_EQUAL(neighbours.size(), grid.multiAxis().getNBins()[0ul]);
 
   auto startGrid = grid.begin(navigation);
   auto stopGrid = grid.end(navigation);
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_pattern) {
 
   for (const std::size_t neighbour : neighs) {
     std::array<std::size_t, 1ul> neighboutLocPosition =
-        grid.localBinsFromGlobalBin(neighbour);
+        grid.multiAxis().getLocalBinsFromGlobalBin(neighbour);
     std::size_t distance = locPosition[0ul] <= neighboutLocPosition[0ul]
                                ? neighboutLocPosition[0ul] - locPosition[0ul]
                                : locPosition[0ul] - neighboutLocPosition[0ul];
@@ -374,8 +374,8 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_pattern) {
   neighboursY.push_back(std::make_pair(-1, 1));
   neighboursY.push_back(std::make_pair(-1, 0));
 
-  BOOST_CHECK_EQUAL(neighboursX.size(), grid.numLocalBins()[0ul]);
-  BOOST_CHECK_EQUAL(neighboursY.size(), grid.numLocalBins()[1ul]);
+  BOOST_CHECK_EQUAL(neighboursX.size(), grid.multiAxis().getNBins()[0ul]);
+  BOOST_CHECK_EQUAL(neighboursY.size(), grid.multiAxis().getNBins()[1ul]);
 
   auto startGrid = grid.begin(navigation);
   auto stopGrid = grid.end(navigation);
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_mixed) {
   neighboursX.push_back(std::make_pair(-2, 1));
   neighboursX.push_back(std::make_pair(-1, 0));
 
-  BOOST_CHECK_EQUAL(neighboursX.size(), grid.numLocalBins()[0ul]);
+  BOOST_CHECK_EQUAL(neighboursX.size(), grid.multiAxis().getNBins()[0ul]);
 
   auto startGrid = grid.begin(navigation);
   auto stopGrid = grid.end(navigation);

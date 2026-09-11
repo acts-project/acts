@@ -84,7 +84,7 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
   Config m_cfg;
 
   using Box_t = ConvertedVolList_t::value_type;
-  using Node_t = Acts::Experimental::StaticBlueprintNode;
+  using Node_t = Acts::StaticBlueprintNode;
   using NodePtr_t = std::shared_ptr<Node_t>;
 
   /// @brief Produce a station node from the provided converted volume boxes

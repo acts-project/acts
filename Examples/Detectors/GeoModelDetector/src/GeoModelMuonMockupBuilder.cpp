@@ -29,7 +29,7 @@
 #include <format>
 #include <typeinfo>
 using namespace Acts::UnitLiterals;
-using namespace Acts::Experimental;
+using namespace Acts;
 
 namespace ActsExamples {
 
@@ -49,10 +49,10 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   }
 
   // Blue print construction for the tracking geometry
-  Acts::Experimental::Blueprint::Config bpCfg;
+  Acts::Blueprint::Config bpCfg;
   bpCfg.envelope[Acts::AxisDirection::AxisZ] = {20_mm, 20_mm};
   bpCfg.envelope[Acts::AxisDirection::AxisR] = {5008.87000_mm, 12_mm};
-  Acts::Experimental::Blueprint root{bpCfg};
+  Acts::Blueprint root{bpCfg};
 
   // Helper lambda to configure a container
   auto configureContainer = [](CylinderContainerBlueprintNode& c) {
@@ -333,11 +333,13 @@ GeoModelMuonMockupBuilder::buildChildChamber(
     }
     double tubeR = lineBounds->get(LineBounds::eR);
     mwCfg.binning = {
-        {{Acts::AxisDirection::AxisY, Acts::AxisBoundaryType::Bound, -halfY,
-          halfY, static_cast<std::size_t>(std::lround(1. * halfY / tubeR))},
+        {Acts::AxisSpec::Equidistant(
+             static_cast<std::size_t>(std::lround(1. * halfY / tubeR)), -halfY,
+             halfY, Acts::AxisBoundaryType::Bound, Acts::AxisDirection::AxisY),
          2},
-        {{Acts::AxisDirection::AxisZ, Acts::AxisBoundaryType::Bound, -halfZ,
-          halfZ, static_cast<std::size_t>(std::lround(1. * halfZ / tubeR))},
+        {Acts::AxisSpec::Equidistant(
+             static_cast<std::size_t>(std::lround(1. * halfZ / tubeR)), -halfZ,
+             halfZ, Acts::AxisBoundaryType::Bound, Acts::AxisDirection::AxisZ),
          1}};
 
     MultiWireVolumeBuilder mdtBuilder{mwCfg};

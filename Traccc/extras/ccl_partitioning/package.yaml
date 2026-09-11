@@ -1,0 +1,18 @@
+name:                ccl-partitioning
+version:             1.0.0.0
+author:              "Stephen Nicholas Swatman"
+maintainer:          "stephen.nicholas.swatman@cern.ch"
+
+dependencies:
+  - base >= 4.16 && < 5
+  - cassava
+  - bytestring
+
+executables:
+  run:
+    main:                Main.hs
+    source-dirs:         src
+    ghc-options:
+      - -Wall
+      - -Wcompat
+      - -O3

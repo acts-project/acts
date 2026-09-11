@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/indexing.hpp"
 #include "detray/definitions/navigation.hpp"
@@ -19,7 +20,11 @@
 #include "detray/navigation/navigation_config.hpp"
 #include "detray/navigation/navigation_state.hpp"
 #include "detray/navigation/navigator_base.hpp"
+#include "detray/tracks/ray.hpp"
 #include "detray/utils/logging.hpp"
+
+// System include(s)
+#include <limits>
 
 namespace detray {
 
@@ -29,11 +34,11 @@ namespace detray {
 /// @tparam inspector_t is a validation inspector that can record information
 ///         about the navigation state at different points of the nav. flow.
 /// @tparam intersection_t candidate type
-template <
-    typename detector_t, typename inspector_t = navigation::void_inspector,
-    typename intersection_t = intersection2D<typename detector_t::surface_type,
-                                             typename detector_t::algebra_type,
-                                             !intersection::contains_pos>>
+template <concepts::detector detector_t,
+          typename inspector_t = navigation::void_inspector,
+          typename intersection_t = intersection2D<
+              typename detector_t::surface_type,
+              typename detector_t::algebra_type, !intersection::contains_pos>>
 class navigator : public navigator_base<
                       navigator<detector_t, inspector_t, intersection_t>> {
   friend class navigator_base<navigator>;
@@ -55,13 +60,10 @@ class navigator : public navigator_base<
     friend class navigator;
     friend class navigator_base<navigator>;
 
-    // Allow the filling/updating of candidates
+    // Allow the filling of candidates
     friend struct detail::intersection_initialize<ray_intersector>;
-    friend struct detail::intersection_update<ray_intersector>;
 
     // Navigation utility functions that need to modify the state
-    friend struct navigation::candidate_search;
-
     template <typename state_t>
     friend constexpr void navigation::update_status(state_t &,
                                                     const navigation::config &);
@@ -76,10 +78,6 @@ class navigator : public navigator_base<
                                                     const navigation::config &,
                                                     const ctx_t &);
 
-    template <typename track_t, typename state_t, typename ctx_t>
-    friend constexpr void navigation::init_loose_cfg(const track_t &, state_t &,
-                                                     navigation::config,
-                                                     const ctx_t &);
     using base_type = navigation::base_state<state, detector_type, 2u,
                                              inspector_type, intersection_type>;
 
@@ -155,7 +153,14 @@ class navigator : public navigator_base<
     const auto &det = navigation.detector();
     constexpr bool is_init{true};
 
+    using algebra_t = typename detector_t::algebra_type;
+
     assert(navigation.trust_level() != navigation::trust_level::e_full);
+
+    // Tangential to the track direction
+    const detray::detail::ray<algebra_t> tangential{
+        track.pos(),
+        static_cast<scalar_t>(navigation.direction()) * track.dir()};
 
     // Update only the current candidate and the corresponding
     // - do this only when the navigation state is still coherent
@@ -163,9 +168,9 @@ class navigator : public navigator_base<
       DETRAY_VERBOSE_HOST_DEVICE("Called 'update()' - high trust");
 
       // Update next candidate: If not reachable, 'high trust' is broken
-      if (!navigation::update_candidate(
-              navigation.direction(), navigation.target(), track, det,
-              cfg.intersection, navigation.external_tol(), ctx)) {
+      if (!navigation::update_candidate(navigation.target(), tangential, det,
+                                        cfg.intersection,
+                                        navigation.external_tol(), ctx)) {
         navigation.status(navigation::status::e_unknown);
         // This will run into the fair trust case below.
         navigation.set_fair_trust();

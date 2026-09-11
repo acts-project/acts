@@ -39,15 +39,14 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
 @pytest.mark.slow
 @pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-def test_material_mapping(material_recording, tmp_path, assert_root_hash):
+def test_material_mapping(material_recording, tmp_path, assert_root_hash, odd_detector):
     from material_mapping import runMaterialMapping
     from material_validation import runMaterialValidation
 
     map_file = tmp_path / "material-map_tracks.root"
     assert not map_file.exists()
 
-    odd = getOpenDataDetector()
-    trackingGeometry = odd.trackingGeometry()
+    trackingGeometry = odd_detector.trackingGeometry()
     materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 
     s = Sequencer(events=2000, numThreads=1)

@@ -34,9 +34,14 @@ EXCLUDE_PATTERNS = [
 EXCLUDE_PATHS = [
     "Tests/",
     "Python/",
+    "Examples/",
+    "docs/",
     "dependencies/",
     "spack/",
     "thirdparty/",
+    # Excluded for the time being
+    "Detray/",
+    "Traccc/",
 ]
 
 

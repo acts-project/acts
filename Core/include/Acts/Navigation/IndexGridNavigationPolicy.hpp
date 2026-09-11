@@ -16,7 +16,6 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 
 namespace Acts {
 

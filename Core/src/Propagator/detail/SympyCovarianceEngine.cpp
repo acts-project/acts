@@ -16,6 +16,29 @@
 
 namespace Acts::detail {
 
+namespace {
+
+/// Transport a bound covariance, taking the cheaper vacuum kernel where it
+/// applies. d(q/p)/d(q/p) is left untouched by a vacuum step, so it is exactly
+/// one there and the test is structural rather than numerical.
+///
+/// @param jacobian the full bound-to-bound transport jacobian
+/// @param in the covariance to transport
+/// @param [out] out the transported covariance
+void applyBoundCovarianceTransport(const BoundMatrix& jacobian,
+                                   const BoundMatrix& in, BoundMatrix& out) {
+  const auto j = std::span<const double, 36>(jacobian.data(), 36);
+  const auto c = std::span<const double, 36>(in.data(), 36);
+  const auto o = std::span<double, 36>(out.data(), 36);
+  if (jacobian(eBoundQOverP, eBoundQOverP) == 1) {
+    transportCovarianceToBoundVacuumImpl(c, j, o);
+  } else {
+    transportCovarianceToBoundDenseImpl(c, j, o);
+  }
+}
+
+}  // namespace
+
 /// Some type defs
 using Jacobian = BoundMatrix;
 using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
@@ -23,8 +46,7 @@ using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
 Result<BoundState> sympy::boundState(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian,
+    FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
     FreeVector& freeParameters, const ParticleHypothesis& particleHypothesis,
     bool covTransport, double accumulatedPath,
@@ -44,8 +66,8 @@ Result<BoundState> sympy::boundState(
     // boundToFreeJacobian
     Result<void> transportRes = transportCovarianceToBound(
         geoContext, surface, boundCovariance, fullTransportJacobian,
-        freeTransportJacobian, freeToPathDerivatives, boundToFreeJacobian,
-        additionalFreeCovariance, freeParameters, freeToBoundCorrection);
+        freeToPathDerivatives, boundToFreeJacobian, additionalFreeCovariance,
+        freeParameters, freeToBoundCorrection);
     if (!transportRes.ok()) {
       return transportRes.error();
     }
@@ -61,8 +83,7 @@ Result<BoundState> sympy::boundState(
 
 BoundState sympy::curvilinearState(
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian,
+    FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
     const FreeVector& freeParameters,
     const ParticleHypothesis& particleHypothesis, bool covTransport,
@@ -76,7 +97,6 @@ BoundState sympy::curvilinearState(
     // Then reinitialize the transportJacobian, derivatives and the
     // boundToFreeJacobian
     transportCovarianceToCurvilinear(boundCovariance, fullTransportJacobian,
-                                     freeTransportJacobian,
                                      freeToPathDerivatives, boundToFreeJacobian,
                                      additionalFreeCovariance, direction);
     cov = boundCovariance;
@@ -99,8 +119,7 @@ BoundState sympy::curvilinearState(
 Result<void> sympy::transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian,
+    FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
     FreeVector& freeParameters,
     const FreeToBoundCorrection& freeToBoundCorrection) {
@@ -110,16 +129,12 @@ Result<void> sympy::transportCovarianceToBound(
   // current bound parameters
   sympy::boundToBoundTransportJacobian(
       geoContext, surface, freeParameters, boundToFreeJacobian,
-      freeTransportJacobian, freeToBoundJacobian, freeToPathDerivatives,
-      fullTransportJacobian);
+      freeToBoundJacobian, freeToPathDerivatives, fullTransportJacobian);
 
   bool correction = false;
   if (freeToBoundCorrection) {
-    BoundToFreeMatrix startBoundToFinalFreeJacobian =
-        freeTransportJacobian * boundToFreeJacobian;
-    FreeMatrix freeCovariance = startBoundToFinalFreeJacobian *
-                                boundCovariance *
-                                startBoundToFinalFreeJacobian.transpose();
+    FreeMatrix freeCovariance =
+        boundToFreeJacobian * boundCovariance * boundToFreeJacobian.transpose();
 
     auto transformer =
         detail::CorrectedFreeToBoundTransformer(freeToBoundCorrection);
@@ -144,9 +159,8 @@ Result<void> sympy::transportCovarianceToBound(
     // Apply the actual covariance transport to get covariance of the current
     // bound parameters
     BoundMatrix newBoundCovariance;
-    transportCovarianceToBoundImpl(boundCovariance.data(),
-                                   fullTransportJacobian.data(),
-                                   newBoundCovariance.data());
+    applyBoundCovarianceTransport(fullTransportJacobian, boundCovariance,
+                                  newBoundCovariance);
     boundCovariance = newBoundCovariance;
   }
 
@@ -156,18 +170,15 @@ Result<void> sympy::transportCovarianceToBound(
   }
 
   // Reinitialize jacobian components:
-  // ->The transportJacobian is reinitialized to Identity
-  // ->The derivatives is reinitialized to Zero
+  // ->The derivatives are reinitialized to Zero
   // ->The boundToFreeJacobian is initialized to that at the current surface
-  return reinitializeJacobians(geoContext, surface, freeTransportJacobian,
-                               freeToPathDerivatives, boundToFreeJacobian,
-                               freeParameters);
+  return reinitializeJacobians(geoContext, surface, freeToPathDerivatives,
+                               boundToFreeJacobian, freeParameters);
 }
 
 void sympy::transportCovarianceToCurvilinear(
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian,
+    FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
     const Vector3& direction) {
   FreeToBoundMatrix freeToBoundJacobian;
@@ -175,15 +186,14 @@ void sympy::transportCovarianceToCurvilinear(
   // Calculate the full jacobian from local parameters at the start surface to
   // current curvilinear parameters
   sympy::boundToCurvilinearTransportJacobian(
-      direction, boundToFreeJacobian, freeTransportJacobian,
-      freeToBoundJacobian, freeToPathDerivatives, fullTransportJacobian);
+      direction, boundToFreeJacobian, freeToBoundJacobian,
+      freeToPathDerivatives, fullTransportJacobian);
 
   // Apply the actual covariance transport to get covariance of the current
   // curvilinear parameters
   BoundMatrix newBoundCovariance;
-  transportCovarianceToBoundImpl(boundCovariance.data(),
-                                 fullTransportJacobian.data(),
-                                 newBoundCovariance.data());
+  applyBoundCovarianceTransport(fullTransportJacobian, boundCovariance,
+                                newBoundCovariance);
   boundCovariance = newBoundCovariance;
 
   if (additionalFreeCovariance) {
@@ -192,12 +202,10 @@ void sympy::transportCovarianceToCurvilinear(
   }
 
   // Reinitialize jacobian components:
-  // ->The free transportJacobian is reinitialized to Identity
-  // ->The path derivatives is reinitialized to Zero
+  // ->The path derivatives are reinitialized to Zero
   // ->The boundToFreeJacobian is reinitialized to that at the current
   // curvilinear surface
-  reinitializeJacobians(freeTransportJacobian, freeToPathDerivatives,
-                        boundToFreeJacobian, direction);
+  reinitializeJacobians(freeToPathDerivatives, boundToFreeJacobian, direction);
 }
 
 }  // namespace Acts::detail

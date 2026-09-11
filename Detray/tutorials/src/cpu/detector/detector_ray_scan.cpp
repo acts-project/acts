@@ -39,6 +39,7 @@ constexpr std::size_t root_hash = 11359580520962287982ul;
 int main() {
   using algebra_t = detray::tutorial::algebra_t;
   using scalar = detray::tutorial::scalar;
+  using detector_t = detray::detector<detray::toy_metadata<algebra_t>>;
 
   // Can also be performed with helices
   using ray_t = detray::detail::ray<algebra_t>;
@@ -50,7 +51,6 @@ int main() {
   const auto [det, names] = detray::build_toy_detector<algebra_t>(host_mr);
 
   // The current geometry context
-  using detector_t = decltype(det);
   const detector_t::geometry_context gctx{};
 
   // Visualization style to be applied to the SVGs
@@ -83,6 +83,8 @@ int main() {
   // Run the check
   DETRAY_INFO_HOST("\nScanning " << det.name(names) << " ("
                                  << ray_generator.size() << " rays) ...\n");
+  using intersection_trace_t =
+      detray::dvector<detray::intersection_record<detector_t>>;
 
   bool success = true;
   for (const auto ray : ray_generator) {
@@ -94,9 +96,6 @@ int main() {
         intersection_trace, start_index, adj_mat_scan, obj_hashes);
 
     if (!check_result) {
-      // Empty navigation trace
-      using intersection_trace_t = decltype(intersection_trace);
-
       detray::detector_scanner::display_error(
           gctx, det, names, "ray_scan_tutorial", ray, intersection_trace,
           svg_style, n_rays, ray_generator.size(), intersection_trace_t{});

@@ -223,8 +223,9 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   explicit InterpolatedBFieldMap(Config cfg) : m_cfg{std::move(cfg)} {
     typename Grid::index_t minBin{};
     minBin.fill(1);
-    m_lowerLeft = m_cfg.grid.lowerLeftBinEdge(minBin);
-    m_upperRight = m_cfg.grid.lowerLeftBinEdge(m_cfg.grid.numLocalBins());
+    m_lowerLeft = m_cfg.grid.multiAxis().getLowerLeftBinEdge(minBin);
+    m_upperRight = m_cfg.grid.multiAxis().getLowerLeftBinEdge(
+        m_cfg.grid.multiAxis().getNBins());
   }
 
   /// @brief retrieve field cell for given position
@@ -236,14 +237,17 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   ///      magnetic field map.
   Result<FieldCell> getFieldCell(const Vector3& position) const {
     const auto& gridPosition = m_cfg.transformPos(position);
-    const auto& indices = m_cfg.grid.localBinsFromPosition(gridPosition);
-    const auto& lowerLeft = m_cfg.grid.lowerLeftBinEdge(indices);
-    const auto& upperRight = m_cfg.grid.upperRightBinEdge(indices);
+    const auto& indices =
+        m_cfg.grid.multiAxis().getLocalBinsFromPoint(gridPosition);
+    const auto& lowerLeft = m_cfg.grid.multiAxis().getLowerLeftBinEdge(indices);
+    const auto& upperRight =
+        m_cfg.grid.multiAxis().getUpperRightBinEdge(indices);
 
     // loop through all corner points
     constexpr std::size_t nCorners = 1 << DIM_POS;
     std::array<Vector3, nCorners> neighbors{};
-    const auto& cornerIndices = m_cfg.grid.closestPointsIndices(gridPosition);
+    const auto& cornerIndices =
+        m_cfg.grid.multiAxis().getClosestPointsIndices(gridPosition);
 
     if (!isInsideLocal(gridPosition)) {
       return MagneticFieldError::OutOfBounds;
@@ -263,7 +267,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   ///
   /// @return vector returning number of bins for all field map axes
   std::vector<std::size_t> getNBins() const final {
-    auto nBinsArray = m_cfg.grid.numLocalBins();
+    auto nBinsArray = m_cfg.grid.multiAxis().getNBins();
     return std::vector<std::size_t>(nBinsArray.begin(), nBinsArray.end());
   }
 

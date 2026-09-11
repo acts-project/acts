@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -300,16 +301,40 @@ static_assert(std::is_trivially_move_assignable_v<MultiIntersection2D>);
 
 namespace detail {
 
+/// Verbose-logging companion of checkPathLength(): prints why a path length
+/// is (not) within the limits. Split out of line so the inline fast path
+/// below stays free of the log-message formatting.
+///
+/// @param pathLength The path length of the intersection
+/// @param nearLimit The minimum path length for an intersection to be considered
+/// @param farLimit The maximum path length for an intersection to be considered
+/// @param logger The logger to print to (at VERBOSE level)
+void printCheckPathLength(double pathLength, double nearLimit, double farLimit,
+                          const Logger& logger);
+
 /// This function checks if an intersection path length is valid for the
 /// specified near-limit and far-limit
+///
+/// This is called per candidate on the navigation hot paths, so the two
+/// comparisons are inline and the (rarely enabled) verbose logging is
+/// delegated to an out-of-line helper.
 ///
 /// @param pathLength The path length of the intersection
 /// @param nearLimit The minimum path length for an intersection to be considered
 /// @param farLimit The maximum path length for an intersection to be considered
 /// @param logger A optionally supplied logger which prints out a lot of infos
 ///               at VERBOSE level
-bool checkPathLength(double pathLength, double nearLimit, double farLimit,
-                     const Logger& logger = getDummyLogger());
+inline bool checkPathLength(double pathLength, double nearLimit,
+                            double farLimit,
+                            const Logger& logger = getDummyLogger()) {
+  if (logger.doPrint(Logging::VERBOSE)) [[unlikely]] {
+    printCheckPathLength(pathLength, nearLimit, farLimit, logger);
+  }
+
+  // TODO why?
+  const double tolerance = s_onSurfaceTolerance;
+  return pathLength > nearLimit && pathLength < farLimit + tolerance;
+}
 
 }  // namespace detail
 

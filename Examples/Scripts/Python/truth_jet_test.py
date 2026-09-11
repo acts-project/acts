@@ -50,7 +50,7 @@ from acts.examples.reconstruction import (
 from acts.examples.root import (
     RootTrackStatesWriter,
     RootTrackSummaryWriter,
-    RootTrackFitterPerformanceWriter,
+    RootTrackParameterPerformanceWriter,
 )
 
 

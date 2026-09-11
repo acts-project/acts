@@ -17,11 +17,23 @@
 
 namespace detray {
 
+/// Default tuple type
+///
+/// Serving as the final node in the recursive implementation of this tuple
+/// type.
+///
 template <typename... Ts>
-struct tuple {};
+struct tuple {
+  // As long as we did everything correctly, this should only get instantiated
+  // with an empty parameter list, for the implementation to work correctly.
+  static_assert(sizeof...(Ts) == 0, "There's a coding error in detray::tuple!");
+};
 
 template <typename T, typename... Ts>
 struct tuple<T, Ts...> {
+  // Deliberately not value-initializing: that would require every element to
+  // be default constructible, which is not a requirement of this tuple type.
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
   constexpr tuple() = default;
 
   constexpr tuple(const tuple &o)
@@ -87,7 +99,9 @@ struct tuple<T, Ts...> {
   }
 
   T v;
-  tuple<Ts...> r{};
+  // Value-initialization would require every tail element to be default
+  // constructible, which is not a requirement of this tuple type.
+  tuple<Ts...> r;  // NOLINT(cppcoreguidelines-pro-type-member-init)
 };
 
 template <typename T1, typename T2>

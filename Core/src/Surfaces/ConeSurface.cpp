@@ -204,7 +204,9 @@ Polyhedron ConeSurface::polyhedronRepresentation(
   double hPhiSec = bounds().get(ConeBounds::eHalfPhiSector);
   double avgPhi = bounds().get(ConeBounds::eAveragePhi);
   std::vector<double> refPhi = {};
-  if (bool fullCone = (hPhiSec == std::numbers::pi); !fullCone) {
+  if (bool fullCone =
+          std::abs(hPhiSec - std::numbers::pi) < s_fullAzimuthTolerance;
+      !fullCone) {
     refPhi = {avgPhi};
   }
 

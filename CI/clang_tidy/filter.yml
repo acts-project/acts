@@ -23,5 +23,9 @@ exclude_path_regexes:
   - ^/opt/
   - ^/cvmfs/
 
+  # traccc source files
+  # TODO: Remove this at a future date.
+  - Traccc/
+
 # Severity for GitHub annotations ("error" or "warning")
 severity: error

@@ -8,6 +8,9 @@
 
 #pragma once
 
+// Project include(s)
+#include "detray/core/detail/container_buffers.hpp"
+
 namespace detray::detail {
 
 /// Creates detector view using "static" detector components and

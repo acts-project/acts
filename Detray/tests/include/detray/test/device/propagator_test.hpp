@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/units.hpp"
 #include "detray/navigation/caching_navigator.hpp"
@@ -51,12 +52,12 @@ using free_matrix_t = free_matrix<test_algebra>;
 constexpr std::size_t cache_size{navigation::default_cache_size};
 
 // Navigator
-template <typename detector_t, typename inspector_t>
+template <concepts::detector detector_t, typename inspector_t>
 using navigator_w_insp_t =
     caching_navigator<detector_t, cache_size, inspector_t>;
-template <typename detector_t>
+template <concepts::detector detector_t>
 using navigator_t = navigator_w_insp_t<detector_t, navigation::void_inspector>;
-template <typename detector_t>
+template <concepts::detector detector_t>
 using intersection_t = typename navigator_t<detector_t>::intersection_type;
 
 // Stepper
@@ -117,7 +118,7 @@ inline auto run_propagation_host(vecmem::memory_resource *mr,
                                  const propagation::config &cfg,
                                  const covfie::field<bfield_bknd_t> &field,
                                  const vecmem::vector<test_track> &tracks)
-    -> vecmem::jagged_vector<detail::step_data<test_algebra>> {
+    -> vecmem::jagged_vector<step_record<test_algebra>> {
   // Construct propagator from stepper and navigator
   using host_stepper_t =
       rk_stepper_t<typename covfie::field<bfield_bknd_t>::view_t>;
@@ -129,7 +130,7 @@ inline auto run_propagation_host(vecmem::memory_resource *mr,
   propagator_host_t p{cfg};
 
   // Create vector for track recording
-  vecmem::jagged_vector<detail::step_data<test_algebra>> host_steps(mr);
+  vecmem::jagged_vector<step_record<test_algebra>> host_steps(mr);
 
   for (const auto &trk : tracks) {
     // Create the propagator state
@@ -167,9 +168,8 @@ inline auto run_propagation_host(vecmem::memory_resource *mr,
 
 /// Compare the results between host and device propagation
 inline void compare_propagation_results(
-    const vecmem::jagged_vector<detail::step_data<test_algebra>> &host_steps,
-    const vecmem::jagged_vector<detail::step_data<test_algebra>>
-        &device_steps) {
+    const vecmem::jagged_vector<step_record<test_algebra>> &host_steps,
+    const vecmem::jagged_vector<step_record<test_algebra>> &device_steps) {
   // Make sure the same number of tracks were tested on both backends
   ASSERT_EQ(host_steps.size(), device_steps.size());
 
@@ -192,8 +192,8 @@ inline void compare_propagation_results(
           << "ERROR: Path length at track " << i << " step " << j << std::endl;
 
       // Compare recorded positions along track
-      const point3 &host_pos = host_step.track_params.pos();
-      const point3 &device_pos = device_step.track_params.pos();
+      const point3 &host_pos = host_step.free_params.pos();
+      const point3 &device_pos = device_step.free_params.pos();
 
       auto relative_error = static_cast<point3>(1.f / host_step.path_length *
                                                 (host_pos - device_pos));

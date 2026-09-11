@@ -57,17 +57,17 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   // Test Grid
   BOOST_CHECK_EQUAL(Grid.dimensions(), 2);
 
-  BOOST_CHECK_EQUAL(Grid.numLocalBins()[0], bd[0].bins());
-  BOOST_CHECK_EQUAL(Grid.numLocalBins()[1], bd[1].bins());
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getNBins()[0], bd[0].bins());
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getNBins()[1], bd[1].bins());
 
-  BOOST_CHECK_EQUAL(Grid.minPosition()[0], bd[0].min);
-  BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMinPoint()[0], bd[0].min);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMinPoint()[1], bd[1].min);
 
   float max1 = bd[0].max + std::abs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
   float max2 = bd[1].max + std::abs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
 
-  BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
-  BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max2);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMaxPoint()[0], max1);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMaxPoint()[1], max2);
 
   // Test pos to index
   Grid2D::index_t index1 = {1, 1};
@@ -79,15 +79,15 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   Vector3 pos3 = {-2.7, 1.8, 0.8};
 
   for (int i = 0; i < 2; i++) {
-    BOOST_CHECK_EQUAL(
-        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos1))[i],
-        index1[i]);
-    BOOST_CHECK_EQUAL(
-        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos2))[i],
-        index2[i]);
-    BOOST_CHECK_EQUAL(
-        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos3))[i],
-        index3[i]);
+    BOOST_CHECK_EQUAL(Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+                          transfoGlobalToLocal(pos1))[i],
+                      index1[i]);
+    BOOST_CHECK_EQUAL(Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+                          transfoGlobalToLocal(pos2))[i],
+                      index2[i]);
+    BOOST_CHECK_EQUAL(Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+                          transfoGlobalToLocal(pos3))[i],
+                      index3[i]);
   }
   // Test material mapping
 
@@ -115,8 +115,8 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
       // Search for fitting grid point and accumulate
-      Grid2D::index_t index =
-          Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
+      Grid2D::index_t index = Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+          transfoGlobalToLocal(point));
       Grid.atLocalBins(index).accumulate(rm.first);
     }
   }
@@ -148,17 +148,17 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   // Test Grid
   BOOST_CHECK_EQUAL(Grid.dimensions(), 2);
 
-  BOOST_CHECK_EQUAL(Grid.numLocalBins()[0], bd[0].bins());
-  BOOST_CHECK_EQUAL(Grid.numLocalBins()[1], bd[1].bins());
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getNBins()[0], bd[0].bins());
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getNBins()[1], bd[1].bins());
 
-  BOOST_CHECK_EQUAL(Grid.minPosition()[0], bd[0].min);
-  BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMinPoint()[0], bd[0].min);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMinPoint()[1], bd[1].min);
 
   float max1 = bd[0].max + std::abs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
   float max2 = bd[1].max + std::abs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
 
-  BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
-  BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max2);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMaxPoint()[0], max1);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMaxPoint()[1], max2);
 
   // Test pos to index
   Grid2D::index_t index1 = {1, 1};
@@ -170,15 +170,15 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   Vector3 pos3 = {-1, 0.3, 0.8};
 
   for (int i = 0; i < 2; i++) {
-    BOOST_CHECK_EQUAL(
-        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos1))[i],
-        index1[i]);
-    BOOST_CHECK_EQUAL(
-        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos2))[i],
-        index2[i]);
-    BOOST_CHECK_EQUAL(
-        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos3))[i],
-        index3[i]);
+    BOOST_CHECK_EQUAL(Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+                          transfoGlobalToLocal(pos1))[i],
+                      index1[i]);
+    BOOST_CHECK_EQUAL(Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+                          transfoGlobalToLocal(pos2))[i],
+                      index2[i]);
+    BOOST_CHECK_EQUAL(Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+                          transfoGlobalToLocal(pos3))[i],
+                      index3[i]);
   }
 
   // Test material mapping
@@ -206,8 +206,8 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
       // Search for fitting grid point and accumulate
-      Grid2D::index_t index =
-          Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
+      Grid2D::index_t index = Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+          transfoGlobalToLocal(point));
       Grid.atLocalBins(index).accumulate(rm.first);
     }
   }
@@ -236,21 +236,21 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   // Test Grid
   BOOST_CHECK_EQUAL(Grid.dimensions(), 3);
 
-  BOOST_CHECK_EQUAL(Grid.numLocalBins()[0], bd[0].bins());
-  BOOST_CHECK_EQUAL(Grid.numLocalBins()[1], bd[1].bins());
-  BOOST_CHECK_EQUAL(Grid.numLocalBins()[2], bd[2].bins());
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getNBins()[0], bd[0].bins());
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getNBins()[1], bd[1].bins());
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getNBins()[2], bd[2].bins());
 
-  BOOST_CHECK_EQUAL(Grid.minPosition()[0], bd[0].min);
-  BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
-  BOOST_CHECK_EQUAL(Grid.minPosition()[2], bd[2].min);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMinPoint()[0], bd[0].min);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMinPoint()[1], bd[1].min);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMinPoint()[2], bd[2].min);
 
   float max1 = bd[0].max + std::abs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
   float max2 = bd[1].max + std::abs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
   float max3 = bd[2].max + std::abs(bd[2].max - bd[2].min) / (bd[2].bins() - 1);
 
-  BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
-  BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max2);
-  BOOST_CHECK_EQUAL(Grid.maxPosition()[2], max3);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMaxPoint()[0], max1);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMaxPoint()[1], max2);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMaxPoint()[2], max3);
 
   // Test pos to index
   Grid3D::index_t index1 = {1, 1, 1};
@@ -262,15 +262,15 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   Vector3 pos3 = {-2.7, 1.8, 0.8};
 
   for (int i = 0; i < 3; i++) {
-    BOOST_CHECK_EQUAL(
-        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos1))[i],
-        index1[i]);
-    BOOST_CHECK_EQUAL(
-        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos2))[i],
-        index2[i]);
-    BOOST_CHECK_EQUAL(
-        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos3))[i],
-        index3[i]);
+    BOOST_CHECK_EQUAL(Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+                          transfoGlobalToLocal(pos1))[i],
+                      index1[i]);
+    BOOST_CHECK_EQUAL(Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+                          transfoGlobalToLocal(pos2))[i],
+                      index2[i]);
+    BOOST_CHECK_EQUAL(Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+                          transfoGlobalToLocal(pos3))[i],
+                      index3[i]);
   }
   // Test material mapping
   std::vector<Vector3> vectPos1;
@@ -297,8 +297,8 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
       // Search for fitting grid point and accumulate
-      Grid3D::index_t index =
-          Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
+      Grid3D::index_t index = Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+          transfoGlobalToLocal(point));
       Grid.atLocalBins(index).accumulate(rm.first);
     }
   }
@@ -331,21 +331,21 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   // Test Grid
   BOOST_CHECK_EQUAL(Grid.dimensions(), 3);
 
-  BOOST_CHECK_EQUAL(Grid.numLocalBins()[0], bd[0].bins());
-  BOOST_CHECK_EQUAL(Grid.numLocalBins()[1], bd[1].bins());
-  BOOST_CHECK_EQUAL(Grid.numLocalBins()[2], bd[2].bins());
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getNBins()[0], bd[0].bins());
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getNBins()[1], bd[1].bins());
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getNBins()[2], bd[2].bins());
 
-  BOOST_CHECK_EQUAL(Grid.minPosition()[0], bd[0].min);
-  BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
-  BOOST_CHECK_EQUAL(Grid.minPosition()[2], bd[2].min);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMinPoint()[0], bd[0].min);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMinPoint()[1], bd[1].min);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMinPoint()[2], bd[2].min);
 
   float max1 = bd[0].max + std::abs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
   float max2 = bd[1].max + std::abs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
   float max3 = bd[2].max + std::abs(bd[2].max - bd[2].min) / (bd[2].bins() - 1);
 
-  BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
-  BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max2);
-  BOOST_CHECK_EQUAL(Grid.maxPosition()[2], max3);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMaxPoint()[0], max1);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMaxPoint()[1], max2);
+  BOOST_CHECK_EQUAL(Grid.multiAxis().getMaxPoint()[2], max3);
 
   // Test pos to index
   Grid3D::index_t index1 = {1, 1, 1};
@@ -357,15 +357,15 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   Vector3 pos3 = {-1, 0.3, 0.8};
 
   for (int i = 0; i < 3; i++) {
-    BOOST_CHECK_EQUAL(
-        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos1))[i],
-        index1[i]);
-    BOOST_CHECK_EQUAL(
-        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos2))[i],
-        index2[i]);
-    BOOST_CHECK_EQUAL(
-        Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(pos3))[i],
-        index3[i]);
+    BOOST_CHECK_EQUAL(Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+                          transfoGlobalToLocal(pos1))[i],
+                      index1[i]);
+    BOOST_CHECK_EQUAL(Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+                          transfoGlobalToLocal(pos2))[i],
+                      index2[i]);
+    BOOST_CHECK_EQUAL(Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+                          transfoGlobalToLocal(pos3))[i],
+                      index3[i]);
   }
 
   // Test material mapping
@@ -393,8 +393,8 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
       // Search for fitting grid point and accumulate
-      Grid3D::index_t index =
-          Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
+      Grid3D::index_t index = Grid.multiAxis().getLocalBinsFromLowerLeftEdge(
+          transfoGlobalToLocal(point));
       Grid.atLocalBins(index).accumulate(rm.first);
     }
   }

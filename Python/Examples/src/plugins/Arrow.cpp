@@ -36,7 +36,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
   // before importing this module so that the type is in pybind's
   // registry by the time `expectedSchemas` is bound below.
   ACTS_PYTHON_DECLARE_READER(ParquetReader, m, "ParquetReader", inputDir,
-                             collections, expectedSchemas);
+                             collections, expectedSchemas, shardCacheCapacity);
 
   ACTS_PYTHON_DECLARE_WRITER(ParquetWriter, m, "ParquetWriter", outputDir,
                              collections, expectedSchemas, eventsPerShard,
@@ -75,12 +75,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
     auto [alg, c] = declareAlgorithm<ColliderMLRelease1InputConverter,
                                      ActsExamples::IAlgorithm>(
         m, "ColliderMLRelease1InputConverter");
-    ACTS_PYTHON_STRUCT(c, inputParticlesTable, inputHitsTable, outputParticles,
-                       outputSimHits, outputMeasurements, outputClusters,
-                       outputMeasurementSubset, outputMeasSimHitsMap,
-                       outputMeasParticlesMap, outputParticleMeasurementsMap,
-                       trackingGeometry, geoIdMapPath, geoIdMapSourcePrefix,
-                       geoIdMapTargetPrefix, hitBoundsTolerance);
+    ACTS_PYTHON_STRUCT(
+        c, inputParticlesTable, inputHitsTable, inputTracksTable,
+        outputParticles, outputSimHits, outputMeasurements, outputClusters,
+        outputMeasurementSubset, outputMeasSimHitsMap, outputMeasParticlesMap,
+        outputParticleMeasurementsMap, outputTracks, trackingGeometry,
+        geoIdMapPath, geoIdMapSourcePrefix, geoIdMapTargetPrefix,
+        hitBoundsTolerance, keepParticlesWithoutHits);
 
     alg.def_static(
         "particleSchema", &ColliderMLRelease1InputConverter::particleSchema,
@@ -90,6 +91,10 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
         "hitSchema", &ColliderMLRelease1InputConverter::hitSchema,
         "Expected schema for the ColliderML Release 1 per-event tracker-hit "
         "table.");
+    alg.def_static(
+        "tracksSchema", &ColliderMLRelease1InputConverter::tracksSchema,
+        "Expected schema for the ColliderML Release 1 per-event published-"
+        "track table.");
   }
 
   m.def("makeVolumeIdDetectorResolver",

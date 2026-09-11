@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/core/detail/container_views.hpp"
 #include "detray/definitions/containers.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
@@ -25,6 +26,9 @@
 #include "detray/utils/invalid_values.hpp"
 #include "detray/utils/logging.hpp"
 #include "detray/utils/ranges.hpp"
+
+// System include(s)
+#include <limits>
 
 namespace detray::navigation {
 
@@ -64,8 +68,9 @@ struct void_inspector {
 /// @tparam inspector_t is a validation inspector that can record information
 ///         about the navigation state at different points of the nav. flow.
 /// @tparam intersection_t result of an intersection operation
-template <typename derived_t, typename detector_t, std::size_t k_cache_capacity,
-          typename inspector_t, typename intersection_t>
+template <typename derived_t, concepts::detector detector_t,
+          std::size_t k_cache_capacity, typename inspector_t,
+          typename intersection_t>
 class base_state : public detray::ranges::view_interface<
                        base_state<derived_t, detector_t, k_cache_capacity,
                                   inspector_t, intersection_t>> {
@@ -155,8 +160,8 @@ class base_state : public detray::ranges::view_interface<
   DETRAY_HOST_DEVICE
   constexpr auto last() const -> const candidate_t & {
     assert(!cache_exhausted());
-    assert(next_index() >= 0);
-    return m_candidates[static_cast<std::size_t>(next_index())];
+    assert(m_last >= 0);
+    return m_candidates[static_cast<std::size_t>(m_last)];
   }
 
   /// @returns the capacity of the internal candidate storage

@@ -56,6 +56,8 @@ class MergedMaterialMarker final : public ISurfaceMaterial {
   ///
   /// @note the input parameter is ignored, always returns
   ///       @ref MaterialSlab::Nothing()
+  /// @deprecated Use materialSlab(const Vector2&) with a prior
+  ///             Surface::globalToLocal() call instead.
   [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "
       "Surface::globalToLocal() call instead")]] const MaterialSlab&

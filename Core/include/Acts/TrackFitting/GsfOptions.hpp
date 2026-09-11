@@ -27,15 +27,22 @@ namespace Acts {
 /// @enum ComponentMergeMethod
 ///
 /// Available reduction methods for the reduction of a Gaussian mixture
+//! [component merge method]
 enum class ComponentMergeMethod { eMean, eMaxWeight };
+//! [component merge method]
 
+/// Column names and types for the optional GSF track-container columns
 namespace GsfConstants {
+/// Track-container column name holding the final multi-component state
 constexpr std::string_view kFinalMultiComponentStateColumn =
     "gsf-final-multi-component-state";
+/// Type stored in the final multi-component-state column
 using FinalMultiComponentState =
     std::optional<MultiComponentBoundTrackParameters>;
+/// Track-container column name for the summed forward material @f$x/X_0@f$
 constexpr std::string_view kFwdSumMaterialXOverX0 =
     "gsf-fwd-sum-material-x-over-x0";
+/// Track-container column name for the maximum forward material @f$x/X_0@f$
 constexpr std::string_view kFwdMaxMaterialXOverX0 =
     "gsf-fwd-max-material-x-over-x0";
 }  // namespace GsfConstants
@@ -61,8 +68,10 @@ struct GsfExtensions {
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
   /// Type alias for component reducer delegate function
+  //! [mixture reducer]
   using ComponentReducer =
       Delegate<void(std::vector<GsfComponent> &, std::size_t, const Surface &)>;
+  //! [mixture reducer]
 
   /// The Calibrator is a dedicated calibration algorithm that allows
   /// to calibrate measurements using track information, this could be

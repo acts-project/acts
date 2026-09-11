@@ -23,6 +23,7 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -89,7 +90,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
 
     std::mt19937 rng{static_cast<unsigned int>(run)};
 
-    const auto* volume = trackingGeometry.lowestTrackingVolume(gctx, position);
+    const auto* volume =
+        trackingGeometry.resolveLowestTrackingVolume(gctx, position).value();
     assert(volume != nullptr);
     ACTS_VERBOSE(volume->volumeName());
 
@@ -222,16 +224,16 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
 /// This adds the geometry building bindings for the Gen3 geometry
 /// @param m the module to add the bindings to
 void addGeometryGen3(py::module_& m) {
-  using Experimental::Blueprint;
-  using Experimental::BlueprintNode;
-  using Experimental::BlueprintOptions;
-  using Experimental::CuboidContainerBlueprintNode;
-  using Experimental::CylinderContainerBlueprintNode;
-  using Experimental::GeometryIdentifierBlueprintNode;
-  using Experimental::LayerBlueprintNode;
-  using Experimental::MaterialDesignatorBlueprintNode;
-  using Experimental::PortalDesignatorBlueprintNode;
-  using Experimental::StaticBlueprintNode;
+  using Acts::Blueprint;
+  using Acts::BlueprintNode;
+  using Acts::BlueprintOptions;
+  using Acts::CuboidContainerBlueprintNode;
+  using Acts::CylinderContainerBlueprintNode;
+  using Acts::GeometryIdentifierBlueprintNode;
+  using Acts::LayerBlueprintNode;
+  using Acts::MaterialDesignatorBlueprintNode;
+  using Acts::PortalDesignatorBlueprintNode;
+  using Acts::StaticBlueprintNode;
 
   py::class_<Portal>(m, "Portal")
       .def_property_readonly(
@@ -436,16 +438,29 @@ void addGeometryGen3(py::module_& m) {
                      .def(py::init<const std::string&>(), "name"_a)
                      .def("configureFace",
                           py::overload_cast<CylinderVolumeBounds::Face,
-                                            const DirectedProtoAxis&,
-                                            const DirectedProtoAxis&>(
+                                            const AxisSpec&, const AxisSpec&>(
                               &MaterialDesignatorBlueprintNode::configureFace),
                           "face"_a, "loc0"_a, "loc1"_a)
                      .def("configureFace",
                           py::overload_cast<CuboidVolumeBounds::Face,
-                                            const DirectedProtoAxis&,
-                                            const DirectedProtoAxis&>(
+                                            const AxisSpec&, const AxisSpec&>(
                               &MaterialDesignatorBlueprintNode::configureFace),
                           "face"_a, "loc0"_a, "loc1"_a);
+
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  matNode
+      .def(
+          "configureFace",
+          py::overload_cast<CylinderVolumeBounds::Face,
+                            const DirectedProtoAxis&, const DirectedProtoAxis&>(
+              &MaterialDesignatorBlueprintNode::configureFace),
+          "face"_a, "loc0"_a, "loc1"_a)
+      .def("configureFace",
+           py::overload_cast<CuboidVolumeBounds::Face, const DirectedProtoAxis&,
+                             const DirectedProtoAxis&>(
+               &MaterialDesignatorBlueprintNode::configureFace),
+           "face"_a, "loc0"_a, "loc1"_a);
+  ACTS_POP_IGNORE_DEPRECATED()
 
   addContextManagerProtocol(matNode);
 

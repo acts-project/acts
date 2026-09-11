@@ -14,7 +14,7 @@
 
 #include <string_view>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace detail {
 class PortalDesignatorBlueprintNodeImpl;
@@ -107,4 +107,15 @@ class PortalDesignatorBlueprintNode final : public BlueprintNode {
   std::unique_ptr<detail::PortalDesignatorBlueprintNodeImpl> m_impl;
 };
 
-}  // namespace Acts::Experimental
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use @ref Acts::PortalDesignatorBlueprintNode instead.
+///             This alias is kept for backward compatibility and will be
+///             removed.
+using PortalDesignatorBlueprintNode
+    [[deprecated("Acts::Experimental::PortalDesignatorBlueprintNode moved to "
+                 "Acts::PortalDesignatorBlueprintNode")]] =
+        Acts::PortalDesignatorBlueprintNode;
+}  // namespace Experimental
+
+}  // namespace Acts

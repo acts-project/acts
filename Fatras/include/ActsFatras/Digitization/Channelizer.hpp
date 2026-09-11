@@ -10,17 +10,15 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
 #include "ActsFatras/Digitization/SurfaceDrift.hpp"
 #include "ActsFatras/Digitization/SurfaceMask.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
-#include <numeric>
-
 namespace Acts {
+class IMultiAxis;
 class Surface;
-}
+}  // namespace Acts
 
 namespace ActsFatras {
 
@@ -30,7 +28,7 @@ namespace ActsFatras {
 /// SurfaceMask each dispatch internally on the surface type (plane / disc /
 /// cylinder). The resulting (already-clipped) 2-D segment is fed into the
 /// Segmentizer, which steps through the channel grid defined by the supplied
-/// BinUtility.
+/// multi-axis segmentation.
 class Channelizer {
   SurfaceDrift m_surfaceDrift;
   SurfaceMask m_surfaceMask;
@@ -51,7 +49,7 @@ class Channelizer {
   Acts::Result<std::vector<Segmentizer::ChannelSegment>> channelize(
       const Hit& hit, const Acts::Surface& surface,
       const Acts::GeometryContext& gctx, const Acts::Vector3& driftDir,
-      const Acts::BinUtility& segmentation, double thickness,
+      const Acts::IMultiAxis& segmentation, double thickness,
       double minRelPerpDrift = 0.001) const;
 };
 

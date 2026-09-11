@@ -15,12 +15,13 @@ import acts
 import acts.examples
 from acts.examples.uproot import UprootParticleReader, UprootSimHitReader
 from acts.examples import Sequencer
-from acts.examples.root import RootParticleWriter, RootSimHitWriter
 
 
 @pytest.mark.root
 def test_root_write_uproot_read(tmp_path, fatras, conf_const):
     """Full round-trip: simulate with fatras, write ROOT files, read back with uproot readers."""
+    from acts.examples.root import RootParticleWriter, RootSimHitWriter
+
     particle_file = tmp_path / "particles_simulation.root"
     hit_file = tmp_path / "hits.root"
 

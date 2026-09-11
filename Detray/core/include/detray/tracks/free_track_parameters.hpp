@@ -15,6 +15,7 @@
 #include "detray/definitions/track_parametrization.hpp"
 
 // System include(s)
+#include <limits>
 #include <ostream>
 
 namespace detray {

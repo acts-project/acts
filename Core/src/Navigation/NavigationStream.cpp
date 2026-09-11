@@ -14,30 +14,55 @@
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <algorithm>
-#include <unordered_set>
 
 namespace Acts {
 
 bool NavigationStream::initialize(const GeometryContext& gctx,
                                   const QueryPoint& queryPoint,
                                   const BoundaryTolerance& cTolerance,
-                                  const double onSurfaceTolerance) {
+                                  const double onSurfaceTolerance,
+                                  const bool candidatesAreUnique) {
   // Position and direction from the query point
   const Vector3& position = queryPoint.position;
   const Vector3& direction = queryPoint.direction;
 
-  // A container collecting additional candidates from multiple
-  // valid intersections
-  std::vector<NavigationTarget> additionalCandidates = {};
-  additionalCandidates.reserve(m_candidates.size());
-  std::unordered_set<const Surface*> processed{};
+  // De-duplicate by surface pointer first, so each surface is intersected only
+  // once in this pass, keeping the first occurrence (in insertion order). This
+  // reproduces the previous std::stable_sort + std::unique result (first-wins),
+  // but in place: it avoids the temporary buffer that std::stable_sort
+  // allocates on every call, which matters on this per-navigation hot path. The
+  // candidate count per volume is small, so the quadratic scan is cheap — but
+  // it is skipped entirely when the caller guarantees uniqueness. (Should a
+  // duplicate slip through regardless, the post-sort unique pass below still
+  // removes it; only the first-wins tolerance selection is then not enforced.)
+  if (!candidatesAreUnique) {
+    std::size_t writeIdx = 0;
+    for (std::size_t readIdx = 0; readIdx < m_candidates.size(); ++readIdx) {
+      const Surface* surface = &m_candidates[readIdx].surface();
+      bool alreadySeen = false;
+      for (std::size_t k = 0; k < writeIdx; ++k) {
+        if (&m_candidates[k].surface() == surface) {
+          alreadySeen = true;
+          break;
+        }
+      }
+      if (!alreadySeen) {
+        if (writeIdx != readIdx) {
+          m_candidates[writeIdx] = m_candidates[readIdx];
+        }
+        ++writeIdx;
+      }
+    }
+    m_candidates.erase(m_candidates.begin() + writeIdx, m_candidates.end());
+  }
+
+  // Collect additional candidates for the second valid intersection. Reuse the
+  // member scratch buffer to avoid a heap allocation on every call.
+  std::vector<NavigationTarget>& additionalCandidates = m_additionalCandidates;
+  additionalCandidates.clear();
   for (auto& candidate : m_candidates) {
     // Get the surface from the object intersection
     const Surface& surface = candidate.surface();
-    // Check whether the surface already has been processed
-    if (!processed.insert(&surface).second) {
-      continue;
-    }
     // Intersect the surface
     auto multiIntersection = surface.intersect(gctx, position, direction,
                                                cTolerance, onSurfaceTolerance);

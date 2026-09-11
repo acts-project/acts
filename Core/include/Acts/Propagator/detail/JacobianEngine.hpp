@@ -209,4 +209,29 @@ void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
                            BoundToFreeMatrix& boundToFreeJacobian,
                            const Vector3& direction);
 
+/// @brief Overload for steppers that transport the bound-to-free jacobian
+///        itself and so have no free-to-free transport to reset.
+///
+/// @param [in] geoContext The geometry context
+/// @param [in] surface The reference surface of the local parametrisation
+/// @param [out] freeToPathDerivatives Path length derivatives
+/// @param [out] boundToFreeJacobian Jacobian from the local parametrisation
+///        to free parameters
+/// @param [in] freeParameters Free, nominal parametrisation
+Result<void> reinitializeJacobians(const GeometryContext& geoContext,
+                                   const Surface& surface,
+                                   FreeVector& freeToPathDerivatives,
+                                   BoundToFreeMatrix& boundToFreeJacobian,
+                                   const FreeVector& freeParameters);
+
+/// @brief Curvilinear overload of the above
+///
+/// @param [out] freeToPathDerivatives Path length derivatives
+/// @param [out] boundToFreeJacobian Jacobian from the local parametrisation
+///        to free parameters
+/// @param [in] direction Normalised direction vector
+void reinitializeJacobians(FreeVector& freeToPathDerivatives,
+                           BoundToFreeMatrix& boundToFreeJacobian,
+                           const Vector3& direction);
+
 }  // namespace Acts::detail

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -95,6 +96,15 @@ struct CombinatorialKalmanFilterExtensions {
   /// @note a reference implementation can be found in @ref TrackStateCreator
   ///   which makes uses of @ref MeasurementSelector and SourceLinkAccessor
   TrackStateCreator createTrackStates;
+
+  // The following options are only relevant if a multi stepper is used
+
+  /// Type alias for component reducer delegate function
+  using ComponentReducer =
+      Delegate<void(std::vector<GsfComponent>&, std::size_t, const Surface&)>;
+
+  /// Takes a vector of components and reduces its number
+  ComponentReducer mixtureReducer;
 
  private:
   /// Default branch stopper which will never stop

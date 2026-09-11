@@ -17,7 +17,7 @@
 
 #include <boost/algorithm/string/join.hpp>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace {
 class Configuration {
@@ -234,4 +234,4 @@ GeometryIdentifierBlueprintNode& GeometryIdentifierBlueprintNode::sortBy(
   return *this;
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

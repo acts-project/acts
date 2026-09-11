@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Seeding2/HoughAccumulatorSection.hpp"
+#include "Acts/Seeding/HoughAccumulatorSection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <functional>

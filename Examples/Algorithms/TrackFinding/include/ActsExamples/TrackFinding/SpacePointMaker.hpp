@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -62,6 +63,12 @@ class SpacePointMaker final : public IAlgorithm {
     std::vector<Acts::GeometryIdentifier> geometrySelection;
     /// Geometry selection for strip modules
     std::vector<Acts::GeometryIdentifier> stripGeometrySelection;
+    /// Assumed vertex position for the strip space point formation.
+    Acts::Vector3 stripVertex = Acts::Vector3::Zero();
+    /// Tolerance scaling factor on the strip detector element length.
+    double stripLengthTolerance = 0.01;
+    /// Tolerance on the gap between the two strip detector elements, in mm.
+    double stripLengthGapTolerance = 0.01;
   };
 
   /// Construct the space point maker.

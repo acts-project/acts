@@ -20,19 +20,19 @@
 
 namespace ActsExamples {
 
-/// Reader for a sharded Parquet @c arrow::dataset, one directory per
-/// collection. Mirror of @c ParquetWriter: each collection is read from
-/// a directory of @c shard_*.parquet files, each holding a contiguous
-/// disjoint range of event ids in an @c event_id column.
+/// Reader for a sharded Parquet dataset, one directory per collection.
+/// Mirror of @c ParquetWriter: each collection is read from a directory
+/// of @c shard_*.parquet files, each holding a contiguous disjoint range
+/// of event ids in an @c event_id column.
 ///
-/// Per-event lookups push a filter @c event_id == N into the dataset
-/// scanner, which prunes to a single fragment and a single row group via
-/// Parquet footer/page-index statistics. The matching row's other
-/// columns are late-materialized via the page offset index, so the read
-/// cost per event is roughly the size of one event's payload.
+/// At construction the reader reads every shard's footer to build an
+/// event-id → shard index. Per-event lookups are served from an in-memory
+/// LRU shard cache: the owning shard is decompressed in full on first
+/// access, then kept in memory; subsequent events in the same shard cost
+/// only an @c arrow::Table::Slice call with no I/O.
 ///
-/// The total event count is the sum of per-fragment row counts (footer
-/// reads only). All collections must agree on their total row count.
+/// The total event count is the sum of per-shard row counts (footer reads
+/// only). All collections must agree on their total row count.
 ///
 /// Every configured collection must declare an expected schema. The
 /// scanner projects each fragment to that schema: columns the fragment
@@ -67,6 +67,13 @@ class ACTS_ARROW_EXPORT ParquetReader : public IReader {
     /// isolation is built to prevent).
     std::unordered_map<std::string, ActsPlugins::ArrowUtil::ArrowSchemaHandle>
         expectedSchemas;
+
+    /// Number of shards to keep decompressed in memory simultaneously.
+    /// A shard is loaded in full on first access and evicted LRU when
+    /// the cache is full. Default 1 is optimal for sequential single-
+    /// threaded runs. Set to @c numThreads for parallel processing so
+    /// each thread can hold its current shard without evicting another.
+    std::size_t shardCacheCapacity = 1;
   };
 
   /// Construct the reader.

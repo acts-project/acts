@@ -28,7 +28,14 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
   state.stage = PropagatorStage::prePropagation;
 
   // Pre-Propagation: call to the actor list, abort condition check
-  state.options.actorList.act(state, m_stepper, m_navigator, logger());
+  if (Result<void> preActResult =
+          state.options.actorList.act(state, m_stepper, m_navigator, logger());
+      !preActResult.ok()) {
+    ACTS_DEBUG("Pre-propagation actor call failed: "
+               << preActResult.error() << ": "
+               << preActResult.error().message());
+    return preActResult.error();
+  }
 
   if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
                                          logger())) {
@@ -407,9 +414,11 @@ detail::BasePropagatorHelper<derived_t>::propagateToSurface(
   Result<DerivedResult> res =
       Result<DerivedResult>::failure(PropagatorError::Failure);
 
-  // Due to the geometry of the perigee surface the overstepping tolerance
-  // is sometimes not met.
-  if (target.type() == Surface::SurfaceType::Perigee) {
+  // Due to the geometry of the perigee and point surfaces (their intersection
+  // is a point of closest approach, which can sit behind the current step) the
+  // overstepping tolerance is sometimes not met.
+  if (target.type() == Surface::SurfaceType::Perigee ||
+      target.type() == Surface::SurfaceType::Point) {
     res = static_cast<const derived_t*>(this)
               ->template propagate<DerivedOptions, ForcedSurfaceReached,
                                    PathLimitReached>(start, target,

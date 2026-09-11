@@ -8,19 +8,19 @@
 
 #pragma once
 
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
 
 namespace ActsExamples {
 
-using SpacePointIndex = Acts::SpacePointIndex2;
+using SpacePointIndex = Acts::SpacePointIndex;
 
-using SpacePointProxy = Acts::SpacePointContainer2::MutableProxy;
-using ConstSpacePointProxy = Acts::SpacePointContainer2::ConstProxy;
+using SpacePointProxy = Acts::SpacePointContainer::MutableProxy;
+using ConstSpacePointProxy = Acts::SpacePointContainer::ConstProxy;
 
-using ConstSpacePointSubset = Acts::SpacePointContainer2::ConstSubset;
+using ConstSpacePointSubset = Acts::SpacePointContainer::ConstSubset;
 
 using SpacePointColumns = Acts::SpacePointColumns;
-using SpacePointContainer = Acts::SpacePointContainer2;
+using SpacePointContainer = Acts::SpacePointContainer;
 
 }  // namespace ActsExamples

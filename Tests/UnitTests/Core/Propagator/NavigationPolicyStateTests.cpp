@@ -46,9 +46,9 @@
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using Experimental::Blueprint;
-using Experimental::BlueprintOptions;
-using Experimental::StaticBlueprintNode;
+using Acts::Blueprint;
+using Acts::BlueprintOptions;
+using Acts::StaticBlueprintNode;
 
 namespace ActsTests {
 

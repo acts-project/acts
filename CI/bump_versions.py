@@ -49,8 +49,8 @@ class VersionBumper:
             r"(ghcr\.io/acts-project/spack-container):(\d+\.\d+\.\d+)(_[a-z0-9._-]+)"
         ),
         # Matches DEPENDENCY_TAG in two formats:
-        # 1. GitLab CI: DEPENDENCY_TAG: v18.0.0
-        # 2. GitHub Actions: DEPENDENCY_TAG: ... default: 'v18.0.0'
+        # 1. Plain YAML mapping: DEPENDENCY_TAG: v18.0.0
+        # 2. GitHub Actions input: DEPENDENCY_TAG: ... default: 'v18.0.0'
         "dependency_tag": re.compile(
             r"(DEPENDENCY_TAG:(?:\s*['\"]?|(?:[^\n]|\n(?!\s{0,2}\w))*?default:\s*['\"]))(v\d+\.\d+\.\d+)(['\"]?)",
             re.MULTILINE,
@@ -59,7 +59,6 @@ class VersionBumper:
 
     # File patterns to search
     FILE_PATTERNS = [
-        ".gitlab-ci.yml",
         ".github/workflows/*.yml",
         ".github/workflows/*.yaml",
         ".github/actions/**/action.yml",

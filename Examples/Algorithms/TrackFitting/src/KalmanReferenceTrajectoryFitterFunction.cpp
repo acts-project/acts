@@ -196,8 +196,11 @@ struct KalmanReferenceTrajectoryFitterFunctionImpl final
         options.geoContext, options.calibrationContext, track,
         calibratorDelegate);
 
-    directReferenceTrajectoryBuilder.filter(options.geoContext, track,
-                                            updaterDelegate);
+    auto filterResult = directReferenceTrajectoryBuilder.filter(
+        options.geoContext, track, updaterDelegate);
+    if (!filterResult.ok()) {
+      return filterResult.error();
+    }
 
     auto smoothRes = kfSmoother(options.geoContext,
                                 tracks.trackStateContainer(), track.tipIndex());

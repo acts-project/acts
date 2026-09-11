@@ -73,6 +73,8 @@ class MuonHoughSeeder final : public IAlgorithm {
     unsigned nBinsTanPhi = 10;
     /// @brief Number of bins in x0 space (omplementary to tan (phi))
     unsigned nBinsX0 = 10;
+    /// @brief Extend Eta maxima with a second Hough transform in phi
+    bool extendWithPhi = true;
     /// @brief Visualize the Hough plane maxima
     bool dumpVisualization{false};
     /// @brief Visualization function (optional, e.g., for ROOT-based visualization)

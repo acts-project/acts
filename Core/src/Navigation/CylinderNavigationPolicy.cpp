@@ -15,6 +15,10 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 
+#include <algorithm>
+#include <numbers>
+#include <sstream>
+
 namespace Acts {
 
 namespace {
@@ -35,6 +39,46 @@ std::string_view faceName(CylinderVolumeBounds::Face face) {
 }
 }  // namespace
 
+bool CylinderNavigationPolicy::isApplicable(const TrackingVolume& volume,
+                                            const Logger& logger) {
+  const auto& volumeBounds = volume.volumeBounds();
+
+  if (volumeBounds.type() != VolumeBounds::eCylinder) {
+    ACTS_DEBUG("CylinderNavigationPolicy can only be used with "
+               << "cylinder volumes, which " << volume.volumeName()
+               << " is not");
+    return false;
+  }
+
+  const auto& bounds =
+      dynamic_cast<const CylinderVolumeBounds&>(volume.volumeBounds());
+
+  if (bounds.get(CylinderVolumeBounds::eMinR) == 0) {
+    ACTS_DEBUG("CylinderNavigationPolicy can only be used with "
+               << "non-zero inner radius, which " << volume.volumeName()
+               << " has not");
+    return false;
+  }
+
+  if (bounds.get(CylinderVolumeBounds::eHalfPhiSector) < std::numbers::pi) {
+    ACTS_DEBUG("CylinderNavigationPolicy can only be used with "
+               << "full-phi volumes, which " << volume.volumeName()
+               << " is not");
+    return false;
+  }
+
+  // A volume confining sub-volumes also carries their portals, so this
+  // implicitly rejects those as well.
+  if (volume.portals().size() != 4) {
+    ACTS_DEBUG("CylinderNavigationPolicy can only be used with "
+               << "volumes with 4 portals, but " << volume.volumeName()
+               << " has " << volume.portals().size());
+    return false;
+  }
+
+  return true;
+}
+
 CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
                                                    const TrackingVolume& volume,
                                                    const Logger& logger)
@@ -43,15 +87,15 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
                << volume.volumeName());
   using enum CylinderVolumeBounds::Face;
 
-  if (m_volume->volumeBounds().type() != VolumeBounds::eCylinder) {
-    ACTS_ERROR("CylinderNavigationPolicy can only be used with "
-               << "cylinder volumes");
+  if (!isApplicable(volume, logger)) {
+    ACTS_ERROR("CylinderNavigationPolicy is not applicable to volume "
+               << volume.volumeName());
     throw std::invalid_argument(
-        "CylinderNavigationPolicy can only be used with "
-        "cylinder volumes");
+        "CylinderNavigationPolicy is not applicable to volume " +
+        volume.volumeName());
   }
 
-  auto& bounds =
+  const auto& bounds =
       dynamic_cast<const CylinderVolumeBounds&>(m_volume->volumeBounds());
 
   double rMin = bounds.get(CylinderVolumeBounds::eMinR);
@@ -59,23 +103,6 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
   double rMax = bounds.get(CylinderVolumeBounds::eMaxR);
   m_rMax2 = rMax * rMax;
   m_halfLengthZ = bounds.get(CylinderVolumeBounds::eHalfLengthZ);
-
-  if (rMin == 0) {
-    ACTS_ERROR("CylinderNavigationPolicy can only be used with "
-               << "non-zero inner radius, which " << m_volume->volumeName()
-               << " has not");
-    throw std::invalid_argument(
-        "CylinderNavigationPolicy can only be used with "
-        "non-zero inner radius");
-  }
-
-  if (m_volume->portals().size() != 4) {
-    ACTS_ERROR("CylinderNavigationPolicy can only be used with "
-               << "volumes with 4 portals");
-    throw std::invalid_argument(
-        "CylinderNavigationPolicy can only be used with "
-        "volumes with 4 portals");
-  }
 
   ACTS_VERBOSE("CylinderNavigationPolicy created for volume "
                << volume.volumeName());
@@ -123,16 +150,79 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
     }
   }
 
+  // Validate that the geometric recovery binned a portal onto every face. If
+  // not, dump a detailed comparison of every raw portal against the volume's
+  // reference geometry so we can see *why* a face was left unassigned (portal
+  // dropped because its bounds type / radius / localZ did not match, or two
+  // portals collided on the same face).
+  const bool complete = std::ranges::all_of(
+      m_portals, [](const Portal* portal) { return portal != nullptr; });
+
+  if (!complete) {
+    std::ostringstream diag;
+    diag << "CylinderNavigationPolicy failed to recover a portal for every "
+            "face of volume "
+         << volume.volumeName() << "\n";
+    diag << "  reference bounds: rMin=" << rMin << " rMax=" << rMax
+         << " halfLengthZ=" << m_halfLengthZ
+         << " (s_onSurfaceTolerance=" << s_onSurfaceTolerance << ")\n";
+    diag << "  volume center (global): " << volume.center(gctx).transpose()
+         << "\n";
+    diag << "  localToGlobal translation: "
+         << volume.localToGlobalTransform(gctx).translation().transpose()
+         << "\n";
+
+    diag << "  " << m_volume->portals().size() << " raw portal(s):\n";
+    for (const auto& portal : m_volume->portals()) {
+      const auto& surface = portal.surface();
+      diag << "    - " << surface.toStream(gctx) << "\n";
+      if (const auto* cylBounds =
+              dynamic_cast<const CylinderBounds*>(&surface.bounds());
+          cylBounds != nullptr) {
+        const double r = cylBounds->get(CylinderBounds::eR);
+        diag << "      CylinderBounds: r=" << r
+             << " |r-rMin|=" << std::abs(r - rMin)
+             << " |r-rMax|=" << std::abs(r - rMax) << "\n";
+      } else if (const auto* radBounds =
+                     dynamic_cast<const RadialBounds*>(&surface.bounds());
+                 radBounds != nullptr) {
+        const Transform3 localTransform =
+            m_volume->globalToLocalTransform(gctx) *
+            surface.localToGlobalTransform(gctx);
+        const double localZ = localTransform.translation().z();
+        diag << "      RadialBounds: rMin="
+             << radBounds->get(RadialBounds::eMinR)
+             << " rMax=" << radBounds->get(RadialBounds::eMaxR)
+             << " localZ=" << localZ
+             << " |localZ-halfLengthZ|=" << std::abs(localZ - m_halfLengthZ)
+             << " |localZ+halfLengthZ|=" << std::abs(localZ + m_halfLengthZ)
+             << "\n";
+      } else {
+        diag << "      (bounds type "
+             << static_cast<int>(surface.bounds().type())
+             << " is not handled by the recovery logic)\n";
+      }
+    }
+
+    diag << "  resulting face assignment:\n";
+    for (const auto& [i, portal] : enumerate(m_portals)) {
+      const auto face = static_cast<CylinderVolumeBounds::Face>(i);
+      diag << "    " << faceName(face) << " -> ";
+      if (portal == nullptr) {
+        diag << "nullptr";
+      } else {
+        diag << portal->surface().toStream(gctx);
+      }
+      diag << "\n";
+    }
+
+    ACTS_ERROR(diag.str());
+    throw std::invalid_argument(diag.str());
+  }
+
   ACTS_VERBOSE("Portal assignment:");
   for (const auto& [i, portal] : enumerate(m_portals)) {
     auto face = static_cast<CylinderVolumeBounds::Face>(i);
-
-    if (portal == nullptr) {
-      ACTS_ERROR("Have no portal for " << faceName(face));
-      throw std::invalid_argument("Have no portal for " +
-                                  std::string{faceName(face)});
-    }
-
     ACTS_VERBOSE("  " << faceName(face) << " -> "
                       << portal->surface().toStream(gctx));
   }

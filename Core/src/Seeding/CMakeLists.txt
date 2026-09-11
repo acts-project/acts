@@ -2,8 +2,26 @@ target_sources(
     ActsCore
     PRIVATE
         EstimateTrackParamsFromSeed.cpp
+        TrackParamsEstimationError.cpp
         CompSpacePointAuxiliaries.cpp
         CompositeSpacePointLineFitter.cpp
         FastStrawLineFitter.cpp
         CompositeSpacePointLineSeeder.cpp
+        detail/CandidatesForMiddleSp.cpp
+        detail/SpacePointGridPhiBinning.cpp
+        BroadTripletSeedFilter.cpp
+        CylindricalSpacePointGrid.cpp
+        SphericalSpacePointGrid.cpp
+        CartesianSpacePointGrid.cpp
+        CylindricalSpacePointKDTree.cpp
+        DoubletSeedFinder.cpp
+        TripletSeedFinder.cpp
+        TripletSeeder.cpp
+        GbtsNodeStorage.cpp
+        GbtsGeometry.cpp
+        GbtsTrackingFilter.cpp
+        GraphBasedTrackSeeder.cpp
+        GbtsRoiDescriptor.cpp
+        GbtsLayerConnectionTool.cpp
+        HoughAccumulatorSection.cpp
 )

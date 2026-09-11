@@ -45,12 +45,11 @@ struct transform3 {
   template <std::size_t N>
   using array_type = fastor::Vector<scalar_t, N>;
 
-  /// 3-element "vector" type
+  /// Vector and point types
+  using vector2 = array_type<2>;
   using vector3 = array_type<3>;
-  /// Point in 3D space
+  using point2 = vector2;
   using point3 = vector3;
-  /// Point in 2D space
-  using point2 = array_type<2>;
 
   /// 4x4 matrix type
   using matrix44 = fastor::Matrix<scalar_type, 4UL, 4UL>;
@@ -210,6 +209,18 @@ struct transform3 {
   /// This method transform from a point from the local 3D cartesian frame to
   /// the global 3D cartesian frame
   DETRAY_HOST
+  constexpr point3 point_to_global(const point2 &v) const {
+    Fastor::Tensor<scalar_type, 4> vector_4;
+    vector_4(Fastor::fseq<0, 2>()) = v;
+    vector_4[2] = static_cast<scalar_type>(0);
+    vector_4[3] = static_cast<scalar_type>(1);
+    return Fastor::Tensor<scalar_type, 3>(
+        Fastor::matmul(_data, vector_4)(Fastor::fseq<0, 3>()));
+  }
+
+  /// This method transform from a point from the local 3D cartesian frame to
+  /// the global 3D cartesian frame
+  DETRAY_HOST
   constexpr point3 point_to_global(const point3 &v) const {
     Fastor::Tensor<scalar_type, 4> vector_4;
     vector_4(Fastor::fseq<0, 3>()) = v;
@@ -227,6 +238,18 @@ struct transform3 {
     vector_4[3] = static_cast<scalar_type>(1);
     return Fastor::Tensor<scalar_type, 3>(
         Fastor::matmul(_data_inv, vector_4)(Fastor::fseq<0, 3>()));
+  }
+
+  /// This method transform from a vector from the local 2D cartesian frame to
+  /// the global 3D cartesian frame
+  DETRAY_HOST
+  constexpr point3 vector_to_global(const vector2 &v) const {
+    Fastor::Tensor<scalar_type, 4> vector_4;
+    vector_4(Fastor::fseq<0, 2>()) = v;
+    vector_4[2] = static_cast<scalar_type>(0);
+    vector_4[3] = static_cast<scalar_type>(0);
+    return Fastor::Tensor<scalar_type, 3>(
+        Fastor::matmul(_data, vector_4)(Fastor::fseq<0, 3>()));
   }
 
   /// This method transform from a vector from the local 3D cartesian frame to

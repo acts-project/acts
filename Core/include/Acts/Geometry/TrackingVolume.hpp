@@ -27,11 +27,16 @@
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <cstddef>
+#include <iterator>
 #include <memory>
+#include <ranges>
+#include <span>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -51,7 +56,6 @@ class TrackingVolume;
 struct GeometryIdentifierHook;
 class Portal;
 class INavigationPolicy;
-
 /// Interface types of the Gen1 geometry model
 /// @note This interface is being replaced, and is subject to removal
 /// @{
@@ -342,7 +346,10 @@ class TrackingVolume : public Volume {
   using PortalRange =
       detail::TransformRange<detail::ConstDereference,
                              const std::vector<std::shared_ptr<Portal>>>;
-
+  /// Abrivation of the shared ptr variant holding the placements
+  using PlacementOwnPtr =
+      std::variant<std::shared_ptr<const VolumePlacementBase>,
+                   std::shared_ptr<const SurfacePlacementBase>>;
   /// Return all portals registered under this tracking volume
   /// @return the range of portals
   PortalRange portals() const;
@@ -374,6 +381,7 @@ class TrackingVolume : public Volume {
 
   /// Add a surface to this tracking volume
   /// @param surface The surface to add
+  /// @note The volume takes shared ownership of the placement
   void addSurface(std::shared_ptr<Surface> surface);
 
   /// Add a child volume to this tracking volume
@@ -515,16 +523,25 @@ class TrackingVolume : public Volume {
   /// @return Reference to the glue volumes descriptor
   GlueVolumesDescriptor& glueVolumesDescriptor();
 
-  /// Produces a 3D visualization of this tracking volume
-  /// @param helper The visualization helper describing the output format
+  /// @param helper The visualization helper that implement the output
   /// @param gctx The geometry context
   /// @param viewConfig The view configuration
   /// @param portalViewConfig View configuration for portals
   /// @param sensitiveViewConfig View configuration for sensitive surfaces
+  /// @deprecated Use the ViewConfigFunc overload instead
+  [[deprecated("Use the ViewConfigFunc overload instead")]]
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
                  const ViewConfig& viewConfig,
                  const ViewConfig& portalViewConfig,
                  const ViewConfig& sensitiveViewConfig) const;
+
+  /// Produces a 3D visualization of this tracking volume
+  /// @param helper The visualization helper describing the output format
+  /// @param gctx The geometry context
+  /// @param viewConfigFactory Function determining the ViewConfig for each GeometryObject
+  void visualize(
+      IVisualization3D& helper, const GeometryContext& gctx,
+      const ViewConfigFunc& viewConfigFactory = defaultGeometryColoring) const;
 
   /// @cond
   using Volume::visualize;
@@ -556,6 +573,18 @@ class TrackingVolume : public Volume {
                                       NavigationPolicyState& state,
                                       AppendOnlyNavigationStream& stream,
                                       const Logger& logger) const;
+
+  /// Pass over a (Volume / Surface) placement to share owner ship
+  /// with the volume
+  /// @param placement: Pointer to the placement to be managed by the
+  ///                   tracking volume
+  void retainPlacement(PlacementOwnPtr placement) {
+    m_placements.emplace_back(std::move(placement));
+  }
+
+  /// Returns the view on all the placements owned by the tracking volume
+  /// @returns The const view on all the placements owned by this volume
+  std::span<const PlacementOwnPtr> placements() const;
 
  private:
   void connectDenseBoundarySurfaces(
@@ -603,6 +632,7 @@ class TrackingVolume : public Volume {
   std::vector<std::unique_ptr<TrackingVolume>> m_volumes;
   std::vector<std::shared_ptr<Portal>> m_portals;
   std::vector<std::shared_ptr<Surface>> m_surfaces;
+  std::vector<PlacementOwnPtr> m_placements;
 
   std::unique_ptr<INavigationPolicy> m_navigationPolicy;
 

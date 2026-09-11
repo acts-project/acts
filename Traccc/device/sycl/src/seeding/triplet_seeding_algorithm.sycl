@@ -1,0 +1,274 @@
+/** TRACCC library, part of the ACTS project (R&D line)
+ *
+ * (c) 2021-2026 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+// SYCL include
+#include <sycl/sycl.hpp>
+
+// Library include(s).
+#include "../utils/calculate1DimNdRange.hpp"
+#include "../utils/get_queue.hpp"
+#include "../utils/global_index.hpp"
+#include "traccc/sycl/seeding/triplet_seeding_algorithm.hpp"
+
+// Project include(s).
+#include "traccc/seeding/device/count_doublets.hpp"
+#include "traccc/seeding/device/count_grid_capacities.hpp"
+#include "traccc/seeding/device/count_triplets.hpp"
+#include "traccc/seeding/device/find_doublets.hpp"
+#include "traccc/seeding/device/find_triplets.hpp"
+#include "traccc/seeding/device/populate_grid.hpp"
+#include "traccc/seeding/device/reduce_triplet_counts.hpp"
+#include "traccc/seeding/device/select_seeds.hpp"
+#include "traccc/seeding/device/update_triplet_weights.hpp"
+
+// VecMem include(s).
+#include <vecmem/utils/sycl/local_accessor.hpp>
+
+namespace traccc::sycl {
+namespace kernels {
+
+/// Class identifying the SYCL kernel that runs
+/// @c traccc::device::count_grid_capacities
+class count_grid_capacities;
+
+/// Class identifying the SYCL kernel that runs @c traccc::device::populate_grid
+class populate_grid;
+
+/// Class identifying the kernel running @c traccc::device::count_doublets
+class count_doublets;
+
+/// Class identifying the kernel running @c traccc::device::find_doublets
+class find_doublets;
+
+/// Class identifying the kernel running @c traccc::device::count_triplets
+class count_triplets;
+
+/// Class identifying the kernel running @c
+/// traccc::device::reduce_triplet_counts
+class reduce_triplet_counts;
+
+/// Class identifying the kernel running @c traccc::device::find_triplets
+class find_triplets;
+
+/// Class identifying the kernel running @c
+/// traccc::device::update_triplet_weights
+class update_triplet_weights;
+
+/// Class identifying the kernel running @c traccc::device::select_seeds
+class select_seeds;
+
+}  // namespace kernels
+
+triplet_seeding_algorithm::triplet_seeding_algorithm(
+    const seedfinder_config& finder_config,
+    const spacepoint_grid_config& grid_config,
+    const seedfilter_config& filter_config, const traccc::memory_resource& mr,
+    const vecmem::copy& copy, queue_wrapper& queue,
+    std::unique_ptr<const Logger> logger)
+    : device::triplet_seeding_algorithm(finder_config, grid_config,
+                                        filter_config, mr, copy,
+                                        std::move(logger)),
+      sycl::algorithm_base{queue} {}
+
+void triplet_seeding_algorithm::count_grid_capacities_kernel(
+    const count_grid_capacities_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::count_grid_capacities>(
+        details::calculate1DimNdRange(payload.n_spacepoints, warp_size() * 4),
+        [config = payload.config, phi_axis = payload.phi_axis,
+         z_axis = payload.z_axis, spacepoints = payload.spacepoints,
+         grid_capacities = payload.grid_capacities](::sycl::nd_item<1> item) {
+          device::count_grid_capacities(details::global_index(item), config,
+                                        phi_axis, z_axis, spacepoints,
+                                        grid_capacities);
+        });
+  });
+}
+
+void triplet_seeding_algorithm::populate_grid_kernel(
+    const populate_grid_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::populate_grid>(
+        details::calculate1DimNdRange(payload.n_spacepoints, warp_size() * 4),
+        [config = payload.config, spacepoints = payload.spacepoints,
+         grid = payload.grid,
+         grid_prefix_sum = payload.grid_prefix_sum](::sycl::nd_item<1> item) {
+          device::populate_grid(details::global_index(item), config,
+                                spacepoints, grid, grid_prefix_sum);
+        });
+  });
+}
+
+void triplet_seeding_algorithm::count_doublets_kernel(
+    const count_doublets_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::count_doublets>(
+        details::calculate1DimNdRange(payload.n_spacepoints, warp_size() * 2),
+        [config = payload.config, spacepoints = payload.spacepoints,
+         grid = payload.grid, grid_prefix_sum = payload.grid_prefix_sum,
+         doublet_counter = payload.doublet_counter,
+         nMidBot = &(payload.nMidBot),
+         nMidTop = &(payload.nMidTop)](::sycl::nd_item<1> item) {
+          device::count_doublets(details::global_index(item), config,
+                                 spacepoints, grid, grid_prefix_sum,
+                                 doublet_counter, *nMidBot, *nMidTop);
+        });
+  });
+}
+
+void triplet_seeding_algorithm::find_doublets_kernel(
+    const find_doublets_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::find_doublets>(
+        details::calculate1DimNdRange(payload.n_doublets, warp_size() * 2),
+        [config = payload.config, spacepoints = payload.spacepoints,
+         grid = payload.grid, doublet_counter = payload.doublet_counter,
+         mb_doublets = payload.mb_doublets,
+         mt_doublets = payload.mt_doublets](::sycl::nd_item<1> item) {
+          device::find_doublets(details::global_index(item), config,
+                                spacepoints, grid, doublet_counter, mb_doublets,
+                                mt_doublets);
+        });
+  });
+}
+
+void triplet_seeding_algorithm::count_triplets_kernel(
+    const count_triplets_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::count_triplets>(
+        details::calculate1DimNdRange(payload.nMidBot, warp_size() * 2),
+        [config = payload.config, spacepoints = payload.spacepoints,
+         grid = payload.grid, doublet_counter = payload.doublet_counter,
+         mb_doublets = payload.mb_doublets, mt_doublets = payload.mt_doublets,
+         spM_counter = payload.spM_counter,
+         midBot_counter = payload.midBot_counter](::sycl::nd_item<1> item) {
+          device::count_triplets(details::global_index(item), config,
+                                 spacepoints, grid, doublet_counter,
+                                 mb_doublets, mt_doublets, spM_counter,
+                                 midBot_counter);
+        });
+  });
+}
+
+void triplet_seeding_algorithm::triplet_counts_reduction_kernel(
+    const triplet_counts_reduction_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::reduce_triplet_counts>(
+        details::calculate1DimNdRange(payload.n_doublets, warp_size() * 2),
+        [doublet_counter = payload.doublet_counter,
+         spM_counter = payload.spM_counter,
+         nTriplets = &(payload.nTriplets)](::sycl::nd_item<1> item) {
+          device::reduce_triplet_counts(details::global_index(item),
+                                        doublet_counter, spM_counter,
+                                        *nTriplets);
+        });
+  });
+}
+
+void triplet_seeding_algorithm::find_triplets_kernel(
+    const find_triplets_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::find_triplets>(
+        details::calculate1DimNdRange(payload.nMidBot, warp_size() * 2),
+        [finding_config = payload.finding_config,
+         filter_config = payload.filter_config,
+         spacepoints = payload.spacepoints, grid = payload.grid,
+         doublet_counter = payload.doublet_counter,
+         mt_doublets = payload.mt_doublets, spM_tc = payload.spM_tc,
+         midBot_tc = payload.midBot_tc,
+         triplets = payload.triplets](::sycl::nd_item<1> item) {
+          device::find_triplets(details::global_index(item), finding_config,
+                                filter_config, spacepoints, grid,
+                                doublet_counter, mt_doublets, spM_tc, midBot_tc,
+                                triplets);
+        });
+  });
+}
+
+void triplet_seeding_algorithm::update_triplet_weights_kernel(
+    const update_triplet_weights_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  const unsigned int n_threads = warp_size() * 2;
+
+  // Check if device is capable of allocating sufficient local memory
+  assert(sizeof(scalar) * payload.config.compatSeedLimit * n_threads <
+         squeue.get_device().get_info<::sycl::info::device::local_mem_size>());
+
+  squeue.submit([&](::sycl::handler& h) {
+    // Array for temporary storage of triplet weights for comparing
+    // within kernel
+    vecmem::sycl::local_accessor<scalar> local_mem(
+        payload.config.compatSeedLimit * n_threads, h);
+
+    h.parallel_for<kernels::update_triplet_weights>(
+        details::calculate1DimNdRange(payload.n_triplets, n_threads),
+        [config = payload.config, spacepoints = payload.spacepoints,
+         spM_tc = payload.spM_tc, midBot_tc = payload.midBot_tc,
+         triplets = payload.triplets, local_mem](::sycl::nd_item<1> item) {
+          // Each thread uses compatSeedLimit elements of the array
+          scalar* dataPos =
+              &local_mem[item.get_local_id() * config.compatSeedLimit];
+          device::update_triplet_weights(details::global_index(item), config,
+                                         spacepoints, spM_tc, midBot_tc,
+                                         dataPos, triplets);
+        });
+  });
+}
+
+void triplet_seeding_algorithm::select_seeds_kernel(
+    const select_seeds_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+
+  const unsigned int n_threads = warp_size() * 2;
+
+  // Check if device is capable of allocating sufficient local memory
+  assert(sizeof(triplet) * payload.finder_config.maxSeedsPerSpM * n_threads <
+         squeue.get_device().get_info<::sycl::info::device::local_mem_size>());
+
+  squeue.submit([&](::sycl::handler& h) {
+    // Array for temporary storage of triplets for comparing within
+    // kernel
+    vecmem::sycl::local_accessor<device::device_triplet> local_mem(
+        payload.finder_config.maxSeedsPerSpM * n_threads, h);
+
+    h.parallel_for<kernels::select_seeds>(
+        details::calculate1DimNdRange(payload.n_doublets, n_threads),
+        [finder_config = payload.finder_config,
+         filter_config = payload.filter_config,
+         spacepoints = payload.spacepoints, grid = payload.grid,
+         spM_tc = payload.spM_tc, midBot_tc = payload.midBot_tc,
+         triplets = payload.triplets, seeds = payload.seeds,
+         local_mem](::sycl::nd_item<1> item) {
+          // Each thread uses compatSeedLimit elements of the array
+          device::device_triplet* dataPos =
+              &local_mem[item.get_local_id() * finder_config.maxSeedsPerSpM];
+
+          device::select_seeds(details::global_index(item), finder_config,
+                               filter_config, spacepoints, grid, spM_tc,
+                               midBot_tc, triplets, dataPos, seeds);
+        });
+  });
+}
+
+}  // namespace traccc::sycl

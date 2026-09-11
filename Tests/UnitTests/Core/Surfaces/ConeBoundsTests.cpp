@@ -102,6 +102,11 @@ BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
   BOOST_CHECK_THROW(ConeBounds(alpha, zMin, zMax, -halfPhi, averagePhi),
                     std::logic_error);
 
+  // Exception for a half sector phi beyond pi
+  BOOST_CHECK_THROW(
+      ConeBounds(alpha, zMin, zMax, std::numbers::pi + 0.1, averagePhi),
+      std::logic_error);
+
   // Exception for out of range phi positioning
   BOOST_CHECK_THROW(
       ConeBounds(alpha, zMin, zMax, halfPhi, 2 * std::numbers::pi),

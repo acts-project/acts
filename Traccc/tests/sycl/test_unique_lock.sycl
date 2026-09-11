@@ -1,0 +1,145 @@
+/**
+ * traccc library, part of the ACTS project (R&D line)
+ *
+ * (c) 2024-2026 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+// SYCL include(s).
+#include <sycl/sycl.hpp>
+
+// Project include(s).
+#include "traccc/device/mutex.hpp"
+#include "traccc/device/unique_lock.hpp"
+
+// VecMem include(s).
+#include <vecmem/memory/sycl/device_memory_resource.hpp>
+#include <vecmem/memory/sycl/shared_memory_resource.hpp>
+#include <vecmem/memory/unique_ptr.hpp>
+
+// GoogleTest include(s).
+#include <gtest/gtest.h>
+
+TEST(SYCLUniqueLock, MassAdditionKernelTryLock) {
+  ::sycl::queue queue;
+  vecmem::sycl::device_memory_resource device_mr{&queue};
+  vecmem::sycl::shared_memory_resource shared_mr{&queue};
+
+  vecmem::unique_alloc_ptr<uint32_t> out =
+      vecmem::make_unique_alloc<uint32_t>(shared_mr);
+  vecmem::unique_alloc_ptr<uint32_t> lock =
+      vecmem::make_unique_alloc<uint32_t>(device_mr);
+
+  queue.memset(lock.get(), 0, sizeof(uint32_t)).wait_and_throw();
+  queue.memset(out.get(), 0, sizeof(uint32_t)).wait_and_throw();
+
+  uint32_t n_blocks = 262144;
+  uint32_t n_threads = 32;
+
+  ::sycl::nd_range test_range(::sycl::range<1>(n_blocks * n_threads),
+                              ::sycl::range<1>(n_threads));
+
+  queue
+      .submit([&, out = out.get(), _lock = lock.get()](::sycl::handler& h) {
+        h.parallel_for<class MassAdditionTryLockTest>(
+            test_range, [=](::sycl::nd_item<1> item) {
+              traccc::device::mutex m(*_lock);
+
+              if (item.get_local_id()[0] == 0) {
+                traccc::device::unique_lock lock(m, std::try_to_lock);
+
+                if (!lock.owns_lock()) {
+                  lock.lock();
+                }
+
+                uint32_t tmp = *out;
+                tmp += 1;
+                *out = tmp;
+              }
+            });
+      })
+      .wait_and_throw();
+
+  EXPECT_EQ(n_blocks, *out.get());
+}
+
+TEST(SYCLUniqueLock, MassAdditionKernelDeferLock) {
+  ::sycl::queue queue;
+  vecmem::sycl::device_memory_resource device_mr{&queue};
+  vecmem::sycl::shared_memory_resource shared_mr{&queue};
+
+  vecmem::unique_alloc_ptr<uint32_t> out =
+      vecmem::make_unique_alloc<uint32_t>(shared_mr);
+  vecmem::unique_alloc_ptr<uint32_t> lock =
+      vecmem::make_unique_alloc<uint32_t>(device_mr);
+
+  queue.memset(lock.get(), 0, sizeof(uint32_t)).wait_and_throw();
+  queue.memset(out.get(), 0, sizeof(uint32_t)).wait_and_throw();
+
+  uint32_t n_blocks = 262144;
+  uint32_t n_threads = 32;
+
+  ::sycl::nd_range test_range(::sycl::range<1>(n_blocks * n_threads),
+                              ::sycl::range<1>(n_threads));
+
+  queue
+      .submit([&, out = out.get(), _lock = lock.get()](::sycl::handler& h) {
+        h.parallel_for<class MassAdditionDeferLockTest>(
+            test_range, [=](::sycl::nd_item<1> item) {
+              traccc::device::mutex m(*_lock);
+              traccc::device::unique_lock lock(m, std::defer_lock);
+
+              if (item.get_local_id()[0] == 0) {
+                lock.lock();
+
+                uint32_t tmp = *out;
+                tmp += 1;
+                *out = tmp;
+              }
+            });
+      })
+      .wait_and_throw();
+
+  EXPECT_EQ(n_blocks, *out.get());
+}
+
+TEST(SYCLUniqueLock, MassAdditionKernelAdoptLock) {
+  ::sycl::queue queue;
+  vecmem::sycl::device_memory_resource device_mr{&queue};
+  vecmem::sycl::shared_memory_resource shared_mr{&queue};
+
+  vecmem::unique_alloc_ptr<uint32_t> out =
+      vecmem::make_unique_alloc<uint32_t>(shared_mr);
+  vecmem::unique_alloc_ptr<uint32_t> lock =
+      vecmem::make_unique_alloc<uint32_t>(device_mr);
+
+  queue.memset(lock.get(), 0, sizeof(uint32_t)).wait_and_throw();
+  queue.memset(out.get(), 0, sizeof(uint32_t)).wait_and_throw();
+
+  uint32_t n_blocks = 262144;
+  uint32_t n_threads = 32;
+
+  ::sycl::nd_range test_range(::sycl::range<1>(n_blocks * n_threads),
+                              ::sycl::range<1>(n_threads));
+
+  queue
+      .submit([&, out = out.get(), _lock = lock.get()](::sycl::handler& h) {
+        h.parallel_for<class MassAdditionAdoptLockTest>(
+            test_range, [=](::sycl::nd_item<1> item) {
+              traccc::device::mutex m(*_lock);
+
+              if (item.get_local_id()[0] == 0) {
+                m.lock();
+                traccc::device::unique_lock lock(m, std::adopt_lock);
+
+                uint32_t tmp = *out;
+                tmp += 1;
+                *out = tmp;
+              }
+            });
+      })
+      .wait_and_throw();
+
+  EXPECT_EQ(n_blocks, *out.get());
+}

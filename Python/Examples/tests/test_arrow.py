@@ -16,6 +16,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+@pytest.mark.pypi
 def test_coexist_with_pyarrow():
     """Verify acts.examples.arrow and pyarrow can be loaded into the same
     Python process. Regression guard for the linker-isolation design: if
@@ -195,6 +196,7 @@ def _add_arrow_writer(
     )
 
 
+@pytest.mark.pypi
 def test_particle_gun_generated(tmp_path, ptcl_gun):
     """Particle gun → generated particles → Parquet."""
     from acts.arrow import particleSchema
@@ -214,6 +216,7 @@ def test_particle_gun_generated(tmp_path, ptcl_gun):
     )
 
 
+@pytest.mark.pypi
 def test_particle_gun_roundtrip(tmp_path, ptcl_gun):
     """Write sharded Parquet, then drive a second Sequencer off ParquetReader
     and check the reader exposes — and processes — the same number of events
@@ -274,6 +277,60 @@ def test_particle_gun_roundtrip(tmp_path, ptcl_gun):
     )
 
 
+@pytest.mark.pypi
+def test_particle_gun_roundtrip_parallel_cache(tmp_path, ptcl_gun):
+    """Write a multi-shard Parquet dataset, then read it back with a
+    multi-threaded Sequencer and shardCacheCapacity > 1. Exercises the
+    ParquetDatasetReader's concurrent shard-cache path (double-checked
+    locking + LRU eviction across multiple resident shards) end-to-end,
+    which the single-threaded/default-capacity tests above don't reach."""
+    from acts.arrow import particleSchema
+    from acts.examples.arrow import ParquetReader
+
+    nevents = 12
+    events_per_shard = 2  # -> 6 shards, more than numThreads/cacheCapacity
+    num_threads = 3
+    cache_capacity = 3
+
+    s_write = Sequencer(numThreads=1, events=nevents)
+    ptcl_gun(s_write)
+    _add_arrow_writer(
+        s_write,
+        tmp_path,
+        {"particles_generated": "particles_generated_arrow"},
+        eventsPerShard=events_per_shard,
+    )
+    s_write.run()
+
+    out_dir = tmp_path / "particles_generated_arrow"
+    _assert_particles_parquet(out_dir, nevents)
+
+    reader = ParquetReader(
+        level=acts.logging.INFO,
+        inputDir=str(tmp_path),
+        collections={"particles_generated_arrow": "particles_generated_arrow"},
+        expectedSchemas={"particles_generated_arrow": particleSchema()},
+        shardCacheCapacity=cache_capacity,
+    )
+    assert reader.availableEvents() == (0, nevents)
+
+    s_read = Sequencer(numThreads=num_threads)
+    s_read.addReader(reader)
+    counter = AssertCollectionExistsAlg(
+        collections="particles_generated_arrow",
+        name="roundtrip_check_parallel",
+        level=acts.logging.INFO,
+    )
+    s_read.addAlgorithm(counter)
+    s_read.run()
+
+    assert counter.events_seen == nevents, (
+        f"reader-driven parallel sequencer processed {counter.events_seen} events, "
+        f"expected {nevents}"
+    )
+
+
+@pytest.mark.pypi
 def test_particle_gun_fatras(tmp_path, fatras):
     """Particle gun + Fatras → both generated and simulated particles → Parquet."""
     nevents = 5
@@ -448,6 +505,7 @@ def _assert_simhits_parquet(
             )
 
 
+@pytest.mark.pypi
 def test_fatras_simhits_digitized(tmp_path, fatras):
     """Fatras + digitization → ArrowSimHitOutputConverter reads cluster
     positions → Parquet. The matched-hit x,y,z must be the precomputed cluster
@@ -461,6 +519,7 @@ def test_fatras_simhits_digitized(tmp_path, fatras):
     _assert_simhits_parquet(tmp_path / "simhits_arrow", nevents, expect_digitized=True)
 
 
+@pytest.mark.pypi
 def test_fatras_simhits_no_clusters_are_nan(tmp_path, fatras):
     """Without the cluster container and sim-hit→measurement map wired, the
     digitized x,y,z columns fall back to NaN while truth positions still
@@ -547,6 +606,7 @@ def test_pythia8_fatras(tmp_path, rng, trk_geo):
     _assert_particles_parquet(tmp_path / "particles_simulated_arrow", nevents)
 
 
+@pytest.mark.pypi
 def test_reader_schema_evolution_added_optional_column(tmp_path):
     """Read shards written without an optional column and verify the reader
     materializes it as null.
@@ -606,6 +666,9 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
                 "qop": pa.array([[0.5]], type=field_type("qop")),
                 "majority_particle_id": pa.array(
                     [[1]], type=field_type("majority_particle_id")
+                ),
+                "measurement_ids": pa.array(
+                    [[[1, 2, 3]]], type=field_type("measurement_ids")
                 ),
                 "hit_ids": pa.array([[[1, 2, 3]]], type=field_type("hit_ids")),
                 "track_id": pa.array([[7]], type=field_type("track_id")),
@@ -680,6 +743,7 @@ def test_reader_schema_evolution_added_optional_column(tmp_path):
     ), f"checker saw {TrackTableCheck.events_seen} events, expected {nevents}"
 
 
+@pytest.mark.pypi
 def test_python_alg_writes_arrow_table(tmp_path):
     """Smoke test for the write direction.
 
@@ -724,6 +788,9 @@ def test_python_alg_writes_arrow_table(tmp_path):
                     "qop": pa.array([[0.5]], type=field_type("qop")),
                     "majority_particle_id": pa.array(
                         [[1]], type=field_type("majority_particle_id")
+                    ),
+                    "measurement_ids": pa.array(
+                        [[[1, 2, 3]]], type=field_type("measurement_ids")
                     ),
                     "hit_ids": pa.array([[[1, 2, 3]]], type=field_type("hit_ids")),
                     "track_id": pa.array([[7]], type=field_type("track_id")),
@@ -771,6 +838,86 @@ def test_python_alg_writes_arrow_table(tmp_path):
     ), f"consumer saw {TrackConsumer.events_seen} events, expected {nevents}"
 
 
+@pytest.mark.pypi
+@pytest.mark.parametrize("withSimHitMap", [False, True])
+def test_track_converter_hit_indices(withSimHitMap):
+    """`measurement_ids` is written from the track states alone; `hit_ids`
+    needs the measurement->sim-hit map and is null without it."""
+    pa = pytest.importorskip("pyarrow")
+
+    from acts.arrow import ArrowTable
+    from acts.examples import (
+        ConstTrackContainer,
+        IndexSourceLink,
+        MeasurementSimHitsMap,
+        ReadDataHandle,
+        TrackContainer,
+        WriteDataHandle,
+    )
+    from acts.examples.arrow import ArrowTrackOutputConverter
+
+    # One track over measurements 2 and 5, each mapping to one sim hit.
+    measIndices = [2, 5]
+    simHitIndices = [20, 50]
+
+    class TrackProducer(acts.examples.IAlgorithm):
+        def __init__(self):
+            super().__init__(name="TrackProducer", level=acts.logging.INFO)
+            self._tracks = WriteDataHandle(self, ConstTrackContainer, "tracks")
+            self._tracks.initialize("tracks")
+            self._map = WriteDataHandle(self, MeasurementSimHitsMap, "meas_simhits")
+            self._map.initialize("meas_simhits")
+
+        def execute(self, ctx):
+            tracks = TrackContainer()
+            track = tracks.makeTrack()
+            for measIdx in measIndices:
+                state = track.appendTrackState()
+                state.uncalibratedSourceLink = IndexSourceLink(
+                    geometryId=acts.GeometryIdentifier(), index=measIdx
+                ).toSourceLink()
+            self._tracks(ctx, tracks.makeConst())
+
+            measToSimHits = MeasurementSimHitsMap()
+            for measIdx, hitIdx in zip(measIndices, simHitIndices):
+                measToSimHits.insert(measIdx, hitIdx)
+            self._map(ctx, measToSimHits)
+
+            return acts.examples.ProcessCode.SUCCESS
+
+    class TableCheck(acts.examples.IAlgorithm):
+        events_seen = 0
+
+        def __init__(self):
+            super().__init__(name="TableCheck", level=acts.logging.INFO)
+            self._in = ReadDataHandle(self, ArrowTable, "tracks_arrow")
+            self._in.initialize("tracks_arrow")
+
+        def execute(self, ctx):
+            t = self._in(ctx.eventStore).as_table()
+            assert t.column("measurement_ids").to_pylist() == [[measIndices]]
+            expected = [[simHitIndices]] if withSimHitMap else [None]
+            assert t.column("hit_ids").to_pylist() == expected
+            type(self).events_seen += 1
+            return acts.examples.ProcessCode.SUCCESS
+
+    s = Sequencer(numThreads=1, events=2)
+    s.addAlgorithm(TrackProducer())
+    s.addAlgorithm(
+        ArrowTrackOutputConverter(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            inputMeasurementSimHitsMap="meas_simhits" if withSimHitMap else "",
+            outputTable="tracks_arrow",
+        )
+    )
+    s.addAlgorithm(TableCheck())
+    s.run()
+
+    assert TableCheck.events_seen == 2
+
+
+@pytest.mark.pypi
 def test_writer_rejects_missing_schema(tmp_path):
     """ParquetWriter requires an expected schema for every collection.
     Constructing one without one must fail at config time, not at run time.
@@ -786,6 +933,7 @@ def test_writer_rejects_missing_schema(tmp_path):
         )
 
 
+@pytest.mark.pypi
 def test_writer_aborts_on_per_event_schema_mismatch(tmp_path):
     """A pure-Python algorithm produces a table whose schema doesn't match
     the writer's declared expectedSchemas. The writer must abort the

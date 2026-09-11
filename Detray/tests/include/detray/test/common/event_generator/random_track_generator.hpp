@@ -71,8 +71,8 @@ class random_track_generator
 
     DETRAY_HOST_DEVICE
     iterator(std::shared_ptr<generator_t> rand_gen, configuration cfg,
-             std::size_t n_tracks)
-        : m_rnd_numbers{std::move(rand_gen)}, m_tracks{n_tracks}, m_cfg{cfg} {}
+             std::size_t n_tracks_)
+        : m_rnd_numbers{std::move(rand_gen)}, m_tracks{n_tracks_}, m_cfg{cfg} {}
 
     /// @returns whether we reached the end of iteration
     DETRAY_HOST_DEVICE
@@ -169,17 +169,17 @@ class random_track_generator
   ///
   /// @note For more complex tasks, use the @c configuration type
   ///
-  /// @param n_tracks the number of steps in the theta space
+  /// @param n_tracks_ the number of steps in the theta space
   /// @param mom_range the range of the track momentum (in GeV)
   /// @param charge charge of particle (e)
   DETRAY_HOST_DEVICE
   explicit random_track_generator(
-      std::size_t n_tracks,
+      std::size_t n_tracks_,
       darray<scalar_t, 2> mom_range = {1.f * unit<scalar_t>::GeV,
                                        1.f * unit<scalar_t>::GeV},
       scalar_t charge = -1.f * unit<scalar_t>::e)
       : m_gen{std::make_shared<generator_t>()} {
-    m_cfg.n_tracks(n_tracks);
+    m_cfg.n_tracks(n_tracks_);
     m_cfg.mom_range(mom_range);
     m_cfg.charge(charge);
   }

@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/propagator/line_stepper.hpp"
 #include "detray/propagator/rk_stepper.hpp"
 #include "detray/tracks/ray.hpp"
@@ -39,7 +40,7 @@ namespace detray::test {
 /// @brief Test class that runs the navigation check on a given detector.
 ///
 /// @note The lifetime of the detector needs to be guaranteed.
-template <typename detector_t, template <typename> class scan_type>
+template <concepts::detector detector_t, template <typename> class scan_type>
 class navigation_validation : public test::fixture_base<> {
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
@@ -147,9 +148,8 @@ class navigation_validation : public test::fixture_base<> {
     detray::io::file_handle debug_file{debug_file_name, io_mode};
 
     // Keep a record of track positions and material along the track
-    dvector<dvector<navigation::detail::candidate_record<intersection_t>>>
-        recorded_traces{};
-    dvector<material_validator::material_record<scalar_t>> mat_records{};
+    std::vector<dvector<intersection_record<detector_t>>> recorded_traces{};
+    dvector<material_validator::track_material<scalar_t>> track_mat_vec{};
     std::vector<std::pair<trajectory_type, std::vector<intersection_t>>>
         missed_intersections{};
 
@@ -163,7 +163,7 @@ class navigation_validation : public test::fixture_base<> {
       // Follow the test trajectory with a track and check, if we find
       // the same volumes and distances along the way
       const auto &start = truth_trace.front();
-      const auto &track = start.track_param;
+      const auto &track = start.track_param();
       assert(!track.is_invalid());
       trajectory_type test_traj = get_parametrized_trajectory(track);
 
@@ -243,7 +243,7 @@ class navigation_validation : public test::fixture_base<> {
       }
 
       recorded_traces.push_back(std::move(obj_tracer.object_trace));
-      mat_records.push_back(mat_record);
+      track_mat_vec.push_back(mat_record);
 
       EXPECT_TRUE(success)
           << "\nDETRAY INFO (HOST): Wrote navigation debugging data in: "
@@ -319,7 +319,7 @@ class navigation_validation : public test::fixture_base<> {
     detector_scanner::write_intersections(truth_intr_path.string(),
                                           truth_traces);
     detector_scanner::write_intersections(intr_path.string(), recorded_traces);
-    material_validator::write_material(mat_path.string(), mat_records);
+    material_validator::write_material(mat_path.string(), track_mat_vec);
 
     DETRAY_INFO_HOST("Wrote distance to boundary of missed intersections in: "
                      << missed_path);
@@ -359,11 +359,11 @@ class navigation_validation : public test::fixture_base<> {
   std::shared_ptr<test::whiteboard> m_whiteboard{nullptr};
 };
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 using straight_line_navigation =
     navigation_validation<detector_t, detray::ray_scan>;
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 using helix_navigation = navigation_validation<detector_t, detray::helix_scan>;
 
 }  // namespace detray::test

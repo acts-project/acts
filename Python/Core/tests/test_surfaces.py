@@ -163,3 +163,12 @@ def test_surface_factory_and_surface_api():
     perigee = acts.Surface.createPerigee(acts.Vector3(0.0, 0.0, 0.0))
     assert isinstance(perigee, acts.PerigeeSurface)
     assert perigee.type == acts.SurfaceType.Perigee
+
+    point = acts.Surface.createPoint(acts.Vector3(1.0, 2.0, 3.0))
+    assert isinstance(point, acts.PointSurface)
+    assert point.type == acts.SurfaceType.Point
+    assert point.bounds.type == acts.SurfaceBoundsType.Boundless
+
+    bounded_point = acts.Surface.createPoint(acts.Vector3(1.0, 2.0, 3.0), 5.0)
+    assert bounded_point.type == acts.SurfaceType.Point
+    assert bounded_point.bounds.type == acts.SurfaceBoundsType.Point

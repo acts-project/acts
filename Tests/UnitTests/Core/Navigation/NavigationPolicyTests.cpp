@@ -23,6 +23,7 @@
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <boost/algorithm/string/join.hpp>
@@ -242,11 +243,14 @@ struct IsolatedConfig {
   int value;
 };
 
-auto makeCPolicy(const GeometryContext& /*gctx*/, const TrackingVolume& volume,
-                 const Logger& /*logger*/, IsolatedConfig config) {
-  // I can do arbitrary stuff here
+std::unique_ptr<INavigationPolicy> makeCPolicy(const GeometryContext& /*gctx*/,
+                                               const TrackingVolume& volume,
+                                               const Logger& /*logger*/,
+                                               IsolatedConfig config) {
+  // I can do arbitrary stuff here, including selecting the concrete policy type
+  // at runtime, since we return a unique_ptr to the base class.
   CPolicySpecialized<int>::Config config2{.value = config.value};
-  return CPolicySpecialized<int>(volume, config2);
+  return std::make_unique<CPolicySpecialized<int>>(volume, config2);
 }
 
 BOOST_AUTO_TEST_CASE(IsolatedFactory) {
@@ -261,6 +265,59 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
 
   auto factory2 =
       NavigationPolicyFactory{}.add(makeCPolicy, config).add<APolicy>();
+
+  auto policyBase = factory(gctx, volume, *logger);
+  auto& policy = dynamic_cast<MultiNavigationPolicy&>(*policyBase);
+
+  NavigationDelegate delegate;
+  policyBase->connect(delegate);
+
+  NavigationStream main;
+  AppendOnlyNavigationStream stream{main};
+  NavigationArguments args{.position = Vector3::Zero(),
+                           .direction = Vector3::Zero()};
+  NavigationPolicyStateManager stateManager;
+  stateManager.pushState<MultiNavigationPolicy::State>();
+  policy.createState(gctx, args, stateManager, *logger);
+  auto policyState = stateManager.currentState();
+  delegate(gctx, args, policyState, stream, *logger);
+
+  BOOST_REQUIRE_EQUAL(policy.policies().size(), 2);
+
+  const auto& policyA = dynamic_cast<const APolicy&>(*policy.policies()[0]);
+  const auto& cPolicy =
+      dynamic_cast<const CPolicySpecialized<int>&>(*policy.policies()[1]);
+
+  BOOST_CHECK(policyA.executed);
+  BOOST_CHECK(cPolicy.executed);
+  BOOST_CHECK_EQUAL(cPolicy.value, 44);
+}
+
+// Factory function returning a concrete policy by value. This exercises the
+// deprecated `add` overload, which is kept working for backwards compatibility.
+CPolicySpecialized<int> makeCPolicyByValue(const GeometryContext& /*gctx*/,
+                                           const TrackingVolume& volume,
+                                           const Logger& /*logger*/,
+                                           IsolatedConfig config) {
+  CPolicySpecialized<int>::Config config2{.value = config.value};
+  return CPolicySpecialized<int>(volume, config2);
+}
+
+BOOST_AUTO_TEST_CASE(IsolatedFactoryByValueDeprecated) {
+  TrackingVolume volume{
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(250_mm, 400_mm, 310_mm),
+      "PixelLayer3"};
+
+  IsolatedConfig config{.value = 44};
+
+  // The by-value factory function form is deprecated in favor of returning a
+  // unique_ptr, but must keep working. Suppress the deprecation warning here so
+  // this coverage does not break `-Werror` builds.
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  auto factory =
+      NavigationPolicyFactory{}.add<APolicy>().add(makeCPolicyByValue, config);
+  ACTS_POP_IGNORE_DEPRECATED()
 
   auto policyBase = factory(gctx, volume, *logger);
   auto& policy = dynamic_cast<MultiNavigationPolicy&>(*policyBase);

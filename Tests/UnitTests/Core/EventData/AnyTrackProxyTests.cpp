@@ -22,6 +22,7 @@
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
 
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -285,15 +286,11 @@ BOOST_AUTO_TEST_CASE(AccessStatistics) {
   BOOST_CHECK_EQUAL(anyTrack.nSharedHits(), 2u);
 }
 
-BOOST_AUTO_TEST_CASE(AccessTrackStates) {
-  VectorTrackContainer vtc;
-  VectorMultiTrajectory mtj;
-  TrackContainer tc{vtc, mtj};
-
-  auto track = tc.makeTrack();
-  fillTestTrack<decltype(tc)>(track);
-
-  // Add some track states
+// Helper that builds a track with three `previous()`-linked track states and
+// sets the tip index. Returns the three state indices, innermost first.
+template <typename track_container_t>
+std::array<TrackIndexType, 3> fillTestTrackStates(
+    track_container_t& tc, typename track_container_t::TrackProxy track) {
   auto ts1 = tc.trackStateContainer().makeTrackState();
   auto ts2 = tc.trackStateContainer().makeTrackState();
   ts2.previous() = ts1.index();
@@ -302,9 +299,145 @@ BOOST_AUTO_TEST_CASE(AccessTrackStates) {
 
   track.tipIndex() = ts3.index();
 
+  return {ts1.index(), ts2.index(), ts3.index()};
+}
+
+BOOST_AUTO_TEST_CASE(AccessTrackStates) {
+  VectorTrackContainer vtc;
+  VectorMultiTrajectory mtj;
+  TrackContainer tc{vtc, mtj};
+
+  auto track = tc.makeTrack();
+  fillTestTrack<decltype(tc)>(track);
+  fillTestTrackStates(tc, track);
+
   AnyMutableTrackProxy anyTrack(track);
 
   BOOST_CHECK_EQUAL(anyTrack.nTrackStates(), 3u);
+}
+
+BOOST_AUTO_TEST_CASE(TrackStatesReversed) {
+  VectorTrackContainer vtc;
+  VectorMultiTrajectory mtj;
+  TrackContainer tc{vtc, mtj};
+
+  auto track = tc.makeTrack();
+  fillTestTrack<decltype(tc)>(track);
+  auto [i1, i2, i3] = fillTestTrackStates(tc, track);
+
+  AnyConstTrackProxy anyTrack(track);
+
+  // Outermost is the tip
+  BOOST_CHECK_EQUAL(anyTrack.outermostTrackState().index(), i3);
+
+  // Reverse iteration walks tip -> stem
+  std::vector<TrackIndexType> indices;
+  for (auto ts : anyTrack.trackStatesReversed()) {
+    static_assert(decltype(ts)::ReadOnly, "expected const track state proxy");
+    indices.push_back(ts.index());
+  }
+  std::vector<TrackIndexType> expected = {i3, i2, i1};
+  BOOST_CHECK_EQUAL_COLLECTIONS(indices.begin(), indices.end(),
+                                expected.begin(), expected.end());
+
+  // Consistent with nTrackStates
+  BOOST_CHECK_EQUAL(indices.size(), anyTrack.nTrackStates());
+}
+
+BOOST_AUTO_TEST_CASE(TrackStatesForward) {
+  VectorTrackContainer vtc;
+  VectorMultiTrajectory mtj;
+  TrackContainer tc{vtc, mtj};
+
+  auto track = tc.makeTrack();
+  fillTestTrack<decltype(tc)>(track);
+  auto [i1, i2, i3] = fillTestTrackStates(tc, track);
+
+  // Forward iteration requires forward-linking
+  track.linkForward();
+
+  AnyConstTrackProxy anyTrack(track);
+
+  // Innermost is the stem
+  auto innermost = anyTrack.innermostTrackState();
+  BOOST_REQUIRE(innermost.has_value());
+  BOOST_CHECK_EQUAL(innermost->index(), i1);
+
+  // Forward iteration walks stem -> tip
+  std::vector<TrackIndexType> indices;
+  for (auto ts : anyTrack.trackStates()) {
+    indices.push_back(ts.index());
+  }
+  std::vector<TrackIndexType> expected = {i1, i2, i3};
+  BOOST_CHECK_EQUAL_COLLECTIONS(indices.begin(), indices.end(),
+                                expected.begin(), expected.end());
+}
+
+BOOST_AUTO_TEST_CASE(TrackStatesNotForwardLinked) {
+  VectorTrackContainer vtc;
+  VectorMultiTrajectory mtj;
+  TrackContainer tc{vtc, mtj};
+
+  auto track = tc.makeTrack();
+  fillTestTrack<decltype(tc)>(track);
+  fillTestTrackStates(tc, track);
+
+  AnyConstTrackProxy anyTrack(track);
+
+  // Without forward-linking there is no innermost state and forward iteration
+  // yields an empty range
+  BOOST_CHECK(!anyTrack.innermostTrackState().has_value());
+  auto range = anyTrack.trackStates();
+  BOOST_CHECK(range.begin() == range.end());
+}
+
+BOOST_AUTO_TEST_CASE(TrackStatesEmpty) {
+  VectorTrackContainer vtc;
+  VectorMultiTrajectory mtj;
+  TrackContainer tc{vtc, mtj};
+
+  auto track = tc.makeTrack();
+  fillTestTrack<decltype(tc)>(track);
+  // No track states, tip index stays invalid
+
+  AnyConstTrackProxy anyTrack(track);
+
+  BOOST_CHECK_EQUAL(anyTrack.nTrackStates(), 0u);
+  auto range = anyTrack.trackStatesReversed();
+  BOOST_CHECK(range.begin() == range.end());
+}
+
+BOOST_AUTO_TEST_CASE(MutableTrackStateAccess) {
+  VectorTrackContainer vtc;
+  VectorMultiTrajectory mtj;
+  TrackContainer tc{vtc, mtj};
+
+  auto track = tc.makeTrack();
+  fillTestTrack<decltype(tc)>(track);
+  auto [i1, i2, i3] = fillTestTrackStates(tc, track);
+  (void)i1;
+  (void)i2;
+
+  AnyMutableTrackProxy anyTrack(track);
+
+  // Mutable access yields a mutable track state proxy we can write through
+  auto outer = anyTrack.outermostTrackState();
+  static_assert(!decltype(outer)::ReadOnly,
+                "expected mutable track state proxy");
+  outer.pathLength() = 42.0;
+
+  // The write is visible through the concrete track state proxy
+  BOOST_CHECK_EQUAL(tc.trackStateContainer().getTrackState(i3).pathLength(),
+                    42.0);
+
+  // Mutable range also yields mutable proxies
+  for (auto ts : anyTrack.trackStatesReversed()) {
+    static_assert(!decltype(ts)::ReadOnly,
+                  "expected mutable track state proxy");
+    ts.pathLength() = 1.0;
+  }
+  BOOST_CHECK_EQUAL(tc.trackStateContainer().getTrackState(i3).pathLength(),
+                    1.0);
 }
 
 BOOST_AUTO_TEST_CASE(AccessDynamicColumns) {

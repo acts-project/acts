@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test a case where no step size adjustment is required
   esState.options.stepTolerance = 2. * 4.4258e+09;
   double h0 = esState.stepSize.value();
-  es.step(esState, navDir, nullptr);
+  BOOST_CHECK(es.step(esState, navDir, nullptr).ok());
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
 
   // Produce some errors
@@ -780,7 +780,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Collect boundaries
   std::vector<Surface const*> surs;
   std::vector<std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>>
-      boundaries = det->lowestTrackingVolume(tgContext, {0.5_m, 0., 0.})
+      boundaries = det->resolveLowestTrackingVolume(tgContext, {0.5_m, 0., 0.})
+                       .value()
                        ->boundarySurfaces();
   for (auto& b : boundaries) {
     if (b->surfaceRepresentation().center(tgContext).x() == 1_m) {
@@ -788,16 +789,18 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
       break;
     }
   }
-  boundaries =
-      det->lowestTrackingVolume(tgContext, {1.5_m, 0., 0.})->boundarySurfaces();
+  boundaries = det->resolveLowestTrackingVolume(tgContext, {1.5_m, 0., 0.})
+                   .value()
+                   ->boundarySurfaces();
   for (auto& b : boundaries) {
     if (b->surfaceRepresentation().center(tgContext).x() == 2_m) {
       surs.push_back(&(b->surfaceRepresentation()));
       break;
     }
   }
-  boundaries =
-      det->lowestTrackingVolume(tgContext, {2.5_m, 0., 0.})->boundarySurfaces();
+  boundaries = det->resolveLowestTrackingVolume(tgContext, {2.5_m, 0., 0.})
+                   .value()
+                   ->boundarySurfaces();
   for (auto& b : boundaries) {
     if (b->surfaceRepresentation().center(tgContext).x() == 3_m) {
       surs.push_back(&(b->surfaceRepresentation()));

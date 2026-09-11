@@ -16,11 +16,11 @@
 #include <memory>
 #include <optional>
 
-using namespace Acts::Experimental;
-using Acts::Experimental::detail::OnContainerMutatesContainer;
-using Acts::Experimental::detail::OnContainerReturnsNode;
-using Acts::Experimental::detail::OnLayerMutatesLayer;
-using Acts::Experimental::detail::OnLayerReturnsNode;
+using namespace Acts;
+using Acts::detail::OnContainerMutatesContainer;
+using Acts::detail::OnContainerReturnsNode;
+using Acts::detail::OnLayerMutatesLayer;
+using Acts::detail::OnLayerReturnsNode;
 
 namespace ActsTests {
 

@@ -102,12 +102,6 @@ DetrayPayloadConverter::convertBinnedSurfaceMaterial(
 }
 
 std::optional<DetraySurfaceMaterial>
-DetrayPayloadConverter::convertGridSurfaceMaterial(
-    const IGridSurfaceMaterialBase& /*material*/, const Surface& /*surface*/) {
-  throw DetrayUnsupportedMaterialException("detail::IGridSurfaceMaterialBase");
-}
-
-std::optional<DetraySurfaceMaterial>
 DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(
     const HomogeneousSurfaceMaterial& material, const Surface& /*surface*/) {
   return DetrayConversionUtils::convertMaterialSlab(material.materialSlab());
@@ -121,8 +115,8 @@ DetrayPayloadConverter::convertProtoSurfaceMaterialBinUtility(
 }
 
 std::optional<DetraySurfaceMaterial>
-DetrayPayloadConverter::convertProtoSurfaceMaterialProtoAxes(
-    const ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>& /*material*/,
+DetrayPayloadConverter::convertProtoSurfaceMaterialAxisSpec(
+    const ProtoSurfaceMaterialT<Acts::MultiAxisSpec2D>& /*material*/,
     const Surface& /*surface*/) {
   return std::nullopt;
 }

@@ -21,11 +21,13 @@ namespace Acts {
 
 namespace detail {
 
+//! [gaussian component]
 struct GaussianComponent {
   double weight = 0;
   double mean = 0;
   double var = 0;
 };
+//! [gaussian component]
 
 /// Transform a gaussian component to a space where all values are defined from
 /// [-inf, inf]
@@ -62,6 +64,7 @@ class BetheHeitlerApprox {
 
   virtual ~BetheHeitlerApprox() = default;
 
+  //! [bethe heitler interface]
   /// Maximum number of components in the mixture
   /// @return Maximum number of components
   virtual std::size_t maxComponents() const = 0;
@@ -77,6 +80,7 @@ class BetheHeitlerApprox {
   /// @return Span of computed mixture components
   virtual std::span<Component> mixture(double xOverX0,
                                        std::span<Component> mixture) const = 0;
+  //! [bethe heitler interface]
 };
 
 /// This class approximates the Bethe-Heitler with only one component. This is
@@ -107,9 +111,11 @@ class BetheHeitlerApproxSingleCmp final : public BetheHeitlerApprox {
       const double xOverX0, const std::span<Component> mixture) const override {
     mixture[0].weight = 1.0;
 
+    //! [single component moments]
     const double c = xOverX0 / std::numbers::ln2;
     mixture[0].mean = std::pow(2, -c);
     mixture[0].var = std::pow(3, -c) - std::pow(4, -c);
+    //! [single component moments]
 
     return mixture;
   }
@@ -187,6 +193,7 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
   /// @param clampToRange whether to clamp the input x/x0 to the allowed range
   /// @param noChangeLimit limit below which no change is applied
   /// @param singleGaussianLimit limit below which a single Gaussian is used
+  /// @deprecated Use constructor taking std::vector<RangeData> instead
   [[deprecated("Use constructor taking std::vector<RangeData> instead")]]
   PolynomialBetheHeitlerApprox(const Data &lowData, const Data &highData,
                                bool lowTransform, bool highTransform,

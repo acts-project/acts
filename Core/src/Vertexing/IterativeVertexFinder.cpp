@@ -151,8 +151,11 @@ auto Acts::IterativeVertexFinder::find(
       }  // end reassignTracksAfterFirstFit case
          // still good vertex? might have changed in the meanwhile
       if (isGoodVertex) {
-        removeUsedCompatibleTracks(currentVertex, tracksToFit, seedTracks,
-                                   vertexingOptions, state);
+        Result<void> removeRes = removeUsedCompatibleTracks(
+            currentVertex, tracksToFit, seedTracks, vertexingOptions, state);
+        if (!removeRes.ok()) {
+          return removeRes.error();
+        }
 
         ACTS_DEBUG(
             "Number of seed tracks after removal of compatible tracks "
@@ -169,8 +172,12 @@ auto Acts::IterativeVertexFinder::find(
       if (!isGoodSplitVertex) {
         removeTracks(tracksToFitSplitVertex, seedTracks);
       } else {
-        removeUsedCompatibleTracks(currentSplitVertex, tracksToFitSplitVertex,
-                                   seedTracks, vertexingOptions, state);
+        Result<void> removeRes = removeUsedCompatibleTracks(
+            currentSplitVertex, tracksToFitSplitVertex, seedTracks,
+            vertexingOptions, state);
+        if (!removeRes.ok()) {
+          return removeRes.error();
+        }
       }
     }
     // Now fill vertex collection with vertex

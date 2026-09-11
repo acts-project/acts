@@ -1,0 +1,5 @@
+*.csv
+*.csv.bak
+*.json
+.venv/
+!example.json

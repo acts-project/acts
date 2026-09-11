@@ -504,8 +504,8 @@ void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
   ACTS_VERBOSE("Filling merged grid");
   assert(a.dim() == b.dim());
   assert(a.direction() == b.direction());
-  const auto locBinsA = a.grid().numLocalBinsAny();
-  const auto locBinsB = b.grid().numLocalBinsAny();
+  const auto locBinsA = a.grid().multiAxisAny().getNBinsAny();
+  const auto locBinsB = b.grid().multiAxisAny().getNBinsAny();
 
   ACTS_VERBOSE("a: " << a.grid());
   ACTS_VERBOSE("b: " << b.grid());

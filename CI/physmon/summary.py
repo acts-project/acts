@@ -23,7 +23,9 @@ summary = []
 
 with open(args.results) as f:
     reader = csv.reader(f)
-    for title, html_path, ec in reader:
+    # Later columns carry the reference/monitored paths used to build a
+    # candidate manifest; they are not part of the summary
+    for title, html_path, ec, *_ in reader:
         summary.append(
             {
                 "title": title,

@@ -214,9 +214,9 @@ std::string TGeoBlueprintBuilderBackend::pathOf(const Element& element) const {
 
 }  // namespace ActsPlugins
 
-namespace Acts::Experimental {
+namespace Acts {
 template class BlueprintBuilder<ActsPlugins::TGeoBlueprintBuilderBackend>;
 template class ElementLayerAssembler<ActsPlugins::TGeoBlueprintBuilderBackend>;
 template class SensorLayerAssembler<ActsPlugins::TGeoBlueprintBuilderBackend>;
 template class SensorLayer<ActsPlugins::TGeoBlueprintBuilderBackend>;
-}  // namespace Acts::Experimental
+}  // namespace Acts

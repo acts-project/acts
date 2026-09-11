@@ -153,9 +153,9 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
             std::function<Vector2(Vector3)> transfoGlobalToLocal;
             Grid2D grid = createGrid2D(bUtility, transfoGlobalToLocal);
 
-            Grid2D::point_t gMin = grid.minPosition();
-            Grid2D::point_t gMax = grid.maxPosition();
-            Grid2D::index_t gNBins = grid.numLocalBins();
+            Grid2D::point_t gMin = grid.multiAxis().getMinPoint();
+            Grid2D::point_t gMax = grid.multiAxis().getMaxPoint();
+            Grid2D::index_t gNBins = grid.multiAxis().getNBins();
 
             EAxis axis1(gMin[0], gMax[0], gNBins[0]);
             EAxis axis2(gMin[1], gMax[1], gNBins[1]);
@@ -184,9 +184,9 @@ ActsPlugins::RootMaterialDecorator::RootMaterialDecorator(
             std::function<Vector3(Vector3)> transfoGlobalToLocal;
             Grid3D grid = createGrid3D(bUtility, transfoGlobalToLocal);
 
-            Grid3D::point_t gMin = grid.minPosition();
-            Grid3D::point_t gMax = grid.maxPosition();
-            Grid3D::index_t gNBins = grid.numLocalBins();
+            Grid3D::point_t gMin = grid.multiAxis().getMinPoint();
+            Grid3D::point_t gMax = grid.multiAxis().getMaxPoint();
+            Grid3D::index_t gNBins = grid.multiAxis().getNBins();
 
             EAxis axis1(gMin[0], gMax[0], gNBins[0]);
             EAxis axis2(gMin[1], gMax[1], gNBins[1]);

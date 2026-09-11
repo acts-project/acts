@@ -10,6 +10,8 @@
 
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <format>
+
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -36,31 +38,31 @@ DuplicationPlotTool::DuplicationPlotTool(const DuplicationPlotTool::Config& cfg,
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("DuplicationPlotTool", lvl)) {
   ACTS_DEBUG("Initialize the histograms for duplication ratio plots");
 
+  std::string dupTitle =
+      std::format("Number of duplicated {}s candidates", m_cfg.label);
+
   m_profiles.insert(
-      {"nDuplicated_vs_pT", makeProfile(m_cfg, "nDuplicated_vs_pT",
-                                        "Number of duplicated track candidates",
+      {"nDuplicated_vs_pT", makeProfile(m_cfg, "nDuplicated_vs_pT", dupTitle,
                                         m_cfg.varBinning.at("Pt"))});
-  m_profiles.insert({"nDuplicated_vs_eta",
-                     makeProfile(m_cfg, "nDuplicated_vs_eta",
-                                 "Number of duplicated track candidates",
-                                 m_cfg.varBinning.at("Eta"))});
-  m_profiles.insert({"nDuplicated_vs_phi",
-                     makeProfile(m_cfg, "nDuplicated_vs_phi",
-                                 "Number of duplicated track candidates",
-                                 m_cfg.varBinning.at("Phi"))});
+  m_profiles.insert(
+      {"nDuplicated_vs_eta", makeProfile(m_cfg, "nDuplicated_vs_eta", dupTitle,
+                                         m_cfg.varBinning.at("Eta"))});
+  m_profiles.insert(
+      {"nDuplicated_vs_phi", makeProfile(m_cfg, "nDuplicated_vs_phi", dupTitle,
+                                         m_cfg.varBinning.at("Phi"))});
 
   m_efficiencies.insert(
       {"duplicationRatio_vs_pT",
        Efficiency1("duplicationRatio_vs_pT", "Duplication ratio",
-                   std::array{m_cfg.varBinning.at("Pt")})});
+                   std::array{m_cfg.recoVarBinning.at("Pt")})});
   m_efficiencies.insert(
       {"duplicationRatio_vs_eta",
        Efficiency1("duplicationRatio_vs_eta", "Duplication ratio",
-                   std::array{m_cfg.varBinning.at("Eta")})});
+                   std::array{m_cfg.recoVarBinning.at("Eta")})});
   m_efficiencies.insert(
       {"duplicationRatio_vs_phi",
        Efficiency1("duplicationRatio_vs_phi", "Duplication ratio",
-                   std::array{m_cfg.varBinning.at("Phi")})});
+                   std::array{m_cfg.recoVarBinning.at("Phi")})});
 }
 
 void DuplicationPlotTool::fill(

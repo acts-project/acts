@@ -12,9 +12,7 @@ except RuntimeError:
         else "positive"
     )
     warnings.warn(
-        "Runtime log failure threshold could not be set. "
-        "Compile-time value is probably set via CMake, i.e. "
-        f"`ACTS_LOG_FAILURE_THRESHOLD={acts.logging.getFailureThreshold().name}` is set, "
-        "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`. "
+        "Log failure threshold could not be set: this build was configured with "
+        "`ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`. "
         f"The pytest test-suite can produce false-{errtype} results in this configuration"
     )

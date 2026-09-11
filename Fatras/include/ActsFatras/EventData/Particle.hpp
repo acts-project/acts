@@ -123,6 +123,13 @@ class Particle {
     m_particleId = barcode;
     return *this;
   }
+  /// Set the particle ID.
+  /// @param idx Original particle index (to match HepMC file)
+  /// @return Reference to this particle in HepMC file
+  Particle &setOrigParticleIdx(std::uint32_t idx) {
+    m_origParticleIdx = idx;
+    return *this;
+  }
   /// Set the space-time position four-vector.
   /// @param pos4 Four-vector containing spatial position and time
   /// @return Reference to this particle for method chaining
@@ -211,6 +218,9 @@ class Particle {
   /// Particle identifier within an event.
   /// @return The unique particle identifier barcode
   Barcode particleId() const { return m_particleId; }
+  /// Original particle index (to match HepMC)
+  /// @return The particle index
+  std::uint32_t origParticleIdx() const { return m_origParticleIdx; }
   /// Which type of process generated this particle.
   /// @return The process type that generated this particle
   GenerationProcess process() const { return m_process; }
@@ -423,6 +433,8 @@ class Particle {
   // identity, i.e. things that do not change over the particle lifetime.
   /// Particle identifier within the event.
   Barcode m_particleId;
+  /// particle index to match the HepMC file
+  std::uint32_t m_origParticleIdx = 0;
   /// Process type specifier.
   GenerationProcess m_process = GenerationProcess::eUndefined;
   /// PDG particle number.

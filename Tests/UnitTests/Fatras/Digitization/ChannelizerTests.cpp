@@ -10,12 +10,13 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/IMultiAxis.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
-#include "ActsFatras/Digitization/SurfaceDrift.hpp"
 #include "ActsFatras/Digitization/SurfaceMask.hpp"
 
+#include <memory>
 #include <numeric>
 
 using namespace Acts;
@@ -24,7 +25,7 @@ using namespace ActsFatras;
 
 struct Helper {
   std::shared_ptr<Surface> surface;
-  BinUtility segmentation;
+  std::shared_ptr<const IMultiAxis> segmentation;
 
   GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
   double thickness = 125_um;
@@ -33,17 +34,18 @@ struct Helper {
   ActsFatras::Channelizer channelizer;
 
   Helper() {
-    surface = CurvilinearSurface(Vector3::Zero(), Vector3{0.0, 0.0, 1.0})
-                  .planeSurface();
+    surface =
+        CurvilinearSurface(Vector3::Zero(), Vector3{0.0, 0.0, 1.0}).surface();
 
     float pitchSize = 50_um;
     float min = -200_um;
     float max = 200_um;
     int bins = static_cast<int>((max - min) / pitchSize);
-    segmentation =
-        BinUtility(bins, min, max, BinningOption::open, AxisDirection::AxisX);
-    segmentation +=
-        BinUtility(bins, min, max, BinningOption::open, AxisDirection::AxisY);
+    const auto axisX = IAxis::createEquidistant(
+        AxisBoundaryType::Bound, min, max, bins, AxisDirection::AxisX);
+    const auto axisY = IAxis::createEquidistant(
+        AxisBoundaryType::Bound, min, max, bins, AxisDirection::AxisY);
+    segmentation = IMultiAxis::create(*axisX, *axisY);
   }
 
   auto channelize(const Vector3 &pos3, const Vector3 &dir3) const {
@@ -53,7 +55,7 @@ struct Helper {
     mom4.segment<3>(eMom0) = dir3;
     ActsFatras::Hit hit({}, {}, pos4, mom4, mom4);
     auto res = channelizer.channelize(hit, *surface, gctx, driftDir,
-                                      segmentation, thickness);
+                                      *segmentation, thickness);
     BOOST_REQUIRE(res.ok());
     return *res;
   }

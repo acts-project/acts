@@ -1,0 +1,52 @@
+/** TRACCC library, part of the ACTS project (R&D line)
+ *
+ * (c) 2021-2026 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+// SYCL include
+#include <sycl/sycl.hpp>
+
+// Local include(s).
+#include "../utils/calculate1DimNdRange.hpp"
+#include "../utils/get_queue.hpp"
+#include "../utils/global_index.hpp"
+#include "../utils/magnetic_field_types.hpp"
+#include "traccc/sycl/seeding/seed_parameter_estimation_algorithm.hpp"
+
+// Project include(s).
+#include "traccc/seeding/device/estimate_track_params.hpp"
+
+namespace traccc::sycl {
+
+seed_parameter_estimation_algorithm::seed_parameter_estimation_algorithm(
+    const track_params_estimation_config& config,
+    const traccc::memory_resource& mr, const vecmem::copy& copy,
+    queue_wrapper& queue, std::unique_ptr<const Logger> logger)
+    : device::seed_parameter_estimation_algorithm(config, mr, copy,
+                                                  std::move(logger)),
+      sycl::algorithm_base(queue) {}
+
+void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
+    const struct estimate_seed_params_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  magnetic_field_visitor<bfield_type_list<scalar>>(
+      payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {
+        squeue.submit([&](::sycl::handler& h) {
+          h.parallel_for(
+              details::calculate1DimNdRange(payload.n_seeds, warp_size() * 4),
+              [config = payload.config, measurements = payload.measurements,
+               spacepoints = payload.spacepoints, seeds = payload.seeds,
+               bfield = bfield,
+               params = payload.params](::sycl::nd_item<1> item) {
+                device::estimate_track_params(details::global_index(item),
+                                              config, measurements, spacepoints,
+                                              seeds, bfield, params);
+              });
+        });
+      });
+}
+
+}  // namespace traccc::sycl

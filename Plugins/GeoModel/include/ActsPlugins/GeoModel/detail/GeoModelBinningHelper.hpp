@@ -8,15 +8,10 @@
 
 #pragma once
 
-#include "Acts/Geometry/Extent.hpp"
-#include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
-#include <exception>
-#include <optional>
+#include <stdexcept>
 #include <string>
-#include <utility>
-#include <vector>
 
 namespace ActsPlugins::detail::GeoModelBinningHelper {
 
@@ -39,15 +34,5 @@ inline Acts::AxisDirection toAxisDirection(const std::string& binning) {
   throw std::invalid_argument("GeoModelBinningHelper: Unknown binning value '" +
                               binning + "'");
 }
-
-/// @brief Convert a binning string into a ProtoiBinning description
-///
-/// @param binning the binning string
-/// @param extent the extent of the binning
-///
-/// @return a DirectedProtoAxis object and the bin expansion
-std::tuple<Acts::DirectedProtoAxis, std::size_t> toProtoAxis(
-    const std::string& binning,
-    const std::optional<Acts::Extent>& extent = std::nullopt);
 
 }  // namespace ActsPlugins::detail::GeoModelBinningHelper

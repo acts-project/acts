@@ -20,8 +20,6 @@ class TrackingVolume;
 class PortalShellBase;
 class Volume;
 
-namespace Experimental {
-
 struct GeometryIdentifierBlueprintNodeImpl;
 
 /// @brief Blueprint node for configuring and applying geometry identifiers to volumes
@@ -107,5 +105,15 @@ class GeometryIdentifierBlueprintNode : public BlueprintNode {
   std::unique_ptr<GeometryIdentifierBlueprintNodeImpl> m_impl;
 };
 
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use @ref Acts::GeometryIdentifierBlueprintNode
+///             instead. This alias is kept for backward compatibility and will
+///             be removed.
+using GeometryIdentifierBlueprintNode
+    [[deprecated("Acts::Experimental::GeometryIdentifierBlueprintNode moved to "
+                 "Acts::GeometryIdentifierBlueprintNode")]] =
+        Acts::GeometryIdentifierBlueprintNode;
 }  // namespace Experimental
+
 }  // namespace Acts

@@ -280,7 +280,6 @@ std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen1(
 
 std::shared_ptr<TrackingGeometry> CylindricalTrackingGeometry::buildGen3(
     const Logger& logger) {
-  using namespace Experimental;
   using namespace UnitLiterals;
   using enum CylinderVolumeBounds::Face;
   using enum AxisDirection;

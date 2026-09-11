@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/EventData/BoundTrackParameters.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -22,8 +24,7 @@ namespace ActsExamples {
 
 /// Tools to make hists to show residual, i.e. smoothed_parameter -
 /// truth_parameter, and pull, i.e. (smoothed_parameter -
-/// truth_parameter)/smoothed_paramter_error, of track parameters at perigee
-/// surface
+/// truth_parameter)/smoothed_paramter_error, of bound track parameters
 class ResPlotTool {
  public:
   using AxisVariant = Acts::Experimental::AxisVariant;
@@ -34,9 +35,12 @@ class ResPlotTool {
 
   /// @brief Nested configuration struct
   struct Config {
-    /// Track parameter names
-    std::vector<std::string> paramNames = {"d0",    "z0",  "phi",
-                                           "theta", "qop", "t"};
+    /// Track parameter names, one per bound parameter.
+    ///
+    /// Empty by default because the first two depend on the surface the
+    /// parameters are expressed on: `d0`/`z0` on a perigee, `loc0`/`loc1` on
+    /// a sensor. The caller has to fill them in.
+    std::vector<std::string> paramNames;
 
     std::string qOverPtName = "qopt";
     std::string relQoverPtName = "qopt_rel";
@@ -50,6 +54,8 @@ class ResPlotTool {
         {"Pull", BoostRegularAxis(100, -5, 5, "pull")},
         {"Residual_d0", BoostRegularAxis(100, -0.5, 0.5, "r_{d0} [mm]")},
         {"Residual_z0", BoostRegularAxis(100, -0.5, 0.5, "r_{z0} [mm]")},
+        {"Residual_loc0", BoostRegularAxis(100, -0.5, 0.5, "r_{loc0} [mm]")},
+        {"Residual_loc1", BoostRegularAxis(100, -0.5, 0.5, "r_{loc1} [mm]")},
         {"Residual_phi", BoostRegularAxis(100, -0.01, 0.01, "r_{#phi} [rad]")},
         {"Residual_theta",
          BoostRegularAxis(100, -0.01, 0.01, "r_{#theta} [rad]")},
@@ -58,6 +64,14 @@ class ResPlotTool {
         {"Residual_qopt", BoostRegularAxis(100, -0.1, 0.1, "r_{q/pT} [c/GeV]")},
         {"Residual_qopt_rel",
          BoostRegularAxis(100, -0.1, 0.1, "r_{rel q/pT} [%]")}};
+  };
+
+  /// Quantities the histograms are binned in. Each `fill` overload derives
+  /// them from its own inputs to avoid lossy conversions.
+  struct Binning {
+    double eta;
+    double phi;
+    double pt;
   };
 
   /// @param cfg Configuration struct
@@ -70,6 +84,30 @@ class ResPlotTool {
   void fill(const Acts::GeometryContext& gctx,
             const SimParticleState& truthParticle,
             const Acts::BoundTrackParameters& fittedParamters);
+
+  /// Fill from truth parameters on the same surface as the fitted ones.
+  ///
+  /// @param truthParameters the truth bound parameters
+  /// @param fittedParameters the fitted parameters
+  void fill(const Acts::BoundTrackParameters& truthParameters,
+            const Acts::BoundTrackParameters& fittedParameters);
+
+  /// Fill the residual and pull of a subset of the bound parameters.
+  ///
+  /// For references that constrain only part of the parameters, e.g. a
+  /// measurement. Parameters outside @p subspace are left untouched, and the
+  /// derived `q/pT` histograms are never filled since they need theta and
+  /// q/p.
+  ///
+  /// @param binning the quantities to bin the histograms in
+  /// @param subspace the bound parameters to fill
+  /// @param residuals the residual per bound index; only @p subspace is read
+  /// @param residualCovariance the covariance of @p residuals; only the
+  ///        diagonal entries of @p subspace are read
+  void fill(const Binning& binning,
+            const Acts::VariableBoundSubspaceHelper& subspace,
+            const Acts::BoundVector& residuals,
+            const Acts::BoundMatrix& residualCovariance);
 
   const std::map<std::string, Histogram1>& res() const { return m_res; }
   const std::map<std::string, Histogram2>& resVsEta() const {
@@ -122,6 +160,10 @@ class ResPlotTool {
   std::map<std::string, Histogram3> m_pullVsEtaPhi;
   /// Pull vs eta-pT scatter plot
   std::map<std::string, Histogram3> m_pullVsEtaPt;
+
+  void fill(const Acts::BoundVector& truthVector, const Binning& binning,
+            double truthCharge, double truthAbsCharge,
+            const Acts::BoundTrackParameters& fittedParameters);
 
   void fillResidual(const std::string& paramName, double residual,
                     double truthEta, double truthPhi, double truthPt);

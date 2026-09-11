@@ -53,7 +53,7 @@ class TrackParamsLookupAccumulator {
                 const Vector2& position) {
     std::lock_guard<std::mutex> lock(m_gridMutex);
 
-    auto bin = m_grid.localBinsFromPosition(position);
+    auto bin = m_grid.multiAxis().getLocalBinsFromPoint(position);
 
     if (m_countGrid[bin] == 0) {
       m_grid.atLocalBins(bin).first =

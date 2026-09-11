@@ -19,7 +19,8 @@ namespace Acts {
 ///
 /// It consumes the assigned material interactions and then accumulates
 /// the material on the surfaces in prepared binned containers for averaging
-
+///
+/// @ingroup material_mapping
 class BinnedSurfaceMaterialAccumulator final
     : public ISurfaceMaterialAccumulator {
  public:

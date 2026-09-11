@@ -14,7 +14,6 @@ acts_add_library(
     src/detail/GeoSubtractionConverter.cpp
     src/detail/GeoShiftConverter.cpp
     src/detail/GeoIntersectionAnnulusConverter.cpp
-    src/detail/GeoModelBinningHelper.cpp
     src/detail/GeoModelExtentHelper.cpp
     src/detail/GeoUnionDoubleTrdConverter.cpp
     src/GeoModelDetectorElementITk.cpp

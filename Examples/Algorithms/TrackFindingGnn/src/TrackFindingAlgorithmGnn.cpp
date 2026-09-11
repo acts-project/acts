@@ -224,7 +224,11 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
     onetrack.reserve(candidate.size());
 
     for (auto i : candidate) {
-      for (const auto& sl : sortedSpacePoints.at(i).sourceLinks()) {
+      // Named, so the proxy outlives the loop: as a temporary it would be
+      // destroyed at the end of the full expression, leaving the range-for
+      // iterating a span whose owner is gone.
+      const auto sp = sortedSpacePoints.at(i);
+      for (const auto& sl : sp.sourceLinks()) {
         onetrack.push_back(sl.template get<IndexSourceLink>().index());
       }
     }

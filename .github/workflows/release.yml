@@ -12,16 +12,28 @@ permissions:
 jobs:
   release:
     name: Make release
-    runs-on: ubuntu-slim
+    # ubuntu-slim doesn't ship CMake, which CI/release.sh now needs to verify
+    # the source archive it builds (see the codegen_prebuilt job in
+    # checks.yml).
+    runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         # persisted credentials are required: CI/release.sh pushes the version
         # bump commit back to the repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          # setup-uv caches by default, which on a push to a protected branch
+          # that publishes the resulting release artifact is exactly the
+          # pattern zizmor's cache-poisoning audit flags: a poisoned cache
+          # entry could taint the released tarball. It also runs rarely enough
+          # that the cache wouldn't pay for itself.
+          enable-cache: false
 
       - name: Install git-cliff
         run: |

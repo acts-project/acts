@@ -9,7 +9,10 @@ set(py_files
     reconstruction.py
     itk.py
     odd.py
+    dataset.py
     uproot.py
+    visualization.py
+    scipy.py
 )
 
 # Macro to add example bindings conditionally
@@ -140,7 +143,11 @@ install(
     DESTINATION ${_examples_python_install_dir}
 )
 
-acts_pybind_generate_stubs(acts.examples ActsExamplesPythonBindings ActsPythonBindings)
+acts_pybind_generate_stubs(
+    acts.examples
+    ActsExamplesPythonBindings
+    ActsPythonBindings
+)
 
 set_target_properties(
     ActsExamplesPythonBindings

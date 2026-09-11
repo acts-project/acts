@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global) {
   BOOST_CHECK_EQUAL(grid.size(false), nBins);
   BOOST_CHECK_EQUAL(grid.size(true), nBins + 2ul);
 
-  const std::array<std::size_t, 1ul> numLocalBins = grid.numLocalBins();
+  const std::array<std::size_t, 1ul> numLocalBins = grid.multiAxis().getNBins();
   BOOST_CHECK_EQUAL(numLocalBins[0ul], nBins);
 
   GridGlobalIterator gridStart = grid.begin();
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_global) {
   BOOST_CHECK_EQUAL(grid.size(false), nBins * nBins);
   BOOST_CHECK_EQUAL(grid.size(true), (nBins + 2ul) * (nBins + 2ul));
 
-  const std::array<std::size_t, 2ul> numLocalBins = grid.numLocalBins();
+  const std::array<std::size_t, 2ul> numLocalBins = grid.multiAxis().getNBins();
   BOOST_CHECK_EQUAL(numLocalBins[0ul], nBins);
   BOOST_CHECK_EQUAL(numLocalBins[1ul], nBins);
 
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_global) {
   BOOST_CHECK_EQUAL(grid.size(true),
                     (nBins + 2ul) * (nBins + 2ul) * (nBinsZ + 2ul));
 
-  const std::array<std::size_t, 3ul> numLocalBins = grid.numLocalBins();
+  const std::array<std::size_t, 3ul> numLocalBins = grid.multiAxis().getNBins();
   BOOST_CHECK_EQUAL(numLocalBins[0ul], nBins);
   BOOST_CHECK_EQUAL(numLocalBins[1ul], nBins);
   BOOST_CHECK_EQUAL(numLocalBins[2ul], nBinsZ);
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local) {
   BOOST_CHECK_EQUAL(grid.size(false), nBins);
   BOOST_CHECK_EQUAL(grid.size(true), nBins + 2ul);
 
-  const std::array<std::size_t, 1ul> numLocalBins = grid.numLocalBins();
+  const std::array<std::size_t, 1ul> numLocalBins = grid.multiAxis().getNBins();
   BOOST_CHECK_EQUAL(numLocalBins[0ul], nBins);
 
   std::array<std::vector<std::size_t>, 1ul> navigation;
@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local) {
   BOOST_CHECK_EQUAL(grid.size(false), nBins * nBins);
   BOOST_CHECK_EQUAL(grid.size(true), (nBins + 2ul) * (nBins + 2ul));
 
-  const std::array<std::size_t, 2ul> numLocalBins = grid.numLocalBins();
+  const std::array<std::size_t, 2ul> numLocalBins = grid.multiAxis().getNBins();
   BOOST_CHECK_EQUAL(numLocalBins[0ul], nBins);
   BOOST_CHECK_EQUAL(numLocalBins[1ul], nBins);
 
@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local) {
   BOOST_CHECK_EQUAL(grid.size(true),
                     (nBins + 2ul) * (nBins + 2ul) * (nBinsZ + 2ul));
 
-  const std::array<std::size_t, 3ul> numLocalBins = grid.numLocalBins();
+  const std::array<std::size_t, 3ul> numLocalBins = grid.multiAxis().getNBins();
   BOOST_CHECK_EQUAL(numLocalBins[0ul], nBins);
   BOOST_CHECK_EQUAL(numLocalBins[1ul], nBins);
   BOOST_CHECK_EQUAL(numLocalBins[2ul], nBinsZ);
@@ -440,7 +440,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local_custom_navigation) {
   BOOST_CHECK_EQUAL(grid.size(true),
                     (nBins + 2ul) * (nBins + 2ul) * (nBinsZ + 2ul));
 
-  const std::array<std::size_t, 3ul> numLocalBins = grid.numLocalBins();
+  const std::array<std::size_t, 3ul> numLocalBins = grid.multiAxis().getNBins();
   BOOST_CHECK_EQUAL(numLocalBins[0ul], nBins);
   BOOST_CHECK_EQUAL(numLocalBins[1ul], nBins);
   BOOST_CHECK_EQUAL(numLocalBins[2ul], nBinsZ);
@@ -480,7 +480,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_5d_local_custom_subnavigation) {
                                          (nBinsZ + 2ul) * (nBinsJK + 2ul) *
                                          (nBinsJK + 2ul));
 
-  const std::array<std::size_t, 5ul> numLocalBins = grid.numLocalBins();
+  const std::array<std::size_t, 5ul> numLocalBins = grid.multiAxis().getNBins();
   BOOST_CHECK_EQUAL(numLocalBins[0ul], nBins);
   BOOST_CHECK_EQUAL(numLocalBins[1ul], nBins);
   BOOST_CHECK_EQUAL(numLocalBins[2ul], nBinsZ);
@@ -533,7 +533,8 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local_norepetitions) {
     for (std::size_t y : navigation[1ul]) {
       for (std::size_t z : navigation[2ul]) {
         std::array<std::size_t, 3ul> locPos({x, y, z});
-        std::size_t globPos = grid.globalBinFromLocalBins(locPos);
+        std::size_t globPos =
+            grid.multiAxis().getGlobalBinFromLocalBins(locPos);
         BOOST_CHECK(!allowed_global_bins.contains(globPos));
         allowed_global_bins.insert(globPos);
       }
@@ -552,7 +553,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local_norepetitions) {
   for (; gridStart != gridStop; ++gridStart) {
     ++numIterations;
     std::array<std::size_t, 3ul> locPos = gridStart.localBinsIndices();
-    std::size_t globPos = grid.globalBinFromLocalBins(locPos);
+    std::size_t globPos = grid.multiAxis().getGlobalBinFromLocalBins(locPos);
     BOOST_CHECK(!visited_global_bins.contains(globPos));
     BOOST_CHECK(allowed_global_bins.contains(globPos));
     visited_global_bins.insert(globPos);

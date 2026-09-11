@@ -38,6 +38,12 @@
 #define DETRAY_INLINE
 #endif
 
+#if defined(__CUDACC__)
+#define DETRAY_NO_INLINE __noinline__
+#else
+#define DETRAY_NO_INLINE
+#endif
+
 // @see
 // https://stackoverflow.com/questions/78071873/gcc-preprocessor-macro-and-pragma-gcc-unroll
 #if defined(__clang__)

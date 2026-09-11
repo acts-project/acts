@@ -30,8 +30,6 @@ class TrackingVolume;
 class VolumeBounds;
 class PortalShellBase;
 
-namespace Experimental {
-
 class MaterialDesignatorBlueprintNode;
 class PortalDesignatorBlueprintNode;
 class StaticBlueprintNode;
@@ -50,9 +48,9 @@ class CuboidContainerBlueprintNode;
 ///    structures
 ///
 /// During the *build* phase, the `build` method of all nodes in the tree are
-/// called recursively. Some nodes, like @ref Acts::Experimental::ContainerBlueprintNode,
+/// called recursively. Some nodes, like @ref Acts::ContainerBlueprintNode,
 /// will take action on the volumes returns from its children, and perform
-/// sizing to connect them. See the @ref Acts::Experimental::ContainerBlueprintNode
+/// sizing to connect them. See the @ref Acts::ContainerBlueprintNode
 /// and @ref Acts::CylinderVolumeStack documentation for details on how the
 /// sizing is carried out.
 class BlueprintNode {
@@ -82,7 +80,7 @@ class BlueprintNode {
   ///
   /// @note Generally, you should not need to to call this method directly.
   ///       The construction should usually be done through the special
-  ///       @ref Acts::Experimental::Blueprint class.
+  ///       @ref Acts::Blueprint class.
   ///
   /// @param options The global construction options
   /// @param gctx The geometry context for construction (usually nominal)
@@ -99,7 +97,7 @@ class BlueprintNode {
   /// Each boundary surface is then turned into a @ref Acts::TrivialPortalLink, which
   /// in turn produces a one-sided portal (see @ref Acts::Portal documentation)
   ///
-  /// Some nodes (like @ref Acts::Experimental::ContainerBlueprintNode) will take action on
+  /// Some nodes (like @ref Acts::ContainerBlueprintNode) will take action on
   /// their children, and unify the connected portals.
   ///
   /// After a node's processing has completed, it returns a reference to a @ref
@@ -130,7 +128,7 @@ class BlueprintNode {
   ///       argument**, rather than being implicitly determined from the
   ///       **parent node**. This is done so that nodes can remove themselves
   ///       from the final volume hierarchy, like container nodes or the
-  ///       @ref Acts::Experimental::MaterialDesignatorBlueprintNode.
+  ///       @ref Acts::MaterialDesignatorBlueprintNode.
   ///
   /// @param options The global construction options
   /// @param gctx The geometry context for construction (usually nominal)
@@ -174,7 +172,7 @@ class BlueprintNode {
   ///
   /// @{
 
-  /// This method creates a new @ref Acts::Experimental::StaticBlueprintNode wrapping @p
+  /// This method creates a new @ref Acts::StaticBlueprintNode wrapping @p
   /// volume and adds it to this node as a child.
   /// @param volume The volume to add
   /// @param callback An optional callback that receives the node as an argument
@@ -183,7 +181,7 @@ class BlueprintNode {
       std::unique_ptr<TrackingVolume> volume,
       const std::function<void(StaticBlueprintNode& cylinder)>& callback = {});
 
-  /// Alternative overload for creating a @ref Acts::Experimental::StaticBlueprintNode. This
+  /// Alternative overload for creating a @ref Acts::StaticBlueprintNode. This
   /// overload will invoke the constructor of @ref Acts::TrackingVolume and use
   /// that volume to create the node.
   /// @param transform The transform of the volume
@@ -196,7 +194,7 @@ class BlueprintNode {
       const std::string& volumeName = "undefined",
       const std::function<void(StaticBlueprintNode& cylinder)>& callback = {});
 
-  /// Convenience method for creating a cylinder specialization of @ref Acts::Experimental::ContainerBlueprintNode.
+  /// Convenience method for creating a cylinder specialization of @ref Acts::ContainerBlueprintNode.
   /// @param name The name of the container node. This name is only reflected
   ///             in the node tree for debugging, as no extra volumes is created
   ///             for the container.
@@ -209,7 +207,7 @@ class BlueprintNode {
       const std::function<void(CylinderContainerBlueprintNode& cylinder)>&
           callback = {});
 
-  /// Convenience method for creating a cuboid specialization of @ref Acts::Experimental::ContainerBlueprintNode.
+  /// Convenience method for creating a cuboid specialization of @ref Acts::ContainerBlueprintNode.
   /// @param name The name of the container node. This name is only reflected
   ///             in the node tree for debugging, as no extra volumes is created
   ///             for the container.
@@ -222,7 +220,7 @@ class BlueprintNode {
       const std::function<void(CuboidContainerBlueprintNode& cylinder)>&
           callback = {});
 
-  /// Convenience method for creating a @ref Acts::Experimental::MaterialDesignatorBlueprintNode.
+  /// Convenience method for creating a @ref Acts::MaterialDesignatorBlueprintNode.
   /// @param name The name of the material designator node. Used for debugging
   ///             the node tree only.
   /// @param callback An optional callback that receives the node as an argument
@@ -232,7 +230,7 @@ class BlueprintNode {
       const std::function<void(MaterialDesignatorBlueprintNode& material)>&
           callback = {});
 
-  /// Convenience method for creating a @ref Acts::Experimental::PortalDesignatorBlueprintNode.
+  /// Convenience method for creating a @ref Acts::PortalDesignatorBlueprintNode.
   /// @param name The name of the portal designator node. Used for debugging
   ///             the node tree only.
   /// @param callback An optional callback that receives the node as an argument
@@ -242,7 +240,7 @@ class BlueprintNode {
       const std::function<void(PortalDesignatorBlueprintNode& portals)>&
           callback = {});
 
-  /// Convenience method for creating a @ref Acts::Experimental::LayerBlueprintNode.
+  /// Convenience method for creating a @ref Acts::LayerBlueprintNode.
   /// @param name The name of the layer node.
   /// @param callback An optional callback that receives the node as an argument
   /// @return Reference to the newly created layer blueprint node
@@ -250,7 +248,7 @@ class BlueprintNode {
       const std::string& name,
       const std::function<void(LayerBlueprintNode& layer)>& callback = {});
 
-  /// Convenience method for creating a @ref Acts::Experimental::GeometryIdentifierBlueprintNode.
+  /// Convenience method for creating a @ref Acts::GeometryIdentifierBlueprintNode.
   /// @param callback An optional callback that receives the node as an argument
   /// @return Reference to the newly created geometry identifier blueprint node
   GeometryIdentifierBlueprintNode& withGeometryIdentifier(
@@ -350,5 +348,13 @@ class BlueprintNode {
   std::vector<std::shared_ptr<BlueprintNode>> m_children{};
 };
 
+namespace Experimental {
+/// @deprecated The blueprint geometry moved out of the `Acts::Experimental`
+///             namespace. Use @ref Acts::BlueprintNode instead. This alias is
+///             kept for backward compatibility and will be removed.
+using BlueprintNode [[deprecated(
+    "Acts::Experimental::BlueprintNode moved to Acts::BlueprintNode")]] =
+    Acts::BlueprintNode;
 }  // namespace Experimental
+
 }  // namespace Acts

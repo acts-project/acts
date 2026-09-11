@@ -249,15 +249,16 @@ struct TrackStateCreator {
     for (auto it = begin; it != end; ++it) {
       auto& candidateTrackState = *it;
 
-      PM mask = PM::Predicted | PM::Filtered | PM::Jacobian | PM::Calibrated;
+      // The filtered parameters are deliberately not allocated here. Outliers
+      // never get separate filtered parameters, and for measurements the
+      // caller allocates them right before the Kalman update writes them, so
+      // that nobody can observe allocated but uninitialized filtered
+      // parameters via `parameters()`.
+      PM mask = PM::Predicted | PM::Jacobian | PM::Calibrated;
       if (it != begin) {
         // subsequent track states don't need storage for these as they will
         // be shared
         mask &= ~PM::Predicted & ~PM::Jacobian;
-      }
-      if (isOutlier) {
-        // outlier won't have separate filtered parameters
-        mask &= ~PM::Filtered;
       }
 
       // copy this trackstate into fitted states MultiTrajectory

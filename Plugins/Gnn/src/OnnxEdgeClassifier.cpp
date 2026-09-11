@@ -121,12 +121,69 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   bc::static_vector<Ort::Value, 3> inputTensors;
   bc::static_vector<const char *, 3> inputNames;
 
+  // Apply feature selection if configured
+  std::optional<Tensor<float>> selectedNodeFeatures;
+  ActsPlugins::Tensor<float> *nodeFeatures = &tensors.nodeFeatures;
+
+  if (!m_cfg.selectedFeatures.empty()) {
+    std::size_t numAllFeatures = tensors.nodeFeatures.shape()[1];
+
+    // Create feature mask on CPU (and clone to device)
+    auto maskCpu =
+        Tensor<bool>::Create({numAllFeatures, 1ul}, ExecutionContext{});
+    auto *maskCpuData = maskCpu.data();
+    std::fill_n(maskCpuData, numAllFeatures, false);
+
+    for (std::size_t j = 0; j < m_cfg.selectedFeatures.size(); ++j) {
+      int featureIdx = m_cfg.selectedFeatures[j];
+      if (featureIdx < 0 || featureIdx >= static_cast<int>(numAllFeatures)) {
+        throw std::runtime_error("Selected feature index out of range");
+      }
+      maskCpuData[static_cast<std::size_t>(featureIdx)] = true;
+    }
+
+    // Clone if inputs not on CPU
+    Tensor<bool> mask = tensors.nodeFeatures.device().isCpu()
+                            ? std::move(maskCpu)
+                            : maskCpu.clone(execContext);
+
+    // Select features
+    selectedNodeFeatures.emplace(
+        selectCols(tensors.nodeFeatures, mask, execContext));
+    nodeFeatures = &(*selectedNodeFeatures);
+  }
+
+  // Scale node features if featureScales is given in cfg.
+  // using device-aware mulPerColumn with inverse scales
+  if (!m_cfg.featureScales.empty()) {
+    if (m_cfg.featureScales.size() !=
+        static_cast<std::size_t>(nodeFeatures->shape()[1])) {
+      throw std::runtime_error(
+          "featureScales size must match the number of input features");
+    }
+
+    // Compute inverse scales (1 / featureScales) for division
+    std::vector<float> inverseScales(m_cfg.featureScales.size());
+    for (std::size_t f = 0; f < m_cfg.featureScales.size(); ++f) {
+      if (m_cfg.featureScales[f] == 0.f) {
+        throw std::runtime_error(
+            "featureScales contains zero: division by zero");
+      }
+      inverseScales[f] = 1.f / m_cfg.featureScales[f];
+    }
+
+    // Apply scales to node features
+    auto scaledFeatures =
+        mulPerColumn(*nodeFeatures, inverseScales, execContext);
+    selectedNodeFeatures.emplace(std::move(scaledFeatures));
+    nodeFeatures = &(*selectedNodeFeatures);
+  }
+
   // Node tensor
-  inputTensors.push_back(toOnnx(memoryInfo, tensors.nodeFeatures));
+  inputTensors.push_back(toOnnx(memoryInfo, *nodeFeatures));
   inputNames.push_back(m_inputNames.at(0).c_str());
-  ACTS_DEBUG("Node features shape: (" << tensors.nodeFeatures.shape()[0] << ", "
-                                      << tensors.nodeFeatures.shape()[1]
-                                      << ")");
+  ACTS_DEBUG("Node features shape: (" << nodeFeatures->shape()[0] << ", "
+                                      << nodeFeatures->shape()[1] << ")");
 
   // Edge tensor
   inputTensors.push_back(toOnnx(memoryInfo, tensors.edgeIndex));
@@ -174,7 +231,8 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   auto newEdgeIndex = selectCols(tensors.edgeIndex, mask, execContext);
   std::optional<Tensor<float>> newEdgeFeatures;
   if (tensors.edgeFeatures.has_value()) {
-    newEdgeFeatures = selectRows(*tensors.edgeFeatures, mask, execContext);
+    newEdgeFeatures.emplace(
+        selectRows(*tensors.edgeFeatures, mask, execContext));
   }
 
   ACTS_DEBUG("Finished edge classification, after cut: "

@@ -9,6 +9,9 @@
 # Set the CPU build flags.
 include(detray-compiler-options-cpp)
 
+# Look for openMP, which is / can be used for the CPU propagation benchmark
+find_package(OpenMP)
+
 # Set up a test library, which the "new style" benchmarks and tests could use.
 add_library(
     detray_benchmark_cpu
@@ -22,3 +25,7 @@ add_library(
 add_library(detray::benchmark_cpu ALIAS detray_benchmark_cpu)
 
 target_link_libraries(detray_benchmark_cpu INTERFACE detray::benchmarks)
+
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(detray_benchmark_cpu INTERFACE OpenMP::OpenMP_CXX)
+endif()

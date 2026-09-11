@@ -43,9 +43,9 @@
 #include "ActsPlugins/Json/GridJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
+#include "ActsPlugins/Json/detail/JsonIo.hpp"
 
 #include <filesystem>
-#include <fstream>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -222,8 +222,7 @@ std::string getNavigationPolicyKind() {
     return "SurfaceArray";
   } else if (std::is_same_v<bounds_t, Acts::MultiNavigationPolicy>) {
     return "MultiNavigation";
-  } else if (std::is_same_v<bounds_t,
-                            Acts::Experimental::MultiLayerNavigationPolicy>) {
+  } else if (std::is_same_v<bounds_t, Acts::MultiLayerNavigationPolicy>) {
     return "MultiLayerNavigation";
   } else if (std::is_same_v<bounds_t, Acts::CylinderNavigationPolicy>) {
     return "Cylinder";
@@ -343,11 +342,11 @@ nlohmann::json encodeSurfaceArrayNavigationPolicy(
 }
 
 nlohmann::json encodeMultiLayerNavigationPolicy(
-    const Acts::Experimental::MultiLayerNavigationPolicy& policy,
+    const Acts::MultiLayerNavigationPolicy& policy,
     const Acts::TrackingGeometryJsonConverter& /*converter*/) {
   nlohmann::json jPolicy;
   jPolicy[kKindKey] =
-      getNavigationPolicyKind<Acts::Experimental::MultiLayerNavigationPolicy>();
+      getNavigationPolicyKind<Acts::MultiLayerNavigationPolicy>();
 
   const auto& grid = policy.indexedGrid();
   nlohmann::json jAxes;
@@ -378,21 +377,21 @@ std::unique_ptr<Acts::INavigationPolicy> decodeMultiLayerNavigationPolicy(
       range0[0], range0[1], bins0);
   Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound> axis1(
       range1[0], range1[1], bins1);
-  Acts::Experimental::MultiLayerNavigationPolicy::GridType grid(
-      std::move(axis0), std::move(axis1));
+  Acts::MultiLayerNavigationPolicy::GridType grid(std::move(axis0),
+                                                  std::move(axis1));
 
   std::vector<Acts::AxisDirection> castsVec =
       encoded.at("casts").get<std::vector<Acts::AxisDirection>>();
   std::array<Acts::AxisDirection, 2> casts = {castsVec.at(0), castsVec.at(1)};
 
-  Acts::Experimental::MultiLayerNavigationPolicy::IndexedUpdatorType
-      indexedGrid(std::move(grid), casts);
+  Acts::MultiLayerNavigationPolicy::IndexedUpdatorType indexedGrid(
+      std::move(grid), casts);
 
-  Acts::Experimental::MultiLayerNavigationPolicy::Config config;
+  Acts::MultiLayerNavigationPolicy::Config config;
   config.binExpansion =
       encoded.at("binExpansion").get<std::vector<std::size_t>>();
 
-  return std::make_unique<Acts::Experimental::MultiLayerNavigationPolicy>(
+  return std::make_unique<Acts::MultiLayerNavigationPolicy>(
       gctx, volume, logger, config, std::move(indexedGrid));
 }
 
@@ -498,7 +497,7 @@ nlohmann::json encodeGridPortalLink(
   }
 
   Acts::AnyGridConstView<const Acts::TrackingVolume*> view(link.grid());
-  const auto nBins = view.numLocalBins();
+  const auto nBins = view.multiAxisAny().getNBinsAny();
   const auto dim = view.dimensions();
 
   jLink[kBinsKey] = nlohmann::json::array();
@@ -841,9 +840,8 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
                     decodeSurfaceArrayNavigationPolicy)
       .registerKind(getNavigationPolicyKind<MultiNavigationPolicy>(),
                     decodeMultiNavigationPolicy)
-      .registerKind(
-          getNavigationPolicyKind<Experimental::MultiLayerNavigationPolicy>(),
-          decodeMultiLayerNavigationPolicy)
+      .registerKind(getNavigationPolicyKind<MultiLayerNavigationPolicy>(),
+                    decodeMultiLayerNavigationPolicy)
       .registerKind(getNavigationPolicyKind<CylinderNavigationPolicy>(),
                     decodeCylinderNavigationPolicy);
 
@@ -893,7 +891,7 @@ Acts::TrackingGeometryJsonConverter::navigationPolicyFromJson(
 
 nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
     const GeometryContext& gctx, const TrackingVolume& world,
-    const Options& /*options*/) const {
+    const Options& options) const {
   nlohmann::json encoded;
   encoded[kHeaderKey] = nlohmann::json::object();
   encoded[kHeaderKey][kVersionKey] = kFormatVersion;
@@ -923,8 +921,11 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
   encoded[kRootVolumeIdKey] = volumeIds.at(world);
 
   // Encode surfaces
+  const SurfaceJsonConverter::Options surfaceOptions{.writeMaterial =
+                                                         options.writeMaterial};
   for (const auto* surf : orderedSurfaces) {
-    nlohmann::json jSurface = SurfaceJsonConverter::toJson(gctx, *surf);
+    nlohmann::json jSurface =
+        SurfaceJsonConverter::toJson(gctx, *surf, surfaceOptions);
     jSurface[kSurfaceIdKey] = surfaceIds.at(*surf);
     encoded[kSurfacesKey].push_back(std::move(jSurface));
   }
@@ -1204,28 +1205,33 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
   return std::shared_ptr<TrackingVolume>(std::move(root));
 }
 
+void Acts::TrackingGeometryJsonConverter::toFile(
+    const GeometryContext& gctx, const TrackingGeometry& geometry,
+    const std::filesystem::path& path, const Options& options) const {
+  ACTS_DEBUG("Writing TrackingGeometry to '" << path.string() << "'");
+  detail::writeJsonFile(path, toJson(gctx, geometry, options),
+                        options.indentation, options.compressionLevel);
+}
+
+std::shared_ptr<Acts::TrackingGeometry>
+Acts::TrackingGeometryJsonConverter::fromFile(const GeometryContext& gctx,
+                                              const std::filesystem::path& path,
+                                              const Options& options) const {
+  ACTS_DEBUG("Reading TrackingGeometry from '" << path.string() << "'");
+  return fromJson(gctx, detail::readJsonFile(path), options);
+}
+
 std::shared_ptr<Acts::TrackingGeometry>
 Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
                                               const std::filesystem::path& path,
                                               const Options& options) const {
-  if (!std::filesystem::exists(path)) {
-    throw std::invalid_argument(std::format(
-        "TrackingGeometryJsonConverter() - JSON file {:} does not exist",
-        path.native()));
-  }
-  std::ifstream istr{path};
-  if (!istr.good()) {
-    throw std::invalid_argument(std::format(
-        "TrackingGeometryJsonConverter() - Cannot open '{:}'", path.native()));
-  }
-  nlohmann::json encoded{};
-  istr >> encoded;
-  return fromJsonPayload(gctx, encoded, options);
+  return fromFile(gctx, path, options);
 }
+
 std::shared_ptr<Acts::TrackingGeometry>
-Acts::TrackingGeometryJsonConverter::fromJsonPayload(
-    const GeometryContext& gctx, const nlohmann::json& encoded,
-    const Options& options) const {
+Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
+                                              const nlohmann::json& encoded,
+                                              const Options& options) const {
   ACTS_DEBUG("Reconstructing TrackingGeometry from JSON");
   auto world = trackingVolumeFromJson(gctx, encoded, options);
 

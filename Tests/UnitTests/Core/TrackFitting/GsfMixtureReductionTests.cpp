@@ -288,6 +288,87 @@ BOOST_AUTO_TEST_CASE(test_naive_vs_optimized) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(test_exact_tie_breaking) {
+  // Four exactly identical components: every pairwise KL distance is exactly
+  // 0, so every merge step is a tie. The optimized reducer does not attempt
+  // to match naive's specific tie-break convention (which pair is merged
+  // first among exact ties is otherwise unspecified) -- but reducing to a
+  // single component here still must equal naive's result regardless of
+  // merge order, since merging any subset of exactly-identical Gaussians is
+  // a commutative, associative operation (the weighted mean/covariance of
+  // identical components doesn't depend on pairing order). This is a
+  // regression guard for the underlying merge math, not for tie-break
+  // ordering.
+  std::shared_ptr<PlaneSurface> surface =
+      CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
+
+  std::vector<GsfComponent> cmps;
+  for (int i = 0; i < 4; ++i) {
+    GsfComponent cmp = makeDefaultComponent(0.25);
+    cmp.boundPars[eBoundQOverP] = 1.0;
+    cmp.boundCov(eBoundQOverP, eBoundQOverP) = 1.0;
+    cmps.push_back(cmp);
+  }
+
+  std::vector<GsfComponent> cmpsNaive = cmps;
+  reduceMixtureWithKLDistanceNaive(cmpsNaive, 1, *surface);
+
+  std::vector<GsfComponent> cmpsOptimized = cmps;
+  reduceMixtureWithKLDistance(cmpsOptimized, 1, *surface);
+
+  testReductionEquivalence(cmpsNaive, cmpsOptimized);
+}
+
+BOOST_AUTO_TEST_CASE(test_naive_vs_optimized_stress) {
+  std::shared_ptr<PlaneSurface> surface =
+      CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
+
+  std::mt19937 rng(1234);
+  std::uniform_real_distribution<double> weightDist(0.5, 1.5);
+  std::uniform_real_distribution<double> qopDist(0.1, 5.0);
+  std::uniform_real_distribution<double> covDist(0.5, 2.0);
+
+  for (int seed = 0; seed < 500; ++seed) {
+    const std::size_t NComps = 72;
+    std::vector<GsfComponent> cmps;
+    double weightSum = 0.0;
+
+    for (auto i = 0ul; i < NComps; ++i) {
+      GsfComponent cmp = makeDefaultComponent(weightDist(rng));
+      // Force frequent exact ties/duplicates by quantizing qop and cov, and
+      // by making every third component an exact duplicate of a previous
+      // one, similar to how real GSF material-mixture components can be
+      // near/exactly-degenerate.
+      double qop = qopDist(rng);
+      if (i % 3 == 0 && !cmps.empty()) {
+        cmp.boundPars[eBoundQOverP] = cmps[i / 2].boundPars[eBoundQOverP];
+        cmp.boundCov(eBoundQOverP, eBoundQOverP) =
+            cmps[i / 2].boundCov(eBoundQOverP, eBoundQOverP);
+      } else {
+        cmp.boundPars[eBoundQOverP] = qop;
+        cmp.boundCov(eBoundQOverP, eBoundQOverP) = covDist(rng);
+      }
+      weightSum += cmp.weight;
+      cmps.push_back(cmp);
+    }
+
+    for (auto &cmp : cmps) {
+      cmp.weight /= weightSum;
+    }
+
+    for (std::size_t targetSize : {1ul, 2ul, 12ul, 40ul, 71ul}) {
+      std::vector<GsfComponent> cmpsOptimized = cmps;
+      std::vector<GsfComponent> cmpsNaive = cmps;
+
+      reduceMixtureWithKLDistance(cmpsOptimized, targetSize, *surface);
+      reduceMixtureWithKLDistanceNaive(cmpsNaive, targetSize, *surface);
+      BOOST_REQUIRE_EQUAL(cmpsNaive.size(), targetSize);
+
+      testReductionEquivalence(cmpsNaive, cmpsOptimized);
+    }
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

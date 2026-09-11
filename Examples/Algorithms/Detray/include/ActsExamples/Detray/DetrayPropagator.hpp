@@ -18,6 +18,7 @@
 #include <array>
 
 #include <covfie/core/field.hpp>
+#include <detray/core/concepts.hpp>
 #include <detray/navigation/caching_navigator.hpp>
 #include <detray/propagator/actor_chain.hpp>
 #include <detray/propagator/propagation_config.hpp>
@@ -29,8 +30,8 @@
 
 namespace ActsExamples {
 
-template <typename stepper_t, typename detector_t, typename field_t,
-          bool kSTERILE>
+template <typename stepper_t, detray::concepts::detector detector_t,
+          typename field_t, bool kSTERILE>
 class DetrayConcretePropagator : public PropagatorInterface {
  public:
   /// Create a DetrayConcretePropagator - this is for testing purposes only,
@@ -70,7 +71,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
       const Acts::Logger& logger,
       const Acts::BoundTrackParameters& startParameters) const final {
     // Get the geometry context form the algorithm context
-    const auto& geoContext = context.geoContext;
+    const auto& geoContext = context.recoGeoContext;
     // Get the track information
     const Acts::Vector3 position = startParameters.position(geoContext);
     const Acts::Vector3 direction = startParameters.momentum().normalized();
@@ -128,8 +129,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
       using DMaterialTracer =
           detray::material_validator::material_tracer<float, vecmem::vector>;
       using DObjectTracer = detray::navigation::object_tracer<
-          DIntersection, detray::dvector,
-          detray::navigation::status::e_on_object,
+          detector_t, detray::dvector, detray::navigation::status::e_on_object,
           detray::navigation::status::e_on_portal>;
       using DInspector = detray::aggregate_inspector<DObjectTracer>;
 
@@ -206,7 +206,7 @@ class DetrayConcretePropagator : public PropagatorInterface {
     }
 
     // Retrieve the material information
-    const auto& detrayMaterial = materialTracerState.get_material_record();
+    const auto& detrayMaterial = materialTracerState.get_track_material();
     recordedMaterial.materialInX0 = detrayMaterial.sX0;
     recordedMaterial.materialInL0 = detrayMaterial.sL0;
   }
@@ -227,11 +227,13 @@ class DetrayConcretePropagator : public PropagatorInterface {
   const Acts::Logger& logger() const { return *m_logger; }
 };
 
-template <typename stepper_t, typename detector_t, typename field_t = bool>
+template <typename stepper_t, detray::concepts::detector detector_t,
+          typename field_t = bool>
 using DetraySterilePropagator =
     DetrayConcretePropagator<stepper_t, detector_t, field_t, true>;
 
-template <typename stepper_t, typename detector_t, typename field_t = bool>
+template <typename stepper_t, detray::concepts::detector detector_t,
+          typename field_t = bool>
 using DetrayPropagator =
     DetrayConcretePropagator<stepper_t, detector_t, field_t, false>;
 

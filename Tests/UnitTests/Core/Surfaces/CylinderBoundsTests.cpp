@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <numbers>
 #include <stdexcept>
 #include <vector>
@@ -199,6 +200,20 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsCenter) {
   CylinderBounds offsetCylinder(radius, halfZ, std::numbers::pi, averagePhi);
   Vector2 centerOffset = offsetCylinder.center();
   CHECK_CLOSE_ABS(centerOffset, Vector2(averagePhi, 0.), 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(CylinderBoundsCoversFullAzimuth) {
+  const double radius = 0.5;
+  const double halfZ = 10.;
+
+  BOOST_CHECK(CylinderBounds(radius, halfZ).coversFullAzimuth());
+  BOOST_CHECK(
+      CylinderBounds(radius, halfZ, std::numbers::pi).coversFullAzimuth());
+  BOOST_CHECK(
+      CylinderBounds(radius, halfZ, std::nextafter(std::numbers::pi, 0.))
+          .coversFullAzimuth());
+  BOOST_CHECK(!CylinderBounds(radius, halfZ, std::numbers::pi / 4.)
+                   .coversFullAzimuth());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

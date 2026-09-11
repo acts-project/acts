@@ -8,24 +8,140 @@
 
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 
-#include "Acts/EventData/SpacePointColumns.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Seeding2/GbtsGeometry.hpp"
-#include "Acts/Seeding2/GbtsLayerConnection.hpp"
-#include "Acts/Seeding2/GbtsTrackingFilter.hpp"
+#include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsLayerConnection.hpp"
+#include "Acts/Seeding/GbtsTrackingFilter.hpp"
+#include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
+#include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <numbers>
 #include <sstream>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace ActsExamples {
+
+namespace {
+
+/// What the ATLAS connector file has to say: the eta bin width its layers were
+/// trained with, and the layer pairs the seeder may connect.
+struct ConnectorTable {
+  float etaBinWidth{};
+  std::vector<Acts::Experimental::GbtsLayerConnection> connections;
+};
+
+/// Read an ATLAS GBTS connector file: a `nLinks etaBinWidth` header, then per
+/// link a `index stage src dst height width nEntries` line followed by a
+/// height x width bin table. Only the layer ids survive - GbtsGeometry derives
+/// the bin table from the layer geometry, and the stages from the connections.
+///
+/// @param path Path to the connector file
+/// @param stripConnections Keep the strip connections instead of the pixel ones
+ConnectorTable readConnectorTable(const std::string &path,
+                                  bool stripConnections) {
+  std::ifstream inStream(path);
+  if (!inStream) {
+    throw std::runtime_error("Cannot open GBTS connector file '" + path + "'");
+  }
+
+  ConnectorTable table;
+
+  std::uint32_t nLinks{};
+  inStream >> nLinks >> table.etaBinWidth;
+
+  // the file's own stage column, which only fixes the order the connections
+  // are handed over in
+  std::vector<std::pair<std::uint32_t, Acts::Experimental::GbtsLayerConnection>>
+      staged;
+  staged.reserve(nLinks);
+
+  for (std::uint32_t l = 0; l < nLinks; l++) {
+    std::uint32_t lIdx{};
+    std::uint32_t stage{};
+    Acts::Experimental::GbtsExperimentLayerId src{};
+    Acts::Experimental::GbtsExperimentLayerId dst{};
+    std::uint32_t height{};
+    std::uint32_t width{};
+    std::uint32_t nEntries{};
+
+    inStream >> lIdx >> stage >> src >> dst >> height >> width >> nEntries;
+
+    std::uint32_t dummy{};
+    for (std::uint32_t i = 0; i < height * width; ++i) {
+      inStream >> dummy;
+    }
+
+    // ATLAS ITk volume ids: 12, 13 and 14 are the strip subdetectors. The
+    // table holds both technologies and only one of them is ever seeded.
+    const auto isStrip = [](Acts::Experimental::GbtsExperimentLayerId layerId) {
+      const auto volumeId = layerId / 1000;
+      return volumeId == 12 || volumeId == 13 || volumeId == 14;
+    };
+    if (isStrip(src) != stripConnections || isStrip(dst) != stripConnections) {
+      continue;
+    }
+
+    staged.emplace_back(stage,
+                        Acts::Experimental::GbtsLayerConnection{src, dst});
+  }
+
+  if (!inStream) {
+    throw std::runtime_error("Malformed GBTS connector file '" + path + "'");
+  }
+
+  std::ranges::stable_sort(staged, {},
+                           [](const auto &entry) { return entry.first; });
+
+  table.connections.reserve(staged.size());
+  for (const auto &[stage, connection] : staged) {
+    table.connections.push_back(connection);
+  }
+
+  return table;
+}
+
+/// Read an ATLAS GBTS tau lookup table: per line a cluster width, the bulk tau
+/// bounds and the near-edge ones. The width is dropped - a row is located by
+/// index, one row per `tauLutBinWidth` of cluster width, never searched.
+///
+/// @param path Path to the lookup table file
+Acts::Experimental::detail::GbtsTauLookupTable readTauLookupTable(
+    const std::filesystem::path &path) {
+  std::ifstream inStream(path);
+  if (!inStream) {
+    throw std::runtime_error("Cannot open GBTS tau lookup table '" +
+                             path.string() + "'");
+  }
+
+  Acts::Experimental::detail::GbtsTauLookupTable tauLut;
+
+  float clusterWidth{};
+  Acts::Experimental::detail::GbtsTauBounds bounds;
+  while (inStream >> clusterWidth >> bounds.minTau >> bounds.maxTau >>
+         bounds.minTauNearEdge >> bounds.maxTauNearEdge) {
+    tauLut.push_back(bounds);
+  }
+
+  if (!inStream.eof()) {
+    // ended on a parse error, not on a clean EOF
+    throw std::runtime_error("Malformed GBTS tau lookup table '" +
+                             path.string() + "'");
+  }
+
+  return tauLut;
+}
+
+}  // namespace
 
 GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
     const Config &cfg, std::unique_ptr<const Acts::Logger> logger)
@@ -38,36 +154,39 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // parse the mapping file and turn into map
   m_actsGbtsMap = makeActsGbtsMap();
 
-  // create the connection objects
-  Acts::Experimental::GbtsLayerConnectionMap layerConnectionMap =
-      Acts::Experimental::GbtsLayerConnectionMap::fromFile(
-          m_cfg.seedFinderConfig.connectorInputFile,
-          m_cfg.seedFinderConfig.lrtMode);
+  // read which layers may be connected
+  const ConnectorTable connectorTable = readConnectorTable(
+      m_cfg.connectorInputFile, m_cfg.seedFinderConfig.useStripConnections);
+
+  // the cluster width cuts are the only user of the tau lookup table
+  if (m_cfg.seedFinderConfig.useClusterWidthCuts) {
+    m_cfg.seedFinderConfig.tauLookupTable =
+        readTauLookupTable(m_cfg.lutInputFile);
+  }
 
   // create the TrigInDetSiLayers (Logical Layers),
   // as well as a map that tracks there index in m_layerGeometry
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
-  // as all layers in examples are pixel, we set entire vector to true
-  m_isPixelLayer.resize(layerGeometry.size(), true);
-
   // option that allows for adding custom eta binning (default is at 0.2)
-  if (m_cfg.seedFinderConfig.etaBinWidthOverride != 0.0f) {
-    layerConnectionMap.etaBinWidth = m_cfg.seedFinderConfig.etaBinWidthOverride;
-  }
+  const float etaBinWidth = m_cfg.etaBinWidthOverride != 0.0f
+                                ? m_cfg.etaBinWidthOverride
+                                : connectorTable.etaBinWidth;
 
   // initialise the object that holds all the geometry information needed for
   // the algorithm
   auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
-      layerGeometry, layerConnectionMap);
+      layerGeometry, connectorTable.connections, etaBinWidth, m_cfg.gbtsZ0Range,
+      this->logger());
+
+  resolveLayerIndices(*geometry);
 
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
   // for pixel seeding, roi z bounds are used
 
-  m_internalRoi.emplace(0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0,
-                        -150., 150.);
+  m_internalRoi.emplace(-4.5, 4.5, -150., 150.);
   m_cfg.seedFinderConfig.maxZ0 = m_internalRoi->zMax();
   m_cfg.seedFinderConfig.minZ0 = m_internalRoi->zMin();
 
@@ -76,8 +195,9 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
           m_cfg.seedFinderConfig),
       geometry, this->logger().cloneWithSuffix("GbtsFinder"));
 
-  m_filter = Acts::Experimental::GbtsTrackingFilter(m_cfg.trackingFilterConfig,
-                                                    geometry);
+  m_filter = Acts::Experimental::GbtsTrackingFilter(
+      m_cfg.trackingFilterConfig, geometry,
+      this->logger().cloneWithSuffix("GbtsFilter"));
 
   printConfig();
 }
@@ -87,35 +207,42 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // initialise input space points from handle and define new container
   const SpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
-  // take space points, add variables needed for GBTS and add them to new
-  // container due to how space point container works, we need to keep the
-  // container and the external columns we added alive this is done by using a
-  // tuple of the core container and the two extra columns
-  const Acts::SpacePointContainer2 coreSpacePoints =
-      makeSpContainer(spacePoints, m_actsGbtsMap);
+  const Acts::Experimental::GraphBasedTrackSeeder::Options options{
+      .bFieldInZ = m_cfg.bFieldInZ};
 
-  // used to reserve size of nodes 2D vector in core
-  const std::uint32_t maxLayers = m_layerIdMap.size();
+  // The node storage is filled straight from the input space points. It takes
+  // plain scalars, so no intermediate space point container is needed and the
+  // seeds come back indexed into the input container directly.
+  Acts::Experimental::GbtsNodeStorage nodeStorage = m_finder->makeNodeStorage();
 
-  const Acts::Experimental::GraphBasedTrackSeeder::Options options(
-      m_cfg.bFieldInZ);
+  std::uint32_t nUnmapped = 0;
 
-  Acts::SeedContainer2 seeds;
+  for (const auto &spacePoint : spacePoints) {
+    const std::optional<Acts::Experimental::GbtsLayerIndex> layerIndex =
+        gbtsLayerIndex(spacePoint);
+    if (!layerIndex.has_value()) {
+      ++nUnmapped;
+      continue;
+    }
+
+    // Cluster width and local position are not available in the examples
+    // framework, so the machine learning features stay switched off.
+    nodeStorage.insert(spacePoint.index(), spacePoint.x(), spacePoint.y(),
+                       spacePoint.z(), *layerIndex);
+  }
+
+  nodeStorage.finalize();
+
+  ACTS_VERBOSE("Loaded " << nodeStorage.numberOfNodes() << " graph nodes, "
+                         << nUnmapped << " space points not in the GBTS map");
+
+  Acts::SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
   // create the seeds
 
-  m_finder->createSeeds(coreSpacePoints, m_internalRoi.value(), m_isPixelLayer,
-                        maxLayers, *m_filter, options, seeds);
-
-  seeds.assignSpacePointContainer(spacePoints);
-
-  // update seed space point indices to original space point container
-  for (auto seed : seeds) {
-    for (auto &spIndex : seed.spacePointIndices()) {
-      spIndex = coreSpacePoints.at(spIndex).copiedFromIndex();
-    }
-  }
+  m_finder->createSeeds(nodeStorage, m_internalRoi.value(), *m_filter, options,
+                        seeds);
 
   m_outputSeeds(ctx, std::move(seeds));
 
@@ -146,118 +273,95 @@ GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
 
   // file in format ACTS_vol,ACTS_lay,ACTS_mod,gbtsId
   for (auto i : parsedCsv) {
-    std::uint32_t actsVol = stoi(i[0]);
-    std::uint32_t actsLay = stoi(i[1]);
-    std::uint32_t actsMod = stoi(i[2]);
-    std::uint32_t gbts = stoi(i[5]);
-    std::uint32_t etaMod = stoi(i[6]);
-    std::uint32_t actsJoint = actsVol * 100 + actsLay;
-    ActsIDs actsId{static_cast<std::uint64_t>(actsJoint),
-                   static_cast<std::uint64_t>(actsMod)};
-    GbtsIDs gbtsId{static_cast<std::uint32_t>(gbts),
-                   static_cast<std::uint32_t>(etaMod), 0};
-    actsToGbtsMap.insert({{actsId}, {gbtsId}});
+    const auto actsVol = static_cast<std::uint32_t>(std::stoul(i[0]));
+    const auto actsLay = static_cast<std::uint32_t>(std::stoul(i[1]));
+    const auto actsMod = static_cast<std::uint32_t>(std::stoul(i[2]));
+    const auto gbts = static_cast<Acts::Experimental::GbtsExperimentLayerId>(
+        std::stoul(i[5]));
+    const auto etaMod = static_cast<std::uint32_t>(std::stoul(i[6]));
+    const std::uint32_t actsJoint = actsVol * 100 + actsLay;
+    const ActsIDs actsId{actsJoint, actsMod};
+    const GbtsIDs gbtsId{.layerId = gbts, .etaModule = etaMod};
+    actsToGbtsMap.insert({actsId, gbtsId});
   }
 
   return actsToGbtsMap;
 }
 
-Acts::SpacePointContainer2 GraphBasedSeedingAlgorithm::makeSpContainer(
-    const SpacePointContainer &spacePoints,
-    std::map<ActsIDs, GbtsIDs> map) const {
-  Acts::SpacePointContainer2 coreSpacePoints(
-      Acts::SpacePointColumns::CopiedFromIndex | Acts::SpacePointColumns::X |
-      Acts::SpacePointColumns::Y | Acts::SpacePointColumns::Z |
-      Acts::SpacePointColumns::R | Acts::SpacePointColumns::Phi);
+std::optional<Acts::Experimental::GbtsLayerIndex>
+GraphBasedSeedingAlgorithm::gbtsLayerIndex(
+    const ConstSpacePointProxy &spacePoint) const {
+  const auto &sourceLink = spacePoint.sourceLinks();
 
-  // add new column for layer ID and clusterwidth
-  auto layerColomn = coreSpacePoints.createColumn<std::uint32_t>("layerId");
-  auto clusterWidthColomn = coreSpacePoints.createColumn<float>("clusterWidth");
-  auto localPositionColomn =
-      coreSpacePoints.createColumn<float>("localPositionY");
-  coreSpacePoints.reserve(spacePoints.size());
-
-  // for loop filling space point container and assigning layer ID's using the
-  // map, also assigning cluster width and local position (currently false input
-  // as not in examples but will be added in future)
-  for (const auto &spacePoint : spacePoints) {
-    // Gbts space point vector
-    // loop over space points, call on map
-    const auto &sourceLink = spacePoint.sourceLinks();
-
-    // warning if source link empty
-    if (sourceLink.empty()) {
-      // warning in officaial acts format
-      ACTS_WARNING("warning source link vector is empty");
-      continue;
-    }
-
-    const auto &indexSourceLink = sourceLink.front().get<IndexSourceLink>();
-
-    std::uint32_t actsVolId = indexSourceLink.geometryId().volume();
-    std::uint32_t actsLayId = indexSourceLink.geometryId().layer();
-    std::uint32_t actsModId = indexSourceLink.geometryId().sensitive();
-
-    // dont want strips or HGTD
-    if (actsVolId == 2 || actsVolId == 22 || actsVolId == 23 ||
-        actsVolId == 24) {
-      continue;
-    }
-
-    // Search for vol, lay and module=0, if doesn't esist (end) then search
-    // for full thing vol*100+lay as first number in pair then 0 or mod id
-    auto actsJointId = actsVolId * 100 + actsLayId;
-
-    // here the key needs to be pair of(vol*100+lay, 0)
-    ActsIDs key{static_cast<std::uint64_t>(actsJointId), 0};
-    auto find = map.find(key);
-
-    // if end then make new key of (vol*100+lay, modid)
-    if (find == map.end()) {
-      key = ActsIDs{static_cast<std::uint64_t>(actsJointId),
-                    static_cast<std::uint64_t>(actsModId)};  // mod ID
-      find = map.find(key);
-    }
-
-    // warning if key not in map
-    if (find == map.end()) {
-      ACTS_WARNING("Key not found in Gbts map for volume id: "
-                   << actsVolId << " and layer id: " << actsLayId);
-      continue;
-    }
-
-    // now should be pixel with Gbts ID:
-    // new map the item is a pair so want first from it
-    std::uint32_t gbtsId = std::get<0>(find->second);
-
-    if (gbtsId == 0) {
-      ACTS_WARNING("No assigned Gbts ID for key for volume id: "
-                   << actsVolId << " and layer id: " << actsLayId);
-    }
-
-    // access IDs from map
-
-    auto newSp = coreSpacePoints.createSpacePoint();
-
-    newSp.x() = spacePoint.x();
-    newSp.y() = spacePoint.y();
-    newSp.z() = spacePoint.z();
-    newSp.r() = spacePoint.r();
-    newSp.phi() = std::atan2(spacePoint.y(), spacePoint.x());
-    newSp.copiedFromIndex() = spacePoint.index();
-    newSp.extra(layerColomn) = std::get<2>(find->second);
-    // false input as this is not available in examples
-    newSp.extra(clusterWidthColomn) = 0;
-    newSp.extra(localPositionColomn) = 0;
+  if (sourceLink.empty()) {
+    ACTS_WARNING("warning source link vector is empty");
+    return std::nullopt;
   }
 
-  ACTS_VERBOSE("space point collection successfully assigned layerId's");
+  const auto &indexSourceLink = sourceLink.front().get<IndexSourceLink>();
 
-  return coreSpacePoints;
+  const auto actsVolId =
+      static_cast<std::uint32_t>(indexSourceLink.geometryId().volume());
+  const auto actsLayId =
+      static_cast<std::uint32_t>(indexSourceLink.geometryId().layer());
+  const auto actsModId =
+      static_cast<std::uint32_t>(indexSourceLink.geometryId().sensitive());
+
+  // dont want strips or HGTD
+  if (actsVolId == 2 || actsVolId == 22 || actsVolId == 23 || actsVolId == 24) {
+    return std::nullopt;
+  }
+
+  // Search for vol, lay and module=0, if doesn't esist (end) then search
+  // for full thing vol*100+lay as first number in pair then 0 or mod id
+  const std::uint64_t actsJointId = std::uint64_t{actsVolId} * 100 + actsLayId;
+
+  // here the key needs to be pair of(vol*100+lay, 0)
+  ActsIDs key{actsJointId, 0};
+  auto find = m_actsGbtsMap.find(key);
+
+  // if end then make new key of (vol*100+lay, modid)
+  if (find == m_actsGbtsMap.end()) {
+    key = ActsIDs{actsJointId, actsModId};  // mod ID
+    find = m_actsGbtsMap.find(key);
+  }
+
+  // warning if key not in map
+  if (find == m_actsGbtsMap.end()) {
+    ACTS_WARNING("Key not found in Gbts map for volume id: "
+                 << actsVolId << " and layer id: " << actsLayId);
+    return std::nullopt;
+  }
+
+  // now should be pixel with Gbts ID
+  if (find->second.layerId == 0) {
+    ACTS_WARNING("No assigned Gbts ID for key for volume id: "
+                 << actsVolId << " and layer id: " << actsLayId);
+  }
+
+  return find->second.layerIndex;
+}
+
+void GraphBasedSeedingAlgorithm::resolveLayerIndices(
+    const Acts::Experimental::GbtsGeometry &geometry) {
+  for (auto &[actsId, gbtsId] : m_actsGbtsMap) {
+    const Acts::Experimental::GbtsExperimentLayerId combinedId =
+        gbtsId.layerId * 1000 + gbtsId.etaModule;
+
+    const std::optional<Acts::Experimental::GbtsLayerIndex> index =
+        geometry.layerIndex(combinedId);
+
+    if (!index.has_value()) {
+      ACTS_WARNING("No GBTS layer for combined ID: " << combinedId);
+    }
+
+    gbtsId.layerIndex = index;
+  }
 }
 
 std::vector<Acts::Experimental::GbtsLayerDescription>
-GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
+GraphBasedSeedingAlgorithm::layerNumbering(
+    const Acts::GeometryContext &gctx) const {
   std::vector<Acts::Experimental::GbtsLayerDescription> inputVector;
   std::vector<std::size_t> countVector;
 
@@ -309,12 +413,13 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
       return;  // skip this surface in the visitor
     }
 
-    const std::uint32_t gbtsId = std::get<0>(find->second);
+    const Acts::Experimental::GbtsExperimentLayerId gbtsId =
+        find->second.layerId;
 
     Acts::Experimental::GbtsLayerType barrelEc =
         Acts::Experimental::GbtsLayerType::Barrel;  // a variable that says if
                                                     // barrrel, 0 = barrel
-    std::uint32_t etaMod = std::get<1>(find->second);
+    const std::uint32_t etaMod = find->second.etaModule;
 
     // assign barrelEc depending on Gbts_layer
     if (79 < gbtsId && gbtsId < 85) {  // 80s, barrel
@@ -353,13 +458,15 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
           "Invalid barrel/endcap assignment for GbtsLayer");
     }
 
-    std::int32_t combinedId = gbtsId * 1000 + etaMod;
+    const Acts::Experimental::GbtsExperimentLayerId combinedId =
+        gbtsId * 1000 + etaMod;
 
     const auto currentIndex =
         find_if(inputVector.begin(), inputVector.end(),
                 [combinedId](auto n) { return n.id == combinedId; });
     if (currentIndex != inputVector.end()) {  // not end so does exist
-      std::size_t index = std::distance(inputVector.begin(), currentIndex);
+      const auto index = static_cast<std::size_t>(
+          std::distance(inputVector.begin(), currentIndex));
       inputVector[index].refCoord += rc;
       inputVector[index].minBound =
           std::min(inputVector[index].minBound, minBound);
@@ -369,25 +476,16 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
 
     } else {  // end so doesn't exists
       // make new if one with Gbts ID doesn't exist:
-      Acts::Experimental::GbtsLayerDescription newGbtsId(
-          combinedId, barrelEc, rc, minBound, maxBound);
-      inputVector.push_back(newGbtsId);
+      // every layer the examples framework feeds GBTS is a pixel layer
+      inputVector.push_back(Acts::Experimental::GbtsLayerDescription{
+          .id = combinedId,
+          .type = barrelEc,
+          .technology = Acts::Experimental::GbtsLayerTechnology::Pixel,
+          .refCoord = rc,
+          .minBound = minBound,
+          .maxBound = maxBound});
       // so the element exists and not divinding by 0
       countVector.push_back(1);
-
-      // tracking the index of each GbtsLayerDescription as there added
-
-      // so layer ID refers to actual index and not size of vector
-      std::uint32_t layerId = countVector.size() - 1;
-      std::get<2>(find->second) = layerId;
-      m_layerIdMap.insert({combinedId, layerId});
-    }
-    // look up for every combined ID to see if it has a layer
-    if (auto findLayer = m_layerIdMap.find(combinedId);
-        findLayer == m_layerIdMap.end()) {
-      ACTS_WARNING("No assigned Layer ID for combined ID: " << combinedId);
-    } else {
-      std::get<2>(find->second) = findLayer->second;
     }
 
     // add to file each time,
@@ -415,18 +513,19 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
 }
 
 void GraphBasedSeedingAlgorithm::printConfig() const {
+  ACTS_DEBUG("===== GraphBasedSeedingAlgorithm =====");
+  ACTS_DEBUG("layerMappingFile: " << m_cfg.layerMappingFile);
+  ACTS_DEBUG("connectorInputFile: " << m_cfg.connectorInputFile);
+  ACTS_DEBUG("lutInputFile: " << m_cfg.lutInputFile);
+  ACTS_DEBUG("etaBinWidthOverride: " << m_cfg.etaBinWidthOverride);
   ACTS_DEBUG("===== GraphBasedTrackSeeder =====");
   const auto &cfg1 = m_cfg.seedFinderConfig;
   ACTS_DEBUG("BeamSpotCorrection: " << cfg1.beamSpotCorrection);
-  ACTS_DEBUG("connectorInputFile: " << cfg1.connectorInputFile);
-  ACTS_DEBUG("lutInputFile: " << cfg1.lutInputFile);
-  ACTS_DEBUG("lrtMode: " << cfg1.lrtMode);
-  ACTS_DEBUG("useMl: " << cfg1.useMl);
+  ACTS_DEBUG("useStripConnections: " << cfg1.useStripConnections);
+  ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
   ACTS_DEBUG("matchBeforeCreate: " << cfg1.matchBeforeCreate);
-  ACTS_DEBUG("useOldTunings: " << cfg1.useOldTunings);
   ACTS_DEBUG("tauRatioCut: " << cfg1.tauRatioCut);
   ACTS_DEBUG("tauRatioPrecut: " << cfg1.tauRatioPrecut);
-  ACTS_DEBUG("etaBinWidthOverride: " << cfg1.etaBinWidthOverride);
   ACTS_DEBUG("nMaxPhiSlice: " << cfg1.nMaxPhiSlice);
   ACTS_DEBUG("minPt: " << cfg1.minPt);
   ACTS_DEBUG("useEtaBinning: " << cfg1.useEtaBinning);
@@ -440,13 +539,12 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("useAdaptiveCuts: " << cfg1.useAdaptiveCuts);
   ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
   ACTS_DEBUG("tauRatioCorr: " << cfg1.tauRatioCorr);
-  ACTS_DEBUG("maxAbsEtaAddTripelts: " << cfg1.maxAbsEtaAddTripelts);
+  ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
   ACTS_DEBUG("d0Max: " << cfg1.d0Max);
   ACTS_DEBUG("cutDPhiMax: " << cfg1.cutDPhiMax);
   ACTS_DEBUG("cutDCurvMax: " << cfg1.cutDCurvMax);
   ACTS_DEBUG("minZ0: " << cfg1.minZ0);
   ACTS_DEBUG("maxZ0: " << cfg1.maxZ0);
-  ACTS_DEBUG("minDeltaPhi: " << cfg1.minDeltaPhi);
   ACTS_DEBUG("maxOuterRadius: " << cfg1.maxOuterRadius);
   ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);
   ACTS_DEBUG("maxInvRadDiff: " << cfg1.maxInvRadDiff);

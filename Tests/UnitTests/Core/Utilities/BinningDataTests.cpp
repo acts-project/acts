@@ -12,6 +12,8 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
+#include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -435,6 +437,9 @@ BOOST_AUTO_TEST_CASE(BinningData_from_ProtoAxis) {
   using enum AxisDirection;
   using enum AxisBoundaryType;
 
+  // The DirectedProtoAxis based constructor is deprecated but still covered
+  ACTS_PUSH_IGNORE_DEPRECATED()
+
   // Bound, equidistant axis
   DirectedProtoAxis epab(AxisX, Bound, 0.0, 1.0, 10);
   BinningData bEpab(epab);
@@ -461,6 +466,41 @@ BOOST_AUTO_TEST_CASE(BinningData_from_ProtoAxis) {
   BOOST_CHECK_EQUAL(bVpab.bins(), std::size_t{2});
   BOOST_CHECK(bVpab.option == open);
   BOOST_CHECK(bVpab.type == arbitrary);
+
+  ACTS_POP_IGNORE_DEPRECATED()
+}
+
+BOOST_AUTO_TEST_CASE(BinningData_from_IAxis) {
+  using enum AxisDirection;
+  using enum AxisBoundaryType;
+
+  // Bound, equidistant axis carrying its direction
+  auto eAxis = IAxis::createEquidistant(Bound, 0.0, 1.0, 10, AxisX);
+  BinningData bEqui(*eAxis);
+
+  BOOST_CHECK_EQUAL(bEqui.bins(), std::size_t{10});
+  BOOST_CHECK_EQUAL(bEqui.min, 0.);
+  BOOST_CHECK_EQUAL(bEqui.max, 1.);
+  BOOST_CHECK(bEqui.binvalue == AxisX);
+  BOOST_CHECK(bEqui.option == open);
+  BOOST_CHECK(bEqui.type == equidistant);
+
+  // Bound, variable axis carrying its direction
+  auto vAxis = IAxis::createVariable(Bound, {0.0, 1.0, 10.}, AxisZ);
+  BinningData bVar(*vAxis);
+  BOOST_CHECK(bVar.binvalue == AxisZ);
+  BOOST_CHECK_EQUAL(bVar.bins(), std::size_t{2});
+  BOOST_CHECK(bVar.option == open);
+  BOOST_CHECK(bVar.type == arbitrary);
+
+  // An axis without direction is rejected
+  auto nAxis = IAxis::createEquidistant(Bound, 0.0, 1.0, 10);
+  BOOST_CHECK_THROW(BinningData{*nAxis}, std::invalid_argument);
+
+  // Explicitly directed construction works without an axis direction
+  BinningData bDir(AxisY, *nAxis);
+  BOOST_CHECK(bDir.binvalue == AxisY);
+  BOOST_CHECK_EQUAL(bDir.bins(), std::size_t{10});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

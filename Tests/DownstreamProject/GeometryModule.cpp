@@ -27,20 +27,19 @@ std::unique_ptr<Acts::TrackingGeometry> buildGeometryModule(
 
   const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
-  Experimental::Blueprint::Config cfg;
+  Blueprint::Config cfg;
   cfg.envelope = ExtentEnvelope{{
       .x = {10., 10.},
       .y = {10., 10.},
       .z = {10., 10.},
   }};
 
-  Experimental::Blueprint root{cfg};
+  Blueprint root{cfg};
 
   auto outerBounds = std::make_shared<CuboidVolumeBounds>(1000., 1000., 1000.);
   auto outerVol = std::make_unique<TrackingVolume>(Transform3::Identity(),
                                                    outerBounds, "Outer");
-  auto outerNode =
-      std::make_shared<Experimental::StaticBlueprintNode>(std::move(outerVol));
+  auto outerNode = std::make_shared<StaticBlueprintNode>(std::move(outerVol));
   root.addChild(outerNode);
 
   auto trackingGeometry = root.construct({}, gctx, *logger.clone("Geometry"));

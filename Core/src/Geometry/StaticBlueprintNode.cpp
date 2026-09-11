@@ -8,17 +8,13 @@
 
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 
-#include "Acts/Geometry/CuboidPortalShell.hpp"
-#include "Acts/Geometry/CylinderPortalShell.hpp"
-#include "Acts/Geometry/DiamondPortalShell.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/TrapezoidPortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 StaticBlueprintNode::StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume)
     : m_volume(std::move(volume)) {}
@@ -59,22 +55,7 @@ PortalShellBase& StaticBlueprintNode::connect(const BlueprintOptions& options,
     shell.fill(*m_volume);
   }
 
-  VolumeBounds::BoundsType type = m_volume->volumeBounds().type();
-  if (type == VolumeBounds::eCylinder) {
-    m_shell = std::make_unique<SingleCylinderPortalShell>(gctx, *m_volume);
-
-  } else if (type == VolumeBounds::eCuboid) {
-    m_shell = std::make_unique<SingleCuboidPortalShell>(gctx, *m_volume);
-
-  } else if (type == VolumeBounds::eTrapezoid) {
-    m_shell = std::make_unique<SingleTrapezoidPortalShell>(gctx, *m_volume);
-
-  } else if (type == VolumeBounds::eDiamond) {
-    m_shell = std::make_unique<SingleDiamondPortalShell>(gctx, *m_volume);
-
-  } else {
-    throw std::logic_error("Volume type is not supported");
-  }
+  m_shell = PortalShellBase::makeSingle(gctx, *m_volume);
 
   assert(m_shell != nullptr &&
          "No shell was built at the end of StaticBlueprintNode::connect");
@@ -114,13 +95,9 @@ void StaticBlueprintNode::finalize(const BlueprintOptions& options,
   }
   m_volume->setNavigationPolicy(policyFactory->build(gctx, *m_volume, logger));
 
-  // only add the volume to the parent if it is not the parent itself.
-  if (name() != "World") {
-    ACTS_DEBUG(prefix() << " Adding volume (" << m_volume->volumeName()
-                        << ") to parent volume (" << parent.volumeName()
-                        << ")");
-    parent.addVolume(std::move(m_volume));
-  }
+  ACTS_DEBUG(prefix() << " Adding volume (" << m_volume->volumeName()
+                      << ") to parent volume (" << parent.volumeName() << ")");
+  parent.addVolume(std::move(m_volume));
 }
 const std::string& StaticBlueprintNode::name() const {
   static const std::string uninitialized = "uninitialized";
@@ -179,4 +156,4 @@ void StaticBlueprintNode::addToGraphviz(std::ostream& os) const {
   BlueprintNode::addToGraphviz(os);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

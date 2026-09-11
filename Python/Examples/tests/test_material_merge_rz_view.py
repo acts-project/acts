@@ -18,7 +18,6 @@ def _build_marker_geometry(gctx):
     MergedMaterialMarker instead of aborting.
     """
     bv = acts.AxisDirection
-    abt = acts.AxisBoundaryType
     base = acts.Transform3.Identity()
 
     root = acts.Blueprint(
@@ -29,8 +28,8 @@ def _build_marker_geometry(gctx):
     mat = stack.addMaterial("Material")
     mat.configureFace(
         acts.CylinderVolumeBounds.Face.OuterCylinder,
-        acts.DirectedProtoAxis(bv.AxisRPhi, abt.Bound, 20),
-        acts.DirectedProtoAxis(bv.AxisZ, abt.Bound, 20),
+        acts.AxisSpec.DeferredEquidistant(20, bv.AxisRPhi),
+        acts.AxisSpec.DeferredEquidistant(20, bv.AxisZ),
     )
     mat.addStaticVolume(
         base * acts.Translation3(acts.Vector3(0, 0, -200 * mm)),
@@ -77,19 +76,15 @@ def test_rz_view_with_markers(tmp_path):
 # material-on-merged-face clash), which would otherwise trip the test harness'
 # ACTS_LOG_FAILURE_THRESHOLD.
 @acts.with_log_threshold(acts.logging.FATAL)
-def test_rz_view_odd_gen3(tmp_path):
+def test_rz_view_odd_gen3(tmp_path, odd_detector_gen3):
     pytest.importorskip("matplotlib")
-    from acts.examples.odd import getOpenDataDetector
     from acts.json import TrackingGeometryJsonConverter
 
     gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
 
-    with getOpenDataDetector(gen3=True) as detector:
-        trackingGeometry = detector.trackingGeometry()
-        json_path = tmp_path / "odd-geometry.json"
-        json_path.write_text(
-            TrackingGeometryJsonConverter().toJson(gctx, trackingGeometry)
-        )
+    trackingGeometry = odd_detector_gen3.trackingGeometry()
+    json_path = tmp_path / "odd-geometry.json"
+    json_path.write_text(TrackingGeometryJsonConverter().toJson(gctx, trackingGeometry))
 
     out = tmp_path / "odd_rz.svg"
     volumes, markers = mrz.run(json_path, out)

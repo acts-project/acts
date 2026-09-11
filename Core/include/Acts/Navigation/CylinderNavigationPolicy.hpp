@@ -42,16 +42,29 @@ class Logger;
 ///    cylinder as the target (particle will exit through outer boundary)
 ///
 /// Constraints:
-/// - Only works with cylindrical volumes having non-zero inner radius
-/// - Requires exactly 4 portals (inner cylinder, outer cylinder, ±z discs)
-/// - Does not handle contained sub-volumes
+/// - Only works with full-phi cylindrical volumes having non-zero inner radius
+/// - Requires exactly 4 portals (inner cylinder, outer cylinder, ±z discs),
+///   which also means the volume cannot confine sub-volumes, as it would carry
+///   their portals as well
+/// - Only produces portal candidates: a volume confining surfaces needs to
+///   combine this policy with one that adds the surface candidates
 ///
 /// Performance benefits:
 /// - Reduces intersection calculations by ~2-3x compared to trying all portals
 /// - Eliminates false positive intersections that would be filtered later
 class CylinderNavigationPolicy final : public INavigationPolicy {
  public:
+  /// Check if this policy is applicable to a volume, i.e. if the volume
+  /// satisfies all of the constraints documented above. Reasons for a volume
+  /// being rejected are reported to the logger.
+  /// @param volume is the volume to check
+  /// @param logger is the logger
+  /// @return true if the policy can be constructed from @p volume
+  static bool isApplicable(const TrackingVolume& volume, const Logger& logger);
+
   /// Constructor from a volume
+  /// @note The volume needs to satisfy @ref isApplicable, otherwise the
+  ///       constructor throws @c std::invalid_argument
   /// @param gctx is the geometry context
   /// @param volume is the volume to navigate
   /// @param logger is the logger

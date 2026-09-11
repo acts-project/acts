@@ -22,7 +22,7 @@ mplhep = pytest.importorskip("mplhep")
 def test_histogram1_to_boost_histogram():
     bh_h = bh.Histogram(acts._demo_histogram1())
     assert bh_h.ndim == 1
-    assert bh_h.sum() > 0
+    assert bh_h.sum().value > 0
     assert bh_h.axes[0].metadata == "x [a.u.]"
 
 
@@ -36,8 +36,8 @@ def test_efficiency1_to_boost_histogram():
     h = acts._demo_efficiency1()
     bh_acc = bh.Histogram(h.accepted)
     bh_tot = bh.Histogram(h.total)
-    assert bh_acc.sum() > 0
-    assert bh_tot.sum() >= bh_acc.sum()
+    assert bh_acc.sum().value > 0
+    assert bh_tot.sum().value >= bh_acc.sum().value
 
 
 def test_plot_histogram():

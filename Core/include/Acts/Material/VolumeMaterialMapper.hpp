@@ -38,9 +38,13 @@ class TrackingGeometry;
 //
 /// @brief VolumeMaterialMapper
 ///
-/// This is the main feature tool to map material information
-/// from a 3D geometry onto the TrackingGeometry with its surface
-/// material description.
+/// This maps material information from a 3D geometry onto the TrackingGeometry
+/// with its volume material description, driven by a propagation through the
+/// geometry.
+///
+/// @deprecated Use @ref Acts::MaterialMapper instead, composed with an
+/// @ref Acts::IAssignmentFinder and an @ref Acts::ISurfaceMaterialAccumulator.
+/// See @ref material_mapping for the current, navigation-independent procedure.
 ///
 /// The process runs as such:
 ///
@@ -58,7 +62,8 @@ class TrackingGeometry;
 ///          Additional step are created along the track direction.
 ///
 ///  3) Each 'hit' bin per event is counted and averaged at the end of the run
-
+///
+/// @ingroup material_mapping
 class VolumeMaterialMapper {
  public:
   /// Type alias for straight line propagator used in material mapping
@@ -129,6 +134,8 @@ class VolumeMaterialMapper {
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator
   /// @param slogger The logger
+  /// @deprecated Material mapping with propagation is deprecated. Use
+  ///             MaterialMapper instead.
   [[deprecated(
       "Material mapping with propagation is deprecated. Use MaterialMapper "
       "instead.")]]
