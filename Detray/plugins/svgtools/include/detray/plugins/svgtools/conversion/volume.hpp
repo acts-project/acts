@@ -24,6 +24,7 @@
 #include "actsvg/proto/volume.hpp"
 
 // System include(s)
+#include <array>
 #include <map>
 #include <string>
 #include <tuple>

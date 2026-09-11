@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "detray/definitions/detail/qualifiers.hpp"
+#include "detray/definitions/navigation.hpp"
 #include "detray/definitions/units.hpp"
 #include "detray/geometry/surface.hpp"
 #include "detray/geometry/tracking_volume.hpp"

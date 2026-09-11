@@ -9,6 +9,9 @@
 // Detray core include(s)
 #include "detray/core/detector.hpp"
 
+// Detray navigation include(s)
+#include "detray/navigation/volume_graph.hpp"
+
 // Detray propagation include(s)
 #include "detray/propagator/propagation_config.hpp"
 
@@ -97,6 +100,7 @@ using transform_store_t = detector_t::transform_container;
 using mask_store_t = detector_t::mask_container;
 using material_store_t = detector_t::material_container;
 using accelerator_store_t = detector_t::accelerator_container;
+using volume_graph_t = detray::volume_graph<detector_t>;
 
 }  // namespace
 
@@ -184,7 +188,14 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
                                                              "VolumeContainer");
   bind_const_vector<surface_container_t, surface_descriptor_t>(
       m, "SurfaceContainer");
-  py::class_<geometry_context_t>(m, "GeometryContext");
+  py::class_<geometry_context_t>(m, "GeometryContext")
+      .def(py::init<>())
+      .def(py::init<detray::dindex>(), py::arg("index"))
+      .def_property_readonly("index", &geometry_context_t::get,
+                             "Index into the geometry data store")
+      .def("__repr__", [](const geometry_context_t &gctx) {
+        return "GeometryContext(index=" + std::to_string(gctx.get()) + ")";
+      });
   py::class_<transform_store_t>(m, "TransformStore");
   py::class_<mask_store_t>(m, "MaskStore");
   py::class_<material_store_t>(m, "MaterialStore");
@@ -303,4 +314,13 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
           },
           py::return_value_policy::reference_internal, "Accelerator store")
       .def("__repr__", [](const detector_t &d) { return to_string(d); });
+
+  py::class_<volume_graph_t>(m, "VolumeGraph")
+      .def(py::init<const detector_t &>(), py::arg("detector"),
+           py::keep_alive<1, 2>(),
+           "Build the volume graph of a detector. The detector is kept alive "
+           "for as long as the graph is used")
+      .def("toDotString", &volume_graph_t::to_dot_string,
+           "The volume linking description in DOT syntax")
+      .def("__repr__", &volume_graph_t::to_string);
 }

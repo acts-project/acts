@@ -36,6 +36,7 @@ traccc_add_test(
     hip
     # Define the sources for the test.
     test_cca.cpp
+    test_spacepoint_formation.cpp
     LINK_LIBRARIES
     GTest::gtest_main
     vecmem::core

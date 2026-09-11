@@ -123,7 +123,7 @@ bool isInsidePolygon(const vertex_t& point,
   // returns which side of the connecting line between `ll0` and `ll1` the point
   // `p` is on. computes the sign of the z-component of the cross-product
   // between the line normal vector and the vector from `ll0` to `p`.
-  auto lineSide = [&](auto&& ll0, auto&& ll1) {
+  auto lineSide = [&](const auto& ll0, const auto& ll1) {
     auto normal = ll1 - ll0;
     auto delta = point - ll0;
     return std::signbit((normal[0] * delta[1]) - (normal[1] * delta[0]));

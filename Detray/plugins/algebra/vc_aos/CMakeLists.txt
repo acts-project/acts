@@ -24,6 +24,10 @@ target_compile_definitions(
         DETRAY_ALGEBRA_VC_AOS
 )
 
-detray_test_public_headers( detray_algebra_vc_aos
-   "algebra/vc_aos.hpp"
+# Compile all headers one-by-one.
+detray_compile_headers(
+    algebra_vc_aos
+    detray::algebra_vc_aos
+    "include/algebra/*.hpp"
+    "include/algebra/**/*.hpp"
 )

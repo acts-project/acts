@@ -194,6 +194,11 @@ def runPypiFindingFittingDemo(
     cfg_finder.inputTrackParticleMatching = "track_particle_matching"
     cfg_finder.inputParticleTrackMatching = "particle_track_matching"
     cfg_finder.inputParticleMeasurementsMap = "particle_measurements_map"
+    cfg_finder.subDetectorTrackSummaryVolumes = {
+        "pixel": {7, 8, 9},
+        "sstrip": {12, 13, 14},
+        "lstrip": {16, 17, 18},
+    }
     perfWriterFinder = acts.examples.PythonPatternRecognitionPerformanceWriter(
         cfg_finder, acts.logging.INFO
     )

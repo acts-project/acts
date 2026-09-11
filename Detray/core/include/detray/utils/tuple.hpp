@@ -31,6 +31,9 @@ struct tuple {
 
 template <typename T, typename... Ts>
 struct tuple<T, Ts...> {
+  // Deliberately not value-initializing: that would require every element to
+  // be default constructible, which is not a requirement of this tuple type.
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
   constexpr tuple() = default;
 
   constexpr tuple(const tuple &o)
@@ -96,7 +99,9 @@ struct tuple<T, Ts...> {
   }
 
   T v;
-  tuple<Ts...> r;
+  // Value-initialization would require every tail element to be default
+  // constructible, which is not a requirement of this tuple type.
+  tuple<Ts...> r;  // NOLINT(cppcoreguidelines-pro-type-member-init)
 };
 
 template <typename T1, typename T2>

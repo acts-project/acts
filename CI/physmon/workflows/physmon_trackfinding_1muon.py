@@ -23,7 +23,6 @@ from acts.examples.reconstruction import (
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
-    TruthEstimatedSeedingAlgorithmConfigArg,
     CkfConfig,
     addCKFTracks,
     TrackSelectorConfig,
@@ -121,8 +120,12 @@ def run_ckf_tracking(label, seeding):
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=2 * u.T),
-            TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
             seedingAlgorithm=seeding,
+            paramEstimationSpacePoints=(
+                acts.examples.SeedSpacePointSelection.SpreadTriplet
+                if seeding == SeedingAlgorithm.TruthEstimated
+                else None
+            ),
             initialSigmas=[
                 1 * u.mm,
                 1 * u.mm,

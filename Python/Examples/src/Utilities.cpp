@@ -73,7 +73,7 @@ void addUtilities(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ProtoTracksToParameters, mex, "ProtoTracksToParameters", inputProtoTracks,
       inputSpacePoints, outputSeeds, outputParameters, outputProtoTracks,
-      geometry, magneticField, spacePointSelection);
+      geometry, magneticField, spacePointSelection, minTransverseDistance);
 }
 
 }  // namespace ActsPython

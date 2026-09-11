@@ -27,6 +27,7 @@
 #include <concepts>
 #include <exception>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 #include <vector>
 

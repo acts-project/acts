@@ -12,16 +12,29 @@
 
 namespace Acts::Experimental {
 
-/// GBTS layer types
-enum class GbtsLayerType { Barrel = 0, Endcap = 1 };
+/// Layer id as the experiment numbers it (80000, 81000, ...). Sparse, and an
+/// index into nothing.
+using GbtsExperimentLayerId = std::uint32_t;
+
+/// Position of a layer within one GbtsGeometry, dense from zero. Ask
+/// GbtsGeometry::layerIndex for it rather than deriving it.
+using GbtsLayerIndex = std::uint16_t;
+
+/// Where a GBTS layer sits, which fixes its coordinate convention.
+enum class GbtsLayerType : std::uint8_t { Barrel = 0, Endcap = 1 };
+
+/// Sensor technology of a GBTS layer, independent of GbtsLayerType.
+enum class GbtsLayerTechnology : std::uint8_t { Pixel = 0, Strip = 1 };
 
 /// Lightweight layer description for GBTS geometry.
 struct GbtsLayerDescription final {
   /// Combined subdetector ID.
-  std::int32_t id{};
+  GbtsExperimentLayerId id{};
   /// Layer type (barrel or endcap).
   GbtsLayerType type{};
-  /// Reference coordinate (z for barrel, r for endcap).
+  /// Sensor technology of the layer.
+  GbtsLayerTechnology technology{GbtsLayerTechnology::Pixel};
+  /// Reference coordinate (r for barrel, z for endcap).
   float refCoord{};
   /// Minimum boundary coordinate.
   float minBound{};

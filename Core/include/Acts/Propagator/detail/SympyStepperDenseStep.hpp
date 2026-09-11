@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
-#include "Acts/Utilities/Result.hpp"
+#include "Acts/Propagator/detail/SympyStepperStatus.hpp"
 
 #include <span>
+#include <system_error>
 
 namespace Acts {
 
@@ -31,21 +31,21 @@ namespace detail {
 /// @param [in,out] state the stepper state, read for the start parameters and
 ///        written with the end parameters on success
 /// @param [in] material the volume material
-/// @param [in] timeDirection direction of time propagation
 /// @param [in] h the step size to attempt
 /// @param [in] errTol the tolerated error estimate
 /// @param [out] errorEstimate the error estimate of the attempted step
 /// @param [out] lastField the field at the last sampled point, to seed the
 ///        next step
+/// @param [out] fieldErr the error of a failed field lookup
 /// @param [in,out] jac the bound-to-free jacobian, empty to skip transport
 ///
-/// @return whether the step was accepted, or an error
-Result<bool> sympyDenseStep(const SympyStepper& stepper,
-                            SympyStepper::State& state,
-                            const IVolumeMaterial& material,
-                            Direction timeDirection, double h, double errTol,
-                            double& errorEstimate, Vector3& lastField,
-                            std::span<double> jac);
+/// @return whether the step was accepted, rejected or hit a field error
+Rk4Status sympyDenseStep(const SympyStepper& stepper,
+                         SympyStepper::State& state,
+                         const IVolumeMaterial& material, double h,
+                         double errTol, double& errorEstimate,
+                         Vector3& lastField, std::error_code& fieldErr,
+                         std::span<double> jac);
 
 }  // namespace detail
 }  // namespace Acts

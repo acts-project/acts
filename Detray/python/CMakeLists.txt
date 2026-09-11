@@ -47,6 +47,7 @@ if(DETRAY_BUILD_PYTHON_BINDINGS)
     add_subdirectory(Core)
     add_subdirectory(Io)
     add_subdirectory(Examples)
+    add_subdirectory(Plugins)
     add_subdirectory(Tests)
 endif()
 
