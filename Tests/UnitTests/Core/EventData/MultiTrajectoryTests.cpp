@@ -14,6 +14,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/detail/MultiTrajectoryTestsCommon.hpp"
 #include "Acts/EventData/detail/TestTrackState.hpp"
@@ -61,6 +62,12 @@ BOOST_AUTO_TEST_CASE(Build) {
   ct.testBuild();
 }
 
+BOOST_AUTO_TEST_CASE(TrackStateTypeIsReadOnly) {
+  static_assert(!TrackStateType::IsReadOnly);
+  static_assert(ConstTrackStateTypeMap::IsReadOnly);
+  static_assert(!MutableTrackStateTypeMap::IsReadOnly);
+}
+
 BOOST_AUTO_TEST_CASE(ConstCorrectness) {
   // make mutable
   VectorMultiTrajectory t;
@@ -103,6 +110,43 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
   // doesn't compile:
   // ct.clear();
   // ct.addTrackState();
+}
+
+BOOST_AUTO_TEST_CASE(ConstMutableRoundTrip) {
+  VectorMultiTrajectory mtj;
+  mtj.template addColumn<int>("extra_column");
+
+  TestTrackState pc(rng, 2u);
+  auto ts = mtj.getTrackState(
+      mtj.addTrackState(TrackStatePropMask::All, kTrackIndexInvalid));
+  fillTrackState<VectorMultiTrajectory>(pc, TrackStatePropMask::All, ts);
+  ts.template component<int>("extra_column") = 42;
+
+  ConstVectorMultiTrajectory cmtj{mtj};
+
+  // convert back to mutable
+  VectorMultiTrajectory roundTripped =
+      VectorMultiTrajectory::getMutableCopy(cmtj);
+  BOOST_CHECK_EQUAL(roundTripped.size(), mtj.size());
+
+  auto orig = mtj.getTrackState(ts.index());
+  auto copy = roundTripped.getTrackState(ts.index());
+
+  BOOST_CHECK_EQUAL(copy.predicted(), orig.predicted());
+  BOOST_CHECK_EQUAL(copy.predictedCovariance(), orig.predictedCovariance());
+  BOOST_CHECK_EQUAL(copy.filtered(), orig.filtered());
+  BOOST_CHECK_EQUAL(copy.smoothed(), orig.smoothed());
+  BOOST_CHECK_EQUAL(copy.jacobian(), orig.jacobian());
+  BOOST_CHECK_EQUAL(copy.chi2(), orig.chi2());
+  BOOST_CHECK_EQUAL(copy.pathLength(), orig.pathLength());
+  BOOST_CHECK_EQUAL(&copy.referenceSurface(), &orig.referenceSurface());
+  BOOST_CHECK(copy.hasUncalibratedSourceLink());
+  BOOST_CHECK_EQUAL((copy.template component<int>("extra_column")),
+                    (orig.template component<int>("extra_column")));
+
+  // the round-tripped trajectory is independently mutable
+  copy.chi2() = orig.chi2() + 1.0f;
+  BOOST_CHECK_NE(copy.chi2(), orig.chi2());
 }
 
 BOOST_AUTO_TEST_CASE(Clear) {
