@@ -91,6 +91,42 @@ bool Navigator::endOfWorldReached(const State& state) const {
   return state.currentVolume == nullptr;
 }
 
+void Navigator::resolveBoundaryToleranceOverrides(State& state) const {
+  state.boundaryToleranceOverrides.clear();
+  state.boundaryToleranceOverrides.reserve(
+      state.options.boundaryToleranceOverrides.size());
+
+  for (const BoundaryToleranceOverride& toleranceOverride :
+       state.options.boundaryToleranceOverrides) {
+    if (toleranceOverride.surface == nullptr) {
+      throw std::invalid_argument(
+          "Navigator: boundary tolerance override surface is nullptr");
+    }
+
+    // Without this the navigator never offers the surface and the override
+    // is silently lost
+    const GeometryIdentifier geoId = toleranceOverride.surface->geometryId();
+    if (m_cfg.trackingGeometry->findSurface(geoId) !=
+        toleranceOverride.surface) {
+      throw std::invalid_argument(
+          "Navigator: the surface " + std::to_string(geoId.value()) +
+          " of a boundary tolerance override is not part of the tracking "
+          "geometry");
+    }
+
+    // Gen3 offers the override in the volume of the surface, Gen1 on its
+    // layer
+    const TrackingVolume* volume = nullptr;
+    if (m_geometryVersion == GeometryVersion::Gen3) {
+      volume = m_cfg.trackingGeometry->findVolume(geoId.withSensitive(0));
+    }
+
+    state.boundaryToleranceOverrides.push_back(
+        {toleranceOverride.surface, toleranceOverride.boundaryTolerance,
+         volume});
+  }
+}
+
 bool Navigator::navigationBreak(const State& state) const {
   return state.navigationBreak;
 }
@@ -123,15 +159,9 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
     // iteration.
     // @TODO: Make this user configurable through the configuration
     state.stream.candidates().reserve(50);
-
-    state.freeCandidates.clear();
-    state.freeCandidates.reserve(state.options.externalSurfaces.size());
-    for (const Surface* candidate : state.options.externalSurfaces) {
-      if (candidate->geometryId() == GeometryIdentifier{}) {
-        state.freeCandidates.emplace_back(candidate, false);
-      }
-    }
   }
+
+  resolveBoundaryToleranceOverrides(state);
 
   state.startSurface = state.options.startSurface;
   state.targetSurface = state.options.targetSurface;
@@ -412,18 +442,6 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
         state.navigationBreak = true;
       }
     }
-    // Mark reached free candidates
-    else if (&state.navCandidate().surface() == &surface &&
-             surface.geometryId() == GeometryIdentifier{}) {
-      auto freeItr = std::ranges::find_if(
-          state.freeCandidates,
-          [&surface](const std::pair<const Surface*, bool>& cand) {
-            return &surface == cand.first;
-          });
-      if (freeItr != state.freeCandidates.end()) {
-        freeItr->second = true;
-      }
-    }
     return;
   }
 
@@ -661,6 +679,22 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   args.position = position;
   args.direction = direction;
 
+  // Overrides go in first, because the de-duplication in
+  // NavigationStream::initialize keeps the first entry per surface
+  for (const State::ResolvedBoundaryToleranceOverride& toleranceOverride :
+       state.boundaryToleranceOverrides) {
+    if (toleranceOverride.volume != state.currentVolume) {
+      continue;
+    }
+    ACTS_VERBOSE(volInfo(state)
+                 << "Append " << toleranceOverride.surface->type()
+                 << " surface " << toleranceOverride.surface->geometryId()
+                 << " with an overridden boundary tolerance");
+    appendOnly.addSurfaceCandidate(*toleranceOverride.surface,
+                                   toleranceOverride.boundaryTolerance);
+  }
+  const std::size_t nOverrideCandidates = state.stream.candidates().size();
+
   const INavigationPolicy* policy = state.currentVolume->navigationPolicy();
   if (policy == nullptr) {
     ACTS_ERROR(volInfo(state) << "No navigation policy found for volume. "
@@ -675,44 +709,11 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
 
   ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
                               << " navigation candidates.");
-  // Track whether anything is appended beyond the policy candidates. External
-  // and free surfaces may duplicate a surface a policy already added; the
-  // policies of a volume themselves are expected to add disjoint candidates.
-  const std::size_t nPolicyCandidates = state.stream.candidates().size();
-  for (const Surface* surface : state.options.externalSurfaces) {
-    const GeometryIdentifier geoId = surface->geometryId();
-    // Don't add any surface which is not in the same volume (volume bits)
-    // or sub volume (extra bits)
-    if (geoId.withSensitive(0) != state.currentVolume->geometryId()) {
-      continue;
-    }
-    ACTS_VERBOSE(volInfo(state) << "Try to navigate to " << surface->type()
-                                << " surface " << geoId);
-    appendOnly.addSurfaceCandidate(*surface, BoundaryTolerance::Infinite());
-  }
-  bool pruneFreeCand{false};
-  if (!state.freeCandidates.empty()) {
-    for (const auto& [surface, wasReached] : state.freeCandidates) {
-      /// Don't process already reached surfaces again
-      if (wasReached) {
-        continue;
-      }
-      if (!state.options.freeSurfaceSelector.connected() ||
-          state.options.freeSurfaceSelector(state.options.geoContext,
-                                            *state.currentVolume, position,
-                                            direction, *surface)) {
-        ACTS_VERBOSE(volInfo(state)
-                     << "Append free " << surface->type() << " surface  \n"
-                     << surface->toStream(state.options.geoContext));
-        appendOnly.addSurfaceCandidate(*surface, BoundaryTolerance::Infinite());
-        pruneFreeCand = !state.options.freeSurfaceSelector.connected();
-      }
-    };
-  }
-  const bool candidatesAreUnique =
-      state.stream.candidates().size() == nPolicyCandidates;
+
+  // An override can duplicate a policy candidate; the policies of a volume
+  // are expected to add disjoint candidates
+  const bool candidatesAreUnique = nOverrideCandidates == 0;
   state.stream.initialize(state.options.geoContext, {position, direction},
-                          BoundaryTolerance::None(),
                           state.options.surfaceTolerance, candidatesAreUnique);
 
   ACTS_VERBOSE(volInfo(state)
@@ -720,24 +721,10 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
                << " navigation candidates after initialization.\n"
                << state.stream.candidates());
 
-  double farLimit = state.options.farLimit;
-  // If the user has not provided the selection delegate, then
-  // just apply a simple candidate pruning. Constrain the maximum
-  // reach of the navigation to the last portal in the state
-  if (pruneFreeCand) {
-    farLimit = state.options.nearLimit;
-    for (const auto& candidate : state.stream.candidates()) {
-      if (candidate.isPortalTarget()) {
-        farLimit = std::max(farLimit, candidate.intersection().pathLength() +
-                                          state.options.surfaceTolerance);
-      }
-    }
-  }
-
   // The candidates are consumed directly from the stream; the path-length
   // window is applied lazily while advancing the candidate index, so record
   // the far limit for this resolution.
-  state.navCandidatesFarLimit = farLimit;
+  state.navCandidatesFarLimit = state.options.farLimit;
 }
 
 void Navigator::resolveSurfaces(State& state, const Vector3& position,
@@ -763,22 +750,48 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
   navOpts.nearLimit = state.options.nearLimit;
   navOpts.farLimit = state.options.farLimit;
 
-  const auto layerId = layerSurface->geometryId().layer();
-  for (const Surface* surface : state.options.externalSurfaces) {
-    const GeometryIdentifier geoId = surface->geometryId();
-    if (geoId.layer() == layerId) {
-      navOpts.externalSurfaces.push_back(geoId);
+  const GeometryIdentifier layerId = layerSurface->geometryId();
+  for (const State::ResolvedBoundaryToleranceOverride& toleranceOverride :
+       state.boundaryToleranceOverrides) {
+    const GeometryIdentifier geoId = toleranceOverride.surface->geometryId();
+    // The layer resolves the surface, so only its own overrides apply
+    if (geoId.volume() == layerId.volume() &&
+        geoId.layer() == layerId.layer()) {
+      navOpts.boundaryToleranceOverrides.emplace_back(
+          geoId, toleranceOverride.boundaryTolerance);
     }
   }
+
+  auto isOverridden = [&state](const NavigationTarget& target) {
+    return std::ranges::any_of(
+        state.boundaryToleranceOverrides,
+        [&target](const State::ResolvedBoundaryToleranceOverride& entry) {
+          return entry.surface == &target.surface();
+        });
+  };
 
   // Request the compatible surfaces
   state.navSurfaces = currentLayer->compatibleSurfaces(
       state.options.geoContext, position, direction, navOpts);
+
+  // A relaxed bounds check can put the intersection outside the volume.
+  // Targeting it would step the propagation over the boundary.
+  if (!state.boundaryToleranceOverrides.empty()) {
+    auto outside = std::ranges::remove_if(
+        state.navSurfaces, [&](const NavigationTarget& target) {
+          return isOverridden(target) &&
+                 !state.currentVolume->inside(state.options.geoContext,
+                                              target.intersection().position(),
+                                              state.options.surfaceTolerance);
+        });
+    state.navSurfaces.erase(outside.begin(), outside.end());
+  }
+
   // Sort the surfaces by path length.
-  // Special care is taken for the external surfaces which should always
+  // Special care is taken for the overridden surfaces which should always
   // come first, so they are preferred to be targeted and hit first.
-  std::ranges::sort(state.navSurfaces, [&state](const NavigationTarget& a,
-                                                const NavigationTarget& b) {
+  std::ranges::sort(state.navSurfaces, [&](const NavigationTarget& a,
+                                           const NavigationTarget& b) {
     // Prefer to sort by path length. We assume surfaces are at the same
     // distance if the difference is smaller than the tolerance.
     if (std::abs(a.pathLength() - b.pathLength()) >
@@ -786,16 +799,15 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
       return NavigationTarget::pathLengthOrder(a, b);
     }
     // If the path length is practically the same, sort by geometry.
-    // First we check if one of the surfaces is external.
-    bool aIsExternal = a.boundaryTolerance().isInfinite();
-    bool bIsExternal = b.boundaryTolerance().isInfinite();
-    if (aIsExternal == bIsExternal) {
-      // If both are external or both are not external, sort by geometry
-      // identifier
+    // First we check if one of the surfaces carries an override.
+    bool aIsOverridden = isOverridden(a);
+    bool bIsOverridden = isOverridden(b);
+    if (aIsOverridden == bIsOverridden) {
+      // If both carry one or both do not, sort by geometry identifier
       return a.surface().geometryId() < b.surface().geometryId();
     }
-    // If only one is external, it should come first
-    return aIsExternal;
+    // If only one carries an override, it should come first
+    return aIsOverridden;
   });
   // For now we implicitly remove overlapping surfaces.
   // For track finding it might be useful to discover overlapping surfaces
