@@ -162,7 +162,7 @@ class NavigationStream {
   /// index.
   ///
   /// This clears the candidates vector and resets the current index to 0.
-  /// @param keepBoundless: Flag to toggle whether unreached boundless
+  /// @param keepBoundLess: Flag to toggle whether unreached boundless
   ///                       navigation targets remain in the stream
   void reset(const bool keepBoundLess = false);
 
