@@ -92,9 +92,14 @@
                 "ACTS_BUILD_EXAMPLES_FASTJET": "ON",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
                 "ACTS_USE_SYSTEM_PYBIND11": "ON",
+                "ACTS_USE_SYSTEM_ACTSVG": "ON",
+                "ACTS_USE_SYSTEM_VECMEM": "ON",
+                "ACTS_USE_SYSTEM_COVFIE": "ON",
                 "ACTS_USE_SYSTEM_GBL": "OFF",
                 "ACTS_USE_SYSTEM_MILLE": "ON",
-                "ACTS_USE_SYSTEM_MP2": "ON"
+                "ACTS_USE_SYSTEM_MP2": "ON",
+                "DETRAY_USE_SYSTEM_GOOGLETEST": "ON",
+                "DETRAY_USE_SYSTEM_BENCHMARK": "ON"
             }
         },
         {
@@ -167,11 +172,17 @@
         {
             "name": "github-ci-lcg",
             "displayName": "GitHub-CI LCG",
+            "description": "The LCG views are not the ci-dependencies spack environment, so every ACTS_USE_SYSTEM_* / DETRAY_USE_SYSTEM_* flag ci-common turns on has to be re-checked here and switched off unless the view carries a new enough copy.",
             "inherits": "ci-common",
             "cacheVariables": {
                 "ACTS_BUILD_PLUGIN_GEOMODEL": "OFF",
                 "ACTS_BUILD_PLUGIN_ARROW": "OFF",
                 "ACTS_BUILD_EXAMPLES_PARQUET": "OFF",
+                "ACTS_USE_SYSTEM_ACTSVG": "OFF",
+                "ACTS_USE_SYSTEM_VECMEM": "OFF",
+                "ACTS_USE_SYSTEM_COVFIE": "OFF",
+                "DETRAY_USE_SYSTEM_GOOGLETEST": "OFF",
+                "DETRAY_USE_SYSTEM_BENCHMARK": "OFF",
                 "ACTS_USE_SYSTEM_GBL": "OFF",
                 "ACTS_USE_SYSTEM_MILLE": "OFF",
                 "ACTS_USE_SYSTEM_MP2": "OFF",
