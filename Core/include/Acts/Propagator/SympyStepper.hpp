@@ -100,6 +100,11 @@ class SympyStepper final {
     /// Particle hypothesis
     ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
+    /// dt/ds, handed to the vacuum kernel rather than formed in it. Constant
+    /// while q/p is, so it is refreshed wherever q/p moves: initialize(),
+    /// update() and a dense step.
+    double dtds = 1;
+
     /// Adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize;
 

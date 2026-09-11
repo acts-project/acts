@@ -56,6 +56,7 @@ void SympyStepper::initialize(State& state, const BoundVector& boundParams,
 
   state.pars = freeParams;
   state.field.reset();
+  state.dtds = detail::sympyDtds(state);
 
   // Init the jacobian matrix if needed
   state.covTransport = cov.has_value();
@@ -136,6 +137,7 @@ void SympyStepper::update(State& state, const FreeVector& freeParams,
                           const Surface& surface) const {
   state.pars = freeParams;
   state.field.reset();
+  state.dtds = detail::sympyDtds(state);
   state.cov = covariance;
   if (state.covTransport) {
     state.jacToGlobal = surface.boundToFreeJacobian(
@@ -157,6 +159,7 @@ void SympyStepper::update(State& state, const Vector3& uposition,
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
   state.pars[eFreeQOverP] = qOverP;
+  state.dtds = detail::sympyDtds(state);
   state.field.reset();
 }
 
@@ -189,14 +192,18 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
                                   const IVolumeMaterial* material) const {
   if (state.options.doDense &&
       (material != nullptr || !state.materialEffectsAccumulator.isVacuum())) {
-    return detail::sympyStep<detail::SympyStepMode::Dense>(*this, state,
-                                                           propDir, material);
+    if (state.covTransport) {
+      return detail::sympyStep<detail::SympyStepMode::Dense, true>(
+          *this, state, propDir, material);
+    }
+    return detail::sympyStep<detail::SympyStepMode::Dense, false>(
+        *this, state, propDir, material);
   }
   if (state.covTransport) {
-    return detail::sympyStep<detail::SympyStepMode::VacuumJac>(
+    return detail::sympyStep<detail::SympyStepMode::Vacuum, true>(
         *this, state, propDir, nullptr);
   }
-  return detail::sympyStep<detail::SympyStepMode::VacuumNoJac>(
+  return detail::sympyStep<detail::SympyStepMode::Vacuum, false>(
       *this, state, propDir, nullptr);
 }
 
