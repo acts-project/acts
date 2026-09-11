@@ -396,9 +396,9 @@ __launch_bounds__(512) __global__
 
     auto trk_id = sorted_ids.at(n_accepted_prev - 1 - sh_threads[threadIndex]);
 
-    unsigned int worst_idx =
+    unsigned int worst_idx = static_cast<unsigned int>(
         thrust::lower_bound(thrust::seq, tracks.begin(), tracks.end(), trk_id) -
-        tracks.begin();
+        tracks.begin());
 
     track_status[worst_idx] = 0;
 
@@ -410,9 +410,10 @@ __launch_bounds__(512) __global__
 
         trk_id = sorted_ids[n_accepted_prev - 1 - sh_threads[i]];
 
-        worst_idx = thrust::lower_bound(thrust::seq, tracks.begin(),
-                                        tracks.end(), trk_id) -
-                    tracks.begin();
+        worst_idx = static_cast<unsigned int>(
+            thrust::lower_bound(thrust::seq, tracks.begin(), tracks.end(),
+                                trk_id) -
+            tracks.begin());
 
         track_status[worst_idx] = 0;
 
@@ -428,10 +429,10 @@ __launch_bounds__(512) __global__
 
     if (N_A == 1 + n_sharing_tracks) {
       active = true;
-      const unsigned int alive_idx =
+      const unsigned int alive_idx = static_cast<unsigned int>(
           thrust::find(thrust::seq, track_status.begin(), track_status.end(),
                        1) -
-          track_status.begin();
+          track_status.begin());
 
       pos1 = atomicAdd(&n_updating_threads, 1);
       alive_trk_id = static_cast<int>(tracks[alive_idx]);

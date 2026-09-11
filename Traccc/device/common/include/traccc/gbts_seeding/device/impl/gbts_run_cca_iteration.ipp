@@ -62,7 +62,7 @@ TRACCC_HOST_DEVICE inline void gbts_run_cca_iteration(
           d_output_graph[edge_pos + gbts_consts::nei_start + nIdx];
       const unsigned char forward_level = d_levels[levelLoad + nextglobalIndex];
       if (next_level == forward_level) {
-        next_level = forward_level + 1;
+        next_level = static_cast<unsigned char>(forward_level + 1);
         localChange = true;
         break;
       }

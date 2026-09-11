@@ -86,8 +86,9 @@ TRACCC_HOST_DEVICE inline void gbts_bin_spacepoints(
 
     const detray::geometry::identifier geo_id = measurement.surface_link();
     const unsigned int volume = geo_id.volume();
-    const short begin_or_bin =
-        (volume < payload.volumeMapSize) ? volumeToLayerMap[volume] : SHRT_MAX;
+    const short begin_or_bin = (volume < payload.volumeMapSize)
+                                   ? volumeToLayerMap[volume]
+                                   : static_cast<short>(SHRT_MAX);
 
     if (begin_or_bin == SHRT_MAX) {
       reducedSP[globalIndex].w = -CHAR_MAX - 1;
