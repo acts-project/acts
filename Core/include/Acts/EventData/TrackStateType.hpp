@@ -55,6 +55,10 @@ enum class TrackStateFlag {
 template <typename Derived, bool ReadOnly>
 class TrackStateTypeBase {
  public:
+  /// Whether this flag view is read-only. Named IsReadOnly, not ReadOnly, to
+  /// avoid shadowing the template parameter in its own initializer.
+  static constexpr bool IsReadOnly = ReadOnly;
+
   /// Type alias for underlying raw data type
   using raw_type = std::uint64_t;
   /// Number of bits available in the raw storage type

@@ -15,6 +15,7 @@
 #include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <any>
@@ -222,7 +223,18 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
 
   /// Construct from const container
   /// @param other Const container to copy from
+  /// @deprecated Use @ref getMutableCopy instead, which makes the cost of the
+  /// deep copy explicit at the call site
+  [[deprecated("Use VectorTrackContainer::getMutableCopy instead")]]
   explicit VectorTrackContainer(const ConstVectorTrackContainer& other);
+
+  /// Create a mutable container by deep-copying a const container. This is an
+  /// expensive operation, spelled out explicitly here so that it cannot
+  /// happen by accident, e.g. via an implicit conversion.
+  /// @param other Const container to copy from
+  /// @return Newly constructed mutable container
+  static VectorTrackContainer getMutableCopy(
+      const ConstVectorTrackContainer& other);
 
  public:
   // BEGIN INTERFACE
@@ -375,6 +387,13 @@ inline VectorTrackContainer::VectorTrackContainer(
     const ConstVectorTrackContainer& other)
     : VectorTrackContainerBase{other} {
   assert(checkConsistency());
+}
+
+inline VectorTrackContainer VectorTrackContainer::getMutableCopy(
+    const ConstVectorTrackContainer& other) {
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  return VectorTrackContainer{other};
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 }  // namespace Acts

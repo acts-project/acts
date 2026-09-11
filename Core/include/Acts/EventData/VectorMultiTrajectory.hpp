@@ -383,6 +383,7 @@ class VectorMultiTrajectoryBase {
 }  // namespace detail_vmt
 
 class VectorMultiTrajectory;
+class ConstVectorMultiTrajectory;
 
 template <>
 struct IsReadOnlyMultiTrajectory<VectorMultiTrajectory> : std::false_type {};
@@ -398,6 +399,14 @@ class VectorMultiTrajectory final
  public:
   VectorMultiTrajectory() = default;
   using VectorMultiTrajectoryBase::VectorMultiTrajectoryBase;
+
+  /// Create a mutable container by deep-copying a const container. This is an
+  /// expensive operation, spelled out explicitly here so that it cannot
+  /// happen by accident, e.g. via an implicit conversion.
+  /// @param other Const container to copy from
+  /// @return Newly constructed mutable container
+  static VectorMultiTrajectory getMutableCopy(
+      const ConstVectorMultiTrajectory& other);
 
   /// Get statistics about memory usage
   /// @return Statistics object
@@ -564,13 +573,18 @@ class VectorMultiTrajectory final
   /// Reserve space for track states
   /// @param n Number of track states to reserve space for
   void reserve(std::size_t n);
+
+ private:
+  /// Deep-copy construct from a const container. Private so that this
+  /// expensive operation cannot happen implicitly; use @ref getMutableCopy
+  /// instead.
+  /// @param other Const container to copy from
+  explicit VectorMultiTrajectory(const ConstVectorMultiTrajectory& other);
 };
 
 static_assert(
     MutableMultiTrajectoryBackend<VectorMultiTrajectory>,
     "VectorMultiTrajectory does not fulfill MutableMultiTrajectoryBackend");
-
-class ConstVectorMultiTrajectory;
 
 template <>
 struct IsReadOnlyMultiTrajectory<ConstVectorMultiTrajectory> : std::true_type {
@@ -687,5 +701,14 @@ class ConstVectorMultiTrajectory final
 static_assert(
     ConstMultiTrajectoryBackend<ConstVectorMultiTrajectory>,
     "ConctVectorMultiTrajectory does not fulfill ConstMultiTrajectoryBackend");
+
+inline VectorMultiTrajectory::VectorMultiTrajectory(
+    const ConstVectorMultiTrajectory& other)
+    : VectorMultiTrajectoryBase{other} {}
+
+inline VectorMultiTrajectory VectorMultiTrajectory::getMutableCopy(
+    const ConstVectorMultiTrajectory& other) {
+  return VectorMultiTrajectory{other};
+}
 
 }  // namespace Acts
