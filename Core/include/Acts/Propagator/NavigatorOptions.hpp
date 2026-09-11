@@ -43,7 +43,7 @@ struct NavigatorPlainOptions {
 
   /// The far limit to resolve surfaces
   double farLimit = std::numeric_limits<double>::max();
-  /// Do not clear surfaces with inifinite bounds from the navigation stream at 
+  /// Do not clear surfaces with infinite bounds from the navigation stream at
   /// the change of the volume
   bool keepUnreachedExternal = false;
 

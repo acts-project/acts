@@ -563,16 +563,25 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
 
   // The navigator works directly off the (path-length sorted) stream
   // candidates; skip those outside the path-length window here at consumption
-  // instead of copying the accepted ones out during resolution. 
-  ACTS_VERBOSE(volInfo(state)<<" Stream is valid "<<state.stream.isValid()<<", current index: "<<(state.stream.currentIndex() != std::nullopt ? 
-                std::format("{:}", *state.stream.currentIndex()) : "n/a")<<", candidates: "<<
-              state.stream.candidates().size());
-  while (state.stream.switchToNextCandidate() &&
-         !detail::checkPathLength(state.stream.currentCandidate().pathLength(),
-                                  state.options.nearLimit,
-                                  state.navCandidatesFarLimit, logger())) {
-      ACTS_VERBOSE(volInfo(state)<<" Skip invalid navigation target: "<<
-        (state.stream.isValid() ? state.navCandidate() : NavigationTarget::None()) );
+  // instead of copying the accepted ones out during resolution.
+  ACTS_VERBOSE(volInfo(state)
+               << " Stream is valid " << state.stream.isValid()
+               << ", current index: "
+               << (state.stream.currentIndex() != std::nullopt
+                       ? std::format("{:}", *state.stream.currentIndex())
+                       : "n/a")
+               << ", candidates: " << state.stream.candidates().size());
+
+  if (state.stream.isValid()) {
+    while (!detail::checkPathLength(
+        state.stream.currentCandidate().pathLength(), state.options.nearLimit,
+        state.navCandidatesFarLimit, logger())) {
+      ACTS_VERBOSE(volInfo(state)
+                   << " Skip invalid navigation target: "
+                   << (state.stream.isValid() ? state.navCandidate()
+                                              : NavigationTarget::None()));
+      state.stream.switchToNextCandidate();
+    }
   }
 
   if (state.stream.isValid()) {

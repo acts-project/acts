@@ -111,6 +111,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
       gContext, {Vector3(0., 0., -30.), Vector3(0., 0., 1.)}, logger()));
 
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
+  BOOST_CHECK(nStream.isValid());
   BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
                     surfaces.at(1u).get());
 
@@ -121,6 +122,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
   BOOST_CHECK(nStream.initialize(
       gContext, {Vector3(0., 0., 0.), Vector3(0., 0., 1.)}, logger()));
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 3u);
+  BOOST_CHECK(nStream.isValid());
   BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
                     surfaces.at(3u).get());
 
@@ -177,6 +179,8 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
       makeStream(surfaces, BoundaryTolerance::Infinite());
   BOOST_CHECK(nStream.initialize(gContext, qPoint, logger()));
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
+  BOOST_CHECK(nStream.isValid());
+
   BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
                     surfaces.at(1u).get());
   CHECK_CLOSE_ABS(nStream.currentCandidate().pathLength(), 10.,
@@ -185,6 +189,8 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   // Let's push a bit closer to the surface
   qPoint.position = Vector3(0., 0., -22.);
   BOOST_CHECK(nStream.update(gContext, qPoint, logger()));
+  BOOST_CHECK(nStream.isValid());
+
   // Surface unchanged, but the intersection should be closer
   BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
                     surfaces.at(1u).get());
@@ -194,6 +200,8 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   // Uuuups, an overstep
   qPoint.position = Vector3(0., 0., -19.5);
   BOOST_CHECK(nStream.update(gContext, qPoint, logger()));
+  BOOST_CHECK(nStream.isValid());
+
   // Surface still unchanged, but pathLength is now negative
   BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
                     surfaces.at(1u).get());
@@ -203,6 +211,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   // Finally hit it
   qPoint.position = Vector3(0., 0., -20.);
   BOOST_CHECK(nStream.update(gContext, qPoint, logger()));
+  BOOST_CHECK(nStream.isValid());
   // Surface still unchanged, however, now withL
   // - pathlength smaller on surface tolerance, intersection status onSurface
   BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
@@ -228,6 +237,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   // due to outside bounds - and will switch to the next candidate: which sits
   // at 200 and then will yield 220
   BOOST_CHECK(nStream.update(gContext, qPoint, logger()));
+  BOOST_CHECK(nStream.isValid());
   CHECK_CLOSE_ABS(nStream.currentCandidate().pathLength(), 220.,
                   std::numeric_limits<double>::epsilon());
   // Oh noooo, an actor just kicked in and changed the direction
@@ -253,12 +263,9 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinders) {
   // Technically, the surface at 20,20,0 is hit twice, but we deduplicate them
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
   // First one is inner candidate
-  BOOST_CHECK_EQUAL(&nStream.candidates()[0u].surface(),
-                    surfaces.at(2).get());
-  BOOST_CHECK_EQUAL(&nStream.candidates()[1u].surface(),
-                    surfaces.at(1).get());
-  BOOST_CHECK_EQUAL(&nStream.candidates()[2u].surface(),
-                    surfaces.at(0).get());
+  BOOST_CHECK_EQUAL(&nStream.candidates()[0u].surface(), surfaces.at(2).get());
+  BOOST_CHECK_EQUAL(&nStream.candidates()[1u].surface(), surfaces.at(1).get());
+  BOOST_CHECK_EQUAL(&nStream.candidates()[2u].surface(), surfaces.at(0).get());
 
   // (2) Run an initial update - from a position/direction where only
   // the concentric ones are reachable
