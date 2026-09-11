@@ -75,9 +75,11 @@ configured from.
 > The connections are trained offline rather than written by hand.
 > @ref Acts::Experimental::GbtsLayerConnectionTool accumulates layer-pair
 > statistics from simulated tracks; the
-> `Examples/Scripts/Python/gbts_layer_connection_training.py` script drives it.
-> `ActsExamples::GraphBasedSeedingAlgorithm` reads the resulting table, in
-> ATLAS' connector file format, and hands the pairs it lists to the geometry.
+> `Examples/Scripts/Python/gbts_layer_connection_training_itk.py` and
+> `gbts_layer_connection_training_odd.py` scripts drive it for the ITk and the
+> Open Data Detector. `ActsExamples::GraphBasedSeedingAlgorithm` reads the
+> resulting table, in ATLAS' connector file format, and hands the pairs it
+> lists to the geometry.
 
 ## Graph nodes {#gbts-nodes}
 
