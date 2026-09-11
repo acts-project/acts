@@ -273,8 +273,11 @@ class ReferenceTrajectoryBuilder {
                                const stepper_t& stepper,
                                const navigator_t& navigator,
                                result_type& result) const {
-      stepper.transportCovarianceToBound(state.stepping, surface,
-                                         freeToBoundCorrection);
+      Result<void> transportRes = stepper.transportCovarianceToBound(
+          state.stepping, surface, freeToBoundCorrection);
+      if (!transportRes.ok()) {
+        return transportRes.error();
+      }
 
       const Result<detail::PointwiseMaterialEffects> materialInteractionPreRes =
           detail::performMaterialInteraction(
