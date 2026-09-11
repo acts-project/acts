@@ -31,8 +31,9 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "ActsPlugins/Json/GeometryIdentifierJsonConverter.hpp"
-#include "ActsPlugins/Json/MaterialJsonConverter.hpp"
+#include "ActsPlugins/Json/GeometryJsonKeys.hpp"
 #include "ActsPlugins/Json/SurfaceBoundsJsonConverter.hpp"
+#include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
 
 #include <memory>
 
@@ -139,8 +140,8 @@ nlohmann::json surfaceToJsonT(const surface_t& surface,
   jSurface["geo_id"] = nlohmann::json(surface.geometryId());
   jSurface["sensitive"] = surface.isSensitive();
   if (surface.hasMaterial() && opt.writeMaterial) {
-    jSurface["material"] =
-        nlohmann::json(surface.surfaceMaterial())["material"];
+    jSurface[Acts::jsonKey().materialkey] =
+        Acts::SurfaceMaterialJsonConverter::toJson(*surface.surfaceMaterial());
   }
   jSurface["kind"] = getSurfaceKind<surface_t>();
   return jSurface;
@@ -184,7 +185,10 @@ std::shared_ptr<Acts::Surface> surfaceFromJsonT(const nlohmann::json& j) {
 void Acts::to_json(nlohmann::json& j,
                    const Acts::SurfaceAndMaterialWithContext& surface) {
   toJson(j, std::get<0>(surface), std::get<2>(surface));
-  to_json(j, std::get<1>(surface).get());
+  const auto& material = std::get<1>(surface);
+  if (material != nullptr) {
+    j[jsonKey().materialkey] = SurfaceMaterialJsonConverter::toJson(*material);
+  }
 }
 
 void Acts::to_json(nlohmann::json& j, const Acts::Surface& surface) {
@@ -346,12 +350,10 @@ std::shared_ptr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
   }
   mutableSf->assignIsSensitive(j["sensitive"].get<bool>());
 
-  if (j.find("material") != j.end() && !j["material"].empty()) {
-    const ISurfaceMaterial* surfaceMaterial = nullptr;
-    from_json(j, surfaceMaterial);
-    std::shared_ptr<const ISurfaceMaterial> sharedSurfaceMaterial(
-        surfaceMaterial);
-    mutableSf->assignSurfaceMaterial(sharedSurfaceMaterial);
+  if (j.find(jsonKey().materialkey) != j.end() &&
+      !j[jsonKey().materialkey].empty()) {
+    mutableSf->assignSurfaceMaterial(
+        SurfaceMaterialJsonConverter::fromJson(j[jsonKey().materialkey]));
   }
   return mutableSf;
 }
