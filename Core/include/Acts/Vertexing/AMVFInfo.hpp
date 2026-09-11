@@ -17,6 +17,13 @@
 namespace Acts {
 
 /// @brief Helper struct for storing vertex related information
+///
+/// @deprecated Superseded by @c VertexFitCandidate, which describes the vertex
+/// to be fitted, and the private fitter cache, which holds the fitter's
+/// per-vertex scratch data. This type merges the two and is kept only so that
+/// code
+/// written against the pre-split @c AdaptiveMultiVertexFitter::State keeps
+/// compiling; it is no longer used by the fitter itself.
 struct VertexInfo {
   VertexInfo() = default;
 
@@ -29,8 +36,7 @@ struct VertexInfo {
         oldPosition(pos),
         seedPosition(pos) {}
 
-  /// Prior the fit restarts from in every iteration. If unset, the fitter
-  /// initializes it with the vertex state at the start of the fit.
+  /// Vertex constraint for fitting procedure
   Acts::Vertex constraint;
 
   /// Point where all associated tracks are linearized
