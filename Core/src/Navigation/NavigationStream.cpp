@@ -148,10 +148,7 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
                       NavigationTarget::None());
 
   m_currentIndex = 0;
-  if (m_candidates.empty()) {
-    return false;
-  }
-  return true;
+  return isValid();
 }
 
 bool NavigationStream::update(const GeometryContext& gctx,
@@ -163,11 +160,15 @@ bool NavigationStream::update(const GeometryContext& gctx,
                << toString(queryPoint.position)
                << ", direction: " << toString(queryPoint.direction));
   if (m_currentIndex == std::nullopt) {
-    ACTS_VERBOSE("NavigationStream::update() - Initialize the index of the stream first");
-      m_currentIndex = 0;
+    ACTS_VERBOSE(
+        "NavigationStream::update() - Initialize the index of the stream "
+        "first");
+    m_currentIndex = 0;
   }
   if (!isValid()) {
-    ACTS_VERBOSE("NavigationStream::update() - No valid candidate is left in the stream");
+    ACTS_VERBOSE(
+        "NavigationStream::update() - No valid candidate is left in the "
+        "stream");
     return false;
   }
   do {
@@ -204,11 +205,14 @@ void NavigationStream::reset(const bool keepBoundLess) {
     m_candidates.clear();
   } else {
     if (m_currentIndex) {
-       m_candidates.erase(m_candidates.begin(), m_candidates.begin() + std::min(*m_currentIndex, m_candidates.size()));
+      m_candidates.erase(m_candidates.begin(),
+                         m_candidates.begin() +
+                             std::min(*m_currentIndex, m_candidates.size()));
     }
     auto [begin, end] = std::ranges::remove_if(
         m_candidates, [](const NavigationTarget& target) {
-          return target.pathLength() < 0. || !target.boundaryTolerance().isInfinite();
+          return target.pathLength() < 0. ||
+                 !target.boundaryTolerance().isInfinite();
         });
     m_candidates.erase(begin, end);
   }

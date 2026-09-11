@@ -47,34 +47,35 @@ class NavigationStream {
   /// @return true if a next candidate is available
   bool switchToNextCandidate() {
     if (!m_currentIndex) {
-     m_currentIndex = 0;
-  } else {
-     ++(*m_currentIndex);
+      m_currentIndex = 0;
+    } else {
+      ++(*m_currentIndex);
+    }
+    return isValid();
   }
-  return isValid();
-  }
-    /// Performs the validity check on the navigation current navigation candidate index
+  /// Performs the validity check on the navigation current navigation candidate
+  /// index
   /// @return Returns whether the index is initialized and less than the size of the available
   ///         candidates
   bool isValid() const {
-      return m_currentIndex.value_or(m_candidates.size()) < m_candidates.size();
+    return m_currentIndex.value_or(m_candidates.size()) < m_candidates.size();
   }
 
   /// Const access the current candidate
   /// @return Const reference to current candidate
   const NavigationTarget& currentCandidate() const {
-     assert(isValid());
+    assert(m_currentIndex != std::nullopt);
     return m_candidates.at(*m_currentIndex);
   }
   /// Preallocate the memory to store a certain amount of candidates
   /// @param n: The number of candidates to be stored
-  void reserve(const std::size_t n) {
-      m_candidates.reserve(n);
-  }
+  void reserve(const std::size_t n) { m_candidates.reserve(n); }
 
   /// Current Index
   /// @return Index of the current candidate in the vector
-  const std::optional<std::size_t>& currentIndex() const { return m_currentIndex; }
+  const std::optional<std::size_t>& currentIndex() const {
+    return m_currentIndex;
+  }
 
   /// Non-const access the candidate vector
   /// @return Mutable reference to vector of navigation candidates
@@ -82,9 +83,7 @@ class NavigationStream {
 
   /// Const access the candidate vector
   /// @return Const reference to vector of navigation candidates
-   std::span<const NavigationTarget> candidates() const {
-    return m_candidates;
-  }
+  std::span<const NavigationTarget> candidates() const { return m_candidates; }
 
   /// Non-const access the current candidate
   ///
@@ -92,7 +91,7 @@ class NavigationStream {
   /// valid anymore.
   /// @return Mutable reference to current candidate
   NavigationTarget& currentCandidate() {
-    assert(isValid());
+    assert(m_currentIndex != std::nullopt);
     return m_candidates.at(*m_currentIndex);
   }
 

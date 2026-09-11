@@ -199,9 +199,7 @@ class Navigator final {
 
     /// Get reference to current navigation candidate
     /// @return Reference to current boundary intersection
-    NavigationTarget& navCandidate() {
-      return stream.currentCandidate();
-    }
+    NavigationTarget& navCandidate() { return stream.currentCandidate(); }
 
     /// Volume where the navigation started
     const TrackingVolume* startVolume = nullptr;
@@ -272,9 +270,7 @@ class Navigator final {
       stream.reset(false);
     }
     /// Reset the navigation stream
-    void resetStream() {
-        stream.reset(options.keepUnreachedExternal);
-    }
+    void resetStream() { stream.reset(options.keepUnreachedExternal); }
   };
 
   /// Constructor with configuration object
