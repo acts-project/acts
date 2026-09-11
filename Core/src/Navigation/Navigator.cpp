@@ -163,6 +163,16 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
 
   resolveBoundaryToleranceOverrides(state);
 
+  state.externalSurfaces.clear();
+  state.externalSurfaces.reserve(state.options.externalSurfaces.size());
+  for (const ExternalSurface& external : state.options.externalSurfaces) {
+    if (external.surface == nullptr) {
+      throw std::invalid_argument("Navigator: external surface is nullptr");
+    }
+    state.externalSurfaces.push_back({&external, false});
+  }
+  state.pendingTarget.reset();
+
   state.startSurface = state.options.startSurface;
   state.targetSurface = state.options.targetSurface;
 
@@ -287,6 +297,115 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
     return NavigationTarget::None();
   }
 
+  if (state.externalSurfaces.empty()) {
+    return nextStagedTarget(state, position, direction);
+  }
+
+  // An external surface is not among the candidates of the tracking geometry.
+  // Hold on to the staged candidate, intersect both from here, and hand out
+  // the closer one.
+  if (!state.pendingTarget.has_value()) {
+    state.pendingTarget = nextStagedTarget(state, position, direction);
+  }
+
+  const NavigationTarget externalTarget =
+      nextExternalTarget(state, position, direction);
+  if (!externalTarget.isNone()) {
+    NavigationTarget& staged = state.pendingTarget.value();
+    if (!staged.isNone()) {
+      // The staged candidate was resolved earlier, so its stored path length
+      // is too long by the distance the propagation travelled since.
+      const Intersection3D refreshed =
+          staged.surface()
+              .intersect(state.options.geoContext, position, direction,
+                         staged.boundaryTolerance(),
+                         state.options.surfaceTolerance)
+              .at(staged.intersectionIndex());
+      // Keep the stored one if the straight-line estimate lost the surface
+      if (refreshed.isValid()) {
+        staged.intersection() = refreshed;
+      }
+    }
+    // A tie goes to the staged candidate, so the tracking geometry keeps the
+    // handling of a surface that is in both
+    if (staged.isNone() ||
+        externalTarget.pathLength() < staged.intersection().pathLength()) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Target set to external surface "
+                   << externalTarget.surface().geometryId()
+                   << " at path length " << externalTarget.pathLength());
+      return externalTarget;
+    }
+  }
+
+  const NavigationTarget staged = state.pendingTarget.value();
+  state.pendingTarget.reset();
+  return staged;
+}
+
+NavigationTarget Navigator::nextExternalTarget(State& state,
+                                               const Vector3& position,
+                                               const Vector3& direction) const {
+  NavigationTarget closest = NavigationTarget::None();
+
+  for (const State::ExternalSurfaceState& external : state.externalSurfaces) {
+    if (external.reached && external.entry->dropAfterReached) {
+      continue;
+    }
+    if (external.entry->volume != nullptr &&
+        external.entry->volume != state.currentVolume) {
+      continue;
+    }
+
+    auto [intersection, intersectionIndex] =
+        external.entry->surface
+            ->intersect(state.options.geoContext, position, direction,
+                        external.entry->boundaryTolerance,
+                        state.options.surfaceTolerance)
+            .closestWithIndex();
+    if (!intersection.isValid() ||
+        !detail::checkPathLength(intersection.pathLength(),
+                                 state.options.nearLimit,
+                                 state.options.farLimit)) {
+      continue;
+    }
+    if (closest.isNone() ||
+        intersection.pathLength() < closest.intersection().pathLength()) {
+      closest = NavigationTarget(intersection, intersectionIndex,
+                                 *external.entry->surface,
+                                 external.entry->boundaryTolerance);
+    }
+  }
+
+  return closest;
+}
+
+bool Navigator::stagedTargetIs(const State& state,
+                               const Surface& surface) const {
+  auto targets = [&surface](const auto& list,
+                            const std::optional<std::size_t>& index) {
+    return index.has_value() && index.value() < list.size() &&
+           &list.at(index.value()).surface() == &surface;
+  };
+
+  if (m_geometryVersion == GeometryVersion::Gen3) {
+    return targets(state.stream.candidates(), state.navCandidateIndex);
+  }
+  switch (state.navigationStage) {
+    case Stage::surfaceTarget:
+      return targets(state.navSurfaces, state.navSurfaceIndex);
+    case Stage::layerTarget:
+      return targets(state.navLayers, state.navLayerIndex);
+    case Stage::boundaryTarget:
+      return targets(state.navBoundaries, state.navBoundaryIndex);
+    default:
+      return false;
+  }
+}
+
+NavigationTarget Navigator::nextStagedTarget(State& state,
+                                             const Vector3& position,
+                                             const Vector3& direction) const {
   ACTS_VERBOSE(volInfo(state) << "Entering Navigator::nextTarget.");
 
   NavigationTarget nextTarget = tryGetNextTarget(state, position, direction);
@@ -383,6 +502,24 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
 
   ACTS_VERBOSE(volInfo(state)
                << "Current surface: " << state.currentSurface->geometryId());
+
+  // An external surface is outside the staged navigation, so reaching it must
+  // not advance the state machine. The geometry can offer the same surface,
+  // and then the staged handling applies.
+  if (!state.externalSurfaces.empty()) {
+    auto itr = std::ranges::find_if(
+        state.externalSurfaces,
+        [&surface](const State::ExternalSurfaceState& external) {
+          return external.entry->surface == &surface;
+        });
+    if (itr != state.externalSurfaces.end()) {
+      itr->reached = true;
+      if (!stagedTargetIs(state, surface)) {
+        ACTS_VERBOSE(volInfo(state) << "Reached external surface.");
+        return;
+      }
+    }
+  }
 
   // handling portals in gen3 configuration
   if (m_geometryVersion == GeometryVersion::Gen3) {

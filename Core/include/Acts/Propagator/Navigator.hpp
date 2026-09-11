@@ -193,6 +193,21 @@ class Navigator final {
     /// Boundary tolerance overrides resolved once at initialization
     std::vector<ResolvedBoundaryToleranceOverride> boundaryToleranceOverrides{};
 
+    /// An external surface of the options with its bookkeeping
+    struct ExternalSurfaceState {
+      /// The entry of the options
+      const ExternalSurface* entry{};
+      /// Whether the propagation reached the surface
+      bool reached{false};
+    };
+
+    /// External surfaces of the options, tracked over the propagation
+    std::vector<ExternalSurfaceState> externalSurfaces{};
+
+    /// The staged candidate an external surface took precedence over. It is
+    /// handed out once the external surface is no longer the closer one.
+    std::optional<NavigationTarget> pendingTarget;
+
     /// Get reference to current navigation surface
     /// @return Reference to current navigation target
     NavigationTarget& navSurface() {
@@ -272,6 +287,7 @@ class Navigator final {
 
       navigationBreak = false;
       navigationStage = Stage::initial;
+      pendingTarget.reset();
 
       stream.reset();
     }
@@ -382,6 +398,35 @@ class Navigator final {
   ///
   /// @param state The navigation state
   void resolveBoundaryToleranceOverrides(State& state) const;
+
+  /// @brief Get the next target of the staged navigation, without the
+  ///        external surfaces
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @return The next staged target
+  NavigationTarget nextStagedTarget(State& state, const Vector3& position,
+                                    const Vector3& direction) const;
+
+  /// @brief Get the closest external surface from the current position
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @return The closest external surface, or none
+  NavigationTarget nextExternalTarget(State& state, const Vector3& position,
+                                      const Vector3& direction) const;
+
+  /// @brief Whether the staged navigation targets the given surface
+  ///
+  /// Tells a surface reached through the tracking geometry apart from one
+  /// reached as an external surface.
+  ///
+  /// @param state The navigation state
+  /// @param surface The surface the propagation reached
+  /// @return True if the current staged target is that surface
+  bool stagedTargetIs(const State& state, const Surface& surface) const;
 
   /// @brief NextTarget helper function for Gen1 geometry configuration
   ///
