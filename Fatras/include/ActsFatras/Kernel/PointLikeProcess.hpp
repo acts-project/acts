@@ -12,7 +12,10 @@
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
 
+#include <algorithm>
+#include <iterator>
 #include <limits>
+#include <vector>
 
 namespace ActsFatras {
 
@@ -90,8 +93,8 @@ struct PointLikeProcess {
     std::vector<Particle> children;
     physics.run(rng, particle, children);
 
-    std::copy_if(std::begin(children), std::end(children),
-                 std::back_inserter(generatedParticles), selectChildParticle);
+    std::ranges::copy_if(children, std::back_inserter(generatedParticles),
+                         selectChildParticle);
 
     return !selectOutputParticle(particle);
   }

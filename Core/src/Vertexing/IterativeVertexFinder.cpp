@@ -11,6 +11,8 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
+#include <algorithm>
+
 Acts::IterativeVertexFinder::IterativeVertexFinder(
     Config cfg, std::unique_ptr<const Logger> logger)
     : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
@@ -566,8 +568,7 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
 
 int Acts::IterativeVertexFinder::countSignificantTracks(
     const Vertex& vtx) const {
-  return std::count_if(vtx.tracks().begin(), vtx.tracks().end(),
-                       [this](const TrackAtVertex& trk) {
-                         return trk.trackWeight > m_cfg.cutOffTrackWeight;
-                       });
+  return std::ranges::count_if(vtx.tracks(), [this](const TrackAtVertex& trk) {
+    return trk.trackWeight > m_cfg.cutOffTrackWeight;
+  });
 }

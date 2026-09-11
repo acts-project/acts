@@ -15,6 +15,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
 
+#include <algorithm>
+
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
@@ -41,8 +43,8 @@ ActsPlugins::detail::GeoBoxConverter::operator()(
                                      geoBox.getYHalfLength(),
                                      geoBox.getZHalfLength()};
   // Create the surface
-  auto minElement = std::min_element(halfLengths.begin(), halfLengths.end());
-  auto zIndex = std::distance(halfLengths.begin(), minElement);
+  auto minElement = std::ranges::min_element(halfLengths);
+  auto zIndex = std::ranges::distance(halfLengths.begin(), minElement);
   std::size_t yIndex = zIndex > 0u ? zIndex - 1u : 2u;
   std::size_t xIndex = yIndex > 0u ? yIndex - 1u : 2u;
 

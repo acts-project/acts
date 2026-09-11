@@ -25,8 +25,8 @@ void Polyhedron::merge(const Polyhedron& other) {
                   const std::vector<FaceType>& additional) -> void {
     for (const auto& aface : additional) {
       FaceType nface = aface;
-      std::transform(nface.begin(), nface.end(), nface.begin(),
-                     [&](std::size_t x) { return (x + cvert); });
+      std::ranges::transform(nface, nface.begin(),
+                             [&](std::size_t x) { return (x + cvert); });
       existing.push_back(nface);
     }
   };
@@ -36,14 +36,13 @@ void Polyhedron::merge(const Polyhedron& other) {
 }
 
 void Polyhedron::move(const Transform3& transform) {
-  for_each(vertices.begin(), vertices.end(),
-           [&](auto& v) { v = transform * v; });
+  std::ranges::for_each(vertices, [&](auto& v) { v = transform * v; });
 }
 
 Extent Polyhedron::extent(const Transform3& transform) const {
   Extent extent;
   auto vtxs = vertices;
-  std::transform(vtxs.begin(), vtxs.end(), vtxs.begin(), [&](auto& v) {
+  std::ranges::transform(vtxs, vtxs.begin(), [&](auto& v) {
     auto vt = (transform * v);
     extent.extend(vt);
     return (vt);
