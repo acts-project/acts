@@ -22,7 +22,8 @@ full_chain_algorithm::full_chain_algorithm(
     const detector_design_description::host& det_descr,
     const detector_conditions_description::host& det_cond,
     const magnetic_field& field, const host_detector* detector,
-    std::unique_ptr<const traccc::Logger> logger, const bool useGBTS)
+    std::unique_ptr<const traccc::Logger> logger, const bool useGBTS,
+    await_strategy)
     : messaging(logger->clone()),
       m_mr(mr),
       m_copy{std::make_unique<vecmem::copy>()},
