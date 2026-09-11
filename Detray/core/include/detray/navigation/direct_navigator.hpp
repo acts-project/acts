@@ -86,7 +86,8 @@ class direct_navigator {
       // Set the index into the external surface sequence to the beginning
       // or end of the container
       m_next_external =
-          is_forward() ? 0 : static_cast<dist_t>(m_sequence.size()) - 1;
+          is_forward() ? dist_t{0}
+                       : static_cast<dist_t>(m_sequence.size() - 1u);
 
       // Update the target with the next external surface
       this->target().set_surface(next_external());
