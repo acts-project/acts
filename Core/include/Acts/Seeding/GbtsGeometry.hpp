@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/GbtsBinning.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/detail/GbtsLayer.hpp"
@@ -49,27 +50,42 @@ class GbtsGeometry final {
                float etaBinWidth, const GbtsZ0Range& z0Range = {},
                const Logger& logger = getDummyLogger());
 
+  /// Get the number of layers the geometry was built from
+  /// @return The layer count
+  std::size_t numLayers() const { return m_layers.size(); }
+
+  /// Get the number of eta bins across all layers
+  /// @return The bin count
+  std::uint32_t numBins() const { return m_nEtaBins; }
+
   /// Resolve a layer id into the index GbtsNodeStorage::insert takes.
   /// @param id Layer id, as the layer descriptions carry it
   /// @return The layer's index, or nullopt if this geometry has no such layer
   std::optional<GbtsLayerIndex> layerIndex(GbtsExperimentLayerId id) const;
 
+  /// Get the description a layer was built from
+  /// @param idx Layer index
+  /// @return Reference to the layer description
+  const GbtsLayerDescription& layerDescription(GbtsLayerIndex idx) const {
+    return layerByIndex(idx).layerDescription();
+  }
+
+  /// Get the eta binning the geometry gave a layer
+  /// @param idx Layer index
+  /// @return Reference to the layer's binning
+  const GbtsLayerBinning& layerBinning(GbtsLayerIndex idx) const {
+    return layerByIndex(idx).binning();
+  }
+
+  /// Get the eta bin pairs the graph is built over, in build order
+  /// @return The bin groups
+  std::span<const GbtsBinGroup> binGroups() const { return m_binGroups; }
+
  private:
-  // The layer binning is shared only with the classes that build the graph.
+  // The layer object is shared only with the classes that build the graph.
   friend class GbtsNodeStorage;
   friend class GbtsTrackingFilter;
   friend class GraphBasedTrackSeeder;
-
-  /// Get number of eta bins
-  /// @return Number of eta bins
-  std::uint32_t numBins() const { return m_nEtaBins; }
-
-  /// Get bin groups
-  /// @return Bin groups vector
-  const std::vector<std::pair<std::uint32_t, std::vector<std::uint32_t>>>&
-  binGroups() const {
-    return m_binGroups;
-  }
 
   /// Get layer by ID
   /// @param id Layer ID
@@ -80,14 +96,6 @@ class GbtsGeometry final {
   /// @param idx Layer index
   /// @return Reference to layer
   const detail::GbtsLayer& layerByIndex(GbtsLayerIndex idx) const;
-
-  /// Get the description of a layer by index
-  /// @param idx Layer index
-  /// @return Reference to the layer description
-  const GbtsLayerDescription& layerDescriptionByIndex(
-      GbtsLayerIndex idx) const {
-    return layerByIndex(idx).layerDescription();
-  }
 
   /// @param layerDescription Layer description for the layer
   /// @param bin0 Starting bin index
@@ -106,7 +114,7 @@ class GbtsGeometry final {
   std::uint32_t m_nEtaBins{};
 
   /// Bin groups
-  std::vector<std::pair<std::uint32_t, std::vector<std::uint32_t>>> m_binGroups;
+  std::vector<GbtsBinGroup> m_binGroups;
 };
 
 }  // namespace Acts::Experimental

@@ -11,15 +11,22 @@ import os
 import pytest
 
 import detray.core
-import detray.examples
 import detray.io
+import detray.tests
 
 
 @pytest.fixture(scope="session")
 def toy_detector_files(tmp_path_factory):
     """Write a toy detector to disk."""
     out_dir = str(tmp_path_factory.mktemp("toy_detector")) + os.sep
-    detray.examples.generateToyDetector(outputDir=out_dir)
+
+    det, names = detray.tests.buildToyDetector(
+        detray.core.HostMemoryResource(), detray.tests.ToyDetectorConfig()
+    )
+
+    writer_config = detray.io.DetectorWriterConfig()
+    writer_config.path = out_dir
+    detray.io.writeDetector(det, names, writer_config)
 
     files = {
         "geometry": os.path.join(out_dir, "toy_detector_geometry.json"),

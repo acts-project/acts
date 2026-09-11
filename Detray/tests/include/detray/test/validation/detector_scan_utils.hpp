@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/utils/logging.hpp"
 #include "detray/utils/ranges.hpp"
 
@@ -43,7 +44,7 @@ namespace detray::detector_scanner {
 /// ACTS geometries can produce multiple overlapping portals, since some portals
 /// are larger than the volumes they belong to. This leads to duplicate
 /// intersections in the traces.
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline dindex_range overlaps_removal(
     dvector<intersection_record<detector_t>> &intersection_records,
     const float tol = 1e-4f * unit<float>::mm) {
@@ -326,7 +327,7 @@ inline bool check_connectivity(
 ///
 /// @return a set of volume connections that were found by portal intersection
 ///         of a ray.
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline auto trace_intersections(
     const dvector<intersection_record<detector_t>> &intersection_records,
     dindex start_volume = 0u) {
@@ -681,7 +682,7 @@ inline auto build_adjacency(
 /// @param[out] obj_hashes objects in a volume that were already visisted
 ///
 /// @return true if the checks were successful
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline bool check_trace(
     const dvector<intersection_record<detector_t>> &intersection_trace,
     const dindex start_index, dvector<dindex> &adj_mat_scan,
@@ -723,7 +724,7 @@ inline bool check_trace(
 /// @param svg_style svgtools style for the detector display
 /// @param i_track index of the test track
 /// @param n_track total number of test tracks
-template <typename detector_t, typename trajectory_t>
+template <concepts::detector detector_t, typename trajectory_t>
 inline void display_error(
     const typename detector_t::geometry_context gctx, const detector_t &det,
     const typename detector_t::name_map &vol_names,
@@ -764,7 +765,7 @@ inline void display_error(
 }
 
 /// Print an intersection trace
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline std::string print_trace(
     const dvector<intersection_record<detector_t>> &truth_trace,
     std::size_t n) {

@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/geometry/mask.hpp"
 #include "detray/geometry/shapes.hpp"
@@ -219,7 +220,7 @@ struct surface_converter {
 /// cylinders etc (not implemented yet).
 ///
 /// @returns An actsvg proto surface representing the surface.
-template <typename detector_t, typename view_t>
+template <concepts::detector detector_t, typename view_t>
 auto surface(const typename detector_t::geometry_context& context,
              const detector_t& detector,
              const detray::geometry::surface<detector_t>& d_surface,

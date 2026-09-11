@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/geometry/surface.hpp"
 #include "detray/utils/invalid_values.hpp"
 
@@ -22,7 +23,7 @@
 namespace detray::svgtools::utils {
 
 /// @brief Checks if the detray surface has a volume link.
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline auto is_not_world_portal(
     const detray::geometry::surface<detector_t>& d_portal) {
   const auto d_link_idx = d_portal.volume_links();
@@ -35,7 +36,7 @@ inline auto is_not_world_portal(
 
 /// @note expects that the detray surface has a volume link.
 /// @returns the volume link of the detray surface.
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline auto get_linked_volume(
     const detector_t& detector,
     const detray::geometry::surface<detector_t>& d_portal,
@@ -49,7 +50,7 @@ inline auto get_linked_volume(
 /// @brief Calculates the start and end point of the link.
 /// @note The detray surface must have a volume link.
 /// @returns (start, end).
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline auto link_points(const typename detector_t::geometry_context& context,
                         const detector_t& detector,
                         const detray::geometry::surface<detector_t>& d_portal,

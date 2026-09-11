@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
 #include "detray/detectors/toy_metadata.hpp"
 
@@ -23,7 +24,7 @@
 namespace detray {
 
 /// Launch the propagation test kernel
-template <typename bfield_bknd_t, typename detector_t>
+template <typename bfield_bknd_t, concepts::detector detector_t>
 void propagator_test(
     typename detector_t::view_type, const propagation::config &,
     covfie::field_view<bfield_bknd_t>, vecmem::data::vector_view<test_track> &,
@@ -31,7 +32,7 @@ void propagator_test(
     sycl::queue_wrapper);
 
 /// test function for propagator on the device
-template <typename bfield_bknd_t, typename detector_t>
+template <typename bfield_bknd_t, concepts::detector detector_t>
 inline auto run_propagation_device(
     vecmem::memory_resource *mr, const propagation::config &cfg,
     typename detector_t::view_type det_view,
@@ -70,7 +71,7 @@ inline auto run_propagation_device(
 
 /// Test chain for the propagator
 template <typename device_bfield_bknd_t, typename host_bfield_bknd_t,
-          typename detector_t>
+          concepts::detector detector_t>
 inline auto run_propagation_test(vecmem::memory_resource *mr, ::sycl::queue *q,
                                  detector_t &det,
                                  const propagator_test_config &cfg,
