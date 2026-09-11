@@ -158,8 +158,8 @@ DigitizationAlgorithm::DigitizationAlgorithm(
       continue;
     }
 
-    const auto* holder =
-        dynamic_cast<const Acts::detail::ISensorDesignHolder*>(placement);
+    auto* holder = dynamic_cast<Acts::detail::ISensorDesignHolder*>(
+        const_cast<Acts::SurfacePlacementBase*>(placement));
     if (holder == nullptr) {
       continue;
     }
@@ -213,7 +213,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     const Acts::Surface* surfacePtr = surfaceItr->second;
 
-    // Try the fast path: design pointer attached to the surface placement.
+    // design pointer attached to the surface placement.
     // Works for DD4hepDetectorElementWithDesign; returns nullptr otherwise.
     const Digitizer* digitizerPtr = nullptr;
     const auto* placement = surfacePtr->surfacePlacement();

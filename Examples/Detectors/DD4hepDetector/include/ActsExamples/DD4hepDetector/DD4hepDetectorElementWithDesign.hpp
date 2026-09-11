@@ -30,12 +30,12 @@ class DD4hepDetectorElementWithDesign
   }
 
   void assignSensorDesign(
-      const std::shared_ptr<const Acts::ISensorDesign>& design) const override {
+      const std::shared_ptr<const Acts::ISensorDesign>& design) override {
     m_design = design;
   }
 
  private:
-  mutable std::shared_ptr<const Acts::ISensorDesign> m_design{nullptr};
+  std::shared_ptr<const Acts::ISensorDesign> m_design{nullptr};
 };
 
 /// Drop-in replacement for DD4hepLayerBuilder::defaultDetectorElementFactory.

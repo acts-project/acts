@@ -26,7 +26,7 @@ class ISensorDesignHolder {
 
   /// @brief Attach a sensor design to this element
   virtual void assignSensorDesign(
-      const std::shared_ptr<const ISensorDesign>& design) const = 0;
+      const std::shared_ptr<const ISensorDesign>& design) = 0;
 };
 
 }  // namespace Acts::detail
