@@ -126,7 +126,7 @@ void checkHierarchy(const GeometryContext& gctx,
           checkSurfaces(gridA->surface(), gridB->surface());
 
           const auto& childrenA = gridA->artifactPortalLinks();
-          const auto& childrenB = gridA->artifactPortalLinks();
+          const auto& childrenB = gridB->artifactPortalLinks();
           for (std::size_t i = 0; i < childrenA.size(); i++) {
             const auto& childA = *(childrenA.begin() + i);
             const auto& childB = *(childrenB.begin() + i);
@@ -160,7 +160,7 @@ void checkHierarchy(const GeometryContext& gctx,
     const auto& surfsB = volB.surfaces();
     BOOST_CHECK_EQUAL(surfsA.size(), surfsB.size());
     for (std::size_t j = 0; j < surfsA.size(); j++) {
-      checkSurfaces(surfsA.at(i), surfsB.at(i));
+      checkSurfaces(surfsA.at(j), surfsB.at(j));
     }
 
     const auto& portsA = volA.portals();
@@ -403,6 +403,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
 
   // Options definition
   PropagatorOptions options(gctx, mctx);
+  options.pathLimit = 100._m;
 
   // Build geometry
   CylindricalTrackingGeometry cylindricalGeometryBuilder(gctx, true);
@@ -448,7 +449,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   decodedNavCfg.resolveMaterial = true;
   decodedNavCfg.resolvePassive = false;
   Navigator decodedNavigator{
-      sourceNavCfg,
+      decodedNavCfg,
       Acts::getDefaultLogger("DecodedNavigator", Acts::Logging::INFO)};
   ConstantFieldPropagator decodedPropagator(stepper, decodedNavigator);
 
@@ -457,18 +458,45 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   auto& sourceStates = sourceRes.template get<StateCollector<>::result_type>();
   auto& decodedStates =
       decodedRes.template get<StateCollector<>::result_type>();
+  BOOST_REQUIRE_EQUAL(sourceStates.navigation.size(),
+                      decodedStates.navigation.size());
+  BOOST_REQUIRE_EQUAL(sourceStates.stepping.size(),
+                      decodedStates.stepping.size());
+
+  auto checkNavigationSurface = [&](const Surface* surfaceA,
+                                    const Surface* surfaceB) {
+    if (surfaceA == nullptr || surfaceB == nullptr) {
+      BOOST_CHECK_EQUAL(surfaceA, surfaceB);
+      return;
+    }
+    BOOST_CHECK_EQUAL(surfaceA->type(), surfaceB->type());
+    BOOST_CHECK_EQUAL(surfaceA->geometryId(), surfaceB->geometryId());
+    BOOST_CHECK_EQUAL(surfaceA->bounds(), surfaceB->bounds());
+    BOOST_CHECK_LT((surfaceA->localToGlobalTransform(gctx).matrix() -
+                    surfaceB->localToGlobalTransform(gctx).matrix())
+                       .norm(),
+                   1e-9);
+  };
+
   for (std::size_t i = 0; i < sourceStates.navigation.size(); i++) {
     auto& navigationA = sourceStates.navigation.at(i);
     auto& navigationB = decodedStates.navigation.at(i);
-    if (!navigationA.navigationBreak) {
+    BOOST_CHECK_EQUAL(navigationA.navigationBreak, navigationB.navigationBreak);
+    BOOST_CHECK_EQUAL(navigationA.currentVolume == nullptr,
+                      navigationB.currentVolume == nullptr);
+    BOOST_CHECK_EQUAL(navigationA.startVolume == nullptr,
+                      navigationB.startVolume == nullptr);
+    if (navigationA.currentVolume != nullptr &&
+        navigationB.currentVolume != nullptr) {
       BOOST_CHECK(*navigationA.currentVolume == *navigationB.currentVolume);
-      BOOST_CHECK(*navigationA.startVolume == *navigationB.startVolume);
-      BOOST_CHECK(*navigationA.currentSurface == *navigationB.currentSurface);
-      BOOST_CHECK(*navigationA.startSurface == *navigationB.startSurface);
-    } else {
-      BOOST_CHECK_EQUAL(navigationA.currentVolume, nullptr);
-      BOOST_CHECK_EQUAL(navigationB.currentVolume, nullptr);
     }
+    if (navigationA.startVolume != nullptr &&
+        navigationB.startVolume != nullptr) {
+      BOOST_CHECK(*navigationA.startVolume == *navigationB.startVolume);
+    }
+    checkNavigationSurface(navigationA.currentSurface,
+                           navigationB.currentSurface);
+    checkNavigationSurface(navigationA.startSurface, navigationB.startSurface);
 
     auto& steppingA = sourceStates.stepping.at(i);
     auto& steppingB = decodedStates.stepping.at(i);
