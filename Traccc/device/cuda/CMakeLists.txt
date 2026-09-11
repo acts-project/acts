@@ -22,6 +22,8 @@ traccc_add_library( traccc_cuda cuda TYPE SHARED
   # Utility definitions.
   "include/traccc/cuda/utils/algorithm_base.hpp"
   "src/utils/algorithm_base.cpp"
+  "include/traccc/cuda/utils/await.hpp"
+  "src/utils/await.cpp"
   "src/utils/barrier.hpp"
   "src/utils/cuda_error_handling.hpp"
   "src/utils/cuda_error_handling.cpp"

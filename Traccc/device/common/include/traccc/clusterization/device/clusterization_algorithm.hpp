@@ -10,6 +10,7 @@
 // Local include(s).
 #include "traccc/clusterization/device/ccl_kernel_definitions.hpp"
 #include "traccc/clusterization/device/tags.hpp"
+#include "traccc/device/abstract_awaitable.hpp"
 #include "traccc/device/algorithm_base.hpp"
 
 // Project include(s).
@@ -25,6 +26,7 @@
 
 // VecMem include(s).
 #include <vecmem/memory/unique_ptr.hpp>
+#include <vecmem/utils/abstract_event.hpp>
 #include <vecmem/utils/copy.hpp>
 
 // System include(s).
@@ -58,7 +60,8 @@ class clusterization_algorithm
           const detector_conditions_description::const_view&,
           clustering_keep_disjoint_set&&)>,
       public messaging,
-      public algorithm_base {
+      public algorithm_base,
+      public virtual abstract_awaitable {
  public:
   /// Configuration type
   using config_type = clustering_config;
