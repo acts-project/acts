@@ -36,7 +36,7 @@ namespace traccc {
 
 /// Triplet fitting algorithm to fit a single track
 
-template <typename detector_t, typename bfield_t>
+template <detray::concepts::detector detector_t, typename bfield_t>
 class triplet_fitter {
  public:
   // Algebra type

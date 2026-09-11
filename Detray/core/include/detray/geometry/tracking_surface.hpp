@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/geometry/detail/tracking_surface_kernels.hpp"
@@ -20,7 +21,7 @@
 namespace detray {
 
 /// @brief Facade for a detray detector surface with extra tracking capabilities
-template <typename det_t>  // @TODO: This needs a concept
+template <concepts::detector det_t>
 class tracking_surface : public geometry::surface<const det_t> {
   /// Make sure the detector is always evaluated as constant type
   using detector_t = std::add_const_t<det_t>;
@@ -116,20 +117,20 @@ class tracking_surface : public geometry::surface<const det_t> {
   }
 };
 
-template <typename detector_t, typename descr_t>
+template <concepts::detector detector_t, typename descr_t>
 DETRAY_HOST_DEVICE tracking_surface(const detector_t &, const descr_t &)
     -> tracking_surface<detector_t>;
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 DETRAY_HOST_DEVICE tracking_surface(const detector_t &,
                                     const geometry::identifier)
     -> tracking_surface<detector_t>;
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 DETRAY_HOST_DEVICE tracking_surface(const geometry::surface<detector_t>)
     -> tracking_surface<detector_t>;
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 DETRAY_HOST_DEVICE tracking_surface(const geometry::surface<const detector_t>)
     -> tracking_surface<detector_t>;
 

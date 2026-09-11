@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
 #include "detray/tracks/tracks.hpp"
 
@@ -33,7 +34,7 @@ namespace detray::cuda {
 /// @param[in] cfg the propagation configuration
 /// @param[in] tracks_view the initial track parameter of every test track
 /// @param[out] track_mat_view the accumulated material per track
-template <typename detector_t>
+template <concepts::detector detector_t>
 void material_validation_device(
     typename detector_t::view_type det_view, const propagation::config &cfg,
     vecmem::data::vector_view<
@@ -48,7 +49,7 @@ void material_validation_device(
 struct run_material_validation {
   static constexpr std::string_view name = "cuda";
 
-  template <typename detector_t>
+  template <concepts::detector detector_t>
   auto operator()(
       vecmem::memory_resource *host_mr, vecmem::memory_resource *dev_mr,
       const detector_t &det, const propagation::config &cfg,
@@ -101,7 +102,7 @@ struct run_material_validation {
   }
 };
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 using material_validation = detray::test::material_validation_impl<
     detector_t, detray::cuda::run_material_validation>;
 

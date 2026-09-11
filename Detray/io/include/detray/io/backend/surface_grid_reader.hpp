@@ -11,6 +11,7 @@
 // Project include(s)
 #include "detray/builders/detector_builder.hpp"
 #include "detray/builders/grid_builder.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/io/backend/detail/grid_reader.hpp"
 #include "detray/io/frontend/payloads.hpp"
 
@@ -43,7 +44,7 @@ class surface_grid_reader
 
   /// Convert the detector grids @param grids_data from their IO
   /// payload
-  template <typename detector_t>
+  template <concepts::detector detector_t>
   static void from_payload(detector_builder<typename detector_t::metadata,
                                             volume_builder> &det_builder,
                            const payload_type &grids_data) {
