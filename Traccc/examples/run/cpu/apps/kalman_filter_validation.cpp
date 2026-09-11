@@ -39,14 +39,14 @@
 #include <filesystem>
 
 int main(int argc, char* argv[]) {
-  using detector_t = traccc::default_detector::host;
-  using algebra_t = typename detector_t::algebra_type;
-  using vector3_t = typename detector_t::vector3_type;
+  using host_detector_t = traccc::default_detector_traits::host;
+  using algebra_t = typename host_detector_t::algebra_type;
+  using vector3_t = typename host_detector_t::vector3_type;
 
   using b_field_t =
       covfie::field<traccc::const_bfield_backend_t<traccc::scalar>>;
   using sf_candidate_t =
-      traccc::propagation_validator::candidate_type<detector_t>;
+      traccc::propagation_validator::candidate_type<host_detector_t>;
 
   std::unique_ptr<const traccc::Logger> ilogger = traccc::getDefaultLogger(
       "KalmanFilterValidationCPU", traccc::Logging::Level::INFO);
@@ -88,11 +88,11 @@ int main(int argc, char* argv[]) {
 
   // Read the detector.
   auto [io_det, names] =
-      detray::io::read_detector<detector_t>(host_mr, reader_cfg);
+      detray::io::read_detector<host_detector_t>(host_mr, reader_cfg);
 
   traccc::host_detector host_det{};
-  host_det.template set < detector_t >> (std::move(io_det));
-  const auto& det = host_det.template as < detector_t >>();
+  host_det.template set<host_detector_t>(std::move(io_det));
+  const auto& det = host_det.template as<host_detector_t>();
 
   // Create B-field
   const vector3_t B{0.f, 0.f, 2.f * traccc::unit<traccc::scalar>::T};
@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
   }
 
   detray::propagation_validation_config<float> test_cfg{};
-  traccc::seed_generator<detector_t>::config smearing_cfg{};
+  traccc::seed_generator<host_detector_t>::config smearing_cfg{};
 
   // Specific config for the navigation test
   test_cfg.propagation = propagation_opts;

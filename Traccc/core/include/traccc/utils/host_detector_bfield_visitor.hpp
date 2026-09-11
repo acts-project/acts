@@ -20,8 +20,9 @@ auto host_detector_magnetic_field_visitor(const host_detector& host_detector,
       bfield, [&host_detector,
                &callable]<typename bfield_t>(const bfield_t& concrete_bfield) {
         return host_detector_visitor<detector_list_t>(
-            host_detector, [&concrete_bfield, &callable]<typename detector_t>(
-                               const detector_t::host& concrete_detector_host) {
+            host_detector, [&concrete_bfield,
+                            &callable]<detray::concepts::detector detector_t>(
+                               const detector_t& concrete_detector_host) {
               return callable.template operator()<detector_t>(
                   concrete_detector_host, concrete_bfield);
             });

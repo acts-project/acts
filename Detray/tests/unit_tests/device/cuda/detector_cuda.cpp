@@ -36,7 +36,7 @@ TEST(detector_cuda, detector) {
   // create toy geometry
   auto [toy_det, names] = build_toy_detector<test::algebra>(mng_mr);
 
-  auto ctx0 = typename detector_host_t::geometry_context();
+  auto ctx0 = typename host_detector_t::geometry_context();
 
   // host objects
   auto& volumes_host = toy_det.volumes();
@@ -128,7 +128,7 @@ TEST(detector_cuda, detector_alignment) {
   // build a vector of aligned transforms on the host
   // for populating this vector take all transforms of the detector
   // and shift them by the same translation
-  typename detector_host_t::transform_container tf_store_aligned_host;
+  typename host_detector_t::transform_container tf_store_aligned_host;
 
   point3 shift{.1f * unit<scalar>::mm, .2f * unit<scalar>::mm,
                .3f * unit<scalar>::mm};
@@ -153,7 +153,7 @@ TEST(detector_cuda, detector_alignment) {
   // transforms and the static part of the detector copied to the device
   // earlier
   auto detector_view_aligned =
-      detail::misaligned_detector_view<detector_host_t>(det_buff_static,
+      detail::misaligned_detector_view<host_detector_t>(det_buff_static,
                                                         tf_buff_aligned);
   // Get the view of the static detector
   auto detector_view_static = detray::get_data(det_buff_static);

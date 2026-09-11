@@ -20,13 +20,13 @@ namespace detray {
 
 // some useful type declarations
 using metadata_t = test::toy_metadata;
-using detector_host_t = host::detector<metadata_t>;
-using detector_device_t = device::detector<metadata_t>;
+using host_detector_t = host::detector<metadata_t>;
+using device_detector_t = device::detector<metadata_t>;
 
-using det_volume_t = typename detector_host_t::volume_type;
-using det_surface_t = typename detector_host_t::surface_type;
-using transform_t = typename detector_host_t::transform3_type;
-using mask_defs = typename detector_host_t::masks;
+using det_volume_t = typename host_detector_t::volume_type;
+using det_surface_t = typename host_detector_t::surface_type;
+using transform_t = typename host_detector_t::transform3_type;
+using mask_defs = typename host_detector_t::masks;
 
 constexpr auto rectangle_id = mask_defs::id::e_rectangle2D;
 constexpr auto disc_id = mask_defs::id::e_ring2D;
@@ -37,7 +37,7 @@ using disc_t = types::get<mask_defs, disc_id>;
 using cylinder_t = types::get<mask_defs, cylinder_id>;
 
 /// declaration of a test function for detector
-void detector_test(typename detector_host_t::view_type det_data,
+void detector_test(typename host_detector_t::view_type det_data,
                    vecmem::data::vector_view<det_volume_t> volumes_data,
                    vecmem::data::vector_view<det_surface_t> surfaces_data,
                    vecmem::data::vector_view<transform_t> transforms_data,

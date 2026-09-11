@@ -23,15 +23,15 @@ __global__ void __launch_bounds__(256, 4) propagator_benchmark_kernel(
     vecmem::data::vector_view<
         free_track_parameters<typename propagator_t::algebra_type>>
         tracks_view) {
-  using detector_device_t =
+  using device_detector_t =
       device::detector<typename propagator_t::detector_type::metadata>;
-  using algebra_t = typename detector_device_t::algebra_type;
+  using algebra_t = typename device_detector_t::algebra_type;
   using actor_chain_t = typename propagator_t::actor_chain_type;
   using propagator_device_t =
       propagator<typename propagator_t::stepper_type,
-                 caching_navigator<detector_device_t>, actor_chain_t>;
+                 caching_navigator<device_detector_t>, actor_chain_t>;
 
-  const detector_device_t det(det_view);
+  const device_detector_t det(det_view);
   const vecmem::device_vector<free_track_parameters<algebra_t>> tracks(
       tracks_view);
 

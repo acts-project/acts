@@ -153,8 +153,8 @@ void kalman_fitting_algorithm::fit_forward_kernel(
   return detector_buffer_magnetic_field_visitor<
       detector_type_list, alpaka::bfield_type_list<scalar>>(
       payload.detector, payload.field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view&, const bfield_view_t&) {
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>&, const bfield_view_t&) {
         // Get the number of tracks.
         const unsigned int n_tracks = payload.payload.tracks.tracks.capacity();
         assert(n_tracks == copy().get_size(payload.payload.tracks.tracks));
@@ -165,9 +165,8 @@ void kalman_fitting_algorithm::fit_forward_kernel(
         auto workDiv = makeWorkDiv<Acc>(nBlocks, nThreads);
 
         // Fitter type to use.
-        using fitter_t =
-            traccc::details::kalman_fitter_t<typename detector_traits_t::device,
-                                             bfield_view_t>;
+        using fitter_t = traccc::details::kalman_fitter_t<
+            detray::detector_device_t<detector_t>, bfield_view_t>;
 
         // Run the track fitting
         ::alpaka::exec<Acc>(details::get_queue(queue()), workDiv,
@@ -181,8 +180,8 @@ void kalman_fitting_algorithm::fit_backward_kernel(
   return detector_buffer_magnetic_field_visitor<
       detector_type_list, alpaka::bfield_type_list<scalar>>(
       payload.detector, payload.field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view&, const bfield_view_t&) {
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>&, const bfield_view_t&) {
         // Get the number of tracks.
         const unsigned int n_tracks = payload.payload.tracks.tracks.capacity();
         assert(n_tracks == copy().get_size(payload.payload.tracks.tracks));
@@ -193,9 +192,8 @@ void kalman_fitting_algorithm::fit_backward_kernel(
         auto workDiv = makeWorkDiv<Acc>(nBlocks, nThreads);
 
         // Fitter type to use.
-        using fitter_t =
-            traccc::details::kalman_fitter_t<typename detector_traits_t::device,
-                                             bfield_view_t>;
+        using fitter_t = traccc::details::kalman_fitter_t<
+            detray::detector_device_t<detector_t>, bfield_view_t>;
 
         // Run the track fitting
         ::alpaka::exec<Acc>(details::get_queue(queue()), workDiv,

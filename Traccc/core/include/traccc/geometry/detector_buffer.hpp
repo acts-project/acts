@@ -21,52 +21,48 @@ namespace traccc {
 class detector_buffer {
  public:
   /// @tparam T either a detray metadata or detector type (checked by the trait)
+  /// @{
   template <typename T>
-  void set(typename detray::detector_traits<T>::buffer&& obj) {
-    m_obj.set<typename detray::detector_traits<T>::buffer>(std::move(obj));
+  void set(detray::detector_buffer_t<T>&& obj) {
+    m_obj.set<detray::detector_buffer_t<T>>(std::move(obj));
   }
 
-  /// @tparam T either a detray metadata or detector type (checked by the trait)
   template <typename T>
   bool is() const {
-    return (type() == typeid(typename detray::detector_traits<T>::buffer));
+    return (type() == typeid(detray::detector_buffer_t<T>));
   }
 
   const std::type_info& type() const { return m_obj.type(); }
 
-  /// @tparam T either a detray metadata or detector type (checked by the trait)
   template <typename T>
-  const typename detray::detector_traits<T>::buffer& as() const {
-    return m_obj.as<typename detray::detector_traits<T>::buffer>();
+  const detray::detector_buffer_t<T>& as() const {
+    return m_obj.as<detray::detector_buffer_t<T>>();
   }
 
-  /// @tparam T either a detray metadata or detector type (checked by the trait)
   template <typename T>
-  typename detray::detector_traits<T>::view as_view() const {
-    return detray::get_data(as<typename detray::detector_traits<T>::view>());
+  typename detray::detector_view_t<T> as_view() const {
+    return detray::get_data(as<T>());
   }
+  /// @}
 
  private:
   move_only_any m_obj;
 };  // class detector_buffer
 
 /// @brief Helper function for `detector_buffer_visitor`
-template <typename callable_t,
-          detray::concepts::detector_traits detector_traits_t,
-          detray::concepts::detector_traits... detector_traits_ts>
-auto detector_buffer_visitor_helper(
-    const detector_buffer& detector_buffer, callable_t&& callable,
-    std::tuple<detector_traits_t, detector_traits_ts...>*) {
-  using detector_t = typename detector_traits_t::host;
-
+template <typename callable_t, detray::concepts::detector detector_t,
+          detray::concepts::detector... detector_ts>
+auto detector_buffer_visitor_helper(const detector_buffer& detector_buffer,
+                                    callable_t&& callable,
+                                    std::tuple<detector_t, detector_ts...>*) {
   if (detector_buffer.is<detector_t>()) {
     return callable.template operator()<detector_t>(
         detector_buffer.as_view<detector_t>());
   } else {
-    if constexpr (sizeof...(detector_traits_ts) > 0) {
+    if constexpr (sizeof...(detector_ts) > 0) {
       return detector_buffer_visitor_helper(
           detector_buffer, std::forward<callable_t>(callable),
-          static_cast<std::tuple<detector_traits_ts...>*>(nullptr));
+          static_cast<std::tuple<detector_ts...>*>(nullptr));
     } else {
       std::stringstream exception_message;
 
@@ -98,11 +94,10 @@ inline detector_buffer buffer_from_host_detector(const host_detector& det,
                                                  vecmem::memory_resource& mr,
                                                  vecmem::copy& copy) {
   return host_detector_visitor<traccc::detector_type_list>(
-      det, [&mr, &copy]<detray::concepts::detector_traits detector_traits_t>(
-               const typename detector_traits_t::host& detector) {
+      det, [&mr, &copy]<detray::concepts::detector detector_t>(
+               const detector_t& detector) {
         traccc::detector_buffer rv;
-        rv.set<typename detector_traits_t::host>(
-            detray::get_buffer(detector, mr, copy));
+        rv.set<detector_t>(detray::get_buffer(detector, mr, copy));
         return rv;
       });
 }

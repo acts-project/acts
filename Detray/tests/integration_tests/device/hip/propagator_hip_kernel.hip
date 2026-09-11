@@ -22,13 +22,13 @@ __global__ void propagator_test_kernel(
     vecmem::data::vector_view<test_track> tracks_data,
     vecmem::data::jagged_vector_view<step_record<test_algebra>> steps_data) {
   int gid = threadIdx.x + blockIdx.x * blockDim.x;
-  using detector_device_t = device::detector<typename detector_t::metadata>;
+  using device_detector_t = device::detector<typename detector_t::metadata>;
 
   static_assert(std::is_same_v<typename detector_t::view_type,
-                               typename detector_device_t::view_type>,
+                               typename device_detector_t::view_type>,
                 "Host and device detector views do not match");
 
-  detector_device_t det(det_data);
+  device_detector_t det(det_data);
   vecmem::device_vector<test_track> tracks(tracks_data);
   vecmem::jagged_device_vector<step_record<test_algebra>> steps(steps_data);
 
@@ -37,7 +37,7 @@ __global__ void propagator_test_kernel(
   }
 
   auto stepr = rk_stepper_t<covfie::field_view<bfield_bknd_t>>{};
-  auto nav = navigator_t<detector_device_t>{};
+  auto nav = navigator_t<device_detector_t>{};
 
   // Create propagator
   using propagator_device_t =

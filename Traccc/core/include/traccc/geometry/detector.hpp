@@ -30,26 +30,28 @@ namespace traccc {
 
 /// Default detector (can contain (almost) any detector data)
 using default_detector =
-    detray::detector_traits<detray::default_metadata<traccc::default_algebra>>;
+    detray::host::detector<detray::default_metadata<traccc::default_algebra>>;
+
+using default_detector_traits = detray::detector_traits<default_detector>;
 
 /// ATLAS Inner Tracker (ITk) detector
 using itk_detector =
-    detray::detector_traits<detray::itk_metadata<traccc::default_algebra>>;
+    detray::host::detector<detray::itk_metadata<traccc::default_algebra>>;
 
 /// Open Data Detector (ODD) detector
 using odd_detector =
-    detray::detector_traits<detray::odd_metadata<traccc::default_algebra>>;
+    detray::host::detector<detray::odd_metadata<traccc::default_algebra>>;
 
 /// Detray telescope detector (test detector)
-using telescope_detector = detray::detector_traits<
+using telescope_detector = detray::host::detector<
     detray::telescope_metadata<traccc::default_algebra, detray::rectangle2D>>;
 
 /// Detray toy detector (test detector)
 using toy_detector =
-    detray::detector_traits<detray::toy_metadata<traccc::default_algebra>>;
+    detray::host::detector<detray::toy_metadata<traccc::default_algebra>>;
 
 /// Detray wire chamber detector (test detector)
-using wire_chamber = detray::detector_traits<
+using wire_chamber = detray::host::detector<
     detray::wire_chamber_metadata<traccc::default_algebra>>;
 
 }  // namespace traccc
