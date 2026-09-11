@@ -6,9 +6,6 @@ from typing import Optional
 
 import acts
 import acts.examples
-from acts.examples.root import (
-    RootSimHitReader,
-)
 import uproot as ur
 import awkward as ak
 import numpy as np
@@ -46,9 +43,8 @@ def runTruthTracking(
     )
     from acts.examples.root import (
         RootParticleReader,
-        RootTrackStatesWriter,
+        RootSimHitReader,
         RootTrackSummaryWriter,
-        RootTrackParameterPerformanceWriter,
     )
 
     s = s or acts.examples.Sequencer(
