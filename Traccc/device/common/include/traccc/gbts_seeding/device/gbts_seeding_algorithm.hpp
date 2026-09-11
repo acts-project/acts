@@ -8,6 +8,7 @@
 #pragma once
 
 // Local include(s).
+#include "traccc/device/abstract_awaitable.hpp"
 #include "traccc/device/algorithm_base.hpp"
 #include "traccc/gbts_seeding/device/gbts_add_terminus_to_path_store.hpp"
 #include "traccc/gbts_seeding/device/gbts_bid_seeds_for_hits.hpp"
@@ -63,7 +64,8 @@ class gbts_seeding_algorithm
           const edm::spacepoint_collection::const_view&,
           const edm::measurement_collection::const_view&)>,
       public messaging,
-      public algorithm_base {
+      public algorithm_base,
+      public virtual abstract_awaitable {
  public:
   /// Constructor for the GBTS seed finding algorithm
   ///

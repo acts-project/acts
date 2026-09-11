@@ -100,9 +100,9 @@ full_chain_algorithm::full_chain_algorithm(
                 {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy,
                 m_stream, logger->cloneWithSuffix("SeedingAlg"),
                 m_await_function),
-      m_gbts_seeding(gbts_config,
-                     {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy,
-                     m_stream, logger->cloneWithSuffix("GbtsAlg")),
+      m_gbts_seeding(
+          gbts_config, {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy,
+          m_stream, logger->cloneWithSuffix("GbtsAlg"), m_await_function),
       m_track_parameter_estimation(
           track_params_estimation_config,
           {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy, m_stream,
@@ -191,7 +191,8 @@ full_chain_algorithm::full_chain_algorithm(const full_chain_algorithm& parent)
           parent.logger().cloneWithSuffix("SeedingAlg"), m_await_function),
       m_gbts_seeding(parent.m_gbts_config,
                      {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy,
-                     m_stream, parent.logger().cloneWithSuffix("GbtsAlg")),
+                     m_stream, parent.logger().cloneWithSuffix("GbtsAlg"),
+                     m_await_function),
       m_track_parameter_estimation(
           parent.m_track_params_estimation_config,
           {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy, m_stream,

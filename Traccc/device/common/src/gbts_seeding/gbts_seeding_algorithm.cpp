@@ -456,9 +456,9 @@ auto gbts_seeding_algorithm::extract_seeds(
   unsigned int outputSeeds;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(output_seeds, *(mr().host));
-    // Here we could give control back to the caller, once our
-    // code allows for it. (coroutines...)
-    outputSeeds = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    outputSeeds = size.unsafe_get();
   } else {
     outputSeeds = copy().get_size(output_seeds);
   }
@@ -521,9 +521,9 @@ auto gbts_seeding_algorithm::operator()(
   unsigned int nSp;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(spacepoints, *(mr().host));
-    // Here we could give control back to the caller, once our
-    // code allows for it. (coroutines...)
-    nSp = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    nSp = size.unsafe_get();
   } else {
     nSp = copy().get_size(spacepoints);
   }
