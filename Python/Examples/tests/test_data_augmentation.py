@@ -197,7 +197,6 @@ def readExampleRootData(outputDir: Path):
     masks = []
     for field in summary_fields:
         nonempty = ak.to_numpy(ak.num(summary[field]) > 0)
-
         firsts = ak.firsts(summary[field])
         arr = ak.to_numpy(firsts)
         arr = np.asarray(arr).squeeze()
