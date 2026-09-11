@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/geometry/concepts.hpp"
 #include "detray/geometry/mask.hpp"
 #include "detray/geometry/shapes/concentric_cylinder2D.hpp"
@@ -186,7 +187,7 @@ class spatial_grid_impl : public grid_t {
   }
 
   /// Interface for the navigator
-  template <typename detector_t, typename track_t,
+  template <concepts::detector detector_t, typename track_t,
             concepts::arithmetic window_size_t>
   DETRAY_HOST_DEVICE auto search(
       const detector_t &det, const typename detector_t::volume_type &volume,

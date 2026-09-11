@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "detray/builders/surface_factory_interface.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/core/detail/data_context.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/indexing.hpp"
@@ -38,7 +39,7 @@ namespace detray {
 ///
 /// @tparam detector_t the type of detector the volume belongs to.
 /// @tparam mask_shape_t the shape of the surface.
-template <typename detector_t, typename mask_shape_t>
+template <concepts::detector detector_t, typename mask_shape_t>
 class surface_factory : public surface_factory_interface<detector_t> {
   using algebra_t = typename detector_t::algebra_type;
   using volume_link_t = typename detector_t::surface_type::navigation_link;

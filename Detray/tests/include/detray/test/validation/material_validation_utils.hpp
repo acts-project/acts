@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/material/concepts.hpp"
 #include "detray/material/detail/material_accessor.hpp"
@@ -209,7 +210,7 @@ struct material_tracer : public detray::base_actor {
   }
 
   /// Record the data for a material step
-  template <typename detector_t>
+  template <concepts::detector detector_t>
   DETRAY_HOST_DEVICE inline auto record_mat_step(
       state &tracer, const typename detector_t::geometry_context &gctx,
       const tracking_surface<detector_t> sf,
@@ -240,7 +241,7 @@ struct material_tracer : public detray::base_actor {
 };
 
 /// Run the propagation and record test data along the way
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline auto record_material(
     const typename detector_t::geometry_context /*gctx*/,
     vecmem::memory_resource *host_mr, const detector_t &det,

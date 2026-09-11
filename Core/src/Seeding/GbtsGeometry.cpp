@@ -13,8 +13,12 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <iterator>
 #include <optional>
+#include <stdexcept>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace Acts::Experimental::detail {
 
@@ -285,7 +289,37 @@ GbtsGeometry::GbtsGeometry(
   const float minZ0 = z0Range.min;
   const float maxZ0 = z0Range.max;
 
-  for (const GbtsLayerDescription& layer : layerDescriptions) {
+  // The adaptive cuts key on where a pixel barrel layer sits radially. Derive
+  // that ordinal here so the seeder never has to read an experiment layer id.
+  std::vector<GbtsLayerDescription> layers(layerDescriptions.begin(),
+                                           layerDescriptions.end());
+
+  std::vector<GbtsLayerDescription*> pixelBarrel;
+  for (GbtsLayerDescription& layer : layers) {
+    if (layer.type == GbtsLayerType::Barrel &&
+        layer.technology == GbtsLayerTechnology::Pixel) {
+      pixelBarrel.push_back(&layer);
+    }
+  }
+
+  const auto numOrdered = std::ranges::count_if(
+      pixelBarrel,
+      [](const GbtsLayerDescription* l) { return l->barrelOrder >= 0; });
+  if (numOrdered == 0) {
+    // ties broken by id so the result does not depend on the input order
+    std::ranges::sort(pixelBarrel, {}, [](const GbtsLayerDescription* l) {
+      return std::pair{l->refCoord, l->id};
+    });
+    for (std::size_t i = 0; i < pixelBarrel.size(); ++i) {
+      pixelBarrel[i]->barrelOrder = static_cast<std::int32_t>(i);
+    }
+  } else if (numOrdered != std::ssize(pixelBarrel)) {
+    throw std::invalid_argument(
+        "GbtsGeometry: barrelOrder must be set on every pixel barrel layer or "
+        "on none of them");
+  }
+
+  for (const GbtsLayerDescription& layer : layers) {
     const detail::GbtsLayer& pL = createLayer(layer, m_nEtaBins);
     m_nEtaBins += pL.binning().numBins;
   }

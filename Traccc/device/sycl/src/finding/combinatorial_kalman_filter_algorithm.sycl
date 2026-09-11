@@ -62,10 +62,10 @@ struct remove_duplicates {};
 
 struct fill_finding_propagation_sort_keys {};
 
-template <typename detector_t, typename bfield_t>
+template <detray::concepts::detector detector_t, typename bfield_t>
 struct progressive_kalman_filter {};
 
-template <typename detector_t, typename bfield_t>
+template <detray::concepts::detector detector_t, typename bfield_t>
 struct propagate_to_next_surface {};
 
 template <typename detector_t>

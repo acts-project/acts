@@ -594,10 +594,16 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
 
         // track parameters error
         Acts::BoundVector errors;
+        // A failed or empty fit leaves NaN on the covariance diagonal, and the
+        // ordered comparison signals FE_INVALID on it. Writing `nan` for such
+        // an entry is the intended behaviour here; the NaN covariance itself
+        // is the fitter's problem, tracked in #2348.
+        // MARK: fpeMaskBegin(FLTINV, 1, #2348)
         for (Eigen::Index i = 0; i < parameters.size(); ++i) {
           const double variance = covariance(i, i);
           errors[i] = variance >= 0 ? std::sqrt(variance) : nan;
         }
+        // MARK: fpeMaskEnd(FLTINV)
         m_err_eLOC0[ipar].push_back(
             Acts::clampValue<float>(errors[Acts::eBoundLoc0]));
         m_err_eLOC1[ipar].push_back(

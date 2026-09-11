@@ -25,7 +25,7 @@ namespace traccc::details {
 /// @tparam detector_t The detector type to use
 /// @tparam bfield_t   The magnetic field type to use
 ///
-template <typename detector_t, typename bfield_t>
+template <detray::concepts::detector detector_t, typename bfield_t>
 using kalman_fitter_t = kalman_fitter<
     detray::rk_stepper<
         bfield_t, typename detector_t::algebra_type,

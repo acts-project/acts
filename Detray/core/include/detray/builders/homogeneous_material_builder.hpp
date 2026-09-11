@@ -33,6 +33,8 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
   using material_id = typename detector_t::material::id;
   using scalar_type = dscalar<typename detector_t::algebra_type>;
 
+  static_assert(concepts::detector<detector_t>);
+
   /// @param vol_builder volume builder that should be decorated with material
   DETRAY_HOST
   explicit homogeneous_material_builder(

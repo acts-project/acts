@@ -22,8 +22,8 @@
 
 namespace traccc {
 
-template <typename detector_t, typename bfield_t, typename track_generator_t,
-          typename writer_t>
+template <detray::concepts::detector detector_t, typename bfield_t,
+          typename track_generator_t, typename writer_t>
 struct simulator {
   using algebra_type = typename detector_t::algebra_type;
   using scalar_type = typename detector_t::scalar_type;
