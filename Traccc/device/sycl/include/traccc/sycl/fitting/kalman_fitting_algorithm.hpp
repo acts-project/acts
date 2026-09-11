@@ -9,6 +9,7 @@
 
 // SYCL library include(s).
 #include "traccc/sycl/utils/algorithm_base.hpp"
+#include "traccc/sycl/utils/await.hpp"
 #include "traccc/sycl/utils/queue_wrapper.hpp"
 
 // Project include(s).
@@ -27,11 +28,13 @@ class kalman_fitting_algorithm : public device::kalman_fitting_algorithm,
   /// @param copy   The copy object used by the algorithm
   /// @param queue  The SYCL queue used by the algorithm
   /// @param logger The logger used by the algorithm
+  /// @param await_func The function used to synchronize events
   ///
   kalman_fitting_algorithm(
       const config_type& config, const traccc::memory_resource& mr,
       const vecmem::copy& copy, queue_wrapper& queue,
-      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
+      await_function_type await_func = await_sync_event);
 
  private:
   /// @name Function(s) implemented from @c device::kalman_fitting_algorithm

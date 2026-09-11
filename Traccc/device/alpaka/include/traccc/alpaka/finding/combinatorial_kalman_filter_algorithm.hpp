@@ -9,6 +9,7 @@
 
 // Local include(s).
 #include "traccc/alpaka/utils/algorithm_base.hpp"
+#include "traccc/alpaka/utils/await.hpp"
 
 // Project include(s).
 #include "traccc/alpaka/fitting/kalman_fitting_algorithm.hpp"
@@ -27,7 +28,8 @@ class combinatorial_kalman_filter_algorithm
       const vecmem::copy& copy, alpaka::queue& queue,
       std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
       std::unique_ptr<traccc::alpaka::kalman_fitting_algorithm> kf_fitter =
-          nullptr);
+          nullptr,
+      await_function_type await_func = await_sync_event);
 
  private:
   /// @name Function(s) inherited from
