@@ -647,6 +647,7 @@ class RiddersStepper final {
   /// @param state the state of the RiddersStepper
   /// @param surface the surface
   /// @param freeToBoundCorrection the correction
+  /// @return Failure if the parameters cannot be expressed on the surface
   Result<void> transportCovarianceToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =

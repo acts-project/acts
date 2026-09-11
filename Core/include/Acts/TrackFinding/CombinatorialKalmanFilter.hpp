@@ -1036,10 +1036,8 @@ class CombinatorialKalmanFilter {
                                      *brem.componentCache);
         }
 
-        detail::Gsf::applyMultipleScattering(state, stepper, surface,
-                                             updateMode, logger());
-
-        return Result<void>::success();
+        return detail::Gsf::applyMultipleScattering(state, stepper, surface,
+                                                    updateMode, logger());
       }
     }
 

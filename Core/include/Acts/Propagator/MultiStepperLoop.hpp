@@ -750,6 +750,7 @@ class MultiStepperLoop final {
   /// @param [in] freeToBoundCorrection Flag steering non-linear correction during global to local correction
   /// to
   /// @note no check is done if the position is actually on the surface
+  /// @return Failure if the parameters cannot be expressed on the surface
   Result<void> transportCovarianceToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
