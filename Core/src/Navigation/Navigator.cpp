@@ -559,6 +559,8 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
   if (!isValid || !state.stream.isValid()) {
     // first time, resolve the candidates
     resolveCandidates(state, position, direction);
+  } else {
+    state.stream.switchToNextCandidate();
   }
 
   // The navigator works directly off the (path-length sorted) stream
