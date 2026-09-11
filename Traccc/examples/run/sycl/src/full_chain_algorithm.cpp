@@ -115,7 +115,8 @@ full_chain_algorithm::full_chain_algorithm(
                      {m_cached_device_mr, &m_cached_pinned_host_mr},
                      m_copy,
                      m_data->m_queue_wrapper,
-                     log->clone("GbtsAlg")},
+                     log->clone("GbtsAlg"),
+                     m_await_function},
       m_track_parameter_estimation{
           track_params_estimation_config,
           {m_cached_device_mr, &m_cached_pinned_host_mr},
@@ -218,7 +219,8 @@ full_chain_algorithm::full_chain_algorithm(const full_chain_algorithm& parent)
                      {m_cached_device_mr, &m_cached_pinned_host_mr},
                      m_copy,
                      m_data->m_queue_wrapper,
-                     parent.logger().clone("GbtsAlg")},
+                     parent.logger().clone("GbtsAlg"),
+                     m_await_function},
       m_track_parameter_estimation{
           parent.m_track_params_estimation_config,
           {m_cached_device_mr, &m_cached_pinned_host_mr},
