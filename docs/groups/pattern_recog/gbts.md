@@ -108,7 +108,7 @@ Two different layer numbers meet here, and they are separate types:
 
 | Type | What it is |
 | --- | --- |
-| `GbtsExperimentLayerId` | the layer id the experiment assigns (80000, 81000, ...). Sparse and structured -- the layer descriptions and connections are written in terms of it. The algorithm treats it as an opaque key. |
+| `GbtsExperimentLayerId` | the layer id the experiment assign. Sparse and structured -- the layer descriptions and connections are written in terms of it. The algorithm treats it as an opaque key. |
 | `GbtsLayerIndex` | where that layer sits in one @ref Acts::Experimental::GbtsGeometry, dense from zero. It indexes the geometry, and it is what a node carries. |
 
 `insert` takes the **index**, because it is on the per-space-point path.
