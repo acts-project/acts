@@ -112,13 +112,11 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
 
     const float r2 = otherLayer.m_layerDescription.refCoord;
 
-    // for same layer links use layer width
-    float A = r2 / (2.0f * m_layerDescription.refHalfWidth);
-    float B = r1 / (2.0f * m_layerDescription.refHalfWidth);
-    if (r2 != r1) {
-      A = r2 / (r2 - r1);
-      B = r1 / (r2 - r1);
-    }
+    // for same layer links use layer thickness
+    const float dr =
+        this == &otherLayer ? m_layerDescription.layerThickness : r2 - r1;
+    const float A = r2 / dr;
+    const float B = r1 / dr;
 
     const float z0Min = z1min * A - maxB2 * B;
     const float z0Max = z1max * A - minB2 * B;
@@ -173,11 +171,9 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
     if (r1min >= r2max) {
       return false;
     }
-
-    float dz = z2 - z1;
-    if (z2 == z1) {  // self link
-      dz = 2.0f * m_layerDescription.refHalfWidth;
-    }
+    // for same layer links use layer thickness
+    const float dz =
+        this == &otherLayer ? m_layerDescription.layerThickness : z2 - z1;
 
     if (z2 > 0) {  // positive endcap
 
@@ -428,18 +424,19 @@ GbtsGeometry::GbtsGeometry(
       auto& outLinks = binLinks.first;
 
       if (!outLinks.empty()) {
-        bool linkCircle = true;
-        for (auto bin2 : outLinks) {
-          if (binLayerMap[bl.first] != binLayerMap[bin2]) {
-            linkCircle = false;
-            break;
-          }
-          // in the barrel, potential for 1->2->1, we want both links
-          // in the endcap only 1->2 since bins are separated in radius
-          linkCircle = bl.first == bin2 ||
-                       binLayerMap[bl.first]->layerDescription().type ==
-                           GbtsLayerType::Barrel;
-        }
+        const detail::GbtsLayer* layer1 = binLayerMap[bl.first];
+        const bool isBarrel =
+            layer1->layerDescription().type == GbtsLayerType::Barrel;
+        // A bin will never have empty outLinks if it links back to itself.
+        // The barrel can link its bins both ways. 1->2->1 will survive as a
+        // pair, exit both together after all other outgoing links.
+        // The endcap separates its bins in radius. Only a self link will
+        // survive, exit it after all other outgoing links.
+        const bool linkCircle =
+            std::ranges::all_of(outLinks, [&](const std::uint32_t bin2) {
+              return binLayerMap[bin2] == layer1 &&
+                     (bin2 == bl.first || isBarrel);
+            });
         if (!linkCircle) {
           continue;
         }

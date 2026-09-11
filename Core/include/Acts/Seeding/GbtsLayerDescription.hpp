@@ -36,8 +36,9 @@ struct GbtsLayerDescription final {
   GbtsLayerTechnology technology{GbtsLayerTechnology::Pixel};
   /// Reference coordinate (r for barrel, z for endcap).
   float refCoord{};
-  /// half width in the reference direction
-  float refHalfWidth{};
+  /// thickness in the reference direction
+  /// max r - min r for the barrel, max z - min z for endcap
+  float layerThickness{};
   /// Minimum boundary coordinate.
   float minBound{};
   /// Maximum boundary coordinate.
