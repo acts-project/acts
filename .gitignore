@@ -36,6 +36,10 @@ codegen/src/codegen.egg-info/
 # generated code shipped in source archives, never committed
 /prebuilt-codegen/
 
+# the shipped synthetic detector descriptions, their material and the
+# configurations fitted to them, which are data rather than output
+!Fatras/data/*.json
+
 # dont ignore hidden configs
 !.clang-format
 !.github

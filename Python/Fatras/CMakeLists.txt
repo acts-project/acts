@@ -3,6 +3,18 @@ file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
 pybind11_add_module(ActsFatrasPythonBindings src/Fatras.cpp)
+
+target_sources(ActsFatrasPythonBindings PRIVATE src/Synthetic.cpp)
+# Reading a detector from file needs `ActsFatrasJson`, which only exists with the
+# JSON plugin. Without it the bindings still build the detectors they are given.
+if(ACTS_BUILD_PLUGIN_JSON)
+    target_sources(ActsFatrasPythonBindings PRIVATE src/SyntheticJson.cpp)
+    target_link_libraries(ActsFatrasPythonBindings PUBLIC ActsFatrasJson)
+    target_compile_definitions(
+        ActsFatrasPythonBindings
+        PRIVATE ACTS_FATRAS_JSON
+    )
+endif()
 install(
     TARGETS ActsFatrasPythonBindings
     DESTINATION ${_acts_python_install_dir}
