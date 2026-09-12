@@ -51,7 +51,8 @@ inline void gbts_create_seed_candidate(
     if (competing_offer > seed_bid) {
       d_seed_ambiguity[prop_idx] = -1;
     } else if (competing_offer != 0) {
-      d_seed_ambiguity[competing_offer & 0xFFFFFFFFLL] = -1;
+      d_seed_ambiguity[static_cast<unsigned int>(competing_offer &
+                                                 0xFFFFFFFFULL)] = -1;
     }
   }
 }
