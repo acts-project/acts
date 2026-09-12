@@ -153,7 +153,7 @@ class caching_navigator
       // Insert the first candidate
       if (this->n_candidates() == 0) [[unlikely]] {
         this->candidates()[0] = new_candidate;
-        this->last_index(this->last_index() + 1);
+        this->last_index(static_cast<dist_t>(this->last_index() + 1));
         assert(this->next_index() <= this->last_index() + 1);
         assert(static_cast<std::size_t>(this->last_index()) < k_cache_capacity);
         return;

@@ -71,7 +71,7 @@ struct cartesian_product_view : public detray::ranges::view_interface<
   constexpr auto data() { return &(*(detray::get<0>(m_begins()))); }
 
   /// @returns product of the number elements of all ranges in the view
-  template <int I = sizeof...(range_ts) - 1>
+  template <int I = static_cast<int>(sizeof...(range_ts)) - 1>
   DETRAY_HOST_DEVICE constexpr auto size(std::size_t s = 1u) const noexcept
       -> std::size_t {
     decltype(auto) begin = detray::get<I>(m_begins);
@@ -187,7 +187,7 @@ struct cartesian_product_iterator {
   /// reset to start a new iteration
   /// @see
   /// https://github.com/gcc-mirror/gcc/blob/master/libstdc%2B%2B-v3/include/std/ranges
-  template <int I = sizeof...(iterator_ts) - 1>
+  template <int I = static_cast<int>(sizeof...(iterator_ts)) - 1>
   DETRAY_HOST_DEVICE constexpr void unroll_increment() {
     auto &itr = detray::get<I>(m_itrs);
     ++itr;
@@ -203,7 +203,7 @@ struct cartesian_product_iterator {
   /// reset to start a new iteration from the end
   /// @see
   /// https://github.com/gcc-mirror/gcc/blob/master/libstdc%2B%2B-v3/include/std/ranges
-  template <int I = sizeof...(iterator_ts) - 1>
+  template <int I = static_cast<int>(sizeof...(iterator_ts)) - 1>
   DETRAY_HOST_DEVICE constexpr void unroll_decrement() {
     auto &itr = detray::get<I>(m_itrs);
 
