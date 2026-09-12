@@ -82,11 +82,10 @@ TEST_P(CkfToyDetectorTests, Run) {
       .do_check(true);
 
   auto [io_det, names] =
-      detray::io::read_detector<traccc::default_detector::host>(host_mr,
-                                                                reader_cfg);
+      detray::io::read_detector<traccc::default_detector_traits::host>(
+          host_mr, reader_cfg);
   traccc::host_detector host_detector{};
-  host_detector.template set<
-      traccc::detector_traits<traccc::default_detector::host::metadata>>(
+  host_detector.template set<traccc::default_detector_traits::host>(
       std::move(io_det));
 
   const traccc::detector_buffer detector_buffer =
@@ -129,7 +128,7 @@ TEST_P(CkfToyDetectorTests, Run) {
   std::filesystem::create_directories(path);
   auto sim = traccc::simulator<host_detector_type, b_field_t, generator_type,
                                writer_type>(
-      ptc, n_events, host_detector.as<detector_traits>(),
+      ptc, n_events, host_detector.as<host_detector_type>(),
       field.as_field<traccc::const_bfield_backend_t<traccc::scalar>>(),
       std::move(generator), std::move(smearer_writer_cfg), path.native());
   sim.get_config().propagation.navigation.search_window = search_window;
@@ -140,7 +139,7 @@ TEST_P(CkfToyDetectorTests, Run) {
    *****************************/
 
   // Seed generator
-  seed_generator<host_detector_type> sg(host_detector.as<detector_traits>(),
+  seed_generator<host_detector_type> sg(host_detector.as<host_detector_type>(),
                                         seed_cfg);
 
   // Finding algorithm configuration

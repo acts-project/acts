@@ -27,14 +27,14 @@ using metadata_t = test::toy_metadata;
 using test_algebra = metadata_t::algebra_type;
 using scalar = dscalar<test_algebra>;
 using point3 = dpoint3D<test_algebra>;
-using detector_host_t = detector<metadata_t, host_container_types>;
-using detector_device_t = detector<metadata_t, device_container_types>;
+using host_detector_t = host::detector<metadata_t>;
+using device_detector_t = device::detector<metadata_t>;
 
 using intersection_t =
-    intersection2D<typename detector_device_t::surface_type, test_algebra>;
+    intersection2D<typename device_detector_t::surface_type, test_algebra>;
 
-using navigator_host_t = caching_navigator<detector_host_t>;
-using navigator_device_t = caching_navigator<detector_device_t>;
+using navigator_host_t = caching_navigator<host_detector_t>;
+using navigator_device_t = caching_navigator<device_detector_t>;
 using stepper_t = line_stepper<test_algebra>;
 
 // detector configuration
@@ -62,7 +62,7 @@ struct prop_state {
 
 /// test function for navigator with single state
 void navigator_test(
-    typename detector_host_t::view_type det_data, propagation::config& prop_cfg,
+    typename host_detector_t::view_type det_data, propagation::config& prop_cfg,
     vecmem::data::vector_view<free_track_parameters<test_algebra>>& tracks_data,
     vecmem::data::jagged_vector_view<dindex>& volume_records_data,
     vecmem::data::jagged_vector_view<point3>& position_records_data);

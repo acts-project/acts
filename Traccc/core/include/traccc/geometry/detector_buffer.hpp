@@ -20,42 +20,38 @@ namespace traccc {
 
 class detector_buffer {
  public:
-  template <typename detector_traits_t>
-  void set(typename detector_traits_t::buffer&& obj)
-    requires(is_detector_traits<detector_traits_t>)
-  {
-    m_obj.set<typename detector_traits_t::buffer>(std::move(obj));
+  /// @tparam T either a detray metadata or detector type (checked by the trait)
+  /// @{
+  template <typename T>
+  void set(detray::detector_buffer_t<T>&& obj) {
+    m_obj.set<detray::detector_buffer_t<T>>(std::move(obj));
   }
 
-  template <typename detector_traits_t>
-  bool is() const
-    requires(is_detector_traits<detector_traits_t>)
-  {
-    return (type() == typeid(typename detector_traits_t::buffer));
+  template <typename T>
+  bool is() const {
+    return (type() == typeid(detray::detector_buffer_t<T>));
   }
 
   const std::type_info& type() const { return m_obj.type(); }
 
-  template <typename detector_traits_t>
-  const typename detector_traits_t::buffer& as() const
-    requires(is_detector_traits<detector_traits_t>)
-  {
-    return m_obj.as<typename detector_traits_t::buffer>();
+  template <typename T>
+  const detray::detector_buffer_t<T>& as() const {
+    return m_obj.as<detray::detector_buffer_t<T>>();
   }
 
-  template <typename detector_traits_t>
-  typename detector_traits_t::view as_view() const
-    requires(is_detector_traits<detector_traits_t>)
-  {
-    return detray::get_data(as<detector_traits_t>());
+  template <typename T>
+  typename detray::detector_view_t<T> as_view() const {
+    return detray::get_data(as<T>());
   }
+  /// @}
 
  private:
   move_only_any m_obj;
-};  // class bfield
+};  // class detector_buffer
 
 /// @brief Helper function for `detector_buffer_visitor`
-template <typename callable_t, typename detector_t, typename... detector_ts>
+template <typename callable_t, detray::concepts::detector detector_t,
+          detray::concepts::detector... detector_ts>
 auto detector_buffer_visitor_helper(const detector_buffer& detector_buffer,
                                     callable_t&& callable,
                                     std::tuple<detector_t, detector_ts...>*) {
@@ -98,10 +94,10 @@ inline detector_buffer buffer_from_host_detector(const host_detector& det,
                                                  vecmem::memory_resource& mr,
                                                  vecmem::copy& copy) {
   return host_detector_visitor<traccc::detector_type_list>(
-      det, [&mr, &copy]<typename detector_traits_t>(
-               const typename detector_traits_t::host& detector) {
+      det, [&mr, &copy]<detray::concepts::detector detector_t>(
+               const detector_t& detector) {
         traccc::detector_buffer rv;
-        rv.set<detector_traits_t>(detray::get_buffer(detector, mr, copy));
+        rv.set<detector_t>(detray::get_buffer(detector, mr, copy));
         return rv;
       });
 }

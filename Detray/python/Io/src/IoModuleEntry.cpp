@@ -41,9 +41,9 @@ namespace {
 using reader_config_t = detray::io::detector_reader_config;
 using scalar_t = DETRAY_CUSTOM_SCALARTYPE;
 using algebra_t = detray::array<scalar_t>;
-using detector_t = detray::detector<detray::default_metadata<algebra_t>>;
+using detector_t = detray::host::detector<detray::default_metadata<algebra_t>>;
 using writer_config_t = detray::io::detector_writer_config;
-using toy_detector_t = detray::detector<detray::toy_metadata<algebra_t>>;
+using toy_detector_t = detray::host::detector<detray::toy_metadata<algebra_t>>;
 
 template <typename T>
 std::string to_string(const T &obj) {

@@ -1508,8 +1508,9 @@ int main(int argc, char** argv) {
 
   // Detector types
   using rectangle_telescope =
-      detector<telescope_metadata<test_algebra, rect_type>>;
-  using wire_telescope = detector<telescope_metadata<test_algebra, wire_type>>;
+      host::detector<telescope_metadata<test_algebra, rect_type>>;
+  using wire_telescope =
+      host::detector<telescope_metadata<test_algebra, wire_type>>;
   using track_type = free_track_parameters<test_algebra>;
 
   // Constant magnetic field type

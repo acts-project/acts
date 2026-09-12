@@ -109,7 +109,7 @@ TEST_P(KalmanFittingHoleCountTests, Run) {
   std::filesystem::create_directories(full_path);
   auto sim = traccc::simulator<host_detector_type, b_field_t, generator_type,
                                writer_type>(
-      ptc, n_events, detector.as<detector_traits>(),
+      ptc, n_events, detector.as<host_detector_type>(),
       field.as_field<traccc::const_bfield_backend_t<traccc::scalar>>(),
       std::move(generator), std::move(smearer_writer_cfg), full_path);
   sim.run();
@@ -119,7 +119,7 @@ TEST_P(KalmanFittingHoleCountTests, Run) {
    ***************/
 
   // Seed generator
-  seed_generator<host_detector_type> sg(detector.as<detector_traits>(),
+  seed_generator<host_detector_type> sg(detector.as<host_detector_type>(),
                                         seed_cfg);
 
   // Fitting algorithm object

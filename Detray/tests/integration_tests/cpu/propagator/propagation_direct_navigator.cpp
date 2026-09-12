@@ -52,7 +52,7 @@ TEST_P(PropagatorWithRkStepperDirectNavigatorToyDetector, direct_navigator) {
       uniform_track_generator<free_track_parameters<test_algebra>>;
 
   // Toy detector
-  using detector_t = detector<test::toy_metadata>;
+  using detector_t = host::detector<test::toy_metadata>;
   using surface_t = typename detector_t::surface_type;
 
   // Runge-Kutta propagation
@@ -234,7 +234,7 @@ TEST_P(PropagatorWithRkStepperDirectNavigatorWireChamber, direct_navigator) {
       uniform_track_generator<free_track_parameters<test_algebra>>;
 
   // Toy detector
-  using detector_t = detector<test::wire_chamber_metadata>;
+  using detector_t = host::detector<test::wire_chamber_metadata>;
   using surface_t = typename detector_t::surface_type;
 
   // Default navigator for comparison

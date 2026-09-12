@@ -20,9 +20,9 @@ namespace traccc::details {
 /// @tparam detector_t The detector type to use
 /// @tparam bfield_t   The magnetic field type to use
 ///
-using triplet_fitter_t = traccc::triplet_fitter<
-    const typename traccc::default_detector::host,
-    typename detray::bfield::const_field_t<
-        traccc::default_detector::host::scalar_type>::view_t>;
+using triplet_fitter_t =
+    traccc::triplet_fitter<const typename traccc::default_detector_traits::host,
+                           typename detray::bfield::const_field_t<
+                               traccc::default_detector::scalar_type>::view_t>;
 
 }  // namespace traccc::details

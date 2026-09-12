@@ -46,34 +46,30 @@ void set_transform(detector_t &det, const transform3_t &trf, unsigned int i) {
       "Please, use a separate geometry context in this case");
   det._transforms.at(i) = trf;
 }
-}  // namespace detail
 
 /// @brief The detector definition.
 ///
-/// This class is a heavily templated container aggregation, that owns all data
-/// and sets the interface between geometry, navigator and surface finder
-/// structures. Its view type is used to move the data between host and device.
+/// This class is a heavily templated container aggregation, that owns all data.
+/// Its view type is used to move the data between host and device.
+/// It is constructed by the @c detector_builder and is afterwards immutable.
 ///
 /// @tparam metadata helper that defines collection and link types centrally
 /// @tparam container_t type collection of the underlying containers
-template <concepts::metadata metadata_t,
-          typename container_t = host_container_types>
+template <concepts::metadata metadata_t, typename container_t>
 class detector {
   // Allow the building of the detector containers
-  friend class volume_builder<detector<metadata_t, container_t>>;
+  friend class detray::volume_builder<detector<metadata_t, container_t>>;
   template <concepts::detector, concepts::grid, typename, typename>
-  friend class grid_builder;
-  friend class homogeneous_material_builder<detector<metadata_t, container_t>>;
-  friend class homogeneous_volume_material_builder<
+  friend class detray::grid_builder;
+  friend class detray::homogeneous_material_builder<
+      detector<metadata_t, container_t>>;
+  friend class detray::homogeneous_volume_material_builder<
       detector<metadata_t, container_t>>;
   template <concepts::detector, std::size_t, typename>
-  friend class material_map_builder;
-  template <typename>
-  friend class volume_accelerator_builder;
+  friend class detray::material_map_builder;
   /// @todo Remove
-  friend void
-  detail::set_transform<detector<metadata_t, container_t>,
-                        dtransform3D<typename metadata_t::algebra_type>>(
+  friend void set_transform<detector<metadata_t, container_t>,
+                            dtransform3D<typename metadata_t::algebra_type>>(
       detector<metadata_t, container_t> &,
       const dtransform3D<typename metadata_t::algebra_type> &, unsigned int);
 
@@ -132,17 +128,6 @@ class detector {
   using volume_container = vector_type<volume_type>;
 
   /// Detector view types
-  /// @TODO: Switch to const_view_type always if possible
-  using view_type = dmulti_view<dvector_view<volume_type>,
-                                typename surface_lookup_container::view_type,
-                                typename transform_container::view_type,
-                                typename mask_container::view_type,
-                                typename material_container::view_type,
-                                typename accelerator_container::view_type>;
-
-  static_assert(concepts::device_view<view_type>,
-                "Detector view type ill-formed");
-
   using const_view_type =
       dmulti_view<dvector_view<const volume_type>,
                   typename surface_lookup_container::const_view_type,
@@ -151,6 +136,10 @@ class detector {
                   typename material_container::const_view_type,
                   typename accelerator_container::const_view_type>;
 
+  using view_type = const_view_type;
+
+  static_assert(concepts::device_view<view_type>,
+                "Detector view type ill-formed");
   static_assert(concepts::device_view<const_view_type>,
                 "Detector const view type ill-formed");
 
@@ -350,5 +339,78 @@ class detector {
   /// All surface finder data structures that are used in the detector volumes
   accelerator_container _accelerators;
 };
+
+}  // namespace detail
+
+namespace host {
+
+template <concepts::metadata metadata_t>
+using detector = detray::detail::detector<metadata_t, host_container_types>;
+
+}  // namespace host
+
+namespace device {
+
+template <concepts::metadata metadata_t>
+using detector =
+    detray::detail::detector<metadata_t, const_device_container_types>;
+
+}  // namespace device
+
+template <typename T>
+struct detector_traits {};
+
+/// Unified interface to detector types - from a metadata type
+template <concepts::metadata metadata_t>
+struct detector_traits<metadata_t> {
+  /// Metadata type of the detector.
+  using metadata_type = metadata_t;
+
+  /// Host type of the detector.
+  using host = detray::host::detector<metadata_type>;
+
+  /// Device type of the detector.
+  using device = detray::device::detector<metadata_type>;
+
+  /// View of the detector.
+  using view = typename host::const_view_type;
+
+  /// Buffer for a detector's data.
+  using buffer = typename host::buffer_type;
+};
+
+/// Unified interface to detector types - from any detector type
+template <concepts::metadata metadata_t, typename container_t>
+struct detector_traits<detail::detector<metadata_t, container_t>> {
+ private:
+  using T = detector_traits<metadata_t>;
+
+ public:
+  using metadata_type = typename T::metadata_type;
+  using host = typename T::host;
+  using device = typename T::device;
+  using view = typename T::view;
+  using buffer = typename T::buffer;
+};
+
+/// Some predefined alias types
+/// @{
+
+template <typename D>
+using detector_metadata_t = typename detector_traits<D>::metadata_type;
+
+template <typename D>
+using detector_host_t = typename detector_traits<D>::host;
+
+template <typename D>
+using detector_device_t = typename detector_traits<D>::device;
+
+template <typename D>
+using detector_view_t = typename detector_traits<D>::view;
+
+template <typename D>
+using detector_buffer_t = typename detector_traits<D>::buffer;
+
+/// @}
 
 }  // namespace detray

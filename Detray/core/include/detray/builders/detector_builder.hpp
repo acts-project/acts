@@ -38,7 +38,9 @@ template <concepts::metadata metadata_t,
           template <typename...> class volume_data_t = std::vector>
 class detector_builder {
  public:
-  using detector_type = detector<metadata_t, host_container_types>;
+  // Cannot use the host::detector type, because the friendship relation with
+  // the volume builders cannot be resolved through the type alias
+  using detector_type = detail::detector<metadata_t, host_container_types>;
   using algebra_type = typename detector_type::algebra_type;
   using scalar_type = dscalar<algebra_type>;
 

@@ -33,6 +33,9 @@
 #include "traccc/geometry/detector_buffer.hpp"
 #include "traccc/utils/detector_buffer_bfield_visitor.hpp"
 
+// Detray include(s)
+#include <detray/core/concepts.hpp>
+
 // System include(s).
 #include <new>
 #include <type_traits>
@@ -252,10 +255,10 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
     const edm::measurement_collection::const_view::size_type n_measurements,
     const edm::measurement_collection::const_view& measurements) const {
   return detector_buffer_visitor<detector_type_list>(
-      detector, [&]<typename detector_traits_t>(
-                    const typename detector_traits_t::view& det) {
+      detector, [&]<detray::concepts::detector detector_t>(
+                    const detray::detector_view_t<detector_t>& det) {
         // Construct an appropriate device detector object.
-        typename detector_traits_t::device device_det{det};
+        detray::detector_device_t<detector_t> device_det{det};
 
         // Create the result buffer.
         vecmem::data::vector_buffer<
@@ -298,14 +301,14 @@ void combinatorial_kalman_filter_algorithm::progressive_kalman_filter_kernel(
   detector_buffer_magnetic_field_visitor<detector_type_list,
                                          alpaka::bfield_type_list<scalar>>(
       detector, field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view& det,
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>& det,
           const bfield_view_t& bfield) {
-        using detector_t = typename detector_traits_t::device;
+        using detector_device_t = detray::detector_device_t<detector_t>;
         using surface_t = typename detector_t::surface_type;
 
         // Copy the detector data to device memory.
-        vecmem::data::vector_buffer<typename detector_traits_t::view>
+        vecmem::data::vector_buffer<detray::detector_view_t<detector_t>>
             device_det(1u, mr().main);
         copy().setup(device_det)->ignore();
         copy()({1u, &det}, device_det)->ignore();
@@ -324,7 +327,8 @@ void combinatorial_kalman_filter_algorithm::progressive_kalman_filter_kernel(
             details::get_queue(queue()),
             makeWorkDiv<Acc>(deviceBlocks, deviceThreads),
             kernels::progressive_kalman_filter<
-                traccc::details::ckf_propagator_t<detector_t, bfield_view_t>>{},
+                traccc::details::ckf_propagator_t<detector_device_t,
+                                                  bfield_view_t>>{},
             config, device_det.ptr(), bfield, sf_sequences, payload);
       });
 }
@@ -340,10 +344,10 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
 
   // Launch the kernel for the appropriate detector type.
   detector_buffer_visitor<detector_type_list>(
-      detector, [&]<typename detector_traits_t>(
-                    const typename detector_traits_t::view& det) {
+      detector, [&]<detray::concepts::detector detector_t>(
+                    const detray::detector_view_t<detector_t>& det) {
         // Copy the detector data to device memory.
-        vecmem::data::vector_buffer<typename detector_traits_t::view>
+        vecmem::data::vector_buffer<detray::detector_view_t<detector_t>>
             device_det(1u, mr().main);
         copy().setup(device_det)->ignore();
         copy()({1u, &det}, device_det)->ignore();
@@ -352,8 +356,8 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
         ::alpaka::exec<Acc>(
             details::get_queue(queue()),
             makeWorkDiv<Acc>(deviceBlocks, deviceThreads),
-            kernels::find_tracks<typename detector_traits_t::device>{}, config,
-            device_det.ptr(), payload);
+            kernels::find_tracks<detray::detector_device_t<detector_t>>{},
+            config, device_det.ptr(), payload);
       });
 }
 
@@ -467,16 +471,18 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
   detector_buffer_magnetic_field_visitor<detector_type_list,
                                          alpaka::bfield_type_list<scalar>>(
       detector, field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view&,
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>&,
           const bfield_view_t& bfield) {
+        using detector_device_t = detray::detector_device_t<detector_t>;
+
         // The detector was already built in global memory by
         // create_device_detector, which dispatched over the same detector
         // type list, so this is the type it stored there.
-        const vecmem::data::vector_buffer<typename detector_traits_t::device>&
+        const vecmem::data::vector_buffer<detector_device_t>&
             device_detector_buffer =
-                device_detector.as<vecmem::data::vector_buffer<
-                    typename detector_traits_t::device>>();
+                device_detector
+                    .as<vecmem::data::vector_buffer<detector_device_t>>();
 
         // Launch the kernel to propagate all active tracks to the next
         // surface.
@@ -484,8 +490,8 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
             details::get_queue(queue()),
             makeWorkDiv<Acc>(deviceBlocks, deviceThreads),
             kernels::propagate_to_next_surface<
-                traccc::details::ckf_propagator_t<
-                    typename detector_traits_t::device, bfield_view_t>,
+                traccc::details::ckf_propagator_t<detector_device_t,
+                                                  bfield_view_t>,
                 bfield_view_t>{},
             config, device_detector_buffer.ptr(), bfield, payload);
       });
@@ -494,9 +500,9 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
 move_only_any combinatorial_kalman_filter_algorithm::create_device_detector(
     const detector_buffer& det) const {
   return detector_buffer_visitor<detector_type_list>(
-      det, [&]<typename detector_traits_t>(
-               const typename detector_traits_t::view& det_view) {
-        using device_detector_t = typename detector_traits_t::device;
+      det, [&]<detray::concepts::detector detector_t>(
+               const detray::detector_view_t<detector_t>& det_view) {
+        using device_detector_t = detray::detector_device_t<detector_t>;
 
         static_assert(
             std::is_trivially_destructible_v<device_detector_t>,

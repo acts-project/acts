@@ -34,36 +34,34 @@ auto kalman_fitting_algorithm::prepare_fit_payload_helper(
     const device::fit_payload& payload) const -> fit_payload {
   return detector_buffer_magnetic_field_visitor<detector_list_t, bfield_list_t>(
       det, field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view& detector,
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>& detector,
           const bfield_view_t& bfield) -> fit_payload {
+        using detector_view_t = detray::detector_view_t<detector_t>;
+        using surface_t =
+            typename detray::detector_device_t<detector_t>::surface_type;
+
         // Create the surface buffer used during the fitting.
-        vecmem::data::jagged_vector_buffer<
-            typename detector_traits_t::device::surface_type>
-            surfaces{n_surfaces, mr().main, mr().host,
-                     vecmem::data::buffer_type::resizable};
+        vecmem::data::jagged_vector_buffer<surface_t> surfaces{
+            n_surfaces, mr().main, mr().host,
+            vecmem::data::buffer_type::resizable};
         copy().setup(surfaces)->ignore();
 
         // Create the (templated) host payload.
-        device::fit_tpayload<
-            typename detector_traits_t::device::const_view_type, bfield_view_t,
-            typename detector_traits_t::device::surface_type>
+        device::fit_tpayload<detector_view_t, bfield_view_t, surface_t>
             host_tpayload{
                 .det = detector, .field = bfield, .surfaces = surfaces};
 
         // Create the (templated) device payload buffer, and copy the host
         // payload into it.
-        vecmem::data::vector_buffer<device::fit_tpayload<
-            typename detector_traits_t::device::const_view_type, bfield_view_t,
-            typename detector_traits_t::device::surface_type>>
+        vecmem::data::vector_buffer<
+            device::fit_tpayload<detector_view_t, bfield_view_t, surface_t>>
             device_tpayload{1u, mr().main};
         copy().setup(device_tpayload)->ignore();
-        copy()(vecmem::data::vector_view<device::fit_tpayload<
-                   typename detector_traits_t::device::const_view_type,
-                   bfield_view_t,
-                   typename detector_traits_t::device::surface_type>>(
-                   1u, &host_tpayload),
-               device_tpayload)
+        copy()(
+            vecmem::data::vector_view<device::fit_tpayload<
+                detector_view_t, bfield_view_t, surface_t>>(1u, &host_tpayload),
+            device_tpayload)
             ->ignore();
 
         // Create the result payload object.

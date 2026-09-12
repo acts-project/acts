@@ -10,6 +10,9 @@
 
 #include "silicon_pixel_spacepoint_formation.hpp"
 
+// Detray include(s)
+#include <detray/core/concepts.hpp>
+
 namespace traccc::host {
 
 silicon_pixel_spacepoint_formation_algorithm::
@@ -22,8 +25,8 @@ silicon_pixel_spacepoint_formation_algorithm::operator()(
     const host_detector& det,
     const edm::measurement_collection::const_view& meas) const {
   return host_detector_visitor<detector_type_list>(
-      det, [&]<typename detector_traits_t>(
-               const typename detector_traits_t::host& detector) {
+      det,
+      [&]<detray::concepts::detector detector_t>(const detector_t& detector) {
         return details::silicon_pixel_spacepoint_formation(detector, meas,
                                                            m_mr);
       });

@@ -20,7 +20,7 @@
 namespace traccc::cuda {
 
 using fitter =
-    traccc::details::kalman_fitter_t<@DETECTOR_NAME@::device,
+    traccc::details::kalman_fitter_t<detray::detector_device_t<traccc::@DETECTOR_NAME@>,
                                      covfie::field<@BFIELD_NAME@>::view_t>;
 
 template void fit_backward<fitter>(

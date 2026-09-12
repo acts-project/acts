@@ -25,7 +25,7 @@
 
 namespace traccc::propagation_validator {
 
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 using candidate_type = detray::intersection_record<detector_t>;
 
 /// Transcribe the hits for a particle to a candidate trace for the detray
@@ -38,7 +38,7 @@ using candidate_type = detray::intersection_record<detector_t>;
 /// @param n_hits_for_particle expected number of hits for the particle
 ///
 /// @returns a vector of intersection candidate records
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 auto transcribe_to_trace(const typename detector_t::geometry_context ctx,
                          const detector_t& det,
                          const traccc::io::csv::particle& ptc,
@@ -100,7 +100,7 @@ auto transcribe_to_trace(const typename detector_t::geometry_context ctx,
 /// @param n_meas_for_particle expected number of ,easurements for the particle
 ///
 /// @returns a vector of intersection candidate records
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 auto transcribe_to_trace(
     const typename detector_t::geometry_context ctx, const detector_t& det,
     const traccc::particle& ptc,

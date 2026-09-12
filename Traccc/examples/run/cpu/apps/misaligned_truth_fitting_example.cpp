@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
       logger().cloneWithSuffix("Options")};
 
   /// Type declarations
-  using host_detector_type = traccc::default_detector::host;
+  using host_detector_type = traccc::default_detector_traits::host;
 
   // Memory resources used by the application.
   vecmem::host_memory_resource host_mr;
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
       polymorphic_detector, host_mr, detector_opts.detector_file,
       detector_opts.material_file, detector_opts.grid_file);
 
-  const traccc::default_detector::host& host_det =
+  const host_detector_type& host_det =
       polymorphic_detector.as<traccc::default_detector>();
 
   /// Create a "misaligned" context in the transform store

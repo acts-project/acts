@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
   vecmem::host_memory_resource host_mr;
 
   using metadata_t = test::wire_chamber_metadata;
-  using wire_chamber_t = detector<metadata_t>;
+  using wire_chamber_t = host::detector<metadata_t>;
   using test_algebra = metadata_t::algebra_type;
   using scalar = dscalar<test_algebra>;
 

@@ -40,7 +40,7 @@ using scalar = test::scalar;
 using point3 = test::point3;
 
 using metadata_t = test::default_metadata;
-using detector_t = detector<metadata_t>;
+using detector_t = host::detector<metadata_t>;
 using mat_id = typename detector_t::material::id;
 using bin_index_t = axis::multi_bin<2u>;
 

@@ -14,14 +14,14 @@
 namespace detray {
 
 __global__ void navigator_test_kernel(
-    typename detector_host_t::view_type det_data,
+    typename host_detector_t::view_type det_data,
     const propagation::config prop_cfg,
     vecmem::data::vector_view<free_track_parameters<test_algebra>> tracks_data,
     vecmem::data::jagged_vector_view<dindex> volume_records_data,
     vecmem::data::jagged_vector_view<point3> position_records_data) {
   int gid = threadIdx.x + blockIdx.x * blockDim.x;
 
-  detector_device_t det(det_data);
+  device_detector_t det(det_data);
   vecmem::device_vector<free_track_parameters<test_algebra>> tracks(
       tracks_data);
   vecmem::jagged_device_vector<dindex> volume_records(volume_records_data);
@@ -71,7 +71,7 @@ __global__ void navigator_test_kernel(
 }
 
 void navigator_test(
-    typename detector_host_t::view_type det_data, propagation::config& prop_cfg,
+    typename host_detector_t::view_type det_data, propagation::config& prop_cfg,
     vecmem::data::vector_view<free_track_parameters<test_algebra>>& tracks_data,
     vecmem::data::jagged_vector_view<dindex>& volume_records_data,
     vecmem::data::jagged_vector_view<point3>& position_records_data) {

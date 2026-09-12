@@ -35,14 +35,12 @@ __global__ void __launch_bounds__(1024, 1) count_spacepoints(
 }
 
 /// Kernel wrapping @c device::form_spacepoints
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 __global__ void __launch_bounds__(1024, 1) form_spacepoints(
-    typename detector_t::view detector,
+    detray::detector_view_t<detector_t> detector,
     edm::measurement_collection::const_view measurements,
     vecmem::data::vector_view<const unsigned int> spacepoint_index,
-    edm::spacepoint_collection::view spacepoints)
-  requires(traccc::is_detector_traits<detector_t>)
-{
+    edm::spacepoint_collection::view spacepoints) {
   device::form_spacepoints<detector_t>(details::global_index1(), detector,
                                        measurements, spacepoint_index,
                                        spacepoints);
@@ -86,9 +84,9 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
   const unsigned int n_blocks =
       (payload.n_measurements + n_threads - 1) / n_threads;
   detector_buffer_visitor<detector_type_list>(
-      payload.detector, [&]<typename detector_traits_t>(
-                            const typename detector_traits_t::view& det) {
-        kernels::form_spacepoints<detector_traits_t>
+      payload.detector, [&]<detray::concepts::detector detector_t>(
+                            const detray::detector_view_t<detector_t>& det) {
+        kernels::form_spacepoints<detector_t>
             <<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(
                 det, payload.measurements, payload.spacepoint_index,
                 payload.spacepoints);

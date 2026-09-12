@@ -49,7 +49,7 @@ int simulate(const traccc::opts::generation& generation_opts,
    *****************************/
 
   // Detector type
-  using detector_type = traccc::toy_detector::host;
+  using detector_type = detray::detector_host_t<traccc::toy_detector>;
 
   // B field value and its type
   // @TODO: Set B field as argument
