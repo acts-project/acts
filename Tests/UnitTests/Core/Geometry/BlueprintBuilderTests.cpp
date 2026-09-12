@@ -12,9 +12,15 @@
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
+#include "Acts/Geometry/detail/BlueprintBuilder_impl.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <optional>
+#include <span>
+#include <string>
+#include <string_view>
+#include <vector>
 
 using namespace Acts;
 using Acts::detail::OnContainerMutatesContainer;
@@ -87,11 +93,90 @@ static_assert(OnContainerMutatesContainer<Element, decltype(mutateContainer)>,
 static_assert(!OnContainerReturnsNode<Element, decltype(mutateContainer)>,
               "void-returning callback must not match the node-returning form");
 
+// A minimal backend satisfying detail::BlueprintBackend plus the barrel/endcap
+// classifier, so the assemblers' member templates can be instantiated. The
+// plugins instantiate the assemblers with `template class`, which does not
+// cover member templates such as `onLayer`, leaving the in-place customizer
+// adapters below uncompiled anywhere else in the tree.
+struct StubBackend {
+  using Element = int;
+
+  struct AxisDefinition {};
+
+  struct LayerSpec {
+    std::optional<std::string> layerName;
+    std::optional<AxisDefinition> axes;
+    std::optional<AxisDefinition> layerAxes;
+  };
+
+  struct Config {};
+
+  static constexpr std::string_view kIdentifier = "Stub";
+
+  StubBackend(const Config& /*cfg*/, const Logger& /*logger*/) {}
+
+  detail::SurfaceVector makeSurfaces(std::span<const Element> /*sensitives*/,
+                                     const LayerSpec& /*layerSpec*/) const {
+    return {};
+  }
+
+  Element world() const { return 0; }
+  std::string nameOf(const Element& /*element*/) const { return {}; }
+  std::vector<Element> children(const Element& /*element*/) const { return {}; }
+  Element parent(const Element& /*element*/) const { return 0; }
+  bool isSensitive(const Element& /*element*/) const { return false; }
+
+  bool isBarrel(const Element& /*element*/) const { return false; }
+  bool isEndcap(const Element& /*element*/) const { return false; }
+  bool isTracker(const Element& /*element*/) const { return false; }
+};
+
+static_assert(detail::BlueprintBackend<StubBackend>);
+static_assert(detail::HasAxisDefinition<StubBackend>);
+static_assert(detail::HasBarrelEndcapClassifier<StubBackend>);
+
 BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(CustomizerReturnTypeBackwardCompatibility) {
   // The substantive checks are the static_asserts above; this case ensures the
   // translation unit is exercised by the test runner.
+  BOOST_CHECK(true);
+}
+
+// Instantiates every `onLayer`/`onContainer` overload with both accepted
+// callback shapes. The node-returning form stores the callback directly; the
+// void-returning form is wrapped in an adapter lambda, which is what this
+// exercises. Nothing is built -- instantiation is the assertion.
+BOOST_AUTO_TEST_CASE(CustomizerInstantiation) {
+  using Element = StubBackend::Element;
+
+  auto returnsNode = [](const std::optional<Element>&,
+                        std::shared_ptr<LayerBlueprintNode> layer) {
+    return layer;
+  };
+  auto mutatesLayer = [](const std::optional<Element>&, LayerBlueprintNode&) {};
+  auto returnsContainer = [](const Element&,
+                             std::shared_ptr<ContainerBlueprintNode> node) {
+    return node;
+  };
+  auto mutatesContainer = [](const Element&, ContainerBlueprintNode&) {};
+
+  BlueprintBuilder<StubBackend> builder{StubBackend::Config{}};
+
+  static_cast<void>(builder.layers().onLayer(returnsNode));
+  static_cast<void>(builder.layers().onLayer(mutatesLayer));
+
+  static_cast<void>(builder.layersFromSensors().onLayer(returnsNode));
+  static_cast<void>(builder.layersFromSensors().onLayer(mutatesLayer));
+
+  static_cast<void>(builder.layerFromSensors().onLayer(returnsNode));
+  static_cast<void>(builder.layerFromSensors().onLayer(mutatesLayer));
+
+  static_cast<void>(builder.barrelEndcap().onLayer(returnsNode));
+  static_cast<void>(builder.barrelEndcap().onLayer(mutatesLayer));
+  static_cast<void>(builder.barrelEndcap().onContainer(returnsContainer));
+  static_cast<void>(builder.barrelEndcap().onContainer(mutatesContainer));
+
   BOOST_CHECK(true);
 }
 
