@@ -80,6 +80,7 @@ def run() -> None:
     }
 
     role_instances["class"] |= {
+        "Acts::TrackStateCreatorBase",
         "Acts::GeometryContext",
         "Acts::MagneticFieldContext",
         "Acts::CalibrationContext",

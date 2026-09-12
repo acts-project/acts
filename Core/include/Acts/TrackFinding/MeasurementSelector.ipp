@@ -12,6 +12,8 @@
 
 namespace Acts {
 
+ACTS_PUSH_IGNORE_DEPRECATED()
+
 template <typename traj_t>
 Result<
     std::pair<typename std::vector<typename traj_t::TrackStateProxy>::iterator,
@@ -122,5 +124,7 @@ MeasurementSelector::select(
       candidates.begin(),
       candidates.begin() + std::min(cuts.numMeasurements, passedCandidates)));
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts
