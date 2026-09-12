@@ -188,6 +188,16 @@ interactive testing with one-off configuration specified by command-line options
         help="Select the seeding algorithm to use",
     )
     parser.add_argument(
+        "--gbts-layer-map",
+        type=pathlib.Path,
+        help="GBTS layer map file (default: the detector's shipped one)",
+    )
+    parser.add_argument(
+        "--gbts-connection-table",
+        type=pathlib.Path,
+        help="GBTS layer connection table file (default: the detector's shipped one)",
+    )
+    parser.add_argument(
         "--ckf",
         default=True,
         action=argparse.BooleanOptionalAction,
@@ -293,6 +303,10 @@ def full_chain(args):
         if args.digi_config is None:
             args.digi_config = actsDir / "Examples/Configs/generic-digi-smearing-config.json"
         seedingConfigFile = actsDir / "Examples/Configs/generic-seeding-config.json"
+        if args.gbts_layer_map is None:
+            args.gbts_layer_map = actsDir / "Examples/Configs/generic-gbts-layer-map.txt"
+        if args.gbts_connection_table is None:
+            args.gbts_connection_table = actsDir / "Examples/Configs/generic-gbts-connection-table.txt"
         args.bf_constant = True
         detector = acts.examples.GenericDetector()
         trackingGeometry = detector.trackingGeometry()
@@ -308,6 +322,10 @@ def full_chain(args):
         if args.digi_config is None:
             args.digi_config = actsDir / "Examples/Configs/odd-digi-smearing-config.json"
         seedingConfigFile = actsDir / "Examples/Configs/odd-seeding-config.json"
+        if args.gbts_layer_map is None:
+            args.gbts_layer_map = actsDir / "Examples/Configs/odd-gbts-layer-map.txt"
+        if args.gbts_connection_table is None:
+            args.gbts_connection_table = actsDir / "Examples/Configs/odd-gbts-connection-table.txt"
         if args.material_config is None:
             args.material_config = geoDir / "data/odd-material-maps.root"
         args.bf_constant = True
@@ -328,6 +346,10 @@ def full_chain(args):
         if args.digi_config is None:
             args.digi_config = geoDir / "itk-hgtd/itk-smearing-config.json"
         seedingConfigFile = geoDir / "itk-hgtd/geoSelection-ITk.json"
+        if args.gbts_layer_map is None:
+            args.gbts_layer_map = geoDir / "itk-hgtd/GbtsMapping.csv"
+        if args.gbts_connection_table is None:
+            args.gbts_connection_table = geoDir / "itk-hgtd/GbtsBinTable.txt"
         # args.material_config defaulted in itk.buildITkGeometry: geoDir / "itk-hgtd/material-maps-ITk-HGTD.json"
         bFieldFile = geoDir / "bfield/ATLAS-BField-xyz.root"
         detector = itk.buildITkGeometry(
@@ -563,7 +585,20 @@ def full_chain(args):
         VertexFinder,
     )
 
-    if args.itk and args.seeding_algorithm == SeedingAlgorithm.GridTriplet:
+    if args.seeding_algorithm == SeedingAlgorithm.Gbts and (
+        pathlib.Path(args.gbts_layer_map).is_file() == False
+        or pathlib.Path(args.gbts_connection_table).is_file() == False
+    ):
+        logger.fatal(
+            "GBTS seeding needs --gbts-layer-map and --gbts-connection-table "
+            "for this detector"
+        )
+        sys.exit(2)
+
+    if args.itk and args.seeding_algorithm in (
+        SeedingAlgorithm.GridTriplet,
+        SeedingAlgorithm.Gbts,
+    ):
         seedingAlgConfig = itk.itkSeedingAlgConfig(
             itk.InputSpacePointsType.PixelSpacePoints
         )
@@ -582,7 +617,14 @@ def full_chain(args):
                 rnd=rnd,
             )
             if args.seeding_algorithm == SeedingAlgorithm.TruthSmeared
-            else {}
+            else (
+                dict(
+                    layerMappingConfigFile=args.gbts_layer_map,
+                    connectorInputConfigFile=args.gbts_connection_table,
+                )
+                if args.seeding_algorithm == SeedingAlgorithm.Gbts
+                else {}
+            )
         ),
         initialSigmas=[
             1 * u.mm,
