@@ -14,7 +14,6 @@
 namespace traccc {
 
 // binTables contains pairs of linked layer-eta bins
-// the layerInfo should really be calculated from the geoIDBinning
 // GeoIDBinning pair is detray geo ID and bin index (corrisponding to the
 // layers in layerInfo) minPt in MeV
 bool gbts_seedfinder_config::setLinkingScheme(
@@ -26,8 +25,6 @@ bool gbts_seedfinder_config::setLinkingScheme(
     std::unique_ptr<const traccc::Logger> callers_logger =
         getDummyLogger().clone()) {
   TRACCC_LOCAL_LOGGER(std::move(callers_logger));
-  // copy layer-eta binning infomation
-  layerInfo = input_layerInfo;
   // unroll binTables
   for (std::pair<unsigned int, std::vector<unsigned int>> binPairs :
        input_binTables) {
@@ -36,6 +33,8 @@ bool gbts_seedfinder_config::setLinkingScheme(
     }
   }
 
+  // copy layer-eta binning infomation
+  layerInfo = input_layerInfo;
   for (std::pair<unsigned int, unsigned int> lI : layerInfo.info)
     n_eta_bins = std::max(n_eta_bins, lI.first + lI.second);
 
