@@ -138,9 +138,9 @@ struct GsfOptions {
   /// different use cases.
   double reverseFilteringCovarianceScaling = 100.0;
 
-  /// Whether to use the external-surfaces mechanism of the navigator which
-  /// switches off the boundary-check for measurement surfaces.
-  bool useExternalSurfaces = true;
+  /// Whether to drop the bounds check of the navigator on the measurement
+  /// surfaces, so it targets them even where the track misses them.
+  bool useBoundaryToleranceOverrides = true;
 
   /// Column name for final multi-component state storage
   std::string_view finalMultiComponentStateColumn = "";

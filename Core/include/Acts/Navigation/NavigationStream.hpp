@@ -111,7 +111,6 @@ class NavigationStream {
   ///
   /// @param gctx is the geometry context
   /// @param queryPoint holds current position, direction, etc.
-  /// @param cTolerance is the candidate search tolerance
   /// @param onSurfaceTolerance is the tolerance for on-surface intersections
   /// @param candidatesAreUnique the caller guarantees that no surface was
   ///        added more than once, so the pre-intersection de-duplication pass
@@ -123,10 +122,11 @@ class NavigationStream {
   /// This will allow intializeStream() to be called even as a re-initialization
   /// and still work correctly with at one time valid candidates.
   ///
+  /// Each candidate is intersected with the tolerance it was added with.
+  ///
   /// @return true if the stream is active, false indicates that there are no valid candidates
   bool initialize(const GeometryContext& gctx,
                   const NavigationStream::QueryPoint& queryPoint,
-                  const BoundaryTolerance& cTolerance,
                   double onSurfaceTolerance = s_onSurfaceTolerance,
                   bool candidatesAreUnique = false);
 

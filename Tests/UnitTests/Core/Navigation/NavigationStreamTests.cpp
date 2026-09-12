@@ -83,10 +83,18 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
   // Create the punch of surfaces
   auto surfaces = createPlaneSurfaces();
 
-  NavigationStream nStreamTemplate;
-  for (const auto& surface : surfaces) {
-    nStreamTemplate.addSurfaceCandidate(*surface, BoundaryTolerance::None());
-  }
+  // The stream intersects each candidate with the tolerance it was added
+  // with, so the tolerance of a case is chosen when the template is filled.
+  auto makeTemplate = [&surfaces](const BoundaryTolerance& tolerance) {
+    NavigationStream stream;
+    for (const auto& surface : surfaces) {
+      stream.addSurfaceCandidate(*surface, tolerance);
+    }
+    return stream;
+  };
+
+  NavigationStream nStreamTemplate =
+      makeTemplate(BoundaryTolerance::Infinite());
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 4u);
 
   // (1) Run an initial update
@@ -94,8 +102,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
   // - with infinite boundary tolerance
   NavigationStream nStream = nStreamTemplate;
   BOOST_CHECK(nStream.initialize(gContext,
-                                 {Vector3(0., 0., -30.), Vector3(0., 0., 1.)},
-                                 BoundaryTolerance::Infinite()));
+                                 {Vector3(0., 0., -30.), Vector3(0., 0., 1.)}));
 
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
   BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
@@ -105,9 +112,8 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
   // - from a position where all but one are reachable
   // - with infinite boundary tolerance
   nStream = nStreamTemplate;
-  BOOST_CHECK(nStream.initialize(gContext,
-                                 {Vector3(0., 0., 0.), Vector3(0., 0., 1.)},
-                                 BoundaryTolerance::Infinite()));
+  BOOST_CHECK(
+      nStream.initialize(gContext, {Vector3(0., 0., 0.), Vector3(0., 0., 1.)}));
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 3u);
   BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
                     surfaces.at(3u).get());
@@ -115,31 +121,28 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
   // (3) Run an initial update
   // - from a position where all would be reachable, but
   // - with no boundary tolerance
-  nStream = nStreamTemplate;
-  BOOST_CHECK(nStream.initialize(gContext,
-                                 {Vector3(0., 0., -100.), Vector3(0., 0., 1.)},
-                                 BoundaryTolerance::None()));
+  nStream = makeTemplate(BoundaryTolerance::None());
+  BOOST_CHECK(nStream.initialize(
+      gContext, {Vector3(0., 0., -100.), Vector3(0., 0., 1.)}));
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 3u);
 
   // (4) Run an initial update
   // - none of the surfaces should be reachable
   nStream = nStreamTemplate;
   BOOST_CHECK(!nStream.initialize(gContext,
-                                  {Vector3(0., 0., 0.), Vector3(1., 0., 0.)},
-                                  BoundaryTolerance::Infinite()));
+                                  {Vector3(0., 0., 0.), Vector3(1., 0., 0.)}));
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 0u);
   BOOST_CHECK_THROW(nStream.currentCandidate(), std::out_of_range);
 
   // (5) Test de-duplication
   nStream = nStreamTemplate;
   nStreamTemplate.addSurfaceCandidate(*surfaces.at(0),
-                                      BoundaryTolerance::None());
+                                      BoundaryTolerance::Infinite());
   // One surface is duplicated in the stream
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 5u);
   // Initialize stream reaches all surfaces, but also de-duplicates
-  BOOST_CHECK(nStream.initialize(gContext,
-                                 {Vector3(0., 0., -100.), Vector3(0., 0., 1.)},
-                                 BoundaryTolerance::Infinite()));
+  BOOST_CHECK(nStream.initialize(
+      gContext, {Vector3(0., 0., -100.), Vector3(0., 0., 1.)}));
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
 
   // (6) Even when the caller asserts uniqueness (skipping the
@@ -147,10 +150,10 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
   // still removed by the post-sort unique pass
   nStream = nStreamTemplate;
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 5u);
-  BOOST_CHECK(nStream.initialize(
-      gContext, {Vector3(0., 0., -100.), Vector3(0., 0., 1.)},
-      BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
-      /*candidatesAreUnique=*/true));
+  BOOST_CHECK(nStream.initialize(gContext,
+                                 {Vector3(0., 0., -100.), Vector3(0., 0., 1.)},
+                                 s_onSurfaceTolerance,
+                                 /*candidatesAreUnique=*/true));
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
 }
 
@@ -158,11 +161,12 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   // Create the punch of surfaces
   auto surfaces = createPlaneSurfaces();
 
-  // Surfaces are filled with no boundary tolerance, we require them to be
-  // reachable and intersections inside bounds
+  // The candidates carry an infinite boundary tolerance, so both initialize()
+  // and update() only require the surfaces to be reachable
   NavigationStream nStreamTemplate;
   for (const auto& surface : surfaces) {
-    nStreamTemplate.addSurfaceCandidate(*surface, BoundaryTolerance::None());
+    nStreamTemplate.addSurfaceCandidate(*surface,
+                                        BoundaryTolerance::Infinite());
   }
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 4u);
 
@@ -173,8 +177,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
                                          Vector3(0., 0., 1.)};
 
   NavigationStream nStream = nStreamTemplate;
-  BOOST_CHECK(
-      nStream.initialize(gContext, qPoint, BoundaryTolerance::Infinite()));
+  BOOST_CHECK(nStream.initialize(gContext, qPoint));
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
   BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
                     surfaces.at(1u).get());
@@ -219,16 +222,21 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   // Distance should be the initial estimate from the intialializeStream() call
   CHECK_CLOSE_ABS(nStream.currentCandidate().pathLength(), 130.,
                   std::numeric_limits<double>::epsilon());
-  // Query update will re-evaluate this one: however, we will miss the surface
-  // due to outside bounds - and will switch to the next candidate: which sits
-  // at 200 and then will yield 220
+  // The query update re-evaluates this one. The candidate carries an infinite
+  // boundary tolerance, so the surface is kept even though the intersection
+  // lies outside its bounds.
   BOOST_CHECK(nStream.update(gContext, qPoint));
-  CHECK_CLOSE_ABS(nStream.currentCandidate().pathLength(), 220.,
+  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
+                    surfaces.at(3u).get());
+  // The 130 above was the estimate from the initialize() call at z = -30
+  CHECK_CLOSE_ABS(nStream.currentCandidate().pathLength(), 120.,
                   std::numeric_limits<double>::epsilon());
-  // Oh noooo, an actor just kicked in and changed the direction
+  // Oh noooo, an actor just kicked in and changed the direction. The plane is
+  // still reachable, only further away.
   qPoint.direction = Vector3(0., 1., 1.).normalized();
-  // All is lost, no surface is reachable anymore
-  BOOST_CHECK(!nStream.update(gContext, qPoint));
+  BOOST_CHECK(nStream.update(gContext, qPoint));
+  BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(),
+                    surfaces.at(3u).get());
 }
 
 BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinders) {
@@ -236,12 +244,17 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinders) {
   auto surfaces = createCylinders();
 
   // Let us fill the surfaces into the navigation stream
-  NavigationStream nStreamTemplate;
-  for (const auto& surface : surfaces) {
-    const Surface* pointer = surface.get();
-    nStreamTemplate.addSurfaceCandidates({&pointer, 1},
-                                         BoundaryTolerance::None());
-  }
+  auto makeTemplate = [&surfaces](const BoundaryTolerance& tolerance) {
+    NavigationStream stream;
+    for (const auto& surface : surfaces) {
+      const Surface* pointer = surface.get();
+      stream.addSurfaceCandidates({&pointer, 1}, tolerance);
+    }
+    return stream;
+  };
+
+  NavigationStream nStreamTemplate =
+      makeTemplate(BoundaryTolerance::Infinite());
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 4u);
 
   // (1) Run an initial update - from a position/direction where all are
@@ -249,8 +262,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinders) {
   // - with infinite boundary tolerance
   NavigationStream nStream = nStreamTemplate;
   BOOST_CHECK(nStream.initialize(
-      gContext, {Vector3(0., 0., 0.), Vector3(1., 1., 0.).normalized()},
-      BoundaryTolerance::Infinite()));
+      gContext, {Vector3(0., 0., 0.), Vector3(1., 1., 0.).normalized()}));
 
   // We should have 4 candidates, as one cylinder is reachable twice
   // Technically, the surface at 20,20,0 is hit twice, but we deduplicate them
@@ -267,28 +279,25 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinders) {
   // the concentric ones are reachable
   // - with infinite boundary tolerance
   nStream = nStreamTemplate;
-  BOOST_CHECK(nStream.initialize(gContext,
-                                 {Vector3(0., 0., 0.), Vector3(1., 0., 0.)},
-                                 BoundaryTolerance::Infinite()));
+  BOOST_CHECK(
+      nStream.initialize(gContext, {Vector3(0., 0., 0.), Vector3(1., 0., 0.)}));
   // We should have 3 candidates
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 3u);
 
   // (3) Run an initial update - from a position/direction where only the
   // concentric ones within bounds are reachable
-  nStream = nStreamTemplate;
-  BOOST_CHECK(nStream.initialize(gContext,
-                                 {Vector3(0., 0., 0.), Vector3(1., 0., 0.)},
-                                 BoundaryTolerance::None()));
+  nStream = makeTemplate(BoundaryTolerance::None());
+  BOOST_CHECK(
+      nStream.initialize(gContext, {Vector3(0., 0., 0.), Vector3(1., 0., 0.)}));
   // We should have 2 candidates
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 2u);
 
   // (4) Run an initial update - from a position/direction where none are
   // reachable
   // - (even) with infinite boundary tolerance
-  nStream = nStreamTemplate;
+  nStream = makeTemplate(BoundaryTolerance::None());
   BOOST_CHECK(!nStream.initialize(gContext,
-                                  {Vector3(0., 0., 0.), Vector3(0., 0., 1.)},
-                                  BoundaryTolerance::None()));
+                                  {Vector3(0., 0., 0.), Vector3(0., 0., 1.)}));
   // We should have 0 candidates
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 0u);
   BOOST_CHECK_THROW(nStream.currentCandidate(), std::out_of_range);

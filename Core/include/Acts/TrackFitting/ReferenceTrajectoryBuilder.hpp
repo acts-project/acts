@@ -583,14 +583,14 @@ class ReferenceTrajectoryBuilder {
     if constexpr (!isDirectNavigator) {
       if (sSequence != nullptr) {
         for (const Surface* surface : *sSequence) {
-          propagatorOptions.navigation.appendExternalSurface(*surface);
+          propagatorOptions.navigation.overrideBoundaryTolerance(*surface);
         }
       }
     } else {
       assert(sSequence != nullptr &&
              "DirectNavigator requires a surface sequence for "
              "ReferenceTrajectory");
-      propagatorOptions.navigation.externalSurfaces = *sSequence;
+      propagatorOptions.navigation.surfaceSequence = *sSequence;
     }
 
     auto& actor = propagatorOptions.actorList.template get<Actor>();

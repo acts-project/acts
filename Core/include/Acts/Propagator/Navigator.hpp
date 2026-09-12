@@ -51,8 +51,10 @@ struct NavigationOptions final {
   /// Hint for end object
   const object_t* endObject = nullptr;
 
-  /// External surface identifier for which the boundary check is ignored
-  std::vector<GeometryIdentifier> externalSurfaces = {};
+  /// Boundary tolerance to use instead of @c boundaryTolerance, for the
+  /// surfaces named by their identifier
+  std::vector<std::pair<GeometryIdentifier, BoundaryTolerance>>
+      boundaryToleranceOverrides = {};
 
   /// The minimum distance for a surface to be considered
   double nearLimit = 0;
@@ -174,15 +176,22 @@ class Navigator final {
     /// the current candidate index into the stream's candidates
     std::optional<std::size_t> navCandidateIndex;
     /// far limit applied to the stream candidates, set during candidate
-    /// resolution (options.farLimit, or tightened to the last portal when
-    /// free candidates were appended without a selector)
+    /// resolution
     double navCandidatesFarLimit = std::numeric_limits<double>::max();
 
-    /// Free candidates not part of the tracking geometry.
-    //  They are stored as a pair of surface pointer
-    /// and a boolean indicating whether the surface has already been
-    /// reached during propagation
-    std::vector<std::pair<const Surface*, bool>> freeCandidates{};
+    /// A boundary tolerance override with its volume resolved
+    struct ResolvedBoundaryToleranceOverride {
+      /// The surface
+      const Surface* surface{};
+      /// Tolerance used to intersect the surface
+      BoundaryTolerance boundaryTolerance = BoundaryTolerance::Infinite();
+      /// Volume that holds the surface. Null for Gen1, which scopes through
+      /// the layer.
+      const TrackingVolume* volume{};
+    };
+
+    /// Boundary tolerance overrides resolved once at initialization
+    std::vector<ResolvedBoundaryToleranceOverride> boundaryToleranceOverrides{};
 
     /// Get reference to current navigation surface
     /// @return Reference to current navigation target
@@ -232,9 +241,6 @@ class Navigator final {
     /// Stream for navigation debugging and monitoring
     NavigationStream stream;
 
-    /// Surfaces that are not part of the tracking geometry
-    std::vector<const Surface*> freeSurfaces;
-
     /// Reset navigation state after switching layers
     void resetAfterLayerSwitch() {
       navSurfaces.clear();
@@ -266,12 +272,6 @@ class Navigator final {
 
       navigationBreak = false;
       navigationStage = Stage::initial;
-
-      // Set the surface reached switches back to false
-      std::ranges::for_each(freeCandidates,
-                            [](std::pair<const Surface*, bool>& freeSurface) {
-                              freeSurface.second = false;
-                            });
 
       stream.reset();
     }
@@ -376,6 +376,13 @@ class Navigator final {
                             const Surface& surface) const;
 
  private:
+  /// @brief Resolve the boundary tolerance overrides of the options
+  ///
+  /// Throws if the tracking geometry does not hold a surface.
+  ///
+  /// @param state The navigation state
+  void resolveBoundaryToleranceOverrides(State& state) const;
+
   /// @brief NextTarget helper function for Gen1 geometry configuration
   ///
   /// @param state The navigation state
