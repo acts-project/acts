@@ -46,32 +46,44 @@ class NavigationStream {
   ///
   /// @return true if a next candidate is available
   bool switchToNextCandidate() {
-    if (m_currentIndex < m_candidates.size()) {
-      ++m_currentIndex;
-      return true;
+    if (!m_currentIndex) {
+      m_currentIndex = 0;
+    } else {
+      ++(*m_currentIndex);
     }
-    return false;
+    return isValid();
+  }
+  /// Performs the validity check on the navigation current navigation candidate
+  /// index
+  /// @return Returns whether the index is initialized and less than the size of the available
+  ///         candidates
+  bool isValid() const {
+    return m_currentIndex.value_or(m_candidates.size()) < m_candidates.size();
   }
 
   /// Const access the current candidate
   /// @return Const reference to current candidate
   const NavigationTarget& currentCandidate() const {
-    return m_candidates.at(m_currentIndex);
+    assert(m_currentIndex != std::nullopt);
+    return m_candidates.at(*m_currentIndex);
   }
+  /// Preallocate the memory to store a certain amount of candidates
+  /// @param n: The number of candidates to be stored
+  void reserve(const std::size_t n) { m_candidates.reserve(n); }
 
   /// Current Index
   /// @return Index of the current candidate in the vector
-  std::size_t currentIndex() const { return m_currentIndex; }
+  const std::optional<std::size_t>& currentIndex() const {
+    return m_currentIndex;
+  }
 
   /// Non-const access the candidate vector
   /// @return Mutable reference to vector of navigation candidates
-  std::vector<NavigationTarget>& candidates() { return m_candidates; }
+  std::span<NavigationTarget> candidates() { return m_candidates; }
 
   /// Const access the candidate vector
   /// @return Const reference to vector of navigation candidates
-  const std::vector<NavigationTarget>& candidates() const {
-    return m_candidates;
-  }
+  std::span<const NavigationTarget> candidates() const { return m_candidates; }
 
   /// Non-const access the current candidate
   ///
@@ -79,13 +91,14 @@ class NavigationStream {
   /// valid anymore.
   /// @return Mutable reference to current candidate
   NavigationTarget& currentCandidate() {
-    return m_candidates.at(m_currentIndex);
+    assert(m_currentIndex != std::nullopt);
+    return m_candidates.at(*m_currentIndex);
   }
 
   /// The number of active candidates
   /// @return Number of remaining candidates from current position onwards
   std::size_t remainingCandidates() const {
-    return (m_candidates.size() - m_currentIndex);
+    return (m_candidates.size() - m_currentIndex.value_or(0));
   }
 
   /// Fill one surface into the candidate vector
@@ -111,7 +124,7 @@ class NavigationStream {
   ///
   /// @param gctx is the geometry context
   /// @param queryPoint holds current position, direction, etc.
-  /// @param cTolerance is the candidate search tolerance
+  /// @param logger is the navigator's logger
   /// @param onSurfaceTolerance is the tolerance for on-surface intersections
   /// @param candidatesAreUnique the caller guarantees that no surface was
   ///        added more than once, so the pre-intersection de-duplication pass
@@ -126,7 +139,7 @@ class NavigationStream {
   /// @return true if the stream is active, false indicates that there are no valid candidates
   bool initialize(const GeometryContext& gctx,
                   const NavigationStream::QueryPoint& queryPoint,
-                  const BoundaryTolerance& cTolerance,
+                  const Logger& logger,
                   double onSurfaceTolerance = s_onSurfaceTolerance,
                   bool candidatesAreUnique = false);
 
@@ -136,18 +149,22 @@ class NavigationStream {
   ///
   /// @param gctx is the geometry context
   /// @param queryPoint holds current position, direction, etc.
+  /// @param logger is the navigator's logger
   /// @param onSurfaceTolerance is the tolerance for on-surface intersections
   ///
   /// @return true if the stream is active, false indicate no valid candidates left
   bool update(const GeometryContext& gctx,
               const NavigationStream::QueryPoint& queryPoint,
+              const Logger& logger,
               double onSurfaceTolerance = s_onSurfaceTolerance);
 
   /// Reset the navigation stream by clearing all candidates and resetting the
   /// index.
   ///
   /// This clears the candidates vector and resets the current index to 0.
-  void reset();
+  /// @param keepBoundLess: Flag to toggle whether unreached boundless
+  ///                       navigation targets remain in the stream
+  void reset(const bool keepBoundLess = false);
 
  private:
   /// The candidates of this navigation stream
@@ -160,7 +177,7 @@ class NavigationStream {
   std::vector<NavigationTarget> m_additionalCandidates;
 
   /// The currently active candidate
-  std::size_t m_currentIndex = 0u;
+  std::optional<std::size_t> m_currentIndex{0ul};
 };
 
 /// Append-only helper to add candidates to a navigation stream.

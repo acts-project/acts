@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   startDir = {std::cos(angle), std::sin(angle), 0.};
   args.direction = startDir;
   // clear the candidates and re initialize with new arguments
-  main.candidates().clear();
+  main.reset();
   NavigationPolicyStateManager stateManager2;
   volume->navigationPolicy()->createState(tContext, args, stateManager2,
                                           *logger);

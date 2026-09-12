@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
 
@@ -19,7 +20,7 @@ namespace Acts {
 
 bool NavigationStream::initialize(const GeometryContext& gctx,
                                   const QueryPoint& queryPoint,
-                                  const BoundaryTolerance& cTolerance,
+                                  const Logger& logger,
                                   const double onSurfaceTolerance,
                                   const bool candidatesAreUnique) {
   // Position and direction from the query point
@@ -36,12 +37,19 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   // duplicate slip through regardless, the post-sort unique pass below still
   // removes it; only the first-wins tolerance selection is then not enforced.)
   if (!candidatesAreUnique) {
+    ACTS_VERBOSE("NavigationStream::initialize() "
+                 << __LINE__ << " - Candidates not marked as unique\n"
+                 << m_candidates);
     std::size_t writeIdx = 0;
     for (std::size_t readIdx = 0; readIdx < m_candidates.size(); ++readIdx) {
       const Surface* surface = &m_candidates[readIdx].surface();
       bool alreadySeen = false;
       for (std::size_t k = 0; k < writeIdx; ++k) {
         if (&m_candidates[k].surface() == surface) {
+          /// Ensure that the external surfaces survive the duplicate removal
+          if (m_candidates[readIdx].boundaryTolerance().isInfinite()) {
+            std::swap(m_candidates[readIdx], m_candidates[k]);
+          }
           alreadySeen = true;
           break;
         }
@@ -64,8 +72,9 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
     // Get the surface from the object intersection
     const Surface& surface = candidate.surface();
     // Intersect the surface
-    auto multiIntersection = surface.intersect(gctx, position, direction,
-                                               cTolerance, onSurfaceTolerance);
+    auto multiIntersection =
+        surface.intersect(gctx, position, direction,
+                          candidate.boundaryTolerance(), onSurfaceTolerance);
 
     bool firstValid = multiIntersection.at(0).isValid();
     bool secondValid = multiIntersection.at(1).isValid();
@@ -114,6 +123,9 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
 
   // Sort the candidates by path length
   std::ranges::sort(m_candidates, NavigationTarget::pathLengthOrder);
+  ACTS_VERBOSE("NavigationStream::initialize() "
+               << __LINE__ << " - Sorted candidates before duplicate removal:\n"
+               << m_candidates);
 
   // If we have duplicates, we expect them to be close by in path length, so we
   // don't need to re-sort Remove duplicates on basis of the surface pointer
@@ -136,17 +148,30 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
                       NavigationTarget::None());
 
   m_currentIndex = 0;
-  if (m_candidates.empty()) {
-    return false;
-  }
-  return true;
+  return isValid();
 }
 
 bool NavigationStream::update(const GeometryContext& gctx,
                               const QueryPoint& queryPoint,
-                              double onSurfaceTolerance) {
+                              const Logger& logger, double onSurfaceTolerance) {
   // Loop over the (currently valid) candidates and update
-  for (; m_currentIndex < m_candidates.size(); ++m_currentIndex) {
+  ACTS_VERBOSE("NavigationStream::update() "
+               << __LINE__ << " - Update with new query point "
+               << toString(queryPoint.position)
+               << ", direction: " << toString(queryPoint.direction));
+  if (m_currentIndex == std::nullopt) {
+    ACTS_VERBOSE(
+        "NavigationStream::update() - Initialize the index of the stream "
+        "first");
+    m_currentIndex = 0;
+  }
+  if (!isValid()) {
+    ACTS_VERBOSE(
+        "NavigationStream::update() - No valid candidate is left in the "
+        "stream");
+    return false;
+  }
+  do {
     // Get the candidate, and resolve the tuple
     NavigationTarget& candidate = currentCandidate();
     // Get the surface from the object intersection
@@ -165,17 +190,33 @@ bool NavigationStream::update(const GeometryContext& gctx,
       // Valid solution is either on surface or updates the distance
       if (intersection.isValid()) {
         candidate.intersection() = intersection;
+        ACTS_VERBOSE("NavigationStream::update() "
+                     << __LINE__ << " Update candidate " << candidate);
         return true;
       }
     }
-  }
+  } while (switchToNextCandidate());
   // No candidate was reachable
   return false;
 }
 
-void NavigationStream::reset() {
-  m_candidates.clear();
-  m_currentIndex = 0;
+void NavigationStream::reset(const bool keepBoundLess) {
+  if (!keepBoundLess) {
+    m_candidates.clear();
+  } else {
+    if (m_currentIndex) {
+      m_candidates.erase(m_candidates.begin(),
+                         m_candidates.begin() +
+                             std::min(*m_currentIndex, m_candidates.size()));
+    }
+    auto [begin, end] = std::ranges::remove_if(
+        m_candidates, [](const NavigationTarget& target) {
+          return target.pathLength() < 0. ||
+                 !target.boundaryTolerance().isInfinite();
+        });
+    m_candidates.erase(begin, end);
+  }
+  m_currentIndex.reset();
 }
 
 void NavigationStream::addSurfaceCandidate(

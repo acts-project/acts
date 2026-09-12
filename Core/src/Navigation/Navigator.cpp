@@ -41,15 +41,6 @@ bool skipPolicyState(const TrackingVolume& volume) {
 }
 }  // namespace
 
-std::ostream& operator<<(
-    std::ostream& ostr,
-    const std::span<const Acts::NavigationTarget>& candidates) {
-  for (const auto& target : candidates) {
-    ostr << "\n  -- " << target;
-  }
-  return ostr;
-}
-
 Navigator::Navigator(Config cfg, std::shared_ptr<const Logger> _logger)
     : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {
   if (m_cfg.trackingGeometry == nullptr) {
@@ -122,7 +113,7 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
     // Empirical pre-allocation of candidates for the next navigation
     // iteration.
     // @TODO: Make this user configurable through the configuration
-    state.stream.candidates().reserve(50);
+    state.stream.reserve(m_cfg.candidatePreReserve);
 
     state.freeCandidates.clear();
     state.freeCandidates.reserve(state.options.externalSurfaces.size());
@@ -565,33 +556,36 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
   ACTS_VERBOSE(volInfo(state) << "Current policy says navigation sequence is "
                               << (isValid ? "VALID" : "INVALID"));
 
-  ACTS_VERBOSE(volInfo(state)
-               << "Current candidate index is "
-               << (state.navCandidateIndex.has_value()
-                       ? std::to_string(state.navCandidateIndex.value())
-                       : "n/a"));
-
-  if (!isValid || !state.navCandidateIndex.has_value()) {
+  if (!isValid || !state.stream.isValid()) {
     // first time, resolve the candidates
     resolveCandidates(state, position, direction);
-    state.navCandidateIndex = 0;
   } else {
-    ++state.navCandidateIndex.value();
+    state.stream.switchToNextCandidate();
   }
 
   // The navigator works directly off the (path-length sorted) stream
   // candidates; skip those outside the path-length window here at consumption
   // instead of copying the accepted ones out during resolution.
-  const std::vector<NavigationTarget>& candidates = state.stream.candidates();
-  std::size_t& candidateIndex = state.navCandidateIndex.value();
-  while (candidateIndex < candidates.size() &&
-         !detail::checkPathLength(candidates[candidateIndex].pathLength(),
+  ACTS_VERBOSE(volInfo(state)
+               << " Stream is valid " << state.stream.isValid()
+               << ", current index: "
+               << (state.stream.currentIndex() != std::nullopt
+                       ? std::format("{:}", *state.stream.currentIndex())
+                       : "n/a")
+               << ", candidates: " << state.stream.candidates().size());
+
+  while (state.stream.isValid() &&
+         !detail::checkPathLength(state.stream.currentCandidate().pathLength(),
                                   state.options.nearLimit,
                                   state.navCandidatesFarLimit, logger())) {
-    ++candidateIndex;
+    ACTS_VERBOSE(volInfo(state)
+                 << " Skip invalid navigation target: "
+                 << (state.stream.isValid() ? state.navCandidate()
+                                            : NavigationTarget::None()));
+    state.stream.switchToNextCandidate();
   }
 
-  if (candidateIndex < candidates.size()) {
+  if (state.stream.isValid()) {
     ACTS_VERBOSE(volInfo(state)
                  << "Target set to next candidate " << state.navCandidate());
     return state.navCandidate();
@@ -655,7 +649,12 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   }
   ACTS_VERBOSE(volInfo(state) << "Searching for compatible candidates.");
 
-  state.stream.reset();
+  state.resetStream();
+  if (!state.stream.candidates().empty()) {
+    ACTS_VERBOSE(volInfo(state) << " Carry over " << state.stream.candidates()
+                                << " unreached targets.\n"
+                                << state.stream.candidates());
+  }
   AppendOnlyNavigationStream appendOnly{state.stream};
   NavigationArguments args;
   args.position = position;
@@ -712,8 +711,8 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   const bool candidatesAreUnique =
       state.stream.candidates().size() == nPolicyCandidates;
   state.stream.initialize(state.options.geoContext, {position, direction},
-                          BoundaryTolerance::None(),
-                          state.options.surfaceTolerance, candidatesAreUnique);
+                          logger(), state.options.surfaceTolerance,
+                          candidatesAreUnique);
 
   ACTS_VERBOSE(volInfo(state)
                << "Now " << state.stream.candidates().size()

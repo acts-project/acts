@@ -43,6 +43,9 @@ struct NavigatorPlainOptions {
 
   /// The far limit to resolve surfaces
   double farLimit = std::numeric_limits<double>::max();
+  /// Do not clear surfaces with infinite bounds from the navigation stream at
+  /// the change of the volume
+  bool keepUnreachedExternal = false;
 
   /// Delegate to decide whether free surfaces are appended to the navigation
   /// stream given the current volume and the track coordinates. If the

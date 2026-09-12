@@ -112,6 +112,8 @@ class Navigator final {
     bool resolveMaterial = true;
     /// stop at every surface regardless what it is
     bool resolvePassive = false;
+    /// The amount of memory to be pre allocated for the navigation candidates
+    std::size_t candidatePreReserve = 50;
   };
 
   /// The navigator options
@@ -168,11 +170,6 @@ class Navigator final {
     /// the current boundary index of the navigation state
     std::optional<std::size_t> navBoundaryIndex;
 
-    // Navigation candidates (portals and surfaces together). The candidates
-    // live in `stream` (sorted by path length); the navigator works through
-    // them by index without copying them out.
-    /// the current candidate index into the stream's candidates
-    std::optional<std::size_t> navCandidateIndex;
     /// far limit applied to the stream candidates, set during candidate
     /// resolution (options.farLimit, or tightened to the last portal when
     /// free candidates were appended without a selector)
@@ -202,9 +199,7 @@ class Navigator final {
 
     /// Get reference to current navigation candidate
     /// @return Reference to current boundary intersection
-    NavigationTarget& navCandidate() {
-      return stream.candidates().at(navCandidateIndex.value());
-    }
+    NavigationTarget& navCandidate() { return stream.currentCandidate(); }
 
     /// Volume where the navigation started
     const TrackingVolume* startVolume = nullptr;
@@ -249,7 +244,6 @@ class Navigator final {
       navLayerIndex.reset();
       navBoundaries.clear();
       navBoundaryIndex.reset();
-      navCandidateIndex.reset();
 
       currentLayer = nullptr;
 
@@ -273,8 +267,10 @@ class Navigator final {
                               freeSurface.second = false;
                             });
 
-      stream.reset();
+      stream.reset(false);
     }
+    /// Reset the navigation stream
+    void resetStream() { stream.reset(options.keepUnreachedExternal); }
   };
 
   /// Constructor with configuration object

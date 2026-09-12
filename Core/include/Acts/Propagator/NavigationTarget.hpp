@@ -189,7 +189,6 @@ class NavigationTarget {
   constexpr const BoundaryTolerance& boundaryTolerance() const noexcept {
     return m_boundaryTolerance;
   }
-
   /// Returns whether the intersection was successful or not
   /// @return true if the intersection is valid
   constexpr bool isValid() const noexcept { return m_intersection.isValid(); }
@@ -283,7 +282,7 @@ class NavigationTarget {
   /// Default constructor creating a none target
   constexpr NavigationTarget() = default;
 
-  /// @brief print method
+  /// Print method
   /// @param ostr: Stream to which the object is printed
   void print(std::ostream& ostr) const;
 };
@@ -291,5 +290,13 @@ class NavigationTarget {
 static_assert(std::is_trivially_copy_constructible_v<NavigationTarget>);
 static_assert(std::is_trivially_move_constructible_v<NavigationTarget>);
 static_assert(std::is_trivially_move_assignable_v<NavigationTarget>);
+
+/// Pipe a collection of navigation candidtes to an ostream object
+/// @param ostr: The ostream object into which the information is piped
+/// @param candidates: The list of candidates to print
+/// @return Stream object that's piped into the operator
+std::ostream& operator<<(
+    std::ostream& ostr,
+    const std::span<const Acts::NavigationTarget>& candidates);
 
 }  // namespace Acts
