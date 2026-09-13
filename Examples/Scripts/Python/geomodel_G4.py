@@ -148,6 +148,7 @@ def main():
         ]
 
         gmTree = mockUpBuilder.constructMS()
+        exit(1)
     else:
         raise RuntimeError(f"{args.mockupDetector} not implemented yet")
 
