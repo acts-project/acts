@@ -132,6 +132,7 @@ def main():
         mockUpCfg.nSectors = 12
         mockUpCfg.nEtaStations = 8
         mockUpCfg.buildEndcaps = True
+        mockUpCfg.buildBarrel = False        
         mockUpBuilder = gm_ex.GeoMuonMockupExperiment(
             mockUpCfg, "GeoMockUpMS", logLevel
         )
@@ -148,7 +149,6 @@ def main():
         ]
 
         gmTree = mockUpBuilder.constructMS()
-        exit(1)
     else:
         raise RuntimeError(f"{args.mockupDetector} not implemented yet")
 
