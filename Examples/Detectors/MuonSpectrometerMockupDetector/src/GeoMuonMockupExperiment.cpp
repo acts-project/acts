@@ -186,7 +186,7 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
   m_publisher.reset();
   return outTree;
 }
-void GeoMuonMockupExperiment::buildBarrel(PVLink muonEnvelope) {
+void GeoMuonMockupExperiment::buildBarrel(const PVLink& muonEnvelope) {
   if (!m_cfg.buildBarrel) {
     return;
   }
@@ -289,7 +289,7 @@ void GeoMuonMockupExperiment::buildBarrel(PVLink muonEnvelope) {
   muonEnvelope->add(barrelEnvelope);
 }
 
-void GeoMuonMockupExperiment::buildEndcapAbsorber(PVLink wheelEnvelope) {
+void GeoMuonMockupExperiment::buildEndcapAbsorber(const PVLink& wheelEnvelope) {
   if (!m_cfg.buildAbsorbers) {
     return;
   }
@@ -436,7 +436,7 @@ void GeoMuonMockupExperiment::assembleBigWheel(const PVLink& envelopeVol,
   const double highR = lowR + nEta * effR;
 
   const double envZ = 0.5 * m_stationHeightEndcap +
-                      0.5 * (m_cfg.endCapAbsorberZ + 1.) * m_cfg.buildAbsorbers;
+                      0.5 * (m_cfg.endCapAbsorberZ + 1.) * static_cast<double>(m_cfg.buildAbsorbers);
   auto envelopeShape = make_intrusive<GeoTube>(lowR, highR, envZ);
   auto envelopeLogVol = make_intrusive<GeoLogVol>(
       "EndcapEnvelope", cacheShape(envelopeShape),
@@ -450,7 +450,7 @@ void GeoMuonMockupExperiment::assembleBigWheel(const PVLink& envelopeVol,
           GeoTrf::TranslateZ3D((-envelopeShape->getZHalfLength() +
                                 m_cfg.endCapAbsorberZ +
                                 0.5 * m_stationHeightEndcap + 1.) *
-                               m_cfg.buildAbsorbers) *
+                              static_cast<double>( m_cfg.buildAbsorbers)) *
           GeoTrf::RotateZ3D(sector * m_sectorSize) *
           GeoTrf::TranslateX3D(radius + 0.5 * m_chamberLength) *
           GeoTrf::RotateY3D(90. * GeoModelKernelUnits::deg) *
@@ -462,7 +462,7 @@ void GeoMuonMockupExperiment::assembleBigWheel(const PVLink& envelopeVol,
   }
   buildEndcapAbsorber(wheelEnvelope);
   envelopeVol->add(makeTransform(
-      GeoTrf::RotateX3D(180. * GeoModelKernelUnits::degree * (wheelZ < 0.)) *
+      GeoTrf::RotateX3D((wheelZ < 0.) ? 180. * GeoModelKernelUnits::degree : 0. ) *
       GeoTrf::TranslateZ3D(std::abs(wheelZ))));
 
   envelopeVol->add(wheelEnvelope);
@@ -871,7 +871,7 @@ void GeoMuonMockupExperiment::assembleSmallWheel(const PVLink& envelope,
     return;
   }
   const double envZ = 0.5 * m_innerWheelHeight +
-                      0.5 * (m_cfg.endCapAbsorberZ + 1.) * m_cfg.buildAbsorbers;
+                      0.5 * (m_cfg.endCapAbsorberZ + 1.) * static_cast<double>(m_cfg.buildAbsorbers);
 
   auto envelopeShape =
       make_intrusive<GeoTube>(m_cfg.endCapWheelLowR, outerR, envZ);
@@ -887,7 +887,7 @@ void GeoMuonMockupExperiment::assembleSmallWheel(const PVLink& envelope,
         makeTransform(GeoTrf::TranslateZ3D((-envelopeShape->getZHalfLength() +
                                             m_cfg.endCapAbsorberZ +
                                             0.5 * m_innerWheelHeight + 1.) *
-                                           m_cfg.buildAbsorbers) *
+                                         static_cast<double>(  m_cfg.buildAbsorbers)) *
                       GeoTrf::RotateZ3D(sector * m_sectorSize) *
                       GeoTrf::TranslateX3D(0.5 * (envelopeShape->getRMax() +
                                                   envelopeShape->getRMin())) *
@@ -897,7 +897,7 @@ void GeoMuonMockupExperiment::assembleSmallWheel(const PVLink& envelope,
         assembleSmallWheelSector(wedgeL, copySign(1, wheelZ), sector));
   }
   envelope->add(makeTransform(
-      GeoTrf::RotateX3D(180. * GeoModelKernelUnits::degree * (wheelZ < 0.)) *
+      GeoTrf::RotateX3D(wheelZ < 0. ? 180. * GeoModelKernelUnits::degree  : 0.) *
       GeoTrf::TranslateZ3D(std::abs(wheelZ))));
   buildEndcapAbsorber(envelopeWheel);
   envelope->add(envelopeWheel);
