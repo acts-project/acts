@@ -83,9 +83,9 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// subtracted from weight. This is the c3 factor in the seed score
     /// calculation (w = c1 * Nt - c2 * d0 - c3 * z0)
     float zOriginWeightFactor = 1;
-    /// Maximum number (minus one) of accepted seeds per middle space-point
-    /// In dense environments many seeds may be found per middle space-point
-    /// Only seeds with the highest weight will be kept if this limit is reached
+    /// Maximum number (minus one) of accepted seeds per middle space-point;
+    /// only the highest-weight seeds are kept. Applies regardless of
+    /// seedConfirmation.
     unsigned int maxSeedsPerSpM = 5;
     /// Maximum limit to number of compatible space-point used in score
     /// calculation. We increase by c1 the weight calculation for each
@@ -124,15 +124,14 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// Contains parameters for forward seed confirmation
     SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
-    /// If seedConfirmation is true we classify seeds as "high-quality" seeds.
-    /// Seeds that are not confirmed as "high-quality" are only selected if no
-    /// other "high-quality" seed has been found for that inner-middle doublet
-    /// Maximum number of normal seeds (not classified as "high-quality" seeds)
-    /// in seed confirmation
+    /// Maximum number of normal-quality seeds (not "high-quality") kept in
+    /// seed confirmation. Has no effect unless seedConfirmation is true; in
+    /// particular, does not bound maxSeedsPerSpM.
     std::uint32_t maxSeedsPerSpMConf = 5;
     /// Maximum number of "high-quality" seeds for each inner-middle SP-dublet
     /// in seed confirmation. If the limit is reached we check if there is a
-    /// normal quality seed to be replaced
+    /// normal quality seed to be replaced. Has no effect unless
+    /// seedConfirmation is true.
     std::uint32_t maxQualitySeedsPerSpMConf = 5;
 
     // Other parameters

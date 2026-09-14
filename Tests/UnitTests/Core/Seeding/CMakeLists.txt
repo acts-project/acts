@@ -1,4 +1,5 @@
 add_unittest(BinnedGroup BinnedGroupTests.cpp)
+add_unittest(BroadTripletSeedFilter BroadTripletSeedFilterTests.cpp)
 add_unittest(EstimateTrackParamsFromSeed EstimateTrackParamsFromSeedTest.cpp)
 add_unittest(HoughTransformTest HoughTransformTest.cpp)
 add_unittest(AdaptiveHoughTransformTest HoughAccumulatorSectionTest.cpp)
