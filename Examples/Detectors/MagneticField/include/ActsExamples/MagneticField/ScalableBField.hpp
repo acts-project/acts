@@ -59,6 +59,17 @@ class ScalableBField final : public Acts::MagneticFieldProvider {
     return Acts::Result<Acts::Vector3>::success(m_BField * cache.scalor);
   }
 
+  bool providesFieldGradient() const override { return true; }
+
+  /// @note The gradient of a constant field is zero.
+  Acts::Result<FieldAndGradient> getFieldAndGradient(
+      const Acts::Vector3& /*position*/,
+      MagneticFieldProvider::Cache& gCache) const override {
+    Cache& cache = gCache.as<Cache>();
+    return Acts::Result<FieldAndGradient>::success(
+        {m_BField * cache.scalor, Acts::SquareMatrix3::Zero()});
+  }
+
   Acts::MagneticFieldProvider::Cache makeCache(
       const Acts::MagneticFieldContext& mctx) const override {
     return Acts::MagneticFieldProvider::Cache(std::in_place_type<Cache>, mctx);
