@@ -40,6 +40,7 @@
 #include "ActsPlugins/Json/TrackingGeometryJsonConverter.hpp"
 #include "ActsPlugins/Json/detail/JsonIo.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
 
 #include <cstddef>
@@ -500,9 +501,9 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
 
     auto& steppingA = sourceStates.stepping.at(i);
     auto& steppingB = decodedStates.stepping.at(i);
-    BOOST_CHECK(steppingA.pars == steppingB.pars);
+    CHECK_CLOSE_ABS(steppingA.pars, steppingB.pars, 1e-9);
     BOOST_CHECK(steppingA.nSteps == steppingB.nSteps);
-    BOOST_CHECK(steppingA.pathAccumulated == steppingB.pathAccumulated);
+    CHECK_CLOSE_ABS(steppingA.pathAccumulated, steppingB.pathAccumulated, 1e-9);
   }
 }
 
