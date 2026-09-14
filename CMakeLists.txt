@@ -373,11 +373,21 @@ if(ACTS_SETUP_BOOST)
             Boost
             ${_acts_boost_version}
             REQUIRED
-            COMPONENTS program_options unit_test_framework process
+            COMPONENTS program_options unit_test_framework
         )
     else()
-        find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS process)
+        find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
     endif()
+
+    # Only the Mille plugin needs these, and neither is part of every Boost
+    # installation (Boost.Process is a compiled library since Boost 1.88).
+    # Probe them quietly here, the plugin reports if one it needs is missing.
+    find_package(
+        Boost
+        ${_acts_boost_version}
+        QUIET
+        OPTIONAL_COMPONENTS process filesystem
+    )
 
     if(Boost_VERSION VERSION_EQUAL "1.85.0")
         set(_boost_version_severity WARNING)

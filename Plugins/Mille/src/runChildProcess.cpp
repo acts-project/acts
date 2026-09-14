@@ -37,7 +37,8 @@ namespace {
 /// @brief helper to wrap a file handle
 class wrappedFileHandle {
  public:
-  explicit wrappedFileHandle(const std::filesystem::path& outf = "") {
+  explicit wrappedFileHandle(const std::filesystem::path& outf = "")
+      : m_path(outf) {
     if (!outf.empty()) {
       m_handle = open(outf.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     }
@@ -51,7 +52,8 @@ class wrappedFileHandle {
   wrappedFileHandle& operator=(const wrappedFileHandle&) = delete;
 
   wrappedFileHandle(wrappedFileHandle&& other) noexcept
-      : m_handle(std::exchange(other.m_handle, -1)) {}
+      : m_handle(std::exchange(other.m_handle, -1)),
+        m_path(std::move(other.m_path)) {}
 
   wrappedFileHandle& operator=(wrappedFileHandle&& other) noexcept {
     if (this != &other) {
@@ -59,15 +61,18 @@ class wrappedFileHandle {
         ::close(m_handle);
       }
       m_handle = std::exchange(other.m_handle, -1);
+      m_path = std::move(other.m_path);
     }
 
     return *this;
   }
   int operator()() const { return m_handle; }
   bool isRedirected() const { return m_handle != -1; }
+  const std::filesystem::path& path() const { return m_path; }
 
  private:
   int m_handle = -1;
+  std::filesystem::path m_path{};
 };
 
 #if BOOST_VERSION >= 108800
@@ -104,33 +109,32 @@ ActsPlugins::ActsToMille::childProcessStatus runChildProcessBoost(
 // earlier boost versions use the v1 API.
 #else
 
-#include <boost/process.hpp>
-
 ActsPlugins::ActsToMille::childProcessStatus runChildProcessBoost(
     const std::string& program, const std::vector<std::string>& args,
     const std::filesystem::path& runDir,
     const wrappedFileHandle& outputHandle) {
-  using namespace boost::process;
+  namespace bp = boost::process;
 
   // find the pede installation
-  auto thePede = search_path(program);
+  auto thePede = bp::search_path(program);
   if (thePede.empty()) {
     return ActsPlugins::ActsToMille::childProcessStatus::progNotFound;
   }
 
-  std::unique_ptr<bp::child> theProcess = nullptr;
-  if (outputHandle.isRedirected) {
-    theProcess = std::make_unique<bp::child>(
-        thePede, args, bp::start_dir = workDir.string(),
-        bp::std_out > outputHandle(), bp::std_err > outputHandle());
+  bp::child theProcess;
+  if (outputHandle.isRedirected()) {
+    // The v1 API cannot redirect into an already open file descriptor, so it
+    // gets the path instead. Merging the two streams hands the child a single
+    // handle for both, as in the v2 branch above.
+    theProcess =
+        bp::child(thePede, args, bp::start_dir = runDir.string(),
+                  (bp::std_out & bp::std_err) > outputHandle.path().string());
   } else {
-      theProcess = std::make_unique<bp::child>( thePede,
-        args,
-        bp::start_dir = workDir.string()
-  };
+    theProcess = bp::child(thePede, args, bp::start_dir = runDir.string());
+  }
 
-  theProcess->wait();
-  if (theProcess->exit_code() != 0) {
+  theProcess.wait();
+  if (theProcess.exit_code() != 0) {
     return childProcessStatus::failedRun;
   }
   return childProcessStatus::ok;
