@@ -1335,7 +1335,7 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
         if (&target.surface() == straws.at(s + s1).get()) {
           ACTS_INFO(__LINE__ << " - Target " << target << " is the " << s1
                              << "-th surface.");
-          reached[s1] = true;
+          reached[s1] = 1u;
           break;
         }
       }
