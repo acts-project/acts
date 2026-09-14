@@ -9,6 +9,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/GenericRungeKuttaStepper.hpp"
 #include "Acts/Propagator/HelixStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -74,6 +75,12 @@ void addPropagation(py::module& mex) {
   // Helix stepper based propagator
   {
     addConcretePropagator<HelixStepper, Navigator>(mex, "Helix");
+  }
+
+  // Reference Runge-Kutta stepper based propagator
+  {
+    addConcretePropagator<GenericRungeKuttaStepper, Navigator>(
+        mex, "GenericRungeKutta");
   }
 
   // ATLAS stepper based propagator
