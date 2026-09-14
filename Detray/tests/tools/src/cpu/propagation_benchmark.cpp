@@ -43,7 +43,8 @@ using namespace detray;
 
 int main(int argc, char** argv) {
   // Use the most general type to be able to read in all detector files
-  using detector_t = detray::detector<detray::benchmarks::default_metadata>;
+  using detector_t =
+      detray::host::detector<detray::benchmarks::default_metadata>;
   using bench_algebra = typename detector_t::algebra_type;
   using scalar = dscalar<bench_algebra>;
   using vector3 = dvector3D<bench_algebra>;

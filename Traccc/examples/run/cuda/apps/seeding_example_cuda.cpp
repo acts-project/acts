@@ -411,8 +411,8 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
 
       for (unsigned int i = 0; i < track_candidates_cuda.tracks.size(); i++) {
         host_detector_visitor<detector_type_list>(
-            host_det, [&]<typename detector_traits_t>(
-                          const typename detector_traits_t::host& det) {
+            host_det,
+            [&]<detray::concepts::detector detector_t>(const detector_t& det) {
               fit_performance_writer.write(track_candidates_cuda.tracks.at(i),
                                            track_candidates_cuda.states,
                                            measurements_per_event, det,

@@ -51,7 +51,7 @@ TEST_P(KF_integration_test_toy_detector, toy_detector) {
   // TODO: Enable these tests at a later date.
   GTEST_SKIP();
 
-  using detector_t = traccc::default_detector::host;
+  using detector_t = traccc::default_detector_traits::host;
   using algebra_t = typename detector_t::algebra_type;
   using b_field_t = covfie::field<traccc::const_bfield_backend_t<scalar>>;
   using track_t = traccc::free_track_parameters<algebra_t>;
@@ -86,13 +86,10 @@ TEST_P(KF_integration_test_toy_detector, toy_detector) {
   }
 
   auto [io_det, names] =
-      detray::io::read_detector<traccc::default_detector::host>(host_mr,
-                                                                reader_cfg);
+      detray::io::read_detector<detector_t>(host_mr, reader_cfg);
   traccc::host_detector host_det{};
-  host_det.template set<detector_traits<typename detector_t::metadata>>(
-      std::move(io_det));
-  const auto& det = host_det.template as<
-      traccc::detector_traits<typename detector_t::metadata>>();
+  host_det.template set<detector_t>(std::move(io_det));
+  const auto& det = host_det.template as<detector_t>();
 
   // Create B field
   traccc::magnetic_field field = traccc::construct_const_bfield(B);

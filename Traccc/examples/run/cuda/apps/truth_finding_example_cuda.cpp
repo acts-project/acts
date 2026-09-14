@@ -170,14 +170,12 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
         truth_track_candidates{host_mr};
 
     host_detector_visitor<detector_type_list>(
-        polymorphic_detector, [&]<typename detector_traits_t>(
-                                  const typename detector_traits_t::host& det) {
-          typename traccc::seed_generator<
-              typename detector_traits_t::host>::config seed_cfg{};
+        polymorphic_detector,
+        [&]<detray::concepts::detector detector_t>(const detector_t& det) {
+          typename traccc::seed_generator<detector_t>::config seed_cfg{};
           seed_cfg.initial_sigmas = stddevs;
           // Seed generator
-          traccc::seed_generator<typename detector_traits_t::host> sg(det,
-                                                                      seed_cfg);
+          traccc::seed_generator<detector_t> sg(det, seed_cfg);
           evt_data.generate_truth_candidates(truth_track_candidates,
                                              truth_measurements, sg, host_mr,
                                              truth_finding_opts.m_pT_min);
@@ -315,8 +313,7 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
       for (unsigned int i = 0; i < track_states_cuda.tracks.size(); i++) {
         host_detector_visitor<detector_type_list>(
             polymorphic_detector,
-            [&]<typename detector_traits_t>(
-                const typename detector_traits_t::host& det) {
+            [&]<detray::concepts::detector detector_t>(const detector_t& det) {
               fit_performance_writer.write(
                   track_states_cuda.tracks.at(i), track_states_cuda.states,
                   measurements_per_event, det, evt_data);

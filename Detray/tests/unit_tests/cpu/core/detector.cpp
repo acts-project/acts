@@ -28,7 +28,7 @@ GTEST_TEST(detray_core, detector) {
   using namespace detray;
 
   using metadata_t = test::default_metadata;
-  using detector_t = detector<metadata_t>;
+  using detector_t = host::detector<metadata_t>;
   using mask_id = typename detector_t::masks::id;
   using material_id = typename detector_t::material::id;
   using finder_id = typename detector_t::accel::id;

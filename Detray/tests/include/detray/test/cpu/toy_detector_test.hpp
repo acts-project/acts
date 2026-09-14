@@ -89,12 +89,11 @@ inline void test_mat_map(const mat_map_t& mat_map, const bool is_cyl) {
   }
 }
 
-template <concepts::algebra algebra_t, typename bfield_t>
+template <concepts::algebra algebra_t>
 inline bool toy_detector_test(
-    const detector<toy_metadata<algebra_t>, bfield_t>& toy_det,
-    const typename detector<toy_metadata<algebra_t>, bfield_t>::name_map&
-        names) {
-  using detector_t = detector<toy_metadata<algebra_t>, bfield_t>;
+    const host::detector<toy_metadata<algebra_t>>& toy_det,
+    const detray::name_map& names) {
+  using detector_t = host::detector<toy_metadata<algebra_t>>;
   using scalar_t = dscalar<typename detector_t::algebra_type>;
   using geo_obj_ids = typename detector_t::geo_obj_ids;
   using volume_t = typename detector_t::volume_type;

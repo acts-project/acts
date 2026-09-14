@@ -39,9 +39,8 @@ combinatorial_kalman_filter_algorithm::operator()(
   return host_detector_magnetic_field_visitor<detector_type_list,
                                               bfield_type_list<scalar>>(
       det, bfield,
-      [&]<typename detector_t, typename bfield_view_t>(
-          const typename detector_t::host& detector,
-          const bfield_view_t field) {
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detector_t& detector, const bfield_view_t field) {
         if (m_config.run_pkf && (m_config.max_num_branches_per_seed == 1 ||
                                  m_config.max_num_branches_per_surface == 1)) {
           return details::run_progressive_kalman_filter(
