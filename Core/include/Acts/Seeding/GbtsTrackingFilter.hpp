@@ -125,7 +125,7 @@ class GbtsTrackingFilter final {
   /// Get layer type from layer index
   /// @param layerIndex Layer index
   /// @return Layer type
-  GbtsLayerType getLayerType(std::uint32_t layerIndex) const;
+  GbtsLayerType getLayerType(GbtsLayerIndex layerIndex) const;
 };
 
 }  // namespace Acts::Experimental

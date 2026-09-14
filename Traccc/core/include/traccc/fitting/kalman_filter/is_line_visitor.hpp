@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <detray/core/concepts.hpp>
 #include <detray/geometry/mask.hpp>
 #include <detray/geometry/shapes/line.hpp>
 #include <detray/geometry/surface.hpp>
@@ -17,7 +18,7 @@
 namespace traccc::detail {
 
 /// @returns true if the surface has "line" shape
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 [[nodiscard]] TRACCC_HOST_DEVICE bool constexpr is_line(
     const detray::geometry::surface<detector_t> sf) {
   using algebra_t = typename detector_t::algebra_type;

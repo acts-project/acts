@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Propagator/detail/SympyStepperStatus.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <span>
 #include <system_error>

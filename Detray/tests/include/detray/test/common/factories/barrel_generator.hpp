@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "detray/builders/surface_factory_interface.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/core/detail/data_context.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
@@ -101,7 +102,7 @@ struct barrel_generator_config {
 /// @brief Generates a number of surfaces in a barrel shape
 ///
 /// @tparam detector_t the type of detector the layer should be added to
-template <typename detector_t, typename mask_shape_t = rectangle2D>
+template <concepts::detector detector_t, typename mask_shape_t = rectangle2D>
 class barrel_generator final : public surface_factory_interface<detector_t> {
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;

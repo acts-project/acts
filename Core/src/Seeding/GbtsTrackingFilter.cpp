@@ -358,8 +358,8 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
 }
 
 GbtsLayerType GbtsTrackingFilter::getLayerType(
-    const std::uint32_t layerIndex) const {
-  return m_geometry->layerDescriptionByIndex(layerIndex).type;
+    const GbtsLayerIndex layerIndex) const {
+  return m_geometry->layerDescription(layerIndex).type;
 }
 
 }  // namespace Acts::Experimental

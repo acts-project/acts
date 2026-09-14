@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstdint>
@@ -32,7 +33,7 @@ class GbtsLayerConnectionTool {
     /// @param maxZ_ maximum z coordinate of layer
     /// @param gbtsId_ GBTS id of layer
     LayerDescription(float minR_, float maxR_, float minZ_, float maxZ_,
-                     std::int32_t gbtsId_);
+                     GbtsExperimentLayerId gbtsId_);
 
     /// Minimum radius
     float minR{};
@@ -43,7 +44,7 @@ class GbtsLayerConnectionTool {
     /// Maximum z coordinate
     float maxZ{};
     /// layer ID
-    std::int32_t gbtsId{};
+    GbtsExperimentLayerId gbtsId{};
   };
 
   /// Configuration for the layer connection tool
@@ -77,7 +78,7 @@ class GbtsLayerConnectionTool {
   };
 
   /// pair of layer transitions
-  using LayerIdPair = std::pair<std::int32_t, std::int32_t>;
+  using LayerIdPair = std::pair<GbtsExperimentLayerId, GbtsExperimentLayerId>;
 
   /// Hash id used for unordered sets and maps
   struct LayerIdPairHash {
@@ -86,8 +87,8 @@ class GbtsLayerConnectionTool {
     /// @param pair Layer transition pair
     /// @return hash id
     std::size_t operator()(const LayerIdPair& pair) const noexcept {
-      const auto h1 = std::hash<std::int32_t>{}(pair.first);
-      const auto h2 = std::hash<std::int32_t>{}(pair.second);
+      const auto h1 = std::hash<GbtsExperimentLayerId>{}(pair.first);
+      const auto h2 = std::hash<GbtsExperimentLayerId>{}(pair.second);
 
       return h1 ^ (h2 << 1);
     }
@@ -121,19 +122,20 @@ class GbtsLayerConnectionTool {
   /// Finds the Gbts Coordinate of a given hits coordinate
   /// @param hit the coordinates of the particle hit on a layer
   /// @return gbts coordinate
-  std::optional<std::int32_t> findGbtsIdByCoord(
+  std::optional<GbtsExperimentLayerId> findGbtsIdByCoord(
       const HitCoordinates& hit) const;
 
   /// gets the index to the vector of detector layers via an GBTS id
   /// @param gbtsId Gbts Id of layer
   /// @return detector layer index
-  std::uint32_t getIndexByGbtsId(std::int32_t gbtsId) const;
+  std::uint32_t getIndexByGbtsId(GbtsExperimentLayerId gbtsId) const;
 
   /// finds the opposide layer of a symmetrical detector with a given reference
   /// layer
   /// @param layer the detector layer
   /// @return oppsite side layers gbts id
-  std::optional<std::int32_t> oppositeSideLayer(std::int32_t layer) const;
+  std::optional<GbtsExperimentLayerId> oppositeSideLayer(
+      GbtsExperimentLayerId layer) const;
 
   /// Config for layer connection tool
   Config m_cfg;
