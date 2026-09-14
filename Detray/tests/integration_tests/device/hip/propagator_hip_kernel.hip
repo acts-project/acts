@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/detail/hip_definitions.hpp"
 
 // Detray test include(s)
@@ -14,7 +15,7 @@
 
 namespace detray {
 
-template <typename bfield_bknd_t, typename detector_t>
+template <typename bfield_bknd_t, concepts::detector detector_t>
 __global__ void propagator_test_kernel(
     typename detector_t::view_type det_data, const propagation::config cfg,
     covfie::field_view<bfield_bknd_t> field_data,
@@ -68,7 +69,7 @@ __global__ void propagator_test_kernel(
 }
 
 /// Launch the device kernel
-template <typename bfield_bknd_t, typename detector_t>
+template <typename bfield_bknd_t, concepts::detector detector_t>
 void propagator_test(
     typename detector_t::view_type det_view, const propagation::config& cfg,
     covfie::field_view<bfield_bknd_t> field_data,

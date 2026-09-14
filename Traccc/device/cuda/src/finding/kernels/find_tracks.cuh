@@ -13,7 +13,7 @@
 
 namespace traccc::cuda {
 
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 void find_tracks(const dim3& grid_size, const dim3& block_size,
                  std::size_t shared_mem_size, const cudaStream_t& stream,
                  const finding_config& cfg,

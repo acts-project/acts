@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/geometry/surface.hpp"
 
 // Plugin include(s)
@@ -24,7 +25,7 @@ namespace detray::svgtools::conversion {
 
 /// @returns An actsvg proto portal representing the portal.
 /// @note detray portal is_portal() should be true.
-template <typename detector_t, typename view_t>
+template <concepts::detector detector_t, typename view_t>
 auto portal(const typename detector_t::geometry_context& context,
             const detector_t& detector,
             const detray::geometry::surface<detector_t>& d_portal,

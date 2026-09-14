@@ -7,7 +7,12 @@
 
 #pragma once
 
+// alpaka aliases CUDA/HIP builtin vector types (ulonglong4 and friends) that
+// newer toolkits deprecate: the warning is about alpaka's header, not ours.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <alpaka/alpaka.hpp>
+#pragma GCC diagnostic pop
 
 namespace traccc::alpaka {
 

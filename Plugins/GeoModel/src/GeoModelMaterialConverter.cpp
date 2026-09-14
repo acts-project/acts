@@ -19,8 +19,6 @@ namespace {
 constexpr double s_massDensitryCnvFactor =
     (GeoModelKernelUnits::cm3 * Acts::UnitConstants::g) /
     (GeoModelKernelUnits::gram * Acts::UnitConstants::cm3);
-// Avogadro constant
-constexpr double kAvogadro = 6.02214076e23 / Acts::UnitConstants::mol;
 
 }  // namespace
 
@@ -44,7 +42,8 @@ Material ActsPlugins::GeoModel::geoMaterialConverter(const GeoMaterial& gm,
   }
   if (useMolarDensity) {
     const double molarDensity =
-        massDensity / (A * Acts::UnitConstants::u * kAvogadro);
+        massDensity /
+        (A * Acts::UnitConstants::u * Acts::PhysicalConstants::kAvogadro);
     return Material::fromMolarDensity(x0, l0, A, Z, molarDensity);
   } else {
     return Material::fromMassDensity(x0, l0, A, Z, massDensity);

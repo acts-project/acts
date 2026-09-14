@@ -16,6 +16,7 @@
 #include "detray/test/common/event_generator/uniform_track_generator_config.hpp"
 
 // Detray test include(s)
+#include "detray/test/common/build_toy_detector.hpp"
 #include "detray/test/cpu/material_scan.hpp"
 #include "detray/test/cpu/material_validation.hpp"
 #include "detray/test/framework/register_checks.hpp"
@@ -30,6 +31,9 @@
 
 // GTest include(s)
 #include <gtest/gtest.h>
+
+// Vecmem include(s)
+#include <vecmem/memory/memory_resource.hpp>
 
 // Pybind11 include(s)
 #include <pybind11/pybind11.h>
@@ -60,6 +64,7 @@ using track_generator_config_t =
 using material_validation_config_t =
     detray::test::material_validation_config<algebra_t>;
 using base_config_t = detray::test::configuration<scalar_t>;
+using toy_det_config_t = detray::toy_det_config<scalar_t>;
 
 template <typename T>
 std::string to_string(const T &obj) {
@@ -99,10 +104,50 @@ int run_material_validation(const detector_t &det,
   });
 }
 
+/// Build a toy detector using @p mr as configured by @p cfg .
+///
+/// The memory resource object is automatically kept alive at least as long as
+/// the returned detector object.
+std::pair<py::object, detray::name_map> build_toy_detector(
+    std::shared_ptr<vecmem::memory_resource> mr, const toy_det_config_t &cfg) {
+  auto [det, names] = detray::build_toy_detector<algebra_t>(*mr, cfg);
+
+  py::object detector = py::cast(std::move(det));
+  py::detail::keep_alive_impl(detector, py::cast(std::move(mr)));
+
+  return {std::move(detector), std::move(names)};
+}
+
 }  // namespace
 
 PYBIND11_MODULE(DetrayTestsPythonBindings, m) {
   m.doc() = "Detray tests bindings";
+
+  py::class_<toy_det_config_t>(m, "ToyDetectorConfig")
+      .def(py::init<>())
+      .def_property(
+          "nBarrelLayers",
+          [](const toy_det_config_t &c) { return c.n_brl_layers(); },
+          [](toy_det_config_t &c, unsigned int n) { c.n_brl_layers(n); },
+          "Number of barrel layers [0-4]")
+      .def_property(
+          "nEndcapLayers",
+          [](const toy_det_config_t &c) { return c.n_edc_layers(); },
+          [](toy_det_config_t &c, unsigned int n) { c.n_edc_layers(n); },
+          "Number of endcap layers on either side [0-7]")
+      .def_property(
+          "useMaterialMaps",
+          [](const toy_det_config_t &c) { return c.use_material_maps(); },
+          [](toy_det_config_t &c, bool b) { c.use_material_maps(b); },
+          "Put material maps on the portals instead of homogeneous material "
+          "on the modules")
+      .def("__repr__", &to_string<toy_det_config_t>);
+
+  m.def("buildToyDetector", &build_toy_detector, py::arg("memoryResource"),
+        py::arg("config"),
+        "Build a toy detector using the given memory resource, as configured "
+        "by a ToyDetectorConfig. The returned detector keeps the memory "
+        "resource alive for as long as it is used");
 
   py::class_<track_generator_config_t>(m, "TrackGeneratorConfig")
       .def(py::init<>())

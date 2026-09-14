@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
 #include "detray/definitions/containers.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
@@ -29,7 +30,7 @@
 
 namespace detray {
 
-template <typename detector_t, typename surface_t = void>
+template <concepts::detector detector_t, typename surface_t = void>
 class direct_navigator {
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
