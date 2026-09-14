@@ -1039,7 +1039,7 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
   {
     auto bounds = std::make_shared<CuboidVolumeBounds>(40._cm, 22.5_cm, 10._cm);
     auto volume = std::make_unique<TrackingVolume>(
-        getTranslateX3D(2.5_m) * volRot, bounds);
+        getTranslateX3D(2.5_m) * getTranslateZ3D(1._m) * volRot, bounds);
     using enum CuboidVolumeBounds::BoundValues;
     auto strawBounds = std::make_shared<LineBounds>(
         0.5 * strawPitch - 0.5_mm, bounds->get(eHalfLengthX) - 0.5_mm);
@@ -1082,7 +1082,7 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
                               2. * bounds->get(eHalfLengthY) / strawPitch)),
                           -bounds->get(eHalfLengthY), bounds->get(eHalfLengthY),
                           AxisBoundaryType::Bound, AxisDirection::AxisY),
-                      2u},
+                      1u},
                      {AxisSpec::Equidistant(
                           static_cast<std::size_t>(std::lround(
                               2 * bounds->get(eHalfLengthZ) / strawPitch)),
