@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
@@ -27,13 +28,17 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
@@ -939,15 +944,93 @@ BOOST_AUTO_TEST_CASE(NavigationStartOnBoundaryGen1) {
 }
 
 BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
-    Blueprint::Config bluePrintCfg{};
-    Blueprint root{cfg};
-    cfg.envelope[AxisDirection::AxisX] = {20_mm, 20_mm};
-    cfg.envelope[AxisDirection::AxisY] = {20_mm, 20_mm};
-    cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
-    
-    // auto firstTrackingVol = std::make_unique<TrackingVolume>();
+  Blueprint::Config bluePrintCfg{};
 
-    // root.addStaticVolume(getTranslateX3D(40._cm), std::make_shared<CuboidVolumeBounds>())
+  bluePrintCfg.envelope[AxisDirection::AxisX] = {20_mm, 20_mm};
+  bluePrintCfg.envelope[AxisDirection::AxisY] = {20_mm, 20_mm};
+  bluePrintCfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  Blueprint root{bluePrintCfg};
+
+  Acts::ObjVisualization3D visualHelper{};
+
+  auto& container = root.addCuboidContainer("envelope", AxisDirection::AxisX);
+
+  const Transform3 volRot = getRotateX3D(90._degree) * getRotateY3D(90._degree);
+
+  std::shared_ptr<Acts::Surface> planeSurf1, planeSurf2{};
+  std::vector<std::shared_ptr<Acts::Surface>> straws{};
+  {
+    /// Construct a cuboid volume with 80 x 40 x 20 cm which is 1 m apart from
+    /// the origin and contains two plane surfaces. The first plane is on the
+    /// negative X hemisphere and the other one on the positive. Shift both
+    /// surface by few cm in the local z-axis to distinguish them later in the
+    /// geometry
+    auto volume = std::make_unique<TrackingVolume>(
+        getTranslateX3D(1._m) * volRot,
+        std::make_shared<CuboidVolumeBounds>(40._cm, 20._cm, 10._cm));
+
+    planeSurf1 = Surface::makeShared<PlaneSurface>(
+        volume->localToGlobalTransform(tgContext) *
+            getTranslate3D(-20._cm, 0., -5._cm),
+        std::make_shared<RectangleBounds>(20._cm, 20._cm));
+
+    planeSurf2 = Surface::makeShared<PlaneSurface>(
+        volume->localToGlobalTransform(tgContext) *
+            getTranslate3D(20._cm, 0., 5._cm),
+        std::make_shared<RectangleBounds>(20._cm, 20._cm));
+
+    planeSurf1->assignIsSensitive(true);
+    planeSurf2->assignIsSensitive(true);
+
+    volume->addSurface(planeSurf1);
+    volume->addSurface(planeSurf2);
+
+    GeometryView3D::drawSurface(visualHelper, *planeSurf1, tgContext,
+                                Transform3::Identity());
+    GeometryView3D::drawSurface(visualHelper, *planeSurf2, tgContext,
+                                Transform3::Identity());
+
+    GeometryView3D::drawVolume(visualHelper, *volume, tgContext,
+                               Transform3::Identity());
+    container.addStaticVolume(std::move(volume));
+  }
+  /// Place a second volume another m behind. This time it has two layers of
+  /// straws
+  constexpr double strawRadius = 5._cm;
+  {
+    auto bounds = std::make_shared<CuboidVolumeBounds>(40._cm, 20._cm, 10._cm);
+    auto volume = std::make_unique<TrackingVolume>(
+        getTranslateX3D(2.5_m) * volRot, bounds);
+    using enum CuboidVolumeBounds::BoundValues;
+    auto strawBounds =
+        std::make_shared<LineBounds>(strawRadius, bounds->get(eHalfLengthX));
+    for (double startY = -bounds->get(eHalfLengthY) + strawRadius;
+         startY < bounds->get(eHalfLengthY);
+         startY = startY + 2. * strawRadius) {
+      Transform3 strawTrf = volume->localToGlobalTransform(tgContext) *
+                            getTranslate3D(0., startY, -strawRadius) *
+                            getRotateY3D(90._degree);
+      auto& newStraw = straws.emplace_back(
+          Surface::makeShared<StrawSurface>(strawTrf, strawBounds));
+      GeometryView3D::drawSurface(visualHelper, *newStraw, tgContext,
+                                  Transform3::Identity());
+      newStraw->assignIsSensitive(true);
+    }
+
+    GeometryView3D::drawVolume(visualHelper, *volume, tgContext,
+                               Transform3::Identity());
+
+    // container.addStaticVolume(std::move(volume));
+  }
+
+  visualHelper.write("ExternalTest.obj");
+  auto trkGeo = root.construct(BlueprintOptions{}, tgContext);
+
+  BOOST_CHECK(planeSurf1->geometryId() != GeometryIdentifier{});
+  BOOST_CHECK(planeSurf2->geometryId() != GeometryIdentifier{});
+
+  std::cout << "DIE CASSY " << planeSurf1->toStream(tgContext) << std::endl;
+  std::cout << "DIE CASSY " << planeSurf2->toStream(tgContext) << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
