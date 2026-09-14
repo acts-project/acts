@@ -112,7 +112,7 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
 
     const float r2 = otherLayer.m_layerDescription.refCoord;
 
-    // for same layer links use layer thickness
+    // For same layer links use layer thickness
     const float dr =
         this == &otherLayer ? m_layerDescription.layerThickness : r2 - r1;
     const float A = r2 / dr;
@@ -171,7 +171,7 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
     if (r1min >= r2max) {
       return false;
     }
-    // for same layer links use layer thickness
+    // For same layer links use layer thickness
     const float dz =
         this == &otherLayer ? m_layerDescription.layerThickness : z2 - z1;
 
