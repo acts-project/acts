@@ -56,14 +56,14 @@ TRACCC_HOST_DEVICE void fast_sv_1(const thread_id_t& thread_id,
    * This varible will be set if a change is made, and dictates if another
    * loop is necessary.
    */
-  bool gf_changed;
+  unsigned int gf_changed;
 
   do {
     /*
      * Reset the end-parameter to false, so we can set it to true if we
      * make a change to the gf array.
      */
-    gf_changed = false;
+    gf_changed = 0u;
 
     /*
      * The algorithm executes in a loop of three distinct parallel
@@ -77,7 +77,7 @@ TRACCC_HOST_DEVICE void fast_sv_1(const thread_id_t& thread_id,
           tst * thread_id.getBlockDimX() + thread_id.getLocalThreadIdX();
 
       TRACCC_ASSUME(adjc[tst] <= 4);
-      for (unsigned char k = 0; k < adjc[tst]; ++k) {
+      for (unsigned int k = 0; k < adjc[tst]; ++k) {
         const auto cid2 = adjv[4 * tst + k];
 
         index_t q2 = gf.at(cid2);
@@ -127,7 +127,7 @@ TRACCC_HOST_DEVICE void fast_sv_1(const thread_id_t& thread_id,
        */
       if (gf.at(cid) != f.at(f.at(cid))) {
         gf.at(cid) = f.at(f.at(cid));
-        gf_changed = true;
+        gf_changed = 1u;
       }
     }
 
@@ -138,14 +138,14 @@ TRACCC_HOST_DEVICE void fast_sv_1(const thread_id_t& thread_id,
      * will return a true value and go to the next iteration. Only if
      * all threads return false will the loop exit.
      */
-  } while (barrier.blockOr(gf_changed));
+  } while (barrier.blockOr(gf_changed != 0u));
 }
 
 template <device::concepts::barrier barrier_t,
           device::concepts::thread_id1 thread_id_t, typename index_t>
 TRACCC_HOST_DEVICE inline void ccl_core(
     const clustering_config& cfg, const thread_id_t& thread_id,
-    std::size_t& partition_start, std::size_t& partition_end,
+    unsigned int& partition_start, unsigned int& partition_end,
     vecmem::device_vector<index_t> f, vecmem::device_vector<index_t> gf,
     index_t* adjv, unsigned char* adjc,
     const edm::silicon_cell_collection::const_device& cells_device,
@@ -154,7 +154,7 @@ TRACCC_HOST_DEVICE inline void ccl_core(
     edm::measurement_collection::device measurements_device,
     const barrier_t& barrier, vecmem::device_vector<unsigned int>& disjoint_set,
     vecmem::device_vector<unsigned int>& cluster_size) {
-  const auto size = static_cast<unsigned int>(partition_end - partition_start);
+  const unsigned int size = partition_end - partition_start;
 
   assert(size <= f.size());
   assert(size <= gf.size());
@@ -171,9 +171,8 @@ TRACCC_HOST_DEVICE inline void ccl_core(
         tst * thread_id.getBlockDimX() + thread_id.getLocalThreadIdX();
     adjc[tst] = 0;
 
-    reduce_problem_cell(
-        cells_device, cid, static_cast<unsigned int>(partition_start),
-        static_cast<unsigned int>(partition_end), adjc[tst], &adjv[4 * tst]);
+    reduce_problem_cell(cells_device, cid, partition_start, partition_end,
+                        adjc[tst], &adjv[4 * tst]);
 
     f.at(cid) = static_cast<index_t>(cid);
     gf.at(cid) = static_cast<index_t>(cid);
@@ -233,15 +232,14 @@ TRACCC_HOST_DEVICE inline void ccl_core(
    */
   for (unsigned int i = thread_id.getLocalThreadIdX(); i < size;
        i += thread_id.getBlockDimX()) {
-    const index_t effi =
-        static_cast<index_t>((partition_end - partition_start) - (i + 1));
+    const unsigned int effi = (partition_end - partition_start) - (i + 1);
 
     const auto fid = f.at(effi);
 
     if (fid != effi) {
       for (unsigned int j = effi - 1; j < size; --j) {
         if (fid == f.at(j)) {
-          gf.at(j) = effi;
+          gf.at(j) = static_cast<index_t>(effi);
           break;
         }
       }
@@ -250,9 +248,9 @@ TRACCC_HOST_DEVICE inline void ccl_core(
 
   barrier.blockBarrier();
 
-  for (details::index_t tst = 0; tst < thread_cell_count; ++tst) {
-    const auto cid = static_cast<details::index_t>(
-        tst * thread_id.getBlockDimX() + thread_id.getLocalThreadIdX());
+  for (unsigned int tst = 0; tst < thread_cell_count; ++tst) {
+    const unsigned int cid =
+        tst * thread_id.getBlockDimX() + thread_id.getLocalThreadIdX();
 
     if (f.at(cid) == cid) {
       // Add a new measurement to the output buffer. Remembering its
@@ -261,10 +259,9 @@ TRACCC_HOST_DEVICE inline void ccl_core(
           measurements_device.push_back_default();
       // Set up the measurement under the appropriate index.
       aggregate_cluster(
-          cfg, cells_device, det_desc, det_cond, gf,
-          static_cast<unsigned int>(partition_start),
-          static_cast<unsigned int>(partition_end), cid,
-          measurements_device.at(meas_pos), meas_pos, disjoint_set,
+          cfg, cells_device, det_desc, det_cond, gf, partition_start,
+          partition_end, cid, measurements_device.at(meas_pos), meas_pos,
+          disjoint_set,
           (cluster_size.capacity()
                ? std::optional<
                      std::reference_wrapper<unsigned int>>{cluster_size.at(
@@ -281,7 +278,7 @@ TRACCC_HOST_DEVICE inline void ccl_kernel(
     const edm::silicon_cell_collection::const_view& cells_view,
     const detector_design_description::const_view& det_desc_view,
     const detector_conditions_description::const_view& det_cond_view,
-    std::size_t& partition_start, std::size_t& partition_end, std::size_t& outi,
+    unsigned int& partition_start, unsigned int& partition_end,
     vecmem::data::vector_view<details::index_t> f_view,
     vecmem::data::vector_view<details::index_t> gf_view,
     vecmem::data::vector_view<details::fallback_index_t> f_backup_view,
@@ -325,7 +322,6 @@ TRACCC_HOST_DEVICE inline void ccl_kernel(
     unsigned int start = thread_id.getBlockIdX() * cfg.target_partition_size();
     assert(start < num_cells);
     unsigned int end = std::min(num_cells, start + cfg.target_partition_size());
-    outi = 0;
 
     /*
      * Next, shift the starting point to a position further in the
@@ -365,7 +361,7 @@ TRACCC_HOST_DEVICE inline void ccl_kernel(
   // into a return. As such, we cannot use returns in this kernel.
 
   // Get partition for this thread group
-  const auto size = static_cast<unsigned int>(partition_end - partition_start);
+  const unsigned int size = partition_end - partition_start;
 
   // If the size is zero, we can just retire the whole block.
   if (size == 0) {
