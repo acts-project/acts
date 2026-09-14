@@ -14,7 +14,7 @@
 
 namespace ActsPlugins {
     GeoModelJsonMaterialManager* GeoModelJsonMaterialManager::getManager() {
-        if (!s_instance) {
+        if (s_instance == nullptr) {
             s_instance = new GeoModelJsonMaterialManager();
         }
         return dynamic_cast<GeoModelJsonMaterialManager*>(s_instance);
