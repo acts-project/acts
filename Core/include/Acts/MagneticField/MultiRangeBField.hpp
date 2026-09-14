@@ -81,6 +81,18 @@ class MultiRangeBField final : public MagneticFieldProvider {
   /// otherwise.
   Result<Vector3> getField(const Vector3& position,
                            MagneticFieldProvider::Cache& cache) const override;
+
+  /// @copydoc MagneticFieldProvider::providesFieldGradient() const
+  bool providesFieldGradient() const override { return true; }
+
+  /// @copydoc MagneticFieldProvider::getFieldAndGradient(const Vector3&,MagneticFieldProvider::Cache&) const
+  ///
+  /// @note The field is constant inside each region, so the gradient is
+  ///       zero. The gradient does not describe the steps of the field at the
+  ///       edges of the regions.
+  Result<FieldAndGradient> getFieldAndGradient(
+      const Vector3& position,
+      MagneticFieldProvider::Cache& cache) const override;
 };
 
 }  // namespace Acts
