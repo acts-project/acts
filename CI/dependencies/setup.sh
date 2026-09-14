@@ -252,10 +252,15 @@ function set_env {
 
 checkpoint "Starting setup script"
 
+mkdir -p "${destination}"
+# Spack resolves a relative view root against the environment directory, not
+# the cwd, so a relative -d would materialize the view under
+# ${destination}/env/${destination}/view once the root below is written into
+# the manifest. Pin it here so everything derived from it is absolute.
+destination="$(cd "${destination}" && pwd)"
+
 echo "Install tag: $tag"
 echo "Install destination: $destination"
-
-mkdir -p "${destination}"
 
 if [ -n "${GITLAB_CI:-}" ]; then
     _spack_folder=${CI_PROJECT_DIR}/spack
@@ -375,6 +380,37 @@ end_section
 
 start_section "Create spack environment"
 spack env create -d "${env_dir}" "${lock_file_path}" --with-view "$view_dir"
+# ci-dependencies' own spack.yaml excludes libiconv from its view (see its
+# commit a025501f) because the view's GNU libiconv exports libiconv*, not
+# iconv*, and on macOS DYLD_LIBRARY_PATH outranks a binary's absolute install
+# name -- so it hijacks cmake/ctest/cpack/ccmake, which are built against
+# /usr/lib/libiconv, away from it. That exclude lives in the manifest, not
+# the lockfile, so creating the env straight from spack.lock above loses it
+# regardless of DEPENDENCY_TAG. Re-apply it to the locally generated
+# manifest before the view gets populated below, rather than unsetting
+# DYLD_LIBRARY_PATH for every command: dd4hep's own plugin lookup reads that
+# variable directly (not through dlopen's OS-level resolution), so it still
+# needs the view on it.
+#
+# The colon-path form (`config add view:default:exclude:[libiconv]`) can't
+# do this: view's schema default is a bare bool, and config add errors
+# trying to assign into that regardless of view's current form. `-f <file>`
+# merges a real YAML document instead and does the right thing (verified:
+# installing a spec with this in place drops it from the view while leaving
+# it installed). `-f -` silently no-ops rather than reading stdin, so this
+# needs a real file. `root` has to be repeated here: the view descriptor
+# schema marks it required, so a document carrying only `exclude` is
+# rejected outright.
+view_exclude_config="$(mktemp)"
+cat > "$view_exclude_config" <<YAML
+view:
+  default:
+    root: ${view_dir}
+    exclude:
+    - libiconv
+YAML
+spack -e "${env_dir}" config add -f "$view_exclude_config"
+rm -f "$view_exclude_config"
 checkpoint "Spack environment created"
 spack -e "${env_dir}" spec -l
 checkpoint "Spack spec complete"

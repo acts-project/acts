@@ -9,29 +9,14 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
+#include <stdexcept>
+#include <utility>
 
-namespace Acts {
+namespace Acts::GridAccessHelpers {
 
-namespace GridAccessHelpers {
-
-/// Unroll the cast loop
-///
-/// @tparam cast_container is the container type of cast objects
-/// @tparam Array is the array type to be filled
-///
-/// @param position is the position of the update call
-/// @param globalCasts is the cast value vector from global to grid position
-/// @param ra is the array to be filled
-template <typename cast_container, typename Array, std::size_t... idx>
-void fillCasts(const Vector3& position, const cast_container& globalCasts,
-               Array& ra, std::index_sequence<idx...> /*indices*/) {
-  ((ra[idx] = VectorHelpers::cast(position, globalCasts[idx])), ...);
-}
 /// Cast into a lookup position
 ///
 /// This method allows to transform a global position into a grid position
@@ -39,7 +24,6 @@ void fillCasts(const Vector3& position, const cast_container& globalCasts,
 /// into a format suitable for the grid.
 ///
 /// @tparam cast_container is the container type of cast objects
-/// @tparam Array is the array type to be filled
 ///
 /// @param position is the position of the update call
 /// @param globalCasts is the cast value vector from global to grid position
@@ -48,11 +32,11 @@ void fillCasts(const Vector3& position, const cast_container& globalCasts,
 template <typename grid_type, typename cast_container>
 typename grid_type::point_t castPosition(const Vector3& position,
                                          const cast_container& globalCasts) {
-  // Fill the grid point from global
-  typename grid_type::point_t casted{};
-  fillCasts(position, globalCasts, casted,
-            std::make_integer_sequence<std::size_t, grid_type::DIM>{});
-  return casted;
+  // Fill the grid point from global, unrolling the cast loop
+  return [&]<std::size_t... idx>(std::index_sequence<idx...> /*indices*/) {
+    return typename grid_type::point_t{
+        VectorHelpers::cast(position, globalCasts[idx])...};
+  }(std::make_integer_sequence<std::size_t, grid_type::DIM>{});
 }
 
 /// Unroll the local position loop
@@ -92,178 +76,4 @@ typename grid_type::point_t accessLocal(const Vector2& lposition,
   return accessed;
 }
 
-}  // namespace GridAccessHelpers
-
-namespace GridAccess {
-
-/// Interface class for owning delegate
-class IGlobalToGridLocal {
- public:
-  virtual ~IGlobalToGridLocal() = default;
-};
-
-/// Interface class for owning delegate
-class IBoundToGridLocal {
- public:
-  virtual ~IBoundToGridLocal() = default;
-};
-
-/// Adapter that applies an affine transform before grid-local conversion.
-template <typename global_to_grid_local_t>
-class Affine3Transformed : public IGlobalToGridLocal {
- public:
-  /// Grid-local coordinate type.
-  using grid_local_t = typename global_to_grid_local_t::grid_local_t;
-
-  /// The global to local transformation
-  global_to_grid_local_t globalToGridLocal;
-
-  /// The transformation matrix
-  Transform3 transform;
-
-  /// Constructor
-  ///
-  /// @param g2gl is the global to grid local transformation
-  /// @param t is the transformation matrix
-  Affine3Transformed(global_to_grid_local_t g2gl, const Transform3& t)
-      : globalToGridLocal(std::move(g2gl)), transform(t) {}
-
-  /// Transform in to the local frame, then the grid local position
-  ///
-  /// @param position is the global position
-  ///
-  /// @return the grid position
-  typename global_to_grid_local_t::grid_local_t toGridLocal(
-      const Vector3& position) const {
-    return globalToGridLocal.toGridLocal(transform * position);
-  }
-};
-
-/// @brief A global (potentially casted) sub space of a global
-/// position
-/// @tparam ...Args
-template <AxisDirection... Args>
-class GlobalSubspace : public IGlobalToGridLocal {
- public:
-  /// Type alias for grid-local coordinate array
-  using grid_local_t = std::array<double, sizeof...(Args)>;
-
-  /// Assert that size has to be bigger than 0
-  static_assert(sizeof...(Args) > 0,
-                "GlobalSubspace: cannot have an empty binning value list.");
-
-  /// Assert that size has to be smaller than 4
-  static_assert(sizeof...(Args) <= 3,
-                "GlobalSubspace: cannot have more than 3 binning values.");
-
-  // Constructor
-  GlobalSubspace() = default;
-
-  /// The axis directions of the subspace
-  static constexpr std::array<AxisDirection, sizeof...(Args)> axisDirs = {
-      Args...};
-
-  /// Transform in to the local frame, then the grid local position
-  ///
-  /// @param position is the global position
-  ///
-  /// @return the grid position
-  grid_local_t toGridLocal(const Vector3& position) const {
-    // Fill the grid point from global
-    grid_local_t glocal{};
-    GridAccessHelpers::fillCasts(
-        position, axisDirs, glocal,
-        std::make_integer_sequence<std::size_t, sizeof...(Args)>{});
-    return glocal;
-  }
-};
-
-// The bound to grid local transformation, if only access of a subspace
-// is requested
-/// Access a local coordinate subspace for bound parameter grids.
-template <std::size_t... Args>
-class LocalSubspace : public IBoundToGridLocal {
- public:
-  /// Grid local coordinate type
-  using grid_local_t = std::array<double, sizeof...(Args)>;
-
-  /// Assert that the accessors are unique
-  static_assert(sizeof...(Args) == 1 || sizeof...(Args) == 2,
-                "LocalSubspace: only 1 or 2 accessors are allowed.");
-
-  /// Only 0 or 1 are allowed
-  static_assert(((Args < 2) && ...),
-                "LocalSubspace: local access needs to be 0u or 1u");
-
-  // Constructor
-  LocalSubspace() = default;
-
-  /// Accessor indices
-  static constexpr std::array<std::size_t, sizeof...(Args)> accessors = {
-      Args...};
-
-  /// Access the local entries
-  ///
-  /// @param lposition is the local position
-  ///
-  /// @return the grid position
-  grid_local_t toGridLocal(const Vector2& lposition) const {
-    // Fill the grid point from local according to the accessors
-    grid_local_t accessed{};
-    GridAccessHelpers::fillLocal(
-        lposition, accessors, accessed,
-        std::make_integer_sequence<std::size_t, sizeof...(Args)>{});
-    return accessed;
-  }
-};
-
-/// Convert bound cylinder local coordinates to Z-Phi grid coordinates.
-class BoundCylinderToZPhi : public IBoundToGridLocal {
- public:
-  /// Cylinder radius
-  double radius = 1.;
-  /// Z-coordinate shift
-  double shift = 0.;
-
-  /// Constructor with arguments
-  /// @param r the radius
-  /// @param z the shift
-  BoundCylinderToZPhi(double r, double z) : radius(r), shift(z) {}
-
-  /// Convert local coordinates to grid coordinates
-  /// @param local Local coordinates
-  /// @return Grid coordinates
-  std::array<double, 2u> toGridLocal(const Vector2& local) const {
-    return {local[1u] + shift, local[0u] / radius};
-  }
-
-  /// Type alias for disc-to-RPhi transformation
-  using BoundDiscToRPhi = LocalSubspace<0u, 1u>;
-};
-
-// Definition of bound (on surface) to grid local representation delegate
-// 1 dimensional local grid
-using BoundToGridLocal1DimDelegate =
-    OwningDelegate<std::array<double, 1u>(const Vector2&),
-                   GridAccess::IBoundToGridLocal>;
-
-// Definition of global to grid local representation delegate
-// 1 dimensional local grid
-using GlobalToGridLocal1DimDelegate =
-    OwningDelegate<std::array<double, 1u>(const Vector3&),
-                   GridAccess::IGlobalToGridLocal>;
-
-// Definition of bound (on surface) to grid local representation delegate
-// 2 dimensional local grid
-using BoundToGridLocal2DimDelegate =
-    OwningDelegate<std::array<double, 2u>(const Vector2&),
-                   GridAccess::IBoundToGridLocal>;
-
-// Definition of global to grid local representation delegate
-// 2 dimensional local grid
-using GlobalToGridLocal2DimDelegate =
-    OwningDelegate<std::array<double, 2u>(const Vector3&),
-                   GridAccess::IGlobalToGridLocal>;
-
-}  // namespace GridAccess
-}  // namespace Acts
+}  // namespace Acts::GridAccessHelpers

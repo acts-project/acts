@@ -20,7 +20,7 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:87
+    container: ghcr.io/acts-project/ubuntu2604:90
     # Only pull_request and push-to-main are handled below (PR mode / push
     # mode). Analysis also runs on merge_group, which matches neither, so
     # skip the job outright instead of paying for checkout+deps to do nothing.

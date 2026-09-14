@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/indexing.hpp"
 #include "detray/definitions/math.hpp"
 #include "detray/geometry/tracking_volume.hpp"
@@ -50,7 +51,7 @@ struct void_actor {
 ///         visited
 ///
 /// @note The detector has to expose the volume/portal interface.
-template <typename detector_t,
+template <concepts::detector detector_t,
           typename node_inspector =
               void_node_inspector<typename detector_t::volume_type>,
           template <typename...> class vector_t = dvector>

@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/geometry/surface.hpp"
 #include "detray/geometry/tracking_volume.hpp"
 
@@ -44,7 +45,7 @@ namespace detray::svgtools::conversion {
 /// @param search_window neighborhood search window for the grid.
 ///
 /// @returns An actsvg proto volume representing the volume.
-template <typename detector_t, typename view_t>
+template <concepts::detector detector_t, typename view_t>
 auto volume(const typename detector_t::geometry_context& context,
             const detector_t& detector,
             const detray::tracking_volume<detector_t>& d_volume,

@@ -110,7 +110,8 @@ std::tuple<BoundTrackParameters, BoundMatrix, double> curvilinearState(
 ///
 /// @note No check is done if the position is actually on the surface
 ///
-void transportCovarianceToBound(
+/// @return Failure if the parameters cannot be expressed on the surface
+Result<void> transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
