@@ -1037,7 +1037,7 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
   /// straws
   constexpr double strawPitch = 10._cm;
   {
-    auto bounds = std::make_shared<CuboidVolumeBounds>(40._cm, 20._cm, 10._cm);
+    auto bounds = std::make_shared<CuboidVolumeBounds>(40._cm, 22.5_cm, 10._cm);
     auto volume = std::make_unique<TrackingVolume>(
         getTranslateX3D(2.5_m) * volRot, bounds);
     using enum CuboidVolumeBounds::BoundValues;
@@ -1266,6 +1266,86 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
     BOOST_CHECK_EQUAL(&secondPlaneTarget.surface(), planeSurf2.get());
     navigator.handleSurfaceReached(state, start, dir,
                                    secondPlaneTarget.surface());
+  }
+  /// Setup the testing cases for the straw surfaces
+  ///
+  ///
+  BOOST_CHECK_EQUAL(straws.size(), 8u);
+  for (std::size_t s = 0; s < straws.size(); s += 2u) {
+    /// Surface in the first tube layer
+    const auto& straw1 = straws.at(s);
+    /// Surface in the second tube layer
+    const auto& straw2 = straws.at(s + 1);
+    /// Setup the target a bit to the left from the straw center
+    const Vector3 targetPos = straw1->localToGlobalTransform(tgContext) *
+                              Vector3{2._cm, 3._cm, -10._cm};
+
+    Navigator::Options options{tgContext};
+    options.startSurface = startSurface.get();
+    options.keepUnreachedExternal = true;
+
+    Navigator::State state = navigator.makeState(options);
+    const Vector3 dir = targetPos.normalized();
+
+    NavigationTarget target = NavigationTarget::None();
+
+    auto propagateToMwVolume = [&]() {
+      start.setZero();
+      BOOST_CHECK(
+          navigator.initialize(state, start, dir, Direction::Forward()).ok());
+      target = navigator.nextTarget(state, start, dir);
+      /// Skip all the plane surface volume
+      while (!target.isNone() && (target.surface().geometryId().volume() !=
+                                      mwVolume->geometryId().volume() ||
+                                  target.isPortalTarget())) {
+        step(tgContext, start, dir, target, logger());
+        navigator.handleSurfaceReached(state, start, dir, target.surface());
+        target = navigator.nextTarget(state, start, dir);
+        ACTS_INFO(__LINE__ << " - Proceed to next target " << target);
+      }
+    };
+    propagateToMwVolume();
+    BOOST_CHECK(target.isSurfaceTarget());
+    step(tgContext, start, dir, target, logger());
+    navigator.handleSurfaceReached(state, start, dir, target.surface());
+    BOOST_CHECK_EQUAL(&target.surface(), straw1.get());
+    target = navigator.nextTarget(state, start, dir);
+    BOOST_CHECK(target.isSurfaceTarget());
+    BOOST_CHECK_EQUAL(&target.surface(), straw2.get());
+    target = navigator.nextTarget(state, start, dir);
+    BOOST_CHECK(target.isPortalTarget());
+
+    /// Include the neighbour tube as target and check whether the tubes
+    /// end up in the navigation. Cannot be done if the last two tubes
+    /// are tested
+    if (s + 2 == straws.size()) {
+      continue;
+    }
+    /// Append the two neighbour surfaces to the stream
+    options.appendExternalSurface(*straws.at(s + 2));
+    options.appendExternalSurface(*straws.at(s + 3));
+
+    state = navigator.makeState(options);
+
+    propagateToMwVolume();
+
+    std::array<std::uint8_t, 4> reached{};
+    while (target.isSurfaceTarget()) {
+      for (std::size_t s1 = 0; s1 < reached.size(); ++s1) {
+        if (&target.surface() == straws.at(s + s1).get()) {
+          ACTS_INFO(__LINE__ << " - Target " << target << " is the " << s1
+                             << "-th surface.");
+          reached[s1] = true;
+          break;
+        }
+      }
+      step(tgContext, start, dir, target, logger());
+      navigator.handleSurfaceReached(state, start, dir, target.surface());
+      target = navigator.nextTarget(state, start, dir);
+      ACTS_INFO(__LINE__ << " - Proceed to target " << target);
+    }
+    /// Check that all surfaces have been reached
+    BOOST_CHECK(!Acts::rangeContainsValue(reached, 0));
   }
 }
 
