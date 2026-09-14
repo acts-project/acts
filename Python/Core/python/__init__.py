@@ -33,7 +33,7 @@ if (
 
 
 def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):
-    for prefix in ("Eigen", "Atlas", "Helix", "StraightLine"):
+    for prefix in ("Eigen", "Atlas", "Helix", "StraightLine", "Sympy"):
         _stepper = getattr(ActsPythonBindings, f"{prefix}Stepper")
         if isinstance(stepper, _stepper):
             return getattr(ActsPythonBindings, f"{prefix}Propagator")(
