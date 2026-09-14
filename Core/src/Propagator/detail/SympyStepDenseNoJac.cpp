@@ -8,11 +8,16 @@
 
 // One instantiation per translation unit; see the header.
 
+#include "SympyStepperDenseStepImpl.hpp"
 #include "SympyStepperStepImpl.hpp"
 
 namespace Acts {
 
-template Result<double> detail::sympyStep<detail::SympyStepMode::Vacuum, false>(
+template detail::Rk4Status detail::sympyDenseStep<false>(
+    const SympyStepper&, SympyStepper::State&, const IVolumeMaterial&, double,
+    double, double&, Vector3&, std::error_code&, std::span<double>);
+
+template Result<double> detail::sympyStep<detail::SympyStepMode::Dense, false>(
     const SympyStepper&, SympyStepper::State&, Direction,
     const IVolumeMaterial*);
 

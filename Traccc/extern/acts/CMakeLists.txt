@@ -23,7 +23,7 @@ get_filename_component(
 
 # Options used in the build of Acts.
 set(ACTS_SETUP_EIGEN3 TRUE CACHE BOOL "Set up Eigen in the Acts code")
-set(ACTS_USE_SYSTEM_EIGEN3 FALSE CACHE BOOL "Build Eigen3 from source")
+# Eigen is left at Acts' own default (system), so it is not compiled per build.
 set(ACTS_BUILD_PLUGIN_JSON TRUE CACHE BOOL "Build JSON plugin in Acts")
 set(ACTS_SETUP_DETRAY TRUE CACHE BOOL "Set up Detray in the Acts code")
 
