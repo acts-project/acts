@@ -23,6 +23,12 @@
 #include <memory>
 #include <string>
 
+/// added for counting ERROR Messages
+#include <atomic>
+#include <map>
+#include <mutex>
+#include <system_error>
+
 namespace ActsExamples {
 
 /// Fast track simulation using the Acts propagation and navigation.
@@ -88,6 +94,9 @@ class FatrasSimulation final : public IAlgorithm {
   /// @param ctx the algorithm context containing all event information
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
+  /// added for counting ERROR Messages
+  ProcessCode finalize() override;
+
   /// Const access to the config
   const Config& config() const { return m_cfg; }
 
@@ -103,6 +112,11 @@ class FatrasSimulation final : public IAlgorithm {
 
   Config m_cfg;
   std::unique_ptr<Impl> m_sim;
+  /// added for counting ERROR Messages
+  mutable std::atomic<std::size_t> m_nFailedParticles{0};
+  mutable std::mutex m_failedParticlesMutex;
+  mutable std::map<std::error_code, std::atomic<std::size_t>>
+      m_failedParticlesByError;
 };
 
 }  // namespace ActsExamples
