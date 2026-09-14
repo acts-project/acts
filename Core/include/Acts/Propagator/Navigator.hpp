@@ -249,6 +249,7 @@ class Navigator final {
 
       policyStateManager.reset();
       policyStateIsDefault = true;
+      resetStream();
     }
 
     /// Completely reset navigation state to initial conditions
