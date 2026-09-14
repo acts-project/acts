@@ -938,6 +938,18 @@ BOOST_AUTO_TEST_CASE(NavigationStartOnBoundaryGen1) {
   BOOST_CHECK_EQUAL(initializeOnBoundary(-Vector3::UnitX()), volume1);
 }
 
+BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
+    Blueprint::Config bluePrintCfg{};
+    Blueprint root{cfg};
+    cfg.envelope[AxisDirection::AxisX] = {20_mm, 20_mm};
+    cfg.envelope[AxisDirection::AxisY] = {20_mm, 20_mm};
+    cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+    
+    // auto firstTrackingVol = std::make_unique<TrackingVolume>();
+
+    // root.addStaticVolume(getTranslateX3D(40._cm), std::make_shared<CuboidVolumeBounds>())
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
