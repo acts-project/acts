@@ -196,8 +196,8 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   /// @param muonEnvelope: Overall muon envelope to be appended to the world
   void buildBarrel(const PVLink& muonEnvelope);
   /// Assemble the absorber material in front of the active endcap chambers
-  /// @param endcapEnvelope: Wheel envelope volume that comprises the active stations
-  void buildEndcapAbsorber(const PVLink& endcapEnvelope);
+  /// @param wheelEnvelope: Wheel envelope volume that comprises the active stations
+  void buildEndcapAbsorber(const PVLink& wheelEnvelope);
 
   //// Constructs multilayers of tubes. If the lower & uppereach tube has a
   /// separate length
