@@ -177,28 +177,28 @@ bool GbtsLayer::checkCompatibility(const GbtsLayer& otherLayer,
 
     if (z2 > 0) {  // positive endcap
 
-      const float z0Max = z1 - r1min * (dz) / (r2max - r1min);
+      const float z0Max = z1 - r1min * dz / (r2max - r1min);
 
       if (z0Max < minZ0 - tol) {
         return false;
       }
 
       if (r2min > r1max) {
-        const float z0Min = z1 - r1max * (dz) / (r2min - r1max);
+        const float z0Min = z1 - r1max * dz / (r2min - r1max);
 
         if (z0Min > maxZ0 + tol) {
           return false;
         }
       }
     } else {  // negative endcap
-      const float z0Min = z1 - r1min * (dz) / (r2max - r1min);
+      const float z0Min = z1 - r1min * dz / (r2max - r1min);
 
       if (z0Min > maxZ0 + tol) {
         return false;
       }
 
       if (r2min > r1max) {
-        const float z0Max = z1 - r1max * (dz) / (r2min - r1max);
+        const float z0Max = z1 - r1max * dz / (r2min - r1max);
 
         if (z0Max < minZ0 - tol) {
           return false;
