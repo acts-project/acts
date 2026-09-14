@@ -73,7 +73,7 @@ std::optional<std::uint32_t> GbtsNodeStorage::insert(
 
   m_stagedPerBin.at(bin).push_back(static_cast<std::uint32_t>(m_staged.size()));
   m_staged.emplace_back(index, x, y, z, r, phi, clusterWidth, localPositionY,
-                        static_cast<std::uint16_t>(layerIndex), stripIndex);
+                        layerIndex, stripIndex);
 
   return bin;
 }
@@ -165,8 +165,8 @@ void GbtsNodeStorage::finalize() {
     binInfo.maxRadius = maxRadius;
     // every node in a bin is on the same layer, so any of them will do
     const GbtsLayerDescription& description =
-        m_geometry->layerDescriptionByIndex(m_staged[staged.front()].layer);
-    binInfo.layerId = description.id;
+        m_geometry->layerDescription(m_staged[staged.front()].layer);
+    binInfo.barrelOrder = description.barrelOrder;
     binInfo.type = description.type;
     binInfo.technology = description.technology;
   }
@@ -219,7 +219,7 @@ void GbtsNodeStorage::finalize() {
 void GbtsNodeStorage::applyTauCuts(const StagedNode& staged,
                                    detail::GbtsNodeParams& params) const {
   const GbtsLayerDescription& description =
-      m_geometry->layerDescriptionByIndex(staged.layer);
+      m_geometry->layerDescription(staged.layer);
 
   // the table is trained on pixel barrel clusters
   if (description.technology != GbtsLayerTechnology::Pixel ||

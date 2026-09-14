@@ -59,9 +59,8 @@ constexpr float kTauRatioCut = 0.007f;
 constexpr float kTauRatioCorr = 0.006f;
 constexpr float kTauRatioCorrStrip = 0.03f;
 
-/// One layer of the toy detector. The ids follow ATLAS, which the seeder still
-/// keys on for its per-layer cuts: 80000 is the innermost barrel layer, which
-/// gets the extra z0 cuts.
+/// One layer of the toy detector. The ids follow ATLAS, but the seeder does not
+/// read them: it orders the pixel barrel layers by radius.
 struct LayerSpec {
   Experimental::GbtsExperimentLayerId id{};
   GbtsLayerType type{};
@@ -437,7 +436,7 @@ SeederSetup makeSeeder(const ToyDetector& detector,
           Experimental::GbtsTrackingFilter::Config{}, geometry, makeLogger()),
       .roi = Experimental::GbtsRoiDescriptor(-4.5, 4.5, -kBarrelHalfZ,
                                              kBarrelHalfZ),
-      .options = Experimental::GraphBasedTrackSeeder::Options(2_T),
+      .options = Experimental::GraphBasedTrackSeeder::Options{.bFieldInZ = 2_T},
   };
 }
 
@@ -552,6 +551,37 @@ BOOST_AUTO_TEST_CASE(BarrelInputIsWellFormed) {
   for (const auto& sp : spacePoints) {
     BOOST_CHECK_LT(sp.extra(layerColumn), detector.layers.size());
     BOOST_CHECK_LE(std::abs(sp.z()), kBarrelHalfZ);
+  }
+}
+
+// The binning the geometry hands out is what an external consumer flattens
+// into a device array, so it has to tile the bin numbering exactly.
+BOOST_AUTO_TEST_CASE(LayerBinningTilesTheBins) {
+  const ToyDetector detector = barrelDetector();
+  const auto geometry = makeGeometry(detector);
+
+  BOOST_REQUIRE_EQUAL(geometry->numLayers(), detector.layers.size());
+
+  std::uint32_t nextBin = 0;
+  for (Experimental::GbtsLayerIndex i = 0; i < geometry->numLayers(); ++i) {
+    const Experimental::GbtsLayerBinning& binning = geometry->layerBinning(i);
+
+    BOOST_CHECK_GE(binning.numBins, 1u);
+    BOOST_CHECK_GT(binning.etaBinWidth, 0.f);
+    // contiguous, in layer order, with no gap or overlap
+    BOOST_CHECK_EQUAL(binning.firstBin, nextBin);
+    nextBin += binning.numBins;
+
+    BOOST_CHECK_EQUAL(geometry->layerDescription(i).id, detector.layers[i].id);
+  }
+  BOOST_CHECK_EQUAL(nextBin, geometry->numBins());
+
+  BOOST_CHECK(!geometry->binGroups().empty());
+  for (const Experimental::GbtsBinGroup& group : geometry->binGroups()) {
+    BOOST_CHECK_LT(group.bin, geometry->numBins());
+    for (const Experimental::GbtsBinLink& link : group.links) {
+      BOOST_CHECK_LT(link.bin, geometry->numBins());
+    }
   }
 }
 

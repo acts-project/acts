@@ -82,15 +82,6 @@ struct GbtsNodeEdgeInfo final {
 };
 //! [gbts node edge info]
 
-/// One outer eta bin reachable from an inner one, with the cut the layer pair
-/// they belong to carries.
-struct GbtsBinLink final {
-  /// The outer eta bin.
-  std::uint32_t bin{};
-  /// GbtsLayerConnection::tauRatioCut of the pair this link came from.
-  float tauRatioCut{};
-};
-
 //! [gbts eta bin info]
 /// Constant per-eta-bin data.
 struct GbtsEtaBinInfo final {
@@ -103,7 +94,8 @@ struct GbtsEtaBinInfo final {
 
   float minRadius{};
   float maxRadius{};
-  GbtsExperimentLayerId layerId{0};
+  /// Inside-out pixel barrel ordinal of the bin's layer, -1 for the rest.
+  std::int32_t barrelOrder{-1};
 
   /// Type of the layer this bin belongs to.
   GbtsLayerType type{};
@@ -129,8 +121,8 @@ constexpr std::uint32_t kNoStrip = std::numeric_limits<std::uint32_t>::max();
 struct GbtsNodeView final {
   /// Packed (x, y, z, r) per node.
   std::span<const std::array<float, 4>> positions;
-  /// Dense layer index per node, narrowed to 16 bits.
-  std::span<const std::uint16_t> layers;
+  /// Dense layer index per node.
+  std::span<const GbtsLayerIndex> layers;
   /// Stereo pairs of the strip nodes, reached through `stripIndex`.
   std::span<const OuterStripSpacePointCalibrationDetailsDerived> strips;
   /// Index into `strips` per node, `kNoStrip` where a node carries none.

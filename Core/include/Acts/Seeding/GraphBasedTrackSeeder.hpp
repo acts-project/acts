@@ -23,7 +23,6 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -37,8 +36,9 @@ class GraphBasedTrackSeeder {
     /// Enable beam spot correction.
     bool beamSpotCorrection = false;
 
-    /// Look-up table input file path.
-    std::string lutInputFile;
+    /// Accepted tau range per cluster width bin, needed by the cluster width
+    /// cuts and ignored without them.
+    detail::GbtsTauLookupTable tauLookupTable;
 
     /// Take the strip-to-strip layer connections from the connector file
     /// instead of the pixel-to-pixel ones. Read where the file is loaded, not
@@ -118,11 +118,13 @@ class GraphBasedTrackSeeder {
     float phiWindowFarSlope = 2.2e-4f / UnitConstants::mm;
     /// Incoming edge count below which a node is accepted without a tau match.
     std::uint32_t matchBeforeCreateMaxEdges = 2;
-    /// Layers whose nodes are cut against the z0 histogram of their outer
-    /// neighbourhood, and whose isolated nodes are skipped.
-    std::vector<GbtsExperimentLayerId> z0HistogramLayerIds{80000};
-    /// Layers `matchBeforeCreate` applies to, when it is enabled.
-    std::vector<GbtsExperimentLayerId> matchBeforeCreateLayerIds{80000, 81000};
+    /// Highest pixel barrel layer, counted inside out, whose nodes are cut
+    /// against the z0 histogram of their outer neighbourhood and whose
+    /// isolated nodes are skipped. Negative disables the cut.
+    std::int32_t z0HistogramMaxBarrelOrder = 0;
+    /// Highest pixel barrel layer, counted inside out, `matchBeforeCreate`
+    /// applies to when it is enabled. Negative disables it.
+    std::int32_t matchBeforeCreateMaxBarrelOrder = 1;
     /// Half-width of the z0 window a node is matched against in the histogram.
     float z0Resolution = 2.5f * UnitConstants::mm;
     /// Maximum radius of pixel detector
@@ -156,15 +158,15 @@ class GraphBasedTrackSeeder {
     float maxInvRadDiff = 0.7e-2 / UnitConstants::m;
     // GbtsNodeStorage options
     /// Maximum endcap cluster width.
-    float maxEndcapClusterWidth = 0.35 * Acts::UnitConstants::mm;
+    float maxEndcapClusterWidth = 0.35f * Acts::UnitConstants::mm;
     /// Half-length in local y of a pixel module, against which the distance of
     /// a cluster to the module edge is measured.
-    float moduleHalfLengthY = 10.0 * Acts::UnitConstants::mm;
+    float moduleHalfLengthY = 10.0f * Acts::UnitConstants::mm;
     /// Distance to the module edge below which a cluster may be shortened,
     /// which switches to the tau lookup table's near-edge bounds.
-    float moduleEdgeTolerance = 0.3 * Acts::UnitConstants::mm;
+    float moduleEdgeTolerance = 0.3f * Acts::UnitConstants::mm;
     /// Cluster width covered by one bin of the tau lookup table.
-    float tauLutBinWidth = 0.05 * Acts::UnitConstants::mm;
+    float tauLutBinWidth = 0.05f * Acts::UnitConstants::mm;
     /// Multiples of the phi slice width duplicated either side of the
     /// wrap-around, so a sliding window never has to wrap.
     float phiIndexMargin = 1.5f;
@@ -187,9 +189,6 @@ class GraphBasedTrackSeeder {
   /// Optional inputs for variables passed in
   /// or derived during runtime.
   struct Options {
-    /// @param bFieldInZ_ the magnetic field in z
-    explicit Options(float bFieldInZ_);
-
     /// Magnetic field in z
     /// units of GeV/(e*mm).
     float bFieldInZ{};
@@ -286,6 +285,8 @@ class GraphBasedTrackSeeder {
     std::uint32_t firstIt{};
     /// window half-width;
     float deltaPhi{};
+    /// Inside-out pixel barrel ordinal of the bin's layer, -1 for the rest.
+    std::int32_t barrelOrder{-1};
     /// Cut the layer pair this bin's doublets belong to carries
     float tauRatioCut{};
     /// Type of the bin's layer.
@@ -297,18 +298,10 @@ class GraphBasedTrackSeeder {
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
 
-  detail::GbtsTauLookupTable m_tauLut;
-
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
 
   const Acts::Logger& logger() const { return *m_logger; }
-
-  /// Parse the tau lookup table from file.
-  /// @param lutInputFile Path to the lookup table input file
-  /// @return Parsed tau lookup table
-  detail::GbtsTauLookupTable parseTauLookupTable(
-      const std::string& lutInputFile) const;
 
   /// Build doublet graph from nodes.
   /// @param roi Region of interest descriptor

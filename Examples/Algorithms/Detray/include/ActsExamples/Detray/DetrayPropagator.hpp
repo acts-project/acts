@@ -18,6 +18,7 @@
 #include <array>
 
 #include <covfie/core/field.hpp>
+#include <detray/core/concepts.hpp>
 #include <detray/navigation/caching_navigator.hpp>
 #include <detray/propagator/actor_chain.hpp>
 #include <detray/propagator/propagation_config.hpp>
@@ -29,8 +30,8 @@
 
 namespace ActsExamples {
 
-template <typename stepper_t, typename detector_t, typename field_t,
-          bool kSTERILE>
+template <typename stepper_t, detray::concepts::detector detector_t,
+          typename field_t, bool kSTERILE>
 class DetrayConcretePropagator : public PropagatorInterface {
  public:
   /// Create a DetrayConcretePropagator - this is for testing purposes only,
@@ -226,11 +227,13 @@ class DetrayConcretePropagator : public PropagatorInterface {
   const Acts::Logger& logger() const { return *m_logger; }
 };
 
-template <typename stepper_t, typename detector_t, typename field_t = bool>
+template <typename stepper_t, detray::concepts::detector detector_t,
+          typename field_t = bool>
 using DetraySterilePropagator =
     DetrayConcretePropagator<stepper_t, detector_t, field_t, true>;
 
-template <typename stepper_t, typename detector_t, typename field_t = bool>
+template <typename stepper_t, detray::concepts::detector detector_t,
+          typename field_t = bool>
 using DetrayPropagator =
     DetrayConcretePropagator<stepper_t, detector_t, field_t, false>;
 

@@ -1435,7 +1435,6 @@ def addGbtsSeeding(
     seedFinderConfig = acts.examples.GraphBasedSeedingConfig(
         **acts.examples.defaultKWArgs(
             minPt=seedFinderConfigArg.minPt,
-            lutInputFile=lutInputConfigFileStr,
         ),
     )
 
@@ -1446,6 +1445,7 @@ def addGbtsSeeding(
         seedFinderConfig=seedFinderConfig,
         layerMappingFile=layerMappingFile,
         connectorInputFile=connectorInputFileStr,
+        lutInputFile=lutInputConfigFileStr,
         trackingGeometry=trackingGeometry,
         fillModuleCsv=False,
         inputClusters="clusters",
@@ -2545,6 +2545,9 @@ def addVertexFitting(
     spatialBinExtent: Optional[float] = None,
     temporalBinExtent: Optional[float] = None,
     simultaneousSeeds: Optional[int] = None,
+    tracksMaxZinterval: Optional[float] = None,
+    spatialWindow: Optional[List[float]] = None,
+    temporalWindow: Optional[List[float]] = None,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     writeTrackInfo: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -2657,6 +2660,9 @@ def addVertexFitting(
                 spatialBinExtent=spatialBinExtent,
                 temporalBinExtent=temporalBinExtent,
                 simultaneousSeeds=simultaneousSeeds,
+                tracksMaxZinterval=tracksMaxZinterval,
+                temporalWindow=temporalWindow,
+                spatialWindow=spatialWindow,
             ),
         )
         s.addAlgorithm(findVertices)

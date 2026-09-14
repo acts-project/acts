@@ -79,16 +79,20 @@ Result<void> AdaptiveMultiVertexFitter::fit(
         }
       }
 
-      // Check if we use the constraint during the vertex fit
-      if (state.vtxInfoMap[vtx].constraint.fullCovariance() !=
-          SquareMatrix4::Zero()) {
-        const Vertex& constraint = state.vtxInfoMap[vtx].constraint;
-        vtx->setFullPosition(constraint.fullPosition());
-        vtx->setFitQuality(constraint.fitQuality());
-        vtx->setFullCovariance(constraint.fullCovariance());
-      } else if (vtx->fullCovariance() == SquareMatrix4::Zero()) {
-        return VertexingError::NoCovariance;
+      // setWeightsAndUpdate re-adds every track, so each iteration is a full
+      // refit and the vertex has to be reset to its prior first.
+      Vertex& prior = vtxInfo.constraint;
+      if (prior.fullCovariance() == SquareMatrix4::Zero()) {
+        if (vtx->fullCovariance() == SquareMatrix4::Zero()) {
+          return VertexingError::NoCovariance;
+        }
+        prior.setFullPosition(vtx->fullPosition());
+        prior.setFitQuality(vtx->fitQuality());
+        prior.setFullCovariance(vtx->fullCovariance());
       }
+      vtx->setFullPosition(prior.fullPosition());
+      vtx->setFitQuality(prior.fitQuality());
+      vtx->setFullCovariance(prior.fullCovariance());
 
       // Set vertexCompatibility for all TrackAtVertex objects
       // at the current vertex

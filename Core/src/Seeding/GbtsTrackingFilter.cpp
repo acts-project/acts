@@ -359,7 +359,7 @@ bool GbtsTrackingFilter::update(const detail::GbtsNodeView& nodeView,
 
 GbtsLayerType GbtsTrackingFilter::getLayerType(
     const GbtsLayerIndex layerIndex) const {
-  return m_geometry->layerDescriptionByIndex(layerIndex).type;
+  return m_geometry->layerDescription(layerIndex).type;
 }
 
 }  // namespace Acts::Experimental

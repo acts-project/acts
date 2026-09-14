@@ -9,10 +9,7 @@
 #include "Acts/Seeding/GbtsLayerConnectionTool.hpp"
 
 #include <cmath>
-#include <fstream>
-#include <iostream>
 #include <stdexcept>
-#include <string>
 
 namespace Acts::Experimental {
 
@@ -94,15 +91,11 @@ void GbtsLayerConnectionTool::addTrack(std::span<const HitCoordinates> track) {
 }
 
 GbtsLayerConnectionTool::LayerIdPairs
-GbtsLayerConnectionTool::createConnectionTable(
-    const std::string& outputFileLocation) const {
+GbtsLayerConnectionTool::createConnectionTable() const {
   if (m_totalTracks == 0) {
     throw std::runtime_error(
         "Warning: no tracks were added when creating connection table");
   }
-
-  // define output text file
-  std::ofstream outputFile(outputFileLocation);
 
   // obtain total incoming transitions for each src layer (used as denominator
   // of probability)

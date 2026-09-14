@@ -14,10 +14,12 @@
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
+#include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -68,8 +70,8 @@ ConnectorTable readConnectorTable(const std::string &path,
   for (std::uint32_t l = 0; l < nLinks; l++) {
     std::uint32_t lIdx{};
     std::uint32_t stage{};
-    std::uint32_t src{};
-    std::uint32_t dst{};
+    Acts::Experimental::GbtsExperimentLayerId src{};
+    Acts::Experimental::GbtsExperimentLayerId dst{};
     std::uint32_t height{};
     std::uint32_t width{};
     std::uint32_t nEntries{};
@@ -83,8 +85,8 @@ ConnectorTable readConnectorTable(const std::string &path,
 
     // ATLAS ITk volume ids: 12, 13 and 14 are the strip subdetectors. The
     // table holds both technologies and only one of them is ever seeded.
-    const auto isStrip = [](std::uint32_t layerId) {
-      const std::uint32_t volumeId = layerId / 1000;
+    const auto isStrip = [](Acts::Experimental::GbtsExperimentLayerId layerId) {
+      const auto volumeId = layerId / 1000;
       return volumeId == 12 || volumeId == 13 || volumeId == 14;
     };
     if (isStrip(src) != stripConnections || isStrip(dst) != stripConnections) {
@@ -108,6 +110,37 @@ ConnectorTable readConnectorTable(const std::string &path,
   }
 
   return table;
+}
+
+/// Read an ATLAS GBTS tau lookup table: per line a cluster width, the bulk tau
+/// bounds and the near-edge ones. The width is dropped - a row is located by
+/// index, one row per `tauLutBinWidth` of cluster width, never searched.
+///
+/// @param path Path to the lookup table file
+Acts::Experimental::detail::GbtsTauLookupTable readTauLookupTable(
+    const std::filesystem::path &path) {
+  std::ifstream inStream(path);
+  if (!inStream) {
+    throw std::runtime_error("Cannot open GBTS tau lookup table '" +
+                             path.string() + "'");
+  }
+
+  Acts::Experimental::detail::GbtsTauLookupTable tauLut;
+
+  float clusterWidth{};
+  Acts::Experimental::detail::GbtsTauBounds bounds;
+  while (inStream >> clusterWidth >> bounds.minTau >> bounds.maxTau >>
+         bounds.minTauNearEdge >> bounds.maxTauNearEdge) {
+    tauLut.push_back(bounds);
+  }
+
+  if (!inStream.eof()) {
+    // ended on a parse error, not on a clean EOF
+    throw std::runtime_error("Malformed GBTS tau lookup table '" +
+                             path.string() + "'");
+  }
+
+  return tauLut;
 }
 
 /// Restate, per layer pair, the tau ratio tolerance the seeder used to derive
@@ -193,6 +226,12 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   ConnectorTable connectorTable = readConnectorTable(
       m_cfg.connectorInputFile, m_cfg.seedFinderConfig.useStripConnections);
 
+  // the cluster width cuts are the only user of the tau lookup table
+  if (m_cfg.seedFinderConfig.useClusterWidthCuts) {
+    m_cfg.seedFinderConfig.tauLookupTable =
+        readTauLookupTable(m_cfg.lutInputFile);
+  }
+
   // create the TrigInDetSiLayers (Logical Layers),
   // as well as a map that tracks there index in m_layerGeometry
   const auto layerGeometry =
@@ -243,8 +282,8 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // initialise input space points from handle and define new container
   const SpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
-  const Acts::Experimental::GraphBasedTrackSeeder::Options options(
-      m_cfg.bFieldInZ);
+  const Acts::Experimental::GraphBasedTrackSeeder::Options options{
+      .bFieldInZ = m_cfg.bFieldInZ};
 
   // The node storage is filled straight from the input space points. It takes
   // plain scalars, so no intermediate space point container is needed and the
@@ -552,11 +591,11 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("===== GraphBasedSeedingAlgorithm =====");
   ACTS_DEBUG("layerMappingFile: " << m_cfg.layerMappingFile);
   ACTS_DEBUG("connectorInputFile: " << m_cfg.connectorInputFile);
+  ACTS_DEBUG("lutInputFile: " << m_cfg.lutInputFile);
   ACTS_DEBUG("etaBinWidthOverride: " << m_cfg.etaBinWidthOverride);
   ACTS_DEBUG("===== GraphBasedTrackSeeder =====");
   const auto &cfg1 = m_cfg.seedFinderConfig;
   ACTS_DEBUG("BeamSpotCorrection: " << cfg1.beamSpotCorrection);
-  ACTS_DEBUG("lutInputFile: " << cfg1.lutInputFile);
   ACTS_DEBUG("useStripConnections: " << cfg1.useStripConnections);
   ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
   ACTS_DEBUG("matchBeforeCreate: " << cfg1.matchBeforeCreate);

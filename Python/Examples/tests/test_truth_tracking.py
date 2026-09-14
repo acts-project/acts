@@ -513,6 +513,97 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
             assert_root_hash(fn, fp)
 
 
+def test_refitting_beamspot_constraint(tmp_path, generic_detector_config):
+    """A configured beam spot constraint has to actually influence the refit.
+
+    It used to be silently dropped, leaving the refit identical whether or not
+    one was configured. The particle gun puts every vertex at the origin, so the
+    d0 residual is just the fitted d0 and a constraint at (0, 0) has to sharpen
+    it.
+    """
+    import uproot
+    import numpy as np
+
+    import acts.examples.root
+
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    def refit_d0_resolution(beamSpotConstraint, label):
+        outputDir = tmp_path / label
+        outputDir.mkdir(parents=True, exist_ok=True)
+        seq = runTruthTrackingKalman(
+            trackingGeometry=generic_detector_config.trackingGeometry,
+            field=field,
+            digiConfigFile=generic_detector_config.digiConfigFile,
+            outputDir=outputDir,
+            s=Sequencer(events=25, numThreads=1),
+        )
+
+        seq.addAlgorithm(
+            acts.examples.RefittingAlgorithm(
+                level=acts.logging.INFO,
+                inputTracks="kf_tracks",
+                outputTracks="kf_refit_tracks",
+                fit=acts.examples.makeKalmanFitterFunction(
+                    generic_detector_config.trackingGeometry,
+                    field,
+                    multipleScattering=True,
+                    energyLoss=True,
+                    reverseFilteringMomThreshold=0 * u.GeV,  # direct smoothing
+                    reverseFilteringCovarianceScaling=100.0,
+                    freeToBoundCorrection=acts.examples.FreeToBoundCorrection(False),
+                    chi2Cut=float("inf"),
+                    useJosephFormulation=False,
+                    level=acts.logging.INFO,
+                ),
+                beamSpotConstraint=beamSpotConstraint,
+            )
+        )
+        seq.addAlgorithm(
+            acts.examples.TrackTruthMatcher(
+                level=acts.logging.INFO,
+                inputTracks="kf_refit_tracks",
+                inputParticles="particles_selected",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                outputTrackParticleMatching=f"{label}_track_particle_matching",
+                outputParticleTrackMatching=f"{label}_particle_track_matching",
+            )
+        )
+        summary = outputDir / "tracksummary_refit.root"
+        seq.addWriter(
+            acts.examples.root.RootTrackSummaryWriter(
+                level=acts.logging.INFO,
+                inputTracks="kf_refit_tracks",
+                inputParticles="particles_selected",
+                inputTrackParticleMatching=f"{label}_track_particle_matching",
+                filePath=str(summary),
+            )
+        )
+
+        with generic_detector_config.detector:
+            seq.run()
+
+        with uproot.open(f"{summary}:tracksummary") as tree:
+            res = np.concatenate(tree["res_eLOC0_fit"].array(library="np"))
+        # Unmatched tracks have no truth to compare against.
+        return float(np.std(res[np.isfinite(res)]))
+
+    # Narrow transversely, long longitudinally: constraining z0 as tightly as d0
+    # would fight the real measurements.
+    constraint = acts.SquareMatrix2.Zero()
+    constraint[0, 0] = (5 * u.um) ** 2
+    constraint[1, 1] = (55 * u.mm) ** 2
+
+    assert refit_d0_resolution(None, "unconstrained") == pytest.approx(
+        0.01534, abs=1e-4
+    )
+    assert refit_d0_resolution(constraint, "constrained") == pytest.approx(
+        0.00287, abs=1e-4
+    )
+
+
 def test_measurement_access(tmp_path, generic_detector_config):
     from truth_tracking_kalman import runTruthTrackingKalman
 

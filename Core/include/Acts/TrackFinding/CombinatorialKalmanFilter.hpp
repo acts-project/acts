@@ -579,7 +579,11 @@ class CombinatorialKalmanFilter {
       if (isMaterialOnly) {
         stepper.transportCovarianceToCurvilinear(state.stepping);
       } else {
-        stepper.transportCovarianceToBound(state.stepping, surface);
+        Result<void> transportRes =
+            stepper.transportCovarianceToBound(state.stepping, surface);
+        if (!transportRes.ok()) {
+          return transportRes.error();
+        }
       }
 
       // Update state and stepper with pre material effects
@@ -1032,10 +1036,8 @@ class CombinatorialKalmanFilter {
                                      *brem.componentCache);
         }
 
-        detail::Gsf::applyMultipleScattering(state, stepper, surface,
-                                             updateMode, logger());
-
-        return Result<void>::success();
+        return detail::Gsf::applyMultipleScattering(state, stepper, surface,
+                                                    updateMode, logger());
       }
     }
 

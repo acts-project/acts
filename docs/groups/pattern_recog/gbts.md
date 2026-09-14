@@ -42,13 +42,26 @@ description: a flat list of `GbtsLayer` logical layers, each subdivided into
 @ref Acts::Experimental::GbtsLayerDescription gives a layer its ID, its type
 (barrel or endcap), its sensor technology and its extent. For a barrel layer
 `refCoord` is the radius and the bounds are in @f$z@f$; for an endcap it is the
-other way round. The ID is the caller's own numbering and is very nearly never
-decoded.
+other way round. The ID is the caller's own numbering, and the algorithm never
+decodes it.
+
+A pixel barrel layer carries one more field, `barrelOrder`: the position of the
+layer in the inside-out ordering of the pixel barrel. Every other layer keeps
+the default `-1`, so the sign of the field also says whether a layer is a pixel
+barrel layer. If the caller leaves the field unset,
+@ref Acts::Experimental::GbtsGeometry sorts the pixel barrel layers by
+`refCoord` and fills it in. Set it on every pixel barrel layer or on none of
+them, because the constructor rejects a partial ordering.
+
+The cuts that were tuned on the pixel barrel read `barrelOrder` and nothing
+else: the two innermost-layer cuts of @ref gbts-graph ask how deep a layer sits.
+The @f$\tau@f$ ratio tolerance comes from the layer pairs instead, see below.
+GBTS therefore runs on any layer numbering.
 
 > [!note]
-> The examples algorithm still reads the ATLAS numbering, to pick the strip
-> layers out of an ATLAS connection table and to work out which pairs step over
-> a layer. Core does not.
+> One reader of the ATLAS numbering survives, and it sits outside the core
+> algorithm: the examples algorithm decodes the volume id, to pick the strip
+> layers out of an ATLAS connection table.
 
 Which layer pairs may be joined by an edge is a list of
 @ref Acts::Experimental::GbtsLayerConnection, each naming a source (outer) and a
@@ -56,9 +69,18 @@ destination (inner) layer. @ref Acts::Experimental::GbtsGeometry combines the
 layer descriptions with those connections and precomputes, for every pair of
 connected layers, which *eta bin* pairs are geometrically compatible with the
 allowed @f$z_0@f$ range. The result is a **bin group** list — one inner bin
-together with all outer bins it may connect to — which is kept internal to the
-geometry and serves as the graph builder's iteration schedule, ordered so that
-outer bins are processed before the inner bins that depend on them.
+together with all outer bins it may connect to — which serves as the graph
+builder's iteration schedule, ordered so that outer bins are processed before
+the inner bins that depend on them.
+
+The binning it worked out is readable back off the geometry, so a consumer that
+runs the same algorithm elsewhere does not have to recompute or pre-generate it:
+@ref Acts::Experimental::GbtsGeometry::layerBinning gives a layer's
+@ref Acts::Experimental::GbtsLayerBinning, the eta bins it owns in the global
+numbering, and @ref Acts::Experimental::GbtsGeometry::binGroups the schedule
+itself. Eta bins are numbered globally and a layer's are contiguous, so the
+layers tile the numbering in order. This is what the GPU implementation is
+configured from.
 
 > [!note]
 > The connections are trained offline rather than written by hand.
@@ -86,7 +108,7 @@ Two different layer numbers meet here, and they are separate types:
 
 | Type | What it is |
 | --- | --- |
-| `GbtsExperimentLayerId` | the layer id the experiment assigns (80000, 81000, ...). Sparse and structured -- the layer descriptions and connections are written in terms of it, and so are the seeder's per-layer cuts. |
+| `GbtsExperimentLayerId` | the layer id the experiment assign. Sparse and structured -- the layer descriptions and connections are written in terms of it. The algorithm treats it as an opaque key. |
 | `GbtsLayerIndex` | where that layer sits in one @ref Acts::Experimental::GbtsGeometry, dense from zero. It indexes the geometry, and it is what a node carries. |
 
 `insert` takes the **index**, because it is on the per-space-point path.
@@ -161,17 +183,19 @@ a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$. Each
 edge stores up to `kGbtsMaxEdgeNeighbours` (6) such neighbours.
 
 Two further cuts apply on the innermost pixel barrel layers, where the
-combinatorics are worst:
+combinatorics are worst. Each cut has its own depth limit on the `barrelOrder`
+of the inner layer, and a negative limit switches the cut off:
 
-- `matchBeforeCreate` (off by default) demands the @f$\tau@f$ half of the
+- `matchBeforeCreate` (off by default, limited by
+  `matchBeforeCreateMaxBarrelOrder`) demands the @f$\tau@f$ half of the
   triplet test *before* the edge exists: @f$n_2@f$ must already carry an
   incoming edge whose @f$\tau@f$ agrees with the candidate's within
   `tauRatioPrecut`. A node with two or fewer incoming edges passes
   unconditionally, there being too little evidence to reject it.
 - Every inner node accumulates a 16-bit @f$z_0@f$ **histogram bitmask** of its
-  confirmed edges. On the innermost layer that mask rejects candidates whose
-  @f$z_0@f$ falls in an empty bin, and nodes with no connections at all are
-  skipped outright.
+  confirmed edges. On the layers down to `z0HistogramMaxBarrelOrder` that mask
+  rejects candidates whose @f$z_0@f$ falls in an empty bin, and nodes with no
+  connections at all are skipped outright.
 
 ## Connected component analysis {#gbts-cca}
 
@@ -231,10 +255,12 @@ the angle. Wide clusters in the pixel endcap are dropped entirely
 (`maxEndcapClusterWidth`).
 
 > [!note]
-> The lookup table is only consulted for pixel barrel layers, and the ACTS
-> examples framework does not currently provide cluster widths or local
-> positions, so this path is exercised only by experiment-side integrations that
-> supply them through `insert`.
+> The seeder takes the table itself as `tauLookupTable`, not a path to it;
+> `ActsExamples::GraphBasedSeedingAlgorithm` parses it from ATLAS' text format.
+> It is only consulted for pixel barrel layers, and the ACTS examples framework
+> does not currently provide cluster widths or local positions, so this path is
+> exercised only by experiment-side integrations that supply them through
+> `insert`.
 
 ## Configuration {#gbts-configuration}
 
@@ -251,11 +277,12 @@ The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrac
 | `tauRatioCut` | @ref gbts-graph | @f$\tau@f$ scale of the `validateTriplets` high-pT check. The linking cut itself comes from @ref Acts::Experimental::GbtsLayerConnection::tauRatioCut |
 | `validateTriplets`, `d0Max` | @ref gbts-graph | circle fit on pixel-barrel triplets |
 | `nMaxEdges` | @ref gbts-graph | hard cap on the edge array (2M by default); exceeding it costs efficiency |
-| `matchBeforeCreate`, `tauRatioPrecut` | @ref gbts-graph | require a compatible incoming edge before creating one |
+| `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxBarrelOrder` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
+| `z0HistogramMaxBarrelOrder`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that depth in the pixel barrel |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
 | `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |
 | `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
-| `useClusterWidthCuts`, `lutInputFile` | @ref gbts-ml | cluster-width based @f$\tau@f$ windows |
+| `useClusterWidthCuts`, `tauLookupTable` | @ref gbts-ml | cluster-width based @f$\tau@f$ windows |
 | `maxEndcapClusterWidth`, `moduleHalfLengthY`, `moduleEdgeTolerance` | @ref gbts-ml | cluster-width acceptance and module-edge handling |
 
 @ref Acts::Experimental::GbtsTrackingFilter "GbtsTrackingFilter::Config"
@@ -276,7 +303,8 @@ separately controls the chain-following filter of @ref gbts-extraction "seed ext
   holds - `GbtsNodeParams`, `GbtsNodeEdgeInfo`, `GbtsEtaBinInfo`, `GbtsEdge` -
   is internal and lives in `Acts/Seeding/detail/GbtsGraphTypes.hpp`.
 - Geometry: @ref Acts::Experimental::GbtsGeometry,
-  @ref Acts::Experimental::GbtsLayerConnection, and the internal `GbtsLayer`.
+  @ref Acts::Experimental::GbtsLayerConnection, the binning it hands back in
+  `Acts/Seeding/GbtsBinning.hpp`, and the internal `GbtsLayer`.
 - Chain following: @ref Acts::Experimental::GbtsTrackingFilter and its internal
   `GbtsEdgeState`.
 - Region of interest: @ref Acts::Experimental::GbtsRoiDescriptor.

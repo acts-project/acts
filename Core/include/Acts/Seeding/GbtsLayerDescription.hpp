@@ -18,7 +18,7 @@ using GbtsExperimentLayerId = std::uint32_t;
 
 /// Position of a layer within one GbtsGeometry, dense from zero. Ask
 /// GbtsGeometry::layerIndex for it rather than deriving it.
-using GbtsLayerIndex = std::uint32_t;
+using GbtsLayerIndex = std::uint16_t;
 
 /// Where a GBTS layer sits, which fixes its coordinate convention.
 enum class GbtsLayerType : std::uint8_t { Barrel = 0, Endcap = 1 };
@@ -40,6 +40,10 @@ struct GbtsLayerDescription final {
   float minBound{};
   /// Maximum boundary coordinate.
   float maxBound{};
+  /// Position of the layer in the inside-out ordering of the pixel barrel,
+  /// -1 for every other layer. Derived from `refCoord` when left unset; set it
+  /// on every pixel barrel layer or on none of them.
+  std::int32_t barrelOrder{-1};
 };
 
 }  // namespace Acts::Experimental

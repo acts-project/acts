@@ -25,8 +25,14 @@ jobs:
       # It doesn't matter if it's deleted when merged, it'll be re-created
       BRANCH_NAME: auto-dependency-upgrades
     steps:
-      # persisted credentials are required for the push step below
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Persisted credentials are required for the push step below.
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The supported_python_versions.py helper is itself a uv script, so uv
+      # must be available before we can use it to determine the Python floor.
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       # Lowest Python version the lockfiles must install on, taken from
       # `requires-python` in pyproject.toml so it is defined in exactly one place
@@ -38,11 +44,6 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ steps.floor.outputs.version }}
-
-      - name: Install uv
-        run: |
-          python -m pip install -U pip
-          python -m pip install -U uv
 
       - name: Compile all requirements.txt
         env:

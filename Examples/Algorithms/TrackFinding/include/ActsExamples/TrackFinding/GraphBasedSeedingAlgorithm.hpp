@@ -21,6 +21,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <string>
@@ -32,7 +33,7 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
  public:
   using ActsIDs = std::array<std::uint64_t, 2>;
 
-  /// One ACTS module's entry in the layer mapping file, with the geometry
+  /// One module's entry in the layer mapping file, with the geometry
   /// index resolved from it.
   struct GbtsIDs {
     /// GBTS layer id, before the eta module is folded in
@@ -73,6 +74,10 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
 
     /// the ATLAS connector file listing which layers may be connected
     std::string connectorInputFile;
+
+    /// the ATLAS lookup table of tau bounds per cluster width, needed by the
+    /// cluster width cuts
+    std::filesystem::path lutInputFile;
 
     /// Eta bin width the layers are split into (0 takes the value the
     /// connector file carries, 0.2 in ATLAS' createLinkingScheme.py)
