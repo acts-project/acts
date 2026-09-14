@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/geometry.hpp"
 #include "detray/definitions/indexing.hpp"
@@ -31,7 +32,7 @@ namespace detray::geometry {
 /// wraps a detector instance that contains the data and a surface descriptor
 /// that contains the indices into the detector data containers for the
 /// specific surface instance.
-template <typename det_t>  // @TODO: This needs a concept
+template <concepts::detector det_t>
 class surface {
   /// Make sure the detector is always evaluated as constant type
   using detector_t = std::add_const_t<det_t>;
@@ -381,11 +382,11 @@ class surface {
   const descr_t m_desc;
 };
 
-template <typename detector_t, typename descr_t>
+template <concepts::detector detector_t, typename descr_t>
 DETRAY_HOST_DEVICE surface(const detector_t &, const descr_t &)
     -> surface<detector_t>;
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 DETRAY_HOST_DEVICE surface(const detector_t &, const geometry::identifier)
     -> surface<detector_t>;
 

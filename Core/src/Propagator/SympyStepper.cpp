@@ -171,18 +171,21 @@ void SympyStepper::transportCovarianceToCurvilinear(State& state) const {
   detail::sympy::toScaledBoundToFree(state.jacToGlobal, qOverP(state));
 }
 
-void SympyStepper::transportCovarianceToBound(
+Result<void> SympyStepper::transportCovarianceToBound(
     State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   if (!state.covTransport) {
-    return;
+    return Result<void>::success();
   }
   detail::sympy::fromScaledBoundToFree(state.jacToGlobal, qOverP(state));
-  detail::sympy::transportCovarianceToBound(
+  Result<void> transportRes = detail::sympy::transportCovarianceToBound(
       state.options.geoContext, surface, state.cov, state.jacobian,
       state.derivative, state.jacToGlobal, std::nullopt, state.pars,
       freeToBoundCorrection);
+  // The jacobian stays unscaled if the transport fails, so rescale it in both
+  // cases.
   detail::sympy::toScaledBoundToFree(state.jacToGlobal, qOverP(state));
+  return transportRes;
 }
 
 Result<double> SympyStepper::step(State& state, Direction propDir,

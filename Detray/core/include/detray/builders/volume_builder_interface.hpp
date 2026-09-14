@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/core/concepts.hpp"
 #include "detray/geometry/tracking_volume.hpp"
 
 // System include(s)
@@ -18,14 +19,14 @@
 
 namespace detray {
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 class surface_factory_interface;
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 class volume_decorator;
 
 /// @brief Interface for volume builders (and volume builder decorators)
-template <typename detector_t>
+template <concepts::detector detector_t>
 class volume_builder_interface {
   // Access protected methods
   friend class volume_decorator<detector_t>;
@@ -108,7 +109,7 @@ class volume_builder_interface {
 ///
 /// Can be volume builders that introduce special sorting/memory layout, or
 /// accelerator builders, like the grid builder.
-template <typename detector_t>
+template <concepts::detector detector_t>
 class volume_decorator : public volume_builder_interface<detector_t> {
  public:
   using scalar_t = dscalar<typename detector_t::algebra_type>;
