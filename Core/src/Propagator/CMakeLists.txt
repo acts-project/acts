@@ -2,6 +2,7 @@ target_sources(
     ActsCore
     PRIVATE
         EigenStepperError.cpp
+        HelixStepper.cpp
         MultiStepperError.cpp
         NavigatorError.cpp
         NavigatorOptions.cpp
