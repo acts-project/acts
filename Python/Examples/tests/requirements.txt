@@ -8,7 +8,7 @@ awkward-cpp==56
     # via awkward
 backports-zstd==1.7.0 ; python_full_version < '3.14'
     # via pyhepmc
-boost-histogram==1.8.1
+boost-histogram==1.7.2
     # via hist
 click==8.5.0
     # via histoprint
