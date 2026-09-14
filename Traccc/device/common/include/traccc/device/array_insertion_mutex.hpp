@@ -35,7 +35,7 @@ TRACCC_HOST_DEVICE inline uint64_t encode_insertion_mutex(const bool locked,
 TRACCC_HOST_DEVICE inline std::tuple<bool, uint32_t, float>
 decode_insertion_mutex(const uint64_t val) {
   const uint32_t hi = static_cast<uint32_t>(val >> 32);
-  const uint32_t lo = val & 0xFFFFFFFF;
+  const uint32_t lo = static_cast<uint32_t>(val & 0xFFFFFFFF);
 
   return {static_cast<bool>(hi & 0x80000000), (hi & 0x7FFFFFFF),
           std::bit_cast<float>(lo)};
