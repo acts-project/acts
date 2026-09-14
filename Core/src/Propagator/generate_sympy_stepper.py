@@ -876,41 +876,51 @@ def print_rk4_vacuum_b2f(
     return "\n".join(lines)
 
 
-def print_rk4_dense(name_exprs: list[NamedExpr], run_cse: bool = True) -> str:
+def print_rk4_dense(
+    name_exprs: list[NamedExpr], run_cse: bool = True, mode: str = "jac"
+) -> str:
+    """Print the dense kernel, `jac` or `nojac`.
+
+    Specialised on covariance transport like the vacuum kernel, so it does not
+    test an empty jacobian span on every trial.
+    """
     printer = cxx_printer
-    outputs = [
-        find_by_name(name_exprs, name)[0]
-        for name in [
-            "pos2",
-            "qop2",
-            "qop3",
-            "pos3",
-            "qop4",
-            "err",
-            "new_B",
-            "new_pos",
-            "new_time",
-            "new_dir",
-            "new_qop",
-            "path_derivatives",
-            "new_M",
-        ]
+    jac = mode != "nojac"
+    output_names = [
+        "pos2",
+        "qop2",
+        "qop3",
+        "pos3",
+        "qop4",
+        "err",
+        "new_B",
+        "new_pos",
+        "new_time",
+        "new_dir",
+        "new_qop",
     ]
+    if jac:
+        output_names += ["path_derivatives", "new_M"]
+    outputs = [find_by_name(name_exprs, name)[0] for name in output_names]
 
     lines = []
 
+    fn_name = {"jac": "rk4_dense_jac", "nojac": "rk4_dense_nojac"}[mode]
+    jac_params = ", std::span<T, 8> path_derivatives, std::span<T> M" if jac else ""
     lines.append(
         "template <typename T, typename GetB, typename GetG>\n"
-        f"{STATUS_TYPE} rk4_dense(std::span<const T, 3> pos,"
+        f"inline __attribute__((always_inline)) {STATUS_TYPE} {fn_name}("
+        "std::span<const T, 3> pos,"
         " std::span<const T, 3> dir, const T time, const T h, const T qop, const T mass,"
         " const T charge, const T p_abs, std::span<const T, 3> B1, GetB getB,"
         " GetG getG, T& err, const T errTol, std::error_code& fieldErr,"
         " std::span<T, 3> new_pos, T& new_time,"
-        " std::span<T, 3> new_dir, T& new_qop, std::span<T, 3> new_B,"
-        " std::span<T, 8> path_derivatives, std::span<T> M) {"
+        " std::span<T, 3> new_dir, T& new_qop, std::span<T, 3> new_B"
+        f"{jac_params}) {{"
     )
     lines.append(INPUT_ASSERTS)
-    lines.append(f"  assert(M.empty() || M.size() == {_B2F.size});")
+    if jac:
+        lines.append(f"  assert(M.size() == {_B2F.size});")
 
     lines.append("  const auto dEds1 = getG(pos, qop);")
 
@@ -938,10 +948,6 @@ def print_rk4_dense(name_exprs: list[NamedExpr], run_cse: bool = True) -> str:
             return "const auto dEds4 = getG(std::span<const T, 3>(pos3), qop4);"
         if str(var) == "err":
             return f"if (err > errTol) {{\n  return {STATUS_TYPE}::Rejected;\n}}"
-        if str(var) == "new_qop":
-            # new_qop carries the energy loss, so it belongs to the step and
-            # has to be written before the jacobian-only part is skipped
-            return f"if (M.empty()) {{\n  return {STATUS_TYPE}::Accepted;\n}}"
         if str(var) == "new_M":
             return "\n".join(
                 f"M[{_B2F.flat_index(i, j)}] = new_M[{k}];"
@@ -1320,10 +1326,16 @@ def main(argv: list[str]) -> None:
         # taylor_norm and run_cse are off for the vacuum kernel: neither is
         # faster, and both obscure the correspondence to the ATLAS code.
         vacuum_exprs = rk4_vacuum_b2f_atlasexpr(taylor_norm=False)
-        for vacuum_mode in ("combined", "jac", "nojac"):
-            out.write(print_rk4_vacuum_b2f(vacuum_exprs, mode=vacuum_mode))
-            out.write("\n\n")
-        out.write(print_rk4_dense(rk4_dense_tangentexpr(), run_cse=True))
+        kernels = [
+            print_rk4_vacuum_b2f(vacuum_exprs, mode=mode)
+            for mode in ("combined", "jac", "nojac")
+        ]
+        dense_exprs = rk4_dense_tangentexpr()
+        kernels += [
+            print_rk4_dense(dense_exprs, run_cse=True, mode=mode)
+            for mode in ("jac", "nojac")
+        ]
+        out.write("\n\n".join(kernels))
         out.write("\n")
 
 

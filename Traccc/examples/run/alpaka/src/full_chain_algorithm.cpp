@@ -76,6 +76,10 @@ full_chain_algorithm::full_chain_algorithm(
                 {m_cached_device_mr, &m_cached_pinned_host_mr},
                 m_vecmem_objects.async_copy(), m_queue,
                 logger->cloneWithSuffix("SeedingAlg")),
+      m_gbts_seeding(gbts_config,
+                     {m_cached_device_mr, &m_cached_pinned_host_mr},
+                     m_vecmem_objects.async_copy(), m_queue,
+                     logger->cloneWithSuffix("GbtsAlg")),
       m_track_parameter_estimation(
           track_params_estimation_config,
           {m_cached_device_mr, &m_cached_pinned_host_mr},
@@ -165,6 +169,10 @@ full_chain_algorithm::full_chain_algorithm(const full_chain_algorithm& parent)
                 {m_cached_device_mr, &m_cached_pinned_host_mr},
                 m_vecmem_objects.async_copy(), m_queue,
                 parent.logger().cloneWithSuffix("SeedingAlg")),
+      m_gbts_seeding(parent.m_gbts_config,
+                     {m_cached_device_mr, &m_cached_pinned_host_mr},
+                     m_vecmem_objects.async_copy(), m_queue,
+                     parent.logger().cloneWithSuffix("GbtsAlg")),
       m_track_parameter_estimation(
           parent.m_track_params_estimation_config,
           {m_cached_device_mr, &m_cached_pinned_host_mr},
@@ -223,9 +231,14 @@ full_chain_algorithm::output_type full_chain_algorithm::operator()(
     // Run the seed-finding (asynchronously).
     const spacepoint_formation_algorithm::output_type spacepoints =
         m_spacepoint_formation(m_device_detector, measurements);
+    triplet_seeding_algorithm::output_type seeds;
+    if (usingGBTS) {
+      seeds = m_gbts_seeding(spacepoints, measurements);
+    } else {
+      seeds = m_seeding(spacepoints);
+    }
     const seed_parameter_estimation_algorithm::output_type track_params =
-        m_track_parameter_estimation(m_field, measurements, spacepoints,
-                                     m_seeding(spacepoints));
+        m_track_parameter_estimation(m_field, measurements, spacepoints, seeds);
 
     // Run the track finding (asynchronously).
     const finding_algorithm::output_type track_candidates =
@@ -276,9 +289,14 @@ bound_track_parameters_collection_types::host full_chain_algorithm::seeding(
     // Run the seed-finding (asynchronously).
     const spacepoint_formation_algorithm::output_type spacepoints =
         m_spacepoint_formation(m_device_detector, measurements);
+    triplet_seeding_algorithm::output_type seeds;
+    if (usingGBTS) {
+      seeds = m_gbts_seeding(spacepoints, measurements);
+    } else {
+      seeds = m_seeding(spacepoints);
+    }
     const seed_parameter_estimation_algorithm::output_type track_params =
-        m_track_parameter_estimation(m_field, measurements, spacepoints,
-                                     m_seeding(spacepoints));
+        m_track_parameter_estimation(m_field, measurements, spacepoints, seeds);
 
     // Copy a limited amount of result data back to the host.
     const auto host_seeds =

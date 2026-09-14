@@ -19,7 +19,7 @@ namespace traccc::cuda {
 namespace kernels {
 
 template <typename propagator_t, typename bfield_t>
-__global__ __launch_bounds__(128) void propagate_to_next_surface(
+__global__ __launch_bounds__(128, 5) void propagate_to_next_surface(
     const __grid_constant__ finding_config cfg,
     const typename propagator_t::detector_type* __restrict__ const det_data_ptr,
     const __grid_constant__ bfield_t field_data,

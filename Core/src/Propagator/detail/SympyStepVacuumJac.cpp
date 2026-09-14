@@ -12,7 +12,7 @@
 
 namespace Acts {
 
-template Result<double> detail::sympyStep<detail::SympyStepMode::VacuumJac>(
+template Result<double> detail::sympyStep<detail::SympyStepMode::Vacuum, true>(
     const SympyStepper&, SympyStepper::State&, Direction,
     const IVolumeMaterial*);
 
