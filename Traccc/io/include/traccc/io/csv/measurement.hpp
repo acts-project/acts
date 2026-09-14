@@ -17,9 +17,9 @@ namespace traccc::io::csv {
 
 /// Type used in reading CSV measurement data into memory
 struct measurement {
-  uint64_t measurement_id = 0;
-  uint64_t geometry_id = 0;
-  uint8_t local_key = 0;
+  std::uint64_t measurement_id = 0;
+  std::uint64_t geometry_id = 0;
+  std::uint8_t local_key = 0;
   float local0 = 0.f;
   float local1 = 0.f;
   float phi = 0.f;
