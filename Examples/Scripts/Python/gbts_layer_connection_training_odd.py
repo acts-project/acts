@@ -20,7 +20,9 @@ from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
-parser = argparse.ArgumentParser(description=__doc__)
+parser = argparse.ArgumentParser(
+    description="Layer connection training tool for the GBTS on ODD"
+)
 parser.add_argument(
     "--output",
     "-o",

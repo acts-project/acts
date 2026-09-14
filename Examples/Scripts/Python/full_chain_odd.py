@@ -24,7 +24,6 @@ from acts.examples.simulation import (
 from acts.examples.reconstruction import (
     addSeeding,
     SeedingAlgorithm,
-    SeedFinderConfigArg,
     CkfConfig,
     addCKFTracks,
     TrackSelectorConfig,
@@ -379,7 +378,6 @@ if args.reco:
         **(
             dict(
                 seedingAlgorithm=SeedingAlgorithm.Gbts,
-                seedFinderConfigArg=SeedFinderConfigArg(minPt=900 * u.MeV),
                 layerMappingConfigFile=oddGbtsLayerMap,
                 connectorInputConfigFile=oddGbtsConnectionTable,
             )
