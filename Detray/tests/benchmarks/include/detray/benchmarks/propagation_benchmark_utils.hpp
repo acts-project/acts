@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/navigation/caching_navigator.hpp"
 #include "detray/propagator/actor_chain.hpp"
@@ -56,7 +57,8 @@ enum class propagation_opt {
 /// @param n_samples the number of track to run
 template <template <typename, typename,
                     detray::benchmarks::propagation_opt> class benchmark_t,
-          typename propagator_t, typename detector_t, typename bfield_bknd_t,
+          typename propagator_t, concepts::detector detector_t,
+          typename bfield_bknd_t,
           detray::benchmarks::propagation_opt kOPT =
               detray::benchmarks::propagation_opt::e_unsync>
 inline void register_benchmark(
@@ -127,8 +129,8 @@ inline void register_benchmark(
 /// @tparam actor_chain_t types of actors
 template <template <typename, typename,
                     detray::benchmarks::propagation_opt> class benchmark_t,
-          typename stepper_t, typename actor_chain_t, typename detector_t,
-          typename bfield_bknd_t,
+          typename stepper_t, typename actor_chain_t,
+          concepts::detector detector_t, typename bfield_bknd_t,
           detray::benchmarks::propagation_opt kOPT =
               detray::benchmarks::propagation_opt::e_unsync>
 inline void register_benchmark(

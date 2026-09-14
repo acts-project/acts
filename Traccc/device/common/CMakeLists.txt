@@ -31,10 +31,9 @@ traccc_add_library( traccc_device_common device_common
    "include/traccc/clusterization/device/impl/reduce_problem_cell.ipp"
    "include/traccc/clusterization/device/aggregate_cluster.hpp"
    "include/traccc/clusterization/device/impl/aggregate_cluster.ipp"
-   "include/traccc/clusterization/device/geo_id_based_sorter.hpp"
+   "include/traccc/clusterization/device/measurement_sorting.hpp"
    "include/traccc/clusterization/device/ccl_kernel_definitions.hpp"
    "include/traccc/clusterization/device/ccl_kernel.hpp"
-   "include/traccc/clusterization/device/sorting_index_filler.hpp"
    "include/traccc/clusterization/device/clusterization_algorithm.hpp"
    "src/clusterization/clusterization_algorithm.cpp"
    # Spacepoint binning function(s).
