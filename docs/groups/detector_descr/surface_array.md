@@ -89,12 +89,31 @@ surface at construction:
    keep the lowest and highest bin along the other axis, and register the
    surface in every bin of every column span.
 
-The span fill is exact when the projected outline is convex per column, which
-holds for the module shapes in use; over-filling a concave part is the only way
-it can be wrong. Keying the columns by the axis that wraps means no span is
-ever reconstructed across the phi seam: a module straddling +-pi produces
-columns at both ends of the phi axis, each with its own span along the bound
-axis.
+The footprint is sampled, so sufficiently fine bins can be missed between
+samples. Filling the span can also include extra cells for a concave outline.
+Keying the columns by the axis that wraps prevents a span across the phi seam:
+a module straddling +-pi produces columns at both ends, each with its own span
+along the bound axis.
+
+The optional `overfill` argument of @ref Acts::SurfaceArray,
+@ref Acts::SurfaceArrayCreator and @ref Acts::LayerCreator expands every matched
+cell during construction. It defaults to zero. A value of one also fills the
+immediate neighbors, including diagonals; two reaches the next neighbors, and
+`n` reaches all cells within `n` bin steps on each axis. Closed axes wrap, and
+expansion stops at nonperiodic grid edges. Underflow and overflow cells remain
+empty. Overlapping contributions are deduplicated.
+
+Overfilling changes the stored contents returned by `at()` as well as
+`neighbors()`. It is independent of `NeighborWindow`: the latter gathers those
+contents around the lookup cell. Overfilling can provide a margin for alignment
+or sampling gaps, at the cost of more candidates; it does not guarantee that a
+sampled footprint covers arbitrarily fine grids.
+
+```cpp
+SurfaceArray array(gctx, surfaces, representative, tolerance, axes,
+                   SurfaceArray::NeighborWindow{{0, 0}, {2, 2}},
+                   /*overfill=*/2);
+```
 
 [A module projected onto a disc grid](surface_array_figures.html#fill), the two
 point tests the footprint fill replaced, and what each of them costs in bins are
@@ -140,12 +159,13 @@ around the crossing bin spans that movement.
   `(dx, dy)` on a plane. `surfaceToGridLocal` turns that into a step in grid
   coordinates.
 - The bins at `+slide` and `-slide` from the crossing point give the distance
-  per axis, in bins, with the wrap of a closed axis taken into account. The
-  larger of the two sides is kept.
+  per axis, in bins, following the signed displacement across a closed-axis
+  seam. A full turn covers the axis rather than wrapping the distance to zero.
+  The larger of the two sides is kept.
 
-There is no case analysis on the surface type. The derivative supplies the
-local metric for any @ref Acts::RegularSurface, and the result is already in
-the quantities the grid is binned in.
+The derivative supplies the local metric. This is a first-order estimate on
+curved surfaces, bounded by the configured window. At a coordinate singularity,
+an undefined displacement opens the affected axis to its configured bound.
 
 [The same crossing, in r-z and on the bin
 grid](surface_array_figures.html#window), and the miss rate each window policy
@@ -201,29 +221,12 @@ A lookup is therefore one index computation,
 `bin * stridePerBin + distance0 * stride1 + distance1`, and a span into the
 pack storage. No gather over neighboring bins happens at lookup time.
 
-The index array has `(n0 + 2) * (n1 + 2) * (max0 + 1) * (max1 + 1)` entries
-and is cheap. The pack contents are what cost memory: each pack lists the
+The index array has `(n0 + 2) * (n1 + 2) * (max0 + 1) * (max1 + 1)` entries.
+Both this index and the pack contents cost memory: each pack lists the
 surfaces of up to `(2 max0 + 1) * (2 max1 + 1)` bins. On the generic detector
 at the default bounds the cache is 13.6 MB. A lookup on a toy barrel costs
 about 80 ns; [what that is made of](surface_array_figures.html#cost) is in the
 figures.
 
-## Evolution
-
-- February 2018: `SurfaceArray` replaced the `BinUtility`/`BinnedArray`-based
-  layer lookup. It already cached a neighbor list per bin.
-- April 2018: boost type erasure removed from the array and from the axis
-  introspection, giving the `ISurfaceGridLookup` pimpl with axis-templated
-  implementations that is still in place.
-- `SurfaceArray` is Gen1 geometry but not legacy: Gen3 reaches it through
-  @ref Acts::SurfaceArrayNavigationPolicy.
-- April 2026, PR #5186: the lookup became inclination dependent. The neighbor
-  distance was derived from `1 / |n . d|` instead of being a fixed one bin.
-- June 2026, PR #5498: deprecated members removed.
-- July 2026, PR #5531: `MultiAxis` extracted from `Grid`; the lookup binds its
-  axes through it.
-- September 2026, PRs #6017, #6018 and #6019: the phi grid rotated into the
-  frame of the representative surface, the axes built in that frame, and the
-  fill changed from two point tests to the projected footprint.
-- PR #6038: the neighbor window sized by the slide along the layer, per axis,
-  bounded by @ref Acts::SurfaceArray::NeighborWindow.
+`SurfaceArray` is also used by @ref Acts::SurfaceArrayNavigationPolicy in Gen3
+geometry.

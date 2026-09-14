@@ -84,6 +84,7 @@ class LayerCreator {
   /// be taken used for this layer
   /// @param neighborWindow Bounds on the neighbor window the lookup derives
   ///        from the crossing angle, in bins per grid axis (phi, z)
+  /// @param overfill Extra cells per direction and axis to fill around each matched cell
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr cylinderLayer(
@@ -92,7 +93,8 @@ class LayerCreator {
       std::size_t binsZ, std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {1, 2}}) const;
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {1, 2}},
+      std::uint8_t overfill = 0) const;
 
   /// returning a cylindrical layer
   ///
@@ -111,6 +113,7 @@ class LayerCreator {
   /// be taken used for this layer
   /// @param neighborWindow Bounds on the neighbor window the lookup derives
   ///        from the crossing angle, in bins per grid axis (phi, z)
+  /// @param overfill Extra cells per direction and axis to fill around each matched cell
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr cylinderLayer(
@@ -120,7 +123,8 @@ class LayerCreator {
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {1, 2}}) const;
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {1, 2}},
+      std::uint8_t overfill = 0) const;
 
   /// returning a disc layer
   ///
@@ -139,6 +143,7 @@ class LayerCreator {
   /// be taken used for this layer
   /// @param neighborWindow Bounds on the neighbor window the lookup derives
   ///        from the crossing angle, in bins per grid axis (r, phi)
+  /// @param overfill Extra cells per direction and axis to fill around each matched cell
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr discLayer(
@@ -147,7 +152,8 @@ class LayerCreator {
       std::size_t binsPhi, std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 1}}) const;
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 1}},
+      std::uint8_t overfill = 0) const;
 
   /// returning a disc layer
   ///
@@ -166,6 +172,7 @@ class LayerCreator {
   /// be taken used for this layer
   /// @param neighborWindow Bounds on the neighbor window the lookup derives
   ///        from the crossing angle, in bins per grid axis (r, phi)
+  /// @param overfill Extra cells per direction and axis to fill around each matched cell
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr discLayer(
@@ -175,7 +182,8 @@ class LayerCreator {
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 1}}) const;
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 1}},
+      std::uint8_t overfill = 0) const;
 
   /// returning a plane layer
   ///
@@ -198,6 +206,7 @@ class LayerCreator {
   /// ApproachDescriptor will be taken used for this layer
   /// @param neighborWindow Bounds on the neighbor window the lookup derives
   ///        from the crossing angle, in bins per grid axis
+  /// @param overfill Extra cells per direction and axis to fill around each matched cell
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr planeLayer(
@@ -207,7 +216,8 @@ class LayerCreator {
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 2}}) const;
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 2}},
+      std::uint8_t overfill = 0) const;
 
   /// Set the configuration object
   /// @param lcConfig is the configuration struct

@@ -631,8 +631,8 @@
   </section>
 
   <section class="prose">
-    <p>The span fill is exact only while the projected outline is, per phi column, an unbroken interval in r. A genuinely non-convex projection would over-fill its concave part &mdash; amber in the panels above. That is a strictly better failure than dropping bins, and it is the assumption the approach rests on, not a hole in it.</p>
-    <p>On the generic detector, across all 48 layers against brute-force truth: hits lost at |eta|&nbsp;=&nbsp;3.5 go from <strong>4.9% to zero</strong>. With the &plusmn;1 expansion still in place that costs 9.0&nbsp;&rarr;&nbsp;25.0 candidates per query at eta&nbsp;=&nbsp;0. With the expansion switched off &mdash; which exact filling is what earns &mdash; the same scan gives <strong>3.9 candidates on the disc and 9.0 on the barrel with nothing lost</strong>: today's cost, for strictly better coverage.</p>
+    <p>Spanning a column assumes an unbroken interval in r; a concave projection can include extra cells. Sampling can also miss cells between outline points on sufficiently fine grids. The optional <code>overfill</code> construction parameter expands each matched cell by a radius in bins: zero preserves the footprint, one includes immediate neighbors and diagonals, and n reaches n cells along each axis. It wraps the phi seam and stops at nonperiodic grid edges.</p>
+    <p>On the generic detector, across all 48 layers against brute-force truth: hits lost at |eta|&nbsp;=&nbsp;3.5 go from <strong>4.9% to zero</strong>. With the &plusmn;1 expansion still in place that costs 9.0&nbsp;&rarr;&nbsp;25.0 candidates per query at eta&nbsp;=&nbsp;0. With the expansion switched off, the same scan gives <strong>3.9 candidates on the disc and 9.0 on the barrel with nothing lost</strong>: today's cost, for strictly better coverage.</p>
   </section>
 
   <hr class="rule">

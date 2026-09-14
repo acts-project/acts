@@ -82,11 +82,16 @@ class SurfaceArray {
   /// @param tolerance The tolerance used for intersection checks
   /// @param axes The axes used for the grid
   /// @param neighborWindow Bounds on the neighbor window, in bins per grid axis
+  /// @param overfill Extra cells per direction and axis to fill around each matched
+  ///        cell, wrapping closed axes and stopping at the grid edges. Zero
+  ///        preserves the footprint; one adds immediate neighbors, including
+  ///        diagonals. This also affects at(), independently of neighborWindow.
   SurfaceArray(const GeometryContext& gctx,
                std::vector<std::shared_ptr<const Surface>> surfaces,
                std::shared_ptr<RegularSurface> representative, double tolerance,
                std::tuple<const IAxis&, const IAxis&> axes,
-               NeighborWindow neighborWindow = NeighborWindow{{0, 0}, {2, 2}});
+               NeighborWindow neighborWindow = NeighborWindow{{0, 0}, {2, 2}},
+               std::uint8_t overfill = 0);
 
   // non-copyable but movable due to unique_ptr member. deferred implementation
   // to source since the pimpl is not fully defined in the header.

@@ -661,6 +661,19 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_zAxisInRepresentativeFrame,
     occupiedZBins.insert(axes.at(1)->getBin(local.z()));
   }
   BOOST_CHECK_EQUAL(occupiedZBins.size(), nZ);
+
+  // The layer creator forwards overfill to the array, including at() contents.
+  const auto expandedLayer = layerCreator.cylinderLayer(
+      tgContext, surfaces, nPhi, nZ, pl, Transform3::Identity(), nullptr,
+      {{0, 0}, {0, 0}}, 1);
+  const SurfaceArray* expanded = expandedLayer->surfaceArray();
+  BOOST_REQUIRE(expanded != nullptr);
+  for (std::size_t phiBin = 1; phiBin <= nPhi; ++phiBin) {
+    for (std::size_t zBin = 1; zBin <= nZ; ++zBin) {
+      BOOST_CHECK(std::ranges::equal(expanded->neighbors({phiBin, zBin}, 0),
+                                     sa->neighbors({phiBin, zBin}, 1)));
+    }
+  }
 }
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
