@@ -20,6 +20,8 @@
 #include "detray/utils/root_finding.hpp"
 
 // System include(s)
+#include <cmath>
+#include <limits>
 #include <type_traits>
 
 namespace detray {
@@ -69,6 +71,35 @@ struct helix_intersector_impl<cartesian2D<algebra_t>, algebra_t> {
     const vector3_t sn = trf.z();
     // Surface translation
     const point3_t st = trf.translation();
+
+    // For a plane parallel to the magnetic field, the projected helix is
+    // a circle. Reject planes outside that circle before attempting to find
+    // a root: bracket expansion cannot succeed when no intersection exists.
+    const vector3_t field = h.b_field();
+    const scalar_t curvature = -h.qop() * h.B();
+    if (h.B() > 0.f && curvature != 0.f && h.radius() * h.B() >= 1e-6f &&
+        vector::dot(sn, field) == 0.f) {
+      const vector3_t field_axis = (1.f / h.B()) * field;
+      // Signed plane distance is c + a * sin(K*s) - b * cos(K*s).
+      // Its oscillation amplitude is sqrt(a*a + b*b).
+      const scalar_t a = vector::dot(sn, h.dir()) / curvature;
+      const scalar_t b =
+          vector::dot(sn, vector::cross(field_axis, h.dir())) / curvature;
+      const scalar_t c = vector::dot(sn, h.pos() - st) + b;
+      const scalar_t radius2 = a * a + b * b;
+      const scalar_t distance2 = c * c;
+      // Leave roundoff and the convergence-tolerance band near tangency
+      // to the existing numerical solver.
+      const scalar_t margin = 64.f * std::numeric_limits<scalar_t>::epsilon() *
+                                  (distance2 + radius2) +
+                              2.f * math::fabs(c) * convergence_tolerance +
+                              convergence_tolerance * convergence_tolerance;
+      if (std::isfinite(distance2) && std::isfinite(radius2) &&
+          distance2 - radius2 > margin) {
+        constexpr scalar_t inv = detail::invalid_value<scalar_t>();
+        return {inv, point3_t{inv, inv, inv}, inv};
+      }
+    }
 
     // Starting point on the helix for the Newton iteration
     const vector3_t dist{st - h.pos(0.f)};
