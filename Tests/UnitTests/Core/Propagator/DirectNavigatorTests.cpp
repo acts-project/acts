@@ -147,7 +147,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
         typename dpropagator_t::template Options<DirectActorList>;
     DirectOptions dOptions(tgContext, mfContext);
     // Set the surface sequence
-    dOptions.navigation.externalSurfaces = surfaceSequence;
+    dOptions.navigation.surfaceSequence = surfaceSequence;
     // Surface collector configuration
     auto& dCollector = dOptions.actorList.template get<SurfaceCollector<>>();
     dCollector.selector.selectSensitive = true;
@@ -239,7 +239,7 @@ void runSimpleTest(const std::vector<const Surface*>& surfaces,
                           DirectNavigator>::template Options<DirectActorList>;
   DirectOptions pOptions(tgContext, mfContext);
   pOptions.direction = direction;
-  pOptions.navigation.externalSurfaces = surfaces;
+  pOptions.navigation.surfaceSequence = surfaces;
   pOptions.navigation.startSurface = startSurface;
   auto& dCollector = pOptions.actorList.template get<SurfaceCollector<>>();
   dCollector.selector.selectSensitive = true;
