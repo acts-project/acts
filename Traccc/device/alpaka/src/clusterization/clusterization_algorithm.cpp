@@ -48,10 +48,9 @@ struct ccl_kernel {
     details::thread_id1 thread_id(acc);
 
     auto& partition_start =
-        ::alpaka::declareSharedVar<std::size_t, __COUNTER__>(acc);
+        ::alpaka::declareSharedVar<unsigned int, __COUNTER__>(acc);
     auto& partition_end =
-        ::alpaka::declareSharedVar<std::size_t, __COUNTER__>(acc);
-    auto& outi = ::alpaka::declareSharedVar<std::size_t, __COUNTER__>(acc);
+        ::alpaka::declareSharedVar<unsigned int, __COUNTER__>(acc);
 
     device::details::index_t* const shared_v =
         ::alpaka::getDynSharedMem<device::details::index_t>(acc);
@@ -64,11 +63,11 @@ struct ccl_kernel {
 
     alpaka::barrier<TAcc> barry_r(&acc);
 
-    device::ccl_kernel(
-        cfg, thread_id, cells_view, det_descr_view, det_cond_view,
-        partition_start, partition_end, outi, f_view, gf_view, f_backup_view,
-        gf_backup_view, adjc_backup_view, adjv_backup_view, backup_mutex,
-        disjoint_set_view, cluster_size_view, barry_r, measurements_view);
+    device::ccl_kernel(cfg, thread_id, cells_view, det_descr_view,
+                       det_cond_view, partition_start, partition_end, f_view,
+                       gf_view, f_backup_view, gf_backup_view, adjc_backup_view,
+                       adjv_backup_view, backup_mutex, disjoint_set_view,
+                       cluster_size_view, barry_r, measurements_view);
   }
 
 };  // struct ccl_kernel

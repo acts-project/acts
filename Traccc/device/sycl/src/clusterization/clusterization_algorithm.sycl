@@ -87,7 +87,7 @@ void clusterization_algorithm::ccl_kernel(
   details::get_queue(queue())
       .submit([&](::sycl::handler& h) {
         // Allocate shared memory for the kernel.
-        vecmem::sycl::local_accessor<std::size_t> shared_uint(3, h);
+        vecmem::sycl::local_accessor<unsigned int> shared_uint(2, h);
         vecmem::sycl::local_accessor<device::details::index_t> shared_idx(
             2 * payload.config.max_partition_size(), h);
 
@@ -111,9 +111,8 @@ void clusterization_algorithm::ccl_kernel(
               vecmem::data::vector_view<device::details::index_t> gf_view{
                   static_cast<vector_size_t>(config.max_partition_size()),
                   &shared_idx[config.max_partition_size()]};
-              std::size_t& partition_start = shared_uint[0];
-              std::size_t& partition_end = shared_uint[1];
-              std::size_t& outi = shared_uint[2];
+              unsigned int& partition_start = shared_uint[0];
+              unsigned int& partition_end = shared_uint[1];
 
               // Mutex for scratch space
               vecmem::device_atomic_ref<unsigned int> mutex(*backup_mutex);
@@ -124,7 +123,7 @@ void clusterization_algorithm::ccl_kernel(
 
               // Run the algorithm for this thread.
               device::ccl_kernel(config, thread_id, cells, det_descr, det_cond,
-                                 partition_start, partition_end, outi, f_view,
+                                 partition_start, partition_end, f_view,
                                  gf_view, f_backup, gf_backup, adjc_backup,
                                  adjv_backup, mutex, disjoint_set,
                                  cluster_sizes, barrier, measurements);
