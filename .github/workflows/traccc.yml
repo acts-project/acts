@@ -20,6 +20,7 @@ on:
       - "Traccc/**"
       - "Detray/**"
       - ".github/workflows/traccc.yml"
+      - ".github/detray-traccc-filters.yml"
   pull_request:
     branches:
       - main
@@ -27,11 +28,9 @@ on:
       - "Traccc/**"
       - "Detray/**"
       - ".github/workflows/traccc.yml"
-  # merge_group does not support path filters, so this runs on every queue
-  # entry targeting main, not just ones touching Traccc/ or Detray/. Only
-  # required via merge-sentinel's "Traccc / *" pattern, which is itself
-  # path-gated, so a non-Traccc entry running this wastes compute but doesn't
-  # block merging.
+      - ".github/detray-traccc-filters.yml"
+  # The changes job applies path filtering to merge groups, which do not
+  # support the workflow-level path filters above.
   merge_group:
     types: [checks_requested]
 
@@ -42,7 +41,33 @@ concurrency:
   cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 jobs:
+  # Like Builds/changes, gate jobs rather than suppressing check reporting.
+  # PR/push triggers already filter paths; only merge groups need a checkout
+  # and a comparison against the base SHA carried by the event.
+  changes:
+    if: github.event_name == 'merge_group'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      relevant: ${{ steps.filter.outputs.traccc }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          base: ${{ github.event.merge_group.base_sha }}
+          ref: ${{ github.event.merge_group.head_sha }}
+          filters: .github/detray-traccc-filters.yml
+
   containers:
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
     name: ${{ matrix.platform.name }}-${{ matrix.build }}
     runs-on: ubuntu-latest
     container: ${{ matrix.platform.container }}
@@ -250,6 +275,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────
   cuda-test:
     needs: [containers]
+    if: ${{ !cancelled() && needs.containers.result == 'success' }}
     runs-on: [self-hosted, linux, x64, gpu-nvidia]
     permissions:
       contents: read
