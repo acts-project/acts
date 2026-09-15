@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-
-
 #include "Acts/Utilities/Logger.hpp"
 
 #include "GeoModelHelpers/MaterialManager.h"
@@ -93,7 +91,7 @@ class GeoModelJsonMaterialManager : public MaterialManager {
  private:
   std::unique_ptr<const Acts::Logger> m_logger{Acts::getDefaultLogger(
       "GeoModelMaterialMgr", Acts::Logging::Level::INFO)};
-  /// @brief The Acts logger object
+  /// The Acts logger object
   /// @return The Acts logger object associated with this class
   const Acts::Logger& logger() const { return *m_logger; }
 };
