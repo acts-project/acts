@@ -132,7 +132,9 @@ jobs:
           enable-cache: false
       - name: CI tooling self-tests
         run: >
-          uv run --no-project --with pytest python -m pytest -q
+          uv run --no-project --no-build
+          --with-requirements CI/self_tests/requirements.txt
+          python -m pytest -q
           CI/dependencies/test_select_lockfile.py
           CI/public_api/test_check_deprecated_docs.py
           CI/test_check_unused_files.py
