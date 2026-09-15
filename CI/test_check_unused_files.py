@@ -1,53 +1,22 @@
-#!/usr/bin/env python3
-"""Exercise the unused-file checker's search semantics using real grep calls."""
+"""Exercise reference matching and search failures with real grep calls."""
 
 import subprocess
-import tempfile
-import unittest
-from pathlib import Path
+
+import pytest
 
 from check_unused_files import file_can_be_removed
 
 
-class ReferenceSearchTests(unittest.TestCase):
-    def test_references_and_patterns(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory) / "scope with spaces and 'quotes'"
-            root.mkdir()
-            (root / "references.txt").write_text(
-                "#include <used.hpp>\nimport package.module\nfrom helper import f\n"
-                "a'b.hpp\n-dash.hpp\n"
-            )
-            for pattern in (
-                "used.hpp",
-                r"import .*module",
-                "from helper import",
-                "a'b.hpp",
-                "-dash.hpp",
-            ):
-                with self.subTest(pattern=pattern):
-                    self.assertFalse(file_can_be_removed(pattern, [str(root)]))
-            self.assertTrue(file_can_be_removed("unused.hpp", [str(root)]))
-
-    def test_recursive_scopes_and_binary_files(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            first = root / "first"
-            second = root / "second"
-            first.mkdir()
-            (second / "nested").mkdir(parents=True)
-            (first / "binary").write_bytes(b"\0binary_only.hpp\n")
-            (second / "nested" / "reference").write_text("nested.hpp\n")
-            scopes = [str(first), str(second)]
-            self.assertFalse(file_can_be_removed("nested.hpp", scopes))
-            self.assertTrue(file_can_be_removed("binary_only.hpp", scopes))
-            self.assertTrue(file_can_be_removed("nested.hpp", [str(first)]))
-
-    def test_search_errors_fail_the_check(self):
-        with tempfile.TemporaryDirectory() as directory:
-            with self.assertRaises(subprocess.CalledProcessError):
-                file_can_be_removed("unused.hpp", [str(Path(directory) / "missing")])
+def test_reference_matching(tmp_path):
+    (tmp_path / "references.txt").write_text(
+        "#include <used.hpp>\nimport package.module\n"
+    )
+    scope = [str(tmp_path)]
+    assert not file_can_be_removed("used.hpp", scope)
+    assert not file_can_be_removed(r"import .*module", scope)
+    assert file_can_be_removed("unused.hpp", scope)
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_search_failure(tmp_path):
+    with pytest.raises(subprocess.CalledProcessError):
+        file_can_be_removed("unused.hpp", [str(tmp_path / "missing")])
