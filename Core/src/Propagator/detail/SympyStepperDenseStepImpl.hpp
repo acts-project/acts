@@ -6,22 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Propagator/detail/SympyStepperDenseStep.hpp"
+#pragma once
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Propagator/EigenStepperError.hpp"
+#include "Acts/Propagator/detail/SympyStepperDenseStep.hpp"
 
 #include <cmath>
 
-#include "SympyStepperStepImpl.hpp"
 #include "codegen/sympy_stepper_math.hpp"
 
 namespace Acts {
 
+template <bool WithJac>
 detail::Rk4Status detail::sympyDenseStep(
     const SympyStepper& stepper, SympyStepper::State& state,
     const IVolumeMaterial& material, double h, double errTol,
@@ -60,20 +60,28 @@ detail::Rk4Status detail::sympyDenseStep(
                                  static_cast<float>(l), absQ);
   };
 
-  return rk4_dense(
-      std::span<const double, 3>(pos.data(), 3),
-      std::span<const double, 3>(dir.data(), 3), t, h, qop, m, q, pabs,
-      std::span<const double, 3>(state.field->data(), 3), getB, getG,
-      errorEstimate, errTol, fieldErr,
-      std::span<double, 3>(state.pars.segment<3>(eFreePos0).data(), 3),
-      state.pars[eFreeTime],
-      std::span<double, 3>(state.pars.segment<3>(eFreeDir0).data(), 3),
-      state.pars[eFreeQOverP], std::span<double, 3>(lastField.data(), 3),
-      std::span<double, 8>(state.derivative.data(), 8), jac);
+  if constexpr (WithJac) {
+    return rk4_dense_jac(
+        std::span<const double, 3>(pos.data(), 3),
+        std::span<const double, 3>(dir.data(), 3), t, h, qop, m, q, pabs,
+        std::span<const double, 3>(state.field->data(), 3), getB, getG,
+        errorEstimate, errTol, fieldErr,
+        std::span<double, 3>(state.pars.segment<3>(eFreePos0).data(), 3),
+        state.pars[eFreeTime],
+        std::span<double, 3>(state.pars.segment<3>(eFreeDir0).data(), 3),
+        state.pars[eFreeQOverP], std::span<double, 3>(lastField.data(), 3),
+        std::span<double, 8>(state.derivative.data(), 8), jac);
+  } else {
+    return rk4_dense_nojac(
+        std::span<const double, 3>(pos.data(), 3),
+        std::span<const double, 3>(dir.data(), 3), t, h, qop, m, q, pabs,
+        std::span<const double, 3>(state.field->data(), 3), getB, getG,
+        errorEstimate, errTol, fieldErr,
+        std::span<double, 3>(state.pars.segment<3>(eFreePos0).data(), 3),
+        state.pars[eFreeTime],
+        std::span<double, 3>(state.pars.segment<3>(eFreeDir0).data(), 3),
+        state.pars[eFreeQOverP], std::span<double, 3>(lastField.data(), 3));
+  }
 }
-
-template Result<double> detail::sympyStep<detail::SympyStepMode::Dense>(
-    const SympyStepper&, SympyStepper::State&, Direction,
-    const IVolumeMaterial*);
 
 }  // namespace Acts

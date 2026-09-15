@@ -62,7 +62,7 @@ TRACCC_HOST_DEVICE inline void gbts_run_cca_iteration(
           d_output_graph[edge_pos + gbts_consts::nei_start + nIdx];
       const unsigned char forward_level = d_levels[levelLoad + nextglobalIndex];
       if (next_level == forward_level) {
-        next_level = forward_level + 1;
+        next_level = static_cast<unsigned char>(forward_level + 1);
         localChange = true;
         break;
       }
@@ -87,7 +87,7 @@ TRACCC_HOST_DEVICE inline void gbts_run_cca_iteration(
         // flag as not terminus edge
         d_outgoing_paths[nextglobalIndex].y = -1;
       }
-      // flag as long enough segement to become a seed
+      // flag as long enough segment to become a seed
       d_outgoing_paths[globalIndex] = short2{
           out_paths, static_cast<short>((next_level >= payload.minLevel) - 1)};
     }

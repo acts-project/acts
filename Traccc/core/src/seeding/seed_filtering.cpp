@@ -56,7 +56,7 @@ void seed_filtering::operator()(
     const edm::spacepoint_collection::const_device::const_proxy_type spT =
         spacepoints.at(spT_idx);
 
-    // Updat the triplet weight in-situ.
+    // Update the triplet weight in-situ.
     seed_selecting_helper::seed_weight(m_filter_config, spM, spB, spT,
                                        triplet.weight);
 
