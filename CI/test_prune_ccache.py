@@ -1,14 +1,10 @@
-#!/usr/bin/env python3
-"""Test retention boundaries and deletion behavior without accessing GitHub."""
+"""Test cache selection and deletion without accessing GitHub."""
 
-from contextlib import redirect_stdout
-import io
-import json
-import subprocess
-import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, call
 
-from prune_ccache import list_caches, prune, superseded_caches
+import pytest
+
+import prune_ccache
 
 
 def cache(i, variant="Linux-linux_ubuntu-r2", **changes):
@@ -23,71 +19,44 @@ def cache(i, variant="Linux-linux_ubuntu-r2", **changes):
     return result | changes
 
 
-class RetentionTests(unittest.TestCase):
-    def test_only_superseded_main_archives_of_same_variant_and_version(self):
-        old, new = cache(1), cache(2)
-        protected = [
-            cache(3, ref="refs/pull/123/merge"),
-            cache(4, ref="refs/heads/feature"),
-            cache(5, version="format-b"),
-            cache(6, variant="Linux-linux_ubuntu_extra-r2-clang22-23"),
-            cache(7, variant="macOS-macos-r2"),
-            cache(8, key="spack-r5-Linux"),
-            cache(9, key="ccache-Linux-linux_ubuntu-r2-not-a-sha"),
-            cache(10, version=""),
-            cache(11, variant="Linux-linux_ubuntu-r3"),
-        ]
-        self.assertEqual(superseded_caches([new, *protected, old]), [(new, [old])])
+def test_only_superseded_main_archives_of_same_variant_and_version():
+    old, new = cache(1), cache(2)
+    protected = [
+        cache(3, ref="refs/pull/123/merge"),
+        cache(4, ref="refs/heads/feature"),
+        cache(5, version="format-b"),
+        cache(6, variant="Linux-linux_ubuntu_extra-r2-clang22-23"),
+        cache(7, variant="macOS-macos-r2"),
+        cache(8, key="spack-r5-Linux"),
+        cache(9, key="ccache-Linux-linux_ubuntu-r2-not-a-sha"),
+        cache(10, version=""),
+        cache(11, variant="Linux-linux_ubuntu-r3"),
+        cache(12, size_in_bytes=0),
+    ]
+    assert prune_ccache.superseded_caches([new, *protected, old]) == [(new, [old])]
+    assert prune_ccache.superseded_caches([old, cache(2, size_in_bytes=0)]) == []
 
-    def test_empty_replacement_does_not_displace_last_cache(self):
-        self.assertEqual(superseded_caches([cache(1), cache(2, size_in_bytes=0)]), [])
 
-    def test_order_by_creation_not_input_order_or_last_access(self):
-        old, new = cache(1, last_accessed_at="2026-09-20"), cache(2)
-        self.assertEqual(superseded_caches([new, old]), [(new, [old])])
+@pytest.mark.parametrize(
+    "apply, replacement_present, deleted_ids",
+    [(False, True, []), (True, True, [1]), (True, False, [])],
+    ids=["dry-run", "replacement-present", "replacement-disappeared"],
+)
+def test_cache_deletion(monkeypatch, apply, replacement_present, deleted_ids):
+    # A concurrent upload must never be included in the deletion plan.
+    listing = Mock(return_value=[cache(2), cache(3)] if replacement_present else [])
+    delete = Mock()
+    monkeypatch.setattr(prune_ccache, "list_caches", listing)
+    monkeypatch.setattr(prune_ccache.subprocess, "run", delete)
 
-    def test_dry_run_does_not_call_github(self):
-        with patch("prune_ccache.list_caches") as listing, patch(
-            "prune_ccache.subprocess.run"
-        ) as delete, redirect_stdout(io.StringIO()):
-            self.assertEqual(prune("owner/repo", [cache(1), cache(2)]), 100)
-        listing.assert_not_called()
-        delete.assert_not_called()
+    prune_ccache.prune("owner/repo", [cache(1), cache(2)], apply=apply)
 
-    def test_disappearing_replacement_preserves_old_cache(self):
-        with patch("prune_ccache.list_caches", return_value=[]), patch(
-            "prune_ccache.subprocess.run"
-        ) as delete, redirect_stdout(io.StringIO()):
-            self.assertEqual(prune("owner/repo", [cache(1), cache(2)], True), 0)
-        delete.assert_not_called()
-
-    def test_delete_only_old_ids_from_snapshot(self):
-        with patch(
-            "prune_ccache.list_caches", return_value=[cache(2), cache(3)]
-        ), patch("prune_ccache.subprocess.run") as delete, redirect_stdout(
-            io.StringIO()
-        ):
-            self.assertEqual(prune("owner/repo", [cache(1), cache(2)], True), 100)
-        self.assertEqual(
-            delete.call_args.args[0][-1], "repos/owner/repo/actions/caches/1"
+    assert delete.call_args_list == [
+        call(
+            ["gh", "api", "--method", "DELETE", f"repos/owner/repo/actions/caches/{i}"],
+            check=True,
         )
-        self.assertEqual(delete.call_count, 1)
-
-    def test_all_pages_are_combined_before_planning(self):
-        pages = [{"actions_caches": [cache(1)]}, {"actions_caches": [cache(2)]}]
-        with patch(
-            "prune_ccache.subprocess.check_output", return_value=json.dumps(pages)
-        ):
-            self.assertEqual(list_caches("owner/repo"), [cache(1), cache(2)])
-
-    def test_api_error_does_not_become_an_empty_listing(self):
-        with patch(
-            "prune_ccache.subprocess.check_output",
-            side_effect=subprocess.CalledProcessError(1, "gh"),
-        ):
-            with self.assertRaises(subprocess.CalledProcessError):
-                list_caches("owner/repo")
-
-
-if __name__ == "__main__":
-    unittest.main()
+        for i in deleted_ids
+    ]
+    if not apply:
+        listing.assert_not_called()

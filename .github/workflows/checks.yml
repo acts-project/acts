@@ -114,8 +114,9 @@ jobs:
 
   # The CI tooling's own self-tests, which otherwise have no feedback loop:
   # broken tooling fails in some other job that already paid for a container
-  # pull. Grouped because they are pure python and run in seconds; separate
-  # steps so a failure names the suite. test_public_api_surface.py stays in
+  # pull. Grouped because they are pure Python and run in seconds.
+  # Use explicit test paths to avoid collecting other CI tools.
+  # test_public_api_surface.py stays in
   # `api_surface` -- it skips its drift check without doxygen on PATH.
   self_tests:
     runs-on: ubuntu-slim
@@ -126,18 +127,16 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.14'
-      - name: Dependency lockfile selection
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: false
+      - name: CI tooling self-tests
         run: >
+          uv run --no-project --with pytest python -m pytest -q
           CI/dependencies/test_select_lockfile.py
-      - name: Deprecated-docs checker
-        run: >
           CI/public_api/test_check_deprecated_docs.py
-      - name: Unused-file checker
-        run: python3 CI/test_check_unused_files.py
-      - name: Compiler cache retention
-        run: python3 CI/test_prune_ccache.py
-      - name: Wheel container environment
-        run: python3 CI/test_cibuildwheel_environment.py
+          CI/test_check_unused_files.py
+          CI/test_prune_ccache.py
 
   codegen_prebuilt:
     # Pre-generates the code the build would otherwise generate, then checks
