@@ -1,0 +1,313 @@
+{
+    "acts-fatras-synthetic-material": {
+        "format-version": 0
+    },
+    "layers": [
+        {
+            "ar": 9.012,
+            "bounds": [
+                0.0,
+                3000.0
+            ],
+            "kind": "passive",
+            "l0": 407.0,
+            "layer": 0,
+            "molarDensityX0": 0.07235,
+            "thickness": 0.8,
+            "x0": 352.8,
+            "z": 4.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "passive",
+            "l0": 465.2,
+            "layer": 0,
+            "molarDensityX0": 7.924e-06,
+            "subsystem": "generic-pixel",
+            "thickness": 1.5,
+            "x0": 95.7,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "passive",
+            "l0": 465.2,
+            "layer": 1,
+            "molarDensityX0": 7.924e-06,
+            "subsystem": "generic-pixel",
+            "thickness": 1.5,
+            "x0": 95.7,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "passive",
+            "l0": 465.2,
+            "layer": 2,
+            "molarDensityX0": 7.924e-06,
+            "subsystem": "generic-pixel",
+            "thickness": 1.5,
+            "x0": 95.7,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "passive",
+            "l0": 465.2,
+            "layer": 3,
+            "molarDensityX0": 7.924e-06,
+            "subsystem": "generic-pixel",
+            "thickness": 1.5,
+            "x0": 95.7,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "passive",
+            "l0": 465.2,
+            "layer": 4,
+            "molarDensityX0": 7.924e-06,
+            "subsystem": "generic-pixel",
+            "thickness": 1.5,
+            "x0": 95.7,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "passive",
+            "l0": 465.2,
+            "layer": 5,
+            "molarDensityX0": 7.924e-06,
+            "subsystem": "generic-pixel",
+            "thickness": 1.5,
+            "x0": 95.7,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "passive",
+            "l0": 465.2,
+            "layer": 6,
+            "molarDensityX0": 7.924e-06,
+            "subsystem": "generic-pixel",
+            "thickness": 1.5,
+            "x0": 95.7,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "passive",
+            "l0": 465.2,
+            "layer": 7,
+            "molarDensityX0": 7.924e-06,
+            "subsystem": "generic-pixel",
+            "thickness": 1.5,
+            "x0": 95.7,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                0.0,
+                493.0
+            ],
+            "kind": "barrel",
+            "l0": 465.2,
+            "layer": 0,
+            "molarDensityX0": 7.924e-06,
+            "subsystem": "generic-pixel",
+            "thickness": 1.557,
+            "x0": 95.7,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                0.0,
+                493.0
+            ],
+            "kind": "barrel",
+            "l0": 465.2,
+            "layer": 1,
+            "molarDensityX0": 7.924e-06,
+            "subsystem": "generic-pixel",
+            "thickness": 1.557,
+            "x0": 95.7,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                0.0,
+                493.0
+            ],
+            "kind": "barrel",
+            "l0": 465.2,
+            "layer": 2,
+            "molarDensityX0": 7.924e-06,
+            "subsystem": "generic-pixel",
+            "thickness": 1.557,
+            "x0": 95.7,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                0.0,
+                493.0
+            ],
+            "kind": "barrel",
+            "l0": 465.2,
+            "layer": 3,
+            "molarDensityX0": 7.924e-06,
+            "subsystem": "generic-pixel",
+            "thickness": 1.557,
+            "x0": 95.7,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "endcap",
+            "l0": 389.1,
+            "layer": 0,
+            "molarDensityX0": 7.924e-06,
+            "placement": "mirrored",
+            "subsystem": "generic-pixel",
+            "thickness": 1.255,
+            "x0": 80.04,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "endcap",
+            "l0": 389.1,
+            "layer": 1,
+            "molarDensityX0": 7.924e-06,
+            "placement": "mirrored",
+            "subsystem": "generic-pixel",
+            "thickness": 1.255,
+            "x0": 80.04,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "endcap",
+            "l0": 389.1,
+            "layer": 2,
+            "molarDensityX0": 7.924e-06,
+            "placement": "mirrored",
+            "subsystem": "generic-pixel",
+            "thickness": 1.255,
+            "x0": 80.04,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "endcap",
+            "l0": 389.1,
+            "layer": 3,
+            "molarDensityX0": 7.924e-06,
+            "placement": "mirrored",
+            "subsystem": "generic-pixel",
+            "thickness": 1.255,
+            "x0": 80.04,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "endcap",
+            "l0": 389.1,
+            "layer": 4,
+            "molarDensityX0": 7.924e-06,
+            "placement": "mirrored",
+            "subsystem": "generic-pixel",
+            "thickness": 1.255,
+            "x0": 80.04,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "endcap",
+            "l0": 389.1,
+            "layer": 5,
+            "molarDensityX0": 7.924e-06,
+            "placement": "mirrored",
+            "subsystem": "generic-pixel",
+            "thickness": 1.255,
+            "x0": 80.04,
+            "z": 14.0
+        },
+        {
+            "ar": 28.03,
+            "bounds": [
+                29.0,
+                177.2
+            ],
+            "kind": "endcap",
+            "l0": 389.1,
+            "layer": 6,
+            "molarDensityX0": 7.924e-06,
+            "placement": "mirrored",
+            "subsystem": "generic-pixel",
+            "thickness": 1.255,
+            "x0": 80.04,
+            "z": 14.0
+        }
+    ]
+}
