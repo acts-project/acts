@@ -181,6 +181,22 @@ auto triplet_seeding_algorithm::operator()(
                         grid_buffer, doublet_counter_buffer, doublet_buffer_mb,
                         doublet_buffer_mt});
 
+  // Set up the linearised circle buffers.
+  vecmem::data::vector_buffer<lin_circle> mid_bot_circles_buffer{
+      globalCounter_host->m_nMidBot, mr().main};
+  copy().setup(mid_bot_circles_buffer)->ignore();
+  vecmem::data::vector_buffer<lin_circle> mid_top_circles_buffer{
+      globalCounter_host->m_nMidTop, mr().main};
+  copy().setup(mid_top_circles_buffer)->ignore();
+
+  // Launch the linearised circle making kernels.
+  make_mid_bot_lincircles_kernel(
+      {globalCounter_host->m_nMidBot, doublet_buffer_mb, doublet_counter_buffer,
+       spacepoints, grid_buffer, mid_bot_circles_buffer});
+  make_mid_top_lincircles_kernel(
+      {globalCounter_host->m_nMidTop, doublet_buffer_mt, doublet_counter_buffer,
+       spacepoints, grid_buffer, mid_top_circles_buffer});
+
   // Set up the triplet counter buffers
   triplet_counter_spM_collection_types::buffer triplet_counter_spM_buffer{
       n_doublets, mr().main};
@@ -196,7 +212,8 @@ auto triplet_seeding_algorithm::operator()(
                          spacepoints, grid_buffer, doublet_counter_buffer,
                          doublet_buffer_mb, doublet_buffer_mt,
                          triplet_counter_spM_buffer,
-                         triplet_counter_midBot_buffer});
+                         triplet_counter_midBot_buffer, mid_bot_circles_buffer,
+                         mid_top_circles_buffer});
   // Launch the triplet count reduction kernel.
   triplet_counts_reduction_kernel({n_doublets, doublet_counter_buffer,
                                    triplet_counter_spM_buffer,
@@ -230,11 +247,11 @@ auto triplet_seeding_algorithm::operator()(
   copy().setup(triplet_buffer)->ignore();
 
   // Launch the triplet finding kernel.
-  find_triplets_kernel({n_midBotTriplets, m_data->m_finder_config,
-                        m_data->m_filter_config, spacepoints, grid_buffer,
-                        doublet_counter_buffer, doublet_buffer_mt,
-                        triplet_counter_spM_buffer,
-                        triplet_counter_midBot_buffer, triplet_buffer});
+  find_triplets_kernel(
+      {n_midBotTriplets, m_data->m_finder_config, m_data->m_filter_config,
+       spacepoints, grid_buffer, doublet_counter_buffer, doublet_buffer_mt,
+       triplet_counter_spM_buffer, triplet_counter_midBot_buffer,
+       mid_bot_circles_buffer, mid_top_circles_buffer, triplet_buffer});
   // Launch the triplet weight updating/filling kernel.
   update_triplet_weights_kernel(
       {globalCounter_host->m_nTriplets, m_data->m_filter_config, spacepoints,
