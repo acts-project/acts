@@ -11,6 +11,7 @@
 #include "traccc/seeding/triplet_finding_helper.hpp"
 
 // VecMem include(s).
+#include <vecmem/containers/device_vector.hpp>
 #include <vecmem/memory/device_atomic_ref.hpp>
 
 namespace traccc::device {
@@ -24,7 +25,9 @@ inline void count_triplets(
     const device_doublet_collection_types::const_view& mid_bot_doublet_view,
     const device_doublet_collection_types::const_view& mid_top_doublet_view,
     triplet_counter_spM_collection_types::view spM_tc_view,
-    triplet_counter_collection_types::view mb_tc_view) {
+    triplet_counter_collection_types::view mb_tc_view,
+    vecmem::data::vector_view<const lin_circle> mid_bot_circle_view,
+    vecmem::data::vector_view<const lin_circle> mid_top_circle_view) {
   // Create device copy of input parameters
   const device_doublet_collection_types::const_device mid_bot_doublet_device(
       mid_bot_doublet_view);
@@ -41,6 +44,10 @@ inline void count_triplets(
   const device_doublet_collection_types::const_device mid_top_doublet_device(
       mid_top_doublet_view);
   const doublet_counter_collection_types::const_device dc_device(dc_view);
+  const vecmem::device_vector<const lin_circle> mid_bot_circles(
+      mid_bot_circle_view);
+  const vecmem::device_vector<const lin_circle> mid_top_circles(
+      mid_top_circle_view);
 
   // Create device copy of output parameterss
   triplet_counter_collection_types::device mb_triplet_counter(mb_tc_view);
@@ -57,23 +64,15 @@ inline void count_triplets(
   const edm::spacepoint_collection::const_device::const_proxy_type spM =
       spacepoints.at(sp_device.bin(spM_loc.bin_idx)[spM_loc.sp_idx]);
   const sp_location spB_loc = mid_bot.sp2;
-  // bottom spacepoint
-  const edm::spacepoint_collection::const_device::const_proxy_type spB =
-      spacepoints.at(sp_device.bin(spB_loc.bin_idx)[spB_loc.sp_idx]);
 
   // Apply the conformal transformation to middle-bot doublet
-  traccc::lin_circle lb = doublet_finding_helper::transform_coordinates<
-      traccc::details::spacepoint_type::bottom>(spM, spB);
+  const traccc::lin_circle lb = mid_bot_circles.at(globalIndex);
 
   // Calculate some physical quantities required for triplet compatibility
   // check
   scalar iSinTheta2 = static_cast<scalar>(1.) + lb.cotTheta() * lb.cotTheta();
   scalar scatteringInRegion2 = config.maxScatteringAngle2 * iSinTheta2;
   scatteringInRegion2 *= config.sigmaScattering * config.sigmaScattering;
-
-  // These two quantities are used as output parameters in
-  // triplet_finding_helper::isCompatible but their values are irrelevant
-  scalar curvature, impact_parameter;
 
   // find the reference (start) index of the mid-top doublet container
   // item vector, where the doublets are recorded
@@ -83,18 +82,16 @@ inline void count_triplets(
   // number of triplets per middle-bot doublet
   unsigned int num_triplets_per_mb = 0;
 
+  const unsigned int num_mt = mt_end_idx - mt_start_idx;
+
   // iterate over mid-top doublets
-  for (unsigned int i = mt_start_idx; i < mt_end_idx; ++i) {
-    const traccc::sp_location spT_loc = mid_top_doublet_device[i].sp2;
-
-    const edm::spacepoint_collection::const_device::const_proxy_type spT =
-        spacepoints.at(sp_device.bin(spT_loc.bin_idx)[spT_loc.sp_idx]);
-
+  for (unsigned int ri = 0; ri < num_mt; ++ri) {
     // Apply the conformal transformation to middle-top doublet
-    traccc::lin_circle lt = doublet_finding_helper::transform_coordinates<
-        traccc::details::spacepoint_type::top>(spM, spT);
+    const lin_circle& lt = mid_top_circles.at(ri + mt_start_idx);
 
-    // Check if mid-bot and mid-top doublets can form a triplet
+    // These two quantities are used as output parameters in
+    // triplet_finding_helper::isCompatible but their values are irrelevant
+    scalar curvature, impact_parameter;
     if (triplet_finding_helper::isCompatible(spM, lb, lt, config, iSinTheta2,
                                              scatteringInRegion2, curvature,
                                              impact_parameter)) {
@@ -110,7 +107,7 @@ inline void count_triplets(
     const unsigned int posTriplets = nTriplets.fetch_add(num_triplets_per_mb);
 
     mb_triplet_counter.push_back(
-        {spB_loc, counter_link, num_triplets_per_mb, posTriplets});
+        {spB_loc, counter_link, num_triplets_per_mb, posTriplets, globalIndex});
   }
 }
 
