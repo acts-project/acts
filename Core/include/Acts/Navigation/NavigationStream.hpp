@@ -46,7 +46,7 @@ class NavigationStream {
   ///
   /// @return true if a next candidate is available
   bool switchToNextCandidate() {
-    if (!m_currentIndex) {
+    if (!m_currentIndex.has_value()) {
       m_currentIndex = 0;
     } else {
       ++(*m_currentIndex);
