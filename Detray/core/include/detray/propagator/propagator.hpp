@@ -11,7 +11,9 @@
 // Project include(s).
 #include "detray/definitions/detail/macros.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
+#include "detray/definitions/navigation.hpp"
 #include "detray/navigation/intersection/intersection.hpp"
+#include "detray/navigation/navigation_sync.hpp"
 #include "detray/propagator/actor_chain.hpp"
 #include "detray/propagator/base_stepper.hpp"
 #include "detray/propagator/concepts.hpp"
@@ -252,13 +254,18 @@ struct propagator {
   /// @param propagation the state of a propagation flow
   /// @param actor_state_refs tuple containing references to the actor
   /// states
+  /// @param sync policy that decides when the local navigations that the
+  /// navigator requested are run (e.g. once enough threads in a warp
+  /// request one)
   ///
   /// @return propagation success.
-  template <typename actor_states_t, bool is_owning>
+  template <typename actor_states_t, bool is_owning,
+            typename sync_policy_t = navigation::no_sync>
     requires(concepts::is_state_of<actor_states_t, actor_chain_type>)
   DETRAY_HOST_DEVICE bool propagate(
       state_base<is_owning> &propagation,
-      actor_states_t actor_state_refs = dtuple<>{}) const {
+      actor_states_t actor_state_refs = dtuple<>{},
+      const sync_policy_t &sync = {}) const {
     auto &navigation = propagation.navigation();
     auto &stepping = propagation.stepping();
     auto &context = propagation.context();
@@ -267,50 +274,116 @@ struct propagator {
 
     DETRAY_VERBOSE_HOST("Starting propagation for track:\n" << track);
 
-    bool is_init = false;
+    // Initialize the navigation in the first navigation update, unless the
+    // propagation is resumed
+    navigation::request pending{navigation::request::e_none};
     if (this->is_paused(propagation)) {
       DETRAY_VERBOSE_HOST("Resuming propagation...");
     } else {
-      // Initialize the navigation
       DETRAY_VERBOSE_HOST("Initialize navigation...");
-      m_navigator.init(track, navigation, m_cfg.navigation, context);
-      propagation.heartbeat(navigation.is_alive());
-
-      is_init = true;
+      pending = navigation::request::e_init;
+      propagation.heartbeat(true);
     }
 
     // Run while there is a heartbeat. In order to help the compiler
     // optimize this, and in order to make the code more GPU-friendly,
     // this code is run as a flat loop, but this loop has a defined
-    // structure. Indeed, the structure is always to run either the
-    // actors or the stepper (in alternating order) followed by the
-    // navigation update.
+    // structure. Indeed, the structure is always to run the navigation
+    // update, followed by either the actors or the stepper (in alternating
+    // order).
+    //
+    // The navigation update runs at most one local navigation per iteration,
+    // and only once the synchronization policy allows it. If the navigator
+    // requests further local navigations, they are run in the following
+    // iterations and the actors and the stepper are skipped in the meantime,
+    // so that all local navigations are run from the same place. The track
+    // then resumes with the half step that it skipped, so that the actors and
+    // the stepper strictly alternate for every track.
     //
     // A = actors
     // N = navigation update
     // S = propagation step
     //
-    // ANSNANSNANSNANSNANSNANS...
+    // NANSNANSNANSNANSNANSNANS...
     scalar_type path_length{0.f};
     unsigned int stall_counter{0u};
-    for (unsigned int i = 0; i % 2 == 0 || propagation.is_alive(); ++i) {
+    bool is_init = false;
+    // The half step that is due for this track: 0 = actors, 1 = stepper
+    unsigned int phase{0u};
+    // Number of iterations the track has waited for its local navigation
+    unsigned int n_waited{0u};
+    for (unsigned int i = 0;; ++i) {
+      // Find next candidate (not if the navigation has ended)
+      if (pending == navigation::request::e_none && navigation.is_alive()) {
+        DETRAY_VERBOSE_HOST("Calling navigator...");
+        const navigation::update_result res = m_navigator.update_cache(
+            track, navigation, m_cfg.navigation, context);
+        pending = res.next;
+        is_init = is_init || res.is_init;
+      }
+
+      // Run one of the local navigations that the navigator requested, once
+      // the policy allows it. The policy is evaluated by every track in
+      // every iteration, since it may synchronize the threads of a warp
+      const bool is_pending{pending != navigation::request::e_none};
+      const bool run_pending{sync(is_pending, n_waited)};
+      if (is_pending && run_pending) {
+        DETRAY_VERBOSE_HOST("Calling navigator (local navigation)...");
+        m_navigator.perform(pending, track, navigation, m_cfg.navigation,
+                            context);
+        is_init = true;
+        pending = m_navigator.next_request(navigation, pending);
+        n_waited = 0u;
+      } else if (is_pending) {
+        ++n_waited;
+      }
+
+      propagation.heartbeat(propagation.heartbeat() && navigation.is_alive());
+
+      // Run the half step only if no local navigation is pending and it is
+      // the half step that is due for this track
+      const bool is_due{pending == navigation::request::e_none &&
+                        phase == i % 2};
+
       if (i % 2 == 0) {
+        if (!is_due) {
+          continue;
+        }
+
         DETRAY_VERBOSE_HOST_DEVICE("Propagation step: %d", i / 2);
         DETRAY_VERBOSE_HOST_DEVICE("-> Path length: %f mm",
                                    stepping.path_length());
 
         // Run all registered actors/aborters
         run_actors(actor_state_refs, propagation);
+        phase = 1u;
 
         // Don't run another navigation update, if already exited
         if (!propagation.is_alive()) {
-          continue;
+          break;
         }
 
         path_length = stepping.path_length();
 
         assert(!track.is_invalid());
       } else {
+        if (is_due && i > 1 && propagation.debug()) {
+          DETRAY_VERBOSE_HOST(print(propagation));
+        }
+
+        // Don't take another step, if already exited. If the propagation
+        // ended while the actors were due, they are still run once
+        if (!propagation.is_alive()) {
+          if (phase == 0u) {
+            continue;
+          }
+          break;
+        }
+
+        if (!is_due) {
+          continue;
+        }
+
         assert(!track.is_invalid());
 
         // Set access to the volume material for the stepper
@@ -348,9 +421,8 @@ struct propagator {
         DETRAY_VERBOSE_HOST("-> Evaluate stepper navigation policy:");
         typename stepper_t::policy_type{}(stepping.policy_state(), propagation);
 
-        if (i > 0) {
-          is_init = false;
-        }
+        is_init = false;
+        phase = 0u;
 
         // Check if the propagation makes progress
         if (math::fabs(stepping.path_length()) <=
@@ -376,18 +448,6 @@ struct propagator {
         } else {
           stall_counter = 0u;
         }
-      }
-
-      // Find next candidate
-      DETRAY_VERBOSE_HOST("Calling navigator...");
-      const bool nav_is_init =
-          m_navigator.update(track, navigation, m_cfg.navigation, context);
-      is_init = is_init || nav_is_init;
-
-      propagation.heartbeat(propagation.heartbeat() && navigation.is_alive());
-
-      if (i % 2 == 0 && i > 0 && propagation.debug()) {
-        DETRAY_VERBOSE_HOST(print(propagation));
       }
     }
 
