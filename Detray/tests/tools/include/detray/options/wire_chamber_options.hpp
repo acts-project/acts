@@ -10,7 +10,8 @@
 
 // Project include(s)
 #include "detray/definitions/algebra.hpp"
-#include "detray/geometry/shapes/line.hpp"
+#include "detray/geometry/shapes/line_circular.hpp"
+#include "detray/geometry/shapes/line_square.hpp"
 
 // Detray test include(s)
 #include "detray/options/options_handling.hpp"

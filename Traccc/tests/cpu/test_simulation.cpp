@@ -18,7 +18,7 @@
 
 // Detray include(s).
 #include <detray/geometry/mask.hpp>
-#include <detray/geometry/shapes/line.hpp>
+#include <detray/geometry/shapes/line_circular.hpp>
 #include <detray/geometry/shapes/rectangle2D.hpp>
 #include <detray/geometry/tracking_surface.hpp>
 #include <detray/test/utils/statistics.hpp>
@@ -37,7 +37,7 @@ using namespace traccc;
 constexpr scalar tol{1e-7f};
 
 TEST(traccc_simulation, simulation) {
-  using line_t = detray::mask<detray::line<false>, traccc::default_algebra>;
+  using line_t = detray::mask<detray::line_circular, traccc::default_algebra>;
   using rectangle_t =
       detray::mask<detray::rectangle2D, traccc::default_algebra>;
 

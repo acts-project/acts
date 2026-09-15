@@ -9,7 +9,8 @@
 // Project include(s)
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/units.hpp"
-#include "detray/geometry/shapes/line.hpp"
+#include "detray/geometry/shapes/line_circular.hpp"
+#include "detray/geometry/shapes/line_square.hpp"
 
 // Detray IO include(s)
 #include "detray/io/frontend/detector_writer.hpp"

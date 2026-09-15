@@ -13,7 +13,7 @@
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/geometry.hpp"
 #include "detray/geometry/mask.hpp"
-#include "detray/geometry/shapes/line.hpp"
+#include "detray/geometry/shapes/line_circular.hpp"
 #include "detray/geometry/tracking_volume.hpp"
 #include "detray/navigation/caching_navigator.hpp"
 #include "detray/navigation/intersection/ray_intersector.hpp"
