@@ -22,6 +22,7 @@
 #include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "ActsPlugins/GeoModel/GeoModelDetectorElementITk.hpp"
 #include "ActsPlugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+#include "ActsPlugins/GeoModel/GeoModelJsonMaterialManager.hpp"
 #include "ActsPlugins/GeoModel/GeoModelReader.hpp"
 #include "ActsPlugins/GeoModel/GeoModelTree.hpp"
 #include "ActsPlugins/GeoModel/IGeoShapeConverter.hpp"
@@ -161,4 +162,15 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGeoModel, gm) {
         .def_readwrite("queries",
                        &GeoModelDetectorObjectFactory::Options::queries);
   }
+#ifdef ACTS_BUILD_PLUGIN_JSON
+  {
+    gm.def(
+        "loadGeoModelMaterialDBfromJSON",
+        [](const std::string& jsonPath) {
+          return GeoModelJsonMaterialManager::getManager()->loadMaterialMap(
+              jsonPath);
+        },
+        py::arg("jsonPath"));
+  }
+#endif
 }
