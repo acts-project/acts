@@ -220,9 +220,13 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   /// Move constructor
   VectorTrackContainer(VectorTrackContainer&&) = default;
 
-  /// Construct from const container
+  /// Create a mutable container by deep-copying a const container. This is an
+  /// expensive operation, spelled out explicitly here so that it cannot
+  /// happen by accident, e.g. via an implicit conversion.
   /// @param other Const container to copy from
-  explicit VectorTrackContainer(const ConstVectorTrackContainer& other);
+  /// @return Newly constructed mutable container
+  static VectorTrackContainer getMutableCopy(
+      const ConstVectorTrackContainer& other);
 
  public:
   // BEGIN INTERFACE
@@ -303,6 +307,13 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   /// Get the number of tracks in the container
   /// @return Number of tracks
   std::size_t size() const;
+
+ private:
+  /// Deep-copy construct from a const container. Private so that this
+  /// expensive operation cannot happen implicitly; use @ref getMutableCopy
+  /// instead.
+  /// @param other Const container to copy from
+  explicit VectorTrackContainer(const ConstVectorTrackContainer& other);
 };
 
 static_assert(TrackContainerBackend<VectorTrackContainer>,
@@ -375,6 +386,11 @@ inline VectorTrackContainer::VectorTrackContainer(
     const ConstVectorTrackContainer& other)
     : VectorTrackContainerBase{other} {
   assert(checkConsistency());
+}
+
+inline VectorTrackContainer VectorTrackContainer::getMutableCopy(
+    const ConstVectorTrackContainer& other) {
+  return VectorTrackContainer{other};
 }
 
 }  // namespace Acts
