@@ -204,7 +204,7 @@ void NavigationStream::reset(const bool keepBoundLess) {
   if (!keepBoundLess) {
     m_candidates.clear();
   } else {
-    if (m_currentIndex) {
+    if (m_currentIndex.has_value()) {
       m_candidates.erase(m_candidates.begin(),
                          m_candidates.begin() +
                              std::min(*m_currentIndex, m_candidates.size()));
