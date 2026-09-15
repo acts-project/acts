@@ -110,9 +110,6 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
   state.resetForRenavigation();
 
   if (m_geometryVersion == GeometryVersion::Gen3) {
-    // Empirical pre-allocation of candidates for the next navigation
-    // iteration.
-    // @TODO: Make this user configurable through the configuration
     state.stream.reserve(m_cfg.candidatePreReserve);
 
     state.freeCandidates.clear();
