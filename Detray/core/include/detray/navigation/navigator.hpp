@@ -73,11 +73,6 @@ class navigator : public navigator_base<
         const track_t &, state_t &, const navigation::config &, const ctx_t &,
         const bool);
 
-    template <typename track_t, typename state_t, typename ctx_t>
-    friend constexpr void navigation::volume_switch(const track_t &, state_t &,
-                                                    const navigation::config &,
-                                                    const ctx_t &);
-
     using base_type = navigation::base_state<state, detector_type, 2u,
                                              inspector_type, intersection_type>;
 
@@ -199,13 +194,9 @@ class navigator : public navigator_base<
       }
     }
     // If [next] target is not reachable or actor flagged 'no trust',
-    // re-initialize the volume.
+    // the re-initialization of the volume is requested by the navigator base
     assert(navigation.trust_level() == navigation::trust_level::e_no_trust);
-    DETRAY_VERBOSE_HOST_DEVICE("Called 'update()' - no trust");
 
-    constexpr bool resolve_overstepping{true};
-    navigation::local_navigation(track, navigation, cfg, ctx,
-                                 resolve_overstepping);
     return is_init;
   }
 };
