@@ -287,11 +287,9 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     bUtility = &(psMaterial->binning());
     // Check in the number of bin is different from 1
     auto& binningData = bUtility->binningData();
-    for (std::size_t ibin = 0; ibin < binningData.size(); ++ibin) {
-      if (binningData[ibin].bins() > 1) {
-        jMaterial[Acts::jsonKey().mapkey] = true;
-        break;
-      }
+    if (std::ranges::any_of(binningData,
+                            [](const auto& bd) { return bd.bins() > 1; })) {
+      jMaterial[Acts::jsonKey().mapkey] = true;
     }
     nlohmann::json jBin(*bUtility);
     jMaterial[Acts::jsonKey().binkey] = jBin;
@@ -428,11 +426,9 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
     bUtility = &(pvMaterial->binUtility());
     // Check in the number of bin is different from 1
     auto& binningData = bUtility->binningData();
-    for (std::size_t ibin = 0; ibin < binningData.size(); ++ibin) {
-      if (binningData[ibin].bins() > 1) {
-        jMaterial[Acts::jsonKey().mapkey] = true;
-        break;
-      }
+    if (std::ranges::any_of(binningData,
+                            [](const auto& bd) { return bd.bins() > 1; })) {
+      jMaterial[Acts::jsonKey().mapkey] = true;
     }
     // Write the bin utility
     nlohmann::json jBin(*bUtility);
@@ -467,9 +463,8 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
     // convert the data
     nlohmann::json mmat = nlohmann::json::array();
     Acts::MaterialGrid2D grid = bvMaterial2D->getMapper().getGrid();
-    for (std::size_t bin = 0; bin < grid.size(); bin++) {
-      nlohmann::json jmat(Material(grid.at(bin)));
-      mmat.push_back(jmat);
+    for (const auto& binValue : grid) {
+      mmat.push_back(nlohmann::json(Material(binValue)));
     }
     jMaterial[Acts::jsonKey().datakey] = std::move(mmat);
     // Write the bin utility
@@ -490,9 +485,8 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
     // convert the data
     nlohmann::json mmat = nlohmann::json::array();
     Acts::MaterialGrid3D grid = bvMaterial3D->getMapper().getGrid();
-    for (std::size_t bin = 0; bin < grid.size(); bin++) {
-      nlohmann::json jmat(Material(grid.at(bin)));
-      mmat.push_back(jmat);
+    for (const auto& binValue : grid) {
+      mmat.push_back(nlohmann::json(Material(binValue)));
     }
     jMaterial[Acts::jsonKey().datakey] = std::move(mmat);
     // Write the bin utility

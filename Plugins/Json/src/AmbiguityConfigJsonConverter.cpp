@@ -11,6 +11,8 @@
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "ActsPlugins/Json/ActsJson.hpp"
 
+#include <algorithm>
+
 void initializeEtaVector(std::vector<std::size_t>& target,
                          const std::vector<std::size_t>& source,
                          std::size_t etaBinSize) {
@@ -21,7 +23,7 @@ void initializeEtaVector(std::vector<std::size_t>& target,
     // Resize target to the required size
     target.resize(etaBinSize - 1);
     // Fill with the single value from source
-    std::fill(target.begin(), target.end(), source[0]);
+    std::ranges::fill(target, source[0]);
   } else {
     throw std::invalid_argument("Invalid cuts size. Expected 1 or " +
                                 std::to_string(etaBinSize - 1) + ", got " +
@@ -57,7 +59,7 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
     // Validate eta bins
     if (!etaBins.empty()) {
       // Verify monotonically increasing eta bins
-      if (!std::is_sorted(etaBins.begin(), etaBins.end())) {
+      if (!std::ranges::is_sorted(etaBins)) {
         throw std::invalid_argument(
             "Eta bins must be monotonically increasing");
       }

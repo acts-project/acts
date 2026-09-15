@@ -131,10 +131,8 @@ AdaptiveGridTrackDensity::AdaptiveGridTrackDensity(const Config& cfg)
 AdaptiveGridTrackDensity::DensityMap::const_iterator
 AdaptiveGridTrackDensity::highestDensityEntry(
     const DensityMap& densityMap) const {
-  auto maxEntry = std::max_element(
-      std::begin(densityMap), std::end(densityMap),
-      [](const auto& a, const auto& b) { return a.second < b.second; });
-  return maxEntry;
+  return std::ranges::max_element(
+      densityMap, {}, [](const auto& entry) { return entry.second; });
 }
 
 Result<AdaptiveGridTrackDensity::ZTPosition>

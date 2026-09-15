@@ -97,16 +97,17 @@ const LayerVector DD4hepLayerBuilder::endcapLayers(
         ACTS_VERBOSE("Extent from surfaces: " << ss.str());
 
         std::vector<double> rvalues;
-        std::transform(layerSurfaces.begin(), layerSurfaces.end(),
-                       std::back_inserter(rvalues), [&](const auto& surface) {
-                         return VectorHelpers::perp(surface->center(gctx));
-                       });
+        std::ranges::transform(
+            layerSurfaces, std::back_inserter(rvalues),
+            [&](const auto& surface) {
+              return VectorHelpers::perp(surface->center(gctx));
+            });
         std::ranges::sort(rvalues);
+        const auto duplicates = std::ranges::unique(rvalues);
+        rvalues.erase(duplicates.begin(), duplicates.end());
         std::vector<std::string> locs;
-        std::transform(rvalues.begin(),
-                       std::unique(rvalues.begin(), rvalues.end()),
-                       std::back_inserter(locs),
-                       [](const auto& v) { return std::to_string(v); });
+        std::ranges::transform(rvalues, std::back_inserter(locs),
+                               [](const auto& v) { return std::to_string(v); });
         ACTS_VERBOSE(
             "-> unique r locations: " << boost::algorithm::join(locs, ", "));
       }
@@ -267,16 +268,15 @@ const LayerVector DD4hepLayerBuilder::centralLayers(
         pl.toStream(ss);
         ACTS_VERBOSE("Extent from surfaces: " << ss.str());
         std::vector<double> zvalues;
-        std::transform(layerSurfaces.begin(), layerSurfaces.end(),
-                       std::back_inserter(zvalues), [&](const auto& surface) {
-                         return surface->center(gctx)[eZ];
-                       });
+        std::ranges::transform(
+            layerSurfaces, std::back_inserter(zvalues),
+            [&](const auto& surface) { return surface->center(gctx)[eZ]; });
         std::ranges::sort(zvalues);
+        const auto duplicates = std::ranges::unique(zvalues);
+        zvalues.erase(duplicates.begin(), duplicates.end());
         std::vector<std::string> locs;
-        std::transform(zvalues.begin(),
-                       std::unique(zvalues.begin(), zvalues.end()),
-                       std::back_inserter(locs),
-                       [](const auto& v) { return std::to_string(v); });
+        std::ranges::transform(zvalues, std::back_inserter(locs),
+                               [](const auto& v) { return std::to_string(v); });
         ACTS_VERBOSE(
             "-> unique z locations: " << boost::algorithm::join(locs, ", "));
       }

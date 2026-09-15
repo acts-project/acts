@@ -120,8 +120,7 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
 
   /// But but but... What about the surfaces with multiple intersections?
   auto nonUniqueRange = std::ranges::unique(
-      m_candidates.begin(), m_candidates.end(),
-      [](const NavigationTarget& a, const NavigationTarget& b) {
+      m_candidates, [](const NavigationTarget& a, const NavigationTarget& b) {
         return &a.surface() == &b.surface();
       });
   m_candidates.erase(nonUniqueRange.begin(), nonUniqueRange.end());

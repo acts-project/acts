@@ -12,6 +12,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
+#include <algorithm>
 #include <numeric>
 
 namespace Acts {
@@ -195,9 +196,9 @@ Result<double> HoughVertexFinder::findHoughPeak(
     const std::vector<double>& vtxZPositions) const {
   std::uint32_t numZBins = houghZProjection.size();
 
-  auto maxZElement =
-      std::max_element(houghZProjection.begin(), houghZProjection.end());
-  std::uint32_t maxZBin = std::distance(houghZProjection.begin(), maxZElement);
+  auto maxZElement = std::ranges::max_element(houghZProjection);
+  std::uint32_t maxZBin =
+      std::ranges::distance(houghZProjection.begin(), maxZElement);
 
   double avg =
       std::accumulate(houghZProjection.begin(), houghZProjection.end(), 0.) /

@@ -164,7 +164,7 @@ std::vector<Vector2> AnnulusBounds::vertices(
         detail::VerticesHelper::segmentVertices<Vector2, Transform2>(
             {get(eMinR), get(eMinR)}, phiMinInner, phiMaxInner, {},
             quarterSegments);
-    std::reverse(rvertices.begin(), rvertices.end());
+    std::ranges::reverse(rvertices);
 
     // Outer bow from phi_min -> phi_max
     auto overtices =

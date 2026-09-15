@@ -21,6 +21,7 @@
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <algorithm>
+#include <map>
 
 namespace Acts {
 
@@ -76,14 +77,8 @@ class AdaptiveMultiVertexFitter {
     /// Removes a vertex from trackToVerticesMultiMap
     /// @param vtx Vertex to remove from the multimap along with its track associations
     void removeVertexFromMultiMap(const Vertex& vtx) {
-      for (auto iter = trackToVerticesMultiMap.begin();
-           iter != trackToVerticesMultiMap.end();) {
-        if (iter->second == &vtx) {
-          iter = trackToVerticesMultiMap.erase(iter);
-        } else {
-          ++iter;
-        }
-      }
+      std::erase_if(trackToVerticesMultiMap,
+                    [&vtx](const auto& entry) { return entry.second == &vtx; });
     }
 
     /// Remove a vertex from the vertex collection

@@ -274,19 +274,18 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
   std::set<int> seenSurfaceLabels;
   // a measurement with a residual of identical zero is typically a
   // correlation constraint encoded as pseudo-measurement
-  targetState.measurementDim =
-      std::count_if(measurements.begin(), measurements.end(),
-                    [](const Mille::MilleMeasurement& measurement) {
-                      return measurement.measurement != 0;
-                    });
+  targetState.measurementDim = std::ranges::count_if(
+      measurements, [](const Mille::MilleMeasurement& measurement) {
+        return measurement.measurement != 0;
+      });
 
   // discover labels in use
   for (const Mille::MilleMeasurement& measurement : measurements) {
     if (measurement.localLabels.empty()) {
       continue;
     }
-    auto [minLabel, maxLabel] = std::minmax_element(
-        measurement.localLabels.begin(), measurement.localLabels.end());
+    const auto [minLabel, maxLabel] =
+        std::ranges::minmax_element(measurement.localLabels);
     firstLocal = std::min(firstLocal, *minLabel);
     lastLocal = std::max(lastLocal, *maxLabel);
     seenGlobalLabels.insert(measurement.globalLabels.begin(),
