@@ -309,6 +309,17 @@ class DoubletSeedFinder {
     /// Enable cut on the compatibility between interaction point and doublet,
     /// this is an useful approximation to speed up the seeding
     bool interactionPointCut = false;
+    /// Enable the cut on the time compatibility of the two space points in a
+    /// doublet. The space point container has to provide the
+    /// `SpacePointColumns::Time` and `SpacePointColumns::VarianceT` columns.
+    /// When disabled, no time related code is generated at all.
+    ///
+    /// Declared here, and `timeCutNSigma` next to `helixCutTolerance`, so that
+    /// both fit into existing padding and the layout of this struct is
+    /// unchanged. Keep them in place: moving them grows the struct and shifts
+    /// the members after it, which changes the generated code of the seeding
+    /// even when time is not used.
+    bool useTime = false;
 
     /// Limiting location of collision region in z-axis used to check if doublet
     /// origin is within reasonable bounds
@@ -329,6 +340,10 @@ class DoubletSeedFinder {
     /// Parameter which can loosen the tolerance of the track seed to form a
     /// helix. This is useful for e.g. misaligned seeding.
     float helixCutTolerance = 1;
+    /// Maximum allowed difference of the time of flight corrected times of the
+    /// two space points, expressed in units of their combined time resolution.
+    /// Only used when `useTime` is enabled. See the note there on placement.
+    float timeCutNSigma = 5;
 
     /// Type alias for delegate to apply experiment specific cuts during doublet
     /// finding

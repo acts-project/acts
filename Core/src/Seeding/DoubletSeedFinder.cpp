@@ -21,7 +21,7 @@ namespace Acts {
 namespace {
 
 template <bool isBottomCandidate, bool interactionPointCut, bool sortedByR,
-          bool experimentCuts>
+          bool experimentCuts, bool useTime>
 class Impl final : public DoubletSeedFinder {
  public:
   explicit Impl(const DerivedConfig& config) : m_cfg(config) {}
@@ -52,6 +52,15 @@ class Impl final : public DoubletSeedFinder {
     const float rM = middleSp.zr()[1];
     const float varianceZM = middleSp.varianceZ();
     const float varianceRM = middleSp.varianceR();
+
+    // time of flight corrected time of the middle space point and its
+    // variance. only filled when the time cut is enabled
+    [[maybe_unused]] float t0M = 0;
+    [[maybe_unused]] float varianceTM = 0;
+    if constexpr (useTime) {
+      t0M = middleSp.time() - fastHypot(rM, zM);
+      varianceTM = middleSp.varianceT();
+    }
 
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
@@ -149,6 +158,19 @@ class Impl final : public DoubletSeedFinder {
                             m_cfg.collisionRegionMin * deltaR,
                             m_cfg.collisionRegionMax * deltaR)) {
         continue;
+      }
+
+      // check the time compatibility of the two space points. the times are
+      // corrected for the time of flight from the origin, so that they are
+      // directly comparable. placed after the cheap range checks above to
+      // avoid the square roots for candidates that are rejected anyway
+      if constexpr (useTime) {
+        const ConstSpacePointProxy otherSp = container[indexO];
+        const float t0O = otherSp.time() - fastHypot(rO, zO);
+        const float sigmaT0 = std::sqrt(varianceTM + otherSp.varianceT());
+        if (std::abs(t0O - t0M) > m_cfg.timeCutNSigma * sigmaT0) {
+          continue;
+        }
       }
 
       // if interactionPointCut is false we apply z cuts before coordinate
@@ -303,11 +325,12 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
   using InteractionPointCutOptions = BooleanOptions;
   using SortedByROptions = BooleanOptions;
   using ExperimentCutsOptions = BooleanOptions;
+  using UseTimeOptions = BooleanOptions;
 
   using DoubletOptions =
       boost::mp11::mp_product<boost::mp11::mp_list, IsBottomCandidateOptions,
                               InteractionPointCutOptions, SortedByROptions,
-                              ExperimentCutsOptions>;
+                              ExperimentCutsOptions, UseTimeOptions>;
 
   std::unique_ptr<DoubletSeedFinder> result;
   boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
@@ -317,6 +340,7 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     using InteractionPointCut = boost::mp11::mp_at_c<OptionType, 1>;
     using SortedByR = boost::mp11::mp_at_c<OptionType, 2>;
     using ExperimentCuts = boost::mp11::mp_at_c<OptionType, 3>;
+    using UseTime = boost::mp11::mp_at_c<OptionType, 4>;
 
     const bool configIsBottomCandidate =
         config.candidateDirection == Direction::Backward();
@@ -324,7 +348,8 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     if (configIsBottomCandidate != IsBottomCandidate::value ||
         config.interactionPointCut != InteractionPointCut::value ||
         config.spacePointsSortedByRadius != SortedByR::value ||
-        config.experimentCuts.connected() != ExperimentCuts::value) {
+        config.experimentCuts.connected() != ExperimentCuts::value ||
+        config.useTime != UseTime::value) {
       return;  // skip if the configuration does not match
     }
 
@@ -338,7 +363,7 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     // create the implementation for the given configuration
     result = std::make_unique<
         Impl<IsBottomCandidate::value, InteractionPointCut::value,
-             SortedByR::value, ExperimentCuts::value>>(config);
+             SortedByR::value, ExperimentCuts::value, UseTime::value>>(config);
   });
   if (result == nullptr) {
     throw std::runtime_error(
