@@ -408,12 +408,13 @@ class ElementLayerAssembler {
                                              std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
-      m_onLayer = [customizer = std::move(customizer)](
-                      const std::optional<Element>& layerElement,
-                      std::shared_ptr<LayerBlueprintNode> layer) mutable {
-        customizer(layerElement, *layer);
-        return layer;
-      };
+      m_onLayer =
+          [customizer = std::move(customizer)](
+              const std::optional<Element>& layerElement,
+              const std::shared_ptr<LayerBlueprintNode>& layer) mutable {
+            customizer(layerElement, *layer);
+            return layer;
+          };
     }
     return std::move(*this);
   }
@@ -602,12 +603,13 @@ class SensorLayerAssembler {
                                              std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
-      m_onLayer = [customizer = std::move(customizer)](
-                      const std::optional<Element>& elem,
-                      std::shared_ptr<LayerBlueprintNode> layer) mutable {
-        customizer(elem, *layer);
-        return layer;
-      };
+      m_onLayer =
+          [customizer = std::move(customizer)](
+              const std::optional<Element>& elem,
+              const std::shared_ptr<LayerBlueprintNode>& layer) mutable {
+            customizer(elem, *layer);
+            return layer;
+          };
     }
     return std::move(*this);
   }
@@ -751,12 +753,13 @@ class SensorLayer {
                                              std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
-      m_onLayer = [customizer = std::move(customizer)](
-                      const std::optional<Element>& elem,
-                      std::shared_ptr<LayerBlueprintNode> layer) mutable {
-        customizer(elem, *layer);
-        return layer;
-      };
+      m_onLayer =
+          [customizer = std::move(customizer)](
+              const std::optional<Element>& elem,
+              const std::shared_ptr<LayerBlueprintNode>& layer) mutable {
+            customizer(elem, *layer);
+            return layer;
+          };
     }
     return std::move(*this);
   }
@@ -876,12 +879,13 @@ class BarrelEndcapAssembler {
                                              std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
-      m_onLayer = [customizer = std::move(customizer)](
-                      const std::optional<Element>& elem,
-                      std::shared_ptr<LayerBlueprintNode> layer) mutable {
-        customizer(elem, *layer);
-        return layer;
-      };
+      m_onLayer =
+          [customizer = std::move(customizer)](
+              const std::optional<Element>& elem,
+              const std::shared_ptr<LayerBlueprintNode>& layer) mutable {
+            customizer(elem, *layer);
+            return layer;
+          };
     }
     return std::move(*this);
   }
@@ -908,7 +912,7 @@ class BarrelEndcapAssembler {
       m_onContainer =
           [customizer = std::move(customizer)](
               const Element& elem,
-              std::shared_ptr<ContainerBlueprintNode> node) mutable {
+              const std::shared_ptr<ContainerBlueprintNode>& node) mutable {
             customizer(elem, *node);
             return node;
           };
@@ -955,7 +959,7 @@ class BarrelEndcapAssembler {
  private:
   typename ElementLayerAssembler::LayerCustomizer m_onLayer;
   ContainerCustomizer m_onContainer =
-      [](const Element&, std::shared_ptr<ContainerBlueprintNode> node) {
+      [](const Element&, const std::shared_ptr<ContainerBlueprintNode>& node) {
         return node;
       };
 

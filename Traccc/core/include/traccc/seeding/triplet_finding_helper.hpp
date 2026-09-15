@@ -67,7 +67,7 @@ bool TRACCC_HOST_DEVICE triplet_finding_helper::isCompatible(
     dCotThetaMinusError2 = deltaCotTheta2 + error2 -
                            static_cast<scalar>(2.) * deltaCotTheta * error;
     // avoid taking root of scatteringInRegion
-    // if left side of ">" is positive, both sides of unequality can be
+    // if left side of ">" is positive, both sides of inequality can be
     // squared
     // (scattering is always positive)
     if (dCotThetaMinusError2 > scatteringInRegion2) {

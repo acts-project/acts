@@ -41,7 +41,7 @@ struct ccl_kernel {
       vecmem::data::vector_view<unsigned char> adjc_backup_view,
       vecmem::data::vector_view<device::details::fallback_index_t>
           adjv_backup_view,
-      uint32_t* backup_mutex_ptr,
+      std::uint32_t* backup_mutex_ptr,
       vecmem::data::vector_view<unsigned int> disjoint_set_view,
       vecmem::data::vector_view<unsigned int> cluster_size_view,
       edm::measurement_collection::view measurements_view) const {
@@ -60,7 +60,7 @@ struct ccl_kernel {
     vecmem::data::vector_view<device::details::index_t> gf_view{
         cfg.max_partition_size(), shared_v + cfg.max_partition_size()};
 
-    vecmem::device_atomic_ref<uint32_t> backup_mutex(*backup_mutex_ptr);
+    vecmem::device_atomic_ref<std::uint32_t> backup_mutex(*backup_mutex_ptr);
 
     alpaka::barrier<TAcc> barry_r(&acc);
 

@@ -11,7 +11,7 @@
 #include <string>
 
 namespace traccc {
-enum class kalman_fitter_status : uint16_t {
+enum class kalman_fitter_status : std::uint16_t {
   SUCCESS = 0u,
   ERROR_QOP_ZERO = 1u,
   ERROR_THETA_POLE = 2u,

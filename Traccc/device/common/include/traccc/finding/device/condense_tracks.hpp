@@ -91,7 +91,7 @@ struct condense_tracks_payload {
 /// optional predicted/filtered parameters, and emit tips on the last step.
 ///
 /// @param[in] thread_id The index of the current thread
-/// @param[inout] payload The function call payload
+/// @param[in,out] payload The function call payload
 ///
 TRACCC_HOST_DEVICE inline void condense_tracks(
     global_index_t thread_id, const condense_tracks_payload& payload) {
