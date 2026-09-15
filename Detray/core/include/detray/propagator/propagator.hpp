@@ -13,6 +13,7 @@
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/navigation.hpp"
 #include "detray/navigation/intersection/intersection.hpp"
+#include "detray/navigation/navigation_sync.hpp"
 #include "detray/propagator/actor_chain.hpp"
 #include "detray/propagator/base_stepper.hpp"
 #include "detray/propagator/concepts.hpp"
@@ -253,13 +254,18 @@ struct propagator {
   /// @param propagation the state of a propagation flow
   /// @param actor_state_refs tuple containing references to the actor
   /// states
+  /// @param sync policy that decides when the local navigations that the
+  /// navigator requested are run (e.g. once enough threads in a warp
+  /// request one)
   ///
   /// @return propagation success.
-  template <typename actor_states_t, bool is_owning>
+  template <typename actor_states_t, bool is_owning,
+            typename sync_policy_t = navigation::no_sync>
     requires(concepts::is_state_of<actor_states_t, actor_chain_type>)
   DETRAY_HOST_DEVICE bool propagate(
       state_base<is_owning> &propagation,
-      actor_states_t actor_state_refs = dtuple<>{}) const {
+      actor_states_t actor_state_refs = dtuple<>{},
+      const sync_policy_t &sync = {}) const {
     auto &navigation = propagation.navigation();
     auto &stepping = propagation.stepping();
     auto &context = propagation.context();
@@ -286,12 +292,13 @@ struct propagator {
     // update, followed by either the actors or the stepper (in alternating
     // order).
     //
-    // The navigation update runs at most one local navigation per iteration.
-    // If the navigator requests further local navigations, they are run in
-    // the following iterations and the actors and the stepper are skipped in
-    // the meantime, so that all local navigations are run from the same
-    // place. The track then resumes with the half step that it skipped, so
-    // that the actors and the stepper strictly alternate for every track.
+    // The navigation update runs at most one local navigation per iteration,
+    // and only once the synchronization policy allows it. If the navigator
+    // requests further local navigations, they are run in the following
+    // iterations and the actors and the stepper are skipped in the meantime,
+    // so that all local navigations are run from the same place. The track
+    // then resumes with the half step that it skipped, so that the actors and
+    // the stepper strictly alternate for every track.
     //
     // A = actors
     // N = navigation update
@@ -303,6 +310,8 @@ struct propagator {
     bool is_init = false;
     // The half step that is due for this track: 0 = actors, 1 = stepper
     unsigned int phase{0u};
+    // Number of iterations the track has waited for its local navigation
+    unsigned int n_waited{0u};
     for (unsigned int i = 0;; ++i) {
       // Find next candidate (not if the navigation has ended)
       if (pending == navigation::request::e_none && navigation.is_alive()) {
@@ -313,13 +322,20 @@ struct propagator {
         is_init = is_init || res.is_init;
       }
 
-      // Run one of the local navigations that the navigator requested
-      if (pending != navigation::request::e_none) {
+      // Run one of the local navigations that the navigator requested, once
+      // the policy allows it. The policy is evaluated by every track in
+      // every iteration, since it may synchronize the threads of a warp
+      const bool is_pending{pending != navigation::request::e_none};
+      const bool run_pending{sync(is_pending, n_waited)};
+      if (is_pending && run_pending) {
         DETRAY_VERBOSE_HOST("Calling navigator (local navigation)...");
         m_navigator.perform(pending, track, navigation, m_cfg.navigation,
                             context);
         is_init = true;
         pending = m_navigator.next_request(navigation, pending);
+        n_waited = 0u;
+      } else if (is_pending) {
+        ++n_waited;
       }
 
       propagation.heartbeat(propagation.heartbeat() && navigation.is_alive());
