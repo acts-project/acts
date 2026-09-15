@@ -132,6 +132,12 @@ jobs:
       - name: Deprecated-docs checker
         run: >
           CI/public_api/test_check_deprecated_docs.py
+      - name: Unused-file checker
+        run: python3 CI/test_check_unused_files.py
+      - name: Compiler cache retention
+        run: python3 CI/test_prune_ccache.py
+      - name: Wheel container environment
+        run: python3 CI/test_cibuildwheel_environment.py
 
   codegen_prebuilt:
     # Pre-generates the code the build would otherwise generate, then checks
