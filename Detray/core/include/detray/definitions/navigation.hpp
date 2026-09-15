@@ -39,6 +39,24 @@ enum class trust_level : std::uint_least8_t {
   e_full = 4u       ///< don't update anything
 };
 
+/// Local navigation that a navigator requests from its caller in order to
+/// complete an update. The caller decides when to run it.
+enum class request : unsigned int {
+  e_none = 0u,           ///< no local navigation needed
+  e_init = 1u,           ///< initial local navigation
+  e_re_init = 2u,        ///< re-initialize the current volume (trust lost)
+  e_volume_switch = 3u,  ///< switch to the volume behind the current portal
+  e_loose_re_init = 4u,  ///< re-initialize with loose tolerances (rescue)
+};
+
+/// Result of the cheap part of a navigation update
+struct update_result {
+  /// Local navigation that is needed to complete the update
+  request next{request::e_none};
+  /// Whether the navigation was re-initialized during the update itself
+  bool is_init{false};
+};
+
 // Print the values of an enum by identifier
 #define ENUM_PRINT(x) \
   case x:             \
