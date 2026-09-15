@@ -58,8 +58,8 @@ const free_track_parameters<test_algebra> free_trk({0.f, 0.f, 0.f}, 0.f,
 // Magnetic field
 const vector3 B{static_cast<scalar>(0.f), static_cast<scalar>(0.f),
                 1.f * unit<scalar>::T};
-const vector3 B_0{0.f * unit<scalar>::T, tol* unit<scalar>::T,
-                  tol* unit<scalar>::T};
+const vector3 B_0{0.f * unit<scalar>::T, tol * unit<scalar>::T,
+                  tol * unit<scalar>::T};
 
 // Test helix
 const helix_t hlx(free_trk, B);
