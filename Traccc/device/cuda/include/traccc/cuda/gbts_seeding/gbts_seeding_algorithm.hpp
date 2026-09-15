@@ -48,14 +48,14 @@ class gbts_seeding_algorithm : public device::gbts_seeding_algorithm,
       const device::gbts_sort_nodes_payload& payload) const override;
   void gbts_find_minmax_radius_kernel(
       const device::gbts_find_minmax_radius_payload& payload) const override;
-  void gbts_make_graph_edges_kernel(
-      const device::gbts_make_graph_edges_payload& payload) const override;
-  void gbts_link_graph_edges_kernel(
-      const device::gbts_link_graph_edges_payload& payload) const override;
+  void gbts_build_edge_work_list_kernel(
+      const device::gbts_build_edge_work_list_payload& payload) const override;
+  void gbts_count_graph_edges_kernel(
+      const device::gbts_count_graph_edges_payload& payload) const override;
+  void gbts_fill_graph_edges_kernel(
+      const device::gbts_fill_graph_edges_payload& payload) const override;
   void gbts_match_graph_edges_kernel(
       const device::gbts_match_graph_edges_payload& payload) const override;
-  void gbts_reindex_edges_kernel(
-      const device::gbts_reindex_edges_payload& payload) const override;
   void gbts_compress_graph_kernel(
       const device::gbts_compress_graph_payload& payload) const override;
   void gbts_run_cca_iteration_kernel(
