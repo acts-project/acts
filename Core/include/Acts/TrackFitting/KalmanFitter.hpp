@@ -769,16 +769,16 @@ class KalmanFitter {
     }
 
     if constexpr (!isDirectNavigator) {
-      // Add the measurement surface as external surface to navigator.
-      // We will try to hit those surface by ignoring boundary checks.
+      // Relax the bounds check on the measurement surfaces, so the
+      // navigator targets them even where the track misses them.
       for (const auto& [surface, _] : inputMeasurements) {
-        propagatorOptions.navigation.appendExternalSurface(*surface);
+        propagatorOptions.navigation.overrideBoundaryTolerance(*surface);
       }
     } else {
       assert(sSequence != nullptr &&
              "DirectNavigator requires a surface sequence for KalmanFitter");
       // Set the surface sequence
-      propagatorOptions.navigation.externalSurfaces = *sSequence;
+      propagatorOptions.navigation.surfaceSequence = *sSequence;
     }
 
     // Catch the actor and set the measurements

@@ -19,7 +19,6 @@ namespace Acts {
 
 bool NavigationStream::initialize(const GeometryContext& gctx,
                                   const QueryPoint& queryPoint,
-                                  const BoundaryTolerance& cTolerance,
                                   const double onSurfaceTolerance,
                                   const bool candidatesAreUnique) {
   // Position and direction from the query point
@@ -64,8 +63,9 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
     // Get the surface from the object intersection
     const Surface& surface = candidate.surface();
     // Intersect the surface
-    auto multiIntersection = surface.intersect(gctx, position, direction,
-                                               cTolerance, onSurfaceTolerance);
+    auto multiIntersection =
+        surface.intersect(gctx, position, direction,
+                          candidate.boundaryTolerance(), onSurfaceTolerance);
 
     bool firstValid = multiIntersection.at(0).isValid();
     bool secondValid = multiIntersection.at(1).isValid();

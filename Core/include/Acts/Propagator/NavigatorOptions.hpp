@@ -8,17 +8,29 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 
 #include <functional>
+#include <vector>
 
 namespace Acts {
 
 class GeometryContext;
 class Surface;
-class TrackingVolume;
+
+/// A surface of the tracking geometry that the navigator intersects with the
+/// tolerance of the caller. Only the bounds check changes, the geometry still
+/// resolves the surface where it did before.
+struct BoundaryToleranceOverride {
+  /// The surface. The geometry must hold it, and it must outlive the
+  /// propagation.
+  const Surface* surface{};
+
+  /// Tolerance used to intersect the surface. @c Infinite() drops the bounds
+  /// check.
+  BoundaryTolerance boundaryTolerance = BoundaryTolerance::Infinite();
+};
 
 /// Plain navigator options carrying geometry context and surfaces.
 struct NavigatorPlainOptions {
@@ -44,32 +56,17 @@ struct NavigatorPlainOptions {
   /// The far limit to resolve surfaces
   double farLimit = std::numeric_limits<double>::max();
 
-  /// Delegate to decide whether free surfaces are appended to the navigation
-  /// stream given the current volume and the track coordinates. If the
-  /// delegate is set, it is called in each candidate resolution step
-  /// for each surface that has not been marked as reached yet.
-  /// @param gctx Current geometry context carrying the alignment information
-  /// @param currentVol The current tracking volume in which the propagator resides
-  /// @param pos Position of the track in global coordinates
-  /// @param dir Direction vector of the track
-  /// @param surface Free surface candidate to test
-  using FreeSurfaceSelctor = Delegate<bool(
-      const GeometryContext& gctx, const TrackingVolume& currentVol,
-      const Vector3& pos, const Vector3& dir, const Surface& candidate)>;
+  /// Surfaces the navigator intersects with the tolerance of the caller
+  std::vector<BoundaryToleranceOverride> boundaryToleranceOverrides;
 
-  /// Delegate for selecting free surfaces during navigation
-  FreeSurfaceSelctor freeSurfaceSelector;
-
-  /// Surfaces that are not part of the tracking geometry
-  std::vector<const Surface*> externalSurfaces;
-
-  /// Append an external surface to be considered during navigation. The surface
-  /// will be intersected without bounds check to force the propagation to
-  /// resolve it. Note the surface must outlive the propagation and surfaces
-  /// have to be added in the order they should be considered during navigation.
-  /// @param surface The surface to add to the list
-  void appendExternalSurface(const Surface& surface) {
-    externalSurfaces.push_back(&surface);
+  /// Intersect a surface of the tracking geometry with the given tolerance.
+  /// By default the bounds check is dropped.
+  /// @param surface The surface of the tracking geometry
+  /// @param boundaryTolerance The tolerance used to intersect the surface
+  void overrideBoundaryTolerance(const Surface& surface,
+                                 const BoundaryTolerance& boundaryTolerance =
+                                     BoundaryTolerance::Infinite()) {
+    boundaryToleranceOverrides.push_back({&surface, boundaryTolerance});
   }
 };
 
