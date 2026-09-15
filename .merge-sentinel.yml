@@ -42,6 +42,7 @@ rules:
      - "Detray/*"
      - "Detray/**/*"
      - ".github/workflows/detray.yml"
+     - ".github/detray-traccc-filters.yml"
     required_pattern:
      - "Detray / *"
 
@@ -57,5 +58,6 @@ rules:
      - "Traccc/*"
      - "Traccc/**/*"
      - ".github/workflows/traccc.yml"
+     - ".github/detray-traccc-filters.yml"
     required_pattern:
      - "Traccc / *"

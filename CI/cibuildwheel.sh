@@ -22,7 +22,9 @@ export CIBW_SKIP="*-musllinux* *-manylinux_i686"
 SETUP_CMD="bash {package}/CI/dependencies/setup.sh -t v23.3.1 -d deps -e env.sh"
 export CIBW_BEFORE_ALL_LINUX="dnf install -y bc ccache && ${SETUP_CMD}"
 export CIBW_BEFORE_ALL_MACOS="brew install ninja ccache && ${SETUP_CMD}"
-export CIBW_ENVIRONMENT_PASS="CI GITHUB_TOKEN"
+# Linux wheels build in a container: the job's ccache ceiling must be passed
+# explicitly or the container uses ccache's default (5 GB).
+export CIBW_ENVIRONMENT_PASS="CI GITHUB_TOKEN CCACHE_MAXSIZE"
 export CIBW_BEFORE_BUILD="ccache -z"
 export CIBW_ENVIRONMENT_LINUX="CMAKE_PREFIX_PATH=\$PWD/deps/venv:\$PWD/deps/view CCACHE_DIR=/host${CCACHE_DIR} LD_LIBRARY_PATH=\$PWD/deps/view/lib64:\$PWD/deps/view/lib:\$PWD/deps/venv/lib64:\$PWD/deps/venv/lib"
 export CIBW_ENVIRONMENT_MACOS="CMAKE_PREFIX_PATH=\$PWD/deps/venv:\$PWD/deps/view CCACHE_DIR=${CCACHE_DIR} MACOSX_DEPLOYMENT_TARGET=26.0"
