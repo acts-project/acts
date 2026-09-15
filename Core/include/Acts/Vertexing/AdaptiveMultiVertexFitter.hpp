@@ -225,7 +225,7 @@ class AdaptiveMultiVertexFitter {
     /// @param field Magnetic field provider for track extrapolation
     /// @param magContext Magnetic field context for field evaluations
     State(const MagneticFieldProvider& field,
-          const Acts::MagneticFieldContext& magContext)
+          const MagneticFieldContext& magContext)
         : ipState{field.makeCache(magContext)},
           fieldCache(field.makeCache(magContext)) {}
 

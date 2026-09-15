@@ -34,15 +34,15 @@ struct VertexFitCandidate {
   /// Construct a candidate from a constraint and a seed position.
   /// @param constr Vertex constraint for the fitting procedure
   /// @param pos Seed position as proposed by the vertex seed finder
-  VertexFitCandidate(const Acts::Vertex& constr, const Acts::Vector4& pos)
+  VertexFitCandidate(const Vertex& constr, const Vector4& pos)
       : constraint(constr), seedPosition(pos) {}
 
   /// Vertex constraint for the fitting procedure
-  Acts::Vertex constraint;
+  Vertex constraint;
 
   /// The seed position, i.e. the first estimate of the vertex position as
   /// obtained by the vertex seed finder
-  Acts::Vector4 seedPosition{Acts::Vector4::Zero()};
+  Vector4 seedPosition{Vector4::Zero()};
 
   /// All tracks that are currently assigned to this vertex
   std::vector<InputTrack> trackLinks;
