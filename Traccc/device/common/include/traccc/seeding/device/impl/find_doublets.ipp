@@ -151,13 +151,23 @@ inline void find_doublets(
   // See the warning above; here we handle the cases where the find kernel
   // finds _fewer_ doublets.
   //
-  // NOTE: Because the mid-top spacepoints are guarded by the write to
-  // m_nMidTop above, we don't need to add sentinel values there.
+  // NOTE: The triplet kernels never read the mid-top sentinels, because of
+  // the write to m_nMidTop above, but make_mid_top_lincircles iterates over
+  // every slot of the mid-top collection and so needs them.
   for (; mid_bot_idx < mid_bot_count; ++mid_bot_idx) {
     const unsigned int pos = mid_bot_start_idx + mid_bot_idx;
     assert(pos < mb_doublets.size());
     // Add a sentinel mid-bot doublet
     mb_doublets.at(pos) = {
+        {std::numeric_limits<unsigned int>::max(),
+         std::numeric_limits<unsigned int>::max()},
+        std::numeric_limits<device_doublet::link_type>::max()};
+  }
+  for (; mid_top_idx < mid_top_count; ++mid_top_idx) {
+    const unsigned int pos = mid_top_start_idx + mid_top_idx;
+    assert(pos < mt_doublets.size());
+    // Add a sentinel mid-top doublet
+    mt_doublets.at(pos) = {
         {std::numeric_limits<unsigned int>::max(),
          std::numeric_limits<unsigned int>::max()},
         std::numeric_limits<device_doublet::link_type>::max()};
