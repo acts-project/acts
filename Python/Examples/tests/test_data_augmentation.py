@@ -6,6 +6,7 @@ from typing import Optional
 
 import acts
 import acts.examples
+import pytest
 import uproot as ur
 import awkward as ak
 import numpy as np
@@ -197,6 +198,7 @@ def readExampleRootData(outputDir: Path):
     masks = []
     for field in summary_fields:
         nonempty = ak.to_numpy(ak.num(summary[field]) > 0)
+
         firsts = ak.firsts(summary[field])
         arr = ak.to_numpy(firsts)
         arr = np.asarray(arr).squeeze()
@@ -291,26 +293,21 @@ def vacuumTrackParameterAndBeamspotPropagation(
     return beamspot_pocas
 
 
-def test_track_propagation_returns_values():
-    srcdir = Path(__file__).resolve().parent.parent.parent.parent
-
-    from acts.examples.odd import getOpenDataDetector
-
-    detector = getOpenDataDetector()
-    trackingGeometry = detector.trackingGeometry()
-    digiConfigFile = srcdir / "Examples/Configs/odd-digi-smearing-config.json"
-
+@pytest.mark.odd
+def test_track_propagation_returns_values(odd_detector_config):
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     outputDir = Path.cwd()
     n = 100
-    runTruthTracking(
-        trackingGeometry=trackingGeometry,
-        field=field,
-        digiConfigFile=digiConfigFile,
-        outputDir=outputDir,
-        n_events=n,
-    ).run()
+    with odd_detector_config.detector:
+        runTruthTracking(
+            trackingGeometry=odd_detector_config.trackingGeometry,
+            field=field,
+            digiConfigFile=odd_detector_config.digiConfigFile,
+            outputDir=outputDir,
+            decorators=odd_detector_config.decorators,
+            n_events=n,
+        ).run()
 
     simulation_data = readExampleRootData(outputDir)
     truth_params = np.column_stack(
