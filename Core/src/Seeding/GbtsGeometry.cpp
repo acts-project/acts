@@ -278,7 +278,7 @@ namespace {
 // key: bin. value: (outgoing, incoming) bins it connects to.
 using BinConnections =
     std::unordered_map<std::uint32_t, std::pair<std::vector<std::uint32_t>,
-                                                std::vector<std::uint32_t>>>;
+                                                std::vector<GbtsBinLink>>>;
 }  // namespace
 
 GbtsGeometry::GbtsGeometry(
@@ -330,6 +330,11 @@ GbtsGeometry::GbtsGeometry(
   std::optional<std::uint32_t> lastBin1;
 
   for (const GbtsLayerConnection& connection : layerConnections) {
+    if (!(connection.tauRatioCut >= 0.f)) {
+      throw std::invalid_argument(
+          "GbtsGeometry: layer connection with a negative or NaN tauRatioCut");
+    }
+
     const detail::GbtsLayer* pL1 = layerById(connection.dst);  // n1
     const detail::GbtsLayer* pL2 = layerById(connection.src);  // n2
     if (pL1 == nullptr) {
@@ -355,13 +360,15 @@ GbtsGeometry::GbtsGeometry(
         const std::uint32_t bin1Idx = pL1->binning().firstBin + b1;
         const std::uint32_t bin2Idx = pL2->binning().firstBin + b2;
 
+        const GbtsBinLink link{bin2Idx, connection.tauRatioCut};
+
         if (bin1Idx != lastBin1) {
           // adding a new group
-          m_binGroups.push_back({bin1Idx, {bin2Idx}});
+          m_binGroups.push_back({bin1Idx, {link}});
           lastBin1 = bin1Idx;
         } else {
           // extend the last group
-          m_binGroups.back().links.push_back(bin2Idx);
+          m_binGroups.back().links.push_back(link);
         }
       }
     }
@@ -380,7 +387,7 @@ GbtsGeometry::GbtsGeometry(
     auto& bin1Links = binMap[bin1];
 
     for (const auto& bin2 : bin2s) {
-      auto& bin2Links = binMap[bin2];
+      auto& bin2Links = binMap[bin2.bin];
 
       bin1Links.second.push_back(bin2);  // incoming link bin1 <- bin2
       bin2Links.first.push_back(bin1);   // outgoing link bin2 -> bin1
@@ -435,8 +442,8 @@ GbtsGeometry::GbtsGeometry(
       }
       auto& bin1Links = p1->second;
 
-      for (const std::uint32_t bin2Key : bin1Links.second) {
-        const auto p2 = binMap.find(bin2Key);
+      for (const GbtsBinLink& bin2Link : bin1Links.second) {
+        const auto p2 = binMap.find(bin2Link.bin);
         if (p2 == binMap.end()) {
           continue;
         }
@@ -476,10 +483,9 @@ GbtsGeometry::GbtsGeometry(
       }
 
       const auto& binLists = p->second;
-      const std::vector<std::uint32_t>& bin2List = binLists.second;
 
       // store the group
-      m_binGroups.push_back({bin1Idx, bin2List});
+      m_binGroups.push_back({bin1Idx, binLists.second});
     }
   }
 }
