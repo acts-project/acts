@@ -52,7 +52,7 @@ def runGeant4(
         outputDirRoot=outputDir / "PG",
         momentumConfig=MomentumConfig(50.0 * u.GeV, 60.0 * u.GeV, transverse=True),
         etaConfig=EtaConfig(-1.0, 1.0, uniform=True),
-        phiConfig=PhiConfig(0.0, 360.0 * u.degree),
+        phiConfig=PhiConfig(0.1, 0.1 * u.degree),
         particleConfig=ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=True),
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
@@ -74,6 +74,8 @@ def runGeant4(
         rnd=rnd,
         materialMappings=materialMappings,
         volumeMappings=volumeMappings,
+        recordHitsOfSecondaries=False,
+        killSecondaries=True,
     )
     return s
 
@@ -99,10 +101,10 @@ def main():
         default="Muon",
     )
     parser.add_argument("--outDir", default="./", help="Output")
-    parser.add_argument("--nEvents", default=100, type=int, help="Number of events")
+    parser.add_argument("--nEvents", default=1, type=int, help="Number of events")
     parser.add_argument(
-        "--randomSeed", default=1602, type=int, help="Random seed for event generation"
-    )
+        "--randomSeed", default=1014, type=int, help="Random seed for event generation"
+    )  # good seed at 16022 or 1602, 1011 also nice for only straw
     parser.add_argument(
         "--geoSvgDump",
         default=False,
@@ -131,6 +133,11 @@ def main():
         mockUpCfg.dbName = "ActsGeoMS.db"
         mockUpCfg.nSectors = 12
         mockUpCfg.nEtaStations = 8
+        # mockUpCfg.buildEndcaps = False
+        # mockUpBuilder = gm_ex.GeoMuonMockupExperiment(
+        #     mockUpCfg, "GeoMockUpMS", logLevel
+        # )
+        # gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
         mockUpCfg.buildEndcaps = True
         mockUpBuilder = gm_ex.GeoMuonMockupExperiment(
             mockUpCfg, "GeoMockUpMS", logLevel
@@ -228,6 +235,53 @@ def main():
             inputMeasurementSimHitsMap="measurement_simhits_map",
             filePath=str("measurements.root"),
             surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
+        )
+    )
+
+    algSequence.addAlgorithm(
+        acts.examples.TruthTrackFinder(
+            level=logLevel,
+            inputParticles="particles_generated",
+            inputMeasurements="measurements",
+            inputParticleMeasurementsMap="particle_measurements_map",
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            outputProtoTracks="truth_particle_tracks",
+        )
+    )
+
+    from acts.examples.reconstruction import addGx2fTracks
+
+    addGx2fTracks(
+        algSequence,
+        trackingGeometry,
+        field,
+        nUpdateMax=50,
+        relChi2changeCutOff=1e-7,
+        multipleScattering=False,
+        logLevel=logging.VERBOSE,
+    )
+
+    algSequence.addWriter(
+        acts.examples.root.RootTrackStatesWriter(
+            level=acts.logging.WARNING,
+            inputTracks="tracks",
+            inputParticles="particles_generated",
+            inputTrackParticleMatching="track_particle_matching",
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            filePath=str("trackstates_gx2f.root"),
+        )
+    )
+
+    algSequence.addWriter(
+        acts.examples.root.RootTrackSummaryWriter(
+            level=acts.logging.WARNING,
+            inputTracks="tracks",
+            inputParticles="particles_generated",
+            inputTrackParticleMatching="track_particle_matching",
+            filePath=str("tracksummary_gx2f.root"),
+            writeGx2fSpecific=True,
         )
     )
 
