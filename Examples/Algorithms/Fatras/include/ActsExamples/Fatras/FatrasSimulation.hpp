@@ -19,14 +19,12 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
-#include <cstddef>
-#include <memory>
-#include <string>
-
-/// added for counting ERROR Messages
 #include <atomic>
+#include <cstddef>
 #include <map>
+#include <memory>
 #include <mutex>
+#include <string>
 #include <system_error>
 
 namespace ActsExamples {
@@ -94,7 +92,6 @@ class FatrasSimulation final : public IAlgorithm {
   /// @param ctx the algorithm context containing all event information
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
-  /// added for counting ERROR Messages
   ProcessCode finalize() override;
 
   /// Const access to the config
@@ -112,11 +109,12 @@ class FatrasSimulation final : public IAlgorithm {
 
   Config m_cfg;
   std::unique_ptr<Impl> m_sim;
-  /// added for counting ERROR Messages
-  mutable std::atomic<std::size_t> m_nFailedParticles{0};
-  mutable std::mutex m_failedParticlesMutex;
-  mutable std::map<std::error_code, std::atomic<std::size_t>>
-      m_failedParticlesByError;
+  struct Counters {
+    std::mutex failedParticlesMutex;
+    std::size_t nFailedParticles{0};
+    std::map<std::error_code, std::size_t> failedParticlesByError;
+  };
+  mutable Counters m_counters;
 };
 
 }  // namespace ActsExamples

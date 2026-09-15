@@ -242,13 +242,10 @@ ProcessCode FatrasSimulation::execute(const AlgorithmContext &ctx) const {
                         << " failed to simulate with error " << failed.error
                         << ": " << failed.error.message());
 
-    /// added for counting ERROR Messages
-    m_nFailedParticles.fetch_add(1, std::memory_order_relaxed);
-
     {
-      std::lock_guard<std::mutex> lock(m_failedParticlesMutex);
-      m_failedParticlesByError[failed.error].fetch_add(
-          1, std::memory_order_relaxed);
+      std::lock_guard<std::mutex> lock(m_counters.failedParticlesMutex);
+      ++m_counters.nFailedParticles;
+      ++m_counters.failedParticlesByError[failed.error];
     }
   }
 
@@ -292,7 +289,6 @@ ProcessCode FatrasSimulation::execute(const AlgorithmContext &ctx) const {
   return ProcessCode::SUCCESS;
 }
 
-/// added for counting ERROR Messages
 ProcessCode FatrasSimulation::finalize() {
   if (m_nFailedParticles.load() > 0) {
     ACTS_ERROR(m_nFailedParticles.load() << " particles failed to simulate");
