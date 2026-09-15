@@ -7,6 +7,11 @@
 
 #pragma once
 
+#include <detray/core/concepts.hpp>
+#include <detray/definitions/track_parametrization.hpp>
+
+#include "traccc/definitions/primitives.hpp"
+
 // Project include(s).
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/edm/measurement_collection.hpp"
@@ -34,6 +39,17 @@ TRACCC_HOST_DEVICE inline void fill_pixel_spacepoint(
     edm::spacepoint<spacepoint_backend_t>& sp, const detector_t& det,
     const edm::measurement<measurement_backend_t>& meas,
     const typename detector_t::geometry_context gctx = {});
+
+/// Intersect strip lines with beam-spot planes, with explicit endpoint
+/// allowances.
+TRACCC_HOST_DEVICE inline bool make_strip_spacepoint(
+    point3& spacepoint, const point3& first_center,
+    const vector3& first_direction, const vector3& second_direction,
+    const vector3& first_trajectory, const vector3& second_trajectory,
+    const vector3& first_normal, const vector3& second_normal,
+    const scalar first_half_length, const scalar second_half_length,
+    const scalar strip_length_gap_tolerance,
+    const scalar strip_length_tolerance);
 
 }  // namespace traccc::details
 
