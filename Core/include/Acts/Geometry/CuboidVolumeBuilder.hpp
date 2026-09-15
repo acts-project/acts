@@ -57,6 +57,8 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     // Thickness
     /// Material thickness of the surface
     double thickness = 0.;
+    /// Declare the produced surface as sensitive
+    bool isSensitive{false};
     /// Constructor function for optional detector elements
     /// Arguments are transform, rectangle bounds and thickness.
     std::function<SurfacePlacementBase*(
