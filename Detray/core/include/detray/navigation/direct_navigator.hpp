@@ -43,12 +43,12 @@ class direct_navigator {
   // perigee/external surface flows instantiate direct_navigator with
   // single_view-like range wrappers.
   using surface_sequence_type = std::conditional_t<
-    std::same_as<surface_sequence_t, void>,
-    vecmem::device_vector<typename detector_t::surface_type>,
-    surface_sequence_t>;
+      std::same_as<surface_sequence_t, void>,
+      vecmem::device_vector<typename detector_t::surface_type>,
+      surface_sequence_t>;
 
   static_assert(detray::ranges::range<surface_sequence_type>,
-        "Surface sequnece must be iterable");
+                "Surface sequence must be iterable");
 
   using surface_type = detray::ranges::range_value_t<surface_sequence_type>;
   using intersection_type =
@@ -75,13 +75,13 @@ class direct_navigator {
     using sequence_type = surface_sequence_type;
 
     using view_type =
-      std::conditional_t<std::same_as<surface_sequence_t, void>,
-                 detail::get_view_t<surface_sequence_type>,
-                 surface_sequence_type>;
+        std::conditional_t<std::same_as<surface_sequence_t, void>,
+                           detail::get_view_t<surface_sequence_type>,
+                           surface_sequence_type>;
     using const_view_type =
-      std::conditional_t<std::same_as<surface_sequence_t, void>,
-                 detail::get_view_t<const surface_sequence_type>,
-                 surface_sequence_type>;
+        std::conditional_t<std::same_as<surface_sequence_t, void>,
+                           detail::get_view_t<const surface_sequence_type>,
+                           surface_sequence_type>;
 
     /// Constructor using the detector and an externally provided sequence
     /// of detector surfaces
@@ -284,7 +284,7 @@ class direct_navigator {
       }
 
       // Otherwise, track is on surface: Update the next target
-        if (navigation.has_next_external() &&
+      if (navigation.has_next_external() &&
           !update_candidate(tangential, det, navigation, intr_cfg, ctx)) {
         navigation.abort("Could not find new target after surface was reached");
         return !is_init;
@@ -312,57 +312,58 @@ class direct_navigator {
     return !is_init;
   }
 
-  private:
-    /// Update the next candidate: Either an externally specified detector
-    /// surface or a standalone surface.
-    DETRAY_HOST_DEVICE DETRAY_INLINE constexpr bool update_candidate(
-        const detray::detail::ray<algebra_t> &tangential, const detector_t &det,
-        state &navigation, const intersection::config &intr_cfg,
-        [[maybe_unused]] const context_type &ctx) const {
-      if constexpr (std::same_as<surface_sequence_t, void>) {
-        // Update a detector surface.
-        return navigation::update_candidate(
-            navigation.target(), tangential, det, intr_cfg,
-            navigation.external_tol(), ctx);
-      } else {
-        // Update a standalone surface.
-        return update_external_candidate(
-            navigation.direction(), navigation.target(), tangential,
-            navigation.next_external(), intr_cfg, navigation.external_tol());
-      }
+ private:
+  /// Update the next candidate: Either an externally specified detector
+  /// surface or a standalone surface.
+  DETRAY_HOST_DEVICE DETRAY_INLINE constexpr bool update_candidate(
+      const detray::detail::ray<algebra_t> &tangential, const detector_t &det,
+      state &navigation, const intersection::config &intr_cfg,
+      [[maybe_unused]] const context_type &ctx) const {
+    if constexpr (std::same_as<surface_sequence_t, void>) {
+      // Update a detector surface.
+      return navigation::update_candidate(navigation.target(), tangential, det,
+                                          intr_cfg, navigation.external_tol(),
+                                          ctx);
+    } else {
+      // Update a standalone surface.
+      return update_external_candidate(
+          navigation.direction(), navigation.target(), tangential,
+          navigation.next_external(), intr_cfg, navigation.external_tol());
+    }
+  }
+
+  /// Update a standalone surface.
+  DETRAY_HOST_DEVICE DETRAY_INLINE constexpr bool update_external_candidate(
+      const navigation::direction nav_dir,
+      typename state::value_type &candidate,
+      const detray::detail::ray<algebra_t> &tangential, const surface_type &sf,
+      const intersection::config &cfg,
+      const scalar_t external_mask_tolerance) const {
+    constexpr ray_intersector<typename surface_type::mask_type::shape,
+                              algebra_t, !intersection::contains_pos>
+        intersector{};
+
+    // Intersect the standalone surface.
+    typename decltype(intersector)::result_type result{};
+    if constexpr (concepts::cylindrical<typename surface_type::mask_type>) {
+      result = intersector.point_of_intersection(
+          tangential, sf.transform(), sf.mask(), cfg.overstep_tolerance);
+    } else {
+      result = intersector.point_of_intersection(tangential, sf.transform(),
+                                                 cfg.overstep_tolerance);
     }
 
-    /// Update a standalone surface.
-    DETRAY_HOST_DEVICE DETRAY_INLINE constexpr bool update_external_candidate(
-        const navigation::direction nav_dir, typename state::value_type &candidate,
-        const detray::detail::ray<algebra_t> &tangential, const surface_type &sf,
-        const intersection::config &cfg,
-        const scalar_t external_mask_tolerance) const {
-      constexpr ray_intersector<typename surface_type::mask_type::shape,
-                                algebra_t, !intersection::contains_pos>
-          intersector{};
-
-      // Intersect the standalone surface.
-      typename decltype(intersector)::result_type result{};
-      if constexpr (concepts::cylindrical<typename surface_type::mask_type>) {
-        result = intersector.point_of_intersection(
-            tangential, sf.transform(), sf.mask(), cfg.overstep_tolerance);
-      } else {
-        result = intersector.point_of_intersection(
-            tangential, sf.transform(), cfg.overstep_tolerance);
-      }
-
-      // Build resulting intersection candidate(s).
-      if constexpr (decltype(intersector)::n_solutions > 1) {
-        resolve_mask(candidate, tangential, result[0], candidate.surface(),
-                     sf.mask(), sf.transform(), cfg, external_mask_tolerance);
-      } else {
-        resolve_mask(candidate, tangential, result, candidate.surface(),
-                     sf.mask(), sf.transform(), cfg, external_mask_tolerance);
-      }
-
-      return candidate.is_probably_inside();
+    // Build resulting intersection candidate(s).
+    if constexpr (decltype(intersector)::n_solutions > 1) {
+      resolve_mask(candidate, tangential, result[0], candidate.surface(),
+                   sf.mask(), sf.transform(), cfg, external_mask_tolerance);
+    } else {
+      resolve_mask(candidate, tangential, result, candidate.surface(),
+                   sf.mask(), sf.transform(), cfg, external_mask_tolerance);
     }
+
+    return candidate.is_probably_inside();
+  }
 };
 
 }  // namespace detray
