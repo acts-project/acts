@@ -38,8 +38,15 @@ endif()
 
 foreach(algebra ${algebras})
     # Unit tests for the selected algebra.
+    # The known-substructure matrix test is algebra agnostic in what it
+    # computes, but its header's to_dense() pulls in
+    # detray/definitions/algebra.hpp, which #errors without a plugin selected.
+    # So it lives here rather than in the algebra-independent target above.
     detray_add_unit_test(cuda_${algebra}
        "algebra.cu"
+       "known_substructure_matrix_cuda_kernel.hpp"
+       "known_substructure_matrix_cuda.cpp"
+       "known_substructure_matrix_cuda_kernel.cu"
        "detector_cuda_kernel.hpp"
        "detector_cuda.cpp"
        "detector_cuda_kernel.cu"

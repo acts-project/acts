@@ -8,7 +8,9 @@
 #pragma once
 
 // Project include(s).
+#include "detray/algebra/type_traits.hpp"
 #include "traccc/edm/track_parameters.hpp"
+#include "traccc/utils/concepts.hpp"
 #include "traccc/utils/logging.hpp"
 
 namespace traccc::details {
@@ -17,33 +19,32 @@ namespace traccc::details {
 ///
 /// @param[out] cov  covariance matrix
 /// @param[in] min_var variance threshold below which to flag an error
-template <detray::concepts::algebra algebra_t>
+template <concepts::symmetric_matrix<e_bound_size> matrix_t>
 TRACCC_HOST_DEVICE constexpr bool regularize_covariance(
-    traccc::bound_matrix<algebra_t>& cov,
-    const detray::dscalar<algebra_t> min_var) {
-  if (getter::element(cov, 0, 0) < min_var ||
-      getter::element(cov, 1, 1) < min_var ||
-      getter::element(cov, 2, 2) < min_var ||
-      getter::element(cov, 3, 3) < min_var ||
-      getter::element(cov, 4, 4) < min_var ||
-      getter::element(cov, 5, 5) < min_var) {
+    matrix_t& cov, const detray::traits::scalar_t<matrix_t> min_var) {
+  if (getter::element<0, 0>(cov) < min_var ||
+      getter::element<1, 1>(cov) < min_var ||
+      getter::element<2, 2>(cov) < min_var ||
+      getter::element<3, 3>(cov) < min_var ||
+      getter::element<4, 4>(cov) < min_var ||
+      getter::element<5, 5>(cov) < min_var) {
     TRACCC_ERROR_HOST_DEVICE("Negative variance");
     return false;
-  } else if (getter::element(cov, 0, 0) < 0.f ||
-             getter::element(cov, 1, 1) < 0.f ||
-             getter::element(cov, 2, 2) < 0.f ||
-             getter::element(cov, 3, 3) < 0.f ||
-             getter::element(cov, 4, 4) < 0.f ||
-             getter::element(cov, 5, 5) < 0.f) {
+  } else if (getter::element<0, 0>(cov) < 0.f ||
+             getter::element<1, 1>(cov) < 0.f ||
+             getter::element<2, 2>(cov) < 0.f ||
+             getter::element<3, 3>(cov) < 0.f ||
+             getter::element<4, 4>(cov) < 0.f ||
+             getter::element<5, 5>(cov) < 0.f) {
     TRACCC_WARNING_HOST_DEVICE("Negative variance: Regularize...");
   }
 
-  getter::element(cov, 0, 0) = math::fabs(getter::element(cov, 0, 0));
-  getter::element(cov, 1, 1) = math::fabs(getter::element(cov, 1, 1));
-  getter::element(cov, 2, 2) = math::fabs(getter::element(cov, 2, 2));
-  getter::element(cov, 3, 3) = math::fabs(getter::element(cov, 3, 3));
-  getter::element(cov, 4, 4) = math::fabs(getter::element(cov, 4, 4));
-  getter::element(cov, 5, 5) = math::fabs(getter::element(cov, 5, 5));
+  getter::element<0, 0>(cov) = math::fabs(getter::element<0, 0>(cov));
+  getter::element<1, 1>(cov) = math::fabs(getter::element<1, 1>(cov));
+  getter::element<2, 2>(cov) = math::fabs(getter::element<2, 2>(cov));
+  getter::element<3, 3>(cov) = math::fabs(getter::element<3, 3>(cov));
+  getter::element<4, 4>(cov) = math::fabs(getter::element<4, 4>(cov));
+  getter::element<5, 5>(cov) = math::fabs(getter::element<5, 5>(cov));
 
   return true;
 }

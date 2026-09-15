@@ -137,17 +137,21 @@ TRACCC_HOST_DEVICE inline void build_tracks(
       const detray::dmatrix<default_algebra, 2, 1> meas_local =
           measurement_selector::calibrated_measurement_position<default_algebra,
                                                                 2>(meas,
-                                                                   calib_cfg);
+                                                                   calib_cfg)
+              .template to_dense<default_algebra>();
 
       // Spatial resolution (Measurement covariance)
       const detray::dmatrix<default_algebra, 2, 2> V =
           measurement_selector::calibrated_measurement_covariance<
-              default_algebra, 2>(meas, calib_cfg);
+              default_algebra, 2>(meas, calib_cfg)
+              .template to_dense<default_algebra>();
 
       // TODO: Does not work for line surfaces!
+      // This smoother has not been converted to structured matrices yet.
       const detray::dmatrix<default_algebra, 2, e_bound_size> H =
           measurement_selector::observation_model<default_algebra, 2>(
-              meas, predicted_params, false);
+              meas, predicted_params, false)
+              .template to_dense<default_algebra>();
 
       const auto S_inv = masked_inverse<default_algebra>(
           H * predicted_covariance * matrix::transpose(H) + V,
