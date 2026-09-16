@@ -39,10 +39,10 @@ class TripletSeeder {
     /// Cache for triplet top candidates during seed formation
     TripletTopCandidates tripletTopCandidates;
 
-    /// Cursors into the bottom and top space point groups of the current
-    /// call. Copied from the caller's groups by `createSeedsFromGroups` and
-    /// advanced as the middle space points are swept in ascending radius.
+    /// Cursors into the bottom space point groups, advanced as the middle
+    /// space points are swept in ascending radius
     std::vector<SpacePointContainer::ConstRange> bottomSpGroups;
+    /// Cursors into the top space point groups, advanced the same way
     std::vector<SpacePointContainer::ConstRange> topSpGroups;
   };
 
