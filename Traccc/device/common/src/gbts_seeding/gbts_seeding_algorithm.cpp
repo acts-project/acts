@@ -27,42 +27,9 @@ namespace traccc::device {
 // and the bin-wise min/max radius for the graph-building cuts.
 auto gbts_seeding_algorithm::make_nodes(
     const edm::spacepoint_collection::const_view& spacepoints,
-    const edm::measurement_collection::const_view& measurements) const
-    -> node_making_output {
+    const edm::measurement_collection::const_view& measurements,
+    const unsigned int nSp) const -> node_making_output {
   const gbts_seedfinder_config& cfg = m_config;
-  const unsigned int nSp = copy().get_size(spacepoints);
-
-  // 0. Upload the layer maps and tables.
-  vecmem::data::vector_buffer<short> volumeToLayerMap_buf(
-      static_cast<unsigned int>(cfg.volumeToLayerMap.size()), mr().main);
-  copy().setup(volumeToLayerMap_buf)->ignore();
-  copy()(vecmem::get_data(cfg.volumeToLayerMap), volumeToLayerMap_buf)
-      ->ignore();
-
-  vecmem::data::vector_buffer<std::pair<unsigned int, unsigned int>>
-      surfaceToLayerMap_buf;
-  if (!cfg.surfaceToLayerMap.empty()) {
-    surfaceToLayerMap_buf =
-        vecmem::data::vector_buffer<std::pair<unsigned int, unsigned int>>(
-            static_cast<unsigned int>(cfg.surfaceToLayerMap.size()), mr().main);
-    copy().setup(surfaceToLayerMap_buf)->ignore();
-    copy()(vecmem::get_data(cfg.surfaceToLayerMap), surfaceToLayerMap_buf)
-        ->ignore();
-  }
-
-  vecmem::data::vector_buffer<char> layerType_buf(cfg.nLayers, mr().main);
-  copy().setup(layerType_buf)->ignore();
-  copy()(vecmem::get_data(cfg.layerInfo.type), layerType_buf)->ignore();
-
-  vecmem::data::vector_buffer<std::pair<unsigned int, unsigned int>>
-      layer_info_buf(cfg.nLayers, mr().main);
-  copy().setup(layer_info_buf)->ignore();
-  copy()(vecmem::get_data(cfg.layerInfo.info), layer_info_buf)->ignore();
-
-  vecmem::data::vector_buffer<std::pair<float, float>> layer_geo_buf(
-      cfg.nLayers, mr().main);
-  copy().setup(layer_geo_buf)->ignore();
-  copy()(vecmem::get_data(cfg.layerInfo.geo), layer_geo_buf)->ignore();
 
   // 1. Fused binning: assign each spacepoint a layer (or reject it), write
   //    its reduced parameters, count its eta bin and append its node sort
@@ -84,8 +51,9 @@ auto gbts_seeding_algorithm::make_nodes(
   copy().memset(eta_node_counter_buf, 0)->ignore();
 
   gbts_bin_spacepoints_kernel(
-      {nSp, cfg.n_eta_bins, spacepoints, measurements, volumeToLayerMap_buf,
-       surfaceToLayerMap_buf, layerType_buf, layer_info_buf, layer_geo_buf,
+      {nSp, cfg.n_eta_bins, spacepoints, measurements,
+       m_volume_to_layer_map_buffer, m_surface_to_layer_map_buffer,
+       m_layer_type_buffer, m_layer_info_buffer, m_layer_geo_buffer,
        reducedSP_buf, eta_node_counter_buf, sort_keys_buf, sort_values_buf,
        cfg.volumeToLayerMap.size(), cfg.surfaceToLayerMap.size(),
        cfg.gbts_count_spacepoints_by_layer_params});
@@ -113,21 +81,9 @@ auto gbts_seeding_algorithm::make_nodes(
   vecmem::data::vector_buffer<unsigned int> node_index_buf(nNodes, mr().main);
   copy().setup(node_index_buf)->ignore();
 
-  // Optional tau LUT consumed by device::gbts_sort_nodes when
-  // cfg.gbts_sort_nodes_params.useTauLUT is set. A size-1 dummy is allocated
-  // when the LUT is unused so the kernel always receives a valid (never-read)
-  // view.
-  const unsigned int tau_lut_size =
-      std::max<unsigned int>(1u, static_cast<unsigned int>(cfg.tau_lut.size()));
-  vecmem::data::vector_buffer<float> tau_lut_buf(tau_lut_size, mr().main);
-  copy().setup(tau_lut_buf)->ignore();
-  if (!cfg.tau_lut.empty()) {
-    copy()(vecmem::get_data(cfg.tau_lut), tau_lut_buf)->ignore();
-  }
-
   gbts_sort_nodes_kernel({nNodes, reducedSP_buf, sort_keys_buf, sort_values_buf,
                           node_params_buf, node_phi_buf, node_index_buf,
-                          tau_lut_buf, cfg.gbts_sort_nodes_params});
+                          m_tau_lut_buffer, cfg.gbts_sort_nodes_params});
 
   vecmem::data::vector_buffer<unsigned int> eta_bin_views_buf(
       2 * cfg.n_eta_bins, mr().main);
@@ -497,7 +453,15 @@ auto gbts_seeding_algorithm::extract_seeds(
        seed_ambiguity_buf, path_store_buf, output_graph, reducedSP,
        output_seeds, hit_bids_buf, cfg.gbts_convert_seeds_params});
 
-  const unsigned int outputSeeds = copy().get_size(output_seeds);
+  unsigned int outputSeeds;
+  if (mr().host) {
+    vecmem::async_size size = copy().get_size(output_seeds, *(mr().host));
+    // Here we could give control back to the caller, once our
+    // code allows for it. (coroutines...)
+    outputSeeds = size.get();
+  } else {
+    outputSeeds = copy().get_size(output_seeds);
+  }
   TRACCC_DEBUG("GBTS found " << outputSeeds << " seeds");
   return output_seeds;
 }
@@ -505,13 +469,64 @@ auto gbts_seeding_algorithm::extract_seeds(
 gbts_seeding_algorithm::gbts_seeding_algorithm(
     const gbts_seedfinder_config& cfg, const memory_resource& mr,
     const vecmem::copy& copy, std::unique_ptr<const Logger> logger)
-    : messaging(std::move(logger)), algorithm_base{mr, copy}, m_config{cfg} {}
+    : messaging(std::move(logger)),
+      algorithm_base{mr, copy},
+      m_config{cfg},
+      m_volume_to_layer_map_buffer{
+          static_cast<unsigned int>(cfg.volumeToLayerMap.size()), mr.main},
+      m_layer_type_buffer{cfg.nLayers, mr.main},
+      m_layer_info_buffer{cfg.nLayers, mr.main},
+      m_layer_geo_buffer{cfg.nLayers, mr.main},
+      m_tau_lut_buffer{std::max<unsigned int>(
+                           1u, static_cast<unsigned int>(cfg.tau_lut.size())),
+                       mr.main} {
+  // The copies below may be asynchronous, so they read from m_config (which
+  // lives as long as the buffers) rather than from the cfg argument.
+  copy.setup(m_volume_to_layer_map_buffer)->ignore();
+  copy(vecmem::get_data(m_config.volumeToLayerMap),
+       m_volume_to_layer_map_buffer)
+      ->ignore();
+  if (!m_config.surfaceToLayerMap.empty()) {
+    m_surface_to_layer_map_buffer =
+        vecmem::data::vector_buffer<std::pair<unsigned int, unsigned int>>(
+            static_cast<unsigned int>(m_config.surfaceToLayerMap.size()),
+            mr.main);
+    copy.setup(m_surface_to_layer_map_buffer)->ignore();
+    copy(vecmem::get_data(m_config.surfaceToLayerMap),
+         m_surface_to_layer_map_buffer)
+        ->ignore();
+  }
+  copy.setup(m_layer_type_buffer)->ignore();
+  copy(vecmem::get_data(m_config.layerInfo.type), m_layer_type_buffer)
+      ->ignore();
+  copy.setup(m_layer_info_buffer)->ignore();
+  copy(vecmem::get_data(m_config.layerInfo.info), m_layer_info_buffer)
+      ->ignore();
+  copy.setup(m_layer_geo_buffer)->ignore();
+  copy(vecmem::get_data(m_config.layerInfo.geo), m_layer_geo_buffer)->ignore();
+  // Optional tau LUT consumed by device::gbts_sort_nodes when
+  // cfg.gbts_sort_nodes_params.useTauLUT is set. A size-1 dummy is allocated
+  // when the LUT is unused so the kernel always receives a valid (never-read)
+  // view.
+  copy.setup(m_tau_lut_buffer)->ignore();
+  if (!m_config.tau_lut.empty()) {
+    copy(vecmem::get_data(m_config.tau_lut), m_tau_lut_buffer)->ignore();
+  }
+}
 
 auto gbts_seeding_algorithm::operator()(
     const edm::spacepoint_collection::const_view& spacepoints,
     const edm::measurement_collection::const_view& measurements) const
     -> output_type {
-  const unsigned int nSp = copy().get_size(spacepoints);
+  unsigned int nSp;
+  if (mr().host) {
+    vecmem::async_size size = copy().get_size(spacepoints, *(mr().host));
+    // Here we could give control back to the caller, once our
+    // code allows for it. (coroutines...)
+    nSp = size.get();
+  } else {
+    nSp = copy().get_size(spacepoints);
+  }
   TRACCC_DEBUG("nSp " << nSp);
   if (nSp == 0) {
     TRACCC_WARNING("No spacepoints were found in the event");
@@ -520,7 +535,7 @@ auto gbts_seeding_algorithm::operator()(
 
   // Stage 1: bin spacepoints and create nodes with the parameters (eta, phi,
   // r, z).
-  node_making_output nodes = make_nodes(spacepoints, measurements);
+  node_making_output nodes = make_nodes(spacepoints, measurements, nSp);
   if (nodes.nNodes == 0) {
     // No nodes survived spacepoint counting -> no seeds.
     return {0, mr().main};

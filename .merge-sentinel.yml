@@ -44,3 +44,18 @@ rules:
      - ".github/workflows/detray.yml"
     required_pattern:
      - "Detray / *"
+
+  # Without this the Traccc jobs run on a queue entry but do not gate it:
+  # pending only blocks when required, and they take ~25 minutes, so the
+  # aggregate would go green long before they report. A Detray-only change
+  # still runs them (traccc.yml triggers on Detray/** too) and a *failure*
+  # fails the gate whether required or not -- only the wait is missing there.
+  - branch_filter:
+     - "main"
+     - "develop/*"
+    paths:
+     - "Traccc/*"
+     - "Traccc/**/*"
+     - ".github/workflows/traccc.yml"
+    required_pattern:
+     - "Traccc / *"

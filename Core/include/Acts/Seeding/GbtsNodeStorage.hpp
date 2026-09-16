@@ -35,6 +35,9 @@ class GbtsGeometry;
 /// the derived per-node data in dynamic columns on that container.
 class GbtsNodeStorage final {
  public:
+  /// Maximum `Config::phiSortBuckets`; sizes the fixed bucket array.
+  static constexpr std::uint32_t kMaxPhiSortBuckets = 31;
+
   /// Filled storage is not relocatable: the column proxies point into the
   /// space point container held by value.
   GbtsNodeStorage(const GbtsNodeStorage&) = delete;
@@ -54,7 +57,7 @@ class GbtsNodeStorage final {
   /// @param localPositionY Local y cluster position
   /// @return The eta bin the node was placed in, or nullopt if it was rejected
   std::optional<std::uint32_t> insert(SpacePointIndex index, float x, float y,
-                                      float z, std::uint32_t layerIndex,
+                                      float z, GbtsLayerIndex layerIndex,
                                       float clusterWidth = 0.f,
                                       float localPositionY = 0.f);
   //! [gbts insert]
@@ -73,7 +76,7 @@ class GbtsNodeStorage final {
   /// @return The eta bin the node was placed in, or nullopt if it was rejected
   std::optional<std::uint32_t> insert(
       SpacePointIndex index, float x, float y, float z, float r, float phi,
-      std::uint32_t layerIndex, float clusterWidth = 0.f,
+      GbtsLayerIndex layerIndex, float clusterWidth = 0.f,
       float localPositionY = 0.f,
       const OuterStripSpacePointCalibrationDetails* strip = nullptr);
 
@@ -86,7 +89,7 @@ class GbtsNodeStorage final {
   /// @return The eta bin the node was placed in, or nullopt if it was rejected
   std::optional<std::uint32_t> insert(
       const ConstSpacePointProxy& sp,
-      const ConstSpacePointColumnProxy<std::uint32_t>& layerColumn,
+      const ConstSpacePointColumnProxy<GbtsLayerIndex>& layerColumn,
       const ConstSpacePointColumnProxy<float>& clusterWidthColumn,
       const ConstSpacePointColumnProxy<float>& localPositionYColumn,
       bool strips = false) {
@@ -105,7 +108,7 @@ class GbtsNodeStorage final {
   /// @param clusterWidthColumn Column holding the pixel cluster width
   /// @param localPositionYColumn Column holding the local y cluster position
   void extend(const SpacePointContainer& spacePoints,
-              const ConstSpacePointColumnProxy<std::uint32_t>& layerColumn,
+              const ConstSpacePointColumnProxy<GbtsLayerIndex>& layerColumn,
               const ConstSpacePointColumnProxy<float>& clusterWidthColumn,
               const ConstSpacePointColumnProxy<float>& localPositionYColumn);
 
@@ -124,14 +127,18 @@ class GbtsNodeStorage final {
     return m_nodes.copiedFromIndexColumn()[node];
   }
 
+  /// Whether any node carries a stereo pair, i.e. whether the graph has a
+  /// strip path to take. A caller that fed strip space points in can check
+  /// here that their pairs arrived.
+  /// @return Whether there are any
+  bool hasStrips() const { return !m_strips.empty(); }
+
  private:
   // Only the seeder builds one and walks the graph inside it.
   friend class GraphBasedTrackSeeder;
 
   /// Configuration for node loading.
   struct Config {
-    /// Per-layer flag marking pixel layers. Indexed by dense layer index.
-    std::vector<bool> isPixelLayer;
     /// Enable the cluster width cuts: wide endcap rejection and tau narrowing.
     bool useClusterWidthCuts = false;
     /// Maximum endcap cluster width, applied to pixel endcap nodes when
@@ -145,12 +152,20 @@ class GbtsNodeStorage final {
     float moduleEdgeTolerance = 0.3f;
     /// Width of the phi slice used to build the phi indexing.
     float phiSliceWidth = 0.f;
+    /// Multiples of `phiSliceWidth` duplicated either side of the wrap-around,
+    /// so a sliding window never has to wrap.
+    float phiIndexMargin = 1.5f;
+    /// Buckets used to sort a bin by phi, at most `kMaxPhiSortBuckets`.
+    std::uint32_t phiSortBuckets = 31;
+    /// Cluster width covered by one bin of the tau lookup table.
+    float tauLutBinWidth = 0.05f;
   };
 
   /// @param config Node loading configuration
   /// @param geometry Shared pointer to GBTS geometry
   /// @param tauLut Per-cluster-width tau bounds
-  GbtsNodeStorage(Config config, std::shared_ptr<const GbtsGeometry> geometry,
+  GbtsNodeStorage(const Config& config,
+                  std::shared_ptr<const GbtsGeometry> geometry,
                   detail::GbtsTauLookupTable tauLut);
 
   /// Get eta bin info by index
@@ -201,11 +216,6 @@ class GbtsNodeStorage final {
     return m_strips[m_stripIndex[node]];
   }
 
-  /// Whether any node carries a stereo pair, i.e. whether the graph has a
-  /// strip path to take.
-  /// @return Whether there are any
-  bool hasStrips() const { return !m_strips.empty(); }
-
   /// A node as recorded by `insert`, before sorting.
   struct StagedNode {
     SpacePointIndex spacePointIndex{};
@@ -216,7 +226,8 @@ class GbtsNodeStorage final {
     float phi{};
     float clusterWidth{};
     float localPositionY{};
-    std::uint16_t layer{};
+    /// Dense layer index
+    GbtsLayerIndex layer{};
     /// Index into the staged stereo pairs, `detail::kNoStrip` for a pixel node
     std::uint32_t strip{detail::kNoStrip};
   };
@@ -253,7 +264,7 @@ class GbtsNodeStorage final {
       m_edgeInfoColumn;
 
   /// Dense layer index per node, in node order.
-  std::vector<std::uint16_t> m_layers;
+  std::vector<GbtsLayerIndex> m_layers;
 
   /// Stereo pairs of the strip nodes, in node order and compacted: too large
   /// to carry for every node of a mostly pixel detector.

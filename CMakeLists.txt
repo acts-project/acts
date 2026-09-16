@@ -155,9 +155,21 @@ option(ACTS_ENABLE_MEMORY_PROFILING "Enable memory profiling using gperftools" O
 set(ACTS_GPERF_INSTALL_DIR "" CACHE STRING "Hint to help find gperf if profiling is enabled")
 
 option(ACTS_ENABLE_LOG_FAILURE_THRESHOLD "Enable failing on log messages with level above certain threshold" OFF)
-set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an exception should be automatically thrown. If ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set and this is unset, this will enable a runtime check of the log level.")
 option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # gersemi: on
+
+# Removed option: warn and drop it from the cache. Setting it used to imply
+# ACTS_ENABLE_LOG_FAILURE_THRESHOLD, so ignoring it silently would leave a
+# downstream that set only this one with no threshold at all.
+if(DEFINED ACTS_LOG_FAILURE_THRESHOLD)
+    message(
+        WARNING
+        "ACTS_LOG_FAILURE_THRESHOLD was removed. Set "
+        "ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON and pass the level in the "
+        "ACTS_LOG_FAILURE_THRESHOLD environment variable instead."
+    )
+    unset(ACTS_LOG_FAILURE_THRESHOLD CACHE)
+endif()
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees

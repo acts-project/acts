@@ -14,6 +14,7 @@
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <optional>
@@ -48,10 +49,13 @@ Result<BoundState> detail::boundState(
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
     // boundToFreeJacobian
-    transportCovarianceToBound(
+    Result<void> transportRes = transportCovarianceToBound(
         geoContext, surface, boundCovariance, fullTransportJacobian,
         freeTransportJacobian, freeToPathDerivatives, boundToFreeJacobian,
         additionalFreeCovariance, freeParameters, freeToBoundCorrection);
+    if (!transportRes.ok()) {
+      return transportRes.error();
+    }
     cov = boundCovariance;
   }
 
@@ -99,7 +103,7 @@ BoundState detail::curvilinearState(
   return {std::move(curvilinearParams), fullTransportJacobian, accumulatedPath};
 }
 
-void detail::transportCovarianceToBound(
+Result<void> detail::transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
@@ -159,9 +163,9 @@ void detail::transportCovarianceToBound(
   // ->The transportJacobian is reinitialized to Identity
   // ->The derivatives is reinitialized to Zero
   // ->The boundToFreeJacobian is initialized to that at the current surface
-  reinitializeJacobians(geoContext, surface, freeTransportJacobian,
-                        freeToPathDerivatives, boundToFreeJacobian,
-                        freeParameters);
+  return reinitializeJacobians(geoContext, surface, freeTransportJacobian,
+                               freeToPathDerivatives, boundToFreeJacobian,
+                               freeParameters);
 }
 
 void detail::transportCovarianceToCurvilinear(
@@ -224,7 +228,11 @@ Result<BoundTrackParameters> detail::boundToBoundConversion(
     freeToPathDerivatives.head<3>() = freePars.segment<3>(eFreeDir0);
 
     freeToPathDerivatives.segment<3>(eFreeDir0) =
-        bField.cross(freePars.segment<3>(eFreeDir0));
+        freePars[eFreeQOverP] * freePars.segment<3>(eFreeDir0).cross(bField);
+
+    const double mass = boundParameters.particleHypothesis().mass();
+    const double absMomentum = boundParameters.absoluteMomentum();
+    freeToPathDerivatives[eFreeTime] = fastHypot(1, mass / absMomentum);
 
     BoundMatrix boundToBoundJac;
     FreeToBoundMatrix freeToBoundJacobian;

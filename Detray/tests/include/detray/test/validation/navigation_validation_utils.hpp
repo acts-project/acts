@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/track_parametrization.hpp"
 #include "detray/geometry/identifier.hpp"
 #include "detray/geometry/surface.hpp"
@@ -132,8 +133,8 @@ struct track_statistics {
 };
 
 /// Run the propagation and record test data along the way
-template <typename stepper_t, typename... actor_ts, typename detector_t,
-          typename bfield_t = empty_bfield>
+template <typename stepper_t, typename... actor_ts,
+          concepts::detector detector_t, typename bfield_t = empty_bfield>
 inline auto record_propagation(
     const typename detector_t::geometry_context ctx,
     vecmem::memory_resource *host_mr, const detector_t &det,
@@ -370,7 +371,8 @@ inline auto record_propagation(
 ///
 /// @returns the counts on missed and additional surfaces, matching errors,
 /// as well as the collections of the intersections that did not match
-template <typename detector_t, typename traj_t, concepts::algebra algebra_t>
+template <concepts::detector detector_t, typename traj_t,
+          concepts::algebra algebra_t>
 auto compare_traces(
     const detray::test::navigation_validation_config<algebra_t> &cfg,
     dvector<intersection_record<detector_t>> &truth_trace,
@@ -854,7 +856,7 @@ auto compare_traces(
 
 /// Write the track positions of a trace @param intersection_traces to a csv
 /// file to the path @param track_param_file_name
-template <typename detector_t, typename allocator_t>
+template <concepts::detector detector_t, typename allocator_t>
 auto write_tracks(const std::string &track_param_file_name,
                   const std::vector<dvector<intersection_record<detector_t>>,
                                     allocator_t> &intersection_traces) {
@@ -882,7 +884,8 @@ auto write_tracks(const std::string &track_param_file_name,
 
 /// Write the distance between the intersection and the surface boundaries in
 /// @param missed_intersections to a csv file at the path @param file_name
-template <typename detector_t, typename track_t, typename intersection_t>
+template <concepts::detector detector_t, typename track_t,
+          typename intersection_t>
 auto write_dist_to_boundary(
     const detector_t &det, const typename detector_t::name_map &names,
     const std::string &file_name,
@@ -1038,8 +1041,9 @@ inline auto print_efficiency(std::size_t n_tracks,
 /// encountered surfaces, stats of missed surfaces for navigation, stats of
 /// missed surfaces for truth traces, recorded step traces, recorded material
 /// traces and integrated material
-template <typename stepper_t, typename... actor_ts, typename detector_t,
-          typename field_view_t, concepts::algebra algebra_t>
+template <typename stepper_t, typename... actor_ts,
+          concepts::detector detector_t, typename field_view_t,
+          concepts::algebra algebra_t>
 auto compare_to_navigation(
     const detray::test::navigation_validation_config<algebra_t> &cfg,
     vecmem::host_memory_resource &host_mr, const detector_t &det,

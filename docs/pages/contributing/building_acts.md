@@ -125,7 +125,7 @@ and they contain all the dependencies required to build ACTS.
 
 > [!note]
 > Most containers are only build for the `x86_64` platform. If you are on an
-> `aarch64` (such as a recent Mac), you'll need to use the `ubuntu2404`
+> `aarch64` (such as a recent Mac), you'll need to use the `ubuntu2604`
 > container, which is built for `aarch64` and `x86_64`!
 
 Furthermore, we are also testing on, but do not provide the corresponding containers:
@@ -144,13 +144,13 @@ available tags, e.g. for the `ubuntu2004` image, you can use the following
 command:
 
 ```console
-docker search --list-tags ghcr.io/acts-project/ubuntu2404
+docker search --list-tags ghcr.io/acts-project/ubuntu2604
 ```
 
-The following command then downloads a stable tag of the `ubuntu2404` image:
+The following command then downloads a stable tag of the `ubuntu2604` image:
 
 ```console
-docker pull ghcr.io/acts-project/ubuntu2404:87
+docker pull ghcr.io/acts-project/ubuntu2604:90
 ```
 
 This should print the image id as part of the output. You can also find out the
@@ -322,7 +322,6 @@ components.
 | ACTS_ENABLE_MEMORY_PROFILING                  | Enable memory profiling using gperftools<br> type: `bool`, default: `OFF`                                                                                                                                                                                                   |
 | ACTS_GPERF_INSTALL_DIR                        | Hint to help find gperf if profiling is<br>enabled<br> type: `string`, default: `""`                                                                                                                                                                                        |
 | ACTS_ENABLE_LOG_FAILURE_THRESHOLD             | Enable failing on log messages with<br>level above certain threshold<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
-| ACTS_LOG_FAILURE_THRESHOLD                    | Log level above which an exception<br>should be automatically thrown. If<br>ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set<br>and this is unset, this will enable a<br>runtime check of the log level.<br> type: `string`, default: `""`                                          |
 | ACTS_COMPILE_HEADERS                          | Generate targets to compile header files<br> type: `bool`, default: `ON`                                                                                                                                                                                                    |
 <!-- CMAKE_OPTS_END -->
 

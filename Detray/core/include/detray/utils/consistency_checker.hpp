@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/geometry/surface.hpp"
 #include "detray/geometry/tracking_volume.hpp"
 #include "detray/material/concepts.hpp"
@@ -48,7 +49,7 @@ void report_empty(const store_t &store,
 /// every acceleration data structure for a given volume
 struct surface_checker {
   /// Test the contained surfaces for consistency
-  template <typename detector_t>
+  template <concepts::detector detector_t>
   DETRAY_HOST_DEVICE void operator()(
       const typename detector_t::surface_type &sf_descr, const detector_t &det,
       const dindex vol_idx, const typename detector_t::name_map &names) const {
@@ -229,7 +230,7 @@ struct material_checker {
 ///
 /// In case the default metadata is used, the unused containers are allowed to
 /// be empty.
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline void check_empty(const detector_t &det, const bool verbose) {
   // Check if there is at least one portal in the detector
   auto find_portals = [&det]() {
@@ -299,7 +300,7 @@ inline void check_empty(const detector_t &det, const bool verbose) {
 }
 
 /// @brief Checks the internal consistency of a detector
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline bool check_consistency(const detector_t &det, const bool verbose = false,
                               const typename detector_t::name_map &names = {}) {
   DETRAY_INFO_HOST("Checking detector consistency...");

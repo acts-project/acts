@@ -13,6 +13,7 @@
 #include "Acts/Seeding/detail/GbtsFilterTypes.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -58,6 +59,11 @@ class GbtsTrackingFilter final {
     float maxCurvature = 1e-3f / Acts::UnitConstants::mm;
     /// Maximum longitudinal impact parameter.
     float maxZ0 = 170.0 * Acts::UnitConstants::mm;
+
+    /// Initial variance of the transverse state (y, dy/dx, d2y/dx2).
+    std::array<float, 3> initialVarianceX = {0.25f, 0.001f, 0.001f};
+    /// Initial variance of the longitudinal state (z, dz/dr).
+    std::array<float, 2> initialVarianceY = {1.5f, 0.001f};
   };
 
   /// @param config Configuration for seed finder
@@ -119,7 +125,7 @@ class GbtsTrackingFilter final {
   /// Get layer type from layer index
   /// @param layerIndex Layer index
   /// @return Layer type
-  GbtsLayerType getLayerType(std::uint32_t layerIndex) const;
+  GbtsLayerType getLayerType(GbtsLayerIndex layerIndex) const;
 };
 
 }  // namespace Acts::Experimental

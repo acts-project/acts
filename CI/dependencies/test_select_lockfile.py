@@ -18,19 +18,24 @@ sys.path.insert(0, str(HERE))
 
 import select_lockfile as sl  # noqa: E402
 
-# Real asset names from v24.0.0, the first release carrying flavors, in the
-# shape the GitHub releases API returns them.
+# Real asset names from v24.0.3, in the shape the GitHub releases API returns
+# them. v24.0.0 first carried flavors but published almost everything at C++23;
+# v24.0.1 put the default back to C++20; v24.0.2 then moved clang to C++23, so
+# the standard is covered on both compilers while the default build and both
+# flavors stay on C++20. Note llvm publishes cxx23 *only* -- there is no clang
+# C++20 stack -- which several rules below turn on.
 V24_ASSETS = [
     "spack_darwin-tahoe-aarch64.lock",
-    "spack_darwin-tahoe-aarch64_apple-clang@17.0.0_cxx23.lock",
+    "spack_darwin-tahoe-aarch64_apple-clang@17.0.0_cxx20.lock",
     "spack_linux-almalinux9-x86_64.lock",
-    "spack_linux-almalinux9-x86_64_gcc@15.2.1_cxx23.lock",
-    "spack_linux-ubuntu26.04-aarch64_gcc@15.2.0_cxx23.lock",
+    "spack_linux-almalinux9-x86_64_gcc@15.2.1_cxx20.lock",
+    "spack_linux-almalinux10-x86_64_gcc@15.2.1_cxx20.lock",
+    "spack_linux-ubuntu26.04-aarch64_gcc@15.2.0_cxx20.lock",
     "spack_linux-ubuntu26.04-x86_64.lock",
     "spack_linux-ubuntu26.04-x86_64_gcc@15.2.0_cxx20.lock",
     "spack_linux-ubuntu26.04-x86_64_gcc@15.2.0_cxx23.lock",
-    "spack_linux-ubuntu26.04-x86_64_gcc@15.2.0_cxx23_cuda13.lock",
-    "spack_linux-ubuntu26.04-x86_64_gcc@15.2.0_cxx23_rocm-gfx90a.lock",
+    "spack_linux-ubuntu26.04-x86_64_gcc@15.2.0_cxx20_cuda13.lock",
+    "spack_linux-ubuntu26.04-x86_64_gcc@15.2.0_cxx20_rocm-gfx90a.lock",
     "spack_linux-ubuntu26.04-x86_64_llvm@22.1.8_cxx23.lock",
 ]
 
@@ -98,14 +103,14 @@ def test_normalize_flavor():
 
 
 def test_flavored_lockfile_is_selected():
-    got = _select(V24_ASSETS, UBUNTU26, "gcc@15.2.0", cxx="cxx23", flavor="cuda13")
-    assert got == "spack_linux-ubuntu26.04-x86_64_gcc@15.2.0_cxx23_cuda13.lock", got
+    got = _select(V24_ASSETS, UBUNTU26, "gcc@15.2.0", cxx="cxx20", flavor="cuda13")
+    assert got == "spack_linux-ubuntu26.04-x86_64_gcc@15.2.0_cxx20_cuda13.lock", got
 
 
 def test_flavor_name_with_dash_is_selected():
-    got = _select(V24_ASSETS, UBUNTU26, "gcc@15.2.0", cxx="cxx23", flavor="rocm-gfx90a")
+    got = _select(V24_ASSETS, UBUNTU26, "gcc@15.2.0", cxx="cxx20", flavor="rocm-gfx90a")
     assert (
-        got == "spack_linux-ubuntu26.04-x86_64_gcc@15.2.0_cxx23_rocm-gfx90a.lock"
+        got == "spack_linux-ubuntu26.04-x86_64_gcc@15.2.0_cxx20_rocm-gfx90a.lock"
     ), got
 
 
@@ -117,17 +122,18 @@ def test_host_request_never_picks_a_flavored_lockfile():
 
 
 def test_flavor_falls_back_across_cxx_but_not_across_flavor():
-    # Flavors ship at cxx23 only, so cxx20+cuda13 must land on the cxx23 CUDA
-    # stack -- never the cxx20 *host* stack, the wrong-but-plausible answer.
-    got = _select(V24_ASSETS, UBUNTU26, "gcc@15.2.0", cxx="cxx20", flavor="cuda13")
-    assert got == "spack_linux-ubuntu26.04-x86_64_gcc@15.2.0_cxx23_cuda13.lock", got
+    # Flavors ship at cxx20 only, so cxx23+cuda13 must land on the cxx20 CUDA
+    # stack -- never the cxx23 *host* stack, the wrong-but-plausible answer,
+    # which v24.0.3 does publish, for gcc and clang alike.
+    got = _select(V24_ASSETS, UBUNTU26, "gcc@15.2.0", cxx="cxx23", flavor="cuda13")
+    assert got == "spack_linux-ubuntu26.04-x86_64_gcc@15.2.0_cxx20_cuda13.lock", got
 
 
 def test_unknown_flavor_exits_rather_than_falling_back():
     # Returning the host stack would surface as a missing-CUDA configure error
     # much later, pointing nowhere near the cause.
     try:
-        _select(V24_ASSETS, UBUNTU26, "gcc@15.2.0", cxx="cxx23", flavor="cuda12")
+        _select(V24_ASSETS, UBUNTU26, "gcc@15.2.0", cxx="cxx20", flavor="cuda12")
     except SystemExit as e:
         assert e.code == 1, e.code
     else:
@@ -153,6 +159,25 @@ def test_exact_compiler_and_cxx_match():
 
 def test_clang_is_an_alias_for_llvm():
     got = _select(V24_ASSETS, UBUNTU26, "clang@22.1.8", cxx="cxx23")
+    assert got == "spack_linux-ubuntu26.04-x86_64_llvm@22.1.8_cxx23.lock", got
+
+
+def test_cxx23_is_published_for_both_compilers():
+    # v24.0.3 covers C++23 on gcc and clang. Each has to land on its own cxx23
+    # build rather than on whichever the pool happens to hold first, and
+    # neither may settle for the cxx20 default.
+    gcc = _select(V24_ASSETS, UBUNTU26, "gcc@15.2.0", cxx="cxx23")
+    assert gcc == "spack_linux-ubuntu26.04-x86_64_gcc@15.2.0_cxx23.lock", gcc
+    clang = _select(V24_ASSETS, UBUNTU26, "clang@22.1.8", cxx="cxx23")
+    assert clang == "spack_linux-ubuntu26.04-x86_64_llvm@22.1.8_cxx23.lock", clang
+
+
+def test_cxx20_request_stays_on_its_compiler_when_only_cxx23_is_published():
+    # ACTS' clang_tidy job asks for clang with no cxx_std, so cxx20, and
+    # v24.0.3 publishes llvm at cxx23 only. It must fall back within llvm: gcc
+    # does publish cxx20, and answering with it would hand a clang job a
+    # gcc-built stack.
+    got = _select(V24_ASSETS, UBUNTU26, "clang@22.1.8", cxx="cxx20")
     assert got == "spack_linux-ubuntu26.04-x86_64_llvm@22.1.8_cxx23.lock", got
 
 

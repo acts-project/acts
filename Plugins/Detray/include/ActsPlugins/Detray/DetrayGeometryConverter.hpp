@@ -59,7 +59,7 @@ class DetrayGeometryConverter {
   /// Bundles the built detray detector together with the detray volume/surface
   /// name map.
   /// @tparam metadata_t the detector metadata type
-  template <typename metadata_t>
+  template <detray::concepts::metadata metadata_t>
   struct DetrayGeometry {
     /// The built detray detector
     std::shared_ptr<detray::detector<metadata_t>> detector;
@@ -98,7 +98,7 @@ class DetrayGeometryConverter {
   ///    detray::detector_builder.
   ///
   /// @return The built detray detector together with its name map.
-  template <typename metadata_t>
+  template <detray::concepts::metadata metadata_t>
   DetrayGeometry<metadata_t> convert(
       vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
       const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,

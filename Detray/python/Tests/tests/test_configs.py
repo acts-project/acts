@@ -29,6 +29,17 @@ def test_material_validation_config():
     assert cfg.propagation.stepping.pathLimit == pytest.approx(1234.0, rel=1e-6)
 
 
+def test_toy_detector_config():
+    cfg = detray.tests.ToyDetectorConfig()
+    cfg.nBarrelLayers = 2
+    cfg.nEndcapLayers = 0
+    cfg.useMaterialMaps = True
+
+    assert cfg.nBarrelLayers == 2
+    assert cfg.nEndcapLayers == 0
+    assert cfg.useMaterialMaps
+
+
 def test_name_map():
     names = detray.core.NameMap()
     names[0] = "volume_0"

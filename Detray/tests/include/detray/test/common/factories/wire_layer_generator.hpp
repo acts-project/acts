@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "detray/builders/surface_factory_interface.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/core/detail/data_context.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
@@ -72,7 +73,7 @@ struct wire_layer_generator_config {
 ///
 /// @tparam detector_t the type of detector the layer should be added to
 /// @tparam mask_shape_t the shape for the drift cells or straw tubes
-template <typename detector_t, typename mask_shape_t = line_square>
+template <concepts::detector detector_t, typename mask_shape_t = line_square>
 class wire_layer_generator final
     : public surface_factory_interface<detector_t> {
   using algebra_t = typename detector_t::algebra_type;
