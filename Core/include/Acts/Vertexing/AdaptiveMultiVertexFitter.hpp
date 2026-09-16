@@ -37,8 +37,8 @@ namespace Acts {
 class AdaptiveMultiVertexFitter final : public IVertexFitter {
   /// @brief Per-vertex scratch data of the adaptive multi-vertex fitter
   ///
-  /// This is the fitter-private counterpart of @ref VertexFitCandidate:
-  /// everything here is regenerated during fitting and carries no meaning for
+  /// This is the fitter-private counterpart of @ref VertexFitCandidate .
+  /// Everything here is regenerated during fitting and carries no meaning for
   /// a caller. It lives in the fitter cache rather than in the fit problem.
   ///
   /// @note @c linPoint and @c oldPosition must be initialised to the seed
@@ -87,10 +87,12 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
     /// Cache scratch data is owned by one caller and cannot be copied.
     Cache(const Cache&) = delete;
     /// Cache scratch data cannot be copy-assigned.
+    /// @return Reference to this cache.
     Cache& operator=(const Cache&) = delete;
     /// Transfer ownership of the scratch data.
     Cache(Cache&&) = default;
     /// Transfer ownership of the scratch data.
+    /// @return Reference to this cache.
     Cache& operator=(Cache&&) = default;
 
     /// Drop the scratch data associated with @p vtx
