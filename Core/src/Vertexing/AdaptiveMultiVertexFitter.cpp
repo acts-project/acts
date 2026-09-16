@@ -266,14 +266,12 @@ Result<Vertex> AdaptiveMultiVertexFitter::fitSingle(
   candidate.trackLinks.assign(trackVector.begin(), trackVector.end());
 
   for (const auto& trk : trackVector) {
-    problem.tracksAtVertices.emplace(
-        std::make_pair(trk, &vtx),
-        TrackAtVertex(m_cfg.extractParameters(trk), trk));
+    problem.tracksAtVertices.try_emplace(std::make_pair(trk, &vtx),
+                                         m_cfg.extractParameters(trk), trk);
   }
   problem.addVertexToMultiMap(vtx);
 
-  auto res = fit(problem, vertexingOptions, cache);
-  if (!res.ok()) {
+  if (auto res = fit(problem, vertexingOptions, cache); !res.ok()) {
     return res.error();
   }
 

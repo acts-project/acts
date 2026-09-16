@@ -40,6 +40,7 @@
 #include <memory>
 #include <numbers>
 #include <random>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -54,6 +55,8 @@ using Acts::VectorHelpers::makeVector4;
 ACTS_LOCAL_LOGGER(getDefaultLogger("AMVFitterTests", Logging::INFO))
 
 using Covariance = BoundMatrix;
+
+static_assert(std::is_nothrow_move_constructible_v<AdaptiveMultiVertexFitter>);
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer;
 

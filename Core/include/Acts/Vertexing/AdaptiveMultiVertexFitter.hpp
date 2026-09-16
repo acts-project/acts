@@ -37,9 +37,9 @@ namespace Acts {
 class AdaptiveMultiVertexFitter final : public IVertexFitter {
   /// @brief Per-vertex scratch data of the adaptive multi-vertex fitter
   ///
-  /// This is the fitter-private counterpart of @c VertexFitCandidate: everything
-  /// here is regenerated during fitting and carries no meaning for a caller. It
-  /// lives in the fitter cache rather than in the fit problem.
+  /// This is the fitter-private counterpart of @ref VertexFitCandidate:
+  /// everything here is regenerated during fitting and carries no meaning for
+  /// a caller. It lives in the fitter cache rather than in the fit problem.
   ///
   /// @note @c linPoint and @c oldPosition must be initialised to the seed
   /// position of the corresponding vertex when the scratch entry is first
@@ -74,7 +74,7 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
   /// Holds everything that is scratch data of a running fit: the annealing
   /// state, the impact point estimator state, the magnetic field cache and the
   /// per-vertex linearization bookkeeping. The data describing *what* is being
-  /// fitted lives in @c VertexFitProblem instead.
+  /// fitted lives in @ref VertexFitProblem instead.
   struct Cache {
     /// Constructor for the multi-vertex fitter cache
     /// @param field Magnetic field provider for track extrapolation
@@ -115,7 +115,7 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
     std::map<const Vertex*, VertexScratch> vertexScratch;
 
     /// Construct a cache adopting an already existing impact point estimator
-    /// state and magnetic field cache. Used by the deprecated @c State based
+    /// state and magnetic field cache. Used by the deprecated @ref State based
     /// entry points, which own those two caches themselves.
     /// @param ipStateIn Impact point estimator state to adopt
     /// @param fieldCacheIn Magnetic field cache to adopt
@@ -182,6 +182,9 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
   explicit AdaptiveMultiVertexFitter(
       Config cfg, std::unique_ptr<const Logger> logger = getDefaultLogger(
                       "AdaptiveMultiVertexFitter", Logging::INFO));
+
+  /// Move constructor
+  AdaptiveMultiVertexFitter(AdaptiveMultiVertexFitter&&) noexcept = default;
 
   /// @brief Adds a new vertex to an existing multi-vertex fit.
   /// 1. The 3D impact parameters are calculated for all tracks associated
@@ -255,10 +258,10 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
 
   /// @brief The fitter state
   ///
-  /// @deprecated Split into @c VertexFitProblem, which describes the vertices
-  /// to be fitted and is owned by the caller, and @c Cache, which holds the
-  /// fitter's scratch data. Construct those two separately and use the
-  /// corresponding @c fit and @c addVtxToFit overloads instead.
+  /// @deprecated Split into @ref VertexFitProblem, which describes the
+  /// vertices to be fitted and is owned by the caller, and @ref Cache, which
+  /// holds the fitter's scratch data. Construct those two separately and use
+  /// the corresponding @ref fit and @ref addVtxToFit overloads instead.
   struct State {
     /// Constructor for multi-vertex fitter state
     /// @param field Magnetic field provider for track extrapolation
@@ -330,7 +333,8 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
 
   /// @brief Adds a new vertex to an existing multi-vertex fit
   ///
-  /// @deprecated Use the overload taking a @c VertexFitProblem and a @c Cache
+  /// @deprecated Use the overload taking a @ref VertexFitProblem and a
+  /// @ref Cache
   ///
   /// @param state Fitter state
   /// @param newVertices Vertex to be added to fit
@@ -347,7 +351,8 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
   /// @brief Performs a simultaneous fit of all vertices in
   /// state.vertexCollection
   ///
-  /// @deprecated Use the overload taking a @c VertexFitProblem and a @c Cache
+  /// @deprecated Use the overload taking a @ref VertexFitProblem and a
+  /// @ref Cache
   ///
   /// @param state Fitter state
   /// @param vertexingOptions Vertexing options
@@ -359,7 +364,7 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
 
  private:
   /// Configuration object
-  const Config m_cfg;
+  Config m_cfg;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

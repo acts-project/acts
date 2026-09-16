@@ -24,19 +24,20 @@ struct VertexingOptions;
 
 /// @brief Common interface for vertex fitters
 ///
-/// A fitter takes a @c VertexFitProblem — the vertices to fit, their
+/// A fitter takes a @ref VertexFitProblem — the vertices to fit, their
 /// constraints and the tracks assigned to them — and updates the vertices in
 /// place. Scratch data is kept in a type-erased, caller-owned cache, so that a
 /// fitter instance is stateless and can be shared between threads.
 ///
 /// @note Implementations differ in one semantic property that this interface
 /// deliberately does not hide: **whether the fitter couples vertices that
-/// share tracks**. @c AdaptiveMultiVertexFitter does — it fits all vertices in
-/// the problem simultaneously and competes shared tracks between them.
-/// @c FullBilloirVertexFitter does not — it fits each vertex independently.
+/// share tracks**. @ref AdaptiveMultiVertexFitter does — it fits all vertices
+/// in the problem simultaneously and competes shared tracks between them.
+/// @ref FullBilloirVertexFitter does not — it fits each vertex independently.
 /// Substituting one for the other is therefore a change of algorithm, not of
-/// configuration. For this reason @c AdaptiveMultiVertexFinder stays bound to
-/// the concrete @c AdaptiveMultiVertexFitter rather than taking this interface.
+/// configuration. For this reason @ref AdaptiveMultiVertexFinder stays bound
+/// to the concrete @ref AdaptiveMultiVertexFitter rather than taking this
+/// interface.
 class IVertexFitter {
  public:
   /// Move-only type-erased wrapper for concrete fitter cache objects
@@ -50,7 +51,7 @@ class IVertexFitter {
   /// Fit all vertices in @p problem, updating them in place
   /// @param problem The multi-vertex fit problem
   /// @param vertexingOptions The vertexing options
-  /// @param cache The cache object (needs to be created via @c makeCache)
+  /// @param cache The cache object (needs to be created via @ref makeCache)
   /// @return Result indicating success or failure of the fit
   virtual Result<void> fit(VertexFitProblem& problem,
                            const VertexingOptions& vertexingOptions,
@@ -65,7 +66,7 @@ class IVertexFitter {
   /// @param problem The multi-vertex fit problem
   /// @param newVertices The vertices to add to the fit
   /// @param vertexingOptions The vertexing options
-  /// @param cache The cache object (needs to be created via @c makeCache)
+  /// @param cache The cache object (needs to be created via @ref makeCache)
   /// @return Result indicating success or failure of the fit
   virtual Result<void> addVertices(VertexFitProblem& problem,
                                    std::span<Vertex* const> newVertices,
@@ -78,7 +79,7 @@ class IVertexFitter {
   ///
   /// @param trackVector The tracks to fit a vertex to
   /// @param vertexingOptions The vertexing options
-  /// @param cache The cache object (needs to be created via @c makeCache)
+  /// @param cache The cache object (needs to be created via @ref makeCache)
   /// @return The fitted vertex
   virtual Result<Vertex> fitSingle(std::span<const InputTrack> trackVector,
                                    const VertexingOptions& vertexingOptions,
