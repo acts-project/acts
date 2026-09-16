@@ -84,7 +84,7 @@ class SphericalSpacePointGrid
     /// maximum number of phi bins
     std::uint32_t maxPhiBins = 10000;
     /// width of the equidistant eta bins used when `etaBinEdges` is empty
-    float etaBinSize = 0.8;
+    float etaBinSize = 0.8f;
     /// enable non equidistant binning in eta (edges given in pseudorapidity;
     /// mapped to cot(theta) = sinh(eta) internally)
     std::vector<float> etaBinEdges{};
