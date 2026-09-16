@@ -80,22 +80,19 @@ struct helix_intersector_impl<cartesian2D<algebra_t>, algebra_t> {
     if (h.B() > 0.f && curvature != 0.f && h.radius() * h.B() >= 1e-6f &&
         vector::dot(sn, field) == 0.f) {
       const vector3_t field_axis = (1.f / h.B()) * field;
-      // Signed plane distance is c + a * sin(K*s) - b * cos(K*s).
-      // Its oscillation amplitude is sqrt(a*a + b*b).
-      const scalar_t a = vector::dot(sn, h.dir()) / curvature;
-      const scalar_t b =
-          vector::dot(sn, vector::cross(field_axis, h.dir())) / curvature;
-      const scalar_t c = vector::dot(sn, h.pos() - st) + b;
-      const scalar_t radius2 = a * a + b * b;
-      const scalar_t distance2 = c * c;
-      // Leave roundoff and the convergence-tolerance band near tangency
-      // to the existing numerical solver.
-      const scalar_t margin = 64.f * std::numeric_limits<scalar_t>::epsilon() *
-                                  (distance2 + radius2) +
-                              2.f * math::fabs(c) * convergence_tolerance +
-                              convergence_tolerance * convergence_tolerance;
-      if (std::isfinite(distance2) && std::isfinite(radius2) &&
-          distance2 - radius2 > margin) {
+      // The transverse circle centre is offset from the initial position.
+      const vector3_t center_offset =
+          (1.f / curvature) * vector::cross(field_axis, h.dir());
+      const scalar_t center_distance = math::fabs(
+          vector::dot(sn, h.pos() - st) + vector::dot(sn, center_offset));
+      const scalar_t radius = h.radius();
+      // Keep near-tangent cases within the solver's tolerance, with an
+      // additional allowance for floating-point roundoff.
+      const scalar_t margin = convergence_tolerance +
+                              64.f * std::numeric_limits<scalar_t>::epsilon() *
+                                  (center_distance + radius);
+      if (std::isfinite(center_distance) && std::isfinite(radius) &&
+          center_distance - radius > margin) {
         constexpr scalar_t inv = detail::invalid_value<scalar_t>();
         return {inv, point3_t{inv, inv, inv}, inv};
       }
