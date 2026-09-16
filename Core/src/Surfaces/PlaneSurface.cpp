@@ -24,6 +24,7 @@
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 
 #include <cmath>
 #include <numbers>
