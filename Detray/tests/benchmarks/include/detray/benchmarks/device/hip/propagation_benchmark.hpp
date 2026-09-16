@@ -134,7 +134,7 @@ struct hip_propagation_bm
         detray::get_buffer(vecmem::get_data(*tracks), *dev_mr, hip_cpy);
 
     // Copy the detector to device and get its view
-    auto det_buffer = detray::get_buffer(*det, *dev_mr, hip_cpy);
+    const auto det_buffer = detray::get_buffer(*det, *dev_mr, hip_cpy);
     auto det_view = detray::get_data(det_buffer);
 
     // Copy blueprint actor states to device

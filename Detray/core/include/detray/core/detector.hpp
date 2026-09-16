@@ -276,12 +276,14 @@ class detector {
     return _accelerators;
   }
 
-  /// @returns view of a detector
-  DETRAY_HOST auto get_data() -> view_type {
-    return view_type{
-        detray::get_data(_volumes),    detray::get_data(_surfaces),
-        detray::get_data(_transforms), detray::get_data(_masks),
-        detray::get_data(_materials),  detray::get_data(_accelerators)};
+  /// @returns view of a detector - vecmem auto-conversion to const view types
+  DETRAY_HOST auto get_data() -> const_view_type {
+    return const_view_type{detray::get_data(std::as_const(_volumes)),
+                           detray::get_data(std::as_const(_surfaces)),
+                           detray::get_data(std::as_const(_transforms)),
+                           detray::get_data(std::as_const(_masks)),
+                           detray::get_data(std::as_const(_materials)),
+                           detray::get_data(std::as_const(_accelerators))};
   }
 
   /// @returns const view of a detector

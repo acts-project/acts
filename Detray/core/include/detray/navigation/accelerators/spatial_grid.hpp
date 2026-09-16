@@ -273,6 +273,7 @@ class grid_collection<spatial_grid_impl<grid_t>>
     : public grid_collection<grid_t> {
   // Use a normal grid collection for the grid related data
   using base_collection = grid_collection<grid_t>;
+  using const_base_collection = const base_collection;
 
   using frame_t = typename grid_t::local_frame_type;
   using mask_t = typename spatial_grid_impl<grid_t>::mask_type;
@@ -290,7 +291,7 @@ class grid_collection<spatial_grid_impl<grid_t>>
       dmulti_view<detail::get_view_t<base_collection>, dvector_view<mask_t>>;
 
   /// Vecmem based grid collection view type
-  using const_view_type = dmulti_view<detail::get_view_t<const base_collection>,
+  using const_view_type = dmulti_view<detail::get_view_t<const_base_collection>,
                                       dvector_view<const mask_t>>;
 
   /// Vecmem based buffer type
@@ -340,10 +341,10 @@ class grid_collection<spatial_grid_impl<grid_t>>
       -> spatial_grid_impl<grid_t> {
     if constexpr (concepts::cylindrical<frame_t>) {
       assert(static_cast<dindex>(m_mask_values.size()) == this->size());
-      return spatial_grid_impl<grid_t>(base_collection::operator[](i),
+      return spatial_grid_impl<grid_t>(const_base_collection::operator[](i),
                                        m_mask_values[i]);
     } else {
-      return spatial_grid_impl<grid_t>(base_collection::operator[](i));
+      return spatial_grid_impl<grid_t>(const_base_collection::operator[](i));
     }
   }
 
@@ -352,10 +353,10 @@ class grid_collection<spatial_grid_impl<grid_t>>
   constexpr auto at(const size_type i) const -> spatial_grid_impl<grid_t> {
     if constexpr (concepts::cylindrical<frame_t>) {
       assert(static_cast<dindex>(m_mask_values.size()) == this->size());
-      return spatial_grid_impl<grid_t>(base_collection::at(i),
+      return spatial_grid_impl<grid_t>(const_base_collection::at(i),
                                        m_mask_values[i]);
     } else {
-      return spatial_grid_impl<grid_t>(base_collection::at(i));
+      return spatial_grid_impl<grid_t>(const_base_collection::at(i));
     }
   }
 
@@ -368,7 +369,7 @@ class grid_collection<spatial_grid_impl<grid_t>>
   /// @returns a vecmem view on the spatial grid collection data - const
   DETRAY_HOST
   auto get_data() const -> const_view_type {
-    return const_view_type{base_collection::get_data(),
+    return const_view_type{const_base_collection::get_data(),
                            detray::get_data(m_mask_values)};
   }
 

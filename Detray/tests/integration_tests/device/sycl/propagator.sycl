@@ -108,7 +108,7 @@ TEST_P(SyclPropConstBFieldCpy, propagator) {
   // Create the toy geometry
   auto [det, names] = build_toy_detector<test_algebra>(host_mr);
 
-  auto det_buff = detray::get_buffer(det, dev_mr, sycl_cpy);
+  const auto det_buff = detray::get_buffer(det, dev_mr, sycl_cpy);
 
   run_propagation_test<bfield::const_bknd_t<scalar>>(
       &shared_mr, &q, det, cfg, detray::get_data(det_buff), field);
@@ -199,7 +199,7 @@ TEST(SyclPropagatorValidation10, inhomogeneous_bfield_cpy) {
     auto [det, names] = build_toy_detector<test_algebra, bfield::inhom_bknd_t>(
         shared_mr, toy_cfg);
 
-    auto det_buff = detray::get_buffer<bfield::sycl::inhom_bknd_t>(det,
+    const auto det_buff = detray::get_buffer<bfield::sycl::inhom_bknd_t>(det,
 cfg,dev_mr, sycl_cpy);
 
     run_propagation_test<bfield::sycl::inhom_bknd_t>(&mng_mr, &q, det, cfg,

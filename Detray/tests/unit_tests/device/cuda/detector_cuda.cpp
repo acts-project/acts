@@ -121,7 +121,7 @@ TEST(detector_cuda, detector_alignment) {
   // copy static detector data (including the initial set of transforms) to
   // the device
   // use synchronous copy and fixed size buffers
-  auto det_buff_static = detray::get_buffer(det_host, dev_mr, cuda_cpy);
+  const auto det_buff_static = detray::get_buffer(det_host, dev_mr, cuda_cpy);
 
   // ---------- construct an "aligned" transform store ---------
 

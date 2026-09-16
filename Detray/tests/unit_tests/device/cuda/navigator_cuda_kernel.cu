@@ -54,7 +54,10 @@ __global__ void navigator_test_kernel(
   bool heartbeat = navigation.is_alive();
   bool do_reset{true};
 
-  while (heartbeat) {
+  // Prevent infinite loops
+  int i = 0;
+  while (heartbeat && i < 10000) {
+    ++i;
     heartbeat =
         heartbeat && stepper.step(navigation(), stepping, step_cfg, do_reset);
 
