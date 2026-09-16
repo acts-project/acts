@@ -1,0 +1,242 @@
+{
+  "periodicTable" : [
+      { "name": "Calcium" , "symbol": "Ca", "atomicNumber" :40.08,  "charge":20},
+  { "name": "Scandium" , "symbol": "Sc", "atomicNumber" :44.956,  "charge":21},
+  { "name": "Titanium" , "symbol": "Ti", "atomicNumber" :47.9,  "charge":22},
+  { "name": "Vanadium" , "symbol": "V", "atomicNumber" :50.942,  "charge":23},
+  { "name": "Chromium" , "symbol": "Cr", "atomicNumber" :51.996,  "charge":24},
+  { "name": "Manganese" , "symbol": "Mn", "atomicNumber" :54.938,  "charge":25},
+  { "name": "Iron" , "symbol": "Fe", "atomicNumber" :55.847,  "charge":26},
+  { "name": "Cobalt" , "symbol": "Co", "atomicNumber" :58.933,  "charge":27},
+  { "name": "Nickel" , "symbol": "Ni", "atomicNumber" :58.71,  "charge":28},
+  { "name": "Copper" , "symbol": "Cu", "atomicNumber" :63.54,  "charge":29},
+  { "name": "Zinc" , "symbol": "Zn", "atomicNumber" :65.37,  "charge":30},
+  { "name": "Gallium" , "symbol": "Ga", "atomicNumber" :69.72,  "charge":31},
+  { "name": "Germanium" , "symbol": "Ge", "atomicNumber" :72.59,  "charge":32},
+  { "name": "Arsenic" , "symbol": "As", "atomicNumber" :74.992,  "charge":33},
+  { "name": "Selenium" , "symbol": "Se", "atomicNumber" :78.96,  "charge":34},
+  { "name": "Bromine" , "symbol": "Br", "atomicNumber" :79.909,  "charge":35},
+  { "name": "Krypton" , "symbol": "Kr", "atomicNumber" :83.8,  "charge":36},
+  { "name": "Rubidium" , "symbol": "Rb", "atomicNumber" :85.47,  "charge":37},
+  { "name": "Strontium" , "symbol": "Sr", "atomicNumber" :87.62,  "charge":38},
+  { "name": "Yttrium" , "symbol": "Y", "atomicNumber" :88.9059,  "charge":39},
+  { "name": "Zirconium" , "symbol": "Zr", "atomicNumber" :91.22,  "charge":40},
+  { "name": "Niobium" , "symbol": "Nb", "atomicNumber" :92.906,  "charge":41},
+  { "name": "Molybdenum" , "symbol": "Mo", "atomicNumber" :95.94,  "charge":42},
+  { "name": "Technetium" , "symbol": "Tc", "atomicNumber" :96.9062,  "charge":43},
+  { "name": "Ruthenium" , "symbol": "Ru", "atomicNumber" :101.07,  "charge":44},
+  { "name": "Rhodium" , "symbol": "Rh", "atomicNumber" :102.905,  "charge":45},
+  { "name": "Palladium" , "symbol": "Pd", "atomicNumber" :106.4,  "charge":46},
+  { "name": "Silver" , "symbol": "Ag", "atomicNumber" :107.87,  "charge":47},
+  { "name": "Cadmium" , "symbol": "Cd", "atomicNumber" :112.4,  "charge":48},
+  { "name": "Indium" , "symbol": "In", "atomicNumber" :114.82,  "charge":49},
+  { "name": "Tin" , "symbol": "Sn", "atomicNumber" :118.69,  "charge":50},
+  { "name": "Antimony" , "symbol": "Sb", "atomicNumber" :121.75,  "charge":51},
+  { "name": "Tellurium" , "symbol": "Te", "atomicNumber" :127.6,  "charge":52},
+  { "name": "Iodine" , "symbol": "I", "atomicNumber" :126.904,  "charge":53},
+  { "name": "Xenon" , "symbol": "Xe", "atomicNumber" :131.3,  "charge":54},
+  { "name": "Cesium" , "symbol": "Cs", "atomicNumber" :132.905,  "charge":55},
+  { "name": "Barium" , "symbol": "Ba", "atomicNumber" :137.34,  "charge":56},
+  { "name": "Lanthanum" , "symbol": "La", "atomicNumber" :138.91,  "charge":57},
+  { "name": "Cerium" , "symbol": "Ce", "atomicNumber" :140.12,  "charge":58},
+  { "name": "Praseodymium" , "symbol": "Pr", "atomicNumber" :140.907,  "charge":59},
+  { "name": "Neodymium" , "symbol": "Nd", "atomicNumber" :144.24,  "charge":60},
+  { "name": "Promethium" , "symbol": "Pm", "atomicNumber" :144.9128,  "charge":61},
+  { "name": "Samarium" , "symbol": "Sm", "atomicNumber" :150.35,  "charge":62},
+  { "name": "Europium" , "symbol": "Eu", "atomicNumber" :151.96,  "charge":63},
+  { "name": "Gadolinium" , "symbol": "Gd", "atomicNumber" :157.25,  "charge":64},
+  { "name": "Terbium" , "symbol": "Tb", "atomicNumber" :158.924,  "charge":65},
+  { "name": "Dysprosium" , "symbol": "Dy", "atomicNumber" :162.5,  "charge":66},
+  { "name": "Holmium" , "symbol": "Ho", "atomicNumber" :164.93,  "charge":67},
+  { "name": "Erbium" , "symbol": "Er", "atomicNumber" :167.26,  "charge":68},
+  { "name": "Thulium" , "symbol": "Tm", "atomicNumber" :168.934,  "charge":69},
+  { "name": "Ytterbium" , "symbol": "Yb", "atomicNumber" :173.04,  "charge":70},
+  { "name": "Lutetium" , "symbol": "Lu", "atomicNumber" :174.97,  "charge":71},
+  { "name": "Hafnium" , "symbol": "Hf", "atomicNumber" :178.49,  "charge":72},
+  { "name": "Tantalum" , "symbol": "Ta", "atomicNumber" :180.948,  "charge":73},
+  { "name": "Wolfram" , "symbol": "W", "atomicNumber" :183.85,  "charge":74},
+  { "name": "Rhenium" , "symbol": "Re", "atomicNumber" :186.2,  "charge":75},
+  { "name": "Osmium" , "symbol": "Os", "atomicNumber" :190.2,  "charge":76},
+  { "name": "Iridium" , "symbol": "Ir", "atomicNumber" :192.22,  "charge":77},
+  { "name": "Platinum" , "symbol": "Pt", "atomicNumber" :195.09,  "charge":78},
+  { "name": "Gold" , "symbol": "Au", "atomicNumber" :196.967,  "charge":79},
+  { "name": "Mercury" , "symbol": "Hg", "atomicNumber" :200.59,  "charge":80},
+  { "name": "Thallium" , "symbol": "Tl", "atomicNumber" :204.37,  "charge":81},
+  { "name": "Lithium" , "symbol": "Li", "atomicNumber" :6.939,  "charge":3},
+  { "name": "Helium" , "symbol": "He", "atomicNumber" :4.0026,  "charge":2},
+  { "name": "Beryllium" , "symbol": "Be", "atomicNumber" :9.0122,  "charge":4},
+  { "name": "Boron" , "symbol": "B", "atomicNumber" :10.811,  "charge":5},
+  { "name": "Carbon" , "symbol": "C", "atomicNumber" :12.0112,  "charge":6},
+  { "name": "Nitrogen" , "symbol": "N", "atomicNumber" :14.0067,  "charge":7},
+  { "name": "Oxygen" , "symbol": "O", "atomicNumber" :15.9994,  "charge":8},
+  { "name": "Fluorine" , "symbol": "F", "atomicNumber" :18.9984,  "charge":9},
+  { "name": "Neon" , "symbol": "Ne", "atomicNumber" :20.183,  "charge":10},
+  { "name": "Sodium" , "symbol": "Na", "atomicNumber" :22.9898,  "charge":11},
+  { "name": "Magnesium" , "symbol": "Mg", "atomicNumber" :24.312,  "charge":12},
+  { "name": "Aluminium" , "symbol": "Al", "atomicNumber" :26.9815,  "charge":13},
+  { "name": "Silicon" , "symbol": "Si", "atomicNumber" :28.086,  "charge":14},
+  { "name": "Phosphorus" , "symbol": "P", "atomicNumber" :30.984,  "charge":15},
+  { "name": "Sulfur" , "symbol": "S", "atomicNumber" :32.064,  "charge":16},
+  { "name": "Chlorine" , "symbol": "Cl", "atomicNumber" :35.453,  "charge":17},
+  { "name": "Argon" , "symbol": "Ar", "atomicNumber" :39.948,  "charge":18},
+  { "name": "Potassium" , "symbol": "K", "atomicNumber" :39.102,  "charge":19},
+  { "name": "Hydrogen" , "symbol": "H", "atomicNumber" :1.00797,  "charge":1},
+  { "name": "Lead" , "symbol": "Pb", "atomicNumber" :207.19,  "charge":82},
+  { "name": "Bismuth" , "symbol": "Bi", "atomicNumber" :208.98,  "charge":83},
+  { "name": "Polonium" , "symbol": "Po", "atomicNumber" :208.98,  "charge":84},
+  { "name": "Astatine" , "symbol": "At", "atomicNumber" :209.987,  "charge":85},
+  { "name": "Radon" , "symbol": "Rn", "atomicNumber" :222.0176,  "charge":86},
+  { "name": "Francium" , "symbol": "Fr", "atomicNumber" :223.0189,  "charge":87},
+  { "name": "Radium" , "symbol": "Ra", "atomicNumber" :226,  "charge":88},
+  { "name": "Actinium" , "symbol": "Ac", "atomicNumber" :227.0278,  "charge":89},
+  { "name": "Thorium" , "symbol": "Th", "atomicNumber" :232.038,  "charge":90},
+  { "name": "Protactinium" , "symbol": "Pa", "atomicNumber" :231.0359,  "charge":91},
+  { "name": "Uranium" , "symbol": "U", "atomicNumber" :238.03,  "charge":92}
+  ],
+  "materials" : [
+    {
+      "name": "Air",
+      "rho": 0.001214,
+      "composition": [
+        { "component": "Nitrogen", "parts": 0.7494 },
+        { "component": "Oxygen", "parts": 0.2369 },
+        { "component": "Argon", "parts": 0.0129 },
+        { "component": "Hydrogen", "parts": 0.0008 }
+      ]
+    },
+    {
+      "name": "Carbon",
+      "rho": 2.265,
+      "composition": [
+        { "component": "Carbon", "parts": 1.0 }
+      ]
+    },
+    {
+      "name": "Aluminium",
+      "rho": 2.7,
+      "composition": [
+        { "component": "Aluminium", "parts": 1.0 }
+      ]
+    },
+    {
+      "name": "Silicon",
+      "rho": 2.33,
+      "composition": [
+        { "component": "Silicon", "parts": 1.0 }
+      ]
+    },
+    {
+      "name": "Copper",
+      "rho": 8.96,
+      "composition": [
+        { "component": "Copper", "parts": 1.0 }
+      ]
+    },
+    {
+      "name": "Kapton",
+      "rho": 1.46,
+      "composition": [
+        { "component": "Carbon", "parts": 22.0 },
+        { "component": "Hydrogen", "parts": 10.0 },
+        { "component": "Oxygen", "parts": 5.0 },
+        { "component": "Nitrogen", "parts": 2.0 }
+      ]
+    },
+    {
+      "name": "Iron",
+      "rho": 7.87,
+      "composition": [
+        { "component": "Iron", "parts": 1.0 }
+      ]
+    },
+    {
+      "name": "Lead",
+      "rho": 11.35,
+      "composition": [
+        { "component": "Lead", "parts": 1.0 }
+      ]
+    },
+    {
+      "name": "Quartz",
+      "rho": 2.62,
+      "composition": [
+        { "component": "Silicon", "parts": 0.47 },
+        { "component": "Oxygen", "parts": 0.53 }
+      ]
+    },
+    {
+      "name": "Feldspar",
+      "rho": 2.56,
+      "composition": [
+        { "component": "Oxygen", "parts": 0.46 },
+        { "component": "Silicon", "parts": 0.3 },
+        { "component": "Potassium", "parts": 0.14 },
+        { "component": "Aluminium", "parts": 0.1 }
+      ]
+    },
+    {
+      "name": "Rock",
+      "rho": 2.33,
+      "composition": [
+        { "component": "std::Quartz", "parts": 0.83 },
+        { "component": "std::Feldspar", "parts": 0.17 }
+      ]
+    },
+    {
+      "name": "Concrete",
+      "rho": 2.4,
+      "composition": [
+        { "component": "Oxygen", "parts": 0.5 },
+        { "component": "Calcium", "parts": 0.2 },
+        { "component": "Silicon", "parts": 0.2 },
+        { "component": "Carbon", "parts": 0.03 },
+        { "component": "Aluminium", "parts": 0.03 },
+        { "component": "Iron", "parts": 0.014 },
+        { "component": "Potassium", "parts": 0.01 },
+        { "component": "Sodium", "parts": 0.01 },
+        { "component": "Hydrogen", "parts": 0.006 }
+      ]
+    },
+    {
+      "name": "Titanium",
+      "rho": 4.507,
+      "composition": [
+        { "component": "Titanium", "parts": 1.0 }
+      ]
+    },
+    {
+      "name": "Water",
+      "rho": 1.0,
+      "composition": [
+        { "component": "Hydrogen", "parts": 2.0 },
+        { "component": "Oxygen", "parts": 1.0 }
+      ]
+    },
+    {
+      "name": "Steel",
+      "rho": 7.87,
+      "composition": [
+        { "component": "Iron", "parts": 0.74 },
+        { "component": "Chromium", "parts": 0.18 },
+        { "component": "Nickel", "parts": 0.08 }
+      ]
+    },
+    {
+      "name": "CO2",
+      "rho": 0.00184,
+      "composition": [
+        { "component": "Carbon", "parts": 1.0 },
+        { "component": "Oxygen", "parts": 2.0 }
+      ]
+    },
+    {
+      "name": "ArCO2",
+      "rho": 0.0054,
+      "namespace": "Muon",
+      "composition": [
+        { "component": "Argon", "parts": 0.93 },
+        { "component": "std::CO2", "parts": 0.07 }
+      ]
+    }
+  ]
+}
