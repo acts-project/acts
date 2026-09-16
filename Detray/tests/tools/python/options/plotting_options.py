@@ -61,7 +61,7 @@ def parse_plotting_options(args, logging):
         os.mkdir(args.outdir, 0o755)
 
     if args.output_format not in ["svg", "png", "pdf"]:
-        logging.error(f"Unknown output file format: {out_format}")
+        logging.error(f"Unknown output file format: {args.output_format}")
         sys.exit(1)
 
     return args.inputdir, args.outdir, args.output_format
