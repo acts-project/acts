@@ -189,7 +189,7 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
   }
 
   // Set up and populate a queue with concurrent slot indices.
-  tbb::concurrent_bounded_queue<size_t> concurrent_slots;
+  tbb::concurrent_bounded_queue<std::size_t> concurrent_slots;
   concurrent_slots.set_capacity(
       static_cast<typename decltype(concurrent_slots)::size_type>(
           threading_opts.concurrent_slots));
@@ -258,7 +258,7 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
                                 input_opts.events;
 
       // Get a free concurrent slot.
-      size_t slot = std::numeric_limits<size_t>::max();
+      std::size_t slot = std::numeric_limits<std::size_t>::max();
       concurrent_slots.pop(slot);
       // Launch the processing of the event.
       arena.execute([&, event, slot]() {
@@ -298,7 +298,7 @@ int throughput_mt(std::string_view description, int argc, char* argv[],
                                 input_opts.events;
 
       // Get a free concurrent slot.
-      size_t slot = std::numeric_limits<size_t>::max();
+      std::size_t slot = std::numeric_limits<std::size_t>::max();
       concurrent_slots.pop(slot);
       // Launch the processing of the event.
       arena.execute([&, event, slot]() {

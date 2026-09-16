@@ -5,6 +5,8 @@
  * Mozilla Public License Version 2.0
  */
 
+#pragma once
+
 // CUDA include(s).
 #include <cuda_runtime_api.h>
 
