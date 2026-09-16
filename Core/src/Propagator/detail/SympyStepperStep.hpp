@@ -12,6 +12,8 @@
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <cmath>
+
 namespace Acts {
 
 class IVolumeMaterial;
@@ -23,6 +25,14 @@ enum class SympyStepMode {
   Vacuum,
   Dense,
 };
+
+/// dt/ds from the state's current q/p, for refreshing @c State::dtds
+inline double sympyDtds(const SympyStepper::State& state) {
+  const double m = state.particleHypothesis.mass();
+  const double p =
+      state.particleHypothesis.extractMomentum(state.pars[eFreeQOverP]);
+  return std::sqrt(1 + m * m / (p * p));
+}
 
 /// @brief A whole Runge-Kutta step
 ///
