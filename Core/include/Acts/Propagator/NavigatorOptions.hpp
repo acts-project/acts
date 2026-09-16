@@ -20,7 +20,11 @@ class GeometryContext;
 class Surface;
 class TrackingVolume;
 
-/// Plain navigator options carrying geometry context and surfaces.
+/// Plain navigator options carrying geometry context and navigation settings.
+///
+/// These are bound to the lifetime of a navigation state and have to be
+/// invariant across all runs it serves. Per-run inputs belong into
+/// @c NavigatorInitializeArguments instead.
 struct NavigatorPlainOptions {
   /// NavigatorPlainOptions with context
   /// @param gctx The geometry context
@@ -29,11 +33,6 @@ struct NavigatorPlainOptions {
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
-
-  /// Start surface for navigation
-  const Surface* startSurface{};
-  /// Target surface for navigation
-  const Surface* targetSurface{};
 
   /// The surface tolerance
   double surfaceTolerance = s_onSurfaceTolerance;

@@ -239,10 +239,13 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     const TrackingVolume* startVol =
         tGeometry->resolveLowestTrackingVolume(tgContext, position).value();
     const Layer* startLay = startVol->associatedLayer(tgContext, position);
-    state.options.startSurface = startSurf;
-    state.options.targetSurface = startSurf;
     BOOST_CHECK(
-        navigator.initialize(state, position, direction, Direction::Forward())
+        navigator
+            .initialize(state, {.position = position,
+                                .direction = direction,
+                                .propagationDirection = Direction::Forward(),
+                                .startSurface = startSurf,
+                                .targetSurface = startSurf})
             .ok());
     BOOST_CHECK(testNavigatorStateVectors(state, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state, startVol, startLay, startSurf,
@@ -256,7 +259,10 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
         tGeometry->resolveLowestTrackingVolume(tgContext, position).value();
     startLay = startVol->associatedLayer(tgContext, position);
     BOOST_CHECK(
-        navigator.initialize(state, position, direction, Direction::Forward())
+        navigator
+            .initialize(state, {.position = position,
+                                .direction = direction,
+                                .propagationDirection = Direction::Forward()})
             .ok());
     BOOST_CHECK(testNavigatorStateVectors(state, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state, startVol, startLay, nullptr,
@@ -264,9 +270,12 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
 
     ACTS_INFO("    b) Initialise having a start surface");
     state = navigator.makeState(options);
-    state.options.startSurface = startSurf;
     BOOST_CHECK(
-        navigator.initialize(state, position, direction, Direction::Forward())
+        navigator
+            .initialize(state, {.position = position,
+                                .direction = direction,
+                                .propagationDirection = Direction::Forward(),
+                                .startSurface = startSurf})
             .ok());
     BOOST_CHECK(testNavigatorStateVectors(state, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state, startVol, startLay, startSurf,
@@ -274,14 +283,63 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
 
     ACTS_INFO("    c) Initialise having a start volume");
     state = navigator.makeState(options);
-    state.startVolume = startVol;
     BOOST_CHECK(
-        navigator.initialize(state, position, direction, Direction::Forward())
+        navigator
+            .initialize(state, {.position = position,
+                                .direction = direction,
+                                .propagationDirection = Direction::Forward(),
+                                .startVolume = startVol})
             .ok());
     BOOST_CHECK(testNavigatorStateVectors(state, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state, startVol, startLay, nullptr,
                                            nullptr, startVol, nullptr));
   }
+}
+
+// A navigation state can be reused for another navigation run, for example when
+// the combinatorial track finder jumps to another branch. The start information
+// of the previous run must not leak into the new one.
+BOOST_AUTO_TEST_CASE(Navigator_reinitialize_does_not_reuse_start_state) {
+  ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
+
+  Navigator::Config navCfg;
+  navCfg.trackingGeometry = tGeometry;
+  Navigator navigator{navCfg};
+
+  const Vector3 direction = Vector3::UnitX();
+
+  // two positions which resolve to different volumes
+  const Vector3 firstPosition = Vector3::Zero();
+  const Vector3 secondPosition = Vector3(300_mm, 0, 0);
+  const TrackingVolume* firstVolume =
+      tGeometry->resolveLowestTrackingVolume(tgContext, firstPosition).value();
+  const TrackingVolume* secondVolume =
+      tGeometry->resolveLowestTrackingVolume(tgContext, secondPosition).value();
+  BOOST_REQUIRE_NE(firstVolume, nullptr);
+  BOOST_REQUIRE_NE(secondVolume, nullptr);
+  BOOST_REQUIRE_NE(firstVolume, secondVolume);
+
+  Navigator::Options options(tgContext);
+  Navigator::State state = navigator.makeState(options);
+
+  BOOST_REQUIRE(
+      navigator
+          .initialize(state, {.position = firstPosition,
+                              .direction = direction,
+                              .propagationDirection = Direction::Forward()})
+          .ok());
+  BOOST_CHECK_EQUAL(state.startVolume, firstVolume);
+
+  // reusing the state must resolve the second volume by search instead of
+  // falling back onto the start volume of the first run
+  BOOST_CHECK(
+      navigator
+          .initialize(state, {.position = secondPosition,
+                              .direction = direction,
+                              .propagationDirection = Direction::Forward()})
+          .ok());
+  BOOST_CHECK_EQUAL(state.startVolume, secondVolume);
+  BOOST_CHECK_EQUAL(state.currentVolume, secondVolume);
 }
 
 BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
@@ -310,7 +368,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // - this will call resolveLayers() as well
   // - and thus should call a return to the stepper
   BOOST_CHECK(
-      navigator.initialize(state, position, direction, Direction::Forward())
+      navigator
+          .initialize(state, {.position = position,
+                              .direction = direction,
+                              .propagationDirection = Direction::Forward()})
           .ok());
   // Check that the currentVolume is set
   BOOST_CHECK_NE(state.currentVolume, nullptr);
@@ -575,8 +636,10 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     Vector3 position = Vector3::Zero();
     Vector3 direction = Vector3::UnitZ();
 
-    Result<void> result =
-        navigator.initialize(state, position, direction, Direction::Forward());
+    Result<void> result = navigator.initialize(
+        state, {.position = position,
+                .direction = direction,
+                .propagationDirection = Direction::Forward()});
     BOOST_CHECK(result.ok());
 
     NavigationTarget target = navigator.nextTarget(state, position, direction);
@@ -595,8 +658,10 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     Vector3 position = {0, 0.5_m, 0};
     Vector3 direction = Vector3::UnitZ();
 
-    Result<void> result =
-        navigator.initialize(state, position, direction, Direction::Forward());
+    Result<void> result = navigator.initialize(
+        state, {.position = position,
+                .direction = direction,
+                .propagationDirection = Direction::Forward()});
     BOOST_CHECK(result.ok());
 
     NavigationTarget target = navigator.nextTarget(state, position, direction);
@@ -616,8 +681,10 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     Vector3 position = {0, -0.5_m, 0};
     Vector3 direction = Vector3::UnitZ();
 
-    Result<void> result =
-        navigator.initialize(state, position, direction, Direction::Forward());
+    Result<void> result = navigator.initialize(
+        state, {.position = position,
+                .direction = direction,
+                .propagationDirection = Direction::Forward()});
     BOOST_CHECK(result.ok());
 
     NavigationTarget target = navigator.nextTarget(state, position, direction);
@@ -638,8 +705,10 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     Vector3 position = Vector3::Zero();
     Vector3 direction = Vector3::UnitZ();
 
-    Result<void> result =
-        navigator.initialize(state, position, direction, Direction::Forward());
+    Result<void> result = navigator.initialize(
+        state, {.position = position,
+                .direction = direction,
+                .propagationDirection = Direction::Forward()});
     BOOST_CHECK(result.ok());
 
     NavigationTarget target = navigator.nextTarget(state, position, direction);
@@ -660,8 +729,10 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     Vector3 position = {0, 0.5_m, 0};
     Vector3 direction = Vector3::UnitZ();
 
-    Result<void> result =
-        navigator.initialize(state, position, direction, Direction::Forward());
+    Result<void> result = navigator.initialize(
+        state, {.position = position,
+                .direction = direction,
+                .propagationDirection = Direction::Forward()});
     BOOST_CHECK(result.ok());
 
     NavigationTarget target = navigator.nextTarget(state, position, direction);
@@ -682,8 +753,10 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     Vector3 position = {0, -0.5_m, 0};
     Vector3 direction = Vector3::UnitZ();
 
-    Result<void> result =
-        navigator.initialize(state, position, direction, Direction::Forward());
+    Result<void> result = navigator.initialize(
+        state, {.position = position,
+                .direction = direction,
+                .propagationDirection = Direction::Forward()});
     BOOST_CHECK(result.ok());
 
     NavigationTarget target = navigator.nextTarget(state, position, direction);
@@ -768,8 +841,10 @@ BOOST_AUTO_TEST_CASE(TryAllNavigationPolicy_SurfaceInsideVolume) {
   Vector3 position{0., 0., -1000. + 0.5};
   Vector3 direction = Vector3::UnitZ();
 
-  Result<void> result =
-      navigator.initialize(state, position, direction, Direction::Forward());
+  Result<void> result = navigator.initialize(
+      state, {.position = position,
+              .direction = direction,
+              .propagationDirection = Direction::Forward()});
   BOOST_CHECK(result.ok());
   BOOST_CHECK(state.currentVolume != nullptr);
   BOOST_CHECK(state.currentVolume->volumeName() == "parent");
@@ -898,10 +973,12 @@ BOOST_AUTO_TEST_CASE(NavigationStartOnPortalGen3) {
   auto initializeOnPortal =
       [&](const Vector3& direction) -> const TrackingVolume* {
     Navigator::Options options(tgContext);
-    options.startSurface = &sharedPortal->surface();
     Navigator::State state = navigator.makeState(options);
-    Result<void> result =
-        navigator.initialize(state, position, direction, Direction::Forward());
+    Result<void> result = navigator.initialize(
+        state, {.position = position,
+                .direction = direction,
+                .propagationDirection = Direction::Forward(),
+                .startSurface = &sharedPortal->surface()});
     BOOST_REQUIRE(result.ok());
     return state.currentVolume;
   };
@@ -951,10 +1028,12 @@ BOOST_AUTO_TEST_CASE(NavigationStartOnBoundaryGen1) {
   auto initializeOnBoundary =
       [&](const Vector3& direction) -> const TrackingVolume* {
     Navigator::Options options(tgContext);
-    options.startSurface = boundarySurface;
     Navigator::State state = navigator.makeState(options);
-    Result<void> result =
-        navigator.initialize(state, position, direction, Direction::Forward());
+    Result<void> result = navigator.initialize(
+        state, {.position = position,
+                .direction = direction,
+                .propagationDirection = Direction::Forward(),
+                .startSurface = boundarySurface});
     BOOST_REQUIRE(result.ok());
     return state.currentVolume;
   };
