@@ -5,6 +5,8 @@
  * Mozilla Public License Version 2.0
  */
 
+#pragma once
+
 // Local include(s).
 #include "traccc/device/global_index.hpp"
 #include "traccc/edm/device/device_triplet.hpp"

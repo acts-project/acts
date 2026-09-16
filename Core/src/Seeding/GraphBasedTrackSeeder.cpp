@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <memory>
 #include <numbers>
+#include <span>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -191,7 +192,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
 
   // loop over bin groups
   for (const auto& bg : m_geometry->binGroups()) {
-    const detail::GbtsEtaBinInfo& B1 = nodeStorage.etaBin(bg.first);
+    const detail::GbtsEtaBinInfo& B1 = nodeStorage.etaBin(bg.bin);
 
     if (B1.empty()) {
       continue;
@@ -199,28 +200,23 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
 
     const float rb1 = B1.minRadius;
 
-    const GbtsExperimentLayerId layerId1 = B1.layerId;
+    const std::int32_t barrelOrder1 = B1.barrelOrder;
 
     const bool isPixel1 = B1.technology == GbtsLayerTechnology::Pixel;
-    // The adaptive tau corrections and the triplet validation below were tuned
-    // on the pixel barrel and are keyed on it, which is what ATLAS's
-    // (layerId / 10000) == 8 selects: its strip barrel is numbered 13xxx.
-    const bool isPixelBarrel1 = isPixel1 && B1.type == GbtsLayerType::Barrel;
+    const bool isPixelBarrel1 = barrelOrder1 >= 0;
 
-    const auto listed =
-        [layerId1](const std::vector<GbtsExperimentLayerId>& ids) {
-          return std::ranges::find(ids, layerId1) != ids.end();
-        };
-    const bool useZ0Histogram = listed(m_cfg.z0HistogramLayerIds);
+    const bool useZ0Histogram =
+        barrelOrder1 >= 0 && barrelOrder1 <= m_cfg.z0HistogramMaxBarrelOrder;
     const bool useMatchBeforeCreate =
-        m_cfg.matchBeforeCreate && listed(m_cfg.matchBeforeCreateLayerIds);
+        m_cfg.matchBeforeCreate && barrelOrder1 >= 0 &&
+        barrelOrder1 <= m_cfg.matchBeforeCreateMaxBarrelOrder;
 
     // prepare a sliding window for each non-empty bin2 in the group
 
     phiSlidingWindow.clear();
 
     // loop over n2 eta-bins in L2 layers
-    for (const auto& b2Idx : bg.second) {
+    for (const std::uint32_t b2Idx : bg.links) {
       const detail::GbtsEtaBinInfo& B2 = nodeStorage.etaBin(b2Idx);
 
       if (B2.empty()) {
@@ -247,7 +243,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
       window.phiNodes = B2.phiNodes.data();
       window.numPhiNodes = static_cast<std::uint32_t>(B2.phiNodes.size());
       window.deltaPhi = deltaPhi;
-      window.layerId = B2.layerId;
+      window.barrelOrder = B2.barrelOrder;
       window.type = B2.type;
       window.technology = B2.technology;
     }
@@ -282,11 +278,10 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
 
       // the intermediate loop over sliding windows
       for (auto& slw : phiSlidingWindow) {
-        const GbtsExperimentLayerId lk2 = slw.layerId;
+        const std::int32_t barrelOrder2 = slw.barrelOrder;
 
         const bool isPixel2 = slw.technology == GbtsLayerTechnology::Pixel;
-        const bool isPixelBarrel2 =
-            isPixel2 && slw.type == GbtsLayerType::Barrel;
+        const bool isPixelBarrel2 = barrelOrder2 >= 0;
 
         const bool stripPair = calibrate && (!isPixel1 || !isPixel2);
 
@@ -462,8 +457,8 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float dPhi1 = curv * r1c;
 
           if (nEdges < m_cfg.nMaxEdges) {
-            edgeStorage.emplace_back(n1Idx, n2Idx, lk2, isPixelBarrel2, expEta,
-                                     curv, phi1 + dPhi1);
+            edgeStorage.emplace_back(n1Idx, n2Idx, barrelOrder2, expEta, curv,
+                                     phi1 + dPhi1);
 
             ++numCreatedEdges;
 
@@ -489,16 +484,17 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
                 continue;
               }
 
-              const GbtsExperimentLayerId lk3 = pS->n2LayerId;
+              const std::int32_t barrelOrder3 = pS->n2BarrelOrder;
 
-              const bool isPixelBarrel3 = pS->n2PixelBarrel;
+              const bool isPixelBarrel3 = barrelOrder3 >= 0;
 
               float addTauRatioCorr = 0;
 
               if (m_cfg.useAdaptiveCuts) {
                 if (isPixelBarrel1 && isPixelBarrel2 && isPixelBarrel3) {
-                  const bool noGap =
-                      ((lk3 - lk2) == 1000) && ((lk2 - layerId1) == 1000);
+                  // three radially consecutive layers, none skipped
+                  const bool noGap = (barrelOrder2 - barrelOrder1) == 1 &&
+                                     (barrelOrder3 - barrelOrder2) == 1;
 
                   // assume more scattering due to the layer in between
                   if (!noGap) {

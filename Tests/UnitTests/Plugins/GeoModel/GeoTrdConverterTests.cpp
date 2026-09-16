@@ -183,8 +183,8 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
       make_intrusive<GeoLogVol>("LogVolumeDouble", trapDouble, material);
   auto fphysDouble = make_intrusive<GeoFullPhysVol>(logDouble);
 
-  BOOST_CHECK_THROW(GeoTrdConverter{}.toSensitiveSurface(
-                        fphysDouble, idTransform, boundFactory),
+  BOOST_CHECK_THROW(static_cast<void>(GeoTrdConverter{}.toSensitiveSurface(
+                        fphysDouble, idTransform, boundFactory)),
                     std::invalid_argument);
 }
 
