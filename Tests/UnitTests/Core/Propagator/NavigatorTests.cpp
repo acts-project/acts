@@ -39,6 +39,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
