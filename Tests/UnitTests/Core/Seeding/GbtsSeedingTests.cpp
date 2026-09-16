@@ -16,6 +16,7 @@
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
+#include "Acts/Seeding/detail/GbtsGraph.hpp"
 
 #include <algorithm>
 #include <array>
@@ -375,6 +376,7 @@ SpacePointContainer makeStripSpacePoints(const ToyDetector& detector,
 /// The seeder and everything it needs, for one toy detector.
 struct SeederSetup {
   Experimental::GraphBasedTrackSeeder seeder;
+  Experimental::detail::GbtsGraph graph;
   Experimental::GbtsTrackingFilter filter;
   Experimental::GbtsRoiDescriptor roi;
   Experimental::GraphBasedTrackSeeder::Options options;
@@ -396,18 +398,22 @@ SeederSetup makeSeeder(const ToyDetector& detector,
   };
 
   Experimental::GraphBasedTrackSeeder::Config config;
-  config.minPt = 1_GeV;
-  config.minZ0 = -kBarrelHalfZ;
-  config.maxZ0 = kBarrelHalfZ;
-  config.maxOuterRadius = detector.maxOuterRadius;
   // the toy setup has no tau lookup table and no cluster widths
   config.useClusterWidthCuts = false;
-  config.calibrateStrips = calibrateStrips;
+
+  Experimental::detail::GbtsGraph::Config graphConfig;
+  graphConfig.minPt = 1_GeV;
+  graphConfig.minZ0 = -kBarrelHalfZ;
+  graphConfig.maxZ0 = kBarrelHalfZ;
+  graphConfig.maxOuterRadius = detector.maxOuterRadius;
+  graphConfig.calibrateStrips = calibrateStrips;
 
   return SeederSetup{
       .seeder = Experimental::GraphBasedTrackSeeder(
           Experimental::GraphBasedTrackSeeder::DerivedConfig(config), geometry,
           makeLogger()),
+      .graph =
+          Experimental::detail::GbtsGraph(graphConfig, geometry, makeLogger()),
       .filter = Experimental::GbtsTrackingFilter(
           Experimental::GbtsTrackingFilter::Config{}, geometry, makeLogger()),
       .roi = Experimental::GbtsRoiDescriptor(-4.5, 4.5, -kBarrelHalfZ,
@@ -423,8 +429,8 @@ SeedContainer runSeeding(const ToyDetector& detector,
   SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
 
-  setup.seeder.createSeeds(spacePoints, setup.roi, setup.filter, setup.options,
-                           seeds);
+  setup.seeder.createSeeds(spacePoints, setup.roi, setup.graph, setup.filter,
+                           setup.options, seeds);
 
   return seeds;
 }
@@ -598,8 +604,8 @@ BOOST_AUTO_TEST_CASE(SeedsFromCallerFilledNodeStorage) {
 
   SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
-  setup.seeder.createSeeds(storage, setup.roi, setup.filter, setup.options,
-                           seeds);
+  setup.seeder.createSeeds(storage, setup.roi, setup.graph, setup.filter,
+                           setup.options, seeds);
 
   BOOST_CHECK_EQUAL(formatSeeds(seeds),
                     formatSeeds(runSeeding(detector, spacePoints)));
@@ -754,7 +760,7 @@ BOOST_AUTO_TEST_CASE(StripLayersNeedTheirPairResolved) {
     const SeederSetup setup = makeSeeder(detector, calibrate, /*quiet=*/true);
     SeedContainer seeds;
     seeds.assignSpacePointContainer(spacePoints);
-    setup.seeder.createSeeds(spacePoints, setup.roi, setup.filter,
+    setup.seeder.createSeeds(spacePoints, setup.roi, setup.graph, setup.filter,
                              setup.options, seeds);
     return seeds.size();
   };

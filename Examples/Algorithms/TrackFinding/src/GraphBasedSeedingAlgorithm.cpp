@@ -8,7 +8,6 @@
 
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 
-#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
@@ -23,7 +22,6 @@
 #include <fstream>
 #include <iostream>
 #include <map>
-#include <numbers>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -155,8 +153,8 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   m_actsGbtsMap = makeActsGbtsMap();
 
   // read which layers may be connected
-  const ConnectorTable connectorTable = readConnectorTable(
-      m_cfg.connectorInputFile, m_cfg.seedFinderConfig.useStripConnections);
+  const ConnectorTable connectorTable =
+      readConnectorTable(m_cfg.connectorInputFile, m_cfg.useStripConnections);
 
   // the cluster width cuts are the only user of the tau lookup table
   if (m_cfg.seedFinderConfig.useClusterWidthCuts) {
@@ -185,15 +183,18 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
   // for pixel seeding, roi z bounds are used
-
   m_internalRoi.emplace(-4.5, 4.5, -150., 150.);
-  m_cfg.seedFinderConfig.maxZ0 = m_internalRoi->zMax();
-  m_cfg.seedFinderConfig.minZ0 = m_internalRoi->zMin();
 
-  m_finder = Acts::Experimental::GraphBasedTrackSeeder(
-      Acts::Experimental::GraphBasedTrackSeeder::DerivedConfig(
-          m_cfg.seedFinderConfig),
-      geometry, this->logger().cloneWithSuffix("GbtsFinder"));
+  // the RoI owns the luminous region, so it overrides what came in
+  m_cfg.graphConfig.maxZ0 = m_internalRoi->zMax();
+  m_cfg.graphConfig.minZ0 = m_internalRoi->zMin();
+
+  m_graph.emplace(m_cfg.graphConfig, geometry,
+                  this->logger().cloneWithSuffix("GbtsGraph"));
+
+  m_finder.emplace(Acts::Experimental::GraphBasedTrackSeeder::DerivedConfig(
+                       m_cfg.seedFinderConfig),
+                   geometry, this->logger().cloneWithSuffix("GbtsFinder"));
 
   m_filter = Acts::Experimental::GbtsTrackingFilter(
       m_cfg.trackingFilterConfig, geometry,
@@ -241,8 +242,8 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
 
   // create the seeds
 
-  m_finder->createSeeds(nodeStorage, m_internalRoi.value(), *m_filter, options,
-                        seeds);
+  m_finder->createSeeds(nodeStorage, m_internalRoi.value(), *m_graph, *m_filter,
+                        options, seeds);
 
   m_outputSeeds(ctx, std::move(seeds));
 
@@ -518,49 +519,51 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("connectorInputFile: " << m_cfg.connectorInputFile);
   ACTS_DEBUG("lutInputFile: " << m_cfg.lutInputFile);
   ACTS_DEBUG("etaBinWidthOverride: " << m_cfg.etaBinWidthOverride);
+  ACTS_DEBUG("useStripConnections: " << m_cfg.useStripConnections);
   ACTS_DEBUG("===== GraphBasedTrackSeeder =====");
   const auto &cfg1 = m_cfg.seedFinderConfig;
-  ACTS_DEBUG("BeamSpotCorrection: " << cfg1.beamSpotCorrection);
-  ACTS_DEBUG("useStripConnections: " << cfg1.useStripConnections);
-  ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
-  ACTS_DEBUG("matchBeforeCreate: " << cfg1.matchBeforeCreate);
-  ACTS_DEBUG("tauRatioCut: " << cfg1.tauRatioCut);
-  ACTS_DEBUG("tauRatioPrecut: " << cfg1.tauRatioPrecut);
   ACTS_DEBUG("nMaxPhiSlice: " << cfg1.nMaxPhiSlice);
-  ACTS_DEBUG("minPt: " << cfg1.minPt);
-  ACTS_DEBUG("useEtaBinning: " << cfg1.useEtaBinning);
-  ACTS_DEBUG("doubletFilterRZ: " << cfg1.doubletFilterRZ);
-  ACTS_DEBUG("nMaxEdges: " << cfg1.nMaxEdges);
-  ACTS_DEBUG("minDeltaRadius: " << cfg1.minDeltaRadius);
+  ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
   ACTS_DEBUG("edgeMaskMinEta: " << cfg1.edgeMaskMinEta);
   ACTS_DEBUG("hitShareThreshold: " << cfg1.hitShareThreshold);
   ACTS_DEBUG("maxEndcapClusterWidth: " << cfg1.maxEndcapClusterWidth);
-  ACTS_DEBUG("validateTriplets: " << cfg1.validateTriplets);
-  ACTS_DEBUG("useAdaptiveCuts: " << cfg1.useAdaptiveCuts);
-  ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
-  ACTS_DEBUG("tauRatioCorr: " << cfg1.tauRatioCorr);
-  ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
-  ACTS_DEBUG("d0Max: " << cfg1.d0Max);
-  ACTS_DEBUG("cutDPhiMax: " << cfg1.cutDPhiMax);
-  ACTS_DEBUG("cutDCurvMax: " << cfg1.cutDCurvMax);
-  ACTS_DEBUG("minZ0: " << cfg1.minZ0);
-  ACTS_DEBUG("maxZ0: " << cfg1.maxZ0);
-  ACTS_DEBUG("maxOuterRadius: " << cfg1.maxOuterRadius);
   ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);
   ACTS_DEBUG("maxInvRadDiff: " << cfg1.maxInvRadDiff);
-  ACTS_DEBUG("===== GbtsTrackFilter =====");
-  const auto &cfg2 = m_cfg.trackingFilterConfig;
-  ACTS_DEBUG("sigmaMS: " << cfg2.sigmaMS);
-  ACTS_DEBUG("radLen: " << cfg2.radLen);
-  ACTS_DEBUG("sigmaX: " << cfg2.sigmaX);
-  ACTS_DEBUG("sigmaY: " << cfg2.sigmaY);
-  ACTS_DEBUG("weightX: " << cfg2.weightX);
-  ACTS_DEBUG("weightY: " << cfg2.weightY);
-  ACTS_DEBUG("maxDChi2X: " << cfg2.maxDChi2X);
-  ACTS_DEBUG("maxDChi2Y: " << cfg2.maxDChi2Y);
-  ACTS_DEBUG("addHit: " << cfg2.addHit);
-  ACTS_DEBUG("maxCurvature: " << cfg2.maxCurvature);
+  ACTS_DEBUG("=====GbtsGraph=====");
+  const auto &cfg2 = m_cfg.graphConfig;
+  ACTS_DEBUG("matchBeforeCreate: " << cfg2.matchBeforeCreate);
+  ACTS_DEBUG("tauRatioCut: " << cfg2.tauRatioCut);
+  ACTS_DEBUG("tauRatioPrecut: " << cfg2.tauRatioPrecut);
+  ACTS_DEBUG("minPt: " << cfg2.minPt);
+  ACTS_DEBUG("useEtaBinning: " << cfg2.useEtaBinning);
+  ACTS_DEBUG("doubletFilterRZ: " << cfg2.doubletFilterRZ);
+  ACTS_DEBUG("nMaxEdges: " << cfg2.nMaxEdges);
+  ACTS_DEBUG("minDeltaRadius: " << cfg2.minDeltaRadius);
+  ACTS_DEBUG("validateTriplets: " << cfg2.validateTriplets);
+  ACTS_DEBUG("useAdaptiveCuts: " << cfg2.useAdaptiveCuts);
+  ACTS_DEBUG("tauRatioCorr: " << cfg2.tauRatioCorr);
+  ACTS_DEBUG("d0Max: " << cfg2.d0Max);
+  ACTS_DEBUG("cutDPhiMax: " << cfg2.cutDPhiMax);
+  ACTS_DEBUG("cutDCurvMax: " << cfg2.cutDCurvMax);
+  ACTS_DEBUG("minZ0: " << cfg2.minZ0);
   ACTS_DEBUG("maxZ0: " << cfg2.maxZ0);
+  ACTS_DEBUG("maxOuterRadius: " << cfg2.maxOuterRadius);
+  ACTS_DEBUG("minSeedLevel: " << cfg2.minSeedLevel);
+  ACTS_DEBUG("addTriplets: " << cfg2.addTriplets);
+  ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg2.maxAbsEtaAddTriplets);
+  ACTS_DEBUG("===== GbtsTrackFilter =====");
+  const auto &cfg3 = m_cfg.trackingFilterConfig;
+  ACTS_DEBUG("sigmaMS: " << cfg3.sigmaMS);
+  ACTS_DEBUG("radLen: " << cfg3.radLen);
+  ACTS_DEBUG("sigmaX: " << cfg3.sigmaX);
+  ACTS_DEBUG("sigmaY: " << cfg3.sigmaY);
+  ACTS_DEBUG("weightX: " << cfg3.weightX);
+  ACTS_DEBUG("weightY: " << cfg3.weightY);
+  ACTS_DEBUG("maxDChi2X: " << cfg3.maxDChi2X);
+  ACTS_DEBUG("maxDChi2Y: " << cfg3.maxDChi2Y);
+  ACTS_DEBUG("addHit: " << cfg3.addHit);
+  ACTS_DEBUG("maxCurvature: " << cfg3.maxCurvature);
+  ACTS_DEBUG("maxZ0: " << cfg3.maxZ0);
   ACTS_DEBUG("================================");
 }
 

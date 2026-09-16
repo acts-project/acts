@@ -15,6 +15,7 @@
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
+#include "Acts/Seeding/detail/GbtsGraph.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
@@ -61,12 +62,20 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// Magnetic field in z direction
     float bFieldInZ = 2 * Acts::UnitConstants::T;
 
+    /// keeps or disregards strip layers during parsing
+    bool useStripConnections = false;
+
     /// contains all the options used to steer the algorithm
     /// includes both user options available to change in the python script and
     /// those seen just be the algorithm
     Acts::Experimental::GraphBasedTrackSeeder::Config seedFinderConfig;
 
+    /// steers the chain-following filter of seed extraction
     Acts::Experimental::GbtsTrackingFilter::Config trackingFilterConfig;
+
+    /// steers doublet creation, edge linking and chain selection. `minZ0` and
+    /// `maxZ0` are overridden from the region of interest.
+    Acts::Experimental::detail::GbtsGraph::Config graphConfig;
 
     /// the connection table (parsed from csv file) used to make geoemetry cuts
     /// be GBTS
@@ -113,6 +122,11 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// actual seed finder algorithm
   std::optional<Acts::Experimental::GraphBasedTrackSeeder> m_finder;
 
+  /// graph used in creating and extracting edges, edge connections
+  /// and valid chains
+  std::optional<Acts::Experimental::detail::GbtsGraph> m_graph;
+
+  /// filter used to extract seed candidates from graph
   std::optional<Acts::Experimental::GbtsTrackingFilter> m_filter;
 
   /// conversion between ACTS labelling of volume, layer and modules to that
