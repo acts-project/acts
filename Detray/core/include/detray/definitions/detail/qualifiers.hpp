@@ -73,3 +73,9 @@
 #else
 #define DETRAY_GRID_CONSTANT
 #endif
+
+#if defined(__CUDA_ARCH__)
+#define DETRAY_DEVICE_CONSTANT __constant__
+#else
+#define DETRAY_DEVICE_CONSTANT
+#endif
