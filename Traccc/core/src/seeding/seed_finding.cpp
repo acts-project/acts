@@ -12,6 +12,9 @@
 #include "seed_filtering.hpp"
 #include "triplet_finding.hpp"
 
+// Project include(s).
+#include "traccc/seeding/spacepoint_binning_helper.hpp"
+
 namespace traccc::host::details {
 
 struct seed_finding::impl {
@@ -19,7 +22,8 @@ struct seed_finding::impl {
   impl(const seedfinder_config& finder_config,
        const seedfilter_config& filter_config, vecmem::memory_resource& mr,
        std::unique_ptr<const Logger> logger)
-      : m_midBot_finding(finder_config, mr,
+      : m_finder_config(finder_config),
+        m_midBot_finding(finder_config, mr,
                          logger->cloneWithSuffix("MidBotAlg")),
         m_midTop_finding(finder_config, mr,
                          logger->cloneWithSuffix("MidTopAlg")),
@@ -29,6 +33,8 @@ struct seed_finding::impl {
                          logger->cloneWithSuffix("FilterAlg")),
         m_mr{mr} {}
 
+  /// The seed finding configuration
+  seedfinder_config m_finder_config;
   /// Algorithm performing the mid bottom doublet finding
   doublet_finding<traccc::details::spacepoint_type::bottom> m_midBot_finding;
   /// Algorithm performing the mid top doublet finding
@@ -74,6 +80,12 @@ edm::seed_collection::host seed_finding::operator()(
     for (unsigned int j = 0; j < middle_indices.size(); ++j) {
       // Internal identifier for this middle spacepoint.
       sp_location spM_location({i, j});
+
+      // Only consider spacepoints in the configured middle spacepoint range.
+      if (!is_valid_middle_sp(m_impl->m_finder_config,
+                              spacepoints.at(middle_indices[j]))) {
+        continue;
+      }
 
       // middule-bottom doublet search
       const auto mid_bot =

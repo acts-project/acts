@@ -9,6 +9,7 @@
 
 // Project include(s).
 #include "traccc/seeding/doublet_finding_helper.hpp"
+#include "traccc/seeding/spacepoint_binning_helper.hpp"
 
 // VecMem include(s).
 #include <vecmem/memory/device_atomic_ref.hpp>
@@ -44,6 +45,11 @@ inline void count_doublets(
   // as the "middle" spacepoint.
   const edm::spacepoint_collection::const_device::const_proxy_type middle_sp =
       spacepoints.at(sp_grid.bin(middle_sp_idx.first).at(middle_sp_idx.second));
+
+  // Only consider spacepoints in the configured middle spacepoint range.
+  if (!is_valid_middle_sp(config, middle_sp)) {
+    return;
+  }
 
   // The the IDs of the neighbouring bins along the phi and Z axes of the
   // grid.

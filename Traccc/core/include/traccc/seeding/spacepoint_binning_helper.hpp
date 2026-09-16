@@ -110,6 +110,22 @@ inline std::pair<axis2::circular<>, axis2::regular<>> get_axes(
   return {m_phi_axis, m_z_axis};
 }
 
+/// Check whether a spacepoint may be used as the middle spacepoint of a seed
+///
+/// @param config The seed finding configuration
+/// @param sp     The spacepoint to check
+///
+template <typename T>
+inline TRACCC_HOST_DEVICE bool is_valid_middle_sp(
+    const seedfinder_config& config, const edm::spacepoint<T>& sp) {
+  const scalar r = sp.radius();
+  if (r < config.rMinMiddle || r > config.rMaxMiddle) {
+    return false;
+  }
+  const scalar z = sp.z();
+  return (z >= config.zMinMiddle && z <= config.zMaxMiddle);
+}
+
 template <typename T>
 inline TRACCC_HOST_DEVICE bool is_valid_sp(const seedfinder_config& config,
                                            const edm::spacepoint<T>& sp) {
