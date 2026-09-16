@@ -95,10 +95,12 @@ bool Navigator::navigationBreak(const State& state) const {
   return state.navigationBreak;
 }
 
-Result<void> Navigator::initialize(State& state, const Vector3& position,
-                                   const Vector3& direction,
-                                   Direction propagationDirection) const {
-  static_cast<void>(propagationDirection);
+Result<void> Navigator::initialize(
+    State& state, const NavigatorInitializeArguments& args) const {
+  state.resetForInitialization();
+
+  const Vector3& position = args.position;
+  const Vector3& direction = args.direction;
 
   ACTS_VERBOSE(volInfo(state) << "Initialization.");
 
@@ -116,8 +118,6 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
   ACTS_VERBOSE(volInfo(state) << "Geometry version is: "
                               << printGeometryVersion(m_geometryVersion));
 
-  state.resetForRenavigation();
-
   if (m_geometryVersion == GeometryVersion::Gen3) {
     // Empirical pre-allocation of candidates for the next navigation
     // iteration.
@@ -133,50 +133,54 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
     }
   }
 
-  state.startSurface = state.options.startSurface;
-  state.targetSurface = state.options.targetSurface;
+  // @TODO: Implement fast initialization with Gen3. This requires the volume
+  // lookup to work properly
+
+  // Resolved into locals and written to the state only once complete, so a
+  // previous run cannot leak into the resolution
+  const TrackingVolume* startVolume = args.startVolume;
+  const Layer* startLayer = nullptr;
+  const Surface* startSurface = args.startSurface;
 
   // Validate that the propagation state is consistent with the start surface
   // before it is used to resolve the start volume
-  if (state.startSurface != nullptr &&
-      !state.startSurface->isOnSurface(state.options.geoContext, position,
-                                       direction, BoundaryTolerance::Infinite(),
-                                       state.options.surfaceTolerance)) {
-    ACTS_DEBUG(volInfo(state)
+  if (startSurface != nullptr &&
+      !startSurface->isOnSurface(state.options.geoContext, position, direction,
+                                 BoundaryTolerance::Infinite(),
+                                 state.options.surfaceTolerance)) {
+    ACTS_DEBUG(volInfo(startVolume)
                << "We did not end up on the expected surface. surface = "
-               << state.startSurface->geometryId()
+               << startSurface->geometryId()
                << " position = " << position.transpose()
                << " direction = " << direction.transpose());
 
     return Result<void>::failure(NavigatorError::NotOnExpectedSurface);
   }
 
-  // @TODO: Implement fast initialization with Gen3. This requires the volume
-  // lookup to work properly
-
   // Fast Navigation initialization for start condition:
   // - short-cut through object association, saves navigation in the
   // - geometry and volume tree search for the lowest volume
   using enum TrackingGeometry::GeometryVersion;
-  if (m_geometryVersion == Gen1 && state.startSurface != nullptr &&
-      state.startSurface->associatedLayer() != nullptr) {
+  if (m_geometryVersion == Gen1 && startSurface != nullptr &&
+      startSurface->associatedLayer() != nullptr) {
     ACTS_VERBOSE(
-        volInfo(state)
+        volInfo(startVolume)
         << "Fast start initialization through association from Surface.");
 
-    state.startLayer = state.startSurface->associatedLayer();
-    state.startVolume = state.startLayer->trackingVolume();
-  } else if (m_geometryVersion == Gen1 && state.startVolume != nullptr &&
-             state.startSurface == nullptr) {
+    startLayer = startSurface->associatedLayer();
+    startVolume = startLayer->trackingVolume();
+  } else if (m_geometryVersion == Gen1 && startVolume != nullptr &&
+             startSurface == nullptr) {
     ACTS_VERBOSE(
-        volInfo(state)
+        volInfo(startVolume)
         << "Fast start initialization through association from Volume.");
 
-    state.startLayer =
-        state.startVolume->associatedLayer(state.options.geoContext, position);
+    startLayer =
+        startVolume->associatedLayer(state.options.geoContext, position);
   } else {
-    ACTS_VERBOSE(volInfo(state) << "Slow start initialization through search.");
-    ACTS_VERBOSE(volInfo(state)
+    ACTS_VERBOSE(volInfo(startVolume)
+                 << "Slow start initialization through search.");
+    ACTS_VERBOSE(volInfo(startVolume)
                  << "Starting from position " << toString(position)
                  << " and direction " << toString(direction));
 
@@ -185,65 +189,71 @@ Result<void> Navigator::initialize(State& state, const Vector3& position,
     // determine the start volume: the volume actually being entered depends
     // on the direction, so the start surface is passed along as a hint.
     const auto resolved = m_cfg.trackingGeometry->resolveLowestTrackingVolume(
-        state.options.geoContext, position, direction, state.startSurface,
+        state.options.geoContext, position, direction, startSurface,
         state.options.surfaceTolerance);
     if (!resolved.ok()) {
       // The start surface bounds the volume at the position, but the position
       // is outside of them, e.g. when grazing a volume edge within the surface
       // tolerance.
-      ACTS_DEBUG(volInfo(state)
+      ACTS_DEBUG(volInfo(startVolume)
                  << "Could not resolve the start volume through the start "
                     "surface = "
-                 << state.startSurface->geometryId() << ": "
+                 << startSurface->geometryId() << ": "
                  << resolved.error().message());
 
       state.navigationBreak = true;
       return Result<void>::failure(resolved.error());
     }
-    state.startVolume = *resolved;
+    startVolume = *resolved;
 
-    if (state.startVolume != nullptr) {
-      state.startLayer = state.startVolume->associatedLayer(
-          state.options.geoContext, position);
+    if (startVolume != nullptr) {
+      startLayer =
+          startVolume->associatedLayer(state.options.geoContext, position);
     } else {
-      ACTS_DEBUG(volInfo(state)
+      ACTS_DEBUG(volInfo(startVolume)
                  << "No start volume resolved. Nothing left to do.");
       state.navigationBreak = true;
       return Result<void>::failure(NavigatorError::NoStartVolume);
     }
   }
 
-  state.currentVolume = state.startVolume;
-  state.currentLayer = state.startLayer;
-  state.currentSurface = state.startSurface;
+  if (startVolume != nullptr) {
+    ACTS_VERBOSE(volInfo(startVolume)
+                 << "Start volume resolved " << startVolume->geometryId());
 
-  if (state.currentVolume != nullptr) {
-    ACTS_VERBOSE(volInfo(state) << "Start volume resolved "
-                                << state.currentVolume->geometryId());
-
-    if (!state.currentVolume->inside(state.options.geoContext, position,
-                                     state.options.surfaceTolerance)) {
-      ACTS_DEBUG(volInfo(state)
+    if (!startVolume->inside(state.options.geoContext, position,
+                             state.options.surfaceTolerance)) {
+      ACTS_DEBUG(volInfo(startVolume)
                  << "We did not end up inside the expected volume. position = "
                  << position.transpose());
 
       return Result<void>::failure(NavigatorError::NotInsideExpectedVolume);
     }
 
-    if (state.currentVolume->navigationPolicy() != nullptr) {
-      ACTS_VERBOSE(volInfo(state)
+    if (startVolume->navigationPolicy() != nullptr) {
+      ACTS_VERBOSE(volInfo(startVolume)
                    << "Creating initial navigation policy state for volume.");
-      createPolicyState(state, position, direction);
+      createPolicyState(state, *startVolume, position, direction);
     }
   }
-  if (state.currentLayer != nullptr) {
-    ACTS_VERBOSE(volInfo(state) << "Start layer resolved "
-                                << state.currentLayer->geometryId());
+  if (startLayer != nullptr) {
+    ACTS_VERBOSE(volInfo(startVolume)
+                 << "Start layer resolved " << startLayer->geometryId());
   }
-  if (state.currentSurface != nullptr) {
-    ACTS_VERBOSE(volInfo(state) << "Start surface resolved "
-                                << state.currentSurface->geometryId());
+  if (startSurface != nullptr) {
+    ACTS_VERBOSE(volInfo(startVolume)
+                 << "Start surface resolved " << startSurface->geometryId());
   }
+
+  state.startVolume = startVolume;
+  state.startLayer = startLayer;
+  state.startSurface = startSurface;
+
+  state.currentVolume = startVolume;
+  state.currentLayer = startLayer;
+  state.currentSurface = startSurface;
+
+  state.targetSurface = args.targetSurface;
 
   return Result<void>::success();
 }
@@ -292,7 +302,7 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
 
     ACTS_VERBOSE(volInfo(state) << "Creating navigation policy state for new "
                                    "volume after renavigation.");
-    createPolicyState(state, position, direction);
+    createPolicyState(state, *state.currentVolume, position, direction);
   }
 
   state.currentLayer =
@@ -401,7 +411,7 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
         ACTS_VERBOSE(volInfo(state)
                      << "Creating navigation policy state for new "
                         "volume after portal transition.");
-        createPolicyState(state, position, direction);
+        createPolicyState(state, *state.currentVolume, position, direction);
 
         // this is set only for the check target validity since gen3 does not
         // care
@@ -623,11 +633,9 @@ NavigationTarget Navigator::tryGetNextTarget(State& state,
   }
 }
 
-void Navigator::createPolicyState(State& state, const Vector3& position,
+void Navigator::createPolicyState(State& state, const TrackingVolume& volume,
+                                  const Vector3& position,
                                   const Vector3& direction) const {
-  assert(state.currentVolume != nullptr && "currentVolume is nullptr");
-
-  const TrackingVolume& volume = *state.currentVolume;
   const INavigationPolicy& policy = *volume.navigationPolicy();
 
   // Statelessness is probed once at construction and fixed thereafter, so it is
@@ -637,7 +645,7 @@ void Navigator::createPolicyState(State& state, const Vector3& position,
   state.policyStateIsDefault = policy.isStateless();
 
   if (skipPolicyState(volume)) {
-    ACTS_VERBOSE(volInfo(state)
+    ACTS_VERBOSE(volInfo(&volume)
                  << "Volume policy is stateless, skipping state creation.");
     return;
   }
@@ -891,12 +899,15 @@ bool Navigator::inactive(const State& state) const {
 }
 
 std::string Navigator::volInfo(const State& state) const {
-  if (state.currentVolume == nullptr) {
+  return volInfo(state.currentVolume);
+}
+
+std::string Navigator::volInfo(const TrackingVolume* volume) const {
+  if (volume == nullptr) {
     return "No Volume | ";
   }
   std::stringstream sstr{};
-  sstr << state.currentVolume->volumeName() << " ("
-       << state.currentVolume->geometryId() << ") | ";
+  sstr << volume->volumeName() << " (" << volume->geometryId() << ") | ";
   return sstr.str();
 }
 
