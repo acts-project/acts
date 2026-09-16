@@ -363,29 +363,24 @@ include(ActsExternSources)
 if(ACTS_SETUP_BOOST)
     # Enable both program_options and unit_test_framework to reduce complexity
     # Also Cuda tests seem to use program_options
+    set(_acts_boost_components)
     if(
         ACTS_BUILD_ANALYSIS_APPS
         OR ACTS_BUILD_UNITTESTS
         OR ACTS_BUILD_INTEGRATIONTESTS
         OR ACTS_BUILD_BENCHMARKS
     )
-        find_package(
-            Boost
-            ${_acts_boost_version}
-            REQUIRED
-            COMPONENTS program_options unit_test_framework
-        )
-    else()
-        find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
+        list(APPEND _acts_boost_components program_options unit_test_framework)
     endif()
 
-    # Only the Mille plugin needs these, and neither is part of every Boost
-    # installation (Boost.Process is a compiled library since Boost 1.88).
-    # Probe them quietly here, the plugin reports if one it needs is missing.
+    # Only the Mille plugin needs process/filesystem, and neither is part of
+    # every Boost installation (Boost.Process is a compiled library since Boost
+    # 1.88). The plugin reports if the one it needs is missing.
     find_package(
         Boost
         ${_acts_boost_version}
-        QUIET
+        REQUIRED
+        COMPONENTS ${_acts_boost_components}
         OPTIONAL_COMPONENTS process filesystem
     )
 
