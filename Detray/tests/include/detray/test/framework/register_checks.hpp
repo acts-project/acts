@@ -8,6 +8,9 @@
 
 #pragma once
 
+// Project include(s)
+#include "detray/core/concepts.hpp"
+
 // Detray test include(s)
 #include "detray/test/framework/whiteboard.hpp"
 
@@ -20,7 +23,7 @@
 
 namespace detray::test {
 
-template <template <typename> class check_t, typename detector_t,
+template <template <typename> class check_t, concepts::detector detector_t,
           typename config_t = typename check_t<detector_t>::config>
 void register_checks(const detector_t &det,
                      const typename detector_t::name_map &vol_names,
@@ -42,7 +45,7 @@ void register_checks(const detector_t &det,
                           });
 }
 
-template <template <typename> class check_t, typename detector_t,
+template <template <typename> class check_t, concepts::detector detector_t,
           typename config_t = typename check_t<detector_t>::config>
 void register_checks(const detector_t &det,
                      const typename detector_t::name_map &vol_names,

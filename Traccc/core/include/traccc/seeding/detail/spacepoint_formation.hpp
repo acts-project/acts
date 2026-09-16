@@ -14,7 +14,7 @@
 
 namespace traccc::details {
 
-/// Function helping with checking a measurement obejct for spacepoint creation
+/// Function helping with checking a measurement object for spacepoint creation
 ///
 /// @param[in]  measurement The input measurement
 template <typename measurement_backend_t>
@@ -28,7 +28,7 @@ TRACCC_HOST_DEVICE inline bool is_valid_measurement(
 /// @param[in]  measurement The measurement to create the spacepoint out of
 /// @param[in]  gctx        The current geometry context
 ///
-template <typename spacepoint_backend_t, typename detector_t,
+template <typename spacepoint_backend_t, detray::concepts::detector detector_t,
           typename measurement_backend_t>
 TRACCC_HOST_DEVICE inline void fill_pixel_spacepoint(
     edm::spacepoint<spacepoint_backend_t>& sp, const detector_t& det,

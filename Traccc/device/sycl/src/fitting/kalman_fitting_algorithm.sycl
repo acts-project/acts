@@ -30,9 +30,9 @@ namespace kernels {
 
 struct fill_fitting_sort_keys;
 struct fit_prelude;
-template <typename detector_t, typename bfield_t>
+template <detray::concepts::detector detector_t, typename bfield_t>
 struct fit_forward;
-template <typename detector_t, typename bfield_t>
+template <detray::concepts::detector detector_t, typename bfield_t>
 struct fit_backward;
 
 }  // namespace kernels

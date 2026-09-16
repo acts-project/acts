@@ -13,6 +13,7 @@
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/math.hpp"
 #include "detray/definitions/units.hpp"
+#include "detray/propagator/constrained_step.hpp"
 #include "detray/propagator/stepping_config.hpp"
 #include "detray/tracks/ray.hpp"
 

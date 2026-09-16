@@ -147,7 +147,11 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
   BOOST_CHECK_LT(converted.covariance.value()(3, 3), 1.2);
 
   BOOST_CHECK_GT(converted.covariance.value()(4, 4), 0);
-  BOOST_CHECK_EQUAL(converted.covariance.value()(5, 5), 25_ns);
+  // The time variance grows slightly: the path length from the plane surface
+  // to the ad-hoc perigee varies with the other (uncertain) parameters, and
+  // dt/ds couples that variation into the time.
+  BOOST_CHECK_GT(converted.covariance.value()(5, 5), 25_ns);
+  CHECK_CLOSE_REL(converted.covariance.value()(5, 5), 25_ns, 1e-4);
 
   // convert back for roundtrip test
   BoundTrackParameters roundtripPar =
@@ -161,7 +165,8 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
       roundtripPar.covariance().value().topLeftCorner<3, 3>())));
   CHECK_CLOSE_ABS(roundtripPar.covariance().value()(3, 3), 1, 1e-6);
   CHECK_CLOSE_ABS(roundtripPar.covariance().value()(4, 4), 1, 1e-6);
-  BOOST_CHECK_EQUAL(roundtripPar.covariance().value()(5, 5), 25_ns);
+  BOOST_CHECK_GT(roundtripPar.covariance().value()(5, 5), 25_ns);
+  CHECK_CLOSE_REL(roundtripPar.covariance().value()(5, 5), 25_ns, 1e-4);
 
   auto roundtripPlaneBoundParams =
       detail::boundToBoundConversion(gctx, roundtripPar, *planeSurface).value();

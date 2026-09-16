@@ -99,6 +99,8 @@ struct LayerCreatorFixture {
         cfg, getDefaultLogger("LayerCreator", Logging::VERBOSE));
   }
 
+  /// Every bin has to hold at least @p n surfaces. A bin on a module boundary
+  /// holds more, since surfaces are registered in every bin they overlap.
   bool checkBinContentSize(const SurfaceArray* sArray, std::size_t n) {
     std::size_t nBins = sArray->size();
     bool result = true;
@@ -108,8 +110,8 @@ struct LayerCreatorFixture {
       }
       const std::span<const Surface* const> binContent = sArray->at(i);
       BOOST_TEST_INFO("Bin: " << i);
-      BOOST_CHECK_EQUAL(binContent.size(), n);
-      result = result && binContent.size() == n;
+      BOOST_CHECK_GE(binContent.size(), n);
+      result = result && binContent.size() >= n;
     }
 
     return result;
@@ -428,7 +430,6 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
     Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
     const std::span<const Surface* const> binContent =
         layer->surfaceArray()->at(tgContext, ctr, ctr.normalized());
-    BOOST_CHECK_EQUAL(binContent.size(), 2u);
 
     std::set<const Surface*> exp({A, B});
     BOOST_CHECK(std::ranges::includes(binContent, exp));

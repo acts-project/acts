@@ -27,11 +27,13 @@ namespace {
 /// @param [out] out the transported covariance
 void applyBoundCovarianceTransport(const BoundMatrix& jacobian,
                                    const BoundMatrix& in, BoundMatrix& out) {
+  const auto j = std::span<const double, 36>(jacobian.data(), 36);
+  const auto c = std::span<const double, 36>(in.data(), 36);
+  const auto o = std::span<double, 36>(out.data(), 36);
   if (jacobian(eBoundQOverP, eBoundQOverP) == 1) {
-    transportCovarianceToBoundVacuumImpl(in.data(), jacobian.data(),
-                                         out.data());
+    transportCovarianceToBoundVacuumImpl(c, j, o);
   } else {
-    transportCovarianceToBoundDenseImpl(in.data(), jacobian.data(), out.data());
+    transportCovarianceToBoundDenseImpl(c, j, o);
   }
 }
 
@@ -62,10 +64,13 @@ Result<BoundState> sympy::boundState(
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
     // boundToFreeJacobian
-    transportCovarianceToBound(geoContext, surface, boundCovariance,
-                               fullTransportJacobian, freeToPathDerivatives,
-                               boundToFreeJacobian, additionalFreeCovariance,
-                               freeParameters, freeToBoundCorrection);
+    Result<void> transportRes = transportCovarianceToBound(
+        geoContext, surface, boundCovariance, fullTransportJacobian,
+        freeToPathDerivatives, boundToFreeJacobian, additionalFreeCovariance,
+        freeParameters, freeToBoundCorrection);
+    if (!transportRes.ok()) {
+      return transportRes.error();
+    }
     cov = boundCovariance;
   }
 
@@ -111,7 +116,7 @@ BoundState sympy::curvilinearState(
   return {std::move(curvilinearParams), fullTransportJacobian, accumulatedPath};
 }
 
-void sympy::transportCovarianceToBound(
+Result<void> sympy::transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
@@ -167,8 +172,8 @@ void sympy::transportCovarianceToBound(
   // Reinitialize jacobian components:
   // ->The derivatives are reinitialized to Zero
   // ->The boundToFreeJacobian is initialized to that at the current surface
-  reinitializeJacobians(geoContext, surface, freeToPathDerivatives,
-                        boundToFreeJacobian, freeParameters);
+  return reinitializeJacobians(geoContext, surface, freeToPathDerivatives,
+                               boundToFreeJacobian, freeParameters);
 }
 
 void sympy::transportCovarianceToCurvilinear(

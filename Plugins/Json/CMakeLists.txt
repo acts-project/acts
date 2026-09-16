@@ -23,6 +23,7 @@ acts_add_library(
     src/SeedingConfigJsonConverter.cpp
     src/TrackingGeometryJsonConverter.cpp
     src/BetheHeitlerApproxJsonConverter.cpp
+    src/detail/JsonIo.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
@@ -42,5 +43,19 @@ target_compile_definitions(
     ActsPluginJson
     PRIVATE JSON_DISABLE_ENUM_SERIALIZATION=1
 )
+
+# zstd is optional: without it, reading a compressed file and requesting
+# compressed output both fail with an explanatory error. All zstd use is
+# confined to the .cpp, so the definition stays private and the headers
+# compile identically either way.
+message(CHECK_START "Json plugin: checking for zstd")
+find_package(ZSTD QUIET)
+if(ZSTD_FOUND)
+    message(CHECK_PASS "found")
+    target_link_libraries(ActsPluginJson PRIVATE ZSTD::ZSTD)
+    target_compile_definitions(ActsPluginJson PRIVATE ACTS_JSON_ZSTD_SUPPORT=1)
+else()
+    message(CHECK_FAIL "not found")
+endif()
 
 acts_compile_headers(PluginJson GLOB include/**/*.hpp)

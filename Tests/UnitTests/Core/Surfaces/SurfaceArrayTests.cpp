@@ -20,6 +20,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <fstream>
@@ -202,17 +203,18 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   // let's see if we can access all surfaces
   sa.toStream(tgContext, std::cout);
 
+  // the bin a surface's own centre falls into has to hold it
   for (const auto& srf : brl) {
     const Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
     const Vector3 normal = srf->normal(tgContext, ctr, Vector3::UnitZ());
     const auto binContent = sa.at(tgContext, ctr, normal);
 
-    BOOST_CHECK(binContent.size() <= 2u);
+    BOOST_CHECK(std::ranges::find(binContent, srf.get()) != binContent.end());
   }
 
   const auto neighbors = sa.neighbors(tgContext, itransform(Vector2(0, 0)),
                                       itransform(Vector2(0, 0)).normalized());
-  BOOST_CHECK_EQUAL(neighbors.size(), 6u);
+  BOOST_CHECK_EQUAL(neighbors.size(), 16u);
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {

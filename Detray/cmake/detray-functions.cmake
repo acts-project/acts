@@ -61,56 +61,49 @@ function(detray_add_library fullname basename)
     )
 endfunction(detray_add_library)
 
-# Helper function testing the detray public headers.
+# Helper function to set up a target that compiles detray's headers one-by-one.
 #
-# It can be used to test that public headers would include everything
-# that they need to work, and that the CMake library targets would take
-# care of declaring all of their dependencies correctly for the public
-# headers to work.
+# It replaces the per-header `main()` executables detray used to build: this
+# also covers the `detail/` headers, produces one library per component rather
+# than one executable per header, and gives tools like clangd the compiler
+# flags for every header.
 #
-# Usage: detray_test_public_headers( detray_core
-#                                    include/header1.hpp ... )
+# The generated targets are EXCLUDE_FROM_ALL. `detray_headers` depends on all
+# of them, so `cmake --build . --target detray_headers` compiles every header.
 #
-function(detray_test_public_headers library)
-    # If testing is not turned on, don't do anything.
-    if((NOT BUILD_TESTING) OR (NOT DETRAY_BUILD_TESTING))
+# This is a thin wrapper around ACTS' `acts_compile_headers`, which the
+# top-level CMakeLists.txt makes available in a standalone detray build too.
+#
+# Note that the detray headers only compile when an algebra plugin is present,
+# so `link` should name one of the algebra-specific targets (e.g.
+# `detray::core_array`) rather than the plugin-less `detray::core`. A `link`
+# that does not exist -- a disabled algebra plugin -- is skipped.
+#
+# Usage: detray_compile_headers( core_array detray::core_array
+#                                include/detray/*.hpp ... )
+#
+function(detray_compile_headers name link)
+    if(NOT TARGET ${link})
         return()
     endif()
 
-    # All arguments are treated as header file names.
-    foreach(_headerName ${ARGN})
-        # Make the header filename into a "string".
-        string(REPLACE "/" "_" _headerNormName "${_headerName}")
-        string(REPLACE "." "_" _headerNormName "${_headerNormName}")
+    acts_compile_headers(
+        ${name}
+        NAME detray_${name}_HEADERS
+        LINK ${link}
+        GLOB ${ARGN}
+    )
 
-        # Write a small source file that would test that the public
-        # header can be used as-is.
-        set(_testFileName
-            "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/test_${library}_${_headerNormName}.cpp"
-        )
-        if(NOT EXISTS "${_testFileName}")
-            file(
-                WRITE "${_testFileName}"
-                "#include \"${_headerName}\"\n"
-                "int main() { return 0; }"
-            )
-        endif()
+    # acts_compile_headers is a no-op when header compilation is turned off.
+    if(NOT TARGET detray_${name}_HEADERS)
+        return()
+    endif()
 
-        # Set up an executable that would build it. But hide it, don't put it
-        # into ${CMAKE_BINARY_DIR}/bin.
-        add_executable("test_${library}_${_headerNormName}" "${_testFileName}")
-        target_link_libraries(
-            "test_${library}_${_headerNormName}"
-            PRIVATE ${library}
-        )
-        set_target_properties(
-            "test_${library}_${_headerNormName}"
-            PROPERTIES
-                RUNTIME_OUTPUT_DIRECTORY
-                    "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}"
-        )
-    endforeach()
-endfunction(detray_test_public_headers)
+    if(NOT TARGET detray_headers)
+        add_custom_target(detray_headers)
+    endif()
+    add_dependencies(detray_headers detray_${name}_HEADERS)
+endfunction(detray_compile_headers)
 
 # Helper function for setting up the detray executables.
 #
