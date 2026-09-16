@@ -25,7 +25,7 @@ namespace traccc {
 /// Container base class for describing objects in a given event
 ///
 /// This is the generic container of the code, holding all relevant
-/// information about objcts in a given event.
+/// information about objects in a given event.
 ///
 /// It can be instantiated with different vector types, to be able to use
 /// the same container type in both host and device code.

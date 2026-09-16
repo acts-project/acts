@@ -19,6 +19,7 @@
 #include "algebra/array.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/detectors/default_metadata.hpp"
+#include "detray/detectors/toy_metadata.hpp"
 
 // Vecmem include(s)
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -90,6 +91,7 @@ void bind_const_vector(py::module_ &m, const char *name) {
 
 using algebra_t = detray::array<scalar_t>;
 using detector_t = detray::detector<detray::default_metadata<algebra_t>>;
+using toy_detector_t = detray::detector<detray::toy_metadata<algebra_t>>;
 using volume_descriptor_t = detector_t::volume_type;
 using volume_container_t = detector_t::volume_container;
 using surface_descriptor_t = detector_t::surface_type;
@@ -314,6 +316,9 @@ PYBIND11_MODULE(DetrayPythonBindings, m) {
           },
           py::return_value_policy::reference_internal, "Accelerator store")
       .def("__repr__", [](const detector_t &d) { return to_string(d); });
+
+  py::class_<toy_detector_t>(
+      m, "DetectorToyMetadata" STRINGIFY_HELPER(DETRAY_CUSTOM_SCALARTYPE));
 
   py::class_<volume_graph_t>(m, "VolumeGraph")
       .def(py::init<const detector_t &>(), py::arg("detector"),

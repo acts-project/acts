@@ -347,7 +347,7 @@ struct kalman_actor : detray::base_actor {
     TRACCC_VERBOSE_HOST_DEVICE("Actor: Kalman Fitter (status %d)...",
                                actor_state.fit_result);
 
-    // Allow to count holes after the intial track states
+    // Allow to count holes after the initial track states
     if (actor_state.do_precise_hole_count && actor_state.finished()) {
       if (navigation.is_on_sensitive()) {
         TRACCC_VERBOSE_HOST_DEVICE(
@@ -547,7 +547,7 @@ struct kalman_actor : detray::base_actor {
         TRACCC_DEBUG_HOST_DEVICE("Encountered overlap, jump to next surface");
       }
 
-      // Signal that paramter update is needed
+      // Signal that parameter update is needed
       res.status = detray::actor::status::e_success;
     } else if (navigation.direction() ==
                    detray::navigation::direction::e_forward &&

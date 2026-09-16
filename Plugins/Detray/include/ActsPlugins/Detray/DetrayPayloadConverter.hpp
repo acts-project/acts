@@ -93,14 +93,6 @@ class DetrayPayloadConverter {
       const Acts::HomogeneousSurfaceMaterial& material,
       const Acts::Surface& surface);
 
-  /// Convert grid surface material
-  /// @param material Grid surface material
-  /// @param surface Surface associated with the material
-  /// @return Detray surface material payload
-  static std::optional<DetraySurfaceMaterial> convertGridSurfaceMaterial(
-      const Acts::IGridSurfaceMaterialBase& material,
-      const Acts::Surface& surface);
-
   /// Convert binned surface material
   /// @param material Binned surface material
   /// @param surface Surface associated with the material
@@ -227,10 +219,10 @@ class DetrayPayloadConverter {
     Acts::TypeDispatcher<Acts::ISurfaceMaterial,
                          std::optional<DetraySurfaceMaterial>(
                              const Acts::Surface& surface)>
-        convertSurfaceMaterial{
-            convertHomogeneousSurfaceMaterial, convertBinnedSurfaceMaterial,
-            convertGridSurfaceMaterial, convertProtoSurfaceMaterialAxisSpec,
-            convertProtoSurfaceMaterialBinUtility};
+        convertSurfaceMaterial{convertHomogeneousSurfaceMaterial,
+                               convertBinnedSurfaceMaterial,
+                               convertProtoSurfaceMaterialAxisSpec,
+                               convertProtoSurfaceMaterialBinUtility};
   };
 
   /// Convert surface bounds to detray mask payload

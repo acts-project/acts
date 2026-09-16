@@ -102,10 +102,11 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   FreeToBoundCorrection freeToBoundCorrection(false);
   std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(position, direction).planeSurface();
-  detail::transportCovarianceToBound(
-      tgContext, *surface, covariance, jacobian, transportJacobian, derivatives,
-      boundToFreeJacobian, additionalFreeCovariance, parameters,
-      freeToBoundCorrection);
+  BOOST_CHECK(detail::transportCovarianceToBound(
+                  tgContext, *surface, covariance, jacobian, transportJacobian,
+                  derivatives, boundToFreeJacobian, additionalFreeCovariance,
+                  parameters, freeToBoundCorrection)
+                  .ok());
 
   BOOST_CHECK_NE(covariance, Covariance::Identity());
   BOOST_CHECK_NE(jacobian, 2. * Jacobian::Identity());

@@ -33,12 +33,12 @@ namespace detray {
 /// @tparam volume_builder_t the basic volume builder to be used for the
 ///                          geometry data
 /// @tparam volume_data_t the data structure that holds the volume builders
-template <typename metadata,
+template <concepts::metadata metadata_t,
           template <typename> class volume_builder_t = volume_builder,
           template <typename...> class volume_data_t = std::vector>
 class detector_builder {
  public:
-  using detector_type = detector<metadata, host_container_types>;
+  using detector_type = detector<metadata_t, host_container_types>;
   using algebra_type = typename detector_type::algebra_type;
   using scalar_type = dscalar<algebra_type>;
 
@@ -112,7 +112,7 @@ class detector_builder {
   DETRAY_HOST
   auto build(vecmem::memory_resource& resource) -> detector_type {
     DETRAY_INFO_HOST("Building detector: \"" << name() << "\"... ");
-    DETRAY_INFO_HOST("-> type: " << DETRAY_TYPENAME(metadata));
+    DETRAY_INFO_HOST("-> type: " << DETRAY_TYPENAME(metadata_t));
 
     detector_type det{resource};
 

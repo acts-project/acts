@@ -48,7 +48,7 @@ jobs:
       # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -154,7 +154,7 @@ jobs:
       # ghcr.io. Without this scope GITHUB_TOKEN has no packages access,
       # so reads fall back to the anonymous (heavily rate limited) bucket.
       packages: read
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
     needs: [linux_ubuntu]
     env:
       # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build: source
@@ -206,7 +206,7 @@ jobs:
       # Reference histograms are pulled from ghcr.io by content hash. Anonymous
       # GHCR reads are rate limited hard enough to break the job.
       packages: read
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:87
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
     needs: [linux_ubuntu]
     env:
       # Enforce FPE masking on the RelWithDebInfo (github-ci-fpe) build: the
@@ -302,11 +302,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: ubuntu2404_clang22
+          - image: ubuntu2604_clang22
             std: 23
             cxx: clang++-22
     # Templated tag, so CI/bump_versions.py cannot see it; bumped by hand.
-    container: registry.cern.ch/ghcr.io/acts-project/${{ matrix.image }}:86
+    container: registry.cern.ch/ghcr.io/acts-project/${{ matrix.image }}:90
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -502,8 +502,8 @@ jobs:
         with:
           compiler: g++
           flavor: cuda13
-          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
-          DEPENDENCY_TAG: v24.0.6
+          # Flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -623,8 +623,8 @@ jobs:
         with:
           compiler: g++
           flavor: cuda13
-          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
-          DEPENDENCY_TAG: v24.0.6
+          # Flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -689,8 +689,8 @@ jobs:
         with:
           compiler: g++
           flavor: cuda13
-          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
-          DEPENDENCY_TAG: v24.0.6
+          # Flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -757,8 +757,8 @@ jobs:
         with:
           compiler: g++
           flavor: cuda13
-          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
-          DEPENDENCY_TAG: v24.0.6
+          # Flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -831,8 +831,8 @@ jobs:
         with:
           compiler: g++
           flavor: cuda13
-          # Ahead of the repo default (v23.3.1): flavors need v24.0.0 or newer.
-          DEPENDENCY_TAG: v24.0.6
+          # Flavors need v24.0.0 or newer.
+          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 

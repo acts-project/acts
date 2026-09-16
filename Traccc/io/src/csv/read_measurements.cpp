@@ -64,7 +64,7 @@ std::vector<measurement_id_type> read_measurements(
   // Contains the index of the new position at the entry of the old position
   std::vector<measurement_id_type> new_idx_map(measurements.size());
   if (do_sort) {
-    // Remeber index locations
+    // Remember index locations
     std::vector<unsigned int> idx(measurements.size());
     std::iota(idx.begin(), idx.end(), 0u);
 

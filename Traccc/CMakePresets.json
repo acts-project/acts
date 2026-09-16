@@ -47,6 +47,17 @@
             }
         },
         {
+            "name": "cuda-fp32-ci",
+            "displayName": "CUDA FP32, dependencies from the environment",
+            "inherits": [
+                "cuda-fp32"
+            ],
+            "cacheVariables": {
+                "VECMEM_BUILD_CUDA_LIBRARY": null,
+                "TRACCC_USE_SYSTEM_THRUST": "TRUE"
+            }
+        },
+        {
             "name": "cuda-fp64",
             "displayName": "CUDA FP64 Code Development",
             "inherits": [
@@ -60,6 +71,17 @@
             }
         },
         {
+            "name": "cuda-fp64-ci",
+            "displayName": "CUDA FP64, dependencies from the environment",
+            "inherits": [
+                "cuda-fp64"
+            ],
+            "cacheVariables": {
+                "VECMEM_BUILD_CUDA_LIBRARY": null,
+                "TRACCC_USE_SYSTEM_THRUST": "TRUE"
+            }
+        },
+        {
             "name": "hip-fp32",
             "displayName": "HIP FP32 Code Development",
             "inherits": [
@@ -69,6 +91,17 @@
                 "TRACCC_BUILD_HIP": "TRUE",
                 "VECMEM_BUILD_HIP_LIBRARY": "TRUE",
                 "TRACCC_SETUP_ROCTHRUST": "TRUE"
+            }
+        },
+        {
+            "name": "hip-fp32-ci",
+            "displayName": "HIP FP32, dependencies from the environment",
+            "inherits": [
+                "hip-fp32"
+            ],
+            "cacheVariables": {
+                "VECMEM_BUILD_HIP_LIBRARY": null,
+                "TRACCC_SETUP_THRUST": "FALSE"
             }
         },
         {
