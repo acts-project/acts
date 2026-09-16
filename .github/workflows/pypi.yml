@@ -1,9 +1,7 @@
 name: PyPI
 
-# Nightly builds on schedule; release builds triggered manually via workflow_dispatch
+# Nightly and release builds are both triggered manually via workflow_dispatch
 on:
-  schedule:
-    - cron: '5 3 * * *'
   workflow_dispatch:
     inputs:
       acts_ref:
@@ -24,7 +22,6 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     permissions: {}
-    if: github.repository == 'acts-project/acts' || github.event_name != 'schedule'
     steps:
       - name: Set build version
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
