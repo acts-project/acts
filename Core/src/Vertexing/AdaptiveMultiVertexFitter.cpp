@@ -157,7 +157,7 @@ Result<void> AdaptiveMultiVertexFitter::fit(
 }
 
 Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
-    VertexFitProblem& problem, const std::vector<Vertex*>& newVertices,
+    VertexFitProblem& problem, std::span<Vertex* const> newVertices,
     const VertexingOptions& vertexingOptions, Cache& cache) const {
   for (const auto& newVertex : newVertices) {
     if (problem.candidates[newVertex].trackLinks.empty()) {
@@ -168,10 +168,11 @@ Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
     }
   }
 
-  std::vector<Vertex*> verticesToFit = newVertices;
+  std::vector<Vertex*> verticesToFit(newVertices.begin(), newVertices.end());
 
   // List of vertices added in last iteration
-  std::vector<Vertex*> lastIterAddedVertices = newVertices;
+  std::vector<Vertex*> lastIterAddedVertices(newVertices.begin(),
+                                             newVertices.end());
   // List of vertices added in current iteration
   std::vector<Vertex*> currentIterAddedVertices;
 
@@ -235,7 +236,7 @@ Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
 }
 
 Result<Vertex> AdaptiveMultiVertexFitter::fitSingle(
-    const std::vector<InputTrack>& trackVector,
+    std::span<const InputTrack> trackVector,
     const VertexingOptions& vertexingOptions,
     IVertexFitter::Cache& anyCache) const {
   if (trackVector.empty()) {
@@ -262,7 +263,7 @@ Result<Vertex> AdaptiveMultiVertexFitter::fitSingle(
   if (vertexingOptions.useConstraintInFit) {
     candidate.constraint = vertexingOptions.constraint;
   }
-  candidate.trackLinks = trackVector;
+  candidate.trackLinks.assign(trackVector.begin(), trackVector.end());
 
   for (const auto& trk : trackVector) {
     problem.tracksAtVertices.emplace(

@@ -23,6 +23,7 @@
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <algorithm>
+#include <span>
 
 namespace Acts {
 
@@ -198,7 +199,7 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
   ///
   /// @return Result<void> object
   Result<void> addVtxToFit(VertexFitProblem& problem,
-                           const std::vector<Vertex*>& newVertices,
+                           std::span<Vertex* const> newVertices,
                            const VertexingOptions& vertexingOptions,
                            Cache& cache) const;
 
@@ -230,7 +231,7 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
 
   /// @copydoc IVertexFitter::addVertices
   Result<void> addVertices(VertexFitProblem& problem,
-                           const std::vector<Vertex*>& newVertices,
+                           std::span<Vertex* const> newVertices,
                            const VertexingOptions& vertexingOptions,
                            IVertexFitter::Cache& cache) const override {
     return addVtxToFit(problem, newVertices, vertexingOptions,
@@ -238,7 +239,7 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
   }
 
   /// @copydoc IVertexFitter::fitSingle
-  Result<Vertex> fitSingle(const std::vector<InputTrack>& trackVector,
+  Result<Vertex> fitSingle(std::span<const InputTrack> trackVector,
                            const VertexingOptions& vertexingOptions,
                            IVertexFitter::Cache& cache) const override;
 
@@ -337,7 +338,7 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
   ///
   /// @return Result<void> object
   [[deprecated(
-      "Use addVtxToFit(VertexFitProblem&, const std::vector<Vertex*>&, const "
+      "Use addVtxToFit(VertexFitProblem&, std::span<Vertex* const>, const "
       "VertexingOptions&, Cache&)")]]
   Result<void> addVtxToFit(State& state,
                            const std::vector<Vertex*>& newVertices,

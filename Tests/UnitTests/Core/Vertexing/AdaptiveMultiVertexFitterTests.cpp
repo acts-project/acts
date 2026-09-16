@@ -34,6 +34,7 @@
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <array>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -936,7 +937,7 @@ BOOST_AUTO_TEST_CASE(deprecated_state_interface) {
   // Fit the first vertex, which drags in the second one via the shared track,
   // then the third one on its own
   for (std::size_t vtxIdx : {0u, 2u}) {
-    std::vector<Vertex*> newVerticesNew = {&vtxListNew.at(vtxIdx)};
+    std::array<Vertex*, 1> newVerticesNew = {&vtxListNew.at(vtxIdx)};
     BOOST_CHECK(
         fitter.addVtxToFit(problem, newVerticesNew, vertexingOptions, cache)
             .ok());

@@ -14,7 +14,7 @@
 #include "Acts/Vertexing/VertexFitProblem.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
-#include <vector>
+#include <span>
 
 namespace Acts {
 
@@ -68,7 +68,7 @@ class IVertexFitter {
   /// @param cache The cache object (needs to be created via @c makeCache)
   /// @return Result indicating success or failure of the fit
   virtual Result<void> addVertices(VertexFitProblem& problem,
-                                   const std::vector<Vertex*>& newVertices,
+                                   std::span<Vertex* const> newVertices,
                                    const VertexingOptions& vertexingOptions,
                                    Cache& cache) const = 0;
 
@@ -80,7 +80,7 @@ class IVertexFitter {
   /// @param vertexingOptions The vertexing options
   /// @param cache The cache object (needs to be created via @c makeCache)
   /// @return The fitted vertex
-  virtual Result<Vertex> fitSingle(const std::vector<InputTrack>& trackVector,
+  virtual Result<Vertex> fitSingle(std::span<const InputTrack> trackVector,
                                    const VertexingOptions& vertexingOptions,
                                    Cache& cache) const = 0;
 
