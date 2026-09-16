@@ -23,6 +23,7 @@
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <algorithm>
+#include <initializer_list>
 #include <span>
 
 namespace Acts {
@@ -207,6 +208,40 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
                            std::span<Vertex* const> newVertices,
                            const VertexingOptions& vertexingOptions,
                            Cache& cache) const;
+
+  /// @brief Compatibility overload for vector callers.
+  /// @deprecated Pass a span of vertex pointers instead.
+  /// @param problem The multi-vertex fit problem
+  /// @param newVertices Vertices to be added to the fit
+  /// @param vertexingOptions Vertexing options
+  /// @param cache Fitter cache
+  /// @return Result indicating success or failure of the fit
+  [[deprecated("Pass std::span<Vertex* const> to addVtxToFit instead")]]
+  Result<void> addVtxToFit(VertexFitProblem& problem,
+                           const std::vector<Vertex*>& newVertices,
+                           const VertexingOptions& vertexingOptions,
+                           Cache& cache) const {
+    return addVtxToFit(problem, std::span<Vertex* const>{newVertices},
+                       vertexingOptions, cache);
+  }
+
+  /// @brief Compatibility overload for brace-initialized vertex lists.
+  /// @deprecated Pass a span of vertex pointers instead.
+  /// @param problem The multi-vertex fit problem
+  /// @param newVertices Vertices to be added to the fit
+  /// @param vertexingOptions Vertexing options
+  /// @param cache Fitter cache
+  /// @return Result indicating success or failure of the fit
+  [[deprecated("Pass std::span<Vertex* const> to addVtxToFit instead")]]
+  Result<void> addVtxToFit(VertexFitProblem& problem,
+                           std::initializer_list<Vertex*> newVertices,
+                           const VertexingOptions& vertexingOptions,
+                           Cache& cache) const {
+    return addVtxToFit(
+        problem,
+        std::span<Vertex* const>{newVertices.begin(), newVertices.size()},
+        vertexingOptions, cache);
+  }
 
   /// @brief Performs a simultaneous fit of all vertices in
   /// problem.vertices

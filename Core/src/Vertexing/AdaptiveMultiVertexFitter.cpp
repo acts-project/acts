@@ -564,7 +564,8 @@ Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
   Cache cache(std::move(state.ipState), std::move(state.fieldCache));
   decomposeState(state, problem, cache);
 
-  auto res = addVtxToFit(problem, newVertices, vertexingOptions, cache);
+  auto res = addVtxToFit(problem, std::span<Vertex* const>{newVertices},
+                         vertexingOptions, cache);
 
   recomposeState(state, problem, cache);
   return res;
