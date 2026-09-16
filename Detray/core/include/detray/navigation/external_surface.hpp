@@ -92,9 +92,11 @@ class external_surface {
     return m_barcode;
   }
 
-  /// Implicit conversion for APIs that take geometry::identifier.
+  /// Explicit conversion for APIs that take geometry::identifier.
   DETRAY_HOST_DEVICE
-  constexpr operator geometry::identifier() const { return m_barcode; }
+  explicit operator geometry::identifier() const {
+    return m_barcode;
+  }
 
   /// Sets a new surface id (portal/passive/sensitive)
   DETRAY_HOST_DEVICE

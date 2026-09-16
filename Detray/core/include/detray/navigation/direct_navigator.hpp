@@ -327,14 +327,13 @@ class direct_navigator {
     } else {
       // Update a standalone surface.
       return update_external_candidate(
-          navigation.direction(), navigation.target(), tangential,
-          navigation.next_external(), intr_cfg, navigation.external_tol());
+          navigation.target(), tangential, navigation.next_external(),
+          intr_cfg, navigation.external_tol());
     }
   }
 
   /// Update a standalone surface.
   DETRAY_HOST_DEVICE DETRAY_INLINE constexpr bool update_external_candidate(
-      const navigation::direction nav_dir,
       typename state::value_type &candidate,
       const detray::detail::ray<algebra_t> &tangential, const surface_type &sf,
       const intersection::config &cfg,
