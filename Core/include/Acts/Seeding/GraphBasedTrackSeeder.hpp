@@ -28,9 +28,7 @@
 
 namespace Acts::Experimental {
 
-namespace detail {
 class GbtsGraph;
-}
 
 /// Seed finder implementing the GBTS seeding workflow.
 class GraphBasedTrackSeeder {
@@ -130,7 +128,7 @@ class GraphBasedTrackSeeder {
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
   void createSeeds(const SpacePointContainer& spacePoints,
-                   const GbtsRoiDescriptor& roi, const detail::GbtsGraph& graph,
+                   const GbtsRoiDescriptor& roi, const GbtsGraph& graph,
                    const GbtsTrackingFilter& filter, const Options& options,
                    SeedContainer& outputSeeds) const;
 
@@ -143,9 +141,8 @@ class GraphBasedTrackSeeder {
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
   void createSeeds(GbtsNodeStorage& nodeStorage, const GbtsRoiDescriptor& roi,
-                   const detail::GbtsGraph& graph,
-                   const GbtsTrackingFilter& filter, const Options& options,
-                   SeedContainer& outputSeeds) const;
+                   const GbtsGraph& graph, const GbtsTrackingFilter& filter,
+                   const Options& options, SeedContainer& outputSeeds) const;
 
  private:
   /// candidate seed metadata produced by the GBTS algorithm.
@@ -205,7 +202,7 @@ class GraphBasedTrackSeeder {
                                 std::vector<OutputSeedProperties>& vOutputSeeds,
                                 const GbtsTrackingFilter& filter,
                                 std::vector<detail::GbtsEdge*>& vChainHeads,
-                                const detail::GbtsGraph& graph) const;
+                                const GbtsGraph& graph) const;
 
   /// Estimate the inverse radius of the circle through three nodes.
   /// @param nodeView View of the node positions and layers

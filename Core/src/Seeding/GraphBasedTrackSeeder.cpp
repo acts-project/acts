@@ -8,8 +8,8 @@
 
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 
+#include "Acts/Seeding/GbtsGraph.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
-#include "Acts/Seeding/detail/GbtsGraph.hpp"
 
 #include <algorithm>
 #include <array>
@@ -63,7 +63,7 @@ GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
 
 void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& spacePoints,
                                         const GbtsRoiDescriptor& roi,
-                                        const detail::GbtsGraph& graph,
+                                        const GbtsGraph& graph,
                                         const GbtsTrackingFilter& filter,
                                         const Options& options,
                                         SeedContainer& outputSeeds) const {
@@ -83,7 +83,7 @@ void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& spacePoints,
 
 void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
                                         const GbtsRoiDescriptor& roi,
-                                        const detail::GbtsGraph& graph,
+                                        const GbtsGraph& graph,
                                         const GbtsTrackingFilter& filter,
                                         const Options& options,
                                         SeedContainer& outputSeeds) const {
@@ -143,12 +143,11 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     std::vector<detail::GbtsEdge>& edgeStorage,
     std::vector<OutputSeedProperties>& vOutputSeeds,
     const GbtsTrackingFilter& filter,
-    std::vector<detail::GbtsEdge*>& vChainHeads,
-    const detail::GbtsGraph& graph) const {
+    std::vector<detail::GbtsEdge*>& vChainHeads, const GbtsGraph& graph) const {
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
   // the chain selection is the graph's, so that the chains it handed back and
   // the candidates built from them are cut the same way
-  const detail::GbtsGraph::Config& graphCfg = graph.config();
+  const GbtsGraph::Config& graphCfg = graph.config();
   const auto minLevel = static_cast<std::uint8_t>(graphCfg.minSeedLevel);
   // `addTriplets` accepts a chain one level short. Signed: an uncollected
   // edge sits at level -1 and `minSeedLevel` may be configured to 0.

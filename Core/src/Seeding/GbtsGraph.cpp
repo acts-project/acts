@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding/detail/GbtsGraph.hpp"
+#include "Acts/Seeding/GbtsGraph.hpp"
 
 #include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Experimental::detail {
+namespace Acts::Experimental {
 
 namespace {
 
@@ -763,4 +763,4 @@ bool GbtsGraph::checkZ0BitMask(const std::uint16_t z0BitMask, const float z0,
 
   return false;
 }
-}  // namespace Acts::Experimental::detail
+}  // namespace Acts::Experimental

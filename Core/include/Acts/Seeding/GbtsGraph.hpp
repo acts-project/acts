@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Experimental::detail {
+namespace Acts::Experimental {
 
 /// The doublet graph of the GBTS workflow.
 ///
@@ -255,4 +255,4 @@ class GbtsGraph {
   const Acts::Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace Acts::Experimental::detail
+}  // namespace Acts::Experimental

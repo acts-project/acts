@@ -12,11 +12,11 @@
 #include "Acts/EventData/SeedContainer.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsGraph.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
-#include "Acts/Seeding/detail/GbtsGraph.hpp"
 
 #include <algorithm>
 #include <array>
@@ -376,7 +376,7 @@ SpacePointContainer makeStripSpacePoints(const ToyDetector& detector,
 /// The seeder and everything it needs, for one toy detector.
 struct SeederSetup {
   Experimental::GraphBasedTrackSeeder seeder;
-  Experimental::detail::GbtsGraph graph;
+  Experimental::GbtsGraph graph;
   Experimental::GbtsTrackingFilter filter;
   Experimental::GbtsRoiDescriptor roi;
   Experimental::GraphBasedTrackSeeder::Options options;
@@ -401,7 +401,7 @@ SeederSetup makeSeeder(const ToyDetector& detector,
   // the toy setup has no tau lookup table and no cluster widths
   config.useClusterWidthCuts = false;
 
-  Experimental::detail::GbtsGraph::Config graphConfig;
+  Experimental::GbtsGraph::Config graphConfig;
   graphConfig.minPt = 1_GeV;
   graphConfig.minZ0 = -kBarrelHalfZ;
   graphConfig.maxZ0 = kBarrelHalfZ;
@@ -412,8 +412,7 @@ SeederSetup makeSeeder(const ToyDetector& detector,
       .seeder = Experimental::GraphBasedTrackSeeder(
           Experimental::GraphBasedTrackSeeder::DerivedConfig(config), geometry,
           makeLogger()),
-      .graph =
-          Experimental::detail::GbtsGraph(graphConfig, geometry, makeLogger()),
+      .graph = Experimental::GbtsGraph(graphConfig, geometry, makeLogger()),
       .filter = Experimental::GbtsTrackingFilter(
           Experimental::GbtsTrackingFilter::Config{}, geometry, makeLogger()),
       .roi = Experimental::GbtsRoiDescriptor(-4.5, 4.5, -kBarrelHalfZ,
