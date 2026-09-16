@@ -290,8 +290,8 @@ void writeTrack(const Acts::GeometryContext& gctx,
   // k4ActsTracking: the IP state first, then the measurement states ordered
   // inside-out (first hit ... last hit). Reverse the outside-in buffers so the
   // measurement states, and their tracker hits, come out in that order.
-  std::reverse(outTrackStates.begin(), outTrackStates.end());
-  std::reverse(outStates.begin(), outStates.end());
+  std::ranges::reverse(outTrackStates.begin(), outTrackStates.end());
+  std::ranges::reverse(outStates.begin(), outStates.end());
 
   to.addToTrackStates(ipState);
   for (std::size_t i = 0; i < outTrackStates.size(); ++i) {
