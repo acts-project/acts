@@ -36,6 +36,27 @@ TRACCC_HOST_DEVICE inline void estimate_track_params(
     const edm::seed_collection::const_view& seeds_view, const bfield_t& bfield,
     bound_track_parameters_collection_types::view params_view);
 
+/// Function used for calculating the bound track parameters for each seed,
+/// for spacepoints made of one or two measurements
+///
+/// @param[in] globalIndex      The index of the current thread
+/// @param[in] config           The track parameter estimation configuration
+/// @param[in] det              The detector object
+/// @param[in] measurements_view All measurements of the event
+/// @param[in] spacepoints_view Collection storing the spacepoints
+/// @param[in] seeds_view       Collection storing the seeds
+/// @param[in] bfield           B field
+/// @param[out] params_view     Collection storing the bound track parameters
+///
+template <typename detector_t, typename bfield_t>
+TRACCC_HOST_DEVICE inline void estimate_track_params(
+    global_index_t globalIndex, const track_params_estimation_config& config,
+    const detector_t& det,
+    const edm::measurement_collection::const_view& measurements_view,
+    const edm::spacepoint_collection::const_view& spacepoints_view,
+    const edm::seed_collection::const_view& seeds_view, const bfield_t& bfield,
+    bound_track_parameters_collection_types::view params_view);
+
 }  // namespace traccc::device
 
 // Include the implementation.

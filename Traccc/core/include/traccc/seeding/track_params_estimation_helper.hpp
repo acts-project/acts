@@ -15,6 +15,10 @@
 #include "traccc/edm/spacepoint_helpers.hpp"
 #include "traccc/edm/track_parameters.hpp"
 
+// Detray include(s).
+#include <detray/geometry/tracking_surface.hpp>
+#include <detray/tracks/free_track_parameters.hpp>
+
 // System include(s).
 #include <cassert>
 #include <cmath>
@@ -35,28 +39,20 @@ inline TRACCC_HOST_DEVICE vector2 uv_transform(const scalar& x,
   return uv;
 }
 
-/// helper functions (for both cpu and gpu) to calculate bound track parameter
-/// at the bottom spacepoint
+/// helper functions (for both cpu and gpu) to estimate the direction and
+/// momentum of a seed from its three spacepoints
 ///
 /// @param [out] params the bound track parameter vector to be filled
-/// @param [in] measurements is the measurement collection
-/// @param [in] spacepoints is the spacepoint collection
-/// @param [in] seed is the input seed
+/// @param [in] spB is the bottom spacepoint
+/// @param [in] spM is the middle spacepoint
+/// @param [in] spT is the top spacepoint
 /// @param [in] bfield is the magnetic field
 ///
-template <typename T>
-inline TRACCC_HOST_DEVICE void seed_to_bound_param_vector(
-    bound_track_parameters<>& params,
-    const edm::measurement_collection::const_device& measurements,
-    const edm::spacepoint_collection::const_device& spacepoints,
-    const edm::seed<T>& seed, const vector3& bfield) {
-  const edm::spacepoint_collection::const_device::const_proxy_type spB =
-      spacepoints.at(seed.bottom_index());
-  const edm::spacepoint_collection::const_device::const_proxy_type spM =
-      spacepoints.at(seed.middle_index());
-  const edm::spacepoint_collection::const_device::const_proxy_type spT =
-      spacepoints.at(seed.top_index());
-
+template <typename T1, typename T2, typename T3>
+inline TRACCC_HOST_DEVICE void seed_direction_estimate(
+    bound_track_parameters<>& params, const edm::spacepoint<T1>& spB,
+    const edm::spacepoint<T2>& spM, const edm::spacepoint<T3>& spT,
+    const vector3& bfield) {
   std::array<vector3, 3> sp_global_positions{
       edm::get_spacepoint_global<default_algebra>(spB),
       edm::get_spacepoint_global<default_algebra>(spM),
@@ -108,6 +104,38 @@ inline TRACCC_HOST_DEVICE void seed_to_bound_param_vector(
   params.set_phi(vector::phi(direction));
   params.set_theta(vector::theta(direction));
 
+  // The estimated q/pt in [GeV/c]^-1 (note that the pt is the
+  // projection of momentum on the transverse plane of the new frame)
+  scalar qOverPt = 1.f / (R * vector::norm(bfield));
+  // The estimated q/p in [GeV/c]^-1
+  params.set_qop(qOverPt / vector::perp(vector2{1.f, invTanTheta}));
+
+}
+
+/// helper functions (for both cpu and gpu) to calculate bound track parameter
+/// at the bottom spacepoint
+///
+/// @param [out] params the bound track parameter vector to be filled
+/// @param [in] measurements is the measurement collection
+/// @param [in] spacepoints is the spacepoint collection
+/// @param [in] seed is the input seed
+/// @param [in] bfield is the magnetic field
+///
+template <typename T>
+inline TRACCC_HOST_DEVICE void seed_to_bound_param_vector(
+    bound_track_parameters<>& params,
+    const edm::measurement_collection::const_device& measurements,
+    const edm::spacepoint_collection::const_device& spacepoints,
+    const edm::seed<T>& seed, const vector3& bfield) {
+  const edm::spacepoint_collection::const_device::const_proxy_type spB =
+      spacepoints.at(seed.bottom_index());
+  const edm::spacepoint_collection::const_device::const_proxy_type spM =
+      spacepoints.at(seed.middle_index());
+  const edm::spacepoint_collection::const_device::const_proxy_type spT =
+      spacepoints.at(seed.top_index());
+
+  seed_direction_estimate(params, spB, spM, spT, bfield);
+
   // The measured loc0 and loc1
   assert(spB.measurement_index_2() ==
          edm::spacepoint_collection::device::INVALID_MEASUREMENT_INDEX);
@@ -117,11 +145,59 @@ inline TRACCC_HOST_DEVICE void seed_to_bound_param_vector(
   params.set_bound_local(
       {meas_for_spB.local_position()[0], meas_for_spB.local_position()[1]});
 
-  // The estimated q/pt in [GeV/c]^-1 (note that the pt is the
-  // projection of momentum on the transverse plane of the new frame)
-  scalar qOverPt = 1.f / (R * vector::norm(bfield));
-  // The estimated q/p in [GeV/c]^-1
-  params.set_qop(qOverPt / vector::perp(vector2{1.f, invTanTheta}));
+  // Make sure the time is a finite value
+  assert(std::isfinite(params.time()));
+}
+
+/// helper functions (for both cpu and gpu) to calculate bound track parameter
+/// at the bottom spacepoint, for spacepoints made of one or two measurements
+///
+/// Spacepoints made of a single (2D) measurement are treated as in the
+/// overload without a detector. Spacepoints made of two (1D) measurements are
+/// projected onto the surface of their first measurement.
+///
+/// @param [out] params the bound track parameter vector to be filled
+/// @param [in] det is the detector
+/// @param [in] measurements is the measurement collection
+/// @param [in] spacepoints is the spacepoint collection
+/// @param [in] seed is the input seed
+/// @param [in] bfield is the magnetic field
+///
+template <typename detector_t, typename T>
+inline TRACCC_HOST_DEVICE void seed_to_bound_param_vector(
+    bound_track_parameters<>& params, const detector_t& det,
+    const edm::measurement_collection::const_device& measurements,
+    const edm::spacepoint_collection::const_device& spacepoints,
+    const edm::seed<T>& seed, const vector3& bfield) {
+  const edm::spacepoint_collection::const_device::const_proxy_type spB =
+      spacepoints.at(seed.bottom_index());
+
+  if (spB.measurement_index_2() ==
+      edm::spacepoint_collection::device::INVALID_MEASUREMENT_INDEX) {
+    seed_to_bound_param_vector(params, measurements, spacepoints, seed, bfield);
+    return;
+  }
+
+  const edm::spacepoint_collection::const_device::const_proxy_type spM =
+      spacepoints.at(seed.middle_index());
+  const edm::spacepoint_collection::const_device::const_proxy_type spT =
+      spacepoints.at(seed.top_index());
+  seed_direction_estimate(params, spB, spM, spT, bfield);
+
+  // Project the spacepoint onto the surface of its first measurement
+  const edm::measurement meas_for_spB =
+      measurements.at(spB.measurement_index_1());
+  const detray::tracking_surface sf{det, meas_for_spB.surface_link()};
+
+  detray::free_parameters_vector<default_algebra> free_vec;
+  free_vec.set_pos(edm::get_spacepoint_global<default_algebra>(spB));
+  free_vec.set_dir(params.dir());
+  free_vec.set_time(0.f);
+  free_vec.set_qop(params.qop());
+  const auto bound_vec = sf.free_to_bound_vector({}, free_vec);
+
+  params.set_surface_link(meas_for_spB.surface_link());
+  params.set_bound_local(bound_vec.bound_local());
 
   // Make sure the time is a finite value
   assert(std::isfinite(params.time()));

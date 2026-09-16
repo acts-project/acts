@@ -32,6 +32,22 @@ auto seed_parameter_estimation_algorithm::operator()(
     const edm::measurement_collection::const_view& measurements,
     const edm::spacepoint_collection::const_view& spacepoints,
     const edm::seed_collection::const_view& seeds) const -> output_type {
+  return execute(nullptr, bfield, measurements, spacepoints, seeds);
+}
+
+auto seed_parameter_estimation_algorithm::operator()(
+    const detector_buffer& det, const magnetic_field& bfield,
+    const edm::measurement_collection::const_view& measurements,
+    const edm::spacepoint_collection::const_view& spacepoints,
+    const edm::seed_collection::const_view& seeds) const -> output_type {
+  return execute(&det, bfield, measurements, spacepoints, seeds);
+}
+
+auto seed_parameter_estimation_algorithm::execute(
+    const detector_buffer* det, const magnetic_field& bfield,
+    const edm::measurement_collection::const_view& measurements,
+    const edm::spacepoint_collection::const_view& spacepoints,
+    const edm::seed_collection::const_view& seeds) const -> output_type {
   // Get the number of seeds. In an asynchronous way if possible.
   edm::seed_collection::const_view::size_type n_seeds = 0u;
   if (mr().host) {
@@ -53,8 +69,8 @@ auto seed_parameter_estimation_algorithm::operator()(
   copy().setup(result)->ignore();
 
   // Launch the seed parameter estimation kernel.
-  estimate_seed_params_kernel({n_seeds, m_data->m_config, bfield, measurements,
-                               spacepoints, seeds, result});
+  estimate_seed_params_kernel({n_seeds, det, m_data->m_config, bfield,
+                               measurements, spacepoints, seeds, result});
 
   // Return the result.
   return result;
