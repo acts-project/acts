@@ -53,6 +53,10 @@ SeedFinderConfigArg = namedtuple(
         "forwardSeedConfirmationRange",
         "rMinMiddle",
         "rMaxMiddle",
+        "useTimeDoubletCut",
+        "doubletTimeCutNSigma",
+        "useTimeTripletCut",
+        "tripletTimeChi2Max",
         "deltaR",  # (min,max)
         "deltaRBottomSP",  # (min,max)
         "deltaRTopSP",  # (min,max)
@@ -61,7 +65,7 @@ SeedFinderConfigArg = namedtuple(
         "r",  # (min,max)
         "z",  # (min,max)
     ],
-    defaults=[None] * 20 + [(None, None)] * 7,
+    defaults=[None] * 24 + [(None, None)] * 7,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -1089,6 +1093,10 @@ def addGridTripletSeeding(
             maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
             maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
             useDeltaRinsteadOfTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
+            useTimeDoubletCut=seedFinderConfigArg.useTimeDoubletCut,
+            doubletTimeCutNSigma=seedFinderConfigArg.doubletTimeCutNSigma,
+            useTimeTripletCut=seedFinderConfigArg.useTimeTripletCut,
+            tripletTimeChi2Max=seedFinderConfigArg.tripletTimeChi2Max,
             useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
         ),
     )
