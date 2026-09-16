@@ -290,11 +290,11 @@ ProcessCode FatrasSimulation::execute(const AlgorithmContext &ctx) const {
 }
 
 ProcessCode FatrasSimulation::finalize() {
-  if (m_nFailedParticles.load() > 0) {
-    ACTS_ERROR(m_nFailedParticles.load() << " particles failed to simulate");
-    for (const auto &[errorCode, count] : m_failedParticlesByError) {
+  if (m_counters.nFailedParticles > 0) {
+    ACTS_ERROR(m_counters.nFailedParticles << " particles failed to simulate");
+    for (const auto &[errorCode, count] : m_counters.failedParticlesByError) {
       ACTS_ERROR("  " << errorCode.message() << " (code " << errorCode.value()
-                      << "): " << count.load() << " times");
+                      << "): " << count << " times");
     }
   }
   return ProcessCode::SUCCESS;
