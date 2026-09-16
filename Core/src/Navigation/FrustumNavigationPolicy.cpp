@@ -88,14 +88,9 @@ bool FrustumNavigationPolicy::isValid(const GeometryContext &,
                                       const Logger &logger) const {
   // Check if we leave the frustum, reset candidates if so
   auto &s = state.as<State>();
-  const Vector3 difference = args.position - s.frustum.origin();
-  const auto &normals = s.frustum.normals();
-  auto it_start = normals.begin();
-  ++it_start;
-  const bool outside = std::any_of(
-      it_start, normals.end(),
-      [&difference](const auto &normal) { return difference.dot(normal) < 0; });
-  if (outside) {
+  double costheta=args.position.normalized().dot(s.frustum.origin().normalized());
+  //Compare to half the frustum opening angle
+  if(costheta<std::cos(s.openingAngle/2)){
     ACTS_DEBUG("FrustumNavigationPolicy: outside frustum");
     return false;
   } else {
@@ -110,6 +105,7 @@ void FrustumNavigationPolicy::createState(
   ACTS_DEBUG("create FrustumNavigationPolicy state");
   auto &s = stateManager.pushState<State>();
   s.frustum = Frustum3(args.position, args.direction, std::numbers::pi / 4);
+  s.openingAngle=std::numbers::pi / 4;
 }
 
 void FrustumNavigationPolicy::popState(
