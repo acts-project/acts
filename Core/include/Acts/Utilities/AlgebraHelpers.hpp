@@ -21,7 +21,8 @@
 namespace Acts {
 
 /// Invert a placement, i.e. a transform that only rotates and translates.
-/// `Transform3` is an `Eigen::Affine`, so its own `inverse()` is a general one.
+/// `Transform3` is an `Eigen::Isometry`, so this is its own `inverse()` plus a
+/// debug check on the linear part.
 ///
 /// @param transform The placement to invert, whose linear part must be a rotation
 /// @return The inverse transform
