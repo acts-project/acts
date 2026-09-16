@@ -143,6 +143,15 @@ class TripletSeedFinder {
     /// Whether the input doublets are sorted by cotTheta
     bool sortedByCotTheta = true;
 
+    /// Enable the cut on the time compatibility of the three space points of a
+    /// triplet. The space point container has to provide the
+    /// `SpacePointColumns::Time` and `SpacePointColumns::VarianceT` columns.
+    /// When disabled, no time related code is generated at all.
+    ///
+    /// Declared here so that it fits into the padding after the booleans above
+    /// and does not change the layout of this struct.
+    bool useTime = false;
+
     /// Minimum transverse momentum (pT) used to check the r-z slope
     /// compatibility of triplets with maximum multiple scattering effect
     /// (produced by the minimum allowed pT particle) + a certain uncertainty
@@ -172,6 +181,10 @@ class TripletSeedFinder {
     /// coordinate transformation. Only active when useStripInfo is true.
     /// Set to infinity (default) to disable.
     float cotThetaDiffMax = std::numeric_limits<float>::infinity();
+
+    /// Maximum allowed chi2 of the three time of flight corrected times of the
+    /// triplet with respect to their mean. Only used when `useTime` is enabled.
+    float timeChi2Max = 15;
   };
 
   /// Derived configuration for the triplet seed finder using a magnetic field.
