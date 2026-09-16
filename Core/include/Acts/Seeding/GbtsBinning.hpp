@@ -29,13 +29,22 @@ struct GbtsLayerBinning final {
   float etaBinWidth{};
 };
 
+/// One outer eta bin reachable from an inner one, with the cut the layer pair
+/// they belong to carries.
+struct GbtsBinLink final {
+  /// The outer eta bin.
+  std::uint32_t bin{};
+  /// GbtsLayerConnection::tauRatioCut of the pair this link came from.
+  float tauRatioCut{};
+};
+
 /// The outer eta bins reachable from one inner eta bin. Groups come in the
 /// order the graph is built, outside-in.
 struct GbtsBinGroup final {
   /// The inner eta bin.
   std::uint32_t bin{};
   /// The outer bins it links to.
-  std::vector<std::uint32_t> links;
+  std::vector<GbtsBinLink> links;
 };
 
 }  // namespace Acts::Experimental

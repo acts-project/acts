@@ -54,9 +54,9 @@ barrel layer. If the caller leaves the field unset,
 them, because the constructor rejects a partial ordering.
 
 The cuts that were tuned on the pixel barrel read `barrelOrder` and nothing
-else. The adaptive @f$\tau@f$ correction of @ref gbts-graph asks whether three
-layers are radially consecutive, and the two innermost-layer cuts of the same
-section ask how deep a layer sits. GBTS therefore runs on any layer numbering.
+else: the two innermost-layer cuts of @ref gbts-graph ask how deep a layer sits.
+The @f$\tau@f$ ratio tolerance comes from the layer pairs instead, see below.
+GBTS therefore runs on any layer numbering.
 
 > [!note]
 > One reader of the ATLAS numbering survives, and it sits outside the core
@@ -175,7 +175,10 @@ a node form a contiguous range, recorded in that node's `GbtsNodeEdgeInfo`.
 Immediately after creating an edge @f$(n_1, n_2)@f$, the builder scans the edges
 incoming to @f$n_2@f$ — that is, edges @f$(n_2, n_3)@f$ — and links the two
 whenever the implied triplet is consistent: the @f$\tau@f$ ratio, the @f$\phi@f$
-continuation and the curvature difference must all agree within tolerance. For
+continuation and the curvature difference must all agree within tolerance. The
+@f$\tau@f$ ratio tolerance is the experiment's, not the seeder's: a triplet
+spans two layer pairs and is held to the looser of the two
+@ref Acts::Experimental::GbtsLayerConnection::tauRatioCut values they carry. For
 pixel-barrel triplets an optional
 @ref Acts::Experimental::GraphBasedTrackSeeder "validateTriplets" step also fits
 a circle through the three points and cuts on @f$d_0@f$ and @f$p_T@f$. Each
@@ -272,8 +275,8 @@ The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrac
 | `nMaxPhiSlice` | @ref gbts-graph | sets the base @f$\phi@f$ sliding-window width |
 | `minDeltaRadius`, `maxAbsTau` | @ref gbts-graph | doublet acceptance |
 | `minZ0`, `maxZ0`, `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet |
-| `tauRatioCut`, `cutDPhiMax`, `cutDCurvMax` | @ref gbts-graph | edge-to-edge linking tolerances |
-| `useAdaptiveCuts`, `tauRatioCorr` | @ref gbts-graph | widen the @f$\tau@f$ tolerance when a layer is skipped |
+| `cutDPhiMax`, `cutDCurvMax` | @ref gbts-graph | edge-to-edge linking tolerances |
+| `tauRatioCut` | @ref gbts-graph | @f$\tau@f$ scale of the `validateTriplets` high-pT check. The linking cut itself comes from @ref Acts::Experimental::GbtsLayerConnection::tauRatioCut |
 | `validateTriplets`, `d0Max` | @ref gbts-graph | circle fit on pixel-barrel triplets |
 | `nMaxEdges` | @ref gbts-graph | hard cap on the edge array (2M by default); exceeding it costs efficiency |
 | `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxBarrelOrder` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |

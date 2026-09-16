@@ -22,6 +22,11 @@ struct GbtsLayerConnection {
   GbtsExperimentLayerId src{};
   /// Inner layer id.
   GbtsExperimentLayerId dst{};
+  /// Largest |tau ratio| a triplet stepping through this pair may show. A
+  /// triplet spans two pairs and is cut at the larger of the two, so this is
+  /// the tolerance a triplet through this pair deserves, not a contribution to
+  /// one. Default as `GraphBasedTrackSeeder::Config::tauRatioCut`.
+  float tauRatioCut = 0.007f;
 };
 
 }  // namespace Acts::Experimental

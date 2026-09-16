@@ -36,13 +36,6 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
     : m_cfg(config),
       m_geometry(std::move(geometry)),
       m_logger(std::move(logger)) {
-  // buildTheGraph pre-computes the loosest tau ratio threshold it can apply,
-  // which assumes the correction only ever widens the cut.
-  if (m_cfg.tauRatioCorr < 0) {
-    throw std::invalid_argument(
-        "GraphBasedTrackSeeder: tauRatioCorr must not be negative");
-  }
-
   if (m_cfg.phiSortBuckets > GbtsNodeStorage::kMaxPhiSortBuckets) {
     throw std::invalid_argument(
         "GraphBasedTrackSeeder: phiSortBuckets exceeds the maximum");
@@ -144,11 +137,6 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
   const float curvatureCutHighEta = m_cfg.maxCurvatureHighEta * ptScale;
   const float curvatureCutLowEta = m_cfg.maxCurvatureLowEta * ptScale;
 
-  // the loosest tau ratio threshold the triplet matching can apply
-  const float maxTauRatioCut =
-      m_cfg.tauRatioCut + (m_cfg.useAdaptiveCuts ? m_cfg.tauRatioCorr : 0.0f) +
-      (nodeStorage.hasStrips() ? m_cfg.tauRatioCorrStrip : 0.0f);
-
   // the default sliding window along phi
   const float deltaPhi0 = 0.5f * m_cfg.phiSliceWidth;
 
@@ -216,8 +204,8 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
     phiSlidingWindow.clear();
 
     // loop over n2 eta-bins in L2 layers
-    for (const std::uint32_t b2Idx : bg.links) {
-      const detail::GbtsEtaBinInfo& B2 = nodeStorage.etaBin(b2Idx);
+    for (const GbtsBinLink& link : bg.links) {
+      const detail::GbtsEtaBinInfo& B2 = nodeStorage.etaBin(link.bin);
 
       if (B2.empty()) {
         continue;
@@ -244,6 +232,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
       window.numPhiNodes = static_cast<std::uint32_t>(B2.phiNodes.size());
       window.deltaPhi = deltaPhi;
       window.barrelOrder = B2.barrelOrder;
+      window.tauRatioCut = link.tauRatioCut;
       window.type = B2.type;
       window.technology = B2.technology;
     }
@@ -279,6 +268,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
       // the intermediate loop over sliding windows
       for (auto& slw : phiSlidingWindow) {
         const std::int32_t barrelOrder2 = slw.barrelOrder;
+        const float tauRatioCut2 = slw.tauRatioCut;
 
         const bool isPixel2 = slw.technology == GbtsLayerTechnology::Pixel;
         const bool isPixelBarrel2 = barrelOrder2 >= 0;
@@ -457,8 +447,8 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float dPhi1 = curv * r1c;
 
           if (nEdges < m_cfg.nMaxEdges) {
-            edgeStorage.emplace_back(n1Idx, n2Idx, barrelOrder2, expEta, curv,
-                                     phi1 + dPhi1);
+            edgeStorage.emplace_back(n1Idx, n2Idx, tauRatioCut2, isPixelBarrel2,
+                                     expEta, curv, phi1 + dPhi1);
 
             ++numCreatedEdges;
 
@@ -475,52 +465,17 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               const float absTauRatio = std::abs(pS->p[0] * uat2 - 1.0f);
 
-              // rejects most candidates before the layer bookkeeping below
-              if (absTauRatio > maxTauRatioCut) {
-                continue;
+              // the triplet spans two layer pairs and is held to the looser
+              // of the two tolerances they carry
+              if (absTauRatio > std::max(tauRatioCut2, pS->tauRatioCut)) {
+                continue;  // bad match
               }
 
               if (pS->nNei >= detail::kGbtsMaxEdgeNeighbours) {
                 continue;
               }
 
-              const std::int32_t barrelOrder3 = pS->n2BarrelOrder;
-
-              const bool isPixelBarrel3 = barrelOrder3 >= 0;
-
-              float addTauRatioCorr = 0;
-
-              if (m_cfg.useAdaptiveCuts) {
-                if (isPixelBarrel1 && isPixelBarrel2 && isPixelBarrel3) {
-                  // three radially consecutive layers, none skipped
-                  const bool noGap = (barrelOrder2 - barrelOrder1) == 1 &&
-                                     (barrelOrder3 - barrelOrder2) == 1;
-
-                  // assume more scattering due to the layer in between
-                  if (!noGap) {
-                    addTauRatioCorr = m_cfg.tauRatioCorr;
-                  }
-                } else {
-                  bool mixedTriplet =
-                      isPixelBarrel1 && isPixelBarrel2 && !isPixelBarrel3;
-                  if (mixedTriplet) {
-                    addTauRatioCorr = m_cfg.tauRatioCorr;
-                  }
-                }
-              }
-              // The two doublets sharing a strip node resolved it separately,
-              // so a triplet through a strip may disagree on tau by more. Any
-              // of the three: the outer two carry their end's error into tau.
-              if (m_cfg.tauRatioCorrStrip > 0.f &&
-                  (!isPixel1 || !isPixel2 ||
-                   nodeView.strip(pS->n2) != nullptr)) {
-                addTauRatioCorr += m_cfg.tauRatioCorrStrip;
-              }
-
-              // bad match
-              if (absTauRatio > m_cfg.tauRatioCut + addTauRatioCorr) {
-                continue;
-              }
+              const bool isPixelBarrel3 = pS->n2PixelBarrel;
 
               float dPhi = phi2u - pS->p[2];
 
