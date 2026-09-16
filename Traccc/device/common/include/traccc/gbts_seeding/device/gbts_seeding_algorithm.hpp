@@ -258,7 +258,8 @@ class gbts_seeding_algorithm
   /// Stage 1: count, bin, sort and characterise nodes.
   node_making_output make_nodes(
       const edm::spacepoint_collection::const_view& spacepoints,
-      const edm::measurement_collection::const_view& measurements) const;
+      const edm::measurement_collection::const_view& measurements,
+      const unsigned int nSp) const;
 
   /// Stage 2: build, link, match and compress the edge graph. The per-node
   /// buffers are taken by value so they are released when this stage returns.
@@ -285,6 +286,26 @@ class gbts_seeding_algorithm
   /// GBTS seed-finding configuration.
   gbts_seedfinder_config m_config;
 
+  /// @name Device copies of the configuration tables, uploaded once at
+  ///       construction and shared by every event.
+  /// @{
+
+  /// Volume ID to GBTS layer index map.
+  vecmem::data::vector_buffer<short> m_volume_to_layer_map_buffer;
+  /// (Surface ID, GBTS layer index) pairs, for detectors that need them.
+  vecmem::data::vector_buffer<std::pair<unsigned int, unsigned int>>
+      m_surface_to_layer_map_buffer;
+  /// Per-layer type (barrel / endcap).
+  vecmem::data::vector_buffer<char> m_layer_type_buffer;
+  /// Per-layer (etaBin0, numBins).
+  vecmem::data::vector_buffer<std::pair<unsigned int, unsigned int>>
+      m_layer_info_buffer;
+  /// Per-layer (minEta, deltaEta).
+  vecmem::data::vector_buffer<std::pair<float, float>> m_layer_geo_buffer;
+  /// Optional tau LUT for @c gbts_sort_nodes (a size-1 dummy when unused).
+  vecmem::data::vector_buffer<float> m_tau_lut_buffer;
+
+  /// @}
 };  // class gbts_seeding_algorithm
 
 }  // namespace traccc::device

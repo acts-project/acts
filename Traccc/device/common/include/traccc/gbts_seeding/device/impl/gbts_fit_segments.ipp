@@ -317,7 +317,7 @@ TRACCC_HOST_DEVICE inline void gbts_fit_segments(
       return;
     }
     // prefer seeds that reach to the outer edge of the detector for better
-    // resoultion at high pT
+    // resolution at high pT
     if (math::fabs(state1.m_Y[1]) > fit_params.zmax / fit_params.rmax) {
       state1.m_J += fit_params.add_hit * math::fabs(node1.z) / fit_params.zmax;
     } else {

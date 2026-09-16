@@ -58,9 +58,11 @@ jobs:
       fail-fast: false
       matrix:
         platform:
+          # Build Alpaka alongside the host backend, as on the GPU legs.
+          # Release runs both test suites; Debug also compiles Alpaka.
           - name: CPU
             container: ghcr.io/acts-project/ubuntu2604:91
-            options: --preset host-fp32
+            options: --preset host-fp32 -DTRACCC_BUILD_ALPAKA=ON
             run_tests: true
             flavor: ""
           # Distinct name because merge-sentinel deduplicates result items by
@@ -145,13 +147,6 @@ jobs:
           #     run_tests: false
           #     flavor: rocm7
           #   build: Release
-          - platform:
-              name: "ALPAKA_CPU"
-              container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset alpaka-fp32
-              run_tests: true
-              flavor: ""
-            build: Release
     # Use BASH as the shell from the images.
     defaults:
       run:
@@ -171,10 +166,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      # vecmem, covfie, alpaka and TBB come from spack on every leg: the host
-      # lockfile carries them and each flavor overlays its own build, so no
+      # vecmem, covfie, alpaka, actsvg and TBB come from spack on every leg: the
+      # host lockfile carries them and each flavor overlays its own build, so no
       # per-leg gating is needed. TRACCC_USE_SYSTEM_ALPAKA is unconditional
-      # because traccc only acts on it under TRACCC_SETUP_ALPAKA.
+      # because traccc only acts on it under TRACCC_SETUP_ALPAKA. actsvg is
+      # needed because extern/acts forces ACTS_BUILD_PLUGIN_ACTSVG on for
+      # detray's validation tools, so without the flag every leg compiles it.
       #
       # TBB too: the FetchContent oneTBB turns IPO on, which under a clang
       # host is ThinLTO, leaving bitcode the ROCm linker cannot read.
@@ -190,6 +187,7 @@ jobs:
             -DACTS_USE_SYSTEM_COVFIE=ON \
             -DACTS_USE_SYSTEM_VECMEM=ON \
             -DACTS_USE_SYSTEM_EIGEN3=ON \
+            -DACTS_USE_SYSTEM_ACTSVG=ON \
             -DTRACCC_USE_SYSTEM_VECMEM=ON \
             -DTRACCC_USE_SYSTEM_COVFIE=ON \
             -DTRACCC_USE_SYSTEM_ALPAKA=ON \

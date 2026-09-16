@@ -30,6 +30,7 @@
 // System include(s).
 #include <iostream>
 #include <limits>
+#include <numbers>
 #include <string>
 
 namespace traccc {
@@ -63,8 +64,8 @@ class triplet_fitter {
   // Convenience function: wrap angle between -Pi and Pi
   static inline scalar wrap_pi_mpi(scalar angle) {
     // Map angle to [ -2*PI, 2*PI ]
-    const scalar two_pi = 2.0f * static_cast<scalar>(M_PI);
-    angle = std::fmod(angle + static_cast<scalar>(M_PI), two_pi);
+    const scalar two_pi = 2.0f * std::numbers::pi_v<scalar>;
+    angle = std::fmod(angle + std::numbers::pi_v<scalar>, two_pi);
 
     // Handle negative results from fmod to ensure we are in [ 0, 2*PI ]
     if (angle < 0) {
@@ -72,17 +73,17 @@ class triplet_fitter {
     }
 
     // Shift back to [ -PI, PI ]
-    return angle - static_cast<scalar>(M_PI);
+    return angle - std::numbers::pi_v<scalar>;
   }
 
   // Convenience function: difference of two azimuthal angles
   static inline scalar delta_phi(scalar phi_a, scalar phi_b) {
-    scalar dphi = math::fmod(phi_a - phi_b, 2.f * static_cast<scalar>(M_PI));
+    scalar dphi = math::fmod(phi_a - phi_b, 2.f * std::numbers::pi_v<scalar>);
 
-    if (dphi > static_cast<scalar>(M_PI))
-      dphi -= 2.f * static_cast<scalar>(M_PI);
-    if (dphi < -1.f * static_cast<scalar>(M_PI))
-      dphi += 2.f * static_cast<scalar>(M_PI);
+    if (dphi > std::numbers::pi_v<scalar>)
+      dphi -= 2.f * std::numbers::pi_v<scalar>;
+    if (dphi < -1.f * std::numbers::pi_v<scalar>)
+      dphi += 2.f * std::numbers::pi_v<scalar>;
     return dphi;
   }
 
@@ -139,10 +140,10 @@ class triplet_fitter {
     ///
     /// @param hit_idx hit index
     /// @param dir_idx direction index
-    /// @param multipler multipler
+    /// @param multiplier multiplier
     /// @param detector detector
     void shiftHit(const unsigned& hit_idx, const unsigned& dir_idx,
-                  const scalar& multipler,
+                  const scalar& multiplier,
                   edm::measurement_collection::const_device measurements,
                   const detector_t& detector) {
       // The shifts are applied to the global
@@ -161,7 +162,7 @@ class triplet_fitter {
 
       // Shift local position
       assert(dir_idx <= measurements.at(m_meas_idx[hit_idx]).dimensions());
-      loc_pos[dir_idx] += multipler * math::sqrt(loc_var[dir_idx]);
+      loc_pos[dir_idx] += multiplier * math::sqrt(loc_var[dir_idx]);
 
       // Surface
       detray::tracking_surface sf{
@@ -219,7 +220,7 @@ class triplet_fitter {
   void make_triplets(const vecmem::vector<unsigned int>& in_measurements,
                      edm::measurement_collection::const_device measurements) {
     // Assuming no holes
-    const size_t n_triplets = in_measurements.size() - 2;
+    const std::size_t n_triplets = in_measurements.size() - 2;
 
     // Clear triplets from last candidate
     m_triplets.clear();
@@ -228,7 +229,7 @@ class triplet_fitter {
     m_triplets.reserve(n_triplets);
 
     // loop over measurements (track states) in candidate
-    for (size_t i = 0; i < n_triplets; ++i) {
+    for (std::size_t i = 0; i < n_triplets; ++i) {
       // Get track states (and measurements)
       auto meas_0 = measurements.at(in_measurements[i]);
       auto meas_1 = measurements.at(in_measurements[i + 1]);
@@ -620,13 +621,13 @@ class triplet_fitter {
       typename edm::track_collection<algebra_type>::host::proxy_type& track,
       edm::measurement_collection::const_device measurements) {
     // Allocate matrices with max possible sizes
-    constexpr size_t max_nhits =
+    constexpr std::size_t max_nhits =
         20u;  // Assumption about max number of hits in track candidate
-    constexpr size_t max_ntrips = max_nhits - 2u;
-    constexpr size_t max_ndirs = m_max_dims * max_nhits;
+    constexpr std::size_t max_ntrips = max_nhits - 2u;
+    constexpr std::size_t max_ndirs = m_max_dims * max_nhits;
 
     // Actual number in this track
-    const size_t N_triplets = m_triplets.size();
+    const std::size_t N_triplets = m_triplets.size();
     // assert(m_track_states.size() <= max_nhits);
     // assert(N_triplets == m_track_states.size() - 2u);
     assert(N_triplets + 2u <= max_nhits);
@@ -649,7 +650,7 @@ class triplet_fitter {
 
     // Fill matrices/vectors
 
-    for (size_t i = 0; i < N_triplets; ++i) {
+    for (std::size_t i = 0; i < N_triplets; ++i) {
       const triplet& t_i = m_triplets[i];
 
       getter::element(rho, i, 0u) = t_i.m_rho_theta;
@@ -782,7 +783,7 @@ class triplet_fitter {
     // Calculation of track state vector and covariance matrix //
     // ------------------------------------------------------- //
 
-    // At the first measurement surface (first triplet, first segement)
+    // At the first measurement surface (first triplet, first segment)
 
     const triplet& triplet_first = m_triplets[0u];
 
@@ -1000,7 +1001,7 @@ class triplet_fitter {
   static constexpr scalar mom_conv = 0.299792458f;
 
   // Maximum number of uncertainty directions / hit
-  static constexpr size_t m_max_dims = 2u;
+  static constexpr std::size_t m_max_dims = 2u;
 
   // Sum of measurement diensions
   scalar m_meas_sum_dims{};

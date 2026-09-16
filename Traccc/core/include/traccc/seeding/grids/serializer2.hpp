@@ -17,7 +17,7 @@ namespace traccc {
  * a serial binning for data storage.
  *
  * Serializers allow to create a memory local environment if
- * advantegeous.
+ * advantageous.
  *
  **/
 struct serializer2 {

@@ -12,6 +12,7 @@
 #include "traccc/alpaka/clusterization/measurement_sorting_algorithm.hpp"
 #include "traccc/alpaka/finding/combinatorial_kalman_filter_algorithm.hpp"
 #include "traccc/alpaka/fitting/kalman_fitting_algorithm.hpp"
+#include "traccc/alpaka/gbts_seeding/gbts_seeding_algorithm.hpp"
 #include "traccc/alpaka/seeding/seed_parameter_estimation_algorithm.hpp"
 #include "traccc/alpaka/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
 #include "traccc/alpaka/seeding/triplet_seeding_algorithm.hpp"
@@ -23,6 +24,7 @@
 #include "traccc/edm/track_collection.hpp"
 #include "traccc/edm/track_parameters.hpp"
 #include "traccc/fitting/kalman_filter/kalman_fitter.hpp"
+#include "traccc/gbts_seeding/gbts_seeding_config.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/detector_buffer.hpp"
 #include "traccc/geometry/detector_conditions_description.hpp"
@@ -31,8 +33,6 @@
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/messaging.hpp"
 #include "traccc/utils/propagation.hpp"
-// GBTS include for placeholder input (not implemented)
-#include "traccc/gbts_seeding/gbts_seeding_config.hpp"
 
 // VecMem include(s).
 #include <vecmem/containers/vector.hpp>
@@ -162,6 +162,8 @@ class full_chain_algorithm
   spacepoint_formation_algorithm m_spacepoint_formation;
   /// Seeding algorithm
   triplet_seeding_algorithm m_seeding;
+  /// Seeding with GBTS algorithm
+  gbts_seeding_algorithm m_gbts_seeding;
   /// Track parameter estimation algorithm
   seed_parameter_estimation_algorithm m_track_parameter_estimation;
 
@@ -183,8 +185,8 @@ class full_chain_algorithm
   spacepoint_grid_config m_grid_config;
   /// Configuration for the seed filtering
   seedfilter_config m_filter_config;
-  /// placeholder GBTS config
-  [[maybe_unused]] gbts_seedfinder_config m_gbts_config;
+  /// Configuration for GBTS seeding
+  gbts_seedfinder_config m_gbts_config;
   /// Configuration for track parameter estimation
   track_params_estimation_config m_track_params_estimation_config;
 

@@ -87,9 +87,9 @@ int seq_run(const traccc::opts::detector& detector_opts,
       logger().clone("SeedingPerformanceWriter"));
 
   // Output stats
-  uint64_t n_spacepoints = 0;
-  uint64_t n_seeds = 0;
-  uint64_t n_seeds_sycl = 0;
+  std::uint64_t n_spacepoints = 0;
+  std::uint64_t n_seeds = 0;
+  std::uint64_t n_seeds_sycl = 0;
 
   /*****************************
    * Build a geometry
