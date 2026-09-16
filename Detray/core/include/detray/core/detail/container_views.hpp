@@ -127,13 +127,13 @@ struct get_view<const vecmem::device_vector<T>> : public std::true_type {
   using type = dvector_view<const T>;
 };
 
-/// Specialization of the view getter for @c vecmem::device_vector
+/// Specialization of the view getter for @c compact_device_vector
 template <typename T>
 struct get_view<compact_device_vector<T>> : public std::true_type {
   using type = dvector_view<T>;
 };
 
-/// Specialization of the view getter for @c vecmem::device_vector - const
+/// Specialization of the view getter for @c compact_device_vector - const
 template <typename T>
 struct get_view<const compact_device_vector<T>> : public std::true_type {
   using type = dvector_view<const T>;
@@ -187,12 +187,6 @@ struct dmulti_view : public detail::dbase_view {
   dtuple<view_ts...> m_view;
 
   dmulti_view() = default;
-
-  /// Allow conversion of views (especially non-const to const)
-  template <concepts::device_view... other_view_ts>
-    requires(std::is_convertible_v<other_view_ts, view_ts> && ...)
-  dmulti_view(const dmulti_view<other_view_ts...>& other_view)
-      : m_view{detray::get<other_view_ts>(other_view.m_view)...} {}
 
   /// Tie multiple views together
   DETRAY_HOST_DEVICE

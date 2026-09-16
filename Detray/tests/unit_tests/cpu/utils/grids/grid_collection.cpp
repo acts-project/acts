@@ -60,6 +60,9 @@ GTEST_TEST(detray_grid, grid_collection) {
   using grid_t =
       grid<test_algebra, axes<cylinder3D>, bins::static_array<dindex, 3>,
            simple_serializer, host_container_types, is_n_owning>;
+  using grid_device_t =
+      grid<test_algebra, axes<cylinder3D>, bins::static_array<dindex, 3>,
+           simple_serializer, const_device_container_types, is_n_owning>;
 
   // Build test data
   grid_t::bin_container_type bin_data{};
@@ -84,26 +87,56 @@ GTEST_TEST(detray_grid, grid_collection) {
       grid_collection<grid_t>(std::move(grid_offsets), std::move(bin_data),
                               std::move(edge_ranges), std::move(bin_edges));
 
+  auto grid_coll_view = detray::get_data(grid_coll);
+  static_assert(std::is_same_v<decltype(grid_coll_view),
+                               typename grid_collection<grid_t>::view_type>,
+                "Grid collection view incorrectly assembled");
+
+  const grid_collection<grid_t>& const_coll = grid_coll;
+  auto const_coll_view = detray::get_data(const_coll);
+  static_assert(
+      std::is_same_v<decltype(const_coll_view),
+                     typename grid_collection<grid_t>::const_view_type>,
+      "Grid collection const view incorrectly assembled");
+
+  grid_collection<grid_t>::const_view_type coll_view =
+      detray::get_data(std::as_const(grid_coll));
+  auto grid_coll_dev = grid_collection<grid_device_t>(coll_view);
+
   // Tests
 
   // Basics
   EXPECT_EQ(grid_coll.size(), 3u);
+  EXPECT_EQ(grid_coll_dev.size(), 3u);
   EXPECT_EQ(grid_coll.bin_storage().size(), 197u);
+  EXPECT_EQ(grid_coll_dev.bin_storage().size(), 197u);
   EXPECT_EQ(grid_coll.axes_storage().size(), 9u);
+  EXPECT_EQ(grid_coll_dev.axes_storage().size(), 9u);
   EXPECT_EQ(grid_coll.bin_edges_storage().size(), 18u);
+  EXPECT_EQ(grid_coll_dev.bin_edges_storage().size(), 18u);
 
   // Get a grid instance
   auto single_grid = grid_coll[1];
+  auto single_grid_dev = grid_coll_dev[1];
 
   static_assert(std::is_same_v<decltype(single_grid), grid_t>,
                 "Grid from collection has wrong type");
 
+  static_assert(std::is_same_v<decltype(single_grid_dev), grid_device_t>,
+                "Grid from device collection has wrong type");
+
   EXPECT_EQ(single_grid.dim, 3);
+  EXPECT_EQ(single_grid_dev.dim, 3);
   EXPECT_EQ(single_grid.nbins(), 24u);
+  EXPECT_EQ(single_grid_dev.nbins(), 24u);
   auto r_axis = single_grid.get_axis<label::e_r>();
+  auto r_axis_dev = single_grid_dev.get_axis<label::e_r>();
   EXPECT_EQ(r_axis.nbins(), 1u);
+  EXPECT_EQ(r_axis_dev.nbins(), 1u);
   auto phi_axis = single_grid.get_axis<label::e_phi>();
+  auto phi_axis_dev = single_grid_dev.get_axis<label::e_phi>();
   EXPECT_EQ(phi_axis.nbins(), 3u);
+  EXPECT_EQ(phi_axis_dev.nbins(), 3u);
   using z_axis_t = single_axis<closed<label::e_z>, regular<scalar>>;
   auto z_axis = single_grid.get_axis<z_axis_t>();
   EXPECT_EQ(z_axis.nbins(), 8u);
@@ -112,6 +145,10 @@ GTEST_TEST(detray_grid, grid_collection) {
   EXPECT_EQ(single_grid.bin(0u, 0u, 0u)[0u], 49u);
   EXPECT_EQ(single_grid.bin(0u, 0u, 0u)[1u], inf);
   EXPECT_EQ(single_grid.bin(0u, 0u, 0u)[2u], inf);
+
+  EXPECT_EQ(single_grid_dev.bin(0u, 0u, 0u)[0u], 49u);
+  EXPECT_EQ(single_grid_dev.bin(0u, 0u, 0u)[1u], inf);
+  EXPECT_EQ(single_grid_dev.bin(0u, 0u, 0u)[2u], inf);
 
   // Test the bin view
   auto& bin_view = grid_coll[2].bin(101u);
@@ -123,22 +160,14 @@ GTEST_TEST(detray_grid, grid_collection) {
   // Test the global bin iteration. Take the middle grid!
   auto seq = detray::views::iota(49, 73);
   auto flat_bin_view = single_grid.all();
+  auto flat_bin_view_dev = single_grid_dev.all();
   EXPECT_EQ(seq.size(), 24u);
   EXPECT_EQ(flat_bin_view.size(), 24u);
+  EXPECT_EQ(flat_bin_view_dev.size(), 24u);
   EXPECT_TRUE(
       std::equal(flat_bin_view.begin(), flat_bin_view.end(), seq.begin()));
-
-  auto grid_coll_view = get_data(grid_coll);
-  static_assert(std::is_same_v<decltype(grid_coll_view),
-                               typename grid_collection<grid_t>::view_type>,
-                "Grid collection view incorrectly assembled");
-
-  const grid_collection<grid_t>& const_coll = grid_coll;
-  auto const_coll_view = get_data(const_coll);
-  static_assert(
-      std::is_same_v<decltype(const_coll_view),
-                     typename grid_collection<grid_t>::const_view_type>,
-      "Grid collection const view incorrectly assembled");
+  EXPECT_TRUE(std::equal(flat_bin_view_dev.begin(), flat_bin_view_dev.end(),
+                         seq.begin()));
 }
 
 /// Unittest: Test the construction of a collection of grids with dynamic grid
@@ -148,6 +177,9 @@ GTEST_TEST(detray_grid, grid_collection_dynamic_bin) {
   using grid_t =
       grid<test_algebra, axes<cylinder3D>, bins::dynamic_array<dindex>,
            simple_serializer, host_container_types, is_n_owning>;
+  using grid_device_t =
+      grid<test_algebra, axes<cylinder3D>, bins::dynamic_array<dindex>,
+           simple_serializer, const_device_container_types, is_n_owning>;
 
   // Build test data
   grid_t::bin_container_type bin_data{};
@@ -205,35 +237,70 @@ GTEST_TEST(detray_grid, grid_collection_dynamic_bin) {
       grid_collection<grid_t>(std::move(grid_offsets), std::move(bin_data),
                               std::move(edge_ranges), std::move(bin_edges));
 
+  auto grid_coll_view = detray::get_data(grid_coll);
+  static_assert(std::is_same_v<decltype(grid_coll_view),
+                               typename grid_collection<grid_t>::view_type>,
+                "Grid collection view incorrectly assembled");
+
+  const grid_collection<grid_t>& const_coll = grid_coll;
+  auto const_coll_view = detray::get_data(const_coll);
+  static_assert(
+      std::is_same_v<decltype(const_coll_view),
+                     typename grid_collection<grid_t>::const_view_type>,
+      "Grid collection const view incorrectly assembled");
+
+  grid_collection<grid_t>::const_view_type coll_view =
+      detray::get_data(std::as_const(grid_coll));
+  auto grid_coll_dev = grid_collection<grid_device_t>(coll_view);
+
   // Tests
 
   // Basics
   EXPECT_EQ(grid_coll.size(), 3u);
+  EXPECT_EQ(grid_coll_dev.size(), 3u);
   EXPECT_EQ(grid_coll.bin_storage().bins.size(), 197u);
+  EXPECT_EQ(grid_coll_dev.bin_storage().bins.size(), 197u);
   EXPECT_EQ(grid_coll.bin_storage().entries.size(), 4u * 197u);
+  EXPECT_EQ(grid_coll_dev.bin_storage().entries.size(), 4u * 197u);
   EXPECT_EQ(grid_coll.axes_storage().size(), 9u);
+  EXPECT_EQ(grid_coll_dev.axes_storage().size(), 9u);
   EXPECT_EQ(grid_coll.bin_edges_storage().size(), 18u);
+  EXPECT_EQ(grid_coll_dev.bin_edges_storage().size(), 18u);
 
   // Get a grid instance
   auto single_grid = grid_coll[1];
+  auto single_grid_dev = grid_coll_dev[1];
 
   static_assert(std::is_same_v<decltype(single_grid), grid_t>,
                 "Grid from collection has wrong type");
 
+  static_assert(std::is_same_v<decltype(single_grid_dev), grid_device_t>,
+                "Grid from device collection has wrong type");
+
   EXPECT_EQ(single_grid.dim, 3);
+  EXPECT_EQ(single_grid_dev.dim, 3);
   EXPECT_EQ(single_grid.nbins(), 24u);
+  EXPECT_EQ(single_grid_dev.nbins(), 24u);
   auto r_axis = single_grid.get_axis<label::e_r>();
+  auto r_axis_dev = single_grid_dev.get_axis<label::e_r>();
   EXPECT_EQ(r_axis.nbins(), 1u);
+  EXPECT_EQ(r_axis_dev.nbins(), 1u);
   auto phi_axis = single_grid.get_axis<label::e_phi>();
+  auto phi_axis_dev = single_grid_dev.get_axis<label::e_phi>();
   EXPECT_EQ(phi_axis.nbins(), 3u);
+  EXPECT_EQ(phi_axis_dev.nbins(), 3u);
   using z_axis_t = single_axis<closed<label::e_z>, regular<scalar>>;
   auto z_axis = single_grid.get_axis<z_axis_t>();
   EXPECT_EQ(z_axis.nbins(), 8u);
 
   auto bin = single_grid.bin(0u, 0u, 0u);
+  auto bin_dev = single_grid_dev.bin(0u, 0u, 0u);
   EXPECT_EQ(bin.capacity(), 3u);
+  EXPECT_EQ(bin_dev.capacity(), 3u);
   EXPECT_EQ(bin.size(), 1u);
+  EXPECT_EQ(bin_dev.size(), 1u);
   EXPECT_EQ(bin[0u], 48u);
+  EXPECT_EQ(bin_dev[0u], 48u);
 
   // Test the bin view
   EXPECT_EQ(grid_coll[2].nbins(), 125u);
@@ -247,20 +314,12 @@ GTEST_TEST(detray_grid, grid_collection_dynamic_bin) {
   // Test the global bin iteration. Take the middle grid!
   auto seq = detray::views::iota(48, 72);
   auto flat_bin_view = single_grid.all();
+  auto flat_bin_view_dev = single_grid_dev.all();
   EXPECT_EQ(seq.size(), 24u);
   EXPECT_EQ(flat_bin_view.size(), 24u);
+  EXPECT_EQ(flat_bin_view_dev.size(), 24u);
   EXPECT_TRUE(
       std::equal(flat_bin_view.begin(), flat_bin_view.end(), seq.begin()));
-
-  auto grid_coll_view = get_data(grid_coll);
-  static_assert(std::is_same_v<decltype(grid_coll_view),
-                               typename grid_collection<grid_t>::view_type>,
-                "Grid collection view incorrectly assembled");
-
-  const grid_collection<grid_t>& const_coll = grid_coll;
-  auto const_coll_view = get_data(const_coll);
-  static_assert(
-      std::is_same_v<decltype(const_coll_view),
-                     typename grid_collection<grid_t>::const_view_type>,
-      "Grid collection const view incorrectly assembled");
+  EXPECT_TRUE(std::equal(flat_bin_view_dev.begin(), flat_bin_view_dev.end(),
+                         seq.begin()));
 }
