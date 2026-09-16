@@ -43,30 +43,6 @@ class SurfaceArray {
     std::array<std::uint8_t, 2> min = {0, 0};
     /// Most bins served in each direction; also sizes the neighbor cache
     std::array<std::uint8_t, 2> max = {2, 2};
-
-    /// Default window: no floor, at most two bins per axis
-    constexpr NeighborWindow() = default;
-
-    /// Window with an explicit floor and bound per axis
-    /// @param windowMin Fewest bins served in each direction
-    /// @param windowMax Most bins served in each direction
-    constexpr NeighborWindow(std::array<std::uint8_t, 2> windowMin,
-                             std::array<std::uint8_t, 2> windowMax)
-        : min(windowMin), max(windowMax) {}
-
-    /// Isotropic window: at least one bin unless the bound forbids it, at
-    /// most @p maxNeighborDistance.
-    /// @deprecated The two axes of a layer grid are not equivalent, give the
-    ///             bounds per axis.
-    /// @param maxNeighborDistance Most bins served in each direction
-    [[deprecated(
-        "Pass an Acts::SurfaceArray::NeighborWindow with per-axis bounds "
-        "instead of a single neighbor distance")]]
-    constexpr NeighborWindow(  // NOLINT(google-explicit-constructor)
-        std::uint8_t maxNeighborDistance)
-        : min({std::min<std::uint8_t>(1, maxNeighborDistance),
-               std::min<std::uint8_t>(1, maxNeighborDistance)}),
-          max({maxNeighborDistance, maxNeighborDistance}) {}
   };
 
   /// Constructor with a single surface
@@ -90,6 +66,7 @@ class SurfaceArray {
                std::vector<std::shared_ptr<const Surface>> surfaces,
                std::shared_ptr<RegularSurface> representative, double tolerance,
                std::tuple<const IAxis&, const IAxis&> axes,
+               // spelled out, the enclosing class is still incomplete here
                NeighborWindow neighborWindow = NeighborWindow{{0, 0}, {2, 2}},
                std::uint8_t overfill = 0);
 
@@ -210,14 +187,6 @@ class SurfaceArray {
   /// Get the bounds on the neighbor window this lookup serves.
   /// @return Neighbor window bounds per axis
   NeighborWindow neighborWindow() const;
-
-  /// Get the maximum neighbor distance that is supported by this lookup.
-  /// @deprecated Use @ref neighborWindow; this reports the larger bound.
-  /// @return Maximum neighbor distance over both axes
-  [[deprecated(
-      "Use Acts::SurfaceArray::neighborWindow(), the window is bounded per "
-      "axis")]]
-  std::uint8_t maxNeighborDistance() const;
 
   /// Forward declaration of the internal lookup struct. The actual definition
   /// is in the source file.

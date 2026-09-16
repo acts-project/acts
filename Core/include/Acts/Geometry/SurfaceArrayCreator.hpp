@@ -124,7 +124,7 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
       std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {1, 2}},
+      SurfaceArray::NeighborWindow neighborWindow = {.max = {1, 2}},
       std::uint8_t overfill = 0) const;
 
   /// SurfaceArrayCreator interface method
@@ -153,7 +153,7 @@ class SurfaceArrayCreator {
       BinningType bTypePhi = equidistant, BinningType bTypeZ = equidistant,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {1, 2}},
+      SurfaceArray::NeighborWindow neighborWindow = {.max = {1, 2}},
       std::uint8_t overfill = 0) const;
 
   /// SurfaceArrayCreator interface method
@@ -181,7 +181,7 @@ class SurfaceArrayCreator {
       std::size_t binsPhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 1}},
+      SurfaceArray::NeighborWindow neighborWindow = {.max = {2, 1}},
       std::uint8_t overfill = 0) const;
 
   /// SurfaceArrayCreator interface method
@@ -214,7 +214,7 @@ class SurfaceArrayCreator {
       BinningType bTypePhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 1}},
+      SurfaceArray::NeighborWindow neighborWindow = {.max = {2, 1}},
       std::uint8_t overfill = 0) const;
 
   /// SurfaceArrayCreator interface method
@@ -245,7 +245,7 @@ class SurfaceArrayCreator {
       std::size_t bins2, AxisDirection aDir,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 2}},
+      SurfaceArray::NeighborWindow neighborWindow = {.max = {2, 2}},
       std::uint8_t overfill = 0) const;
 
   /// Static check function for surface equivalent
