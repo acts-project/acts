@@ -42,7 +42,7 @@ namespace traccc::alpaka {
 namespace kernels {
 
 /// Alpaka kernel functor for @c traccc::device::find_tracks
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 struct find_tracks {
   template <typename TAcc>
   ALPAKA_FN_ACC void operator()(
@@ -149,7 +149,7 @@ struct progressive_kalman_filter {
 ///
 /// The detector is built once into global memory rather than in every thread,
 /// so that the propagation kernels only carry a pointer to it.
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 struct create_device_detector {
   template <typename TAcc>
   ALPAKA_FN_ACC void operator()(TAcc const& acc,
@@ -584,7 +584,7 @@ namespace alpaka::trait {
 
 /// Specify how much dynamic shared memory is needed for the
 /// @c traccc::alpaka::details::kernels::find_tracks kernel.
-template <typename TAcc, typename detector_t>
+template <typename TAcc, detray::concepts::detector detector_t>
 struct BlockSharedMemDynSizeBytes<
     traccc::alpaka::kernels::find_tracks<detector_t>, TAcc> {
   template <typename TVec, typename... TArgs>

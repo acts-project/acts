@@ -56,7 +56,7 @@ class nseed_performance_writer {
         measurements_view};
 
     for (SeedIt s = sb; s != se; ++s) {
-      std::vector<std::vector<uint64_t>> particle_ids;
+      std::vector<std::vector<std::uint64_t>> particle_ids;
 
       std::transform(
           s->cbegin(), s->cend(), std::back_inserter(particle_ids),
@@ -73,7 +73,7 @@ class nseed_performance_writer {
 
             const auto& ptcs = em.m_meas_to_ptc_map.find(meas)->second;
 
-            std::vector<uint64_t> ptc_ids;
+            std::vector<std::uint64_t> ptc_ids;
 
             for (auto const& [ptc, _] : ptcs) {
               ptc_ids.push_back(ptc.particle_id);
@@ -82,7 +82,7 @@ class nseed_performance_writer {
             return ptc_ids;
           });
 
-      std::optional<uint64_t> pid = _matcher->operator()(particle_ids);
+      std::optional<std::uint64_t> pid = _matcher->operator()(particle_ids);
 
       if (pid) {
         _stats.true_seeds++;

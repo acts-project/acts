@@ -12,15 +12,15 @@
 
 template <template <typename> typename F>
 struct vector {
-  using tuple_t = std::tuple<uint32_t, uint32_t, uint32_t>;
-  F<uint32_t> x, y, z;
+  using tuple_t = std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>;
+  F<std::uint32_t> x, y, z;
 };
 
 template <template <typename...> typename Layout>
 __global__ void testArrayWrapperKernel(
     const typename traccc::array_wrapper<Layout, vector>::handle h,
-    uint32_t *total) {
-  __shared__ uint32_t block_total;
+    std::uint32_t *total) {
+  __shared__ std::uint32_t block_total;
 
   if (threadIdx.x == 0) {
     block_total = 0;
@@ -30,7 +30,7 @@ __global__ void testArrayWrapperKernel(
 
   int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
-  uint32_t warp_total = h[tid].x;
+  std::uint32_t warp_total = h[tid].x;
 
   for (int i = 16; i >= 1; i /= 2) {
     warp_total += __shfl_xor_sync(0xffffffff, warp_total, i, 32);
@@ -62,7 +62,7 @@ __global__ void fillWrapperKernel(
 TEST(CUDAArrayWrapper, SoALayout) {
   vecmem::cuda::device_memory_resource mr;
 
-  uint32_t n = 1024u * 1024u;
+  std::uint32_t n = 1024u * 1024u;
 
   traccc::array_wrapper<traccc::soa, vector>::owner o(mr, n);
 
@@ -72,11 +72,11 @@ TEST(CUDAArrayWrapper, SoALayout) {
   ASSERT_EQ(cudaPeekAtLastError(), cudaSuccess);
   ASSERT_EQ(cudaDeviceSynchronize(), cudaSuccess);
 
-  uint32_t host_result;
-  uint32_t *dev_result = nullptr;
+  std::uint32_t host_result;
+  std::uint32_t *dev_result = nullptr;
 
-  ASSERT_EQ(cudaMalloc(&dev_result, sizeof(uint32_t)), cudaSuccess);
-  ASSERT_EQ(cudaMemset(&dev_result, sizeof(uint32_t), 0), cudaSuccess);
+  ASSERT_EQ(cudaMalloc(&dev_result, sizeof(std::uint32_t)), cudaSuccess);
+  ASSERT_EQ(cudaMemset(&dev_result, sizeof(std::uint32_t), 0), cudaSuccess);
 
   testArrayWrapperKernel<traccc::soa><<<n / 1024u, 1024u>>>(
       typename traccc::array_wrapper<traccc::soa, vector>::handle(o),
@@ -85,7 +85,7 @@ TEST(CUDAArrayWrapper, SoALayout) {
   ASSERT_EQ(cudaPeekAtLastError(), cudaSuccess);
   ASSERT_EQ(cudaDeviceSynchronize(), cudaSuccess);
 
-  ASSERT_EQ(cudaMemcpy(&host_result, dev_result, sizeof(uint32_t),
+  ASSERT_EQ(cudaMemcpy(&host_result, dev_result, sizeof(std::uint32_t),
                        cudaMemcpyDeviceToHost),
             cudaSuccess);
 
@@ -97,7 +97,7 @@ TEST(CUDAArrayWrapper, SoALayout) {
 TEST(CUDAArrayWrapper, AoSLayout) {
   vecmem::cuda::device_memory_resource mr;
 
-  uint32_t n = 1024u * 1024u;
+  std::uint32_t n = 1024u * 1024u;
 
   traccc::array_wrapper<traccc::aos, vector>::owner o(mr, n);
 
@@ -107,11 +107,11 @@ TEST(CUDAArrayWrapper, AoSLayout) {
   ASSERT_EQ(cudaPeekAtLastError(), cudaSuccess);
   ASSERT_EQ(cudaDeviceSynchronize(), cudaSuccess);
 
-  uint32_t host_result;
-  uint32_t *dev_result = nullptr;
+  std::uint32_t host_result;
+  std::uint32_t *dev_result = nullptr;
 
-  ASSERT_EQ(cudaMalloc(&dev_result, sizeof(uint32_t)), cudaSuccess);
-  ASSERT_EQ(cudaMemset(&dev_result, sizeof(uint32_t), 0), cudaSuccess);
+  ASSERT_EQ(cudaMalloc(&dev_result, sizeof(std::uint32_t)), cudaSuccess);
+  ASSERT_EQ(cudaMemset(&dev_result, sizeof(std::uint32_t), 0), cudaSuccess);
 
   testArrayWrapperKernel<traccc::aos><<<n / 1024u, 1024u>>>(
       typename traccc::array_wrapper<traccc::aos, vector>::handle(o),
@@ -120,7 +120,7 @@ TEST(CUDAArrayWrapper, AoSLayout) {
   ASSERT_EQ(cudaPeekAtLastError(), cudaSuccess);
   ASSERT_EQ(cudaDeviceSynchronize(), cudaSuccess);
 
-  ASSERT_EQ(cudaMemcpy(&host_result, dev_result, sizeof(uint32_t),
+  ASSERT_EQ(cudaMemcpy(&host_result, dev_result, sizeof(std::uint32_t),
                        cudaMemcpyDeviceToHost),
             cudaSuccess);
 

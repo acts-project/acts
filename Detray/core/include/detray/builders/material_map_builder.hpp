@@ -14,6 +14,7 @@
 #include "detray/builders/material_map_generator.hpp"
 #include "detray/builders/surface_factory_interface.hpp"
 #include "detray/builders/volume_builder_interface.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/geometry/concepts.hpp"
 #include "detray/geometry/surface.hpp"
 #include "detray/material/material_map.hpp"
@@ -40,7 +41,7 @@ struct add_sf_material_map;
 ///
 /// Decorator class to a volume builder that adds material maps to either
 /// surfaces or volumes
-template <typename detector_t, std::size_t DIM = 2u,
+template <concepts::detector detector_t, std::size_t DIM = 2u,
           typename mat_map_factory_t =
               material_grid_factory<typename detector_t::algebra_type>>
 class material_map_builder final : public volume_decorator<detector_t> {

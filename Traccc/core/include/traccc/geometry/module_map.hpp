@@ -36,7 +36,7 @@ namespace traccc {
  * constant time, this presents possible speed-up.
  *
  * Thus, the map is essentially two-layered. First, we determine which
- * contigous sub-range a given value must fall in, and then we get the value
+ * contiguous sub-range a given value must fall in, and then we get the value
  * from that sub-range in constant time.
  *
  * The first layer is implemented as a simple balanced binary search tree,
@@ -298,7 +298,7 @@ class module_map {
     values.push_back(input.at(keys.front()));
 
     /*
-     * Starting from the second key, we check if they are contiuous with
+     * Starting from the second key, we check if they are continuous with
      * the last key, and store them if so.
      */
     for (std::size_t i = 1; i < keys.size(); ++i) {
@@ -374,7 +374,7 @@ class module_map {
         return &m_values[node.index + (i - node.start)];
       } else {
         /*
-         * Two possibilties remain, we need to check the right subtree.
+         * Two possibilities remain, we need to check the right subtree.
          */
         return at_helper(i, 2 * n + 2);
       }

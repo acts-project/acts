@@ -183,18 +183,20 @@ if(${DETRAY_BUILD_HIP} AND ${CMAKE_HIP_STANDARD} LESS 20)
     )
 endif()
 
-# Disable the [[no_unique_address]] annotation if we are on CUDA>=13.0.
-# TODO: Update this statement once a fix in CUDA is available.
+# Disable the [[no_unique_address]] annotation if we are on CUDA>=13.0 but <13.2.
 set(DETRAY_INTERNAL_USE_NO_UNIQUE_ADDRESS_ANNOTATION ON)
 
 if(DETRAY_BUILD_CUDA)
     # Figure out the version of CUDA being used.
     find_package(CUDAToolkit REQUIRED)
 
-    if(CUDAToolkit_VERSION_MAJOR GREATER_EQUAL 13)
+    if(
+        CUDAToolkit_VERSION VERSION_GREATER_EQUAL "13.0"
+        AND CUDAToolkit_VERSION VERSION_LESS "13.2"
+    )
         message(
             STATUS
-            "Disabling [[no_unique_address]] annotation due to CUDA incompatibility"
+            "Disabling [[no_unique_address]] annotation due to a bug in CUDA 13.0:13.1"
         )
         set(DETRAY_INTERNAL_USE_NO_UNIQUE_ADDRESS_ANNOTATION OFF)
     endif()
