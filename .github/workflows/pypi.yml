@@ -1,7 +1,11 @@
 name: PyPI
 
-# Nightly and release builds are both triggered manually via workflow_dispatch
+# Nightly builds on schedule, but uploading to test PyPI requires a manual
+# trigger (test PyPI storage is limited); release builds and their uploads
+# are triggered manually via workflow_dispatch
 on:
+  schedule:
+    - cron: '5 3 * * *'
   workflow_dispatch:
     inputs:
       acts_ref:
@@ -22,6 +26,7 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     permissions: {}
+    if: github.repository == 'acts-project/acts' || github.event_name != 'schedule'
     steps:
       - name: Set build version
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
@@ -117,7 +122,7 @@ jobs:
 
   upload_pypi_test:
     needs: build_wheels
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.acts_ref == ''
     environment:
       name: testpypi
       url: https://test.pypi.org/project/pyacts
