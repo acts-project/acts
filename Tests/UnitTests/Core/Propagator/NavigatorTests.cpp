@@ -286,9 +286,9 @@ BOOST_AUTO_TEST_CASE(Navigator_reinitialize_does_not_reuse_start_state) {
   const Vector3 firstPosition = Vector3::Zero();
   const Vector3 secondPosition = Vector3(300_mm, 0, 0);
   const TrackingVolume* firstVolume =
-      tGeometry->lowestTrackingVolume(tgContext, firstPosition);
+      tGeometry->resolveLowestTrackingVolume(tgContext, firstPosition).value();
   const TrackingVolume* secondVolume =
-      tGeometry->lowestTrackingVolume(tgContext, secondPosition);
+      tGeometry->resolveLowestTrackingVolume(tgContext, secondPosition).value();
   BOOST_REQUIRE_NE(firstVolume, nullptr);
   BOOST_REQUIRE_NE(secondVolume, nullptr);
   BOOST_REQUIRE_NE(firstVolume, secondVolume);
