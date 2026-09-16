@@ -202,6 +202,12 @@ keeps them reachable. `{1, 1}` for both `min` and `max` reproduces the fixed
 3x3 lookup the array used before the window was sized by the crossing angle.
 When `min` equals `max` the angle is not evaluated.
 
+Constructing a `NeighborWindow` from a single `std::uint8_t` is deprecated; it
+sets `max` to that value on both axes and `min` to one, or to zero if the bound
+is zero.
+@ref Acts::SurfaceArray::maxNeighborDistance is deprecated in favor of
+@ref Acts::SurfaceArray::neighborWindow.
+
 ## The neighbor cache
 
 The set of surfaces reachable from a bin at a given distance is fixed once the

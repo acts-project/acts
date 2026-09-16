@@ -93,7 +93,7 @@ class LayerCreator {
       std::size_t binsZ, std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      SurfaceArray::NeighborWindow neighborWindow = {.max = {1, 2}},
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {1, 2}},
       std::uint8_t overfill = 0) const;
 
   /// returning a cylindrical layer
@@ -123,7 +123,7 @@ class LayerCreator {
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      SurfaceArray::NeighborWindow neighborWindow = {.max = {1, 2}},
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {1, 2}},
       std::uint8_t overfill = 0) const;
 
   /// returning a disc layer
@@ -152,7 +152,7 @@ class LayerCreator {
       std::size_t binsPhi, std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      SurfaceArray::NeighborWindow neighborWindow = {.max = {2, 1}},
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 1}},
       std::uint8_t overfill = 0) const;
 
   /// returning a disc layer
@@ -182,7 +182,7 @@ class LayerCreator {
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      SurfaceArray::NeighborWindow neighborWindow = {.max = {2, 1}},
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 1}},
       std::uint8_t overfill = 0) const;
 
   /// returning a plane layer
@@ -216,7 +216,7 @@ class LayerCreator {
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
       std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      SurfaceArray::NeighborWindow neighborWindow = {.max = {2, 2}},
+      SurfaceArray::NeighborWindow neighborWindow = {{0, 0}, {2, 2}},
       std::uint8_t overfill = 0) const;
 
   /// Set the configuration object

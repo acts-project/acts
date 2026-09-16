@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
@@ -241,19 +242,32 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
 
   // the floor is served regardless of the crossing angle
   SurfaceArray floored(tgContext, brl, cylinder, 1., std::tuple{phiAxis, zAxis},
-                       {.min = {1, 1}, .max = {1, 2}});
+                       {{1, 1}, {1, 2}});
   BOOST_CHECK(std::ranges::equal(
       floored.neighbors(tgContext, crossing, crossing.normalized()),
       floored.neighbors(crossingBins, {1, 1})));
-  BOOST_CHECK_THROW(
-      SurfaceArray(tgContext, brl, cylinder, 1., std::tuple{phiAxis, zAxis},
-                   {.min = {2, 2}, .max = {1, 2}}),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(SurfaceArray(tgContext, brl, cylinder, 1.,
+                                 std::tuple{phiAxis, zAxis}, {{2, 2}, {1, 2}}),
+                    std::invalid_argument);
 
   // nothing is cached past the bound, so asking for it is an error
   BOOST_CHECK_THROW(floored.neighbors(crossingBins, {2, 0}), std::out_of_range);
   BOOST_CHECK_THROW(floored.neighbors(crossingBins, {0, 3}), std::out_of_range);
   BOOST_CHECK_THROW(floored.neighbors({10000, 0}, {0, 0}), std::out_of_range);
+
+  // a scalar bound is the isotropic window it used to describe
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  const SurfaceArray scalarBound(tgContext, brl, cylinder, 1.,
+                                 std::tuple{phiAxis, zAxis}, std::uint8_t{1});
+  BOOST_CHECK_EQUAL(scalarBound.maxNeighborDistance(), 1u);
+  ACTS_POP_IGNORE_DEPRECATED()
+  const SurfaceArray::NeighborWindow scalarWindow =
+      scalarBound.neighborWindow();
+  BOOST_CHECK((scalarWindow.min == std::array<std::uint8_t, 2>{1, 1}));
+  BOOST_CHECK((scalarWindow.max == std::array<std::uint8_t, 2>{1, 1}));
+  BOOST_CHECK(std::ranges::equal(
+      scalarBound.neighbors(tgContext, crossing, crossing.normalized()),
+      scalarBound.neighbors(crossingBins, {1, 1})));
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceArray_overfill) {
@@ -267,7 +281,7 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_overfill) {
     const Axis<AxisType::Equidistant, boundary> axis(-3.5, 3.5, 7);
     for (const std::uint8_t radius : {0, 1, 2, 3, 255}) {
       const SurfaceArray array(tgContext, {module}, representative, 0.,
-                               {axis, axis}, {.max = {0, 0}}, radius);
+                               {axis, axis}, {{0, 0}, {0, 0}}, radius);
       for (int x = -3; x <= 3; ++x) {
         for (int y = -3; y <= 3; ++y) {
           const auto content =
@@ -300,10 +314,10 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_overfillPhiSeam, SurfaceArrayFixture) {
       {-std::numbers::pi, -3., -2., -1., 0., 1., 2., 3., std::numbers::pi});
   const Axis<AxisType::Equidistant, AxisBoundaryType::Bound> zAxis(-6., 6., 3);
   const SurfaceArray nominal(tgContext, modules, cylinder, 1., {phiAxis, zAxis},
-                             {.max = {3, 3}});
+                             {{0, 0}, {3, 3}});
   for (const std::uint8_t radius : {0, 1, 2, 3}) {
     const SurfaceArray expanded(tgContext, modules, cylinder, 1.,
-                                {phiAxis, zAxis}, {.max = {0, 0}}, radius);
+                                {phiAxis, zAxis}, {{0, 0}, {0, 0}}, radius);
     for (std::size_t phiBin = 1; phiBin <= phiAxis.getNBins(); ++phiBin) {
       for (std::size_t zBin = 1; zBin <= zAxis.getNBins(); ++zBin) {
         BOOST_CHECK(
@@ -320,7 +334,7 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_maximumWindow) {
   const Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axis(-1., 1., 1);
   // Both counters must terminate at the largest representable distance.
   const SurfaceArray array(tgContext, {plane}, plane, 0., {axis, axis},
-                           {.max = {255, 255}});
+                           {{0, 0}, {255, 255}});
   BOOST_CHECK_EQUAL(array.neighbors({1, 1}, {255, 255}).size(), 1u);
 }
 
@@ -332,7 +346,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_periodicWindow, SurfaceArrayFixture) {
       -std::numbers::pi, std::numbers::pi, 30);
   const Axis<AxisType::Equidistant, AxisBoundaryType::Bound> zAxis(-3., 3., 1);
   const SurfaceArray array(tgContext, modules, cylinder, 1., {phiAxis, zAxis},
-                           {.max = {2, 0}});
+                           {{0, 0}, {2, 0}});
   const double phi = 0.1;
   const Vector3 crossing(10. * std::cos(phi), 10. * std::sin(phi), 0.);
   for (const double slide : {0., 2. * std::numbers::pi - 0.01,
@@ -361,7 +375,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_variablePeriodicWindow,
       {-std::numbers::pi, -3., -2.9, -2.8, -2.7, -1., 0., 1., 2., 3.,
        std::numbers::pi});
   const SurfaceArray array(tgContext, modules, disc, 1., {rAxis, phiAxis},
-                           {.max = {0, 4}});
+                           {{0, 0}, {0, 4}});
   const double phi = 3.05;
   const Vector3 crossing(10. * std::cos(phi), 10. * std::sin(phi), 0.);
   const Vector3 direction =

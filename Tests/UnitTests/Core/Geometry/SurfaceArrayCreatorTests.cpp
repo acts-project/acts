@@ -549,9 +549,9 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_neighborWindowFollowsCrossingAngle,
     return missed;
   };
 
-  BOOST_CHECK_EQUAL(missedHits({.max = {1, 2}}), 0u);
+  BOOST_CHECK_EQUAL(missedHits({{0, 0}, {1, 2}}), 0u);
   // the fixed one-bin window this replaces cannot reach that far
-  BOOST_CHECK_GT(missedHits({.max = {1, 1}}), 0u);
+  BOOST_CHECK_GT(missedHits({{0, 0}, {1, 1}}), 0u);
 }
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
@@ -665,7 +665,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_zAxisInRepresentativeFrame,
   // The layer creator forwards overfill to the array, including at() contents.
   const auto expandedLayer = layerCreator.cylinderLayer(
       tgContext, surfaces, nPhi, nZ, pl, Transform3::Identity(), nullptr,
-      {.max = {0, 0}}, 1);
+      {{0, 0}, {0, 0}}, 1);
   const SurfaceArray* expanded = expandedLayer->surfaceArray();
   BOOST_REQUIRE(expanded != nullptr);
   for (std::size_t phiBin = 1; phiBin <= nPhi; ++phiBin) {
