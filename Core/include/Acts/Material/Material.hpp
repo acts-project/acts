@@ -12,7 +12,17 @@
 #include <limits>
 #include <optional>
 
+// for GNU: ignore this specific warning, otherwise just include Eigen/Dense
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#pragma GCC diagnostic push
+#if __GNUC__ >= 12
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 #include <Eigen/Dense>
+#pragma GCC diagnostic pop
+#else
+#include <Eigen/Dense>
+#endif
 
 namespace Acts {
 
