@@ -1235,12 +1235,13 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
 
   {
     Navigator::Options options{tgContext};
-    options.startSurface = startSurface.get();
+    NavigatorInitializeArguments navArgs{};
+    navArgs.startSurface = startSurface.get();
+    navArgs.position = start;
+    navArgs.direction = dirPlane1;
     Navigator::State state = navigator.makeState(options);
 
-    BOOST_CHECK(
-        navigator.initialize(state, start, dirPlane1, Direction::Forward())
-            .ok());
+    BOOST_CHECK(navigator.initialize(state, navArgs).ok());
     NavigationTarget firstPortal =
         navigator.nextTarget(state, start, dirPlane1);
     BOOST_CHECK(firstPortal.isPortalTarget());
@@ -1275,13 +1276,14 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
   /// next let's add the second plane surface as an external surface
   {
     Navigator::Options options{tgContext};
-    options.startSurface = startSurface.get();
+    NavigatorInitializeArguments navArgs{};
+    start.setZero();
+    navArgs.startSurface = startSurface.get();
+    navArgs.position = start;
+    navArgs.direction = dirPlane1;
     options.appendExternalSurface(*planeSurf2);
     Navigator::State state = navigator.makeState(options);
-    start.setZero();
-    BOOST_CHECK(
-        navigator.initialize(state, start, dirPlane1, Direction::Forward())
-            .ok());
+    BOOST_CHECK(navigator.initialize(state, navArgs).ok());
 
     for (const auto* surf :
          std::vector<const Surface*>{bottomPortPlane, planeSurf1.get(),
@@ -1311,15 +1313,17 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
         Vector3{-40._cm, 0., 3._cm};
     BOOST_CHECK(planeVolume->inside(tgContext, posPlaneVolExit));
     Navigator::Options options{tgContext};
-    options.startSurface = startSurface.get();
+    start.setZero();
     options.appendExternalSurface(*planeSurf2);
     options.keepUnreachedExternal = true;
     Navigator::State state = navigator.makeState(options);
-    start.setZero();
     const Vector3 dir = posPlaneVolExit.normalized();
 
-    BOOST_CHECK(
-        navigator.initialize(state, start, dir, Direction::Forward()).ok());
+    NavigatorInitializeArguments navArgs{};
+    navArgs.startSurface = startSurface.get();
+    navArgs.position = start;
+    navArgs.direction = dir;
+    BOOST_CHECK(navigator.initialize(state, navArgs).ok());
 
     NavigationTarget portalTarget1 = navigator.nextTarget(state, start, dir);
     BOOST_CHECK(portalTarget1.isPortalTarget());
@@ -1361,7 +1365,6 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
                               Vector3{2._cm, 3._cm, -10._cm};
 
     Navigator::Options options{tgContext};
-    options.startSurface = startSurface.get();
     options.keepUnreachedExternal = true;
 
     Navigator::State state = navigator.makeState(options);
@@ -1371,8 +1374,13 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
 
     auto propagateToMwVolume = [&]() {
       start.setZero();
-      BOOST_CHECK(
-          navigator.initialize(state, start, dir, Direction::Forward()).ok());
+
+      NavigatorInitializeArguments navArgs{};
+      navArgs.startSurface = startSurface.get();
+      navArgs.position = start;
+      navArgs.direction = dir;
+
+      BOOST_CHECK(navigator.initialize(state, navArgs).ok());
       target = navigator.nextTarget(state, start, dir);
       /// Skip all the plane surface volume
       while (!target.isNone() && (target.surface().geometryId().volume() !=
