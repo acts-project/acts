@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
+#include "Acts/Seeding/detail/GbtsGraph.hpp"
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
@@ -86,14 +87,25 @@ void addTrackFinding(py::module& mex) {
     using Config = Acts::Experimental::GraphBasedTrackSeeder::Config;
     auto c =
         py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, minPt, nMaxPhiSlice);
+    ACTS_PYTHON_STRUCT(c, nMaxPhiSlice);
+    patchKwargsConstructor(c);
+  }
+
+  {
+    using Config = Acts::Experimental::detail::GbtsGraph::Config;
+    auto c = py::class_<Config>(mex, "GbtsGraphConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, minPt, minSeedLevel, addTriplets,
+                       maxAbsEtaAddTriplets, maxEdgesPerSP, minDeltaRadius,
+                       doubletFilterRZ, matchBeforeCreate, validateTriplets,
+                       useAdaptiveCuts, calibrateStrips, maxOuterRadius);
     patchKwargsConstructor(c);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       GraphBasedSeedingAlgorithm, mex, "GraphBasedSeedingAlgorithm",
-      inputSpacePoints, outputSeeds, seedFinderConfig, layerMappingFile,
-      connectorInputFile, lutInputFile, collisionRegionMin, collisionRegionMax,
+      inputSpacePoints, outputSeeds, seedFinderConfig, graphConfig,
+      useStripConnections, layerMappingFile, connectorInputFile, lutInputFile,
+      collisionRegionMin, collisionRegionMax,
       trackingGeometry, fillModuleCsv, inputClusters, bFieldInZ);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
