@@ -12,12 +12,17 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
+#include "Acts/Navigation/FrustumNavigationPolicy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
@@ -878,6 +883,67 @@ BOOST_AUTO_TEST_CASE(CylinderPolicyZeroInnerRadiusTest) {
     BOOST_CHECK_THROW(CylinderNavigationPolicy(gctx, *cylVolume, *logger),
                       std::invalid_argument);
   }
+}
+
+BOOST_AUTO_TEST_CASE(FrustumNavigationPolicyTest) {
+  // Test the frustum navigation policy with a simple geometry
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {50_mm, 50_mm};
+  cfg.envelope[AxisDirection::AxisY] = {50_mm, 50_mm};
+  cfg.envelope[AxisDirection::AxisX] = {50_mm, 50_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+  auto& cub = root->addCuboidContainer("Container", AxisDirection::AxisZ);
+  auto cubBounds = std::make_shared<CuboidVolumeBounds>(20_mm, 20_mm, 20_mm);
+  auto childCub = std::make_unique<TrackingVolume>(Transform3::Identity(),
+		            			   cubBounds, "child");
+  Acts::Experimental::FrustumNavigationPolicy::Config frustumConfig{2};
+  Acts::GeometryIdentifier id = Acts::GeometryIdentifier().withVolume(1);
+  childCub->assignGeometryId(id);
+  auto cubNode = 
+      std::make_shared<Acts::StaticBlueprintNode>(std::move(childCub));
+  int chamberId = 1;
+  auto childBounds = std::make_shared<CuboidVolumeBounds>(5_mm, 5_mm, 5_mm);
+  std::vector<std::shared_ptr<Acts::StaticBlueprintNode>> nodes;
+  for(int x = -3; x < 4; x += 2){
+    for(int y = -3; y < 4; y += 2){
+      for(int z = -3; z < 4; z += 2){
+	auto childVol = std::make_unique<TrackingVolume>(
+	    Transform3::Identity() *
+	        Translation3{Vector3{x * 5_mm, y * 5_mm, z * 5_mm}},
+	    childBounds,
+	    "child_" + std::to_string(x) + "_" + std::to_string(y) + "_" +
+	        std::to_string(z));
+	Acts::GeometryIdentifier chId = id.withLayer(chamberId++);
+	childVol->assignGeometryId(chId);
+	auto staticNode = 
+	    std::make_shared<Acts::StaticBlueprintNode>(std::move(childVol));
+	nodes.push_back(std::move(staticNode));
+	cubNode->addChild(nodes.back());
+      }
+    }
+  }
+  std::shared_ptr<Acts::NavigationPolicyFactory> factory =
+      std::make_shared<Acts::NavigationPolicyFactory>(
+  	  Acts::NavigationPolicyFactory{}
+	      .add<Acts::Experimental::FrustumNavigationPolicy>(frustumConfig));
+  cubNode->setNavigationPolicyFactory(factory);
+  cub.addChild(cubNode);
+  auto tGeometry = root->construct({}, gctx, *logger);
+  const TrackingVolume* vol = tGeometry->findVolume(id);
+  NavigationStream main;
+  AppendOnlyNavigationStream stream{main};
+  NavigationArguments args{.position = Vector3{1, 1, 1},
+                           .direction = Vector3{1, 1, 1}};
+  NavigationPolicyStateManager stateManager;
+  std::unique_ptr<Acts::Experimental::FrustumNavigationPolicy> frustumPolicy =
+      std::make_unique<Acts::Experimental::FrustumNavigationPolicy>(
+	  gctx, *vol, *logger, frustumConfig);
+  frustumPolicy->createState(gctx, args, stateManager, *logger);
+  auto policyState = stateManager.currentState();
+  frustumPolicy->initializeCandidates(gctx, args, policyState, stream, *logger);
+  main.initialize(gctx, {Vector3{1, 1, 1}, Vector3{1, 1, 1}}, 
+		  BoundaryTolerance::None());
+  BOOST_CHECK_EQUAL(main.candidates().size(), 10);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
