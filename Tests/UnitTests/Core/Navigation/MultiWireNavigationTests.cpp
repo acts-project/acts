@@ -164,6 +164,7 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   double angle = std::numbers::pi / 4.;
   startDir = {std::cos(angle), std::sin(angle), 0.};
   args.direction = startDir;
+
   // clear the candidates and re initialize with new arguments
   main.reset();
   NavigationPolicyStateManager stateManager2;
