@@ -20,18 +20,6 @@
 
 namespace Acts {
 
-/// Invert a placement, i.e. a transform that only rotates and translates.
-/// `Transform3` is an `Eigen::Isometry`, so this is its own `inverse()` plus a
-/// debug check on the linear part.
-///
-/// @param transform The placement to invert, whose linear part must be a rotation
-/// @return The inverse transform
-inline Transform3 inverseTransform(const Transform3& transform) {
-  assert(transform.linear().isUnitary() &&
-         "a placement transform must not scale or shear");
-  return transform.inverse(Eigen::Isometry);
-}
-
 /// Convert a bitset to a matrix of integers, with each element set to the bit
 /// value.
 /// @note How the bits are assigned to matrix elements depends on the storage

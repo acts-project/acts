@@ -27,6 +27,7 @@
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>

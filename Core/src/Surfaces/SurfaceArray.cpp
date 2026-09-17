@@ -19,6 +19,7 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Ranges.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Utilities/detail/MultiAxisHelper.hpp"
 #include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 
