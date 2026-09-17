@@ -330,7 +330,10 @@ set(_acts_boost_version 1.78.0)
 set(_acts_dd4hep_version 1.26)
 set(_acts_geant4_version 11.1.3)
 set(_acts_edm4hep_version 1.0)
-set(_acts_edm4hep_fallback_version 0.10.5)
+# 0.99 is the first release providing the TrackerHit interface, the CovMatrix
+# types (edm4hep::TrackState::covMatrix), Track::Nholes and the
+# edm4hep::TrackParams enum, all of which the EDM4hep plugin relies on.
+set(_acts_edm4hep_fallback_version 0.99)
 set(_acts_eigen3_version 3.4.0)
 set(_acts_podio_version 1.0.1) # will try this first
 set(_acts_podio_fallback_version 0.17.4) # if not found, will try this one

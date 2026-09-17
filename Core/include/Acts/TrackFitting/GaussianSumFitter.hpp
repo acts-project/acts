@@ -320,7 +320,7 @@ struct GaussianSumFitter {
           std::declval<StateType&&>(), std::declval<PropagationResultType>(),
           std::declval<const OptionsType&>(), false));
 
-      auto initRes = m_propagator.initialize(state, *params);
+      auto initRes = m_propagator.initialize(state, *params, nullptr);
       if (!initRes.ok()) {
         return ResultType::failure(initRes.error());
       }
@@ -397,9 +397,12 @@ struct GaussianSumFitter {
       auto state =
           m_propagator
               .template makeState<OptionsType, MultiStepperSurfaceReached>(
-                  target, bwdPropOptions);
+                  bwdPropOptions);
 
-      auto initRes = m_propagator.initialize(state, inflatedParams);
+      auto initRes =
+          m_propagator
+              .template initialize<decltype(state), MultiStepperSurfaceReached>(
+                  state, inflatedParams, &target);
       if (!initRes.ok()) {
         return ResultType::failure(initRes.error());
       }
