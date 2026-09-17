@@ -902,8 +902,11 @@ class Gx2Fitter {
         ACTS_DEBUG("    The surface contains a measurement.");
 
         // Transport the covariance to the surface
-        stepper.transportCovarianceToBound(state.stepping, *surface,
-                                           freeToBoundCorrection);
+        Result<void> transportRes = stepper.transportCovarianceToBound(
+            state.stepping, *surface, freeToBoundCorrection);
+        if (!transportRes.ok()) {
+          return transportRes.error();
+        }
 
         // TODO generalize the update of the currentTrackIndex
         auto& fittedStates = *result.fittedStates;
@@ -1004,8 +1007,11 @@ class Gx2Fitter {
             "a hole.");
 
         // Transport the covariance to the surface
-        stepper.transportCovarianceToBound(state.stepping, *surface,
-                                           freeToBoundCorrection);
+        Result<void> transportRes = stepper.transportCovarianceToBound(
+            state.stepping, *surface, freeToBoundCorrection);
+        if (!transportRes.ok()) {
+          return transportRes.error();
+        }
 
         // TODO generalize the update of the currentTrackIndex
         auto& fittedStates = *result.fittedStates;
@@ -1285,7 +1291,7 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
       auto propagatorInitResult =
-          m_propagator.initialize(propagatorState, params);
+          m_propagator.initialize(propagatorState, params, nullptr);
       if (!propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
@@ -1451,7 +1457,7 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
       auto propagatorInitResult =
-          m_propagator.initialize(propagatorState, params);
+          m_propagator.initialize(propagatorState, params, nullptr);
       if (!propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
@@ -1597,7 +1603,7 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
       auto propagatorInitResult =
-          m_propagator.initialize(propagatorState, params);
+          m_propagator.initialize(propagatorState, params, nullptr);
       if (!propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());

@@ -32,7 +32,11 @@ struct BoundaryToleranceOverride {
   BoundaryTolerance boundaryTolerance = BoundaryTolerance::Infinite();
 };
 
-/// Plain navigator options carrying geometry context and surfaces.
+/// Plain navigator options carrying geometry context and navigation settings.
+///
+/// These are bound to the lifetime of a navigation state and have to be
+/// invariant across all runs it serves. Per-run inputs belong into
+/// @c NavigatorInitializeArguments instead.
 struct NavigatorPlainOptions {
   /// NavigatorPlainOptions with context
   /// @param gctx The geometry context
@@ -41,11 +45,6 @@ struct NavigatorPlainOptions {
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
-
-  /// Start surface for navigation
-  const Surface* startSurface{};
-  /// Target surface for navigation
-  const Surface* targetSurface{};
 
   /// The surface tolerance
   double surfaceTolerance = s_onSurfaceTolerance;
@@ -58,6 +57,12 @@ struct NavigatorPlainOptions {
 
   /// Surfaces the navigator intersects with the tolerance of the caller
   std::vector<BoundaryToleranceOverride> boundaryToleranceOverrides;
+
+  /// Offer the surfaces of @c boundaryToleranceOverrides in every volume, and
+  /// not only in the volume that holds the surface. A relaxed bounds check can
+  /// put the intersection outside of that volume, so the surface stays
+  /// reachable after the propagation leaves the volume. Only Gen3 uses it.
+  bool keepUnreachedExternal = false;
 
   /// Intersect a surface of the tracking geometry with the given tolerance.
   /// By default the bounds check is dropped.

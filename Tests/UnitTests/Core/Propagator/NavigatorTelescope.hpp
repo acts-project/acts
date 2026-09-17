@@ -166,7 +166,7 @@ inline NavigationTarget firstTarget(const Navigator& navigator,
   Vector3 pos = position;
   const Vector3 dir = Vector3::UnitZ();
   Result<void> result =
-      navigator.initialize(state, pos, dir, Direction::Forward());
+      navigator.initialize(state, {.position = pos, .direction = dir});
   BOOST_REQUIRE(result.ok());
   return navigator.nextTarget(state, pos, dir);
 }
@@ -179,7 +179,8 @@ inline std::vector<const Surface*> walk(const Navigator& navigator,
   Navigator::State state = navigator.makeState(options);
   Vector3 position = start;
   BOOST_REQUIRE(
-      navigator.initialize(state, position, dir, Direction::Forward()).ok());
+      navigator.initialize(state, {.position = position, .direction = dir})
+          .ok());
 
   std::vector<const Surface*> reached;
   for (int i = 0; i < maxSteps; ++i) {

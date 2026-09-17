@@ -21,8 +21,10 @@
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 
 #include <cmath>
 #include <numbers>
@@ -77,7 +79,8 @@ Vector3 PlaneSurface::localToGlobal(const GeometryContext& gctx,
 Result<Vector2> PlaneSurface::globalToLocal(const GeometryContext& gctx,
                                             const Vector3& position,
                                             double tolerance) const {
-  Vector3 loc3Dframe = localToGlobalTransform(gctx).inverse() * position;
+  Vector3 loc3Dframe =
+      inverseTransform(localToGlobalTransform(gctx)) * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
@@ -210,7 +213,7 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
 
   assert(m_transform != nullptr && other.m_transform != nullptr);
 
-  Transform3 otherLocal = m_transform->inverse() * *other.m_transform;
+  Transform3 otherLocal = inverseTransform(*m_transform) * *other.m_transform;
 
   // TODO: Is it a good tolerance?
   constexpr auto tolerance = s_onSurfaceTolerance;

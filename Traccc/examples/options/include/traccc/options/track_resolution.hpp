@@ -14,7 +14,7 @@
 
 namespace traccc::opts {
 
-/// Configuration for track ambiguity resulution
+/// Configuration for track ambiguity resolution
 class track_resolution : public interface,
                          public config_provider<ambiguity_resolution_config> {
  public:

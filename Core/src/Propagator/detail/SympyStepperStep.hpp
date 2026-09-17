@@ -12,45 +12,60 @@
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <cmath>
+
 namespace Acts {
 
 class IVolumeMaterial;
 
 namespace detail {
 
-/// What a step has to carry: the dense path, or the vacuum one specialised on
-/// covariance transport so the kernel does not test an empty jacobian span on
-/// every trial.
+/// Which path a step takes
 enum class SympyStepMode {
-  VacuumNoJac,
-  VacuumJac,
+  Vacuum,
   Dense,
 };
 
+/// dt/ds from the state's current q/p, for refreshing @c State::dtds
+inline double sympyDtds(const SympyStepper::State& state) {
+  const double m = state.particleHypothesis.mass();
+  const double p =
+      state.particleHypothesis.extractMomentum(state.pars[eFreeQOverP]);
+  return std::sqrt(1 + m * m / (p * p));
+}
+
 /// @brief A whole Runge-Kutta step
 ///
-/// One body for all three modes, instantiated once per mode in a translation
-/// unit of its own; sharing one costs more than the branches it saves.
+/// One body for every combination, instantiated once per combination in a
+/// translation unit of its own; sharing one costs more than the branches it
+/// saves.
+///
+/// @tparam Mode which path the step takes
+/// @tparam WithJac whether the jacobian is transported; specialising on it
+///         keeps the kernel from testing an empty jacobian span on every trial
 ///
 /// @param [in] stepper the stepper, for field access and accessors
 /// @param [in,out] state the stepper state
 /// @param [in] propDir the propagation direction
-/// @param [in] material the volume material, `Dense` only, and null there when
-///        just the accumulator still has material to flush
+/// @param [in] material the volume material, @c Dense only, and null there
+///        when just the accumulator still has material to flush
 ///
 /// @return the step length taken, or an error
-template <SympyStepMode Mode>
+template <SympyStepMode Mode, bool WithJac>
 Result<double> sympyStep(const SympyStepper& stepper,
                          SympyStepper::State& state, Direction propDir,
                          const IVolumeMaterial* material);
 
-extern template Result<double> sympyStep<SympyStepMode::VacuumNoJac>(
+extern template Result<double> sympyStep<SympyStepMode::Vacuum, false>(
     const SympyStepper&, SympyStepper::State&, Direction,
     const IVolumeMaterial*);
-extern template Result<double> sympyStep<SympyStepMode::VacuumJac>(
+extern template Result<double> sympyStep<SympyStepMode::Vacuum, true>(
     const SympyStepper&, SympyStepper::State&, Direction,
     const IVolumeMaterial*);
-extern template Result<double> sympyStep<SympyStepMode::Dense>(
+extern template Result<double> sympyStep<SympyStepMode::Dense, false>(
+    const SympyStepper&, SympyStepper::State&, Direction,
+    const IVolumeMaterial*);
+extern template Result<double> sympyStep<SympyStepMode::Dense, true>(
     const SympyStepper&, SympyStepper::State&, Direction,
     const IVolumeMaterial*);
 
