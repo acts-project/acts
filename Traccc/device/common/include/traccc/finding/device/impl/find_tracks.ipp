@@ -150,7 +150,10 @@ TRACCC_HOST_DEVICE inline void find_tracks(
      * either run out of measurements, or until the shared buffer is full.
      */
     for (; curr_meas < num_meas &&
-           shared_payload.shared_candidates_size < thread_id.getBlockDimX();
+           vecmem::device_atomic_ref<unsigned int,
+                                     vecmem::device_address_space::local>(
+               shared_payload.shared_candidates_size)
+                   .load() < thread_id.getBlockDimX();
          curr_meas++) {
       unsigned int idx =
           vecmem::device_atomic_ref<unsigned int,
