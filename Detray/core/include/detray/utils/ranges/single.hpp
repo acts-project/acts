@@ -132,7 +132,8 @@ struct single : public detray::ranges::single_view<value_t> {
 // deduction guides
 
 template <typename deduced_value_t>
-DETRAY_HOST_DEVICE single(deduced_value_t) -> single<deduced_value_t>;
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE single(deduced_value_t)
+    -> single<deduced_value_t>;
 
 }  // namespace views
 
