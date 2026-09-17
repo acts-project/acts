@@ -18,6 +18,7 @@
 // Project include(s).
 #include "traccc/edm/seed_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
+#include "traccc/seeding/detail/lin_circle.hpp"
 #include "traccc/seeding/detail/seeding_config.hpp"
 #include "traccc/seeding/detail/spacepoint_grid.hpp"
 #include "traccc/utils/algorithm.hpp"
@@ -168,6 +169,52 @@ class triplet_seeding_algorithm
   virtual void find_doublets_kernel(
       const find_doublets_kernel_payload& payload) const = 0;
 
+  /// Payload for the @c make_mid_bot_lincircles_kernel function
+  struct make_mid_bot_lincircles_kernel_payload {
+    /// The number of middle-bottom doublets found earlier
+    unsigned int nMidBot;
+    /// The middle-bottom doublet collection
+    const device_doublet_collection_types::const_view& mb_doublets;
+    /// The doublet counter collection
+    const doublet_counter_collection_types::const_view& doublet_counter;
+    /// All spacepoints in the event
+    const edm::spacepoint_collection::const_view& spacepoints;
+    /// The populated spacepoint grid
+    const traccc::details::spacepoint_grid_types::const_view& grid;
+    /// The middle-bottom linearised circles to fill
+    vecmem::data::vector_view<lin_circle>& mb_circles;
+  };
+
+  /// Middle-bottom linearised circle making kernel launcher
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void make_mid_bot_lincircles_kernel(
+      const make_mid_bot_lincircles_kernel_payload& payload) const = 0;
+
+  /// Payload for the @c make_mid_top_lincircles_kernel function
+  struct make_mid_top_lincircles_kernel_payload {
+    /// The number of middle-top doublets found earlier
+    unsigned int nMidTop;
+    /// The middle-top doublet collection
+    const device_doublet_collection_types::const_view& mt_doublets;
+    /// The doublet counter collection
+    const doublet_counter_collection_types::const_view& doublet_counter;
+    /// All spacepoints in the event
+    const edm::spacepoint_collection::const_view& spacepoints;
+    /// The populated spacepoint grid
+    const traccc::details::spacepoint_grid_types::const_view& grid;
+    /// The middle-top linearised circles to fill
+    vecmem::data::vector_view<lin_circle>& mt_circles;
+  };
+
+  /// Middle-top linearised circle making kernel launcher
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void make_mid_top_lincircles_kernel(
+      const make_mid_top_lincircles_kernel_payload& payload) const = 0;
+
   /// Payload for the @c count_triplets_kernel function
   struct count_triplets_kernel_payload {
     /// The number of middle-bottom doublets found earlier
@@ -188,6 +235,10 @@ class triplet_seeding_algorithm
     triplet_counter_spM_collection_types::view& spM_counter;
     /// The triplet counter per middle-bottom doublet to fill
     triplet_counter_collection_types::view& midBot_counter;
+    /// The middle-bottom linearised circles
+    const vecmem::data::vector_view<const lin_circle>& mb_circles;
+    /// The middle-top linearised circles
+    const vecmem::data::vector_view<const lin_circle>& mt_circles;
   };
 
   /// Triplet counting kernel launcher
@@ -236,6 +287,10 @@ class triplet_seeding_algorithm
     const triplet_counter_spM_collection_types::const_view& spM_tc;
     /// The triplet counter per middle-bottom doublet
     const triplet_counter_collection_types::const_view& midBot_tc;
+    /// The middle-bottom linearised circles
+    const vecmem::data::vector_view<const lin_circle>& mb_circles;
+    /// The middle-top linearised circles
+    const vecmem::data::vector_view<const lin_circle>& mt_circles;
     /// The triplet collection to fill
     device_triplet_collection_types::view& triplets;
   };
