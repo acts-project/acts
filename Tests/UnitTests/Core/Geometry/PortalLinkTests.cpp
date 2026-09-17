@@ -23,6 +23,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -726,6 +727,26 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     BOOST_CHECK_EQUAL(gridY->resolveVolume(gctx, Vector2{15_mm, 20_mm}).value(),
                       vol.get());
   }
+}
+
+BOOST_AUTO_TEST_CASE(ResolveVolumeGlobalPosition) {
+  auto rBounds = std::make_shared<const RectangleBounds>(30_mm, 100_mm);
+  auto plane =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds);
+  auto vol = makeDummyVolume();
+  auto trivial = std::make_unique<TrivialPortalLink>(plane, *vol);
+  BOOST_REQUIRE(trivial);
+
+  // On-surface global position resolves to the target volume
+  BOOST_CHECK_EQUAL(
+      trivial->resolveVolume(gctx, Vector3{10_mm, 20_mm, 0_mm}).value(),
+      vol.get());
+
+  // Off-surface global position (outside the on-surface tolerance) fails
+  // gracefully instead of asserting/aborting
+  auto offSurface = trivial->resolveVolume(gctx, Vector3{10_mm, 20_mm, 5_mm});
+  BOOST_CHECK(!offSurface.ok());
+  BOOST_CHECK(offSurface.error() == SurfaceError::GlobalPositionNotOnSurface);
 }
 
 BOOST_AUTO_TEST_SUITE_END()  // GridConstruction
