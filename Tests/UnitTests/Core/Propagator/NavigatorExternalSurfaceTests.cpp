@@ -237,7 +237,8 @@ NavigationTarget targetOnSecondApproach(const Navigator& navigator,
   Vector3 position = Vector3::Zero();
   const Vector3 direction = Vector3::UnitZ();
   BOOST_REQUIRE(
-      navigator.initialize(state, position, direction, Direction::Forward())
+      navigator
+          .initialize(state, {.position = position, .direction = direction})
           .ok());
 
   NavigationTarget target = navigator.nextTarget(state, position, direction);

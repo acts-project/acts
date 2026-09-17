@@ -42,7 +42,7 @@ struct regular {
 
   static constexpr unsigned int axis_identifier = 0u;
 
-  /** Defualt constructor for dummy axis **/
+  /** Default constructor for dummy axis **/
   DETRAY_HOST_DEVICE
   regular()
       : n_bins(std::numeric_limits<unsigned int>::max()),
@@ -229,7 +229,7 @@ struct circular {
 
   static constexpr unsigned int axis_identifier = 1u;
 
-  /** Defualt constructor for dummy axis **/
+  /** Default constructor for dummy axis **/
   DETRAY_HOST_DEVICE
   circular()
       : n_bins(std::numeric_limits<unsigned int>::max()),
@@ -440,7 +440,7 @@ struct irregular {
 
   static constexpr unsigned int axis_identifier = 2u;
 
-  /** Defualt constructor for dummy axis **/
+  /** Default constructor for dummy axis **/
   DETRAY_HOST_DEVICE
   irregular()
       : n_bins(std::numeric_limits<unsigned int>::max()),

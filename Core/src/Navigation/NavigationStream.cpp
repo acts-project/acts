@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
 
@@ -19,6 +20,7 @@ namespace Acts {
 
 bool NavigationStream::initialize(const GeometryContext& gctx,
                                   const QueryPoint& queryPoint,
+                                  const Logger& logger,
                                   const double onSurfaceTolerance,
                                   const bool candidatesAreUnique) {
   // Position and direction from the query point
@@ -35,6 +37,7 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   // duplicate slip through regardless, the post-sort unique pass below still
   // removes it; only the first-wins tolerance selection is then not enforced.)
   if (!candidatesAreUnique) {
+    ACTS_VERBOSE("De-duplicate the candidates:" << m_candidates);
     std::size_t writeIdx = 0;
     for (std::size_t readIdx = 0; readIdx < m_candidates.size(); ++readIdx) {
       const Surface* surface = &m_candidates[readIdx].surface();
@@ -114,6 +117,7 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
 
   // Sort the candidates by path length
   std::ranges::sort(m_candidates, NavigationTarget::pathLengthOrder);
+  ACTS_VERBOSE("Sorted candidates:" << m_candidates);
 
   // If we have duplicates, we expect them to be close by in path length, so we
   // don't need to re-sort Remove duplicates on basis of the surface pointer
@@ -136,15 +140,15 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
                       NavigationTarget::None());
 
   m_currentIndex = 0;
-  if (m_candidates.empty()) {
-    return false;
-  }
-  return true;
+  return isValid();
 }
 
 bool NavigationStream::update(const GeometryContext& gctx,
                               const QueryPoint& queryPoint,
-                              double onSurfaceTolerance) {
+                              const Logger& logger, double onSurfaceTolerance) {
+  ACTS_VERBOSE("Update from position " << toString(queryPoint.position)
+                                       << " and direction "
+                                       << toString(queryPoint.direction));
   // Loop over the (currently valid) candidates and update
   for (; m_currentIndex < m_candidates.size(); ++m_currentIndex) {
     // Get the candidate, and resolve the tuple
@@ -165,6 +169,7 @@ bool NavigationStream::update(const GeometryContext& gctx,
       // Valid solution is either on surface or updates the distance
       if (intersection.isValid()) {
         candidate.intersection() = intersection;
+        ACTS_VERBOSE("Updated candidate " << candidate);
         return true;
       }
     }

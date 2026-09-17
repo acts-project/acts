@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(SurfaceOutsideTheGeometryThrows) {
   Vector3 position = Vector3::Zero();
   const Vector3 direction = Vector3::UnitZ();
   BOOST_CHECK_THROW(static_cast<void>(navigator.initialize(
-                        state, position, direction, Direction::Forward())),
+                        state, {.position = position, .direction = direction})),
                     std::invalid_argument);
 }
 
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(CrossingOutsideTheVolumeIsDroppedGen1) {
   Navigator::State state = navigator.makeState(options);
   Vector3 position = pokeStart;
   BOOST_REQUIRE(
-      navigator.initialize(state, position, pokeDir, Direction::Forward())
+      navigator.initialize(state, {.position = position, .direction = pokeDir})
           .ok());
 
   NavigationTarget target = navigator.nextTarget(state, position, pokeDir);
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(CrossingOutsideTheVolumeIsDroppedGen3) {
   Navigator::State state = navigator.makeState(options);
   Vector3 position = pokeStart;
   BOOST_REQUIRE(
-      navigator.initialize(state, position, pokeDir, Direction::Forward())
+      navigator.initialize(state, {.position = position, .direction = pokeDir})
           .ok());
 
   NavigationTarget target = navigator.nextTarget(state, position, pokeDir);
@@ -232,7 +232,8 @@ BOOST_AUTO_TEST_CASE(ScopedToItsVolumeGen3) {
   Vector3 position{0, 0, -0.9_m};
   const Vector3 dir = Vector3::UnitZ();
   BOOST_REQUIRE(
-      navigator.initialize(state, position, dir, Direction::Forward()).ok());
+      navigator.initialize(state, {.position = position, .direction = dir})
+          .ok());
 
   // The navigator resolved the volume that holds the surface
   BOOST_REQUIRE_EQUAL(state.boundaryToleranceOverrides.size(), 1u);

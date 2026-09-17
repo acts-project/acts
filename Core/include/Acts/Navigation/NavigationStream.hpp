@@ -48,10 +48,14 @@ class NavigationStream {
   bool switchToNextCandidate() {
     if (m_currentIndex < m_candidates.size()) {
       ++m_currentIndex;
-      return true;
     }
-    return false;
+    return isValid();
   }
+
+  /// Check if the stream points to a candidate
+  ///
+  /// @return true if the current index is a valid candidate
+  bool isValid() const { return m_currentIndex < m_candidates.size(); }
 
   /// Const access the current candidate
   /// @return Const reference to current candidate
@@ -59,19 +63,21 @@ class NavigationStream {
     return m_candidates.at(m_currentIndex);
   }
 
+  /// Reserve memory for the candidates
+  /// @param n The number of candidates to reserve memory for
+  void reserve(std::size_t n) { m_candidates.reserve(n); }
+
   /// Current Index
   /// @return Index of the current candidate in the vector
   std::size_t currentIndex() const { return m_currentIndex; }
 
   /// Non-const access the candidate vector
   /// @return Mutable reference to vector of navigation candidates
-  std::vector<NavigationTarget>& candidates() { return m_candidates; }
+  std::span<NavigationTarget> candidates() { return m_candidates; }
 
   /// Const access the candidate vector
   /// @return Const reference to vector of navigation candidates
-  const std::vector<NavigationTarget>& candidates() const {
-    return m_candidates;
-  }
+  std::span<const NavigationTarget> candidates() const { return m_candidates; }
 
   /// Non-const access the current candidate
   ///
@@ -111,6 +117,7 @@ class NavigationStream {
   ///
   /// @param gctx is the geometry context
   /// @param queryPoint holds current position, direction, etc.
+  /// @param logger is the navigator's logger
   /// @param onSurfaceTolerance is the tolerance for on-surface intersections
   /// @param candidatesAreUnique the caller guarantees that no surface was
   ///        added more than once, so the pre-intersection de-duplication pass
@@ -127,6 +134,7 @@ class NavigationStream {
   /// @return true if the stream is active, false indicates that there are no valid candidates
   bool initialize(const GeometryContext& gctx,
                   const NavigationStream::QueryPoint& queryPoint,
+                  const Logger& logger,
                   double onSurfaceTolerance = s_onSurfaceTolerance,
                   bool candidatesAreUnique = false);
 
@@ -136,11 +144,13 @@ class NavigationStream {
   ///
   /// @param gctx is the geometry context
   /// @param queryPoint holds current position, direction, etc.
+  /// @param logger is the navigator's logger
   /// @param onSurfaceTolerance is the tolerance for on-surface intersections
   ///
   /// @return true if the stream is active, false indicate no valid candidates left
   bool update(const GeometryContext& gctx,
               const NavigationStream::QueryPoint& queryPoint,
+              const Logger& logger,
               double onSurfaceTolerance = s_onSurfaceTolerance);
 
   /// Reset the navigation stream by clearing all candidates and resetting the

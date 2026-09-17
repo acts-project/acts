@@ -135,7 +135,7 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
       }
 
       ACTS_VERBOSE("initializing candidates");
-      main.initialize(gctx, {position, direction});
+      main.initialize(gctx, {position, direction}, logger());
 
       ACTS_VERBOSE(main.candidates().size() << " candidates remaining");
 

@@ -17,6 +17,7 @@
 #include "Acts/Propagator/detail/SympyStepperStatus.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <cassert>
 #include <cmath>
 #include <span>
 
@@ -25,7 +26,7 @@
 
 namespace Acts {
 
-template <detail::SympyStepMode Mode>
+template <detail::SympyStepMode Mode, bool WithJac>
 Result<double> detail::sympyStep(const SympyStepper& stepper,
                                  SympyStepper::State& state, Direction propDir,
                                  const IVolumeMaterial* material) {
@@ -86,6 +87,13 @@ Result<double> detail::sympyStep(const SympyStepper& stepper,
     return std::clamp(x, lower, upper);
   };
 
+  if constexpr (!isDense) {
+    // a stale cache shows up only as a wrong time, so catch it at the read
+    assert(std::abs(state.dtds - std::sqrt(1 + m * m / (pabs * pabs))) <
+               1e-12 * state.dtds &&
+           "cached dt/ds is stale: q/p changed without refreshing it");
+  }
+
   std::size_t nStepTrials = 0;
   double errorEstimate = 0.;
 
@@ -105,10 +113,11 @@ Result<double> detail::sympyStep(const SympyStepper& stepper,
     if constexpr (isDense) {
       const std::span<double, 8> derivative(state.derivative.data(), 8);
       const std::span<double> jac =
-          state.covTransport ? std::span<double>(state.jacToGlobal.data(),
-                                                 state.jacToGlobal.size())
-                             : std::span<double>();
+          WithJac ? std::span<double>(state.jacToGlobal.data(),
+                                      state.jacToGlobal.size())
+                  : std::span<double>();
       if (material == nullptr) {
+        // the combined kernel: this cold branch wants no more inlined into it
         status = rk4_vacuum(startPos, startDir, t, h, qop, m, pabs,
                             std::span<const double, 3>(state.field->data(), 3),
                             getB, errorEstimate, 4 * stepTolerance, fieldError,
@@ -116,27 +125,28 @@ Result<double> detail::sympyStep(const SympyStepper& stepper,
                             std::span<double, 3>(lastField.data(), 3),
                             derivative, jac);
       } else {
-        status = sympyDenseStep(stepper, state, *material, h, 4 * stepTolerance,
-                                errorEstimate, lastField, fieldError, jac);
+        status = sympyDenseStep<WithJac>(stepper, state, *material, h,
+                                         4 * stepTolerance, errorEstimate,
+                                         lastField, fieldError, jac);
       }
-    } else if constexpr (Mode == SympyStepMode::VacuumJac) {
+    } else if constexpr (WithJac) {
       status =
           rk4_vacuum_jac(startPos, startDir, t, h, qop, m, pabs,
                          std::span<const double, 3>(state.field->data(), 3),
                          getB, errorEstimate, 4 * stepTolerance, fieldError,
                          endPos, state.pars[eFreeTime], endDir,
-                         std::span<double, 3>(lastField.data(), 3),
+                         std::span<double, 3>(lastField.data(), 3), state.dtds,
                          std::span<double, 8>(state.derivative.data(), 8),
                          std::span<double>(state.jacToGlobal.data(),
                                            state.jacToGlobal.size()));
     } else {
       // No jacobian, so no path derivatives either.
-      status =
-          rk4_vacuum_nojac(startPos, startDir, t, h, qop, m, pabs,
-                           std::span<const double, 3>(state.field->data(), 3),
-                           getB, errorEstimate, 4 * stepTolerance, fieldError,
-                           endPos, state.pars[eFreeTime], endDir,
-                           std::span<double, 3>(lastField.data(), 3));
+      status = rk4_vacuum_nojac(
+          startPos, startDir, t, h, qop, m, pabs,
+          std::span<const double, 3>(state.field->data(), 3), getB,
+          errorEstimate, 4 * stepTolerance, fieldError, endPos,
+          state.pars[eFreeTime], endDir,
+          std::span<double, 3>(lastField.data(), 3), state.dtds);
     }
     if (status == Rk4Status::FieldError) {
       return fieldError;
@@ -166,6 +176,11 @@ Result<double> detail::sympyStep(const SympyStepper& stepper,
       // Too many trials, have to abort
       return EigenStepperError::StepSizeAdjustmentFailed;
     }
+  }
+
+  if constexpr (isDense) {
+    // the one place q/p moves on its own
+    state.dtds = sympyDtds(state);
   }
 
   state.pathAccumulated += h;
