@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
   stepper.initialize(state, cp);
 
   BOOST_CHECK(!state.covTransport);
-  BOOST_CHECK_EQUAL(state.covariance, nullptr);
+  BOOST_CHECK_EQUAL(state.cov, Covariance::Zero());
   BOOST_CHECK_EQUAL(state.pVector[0], pos.x());
   BOOST_CHECK_EQUAL(state.pVector[1], pos.y());
   BOOST_CHECK_EQUAL(state.pVector[2], pos.z());
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
   stepper.initialize(state, cp);
 
   BOOST_CHECK(state.covTransport);
-  BOOST_CHECK_EQUAL(*state.covariance, cov);
+  BOOST_CHECK_EQUAL(state.cov, cov);
   BOOST_CHECK_EQUAL(state.pVector[0], pos.x());
   BOOST_CHECK_EQUAL(state.pVector[1], pos.y());
   BOOST_CHECK_EQUAL(state.pVector[2], pos.z());
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
     copy.pVector = other.pVector;
     std::copy(std::begin(other.parameters), std::end(other.parameters),
               std::begin(copy.parameters));
-    copy.covariance = other.covariance;
+    copy.cov = other.cov;
     copy.covTransport = other.covTransport;
     copy.pathAccumulated = other.pathAccumulated;
     copy.stepSize = other.stepSize;
@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                      cp.particleHypothesis(), cp.referenceSurface());
   // Test all components
   BOOST_CHECK(stateCopy.covTransport);
-  BOOST_CHECK_EQUAL(*stateCopy.covariance, newCov);
+  BOOST_CHECK_EQUAL(stateCopy.cov, newCov);
   BOOST_CHECK_EQUAL(stepper.position(stateCopy),
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),

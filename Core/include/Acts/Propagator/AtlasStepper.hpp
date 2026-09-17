@@ -22,6 +22,7 @@
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -118,9 +119,8 @@ class AtlasStepper {
 
     // result
     double parameters[eBoundSize] = {0., 0., 0., 0., 0., 0.};
-    /// Pointer to external covariance matrix
-    const Covariance* covariance = nullptr;
-    /// Local covariance matrix storage
+    /// Covariance at the anchor, i.e. the frame of the last initialization,
+    /// transport or update
     Covariance cov = Covariance::Zero();
     /// Flag indicating whether covariance transport is enabled
     bool covTransport = false;
@@ -239,7 +239,7 @@ class AtlasStepper {
     state.covTransport = cov.has_value();
     if (state.covTransport) {
       // copy the covariance matrix
-      state.covariance = new BoundMatrix(*cov);
+      state.cov = *cov;
       state.useJacobian = true;
       const auto transform =
           surface.referenceFrame(state.options.geoContext, pos, dir);
@@ -555,27 +555,25 @@ class AtlasStepper {
   /// @return True if the covariance is transported
   bool hasCovariance(const State& state) const { return state.covTransport; }
 
-  /// Get the covariance of the last transport
+  /// Get the covariance at the anchor
+  ///
+  /// The anchor is the frame of the last initialization, transport or update.
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  /// @return The covariance of the last transport
+  /// @return The covariance at the anchor
   const Covariance& covariance(const State& state) const { return state.cov; }
 
-  /// Set the covariance of the last transport
-  ///
-  /// @note The next transport starts again from the covariance of the last
-  ///       initialization or update, so this change does not propagate.
+  /// Set the covariance at the anchor
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
-  /// @param [in] covariance The new covariance
+  /// @param [in] covariance The new covariance at the anchor
   void setCovariance(State& state, const Covariance& covariance) const {
     state.cov = covariance;
   }
 
   /// Get the bound parameters at the current position
   ///
-  /// The parameters carry the covariance of the last transport if the state
-  /// has a covariance.
+  /// The parameters carry the covariance at the anchor if the state has one.
   ///
   /// @param [in] state The stepping state (thread-local cache)
   /// @param [in] surface The surface of the parameters
@@ -606,8 +604,7 @@ class AtlasStepper {
 
   /// Get the curvilinear parameters at the current position
   ///
-  /// The parameters carry the covariance of the last transport if the state
-  /// has a covariance.
+  /// The parameters carry the covariance at the anchor if the state has one.
   ///
   /// @param [in] state The stepping state (thread-local cache)
   /// @return The curvilinear parameters
@@ -782,7 +779,7 @@ class AtlasStepper {
       state.pVector[34] = Bz3 * boundParams[eBoundLoc0];  // dZ/
     }
 
-    state.covariance = new BoundMatrix(covariance);
+    state.cov = covariance;
     state.covTransport = true;
     state.useJacobian = true;
 
@@ -812,11 +809,11 @@ class AtlasStepper {
 
   /// Transport the covariance to the curvilinear frame at the current position
   ///
-  /// Without a covariance the state does not change.
+  /// This anchors the state on the curvilinear frame. Without a covariance
+  /// the state does not change.
   ///
   /// @param [in,out] state State of the stepper
-  /// @return The jacobian from the last initialization or update to the
-  ///         curvilinear frame
+  /// @return The jacobian from the previous anchor to the curvilinear frame
   Jacobian transportToCurvilinear(State& state) const {
     if (!state.covTransport) {
       return Jacobian::Identity();
@@ -959,19 +956,25 @@ class AtlasStepper {
 
     Eigen::Map<Eigen::Matrix<double, eBoundSize, eBoundSize, Eigen::RowMajor>>
         J(jacobian);
-    state.cov = J * (*state.covariance) * J.transpose();
+    state.cov = J * state.cov * J.transpose();
+    Jacobian jac = J;
 
-    return J;
+    const auto curvilinearSurface =
+        CurvilinearSurface(position(state), direction(state)).surface();
+    reanchor(state, *curvilinearSurface).value();
+
+    return jac;
   }
 
   /// Transport the covariance to a surface at the current position
   ///
-  /// Without a covariance the state does not change.
+  /// This anchors the state on @p surface. Without a covariance the state
+  /// does not change.
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface The surface to transport the covariance to
-  /// @return The jacobian from the last initialization or update to
-  ///         @p surface
+  /// @return The jacobian from the previous anchor to @p surface, or a failure
+  ///         if the parameters cannot be expressed on @p surface
   Result<Jacobian> transportToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& /*freeToBoundCorrection*/ =
@@ -1190,9 +1193,15 @@ class AtlasStepper {
 
     Eigen::Map<Eigen::Matrix<double, eBoundSize, eBoundSize, Eigen::RowMajor>>
         J(jacobian);
-    state.cov = J * (*state.covariance) * J.transpose();
+    state.cov = J * state.cov * J.transpose();
+    Jacobian jac = J;
 
-    return Result<Jacobian>::success(Jacobian(J));
+    Result<void> reanchorResult = reanchor(state, surface);
+    if (!reanchorResult.ok()) {
+      return Result<Jacobian>::failure(reanchorResult.error());
+    }
+
+    return Result<Jacobian>::success(jac);
   }
 
   /// Perform the actual step on the state
@@ -1516,6 +1525,21 @@ class AtlasStepper {
   }
 
  private:
+  /// Reset the jacobian of the state to @p surface at the current position
+  Result<void> reanchor(State& state, const Surface& surface) const {
+    FreeVector freeParams;
+    freeParams << state.pVector[0], state.pVector[1], state.pVector[2],
+        state.pVector[3], state.pVector[4], state.pVector[5], state.pVector[6],
+        state.pVector[7];
+    Result<BoundVector> boundParams = transformFreeToBoundParameters(
+        freeParams, surface, state.options.geoContext);
+    if (!boundParams.ok()) {
+      return boundParams.error();
+    }
+    update(state, freeParams, *boundParams, state.cov, surface);
+    return Result<void>::success();
+  }
+
   std::optional<Covariance> optionalCovariance(const State& state) const {
     if (!state.covTransport) {
       return std::nullopt;
