@@ -89,8 +89,8 @@ void Acts::from_json(const nlohmann::json& j,
   j["minImpactSeedConf"].get_to(config.minImpactSeedConf);
 }
 
-void Acts::Experimental::to_json(nlohmann::json& j,
-                                 const DoubletSeedFinder::Config& config) {
+void Acts::to_json(nlohmann::json& j, const DoubletSeedFinder::Config& config) {
+  j["spacePointsSortedByRadius"] = config.spacePointsSortedByRadius;
   j["candidateDirection"] = config.candidateDirection;
   j["deltaRMin"] = config.deltaRMin;
   j["deltaRMax"] = config.deltaRMax;
@@ -106,27 +106,27 @@ void Acts::Experimental::to_json(nlohmann::json& j,
   // experiment cuts cannot be serialized directly, so we skip it
 }
 
-void Acts::Experimental::to_json(
-    nlohmann::json& j, const DoubletSeedFinder::DerivedConfig& config) {
+void Acts::to_json(nlohmann::json& j,
+                   const DoubletSeedFinder::DerivedConfig& config) {
   to_json(j, static_cast<const DoubletSeedFinder::Config&>(config));
   j["bFieldInZ"] = config.bFieldInZ;
   j["minHelixDiameter2"] = config.minHelixDiameter2;
 }
 
-void Acts::Experimental::to_json(nlohmann::json& j,
-                                 const TripletSeedFinder::Config& config) {
+void Acts::to_json(nlohmann::json& j, const TripletSeedFinder::Config& config) {
   j["minPt"] = config.minPt;
   j["sigmaScattering"] = config.sigmaScattering;
   j["radLengthPerSeed"] = config.radLengthPerSeed;
   j["impactMax"] = config.impactMax;
   j["helixCutTolerance"] = config.helixCutTolerance;
   j["toleranceParam"] = config.toleranceParam;
+  j["cotThetaDiffMax"] = config.cotThetaDiffMax;
   j["useStripInfo"] = config.useStripInfo;
   j["sortedByCotTheta"] = config.sortedByCotTheta;
 }
 
-void Acts::Experimental::to_json(
-    nlohmann::json& j, const TripletSeedFinder::DerivedConfig& config) {
+void Acts::to_json(nlohmann::json& j,
+                   const TripletSeedFinder::DerivedConfig& config) {
   to_json(j, static_cast<const TripletSeedFinder::Config&>(config));
   j["bFieldInZ"] = config.bFieldInZ;
   j["highland"] = config.highland;
@@ -136,8 +136,8 @@ void Acts::Experimental::to_json(
   j["multipleScattering2"] = config.multipleScattering2;
 }
 
-void Acts::Experimental::to_json(nlohmann::json& j,
-                                 const BroadTripletSeedFilter::Config& config) {
+void Acts::to_json(nlohmann::json& j,
+                   const BroadTripletSeedFilter::Config& config) {
   j["deltaInvHelixDiameter"] = config.deltaInvHelixDiameter;
   j["deltaRMin"] = config.deltaRMin;
   j["compatSeedWeight"] = config.compatSeedWeight;
@@ -147,6 +147,8 @@ void Acts::Experimental::to_json(nlohmann::json& j,
   j["compatSeedLimit"] = config.compatSeedLimit;
   j["seedWeightIncrement"] = config.seedWeightIncrement;
   j["numSeedIncrement"] = config.numSeedIncrement;
+  j["absDeltaEtaWeightFactor"] = config.absDeltaEtaWeightFactor;
+  j["absDeltaEtaMinImpact"] = config.absDeltaEtaMinImpact;
   j["seedConfirmation"] = config.seedConfirmation;
   j["centralSeedConfirmationRange"] = config.centralSeedConfirmationRange;
   j["forwardSeedConfirmationRange"] = config.forwardSeedConfirmationRange;
@@ -156,8 +158,8 @@ void Acts::Experimental::to_json(nlohmann::json& j,
   // experiment cuts cannot be serialized directly, so we skip it
 }
 
-void Acts::Experimental::to_json(
-    nlohmann::json& j, const CylindricalSpacePointGrid::Config& config) {
+void Acts::to_json(nlohmann::json& j,
+                   const CylindricalSpacePointGrid::Config& config) {
   j["minPt"] = config.minPt;
   j["rMin"] = config.rMin;
   j["rMax"] = config.rMax;
@@ -173,17 +175,14 @@ void Acts::Experimental::to_json(
   j["zBinEdges"] = config.zBinEdges;
   j["rBinEdges"] = config.rBinEdges;
   j["bFieldInZ"] = config.bFieldInZ;
-  if (config.bottomBinFinder.has_value()) {
-    ::to_json(j["bottomBinFinder"], config.bottomBinFinder.value());
-  }
-  if (config.topBinFinder.has_value()) {
-    ::to_json(j["topBinFinder"], config.topBinFinder.value());
-  }
+  ::to_json(j["bottomBinFinder"], config.bottomBinFinder);
+  ::to_json(j["topBinFinder"], config.topBinFinder);
   j["navigation"] = config.navigation;
 }
 
-void Acts::Experimental::from_json(const nlohmann::json& j,
-                                   DoubletSeedFinder::Config& config) {
+void Acts::from_json(const nlohmann::json& j,
+                     DoubletSeedFinder::Config& config) {
+  j["spacePointsSortedByRadius"].get_to(config.spacePointsSortedByRadius);
   j["candidateDirection"].get_to(config.candidateDirection);
   j["deltaRMin"].get_to(config.deltaRMin);
   j["deltaRMax"].get_to(config.deltaRMax);
@@ -199,27 +198,28 @@ void Acts::Experimental::from_json(const nlohmann::json& j,
   // experiment cuts cannot be serialized directly, so we skip it
 }
 
-void Acts::Experimental::from_json(const nlohmann::json& j,
-                                   DoubletSeedFinder::DerivedConfig& config) {
+void Acts::from_json(const nlohmann::json& j,
+                     DoubletSeedFinder::DerivedConfig& config) {
   from_json(j, static_cast<DoubletSeedFinder::Config&>(config));
   j["bFieldInZ"].get_to(config.bFieldInZ);
   j["minHelixDiameter2"].get_to(config.minHelixDiameter2);
 }
 
-void Acts::Experimental::from_json(const nlohmann::json& j,
-                                   TripletSeedFinder::Config& config) {
+void Acts::from_json(const nlohmann::json& j,
+                     TripletSeedFinder::Config& config) {
   j["minPt"].get_to(config.minPt);
   j["sigmaScattering"].get_to(config.sigmaScattering);
   j["radLengthPerSeed"].get_to(config.radLengthPerSeed);
   j["impactMax"].get_to(config.impactMax);
   j["helixCutTolerance"].get_to(config.helixCutTolerance);
   j["toleranceParam"].get_to(config.toleranceParam);
+  j["cotThetaDiffMax"].get_to(config.cotThetaDiffMax);
   j["useStripInfo"].get_to(config.useStripInfo);
   j["sortedByCotTheta"].get_to(config.sortedByCotTheta);
 }
 
-void Acts::Experimental::from_json(const nlohmann::json& j,
-                                   TripletSeedFinder::DerivedConfig& config) {
+void Acts::from_json(const nlohmann::json& j,
+                     TripletSeedFinder::DerivedConfig& config) {
   from_json(j, static_cast<TripletSeedFinder::Config&>(config));
   j["bFieldInZ"].get_to(config.bFieldInZ);
   j["highland"].get_to(config.highland);
@@ -229,8 +229,8 @@ void Acts::Experimental::from_json(const nlohmann::json& j,
   j["multipleScattering2"].get_to(config.multipleScattering2);
 }
 
-void Acts::Experimental::from_json(const nlohmann::json& j,
-                                   BroadTripletSeedFilter::Config& config) {
+void Acts::from_json(const nlohmann::json& j,
+                     BroadTripletSeedFilter::Config& config) {
   j["deltaInvHelixDiameter"].get_to(config.deltaInvHelixDiameter);
   j["deltaRMin"].get_to(config.deltaRMin);
   j["compatSeedWeight"].get_to(config.compatSeedWeight);
@@ -240,6 +240,8 @@ void Acts::Experimental::from_json(const nlohmann::json& j,
   j["compatSeedLimit"].get_to(config.compatSeedLimit);
   j["seedWeightIncrement"].get_to(config.seedWeightIncrement);
   j["numSeedIncrement"].get_to(config.numSeedIncrement);
+  j["absDeltaEtaWeightFactor"].get_to(config.absDeltaEtaWeightFactor);
+  j["absDeltaEtaMinImpact"].get_to(config.absDeltaEtaMinImpact);
   j["seedConfirmation"].get_to(config.seedConfirmation);
   j["centralSeedConfirmationRange"].get_to(config.centralSeedConfirmationRange);
   j["forwardSeedConfirmationRange"].get_to(config.forwardSeedConfirmationRange);
@@ -249,8 +251,8 @@ void Acts::Experimental::from_json(const nlohmann::json& j,
   // experiment cuts cannot be serialized directly, so we skip it
 }
 
-void Acts::Experimental::from_json(const nlohmann::json& j,
-                                   CylindricalSpacePointGrid::Config& config) {
+void Acts::from_json(const nlohmann::json& j,
+                     CylindricalSpacePointGrid::Config& config) {
   j["minPt"].get_to(config.minPt);
   j["rMin"].get_to(config.rMin);
   j["rMax"].get_to(config.rMax);
@@ -266,11 +268,7 @@ void Acts::Experimental::from_json(const nlohmann::json& j,
   j["zBinEdges"].get_to(config.zBinEdges);
   j["rBinEdges"].get_to(config.rBinEdges);
   j["bFieldInZ"].get_to(config.bFieldInZ);
-  if (j.contains("bottomBinFinder")) {
-    config.bottomBinFinder = ::from_json<3ul>(j["bottomBinFinder"]);
-  }
-  if (j.contains("topBinFinder")) {
-    config.topBinFinder = ::from_json<3ul>(j["topBinFinder"]);
-  }
+  config.bottomBinFinder = ::from_json<3ul>(j["bottomBinFinder"]);
+  config.topBinFinder = ::from_json<3ul>(j["topBinFinder"]);
   j["navigation"].get_to(config.navigation);
 }
