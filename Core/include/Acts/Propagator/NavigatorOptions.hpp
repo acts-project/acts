@@ -58,12 +58,6 @@ struct NavigatorPlainOptions {
   /// Surfaces the navigator intersects with the tolerance of the caller
   std::vector<BoundaryToleranceOverride> boundaryToleranceOverrides;
 
-  /// Offer the surfaces of @c boundaryToleranceOverrides in every volume, and
-  /// not only in the volume that holds the surface. A relaxed bounds check can
-  /// put the intersection outside of that volume, so the surface stays
-  /// reachable after the propagation leaves the volume. Only Gen3 uses it.
-  bool keepUnreachedExternal = false;
-
   /// Intersect a surface of the tracking geometry with the given tolerance.
   /// By default the bounds check is dropped.
   /// @param surface The surface of the tracking geometry

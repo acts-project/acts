@@ -1277,52 +1277,6 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceOverridesGen3) {
       }
     }
   }
-  // Override the second plane again, but leave the volume before the track
-  // reaches the plane. With keepUnreachedExternal the navigator still targets
-  // the plane in the next volume.
-  {
-    const Vector3 posPlaneVolExit =
-        planeVolume->localToGlobalTransform(tgContext) *
-        Vector3{-40._cm, 0., 3._cm};
-    BOOST_CHECK(planeVolume->inside(tgContext, posPlaneVolExit));
-    Navigator::Options options{tgContext};
-    start.setZero();
-    options.overrideBoundaryTolerance(*planeSurf2);
-    options.keepUnreachedExternal = true;
-    Navigator::State state = navigator.makeState(options);
-    const Vector3 dir = posPlaneVolExit.normalized();
-
-    NavigatorInitializeArguments navArgs{};
-    navArgs.startSurface = startSurface.get();
-    navArgs.position = start;
-    navArgs.direction = dir;
-    BOOST_CHECK(navigator.initialize(state, navArgs).ok());
-
-    NavigationTarget portalTarget1 = navigator.nextTarget(state, start, dir);
-    BOOST_CHECK(portalTarget1.isPortalTarget());
-    step(start, dir, portalTarget1, logger());
-    navigator.handleSurfaceReached(state, start, dir, portalTarget1.surface());
-
-    NavigationTarget planeSurfTarget = navigator.nextTarget(state, start, dir);
-    BOOST_CHECK(planeSurfTarget.isSurfaceTarget());
-    BOOST_CHECK_EQUAL(&planeSurfTarget.surface(), planeSurf1.get());
-    step(start, dir, planeSurfTarget, logger());
-    navigator.handleSurfaceReached(state, start, dir,
-                                   planeSurfTarget.surface());
-
-    NavigationTarget sidePortalTarget = navigator.nextTarget(state, start, dir);
-    BOOST_CHECK(sidePortalTarget.isPortalTarget());
-    step(start, dir, sidePortalTarget, logger());
-    navigator.handleSurfaceReached(state, start, dir,
-                                   sidePortalTarget.surface());
-
-    NavigationTarget secondPlaneTarget =
-        navigator.nextTarget(state, start, dir);
-    BOOST_CHECK(secondPlaneTarget.isSurfaceTarget());
-    BOOST_CHECK_EQUAL(&secondPlaneTarget.surface(), planeSurf2.get());
-    navigator.handleSurfaceReached(state, start, dir,
-                                   secondPlaneTarget.surface());
-  }
   // Test the straw surfaces
   BOOST_CHECK_EQUAL(straws.size(), 8u);
   for (std::size_t s = 0; s < straws.size(); s += 2u) {
@@ -1335,7 +1289,6 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceOverridesGen3) {
                               Vector3{2._cm, 3._cm, -10._cm};
 
     Navigator::Options options{tgContext};
-    options.keepUnreachedExternal = true;
 
     Navigator::State state = navigator.makeState(options);
     const Vector3 dir = targetPos.normalized();

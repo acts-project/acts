@@ -675,8 +675,7 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   // NavigationStream::initialize keeps the first entry per surface
   for (const State::ResolvedBoundaryToleranceOverride& toleranceOverride :
        state.boundaryToleranceOverrides) {
-    if (toleranceOverride.volume != state.currentVolume &&
-        !state.options.keepUnreachedExternal) {
+    if (toleranceOverride.volume != state.currentVolume) {
       continue;
     }
     ACTS_VERBOSE(volInfo(state)
