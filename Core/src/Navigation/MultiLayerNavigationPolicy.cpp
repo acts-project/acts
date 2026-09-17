@@ -41,9 +41,26 @@ MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
     surfaces.push_back(surface.getSharedPtr());
   }
 
-  CenterReferenceGenerator rGenerator;
+  const std::size_t nLayerBins = m_indexedGrid.grid.multiAxis().getNBins()[1];
+  if (!m_config.layerOffsets.empty()) {
+    if (m_config.layerOffsets.size() != nLayerBins) {
+      throw std::invalid_argument("layerShift size != layer bin count");
+    }
+    m_shifts = m_config.layerOffsets;
+  } else {
+    m_shifts.assign(nLayerBins, 0.0);
+  }
+
+  // configure the shifted reference generator
+  ShiftedCenterReferenceGenerator rGen;
+  rGen.globalToLocal = m_volume.globalToLocalTransform(gctx);
+  rGen.shiftDir = m_indexedGrid.casts[0];
+  rGen.layerDir = m_indexedGrid.casts[1];
+  rGen.layerLow = m_indexedGrid.grid.multiAxis().getMinPoint()[1];
+  rGen.layerPitch = m_indexedGrid.grid.multiAxis().getBinWidth({1, 1})[1];
+  rGen.shifts = std::move(m_shifts);
   IndexGridFiller filler{config.binExpansion};
-  filler.fill(gctx, m_indexedGrid, surfaces, rGenerator, {});
+  filler.fill(gctx, m_indexedGrid, surfaces, rGen, {});
 }
 
 void MultiLayerNavigationPolicy::initializeCandidates(
@@ -61,7 +78,7 @@ void MultiLayerNavigationPolicy::initializeCandidates(
       << ", direction: " << toString(locDirection)
       << ", inside: " << m_volume.volumeBounds().inside(locPosition));
 
-  std::vector<Vector2> path = generatePath(locPosition, locDirection);
+  std::vector<Vector2> path = generatePath(locPosition, locDirection, logger);
   ACTS_VERBOSE("MultiLayerNavigationPolicy() - Created "
                << path.size() << " points along the path.");
 
@@ -93,7 +110,8 @@ void MultiLayerNavigationPolicy::initializeCandidates(
 }
 
 std::vector<Vector2> MultiLayerNavigationPolicy::generatePath(
-    const Vector3& startPosition, const Vector3& direction) const {
+    const Vector3& startPosition, const Vector3& direction,
+    const Logger& logger) const {
   std::vector<Vector2> path;
 
   auto maxXIndex = m_indexedGrid.grid.multiAxis().getNBins()[0];
@@ -107,18 +125,34 @@ std::vector<Vector2> MultiLayerNavigationPolicy::generatePath(
   Vector2 startDir{VectorHelpers::cast(unitDir, m_indexedGrid.casts[0]),
                    VectorHelpers::cast(unitDir, m_indexedGrid.casts[1])};
 
+  ACTS_VERBOSE(__func__ << "() " << __LINE__
+                        << " - Projected position: " << toString(startPoint)
+                        << ", direction: " << toString(startDir));
   for (std::size_t i = 0; i < maxYIndex; i++) {
-    auto v1 = m_indexedGrid.grid.multiAxis().getLowerLeftBinEdge({1, i + 1});
-    auto v2 =
-        m_indexedGrid.grid.multiAxis().getUpperRightBinEdge({maxXIndex, i + 1});
+    auto v1 = m_indexedGrid.grid.multiAxis().getBinCenter({1, i + 1});
+    auto v2 = m_indexedGrid.grid.multiAxis().getBinCenter({maxXIndex, i + 1});
 
+    const Vector2 gPos{v1[0], v1[1]};
+    const Vector2 gDir{v2[0], v2[1]};
+    ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Intersect layer "
+                          << (i + 1) << " with " << toString(gPos) << " -- "
+                          << toString(gDir));
     auto intersection = Acts::detail::IntersectionHelper2D::intersectSegment(
-        Vector2(v1[0], v1[1]), Vector2(v2[0], v2[1]), startPoint, startDir);
+        gPos, gDir, startPoint, startDir);
     if (!intersection.isValid()) {
+      ACTS_VERBOSE(__func__ << "() " << __LINE__ << " - Intersection failed");
       continue;
     }
 
-    path.push_back(intersection.position());
+    Vector2 pathPos = intersection.position();
+    // apply the shift on the path position of the corresponding layer too
+    // coordinate along the tube layer
+    ACTS_VERBOSE(__func__ << "() " << __LINE__
+                          << " - Path position: " << toString(pathPos)
+                          << ", offset: " << m_config.layerOffsets[i]);
+    pathPos[0] += m_config.layerOffsets[i];
+
+    path.push_back(pathPos);
   }
   return path;
 }
