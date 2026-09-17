@@ -104,11 +104,6 @@ struct SingleComponentReducer {
   static FreeVector pars(const stepper_state_t& s) {
     return component_chooser_t{}(s.components)->state.pars;
   }
-
-  template <typename stepper_state_t>
-  static FreeVector cov(const stepper_state_t& s) {
-    return component_chooser_t{}(s.components)->state.cov;
-  }
 };
 
 }  // namespace detail
@@ -165,8 +160,6 @@ class MultiStepperLoop final {
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
   using Covariance = BoundMatrix;
-  /// Bound state tuple containing parameters, Jacobian, and path length
-  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
   /// @brief The reducer type
   using Reducer = component_reducer_t;
@@ -439,6 +432,8 @@ class MultiStepperLoop final {
         state.components.emplace_back(m_singleStepper.makeState(state.options),
                                       weight, IntersectionStatus::onSurface);
     m_singleStepper.initialize(cmp.state, pars);
+    // the component starts here, but on the trajectory the multi state is on
+    cmp.state.pathAccumulated = state.pathAccumulated;
 
     return ComponentProxy{state.components.back(), state};
   }
@@ -675,35 +670,43 @@ class MultiStepperLoop final {
     return ss.str();
   }
 
-  /// Create and return the bound state at the current position
+  /// Get the stepper statistics
   ///
-  /// @brief This transports (if necessary) the covariance
-  /// to the surface and creates a bound state. It does not check
-  /// if the transported state is at the surface, this needs to
-  /// be guaranteed by the propagator.
-  /// @note This is done by combining the gaussian mixture on the specified
-  /// surface. If the conversion to bound states of some components
-  /// fails, these components are ignored unless all components fail. In this
-  /// case an error code is returned.
-  ///
-  /// @param [in] state State that will be presented as @c BoundState
-  /// @param [in] surface The surface to which we bind the state
-  /// @param [in] transportCov Flag steering covariance transport
-  /// @param [in] freeToBoundCorrection Flag steering non-linear correction during global to local correction
-  ///
-  /// @return A bound state:
-  ///   - the parameters at the surface
-  ///   - the stepwise jacobian towards it (from last bound)
-  ///   - and the path length (from start - for ordering)
-  Result<BoundState> boundState(
-      State& state, const Surface& surface, bool transportCov = true,
-      const FreeToBoundCorrection& freeToBoundCorrection =
-          FreeToBoundCorrection(false)) const;
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The statistics since the last initialization
+  const StepperStatistics& statistics(const State& state) const {
+    return state.statistics;
+  }
 
-  /// @brief If necessary fill additional members needed for curvilinearState
+  /// Get the path length
   ///
-  /// Compute path length derivatives in case they have not been computed
-  /// yet, which is the case if no step has been executed yet.
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The weighted path length of the components
+  double pathLength(const State& state) const { return state.pathAccumulated; }
+
+  /// Check if the state carries a covariance
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return True if the covariance is transported
+  bool hasCovariance(const State& state) const { return state.covTransport; }
+
+  /// Get the bound parameters at the current position
+  ///
+  /// The mixture combines the bound parameters of the components. Components
+  /// that cannot be expressed on @p surface are ignored unless all fail.
+  ///
+  /// @note It does not check if the components are on @p surface. Use
+  ///       @ref transportToBound to put them there.
+  ///
+  /// @param [in] state The stepping state (thread-local cache)
+  /// @param [in] surface The surface of the parameters
+  /// @return The bound mixture, or a failure if no component can be
+  ///         expressed on @p surface
+  Result<BoundParameters> boundParameters(const State& state,
+                                          const Surface& surface) const;
+
+  /// @brief If necessary fill additional members needed for
+  /// transportToCurvilinear
   ///
   /// @param [in, out] state The stepping state (thread-local cache)
   /// @return true if nothing is missing after this call, false otherwise.
@@ -712,58 +715,42 @@ class MultiStepperLoop final {
     return true;
   }
 
-  /// Create and return a curvilinear state at the current position
+  /// Get the curvilinear parameters at the current position
   ///
-  /// @brief This transports (if necessary) the covariance
-  /// to the current position and creates a curvilinear state.
   /// @note This is done as a simple average over the free representation
   /// and covariance of the components.
   ///
-  /// @param [in] state State that will be presented as @c CurvilinearState
-  /// @param [in] transportCov Flag steering covariance transport
-  ///
-  /// @return A curvilinear state:
-  ///   - the curvilinear parameters at given position
-  ///   - the stepweise jacobian towards it (from last bound)
-  ///   - and the path length (from start - for ordering)
-  BoundState curvilinearState(State& state, bool transportCov = true) const;
+  /// @param [in] state The stepping state (thread-local cache)
+  /// @return The curvilinear mixture
+  BoundParameters curvilinearParameters(const State& state) const;
 
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current  position,
-  /// or direction of the state
+  /// Transport the covariance of each component to its curvilinear frame
   ///
   /// @param [in,out] state State of the stepper
-  void transportCovarianceToCurvilinear(State& state) const {
+  /// @return A zero jacobian, the mixture has no single jacobian
+  Jacobian transportToCurvilinear(State& state) const {
     for (auto& component : state.components) {
-      m_singleStepper.transportCovarianceToCurvilinear(component.state);
+      m_singleStepper.transportToCurvilinear(component.state);
     }
+    return Jacobian::Zero();
   }
 
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current position,
-  /// or direction of the state
+  /// Put each component on a surface and transport its covariance there
   ///
-  /// @tparam surface_t the Surface type
+  /// The components are intersected with @p surface first, because a
+  /// propagation can end when only the mean of the components reached it.
+  /// Components that cannot be expressed on @p surface are ignored unless all
+  /// fail.
   ///
   /// @param [in,out] state State of the stepper
-  /// @param [in] surface is the surface to which the covariance is forwarded
+  /// @param [in] surface The surface to transport the components to
   /// @param [in] freeToBoundCorrection Flag steering non-linear correction during global to local correction
-  /// to
-  /// @note no check is done if the position is actually on the surface
-  /// @return Failure if the parameters cannot be expressed on the surface
-  Result<void> transportCovarianceToBound(
+  /// @return A zero jacobian, the mixture has no single jacobian, or a
+  ///         failure if no component can be expressed on @p surface
+  Result<Jacobian> transportToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
-          FreeToBoundCorrection(false)) const {
-    for (auto& component : state.components) {
-      Result<void> result = m_singleStepper.transportCovarianceToBound(
-          component.state, surface, freeToBoundCorrection);
-      if (!result.ok()) {
-        return result.error();
-      }
-    }
-    return Result<void>::success();
-  }
+          FreeToBoundCorrection(false)) const;
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///

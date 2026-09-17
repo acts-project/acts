@@ -409,14 +409,19 @@ class CombinatorialKalmanFilter {
           ACTS_VERBOSE("Target surface reached");
 
           // Bind the parameter to the target surface
-          auto res = stepper.boundState(state.stepping, *targetReached.surface);
+          auto res =
+              stepper.transportToBound(state.stepping, *targetReached.surface)
+                  .and_then([&](const auto& /*jacobian*/) {
+                    return stepper.boundParameters(state.stepping,
+                                                   *targetReached.surface);
+                  });
           if (!res.ok()) {
             ACTS_DEBUG("Error while acquiring bound state for target surface: "
                        << res.error() << " " << res.error().message());
             return res.error();
           }
 
-          const auto& [boundParams, jacobian, pathLength] = *res;
+          const auto& boundParams = *res;
           auto currentBranch = result.activeBranches.back();
           // Assign the fitted parameters
           if constexpr (!IsMultiStepper) {
@@ -577,14 +582,15 @@ class CombinatorialKalmanFilter {
       }
 
       // Transport the covariance to the surface
+      BoundMatrix jacobian;
       if (isMaterialOnly) {
-        stepper.transportCovarianceToCurvilinear(state.stepping);
+        jacobian = stepper.transportToCurvilinear(state.stepping);
       } else {
-        Result<void> transportRes =
-            stepper.transportCovarianceToBound(state.stepping, surface);
+        auto transportRes = stepper.transportToBound(state.stepping, surface);
         if (!transportRes.ok()) {
           return transportRes.error();
         }
+        jacobian = *transportRes;
       }
 
       // Update state and stepper with pre material effects
@@ -604,8 +610,7 @@ class CombinatorialKalmanFilter {
                        << surface.geometryId());
 
           // keep the jacobian segment the transport above just closed
-          result.accumulatedJacobian =
-              state.stepping.jacobian * result.accumulatedJacobian;
+          result.accumulatedJacobian = jacobian * result.accumulatedJacobian;
 
           // apply the post material effects and return early, skipping the
           // track state creation below
@@ -624,13 +629,12 @@ class CombinatorialKalmanFilter {
       // Bind the transported state to the current surface
       auto boundStateRes = [&]() -> Result<SingleBoundState> {
         if constexpr (!IsMultiStepper) {
-          auto res = stepper.boundState(state.stepping, surface, false);
+          auto res = stepper.boundParameters(state.stepping, surface);
           if (!res.ok()) {
             return res.error();
           }
-          auto& [boundParams, jacobian, pathLength] = *res;
-          boundParams.covariance() = state.stepping.cov;
-          return res;
+          return Result<SingleBoundState>::success(
+              {std::move(*res), jacobian, stepper.pathLength(state.stepping)});
         } else {
           // This triggers a second covariance transport which is wasteful in
           // terms of compute. But the multi stepper might filter bound
@@ -638,14 +642,17 @@ class CombinatorialKalmanFilter {
           // parameter components right now to make use of the same track as
           // above.
           // TODO this should be revisited
-          auto res = stepper.boundState(state.stepping, surface, true);
+          auto res =
+              stepper.transportToBound(state.stepping, surface)
+                  .and_then([&](const auto& /*jacobian*/) {
+                    return stepper.boundParameters(state.stepping, surface);
+                  });
           if (!res.ok()) {
             return res.error();
           }
-          auto [multiBoundParams, jacobian, pathLength] = *res;
-          const auto singleParams = multiBoundParams.merge(brem.mergeMethod);
+          const auto singleParams = res->merge(brem.mergeMethod);
           return Result<SingleBoundState>::success(
-              {singleParams, jacobian, pathLength});
+              {singleParams, jacobian, stepper.pathLength(state.stepping)});
         }
       }();
       if (!boundStateRes.ok()) {
@@ -992,8 +999,9 @@ class CombinatorialKalmanFilter {
           double maxPathXOverX0 = 0;
 
           for (auto cmp : stepper.componentIterable(state.stepping)) {
-            const auto boundParamsRes = transformFreeToBoundParameters(
-                cmp.state().pars, surface, state.options.geoContext);
+            const auto boundParamsRes =
+                cmp.singleStepper(stepper).boundParameters(cmp.state(),
+                                                           surface);
             if (!boundParamsRes.ok()) {
               ACTS_DEBUG(
                   "Failed to transform free to bound parameters for "
@@ -1002,9 +1010,7 @@ class CombinatorialKalmanFilter {
               continue;
             }
 
-            const BoundTrackParameters bound(
-                surface.getSharedPtr(), *boundParamsRes, cmp.state().cov,
-                stepper.particleHypothesis(state.stepping));
+            const BoundTrackParameters& bound = *boundParamsRes;
 
             detail::Gsf::applyBetheHeitler(
                 state.options.geoContext, surface, state.options.direction,
@@ -1073,13 +1079,17 @@ class CombinatorialKalmanFilter {
 
           trackStateProxy.setReferenceSurface(surface.getSharedPtr());
           // Bind the transported state to the current surface
-          auto res = singleStepper.boundState(singleState, surface);
+          auto res =
+              singleStepper.transportToBound(singleState, surface)
+                  .and_then([&](const auto& /*jacobian*/) {
+                    return singleStepper.boundParameters(singleState, surface);
+                  });
           if (!res.ok()) {
             ACTS_ERROR("Propagate to surface " << surface.geometryId()
                                                << " failed: " << res.error());
             return res.error();
           }
-          const auto& [boundParams, jacobian, pathLength] = *res;
+          const auto& boundParams = *res;
 
           // Fill the track state
           trackStateProxy.predicted() = boundParams.parameters();

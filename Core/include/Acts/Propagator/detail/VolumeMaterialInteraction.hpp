@@ -69,7 +69,7 @@ struct VolumeMaterialInteraction {
         momentum(stepper.absoluteMomentum(state.stepping)),
         mass(stepper.particleHypothesis(state.stepping).mass()),
         absPdg(stepper.particleHypothesis(state.stepping).absolutePdg()),
-        performCovarianceTransport(state.stepping.covTransport),
+        performCovarianceTransport(stepper.hasCovariance(state.stepping)),
         navDir(state.options.direction) {}
 
   /// @brief This function evaluates the material properties to interact with

@@ -43,8 +43,6 @@ class AtlasStepper {
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
   using Covariance = BoundMatrix;
-  /// Type alias for bound state (parameters, jacobian, path length)
-  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
   /// Configuration for constructing an AtlasStepper.
   struct Config {
@@ -126,8 +124,6 @@ class AtlasStepper {
     Covariance cov = Covariance::Zero();
     /// Flag indicating whether covariance transport is enabled
     bool covTransport = false;
-    /// Jacobian matrix storage for parameter derivatives
-    double jacobian[eBoundSize * eBoundSize] = {};
 
     // accumulated path length cache
     /// Accumulated path length during propagation
@@ -135,9 +131,6 @@ class AtlasStepper {
 
     /// Total number of performed steps
     std::size_t nSteps = 0;
-
-    /// Totoal number of attempted steps
-    std::size_t nStepTrials = 0;
 
     // Adaptive step size of the runge-kutta integration
     /// Constrained step size for adaptive integration
@@ -204,7 +197,6 @@ class AtlasStepper {
 
     state.pathAccumulated = 0;
     state.nSteps = 0;
-    state.nStepTrials = 0;
     state.stepSize = ConstrainedStep();
     state.stepSize.setAccuracy(state.options.initialStepSize);
     state.stepSize.setUser(state.options.maxStepSize);
@@ -535,64 +527,72 @@ class AtlasStepper {
     return state.stepSize.toString();
   }
 
-  /// Create and return the bound state at the current position
+  /// Get the step size constraints
   ///
-  ///
-  /// @param [in] state State that will be presented as @c BoundState
-  /// @param [in] surface The surface to which we bind the state
-  /// @param [in] transportCov Flag steering covariance transport
-  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
-  ///
-  /// @return A bound state:
-  ///   - the parameters at the surface
-  ///   - the stepwise jacobian towards it
-  ///   - and the path length (from start - for ordering)
-  Result<BoundState> boundState(
-      State& state, const Surface& surface, bool transportCov = true,
-      const FreeToBoundCorrection& freeToBoundCorrection =
-          FreeToBoundCorrection(false)) const {
-    // the convert method invalidates the state (in case it's reused)
-    state.state_ready = false;
-    // extract state information
-    Acts::Vector4 pos4;
-    pos4[ePos0] = state.pVector[0];
-    pos4[ePos1] = state.pVector[1];
-    pos4[ePos2] = state.pVector[2];
-    pos4[eTime] = state.pVector[3];
-    Acts::Vector3 dir;
-    dir[eMom0] = state.pVector[4];
-    dir[eMom1] = state.pVector[5];
-    dir[eMom2] = state.pVector[6];
-    const auto qOverP = state.pVector[7];
-
-    // The transport of the covariance
-    std::optional<Covariance> covOpt = std::nullopt;
-    if (state.covTransport && transportCov) {
-      Result<void> transportRes =
-          transportCovarianceToBound(state, surface, freeToBoundCorrection);
-      if (!transportRes.ok()) {
-        return transportRes.error();
-      }
-    }
-    if (state.cov != Covariance::Zero()) {
-      covOpt = state.cov;
-    }
-
-    // Fill the end parameters
-    auto parameters = BoundTrackParameters::create(
-        state.options.geoContext, surface.getSharedPtr(), pos4, dir, qOverP,
-        std::move(covOpt), state.particleHypothesis);
-    if (!parameters.ok()) {
-      return parameters.error();
-    }
-
-    Jacobian jacobian(state.jacobian);
-
-    return BoundState(std::move(*parameters), jacobian.transpose(),
-                      state.pathAccumulated);
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The step size constraints
+  const ConstrainedStep& stepSize(const State& state) const {
+    return state.stepSize;
   }
 
-  /// @brief If necessary fill additional members needed for curvilinearState
+  /// Get the stepper statistics
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The statistics since the last initialization
+  const StepperStatistics& statistics(const State& state) const {
+    return state.statistics;
+  }
+
+  /// Get the path length
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The path length since the last initialization
+  double pathLength(const State& state) const { return state.pathAccumulated; }
+
+  /// Check if the state carries a covariance
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return True if the covariance is transported
+  bool hasCovariance(const State& state) const { return state.covTransport; }
+
+  /// Get the covariance of the last transport
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @return The covariance of the last transport
+  const Covariance& covariance(const State& state) const { return state.cov; }
+
+  /// Set the covariance of the last transport
+  ///
+  /// @note The next transport starts again from the covariance of the last
+  ///       initialization or update, so this change does not propagate.
+  ///
+  /// @param [in,out] state The stepping state (thread-local cache)
+  /// @param [in] covariance The new covariance
+  void setCovariance(State& state, const Covariance& covariance) const {
+    state.cov = covariance;
+  }
+
+  /// Get the bound parameters at the current position
+  ///
+  /// The parameters carry the covariance of the last transport if the state
+  /// has a covariance.
+  ///
+  /// @param [in] state The stepping state (thread-local cache)
+  /// @param [in] surface The surface of the parameters
+  /// @return The bound parameters, or a failure if the position cannot be
+  ///         expressed on @p surface
+  Result<BoundParameters> boundParameters(const State& state,
+                                          const Surface& surface) const {
+    Vector4 pos4(state.pVector[0], state.pVector[1], state.pVector[2],
+                 state.pVector[3]);
+    return BoundTrackParameters::create(
+        state.options.geoContext, surface.getSharedPtr(), pos4,
+        direction(state), qOverP(state), optionalCovariance(state),
+        state.particleHypothesis);
+  }
+
+  /// @brief If necessary fill additional members needed for
+  /// transportToCurvilinear
   ///
   /// Compute path length derivatives in case they have not been computed
   /// yet, which is the case if no step has been executed yet.
@@ -604,46 +604,19 @@ class AtlasStepper {
     return true;
   }
 
-  /// Create and return a curvilinear state at the current position
+  /// Get the curvilinear parameters at the current position
   ///
+  /// The parameters carry the covariance of the last transport if the state
+  /// has a covariance.
   ///
-  /// @param [in] state State that will be presented as @c CurvilinearState
-  /// @param [in] transportCov Flag steering covariance transport
-  ///
-  /// @return A curvilinear state:
-  ///   - the curvilinear parameters at given position
-  ///   - the stepweise jacobian towards it
-  ///   - and the path length (from start - for ordering)
-  BoundState curvilinearState(State& state, bool transportCov = true) const {
-    // the convert method invalidates the state (in case it's reused)
-    state.state_ready = false;
-    // extract state information
-    Acts::Vector4 pos4;
-    pos4[ePos0] = state.pVector[0];
-    pos4[ePos1] = state.pVector[1];
-    pos4[ePos2] = state.pVector[2];
-    pos4[eTime] = state.pVector[3];
-    Acts::Vector3 dir;
-    dir[eMom0] = state.pVector[4];
-    dir[eMom1] = state.pVector[5];
-    dir[eMom2] = state.pVector[6];
-    const auto qOverP = state.pVector[7];
-
-    std::optional<Covariance> covOpt = std::nullopt;
-    if (state.covTransport && transportCov) {
-      transportCovarianceToCurvilinear(state);
-    }
-    if (state.cov != Covariance::Zero()) {
-      covOpt = state.cov;
-    }
-
-    BoundTrackParameters parameters = BoundTrackParameters::createCurvilinear(
-        pos4, dir, qOverP, std::move(covOpt), state.particleHypothesis);
-
-    Jacobian jacobian(state.jacobian);
-
-    return BoundState(std::move(parameters), jacobian.transpose(),
-                      state.pathAccumulated);
+  /// @param [in] state The stepping state (thread-local cache)
+  /// @return The curvilinear parameters
+  BoundParameters curvilinearParameters(const State& state) const {
+    Vector4 pos4(state.pVector[0], state.pVector[1], state.pVector[2],
+                 state.pVector[3]);
+    return BoundTrackParameters::createCurvilinear(
+        pos4, direction(state), qOverP(state), optionalCovariance(state),
+        state.particleHypothesis);
   }
 
   /// The state update method
@@ -837,12 +810,18 @@ class AtlasStepper {
     state.pVector[7] = qop;
   }
 
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current  position,
-  /// or direction of the state
+  /// Transport the covariance to the curvilinear frame at the current position
+  ///
+  /// Without a covariance the state does not change.
   ///
   /// @param [in,out] state State of the stepper
-  void transportCovarianceToCurvilinear(State& state) const {
+  /// @return The jacobian from the last initialization or update to the
+  ///         curvilinear frame
+  Jacobian transportToCurvilinear(State& state) const {
+    if (!state.covTransport) {
+      return Jacobian::Identity();
+    }
+
     double P[60];
     for (unsigned int i = 0; i < 60; ++i) {
       P[i] = state.pVector[i];
@@ -935,68 +914,72 @@ class AtlasStepper {
 
     // Jacobian production
     //
-    state.jacobian[0] = Ax[0] * P[8] + Ax[1] * P[9];    // dL0/dL0
-    state.jacobian[1] = Ax[0] * P[16] + Ax[1] * P[17];  // dL0/dL1
-    state.jacobian[2] = Ax[0] * P[24] + Ax[1] * P[25];  // dL0/dPhi
-    state.jacobian[3] = Ax[0] * P[32] + Ax[1] * P[33];  // dL0/dThe
-    state.jacobian[4] = Ax[0] * P[40] + Ax[1] * P[41];  // dL0/dCM
-    state.jacobian[5] = 0.;                             // dL0/dT
+    double jacobian[eBoundSize * eBoundSize];
+    jacobian[0] = Ax[0] * P[8] + Ax[1] * P[9];    // dL0/dL0
+    jacobian[1] = Ax[0] * P[16] + Ax[1] * P[17];  // dL0/dL1
+    jacobian[2] = Ax[0] * P[24] + Ax[1] * P[25];  // dL0/dPhi
+    jacobian[3] = Ax[0] * P[32] + Ax[1] * P[33];  // dL0/dThe
+    jacobian[4] = Ax[0] * P[40] + Ax[1] * P[41];  // dL0/dCM
+    jacobian[5] = 0.;                             // dL0/dT
 
-    state.jacobian[6] = Ay[0] * P[8] + Ay[1] * P[9] + Ay[2] * P[10];  // dL1/dL0
-    state.jacobian[7] =
-        Ay[0] * P[16] + Ay[1] * P[17] + Ay[2] * P[18];  // dL1/dL1
-    state.jacobian[8] =
-        Ay[0] * P[24] + Ay[1] * P[25] + Ay[2] * P[26];  // dL1/dPhi
-    state.jacobian[9] =
-        Ay[0] * P[32] + Ay[1] * P[33] + Ay[2] * P[34];  // dL1/dThe
-    state.jacobian[10] =
-        Ay[0] * P[40] + Ay[1] * P[41] + Ay[2] * P[42];  // dL1/dCM
-    state.jacobian[11] = 0.;                            // dL1/dT
+    jacobian[6] = Ay[0] * P[8] + Ay[1] * P[9] + Ay[2] * P[10];     // dL1/dL0
+    jacobian[7] = Ay[0] * P[16] + Ay[1] * P[17] + Ay[2] * P[18];   // dL1/dL1
+    jacobian[8] = Ay[0] * P[24] + Ay[1] * P[25] + Ay[2] * P[26];   // dL1/dPhi
+    jacobian[9] = Ay[0] * P[32] + Ay[1] * P[33] + Ay[2] * P[34];   // dL1/dThe
+    jacobian[10] = Ay[0] * P[40] + Ay[1] * P[41] + Ay[2] * P[42];  // dL1/dCM
+    jacobian[11] = 0.;                                             // dL1/dT
 
-    state.jacobian[12] = P3 * P[13] - P4 * P[12];  // dPhi/dL0
-    state.jacobian[13] = P3 * P[21] - P4 * P[20];  // dPhi/dL1
-    state.jacobian[14] = P3 * P[29] - P4 * P[28];  // dPhi/dPhi
-    state.jacobian[15] = P3 * P[37] - P4 * P[36];  // dPhi/dThe
-    state.jacobian[16] = P3 * P[45] - P4 * P[44];  // dPhi/dCM
-    state.jacobian[17] = 0.;                       // dPhi/dT
+    jacobian[12] = P3 * P[13] - P4 * P[12];  // dPhi/dL0
+    jacobian[13] = P3 * P[21] - P4 * P[20];  // dPhi/dL1
+    jacobian[14] = P3 * P[29] - P4 * P[28];  // dPhi/dPhi
+    jacobian[15] = P3 * P[37] - P4 * P[36];  // dPhi/dThe
+    jacobian[16] = P3 * P[45] - P4 * P[44];  // dPhi/dCM
+    jacobian[17] = 0.;                       // dPhi/dT
 
-    state.jacobian[18] = C * P[14];  // dThe/dL0
-    state.jacobian[19] = C * P[22];  // dThe/dL1
-    state.jacobian[20] = C * P[30];  // dThe/dPhi
-    state.jacobian[21] = C * P[38];  // dThe/dThe
-    state.jacobian[22] = C * P[46];  // dThe/dCM
-    state.jacobian[23] = 0.;         // dThe/dT
+    jacobian[18] = C * P[14];  // dThe/dL0
+    jacobian[19] = C * P[22];  // dThe/dL1
+    jacobian[20] = C * P[30];  // dThe/dPhi
+    jacobian[21] = C * P[38];  // dThe/dThe
+    jacobian[22] = C * P[46];  // dThe/dCM
+    jacobian[23] = 0.;         // dThe/dT
 
-    state.jacobian[24] = 0.;     // dCM /dL0
-    state.jacobian[25] = 0.;     // dCM /dL1
-    state.jacobian[26] = 0.;     // dCM /dPhi
-    state.jacobian[27] = 0.;     // dCM /dTheta
-    state.jacobian[28] = P[47];  // dCM /dCM
-    state.jacobian[29] = 0.;     // dCM/dT
+    jacobian[24] = 0.;     // dCM /dL0
+    jacobian[25] = 0.;     // dCM /dL1
+    jacobian[26] = 0.;     // dCM /dPhi
+    jacobian[27] = 0.;     // dCM /dTheta
+    jacobian[28] = P[47];  // dCM /dCM
+    jacobian[29] = 0.;     // dCM/dT
 
-    state.jacobian[30] = P[11];  // dT/dL0
-    state.jacobian[31] = P[19];  // dT/dL1
-    state.jacobian[32] = P[27];  // dT/dPhi
-    state.jacobian[33] = P[35];  // dT/dThe
-    state.jacobian[34] = P[43];  // dT/dCM
-    state.jacobian[35] = P[51];  // dT/dT
+    jacobian[30] = P[11];  // dT/dL0
+    jacobian[31] = P[19];  // dT/dL1
+    jacobian[32] = P[27];  // dT/dPhi
+    jacobian[33] = P[35];  // dT/dThe
+    jacobian[34] = P[43];  // dT/dCM
+    jacobian[35] = P[51];  // dT/dT
 
     Eigen::Map<Eigen::Matrix<double, eBoundSize, eBoundSize, Eigen::RowMajor>>
-        J(state.jacobian);
+        J(jacobian);
     state.cov = J * (*state.covariance) * J.transpose();
+
+    return J;
   }
 
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current position,
-  /// or direction of the state
+  /// Transport the covariance to a surface at the current position
+  ///
+  /// Without a covariance the state does not change.
   ///
   /// @param [in,out] state State of the stepper
-  /// @param [in] surface is the surface to which the covariance is forwarded to
-  /// @return Failure if the parameters cannot be expressed on the surface
-  Result<void> transportCovarianceToBound(
+  /// @param [in] surface The surface to transport the covariance to
+  /// @return The jacobian from the last initialization or update to
+  ///         @p surface
+  Result<Jacobian> transportToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& /*freeToBoundCorrection*/ =
           FreeToBoundCorrection(false)) const {
+    if (!state.covTransport) {
+      return Result<Jacobian>::success(Jacobian::Identity());
+    }
+
     Acts::Vector3 gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3 mom(state.pVector[4], state.pVector[5], state.pVector[6]);
 
@@ -1162,61 +1145,54 @@ class AtlasStepper {
       MB[2] = (RC * Ay[2] - RS * Ax[2]) * Ri;
     }
 
-    state.jacobian[0] = MA[0] * P[8] + MA[1] * P[9] + MA[2] * P[10];  // dL0/dL0
-    state.jacobian[1] =
-        MA[0] * P[16] + MA[1] * P[17] + MA[2] * P[18];  // dL0/dL1
-    state.jacobian[2] =
-        MA[0] * P[24] + MA[1] * P[25] + MA[2] * P[26];  // dL0/dPhi
-    state.jacobian[3] =
-        MA[0] * P[32] + MA[1] * P[33] + MA[2] * P[34];  // dL0/dThe
-    state.jacobian[4] =
-        MA[0] * P[40] + MA[1] * P[41] + MA[2] * P[42];  // dL0/dCM
-    state.jacobian[5] = 0.;                             // dL0/dT
+    double jacobian[eBoundSize * eBoundSize];
+    jacobian[0] = MA[0] * P[8] + MA[1] * P[9] + MA[2] * P[10];    // dL0/dL0
+    jacobian[1] = MA[0] * P[16] + MA[1] * P[17] + MA[2] * P[18];  // dL0/dL1
+    jacobian[2] = MA[0] * P[24] + MA[1] * P[25] + MA[2] * P[26];  // dL0/dPhi
+    jacobian[3] = MA[0] * P[32] + MA[1] * P[33] + MA[2] * P[34];  // dL0/dThe
+    jacobian[4] = MA[0] * P[40] + MA[1] * P[41] + MA[2] * P[42];  // dL0/dCM
+    jacobian[5] = 0.;                                             // dL0/dT
 
-    state.jacobian[6] = MB[0] * P[8] + MB[1] * P[9] + MB[2] * P[10];  // dL1/dL0
-    state.jacobian[7] =
-        MB[0] * P[16] + MB[1] * P[17] + MB[2] * P[18];  // dL1/dL1
-    state.jacobian[8] =
-        MB[0] * P[24] + MB[1] * P[25] + MB[2] * P[26];  // dL1/dPhi
-    state.jacobian[9] =
-        MB[0] * P[32] + MB[1] * P[33] + MB[2] * P[34];  // dL1/dThe
-    state.jacobian[10] =
-        MB[0] * P[40] + MB[1] * P[41] + MB[2] * P[42];  // dL1/dCM
-    state.jacobian[11] = 0.;                            // dL1/dT
+    jacobian[6] = MB[0] * P[8] + MB[1] * P[9] + MB[2] * P[10];     // dL1/dL0
+    jacobian[7] = MB[0] * P[16] + MB[1] * P[17] + MB[2] * P[18];   // dL1/dL1
+    jacobian[8] = MB[0] * P[24] + MB[1] * P[25] + MB[2] * P[26];   // dL1/dPhi
+    jacobian[9] = MB[0] * P[32] + MB[1] * P[33] + MB[2] * P[34];   // dL1/dThe
+    jacobian[10] = MB[0] * P[40] + MB[1] * P[41] + MB[2] * P[42];  // dL1/dCM
+    jacobian[11] = 0.;                                             // dL1/dT
 
-    state.jacobian[12] = P3 * P[13] - P4 * P[12];  // dPhi/dL0
-    state.jacobian[13] = P3 * P[21] - P4 * P[20];  // dPhi/dL1
-    state.jacobian[14] = P3 * P[29] - P4 * P[28];  // dPhi/dPhi
-    state.jacobian[15] = P3 * P[37] - P4 * P[36];  // dPhi/dThe
-    state.jacobian[16] = P3 * P[45] - P4 * P[44];  // dPhi/dCM
-    state.jacobian[17] = 0.;                       // dPhi/dT
+    jacobian[12] = P3 * P[13] - P4 * P[12];  // dPhi/dL0
+    jacobian[13] = P3 * P[21] - P4 * P[20];  // dPhi/dL1
+    jacobian[14] = P3 * P[29] - P4 * P[28];  // dPhi/dPhi
+    jacobian[15] = P3 * P[37] - P4 * P[36];  // dPhi/dThe
+    jacobian[16] = P3 * P[45] - P4 * P[44];  // dPhi/dCM
+    jacobian[17] = 0.;                       // dPhi/dT
 
-    state.jacobian[18] = C * P[14];  // dThe/dL0
-    state.jacobian[19] = C * P[22];  // dThe/dL1
-    state.jacobian[20] = C * P[30];  // dThe/dPhi
-    state.jacobian[21] = C * P[38];  // dThe/dThe
-    state.jacobian[22] = C * P[46];  // dThe/dCM
-    state.jacobian[23] = 0.;         // dThe/dT
+    jacobian[18] = C * P[14];  // dThe/dL0
+    jacobian[19] = C * P[22];  // dThe/dL1
+    jacobian[20] = C * P[30];  // dThe/dPhi
+    jacobian[21] = C * P[38];  // dThe/dThe
+    jacobian[22] = C * P[46];  // dThe/dCM
+    jacobian[23] = 0.;         // dThe/dT
 
-    state.jacobian[24] = 0.;     // dCM /dL0
-    state.jacobian[25] = 0.;     // dCM /dL1
-    state.jacobian[26] = 0.;     // dCM /dPhi
-    state.jacobian[27] = 0.;     // dCM /dTheta
-    state.jacobian[28] = P[47];  // dCM /dCM
-    state.jacobian[29] = 0.;     // dCM/dT
+    jacobian[24] = 0.;     // dCM /dL0
+    jacobian[25] = 0.;     // dCM /dL1
+    jacobian[26] = 0.;     // dCM /dPhi
+    jacobian[27] = 0.;     // dCM /dTheta
+    jacobian[28] = P[47];  // dCM /dCM
+    jacobian[29] = 0.;     // dCM/dT
 
-    state.jacobian[30] = P[11];  // dT/dL0
-    state.jacobian[31] = P[19];  // dT/dL1
-    state.jacobian[32] = P[27];  // dT/dPhi
-    state.jacobian[33] = P[35];  // dT/dThe
-    state.jacobian[34] = P[43];  // dT/dCM
-    state.jacobian[35] = P[51];  // dT/dT
+    jacobian[30] = P[11];  // dT/dL0
+    jacobian[31] = P[19];  // dT/dL1
+    jacobian[32] = P[27];  // dT/dPhi
+    jacobian[33] = P[35];  // dT/dThe
+    jacobian[34] = P[43];  // dT/dCM
+    jacobian[35] = P[51];  // dT/dT
 
     Eigen::Map<Eigen::Matrix<double, eBoundSize, eBoundSize, Eigen::RowMajor>>
-        J(state.jacobian);
+        J(jacobian);
     state.cov = J * (*state.covariance) * J.transpose();
 
-    return Result<void>::success();
+    return Result<Jacobian>::success(Jacobian(J));
   }
 
   /// Perform the actual step on the state
@@ -1293,9 +1269,7 @@ class AtlasStepper {
     double EST = 0;
     double initialH = h;
 
-    std::size_t nStepTrials = 0;
     while (h != 0.) {
-      nStepTrials++;
       ++state.statistics.nAttemptedSteps;
 
       // PS2 is h/(2*momentum) in EigenStepper
@@ -1522,7 +1496,6 @@ class AtlasStepper {
 
     state.pathAccumulated += h;
     ++state.nSteps;
-    state.nStepTrials += nStepTrials;
 
     ++state.statistics.nSuccessfulSteps;
     if (propDir != Direction::fromScalarZeroAsPositive(initialH)) {
@@ -1543,6 +1516,13 @@ class AtlasStepper {
   }
 
  private:
+  std::optional<Covariance> optionalCovariance(const State& state) const {
+    if (!state.covTransport) {
+      return std::nullopt;
+    }
+    return state.cov;
+  }
+
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic

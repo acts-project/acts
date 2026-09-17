@@ -23,84 +23,30 @@
 
 namespace Acts {
 
-/// Some type defs
-using Jacobian = BoundMatrix;
-using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-
-Result<BoundState> detail::boundState(
+Result<BoundTrackParameters> detail::boundParameters(
     const GeometryContext& geoContext, const Surface& surface,
-    BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian,
-    const std::optional<FreeMatrix>& additionalFreeCovariance,
-    FreeVector& freeParameters, const ParticleHypothesis& particleHypothesis,
-    bool covTransport, double accumulatedPath,
-    const FreeToBoundCorrection& freeToBoundCorrection) {
-  // Create the bound parameters
+    const FreeVector& freeParameters, std::optional<BoundMatrix> covariance,
+    const ParticleHypothesis& particleHypothesis) {
   Result<BoundVector> bv =
       transformFreeToBoundParameters(freeParameters, surface, geoContext);
   if (!bv.ok()) {
     return bv.error();
   }
-
-  // Covariance transport
-  std::optional<BoundMatrix> cov = std::nullopt;
-  if (covTransport) {
-    // Calculate the jacobian and transport the covarianceMatrix to final local.
-    // Then reinitialize the transportJacobian, derivatives and the
-    // boundToFreeJacobian
-    Result<void> transportRes = transportCovarianceToBound(
-        geoContext, surface, boundCovariance, fullTransportJacobian,
-        freeTransportJacobian, freeToPathDerivatives, boundToFreeJacobian,
-        additionalFreeCovariance, freeParameters, freeToBoundCorrection);
-    if (!transportRes.ok()) {
-      return transportRes.error();
-    }
-    cov = boundCovariance;
-  }
-
-  // Create the bound state
-  return std::make_tuple(
-      BoundTrackParameters(surface.getSharedPtr(), *bv, std::move(cov),
-                           particleHypothesis),
-      fullTransportJacobian, accumulatedPath);
+  return BoundTrackParameters(surface.getSharedPtr(), *bv,
+                              std::move(covariance), particleHypothesis);
 }
 
-BoundState detail::curvilinearState(
-    BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian,
-    const std::optional<FreeMatrix>& additionalFreeCovariance,
-    const FreeVector& freeParameters,
-    const ParticleHypothesis& particleHypothesis, bool covTransport,
-    double accumulatedPath) {
-  const Vector3& direction = freeParameters.segment<3>(eFreeDir0);
-
-  // Covariance transport
-  std::optional<BoundMatrix> cov = std::nullopt;
-  if (covTransport) {
-    // Calculate the jacobian and transport the covarianceMatrix to final local.
-    // Then reinitialize the transportJacobian, derivatives and the
-    // boundToFreeJacobian
-    transportCovarianceToCurvilinear(boundCovariance, fullTransportJacobian,
-                                     freeTransportJacobian,
-                                     freeToPathDerivatives, boundToFreeJacobian,
-                                     additionalFreeCovariance, direction);
-    cov = boundCovariance;
-  }
-
-  // Create the curvilinear parameters
+BoundTrackParameters detail::curvilinearParameters(
+    const FreeVector& freeParameters, std::optional<BoundMatrix> covariance,
+    const ParticleHypothesis& particleHypothesis) {
   Vector4 pos4 = Vector4::Zero();
   pos4[ePos0] = freeParameters[eFreePos0];
   pos4[ePos1] = freeParameters[eFreePos1];
   pos4[ePos2] = freeParameters[eFreePos2];
   pos4[eTime] = freeParameters[eFreeTime];
-  BoundTrackParameters curvilinearParams =
-      BoundTrackParameters::createCurvilinear(
-          pos4, direction, freeParameters[eFreeQOverP], std::move(cov),
-          particleHypothesis);
-  // Create the curvilinear state
-  return {std::move(curvilinearParams), fullTransportJacobian, accumulatedPath};
+  return BoundTrackParameters::createCurvilinear(
+      pos4, freeParameters.segment<3>(eFreeDir0), freeParameters[eFreeQOverP],
+      std::move(covariance), particleHypothesis);
 }
 
 Result<void> detail::transportCovarianceToBound(

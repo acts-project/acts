@@ -224,9 +224,8 @@ struct GsfActor {
     }
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
-      Result<void> transportRes =
-          cmp.singleStepper(stepper).transportCovarianceToBound(cmp.state(),
-                                                                surface);
+      auto transportRes =
+          cmp.singleStepper(stepper).transportToBound(cmp.state(), surface);
       if (!transportRes.ok()) {
         if (m_cfg.abortOnError) {
           std::abort();
@@ -390,9 +389,8 @@ struct GsfActor {
       // Kalman update is about to write them, so that the calibrator and the
       // outlier finder cannot observe allocated but uninitialized filtered
       // parameters via `parameters()`.
-      TrackStatePropMask mask = TrackStatePropMask::Predicted |
-                                TrackStatePropMask::Jacobian |
-                                TrackStatePropMask::Calibrated;
+      TrackStatePropMask mask =
+          TrackStatePropMask::Predicted | TrackStatePropMask::Calibrated;
       typename traj_t::TrackStateProxy trackStateProxy =
           tmpStates.traj.makeTrackState(mask, kTrackIndexInvalid);
       typename traj_t::ConstTrackStateProxy trackStateProxyConst{
@@ -403,21 +401,20 @@ struct GsfActor {
       {
         trackStateProxy.setReferenceSurface(surface.getSharedPtr());
         // Bind the transported state to the current surface
-        auto res =
-            singleStepper.boundState(singleState.stepping, surface, false);
+        auto res = singleStepper.boundParameters(singleState.stepping, surface);
         if (!res.ok()) {
           ACTS_DEBUG("Propagate to surface " << surface.geometryId()
                                              << " failed: " << res.error());
           return res.error();
         }
-        const auto& [boundParams, jacobian, pathLength] = *res;
 
         // Fill the track state
-        trackStateProxy.predicted() = boundParams.parameters();
-        trackStateProxy.predictedCovariance() = singleState.stepping.cov;
+        trackStateProxy.predicted() = res->parameters();
+        trackStateProxy.predictedCovariance() =
+            singleStepper.covariance(singleState.stepping);
 
-        trackStateProxy.jacobian() = jacobian;
-        trackStateProxy.pathLength() = pathLength;
+        trackStateProxy.pathLength() =
+            singleStepper.pathLength(singleState.stepping);
       }
 
       // We have predicted parameters, so calibrate the uncalibrated input
@@ -513,8 +510,7 @@ struct GsfActor {
 
       // Add a <mask> TrackState entry multi trajectory. This allocates storage
       // for all components, which we will set later.
-      TrackStatePropMask mask =
-          TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
+      TrackStatePropMask mask = TrackStatePropMask::Predicted;
       typename traj_t::TrackStateProxy trackStateProxy =
           tmpStates.traj.makeTrackState(mask, kTrackIndexInvalid);
 
@@ -523,19 +519,24 @@ struct GsfActor {
       {
         trackStateProxy.setReferenceSurface(surface.getSharedPtr());
         // Bind the transported state to the current surface
-        auto res =
-            singleStepper.boundState(singleState, surface, doCovTransport);
+        if (doCovTransport) {
+          auto transportRes =
+              singleStepper.transportToBound(singleState, surface);
+          if (!transportRes.ok()) {
+            return transportRes.error();
+          }
+        }
+        auto res = singleStepper.boundParameters(singleState, surface);
         if (!res.ok()) {
           return res.error();
         }
-        const auto& [boundParams, jacobian, pathLength] = *res;
 
         // Fill the track state
-        trackStateProxy.predicted() = boundParams.parameters();
-        trackStateProxy.predictedCovariance() = singleState.cov;
+        trackStateProxy.predicted() = res->parameters();
+        trackStateProxy.predictedCovariance() =
+            singleStepper.covariance(singleState);
 
-        trackStateProxy.jacobian() = jacobian;
-        trackStateProxy.pathLength() = pathLength;
+        trackStateProxy.pathLength() = singleStepper.pathLength(singleState);
 
         // Set the filtered parameter index to be the same with predicted
         // parameter

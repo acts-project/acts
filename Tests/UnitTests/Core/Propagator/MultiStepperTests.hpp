@@ -225,16 +225,16 @@ struct MultiStepperTester {
       if constexpr (requires { cmp.state().jacTransport; }) {
         BOOST_CHECK_EQUAL(cmp.state().jacTransport, FreeMatrix::Identity());
       }
-      BOOST_CHECK_EQUAL(cmp.derivative(), FreeVector::Zero());
+      BOOST_CHECK_EQUAL(cmp.state().derivative, FreeVector::Zero());
       if constexpr (!Cov) {
-        BOOST_CHECK_EQUAL(cmp.jacToGlobal(), BoundToFreeMatrix::Zero());
-        BOOST_CHECK_EQUAL(cmp.cov(), BoundMatrix::Zero());
+        BOOST_CHECK_EQUAL(cmp.state().jacToGlobal, BoundToFreeMatrix::Zero());
+        BOOST_CHECK_EQUAL(cmp.state().cov, BoundMatrix::Zero());
       }
     }
 
     BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
     for (const auto cmp : const_iterable) {
-      BOOST_CHECK_EQUAL(cmp.pathAccumulated(), 0.);
+      BOOST_CHECK_EQUAL(cmp.state().pathAccumulated, 0.);
     }
 
     // covTransport in the MultiEigenStepperLoop is redundant and
@@ -288,11 +288,11 @@ struct MultiStepperTester {
       // Single stepper
       auto single_result =
           single_stepper.step(single_state, defaultNDir, nullptr);
-      single_stepper.transportCovarianceToCurvilinear(single_state);
+      single_stepper.transportToCurvilinear(single_state);
 
       // Multi stepper;
       auto multi_result = multi_stepper.step(multi_state, defaultNDir, nullptr);
-      multi_stepper.transportCovarianceToCurvilinear(multi_state);
+      multi_stepper.transportToCurvilinear(multi_state);
 
       // Check equality
       BOOST_REQUIRE(multi_result.ok());
@@ -301,15 +301,16 @@ struct MultiStepperTester {
       BOOST_CHECK_EQUAL(*single_result, *multi_result);
 
       for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {
-        BOOST_CHECK_EQUAL(cmp.pars(), single_state.pars);
-        BOOST_CHECK_EQUAL(cmp.cov(), single_state.cov);
+        BOOST_CHECK_EQUAL(cmp.state().pars, single_state.pars);
+        BOOST_CHECK_EQUAL(cmp.state().cov, single_state.cov);
         if constexpr (requires { cmp.state().jacTransport; }) {
           BOOST_CHECK_EQUAL(cmp.state().jacTransport,
                             single_state.jacTransport);
         }
-        BOOST_CHECK_EQUAL(cmp.jacToGlobal(), single_state.jacToGlobal);
-        BOOST_CHECK_EQUAL(cmp.derivative(), single_state.derivative);
-        BOOST_CHECK_EQUAL(cmp.pathAccumulated(), single_state.pathAccumulated);
+        BOOST_CHECK_EQUAL(cmp.state().jacToGlobal, single_state.jacToGlobal);
+        BOOST_CHECK_EQUAL(cmp.state().derivative, single_state.derivative);
+        BOOST_CHECK_EQUAL(cmp.state().pathAccumulated,
+                          single_state.pathAccumulated);
       }
     }
   }
@@ -384,13 +385,14 @@ struct MultiStepperTester {
 
     const auto projectors = std::make_tuple(
         [](auto &cmp) -> decltype(auto) { return cmp.status(); },
-        [](auto &cmp) -> decltype(auto) { return cmp.pathAccumulated(); },
+        [](auto &cmp) -> decltype(auto) {
+          return (cmp.state().pathAccumulated);
+        },
         [](auto &cmp) -> decltype(auto) { return cmp.weight(); },
-        [](auto &cmp) -> decltype(auto) { return cmp.pars(); },
-        [](auto &cmp) -> decltype(auto) { return cmp.cov(); },
-        [](auto &cmp) -> decltype(auto) { return cmp.derivative(); },
-        [](auto &cmp) -> decltype(auto) { return cmp.jacobian(); },
-        [](auto &cmp) -> decltype(auto) { return cmp.jacToGlobal(); });
+        [](auto &cmp) -> decltype(auto) { return (cmp.state().pars); },
+        [](auto &cmp) -> decltype(auto) { return (cmp.state().cov); },
+        [](auto &cmp) -> decltype(auto) { return (cmp.state().derivative); },
+        [](auto &cmp) -> decltype(auto) { return (cmp.state().jacToGlobal); });
 
     std::apply(
         [&](const auto &...projs) {
@@ -583,21 +585,32 @@ struct MultiStepperTester {
 
     // Check component-wise bound-state
     {
-      auto single_bound_state = single_stepper.boundState(
-          single_state, *right_surface, true, FreeToBoundCorrection(false));
+      auto boundState = [&](SingleState &state)
+          -> Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> {
+        auto jacobian = single_stepper.transportToBound(
+            state, *right_surface, FreeToBoundCorrection(false));
+        if (!jacobian.ok()) {
+          return jacobian.error();
+        }
+        auto pars = single_stepper.boundParameters(state, *right_surface);
+        if (!pars.ok()) {
+          return pars.error();
+        }
+        return std::tuple(*pars, *jacobian, single_stepper.pathLength(state));
+      };
+
+      auto single_bound_state = boundState(single_state);
       BOOST_REQUIRE(single_bound_state.ok());
 
       auto cmp_iterable = multi_stepper.componentIterable(multi_state);
       auto cmp_1 = *cmp_iterable.begin();
       auto cmp_2 = *(++cmp_iterable.begin());
 
-      auto bound_state_1 = single_stepper.boundState(
-          cmp_1.state(), *right_surface, true, FreeToBoundCorrection(false));
+      auto bound_state_1 = boundState(cmp_1.state());
       BOOST_REQUIRE(bound_state_1.ok());
       BOOST_CHECK(*single_bound_state == *bound_state_1);
 
-      auto bound_state_2 = single_stepper.boundState(
-          cmp_2.state(), *right_surface, true, FreeToBoundCorrection(false));
+      auto bound_state_2 = boundState(cmp_2.state());
       BOOST_CHECK(bound_state_2.ok());
     }
   }
@@ -629,17 +642,17 @@ struct MultiStepperTester {
     MultiState multi_state = multi_stepper.makeState(options);
     multi_stepper.initialize(multi_state, multi_pars);
 
-    auto res = multi_stepper.boundState(multi_state, *surface, true,
-                                        FreeToBoundCorrection(false));
+    auto jacobian = multi_stepper.transportToBound(
+        multi_state, *surface, FreeToBoundCorrection(false));
+    BOOST_REQUIRE(jacobian.ok());
 
+    auto res = multi_stepper.boundParameters(multi_state, *surface);
     BOOST_REQUIRE(res.ok());
 
-    const auto [bound_pars, jacobian, pathLength] = *res;
-    const auto single_bound_pars =
-        bound_pars.merge(ComponentMergeMethod::eMean);
+    const auto single_bound_pars = res->merge(ComponentMergeMethod::eMean);
 
-    BOOST_CHECK_EQUAL(jacobian, decltype(jacobian)::Zero());
-    BOOST_CHECK_EQUAL(pathLength, 0.0);
+    BOOST_CHECK_EQUAL(*jacobian, BoundMatrix::Zero());
+    BOOST_CHECK_EQUAL(multi_stepper.pathLength(multi_state), 0.0);
     BOOST_CHECK(single_bound_pars.parameters().isApprox(pars, 1.e-8));
     BOOST_CHECK(single_bound_pars.covariance()->isApprox(cov, 1.e-8));
   }
@@ -676,8 +689,7 @@ struct MultiStepperTester {
     MultiState multi_state = multi_stepper.makeState(options);
     multi_stepper.initialize(multi_state, multi_pars);
 
-    const auto [curv_pars, jac, pathLength] =
-        multi_stepper.curvilinearState(multi_state);
+    const auto curv_pars = multi_stepper.curvilinearParameters(multi_state);
     const auto single_curv_pars = curv_pars.merge(ComponentMergeMethod::eMean);
 
     BOOST_CHECK(single_curv_pars.fourPosition(geoCtx).isApprox(
@@ -712,12 +724,12 @@ struct MultiStepperTester {
       auto &sstepping = cmp.state();
 
       BOOST_CHECK_EQUAL(sstepper.position(sstepping),
-                        cmp.pars().template segment<3>(eFreePos0));
+                        cmp.state().pars.template segment<3>(eFreePos0));
       BOOST_CHECK_EQUAL(sstepper.direction(sstepping),
-                        cmp.pars().template segment<3>(eFreeDir0));
-      BOOST_CHECK_EQUAL(sstepper.time(sstepping), cmp.pars()[eFreeTime]);
-      BOOST_CHECK_CLOSE(sstepper.qOverP(sstepping), cmp.pars()[eFreeQOverP],
-                        1.e-8);
+                        cmp.state().pars.template segment<3>(eFreeDir0));
+      BOOST_CHECK_EQUAL(sstepper.time(sstepping), cmp.state().pars[eFreeTime]);
+      BOOST_CHECK_CLOSE(sstepper.qOverP(sstepping),
+                        cmp.state().pars[eFreeQOverP], 1.e-8);
     };
 
     for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {

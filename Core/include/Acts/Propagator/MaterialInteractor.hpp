@@ -96,9 +96,7 @@ struct MaterialInteractor {
       if (!slab.isVacuum()) {
         // To integrate process noise, we need to transport
         // the covariance to the current position in space
-        if (state.stepping.covTransport) {
-          stepper.transportCovarianceToCurvilinear(state.stepping);
-        }
+        stepper.transportToCurvilinear(state.stepping);
 
         const double initialMomentum = stepper.absoluteMomentum(state.stepping);
 

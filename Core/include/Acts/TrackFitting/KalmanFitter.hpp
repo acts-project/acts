@@ -404,14 +404,18 @@ class KalmanFitter {
           ACTS_VERBOSE("Setting fitted parameters at target surface");
 
           // Bind the parameter to the target surface
-          auto res = stepper.boundState(state.stepping, *targetReached.surface);
+          auto res =
+              stepper.transportToBound(state.stepping, *targetReached.surface)
+                  .and_then([&](const auto& /*jacobian*/) {
+                    return stepper.boundParameters(state.stepping,
+                                                   *targetReached.surface);
+                  });
           if (!res.ok()) {
             ACTS_DEBUG("Error while acquiring bound state for target surface: "
                        << res.error() << " " << res.error().message());
             return res.error();
           } else {
-            const auto& [boundParams, jacobian, pathLength] = *res;
-            result.fittedParameters = boundParams;
+            result.fittedParameters = std::move(*res);
           }
         }
 
@@ -456,8 +460,8 @@ class KalmanFitter {
         ACTS_VERBOSE("Measurement surface " << surface.geometryId()
                                             << " detected.");
         // Transport the covariance to the surface
-        Result<void> transportRes = stepper.transportCovarianceToBound(
-            state.stepping, surface, freeToBoundCorrection);
+        auto transportRes = stepper.transportToBound(state.stepping, surface,
+                                                     freeToBoundCorrection);
         if (!transportRes.ok()) {
           return transportRes.error();
         }
@@ -494,21 +498,20 @@ class KalmanFitter {
         // propagation
         trackStateProxy.setReferenceSurface(surface.getSharedPtr());
         // Bind the transported state to the current surface
-        auto res = stepper.boundState(state.stepping, surface, false,
-                                      freeToBoundCorrection);
+        auto res = stepper.boundParameters(state.stepping, surface);
         if (!res.ok()) {
           ACTS_DEBUG("Propagate to surface " << surface.geometryId()
                                              << " failed: " << res.error());
           return res.error();
         }
-        const auto& [boundParams, jacobian, pathLength] = *res;
 
         // Fill the track state
-        trackStateProxy.predicted() = boundParams.parameters();
-        trackStateProxy.predictedCovariance() = state.stepping.cov;
+        trackStateProxy.predicted() = res->parameters();
+        trackStateProxy.predictedCovariance() =
+            stepper.covariance(state.stepping);
 
-        trackStateProxy.jacobian() = jacobian;
-        trackStateProxy.pathLength() = pathLength;
+        trackStateProxy.jacobian() = *transportRes;
+        trackStateProxy.pathLength() = stepper.pathLength(state.stepping);
 
         // We have predicted parameters, so calibrate the uncalibrated input
         // measurement
@@ -605,20 +608,24 @@ class KalmanFitter {
         // Set the trackStateProxy components with the state from the ongoing
         // propagation
         trackStateProxy.setReferenceSurface(surface.getSharedPtr());
-        // Bind the transported state to the current surface
-        auto res = stepper.boundState(state.stepping, surface, true,
-                                      freeToBoundCorrection);
+        // Transport the covariance to the surface and bind the state to it
+        auto transportRes = stepper.transportToBound(state.stepping, surface,
+                                                     freeToBoundCorrection);
+        if (!transportRes.ok()) {
+          return transportRes.error();
+        }
+        auto res = stepper.boundParameters(state.stepping, surface);
         if (!res.ok()) {
           return res.error();
         }
-        const auto& [boundParams, jacobian, pathLength] = *res;
 
         // Fill the track state
-        trackStateProxy.predicted() = boundParams.parameters();
-        trackStateProxy.predictedCovariance() = state.stepping.cov;
+        trackStateProxy.predicted() = res->parameters();
+        trackStateProxy.predictedCovariance() =
+            stepper.covariance(state.stepping);
 
-        trackStateProxy.jacobian() = jacobian;
-        trackStateProxy.pathLength() = pathLength;
+        trackStateProxy.jacobian() = *transportRes;
+        trackStateProxy.pathLength() = stepper.pathLength(state.stepping);
 
         // Set the filtered parameter index to be the same with predicted
         // parameter

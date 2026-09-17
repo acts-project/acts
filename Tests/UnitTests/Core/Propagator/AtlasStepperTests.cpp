@@ -247,7 +247,9 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
   std::shared_ptr<PlaneSurface> plane =
       CurvilinearSurface(pos, unitDir).planeSurface();
 
-  auto&& [pars, jac, pathLength] = stepper.boundState(state, *plane).value();
+  const Jacobian jac = stepper.transportToBound(state, *plane).value();
+  const auto pars = stepper.boundParameters(state, *plane).value();
+  const double pathLength = stepper.pathLength(state);
   // check parameters
   CHECK_CLOSE_ABS(pars.position(geoCtx), pos, eps);
   CHECK_CLOSE_ABS(pars.time(), time, eps);
@@ -274,7 +276,9 @@ BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
   Stepper::State state = stepper.makeState(options);
   stepper.initialize(state, cp);
 
-  auto&& [pars, jac, pathLength] = stepper.curvilinearState(state);
+  const Jacobian jac = stepper.transportToCurvilinear(state);
+  const auto pars = stepper.curvilinearParameters(state);
+  const double pathLength = stepper.pathLength(state);
   // check parameters
   CHECK_CLOSE_ABS(pars.position(geoCtx), pos, eps);
   CHECK_CLOSE_ABS(pars.time(), time, eps);
@@ -363,7 +367,7 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   CHECK_CLOSE_ABS(stepper.absoluteMomentum(state), absMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state), charge);
 
-  stepper.transportCovarianceToCurvilinear(state);
+  stepper.transportToCurvilinear(state);
   BOOST_CHECK_NE(state.cov, cov);
 }
 
@@ -414,8 +418,6 @@ BOOST_AUTO_TEST_CASE(Reset) {
               std::begin(copy.parameters));
     copy.covariance = other.covariance;
     copy.covTransport = other.covTransport;
-    std::copy(std::begin(other.jacobian), std::end(other.jacobian),
-              std::begin(copy.jacobian));
     copy.pathAccumulated = other.pathAccumulated;
     copy.stepSize = other.stepSize;
     copy.previousStepSize = other.previousStepSize;

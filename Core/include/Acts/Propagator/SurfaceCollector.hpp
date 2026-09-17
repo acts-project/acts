@@ -168,9 +168,15 @@ struct BoundParameterRecorder {
 
     // The current surface has been assigned by the navigator
     if (currentSurface && selector(*currentSurface)) {
-      auto res = stepper.boundState(state.stepping, *currentSurface);
+      // The covariance at the surface requires a transport, which anchors the
+      // state on the surface
+      auto res =
+          stepper.transportToBound(state.stepping, *currentSurface)
+              .and_then([&](const auto& /*jacobian*/) {
+                return stepper.boundParameters(state.stepping, *currentSurface);
+              });
       if (res.ok()) {
-        result.emplace_back(std::get<0>(*res));
+        result.emplace_back(std::move(*res));
       }
 
       // Screen output

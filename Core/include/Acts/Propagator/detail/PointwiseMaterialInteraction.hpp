@@ -138,7 +138,7 @@ PointwiseMaterialEffects computeMaterialEffects(const propagator_state_t& state,
                                                 const MaterialSlab& slab,
                                                 bool multipleScattering,
                                                 bool energyLoss) {
-  const bool covTransport = state.stepping.covTransport;
+  const bool covTransport = stepper.hasCovariance(state.stepping);
   const Vector3 direction = stepper.direction(state.stepping);
   const float qOverP = stepper.qOverP(state.stepping);
   const ParticleHypothesis& particleHypothesis =
@@ -213,15 +213,16 @@ PointwiseMaterialEffects performMaterialInteraction(
 
   // update covariance matrix
   //! [covariance update]
-  state.stepping.cov(eBoundPhi, eBoundPhi) =
-      updateVariance(state.stepping.cov(eBoundPhi, eBoundPhi),
-                     effects.variancePhi, noiseUpdateMode);
-  state.stepping.cov(eBoundTheta, eBoundTheta) =
-      updateVariance(state.stepping.cov(eBoundTheta, eBoundTheta),
+  BoundMatrix covariance = stepper.covariance(state.stepping);
+  covariance(eBoundPhi, eBoundPhi) = updateVariance(
+      covariance(eBoundPhi, eBoundPhi), effects.variancePhi, noiseUpdateMode);
+  covariance(eBoundTheta, eBoundTheta) =
+      updateVariance(covariance(eBoundTheta, eBoundTheta),
                      effects.varianceTheta, noiseUpdateMode);
-  state.stepping.cov(eBoundQOverP, eBoundQOverP) =
-      updateVariance(state.stepping.cov(eBoundQOverP, eBoundQOverP),
+  covariance(eBoundQOverP, eBoundQOverP) =
+      updateVariance(covariance(eBoundQOverP, eBoundQOverP),
                      effects.varianceQoverP, noiseUpdateMode);
+  stepper.setCovariance(state.stepping, covariance);
   //! [covariance update]
 
   return effects;
