@@ -50,8 +50,8 @@ class FrustumNavigationPolicy : public INavigationPolicy {
     /// Stored frustum value, initialized to a default value
     Frustum3 frustum =
         Frustum3(Vector3::Zero(), Vector3::Zero(), std::numbers::pi / 4);
-    //Opening angle for the frustum, stored separately for easy access
-    double openingAngle=std::numbers::pi / 4;
+    /// Opening angle for the frustum, stored separately for easy access
+    double openingAngle = std::numbers::pi / 4;
   };
 
   /// Main constructor, which takes the top-level volume and builds the octree
