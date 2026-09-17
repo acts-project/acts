@@ -365,7 +365,7 @@ std::vector<const Portal*> getTruth(const Vector3& position,
   tryAll.createState(gctx, args, stateManager, logger);
   auto policyState = stateManager.currentState();
   tryAll.initializeCandidates(gctx, args, policyState, stream, logger);
-  main.initialize(gctx, {gpos, gdir}, BoundaryTolerance::None());
+  main.initialize(gctx, {gpos, gdir}, logger());
   std::vector<const Portal*> portals;
   for (auto& candidate : main.candidates()) {
     if (!candidate.intersection().isValid()) {
