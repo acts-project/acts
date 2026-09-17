@@ -13,7 +13,6 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "ActsPlugins/GeoModel/detail/GeoTransformConverter.hpp"
 
 #include <numbers>
 
@@ -36,7 +35,7 @@ namespace ActsPlugins::GeoModel {
 Transform3 volumePosInSpace(const PVConstLink& physVol) {
   if (auto fullPhys = dynamic_pointer_cast<const GeoVFullPhysVol>(physVol);
       fullPhys != nullptr) {
-    return detail::convertTransform(fullPhys->getAbsoluteTransform());
+    return makeTransform3(fullPhys->getAbsoluteTransform());
   }
   /// @brief GeoNodePositioning is the class which handles
   ///        the absolute placement of a GeoVPhysVol. Its constructor
@@ -48,7 +47,7 @@ Transform3 volumePosInSpace(const PVConstLink& physVol) {
   };
 
   GeoVolumePositioner positioner{physVol};
-  return detail::convertTransform(positioner.getAbsoluteTransform());
+  return makeTransform3(positioner.getAbsoluteTransform());
 }
 std::shared_ptr<Volume> convertVolume(const Transform3& trf,
                                       const GeoShape* shape,
@@ -128,8 +127,8 @@ std::shared_ptr<Volume> convertVolume(const Transform3& trf,
     const auto shiftShape =
         dynamic_pointer_cast<const GeoShapeShift>(compressed);
     const GeoShape* shapeOp = shiftShape->getOp();
-    return convertVolume(newTrf * detail::convertTransform(shiftShape->getX()),
-                         shapeOp, boundFactory);
+    return convertVolume(newTrf * makeTransform3(shiftShape->getX()), shapeOp,
+                         boundFactory);
   } else {
     throw std::runtime_error("Cannot convert " + printGeoShape(shape));
   }

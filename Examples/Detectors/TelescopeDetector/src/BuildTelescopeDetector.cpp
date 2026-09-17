@@ -79,10 +79,11 @@ ActsExamples::buildTelescopeDetector(
   std::size_t nLayers = positions.size();
   std::vector<Acts::LayerPtr> layers(nLayers);
   for (unsigned int i = 0; i < nLayers; ++i) {
-    // The layer center, rotated into the global frame
-    Acts::Vector3 center =
-        rotation * Acts::Vector3(offsets[0], offsets[1], positions[i]);
-    Acts::Transform3 trafo = Acts::makeTransform3(rotation, center);
+    // The translation without rotation yet
+    Acts::Translation3 trans(offsets[0], offsets[1], positions[i]);
+    // The entire transformation (the coordinate system, whose center is defined
+    // by trans, will be rotated as well)
+    Acts::Transform3 trafo(Acts::makeTransform3(rotation) * trans);
 
     // rotate around local z axis by stereo angle
     auto stereo = stereoAngles[i];
@@ -126,10 +127,9 @@ ActsExamples::buildTelescopeDetector(
   }
 
   // The volume transform
-  Acts::Vector3 centerVol =
-      rotation * Acts::Vector3(offsets[0], offsets[1],
-                               (positions.front() + positions.back()) * 0.5);
-  Acts::Transform3 trafoVol = Acts::makeTransform3(rotation, centerVol);
+  Acts::Translation3 transVol(offsets[0], offsets[1],
+                              (positions.front() + positions.back()) * 0.5);
+  Acts::Transform3 trafoVol(Acts::makeTransform3(rotation) * transVol);
 
   // The volume bounds is set to be a bit larger than either cubic with planes
   // or cylinder with discs
