@@ -18,6 +18,8 @@
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
+#include <map>
+
 namespace Acts {
 
 MultiWireVolumeBuilder::MultiWireVolumeBuilder(
@@ -26,6 +28,16 @@ MultiWireVolumeBuilder::MultiWireVolumeBuilder(
   if (m_config.mlSurfaces.empty()) {
     throw std::invalid_argument(
         "MultiWireStructureBuilder: No surfaces are given");
+  }
+
+  // check that straw tube surfaces hav been passed tot he builder
+  const bool allStraw =
+      std::ranges::all_of(m_config.mlSurfaces, [](const auto& s) {
+        return s->bounds().type() == SurfaceBounds::BoundsType::eLine;
+      });
+  if (!allStraw) {
+    throw std::invalid_argument(
+        "MultiWireVolumeBuilder: all surfaces must have LineBounds");
   }
 }
 
@@ -66,65 +78,178 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
   return trackingVolume;
 }
 
-std::unique_ptr<Acts::NavigationPolicyFactory>
-MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
+std::tuple<AxisSpec, AxisSpec, std::vector<double>>
+MultiWireVolumeBuilder::deriveGridParameters(
+    const GeometryContext& gctx) const {
+  // The global to local transformation to get to the volume's frame
+  const Transform3 globalToLoc =
+      (m_config.alignablePlacement == nullptr)
+          ? m_config.transform.inverse()
+          : m_config.alignablePlacement->globalToLocalTransform(gctx);
+
   if (m_config.binning.size() != 2u) {
-    throw ::std::invalid_argument(
+    throw std::invalid_argument(
+        "MultiWireVolumeBuilder: exactly two binning directions required");
+  }
+  const AxisDirection dirA = std::get<0>(m_config.binning.at(0));
+  const AxisDirection dirB = std::get<0>(m_config.binning.at(1));
+  const AxisDirection shiftDir = m_config.shiftDirection;
+
+  if (shiftDir != dirA && shiftDir != dirB) {
+    throw std::invalid_argument(
+        "MultiWireVolumeBuilder: shiftDirection must be one of the binning "
+        "directions");
+  }
+
+  // The layer direction
+  const AxisDirection layerDir = (shiftDir == dirA) ? dirB : dirA;
+
+  // project every tube onto both directions, grouped by layer
+  std::map<double, std::set<double>> coordsPerLayer;
+  for (const auto& surf : m_config.mlSurfaces) {
+    const Vector3 cLocal = globalToLoc * surf->center(gctx);
+    const long long layerKey = VectorHelpers::cast(cLocal, layerDir);
+    const long long shiftKey = VectorHelpers::cast(cLocal, shiftDir);
+    coordsPerLayer[layerKey].insert(shiftKey);
+  }
+
+  // min gap between adjacent tubes , find the pitch
+  const auto minGap = [&](const auto& sortedSet) -> double {
+    double g = std::numeric_limits<double>::max();
+    for (auto it = std::next(sortedSet.begin()); it != sortedSet.end(); ++it) {
+      g = std::min(g, *it - *std::prev(it));
+    }
+    return g;
+  };
+
+  // shift axis: from the combined tube positions along shiftDir
+  // Use the 1st plane as the reference plane
+  const auto& firstPlane = coordsPerLayer.begin()->second;
+  const double shiftPitch = minGap(firstPlane);
+  const double shiftLow = *firstPlane.begin() - 0.5 * shiftPitch;
+  const double shiftHigh = *firstPlane.rbegin() + 0.5 * shiftPitch;
+  const auto nShiftBins = static_cast<std::size_t>(
+      std::lround((shiftHigh - shiftLow) / shiftPitch));
+
+  // layerr axis: from the layer keys (one distinct value per layer)
+  //     assumes uniform layer spacing (see check below).
+  double layerPitch = std::numeric_limits<double>::max();
+  for (auto it = std::next(coordsPerLayer.begin()); it != coordsPerLayer.end();
+       ++it) {
+    layerPitch = std::min(layerPitch, (it->first - std::prev(it)->first));
+  }
+  const double layerLow = coordsPerLayer.begin()->first - 0.5 * layerPitch;
+  const double layerHigh = coordsPerLayer.rbegin()->first + 0.5 * layerPitch;
+  const auto nLayerBins = static_cast<std::size_t>(
+      std::lround((layerHigh - layerLow) / layerPitch));
+
+  // per-layer staggering correction, indexed by layer-axis bin (if enabled)
+  // Use as reference the first tube of the first layer and then calculate the
+  // offsets along the shift direction
+  std::vector<double> layerShifts(nLayerBins, 0.0);
+  if (m_config.correctOffsets) {
+    const double refPos = *coordsPerLayer.begin()->second.begin();
+    for (const auto& [lk, coords] : coordsPerLayer) {
+      const double firstCoord = *coords.begin();
+      // how far this layer is staggered w.r.t layer 0
+      double d = refPos - firstCoord;
+      // calculate the index of the vector which corresponds to the layer index
+      const auto index =
+          static_cast<std::size_t>(std::floor((lk - layerLow) / layerPitch));
+      layerShifts.at(index) = d;
+    }
+  }
+  // assemble the axis specs
+  AxisSpec shiftAxis = AxisSpec::Equidistant(nShiftBins, shiftLow, shiftHigh,
+                                             AxisBoundaryType::Bound, shiftDir);
+  AxisSpec layerAxis = AxisSpec::Equidistant(nLayerBins, layerLow, layerHigh,
+                                             AxisBoundaryType::Bound, layerDir);
+
+  return {std::move(shiftAxis), std::move(layerAxis), std::move(layerShifts)};
+}
+
+std::unique_ptr<Acts::NavigationPolicyFactory>
+MultiWireVolumeBuilder::createNavigationPolicyFactory(
+    const GeometryContext& gctx) const {
+  if (m_config.binning.size() != 2u) {
+    throw std::invalid_argument(
         "MultiWireStructureBuilder: Invalid binning provided");
   }
-  auto [axisSpecA, expansionA] = m_config.binning.at(0);
-  auto [axisSpecB, expansionB] = m_config.binning.at(1);
+  auto [axisDirectionA, expansionA] = m_config.binning.at(0);
+  auto [axisDirectionB, expansionB] = m_config.binning.at(1);
 
-  // Binning needs to be fully specified and equidistant, with a direction
-  if (axisSpecA.isDeferred() || axisSpecB.isDeferred()) {
+  if (axisDirectionA == axisDirectionB) {
+    throw std::runtime_error(
+        "MultiWireVolumeBuilder: The axis directions need to be different for "
+        "a two-dimensional grid");
+  }
+
+  // check if the direction along which the tubes are shifted is also consistent
+  if (m_config.shiftDirection != axisDirectionA &&
+      m_config.shiftDirection != axisDirectionB) {
+    throw std::invalid_argument(
+        "MultiWireVolumeBuilder: shiftDirection must be one of the two "
+        "binning axis directions");
+  }
+
+  const auto [shiftAxisSpec, layerAxisSpec, layerShifts] =
+      deriveGridParameters(gctx);
+
+  if (shiftAxisSpec.isDeferred() || layerAxisSpec.isDeferred()) {
     throw std::runtime_error(
         "MultiWireVolumeBuilder: Binning axes need a fully specified range");
   }
-  if (!axisSpecA.isEquidistant() || !axisSpecB.isEquidistant()) {
+
+  if (!shiftAxisSpec.isEquidistant() || !layerAxisSpec.isEquidistant()) {
     throw std::runtime_error(
         "MultiWireVolumeBuilder: Binning axes need to be equidistant");
   }
-  if (!axisSpecA.direction().has_value() ||
-      !axisSpecB.direction().has_value()) {
-    throw std::runtime_error(
-        "MultiWireVolumeBuilder: Binning axes need a direction");
-  }
 
-  // Create the grid from the axis
-  const auto& paramsA = axisSpecA.asEquidistant();
-  const auto& paramsB = axisSpecB.asEquidistant();
+  const auto& shiftParams = shiftAxisSpec.asEquidistant();
+  const auto& layerParams = layerAxisSpec.asEquidistant();
 
-  // isDeferred() above guarantees the ranges are set
-  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisA(
-      *paramsA.min, *paramsA.max, paramsA.nBins);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisShift(
+      *shiftParams.min, *shiftParams.max, shiftParams.nBins);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisLayer(
+      *layerParams.min, *layerParams.max, layerParams.nBins);
 
-  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisB(
-      *paramsB.min, *paramsB.max, paramsB.nBins);
-
-  Grid<std::vector<std::size_t>, decltype(axisA), decltype(axisB)> grid(axisA,
-                                                                        axisB);
-
+  Grid<std::vector<std::size_t>, decltype(axisShift), decltype(axisLayer)> grid(
+      axisShift, axisLayer);
+  ACTS_VERBOSE(
+      "MultiWireVolumeBuilder: Assign Multi-layer Navigation Policy with Grid "
+      "axis: "
+      << axisShift << "," << axisLayer);
   // The indexed grid to be filled from the navigation policy
+  // The first axis direction corresponds to the shift direction (the direction
+  // the tubes are aligned) The second axis direction corresponds to the
+  // direction from one layer to another
   const auto* placement = m_config.alignablePlacement;
   auto indexedGrid =
       placement == nullptr
           ? IndexGrid<decltype(grid)>{std::move(grid),
-                                      {*axisSpecA.direction(),
-                                       *axisSpecB.direction()},
+                                      {*shiftAxisSpec.direction(),
+                                       *layerAxisSpec.direction()},
                                       m_config.transform.inverse()}
           : IndexGrid<decltype(grid)>{
                 std::move(grid),
-                {*axisSpecA.direction(), *axisSpecB.direction()},
-                [placement](const GeometryContext& gctx) -> const Transform3& {
-                  return placement->globalToLocalTransform(gctx);
+                {*shiftAxisSpec.direction(), *layerAxisSpec.direction()},
+                [placement](const GeometryContext& gctx2) -> const Transform3& {
+                  return placement->globalToLocalTransform(gctx2);
                 }};
 
   TryAllNavigationPolicy::Config tryAllConfig;
   tryAllConfig.portals = true;
   tryAllConfig.sensitives = false;
 
+  const std::size_t shiftExp =
+      (m_config.shiftDirection == axisDirectionA) ? expansionA : expansionB;
+  const std::size_t layerExp =
+      (m_config.shiftDirection == axisDirectionA) ? expansionB : expansionA;
+
+  // build grid, IndexGrid with casts {shiftDir, layerDir}
   MultiLayerNavigationPolicy::Config navConfig;
-  navConfig.binExpansion = {expansionA, expansionB};
+  navConfig.binExpansion = {shiftExp, layerExp};
+  navConfig.layerOffsets = layerShifts;
 
   // Create the navigation policy factory
   std::unique_ptr<NavigationPolicyFactory> factory =

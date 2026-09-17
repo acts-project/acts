@@ -33,16 +33,21 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   struct Config {
     /// The binning expansion for grid neighbor lookups
     std::vector<std::size_t> binExpansion = {0u, 0u};
+
+    /// The shifts of the center of the surfaces per layer in case of staggering
+    /// (optional) Used to correct for the bin register
+    std::vector<double> layerOffsets;
   };
 
   /// Main constructor, which expects the grid and will fill it with the
   /// surfaces from the volume passed
   /// @note Expects that the grid is defined but not filled - it will be filled here with the surfaces assigned to the @p volume
+  /// @note This policy generates a path along the direction of the layers which is assumed to be the second axis on the grid
   /// @param gctx The geometrycontext object
   /// @param volume The tracking volume holding the surfaces that will be the indexed objects
   /// @param config The configuration of the Navigation Policy
   /// @param logger A logging instance
-  /// @param grid The grid that will be filled with the surfaces
+  /// @param grid The grid that will be filled with the surfaces. The first axis is along the layer and the second axis points from one layer to the next one
   explicit MultiLayerNavigationPolicy(const GeometryContext& gctx,
                                       const TrackingVolume& volume,
                                       const Logger& logger,
@@ -72,7 +77,8 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   /// @param direction The direction of the path (in local frame)
   /// @return A vector of positions along the path
   std::vector<Vector2> generatePath(const Vector3& startPosition,
-                                    const Vector3& direction) const;
+                                    const Vector3& direction,
+                                    const Logger& logger) const;
 
   /// @brief Give const access to the indexed grid
   /// @return The indexed grid
@@ -88,6 +94,8 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
 
   // The grid that holds the indexed surfaces
   IndexedUpdatorType m_indexedGrid;
+
+  std::vector<double> m_shifts{};
 
   // The navigation configuration
   Config m_config;
