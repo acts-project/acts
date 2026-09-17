@@ -45,7 +45,7 @@ void measurement_sorting_algorithm::sorting_kernel(
   ::sycl::queue& squeue = details::get_queue(queue());
   auto policy = oneapi::dpl::execution::device_policy{squeue};
 
-  const unsigned int num_threads = warp_size() * 8;
+  const unsigned int num_threads = 256;
 
   // Sort the indices by the sorting keys, with a radix sort.
   squeue

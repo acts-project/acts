@@ -66,7 +66,7 @@ void measurement_sorting_algorithm::sorting_kernel(
                     stream_synchronizing_allocator(mr().main, stream()))
                     .on(str);
 
-  const unsigned int num_threads = warp_size() * 8;
+  const unsigned int num_threads = 256;
   const unsigned int num_blocks =
       (n_measurements + num_threads - 1) / num_threads;
 

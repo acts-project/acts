@@ -139,8 +139,7 @@ void clusterization_algorithm::cluster_maker_kernel(
     edm::silicon_cluster_collection::view& cluster_data,
     const vecmem::data::vector_view<const unsigned int>& permutation_map_view)
     const {
-  const ::sycl::nd_range range =
-      details::calculate1DimNdRange(num_cells, warp_size() * 8u);
+  const ::sycl::nd_range range = details::calculate1DimNdRange(num_cells, 256u);
   details::get_queue(queue())
       .submit([&](::sycl::handler& h) {
         h.parallel_for<kernels::reify_cluster_data>(

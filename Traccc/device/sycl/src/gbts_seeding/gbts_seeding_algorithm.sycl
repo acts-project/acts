@@ -176,19 +176,17 @@ void gbts_seeding_algorithm::gbts_build_edge_work_list_kernel(
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
 
+  constexpr unsigned int block_size = 256u;
   squeue.submit([&](::sycl::handler& h) {
-    vecmem::sycl::local_accessor<unsigned int> scratch(
-        device::gbts_build_edge_work_list_block_size, h);
+    vecmem::sycl::local_accessor<unsigned int> scratch(block_size, h);
     h.parallel_for<kernels::gbts_build_edge_work_list>(
-        details::calculate1DimNdRange(
-            device::gbts_build_edge_work_list_block_size,
-            device::gbts_build_edge_work_list_block_size),
+        details::calculate1DimNdRange(block_size, block_size),
         [payload, scratch](::sycl::nd_item<1> item) {
           const details::barrier<1> barrier{item};
           device::gbts_build_edge_work_list(
               details::thread_id<1>{item}, barrier, payload,
-              {vecmem::data::vector_view<unsigned int>(
-                  device::gbts_build_edge_work_list_block_size, &scratch[0])});
+              {vecmem::data::vector_view<unsigned int>(block_size,
+                                                       &scratch[0])});
         });
   });
 }

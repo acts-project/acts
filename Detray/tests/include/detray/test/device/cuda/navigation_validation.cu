@@ -139,7 +139,7 @@ void navigation_validation_device(
     vecmem::data::vector_view<material_validator::track_material>
         &track_mat_view,
     vecmem::data::jagged_vector_view<material_record> &mat_steps_view) {
-  constexpr int thread_dim = 2 * WARP_SIZE;
+  constexpr int thread_dim = 64;
   int block_dim = truth_intersection_traces_view.size() / thread_dim + 1;
 
   // run the test kernel

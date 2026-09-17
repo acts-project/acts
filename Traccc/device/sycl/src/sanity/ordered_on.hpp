@@ -95,7 +95,7 @@ bool is_ordered_on(R&& relation, vecmem::memory_resource& mr,
                    const VIEW& view) {
   // This should never be a performance-critical step, so we can keep the
   // block size fixed.
-  constexpr int block_size = 512;
+  constexpr int block_size = 256;
 
   // Grab the number of elements in our container.
   const typename VIEW::size_type n = copy.get_size(view);
