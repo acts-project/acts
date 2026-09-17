@@ -12,13 +12,16 @@
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintOptions.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 #include "ActsPlugins/DD4hep/BlueprintBuilder.hpp"
 
 #include <format>
@@ -36,16 +39,26 @@ namespace ActsPlugins::DD4hep {
 
 namespace {
 
+// Placeholder bin counts for the (deferred) proto material grids attached to
+// each layer / the beampipe. The axis *range* is resolved later from the
+// actual surface bounds during Blueprint::construct; only the bin count is
+// fixed here. TODO: derive these from the DD4hep XML (e.g. the same
+// layer_material_*_bin* constants the Gen1 conversion reads) instead of a
+// fixed placeholder.
+constexpr std::size_t kMatPhiBins = 10;
+constexpr std::size_t kMatZBins = 10;
+constexpr std::size_t kMatRBins = 10;
+
 auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
                          std::regex layerFilter) {
   return [&builder, det = std::move(det), layerFilter = std::move(layerFilter)](
              const std::optional<dd4hep::DetElement>& elem,
-             Acts::LayerBlueprintNode& layer) {
-    layer.setEnvelope(detail::kLayerEnvelope);
+             Acts::detail::LayerNodePtr layer) -> Acts::detail::BlueprintNodePtr {
+    layer->setEnvelope(detail::kLayerEnvelope);
 
     const std::string elemName =
         elem.has_value() ? std::string{builder.backend().nameOf(*elem)}
-                         : layer.name();
+                         : layer->name();
     const int layerIdx = detail::layerIndexFromName(elemName, layerFilter);
 
     using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
@@ -54,23 +67,52 @@ auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
     SrfArrayNavPol::Config navCfg;
     navCfg.envelope = detail::kLayerEnvelope;
 
-    if (layer.layerType() == Acts::LayerBlueprintNode::LayerType::Cylinder) {
+    using enum Acts::CylinderVolumeBounds::Face;
+    auto matNode = std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
+        layer->name() + "_mat");
+
+    if (layer->layerType() == Acts::LayerBlueprintNode::LayerType::Cylinder) {
       // Barrel layer
       navCfg.layerType = Cylinder;
       navCfg.bins = {
           builder.backend().constant("{}_b{}_sf_b_phi", det, layerIdx),
           builder.backend().constant("{}_b_sf_b_z", det)};
+
+      // Barrel: thin cylindrical shell -> outer mantle face carries material
+      matNode->configureFace(
+          OuterCylinder,
+          Acts::AxisSpec::DeferredEquidistant(kMatPhiBins,
+                                              Acts::AxisDirection::AxisRPhi),
+          Acts::AxisSpec::DeferredEquidistant(kMatZBins,
+                                              Acts::AxisDirection::AxisZ));
     } else {
       // Endcap layer
       navCfg.layerType = Disc;
       navCfg.bins = {builder.backend().constant("{}_e_sf_b_r", det),
                      builder.backend().constant("{}_e_sf_b_phi", det)};
+
+      // Endcap: thin disc "pancake" -> both flat faces carry material
+      matNode->configureFace(
+          NegativeDisc,
+          Acts::AxisSpec::DeferredEquidistant(kMatRBins,
+                                              Acts::AxisDirection::AxisR),
+          Acts::AxisSpec::DeferredEquidistant(kMatPhiBins,
+                                              Acts::AxisDirection::AxisPhi));
+      matNode->configureFace(
+          PositiveDisc,
+          Acts::AxisSpec::DeferredEquidistant(kMatRBins,
+                                              Acts::AxisDirection::AxisR),
+          Acts::AxisSpec::DeferredEquidistant(kMatPhiBins,
+                                              Acts::AxisDirection::AxisPhi));
     }
 
-    layer.setNavigationPolicyFactory(Acts::NavigationPolicyFactory{}
-                                         .add<Acts::CylinderNavigationPolicy>()
-                                         .add<SrfArrayNavPol>(navCfg)
-                                         .asUniquePtr());
+    layer->setNavigationPolicyFactory(Acts::NavigationPolicyFactory{}
+                                          .add<Acts::CylinderNavigationPolicy>()
+                                          .add<SrfArrayNavPol>(navCfg)
+                                          .asUniquePtr());
+
+    matNode->addChild(std::move(layer));
+    return matNode;
   };
 }
 
@@ -242,7 +284,13 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  outer.addChild(builder.backend().makeBeampipe());
+  outer.addMaterial("Beampipe_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
+    using enum Acts::CylinderVolumeBounds::Face;
+    mat.configureFace(OuterCylinder,
+                      Acts::AxisSpec::DeferredEquidistant(kMatPhiBins, AxisRPhi),
+                      Acts::AxisSpec::DeferredEquidistant(kMatZBins, AxisZ));
+    mat.addChild(builder.backend().makeBeampipe());
+  });
 
   addBarrelEndcapSubsystem(builder, outer, "Pixels", "pix",
                            ActsPlugins::DD4hep::detail::kPixelLayerFilter);
