@@ -178,16 +178,6 @@ class GridSurfaceMaterial final : public ISurfaceMaterial {
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   const MaterialSlab& materialSlab(const Vector2& lp) const final;
 
-  /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
-  /// @deprecated Global (Vector3) lookup is not supported; use
-  ///             materialSlab(const Vector2&) with a prior
-  ///             Surface::globalToLocal() call instead.
-  /// @throws std::logic_error always - global lookup is not supported
-  [[deprecated("Use materialSlab(const Vector2& lp) with a prior "
-               "Surface::globalToLocal() call instead"),
-    noreturn]] const MaterialSlab&
-  materialSlab(const Vector3& gp) const override;
-
   using ISurfaceMaterial::materialSlab;
 
   /// @copydoc ISurfaceMaterial::localAxisDirections() const

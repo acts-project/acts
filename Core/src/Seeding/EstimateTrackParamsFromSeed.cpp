@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Seeding/TrackParamsEstimationError.hpp"
 #include "Acts/Seeding/detail/CircleFit.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -122,13 +123,6 @@ Vector3 computeLocalTangent(const ConformalMappingResult& cm,
 }  // namespace
 
 }  // namespace Acts
-
-Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
-                                                   const Vector3& sp1,
-                                                   const Vector3& sp2,
-                                                   const Vector3& bField) {
-  return estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField);
-}
 
 Acts::FreeVector Acts::estimateTrackParamsFromSeed(
     const Vector3& sp0, const double t0, const Vector3& sp1, const Vector3& sp2,
