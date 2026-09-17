@@ -61,6 +61,8 @@ traccc_add_library( traccc_cuda cuda TYPE SHARED
   "src/finding/kernels/remove_duplicates.cu"
   "src/finding/kernels/build_tracks.cu"
   "src/finding/kernels/build_tracks.cuh"
+  "src/finding/kernels/collect_expected_layer_patterns.cu"
+  "src/finding/kernels/collect_expected_layer_patterns.cuh"
   "src/finding/kernels/condense_tracks.cuh"
   "src/finding/kernels/condense_tracks.cu"
   "src/finding/kernels/create_device_detector.cuh"

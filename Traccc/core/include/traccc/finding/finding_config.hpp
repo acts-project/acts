@@ -66,6 +66,9 @@ TRACCC_HOST inline std::istream &operator>>(std::istream &is,
   return is;
 }
 
+/// expected-layer pattern mapping entry type
+struct expected_layer_mapping_entry;
+
 /// Configuration struct for track finding
 struct finding_config {
   /// Maximum number of branches per seed
@@ -145,6 +148,10 @@ struct finding_config {
   /// @note This parameter affects GPU-based track finding only.
   unsigned int initial_links_per_seed = 100;
   /// @}
+
+  /// Optional mapping table for expected-layer patterns.
+  const expected_layer_mapping_entry *expected_layer_map{nullptr};
+  std::size_t expected_layer_map_size{0u};
 };
 
 }  // namespace traccc

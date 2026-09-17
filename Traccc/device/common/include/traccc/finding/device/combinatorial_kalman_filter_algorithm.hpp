@@ -27,6 +27,7 @@
 #include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/track_container.hpp"
 #include "traccc/edm/track_parameters.hpp"
+#include "traccc/finding/actors/expected_layer_pattern_collector.hpp"
 #include "traccc/finding/candidate_link.hpp"
 #include "traccc/finding/finding_config.hpp"
 #include "traccc/finding/measurement_selector.hpp"
@@ -42,6 +43,7 @@
 
 // System include(s).
 #include <memory>
+#include <vector>
 
 namespace traccc::device {
 
@@ -87,6 +89,14 @@ class combinatorial_kalman_filter_algorithm
       const edm::measurement_collection::const_view& measurements,
       const bound_track_parameters_collection_types::const_view& seeds)
       const override;
+
+  /// Return expected-layer patterns produced during the last operator() call.
+  const std::vector<expected_layer_pattern_type>& last_expected_layer_patterns()
+      const;
+
+  /// Update expected-layer mapping used by post-CKF processing.
+  virtual void update_expected_layer_mapping(
+      const expected_layer_mapping_entry* map, std::size_t map_size);
 
  protected:
   /// @name Function(s) to be implemented by derived classes
@@ -264,6 +274,17 @@ class combinatorial_kalman_filter_algorithm
 
   /// Wait for all work this algorithm enqueued to complete
   virtual void synchronize() const = 0;
+
+  /// Optional backend hook to collect expected-layer patterns.
+  virtual void collect_expected_layer_patterns_on_ckf_tracks(
+      const detector_buffer& det, const magnetic_field& bfield,
+      const edm::measurement_collection::const_view& measurements,
+      const bound_track_parameters_collection_types::const_view& seeds,
+      const output_type& tracks) const;
+
+  /// Update the expected-layer pattern cache.
+  void set_last_expected_layer_patterns(
+      std::vector<expected_layer_pattern_type> patterns) const;
 
   /// @}
 
