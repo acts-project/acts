@@ -92,7 +92,7 @@ void material_validation_device(
         &track_mat_view,
     vecmem::data::jagged_vector_view<
         material_record<typename detector_t::scalar_type>> &mat_steps_view) {
-  constexpr int thread_dim = 2 * WARP_SIZE;
+  constexpr int thread_dim = 64;
   int block_dim = tracks_view.size() / thread_dim + 1;
 
   // run the test kernel

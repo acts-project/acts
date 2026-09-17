@@ -64,7 +64,7 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
     const detector_buffer& detector,
     const device::find_tracks_payload& payload) const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 2;
+  const unsigned int deviceThreads = 64;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
   const std::size_t deviceSharedMem =

@@ -43,7 +43,7 @@ seed_parameter_estimation_algorithm::seed_parameter_estimation_algorithm(
 
 void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
     const struct estimate_seed_params_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 4;
+  const unsigned int n_threads = 128;
   const unsigned int n_blocks = (payload.n_seeds + n_threads - 1) / n_threads;
   magnetic_field_visitor<bfield_type_list<scalar>>(
       payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {

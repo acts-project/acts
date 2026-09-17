@@ -55,7 +55,7 @@ __global__ void propagation_kernel(
 void propagation(typename detray::tutorial::detector_host_t::view_type det_data,
                  typename detray::tutorial::device_field_t::view_t field_data,
                  const vecmem::data::vector_view<track_t> tracks_data) {
-  int thread_dim = 2 * WARP_SIZE;
+  int thread_dim = 64;
   int block_dim = tracks_data.size() / thread_dim + 1;
 
   // run the tutorial kernel

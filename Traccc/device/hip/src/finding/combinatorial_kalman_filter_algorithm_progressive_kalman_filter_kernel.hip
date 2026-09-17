@@ -51,7 +51,7 @@ void combinatorial_kalman_filter_algorithm::progressive_kalman_filter_kernel(
     const device::kalman_fitting_algorithm::fit_payload& smoothing_payload)
     const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 4;
+  const unsigned int deviceThreads = 128;
   const unsigned int deviceBlocks =
       (n_seeds + deviceThreads - 1) / deviceThreads;
 

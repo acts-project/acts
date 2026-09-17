@@ -75,7 +75,7 @@ void navigator_test(
     vecmem::data::vector_view<free_track_parameters<test_algebra>>& tracks_data,
     vecmem::data::jagged_vector_view<dindex>& volume_records_data,
     vecmem::data::jagged_vector_view<point3>& position_records_data) {
-  constexpr int thread_dim = 2 * WARP_SIZE;
+  constexpr int thread_dim = 64;
   constexpr int block_dim = theta_steps * phi_steps / thread_dim + 1;
 
   // run the test kernel
