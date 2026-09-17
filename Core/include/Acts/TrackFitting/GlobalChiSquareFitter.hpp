@@ -562,15 +562,16 @@ void fillGx2fSystem(
       doMaterial = doMaterial && scatteringMapId->second.materialIsValid();
     }
 
+    // Every state closes a transport segment, so its jacobian enters the
+    // jacobians from start even if the state itself is skipped
+    for (auto& jac : jacobianFromStart) {
+      jac = trackState.jacobian() * jac;
+    }
+
     // We only consider states with a measurement (and/or material)
     if (!stateHasMeasurement && !doMaterial) {
       ACTS_DEBUG("    Skip state.");
       continue;
-    }
-
-    // update all Jacobians from start
-    for (auto& jac : jacobianFromStart) {
-      jac = trackState.jacobian() * jac;
     }
 
     // Handle measurement
@@ -1114,6 +1115,13 @@ class Gx2Fitter {
           return Result<void>::success();
         }
 
+        // Transport the covariance to the surface
+        auto transportRes = stepper.transportToBound(state.stepping, *surface,
+                                                     freeToBoundCorrection);
+        if (!transportRes.ok()) {
+          return transportRes.error();
+        }
+
         auto& fittedStates = *result.fittedStates;
 
         // Add a <trackStateMask> TrackState entry multi trajectory. This
@@ -1127,9 +1135,7 @@ class Gx2Fitter {
         // ongoing propagation
         {
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-          // Bind the state to the current surface. The covariance is not
-          // transported here, so the state carries the covariance of the
-          // previous transport and no transport jacobian.
+          // Bind the transported state to the current surface
           auto res = stepper.boundParameters(state.stepping, *surface);
           if (!res.ok()) {
             return res.error();
@@ -1140,7 +1146,7 @@ class Gx2Fitter {
           trackStateProxy.smoothedCovariance() =
               stepper.covariance(state.stepping);
 
-          trackStateProxy.jacobian() = BoundMatrix::Identity();
+          trackStateProxy.jacobian() = *transportRes;
           trackStateProxy.pathLength() = stepper.pathLength(state.stepping);
         }
 
