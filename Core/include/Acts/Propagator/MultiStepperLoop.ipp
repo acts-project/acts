@@ -13,6 +13,7 @@
 #include "Acts/Propagator/MultiStepperError.hpp"
 
 #include <algorithm>
+#include <optional>
 #include <vector>
 
 namespace Acts {
@@ -70,10 +71,11 @@ auto MultiStepperLoop<S, R>::transportToBound(
     -> Result<Jacobian> {
   assert(!state.components.empty());
 
-  bool anySuccess = false;
+  const std::size_t selected = Reducer::index(state);
+  std::optional<Result<Jacobian>> jacobian;
 
-  for (auto& cmp : state.components) {
-    auto& cmpState = cmp.state;
+  for (std::size_t i = 0; i < state.components.size(); ++i) {
+    auto& cmpState = state.components[i].state;
 
     // Force the component to be on the surface
     // This needs to be done because of the `averageOnSurface`-option of the
@@ -92,15 +94,12 @@ auto MultiStepperLoop<S, R>::transportToBound(
 
     auto res = m_singleStepper.transportToBound(cmpState, surface,
                                                 freeToBoundCorrection);
-    anySuccess = anySuccess || res.ok();
+    if (i == selected) {
+      jacobian = std::move(res);
+    }
   }
 
-  if (!anySuccess) {
-    return Result<Jacobian>::failure(
-        MultiStepperError::AllComponentsConversionToBoundFailed);
-  }
-
-  return Result<Jacobian>::success(Jacobian::Zero());
+  return std::move(*jacobian);
 }
 
 template <Concepts::SingleStepper S, typename R>

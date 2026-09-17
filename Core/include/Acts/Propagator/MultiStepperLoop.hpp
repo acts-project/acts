@@ -59,6 +59,12 @@ struct MaxWeightComponent {
 template <typename component_chooser_t>
 struct SingleComponentReducer {
   template <typename stepper_state_t>
+  static std::size_t index(const stepper_state_t& s) {
+    return static_cast<std::size_t>(std::distance(
+        s.components.begin(), component_chooser_t{}(s.components)));
+  }
+
+  template <typename stepper_state_t>
   static Vector3 position(const stepper_state_t& s) {
     return component_chooser_t{}(s.components)
         ->state.pars.template segment<3>(eFreePos0);
@@ -727,12 +733,19 @@ class MultiStepperLoop final {
   /// Transport the covariance of each component to its curvilinear frame
   ///
   /// @param [in,out] state State of the stepper
-  /// @return A zero jacobian, the mixture has no single jacobian
+  /// @return The jacobian of the component the reducer selects, which also
+  ///         provides the position and direction of the state
   Jacobian transportToCurvilinear(State& state) const {
-    for (auto& component : state.components) {
-      m_singleStepper.transportToCurvilinear(component.state);
+    const std::size_t selected = Reducer::index(state);
+    Jacobian jacobian = Jacobian::Identity();
+    for (std::size_t i = 0; i < state.components.size(); ++i) {
+      Jacobian cmpJacobian =
+          m_singleStepper.transportToCurvilinear(state.components[i].state);
+      if (i == selected) {
+        jacobian = cmpJacobian;
+      }
     }
-    return Jacobian::Zero();
+    return jacobian;
   }
 
   /// Put each component on a surface and transport its covariance there
@@ -745,8 +758,9 @@ class MultiStepperLoop final {
   /// @param [in,out] state State of the stepper
   /// @param [in] surface The surface to transport the components to
   /// @param [in] freeToBoundCorrection Flag steering non-linear correction during global to local correction
-  /// @return A zero jacobian, the mixture has no single jacobian, or a
-  ///         failure if no component can be expressed on @p surface
+  /// @return The jacobian of the component the reducer selects, which also
+  ///         provides the position and direction of the state, or a failure
+  ///         if this component cannot be expressed on @p surface
   Result<Jacobian> transportToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =

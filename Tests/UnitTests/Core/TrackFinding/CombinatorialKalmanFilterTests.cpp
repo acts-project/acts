@@ -31,6 +31,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/MultiStepperLoop.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -40,8 +41,10 @@
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/TrackStateCreator.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Holders.hpp"
@@ -537,6 +540,10 @@ struct MaterialFixture {
   using TestCombinatorialKalmanFilter = Fixture::TestCombinatorialKalmanFilter;
   using TestSourceLinkContainer = Fixture::TestSourceLinkContainer;
   using TestSourceLinkAccessor = Fixture::TestSourceLinkAccessor;
+  using BremPropagator =
+      Propagator<MultiStepperLoop<ConstantFieldStepper>, Navigator>;
+  using BremCombinatorialKalmanFilter =
+      CombinatorialKalmanFilter<BremPropagator, TrackContainer>;
 
   GeometryContext geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext magCtx;
@@ -568,19 +575,25 @@ struct MaterialFixture {
   MeasurementSelector measSel{measurementSelectorCfg};
 
   TestCombinatorialKalmanFilter ckf;
+  BremCombinatorialKalmanFilter bremCkf;
 
-  static ConstantFieldPropagator makePropagator(
-      std::shared_ptr<const TrackingGeometry> geo) {
+  static Navigator makeNavigator(std::shared_ptr<const TrackingGeometry> geo) {
     Navigator::Config cfg{std::move(geo)};
     cfg.resolvePassive = false;
     cfg.resolveMaterial = true;
     cfg.resolveSensitive = true;
-    auto field = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
-    return ConstantFieldPropagator(ConstantFieldStepper(std::move(field)),
-                                   Navigator{cfg});
+    return Navigator{cfg};
   }
 
-  MaterialFixture() : ckf(makePropagator(detector.geometry)) {
+  static std::shared_ptr<ConstantBField> makeField() {
+    return std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
+  }
+
+  MaterialFixture()
+      : ckf(ConstantFieldPropagator(ConstantFieldStepper(makeField()),
+                                    makeNavigator(detector.geometry))),
+        bremCkf(BremPropagator(BremPropagator::Stepper(makeField()),
+                               makeNavigator(detector.geometry))) {
     MeasurementResolution res = {MeasurementType::eLoc01, {25_um, 50_um}};
     MeasurementResolutionMap resolutions = {{GeometryIdentifier(), res}};
 
@@ -621,6 +634,38 @@ struct MaterialFixture {
 
     TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
     auto res = ckf.findTracks(startParameters, options, tc);
+    BOOST_REQUIRE(res.ok());
+    BOOST_REQUIRE_EQUAL(tc.size(), 1u);
+    return tc;
+  }
+
+  /// Run the CKF with bremsstrahlung recovery once and return the container
+  /// holding the single found track
+  TrackContainer findBrem(bool recordMaterialStates) {
+    auto extensions = getExtensions();
+    extensions.mixtureReducer.connect<&reduceMixtureWithKLDistance>();
+
+    BremCombinatorialKalmanFilterOptions<TrackContainer> options(
+        geoCtx, magCtx, calCtx, extensions,
+        PropagatorPlainOptions(geoCtx, magCtx));
+    options.recordMaterialStates = recordMaterialStates;
+    options.betheHeitlerApprox = std::make_shared<AtlasBetheHeitlerApprox>(
+        makeDefaultBetheHeitlerApprox());
+
+    TestSourceLinkAccessor slAccessor;
+    slAccessor.container = &sourceLinks;
+    auto trackStateCreator = makeTrackStateCreator(slAccessor, measSel);
+    options.extensions.createTrackStates
+        .template connect<&decltype(trackStateCreator)::createTrackStates>(
+            &trackStateCreator);
+
+    const BoundTrackParameters electronParameters(
+        startParameters.referenceSurface().getSharedPtr(),
+        startParameters.parameters(), startParameters.covariance(),
+        ParticleHypothesis::electron());
+
+    TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+    auto res = bremCkf.findTracks(electronParameters, options, tc);
     BOOST_REQUIRE(res.ok());
     BOOST_REQUIRE_EQUAL(tc.size(), 1u);
     return tc;
@@ -773,6 +818,37 @@ BOOST_AUTO_TEST_CASE(MaterialStatesSkippedSmoothingAgrees) {
 
   check(GainMatrixSmoother());
   check(MbfSmoother());
+}
+
+// With bremsstrahlung recovery, every state carries the transport jacobian of
+// the dominant component
+BOOST_AUTO_TEST_CASE(BremStatesCarryJacobian) {
+  MaterialFixture f;
+  auto tc = f.findBrem(true);
+  const auto track = tc.getTrack(0);
+
+  BOOST_CHECK_EQUAL(track.nMeasurements(), MaterialTelescope::nSensitive);
+  for (const auto state : track.trackStatesReversed()) {
+    BOOST_CHECK(!state.jacobian().isZero());
+  }
+}
+
+BOOST_AUTO_TEST_CASE(BremMaterialStatesSkippedPreserveJacobianChain) {
+  MaterialFixture fRecorded;
+  MaterialFixture fSkipped;
+  auto tcRecorded = fRecorded.findBrem(true);
+  auto tcSkipped = fSkipped.findBrem(false);
+
+  const auto trackSkipped = tcSkipped.getTrack(0);
+  BOOST_CHECK_EQUAL(trackSkipped.nMeasurements(),
+                    MaterialTelescope::nSensitive);
+  BOOST_CHECK_EQUAL(trackSkipped.nTrackStates(), MaterialTelescope::nSensitive);
+
+  const BoundMatrix recorded =
+      jacobianToLastMeasurement(tcRecorded.getTrack(0));
+  const BoundMatrix skipped = jacobianToLastMeasurement(trackSkipped);
+
+  CHECK_CLOSE_ABS(recorded, skipped, 1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -113,8 +113,7 @@ struct CombinatorialKalmanFilterOptions {
   /// Whether to record track states on material-only (non-sensitive) surfaces.
   /// Material effects are applied either way, only the record is dropped.
   /// @note Keep enabled if the surfaces themselves are needed, e.g. for a refit
-  ///       with the `DirectNavigator`. Must stay enabled with a
-  ///       multi-component stepper.
+  ///       with the `DirectNavigator`.
   bool recordMaterialStates = true;
 };
 
@@ -604,26 +603,33 @@ class CombinatorialKalmanFilter {
         return materialPreRes.error();
       }
 
-      if constexpr (!IsMultiStepper) {
-        if (isMaterialOnly && !recordMaterialStates) {
-          ACTS_VERBOSE("Skip material track state on surface "
-                       << surface.geometryId());
+      if (isMaterialOnly && !recordMaterialStates) {
+        ACTS_VERBOSE("Skip material track state on surface "
+                     << surface.geometryId());
 
-          // keep the jacobian segment the transport above just closed
-          result.accumulatedJacobian = jacobian * result.accumulatedJacobian;
-
-          // apply the post material effects and return early, skipping the
-          // track state creation below
-          const Result<void> materialPostRes = performMaterialInteraction(
-              state, stepper, surface,
-              detail::determineMaterialUpdateMode(
-                  state, navigator, MaterialUpdateMode::PostUpdate));
-          if (!materialPostRes.ok()) {
-            ACTS_DEBUG("Material interaction failed during post-update: "
-                       << materialPostRes.error().message());
+        if constexpr (IsMultiStepper) {
+          // the post material effects read the components on the surface
+          auto transportRes = stepper.transportToBound(state.stepping, surface);
+          if (!transportRes.ok()) {
+            return transportRes.error();
           }
-          return materialPostRes;
+          jacobian = *transportRes * jacobian;
         }
+
+        // keep the jacobian segment the transport above just closed
+        result.accumulatedJacobian = jacobian * result.accumulatedJacobian;
+
+        // apply the post material effects and return early, skipping the
+        // track state creation below
+        const Result<void> materialPostRes = performMaterialInteraction(
+            state, stepper, surface,
+            detail::determineMaterialUpdateMode(
+                state, navigator, MaterialUpdateMode::PostUpdate));
+        if (!materialPostRes.ok()) {
+          ACTS_DEBUG("Material interaction failed during post-update: "
+                     << materialPostRes.error().message());
+        }
+        return materialPostRes;
       }
 
       // Bind the transported state to the current surface
@@ -642,11 +648,12 @@ class CombinatorialKalmanFilter {
           // parameter components right now to make use of the same track as
           // above.
           // TODO this should be revisited
-          auto res =
-              stepper.transportToBound(state.stepping, surface)
-                  .and_then([&](const auto& /*jacobian*/) {
-                    return stepper.boundParameters(state.stepping, surface);
-                  });
+          auto transportRes = stepper.transportToBound(state.stepping, surface);
+          if (!transportRes.ok()) {
+            return transportRes.error();
+          }
+          jacobian = *transportRes * jacobian;
+          auto res = stepper.boundParameters(state.stepping, surface);
           if (!res.ok()) {
             return res.error();
           }
@@ -660,13 +667,11 @@ class CombinatorialKalmanFilter {
       }
       auto& boundState = *boundStateRes;
 
-      if constexpr (!IsMultiStepper) {
-        if (!recordMaterialStates) {
-          // prepend the jacobians of the surfaces skipped since the last state
-          std::get<1>(boundState) =
-              std::get<1>(boundState) * result.accumulatedJacobian;
-          result.accumulatedJacobian = BoundMatrix::Identity();
-        }
+      if (!recordMaterialStates) {
+        // prepend the jacobians of the surfaces skipped since the last state
+        std::get<1>(boundState) =
+            std::get<1>(boundState) * result.accumulatedJacobian;
+        result.accumulatedJacobian = BoundMatrix::Identity();
       }
 
       auto currentBranch = result.activeBranches.back();
@@ -1224,16 +1229,7 @@ class CombinatorialKalmanFilter {
     combKalmanActor.energyLoss = tfOptions.energyLoss;
     combKalmanActor.skipPrePropagationUpdate =
         tfOptions.skipPrePropagationUpdate;
-    if constexpr (IsMultiStepper) {
-      // there is no single transport jacobian to fold into the next state
-      if (!tfOptions.recordMaterialStates) {
-        throw std::invalid_argument(
-            "recordMaterialStates cannot be disabled with a multi-component "
-            "stepper");
-      }
-    } else {
-      combKalmanActor.recordMaterialStates = tfOptions.recordMaterialStates;
-    }
+    combKalmanActor.recordMaterialStates = tfOptions.recordMaterialStates;
     combKalmanActor.actorLogger = m_actorLogger.get();
     combKalmanActor.updaterLogger = m_updaterLogger.get();
     combKalmanActor.calibrationContextPtr = &tfOptions.calibrationContext.get();

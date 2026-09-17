@@ -651,7 +651,18 @@ struct MultiStepperTester {
 
     const auto single_bound_pars = res->merge(ComponentMergeMethod::eMean);
 
-    BOOST_CHECK_EQUAL(*jacobian, BoundMatrix::Zero());
+    // all components are equal, so the jacobian is the one of a single state
+    SingleStepper single_stepper(defaultBField);
+    SingleState single_state = single_stepper.makeState(options);
+    single_stepper.initialize(
+        single_state,
+        BoundTrackParameters(surface, pars, cov, particleHypothesis));
+    auto single_jacobian = single_stepper.transportToBound(
+        single_state, *surface, FreeToBoundCorrection(false));
+    BOOST_REQUIRE(single_jacobian.ok());
+
+    BOOST_CHECK(!jacobian->isZero());
+    BOOST_CHECK(jacobian->isApprox(*single_jacobian, 1.e-8));
     BOOST_CHECK_EQUAL(multi_stepper.pathLength(multi_state), 0.0);
     BOOST_CHECK(single_bound_pars.parameters().isApprox(pars, 1.e-8));
     BOOST_CHECK(single_bound_pars.covariance()->isApprox(cov, 1.e-8));
