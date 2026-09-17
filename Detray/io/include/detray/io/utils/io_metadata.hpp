@@ -25,7 +25,7 @@
 
 namespace detray::io::detail {
 
-template <concepts::detector detector_t>
+template <detray::concepts::detector detector_t>
 inline void print_type_warning([[maybe_unused]] const std::string& subject) {
   DETRAY_WARN_HOST("Detector of type \n"
                    << DETRAY_TYPENAME(typename detector_t::metadata)
