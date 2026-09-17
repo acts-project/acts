@@ -15,6 +15,10 @@ if(TRACCC_BUILD_CUDA)
     add_subdirectory(cuda)
 endif()
 
+if(TRACCC_BUILD_HIP)
+    add_subdirectory(hip)
+endif()
+
 if(TRACCC_BUILD_SYCL)
     add_subdirectory(sycl)
 endif()
