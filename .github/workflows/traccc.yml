@@ -16,17 +16,49 @@ on:
       - 'releases'
       - 'release/**'
       - 'gh-readonly-queue/**'
+    # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Traccc/**"
       - "Detray/**"
+      - "Core/**"
+      - "Plugins/**"
+      - "Fatras/**"
+      - "Alignment/**"
+      - "Examples/**"
+      - "Tests/**"
+      - "Python/**"
+      - "cmake/**"
+      - "codegen/**"
+      - "thirdparty/**"
+      - "CMakeLists.txt"
+      - "CMakePresets.json"
+      - "version_number"
+      - "CI/**"
+      - ".github/actions/**"
       - ".github/workflows/traccc.yml"
       - ".github/detray-traccc-filters.yml"
   pull_request:
     branches:
       - main
+    # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Traccc/**"
       - "Detray/**"
+      - "Core/**"
+      - "Plugins/**"
+      - "Fatras/**"
+      - "Alignment/**"
+      - "Examples/**"
+      - "Tests/**"
+      - "Python/**"
+      - "cmake/**"
+      - "codegen/**"
+      - "thirdparty/**"
+      - "CMakeLists.txt"
+      - "CMakePresets.json"
+      - "version_number"
+      - "CI/**"
+      - ".github/actions/**"
       - ".github/workflows/traccc.yml"
       - ".github/detray-traccc-filters.yml"
   # The changes job applies path filtering to merge groups, which do not

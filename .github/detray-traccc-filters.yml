@@ -1,5 +1,6 @@
 # Merge-group filters: include shared build inputs as well as the package.
 # Keep these conservative when the standalone builds gain new dependencies.
+# Keep the workflow push/pull_request paths and .merge-sentinel.yml in sync.
 detray:
   - 'Detray/**'
   # Standalone Detray uses ACTS' header compilation and codegen modules.
