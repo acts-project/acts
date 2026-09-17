@@ -23,11 +23,6 @@
 #include <Eigen/Geometry>
 #endif
 
-#include "Acts/Definitions/Tolerance.hpp"
-
-#include <cassert>
-#include <stdexcept>
-
 namespace Acts {
 
 /// @defgroup algebra_types Algebra types
@@ -114,61 +109,6 @@ using Transform3 = Eigen::Transform<double, 3, Eigen::Isometry>;
 /// have to be converted to a @ref Acts::Transform3 explicitly before ACTS
 /// geometry can be built from them.
 using AffineTransform3 = Eigen::Transform<double, 3, Eigen::Affine>;
-
-/// @brief Check whether a matrix is orthogonal, i.e. a rotation or reflection
-///
-/// This is the invariant @ref Acts::Transform3 relies on. Internal call sites
-/// use @ref Acts::makeTransform3, which asserts it; call this directly to
-/// reject a matrix coming from outside ACTS.
-///
-/// @param rotation The matrix to check
-/// @return Whether the matrix is orthogonal within
-///         @ref Acts::s_transformEquivalentTolerance
-inline bool isOrthogonal(const RotationMatrix3& rotation) {
-  return (rotation * rotation.transpose())
-      .isApprox(RotationMatrix3::Identity(), s_transformEquivalentTolerance);
-}
-
-/// @brief Build a @ref Acts::Transform3 from a rotation and a translation
-///
-/// Maps `p -> rotation * p + translation`, i.e. the columns of @p rotation are
-/// the local frame axes and @p translation its origin, both in the target
-/// frame. Replaces the Eigen product `Translation3(translation) * rotation`,
-/// which is affine and cannot be assigned to a @ref Acts::Transform3.
-///
-/// For the reverse order, `rotation * translation`, build the pure rotation
-/// first and apply the translation to it: `makeTransform3(rotation) *
-/// translation`.
-///
-/// @param rotation The orthogonal linear part, i.e. the local frame axes
-/// @param translation The local frame origin, in the target frame
-/// @return The combined rigid transformation
-inline Transform3 makeTransform3(const RotationMatrix3& rotation,
-                                 const Vector3& translation = Vector3::Zero()) {
-  assert(isOrthogonal(rotation) &&
-         "Transform3 requires an orthogonal rotation part");
-  Transform3 transform = Transform3::Identity();
-  transform.linear() = rotation;
-  transform.translation() = translation;
-  return transform;
-}
-
-/// @brief Build a @ref Acts::Transform3 from a general affine transform
-///
-/// Use this for transforms that come from outside ACTS, e.g. an
-/// @c Eigen::Affine3d from an external geometry source. Unlike the overload
-/// above, this one checks the linear part in every build type.
-///
-/// @param transform The affine transform to convert
-/// @throws std::invalid_argument if the linear part is not orthogonal
-/// @return The equivalent rigid transformation
-inline Transform3 makeTransform3(const AffineTransform3& transform) {
-  if (!isOrthogonal(transform.linear())) {
-    throw std::invalid_argument(
-        "Affine transform is not a rigid transformation");
-  }
-  return makeTransform3(transform.linear(), transform.translation());
-}
 
 /// @}
 

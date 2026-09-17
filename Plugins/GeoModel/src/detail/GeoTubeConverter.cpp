@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
 
 #include <GeoModelKernel/GeoFullPhysVol.h>

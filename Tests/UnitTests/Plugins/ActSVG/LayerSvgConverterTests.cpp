@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsPlugins/ActSVG/LayerSvgConverter.hpp"
 #include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"

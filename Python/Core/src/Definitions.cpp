@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 
 #include <format>
 #include <stdexcept>

@@ -8,6 +8,8 @@
 
 #include "ActsExamples/GenericDetector/ProtoLayerCreator.hpp"
 
+#include "Acts/Utilities/TransformHelpers.hpp"
+
 using Acts::VectorHelpers::phi;
 
 namespace ActsExamples::Generic {

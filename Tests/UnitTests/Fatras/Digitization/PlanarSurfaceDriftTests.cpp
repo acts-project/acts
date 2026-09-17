@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsFatras/Digitization/SurfaceDrift.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 

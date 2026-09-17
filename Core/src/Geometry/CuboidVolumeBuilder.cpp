@@ -26,6 +26,7 @@
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 
 #include <algorithm>
 #include <limits>

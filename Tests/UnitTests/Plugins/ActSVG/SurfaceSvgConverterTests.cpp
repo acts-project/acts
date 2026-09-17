@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Diagnostics.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "ActsPlugins/ActSVG/SvgUtils.hpp"
 

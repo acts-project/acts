@@ -8,6 +8,8 @@
 
 #include "ActsPlugins/Json/AlgebraJsonConverter.hpp"
 
+#include "Acts/Utilities/TransformHelpers.hpp"
+
 #include <array>
 #include <stdexcept>
 

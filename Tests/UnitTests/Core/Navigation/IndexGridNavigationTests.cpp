@@ -27,6 +27,7 @@
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 
 #include <memory>
 #include <numbers>

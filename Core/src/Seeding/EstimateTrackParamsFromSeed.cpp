@@ -13,6 +13,7 @@
 #include "Acts/Seeding/TrackParamsEstimationError.hpp"
 #include "Acts/Seeding/detail/CircleFit.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 
 #include <cassert>
 #include <cmath>
