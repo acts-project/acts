@@ -9,6 +9,7 @@
 #include "../sanity/contiguous_on.cuh"
 #include "../utils/magnetic_field_types.hpp"
 #include "./kernels/build_tracks.cuh"
+#include "./kernels/collect_expected_layer_patterns.cuh"
 #include "./kernels/condense_tracks.cuh"
 #include "./kernels/create_device_detector.cuh"
 #include "./kernels/fill_finding_duplicate_removal_sort_keys.cuh"
@@ -87,6 +88,85 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
         // Return the filled buffer.
         return result;
       });
+}
+
+void combinatorial_kalman_filter_algorithm::
+    collect_expected_layer_patterns_on_ckf_tracks(
+        const detector_buffer& det, const magnetic_field& bfield,
+        const edm::measurement_collection::const_view&,
+        const bound_track_parameters_collection_types::const_view&,
+        const output_type& tracks) const {
+  const auto n_tracks = copy().get_size(tracks.tracks);
+  std::vector<expected_layer_pattern_type> expected_patterns(
+      n_tracks, expected_layer_pattern_type{});
+
+  // Keep one output pattern slot per track.
+  if (n_tracks == 0u || m_expected_layer_config.expected_layer_map == nullptr ||
+      m_expected_layer_config.expected_layer_map_size == 0u) {
+    set_last_expected_layer_patterns(std::move(expected_patterns));
+    return;
+  }
+
+  vecmem::data::vector_buffer<expected_layer_pattern_type>
+      output_expected_layer_patterns_buffer(n_tracks, mr().main);
+  copy().setup(output_expected_layer_patterns_buffer)->wait();
+
+  const auto expected_layer_map_size = static_cast<
+      vecmem::data::vector_buffer<expected_layer_mapping_entry>::size_type>(
+      m_expected_layer_config.expected_layer_map_size);
+  vecmem::data::vector_buffer<expected_layer_mapping_entry>
+      expected_layer_map_buffer(expected_layer_map_size, mr().main);
+  copy().setup(expected_layer_map_buffer)->wait();
+  copy()(
+      vecmem::data::vector_view<const expected_layer_mapping_entry>(
+          expected_layer_map_size, m_expected_layer_config.expected_layer_map),
+      expected_layer_map_buffer)
+      ->wait();
+  const vecmem::data::vector_view<const expected_layer_mapping_entry>
+      expected_layer_map_view(expected_layer_map_size,
+                              expected_layer_map_buffer.ptr());
+
+  // Launch detector/bfield-specialized kernel to fill per-track patterns.
+  detector_buffer_magnetic_field_visitor<detector_type_list,
+                                         cuda::bfield_type_list<scalar>>(
+      det, bfield,
+      [&]<typename detector_t, typename bfield_view_t>(
+          const typename detector_t::view& detector,
+          const bfield_view_t& field) {
+        const unsigned int n_threads = 128u;
+        const unsigned int n_blocks =
+            static_cast<unsigned int>((n_tracks + n_threads - 1u) / n_threads);
+
+        collect_expected_layer_patterns<typename detector_t::device,
+                                        bfield_view_t>(
+            n_blocks, n_threads, 0u, details::get_stream(stream()), detector,
+            field, {tracks}, m_expected_layer_config, expected_layer_map_view,
+            output_expected_layer_patterns_buffer);
+      });
+
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+  // Ensure kernel completion before copying results back to host memory.
+  stream().synchronize();
+
+  vecmem::vector<expected_layer_pattern_type> host_patterns(mr().host);
+  host_patterns.resize(n_tracks);
+  copy()(output_expected_layer_patterns_buffer, host_patterns)->wait();
+
+  expected_patterns.assign(host_patterns.begin(), host_patterns.end());
+
+  // For checking how many tracks got at least one layer bit.
+  std::size_t non_zero_patterns = 0u;
+  for (const auto& pattern : expected_patterns) {
+    if ((pattern[0] | pattern[1] | pattern[2] | pattern[3]) != 0u) {
+      ++non_zero_patterns;
+    }
+  }
+  TRACCC_DEBUG_HOST("post-CKF expected-layer extraction complete: tracks="
+                    << n_tracks << ", non-zero=" << non_zero_patterns
+                    << ", zero="
+                    << (expected_patterns.size() - non_zero_patterns));
+
+  set_last_expected_layer_patterns(std::move(expected_patterns));
 }
 
 void combinatorial_kalman_filter_algorithm::progressive_kalman_filter_kernel(
