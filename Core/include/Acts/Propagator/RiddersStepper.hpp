@@ -279,22 +279,10 @@ class RiddersStepper final {
       return;
     }
 
-    state.variationMap =
-        m_config.parameterVariation->variationMap(boundVector, *covariance);
-
-    for (const auto& [index, delta] : state.variationMap) {
-      BoundVector nudgedParams = boundVector;
-      nudgedParams[index] += delta;
-
-      state.secondaryStepperStates.push_back(
-          m_stepperImpl.makeState(state.primaryStepperState.options));
-      m_stepperImpl.initialize(state.secondaryStepperStates.back(),
-                               nudgedParams, std::nullopt, particleHypothesis,
-                               surface);
-    }
-
     state.covTransport = true;
     state.cov = *covariance;
+
+    resetSecondaryStates(state, boundVector, surface);
   }
 
   /// Get the magnetic field at the given position for the primary stepper state
@@ -618,8 +606,12 @@ class RiddersStepper final {
 
     state.cov = jacobian * state.cov * jacobian.transpose();
 
-    state.variationMap =
-        m_config.parameterVariation->variationMap(referenceVector, state.cov);
+    // The secondary states restart on the surface, so the next jacobian starts
+    // here as well
+    resetSecondaryStates(state, referenceVector, surface);
+    for (auto& secondaryState : state.secondaryStepperStates) {
+      secondaryState.stepSize = state.primaryStepperState.stepSize;
+    }
 
     return Result<Jacobian>::success(jacobian);
   }
@@ -723,6 +715,28 @@ class RiddersStepper final {
   }
 
  private:
+  /// Start the secondary states from variations of the given parameters
+  /// @param state the state of the RiddersStepper
+  /// @param boundVector the parameters to vary
+  /// @param surface the surface of the parameters
+  void resetSecondaryStates(State& state, const BoundVector& boundVector,
+                            const Surface& surface) const {
+    state.variationMap =
+        m_config.parameterVariation->variationMap(boundVector, state.cov);
+
+    state.secondaryStepperStates.clear();
+    for (const auto& [index, delta] : state.variationMap) {
+      BoundVector nudgedParams = boundVector;
+      nudgedParams[index] += delta;
+
+      state.secondaryStepperStates.push_back(
+          m_stepperImpl.makeState(state.primaryStepperState.options));
+      m_stepperImpl.initialize(state.secondaryStepperStates.back(),
+                               nudgedParams, std::nullopt,
+                               particleHypothesis(state), surface);
+    }
+  }
+
   /// The stepper configuration
   Config m_config;
 
