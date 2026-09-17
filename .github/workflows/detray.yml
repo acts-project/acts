@@ -1,30 +1,8 @@
 name: Detray
 
 on:
-  push:
-    # The release branches (keep in sync with release.yml) carry a tree the
-    # merge queue has already built. The queue's own temp ref triggers
-    # merge_group below; a push run there shares its concurrency group and
-    # evicts the PR from the queue.
-    branches-ignore:
-      - 'releases'
-      - 'release/**'
-      - 'gh-readonly-queue/**'
-    paths:
-      - "Detray/**"
-      - ".github/workflows/detray.yml"
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "Detray/**"
-      - ".github/workflows/detray.yml"
-  # merge_group does not support path filters, so this runs on every queue
-  # entry targeting main, not just ones touching Detray/. Only required via
-  # merge-sentinel's "Detray / *" pattern, which is itself path-gated, so a
-  # non-Detray entry running this wastes compute but doesn't block merging.
-  merge_group:
-    types: [checks_requested]
+  # DISABLED for physmon CI test — manual trigger only. Do not merge.
+  workflow_dispatch:
 
 # Cancel existing jobs on new pushes.
 concurrency:

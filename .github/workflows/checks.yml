@@ -1,23 +1,8 @@
 name: Checks
 
 on:
-  push:
-    # The release branches (keep in sync with release.yml) carry a tree the
-    # merge queue has already built. The queue's own temp ref triggers
-    # merge_group below; a push run there shares its concurrency group and
-    # evicts the PR from the queue.
-    branches-ignore:
-      - 'releases'
-      - 'release/**'
-      - 'gh-readonly-queue/**'
-  pull_request:
-    branches:
-      - main
-      - 'release/**'
-      - 'develop/**'
-  # Required directly ("lint") and via merge-sentinel's "Checks / *" pattern.
-  merge_group:
-    types: [checks_requested]
+  # DISABLED for physmon CI test — manual trigger only. Do not merge.
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
