@@ -326,9 +326,9 @@ class direct_navigator {
                                           ctx);
     } else {
       // Update a standalone surface.
-      return update_external_candidate(
-          navigation.target(), tangential, navigation.next_external(),
-          intr_cfg, navigation.external_tol());
+      return update_external_candidate(navigation.target(), tangential,
+                                       navigation.next_external(), intr_cfg,
+                                       navigation.external_tol());
     }
   }
 
