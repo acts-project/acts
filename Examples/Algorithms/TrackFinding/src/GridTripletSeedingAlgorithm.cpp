@@ -145,10 +145,10 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
   m_gridConfig.rBinEdges = {};
   m_gridConfig.zBinEdges = m_cfg.zBinEdges;
   m_gridConfig.bFieldInZ = m_cfg.bFieldInZ;
-  m_gridConfig.bottomBinFinder.emplace(m_cfg.numPhiNeighbors,
-                                       m_cfg.zBinNeighborsBottom, 0);
-  m_gridConfig.topBinFinder.emplace(m_cfg.numPhiNeighbors,
-                                    m_cfg.zBinNeighborsTop, 0);
+  m_gridConfig.bottomBinFinder = Acts::GridBinFinder<3ul>(
+      m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsBottom, 0);
+  m_gridConfig.topBinFinder = Acts::GridBinFinder<3ul>(
+      m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop, 0);
   m_gridConfig.navigation[0ul] = {};
   m_gridConfig.navigation[1ul] = m_cfg.zBinsCustomLooping;
   m_gridConfig.navigation[2ul] = {};
@@ -373,7 +373,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
                  << radiusRangeForMiddle.first << ", "
                  << radiusRangeForMiddle.second << "]");
 
-    m_seedFinder->createSeedsFromGroups(
+    m_seedFinder.createSeedsFromGroups(
         cache, *bottomDoubletFinder, *topDoubletFinder, *tripletFinder,
         seedFilter, coreSpacePoints, bottomSpRanges, *middleSpRange,
         topSpRanges, radiusRangeForMiddle, seeds);
