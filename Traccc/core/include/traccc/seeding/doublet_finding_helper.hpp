@@ -96,9 +96,9 @@ bool TRACCC_HOST_DEVICE doublet_finding_helper::isCompatible(
     const scalar rInner = math::min(sp1.radius(), sp2.radius());
     const scalar rOuter = math::max(sp1.radius(), sp2.radius());
     const scalar d0 = config.get_doubletDPhiD0Max();
-    const scalar swing =
-        math::fabs(math::asin(math::min(1.f, d0 / math::max(sp2.radius(), 1.f))) -
-                   math::asin(math::min(1.f, d0 / math::max(sp1.radius(), 1.f))));
+    const scalar swing = math::fabs(
+        math::asin(math::min(1.f, d0 / math::max(sp2.radius(), 1.f))) -
+        math::asin(math::min(1.f, d0 / math::max(sp1.radius(), 1.f))));
     scalar dPhi = sp2.phi() - sp1.phi();
     if (dPhi > constant<scalar>::pi) {
       dPhi -= 2.f * constant<scalar>::pi;
