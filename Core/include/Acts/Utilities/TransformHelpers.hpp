@@ -19,6 +19,7 @@ namespace Acts {
 /// Check orthogonality within the given tolerance.
 /// @param rotation Matrix to check
 /// @param tolerance Comparison tolerance (default: s_transformEquivalentTolerance)
+/// @return Whether @p rotation is orthogonal
 inline bool isOrthogonal(const RotationMatrix3& rotation,
                          double tolerance = s_transformEquivalentTolerance) {
   return (rotation * rotation.transpose())
@@ -29,6 +30,7 @@ inline bool isOrthogonal(const RotationMatrix3& rotation,
 /// @pre @p rotation is orthogonal (asserted).
 /// @param rotation Local axes in the target frame
 /// @param translation Local origin in the target frame
+/// @return The rigid transform
 inline Transform3 makeTransform3(const RotationMatrix3& rotation,
                                  const Vector3& translation = Vector3::Zero()) {
   assert(isOrthogonal(rotation) &&
@@ -40,7 +42,9 @@ inline Transform3 makeTransform3(const RotationMatrix3& rotation,
 }
 
 /// Convert an affine transform, rejecting a non-orthogonal linear part.
+/// @param transform Affine transform to convert
 /// @throws std::invalid_argument if the linear part is not orthogonal
+/// @return The equivalent rigid transform
 inline Transform3 makeTransform3(const AffineTransform3& transform) {
   if (!isOrthogonal(transform.linear())) {
     throw std::invalid_argument(
