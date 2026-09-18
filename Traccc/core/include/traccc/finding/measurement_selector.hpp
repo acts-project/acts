@@ -141,8 +141,7 @@ struct measurement_selector {
   /// @param measurement the seed measurement
   /// @param cfg how to apply calibrations
   ///
-  template <detray::concepts::algebra algebra_t,
-            typename measurement_backend_t>
+  template <detray::concepts::algebra algebra_t, typename measurement_backend_t>
   TRACCC_HOST_DEVICE static void set_seed_measurement_covariance(
       detray::bound_matrix<algebra_t>& cov,
       const edm::measurement<measurement_backend_t>& measurement,
