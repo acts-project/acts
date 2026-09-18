@@ -189,8 +189,9 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   m_cfg.graphConfig.maxZ0 = m_internalRoi->zMax();
   m_cfg.graphConfig.minZ0 = m_internalRoi->zMin();
 
-  m_graph.emplace(m_cfg.graphConfig, geometry,
-                  this->logger().cloneWithSuffix("GbtsGraph"));
+  m_gbtsGraphBuilder.emplace(
+      m_cfg.graphConfig, geometry,
+      this->logger().cloneWithSuffix("GbtsGraphBuilder"));
 
   m_finder.emplace(Acts::Experimental::GraphBasedTrackSeeder::DerivedConfig(
                        m_cfg.seedFinderConfig),
@@ -242,8 +243,8 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
 
   // create the seeds
 
-  m_finder->createSeeds(nodeStorage, m_internalRoi.value(), *m_graph, *m_filter,
-                        options, seeds);
+  m_finder->createSeeds(nodeStorage, m_internalRoi.value(), *m_gbtsGraphBuilder,
+                        *m_filter, options, seeds);
 
   m_outputSeeds(ctx, std::move(seeds));
 
@@ -529,7 +530,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("maxEndcapClusterWidth: " << cfg1.maxEndcapClusterWidth);
   ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);
   ACTS_DEBUG("maxInvRadDiff: " << cfg1.maxInvRadDiff);
-  ACTS_DEBUG("=====GbtsGraph=====");
+  ACTS_DEBUG("=====GbtsGraphBuilder=====");
   const auto &cfg2 = m_cfg.graphConfig;
   ACTS_DEBUG("matchBeforeCreate: " << cfg2.matchBeforeCreate);
   ACTS_DEBUG("tauRatioCut: " << cfg2.tauRatioCut);

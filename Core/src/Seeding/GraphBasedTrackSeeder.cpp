@@ -8,7 +8,7 @@
 
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 
-#include "Acts/Seeding/GbtsGraph.hpp"
+#include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 
 #include <algorithm>
@@ -63,7 +63,7 @@ GbtsNodeStorage GraphBasedTrackSeeder::makeNodeStorage() const {
 
 void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& spacePoints,
                                         const GbtsRoiDescriptor& roi,
-                                        const GbtsGraph& graph,
+                                        const GbtsGraphBuilder& graphBuilder,
                                         const GbtsTrackingFilter& filter,
                                         const Options& options,
                                         SeedContainer& outputSeeds) const {
@@ -78,34 +78,31 @@ void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer& spacePoints,
 
   nodeStorage.finalize();
 
-  createSeeds(nodeStorage, roi, graph, filter, options, outputSeeds);
+  createSeeds(nodeStorage, roi, graphBuilder, filter, options, outputSeeds);
 }
 
 void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
                                         const GbtsRoiDescriptor& roi,
-                                        const GbtsGraph& graph,
+                                        const GbtsGraphBuilder& graphBuilder,
                                         const GbtsTrackingFilter& filter,
                                         const Options& options,
                                         SeedContainer& outputSeeds) const {
   ACTS_DEBUG("Loaded " << nodeStorage.numberOfNodes() << " graph nodes");
 
-  // will need to be optional depending on mode (as the objects will either be
-  // triplets or doublet)
-  std::vector<detail::GbtsEdge> edgeStorage;
+  GbtsGraph graph =
+      graphBuilder.buildTheGraph(roi, nodeStorage, options.bFieldInZ);
 
-  const std::pair<std::uint32_t, std::uint32_t> graphStats =
-      graph.buildTheGraph(roi, nodeStorage, edgeStorage, options.bFieldInZ);
+  ACTS_DEBUG("Created graph with " << graph.nEdges << " edges and "
+                                   << graph.nConnections << " edge links");
 
-  ACTS_DEBUG("Created graph with " << graphStats.first << " edges and "
-                                   << graphStats.second << " edge links");
-
-  if (graphStats.first == 0 || graphStats.second == 0) {
+  if (graph.nEdges == 0 || graph.nConnections == 0) {
     ACTS_WARNING("Missing edges or edge connections");
   }
 
-  const std::uint32_t maxLevel = graph.runCCA(graphStats.first, edgeStorage);
+  const std::uint32_t maxLevel = graphBuilder.runCCA(graph);
 
-  const auto minLevel = static_cast<std::uint8_t>(graph.config().minSeedLevel);
+  const auto minLevel =
+      static_cast<std::uint8_t>(graphBuilder.config().minSeedLevel);
   if (maxLevel < minLevel) {
     return;
   }
@@ -113,7 +110,7 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
   ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
 
   std::vector<detail::GbtsEdge*> vChainHeads =
-      graph.extractChainHeads(edgeStorage, graphStats.first);
+      graphBuilder.extractChainHeads(graph);
 
   if (vChainHeads.empty()) {
     ACTS_WARNING("No chains passed minimum edge requirement");
@@ -121,8 +118,8 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
   }
 
   std::vector<OutputSeedProperties> vOutputSeeds;
-  extractSeedsFromTheGraph(nodeStorage, edgeStorage, vOutputSeeds, filter,
-                           vChainHeads, graph);
+  extractSeedsFromTheGraph(nodeStorage, graph.edgeStorage, vOutputSeeds, filter,
+                           vChainHeads, graphBuilder);
 
   ACTS_DEBUG("GBTS created " << vOutputSeeds.size() << " seeds");
   if (vOutputSeeds.empty()) {
@@ -143,11 +140,12 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     std::vector<detail::GbtsEdge>& edgeStorage,
     std::vector<OutputSeedProperties>& vOutputSeeds,
     const GbtsTrackingFilter& filter,
-    std::vector<detail::GbtsEdge*>& vChainHeads, const GbtsGraph& graph) const {
+    std::vector<detail::GbtsEdge*>& vChainHeads,
+    const GbtsGraphBuilder& graphBuilder) const {
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
-  // the chain selection is the graph's, so that the chains it handed back and
-  // the candidates built from them are cut the same way
-  const GbtsGraph::Config& graphCfg = graph.config();
+  // the chain selection is the graph builder's, so that the chains it handed
+  // back and the candidates built from them are cut the same way
+  const GbtsGraphBuilder::Config& graphCfg = graphBuilder.config();
   const auto minLevel = static_cast<std::uint8_t>(graphCfg.minSeedLevel);
   // `addTriplets` accepts a chain one level short. Signed: an uncollected
   // edge sits at level -1 and `minSeedLevel` may be configured to 0.

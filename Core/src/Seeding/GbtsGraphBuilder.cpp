@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding/GbtsGraph.hpp"
+#include "Acts/Seeding/GbtsGraphBuilder.hpp"
 
 #include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -47,16 +47,19 @@ struct SlidingWindow {
 
 }  // namespace
 
-GbtsGraph::GbtsGraph(const Config& config,
-                     std::shared_ptr<const GbtsGeometry> geometry,
-                     std::unique_ptr<const Acts::Logger> logger)
+GbtsGraphBuilder::GbtsGraphBuilder(const Config& config,
+                                   std::shared_ptr<const GbtsGeometry> geometry,
+                                   std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(config),
       m_geometry(std::move(geometry)),
       m_logger(std::move(logger)) {}
 
-std::pair<std::uint32_t, std::uint32_t> GbtsGraph::buildTheGraph(
-    const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
-    std::vector<detail::GbtsEdge>& edgeStorage, const float bFieldInZ) const {
+GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
+                                          GbtsNodeStorage& nodeStorage,
+                                          const float bFieldInZ) const {
+  GbtsGraph graph;
+  std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
+
   // used to calculate Z cut on doublets
   const float cutZMinU =
       m_cfg.minZ0 + m_cfg.maxOuterRadius * static_cast<float>(roi.dzdrMin());
@@ -528,12 +531,15 @@ std::pair<std::uint32_t, std::uint32_t> GbtsGraph::buildTheGraph(
         "Maximum number of graph edges exceeded - possible efficiency loss "
         << nEdges);
   }
-  return std::make_pair(nEdges, nConnections);
+  graph.nEdges = nEdges;
+  graph.nConnections = nConnections;
+  return graph;
 }
 
-std::uint32_t GbtsGraph::runCCA(
-    const std::uint32_t nEdges,
-    std::vector<detail::GbtsEdge>& edgeStorage) const {
+std::uint32_t GbtsGraphBuilder::runCCA(GbtsGraph& graph) const {
+  const std::uint32_t nEdges = graph.nEdges;
+  std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
+
   std::uint32_t maxLevel = 0;
 
   std::uint32_t iter = 0;
@@ -601,8 +607,11 @@ std::uint32_t GbtsGraph::runCCA(
   return maxLevel;
 }
 
-std::vector<detail::GbtsEdge*> GbtsGraph::extractChainHeads(
-    std::vector<detail::GbtsEdge>& edgeStorage, std::uint32_t nEdges) const {
+std::vector<detail::GbtsEdge*> GbtsGraphBuilder::extractChainHeads(
+    GbtsGraph& graph) const {
+  const std::uint32_t nEdges = graph.nEdges;
+  std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
+
   const auto minLevel = static_cast<std::uint8_t>(m_cfg.minSeedLevel);
   // `addTriplets` accepts a chain one level short. Signed: an uncollected
   // edge sits at level -1 and `minSeedLevel` may be configured to 0.
@@ -645,7 +654,7 @@ std::vector<detail::GbtsEdge*> GbtsGraph::extractChainHeads(
   return vChainHeads;
 }
 
-bool GbtsGraph::validateTriplet(
+bool GbtsGraphBuilder::validateTriplet(
     const detail::GbtsNodeView& nodeView,
     const std::array<SpacePointIndex, 3>& candidateTriplet,
     const float tripletMinPt, const float tauRatio, const float tauRatioCut,
@@ -723,8 +732,9 @@ bool GbtsGraph::validateTriplet(
   return true;
 }
 
-bool GbtsGraph::checkZ0BitMask(const std::uint16_t z0BitMask, const float z0,
-                               const float z0HistoCoeff) const {
+bool GbtsGraphBuilder::checkZ0BitMask(const std::uint16_t z0BitMask,
+                                      const float z0,
+                                      const float z0HistoCoeff) const {
   if (z0BitMask == 0) {
     return true;
   }

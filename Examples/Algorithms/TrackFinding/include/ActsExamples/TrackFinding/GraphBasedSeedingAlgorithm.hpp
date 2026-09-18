@@ -13,7 +13,7 @@
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
-#include "Acts/Seeding/GbtsGraph.hpp"
+#include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
@@ -75,7 +75,7 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
 
     /// steers doublet creation, edge linking and chain selection. `minZ0` and
     /// `maxZ0` are overridden from the region of interest.
-    Acts::Experimental::GbtsGraph::Config graphConfig;
+    Acts::Experimental::GbtsGraphBuilder::Config graphConfig;
 
     /// the connection table (parsed from csv file) used to make geoemetry cuts
     /// be GBTS
@@ -124,7 +124,7 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
 
   /// graph used in creating and extracting edges, edge connections
   /// and valid chains
-  std::optional<Acts::Experimental::GbtsGraph> m_graph;
+  std::optional<Acts::Experimental::GbtsGraphBuilder> m_gbtsGraphBuilder;
 
   /// filter used to extract seed candidates from graph
   std::optional<Acts::Experimental::GbtsTrackingFilter> m_filter;

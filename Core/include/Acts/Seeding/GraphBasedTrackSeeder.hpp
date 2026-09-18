@@ -28,7 +28,7 @@
 
 namespace Acts::Experimental {
 
-class GbtsGraph;
+class GbtsGraphBuilder;
 
 /// Seed finder implementing the GBTS seeding workflow.
 class GraphBasedTrackSeeder {
@@ -46,8 +46,9 @@ class GraphBasedTrackSeeder {
     // Seed extraction options
     //
     // @note The chain length a candidate must reach, and the `addTriplets`
-    //       relaxation of it, are `GbtsGraph::Config`: the graph applies them
-    //       when it picks the chain heads, and extraction here has to agree.
+    //       relaxation of it, are `GbtsGraphBuilder::Config`: the graph applies
+    //       them when it picks the chain heads, and extraction here has to
+    //       agree.
 
     /// Smallest seed size that is split into drop-out candidates.
     std::uint32_t minSplitSeedSize = 4;
@@ -122,27 +123,29 @@ class GraphBasedTrackSeeder {
   /// `localPositionY` columns.
   /// @param spacePoints Space point container
   /// @param roi Region of interest descriptor
-  /// @param graph Doublet graph builder, which also carries the chain
+  /// @param graphBuilder Doublet graph builder, which also carries the chain
   ///              selection that this seeder's extraction agrees with
   /// @param filter Tracking filter to be applied
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
   void createSeeds(const SpacePointContainer& spacePoints,
-                   const GbtsRoiDescriptor& roi, const GbtsGraph& graph,
+                   const GbtsRoiDescriptor& roi,
+                   const GbtsGraphBuilder& graphBuilder,
                    const GbtsTrackingFilter& filter, const Options& options,
                    SeedContainer& outputSeeds) const;
 
   /// Create seeds from a finalized node storage in a region of interest.
   /// @param nodeStorage Finalized graph node storage
   /// @param roi Region of interest descriptor
-  /// @param graph Doublet graph builder, which also carries the chain
+  /// @param graphBuilder Doublet graph builder, which also carries the chain
   ///              selection that this seeder's extraction agrees with
   /// @param filter Tracking filter to be applied
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
   void createSeeds(GbtsNodeStorage& nodeStorage, const GbtsRoiDescriptor& roi,
-                   const GbtsGraph& graph, const GbtsTrackingFilter& filter,
-                   const Options& options, SeedContainer& outputSeeds) const;
+                   const GbtsGraphBuilder& graphBuilder,
+                   const GbtsTrackingFilter& filter, const Options& options,
+                   SeedContainer& outputSeeds) const;
 
  private:
   /// candidate seed metadata produced by the GBTS algorithm.
@@ -196,13 +199,13 @@ class GraphBasedTrackSeeder {
   /// @param vOutputSeeds Output vector for seed candidates
   /// @param filter Tracking filter to be applied
   /// @param vChainHeads Chain heads the graph selected
-  /// @param graph Doublet graph, read for its chain selection
+  /// @param graphBuilder Doublet graph builder, read for its chain selection
   void extractSeedsFromTheGraph(const GbtsNodeStorage& nodeStorage,
                                 std::vector<detail::GbtsEdge>& edgeStorage,
                                 std::vector<OutputSeedProperties>& vOutputSeeds,
                                 const GbtsTrackingFilter& filter,
                                 std::vector<detail::GbtsEdge*>& vChainHeads,
-                                const GbtsGraph& graph) const;
+                                const GbtsGraphBuilder& graphBuilder) const;
 
   /// Estimate the inverse radius of the circle through three nodes.
   /// @param nodeView View of the node positions and layers

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding/GbtsGraph.hpp"
+#include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
@@ -91,7 +91,7 @@ void addTrackFinding(py::module& mex) {
   }
 
   {
-    using Config = Acts::Experimental::GbtsGraph::Config;
+    using Config = Acts::Experimental::GbtsGraphBuilder::Config;
     auto c = py::class_<Config>(mex, "GbtsGraphConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, minPt, minSeedLevel, addTriplets,
                        maxAbsEtaAddTriplets, nMaxEdges, minDeltaRadius,
