@@ -82,8 +82,7 @@ greedy_ambiguity_resolution_algorithm::greedy_ambiguity_resolution_algorithm(
       m_config(cfg),
       m_mr(mr),
       m_copy(copy),
-      m_stream(str),
-      m_warp_size(details::get_warp_size(str.device())) {}
+      m_stream(str) {}
 
 greedy_ambiguity_resolution_algorithm::output_type
 greedy_ambiguity_resolution_algorithm::operator()(
@@ -165,7 +164,7 @@ greedy_ambiguity_resolution_algorithm::operator()(
                n_meas_buffer.ptr() + n_tracks, 0);
 
   {
-    const unsigned int nThreads = m_warp_size * 2;
+    const unsigned int nThreads = 64;
     const unsigned int nBlocks = (n_tracks + nThreads - 1) / nThreads;
 
     // Fill the vectors
@@ -250,7 +249,7 @@ greedy_ambiguity_resolution_algorithm::operator()(
 
   // Make meas_id to unique_meas_id vector
   {
-    const unsigned int nThreads = m_warp_size * 2;
+    const unsigned int nThreads = 64;
     const unsigned int nBlocks = (meas_count + nThreads - 1) / nThreads;
 
     kernels::fill_unique_meas_id_map<<<nBlocks, nThreads, 0, stream>>>(
@@ -298,7 +297,7 @@ greedy_ambiguity_resolution_algorithm::operator()(
   // Fill tracks_per_measurement, track_status_per_measurement and
   // n_accepted_tracks_per_measurement vectors
   {
-    const unsigned int nThreads = m_warp_size * 2;
+    const unsigned int nThreads = 64;
     const unsigned int nBlocks = (n_accepted + nThreads - 1) / nThreads;
 
     kernels::fill_tracks_per_measurement<<<nBlocks, nThreads, 0, stream>>>(
@@ -341,7 +340,7 @@ greedy_ambiguity_resolution_algorithm::operator()(
 
   // Count the number of shared measurements
   {
-    const unsigned int nThreads = m_warp_size * 2;
+    const unsigned int nThreads = 64;
     const unsigned int nBlocks = (n_accepted + nThreads - 1) / nThreads;
 
     kernels::count_shared_measurements<<<nBlocks, nThreads, 0, stream>>>(
@@ -446,7 +445,7 @@ greedy_ambiguity_resolution_algorithm::operator()(
       vecmem::make_unique_alloc<unsigned int>(m_mr.main);
 
   // Thread block size
-  unsigned int nThreads_adaptive = m_warp_size;
+  unsigned int nThreads_adaptive = 32;
   unsigned int nBlocks_adaptive =
       (n_accepted + nThreads_adaptive - 1) / nThreads_adaptive;
 
@@ -457,7 +456,7 @@ greedy_ambiguity_resolution_algorithm::operator()(
 
   // Compute the threadblock dimension for scanning kernels
   auto compute_scan_config = [&](unsigned int n_accepted) {
-    unsigned int nThreads_scan = m_warp_size * 4;
+    unsigned int nThreads_scan = 128;
     unsigned int nBlocks_scan =
         (n_accepted + nThreads_scan - 1) / nThreads_scan;
 

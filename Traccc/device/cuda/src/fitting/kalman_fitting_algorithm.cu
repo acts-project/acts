@@ -31,7 +31,7 @@ void kalman_fitting_algorithm::prepare_track_fit_order(
   assert(track_indices.size_ptr() == nullptr);
 
   // Launch parameters for the kernel.
-  const unsigned int nThreads = warp_size() * 4;
+  const unsigned int nThreads = 128;
   const unsigned int nBlocks = (n_tracks + nThreads - 1) / nThreads;
 
   // Fill the keys and indices buffers.

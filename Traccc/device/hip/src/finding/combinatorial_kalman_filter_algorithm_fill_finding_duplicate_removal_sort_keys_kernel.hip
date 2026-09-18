@@ -36,7 +36,7 @@ void combinatorial_kalman_filter_algorithm::
         const device::fill_finding_duplicate_removal_sort_keys_payload& payload)
         const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 8;
+  const unsigned int deviceThreads = 256;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
 

@@ -45,7 +45,7 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
     const magnetic_field& field,
     const device::propagate_to_next_surface_payload& payload) const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 4;
+  const unsigned int deviceThreads = 128;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
 

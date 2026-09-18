@@ -37,7 +37,7 @@ void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
       payload.bfield, [&]<typename bfield_view_t>(const bfield_view_t& bfield) {
         squeue.submit([&](::sycl::handler& h) {
           h.parallel_for(
-              details::calculate1DimNdRange(payload.n_seeds, warp_size() * 4),
+              details::calculate1DimNdRange(payload.n_seeds, 128),
               [config = payload.config, measurements = payload.measurements,
                spacepoints = payload.spacepoints, seeds = payload.seeds,
                bfield = bfield,

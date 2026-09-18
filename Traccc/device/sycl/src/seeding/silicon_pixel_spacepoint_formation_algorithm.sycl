@@ -40,7 +40,7 @@ void silicon_pixel_spacepoint_formation_algorithm::count_spacepoints_kernel(
   squeue
       .submit([&](::sycl::handler& h) {
         h.parallel_for(details::calculate1DimNdRange(payload.n_measurements,
-                                                     warp_size() * 8),
+                                                     256),
                        [measurements = payload.measurements,
                         spacepoint_flags =
                             payload.spacepoint_flags](::sycl::nd_item<1> item) {
@@ -87,7 +87,7 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
             .submit([&](::sycl::handler& h) {
               h.parallel_for(
                   details::calculate1DimNdRange(payload.n_measurements,
-                                                warp_size() * 8),
+                                                256),
                   [det_ptr = device_det.ptr(),
                    measurements = payload.measurements,
                    spacepoint_index = payload.spacepoint_index,

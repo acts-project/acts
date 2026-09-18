@@ -165,7 +165,7 @@ void combinatorial_kalman_filter_algorithm::progressive_kalman_filter_kernel(
           h.parallel_for<kernels::progressive_kalman_filter<
               detector_tag_selector_t<detector_traits_t>,
               bfield_tag_selector_t<typename bfield_view_t::backend_t>>>(
-              details::calculate1DimNdRange(n_seeds, warp_size() * 4),
+              details::calculate1DimNdRange(n_seeds, 128),
               [config, det = device_det.ptr(), bfield, sf_sequences,
                payload](::sycl::nd_item<1> item) {
                 device::progressive_kalman_filter<
@@ -182,7 +182,7 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
     unsigned int n_threads, const finding_config& config,
     const detector_buffer& detector,
     const device::find_tracks_payload& payload) const {
-  const unsigned int deviceThreads = warp_size() * 2;
+  const unsigned int deviceThreads = 64;
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
   detector_buffer_visitor<detector_type_list>(
@@ -248,7 +248,7 @@ void combinatorial_kalman_filter_algorithm::condense_tracks_kernel(
                               params_index_vector.begin());
 
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 8;
+  const unsigned int deviceThreads = 256;
 
   // Launch the kernel.
   assert(params_index.ptr() == payload.in_params_index_view.ptr());
@@ -270,7 +270,7 @@ void combinatorial_kalman_filter_algorithm::
   squeue.throw_asynchronous();
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::fill_finding_duplicate_removal_sort_keys>(
-        details::calculate1DimNdRange(n_threads, warp_size() * 8),
+        details::calculate1DimNdRange(n_threads, 256),
         [payload](::sycl::nd_item<1> item) {
           device::fill_finding_duplicate_removal_sort_keys(
               details::global_index(item), payload);
@@ -298,7 +298,7 @@ void combinatorial_kalman_filter_algorithm::remove_duplicates_kernel(
   squeue.throw_asynchronous();
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::remove_duplicates>(
-        details::calculate1DimNdRange(n_threads, warp_size() * 8),
+        details::calculate1DimNdRange(n_threads, 256),
         [config, payload](::sycl::nd_item<1> item) {
           device::remove_duplicates(details::global_index(item), config,
                                     payload);
@@ -315,7 +315,7 @@ void combinatorial_kalman_filter_algorithm::
   squeue.throw_asynchronous();
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::fill_finding_propagation_sort_keys>(
-        details::calculate1DimNdRange(n_threads, warp_size() * 8),
+        details::calculate1DimNdRange(n_threads, 256),
         [payload](::sycl::nd_item<1> item) {
           device::fill_finding_propagation_sort_keys(
               details::global_index(item), payload);
@@ -361,7 +361,7 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
           h.parallel_for<kernels::propagate_to_next_surface<
               detector_tag_selector_t<detector_traits_t>,
               bfield_tag_selector_t<typename bfield_view_t::backend_t>>>(
-              details::calculate1DimNdRange(n_threads, warp_size() * 4),
+              details::calculate1DimNdRange(n_threads, 128),
               [config, det = device_detector_buffer.ptr(), bfield,
                payload](::sycl::nd_item<1> item) {
                 device::propagate_to_next_surface<
@@ -428,7 +428,7 @@ void combinatorial_kalman_filter_algorithm::gather_measurement_votes_kernel(
   squeue.throw_asynchronous();
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::gather_measurement_votes>(
-        details::calculate1DimNdRange(n_threads, warp_size() * 16),
+        details::calculate1DimNdRange(n_threads, 512),
         [payload](::sycl::nd_item<1> item) {
           device::gather_measurement_votes(details::global_index(item),
                                            payload);
@@ -443,7 +443,7 @@ void combinatorial_kalman_filter_algorithm::update_tip_length_buffer_kernel(
   squeue.throw_asynchronous();
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::update_tip_length_buffer>(
-        details::calculate1DimNdRange(n_threads, warp_size() * 16),
+        details::calculate1DimNdRange(n_threads, 512),
         [payload](::sycl::nd_item<1> item) {
           device::update_tip_length_buffer(details::global_index(item),
                                            payload);
@@ -459,7 +459,7 @@ void combinatorial_kalman_filter_algorithm::build_tracks_kernel(
   squeue.throw_asynchronous();
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::build_tracks>(
-        details::calculate1DimNdRange(n_threads, warp_size() * 2),
+        details::calculate1DimNdRange(n_threads, 64),
         [run_mbf_smoother, calib_cfg, payload](::sycl::nd_item<1> item) {
           device::build_tracks(details::global_index(item), run_mbf_smoother,
                                calib_cfg, payload);

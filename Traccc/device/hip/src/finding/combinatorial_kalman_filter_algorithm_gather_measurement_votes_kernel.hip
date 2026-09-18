@@ -32,7 +32,7 @@ void combinatorial_kalman_filter_algorithm::gather_measurement_votes_kernel(
     unsigned int n_threads,
     const device::gather_measurement_votes_payload& payload) const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 16;
+  const unsigned int deviceThreads = 512;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
 
