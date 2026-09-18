@@ -273,10 +273,9 @@ void addGeometry(py::module_& m) {
     auto cvb =
         py::class_<CylinderVolumeBounds, std::shared_ptr<CylinderVolumeBounds>,
                    VolumeBounds>(m, "CylinderVolumeBounds")
-            .def(py::init<double, double, double, double, double, double,
-                          double>(),
-                 "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = std::numbers::pi,
-                 "avgphi"_a = 0., "bevelMinZ"_a = 0., "bevelMaxZ"_a = 0.);
+            .def(py::init<double, double, double, double, double>(), "rmin"_a,
+                 "rmax"_a, "halfz"_a, "halfphi"_a = std::numbers::pi,
+                 "avgphi"_a = 0.);
 
     py::enum_<CylinderVolumeBounds::Face>(cvb, "Face")
         .value("PositiveDisc", CylinderVolumeBounds::Face::PositiveDisc)

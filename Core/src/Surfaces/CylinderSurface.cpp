@@ -48,11 +48,10 @@ CylinderSurface::CylinderSurface(const GeometryContext& gctx,
     : RegularSurface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 CylinderSurface::CylinderSurface(const Transform3& transform, double radius,
-                                 double halfz, double halfphi, double avphi,
-                                 double bevelMinZ, double bevelMaxZ)
+                                 double halfz, double halfphi, double avphi)
     : RegularSurface(transform),
-      m_bounds(std::make_shared<const CylinderBounds>(
-          radius, halfz, halfphi, avphi, bevelMinZ, bevelMaxZ)) {}
+      m_bounds(std::make_shared<const CylinderBounds>(radius, halfz, halfphi,
+                                                      avphi)) {}
 
 CylinderSurface::CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
                                  const SurfacePlacementBase& placement)
@@ -380,31 +379,6 @@ std::pair<std::shared_ptr<CylinderSurface>, bool> CylinderSurface::mergedWith(
         getSharedPtr(), other.getSharedPtr(),
         "CylinderSurface::merge: surfaces have relative rotation");
   }
-
-  auto checkNoBevel = [this, &logger, &other](const auto& bounds) {
-    if (bounds.get(CylinderBounds::eBevelMinZ) != 0.0) {
-      ACTS_ERROR(
-          "CylinderVolumeStack requires all volumes to have a bevel angle of "
-          "0");
-      throw SurfaceMergingException(
-          getSharedPtr(), other.getSharedPtr(),
-          "CylinderVolumeStack requires all volumes to have a bevel angle of "
-          "0");
-    }
-
-    if (bounds.get(CylinderBounds::eBevelMaxZ) != 0.0) {
-      ACTS_ERROR(
-          "CylinderVolumeStack requires all volumes to have a bevel angle of "
-          "0");
-      throw SurfaceMergingException(
-          getSharedPtr(), other.getSharedPtr(),
-          "CylinderVolumeStack requires all volumes to have a bevel angle of "
-          "0");
-    }
-  };
-
-  checkNoBevel(bounds());
-  checkNoBevel(other.bounds());
 
   // radii need to be identical
   if (std::abs(bounds().get(CylinderBounds::eR) -
