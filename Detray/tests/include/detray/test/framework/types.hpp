@@ -42,6 +42,10 @@ namespace detray::test {
 static constexpr char filenames[] = "array-";
 DETRAY_DEFINE_TEST_TYPES(array)
 
+#elif DETRAY_ALGEBRA_ARRAY_SOA
+static constexpr char filenames[] = "array_soa-";
+DETRAY_DEFINE_TEST_TYPES(array_soa)
+
 #elif DETRAY_ALGEBRA_EIGEN
 static constexpr char filenames[] = "eigen-";
 DETRAY_DEFINE_TEST_TYPES(eigen)
