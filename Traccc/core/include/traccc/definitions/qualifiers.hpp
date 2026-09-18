@@ -31,3 +31,9 @@
 #else
 #define TRACCC_ALIGN(x) alignas(x)
 #endif
+
+#if defined(__CUDACC__) || defined(__HIP__)
+#define TRACCC_RESTRICT __restrict__
+#else
+#define TRACCC_RESTRICT
+#endif

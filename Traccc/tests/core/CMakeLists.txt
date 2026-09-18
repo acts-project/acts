@@ -18,6 +18,7 @@ traccc_add_test(core
    "test_ranges.cpp"
    "test_serializer.cpp"
    "test_simulation.cpp"
+   "test_soa.cpp"
    "test_subspace.cpp"
    "particle.cpp"
    LINK_LIBRARIES GTest::gtest_main vecmem::core traccc_tests_common
