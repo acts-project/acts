@@ -638,7 +638,7 @@ BOOST_AUTO_TEST_CASE(MaterialTesting) {
                       AxisSpec::DeferredEquidistant(20, AxisPhi));
     mat.configureFace(OuterCylinder,
                       AxisSpec::DeferredEquidistant(25, AxisRPhi),
-                      AxisSpec::DeferredEquidistant(30, AxisZ));
+                      AxisSpec::DeferredEquidistant(30, AxisZ), "barrel/outer");
 
     mat.addStaticVolume(std::move(cyl));
   });
@@ -679,6 +679,8 @@ BOOST_AUTO_TEST_CASE(MaterialTesting) {
   BOOST_REQUIRE_NE(outerCyl, nullptr);
   const auto& outerCylMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*outerCyl);
+  BOOST_REQUIRE(outerCylMat.materialKey());
+  BOOST_CHECK_EQUAL(*outerCylMat.materialKey(), "barrel/outer");
   BOOST_CHECK_EQUAL(outerCylMat.binning().axisSpec(0).nBins(), 25);
   BOOST_CHECK_EQUAL(outerCylMat.binning().axisSpec(1).nBins(), 30);
 
@@ -691,6 +693,22 @@ BOOST_AUTO_TEST_CASE(MaterialTesting) {
                         nullptr);
     }
   }
+}
+
+BOOST_AUTO_TEST_CASE(MaterialKeysAndDuplicateFaces) {
+  MaterialDesignatorBlueprintNode node("material");
+  auto axis = AxisSpec::DeferredEquidistant(3);
+  node.configureFace(CylinderVolumeBounds::Face::OuterCylinder, axis, axis,
+                     "barrel/outer");
+  BOOST_CHECK_THROW(
+      node.configureFace(CylinderVolumeBounds::Face::OuterCylinder, axis, axis,
+                         "other"),
+      std::invalid_argument);
+  BOOST_CHECK_THROW(node.configureFace(CylinderVolumeBounds::Face::NegativeDisc,
+                                       axis, axis, ""),
+                    std::invalid_argument);
+  BOOST_CHECK_NO_THROW(
+      node.configureFace(CylinderVolumeBounds::Face::PositiveDisc, axis, axis));
 }
 
 BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
