@@ -10,6 +10,8 @@
 traccc_add_library( traccc_examples_sycl examples_sycl SHARED
    "include/traccc/examples/sycl/full_chain_algorithm.hpp"
    "src/full_chain_algorithm.cpp"
+   "include/traccc/examples/sycl/tbb_await.hpp"
+   "src/tbb_await.cpp"
 )
 target_link_libraries(
     traccc_examples_sycl
@@ -22,6 +24,7 @@ target_link_libraries(
         traccc::device_common
         traccc::sycl
         traccc_examples_common
+    PRIVATE TBB::tbb
 )
 
 traccc_add_executable( throughput_st_sycl "apps/throughput_st.cpp"

@@ -39,6 +39,24 @@ add_library(
     "src/seeding/triplet_seeding_algorithm.hip"
     "include/traccc/hip/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
     "src/seeding/silicon_pixel_spacepoint_formation_algorithm.hip"
+    # Track finding code.
+    "include/traccc/hip/finding/combinatorial_kalman_filter_algorithm.hpp"
+    "src/finding/combinatorial_kalman_filter_algorithm_build_measurement_ranges_buffer.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_build_tracks_kernel.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_condense_tracks_kernel.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_create_device_detector.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_fill_finding_duplicate_removal_sort_keys_kernel.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_fill_finding_propagation_sort_keys_kernel.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_find_tracks_kernel.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_gather_best_tips_per_measurement_kernel.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_gather_measurement_votes_kernel.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_input_is_valid.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_progressive_kalman_filter_kernel.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_propagate_to_next_surface_kernel.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_remove_duplicates_kernel.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_sort_param_ids_by_keys.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_sort_param_ids_by_last_measurement.hip"
+    "src/finding/combinatorial_kalman_filter_algorithm_update_tip_length_buffer_kernel.hip"
     # Track fitting code.
     "include/traccc/hip/fitting/kalman_fitting_algorithm.hpp"
     "src/fitting/kalman_fitting_algorithm_fit_backward_kernel.hip"
@@ -73,11 +91,15 @@ elseif("${CMAKE_HIP_PLATFORM}" STREQUAL "nvidia")
 endif()
 
 traccc_add_library( traccc_hip hip TYPE SHARED
+   # Track finding code.
+   "src/finding/combinatorial_kalman_filter_algorithm.cpp"
    # Track fitting code.
    "src/fitting/kalman_fitting_algorithm.cpp"
    # Utility code.
    "include/traccc/hip/utils/algorithm_base.hpp"
    "src/utils/algorithm_base.cpp"
+   "include/traccc/hip/utils/await.hpp"
+   "src/utils/await.cpp"
    "src/utils/barrier.hpp"
    "src/utils/global_index.hpp"
    "src/utils/hip_error_handling.hpp"

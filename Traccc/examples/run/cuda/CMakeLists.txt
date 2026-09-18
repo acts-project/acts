@@ -1,6 +1,6 @@
 # TRACCC library, part of the ACTS project (R&D line)
 #
-# (c) 2021-2025 CERN for the benefit of the ACTS project
+# (c) 2021-2026 CERN for the benefit of the ACTS project
 #
 # Mozilla Public License Version 2.0
 
@@ -16,6 +16,8 @@ find_package(CUDAToolkit REQUIRED)
 traccc_add_library( traccc_examples_cuda examples_cuda SHARED
    "include/traccc/examples/cuda/full_chain_algorithm.hpp"
    "src/full_chain_algorithm.cpp"
+   "include/traccc/examples/cuda/tbb_await.hpp"
+   "src/tbb_await.cpp"
 )
 target_link_libraries(
     traccc_examples_cuda
@@ -30,6 +32,7 @@ target_link_libraries(
         traccc::cuda_utils
         traccc::cuda
         traccc::examples_common
+    PRIVATE TBB::tbb
 )
 
 traccc_add_executable( throughput_st_cuda "apps/throughput_st.cpp"
