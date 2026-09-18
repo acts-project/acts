@@ -18,10 +18,12 @@ target_sources(
         MaterialInteractionAssignment.cpp
         MaterialMapUtils.cpp
         MaterialMapper.cpp
+        MaterialSurfaceRegistry.cpp
         MaterialSlab.cpp
         MaterialValidator.cpp
         MergedMaterialMarker.cpp
         ProtoVolumeMaterial.cpp
         SurfaceMaterialMapper.cpp
+        TrackingGeometryMaterial.cpp
         VolumeMaterialMapper.cpp
 )

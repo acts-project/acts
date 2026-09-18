@@ -15,6 +15,9 @@
 #include "Acts/Utilities/MultiAxisSpec.hpp"
 
 #include <iosfwd>
+#include <optional>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace Acts {
@@ -38,10 +41,19 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 
   /// Constructor with BinningType
   /// @param binning a binning description for the material map binning
+  /// @param materialKey Optional stable identity of the material assignment
   /// @param mappingType is the type of surface mapping associated to the surface
-  explicit ProtoSurfaceMaterialT(const BinningType& binning,
-                                 MappingType mappingType = MappingType::Default)
-      : ISurfaceMaterial(1., mappingType), m_binning(binning) {}
+  explicit ProtoSurfaceMaterialT(
+      const BinningType& binning,
+      MappingType mappingType = MappingType::Default,
+      std::optional<std::string> materialKey = std::nullopt)
+      : ISurfaceMaterial(1., mappingType),
+        m_binning(binning),
+        m_materialKey(std::move(materialKey)) {
+    if (m_materialKey && m_materialKey->empty()) {
+      throw std::invalid_argument("Material key must not be empty");
+    }
+  }
 
   /// Copy constructor
   ///
@@ -77,6 +89,12 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// @return Reference to this object
   ProtoSurfaceMaterialT<BinningType>& scale(double /*factor*/) final {
     return (*this);
+  }
+
+  /// Stable identity of the material assignment, if configured
+  /// @return Optional stable material assignment key
+  const std::optional<std::string>& materialKey() const {
+    return m_materialKey;
   }
 
   /// Return the BinUtility
@@ -122,6 +140,8 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
  private:
   /// A binning description
   BinningType m_binning;
+
+  std::optional<std::string> m_materialKey;
 
   /// Dummy material properties
   MaterialSlab m_materialSlab = MaterialSlab::Nothing();
