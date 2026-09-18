@@ -33,9 +33,9 @@ void set_initial_covariance(bound_track_parameters<>& track_params,
       var += math::pow(
           config.initial_sigma_qopt * math::sin(track_params.theta()), 2.f);
       var += math::pow(config.initial_sigma_pt_rel * track_params.qop(), 2.f);
-      var += var_theta *
-             math::pow(track_params.qop() / math::tan(track_params.theta()),
-                       2.f);
+      var +=
+          var_theta *
+          math::pow(track_params.qop() / math::tan(track_params.theta()), 2.f);
     }
     var *= config.initial_inflation.at(j);
     getter::element(track_params.covariance(), j, j) = var;
@@ -104,22 +104,24 @@ track_params_estimation::output_type track_params_estimation::operator()(
       det, [&]<typename detector_traits_t>(
                const typename detector_traits_t::host& detector) {
         // Create a track parameters for each seed.
-        for (edm::seed_collection::const_device::size_type i = 0;
-             i < num_seeds; ++i) {
-        TRACCC_VERBOSE("Creating track parameters for seed " << i + 1 << " / "
-                                                             << num_seeds);
-        TRACCC_VERBOSE("  - bottom spacepoint: "
-                       << spacepoints.at(seeds.at(i).bottom_index()).global()
-                       << ", radius: "
-                       << spacepoints.at(seeds.at(i).bottom_index()).radius());
-        TRACCC_VERBOSE("  - middle spacepoint: "
-                       << spacepoints.at(seeds.at(i).middle_index()).global()
-                       << ", radius: "
-                       << spacepoints.at(seeds.at(i).middle_index()).radius());
-        TRACCC_VERBOSE("  - top spacepoint: "
-                       << spacepoints.at(seeds.at(i).top_index()).global()
-                       << ", radius: "
-                       << spacepoints.at(seeds.at(i).top_index()).radius());
+        for (edm::seed_collection::const_device::size_type i = 0; i < num_seeds;
+             ++i) {
+          TRACCC_VERBOSE("Creating track parameters for seed " << i + 1 << " / "
+                                                               << num_seeds);
+          TRACCC_VERBOSE(
+              "  - bottom spacepoint: "
+              << spacepoints.at(seeds.at(i).bottom_index()).global()
+              << ", radius: "
+              << spacepoints.at(seeds.at(i).bottom_index()).radius());
+          TRACCC_VERBOSE(
+              "  - middle spacepoint: "
+              << spacepoints.at(seeds.at(i).middle_index()).global()
+              << ", radius: "
+              << spacepoints.at(seeds.at(i).middle_index()).radius());
+          TRACCC_VERBOSE("  - top spacepoint: "
+                         << spacepoints.at(seeds.at(i).top_index()).global()
+                         << ", radius: "
+                         << spacepoints.at(seeds.at(i).top_index()).radius());
 
           // Calculate the track parameter vector.
           bound_track_parameters<>& track_params = result.at(i);

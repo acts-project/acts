@@ -12,10 +12,10 @@
 #include "traccc/edm/seed_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/edm/track_parameters.hpp"
-#include "traccc/seeding/detail/track_params_estimation_config.hpp"
-#include "traccc/utils/algorithm.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/host_detector.hpp"
+#include "traccc/seeding/detail/track_params_estimation_config.hpp"
+#include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/messaging.hpp"
 
 // VecMem include(s).

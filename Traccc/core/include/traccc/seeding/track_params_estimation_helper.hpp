@@ -109,7 +109,6 @@ inline TRACCC_HOST_DEVICE void seed_direction_estimate(
   scalar qOverPt = 1.f / (R * vector::norm(bfield));
   // The estimated q/p in [GeV/c]^-1
   params.set_qop(qOverPt / vector::perp(vector2{1.f, invTanTheta}));
-
 }
 
 /// helper functions (for both cpu and gpu) to calculate bound track parameter

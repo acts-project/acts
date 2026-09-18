@@ -67,7 +67,6 @@ TRACCC_HOST_DEVICE inline void estimate_track_params(
     const edm::spacepoint_collection::const_view& spacepoints_view,
     const edm::seed_collection::const_view& seeds_view, const bfield_t& bfield,
     bound_track_parameters_collection_types::view params_view) {
-
   // Check if anything needs to be done.
   const edm::seed_collection::const_device seeds(seeds_view);
   if (globalIndex >= seeds.size()) {
@@ -105,7 +104,6 @@ TRACCC_HOST_DEVICE inline void estimate_track_params(
     const edm::spacepoint_collection::const_view& spacepoints_view,
     const edm::seed_collection::const_view& seeds_view, const bfield_t& bfield,
     bound_track_parameters_collection_types::view params_view) {
-
   // Check if anything needs to be done.
   const edm::seed_collection::const_device seeds(seeds_view);
   if (globalIndex >= seeds.size()) {
