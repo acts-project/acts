@@ -1468,7 +1468,7 @@ def addGbtsSeeding(
     lutInputConfigFileStr = str(lutInputConfigFile)
     seedFinderConfig = acts.examples.GraphBasedSeedingConfig()
 
-    graphConfig = acts.examples.GbtsGraphConfig(
+    graphConfig = acts.examples.GbtsGraphBuilderConfig(
         **acts.examples.defaultKWArgs(
             minPt=seedFinderConfigArg.minPt,
         ),
