@@ -155,11 +155,12 @@ def filter_paths(names, root, exclude_paths=(), exclude_files=()):
 
 
 def file_can_be_removed(searchstring, scope):
-    cmd = "grep -IR '" + searchstring + "' " + " ".join(scope)
-
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    output, _ = p.communicate()
-    return output == b""
+    # Only existence matters: stop at the first match instead of scanning the
+    # entire tree and collecting every matching line for each candidate.
+    result = subprocess.run(["grep", "-IRq", "--", searchstring, *scope])
+    if result.returncode not in (0, 1):
+        result.check_returncode()
+    return result.returncode == 1
 
 
 def count_files(path="."):
