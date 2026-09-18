@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <format>
 #include <sstream>
 
 namespace Acts {
@@ -100,21 +101,28 @@ void Navigator::resolveBoundaryToleranceOverrides(State& state) const {
     if (m_cfg.trackingGeometry->findSurface(geoId) !=
         toleranceOverride.surface) {
       throw std::invalid_argument(
-          "Navigator: the surface " + std::to_string(geoId.value()) +
-          " of a boundary tolerance override is not part of the tracking "
-          "geometry");
+          std::format("Navigator: the surface {} of a boundary tolerance "
+                      "override is not part of the tracking geometry",
+                      geoId));
     }
 
     // Gen3 offers the override in the volume of the surface, Gen1 on its
     // layer
     const TrackingVolume* volume = nullptr;
     if (m_geometryVersion == GeometryVersion::Gen3) {
-      volume = m_cfg.trackingGeometry->findVolume(geoId.withSensitive(0));
+      volume = m_cfg.trackingGeometry->findVolume(
+          geoId.withSensitive(0).withBoundary(0));
+      // Without a volume the navigator never offers the surface either
+      if (volume == nullptr) {
+        throw std::invalid_argument(
+            std::format("Navigator: no volume found for the surface {} of a "
+                        "boundary tolerance override",
+                        geoId));
+      }
     }
 
-    state.boundaryToleranceOverrides.push_back(
-        {toleranceOverride.surface, toleranceOverride.boundaryTolerance,
-         volume});
+    state.boundaryToleranceOverrides.emplace_back(
+        toleranceOverride.surface, toleranceOverride.boundaryTolerance, volume);
   }
 }
 
@@ -681,7 +689,8 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
     ACTS_VERBOSE(volInfo(state)
                  << "Append " << toleranceOverride.surface->type()
                  << " surface " << toleranceOverride.surface->geometryId()
-                 << " with an overridden boundary tolerance");
+                 << " with an overridden boundary tolerance "
+                 << toleranceOverride.boundaryTolerance);
     appendOnly.addSurfaceCandidate(*toleranceOverride.surface,
                                    toleranceOverride.boundaryTolerance);
   }
