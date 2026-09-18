@@ -98,13 +98,6 @@ std::vector<AxisDirection> BinnedSurfaceMaterial::localAxisDirections() const {
   return axisDirs;
 }
 
-const MaterialSlab& BinnedSurfaceMaterial::materialSlab(
-    const Vector3& gp) const {
-  const std::size_t ibin0 = m_binUtility.bin(gp, 0);
-  const std::size_t ibin1 = m_binUtility.bin(gp, 1);
-  return m_fullMaterial[ibin1][ibin0];
-}
-
 std::ostream& BinnedSurfaceMaterial::toStream(std::ostream& sl) const {
   sl << "BinnedSurfaceMaterial : " << std::endl;
   sl << "   - Number of Material bins [0,1] : " << m_binUtility.max(0) + 1

@@ -25,11 +25,6 @@ std::vector<AxisDirection> MergedMaterialMarker::localAxisDirections() const {
   return {};
 }
 
-const MaterialSlab& MergedMaterialMarker::materialSlab(
-    const Vector3& /*gp*/) const {
-  return m_slab;
-}
-
 std::ostream& MergedMaterialMarker::toStream(std::ostream& sl) const {
   sl << "MergedMaterialMarker (material discarded during portal merge)";
   return sl;

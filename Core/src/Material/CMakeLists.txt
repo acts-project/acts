@@ -22,6 +22,4 @@ target_sources(
         MaterialValidator.cpp
         MergedMaterialMarker.cpp
         ProtoVolumeMaterial.cpp
-        SurfaceMaterialMapper.cpp
-        VolumeMaterialMapper.cpp
 )

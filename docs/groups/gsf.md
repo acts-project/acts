@@ -94,9 +94,7 @@ form; the default parametrisation shipped in the source
 used by the examples (`betheHeitler_geantSim_cdf_nC6_O5.json`) both use a
 **six-component, fifth-order** CDF fit, split into a low- and a high-thickness
 range at @f$x/X_0 = 0.1@f$ @cite Huth:2024. When a surface exceeds the valid
-@f$x/X_0@f$ range the fitter counts the occurrence and emits a warning; the
-deprecated alias `Acts::AtlasBetheHeitlerApprox` remains for the ATLAS/Athena
-`.par` data format.
+@f$x/X_0@f$ range the fitter counts the occurrence and emits a warning.
 
 Applying the loss convolves every track-state component with every Bethe–Heitler
 component, so a mixture of @f$N_c@f$ components becomes @f$N_c \cdot N_{bh}@f$. In
