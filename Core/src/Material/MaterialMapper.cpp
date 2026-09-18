@@ -81,12 +81,6 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
 
 Acts::TrackingGeometryMaterial Acts::MaterialMapper::finalizeMaps(
     const State& state, const GeometryContext& gctx) const {
-  // The final maps
-  TrackingGeometryMaterial detectorMaterialMaps;
-  // The surface maps
-  detectorMaterialMaps.first =
-      m_cfg.surfaceMaterialAccumulator->finalizeMaterial(
-          *state.surfaceMaterialAccumulatorState, gctx);
-
-  return detectorMaterialMaps;
+  return m_cfg.surfaceMaterialAccumulator->finalizeMaps(
+      *state.surfaceMaterialAccumulatorState, gctx);
 }

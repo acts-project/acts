@@ -39,12 +39,36 @@
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
+#include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 #include "ActsPlugins/Json/VolumeJsonConverter.hpp"
 
 #include <algorithm>
 #include <cstddef>
 #include <map>
 #include <numbers>
+
+namespace {
+void to_json(nlohmann::json& entry,
+             const Acts::KeyedSurfaceMaterial& assignment) {
+  if (assignment.material == nullptr) {
+    throw std::invalid_argument("Keyed material needs a payload");
+  }
+  entry = {{"geometry_id", assignment.geometryId.value()},
+           {"material",
+            Acts::SurfaceMaterialJsonConverter::toJson(*assignment.material)}};
+}
+
+void from_json(const nlohmann::json& entry,
+               Acts::KeyedSurfaceMaterial& assignment) {
+  assignment.geometryId =
+      Acts::GeometryIdentifier(entry.at("geometry_id").get<std::uint64_t>());
+  assignment.material =
+      Acts::SurfaceMaterialJsonConverter::fromJson(entry.at("material"));
+  if (!assignment.material) {
+    throw std::invalid_argument("Keyed material needs a payload");
+  }
+}
+}  // namespace
 
 namespace Acts {
 // specialisations of decoration helper function
@@ -241,7 +265,7 @@ Acts::MaterialMapJsonConverter::MaterialMapJsonConverter(
 nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
     const TrackingGeometryMaterial& maps,
     const IVolumeMaterialJsonDecorator* decorator) {
-  VolumeMaterialMaps volumeMap = maps.second;
+  VolumeMaterialMaps volumeMap = maps.volumeMaterials;
   std::vector<std::pair<GeometryIdentifier, const IVolumeMaterial*>>
       mapVolumeInit;
   for (const auto& [key, value] : volumeMap) {
@@ -252,7 +276,7 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   nlohmann::json materialVolume =
       m_volumeMaterialConverter.toJson(hierarchyVolumeMap, decorator);
   std::vector<std::pair<GeometryIdentifier, nlohmann::json>> surfaceEntries;
-  for (const auto& [geoId, material] : maps.first) {
+  for (const auto& [geoId, material] : maps.surfaceMaterials) {
     nlohmann::json jEntry;
     if (material != nullptr) {
       jEntry[jsonKey().materialkey] =
@@ -268,6 +292,22 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   nlohmann::json materialMap;
   materialMap["Volumes"] = materialVolume;
   materialMap["Surfaces"] = materialSurface;
+  if (!maps.keyedSurfaces.empty()) {
+    nlohmann::json entries = nlohmann::json::array();
+    for (const auto& [key, assignment] : maps.keyedSurfaces) {
+      if (key.empty()) {
+        throw std::invalid_argument("Material key must not be empty");
+      }
+      nlohmann::json entry;
+      ::to_json(entry, assignment);
+      entry["key"] = key;
+      if (decorator != nullptr) {
+        decorator->decorate(*assignment.material, entry);
+      }
+      entries.push_back(std::move(entry));
+    }
+    materialMap["KeyedSurfaces"] = std::move(entries);
+  }
   return materialMap;
 }
 
@@ -299,6 +339,23 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
 
   Acts::TrackingGeometryMaterial maps = {surfaceMap, volumeMap};
 
+  if (materialmap.contains("KeyedSurfaces")) {
+    const auto& keyed = materialmap.at("KeyedSurfaces");
+    if (!keyed.is_array()) {
+      throw std::invalid_argument("KeyedSurfaces must be an array");
+    }
+    for (const auto& entry : keyed) {
+      const auto key = entry.at("key").get<std::string>();
+      if (key.empty()) {
+        throw std::invalid_argument("Material key must not be empty");
+      }
+      KeyedSurfaceMaterial assignment;
+      ::from_json(entry, assignment);
+      if (!maps.keyedSurfaces.try_emplace(key, std::move(assignment)).second) {
+        throw std::invalid_argument("Duplicate material key '" + key + "'");
+      }
+    }
+  }
   // Return the filled maps
   return maps;
 }
