@@ -29,9 +29,9 @@ namespace traccc::hip {
 clusterization_algorithm::clusterization_algorithm(
     const traccc::memory_resource& mr, const vecmem::copy& copy,
     const stream_wrapper& str, const config_type& config,
-    std::unique_ptr<const Logger> logger)
+    std::unique_ptr<const Logger> logger, await_function_type await_func)
     : device::clusterization_algorithm(mr, copy, config, std::move(logger)),
-      hip::algorithm_base(str) {}
+      hip::algorithm_base(str, std::move(await_func)) {}
 
 bool clusterization_algorithm::input_is_contiguous(
     const edm::silicon_cell_collection::const_view& cells) const {
