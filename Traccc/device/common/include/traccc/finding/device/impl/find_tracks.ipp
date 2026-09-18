@@ -63,7 +63,7 @@ TRACCC_HOST_DEVICE inline void find_tracks(
       payload.in_params_liveness_view);
   vecmem::device_vector<candidate_link> links(payload.links_view);
   vecmem::device_vector<candidate_link> tmp_links(payload.tmp_links_view);
-  bound_track_parameters_collection_types::device tmp_params(
+  soa_bound_track_parameters_device<default_algebra> tmp_params(
       payload.tmp_params_view);
   vecmem::device_vector<unsigned int> out_params_per_in_param(
       payload.out_params_per_in_param_view);
@@ -470,7 +470,7 @@ TRACCC_HOST_DEVICE inline void find_tracks(
                     measurements.at(std::get<0>(*result).measurement_index())
                         .dimensions()};
 
-            tmp_params.at(tmp_offset) = std::get<0>(*result).filtered_params();
+            tmp_params.set(tmp_offset, std::get<0>(*result).filtered_params());
           }
 
           /*
@@ -584,7 +584,7 @@ TRACCC_HOST_DEVICE inline void find_tracks(
           .chi2_sum = prev_chi2_sum,
           .ndf_sum = prev_ndf_sum};
 
-      tmp_params.at(in_offset) = in_params.at(in_param_id);
+      tmp_params.set(in_offset, in_params.at(in_param_id));
 
       /*
        * If we created a hole, we now have a single output parameter!
