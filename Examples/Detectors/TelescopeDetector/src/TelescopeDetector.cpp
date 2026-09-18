@@ -13,6 +13,8 @@
 
 #include <stdexcept>
 
+// bool Gen3 = true;
+
 namespace ActsExamples {
 
 TelescopeDetector::TelescopeDetector(const Config& cfg)
@@ -23,7 +25,7 @@ TelescopeDetector::TelescopeDetector(const Config& cfg)
         "The surface type could either be 0 for plane surface or 1 for disc "
         "surface.");
   }
-  if (m_cfg.binValue > 2) {
+  if (m_cfg.rotDirection > 2) {
     throw std::invalid_argument("The axis value could only be 0, 1, or 2.");
   }
   // Check if the bounds values are valid
@@ -44,11 +46,20 @@ TelescopeDetector::TelescopeDetector(const Config& cfg)
 
   m_nominalGeometryContext =
       Acts::GeometryContext::dangerouslyDefaultConstruct();
-  m_trackingGeometry = buildTelescopeDetector(
-      m_nominalGeometryContext, m_detectorStore, m_cfg.positions, m_cfg.stereos,
-      m_cfg.offsets, m_cfg.bounds, m_cfg.thickness,
-      static_cast<TelescopeSurfaceType>(m_cfg.surfaceType),
-      static_cast<Acts::AxisDirection>(m_cfg.binValue));
+
+  if (m_cfg.Gen3) {
+    m_trackingGeometry = buildTelescopeDetectorGen3(
+        m_nominalGeometryContext, m_detectorStore, m_cfg.positions,
+        m_cfg.stereos, m_cfg.offsets, m_cfg.bounds, m_cfg.thickness,
+        static_cast<TelescopeSurfaceType>(m_cfg.surfaceType),
+        static_cast<Acts::AxisDirection>(m_cfg.rotDirection));
+  } else {
+    m_trackingGeometry = buildTelescopeDetector(
+        m_nominalGeometryContext, m_detectorStore, m_cfg.positions,
+        m_cfg.stereos, m_cfg.offsets, m_cfg.bounds, m_cfg.thickness,
+        static_cast<TelescopeSurfaceType>(m_cfg.surfaceType),
+        static_cast<Acts::AxisDirection>(m_cfg.rotDirection));
+  }
 }
 
 TelescopeDetector::TelescopeDetector(const Config& cfg, NoBuildTag /*unused*/)
@@ -59,7 +70,7 @@ TelescopeDetector::TelescopeDetector(const Config& cfg, NoBuildTag /*unused*/)
         "The surface type could either be 0 for plane surface or 1 for disc "
         "surface.");
   }
-  if (m_cfg.binValue > 2) {
+  if (m_cfg.rotDirection > 2) {
     throw std::invalid_argument("The axis value could only be 0, 1, or 2.");
   }
   // Check if the bounds values are valid

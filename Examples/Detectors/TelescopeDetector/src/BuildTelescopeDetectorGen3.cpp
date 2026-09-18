@@ -6,10 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
@@ -17,27 +18,53 @@
 #include "Acts/Geometry/ILayerArrayCreator.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
+#include "Acts/Geometry/LayerBlueprintNode.hpp"
+#include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/PadBlueprintNode.hpp"
 #include "Acts/Geometry/PlaneLayer.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
+#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/TransformHelpers.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
+#include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <algorithm>
 #include <cstddef>
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
 #include <utility>
+#include <vector>
+
+using namespace Acts;
+using namespace Acts::UnitLiterals;
+using Acts::Blueprint;
+using Acts::BlueprintNode;
+using Acts::BlueprintOptions;
+using Acts::LayerBlueprintNode;
+using Acts::MaterialDesignatorBlueprintNode;
+using Acts::PadBlueprintNode;
+using Acts::StaticBlueprintNode;
 
 std::unique_ptr<const Acts::TrackingGeometry>
-ActsExamples::buildTelescopeDetector(
+ActsExamples::buildTelescopeDetectorGen3(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>>&
         detectorStore,
@@ -47,13 +74,13 @@ ActsExamples::buildTelescopeDetector(
     double thickness, TelescopeSurfaceType surfaceType,
     Acts::AxisDirection rotDirection) {
   using namespace Acts::UnitLiterals;
+  std::cout << "Building telescope detector Gen3..." << std::endl;
+
+  auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
   // The rectangle bounds for plane surface
   const auto pBounds =
       std::make_shared<const Acts::RectangleBounds>(bounds[0], bounds[1]);
-  // The radial bounds for disc surface
-  const auto rBounds =
-      std::make_shared<const Acts::RadialBounds>(bounds[0], bounds[1]);
 
   // Material of the surfaces
   Acts::Material silicon = Acts::Material::fromMassDensity(
@@ -61,6 +88,13 @@ ActsExamples::buildTelescopeDetector(
   Acts::MaterialSlab matProp(silicon, thickness);
   const auto surfaceMaterial =
       std::make_shared<Acts::HomogeneousSurfaceMaterial>(matProp);
+
+  // temporary
+  if (rotDirection != Acts::AxisDirection::AxisZ) {
+    throw std::invalid_argument(
+        "Only AxisDirection::AxisZ is currently supported, as a possible "
+        "rotation");
+  }
 
   // Construct the rotation
   // This assumes the direction is AxisX, AxisY or AxisZ. No reset is necessary
@@ -76,19 +110,32 @@ ActsExamples::buildTelescopeDetector(
     rotation.col(2) = Acts::Vector3(0, 1, 0);
   }
 
-  // Construct the surfaces and layers
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisX] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisY] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisZ] = {200_mm, 200_mm};
+  // cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+  Blueprint root{cfg};
+
+  auto& cubcontainer = root.addCuboidContainer("CuboidContainer", rotDirection);
+
   std::size_t nLayers = positions.size();
-  std::vector<Acts::LayerPtr> layers(nLayers);
-  for (unsigned int i = 0; i < nLayers; ++i) {
+  for (unsigned int i = 0; i < nLayers; i++) {
     // The translation without rotation yet
     Acts::Translation3 trans(offsets[0], offsets[1], positions[i]);
     // The entire transformation (the coordinate system, whose center is defined
     // by trans, will be rotated as well)
-    Acts::Transform3 trafo(Acts::makeTransform3(rotation) * trans);
+    Acts::Transform3 trafo(rotation * trans);
 
     // rotate around local z axis by stereo angle
     auto stereo = stereoAngles[i];
     trafo *= Acts::AngleAxis3(stereo, Acts::Vector3::UnitZ());
+
+    // Acts::Transform3 trafo(rotation);
+
+    // trafo.translation() += Vector3::UnitZ() * i * 10_mm;
+
+    std::cout << trafo.matrix() << std::endl;
 
     // Create the detector element
     std::shared_ptr<TelescopeDetectorElement> detElement = nullptr;
@@ -101,68 +148,54 @@ ActsExamples::buildTelescopeDetector(
           id, std::make_shared<Acts::Transform3>(trafo), pBounds, 1._um,
           surfaceMaterial);
     } else {
-      detElement = std::make_shared<TelescopeDetectorElement>(
-          id, std::make_shared<Acts::Transform3>(trafo), rBounds, 1._um,
-          surfaceMaterial);
+      throw std::invalid_argument(
+          "Only TelescopeSurfaceType::Plane is currently supported, not "
+          "TelescopeSurfaceType::Disc");
+      //   detElement = std::make_shared<TelescopeDetectorElement>(
+      //       id, std::make_shared<Acts::Transform3>(trafo), rBounds, 1._um,
+      //       surfaceMaterial);
     }
     detectorStore.push_back(detElement);
 
+    auto layerBounds = std::make_shared<CuboidVolumeBounds>(
+        bounds[0] + 5_mm, bounds[1] + 5_mm, thickness / 2 + 1_mm);
+
+    auto layerVol = std::make_unique<TrackingVolume>(
+        trafo, layerBounds, "parent" + std::to_string(i));
+
     // Get the surface
     auto surface = detElement->surface().getSharedPtr();
-    // Add the detector element to the detector store
-    detectorStore.push_back(std::move(detElement));
-    // Construct the surface array (one surface contained)
-    std::unique_ptr<Acts::SurfaceArray> surArray(
-        new Acts::SurfaceArray(surface));
-    // Construct the layer
-    if (surfaceType == TelescopeSurfaceType::Plane) {
-      layers[i] =
-          Acts::PlaneLayer::create(trafo, pBounds, std::move(surArray), 1._mm);
-    } else {
-      layers[i] =
-          Acts::DiscLayer::create(trafo, rBounds, std::move(surArray), 1._mm);
-    }
-    // Associate the layer to the surface
-    auto mutableSurface = const_cast<Acts::Surface*>(surface.get());
-    mutableSurface->associateLayer(*layers[i]);
+    layerVol->addSurface(surface);
+
+    // layerVol->assignGeometryId(GeometryIdentifier{}.withVolume(1));
+    auto layerNode = std::make_shared<StaticBlueprintNode>(std::move(layerVol));
+
+    cubcontainer.addChild(std::move(layerNode));
   }
 
-  // The volume transform
-  Acts::Translation3 transVol(offsets[0], offsets[1],
-                              (positions.front() + positions.back()) * 0.5);
-  Acts::Transform3 trafoVol(Acts::makeTransform3(rotation) * transVol);
+  // std::size_t nChambers = 10;
+  // // start from the edge of the parent volume/ layer volume
+  // double startX = -1000. + 3. + 0.5;
+  // Transform3 trf = Transform3(Translation3(startX, 0, 0));
+  // auto tbounds =
+  //     std::make_shared<TrapezoidVolumeBounds>(3_mm, 3_mm, 10_mm, 15_mm);
 
-  // The volume bounds is set to be a bit larger than either cubic with planes
-  // or cylinder with discs
-  auto length = positions.back() - positions.front();
-  std::shared_ptr<Acts::VolumeBounds> boundsVol = nullptr;
-  if (surfaceType == TelescopeSurfaceType::Plane) {
-    boundsVol = std::make_shared<Acts::CuboidVolumeBounds>(
-        bounds[0] + 5._mm, bounds[1] + 5._mm, length + 10._mm);
-  } else {
-    boundsVol = std::make_shared<Acts::CylinderVolumeBounds>(
-        std::max(bounds[0] - 5.0_mm, 0.), bounds[1] + 5._mm, length + 10._mm);
-  }
+  // for (std::size_t i = 0; i < nChambers; i++) {
+  //   // move the chambers position
+  //   trf.translation() += Vector3::UnitX() * i * 7_mm;
 
-  Acts::LayerArrayCreator::Config lacConfig;
-  Acts::LayerArrayCreator layArrCreator(
-      lacConfig,
-      Acts::getDefaultLogger("LayerArrayCreator", Acts::Logging::INFO));
-  Acts::LayerVector layVec;
-  for (unsigned int i = 0; i < nLayers; i++) {
-    layVec.push_back(layers[i]);
-  }
-  // Create the layer array
-  Acts::GeometryContext genGctx{gctx};
-  std::unique_ptr<const Acts::LayerArray> layArr(layArrCreator.layerArray(
-      genGctx, layVec, positions.front() - 2._mm, positions.back() + 2._mm,
-      Acts::BinningType::arbitrary, rotDirection));
+  //   auto childVol = std::make_unique<TrackingVolume>(
+  //       trf, tbounds, "child" + std::to_string(i));
+  //   childVol->assignGeometryId(
+  //       GeometryIdentifier{}.withVolume(1).withLayer(i + 1));
+  //   auto childNode =
+  //   std::make_shared<StaticBlueprintNode>(std::move(childVol));
+  //   layerNode->addChild(std::move(childNode));
+  // }
 
-  // Build the tracking volume
-  auto trackVolume = std::make_shared<Acts::TrackingVolume>(
-      trafoVol, boundsVol, nullptr, std::move(layArr), nullptr,
-      Acts::MutableTrackingVolumeVector{}, "Telescope");
+  std::ofstream os{"telescope.dot"};
+  root.graphviz(os);
+  auto trackingGeometry = root.construct({}, gctx, *logger);
 
-  // Build and return tracking geometry
-  return std::make_unique<Acts::TrackingGeometry>(trackVolume);
+  return trackingGeometry;
 }
