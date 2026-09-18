@@ -10,6 +10,8 @@
 
 #if DETRAY_ALGEBRA_ARRAY
 #include "algebra/array.hpp"
+#elif DETRAY_ALGEBRA_ARRAY_SOA
+#include "algebra/array_soa.hpp"
 #elif DETRAY_ALGEBRA_EIGEN
 #include "algebra/eigen.hpp"
 #elif DETRAY_ALGEBRA_FASTOR

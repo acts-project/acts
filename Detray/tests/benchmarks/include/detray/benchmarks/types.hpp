@@ -27,6 +27,10 @@ namespace detray::benchmarks {
 using algebra = detray::array<DETRAY_CUSTOM_SCALARTYPE>;
 DETRAY_DEFINE_BENCHMARK_NAME(array)
 
+#elif DETRAY_ALGEBRA_ARRAY_SOA
+using algebra = detray::array_soa<DETRAY_CUSTOM_SCALARTYPE>;
+DETRAY_DEFINE_BENCHMARK_NAME(array_soa)
+
 #elif DETRAY_ALGEBRA_EIGEN
 using algebra = detray::eigen<DETRAY_CUSTOM_SCALARTYPE>;
 DETRAY_DEFINE_BENCHMARK_NAME(eigen)
