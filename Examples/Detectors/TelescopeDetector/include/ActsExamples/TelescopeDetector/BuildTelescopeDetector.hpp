@@ -38,7 +38,7 @@ enum class TelescopeSurfaceType {
 ///               surface, and minR and maxR if disc surface
 /// @param thickness is the material thickness of each layer
 /// @param surfaceType is the detector surface type
-/// @param binValue indicates which axis the detector surface normals are
+/// @param rotDirection indicates which axis the detector surface normals are
 /// parallel to
 std::unique_ptr<const Acts::TrackingGeometry> buildTelescopeDetector(
     const Acts::GeometryContext& gctx,
@@ -48,6 +48,16 @@ std::unique_ptr<const Acts::TrackingGeometry> buildTelescopeDetector(
     const std::vector<double>& stereoAngles,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
     double thickness, TelescopeSurfaceType surfaceType,
-    Acts::AxisDirection binValue = Acts::AxisDirection::AxisZ);
+    Acts::AxisDirection rotDirection = Acts::AxisDirection::AxisZ);
+
+std::unique_ptr<const Acts::TrackingGeometry> buildTelescopeDetectorGen3(
+    const Acts::GeometryContext& gctx,
+    std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>>&
+        detectorStore,
+    const std::vector<double>& positions,
+    const std::vector<double>& stereoAngles,
+    const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
+    double thickness, TelescopeSurfaceType surfaceType,
+    Acts::AxisDirection rotDirection = Acts::AxisDirection::AxisZ);
 
 }  // namespace ActsExamples

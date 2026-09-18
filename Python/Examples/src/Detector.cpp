@@ -89,7 +89,8 @@ void addDetector(py::module& mex) {
     auto c =
         py::class_<TelescopeDetector::Config>(d, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, positions, stereos, offsets, bounds, thickness,
-                       surfaceType, binValue, materialDecorator, logLevel);
+                       surfaceType, rotDirection, materialDecorator, logLevel,
+                       Gen3);
   }
 }
 
