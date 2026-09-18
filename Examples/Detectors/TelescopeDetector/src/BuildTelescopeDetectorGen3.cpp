@@ -131,11 +131,7 @@ ActsExamples::buildTelescopeDetectorGen3(
     auto stereo = stereoAngles[i];
     trafo *= Acts::AngleAxis3(stereo, Acts::Vector3::UnitZ());
 
-    // Acts::Transform3 trafo(rotation);
-
-    // trafo.translation() += Vector3::UnitZ() * i * 10_mm;
-
-    std::cout << trafo.matrix() << std::endl;
+    // std::cout << trafo.matrix() << std::endl;
 
     // Create the detector element
     std::shared_ptr<TelescopeDetectorElement> detElement = nullptr;
@@ -173,28 +169,8 @@ ActsExamples::buildTelescopeDetectorGen3(
     cubcontainer.addChild(std::move(layerNode));
   }
 
-  // std::size_t nChambers = 10;
-  // // start from the edge of the parent volume/ layer volume
-  // double startX = -1000. + 3. + 0.5;
-  // Transform3 trf = Transform3(Translation3(startX, 0, 0));
-  // auto tbounds =
-  //     std::make_shared<TrapezoidVolumeBounds>(3_mm, 3_mm, 10_mm, 15_mm);
-
-  // for (std::size_t i = 0; i < nChambers; i++) {
-  //   // move the chambers position
-  //   trf.translation() += Vector3::UnitX() * i * 7_mm;
-
-  //   auto childVol = std::make_unique<TrackingVolume>(
-  //       trf, tbounds, "child" + std::to_string(i));
-  //   childVol->assignGeometryId(
-  //       GeometryIdentifier{}.withVolume(1).withLayer(i + 1));
-  //   auto childNode =
-  //   std::make_shared<StaticBlueprintNode>(std::move(childVol));
-  //   layerNode->addChild(std::move(childNode));
-  // }
-
-  std::ofstream os{"telescope.dot"};
-  root.graphviz(os);
+  //   std::ofstream os{"telescope.dot"};
+  //   root.graphviz(os);
   auto trackingGeometry = root.construct({}, gctx, *logger);
 
   return trackingGeometry;
