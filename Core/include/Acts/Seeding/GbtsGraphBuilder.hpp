@@ -24,7 +24,19 @@
 
 namespace Acts::Experimental {
 
-/// The doublet graph of the GBTS workflow.
+/// The doublet graph of the GBTS workflow, as built by `GbtsGraphBuilder`.
+struct GbtsGraph {
+  /// The graph edges, i.e. the doublets. Only the first `nEdges` are in use.
+  std::vector<detail::GbtsEdge> edgeStorage;
+
+  /// Number of edges in the graph.
+  std::uint32_t nEdges = 0;
+
+  /// Number of links between edges.
+  std::uint32_t nConnections = 0;
+};
+
+/// Builds the doublet graph of the GBTS workflow.
 ///
 /// Turns a finalized `GbtsNodeStorage` into a graph whose edges are doublets
 /// and whose links are the doublet pairs that a triplet cut accepted, then
@@ -33,7 +45,7 @@ namespace Acts::Experimental {
 ///
 /// The phi binning is the node storage's, so the sliding windows and the
 /// indexing they slide over cannot disagree.
-class GbtsGraph {
+class GbtsGraphBuilder {
  public:
   /// Config for the prompt graph
   struct Config {
@@ -189,9 +201,11 @@ class GbtsGraph {
   /// @param config Configuration for the graph
   /// @param geometry GBTS geometry
   /// @param logger Logging instance
-  GbtsGraph(const Config& config, std::shared_ptr<const GbtsGeometry> geometry,
-            std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
-                "GbtsGraph", Acts::Logging::Level::INFO));
+  GbtsGraphBuilder(const Config& config,
+                   std::shared_ptr<const GbtsGeometry> geometry,
+                   std::unique_ptr<const Acts::Logger> logger =
+                       Acts::getDefaultLogger("GbtsGraphBuilder",
+                                              Acts::Logging::Level::INFO));
 
   /// Access the configuration, which also carries the chain selection that
   /// seed extraction has to agree with.
@@ -201,27 +215,21 @@ class GbtsGraph {
   /// Build doublet graph from nodes.
   /// @param roi Region of interest descriptor
   /// @param nodeStorage Data storage containing nodes
-  /// @param edgeStorage Storage for generated edges
   /// @param bFieldInZ Magnetic field in z, in GeV/(e*mm)
-  /// @return Pair of edge count and edge link count
-  std::pair<std::uint32_t, std::uint32_t> buildTheGraph(
-      const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
-      std::vector<detail::GbtsEdge>& edgeStorage, float bFieldInZ) const;
+  /// @return The graph, with its edges and their edge and link counts
+  GbtsGraph buildTheGraph(const GbtsRoiDescriptor& roi,
+                          GbtsNodeStorage& nodeStorage, float bFieldInZ) const;
 
   /// Run connected component analysis on the graph.
-  /// @param nEdges Number of edges in the graph
-  /// @param edgeStorage Storage containing graph edges
+  /// @param graph The graph, whose edge levels are updated
   /// @return The highest chain level any edge reached
-  std::uint32_t runCCA(std::uint32_t nEdges,
-                       std::vector<detail::GbtsEdge>& edgeStorage) const;
+  std::uint32_t runCCA(GbtsGraph& graph) const;
 
   /// extract edges that start a chain
-  /// @param edgeStorage Storage containing graph edges
-  /// @param nEdges Number of edges in the graph
+  /// @param graph The graph
   /// @return The edges that start chains, ordered by length of chain, empty
   ///         if no chain reached the required level
-  std::vector<detail::GbtsEdge*> extractChainHeads(
-      std::vector<detail::GbtsEdge>& edgeStorage, std::uint32_t nEdges) const;
+  std::vector<detail::GbtsEdge*> extractChainHeads(GbtsGraph& graph) const;
 
  private:
   /// Check to see if z0 of segment is within the expected z range of the
