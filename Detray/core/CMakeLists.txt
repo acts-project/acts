@@ -110,6 +110,14 @@ target_link_libraries(
     INTERFACE detray::core detray::algebra_array
 )
 
+if(DETRAY_ARRAY_SOA_PLUGIN)
+    detray_add_library( detray_core_array_soa core_array_soa )
+    target_link_libraries(
+        detray_core_array_soa
+        INTERFACE detray::core detray::algebra_array_soa
+    )
+endif()
+
 if(DETRAY_EIGEN_PLUGIN)
     detray_add_library( detray_core_eigen core_eigen )
     target_link_libraries(
