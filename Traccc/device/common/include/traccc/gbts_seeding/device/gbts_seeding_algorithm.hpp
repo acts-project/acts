@@ -9,21 +9,18 @@
 
 // Local include(s).
 #include "traccc/device/algorithm_base.hpp"
-#include "traccc/gbts_seeding/device/gbts_add_terminus_to_path_store.hpp"
 #include "traccc/gbts_seeding/device/gbts_bid_seeds_for_hits.hpp"
 #include "traccc/gbts_seeding/device/gbts_bin_spacepoints.hpp"
 #include "traccc/gbts_seeding/device/gbts_compress_graph.hpp"
 #include "traccc/gbts_seeding/device/gbts_convert_seeds.hpp"
-#include "traccc/gbts_seeding/device/gbts_count_terminus_edges.hpp"
+#include "traccc/gbts_seeding/device/gbts_count_paths.hpp"
 #include "traccc/gbts_seeding/device/gbts_fill_path_store.hpp"
 #include "traccc/gbts_seeding/device/gbts_find_minmax_radius.hpp"
-#include "traccc/gbts_seeding/device/gbts_fit_segments.hpp"
+#include "traccc/gbts_seeding/device/gbts_finish_cca.hpp"
 #include "traccc/gbts_seeding/device/gbts_link_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_make_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_match_graph_edges.hpp"
-#include "traccc/gbts_seeding/device/gbts_rebid_seeds_for_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_reindex_edges.hpp"
-#include "traccc/gbts_seeding/device/gbts_reset_edge_bids.hpp"
 #include "traccc/gbts_seeding/device/gbts_run_cca_iteration.hpp"
 #include "traccc/gbts_seeding/device/gbts_sort_nodes.hpp"
 
@@ -162,19 +159,20 @@ class gbts_seeding_algorithm
   virtual void gbts_run_cca_iteration_kernel(
       const gbts_run_cca_iteration_payload& payload) const = 0;
 
-  /// Terminus-edge counting kernel launcher
+  /// CCA finishing kernel launcher
   ///
   /// @param payload The payload for the kernel
   ///
-  virtual void gbts_count_terminus_edges_kernel(
-      const gbts_count_terminus_edges_payload& payload) const = 0;
+  virtual void gbts_finish_cca_kernel(
+      const gbts_finish_cca_payload& payload) const = 0;
 
-  /// Terminus-to-path-store seeding kernel launcher
+  /// Path counting kernel launcher (followed by the inclusive scan of the
+  /// counts)
   ///
   /// @param payload The payload for the kernel
   ///
-  virtual void gbts_add_terminus_to_path_store_kernel(
-      const gbts_add_terminus_to_path_store_payload& payload) const = 0;
+  virtual void gbts_count_paths_kernel(
+      const gbts_count_paths_payload& payload) const = 0;
 
   /// Path-store-filling kernel launcher
   ///
@@ -182,27 +180,6 @@ class gbts_seeding_algorithm
   ///
   virtual void gbts_fill_path_store_kernel(
       const gbts_fill_path_store_payload& payload) const = 0;
-
-  /// Segment fitting kernel launcher
-  ///
-  /// @param payload The payload for the kernel
-  ///
-  virtual void gbts_fit_segments_kernel(
-      const gbts_fit_segments_payload& payload) const = 0;
-
-  /// Edge-bid reset kernel launcher
-  ///
-  /// @param payload The payload for the kernel
-  ///
-  virtual void gbts_reset_edge_bids_kernel(
-      const gbts_reset_edge_bids_payload& payload) const = 0;
-
-  /// Edge re-bid kernel launcher
-  ///
-  /// @param payload The payload for the kernel
-  ///
-  virtual void gbts_rebid_seeds_for_edges_kernel(
-      const gbts_rebid_seeds_for_edges_payload& payload) const = 0;
 
   /// Seeds-bid-for-hits kernel launcher
   ///
@@ -278,7 +255,6 @@ class gbts_seeding_algorithm
       vecmem::data::vector_buffer<unsigned int>& output_graph,
       vecmem::data::vector_buffer<float4>& reducedSP,
       const unsigned int nConnectedEdges, const unsigned int nSp,
-      vecmem::data::vector_buffer<unsigned int>& counters_buf,
       vecmem::vector<unsigned int>& h_counters) const;
 
   /// @}
