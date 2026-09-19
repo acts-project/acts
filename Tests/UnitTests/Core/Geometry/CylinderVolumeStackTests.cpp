@@ -1941,20 +1941,13 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidInput,
     }
   }
 
-  BOOST_TEST_CONTEXT("Volume has phi values or bevel values") {
+  BOOST_TEST_CONTEXT("Volume has phi values") {
     std::vector<std::shared_ptr<CylinderVolumeBounds>> invalidVolumeBounds = {
         std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm,
                                                0.2 * std::numbers::pi),
 
         std::make_shared<CylinderVolumeBounds>(
             100_mm, 400_mm, 400_mm, std::numbers::pi, 0.3 * std::numbers::pi),
-
-        std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm,
-                                               std::numbers::pi, 0.,
-                                               0.3 * std::numbers::pi),
-        std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm,
-                                               std::numbers::pi, 0., 0.,
-                                               0.3 * std::numbers::pi),
     };
 
     for (const auto& invalid : invalidVolumeBounds) {

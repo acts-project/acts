@@ -382,7 +382,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   firstOptions.targetSurface = m_cfg.reverseSearch ? pSurface.get() : nullptr;
   firstOptions.recordMaterialStates = m_cfg.recordMaterialStates;
   firstOptions.betheHeitlerApprox =
-      std::make_shared<Acts::AtlasBetheHeitlerApprox>(
+      std::make_shared<Acts::PolynomialBetheHeitlerApprox>(
           Acts::makeDefaultBetheHeitlerApprox());
 
   TrackFinderOptions secondOptions(ctx.recoGeoContext, ctx.magFieldContext,
