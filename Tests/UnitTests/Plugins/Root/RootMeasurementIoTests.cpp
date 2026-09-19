@@ -32,8 +32,7 @@ BOOST_AUTO_TEST_CASE(RootMeasurementIoTestsWrite) {
 
   // Create the configuration
   std::vector<BoundIndices> recoIndices = {eBoundLoc0, eBoundLoc1};
-  std::vector<BoundIndices> clusterIndices = {eBoundLoc0, eBoundLoc1};
-  RootMeasurementIo::Config cfg{recoIndices, clusterIndices};
+  RootMeasurementIo::Config cfg{recoIndices};
   RootMeasurementIo accessor(cfg);
 
   const std::filesystem::path filePath =
@@ -53,14 +52,11 @@ BOOST_AUTO_TEST_CASE(RootMeasurementIoTestsWrite) {
                    .withSensitive(4)
                    .withExtra(5);
 
-  accessor.fillIdentification(1, geoId);
+  accessor.fillIdentification(1, 42, geoId);
   accessor.fillTruthParameters(Vector2(0.1, 0.2), Vector4(1.1, 2.2, 3.3, 4.4),
                                Vector3(0.1, 0.2, 0.3),
                                std::make_pair(0.01, 0.02));
   accessor.fillBoundMeasurement({0.11, 0.22}, {0.01, 0.02}, {0, 1});
-  accessor.fillGlobalPosition(Vector3(1.0, 2.0, 3.0));
-  accessor.fillCluster(std::vector<std::tuple<int, int, float>>{
-      {1, 2, 0.5}, {2, 3, 1.5}, {3, 4, 2.5}});
 
   measurementTree.Fill();
   measurementTree.Write();
@@ -79,8 +75,7 @@ BOOST_AUTO_TEST_CASE(RootMeasurementIoTestsWrite) {
 BOOST_AUTO_TEST_CASE(RootMeasurementIoExceptions) {
   // Create the configuration
   std::vector<BoundIndices> recoIndices = {eBoundLoc0};
-  std::vector<BoundIndices> clusterIndices = {eBoundLoc0};
-  RootMeasurementIo::Config cfg{recoIndices, clusterIndices};
+  RootMeasurementIo::Config cfg{recoIndices};
   RootMeasurementIo accessor(cfg);
 
   BOOST_CHECK_THROW(accessor.fillBoundMeasurement({0.1, 0.2}, {0.01}, {0, 1}),
