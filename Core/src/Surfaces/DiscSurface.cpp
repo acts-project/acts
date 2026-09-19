@@ -27,7 +27,6 @@
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
-#include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
@@ -94,8 +93,7 @@ Result<Vector2> DiscSurface::globalToLocal(const GeometryContext& gctx,
                                            const Vector3& position,
                                            double tolerance) const {
   // transport it to the globalframe
-  Vector3 loc3Dframe =
-      inverseTransform(localToGlobalTransform(gctx)) * position;
+  Vector3 loc3Dframe = localToGlobalTransform(gctx).inverse() * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
@@ -131,8 +129,7 @@ Vector3 DiscSurface::localCartesianToGlobal(const GeometryContext& gctx,
 Vector2 DiscSurface::globalToLocalCartesian(const GeometryContext& gctx,
                                             const Vector3& position,
                                             double /*direction*/) const {
-  Vector3 loc3Dframe =
-      inverseTransform(localToGlobalTransform(gctx)) * position;
+  Vector3 loc3Dframe = localToGlobalTransform(gctx).inverse() * position;
   return Vector2(loc3Dframe.x(), loc3Dframe.y());
 }
 
@@ -208,8 +205,7 @@ BoundToFreeMatrix DiscSurface::boundToFreeJacobian(
       referenceFrame(gctx, position, direction).transpose();
 
   // calculate the transformation to local coordinates
-  const Vector3 posLoc =
-      inverseTransform(localToGlobalTransform(gctx)) * position;
+  const Vector3 posLoc = localToGlobalTransform(gctx).inverse() * position;
   const double lr = perp(posLoc);
   const double lphi = phi(posLoc);
   const double lcphi = std::cos(lphi);
@@ -245,8 +241,7 @@ FreeToBoundMatrix DiscSurface::freeToBoundJacobian(
       referenceFrame(gctx, position, direction).transpose();
 
   // calculate the transformation to local coordinates
-  const Vector3 posLoc =
-      inverseTransform(localToGlobalTransform(gctx)) * position;
+  const Vector3 posLoc = localToGlobalTransform(gctx).inverse() * position;
   const double lr = perp(posLoc);
   const double lphi = phi(posLoc);
   const double lcphi = std::cos(lphi);
@@ -316,7 +311,7 @@ Matrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
   // The local frame transform
   const auto& sTransform = localToGlobalTransform(gctx);
   // calculate the transformation to local coordinates
-  const Vector3 localPos = inverseTransform(sTransform) * position;
+  const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
   // the normalised coordinates are already cos and sin of the local azimuth
   const double lcphi = localPos.x() / lr;
@@ -390,7 +385,7 @@ std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
   }
   assert(m_transform != nullptr && other.m_transform != nullptr);
 
-  Transform3 otherLocal = inverseTransform(*m_transform) * *other.m_transform;
+  Transform3 otherLocal = m_transform->inverse() * *other.m_transform;
 
   constexpr auto tolerance = s_onSurfaceTolerance;
 

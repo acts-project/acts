@@ -39,7 +39,6 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
-#include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
@@ -1059,7 +1058,8 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
       Transform3::Identity(),
       std::make_shared<CuboidVolumeBounds>(10._m, 10._m, 10._m), "world");
 
-  const Transform3 volRot = getRotateX3D(90._degree) * getRotateY3D(90._degree);
+  const Transform3 volRot{AngleAxis3{90._degree, Vector3::UnitX()} *
+                          AngleAxis3{90._degree, Vector3::UnitY()}};
 
   std::shared_ptr<Surface> planeSurf1, planeSurf2{};
   std::vector<std::shared_ptr<Surface>> straws{};
@@ -1072,18 +1072,18 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
     /// surface by few cm in the local z-axis to distinguish them later in the
     /// geometry
     auto volume = std::make_unique<TrackingVolume>(
-        getTranslateX3D(1._m) * volRot,
+        Translation3{1._m, 0., 0.} * volRot,
         std::make_shared<CuboidVolumeBounds>(40._cm, 20._cm, 10._cm),
         "planeSurfaceVol");
 
     planeSurf1 = Surface::makeShared<PlaneSurface>(
         volume->localToGlobalTransform(tgContext) *
-            getTranslate3D(-20._cm, 0., -5._cm),
+            Translation3{-20._cm, 0., -5._cm},
         std::make_shared<RectangleBounds>(20._cm, 20._cm));
 
     planeSurf2 = Surface::makeShared<PlaneSurface>(
         volume->localToGlobalTransform(tgContext) *
-            getTranslate3D(20._cm, 0., 5._cm),
+            Translation3{20._cm, 0., 5._cm},
         std::make_shared<RectangleBounds>(20._cm, 20._cm));
 
     planeSurf1->assignIsSensitive(true);
@@ -1119,7 +1119,7 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
   {
     auto bounds = std::make_shared<CuboidVolumeBounds>(40._cm, 22.5_cm, 10._cm);
     auto volume = std::make_unique<TrackingVolume>(
-        getTranslateX3D(2.5_m) * getTranslateZ3D(1._m) * volRot, bounds);
+        Translation3{2.5_m, 0., 1._m} * volRot, bounds);
     using enum CuboidVolumeBounds::BoundValues;
     auto strawBounds = std::make_shared<LineBounds>(
         0.5 * strawPitch - 0.5_mm, bounds->get(eHalfLengthX) - 0.5_mm);
@@ -1127,7 +1127,8 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
          startY < bounds->get(eHalfLengthY); startY = startY + strawPitch) {
       const Vector3 tubePos{0., startY, -0.5 * strawPitch + 1._mm};
       Transform3 strawTrf = volume->localToGlobalTransform(tgContext) *
-                            getTranslate3D(tubePos) * getRotateY3D(90._degree);
+                            Translation3{tubePos} *
+                            AngleAxis3{90._degree, Vector3::UnitY()};
       auto newStraw = straws.emplace_back(
           Surface::makeShared<StrawSurface>(strawTrf, strawBounds));
       GeometryView3D::drawSurface(visualHelper, *newStraw, tgContext,
@@ -1142,8 +1143,8 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
         continue;
       }
       Transform3 strawTrf2 = volume->localToGlobalTransform(tgContext) *
-                             getTranslate3D(secondTubePos) *
-                             getRotateY3D(90._degree);
+                             Translation3{secondTubePos} *
+                             AngleAxis3{90._degree, Vector3::UnitY()};
       newStraw = straws.emplace_back(
           Surface::makeShared<StrawSurface>(strawTrf2, strawBounds));
       GeometryView3D::drawSurface(visualHelper, *newStraw, tgContext,
