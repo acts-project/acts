@@ -33,40 +33,41 @@ using index_type = std::size_t;
 template <concepts::value T>
 using value_type = T;
 /// Scalar type in a linear algebra vector: SoA layout
-template <concepts::value T, std::size_t W>
+template <concepts::value T, std::size_t W = 8u>
 using scalar_type = simd<T, W>;
 /// Array type used to store lane bundles or matrix columns
 template <concepts::simd_scalar T, index_type N>
 using storage_type = std::array<T, N>;
 /// Vector type used in the std::array SoA storage model
-template <concepts::value T, std::size_t W, std::size_t N>
+template <concepts::value T, std::size_t N, std::size_t W = 8u>
 using vector_type = algebra::storage::vector<N, simd<T, W>, storage_type>;
 /// Matrix type used in the std::array SoA storage model
-template <concepts::value T, std::size_t W, index_type ROWS, index_type COLS>
+template <concepts::value T, index_type ROWS, index_type COLS,
+          std::size_t W = 8u>
 using matrix_type =
     algebra::storage::matrix<storage_type, simd<T, W>, ROWS, COLS>;
 
 /// 2-element "vector" type, using a lane bundle in every element
-template <concepts::value T, std::size_t W>
-using vector2 = vector_type<T, W, 2>;
+template <concepts::value T, std::size_t W = 8u>
+using vector2 = vector_type<T, 2, W>;
 /// Point in 2D space, using a lane bundle in every element
-template <concepts::value T, std::size_t W>
+template <concepts::value T, std::size_t W = 8u>
 using point2 = vector2<T, W>;
 /// 3-element "vector" type, using a lane bundle in every element
-template <concepts::value T, std::size_t W>
-using vector3 = vector_type<T, W, 3>;
+template <concepts::value T, std::size_t W = 8u>
+using vector3 = vector_type<T, 3, W>;
 /// Point in 3D space, using a lane bundle in every element
-template <concepts::value T, std::size_t W>
+template <concepts::value T, std::size_t W = 8u>
 using point3 = vector3<T, W>;
 /// 6-element "vector" type, using a lane bundle in every element
-template <concepts::value T, std::size_t W>
-using vector6 = vector_type<T, W, 6>;
+template <concepts::value T, std::size_t W = 8u>
+using vector6 = vector_type<T, 6, W>;
 /// 8-element "vector" type, using a lane bundle in every element
-template <concepts::value T, std::size_t W>
-using vector8 = vector_type<T, W, 8>;
+template <concepts::value T, std::size_t W = 8u>
+using vector8 = vector_type<T, 8, W>;
 
 /// Geometry transformation implementation using a lane bundle in every element
-template <concepts::value T, std::size_t W>
+template <concepts::value T, std::size_t W = 8u>
 using transform3 = array_soa::math::transform3<storage_type, simd<T, W>>;
 
 /// Element Getter
@@ -82,21 +83,21 @@ namespace traits {
 
 /// Index type
 /// @{
-template <concepts::value T, std::size_t W, auto N>
-struct index<algebra::array_soa::vector_type<T, W, N>> {
+template <concepts::value T, auto N, std::size_t W>
+struct index<algebra::array_soa::vector_type<T, N, W>> {
   using type = algebra::array_soa::index_type;
 };
 
-template <concepts::value T, std::size_t W, auto ROWS, auto COLS>
-struct index<algebra::array_soa::matrix_type<T, W, ROWS, COLS>> {
+template <concepts::value T, auto ROWS, auto COLS, std::size_t W>
+struct index<algebra::array_soa::matrix_type<T, ROWS, COLS, W>> {
   using type = algebra::array_soa::index_type;
 };
 /// @}
 
 /// Dimensions
 /// @{
-template <concepts::value T, std::size_t W, auto N>
-struct dimensions<algebra::array_soa::vector_type<T, W, N>> {
+template <concepts::value T, auto N, std::size_t W>
+struct dimensions<algebra::array_soa::vector_type<T, N, W>> {
   using index_type = algebra::array_soa::index_type;
 
   static constexpr index_type _dim{1};
@@ -104,8 +105,8 @@ struct dimensions<algebra::array_soa::vector_type<T, W, N>> {
   static constexpr index_type _columns{1};
 };
 
-template <concepts::value T, std::size_t W, auto ROWS, auto COLS>
-struct dimensions<algebra::array_soa::matrix_type<T, W, ROWS, COLS>> {
+template <concepts::value T, auto ROWS, auto COLS, std::size_t W>
+struct dimensions<algebra::array_soa::matrix_type<T, ROWS, COLS, W>> {
   using index_type = algebra::array_soa::index_type;
 
   static constexpr index_type _dim{2};
@@ -116,13 +117,13 @@ struct dimensions<algebra::array_soa::matrix_type<T, W, ROWS, COLS>> {
 
 /// Value type (single precision value) and scalar type (lane bundle)
 /// @{
-template <concepts::value T, std::size_t W, auto N>
-struct value<algebra::array_soa::vector_type<T, W, N>> {
+template <concepts::value T, auto N, std::size_t W>
+struct value<algebra::array_soa::vector_type<T, N, W>> {
   using type = T;
 };
 
-template <concepts::value T, std::size_t W, auto ROWS, auto COLS>
-struct value<algebra::array_soa::matrix_type<T, W, ROWS, COLS>> {
+template <concepts::value T, auto ROWS, auto COLS, std::size_t W>
+struct value<algebra::array_soa::matrix_type<T, ROWS, COLS, W>> {
   using type = T;
 };
 
@@ -131,49 +132,49 @@ struct value<algebra::array_soa::simd<T, W>> {
   using type = T;
 };
 
-template <concepts::value T, std::size_t W, auto N>
-struct scalar<algebra::array_soa::vector_type<T, W, N>> {
+template <concepts::value T, auto N, std::size_t W>
+struct scalar<algebra::array_soa::vector_type<T, N, W>> {
   using type = algebra::array_soa::simd<T, W>;
 };
 
-template <concepts::value T, std::size_t W, auto ROWS, auto COLS>
-struct scalar<algebra::array_soa::matrix_type<T, W, ROWS, COLS>> {
+template <concepts::value T, auto ROWS, auto COLS, std::size_t W>
+struct scalar<algebra::array_soa::matrix_type<T, ROWS, COLS, W>> {
   using type = algebra::array_soa::simd<T, W>;
 };
 /// @}
 
 /// Compatible vector and matrix types
 /// @{
-template <concepts::value T, std::size_t W, auto N>
-struct vector<algebra::array_soa::vector_type<T, W, N>> {
+template <concepts::value T, auto N, std::size_t W>
+struct vector<algebra::array_soa::vector_type<T, N, W>> {
   template <typename other_T, auto other_N>
-  using other_type = algebra::array_soa::vector_type<other_T, W, other_N>;
+  using other_type = algebra::array_soa::vector_type<other_T, other_N, W>;
 
   using type = other_type<T, N>;
 };
 
-template <concepts::value T, std::size_t W, auto ROWS, auto COLS>
-struct vector<algebra::array_soa::matrix_type<T, W, ROWS, COLS>> {
+template <concepts::value T, auto ROWS, auto COLS, std::size_t W>
+struct vector<algebra::array_soa::matrix_type<T, ROWS, COLS, W>> {
   template <typename other_T, auto other_N>
-  using other_type = algebra::array_soa::vector_type<other_T, W, other_N>;
+  using other_type = algebra::array_soa::vector_type<other_T, other_N, W>;
 
   using type = other_type<T, ROWS>;
 };
 
-template <concepts::value T, std::size_t W, auto ROWS, auto COLS>
-struct matrix<algebra::array_soa::matrix_type<T, W, ROWS, COLS>> {
+template <concepts::value T, auto ROWS, auto COLS, std::size_t W>
+struct matrix<algebra::array_soa::matrix_type<T, ROWS, COLS, W>> {
   template <typename other_T, auto other_ROWS, auto other_COLS>
   using other_type =
-      algebra::array_soa::matrix_type<other_T, W, other_ROWS, other_COLS>;
+      algebra::array_soa::matrix_type<other_T, other_ROWS, other_COLS, W>;
 
-  using type = algebra::array_soa::matrix_type<T, W, ROWS, COLS>;
+  using type = algebra::array_soa::matrix_type<T, ROWS, COLS, W>;
 };
 
-template <concepts::value T, std::size_t W, auto N>
-struct matrix<algebra::array_soa::vector_type<T, W, N>> {
+template <concepts::value T, auto N, std::size_t W>
+struct matrix<algebra::array_soa::vector_type<T, N, W>> {
   template <typename other_T, auto other_ROWS, auto other_COLS>
   using other_type =
-      algebra::array_soa::matrix_type<other_T, W, other_ROWS, other_COLS>;
+      algebra::array_soa::matrix_type<other_T, other_ROWS, other_COLS, W>;
 
   using type = other_type<T, N, 1>;
 };
@@ -181,18 +182,18 @@ struct matrix<algebra::array_soa::vector_type<T, W, N>> {
 
 /// Getters
 /// @{
-template <concepts::value T, std::size_t W, auto N>
-struct element_getter<algebra::array_soa::vector_type<T, W, N>> {
+template <concepts::value T, auto N, std::size_t W>
+struct element_getter<algebra::array_soa::vector_type<T, N, W>> {
   using type = algebra::array_soa::element_getter;
 };
 
-template <concepts::value T, std::size_t W, auto ROWS, auto COLS>
-struct element_getter<algebra::array_soa::matrix_type<T, W, ROWS, COLS>> {
+template <concepts::value T, auto ROWS, auto COLS, std::size_t W>
+struct element_getter<algebra::array_soa::matrix_type<T, ROWS, COLS, W>> {
   using type = algebra::array_soa::element_getter;
 };
 
-template <concepts::value T, std::size_t W, auto ROWS, auto COLS>
-struct block_getter<algebra::array_soa::matrix_type<T, W, ROWS, COLS>> {
+template <concepts::value T, auto ROWS, auto COLS, std::size_t W>
+struct block_getter<algebra::array_soa::matrix_type<T, ROWS, COLS, W>> {
   using type = algebra::array_soa::block_getter;
 };
 /// @}

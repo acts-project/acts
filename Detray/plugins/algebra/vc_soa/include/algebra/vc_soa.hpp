@@ -86,6 +86,9 @@ struct vc_soa {
   /// Fixed-size matrix type with the requested row and column counts.
   using matrix = algebra::vc_soa::matrix_type<value_type, ROWS, COLS>;
   /// @}
+
+  /// @returns the widh of the SIMD lane
+  static consteval std::size_t size() { return simd<V>::Size; }
 };
 /// @}
 
