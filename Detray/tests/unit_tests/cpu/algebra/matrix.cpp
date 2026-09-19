@@ -800,7 +800,7 @@ TEST_F(detray_algebra, matrix_small_mixed) {
   detray::getter::element(m23, 1, 2) += 7.f;
 
   // Test scalar X Matrix
-  m23 = 2. * m23;
+  m23 = 2.f * m23;
   ASSERT_NEAR(detray::getter::element(m23, 0, 0), 4.f, this->epsilon());
   ASSERT_NEAR(detray::getter::element(m23, 0, 1), 6.f, this->epsilon());
   ASSERT_NEAR(detray::getter::element(m23, 0, 2), 8.f, this->epsilon());

@@ -36,8 +36,11 @@ using algebra::storage::operator+;
 
 /// Define the plugin types
 /// @{
-template <concepts::value V, std::size_t W = 8>
+template <concepts::value V, std::size_t W = 8u>
 struct array_soa {
+  /// @returns the widh of the SIMD lane
+  static consteval std::size_t size() { return W; }
+
   /// Define scalar precision
   using value_type = V;
 
@@ -57,7 +60,7 @@ struct array_soa {
   using vector3D = algebra::array_soa::vector3<value_type, W>;
 
   template <std::size_t ROWS, std::size_t COLS>
-  using matrix = algebra::array_soa::matrix_type<value_type, W, ROWS, COLS>;
+  using matrix = algebra::array_soa::matrix_type<value_type, ROWS, COLS, W>;
   /// @}
 };
 /// @}
