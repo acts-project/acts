@@ -86,17 +86,17 @@ void MultiLayerNavigationPolicy::initializeCandidates(
                            [&](const std::size_t i) { return &surfaces[i]; });
   }
 
-  /// Remove duplicate surface candidates
-  std::size_t writeIdx{0ul};
-  for (std::size_t readIdx = 0ul; readIdx < surfCandidates.size(); ++readIdx) {
-    bool appended{false};
-    for (std::size_t check = 0ul; check < writeIdx; ++check) {
-      if (surfCandidates[check] == surfCandidates[readIdx]) {
-        appended = true;
+  // Remove duplicate surface candidates
+  std::size_t writeIdx = 0;
+  for (std::size_t readIdx = 0; readIdx < surfCandidates.size(); ++readIdx) {
+    bool alreadySeen = false;
+    for (std::size_t k = 0; k < writeIdx; ++k) {
+      if (surfCandidates[k] == surfCandidates[readIdx]) {
+        alreadySeen = true;
         break;
       }
     }
-    if (appended) {
+    if (alreadySeen) {
       continue;
     }
     surfCandidates[writeIdx] = surfCandidates[readIdx];
@@ -111,9 +111,9 @@ void MultiLayerNavigationPolicy::initializeCandidates(
                          surfCandidates.end());
   }
 
-  ACTS_DEBUG("MultiLayerNavigationPolicy() - reported "
-             << surfCandidates.size() << " candidates. "
-             << "\n " << printCandidates(surfCandidates, writeIdx));
+  ACTS_VERBOSE("MultiLayerNavigationPolicy() - reported "
+               << surfCandidates.size() << " candidates. "
+               << "\n " << printCandidates(surfCandidates, writeIdx));
 
   // fill the navigation stream with the container
   for (const auto* surf : surfCandidates) {
