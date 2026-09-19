@@ -192,9 +192,9 @@ __global__ void gbts_convert_seeds(
 gbts_seeding_algorithm::gbts_seeding_algorithm(
     const gbts_seedfinder_config& cfg, const memory_resource& mr,
     const vecmem::copy& copy, const stream_wrapper& str,
-    std::unique_ptr<const Logger> logger)
+    std::unique_ptr<const Logger> logger, await_function_type await_func)
     : device::gbts_seeding_algorithm(cfg, mr, copy, std::move(logger)),
-      cuda::algorithm_base{str} {}
+      cuda::algorithm_base{str, std::move(await_func)} {}
 
 void gbts_seeding_algorithm::gbts_bin_spacepoints_kernel(
     const device::gbts_bin_spacepoints_payload& payload) const {
