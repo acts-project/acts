@@ -556,10 +556,8 @@ class RiddersStepper final {
   /// @return the jacobian, or a failure if the parameters cannot be expressed on @p surface
   Result<Jacobian> transportToBound(
       State& state, const Surface& surface,
-      const FreeToBoundCorrection& freeToBoundCorrection =
+      const FreeToBoundCorrection& /*freeToBoundCorrection*/ =
           FreeToBoundCorrection(false)) const {
-    static_cast<void>(freeToBoundCorrection);
-
     if (!state.covTransport) {
       return Result<Jacobian>::success(Jacobian::Identity());
     }

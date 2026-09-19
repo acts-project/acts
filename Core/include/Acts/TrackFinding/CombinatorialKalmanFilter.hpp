@@ -408,14 +408,18 @@ class CombinatorialKalmanFilter {
           ACTS_VERBOSE("Target surface reached");
 
           // Bind the parameter to the target surface
+          auto transportRes =
+              stepper.transportToBound(state.stepping, *targetReached.surface);
+          if (!transportRes.ok()) {
+            ACTS_DEBUG("Error while transporting to the target surface: "
+                       << transportRes.error() << " "
+                       << transportRes.error().message());
+            return transportRes.error();
+          }
           auto res =
-              stepper.transportToBound(state.stepping, *targetReached.surface)
-                  .and_then([&](const auto& /*jacobian*/) {
-                    return stepper.boundParameters(state.stepping,
-                                                   *targetReached.surface);
-                  });
+              stepper.boundParameters(state.stepping, *targetReached.surface);
           if (!res.ok()) {
-            ACTS_DEBUG("Error while acquiring bound state for target surface: "
+            ACTS_DEBUG("Error while binding to the target surface: "
                        << res.error() << " " << res.error().message());
             return res.error();
           }
@@ -1084,14 +1088,18 @@ class CombinatorialKalmanFilter {
 
           trackStateProxy.setReferenceSurface(surface.getSharedPtr());
           // Bind the transported state to the current surface
-          auto res =
-              singleStepper.transportToBound(singleState, surface)
-                  .and_then([&](const auto& /*jacobian*/) {
-                    return singleStepper.boundParameters(singleState, surface);
-                  });
+          auto transportRes =
+              singleStepper.transportToBound(singleState, surface);
+          if (!transportRes.ok()) {
+            ACTS_ERROR("Transport to surface "
+                       << surface.geometryId()
+                       << " failed: " << transportRes.error());
+            return transportRes.error();
+          }
+          auto res = singleStepper.boundParameters(singleState, surface);
           if (!res.ok()) {
-            ACTS_ERROR("Propagate to surface " << surface.geometryId()
-                                               << " failed: " << res.error());
+            ACTS_ERROR("Bind to surface " << surface.geometryId()
+                                          << " failed: " << res.error());
             return res.error();
           }
           const auto& boundParams = *res;

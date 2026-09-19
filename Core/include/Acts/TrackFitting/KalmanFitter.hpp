@@ -404,19 +404,22 @@ class KalmanFitter {
           ACTS_VERBOSE("Setting fitted parameters at target surface");
 
           // Bind the parameter to the target surface
+          auto transportRes =
+              stepper.transportToBound(state.stepping, *targetReached.surface);
+          if (!transportRes.ok()) {
+            ACTS_DEBUG("Error while transporting to the target surface: "
+                       << transportRes.error() << " "
+                       << transportRes.error().message());
+            return transportRes.error();
+          }
           auto res =
-              stepper.transportToBound(state.stepping, *targetReached.surface)
-                  .and_then([&](const auto& /*jacobian*/) {
-                    return stepper.boundParameters(state.stepping,
-                                                   *targetReached.surface);
-                  });
+              stepper.boundParameters(state.stepping, *targetReached.surface);
           if (!res.ok()) {
-            ACTS_DEBUG("Error while acquiring bound state for target surface: "
+            ACTS_DEBUG("Error while binding to the target surface: "
                        << res.error() << " " << res.error().message());
             return res.error();
-          } else {
-            result.fittedParameters = std::move(*res);
           }
+          result.fittedParameters = std::move(*res);
         }
 
         result.finished = true;

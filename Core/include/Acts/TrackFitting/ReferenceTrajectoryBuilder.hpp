@@ -241,19 +241,22 @@ class ReferenceTrajectoryBuilder {
         if (isTargetReached) {
           ACTS_VERBOSE("Setting parameters at target surface");
 
+          auto transportRes =
+              stepper.transportToBound(state.stepping, *targetReached.surface);
+          if (!transportRes.ok()) {
+            ACTS_DEBUG("Error while transporting to the target surface: "
+                       << transportRes.error() << " "
+                       << transportRes.error().message());
+            return transportRes.error();
+          }
           auto res =
-              stepper.transportToBound(state.stepping, *targetReached.surface)
-                  .and_then([&](const auto& /*jacobian*/) {
-                    return stepper.boundParameters(state.stepping,
-                                                   *targetReached.surface);
-                  });
+              stepper.boundParameters(state.stepping, *targetReached.surface);
           if (!res.ok()) {
-            ACTS_DEBUG("Error while acquiring bound state for target surface: "
+            ACTS_DEBUG("Error while binding to the target surface: "
                        << res.error() << " " << res.error().message());
             return res.error();
-          } else {
-            result.referenceParameters = std::move(*res);
           }
+          result.referenceParameters = std::move(*res);
         }
 
         result.finished = true;
