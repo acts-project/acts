@@ -427,8 +427,6 @@ class SympyStepper final {
   /// This anchors the state on @p surface. Without a covariance the state
   /// does not change.
   ///
-  /// @note It does not check if the position is on @p surface
-  ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface The surface to transport the covariance to
   /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound

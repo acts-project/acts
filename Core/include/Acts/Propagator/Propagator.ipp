@@ -16,8 +16,6 @@
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
@@ -354,17 +352,6 @@ auto Propagator<S, N>::makeResult(propagator_state_t state,
     }
 
     if (target != nullptr) {
-      // The propagation can stop before it reaches the target, e.g. at the end
-      // of the world. The transport assumes that the position is on the
-      // surface, so check this first.
-      if (!target->isOnSurface(state.options.geoContext,
-                               m_stepper.position(state.stepping),
-                               m_stepper.direction(state.stepping),
-                               BoundaryTolerance::Infinite())) {
-        ACTS_DEBUG("Final position is not on the target surface");
-        return SurfaceError::GlobalPositionNotOnSurface;
-      }
-
       // We are at a surface, so we need to compute the bound state
       const auto jacobian = m_stepper.transportToBound(state.stepping, *target);
       if (!jacobian.ok()) {

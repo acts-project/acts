@@ -69,9 +69,7 @@ BoundTrackParameters curvilinearParameters(
 /// @param [in] freeToBoundCorrection Correction for non-linearity effect during
 ///        transform from free to bound
 ///
-/// @note No check is done if the position is actually on the surface
-///
-/// @return Failure if the parameters cannot be expressed on the surface
+/// @return Failure if the parameters are not on the surface
 Result<void> transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
