@@ -197,20 +197,10 @@ struct GsfActor {
     // The Core Algorithm
     ////////////////////////
 
-    // Early return if nothing happens
-    if (!haveMaterial && !haveMeasurement) {
-      // No hole before first measurement
-      if (result.processedStates > 0 && surface.isSensitive()) {
-        TemporaryStates tmpStates;
-        Result<void> res = noMeasurementUpdate(state, stepper, surface, result,
-                                               tmpStates, true);
-        if (!res.ok()) {
-          if (m_cfg.abortOnError) {
-            std::abort();
-          }
-          return res.error();
-        }
-      }
+    // A surface without material and without measurement only contributes a
+    // hole, and there is no hole before the first measurement
+    const bool holeOnly = !haveMaterial && !haveMeasurement;
+    if (holeOnly && (result.processedStates == 0 || !surface.isSensitive())) {
       return Result<void>::success();
     }
 
@@ -223,15 +213,28 @@ struct GsfActor {
       result.nInvalidBetheHeitler.update();
     }
 
-    for (auto cmp : stepper.componentIterable(state.stepping)) {
-      auto transportRes =
-          cmp.singleStepper(stepper).transportToBound(cmp.state(), surface);
-      if (!transportRes.ok()) {
+    // The transport closes the segment since the last surface with a state, so
+    // its jacobian is the one of the state this call creates
+    Result<BoundMatrix> jacobian =
+        stepper.transportToBound(state.stepping, surface);
+    if (!jacobian.ok()) {
+      if (m_cfg.abortOnError) {
+        std::abort();
+      }
+      return jacobian.error();
+    }
+
+    if (holeOnly) {
+      TemporaryStates tmpStates;
+      Result<void> res = noMeasurementUpdate(state, stepper, surface, result,
+                                             tmpStates, *jacobian);
+      if (!res.ok()) {
         if (m_cfg.abortOnError) {
           std::abort();
         }
-        return transportRes.error();
+        return res.error();
       }
+      return Result<void>::success();
     }
 
     if (m_cfg.multipleScattering && haveMaterial) {
@@ -263,7 +266,7 @@ struct GsfActor {
       TemporaryStates tmpStates;
 
       auto res = kalmanUpdate(state, stepper, surface, result, tmpStates,
-                              foundSourceLink->second);
+                              foundSourceLink->second, *jacobian);
 
       if (!res.ok()) {
         if (m_cfg.abortOnError) {
@@ -283,10 +286,10 @@ struct GsfActor {
 
       if (haveMeasurement) {
         res = kalmanUpdate(state, stepper, surface, result, tmpStates,
-                           foundSourceLink->second);
+                           foundSourceLink->second, *jacobian);
       } else {
         res = noMeasurementUpdate(state, stepper, surface, result, tmpStates,
-                                  false);
+                                  *jacobian);
       }
 
       if (!res.ok()) {
@@ -374,7 +377,8 @@ struct GsfActor {
   Result<void> kalmanUpdate(propagator_state_t& state, const stepper_t& stepper,
                             const Surface& surface, result_type& result,
                             TemporaryStates& tmpStates,
-                            const SourceLink& sourceLink) const {
+                            const SourceLink& sourceLink,
+                            const BoundMatrix& jacobian) const {
     // Keep track of all created components for outlier handling
     std::vector<TrackIndexType> allTips;
     allTips.reserve(stepper.numberComponents(state.stepping));
@@ -476,7 +480,8 @@ struct GsfActor {
                               .setHasParameters()
                               .setHasMaterial(surface.hasMaterial())
                               .setHasMeasurement()
-                              .setIsOutlier(isOutlier));
+                              .setIsOutlier(isOutlier),
+                          jacobian);
 
     result.lastMeasurementTip = result.currentTip;
     result.lastMeasurementSurface = &surface;
@@ -503,7 +508,7 @@ struct GsfActor {
                                    const stepper_t& stepper,
                                    const Surface& surface, result_type& result,
                                    TemporaryStates& tmpStates,
-                                   bool doCovTransport) const {
+                                   const BoundMatrix& jacobian) const {
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto& singleState = cmp.state();
       const auto& singleStepper = cmp.singleStepper(stepper);
@@ -519,13 +524,6 @@ struct GsfActor {
       {
         trackStateProxy.setReferenceSurface(surface.getSharedPtr());
         // Bind the transported state to the current surface
-        if (doCovTransport) {
-          auto transportRes =
-              singleStepper.transportToBound(singleState, surface);
-          if (!transportRes.ok()) {
-            return transportRes.error();
-          }
-        }
         auto res = singleStepper.boundParameters(singleState, surface);
         if (!res.ok()) {
           return res.error();
@@ -562,15 +560,16 @@ struct GsfActor {
                           TrackStateType()
                               .setHasParameters()
                               .setHasMaterial(surface.hasMaterial())
-                              .setIsHole(isHole));
+                              .setIsHole(isHole),
+                          jacobian);
 
     return Result<void>::success();
   }
 
   void updateMultiTrajectory(result_type& result,
                              const TemporaryStates& tmpStates,
-                             const Surface& surface,
-                             TrackStateType type) const {
+                             const Surface& surface, TrackStateType type,
+                             const BoundMatrix& jacobian) const {
     using PrtProjector =
         MultiTrajectoryProjector<StatesType::ePredicted, traj_t>;
     using FltProjector =
@@ -585,7 +584,8 @@ struct GsfActor {
 
       // Smoothed parameters are not allocated here but in the backward pass
       // that computes them, so they are never left uninitialized
-      auto combinedStateMask = TrackStatePropMask::Predicted;
+      auto combinedStateMask =
+          TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
       if (type.isMeasurement()) {
         combinedStateMask |=
             TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered;
@@ -604,6 +604,7 @@ struct GsfActor {
       }
       combinedState.copyFrom(firstCmpProxy, copyMask);
       combinedState.typeFlags() = type;
+      combinedState.jacobian() = jacobian;
 
       auto [prtMean, prtCov] = mergeGaussianMixture(
           tmpStates.tips, PrtProjector{tmpStates.traj, tmpStates.weights},
