@@ -27,15 +27,11 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   const Vector3& position = queryPoint.position;
   const Vector3& direction = queryPoint.direction;
 
-  // De-duplicate by surface pointer first, so each surface is intersected only
-  // once in this pass, keeping the first occurrence (in insertion order). This
-  // reproduces the previous std::stable_sort + std::unique result (first-wins),
-  // but in place: it avoids the temporary buffer that std::stable_sort
-  // allocates on every call, which matters on this per-navigation hot path. The
-  // candidate count per volume is small, so the quadratic scan is cheap — but
-  // it is skipped entirely when the caller guarantees uniqueness. (Should a
-  // duplicate slip through regardless, the post-sort unique pass below still
-  // removes it; only the first-wins tolerance selection is then not enforced.)
+  // De-duplicate by surface pointer, keeping the first occurrence, so each
+  // surface is intersected once and with the tolerance it was added with
+  // first. The caller relies on that order to give a candidate a tolerance the
+  // policies do not know about. The scan is quadratic, but the candidate count
+  // per volume is small, and a caller that guarantees uniqueness skips it.
   if (!candidatesAreUnique) {
     ACTS_VERBOSE("De-duplicate the candidates:" << m_candidates);
     std::size_t writeIdx = 0;

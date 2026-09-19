@@ -11,6 +11,8 @@
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
 #include <algorithm>
@@ -158,12 +160,9 @@ BOOST_AUTO_TEST_CASE(NothingOfTheGeometryIsSkippedGen3) {
   BOOST_CHECK(isSubsequence(baseline, reached));
 }
 
-// A portal that is closer wins, so the propagation cannot step out of its
-// volume through an external surface. The surface below is 20 m across and
-// crosses the track at z = 0.96 m, outside the telescope volume.
-
-// The boundary is the closer candidate, so the propagation leaves through it
-// before it targets the surface.
+// A closer portal wins, so an external surface cannot step the propagation
+// out of its volume. The surface below crosses the track at z = 0.96 m,
+// outside the telescope volume, so the boundary comes first.
 BOOST_AUTO_TEST_CASE(PortalWinsGen1) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen1", logLevel));
   Telescope telescope = makeTelescopeGen1();
@@ -369,6 +368,31 @@ BOOST_AUTO_TEST_CASE(SeveralSurfacesInOrderGen3) {
   const std::vector<const Surface*> expected{first.get(), second.get(),
                                              third.get()};
   BOOST_CHECK(externals == expected);
+}
+
+// A surface with two solutions, where the one behind the propagation is the
+// closer one. The navigator has to offer the solution ahead.
+
+BOOST_AUTO_TEST_CASE(SecondSolutionAheadGen1) {
+  ACTS_LOCAL_LOGGER(getDefaultLogger("Gen1", logLevel));
+  Telescope telescope = makeTelescopeGen1();
+  Navigator navigator = makeNavigator(telescope.geometry, logger());
+
+  // A cylinder around the y axis, so a track along z crosses it at z = +-R
+  constexpr double radius = 0.3_m;
+  auto external = Surface::makeShared<CylinderSurface>(
+      Transform3{AngleAxis3{90._degree, Vector3::UnitX()}},
+      std::make_shared<const CylinderBounds>(radius, 0.5_m));
+
+  Navigator::Options options(gctx);
+  options.addExternalSurface(*external);
+  // Start closer to the solution behind than to the one ahead
+  NavigationTarget target =
+      firstTarget(navigator, options, {0, 0, -0.2 * radius});
+
+  BOOST_REQUIRE(!target.isNone());
+  BOOST_CHECK_EQUAL(&target.surface(), external.get());
+  BOOST_CHECK_GT(target.pathLength(), 0.);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

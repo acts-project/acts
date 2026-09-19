@@ -769,8 +769,8 @@ class KalmanFitter {
     }
 
     if constexpr (!isDirectNavigator) {
-      // Relax the bounds check on the measurement surfaces, so the
-      // navigator targets them even where the track misses them.
+      // Relax the bounds check, so the navigator targets a measurement
+      // surface even where the track misses it
       for (const auto& [surface, _] : inputMeasurements) {
         propagatorOptions.navigation.overrideBoundaryTolerance(*surface);
       }

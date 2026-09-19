@@ -35,14 +35,11 @@ struct BoundaryToleranceOverride {
 
 /// A surface the navigator offers on top of the tracking geometry.
 ///
-/// The geometry does not resolve it, so the navigator intersects it on every
-/// step and targets it whenever it is closer than the candidate of the
-/// geometry. The candidate is held back rather than consumed, so nothing of
-/// the geometry is skipped and a closer portal still wins.
-///
-/// The geometry resolves its own intersections once per volume. That is not
-/// enough here, because @c Surface::intersect estimates along a straight line
-/// while a track in a magnetic field bends away from it.
+/// The navigator targets it whenever it is closer than the candidate of the
+/// geometry, and holds that candidate back rather than consuming it, so
+/// nothing of the geometry is skipped. It intersects the surface on every
+/// step, because @c Surface::intersect estimates along a straight line while
+/// a track in a magnetic field bends away from it.
 struct ExternalSurface {
   /// The surface. It must outlive the propagation.
   const Surface* surface{};

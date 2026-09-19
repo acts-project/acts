@@ -96,7 +96,6 @@ void step(Vector3& pos, const Vector3& dir, const NavigationTarget& target) {
 /// @param [in] navSurf Number of navigation surfaces
 /// @param [in] navLay Number of navigation layers
 /// @param [in] navBound Number of navigation boundaries
-/// @param [in] extSurf Number of external surfaces
 bool testNavigatorStateVectors(Navigator::State& state, std::size_t navSurf,
                                std::size_t navLay, std::size_t navBound) {
   return ((state.navSurfaces.size() == navSurf) &&
@@ -603,7 +602,7 @@ createDenseTelescope(const GeometryContext& geoCtx) {
   return {std::move(detector), std::move(surfaces)};
 }
 
-BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
+BOOST_AUTO_TEST_CASE(Navigator_boundary_tolerance_overrides) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
 
   auto [detector, surfaces] = createDenseTelescope(tgContext);
@@ -620,10 +619,9 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
   navCfg.resolvePassive = false;
   Navigator navigator(navCfg, logger().clone("Navigator"));
 
-  // check if we find no sensitive target starting from the middle without
-  // external surfaces
+  // No override, so no sensitive target from the middle
   {
-    ACTS_INFO("Test 1: start in the middle without external surfaces");
+    ACTS_INFO("Test 1: start in the middle without an override");
 
     Navigator::Options options(tgContext);
     Navigator::State state = navigator.makeState(options);
@@ -643,9 +641,9 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     BOOST_CHECK_NE(&target.surface(), surfaces.at(1));
   }
 
-  // check if we find a target starting from the top without external surfaces
+  // No override, but the track crosses the top surface
   {
-    ACTS_INFO("Test 2: start from top without external surfaces");
+    ACTS_INFO("Test 2: start from top without an override");
 
     Navigator::Options options(tgContext);
     Navigator::State state = navigator.makeState(options);
@@ -665,10 +663,9 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     BOOST_CHECK_EQUAL(&target.surface(), &surfaceTop);
   }
 
-  // check if we find a target starting from the bottom without external
-  // surfaces
+  // No override, but the track crosses the bottom surface
   {
-    ACTS_INFO("Test 2: start from bottom without external surfaces");
+    ACTS_INFO("Test 3: start from bottom without an override");
 
     Navigator::Options options(tgContext);
     Navigator::State state = navigator.makeState(options);
@@ -688,10 +685,9 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     BOOST_CHECK_EQUAL(&target.surface(), &surfaceBottom);
   }
 
-  // check if we find the top surface starting from the middle with external
-  // surfaces
+  // With an override the top surface is targeted from the middle
   {
-    ACTS_INFO("Test 3: start in the middle with external surfaces");
+    ACTS_INFO("Test 4: start in the middle with an override");
 
     Navigator::Options options(tgContext);
     options.overrideBoundaryTolerance(surfaceTop);
@@ -712,10 +708,9 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     BOOST_CHECK_EQUAL(&target.surface(), &surfaceTop);
   }
 
-  // check if we find the bottom surface starting from the top with external
-  // surfaces
+  // With an override the bottom surface is targeted from the top
   {
-    ACTS_INFO("Test 4: start from top with external surfaces");
+    ACTS_INFO("Test 5: start from top with an override");
 
     Navigator::Options options(tgContext);
     options.overrideBoundaryTolerance(surfaceBottom);
@@ -736,10 +731,9 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     BOOST_CHECK_EQUAL(&target.surface(), &surfaceBottom);
   }
 
-  // check if we find the top surface starting from the bottom with external
-  // surfaces
+  // With an override the top surface is targeted from the bottom
   {
-    ACTS_INFO("Test 5: start from bottom with external surfaces");
+    ACTS_INFO("Test 6: start from bottom with an override");
 
     Navigator::Options options(tgContext);
     options.overrideBoundaryTolerance(surfaceTop);

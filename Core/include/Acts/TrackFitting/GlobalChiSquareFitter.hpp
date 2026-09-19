@@ -1273,8 +1273,8 @@ class Gx2Fitter {
       // set up propagator and co
       PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
-      // Relax the bounds check on the measurement surfaces.
-      // We will try to hit those surface by ignoring boundary checks.
+      // Relax the bounds check, so the navigator targets a measurement
+      // surface even where the track misses it
       for (const auto& [surface, _] : inputMeasurements) {
         propagatorOptions.navigation.overrideBoundaryTolerance(*surface);
       }
@@ -1439,8 +1439,8 @@ class Gx2Fitter {
       // Set up the propagator
       PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
-      // Relax the bounds check on the measurement surfaces.
-      // We will try to hit those surface by ignoring boundary checks.
+      // Relax the bounds check, so the navigator targets a measurement
+      // surface even where the track misses it
       for (const auto& [surface, _] : inputMeasurements) {
         propagatorOptions.navigation.overrideBoundaryTolerance(*surface);
       }

@@ -14,6 +14,8 @@
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Propagator/NavigatorError.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -363,23 +365,27 @@ NavigationTarget Navigator::nextExternalTarget(State& state,
       continue;
     }
 
-    auto [intersection, intersectionIndex] =
-        external.entry->surface
-            ->intersect(state.options.geoContext, position, direction,
-                        external.entry->boundaryTolerance,
-                        state.options.surfaceTolerance)
-            .closestWithIndex();
-    if (!intersection.isValid() ||
-        !detail::checkPathLength(intersection.pathLength(),
-                                 state.options.nearLimit,
-                                 state.options.farLimit)) {
-      continue;
-    }
-    if (closest.isNone() ||
-        intersection.pathLength() < closest.intersection().pathLength()) {
-      closest = NavigationTarget(intersection, intersectionIndex,
-                                 *external.entry->surface,
-                                 external.entry->boundaryTolerance);
+    // A surface can have two solutions, and the one behind the propagation
+    // can be the closer one, so weigh up every solution
+    const MultiIntersection3D multiIntersection =
+        external.entry->surface->intersect(
+            state.options.geoContext, position, direction,
+            external.entry->boundaryTolerance, state.options.surfaceTolerance);
+
+    for (const auto [intersectionIndex, intersection] :
+         enumerate(multiIntersection)) {
+      if (!intersection.isValid() ||
+          !detail::checkPathLength(intersection.pathLength(),
+                                   state.options.nearLimit,
+                                   state.options.farLimit)) {
+        continue;
+      }
+      if (closest.isNone() ||
+          intersection.pathLength() < closest.pathLength()) {
+        closest = NavigationTarget(
+            intersection, static_cast<IntersectionIndex>(intersectionIndex),
+            *external.entry->surface, external.entry->boundaryTolerance);
+      }
     }
   }
 
@@ -890,24 +896,25 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
   navOpts.nearLimit = state.options.nearLimit;
   navOpts.farLimit = state.options.farLimit;
 
+  // The layer resolves the surface, so only its own overrides apply
   const GeometryIdentifier layerId = layerSurface->geometryId();
+  boost::container::small_vector<const Surface*, 4> overridden;
   for (const State::ResolvedBoundaryToleranceOverride& toleranceOverride :
        state.boundaryToleranceOverrides) {
     const GeometryIdentifier geoId = toleranceOverride.surface->geometryId();
-    // The layer resolves the surface, so only its own overrides apply
-    if (geoId.volume() == layerId.volume() &&
-        geoId.layer() == layerId.layer()) {
-      navOpts.boundaryToleranceOverrides.emplace_back(
-          geoId, toleranceOverride.boundaryTolerance);
+    if (geoId.volume() != layerId.volume() ||
+        geoId.layer() != layerId.layer()) {
+      continue;
     }
+    navOpts.boundaryToleranceOverrides.emplace_back(
+        geoId, toleranceOverride.boundaryTolerance);
+    overridden.push_back(toleranceOverride.surface);
   }
 
-  auto isOverridden = [&state](const NavigationTarget& target) {
-    return std::ranges::any_of(
-        state.boundaryToleranceOverrides,
-        [&target](const State::ResolvedBoundaryToleranceOverride& entry) {
-          return entry.surface == &target.surface();
-        });
+  // Called from the sort comparator below, so it scans the overrides of this
+  // layer only
+  auto isOverridden = [&overridden](const NavigationTarget& target) {
+    return rangeContainsValue(overridden, &target.surface());
   };
 
   // Request the compatible surfaces
@@ -916,7 +923,7 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
 
   // A relaxed bounds check can put the intersection outside the volume.
   // Targeting it would step the propagation over the boundary.
-  if (!state.boundaryToleranceOverrides.empty()) {
+  if (!overridden.empty()) {
     auto outside = std::ranges::remove_if(
         state.navSurfaces, [&](const NavigationTarget& target) {
           return isOverridden(target) &&
