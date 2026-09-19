@@ -241,7 +241,7 @@ Acts::MaterialMapJsonConverter::MaterialMapJsonConverter(
 nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
     const TrackingGeometryMaterial& maps,
     const IVolumeMaterialJsonDecorator* decorator) {
-  VolumeMaterialMaps volumeMap = maps.second;
+  VolumeMaterialMaps volumeMap = maps.volumeMaterials;
   std::vector<std::pair<GeometryIdentifier, const IVolumeMaterial*>>
       mapVolumeInit;
   for (const auto& [key, value] : volumeMap) {
@@ -252,7 +252,7 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   nlohmann::json materialVolume =
       m_volumeMaterialConverter.toJson(hierarchyVolumeMap, decorator);
   std::vector<std::pair<GeometryIdentifier, nlohmann::json>> surfaceEntries;
-  for (const auto& [geoId, material] : maps.first) {
+  for (const auto& [geoId, material] : maps.surfaceMaterials) {
     nlohmann::json jEntry;
     if (material != nullptr) {
       jEntry[jsonKey().materialkey] =
