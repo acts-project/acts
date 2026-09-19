@@ -649,7 +649,7 @@ struct MaterialFixture {
         geoCtx, magCtx, calCtx, extensions,
         PropagatorPlainOptions(geoCtx, magCtx));
     options.recordMaterialStates = recordMaterialStates;
-    options.betheHeitlerApprox = std::make_shared<AtlasBetheHeitlerApprox>(
+    options.betheHeitlerApprox = std::make_shared<PolynomialBetheHeitlerApprox>(
         makeDefaultBetheHeitlerApprox());
 
     TestSourceLinkAccessor slAccessor;
