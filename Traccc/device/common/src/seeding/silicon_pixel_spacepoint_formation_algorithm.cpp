@@ -59,11 +59,14 @@ auto silicon_pixel_spacepoint_formation_algorithm::operator()(
   // wait for the scan here.
   assert(mr().host != nullptr);
   vecmem::vector<unsigned int> n_spacepoints_host(mr().host);
-  // TODO: Yield during this asynchronous copy.
-  copy()(vecmem::data::vector_view<const unsigned int>(
-             1u, spacepoint_flags_view.ptr() + n_measurements - 1u),
-         n_spacepoints_host)
-      ->wait();
+  {
+    auto copy_event =
+        copy()(vecmem::data::vector_view<const unsigned int>(
+                   1u, spacepoint_flags_view.ptr() + n_measurements - 1u),
+               n_spacepoints_host);
+    // Block or suspend execution until the copy is completed.
+    await(*copy_event);
+  }
   const unsigned int n_spacepoints = n_spacepoints_host.at(0);
 
   // If no measurement produces a spacepoint, return right away.
