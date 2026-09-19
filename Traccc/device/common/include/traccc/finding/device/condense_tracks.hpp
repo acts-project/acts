@@ -15,6 +15,7 @@
 #include "traccc/edm/track_parameters.hpp"
 #include "traccc/finding/candidate_link.hpp"
 #include "traccc/utils/logging.hpp"
+#include "traccc/utils/soa_types/soa_bound_track_parameters.hpp"
 
 // VecMem include(s).
 #include <vecmem/containers/data/vector_view.hpp>
@@ -50,7 +51,7 @@ struct condense_tracks_payload {
   /**
    * @brief View object to the temporary track parameter vector
    */
-  bound_track_parameters_collection_types::const_view in_tmp_params_view;
+  soa_bound_track_parameters_const_view<default_algebra> in_tmp_params_view;
 
   /**
    * @brief View object to the temporary link vector
@@ -111,7 +112,7 @@ TRACCC_HOST_DEVICE inline void condense_tracks(
   vecmem::device_vector<candidate_link> links(payload.links_view);
   bound_track_parameters_collection_types::const_device in_params(
       payload.in_params_view);
-  bound_track_parameters_collection_types::const_device in_tmp_params(
+  const soa_bound_track_parameters_const_device<default_algebra> in_tmp_params(
       payload.in_tmp_params_view);
   bound_track_parameters_collection_types::device out_params(
       payload.out_params_view);
@@ -140,13 +141,15 @@ TRACCC_HOST_DEVICE inline void condense_tracks(
   }
 
   for (unsigned int i = 0; i < num_parameters; ++i) {
-    const unsigned int in_offset =
-        in_param_id * payload.max_num_branches_per_surface + i;
+    const unsigned int in_offset = i * payload.n_in_params + in_param_id;
     const unsigned int param_out_index = idx + i;
     const unsigned int link_out_index =
         param_out_index + payload.curr_links_idx;
 
-    out_params.at(param_out_index) = in_tmp_params.at(in_offset);
+    // Read the row once: the accessor rebuilds the whole parameter object.
+    const bound_track_parameters<> tmp_param = in_tmp_params.get(in_offset);
+
+    out_params.at(param_out_index) = tmp_param;
     out_params_liveness.at(param_out_index) =
         static_cast<unsigned int>(!last_step);
     links.at(link_out_index) = in_tmp_links.at(in_offset);
@@ -157,7 +160,7 @@ TRACCC_HOST_DEVICE inline void condense_tracks(
     }
 
     if (link_filtered_parameters.capacity() > 0) {
-      link_filtered_parameters.at(link_out_index) = in_tmp_params.at(in_offset);
+      link_filtered_parameters.at(link_out_index) = tmp_param;
     }
 
     if (link_predicted_parameters.capacity() > 0) {
