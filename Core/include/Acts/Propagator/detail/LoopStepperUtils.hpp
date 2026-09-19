@@ -48,12 +48,6 @@ struct LoopComponentProxyBase {
   const auto& state() const { return cmp.state; }
   auto status() const { return cmp.status; }
   auto weight() const { return cmp.weight; }
-  auto pathAccumulated() const { return cmp.state.pathAccumulated; }
-  const auto& pars() const { return cmp.state.pars; }
-  const auto& derivative() const { return cmp.state.derivative; }
-  const auto& cov() const { return cmp.state.cov; }
-  const auto& jacobian() const { return cmp.state.jacobian; }
-  const auto& jacToGlobal() const { return cmp.state.jacToGlobal; }
 
   template <typename propagator_state_t>
   auto singleState(const propagator_state_t& state) const {
@@ -87,12 +81,6 @@ struct LoopComponentProxy
 
   // Import the const accessors from ComponentProxyBase
   using Base::cmp;
-  using Base::cov;
-  using Base::derivative;
-  using Base::jacobian;
-  using Base::jacToGlobal;
-  using Base::pars;
-  using Base::pathAccumulated;
   using Base::singleState;
   using Base::singleStepper;
   using Base::state;
@@ -110,12 +98,6 @@ struct LoopComponentProxy
   auto& state() { return cmp.state; }
   auto& status() { return cmp.status; }
   auto& weight() { return cmp.weight; }
-  auto& pathAccumulated() { return cmp.state.pathAccumulated; }
-  auto& pars() { return cmp.state.pars; }
-  auto& derivative() { return cmp.state.derivative; }
-  auto& cov() { return cmp.state.cov; }
-  auto& jacobian() { return cmp.state.jacobian; }
-  auto& jacToGlobal() { return cmp.state.jacToGlobal; }
 
   template <typename propagator_state_t>
   auto singleState(propagator_state_t& state) {

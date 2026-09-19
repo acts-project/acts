@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Concepts.hpp"
@@ -28,30 +29,19 @@ concept CommonStepper = requires {
   typename Stepper::State;
   typename Stepper::Jacobian;
   typename Stepper::Covariance;
-  typename Stepper::BoundState;
 
   requires requires(const Stepper& s, State& t) {
-    { s.transportCovarianceToCurvilinear(t) } -> std::same_as<void>;
+    { s.transportToCurvilinear(t) } -> std::same_as<typename Stepper::Jacobian>;
+    { s.prepareCurvilinearState(t) } -> std::same_as<bool>;
 
-    requires requires(
-        const std::tuple_element_t<0, typename Stepper::BoundState>& par) {
+    requires requires(const typename Stepper::BoundParameters& par) {
       { s.initialize(t, par) } -> std::same_as<void>;
     };
 
-    requires requires(const Surface& sf, bool b,
-                      const FreeToBoundCorrection& corr) {
+    requires requires(const Surface& sf, const FreeToBoundCorrection& corr) {
       {
-        s.boundState(t, sf, b, corr)
-      } -> std::same_as<Result<typename Stepper::BoundState>>;
-      {
-        s.transportCovarianceToBound(t, sf, corr)
-      } -> std::same_as<Result<void>>;
-    };
-
-    requires requires(bool b) {
-      {
-        s.curvilinearState(t, b)
-      } -> std::same_as<typename Stepper::BoundState>;
+        s.transportToBound(t, sf, corr)
+      } -> std::same_as<Result<typename Stepper::Jacobian>>;
     };
 
     requires requires(const Surface& sf, std::uint8_t ui, Direction d,
@@ -78,6 +68,18 @@ concept CommonStepper = requires {
     { s.charge(t) } -> std::same_as<double>;
     { s.time(t) } -> std::same_as<double>;
     { s.outputStepSize(t) } -> std::same_as<std::string>;
+    { s.pathLength(t) } -> std::same_as<double>;
+    { s.hasCovariance(t) } -> std::same_as<bool>;
+    { s.statistics(t) } -> std::same_as<const StepperStatistics&>;
+    {
+      s.curvilinearParameters(t)
+    } -> std::same_as<typename Stepper::BoundParameters>;
+
+    requires requires(const Surface& sf) {
+      {
+        s.boundParameters(t, sf)
+      } -> std::same_as<Result<typename Stepper::BoundParameters>>;
+    };
 
     requires requires(const ConstrainedStep::Type st) {
       { s.getStepSize(t, st) } -> std::same_as<double>;
@@ -100,6 +102,17 @@ concept SingleStepper =
                         double d2) {
         { s.update(t, v1, v2, d1, d2) } -> std::same_as<void>;
         { s.getField(t, v1) } -> std::same_as<Result<Vector3>>;
+      };
+
+      requires requires(const typename Stepper::Covariance& cov) {
+        { s.setCovariance(t, cov) } -> std::same_as<void>;
+      };
+
+      requires requires(const Stepper& cs, const State& ct) {
+        {
+          cs.covariance(ct)
+        } -> std::same_as<const typename Stepper::Covariance&>;
+        { cs.stepSize(ct) } -> std::same_as<const ConstrainedStep&>;
       };
     };
 
@@ -125,12 +138,5 @@ concept MultiStepper = CommonStepper<Stepper, State> && requires {
 template <typename _Stepper, typename State = typename _Stepper::State>
 concept StepperConcept = Concepts::SingleStepper<_Stepper, State> ||
                          Concepts::MultiStepper<_Stepper, State>;
-
-/// @brief Concept that is satisfied by stepper states.
-template <typename State>
-concept StepperStateConcept = requires(const State& t) {
-  { t.covTransport } -> Concepts::decayed_same_as<const bool&>;
-  { t.pathAccumulated } -> Concepts::decayed_same_as<const double&>;
-};
 
 }  // namespace Acts
