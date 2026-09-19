@@ -20,8 +20,12 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c traccc::device::gbts_compress_graph
 /// function
 struct gbts_compress_graph_payload {
-  /// Number of original (uncompressed) edges
-  unsigned int nEdges;
+  /// Capacity of the edge buffers (sizes the launch grid)
+  unsigned int nEdgesMax;
+  /// Per node edge buckets: the number of edges the count pass found
+  vecmem::data::vector_view<const unsigned int> num_outgoing_edges;
+  /// Capacity of the compacted graph.
+  unsigned int nConnectedEdgesMax;
   /// Maximum number of neighbours retained per edge
   unsigned int nMaxNei;
   /// Sorted-slot to original spacepoint index map
@@ -32,8 +36,8 @@ struct gbts_compress_graph_payload {
   vecmem::data::vector_view<const unsigned char> num_neighbours;
   /// Neighbour edge indices per edge (nMaxNei per edge, flat)
   vecmem::data::vector_view<const unsigned int> neighbours;
-  /// Old-edge to compacted-edge index map
-  vecmem::data::vector_view<const int> reIndexer;
+  /// Inclusive prefix sum of the per-edge "kept" flags.
+  vecmem::data::vector_view<const unsigned int> reIndexer;
   /// Output: compacted graph in row-major layout; each edge owns a block
   /// of edge_size = 2 + 1 + nMaxNei ints (node1, node2, nNei,
   /// nei0..neiN-1).
@@ -42,7 +46,7 @@ struct gbts_compress_graph_payload {
 
 /// @brief Pack kept edges into the compact "output graph" layout.
 ///
-/// Each thread processes one original edge; if it survived re-indexing, the
+/// Each thread processes one original edge. If it survived re-indexing, the
 /// thread writes a record at its compact slot containing the
 /// source/destination original-SP indices, the neighbour count, and up to
 /// nMaxNei remapped neighbour indices.

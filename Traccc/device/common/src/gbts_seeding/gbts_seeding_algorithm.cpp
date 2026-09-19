@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cmath>
 #include <utility>
+#include <vector>
 
 namespace traccc::device {
 
@@ -45,29 +46,29 @@ auto gbts_seeding_algorithm::make_nodes(
   vecmem::data::vector_buffer<unsigned int> sort_values_buf(nSp, mr().main);
   copy().setup(sort_values_buf)->ignore();
 
-  vecmem::data::vector_buffer<unsigned int> eta_node_counter_buf(
+  // Per eta bin node counts, scanned in place by the kernel launcher into
+  // the node offsets.
+  vecmem::data::vector_buffer<unsigned int> eta_bin_offsets_buf(
       cfg.n_eta_bins + 1, mr().main);
-  copy().setup(eta_node_counter_buf)->ignore();
-  copy().memset(eta_node_counter_buf, 0)->ignore();
+  copy().setup(eta_bin_offsets_buf)->ignore();
+  copy().memset(eta_bin_offsets_buf, 0)->ignore();
 
   gbts_bin_spacepoints_kernel(
       {nSp, cfg.n_eta_bins, spacepoints, measurements,
        m_volume_to_layer_map_buffer, m_surface_to_layer_map_buffer,
        m_layer_type_buffer, m_layer_info_buffer, m_layer_geo_buffer,
-       reducedSP_buf, eta_node_counter_buf, sort_keys_buf, sort_values_buf,
+       reducedSP_buf, eta_bin_offsets_buf, sort_keys_buf, sort_values_buf,
        cfg.volumeToLayerMap.size(), cfg.surfaceToLayerMap.size(),
        cfg.gbts_count_spacepoints_by_layer_params});
 
-  vecmem::vector<unsigned int> eta_counts(cfg.n_eta_bins + 1, mr().host);
-  copy()(vecmem::get_data(eta_node_counter_buf), eta_counts)->wait();
-
-  vecmem::vector<unsigned int> eta_bin_views(2 * cfg.n_eta_bins, mr().host);
-  unsigned int nNodes = 0;
-  for (unsigned int view_idx = 0; view_idx < cfg.n_eta_bins; view_idx++) {
-    eta_bin_views[2 * view_idx] = nNodes;
-    nNodes += eta_counts[view_idx];
-    eta_bin_views[2 * view_idx + 1] = nNodes;
-  }
+  // The node count sizes the node buffers: one readback of the last offset.
+  vecmem::vector<unsigned int> h_nNodes(1,
+                                        mr().host ? mr().host : &(mr().main));
+  copy()(vecmem::data::vector_view<unsigned int>{1u, eta_bin_offsets_buf.ptr() +
+                                                         cfg.n_eta_bins},
+         vecmem::get_data(h_nNodes))
+      ->wait();
+  const unsigned int nNodes = h_nNodes[0];
   TRACCC_DEBUG("nNodes " << nNodes);
   if (nNodes == 0) {
     TRACCC_WARNING("No nodes were found after spacepoint binning");
@@ -85,232 +86,160 @@ auto gbts_seeding_algorithm::make_nodes(
                           node_params_buf, node_phi_buf, node_index_buf,
                           m_tau_lut_buffer, cfg.gbts_sort_nodes_params});
 
-  vecmem::data::vector_buffer<unsigned int> eta_bin_views_buf(
-      2 * cfg.n_eta_bins, mr().main);
-  copy().setup(eta_bin_views_buf)->ignore();
-  copy()(vecmem::get_data(eta_bin_views), eta_bin_views_buf)->ignore();
-
   vecmem::data::vector_buffer<float> bin_rads_buf(2 * cfg.n_eta_bins,
                                                   mr().main);
   copy().setup(bin_rads_buf)->ignore();
 
   gbts_find_minmax_radius_kernel(
-      {cfg.n_eta_bins, eta_bin_views_buf, node_params_buf, bin_rads_buf});
-
-  vecmem::vector<float> bin_rads(2 * cfg.n_eta_bins, mr().host);
-  copy()(vecmem::get_data(bin_rads_buf), bin_rads)->wait();
+      {cfg.n_eta_bins, eta_bin_offsets_buf, node_params_buf, bin_rads_buf});
 
   return node_making_output{std::move(reducedSP_buf),
                             std::move(node_params_buf),
                             std::move(node_phi_buf),
                             std::move(node_index_buf),
-                            std::move(bin_rads),
-                            std::move(eta_bin_views),
+                            std::move(bin_rads_buf),
+                            std::move(eta_bin_offsets_buf),
                             nNodes};
 }
 
 // Stage 2:
-// Find edges between compatible nodes
-// The main output is a graph in
-// the form of an edge list (array of node index pairs)
-// and an accompanying array of edge parameters
-// (exp(-eta), curvature, extrapolated phi at node1, extrapolated phi at node2).
+// Find edges between compatible nodes. The output is the compacted graph
+// (an edge list with the accepted neighbour edges of every edge).
 auto gbts_seeding_algorithm::create_edges(
     vecmem::data::vector_buffer<float4> node_params,
     vecmem::data::vector_buffer<float> node_phi,
     vecmem::data::vector_buffer<unsigned int> node_index,
-    const vecmem::vector<float>& bin_rads,
-    const vecmem::vector<unsigned int>& eta_bin_views,
-    const unsigned int nNodes,
+    vecmem::data::vector_buffer<float> bin_rads,
+    vecmem::data::vector_buffer<unsigned int> eta_bin_offsets,
+    const unsigned int nNodes, const unsigned int nSp,
     vecmem::data::vector_buffer<unsigned int>& counters_buf,
     vecmem::vector<unsigned int>& h_counters) const -> graph_making_output {
   const gbts_seedfinder_config& cfg = m_config;
-  unsigned int* d_counters = counters_buf.ptr();
 
-  // CPU: build the per-bin-pair work list (begin/end node ranges + phi search
-  // window) on the host from the eta-bin views, splitting large bins into
-  // node_buffer_length-sized chunks. Two passes: count then fill.
-  unsigned int nBinPairs = 0;
-  for (const std::pair<unsigned int, unsigned int>& binPair : cfg.binTables) {
-    const unsigned int bin1_begin = eta_bin_views[2 * binPair.first];
-    const unsigned int bin1_end = eta_bin_views[2 * binPair.first + 1];
-    unsigned int nNodesInBin1 = bin1_end - bin1_begin;
-    unsigned int nNodesInBin2 = eta_bin_views[2 * binPair.second] -
-                                eta_bin_views[2 * binPair.second + 1];
-    if ((nNodesInBin1 == 0) | (nNodesInBin2 == 0)) {
-      continue;
-    }
-    if (bin1_begin > bin1_end) {
-      nNodesInBin1 = bin1_begin - bin1_end;
-    }
-    nBinPairs += 1 + (nNodesInBin1 - 1) / gbts_consts::node_buffer_length;
-  }
+  // Per bin pair tables.
+  vecmem::data::vector_buffer<uint2> bin_pairs_buf(m_nBinPairs, mr().main);
+  copy().setup(bin_pairs_buf)->ignore();
+  copy()(vecmem::get_data(m_bin_pairs), bin_pairs_buf)->ignore();
+  vecmem::data::vector_buffer<unsigned int> pair_group_begin_buf(m_nBinPairs,
+                                                                 mr().main);
+  copy().setup(pair_group_begin_buf)->ignore();
+  copy()(vecmem::get_data(m_pair_group_begin), pair_group_begin_buf)->ignore();
 
-  vecmem::vector<unsigned int> bin_pair_views(4 * nBinPairs, mr().host);
-  vecmem::vector<float> bin_pair_dphi(nBinPairs, mr().host);
+  // 1. Work list: one item per (bin pair, chunk of the inner bin).
+  constexpr unsigned int chunk_size = gbts_consts::edge_chunk_size;
+  const unsigned int nWorkMax =
+      m_nBinPairs + m_maxPairsPerBin1 * (nNodes / chunk_size + 1u);
+  vecmem::data::vector_buffer<unsigned int> pair_work_begin_buf(m_nBinPairs + 1,
+                                                                mr().main);
+  copy().setup(pair_work_begin_buf)->ignore();
+  vecmem::data::vector_buffer<gbts_graph_edges_work_item> work_items_buf(
+      nWorkMax, mr().main);
+  copy().setup(work_items_buf)->ignore();
+  gbts_build_edge_work_list_kernel({m_nBinPairs, bin_pairs_buf, eta_bin_offsets,
+                                    bin_rads, cfg.gbts_dphi_window_params,
+                                    pair_work_begin_buf, work_items_buf});
 
-  unsigned int pairIdx = 0;
-  for (const std::pair<unsigned int, unsigned int>& binPair : cfg.binTables) {
-    const float rb1 = bin_rads[2 * binPair.first];
-
-    const unsigned int begin_bin1 = eta_bin_views[2 * binPair.first];
-    const unsigned int end_bin1 = eta_bin_views[2 * binPair.first + 1];
-    if (begin_bin1 == end_bin1) {
-      continue;
-    }
-    if (eta_bin_views[2 * binPair.second] ==
-        eta_bin_views[2 * binPair.second + 1]) {
-      continue;
-    }
-
-    const float rb2 = bin_rads[2 * binPair.second + 1];
-    const float maxDeltaR = std::fabs(rb2 - rb1);
-
-    float deltaPhi = cfg.gbts_dphi_window_params.min_delta_phi +
-                     cfg.gbts_dphi_window_params.dphi_coeff * maxDeltaR;
-    if (maxDeltaR < cfg.gbts_dphi_window_params.low_dr_threshold) {
-      deltaPhi = cfg.gbts_dphi_window_params.min_delta_phi_low_dr +
-                 cfg.gbts_dphi_window_params.dphi_coeff_low_dr * maxDeltaR;
-    }
-
-    unsigned int currBegin_bin1 = begin_bin1;
-    unsigned int currEnd_bin1 =
-        end_bin1 < gbts_consts::node_buffer_length
-            ? end_bin1
-            : begin_bin1 + gbts_consts::node_buffer_length;
-
-    for (; currEnd_bin1 < end_bin1;
-         currEnd_bin1 += gbts_consts::node_buffer_length, pairIdx++) {
-      const unsigned int offset = 4 * pairIdx;
-      bin_pair_views[offset] = currBegin_bin1;
-      bin_pair_views[1 + offset] = currEnd_bin1;
-      bin_pair_views[2 + offset] = eta_bin_views[2 * binPair.second];
-      bin_pair_views[3 + offset] = eta_bin_views[2 * binPair.second + 1];
-      bin_pair_dphi[pairIdx] = deltaPhi;
-      currBegin_bin1 = currEnd_bin1;
-    }
-    currEnd_bin1 = end_bin1;
-
-    const unsigned int offset = 4 * pairIdx;
-    bin_pair_views[offset] = currBegin_bin1;
-    bin_pair_views[1 + offset] = currEnd_bin1;
-    bin_pair_views[2 + offset] = eta_bin_views[2 * binPair.second];
-    bin_pair_views[3 + offset] = eta_bin_views[2 * binPair.second + 1];
-    bin_pair_dphi[pairIdx] = deltaPhi;
-    pairIdx++;
-  }
-  const unsigned int nUsedBinPairs = pairIdx;
-  TRACCC_DEBUG("nUsedBinPairs " << nUsedBinPairs);
-  if (nUsedBinPairs == 0) {
-    TRACCC_WARNING("No bin pairs were used for edge finding");
-    return graph_making_output{};
-  }
-
-  vecmem::data::vector_buffer<unsigned int> bin_pair_views_buf(
-      4 * nUsedBinPairs, mr().main);
-  copy().setup(bin_pair_views_buf)->ignore();
-  copy()(vecmem::get_data(bin_pair_views), bin_pair_views_buf)->ignore();
-
-  vecmem::data::vector_buffer<float> bin_pair_dphi_buf(nUsedBinPairs,
-                                                       mr().main);
-  copy().setup(bin_pair_dphi_buf)->ignore();
-  copy()(vecmem::get_data(bin_pair_dphi), bin_pair_dphi_buf)->ignore();
-
-  // 2. Find edges between spacepoint pairs.
-  const unsigned int nMaxEdges = cfg.max_edges_factor * nNodes;
-  // Packed per-edge parameter buffer ([exp(-eta), curv, phi_z, phi_w]).
-  vecmem::data::vector_buffer<short4> edge_params_buf(nMaxEdges, mr().main);
-  copy().setup(edge_params_buf)->ignore();
-  vecmem::data::vector_buffer<uint2> edge_nodes_buf(nMaxEdges, mr().main);
-  copy().setup(edge_nodes_buf)->ignore();
-  vecmem::data::vector_buffer<unsigned int> num_incoming_edges_buf(nNodes + 1,
-                                                                   mr().main);
-  copy().setup(num_incoming_edges_buf)->ignore();
-  copy().memset(num_incoming_edges_buf, 0)->ignore();
-  // setup edge param converter
+  // 2. Count the edges per inner node.
   const float max_Kappa =
       std::max(cfg.gbts_make_graph_edges_params.max_Kappa_low_tau,
                cfg.gbts_make_graph_edges_params.max_Kappa_high_tau);
-  edge_params_converter edge_param_converter(max_Kappa,
-                                             cfg.gbts_sort_nodes_params.maxTau);
+  const edge_params_converter edge_params_maker(
+      max_Kappa, cfg.gbts_sort_nodes_params.maxTau);
+  vecmem::data::vector_buffer<unsigned int> edge_counts_buf(
+      nWorkMax * chunk_size, mr().main);
+  copy().setup(edge_counts_buf)->ignore();
+  // Per node edge counts at [node + 1]; the scan turns them into the edge
+  // buckets and leaves the edge count at [nNodes].
+  vecmem::data::vector_buffer<unsigned int> num_outgoing_edges_buf(nNodes + 1,
+                                                                   mr().main);
+  copy().setup(num_outgoing_edges_buf)->ignore();
+  copy().memset(num_outgoing_edges_buf, 0)->ignore();
+  gbts_count_graph_edges_kernel({nWorkMax, pair_work_begin_buf, work_items_buf,
+                                 node_params, node_phi,
+                                 cfg.gbts_make_graph_edges_params,
+                                 edge_counts_buf, num_outgoing_edges_buf});
 
-  gbts_make_graph_edges_kernel(
-      {nUsedBinPairs, nMaxEdges, cfg.n_phi_bins, bin_pair_views_buf,
-       bin_pair_dphi_buf, node_params, node_phi,
-       cfg.gbts_make_graph_edges_params, d_counters + gbts_counter::nEdges,
-       edge_nodes_buf, edge_params_buf, edge_param_converter,
-       num_incoming_edges_buf});
+  // 3. Write the edges into their slots.
+  const unsigned int nEdgesMax = cfg.max_edges_per_spacepoint * nSp;
+  vecmem::data::vector_buffer<uint2> edge_nodes_buf(nEdgesMax, mr().main);
+  copy().setup(edge_nodes_buf)->ignore();
+  vecmem::data::vector_buffer<short4> edge_params_buf(nEdgesMax, mr().main);
+  copy().setup(edge_params_buf)->ignore();
 
-  // Read back the number of edges produced.
-  copy()(counters_buf, h_counters)->wait();
+  gbts_fill_graph_edges_kernel(
+      {nWorkMax, pair_work_begin_buf, work_items_buf, node_params, node_phi,
+       cfg.gbts_make_graph_edges_params, pair_group_begin_buf, edge_counts_buf,
+       num_outgoing_edges_buf, edge_params_maker, nEdgesMax, edge_nodes_buf,
+       edge_params_buf});
 
-  unsigned int nEdges = h_counters[gbts_counter::nEdges];
-  TRACCC_DEBUG("Created " << nEdges << " edges with a cap of " << nMaxEdges);
-  if (nEdges > nMaxEdges) {
-    TRACCC_WARNING("Number of edges exceeds the maximum allowed, Removing "
-                   << nEdges - nMaxEdges << " edges");
-    nEdges = nMaxEdges;
-  } else if (nEdges == 0) {
-    TRACCC_WARNING("No edges were found");
-    return graph_making_output{};
-  }
-
-  // 3. Link edges and nodes.
-  vecmem::data::vector_buffer<unsigned int> edge_links_buf(nEdges, mr().main);
-  copy().setup(edge_links_buf)->ignore();
-
-  gbts_link_graph_edges_kernel(
-      {nEdges, edge_nodes_buf, edge_links_buf, num_incoming_edges_buf});
-
-  // 4. Edge matching to create edge-to-edge connections.
-  vecmem::data::vector_buffer<unsigned char> num_neighbours_buf(nEdges,
+  // 4. Match every edge with the edges entering its outer node, then
+  //    compact the kept edges.
+  vecmem::data::vector_buffer<unsigned char> num_neighbours_buf(nEdgesMax,
                                                                 mr().main);
   copy().setup(num_neighbours_buf)->ignore();
-  copy().memset(num_neighbours_buf, 0)->ignore();
-
-  vecmem::data::vector_buffer<int> reIndexer_buf(nEdges, mr().main);
-  copy().setup(reIndexer_buf)->ignore();
-  // Byte-fill 0xFF -> int -1, the "edge not kept" sentinel checked by
-  // gbts_reindex_edges / gbts_compress_graph.
-  copy().memset(reIndexer_buf, 0xFF)->ignore();
-
   vecmem::data::vector_buffer<unsigned int> neighbours_buf(
-      cfg.max_num_neighbours * nEdges, mr().main);
+      cfg.max_num_neighbours * nEdgesMax, mr().main);
   copy().setup(neighbours_buf)->ignore();
-  copy().memset(neighbours_buf, 0)->ignore();
+  vecmem::data::vector_buffer<unsigned int> edge_kept_buf(nEdgesMax, mr().main);
+  copy().setup(edge_kept_buf)->ignore();
+  copy().memset(edge_kept_buf, 0)->ignore();
+  vecmem::data::vector_buffer<unsigned int> reIndexer_buf(nEdgesMax, mr().main);
+  copy().setup(reIndexer_buf)->ignore();
 
   gbts_match_graph_edges_kernel(
-      {nEdges, cfg.max_num_neighbours, cfg.gbts_match_graph_edges_params,
-       edge_params_buf, edge_nodes_buf, num_incoming_edges_buf, edge_links_buf,
-       num_neighbours_buf, neighbours_buf, reIndexer_buf, edge_param_converter,
-       d_counters + gbts_counter::nConnections});
+      {nEdgesMax, cfg.max_num_neighbours, cfg.gbts_match_graph_edges_params,
+       edge_params_buf, edge_nodes_buf, num_outgoing_edges_buf,
+       num_neighbours_buf, neighbours_buf, edge_kept_buf, reIndexer_buf,
+       edge_params_maker});
 
-  // 5. Edge re-indexing to keep only edges involved in any connection.
-  gbts_reindex_edges_kernel(
-      {nEdges, reIndexer_buf, d_counters + gbts_counter::nConnectedEdges});
+  // 5. Compress the kept edges into the output graph.
+  const unsigned int nConnectedEdgesMax =
+      cfg.max_connected_edges_per_spacepoint * nSp;
+  const unsigned int nIntsPerEdge = 2 + 1 + cfg.max_num_neighbours;
+  vecmem::data::vector_buffer<unsigned int> output_graph_buf(
+      nConnectedEdgesMax * nIntsPerEdge, mr().main);
+  copy().setup(output_graph_buf)->ignore();
 
+  gbts_compress_graph_kernel({nEdgesMax, num_outgoing_edges_buf,
+                              nConnectedEdgesMax, cfg.max_num_neighbours,
+                              node_index, edge_nodes_buf, num_neighbours_buf,
+                              neighbours_buf, reIndexer_buf, output_graph_buf});
+
+  // The seed extraction needs the kept-edge count on the host.
+  copy()(
+      vecmem::data::vector_view<unsigned int>{
+          1u, num_outgoing_edges_buf.ptr() + nNodes},
+      vecmem::data::vector_view<unsigned int>{
+          1u, counters_buf.ptr() + gbts_counter::nEdgesTotal})
+      ->ignore();
+  copy()(vecmem::data::vector_view<unsigned int>{1u, reIndexer_buf.ptr() +
+                                                         (nEdgesMax - 1u)},
+         vecmem::data::vector_view<unsigned int>{
+             1u, counters_buf.ptr() + gbts_counter::nConnectedEdges})
+      ->ignore();
   copy()(counters_buf, h_counters)->wait();
-
-  const unsigned int nConnections = h_counters[gbts_counter::nConnections];
-  const unsigned int nConnectedEdges =
-      h_counters[gbts_counter::nConnectedEdges];
-  TRACCC_DEBUG("created " << nConnections << " edge links, found "
-                          << nConnectedEdges
-                          << " connected edges for seed extraction");
+  if (h_counters[gbts_counter::nEdgesTotal] > nEdgesMax) {
+    TRACCC_WARNING("Edge buffer capacity ("
+                   << nEdgesMax << ") exceeded, "
+                   << h_counters[gbts_counter::nEdgesTotal] - nEdgesMax
+                   << " edges were dropped. "
+                      "Increase max_edges_per_spacepoint");
+  }
+  unsigned int nConnectedEdges = h_counters[gbts_counter::nConnectedEdges];
+  if (nConnectedEdges > nConnectedEdgesMax) {
+    TRACCC_WARNING("Compacted graph capacity ("
+                   << nConnectedEdgesMax << ") exceeded, "
+                   << nConnectedEdges - nConnectedEdgesMax
+                   << " connected edges were dropped. "
+                      "Increase max_connected_edges_per_spacepoint");
+    nConnectedEdges = nConnectedEdgesMax;
+  }
+  TRACCC_DEBUG("found " << nConnectedEdges
+                        << " connected edges for seed extraction");
   if (nConnectedEdges == 0) {
     TRACCC_WARNING("No connected edges were found");
     return graph_making_output{};
   }
-
-  const unsigned int nIntsPerEdge = 2 + 1 + cfg.max_num_neighbours;
-  vecmem::data::vector_buffer<unsigned int> output_graph_buf(
-      nConnectedEdges * nIntsPerEdge, mr().main);
-  copy().setup(output_graph_buf)->ignore();
-
-  gbts_compress_graph_kernel({nEdges, cfg.max_num_neighbours, node_index,
-                              edge_nodes_buf, num_neighbours_buf,
-                              neighbours_buf, reIndexer_buf, output_graph_buf});
-
   return graph_making_output{std::move(output_graph_buf), nConnectedEdges};
 }
 
@@ -512,6 +441,46 @@ gbts_seeding_algorithm::gbts_seeding_algorithm(
   if (!m_config.tau_lut.empty()) {
     copy(vecmem::get_data(m_config.tau_lut), m_tau_lut_buffer)->ignore();
   }
+
+  prepare_bin_pairs();
+}
+
+void gbts_seeding_algorithm::prepare_bin_pairs() {
+  // The fill kernel relies on the bin pairs being sorted by (bin1, bin2)
+  // without duplicates.
+  std::vector<std::pair<unsigned int, unsigned int>>& binTables =
+      m_config.binTables;
+  const std::size_t nInput = binTables.size();
+  std::erase_if(binTables,
+                [this](const std::pair<unsigned int, unsigned int>& p) {
+                  return (p.first >= m_config.n_eta_bins) ||
+                         (p.second >= m_config.n_eta_bins);
+                });
+  if (binTables.size() != nInput) {
+    TRACCC_ERROR("Dropped " << nInput - binTables.size()
+                            << " bin pairs referring to eta bins >= "
+                            << m_config.n_eta_bins);
+  }
+  std::ranges::sort(binTables);
+  const auto duplicates = std::ranges::unique(binTables);
+  if (!duplicates.empty()) {
+    TRACCC_WARNING("Removed " << duplicates.size()
+                              << " duplicate bin pairs from binTables");
+    binTables.erase(duplicates.begin(), duplicates.end());
+  }
+  m_nBinPairs = static_cast<unsigned int>(binTables.size());
+  m_maxPairsPerBin1 = 0;
+  m_bin_pairs.resize(m_nBinPairs);
+  m_pair_group_begin.resize(m_nBinPairs);
+  unsigned int run = 0;
+  for (unsigned int i = 0; i < m_nBinPairs; i++) {
+    const bool same_bin1 =
+        (i > 0) && (binTables[i - 1].first == binTables[i].first);
+    run = same_bin1 ? run + 1 : 1;
+    m_maxPairsPerBin1 = std::max(m_maxPairsPerBin1, run);
+    m_bin_pairs[i] = uint2{binTables[i].first, binTables[i].second};
+    m_pair_group_begin[i] = same_bin1 ? m_pair_group_begin[i - 1] : i;
+  }
 }
 
 auto gbts_seeding_algorithm::operator()(
@@ -550,12 +519,12 @@ auto gbts_seeding_algorithm::operator()(
                                           mr().host ? mr().host : &(mr().main));
 
   // Stage 2: graph. The per-node buffers are moved in so they are released
-  // when create_gbts_edges_from_nodes returns, along with all the edge/link
-  // transients.
+  // when create_edges returns, along with the edge transients.
   graph_making_output graph =
       create_edges(std::move(nodes.node_params), std::move(nodes.node_phi),
-                   std::move(nodes.node_index), nodes.bin_rads,
-                   nodes.eta_bin_views, nodes.nNodes, counters_buf, h_counters);
+                   std::move(nodes.node_index), std::move(nodes.bin_rads),
+                   std::move(nodes.eta_bin_offsets), nodes.nNodes, nSp,
+                   counters_buf, h_counters);
   if (graph.nConnectedEdges == 0) {
     // No connected edges survived graph making -> no seeds.
     return {0, mr().main};
