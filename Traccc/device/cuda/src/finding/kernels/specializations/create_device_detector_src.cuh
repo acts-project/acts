@@ -16,9 +16,9 @@
 namespace traccc::cuda {
 namespace kernels {
 
-template <typename detector_t>
-__global__ void create_device_detector(typename detector_t::const_view_type in,
-                                       detector_t* out) {
+template <detray::concepts::detector detector_t>
+__global__ void create_device_detector(
+    const detray::detector_view_t<detector_t> in, detector_t* out) {
   unsigned int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
 
   if (thread_id == 0) {
@@ -28,9 +28,9 @@ __global__ void create_device_detector(typename detector_t::const_view_type in,
 
 }  // namespace kernels
 
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 void create_device_detector(const cudaStream_t& stream,
-                            typename detector_t::const_view_type in,
+                            const detray::detector_view_t<detector_t> in,
                             detector_t* out) {
   kernels::create_device_detector<detector_t><<<1, 1, 0, stream>>>(in, out);
 }

@@ -33,7 +33,7 @@
 using namespace detray;
 
 int main(int argc, char** argv) {
-  using toy_detector_t = detector<benchmarks::toy_metadata>;
+  using toy_detector_t = host::detector<benchmarks::toy_metadata>;
   using bench_algebra = typename toy_detector_t::algebra_type;
   using scalar = dscalar<bench_algebra>;
   using vector3 = dvector3D<bench_algebra>;
