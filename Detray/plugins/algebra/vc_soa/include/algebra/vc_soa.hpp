@@ -60,6 +60,9 @@ struct vc_soa {
   template <std::size_t ROWS, std::size_t COLS>
   using matrix = algebra::vc_soa::matrix_type<value_type, ROWS, COLS>;
   /// @}
+
+  /// @returns the widh of the SIMD lane
+  static consteval std::size_t size() { return simd<V>::Size; }
 };
 /// @}
 

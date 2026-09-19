@@ -99,12 +99,60 @@ if(DETRAY_VC_AOS_PLUGIN)
     )
 endif()
 
+# SoA comparison benchmarks
+macro(detray_add_soa_benchmark algebra)
+    # Build the benchmark executable.
+    detray_add_executable(benchmark_cpu_${algebra}_vs_array
+        "soa/intersectors.cpp"
+        LINK_LIBRARIES detray::benchmark_cpu benchmark::benchmark benchmark::benchmark_main vecmem::core detray::core_${algebra} detray::core_array detray::test_common
+    )
+
+    # Set the benchmark specific compilation options.
+    if(DETRAY_BENCHMARKS_MULTITHREAD)
+        target_compile_definitions(
+            detray_benchmark_cpu_${algebra}_vs_array
+            PRIVATE DETRAY_BENCHMARKS_MULTITHREAD
+        )
+    endif()
+
+    target_compile_options(
+        detray_benchmark_cpu_${algebra}_vs_array
+        PRIVATE "-march=native" "-ftree-vectorize"
+    )
+
+    if(DETRAY_BENCHMARK_PRINTOUTS)
+        target_compile_definitions(
+            detray_benchmark_cpu_${algebra}_vs_array
+            PRIVATE DETRAY_BENCHMARK_PRINTOUTS
+        )
+    endif()
+endmacro()
+
+if(DETRAY_ARRAY_SOA_PLUGIN)
+    message(STATUS "Building 'detray::benchmark_cpu_array_soa' component")
+
+    # Build the linear algebra benchmark executables
+    detray_add_executable(benchmark_cpu_linear_algebra_array_soa
+       "soa/linear_algebra_array_soa.cpp"
+       LINK_LIBRARIES benchmark::benchmark benchmark::benchmark_main vecmem::core detray::benchmarks detray::core_array_soa
+    )
+
+    target_compile_options(
+        detray_benchmark_cpu_linear_algebra_array_soa
+        PRIVATE "-march=native"
+    )
+
+    detray_add_soa_benchmark( array_soa array )
+    # detray_add_soa_benchmark( array_soa eigen )
+    # detray_add_soa_benchmark( array_soa vc_aos )
+endif()
+
 if(DETRAY_VC_SOA_PLUGIN)
     message(STATUS "Building 'detray::benchmark_cpu_vc_soa' component")
 
     # Build the linear algebra benchmark executables
     detray_add_executable(benchmark_cpu_linear_algebra_vc_soa
-       "soa/linear_algebra.cpp"
+       "soa/linear_algebra_vc_soa.cpp"
        LINK_LIBRARIES benchmark::benchmark benchmark::benchmark_main vecmem::core detray::benchmarks detray::core_vc_soa
     )
 
@@ -118,43 +166,13 @@ if(DETRAY_VC_SOA_PLUGIN)
         INTERFACE ${Vc_COMPILE_FLAGS} ${Vc_ARCHITECTURE_FLAGS}
     )
 
-    # Build the intersector benchmark per algebra plugin
-    macro(detray_add_soa_benchmark algebra)
-        # Build the benchmark executable.
-        detray_add_executable(benchmark_cpu_vc_soa_vs_${algebra}
-         "soa/intersectors.cpp"
-           LINK_LIBRARIES detray::benchmark_cpu benchmark::benchmark benchmark::benchmark_main vecmem::core detray::core_vc_soa detray::core_vc_aos detray::core_${algebra}
-           detray::test_common
-        )
+    detray_add_soa_benchmark( vc_soa array )
+    # detray_add_soa_benchmark( vc_soa eigen )
+    # detray_add_soa_benchmark( vc_soa vc_aos )
 
-        target_compile_options(
-            detray_benchmark_cpu_vc_soa_vs_${algebra}
-            PRIVATE "-march=native"
-        )
-
-        # Add Vc specific flags
-        target_compile_options(
-            detray_benchmark_cpu_vc_soa_vs_${algebra}
-            INTERFACE ${Vc_COMPILE_FLAGS} ${Vc_ARCHITECTURE_FLAGS}
-        )
-
-        # Set the benchmark specific compilation options.
-        if(DETRAY_BENCHMARKS_MULTITHREAD)
-            target_compile_definitions(
-                detray_benchmark_cpu_vc_soa_vs_${algebra}
-                PRIVATE DETRAY_BENCHMARKS_MULTITHREAD
-            )
-        endif()
-
-        if(DETRAY_BENCHMARK_PRINTOUTS)
-            target_compile_definitions(
-                detray_benchmark_cpu_vc_soa_vs_${algebra}
-                PRIVATE DETRAY_BENCHMARK_PRINTOUTS
-            )
-        endif()
-    endmacro()
-
-    detray_add_soa_benchmark( array )
-    # detray_add_soa_benchmark( eigen )
-    # detray_add_soa_benchmark( vc_aos )
+    # Add Vc specific flags
+    target_compile_options(
+        detray_benchmark_cpu_vc_soa_vs_array
+        INTERFACE ${Vc_COMPILE_FLAGS} ${Vc_ARCHITECTURE_FLAGS}
+    )
 endif()

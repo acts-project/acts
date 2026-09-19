@@ -182,7 +182,8 @@ DETRAY_HOST_DEVICE constexpr void resolve_mask(
   }
 
   // Build intersection struct from test trajectory, if the distance is valid
-  if (detray::detail::none_of(ip.path >= cfg.overstep_tolerance)) {
+  if (detray::detail::none_of(ip.path >=
+                              static_cast<scalar_t>(cfg.overstep_tolerance))) {
     // Not a valid intersection
     return;
   }

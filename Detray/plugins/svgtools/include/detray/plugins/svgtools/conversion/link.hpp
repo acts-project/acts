@@ -36,7 +36,7 @@ inline auto links(const typename detector_t::geometry_context& context,
   typename detector_t::vector3_type dir{};
 
   // Length of link arrow is currently hardcoded.
-  constexpr double link_length = 4.;
+  constexpr typename detector_t::scalar_type link_length = 4.f;
 
   for (std::size_t i = 0u; i < d_portal.n_masks(); ++i) {
     const auto [start, end] = svgtools::utils::link_points(
