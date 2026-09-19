@@ -434,13 +434,14 @@ class EigenStepper final {
   /// Transport the covariance to a surface at the current position
   ///
   /// This anchors the state on @p surface. Without a covariance the state
-  /// does not change.
+  /// does not change. The state must be on @p surface, and it stays unchanged
+  /// if it is not.
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface The surface to transport the covariance to
   /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   /// @return The jacobian from the previous anchor to @p surface, or a failure
-  ///         if the parameters cannot be expressed on @p surface
+  ///         if the state is not on @p surface
   Result<Jacobian> transportToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =

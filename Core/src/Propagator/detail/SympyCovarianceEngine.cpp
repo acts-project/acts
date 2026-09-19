@@ -39,21 +39,13 @@ void applyBoundCovarianceTransport(const BoundMatrix& jacobian,
 
 }  // namespace
 
-Result<void> sympy::transportCovarianceToBound(
+void sympy::transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
     FreeVector& freeParameters,
     const FreeToBoundCorrection& freeToBoundCorrection) {
-  // The jacobians below assume that the free parameters are on the surface
-  if (auto local = surface.globalToLocal(geoContext,
-                                         freeParameters.segment<3>(eFreePos0),
-                                         freeParameters.segment<3>(eFreeDir0));
-      !local.ok()) {
-    return local.error();
-  }
-
   FreeToBoundMatrix freeToBoundJacobian;
 
   // Calculate the full jacobian from local parameters at the start surface to
@@ -105,7 +97,6 @@ Result<void> sympy::transportCovarianceToBound(
   // ->The boundToFreeJacobian is initialized to that at the current surface
   reinitializeJacobians(geoContext, surface, freeToPathDerivatives,
                         boundToFreeJacobian, freeParameters);
-  return Result<void>::success();
 }
 
 void sympy::transportCovarianceToCurvilinear(

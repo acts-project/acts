@@ -14,6 +14,8 @@
 #include "Acts/Propagator/detail/SympyBoundToFreeScaling.hpp"
 #include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 #include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
 
 #include <cmath>
 #include <span>
@@ -149,6 +151,11 @@ SympyStepper::Jacobian SympyStepper::transportToCurvilinear(
 Result<SympyStepper::Jacobian> SympyStepper::transportToBound(
     State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
+  if (!surface.isOnSurface(state.options.geoContext, position(state),
+                           direction(state), BoundaryTolerance::Infinite())) {
+    return Result<Jacobian>::failure(SurfaceError::GlobalPositionNotOnSurface);
+  }
+
   Jacobian jacobian = Jacobian::Identity();
   if (!state.covTransport) {
     state.materialEffectsAccumulator.reset();
@@ -159,16 +166,11 @@ Result<SympyStepper::Jacobian> SympyStepper::transportToBound(
           direction(state));
   state.materialEffectsAccumulator.reset();
   detail::sympy::fromScaledBoundToFree(state.jacToGlobal, qOverP(state));
-  Result<void> result = detail::sympy::transportCovarianceToBound(
+  detail::sympy::transportCovarianceToBound(
       state.options.geoContext, surface, state.cov, jacobian, state.derivative,
       state.jacToGlobal, additionalFreeCovariance, state.pars,
       freeToBoundCorrection);
-  // The jacobian stays unscaled if the transport fails, so rescale it in both
-  // cases.
   detail::sympy::toScaledBoundToFree(state.jacToGlobal, qOverP(state));
-  if (!result.ok()) {
-    return Result<Jacobian>::failure(result.error());
-  }
   return Result<Jacobian>::success(jacobian);
 }
 

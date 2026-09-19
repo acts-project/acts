@@ -15,6 +15,8 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
 
 template <typename E>
 Acts::EigenStepper<E>::EigenStepper(
@@ -161,17 +163,19 @@ auto Acts::EigenStepper<E>::transportToBound(
     State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const
     -> Result<Jacobian> {
+  if (!surface.isOnSurface(state.options.geoContext, position(state),
+                           direction(state), BoundaryTolerance::Infinite())) {
+    return Result<Jacobian>::failure(SurfaceError::GlobalPositionNotOnSurface);
+  }
+
   Jacobian jacobian = Jacobian::Identity();
   if (!state.covTransport) {
     return Result<Jacobian>::success(jacobian);
   }
-  Result<void> result = detail::transportCovarianceToBound(
+  detail::transportCovarianceToBound(
       state.options.geoContext, surface, state.cov, jacobian,
       state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
       state.pars, freeToBoundCorrection);
-  if (!result.ok()) {
-    return Result<Jacobian>::failure(result.error());
-  }
   return Result<Jacobian>::success(jacobian);
 }
 

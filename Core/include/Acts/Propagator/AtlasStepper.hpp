@@ -22,8 +22,10 @@
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -959,10 +961,9 @@ class AtlasStepper {
     state.cov = J * state.cov * J.transpose();
     Jacobian jac = J;
 
-    // the surface is built at the current position, so the reanchor cannot fail
     const auto curvilinearSurface =
         CurvilinearSurface(position(state), direction(state)).surface();
-    reanchor(state, *curvilinearSurface).value();
+    reanchor(state, *curvilinearSurface);
 
     return jac;
   }
@@ -970,16 +971,23 @@ class AtlasStepper {
   /// Transport the covariance to a surface at the current position
   ///
   /// This anchors the state on @p surface. Without a covariance the state
-  /// does not change.
+  /// does not change. The state must be on @p surface, and it stays unchanged
+  /// if it is not.
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface The surface to transport the covariance to
   /// @return The jacobian from the previous anchor to @p surface, or a failure
-  ///         if the parameters cannot be expressed on @p surface
+  ///         if the state is not on @p surface
   Result<Jacobian> transportToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& /*freeToBoundCorrection*/ =
           FreeToBoundCorrection(false)) const {
+    if (!surface.isOnSurface(state.options.geoContext, position(state),
+                             direction(state), BoundaryTolerance::Infinite())) {
+      return Result<Jacobian>::failure(
+          SurfaceError::GlobalPositionNotOnSurface);
+    }
+
     if (!state.covTransport) {
       return Result<Jacobian>::success(Jacobian::Identity());
     }
@@ -1197,10 +1205,7 @@ class AtlasStepper {
     state.cov = J * state.cov * J.transpose();
     Jacobian jac = J;
 
-    Result<void> reanchorResult = reanchor(state, surface);
-    if (!reanchorResult.ok()) {
-      return Result<Jacobian>::failure(reanchorResult.error());
-    }
+    reanchor(state, surface);
 
     return Result<Jacobian>::success(jac);
   }
@@ -1527,18 +1532,16 @@ class AtlasStepper {
 
  private:
   /// Reset the jacobian of the state to @p surface at the current position
-  Result<void> reanchor(State& state, const Surface& surface) const {
+  /// @note The state must be on @p surface
+  void reanchor(State& state, const Surface& surface) const {
     FreeVector freeParams;
     freeParams << state.pVector[0], state.pVector[1], state.pVector[2],
         state.pVector[3], state.pVector[4], state.pVector[5], state.pVector[6],
         state.pVector[7];
     Result<BoundVector> boundParams = transformFreeToBoundParameters(
         freeParams, surface, state.options.geoContext);
-    if (!boundParams.ok()) {
-      return boundParams.error();
-    }
+    assert(boundParams.ok());
     update(state, freeParams, *boundParams, state.cov, surface);
-    return Result<void>::success();
   }
 
   std::optional<Covariance> optionalCovariance(const State& state) const {

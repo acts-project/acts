@@ -11,6 +11,8 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
 
 namespace Acts {
 
@@ -112,17 +114,19 @@ StraightLineStepper::Jacobian StraightLineStepper::transportToCurvilinear(
 Result<StraightLineStepper::Jacobian> StraightLineStepper::transportToBound(
     State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
+  if (!surface.isOnSurface(state.options.geoContext, position(state),
+                           direction(state), BoundaryTolerance::Infinite())) {
+    return Result<Jacobian>::failure(SurfaceError::GlobalPositionNotOnSurface);
+  }
+
   Jacobian jacobian = Jacobian::Identity();
   if (!state.covTransport) {
     return Result<Jacobian>::success(jacobian);
   }
-  Result<void> result = detail::transportCovarianceToBound(
+  detail::transportCovarianceToBound(
       state.options.geoContext, surface, state.cov, jacobian,
       state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
       state.pars, freeToBoundCorrection);
-  if (!result.ok()) {
-    return Result<Jacobian>::failure(result.error());
-  }
   return Result<Jacobian>::success(jacobian);
 }
 

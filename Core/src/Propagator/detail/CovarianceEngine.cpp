@@ -49,7 +49,7 @@ BoundTrackParameters detail::curvilinearParameters(
       std::move(covariance), particleHypothesis);
 }
 
-Result<void> detail::transportCovarianceToBound(
+void detail::transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
@@ -57,14 +57,6 @@ Result<void> detail::transportCovarianceToBound(
     const std::optional<FreeMatrix>& additionalFreeCovariance,
     FreeVector& freeParameters,
     const FreeToBoundCorrection& freeToBoundCorrection) {
-  // The jacobians below assume that the free parameters are on the surface
-  if (auto local = surface.globalToLocal(geoContext,
-                                         freeParameters.segment<3>(eFreePos0),
-                                         freeParameters.segment<3>(eFreeDir0));
-      !local.ok()) {
-    return local.error();
-  }
-
   FreeToBoundMatrix freeToBoundJacobian;
 
   // Calculate the full jacobian from local parameters at the start surface to
@@ -120,7 +112,6 @@ Result<void> detail::transportCovarianceToBound(
   reinitializeJacobians(geoContext, surface, freeTransportJacobian,
                         freeToPathDerivatives, boundToFreeJacobian,
                         freeParameters);
-  return Result<void>::success();
 }
 
 void detail::transportCovarianceToCurvilinear(

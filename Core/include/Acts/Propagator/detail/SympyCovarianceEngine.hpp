@@ -39,8 +39,8 @@ namespace Acts::detail::sympy {
 /// @param [in] freeToBoundCorrection Correction for non-linearity effect during
 ///        transform from free to bound
 ///
-/// @return Failure if the parameters are not on the surface
-Result<void> transportCovarianceToBound(
+/// @note The free parameters must be on the surface
+void transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
