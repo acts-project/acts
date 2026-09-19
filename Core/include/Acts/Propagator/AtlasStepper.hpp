@@ -959,6 +959,7 @@ class AtlasStepper {
     state.cov = J * state.cov * J.transpose();
     Jacobian jac = J;
 
+    // the surface is built at the current position, so the reanchor cannot fail
     const auto curvilinearSurface =
         CurvilinearSurface(position(state), direction(state)).surface();
     reanchor(state, *curvilinearSurface).value();

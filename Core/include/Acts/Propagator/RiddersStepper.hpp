@@ -650,6 +650,7 @@ class RiddersStepper final {
       }
     }
 
+    // the surface is built at the current position, so this cannot fail
     return transportToBound(state, *curvilinearSurface).value();
   }
 

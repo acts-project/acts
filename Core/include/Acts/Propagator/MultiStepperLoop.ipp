@@ -72,7 +72,8 @@ auto MultiStepperLoop<S, R>::transportToBound(
   assert(!state.components.empty());
 
   const std::size_t selected = Reducer::index(state);
-  std::optional<Result<Jacobian>> jacobian;
+  assert(selected < state.components.size());
+  Result<Jacobian> jacobian = Result<Jacobian>::success(Jacobian::Identity());
 
   for (std::size_t i = 0; i < state.components.size(); ++i) {
     auto& cmpState = state.components[i].state;
@@ -96,7 +97,7 @@ auto MultiStepperLoop<S, R>::transportToBound(
     }
   }
 
-  return std::move(*jacobian);
+  return jacobian;
 }
 
 template <Concepts::SingleStepper S, typename R>
