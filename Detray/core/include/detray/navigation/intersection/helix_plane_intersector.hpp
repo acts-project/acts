@@ -20,6 +20,8 @@
 #include "detray/utils/root_finding.hpp"
 
 // System include(s)
+#include <cmath>
+#include <limits>
 #include <type_traits>
 
 namespace detray {
@@ -69,6 +71,32 @@ struct helix_intersector_impl<cartesian2D<algebra_t>, algebra_t> {
     const vector3_t sn = trf.z();
     // Surface translation
     const point3_t st = trf.translation();
+
+    // For a plane parallel to the magnetic field, the projected helix is
+    // a circle. Reject planes outside that circle before attempting to find
+    // a root: bracket expansion cannot succeed when no intersection exists.
+    const vector3_t field = h.b_field();
+    const scalar_t curvature = -h.qop() * h.B();
+    if (h.B() > 0.f && curvature != 0.f && h.radius() * h.B() >= 1e-6f &&
+        vector::dot(sn, field) == 0.f) {
+      const vector3_t field_axis = (1.f / h.B()) * field;
+      // The transverse circle centre is offset from the initial position.
+      const vector3_t center_offset =
+          (1.f / curvature) * vector::cross(field_axis, h.dir());
+      const scalar_t center_distance = math::fabs(
+          vector::dot(sn, h.pos() - st) + vector::dot(sn, center_offset));
+      const scalar_t radius = h.radius();
+      // Keep near-tangent cases within the solver's tolerance, with an
+      // additional allowance for floating-point roundoff.
+      const scalar_t margin = convergence_tolerance +
+                              64.f * std::numeric_limits<scalar_t>::epsilon() *
+                                  (center_distance + radius);
+      if (std::isfinite(center_distance) && std::isfinite(radius) &&
+          center_distance - radius > margin) {
+        constexpr scalar_t inv = detail::invalid_value<scalar_t>();
+        return {inv, point3_t{inv, inv, inv}, inv};
+      }
+    }
 
     // Starting point on the helix for the Newton iteration
     const vector3_t dist{st - h.pos(0.f)};
