@@ -16,8 +16,6 @@
 #include "Acts/Material/MaterialValidator.hpp"
 #include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Material/SurfaceMaterialMapper.hpp"
-#include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
