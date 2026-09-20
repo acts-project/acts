@@ -44,6 +44,7 @@
 
 // Algebra-plugins include(s)
 #include "detray/algebra/common/boolean.hpp"
+#include "detray/algebra/common/constants.hpp"
 #include "detray/algebra/common/math.hpp"
 #include "detray/algebra/utils/approximately_equal.hpp"
 #include "detray/algebra/utils/casts.hpp"

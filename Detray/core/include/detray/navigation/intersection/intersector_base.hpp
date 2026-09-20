@@ -172,14 +172,10 @@ DETRAY_HOST_DEVICE constexpr void resolve_mask(
     const intersection::config &cfg = {},
     const scalar_t external_mask_tolerance = 0.f) {
   // Mask out solutions that don't meet the overstepping tolerance (SoA)
-  if constexpr (concepts::soa<algebra_t>) {
-    using status_t = typename intersection_t::status_type;
-
-    is.status()(is.path() < cfg.overstep_tolerance) =
-        static_cast<status_t>(intersection::status::e_outside);
-  } else {
-    is.set_status(intersection::status::e_outside);
-  }
+  is.set_status_if(intersection::status::e_outside,
+                   ip.path < cfg.overstep_tolerance);
+  // is.set_status_if(intersection::status::e_outside,
+  // !math::isfinite(ip.path));
 
   // Build intersection struct from test trajectory, if the distance is valid
   if (detray::detail::none_of(ip.path >=

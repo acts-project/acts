@@ -234,7 +234,7 @@ class matrix22_ops_functor {
     detray::getter::element(m23, 1, 2) += 7;
 
     // Test scalar X Matrix
-    m23 = 2. * m23;
+    m23 = 2.f * m23;
 
     // Test Transpose
     auto m32 = detray::matrix::transpose(m23);
@@ -243,12 +243,12 @@ class matrix22_ops_functor {
     m32 = m32 + detray::matrix::identity<matrix_t<3, 2>>();
 
     // Test Matrix X scalar
-    m32 = m32 * 2.;
+    m32 = m32 * 2.f;
 
     // Test Matrix multiplication
     auto new_m22 = m22_inv * m23 * m33_inv * m32;
 
-    scalar_t result = 0;
+    scalar_t result = 0.f;
     result += m22_det;
     result += m33_det;
     result += detray::getter::element(new_m22, 0, 0);

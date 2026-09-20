@@ -24,7 +24,7 @@ namespace detray::benchmarks {
 
 // Select the main algebra-plugin to compile the test with
 #if DETRAY_ALGEBRA_ARRAY_SOA
-using algebra = detray::array_soa<DETRAY_CUSTOM_SCALARTYPE, 32u>;
+using algebra = detray::array_soa<DETRAY_CUSTOM_SCALARTYPE, 8u>;
 DETRAY_DEFINE_BENCHMARK_NAME(array_soa)
 
 #elif DETRAY_ALGEBRA_EIGEN
