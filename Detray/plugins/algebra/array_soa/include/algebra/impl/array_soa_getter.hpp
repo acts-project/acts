@@ -20,6 +20,7 @@ using algebra::storage::element;
 using algebra::storage::set_block;
 
 /// Get a vector of a const matrix
+// @note define this here, so it does not conflict with vector class (common)
 template <std::size_t SIZE, std::size_t ROW, std::size_t COL,
           concepts::scalar scalar_t,
           template <typename, std::size_t> class array_t>

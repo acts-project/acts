@@ -27,8 +27,8 @@ using namespace detray::algebra;
 
 /// Run vector benchmarks
 int main(int argc, char** argv) {
-  constexpr std::size_t n_samples{100000};
-  constexpr unsigned int simd_size{32u};
+  constexpr std::size_t n_samples{100000u};
+  constexpr unsigned int simd_size{8u};
 
   //
   // Prepare benchmarks

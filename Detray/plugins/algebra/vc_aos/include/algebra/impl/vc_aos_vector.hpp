@@ -59,7 +59,14 @@ DETRAY_HOST_DEVICE constexpr auto theta(const vector_t &v) {
 template <detray::concepts::vc_aos_vector vector_t1,
           detray::concepts::vc_aos_vector vector_t2>
 DETRAY_HOST_DEVICE constexpr auto dot(const vector_t1 &a, const vector_t2 &b) {
-  return (a * b).sum();
+  using result_t = decltype(a * b);
+  if constexpr (detray::concepts::vc_simd_vector<result_t>) {
+    return (a * b).sum();
+  } else if constexpr (detray::concepts::simd_storage_vector<result_t>) {
+    return (a * b).get().sum();
+  } else {
+    static_assert(false);
+  }
 }
 
 /// This method retrieves the norm of a vector, no dimension restriction
@@ -142,7 +149,7 @@ DETRAY_HOST_DEVICE constexpr auto cross(const vector_t1 &a, const vector_t2 &b)
     -> decltype(a * b - b * a) {
   return {algebra::math::fma(a[1], b[2], -b[1] * a[2]),
           algebra::math::fma(a[2], b[0], -b[2] * a[0]),
-          algebra::math::fma(a[0], b[1], -b[0] * a[1]), 0.f};
+          algebra::math::fma(a[0], b[1], -b[0] * a[1])};
 }
 
 /// Elementwise sum
