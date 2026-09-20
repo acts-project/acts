@@ -63,17 +63,17 @@ class vector_fixture : public device_fixture<dscalar<A>> {
 
     // Initialise the input and output vectors.
     for (std::size_t i = 0; i < this->size(); ++i) {
-      m_p1->at(i) = {static_cast<scalar_t>(i * 0.5),
-                     static_cast<scalar_t>((i + 1) * 1.0)};
-      m_p2->at(i) = {static_cast<scalar_t>((i + 2) * 1.2),
-                     static_cast<scalar_t>(i * 0.6)};
+      m_p1->at(i) = {static_cast<scalar_t>(i * 0.5f),
+                     static_cast<scalar_t>((i + 1) * 1.f)};
+      m_p2->at(i) = {static_cast<scalar_t>((i + 2) * 1.2f),
+                     static_cast<scalar_t>(i * 0.6f)};
 
-      m_v1->at(i) = {static_cast<scalar_t>(i * 0.6),
-                     static_cast<scalar_t>((i + 1) * 1.2),
-                     static_cast<scalar_t>((i + 2) * 1.3)};
-      m_v2->at(i) = {static_cast<scalar_t>((i + 1) * 1.8),
-                     static_cast<scalar_t>(i * 2.3),
-                     static_cast<scalar_t>((i + 2) * 3.4)};
+      m_v1->at(i) = {static_cast<scalar_t>(i * 0.6f),
+                     static_cast<scalar_t>((i + 1) * 1.2f),
+                     static_cast<scalar_t>((i + 2) * 1.3f)};
+      m_v2->at(i) = {static_cast<scalar_t>((i + 1) * 1.8f),
+                     static_cast<scalar_t>(i * 2.3f),
+                     static_cast<scalar_t>((i + 2) * 3.4f)};
     }
   }
 
@@ -124,7 +124,7 @@ class vector_2d_ops_functor {
   DETRAY_HOST_DEVICE
   scalar_t vector_2d_ops(point2_t a, point2_t b) const {
     point2_t c = a + b;
-    point2_t c2 = c * 2.0;
+    point2_t c2 = c * 2.f;
 
     scalar_t phi = detray::vector::phi(c2);
     scalar_t perp = detray::vector::perp(c2);
@@ -163,7 +163,7 @@ class vector_3d_ops_functor {
   DETRAY_HOST_DEVICE
   scalar_t vector_3d_ops(vector3_t a, vector3_t b) const {
     vector3_t c = a + b;
-    vector3_t c2 = c * 2.0;
+    vector3_t c2 = c * 2.f;
 
     scalar_t phi = detray::vector::phi(c2);
     scalar_t perp = detray::vector::perp(c2);

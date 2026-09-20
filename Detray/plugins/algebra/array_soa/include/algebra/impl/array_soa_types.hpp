@@ -11,6 +11,7 @@
 // Project include(s).
 #include "algebra/impl/array_soa_casts.hpp"
 #include "algebra/impl/array_soa_concepts.hpp"
+#include "algebra/impl/array_soa_constants.hpp"
 #include "algebra/impl/array_soa_getter.hpp"
 #include "algebra/impl/array_soa_simd.hpp"
 #include "algebra/impl/array_soa_transform3.hpp"

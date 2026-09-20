@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "algebra/impl/array_soa_constants.hpp"
 #include "algebra/impl/array_soa_math.hpp"
 #include "detray/algebra/common/vector.hpp"
 #include "detray/algebra/concepts.hpp"
@@ -148,7 +149,7 @@ DETRAY_HOST_DEVICE constexpr algebra::storage::vector<
     N, array_soa::simd<value_t, W>, array_t>
 normalize(const algebra::storage::vector<N, array_soa::simd<value_t, W>,
                                          array_t> &v) {
-  return (array_soa::simd<value_t, W>::One() / norm(v)) * v;
+  return (algebra::constants::one<array_soa::simd<value_t, W>>() / norm(v)) * v;
 }
 
 /// This method retrieves the pseudo-rapidity from a vector or vector base with

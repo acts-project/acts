@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "algebra/impl/array_soa_boolean.hpp"
 #include "algebra/impl/array_soa_simd.hpp"
 #include "detray/algebra/common/math.hpp"
 #include "detray/algebra/concepts.hpp"
@@ -39,7 +40,7 @@ DETRAY_HOST_DEVICE constexpr bool approx_equal(
     const T rel_error = 16.f * std::numeric_limits<T>::epsilon(),
     const T max_error = std::numeric_limits<T>::epsilon()) {
   if constexpr (std::integral<T>) {
-    return (a == b).isFull();
+    return detray::algebra::boolean::all_of(a == b);
   } else {
     for (std::size_t i = 0u; i < W; ++i) {
       // Calculate the difference.

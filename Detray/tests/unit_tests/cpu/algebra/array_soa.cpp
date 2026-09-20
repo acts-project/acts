@@ -55,12 +55,12 @@ TEST(detray_algebra_soa, simd) {
 
   // Default construction is zero, like Vc::Vector
   scalar_t z;
-  EXPECT_TRUE((z == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((z == 0.f).isFull());
+  EXPECT_TRUE(detray::detail::all_of(z == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(detray::detail::all_of(z == 0.f));
 
   // Broadcast and lane index
   scalar_t two{2.f};
-  const scalar_t idx = scalar_t::IndexesFromZero();
+  const scalar_t idx = detray::detail::iota<scalar_t>();
   for (std::size_t i = 0u; i < scalar_t::size(); ++i) {
     EXPECT_EQ(two[i], 2.f);
     EXPECT_EQ(idx[i], static_cast<value_t>(i));
@@ -69,34 +69,35 @@ TEST(detray_algebra_soa, simd) {
   // Arithmetic with bundles and with single values on both sides
   const scalar_t a = idx + 1.f;
   const scalar_t b = 2.f * a;
-  EXPECT_TRUE((b == a + a).isFull());
-  EXPECT_TRUE((b - a == a).isFull());
-  EXPECT_TRUE((b / 2.f == a).isFull());
-  EXPECT_TRUE((-a == 0.f - a).isFull());
-  EXPECT_TRUE((a * b == b * a).isFull());
-  EXPECT_TRUE((1.f / scalar_t::One() == scalar_t::One()).isFull());
+  EXPECT_TRUE(detray::detail::all_of(b == a + a));
+  EXPECT_TRUE(detray::detail::all_of(b - a == a));
+  EXPECT_TRUE(detray::detail::all_of(b / 2.f == a));
+  EXPECT_TRUE(detray::detail::all_of(-a == 0.f - a));
+  EXPECT_TRUE(detray::detail::all_of(a * b == b * a));
+  EXPECT_TRUE(detray::detail::all_of(1.f / detray::detail::one<scalar_t>() ==
+                                     detray::detail::one<scalar_t>()));
 
   scalar_t c = a;
   c += 1.f;
-  c -= scalar_t::One();
+  c -= detray::detail::one<scalar_t>();
   c *= 2.f;
   c /= two;
-  EXPECT_TRUE((c == a).isFull());
+  EXPECT_TRUE(detray::detail::all_of(c == a));
 
   // Comparisons yield masks
   const bool_t m = idx < 3.f;
   static_assert(std::same_as<decltype(m), const bool_t>);
-  EXPECT_FALSE(m.isFull());
-  EXPECT_FALSE(m.isEmpty());
-  EXPECT_TRUE(m.isNotEmpty());
-  EXPECT_EQ(m.count(), 3u);
-  EXPECT_TRUE((!m).count() == scalar_t::size() - 3u);
-  EXPECT_TRUE((m && !m).isEmpty());
-  EXPECT_TRUE((m || !m).isFull());
-  EXPECT_TRUE((idx >= 0.f).isFull());
+  EXPECT_FALSE(detray::detail::all_of(m));
+  EXPECT_FALSE(detray::detail::none_of(m));
+  EXPECT_TRUE(detray::detail::any_of(m));
+  EXPECT_EQ(detray::detail::count(m), 3u);
+  EXPECT_TRUE(detray::detail::count(!m) == scalar_t::size() - 3u);
+  EXPECT_TRUE(detray::detail::none_of(m && !m));
+  EXPECT_TRUE(detray::detail::all_of(m || !m));
+  EXPECT_TRUE(detray::detail::all_of(idx >= 0.f));
   EXPECT_TRUE((3.f > idx) == m);
-  EXPECT_TRUE(bool_t{true}.isFull());
-  EXPECT_TRUE(bool_t{false}.isEmpty());
+  EXPECT_TRUE(detray::detail::all_of(bool_t{true}));
+  EXPECT_TRUE(detray::detail::none_of(bool_t{false}));
 
   // Boolean reductions used by the core
   EXPECT_TRUE(detray::detail::any_of(m));
@@ -106,33 +107,31 @@ TEST(detray_algebra_soa, simd) {
 
   // Masked assignment
   scalar_t d = idx;
-  d(m) = 42.f;
+  detray::detail::set_if(d, m, scalar_t{42.f});
   for (std::size_t i = 0u; i < scalar_t::size(); ++i) {
     EXPECT_EQ(d[i], i < 3u ? 42.f : static_cast<value_t>(i));
   }
-  d(!m) = a;
+  detray::detail::set_if(d, !m, a);
   for (std::size_t i = 0u; i < scalar_t::size(); ++i) {
     EXPECT_EQ(d[i], i < 3u ? 42.f : static_cast<value_t>(i + 1u));
   }
 
   scalar_t e = a;
-  e.setZeroInverted(m);
+  detray::detail::set_zero_inverted(e, m);
   for (std::size_t i = 0u; i < scalar_t::size(); ++i) {
     EXPECT_EQ(e[i], i < 3u ? static_cast<value_t>(i + 1u) : 0.f);
   }
   e = a;
-  e.setZero(m);
+  detray::detail::set_zero(e, m);
   for (std::size_t i = 0u; i < scalar_t::size(); ++i) {
     EXPECT_EQ(e[i], i < 3u ? 0.f : static_cast<value_t>(i + 1u));
   }
 
   // Numeric limits are broadcast
-  EXPECT_TRUE((std::numeric_limits<scalar_t>::epsilon() ==
-               std::numeric_limits<value_t>::epsilon())
-                  .isFull());
-  EXPECT_TRUE((std::numeric_limits<scalar_t>::max() ==
-               std::numeric_limits<value_t>::max())
-                  .isFull());
+  EXPECT_TRUE(detray::detail::all_of(std::numeric_limits<scalar_t>::epsilon() ==
+                                     std::numeric_limits<value_t>::epsilon()));
+  EXPECT_TRUE(detray::detail::all_of(std::numeric_limits<scalar_t>::max() ==
+                                     std::numeric_limits<value_t>::max()));
   static_assert(std::numeric_limits<scalar_t>::is_specialized);
 
   // Math functions lane by lane
@@ -203,16 +202,16 @@ TEST(detray_algebra_soa, vector) {
   static_assert(std::same_as<decltype(s2), scalar_d>);
   static_assert(std::same_as<decltype(s3), scalar_i>);
 
-  ASSERT_TRUE((s1 == scalar_f(1.f)).isFull());
-  ASSERT_TRUE((s2 == scalar_d(2.)).isFull());
-  ASSERT_TRUE((s3 == scalar_i(3)).isFull());
+  ASSERT_TRUE(detray::detail::all_of(s1 == scalar_f(1.f)));
+  ASSERT_TRUE(detray::detail::all_of(s2 == scalar_d(2.)));
+  ASSERT_TRUE(detray::detail::all_of(s3 == scalar_i(3)));
 
   vector3_v a{1.f, 2.f, 3.f};
   vector3_v b{4.f, 5.f, 6.f};
 
-  EXPECT_TRUE((a[0] == scalar_t(1.f)).isFull());
-  EXPECT_TRUE((a[1] == scalar_t(2.f)).isFull());
-  EXPECT_TRUE((a[2] == scalar_t(3.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(a[0] == scalar_t(1.f)));
+  EXPECT_TRUE(detray::detail::all_of(a[1] == scalar_t(2.f)));
+  EXPECT_TRUE(detray::detail::all_of(a[2] == scalar_t(3.f)));
 
   // Test printing
   std::cout << a << std::endl;
@@ -256,23 +255,24 @@ TEST(detray_algebra_soa, vector) {
   static_assert(std::same_as<decltype(a_cast_i), dvector3D<algebra_i_t>>);
 
   for (int i = 0; i < 3; ++i) {
-    EXPECT_TRUE(
-        (a_cast_f[i] == detray::algebra::cast_to<float>(a[i])).isFull());
-    EXPECT_TRUE(
-        (a_cast_d[i] == detray::algebra::cast_to<double>(a[i])).isFull());
-    EXPECT_TRUE((a_cast_i[i] == detray::algebra::cast_to<int>(a[i])).isFull());
+    EXPECT_TRUE(detray::detail::all_of(a_cast_f[i] ==
+                                       detray::algebra::cast_to<float>(a[i])));
+    EXPECT_TRUE(detray::detail::all_of(a_cast_d[i] ==
+                                       detray::algebra::cast_to<double>(a[i])));
+    EXPECT_TRUE(detray::detail::all_of(a_cast_i[i] ==
+                                       detray::algebra::cast_to<int>(a[i])));
   }
 
   // Masked comparison
   auto m = a.compare(a);
-  EXPECT_TRUE(m[0].isFull());
-  EXPECT_TRUE(m[1].isFull());
-  EXPECT_TRUE(m[2].isFull());
+  EXPECT_TRUE(detray::detail::all_of(m[0]));
+  EXPECT_TRUE(detray::detail::all_of(m[1]));
+  EXPECT_TRUE(detray::detail::all_of(m[2]));
 
   m = a.compare(b);
-  EXPECT_FALSE(m[0].isFull());
-  EXPECT_FALSE(m[1].isFull());
-  EXPECT_FALSE(m[2].isFull());
+  EXPECT_FALSE(detray::detail::all_of(m[0]));
+  EXPECT_FALSE(detray::detail::all_of(m[1]));
+  EXPECT_FALSE(detray::detail::all_of(m[2]));
 
   // Full comparisons
   EXPECT_TRUE(a == a);
@@ -280,48 +280,48 @@ TEST(detray_algebra_soa, vector) {
 
   // Addition
   auto v_add = a + b;
-  EXPECT_TRUE((v_add[0] == scalar_t(5.f)).isFull());
-  EXPECT_TRUE((v_add[1] == scalar_t(7.f)).isFull());
-  EXPECT_TRUE((v_add[2] == scalar_t(9.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(v_add[0] == scalar_t(5.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_add[1] == scalar_t(7.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_add[2] == scalar_t(9.f)));
 
   // Subration
   auto v_sub = a - b;
-  EXPECT_TRUE((v_sub[0] == scalar_t(-3.f)).isFull());
-  EXPECT_TRUE((v_sub[1] == scalar_t(-3.f)).isFull());
-  EXPECT_TRUE((v_sub[2] == scalar_t(-3.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(v_sub[0] == scalar_t(-3.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_sub[1] == scalar_t(-3.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_sub[2] == scalar_t(-3.f)));
 
   // Multiplication
   auto v_mul = a * b;
-  EXPECT_TRUE((v_mul[0] == scalar_t(4.f)).isFull());
-  EXPECT_TRUE((v_mul[1] == scalar_t(10.f)).isFull());
-  EXPECT_TRUE((v_mul[2] == scalar_t(18.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(v_mul[0] == scalar_t(4.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_mul[1] == scalar_t(10.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_mul[2] == scalar_t(18.f)));
 
   // Division
   auto v_div = a / b;
-  EXPECT_TRUE((v_div[0] == scalar_t(0.25f)).isFull());
-  EXPECT_TRUE((v_div[1] == scalar_t(0.4f)).isFull());
-  EXPECT_TRUE((v_div[2] == scalar_t(0.5f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(v_div[0] == scalar_t(0.25f)));
+  EXPECT_TRUE(detray::detail::all_of(v_div[1] == scalar_t(0.4f)));
+  EXPECT_TRUE(detray::detail::all_of(v_div[2] == scalar_t(0.5f)));
 
   // Scalar multiplication
   auto v_smul = 2.f * b;
-  EXPECT_TRUE((v_smul[0] == scalar_t(8.f)).isFull());
-  EXPECT_TRUE((v_smul[1] == scalar_t(10.f)).isFull());
-  EXPECT_TRUE((v_smul[2] == scalar_t(12.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(v_smul[0] == scalar_t(8.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_smul[1] == scalar_t(10.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_smul[2] == scalar_t(12.f)));
 
   // Lane bundle multiplication
   auto v_bmul = scalar_t(2.f) * b;
-  EXPECT_TRUE((v_bmul[0] == scalar_t(8.f)).isFull());
-  EXPECT_TRUE((v_bmul[1] == scalar_t(10.f)).isFull());
-  EXPECT_TRUE((v_bmul[2] == scalar_t(12.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(v_bmul[0] == scalar_t(8.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_bmul[1] == scalar_t(10.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_bmul[2] == scalar_t(12.f)));
 
   // Expression
   auto v_expr = (b / a) - (2.5f * b) + vector3_v{};
-  EXPECT_TRUE((v_expr[0] == scalar_t(-6.f)).isFull());
-  EXPECT_TRUE((v_expr[1] == scalar_t(-10.f)).isFull());
-  EXPECT_TRUE((v_expr[2] == scalar_t(-13.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(v_expr[0] == scalar_t(-6.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_expr[1] == scalar_t(-10.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_expr[2] == scalar_t(-13.f)));
 
   auto d{vector::dot(a, b)};
-  EXPECT_TRUE((d == scalar_t(32.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(d == scalar_t(32.f)));
 
   scalar_t norms_a{vector::norm(vector::normalize(a))};
   scalar_t norms_b{vector::norm(vector::normalize(b))};
@@ -331,9 +331,9 @@ TEST(detray_algebra_soa, vector) {
   }
 
   auto cr{vector::cross(a, b)};
-  EXPECT_TRUE((cr[0] == scalar_t(-3.f)).isFull());
-  EXPECT_TRUE((cr[1] == scalar_t(6.f)).isFull());
-  EXPECT_TRUE((cr[2] == scalar_t(-3.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(cr[0] == scalar_t(-3.f)));
+  EXPECT_TRUE(detray::detail::all_of(cr[1] == scalar_t(6.f)));
+  EXPECT_TRUE(detray::detail::all_of(cr[2] == scalar_t(-3.f)));
 
   static_assert(std::is_convertible_v<decltype(v_expr), vector3_v>,
                 "expression type not convertible");
@@ -388,18 +388,30 @@ TEST(detray_algebra_soa, transform3) {
 
   transform3 idty{};
 
-  EXPECT_TRUE((idty(0, 0) == scalar_t::One()).isFull());
-  EXPECT_TRUE((idty(1, 0) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(2, 0) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(0, 1) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(1, 1) == scalar_t::One()).isFull());
-  EXPECT_TRUE((idty(2, 1) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(0, 2) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(1, 2) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(2, 2) == scalar_t::One()).isFull());
-  EXPECT_TRUE((idty(0, 3) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(1, 3) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(2, 3) == scalar_t::Zero()).isFull());
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(0, 0) == detray::detail::one<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(1, 0) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(2, 0) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(0, 1) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(1, 1) == detray::detail::one<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(2, 1) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(0, 2) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(1, 2) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(2, 2) == detray::detail::one<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(0, 3) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(1, 3) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(2, 3) == detray::detail::zero<scalar_t>()));
 
   // Preparatioon work
   vector3 z = vector::normalize(vector3{3.f, 2.f, 1.f});
@@ -445,34 +457,37 @@ TEST(detray_algebra_soa, transform3) {
   for (int j = 0; j < 3; ++j) {
     for (int i = 0; i < 3; ++i) {
       const auto& elem_ij = trf1.matrix()[i][j];
-      EXPECT_TRUE(
-          (mat_f[i][j] == detray::algebra::cast_to<float>(elem_ij)).isFull());
-      EXPECT_TRUE(
-          (mat_d[i][j] == detray::algebra::cast_to<double>(elem_ij)).isFull());
-      EXPECT_TRUE(
-          (mat_i[i][j] == detray::algebra::cast_to<int>(elem_ij)).isFull());
+      EXPECT_TRUE(detray::detail::all_of(
+          mat_f[i][j] == detray::algebra::cast_to<float>(elem_ij)));
+      EXPECT_TRUE(detray::detail::all_of(
+          mat_d[i][j] == detray::algebra::cast_to<double>(elem_ij)));
+      EXPECT_TRUE(detray::detail::all_of(
+          mat_i[i][j] == detray::algebra::cast_to<int>(elem_ij)));
     }
   }
 
-  EXPECT_TRUE((trf2(0, 0) == x[0]).isFull());
-  EXPECT_TRUE((trf2(1, 0) == x[1]).isFull());
-  EXPECT_TRUE((trf2(2, 0) == x[2]).isFull());
-  EXPECT_TRUE((trf2(0, 1) == y[0]).isFull());
-  EXPECT_TRUE((trf2(1, 1) == y[1]).isFull());
-  EXPECT_TRUE((trf2(2, 1) == y[2]).isFull());
-  EXPECT_TRUE((trf2(0, 2) == z[0]).isFull());
-  EXPECT_TRUE((trf2(1, 2) == z[1]).isFull());
-  EXPECT_TRUE((trf2(2, 2) == z[2]).isFull());
-  EXPECT_TRUE((trf2(0, 3) == 2.f * scalar_t::One()).isFull());
-  EXPECT_TRUE((trf2(1, 3) == 3.f * scalar_t::One()).isFull());
-  EXPECT_TRUE((trf2(2, 3) == 4.f * scalar_t::One()).isFull());
+  EXPECT_TRUE(detray::detail::all_of(trf2(0, 0) == x[0]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(1, 0) == x[1]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(2, 0) == x[2]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(0, 1) == y[0]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(1, 1) == y[1]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(2, 1) == y[2]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(0, 2) == z[0]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(1, 2) == z[1]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(2, 2) == z[2]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(0, 3) ==
+                                     2.f * detray::detail::one<scalar_t>()));
+  EXPECT_TRUE(detray::detail::all_of(trf2(1, 3) ==
+                                     3.f * detray::detail::one<scalar_t>()));
+  EXPECT_TRUE(detray::detail::all_of(trf2(2, 3) ==
+                                     4.f * detray::detail::one<scalar_t>()));
 
   // Check that local origin translates into global translation
   point3 lzero = {0.f, 0.f, 0.f};
   point3 gzero = trf2.point_to_global(lzero);
-  EXPECT_TRUE((gzero[0] == t[0]).isFull());
-  EXPECT_TRUE((gzero[1] == t[1]).isFull());
-  EXPECT_TRUE((gzero[2] == t[2]).isFull());
+  EXPECT_TRUE(detray::detail::all_of(gzero[0] == t[0]));
+  EXPECT_TRUE(detray::detail::all_of(gzero[1] == t[1]));
+  EXPECT_TRUE(detray::detail::all_of(gzero[2] == t[2]));
 
   // Check a round trip for point
   point3 loc_pt = {3.f, 4.f, 5.f};
@@ -583,8 +598,8 @@ TEST(detray_algebra_soa, matrix64) {
   const matrix_4x6_t I64_T = detray::matrix::transpose(I64);
   for (std::size_t i = 0u; i < 4u; ++i) {
     for (std::size_t j = 0u; j < 6u; ++j) {
-      EXPECT_TRUE((getter::element(I64_T, i, j) == getter::element(I64, j, i))
-                      .isFull());
+      EXPECT_TRUE(detray::detail::all_of(getter::element(I64_T, i, j) ==
+                                         getter::element(I64, j, i)));
     }
   }
   // Only the first four diagonal entries of the product are one
@@ -592,7 +607,8 @@ TEST(detray_algebra_soa, matrix64) {
   for (std::size_t i = 0u; i < 6u; ++i) {
     for (std::size_t j = 0u; j < 6u; ++j) {
       const value_t ref = (i == j && i < 4u) ? 1.f : 0.f;
-      EXPECT_TRUE((getter::element(I66, i, j) == ref).isFull()) << i << j;
+      EXPECT_TRUE(detray::detail::all_of(getter::element(I66, i, j) == ref))
+          << i << j;
     }
   }
 }
@@ -627,8 +643,8 @@ TEST(detray_algebra_soa, quadratic_equation) {
   // All lanes linear: early exit
   const detail::quadratic_equation<scalar_t> qe_lin{
       scalar_t{0.f}, scalar_t{2.f}, scalar_t{-4.f}};
-  EXPECT_TRUE((qe_lin.solutions() == 1.f).isFull());
-  EXPECT_TRUE((qe_lin.smaller() == 2.f).isFull());
+  EXPECT_TRUE(detray::detail::all_of(qe_lin.solutions() == 1.f));
+  EXPECT_TRUE(detray::detail::all_of(qe_lin.smaller() == 2.f));
 }
 
 /// This tests that the SoA ray intersectors compile and work with the plugin
@@ -653,7 +669,7 @@ TEST(detray_algebra_soa, ray_plane_intersection) {
   const mask_t rect{0u, 5.f, 5.f};
 
   // One plane per lane, shifted in x by 3 * lane and in z by 10 + lane
-  const scalar_t idx = scalar_t::IndexesFromZero();
+  const scalar_t idx = detray::detail::iota<scalar_t>();
   const point3_t t{3.f * idx, 0.f, 10.f + idx};
   const vector3_t z{0.f, 0.f, 1.f};
   const vector3_t x{1.f, 0.f, 0.f};
