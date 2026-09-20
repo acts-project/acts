@@ -35,8 +35,8 @@ JsonMaterialDecorator::JsonMaterialDecorator(
   }
 
   auto maps = jmConverter.jsonToMaterialMaps(jin);
-  m_surfaceMaterialMap = maps.first;
-  m_volumeMaterialMap = maps.second;
+  m_surfaceMaterialMap = maps.surfaceMaterials;
+  m_volumeMaterialMap = maps.volumeMaterials;
   ACTS_VERBOSE("JSON material description read complete");
 }
 

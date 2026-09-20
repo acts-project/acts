@@ -1,6 +1,6 @@
 /** TRACCC library, part of the ACTS project (R&D line)
  *
- * (c) 2022 CERN for the benefit of the ACTS project
+ * (c) 2022-2026 CERN for the benefit of the ACTS project
  *
  * Mozilla Public License Version 2.0
  */
@@ -8,6 +8,8 @@
 // Project include(s).
 #include "traccc/sycl/utils/queue_wrapper.hpp"
 
+// SYCL include(s).
+#include <sycl/sycl.hpp>
 namespace traccc::sycl {
 
 queue_wrapper::queue_wrapper(void* queue) : m_queue(queue) {}
@@ -20,4 +22,12 @@ const void* queue_wrapper::queue() const {
   return m_queue;
 }
 
+void queue_wrapper::enqueue_callback(std::function<void()> func) const {
+  assert(m_queue != nullptr);
+
+  auto& sycl_queue = *(reinterpret_cast<::sycl::queue*>(m_queue));
+  sycl_queue.submit([func = std::move(func)](::sycl::handler& cgh) {
+    cgh.host_task([func = std::move(func)]() { func(); });
+  });
+}
 }  // namespace traccc::sycl

@@ -535,8 +535,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
 
     // the surface's metric maps the slide into what the grid bins
     const Vector3 localSlide =
-        inverseTransform(m_representative->localToGlobalTransform(gctx))
-            .linear() *
+        m_representative->localToGlobalTransform(gctx).inverse().linear() *
         slide;
     const Vector2 boundSlide =
         m_representative->localCartesianToBoundLocalDerivative(

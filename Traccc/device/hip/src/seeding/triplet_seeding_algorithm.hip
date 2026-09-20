@@ -263,7 +263,9 @@ void triplet_seeding_algorithm::select_seeds_kernel(
   const unsigned int n_threads = warp_size() * 2;
   const unsigned int n_blocks =
       (payload.n_doublets + n_threads - 1) / n_threads;
-  hipLaunchKernelGGL(kernels::select_seeds, n_blocks, n_threads, 0,
+  hipLaunchKernelGGL(kernels::select_seeds, n_blocks, n_threads,
+                     sizeof(device::device_triplet) *
+                         payload.finder_config.maxSeedsPerSpM * n_threads,
                      details::get_stream(stream()), payload.finder_config,
                      payload.filter_config, payload.spacepoints, payload.grid,
                      payload.spM_tc, payload.midBot_tc, payload.triplets,

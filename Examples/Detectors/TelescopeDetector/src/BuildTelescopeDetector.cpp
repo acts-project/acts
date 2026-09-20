@@ -29,6 +29,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <algorithm>
@@ -83,7 +84,7 @@ ActsExamples::buildTelescopeDetector(
     Acts::Translation3 trans(offsets[0], offsets[1], positions[i]);
     // The entire transformation (the coordinate system, whose center is defined
     // by trans, will be rotated as well)
-    Acts::Transform3 trafo(rotation * trans);
+    Acts::Transform3 trafo(Acts::makeTransform3(rotation) * trans);
 
     // rotate around local z axis by stereo angle
     auto stereo = stereoAngles[i];
@@ -129,7 +130,7 @@ ActsExamples::buildTelescopeDetector(
   // The volume transform
   Acts::Translation3 transVol(offsets[0], offsets[1],
                               (positions.front() + positions.back()) * 0.5);
-  Acts::Transform3 trafoVol(rotation * transVol);
+  Acts::Transform3 trafoVol(Acts::makeTransform3(rotation) * transVol);
 
   // The volume bounds is set to be a bit larger than either cubic with planes
   // or cylinder with discs
