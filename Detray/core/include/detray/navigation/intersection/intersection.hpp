@@ -274,7 +274,7 @@ class intersection2D {
   /// @returns the local 3D intersection point (only debug)
   template <bool B = has_pos>
     requires B
-  DETRAY_HOST_DEVICE constexpr point3_type local() const {
+  DETRAY_HOST_DEVICE constexpr const point3_type &local() const {
     return m_ip.point;
   }
 
@@ -284,6 +284,10 @@ class intersection2D {
   DETRAY_HOST_DEVICE constexpr void set_local(const point3_type p) {
     m_ip.point = p;
   }
+
+  /// @returns the intersection status
+  DETRAY_HOST_DEVICE
+  constexpr dsimd<algebra_t, status_type> status() { return m_status; }
 
   /// @returns the intersection status
   DETRAY_HOST_DEVICE
@@ -299,12 +303,7 @@ class intersection2D {
   DETRAY_HOST_DEVICE
   constexpr void set_status_if(intersection::status s,
                                dbool<algebra_t> result_mask) {
-    // @TODO find a unified conditional assignment in algebra_plugins
-    if constexpr (concepts::soa<algebra_t>) {
-      m_status(result_mask) = static_cast<status_type>(s);
-    } else {
-      m_status = result_mask ? static_cast<status_type>(s) : m_status;
-    }
+    detail::set_if(m_status, result_mask, static_cast<status_type>(s));
   }
 
   /// @note: Three way comparison cannot be used easily with SoA boolean masks

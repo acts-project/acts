@@ -71,32 +71,6 @@ struct mask {
     return ret;
   }
 
-  /// @returns true if no lane is set
-  DETRAY_HOST_DEVICE
-  constexpr bool isEmpty() const {
-    bool ret{true};
-    DETRAY_UNROLL_N(W)
-    for (std::size_t i = 0u; i < W; ++i) {
-      ret = ret && !m_data[i];
-    }
-    return ret;
-  }
-
-  /// @returns true if at least one lane is set
-  DETRAY_HOST_DEVICE
-  constexpr bool isNotEmpty() const { return !isEmpty(); }
-
-  /// @returns the number of set lanes
-  DETRAY_HOST_DEVICE
-  constexpr std::size_t count() const {
-    std::size_t n{0u};
-    DETRAY_UNROLL_N(W)
-    for (std::size_t i = 0u; i < W; ++i) {
-      n += m_data[i] ? 1u : 0u;
-    }
-    return n;
-  }
-
   /// Logical operators (lane-wise, no short-circuit)
   /// @{
   DETRAY_HOST_DEVICE
@@ -188,7 +162,7 @@ struct mask {
 /// This is the scalar type of the SoA plugin. Every operation is a plain loop
 /// over the lanes, so that the compiler can vectorize it.
 template <concepts::value T, std::size_t W>
-struct simd {
+struct DETRAY_ALIGN(16) simd {
   static_assert(W > 0u, "A lane bundle needs at least one lane");
 
   using value_type = T;
@@ -202,10 +176,12 @@ struct simd {
 
   /// Broadcast constructor
   // NOLINTNEXTLINE(google-explicit-constructor)
-  DETRAY_HOST_DEVICE constexpr simd(T v) {
+  template <typename U>
+    requires(std::convertible_to<U, T>)
+  DETRAY_HOST_DEVICE constexpr simd(U v) {
     DETRAY_UNROLL_N(W)
     for (std::size_t i = 0u; i < W; ++i) {
-      m_data[i] = v;
+      m_data[i] = static_cast<T>(v);
     }
   }
 
@@ -227,26 +203,6 @@ struct simd {
   DETRAY_HOST_DEVICE
   static consteval std::size_t size() { return W; }
 
-  /// Named constants
-  /// @{
-  DETRAY_HOST_DEVICE
-  static constexpr simd Zero() { return simd{static_cast<T>(0)}; }
-
-  DETRAY_HOST_DEVICE
-  static constexpr simd One() { return simd{static_cast<T>(1)}; }
-
-  /// @returns a bundle that holds the lane index in every lane
-  DETRAY_HOST_DEVICE
-  static constexpr simd IndexesFromZero() {
-    simd ret;
-    DETRAY_UNROLL_N(W)
-    for (std::size_t i = 0u; i < W; ++i) {
-      ret.m_data[i] = static_cast<T>(i);
-    }
-    return ret;
-  }
-  /// @}
-
   /// Lane access
   /// @{
   DETRAY_HOST_DEVICE
@@ -254,54 +210,6 @@ struct simd {
   DETRAY_HOST_DEVICE
   constexpr T &operator[](std::size_t i) { return m_data[i]; }
   /// @}
-
-  /// Proxy for the masked assignment @c v(mask) = x
-  struct masked_ref {
-    simd &v;
-    mask_type m;
-
-    DETRAY_HOST_DEVICE
-    constexpr void operator=(const simd &rhs) const {
-      DETRAY_UNROLL_N(W)
-      for (std::size_t i = 0u; i < W; ++i) {
-        if (m[i]) {
-          v.m_data[i] = rhs.m_data[i];
-        }
-      }
-    }
-
-    DETRAY_HOST_DEVICE
-    constexpr void operator=(T rhs) const {
-      DETRAY_UNROLL_N(W)
-      for (std::size_t i = 0u; i < W; ++i) {
-        if (m[i]) {
-          v.m_data[i] = rhs;
-        }
-      }
-    }
-  };
-
-  /// Masked assignment: only the lanes set in @param m are written
-  DETRAY_HOST_DEVICE
-  constexpr masked_ref operator()(mask_type m) { return masked_ref{*this, m}; }
-
-  /// Set the lanes to zero where @param m is @c false
-  DETRAY_HOST_DEVICE
-  constexpr void setZeroInverted(mask_type m) {
-    DETRAY_UNROLL_N(W)
-    for (std::size_t i = 0u; i < W; ++i) {
-      m_data[i] = m[i] ? m_data[i] : static_cast<T>(0);
-    }
-  }
-
-  /// Set the lanes to zero where @param m is @c true
-  DETRAY_HOST_DEVICE
-  constexpr void setZero(mask_type m) {
-    DETRAY_UNROLL_N(W)
-    for (std::size_t i = 0u; i < W; ++i) {
-      m_data[i] = m[i] ? static_cast<T>(0) : m_data[i];
-    }
-  }
 
   /// Compound assignment
   /// @{

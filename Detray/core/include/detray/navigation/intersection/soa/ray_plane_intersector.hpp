@@ -66,16 +66,20 @@ struct ray_intersector_impl<cartesian2D<algebra_t>, algebra_t, resolve_pos> {
     const vector3_type &sn = trf.z();
     const vector3_type &st = trf.translation();
 
-    // Broadcast ray data
+    // Broadcast ray data;
     const auto &pos = ray.pos();
     const auto &dir = ray.dir();
-    const vector3_type ro{pos[0], pos[1], pos[2]};
-    const vector3_type rd{dir[0], dir[1], dir[2]};
+    const vector3_type &ro = {pos[0], pos[1], pos[2]};
+    const vector3_type &rd = {dir[0], dir[1], dir[2]};
 
     const scalar_type denom = vector::dot(rd, sn);
-    const vector3_type diff = st - ro;
-    const scalar_type s = vector::dot(sn, diff) / denom;
 
+    // This is dangerous...
+    if (detail::all_of(denom == 0.f)) [[unlikely]] {
+      return {};
+    }
+
+    const scalar_type s = vector::dot(sn, st - ro) / denom;
     const point3_type glob_pos = ro + s * rd;
 
     return {s, glob_pos};

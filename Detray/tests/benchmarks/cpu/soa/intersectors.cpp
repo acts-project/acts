@@ -84,7 +84,7 @@ std::vector<ray_t> generate_rays() {
 }
 
 /// Generate the translation distances to place the surfaces
-template <concepts::algebra algebra_t>
+template <concepts::aos algebra_t>
 dvector<dscalar<algebra_t>> get_dists(std::size_t n) {
   using scalar_t = dscalar<algebra_t>;
 
@@ -98,16 +98,17 @@ dvector<dscalar<algebra_t>> get_dists(std::size_t n) {
 }
 
 /// Specialization for hthe SOA memory layout (need n/simd_size samples)
-template <>
-dvector<dscalar<algebra_v>> get_dists<algebra_v>(std::size_t n) {
-  using scalar_t = dscalar<algebra_v>;
-  using value_t = typename algebra_v::value_type;
+template <concepts::soa algebra_t>
+dvector<dscalar<algebra_t>> get_dists(std::size_t n) {
+  using scalar_t = dscalar<algebra_t>;
+  using value_t = typename algebra_t::value_type;
 
   dvector<scalar_t> dists;
   dists.resize(static_cast<std::size_t>(std::ceil(n / simd_size)));
   for (std::size_t i = 0u; i < dists.size(); ++i) {
-    dists[i] = /*scalar_t::IndexesFromZero() +*/
-        scalar_t(static_cast<value_t>(i)) * 10 + scalar_t(1.f);
+    dists[i] = detray::detail::iota<scalar_t>() +
+               detray::detail::one<scalar_t>() +
+               scalar_t(static_cast<value_t>(i)) * simd_size;
   }
 
   return dists;

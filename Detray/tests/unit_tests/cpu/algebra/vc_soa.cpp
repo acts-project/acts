@@ -55,16 +55,16 @@ TEST(detray_algebra_soa, vector) {
   static_assert(std::same_as<decltype(s2), scalar_d>);
   static_assert(std::same_as<decltype(s3), scalar_i>);
 
-  ASSERT_TRUE((s1 == scalar_f(1.f)).isFull());
-  ASSERT_TRUE((s2 == scalar_d(2.f)).isFull());
-  ASSERT_TRUE((s3 == scalar_i(3.f)).isFull());
+  ASSERT_TRUE(detray::detail::all_of(s1 == scalar_f(1.f)));
+  ASSERT_TRUE(detray::detail::all_of(s2 == scalar_d(2.f)));
+  ASSERT_TRUE(detray::detail::all_of(s3 == scalar_i(3.f)));
 
   vector3_v a{1.f, 2.f, 3.f};
   vector3_v b{4.f, 5.f, 6.f};
 
-  EXPECT_TRUE((a[0] == scalar_t(1.f)).isFull());
-  EXPECT_TRUE((a[1] == scalar_t(2.f)).isFull());
-  EXPECT_TRUE((a[2] == scalar_t(3.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(a[0] == scalar_t(1.f)));
+  EXPECT_TRUE(detray::detail::all_of(a[1] == scalar_t(2.f)));
+  EXPECT_TRUE(detray::detail::all_of(a[2] == scalar_t(3.f)));
 
   // Test printing
   std::cout << a << std::endl;
@@ -108,23 +108,24 @@ TEST(detray_algebra_soa, vector) {
   static_assert(std::same_as<decltype(a_cast_i), dvector3D<algebra_i_t>>);
 
   for (int i = 0; i < 3; ++i) {
-    EXPECT_TRUE(
-        (a_cast_f[i] == detray::algebra::cast_to<float>(a[i])).isFull());
-    EXPECT_TRUE(
-        (a_cast_d[i] == detray::algebra::cast_to<double>(a[i])).isFull());
-    EXPECT_TRUE((a_cast_i[i] == detray::algebra::cast_to<int>(a[i])).isFull());
+    EXPECT_TRUE(detray::detail::all_of(a_cast_f[i] ==
+                                       detray::algebra::cast_to<float>(a[i])));
+    EXPECT_TRUE(detray::detail::all_of(a_cast_d[i] ==
+                                       detray::algebra::cast_to<double>(a[i])));
+    EXPECT_TRUE(detray::detail::all_of(a_cast_i[i] ==
+                                       detray::algebra::cast_to<int>(a[i])));
   }
 
   // Masked comparison
   auto m = a.compare(a);
-  EXPECT_TRUE(m[0].isFull());
-  EXPECT_TRUE(m[1].isFull());
-  EXPECT_TRUE(m[2].isFull());
+  EXPECT_TRUE(detray::detail::all_of(m[0]));
+  EXPECT_TRUE(detray::detail::all_of(m[1]));
+  EXPECT_TRUE(detray::detail::all_of(m[2]));
 
   m = a.compare(b);
-  EXPECT_FALSE(m[0].isFull());
-  EXPECT_FALSE(m[1].isFull());
-  EXPECT_FALSE(m[2].isFull());
+  EXPECT_FALSE(detray::detail::all_of(m[0]));
+  EXPECT_FALSE(detray::detail::all_of(m[1]));
+  EXPECT_FALSE(detray::detail::all_of(m[2]));
 
   // Full comparisons
   EXPECT_TRUE(a == a);
@@ -132,42 +133,42 @@ TEST(detray_algebra_soa, vector) {
 
   // Addition
   auto v_add = a + b;
-  EXPECT_TRUE((v_add[0] == scalar_t(5.f)).isFull());
-  EXPECT_TRUE((v_add[1] == scalar_t(7.f)).isFull());
-  EXPECT_TRUE((v_add[2] == scalar_t(9.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(v_add[0] == scalar_t(5.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_add[1] == scalar_t(7.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_add[2] == scalar_t(9.f)));
 
   // Subration
   auto v_sub = a - b;
-  EXPECT_TRUE((v_sub[0] == scalar_t(-3.f)).isFull());
-  EXPECT_TRUE((v_sub[1] == scalar_t(-3.f)).isFull());
-  EXPECT_TRUE((v_sub[2] == scalar_t(-3.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(v_sub[0] == scalar_t(-3.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_sub[1] == scalar_t(-3.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_sub[2] == scalar_t(-3.f)));
 
   // Multiplication
   auto v_mul = a * b;
-  EXPECT_TRUE((v_mul[0] == scalar_t(4.f)).isFull());
-  EXPECT_TRUE((v_mul[1] == scalar_t(10.f)).isFull());
-  EXPECT_TRUE((v_mul[2] == scalar_t(18.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(v_mul[0] == scalar_t(4.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_mul[1] == scalar_t(10.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_mul[2] == scalar_t(18.f)));
 
   // Division
   auto v_div = a / b;
-  EXPECT_TRUE((v_div[0] == scalar_t(0.25f)).isFull());
-  EXPECT_TRUE((v_div[1] == scalar_t(0.4f)).isFull());
-  EXPECT_TRUE((v_div[2] == scalar_t(0.5f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(v_div[0] == scalar_t(0.25f)));
+  EXPECT_TRUE(detray::detail::all_of(v_div[1] == scalar_t(0.4f)));
+  EXPECT_TRUE(detray::detail::all_of(v_div[2] == scalar_t(0.5f)));
 
   // Scalar multiplication
   auto v_smul = 2.f * b;
-  EXPECT_TRUE((v_smul[0] == scalar_t(8.f)).isFull());
-  EXPECT_TRUE((v_smul[1] == scalar_t(10.f)).isFull());
-  EXPECT_TRUE((v_smul[2] == scalar_t(12.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(v_smul[0] == scalar_t(8.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_smul[1] == scalar_t(10.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_smul[2] == scalar_t(12.f)));
 
   // Expression
   auto v_expr = (b / a) - (2.5f * b) + vector3_v{};
-  EXPECT_TRUE((v_expr[0] == scalar_t(-6.f)).isFull());
-  EXPECT_TRUE((v_expr[1] == scalar_t(-10.f)).isFull());
-  EXPECT_TRUE((v_expr[2] == scalar_t(-13.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(v_expr[0] == scalar_t(-6.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_expr[1] == scalar_t(-10.f)));
+  EXPECT_TRUE(detray::detail::all_of(v_expr[2] == scalar_t(-13.f)));
 
   auto d{vector::dot(a, b)};
-  EXPECT_TRUE((d == scalar_t(32.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(d == scalar_t(32.f)));
 
   scalar_t norms_a{vector::norm(vector::normalize(a))};
   scalar_t norms_b{vector::norm(vector::normalize(b))};
@@ -177,9 +178,9 @@ TEST(detray_algebra_soa, vector) {
   }
 
   auto cr{vector::cross(a, b)};
-  EXPECT_TRUE((cr[0] == scalar_t(-3.f)).isFull());
-  EXPECT_TRUE((cr[1] == scalar_t(6.f)).isFull());
-  EXPECT_TRUE((cr[2] == scalar_t(-3.f)).isFull());
+  EXPECT_TRUE(detray::detail::all_of(cr[0] == scalar_t(-3.f)));
+  EXPECT_TRUE(detray::detail::all_of(cr[1] == scalar_t(6.f)));
+  EXPECT_TRUE(detray::detail::all_of(cr[2] == scalar_t(-3.f)));
 
   static_assert(std::is_convertible_v<decltype(v_expr), vector3_v>,
                 "expression type not convertible");
@@ -234,18 +235,30 @@ TEST(detray_algebra_soa, transform3) {
 
   transform3 idty{};
 
-  EXPECT_TRUE((idty(0, 0) == scalar_t::One()).isFull());
-  EXPECT_TRUE((idty(1, 0) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(2, 0) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(0, 1) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(1, 1) == scalar_t::One()).isFull());
-  EXPECT_TRUE((idty(2, 1) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(0, 2) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(1, 2) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(2, 2) == scalar_t::One()).isFull());
-  EXPECT_TRUE((idty(0, 3) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(1, 3) == scalar_t::Zero()).isFull());
-  EXPECT_TRUE((idty(2, 3) == scalar_t::Zero()).isFull());
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(0, 0) == detray::detail::one<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(1, 0) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(2, 0) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(0, 1) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(1, 1) == detray::detail::one<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(2, 1) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(0, 2) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(1, 2) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(2, 2) == detray::detail::one<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(0, 3) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(1, 3) == detray::detail::zero<scalar_t>()));
+  EXPECT_TRUE(
+      detray::detail::all_of(idty(2, 3) == detray::detail::zero<scalar_t>()));
 
   // Preparatioon work
   vector3 z = vector::normalize(vector3{3.f, 2.f, 1.f});
@@ -291,34 +304,37 @@ TEST(detray_algebra_soa, transform3) {
   for (int j = 0; j < 3; ++j) {
     for (int i = 0; i < 3; ++i) {
       const auto& elem_ij = trf1.matrix()[i][j];
-      EXPECT_TRUE(
-          (mat_f[i][j] == detray::algebra::cast_to<float>(elem_ij)).isFull());
-      EXPECT_TRUE(
-          (mat_d[i][j] == detray::algebra::cast_to<double>(elem_ij)).isFull());
-      EXPECT_TRUE(
-          (mat_i[i][j] == detray::algebra::cast_to<int>(elem_ij)).isFull());
+      EXPECT_TRUE(detray::detail::all_of(
+          mat_f[i][j] == detray::algebra::cast_to<float>(elem_ij)));
+      EXPECT_TRUE(detray::detail::all_of(
+          mat_d[i][j] == detray::algebra::cast_to<double>(elem_ij)));
+      EXPECT_TRUE(detray::detail::all_of(
+          mat_i[i][j] == detray::algebra::cast_to<int>(elem_ij)));
     }
   }
 
-  EXPECT_TRUE((trf2(0, 0) == x[0]).isFull());
-  EXPECT_TRUE((trf2(1, 0) == x[1]).isFull());
-  EXPECT_TRUE((trf2(2, 0) == x[2]).isFull());
-  EXPECT_TRUE((trf2(0, 1) == y[0]).isFull());
-  EXPECT_TRUE((trf2(1, 1) == y[1]).isFull());
-  EXPECT_TRUE((trf2(2, 1) == y[2]).isFull());
-  EXPECT_TRUE((trf2(0, 2) == z[0]).isFull());
-  EXPECT_TRUE((trf2(1, 2) == z[1]).isFull());
-  EXPECT_TRUE((trf2(2, 2) == z[2]).isFull());
-  EXPECT_TRUE((trf2(0, 3) == 2.f * scalar_t::One()).isFull());
-  EXPECT_TRUE((trf2(1, 3) == 3.f * scalar_t::One()).isFull());
-  EXPECT_TRUE((trf2(2, 3) == 4.f * scalar_t::One()).isFull());
+  EXPECT_TRUE(detray::detail::all_of(trf2(0, 0) == x[0]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(1, 0) == x[1]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(2, 0) == x[2]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(0, 1) == y[0]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(1, 1) == y[1]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(2, 1) == y[2]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(0, 2) == z[0]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(1, 2) == z[1]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(2, 2) == z[2]));
+  EXPECT_TRUE(detray::detail::all_of(trf2(0, 3) ==
+                                     2.f * detray::detail::one<scalar_t>()));
+  EXPECT_TRUE(detray::detail::all_of(trf2(1, 3) ==
+                                     3.f * detray::detail::one<scalar_t>()));
+  EXPECT_TRUE(detray::detail::all_of(trf2(2, 3) ==
+                                     4.f * detray::detail::one<scalar_t>()));
 
   // Check that local origin translates into global translation
   point3 lzero = {0.f, 0.f, 0.f};
   point3 gzero = trf2.point_to_global(lzero);
-  EXPECT_TRUE((gzero[0] == t[0]).isFull());
-  EXPECT_TRUE((gzero[1] == t[1]).isFull());
-  EXPECT_TRUE((gzero[2] == t[2]).isFull());
+  EXPECT_TRUE(detray::detail::all_of(gzero[0] == t[0]));
+  EXPECT_TRUE(detray::detail::all_of(gzero[1] == t[1]));
+  EXPECT_TRUE(detray::detail::all_of(gzero[2] == t[2]));
 
   // Check a round trip for point
   point3 loc_pt = {3.f, 4.f, 5.f};
