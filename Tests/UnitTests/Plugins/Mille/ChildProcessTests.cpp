@@ -26,16 +26,21 @@ BOOST_AUTO_TEST_CASE(MissingProg) {
 
 /// catch a missing steering file
 BOOST_AUTO_TEST_CASE(WrongWD) {
-  childProcessStatus status =
-      runChildProcess("echo", {"Hello World"}, "/non/existing/directory");
-  std::cout << static_cast<int>(status) << std::endl;
+  // create a local file - for which we will then
+  // (illegaly) try to create a subdirectory.
+  std::ofstream testFile("test.txt");
+  testFile << "Hello" << std::endl;
+  testFile.close();
+  // now call a child process with an guaranteed-invalid work dir (subdir of a
+  // file)
+  childProcessStatus status = runChildProcess(
+      "echo", {"Hello World"}, "test.txt/subFolderOfFileDoesNotWork/");
   BOOST_CHECK(status == childProcessStatus::failedWorkDir);
 }
 
 /// successful call
 BOOST_AUTO_TEST_CASE(GoodCall) {
   childProcessStatus status = runChildProcess("echo", {"Hello World"});
-  std::cout << static_cast<int>(status) << std::endl;
   BOOST_CHECK(status == childProcessStatus::ok);
 }
 
@@ -44,7 +49,6 @@ BOOST_AUTO_TEST_CASE(Redirect) {
   const std::string testMessage = "Hello ACTS!";
   childProcessStatus status =
       runChildProcess("echo", {testMessage}, "", "teststdout.txt");
-  std::cout << static_cast<int>(status) << std::endl;
   BOOST_CHECK(status == childProcessStatus::ok);
   std::ifstream in("teststdout.txt");
   BOOST_CHECK(in.is_open());

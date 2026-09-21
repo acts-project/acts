@@ -25,7 +25,7 @@ using Acts::Result;
 using std::filesystem::path;
 
 Acts::Result<MillePedeSolver::mpResult> MillePedeSolver::solve(
-    Config cfg) const {
+    const Config& cfg) const {
   ACTS_INFO("=== Proceeding to run Millepede-II alignment fit ===");
 
   // determine where the user wishes to run

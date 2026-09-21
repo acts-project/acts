@@ -70,7 +70,7 @@ class MillePedeSolver {
   /// Will invoke pede, await the exit, and parse
   /// the output.
   /// @param cfg: The configuration to use
-  Acts::Result<mpResult> solve(Config cfg) const;
+  Acts::Result<mpResult> solve(const Config& cfg) const;
 
  private:
   /// @brief translation of the detailed pede code to a summary status
