@@ -63,6 +63,73 @@ def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
     assert alg.events_seen == 10
 
 
+def _dropBranches(src: Path, dst: Path, treeName: str, drop: list):
+    """Copy a ROOT tree, omitting the given branches."""
+    import ROOT
+
+    fin = ROOT.TFile.Open(str(src))
+    tin = fin.Get(treeName)
+    for branch in drop:
+        assert tin.GetBranch(branch), f"no branch '{branch}' to drop"
+        tin.SetBranchStatus(branch, 0)
+
+    fout = ROOT.TFile.Open(str(dst), "RECREATE")
+    tout = tin.CloneTree(-1)
+    tout.Write()
+    fout.Close()
+    fin.Close()
+
+    # make sure the fixture really is missing the branches
+    check = ROOT.TFile.Open(str(dst))
+    tree = check.Get(treeName)
+    for branch in drop:
+        assert not tree.GetBranch(branch), f"branch '{branch}' was not dropped"
+    check.Close()
+
+
+@pytest.mark.root
+def test_root_particle_reader_without_hf_branches(tmp_path, conf_const, ptcl_gun):
+    """Particle files written before the HF-tagging branches were introduced
+    have no `orig_part_idx` / `hf_origin`. Reading them must still work."""
+    from acts.examples.root import RootParticleWriter, RootParticleReader
+
+    s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
+    _, h3conv = ptcl_gun(s)
+
+    full = tmp_path / "particles_full.root"
+    s.addWriter(
+        conf_const(
+            RootParticleWriter,
+            acts.logging.WARNING,
+            inputParticles=h3conv.config.outputParticles,
+            filePath=str(full),
+        )
+    )
+    s.run()
+
+    legacy = tmp_path / "particles_legacy.root"
+    _dropBranches(full, legacy, "particles", ["orig_part_idx", "hf_origin"])
+
+    s2 = Sequencer(numThreads=1, logLevel=acts.logging.WARNING)
+    s2.addReader(
+        conf_const(
+            RootParticleReader,
+            acts.logging.WARNING,
+            outputParticles="particles_generated",
+            filePath=str(legacy),
+        )
+    )
+
+    alg = AssertCollectionExistsAlg(
+        "particles_generated", "check_alg", acts.logging.WARNING
+    )
+    s2.addAlgorithm(alg)
+
+    s2.run()
+
+    assert alg.events_seen == 10
+
+
 @pytest.mark.csv
 def test_csv_particle_reader(tmp_path, conf_const, ptcl_gun):
     s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)

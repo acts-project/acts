@@ -39,43 +39,69 @@ RootParticleReader::RootParticleReader(const RootParticleReader::Config& config,
 
   m_outputParticles.initialize(m_cfg.outputParticles);
 
-  // Set the branches
-  m_inputChain->SetBranchAddress("event_id", &m_eventId);
-  m_inputChain->SetBranchAddress("particle_hash", &m_particleHash.get());
-  m_inputChain->SetBranchAddress("particle_type", &m_particleType.get());
-  m_inputChain->SetBranchAddress("process", &m_process.get());
-  m_inputChain->SetBranchAddress("vx", &m_vx.get());
-  m_inputChain->SetBranchAddress("vy", &m_vy.get());
-  m_inputChain->SetBranchAddress("vz", &m_vz.get());
-  m_inputChain->SetBranchAddress("vt", &m_vt.get());
-  m_inputChain->SetBranchAddress("p", &m_p.get());
-  m_inputChain->SetBranchAddress("px", &m_px.get());
-  m_inputChain->SetBranchAddress("py", &m_py.get());
-  m_inputChain->SetBranchAddress("pz", &m_pz.get());
-  m_inputChain->SetBranchAddress("m", &m_m.get());
-  m_inputChain->SetBranchAddress("q", &m_q.get());
-  m_inputChain->SetBranchAddress("eta", &m_eta.get());
-  m_inputChain->SetBranchAddress("phi", &m_phi.get());
-  m_inputChain->SetBranchAddress("pt", &m_pt.get());
-  m_inputChain->SetBranchAddress("vertex_primary", &m_vertexPrimary.get());
-  m_inputChain->SetBranchAddress("vertex_secondary", &m_vertexSecondary.get());
-  m_inputChain->SetBranchAddress("particle", &m_particle.get());
-  m_inputChain->SetBranchAddress("generation", &m_generation.get());
-  m_inputChain->SetBranchAddress("sub_particle", &m_subParticle.get());
-  m_inputChain->SetBranchAddress("orig_part_idx", &m_origParticleIdx.get());
-  m_inputChain->SetBranchAddress("hf_origin", &m_hfOrigin.get());
-
-  m_inputChain->SetBranchAddress("e_loss", &m_eLoss.get());
-  m_inputChain->SetBranchAddress("total_x0", &m_pathInX0.get());
-  m_inputChain->SetBranchAddress("total_l0", &m_pathInL0.get());
-  m_inputChain->SetBranchAddress("number_of_hits", &m_numberOfHits.get());
-  m_inputChain->SetBranchAddress("outcome", &m_outcome.get());
-
   auto path = m_cfg.filePath;
 
-  // add file to the input chain
+  // add file to the input chain. This has to happen before the branches are
+  // set up, otherwise the branch layout of the file is not known yet and
+  // missing branches cannot be detected.
   m_inputChain->Add(path.c_str());
   ACTS_DEBUG("Adding File " << path << " to tree '" << m_cfg.treeName << "'.");
+
+  // Without a loaded tree the branch layout is unknown and cannot be
+  // validated. Reading is a no-op in that case since the chain has no entries.
+  const bool treeLoaded = m_inputChain->LoadTree(0) >= 0;
+
+  // Set the branches. A required branch that is absent would otherwise leave
+  // the branch pointer null and be dereferenced during reading.
+  auto setBranch = [&](const char* name, auto address) {
+    if (treeLoaded && m_inputChain->FindBranch(name) == nullptr) {
+      throw std::runtime_error("Branch '" + std::string(name) +
+                               "' not found in input file '" + path + "'");
+    }
+    m_inputChain->SetBranchAddress(name, address);
+  };
+
+  // Branches which are not present in files written before the HF truth
+  // information was introduced. Those fall back to the SimParticle defaults.
+  auto setOptionalBranch = [&](const char* name, auto address) {
+    if (treeLoaded && m_inputChain->FindBranch(name) == nullptr) {
+      ACTS_WARNING("Branch '" << name << "' not found in input file '" << path
+                              << "', falling back to default values");
+      return;
+    }
+    m_inputChain->SetBranchAddress(name, address);
+  };
+
+  setBranch("event_id", &m_eventId);
+  setBranch("particle_hash", &m_particleHash.get());
+  setBranch("particle_type", &m_particleType.get());
+  setBranch("process", &m_process.get());
+  setBranch("vx", &m_vx.get());
+  setBranch("vy", &m_vy.get());
+  setBranch("vz", &m_vz.get());
+  setBranch("vt", &m_vt.get());
+  setBranch("p", &m_p.get());
+  setBranch("px", &m_px.get());
+  setBranch("py", &m_py.get());
+  setBranch("pz", &m_pz.get());
+  setBranch("m", &m_m.get());
+  setBranch("q", &m_q.get());
+  setBranch("eta", &m_eta.get());
+  setBranch("phi", &m_phi.get());
+  setBranch("pt", &m_pt.get());
+  setBranch("vertex_primary", &m_vertexPrimary.get());
+  setBranch("vertex_secondary", &m_vertexSecondary.get());
+  setBranch("particle", &m_particle.get());
+  setBranch("generation", &m_generation.get());
+  setBranch("sub_particle", &m_subParticle.get());
+  setOptionalBranch("orig_part_idx", &m_origParticleIdx.get());
+  setOptionalBranch("hf_origin", &m_hfOrigin.get());
+
+  setBranch("e_loss", &m_eLoss.get());
+  setBranch("total_x0", &m_pathInX0.get());
+  setBranch("total_l0", &m_pathInL0.get());
+  setBranch("number_of_hits", &m_numberOfHits.get());
+  setBranch("outcome", &m_outcome.get());
 
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
@@ -135,9 +161,13 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
                         .withGeneration((*m_generation).at(i))
                         .withSubParticle((*m_subParticle).at(i)));
 
-    p.setOrigParticleIdx((*m_origParticleIdx).at(i));
-    p.setHeavyFlavourOrigin(
-        static_cast<HeavyFlavourOrigin>((*m_hfOrigin).at(i)));
+    if (m_origParticleIdx.hasValue()) {
+      p.setOrigParticleIdx((*m_origParticleIdx).at(i));
+    }
+    if (m_hfOrigin.hasValue()) {
+      p.setHeavyFlavourOrigin(
+          static_cast<HeavyFlavourOrigin>((*m_hfOrigin).at(i)));
+    }
 
     SimParticleState& initialState = p.initialState();
 
