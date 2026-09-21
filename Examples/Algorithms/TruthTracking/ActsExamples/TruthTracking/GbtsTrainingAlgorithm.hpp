@@ -44,8 +44,8 @@ class GbtsTrainingAlgorithm final : public IAlgorithm {
     std::string geometryFileDir{};
     /// output directory for layer connection table
     std::string outputFileDir{};
-    /// Use legacy athena style table formatting
-    bool useOldFormatting = false;
+    /// eta bin width written with the layer connection table.
+    float etaBinWidth = 0.2f;
   };
 
   /// Constructor for GBTS training algorithm

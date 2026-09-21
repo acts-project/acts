@@ -1,0 +1,274 @@
+{
+    "layers": [
+        {
+            "id": 7,
+            "type": "endcap",
+            "technology": "pixel",
+            "minR": 30,
+            "maxR": 180,
+            "minZ": -1532,
+            "maxZ": -1508,
+            "surfaces": [
+                {
+                    "volume": 16,
+                    "layer": 4
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "type": "endcap",
+            "technology": "pixel",
+            "minR": 30,
+            "maxR": 180,
+            "minZ": -1332,
+            "maxZ": -1308,
+            "surfaces": [
+                {
+                    "volume": 16,
+                    "layer": 6
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "type": "endcap",
+            "technology": "pixel",
+            "minR": 30,
+            "maxR": 180,
+            "minZ": -1132,
+            "maxZ": -1108,
+            "surfaces": [
+                {
+                    "volume": 16,
+                    "layer": 8
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "type": "endcap",
+            "technology": "pixel",
+            "minR": 30,
+            "maxR": 180,
+            "minZ": -992,
+            "maxZ": -968,
+            "surfaces": [
+                {
+                    "volume": 16,
+                    "layer": 10
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "type": "endcap",
+            "technology": "pixel",
+            "minR": 30,
+            "maxR": 180,
+            "minZ": -852,
+            "maxZ": -828,
+            "surfaces": [
+                {
+                    "volume": 16,
+                    "layer": 12
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "type": "endcap",
+            "technology": "pixel",
+            "minR": 30,
+            "maxR": 180,
+            "minZ": -732,
+            "maxZ": -708,
+            "surfaces": [
+                {
+                    "volume": 16,
+                    "layer": 14
+                }
+            ]
+        },
+        {
+            "id": 1,
+            "type": "endcap",
+            "technology": "pixel",
+            "minR": 30,
+            "maxR": 180,
+            "minZ": -632,
+            "maxZ": -608,
+            "surfaces": [
+                {
+                    "volume": 16,
+                    "layer": 16
+                }
+            ]
+        },
+        {
+            "id": 8,
+            "type": "barrel",
+            "technology": "pixel",
+            "minR": 28,
+            "maxR": 38,
+            "minZ": -515,
+            "maxZ": 515,
+            "surfaces": [
+                {
+                    "volume": 17,
+                    "layer": 2
+                }
+            ]
+        },
+        {
+            "id": 9,
+            "type": "barrel",
+            "technology": "pixel",
+            "minR": 64,
+            "maxR": 74,
+            "minZ": -515,
+            "maxZ": 515,
+            "surfaces": [
+                {
+                    "volume": 17,
+                    "layer": 4
+                }
+            ]
+        },
+        {
+            "id": 10,
+            "type": "barrel",
+            "technology": "pixel",
+            "minR": 109,
+            "maxR": 119,
+            "minZ": -515,
+            "maxZ": 515,
+            "surfaces": [
+                {
+                    "volume": 17,
+                    "layer": 6
+                }
+            ]
+        },
+        {
+            "id": 11,
+            "type": "barrel",
+            "technology": "pixel",
+            "minR": 165,
+            "maxR": 175,
+            "minZ": -515,
+            "maxZ": 515,
+            "surfaces": [
+                {
+                    "volume": 17,
+                    "layer": 8
+                }
+            ]
+        },
+        {
+            "id": 12,
+            "type": "endcap",
+            "technology": "pixel",
+            "minR": 30,
+            "maxR": 180,
+            "minZ": 608,
+            "maxZ": 632,
+            "surfaces": [
+                {
+                    "volume": 18,
+                    "layer": 2
+                }
+            ]
+        },
+        {
+            "id": 13,
+            "type": "endcap",
+            "technology": "pixel",
+            "minR": 30,
+            "maxR": 180,
+            "minZ": 708,
+            "maxZ": 732,
+            "surfaces": [
+                {
+                    "volume": 18,
+                    "layer": 4
+                }
+            ]
+        },
+        {
+            "id": 14,
+            "type": "endcap",
+            "technology": "pixel",
+            "minR": 30,
+            "maxR": 180,
+            "minZ": 828,
+            "maxZ": 852,
+            "surfaces": [
+                {
+                    "volume": 18,
+                    "layer": 6
+                }
+            ]
+        },
+        {
+            "id": 15,
+            "type": "endcap",
+            "technology": "pixel",
+            "minR": 30,
+            "maxR": 180,
+            "minZ": 968,
+            "maxZ": 992,
+            "surfaces": [
+                {
+                    "volume": 18,
+                    "layer": 8
+                }
+            ]
+        },
+        {
+            "id": 16,
+            "type": "endcap",
+            "technology": "pixel",
+            "minR": 30,
+            "maxR": 180,
+            "minZ": 1108,
+            "maxZ": 1132,
+            "surfaces": [
+                {
+                    "volume": 18,
+                    "layer": 10
+                }
+            ]
+        },
+        {
+            "id": 17,
+            "type": "endcap",
+            "technology": "pixel",
+            "minR": 30,
+            "maxR": 180,
+            "minZ": 1308,
+            "maxZ": 1332,
+            "surfaces": [
+                {
+                    "volume": 18,
+                    "layer": 12
+                }
+            ]
+        },
+        {
+            "id": 18,
+            "type": "endcap",
+            "technology": "pixel",
+            "minR": 30,
+            "maxR": 180,
+            "minZ": 1508,
+            "maxZ": 1532,
+            "surfaces": [
+                {
+                    "volume": 18,
+                    "layer": 14
+                }
+            ]
+        }
+    ]
+}
