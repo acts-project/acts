@@ -602,7 +602,7 @@ createDenseTelescope(const GeometryContext& geoCtx) {
   return {std::move(detector), std::move(surfaces)};
 }
 
-BOOST_AUTO_TEST_CASE(Navigator_boundary_tolerance_overrides) {
+BOOST_AUTO_TEST_CASE(Navigator_extended_surfaces) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
 
   auto [detector, surfaces] = createDenseTelescope(tgContext);
@@ -619,9 +619,9 @@ BOOST_AUTO_TEST_CASE(Navigator_boundary_tolerance_overrides) {
   navCfg.resolvePassive = false;
   Navigator navigator(navCfg, logger().clone("Navigator"));
 
-  // No override, so no sensitive target from the middle
+  // No extension, so no sensitive target from the middle
   {
-    ACTS_INFO("Test 1: start in the middle without an override");
+    ACTS_INFO("Test 1: start in the middle without an extension");
 
     Navigator::Options options(tgContext);
     Navigator::State state = navigator.makeState(options);
@@ -641,9 +641,9 @@ BOOST_AUTO_TEST_CASE(Navigator_boundary_tolerance_overrides) {
     BOOST_CHECK_NE(&target.surface(), surfaces.at(1));
   }
 
-  // No override, but the track crosses the top surface
+  // No extension, but the track crosses the top surface
   {
-    ACTS_INFO("Test 2: start from top without an override");
+    ACTS_INFO("Test 2: start from top without an extension");
 
     Navigator::Options options(tgContext);
     Navigator::State state = navigator.makeState(options);
@@ -663,9 +663,9 @@ BOOST_AUTO_TEST_CASE(Navigator_boundary_tolerance_overrides) {
     BOOST_CHECK_EQUAL(&target.surface(), &surfaceTop);
   }
 
-  // No override, but the track crosses the bottom surface
+  // No extension, but the track crosses the bottom surface
   {
-    ACTS_INFO("Test 3: start from bottom without an override");
+    ACTS_INFO("Test 3: start from bottom without an extension");
 
     Navigator::Options options(tgContext);
     Navigator::State state = navigator.makeState(options);
@@ -685,12 +685,12 @@ BOOST_AUTO_TEST_CASE(Navigator_boundary_tolerance_overrides) {
     BOOST_CHECK_EQUAL(&target.surface(), &surfaceBottom);
   }
 
-  // With an override the top surface is targeted from the middle
+  // With an extension the top surface is targeted from the middle
   {
-    ACTS_INFO("Test 4: start in the middle with an override");
+    ACTS_INFO("Test 4: start in the middle with an extension");
 
     Navigator::Options options(tgContext);
-    options.overrideBoundaryTolerance(surfaceTop);
+    options.registerExtendedSurface(surfaceTop);
     Navigator::State state = navigator.makeState(options);
 
     Vector3 position = Vector3::Zero();
@@ -708,12 +708,12 @@ BOOST_AUTO_TEST_CASE(Navigator_boundary_tolerance_overrides) {
     BOOST_CHECK_EQUAL(&target.surface(), &surfaceTop);
   }
 
-  // With an override the bottom surface is targeted from the top
+  // With an extension the bottom surface is targeted from the top
   {
-    ACTS_INFO("Test 5: start from top with an override");
+    ACTS_INFO("Test 5: start from top with an extension");
 
     Navigator::Options options(tgContext);
-    options.overrideBoundaryTolerance(surfaceBottom);
+    options.registerExtendedSurface(surfaceBottom);
     Navigator::State state = navigator.makeState(options);
 
     Vector3 position = {0, 0.5_m, 0};
@@ -731,12 +731,12 @@ BOOST_AUTO_TEST_CASE(Navigator_boundary_tolerance_overrides) {
     BOOST_CHECK_EQUAL(&target.surface(), &surfaceBottom);
   }
 
-  // With an override the top surface is targeted from the bottom
+  // With an extension the top surface is targeted from the bottom
   {
-    ACTS_INFO("Test 6: start from bottom with an override");
+    ACTS_INFO("Test 6: start from bottom with an extension");
 
     Navigator::Options options(tgContext);
-    options.overrideBoundaryTolerance(surfaceTop);
+    options.registerExtendedSurface(surfaceTop);
     Navigator::State state = navigator.makeState(options);
 
     Vector3 position = {0, -0.5_m, 0};
@@ -1032,7 +1032,7 @@ BOOST_AUTO_TEST_CASE(NavigationStartOnBoundaryGen1) {
   BOOST_CHECK_EQUAL(initializeOnBoundary(-Vector3::UnitX()), volume1);
 }
 
-BOOST_AUTO_TEST_CASE(BoundaryToleranceOverridesGen3) {
+BOOST_AUTO_TEST_CASE(ExtendedSurfacesGen3) {
   Blueprint::Config bluePrintCfg{};
 
   ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
@@ -1195,7 +1195,7 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceOverridesGen3) {
 
   Navigator navigator{navCfg, getDefaultLogger("Navigator", logLevel)};
 
-  // Without an override the navigator reaches only the first plane, because
+  // Without an extension the navigator reaches only the first plane, because
   // the track misses the bounds of the second plane
   const Vector3 dirPlane1 = planeSurf1->center(tgContext).normalized();
   Vector3 start{Vector3::Zero()};
@@ -1243,7 +1243,7 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceOverridesGen3) {
     navigator.handleSurfaceReached(state, start, dirPlane1,
                                    secondPortal.surface());
   }
-  // With an override the navigator also targets the second plane
+  // With an extension the navigator also targets the second plane
   {
     Navigator::Options options{tgContext};
     NavigatorInitializeArguments navArgs{};
@@ -1251,7 +1251,7 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceOverridesGen3) {
     navArgs.startSurface = startSurface.get();
     navArgs.position = start;
     navArgs.direction = dirPlane1;
-    options.overrideBoundaryTolerance(*planeSurf2);
+    options.registerExtendedSurface(*planeSurf2);
     Navigator::State state = navigator.makeState(options);
     BOOST_CHECK(navigator.initialize(state, navArgs).ok());
 
@@ -1264,7 +1264,7 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceOverridesGen3) {
       BOOST_CHECK_EQUAL(surf, &target.surface());
       step(start, dirPlane1, target, logger());
       navigator.handleSurfaceReached(state, start, dirPlane1, target.surface());
-      // Only the second plane carries the overridden tolerance
+      // Only the second plane carries the extended tolerance
       if (surf != planeSurf2.get()) {
         BOOST_CHECK(target.boundaryTolerance().isNone());
       } else {
@@ -1272,8 +1272,8 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceOverridesGen3) {
       }
     }
   }
-  // Offer the second plane as an external surface, and leave the volume
-  // before the track reaches the plane. The external surface applies in every
+  // Offer the second plane as an additional surface, and leave the volume
+  // before the track reaches the plane. The additional surface applies in every
   // volume, so the navigator still targets the plane in the next volume.
   {
     const Vector3 posPlaneVolExit =
@@ -1282,7 +1282,7 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceOverridesGen3) {
     BOOST_CHECK(planeVolume->inside(tgContext, posPlaneVolExit));
     Navigator::Options options{tgContext};
     start.setZero();
-    options.addExternalSurface(*planeSurf2);
+    options.registerAdditionalSurface(*planeSurf2);
     Navigator::State state = navigator.makeState(options);
     const Vector3 dir = posPlaneVolExit.normalized();
 
@@ -1366,14 +1366,14 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceOverridesGen3) {
     target = navigator.nextTarget(state, start, dir);
     BOOST_CHECK(target.isPortalTarget());
 
-    // Override the neighbour tubes and check that the navigator targets them.
+    // Extend the neighbour tubes and check that the navigator targets them.
     // The last two tubes have no neighbours.
     if (s + 2 == straws.size()) {
       continue;
     }
-    // Override the two neighbour surfaces
-    options.overrideBoundaryTolerance(*straws.at(s + 2));
-    options.overrideBoundaryTolerance(*straws.at(s + 3));
+    // Extend the two neighbour surfaces
+    options.registerExtendedSurface(*straws.at(s + 2));
+    options.registerExtendedSurface(*straws.at(s + 3));
 
     state = navigator.makeState(options);
 

@@ -20,10 +20,17 @@ class GeometryContext;
 class Surface;
 class TrackingVolume;
 
-/// A surface of the tracking geometry that the navigator intersects with the
+/// A surface of the tracking geometry whose bounds the navigator extends to the
 /// tolerance of the caller. Only the bounds check changes, the geometry still
 /// resolves the surface where it did before.
-struct BoundaryToleranceOverride {
+///
+/// The extension applies only in the volume of the surface (Gen3), or on its
+/// layer (Gen1). It can put the intersection outside that volume. The
+/// navigator never targets such an intersection, because the propagation
+/// leaves the volume through a boundary first, and no other volume offers the
+/// surface. To reach a surface outside its volume, use an
+/// @c AdditionalSurface instead.
+struct ExtendedSurface {
   /// The surface. The geometry must hold it, and it must outlive the
   /// propagation.
   const Surface* surface{};
@@ -33,14 +40,24 @@ struct BoundaryToleranceOverride {
   BoundaryTolerance boundaryTolerance = BoundaryTolerance::Infinite();
 };
 
-/// A surface the navigator offers on top of the tracking geometry.
+/// A surface the navigator offers on top of the candidates of the tracking
+/// geometry. The geometry can hold the surface or not.
 ///
 /// The navigator targets it whenever it is closer than the candidate of the
 /// geometry, and holds that candidate back rather than consuming it, so
 /// nothing of the geometry is skipped. It intersects the surface on every
 /// step, because @c Surface::intersect estimates along a straight line while
 /// a track in a magnetic field bends away from it.
-struct ExternalSurface {
+///
+/// A boundary of the current volume is a candidate of the geometry too, so a
+/// closer boundary wins. The propagation therefore reaches the surface only in
+/// the volume that holds the intersection, and the current volume stays
+/// correct.
+///
+/// If the geometry also offers the surface, a tie goes to the candidate of the
+/// geometry, so the geometry keeps the handling of the surface in its own
+/// volume.
+struct AdditionalSurface {
   /// The surface. It must outlive the propagation.
   const Surface* surface{};
 
@@ -80,36 +97,37 @@ struct NavigatorPlainOptions {
   /// The far limit to resolve surfaces
   double farLimit = std::numeric_limits<double>::max();
 
-  /// Surfaces the navigator intersects with the tolerance of the caller
-  std::vector<BoundaryToleranceOverride> boundaryToleranceOverrides;
+  /// Surfaces of the tracking geometry with bounds extended by the caller
+  std::vector<ExtendedSurface> extendedSurfaces;
 
-  /// Intersect a surface of the tracking geometry with the given tolerance.
-  /// By default the bounds check is dropped.
+  /// Extend the bounds of a surface of the tracking geometry to the given
+  /// tolerance. By default the bounds check is dropped. The navigator targets
+  /// the surface only inside its volume, see @c ExtendedSurface.
   /// @param surface The surface of the tracking geometry
   /// @param boundaryTolerance The tolerance used to intersect the surface
-  void overrideBoundaryTolerance(const Surface& surface,
-                                 const BoundaryTolerance& boundaryTolerance =
-                                     BoundaryTolerance::Infinite()) {
-    boundaryToleranceOverrides.emplace_back(&surface, boundaryTolerance);
+  void registerExtendedSurface(const Surface& surface,
+                               const BoundaryTolerance& boundaryTolerance =
+                                   BoundaryTolerance::Infinite()) {
+    extendedSurfaces.emplace_back(&surface, boundaryTolerance);
   }
 
   /// Surfaces the navigator offers on top of the tracking geometry
-  std::vector<ExternalSurface> externalSurfaces;
+  std::vector<AdditionalSurface> additionalSurfaces;
 
-  /// Offer a surface the tracking geometry does not hold. By default the
+  /// Offer a surface on top of the tracking geometry. By default the
   /// bounds check is dropped, every volume offers it, and the navigator stops
   /// offering it once the propagation reached it.
   /// @param surface The surface to offer
   /// @param boundaryTolerance The tolerance used to intersect the surface
   /// @param volume The volume to offer the surface in, null for every volume
   /// @param dropAfterReached Whether to stop offering it once reached
-  void addExternalSurface(const Surface& surface,
-                          const BoundaryTolerance& boundaryTolerance =
-                              BoundaryTolerance::Infinite(),
-                          const TrackingVolume* volume = nullptr,
-                          bool dropAfterReached = true) {
-    externalSurfaces.emplace_back(&surface, boundaryTolerance, volume,
-                                  dropAfterReached);
+  void registerAdditionalSurface(const Surface& surface,
+                                 const BoundaryTolerance& boundaryTolerance =
+                                     BoundaryTolerance::Infinite(),
+                                 const TrackingVolume* volume = nullptr,
+                                 bool dropAfterReached = true) {
+    additionalSurfaces.emplace_back(&surface, boundaryTolerance, volume,
+                                    dropAfterReached);
   }
 };
 

@@ -140,7 +140,7 @@ struct GsfOptions {
 
   /// Whether to drop the bounds check of the navigator on the measurement
   /// surfaces, so it targets them even where the track misses them.
-  bool useBoundaryToleranceOverrides = true;
+  bool useExtendedSurfaces = true;
 
   /// Column name for final multi-component state storage
   std::string_view finalMultiComponentStateColumn = "";

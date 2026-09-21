@@ -55,7 +55,7 @@ struct NavigationOptions final {
   /// Boundary tolerance to use instead of @c boundaryTolerance, for the
   /// surfaces named by their identifier
   std::vector<std::pair<GeometryIdentifier, BoundaryTolerance>>
-      boundaryToleranceOverrides = {};
+      extendedSurfaces = {};
 
   /// The minimum distance for a surface to be considered
   double nearLimit = 0;
@@ -177,8 +177,8 @@ class Navigator final {
     /// resolution
     double navCandidatesFarLimit = std::numeric_limits<double>::max();
 
-    /// A boundary tolerance override with its volume resolved
-    struct ResolvedBoundaryToleranceOverride {
+    /// An extended surface with its volume resolved
+    struct ResolvedExtendedSurface {
       /// The surface
       const Surface* surface{};
       /// Tolerance used to intersect the surface
@@ -188,22 +188,22 @@ class Navigator final {
       const TrackingVolume* volume{};
     };
 
-    /// Boundary tolerance overrides resolved once at initialization
-    std::vector<ResolvedBoundaryToleranceOverride> boundaryToleranceOverrides{};
+    /// Extended surfaces resolved once at initialization
+    std::vector<ResolvedExtendedSurface> extendedSurfaces{};
 
-    /// An external surface of the options with its bookkeeping
-    struct ExternalSurfaceState {
+    /// An additional surface of the options with its bookkeeping
+    struct AdditionalSurfaceState {
       /// The entry of the options
-      const ExternalSurface* entry{};
+      const AdditionalSurface* entry{};
       /// Whether the propagation reached the surface
       bool reached{false};
     };
 
-    /// External surfaces of the options, tracked over the propagation
-    std::vector<ExternalSurfaceState> externalSurfaces{};
+    /// Additional surfaces of the options, tracked over the propagation
+    std::vector<AdditionalSurfaceState> additionalSurfaces{};
 
-    /// The staged candidate an external surface took precedence over. It is
-    /// handed out once the external surface is no longer the closer one.
+    /// The staged candidate an additional surface took precedence over. It is
+    /// handed out once the additional surface is no longer the closer one.
     std::optional<NavigationTarget> pendingTarget;
 
     /// Get reference to current navigation surface
@@ -402,15 +402,15 @@ class Navigator final {
                             const Surface& surface) const;
 
  private:
-  /// @brief Resolve the boundary tolerance overrides of the options
+  /// @brief Resolve the extended surfaces of the options
   ///
   /// Throws if the tracking geometry does not hold a surface.
   ///
   /// @param state The navigation state
-  void resolveBoundaryToleranceOverrides(State& state) const;
+  void resolveExtendedSurfaces(State& state) const;
 
   /// @brief Get the next target of the staged navigation, without the
-  ///        external surfaces
+  ///        additional surfaces
   ///
   /// @param state The navigation state
   /// @param position The current position
@@ -419,20 +419,20 @@ class Navigator final {
   NavigationTarget nextStagedTarget(State& state, const Vector3& position,
                                     const Vector3& direction) const;
 
-  /// @brief Get the closest external surface from the current position
+  /// @brief Get the closest additional surface from the current position
   ///
   /// @param state The navigation state
   /// @param position The current position
   /// @param direction The current direction
-  /// @return The closest external surface, or none
-  NavigationTarget nextExternalTarget(const State& state,
-                                      const Vector3& position,
-                                      const Vector3& direction) const;
+  /// @return The closest additional surface, or none
+  NavigationTarget nextAdditionalTarget(const State& state,
+                                        const Vector3& position,
+                                        const Vector3& direction) const;
 
   /// @brief Whether the staged navigation targets the given surface
   ///
   /// Tells a surface reached through the tracking geometry apart from one
-  /// reached as an external surface.
+  /// reached as an additional surface.
   ///
   /// @param state The navigation state
   /// @param surface The surface the propagation reached

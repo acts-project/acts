@@ -23,14 +23,14 @@ using namespace ActsTests::NavigatorTelescope;
 
 namespace ActsTests {
 
-// `NavigatorPlainOptions::boundaryToleranceOverrides` relaxes the bounds check
+// `NavigatorPlainOptions::extendedSurfaces` relaxes the bounds check
 // on a surface of the tracking geometry. The geometry still resolves the
 // surface, in its volume for Gen3 and on its layer for Gen1, so both
 // generations are covered.
 
-BOOST_AUTO_TEST_SUITE(NavigatorBoundaryToleranceOverride)
+BOOST_AUTO_TEST_SUITE(NavigatorExtendedSurface)
 
-// Without an override the navigator must not target a surface the track misses
+// Without an extension the navigator must not target a surface the track misses
 
 BOOST_AUTO_TEST_CASE(BaselineGen1) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen1", logLevel));
@@ -68,14 +68,14 @@ BOOST_AUTO_TEST_CASE(BoundsExtensionGen1) {
   Navigator navigator = makeNavigator(telescope.geometry, logger());
 
   Navigator::Options options(gctx);
-  options.overrideBoundaryTolerance(*telescope.top);
+  options.registerExtendedSurface(*telescope.top);
   NavigationTarget target = firstTarget(navigator, options, Vector3::Zero());
 
   BOOST_REQUIRE(!target.isNone());
   BOOST_CHECK_EQUAL(&target.surface(), telescope.top);
 }
 
-// The policy returns the same surface with a `None` tolerance. The override
+// The policy returns the same surface with a `None` tolerance. The extension
 // goes in first, so the de-duplication keeps the tolerance of the caller.
 BOOST_AUTO_TEST_CASE(BoundsExtensionGen3) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen3", logLevel));
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(BoundsExtensionGen3) {
   Navigator navigator = makeNavigator(telescope.geometry, logger());
 
   Navigator::Options options(gctx);
-  options.overrideBoundaryTolerance(*telescope.top);
+  options.registerExtendedSurface(*telescope.top);
   NavigationTarget target = firstTarget(navigator, options, Vector3::Zero());
 
   BOOST_REQUIRE(!target.isNone());
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(BoundsCheckedGen1) {
   Navigator navigator = makeNavigator(telescope.geometry, logger());
 
   Navigator::Options options(gctx);
-  options.overrideBoundaryTolerance(*telescope.top, BoundaryTolerance::None());
+  options.registerExtendedSurface(*telescope.top, BoundaryTolerance::None());
   NavigationTarget target = firstTarget(navigator, options, Vector3::Zero());
 
   BOOST_CHECK_NE(&target.surface(), telescope.top);
@@ -111,14 +111,14 @@ BOOST_AUTO_TEST_CASE(BoundsCheckedGen3) {
   Navigator navigator = makeNavigator(telescope.geometry, logger());
 
   Navigator::Options options(gctx);
-  options.overrideBoundaryTolerance(*telescope.top, BoundaryTolerance::None());
+  options.registerExtendedSurface(*telescope.top, BoundaryTolerance::None());
   NavigationTarget target = firstTarget(navigator, options, Vector3::Zero());
 
   BOOST_CHECK_NE(&target.surface(), telescope.top);
 }
 
 // The geometry has to hold the surface, otherwise it never resolves it and the
-// override is silently lost. The check is shared by both generations.
+// extension is silently lost. The check is shared by both generations.
 
 BOOST_AUTO_TEST_CASE(SurfaceOutsideTheGeometryThrows) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen3", logLevel));
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(SurfaceOutsideTheGeometryThrows) {
   BOOST_REQUIRE(outOfGeometry->geometryId() == GeometryIdentifier{});
 
   Navigator::Options options(gctx);
-  options.overrideBoundaryTolerance(*outOfGeometry);
+  options.registerExtendedSurface(*outOfGeometry);
   Navigator::State state = navigator.makeState(options);
   Vector3 position = Vector3::Zero();
   const Vector3 direction = Vector3::UnitZ();
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(CrossingOutsideTheVolumeIsDroppedGen1) {
   Navigator navigator = makeNavigator(telescope.geometry, logger());
 
   Navigator::Options options(gctx);
-  options.overrideBoundaryTolerance(*telescope.top);
+  options.registerExtendedSurface(*telescope.top);
   Navigator::State state = navigator.makeState(options);
   Vector3 position = pokeStart;
   BOOST_REQUIRE(
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(CrossingOutsideTheVolumeIsDroppedGen3) {
   Navigator navigator = makeNavigator(telescope.geometry, logger());
 
   Navigator::Options options(gctx);
-  options.overrideBoundaryTolerance(*telescope.top);
+  options.registerExtendedSurface(*telescope.top);
   Navigator::State state = navigator.makeState(options);
   Vector3 position = pokeStart;
   BOOST_REQUIRE(
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(CrossingOutsideTheVolumeIsDroppedGen3) {
   BOOST_CHECK(target.isPortalTarget());
 }
 
-// The override applies where the geometry resolves the surface: in its volume
+// The extension applies where the geometry resolves the surface: in its volume
 // for Gen3, on its layer for Gen1
 
 BOOST_AUTO_TEST_CASE(ScopedToItsVolumeGen3) {
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(ScopedToItsVolumeGen3) {
   Blueprint root{cfg};
 
   // Two volumes along z. The far one holds a small surface off the axis.
-  const Surface* overridden = nullptr;
+  const Surface* extended = nullptr;
   root.addCuboidContainer("Stack", AxisDirection::AxisZ, [&](auto& stack) {
     stack.addChild(
         std::make_shared<StaticBlueprintNode>(std::make_unique<TrackingVolume>(
@@ -215,18 +215,18 @@ BOOST_AUTO_TEST_CASE(ScopedToItsVolumeGen3) {
     auto surface = Surface::makeShared<PlaneSurface>(
         Transform3{Translation3{Vector3{0, 0.4_m, 0.5_m}}},
         std::make_shared<const RectangleBounds>(0.05_m, 0.05_m));
-    overridden = surface.get();
+    extended = surface.get();
     farVolume->addSurface(std::move(surface));
     stack.addChild(std::make_shared<StaticBlueprintNode>(std::move(farVolume)));
   });
 
   auto geometry = root.construct({}, gctx, *logger);
-  BOOST_REQUIRE(overridden != nullptr);
+  BOOST_REQUIRE(extended != nullptr);
   Navigator navigator = makeNavigator(
       std::shared_ptr<const TrackingGeometry>(std::move(geometry)), *logger);
 
   Navigator::Options options(gctx);
-  options.overrideBoundaryTolerance(*overridden);
+  options.registerExtendedSurface(*extended);
   Navigator::State state = navigator.makeState(options);
 
   Vector3 position{0, 0, -0.9_m};
@@ -236,12 +236,11 @@ BOOST_AUTO_TEST_CASE(ScopedToItsVolumeGen3) {
           .ok());
 
   // The navigator resolved the volume that holds the surface
-  BOOST_REQUIRE_EQUAL(state.boundaryToleranceOverrides.size(), 1u);
-  BOOST_REQUIRE(state.boundaryToleranceOverrides.front().volume != nullptr);
-  BOOST_CHECK_EQUAL(
-      state.boundaryToleranceOverrides.front().volume->volumeName(), "far");
+  BOOST_REQUIRE_EQUAL(state.extendedSurfaces.size(), 1u);
+  BOOST_REQUIRE(state.extendedSurfaces.front().volume != nullptr);
+  BOOST_CHECK_EQUAL(state.extendedSurfaces.front().volume->volumeName(), "far");
 
-  // In the near volume the portal is targeted, not the overridden surface
+  // In the near volume the portal is targeted, not the extended surface
   NavigationTarget target = navigator.nextTarget(state, position, dir);
   BOOST_REQUIRE(!target.isNone());
   BOOST_CHECK(target.isPortalTarget());
@@ -252,7 +251,7 @@ BOOST_AUTO_TEST_CASE(ScopedToItsVolumeGen3) {
   // In its own volume the relaxed bounds check applies and it is targeted
   target = navigator.nextTarget(state, position, dir);
   BOOST_REQUIRE(!target.isNone());
-  BOOST_CHECK_EQUAL(&target.surface(), overridden);
+  BOOST_CHECK_EQUAL(&target.surface(), extended);
 }
 
 BOOST_AUTO_TEST_CASE(ScopedToItsLayerGen1) {
@@ -297,21 +296,21 @@ BOOST_AUTO_TEST_CASE(ScopedToItsLayerGen1) {
   std::vector<const Surface*> surfaces;
   geometry->visitSurfaces([&](const Surface* sf) { surfaces.push_back(sf); });
   BOOST_REQUIRE_EQUAL(surfaces.size(), 2u);
-  const Surface* overridden = surfaces.at(1);
-  BOOST_REQUIRE_EQUAL(overridden->center(gctx).y(), 0.4_m);
+  const Surface* extended = surfaces.at(1);
+  BOOST_REQUIRE_EQUAL(extended->center(gctx).y(), 0.4_m);
 
   Navigator navigator = makeNavigator(
       std::shared_ptr<const TrackingGeometry>(std::move(geometry)), logger());
 
   Navigator::Options options(gctx);
-  options.overrideBoundaryTolerance(*overridden);
+  options.registerExtendedSurface(*extended);
   std::vector<const Surface*> reached =
       walk(navigator, options, Vector3{0, 0, -0.8_m}, Vector3::UnitZ());
 
-  // The override applies only while its layer is the current one, so the near
+  // The extension applies only while its layer is the current one, so the near
   // layer comes first
   BOOST_REQUIRE(!reached.empty());
-  BOOST_CHECK_NE(reached.front(), overridden);
+  BOOST_CHECK_NE(reached.front(), extended);
   BOOST_CHECK_LT(
       std::abs(reached.front()->center(gctx).z() - onAxis.position.z()), 1_um);
 }

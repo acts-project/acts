@@ -25,9 +25,9 @@ using namespace ActsTests::NavigatorTelescope;
 
 namespace ActsTests {
 
-// `NavigatorPlainOptions::externalSurfaces` offers a surface the tracking
-// geometry does not hold. The navigator intersects it on every step and hands
-// it out whenever it is closer than the candidate of the geometry. Both
+// `NavigatorPlainOptions::additionalSurfaces` offers a surface the tracking
+// geometry does not have to hold. The navigator intersects it on every step and
+// hands it out whenever it is closer than the candidate of the geometry. Both
 // generations share the mechanism, so the cases that depend on the staged
 // navigation run for both.
 
@@ -49,7 +49,7 @@ bool isSubsequence(const std::vector<const Surface*>& sub,
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(NavigatorExternalSurface)
+BOOST_AUTO_TEST_SUITE(NavigatorAdditionalSurface)
 
 // The default tolerance drops the bounds check, so a surface the track misses
 // is targeted too. A caller that asks for a bounds check gets one.
@@ -59,14 +59,14 @@ BOOST_AUTO_TEST_CASE(OffPathGen1) {
   Telescope telescope = makeTelescopeGen1();
   Navigator navigator = makeNavigator(telescope.geometry, logger());
 
-  auto external = makeOutOfGeometrySurface({0, surfaceY, 0.25_m});
+  auto additional = makeOutOfGeometrySurface({0, surfaceY, 0.25_m});
 
   Navigator::Options options(gctx);
-  options.addExternalSurface(*external);
+  options.registerAdditionalSurface(*additional);
   NavigationTarget target = firstTarget(navigator, options, Vector3::Zero());
 
   BOOST_REQUIRE(!target.isNone());
-  BOOST_CHECK_EQUAL(&target.surface(), external.get());
+  BOOST_CHECK_EQUAL(&target.surface(), additional.get());
 }
 
 BOOST_AUTO_TEST_CASE(OffPathGen3) {
@@ -74,14 +74,14 @@ BOOST_AUTO_TEST_CASE(OffPathGen3) {
   Telescope telescope = makeTelescopeGen3(logger());
   Navigator navigator = makeNavigator(telescope.geometry, logger());
 
-  auto external = makeOutOfGeometrySurface({0, surfaceY, 0.25_m});
+  auto additional = makeOutOfGeometrySurface({0, surfaceY, 0.25_m});
 
   Navigator::Options options(gctx);
-  options.addExternalSurface(*external);
+  options.registerAdditionalSurface(*additional);
   NavigationTarget target = firstTarget(navigator, options, Vector3::Zero());
 
   BOOST_REQUIRE(!target.isNone());
-  BOOST_CHECK_EQUAL(&target.surface(), external.get());
+  BOOST_CHECK_EQUAL(&target.surface(), additional.get());
 }
 
 BOOST_AUTO_TEST_CASE(BoundsCheckedGen1) {
@@ -89,14 +89,14 @@ BOOST_AUTO_TEST_CASE(BoundsCheckedGen1) {
   Telescope telescope = makeTelescopeGen1();
   Navigator navigator = makeNavigator(telescope.geometry, logger());
 
-  auto external = makeOutOfGeometrySurface({0, surfaceY, 0.25_m});
+  auto additional = makeOutOfGeometrySurface({0, surfaceY, 0.25_m});
 
   Navigator::Options options(gctx);
-  options.addExternalSurface(*external, BoundaryTolerance::None());
+  options.registerAdditionalSurface(*additional, BoundaryTolerance::None());
   std::vector<const Surface*> reached =
       walk(navigator, options, Vector3::Zero(), Vector3::UnitZ());
 
-  BOOST_CHECK_EQUAL(std::ranges::count(reached, external.get()), 0);
+  BOOST_CHECK_EQUAL(std::ranges::count(reached, additional.get()), 0);
 }
 
 BOOST_AUTO_TEST_CASE(BoundsCheckedGen3) {
@@ -104,18 +104,18 @@ BOOST_AUTO_TEST_CASE(BoundsCheckedGen3) {
   Telescope telescope = makeTelescopeGen3(logger());
   Navigator navigator = makeNavigator(telescope.geometry, logger());
 
-  auto external = makeOutOfGeometrySurface({0, surfaceY, 0.25_m});
+  auto additional = makeOutOfGeometrySurface({0, surfaceY, 0.25_m});
 
   Navigator::Options options(gctx);
-  options.addExternalSurface(*external, BoundaryTolerance::None());
+  options.registerAdditionalSurface(*additional, BoundaryTolerance::None());
   std::vector<const Surface*> reached =
       walk(navigator, options, Vector3::Zero(), Vector3::UnitZ());
 
-  BOOST_CHECK_EQUAL(std::ranges::count(reached, external.get()), 0);
+  BOOST_CHECK_EQUAL(std::ranges::count(reached, additional.get()), 0);
 }
 
 // The tracking geometry keeps every candidate it would have offered, the
-// external surface only joins them
+// additional surface only joins them
 
 BOOST_AUTO_TEST_CASE(NothingOfTheGeometryIsSkippedGen1) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen1", logLevel));
@@ -123,19 +123,19 @@ BOOST_AUTO_TEST_CASE(NothingOfTheGeometryIsSkippedGen1) {
   Navigator navigator = makeNavigator(telescope.geometry, logger());
 
   // Between the origin and the two telescope surfaces
-  auto external = makeOutOfGeometrySurface({0, 0, 0.25_m});
+  auto additional = makeOutOfGeometrySurface({0, 0, 0.25_m});
 
   Navigator::Options plain(gctx);
   std::vector<const Surface*> baseline =
       walk(navigator, plain, Vector3::Zero(), Vector3::UnitZ(), 20);
 
   Navigator::Options options(gctx);
-  options.addExternalSurface(*external);
+  options.registerAdditionalSurface(*additional);
   std::vector<const Surface*> reached =
       walk(navigator, options, Vector3::Zero(), Vector3::UnitZ(), 20);
 
   BOOST_REQUIRE(!baseline.empty());
-  BOOST_CHECK_EQUAL(std::ranges::count(reached, external.get()), 1);
+  BOOST_CHECK_EQUAL(std::ranges::count(reached, additional.get()), 1);
   BOOST_CHECK(isSubsequence(baseline, reached));
 }
 
@@ -144,23 +144,23 @@ BOOST_AUTO_TEST_CASE(NothingOfTheGeometryIsSkippedGen3) {
   Telescope telescope = makeTelescopeGen3(logger());
   Navigator navigator = makeNavigator(telescope.geometry, logger());
 
-  auto external = makeOutOfGeometrySurface({0, 0, 0.25_m});
+  auto additional = makeOutOfGeometrySurface({0, 0, 0.25_m});
 
   Navigator::Options plain(gctx);
   std::vector<const Surface*> baseline =
       walk(navigator, plain, Vector3::Zero(), Vector3::UnitZ(), 20);
 
   Navigator::Options options(gctx);
-  options.addExternalSurface(*external);
+  options.registerAdditionalSurface(*additional);
   std::vector<const Surface*> reached =
       walk(navigator, options, Vector3::Zero(), Vector3::UnitZ(), 20);
 
   BOOST_REQUIRE(!baseline.empty());
-  BOOST_CHECK_EQUAL(std::ranges::count(reached, external.get()), 1);
+  BOOST_CHECK_EQUAL(std::ranges::count(reached, additional.get()), 1);
   BOOST_CHECK(isSubsequence(baseline, reached));
 }
 
-// A closer portal wins, so an external surface cannot step the propagation
+// A closer portal wins, so an additional surface cannot step the propagation
 // out of its volume. The surface below crosses the track at z = 0.96 m,
 // outside the telescope volume, so the boundary comes first.
 BOOST_AUTO_TEST_CASE(PortalWinsGen1) {
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(PortalWinsGen1) {
   auto outside = makeOutOfGeometrySurface({0, 0, 0.96_m}, 10_m, 10_m);
 
   Navigator::Options options(gctx);
-  options.addExternalSurface(*outside);
+  options.registerAdditionalSurface(*outside);
   std::vector<const Surface*> reached =
       walk(navigator, options, Vector3::Zero(), Vector3::UnitZ(), 20);
 
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(PortalWinsGen3) {
   auto outside = makeOutOfGeometrySurface({0, 0, 0.96_m}, 10_m, 10_m);
 
   Navigator::Options options(gctx);
-  options.addExternalSurface(*outside);
+  options.registerAdditionalSurface(*outside);
   std::vector<const Surface*> reached =
       walk(navigator, options, Vector3::Zero(), Vector3::UnitZ(), 20);
 
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(PerigeeGen3) {
   auto perigee = Surface::makeShared<PerigeeSurface>(Vector3{0.1_m, 0, 0.25_m});
 
   Navigator::Options options(gctx);
-  options.addExternalSurface(*perigee);
+  options.registerAdditionalSurface(*perigee);
   const Vector3 dir = Vector3{0.3, 0, 1}.normalized();
   std::vector<const Surface*> reached =
       walk(navigator, options, Vector3::Zero(), dir);
@@ -228,10 +228,10 @@ BOOST_AUTO_TEST_CASE(PerigeeGen3) {
 // twice, so the propagation below steps back in front of it.
 
 namespace {
-/// Reach @p external, then ask for the next target from just before it.
+/// Reach @p additional, then ask for the next target from just before it.
 NavigationTarget targetOnSecondApproach(const Navigator& navigator,
                                         const Navigator::Options& options,
-                                        const Surface& external) {
+                                        const Surface& additional) {
   Navigator::State state = navigator.makeState(options);
   Vector3 position = Vector3::Zero();
   const Vector3 direction = Vector3::UnitZ();
@@ -242,7 +242,7 @@ NavigationTarget targetOnSecondApproach(const Navigator& navigator,
 
   NavigationTarget target = navigator.nextTarget(state, position, direction);
   BOOST_REQUIRE(!target.isNone());
-  BOOST_REQUIRE_EQUAL(&target.surface(), &external);
+  BOOST_REQUIRE_EQUAL(&target.surface(), &additional);
   stepOnto(position, direction, target.surface());
   navigator.handleSurfaceReached(state, position, direction, target.surface());
 
@@ -257,14 +257,14 @@ BOOST_AUTO_TEST_CASE(DroppedAfterReachedGen1) {
   Telescope telescope = makeTelescopeGen1();
   Navigator navigator = makeNavigator(telescope.geometry, logger());
 
-  auto external = makeOutOfGeometrySurface({0, 0, 0.25_m});
+  auto additional = makeOutOfGeometrySurface({0, 0, 0.25_m});
 
   Navigator::Options options(gctx);
-  options.addExternalSurface(*external);
+  options.registerAdditionalSurface(*additional);
   NavigationTarget target =
-      targetOnSecondApproach(navigator, options, *external);
+      targetOnSecondApproach(navigator, options, *additional);
 
-  BOOST_CHECK_NE(&target.surface(), external.get());
+  BOOST_CHECK_NE(&target.surface(), additional.get());
 }
 
 BOOST_AUTO_TEST_CASE(KeptAfterReachedGen1) {
@@ -272,16 +272,16 @@ BOOST_AUTO_TEST_CASE(KeptAfterReachedGen1) {
   Telescope telescope = makeTelescopeGen1();
   Navigator navigator = makeNavigator(telescope.geometry, logger());
 
-  auto external = makeOutOfGeometrySurface({0, 0, 0.25_m});
+  auto additional = makeOutOfGeometrySurface({0, 0, 0.25_m});
 
   Navigator::Options options(gctx);
-  options.addExternalSurface(*external, BoundaryTolerance::Infinite(), nullptr,
-                             false);
+  options.registerAdditionalSurface(*additional, BoundaryTolerance::Infinite(),
+                                    nullptr, false);
   NavigationTarget target =
-      targetOnSecondApproach(navigator, options, *external);
+      targetOnSecondApproach(navigator, options, *additional);
 
   BOOST_REQUIRE(!target.isNone());
-  BOOST_CHECK_EQUAL(&target.surface(), external.get());
+  BOOST_CHECK_EQUAL(&target.surface(), additional.get());
 }
 
 // A volume scopes the surface to that one volume
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(ScopedToAVolumeGen3) {
   Navigator navigator = makeNavigator(geometry, *logger);
 
   // Inside the near volume
-  auto external = makeOutOfGeometrySurface({0, 0, -0.5_m});
+  auto additional = makeOutOfGeometrySurface({0, 0, -0.5_m});
   const TrackingVolume* farVolume = geometry->findVolumeByName("far");
   BOOST_REQUIRE(farVolume != nullptr);
 
@@ -323,23 +323,23 @@ BOOST_AUTO_TEST_CASE(ScopedToAVolumeGen3) {
   // Scoped to the far volume, where the track never crosses it
   {
     Navigator::Options options(gctx);
-    options.addExternalSurface(*external, BoundaryTolerance::Infinite(),
-                               farVolume);
+    options.registerAdditionalSurface(*additional,
+                                      BoundaryTolerance::Infinite(), farVolume);
     std::vector<const Surface*> reached =
         walk(navigator, options, start, Vector3::UnitZ(), 12);
-    BOOST_CHECK_EQUAL(std::ranges::count(reached, external.get()), 0);
+    BOOST_CHECK_EQUAL(std::ranges::count(reached, additional.get()), 0);
   }
   // Unscoped, so the volume that holds the crossing offers it
   {
     Navigator::Options options(gctx);
-    options.addExternalSurface(*external);
+    options.registerAdditionalSurface(*additional);
     std::vector<const Surface*> reached =
         walk(navigator, options, start, Vector3::UnitZ(), 12);
-    BOOST_CHECK_EQUAL(std::ranges::count(reached, external.get()), 1);
+    BOOST_CHECK_EQUAL(std::ranges::count(reached, additional.get()), 1);
   }
 }
 
-// Several external surfaces are offered in the order the track crosses them
+// Several additional surfaces are offered in the order the track crosses them
 
 BOOST_AUTO_TEST_CASE(SeveralSurfacesInOrderGen3) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen3", logLevel));
@@ -351,23 +351,23 @@ BOOST_AUTO_TEST_CASE(SeveralSurfacesInOrderGen3) {
   auto third = makeOutOfGeometrySurface({0, 0, 0.3_m});
 
   Navigator::Options options(gctx);
-  options.addExternalSurface(*third);
-  options.addExternalSurface(*first);
-  options.addExternalSurface(*second);
+  options.registerAdditionalSurface(*third);
+  options.registerAdditionalSurface(*first);
+  options.registerAdditionalSurface(*second);
 
   std::vector<const Surface*> reached =
       walk(navigator, options, Vector3::Zero(), Vector3::UnitZ(), 20);
 
-  std::vector<const Surface*> externals;
+  std::vector<const Surface*> reachedAdditional;
   for (const Surface* surface : reached) {
     if (surface == first.get() || surface == second.get() ||
         surface == third.get()) {
-      externals.push_back(surface);
+      reachedAdditional.push_back(surface);
     }
   }
   const std::vector<const Surface*> expected{first.get(), second.get(),
                                              third.get()};
-  BOOST_CHECK(externals == expected);
+  BOOST_CHECK(reachedAdditional == expected);
 }
 
 // A surface with two solutions, where the one behind the propagation is the
@@ -380,18 +380,18 @@ BOOST_AUTO_TEST_CASE(SecondSolutionAheadGen1) {
 
   // A cylinder around the y axis, so a track along z crosses it at z = +-R
   constexpr double radius = 0.3_m;
-  auto external = Surface::makeShared<CylinderSurface>(
+  auto additional = Surface::makeShared<CylinderSurface>(
       Transform3{AngleAxis3{90._degree, Vector3::UnitX()}},
       std::make_shared<const CylinderBounds>(radius, 0.5_m));
 
   Navigator::Options options(gctx);
-  options.addExternalSurface(*external);
+  options.registerAdditionalSurface(*additional);
   // Start closer to the solution behind than to the one ahead
   NavigationTarget target =
       firstTarget(navigator, options, {0, 0, -0.2 * radius});
 
   BOOST_REQUIRE(!target.isNone());
-  BOOST_CHECK_EQUAL(&target.surface(), external.get());
+  BOOST_CHECK_EQUAL(&target.surface(), additional.get());
   BOOST_CHECK_GT(target.pathLength(), 0.);
 }
 

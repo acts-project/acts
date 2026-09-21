@@ -583,7 +583,7 @@ class ReferenceTrajectoryBuilder {
     if constexpr (!isDirectNavigator) {
       if (sSequence != nullptr) {
         for (const Surface* surface : *sSequence) {
-          propagatorOptions.navigation.overrideBoundaryTolerance(*surface);
+          propagatorOptions.navigation.registerExtendedSurface(*surface);
         }
       }
     } else {

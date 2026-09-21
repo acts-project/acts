@@ -772,7 +772,7 @@ class KalmanFitter {
       // Relax the bounds check, so the navigator targets a measurement
       // surface even where the track misses it
       for (const auto& [surface, _] : inputMeasurements) {
-        propagatorOptions.navigation.overrideBoundaryTolerance(*surface);
+        propagatorOptions.navigation.registerExtendedSurface(*surface);
       }
     } else {
       assert(sSequence != nullptr &&

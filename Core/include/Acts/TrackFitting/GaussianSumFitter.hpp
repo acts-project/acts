@@ -168,9 +168,9 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      if (options.useBoundaryToleranceOverrides) {
+      if (options.useExtendedSurfaces) {
         for (auto it = begin; it != end; ++it) {
-          propOptions.navigation.overrideBoundaryTolerance(
+          propOptions.navigation.registerExtendedSurface(
               *options.extensions.surfaceAccessor(*it));
         }
       }
@@ -190,9 +190,9 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      if (options.useBoundaryToleranceOverrides) {
+      if (options.useExtendedSurfaces) {
         for (auto it = begin; it != end; ++it) {
-          propOptions.navigation.overrideBoundaryTolerance(
+          propOptions.navigation.registerExtendedSurface(
               *options.extensions.surfaceAccessor(*it));
         }
       }

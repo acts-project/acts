@@ -33,8 +33,8 @@
 #include <vector>
 
 /// A telescope of two plane surfaces, built for both geometry generations.
-/// Shared by the navigator tests of the boundary tolerance overrides and of
-/// the external surfaces.
+/// Shared by the navigator tests of the extended surfaces and of
+/// the additional surfaces.
 namespace ActsTests::NavigatorTelescope {
 
 using namespace Acts;
