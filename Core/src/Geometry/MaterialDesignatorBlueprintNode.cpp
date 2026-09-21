@@ -143,9 +143,9 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
 ACTS_PUSH_IGNORE_DEPRECATED()
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
-    const DirectedProtoAxis& loc1, std::optional<std::string> materialKey) {
-  return configureFace(face, toDeferredAxisSpec(loc0), toDeferredAxisSpec(loc1),
-                       std::move(materialKey));
+    const DirectedProtoAxis& loc1) {
+  return configureFace(face, toDeferredAxisSpec(loc0),
+                       toDeferredAxisSpec(loc1));
 }
 ACTS_POP_IGNORE_DEPRECATED()
 
@@ -174,9 +174,9 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
 ACTS_PUSH_IGNORE_DEPRECATED()
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CuboidVolumeBounds::Face face, const DirectedProtoAxis& loc0,
-    const DirectedProtoAxis& loc1, std::optional<std::string> materialKey) {
-  return configureFace(face, toDeferredAxisSpec(loc0), toDeferredAxisSpec(loc1),
-                       std::move(materialKey));
+    const DirectedProtoAxis& loc1) {
+  return configureFace(face, toDeferredAxisSpec(loc0),
+                       toDeferredAxisSpec(loc1));
 }
 ACTS_POP_IGNORE_DEPRECATED()
 

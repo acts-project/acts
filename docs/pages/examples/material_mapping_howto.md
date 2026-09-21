@@ -198,7 +198,8 @@ alongside @ref Acts::ProtoSurfaceMaterial. Steps 2 to 5 below are unchanged — 
 @anchor material_mapping_stable_keys
 #### Stable surface assignment keys
 
-@ref Acts::MaterialDesignatorBlueprintNode::configureFace accepts an optional
+The @ref Acts::AxisSpec overloads of
+@ref Acts::MaterialDesignatorBlueprintNode::configureFace accept an optional
 trailing key for proto materials. Existing calls without a key continue to use geometry identifiers:
 
 @snippet{trimleft} examples/material_designation.cpp Designate Keyed Material

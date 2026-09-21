@@ -450,18 +450,17 @@ void addGeometryGen3(py::module_& m) {
 
   ACTS_PUSH_IGNORE_DEPRECATED()
   matNode
-      .def("configureFace",
-           py::overload_cast<CylinderVolumeBounds::Face,
-                             const DirectedProtoAxis&, const DirectedProtoAxis&,
-                             std::optional<std::string>>(
-               &MaterialDesignatorBlueprintNode::configureFace),
-           "face"_a, "loc0"_a, "loc1"_a, "materialKey"_a = py::none())
+      .def(
+          "configureFace",
+          py::overload_cast<CylinderVolumeBounds::Face,
+                            const DirectedProtoAxis&, const DirectedProtoAxis&>(
+              &MaterialDesignatorBlueprintNode::configureFace),
+          "face"_a, "loc0"_a, "loc1"_a)
       .def("configureFace",
            py::overload_cast<CuboidVolumeBounds::Face, const DirectedProtoAxis&,
-                             const DirectedProtoAxis&,
-                             std::optional<std::string>>(
+                             const DirectedProtoAxis&>(
                &MaterialDesignatorBlueprintNode::configureFace),
-           "face"_a, "loc0"_a, "loc1"_a, "materialKey"_a = py::none());
+           "face"_a, "loc0"_a, "loc1"_a);
   ACTS_POP_IGNORE_DEPRECATED()
 
   addContextManagerProtocol(matNode);

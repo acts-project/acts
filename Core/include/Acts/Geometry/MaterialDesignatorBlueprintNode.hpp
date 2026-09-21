@@ -101,7 +101,6 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @param face The face of the cylinder to configure
   /// @param loc0 The first binning configuration along local axis 0
   /// @param loc1 The first binning configuration along local axis 1
-  /// @param materialKey Optional stable key for this face
   /// @return The material designator node
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
@@ -109,8 +108,7 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   [[deprecated("Use configureFace with deferred AxisSpec axes instead")]]
   MaterialDesignatorBlueprintNode& configureFace(
       CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
-      const DirectedProtoAxis& loc1,
-      std::optional<std::string> materialKey = std::nullopt);
+      const DirectedProtoAxis& loc1);
 
   /// Configure the designator with a cylinder face and a homogeneous surface
   /// material.
@@ -147,16 +145,14 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @param face The face of the cuboid to configure
   /// @param loc0 The first binning configuration along local axis 0
   /// @param loc1 The second binning configuration along local axis 1
-  /// @param materialKey Optional stable key for this face
   /// @return The material designator node
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
   /// @deprecated Use configureFace with deferred AxisSpec axes instead
   [[deprecated("Use configureFace with deferred AxisSpec axes instead")]]
-  MaterialDesignatorBlueprintNode& configureFace(
-      CuboidVolumeBounds::Face face, const DirectedProtoAxis& loc0,
-      const DirectedProtoAxis& loc1,
-      std::optional<std::string> materialKey = std::nullopt);
+  MaterialDesignatorBlueprintNode& configureFace(CuboidVolumeBounds::Face face,
+                                                 const DirectedProtoAxis& loc0,
+                                                 const DirectedProtoAxis& loc1);
 
   /// Configure the designator with a cuboid face and a homogeneous surface
   /// material.
