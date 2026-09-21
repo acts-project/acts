@@ -298,17 +298,11 @@ GeoModelMuonMockupBuilder::buildChildChamber(
     MultiWireVolumeBuilder::Config mwCfg;
     auto vb = box.volume->volumeBoundsPtr();
 
-    using LineBounds = Acts::LineBounds::BoundValues;
-
     if (vb->type() == Acts::VolumeBounds::eTrapezoid) {
-      using BoundVal = Acts::TrapezoidVolumeBounds::BoundValues;
-
       auto tzb = std::dynamic_pointer_cast<Acts::TrapezoidVolumeBounds>(vb);
       mwCfg.bounds = boundFactory.insert(tzb);
 
     } else if (vb->type() == Acts::VolumeBounds::eCuboid) {
-      using BoundVal = Acts::CuboidVolumeBounds::BoundValues;
-
       auto cbb = std::dynamic_pointer_cast<Acts::CuboidVolumeBounds>(vb);
       mwCfg.bounds = boundFactory.insert(cbb);
 

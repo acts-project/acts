@@ -81,7 +81,6 @@ void generateStrawSurfaces(const TrapezoidVolumeBounds& volBounds,
   std::cout << nLayers << std::endl;
   std::cout << nStraws << std::endl;
   Vector3 ipos = {-halfX + strawRadius, -0., -halfZ + strawRadius};
-  Vector3 pos = ipos;
   auto strawBounds = std::make_shared<LineBounds>(strawRadius, halfY - 0.5_mm);
 
   for (std::size_t i = 0; i < nLayers; i++) {

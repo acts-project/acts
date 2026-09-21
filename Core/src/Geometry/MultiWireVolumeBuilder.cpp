@@ -47,7 +47,7 @@ MultiWireVolumeBuilder::MultiWireVolumeBuilder(
         "MultiWireStructureBuilder: No surfaces are given");
   }
 
-  // check that straw tube surfaces hav been passed tot he builder
+  // check that straw tube surfaces have been passed tot he builder
   const bool allStraw =
       std::ranges::all_of(m_config.mlSurfaces, [](const auto& s) {
         return s->bounds().type() == SurfaceBounds::BoundsType::eLine;
@@ -125,8 +125,8 @@ MultiWireVolumeBuilder::deriveGridParameters(
   std::map<double, std::set<double>, PrecisionDelimiter> coordsPerLayer;
   for (const auto& surf : m_config.mlSurfaces) {
     const Vector3 cLocal = globalToLoc * surf->center(gctx);
-    const long long layerKey = VectorHelpers::cast(cLocal, layerDir);
-    const long long shiftKey = VectorHelpers::cast(cLocal, shiftDir);
+    const double layerKey = VectorHelpers::cast(cLocal, layerDir);
+    const double shiftKey = VectorHelpers::cast(cLocal, shiftDir);
     coordsPerLayer[layerKey].insert(shiftKey);
   }
 
