@@ -51,6 +51,10 @@ class MultiWireVolumeBuilder {
     /// The direction of the axis the shift of the surfaces is applied
     /// It is the direction along the tubes
     AxisDirection shiftDirection{};
+
+    /// The precision delimiter for discriminating the wires/tubes per layer
+    /// with a map
+    double precisionDelimiter{1e-3};
   };
 
   /// Constructor

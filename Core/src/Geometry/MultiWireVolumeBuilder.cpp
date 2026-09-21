@@ -122,7 +122,8 @@ MultiWireVolumeBuilder::deriveGridParameters(
   const AxisDirection layerDir = (shiftDir == dirA) ? dirB : dirA;
 
   // project every tube onto both directions, grouped by layer
-  std::map<double, std::set<double>, PrecisionDelimiter> coordsPerLayer;
+  std::map<double, std::set<double>, PrecisionDelimiter> coordsPerLayer{
+      PrecisionDelimiter{m_config.precisionDelimiter}};
   for (const auto& surf : m_config.mlSurfaces) {
     const Vector3 cLocal = globalToLoc * surf->center(gctx);
     const double layerKey = VectorHelpers::cast(cLocal, layerDir);
