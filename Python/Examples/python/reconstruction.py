@@ -660,15 +660,15 @@ def addSeeding(
 def addGbtsTraining(
     s: acts.examples.Sequencer,
     selectedParticles: str = "particles_selected",
-    geometryFile: str = "gbts_layer_geometry.txt",
-    outputConnectionTable: str = "layer_connection_table.txt",
+    geometryFile: str = "gbts_layers.json",
+    outputConnectionTable: str = "layer_connection_table.json",
     probThreshold: float = -1.0,
     zMinTol: float = 0.2340,
     zMaxTol: float = 0.2340,
     rMinTol: float = 2.5337,
     rMaxTol: float = 2.5337,
     doSymmetrization: bool = False,
-    useOldFormatting: bool = False,
+    etaBinWidth: float = 0.2,
     logLevel: acts.logging.Level = None,
 ):
     logLevel = acts.examples.defaultLogging(s, logLevel)()
@@ -692,7 +692,7 @@ def addGbtsTraining(
         gbtsLayerConnectionToolConfig=gbtsLayerConnectionToolConfig,
         geometryFileDir=str(geometryFile),
         outputFileDir=str(outputConnectionTable),
-        useOldFormatting=useOldFormatting,
+        etaBinWidth=etaBinWidth,
     )
 
     s.addAlgorithm(alg)

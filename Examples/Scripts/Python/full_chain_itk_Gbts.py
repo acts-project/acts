@@ -100,9 +100,9 @@ addSeeding(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
-    layerMappingConfigFile=geo_dir / "itk-hgtd/GbtsMapping.csv",
-    connectorInputConfigFile=geo_dir / "itk-hgtd/GbtsBinTable.txt",
-    lutInputConfigFile=geo_dir / "itk-hgtd/gbts_ml_pixel_barrel_loose.lut",
+    layerMappingConfigFile=geo_dir / "itk-hgtd/gbts_layers.json",
+    connectorInputConfigFile=geo_dir / "itk-hgtd/gbts_connections.json",
+    lutInputConfigFile=geo_dir / "itk-hgtd/gbts_tau_lut.json",
     outputDirRoot=outputDir,
 )
 

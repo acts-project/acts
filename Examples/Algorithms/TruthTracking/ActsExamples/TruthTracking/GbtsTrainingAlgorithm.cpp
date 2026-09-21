@@ -10,66 +10,13 @@
 
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsPlugins/Json/GbtsConfigJsonConverter.hpp"
+#include "ActsPlugins/Json/detail/JsonIo.hpp"
 
-#include <fstream>
-#include <ostream>
 #include <stdexcept>
 #include <utility>
 
 namespace ActsExamples {
-
-static void geometryParser(
-    const std::string& geometryInformation,
-    std::vector<Acts::Experimental::GbtsLayerConnectionTool::LayerDescription>&
-        detectorGeometry) {
-  std::ifstream inStream(geometryInformation.c_str());
-
-  if (!inStream) {
-    throw std::runtime_error("File does not exist or could not be opened");
-  }
-
-  // define how many lines there are for reserving
-  std::uint32_t lines{};
-  std::string line{};
-  while (std::getline(inStream, line)) {
-    lines++;
-  }
-  inStream.clear();
-  inStream.seekg(0);
-
-  // reserves
-  detectorGeometry.reserve(lines);
-
-  // create geometry objects
-  float minR{};
-  float maxR{};
-
-  float minZ{};
-  float maxZ{};
-
-  Acts::Experimental::GbtsExperimentLayerId gbtsId{};
-
-  for (std::uint32_t l = 0; l < lines; l++) {
-    inStream >> minR >> maxR >> minZ >> maxZ >> gbtsId;
-
-    detectorGeometry.emplace_back(minR, maxR, minZ, maxZ, gbtsId);
-  }
-}
-
-static void oldStyleFormatting(
-    const std::string& outputFileLocation,
-    const Acts::Experimental::GbtsLayerConnectionTool::LayerIdPairs&
-        tempTable) {
-  std::ofstream outputFile(outputFileLocation);
-
-  outputFile << tempTable.size() << " " << 0.2 << "\n";
-  for (const auto& layerPair : tempTable) {
-    outputFile << 0 << " " << 1 << " " << layerPair.second << " "
-               << layerPair.first << " " << 1 << " " << 1 << " " << 100 << "\n";
-
-    outputFile << 100 << "\n";
-  }
-}
 
 GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
     const Config& config, std::unique_ptr<const Acts::Logger> inputLogger)
@@ -101,8 +48,11 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
 
   ACTS_INFO("LayerConnectionTool chosen");
 
-  geometryParser(m_cfg.geometryFileDir,
-                 m_cfg.gbtsLayerConnectionToolConfig.detectorGeometry);
+  m_cfg.gbtsLayerConnectionToolConfig.detectorGeometry =
+      Acts::detail::readJsonFile(m_cfg.geometryFileDir)
+          .at("layers")
+          .get<std::vector<
+              Acts::Experimental::GbtsLayerConnectionTool::LayerDescription>>();
 
   m_layerConnectionTool.emplace(
       m_cfg.gbtsLayerConnectionToolConfig,
@@ -112,19 +62,15 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
 ProcessCode GbtsTrainingAlgorithm::finalize() {
   const auto layerTable = m_layerConnectionTool->createConnectionTable();
 
-  // define output text file
-  std::ofstream outputFile(m_cfg.outputFileDir);
-
-  // finally, add transitions to output file (old or new format)
-  if (m_cfg.useOldFormatting) {
-    oldStyleFormatting(m_cfg.outputFileDir, layerTable);
-  } else {
-    outputFile << layerTable.size() << "\n";
-    for (const auto& layerPair : layerTable) {
-      // swap order as we want outward -> inward ordering
-      outputFile << layerPair.second << " " << layerPair.first << "\n";
-    }
+  Acts::Experimental::GbtsConnectionsConfig connections;
+  connections.etaBinWidth = m_cfg.etaBinWidth;
+  for (const auto& layerPair : layerTable) {
+    // swap order as we want outward -> inward ordering
+    connections.connections.push_back(
+        {.src = layerPair.second, .dst = layerPair.first});
   }
+  Acts::detail::writeJsonFile(m_cfg.outputFileDir, nlohmann::json(connections),
+                              4, 0);
 
   return ProcessCode::SUCCESS;
 }
