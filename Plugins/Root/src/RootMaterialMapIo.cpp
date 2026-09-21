@@ -141,7 +141,7 @@ void RootMaterialMapIo::write(TFile& rFile, const GeometryIdentifier& geoID,
 void RootMaterialMapIo::write(TFile& rFile,
                               const TrackingGeometryMaterial& detectorMaterial,
                               const Options& options) {
-  const auto& [surfaceMaterials, volumeMaterials] = detectorMaterial;
+  const auto& surfaceMaterials = detectorMaterial.surfaceMaterials;
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
     write(rFile, geoID, *sMaterial, options);
   }
@@ -261,7 +261,7 @@ TrackingGeometryMaterial RootMaterialMapIo::read(TFile& rFile,
                                                  const Options& options) {
   TrackingGeometryMaterial detectorMaterial;
 
-  auto& [surfaceMaterials, volumeMaterials] = detectorMaterial;
+  auto& surfaceMaterials = detectorMaterial.surfaceMaterials;
 
   auto homogeneousMaterialTree = dynamic_cast<TTree*>(
       rFile.Get(options.homogeneousMaterialTreeName.c_str()));

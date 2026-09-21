@@ -14,7 +14,6 @@
 
 #include <map>
 #include <memory>
-#include <utility>
 
 namespace Acts {
 
@@ -24,8 +23,13 @@ using SurfaceMaterialMaps =
 /// Type alias for volume material maps indexed by geometry identifier
 using VolumeMaterialMaps =
     std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
-/// Type alias for tracking geometry material containing surface and volume maps
-using TrackingGeometryMaterial =
-    std::pair<SurfaceMaterialMaps, VolumeMaterialMaps>;
+/// Surface and volume material assignments.
+/// Access assignments through the named members rather than a tuple interface.
+struct TrackingGeometryMaterial {
+  /// Surface assignments indexed by geometry ID.
+  SurfaceMaterialMaps surfaceMaterials{};
+  /// Volume assignments indexed by geometry ID.
+  VolumeMaterialMaps volumeMaterials{};
+};
 
 }  // namespace Acts

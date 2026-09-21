@@ -33,6 +33,8 @@ codegen/build/
 codegen/src/codegen.egg-info/
 # the codegen manifest is tracked, despite the blanket *.json rule above
 !codegen/manifest.json
+# the generated material map example shown in the docs, same exception
+!docs/examples/material_map_example.json
 # generated code shipped in source archives, never committed
 /prebuilt-codegen/
 

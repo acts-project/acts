@@ -12,6 +12,7 @@ acts_add_library(
     src/ProtoAxisJsonConverter.cpp
     src/SurfaceBoundsJsonConverter.cpp
     src/SurfaceJsonConverter.cpp
+    src/SurfaceMaterialJsonConverter.cpp
     src/UtilitiesJsonConverter.cpp
     src/VolumeBoundsJsonConverter.cpp
     src/VolumeJsonConverter.cpp

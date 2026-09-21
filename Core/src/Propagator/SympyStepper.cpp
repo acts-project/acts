@@ -56,6 +56,7 @@ void SympyStepper::initialize(State& state, const BoundVector& boundParams,
 
   state.pars = freeParams;
   state.field.reset();
+  state.dtds = detail::sympyDtds(state);
 
   // Init the jacobian matrix if needed
   state.covTransport = cov.has_value();
@@ -136,6 +137,7 @@ void SympyStepper::update(State& state, const FreeVector& freeParams,
                           const Surface& surface) const {
   state.pars = freeParams;
   state.field.reset();
+  state.dtds = detail::sympyDtds(state);
   state.cov = covariance;
   if (state.covTransport) {
     state.jacToGlobal = surface.boundToFreeJacobian(
@@ -157,6 +159,7 @@ void SympyStepper::update(State& state, const Vector3& uposition,
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
   state.pars[eFreeQOverP] = qOverP;
+  state.dtds = detail::sympyDtds(state);
   state.field.reset();
 }
 

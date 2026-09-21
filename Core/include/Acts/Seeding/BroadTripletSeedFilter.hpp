@@ -17,6 +17,7 @@
 #include "Acts/Seeding/detail/CandidatesForMiddleSp.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -86,11 +87,11 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     /// Maximum number (minus one) of accepted seeds per middle space-point
     /// In dense environments many seeds may be found per middle space-point
     /// Only seeds with the highest weight will be kept if this limit is reached
-    unsigned int maxSeedsPerSpM = 5;
+    std::uint32_t maxSeedsPerSpM = 5;
     /// Maximum limit to number of compatible space-point used in score
     /// calculation. We increase by c1 the weight calculation for each
     /// compatible space-point until we reach compatSeedLimit
-    std::size_t compatSeedLimit = 2;
+    std::uint32_t compatSeedLimit = 2;
 
     /// Increment in seed weight if the number of compatible seeds is larger
     /// than numSeedIncrement, this is used in case of high occupancy scenarios

@@ -14,6 +14,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/NavigatorError.hpp"
+#include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Propagator/detail/NavigationHelpers.hpp"
@@ -234,21 +235,19 @@ class TryAllNavigator final {
   /// current volume and surface to the start volume and surface, respectively.
   ///
   /// @param state The navigation state
-  /// @param position The starting position
-  /// @param direction The starting direction
-  /// @param propagationDirection The propagation direction
+  /// @param args The initialization arguments of this navigation run
   /// @return Result indicating success or failure of initialization
-  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
-                                        const Vector3& direction,
-                                        Direction propagationDirection) const {
-    static_cast<void>(propagationDirection);
+  [[nodiscard]] Result<void> initialize(
+      State& state, const NavigatorInitializeArguments& args) const {
+    const Vector3& position = args.position;
+    const Vector3& direction = args.direction;
 
     ACTS_VERBOSE("initialize");
 
-    state.startSurface = state.options.startSurface;
-    state.targetSurface = state.options.targetSurface;
+    state.startSurface = args.startSurface;
+    state.targetSurface = args.targetSurface;
 
-    const TrackingVolume* startVolume = nullptr;
+    const TrackingVolume* startVolume = args.startVolume;
 
     if (state.startSurface != nullptr &&
         state.startSurface->associatedLayer() != nullptr) {
@@ -256,7 +255,7 @@ class TryAllNavigator final {
           "Fast start initialization through association from Surface.");
       const auto* startLayer = state.startSurface->associatedLayer();
       startVolume = startLayer->trackingVolume();
-    } else {
+    } else if (startVolume == nullptr) {
       ACTS_VERBOSE("Slow start initialization through search.");
       ACTS_VERBOSE("Starting from position " << toString(position)
                                              << " and direction "
