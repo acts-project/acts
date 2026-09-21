@@ -90,7 +90,7 @@ struct NavigatorPlainOptions {
   void overrideBoundaryTolerance(const Surface& surface,
                                  const BoundaryTolerance& boundaryTolerance =
                                      BoundaryTolerance::Infinite()) {
-    boundaryToleranceOverrides.push_back({&surface, boundaryTolerance});
+    boundaryToleranceOverrides.emplace_back(&surface, boundaryTolerance);
   }
 
   /// Surfaces the navigator offers on top of the tracking geometry
@@ -108,8 +108,8 @@ struct NavigatorPlainOptions {
                               BoundaryTolerance::Infinite(),
                           const TrackingVolume* volume = nullptr,
                           bool dropAfterReached = true) {
-    externalSurfaces.push_back(
-        {&surface, boundaryTolerance, volume, dropAfterReached});
+    externalSurfaces.emplace_back(&surface, boundaryTolerance, volume,
+                                  dropAfterReached);
   }
 };
 

@@ -316,9 +316,9 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
     state.pendingTarget = nextStagedTarget(state, position, direction);
   }
 
-  const NavigationTarget externalTarget =
-      nextExternalTarget(state, position, direction);
-  if (!externalTarget.isNone()) {
+  if (const NavigationTarget externalTarget =
+          nextExternalTarget(state, position, direction);
+      !externalTarget.isNone()) {
     NavigationTarget& staged = state.pendingTarget.value();
     if (!staged.isNone()) {
       // The staged candidate was resolved earlier, so its stored path length
@@ -351,7 +351,7 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
   return staged;
 }
 
-NavigationTarget Navigator::nextExternalTarget(State& state,
+NavigationTarget Navigator::nextExternalTarget(const State& state,
                                                const Vector3& position,
                                                const Vector3& direction) const {
   NavigationTarget closest = NavigationTarget::None();

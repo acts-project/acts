@@ -161,10 +161,10 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
       return;
     }
     BoundaryTolerance boundaryTolerance = options.boundaryTolerance;
-    auto toleranceOverride = std::ranges::find(
-        options.boundaryToleranceOverrides, surface.geometryId(),
-        [](const auto& e) { return e.first; });
-    if (toleranceOverride != options.boundaryToleranceOverrides.end()) {
+    if (auto toleranceOverride = std::ranges::find(
+            options.boundaryToleranceOverrides, surface.geometryId(),
+            [](const auto& e) { return e.first; });
+        toleranceOverride != options.boundaryToleranceOverrides.end()) {
       boundaryTolerance = toleranceOverride->second;
     }
     // the surface intersection

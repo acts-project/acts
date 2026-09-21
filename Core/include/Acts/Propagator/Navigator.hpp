@@ -425,7 +425,8 @@ class Navigator final {
   /// @param position The current position
   /// @param direction The current direction
   /// @return The closest external surface, or none
-  NavigationTarget nextExternalTarget(State& state, const Vector3& position,
+  NavigationTarget nextExternalTarget(const State& state,
+                                      const Vector3& position,
                                       const Vector3& direction) const;
 
   /// @brief Whether the staged navigation targets the given surface
