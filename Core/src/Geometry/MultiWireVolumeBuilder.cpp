@@ -26,7 +26,7 @@
 namespace {
 
 struct PrecisionDelimiter {
-  PrecisionDelimiter(const double limit = 1e-3) : m_limit{limit} {}
+  explicit PrecisionDelimiter(const double limit = 1e-3) : m_limit{limit} {}
   bool operator()(const double a, const double b) const {
     return a + m_limit < b;
   }
