@@ -50,23 +50,18 @@ enum gbts_counter : unsigned int {
   nConnections,     // edge-to-edge connections from gbts_match_graph_edges
   nConnectedEdges,  // edges kept after gbts_reindex_edges
   nEdgesLeft,       // edges remaining for CCA (kept for reference parity)
-  nPaths,           // total paths reachable from any terminus edge
-  nTerminusEdges,   // #terminus edges; then reused as path-store write cursor
-  nProps,           // seed proposals from gbts_fit_segments
-  nRejected,        // rejected seed proposals
+  nPaths,           // paths in the path store (uncapped)
   nCounters         // total number of counters
 };
 
 struct gbts_consts {
-  // CCA max iterations -> maximum seed length (in edges).
-  static constexpr unsigned short max_cca_iter = 15;
-  // shared memory allocation sizes (element counts per block).
-  // Which is used in the fill_path_store, and store 2 unsigned int.
-  static constexpr unsigned short live_path_buffer = 1024;
+  // Longest seed candidate, in edges, that can be produced. Longer chains
+  // are truncated at their inner end. It also bounds the CCA sweeps.
+  static constexpr unsigned short max_seed_candidate_length = 15;
   static constexpr unsigned short node_buffer_length = 128;
 
   // Per-edge offsets into the row-major output graph
-  // (each edge occupies edge_size = 2 + 1 + max_num_neighbours ints).
+  // (each edge occupies edge_size = nei_start + max_num_neighbours ints).
   static constexpr unsigned char node1 = 0;
   static constexpr unsigned char node2 = 1;
   static constexpr unsigned char nNei = 2;
@@ -169,7 +164,7 @@ struct gbts_dphi_window_params {
   float low_dr_threshold = 60.0f;
 };
 
-// Kalman-filter cuts for device::gbts_fit_segments.
+// Kalman-filter cuts of the segment fit in device::gbts_fill_path_store.
 struct gbts_fit_segments_params {
   // Per-layer multiple-scattering angle:
   // sigmaMS = E_s / pT = 14.1/900 = 0.0156  (900 MeV, eta=0).
@@ -200,7 +195,8 @@ struct gbts_fit_segments_params {
   // Exact int-scaling so the longest seed maps to ~1% of INT_MAX:
   float qual_scale =
       0.01f * static_cast<float>(INT_MAX) /
-      (add_hit * static_cast<float>(traccc::device::gbts_consts::max_cca_iter));
+      (add_hit * static_cast<float>(
+                     traccc::device::gbts_consts::max_seed_candidate_length));
 
   // Minimum-pT gate in the fit: reject if |X2| * inv_max_curvature > 1
   // inv_max_curvature = 1/curv_max = ~pT[MeV].
@@ -288,9 +284,6 @@ struct gbts_seedfinder_config {
 
   // nMaxEdges = max_edges_factor * nNodes  (fixed buffer size).
   unsigned int max_edges_factor = 10;
-
-  // number of seed-vs-edge bidding rounds during disambiguation.
-  unsigned int edge_bidding_rounds = 5;
 };
 
 }  // namespace traccc
