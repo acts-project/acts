@@ -10,8 +10,6 @@
 // Project include(s).
 #include "traccc/definitions/math.hpp"
 #include "traccc/definitions/qualifiers.hpp"
-#include "traccc/device/concepts/thread_id.hpp"
-#include "traccc/gbts_seeding/device/details/gbts_create_seed_candidate.hpp"
 #include "traccc/gbts_seeding/gbts_seeding_config.hpp"
 #include "traccc/gbts_seeding/gbts_types.hpp"
 
@@ -22,9 +20,7 @@
 // System include(s).
 #include <cstring>
 
-namespace traccc::device {
-
-namespace details {
+namespace traccc::device::details {
 
 // ===========================================================================
 // edgeState -- Kalman-filter state for a track-segment fit.
@@ -242,97 +238,4 @@ TRACCC_HOST_DEVICE inline bool gbts_kalman_update(
   return true;
 }
 
-}  // namespace details
-
-template <concepts::thread_id1 thread_id_t>
-TRACCC_HOST_DEVICE inline void gbts_fit_segments(
-    const thread_id_t& thread_id, const gbts_fit_segments_payload& payload) {
-  const vecmem::device_vector<const float4> d_sp_reduced(payload.reducedSP);
-  const vecmem::device_vector<const unsigned int> d_output_graph(
-      payload.output_graph);
-  const vecmem::device_vector<const int2> d_path_store(payload.path_store);
-
-  const gbts_fit_segments_params& fit_params = payload.gbts_fit_segments_params;
-  const float max_z0 = payload.max_z0;
-
-  // Row-major output graph: each edge owns a contiguous block of
-  // edge_size = 2 + 1 + max_num_neighbours ints.
-  const unsigned int edge_size = 2u + 1u + payload.max_num_neighbours;
-
-  const unsigned int store_size = *payload.nPathStoreSize;
-
-  const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
-  const unsigned int blockDimX = thread_id.getBlockDimX();
-  const unsigned int gridDimX = thread_id.getGridDimX();
-
-  for (unsigned int globalIndex = globalIdx;
-       globalIndex + payload.nTerminusEdges < store_size;
-       globalIndex += blockDimX * gridDimX) {
-    const unsigned int path_idx = globalIndex + payload.nTerminusEdges;
-
-    unsigned char length = 1;
-    bool toggle = false;
-    details::edgeState state1;
-    details::edgeState state2;
-
-    int2 path = d_path_store[path_idx];
-
-    const unsigned int nodeidx1 =
-        d_output_graph[edge_size * static_cast<unsigned int>(path.x) +
-                       gbts_consts::node1];
-    traccc::float4 node1 = d_sp_reduced[nodeidx1];
-    const unsigned int nodeidx2 =
-        d_output_graph[edge_size * static_cast<unsigned int>(path.x) +
-                       gbts_consts::node2];
-    traccc::float4 node2 = d_sp_reduced[nodeidx2];
-
-    state1.initialize(node2, node1);
-    while (path.y >= 0) {
-      path = d_path_store[static_cast<unsigned int>(path.y)];
-      node2 = d_sp_reduced[d_output_graph[edge_size * static_cast<unsigned int>(
-                                                          path.x) +
-                                          gbts_consts::node2]];
-      if (toggle) {
-        if (!details::gbts_kalman_update(&state1, &state2, node2, fit_params,
-                                         max_z0)) {
-          state1 = state2;
-          break;
-        }
-      } else if (!details::gbts_kalman_update(&state2, &state1, node2,
-                                              fit_params, max_z0)) {
-        break;
-      }
-      toggle = !toggle;
-      length++;
-    }
-    if (length < payload.minLevel) {
-      continue;
-    }
-
-    // state1 is the final state
-    //  can cut more strongly now the fit is done
-    if (math::fabs(state1.m_X[2]) * fit_params.final_curv_cut_tighten *
-            fit_params.inv_max_curvature >
-        1.0f) {
-      return;
-    }
-    // prefer seeds that reach to the outer edge of the detector for better
-    // resolution at high pT
-    if (math::fabs(state1.m_Y[1]) > fit_params.zmax / fit_params.rmax) {
-      state1.m_J += fit_params.add_hit * math::fabs(node1.z) / fit_params.zmax;
-    } else {
-      float r2_max = (node1.x) * (node1.x) + (node1.y) * (node1.y);
-      state1.m_J += fit_params.add_hit * math::sqrt(r2_max) / fit_params.rmax;
-    }
-    int qual = static_cast<int>(fit_params.qual_scale * state1.m_J);
-
-    const unsigned int prop_idx =
-        vecmem::device_atomic_ref<unsigned int>(*payload.nPropsCounter)
-            .fetch_add(1u);
-    details::gbts_create_seed_candidate(
-        qual, static_cast<int>(path_idx), prop_idx, payload.seed_ambiguity,
-        payload.seed_proposals, payload.edge_bids, payload.path_store, 1);
-  }
-}
-
-}  // namespace traccc::device
+}  // namespace traccc::device::details
