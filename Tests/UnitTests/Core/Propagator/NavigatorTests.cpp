@@ -1272,9 +1272,8 @@ BOOST_AUTO_TEST_CASE(ExtendedSurfacesGen3) {
       }
     }
   }
-  // Offer the second plane as an additional surface, and leave the volume
-  // before the track reaches the plane. The additional surface applies in every
-  // volume, so the navigator still targets the plane in the next volume.
+  // As an additional surface, the plane is still reached after the track left
+  // its volume
   {
     const Vector3 posPlaneVolExit =
         planeVolume->localToGlobalTransform(tgContext) *

@@ -27,11 +27,8 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   const Vector3& position = queryPoint.position;
   const Vector3& direction = queryPoint.direction;
 
-  // De-duplicate by surface pointer, keeping the first occurrence, so each
-  // surface is intersected once and with the tolerance it was added with
-  // first. The caller relies on that order to give a candidate a tolerance the
-  // policies do not know about. The scan is quadratic, but the candidate count
-  // per volume is small, and a caller that guarantees uniqueness skips it.
+  // De-duplicate by surface pointer. The first entry wins, so its tolerance is
+  // the one used.
   if (!candidatesAreUnique) {
     ACTS_VERBOSE("De-duplicate the candidates:" << m_candidates);
     std::size_t writeIdx = 0;

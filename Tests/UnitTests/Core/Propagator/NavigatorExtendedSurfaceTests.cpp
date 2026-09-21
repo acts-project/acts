@@ -23,14 +23,11 @@ using namespace ActsTests::NavigatorTelescope;
 
 namespace ActsTests {
 
-// `NavigatorPlainOptions::extendedSurfaces` relaxes the bounds check
-// on a surface of the tracking geometry. The geometry still resolves the
-// surface, in its volume for Gen3 and on its layer for Gen1, so both
-// generations are covered.
+// Tests of `NavigatorPlainOptions::extendedSurfaces` for Gen1 and Gen3
 
 BOOST_AUTO_TEST_SUITE(NavigatorExtendedSurface)
 
-// Without an extension the navigator must not target a surface the track misses
+// Without an extension a surface the track misses is not targeted
 
 BOOST_AUTO_TEST_CASE(BaselineGen1) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen1", logLevel));
@@ -75,8 +72,7 @@ BOOST_AUTO_TEST_CASE(BoundsExtensionGen1) {
   BOOST_CHECK_EQUAL(&target.surface(), telescope.top);
 }
 
-// The policy returns the same surface with a `None` tolerance. The extension
-// goes in first, so the de-duplication keeps the tolerance of the caller.
+// The policy adds the same surface with `None`. The extension must win.
 BOOST_AUTO_TEST_CASE(BoundsExtensionGen3) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen3", logLevel));
   Telescope telescope = makeTelescopeGen3(logger());
@@ -117,8 +113,7 @@ BOOST_AUTO_TEST_CASE(BoundsCheckedGen3) {
   BOOST_CHECK_NE(&target.surface(), telescope.top);
 }
 
-// The geometry has to hold the surface, otherwise it never resolves it and the
-// extension is silently lost. The check is shared by both generations.
+// The geometry has to hold the surface
 
 BOOST_AUTO_TEST_CASE(SurfaceOutsideTheGeometryThrows) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen3", logLevel));
@@ -138,17 +133,15 @@ BOOST_AUTO_TEST_CASE(SurfaceOutsideTheGeometryThrows) {
                     std::invalid_argument);
 }
 
-// The relaxed bounds check must not pull the propagation out of its volume.
-// The track below crosses the plane of the top surface at y = 1.2 m, outside
-// the 0.95 m volume, and leaves through the boundary at y = 0.95 m first.
+// The track crosses the plane of the top surface at y = 1.2 m, outside the
+// volume, and leaves through the boundary at y = 0.95 m first.
 
 namespace {
 const Vector3 pokeStart{0, 0.9_m, 0};
 const Vector3 pokeDir = Vector3{0, 0.6, 1}.normalized();
 }  // namespace
 
-// Gen1 resolves the surfaces of a layer before the boundaries, so it checks
-// the intersection against the volume explicitly.
+// Gen1 drops the crossing outside the volume explicitly.
 BOOST_AUTO_TEST_CASE(CrossingOutsideTheVolumeIsDroppedGen1) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen1", logLevel));
   Telescope telescope = makeTelescopeGen1();
@@ -167,7 +160,7 @@ BOOST_AUTO_TEST_CASE(CrossingOutsideTheVolumeIsDroppedGen1) {
   BOOST_CHECK(target.surface().geometryId().boundary() != 0);
 }
 
-// Gen3 sorts portals and surfaces together, so the portal wins on its own.
+// Gen3 sorts the portal first.
 BOOST_AUTO_TEST_CASE(CrossingOutsideTheVolumeIsDroppedGen3) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen3", logLevel));
   Telescope telescope = makeTelescopeGen3(logger());
@@ -186,8 +179,7 @@ BOOST_AUTO_TEST_CASE(CrossingOutsideTheVolumeIsDroppedGen3) {
   BOOST_CHECK(target.isPortalTarget());
 }
 
-// The extension applies where the geometry resolves the surface: in its volume
-// for Gen3, on its layer for Gen1
+// The extension applies in the volume (Gen3) or on the layer (Gen1)
 
 BOOST_AUTO_TEST_CASE(ScopedToItsVolumeGen3) {
   auto logger = getDefaultLogger("Gen3", logLevel);

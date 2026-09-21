@@ -25,11 +25,7 @@ using namespace ActsTests::NavigatorTelescope;
 
 namespace ActsTests {
 
-// `NavigatorPlainOptions::additionalSurfaces` offers a surface the tracking
-// geometry does not have to hold. The navigator intersects it on every step and
-// hands it out whenever it is closer than the candidate of the geometry. Both
-// generations share the mechanism, so the cases that depend on the staged
-// navigation run for both.
+// Tests of `NavigatorPlainOptions::additionalSurfaces` for Gen1 and Gen3
 
 namespace {
 
@@ -51,8 +47,7 @@ bool isSubsequence(const std::vector<const Surface*>& sub,
 
 BOOST_AUTO_TEST_SUITE(NavigatorAdditionalSurface)
 
-// The default tolerance drops the bounds check, so a surface the track misses
-// is targeted too. A caller that asks for a bounds check gets one.
+// By default a surface the track misses is targeted too
 
 BOOST_AUTO_TEST_CASE(OffPathGen1) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen1", logLevel));
@@ -114,8 +109,7 @@ BOOST_AUTO_TEST_CASE(BoundsCheckedGen3) {
   BOOST_CHECK_EQUAL(std::ranges::count(reached, additional.get()), 0);
 }
 
-// The tracking geometry keeps every candidate it would have offered, the
-// additional surface only joins them
+// The candidates of the geometry are all still reached
 
 BOOST_AUTO_TEST_CASE(NothingOfTheGeometryIsSkippedGen1) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen1", logLevel));
@@ -160,9 +154,8 @@ BOOST_AUTO_TEST_CASE(NothingOfTheGeometryIsSkippedGen3) {
   BOOST_CHECK(isSubsequence(baseline, reached));
 }
 
-// A closer portal wins, so an additional surface cannot step the propagation
-// out of its volume. The surface below crosses the track at z = 0.96 m,
-// outside the telescope volume, so the boundary comes first.
+// The surface crosses the track at z = 0.96 m, outside the telescope volume,
+// so the closer boundary wins.
 BOOST_AUTO_TEST_CASE(PortalWinsGen1) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen1", logLevel));
   Telescope telescope = makeTelescopeGen1();
@@ -182,8 +175,7 @@ BOOST_AUTO_TEST_CASE(PortalWinsGen1) {
   BOOST_CHECK_EQUAL(std::count(reached.begin(), boundary, outside.get()), 0);
 }
 
-// Gen3 wraps the telescope in a world volume that reaches to z = 0.97 m, so
-// the surface is offered there once the propagation crossed the portal.
+// The Gen3 world volume reaches z = 0.97 m, so the surface is reached there.
 BOOST_AUTO_TEST_CASE(PortalWinsGen3) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen3", logLevel));
   Telescope telescope = makeTelescopeGen3(logger());
@@ -205,8 +197,7 @@ BOOST_AUTO_TEST_CASE(PortalWinsGen3) {
   }));
 }
 
-// A line surface is unbounded along its axis, and its intersection is a point
-// of closest approach. It is the case the per-step intersection exists for.
+// A line surface, intersected at the point of closest approach
 BOOST_AUTO_TEST_CASE(PerigeeGen3) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen3", logLevel));
   Telescope telescope = makeTelescopeGen3(logger());
@@ -223,9 +214,8 @@ BOOST_AUTO_TEST_CASE(PerigeeGen3) {
   BOOST_CHECK_EQUAL(std::ranges::count(reached, perigee.get()), 1);
 }
 
-// `dropAfterReached` decides whether the navigator offers the surface again
-// once the propagation reached it. A straight walk cannot approach a surface
-// twice, so the propagation below steps back in front of it.
+// `dropAfterReached`. A straight walk cannot approach a surface twice, so the
+// propagation steps back in front of it.
 
 namespace {
 /// Reach @p additional, then ask for the next target from just before it.
@@ -370,8 +360,7 @@ BOOST_AUTO_TEST_CASE(SeveralSurfacesInOrderGen3) {
   BOOST_CHECK(reachedAdditional == expected);
 }
 
-// A surface with two solutions, where the one behind the propagation is the
-// closer one. The navigator has to offer the solution ahead.
+// The closer solution is behind the propagation, so the one ahead is offered
 
 BOOST_AUTO_TEST_CASE(SecondSolutionAheadGen1) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Gen1", logLevel));

@@ -95,8 +95,7 @@ void Navigator::resolveExtendedSurfaces(State& state) const {
       throw std::invalid_argument("Navigator: extended surface is nullptr");
     }
 
-    // Without this the navigator never offers the surface and the extension
-    // is silently lost
+    // Otherwise the extension is silently lost
     const GeometryIdentifier geoId = extendedSurface.surface->geometryId();
     if (m_cfg.trackingGeometry->findSurface(geoId) != extendedSurface.surface) {
       throw std::invalid_argument(
@@ -105,13 +104,11 @@ void Navigator::resolveExtendedSurfaces(State& state) const {
                       geoId));
     }
 
-    // Gen3 offers the extended surface in the volume of the surface, Gen1 on
-    // its layer
+    // Gen3 scopes to the volume of the surface, Gen1 to its layer
     const TrackingVolume* volume = nullptr;
     if (m_geometryVersion == GeometryVersion::Gen3) {
       volume = m_cfg.trackingGeometry->findVolume(
           geoId.withSensitive(0).withBoundary(0));
-      // Without a volume the navigator never offers the surface either
       if (volume == nullptr) {
         throw std::invalid_argument(std::format(
             "Navigator: no volume found for the extended surface {}", geoId));
@@ -304,8 +301,7 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
     return nextStagedTarget(state, position, direction);
   }
 
-  // The tracking geometry does not stage additional surfaces. Hold on to the
-  // staged candidate, intersect both from here, and hand out the closer one.
+  // Hold the staged candidate back and hand out the closer one
   if (!state.pendingTarget.has_value()) {
     state.pendingTarget = nextStagedTarget(state, position, direction);
   }
@@ -315,8 +311,7 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
       !additionalTarget.isNone()) {
     NavigationTarget& staged = state.pendingTarget.value();
     if (!staged.isNone()) {
-      // The staged candidate was resolved earlier, so its stored path length
-      // is too long by the distance the propagation travelled since.
+      // The stored path length is stale by the distance travelled since
       const Intersection3D refreshed =
           staged.surface()
               .intersect(state.options.geoContext, position, direction,
@@ -328,8 +323,7 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
         staged.intersection() = refreshed;
       }
     }
-    // A tie goes to the staged candidate, so the tracking geometry keeps the
-    // handling of a surface that is in both
+    // A tie goes to the staged candidate
     if (staged.isNone() ||
         additionalTarget.pathLength() < staged.intersection().pathLength()) {
       ACTS_VERBOSE(volInfo(state)
@@ -360,8 +354,7 @@ NavigationTarget Navigator::nextAdditionalTarget(
       continue;
     }
 
-    // A surface can have two solutions, and the one behind the propagation
-    // can be the closer one, so weigh up every solution
+    // The closer solution can be behind the propagation, so check all
     const MultiIntersection3D multiIntersection =
         additional.entry->surface->intersect(
             state.options.geoContext, position, direction,
@@ -512,9 +505,8 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
   ACTS_VERBOSE(volInfo(state)
                << "Current surface: " << state.currentSurface->geometryId());
 
-  // An additional surface is outside the staged navigation, so reaching it must
-  // not advance the state machine. The geometry can offer the same surface,
-  // and then the staged handling applies.
+  // Reaching an additional surface does not advance the staged navigation,
+  // unless it also staged the surface
   if (!state.additionalSurfaces.empty()) {
     auto itr = std::ranges::find_if(
         state.additionalSurfaces,
@@ -851,8 +843,7 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
                               << " navigation candidates.");
 
-  // An extended surface can duplicate a policy candidate; the policies of a
-  // volume are expected to add disjoint candidates
+  // An extended surface can duplicate a policy candidate
   const bool candidatesAreUnique = nExtendedCandidates == 0;
   state.stream.initialize(state.options.geoContext, {position, direction},
                           logger(), state.options.surfaceTolerance,
@@ -907,8 +898,6 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
     extended.push_back(extendedSurface.surface);
   }
 
-  // Called from the sort comparator below, so it scans the extended surfaces of
-  // this layer only
   auto isExtended = [&extended](const NavigationTarget& target) {
     return rangeContainsValue(extended, &target.surface());
   };
