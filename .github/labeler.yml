@@ -14,13 +14,15 @@
     - any-glob-to-any-file:
       - Detray/**
       - Plugins/Detray/**
-      - .github/detray.yml
+      - .github/workflows/detray.yml
+      - .github/detray-traccc-filters.yml
 'Component - Traccc':
   - changed-files:
     - any-glob-to-any-file:
       - Traccc/**
       - Plugins/Traccc/**
-      - .github/traccc.yml
+      - .github/workflows/traccc.yml
+      - .github/detray-traccc-filters.yml
 'Component - Examples':
   - changed-files:
     - any-glob-to-any-file:
