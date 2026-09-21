@@ -41,11 +41,14 @@
 #include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <algorithm>
 #include <cstddef>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -89,12 +92,12 @@ ActsExamples::buildTelescopeDetectorGen3(
   const auto surfaceMaterial =
       std::make_shared<Acts::HomogeneousSurfaceMaterial>(matProp);
 
-  // temporary
-  if (rotDirection != Acts::AxisDirection::AxisZ) {
-    throw std::invalid_argument(
-        "Only AxisDirection::AxisZ is currently supported, as a possible "
-        "rotation");
-  }
+  //   // temporary
+  //   if (rotDirection != Acts::AxisDirection::AxisZ) {
+  //     throw std::invalid_argument(
+  //         "Only AxisDirection::AxisZ is currently supported, as a possible "
+  //         "rotation");
+  //   }
 
   // Construct the rotation
   // This assumes the direction is AxisX, AxisY or AxisZ. No reset is necessary
@@ -111,21 +114,35 @@ ActsExamples::buildTelescopeDetectorGen3(
   }
 
   Blueprint::Config cfg;
-  cfg.envelope[AxisDirection::AxisX] = {20_mm, 20_mm};
-  cfg.envelope[AxisDirection::AxisY] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisX] = {200_mm, 200_mm};
+  cfg.envelope[AxisDirection::AxisY] = {200_mm, 200_mm};
   cfg.envelope[AxisDirection::AxisZ] = {200_mm, 200_mm};
   // cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
   Blueprint root{cfg};
 
   auto& cubcontainer = root.addCuboidContainer("CuboidContainer", rotDirection);
 
+  std::filesystem::path debugOutputDir = "telescope_debug_obj";
+  std::filesystem::create_directories(debugOutputDir);
+
   std::size_t nLayers = positions.size();
   for (unsigned int i = 0; i < nLayers; i++) {
     // The translation without rotation yet
-    Acts::Translation3 trans(offsets[0], offsets[1], positions[i]);
+    Acts::Vector3 transVec;
+    if (rotDirection == Acts::AxisDirection::AxisX) {
+      transVec = Acts::Vector3(positions[i], offsets[0], offsets[1]);
+    } else if (rotDirection == Acts::AxisDirection::AxisY) {
+      transVec = Acts::Vector3(offsets[0], positions[i], offsets[1]);
+    } else {  // AxisZ
+      transVec = Acts::Vector3(offsets[0], offsets[1], positions[i]);
+    }
+    Acts::Translation3 trans(transVec);
+
     // The entire transformation (the coordinate system, whose center is defined
     // by trans, will be rotated as well)
-    Acts::Transform3 trafo(rotation * trans);
+    Acts::Transform3 trafo(trans * rotation);
+    // Acts::Transform3 trafo(rotation * trans);  // this is the wrong order of
+    // matrix multiplication
 
     // rotate around local z axis by stereo angle
     auto stereo = stereoAngles[i];
@@ -156,14 +173,35 @@ ActsExamples::buildTelescopeDetectorGen3(
     auto layerBounds = std::make_shared<CuboidVolumeBounds>(
         bounds[0] + 5_mm, bounds[1] + 5_mm, thickness / 2 + 1_mm);
 
+    if (rotDirection == Acts::AxisDirection::AxisX) {
+      layerBounds = std::make_shared<CuboidVolumeBounds>(
+          thickness / 2 + 1_mm, bounds[0] + 5_mm, bounds[1] + 5_mm);
+    } else if (rotDirection == Acts::AxisDirection::AxisY) {
+      layerBounds = std::make_shared<CuboidVolumeBounds>(
+          bounds[0] + 5_mm, thickness / 2 + 1_mm, bounds[1] + 5_mm);
+    } else if (rotDirection == Acts::AxisDirection::AxisZ) {
+      layerBounds = std::make_shared<CuboidVolumeBounds>(
+          bounds[0] + 5_mm, bounds[1] + 5_mm, thickness / 2 + 1_mm);
+    }
+
     auto layerVol = std::make_unique<TrackingVolume>(
-        trafo, layerBounds, "parent" + std::to_string(i));
+        Acts::Transform3{trans}, layerBounds, "parent" + std::to_string(i));
 
     // Get the surface
     auto surface = detElement->surface().getSharedPtr();
     layerVol->addSurface(surface);
 
-    // layerVol->assignGeometryId(GeometryIdentifier{}.withVolume(1));
+    // // --- Debug-Export ---
+    // {
+    //   Acts::ObjVisualization3D vis;
+    //   Acts::GeometryView3D::drawVolume(vis, *layerVol, gctx);
+    //   vis.write((debugOutputDir / ("layer_" + std::to_string(i) +
+    //   ".obj")).string()); Acts::GeometryView3D::drawSurface(vis, *surface,
+    //   gctx); vis.write((debugOutputDir / ("surface_" + std::to_string(i) +
+    //   ".obj")).string());
+    // }
+    // // --- End Debug-Export ---
+
     auto layerNode = std::make_shared<StaticBlueprintNode>(std::move(layerVol));
 
     cubcontainer.addChild(std::move(layerNode));
