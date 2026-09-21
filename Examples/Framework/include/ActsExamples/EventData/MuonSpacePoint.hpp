@@ -209,8 +209,10 @@ class MuonSpacePointBucket : public std::vector<MuonSpacePoint> {
   using Base = std::vector<MuonSpacePoint>;
   using Base::Base;
   /// @brief Define the transformation from the local frame to the sector frame
-  void setToSectorFrameTransform(Acts::Transform3&& transform) {
-    m_toSectorFrameTransform = std::move(transform);
+  void setToSectorFrameTransform(const Acts::Vector3& translation, 
+                                 const Acts::SquareMatrix<3>& rotation) {
+    m_toSectorFrameTransform.translation() = translation;
+    m_toSectorFrameTransform.linear() = rotation;
   }
   /// @brief Returns the transformation from the local frame to the sector frame
   const Acts::Transform3& toSectorFrameTransform() const {

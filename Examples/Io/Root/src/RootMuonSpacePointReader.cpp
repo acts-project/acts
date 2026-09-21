@@ -77,17 +77,17 @@ ProcessCode RootMuonSpacePointReader::read(const AlgorithmContext& context) {
       };
       SquareMatrix<3> toSectorRotation{};
       toSectorRotation.col(0) = makeDirectionFromPhiTheta<double>(
-            m_toSectorFrameRotationPhiX->at(spIdx) * 1._degree,
-            m_toSectorFrameRotationThetaX->at(spIdx) * 1._degree);
+            m_toSectorFrameLinearCol0Phi->at(spIdx) * 1._degree,
+            m_toSectorFrameLinearCol0Theta->at(spIdx) * 1._degree);
       toSectorRotation.col(1) = makeDirectionFromPhiTheta<double>(
-            m_toSectorFrameRotationPhiY->at(spIdx) * 1._degree,
-            m_toSectorFrameRotationThetaY->at(spIdx) * 1._degree);
+            m_toSectorFrameLinearCol1Phi->at(spIdx) * 1._degree,
+            m_toSectorFrameLinearCol1Theta->at(spIdx) * 1._degree);
       toSectorRotation.col(2) = makeDirectionFromPhiTheta<double>(
-            m_toSectorFrameRotationPhiZ->at(spIdx) * 1._degree,
-            m_toSectorFrameRotationThetaZ->at(spIdx) * 1._degree);
+            m_toSectorFrameLinearCol2Phi->at(spIdx) * 1._degree,
+            m_toSectorFrameLinearCol2Theta->at(spIdx) * 1._degree);
 
-      outSpacePoints.back().setToSectorFrame(std::move(toSectorTranslation),
-            std::move(toSectorRotation));
+      outSpacePoints.back().setToSectorFrameTransform(toSectorTranslation,
+                                                      toSectorRotation);
       ACTS_VERBOSE("Loaded new space point bucket with transformation "
           << toString(outSpacePoints.back().toSectorFrameTransform()));
     }

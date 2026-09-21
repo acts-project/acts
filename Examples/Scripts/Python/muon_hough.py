@@ -6,11 +6,10 @@ import acts
 
 from acts.examples import (
     CsvMuonSpacePointReader,
-    CsvMuonSegmentReader,
-    MuonHoughSeeder,
-    RootMuonSpacePointReader,
+    CsvMuonSegmentReader
 )
 
+from acts.examples.ActsExamplesPythonBindingsRoot import RootMuonSpacePointReader
 u = acts.UnitConstants
 rnd = acts.examples.RandomNumbers(seed=42)
 
@@ -20,11 +19,14 @@ def runHoughFromRoot(inFile: str, nEvents: int):
         events=nEvents, numThreads=1, logLevel=acts.logging.VERBOSE
     )
 
-    # Read input space points from input csv files
+    readerCfg = RootMuonSpacePointReader.Config()
+    readerCfg.filePath = inFile
+    readerCfg.outputSpacePoints = "MuonSpacePoints"
+    readerCfg.treeName = "MuonSpacePoints"
+
     evReader = RootMuonSpacePointReader(
-        filePath=inFile,
-        outputSpacePoints="MuonSpacePoints",
-        level=acts.logging.VERBOSE,
+        readerCfg,
+        acts.logging.Level.VERBOSE,
     )
     s.addReader(evReader)
 
