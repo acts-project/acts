@@ -40,7 +40,7 @@ class wrappedFileHandle {
   explicit wrappedFileHandle(const std::filesystem::path& outf = "")
       : m_path(outf) {
     if (!outf.empty()) {
-      m_handle = open(outf.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      m_handle = open(outf.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0640);
     }
   }
   ~wrappedFileHandle() {
@@ -161,7 +161,7 @@ ActsPlugins::ActsToMille::runChildProcess(
     if (e) {
       return ActsPlugins::ActsToMille::childProcessStatus::failedWorkDir;
     }
-  };
+  }
 
   wrappedFileHandle outputHandle;  // defaults to "do not redirect"
 

@@ -41,8 +41,7 @@ Acts::Result<MillePedeSolver::mpResult> MillePedeSolver::solve(
   // make sure the steering file exists (or is empty)
   std::vector<std::string> mpArgs = cfg.extraOpts;
 
-  std::filesystem::path steerPath = cfg.steeringFile;
-  if (!steerPath.empty()) {
+  if (std::filesystem::path steerPath = cfg.steeringFile; !steerPath.empty()) {
     if (steerPath.is_relative()) {
       steerPath = std::filesystem::current_path() / steerPath;
     }
@@ -170,18 +169,19 @@ MillePedeSolver::readDetailedExit(const std::filesystem::path& mpend) const {
 MillePedeSolver::mpExitStatus MillePedeSolver::interpretExit(int theExitCode) {
   // implementation follows
   // https://millepede.pages.desy.de/millepede-ii/exit_code_page.html
+  using enum MillePedeSolver::mpExitStatus;
   if (theExitCode < 0) {
-    return mpExitStatus::notFinishedOrCrashed;
+    return notFinishedOrCrashed;
   } else if (theExitCode == 0) {
-    return mpExitStatus::nominalExit;
+    return nominalExit;
   } else if (theExitCode == 1) {
-    return mpExitStatus::tolerableWarnings;
+    return tolerableWarnings;
   } else if (theExitCode <= 4) {
-    return mpExitStatus::seriousWarnings;
+    return seriousWarnings;
   } else if (theExitCode == 5) {
-    return mpExitStatus::noSolution;
+    return noSolution;
   } else {
-    return mpExitStatus::aborted;
+    return aborted;
   }
 }
 

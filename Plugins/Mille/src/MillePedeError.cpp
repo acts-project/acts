@@ -20,15 +20,16 @@ class MillePedeErrorCategory : public std::error_category {
   // Return what each enum means in text.
   std::string message(int c) const final {
     using ActsPlugins::ActsToMille::MillePedeError;
+    using enum MillePedeError;
 
     switch (static_cast<MillePedeError>(c)) {
-      case MillePedeError::InstallationNotFound:
+      case InstallationNotFound:
         return "Installation of the 'pede' program was not found";
-      case MillePedeError::SteeringNotFound:
+      case SteeringNotFound:
         return "Steering file for `pede` was not found at configured location";
-      case MillePedeError::SolverCrash:
+      case SolverCrash:
         return "The solver crashed";
-      case MillePedeError::InvalidSolution:
+      case InvalidSolution:
         return "The solver encountered a serious error and found no valid "
                "solution";
       default:
