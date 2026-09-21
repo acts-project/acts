@@ -28,7 +28,7 @@ namespace {
 
 namespace Acts::Experimental::detail {
 
-template <HitPayload Hit_t, 
+template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
 void 
@@ -46,7 +46,7 @@ PatternState<Hit_t, Sector_t, Topology_t>::moveLineAnchorHit(
     const auto& closestGroupIt = std::ranges::min_element(hitsPerGroup, std::ranges::less{},
         [&refHit](const auto& hits){
             if (hits.empty() || 
-                    Topology_t::GroupIndex(*hits.front()) == Topology_t::GroupIndex(*refHit)) {
+                    Topology_t::groupIndex(*hits.front()) == Topology_t::groupIndex(*refHit)) {
                 return std::numeric_limits<int>::max();
             }
             return std::abs(hits.front().globLayer - refHit.globLayer);
@@ -59,7 +59,7 @@ PatternState<Hit_t, Sector_t, Topology_t>::moveLineAnchorHit(
             return std::abs(hit.globLayer - refHit.globLayer); });
 }
 
-template <HitPayload Hit_t, 
+template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
 void 
@@ -78,8 +78,8 @@ PatternState<Hit_t, Sector_t, Topology_t>::updateLineParameters(
     /** Check whether we have to use the beamspot instead of the anchor hit to draw the line. */
     useBeamspot = leverArm < cfg->minHitDistance4Line;
     if (useBeamspot) {
-        linePos = beamSpot;
-        d = pos2 - beamSpot;
+        linePos = beamSpot.position;
+        d = pos2 - beamSpot.position;
         leverArm = d.norm();
     } else {
         linePos = pos1;
@@ -91,22 +91,24 @@ PatternState<Hit_t, Sector_t, Topology_t>::updateLineParameters(
         <<", lineDir: "<<toString(lineDir)<<", LeverArm: "
         <<leverArm<<", Use beamspot: "<<useBeamspot);
 }
-template <HitPayload Hit_t, 
+template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
 typename PatternState<Hit_t, Sector_t, Topology_t>::LineTestRes 
 PatternState<Hit_t, Sector_t, Topology_t>::computeLineResidual(
     const GeometryContext& gctx, 
-    const OrderedHit& testHit) const 
+    const OrderedHit& testHit,
+    const BeamspotInfo& beamSpot) const 
 {
     LineTestRes res{};
 
     /** We project the test hit onto the phi plane only when the test hit does 
         *  not measure phi or when we have no phi layers, otherwise we do not project
         *  so the residual include the error in the phi direction. */
-    const bool projectTestHit {!testHit.sp()->measuresLoc0() || nPhiLayers == 0u};
+    const bool projectTestHit {!testHit->spacePoint()->measuresLoc0() || 
+                               nPhiLayers == 0u};
     const Vector3 testPos {projectTestHit ? projToPhiPlane(gctx,*testHit) 
-                                          : testHit->position};
+                                          : testHit->globalPosition(gctx)};
     const Vector3 K {testPos - linePos};
     const double KdotD {K.dot(lineDir)};
     
@@ -149,23 +151,23 @@ PatternState<Hit_t, Sector_t, Topology_t>::computeLineResidual(
                 
         if (!isProjected) {
             residualCovAcc += Acts::square(preFactor) * 
-                hit.residualVariance(gctx, resDir, /*isProjected=*/false);
+                hit.intrinsicVariance(gctx, resDir);
             return;
         }
-        const Vector3 sensorDir {hit.sensorDir(gctx)};
+        const Vector3 sensorDir {hit.globalSensorDirection(gctx)};
         const double projFactor {sensorDir.dot(resDir) / 
                                     sensorDir.dot(bendPlaneNorm)};
         const Vector3 trfDir {resDir - projFactor * bendPlaneNorm};
         
         residualCovAcc += Acts::square(preFactor) 
-            * hit.residualVariance(gctx, trfDir, /*isProjected=*/true);  
+            * hit.intrinsicVariance(gctx, trfDir);  
         phiPlaneDerivativeAcc += preFactor * Acts::fastHypot(pos.x(), pos.y()) * projFactor;
     };
 
     /** Compute the covariance contributions of the first line point */
     if (useBeamspot) {
-        const double covS1 = cfg->beamSpotLength * Acts::square(resDir.z()) + 
-                                cfg->beamSpotRadius * (1 - Acts::square(resDir.z()));
+        const double covS1 = beamSpot.length * Acts::square(resDir.z()) + 
+                             beamSpot.radius * (1 - Acts::square(resDir.z()));
         residualCovAcc += Acts::square(alpha - 1) * covS1;
     } else {
         covarianceTerm(*lineAnchorHit, linePos, alpha - 1, /*isProjected=*/true);
@@ -188,7 +190,7 @@ PatternState<Hit_t, Sector_t, Topology_t>::computeLineResidual(
         <<", phi plane sigma: "<<std::abs(phiPlaneDerivativeAcc)*std::sqrt(patPhiCov));
     return res;
 }
-template <HitPayload Hit_t, 
+template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
 Vector3
@@ -196,15 +198,17 @@ PatternState<Hit_t, Sector_t, Topology_t>::projToPhiPlane(
     const Acts::GeometryContext& gctx, 
     const Hit_t& hit) const 
 {
-    return Acts::PlanarHelper::intersectPlane(hit.position, hit.sensorDir(gctx),
-        bendPlaneNorm, Vector3::Zero()).position();        
+    return Acts::PlanarHelper::intersectPlane(hit.globalPosition(gctx), 
+                                              hit.globalSensorDirection(gctx),
+                                              bendPlaneNorm, Vector3::Zero()).position();        
 }
 
-template <HitPayload Hit_t, 
+template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
 void 
-PatternState<Hit_t, Sector_t, Topology_t>::updatePatternPhi() 
+PatternState<Hit_t, Sector_t, Topology_t>::updatePatternPhi(
+    const GeometryContext& gctx)
 {
     if (nPhiLayers == 0) {
         /** If there are no phi hits, we just use the central phi of the sector/overlap region, 
@@ -219,18 +223,19 @@ PatternState<Hit_t, Sector_t, Topology_t>::updatePatternPhi()
     }
     double sumSin{0.}, sumCos{0.}, sumWeight{0.};
 
-    auto processPhiHit = [&sumSin, &sumCos, &sumWeight](const Hit_t& hit){
-        if (!hit->measuresLoc0()) {
+    auto processPhiHit = [&](const Hit_t& hit){
+        if (!hit.spacePoint()->measuresLoc0()) {
             return;
         }
-        if (hit.phiCov < Acts::s_epsilon) {
+        const double phiCov {hit.phiVariance(gctx)};
+        if (phiCov < Acts::s_epsilon) {
             std::stringstream ss {};
-            ss << "Unexpected to have a phi hit with zero variance in phi direction: " << *hit.spacePoint << "\n";
+            ss << "Unexpected to have a phi hit with zero variance in phi direction: " << *hit.spacePoint() << "\n";
             throw std::runtime_error(ss.str());
         }
-        const double w = 1./hit.phiCov;
+        const double w = 1./phiCov;
 
-        const double phi {hit.position.phi()};
+        const double phi {hit.globalPosition(gctx).phi()};
         sumSin += w * std::sin(phi);
         sumCos += w * std::cos(phi);
         sumWeight += w;
@@ -251,24 +256,25 @@ PatternState<Hit_t, Sector_t, Topology_t>::updatePatternPhi()
         <<inDeg(patPhi)<<" +- "<<inDeg(std::sqrt(patPhiCov)));
 }
 
-template <HitPayload Hit_t, 
+template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
 bool 
 PatternState<Hit_t, Sector_t, Topology_t>::isPhiCompatible(
+    const GeometryContext& gctx,
     const Hit_t& hit) const 
 {
     /** We check that the test hit is compatible with the pattern phi, if available, which is given by the first
         *  phi measurement in the pattern. If the pattern doesn't have a phi yet, we check that the test hit is in 
         *  the same pattern sector(s) */
-    const double testPhi {hit.position.phi()};
+    const double testPhi {hit.globalPosition(gctx).phi()};
     if (nPhiLayers > 0) {
-        const double deltaPhiSigma {std::sqrt(patPhiCov + hit.phiCov)};
+        const double deltaPhiSigma {std::sqrt(patPhiCov + hit.phiVariance(gctx))};
         const double deltaPhi {Acts::detail::difference_periodic(
             patPhi, testPhi, 2. * std::numbers::pi)};
         if (std::abs(deltaPhi) > cfg->nPhiSigma * deltaPhiSigma) {
             ACTS_VERBOSE(__func__<<"() The pattern with phi = "<<inDeg(patPhi)<<" +- "<<inDeg(std::sqrt(patPhiCov))
-                <<" is not compatible with the test hit with phi "<<inDeg(testPhi) <<" +- "<<inDeg(std::sqrt(hit.phiCov)));
+                <<" is not compatible with the test hit with phi "<<inDeg(testPhi) <<" +- "<<inDeg(std::sqrt(hit.phiVariance(gctx))));
             return false;
         }
     } else {
@@ -281,11 +287,12 @@ PatternState<Hit_t, Sector_t, Topology_t>::isPhiCompatible(
     return true;
 }
 
-template <HitPayload Hit_t, 
+template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
 void 
 PatternState<Hit_t, Sector_t, Topology_t>::addHit(
+    const GeometryContext& gctx,
     const OrderedHit& hit,
     const double residual,
     const double resSigma) 
@@ -299,9 +306,9 @@ PatternState<Hit_t, Sector_t, Topology_t>::addHit(
     } else {
         nTriggerLayers++;
     }
-    if (hit.sp()->measuresLoc0()) {
+    if (hit->spacePoint()->measuresLoc0()) {
         nPhiLayers++;
-        updatePatternPhi();
+        updatePatternPhi(gctx);
     }
 
     /** Update the pointers to previous layer hit */
@@ -321,16 +328,17 @@ PatternState<Hit_t, Sector_t, Topology_t>::addHit(
     needLineUpdate = true;
 }
 
-template <HitPayload Hit_t, 
+template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
 void 
 PatternState<Hit_t, Sector_t, Topology_t>::overWriteHit(
+    const GeometryContext& gctx,
     const OrderedHit& newHit,
     const double newResidual,
     const double newResSigma) 
 {
-    const auto group {Topology_t::groupIndex(newHit)};
+    const auto group {Topology_t::groupIndex(*newHit)};
     if (group != Topology_t::groupIndex(*lastInsertedHit) || 
             lastInsertedHit.globLayer != newHit.globLayer) {
         throw std::runtime_error(std::format(
@@ -351,11 +359,11 @@ PatternState<Hit_t, Sector_t, Topology_t>::overWriteHit(
     }
     /** Update the phi counts */
     bool updatePhi {false};
-    if (lastInsertedHit.sp()->measuresLoc0()) {
+    if (lastInsertedHit->spacePoint()->measuresLoc0()) {
         nPhiLayers--;
         updatePhi = true;
     }
-    if (newHit.sp()->measuresLoc0()) {
+    if (newHit->spacePoint()->measuresLoc0()) {
         nPhiLayers++;
         updatePhi = true;
     }
@@ -368,10 +376,10 @@ PatternState<Hit_t, Sector_t, Topology_t>::overWriteHit(
     auto& stHits {hitsPerGroup[group]};
     if (stHits.back() != lastInsertedHit) {
         std::stringstream ss {};
-        ss << "Trying to overwrite a hit that is not the last inserted hit in station/layer " 
+        ss << "Trying to overwrite a hit that is not the last inserted hit in group/layer " 
         << static_cast<int>(group) << "/" << lastInsertedHit.globLayer << "\n";
-        ss << "Last inserted hit: " << **lastInsertedHit << "\n";
-        ss << "Last hit in station: " << **stHits.back();
+        ss << "Last inserted hit: " << *lastInsertedHit->spacePoint() << "\n";
+        ss << "Last hit in group: " << *stHits.back()->spacePoint();
         throw std::runtime_error(ss.str());
     }
     stHits.pop_back();
@@ -381,12 +389,12 @@ PatternState<Hit_t, Sector_t, Topology_t>::overWriteHit(
     lastInsertedHit = newHit;
 
     if (updatePhi) {
-        updatePatternPhi();
+        updatePatternPhi(gctx);
     }
     needLineUpdate = true;
 }
 
-template <HitPayload Hit_t, 
+template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
 bool 
@@ -398,7 +406,7 @@ PatternState<Hit_t, Sector_t, Topology_t>::isInPattern(
         [&hit](const OrderedHit& c){ return *c == hit; }) != hits.end();                                           
 }
 
-template <HitPayload Hit_t, 
+template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
 double 
@@ -409,23 +417,23 @@ PatternState<Hit_t, Sector_t, Topology_t>::getMeanResidual2() const {
     return meanNormResidual2 / nBendingLayers();
 }
 
-template <HitPayload Hit_t, 
+template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
-typename Topology_t::LayerIndex 
+typename Topology_t::LayerIdx 
 PatternState<Hit_t, Sector_t, Topology_t>::nBendingLayers() const {
     return nPrecisionLayers + nTriggerLayers;
 }
 
-template<HitPayload Hit_t,
+template<GlobPatFinderHit Hit_t,
          SectorType Sector_t,
          PatternTopology<Hit_t> Topology_t>
-typename Topology_t::GroupIndex 
+typename Topology_t::GroupIdx 
 PatternState<Hit_t, Sector_t, Topology_t>::countGroups(
     const bool onlyGoodGroups) const 
 {
-    typename Topology_t::GroupIndex nGroups = 0u;
-    for (typename Topology_t::GroupIndex g = 0u; g < Topology_t::nGroups; ++g) {
+    typename Topology_t::GroupIdx nGroups = 0u;
+    for (typename Topology_t::GroupIdx g = 0u; g < Topology_t::nGroups; ++g) {
         const auto& hits {hitsPerGroup[g]};
         if (!hits.empty() && 
                 (!onlyGoodGroups || hits.size() >= cfg->minGroupLayers)) {
@@ -433,5 +441,101 @@ PatternState<Hit_t, Sector_t, Topology_t>::countGroups(
         }
     }
     return nGroups;
+}
+
+template <GlobPatFinderHit Hit_t, 
+          SectorType Sector_t, 
+          PatternTopology<Hit_t> Topology_t>
+typename PatternState<Hit_t, Sector_t, Topology_t>::PatternPrintView 
+PatternState<Hit_t, Sector_t, Topology_t>::brief(const PatternState& p) {
+    return {p, /*detailed=*/false};
+}
+
+template <GlobPatFinderHit Hit_t, 
+          SectorType Sector_t, 
+          PatternTopology<Hit_t> Topology_t>
+typename PatternState<Hit_t, Sector_t, Topology_t>::PatternPrintView 
+PatternState<Hit_t, Sector_t, Topology_t>::detailed(const PatternState& p) {
+    return {p, /*detailed=*/true};
+}
+
+
+template <GlobPatFinderHit Hit_t, 
+          SectorType Sector_t, 
+          PatternTopology<Hit_t> Topology_t>
+PatternState<Hit_t, Sector_t, Topology_t>::PatternState(
+    const GeometryContext& gctx,
+    const OrderedHit& seed,
+    const typename Sector_t::Index_t  expSector,          
+    const Config* cfg,
+    const Acts::Logger* logger)
+        : cfg{cfg},
+          m_logger{logger},
+          lastInsertedHit{seed},
+          prevLayerHit{seed},
+          lineAnchorHit{seed},
+          patTheta{seed->globalPosition(gctx).theta()},
+          expSect{expSector} {
+                
+        /** Add the new hit */
+        hitsPerGroup[Topology_t::groupIndex(*seed)].push_back(seed);
+
+        /** Update the hit counts */
+        if (seed->isPrecision()) {
+            nPrecisionLayers++;
+        } else {
+            nTriggerLayers++;
+        }
+        if (seed->spacePoint()->measuresPhi()) {
+            nPhiLayers++;
+        }
+        updatePatternPhi(gctx);
+        needLineUpdate = true;
+    }
+
+template<GlobPatFinderHit Hit_t, 
+         SectorType Sector_t, 
+         PatternTopology<Hit_t> Topology_t>
+void PatternState<Hit_t, Sector_t, Topology_t>::print(
+    std::ostream& ostr, 
+    bool detailed) const 
+{
+    using namespace Acts::UnitLiterals;
+    auto inDeg = [](double angle) { return angle / 1._degree; };
+    ostr<<"PatternState Exp Sector: "<<static_cast<int>(expSect.sector())
+    <<", Theta: "<<inDeg(patTheta) << ", Phi: "<<inDeg(patPhi)<<" +- "<<inDeg(std::sqrt(patPhiCov));
+    ostr<<", nPrec: "<<static_cast<int>(nPrecisionLayers)<<", nEtaNonPrec: "
+        <<static_cast<int>(nTriggerLayers)<<", nPhi: "<<static_cast<int>(nPhiLayers);
+    ostr<<", mean norma res sq: "<<getMeanResidual2()<<", dir: "<<toString(lineDir);
+    ostr<<", Hit per group: \n";
+    for (typename Topology_t::GroupIdx g = 0u; g < Topology_t::nGroups; ++g) {
+        const auto& hits {hitsPerGroup[g]};
+        if (hits.empty()) {
+            continue;
+        }
+
+        ostr<<"  Group "<<static_cast<int>(g)<<" has "<<hits.size()<<" hits ";
+        if (detailed) {
+            ostr<<"\n";
+            for (const auto& hit : hits) {
+                ostr<<"    "<<*hit->spacePoint()<<", globLay: "<<static_cast<int>(hit.globLayer)<<"\n";
+            }
+        }
+    }
+    if (!detailed) {
+        ostr<<"\n";
+        ostr<<"  Last inserted hit: "<<lastInsertedHit<<"\n";
+        ostr<<"  Previous layer hit: "<<prevLayerHit<<"\n";
+        ostr<<"  Line anchor hit: "<<lineAnchorHit<<"\n";
+    }
+}
+
+template <GlobPatFinderHit Hit_t, 
+          SectorType Sector_t, 
+          PatternTopology<Hit_t> Topology_t>
+void
+PatternState<Hit_t, Sector_t, Topology_t>::OrderedHit::print(std::ostream& ostr) const {
+    ostr<<*hitPtr->spacePoint()<< ", group: " << static_cast<int>(Topology_t::groupIndex(*hitPtr)) 
+        <<", globLay: "<<static_cast<int>(globLayer);
 }
 }

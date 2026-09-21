@@ -15,12 +15,11 @@
 
 namespace Acts::Experimental::detail {
 
-template <typename HitPayload_t>
-concept HitPayload = requires(const HitPayload_t hit,
-                              const GeometryContext& gctx,
-                              const Vector3& contractionVector,
-                              const bool isProjected,
-                              const HitPayload_t& otherHit) {
+template <typename Hit_t>
+concept GlobPatFinderHit = requires(const Hit_t hit,
+                                    const GeometryContext& gctx,
+                                    const Vector3& contractionVector,
+                                    const Hit_t& otherHit) {
 
     /// Unit vector pointing to the next strip/straw in the plane or in case of a
     /// combined measurement, the complementary strip direction
@@ -37,7 +36,7 @@ concept HitPayload = requires(const HitPayload_t hit,
     { hit.globalSensorDirection(gctx) } -> std::convertible_to<const Vector3>;
   
     /// Contraction of the hit position covariance along the given contraction vector.
-    { hit.intrinsicVariance(gctx, contractionVector, isProjected) } -> std::same_as<double>;
+    { hit.intrinsicVariance(gctx, contractionVector) } -> std::same_as<double>;
     /// Radius of the variance in [rad] of the space point measurement.
     { hit.phiVariance(gctx) } -> std::same_as<double>;
     /// Whether the hit is a precision measurement
@@ -48,19 +47,19 @@ concept HitPayload = requires(const HitPayload_t hit,
 
 template<typename T, typename Hit_t>
 concept PatternTopology = 
-    HitPayload<Hit_t> && 
+    GlobPatFinderHit<Hit_t> && 
     requires(const Hit_t& hit1, 
              const Hit_t& hit2,
              const Hit_t& hit) {
-    typename T::GroupIndex;
-    typename T::LayerIndex;
-    requires std::unsigned_integral<typename T::GroupIndex>;
-    requires std::unsigned_integral<typename T::LayerIndex>;
+    typename T::GroupIdx;
+    typename T::LayerIdx;
+    requires std::unsigned_integral<typename T::GroupIdx>;
+    requires std::unsigned_integral<typename T::LayerIdx>;
 
-    { T::nGroups } -> std::same_as<uint8_t>;
+    { T::nGroups } -> std::convertible_to<typename T::GroupIdx>;
     { T::layerSorter(hit1, hit2) } -> std::same_as<bool>;
     { T::sameLayer(hit1, hit2) } -> std::same_as<bool>;
-    { T::groupIndex(hit) } -> std::same_as<typename T::GroupIndex>;
+    { T::groupIndex(hit) } -> std::convertible_to<typename T::GroupIdx>;
 };
 
 template<typename Sector_t>
@@ -80,7 +79,7 @@ concept SectorType = requires(const Sector_t& sector,
 };
 
 /** @brief Pattern state object storing pattern information during construction */
-template<HitPayload Hit_t,
+template<GlobPatFinderHit Hit_t,
          SectorType Sector_t,
          PatternTopology<Hit_t> Topology_t>
 struct PatternState {
@@ -113,7 +112,12 @@ struct PatternState {
         /** @brief Pointer to the underlying hit */
         const Hit_t* hitPtr{nullptr};
         /** @brief Global measurement layer number */
-        typename Topology_t::LayerIndex globLayer{0u};
+        typename Topology_t::LayerIdx globLayer{0u};
+        // Forward commonly used accessors for convenience
+        const Hit_t* operator->() const { return hitPtr; }
+        const Hit_t& operator*() const { return *hitPtr; }
+        bool operator==(const OrderedHit& other) const { return *hitPtr == *other.hitPtr; }
+        bool operator==(const Hit_t& other) const { return *hitPtr == other; }
         // Print and stream operator
         friend std::ostream& operator<<(std::ostream& ostr, const OrderedHit& c) {
             c.print(ostr);
@@ -141,7 +145,8 @@ struct PatternState {
         *  @param expSector: sector index of the seed hit
         *  @param cfg: pointer to configuration object
         *  @param logger: pointer to messaging object */
-    explicit PatternState(const OrderedHit& seed,
+    explicit PatternState(const GeometryContext& gctx,
+                          const OrderedHit& seed,
                           const typename Sector_t::Index_t expSector,
                           const Config* cfg,
                           const Logger* logger);
@@ -164,7 +169,8 @@ struct PatternState {
         *  @param hit: hit to be added
         *  @param residual: residual of the hit
         *  @param resSigma: residual uncertainty of the hit */
-    void addHit(const OrderedHit& hit,
+    void addHit(const GeometryContext& gctx,
+                const OrderedHit& hit,
                 const double residual,
                 const double resSigma);
     /** @brief Overwrite the hits on the last layer with the new one
@@ -172,14 +178,17 @@ struct PatternState {
         *  @param newResidual: residual of the new hit 
         *  @param newResSigma: residual uncertainty of the new hit
         *  @param beamSpot: needed to update line parameters */
-    void overWriteHit(const OrderedHit& newHit,
+    void overWriteHit(const GeometryContext& gctx,
+                      const OrderedHit& newHit,
                       const double newResidual,
                       const double newResSigma);
     /** @brief Method to compute the residual of a test hit against the pattern line
         *  @param testHit: test hit information
+        *  @param beamSpot: position of the beam spot
         *  @return: Test result holding the residual and acceptance window. The decision is set later. */
     LineTestRes computeLineResidual(const GeometryContext& gctx,
-                                    const OrderedHit& testHit) const;
+                                    const OrderedHit& testHit,
+                                    const BeamspotInfo& beamSpot) const;
     /** @brief Project a certain hit position onto the bending plane where the pattern is defined. 
         *         The hit is moved along the sensor direction if it does not measure phi, 
         *         or is rotated around the Z axis if it does.
@@ -188,9 +197,11 @@ struct PatternState {
     Vector3 projToPhiPlane(const GeometryContext& gctx,
                            const Hit_t& hit) const;
     /** @brief Method to check the phi compatibility of a test hit with a given pattern
+        *  @param gctx: geometry context
         *  @param hit: hit to be checked
         *  @return: true if the test hit is phi compatible with the pattern, false otherwise */
-    bool isPhiCompatible(const Hit_t& hit) const;
+    bool isPhiCompatible(const GeometryContext& gctx, 
+                         const Hit_t& hit) const;
     /** @brief Check wheter a hit is present in the pattern
         *  @param hit: hit to be checked
         *  @return: boolean indicating if the hit is in the pattern */
@@ -203,15 +214,15 @@ struct PatternState {
     void updateLineParameters(const GeometryContext& gctx,
                               const BeamspotInfo& beamSpot);
     /** @brief Helper method to update the pattern phi and bending plane normal */
-    void updatePatternPhi();
+    void updatePatternPhi(const GeometryContext& gctx);
     /** @brief Return the mean normalized residual squared */
     double getMeanResidual2() const;
     /** @brief Method returning the number of groups
      *  @param onlyGoodGroups: flag to indicate if only good groups should be counted,
      *         i.e. having a minimum number of hits */
-    Topology_t::GroupIndex countGroups(const bool onlyGoodGroups) const;
+    typename Topology_t::GroupIdx countGroups(const bool onlyGoodGroups) const;
     /** @brief Return the number of layers in bending coordinate */
-    Topology_t::LayerIndex nBendingLayers() const;
+    typename Topology_t::LayerIdx nBendingLayers() const;
     
     /** @brief Return the logger */
     const Logger& logger() const {
@@ -251,9 +262,9 @@ struct PatternState {
     /** @brief Sector */
     Sector_t expSect{static_cast<typename Sector_t::Index_t>(0u)};
     /** @brief Counts of precision / non-precision / phi layers  */
-    Topology_t::LayerIndex nPrecisionLayers{0u};
-    Topology_t::LayerIndex nTriggerLayers{0u};
-    Topology_t::LayerIndex nPhiLayers{0u};
+    typename Topology_t::LayerIdx nPrecisionLayers{0u};
+    typename Topology_t::LayerIdx nTriggerLayers{0u};
+    typename Topology_t::LayerIdx nPhiLayers{0u};
     /** @brief Flag to indicate if the pattern has been finalized */
     bool isFinalized{false};
     /** @brief Flag to indicate if the pattern is overlapping with another one, used during overlap removal */
@@ -264,7 +275,7 @@ struct PatternState {
     bool needLineUpdate{false};
     
     /** @brief Map collection of hits per station. A pattern is determined by the hits belonging to it. */
-    std::array<std::vector<const Hit_t*>, Topology_t::nGroups> hitsPerGroup{};
+    std::array<std::vector<OrderedHit>, Topology_t::nGroups> hitsPerGroup{};
     /** @brief Array holding phi-only hits */
     std::vector<Hit_t> phiOnlyHits{};
 
@@ -292,3 +303,4 @@ struct PatternState {
 };
 
 }
+#include "Acts/Seeding/detail/GlobalPatternFinderAuxiliaries.ipp"
