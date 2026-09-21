@@ -77,7 +77,8 @@ void generateStrawSurfaces(const TrapezoidVolumeBounds& volBounds,
 
   const auto nLayers = static_cast<std::size_t>(
       std::floor(2 * halfZ / (std::sqrt(3.) * strawRadius)));
-  std::size_t nStraws = std::floor(((halfX) / strawRadius));
+  const auto nStraws =
+      static_cast<std::size_t>(std::floor(((halfX) / strawRadius)));
   std::cout << nLayers << std::endl;
   std::cout << nStraws << std::endl;
   Vector3 ipos = {-halfX + strawRadius, -0., -halfZ + strawRadius};
