@@ -9,6 +9,7 @@
 
 // Local include(s).
 #include "traccc/cuda/utils/algorithm_base.hpp"
+#include "traccc/cuda/utils/await.hpp"
 
 // Project include(s).
 #include "traccc/clusterization/device/clusterization_algorithm.hpp"
@@ -34,11 +35,13 @@ class clusterization_algorithm : public device::clusterization_algorithm,
   /// @param str The CUDA stream to perform the operations in
   /// @param config The clustering configuration partition
   /// @param logger The logger instance to use for messaging
+  /// @param await_func The function to use for synchronizing events
   ///
   clusterization_algorithm(
       const traccc::memory_resource& mr, const vecmem::copy& copy,
       const stream_wrapper& str, const config_type& config,
-      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
+      await_function_type await_func = await_sync_event);
 
  private:
   /// @name Function(s) inherited from the base class

@@ -20,7 +20,7 @@
 namespace detray {
 
 /// @returns the total number of portals in the detector @param det
-template <typename detector_t>
+template <concepts::detector detector_t>
 DETRAY_HOST_DEVICE inline std::size_t n_portals(const detector_t& det) {
   std::size_t n_portals{0u};
 
@@ -32,7 +32,7 @@ DETRAY_HOST_DEVICE inline std::size_t n_portals(const detector_t& det) {
 }
 
 /// @returns the total number of sensitive surfaces in the detector @param det
-template <typename detector_t>
+template <concepts::detector detector_t>
 DETRAY_HOST_DEVICE inline std::size_t n_sensitives(const detector_t& det) {
   std::size_t n_sensitives{0u};
 
@@ -44,7 +44,7 @@ DETRAY_HOST_DEVICE inline std::size_t n_sensitives(const detector_t& det) {
 }
 
 /// @returns the total number of passive surfaces in the detector @param det
-template <typename detector_t>
+template <concepts::detector detector_t>
 DETRAY_HOST_DEVICE inline std::size_t n_passives(const detector_t& det) {
   std::size_t n_passives{0u};
 
@@ -73,20 +73,20 @@ DETRAY_HOST_DEVICE inline std::size_t n_grids(const store_t& store,
 }
 
 /// @returns the total number of surface grids in the detector  @param det
-template <typename detector_t>
+template <concepts::detector detector_t>
 DETRAY_HOST_DEVICE inline std::size_t n_surface_grids(const detector_t& det) {
   return n_grids(det.accelerator_store());
 }
 
 /// @returns the total number of material maps in the detector  @param det
-template <typename detector_t>
+template <concepts::detector detector_t>
 DETRAY_HOST_DEVICE inline std::size_t n_material_maps(const detector_t& det) {
   return n_grids(det.material_store());
 }
 
 /// @returns the total number of material slabs outside of material maps in the
 /// detector  @param det
-template <typename detector_t>
+template <concepts::detector detector_t>
 DETRAY_HOST_DEVICE inline std::size_t n_material_slabs(const detector_t& det) {
   if constexpr (detray::concepts::has_material_slabs<detector_t>) {
     constexpr auto slab_id{detector_t::material::id::e_material_slab};
@@ -97,7 +97,7 @@ DETRAY_HOST_DEVICE inline std::size_t n_material_slabs(const detector_t& det) {
 }
 
 /// @returns the total number of material rods in the detector  @param det
-template <typename detector_t>
+template <concepts::detector detector_t>
 DETRAY_HOST_DEVICE inline std::size_t n_material_rods(const detector_t& det) {
   if constexpr (detray::concepts::has_material_rods<detector_t>) {
     constexpr auto rod_id{detector_t::material::id::e_material_rod};

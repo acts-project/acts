@@ -10,19 +10,35 @@ on:
       - 'releases'
       - 'release/**'
       - 'gh-readonly-queue/**'
+    # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Detray/**"
+      - "cmake/**"
+      - "codegen/**"
+      - "thirdparty/**"
+      - "CMakeLists.txt"
+      - "CMakePresets.json"
+      - "CI/**"
+      - ".github/actions/**"
       - ".github/workflows/detray.yml"
+      - ".github/detray-traccc-filters.yml"
   pull_request:
     branches:
       - main
+    # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Detray/**"
+      - "cmake/**"
+      - "codegen/**"
+      - "thirdparty/**"
+      - "CMakeLists.txt"
+      - "CMakePresets.json"
+      - "CI/**"
+      - ".github/actions/**"
       - ".github/workflows/detray.yml"
-  # merge_group does not support path filters, so this runs on every queue
-  # entry targeting main, not just ones touching Detray/. Only required via
-  # merge-sentinel's "Detray / *" pattern, which is itself path-gated, so a
-  # non-Detray entry running this wastes compute but doesn't block merging.
+      - ".github/detray-traccc-filters.yml"
+  # The changes job applies path filtering to merge groups, which do not
+  # support the workflow-level path filters above.
   merge_group:
     types: [checks_requested]
 
@@ -45,9 +61,34 @@ env:
 
 # All the different build/test jobs.
 jobs:
+  # Like Builds/changes, gate jobs rather than suppressing check reporting.
+  # PR/push triggers already filter paths; only merge groups need a checkout
+  # and a comparison against the base SHA carried by the event.
+  changes:
+    if: github.event_name == 'merge_group'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      relevant: ${{ steps.filter.outputs.detray }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          base: ${{ github.event.merge_group.base_sha }}
+          ref: ${{ github.event.merge_group.head_sha }}
+          filters: .github/detray-traccc-filters.yml
 
   # Native build jobs.
   native:
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
 
     # The different build modes to test.
     strategy:
@@ -93,6 +134,11 @@ jobs:
 
   # Containerised build jobs.
   host-container:
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
 
     # The different build modes to test.
     strategy:
@@ -106,7 +152,9 @@ jobs:
           - NAME: "HOST"
             CXX_STANDARD: "20"
             CONTAINER: "ghcr.io/acts-project/ubuntu2604:91"
-            OPTIONS: -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_FASTOR_PLUGIN=OFF -DDETRAY_SMATRIX_PLUGIN=OFF -DDETRAY_VC_AOS_PLUGIN=OFF -DDETRAY_VC_SOA_PLUGIN=OFF -DDETRAY_USE_SYSTEM_EIGEN3=ON -DDETRAY_USE_SYSTEM_VECMEM=ON -DDETRAY_USE_SYSTEM_COVFIE=ON -DDETRAY_USE_SYSTEM_GOOGLETEST=ON -DDETRAY_USE_SYSTEM_NLOHMANN=ON
+            # detray-full-fp32 turns benchmarks on, so Google Benchmark has to
+            # come from the flavor too -- the other legs disable them instead.
+            OPTIONS: -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_FASTOR_PLUGIN=OFF -DDETRAY_SMATRIX_PLUGIN=OFF -DDETRAY_VC_AOS_PLUGIN=OFF -DDETRAY_VC_SOA_PLUGIN=OFF -DDETRAY_USE_SYSTEM_EIGEN3=ON -DDETRAY_USE_SYSTEM_VECMEM=ON -DDETRAY_USE_SYSTEM_COVFIE=ON -DDETRAY_USE_SYSTEM_GOOGLETEST=ON -DDETRAY_USE_SYSTEM_NLOHMANN=ON -DDETRAY_USE_SYSTEM_BENCHMARK=ON
 
     # The system to run on.
     runs-on: ubuntu-latest
@@ -190,6 +238,11 @@ jobs:
   # Containerised build jobs. Debug compile checks only -- nothing here is
   # executed. CUDA has its own build/test pair below.
   device-container:
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
 
     # The different build modes to test.
     strategy:
@@ -289,6 +342,11 @@ jobs:
   # build down to what the GPU job actually runs.
   # ─────────────────────────────────────────────────────────────────────
   cuda:
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
     name: "cuda (${{ matrix.SCALAR_TYPE }})"
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
@@ -403,6 +461,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────
   cuda-test:
     needs: [cuda]
+    if: ${{ !cancelled() && needs.cuda.result == 'success' }}
     runs-on: [self-hosted, linux, x64, gpu-nvidia]
     permissions:
       contents: read

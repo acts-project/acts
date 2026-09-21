@@ -79,7 +79,7 @@ struct hom_material_config {
 /// @brief Surface factory decorator that adds homogeneous material to surfaces
 ///
 /// @tparam detector_t the type of detector the volume belongs to.
-template <typename detector_t>
+template <concepts::detector detector_t>
 class homogeneous_material_generator final
     : public factory_decorator<detector_t> {
   using scalar_t = dscalar<typename detector_t::algebra_type>;

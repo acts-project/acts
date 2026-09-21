@@ -13,6 +13,7 @@ traccc_add_library( traccc_device_common device_common
    # General code.
    "include/traccc/device/algorithm_base.hpp"
    "src/device/algorithm_base.cpp"
+   "include/traccc/device/abstract_awaitable.hpp"
    "include/traccc/device/prefix_sum_element.hpp"
    "include/traccc/device/container_h2d_copy_alg.hpp"
    "include/traccc/device/impl/container_h2d_copy_alg.ipp"
@@ -31,10 +32,9 @@ traccc_add_library( traccc_device_common device_common
    "include/traccc/clusterization/device/impl/reduce_problem_cell.ipp"
    "include/traccc/clusterization/device/aggregate_cluster.hpp"
    "include/traccc/clusterization/device/impl/aggregate_cluster.ipp"
-   "include/traccc/clusterization/device/geo_id_based_sorter.hpp"
+   "include/traccc/clusterization/device/measurement_sorting.hpp"
    "include/traccc/clusterization/device/ccl_kernel_definitions.hpp"
    "include/traccc/clusterization/device/ccl_kernel.hpp"
-   "include/traccc/clusterization/device/sorting_index_filler.hpp"
    "include/traccc/clusterization/device/clusterization_algorithm.hpp"
    "src/clusterization/clusterization_algorithm.cpp"
    # Spacepoint binning function(s).
@@ -109,7 +109,7 @@ traccc_add_library( traccc_device_common device_common
    # Track parameters estimation function(s).
    "include/traccc/seeding/device/estimate_track_params.hpp"
    "include/traccc/seeding/device/impl/estimate_track_params.ipp"
-   # Track finding funtions(s).
+   # Track finding functions(s).
    "include/traccc/finding/device/geo_id_surface_comparator.hpp"
    "include/traccc/finding/device/build_tracks.hpp"
    "include/traccc/finding/device/find_tracks_payload.hpp"

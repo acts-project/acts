@@ -14,6 +14,7 @@
 #include "traccc/utils/trigonometric_helpers.hpp"
 
 // detray include(s).
+#include <detray/core/concepts.hpp>
 #include <detray/definitions/navigation.hpp>  // < navigation::direction
 #include <detray/geometry/identifier.hpp>
 #include <detray/geometry/tracking_surface.hpp>
@@ -25,7 +26,7 @@
 namespace traccc {
 
 /// Seed track parameter generator
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 struct seed_generator {
   using algebra_type = typename detector_t::algebra_type;
   using ctx_t = typename detector_t::geometry_context;

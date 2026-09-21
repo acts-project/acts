@@ -14,10 +14,14 @@
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 namespace {
-std::string printCandidates(const std::vector<const Acts::Surface*>& surfaces) {
+std::string printCandidates(const std::vector<const Acts::Surface*>& surfaces,
+                            const std::size_t lastMark) {
   std::stringstream sstr{};
-  for (const auto* surf : surfaces) {
-    sstr << " --- " << surf->geometryId() << std::endl;
+  for (const auto [idx, surf] : Acts::enumerate(surfaces)) {
+    sstr << "  " << (idx + 1) << ") " << surf->geometryId()
+         << (idx + 1 == lastMark && idx + 1 != surfaces.size() ? " <-- last"
+                                                               : "")
+         << std::endl;
   }
   return sstr.str();
 }
@@ -82,9 +86,34 @@ void MultiLayerNavigationPolicy::initializeCandidates(
                            [&](const std::size_t i) { return &surfaces[i]; });
   }
 
-  ACTS_VERBOSE("MultiLayerNavigationPolicy() - reported "
-               << surfCandidates.size() << " candidates. "
-               << "\n " << printCandidates(surfCandidates));
+  /// Remove duplicate surface candidates
+  std::size_t writeIdx{0ul};
+  for (std::size_t readIdx = 0ul; readIdx < surfCandidates.size(); ++readIdx) {
+    bool appended{false};
+    for (std::size_t check = 0ul; check < writeIdx; ++check) {
+      if (surfCandidates[check] == surfCandidates[readIdx]) {
+        appended = true;
+        break;
+      }
+    }
+    if (appended) {
+      continue;
+    }
+    surfCandidates[writeIdx] = surfCandidates[readIdx];
+    ++writeIdx;
+  }
+  if (writeIdx != surfCandidates.size()) {
+    ACTS_VERBOSE("MultiLayerNavigationPolicy - Remove "
+                 << (surfCandidates.size() - writeIdx)
+                 << " duplicate candidates\n"
+                 << printCandidates(surfCandidates, writeIdx));
+    surfCandidates.erase(surfCandidates.begin() + writeIdx,
+                         surfCandidates.end());
+  }
+
+  ACTS_DEBUG("MultiLayerNavigationPolicy() - reported "
+             << surfCandidates.size() << " candidates. "
+             << "\n " << printCandidates(surfCandidates, writeIdx));
 
   // fill the navigation stream with the container
   for (const auto* surf : surfCandidates) {

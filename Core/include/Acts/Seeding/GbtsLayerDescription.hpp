@@ -36,10 +36,17 @@ struct GbtsLayerDescription final {
   GbtsLayerTechnology technology{GbtsLayerTechnology::Pixel};
   /// Reference coordinate (r for barrel, z for endcap).
   float refCoord{};
+  /// Thickness in the reference direction
+  /// max r - min r for the barrel, max z - min z for endcap
+  float layerThickness{};
   /// Minimum boundary coordinate.
   float minBound{};
   /// Maximum boundary coordinate.
   float maxBound{};
+  /// Position of the layer in the inside-out ordering of the pixel barrel,
+  /// -1 for every other layer. Derived from `refCoord` when left unset; set it
+  /// on every pixel barrel layer or on none of them.
+  std::int32_t barrelOrder{-1};
 };
 
 }  // namespace Acts::Experimental

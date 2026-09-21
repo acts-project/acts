@@ -94,19 +94,6 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// @copydoc ISurfaceMaterial::localAxisDirections() const
   std::vector<AxisDirection> localAxisDirections() const final { return {}; }
 
-  /// Return method for full material description of the Surface - from the
-  /// global coordinates
-  ///
-  /// @return will return dummy material
-  /// @deprecated Use materialSlab(const Vector2&) with a prior
-  ///             Surface::globalToLocal() call instead.
-  [[deprecated(
-      "Use materialSlab(const Vector2& lp) with a prior "
-      "Surface::globalToLocal() call instead")]] const MaterialSlab&
-  materialSlab(const Vector3& /*gp*/) const final {
-    return (m_materialSlab);
-  }
-
   using ISurfaceMaterial::materialSlab;
 
   /// Output Method for std::ostream, to be overloaded by child classes

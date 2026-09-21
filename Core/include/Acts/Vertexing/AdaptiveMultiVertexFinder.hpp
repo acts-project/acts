@@ -23,7 +23,6 @@ namespace Acts {
 /// @brief Implements an iterative vertex finder
 class AdaptiveMultiVertexFinder final : public IVertexFinder {
   using VertexFitter = AdaptiveMultiVertexFitter;
-  using VertexFitterState = VertexFitter::State;
 
  public:
   /// Configuration struct
@@ -264,11 +263,11 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   ///
   /// @param tracks The tracks
   /// @param vtx The vertex candidate
-  /// @param[out] fitterState The vertex fitter state
+  /// @param[out] fitProblem The vertex fitter state
   /// @param vertexingOptions Vertexing options
   Result<void> addCompatibleTracksToVertex(
       const std::vector<InputTrack>& tracks, Vertex& vtx,
-      VertexFitterState& fitterState,
+      VertexFitProblem& fitProblem,
       const VertexingOptions& vertexingOptions) const;
 
   /// @brief Method that tries to recover from cases where no tracks
@@ -279,14 +278,14 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @param seedTracks The seed tracks
   /// @param[out] vtx The vertex candidate
   /// @param currentConstraint Vertex constraint
-  /// @param[out] fitterState The vertex fitter state
+  /// @param[out] fitProblem The vertex fitter state
   /// @param vertexingOptions Vertexing options
   ///
   /// return True if recovery was successful, false otherwise
   Result<bool> canRecoverFromNoCompatibleTracks(
       const std::vector<InputTrack>& allTracks,
       const std::vector<InputTrack>& seedTracks, Vertex& vtx,
-      const Vertex& currentConstraint, VertexFitterState& fitterState,
+      const Vertex& currentConstraint, VertexFitProblem& fitProblem,
       const VertexingOptions& vertexingOptions) const;
 
   /// @brief Method that tries to prepare the vertex for the fit
@@ -296,14 +295,14 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @param seedTracks The seed tracks
   /// @param[out] vtx The vertex candidate
   /// @param currentConstraint Vertex constraint
-  /// @param[out] fitterState The vertex fitter state
+  /// @param[out] fitProblem The vertex fitter state
   /// @param vertexingOptions Vertexing options
   ///
   /// @return True if preparation was successful, false otherwise
   Result<bool> canPrepareVertexForFit(
       const std::vector<InputTrack>& allTracks,
       const std::vector<InputTrack>& seedTracks, Vertex& vtx,
-      const Vertex& currentConstraint, VertexFitterState& fitterState,
+      const Vertex& currentConstraint, VertexFitProblem& fitProblem,
       const VertexingOptions& vertexingOptions) const;
 
   /// @brief Method that checks if vertex is a good vertex and if
@@ -311,25 +310,25 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   ///
   /// @param vtx The vertex candidate
   /// @param seedTracks The seed tracks
-  /// @param fitterState The vertex fitter state
+  /// @param fitProblem The vertex fitter state
   /// @param useVertexConstraintInFit Indicates whether constraint is used in the vertex fit
   ///
   /// @return pair(nCompatibleTracks, isGoodVertex)
   std::pair<int, bool> checkVertexAndCompatibleTracks(
       Vertex& vtx, const std::vector<InputTrack>& seedTracks,
-      VertexFitterState& fitterState, bool useVertexConstraintInFit) const;
+      VertexFitProblem& fitProblem, bool useVertexConstraintInFit) const;
 
   /// @brief Method that removes all tracks that are compatible with
   /// current vertex from seedTracks
   ///
   /// @param vtx The vertex candidate
   /// @param[out] seedTracks The seed tracks
-  /// @param fitterState The vertex fitter state
+  /// @param fitProblem The vertex fitter state
   /// @param[out] removedSeedTracks Collection of seed track that will be
   /// removed
   void removeCompatibleTracksFromSeedTracks(
       Vertex& vtx, std::vector<InputTrack>& seedTracks,
-      VertexFitterState& fitterState,
+      VertexFitProblem& fitProblem,
       std::vector<InputTrack>& removedSeedTracks) const;
 
   /// @brief Method that tries to remove an incompatible track
@@ -337,7 +336,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   ///
   /// @param vtx The vertex candidate
   /// @param[out] seedTracks The seed tracks
-  /// @param fitterState The vertex fitter state
+  /// @param fitProblem The vertex fitter state
   /// @param[out] removedSeedTracks Collection of seed track that will be
   /// removed
   /// @param[in] geoCtx The geometry context to access global positions
@@ -345,8 +344,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @return Incompatible track was removed
   Result<void> removeTrackIfIncompatible(
       Vertex& vtx, std::vector<InputTrack>& seedTracks,
-      VertexFitterState& fitterState,
-      std::vector<InputTrack>& removedSeedTracks,
+      VertexFitProblem& fitProblem, std::vector<InputTrack>& removedSeedTracks,
       const GeometryContext& geoCtx) const;
 
   /// @brief Method that evaluates if the new vertex candidate should
@@ -354,12 +352,12 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   ///
   /// @param vtx The vertex candidate
   /// @param allVertices All so far found vertices
-  /// @param fitterState The vertex fitter state
+  /// @param fitProblem The vertex fitter state
   ///
   /// @return Keep new vertex
   Result<bool> keepNewVertex(Vertex& vtx,
                              const std::vector<Vertex*>& allVertices,
-                             VertexFitterState& fitterState) const;
+                             VertexFitProblem& fitProblem) const;
 
   /// @brief Method that evaluates if the new vertex candidate is
   /// merged with one of the previously found vertices
@@ -377,22 +375,24 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @param vtx The vertex which will be removed
   /// @param allVertices Vector containing the unique_ptr to vertices
   /// @param allVerticesPtr Vector containing the actual addresses
-  /// @param fitterState The current vertex fitter state
+  /// @param fitProblem The current vertex fit problem
   /// @param vertexingOptions Vertexing options
+  /// @param fitCache The vertex fitter cache
   Result<void> deleteLastVertex(
       Vertex& vtx, std::vector<std::unique_ptr<Vertex>>& allVertices,
-      std::vector<Vertex*>& allVerticesPtr, VertexFitterState& fitterState,
-      const VertexingOptions& vertexingOptions) const;
+      std::vector<Vertex*>& allVerticesPtr, VertexFitProblem& fitProblem,
+      const VertexingOptions& vertexingOptions,
+      VertexFitter::Cache& fitCache) const;
 
   /// @brief Prepares the output vector of vertices
   ///
   /// @param allVerticesPtr Vector of pointers to vertices
-  /// @param fitterState The vertex fitter state
+  /// @param fitProblem The vertex fitter state
   ///
   /// @return The output vertex collection
   Result<std::vector<Vertex>> getVertexOutputList(
       const std::vector<Vertex*>& allVerticesPtr,
-      VertexFitterState& fitterState) const;
+      VertexFitProblem& fitProblem) const;
 };
 
 }  // namespace Acts

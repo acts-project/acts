@@ -64,7 +64,8 @@ void RootMaterialWriter::writeMaterial(
   // Change to the output file
   m_outputFile->cd();
 
-  const auto& [surfaceMaps, volumeMaps] = detMaterial;
+  const auto& surfaceMaps = detMaterial.surfaceMaterials;
+  const auto& volumeMaps = detMaterial.volumeMaterials;
 
   // Write the surface material maps
   ActsPlugins::RootMaterialMapIo accessor(m_cfg.accessorConfig,
@@ -241,7 +242,8 @@ void RootMaterialWriter::collectMaterial(
     Acts::TrackingGeometryMaterial& detMatMap) {
   // If the volume has volume material, write that
   if (tVolume.volumeMaterialPtr() != nullptr && m_cfg.processVolumes) {
-    detMatMap.second[tVolume.geometryId()] = tVolume.volumeMaterialPtr();
+    detMatMap.volumeMaterials[tVolume.geometryId()] =
+        tVolume.volumeMaterialPtr();
   }
 
   // If confined layers exist, loop over them and collect the layer material
@@ -258,7 +260,7 @@ void RootMaterialWriter::collectMaterial(
     for (auto& bou : tVolume.boundarySurfaces()) {
       const auto& bSurface = bou->surfaceRepresentation();
       if (bSurface.surfaceMaterialSharedPtr() != nullptr) {
-        detMatMap.first[bSurface.geometryId()] =
+        detMatMap.surfaceMaterials[bSurface.geometryId()] =
             bSurface.surfaceMaterialSharedPtr();
       }
     }
@@ -278,7 +280,7 @@ void RootMaterialWriter::collectMaterial(
   const auto& rSurface = tLayer.surfaceRepresentation();
   if (rSurface.surfaceMaterialSharedPtr() != nullptr &&
       m_cfg.processRepresenting) {
-    detMatMap.first[rSurface.geometryId()] =
+    detMatMap.surfaceMaterials[rSurface.geometryId()] =
         rSurface.surfaceMaterialSharedPtr();
   }
 
@@ -286,7 +288,7 @@ void RootMaterialWriter::collectMaterial(
   if (tLayer.approachDescriptor() != nullptr && m_cfg.processApproaches) {
     for (auto& aSurface : tLayer.approachDescriptor()->containedSurfaces()) {
       if (aSurface->surfaceMaterialSharedPtr() != nullptr) {
-        detMatMap.first[aSurface->geometryId()] =
+        detMatMap.surfaceMaterials[aSurface->geometryId()] =
             aSurface->surfaceMaterialSharedPtr();
       }
     }
@@ -297,7 +299,7 @@ void RootMaterialWriter::collectMaterial(
     // sensitive surface loop
     for (auto& sSurface : tLayer.surfaceArray()->surfaces()) {
       if (sSurface->surfaceMaterialSharedPtr() != nullptr) {
-        detMatMap.first[sSurface->geometryId()] =
+        detMatMap.surfaceMaterials[sSurface->geometryId()] =
             sSurface->surfaceMaterialSharedPtr();
       }
     }

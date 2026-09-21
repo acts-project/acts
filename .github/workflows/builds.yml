@@ -50,6 +50,9 @@ jobs:
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
     env:
+      # The FPE build evicted objects during compilation at 500 MB. Cache
+      # retention removes superseded main archives to make room for this.
+      CCACHE_MAXSIZE: 1G
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
