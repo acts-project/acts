@@ -202,8 +202,23 @@ class MuonSpacePoint {
 static_assert(Acts::Experimental::CompositeSpacePoint<MuonSpacePoint>);
 /// @brief Abbrivation of the MuonSpacePoint container as a jagged vector of
 ///        space point objects. The inner vector represents a collection of
-///        space points that are close-by together in space, a so-called bucket
-using MuonSpacePointBucket = std::vector<MuonSpacePoint>;
+///        space points that are close-by together in space, a so-called bucket,
+///        and they share the same transformation to the global frame.
+class MuonSpacePointBucket : public std::vector<MuonSpacePoint> {
+ public:
+  using Base = std::vector<MuonSpacePoint>;
+  using Base::Base;
+  /// @brief Define the transformation from the local frame to the sector frame
+  void setToSectorFrameTransform(Acts::Transform3&& transform) {
+    m_toSectorFrameTransform = std::move(transform);
+  }
+  /// @brief Returns the transformation from the local frame to the sector frame
+  const Acts::Transform3& toSectorFrameTransform() const {
+    return m_toSectorFrameTransform;
+  }
+ private:
+  Acts::Transform3 m_toSectorFrameTransform{Acts::Transform3::Identity()};
+};
 using MuonSpacePointContainer = std::vector<MuonSpacePointBucket>;
 
 /// @brief ostream operator of the Muon space point Identifier

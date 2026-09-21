@@ -112,6 +112,25 @@ class RootMuonSpacePointReader : public IReader {
   VecReader_t<float> m_driftR{m_reader, "spacePoint_driftRadius"};
   /// @brief Recorded measurement time.
   VecReader_t<float> m_time{m_reader, "spacePoint_time"};
+  /// @brief Transformation from local to global coordinates
+  VecReader_t<float> m_toSectorFrameLinearCol0Phi{m_reader,
+                                                "spacePoint_toSectorFrameLinearCol0Phi"};
+  VecReader_t<float> m_toSectorFrameLinearCol0Theta{m_reader,
+                                                   "spacePoint_toSectorFrameLinearCol0Theta"};
+  VecReader_t<float> m_toSectorFrameLinearCol1Phi{m_reader,
+                                                "spacePoint_toSectorFrameLinearCol1Phi"};
+  VecReader_t<float> m_toSectorFrameLinearCol1Theta{m_reader,
+                                                   "spacePoint_toSectorFrameLinearCol1Theta"};
+  VecReader_t<float> m_toSectorFrameLinearCol2Phi{m_reader,
+                                                "spacePoint_toSectorFrameLinearCol2Phi"};
+  VecReader_t<float> m_toSectorFrameLinearCol2Theta{m_reader,
+                                                   "spacePoint_toSectorFrameLinearCol2Theta"};
+  VecReader_t<float> m_toSectorFrameTranslationX{m_reader,
+                                                "spacePoint_toSectorFrameTranslationX"};
+  VecReader_t<float> m_toSectorFrameTranslationY{m_reader,
+                                                "spacePoint_toSectorFrameTranslationY"};
+  VecReader_t<float> m_toSectorFrameTranslationZ{m_reader,
+                                                "spacePoint_toSectorFrameTranslationZ"};
 };
 
 }  // namespace ActsExamples

@@ -11,6 +11,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsExamples/Io/Root/RootUtility.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
+
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
@@ -67,6 +69,27 @@ ProcessCode RootMuonSpacePointReader::read(const AlgorithmContext& context) {
     // The space point buckets are ordered sequentially
     if (bucketIdx + 1 != outSpacePoints.size()) {
       outSpacePoints.emplace_back();
+
+      Vector3 toSectorTranslation{
+        m_toSectorFrameTranslationX->at(spIdx),
+        m_toSectorFrameTranslationY->at(spIdx),
+        m_toSectorFrameTranslationZ->at(spIdx)
+      };
+      SquareMatrix<3> toSectorRotation{};
+      toSectorRotation.col(0) = makeDirectionFromPhiTheta<double>(
+            m_toSectorFrameRotationPhiX->at(spIdx) * 1._degree,
+            m_toSectorFrameRotationThetaX->at(spIdx) * 1._degree);
+      toSectorRotation.col(1) = makeDirectionFromPhiTheta<double>(
+            m_toSectorFrameRotationPhiY->at(spIdx) * 1._degree,
+            m_toSectorFrameRotationThetaY->at(spIdx) * 1._degree);
+      toSectorRotation.col(2) = makeDirectionFromPhiTheta<double>(
+            m_toSectorFrameRotationPhiZ->at(spIdx) * 1._degree,
+            m_toSectorFrameRotationThetaZ->at(spIdx) * 1._degree);
+
+      outSpacePoints.back().setToSectorFrame(std::move(toSectorTranslation),
+            std::move(toSectorRotation));
+      ACTS_VERBOSE("Loaded new space point bucket with transformation "
+          << toString(outSpacePoints.back().toSectorFrameTransform()));
     }
     MuonSpacePoint& newSp{outSpacePoints.back().emplace_back()};
     newSp.setGeometryId(GeometryIdentifier{m_geometryId->at(spIdx)});
