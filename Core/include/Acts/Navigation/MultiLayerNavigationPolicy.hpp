@@ -35,7 +35,7 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
     std::vector<std::size_t> binExpansion = {0u, 0u};
 
     /// The shifts of the center of the surfaces per layer in case of staggering
-    /// (optional) Used to correct for the bin register
+    /// It is used to correct for the bin register
     std::vector<double> layerOffsets;
   };
 

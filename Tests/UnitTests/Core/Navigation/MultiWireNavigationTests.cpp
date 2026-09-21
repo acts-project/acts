@@ -33,6 +33,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
@@ -45,21 +46,7 @@
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace {
-
-// small local helpers replacing the getRotate*/getTranslate* utilities
-Transform3 transl(const Vector3& v) {
-  return Transform3(Translation3(v));
-}
-
-}  // namespace
-
 auto tContext = GeometryContext::dangerouslyDefaultConstruct();
-
-constexpr std::size_t nSurfacesX = 15;
-constexpr std::size_t nSurfacesY = 4;
-constexpr double radius = 15.0;
-constexpr double halfZ = 250.0;
 
 namespace ActsTests {
 
@@ -67,7 +54,7 @@ BOOST_AUTO_TEST_SUITE(NavigationSuite)
 ACTS_LOCAL_LOGGER(getDefaultLogger("MultiWireNavigationTests",
                                    Logging::Level::VERBOSE));
 
-// advance `pos` to the intersection with the current target surface
+// advance pos to the intersection with the current target surface
 void step(const GeometryContext& geoCtx, Vector3& pos, const Vector3& dir,
           const NavigationTarget& target) {
   auto isect = target.surface()
@@ -77,70 +64,95 @@ void step(const GeometryContext& geoCtx, Vector3& pos, const Vector3& dir,
 }
 
 // build a grid of staggered straw surfaces for the first test
-void generateStrawSurfaces(std::size_t nStraws, std::size_t nLayers, double r,
-                           double hZ,
+void generateStrawSurfaces(const TrapezoidVolumeBounds& volBounds,
+                           const Transform3& localToGlobal,
                            std::vector<std::shared_ptr<Surface>>& out,
                            ObjVisualization3D& vis) {
-  Vector3 ipos = {-0.5 * nStraws * 2 * r + r, -0.5 * nLayers * 2 * r + r, 0.};
+  constexpr double strawRadius = 5._cm;
+  const double halfX =
+      std::max(volBounds.get(TrapezoidVolumeBounds::eHalfLengthXnegY),
+               volBounds.get(TrapezoidVolumeBounds::eHalfLengthXposY));
+  const double halfY = volBounds.get(TrapezoidVolumeBounds::eHalfLengthY);
+  const double halfZ = volBounds.get(TrapezoidVolumeBounds::eHalfLengthZ);
+
+  const auto nLayers = static_cast<std::size_t>(
+      std::floor(2 * halfZ / (std::sqrt(3.) * strawRadius)));
+  std::size_t nStraws = std::floor(((halfX) / strawRadius));
+  std::cout << nLayers << std::endl;
+  std::cout << nStraws << std::endl;
+  Vector3 ipos = {-halfX + strawRadius, -0., -halfZ + strawRadius};
   Vector3 pos = ipos;
-  auto strawBounds = std::make_shared<LineBounds>(r, hZ);
+  auto strawBounds = std::make_shared<LineBounds>(strawRadius, halfY - 0.5_mm);
 
   for (std::size_t i = 0; i < nLayers; i++) {
     for (std::size_t j = 0; j < nStraws; j++) {
-      pos.x() = ipos.x() + (2 * j + (i + 1) % 2) * r;
+      const Vector3 localPos{
+          ipos.x() + (2 * j + (i) % 2) * strawRadius,  // x: across the layer
+          0,                                           // y: layer-to-layer
+          ipos.z() +
+              i * std::sqrt(3.) * strawRadius};  // z: along the wire (centered)
+      Transform3 tubetrans =
+          Transform3(Translation3(localPos)) *
+          Transform3(AngleAxis3{90._degree, Vector3::UnitX()});
+      Transform3 trans = localToGlobal * tubetrans;
       auto newStraw = out.emplace_back(
-          Surface::makeShared<StrawSurface>(transl(pos), strawBounds));
+          Surface::makeShared<StrawSurface>(trans, strawBounds));
       newStraw->assignIsSensitive(true);
       newStraw->assignGeometryId(
           GeometryIdentifier{}.withLayer(i + 1).withSensitive(j + 1));
       GeometryView3D::drawSurface(vis, *newStraw, tContext,
                                   Transform3::Identity());
     }
-    pos.y() = ipos.y() + (i + 1) * std::sqrt(3.) * radius;
   }
 }
 
-// ---------------------------------------------------------------------------
-// Test 1: candidate initialization inside a single multi-wire volume
-// ---------------------------------------------------------------------------
+// Test 1: Candidates initialization test inside a multiwire volume
 BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   std::vector<std::shared_ptr<Surface>> strawSurfaces{};
   ObjVisualization3D visualHelper{};
 
-  generateStrawSurfaces(nSurfacesX, nSurfacesY, radius, halfZ, strawSurfaces,
-                        visualHelper);
+  auto volBounds =
+      std::make_shared<TrapezoidVolumeBounds>(0.925_m, 0.925_m, 1.2_m, 0.14_m);
+  const Transform3 volTrans =
+      Transform3(Translation3(Vector3(300., -150., 500.))) *  // translation
+      Transform3(AngleAxis3(35._degree, Vector3::UnitZ())) *  // rotation
+      Transform3(AngleAxis3(20._degree, Vector3::UnitX()));
+  std::cout << "here" << std::endl;
 
-  std::vector<double> vBounds = {0.5 * nSurfacesX * 2 * radius + radius,
-                                 0.5 * nSurfacesX * 2 * radius + radius,
-                                 0.5 * nSurfacesY * 2 * radius, halfZ};
+  generateStrawSurfaces(*volBounds, volTrans, strawSurfaces, visualHelper);
 
   MultiWireVolumeBuilder::Config mwCfg;
   mwCfg.name = "MultiWireVolume";
   mwCfg.mlSurfaces = strawSurfaces;
-  mwCfg.binning = {{AxisDirection::AxisX, 0u}, {AxisDirection::AxisY, 0u}};
+  mwCfg.binning = {{AxisDirection::AxisX, 0u}, {AxisDirection::AxisZ, 0u}};
   mwCfg.shiftDirection = AxisDirection::AxisX;
-  mwCfg.bounds = std::make_shared<TrapezoidVolumeBounds>(
-      vBounds[0], vBounds[1], vBounds[2], vBounds[3]);
-  mwCfg.transform = Transform3(Translation3(Vector3(0., 0., 0.)));
+  mwCfg.bounds = volBounds;
+  mwCfg.transform = volTrans;
+
+  std::cout << "surface sgenerated" << std::endl;
 
   MultiWireVolumeBuilder mwBuilder(mwCfg);
   std::unique_ptr<TrackingVolume> volume = mwBuilder.buildVolume();
 
   GeometryView3D::drawVolume(visualHelper, *volume, tContext,
                              Transform3::Identity());
-  visualHelper.write("MultiLayerNavigation.obj");
+
+  std::cout << "surface sgenerated" << std::endl;
+
+  visualHelper.write("MultiLayerNavigation_test1.obj");
 
   SingleTrapezoidPortalShell portalShell{tContext, *volume};
   portalShell.applyToVolume();
 
   BOOST_CHECK(volume->volumes().empty());
-  BOOST_CHECK_EQUAL(volume->surfaces().size(), 60u);
+  // 18 straws per layer and in total 3 layers
+  BOOST_CHECK_EQUAL(volume->surfaces().size(), 54u);
   BOOST_CHECK_EQUAL(volume->portals().size(), 6u);
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  Vector3 startPos = {0., -59., 0.};
-  Vector3 startDir = {0., 1., 0.};
+  Vector3 startPos = {0., 0., -199.};
+  Vector3 startDir = {0., 0., 1.};
   NavigationArguments args{startPos, startDir};
 
   auto navFactory = mwBuilder.createNavigationPolicyFactory(tContext);
@@ -152,8 +164,8 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   auto policyState = stateManager.currentState();
   volume->initializeNavigationCandidates(tContext, args, policyState, stream,
                                          logger());
-
-  BOOST_CHECK_EQUAL(main.candidates().size(), 10u);
+  std::cout << "surface sgenerated" << std::endl;
+  BOOST_CHECK_EQUAL(main.candidates().size(), 9u);
 
   auto it = std::unique(main.candidates().begin(), main.candidates().end(),
                         [](const auto& lhs, const auto& rhs) {
@@ -162,7 +174,7 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   BOOST_CHECK(it == main.candidates().end());
 
   double angle = std::numbers::pi / 4.;
-  startDir = {std::cos(angle), std::sin(angle), 0.};
+  startDir = {std::cos(angle), 0., std::sin(angle)};
   args.direction = startDir;
 
   // clear the candidates and re initialize with new arguments
@@ -173,22 +185,23 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   auto policyState2 = stateManager2.currentState();
   volume->initializeNavigationCandidates(tContext, args, policyState2, stream,
                                          logger());
-  BOOST_CHECK_EQUAL(main.candidates().size(), 10u);
+  BOOST_CHECK_EQUAL(main.candidates().size(), 9u);
 }
 
-// ---------------------------------------------------------------------------
-// Test 2: navigate a ring of impact points around each straw's center
-// ---------------------------------------------------------------------------
+// // Test 2: navigate a ring of impact points around each straw's center and
+// check if target is reached
 BOOST_AUTO_TEST_CASE(MultiLayerNavigation_TargetSurfaces) {
-  // --- build straws with the shared generator ---
   std::vector<std::shared_ptr<Surface>> straws{};
   ObjVisualization3D vis{};
-  generateStrawSurfaces(nSurfacesX, nSurfacesY, radius, halfZ, straws, vis);
-  BOOST_REQUIRE_EQUAL(straws.size(), nSurfacesX * nSurfacesY);
 
-  std::vector<double> vBounds = {0.5 * nSurfacesX * 2 * radius + radius,
-                                 0.5 * nSurfacesX * 2 * radius + radius,
-                                 0.5 * nSurfacesY * 2 * radius, halfZ};
+  auto volBounds =
+      std::make_shared<TrapezoidVolumeBounds>(0.925_m, 0.925_m, 1.2_m, 0.14_m);
+  const Transform3 volTrans =
+      Transform3(Translation3(Vector3(300., -500., 500.))) *  // translation
+      Transform3(AngleAxis3(35._degree, Vector3::UnitZ())) *  // rotation
+      Transform3(AngleAxis3(20._degree, Vector3::UnitX()));
+
+  generateStrawSurfaces(*volBounds, volTrans, straws, vis);
 
   Blueprint::Config bpCfg{};
   bpCfg.envelope[AxisDirection::AxisX] = {20_mm, 20_mm};
@@ -198,23 +211,26 @@ BOOST_AUTO_TEST_CASE(MultiLayerNavigation_TargetSurfaces) {
 
   auto& container = root.addStaticVolume(
       Transform3::Identity(),
-      std::make_shared<CuboidVolumeBounds>(1._m, 1._m, 1._m), "world");
+      std::make_shared<CuboidVolumeBounds>(25._m, 25._m, 25._m), "world");
 
   // start plane: launch tracks from the origin toward each straw.
-  // straws lie in the z=0 plane with wires along z, so a plane facing +z works.
+  const Transform3 surfaceTrans =
+      Transform3(Translation3(Vector3(0., 0., -1000.)));
+
   auto startSurface = Surface::makeShared<PlaneSurface>(
-      Transform3(Translation3(Vector3(0., -200., 0.))),
-      std::make_shared<RectangleBounds>(vBounds[0], vBounds[2]));
+      surfaceTrans, std::make_shared<RectangleBounds>(10._m, 10._m));
+
+  GeometryView3D::drawSurface(vis, *startSurface, tContext,
+                              Transform3::Identity());
 
   {
     MultiWireVolumeBuilder::Config mwCfg{};
     mwCfg.name = "MultiWireVolume";
     mwCfg.mlSurfaces = straws;
-    mwCfg.binning = {{AxisDirection::AxisX, 0u}, {AxisDirection::AxisY, 0u}};
+    mwCfg.binning = {{AxisDirection::AxisX, 0u}, {AxisDirection::AxisZ, 0u}};
     mwCfg.shiftDirection = AxisDirection::AxisX;
-    mwCfg.bounds = std::make_shared<TrapezoidVolumeBounds>(
-        vBounds[0], vBounds[1], vBounds[2], vBounds[3]);
-    mwCfg.transform = Transform3::Identity();
+    mwCfg.bounds = volBounds;
+    mwCfg.transform = volTrans;
 
     MultiWireVolumeBuilder mwBuilder{mwCfg};
     auto volume = mwBuilder.buildVolume();
@@ -235,22 +251,22 @@ BOOST_AUTO_TEST_CASE(MultiLayerNavigation_TargetSurfaces) {
     GeometryView3D::drawVolume(vis, *vol, tContext, Transform3::Identity());
   });
 
-  vis.write("trackingGeometry.obj");
+  vis.write("MultiLayerNavTest_trkGeo.obj");
 
-  // --- navigator ---
+  // navigator configuration
   Navigator::Config navCfg;
   navCfg.trackingGeometry = std::move(trkGeo);
   navCfg.resolveSensitive = true;
   navCfg.resolveMaterial = true;
   navCfg.resolvePassive = false;
   Navigator navigator{navCfg, getDefaultLogger("MWNav", Logging::VERBOSE)};
-  Vector3 start = {0., -200., 0.};
-  Vector3 dir = {0., 1., 0.};
+  Vector3 start = {0., 0., -1000.};
+  Vector3 dir = {0., 0., 1.};
   Navigator::Options options{tContext};
   Navigator::State state = navigator.makeState(options);
   NavigationTarget target = navigator.nextTarget(state, start, dir);
   NavigatorInitializeArguments initArgs;
-  initArgs.position = Vector3(0., -200., 0.);
+  initArgs.position = start;
   initArgs.direction = dir;
   BOOST_CHECK(navigator.initialize(state, initArgs).ok());
   BOOST_CHECK(!target.isNone());
@@ -260,7 +276,7 @@ BOOST_AUTO_TEST_CASE(MultiLayerNavigation_TargetSurfaces) {
   // ring of impact points around each straw center
   constexpr std::size_t nSamples = 5;
   constexpr double rFrac = 0.5;
-  const double tubeR = radius;  // radius of the straw
+  constexpr double tubeR = 5._cm;
   for (std::size_t s = 0; s < straws.size(); ++s) {
     const auto& straw = straws.at(s);
     const Transform3 l2g = straw->localToGlobalTransform(tContext);
@@ -274,7 +290,7 @@ BOOST_AUTO_TEST_CASE(MultiLayerNavigation_TargetSurfaces) {
                    << " - Start to target surface: " << straw->geometryId()
                    << ", impact position " << toString(impact) << ", local: "
                    << toString(locPos) << " phi: " << (phi / 1._degree));
-      Vector3 pos{0., -200, 0.};
+      Vector3 pos = start;
       const Vector3 direction = (impact - pos).normalized();
 
       Navigator::State st = navigator.makeState(options);

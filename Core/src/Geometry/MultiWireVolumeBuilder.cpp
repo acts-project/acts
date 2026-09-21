@@ -20,6 +20,23 @@
 
 #include <map>
 
+// A struct to avoid having surfaces that belong to
+// the same layer into different bins along Y because of floating point
+// comparison
+namespace {
+
+struct PrecisionDelimiter {
+  PrecisionDelimiter(const double limit = 1e-3) : m_limit{limit} {}
+  bool operator()(const double a, const double b) const {
+    return a + m_limit < b;
+  }
+
+ private:
+  double m_limit{1e-3};
+};
+
+}  // namespace
+
 namespace Acts {
 
 MultiWireVolumeBuilder::MultiWireVolumeBuilder(
@@ -105,7 +122,7 @@ MultiWireVolumeBuilder::deriveGridParameters(
   const AxisDirection layerDir = (shiftDir == dirA) ? dirB : dirA;
 
   // project every tube onto both directions, grouped by layer
-  std::map<double, std::set<double>> coordsPerLayer;
+  std::map<double, std::set<double>, PrecisionDelimiter> coordsPerLayer;
   for (const auto& surf : m_config.mlSurfaces) {
     const Vector3 cLocal = globalToLoc * surf->center(gctx);
     const long long layerKey = VectorHelpers::cast(cLocal, layerDir);

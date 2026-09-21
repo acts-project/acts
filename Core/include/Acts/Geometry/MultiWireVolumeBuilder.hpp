@@ -85,10 +85,9 @@ class MultiWireVolumeBuilder {
   ///
   /// The tube centers are projected, in the volume-local frame, onto the two
   /// binning directions. The shift axis (m_config.shiftDirection) is the one
-  /// the tubes are staggered along; the layer axis is the other. Bins are
-  /// centered on the tube lattice (edges at the inter-tube midpoints). The
-  /// returned shift vector is indexed by layer-axis bin and corrects the
-  /// per-layer stagger during bin registration.
+  /// the tubes are staggered along; the layer axis is the other pointing from
+  /// one layer to the next one. The returned shift vector is indexed by
+  /// layer-axis bin and corrects the per-layer stagger during bin registration.
   ///
   /// @param gctx the geometry context
   /// @return {shiftAxis, layerAxis, layerShifts} — layerShifts has one entry

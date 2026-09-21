@@ -44,21 +44,24 @@ struct CenterReferenceGenerator : public IReferenceGenerator {
 /// only a single bin in the indexed grid.
 struct ShiftedCenterReferenceGenerator : public IReferenceGenerator {
   // The global to local volume's frame
-  Transform3 globalToLocal = Transform3::Identity();
+  Transform3 globalToLocal{Transform3::Identity()};
 
-  AxisDirection layerDir;
+  // The direction orthogonal to the shift direction
+  AxisDirection layerDir{AxisDirection::AxisY};
 
-  AxisDirection shiftDir;
+  // The direction along the shift direction
+  AxisDirection shiftDir{AxisDirection::AxisX};
 
-  // the lowest bin edge in the grid along the direction opposite to the shift
-  // direction it is needed to extract the correct index of the shifts vector
-  double layerLow;
+  // The lowest bin edge in the grid along the direction opposite to the shift
+  // direction, it is needed to extract the correct index of the shifts vector
+  double layerLow{0.};
 
-  // the layer pitch
+  // The layer pitch
   // it is needed to extract the correct index of the shifts vector
-  double layerPitch;
+  double layerPitch{0.};
 
-  // the vector with the shifts per layer
+  // The vector with the shifts per layer
+  // if empty, exception is thrown
   std::vector<double> shifts;
 
   /// Helper to access the Center point of for filling the grid
@@ -69,6 +72,11 @@ struct ShiftedCenterReferenceGenerator : public IReferenceGenerator {
   /// @return a vector of reference points for filling
   const std::vector<Vector3> references(const GeometryContext& gctx,
                                         const Surface& surface) const override {
+    if (shifts.empty()) {
+      throw std::invalid_argument(
+          "The ShiftedCenetrReference generator called without shifts vector.");
+    }
+
     Vector3 cLocal = globalToLocal * surface.center(gctx);
 
     const double lc = VectorHelpers::cast(cLocal, layerDir);
