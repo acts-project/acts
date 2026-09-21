@@ -43,25 +43,25 @@ struct CenterReferenceGenerator : public IReferenceGenerator {
 /// This generator will provide only one filling point and hence
 /// only a single bin in the indexed grid.
 struct ShiftedCenterReferenceGenerator : public IReferenceGenerator {
-  // The global to local volume's frame
+  /// The global to local volume's frame
   Transform3 globalToLocal{Transform3::Identity()};
 
-  // The direction orthogonal to the shift direction
+  /// The direction orthogonal to the shift direction
   AxisDirection layerDir{AxisDirection::AxisY};
 
-  // The direction along the shift direction
+  /// The direction along the shift direction
   AxisDirection shiftDir{AxisDirection::AxisX};
 
-  // The lowest bin edge in the grid along the direction opposite to the shift
-  // direction, it is needed to extract the correct index of the shifts vector
+  /// The lowest bin edge in the grid along the direction opposite to the shift
+  /// direction, it is needed to extract the correct index of the shifts vector
   double layerLow{0.};
 
-  // The layer pitch
-  // it is needed to extract the correct index of the shifts vector
+  /// The layer pitch
+  /// it is needed to extract the correct index of the shifts vector
   double layerPitch{0.};
 
-  // The vector with the shifts per layer
-  // if empty, exception is thrown
+  /// The vector with the shifts per layer
+  /// if empty, exception is thrown
   std::vector<double> shifts;
 
   /// Helper to access the Center point of for filling the grid

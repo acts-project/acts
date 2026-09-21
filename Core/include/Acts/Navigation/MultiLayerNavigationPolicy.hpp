@@ -81,24 +81,24 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
                                     const Vector3& direction,
                                     const Logger& logger) const;
 
-  /// @brief Give const access to the indexed grid
+  /// Give const access to the indexed grid
   /// @return The indexed grid
   const IndexedUpdatorType& indexedGrid() const { return m_indexedGrid; }
 
-  /// @brief Access the configuration
+  /// Access the configuration
   /// @return The configuration
   const Config& config() const { return m_config; }
 
  private:
-  // The tracking volume
+  /// The tracking volume
   const TrackingVolume& m_volume;
 
-  // The grid that holds the indexed surfaces
+  /// The grid that holds the indexed surfaces
   IndexedUpdatorType m_indexedGrid;
 
   std::vector<double> m_shifts{};
 
-  // The navigation configuration
+  /// The navigation configuration
   Config m_config;
 };
 

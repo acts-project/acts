@@ -48,8 +48,8 @@ class MultiWireVolumeBuilder {
     /// Boolean flag if staggering corrections should be applied
     bool correctOffsets{true};
 
-    // The direction of the axis the shift of the surfaces is applied
-    // It is the direction along the tubes
+    /// The direction of the axis the shift of the surfaces is applied
+    /// It is the direction along the tubes
     AxisDirection shiftDirection{};
   };
 
@@ -61,12 +61,13 @@ class MultiWireVolumeBuilder {
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
           "MultiWireVolumeBuilder", Acts::Logging::INFO));
 
-  /// @brief Constructs the tracking volume with the wrapped surfaces
+  /// Constructs the tracking volume with the wrapped surfaces
   /// @return a unique ptr of the tracking volume
   std::unique_ptr<Acts::TrackingVolume> buildVolume() const;
 
-  /// @brief Creates a multilayer navigation policy factory that can be used for the trackingVolume
-  /// or attached to a blueprint node
+  /// Creates a multilayer navigation policy factory that can be used for the
+  /// trackingVolume or attached to a blueprint node
+  /// @param gctx The geometry context
   /// @return Unique pointer to the created navigation policy factory
   std::unique_ptr<NavigationPolicyFactory> createNavigationPolicyFactory(
       const GeometryContext& gctx) const;
