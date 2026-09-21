@@ -10,7 +10,7 @@ awkward==2.14.0
     #   uproot
 awkward-cpp==57
     # via awkward
-boost-histogram==1.8.1
+boost-histogram==1.7.2
     # via hist
 click==8.5.0
     # via histoprint
