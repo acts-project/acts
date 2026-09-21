@@ -148,13 +148,14 @@ jobs:
       fail-fast: false
       matrix:
         BUILD_TYPE: ["Release", "Debug"]
+        SCALAR_TYPE: ["float", "double"]
         PLATFORM:
           - NAME: "CPU"
             CXX_STANDARD: "20"
             CONTAINER: "ghcr.io/acts-project/ubuntu2604:91"
             # detray-full-fp32 turns benchmarks on, so Google Benchmark has to
             # come from the flavor too -- the other legs disable them instead.
-            OPTIONS: -DDETRAY_EIGEN_PLUGIN=OFF -DDETRAY_FASTOR_PLUGIN=OFF -DDETRAY_SMATRIX_PLUGIN=OFF -DDETRAY_VC_AOS_PLUGIN=OFF -DDETRAY_VC_SOA_PLUGIN=OFF -DDETRAY_USE_SYSTEM_EIGEN3=ON -DDETRAY_USE_SYSTEM_VECMEM=ON -DDETRAY_USE_SYSTEM_COVFIE=ON -DDETRAY_USE_SYSTEM_GOOGLETEST=ON -DDETRAY_USE_SYSTEM_NLOHMANN=ON -DDETRAY_USE_SYSTEM_BENCHMARK=ON
+            OPTIONS: -DDETRAY_EIGEN_PLUGIN=OFF -DDETRAY_FASTOR_PLUGIN=OFF -DDETRAY_SMATRIX_PLUGIN=OFF -DDETRAY_VC_AOS_PLUGIN=OFF -DDETRAY_VC_SOA_PLUGIN=OFF -DDETRAY_USE_SYSTEM_EIGEN3=OFF -DDETRAY_USE_SYSTEM_VECMEM=ON -DDETRAY_USE_SYSTEM_COVFIE=ON -DDETRAY_USE_SYSTEM_GOOGLETEST=ON -DDETRAY_USE_SYSTEM_NLOHMANN=ON -DDETRAY_USE_SYSTEM_BENCHMARK=ON
 
     # The system to run on.
     runs-on: ubuntu-latest
@@ -205,14 +206,10 @@ jobs:
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --preset detray-full-fp32 \
           -DCMAKE_CXX_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
-          -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }} \
           -DDETRAY_FAIL_ON_WARNINGS=ON \
-          -DDETRAY_SET_LOGGING=INFO \
-          -DDETRAY_EIGEN_PLUGIN=OFF \
-          -DDETRAY_SMATRIX_PLUGIN=OFF \
-          -DDETRAY_FASTOR_PLUGIN=OFF \
-          -DDETRAY_VC_AOS_PLUGIN=OFF \
-          -DDETRAY_VC_SOA_PLUGIN=ON \
+          -DDETRAY_SET_LOGGING=DEBUG \
+          -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }} \
+          -DDETRAY_CUSTOM_SCALARTYPE=${{ matrix.SCALAR_TYPE }} \
           ${{ matrix.PLATFORM.OPTIONS }} \
           -S ${GITHUB_WORKSPACE}/Detray \
           -B build
@@ -238,7 +235,7 @@ jobs:
         source ${GITHUB_WORKSPACE}/.env
         cd build
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
-        ctest -R detray_unit_test_. --output-on-failure
+        ctest -R detray_unit_test_. --output-on-failure --no-tests=error
 
   # Containerised build jobs. Debug compile checks only -- nothing here is
   # executed. CUDA has its own build/test pair below.
@@ -256,6 +253,7 @@ jobs:
       fail-fast: false
       matrix:
         BUILD_TYPE: ["Debug"]
+        SCALAR_TYPE: ["float", "double"]
         PLATFORM:
           - NAME: "HIP-AMD"
             CXX_STANDARD: "20"
@@ -265,11 +263,11 @@ jobs:
             # found through vecmem's FindHIPToolkit.cmake, which 1.26.0 added to
             # the installed language helpers and vecmem-config puts on
             # CMAKE_MODULE_PATH. The pinned tag carries 1.27.0.
-            OPTIONS: -DCMAKE_HIP_PLATFORM=amd -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=OFF -DDETRAY_BUILD_BENCHMARKS=OFF -DDETRAY_BUILD_INTEGRATIONTESTS=OFF -DDETRAY_USE_SYSTEM_EIGEN3=ON -DDETRAY_USE_SYSTEM_VECMEM=ON -DDETRAY_USE_SYSTEM_COVFIE=ON -DDETRAY_USE_SYSTEM_GOOGLETEST=ON -DDETRAY_USE_SYSTEM_NLOHMANN=ON
+            OPTIONS: -DCMAKE_HIP_PLATFORM=amd -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_BUILD_BENCHMARKS=OFF -DDETRAY_BUILD_INTEGRATIONTESTS=OFF -DDETRAY_USE_SYSTEM_VECMEM=ON -DDETRAY_USE_SYSTEM_COVFIE=ON -DDETRAY_USE_SYSTEM_GOOGLETEST=ON -DDETRAY_USE_SYSTEM_NLOHMANN=ON
           #- NAME: "HIP-NVIDIA"
           #  CXX_STANDARD: "20"
           #  CONTAINER:
-          #  OPTIONS: -DCMAKE_HIP_PLATFORM=nvidia -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_BENCHMARKS=OFF
+          #  OPTIONS: -DCMAKE_HIP_PLATFORM=nvidia -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=OFF -DDETRAY_BUILD_BENCHMARKS=OFF
 
     # The system to run on.
     runs-on: ubuntu-latest
@@ -316,13 +314,14 @@ jobs:
           -DCMAKE_CUDA_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DCMAKE_HIP_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DDETRAY_BUILD_HOST=OFF \
-          -DDETRAY_EGIEN_PLUGIN=OFF \
+          -DDETRAY_EIGEN_PLUGIN=OFF \
           -DDETRAY_FASTOR_PLUGIN=OFF \
           -DDETRAY_SMATRIX_PLUGIN=OFF \
           -DDETRAY_VC_AOS_PLUGIN=OFF \
           -DDETRAY_VC_SOA_PLUGIN=OFF \
           -DDETRAY_FAIL_ON_WARNINGS=ON \
           -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }} \
+          -DDETRAY_CUSTOM_SCALARTYPE=${{ matrix.SCALAR_TYPE }} \
           ${{ matrix.PLATFORM.OPTIONS }} \
           -S ${GITHUB_WORKSPACE}/Detray \
           -B build
@@ -403,7 +402,7 @@ jobs:
         cmake --preset detray-github-cuda-ci \
           -DCMAKE_BUILD_TYPE=Release \
           -DDETRAY_CUSTOM_SCALARTYPE=${{ matrix.SCALAR_TYPE }} \
-          -DDETRAY_USE_SYSTEM_EIGEN3=ON \
+          -DDETRAY_EIGEN_PLUGIN=OFF \
           -DDETRAY_USE_SYSTEM_VECMEM=ON \
           -DDETRAY_USE_SYSTEM_COVFIE=ON \
           -DDETRAY_USE_SYSTEM_BENCHMARK=ON \

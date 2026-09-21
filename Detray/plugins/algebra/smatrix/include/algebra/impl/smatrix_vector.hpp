@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/algebra/concepts.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 
 // ROOT/Smatrix include(s).
@@ -180,9 +181,9 @@ DETRAY_HOST constexpr scalar_t dot(
 /// @param b the second input vector
 ///
 /// @return the scalar dot product value
-template <concepts::scalar scalar_t, class A, auto N>
+template <concepts::scalar scalar_t, class A, auto N, class R>
 DETRAY_HOST constexpr scalar_t dot(
-    const ROOT::Math::SMatrix<scalar_t, N, 1> &a,
+    const ROOT::Math::SMatrix<scalar_t, N, 1, R> &a,
     const ROOT::Math::VecExpr<A, scalar_t, N> &b) {
   return ROOT::Math::Dot(a.Col(0), b);
 }
@@ -193,10 +194,10 @@ DETRAY_HOST constexpr scalar_t dot(
 /// @param b the second input vector
 ///
 /// @return the scalar dot product value
-template <concepts::scalar scalar_t, class A, auto N>
+template <concepts::scalar scalar_t, class A, auto N, class R>
 DETRAY_HOST constexpr scalar_t dot(
     const ROOT::Math::VecExpr<A, scalar_t, N> &a,
-    const ROOT::Math::SMatrix<scalar_t, N, 1> &b) {
+    const ROOT::Math::SMatrix<scalar_t, N, 1, R> &b) {
   return dot(b, a);
 }
 
@@ -218,10 +219,10 @@ DETRAY_HOST constexpr scalar_t dot(const ROOT::Math::SMatrix<scalar_t, N, 1> &a,
 /// @param b the second input vector
 ///
 /// @return the scalar dot product value
-template <concepts::scalar scalar_t, auto N>
+template <concepts::scalar scalar_t, auto N, class R>
 DETRAY_HOST constexpr scalar_t dot(
     const ROOT::Math::SVector<scalar_t, N> &a,
-    const ROOT::Math::SMatrix<scalar_t, N, 1> &b) {
+    const ROOT::Math::SMatrix<scalar_t, N, 1, R> &b) {
   return dot(b, a);
 }
 
@@ -296,9 +297,9 @@ DETRAY_HOST constexpr ROOT::Math::SVector<scalar_t, 3> cross(
 /// @param b the first input vector
 ///
 /// @return a vector (expression) representing the cross product
-template <concepts::scalar scalar_t>
+template <concepts::scalar scalar_t, class R>
 DETRAY_HOST constexpr ROOT::Math::SVector<scalar_t, 3> cross(
-    const ROOT::Math::SMatrix<scalar_t, 3, 1> &a,
+    const ROOT::Math::SMatrix<scalar_t, 3, 1, R> &a,
     const ROOT::Math::SVector<scalar_t, 3> &b) {
   return ROOT::Math::Cross(a.Col(0), b);
 }
@@ -309,10 +310,10 @@ DETRAY_HOST constexpr ROOT::Math::SVector<scalar_t, 3> cross(
 /// @param b the first input matrix<3,1>
 ///
 /// @return a vector (expression) representing the cross product
-template <concepts::scalar scalar_t>
+template <concepts::scalar scalar_t, class R>
 DETRAY_HOST constexpr ROOT::Math::SVector<scalar_t, 3> cross(
-    const ROOT::Math::SMatrix<scalar_t, 3, 1> &a,
-    const ROOT::Math::SMatrix<scalar_t, 3, 1> &b) {
+    const ROOT::Math::SMatrix<scalar_t, 3, 1, R> &a,
+    const ROOT::Math::SMatrix<scalar_t, 3, 1, R> &b) {
   return ROOT::Math::Cross(a.Col(0), b.Col(0));
 }
 

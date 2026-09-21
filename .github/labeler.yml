@@ -15,6 +15,7 @@
       - Detray/**
       - Plugins/Detray/**
       - .github/workflows/detray.yml
+      - .github/workflows/detray_nightly.yml
       - .github/detray-traccc-filters.yml
 'Component - Traccc':
   - changed-files:
