@@ -42,7 +42,12 @@ void addDetector(py::module& mex) {
   {
     py::class_<Detector, std::shared_ptr<Detector>>(mex, "DetectorBase")
         .def("nominalGeometryContext", &Detector::nominalGeometryContext)
-        .def("trackingGeometry", &Detector::trackingGeometry)
+        // The TrackingGeometry only shares ownership of the surfaces, not of
+        // the detector elements they reference through the non-owning
+        // Surface::m_placement. Those are owned by the detector, so it has to
+        // outlive the geometry or every placement pointer dangles.
+        .def("trackingGeometry", &Detector::trackingGeometry,
+             py::keep_alive<0, 1>())
         .def("contextDecorators", &Detector::contextDecorators)
         .def("__enter__",
              [](const std::shared_ptr<Detector>& self) { return self; })
