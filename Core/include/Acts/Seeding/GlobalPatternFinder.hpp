@@ -19,25 +19,25 @@ namespace Acts::Experimental::detail {
 
 template<typename Selector_t, typename Hit_t>
 concept PatternSeedSelector = 
-    HitPayload<Hit_t> &&
+    GlobPatFinderHit<Hit_t> &&
     requires(const Selector_t& selector, 
              const Hit_t& hit) {
     { selector.goodForSeeding(hit) } -> std::same_as<bool>;
     { selector.thetaSearchWindow(hit) } -> std::same_as<double>;
 };
 
-template<typename Provider_t, typename Hit_t, typename Topology_t>
-concept OnlyPhiHitsProvider =
-    HitPayload<Hit_t> &&
+template<typename Provider_t, typename Hit_t, typename Topology_t, typename Pattern_t>
+concept OnlyPhiHitsProvider = 
+    GlobPatFinderHit<Hit_t> &&
     PatternTopology<Topology_t, Hit_t> &&
     requires(const Provider_t& provider,
-             std::span<const std::vector<const Hit_t*>, 
-                       Topology_t::nGroups> patternHits) {
-    { provider.getPhiOnlyHits(patternHits) } 
+             const Pattern_t& pattern,
+             const GeometryContext& gctx) {
+    { provider.getPhiOnlyHits(pattern, gctx) } 
         -> std::same_as<std::array<std::vector<Hit_t>, Topology_t::nGroups>>;
 };
 
-template<HitPayload Hit_t,
+template<GlobPatFinderHit Hit_t,
          SectorType Sector_t,
          PatternTopology<Hit_t> Topology_t>
 class GlobalPatternFinder {
@@ -48,7 +48,7 @@ class GlobalPatternFinder {
     struct Config : PatternState::Config {
         /********* Pattern bulding acceptance **********/ 
         /** @brief Size of theta window in radians to search for comapatible hits with a pattern, tailored to the target pt cutoff */
-        double thetaSearchWindow {0.05};
+        double maxThetaSizeOverlap {0.05};
         /** @brief Residual uncertainty to consider the hit as low confidence */
         double lowConfidenceResSigma {50};
         /********* Pile-up & Fake rate suppression *****/
@@ -89,7 +89,7 @@ class GlobalPatternFinder {
         explicit OutputPattern(typename Sector_t::Index_t sector) 
             : expSect{sector} {}
         /** @brief Vector of hits in the pattern */
-        std::array<std::vector<const Hit_t*>, Topology_t::nGroups> hits{};
+        std::array<std::vector<const Hit_t*>, Topology_t::nGroups> hitsPerGroup{};
         /** @brief Vector of phi-only hits */
         std::vector<Hit_t> phiOnlyHits{};
         /** @brief Mean over eta hits of the square of their residual divided by residual uncertainty */
@@ -122,7 +122,7 @@ class GlobalPatternFinder {
      *  @param beamspotInfo: Beamspot information
      *  @return: Vector of found patterns */
     template<PatternSeedSelector<Hit_t> SeedSelector_t,
-             OnlyPhiHitsProvider<Hit_t, Topology_t> OnlyPhiProvider_t>
+             OnlyPhiHitsProvider<Hit_t, Topology_t, PatternState> OnlyPhiProvider_t>
     std::vector<OutputPattern> 
     findPatterns(const GeometryContext& gctx,
                  const SearchTree_t& treeData,
@@ -186,7 +186,7 @@ class GlobalPatternFinder {
      *  @param gctx: Geometry context
      *  @param patterns: Vector of pattern states to which to add phi-only hits
      *  @return: Vector of added phi-only hits */
-    template<OnlyPhiHitsProvider<Hit_t, Topology_t> OnlyPhiProvider_t>
+    template<OnlyPhiHitsProvider<Hit_t, Topology_t, PatternState> OnlyPhiProvider_t>
     void addPhiOnlyHits(const GeometryContext& gctx,
                         const OnlyPhiProvider_t& onlyPhiProvider,
                         PatternStateVec& patterns) const;
@@ -200,15 +200,6 @@ class GlobalPatternFinder {
      *  @return: Vector of converted GlobalPatterns */
     std::vector<OutputPattern> 
     convertToPattern(PatternStateVec&& candidates) const;
-    
-    /** @brief Stream operator for tree coordinates */
-    friend std::ostream& operator<<(std::ostream& os, 
-            const typename SearchTree_t::coordinate_t& coords) {
-        os << "[" << coords[toUnderlying(HitCoords::eSector)] 
-           << ", "<< coords[toUnderlying(HitCoords::eTheta)] << "]";
-        return os;
-    }
-    
 
     /** @brief Global Pattern Recognition configuration */
     Config m_cfg;
@@ -218,3 +209,5 @@ class GlobalPatternFinder {
     const Logger& logger() const { return *m_logger; }
 };
 }
+
+#include "Acts/Seeding/GlobalPatternFinder.ipp"
