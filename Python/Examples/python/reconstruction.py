@@ -673,7 +673,6 @@ def addGbtsTraining(
     rMinTol: float = 2.5337,
     rMaxTol: float = 2.5337,
     doSymmetrization: bool = False,
-    etaBinWidth: float = 0.2,
     logLevel: acts.logging.Level = None,
 ):
     logLevel = acts.examples.defaultLogging(s, logLevel)()
@@ -697,7 +696,6 @@ def addGbtsTraining(
         gbtsLayerConnectionToolConfig=gbtsLayerConnectionToolConfig,
         geometryFileDir=str(geometryFile),
         outputFileDir=str(outputConnectionTable),
-        etaBinWidth=etaBinWidth,
     )
 
     s.addAlgorithm(alg)

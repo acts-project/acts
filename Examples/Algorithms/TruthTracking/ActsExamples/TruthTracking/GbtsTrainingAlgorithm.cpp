@@ -62,15 +62,13 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
 ProcessCode GbtsTrainingAlgorithm::finalize() {
   const auto layerTable = m_layerConnectionTool->createConnectionTable();
 
-  Acts::Experimental::GbtsConnectionsConfig connections;
-  connections.etaBinWidth = m_cfg.etaBinWidth;
+  std::vector<Acts::Experimental::GbtsLayerConnection> connections;
   for (const auto& layerPair : layerTable) {
     // swap order as we want outward -> inward ordering
-    connections.connections.push_back(
-        {.src = layerPair.second, .dst = layerPair.first});
+    connections.push_back({.src = layerPair.second, .dst = layerPair.first});
   }
-  Acts::detail::writeJsonFile(m_cfg.outputFileDir, nlohmann::json(connections),
-                              4, 0);
+  Acts::detail::writeJsonFile(
+      m_cfg.outputFileDir, nlohmann::json{{"connections", connections}}, 4, 0);
 
   return ProcessCode::SUCCESS;
 }
