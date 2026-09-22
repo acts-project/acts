@@ -8,11 +8,9 @@
 
 #include "ActsPlugins/Mille/detail/WrappedFileHandle.hpp"
 
+#include <cstdio>
 #include <filesystem>
 #include <utility>
-
-#include <fcntl.h>
-#include <unistd.h>
 
 namespace ActsPlugins::ActsToMille {
 
@@ -20,37 +18,37 @@ namespace ActsPlugins::ActsToMille {
 WrappedFileHandle::WrappedFileHandle(const std::filesystem::path& outf)
     : m_path(outf) {
   if (!outf.empty()) {
-    m_handle = open(outf.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0640);
+    m_handle = std::fopen(outf.c_str(), "w");
   }
 }
 
 WrappedFileHandle::~WrappedFileHandle() {
-  if (m_handle >= 0) {
-    close(m_handle);
+  if (m_handle != nullptr) {
+    std::fclose(m_handle);
   }
 }
 
 WrappedFileHandle::WrappedFileHandle(WrappedFileHandle&& other) noexcept
-    : m_handle(std::exchange(other.m_handle, -1)),
+    : m_handle(std::exchange(other.m_handle, nullptr)),
       m_path(std::move(other.m_path)) {}
 
 WrappedFileHandle& WrappedFileHandle::operator=(
     WrappedFileHandle&& other) noexcept {
   if (this != &other) {
-    if (m_handle >= 0) {
-      ::close(m_handle);
+    if (m_handle != nullptr) {
+      std::fclose(m_handle);
     }
-    m_handle = std::exchange(other.m_handle, -1);
+    m_handle = std::exchange(other.m_handle, nullptr);
     m_path = std::move(other.m_path);
   }
 
   return *this;
 }
-int WrappedFileHandle::operator()() const {
+FILE* WrappedFileHandle::operator()() const {
   return m_handle;
 }
 bool WrappedFileHandle::isRedirected() const {
-  return m_handle != -1;
+  return m_handle != nullptr;
 }
 const std::filesystem::path& WrappedFileHandle::path() const {
   return m_path;

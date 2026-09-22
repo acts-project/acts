@@ -37,7 +37,7 @@ ActsPlugins::ActsToMille::runSolverProcess(
 
   if (!outputDest.empty()) {
     outputHandle = WrappedFileHandle(outputDest);
-    if (outputHandle() < 0) {
+    if (!outputHandle.isRedirected()) {
       return ActsPlugins::ActsToMille::ChildProcessStatus::FailedRedirectStdout;
     }
   }

@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+#include <cstdio>
 #include <filesystem>
 
 namespace ActsPlugins::ActsToMille {
@@ -22,12 +23,12 @@ class WrappedFileHandle {
   WrappedFileHandle(WrappedFileHandle&& other) noexcept;
 
   WrappedFileHandle& operator=(WrappedFileHandle&& other) noexcept;
-  int operator()() const;
+  FILE* operator()() const;
   bool isRedirected() const;
   const std::filesystem::path& path() const;
 
  private:
-  int m_handle = -1;
+  FILE* m_handle = nullptr;
   std::filesystem::path m_path{};
 };
 

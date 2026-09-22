@@ -25,12 +25,8 @@ ActsPlugins::ActsToMille::ChildProcessStatus runChildProcessBoost(
 
   bp::child theProcess;
   if (outputHandle.isRedirected()) {
-    // The v1 API cannot redirect into an already open file descriptor, so it
-    // gets the path instead. Merging the two streams hands the child a single
-    // handle for both, as in the v2 branch above.
-    theProcess =
-        bp::child(thePede, args, bp::start_dir = runDir.string(),
-                  (bp::std_out & bp::std_err) > outputHandle.path().string());
+    theProcess = bp::child(thePede, args, bp::start_dir = runDir.string(),
+                           (bp::std_out & bp::std_err) > outputHandle());
   } else {
     theProcess = bp::child(thePede, args, bp::start_dir = runDir.string());
   }
