@@ -357,4 +357,8 @@ void gbts_seeding_algorithm::gbts_convert_seeds_kernel(
                       kernels::gbts_convert_seeds{}, payload);
 }
 
+void gbts_seeding_algorithm::synchronize() const {
+  queue().synchronize();
+}
+
 }  // namespace traccc::alpaka

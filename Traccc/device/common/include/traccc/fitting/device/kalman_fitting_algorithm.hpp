@@ -131,6 +131,9 @@ class kalman_fitting_algorithm
                                    const fit_payload& payload) const = 0;
 
  protected:
+  /// Wait for outstanding device work before releasing local buffers.
+  virtual void synchronize() const = 0;
+
   /// @name Type(s)/function(s) used internally by the algorithm
   /// @{
 

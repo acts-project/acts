@@ -90,6 +90,9 @@ class gbts_seeding_algorithm
       const override;
 
  protected:
+  /// Wait for outstanding device work before releasing local buffers.
+  virtual void synchronize() const = 0;
+
   /// @name Kernel launchers (to be implemented by backends)
   ///
   /// Each launcher receives the payload of the device function it runs;

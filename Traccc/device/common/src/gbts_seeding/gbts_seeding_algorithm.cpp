@@ -100,6 +100,9 @@ auto gbts_seeding_algorithm::make_nodes(
   vecmem::vector<float> bin_rads(2 * cfg.n_eta_bins, mr().host);
   copy()(vecmem::get_data(bin_rads_buf), bin_rads)->wait();
 
+  // Sorting and node creation still access the local sort keys and values.
+  synchronize();
+
   return node_making_output{std::move(reducedSP_buf),
                             std::move(node_params_buf),
                             std::move(node_phi_buf),
