@@ -46,6 +46,10 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     return state.options.actorList.act(state, m_stepper, m_navigator, logger());
   }
 
+  // priming error condition
+  bool terminatedNormally = false;
+
+  // Returns none if an aborter stops the propagation on a surface it is on
   auto getNextTarget = [&]() -> Result<NavigationTarget> {
     for (unsigned int i = 0; i < state.options.maxTargetSkipping; ++i) {
       NavigationTarget nextTarget = m_navigator.nextTarget(
@@ -59,12 +63,28 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
           state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
           logger());
       if (preStepSurfaceStatus == IntersectionStatus::onSurface) {
-        // This indicates a geometry overlap which is not handled by the
-        // navigator, so we skip this target.
-        // This can also happen in a well-behaved geometry with external
-        // surfaces.
-        ACTS_VERBOSE("Pre-step surface status is onSurface, skipping target "
-                     << nextTarget.surface().geometryId());
+        // The propagation is on the target already, e.g. at a geometry overlap
+        // or at the start. Reach it with a step of zero length.
+        ACTS_VERBOSE("Pre-step surface status is onSurface, reaching target "
+                     << nextTarget.surface().geometryId() << " without a step");
+        state.stage = PropagatorStage::postStep;
+        m_navigator.handleSurfaceReached(state.navigation, state.position,
+                                         state.direction, nextTarget.surface());
+        if (Result<void> actResult = state.options.actorList.act(
+                state, m_stepper, m_navigator, logger());
+            !actResult.ok()) {
+          return actResult.error();
+        }
+        if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
+                                               logger())) {
+          terminatedNormally = true;
+          return NavigationTarget::None();
+        }
+        // Actors might have changed the position and direction
+        state.position = m_stepper.position(state.stepping);
+        state.direction =
+            state.options.direction * m_stepper.direction(state.stepping);
+        state.stage = PropagatorStage::preStep;
         continue;
       }
       if (preStepSurfaceStatus == IntersectionStatus::reachable) {
@@ -77,9 +97,6 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     return Result<NavigationTarget>::failure(
         PropagatorError::NextTargetLimitReached);
   };
-
-  // priming error condition
-  bool terminatedNormally = false;
 
   // Pre-Stepping: target setting
   state.stage = PropagatorStage::preStep;
@@ -96,7 +113,8 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
   ACTS_VERBOSE("Starting stepping loop.");
 
   // Stepping loop
-  for (; state.steps < state.options.maxSteps; ++state.steps) {
+  for (; !terminatedNormally && state.steps < state.options.maxSteps;
+       ++state.steps) {
     // Perform a step
     Result<double> res =
         m_stepper.step(state.stepping, state.options.direction,
@@ -180,6 +198,9 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
                    << nextTargetResult.error() << ": "
                    << nextTargetResult.error().message());
         return nextTargetResult.error();
+      }
+      if (terminatedNormally) {
+        break;
       }
       nextTarget = *nextTargetResult;
     }

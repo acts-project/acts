@@ -298,10 +298,12 @@ class VoidNavigator {
           surface.boundaryTolerance, state.options.surfaceTolerance);
 
       // The stepper decides whether the surface is reached, so everything
-      // ahead is offered
+      // ahead and on the position is offered
       for (const auto [intersectionIndex, intersection] :
            enumerate(multiIntersection)) {
-        if (!intersection.isValid() || intersection.pathLength() <= 0 ||
+        if (!intersection.isValid() ||
+            (intersection.status() != IntersectionStatus::onSurface &&
+             intersection.pathLength() <= 0) ||
             intersection.pathLength() > state.options.farLimit) {
           continue;
         }

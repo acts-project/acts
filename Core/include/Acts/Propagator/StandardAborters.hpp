@@ -9,10 +9,8 @@
 #pragma once
 
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cmath>
@@ -67,8 +65,8 @@ struct PathLimitReached {
 struct NoTargetAborter {};
 
 /// This is the condition that the target surface has been reached. It aborts
-/// the propagation once the position is on the target surface, and it does
-/// not steer the propagation towards it.
+/// the propagation once the navigator reports the target as the current
+/// surface, and it does not steer the propagation towards it.
 ///
 /// @note The navigator steers the propagation onto the target surface. The
 ///       propagator hands its target surface to the navigator. An actor that
@@ -93,18 +91,10 @@ struct SurfaceReached {
             typename navigator_t>
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
-    if (surface == nullptr) {
-      return false;
-    }
+    static_cast<void>(stepper);
 
-    // Another surface at the same position can be the current surface
-    if (navigator.currentSurface(state.navigation) != surface &&
-        surface->intersect(
-                   state.geoContext, stepper.position(state.stepping),
-                   state.options.direction * stepper.direction(state.stepping),
-                   BoundaryTolerance::None(), state.options.surfaceTolerance)
-                .closest()
-                .status() != IntersectionStatus::onSurface) {
+    if (surface == nullptr ||
+        navigator.currentSurface(state.navigation) != surface) {
       return false;
     }
 
