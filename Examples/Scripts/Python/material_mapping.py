@@ -84,7 +84,13 @@ def runMaterialMapping(
     # Add the map writer(s)
     materialMapWriters = []
     # json map writer
-    if "json" in outputMapFormats:
+    jsonOutputMapFormatsDict = {"json": JsonFormat.Json, "cbor": JsonFormat.Cbor}
+    jsonOutputMapFormats = [
+        jsonOutputMapFormatsDict[f]
+        for f in outputMapFormats
+        if f in jsonOutputMapFormatsDict
+    ]
+    if jsonOutputMapFormats:
         jmConverterCfg = MaterialMapJsonConverter.Config(
             processSensitives=True,
             processApproaches=True,
@@ -93,14 +99,15 @@ def runMaterialMapping(
             processVolumes=False,
         )
         # Suffix for the map file is added in the writer depending on the format
-        materialMapWriters.append(
-            JsonMaterialWriter(
-                level=loglevel,
-                converterCfg=jmConverterCfg,
-                fileName=outputFileBase + "_map",
-                writeFormat=JsonFormat.Json,
+        for writeFormat in jsonOutputMapFormats:
+            materialMapWriters.append(
+                JsonMaterialWriter(
+                    level=loglevel,
+                    converterCfg=jmConverterCfg,
+                    fileName=outputFileBase + "_map",
+                    writeFormat=writeFormat,
+                )
             )
-        )
     if "root" in outputMapFormats:
         materialMapWriters.append(
             RootMaterialWriter(

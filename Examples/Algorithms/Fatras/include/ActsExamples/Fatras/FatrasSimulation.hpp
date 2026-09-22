@@ -19,9 +19,13 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include <atomic>
 #include <cstddef>
+#include <map>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <system_error>
 
 namespace ActsExamples {
 
@@ -88,6 +92,8 @@ class FatrasSimulation final : public IAlgorithm {
   /// @param ctx the algorithm context containing all event information
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
+  ProcessCode finalize() override;
+
   /// Const access to the config
   const Config& config() const { return m_cfg; }
 
@@ -103,6 +109,12 @@ class FatrasSimulation final : public IAlgorithm {
 
   Config m_cfg;
   std::unique_ptr<Impl> m_sim;
+  struct Counters {
+    std::mutex failedParticlesMutex;
+    std::size_t nFailedParticles{0};
+    std::map<std::error_code, std::size_t> failedParticlesByError;
+  };
+  mutable Counters m_counters;
 };
 
 }  // namespace ActsExamples

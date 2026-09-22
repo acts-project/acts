@@ -127,12 +127,23 @@ struct LoopComponentProxy
         cmp.state, state.navigation, state.options, state.geoContext);
   }
 
-  void update(const FreeVector& freeParams, const BoundVector& boundParams,
-              const Covariance& covariance, const Surface& surface) {
-    cmp.state.pars = freeParams;
-    cmp.state.cov = covariance;
-    cmp.state.jacToGlobal =
-        surface.boundToFreeJacobian(all_state.geoContext, boundParams);
+  /// Update the component to the parameters of a filter step
+  ///
+  /// It goes through the single stepper, so that the component ends up in the
+  /// same state a single-stepper fitter leaves its state in. A single state
+  /// caches values that follow from its parameters, and a plain write to
+  /// @c pars() leaves those stale.
+  ///
+  /// @param stepper the multi-stepper this component belongs to
+  /// @param freeParams the new free parameters
+  /// @param boundParams the same parameters, bound to @p surface
+  /// @param covariance the new covariance
+  /// @param surface the surface the parameters are bound to
+  void update(const loop_stepper_t& stepper, const FreeVector& freeParams,
+              const BoundVector& boundParams, const Covariance& covariance,
+              const Surface& surface) {
+    singleStepper(stepper).update(cmp.state, freeParams, boundParams,
+                                  covariance, surface);
   }
 };
 

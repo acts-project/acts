@@ -56,7 +56,6 @@ The following cmake options are available and can also be specified explicitly f
 | DETRAY_SET_LOGGING  | Set log level (NONE, WARN, INFO, VERBOSE, DEBUG) | INFO |
 | DETRAY_BUILD_CUDA  | Build the CUDA sources included in detray | ON (if available) |
 | DETRAY_BUILD_SYCL  | Build the SYCL sources included in detray | OFF |
-| DETRAY_BUILD_TEST_UTILS  | Build the detray test utilities library (contains e.g. test detectors) | OFF |
 | DETRAY_BUILD_UNITTESTS  | Build the detray unit tests | OFF |
 | DETRAY_BUILD_INTEGRATIONTESTS  | Build the detray integration tests | OFF |
 | DETRAY_BUILD_ALL_TESTS  | Build the detray unit and integration tests | OFF |
@@ -72,6 +71,8 @@ The following cmake options are available and can also be specified explicitly f
 | DETRAY_SMATRIX_PLUGIN | Build ROOT/SMatrix math plugin | OFF |
 | DETRAY_VC_AOS_PLUGIN | Build Vc based AoS math plugin | OFF |
 | DETRAY_VC_SOA_PLUGIN | Build Vc based SoA math plugin (currently only supports the ray-surface intersectors) | OFF |
+| DETRAY_BUILD_TEST_UTILS  | Build the detray test utilities library (contains e.g. test detectors) | OFF |
+| DETRAY_BUILD_VALIDATION_TOOLS | Build detray validation suite | OFF |
 | DETRAY_SVG_DISPLAY | Build ActSVG display module | OFF |
 
 ## Tutorials
@@ -90,9 +91,10 @@ Otherwise, the default detector metadata (`#include <detray/detectors/default_me
 
 ## Detector Validation
 
-Given a detray detector (and optionally also a grid and a material) json file, a number of validation test can be run from the command-line. For this, the library has to be built with the `-DDETRAY_BUILD_CLI_TOOLS=ON` option enabled. An example detector file can then be obtained using e.g.
+Given a detray detector (and optionally also a grid and a material) json file, a number of validation test can be run from the command-line. For this, the library has to be built with the `-DDETRAY_BUILD_CLI_TOOLS=ON` option enabled. An example detector file can then be obtained using the following command, which requires the python bindings (`-DDETRAY_BUILD_PYTHON_BINDINGS=ON -DDETRAY_BUILD_UNITTESTS=ON`) to be built and set up via `detray-build/python/setup.sh`:
 ```shell
-detray-build/bin/detray_generate_toy_detector --write_material --write_grids
+python3 detray/tests/tools/python/generate_toy_detector.py \
+   --write_material --write_grids
 ```
 All of the validation tools presented in the following can also be run as part of a corresponding [python script](https://github.com/acts-project/acts/tree/main/Detray/tests/tools/python) which takes the same arguments and will automatically create plots from the collected data. However, creating the plots requires Python 3, pandas, SciPy and NumPy, as well as Matplotlib to be available.
 

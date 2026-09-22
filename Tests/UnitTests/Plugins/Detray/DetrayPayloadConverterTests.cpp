@@ -531,7 +531,7 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversionTests) {
 //
 // }  // namespace detail
 //
-// template <typename detector_t>
+// template <concepts::detector detector_t>
 // inline std::string print_detector(
 //     const detector_t& det, const typename detector_t::name_map& names = {}) {
 //   // Gathers navigation information across navigator update calls

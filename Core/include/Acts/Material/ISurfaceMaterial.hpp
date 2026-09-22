@@ -74,19 +74,6 @@ class ISurfaceMaterial {
   /// @return const MaterialSlab
   virtual const MaterialSlab& materialSlab(const Vector2& lp) const = 0;
 
-  /// Return method for full material description of the Surface
-  /// - from the global coordinates
-  ///
-  /// @param gp is the global position used for the (eventual) lookup
-  ///
-  /// @return const MaterialSlab
-  /// @deprecated Use materialSlab(const Vector2&) with a prior
-  ///             Surface::globalToLocal() call to convert the global position.
-  [[deprecated(
-      "Use materialSlab(const Vector2& lp) with a prior "
-      "Surface::globalToLocal() call instead")]] virtual const MaterialSlab&
-  materialSlab(const Vector3& gp) const = 0;
-
   /// Return method for fully scaled material description of the Surface
   /// - from local coordinate of the material grid
   ///
@@ -97,22 +84,6 @@ class ISurfaceMaterial {
   /// @return MaterialSlab
   virtual MaterialSlab materialSlab(const Vector2& lp, Direction pDir,
                                     MaterialUpdateMode mode) const;
-
-  /// Return method for full material description of the Surface
-  /// - from the global coordinates
-  ///
-  /// @param gp is the global position used for the (eventual) lookup
-  /// @param pDir is the positive direction through the surface
-  /// @param mode is the material update directive
-  ///
-  /// @return MaterialSlab
-  /// @deprecated Use materialSlab(const Vector2&, Direction, MaterialUpdateMode)
-  ///             with a prior Surface::globalToLocal() call to convert gp.
-  [[deprecated(
-      "Use materialSlab(const Vector2& lp) with a prior "
-      "Surface::globalToLocal() call instead")]] virtual MaterialSlab
-  materialSlab(const Vector3& gp, Direction pDir,
-               MaterialUpdateMode mode) const;
 
   /// Update pre factor
   ///

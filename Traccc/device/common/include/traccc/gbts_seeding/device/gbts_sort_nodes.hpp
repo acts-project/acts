@@ -23,36 +23,34 @@ namespace traccc::device {
 struct gbts_sort_nodes_payload {
   /// Total number of GBTS nodes
   unsigned int nNodes;
-  /// Number of phi bins per eta slice
-  unsigned int nPhiBins;
-  /// Layer-ordered (x, y, z, r) per spacepoint
-  vecmem::data::vector_view<const float4> sp_params;
-  /// Eta-bin index per node
-  vecmem::data::vector_view<const unsigned int> node_eta_index;
-  /// Phi-bin index per node
-  vecmem::data::vector_view<const unsigned int> node_phi_index;
-  /// In/out: per-(eta, phi) write cursor (atomically advanced)
-  vecmem::data::vector_view<unsigned int> phi_cusums;
+  /// Reduced (x, y, z, cluster width) per spacepoint, in original order
+  vecmem::data::vector_view<const float4> reducedSP;
+  /// In/out: the nNodes node sort keys from gbts_bin_spacepoints.
+  vecmem::data::vector_view<unsigned long long int> sort_keys;
+  /// In/out: the spacepoint index belonging to each key, sorted alongside
+  /// @c sort_keys by the kernel launcher
+  vecmem::data::vector_view<unsigned int> sort_values;
   /// Output: per-node (tau_min, tau_max, r, z), written in sorted order
   vecmem::data::vector_view<float4> node_params;
   /// Output: per-node phi, written in sorted order
   vecmem::data::vector_view<float> node_phi;
-  /// Output: per-sorted-slot original layer-ordered spacepoint index
+  /// Output: per-sorted-slot original spacepoint index
   vecmem::data::vector_view<unsigned int> node_index;
-  /// Map from layer-ordered SP index to the original SP slot
-  vecmem::data::vector_view<const unsigned int> original_sp_idx;
   /// Optional tau lookup table (used iff gbts_sort_nodes_params.useTauLUT)
   vecmem::data::vector_view<const float> tau_lut;
   /// Tau-prediction cuts read by @c device::gbts_sort_nodes
   traccc::gbts_sort_nodes_params gbts_sort_nodes_params;
 };
 
-/// @brief Scatter nodes into (eta, phi)-sorted slots and pack their geometry
-/// tuple.
+/// @brief
 ///
-/// Each thread picks one node, atomically increments its (eta, phi) write
-/// cursor, packs the geometry / kinematic tuple into the node parameters at
-/// that slot, and stores the original SP index in the node index map.
+/// Gather nodes into their (eta bin, phi, spacepoint)-sorted slots and
+/// pack their geometry tuple.
+///
+/// The kernel launcher first sorts the (sort_keys, sort_values) pairs
+/// built in gbts_bin_spacepoints; thread i then reads the spacepoint index
+/// at sort_values[i] and writes that spacepoint's node data at rank i
+/// directly.
 ///
 /// @param[in] thread_id Thread identifier for the kernel launch
 /// @param[in] payload   The global memory payload

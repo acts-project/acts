@@ -52,17 +52,6 @@ class MergedMaterialMarker final : public ISurfaceMaterial {
   /// @copydoc ISurfaceMaterial::localAxisDirections() const
   std::vector<AxisDirection> localAxisDirections() const override;
 
-  /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
-  ///
-  /// @note the input parameter is ignored, always returns
-  ///       @ref MaterialSlab::Nothing()
-  /// @deprecated Use materialSlab(const Vector2&) with a prior
-  ///             Surface::globalToLocal() call instead.
-  [[deprecated(
-      "Use materialSlab(const Vector2& lp) with a prior "
-      "Surface::globalToLocal() call instead")]] const MaterialSlab&
-  materialSlab(const Vector3& gp) const override;
-
   // Inherit additional materialSlab overloads from base class
   using ISurfaceMaterial::materialSlab;
 

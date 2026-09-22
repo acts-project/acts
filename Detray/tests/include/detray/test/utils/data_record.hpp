@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/navigation.hpp"
@@ -22,7 +23,7 @@
 namespace detray {
 
 /// Record of a surface intersection along a track
-template <typename detector_t>
+template <concepts::detector detector_t>
 struct intersection_record {
   using algebra_type = typename detector_t::algebra_type;
   using scalar_type = dscalar<algebra_type>;
@@ -106,7 +107,7 @@ struct material_record {
 };
 
 /// Data for a single step
-template <typename detector_t>
+template <concepts::detector detector_t>
 struct propagation_record {
   using algebra_type = typename detector_t::algebra_type;
   using scalar_type = dscalar<algebra_type>;

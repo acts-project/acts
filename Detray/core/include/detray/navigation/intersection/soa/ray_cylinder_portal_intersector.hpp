@@ -16,6 +16,9 @@
 #include "detray/navigation/intersection/intersection.hpp"
 #include "detray/tracks/ray.hpp"
 
+// System include(s)
+#include <limits>
+
 namespace detray {
 
 template <typename frame_t, concepts::algebra algebra_t, bool resolve_pos>

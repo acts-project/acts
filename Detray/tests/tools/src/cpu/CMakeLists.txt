@@ -13,12 +13,6 @@ include(CMakeFindDependencyMacro)
 find_dependency(Boost COMPONENTS program_options)
 
 # Generate test detectors
-detray_add_executable(generate_toy_detector
-                      "generate_toy_detector.cpp"
-                      LINK_LIBRARIES Boost::program_options detray::tools
-                      detray::io detray::test_common detray::test_utils detray::core_array
-)
-
 detray_add_executable(generate_wire_chamber
                       "generate_wire_chamber.cpp"
                       LINK_LIBRARIES Boost::program_options detray::tools

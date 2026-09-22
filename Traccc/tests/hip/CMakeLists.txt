@@ -36,6 +36,9 @@ traccc_add_test(
     hip
     # Define the sources for the test.
     test_cca.cpp
+    test_ckf_combinatorics_telescope.cpp
+    test_ckf_toy_detector.cpp
+    test_spacepoint_formation.cpp
     LINK_LIBRARIES
     GTest::gtest_main
     vecmem::core
@@ -44,6 +47,7 @@ traccc_add_test(
     traccc::device_common
     traccc::hip_utils
     traccc::hip
+    traccc::performance
     traccc_tests_common
     traccc_test_hip_device
 )

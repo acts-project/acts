@@ -38,6 +38,9 @@ ProtoTracksToParameters::ProtoTracksToParameters(
   if (m_cfg.magneticField == nullptr) {
     throw std::invalid_argument("No magnetic field given");
   }
+  if (m_cfg.spacePointSelection == SeedSpacePointSelection::All) {
+    throw std::invalid_argument("The seeds made here are triplets");
+  }
 
   // Set up the track parameters covariance (the same for all tracks)
   for (std::size_t i = eBoundLoc0; i < eBoundSize; ++i) {

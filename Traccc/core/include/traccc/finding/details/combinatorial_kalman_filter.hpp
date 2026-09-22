@@ -56,7 +56,7 @@ namespace traccc::host::details {
 ///
 /// @return A container of the found tracks
 ///
-template <typename detector_t, typename bfield_t>
+template <detray::concepts::detector detector_t, typename bfield_t>
 edm::track_container<typename detector_t::algebra_type>::host
 combinatorial_kalman_filter(
     const detector_t& det, const bfield_t& field,
