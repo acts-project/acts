@@ -58,11 +58,9 @@ void createPixelSpacePoint(
   // we rely on the direction not being used by the surface
   const Acts::Vector3 global =
       surface.localToGlobal(gctx, local, Acts::Vector3::Zero());
-  const Acts::Vector2 varZR =
-      Acts::PixelSpacePointBuilder::computeCovarianceZR(
-          surface.referenceFrame(gctx, global, Acts::Vector3::Zero()), global,
-          localCov)
-          .diagonal();
+  const Acts::Vector2 varZR = Acts::PixelSpacePointBuilder::computeVarianceZR(
+      surface.referenceFrame(gctx, global, Acts::Vector3::Zero()), global,
+      localCov);
 
   auto sp = spacePoints.createSpacePoint();
   sp.assignSourceLinks(std::array{Acts::SourceLink(sourceLink)});

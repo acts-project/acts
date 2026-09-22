@@ -219,7 +219,7 @@ __global__ void grid_attach_assign_test_kernel(
 
   auto pts = g2_device.bin(threadIdx.x, threadIdx.y);
 
-  for (std::size_t i = 0u; i < pts.size(); i++) {
+  for (unsigned int i = 0u; i < pts.size(); i++) {
     pts[i] = {static_cast<scalar>(i), static_cast<scalar>(i + 1u),
               static_cast<scalar>(i + 2u)};
   }

@@ -365,17 +365,17 @@ struct pick : public pick_view<range_itr_t, detray::ranges::const_iterator_t<
 };
 
 // deduction guides>
-DETRAY_HOST_DEVICE pick()
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE pick()
     -> pick<detray::ranges::iterator_t<detray::ranges::views::empty<int>>,
             dvector<int>>;
 
 template <detray::ranges::range sequence_t>
-DETRAY_HOST_DEVICE pick(sequence_t &&seq)
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE pick(sequence_t &&seq)
     -> pick<detray::ranges::iterator_t<detray::ranges::views::empty<int>>,
             sequence_t>;
 
 template <detray::ranges::range range_t, detray::ranges::range sequence_t>
-DETRAY_HOST_DEVICE pick(range_t &&range, sequence_t &&seq)
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE pick(range_t &&range, sequence_t &&seq)
     -> pick<detray::ranges::iterator_t<std::remove_reference_t<range_t>>,
             sequence_t>;
 

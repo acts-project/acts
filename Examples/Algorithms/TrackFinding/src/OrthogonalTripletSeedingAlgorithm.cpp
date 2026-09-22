@@ -285,19 +285,17 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
     candidates.clear();
     kdTree.validTuples(lhOptions, hlOptions, spM, nTopSeedConf, candidates);
 
-    Acts::SpacePointContainer::ConstSubset bottomSps =
-        coreSpacePoints.subset(candidates.bottom_lh_v).asConst();
-    Acts::SpacePointContainer::ConstSubset topSps =
-        coreSpacePoints.subset(candidates.top_lh_v).asConst();
     m_seedFinder->createSeedsFromGroup(
         cache, *bottomDoubletFinder, *topDoubletFinder, *tripletFinder,
-        seedFilter, coreSpacePoints, bottomSps, spM, topSps, seeds);
+        seedFilter, coreSpacePoints,
+        coreSpacePoints.subset(candidates.bottom_lh_v).asConst(), spM,
+        coreSpacePoints.subset(candidates.top_lh_v).asConst(), seeds);
 
-    bottomSps = coreSpacePoints.subset(candidates.bottom_hl_v).asConst();
-    topSps = coreSpacePoints.subset(candidates.top_hl_v).asConst();
     m_seedFinder->createSeedsFromGroup(
         cache, *bottomDoubletFinder, *topDoubletFinder, *tripletFinder,
-        seedFilter, coreSpacePoints, bottomSps, spM, topSps, seeds);
+        seedFilter, coreSpacePoints,
+        coreSpacePoints.subset(candidates.bottom_hl_v).asConst(), spM,
+        coreSpacePoints.subset(candidates.top_hl_v).asConst(), seeds);
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "

@@ -10,16 +10,16 @@
 
 #include "../../device/cuda/src/utils/sync.cuh"
 
-__global__ void testWarpIndexedBallotSyncBasicKernel(uint32_t *vts,
-                                                     uint32_t *vis) {
+__global__ void testWarpIndexedBallotSyncBasicKernel(std::uint32_t *vts,
+                                                     std::uint32_t *vis) {
   auto [vt, vi] = traccc::cuda::warp_indexed_ballot_sync(threadIdx.x % 2 == 0);
 
   vts[threadIdx.x] = vt;
   vis[threadIdx.x] = vi;
 }
 
-__global__ void testWarpIndexedBallotSyncWithExitKernel(uint32_t *vts,
-                                                        uint32_t *vis) {
+__global__ void testWarpIndexedBallotSyncWithExitKernel(std::uint32_t *vts,
+                                                        std::uint32_t *vis) {
   if (threadIdx.x < 16) {
     return;
   }
@@ -31,11 +31,11 @@ __global__ void testWarpIndexedBallotSyncWithExitKernel(uint32_t *vts,
 }
 
 TEST(CUDASync, WarpIndexedBallotSyncBasic) {
-  uint32_t *dev_vt = nullptr, *dev_vi = nullptr;
-  uint32_t host_vt[32], host_vi[32];
+  std::uint32_t *dev_vt = nullptr, *dev_vi = nullptr;
+  std::uint32_t host_vt[32], host_vi[32];
 
-  ASSERT_EQ(cudaMalloc(&dev_vt, 32u * sizeof(uint32_t)), cudaSuccess);
-  ASSERT_EQ(cudaMalloc(&dev_vi, 32u * sizeof(uint32_t)), cudaSuccess);
+  ASSERT_EQ(cudaMalloc(&dev_vt, 32u * sizeof(std::uint32_t)), cudaSuccess);
+  ASSERT_EQ(cudaMalloc(&dev_vi, 32u * sizeof(std::uint32_t)), cudaSuccess);
   ASSERT_NE(dev_vt, nullptr);
   ASSERT_NE(dev_vi, nullptr);
 
@@ -43,18 +43,18 @@ TEST(CUDASync, WarpIndexedBallotSyncBasic) {
 
   ASSERT_EQ(cudaPeekAtLastError(), cudaSuccess);
 
-  ASSERT_EQ(cudaMemcpy(host_vt, dev_vt, 32u * sizeof(uint32_t),
+  ASSERT_EQ(cudaMemcpy(host_vt, dev_vt, 32u * sizeof(std::uint32_t),
                        cudaMemcpyDeviceToHost),
             cudaSuccess);
-  ASSERT_EQ(cudaMemcpy(host_vi, dev_vi, 32u * sizeof(uint32_t),
+  ASSERT_EQ(cudaMemcpy(host_vi, dev_vi, 32u * sizeof(std::uint32_t),
                        cudaMemcpyDeviceToHost),
             cudaSuccess);
 
-  for (uint32_t i = 0; i < 32u; ++i) {
+  for (std::uint32_t i = 0; i < 32u; ++i) {
     ASSERT_EQ(host_vt[i], 16u);
   }
 
-  for (uint32_t i = 0; i < 16u; ++i) {
+  for (std::uint32_t i = 0; i < 16u; ++i) {
     ASSERT_EQ(host_vi[i * 2], i);
   }
 
@@ -63,11 +63,11 @@ TEST(CUDASync, WarpIndexedBallotSyncBasic) {
 }
 
 TEST(CUDASync, WarpIndexedBallotSyncWithExit) {
-  uint32_t *dev_vt = nullptr, *dev_vi = nullptr;
-  uint32_t host_vt[32], host_vi[32];
+  std::uint32_t *dev_vt = nullptr, *dev_vi = nullptr;
+  std::uint32_t host_vt[32], host_vi[32];
 
-  ASSERT_EQ(cudaMalloc(&dev_vt, 32u * sizeof(uint32_t)), cudaSuccess);
-  ASSERT_EQ(cudaMalloc(&dev_vi, 32u * sizeof(uint32_t)), cudaSuccess);
+  ASSERT_EQ(cudaMalloc(&dev_vt, 32u * sizeof(std::uint32_t)), cudaSuccess);
+  ASSERT_EQ(cudaMalloc(&dev_vi, 32u * sizeof(std::uint32_t)), cudaSuccess);
   ASSERT_NE(dev_vt, nullptr);
   ASSERT_NE(dev_vi, nullptr);
 
@@ -75,18 +75,18 @@ TEST(CUDASync, WarpIndexedBallotSyncWithExit) {
 
   ASSERT_EQ(cudaPeekAtLastError(), cudaSuccess);
 
-  ASSERT_EQ(cudaMemcpy(host_vt, dev_vt, 32u * sizeof(uint32_t),
+  ASSERT_EQ(cudaMemcpy(host_vt, dev_vt, 32u * sizeof(std::uint32_t),
                        cudaMemcpyDeviceToHost),
             cudaSuccess);
-  ASSERT_EQ(cudaMemcpy(host_vi, dev_vi, 32u * sizeof(uint32_t),
+  ASSERT_EQ(cudaMemcpy(host_vi, dev_vi, 32u * sizeof(std::uint32_t),
                        cudaMemcpyDeviceToHost),
             cudaSuccess);
 
-  for (uint32_t i = 16; i < 32u; ++i) {
+  for (std::uint32_t i = 16; i < 32u; ++i) {
     ASSERT_EQ(host_vt[i], 8u);
   }
 
-  for (uint32_t i = 0; i < 8u; ++i) {
+  for (std::uint32_t i = 0; i < 8u; ++i) {
     ASSERT_EQ(host_vi[i * 2 + 16], i);
   }
 

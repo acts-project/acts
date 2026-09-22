@@ -297,8 +297,11 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
 
     auto proxy = tmpStates.traj.getTrackState(idx);
 
-    cmp.pars() = MultiTrajectoryHelpers::freeFiltered(state.geoContext, proxy);
-    cmp.cov() = proxy.filteredCovariance();
+    // The same update the KF and the single-stepper CKF apply after a filter
+    // step, so a component ends up in the same state a single stepper would
+    cmp.update(
+        stepper, MultiTrajectoryHelpers::freeFiltered(state.geoContext, proxy),
+        proxy.filtered(), proxy.filteredCovariance(), proxy.referenceSurface());
     cmp.weight() = tmpStates.weights.at(idx);
   }
 

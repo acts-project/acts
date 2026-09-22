@@ -26,7 +26,8 @@ namespace traccc::device {
 namespace detail {
 
 struct Tracklet {
-  unsigned int nodes[traccc::device::gbts_consts::max_cca_iter + 1];
+  unsigned int
+      nodes[traccc::device::gbts_consts::max_seed_candidate_length + 1];
   int size;
 };
 
@@ -90,22 +91,30 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
   const bool use_dropout = payload.gbts_convert_seeds_params.use_dropout;
 
   // Row-major output graph: each edge owns a contiguous block of
-  // edge_size = 2 + 1 + max_num_neighbours ints.
-  const unsigned int edge_size = 2u + 1u + payload.max_num_neighbours;
+  // nei_start + max_num_neighbours ints ([node1, node2, nNei, nei0..]).
+  const unsigned int edge_size =
+      gbts_consts::nei_start + payload.max_num_neighbours;
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
   const unsigned int gridDimX = thread_id.getGridDimX();
 
-  for (unsigned int prop_idx = globalIdx; prop_idx < payload.nProps;
+  const unsigned int path_count =
+      vecmem::device_vector<const unsigned int>(payload.path_count)[0];
+  const unsigned int nPaths =
+      (path_count < payload.nPathsMax) ? path_count : payload.nPathsMax;
+  for (unsigned int prop_idx = globalIdx; prop_idx < nPaths;
        prop_idx += blockDimX * gridDimX) {
+    const int2 prop = d_seed_proposals[prop_idx];
+    if (prop.y < 0) {
+      continue;
+    }
     if (d_seed_ambiguity[prop_idx] == -2) {
       continue;
     }
     char best_for_hit = 0;
     detail::Tracklet seed;
     seed.size = 0;
-    const int2 prop = d_seed_proposals[prop_idx];
     int2 path = int2{0, prop.y};
     while (path.y >= 0) {
       path = d_path_store[static_cast<unsigned int>(path.y)];
@@ -158,24 +167,24 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
                        (diff_code == 0);
     }
     float quality = static_cast<float>(prop.x);
-    // use one seed from a consistant pair/set + the inconsistant one
+    // use one seed from a consistent pair/set + the inconsistent one
     // sample spacepoints from tracklet to create seeds
-    // include 1st order unless either 2 or 3 are consitant with the other
+    // include 1st order unless either 2 or 3 are consistent with the other
     // and 1
     if (((diff_code != 3) & (diff_code != 6)) | force_dropout) {
       seeds_device.push_back({seed.nodes[seed.size - 1],
                               seed.nodes[(seed.size - 1) / 2 + 1],
                               seed.nodes[0], quality});
     }
-    // include 2nd order if it consistant with 1 and 3 or only 1 and 3 are
-    // consistant
+    // include 2nd order if it consistent with 1 and 3 or only 1 and 3 are
+    // consistent
     if ((diff_code == 1) | (diff_code == 6)) {
       seeds_device.push_back({seed.nodes[seed.size - 1],
                               seed.nodes[(seed.size - 1) / 2], seed.nodes[0],
                               quality});
     }
-    // include 3rd order if it is consistant with 1 and 2 or only 1 and 2
-    // are consistant or if only 2 and 3 are consistant
+    // include 3rd order if it is consistent with 1 and 2 or only 1 and 2
+    // are consistent or if only 2 and 3 are consistent
     if ((diff_code == 2) | (diff_code == 3) | (diff_code == 4) |
         force_dropout) {
       seeds_device.push_back({seed.nodes[seed.size - 2],

@@ -34,6 +34,8 @@ struct mask_index_update;
 /// @brief Provides basic functionality to build detector volumes
 template <typename detector_t>
 class volume_builder : public volume_builder_interface<detector_t> {
+  static_assert(concepts::detector<detector_t>);
+
  public:
   using scalar_t = dscalar<typename detector_t::algebra_type>;
   using volume_type = typename detector_t::volume_type;

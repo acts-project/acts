@@ -9,6 +9,7 @@
 
 // Local include(s).
 #include "traccc/sycl/utils/algorithm_base.hpp"
+#include "traccc/sycl/utils/await.hpp"
 
 // Project include(s).
 #include "traccc/seeding/device/silicon_pixel_spacepoint_formation_algorithm.hpp"
@@ -31,16 +32,32 @@ class silicon_pixel_spacepoint_formation_algorithm
   ///             and host memory blocks
   /// @param queue The SYCL queue to use
   /// @param logger The logger instance to use
+  /// @param await_func The function used to synchronize events
   ///
   silicon_pixel_spacepoint_formation_algorithm(
       const traccc::memory_resource& mr, const vecmem::copy& copy,
       queue_wrapper& queue,
-      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
+      await_function_type await_func = await_sync_event);
 
  private:
   /// @name Function(s) inherited from
   /// @c traccc::device::silicon_pixel_spacepoint_formation_algorithm
   /// @{
+
+  /// Launch the spacepoint counting kernel
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  void count_spacepoints_kernel(
+      const count_spacepoints_kernel_payload& payload) const override;
+
+  /// Turn the spacepoint flags into a prefix sum, in place
+  ///
+  /// @param spacepoint_flags The flags to scan
+  ///
+  void scan_spacepoint_flags(
+      vecmem::data::vector_view<unsigned int>& spacepoint_flags) const override;
 
   /// Launch the spacepoint formation kernel
   ///

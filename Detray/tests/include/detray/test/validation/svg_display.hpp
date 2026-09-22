@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/utils/logging.hpp"
 
@@ -108,7 +109,7 @@ auto transcribe_intersections(
 }
 
 /// @returns the svg of the intersections (truth and track) and the trajectory
-template <typename detector_t, typename truth_trace_t, class traj_t,
+template <concepts::detector detector_t, typename truth_trace_t, class traj_t,
           typename recorded_trace_t, typename view_t>
 auto draw_intersection_and_traj_svg(
     const typename detector_t::geometry_context gctx,
@@ -149,7 +150,7 @@ auto draw_intersection_and_traj_svg(
 }
 
 /// Display the geometry, intersection and track data via @c svgtools
-template <typename detector_t, typename truth_trace_t, class traj_t,
+template <concepts::detector detector_t, typename truth_trace_t, class traj_t,
           typename recorded_trace_t>
 inline void svg_display(
     const typename detector_t::geometry_context gctx,

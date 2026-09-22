@@ -8,6 +8,7 @@
 
 #include "ActsPlugins/Gnn/BoostTrackBuilding.hpp"
 #include "ActsPlugins/Gnn/CudaTrackBuilding.hpp"
+#include "ActsPlugins/Gnn/DWalkTrackBuilding.hpp"
 #include "ActsPlugins/Gnn/EdgeLayerConnector.hpp"
 #include "ActsPlugins/Gnn/GnnPipeline.hpp"
 #include "ActsPlugins/Gnn/ModuleMapCuda.hpp"
@@ -86,6 +87,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGnn, gnn) {
   ACTS_PYTHON_DECLARE_GNN_STAGE(CudaTrackBuilding, TrackBuildingBase, gnn,
                                 useOneBlockImplementation, doJunctionRemoval,
                                 minCandidateSize);
+  ACTS_PYTHON_DECLARE_GNN_STAGE(DWalkTrackBuilding, TrackBuildingBase, gnn,
+                                thMin, thAdd, minCandidateSize,
+                                radialFeatureIndex, pathMetric);
 #endif
 
 #ifdef ACTS_GNN_ONNX_BACKEND

@@ -10,9 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
+#include "Acts/Propagator/detail/SympyStepperStatus.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <span>
+#include <system_error>
 
 namespace Acts {
 
@@ -24,7 +26,10 @@ namespace detail {
 ///
 /// Kept in its own translation unit so that the dense kernel is not
 /// instantiated next to SympyStepper::step, where it would share a stack frame
-/// and a register allocation with the vacuum path.
+/// and a register allocation with the vacuum path. Specialised on covariance
+/// transport, a translation unit each.
+///
+/// @tparam WithJac whether the jacobian is transported
 ///
 /// @param [in] stepper the stepper, for field access
 /// @param [in,out] state the stepper state, read for the start parameters and
@@ -35,14 +40,24 @@ namespace detail {
 /// @param [out] errorEstimate the error estimate of the attempted step
 /// @param [out] lastField the field at the last sampled point, to seed the
 ///        next step
-/// @param [in,out] jac the bound-to-free jacobian, empty to skip transport
+/// @param [out] fieldErr the error of a failed field lookup
+/// @param [in,out] jac the bound-to-free jacobian, unread without @c WithJac
 ///
-/// @return whether the step was accepted, or an error
-Result<bool> sympyDenseStep(const SympyStepper& stepper,
-                            SympyStepper::State& state,
-                            const IVolumeMaterial& material, double h,
-                            double errTol, double& errorEstimate,
-                            Vector3& lastField, std::span<double> jac);
+/// @return whether the step was accepted, rejected or hit a field error
+template <bool WithJac>
+Rk4Status sympyDenseStep(const SympyStepper& stepper,
+                         SympyStepper::State& state,
+                         const IVolumeMaterial& material, double h,
+                         double errTol, double& errorEstimate,
+                         Vector3& lastField, std::error_code& fieldErr,
+                         std::span<double> jac);
+
+extern template Rk4Status sympyDenseStep<true>(
+    const SympyStepper&, SympyStepper::State&, const IVolumeMaterial&, double,
+    double, double&, Vector3&, std::error_code&, std::span<double>);
+extern template Rk4Status sympyDenseStep<false>(
+    const SympyStepper&, SympyStepper::State&, const IVolumeMaterial&, double,
+    double, double&, Vector3&, std::error_code&, std::span<double>);
 
 }  // namespace detail
 }  // namespace Acts

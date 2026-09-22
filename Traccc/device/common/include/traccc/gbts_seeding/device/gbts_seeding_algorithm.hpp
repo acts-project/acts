@@ -9,24 +9,18 @@
 
 // Local include(s).
 #include "traccc/device/algorithm_base.hpp"
-#include "traccc/gbts_seeding/device/gbts_add_terminus_to_path_store.hpp"
 #include "traccc/gbts_seeding/device/gbts_bid_seeds_for_hits.hpp"
 #include "traccc/gbts_seeding/device/gbts_bin_spacepoints.hpp"
 #include "traccc/gbts_seeding/device/gbts_compress_graph.hpp"
 #include "traccc/gbts_seeding/device/gbts_convert_seeds.hpp"
-#include "traccc/gbts_seeding/device/gbts_count_eta_phi_bins.hpp"
-#include "traccc/gbts_seeding/device/gbts_count_spacepoints_by_layer.hpp"
-#include "traccc/gbts_seeding/device/gbts_count_terminus_edges.hpp"
+#include "traccc/gbts_seeding/device/gbts_count_paths.hpp"
 #include "traccc/gbts_seeding/device/gbts_fill_path_store.hpp"
 #include "traccc/gbts_seeding/device/gbts_find_minmax_radius.hpp"
-#include "traccc/gbts_seeding/device/gbts_fit_segments.hpp"
+#include "traccc/gbts_seeding/device/gbts_finish_cca.hpp"
 #include "traccc/gbts_seeding/device/gbts_link_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_make_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_match_graph_edges.hpp"
-#include "traccc/gbts_seeding/device/gbts_prefix_sum_eta_phi_bins.hpp"
-#include "traccc/gbts_seeding/device/gbts_rebid_seeds_for_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_reindex_edges.hpp"
-#include "traccc/gbts_seeding/device/gbts_reset_edge_bids.hpp"
 #include "traccc/gbts_seeding/device/gbts_run_cca_iteration.hpp"
 #include "traccc/gbts_seeding/device/gbts_sort_nodes.hpp"
 
@@ -102,33 +96,12 @@ class gbts_seeding_algorithm
   /// the payload types are defined in the per-function device headers.
   /// @{
 
-  /// Spacepoint-by-layer counting kernel launcher
-  ///
-  /// @param payload The payload for the kernel
-  ///
-  virtual void gbts_count_spacepoints_by_layer_kernel(
-      const gbts_count_spacepoints_by_layer_payload& payload) const = 0;
-
   /// Spacepoint-binning kernel launcher
   ///
   /// @param payload The payload for the kernel
   ///
   virtual void gbts_bin_spacepoints_kernel(
       const gbts_bin_spacepoints_payload& payload) const = 0;
-
-  /// Eta-phi counting kernel launcher
-  ///
-  /// @param payload The payload for the kernel
-  ///
-  virtual void gbts_count_eta_phi_bins_kernel(
-      const gbts_count_eta_phi_bins_payload& payload) const = 0;
-
-  /// Eta-phi prefix-sum kernel launcher
-  ///
-  /// @param payload The payload for the kernel
-  ///
-  virtual void gbts_prefix_sum_eta_phi_bins_kernel(
-      const gbts_prefix_sum_eta_phi_bins_payload& payload) const = 0;
 
   /// Node sorting kernel launcher
   ///
@@ -186,19 +159,20 @@ class gbts_seeding_algorithm
   virtual void gbts_run_cca_iteration_kernel(
       const gbts_run_cca_iteration_payload& payload) const = 0;
 
-  /// Terminus-edge counting kernel launcher
+  /// CCA finishing kernel launcher
   ///
   /// @param payload The payload for the kernel
   ///
-  virtual void gbts_count_terminus_edges_kernel(
-      const gbts_count_terminus_edges_payload& payload) const = 0;
+  virtual void gbts_finish_cca_kernel(
+      const gbts_finish_cca_payload& payload) const = 0;
 
-  /// Terminus-to-path-store seeding kernel launcher
+  /// Path counting kernel launcher (followed by the inclusive scan of the
+  /// counts)
   ///
   /// @param payload The payload for the kernel
   ///
-  virtual void gbts_add_terminus_to_path_store_kernel(
-      const gbts_add_terminus_to_path_store_payload& payload) const = 0;
+  virtual void gbts_count_paths_kernel(
+      const gbts_count_paths_payload& payload) const = 0;
 
   /// Path-store-filling kernel launcher
   ///
@@ -206,27 +180,6 @@ class gbts_seeding_algorithm
   ///
   virtual void gbts_fill_path_store_kernel(
       const gbts_fill_path_store_payload& payload) const = 0;
-
-  /// Segment fitting kernel launcher
-  ///
-  /// @param payload The payload for the kernel
-  ///
-  virtual void gbts_fit_segments_kernel(
-      const gbts_fit_segments_payload& payload) const = 0;
-
-  /// Edge-bid reset kernel launcher
-  ///
-  /// @param payload The payload for the kernel
-  ///
-  virtual void gbts_reset_edge_bids_kernel(
-      const gbts_reset_edge_bids_payload& payload) const = 0;
-
-  /// Edge re-bid kernel launcher
-  ///
-  /// @param payload The payload for the kernel
-  ///
-  virtual void gbts_rebid_seeds_for_edges_kernel(
-      const gbts_rebid_seeds_for_edges_payload& payload) const = 0;
 
   /// Seeds-bid-for-hits kernel launcher
   ///
@@ -282,7 +235,8 @@ class gbts_seeding_algorithm
   /// Stage 1: count, bin, sort and characterise nodes.
   node_making_output make_nodes(
       const edm::spacepoint_collection::const_view& spacepoints,
-      const edm::measurement_collection::const_view& measurements) const;
+      const edm::measurement_collection::const_view& measurements,
+      const unsigned int nSp) const;
 
   /// Stage 2: build, link, match and compress the edge graph. The per-node
   /// buffers are taken by value so they are released when this stage returns.
@@ -301,7 +255,6 @@ class gbts_seeding_algorithm
       vecmem::data::vector_buffer<unsigned int>& output_graph,
       vecmem::data::vector_buffer<float4>& reducedSP,
       const unsigned int nConnectedEdges, const unsigned int nSp,
-      vecmem::data::vector_buffer<unsigned int>& counters_buf,
       vecmem::vector<unsigned int>& h_counters) const;
 
   /// @}
@@ -309,6 +262,26 @@ class gbts_seeding_algorithm
   /// GBTS seed-finding configuration.
   gbts_seedfinder_config m_config;
 
+  /// @name Device copies of the configuration tables, uploaded once at
+  ///       construction and shared by every event.
+  /// @{
+
+  /// Volume ID to GBTS layer index map.
+  vecmem::data::vector_buffer<short> m_volume_to_layer_map_buffer;
+  /// (Surface ID, GBTS layer index) pairs, for detectors that need them.
+  vecmem::data::vector_buffer<std::pair<unsigned int, unsigned int>>
+      m_surface_to_layer_map_buffer;
+  /// Per-layer type (barrel / endcap).
+  vecmem::data::vector_buffer<char> m_layer_type_buffer;
+  /// Per-layer (etaBin0, numBins).
+  vecmem::data::vector_buffer<std::pair<unsigned int, unsigned int>>
+      m_layer_info_buffer;
+  /// Per-layer (minEta, deltaEta).
+  vecmem::data::vector_buffer<std::pair<float, float>> m_layer_geo_buffer;
+  /// Optional tau LUT for @c gbts_sort_nodes (a size-1 dummy when unused).
+  vecmem::data::vector_buffer<float> m_tau_lut_buffer;
+
+  /// @}
 };  // class gbts_seeding_algorithm
 
 }  // namespace traccc::device

@@ -17,8 +17,8 @@
 
 namespace Acts::detail {
 
-int computeSpacePointGridPhiBins(const SpacePointGridPhiBinningConfig& config,
-                                 const Logger& logger) {
+std::uint32_t computeSpacePointGridPhiBins(
+    const SpacePointGridPhiBinningConfig& config, const Logger& logger) {
   if (config.bFieldInZ == 0) {
     // for no magnetic field, use the maximum number of phi bins
     ACTS_VERBOSE(
@@ -87,8 +87,8 @@ int computeSpacePointGridPhiBins(const SpacePointGridPhiBinningConfig& config,
 
   // divide 2pi by angle delta to get number of phi-bins
   // size is always 2pi even for regions of interest
-  const int phiBins =
-      static_cast<int>(std::ceil(2 * std::numbers::pi / deltaPhi));
+  const auto phiBins =
+      static_cast<std::uint32_t>(std::ceil(2 * std::numbers::pi / deltaPhi));
 
   // set protection for large number of bins, by default it is large
   return std::min(phiBins, config.maxPhiBins);

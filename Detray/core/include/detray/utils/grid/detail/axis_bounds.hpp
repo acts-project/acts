@@ -9,10 +9,12 @@
 #pragma once
 
 // Project include(s).
+#include "detray/definitions/containers.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/grid_axis.hpp"
 
 // System include(s).
+#include <cassert>
 #include <cstddef>
 
 namespace detray::axis {
