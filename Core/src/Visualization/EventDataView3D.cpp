@@ -102,8 +102,8 @@ void Acts::EventDataView3D::drawTrack(IVisualization3D& helper,
     auto& s = ts.referenceSurface();
     auto currentpos = s.localToGlobal(gctx, locpos, locdir);
 
-    if (!first) {
-      helper.line(previouspos, currentpos);
+    if (previouspos.has_value()) {
+      helper.line(*previouspos, currentpos);
     }
     previouspos = currentpos;
     first = false;
