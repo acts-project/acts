@@ -29,10 +29,9 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-// Prevent stl.h's list_caster-based type_caster<std::vector<T>> from matching,
-// which would break py::cast<std::unique_ptr<T>> needed
-// by WhiteBoardRegistry. The full specialization takes priority over stl.h's
-// partial specialization regardless of include order.
+// Prevent stl.h's type_caster<std::vector<T>> from matching, which would
+// break py::cast<std::unique_ptr<T>> needed by WhiteBoardRegistry (full
+// specializations take priority over stl.h's partial one).
 PYBIND11_MAKE_OPAQUE(ActsExamples::ClusterContainer)
 PYBIND11_MAKE_OPAQUE(ActsExamples::ProtoTrackContainer)
 // MeasurementSimHitsMap == SimHitMeasurementsMap at the C++ level (both are
@@ -101,12 +100,8 @@ void bindIndexMultimapPair(py::module& m, const char* forwardName,
   });
 }
 
-/// Bind the bit-flag accessors shared by TrackStateType/ConstTrackStateTypeMap/
-/// MutableTrackStateTypeMap. Getters are always available; setters only exist
-/// when `!Map::IsReadOnly`. isMeasurement mirrors the C++ API: it's a
-/// computed flag with only a no-argument setIsMeasurement() (no inverse), so
-/// it stays a read-only property with setIsMeasurement() as a plain method,
-/// rather than inventing bool semantics for it.
+/// Setters only exist when `!Map::IsReadOnly`. isMeasurement is computed and
+/// only gets a plain setIsMeasurement(), no getter/setter pair.
 template <typename Map>
 void addTrackStateTypeFlags(py::class_<Map>& cls) {
   cls.def_property_readonly("hasMaterial", &Map::hasMaterial)
@@ -145,9 +140,8 @@ void bindEigenReadonly(Cls& cls, const char* name, Access access) {
 }
 
 /// Bind a property whose accessor returns an Eigen::Map, read-write when
-/// `!Proxy::ReadOnly`. `access` must be a generic lambda `(auto& self) ->
-/// decltype(auto)`, since these accessors are overloaded on const vs. mutable
-/// with different Eigen::Map return types; the constness of `self` picks it.
+/// `!Proxy::ReadOnly`. `access` must be a generic lambda so the constness of
+/// `self` selects the const/mutable overload.
 template <typename Cls, typename Access>
 void bindEigen(Cls& cls, const char* name, Access access) {
   using Proxy = typename Cls::type;
@@ -330,9 +324,8 @@ void bindTrackProxyVector(Cls& cls) {
 }
 
 /// Bind the surface shared by the concrete and Any track state proxies (same
-/// rationale as @ref bindTrackProxyCommon). `effectiveCalibrated`/
-/// `effectiveCalibratedCovariance` are always read-only here; see
-/// @ref bindTrackStateProxyVector for why.
+/// rationale as @ref bindTrackProxyCommon); `effectiveCalibrated`/
+/// `effectiveCalibratedCovariance` stay read-only here, see below.
 template <typename Cls>
 void bindTrackStateProxyCommon(Cls& cls) {
   using Proxy = typename Cls::type;
@@ -448,16 +441,9 @@ void bindTrackStateProxyCommon(Cls& cls) {
   }
 }
 
-/// Bind the extra surface only the concrete Vector-backed proxies have:
-/// `copyFrom` (a member function template, absent from `AnyTrackStateProxy`)
-/// and write access to `effectiveCalibrated`/`effectiveCalibratedCovariance`.
-///
-/// The latter is kept off `Any*` deliberately, not because it's unsafe today:
-/// these accessors always return a plain (non-strided) `Eigen::Map`, which
-/// Eigen only allows to be contiguous, so `toVector`'s raw `.data()` walk is
-/// safe regardless of backend. But that's a property of today's concrete
-/// backends, not something `AnyTrackStateProxy`'s interface enforces — keep
-/// the write path Vector-only rather than relying on that going forward.
+/// Bind what only concrete Vector-backed proxies have: `copyFrom`, and write
+/// access to `effectiveCalibrated`/`effectiveCalibratedCovariance` (needs a
+/// contiguous `Eigen::Map`, not guaranteed by `AnyTrackStateProxy`).
 template <typename Cls>
 void bindTrackStateProxyVector(Cls& cls) {
   using Proxy = typename Cls::type;
@@ -610,10 +596,9 @@ void addEventData(py::module& mex) {
                 return self.hasColumn(key);
               },
               py::arg("key"))
-          // Build an independent, fully mutable copy of this container. The
-          // source container is left untouched (unlike @c makeConst on
-          // TrackContainer, which moves out of its backends), since a
-          // ConstTrackContainer may be shared, e.g. via the whiteboard.
+          // Build an independent, fully mutable copy; the source is left
+          // untouched (unlike TrackContainer::makeConst, which moves out of
+          // its backends) since a ConstTrackContainer may be shared.
           .def("makeMutable",
                [](const ConstTrackContainer& self) {
                  return TrackContainer{
@@ -796,8 +781,7 @@ void addEventData(py::module& mex) {
       .def("index", &IndexSourceLink::index)
       .def("geometryId", &IndexSourceLink::geometryId);
 
-  // bind measurements
-  // The measurement proxy is bound as a ProxyTether (see ProxyTether.hpp). The
+  // The measurement proxy is bound as a ProxyTether (see ProxyTether.hpp); the
   // type-erased alive-check lets both MeasurementContainer and
   // MeasurementSubset produce the same bound proxy type.
   using MeasTether = ProxyTether<ConstVariableBoundMeasurementProxy>;
