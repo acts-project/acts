@@ -39,7 +39,7 @@ struct gbts_compress_graph_payload {
   /// Inclusive prefix sum of the per-edge "kept" flags.
   vecmem::data::vector_view<const unsigned int> reIndexer;
   /// Output: compacted graph in row-major layout; each edge owns a block
-  /// of edge_size = 2 + 1 + nMaxNei ints (node1, node2, nNei,
+  /// of edge_size = nei_start + nMaxNei ints (node1, node2, nNei,
   /// nei0..neiN-1).
   vecmem::data::vector_view<unsigned int> output_graph;
 };

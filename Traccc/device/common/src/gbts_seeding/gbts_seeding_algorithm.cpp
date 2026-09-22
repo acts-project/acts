@@ -195,7 +195,8 @@ auto gbts_seeding_algorithm::create_edges(
   // 5. Compress the kept edges into the output graph.
   const unsigned int nConnectedEdgesMax =
       cfg.max_connected_edges_per_spacepoint * nSp;
-  const unsigned int nIntsPerEdge = 2 + 1 + cfg.max_num_neighbours;
+  const unsigned int nIntsPerEdge =
+      gbts_consts::nei_start + cfg.max_num_neighbours;
   vecmem::data::vector_buffer<unsigned int> output_graph_buf(
       nConnectedEdgesMax * nIntsPerEdge, mr().main);
   copy().setup(output_graph_buf)->ignore();

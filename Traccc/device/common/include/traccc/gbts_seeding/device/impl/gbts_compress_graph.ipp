@@ -55,9 +55,8 @@ TRACCC_HOST_DEVICE inline void gbts_compress_graph(
     }
 
     // Row-major output graph: each edge owns a contiguous block of
-    // edge_size = 2 + 1 + nMaxNei ints ([node1, node2, nNei,
-    // nei0..neiN-1]).
-    const unsigned int edge_size = 2u + 1u + payload.nMaxNei;
+    // nei_start + nMaxNei ints ([node1, node2, nNei, nei0..neiN-1]).
+    const unsigned int edge_size = gbts_consts::nei_start + payload.nMaxNei;
     const unsigned int pos = edge_size * newIdx;
 
     const uint2 edge_nodes = d_edge_nodes[globalIndex];
