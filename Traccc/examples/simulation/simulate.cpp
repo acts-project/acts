@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
   /// Type declarations
   using host_detector_type = traccc::default_detector_traits::host;
   using uniform_gen_t =
-      detray::detail::random_numbers<scalar,
+      detray::detail::random_numbers<traccc::default_algebra,
                                      std::uniform_real_distribution<scalar>>;
   using generator_type =
       detray::random_track_generator<traccc::free_track_parameters<>,

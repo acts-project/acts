@@ -38,7 +38,7 @@ int simulate(const traccc::opts::generation& generation_opts,
              const traccc::opts::track_propagation& propagation_opts) {
   // Use deterministic random number generator for testing
   using uniform_gen_t =
-      detray::detail::random_numbers<scalar,
+      detray::detail::random_numbers<traccc::default_algebra,
                                      std::uniform_real_distribution<scalar>>;
 
   // Memory resource

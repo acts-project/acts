@@ -16,10 +16,10 @@ namespace detray::algebra::constants {
 
 /// Pulling in global constants for overload resolution
 /// @{
-using algebra::constants::iota;
-using algebra::constants::one;
-using algebra::constants::size;
-using algebra::constants::zero;
+using detray::detail::iota;
+using detray::detail::one;
+using detray::detail::size;
+using detray::detail::zero;
 /// @}
 
 /// Utilities to generate values

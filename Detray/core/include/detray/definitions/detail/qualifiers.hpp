@@ -56,9 +56,13 @@
 
 // @see
 // https://stackoverflow.com/questions/78071873/gcc-preprocessor-macro-and-pragma-gcc-unroll
-#if defined(__clang__)
+#if (defined(__CUDACC__) || defined(__HIP__))
+#define DETRAY_UNROLL_N(n)
+
+#elif defined(__clang__)
 #define ARG_TO_STRING(A) #A
 #define DETRAY_UNROLL_N(n) _Pragma(ARG_TO_STRING(clang loop unroll_count(n)))
+
 #elif defined(__GNUC__) || defined(__GNUG__)
 #define ARG_TO_STRING(A) #A
 #if __GNUC__ >= 14
@@ -67,6 +71,7 @@
 // For versions below 14, template parameters apparently cannot be used
 #define DETRAY_UNROLL_N(n) _Pragma(ARG_TO_STRING(GCC unroll 8))
 #endif
+
 #else
 // Unknown compiler or does not support unrolling directives
 #define DETRAY_UNROLL_N(n)

@@ -83,7 +83,7 @@ GTEST_TEST(traccc_simulation, toy_detector_simulation) {
 
   // Create track generator
   using uniform_gen_t =
-      detray::detail::random_numbers<scalar,
+      detray::detail::random_numbers<traccc::default_algebra,
                                      std::uniform_real_distribution<scalar>>;
   using generator_type =
       detray::random_track_generator<traccc::free_track_parameters<>,

@@ -9,11 +9,13 @@
 #pragma once
 
 // Project include(s)
+#include "detray/algebra/common/boolean.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/math.hpp"
 #include "detray/definitions/units.hpp"
 #include "detray/tracks/ray.hpp"
+#include "detray/utils/invalid_values.hpp"
 #include "detray/utils/logging.hpp"
 #include "detray/utils/ranges/ranges.hpp"
 
@@ -39,19 +41,21 @@ namespace detray {
 /// @tparam track_t the type of track parametrization that should be used.
 template <typename track_t,
           typename generator_t =
-              detail::random_numbers<dscalar<typename track_t::algebra_type>>>
+              detail::random_numbers<typename track_t::algebra_type>>
 class uniform_track_generator
     : public detray::ranges::view_interface<
           uniform_track_generator<track_t, generator_t>> {
   using algebra_t = typename track_t::algebra_type;
+  using value_t = dvalue<algebra_t>;
   using scalar_t = dscalar<algebra_t>;
+  using point3_t = dvector3D<algebra_t>;
   using vector3_t = dvector3D<algebra_t>;
 
  public:
   using track_type = track_t;
 
   /// Configure how tracks are generated
-  using configuration = uniform_track_generator_config<scalar_t>;
+  using configuration = uniform_track_generator_config<algebra_t>;
 
  private:
   /// @brief Nested iterator type that generates track states.
@@ -66,20 +70,43 @@ class uniform_track_generator
 
     DETRAY_HOST_DEVICE
     constexpr iterator(std::shared_ptr<generator_t> rand_gen, configuration cfg,
-                       std::size_t iph = 1u, std::size_t ith = 0u)
+                       std::size_t iph = detail::size<scalar_t>(),
+                       std::size_t ith = 0u)
         : m_rnd_numbers{std::move(rand_gen)},
           m_cfg{cfg},
           m_phi_step_size{(cfg.phi_range()[1] - cfg.phi_range()[0]) /
                           static_cast<scalar_t>(cfg.phi_steps())},
-          m_theta_step_size{(cfg.theta_range()[1] - cfg.theta_range()[0]) /
-                            static_cast<scalar_t>(cfg.theta_steps() - 1u)},
-          m_eta_step_size{(cfg.eta_range()[1] - cfg.eta_range()[0]) /
-                          static_cast<scalar_t>(cfg.eta_steps() - 1u)},
           m_phi{cfg.phi_range()[0]},
           m_theta{cfg.uniform_eta() ? get_theta(cfg.eta_range()[0])
                                     : cfg.theta_range()[0]},
           i_phi{iph},
-          i_theta{ith} {}
+          i_theta{ith} {
+      const std::size_t n_theta_steps{cfg.theta_steps() - 1u};
+      const std::size_t n_eta_steps{cfg.eta_steps() - 1u};
+      m_theta_step_size = (cfg.theta_range()[1] - cfg.theta_range()[0]);
+      m_eta_step_size = (cfg.eta_range()[1] - cfg.eta_range()[0]);
+      if (n_theta_steps != 0u) {
+        m_theta_step_size /= static_cast<scalar_t>(n_theta_steps);
+      }
+      if (n_eta_steps != 0u) {
+        m_eta_step_size /= static_cast<scalar_t>(n_eta_steps);
+      }
+
+      // Init the first batch of phi angles
+      scalar_t n_step = detail::iota<scalar_t>();
+      const auto is_invalid_slot{n_step >=
+                                 static_cast<scalar_t>(cfg.phi_steps())};
+      detail::set_if(n_step, is_invalid_slot,
+                     detail::invalid_value<scalar_t>());
+
+      std::cout << "no. initial steps: " << n_step << std::endl;
+      m_phi = cfg.phi_range()[0] + n_step * m_phi_step_size;
+      // i_phi += detail::size<scalar_t>();
+      std::cout << "initial phi: " << m_phi << std::endl;
+      std::cout << "theta range: " << cfg.theta_range()[0] << std::endl;
+      std::cout << "theta step: " << m_theta_step_size << std::endl;
+      std::cout << "initial theta: " << m_theta << std::endl;
+    }
 
     /// @returns whether we reached end of angle space
     DETRAY_HOST_DEVICE
@@ -96,15 +123,31 @@ class uniform_track_generator
       if (i_theta < m_cfg.theta_steps()) {
         // Check phi sub-range
         if (i_phi < m_cfg.phi_steps()) {
+          scalar_t n_step =
+              detail::iota<scalar_t>() + static_cast<scalar_t>(i_phi);
+          const auto is_invalid_slot{n_step >=
+                                     static_cast<scalar_t>(m_cfg.phi_steps())};
+          std::cout << "loop no. phi steps: " << n_step << std::endl;
           // Calculate new phi in the given range
-          m_phi = m_cfg.phi_range()[0] +
-                  static_cast<scalar_t>(i_phi) * m_phi_step_size;
-          ++i_phi;
+          m_phi = m_cfg.phi_range()[0] + n_step * m_phi_step_size;
+          detail::set_if(m_phi, is_invalid_slot,
+                         detail::invalid_value<scalar_t>());
+
+          i_phi += detail::size<scalar_t>();
+          std::cout << "loop phi: " << m_phi << std::endl;
+          std::cout << "loop theta: " << m_theta << std::endl;
           return *this;
         }
         // Reset phi range
-        i_phi = 1;
-        m_phi = m_cfg.phi_range()[0];
+        i_phi = detail::size<scalar_t>();
+
+        scalar_t n_step = detail::iota<scalar_t>();
+        const auto is_invalid_slot{n_step >=
+                                   static_cast<scalar_t>(m_cfg.phi_steps())};
+        std::cout << "no. phi steps: " << n_step << std::endl;
+        m_phi = m_cfg.phi_range()[0] + n_step * m_phi_step_size;
+        detail::set_if(m_phi, is_invalid_slot,
+                       detail::invalid_value<scalar_t>());
 
         // Calculate new theta in the given range
         ++i_theta;
@@ -117,6 +160,10 @@ class uniform_track_generator
           m_theta = m_cfg.theta_range()[0] +
                     static_cast<scalar_t>(i_theta) * m_theta_step_size;
         }
+        detail::set_if(m_theta, is_invalid_slot,
+                       detail::invalid_value<scalar_t>());
+        std::cout << "phi: " << m_phi << std::endl;
+        std::cout << "theta: " << m_theta << std::endl;
       }
       return *this;
     }
@@ -148,22 +195,30 @@ class uniform_track_generator
       if constexpr (std::is_same_v<track_t, detail::ray<algebra_t>>) {
         p = vector::normalize(p);
       } else {
-        sin_theta = (sin_theta == scalar_t{0.f})
-                        ? std::numeric_limits<scalar_t>::epsilon()
-                        : sin_theta;
-        p = (m_cfg.is_pT() ? 1.f / sin_theta : 1.f) * m_cfg.m_p_mag *
-            vector::normalize(p);
-      }
+        detail::set_if(sin_theta, sin_theta == detail::zero<scalar_t>(),
+                       std::numeric_limits<scalar_t>::epsilon());
 
-      const auto& ori = m_cfg.origin();
+        p = (m_cfg.is_pT() ? detail::one<scalar_t>() / sin_theta
+                           : detail::one<scalar_t>()) *
+            m_cfg.m_p_mag * vector::normalize(p);
+      }
 
       // Randomly flip the charge sign
       darray<double, 2> signs{1., -1.};
       const auto sign{static_cast<scalar_t>(
           signs[m_cfg.randomize_charge() ? m_rnd_numbers->coin_toss() : 0u])};
 
-      return track_t{
+      const auto& ori = m_cfg.origin();
+      track_t trk{
           {ori[0], ori[1], ori[2]}, m_cfg.time(), p, sign * m_cfg.charge()};
+
+      // Set invalid slots
+      const dbool<algebra_t> m = detail::is_invalid_value(m_phi);
+      for (std::size_t i = 0u; i < track_t::n_param(); ++i) {
+        detail::set_if(trk[i], m, detail::invalid_value<scalar_t>());
+      }
+
+      return trk;
     }
 
     /// Random number generator
@@ -219,9 +274,9 @@ class uniform_track_generator
   /// @param charge charge of particle (e)
   DETRAY_HOST_DEVICE
   uniform_track_generator(std::size_t n_phi, std::size_t n_theta,
-                          scalar_t p_mag = 1.f * unit<scalar_t>::GeV,
+                          value_t p_mag = 1.f * unit<value_t>::GeV,
                           bool uniform_eta = false,
-                          scalar_t charge = -1.f * unit<scalar_t>::e)
+                          value_t charge = -1.f * unit<value_t>::e)
       : m_gen{std::make_shared<generator_t>()} {
     m_cfg.phi_steps(n_phi).theta_steps(n_theta);
     m_cfg.uniform_eta(uniform_eta);
@@ -250,18 +305,22 @@ class uniform_track_generator
   /// @returns the generator in initial state: Default values reflect the
   /// first phi angle iteration.
   DETRAY_HOST_DEVICE
-  constexpr auto begin() noexcept -> iterator { return {m_gen, m_cfg, 1u, 0u}; }
+  constexpr auto begin() noexcept -> iterator {
+    return {m_gen, m_cfg, detail::size<scalar_t>(), 0u};
+  }
 
   /// @returns the generator in end state
   DETRAY_HOST_DEVICE
   constexpr auto end() noexcept -> iterator {
-    return {m_gen, m_cfg, 1u, m_cfg.theta_steps()};
+    return {m_gen, m_cfg, detail::size<scalar_t>(), m_cfg.theta_steps()};
   }
 
   /// @returns the number of tracks that will be generated
   DETRAY_HOST_DEVICE
   constexpr auto size() const noexcept -> std::size_t {
-    return m_cfg.phi_steps() * m_cfg.theta_steps();
+    const double n_tracks{m_cfg.phi_steps() * m_cfg.theta_steps()};
+    return static_cast<std::size_t>(
+        std::ceil(n_tracks / detail::size<scalar_t>()));
   }
 };
 

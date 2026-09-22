@@ -19,6 +19,25 @@
 
 namespace detray::algebra {
 
+/// Fill an array SoA with random values
+template <detray::concepts::scalar scalar_t>
+inline void fill_random_scalar(std::vector<scalar_t> &collection) {
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_real_distribution<double> dist(0.f, 1.f);
+
+  auto rand_simd = [&]() {
+    scalar_t s;
+    for (std::size_t i = 0u; i < scalar_t::size(); ++i) {
+      s[i] = dist(mt);
+    }
+    return static_cast<scalar_t>(s);
+  };
+
+  collection.resize(collection.capacity());
+  std::ranges::generate(collection, rand_obj);
+}
+
 /// Fill a lane bundle based vector with random values
 template <detray::concepts::vector vector_soa_t>
 inline void fill_random_vec(std::vector<vector_soa_t> &collection) {

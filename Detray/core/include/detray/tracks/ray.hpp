@@ -53,6 +53,37 @@ class ray {
     assert(!track.is_invalid());
   }
 
+  /// @returns the number of parameters needed to the define the trajectory
+  static consteval std::size_t n_param() { return 6u; }
+
+  /// Convenience access to the track parameters - const
+  /// @note Compliance with track interface
+  DETRAY_HOST_DEVICE scalar_type operator[](std::size_t i) const {
+    if (i < 3u) {
+      return _pos[i];
+    } else if (i < 6u) {
+      assert(i >= 3u);
+      return _dir[i - 3u];
+    } else {
+      assert(false);
+      __builtin_unreachable();
+    }
+  }
+
+  /// Convenience access to the track parameters - non-const
+  /// @note Compliance with track interface
+  DETRAY_HOST_DEVICE decltype(auto) operator[](std::size_t i) {
+    if (i < 3u) {
+      return _pos[i];
+    } else if (i < 6u) {
+      assert(i >= 3u);
+      return _dir[i - 3u];
+    } else {
+      assert(false);
+      __builtin_unreachable();
+    }
+  }
+
   /// @returns position on the ray (compatible with tracks/intersectors)
   DETRAY_HOST_DEVICE const point3_type &pos() const { return _pos; }
 

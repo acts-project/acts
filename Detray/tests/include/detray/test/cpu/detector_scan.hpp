@@ -45,7 +45,7 @@ class detector_scan : public test::fixture_base<> {
       algebra_t>::template intersection_trace_type<detector_t>;
   using trajectory_type = typename scan_type<algebra_t>::trajectory_type;
   using uniform_gen_t =
-      detail::random_numbers<scalar_t,
+      detail::random_numbers<algebra_t,
                              std::uniform_real_distribution<scalar_t>>;
   using track_generator_t =
       random_track_generator<free_track_parameters_t, uniform_gen_t>;

@@ -63,6 +63,9 @@ struct free_parameters_vector {
     assert(!this->is_invalid());
   }
 
+  /// @returns the number of parameters needed to the define the track
+  static consteval std::size_t n_param() { return e_free_size; }
+
   /// @param rhs is the left hand side params for comparison
   DETRAY_HOST_DEVICE
   bool operator==(const free_parameters_vector& rhs) const {

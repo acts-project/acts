@@ -232,11 +232,6 @@ using get_matrix_t = typename traits::get_algebra<A>::template matrix<R, C>;
     static constexpr index_type _columns{COLS};                         \
   };                                                                    \
                                                                         \
-  template <typename T>                                                 \
-  struct value<A::scalar_type<T>> {                                     \
-    using type = T;                                                     \
-  };                                                                    \
-                                                                        \
   template <typename T, auto N>                                         \
   struct value<A::vector_type<T, N>> {                                  \
     using type = T;                                                     \
@@ -245,21 +240,6 @@ using get_matrix_t = typename traits::get_algebra<A>::template matrix<R, C>;
   template <typename T, auto ROWS, auto COLS>                           \
   struct value<A::matrix_type<T, ROWS, COLS>> {                         \
     using type = T;                                                     \
-  };                                                                    \
-                                                                        \
-  template <typename T>                                                 \
-  struct scalar<A::scalar_type<T>> {                                    \
-    using type = A::scalar_type<T>;                                     \
-  };                                                                    \
-                                                                        \
-  template <typename T, auto N>                                         \
-  struct scalar<A::vector_type<T, N>> {                                 \
-    using type = A::scalar_type<T>;                                     \
-  };                                                                    \
-                                                                        \
-  template <typename T, auto ROWS, auto COLS>                           \
-  struct scalar<A::matrix_type<T, ROWS, COLS>> {                        \
-    using type = A::scalar_type<T>;                                     \
   };                                                                    \
                                                                         \
   template <typename T, auto N>                                         \

@@ -43,7 +43,7 @@ namespace detray {
 /// effect distribution mean etc.
 template <typename track_t,
           typename generator_t =
-              detail::random_numbers<dscalar<typename track_t::algebra_type>>>
+              detail::random_numbers<typename track_t::algebra_type>>
 class random_track_generator
     : public detray::ranges::view_interface<
           random_track_generator<track_t, generator_t>> {
@@ -56,7 +56,7 @@ class random_track_generator
   using track_type = track_t;
 
   /// Configure how tracks are generated
-  using configuration = random_track_generator_config<scalar_t>;
+  using configuration = random_track_generator_config<algebra_t>;
 
  private:
   /// @brief Nested iterator type that generates track states.

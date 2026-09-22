@@ -33,9 +33,9 @@ struct DETRAY_ALIGN(alignof(algebra::storage::vector<ROW, scalar_t, array_t>))
 
   /// Construct from given column vectors @param v
   template <concepts::vector... vector_t>
-  DETRAY_HOST_DEVICE
     requires(sizeof...(vector_t) == COL)
-  explicit matrix(vector_t &&...v) : m_storage{std::forward<vector_t>(v)...} {}
+  DETRAY_HOST_DEVICE explicit matrix(vector_t &&...v)
+      : m_storage{std::forward<vector_t>(v)...} {}
 
   /// Subscript operator
   /// @{

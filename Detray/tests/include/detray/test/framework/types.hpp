@@ -73,6 +73,7 @@ DETRAY_DEFINE_TEST_TYPES(vc_soa)
 // Test algebra types
 using algebra = algebra_type<DETRAY_CUSTOM_SCALARTYPE>;
 using index = dindex_type<algebra>;
+using value = dvalue<algebra>;
 using scalar = dscalar<algebra>;
 using point2 = dpoint2D<algebra>;
 using point3 = dpoint3D<algebra>;

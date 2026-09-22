@@ -17,10 +17,10 @@ namespace detray::algebra::boolean {
 
 /// Boolean utilities on single values
 /// @{
-using algebra::boolean::all_of;
-using algebra::boolean::any_of;
-using algebra::boolean::count;
-using algebra::boolean::none_of;
+using detray::detail::all_of;
+using detray::detail::any_of;
+using detray::detail::count;
+using detray::detail::none_of;
 /// @}
 
 /// Lane mask overloads

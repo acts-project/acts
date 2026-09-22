@@ -71,7 +71,7 @@ int main() {
 
   // Generate a number of random rays
   using generator_t =
-      detray::detail::random_numbers<scalar,
+      detray::detail::random_numbers<algebra_t,
                                      std::uniform_real_distribution<scalar>>;
   using ray_generator_t = detray::random_track_generator<ray_t, generator_t>;
 

@@ -19,6 +19,20 @@
 
 namespace detray::algebra {
 
+/// Fill an @c std::array based scalar with random value
+template <detray::concepts::scalar scalar_t>
+inline void fill_random_scalar(std::vector<scalar_t> &collection) {
+  // Generate random values
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_real_distribution<scalar_t> dist(0.f, 1.f);
+
+  auto rand_obj = [&]() { return dist(mt); };
+
+  collection.resize(collection.capacity());
+  std::ranges::generate(collection, rand_obj);
+}
+
 /// Fill an @c std::array based vector with random values
 template <detray::concepts::vector vector_t>
 inline void fill_random_vec(std::vector<vector_t> &collection) {

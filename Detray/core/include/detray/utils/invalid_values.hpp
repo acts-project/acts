@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/algebra/concepts.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 
 // System include(s)
@@ -19,33 +20,34 @@ namespace detray::detail {
 
 /// Invalid value for fundamental types - constexpr
 template <typename T>
-  requires std::is_fundamental_v<T> || std::is_enum_v<T>
+  requires(std::is_fundamental_v<T> || std::is_enum_v<T> ||
+           detray::concepts::scalar<T>)
 DETRAY_HOST_DEVICE constexpr T invalid_value() noexcept {
   return std::numeric_limits<T>::max();
 }
 
 /// Invalid value for types that cannot be constructed constexpr, e.g. Eigen
 template <typename T>
-  requires(!std::is_fundamental_v<T>) && (!std::is_enum_v<T>) &&
-          std::is_default_constructible_v<T>
+  requires(!std::is_fundamental_v<T> && !std::is_enum_v<T> &&
+           !detray::concepts::scalar<T> && std::is_default_constructible_v<T>)
 DETRAY_HOST_DEVICE constexpr T invalid_value() noexcept {
   return T{};
 }
 
 template <typename T>
-  requires std::is_fundamental_v<T>
-DETRAY_HOST_DEVICE constexpr bool is_invalid_value(const T value) noexcept {
+  requires(std::is_fundamental_v<T> || detray::concepts::scalar<T>)
+DETRAY_HOST_DEVICE constexpr auto is_invalid_value(const T value) noexcept {
   if constexpr (std::is_signed_v<T>) {
     return (value == detail::invalid_value<T>() ||
             value == -detail::invalid_value<T>());
   } else {
-    return (value == detail::invalid_value<T>());
+    return value == detail::invalid_value<T>();
   }
 }
 
 template <typename T>
-  requires(!std::is_fundamental_v<T>)
-DETRAY_HOST_DEVICE constexpr bool is_invalid_value(const T& value) noexcept {
+  requires(!std::is_fundamental_v<T> && !detray::concepts::scalar<T>)
+DETRAY_HOST_DEVICE constexpr auto is_invalid_value(const T& value) noexcept {
   return (value == detail::invalid_value<T>());
 }
 
