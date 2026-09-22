@@ -1,0 +1,172 @@
+name: Detray Nightly
+
+on:
+  #schedule:
+  #  - cron: '0 3 * * *' # run at 3 AM UTC
+  #workflow_dispatch:
+  push:
+    # The release branches (keep in sync with release.yml) carry a tree the
+    # merge queue has already built. The queue's own temp ref triggers
+    # merge_group below; a push run there shares its concurrency group and
+    # evicts the PR from the queue.
+    branches-ignore:
+      - 'releases'
+      - 'release/**'
+      - 'gh-readonly-queue/**'
+    # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
+    paths:
+      - "Detray/**"
+      - "cmake/**"
+      - "codegen/**"
+      - "thirdparty/**"
+      - "CMakeLists.txt"
+      - "CMakePresets.json"
+      - "CI/**"
+      - ".github/actions/**"
+      - ".github/workflows/detray.yml"
+      - ".github/detray-traccc-filters.yml"
+  pull_request:
+    branches:
+      - main
+    # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
+    paths:
+      - "Detray/**"
+      - "cmake/**"
+      - "codegen/**"
+      - "thirdparty/**"
+      - "CMakeLists.txt"
+      - "CMakePresets.json"
+      - "CI/**"
+      - ".github/actions/**"
+      - ".github/workflows/detray.yml"
+      - ".github/detray-traccc-filters.yml"
+  # The changes job applies path filtering to merge groups, which do not
+  # support the workflow-level path filters above.
+  merge_group:
+    types: [checks_requested]
+
+# All the different build/test jobs.
+jobs:
+  # Like Builds/changes, gate jobs rather than suppressing check reporting.
+  # PR/push triggers already filter paths; only merge groups need a checkout
+  # and a comparison against the base SHA carried by the event.
+  changes:
+    if: github.event_name == 'merge_group'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      relevant: ${{ steps.filter.outputs.detray }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          base: ${{ github.event.merge_group.base_sha }}
+          ref: ${{ github.event.merge_group.head_sha }}
+          filters: .github/detray-traccc-filters.yml
+
+  # Containerised build jobs.
+  host-nightly:
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
+
+    # The different build modes to test.
+    strategy:
+      # A broken scalar type or build mode must not cancel the others: which of
+      # the legs is affected is the useful part of the signal.
+      fail-fast: false
+      matrix:
+        BUILD_TYPE: ["Release", "Debug"]
+        SCALAR_TYPE: ["float", "double"]
+        PLATFORM:
+          - NAME: "CPU"
+            CXX_STANDARD: "20"
+            CONTAINER: "ghcr.io/acts-project/ubuntu2604:91"
+            # detray-full-fp32 turns benchmarks on, so Google Benchmark has to
+            # come from the flavor too -- the other legs disable them instead.
+            OPTIONS: -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_FASTOR_PLUGIN=OFF -DDETRAY_SMATRIX_PLUGIN=ON -DDETRAY_VC_AOS_PLUGIN=ON -DDETRAY_VC_SOA_PLUGIN=ON -DDETRAY_USE_SYSTEM_EIGEN3=ON -DDETRAY_USE_SYSTEM_VECMEM=ON -DDETRAY_USE_SYSTEM_COVFIE=ON -DDETRAY_USE_SYSTEM_GOOGLETEST=ON -DDETRAY_USE_SYSTEM_NLOHMANN=ON -DDETRAY_USE_SYSTEM_BENCHMARK=ON
+
+    # The system to run on.
+    runs-on: ubuntu-latest
+    container: ${{ matrix.PLATFORM.CONTAINER }}
+    permissions:
+      contents: read
+      # Authenticated GHCR reads for the spack buildcache.
+      packages: read
+    # BUILD_TYPE and SCALAR_TYPE are in the name because merge-sentinel
+    # deduplicates result items by normalised name: without them all four legs
+    # collapse into one check and a failing leg is masked by a passing one.
+    name: "${{ matrix.PLATFORM.NAME }} (${{ matrix.BUILD_TYPE }}, ${{ matrix.SCALAR_TYPE }})"
+
+    # Use BASH as the shell from the image.
+    defaults:
+      run:
+        shell: bash
+
+    # Set the path to the test data files
+    env:
+      DETRAY_DATA_DIRECTORY: ${{ github.workspace }}/Detray/data/
+      DETRAY_BFIELD_FILE: ${{ github.workspace }}/Detray/data/odd-bfield_v0_9_0.cvf
+
+    # The build/test steps to execute.
+    steps:
+    # Use a standard checkout of the code.
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    # Same install as the device legs below, on the plain host stack.
+    - name: Install dependencies
+      uses: ./.github/actions/dependencies
+      with:
+        compiler: g++
+        # Flavors need v24.0.0 or newer.
+        DEPENDENCY_TAG: v24.1.0
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env_file: .env
+
+    # Get the data files for the tests
+    - name: Download data files
+      run: Detray/data/detray_data_get_files.sh
+    # Run the CMake configuration.
+    - name: Configure
+      run: |
+        source ${GITHUB_WORKSPACE}/.env
+        source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
+        cmake --preset detray-full-fp32 \
+          -DCMAKE_CXX_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
+          -DDETRAY_FAIL_ON_WARNINGS=ON \
+          -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }} \
+          -DDETRAY_CUSTOM_SCALARTYPE=${{ matrix.SCALAR_TYPE }} \
+          ${{ matrix.PLATFORM.OPTIONS }} \
+          -S ${GITHUB_WORKSPACE}/Detray \
+          -B build
+    # Perform the build. The per-header TU targets are EXCLUDE_FROM_ALL, so
+    # `detray_headers` has to be asked for by name.
+    - name: Build
+      run: |
+        source ${GITHUB_WORKSPACE}/.env
+        source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
+        cmake --build build --target all detray_headers -- -j $(nproc)
+    # Run the unit test(s). They link the flavor's shared libraries, so the
+    # environment is needed here too.
+    - name: Full Test
+      if: "matrix.BUILD_TYPE == 'Release'"
+      run: |
+        source ${GITHUB_WORKSPACE}/.env
+        cd build
+        source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
+        ctest --output-on-failure
+    - name: Unit Tests
+      if: "matrix.BUILD_TYPE == 'Debug'"
+      run: |
+        source ${GITHUB_WORKSPACE}/.env
+        cd build
+        source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
+        ctest -R detray_unit_test_. -E "._eigen|._fastor|._vc_aos" --output-on-failure --no-tests=error

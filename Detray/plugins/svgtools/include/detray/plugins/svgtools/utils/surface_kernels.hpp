@@ -186,7 +186,8 @@ struct link_end_getter {
                             const detray::tracking_volume<detector_t>& volume,
                             const point3_t& surface_point,
                             const vector3_t& surface_normal) const {
-    const auto dir = volume.center() - surface_point;
+    const auto vol_cent = volume.center();
+    const auto dir = vol_cent - surface_point;
     const auto dot_prod = vector::dot(dir, surface_normal);
 
     // Should geometrically not happen with a local point 'surface_point'
