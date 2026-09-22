@@ -13,14 +13,13 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintOptions.hpp"
+#include "Acts/Geometry/CuboidPortalShell.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/TrapezoidPortalShell.hpp"
-#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
@@ -64,16 +63,14 @@ void step(const GeometryContext& geoCtx, Vector3& pos, const Vector3& dir,
 }
 
 // build a grid of staggered straw surfaces for the first test
-void generateStrawSurfaces(const TrapezoidVolumeBounds& volBounds,
+void generateStrawSurfaces(const CuboidVolumeBounds& volBounds,
                            const Transform3& localToGlobal,
                            std::vector<std::shared_ptr<Surface>>& out,
                            ObjVisualization3D& vis) {
   constexpr double strawRadius = 5._cm;
-  const double halfX =
-      std::max(volBounds.get(TrapezoidVolumeBounds::eHalfLengthXnegY),
-               volBounds.get(TrapezoidVolumeBounds::eHalfLengthXposY));
-  const double halfY = volBounds.get(TrapezoidVolumeBounds::eHalfLengthY);
-  const double halfZ = volBounds.get(TrapezoidVolumeBounds::eHalfLengthZ);
+  const double halfX = volBounds.get(CuboidVolumeBounds::eHalfLengthX);
+  const double halfY = volBounds.get(CuboidVolumeBounds::eHalfLengthY);
+  const double halfZ = volBounds.get(CuboidVolumeBounds::eHalfLengthZ);
 
   const auto nLayers = static_cast<std::size_t>(
       std::floor(2 * halfZ / (std::sqrt(3.) * strawRadius)));
@@ -109,8 +106,7 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   std::vector<std::shared_ptr<Surface>> strawSurfaces{};
   ObjVisualization3D visualHelper{};
 
-  auto volBounds =
-      std::make_shared<TrapezoidVolumeBounds>(0.925_m, 0.925_m, 1.2_m, 0.14_m);
+  auto volBounds = std::make_shared<CuboidVolumeBounds>(0.925_m, 1.2_m, 0.14_m);
   const Transform3 volTrans =
       Transform3(Translation3(Vector3(300., -150., 500.))) *  // translation
       Transform3(AngleAxis3(35._degree, Vector3::UnitZ())) *  // rotation
@@ -134,7 +130,7 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
 
   visualHelper.write("MultiLayerNavigation_test1.obj");
 
-  SingleTrapezoidPortalShell portalShell{tContext, *volume};
+  SingleCuboidPortalShell portalShell{tContext, *volume};
   portalShell.applyToVolume();
 
   BOOST_CHECK(volume->volumes().empty());
@@ -165,9 +161,7 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
                           return lhs.surface() == rhs.surface();
                         });
   BOOST_CHECK(it == main.candidates().end());
-
-  double angle = std::numbers::pi / 4.;
-  startDir = {std::cos(angle), 0., std::sin(angle)};
+  startDir = makeDirectionFromPhiTheta(0._degree, 45._degree);
   args.direction = startDir;
 
   // clear the candidates and re initialize with new arguments
@@ -187,11 +181,10 @@ BOOST_AUTO_TEST_CASE(MultiLayerNavigation_TargetSurfaces) {
   std::vector<std::shared_ptr<Surface>> straws{};
   ObjVisualization3D vis{};
 
-  auto volBounds =
-      std::make_shared<TrapezoidVolumeBounds>(0.925_m, 0.925_m, 1.2_m, 0.14_m);
+  auto volBounds = std::make_shared<CuboidVolumeBounds>(0.925_m, 1.2_m, 0.14_m);
   const Transform3 volTrans =
-      Transform3(Translation3(Vector3(300., -500., 500.))) *  // translation
-      Transform3(AngleAxis3(35._degree, Vector3::UnitZ())) *  // rotation
+      Transform3(Translation3(Vector3(0.3_m, -0.5_m, 0.5_m))) *  // translation
+      Transform3(AngleAxis3(35._degree, Vector3::UnitZ())) *     // rotation
       Transform3(AngleAxis3(20._degree, Vector3::UnitX()));
 
   generateStrawSurfaces(*volBounds, volTrans, straws, vis);
@@ -208,7 +201,7 @@ BOOST_AUTO_TEST_CASE(MultiLayerNavigation_TargetSurfaces) {
 
   // start plane: launch tracks from the origin toward each straw.
   const Transform3 surfaceTrans =
-      Transform3(Translation3(Vector3(0., 0., -1000.)));
+      Transform3(Translation3(Vector3(0., 0., -1._m)));
 
   auto startSurface = Surface::makeShared<PlaneSurface>(
       surfaceTrans, std::make_shared<RectangleBounds>(10._m, 10._m));
@@ -253,8 +246,8 @@ BOOST_AUTO_TEST_CASE(MultiLayerNavigation_TargetSurfaces) {
   navCfg.resolveMaterial = true;
   navCfg.resolvePassive = false;
   Navigator navigator{navCfg, getDefaultLogger("MWNav", Logging::VERBOSE)};
-  Vector3 start = {0., 0., -1000.};
-  Vector3 dir = {0., 0., 1.};
+  Vector3 start = {0., 0., -1._m};
+  Vector3 dir = Vector3::UnitZ();
   Navigator::Options options{tContext};
   Navigator::State state = navigator.makeState(options);
   NavigationTarget target = navigator.nextTarget(state, start, dir);

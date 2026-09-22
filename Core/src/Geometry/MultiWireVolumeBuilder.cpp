@@ -132,7 +132,7 @@ MultiWireVolumeBuilder::deriveGridParameters(
   }
 
   // min gap between adjacent tubes , find the pitch
-  const auto minGap = [&](const auto& sortedSet) -> double {
+  const auto minGap = [&](const auto& sortedSet) {
     double g = std::numeric_limits<double>::max();
     for (auto it = std::next(sortedSet.begin()); it != sortedSet.end(); ++it) {
       g = std::min(g, *it - *std::prev(it));
@@ -231,8 +231,11 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory(
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisLayer(
       *layerParams.min, *layerParams.max, layerParams.nBins);
 
-  Grid<std::vector<std::size_t>, decltype(axisShift), decltype(axisLayer)> grid(
-      axisShift, axisLayer);
+  using GridType =
+      Grid<std::vector<std::size_t>, decltype(axisShift), decltype(axisLayer)>;
+  using IndexedGridType = IndexGrid<GridType>;
+
+  GridType grid(axisShift, axisLayer);
   ACTS_VERBOSE(
       "MultiWireVolumeBuilder: Assign Multi-layer Navigation Policy with Grid "
       "axis: "
@@ -242,13 +245,14 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory(
   // the tubes are aligned) The second axis direction corresponds to the
   // direction from one layer to another
   const auto* placement = m_config.alignablePlacement;
+
   auto indexedGrid =
       placement == nullptr
-          ? IndexGrid<decltype(grid)>{std::move(grid),
-                                      {*shiftAxisSpec.direction(),
-                                       *layerAxisSpec.direction()},
-                                      m_config.transform.inverse()}
-          : IndexGrid<decltype(grid)>{
+          ? IndexedGridType{std::move(grid),
+                            {*shiftAxisSpec.direction(),
+                             *layerAxisSpec.direction()},
+                            m_config.transform.inverse()}
+          : IndexedGridType{
                 std::move(grid),
                 {*shiftAxisSpec.direction(), *layerAxisSpec.direction()},
                 [placement](const GeometryContext& gctx2) -> const Transform3& {
