@@ -125,8 +125,7 @@ BOOST_AUTO_TEST_CASE(ConstMutableRoundTrip) {
   ConstVectorMultiTrajectory cmtj{mtj};
 
   // convert back to mutable
-  VectorMultiTrajectory roundTripped =
-      VectorMultiTrajectory::getMutableCopy(cmtj);
+  VectorMultiTrajectory roundTripped{cmtj};
   BOOST_CHECK_EQUAL(roundTripped.size(), mtj.size());
 
   auto orig = mtj.getTrackState(ts.index());
