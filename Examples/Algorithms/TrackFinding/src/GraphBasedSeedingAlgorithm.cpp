@@ -24,6 +24,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <numbers>
 #include <stdexcept>
@@ -44,8 +45,10 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   m_actsGbtsMap = makeActsGbtsMap();
 
   // read which layers may be connected
-  auto connectorTable = Acts::detail::readJsonFile(m_cfg.connectorInputFile)
-                            .get<Acts::Experimental::GbtsConnectionsConfig>();
+  auto connections =
+      Acts::detail::readJsonFile(m_cfg.connectorInputFile)
+          .at("connections")
+          .get<std::vector<Acts::Experimental::GbtsLayerConnection>>();
 
   // keep the connections between layers of the seeded technology
   const Acts::Experimental::GbtsLayerTechnology seededTechnology =
@@ -64,7 +67,7 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
         return technology != layerTechnology.end() &&
                technology->second == seededTechnology;
       };
-  std::erase_if(connectorTable.connections,
+  std::erase_if(connections,
                 [&](const Acts::Experimental::GbtsLayerConnection &connection) {
                   return !isSeededTechnology(connection.src) ||
                          !isSeededTechnology(connection.dst);
@@ -83,15 +86,10 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
-  // option that allows for adding custom eta binning (default is at 0.2)
-  const float etaBinWidth = m_cfg.etaBinWidthOverride != 0.0f
-                                ? m_cfg.etaBinWidthOverride
-                                : connectorTable.etaBinWidth;
-
   // initialise the object that holds all the geometry information needed for
   // the algorithm
   auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
-      layerGeometry, connectorTable.connections, etaBinWidth, m_cfg.gbtsZ0Range,
+      layerGeometry, connections, m_cfg.etaBinWidth, m_cfg.gbtsZ0Range,
       this->logger());
 
   resolveLayerIndices(*geometry);
@@ -275,8 +273,8 @@ GraphBasedSeedingAlgorithm::layerNumbering(
         }
 
         float rc = 0.0;
-        float minBound = 100000.0;
-        float maxBound = -100000.0;
+        float minBound = std::numeric_limits<float>::infinity();
+        float maxBound = -std::numeric_limits<float>::infinity();
 
         // convert to Gbts ID
         auto actsJointId = actsVolId * 100 + actsLayId;
@@ -386,7 +384,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("layerMappingFile: " << m_cfg.layerMappingFile);
   ACTS_DEBUG("connectorInputFile: " << m_cfg.connectorInputFile);
   ACTS_DEBUG("lutInputFile: " << m_cfg.lutInputFile);
-  ACTS_DEBUG("etaBinWidthOverride: " << m_cfg.etaBinWidthOverride);
+  ACTS_DEBUG("etaBinWidth: " << m_cfg.etaBinWidth);
   ACTS_DEBUG("===== GraphBasedTrackSeeder =====");
   const auto &cfg1 = m_cfg.seedFinderConfig;
   ACTS_DEBUG("BeamSpotCorrection: " << cfg1.beamSpotCorrection);

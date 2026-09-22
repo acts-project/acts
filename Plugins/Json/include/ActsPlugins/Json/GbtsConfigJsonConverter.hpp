@@ -44,16 +44,6 @@ void from_json(const nlohmann::json& j, GbtsLayerConnection& connection);
 /// @param layer Destination GbtsLayerConfig to populate
 void from_json(const nlohmann::json& j, GbtsLayerConfig& layer);
 
-/// Convert GbtsConnectionsConfig to JSON
-/// @param j Destination JSON object
-/// @param config Source GbtsConnectionsConfig to convert
-void to_json(nlohmann::json& j, const GbtsConnectionsConfig& config);
-
-/// Convert JSON to GbtsConnectionsConfig
-/// @param j Source JSON object
-/// @param config Destination GbtsConnectionsConfig to populate
-void from_json(const nlohmann::json& j, GbtsConnectionsConfig& config);
-
 /// Convert JSON to GbtsLayerConnectionTool::LayerDescription
 /// @param j Source JSON object
 /// @param layer Destination LayerDescription to populate

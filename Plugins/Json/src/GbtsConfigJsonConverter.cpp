@@ -8,9 +8,6 @@
 
 #include "ActsPlugins/Json/GbtsConfigJsonConverter.hpp"
 
-#include <format>
-#include <string>
-
 void Acts::Experimental::to_json(nlohmann::json& j,
                                  const GbtsLayerConnection& connection) {
   j["outer"] = connection.src;
@@ -29,20 +26,6 @@ void Acts::Experimental::from_json(const nlohmann::json& j,
   layer.type = j.at("type").get<GbtsLayerType>();
   layer.technology = j.at("technology").get<GbtsLayerTechnology>();
   layer.surfaces = j.at("surfaces").get<std::vector<GeometryIdentifier>>();
-}
-
-void Acts::Experimental::to_json(nlohmann::json& j,
-                                 const GbtsConnectionsConfig& config) {
-  // the shortest decimal that reads back as the same float
-  j["etaBinWidth"] = std::stod(std::format("{}", config.etaBinWidth));
-  j["connections"] = config.connections;
-}
-
-void Acts::Experimental::from_json(const nlohmann::json& j,
-                                   GbtsConnectionsConfig& config) {
-  config.etaBinWidth = j.at("etaBinWidth").get<float>();
-  config.connections =
-      j.at("connections").get<std::vector<GbtsLayerConnection>>();
 }
 
 void Acts::Experimental::detail::from_json(const nlohmann::json& j,

@@ -11,7 +11,6 @@
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 
 #include <cstdint>
-#include <vector>
 
 namespace Acts::Experimental {
 
@@ -23,14 +22,6 @@ struct GbtsLayerConnection {
   GbtsExperimentLayerId src{};
   /// Inner layer id.
   GbtsExperimentLayerId dst{};
-};
-
-/// The layers the GBTS seeding may connect
-struct GbtsConnectionsConfig final {
-  /// Width of the eta bins the layers are split into
-  float etaBinWidth{};
-  /// Pairs of connected layers
-  std::vector<GbtsLayerConnection> connections;
 };
 
 }  // namespace Acts::Experimental

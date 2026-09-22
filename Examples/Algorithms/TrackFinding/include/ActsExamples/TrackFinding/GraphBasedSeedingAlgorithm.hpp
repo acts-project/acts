@@ -80,9 +80,9 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// cluster width cuts
     std::filesystem::path lutInputFile;
 
-    /// Eta bin width the layers are split into (0 takes the value the
-    /// connector file carries, 0.2 in ATLAS' createLinkingScheme.py)
-    float etaBinWidthOverride = 0.0f;
+    /// Eta bin width the layers are split into (0.2 in ATLAS'
+    /// createLinkingScheme.py)
+    float etaBinWidth = 0.2f;
 
     /// z0 range the eta bin table is built against
     Acts::Experimental::GbtsZ0Range gbtsZ0Range;
