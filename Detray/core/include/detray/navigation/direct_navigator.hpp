@@ -11,6 +11,7 @@
 // Project include(s)
 #include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
+#include "detray/definitions/algorithms.hpp"
 #include "detray/definitions/containers.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/indexing.hpp"
@@ -262,8 +263,15 @@ class direct_navigator {
       // Update the current target. If it cannot be reached, direct
       // navigation is broken
       if (!update_candidate(tangential, det, navigation, intr_cfg, ctx)) {
-        navigation.abort("Could not reach current target");
-        return !is_init;
+        // If update fails but the track is already on the target within
+        // tolerance, treat the target as reached instead of aborting.
+        if (target_reached_within_tolerance(track, navigation, cfg)) {
+          navigation.target().set_path(static_cast<scalar_t>(0.f));
+          navigation.target().set_status(intersection::status::e_inside);
+        } else {
+          navigation.abort("Could not reach current target");
+          return !is_init;
+        }
       }
 
       // Update navigation flow on the new candidate information and set
@@ -362,6 +370,27 @@ class direct_navigator {
     }
 
     return candidate.is_probably_inside();
+  }
+
+  /// Check if the target surface has been reached within the given tolerance.
+  template <typename track_t>
+  DETRAY_HOST_DEVICE DETRAY_INLINE constexpr bool
+  target_reached_within_tolerance(const track_t &track, const state &navigation,
+                                  const navigation::config &cfg) const {
+    if constexpr (std::same_as<surface_sequence_t, void>) {
+      return false;
+    } else {
+      const surface_type target_sf = navigation.target().surface();
+      const auto inside = target_sf.mask().is_inside(
+          target_sf.transform(), track.pos(),
+          static_cast<scalar_t>(cfg.intersection.path_tolerance));
+
+      if constexpr (std::is_scalar_v<decltype(inside)>) {
+        return inside;
+      } else {
+        return detray::detail::any_of(inside);
+      }
+    }
   }
 };
 
