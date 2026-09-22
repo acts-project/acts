@@ -17,21 +17,18 @@
 #include "traccc/sycl/gbts_seeding/gbts_seeding_algorithm.hpp"
 
 // Project include(s).
-#include "traccc/gbts_seeding/device/gbts_add_terminus_to_path_store.hpp"
 #include "traccc/gbts_seeding/device/gbts_bid_seeds_for_hits.hpp"
 #include "traccc/gbts_seeding/device/gbts_bin_spacepoints.hpp"
 #include "traccc/gbts_seeding/device/gbts_compress_graph.hpp"
 #include "traccc/gbts_seeding/device/gbts_convert_seeds.hpp"
-#include "traccc/gbts_seeding/device/gbts_count_terminus_edges.hpp"
+#include "traccc/gbts_seeding/device/gbts_count_paths.hpp"
 #include "traccc/gbts_seeding/device/gbts_fill_path_store.hpp"
 #include "traccc/gbts_seeding/device/gbts_find_minmax_radius.hpp"
-#include "traccc/gbts_seeding/device/gbts_fit_segments.hpp"
+#include "traccc/gbts_seeding/device/gbts_finish_cca.hpp"
 #include "traccc/gbts_seeding/device/gbts_link_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_make_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_match_graph_edges.hpp"
-#include "traccc/gbts_seeding/device/gbts_rebid_seeds_for_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_reindex_edges.hpp"
-#include "traccc/gbts_seeding/device/gbts_reset_edge_bids.hpp"
 #include "traccc/gbts_seeding/device/gbts_run_cca_iteration.hpp"
 #include "traccc/gbts_seeding/device/gbts_sort_nodes.hpp"
 #include "traccc/gbts_seeding/gbts_types.hpp"
@@ -91,26 +88,15 @@ class gbts_compress_graph;
 /// traccc::device::gbts_run_cca_iteration
 class gbts_run_cca_iteration;
 
-/// Class identifying the kernel running @c
-/// traccc::device::gbts_count_terminus_edges
-class gbts_count_terminus_edges;
+/// Class identifying the kernel running @c traccc::device::gbts_finish_cca
+class gbts_finish_cca;
 
 /// Class identifying the kernel running @c
-/// traccc::device::gbts_add_terminus_to_path_store
-class gbts_add_terminus_to_path_store;
+/// traccc::device::gbts_count_paths
+class gbts_count_paths;
 
 /// Class identifying the kernel running @c traccc::device::gbts_fill_path_store
 class gbts_fill_path_store;
-
-/// Class identifying the kernel running @c traccc::device::gbts_fit_segments
-class gbts_fit_segments;
-
-/// Class identifying the kernel running @c traccc::device::gbts_reset_edge_bids
-class gbts_reset_edge_bids;
-
-/// Class identifying the kernel running @c
-/// traccc::device::gbts_rebid_seeds_for_edges
-class gbts_rebid_seeds_for_edges;
 
 /// Class identifying the kernel running @c
 /// traccc::device::gbts_bid_seeds_for_hits
@@ -284,7 +270,7 @@ void gbts_seeding_algorithm::gbts_run_cca_iteration_kernel(
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
 
-  const unsigned int n_threads = 128;
+  const unsigned int n_threads = 256;
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::gbts_run_cca_iteration>(
         details::calculate1DimNdRange(payload.nConnectedEdges, n_threads),
@@ -294,36 +280,40 @@ void gbts_seeding_algorithm::gbts_run_cca_iteration_kernel(
   });
 }
 
-void gbts_seeding_algorithm::gbts_count_terminus_edges_kernel(
-    const device::gbts_count_terminus_edges_payload& payload) const {
+void gbts_seeding_algorithm::gbts_finish_cca_kernel(
+    const device::gbts_finish_cca_payload& payload) const {
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
 
-  const unsigned int n_threads = 128;
+  const unsigned int n_threads = 256;
   squeue.submit([&](::sycl::handler& h) {
-    h.parallel_for<kernels::gbts_count_terminus_edges>(
+    h.parallel_for<kernels::gbts_finish_cca>(
         details::calculate1DimNdRange(payload.nConnectedEdges, n_threads),
         [payload](::sycl::nd_item<1> item) {
-          device::gbts_count_terminus_edges(details::thread_id<1>{item},
-                                            payload);
+          device::gbts_finish_cca(details::thread_id<1>{item}, payload);
         });
   });
 }
 
-void gbts_seeding_algorithm::gbts_add_terminus_to_path_store_kernel(
-    const device::gbts_add_terminus_to_path_store_payload& payload) const {
+void gbts_seeding_algorithm::gbts_count_paths_kernel(
+    const device::gbts_count_paths_payload& payload) const {
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
 
   const unsigned int n_threads = 128;
   squeue.submit([&](::sycl::handler& h) {
-    h.parallel_for<kernels::gbts_add_terminus_to_path_store>(
+    h.parallel_for<kernels::gbts_count_paths>(
         details::calculate1DimNdRange(payload.nConnectedEdges, n_threads),
         [payload](::sycl::nd_item<1> item) {
-          device::gbts_add_terminus_to_path_store(details::thread_id<1>{item},
-                                                  payload);
+          device::gbts_count_paths(details::thread_id<1>{item}, payload);
         });
   });
+
+  // Path offsets of the path store.
+  oneapi::dpl::inclusive_scan(
+      oneapi::dpl::execution::device_policy{squeue}, payload.path_counts.ptr(),
+      payload.path_counts.ptr() + payload.nConnectedEdges,
+      payload.path_counts.ptr());
 }
 
 void gbts_seeding_algorithm::gbts_fill_path_store_kernel(
@@ -332,76 +322,11 @@ void gbts_seeding_algorithm::gbts_fill_path_store_kernel(
   squeue.throw_asynchronous();
 
   const unsigned int n_threads = 128;
-  const unsigned int pathsPerTerminus =
-      1 + (payload.nPaths - 1) / payload.nTerminusEdges;
-  const unsigned int terminusPerBlock = std::min(
-      n_threads, 1 + (traccc::device::gbts_consts::live_path_buffer - 1) /
-                         pathsPerTerminus);
-  const unsigned int n_blocks =
-      1 + (payload.nTerminusEdges - 1) / terminusPerBlock;
   squeue.submit([&](::sycl::handler& h) {
-    // Shared-memory scratch: the block-local stack of live paths and its
-    // running length.
-    vecmem::sycl::local_accessor<traccc::uint2> live_paths(
-        traccc::device::gbts_consts::live_path_buffer, h);
-    vecmem::sycl::local_accessor<int> n_live_paths(1, h);
-
     h.parallel_for<kernels::gbts_fill_path_store>(
-        details::calculate1DimNdRange(n_blocks * n_threads, n_threads),
-        [payload, live_paths, n_live_paths](::sycl::nd_item<1> item) {
-          const details::barrier<1> barrier{item};
-          device::gbts_fill_path_store(
-              details::thread_id<1>{item}, barrier, payload,
-              {vecmem::data::vector_view<traccc::uint2>(
-                   traccc::device::gbts_consts::live_path_buffer,
-                   &live_paths[0]),
-               n_live_paths[0]});
-        });
-  });
-}
-
-void gbts_seeding_algorithm::gbts_fit_segments_kernel(
-    const device::gbts_fit_segments_payload& payload) const {
-  ::sycl::queue& squeue = details::get_queue(queue());
-  squeue.throw_asynchronous();
-
-  const unsigned int n_threads = 128;
-  squeue.submit([&](::sycl::handler& h) {
-    h.parallel_for<kernels::gbts_fit_segments>(
-        details::calculate1DimNdRange(payload.nPaths, n_threads),
+        details::calculate1DimNdRange(payload.nPathsGrid, n_threads),
         [payload](::sycl::nd_item<1> item) {
-          device::gbts_fit_segments(details::thread_id<1>{item}, payload);
-        });
-  });
-}
-
-void gbts_seeding_algorithm::gbts_reset_edge_bids_kernel(
-    const device::gbts_reset_edge_bids_payload& payload) const {
-  ::sycl::queue& squeue = details::get_queue(queue());
-  squeue.throw_asynchronous();
-
-  const unsigned int n_threads = 128;
-  squeue.submit([&](::sycl::handler& h) {
-    h.parallel_for<kernels::gbts_reset_edge_bids>(
-        details::calculate1DimNdRange(payload.nProps, n_threads),
-        [payload](::sycl::nd_item<1> item) {
-          device::gbts_reset_edge_bids(details::thread_id<1>{item}, payload);
-        });
-  });
-}
-
-void gbts_seeding_algorithm::gbts_rebid_seeds_for_edges_kernel(
-    const device::gbts_rebid_seeds_for_edges_payload& payload) const {
-  ::sycl::queue& squeue = details::get_queue(queue());
-  squeue.throw_asynchronous();
-
-  const unsigned int n_threads = 128;
-  squeue.submit([&](::sycl::handler& h) {
-    h.parallel_for<kernels::gbts_rebid_seeds_for_edges>(
-        details::calculate1DimNdRange(payload.nProps, n_threads),
-        [payload](::sycl::nd_item<1> item) {
-          device::gbts_rebid_seeds_for_edges(details::thread_id<1>{item},
-                                             payload);
+          device::gbts_fill_path_store(details::thread_id<1>{item}, payload);
         });
   });
 }
@@ -414,7 +339,7 @@ void gbts_seeding_algorithm::gbts_bid_seeds_for_hits_kernel(
   const unsigned int n_threads = 128;
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::gbts_bid_seeds_for_hits>(
-        details::calculate1DimNdRange(payload.nProps, n_threads),
+        details::calculate1DimNdRange(payload.nPathsGrid, n_threads),
         [payload](::sycl::nd_item<1> item) {
           device::gbts_bid_seeds_for_hits(details::thread_id<1>{item}, payload);
         });
@@ -429,7 +354,7 @@ void gbts_seeding_algorithm::gbts_convert_seeds_kernel(
   const unsigned int n_threads = 128;
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::gbts_convert_seeds>(
-        details::calculate1DimNdRange(payload.nProps, n_threads),
+        details::calculate1DimNdRange(payload.nPathsGrid, n_threads),
         [payload](::sycl::nd_item<1> item) {
           device::gbts_convert_seeds(details::thread_id<1>{item}, payload);
         });

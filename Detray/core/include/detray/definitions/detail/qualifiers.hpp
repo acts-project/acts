@@ -26,6 +26,16 @@
 #define DETRAY_HOST_DEVICE
 #endif
 
+// Clang 22 and older treat a deduction guide as a host function, so CTAD in
+// device code needs `__host__ __device__` on the guide. Clang 23 treats every
+// deduction guide as implicitly host+device and rejects the attributes.
+#if (defined(__CUDACC__) || defined(__HIP__)) && \
+    !(defined(__clang__) && __clang_major__ >= 23)
+#define DETRAY_HOST_DEVICE_DEDUCTION_GUIDE __host__ __device__
+#else
+#define DETRAY_HOST_DEVICE_DEDUCTION_GUIDE
+#endif
+
 #if defined(__CUDACC__) || defined(__HIP__)
 #define DETRAY_ALIGN(x) __align__(x)
 #else
