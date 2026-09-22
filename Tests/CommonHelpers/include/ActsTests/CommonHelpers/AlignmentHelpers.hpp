@@ -41,6 +41,7 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
@@ -137,7 +138,7 @@ struct TelescopeDetector {
     for (unsigned int i = 0; i < nLayers; ++i) {
       // The transform
       Acts::Translation3 trans(0., 0., positions[i]);
-      Acts::Transform3 trafo(rotation * trans);
+      Acts::Transform3 trafo(Acts::makeTransform3(rotation) * trans);
       auto detElement = std::make_shared<DetectorElementStub>(
           trafo, rBounds, 1._um, surfaceMaterial);
       // The surface is not right!!!
@@ -156,7 +157,7 @@ struct TelescopeDetector {
 
     // The volume transform
     Acts::Translation3 transVol(0, 0, 0);
-    Acts::Transform3 trafoVol(rotation * transVol);
+    Acts::Transform3 trafoVol(Acts::makeTransform3(rotation) * transVol);
     auto boundsVol = std::make_shared<Acts::CuboidVolumeBounds>(
         rBounds->halfLengthX() + 10._mm, rBounds->halfLengthY() + 10._mm,
         length + 10._mm);

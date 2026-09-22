@@ -55,7 +55,7 @@ def main():
     p.add_argument("-t", "--tests", type=int, default=10000, help="Tests per track")
 
     args = p.parse_args()
-    geoContext = GeometryContext()
+    geoContext = GeometryContext.dangerouslyDefaultConstruct()
 
     # Convert the detector surfaces from GDML
     [_, ssurfaces, psurfaces] = acts_g4.convertSurfaces(

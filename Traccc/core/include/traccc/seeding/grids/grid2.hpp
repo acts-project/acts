@@ -32,7 +32,7 @@ namespace traccc {
  * populated, it broadcasts also the value type
  * @tparam tparam axis_p0_t the type of the first axis
  * @tparam tparam axis_p1_t the type of the second axis
- * @tparam serialzier_t  type of the serializer to the storage represenations
+ * @tparam serialzier_t  type of the serializer to the storage representations
  *
  **/
 template <template <template <typename...> class, template <typename...> class,
@@ -175,7 +175,7 @@ class grid2 {
     populate(bin0, bin1, std::move(fvalue));
   }
 
-  /** Return the value of a single bin - with direct bin acess
+  /** Return the value of a single bin - with direct bin access
    *
    * @param bin0 the index of bin 0
    * @param bin1 the index of bin 1
@@ -358,11 +358,11 @@ class grid2 {
   DETRAY_HOST_DEVICE
   unsigned int nbins() const { return _axis_p0.bins() * _axis_p1.bins(); }
 
-  /** Const acess to the serializer */
+  /** Const access to the serializer */
   DETRAY_HOST_DEVICE
   const serializer_type &serializer() const { return _serializer; }
 
-  /** Const acess to the polulator */
+  /** Const access to the polulator */
   DETRAY_HOST_DEVICE
   const populator_type &populator() const { return _populator; }
 

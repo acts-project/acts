@@ -15,7 +15,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "ActsPlugins/Json/GridJsonConverter.hpp"
-#include "ActsPlugins/Json/MaterialJsonConverter.hpp"
+#include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
 
 #include <memory>
 #include <numbers>
@@ -53,23 +53,22 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial2DTests) {
   auto ism = GridSurfaceMaterial::createIndexed(*axisZ, *axisPhi, material,
                                                 indexPayload);
 
-  nlohmann::json jMaterial = ism.get();
+  nlohmann::json jMaterial = SurfaceMaterialJsonConverter::toJson(*ism);
 
   // Run a few tests
-  BOOST_REQUIRE(jMaterial.find("material") != jMaterial.end());
-  BOOST_CHECK_EQUAL(jMaterial["material"]["type"], "grid");
-  BOOST_CHECK_EQUAL(jMaterial["material"]["accessor"]["type"], "indexed");
-  BOOST_CHECK(!jMaterial["material"].contains("global_to_grid_local"));
-  BOOST_CHECK(!jMaterial["material"].contains("bound_to_grid_local"));
+  BOOST_CHECK_EQUAL(jMaterial["type"], "grid");
+  BOOST_CHECK_EQUAL(jMaterial["accessor"]["type"], "indexed");
+  BOOST_CHECK(!jMaterial.contains("global_to_grid_local"));
+  BOOST_CHECK(!jMaterial.contains("bound_to_grid_local"));
 
   // Read it back in
-  const ISurfaceMaterial* ismRead = nullptr;
-  from_json(jMaterial, ismRead);
+  auto ismRead = SurfaceMaterialJsonConverter::fromJson(jMaterial);
   BOOST_REQUIRE(ismRead != nullptr);
 
   // Check if it's the right type - the reader always resolves "grid" json
   // into the concrete GridSurfaceMaterial class
-  const auto* ismReadTyped = dynamic_cast<const GridSurfaceMaterial*>(ismRead);
+  const auto* ismReadTyped =
+      dynamic_cast<const GridSurfaceMaterial*>(ismRead.get());
   BOOST_REQUIRE(ismReadTyped != nullptr);
 
   Vector2 l0(-0.5, -std::numbers::pi * 0.75);
@@ -90,8 +89,6 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial2DTests) {
   BOOST_CHECK_EQUAL(indexed.material[1].material().X0(), 1.);
   BOOST_CHECK_EQUAL(indexed.material[2].material().X0(), 11.);
   BOOST_CHECK_EQUAL(indexed.material[3].material().X0(), 21.);
-
-  delete ismRead;
 }
 
 BOOST_AUTO_TEST_CASE(GridSurfaceMaterialDirectStorageRoundTrip) {
@@ -118,23 +115,22 @@ BOOST_AUTO_TEST_CASE(GridSurfaceMaterialDirectStorageRoundTrip) {
   auto gsm = GridSurfaceMaterial::createDirect(*axisX, *axisY, material2x2);
   BOOST_REQUIRE(gsm != nullptr);
 
-  nlohmann::json jMaterial = gsm.get();
+  nlohmann::json jMaterial = SurfaceMaterialJsonConverter::toJson(*gsm);
 
-  BOOST_REQUIRE(jMaterial.find("material") != jMaterial.end());
-  BOOST_CHECK_EQUAL(jMaterial["material"]["type"], "grid");
-  BOOST_CHECK_EQUAL(jMaterial["material"]["accessor"]["type"], "direct");
-  BOOST_REQUIRE(jMaterial["material"]["accessor"].contains("grid"));
-  BOOST_CHECK(jMaterial["material"]["accessor"]["grid"].contains("axes"));
-  BOOST_CHECK(jMaterial["material"]["accessor"]["grid"].contains("data"));
-  BOOST_CHECK(!jMaterial["material"].contains("global_to_grid_local"));
-  BOOST_CHECK(!jMaterial["material"].contains("bound_to_grid_local"));
+  BOOST_CHECK_EQUAL(jMaterial["type"], "grid");
+  BOOST_CHECK_EQUAL(jMaterial["accessor"]["type"], "direct");
+  BOOST_REQUIRE(jMaterial["accessor"].contains("grid"));
+  BOOST_CHECK(jMaterial["accessor"]["grid"].contains("axes"));
+  BOOST_CHECK(jMaterial["accessor"]["grid"].contains("data"));
+  BOOST_CHECK(!jMaterial.contains("global_to_grid_local"));
+  BOOST_CHECK(!jMaterial.contains("bound_to_grid_local"));
 
   // Read it back in
-  const ISurfaceMaterial* gsmRead = nullptr;
-  from_json(jMaterial, gsmRead);
+  auto gsmRead = SurfaceMaterialJsonConverter::fromJson(jMaterial);
   BOOST_REQUIRE(gsmRead != nullptr);
 
-  const auto* gsmReadTyped = dynamic_cast<const GridSurfaceMaterial*>(gsmRead);
+  const auto* gsmReadTyped =
+      dynamic_cast<const GridSurfaceMaterial*>(gsmRead.get());
   BOOST_REQUIRE(gsmReadTyped != nullptr);
 
   BOOST_CHECK(
@@ -145,26 +141,20 @@ BOOST_AUTO_TEST_CASE(GridSurfaceMaterialDirectStorageRoundTrip) {
       gsmReadTyped->materialSlab(Vector2{1.5, 0.5}).material().X0(), 11.);
   BOOST_CHECK_EQUAL(
       gsmReadTyped->materialSlab(Vector2{1.5, 1.5}).material().X0(), 21.);
-
-  delete gsmRead;
 }
 
 BOOST_AUTO_TEST_CASE(MergedMaterialMarkerRoundTrip) {
   // The marker left behind by a lossy portal merge must survive a JSON
   // round-trip so it can be picked up by downstream tooling.
-  const ISurfaceMaterial* marker = new MergedMaterialMarker();
+  MergedMaterialMarker marker;
 
-  nlohmann::json jMaterial = marker;
-  BOOST_REQUIRE(jMaterial.find("material") != jMaterial.end());
-  BOOST_CHECK_EQUAL(jMaterial["material"]["type"], "merged-material-marker");
+  nlohmann::json jMaterial = SurfaceMaterialJsonConverter::toJson(marker);
+  BOOST_CHECK_EQUAL(jMaterial["type"], "merged-material-marker");
 
-  const ISurfaceMaterial* markerRead = nullptr;
-  from_json(jMaterial, markerRead);
+  auto markerRead = SurfaceMaterialJsonConverter::fromJson(jMaterial);
   BOOST_REQUIRE(markerRead != nullptr);
-  BOOST_CHECK(dynamic_cast<const MergedMaterialMarker*>(markerRead) != nullptr);
-
-  delete marker;
-  delete markerRead;
+  BOOST_CHECK(dynamic_cast<const MergedMaterialMarker*>(markerRead.get()) !=
+              nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

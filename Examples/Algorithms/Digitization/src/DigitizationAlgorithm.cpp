@@ -11,6 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/detail/ISensorDesignHolder.hpp"
+#include "ActsExamples/Digitization/DigitizationDesign.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -144,6 +146,26 @@ DigitizationAlgorithm::DigitizationAlgorithm(
   }
 
   m_digitizers = Acts::GeometryHierarchyMap<Digitizer>(digitizerInput);
+
+  for (const auto& [geoId, surfacePtr] : m_cfg.surfaceByIdentifier) {
+    auto digitizerItr = m_digitizers.find(geoId);
+    if (digitizerItr == m_digitizers.end()) {
+      continue;
+    }
+
+    const auto* placement = surfacePtr->surfacePlacement();
+    if (placement == nullptr) {
+      continue;
+    }
+
+    auto* holder = dynamic_cast<Acts::detail::ISensorDesignHolder*>(
+        const_cast<Acts::SurfacePlacementBase*>(placement));
+    if (holder == nullptr) {
+      continue;
+    }
+    auto design = std::make_shared<DigitizationDesign>(&(*digitizerItr));
+    holder->assignSensorDesign(design);
+  }
 }
 
 ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
@@ -184,8 +206,6 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
     auto surfaceItr = m_cfg.surfaceByIdentifier.find(moduleGeoId);
 
     if (surfaceItr == m_cfg.surfaceByIdentifier.end()) {
-      // this is either an invalid geometry id or a misconfigured smearer
-      // setup; both cases can not be handled and should be fatal.
       ACTS_ERROR("Could not find surface " << moduleGeoId
                                            << " for configured smearer");
       return ProcessCode::ABORT;
@@ -193,12 +213,31 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     const Acts::Surface* surfacePtr = surfaceItr->second;
 
-    auto digitizerItr = m_digitizers.find(moduleGeoId);
-    if (digitizerItr == m_digitizers.end()) {
-      ACTS_VERBOSE("No digitizer present for module " << moduleGeoId);
-      continue;
-    } else {
-      ACTS_VERBOSE("Digitizer found for module " << moduleGeoId);
+    // design pointer attached to the surface placement.
+    // Works for DD4hepDetectorElementWithDesign; returns nullptr otherwise.
+    const Digitizer* digitizerPtr = nullptr;
+    const auto* placement = surfacePtr->surfacePlacement();
+    if (placement != nullptr) {
+      const auto* holder =
+          dynamic_cast<const Acts::detail::ISensorDesignHolder*>(placement);
+      if (holder != nullptr) {
+        if (const auto* sensorDes = holder->sensorDesign()) {
+          if (const auto* design =
+                  dynamic_cast<const DigitizationDesign*>(sensorDes)) {
+            digitizerPtr = &design->digitizer();
+          }
+        }
+      }
+    }
+
+    // Fallback for non-DD4hep surfaces (generic detector etc.)
+    if (digitizerPtr == nullptr) {
+      auto digitizerItr = m_digitizers.find(moduleGeoId);
+      if (digitizerItr == m_digitizers.end()) {
+        ACTS_VERBOSE("No digitizer present for module " << moduleGeoId);
+        continue;
+      }
+      digitizerPtr = &(*digitizerItr);
     }
 
     // Run the digitizer. Iterate over the hits for this surface inside the
@@ -311,7 +350,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
             }
           }
         },
-        *digitizerItr);
+        *digitizerPtr);
   }
 
   if (skippedHits > 0) {

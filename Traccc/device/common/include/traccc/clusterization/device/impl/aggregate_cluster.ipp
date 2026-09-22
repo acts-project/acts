@@ -72,7 +72,7 @@ TRACCC_HOST_DEVICE inline void aggregate_cluster(
 
   const unsigned int partition_size = end - start;
 
-  index_t j = static_cast<index_t>(cid);
+  unsigned int j = cid;
 
   while (j < partition_size) {
     const unsigned int pos = j + start;

@@ -301,20 +301,18 @@ Rules of thumb:
 ## Limitations you should know about
 
 These are properties of the current navigation-less mapper, not of your setup.
-Both are cases where the legacy propagation-based mapper did more.
 
 **Volume material is not produced.** @ref Acts::MaterialMapper retrieves volume
 assignments from the assignment finder and then discards them; only surface
 material is accumulated, and `finalizeMaps()` returns an empty volume map
-(`Core/src/Material/MaterialMapper.cpp`). If you need volume material, the
-deprecated @ref Acts::VolumeMaterialMapper is currently the only path.
+(`Core/src/Material/MaterialMapper.cpp`). ACTS currently has no way to map
+volume material.
 
 **`mappingType` is not honoured.** The `"mappingType"` key round-trips through
 the JSON and is stored on the material, but the current assignment does plain
 nearest-intersection matching — its own comment says *"no pre/post matching"*
 (`Core/src/Material/MaterialInteractionAssignment.cpp`). `PreMapping`,
-`PostMapping` and `Sensor` are only interpreted by the deprecated
-@ref Acts::SurfaceMaterialMapper. To steer assignment today, use the
+`PostMapping` and `Sensor` have no effect. To steer assignment, use the
 `globalVetos`, `localVetos` and `reAssignments` hooks in
 @ref Acts::MaterialInteractionAssignment::Options.
 
