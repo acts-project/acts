@@ -109,5 +109,5 @@ void Acts::EventDataView3D::drawTrack(IVisualization3D& helper,
     first = false;
   }
 
-  helper.line(previouspos, tglobpos);
+  helper.line(*previouspos, tglobpos);
 }
