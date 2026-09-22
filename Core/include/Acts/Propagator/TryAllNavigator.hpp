@@ -17,6 +17,7 @@
 #include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Propagator/detail/NavigationHelpers.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -89,7 +90,8 @@ class TryAllNavigator final {
   /// Nested state struct
   struct State final {
     /// @param options_ Navigator options to initialise state with
-    explicit State(const Options& options_) : options(options_) {}
+    explicit State(const Options& options_)
+        : options(options_), additional(VoidNavigator::Options(options_)) {}
 
     /// Navigation options containing configuration for this propagation
     Options options;
@@ -118,6 +120,9 @@ class TryAllNavigator final {
 
     /// If a break has been detected
     bool navigationBreak = false;
+
+    /// State of the navigator that offers the additional surfaces
+    VoidNavigator::State additional;
 
     /// Navigation statistics
     NavigatorStatistics statistics;
@@ -246,6 +251,7 @@ class TryAllNavigator final {
 
     state.startSurface = args.startSurface;
     state.targetSurface = args.targetSurface;
+    static_cast<void>(m_additional.initialize(state.additional, args));
 
     const TrackingVolume* startVolume = args.startVolume;
 
@@ -310,6 +316,151 @@ class TryAllNavigator final {
     // Navigator preStep always resets the current surface
     state.currentSurface = nullptr;
 
+    // The additional surfaces outlive the navigation in the geometry
+    return m_additional.nextTarget(
+        state.additional, position, direction, state.currentVolume,
+        [&] { return nextGeometryTarget(state, position, direction); });
+  }
+
+  /// @brief Check if the target is still valid
+  ///
+  /// This method checks if the target is valid based on the current position
+  /// and direction. It returns true if the target is still valid.
+  ///
+  /// For the TryAllNavigator, the target is always invalid since we do not want
+  /// to assume any specific surface sequence over multiple steps.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  ///
+  /// @return True if the target is still valid
+  bool checkTargetValid(const State& state, const Vector3& position,
+                        const Vector3& direction) const {
+    static_cast<void>(state);
+    static_cast<void>(position);
+    static_cast<void>(direction);
+
+    return false;
+  }
+
+  /// @brief Handle the surface reached
+  ///
+  /// This method is called when a surface is reached. It sets the current
+  /// surface in the navigation state and updates the navigation candidates.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  void handleSurfaceReached(State& state, const Vector3& position,
+                            const Vector3& direction,
+                            const Surface& surface) const {
+    ACTS_VERBOSE(volInfo(state) << "handleSurfaceReached");
+
+    // Reaching an additional surface does not touch the navigation in the
+    // geometry, unless it targets the surface too
+    if (m_additional.handleAdditionalSurfaceReached(state.additional,
+                                                    surface)) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Reached additional surface " << surface.geometryId());
+      state.currentSurface = &surface;
+      return;
+    }
+
+    // Check if the navigator is inactive
+    if (state.navigationBreak) {
+      return;
+    }
+
+    const std::vector<NavigationTarget>& currentTargets =
+        state.currentTargets();
+
+    if (currentTargets.empty()) {
+      ACTS_VERBOSE(volInfo(state) << "No current target set.");
+      return;
+    }
+
+    assert(state.currentSurface == nullptr && "Current surface must be reset.");
+
+    // handle multiple surface intersections due to increased bounds
+
+    std::vector<NavigationTarget> hitTargets;
+
+    for (const auto& target : currentTargets) {
+      const std::uint8_t index = target.intersectionIndex();
+      const Surface& targetSurface = target.surface();
+      const BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
+
+      const Intersection3D intersection =
+          targetSurface
+              .intersect(state.options.geoContext, position, direction,
+                         boundaryTolerance, state.options.surfaceTolerance)
+              .at(index);
+
+      if (intersection.status() == IntersectionStatus::onSurface) {
+        hitTargets.emplace_back(target);
+      }
+    }
+
+    ACTS_VERBOSE(volInfo(state)
+                 << "Found " << hitTargets.size()
+                 << " intersections on surface with bounds check.");
+
+    // reset stored targets
+    state.lastPosition.reset();
+    state.activeTargetsAhead.clear();
+    state.activeTargetsBehind.clear();
+    state.activeTargetBehindIndex = -1;
+
+    if (hitTargets.empty()) {
+      ACTS_VERBOSE(volInfo(state) << "No hit targets found.");
+      return;
+    }
+
+    if (hitTargets.size() > 1) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Only using first intersection within bounds.");
+    }
+
+    // we can only handle a single surface hit so we pick the first one
+    const NavigationTarget& target = hitTargets.front();
+    const Surface& hitSurface = target.surface();
+
+    ACTS_VERBOSE(volInfo(state) << "Surface " << hitSurface.geometryId()
+                                << " successfully hit, storing it.");
+    state.currentSurface = &hitSurface;
+
+    if (target.isSurfaceTarget()) {
+      ACTS_VERBOSE(volInfo(state) << "This is a surface");
+    } else if (target.isLayerTarget()) {
+      ACTS_VERBOSE(volInfo(state) << "This is a layer");
+    } else if (target.isPortalTarget()) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "This is a boundary. Reinitialize navigation");
+
+      const BoundarySurface& boundary = target.boundarySurface();
+
+      state.currentVolume = boundary.attachedVolume(state.options.geoContext,
+                                                    position, direction);
+
+      ACTS_VERBOSE(volInfo(state) << "Switched volume");
+
+      reinitializeCandidates(state);
+    } else {
+      ACTS_ERROR(volInfo(state) << "Unknown intersection type");
+    }
+  }
+
+ private:
+  /// Configuration object for this navigator
+  Config m_cfg;
+
+  /// Offers the additional surfaces on top of the tracking geometry
+  VoidNavigator m_additional;
+
+  /// Get the next target in the tracking geometry
+  NavigationTarget nextGeometryTarget(State& state, const Vector3& position,
+                                      const Vector3& direction) const {
     // Check if the navigator is inactive
     if (state.navigationBreak) {
       return NavigationTarget::None();
@@ -333,7 +484,7 @@ class TryAllNavigator final {
       if (stepDistance < std::numeric_limits<double>::epsilon()) {
         ACTS_DEBUG(volInfo(state) << "Step distance is zero: " << stepDistance
                                   << ". Retry to resolve the next target.");
-        return nextTarget(state, position, direction);
+        return nextGeometryTarget(state, position, direction);
       }
 
       const Vector3 stepDirection = step.normalized();
@@ -417,129 +568,6 @@ class TryAllNavigator final {
 
     return nextTarget;
   }
-
-  /// @brief Check if the target is still valid
-  ///
-  /// This method checks if the target is valid based on the current position
-  /// and direction. It returns true if the target is still valid.
-  ///
-  /// For the TryAllNavigator, the target is always invalid since we do not want
-  /// to assume any specific surface sequence over multiple steps.
-  ///
-  /// @param state The navigation state
-  /// @param position The current position
-  /// @param direction The current direction
-  ///
-  /// @return True if the target is still valid
-  bool checkTargetValid(const State& state, const Vector3& position,
-                        const Vector3& direction) const {
-    static_cast<void>(state);
-    static_cast<void>(position);
-    static_cast<void>(direction);
-
-    return false;
-  }
-
-  /// @brief Handle the surface reached
-  ///
-  /// This method is called when a surface is reached. It sets the current
-  /// surface in the navigation state and updates the navigation candidates.
-  ///
-  /// @param state The navigation state
-  /// @param position The current position
-  /// @param direction The current direction
-  void handleSurfaceReached(State& state, const Vector3& position,
-                            const Vector3& direction,
-                            const Surface& /*surface*/) const {
-    // Check if the navigator is inactive
-    if (state.navigationBreak) {
-      return;
-    }
-
-    ACTS_VERBOSE(volInfo(state) << "handleSurfaceReached");
-
-    const std::vector<NavigationTarget>& currentTargets =
-        state.currentTargets();
-
-    if (currentTargets.empty()) {
-      ACTS_VERBOSE(volInfo(state) << "No current target set.");
-      return;
-    }
-
-    assert(state.currentSurface == nullptr && "Current surface must be reset.");
-
-    // handle multiple surface intersections due to increased bounds
-
-    std::vector<NavigationTarget> hitTargets;
-
-    for (const auto& target : currentTargets) {
-      const std::uint8_t index = target.intersectionIndex();
-      const Surface& surface = target.surface();
-      const BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
-
-      const Intersection3D intersection =
-          surface
-              .intersect(state.options.geoContext, position, direction,
-                         boundaryTolerance, state.options.surfaceTolerance)
-              .at(index);
-
-      if (intersection.status() == IntersectionStatus::onSurface) {
-        hitTargets.emplace_back(target);
-      }
-    }
-
-    ACTS_VERBOSE(volInfo(state)
-                 << "Found " << hitTargets.size()
-                 << " intersections on surface with bounds check.");
-
-    // reset stored targets
-    state.lastPosition.reset();
-    state.activeTargetsAhead.clear();
-    state.activeTargetsBehind.clear();
-    state.activeTargetBehindIndex = -1;
-
-    if (hitTargets.empty()) {
-      ACTS_VERBOSE(volInfo(state) << "No hit targets found.");
-      return;
-    }
-
-    if (hitTargets.size() > 1) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Only using first intersection within bounds.");
-    }
-
-    // we can only handle a single surface hit so we pick the first one
-    const NavigationTarget& target = hitTargets.front();
-    const Surface& surface = target.surface();
-
-    ACTS_VERBOSE(volInfo(state) << "Surface " << surface.geometryId()
-                                << " successfully hit, storing it.");
-    state.currentSurface = &surface;
-
-    if (target.isSurfaceTarget()) {
-      ACTS_VERBOSE(volInfo(state) << "This is a surface");
-    } else if (target.isLayerTarget()) {
-      ACTS_VERBOSE(volInfo(state) << "This is a layer");
-    } else if (target.isPortalTarget()) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "This is a boundary. Reinitialize navigation");
-
-      const BoundarySurface& boundary = target.boundarySurface();
-
-      state.currentVolume = boundary.attachedVolume(state.options.geoContext,
-                                                    position, direction);
-
-      ACTS_VERBOSE(volInfo(state) << "Switched volume");
-
-      reinitializeCandidates(state);
-    } else {
-      ACTS_ERROR(volInfo(state) << "Unknown intersection type");
-    }
-  }
-
- private:
-  /// Configuration object for this navigator
-  Config m_cfg;
 
   /// Logger instance for this navigator
   std::unique_ptr<const Logger> m_logger;

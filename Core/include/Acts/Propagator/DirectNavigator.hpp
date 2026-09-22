@@ -17,6 +17,7 @@
 #include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -79,7 +80,8 @@ class DirectNavigator {
   struct State {
     /// Constructor from options
     /// @param options_ The navigator options
-    explicit State(const Options& options_) : options(options_) {}
+    explicit State(const Options& options_)
+        : options(options_), additional(VoidNavigator::Options(options_)) {}
 
     /// Configuration options for the direct navigator
     Options options;
@@ -103,6 +105,9 @@ class DirectNavigator {
 
     /// Navigation state - external interface: a break has been detected
     bool navigationBreak = false;
+
+    /// State of the navigator that offers the additional surfaces
+    VoidNavigator::State additional;
 
     /// Navigation statistics
     NavigatorStatistics statistics;
@@ -240,6 +245,7 @@ class DirectNavigator {
 
     state.startSurface = args.startSurface;
     state.targetSurface = args.targetSurface;
+    static_cast<void>(m_additional.initialize(state.additional, args));
 
     // We set the current surface to the start surface
     state.currentSurface = state.startSurface;
@@ -276,7 +282,8 @@ class DirectNavigator {
   /// @brief Get the next target surface
   ///
   /// This function gets the next target surface for the propagation. For
-  /// the direct navigator this is always the next surface in the sequence.
+  /// the direct navigator this is the next surface in the sequence, unless an
+  /// additional surface is closer.
   ///
   /// @param state The navigation state
   /// @param position The current position
@@ -288,6 +295,73 @@ class DirectNavigator {
     // Navigator target always resets the current surface
     state.currentSurface = nullptr;
 
+    // The additional surfaces outlive the surface sequence
+    const TrackingVolume* noVolume = nullptr;
+    return m_additional.nextTarget(
+        state.additional, position, direction, noVolume,
+        [&] { return nextSequenceTarget(state, position, direction); });
+  }
+
+  /// @brief Check if the current target is still valid
+  ///
+  /// This function checks if the target is valid. For the direct navigator this
+  /// is always true.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  ///
+  /// @return True if the target is valid
+  bool checkTargetValid(const State& state, const Vector3& position,
+                        const Vector3& direction) const {
+    static_cast<void>(state);
+    static_cast<void>(position);
+    static_cast<void>(direction);
+
+    return true;
+  }
+
+  /// @brief Handle the surface reached
+  ///
+  /// This function handles the surface reached. For the direct navigator this
+  /// effectively sets the current surface to the reached surface.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @param surface The surface reached
+  void handleSurfaceReached(State& state, const Vector3& position,
+                            const Vector3& direction,
+                            const Surface& surface) const {
+    static_cast<void>(position);
+    static_cast<void>(direction);
+
+    ACTS_VERBOSE("DirectNavigator::handleSurfaceReached");
+
+    // Reaching an additional surface does not advance the sequence, unless
+    // the sequence targets the surface too
+    if (m_additional.handleAdditionalSurfaceReached(state.additional,
+                                                    surface)) {
+      state.currentSurface = &surface;
+      ACTS_VERBOSE("Current surface set to additional surface "
+                   << surface.geometryId());
+      return;
+    }
+
+    if (state.navigationBreak) {
+      return;
+    }
+
+    // Set the current surface
+    state.currentSurface = &state.navSurface();
+    ACTS_VERBOSE("Current surface set to "
+                 << state.currentSurface->geometryId());
+  }
+
+ private:
+  /// Get the next surface of the sequence
+  NavigationTarget nextSequenceTarget(State& state, const Vector3& position,
+                                      const Vector3& direction) const {
     if (state.navigationBreak) {
       return NavigationTarget::None();
     }
@@ -326,54 +400,6 @@ class DirectNavigator {
     return NavigationTarget::None();
   }
 
-  /// @brief Check if the current target is still valid
-  ///
-  /// This function checks if the target is valid. For the direct navigator this
-  /// is always true.
-  ///
-  /// @param state The navigation state
-  /// @param position The current position
-  /// @param direction The current direction
-  ///
-  /// @return True if the target is valid
-  bool checkTargetValid(const State& state, const Vector3& position,
-                        const Vector3& direction) const {
-    static_cast<void>(state);
-    static_cast<void>(position);
-    static_cast<void>(direction);
-
-    return true;
-  }
-
-  /// @brief Handle the surface reached
-  ///
-  /// This function handles the surface reached. For the direct navigator this
-  /// effectively sets the current surface to the reached surface.
-  ///
-  /// @param state The navigation state
-  /// @param position The current position
-  /// @param direction The current direction
-  /// @param surface The surface reached
-  void handleSurfaceReached(State& state, const Vector3& position,
-                            const Vector3& direction,
-                            const Surface& surface) const {
-    static_cast<void>(position);
-    static_cast<void>(direction);
-    static_cast<void>(surface);
-
-    if (state.navigationBreak) {
-      return;
-    }
-
-    ACTS_VERBOSE("DirectNavigator::handleSurfaceReached");
-
-    // Set the current surface
-    state.currentSurface = &state.navSurface();
-    ACTS_VERBOSE("Current surface set to "
-                 << state.currentSurface->geometryId());
-  }
-
- private:
   NavigationTarget chooseIntersection(
       const GeometryContext& gctx, const Surface& surface,
       const Vector3& position, const Vector3& direction,
@@ -398,6 +424,9 @@ class DirectNavigator {
   const Logger& logger() const { return *m_logger; }
 
   std::unique_ptr<const Logger> m_logger;
+
+  /// Offers the additional surfaces on top of the surface sequence
+  VoidNavigator m_additional;
 };
 
 }  // namespace Acts

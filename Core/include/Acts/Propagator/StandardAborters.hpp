@@ -8,14 +8,15 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cmath>
+#include <cstdint>
 #include <limits>
 
 namespace Acts {
@@ -65,24 +66,17 @@ struct PathLimitReached {
 /// a propagation without a target surface
 struct NoTargetAborter {};
 
-/// This is the condition that the Surface has been reached it then triggers a
-/// propagation abort
+/// This is the condition that the target surface has been reached. It aborts
+/// the propagation once the position is on the target surface, and it does
+/// not steer the propagation towards it.
+///
+/// @note The navigator steers the propagation onto the target surface. The
+///       propagator hands its target surface to the navigator. An actor that
+///       stops on a surface of its own registers it as an additional surface
+///       of the navigator.
 struct SurfaceReached {
   /// Target surface to reach for propagation termination
   const Surface* surface = nullptr;
-  /// Boundary tolerance for surface intersection checks
-  BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
-
-  // TODO https://github.com/acts-project/acts/issues/2738
-  /// Distance limit to discard intersections "behind us"
-  /// @note this is only necessary because some surfaces have more than one
-  ///       intersection
-  double nearLimit = -100 * UnitConstants::um;
-
-  SurfaceReached() = default;
-  /// Constructor with custom near limit
-  /// @param nLimit Distance limit to discard intersections "behind us"
-  explicit SurfaceReached(double nLimit) : nearLimit(nLimit) {}
 
   /// boolean operator for abort condition without using the result
   ///
@@ -100,71 +94,23 @@ struct SurfaceReached {
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
     if (surface == nullptr) {
-      ACTS_VERBOSE("SurfaceReached aborter | Target surface not set.");
       return false;
     }
 
-    if (navigator.currentSurface(state.navigation) == surface) {
-      ACTS_VERBOSE("SurfaceReached aborter | Target surface reached.");
-      return true;
+    // Another surface at the same position can be the current surface
+    if (navigator.currentSurface(state.navigation) != surface &&
+        surface->intersect(
+                   state.geoContext, stepper.position(state.stepping),
+                   state.options.direction * stepper.direction(state.stepping),
+                   BoundaryTolerance::None(), state.options.surfaceTolerance)
+                .closest()
+                .status() != IntersectionStatus::onSurface) {
+      return false;
     }
 
-    // not using the stepper overstep limit here because it does not always work
-    // for perigee surfaces
-    // note: the near limit is necessary for surfaces with more than one
-    // intersection in order to discard the ones which are behind us
-    const double farLimit = std::numeric_limits<double>::max();
-    const double tolerance = state.options.surfaceTolerance;
-
-    const MultiIntersection3D multiIntersection = surface->intersect(
-        state.geoContext, stepper.position(state.stepping),
-        state.options.direction * stepper.direction(state.stepping),
-        boundaryTolerance, tolerance);
-    const Intersection3D closestIntersection = multiIntersection.closest();
-
-    bool reached = false;
-
-    if (closestIntersection.status() == IntersectionStatus::onSurface) {
-      const double distance = closestIntersection.pathLength();
-      ACTS_VERBOSE(
-          "SurfaceReached aborter | "
-          "Target surface reached at distance (tolerance) "
-          << distance << " (" << tolerance << ")");
-      reached = true;
-    }
-
-    if (const auto intersectionIt = std::ranges::find_if(
-            multiIntersection,
-            [&](const auto& intersection) {
-              return intersection.isValid() &&
-                     detail::checkPathLength(intersection.pathLength(),
-                                             nearLimit, farLimit, logger);
-            });
-        intersectionIt != multiIntersection.end()) {
-      stepper.updateSurfaceStatus(
-          state.stepping, *surface, intersectionIt - multiIntersection.begin(),
-          state.options.direction, boundaryTolerance,
-          state.options.surfaceTolerance, ConstrainedStep::Type::Actor, logger);
-      ACTS_VERBOSE(
-          "SurfaceReached aborter | "
-          "Target stepSize (surface) updated to "
-          << stepper.outputStepSize(state.stepping));
-    } else {
-      ACTS_VERBOSE(
-          "SurfaceReached aborter | "
-          "Target intersection not found. Maybe next time?");
-    }
-
-    return reached;
+    ACTS_VERBOSE("SurfaceReached aborter | Target surface reached.");
+    return true;
   }
-};
-
-/// Similar to SurfaceReached, but with an infinite overstep limit.
-///
-/// This can be used to force the propagation to the target surface.
-struct ForcedSurfaceReached : SurfaceReached {
-  ForcedSurfaceReached()
-      : SurfaceReached(std::numeric_limits<double>::lowest()) {}
 };
 
 /// This is the condition that the end of world has been reached

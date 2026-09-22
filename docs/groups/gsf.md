@@ -208,12 +208,12 @@ reducer type; the default is the highest-weight component
 (`Acts::MaxWeightReducerLoop`, with `Acts::MaxMomentumReducerLoop` as an
 alternative), which keeps the navigation stream close to the bulk of the mixture.
 
-Determining when the whole multi-component state has "reached" a surface is
-handled by @ref Acts::MultiStepperSurfaceReached, which by default treats the
-state as on-surface once its *average* is within tolerance. This guards against a
-pathology described in @cite Huth:2024 — low-momentum components approaching a
-cylinder on a straight-line intersection can spiral indefinitely while always
-reporting *reachable*. A step limit that engages once the first component lands
+The stepper decides when the whole multi-component state has "reached" a
+surface, and it does so for every surface, the target surface included. The
+state is on the surface once no component still reports *reachable*. A
+pathology described in @cite Huth:2024 needs a guard — low-momentum components
+approaching a cylinder on a straight-line intersection can spiral indefinitely
+while always reporting *reachable*. A step limit that engages once the first component lands
 on the surface (`stepLimitAfterFirstComponentOnSurface`, default 50) forces the
 remaining stragglers to *unreachable* and removes them, after which the weights
 are renormalised:
@@ -303,8 +303,7 @@ Bethe–Heitler approximation, while all other seeds use the plain finder.
   @ref Acts::makeDefaultBetheHeitlerApprox.
 - Mixture reduction: @ref Acts::reduceMixtureWithKLDistance,
   @ref Acts::reduceMixtureLargestWeights.
-- Multi-component transport: @ref Acts::MultiEigenStepperLoop,
-  @ref Acts::MultiStepperSurfaceReached.
+- Multi-component transport: @ref Acts::MultiEigenStepperLoop.
 - Bremsstrahlung recovery in finding: @ref Acts::CombinatorialKalmanFilter,
   @ref Acts::BremCombinatorialKalmanFilterOptions.
 - Shared material formalism (scattering / ionization): @ref kf_material_effects.

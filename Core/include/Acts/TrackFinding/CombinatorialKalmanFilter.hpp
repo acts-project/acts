@@ -256,7 +256,7 @@ class CombinatorialKalmanFilter {
     using BranchStopperResult = CombinatorialKalmanFilterBranchStopperResult;
 
     /// The target surface aborter
-    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
+    SurfaceReached targetReached;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -531,9 +531,6 @@ class CombinatorialKalmanFilter {
       // Set path limit based on loop protection
       detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
                                   logger());
-
-      // Set path limit based on target surface
-      targetReached.checkAbort(state, stepper, navigator, logger());
 
       return Result<void>::success();
     }
@@ -1205,6 +1202,12 @@ class CombinatorialKalmanFilter {
 
     // Set the trivial propagator options
     propOptions.setPlainOptions(tfOptions.propagatorPlainOptions);
+
+    // The navigator stops on the target surface as the current surface
+    if (tfOptions.targetSurface != nullptr) {
+      propOptions.navigation.registerAdditionalSurface(
+          *tfOptions.targetSurface, BoundaryTolerance::None());
+    }
 
     // Catch the actor
     auto& combKalmanActor =
