@@ -53,7 +53,8 @@ auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
                          std::regex layerFilter) {
   return [&builder, det = std::move(det), layerFilter = std::move(layerFilter)](
              const std::optional<dd4hep::DetElement>& elem,
-             Acts::detail::LayerNodePtr layer) -> Acts::detail::BlueprintNodePtr {
+             Acts::detail::LayerNodePtr layer)
+             -> Acts::detail::BlueprintNodePtr {
     layer->setEnvelope(detail::kLayerEnvelope);
 
     const std::string elemName =
@@ -79,12 +80,11 @@ auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
           builder.backend().constant("{}_b_sf_b_z", det)};
 
       // Barrel: thin cylindrical shell -> outer mantle face carries material
-      matNode->configureFace(
-          OuterCylinder,
-          Acts::AxisSpec::DeferredEquidistant(kMatPhiBins,
-                                              Acts::AxisDirection::AxisRPhi),
-          Acts::AxisSpec::DeferredEquidistant(kMatZBins,
-                                              Acts::AxisDirection::AxisZ));
+      matNode->configureFace(OuterCylinder,
+                             Acts::AxisSpec::DeferredEquidistant(
+                                 kMatPhiBins, Acts::AxisDirection::AxisRPhi),
+                             Acts::AxisSpec::DeferredEquidistant(
+                                 kMatZBins, Acts::AxisDirection::AxisZ));
     } else {
       // Endcap layer
       navCfg.layerType = Disc;
@@ -92,18 +92,16 @@ auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
                      builder.backend().constant("{}_e_sf_b_phi", det)};
 
       // Endcap: thin disc "pancake" -> both flat faces carry material
-      matNode->configureFace(
-          NegativeDisc,
-          Acts::AxisSpec::DeferredEquidistant(kMatRBins,
-                                              Acts::AxisDirection::AxisR),
-          Acts::AxisSpec::DeferredEquidistant(kMatPhiBins,
-                                              Acts::AxisDirection::AxisPhi));
-      matNode->configureFace(
-          PositiveDisc,
-          Acts::AxisSpec::DeferredEquidistant(kMatRBins,
-                                              Acts::AxisDirection::AxisR),
-          Acts::AxisSpec::DeferredEquidistant(kMatPhiBins,
-                                              Acts::AxisDirection::AxisPhi));
+      matNode->configureFace(NegativeDisc,
+                             Acts::AxisSpec::DeferredEquidistant(
+                                 kMatRBins, Acts::AxisDirection::AxisR),
+                             Acts::AxisSpec::DeferredEquidistant(
+                                 kMatPhiBins, Acts::AxisDirection::AxisPhi));
+      matNode->configureFace(PositiveDisc,
+                             Acts::AxisSpec::DeferredEquidistant(
+                                 kMatRBins, Acts::AxisDirection::AxisR),
+                             Acts::AxisSpec::DeferredEquidistant(
+                                 kMatPhiBins, Acts::AxisDirection::AxisPhi));
     }
 
     layer->setNavigationPolicyFactory(Acts::NavigationPolicyFactory{}
@@ -284,13 +282,15 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  outer.addMaterial("Beampipe_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
-    using enum Acts::CylinderVolumeBounds::Face;
-    mat.configureFace(OuterCylinder,
-                      Acts::AxisSpec::DeferredEquidistant(kMatPhiBins, AxisRPhi),
-                      Acts::AxisSpec::DeferredEquidistant(kMatZBins, AxisZ));
-    mat.addChild(builder.backend().makeBeampipe());
-  });
+  outer.addMaterial(
+      "Beampipe_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
+        using enum Acts::CylinderVolumeBounds::Face;
+        mat.configureFace(
+            OuterCylinder,
+            Acts::AxisSpec::DeferredEquidistant(kMatPhiBins, AxisRPhi),
+            Acts::AxisSpec::DeferredEquidistant(kMatZBins, AxisZ));
+        mat.addChild(builder.backend().makeBeampipe());
+      });
 
   addBarrelEndcapSubsystem(builder, outer, "Pixels", "pix",
                            ActsPlugins::DD4hep::detail::kPixelLayerFilter);
