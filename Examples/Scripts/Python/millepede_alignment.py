@@ -181,6 +181,7 @@ alignDecoConfig.nominalStore = GeoIdAlignmentStore(
     )
 )
 alignDecoConfig.iovGenerators = [((0, 10000000), leShift)]
+alignDecoConfig.target = AlignmentDecorator.Target.eSim
 alignDeco = AlignmentDecorator(alignDecoConfig, acts.logging.WARNING)
 contextDecorators = [alignDeco]
 
@@ -204,8 +205,8 @@ s = Sequencer(
     outputDir=str(outputDir),
 )
 
-# Add a context with the alignment shift - sim, digi and
-# initial reco will "see" the distorted detector
+# Add a context with the alignment shift - sim and digi will "see" the
+# distorted detector, reconstruction will not
 s.addContextDecorator(alignDeco)
 
 # Run particle gun and fire some muons at our telescope

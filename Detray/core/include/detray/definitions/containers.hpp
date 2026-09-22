@@ -18,6 +18,7 @@
 #include <vecmem/containers/vector.hpp>
 
 // System include(s)
+#include <array>
 #include <map>
 #include <type_traits>
 #include <vector>

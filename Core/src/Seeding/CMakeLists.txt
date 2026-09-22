@@ -2,6 +2,7 @@ target_sources(
     ActsCore
     PRIVATE
         EstimateTrackParamsFromSeed.cpp
+        TrackParamsEstimationError.cpp
         CompSpacePointAuxiliaries.cpp
         CompositeSpacePointLineFitter.cpp
         FastStrawLineFitter.cpp
@@ -20,7 +21,6 @@ target_sources(
         GbtsGeometry.cpp
         GbtsTrackingFilter.cpp
         GraphBasedTrackSeeder.cpp
-        GbtsLayerConnection.cpp
         GbtsRoiDescriptor.cpp
         GbtsLayerConnectionTool.cpp
         HoughAccumulatorSection.cpp

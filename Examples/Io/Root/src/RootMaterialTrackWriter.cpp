@@ -86,7 +86,7 @@ ProcessCode RootMaterialTrackWriter::writeT(
   // Loop over the material tracks and write them out
   for (auto& [idTrack, mtrack] : materialTracks) {
     // write & fill
-    m_accessor.write(ctx.geoContext, ctx.eventNumber, mtrack);
+    m_accessor.write(ctx.recoGeoContext, ctx.eventNumber, mtrack);
     m_outputTree->Fill();
   }
   // return success

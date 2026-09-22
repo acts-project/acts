@@ -47,8 +47,8 @@ measurement_creation_algorithm::operator()(
     assert(cluster.cell_indices().empty() == false);
 
     // Fill measurement from cluster
-    details::fill_measurement(measurement, cluster, i, cells, det_descr,
-                              det_cond);
+    traccc::details::fill_measurement(measurement, cluster, i, cells, det_descr,
+                                      det_cond);
   }
 
   return result;

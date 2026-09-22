@@ -59,7 +59,8 @@ ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
 
   for (const auto& [idTrack, mTrack] : mtrackCollection) {
     auto [mapped, unmapped] = m_cfg.materialMapper->mapMaterial(
-        *m_mappingState, context.geoContext, context.magFieldContext, mTrack);
+        *m_mappingState, context.recoGeoContext, context.magFieldContext,
+        mTrack);
 
     mappedTrackCollection.try_emplace(mappedTrackCollection.end(), idTrack,
                                       mapped);

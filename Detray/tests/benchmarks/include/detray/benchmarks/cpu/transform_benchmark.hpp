@@ -24,7 +24,7 @@ namespace detray {
 namespace algebra {
 
 template <detray::concepts::transform3D transform3_t>
-void fill_random_trf(std::vector<transform3_t>&);
+void fill_random_trf(std::vector<transform3_t>& collection);
 
 }  // namespace algebra
 
@@ -45,7 +45,8 @@ struct transform3_bm : public vector_bm<typename transform3_t::vector3> {
   /// No default construction: Cannot prepare data
   transform3_bm() = delete;
   /// Construct from an externally provided configuration @param cfg
-  explicit transform3_bm(benchmark_base::configuration cfg) : base_type{cfg} {
+  explicit transform3_bm(const benchmark_base::configuration& cfg)
+      : base_type{cfg} {
     trfs.reserve(static_cast<std::size_t>(this->m_cfg.n_samples()));
 
     detray::algebra::fill_random_trf(trfs);

@@ -521,7 +521,7 @@ void HoughTransformSeeder::addMeasurements(const AlgorithmContext& ctx) const {
         // transform local position to global coordinates
         Acts::Vector3 globalFakeMom(1, 1, 1);
         Acts::Vector3 globalPos =
-            surface->localToGlobal(ctx.geoContext, localPos, globalFakeMom);
+            surface->localToGlobal(ctx.recoGeoContext, localPos, globalFakeMom);
         double r = globalPos.head<2>().norm();
         double phi = std::atan2(globalPos[Acts::ePos1], globalPos[Acts::ePos0]);
         double z = globalPos[Acts::ePos2];

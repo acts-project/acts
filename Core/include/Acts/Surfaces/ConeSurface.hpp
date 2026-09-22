@@ -82,6 +82,8 @@ class ConeSurface : public RegularSurface {
               const Transform3& shift);
 
  public:
+  ~ConeSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other is the source surface for the assignment

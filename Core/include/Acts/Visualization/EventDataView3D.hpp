@@ -10,7 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/AnyTrackProxy.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -307,6 +311,15 @@ struct EventDataView3D {
       return true;
     });
   }
+
+  /// Helper method to draw a track from AnyTrackProxy
+  ///
+  /// @param helper [in, out] The visualization helper
+  /// @param track The track to be drawn
+  /// @param gctx The geometry context for which it is drawn
+  static void drawTrack(IVisualization3D& helper,
+                        const AnyConstTrackProxy& track,
+                        const GeometryContext& gctx);
 };
 
 }  // namespace Acts

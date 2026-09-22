@@ -16,9 +16,7 @@
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cstddef>
-#include <limits>
 #include <ostream>
 #include <stdexcept>
 #include <utility>
@@ -163,75 +161,16 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       continue;
     }
 
-    // Loop over the found space points to find the seed with the maximum score.
-    // The score is defined as the product of the deltaR of the bottom-middle
-    // and middle-top space point pairs to favor separation between both pairs.
-    bool seedFound = false;
-    std::array<SpacePointIndex, 3> bestSPIndices{};
-    float maxScore = std::numeric_limits<float>::min();
-    for (std::size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
-      ConstSpacePointProxy b = spacePoints.at(spacePointsOnTrack[ib]);
+    // the seed is the whole track, see SeedSpacePointSelection
+    auto seed = seeds.createSeed();
+    seed.assignSpacePointIndices(spacePointsOnTrack);
 
-      for (std::size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
-        ConstSpacePointProxy m = spacePoints.at(spacePointsOnTrack[im]);
+    Acts::ParticleHypothesis hypothesis =
+        m_cfg.particleHypothesis.value_or(particle.hypothesis());
 
-        const float bmDeltaR = m.r() - b.r();
-        const float bmAbsDeltaZ = std::abs(m.z() - b.z());
-        if (bmDeltaR < 0) {
-          ACTS_WARNING(
-              "Space points are not sorted in r. Difference middle-bottom: "
-              << bmDeltaR);
-          continue;
-        }
-        if (bmDeltaR < m_cfg.deltaRMin || bmDeltaR > m_cfg.deltaRMax) {
-          continue;
-        }
-        if (bmAbsDeltaZ < m_cfg.absDeltaZMin ||
-            bmAbsDeltaZ > m_cfg.absDeltaZMax) {
-          continue;
-        }
-
-        for (std::size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
-          ConstSpacePointProxy t = spacePoints.at(spacePointsOnTrack[it]);
-
-          const float mtDeltaR = t.r() - m.r();
-          const float mtAbsDeltaZ = std::abs(t.z() - m.z());
-          if (mtDeltaR < 0) {
-            ACTS_WARNING(
-                "Space points are not sorted in r. Difference top-middle: "
-                << mtDeltaR);
-            continue;
-          }
-          if (mtDeltaR < m_cfg.deltaRMin || mtDeltaR > m_cfg.deltaRMax) {
-            continue;
-          }
-          if (mtAbsDeltaZ < m_cfg.absDeltaZMin ||
-              mtAbsDeltaZ > m_cfg.absDeltaZMax) {
-            continue;
-          }
-
-          const float score = bmDeltaR * mtDeltaR;
-
-          if (score > maxScore) {
-            seedFound = true;
-            bestSPIndices = {b.index(), m.index(), t.index()};
-            maxScore = score;
-          }
-        }
-      }
-    }
-
-    if (seedFound) {
-      auto seed = seeds.createSeed();
-      seed.assignSpacePointIndices(bestSPIndices);
-
-      Acts::ParticleHypothesis hypothesis =
-          m_cfg.particleHypothesis.value_or(particle.hypothesis());
-
-      seededParticles.insert(particle);
-      tracks.emplace_back(std::move(track));
-      particleHypotheses.emplace_back(hypothesis);
-    }
+    seededParticles.insert(particle);
+    tracks.emplace_back(std::move(track));
+    particleHypotheses.emplace_back(hypothesis);
   }
 
   ACTS_VERBOSE("Found " << seeds.size() << " seeds");

@@ -21,7 +21,9 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
+#include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -30,7 +32,18 @@ namespace ActsExamples {
 class GraphBasedSeedingAlgorithm final : public IAlgorithm {
  public:
   using ActsIDs = std::array<std::uint64_t, 2>;
-  using GbtsIDs = std::array<std::uint32_t, 3>;
+
+  /// One module's entry in the layer mapping file, with the geometry
+  /// index resolved from it.
+  struct GbtsIDs {
+    /// GBTS layer id, before the eta module is folded in
+    Acts::Experimental::GbtsExperimentLayerId layerId{};
+    /// eta module, which splits an endcap ring into GBTS layers
+    std::uint32_t etaModule{};
+    /// index of `layerId * 1000 + etaModule`, unset if the geometry has no
+    /// such layer
+    std::optional<Acts::Experimental::GbtsLayerIndex> layerIndex{};
+  };
 
   struct Config {
     /// this is used to initialise the handle that points to the container of
@@ -58,6 +71,20 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// the connection table (parsed from csv file) used to make geoemetry cuts
     /// be GBTS
     std::string layerMappingFile;
+
+    /// the ATLAS connector file listing which layers may be connected
+    std::string connectorInputFile;
+
+    /// the ATLAS lookup table of tau bounds per cluster width, needed by the
+    /// cluster width cuts
+    std::filesystem::path lutInputFile;
+
+    /// Eta bin width the layers are split into (0 takes the value the
+    /// connector file carries, 0.2 in ATLAS' createLinkingScheme.py)
+    float etaBinWidthOverride = 0.0f;
+
+    /// z0 range the eta bin table is built against
+    Acts::Experimental::GbtsZ0Range gbtsZ0Range;
 
     /// holds detector information, used to make the geometry objects used by
     /// GBTS
@@ -92,12 +119,6 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// used by GBTS
   std::map<ActsIDs, GbtsIDs> m_actsGbtsMap;
 
-  /// used to assign LayerIds to the GbtsActsMap
-  std::map<std::uint32_t, std::uint32_t> m_layerIdMap{};
-
-  /// used to tell if a layer is a strip or pixel layer
-  std::vector<bool> m_isPixelLayer{};
-
   /// used to define region of interest
   std::optional<Acts::Experimental::GbtsRoiDescriptor> m_internalRoi;
 
@@ -114,16 +135,19 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// make the map between ACTS geometry ID's and GBTS geometry ID's
   std::map<ActsIDs, GbtsIDs> makeActsGbtsMap() const;
 
-  /// make the container that holds space points that have been given
-  /// all the variables needed for GBTS algorithm to run
-  Acts::SpacePointContainer makeSpContainer(
-      const SpacePointContainer &spacePoints,
-      std::map<ActsIDs, GbtsIDs> map) const;
+  /// Resolve the GBTS layer index for a space point, or nullopt if it is not
+  /// part of the GBTS geometry.
+  std::optional<Acts::Experimental::GbtsLayerIndex> gbtsLayerIndex(
+      const ConstSpacePointProxy &spacePoint) const;
+
+  /// Fill in `GbtsIDs::layerIndex` for every mapped module from the geometry.
+  /// @param geometry The geometry the indices belong to
+  void resolveLayerIndices(const Acts::Experimental::GbtsGeometry &geometry);
 
   /// makes the geometry objects used by GBTS that correspond to the objects in
   /// the connection table for ease these are sometimes called "logical layers"
   std::vector<Acts::Experimental::GbtsLayerDescription> layerNumbering(
-      const Acts::GeometryContext &gctx);
+      const Acts::GeometryContext &gctx) const;
 
   void printConfig() const;
 };

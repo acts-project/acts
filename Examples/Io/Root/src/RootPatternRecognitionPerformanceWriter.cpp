@@ -208,7 +208,7 @@ ProcessCode RootPatternRecognitionPerformanceWriter::writeT(
   // Exclusive access to the histograms while filling
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
-  m_collector.fill(ctx.geoContext, tracks, particles, trackParticleMatching,
+  m_collector.fill(ctx.recoGeoContext, tracks, particles, trackParticleMatching,
                    particleTrackMatching, particleMeasurementsMap);
 
   // Write additional matching details to TTree

@@ -183,18 +183,20 @@ if(${DETRAY_BUILD_HIP} AND ${CMAKE_HIP_STANDARD} LESS 20)
     )
 endif()
 
-# Disable the [[no_unique_address]] annotation if we are on CUDA>=13.0.
-# TODO: Update this statement once a fix in CUDA is available.
+# Disable the [[no_unique_address]] annotation if we are on CUDA>=13.0 but <13.2.
 set(DETRAY_INTERNAL_USE_NO_UNIQUE_ADDRESS_ANNOTATION ON)
 
 if(DETRAY_BUILD_CUDA)
     # Figure out the version of CUDA being used.
     find_package(CUDAToolkit REQUIRED)
 
-    if(CUDAToolkit_VERSION_MAJOR GREATER_EQUAL 13)
+    if(
+        CUDAToolkit_VERSION VERSION_GREATER_EQUAL "13.0"
+        AND CUDAToolkit_VERSION VERSION_LESS "13.2"
+    )
         message(
             STATUS
-            "Disabling [[no_unique_address]] annotation due to CUDA incompatibility"
+            "Disabling [[no_unique_address]] annotation due to a bug in CUDA 13.0:13.1"
         )
         set(DETRAY_INTERNAL_USE_NO_UNIQUE_ADDRESS_ANNOTATION OFF)
     endif()
@@ -209,6 +211,17 @@ endif()
 # Alias flag to enable tests in detray (pulls in google test and triggers the build of executables that depend on it)
 if(BUILD_TESTING AND (DETRAY_BUILD_UNITTESTS OR DETRAY_BUILD_INTEGRATIONTESTS))
     set(DETRAY_BUILD_TESTING ON)
+endif()
+
+# detray_compile_headers() delegates to ACTS' acts_compile_headers(), which is
+# already defined when detray is built via add_subdirectory from ACTS. When
+# detray is configured standalone inside the ACTS tree, pull the module in by
+# relative path, as the codegen setup does. ACTS gates the header targets on an
+# option a standalone build does not have, so tie them to detray's own testing
+# switch there -- that is what used to guard the per-header executables.
+if(NOT COMMAND acts_compile_headers)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/ActsFunctions.cmake)
+    set(ACTS_COMPILE_HEADERS ${DETRAY_BUILD_TESTING})
 endif()
 
 # Validation utilities are needed for integration tests and tutorials

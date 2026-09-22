@@ -82,6 +82,8 @@ class LineSurface : public Surface {
                        const Transform3& shift);
 
  public:
+  ~LineSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other is the source surface dor copying

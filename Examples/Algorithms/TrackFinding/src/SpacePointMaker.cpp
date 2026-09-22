@@ -58,11 +58,9 @@ void createPixelSpacePoint(
   // we rely on the direction not being used by the surface
   const Acts::Vector3 global =
       surface.localToGlobal(gctx, local, Acts::Vector3::Zero());
-  const Acts::Vector2 varZR =
-      Acts::PixelSpacePointBuilder::computeCovarianceZR(
-          surface.referenceFrame(gctx, global, Acts::Vector3::Zero()), global,
-          localCov)
-          .diagonal();
+  const Acts::Vector2 varZR = Acts::PixelSpacePointBuilder::computeVarianceZR(
+      surface.referenceFrame(gctx, global, Acts::Vector3::Zero()), global,
+      localCov);
 
   auto sp = spacePoints.createSpacePoint();
   sp.assignSourceLinks(std::array{Acts::SourceLink(sourceLink)});
@@ -284,8 +282,8 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
           continue;
         }
 
-        createPixelSpacePoint(ctx.geoContext, surface, measurement, sourceLink,
-                              spacePoints);
+        createPixelSpacePoint(ctx.recoGeoContext, surface, measurement,
+                              sourceLink, spacePoints);
       }
     }
   }
@@ -362,9 +360,9 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
         }
 
         Acts::Vector2 local1 = measurement1.fullParameters().head<2>();
-        local1[1] = surface1.center(ctx.geoContext)[1];
+        local1[1] = surface1.center(ctx.recoGeoContext)[1];
         const Acts::Vector3 global1 = surface1.localToGlobal(
-            ctx.geoContext, local1, Acts::Vector3::Zero());
+            ctx.recoGeoContext, local1, Acts::Vector3::Zero());
 
         std::optional<double> minDistance;
         std::optional<IndexSourceLink> bestSourceLink2;
@@ -381,9 +379,9 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
           }
 
           Acts::Vector2 local2 = measurement2.fullParameters().head<2>();
-          local2[1] = surface2.center(ctx.geoContext)[1];
+          local2[1] = surface2.center(ctx.recoGeoContext)[1];
           const Acts::Vector3 global2 = surface1.localToGlobal(
-              ctx.geoContext, local2, Acts::Vector3::Zero());
+              ctx.recoGeoContext, local2, Acts::Vector3::Zero());
 
           const Acts::Result<double> distance =
               Acts::StripSpacePointBuilder::computeClusterPairDistance(
@@ -436,7 +434,7 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
           measurements.getMeasurement(sourceLink2.index());
 
       Acts::Result<void> spResult = createStripSpacePoint(
-          ctx.geoContext, surface1, surface2, measurement1, measurement2,
+          ctx.recoGeoContext, surface1, surface2, measurement1, measurement2,
           sourceLink1, sourceLink2, constrainedOptions, spacePoints);
       if (!spResult.ok()) {
         ACTS_DEBUG("Skipping strip space point: " << spResult.error());

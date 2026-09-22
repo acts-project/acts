@@ -70,7 +70,7 @@ ProcessCode EDM4hepMeasurementOutputConverter::execute(
     }
 
     auto to = hits->create();
-    EDM4hepUtil::writeMeasurement(ctx.geoContext, from, to, *surface);
+    EDM4hepUtil::writeMeasurement(ctx.recoGeoContext, from, to, *surface);
   }
 
   if (m_outputSimHitLinks.isInitialized()) {

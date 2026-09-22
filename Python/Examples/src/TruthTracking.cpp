@@ -139,8 +139,7 @@ void addTruthTracking(py::module& mex) {
       TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm", inputParticles,
       inputParticleMeasurementsMap, inputSimHits, inputMeasurementSimHitsMap,
       inputSpacePoints, outputParticles, outputSeeds, outputProtoTracks,
-      outputParticleHypotheses, particleHypothesis, deltaRMin, deltaRMax,
-      absDeltaZMin, absDeltaZMax);
+      outputParticleHypotheses, particleHypothesis);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(HitSelector, mex, "HitSelector", inputHits,
                                 inputParticlesSelected, outputHits, minX, maxX,

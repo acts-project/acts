@@ -10,6 +10,8 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstdint>
+
 namespace Acts::detail {
 
 /// Parameters to derive the number of phi bins of a space point grid from the
@@ -33,9 +35,9 @@ struct SpacePointGridPhiBinningConfig {
   /// numPhiNeighbors (in the configuration of the BinFinders) is configured
   /// to return 1 neighbor on either side of the current phi-bin (and you want
   /// to cover the full phi-range of minPT), leave this at 1.
-  int phiBinDeflectionCoverage = 1;
+  std::uint32_t phiBinDeflectionCoverage = 1;
   /// maximum number of phi bins
-  int maxPhiBins = 10000;
+  std::uint32_t maxPhiBins = 10000;
 };
 
 /// Compute the number of phi bins of a space point grid such that each bin
@@ -45,7 +47,8 @@ struct SpacePointGridPhiBinningConfig {
 /// @param config Parameters the phi bin count is derived from
 /// @param logger Logger instance for debugging output
 /// @return The number of phi bins, capped at `config.maxPhiBins`
-int computeSpacePointGridPhiBins(const SpacePointGridPhiBinningConfig& config,
-                                 const Logger& logger = getDummyLogger());
+std::uint32_t computeSpacePointGridPhiBins(
+    const SpacePointGridPhiBinningConfig& config,
+    const Logger& logger = getDummyLogger());
 
 }  // namespace Acts::detail

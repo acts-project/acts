@@ -73,7 +73,7 @@ class ConcretePropagator : public PropagatorInterface {
     using PropagatorOptions =
         typename propagator_t::template Options<ActorList>;
 
-    PropagatorOptions options(context.geoContext, context.magFieldContext);
+    PropagatorOptions options(context.recoGeoContext, context.magFieldContext);
     // Activate loop protection at some pt value
     options.loopProtection =
         startParameters.transverseMomentum() < cfg.ptLoopers;
@@ -92,7 +92,7 @@ class ConcretePropagator : public PropagatorInterface {
 
     auto state = m_propagator.makeState(options);
 
-    auto resultInit = m_propagator.initialize(state, startParameters);
+    auto resultInit = m_propagator.initialize(state, startParameters, nullptr);
     if (!resultInit.ok()) {
       return resultInit.error();
     }

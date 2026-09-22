@@ -95,14 +95,15 @@ inline void count_doublets(
         // Check if this spacepoint is a compatible "bottom" spacepoint
         // to the thread's "middle" spacepoint.
         if (doublet_finding_helper::isCompatible<
-                details::spacepoint_type::bottom>(middle_sp, other_sp,
-                                                  config)) {
+                traccc::details::spacepoint_type::bottom>(middle_sp, other_sp,
+                                                          config)) {
           ++n_mb_cand;
         }
         // Check if this spacepoint is a compatible "top" spacepoint to
         // the thread's "middle" spacepoint.
-        if (doublet_finding_helper::isCompatible<details::spacepoint_type::top>(
-                middle_sp, other_sp, config)) {
+        if (doublet_finding_helper::isCompatible<
+                traccc::details::spacepoint_type::top>(middle_sp, other_sp,
+                                                       config)) {
           ++n_mt_cand;
         }
       }

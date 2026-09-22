@@ -311,7 +311,9 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
                                           const ConstTrackContainer& tracks) {
   constexpr float nan = std::numeric_limits<float>::quiet_NaN();
 
-  const Acts::GeometryContext& gctx = ctx.geoContext;
+  // Track states and measurements live in the reco geometry, the truth hits
+  // below in the sim one
+  const Acts::GeometryContext& gctx = ctx.recoGeoContext;
   // Read additional input collections
   const auto& particles = m_inputParticles(ctx);
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
@@ -419,8 +421,8 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
 
         const auto hitIdx = sl.index();
         const auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
-        const auto [truthLocal, truthPos4, truthUnitDir] =
-            averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
+        const auto [truthLocal, truthPos4, truthUnitDir] = averageSimHits(
+            ctx.simGeoContext, surface, simHits, indices, logger());
 
         // momentum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero
@@ -484,7 +486,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         const Acts::Vector2 local(meas[Acts::eBoundLoc0],
                                   meas[Acts::eBoundLoc1]);
         const Acts::Vector3 global =
-            surface.localToGlobal(ctx.geoContext, local, truthUnitDir);
+            surface.localToGlobal(ctx.recoGeoContext, local, truthUnitDir);
 
         // fill the measurement info
         m_lx_hit.push_back(Acts::clampValue<float>(local[Acts::ePos0]));
@@ -592,10 +594,16 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
 
         // track parameters error
         Acts::BoundVector errors;
+        // A failed or empty fit leaves NaN on the covariance diagonal, and the
+        // ordered comparison signals FE_INVALID on it. Writing `nan` for such
+        // an entry is the intended behaviour here; the NaN covariance itself
+        // is the fitter's problem, tracked in #2348.
+        // MARK: fpeMaskBegin(FLTINV, 1, #2348)
         for (Eigen::Index i = 0; i < parameters.size(); ++i) {
           const double variance = covariance(i, i);
           errors[i] = variance >= 0 ? std::sqrt(variance) : nan;
         }
+        // MARK: fpeMaskEnd(FLTINV)
         m_err_eLOC0[ipar].push_back(
             Acts::clampValue<float>(errors[Acts::eBoundLoc0]));
         m_err_eLOC1[ipar].push_back(

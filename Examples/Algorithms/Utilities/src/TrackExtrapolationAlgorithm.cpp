@@ -68,7 +68,7 @@ ProcessCode TrackExtrapolationAlgorithm::execute(
                       logger().cloneWithSuffix("Navigator")),
       logger().cloneWithSuffix("Propagator"));
 
-  Options options(ctx.geoContext, ctx.magFieldContext);
+  Options options(ctx.recoGeoContext, ctx.magFieldContext);
   options.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
   options.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
@@ -77,7 +77,8 @@ ProcessCode TrackExtrapolationAlgorithm::execute(
   auto extrapolate = [&](const ConstTrackProxy& track)
       -> Acts::Result<Acts::BoundTrackParameters> {
     auto findResult = Acts::findTrackStateForExtrapolation(
-        ctx.geoContext, track, *m_cfg.targetSurface, m_cfg.strategy, logger());
+        ctx.recoGeoContext, track, *m_cfg.targetSurface, m_cfg.strategy,
+        logger());
     if (!findResult.ok()) {
       return findResult.error();
     }

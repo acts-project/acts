@@ -150,7 +150,7 @@ ProcessCode SvgPointWriter<T, Acc>::writeT(
   tgpOptions.trackingGeometryOptions = m_cfg.trackingGeometryOptions;
   auto [xyView, zrView] =
       ActsPlugins::Svg::TrackingGeometryProjections::convert(
-          context.geoContext, *m_cfg.trackingGeometry, tgpOptions);
+          context.recoGeoContext, *m_cfg.trackingGeometry, tgpOptions);
 
   // Fill the space points
   unsigned int id = 0;

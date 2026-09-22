@@ -393,8 +393,16 @@ void TrackingGeometry::visualize(IVisualization3D& helper,
                                  const ViewConfig& viewConfig,
                                  const ViewConfig& portalViewConfig,
                                  const ViewConfig& sensitiveViewConfig) const {
+  ACTS_PUSH_IGNORE_DEPRECATED();
   highestTrackingVolume()->visualize(helper, gctx, viewConfig, portalViewConfig,
                                      sensitiveViewConfig);
+  ACTS_POP_IGNORE_DEPRECATED();
+}
+
+void TrackingGeometry::visualize(IVisualization3D& helper,
+                                 const GeometryContext& gctx,
+                                 const ViewConfigFunc& func) const {
+  highestTrackingVolume()->visualize(helper, gctx, func);
 }
 
 void TrackingGeometry::apply(TrackingGeometryVisitor& visitor) const {

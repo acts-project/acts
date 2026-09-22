@@ -99,9 +99,7 @@ def _small_res_plot_config():
     synthetic track lands in the same (eta, phi, pT) bin, so this just avoids
     fitting ~1600 empty slices per parameter for nothing.
     """
-    import acts.examples.root as acts_root
-
-    cfg = acts_root.ResPlotToolConfig()
+    cfg = acts.examples.ResPlotToolConfig()
     cfg.varBinning["Eta"] = acts.Axis.regular(2, -4.0, 4.0, "#eta")
     cfg.varBinning["Phi"] = acts.Axis.regular(2, -np.pi, np.pi, "#phi")
     cfg.varBinning["Pt"] = acts.Axis.regular(2, 0.0, 100.0, "pT [GeV/c]")

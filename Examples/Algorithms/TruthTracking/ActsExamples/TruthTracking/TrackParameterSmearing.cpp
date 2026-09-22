@@ -160,16 +160,16 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
             cov, particleHypothesis);
 
     ACTS_VERBOSE("Smearing particle (pos, time, phi, theta, q/p):");
-    ACTS_VERBOSE(
-        " from: " << inputTrackParameters.position(ctx.geoContext).transpose()
-                  << ", " << time << ", " << phi << ", " << theta << ", "
-                  << qOverP);
-    ACTS_VERBOSE(
-        "   to: " << outputTrackParameters.position(ctx.geoContext).transpose()
-                  << ", " << params[Acts::eBoundTime] << ", "
-                  << params[Acts::eBoundPhi] << ", "
-                  << params[Acts::eBoundTheta] << ", "
-                  << params[Acts::eBoundQOverP]);
+    ACTS_VERBOSE(" from: " << inputTrackParameters.position(ctx.recoGeoContext)
+                                  .transpose()
+                           << ", " << time << ", " << phi << ", " << theta
+                           << ", " << qOverP);
+    ACTS_VERBOSE("   to: " << outputTrackParameters.position(ctx.recoGeoContext)
+                                  .transpose()
+                           << ", " << params[Acts::eBoundTime] << ", "
+                           << params[Acts::eBoundPhi] << ", "
+                           << params[Acts::eBoundTheta] << ", "
+                           << params[Acts::eBoundQOverP]);
   }
 
   m_outputTrackParameters(ctx, std::move(outputTrackParametersContainer));

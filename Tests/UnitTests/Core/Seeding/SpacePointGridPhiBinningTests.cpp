@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/detail/SpacePointGridPhiBinning.hpp"
 
+#include <cstdint>
 #include <stdexcept>
 
 using namespace Acts::UnitLiterals;
@@ -41,19 +42,19 @@ BOOST_AUTO_TEST_CASE(ZeroFieldUsesMaxPhiBins) {
   auto config = makeConfig();
   config.bFieldInZ = 0;
   config.maxPhiBins = 42;
-  BOOST_CHECK_EQUAL(detail::computeSpacePointGridPhiBins(config), 42);
+  BOOST_CHECK_EQUAL(detail::computeSpacePointGridPhiBins(config), 42u);
 }
 
 BOOST_AUTO_TEST_CASE(BaselineGivesFinitePositiveBinCount) {
   const auto config = makeConfig();
-  const int phiBins = detail::computeSpacePointGridPhiBins(config);
-  BOOST_CHECK_GT(phiBins, 1);
+  const std::uint32_t phiBins = detail::computeSpacePointGridPhiBins(config);
+  BOOST_CHECK_GT(phiBins, 1u);
   BOOST_CHECK_LE(phiBins, config.maxPhiBins);
 }
 
 BOOST_AUTO_TEST_CASE(MaxPhiBinsCapsResult) {
   auto config = makeConfig();
-  const int uncapped = detail::computeSpacePointGridPhiBins(config);
+  const std::uint32_t uncapped = detail::computeSpacePointGridPhiBins(config);
   config.maxPhiBins = uncapped - 1;
   BOOST_CHECK_EQUAL(detail::computeSpacePointGridPhiBins(config),
                     config.maxPhiBins);
@@ -61,9 +62,11 @@ BOOST_AUTO_TEST_CASE(MaxPhiBinsCapsResult) {
 
 BOOST_AUTO_TEST_CASE(DeflectionCoverageIncreasesBinCount) {
   auto config = makeConfig();
-  const int singleCoverage = detail::computeSpacePointGridPhiBins(config);
+  const std::uint32_t singleCoverage =
+      detail::computeSpacePointGridPhiBins(config);
   config.phiBinDeflectionCoverage = 2;
-  const int doubleCoverage = detail::computeSpacePointGridPhiBins(config);
+  const std::uint32_t doubleCoverage =
+      detail::computeSpacePointGridPhiBins(config);
   BOOST_CHECK_GT(doubleCoverage, singleCoverage);
 }
 
@@ -73,8 +76,8 @@ BOOST_AUTO_TEST_CASE(DeflectionCoverageIncreasesBinCount) {
 BOOST_AUTO_TEST_CASE(LargeImpactParameterStaysFinite) {
   auto config = makeConfig();
   config.impactMax = config.rMax;
-  const int phiBins = detail::computeSpacePointGridPhiBins(config);
-  BOOST_CHECK_GT(phiBins, 0);
+  const std::uint32_t phiBins = detail::computeSpacePointGridPhiBins(config);
+  BOOST_CHECK_GT(phiBins, 0u);
   BOOST_CHECK_LE(phiBins, config.maxPhiBins);
 }
 

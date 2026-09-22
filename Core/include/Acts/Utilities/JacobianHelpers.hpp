@@ -63,4 +63,49 @@ inline Matrix<2, 3> freeToSphericalDirectionJacobian(const Vector3& direction) {
   return jacobian;
 }
 
+/// @brief Calculates the Jacobian for spherical to free
+///        momentum transformation
+///
+/// @note We use the direction vector as an input because
+///       the trigonometric simplify that way
+///
+/// @param direction The normalised direction vector
+/// @param qOverP The charge over momentum used in the free parametrization
+/// @param momentum The absolute momentum matching @p qOverP for the
+///        particle's charge hypothesis
+///
+/// @return The Jacobian d(p_x, p_y, p_z) / d(phi, theta, qOverP)
+///
+inline Matrix<3, 3> sphericalToFreeMomentumJacobian(const Vector3& direction,
+                                                    double qOverP,
+                                                    double momentum) {
+  Matrix<3, 3> jacobian;
+  jacobian.leftCols<2>() =
+      momentum * sphericalToFreeDirectionJacobian(direction);
+  jacobian.col(2) = -(momentum / qOverP) * direction;
+
+  return jacobian;
+}
+
+/// @brief Calculates the Jacobian for free to spherical
+///        momentum transformation
+///
+/// @param momentum The global, non-normalized momentum three-vector
+/// @param charge The signed charge of the particle the momentum belongs to
+///
+/// @return The Jacobian d(phi, theta, qOverP) / d(p_x, p_y, p_z)
+///
+inline Matrix<3, 3> freeToSphericalMomentumJacobian(const Vector3& momentum,
+                                                    double charge) {
+  double p = momentum.norm();
+  Vector3 direction = momentum / p;
+  double qOverP = charge / p;
+
+  Matrix<3, 3> jacobian;
+  jacobian.topRows<2>() = freeToSphericalDirectionJacobian(direction) / p;
+  jacobian.row(2) = -(qOverP / p) * direction.transpose();
+
+  return jacobian;
+}
+
 }  // namespace Acts

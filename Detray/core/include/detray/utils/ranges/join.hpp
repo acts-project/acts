@@ -129,10 +129,12 @@ struct join : public ranges::join_view<range_t> {
 };
 
 // deduction guides
-DETRAY_HOST_DEVICE join() -> join<detray::ranges::views::empty<dvector<int>>>;
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE join()
+    -> join<detray::ranges::views::empty<dvector<int>>>;
 
 template <detray::ranges::range R>
-DETRAY_HOST_DEVICE join(R &&ranges) -> join<std::remove_reference_t<R>>;
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE join(R &&ranges)
+    -> join<std::remove_reference_t<R>>;
 
 }  // namespace views
 

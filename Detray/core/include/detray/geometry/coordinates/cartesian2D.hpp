@@ -59,8 +59,7 @@ struct cartesian2D {
   DETRAY_HOST_DEVICE static inline point3_type local_to_global(
       const transform3_type &trf, const mask_t & /*mask*/, const loc_point &p,
       const vector3_type & /*dir*/) {
-    return trf.point_to_global(
-        point3_type{p[0], p[1], static_cast<scalar_type>(0)});
+    return trf.point_to_global(p);
   }
 
   /// @returns the normal vector in global coordinates

@@ -33,6 +33,7 @@
 #include <vector>
 
 #include <boost/algorithm/string/join.hpp>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -111,18 +112,6 @@ namespace ActsPython {
 void addGeometry(py::module_& m) {
   {
     py::class_<GeometryContext>(m, "GeometryContext")
-        .def(py::init([]() {
-          // Issue Python warning about deprecated default constructor
-          auto warnings = py::module_::import("warnings");
-          auto builtins = py::module_::import("builtins");
-          warnings.attr("warn")(
-              "GeometryContext::dangerouslyDefaultConstruct() is deprecated. "
-              "Use "
-              "GeometryContext.dangerouslyDefaultConstruct() instead to "
-              "make empty context construction explicit.",
-              builtins.attr("DeprecationWarning"));
-          return GeometryContext::dangerouslyDefaultConstruct();
-        }))  // Keep for backward compatibility but warn
         .def_static("dangerouslyDefaultConstruct",
                     &GeometryContext::dangerouslyDefaultConstruct,
                     "Create a default GeometryContext (empty, no alignment "
@@ -240,10 +229,18 @@ void addGeometry(py::module_& m) {
                  })
             .def_property_readonly("highestTrackingVolume",
                                    &TrackingGeometry::highestTrackingVolumePtr)
-            .def("visualize", &TrackingGeometry::visualize, py::arg("helper"),
-                 py::arg("gctx"), py::arg("viewConfig") = s_viewVolume,
-                 py::arg("portalViewConfig") = s_viewPortal,
-                 py::arg("sensitiveViewConfig") = s_viewSensitive);
+            .def(
+                "visualize",
+                [](const TrackingGeometry& self, IVisualization3D& helper,
+                   const GeometryContext& gctx, py::object func) {
+                  if (func.is_none()) {
+                    self.visualize(helper, gctx, defaultGeometryColoring);
+                  } else {
+                    self.visualize(helper, gctx, func.cast<ViewConfigFunc>());
+                  }
+                },
+                py::arg("helper"), py::arg("gctx"),
+                py::arg("func") = py::none());
 
     using apply_ptr_t =
         void (TrackingGeometry::*)(TrackingGeometryMutableVisitor&);
@@ -264,10 +261,9 @@ void addGeometry(py::module_& m) {
     auto cvb =
         py::class_<CylinderVolumeBounds, std::shared_ptr<CylinderVolumeBounds>,
                    VolumeBounds>(m, "CylinderVolumeBounds")
-            .def(py::init<double, double, double, double, double, double,
-                          double>(),
-                 "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = std::numbers::pi,
-                 "avgphi"_a = 0., "bevelMinZ"_a = 0., "bevelMaxZ"_a = 0.);
+            .def(py::init<double, double, double, double, double>(), "rmin"_a,
+                 "rmax"_a, "halfz"_a, "halfphi"_a = std::numbers::pi,
+                 "avgphi"_a = 0.);
 
     py::enum_<CylinderVolumeBounds::Face>(cvb, "Face")
         .value("PositiveDisc", CylinderVolumeBounds::Face::PositiveDisc)

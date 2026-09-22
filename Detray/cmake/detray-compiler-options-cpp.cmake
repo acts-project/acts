@@ -39,7 +39,22 @@ if(PROJECT_IS_TOP_LEVEL)
         detray_add_flag(CMAKE_CXX_FLAGS "-Wshadow")
         detray_add_flag(CMAKE_CXX_FLAGS "-Wunused-local-typedefs")
         detray_add_flag(CMAKE_CXX_FLAGS "-Wzero-as-null-pointer-constant")
-        detray_add_flag(CMAKE_CXX_FLAGS "-Wnull-dereference")
+        # -Wnull-dereference and -Wmaybe-uninitialized (the latter pulled in
+        # by -Wall/-Wextra) fire from inside Eigen's own headers on GCC13+,
+        # even when Eigen is picked up as a system include -- ACTS's own
+        # ActsCompilerOptions.cmake carries the identical -Wnull-dereference
+        # exclusion for the same reason.
+        if(
+            "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"
+            OR (
+                "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
+                AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 12
+            )
+        )
+            detray_add_flag(CMAKE_CXX_FLAGS "-Wnull-dereference")
+        elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+            detray_add_flag(CMAKE_CXX_FLAGS "-Wno-maybe-uninitialized")
+        endif()
         detray_add_flag(CMAKE_CXX_FLAGS "-Wold-style-cast")
         detray_add_flag(CMAKE_CXX_FLAGS "-pedantic")
         # No implicit single to double conversions from floating point literals

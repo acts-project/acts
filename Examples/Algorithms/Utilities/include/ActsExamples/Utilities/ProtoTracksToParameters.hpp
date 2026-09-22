@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -49,6 +50,9 @@ class ProtoTracksToParameters final : public IAlgorithm {
     /// closest to the beam pipe.
     SeedSpacePointSelection spacePointSelection =
         SeedSpacePointSelection::SpreadTriplet;
+    /// Minimum transverse distance between the selected space points. Only the
+    /// triplet selections apply it.
+    double minTransverseDistance = 10 * Acts::UnitConstants::mm;
 
     /// The tracking geometry
     std::shared_ptr<const Acts::TrackingGeometry> geometry;

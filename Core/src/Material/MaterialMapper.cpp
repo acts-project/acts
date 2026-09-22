@@ -84,7 +84,7 @@ Acts::TrackingGeometryMaterial Acts::MaterialMapper::finalizeMaps(
   // The final maps
   TrackingGeometryMaterial detectorMaterialMaps;
   // The surface maps
-  detectorMaterialMaps.first =
+  detectorMaterialMaps.surfaceMaterials =
       m_cfg.surfaceMaterialAccumulator->finalizeMaterial(
           *state.surfaceMaterialAccumulatorState, gctx);
 

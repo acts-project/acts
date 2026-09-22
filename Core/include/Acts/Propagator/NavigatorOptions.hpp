@@ -20,7 +20,11 @@ class GeometryContext;
 class Surface;
 class TrackingVolume;
 
-/// Plain navigator options carrying geometry context and surfaces.
+/// Plain navigator options carrying geometry context and navigation settings.
+///
+/// These are bound to the lifetime of a navigation state and have to be
+/// invariant across all runs it serves. Per-run inputs belong into
+/// @c NavigatorInitializeArguments instead.
 struct NavigatorPlainOptions {
   /// NavigatorPlainOptions with context
   /// @param gctx The geometry context
@@ -30,11 +34,6 @@ struct NavigatorPlainOptions {
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
 
-  /// Start surface for navigation
-  const Surface* startSurface{};
-  /// Target surface for navigation
-  const Surface* targetSurface{};
-
   /// The surface tolerance
   double surfaceTolerance = s_onSurfaceTolerance;
 
@@ -43,6 +42,9 @@ struct NavigatorPlainOptions {
 
   /// The far limit to resolve surfaces
   double farLimit = std::numeric_limits<double>::max();
+  /// Do not clear surfaces with infinite bounds from the navigation stream at
+  /// the change of the volume
+  bool keepUnreachedExternal = false;
 
   /// Delegate to decide whether free surfaces are appended to the navigation
   /// stream given the current volume and the track coordinates. If the

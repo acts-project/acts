@@ -9,7 +9,9 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
+#include "detray/definitions/navigation.hpp"
 #include "detray/definitions/units.hpp"
 #include "detray/geometry/surface.hpp"
 #include "detray/geometry/tracking_volume.hpp"
@@ -39,7 +41,8 @@ struct candidate_search {
   ///                        @c mask_tol
   /// @param overstep_tol how far behind the track pos to look for
   /// candidates
-  template <typename traj_t, typename detector_t, typename navigation_state_t>
+  template <typename traj_t, concepts::detector detector_t,
+            typename navigation_state_t>
   DETRAY_HOST_DEVICE constexpr void operator()(
       const typename detector_t::surface_type &sf_descr, const detector_t &det,
       const typename detector_t::geometry_context &ctx,
@@ -58,7 +61,8 @@ struct candidate_search {
   }
 
   /// Test the volume links
-  template <typename traj_t, typename detector_t, typename navigation_state_t>
+  template <typename traj_t, concepts::detector detector_t,
+            typename navigation_state_t>
   DETRAY_HOST_DEVICE void operator()(
       const dindex & /*vol_idx*/, const detector_t & /*det*/,
       const typename detector_t::geometry_context & /*ctx*/,
@@ -83,7 +87,7 @@ struct candidate_search {
 /// @param ctx the geometry context
 ///
 /// @returns @c true if the track can reach this candidate.
-template <typename candidate_t, typename traj_t, typename detector_t>
+template <typename candidate_t, typename traj_t, concepts::detector detector_t>
 DETRAY_HOST_DEVICE DETRAY_INLINE constexpr bool update_candidate(
     candidate_t &candidate, const traj_t &tangential, const detector_t &det,
     const intersection::config &cfg,

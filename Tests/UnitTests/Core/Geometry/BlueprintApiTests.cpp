@@ -165,7 +165,7 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
     }
 
     ACTS_VERBOSE("initializing candidates");
-    main.initialize(gctx, {position, direction}, BoundaryTolerance::None());
+    main.initialize(gctx, {position, direction}, logger());
 
     ACTS_VERBOSE(main.candidates().size() << " candidates remaining");
 
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
 
   ObjVisualization3D vis;
 
-  trackingGeometry->visualize(vis, gctx, {}, {});
+  trackingGeometry->visualize(vis, gctx);
 
   vis.write("api_test_container.obj");
 

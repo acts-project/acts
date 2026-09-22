@@ -44,6 +44,8 @@ traccc_add_alpaka_library( traccc_alpaka alpaka TYPE SHARED
   # Utility definitions.
   "include/traccc/alpaka/utils/algorithm_base.hpp"
   "src/utils/algorithm_base.cpp"
+  "include/traccc/alpaka/utils/await.hpp"
+  "src/utils/await.cpp"
   "include/traccc/alpaka/utils/get_device_info.hpp"
   "include/traccc/alpaka/utils/make_magnetic_field.hpp"
   "src/utils/make_magnetic_field.cpp"

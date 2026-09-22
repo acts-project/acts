@@ -107,6 +107,7 @@ def runColliderMLTruthTracking(
         field=field,
         rnd=rnd,
         seedingAlgorithm=SeedingAlgorithm.TruthEstimated,
+        paramEstimationSpacePoints=acts.examples.SeedSpacePointSelection.SpreadTriplet,
         selectedParticles="particles_selected",
         geoSelectionConfigFile=_srcdir / "Examples/Configs/odd-seeding-config.json",
         initialSigmas=[

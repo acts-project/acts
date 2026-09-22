@@ -88,5 +88,5 @@ target_link_libraries(
 )
 target_compile_definitions(
     traccc_io
-    PRIVATE TRACCC_TEST_DATA_DIR="${CMAKE_SOURCE_DIR}/data"
+    PRIVATE TRACCC_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../data"
 )

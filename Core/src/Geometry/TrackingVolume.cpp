@@ -610,28 +610,44 @@ void TrackingVolume::visualize(IVisualization3D& helper,
                                const ViewConfig& viewConfig,
                                const ViewConfig& portalViewConfig,
                                const ViewConfig& sensitiveViewConfig) const {
+  visualize(helper, gctx, [&](const GeometryObject& geoObj) {
+    if (geoObj.geometryId().boundary() != 0) {
+      return portalViewConfig;
+    }
+    if (geoObj.geometryId().sensitive() != 0) {
+      return sensitiveViewConfig;
+    }
+    return viewConfig;
+  });
+}
+
+void TrackingVolume::visualize(IVisualization3D& helper,
+                               const GeometryContext& gctx,
+                               const ViewConfigFunc& viewConfigFactory) const {
   helper.object(volumeName());
-  if (viewConfig.visible) {
+  {
+    auto viewConfig = viewConfigFactory(*this);
     Volume::visualize(helper, gctx, viewConfig);
   }
 
-  if (sensitiveViewConfig.visible && !surfaces().empty()) {
+  if (!surfaces().empty()) {
     helper.object(volumeName() + "_sensitives");
     for (const auto& surface : surfaces()) {
-      surface.visualize(helper, gctx, sensitiveViewConfig);
+      auto viewConfig = viewConfigFactory(surface);
+      surface.visualize(helper, gctx, viewConfig);
     }
   }
 
-  if (portalViewConfig.visible) {
+  if (!portals().empty()) {
     helper.object(volumeName() + "_portals");
     for (const auto& portal : portals()) {
-      portal.surface().visualize(helper, gctx, portalViewConfig);
+      auto viewConfig = viewConfigFactory(portal.surface());
+      portal.surface().visualize(helper, gctx, viewConfig);
     }
   }
 
   for (const auto& child : volumes()) {
-    child.visualize(helper, gctx, viewConfig, portalViewConfig,
-                    sensitiveViewConfig);
+    child.visualize(helper, gctx, viewConfigFactory);
   }
 }
 

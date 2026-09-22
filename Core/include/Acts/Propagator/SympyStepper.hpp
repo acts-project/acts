@@ -77,30 +77,43 @@ class SympyStepper final {
     State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn)
         : options(optionsIn), fieldCache(std::move(fieldCacheIn)) {}
 
+    // Declaration order matters: members used by `step()` are kept in one
+    // contiguous run of cache lines, the rest come last.
+
     /// Configuration options for the stepper
     Options options;
 
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
 
-    /// Particle hypothesis
-    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
-
-    /// Covariance matrix (and indicator)
-    /// associated with the initial error on track parameters
-    bool covTransport = false;
-    /// Covariance matrix for error propagation
-    Covariance cov = Covariance::Zero();
-
-    /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
+    /// The propagation derivative
+    FreeVector derivative = FreeVector::Zero();
 
     /// Bound-to-free jacobian from the last reference surface, transported
     /// along with the track.
     BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
 
-    /// The propagation derivative
-    FreeVector derivative = FreeVector::Zero();
+    /// Covariance matrix (and indicator)
+    /// associated with the initial error on track parameters
+    bool covTransport = false;
+
+    /// Particle hypothesis
+    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
+
+    /// dt/ds, handed to the vacuum kernel rather than formed in it. Constant
+    /// while q/p is, so it is refreshed wherever q/p moves: initialize(),
+    /// update() and a dense step.
+    double dtds = 1;
+
+    /// Adaptive step size of the runge-kutta integration
+    ConstrainedStep stepSize;
+
+    /// Last performed step (for overstep limit calculation)
+    double previousStepSize = 0.;
+
+    /// Magnetic field at the current position, reused as the next step's
+    /// first sample. Reset whenever the parameters are set from outside.
+    std::optional<Vector3> field;
 
     /// Accumulated path length state
     double pathAccumulated = 0.;
@@ -111,22 +124,24 @@ class SympyStepper final {
     /// Totoal number of attempted steps
     std::size_t nStepTrials = 0;
 
-    /// Adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize;
+    /// Statistics of the stepper
+    StepperStatistics statistics;
 
-    /// Last performed step (for overstep limit calculation)
-    double previousStepSize = 0.;
+    /// Accumulator for material effects along the trajectory
+    detail::MaterialEffectsAccumulator materialEffectsAccumulator;
 
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
     /// See step() code for details.
     MagneticFieldProvider::Cache fieldCache;
 
-    /// Statistics of the stepper
-    StepperStatistics statistics;
+    // Only used when transporting to a surface:
 
-    /// Accumulator for material effects along the trajectory
-    detail::MaterialEffectsAccumulator materialEffectsAccumulator;
+    /// Covariance matrix for error propagation
+    Covariance cov = Covariance::Zero();
+
+    /// The full jacobian of the transport entire transport
+    Jacobian jacobian = Jacobian::Identity();
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
@@ -390,7 +405,8 @@ class SympyStepper final {
   /// @param [in] surface is the surface to which the covariance is forwarded to
   /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   /// @note no check is done if the position is actually on the surface
-  void transportCovarianceToBound(
+  /// @return Failure if the parameters cannot be expressed on the surface
+  Result<void> transportCovarianceToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;
