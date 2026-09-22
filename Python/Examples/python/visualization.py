@@ -23,7 +23,7 @@ def computeProjection(char, vector3):
     elif char == "r":
         return np.sqrt(vector3[0] ** 2 + vector3[1] ** 2)
 
-    elif char == "phi":
+    elif char == "p":
         x = vector3[0]
         y = vector3[1]
         r = np.sqrt(x**2 + y**2)
@@ -137,11 +137,11 @@ class PyVisualization2D(acts.VisualizationBuffer):
                     if any(condition(np.sqrt(v[0] ** 2 + v[1] ** 2)) for v in surface)
                 ]
 
-            if k == "phi":
+            if k == "p":
                 surfaces = [
                     surface
                     for surface in surfaces
-                    if any(condition(computeProjection("phi", v)) for v in surface)
+                    if any(condition(computeProjection("p", v)) for v in surface)
                 ]
 
         surfaces2D = [
