@@ -90,8 +90,7 @@ void Acts::EventDataView3D::drawTrack(IVisualization3D& helper,
   auto& rs = track.referenceSurface();
   auto tglobpos = rs.localToGlobal(gctx, tlocpos, tlocdir);
 
-  bool first = true;
-  Vector3 previouspos;
+  std::optional<Vector3> previouspos;
 
   for (auto ts : track.trackStatesReversed()) {
     auto params = ts.parameters();
