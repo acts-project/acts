@@ -9,8 +9,9 @@
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "ActsPlugins/Mille/detail/runChildProcess.hpp"
+#include "ActsPlugins/Mille/detail/RunSolverProcess.hpp"
 
+#include <filesystem>
 #include <fstream>
 
 using namespace ActsPlugins::ActsToMille;
@@ -19,37 +20,31 @@ BOOST_AUTO_TEST_SUITE(ChildProcessTests)
 
 /// catch a missing steering file
 BOOST_AUTO_TEST_CASE(MissingProg) {
-  childProcessStatus status =
-      runChildProcess("tHiSsur3lyD0esn.otExist.exe", {});
-  BOOST_CHECK(status == childProcessStatus::progNotFound);
+  ChildProcessStatus status = runSolverProcess(
+      "tHiSsur3lyD0esn.otExist.exe", {}, std::filesystem::current_path());
+  BOOST_CHECK(status == ChildProcessStatus::ProgNotFound);
 }
 
-/// catch a missing steering file
+/// catch an invalid work dir
 BOOST_AUTO_TEST_CASE(WrongWD) {
-  // create a local file - for which we will then
-  // (illegaly) try to create a subdirectory.
-  std::ofstream testFile("test.txt");
-  testFile << "Hello" << std::endl;
-  testFile.close();
-  // now call a child process with an guaranteed-invalid work dir (subdir of a
-  // file)
-  childProcessStatus status = runChildProcess(
-      "echo", {"Hello World"}, "test.txt/subFolderOfFileDoesNotWork/");
-  BOOST_CHECK(status == childProcessStatus::failedWorkDir);
+  ChildProcessStatus status =
+      runSolverProcess("echo", {"Hello World"}, "o/hNo/Invalid/WorkDirectory");
+  BOOST_CHECK(status == ChildProcessStatus::FailedWorkDir);
 }
 
 /// successful call
 BOOST_AUTO_TEST_CASE(GoodCall) {
-  childProcessStatus status = runChildProcess("echo", {"Hello World"});
-  BOOST_CHECK(status == childProcessStatus::ok);
+  ChildProcessStatus status = runSolverProcess("echo", {"Hello World"},
+                                               std::filesystem::current_path());
+  BOOST_CHECK(status == ChildProcessStatus::OK);
 }
 
 /// redirect stdout
 BOOST_AUTO_TEST_CASE(Redirect) {
   const std::string testMessage = "Hello ACTS!";
-  childProcessStatus status =
-      runChildProcess("echo", {testMessage}, "", "teststdout.txt");
-  BOOST_CHECK(status == childProcessStatus::ok);
+  ChildProcessStatus status = runSolverProcess(
+      "echo", {testMessage}, std::filesystem::current_path(), "teststdout.txt");
+  BOOST_CHECK(status == ChildProcessStatus::OK);
   std::ifstream in("teststdout.txt");
   BOOST_CHECK(in.is_open());
   std::string read = "";

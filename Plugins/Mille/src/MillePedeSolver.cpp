@@ -11,7 +11,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsPlugins/Mille/MillePedeError.hpp"
-#include "ActsPlugins/Mille/detail/runChildProcess.hpp"
+#include "ActsPlugins/Mille/detail/RunSolverProcess.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -19,12 +19,9 @@
 #include <string>
 #include <tuple>
 
-using namespace ActsPlugins::ActsToMille;
+namespace ActsPlugins::ActsToMille {
 
-using Acts::Result;
-using std::filesystem::path;
-
-Acts::Result<MillePedeSolver::mpResult> MillePedeSolver::solve(
+Acts::Result<MillePedeSolver::MpResult> MillePedeSolver::solve(
     const Config& cfg) const {
   ACTS_INFO("=== Proceeding to run Millepede-II alignment fit ===");
 
@@ -33,6 +30,11 @@ Acts::Result<MillePedeSolver::mpResult> MillePedeSolver::solve(
 
   if (!cfg.workDir.empty()) {
     workDir = cfg.workDir;
+  }
+
+  // create the work dir if it does not exist already
+  if (!std::filesystem::exists(workDir)) {
+    std::filesystem::create_directories(workDir);
   }
 
   ACTS_DEBUG("Will run the alignment fit in folder '"
@@ -48,33 +50,41 @@ Acts::Result<MillePedeSolver::mpResult> MillePedeSolver::solve(
     if (!std::filesystem::exists(steerPath)) {
       ACTS_ERROR("Steering file " << steerPath
                                   << " does not seem to exist - aborting!");
-      return Result<mpResult>::failure(MillePedeError::SteeringNotFound);
+      return Acts::Result<MpResult>::failure(MillePedeError::SteeringNotFound);
     }
     mpArgs.push_back(steerPath);
   }
 
   ACTS_INFO(" Calling pede, this may take a while depending on problem size");
   // now run the fit
-  childProcessStatus pedeProcessStatus =
-      runChildProcess("pede", mpArgs, workDir, cfg.redirectStdout);
-  if (pedeProcessStatus == childProcessStatus::progNotFound) {
+  ChildProcessStatus pedeProcessStatus =
+      runSolverProcess("pede", mpArgs, workDir, cfg.redirectStdout);
+
+  if (pedeProcessStatus == ChildProcessStatus::ProgNotFound) {
     ACTS_ERROR("Pede executable could not be found, aborting!");
-    return Result<mpResult>::failure(MillePedeError::InstallationNotFound);
-  } else if (pedeProcessStatus != childProcessStatus::ok) {
+    return Acts::Result<MpResult>::failure(
+        MillePedeError::InstallationNotFound);
+  }
+  if (pedeProcessStatus == ChildProcessStatus::FailedWorkDir) {
+    ACTS_ERROR("Could not navigate to the run directory `" << workDir
+                                                           << "`, aborting!");
+    return Acts::Result<MpResult>::failure(MillePedeError::SolverCrash);
+  } else if (pedeProcessStatus != ChildProcessStatus::OK) {
     ACTS_ERROR("Pede invocation failed. Did not run alignment.");
-    return Result<mpResult>::failure(MillePedeError::SolverCrash);
+    return Acts::Result<MpResult>::failure(MillePedeError::SolverCrash);
   }
 
   /// now check the detailed exit code - pede speaks fortranese, so we need to
   /// read this from a file
 
   // step 1: Ensure the file is actually there
-  path mpExit = workDir / path("millepede.end");
+  std::filesystem::path mpExit =
+      workDir / std::filesystem::path("millepede.end");
   if (!std::filesystem::exists(mpExit)) {
     ACTS_ERROR(
         "Failed to find the Pede exit code file. The alignment has likely "
         "failed.");
-    return Result<mpResult>::failure(MillePedeError::SolverCrash);
+    return Acts::Result<MpResult>::failure(MillePedeError::SolverCrash);
   }
 
   // step 2: Read and interpret the exit info file
@@ -82,29 +92,29 @@ Acts::Result<MillePedeSolver::mpResult> MillePedeSolver::solve(
 
   // step 3: Tell the user what happened
 
-  if (exitStatus == mpExitStatus::aborted) {
-    ACTS_ERROR("Pede aborted due to errors:\n   "
+  if (exitStatus == MpExitStatus::Aborted) {
+    ACTS_ERROR("Pede Aborted due to errors:\n   "
                << exitMessage << "\n"
                << "Please check the millepede log files in " << workDir
                << " for more information.");
-    return Result<mpResult>::failure(MillePedeError::InvalidSolution);
+    return Acts::Result<MpResult>::failure(MillePedeError::InvalidSolution);
   }
 
-  else if (exitStatus == mpExitStatus::noSolution) {
+  else if (exitStatus == MpExitStatus::NoSolution) {
     ACTS_WARNING("Pede did not find a solution:\n   "
                  << exitMessage << "\n"
                  << "Please check the millepede log files in " << workDir
                  << " for more information.");
   }
 
-  else if (exitStatus == mpExitStatus::seriousWarnings) {
+  else if (exitStatus == MpExitStatus::SeriousWarnings) {
     ACTS_WARNING("Pede exited with severe warnings:\n   "
                  << exitMessage << "\n"
                  << "You should check the millepede log files in " << workDir
                  << " for more information.");
   }
 
-  else if (exitStatus == mpExitStatus::tolerableWarnings) {
+  else if (exitStatus == MpExitStatus::TolerableWarnings) {
     ACTS_INFO("Pede exited with tolerable warnings:\n   "
               << exitMessage << "\n"
               << "You can check the millepede log files in " << workDir
@@ -132,12 +142,12 @@ Acts::Result<MillePedeSolver::mpResult> MillePedeSolver::solve(
   if (outputResultFile.empty()) {
     ACTS_ERROR("Failed to find Millepede result file expected at "
                << workDir / "millepede.res");
-    return Result<mpResult>::failure(MillePedeError::SolutionNotReadable);
+    return Acts::Result<MpResult>::failure(MillePedeError::SolutionNotReadable);
   }
 
   ACTS_INFO("=== Congratulations, the alignment finished! ===");
 
-  return mpResult{
+  return MpResult{
       exitCode,         exitStatus, exitMessage,
       outputResultFile,  /// file containing parameter results
       outputLogFile,     /// log file
@@ -146,7 +156,7 @@ Acts::Result<MillePedeSolver::mpResult> MillePedeSolver::solve(
   };
 }
 
-std::tuple<int, MillePedeSolver::mpExitStatus, std::string>
+std::tuple<int, MillePedeSolver::MpExitStatus, std::string>
 MillePedeSolver::readDetailedExit(const std::filesystem::path& mpend) const {
   std::ifstream exitCodeFile(mpend);  // open the Pede exit code file
   std::string statusMessage = "";
@@ -162,26 +172,26 @@ MillePedeSolver::readDetailedExit(const std::filesystem::path& mpend) const {
       statusMessage.substr(0, statusMessage.find_last_not_of(" \n") + 1);
   exitCodeFile.close();
 
-  mpExitStatus status = interpretExit(retCode);
+  MpExitStatus status = interpretExit(retCode);
   return std::make_tuple(retCode, status, statusMessage);
 }
 
-MillePedeSolver::mpExitStatus MillePedeSolver::interpretExit(int theExitCode) {
+MillePedeSolver::MpExitStatus MillePedeSolver::interpretExit(int theExitCode) {
   // implementation follows
   // https://millepede.pages.desy.de/millepede-ii/exit_code_page.html
-  using enum MillePedeSolver::mpExitStatus;
+  using enum MillePedeSolver::MpExitStatus;
   if (theExitCode < 0) {
-    return notFinishedOrCrashed;
+    return NotFinishedOrCrashed;
   } else if (theExitCode == 0) {
-    return nominalExit;
+    return NominalExit;
   } else if (theExitCode == 1) {
-    return tolerableWarnings;
+    return TolerableWarnings;
   } else if (theExitCode <= 4) {
-    return seriousWarnings;
+    return SeriousWarnings;
   } else if (theExitCode == 5) {
-    return noSolution;
+    return NoSolution;
   } else {
-    return aborted;
+    return Aborted;
   }
 }
 
@@ -203,3 +213,4 @@ std::filesystem::path MillePedeSolver::copyIfRequested(
     return userLoc;
   }
 }
+}  // namespace ActsPlugins::ActsToMille

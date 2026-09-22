@@ -18,26 +18,26 @@
 
 namespace ActsPlugins::ActsToMille {
 
-enum class childProcessStatus {
-  ok = 0,
-  progNotFound = 1,
-  failedRedirectStdout = 2,
-  failedWorkDir = 3,
-  failedRun = 4,
-  unknownError = 5
+enum class ChildProcessStatus {
+  OK = 0,
+  ProgNotFound = 1,
+  FailedRedirectStdout = 2,
+  FailedWorkDir = 3,
+  FailedRun = 4,
+  UnknownError = 5
 };
 
 /// @brief attempt to run a program as a child process.
 /// @param program: Program name (search on PATH)
 /// @param args: command line args
-/// @param path: if not empty, redirect output to a file instead
+/// @param runDir: Directory to run in. Caller is responsible for ensuring
+/// validity.
+/// @param outputDest: if not empty, redirect output to a file instead
 /// of printing to the host stdout
-/// @param runDir: If not empty, will run in the specified directory.
-/// Should already exist (caller is responsible).
-/// @return a pair with the call outcome and the return code (if any, else -1).
-childProcessStatus runChildProcess(
+/// @return the call outcome as a status code
+ChildProcessStatus runSolverProcess(
     const std::string& program, const std::vector<std::string>& args,
-    const std::filesystem::path& runDir = "",
-    const std::filesystem::path& output_dest = "");
+    const std::filesystem::path& runDir,
+    const std::filesystem::path& outputDest = "");
 
 }  // namespace ActsPlugins::ActsToMille

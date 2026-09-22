@@ -25,7 +25,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
                   .def("solve", &MillePedeSolver::solve);
 
     auto mr =
-        py::class_<MillePedeSolver::mpResult>(ps, "mpResult").def(py::init<>());
+        py::class_<MillePedeSolver::MpResult>(ps, "MpResult").def(py::init<>());
     ACTS_PYTHON_STRUCT(mr, exitCode, exitStatus, exitMessage, resultsFile,
                        logFile, histoFile, evFile);
 

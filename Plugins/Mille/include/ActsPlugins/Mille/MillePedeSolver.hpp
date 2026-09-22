@@ -21,39 +21,45 @@ namespace ActsPlugins::ActsToMille {
 class MillePedeSolver {
  public:
   /// @brief abstract summary of the exit codes returned by pede.
-  enum class mpExitStatus {
-    notFinishedOrCrashed,  /// job is still running or crashed before exiting
-    nominalExit,           /// nominal exit
-    tolerableWarnings,     /// exit with tolerable warnings, considered ok
-    seriousWarnings,       /// exit with serious warnings, should investigate
-    noSolution,            /// exit without solution (usually: rank deficit)
-    aborted                /// aborted due to errors
+  enum class MpExitStatus {
+    NotFinishedOrCrashed,  /// job is still running or crashed before exiting
+    NominalExit,           /// nominal exit
+    TolerableWarnings,     /// exit with tolerable warnings, considered ok
+    SeriousWarnings,       /// exit with serious warnings, should investigate
+    NoSolution,            /// exit without solution (usually: rank deficit)
+    Aborted                /// Aborted due to errors
   };
 
   /// @brief configuration for running pede.
   /// Currently, most details are delegated to the steering file syntax.
   struct Config {
-    std::string steeringFile =
-        "pedeSteerMaster.txt";                /// steering file with run options
-    std::filesystem::path workDir = "";       /// directory to run in
-    std::vector<std::string> extraOpts = {};  /// extra CLI options
-    std::string resFileName =
-        "";  /// destination for result file - if empty, keep original
-    std::string redirectStdout = "";  /// destination for the cout/cerr printout
-                                      /// from pede - if empty, send to parent
-    std::string logFileName =
-        "";  /// destination for the log file - if empty, keep original
-    std::string histoFileName =
-        "";  /// destination for the histogram file - if empty, keep original
-    std::string evFileName =
-        "";  /// destination for the eigenvector file - if empty, keep original
+    /// steering file with run options
+    std::string steeringFile = "pedeSteerMaster.txt";
+
+    /// directory to run in. Empty = current work dir
+    std::filesystem::path workDir = "";
+
+    /// extra CLI options
+    std::vector<std::string> extraOpts = {};
+
+    /// destination for result file - if empty, keep original
+    std::string resFileName = "";
+    /// destination for the cout/cerr printout
+    /// from pede - if empty, send to parent
+    std::string redirectStdout = "";
+    /// destination for the log file - if empty, keep original
+    std::string logFileName = "";
+    /// destination for the histogram file - if empty, keep original
+    std::string histoFileName = "";
+    /// destination for the eigenvector file - if empty, keep original
+    std::string evFileName = "";
   };
 
   /// @brief package the result of the alignment fit
-  struct mpResult {
+  struct MpResult {
     int exitCode = -1;  /// raw pede exit code
-    mpExitStatus exitStatus =
-        mpExitStatus::notFinishedOrCrashed;  /// summary exit status
+    MpExitStatus exitStatus =
+        MpExitStatus::NotFinishedOrCrashed;  /// summary exit status
     std::string exitMessage = "";            /// detailed exit message
     std::filesystem::path resultsFile;  /// file containing parameter results
     std::filesystem::path logFile;      /// log file
@@ -70,20 +76,20 @@ class MillePedeSolver {
   /// Will invoke pede, await the exit, and parse
   /// the output.
   /// @param cfg: The configuration to use
-  Acts::Result<mpResult> solve(const Config& cfg) const;
+  Acts::Result<MpResult> solve(const Config& cfg) const;
 
  private:
   /// @brief translation of the detailed pede code to a summary status
   /// Will translate the range of ~30 possible MP exit codes to a simplified
   /// enum value that gives a high-level summary of the status.
   /// @param theExitCode: The integer exit code found in the millepede.end file
-  static mpExitStatus interpretExit(int theExitCode);
+  static MpExitStatus interpretExit(int theExitCode);
 
   /// @brief Reads the `millepede.end` file and parses its content
   /// @param mpend: The file to read, assumed that the user has checked for existence before
   /// @return a tuple containing the original integer exit code, a simplified exit status enum,
   /// and the additional status message emitted by pede.
-  std::tuple<int, mpExitStatus, std::string> readDetailedExit(
+  std::tuple<int, MpExitStatus, std::string> readDetailedExit(
       const std::filesystem::path& mpend) const;
 
   /// @brief Utility method to check if an output exists, copy it if the user requested a relocation,
