@@ -62,7 +62,7 @@ struct expected_layer_table_mapper {
   std::size_t size{0u};
 
   TRACCC_HOST_DEVICE result
-  operator()(const detray::geometry::identifier& barcode) const {
+  operator()(const detray::geometry::identifier& geo_id) const {
     if (entries == nullptr || size == 0u) {
       return {};
     }
