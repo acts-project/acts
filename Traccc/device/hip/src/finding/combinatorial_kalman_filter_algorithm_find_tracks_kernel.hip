@@ -33,7 +33,7 @@ namespace kernels {
 /// where the host-only @c name_map constructor that the concept uses is not
 /// callable. The device function that it calls carries the constraint.
 ///
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 __global__ void find_tracks(const finding_config cfg,
                             const typename detector_t::const_view_type det,
                             const device::find_tracks_payload payload) {

@@ -8,7 +8,6 @@
 // Library include(s).
 #include "traccc/io/read_detector_description.hpp"
 
-#include "traccc/geometry/host_detector.hpp"
 #include "traccc/io/detector.hpp"
 #include "traccc/io/read_conditions_config.hpp"
 #include "traccc/io/read_detector.hpp"
@@ -44,13 +43,13 @@ void fill_digi_info(traccc::detector_design_description::host& det_desc,
 template <detray::concepts::detector detector_t>
 void read_json_dd_impl(traccc::detector_design_description::host& det_desc,
                        traccc::detector_conditions_description::host& det_cond,
-                       const traccc::host_detector& detector,
+                       const detector_t& detector,
                        const traccc::digitization_config& digi,
                        const traccc::conditions_config& cond) {
-  const detector_t& detector_host = detector.as<detector_t>();
+  using algebra_t = typename detector_t::algebra_type;
 
   det_desc.reserve(digi.size());
-  det_cond.reserve(detector_host.surfaces().size());
+  det_cond.reserve(detector.surfaces().size());
 
   int n_design = 0;
   for (const auto& digi_it : digi) {
@@ -61,7 +60,7 @@ void read_json_dd_impl(traccc::detector_design_description::host& det_desc,
 
   std::vector<int> module_to_design;
 
-  for (const auto& surface_desc : detector_host.surfaces()) {
+  for (const auto& surface_desc : detector.surfaces()) {
     const traccc::geometry_id geom_id{surface_desc.source};
     const Acts::GeometryIdentifier acts_geom_id{geom_id};
 
@@ -73,9 +72,9 @@ void read_json_dd_impl(traccc::detector_design_description::host& det_desc,
     det_cond.geometry_id().back() = surface_desc.identifier();
     det_cond.acts_geometry_id().back() = geom_id;
 
-    std::array<detray::dindex_type<traccc::default_algebra>, 2u> subspace = {0,
-                                                                             1};
-    using annulus_t = detray::mask<detray::annulus2D, traccc::default_algebra>;
+    std::array<detray::dindex_type<algebra_t>, 2u> subspace = {0, 1};
+
+    using annulus_t = detray::mask<detray::annulus2D, algebra_t>;
     using mask_registry_t = typename detector_t::masks;
     if constexpr (detray::types::contains<mask_registry_t, annulus_t>) {
       if (surface_desc.mask().id() ==
@@ -118,42 +117,34 @@ void read_json_dd(traccc::detector_design_description::host& det_desc,
                   std::string_view geometry_file,
                   const traccc::digitization_config& digi,
                   const traccc::conditions_config& cond) {
-  // Construct a (temporary) Detray detector object from the geometry
-  // configuration file.
-  vecmem::host_memory_resource mr;
-
   //
   // TODO: Remove and reuse existing detector (for compile time and runtime
   // performance)
   //
   // Set up the detector reader configuration for the optional components
+  vecmem::host_memory_resource mr;
+
   const auto cfg = detray::io::detector_reader_config{}.do_check(false);
   detray::io::detector_payload payload{};
   detray::io::convert_json_to_payload(
       payload, {traccc::io::get_absolute_path(geometry_file)});
 
-  // TODO: Implement detector visitor!
-  traccc::host_detector detector;
-  std::string_view det_name{payload.detector_name};
-  if (det_name == "Cylindrical detector from DD4hep blueprint") {
-    auto det =
-        detray::io::read_detector<traccc::odd_detector::host>(mr, cfg, payload);
-    detector.set<traccc::odd_detector>(std::move(det.first));
-    read_json_dd_impl<traccc::odd_detector>(det_desc, det_cond, detector, digi,
-                                            cond);
-  } else if (det_name == "detray_detector") {
-    auto det =
-        detray::io::read_detector<traccc::itk_detector::host>(mr, cfg, payload);
-    detector.set<traccc::itk_detector>(std::move(det.first));
-    read_json_dd_impl<traccc::itk_detector>(det_desc, det_cond, detector, digi,
-                                            cond);
+  const std::string_view det_name{payload.detector_name};
+  const std::string_view metadata{payload.header.metadata};
+  if (metadata == "odd_metadata" ||
+      det_name == "Cylindrical detector from DD4hep blueprint") {
+    auto [det, names] =
+        detray::io::read_detector<traccc::odd_detector>(mr, cfg, payload);
+    read_json_dd_impl(det_desc, det_cond, det, digi, cond);
+  } else if (metadata == "itk_metadata" || det_name == "detray_detector") {
+    auto [det, names] =
+        detray::io::read_detector<traccc::itk_detector>(mr, cfg, payload);
+    read_json_dd_impl(det_desc, det_cond, det, digi, cond);
   } else {
     // TODO: Warning here
-    auto det = detray::io::read_detector<traccc::default_detector::host>(
-        mr, cfg, payload);
-    detector.set<traccc::default_detector>(std::move(det.first));
-    read_json_dd_impl<traccc::default_detector>(det_desc, det_cond, detector,
-                                                digi, cond);
+    auto [det, names] =
+        detray::io::read_detector<traccc::default_detector>(mr, cfg, payload);
+    read_json_dd_impl(det_desc, det_cond, det, digi, cond);
   }
 }
 
