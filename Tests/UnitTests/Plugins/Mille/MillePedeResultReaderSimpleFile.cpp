@@ -9,6 +9,7 @@
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Mille/MillePedeError.hpp"
 #include "ActsPlugins/Mille/MillePedeResultReader.hpp"
 
@@ -58,8 +59,20 @@ BOOST_AUTO_TEST_CASE(ReadSimpleFile) {
 }
 /// catch a missing steering file
 BOOST_AUTO_TEST_CASE(ReadInvalidFile) {
+  // This test deliberately emits an error
+  // message. To prevent the ACTS CI from
+  // interpreting this as a failure,
+  // we temporarily disable the failure threshold
+  // just for the corresponding call.
   MillePedeResultReader reader;
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  auto level = Acts::Logging::getFailureThreshold();
+  Acts::Logging::setFailureThreshold(Acts::Logging::MAX);
+#endif
   auto res = reader.readParameters("/this/does/hopefully/not/exist?");
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  Acts::Logging::setFailureThreshold(level);
+#endif
   BOOST_CHECK(!res.ok());
   BOOST_CHECK_EQUAL(res.error(), MillePedeError::SolutionNotReadable);
 }
