@@ -13,6 +13,7 @@
 #include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/track_parameters.hpp"
 #include "traccc/finding/candidate_link.hpp"
+#include "traccc/utils/soa_types/soa_bound_track_parameters.hpp"
 
 // VecMem include(s).
 #include <vecmem/containers/data/vector_view.hpp>
@@ -92,7 +93,7 @@ struct find_tracks_payload {
   /**
    * @brief View object to the temporary track parameter vector
    */
-  bound_track_parameters_collection_types::view tmp_params_view;
+  soa_bound_track_parameters_view<default_algebra> tmp_params_view;
 
   /**
    * @brief View object to the temporary link vector

@@ -10,6 +10,7 @@
 
 // Project include(s).
 #include "traccc/finding/candidate_link.hpp"
+#include "traccc/utils/soa_types/soa_bound_track_parameters.hpp"
 
 // System include(s).
 #include <stdexcept>
@@ -355,9 +356,8 @@ auto combinatorial_kalman_filter_algorithm::operator()(
         vecmem::data::vector_buffer<candidate_link> tmp_links_buffer(
             n_max_candidates, mr().main);
         copy().setup(tmp_links_buffer)->ignore();
-        bound_track_parameters_collection_types::buffer tmp_params_buffer(
+        soa_bound_track_parameters_buffer<algebra_t> tmp_params_buffer(
             n_max_candidates, mr().main);
-        copy().setup(tmp_params_buffer)->ignore();
 
         // Launch the track finding kernel.
         find_tracks_kernel(
