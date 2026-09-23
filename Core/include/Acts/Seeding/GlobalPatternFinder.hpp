@@ -11,6 +11,7 @@
 #include "Acts/Seeding/detail/GlobalPatternFinderAuxiliaries.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include "Acts/Utilities/KDTree.hpp"
