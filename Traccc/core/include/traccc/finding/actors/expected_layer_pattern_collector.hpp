@@ -29,7 +29,7 @@ using expected_layer_pattern_type = std::array<unsigned int, 4>;
 /// layer_index selects the bit index (layer) inside the selected detector
 /// partition.
 struct expected_layer_mapping_entry {
-  detray::geometry::identifier::value_t barcode{0u};
+  detray::geometry::identifier::value_t geo_id{0u};
   unsigned int pattern_index{0u};
   unsigned int layer_index{0u};
 };
