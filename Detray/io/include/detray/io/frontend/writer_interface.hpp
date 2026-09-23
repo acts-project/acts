@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "detray/builders/detector_builder.hpp"
+#include "detray/core/concepts.hpp"
 
 // System include(s)
 #include <filesystem>
@@ -20,7 +21,7 @@
 namespace detray::io {
 
 /// @brief Abstract base class for detray detector component writers
-template <class detector_t>
+template <detray::concepts::detector detector_t>
 class writer_interface {
  public:
   /// All writers must define a file extension
