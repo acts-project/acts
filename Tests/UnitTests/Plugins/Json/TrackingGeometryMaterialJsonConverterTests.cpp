@@ -16,6 +16,11 @@
 #include "ActsPlugins/Json/detail/JsonIo.hpp"
 #include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
 
+#include <algorithm>
+#include <array>
+#include <bit>
+#include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -97,6 +102,107 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentExamples) {
   BOOST_CHECK(
       std::get<GridSurfaceMaterial::GloballyIndexed>(a->storage()).material ==
       std::get<GridSurfaceMaterial::GloballyIndexed>(b->storage()).material);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialDocumentQuantization) {
+  Converter converter;
+  const auto id = GeometryIdentifier().withVolume(1);
+  for (unsigned int bits : {0u, 12u, 16u, 20u, 23u}) {
+    Converter::Options options;
+    options.materialFractionBits = bits;
+    const double bound = std::ldexp(1., -static_cast<int>(bits) - 1);
+    for (float value :
+         {0.f, -0.f, 7.23751f, std::nextafter(1.f, 2.f),
+          1.f + std::ldexp(1.f, -17), 1.f + 3 * std::ldexp(1.f, -17),
+          std::numeric_limits<float>::denorm_min(),
+          std::numeric_limits<float>::min(),
+          std::numeric_limits<float>::max()}) {
+      const auto material = Material::fromMolarDensity(
+          value, value, value > 0 ? value : 28.f, value, value, value, value);
+      TrackingGeometryMaterial source;
+      const double split = 0.123456789012345;
+      source.surfaceMaterials[id] =
+          std::make_shared<HomogeneousSurfaceMaterial>(
+              MaterialSlab(material, value), split);
+      const auto original = converter.toJson(source);
+      const auto encoded = converter.toJson(source, options);
+      if (bits == 23) {
+        BOOST_CHECK(encoded == original);
+      }
+      for (const auto& parsed :
+           {nlohmann::json::parse(encoded.dump()),
+            nlohmann::json::from_cbor(nlohmann::json::to_cbor(encoded))}) {
+        const auto recovered = converter.fromJson(parsed);
+        BOOST_CHECK(converter.toJson(recovered, options) == encoded);
+        const auto& surface = *recovered.surfaceMaterials.at(id);
+        const float actual = surface.materialSlab(Vector2::Zero()).thickness();
+        if (!std::isnormal(value) || bits == 23) {
+          BOOST_CHECK_EQUAL(std::bit_cast<std::uint32_t>(actual),
+                            std::bit_cast<std::uint32_t>(value));
+        } else {
+          BOOST_CHECK_LE(std::abs((double(actual) - value) / value), bound);
+        }
+        if (bits == 16 && value == 1.f + std::ldexp(1.f, -17)) {
+          BOOST_CHECK_EQUAL(actual, 1.f);
+        }
+        if (bits == 16 && value == 1.f + 3 * std::ldexp(1.f, -17)) {
+          BOOST_CHECK_EQUAL(actual, 1.f + std::ldexp(1.f, -15));
+        }
+        BOOST_CHECK_EQUAL(surface.factor(Direction::Backward(),
+                                         MaterialUpdateMode::PreUpdate),
+                          split);
+      }
+      for (const auto& change : nlohmann::json::diff(original, encoded)) {
+        BOOST_CHECK_EQUAL(change.at("op").get<std::string>(), "replace");
+        const auto path =
+            nlohmann::json::json_pointer(change.at("path").get<std::string>());
+        const double before = original.at(path).get<double>();
+        const double after = encoded.at(path).get<double>();
+        BOOST_REQUIRE_NE(before, 0.);
+        BOOST_CHECK_LE(std::abs((after - before) / before), bound);
+      }
+    }
+  }
+  Converter::Options invalid;
+  invalid.materialFractionBits = 24;
+  BOOST_CHECK_THROW(converter.toJson({}, invalid), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialDocumentQuantizationStorageAndFiles) {
+  Converter converter;
+  Converter::Options options;
+  options.materialFractionBits = 16;
+  TemporaryDirectory tmp;
+  for (const auto* name : {"minimal.json", "surfaces.json", "templates.json"}) {
+    const auto source = converter.fromJson(fixture(name));
+    const auto original = converter.toJson(source);
+    const auto encoded = converter.toJson(source, options);
+    for (const auto& change : nlohmann::json::diff(original, encoded)) {
+      BOOST_CHECK_EQUAL(change.at("op").get<std::string>(), "replace");
+      const auto path = change.at("path").get<std::string>();
+      // IDs, indices, coordinates, settings, strings and structure must
+      // survive.
+      const std::array fields{"/thickness",
+                              "/radiation_length",
+                              "/interaction_length",
+                              "/relative_atomic_mass",
+                              "/atomic_number",
+                              "/molar_density",
+                              "/molar_electron_density",
+                              "/mean_excitation_energy"};
+      BOOST_CHECK(std::ranges::any_of(
+          fields, [&](const auto* field) { return path.ends_with(field); }));
+    }
+    std::vector<std::string> extensions{".json", ".cbor"};
+    if (detail::zstdSupported()) {
+      extensions.insert(extensions.end(), {".json.zst", ".cbor.zst"});
+    }
+    for (const auto& extension : extensions) {
+      const auto path = tmp.path() / (std::string(name) + extension);
+      converter.toFile(source, path, options);
+      BOOST_CHECK(converter.toJson(converter.fromFile(path)) == encoded);
+    }
+  }
 }
 
 BOOST_AUTO_TEST_CASE(MaterialDocumentDescription) {
@@ -264,8 +370,11 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentExtensionDispatchAndFiles) {
   Converter converter(std::move(config));
   TrackingGeometryMaterial source;
   source.surfaceMaterials[GeometryIdentifier().withVolume(1)] =
-      std::make_shared<CustomMaterial>(3.);
+      std::make_shared<CustomMaterial>(7.23751);
   const auto encoded = converter.toJson(source);
+  Converter::Options quantized;
+  quantized.materialFractionBits = 0;
+  BOOST_CHECK(converter.toJson(source, quantized) == encoded);
   BOOST_CHECK_THROW(Converter().fromJson(encoded), std::invalid_argument);
   const auto decoded = converter.fromJson(encoded);
   BOOST_CHECK(dynamic_cast<const CustomMaterial*>(

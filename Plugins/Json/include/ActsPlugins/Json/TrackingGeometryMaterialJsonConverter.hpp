@@ -73,12 +73,16 @@ class TrackingGeometryMaterialJsonConverter {
     /// @return Default registry, extensible by the caller
     static Config defaultConfig();
   };
-  /// File output options. Version is a property of this codec, not an option.
+  /// Output options. Version is a property of this codec, not an option.
   struct Options {
     /// Text indentation.
-    unsigned indentation{4};
+    unsigned int indentation{4};
     /// Compression level, used only for zstd output.
     int compressionLevel{9};
+    /// Retained float fraction bits for built-in material properties and
+    /// thickness, from 0 to 23. The default preserves full precision; smaller
+    /// values enable lossy rounding. Geometry coordinates are unaffected.
+    unsigned int materialFractionBits{23};
     /// Default options for optional arguments.
     /// @return Default output options
     static Options defaultOptions() { return {}; }
@@ -90,9 +94,13 @@ class TrackingGeometryMaterialJsonConverter {
       Config config = Config::defaultConfig());
   /// Encode a complete material document.
   /// @param material Container, including an optional description
-  /// @throws std::invalid_argument if volume assignments are present
+  /// @param options Output precision (formatting applies only to files)
+  /// @throws std::invalid_argument if volume assignments are present or the
+  /// requested precision is outside [0, 23]
   /// @return Versioned JSON document
-  nlohmann::json toJson(const TrackingGeometryMaterial& material) const;
+  nlohmann::json toJson(
+      const TrackingGeometryMaterial& material,
+      const Options& options = Options::defaultOptions()) const;
   /// Decode and validate a complete material document.
   /// @param encoded Versioned document, never the legacy hierarchy-map layout
   /// @return Assignments and optional description, without applying them
@@ -100,7 +108,7 @@ class TrackingGeometryMaterialJsonConverter {
   /// Write JSON/CBOR with optional zstd, selected by the filename extension.
   /// @param material Material container
   /// @param path Output filename
-  /// @param options Output formatting/compression
+  /// @param options Output precision, formatting and compression
   void toFile(const TrackingGeometryMaterial& material,
               const std::filesystem::path& path,
               const Options& options = Options::defaultOptions()) const;

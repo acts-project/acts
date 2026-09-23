@@ -20,7 +20,9 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <stdexcept>
 #include <string_view>
@@ -54,6 +56,71 @@ float finiteFloat(double v) {
   auto f = static_cast<float>(v);
   check(v == 0 || f != 0, "value underflows float range");
   return f;
+}
+
+float quantize(float value, unsigned int fractionBits) {
+  // Preserve signed zero, subnormals and infinity. Rounding subnormals by
+  // clearing fraction bits would not obey the relative error bound.
+  if (fractionBits == 23 || !std::isnormal(value)) {
+    return value;
+  }
+  const unsigned int drop = 23 - fractionBits;
+  const auto bits = std::bit_cast<std::uint32_t>(value);
+  // Round to nearest, ties to even, including carries into the exponent.
+  const auto rounded =
+      (bits + ((1u << (drop - 1)) - 1) + ((bits >> drop) & 1u)) &
+      ~((1u << drop) - 1);
+  const auto result = std::bit_cast<float>(rounded);
+  return std::isfinite(result) ? result : value;
+}
+
+void quantizeSlab(nlohmann::json& slab, unsigned int fractionBits) {
+  slab.at("thickness") =
+      quantize(slab.at("thickness").get<float>(), fractionBits);
+  auto& material = slab.at("material");
+  if (material.at("kind") == "material") {
+    for (const auto* field :
+         {"radiation_length", "interaction_length", "relative_atomic_mass",
+          "atomic_number", "molar_density", "molar_electron_density",
+          "mean_excitation_energy"}) {
+      auto& value = material.at(field);
+      if (value.is_number()) {
+        value = quantize(value.get<float>(), fractionBits);
+      }
+    }
+  }
+}
+
+void quantizeDocument(nlohmann::json& document, unsigned int fractionBits) {
+  auto slabs = [fractionBits](nlohmann::json& values) {
+    for (auto& slab : values) {
+      quantizeSlab(slab, fractionBits);
+    }
+  };
+  for (auto& entry : document.at("surfaces")) {
+    auto& material = entry.at("material");
+    if (material.is_null()) {
+      continue;
+    }
+    const auto& kind = material.at("kind");
+    if (kind == "homogeneous") {
+      quantizeSlab(material.at("slab"), fractionBits);
+    } else if (kind == "binned") {
+      slabs(material.at("values"));
+    } else if (kind == "grid") {
+      auto& storage = material.at("storage");
+      if (storage.at("kind") == "direct") {
+        slabs(storage.at("values"));
+      } else if (storage.at("kind") == "indexed") {
+        slabs(storage.at("slabs"));
+      }
+    }
+  }
+  if (document.contains("slab_stores")) {
+    for (auto& store : document.at("slab_stores")) {
+      slabs(store);
+    }
+  }
 }
 
 std::size_t index(
@@ -342,7 +409,7 @@ nlohmann::json encodeAxis(const AxisSpec& axis) {
   return j;
 }
 
-BinningData decodeBinAxis(const nlohmann::json& j, unsigned depth = 0) {
+BinningData decodeBinAxis(const nlohmann::json& j, unsigned int depth = 0) {
   using enum AxisDirection;
   check(depth < 32, "binning refinement nesting exceeds 32");
   if (j.at("kind") != "subdivided") {
@@ -736,7 +803,9 @@ TrackingGeometryMaterialJsonConverter::TrackingGeometryMaterialJsonConverter(
     : m_config(std::move(config)) {}
 
 nlohmann::json TrackingGeometryMaterialJsonConverter::toJson(
-    const TrackingGeometryMaterial& material) const {
+    const TrackingGeometryMaterial& material, const Options& options) const {
+  check(options.materialFractionBits <= 23,
+        "material fraction bits must be between 0 and 23");
   check(material.volumeMaterials.empty(),
         "material document version 1 supports surface material only; "
         "volume assignments cannot be serialized");
@@ -773,6 +842,9 @@ nlohmann::json TrackingGeometryMaterialJsonConverter::toJson(
       check(store != nullptr, "null slab store");
       j["slab_stores"][id] = encodeSlabs(*store);
     }
+  }
+  if (options.materialFractionBits < 23) {
+    quantizeDocument(j, options.materialFractionBits);
   }
   return j;
 }
@@ -832,7 +904,7 @@ TrackingGeometryMaterial TrackingGeometryMaterialJsonConverter::fromJson(
 void TrackingGeometryMaterialJsonConverter::toFile(
     const TrackingGeometryMaterial& material, const std::filesystem::path& path,
     const Options& options) const {
-  detail::writeJsonFile(path, toJson(material), options.indentation,
+  detail::writeJsonFile(path, toJson(material, options), options.indentation,
                         options.compressionLevel);
 }
 

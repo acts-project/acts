@@ -3,8 +3,7 @@
 **Experimental version 1.** `Acts::TrackingGeometryMaterialJsonConverter` reads
 and writes this format. Its `Config` supplies extensible surface dispatchers;
 `toJson`/`fromJson` handle documents and `toFile`/`fromFile` handle files. `Options`
-controls indentation and compression level, mirroring the tracking-geometry
-converter. Applying material remains a separate `TrackingGeometryMaterial::apply`
+controls indentation, compression level and optional material quantization. Applying material remains a separate `TrackingGeometryMaterial::apply`
 operation. Existing material writers, decorators and converters are deprecated
 and retain their legacy-format behavior; the new codec does not call them.
 The schema remains a draft pending review of the supported-state boundaries below.
@@ -25,6 +24,29 @@ auto material = converter.fromFile("material.cbor.zst");
 material.apply(geometry);
 converter.toFile(material, "material.json");
 ```
+
+Material quantization is opt-in and affects only built-in slab thickness and
+composition fields. `Options::materialFractionBits` defaults to 23 (full float32
+precision); values from 0 to 22 round to fewer binary fraction bits. For example:
+
+```cpp
+Acts::TrackingGeometryMaterialJsonConverter::Options options;
+options.materialFractionBits = 16;
+converter.toFile(material, "material.cbor.zst", options);
+auto document = converter.toJson(material, options);
+```
+
+Rounding uses nearest with ties to even. For `b` retained fraction bits, each
+normal value changes by at most `2^(-b-1)` relative to its original value (about
+0.000763% at 16 bits). Signed zero, subnormal values, infinity sentinels and values
+that would round to infinity are preserved. This bound applies to individual
+stored values, not to derived physics quantities or tracking results. Repeated
+serialization at the same precision is idempotent. The input material stays
+unchanged, and the reader needs no quantization setting or schema change.
+Geometry coordinates, settings, identifiers and custom surface payloads retain
+their existing precision. Shared slab stores use the same quantization.
+Binary quantization can improve compressibility but does not necessarily produce
+short decimal text; CBOR continues to store the resulting values as float32.
 
 Plugin installation also places the schema under `share/Acts/schema` (subject
 to `CMAKE_INSTALL_DATADIR`). The schema remains explicitly marked as a draft.
