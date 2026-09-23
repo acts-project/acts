@@ -18,7 +18,7 @@ using namespace pybind11::literals;
 
 using ActsPlugins::ActsToMille::MillePedeResultReader;
 using ActsPlugins::ActsToMille::MillePedeSolver;
-using ActsPlugins::ActsToMille::mpParameterResult;
+using ActsPlugins::ActsToMille::MpParameterResult;
 
 PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
   {
@@ -46,7 +46,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
             .def(py::init<Acts::Logging::Level>())
             .def("readParameters", &MillePedeResultReader::readParameters);
 
-    auto c = py::class_<mpParameterResult>(mille, "mpParameterResult")
+    auto c = py::class_<MpParameterResult>(mille, "MpParameterResult")
                  .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, label, val, start, delta, sigma, nRecords);

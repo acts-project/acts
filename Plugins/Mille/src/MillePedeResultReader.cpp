@@ -17,14 +17,14 @@
 
 using namespace ActsPlugins::ActsToMille;
 
-Acts::Result<std::vector<mpParameterResult>>
+Acts::Result<std::vector<MpParameterResult>>
 MillePedeResultReader::readParameters(
-    const std::filesystem::path& theResultFile) const {
-  std::vector<mpParameterResult> res;
-  std::ifstream resFile(theResultFile);
+    const std::filesystem::path& mpFile) const {
+  std::vector<MpParameterResult> res;
+  std::ifstream resFile(mpFile);
   if (!resFile.is_open()) {
-    ACTS_ERROR(" Failed to read the MP results file at " << theResultFile);
-    return Acts::Result<std::vector<mpParameterResult>>::failure(
+    ACTS_ERROR(" Failed to read the MP results file '" << mpFile << "'");
+    return Acts::Result<std::vector<MpParameterResult>>::failure(
         MillePedeError::SolutionNotReadable);
   }
   while (!resFile.eof()) {
@@ -38,9 +38,13 @@ MillePedeResultReader::readParameters(
   resFile.close();
   return res;
 }
-std::optional<mpParameterResult> MillePedeResultReader::parseMpLine(
+std::optional<MpParameterResult> MillePedeResultReader::parseMpLine(
     const std::string& resLine) const {
-  mpParameterResult par;
+  // skip blank lines
+  if (resLine.empty()) {
+    return std::nullopt;
+  }
+  MpParameterResult par;
   par.sigma = -1;
   par.nRecords = -1;
   std::stringstream sstr(resLine);
@@ -51,11 +55,20 @@ std::optional<mpParameterResult> MillePedeResultReader::parseMpLine(
     ACTS_DEBUG(" Skipping a commented line in the MP results file ");
     return std::nullopt;
   }
+  if (!firstWord.empty() && firstWord == "Parameter") {
+    ACTS_DEBUG(" Skipping the header line of the MP results file ");
+    return std::nullopt;
+  }
   sstr.seekg(0);
-  sstr >> par.label >> par.val >> par.start >> par.delta;
+  sstr >> par.label >> par.val >> par.start;
   if (sstr.fail()) {
     ACTS_WARNING(" Failed to read a line of the MP results file ");
     return std::nullopt;
+  }
+  // the following three elements are not guaranteed
+  // to exist, depending on the Pede configuration.
+  if (!sstr.eof()) {
+    sstr >> par.delta;
   }
   if (!sstr.eof()) {
     sstr >> par.sigma;

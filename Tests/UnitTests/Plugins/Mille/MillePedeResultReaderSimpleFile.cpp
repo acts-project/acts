@@ -20,15 +20,15 @@ using namespace ActsPlugins::ActsToMille;
 
 BOOST_AUTO_TEST_SUITE(MillePedeResultReaderSimpleFile)
 
-bool operator==(const mpParameterResult &r1, const mpParameterResult &r2) {
+bool operator==(const MpParameterResult &r1, const MpParameterResult &r2) {
   return (r1.label == r2.label && r1.val == r2.val && r1.start == r2.start &&
           r1.delta == r2.delta && r1.sigma == r2.sigma &&
           r1.nRecords == r2.nRecords);
 }
 
-std::ostream &operator<<(std::ostream &str, const mpParameterResult &p) {
+std::ostream &operator<<(std::ostream &str, const MpParameterResult &p) {
   str << std::format(
-      " [ label {}, val {}, start {}, delta {}, sigma {}, nRecords {} ]",
+      " [ Label {}, Val {}, Start {}, Delta {}, Sigma {}, NRecords {} ]",
       p.label, p.val, p.start, p.delta, p.sigma, p.nRecords);
   return str;
 }
@@ -40,9 +40,10 @@ BOOST_AUTO_TEST_CASE(ReadSimpleFile) {
   dummyResultFile << " # this is a comment line and will be ignored."
                   << std::endl;
 
-  std::vector<mpParameterResult> dummyResults{
+  std::vector<MpParameterResult> dummyResults{
       {1, 0.01, 0.00, 0.01, 0.001, 144},
       {41, -0.07, 0.00, -0.07, 0.001, 86},
+      {99, -0.015, 10.00, -0.0, 0.0031, 1446},
   };
   for (const auto &[label, val, start, delta, sigma, nRec] : dummyResults) {
     dummyResultFile << label << " " << val << " " << start << " " << delta

@@ -20,7 +20,7 @@ namespace ActsPlugins::ActsToMille {
 /// Packages the raw output, agnostic of the mapping
 /// to surfaces or transforms. The latter translation
 /// is expected to be done in a follow-up step.
-struct mpParameterResult {
+struct MpParameterResult {
   int label = 0;     /// label of the parameter
   double val = 0;    /// fitted value
   double start = 0;  /// starting value
@@ -38,7 +38,7 @@ class MillePedeResultReader {
 
   /// @brief Read the alignment parameters from a result file.
   /// @param mpFile: Location of the file to parse
-  Acts::Result<std::vector<mpParameterResult>> readParameters(
+  Acts::Result<std::vector<MpParameterResult>> readParameters(
       const std::filesystem::path& mpFile) const;
 
  private:
@@ -49,7 +49,7 @@ class MillePedeResultReader {
 
   /// @brief Helper to parse one line of a Millepede result file.
   /// Expected to contain the information for one alignment parameter.
-  std::optional<mpParameterResult> parseMpLine(
+  std::optional<MpParameterResult> parseMpLine(
       const std::string& resLine) const;
 };
 
