@@ -20,19 +20,20 @@ namespace Acts {
 /// @brief A class to build multiwire tracking volumes (e.g wire chambers)
 class MultiWireVolumeBuilder {
  public:
-  /// The axis configuration for the binning: a fully specified equidistant
-  /// axis spec with a direction, plus the bin expansion
-  using Binning = std::tuple<AxisSpec, std::size_t>;
+  /// The axis configuration for the binning: axis direction, plus the bin
+  /// expansion
+  using Binning = std::tuple<AxisDirection, std::size_t>;
+
   /// Configuration Struct
   struct Config {
     /// The name of the tracking volume
     std::string name = "undefined";
 
     /// The surfaces to be wrapped from the tracking volume
-    std::vector<std::shared_ptr<Surface>> mlSurfaces = {};
+    std::vector<std::shared_ptr<Surface>> mlSurfaces{};
 
     /// The local -> global transform of the tracking volume
-    Transform3 transform = Transform3::Identity();
+    Transform3 transform{Transform3::Identity()};
 
     /// Connect the tracking geometry with an alignable volume placement
     /// Used instead of the transform if set
@@ -42,8 +43,20 @@ class MultiWireVolumeBuilder {
     std::shared_ptr<Acts::VolumeBounds> bounds = nullptr;
 
     /// Binning configuration for multi-wire volume
-    std::vector<Binning> binning = {};
+    std::vector<Binning> binning{};
+
+    /// Boolean flag if staggering corrections should be applied
+    bool correctOffsets{true};
+
+    /// The direction of the axis the shift of the surfaces is applied
+    /// It is the direction along the tubes
+    AxisDirection shiftDirection{};
+
+    /// The precision delimiter for discriminating the wires/tubes per layer
+    /// with a map
+    double precisionDelimiter{1e-3};
   };
+
   /// Constructor
   /// @param config The configuration struct
   /// @param logger The logger instance for screen output
@@ -52,22 +65,40 @@ class MultiWireVolumeBuilder {
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
           "MultiWireVolumeBuilder", Acts::Logging::INFO));
 
-  /// @brief Constructs the tracking volume with the wrapped surfaces
+  /// Constructs the tracking volume with the wrapped surfaces
   /// @return a unique ptr of the tracking volume
   std::unique_ptr<Acts::TrackingVolume> buildVolume() const;
 
-  /// @brief Creates a multilayer navigation policy factory that can be used for the trackingVolume
-  /// or attached to a blueprint node
+  /// Creates a multilayer navigation policy factory that can be used for the
+  /// trackingVolume or attached to a blueprint node
+  /// @param gctx The geometry context
   /// @return Unique pointer to the created navigation policy factory
-  std::unique_ptr<NavigationPolicyFactory> createNavigationPolicyFactory()
-      const;
+  std::unique_ptr<NavigationPolicyFactory> createNavigationPolicyFactory(
+      const GeometryContext& gctx) const;
 
  private:
+  // The config
   Config m_config;
 
+  // The ACTS logger
   const Acts::Logger& logger() const { return *m_logger; }
 
   std::unique_ptr<const Acts::Logger> m_logger;
+
+  /// Helper method to derive the grid parameters (both axes and the per-layer
+  /// staggering correction) from the tube surfaces.
+  ///
+  /// The tube centers are projected, in the volume-local frame, onto the two
+  /// binning directions. The shift axis (m_config.shiftDirection) is the one
+  /// the tubes are staggered along; the layer axis is the other pointing from
+  /// one layer to the next one. The returned shift vector is indexed by
+  /// layer-axis bin and corrects the per-layer stagger during bin registration.
+  ///
+  /// @param gctx the geometry context
+  /// @return {shiftAxis, layerAxis, layerShifts} — layerShifts has one entry
+  ///         per layer-axis bin.
+  std::tuple<AxisSpec, AxisSpec, std::vector<double>> deriveGridParameters(
+      const GeometryContext& gctx) const;
 };
 
 namespace Experimental {
