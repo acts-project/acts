@@ -297,24 +297,14 @@ GeoModelMuonMockupBuilder::buildChildChamber(
   if (box.name.find("MDT") != std::string::npos) {
     MultiWireVolumeBuilder::Config mwCfg;
     auto vb = box.volume->volumeBoundsPtr();
-    double halfY{0}, halfZ{0};
-    using LineBounds = Acts::LineBounds::BoundValues;
 
     if (vb->type() == Acts::VolumeBounds::eTrapezoid) {
-      using BoundVal = Acts::TrapezoidVolumeBounds::BoundValues;
-
       auto tzb = std::dynamic_pointer_cast<Acts::TrapezoidVolumeBounds>(vb);
       mwCfg.bounds = boundFactory.insert(tzb);
-      halfY = tzb->get(BoundVal::eHalfLengthY);
-      halfZ = tzb->get(BoundVal::eHalfLengthZ);
 
     } else if (vb->type() == Acts::VolumeBounds::eCuboid) {
-      using BoundVal = Acts::CuboidVolumeBounds::BoundValues;
-
       auto cbb = std::dynamic_pointer_cast<Acts::CuboidVolumeBounds>(vb);
       mwCfg.bounds = boundFactory.insert(cbb);
-      halfY = cbb->get(BoundVal::eHalfLengthY);
-      halfZ = cbb->get(BoundVal::eHalfLengthZ);
 
     } else {
       throw std::runtime_error(
@@ -331,16 +321,10 @@ GeoModelMuonMockupBuilder::buildChildChamber(
       throw std::runtime_error(
           "This MDT does not have tubes, what does it have?");
     }
-    double tubeR = lineBounds->get(LineBounds::eR);
     mwCfg.binning = {
-        {Acts::AxisSpec::Equidistant(
-             static_cast<std::size_t>(std::lround(1. * halfY / tubeR)), -halfY,
-             halfY, Acts::AxisBoundaryType::Bound, Acts::AxisDirection::AxisY),
-         2},
-        {Acts::AxisSpec::Equidistant(
-             static_cast<std::size_t>(std::lround(1. * halfZ / tubeR)), -halfZ,
-             halfZ, Acts::AxisBoundaryType::Bound, Acts::AxisDirection::AxisZ),
-         1}};
+        {Acts::AxisDirection::AxisY, 2},   // shift axis, expansion 2
+        {Acts::AxisDirection::AxisZ, 1}};  // layer axis, expansion 1
+    mwCfg.shiftDirection = Acts::AxisDirection::AxisY;
 
     MultiWireVolumeBuilder mdtBuilder{mwCfg};
     trVol = mdtBuilder.buildVolume();
