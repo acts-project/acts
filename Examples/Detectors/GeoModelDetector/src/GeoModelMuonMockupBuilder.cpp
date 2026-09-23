@@ -250,17 +250,17 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
           "processStation() -- Found null chamber node for parent {}",
           parent->getLogVol()->getName()));
     }
-    auto trVol = buildChildChamber(gctx, box, boundFactory);
-    trVol->assignGeometryId(geoId.withVolume(it->second.second)
-                                .withExtra(chamberNode->children().size() + 1));
+    auto childNode =
+        buildChildChamber(gctx, box, boundFactory,
+                          geoId.withVolume(it->second.second)
+                              .withExtra(chamberNode->children().size() + 1));
 
-    ACTS_VERBOSE("\t\t Added child: " << trVol->volumeName() << ", "
-                                      << trVol->geometryId()
+    ACTS_VERBOSE("\t\t Added child: " << childNode->name() << ", "
                                       << " to Parent: " << chamberNode->name());
 
     // create static blueprint node for the inner volume and add it to the
     // chamber node
-    chamberNode->addChild(std::make_shared<Node_t>(std::move(trVol)));
+    chamberNode->addChild(childNode);
   }
   // Create a new station node with the attached cylinder volume
   const double translationZ =
@@ -287,10 +287,11 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
   return stationNode;
 }
 
-std::unique_ptr<Acts::TrackingVolume>
+GeoModelMuonMockupBuilder::NodePtr_t
 GeoModelMuonMockupBuilder::buildChildChamber(
     const Acts::GeometryContext& gctx, const Box_t& box,
-    Acts::VolumeBoundFactory& boundFactory) const {
+    Acts::VolumeBoundFactory& boundFactory,
+    const Acts::GeometryIdentifier& geoId) const {
   std::unique_ptr<Acts::TrackingVolume> trVol{nullptr};
 
   // use dedicated builder for MDT multilayers
@@ -322,22 +323,28 @@ GeoModelMuonMockupBuilder::buildChildChamber(
           "This MDT does not have tubes, what does it have?");
     }
     mwCfg.binning = {
-        {Acts::AxisDirection::AxisY, 2},   // shift axis, expansion 2
-        {Acts::AxisDirection::AxisZ, 1}};  // layer axis, expansion 1
+        {Acts::AxisDirection::AxisY, 15u},  // shift axis, expansion 2
+        {Acts::AxisDirection::AxisZ, 0u}};  // layer axis, expansion 1
     mwCfg.shiftDirection = Acts::AxisDirection::AxisY;
 
     MultiWireVolumeBuilder mdtBuilder{mwCfg};
     trVol = mdtBuilder.buildVolume();
-
-  } else {
-    trVol = std::make_unique<Acts::TrackingVolume>(*box.volume, box.name);
-
-    // add the sensitives in the constructed tracking volume
-    for (const auto& surface : box.surfaces) {
-      trVol->addSurface(surface);
-    }
+    trVol->assignGeometryId(geoId);
+    NodePtr_t staticNode = std::make_shared<Node_t>(std::move(trVol));
+    staticNode->setNavigationPolicyFactory(
+        mdtBuilder.createNavigationPolicyFactory(gctx));
+    return staticNode;
   }
-  return trVol;
+  trVol = std::make_unique<Acts::TrackingVolume>(*box.volume, box.name);
+
+  trVol->assignGeometryId(geoId);
+
+  // add the sensitives in the constructed tracking volume
+  for (const auto& surface : box.surfaces) {
+    trVol->addSurface(surface);
+  }
+  NodePtr_t staticNode = std::make_shared<Node_t>(std::move(trVol));
+  return staticNode;
 }
 template <Acts::VolumeBounds::BoundsType VolBounds_t>
 void GeoModelMuonMockupBuilder::updateBounds(const Acts::GeometryContext& gctx,

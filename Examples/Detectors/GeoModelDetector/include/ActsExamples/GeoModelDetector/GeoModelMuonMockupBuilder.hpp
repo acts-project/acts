@@ -94,10 +94,11 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
                            Acts::VolumeBoundFactory& boundFactory,
                            const Acts::GeometryIdentifier& geoId) const;
 
-  /// @brief Build a child chamber volume from the provided converted volume box
-  std::unique_ptr<Acts::TrackingVolume> buildChildChamber(
-      const Acts::GeometryContext& gctx, const Box_t& box,
-      Acts::VolumeBoundFactory& boundFactory) const;
+  /// @brief Build a child chamber node from the provided converted volume box
+  NodePtr_t buildChildChamber(const Acts::GeometryContext& gctx,
+                              const Box_t& box,
+                              Acts::VolumeBoundFactory& boundFactory,
+                              const Acts::GeometryIdentifier& geoId) const;
 
   /// @brief Helper struct to store cylinder bounds, used to compute the overall bounds
   ///        of a station tracking volume from its component volumes

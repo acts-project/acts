@@ -17,7 +17,7 @@ from acts import examples
 import acts.examples.geomodel as gm_ex
 
 from pathlib import Path
-from propagation import runPropagation
+from muon_mockup import buildMuonMockup
 
 
 def runGeant4(
@@ -115,82 +115,18 @@ def main():
     gContext = acts.GeometryContext.dangerouslyDefaultConstruct()
     logLevel = logging.INFO
 
-    # Create the tracking geometry builder for the muon system
-    gmBuilderConfig = gm_ex.GeoModelMuonMockupBuilder.Config()
-
-    # Read the geometry model from the database
-    gmTree = None
-    ### Use an external geo model file
-    if len(args.input):
-        gmTree = gm.readFromDb(args.input)
-        gmBuilderConfig.stationNames = ["BIL", "BML", "BOL"]
-
-    elif args.mockupDetector == "Muon":
-        mockUpCfg = gm_ex.GeoMuonMockupExperiment.Config()
-        mockUpCfg.dumpTree = True
-        mockUpCfg.dbName = "ActsGeoMS.db"
-        mockUpCfg.nSectors = 12
-        mockUpCfg.nEtaStations = 8
-        mockUpCfg.buildEndcaps = True
-        mockUpCfg.buildBarrel = True
-        mockUpBuilder = gm_ex.GeoMuonMockupExperiment(
-            mockUpCfg, "GeoMockUpMS", logLevel
-        )
-        gmBuilderConfig.stationNames = [
-            "BI",
-            "BM",
-            "BO",
-            "EAI",
-            "EAM",
-            "EAO",
-            "ECI",
-            "ECM",
-            "ECO",
-        ]
-
-        gmTree = mockUpBuilder.constructMS()
-    else:
-        raise RuntimeError(f"{args.mockupDetector} not implemented yet")
-
-    gmFactoryConfig = gm.GeoModelDetectorObjectFactory.Config()
-    gmFactoryConfig.nameList = [
-        "RpcGasGap",
-        "MDTDriftGas",
-        "TgcGasGap",
-        "SmallWheelGasGap",
-    ]
-    gmFactoryConfig.convertSubVolumes = True
-    gmFactoryConfig.convertBox = ["MDT", "RPC", "SmallWheel", "TGC"]
-
-    gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
-    # The options
-    gmFactoryOptions = gm.GeoModelDetectorObjectFactory.Options()
-    gmFactoryOptions.queries = ["Muon"]
-
-    # The Cache & construct call
-    gmFactoryCache = gm.GeoModelDetectorObjectFactory.Cache()
-    gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
-
-    gmBuilderConfig.volumeBoxFPVs = gmFactoryCache.boundingBoxes
-
-    gmDetectorCfg = gm_ex.GeoModelDetector.Config()
-    gmDetectorCfg.geoModelTree = gmTree
-    detector = gm_ex.GeoModelDetector(gmDetectorCfg)
-
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))
-
-    trackingGeometryBuilder = gm_ex.GeoModelMuonMockupBuilder(
-        gmBuilderConfig, "GeoModelMuonMockupBuilder", logLevel
+    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+    detector, trackingGeometry, volumeMappings, factoryCache = buildMuonMockup(
+        gContext=gctx
     )
-
-    trackingGeometry = detector.buildTrackingGeometry(gContext, trackingGeometryBuilder)
 
     algSequence = runGeant4(
         detector=detector,
         trackingGeometry=trackingGeometry,
         field=field,
         outputDir=args.outDir,
-        volumeMappings=gmFactoryConfig.nameList,
+        volumeMappings=volumeMappings,
         events=args.nEvents,
         seed=args.randomSeed,
     )
