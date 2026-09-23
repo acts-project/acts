@@ -44,7 +44,8 @@ including axes, assignments, materials and stores. There are no nested versions.
 `$schema` is optional tooling information, never permission to bypass version
 checks. JSON text and CBOR encode the same data model; zstd only compresses it.
 CBOR must use the same string keys, IDs and finite numeric values as JSON.
-Unknown versions and structural fields are errors in the standard format.
+Unknown versions are rejected. The schema rejects unknown fields; the runtime
+reader ignores unused fields except the explicitly unsupported `volumes` field.
 The shipped schema enumerates the built-in variants and rejects custom kinds.
 An application may register additional material encoders/decoders with the type
 dispatcher: its reader/writer can support those kinds even though the standard
@@ -108,8 +109,8 @@ the current five-component vector loses independently supplied electron density
 and excitation energy. Do not assume a vector's order or length in the new codec.
 No mass-density conversion or automatic recomputation of the two extra fields.
 Float conversion requires range checks; bitwise equality after decimal/unit
-conversion is not promised. Nonphysical states outside the schema require a
-reported unsupported-state error, not silent coercion.
+conversion is not promised. Physical-value constraints belong to the schema;
+the codec does not duplicate them or revalidate encoded output.
 
 `"infinity"` is allowed only for radiation and interaction lengths. Vacuum is
 `{"kind":"vacuum"}`, not a collection of nonfinite numbers. JSON/CBOR NaN and
@@ -189,15 +190,15 @@ serializer concerns.
 | Layer | Responsibility |
 | --- | --- |
 | JSON Schema | Required fields, types, disjoint variants, fixed dimensions, basic numeric bounds, no unexpected structural fields |
-| C++ document reader | Version, duplicate JSON keys, geometry-component bounds and normalized exact identities (omitted and explicit zeros are equivalent), finite/range-safe numbers, unique assignment identities, consistent proto keys, increasing axes/refinements, proper transforms, array products, resolved store names and index bounds, supported coordinate semantics; meaningful exceptions with document paths |
+| C++ document reader | Format/version, duplicate JSON keys, integer and allocation bounds, array sizes, unique identities, key consistency, store references and indices, and unsupported representations. Required fields and types use JSON library exceptions; axis constructors validate axis parameters. |
 | Geometry application/resolution | Existing key matching, uniqueness of participating surfaces, Gen1/key incompatibility, marker rejection, coordinate/bounds agreement and deferred-axis resolution; description is ignored |
 
 Schema validity alone never proves a map is physically meaningful or applicable
 to a detector. `CI/check_material_schema.py` validates examples structurally and
 checks representative document invariants as fixture QA; it is not a public
-material reader or complete semantic validator. The reader checks essential
-input invariants even when optional offline schema
-validation was skipped. File decoding rejects duplicate keys before constructing
+material reader or complete semantic validator. Use the offline schema check
+for the full format contract. The runtime codec performs conversion and basic
+construction checks, not exhaustive schema or physical-value validation. File decoding rejects duplicate keys before constructing
 the JSON/CBOR DOM; `fromJson` cannot recover duplicates already overwritten by a
 caller's parser. File documents are limited to 256 nesting levels and recursive binning to 32.
 

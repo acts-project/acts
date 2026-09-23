@@ -42,41 +42,10 @@ void check(bool condition, const std::string& message) {
   }
 }
 
-void object(const nlohmann::json& j,
-            std::initializer_list<std::string_view> required,
-            std::initializer_list<std::string_view> optional = {}) {
-  check(j.is_object(), "expected object");
-  for (auto key : required) {
-    check(j.contains(std::string(key)),
-          "missing field '" + std::string(key) + "'");
-  }
-  for (auto it = j.begin(); it != j.end(); ++it) {
-    auto contains = [&](auto fields) {
-      return std::ranges::find(fields, it.key()) != fields.end();
-    };
-    check(contains(required) || contains(optional),
-          "unexpected field '" + it.key() + "'");
-  }
-}
-
 void array(const nlohmann::json& j, std::size_t min,
            std::size_t max = std::numeric_limits<std::size_t>::max()) {
   check(j.is_array() && j.size() >= min && j.size() <= max,
         "invalid array size");
-}
-
-std::string text(const nlohmann::json& j) {
-  check(j.is_string(), "expected string");
-  auto s = j.get<std::string>();
-  check(!s.empty(), "expected nonempty string");
-  return s;
-}
-
-double number(const nlohmann::json& j) {
-  check(j.is_number(), "expected number");
-  double v = j.get<double>();
-  check(std::isfinite(v), "expected finite number");
-  return v;
 }
 
 float finiteFloat(double v) {
@@ -85,12 +54,6 @@ float finiteFloat(double v) {
   auto f = static_cast<float>(v);
   check(v == 0 || f != 0, "value underflows float range");
   return f;
-}
-
-double nonnegative(const nlohmann::json& j) {
-  auto v = number(j);
-  check(v >= 0, "expected nonnegative number");
-  return v;
 }
 
 std::size_t index(
@@ -128,8 +91,6 @@ nlohmann::json encodeId(GeometryIdentifier id) {
 }
 
 GeometryIdentifier decodeId(const nlohmann::json& j) {
-  object(j, {},
-         {"volume", "boundary", "layer", "approach", "sensitive", "extra"});
   auto field = [&](const char* key, std::uint64_t max) {
     return j.contains(key) ? index(j.at(key), max) : 0;
   };
@@ -146,13 +107,9 @@ const std::array<std::string, 9> directions{"x",    "y",     "z",   "r",  "phi",
                                             "rphi", "theta", "eta", "mag"};
 
 AxisDirection direction(const nlohmann::json& j) {
-  const auto s = text(j);
-  for (std::size_t i = 0; i < directions.size(); ++i) {
-    if (s == directions[i]) {
-      return static_cast<AxisDirection>(i);
-    }
-  }
-  throw std::invalid_argument("unsupported axis direction '" + s + "'");
+  const auto it = std::ranges::find(directions, j.get<std::string>());
+  check(it != directions.end(), "unsupported axis direction");
+  return static_cast<AxisDirection>(it - directions.begin());
 }
 
 std::string direction(AxisDirection d) {
@@ -169,7 +126,7 @@ double axisUnit(std::optional<AxisDirection> d) {
 
 AxisBoundaryType boundary(const nlohmann::json& j) {
   using enum AxisBoundaryType;
-  auto s = text(j);
+  auto s = j.get<std::string>();
   if (s == "open") {
     return Open;
   }
@@ -196,21 +153,16 @@ std::string boundary(AxisBoundaryType b) {
 }
 
 Transform3 decodeTransform(const nlohmann::json& j) {
-  object(j, {"rotation", "translation"});
   array(j.at("rotation"), 3, 3);
   array(j.at("translation"), 3, 3);
   Transform3 t = Transform3::Identity();
   for (int r = 0; r < 3; ++r) {
     array(j.at("rotation").at(r), 3, 3);
     for (int c = 0; c < 3; ++c) {
-      t.linear()(r, c) = number(j.at("rotation").at(r).at(c));
+      t.linear()(r, c) = j.at("rotation").at(r).at(c).get<double>();
     }
-    t.translation()[r] = number(j.at("translation").at(r)) * lengthUnit;
+    t.translation()[r] = j.at("translation").at(r).get<double>() * lengthUnit;
   }
-  check((t.linear().transpose() * t.linear())
-                .isApprox(RotationMatrix3::Identity(), 1e-9) &&
-            std::abs(t.linear().determinant() - 1) < 1e-9,
-        "transform rotation is not proper orthonormal");
   return t;
 }
 
@@ -225,7 +177,6 @@ nlohmann::json encodeTransform(const Transform3& t) {
     j["rotation"].emplace_back(row);
     j["translation"].emplace_back(t.translation()[r] / lengthUnit);
   }
-  decodeTransform(j);
   return j;
 }
 
@@ -233,8 +184,7 @@ float decodeLength(const nlohmann::json& j) {
   if (j.is_string() && j == "infinity") {
     return std::numeric_limits<float>::infinity();
   }
-  auto v = number(j);
-  check(v > 0, "material length must be positive");
+  auto v = j.get<double>();
   return finiteFloat(v * lengthUnit);
 }
 
@@ -242,29 +192,23 @@ nlohmann::json encodeLength(float v) {
   if (v == std::numeric_limits<float>::infinity()) {
     return "infinity";
   }
-  check(std::isfinite(v) && v > 0, "invalid material length");
   return v / lengthUnit;
 }
 
 Material decodeMaterial(const nlohmann::json& j) {
-  auto kind = text(j.at("kind"));
+  auto kind = j.at("kind").get<std::string>();
   if (kind == "vacuum") {
-    object(j, {"kind"});
     return Material::Vacuum();
   }
   check(kind == "material", "unsupported composition kind");
-  object(j, {"kind", "radiation_length", "interaction_length",
-             "relative_atomic_mass", "atomic_number", "molar_density",
-             "molar_electron_density", "mean_excitation_energy"});
-  auto ar = finiteFloat(number(j.at("relative_atomic_mass")));
-  check(ar > 0, "atomic mass must be positive");
+  auto ar = finiteFloat(j.at("relative_atomic_mass").get<double>());
   return Material::fromMolarDensity(
       decodeLength(j.at("radiation_length")),
       decodeLength(j.at("interaction_length")), ar,
-      finiteFloat(nonnegative(j.at("atomic_number"))),
-      finiteFloat(nonnegative(j.at("molar_density")) * densityUnit),
-      finiteFloat(nonnegative(j.at("molar_electron_density")) * densityUnit),
-      finiteFloat(nonnegative(j.at("mean_excitation_energy")) * energyUnit));
+      finiteFloat(j.at("atomic_number").get<double>()),
+      finiteFloat(j.at("molar_density").get<double>() * densityUnit),
+      finiteFloat(j.at("molar_electron_density").get<double>() * densityUnit),
+      finiteFloat(j.at("mean_excitation_energy").get<double>() * energyUnit));
 }
 
 nlohmann::json encodeMaterial(const Material& m) {
@@ -280,19 +224,16 @@ nlohmann::json encodeMaterial(const Material& m) {
       {"molar_density", m.molarDensity() / densityUnit},
       {"molar_electron_density", m.molarElectronDensity() / densityUnit},
       {"mean_excitation_energy", m.meanExcitationEnergy() / energyUnit}};
-  decodeMaterial(j);
   return j;
 }
 
 MaterialSlab decodeSlab(const nlohmann::json& j) {
-  object(j, {"material", "thickness"});
-  return MaterialSlab(decodeMaterial(j.at("material")),
-                      finiteFloat(nonnegative(j.at("thickness")) * lengthUnit));
+  return MaterialSlab(
+      decodeMaterial(j.at("material")),
+      finiteFloat(j.at("thickness").get<double>() * lengthUnit));
 }
 
 nlohmann::json encodeSlab(const MaterialSlab& slab) {
-  check(std::isfinite(slab.thickness()) && slab.thickness() >= 0,
-        "invalid slab thickness");
   return {{"material", encodeMaterial(slab.material())},
           {"thickness", slab.thickness() / lengthUnit}};
 }
@@ -316,55 +257,26 @@ nlohmann::json encodeSlabs(const std::vector<MaterialSlab>& slabs) {
   return result;
 }
 
+constexpr std::array<std::string_view, 4> mappingNames{"pre", "default", "post",
+                                                       "sensor"};
+
 std::pair<double, MappingType> settings(const nlohmann::json& j) {
-  using enum MappingType;
-  object(j, {"mapping_type", "split_factor"});
-  auto split = nonnegative(j.at("split_factor"));
-  check(split <= 1, "split factor exceeds one");
-  auto name = text(j.at("mapping_type"));
-  if (name == "default") {
-    return {split, Default};
-  }
-  if (name == "pre") {
-    return {split, PreMapping};
-  }
-  if (name == "post") {
-    return {split, PostMapping};
-  }
-  if (name == "sensor") {
-    return {split, Sensor};
-  }
-  throw std::invalid_argument("unsupported mapping type");
+  const auto name = j.at("mapping_type").get<std::string>();
+  const auto it = std::ranges::find(mappingNames, name);
+  check(it != mappingNames.end(), "unsupported mapping type");
+  return {j.at("split_factor").get<double>(),
+          static_cast<MappingType>(it - mappingNames.begin() - 1)};
 }
 
 nlohmann::json settings(const ISurfaceMaterial& m) {
-  using enum MappingType;
-  std::string kind;
-  switch (m.mappingType()) {
-    case Default:
-      kind = "default";
-      break;
-    case PreMapping:
-      kind = "pre";
-      break;
-    case PostMapping:
-      kind = "post";
-      break;
-    case Sensor:
-      kind = "sensor";
-      break;
-    default:
-      throw std::invalid_argument("invalid mapping type");
-  }
-  nlohmann::json j{{"mapping_type", kind},
-                   {"split_factor", m.factor(Direction::Backward(),
-                                             MaterialUpdateMode::PreUpdate)}};
-  settings(j);
-  return j;
+  return {
+      {"mapping_type", mappingNames.at(static_cast<int>(m.mappingType()) + 1)},
+      {"split_factor",
+       m.factor(Direction::Backward(), MaterialUpdateMode::PreUpdate)}};
 }
 
 AxisSpec decodeAxis(const nlohmann::json& j, bool deferred) {
-  const auto kind = text(j.at("kind"));
+  const auto kind = j.at("kind").get<std::string>();
   std::optional<AxisDirection> d;
   std::optional<AxisBoundaryType> b;
   if (j.contains("direction")) {
@@ -375,17 +287,14 @@ AxisSpec decodeAxis(const nlohmann::json& j, bool deferred) {
   }
   check(deferred || b.has_value(), "resolved axis requires boundary");
   if (kind == "equidistant") {
-    object(j, {"kind", "bins"}, {"range", "direction", "boundary"});
     const auto n =
         index(j.at("bins"), std::numeric_limits<std::size_t>::max() - 2);
-    check(n > 0, "axis must have bins");
     std::optional<double> min;
     std::optional<double> max;
     if (j.contains("range")) {
       array(j.at("range"), 2, 2);
-      min = number(j.at("range").at(0)) * axisUnit(d);
-      max = number(j.at("range").at(1)) * axisUnit(d);
-      check(*min < *max, "axis range must increase");
+      min = j.at("range").at(0).get<double>() * axisUnit(d);
+      max = j.at("range").at(1).get<double>() * axisUnit(d);
     }
     check(deferred || min.has_value(), "resolved axis requires range");
     return AxisSpec::Equidistant(n, min, max, b, d);
@@ -393,15 +302,11 @@ AxisSpec decodeAxis(const nlohmann::json& j, bool deferred) {
   check(kind == "variable" || (deferred && kind == "deferred-variable"),
         "unsupported axis kind");
   const std::string field = kind == "variable" ? "edges" : "normalized_edges";
-  if (kind == "variable") {
-    object(j, {"kind", "edges"}, {"direction", "boundary"});
-  } else {
-    object(j, {"kind", "normalized_edges"}, {"direction", "boundary"});
-  }
   array(j.at(field), 2);
   std::vector<double> edges;
   for (const auto& e : j.at(field)) {
-    edges.emplace_back(number(e) * (kind == "variable" ? axisUnit(d) : 1.));
+    edges.emplace_back(e.get<double>() *
+                       (kind == "variable" ? axisUnit(d) : 1.));
   }
   return kind == "variable" ? AxisSpec::Variable(edges, b, d)
                             : AxisSpec::DeferredVariable(edges, b, d);
@@ -434,7 +339,6 @@ nlohmann::json encodeAxis(const AxisSpec& axis) {
   if (const auto b = axis.boundaryType(); b) {
     j["boundary"] = boundary(*b);
   }
-  decodeAxis(j, true);
   return j;
 }
 
@@ -461,14 +365,13 @@ BinningData decodeBinAxis(const nlohmann::json& j, unsigned depth = 0) {
     }
     return BinningData(*axis);
   }
-  object(j, {"kind", "base", "mode", "subdivision"});
   check(j.at("base").at("kind") != "subdivided",
         "refinement base must be resolved");
   auto base = decodeBinAxis(j.at("base"), depth + 1);
   auto sub = decodeBinAxis(j.at("subdivision"), depth + 1);
   check(base.binvalue == sub.binvalue && base.option == sub.option,
         "refinement axis mismatch");
-  auto mode = text(j.at("mode"));
+  auto mode = j.at("mode").get<std::string>();
   check(mode == "replace" || mode == "repeat", "invalid refinement mode");
   const auto& edges = base.boundaries();
   if (mode == "replace") {
@@ -523,7 +426,6 @@ nlohmann::json encodeBinAxis(const BinningData& b) {
 
 BinUtility decodeBinning(const nlohmann::json& j, std::size_t min,
                          std::size_t max) {
-  object(j, {"axes"}, {"transform"});
   array(j.at("axes"), min, max);
   BinUtility b(j.contains("transform") ? decodeTransform(j.at("transform"))
                                        : Transform3::Identity());
@@ -533,8 +435,7 @@ BinUtility decodeBinning(const nlohmann::json& j, std::size_t min,
   return b;
 }
 
-nlohmann::json encodeBinning(const BinUtility& b, std::size_t min,
-                             std::size_t max) {
+nlohmann::json encodeBinning(const BinUtility& b) {
   nlohmann::json j{{"axes", nlohmann::json::array()}};
   for (const auto& a : b.binningData()) {
     j["axes"].emplace_back(encodeBinAxis(a));
@@ -542,13 +443,13 @@ nlohmann::json encodeBinning(const BinUtility& b, std::size_t min,
   if (!b.transform().isApprox(Transform3::Identity())) {
     j["transform"] = encodeTransform(b.transform());
   }
-  decodeBinning(j, min, max);
   return j;
 }
 
 std::optional<std::string> materialKey(const nlohmann::json& j) {
-  return j.contains("material_key") ? std::optional(text(j.at("material_key")))
-                                    : std::nullopt;
+  return j.contains("material_key")
+             ? std::optional(j.at("material_key").get<std::string>())
+             : std::nullopt;
 }
 
 void checkKey(const ISurfaceMaterial& material, const std::string& key) {
@@ -571,7 +472,6 @@ nlohmann::json encodeHomogeneousSurface(const HomogeneousSurfaceMaterial& m,
 
 std::unique_ptr<const ISurfaceMaterial> decodeHomogeneousSurface(
     const nlohmann::json& j, const DecodeContext& /*context*/) {
-  object(j, {"kind", "settings", "slab"});
   auto [split, mapping] = settings(j.at("settings"));
   return std::make_unique<HomogeneousSurfaceMaterial>(decodeSlab(j.at("slab")),
                                                       split, mapping);
@@ -587,13 +487,12 @@ nlohmann::json encodeBinned(const BinnedSurfaceMaterial& m,
   }
   return {{"kind", "binned"},
           {"settings", settings(m)},
-          {"binning", encodeBinning(m.binUtility(), 1, 2)},
+          {"binning", encodeBinning(m.binUtility())},
           {"values", values}};
 }
 
 std::unique_ptr<const ISurfaceMaterial> decodeBinned(
     const nlohmann::json& j, const DecodeContext& /*context*/) {
-  object(j, {"kind", "settings", "binning", "values"});
   auto [split, mapping] = settings(j.at("settings"));
   auto bins = decodeBinning(j.at("binning"), 1, 2);
   auto n0 = bins.binningData()[0].bins();
@@ -614,7 +513,7 @@ nlohmann::json encodeProtoSurface(const ProtoSurfaceMaterial& m,
                                   EncodeContext& /*context*/) {
   nlohmann::json j{{"kind", "proto"},
                    {"settings", settings(m)},
-                   {"binning", encodeBinning(m.binning(), 0, 2)}};
+                   {"binning", encodeBinning(m.binning())}};
   if (const auto& key = m.materialKey(); key) {
     j["material_key"] = *key;
   }
@@ -623,7 +522,6 @@ nlohmann::json encodeProtoSurface(const ProtoSurfaceMaterial& m,
 
 std::unique_ptr<const ISurfaceMaterial> decodeProtoSurface(
     const nlohmann::json& j, const DecodeContext& /*context*/) {
-  object(j, {"kind", "settings", "binning"}, {"material_key"});
   auto [split, mapping] = settings(j.at("settings"));
   check(split == 1, "proto surface split factor must be one");
   return std::make_unique<ProtoSurfaceMaterial>(
@@ -643,9 +541,9 @@ nlohmann::json encodeProtoGrid(const ProtoGridSurfaceMaterial& m,
   }
   return j;
 }
+
 std::unique_ptr<const ISurfaceMaterial> decodeProtoGrid(
     const nlohmann::json& j, const DecodeContext& /*context*/) {
-  object(j, {"kind", "settings", "axes"}, {"material_key"});
   array(j.at("axes"), 2, 2);
   auto [split, mapping] = settings(j.at("settings"));
   check(split == 1, "proto grid split factor must be one");
@@ -672,11 +570,9 @@ nlohmann::json encodeMarker(const MergedMaterialMarker& m,
 
 std::unique_ptr<const ISurfaceMaterial> decodeMarker(
     const nlohmann::json& j, const DecodeContext& /*context*/) {
-  object(j, {"kind", "origins"});
   array(j.at("origins"), 0);
   std::vector<MergedMaterialMarker::Origin> origins;
   for (const auto& origin : j.at("origins")) {
-    object(origin, {"geometry_id"}, {"material_key"});
     origins.emplace_back(decodeId(origin.at("geometry_id")),
                          materialKey(origin));
   }
@@ -736,7 +632,6 @@ nlohmann::json encodeGrid(const GridSurfaceMaterial& m,
 
 std::unique_ptr<const ISurfaceMaterial> decodeGrid(
     const nlohmann::json& j, const DecodeContext& context) {
-  object(j, {"kind", "settings", "axes", "storage"});
   array(j.at("axes"), 2, 2);
   auto [split, mapping] = settings(j.at("settings"));
   MultiAxisSpec2D spec(
@@ -747,8 +642,8 @@ std::unique_ptr<const ISurfaceMaterial> decodeGrid(
   auto count = product(n[0] + 2, n[1] + 2);
   const auto& storage = j.at("storage");
   GridSurfaceMaterial::Storage result;
-  if (const auto kind = text(storage.at("kind")); kind == "direct") {
-    object(storage, {"kind", "values"});
+  if (const auto kind = storage.at("kind").get<std::string>();
+      kind == "direct") {
     array(storage.at("values"), count, count);
     GridSurfaceMaterial::Direct slabs(count);
     for (std::size_t i1 = 0; i1 < n[1] + 2; ++i1) {
@@ -762,12 +657,10 @@ std::unique_ptr<const ISurfaceMaterial> decodeGrid(
     Converter::SlabStore shared;
     std::vector<MaterialSlab> local;
     if (kind == "indexed") {
-      object(storage, {"kind", "slabs", "indices"});
       local = decodeSlabs(storage.at("slabs"));
     } else {
       check(kind == "globally-indexed", "unknown grid storage kind");
-      object(storage, {"kind", "store", "indices"});
-      const auto name = text(storage.at("store"));
+      const auto name = storage.at("store").get<std::string>();
       shared = context.store(name);
     }
     const auto size = shared ? shared->size() : local.size();
@@ -792,14 +685,6 @@ std::unique_ptr<const ISurfaceMaterial> decodeGrid(
       std::move(spec), std::move(result), split, mapping);
 }
 
-template <typename F>
-auto atPath(const std::string& path, F&& f) {
-  try {
-    return f();
-  } catch (const std::exception& e) {
-    throw std::invalid_argument(path + ": " + e.what());
-  }
-}
 }  // namespace
 
 namespace Acts {
@@ -864,11 +749,8 @@ nlohmann::json TrackingGeometryMaterialJsonConverter::toJson(
   }
   EncodeContext context;
   for (const auto& [id, payload] : material.surfaceMaterials) {
-    nlohmann::json value =
-        payload
-            ? atPath("/surfaces/" + std::to_string(j["surfaces"].size()),
-                     [&] { return m_config.encodeSurface(*payload, context); })
-            : nlohmann::json(nullptr);
+    nlohmann::json value = payload ? m_config.encodeSurface(*payload, context)
+                                   : nlohmann::json(nullptr);
     j["surfaces"].emplace_back(nlohmann::json{
         {"target", {{"kind", "geometry-id"}, {"geometry_id", encodeId(id)}}},
         {"material", value}});
@@ -877,9 +759,7 @@ nlohmann::json TrackingGeometryMaterialJsonConverter::toJson(
     check(!key.empty() && assignment.material != nullptr,
           "keyed assignment needs nonempty key and material");
     checkKey(*assignment.material, key);
-    auto value = atPath(
-        "/surfaces/" + std::to_string(j["surfaces"].size()),
-        [&] { return m_config.encodeSurface(*assignment.material, context); });
+    auto value = m_config.encodeSurface(*assignment.material, context);
     j["surfaces"].emplace_back(nlohmann::json{
         {"target",
          {{"kind", "stable-key"},
@@ -899,85 +779,65 @@ nlohmann::json TrackingGeometryMaterialJsonConverter::toJson(
 
 TrackingGeometryMaterial TrackingGeometryMaterialJsonConverter::fromJson(
     const nlohmann::json& encoded) const {
-  return atPath("/", [&] {
-    object(encoded, {"format", "version", "surfaces"},
-           {"$schema", "description", "slab_stores"});
-    check(encoded.at("format") == "acts-material-map",
-          "unsupported material format");
-    check(index(encoded.at("version")) == 1,
-          "unsupported material document version");
-    if (encoded.contains("$schema")) {
-      text(encoded.at("$schema"));
+  check(!encoded.contains("volumes"), "version 1 does not support volumes");
+  check(encoded.at("format") == "acts-material-map",
+        "unsupported material format");
+  check(index(encoded.at("version")) == 1,
+        "unsupported material document version");
+  TrackingGeometryMaterial result;
+  if (encoded.contains("description")) {
+    result.setDescription(encoded.at("description").get<std::string>());
+  }
+  DecodeContext context;
+  if (encoded.contains("slab_stores")) {
+    for (const auto& [name, slabs] :
+         encoded.at("slab_stores").get_ref<const nlohmann::json::object_t&>()) {
+      check(!name.empty(), "empty slab store name");
+      context.m_stores.try_emplace(
+          name,
+          std::make_shared<std::vector<MaterialSlab>>(decodeSlabs(slabs)));
     }
-    TrackingGeometryMaterial result;
-    if (encoded.contains("description")) {
-      atPath("description", [&] {
-        check(encoded.at("description").is_string(),
-              "description must be a string");
-        result.setDescription(encoded.at("description").get<std::string>());
-      });
+  }
+  array(encoded.at("surfaces"), 0);
+  for (const auto& entry : encoded.at("surfaces")) {
+    const auto& target = entry.at("target");
+    const auto kind = target.at("kind").get<std::string>();
+    std::shared_ptr<const ISurfaceMaterial> payload;
+    if (!entry.at("material").is_null()) {
+      payload = m_config.decodeSurface(entry.at("material"), context);
+      check(payload != nullptr,
+            "decoder returned null for a non-null surface payload");
     }
-    DecodeContext context;
-    if (encoded.contains("slab_stores")) {
-      check(encoded.at("slab_stores").is_object(),
-            "slab_stores must be an object");
-      for (auto it = encoded.at("slab_stores").begin();
-           it != encoded.at("slab_stores").end(); ++it) {
-        check(!it.key().empty(), "empty slab store name");
-        context.m_stores.try_emplace(
-            it.key(), atPath("slab_stores/" + it.key(), [&] {
-              return std::make_shared<std::vector<MaterialSlab>>(
-                  decodeSlabs(it.value()));
-            }));
-      }
+    if (kind == "geometry-id") {
+      check(result.surfaceMaterials
+                .try_emplace(decodeId(target.at("geometry_id")),
+                             std::move(payload))
+                .second,
+            "duplicate surface geometry ID");
+    } else {
+      check(kind == "stable-key", "unsupported surface target kind");
+      const auto key = target.at("key").get<std::string>();
+      check(payload != nullptr, "keyed material must not be null");
+      checkKey(*payload, key);
+      check(result.keyedSurfaces
+                .try_emplace(key, decodeId(target.at("recorded_geometry_id")),
+                             std::move(payload))
+                .second,
+            "duplicate stable key");
     }
-    array(encoded.at("surfaces"), 0);
-    for (std::size_t i = 0; i < encoded.at("surfaces").size(); ++i) {
-      atPath("surfaces/" + std::to_string(i), [&] {
-        const auto& entry = encoded.at("surfaces").at(i);
-        object(entry, {"target", "material"});
-        const auto& target = entry.at("target");
-        const auto kind = text(target.at("kind"));
-        std::shared_ptr<const ISurfaceMaterial> payload;
-        if (!entry.at("material").is_null()) {
-          payload = m_config.decodeSurface(entry.at("material"), context);
-          check(payload != nullptr,
-                "decoder returned null for a non-null surface payload");
-        }
-        if (kind == "geometry-id") {
-          object(target, {"kind", "geometry_id"});
-          check(result.surfaceMaterials
-                    .try_emplace(decodeId(target.at("geometry_id")),
-                                 std::move(payload))
-                    .second,
-                "duplicate surface geometry ID");
-        } else {
-          check(kind == "stable-key", "unsupported surface target kind");
-          object(target, {"kind", "key", "recorded_geometry_id"});
-          const auto key = text(target.at("key"));
-          check(payload != nullptr, "keyed material must not be null");
-          checkKey(*payload, key);
-          check(
-              result.keyedSurfaces
-                  .try_emplace(key, decodeId(target.at("recorded_geometry_id")),
-                               std::move(payload))
-                  .second,
-              "duplicate stable key");
-        }
-      });
-    }
-    return result;
-  });
+  }
+  return result;
 }
+
 void TrackingGeometryMaterialJsonConverter::toFile(
     const TrackingGeometryMaterial& material, const std::filesystem::path& path,
     const Options& options) const {
   detail::writeJsonFile(path, toJson(material), options.indentation,
                         options.compressionLevel);
 }
+
 TrackingGeometryMaterial TrackingGeometryMaterialJsonConverter::fromFile(
     const std::filesystem::path& path) const {
-  return atPath(path.string(),
-                [&] { return fromJson(detail::readJsonFile(path, true)); });
+  return fromJson(detail::readJsonFile(path, true));
 }
 }  // namespace Acts

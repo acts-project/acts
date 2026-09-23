@@ -13,7 +13,6 @@
 #include <cmath>
 #include <format>
 #include <fstream>
-#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -34,55 +33,38 @@ using Acts::detail::JsonFileFormat;
 // legacy readers retain their existing behavior, for both JSON and CBOR.
 class StrictDocumentSax : public nlohmann::json_sax<nlohmann::json> {
  public:
-  std::string error;
   bool null() override { return true; }
   bool boolean(bool) override { return true; }
   bool number_integer(number_integer_t) override { return true; }
   bool number_unsigned(number_unsigned_t) override { return true; }
   bool number_float(number_float_t value, const string_t&) override {
-    return std::isfinite(value) || fail("nonfinite number");
+    return std::isfinite(value);
   }
   bool string(string_t&) override { return true; }
-  bool binary(binary_t&) override {
-    return fail("binary value is not part of the JSON document model");
-  }
+  bool binary(binary_t&) override { return false; }
   bool start_object(std::size_t) override {
     if (m_keys.size() >= 256) {
-      return fail("document nesting exceeds 256");
+      return false;
     }
-    m_keys.emplace_back(std::set<std::string>{});
+    m_keys.emplace_back();
     return true;
   }
   bool key(string_t& keyValue) override {
-    return m_keys.back()->insert(keyValue).second ||
-           fail("duplicate object key '" + keyValue + "'");
+    return m_keys.back().insert(keyValue).second;
   }
   bool end_object() override {
     m_keys.pop_back();
     return true;
   }
-  bool start_array(std::size_t) override {
-    if (m_keys.size() >= 256) {
-      return fail("document nesting exceeds 256");
-    }
-    m_keys.emplace_back(std::nullopt);
-    return true;
-  }
-  bool end_array() override {
-    m_keys.pop_back();
-    return true;
-  }
+  bool start_array(std::size_t size) override { return start_object(size); }
+  bool end_array() override { return end_object(); }
   bool parse_error(std::size_t, const std::string&,
-                   const nlohmann::detail::exception& e) override {
-    return fail(e.what());
+                   const nlohmann::detail::exception&) override {
+    return false;
   }
 
  private:
-  bool fail(std::string message) {
-    error = std::move(message);
-    return false;
-  }
-  std::vector<std::optional<std::set<std::string>>> m_keys;
+  std::vector<std::set<std::string>> m_keys;
 };
 
 /// zstd frame magic number 0xFD2FB528, little endian as it appears on disk.
@@ -91,7 +73,7 @@ constexpr std::array<std::byte, 4> kZstdMagic{std::byte{0x28}, std::byte{0xB5},
 
 bool hasZstdMagic(std::span<const std::byte> data) {
   return data.size() >= kZstdMagic.size() &&
-         std::equal(kZstdMagic.begin(), kZstdMagic.end(), data.begin());
+         std::ranges::equal(kZstdMagic, data.first(kZstdMagic.size()));
 }
 
 /// Copy any contiguous byte-like range into a byte buffer.
@@ -253,8 +235,7 @@ nlohmann::json Acts::detail::decodeJson(std::span<const std::byte> data,
                          : nlohmann::json::input_format_t::cbor;
     if (!nlohmann::json::sax_parse(data.begin(), data.end(), &validator,
                                    format)) {
-      throw std::invalid_argument("Invalid document in '" + origin.string() +
-                                  "': " + validator.error);
+      throw std::invalid_argument("Invalid JSON/CBOR document");
     }
   }
   try {

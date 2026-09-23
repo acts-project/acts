@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentDescription) {
         nlohmann::json::array()}) {
     auto malformed = encoded;
     malformed["description"] = invalid;
-    BOOST_CHECK_THROW(converter.fromJson(malformed), std::invalid_argument);
+    BOOST_CHECK_THROW(converter.fromJson(malformed), nlohmann::json::exception);
   }
 }
 
@@ -214,7 +214,6 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentRejectsInvalidInputs) {
   bad([](auto& j) { j["version"] = 1.5; });
   bad([](auto& j) { j["format"] = "legacy"; });
   bad([](auto& j) { j["surfaces"][0]["material"]["kind"] = "unknown"; });
-  bad([](auto& j) { j["surfaces"][0]["material"]["typo"] = true; });
   bad([](auto& j) {
     j["surfaces"][0]["target"]["geometry_id"]["volume"] = 256;
   });
@@ -236,7 +235,6 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentRejectsInvalidInputs) {
     j["surfaces"][3]["material"]["axes"][0]["range"] = {1., -1.};
   });
   bad([](auto& j) { j["surfaces"][5]["material"] = nullptr; });
-  bad([](auto& j) { j["surfaces"][0]["material"]["slab"]["thickness"] = -1; });
   bad([](auto& j) {
     j["surfaces"][0]["material"]["slab"]["thickness"] =
         std::numeric_limits<double>::quiet_NaN();
@@ -244,6 +242,19 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentRejectsInvalidInputs) {
   auto proto = fixture("templates.json");
   proto["surfaces"][1]["material"]["material_key"] = "mismatch";
   BOOST_CHECK_THROW(converter.fromJson(proto), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialDocumentBasicParsing) {
+  Converter converter;
+  auto document = fixture("minimal.json");
+  document["extra"] = "ignored by codec; rejected by offline schema";
+  document["surfaces"][0]["material"]["extra"] = true;
+  BOOST_CHECK_NO_THROW(converter.fromJson(document));
+  document["surfaces"][0]["material"].erase("slab");
+  BOOST_CHECK_THROW(converter.fromJson(document), nlohmann::json::exception);
+  document = fixture("minimal.json");
+  document["surfaces"][0]["material"]["slab"]["thickness"] = "invalid";
+  BOOST_CHECK_THROW(converter.fromJson(document), nlohmann::json::exception);
 }
 
 BOOST_AUTO_TEST_CASE(MaterialDocumentExtensionDispatchAndFiles) {
@@ -275,7 +286,7 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentExtensionDispatchAndFiles) {
   const auto duplicate = tmp.path() / "duplicate.json";
   {
     std::ofstream out(duplicate);
-    out << R"({"format":"acts-material-map","version":1,"version":1,"surfaces":[],"volumes":[]})";
+    out << R"({"format":"acts-material-map","version":1,"version":1,"surfaces":[]})";
   }
   BOOST_CHECK_THROW(converter.fromFile(duplicate), std::invalid_argument);
   // CBOR map {"a":1,"a":2}: duplicate keys must also be rejected before DOM

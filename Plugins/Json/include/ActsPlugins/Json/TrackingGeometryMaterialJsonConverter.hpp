@@ -24,8 +24,8 @@
 namespace Acts {
 
 /// Versioned material-document conversion, independent of the legacy material
-/// converters. Applies no material to geometry. Essential validation is always
-/// performed by the reader; no runtime JSON Schema validator is required.
+/// converters. Applies no material to geometry. The reader checks construction
+/// invariants; use the offline JSON Schema for full format validation.
 /// Version 1 supports surface material only; volume assignments are rejected.
 class TrackingGeometryMaterialJsonConverter {
  public:
