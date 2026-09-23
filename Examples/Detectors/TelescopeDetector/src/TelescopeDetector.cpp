@@ -13,8 +13,6 @@
 
 #include <stdexcept>
 
-// bool Gen3 = true;
-
 namespace ActsExamples {
 
 TelescopeDetector::TelescopeDetector(const Config& cfg)
@@ -47,12 +45,13 @@ TelescopeDetector::TelescopeDetector(const Config& cfg)
   m_nominalGeometryContext =
       Acts::GeometryContext::dangerouslyDefaultConstruct();
 
-  if (m_cfg.Gen3) {
+  if (m_cfg.gen3) {
     m_trackingGeometry = buildTelescopeDetectorGen3(
         m_nominalGeometryContext, m_detectorStore, m_cfg.positions,
         m_cfg.stereos, m_cfg.offsets, m_cfg.bounds, m_cfg.thickness,
         static_cast<TelescopeSurfaceType>(m_cfg.surfaceType),
-        static_cast<Acts::AxisDirection>(m_cfg.rotDirection));
+        static_cast<Acts::AxisDirection>(m_cfg.rotDirection), m_cfg.envelope_x,
+        m_cfg.envelope_y, m_cfg.envelope_z, logger());
   } else {
     m_trackingGeometry = buildTelescopeDetector(
         m_nominalGeometryContext, m_detectorStore, m_cfg.positions,
