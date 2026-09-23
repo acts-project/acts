@@ -80,14 +80,17 @@ std::vector<float> modelInputs(const std::vector<int> &selectedFeatures,
       nodeFeatures.clone(execContext), edgeIndex.clone(execContext), {}, {}};
   auto out = classifier(std::move(tensors), execContext);
 
+  // Copying back from the device needs the stream, a CPU context has none
+  const ExecutionContext toHost{Device::Cpu(), execContext.stream};
+
   // The stage passes the full, unscaled node features on to the next one
-  auto outNodes = out.nodeFeatures.clone(execContextCpu);
+  auto outNodes = out.nodeFeatures.clone(toHost);
   BOOST_CHECK_EQUAL_COLLECTIONS(outNodes.data(),
                                 outNodes.data() + outNodes.size(),
                                 nodes.begin(), nodes.end());
 
   BOOST_REQUIRE(out.edgeScores.has_value());
-  auto scores = out.edgeScores->clone(execContextCpu);
+  auto scores = out.edgeScores->clone(toHost);
   BOOST_REQUIRE_EQUAL(scores.size(), nEdges);
   std::vector<float> inputs(nEdges);
   std::transform(scores.data(), scores.data() + nEdges, inputs.begin(),
