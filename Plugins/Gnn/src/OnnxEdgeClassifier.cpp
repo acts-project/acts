@@ -8,6 +8,10 @@
 
 #include "ActsPlugins/Gnn/OnnxEdgeClassifier.hpp"
 
+#include <format>
+#include <stdexcept>
+#include <string>
+
 #include <boost/container/static_vector.hpp>
 #include <onnxruntime_cxx_api.h>
 
@@ -85,13 +89,22 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
     ACTS_INFO("Using CPU execution provider for ONNX");
   }
 
-  m_model = std::make_unique<Ort::Session>(*m_env, m_cfg.modelPath.c_str(),
-                                           sessionOptions);
+  // onnxruntime's own message does not say which model it failed to load
+  try {
+    m_model = std::make_unique<Ort::Session>(*m_env, m_cfg.modelPath.c_str(),
+                                             sessionOptions);
+  } catch (const Ort::Exception &e) {
+    throw std::runtime_error(
+        std::format("Could not load the ONNX edge classifier model '{}': {}",
+                    m_cfg.modelPath, e.what()));
+  }
 
   Ort::AllocatorWithDefaultOptions allocator;
 
   if (m_model->GetInputCount() < 2 || m_model->GetInputCount() > 3) {
-    throw std::invalid_argument("ONNX edge classifier needs 2 or 3 inputs!");
+    throw std::invalid_argument(std::format(
+        "ONNX edge classifier model '{}' needs 2 or 3 inputs, but has {}",
+        m_cfg.modelPath, m_model->GetInputCount()));
   }
 
   for (std::size_t i = 0; i < m_model->GetInputCount(); ++i) {
@@ -100,8 +113,9 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
   }
 
   if (m_model->GetOutputCount() != 1) {
-    throw std::invalid_argument(
-        "ONNX edge classifier needs exactly one output!");
+    throw std::invalid_argument(std::format(
+        "ONNX edge classifier model '{}' needs exactly one output, but has {}",
+        m_cfg.modelPath, m_model->GetOutputCount()));
   }
 
   m_outputName =
@@ -134,7 +148,10 @@ PipelineTensors OnnxEdgeClassifier::operator()(
     indices.reserve(m_cfg.selectedFeatures.size());
     for (int featureIdx : m_cfg.selectedFeatures) {
       if (featureIdx < 0 || featureIdx >= static_cast<int>(numAllFeatures)) {
-        throw std::runtime_error("Selected feature index out of range");
+        throw std::runtime_error(
+            std::format("Selected feature index {} is out of range for {} "
+                        "node features",
+                        featureIdx, numAllFeatures));
       }
       indices.push_back(static_cast<std::size_t>(featureIdx));
     }
@@ -150,8 +167,9 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   if (!m_cfg.featureScales.empty()) {
     if (m_cfg.featureScales.size() !=
         static_cast<std::size_t>(nodeFeatures->shape()[1])) {
-      throw std::runtime_error(
-          "featureScales size must match the number of input features");
+      throw std::runtime_error(std::format(
+          "{} feature scales are configured for {} model input features",
+          m_cfg.featureScales.size(), nodeFeatures->shape()[1]));
     }
 
     // Compute inverse scales (1 / featureScales) for division
@@ -159,7 +177,9 @@ PipelineTensors OnnxEdgeClassifier::operator()(
     for (std::size_t f = 0; f < m_cfg.featureScales.size(); ++f) {
       if (m_cfg.featureScales[f] == 0.f) {
         throw std::runtime_error(
-            "featureScales contains zero: division by zero");
+            std::format("featureScales[{}] is zero, but each model input "
+                        "feature is divided by its scale",
+                        f));
       }
       inverseScales[f] = 1.f / m_cfg.featureScales[f];
     }
@@ -185,9 +205,10 @@ PipelineTensors OnnxEdgeClassifier::operator()(
 
   // If the model has three inputs, we require edge features, otherwise throw
   if (m_inputNames.size() == 3 && !tensors.edgeFeatures.has_value()) {
-    throw std::invalid_argument(
-        "ONNX edge classifier model has three inputs, but no edge features "
-        "provided!");
+    throw std::invalid_argument(std::format(
+        "ONNX edge classifier model '{}' has three inputs and takes edge "
+        "features, but the pipeline provides none",
+        m_cfg.modelPath));
   }
 
   // Edge feature tensor

@@ -15,6 +15,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <stdexcept>
+#include <string_view>
 #include <vector>
 
 #ifdef ACTS_GNN_WITH_CUDA
@@ -146,6 +148,19 @@ BOOST_AUTO_TEST_CASE(test_feature_selection_cuda) {
   testFeatureSelection(execContextCuda);
 }
 #endif
+
+BOOST_AUTO_TEST_CASE(test_missing_model_is_named) {
+  OnnxEdgeClassifier::Config cfg;
+  cfg.modelPath = "this-model-does-not-exist.onnx";
+  cfg.device = Device::Cpu();
+  BOOST_CHECK_EXCEPTION(
+      OnnxEdgeClassifier(cfg, Acts::getDefaultLogger("OnnxEdgeClassifier",
+                                                     Acts::Logging::WARNING)),
+      std::runtime_error, [&cfg](const std::runtime_error &e) {
+        return std::string_view{e.what()}.find(cfg.modelPath) !=
+               std::string_view::npos;
+      });
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
