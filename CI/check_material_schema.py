@@ -2,6 +2,8 @@
 """Offline draft-schema/fixture QA, not a production material reader.
 
 Requires jsonschema>=4.18. Run from any directory. No network references are used.
+Direct execution validates the schema and examples. Run the self-tests with
+``python -m pytest CI/check_material_schema.py`` (also requires pytest).
 """
 
 import copy
@@ -120,26 +122,43 @@ def changed(document, path, value):
     return result
 
 
-def main():
+def validation_inputs():
     schema = load(SCHEMA)
     Draft202012Validator.check_schema(schema)
     validator = Draft202012Validator(schema)
     examples = {p.stem: load(p) for p in sorted(EXAMPLES.glob("*.json"))}
     require(len(examples) == 3, "expected three fixture documents")
+    return validator, examples
+
+
+def main():
+    validator, examples = validation_inputs()
     for name, document in examples.items():
         validator.validate(document)
         check_examples(document)
         print(f"Validated {name}.json (schema + selected fixture invariants)")
 
-    # Structural regression cases: versions, variants, dimensions and identity.
-    m, s, t = (examples[n] for n in ("minimal", "surfaces", "templates"))
+
+def test_schema_and_examples():
+    main()
+
+
+def test_valid_geometry_ids():
+    validator, examples = validation_inputs()
+    m = examples["minimal"]
     # All-zero, omitted-zero and full-width component IDs are valid objects.
     maxima = dict(zip(ID_COMPONENTS, (255, 255, 4095, 255, 1048575, 255)))
     for identifier in ({}, {"volume": 0}, maxima):
         document = changed(m, ["surfaces", 0, "target", "geometry_id"], identifier)
         validator.validate(document)
         check_examples(document)
-    require(geometry_identity({}) == geometry_identity({"volume": 0}), "zero identity")
+    assert geometry_identity({}) == geometry_identity({"volume": 0})
+
+
+def test_invalid_structures():
+    validator, examples = validation_inputs()
+    m, s = (examples[n] for n in ("minimal", "surfaces"))
+    maxima = dict(zip(ID_COMPONENTS, (255, 255, 4095, 255, 1048575, 255)))
     structural = [
         changed(m, ["version"], 2),
         changed(m, ["surfaces", 0, "target", "geometry_id"], 72057594037927936),
@@ -164,10 +183,15 @@ def main():
             changed(m, ["surfaces", 0, "target", "geometry_id"], {name: maximum + 1})
         )
     for document in structural:
-        require(not validator.is_valid(document), "invalid structure accepted")
+        assert not validator.is_valid(document), document
 
-    # Deliberately schema-valid but semantically invalid documents demonstrate
-    # why a future reader cannot delegate all validation to JSON Schema.
+
+def test_invalid_semantics():
+    import pytest
+
+    validator, examples = validation_inputs()
+    m, s, t = (examples[n] for n in ("minimal", "surfaces", "templates"))
+    # These schema-valid documents need cross-field validation.
     duplicate = changed(
         m, ["surfaces"], [copy.deepcopy(m["surfaces"][0]) for _ in range(2)]
     )
@@ -189,15 +213,8 @@ def main():
     ]
     for document in semantic:
         validator.validate(document)
-        try:
+        with pytest.raises(ValueError):
             check_examples(document)
-        except ValueError:
-            pass
-        else:
-            raise ValueError("invalid fixture invariant accepted")
-    print(
-        f"Rejected {len(structural)} structural and {len(semantic)} semantic negative cases"
-    )
 
 
 if __name__ == "__main__":

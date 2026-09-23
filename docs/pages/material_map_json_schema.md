@@ -15,6 +15,8 @@ editor completion and offline validation. The schema's URN is an identifier, not
 a download endpoint. No network resolution or C++ schema-validator dependency is
 needed. Run `python CI/check_material_schema.py` with Python `jsonschema>=4.18`
 installed; the pre-commit hook supplies that dependency in its own environment.
+The same file contains pytest self-tests, run separately by the CI tooling
+self-test job with `python -m pytest CI/check_material_schema.py`.
 The new API is declared in
 `ActsPlugins/Json/TrackingGeometryMaterialJsonConverter.hpp`. For example:
 
