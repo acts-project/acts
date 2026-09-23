@@ -13,6 +13,7 @@
 
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -362,7 +363,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
     const BeamspotInfo& beamSpot) const
 {
     if (testHit->spacePoint()->measuresLoc0() && !pat.isPhiCompatible(gctx, *testHit)) {
-        ACTS_VERBOSE(__func__<<"() Test hit phi "<<testHit->globalPosition(gctx).phi()
+        ACTS_VERBOSE(__func__<<"() Test hit phi "<<VectorHelpers::phi(testHit->globalPosition(gctx))
             <<" not compatible with "<<PatternState::brief(pat));
         return LineTestRes{};
     }
@@ -590,7 +591,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
             pat.lastInsertedHit = *std::ranges::max_element(groupHits, {},
                 [&](const OrderedHit& c){ 
                     return (pat.projToPhiPlane(gctx, *c) - 
-                            pat.projToPhiPlane(gctx, *pat.lineAnchorHit)).mag(); }); 
+                            pat.projToPhiPlane(gctx, *pat.lineAnchorHit)).norm(); }); 
             pat.updateLineParameters(gctx, BeamspotInfo{});
         }
         if (pat.useBeamspot) {
@@ -637,7 +638,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
         };
         auto phiPull = [&](const Hit_t& hit) {
             return std::abs(Acts::detail::difference_periodic(
-                        hit.globalPosition(gctx).phi(), pat.patPhi, 2. * std::numbers::pi)
+                        VectorHelpers::phi(hit.globalPosition(gctx)), pat.patPhi, 2. * std::numbers::pi)
                     ) / std::sqrt(hit.phiVariance(gctx));
         };
 

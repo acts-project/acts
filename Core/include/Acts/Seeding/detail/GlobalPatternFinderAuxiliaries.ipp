@@ -13,11 +13,14 @@
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
+
+#include <format>
 
 namespace {
     using namespace Acts::UnitLiterals;
@@ -235,7 +238,7 @@ PatternState<Hit_t, Sector_t, Topology_t>::updatePatternPhi(
         }
         const double w = 1./phiCov;
 
-        const double phi {hit.globalPosition(gctx).phi()};
+        const double phi {VectorHelpers::phi(hit.globalPosition(gctx))};
         sumSin += w * std::sin(phi);
         sumCos += w * std::cos(phi);
         sumWeight += w;
@@ -267,7 +270,7 @@ PatternState<Hit_t, Sector_t, Topology_t>::isPhiCompatible(
     /** We check that the test hit is compatible with the pattern phi, if available, which is given by the first
         *  phi measurement in the pattern. If the pattern doesn't have a phi yet, we check that the test hit is in 
         *  the same pattern sector(s) */
-    const double testPhi {hit.globalPosition(gctx).phi()};
+    const double testPhi {VectorHelpers::phi(hit.globalPosition(gctx))};
     if (nPhiLayers > 0) {
         const double deltaPhiSigma {std::sqrt(patPhiCov + hit.phiVariance(gctx))};
         const double deltaPhi {Acts::detail::difference_periodic(
@@ -474,7 +477,7 @@ PatternState<Hit_t, Sector_t, Topology_t>::PatternState(
           lastInsertedHit{seed},
           prevLayerHit{seed},
           lineAnchorHit{seed},
-          patTheta{seed->globalPosition(gctx).theta()},
+          patTheta{VectorHelpers::theta(seed->globalPosition(gctx))},
           expSect{expSector} {
                 
         /** Add the new hit */
@@ -486,7 +489,7 @@ PatternState<Hit_t, Sector_t, Topology_t>::PatternState(
         } else {
             nTriggerLayers++;
         }
-        if (seed->spacePoint()->measuresPhi()) {
+        if (seed->spacePoint()->measuresLoc0()) {
             nPhiLayers++;
         }
         updatePatternPhi(gctx);
