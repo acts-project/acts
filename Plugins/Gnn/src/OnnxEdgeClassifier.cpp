@@ -128,33 +128,25 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   if (!m_cfg.selectedFeatures.empty()) {
     std::size_t numAllFeatures = tensors.nodeFeatures.shape()[1];
 
-    // Create feature mask on CPU (and clone to device)
-    auto maskCpu =
-        Tensor<bool>::Create({numAllFeatures, 1ul}, ExecutionContext{});
-    auto *maskCpuData = maskCpu.data();
-    std::fill_n(maskCpuData, numAllFeatures, false);
-
-    for (std::size_t j = 0; j < m_cfg.selectedFeatures.size(); ++j) {
-      int featureIdx = m_cfg.selectedFeatures[j];
+    // Gather by index rather than by mask, so that the model gets the features
+    // in the order they are listed in, and a feature listed twice twice
+    std::vector<std::size_t> indices;
+    indices.reserve(m_cfg.selectedFeatures.size());
+    for (int featureIdx : m_cfg.selectedFeatures) {
       if (featureIdx < 0 || featureIdx >= static_cast<int>(numAllFeatures)) {
         throw std::runtime_error("Selected feature index out of range");
       }
-      maskCpuData[static_cast<std::size_t>(featureIdx)] = true;
+      indices.push_back(static_cast<std::size_t>(featureIdx));
     }
 
-    // Clone if inputs not on CPU
-    Tensor<bool> mask = tensors.nodeFeatures.device().isCpu()
-                            ? std::move(maskCpu)
-                            : maskCpu.clone(execContext);
-
-    // Select features
     selectedNodeFeatures.emplace(
-        selectCols(tensors.nodeFeatures, mask, execContext));
+        gatherCols(tensors.nodeFeatures, indices, execContext));
     nodeFeatures = &(*selectedNodeFeatures);
   }
 
-  // Scale node features if featureScales is given in cfg.
-  // using device-aware mulPerColumn with inverse scales
+  // Scale node features if featureScales is given in cfg, featureScales[i]
+  // applying to the i-th selected feature, using device-aware mulPerColumn
+  // with inverse scales
   if (!m_cfg.featureScales.empty()) {
     if (m_cfg.featureScales.size() !=
         static_cast<std::size_t>(nodeFeatures->shape()[1])) {
