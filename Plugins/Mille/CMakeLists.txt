@@ -23,6 +23,10 @@ target_include_directories(
 if(Boost_VERSION VERSION_GREATER_EQUAL 1.88.0)
     set(_mille_boost_component process)
     set(_mille_boost_reason "which is a compiled library since Boost 1.88")
+    target_compile_definitions(
+        ActsPluginMille
+        PRIVATE ACTS_MILLE_USE_BOOST_PROCESS_V2
+    )
 else()
     set(_mille_boost_component filesystem)
     set(_mille_boost_reason "whose pre-1.88 API is built on Boost.Filesystem")

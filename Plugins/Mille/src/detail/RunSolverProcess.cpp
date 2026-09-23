@@ -12,12 +12,10 @@
 
 #include <filesystem>
 
-#include <boost/version.hpp>
-
 // The mechanics of launching a child in Boost::Process vary
 // between versions before and after 1.88. Make sure to
 // pick up the one supported by the user's boost install.
-#if BOOST_VERSION >= 108800
+#ifdef ACTS_MILLE_USE_BOOST_PROCESS_V2
 #include "SolverProcessCall_BoostV2.hpp"
 #else
 #include "SolverProcessCall_BoostV1.hpp"
