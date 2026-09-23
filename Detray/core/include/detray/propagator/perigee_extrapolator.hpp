@@ -140,7 +140,7 @@ class perigee_extrapolator {
   /// Line mask of the perigee
   static constexpr typename perigee_surface::mask_type perigee_mask{
       0u, std::numeric_limits<scalar_type>::max(),
-      -std::numeric_limits<scalar_type>::max()};
+      std::numeric_limits<scalar_type>::max()};
   /// The perigee surface
   perigee_surface m_perigee_surface{dtransform3D<algebra_type>{}, perigee_mask,
                                     perigee_material, 0u,
