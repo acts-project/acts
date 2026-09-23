@@ -117,8 +117,7 @@ struct expected_layer_pattern_collector : detray::base_actor {
       return;
     }
 
-    const auto& sf_desc = std::as_const(navigation).current().surface();
-    const auto sf_barcode = sf_desc.identifier();
+    const detray::geometry::identifier geo_id = navigation.geometry_identifier();
 
     // Avoid double counting if navigator revisits the same sensitive.
     if (actor_state.deduplicate_consecutive_surfaces &&
