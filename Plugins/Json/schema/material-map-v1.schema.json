@@ -1,0 +1,876 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:acts:material-map:1-draft",
+    "title": "ACTS material map — draft version 1",
+    "description": "Experimental surface-only version 1 handled by TrackingGeometryMaterialJsonConverter. See docs/pages/material_map_json_schema.md for supported-state boundaries.",
+    "type": "object",
+    "properties": {
+        "$schema": {
+            "type": "string",
+            "minLength": 1
+        },
+        "format": {
+            "const": "acts-material-map"
+        },
+        "version": {
+            "const": 1
+        },
+        "description": {
+            "type": "string"
+        },
+        "slab_stores": {
+            "type": "object",
+            "propertyNames": {
+                "type": "string",
+                "minLength": 1
+            },
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/$defs/slab"
+                },
+                "minItems": 1
+            }
+        },
+        "surfaces": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "target": {
+                        "$ref": "#/$defs/surfaceTarget"
+                    },
+                    "material": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/$defs/surfacePayload"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "target",
+                    "material"
+                ],
+                "additionalProperties": false,
+                "allOf": [
+                    {
+                        "if": {
+                            "properties": {
+                                "target": {
+                                    "properties": {
+                                        "kind": {
+                                            "const": "stable-key"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "then": {
+                            "properties": {
+                                "material": {
+                                    "$ref": "#/$defs/surfacePayload"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "minItems": 0
+        }
+    },
+    "required": [
+        "format",
+        "version",
+        "surfaces"
+    ],
+    "additionalProperties": false,
+    "$defs": {
+        "geometryId": {
+            "type": "object",
+            "description": "Exact geometry identifier in readable components. Omitted fields mean zero, never wildcards; {} is the zero ID. Writers omit zero fields. approach is the canonical name for the shared approach/passive field.",
+            "properties": {
+                "volume": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255,
+                    "default": 0
+                },
+                "boundary": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255,
+                    "default": 0
+                },
+                "layer": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4095,
+                    "default": 0
+                },
+                "approach": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255,
+                    "default": 0
+                },
+                "sensitive": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1048575,
+                    "default": 0
+                },
+                "extra": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255,
+                    "default": 0
+                }
+            },
+            "additionalProperties": false
+        },
+        "direction": {
+            "enum": [
+                "x",
+                "y",
+                "z",
+                "r",
+                "phi",
+                "rphi",
+                "theta",
+                "eta",
+                "mag"
+            ]
+        },
+        "length": {
+            "oneOf": [
+                {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                {
+                    "const": "infinity"
+                }
+            ],
+            "description": "Positive length in mm or the literal infinity; NaN and numeric infinities are forbidden."
+        },
+        "material": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "vacuum"
+                        }
+                    },
+                    "required": [
+                        "kind"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "material"
+                        },
+                        "radiation_length": {
+                            "$ref": "#/$defs/length"
+                        },
+                        "interaction_length": {
+                            "$ref": "#/$defs/length"
+                        },
+                        "relative_atomic_mass": {
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                        },
+                        "atomic_number": {
+                            "type": "number",
+                            "minimum": 0
+                        },
+                        "molar_density": {
+                            "type": "number",
+                            "minimum": 0
+                        },
+                        "molar_electron_density": {
+                            "type": "number",
+                            "minimum": 0
+                        },
+                        "mean_excitation_energy": {
+                            "type": "number",
+                            "minimum": 0
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "radiation_length",
+                        "interaction_length",
+                        "relative_atomic_mass",
+                        "atomic_number",
+                        "molar_density",
+                        "molar_electron_density",
+                        "mean_excitation_energy"
+                    ],
+                    "additionalProperties": false
+                }
+            ],
+            "description": "Physical properties: mm, dimensionless Ar/Z, mol/mm^3 densities, GeV excitation energy. All seven properties are explicit."
+        },
+        "slab": {
+            "type": "object",
+            "properties": {
+                "material": {
+                    "$ref": "#/$defs/material"
+                },
+                "thickness": {
+                    "type": "number",
+                    "minimum": 0
+                }
+            },
+            "required": [
+                "material",
+                "thickness"
+            ],
+            "additionalProperties": false,
+            "description": "Thickness in mm. Vacuum at zero thickness represents Nothing; vacuum with positive thickness retains its extent."
+        },
+        "transform": {
+            "type": "object",
+            "properties": {
+                "rotation": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        },
+                        "minItems": 3,
+                        "maxItems": 3
+                    },
+                    "minItems": 3,
+                    "maxItems": 3
+                },
+                "translation": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 3,
+                    "maxItems": 3
+                }
+            },
+            "required": [
+                "rotation",
+                "translation"
+            ],
+            "additionalProperties": false,
+            "description": "Rigid local-to-global transform: p_global = rotation * p_frame + translation. Row-major rotation; translation in mm. Semantic validation checks a proper orthonormal rotation."
+        },
+        "axis": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "equidistant"
+                        },
+                        "bins": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                        },
+                        "boundary": {
+                            "enum": [
+                                "open",
+                                "bound",
+                                "closed"
+                            ]
+                        },
+                        "direction": {
+                            "$ref": "#/$defs/direction"
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "bins",
+                        "boundary",
+                        "range"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "variable"
+                        },
+                        "edges": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2
+                        },
+                        "boundary": {
+                            "enum": [
+                                "open",
+                                "bound",
+                                "closed"
+                            ]
+                        },
+                        "direction": {
+                            "$ref": "#/$defs/direction"
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "edges",
+                        "boundary"
+                    ],
+                    "additionalProperties": false
+                }
+            ],
+            "description": "Ordered axis. Edges must increase strictly. Deferred properties are permitted only in proto-grid; no implicit ranges in resolved payloads."
+        },
+        "axisSpec": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "equidistant"
+                        },
+                        "bins": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                        },
+                        "boundary": {
+                            "enum": [
+                                "open",
+                                "bound",
+                                "closed"
+                            ]
+                        },
+                        "direction": {
+                            "$ref": "#/$defs/direction"
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "bins"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "variable"
+                        },
+                        "edges": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2
+                        },
+                        "boundary": {
+                            "enum": [
+                                "open",
+                                "bound",
+                                "closed"
+                            ]
+                        },
+                        "direction": {
+                            "$ref": "#/$defs/direction"
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "edges"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "deferred-variable"
+                        },
+                        "normalized_edges": {
+                            "type": "array",
+                            "items": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                            },
+                            "minItems": 2
+                        },
+                        "boundary": {
+                            "enum": [
+                                "open",
+                                "bound",
+                                "closed"
+                            ]
+                        },
+                        "direction": {
+                            "$ref": "#/$defs/direction"
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "normalized_edges"
+                    ],
+                    "additionalProperties": false
+                }
+            ],
+            "description": "Ordered axis. Edges must increase strictly. Deferred properties are permitted only in proto-grid; no implicit ranges in resolved payloads."
+        },
+        "binAxis": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/binningAxis"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "subdivided"
+                        },
+                        "base": {
+                            "$ref": "#/$defs/binningAxis"
+                        },
+                        "mode": {
+                            "enum": [
+                                "replace",
+                                "repeat"
+                            ]
+                        },
+                        "subdivision": {
+                            "$ref": "#/$defs/binAxis"
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "base",
+                        "mode",
+                        "subdivision"
+                    ],
+                    "additionalProperties": false
+                }
+            ],
+            "description": "BinUtility subdivision intent: replace one base interval, or repeat the subdivision in every base interval. Recursive and distinct from a resolved grid axis."
+        },
+        "surfaceBinning": {
+            "type": "object",
+            "properties": {
+                "axes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/binAxis"
+                    },
+                    "minItems": 0,
+                    "maxItems": 2
+                },
+                "transform": {
+                    "$ref": "#/$defs/transform"
+                }
+            },
+            "required": [
+                "axes"
+            ],
+            "additionalProperties": false
+        },
+        "surfaceSettings": {
+            "type": "object",
+            "properties": {
+                "mapping_type": {
+                    "enum": [
+                        "default",
+                        "pre",
+                        "post",
+                        "sensor"
+                    ]
+                },
+                "split_factor": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                }
+            },
+            "required": [
+                "mapping_type",
+                "split_factor"
+            ],
+            "additionalProperties": false
+        },
+        "surfaceStorage": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "direct"
+                        },
+                        "values": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/slab"
+                            },
+                            "minItems": 1
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "values"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "indexed"
+                        },
+                        "slabs": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/slab"
+                            },
+                            "minItems": 1
+                        },
+                        "indices": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "minimum": 0
+                            },
+                            "minItems": 1
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "slabs",
+                        "indices"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "globally-indexed"
+                        },
+                        "store": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "indices": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "minimum": 0
+                            },
+                            "minItems": 1
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "store",
+                        "indices"
+                    ],
+                    "additionalProperties": false
+                }
+            ]
+        },
+        "surfacePayload": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "homogeneous"
+                        },
+                        "settings": {
+                            "$ref": "#/$defs/surfaceSettings"
+                        },
+                        "slab": {
+                            "$ref": "#/$defs/slab"
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "settings",
+                        "slab"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "binned"
+                        },
+                        "settings": {
+                            "$ref": "#/$defs/surfaceSettings"
+                        },
+                        "binning": {
+                            "$ref": "#/$defs/binnedSurfaceBinning"
+                        },
+                        "values": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/slab"
+                            },
+                            "minItems": 1
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "settings",
+                        "binning",
+                        "values"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "grid"
+                        },
+                        "settings": {
+                            "$ref": "#/$defs/surfaceSettings"
+                        },
+                        "axes": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/axis"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                        },
+                        "storage": {
+                            "$ref": "#/$defs/surfaceStorage"
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "settings",
+                        "axes",
+                        "storage"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "proto"
+                        },
+                        "settings": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/$defs/surfaceSettings"
+                                },
+                                {
+                                    "properties": {
+                                        "split_factor": {
+                                            "const": 1
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "binning": {
+                            "$ref": "#/$defs/surfaceBinning"
+                        },
+                        "material_key": {
+                            "type": "string",
+                            "minLength": 1
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "settings",
+                        "binning"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "proto-grid"
+                        },
+                        "settings": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/$defs/surfaceSettings"
+                                },
+                                {
+                                    "properties": {
+                                        "split_factor": {
+                                            "const": 1
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "axes": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/axisSpec"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                        },
+                        "material_key": {
+                            "type": "string",
+                            "minLength": 1
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "settings",
+                        "axes"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "merged-material-marker"
+                        },
+                        "origins": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "geometry_id": {
+                                        "$ref": "#/$defs/geometryId"
+                                    },
+                                    "material_key": {
+                                        "type": "string",
+                                        "minLength": 1
+                                    }
+                                },
+                                "required": [
+                                    "geometry_id"
+                                ],
+                                "additionalProperties": false
+                            },
+                            "minItems": 0
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "origins"
+                    ],
+                    "additionalProperties": false
+                }
+            ]
+        },
+        "surfaceTarget": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "geometry-id"
+                        },
+                        "geometry_id": {
+                            "$ref": "#/$defs/geometryId"
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "geometry_id"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "stable-key"
+                        },
+                        "key": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "recorded_geometry_id": {
+                            "$ref": "#/$defs/geometryId"
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "key",
+                        "recorded_geometry_id"
+                    ],
+                    "additionalProperties": false
+                }
+            ]
+        },
+        "binnedSurfaceBinning": {
+            "type": "object",
+            "properties": {
+                "axes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/binAxis"
+                    },
+                    "minItems": 1,
+                    "maxItems": 2
+                },
+                "transform": {
+                    "$ref": "#/$defs/transform"
+                }
+            },
+            "required": [
+                "axes"
+            ],
+            "additionalProperties": false
+        },
+        "binningAxis": {
+            "description": "Resolved BinUtility axis: direction required, no guard-cell boundary mode.",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/axis"
+                },
+                {
+                    "required": [
+                        "direction"
+                    ],
+                    "properties": {
+                        "boundary": {
+                            "enum": [
+                                "bound",
+                                "closed"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

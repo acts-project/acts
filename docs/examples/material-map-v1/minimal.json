@@ -1,0 +1,36 @@
+{
+    "$schema": "../../../Plugins/Json/schema/material-map-v1.schema.json",
+    "format": "acts-material-map",
+    "version": 1,
+    "surfaces": [
+        {
+            "target": {
+                "kind": "geometry-id",
+                "geometry_id": {
+                    "volume": 1,
+                    "sensitive": 256
+                }
+            },
+            "material": {
+                "kind": "homogeneous",
+                "settings": {
+                    "mapping_type": "default",
+                    "split_factor": 1
+                },
+                "slab": {
+                    "material": {
+                        "kind": "material",
+                        "radiation_length": 93.7,
+                        "interaction_length": 465.2,
+                        "relative_atomic_mass": 28.0855,
+                        "atomic_number": 14,
+                        "molar_density": 8.29e-05,
+                        "molar_electron_density": 0.0011606,
+                        "mean_excitation_energy": 1.73e-07
+                    },
+                    "thickness": 0.15
+                }
+            }
+        }
+    ]
+}

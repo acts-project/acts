@@ -60,3 +60,9 @@ else()
 endif()
 
 acts_compile_headers(PluginJson GLOB include/**/*.hpp)
+
+# Offline/editor tooling only; this draft is not a production input format.
+install(
+    FILES schema/material-map-v1.schema.json
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/Acts/schema
+)

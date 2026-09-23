@@ -43,6 +43,14 @@ repos:
 
   - repo: local
     hooks:
+    - id: material-schema
+      name: Validate draft material schema and examples
+      language: python
+      entry: python CI/check_material_schema.py
+      additional_dependencies: ["jsonschema>=4.18,<5"]
+      files: ^(Plugins/Json/schema/|docs/examples/material-map-v1/|CI/check_material_schema\.py$)
+      pass_filenames: false
+
     - id: license
       name: license
       language: system
