@@ -24,7 +24,7 @@ namespace traccc {
 /// Bitmask layout: [pixel barrel, pixel endcap, strip barrel, strip endcap].
 using expected_layer_pattern_type = std::array<unsigned int, 4>;
 
-/// Mapping from detector surface barcode to bitmask position.
+/// Mapping from detector surface identifier to bitmask position.
 /// pattern_index selects one of the 4 detector partitions in the pattern.
 /// layer_index selects the bit index (layer) inside the selected detector
 /// partition.
