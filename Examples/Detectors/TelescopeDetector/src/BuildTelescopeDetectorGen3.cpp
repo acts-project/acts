@@ -41,6 +41,7 @@
 #include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
@@ -133,9 +134,7 @@ ActsExamples::buildTelescopeDetectorGen3(
 
     // The entire transformation (the coordinate system, whose center is defined
     // by trans, will be rotated as well)
-    Acts::Transform3 trafo(trans * rotation);
-    // Acts::Transform3 trafo(rotation * trans);  // this is the wrong order of
-    // matrix multiplication
+    Acts::Transform3 trafo(trans * Acts::makeTransform3(rotation));
 
     // rotate around local z axis by stereo angle
     auto stereo = stereoAngles[i];
