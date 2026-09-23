@@ -47,7 +47,7 @@ inline typed_link_payload<type_id> to_payload(const type_id id,
 /// Convert the common header information using the detector name
 /// @param det_name and the file tag @param tag that describes the data file
 /// content
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 inline tagged_header_payload to_header_payload(const std::string_view det_name,
                                                const std::string_view tag,
                                                const std::string_view source) {

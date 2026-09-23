@@ -32,7 +32,7 @@ namespace detray::io {
 /// @brief Homogeneous material reader backend
 ///
 /// Fills a @c detector_builder from a @c detector_homogeneous_material_payload
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 class homogeneous_material_reader final : public reader_interface<detector_t> {
   /// IO material ids do not need to coincide with the detector ids,
   /// they are shared with ACTS

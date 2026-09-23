@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "detray/builders/detector_builder.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/io/frontend/payloads.hpp"
 #include "detray/io/utils/file_handle.hpp"
 
@@ -27,7 +28,7 @@ namespace detray::io {
 /// Interface for components readers from payload to @c detector_builder
 ///
 /// @tparam detector_t the detector type under construction
-template <class detector_t>
+template <detray::concepts::detector detector_t>
 class reader_interface {
  public:
   /// Default destructor
