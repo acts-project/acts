@@ -13,6 +13,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/TrackingGeometryMaterial.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -52,6 +53,8 @@ ACTS_DEFINE_ENUM_BITWISE_OPERATORS(JsonFormat)
 class [[deprecated(
     "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
 JsonMaterialWriter : public IMaterialWriter {
+  // Deprecated adapters retain the deprecated converter in their API.
+  ACTS_PUSH_IGNORE_DEPRECATED()
  public:
   struct Config {
     /// The config class of the converter
@@ -96,6 +99,7 @@ JsonMaterialWriter : public IMaterialWriter {
 
   /// The material converter
   std::unique_ptr<Acts::MaterialMapJsonConverter> m_converter{nullptr};
+  ACTS_POP_IGNORE_DEPRECATED()
 };
 
 }  // namespace ActsExamples

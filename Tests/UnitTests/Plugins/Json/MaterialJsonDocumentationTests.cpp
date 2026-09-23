@@ -18,6 +18,7 @@
 #include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
@@ -31,6 +32,9 @@
 #include <vector>
 
 #include <nlohmann/json.hpp>
+
+// These tests intentionally exercise the deprecated material format.
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -152,3 +156,5 @@ BOOST_AUTO_TEST_CASE(MaterialMapDocumentationExample) {
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
+
+ACTS_POP_IGNORE_DEPRECATED()

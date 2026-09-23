@@ -14,6 +14,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
 
 // Convenience shorthand
@@ -33,6 +34,8 @@ namespace Acts {
 class [[deprecated(
     "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
 JsonMaterialDecorator : public IMaterialDecorator {
+  // Deprecated adapters retain the deprecated converter in their API.
+  ACTS_PUSH_IGNORE_DEPRECATED()
  public:
   /// Constructor with configuration
   /// @param rConfig the configuration for the material map reader
@@ -65,6 +68,7 @@ JsonMaterialDecorator : public IMaterialDecorator {
   std::unique_ptr<const Logger> m_logger;
 
   const Logger& logger() const { return *m_logger; }
+  ACTS_POP_IGNORE_DEPRECATED()
 };
 
 /// @}

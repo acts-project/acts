@@ -70,13 +70,6 @@ install(
 
 add_executable(ActsMaterialMapMigrate bin/MaterialMapMigrate.cpp)
 target_link_libraries(ActsMaterialMapMigrate PRIVATE Acts::PluginJson)
-# This executable deliberately uses the deprecated reader to migrate old files.
-target_compile_options(
-    ActsMaterialMapMigrate
-    PRIVATE
-        $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wno-deprecated-declarations>
-        $<$<CXX_COMPILER_ID:MSVC>:/wd4996>
-)
 install(
     TARGETS ActsMaterialMapMigrate
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT bin

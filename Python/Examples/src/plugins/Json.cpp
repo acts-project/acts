@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
@@ -58,7 +59,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
         .value("All", JsonFormat::All);
   }
 
+  // Keep the deprecated material writer binding available during migration.
   {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     auto cls =
         py::class_<JsonMaterialWriter, IMaterialWriter,
                    std::shared_ptr<JsonMaterialWriter>>(json,
@@ -72,6 +75,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
     auto c =
         py::class_<JsonMaterialWriter::Config>(cls, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, converterCfg, fileName, writeFormat);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 
   {

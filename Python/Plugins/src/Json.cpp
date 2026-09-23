@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Json/JsonMaterialDecorator.hpp"
 #include "ActsPlugins/Json/JsonSurfacesReader.hpp"
@@ -35,7 +36,9 @@ using namespace ActsPython;
 using namespace ActsExamples;
 
 PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
+  // Keep the deprecated Python bindings available during migration.
   {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     py::class_<JsonMaterialDecorator, IMaterialDecorator,
                std::shared_ptr<JsonMaterialDecorator>>(json,
                                                        "JsonMaterialDecorator")
@@ -45,9 +48,11 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
         .def_property_readonly("materialMaps",
                                &JsonMaterialDecorator::materialMaps,
                                py::return_value_policy::reference_internal);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 
   {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     auto cls =
         py::class_<MaterialMapJsonConverter>(json, "MaterialMapJsonConverter")
             .def(py::init<const MaterialMapJsonConverter::Config&,
@@ -59,6 +64,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
     ACTS_PYTHON_STRUCT(c, context, processSensitives, processApproaches,
                        processRepresenting, processBoundaries, processVolumes,
                        processDenseVolumes, processNonMaterial);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 
   {

@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
 #include "ActsPlugins/Json/TrackingGeometryMaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/detail/JsonIo.hpp"
@@ -82,8 +83,11 @@ int main(int argc, char* argv[]) {
       throw std::invalid_argument(
           "Expected a deprecated material map with Surfaces and Volumes");
     }
+    // Migration intentionally reads the deprecated format.
+    ACTS_PUSH_IGNORE_DEPRECATED()
     Acts::MaterialMapJsonConverter legacy({}, Acts::Logging::WARNING);
     const auto material = legacy.jsonToMaterialMaps(document);
+    ACTS_POP_IGNORE_DEPRECATED()
     Acts::TrackingGeometryMaterialJsonConverter().toFile(material, output,
                                                          options);
     std::cout << "Migrated "

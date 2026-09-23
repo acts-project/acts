@@ -30,6 +30,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/Json/GeometryIdentifierJsonConverter.hpp"
 #include "ActsPlugins/Json/GeometryJsonKeys.hpp"
 #include "ActsPlugins/Json/SurfaceBoundsJsonConverter.hpp"
@@ -140,8 +141,11 @@ nlohmann::json surfaceToJsonT(const surface_t& surface,
   jSurface["geo_id"] = nlohmann::json(surface.geometryId());
   jSurface["sensitive"] = surface.isSensitive();
   if (surface.hasMaterial() && opt.writeMaterial) {
+    // Embedded material still uses the legacy geometry JSON representation.
+    ACTS_PUSH_IGNORE_DEPRECATED()
     jSurface[Acts::jsonKey().materialkey] =
         Acts::SurfaceMaterialJsonConverter::toJson(*surface.surfaceMaterial());
+    ACTS_POP_IGNORE_DEPRECATED()
   }
   jSurface["kind"] = getSurfaceKind<surface_t>();
   return jSurface;
@@ -187,7 +191,10 @@ void Acts::to_json(nlohmann::json& j,
   toJson(j, std::get<0>(surface), std::get<2>(surface));
   const auto& material = std::get<1>(surface);
   if (material != nullptr) {
+    // Embedded material still uses the legacy geometry JSON representation.
+    ACTS_PUSH_IGNORE_DEPRECATED()
     j[jsonKey().materialkey] = SurfaceMaterialJsonConverter::toJson(*material);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 }
 
@@ -352,8 +359,11 @@ std::shared_ptr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
 
   if (j.find(jsonKey().materialkey) != j.end() &&
       !j[jsonKey().materialkey].empty()) {
+    // Embedded material still uses the legacy geometry JSON representation.
+    ACTS_PUSH_IGNORE_DEPRECATED()
     mutableSf->assignSurfaceMaterial(
         SurfaceMaterialJsonConverter::fromJson(j[jsonKey().materialkey]));
+    ACTS_POP_IGNORE_DEPRECATED()
   }
   return mutableSf;
 }
