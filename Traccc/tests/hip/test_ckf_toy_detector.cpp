@@ -70,12 +70,9 @@ TEST_P(CkfToyDetectorTests, Run) {
       .do_check(true);
 
   auto [io_det, names] =
-      detray::io::read_detector<traccc::default_detector::host>(host_mr,
-                                                                reader_cfg);
+      detray::io::read_detector<traccc::default_detector>(host_mr, reader_cfg);
   traccc::host_detector detector{};
-  detector.template set<
-      traccc::detector_traits<traccc::default_detector::host::metadata>>(
-      std::move(io_det));
+  detector.template set<traccc::default_detector>(std::move(io_det));
 
   traccc::detector_buffer detector_buffer =
       traccc::buffer_from_host_detector(detector, mng_mr, host_copy);
@@ -117,7 +114,7 @@ TEST_P(CkfToyDetectorTests, Run) {
   std::filesystem::create_directories(full_path);
   auto sim = traccc::simulator<host_detector_type, b_field_t, generator_type,
                                writer_type>(
-      ptc, n_events, detector.as<detector_traits>(),
+      ptc, n_events, detector.as<host_detector_type>(),
       field.as_field<traccc::const_bfield_backend_t<traccc::scalar>>(),
       std::move(generator), std::move(smearer_writer_cfg), full_path);
   sim.get_config().propagation.navigation.search_window = search_window;
@@ -135,7 +132,7 @@ TEST_P(CkfToyDetectorTests, Run) {
   vecmem::hip::async_copy copy{stream.hipStream()};
 
   // Seed generator
-  seed_generator<host_detector_type> sg(detector.as<detector_traits>(),
+  seed_generator<host_detector_type> sg(detector.as<host_detector_type>(),
                                         seed_cfg);
 
   // Finding algorithm configuration

@@ -32,10 +32,10 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
     const edm::measurement_collection::const_view::size_type n_measurements,
     const edm::measurement_collection::const_view& measurements) const {
   return detector_buffer_visitor<detector_type_list>(
-      det, [&]<typename detector_traits_t>(
-               const typename detector_traits_t::view& det) {
+      det, [&]<detray::concepts::detector detector_t>(
+               const detray::detector_view_t<detector_t>& det) {
         // Construct an appropriate device detector object.
-        typename detector_traits_t::device device_det{det};
+        detray::detector_device_t<detector_t> device_det{det};
 
         // Create the result buffer.
         vecmem::data::vector_buffer<

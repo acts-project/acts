@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 
   using metadata_t = test::wire_chamber_metadata;
   using test_algebra = metadata_t::algebra_type;
-  using wire_chamber_t = detector<metadata_t>;
+  using wire_chamber_t = host::detector<metadata_t>;
   using scalar = typename wire_chamber_t::scalar_type;
 
   /// Set a consistent minimum step size across all tests

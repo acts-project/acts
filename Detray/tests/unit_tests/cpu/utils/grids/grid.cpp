@@ -93,10 +93,10 @@ GTEST_TEST(detray_grid, single_grid) {
 
   using grid_n_owning_t =
       grid<test_algebra, axes<cuboid3D>, bins::single<scalar>,
-           simple_serializer, host_container_types, false>;
+           simple_serializer, host_container_types, is_n_owning>;
 
   using grid_device_t = grid<test_algebra, axes<cuboid3D>, bins::single<scalar>,
-                             simple_serializer, device_container_types>;
+                             simple_serializer, const_device_container_types>;
 
   static_assert(concepts::grid<grid_owning_t>);
   static_assert(concepts::grid<grid_n_owning_t>);
@@ -153,7 +153,7 @@ GTEST_TEST(detray_grid, single_grid) {
   EXPECT_EQ(z_axis.nbins(), grid_own.get_axis<label::e_z>().nbins());
 
   // Construct a grid from a view
-  grid_owning_t::view_type grid_view = get_data(grid_own);
+  grid_owning_t::view_type grid_view = detray::get_data(grid_own);
   grid_device_t device_grid(grid_view);
 
   // Test for consistency with non-owning grid
@@ -186,8 +186,20 @@ GTEST_TEST(detray_grid, single_grid) {
   EXPECT_TRUE(
       std::equal(flat_bin_view2.begin(), flat_bin_view2.end(), seq.begin()));
 
+  // Test the global bin iteration: non-owning grid
+  auto flat_bin_view_device = device_grid.all();
+
+  static_assert(
+      detray::ranges::random_access_range<decltype(flat_bin_view_device)>);
+
+  EXPECT_EQ(seq.size(), 40'000u);
+  EXPECT_EQ(flat_bin_view_device.size(), 40'000u);
+  EXPECT_EQ(flat_bin_view_device[42], 43u);
+  EXPECT_TRUE(std::equal(flat_bin_view_device.begin(),
+                         flat_bin_view_device.end(), seq.begin()));
+
   // Test const grid view
-  /*auto const_grid_view = get_data(const_cast<const
+  /*auto const_grid_view = detray::get_data(const_cast<const
   grid_owning_t&>(grid_own));
 
   static_assert(
@@ -196,7 +208,7 @@ GTEST_TEST(detray_grid, single_grid) {
   bins::single<const scalar>>::view_type>, "Const grid view was not correctly
   constructed!");
 
-  grid<test_algebra,cartesian_3D<is_owning, device_container_types>,
+  grid<test_algebra,cartesian_3D<is_owning, const_device_container_types>,
   bins::single<const scalar>> const_device_grid(const_grid_view);
 
   static_assert(
@@ -217,7 +229,7 @@ GTEST_TEST(detray_grid, dynamic_array) {
 
   using grid_device_t =
       grid<test_algebra, axes<cuboid3D>, bins::dynamic_array<scalar>,
-           simple_serializer, device_container_types>;
+           simple_serializer, const_device_container_types>;
 
   static_assert(concepts::grid<grid_owning_t>);
   static_assert(concepts::grid<grid_n_owning_t>);
@@ -308,7 +320,7 @@ GTEST_TEST(detray_grid, dynamic_array) {
   EXPECT_EQ(z_axis.nbins(), grid_own.get_axis<label::e_z>().nbins());
 
   // Construct a grid from a view
-  grid_owning_t::view_type grid_view = get_data(grid_own);
+  grid_owning_t::view_type grid_view = detray::get_data(grid_own);
   grid_device_t device_grid(grid_view);
 
   // Test for consistency with non-owning grid
@@ -340,6 +352,17 @@ GTEST_TEST(detray_grid, dynamic_array) {
   EXPECT_EQ(flat_bin_view2.size(), 80'000u);
   EXPECT_TRUE(
       std::equal(flat_bin_view2.begin(), flat_bin_view2.end(), seq.begin()));
+
+  // Test the global bin iteration - device grid
+  auto flat_bin_view_device = device_grid.all();
+
+  static_assert(
+      detray::ranges::bidirectional_range<decltype(flat_bin_view_device)>);
+
+  EXPECT_EQ(seq.size(), 80'000u);
+  EXPECT_EQ(flat_bin_view_device.size(), 80'000u);
+  EXPECT_TRUE(std::equal(flat_bin_view_device.begin(),
+                         flat_bin_view_device.end(), seq.begin()));
 }
 
 /// Integration test: Test replace population

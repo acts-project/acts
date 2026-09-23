@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
   // Telescope detector configuration
   //
   using metadata_t = test::default_telescope_metadata;
-  using tel_detector_t = detector<metadata_t>;
+  using tel_detector_t = host::detector<metadata_t>;
   using test_algebra = metadata_t::algebra_type;
   using scalar = dscalar<test_algebra>;
 
