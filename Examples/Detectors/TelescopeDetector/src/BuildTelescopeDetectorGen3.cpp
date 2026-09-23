@@ -75,11 +75,11 @@ ActsExamples::buildTelescopeDetectorGen3(
     const std::vector<double>& stereoAngles,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
     double thickness, TelescopeSurfaceType surfaceType,
-    Acts::AxisDirection rotDirection) {
+    Acts::AxisDirection rotDirection, const std::array<double, 2>& envelope_x,
+    const std::array<double, 2>& envelope_y,
+    const std::array<double, 2>& envelope_z, const Acts::Logger& logger) {
   using namespace Acts::UnitLiterals;
-  std::cout << "Building telescope detector Gen3..." << std::endl;
-
-  auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
+  ACTS_INFO("Building telescope detector Gen3...");
 
   // The rectangle bounds for plane surface
   const auto pBounds =
@@ -91,13 +91,6 @@ ActsExamples::buildTelescopeDetectorGen3(
   Acts::MaterialSlab matProp(silicon, thickness);
   const auto surfaceMaterial =
       std::make_shared<Acts::HomogeneousSurfaceMaterial>(matProp);
-
-  //   // temporary
-  //   if (rotDirection != Acts::AxisDirection::AxisZ) {
-  //     throw std::invalid_argument(
-  //         "Only AxisDirection::AxisZ is currently supported, as a possible "
-  //         "rotation");
-  //   }
 
   // Construct the rotation
   // This assumes the direction is AxisX, AxisY or AxisZ. No reset is necessary
@@ -114,16 +107,16 @@ ActsExamples::buildTelescopeDetectorGen3(
   }
 
   Blueprint::Config cfg;
-  cfg.envelope[AxisDirection::AxisX] = {200_mm, 200_mm};
-  cfg.envelope[AxisDirection::AxisY] = {200_mm, 200_mm};
-  cfg.envelope[AxisDirection::AxisZ] = {200_mm, 200_mm};
+  cfg.envelope[AxisDirection::AxisX] = {envelope_x[0] * 1_mm,
+                                        envelope_x[1] * 1_mm};
+  cfg.envelope[AxisDirection::AxisY] = {envelope_y[0] * 1_mm,
+                                        envelope_y[1] * 1_mm};
+  cfg.envelope[AxisDirection::AxisZ] = {envelope_z[0] * 1_mm,
+                                        envelope_z[1] * 1_mm};
   // cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
   Blueprint root{cfg};
 
   auto& cubcontainer = root.addCuboidContainer("CuboidContainer", rotDirection);
-
-  std::filesystem::path debugOutputDir = "telescope_debug_obj";
-  std::filesystem::create_directories(debugOutputDir);
 
   std::size_t nLayers = positions.size();
   for (unsigned int i = 0; i < nLayers; i++) {
@@ -170,37 +163,59 @@ ActsExamples::buildTelescopeDetectorGen3(
     }
     detectorStore.push_back(detElement);
 
-    auto layerBounds = std::make_shared<CuboidVolumeBounds>(
-        bounds[0] + 5_mm, bounds[1] + 5_mm, thickness / 2 + 1_mm);
+    std::shared_ptr<CuboidVolumeBounds> layerBounds;
+
+    // Get the surface part 1
+    auto surface = detElement->surface().getSharedPtr();
+
+    // Local 2D- corner point of the rectangle bounds (4 corners)
+    std::vector<Acts::Vector2> localCorners = pBounds->vertices();
+
+    // Convert into global 3D Coordinates
+    double maxAbsInPlane1 = 0.0;
+    double maxAbsInPlane2 = 0.0;
+
+    for (const auto& localCorner : localCorners) {
+      Acts::Vector3 globalCorner =
+          surface->localToGlobal(gctx, localCorner, Acts::Vector3::Zero());
+
+      // Relative to Layer centrum (trans), since layerVol exists unrotated at
+      // trans
+      Acts::Vector3 relCorner = globalCorner - trans.translation();
+
+      if (rotDirection == Acts::AxisDirection::AxisX) {
+        maxAbsInPlane1 = std::max(maxAbsInPlane1, std::abs(relCorner.y()));
+        maxAbsInPlane2 = std::max(maxAbsInPlane2, std::abs(relCorner.z()));
+      } else if (rotDirection == Acts::AxisDirection::AxisY) {
+        maxAbsInPlane1 = std::max(maxAbsInPlane1, std::abs(relCorner.x()));
+        maxAbsInPlane2 = std::max(maxAbsInPlane2, std::abs(relCorner.z()));
+      } else {
+        maxAbsInPlane1 = std::max(maxAbsInPlane1, std::abs(relCorner.x()));
+        maxAbsInPlane2 = std::max(maxAbsInPlane2, std::abs(relCorner.y()));
+      }
+    }
+
+    constexpr double margin = 5_mm;
 
     if (rotDirection == Acts::AxisDirection::AxisX) {
       layerBounds = std::make_shared<CuboidVolumeBounds>(
-          thickness / 2 + 1_mm, bounds[0] + 5_mm, bounds[1] + 5_mm);
+          thickness / 2 + 1_mm, maxAbsInPlane1 + margin,
+          maxAbsInPlane2 + margin);
     } else if (rotDirection == Acts::AxisDirection::AxisY) {
       layerBounds = std::make_shared<CuboidVolumeBounds>(
-          bounds[0] + 5_mm, thickness / 2 + 1_mm, bounds[1] + 5_mm);
-    } else if (rotDirection == Acts::AxisDirection::AxisZ) {
+          maxAbsInPlane1 + margin, thickness / 2 + 1_mm,
+          maxAbsInPlane2 + margin);
+    } else {
       layerBounds = std::make_shared<CuboidVolumeBounds>(
-          bounds[0] + 5_mm, bounds[1] + 5_mm, thickness / 2 + 1_mm);
+          maxAbsInPlane1 + margin, maxAbsInPlane2 + margin,
+          thickness / 2 + 1_mm);
     }
 
     auto layerVol = std::make_unique<TrackingVolume>(
         Acts::Transform3{trans}, layerBounds, "parent" + std::to_string(i));
 
-    // Get the surface
-    auto surface = detElement->surface().getSharedPtr();
+    // Get the surface part 2
     layerVol->addSurface(surface);
-
-    // // --- Debug-Export ---
-    // {
-    //   Acts::ObjVisualization3D vis;
-    //   Acts::GeometryView3D::drawVolume(vis, *layerVol, gctx);
-    //   vis.write((debugOutputDir / ("layer_" + std::to_string(i) +
-    //   ".obj")).string()); Acts::GeometryView3D::drawSurface(vis, *surface,
-    //   gctx); vis.write((debugOutputDir / ("surface_" + std::to_string(i) +
-    //   ".obj")).string());
-    // }
-    // // --- End Debug-Export ---
 
     auto layerNode = std::make_shared<StaticBlueprintNode>(std::move(layerVol));
 
@@ -209,7 +224,7 @@ ActsExamples::buildTelescopeDetectorGen3(
 
   //   std::ofstream os{"telescope.dot"};
   //   root.graphviz(os);
-  auto trackingGeometry = root.construct({}, gctx, *logger);
+  auto trackingGeometry = root.construct({}, gctx, logger);
 
   return trackingGeometry;
 }
