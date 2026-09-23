@@ -61,14 +61,15 @@ int main() {
   auto [det_host, names_host] = detray::build_toy_detector<algebra_t>(host_mr);
 
   // Copy the detector data to device (synchronous copy, fixed size buffers)
-  auto det_fixed_buff = detray::get_buffer(det_host, dev_mr, cuda_cpy);
+  const auto det_fixed_buff = detray::get_buffer(det_host, dev_mr, cuda_cpy);
+  detray::types::print<decltype(det_fixed_buff)>();
 
   // Get the detector view from the buffer and call the kernel
   DETRAY_INFO_HOST("Synchronous copy, fixed size buffers:");
   detray::tutorial::print(detray::get_data(det_fixed_buff));
 
   // Copy the data to device in resizable buffers (synchronous copy)
-  auto det_resz_buff =
+  const auto det_resz_buff =
       detray::get_buffer(det_host, dev_mr, cuda_cpy, detray::copy::sync,
                          vecmem::data::buffer_type::resizable);
 
@@ -101,7 +102,7 @@ int main() {
 
   // Assemble the detector buffer
   using host_detector_type = decltype(det_host);
-  auto det_custom_buff = typename host_detector_type::buffer_type(
+  const auto det_custom_buff = typename host_detector_type::buffer_type(
       std::move(vol_buff), std::move(sf_buff), std::move(trf_buff),
       std::move(msk_buff), std::move(mat_buff), std::move(acc_buff));
 
