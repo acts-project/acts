@@ -383,8 +383,4 @@ move_only_any combinatorial_kalman_filter_algorithm::create_device_detector(
       });
 }
 
-void combinatorial_kalman_filter_algorithm::synchronize() const {
-  stream().synchronize();
-}
-
 }  // namespace traccc::cuda

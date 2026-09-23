@@ -98,8 +98,4 @@ void measurement_sorting_algorithm::sorting_kernel(
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
 }
 
-void measurement_sorting_algorithm::synchronize() const {
-  stream().synchronize();
-}
-
 }  // namespace traccc::hip
