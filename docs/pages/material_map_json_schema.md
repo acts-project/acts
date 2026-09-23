@@ -25,6 +25,26 @@ material.apply(geometry);
 converter.toFile(material, "material.json");
 ```
 
+The JSON plugin also installs `ActsMaterialMapMigrate` in `bin` to migrate
+files written by the deprecated material converter:
+
+```sh
+ActsMaterialMapMigrate old-material.json material.json
+ActsMaterialMapMigrate old-material.json.zst material.cbor.zst \
+    --material-fraction-bits 16 --compression-level 19
+```
+
+The input encoding is detected from its contents. The output extension selects
+JSON or CBOR, with optional zstd compression. Defaults preserve full float32
+precision, use four-space indentation and zstd level 9. `--indentation` changes
+text indentation; `--help` lists all options. Volume material causes migration
+to fail because version 1 only supports surfaces. The tool preserves material
+assignments and stable keys supported by the legacy reader; unrelated geometry
+annotations in decorated legacy files are not part of the new material format.
+Migration uses the legacy reader's semantics, including its default split factors
+(the legacy format does not store them) and normalization of single-bin axes;
+it cannot recover settings already lost by the legacy format.
+
 Material quantization is opt-in and affects only built-in slab thickness and
 composition fields. `Options::materialFractionBits` defaults to 23 (full float32
 precision); values from 0 to 22 round to fewer binary fraction bits. For example:

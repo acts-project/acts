@@ -32,3 +32,16 @@ add_unittest(
     TrackingGeometryMaterialJsonConverterTests.cpp
     "${PROJECT_SOURCE_DIR}/docs/examples/material-map-v1"
 )
+
+add_dependencies(
+    ActsUnitTestTrackingGeometryMaterialJsonConverter
+    ActsMaterialMapMigrate
+)
+add_test(
+    NAME MaterialMapMigrate
+    COMMAND
+        ${CMAKE_COMMAND} -DMIGRATOR=$<TARGET_FILE:ActsMaterialMapMigrate>
+        -DFIXTURE=${PROJECT_SOURCE_DIR}/docs/examples/material_map_example.json
+        -DWORK=${CMAKE_CURRENT_BINARY_DIR}/material-migration-test -P
+        ${CMAKE_CURRENT_SOURCE_DIR}/MaterialMapMigrateTests.cmake
+)
