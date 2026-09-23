@@ -10,8 +10,11 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <format>
 #include <fstream>
+#include <optional>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -25,6 +28,62 @@ namespace {
 using Acts::detail::JsonCompression;
 using Acts::detail::JsonEncoding;
 using Acts::detail::JsonFileFormat;
+
+// Validate the original token stream before constructing a DOM, which would
+// otherwise silently overwrite duplicate object keys. This is opt-in so the
+// legacy readers retain their existing behavior, for both JSON and CBOR.
+class StrictDocumentSax : public nlohmann::json_sax<nlohmann::json> {
+ public:
+  std::string error;
+  bool null() override { return true; }
+  bool boolean(bool) override { return true; }
+  bool number_integer(number_integer_t) override { return true; }
+  bool number_unsigned(number_unsigned_t) override { return true; }
+  bool number_float(number_float_t value, const string_t&) override {
+    return std::isfinite(value) || fail("nonfinite number");
+  }
+  bool string(string_t&) override { return true; }
+  bool binary(binary_t&) override {
+    return fail("binary value is not part of the JSON document model");
+  }
+  bool start_object(std::size_t) override {
+    if (m_keys.size() >= 256) {
+      return fail("document nesting exceeds 256");
+    }
+    m_keys.emplace_back(std::set<std::string>{});
+    return true;
+  }
+  bool key(string_t& keyValue) override {
+    return m_keys.back()->insert(keyValue).second ||
+           fail("duplicate object key '" + keyValue + "'");
+  }
+  bool end_object() override {
+    m_keys.pop_back();
+    return true;
+  }
+  bool start_array(std::size_t) override {
+    if (m_keys.size() >= 256) {
+      return fail("document nesting exceeds 256");
+    }
+    m_keys.emplace_back(std::nullopt);
+    return true;
+  }
+  bool end_array() override {
+    m_keys.pop_back();
+    return true;
+  }
+  bool parse_error(std::size_t, const std::string&,
+                   const nlohmann::detail::exception& e) override {
+    return fail(e.what());
+  }
+
+ private:
+  bool fail(std::string message) {
+    error = std::move(message);
+    return false;
+  }
+  std::vector<std::optional<std::set<std::string>>> m_keys;
+};
 
 /// zstd frame magic number 0xFD2FB528, little endian as it appears on disk.
 constexpr std::array<std::byte, 4> kZstdMagic{std::byte{0x28}, std::byte{0xB5},
@@ -152,7 +211,8 @@ std::vector<std::byte> Acts::detail::encodeJson(const nlohmann::json& payload,
 }
 
 nlohmann::json Acts::detail::decodeJson(std::span<const std::byte> data,
-                                        const std::filesystem::path& origin) {
+                                        const std::filesystem::path& origin,
+                                        bool strictDocument) {
   std::vector<std::byte> decompressed;
   bool wasCompressed = hasZstdMagic(data);
   if (wasCompressed) {
@@ -187,6 +247,16 @@ nlohmann::json Acts::detail::decodeJson(std::span<const std::byte> data,
         origin.string(), stage, lead));
   }
 
+  if (strictDocument) {
+    StrictDocumentSax validator;
+    auto format = isText ? nlohmann::json::input_format_t::json
+                         : nlohmann::json::input_format_t::cbor;
+    if (!nlohmann::json::sax_parse(data.begin(), data.end(), &validator,
+                                   format)) {
+      throw std::invalid_argument("Invalid document in '" + origin.string() +
+                                  "': " + validator.error);
+    }
+  }
   try {
     if (isText) {
       return nlohmann::json::parse(asStringView(data));
@@ -218,7 +288,8 @@ void Acts::detail::writeJsonFile(const std::filesystem::path& path,
   }
 }
 
-nlohmann::json Acts::detail::readJsonFile(const std::filesystem::path& path) {
+nlohmann::json Acts::detail::readJsonFile(const std::filesystem::path& path,
+                                          bool strictDocument) {
   if (!std::filesystem::exists(path)) {
     throw std::invalid_argument(
         std::format("File '{}' does not exist", path.string()));
@@ -244,5 +315,5 @@ nlohmann::json Acts::detail::readJsonFile(const std::filesystem::path& path) {
     throw std::runtime_error(std::format("Failed to read '{}'", path.string()));
   }
 
-  return decodeJson(data, path);
+  return decodeJson(data, path, strictDocument);
 }

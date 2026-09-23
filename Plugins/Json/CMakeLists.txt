@@ -23,6 +23,7 @@ acts_add_library(
     src/DefinitionsJsonConverter.cpp
     src/SeedingConfigJsonConverter.cpp
     src/TrackingGeometryJsonConverter.cpp
+    src/TrackingGeometryMaterialJsonConverter.cpp
     src/BetheHeitlerApproxJsonConverter.cpp
     src/detail/JsonIo.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
@@ -61,7 +62,7 @@ endif()
 
 acts_compile_headers(PluginJson GLOB include/**/*.hpp)
 
-# Offline/editor tooling only; this draft is not a production input format.
+# Offline/editor validation; the codec has no runtime schema dependency.
 install(
     FILES schema/material-map-v1.schema.json
     DESTINATION ${CMAKE_INSTALL_DATADIR}/Acts/schema
