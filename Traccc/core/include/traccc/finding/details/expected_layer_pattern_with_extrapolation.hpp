@@ -125,7 +125,7 @@ collect_expected_layer_pattern_from_perigee(
       const auto nav_target =
           perigee_state.navigation().target().surface().identifier().value();
       const auto nav_current =
-          perigee_state.navigation().current().surface().identifier().value();
+          perigee_state.navigation().geomtry_identifier().value();
       TRACCC_WARNING_HOST_DEVICE(
           "Perigee extrapolation (CUDA direct navigator) failed: finished=%u "
           "invalid=%u nav_alive=%u nav_status=%u path=%f target_id=%llu "
