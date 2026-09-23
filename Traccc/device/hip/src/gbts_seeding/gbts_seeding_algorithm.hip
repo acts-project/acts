@@ -369,8 +369,4 @@ void gbts_seeding_algorithm::gbts_convert_seeds_kernel(
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
 }
 
-void gbts_seeding_algorithm::synchronize() const {
-  stream().synchronize();
-}
-
 }  // namespace traccc::hip

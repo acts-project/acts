@@ -483,8 +483,4 @@ void combinatorial_kalman_filter_algorithm::build_tracks_kernel(
   });
 }
 
-void combinatorial_kalman_filter_algorithm::synchronize() const {
-  details::get_queue(queue()).wait_and_throw();
-}
-
 }  // namespace traccc::sycl

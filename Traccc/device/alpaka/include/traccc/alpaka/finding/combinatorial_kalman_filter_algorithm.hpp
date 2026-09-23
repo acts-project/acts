@@ -213,8 +213,6 @@ class combinatorial_kalman_filter_algorithm
   move_only_any create_device_detector(
       const detector_buffer& det) const override;
 
-  void synchronize() const override;
-
   /// @}
 
 };  // class combinatorial_kalman_filter_algorithm

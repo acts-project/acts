@@ -64,9 +64,6 @@ class measurement_sorting_algorithm
       const override;
 
  protected:
-  /// Wait for outstanding work before temporary buffers are released.
-  virtual void synchronize() const = 0;
-
   /// Launch the backend-specific measurement-sorting implementation.
   /// Implementations may return with work outstanding; the common algorithm
   /// synchronizes before releasing the temporary buffers.

@@ -114,9 +114,6 @@ class triplet_seeding_algorithm : public device::triplet_seeding_algorithm,
 
   /// @}
 
-  /// Wait for outstanding work on the algorithm stream or queue.
-  void synchronize() const override;
-
 };  // class triplet_seeding_algorithm
 
 }  // namespace traccc::hip
