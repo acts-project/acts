@@ -93,7 +93,7 @@ class combinatorial_kalman_filter_algorithm
       const override;
 
   /// Return expected-layer patterns produced during the last operator() call.
-  const std::vector<expected_layer_pattern_type>& last_expected_layer_patterns()
+  const vecmem::vector<expected_layer_pattern_type>& last_expected_layer_patterns()
       const;
 
   /// Update expected-layer mapping used by post-CKF processing.
