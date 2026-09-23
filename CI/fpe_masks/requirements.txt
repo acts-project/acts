@@ -22,17 +22,17 @@ frozenlist==1.8.0
     #   aiosignal
 gidgethub==5.4.0
     # via -r CI/fpe_masks/requirements.in
-idna==3.19
+idna==3.20
     # via yarl
 markdown-it-py==4.2.0
     # via rich
 mdurl==0.1.2
     # via markdown-it-py
-multidict==6.7.1
+multidict==6.9.0
     # via
     #   aiohttp
     #   yarl
-propcache==0.5.2
+propcache==0.5.4
     # via
     #   aiohttp
     #   yarl
@@ -40,7 +40,7 @@ pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementatio
     # via cffi
 pygments==2.21.0
     # via rich
-pyjwt==2.13.0
+pyjwt==2.14.0
     # via gidgethub
 rich==15.0.0
     # via
@@ -56,5 +56,5 @@ typing-extensions==4.16.0 ; python_full_version < '3.13'
     #   aiosignal
 uritemplate==4.2.0
     # via gidgethub
-yarl==1.24.5
+yarl==1.25.1
     # via aiohttp
