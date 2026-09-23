@@ -140,8 +140,7 @@ TRACCC_HOST_DEVICE inline void condense_tracks(
   }
 
   for (unsigned int i = 0; i < num_parameters; ++i) {
-    const unsigned int in_offset =
-        in_param_id * payload.max_num_branches_per_surface + i;
+    const unsigned int in_offset = i * payload.n_in_params + in_param_id;
     const unsigned int param_out_index = idx + i;
     const unsigned int link_out_index =
         param_out_index + payload.curr_links_idx;
