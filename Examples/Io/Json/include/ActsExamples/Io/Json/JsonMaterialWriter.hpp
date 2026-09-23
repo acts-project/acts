@@ -46,7 +46,12 @@ ACTS_DEFINE_ENUM_BITWISE_OPERATORS(JsonFormat)
 ///
 /// @brief Writes out Detector material maps
 /// using the Json Geometry converter
-class JsonMaterialWriter : public IMaterialWriter {
+///
+/// @deprecated Legacy material format; use
+/// @ref Acts::TrackingGeometryMaterialJsonConverter instead.
+class [[deprecated(
+    "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
+JsonMaterialWriter : public IMaterialWriter {
  public:
   struct Config {
     /// The config class of the converter

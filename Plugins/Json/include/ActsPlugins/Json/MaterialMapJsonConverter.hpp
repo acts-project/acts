@@ -58,7 +58,12 @@ using TrackingVolumeAndMaterial =
 /// @class MaterialMapJsonConverter
 ///
 /// @brief read the material from Json
-class MaterialMapJsonConverter {
+///
+/// @deprecated Legacy material format; use
+/// @ref Acts::TrackingGeometryMaterialJsonConverter instead.
+class [[deprecated(
+    "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
+MaterialMapJsonConverter {
  public:
   /// @class Config
   /// Configuration of the Converter

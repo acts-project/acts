@@ -7,4 +7,4 @@ The file format written by the material converters is documented in
 
 The @ref material_map_json_schema describes the experimental versioned material
 format handled by `Acts::TrackingGeometryMaterialJsonConverter`. Legacy material
-converters retain the previous format.
+converters are deprecated and retain the previous format.

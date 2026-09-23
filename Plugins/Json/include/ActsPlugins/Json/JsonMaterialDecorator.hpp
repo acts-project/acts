@@ -27,7 +27,12 @@ namespace Acts {
 ///
 /// This reads in material maps for surfaces and volumes
 /// from a json file
-class JsonMaterialDecorator : public IMaterialDecorator {
+///
+/// @deprecated Legacy material format; use
+/// @ref Acts::TrackingGeometryMaterialJsonConverter instead.
+class [[deprecated(
+    "Legacy material format; use TrackingGeometryMaterialJsonConverter")]]
+JsonMaterialDecorator : public IMaterialDecorator {
  public:
   /// Constructor with configuration
   /// @param rConfig the configuration for the material map reader

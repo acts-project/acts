@@ -5,8 +5,8 @@ and writes this format. Its `Config` supplies extensible surface dispatchers;
 `toJson`/`fromJson` handle documents and `toFile`/`fromFile` handle files. `Options`
 controls indentation and compression level, mirroring the tracking-geometry
 converter. Applying material remains a separate `TrackingGeometryMaterial::apply`
-operation. Existing material writers, decorators and converters retain their
-legacy-format behavior; the new codec does not call them.
+operation. Existing material writers, decorators and converters are deprecated
+and retain their legacy-format behavior; the new codec does not call them.
 The schema remains a draft pending review of the supported-state boundaries below.
 The hand-authored examples are exercised by C++ codec tests as well as offline QA.
 
@@ -219,5 +219,5 @@ range, complete cells) than all states C++ can construct.
 Review before freezing: legacy `theta`/`mag` BinUtility projection quirks. These two BinUtility directions
 are rejected rather than being reinterpreted as their mathematical names.
 Nested binning retains the original base/subdivision construction rather than
-flattening its intent. Existing legacy paths remain available; no ROOT cleanup
-or geometry-format migration is included.
+flattening its intent. Existing legacy paths remain available with deprecation
+warnings; no ROOT cleanup or geometry-format migration is included.
