@@ -48,7 +48,7 @@ struct null_expected_layer_mapper {
   }
 };
 
-/// Mapper that uses a flat lookup table of barcode entries.
+/// Mapper that uses a flat lookup table of geometry identifier entries.
 struct expected_layer_table_mapper {
   using entry_type = expected_layer_mapping_entry;
 
