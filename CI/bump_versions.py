@@ -48,13 +48,10 @@ class VersionBumper:
         "spack_container": re.compile(
             r"(ghcr\.io/acts-project/spack-container):(\d+\.\d+\.\d+)(_[a-z0-9._-]+)"
         ),
-        # Matches dependency tags in three formats:
-        # 1. Plain YAML mapping: DEPENDENCY_TAG: v18.0.0
-        # 2. GitHub Actions input: DEPENDENCY_TAG: ... default: 'v18.0.0'
-        # 3. Wheel build setup command: CI/dependencies/setup.sh -t v18.0.0
+        # Matches the pin in CI/dependencies/versions.env (DEPENDENCY_TAG=v18.0.0),
+        # and any YAML override of it (DEPENDENCY_TAG: v18.0.0)
         "dependency_tag": re.compile(
-            r"(DEPENDENCY_TAG:(?:\s*['\"]?|(?:[^\n]|\n(?!\s{0,2}\w))*?default:\s*['\"])|CI/dependencies/setup\.sh[ \t]+-t[ \t]+)(v\d+\.\d+\.\d+)(['\"]?)",
-            re.MULTILINE,
+            r"(DEPENDENCY_TAG[:=][ \t]*['\"]?)(v\d+\.\d+\.\d+)(['\"]?)"
         ),
     }
 
@@ -65,6 +62,7 @@ class VersionBumper:
         ".github/actions/**/action.yml",
         ".devcontainer/Dockerfile",
         "CI/**/*.sh",
+        "CI/dependencies/versions.env",
         "docs/**/*.md",
     ]
 
@@ -499,8 +497,7 @@ def bump_spack(
 
     This command updates the spack-container image version used in
     .devcontainer/Dockerfile and other configuration files, as well as
-    the DEPENDENCY_TAG in GitHub Actions and GitLab CI and the dependency
-    setup command in the wheel build. It replaces
+    the DEPENDENCY_TAG pin in CI/dependencies/versions.env. It replaces
     all found versions with the new version.
 
     Example:

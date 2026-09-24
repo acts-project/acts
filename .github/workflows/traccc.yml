@@ -218,8 +218,6 @@ jobs:
         with:
           compiler: ${{ matrix.platform.compiler || 'g++' }}
           flavor: ${{ matrix.platform.flavor }}
-          # Flavors need v24.0.0 or newer.
-          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -345,7 +343,6 @@ jobs:
         with:
           compiler: g++
           flavor: cuda13
-          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 

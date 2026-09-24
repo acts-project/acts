@@ -19,7 +19,8 @@ CCACHE_DIR="${CCACHE_DIR:-$PWD/ccache}"
 export CCACHE_DIR
 export CIBW_MANYLINUX_X86_64_IMAGE="manylinux_2_34" # based on almalinux9
 export CIBW_SKIP="*-musllinux* *-manylinux_i686"
-SETUP_CMD="bash {package}/CI/dependencies/setup.sh -t v24.4.0 -d deps -e env.sh"
+# Versions come from CI/dependencies/versions.env, like every other CI job.
+SETUP_CMD="bash {package}/CI/dependencies/setup.sh -d deps -e env.sh"
 export CIBW_BEFORE_ALL_LINUX="dnf install -y bc ccache && ${SETUP_CMD}"
 export CIBW_BEFORE_ALL_MACOS="brew install ninja ccache && ${SETUP_CMD}"
 # Linux wheels build in a container: the job's ccache ceiling must be passed

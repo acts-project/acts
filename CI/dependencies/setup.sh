@@ -7,6 +7,11 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 export SPACK_COLOR=always
 
+# Default for a version pin, from the single source of truth next to this script
+function pinned_version() {
+    sed -n "s/^$1=//p" "${SCRIPT_DIR}/versions.env"
+}
+
 function start_section() {
     local section_name="$1"
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
@@ -161,7 +166,7 @@ while getopts "c:t:d:e:s:F:fh" opt; do
       echo "Usage: $0 [-c compiler] [-t tag] [-d destination] -e env_file [-h]"
       echo "Options:"
       echo "  -c <compiler>    Specify compiler (defaults to CXX env var)"
-      echo "  -t <tag>         Specify dependency tag (defaults to DEPENDENCY_TAG env var)"
+      echo "  -t <tag>         Specify dependency tag (defaults to DEPENDENCY_TAG env var, then versions.env)"
       echo "  -d <destination> Specify install destination (defaults based on CI environment)"
       echo "  -e <env_file>    Specify environment file to output environments to"
       echo "  -s <cxx_std>     C++ standard for lockfile selection (e.g. 20, 23). Defaults to CXXSTD env var or 20."
@@ -200,9 +205,9 @@ if [ -z "${compiler:-}" ]; then
 fi
 
 if [ -z "${tag:-}" ]; then
-  tag="${DEPENDENCY_TAG:-}"
+  tag="${DEPENDENCY_TAG:-$(pinned_version DEPENDENCY_TAG)}"
   if [ -z "${tag:-}" ]; then
-    echo "No tag specified via -t or DEPENDENCY_TAG environment variable"
+    echo "No tag specified via -t, DEPENDENCY_TAG or ${SCRIPT_DIR}/versions.env"
     exit 1
   fi
 fi
@@ -281,7 +286,7 @@ if ! command -v spack &> /dev/null; then
 fi
 checkpoint "Spack install complete"
 
-_spack_repo_version=${SPACK_REPO_VERSION:-develop}
+_spack_repo_version=${SPACK_REPO_VERSION:-$(pinned_version SPACK_REPO_VERSION)}
 _spack_repo_directory="$(realpath "$(spack location --repo builtin)/../../../")"
 
 echo "Ensure builtin repo is synced to commit ${_spack_repo_version}"
