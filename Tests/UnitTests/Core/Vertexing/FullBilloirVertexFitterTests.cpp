@@ -295,34 +295,55 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
         "Testing FullBilloirVertexFitter through the IVertexFitter "
         "interface.") {
       const IVertexFitter& iface = billoirFitter;
-      auto ifaceCache = iface.makeCache(magFieldContext);
+      VertexFitInput input{inputTracks, Vector4::Zero(), std::nullopt};
+      BOOST_CHECK_THROW(
+          static_cast<void>(
+              static_cast<const IVertexFitter&>(customBilloirFitter)
+                  .fit(input, geoContext, magFieldContext)),
+          std::invalid_argument);
 
-      // Config::bField is needed only to drive the fitter through the
-      // interface. customBilloirFitter above is constructed without it and is
-      // used successfully via the direct fit() entry point; requesting a cache
-      // from it is what reports the missing field.
-      BOOST_CHECK_THROW(static_cast<const IVertexFitter&>(customBilloirFitter)
-                            .makeCache(magFieldContext),
-                        std::invalid_argument);
+      // Both unconstrained and constrained fits agree with the direct API.
+      for (const auto* options : {&vfOptions, &vfOptionsConstr}) {
+        input.seedPosition = options->constraint.fullPosition();
+        input.constraint = options->useConstraintInFit
+                               ? std::optional<Vertex>(options->constraint)
+                               : std::nullopt;
+        auto result = iface.fit(input, geoContext, magFieldContext);
+        auto direct = billoirFitter.fit(inputTracks, *options, fieldCache);
+        BOOST_REQUIRE(result.ok());
+        BOOST_REQUIRE(direct.ok());
+        CHECK_CLOSE_ABS(result->fullPosition(), direct->fullPosition(), 1e-9);
+        CHECK_CLOSE_ABS(result->fullCovariance(), direct->fullCovariance(),
+                        1e-9);
+        BOOST_CHECK_EQUAL(result->tracks().size(), inputTracks.size());
+      }
 
-      // fitSingle has to agree with the direct one-shot fit
-      auto single = iface.fitSingle(inputTracks, vfOptions, ifaceCache);
-      BOOST_REQUIRE(single.ok());
-      auto direct = billoirFitter.fit(inputTracks, vfOptions, fieldCache);
-      BOOST_REQUIRE(direct.ok());
-      CHECK_CLOSE_ABS(single->fullPosition(), direct->fullPosition(), 1e-9);
-
-      // The problem-based entry point has to produce the same vertex, and
-      // publish the fitted tracks into the problem.
-      Vertex vtx;
-      VertexFitProblem problem;
-      problem.candidates[&vtx].trackLinks = inputTracks;
-      std::vector<Vertex*> newVertices{&vtx};
-      auto added = iface.addVertices(problem, newVertices, vfOptions, ifaceCache);
-      BOOST_REQUIRE(added.ok());
-      CHECK_CLOSE_ABS(vtx.fullPosition(), direct->fullPosition(), 1e-9);
-      BOOST_CHECK_EQUAL(problem.vertices.size(), 1u);
-      BOOST_CHECK_EQUAL(problem.tracksAtVertices.size(), inputTracks.size());
+      // A constraint must not replace an explicitly supplied seed.
+      std::optional<Vector4> firstLinearizationPoint;
+      auto recordLinearization = [&](const BoundTrackParameters& params,
+                                     double time, const Surface& surface,
+                                     const GeometryContext& gctx,
+                                     const MagneticFieldContext& mctx,
+                                     MagneticFieldProvider::Cache& cache) {
+        if (!firstLinearizationPoint) {
+          Vector4 point;
+          point.head<3>() = surface.center(gctx);
+          point[3] = time;
+          firstLinearizationPoint = point;
+        }
+        return linearizer.linearizeTrack(params, time, surface, gctx, mctx,
+                                         cache);
+      };
+      auto seedConfig = vertexFitterCfg;
+      seedConfig.trackLinearizer.connect(recordLinearization);
+      VertexFitter seedFitter(seedConfig);
+      input.seedPosition = input.constraint->fullPosition();
+      input.seedPosition[0] += 0.1;
+      input.seedPosition[3] += 0.1;
+      auto seeded = seedFitter.fit(input, geoContext, magFieldContext);
+      BOOST_REQUIRE(seeded.ok());
+      BOOST_REQUIRE(firstLinearizationPoint.has_value());
+      CHECK_CLOSE_ABS(*firstLinearizationPoint, input.seedPosition, 1e-12);
     }
   }
 }

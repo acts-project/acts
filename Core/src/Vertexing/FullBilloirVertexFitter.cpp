@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
@@ -60,10 +59,6 @@ struct BilloirVertex {
 
 }  // namespace
 
-Acts::FullBilloirVertexFitter::Cache::Cache(
-    const MagneticFieldProvider& field, const MagneticFieldContext& magContext)
-    : fieldCache(field.makeCache(magContext)) {}
-
 Acts::FullBilloirVertexFitter::FullBilloirVertexFitter(
     const Config& cfg, std::unique_ptr<const Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {
@@ -81,21 +76,19 @@ Acts::FullBilloirVertexFitter::FullBilloirVertexFitter(
   }
 }
 
-Acts::IVertexFitter::Cache Acts::FullBilloirVertexFitter::makeCache(
+Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
+    const VertexFitInput& input, const GeometryContext& gctx,
     const MagneticFieldContext& mctx) const {
   if (m_cfg.bField == nullptr) {
     throw std::invalid_argument(
         "FullBilloirVertexFitter: Config::bField is required to use this "
         "fitter through the IVertexFitter interface.");
   }
-  return IVertexFitter::Cache{std::in_place_type<Cache>, *m_cfg.bField, mctx};
-}
-
-Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fitSingle(
-    std::span<const InputTrack> trackVector,
-    const VertexingOptions& vertexingOptions,
-    IVertexFitter::Cache& cache) const {
-  return fit(trackVector, vertexingOptions, cache.as<Cache>().fieldCache);
+  auto fieldCache = m_cfg.bField->makeCache(mctx);
+  VertexingOptions options =
+      input.constraint ? VertexingOptions(gctx, mctx, *input.constraint)
+                       : VertexingOptions(gctx, mctx);
+  return fitImpl(input.tracks, options, fieldCache, input.seedPosition);
 }
 
 const Acts::Logger& Acts::FullBilloirVertexFitter::logger() const {
@@ -106,6 +99,15 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
     std::span<const InputTrack> paramVector,
     const VertexingOptions& vertexingOptions,
     MagneticFieldProvider::Cache& fieldCache) const {
+  return fitImpl(paramVector, vertexingOptions, fieldCache,
+                 vertexingOptions.constraint.fullPosition());
+}
+
+Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fitImpl(
+    std::span<const InputTrack> paramVector,
+    const VertexingOptions& vertexingOptions,
+    MagneticFieldProvider::Cache& fieldCache,
+    const Vector4& seedPosition) const {
   unsigned int nTracks = paramVector.size();
   double chi2 = std::numeric_limits<double>::max();
 
@@ -137,7 +139,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
   std::vector<BilloirTrack> billoirTracks;
   std::vector<Vector3> trackMomenta;
   // Initial guess of the 4D vertex position
-  Vector4 linPoint = vertexingOptions.constraint.fullPosition();
+  Vector4 linPoint = seedPosition;
   Vertex fittedVertex;
 
   for (int nIter = 0; nIter < m_cfg.maxIterations; ++nIter) {
@@ -384,84 +386,4 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
   }  // end loop iterations
 
   return fittedVertex;
-}
-
-Acts::Result<void> Acts::FullBilloirVertexFitter::fitVertex(
-    VertexFitProblem& problem, Vertex* vtx,
-    const VertexingOptions& vertexingOptions, Cache& cache) const {
-  const VertexFitCandidate& candidate = problem.candidates.at(vtx);
-
-  // The Billoir fit takes the constraint from the options, so apply the
-  // per-vertex constraint if one was supplied.
-  VertexingOptions vertexOptions = vertexingOptions;
-  if (candidate.constraint.fullCovariance() != SquareMatrix4::Zero()) {
-    vertexOptions.constraint = candidate.constraint;
-    vertexOptions.useConstraintInFit = true;
-  }
-
-  auto res = fit(candidate.trackLinks, vertexOptions, cache.fieldCache);
-  if (!res.ok()) {
-    return res.error();
-  }
-
-  const Vertex& fitted = *res;
-  vtx->setFullPosition(fitted.fullPosition());
-  vtx->setFullCovariance(fitted.fullCovariance());
-  vtx->setFitQuality(fitted.fitQuality());
-
-  // Publish the fitted tracks into the problem, so that callers see them the
-  // same way they would for a multi-vertex fit.
-  for (const auto& trkAtVtx : fitted.tracks()) {
-    auto key = std::make_pair(trkAtVtx.originalParams, vtx);
-    auto [it, inserted] = problem.tracksAtVertices.try_emplace(key, trkAtVtx);
-    if (!inserted) {
-      it->second = trkAtVtx;
-    }
-  }
-
-  return {};
-}
-
-Acts::Result<void> Acts::FullBilloirVertexFitter::fit(
-    VertexFitProblem& problem, const VertexingOptions& vertexingOptions,
-    IVertexFitter::Cache& anyCache) const {
-  Cache& cache = anyCache.as<Cache>();
-
-  for (Vertex* vtx : problem.vertices) {
-    auto res = fitVertex(problem, vtx, vertexingOptions, cache);
-    if (!res.ok()) {
-      return res.error();
-    }
-  }
-
-  return {};
-}
-
-Acts::Result<void> Acts::FullBilloirVertexFitter::addVertices(
-    VertexFitProblem& problem, std::span<Vertex* const> newVertices,
-    const VertexingOptions& vertexingOptions,
-    IVertexFitter::Cache& anyCache) const {
-  Cache& cache = anyCache.as<Cache>();
-
-  for (Vertex* vtx : newVertices) {
-    if (problem.candidates[vtx].trackLinks.empty()) {
-      ACTS_ERROR(
-          "newVertex does not have any associated tracks (i.e., its trackLinks "
-          "are empty).");
-      return VertexingError::EmptyInput;
-    }
-    if (!rangeContainsValue(problem.vertices, vtx)) {
-      problem.vertices.push_back(vtx);
-    }
-  }
-
-  // Vertices are fitted independently, so only the new ones need fitting.
-  for (Vertex* vtx : newVertices) {
-    auto res = fitVertex(problem, vtx, vertexingOptions, cache);
-    if (!res.ok()) {
-      return res.error();
-    }
-  }
-
-  return {};
 }

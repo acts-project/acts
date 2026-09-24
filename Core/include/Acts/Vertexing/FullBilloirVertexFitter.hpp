@@ -61,29 +61,14 @@ class FullBilloirVertexFitter final : public IVertexFitter {
     /// Track linearizer
     TrackLinearizer trackLinearizer;
 
-    /// Magnetic field provider, used only to create the fitter cache in
-    /// @c makeCache. This has to be the same field that the track linearizer
-    /// uses.
+    /// Magnetic field provider, used to create a field cache for
+    /// the interface fit overload. This has to be the same field that the track
+    /// linearizer uses.
     ///
     /// Optional: it is required only to drive this fitter through the
     /// @c IVertexFitter interface. Callers using @c fit directly supply their
     /// own field cache and can leave this unset.
     std::shared_ptr<const MagneticFieldProvider> bField;
-  };
-
-  /// @brief The fitter-private cache
-  ///
-  /// The Billoir fit keeps no state across vertices; the only scratch data is
-  /// the magnetic field cache used when linearizing tracks.
-  struct Cache {
-    /// Constructor for the Billoir fitter cache
-    /// @param field Magnetic field provider for track extrapolation
-    /// @param magContext Magnetic field context for field evaluations
-    Cache(const MagneticFieldProvider& field,
-          const Acts::MagneticFieldContext& magContext);
-
-    /// Magnetic field cache for field evaluations during fitting
-    MagneticFieldProvider::Cache fieldCache;
   };
 
   /// @brief Constructor for user-defined InputTrack type
@@ -106,46 +91,23 @@ class FullBilloirVertexFitter final : public IVertexFitter {
                      const VertexingOptions& vertexingOptions,
                      MagneticFieldProvider::Cache& fieldCache) const;
 
-  /// @copydoc IVertexFitter::makeCache
-  ///
-  /// @note Requires @c Config::bField to be set. It is not needed when calling
-  /// @c fit directly with a caller-supplied field cache, which is why it is
-  /// checked here rather than in the constructor.
-  IVertexFitter::Cache makeCache(
-      const MagneticFieldContext& mctx) const override;
-
   /// @copydoc IVertexFitter::fit
-  ///
-  /// Each vertex in @p problem is fitted independently: unlike the adaptive
-  /// multi-vertex fitter, tracks are not competed between vertices.
-  Result<void> fit(VertexFitProblem& problem,
-                   const VertexingOptions& vertexingOptions,
-                   IVertexFitter::Cache& cache) const override;
-
-  /// @copydoc IVertexFitter::addVertices
-  ///
-  /// Since vertices are fitted independently, only @p newVertices are fitted;
-  /// vertices already in @p problem are left untouched.
-  Result<void> addVertices(VertexFitProblem& problem,
-                           std::span<Vertex* const> newVertices,
-                           const VertexingOptions& vertexingOptions,
-                           IVertexFitter::Cache& cache) const override;
-
-  /// @copydoc IVertexFitter::fitSingle
-  Result<Vertex> fitSingle(std::span<const InputTrack> trackVector,
-                           const VertexingOptions& vertexingOptions,
-                           IVertexFitter::Cache& cache) const override;
+  /// @note Requires Config::bField to match the linearizer's provider.
+  /// @throws std::invalid_argument if Config::bField is missing
+  Result<Vertex> fit(const VertexFitInput& input, const GeometryContext& gctx,
+                     const MagneticFieldContext& mctx) const override;
 
  private:
-  /// @brief Fits a single vertex of the problem in place
-  ///
-  /// @param problem The multi-vertex fit problem
-  /// @param vtx The vertex to fit
-  /// @param vertexingOptions Vertexing options
-  /// @param cache Fitter cache
-  Result<void> fitVertex(VertexFitProblem& problem, Vertex* vtx,
-                         const VertexingOptions& vertexingOptions,
-                         Cache& cache) const;
+  /// Fit with an explicit seed and caller-provided magnetic field cache.
+  /// @param tracks Tracks to fit
+  /// @param options Contexts and constraint settings
+  /// @param fieldCache Magnetic field cache
+  /// @param seedPosition Initial linearization point
+  /// @return Fitted vertex or a fitting error
+  Result<Vertex> fitImpl(std::span<const InputTrack> tracks,
+                         const VertexingOptions& options,
+                         MagneticFieldProvider::Cache& fieldCache,
+                         const Vector4& seedPosition) const;
 
   /// Configuration object
   Config m_cfg;
