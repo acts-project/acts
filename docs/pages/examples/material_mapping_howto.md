@@ -238,7 +238,8 @@ overload performs lookup and material assignment but cannot check uniqueness acr
 into these maps. Call `converter.fromFile(path).apply(geometry)` in C++ or Python
 to apply them to a completed geometry. Python also provides
 `acts.IMaterialDecorator.fromFile(path)` for construction-time decoration.
-The legacy JSON decorator remains available for legacy files.
+The deprecated JSON decorator remains available for legacy files, with a Python
+deprecation warning.
 
 - Applying a keyed map to Gen1 geometry is an error. Stable keys require Gen3
   material designators.

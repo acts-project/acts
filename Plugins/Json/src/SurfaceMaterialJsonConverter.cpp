@@ -15,6 +15,7 @@
 #include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/IMultiAxis.hpp"
 #include "ActsPlugins/Json/AxisSpecJsonConverter.hpp"
@@ -32,6 +33,9 @@
 #include <utility>
 #include <variant>
 #include <vector>
+
+// Legacy implementations intentionally call the deprecated material APIs.
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace {
 
@@ -449,3 +453,5 @@ Acts::SurfaceMaterialJsonConverter::fromJson(const nlohmann::json& jMaterial,
   return config.decoder(jMaterial,
                         context != nullptr ? *context : emptyContext);
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
