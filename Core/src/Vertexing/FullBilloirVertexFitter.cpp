@@ -15,6 +15,9 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
+#include <stdexcept>
+#include <utility>
+
 namespace {
 
 /// @struct BilloirTrack
@@ -56,6 +59,48 @@ struct BilloirVertex {
 };
 
 }  // namespace
+
+Acts::FullBilloirVertexFitter::Cache::Cache(
+    const MagneticFieldProvider& field, const MagneticFieldContext& magContext)
+    : fieldCache(field.makeCache(magContext)) {}
+
+Acts::FullBilloirVertexFitter::FullBilloirVertexFitter(
+    const Config& cfg, std::unique_ptr<const Logger> logger)
+    : m_cfg(cfg), m_logger(std::move(logger)) {
+  if (!m_cfg.extractParameters.connected()) {
+    throw std::invalid_argument(
+        "FullBilloirVertexFitter: "
+        "No function to extract parameters "
+        "provided.");
+  }
+
+  if (!m_cfg.trackLinearizer.connected()) {
+    throw std::invalid_argument(
+        "FullBilloirVertexFitter: "
+        "No track linearizer provided.");
+  }
+}
+
+Acts::IVertexFitter::Cache Acts::FullBilloirVertexFitter::makeCache(
+    const MagneticFieldContext& mctx) const {
+  if (m_cfg.bField == nullptr) {
+    throw std::invalid_argument(
+        "FullBilloirVertexFitter: Config::bField is required to use this "
+        "fitter through the IVertexFitter interface.");
+  }
+  return IVertexFitter::Cache{std::in_place_type<Cache>, *m_cfg.bField, mctx};
+}
+
+Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fitSingle(
+    std::span<const InputTrack> trackVector,
+    const VertexingOptions& vertexingOptions,
+    IVertexFitter::Cache& cache) const {
+  return fit(trackVector, vertexingOptions, cache.as<Cache>().fieldCache);
+}
+
+const Acts::Logger& Acts::FullBilloirVertexFitter::logger() const {
+  return *m_logger;
+}
 
 Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
     std::span<const InputTrack> paramVector,

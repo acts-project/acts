@@ -80,8 +80,7 @@ class FullBilloirVertexFitter final : public IVertexFitter {
     /// @param field Magnetic field provider for track extrapolation
     /// @param magContext Magnetic field context for field evaluations
     Cache(const MagneticFieldProvider& field,
-          const Acts::MagneticFieldContext& magContext)
-        : fieldCache(field.makeCache(magContext)) {}
+          const Acts::MagneticFieldContext& magContext);
 
     /// Magnetic field cache for field evaluations during fitting
     MagneticFieldProvider::Cache fieldCache;
@@ -94,21 +93,7 @@ class FullBilloirVertexFitter final : public IVertexFitter {
   explicit FullBilloirVertexFitter(
       const Config& cfg,
       std::unique_ptr<const Logger> logger =
-          getDefaultLogger("FullBilloirVertexFitter", Logging::INFO))
-      : m_cfg(cfg), m_logger(std::move(logger)) {
-    if (!m_cfg.extractParameters.connected()) {
-      throw std::invalid_argument(
-          "FullBilloirVertexFitter: "
-          "No function to extract parameters "
-          "provided.");
-    }
-
-    if (!m_cfg.trackLinearizer.connected()) {
-      throw std::invalid_argument(
-          "FullBilloirVertexFitter: "
-          "No track linearizer provided.");
-    }
-  }
+          getDefaultLogger("FullBilloirVertexFitter", Logging::INFO));
 
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
@@ -127,14 +112,7 @@ class FullBilloirVertexFitter final : public IVertexFitter {
   /// @c fit directly with a caller-supplied field cache, which is why it is
   /// checked here rather than in the constructor.
   IVertexFitter::Cache makeCache(
-      const MagneticFieldContext& mctx) const override {
-    if (m_cfg.bField == nullptr) {
-      throw std::invalid_argument(
-          "FullBilloirVertexFitter: Config::bField is required to use this "
-          "fitter through the IVertexFitter interface.");
-    }
-    return IVertexFitter::Cache{std::in_place_type<Cache>, *m_cfg.bField, mctx};
-  }
+      const MagneticFieldContext& mctx) const override;
 
   /// @copydoc IVertexFitter::fit
   ///
@@ -156,9 +134,7 @@ class FullBilloirVertexFitter final : public IVertexFitter {
   /// @copydoc IVertexFitter::fitSingle
   Result<Vertex> fitSingle(std::span<const InputTrack> trackVector,
                            const VertexingOptions& vertexingOptions,
-                           IVertexFitter::Cache& cache) const override {
-    return fit(trackVector, vertexingOptions, cache.as<Cache>().fieldCache);
-  }
+                           IVertexFitter::Cache& cache) const override;
 
  private:
   /// @brief Fits a single vertex of the problem in place
@@ -178,7 +154,7 @@ class FullBilloirVertexFitter final : public IVertexFitter {
   std::unique_ptr<const Logger> m_logger;
 
   /// Private access to logging instance
-  const Logger& logger() const { return *m_logger; }
+  const Logger& logger() const;
 };
 
 }  // namespace Acts
