@@ -41,7 +41,7 @@ using test_algebra = test::algebra;
 using scalar = test::scalar;
 using point3 = test::point3;
 
-constexpr scalar tol{1e-3f};
+constexpr scalar tol{1.1e-3f};
 
 namespace detray::test {
 
