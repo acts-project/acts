@@ -1,7 +1,9 @@
 {
     "$schema": "../../../Plugins/Json/schema/material-map-v1.schema.json",
-    "format": "acts-material-map",
-    "version": 1,
+    "header": {
+        "format": "acts-material-map",
+        "version": 1
+    },
     "surfaces": [
         {
             "target": {

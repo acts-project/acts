@@ -92,9 +92,10 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentExamples) {
   }
   const auto surfaces = converter.fromJson(fixture("surfaces.json"));
   BOOST_REQUIRE(surfaces.description());
-  BOOST_CHECK_EQUAL(
-      *surfaces.description(),
-      fixture("surfaces.json").at("description").get<std::string>());
+  BOOST_CHECK_EQUAL(*surfaces.description(), fixture("surfaces.json")
+                                                 .at("header")
+                                                 .at("description")
+                                                 .get<std::string>());
   const auto* a = dynamic_cast<const GridSurfaceMaterial*>(
       surfaces.keyedSurfaces.at("barrel/support-a").material.get());
   const auto* b = dynamic_cast<const GridSurfaceMaterial*>(
@@ -211,7 +212,7 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentDescription) {
   Converter converter;
   TrackingGeometryMaterial material;
   BOOST_CHECK(!material.description());
-  BOOST_CHECK(!converter.toJson(material).contains("description"));
+  BOOST_CHECK(!converter.toJson(material).at("header").contains("description"));
   material.setDescription("Mapped detector material");
   auto copy = material;
   copy.setDescription("");
@@ -223,12 +224,12 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentDescription) {
                     "Mapped detector material");
   BOOST_REQUIRE(converter.fromJson(converter.toJson(copy)).description());
   copy.setDescription(std::nullopt);
-  BOOST_CHECK(!converter.toJson(copy).contains("description"));
+  BOOST_CHECK(!converter.toJson(copy).at("header").contains("description"));
   for (const nlohmann::json& invalid :
        {nlohmann::json(nullptr), nlohmann::json(42), nlohmann::json::object(),
         nlohmann::json::array()}) {
     auto malformed = encoded;
-    malformed["description"] = invalid;
+    malformed["header"]["description"] = invalid;
     BOOST_CHECK_THROW(converter.fromJson(malformed), nlohmann::json::exception);
   }
 }
@@ -318,9 +319,9 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentRejectsInvalidInputs) {
     mutation(j);
     BOOST_CHECK_THROW(converter.fromJson(j), std::invalid_argument);
   };
-  bad([](auto& j) { j["version"] = 2; });
-  bad([](auto& j) { j["version"] = 1.5; });
-  bad([](auto& j) { j["format"] = "legacy"; });
+  bad([](auto& j) { j["header"]["version"] = 2; });
+  bad([](auto& j) { j["header"]["version"] = 1.5; });
+  bad([](auto& j) { j["header"]["format"] = "legacy"; });
   bad([](auto& j) { j["surfaces"][0]["material"]["kind"] = "unknown"; });
   bad([](auto& j) {
     j["surfaces"][0]["target"]["geometry_id"]["volume"] = 256;
@@ -355,6 +356,12 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentRejectsInvalidInputs) {
 BOOST_AUTO_TEST_CASE(MaterialDocumentBasicParsing) {
   Converter converter;
   auto document = fixture("minimal.json");
+  document.erase("header");
+  BOOST_CHECK_THROW(converter.fromJson(document), nlohmann::json::exception);
+  document = fixture("minimal.json");
+  document["header"] = nullptr;
+  BOOST_CHECK_THROW(converter.fromJson(document), nlohmann::json::exception);
+  document = fixture("minimal.json");
   document["extra"] = "ignored by codec; rejected by offline schema";
   document["surfaces"][0]["material"]["extra"] = true;
   BOOST_CHECK_NO_THROW(converter.fromJson(document));
@@ -397,7 +404,7 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentExtensionDispatchAndFiles) {
   const auto duplicate = tmp.path() / "duplicate.json";
   {
     std::ofstream out(duplicate);
-    out << R"({"format":"acts-material-map","version":1,"version":1,"surfaces":[]})";
+    out << R"({"header":{"format":"acts-material-map","version":1,"version":1},"surfaces":[]})";
   }
   BOOST_CHECK_THROW(converter.fromFile(duplicate), std::invalid_argument);
   // CBOR map {"a":1,"a":2}: duplicate keys must also be rejected before DOM

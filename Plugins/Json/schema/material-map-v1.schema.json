@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "urn:acts:material-map:1-draft",
-    "title": "ACTS material map — draft version 1",
+    "title": "ACTS material map \u2014 draft version 1",
     "description": "Experimental surface-only version 1 handled by TrackingGeometryMaterialJsonConverter. See docs/pages/material_map_json_schema.md for supported-state boundaries.",
     "type": "object",
     "properties": {
@@ -9,14 +9,24 @@
             "type": "string",
             "minLength": 1
         },
-        "format": {
-            "const": "acts-material-map"
-        },
-        "version": {
-            "const": 1
-        },
-        "description": {
-            "type": "string"
+        "header": {
+            "type": "object",
+            "properties": {
+                "format": {
+                    "const": "acts-material-map"
+                },
+                "version": {
+                    "const": 1
+                },
+                "description": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "format",
+                "version"
+            ],
+            "additionalProperties": false
         },
         "slab_stores": {
             "type": "object",
@@ -83,8 +93,7 @@
         }
     },
     "required": [
-        "format",
-        "version",
+        "header",
         "surfaces"
     ],
     "additionalProperties": false,

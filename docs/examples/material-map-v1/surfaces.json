@@ -1,7 +1,10 @@
 {
     "$schema": "../../../Plugins/Json/schema/material-map-v1.schema.json",
-    "format": "acts-material-map",
-    "version": 1,
+    "header": {
+        "format": "acts-material-map",
+        "version": 1,
+        "description": "Synthetic schema fixtures; these are not production converter output."
+    },
     "surfaces": [
         {
             "target": {
@@ -570,6 +573,5 @@
                 "thickness": 2
             }
         ]
-    },
-    "description": "Synthetic schema fixtures; these are not production converter output."
+    }
 }

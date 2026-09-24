@@ -160,7 +160,11 @@ def test_invalid_structures():
     m, s = (examples[n] for n in ("minimal", "surfaces"))
     maxima = dict(zip(ID_COMPONENTS, (255, 255, 4095, 255, 1048575, 255)))
     structural = [
-        changed(m, ["version"], 2),
+        changed(m, ["header", "version"], 2),
+        changed(m, ["header"], {}),
+        changed(m, ["header"], None),
+        changed(m, ["header", "description"], 42),
+        changed(m, ["description"], "misplaced"),
         changed(m, ["surfaces", 0, "target", "geometry_id"], 72057594037927936),
         changed(m, ["surfaces", 0, "target", "geometry_id"], "72057594037927936"),
         changed(m, ["surfaces", 0, "target", "geometry_id"], {"volume": -1}),

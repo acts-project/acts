@@ -809,12 +809,12 @@ nlohmann::json TrackingGeometryMaterialJsonConverter::toJson(
   check(material.volumeMaterials.empty(),
         "material document version 1 supports surface material only; "
         "volume assignments cannot be serialized");
-  nlohmann::json j{{"$schema", "urn:acts:material-map:1-draft"},
-                   {"format", "acts-material-map"},
-                   {"version", 1},
-                   {"surfaces", nlohmann::json::array()}};
+  nlohmann::json j{
+      {"$schema", "urn:acts:material-map:1-draft"},
+      {"header", {{"format", "acts-material-map"}, {"version", 1}}},
+      {"surfaces", nlohmann::json::array()}};
   if (material.description()) {
-    j["description"] = *material.description();
+    j["header"]["description"] = *material.description();
   }
   EncodeContext context;
   for (const auto& [id, payload] : material.surfaceMaterials) {
@@ -852,13 +852,14 @@ nlohmann::json TrackingGeometryMaterialJsonConverter::toJson(
 TrackingGeometryMaterial TrackingGeometryMaterialJsonConverter::fromJson(
     const nlohmann::json& encoded) const {
   check(!encoded.contains("volumes"), "version 1 does not support volumes");
-  check(encoded.at("format") == "acts-material-map",
+  const auto& header = encoded.at("header");
+  check(header.at("format") == "acts-material-map",
         "unsupported material format");
-  check(index(encoded.at("version")) == 1,
+  check(index(header.at("version")) == 1,
         "unsupported material document version");
   TrackingGeometryMaterial result;
-  if (encoded.contains("description")) {
-    result.setDescription(encoded.at("description").get<std::string>());
+  if (header.contains("description")) {
+    result.setDescription(header.at("description").get<std::string>());
   }
   DecodeContext context;
   if (encoded.contains("slab_stores")) {

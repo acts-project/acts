@@ -83,9 +83,10 @@ to `CMAKE_INSTALL_DATADIR`). The schema remains explicitly marked as a draft.
 
 ## Envelope and identity
 
-`format: "acts-material-map"` and `version: 1` govern the entire document,
+The required `header` object contains `format: "acts-material-map"`, `version: 1`,
+and an optional `description` string. Format and version govern the entire document,
 including axes, assignments, materials and stores. There are no nested versions.
-`$schema` is optional tooling information, never permission to bypass version
+`$schema` stays at the document root as optional tooling information, never permission to bypass version
 checks. JSON text and CBOR encode the same data model; zstd only compresses it.
 CBOR must use the same string keys, IDs and finite numeric values as JSON.
 Unknown versions are rejected. The schema rejects unknown fields; the runtime
@@ -224,7 +225,7 @@ the material container, not a promise of independent per-assignment copies.
 
 ## Description and validation boundaries
 
-An optional top-level `description` string provides human-readable context. It
+An optional `header.description` string provides human-readable context. It
 has no effect on material application. Read it with `material.description()`;
 set it with `material.setDescription("Run A")`. Passing `std::nullopt` removes
 the field; an empty string is preserved. No general metadata, provenance log,
