@@ -18,7 +18,6 @@
 #include "traccc/finding/finding_config.hpp"
 #include "traccc/finding/measurement_selector.hpp"
 #include "traccc/finding/track_state_candidate.hpp"
-#include "traccc/sanity/contiguous_on.hpp"
 #include "traccc/utils/logging.hpp"
 #include "traccc/utils/particle.hpp"
 #include "traccc/utils/prob.hpp"

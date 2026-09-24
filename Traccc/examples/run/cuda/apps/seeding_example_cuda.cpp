@@ -20,8 +20,6 @@
 #include "traccc/efficiency/track_filter.hpp"
 #include "traccc/examples/make_magnetic_field.hpp"
 #include "traccc/examples/print_fitted_tracks_statistics.hpp"
-#include "traccc/finding/combinatorial_kalman_filter_algorithm.hpp"
-#include "traccc/fitting/kalman_fitting_algorithm.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/host_detector.hpp"
 #include "traccc/io/read_detector.hpp"
@@ -42,13 +40,9 @@
 #include "traccc/options/track_propagation.hpp"
 #include "traccc/options/track_seeding.hpp"
 #include "traccc/options/truth_finding.hpp"
-#include "traccc/performance/collection_comparator.hpp"
-#include "traccc/performance/soa_comparator.hpp"
 #include "traccc/performance/timer.hpp"
 #include "traccc/resolution/fitting_performance_writer.hpp"
 #include "traccc/seeding/detail/track_params_estimation_config.hpp"
-#include "traccc/seeding/seeding_algorithm.hpp"
-#include "traccc/seeding/track_params_estimation.hpp"
 #include "traccc/utils/propagation.hpp"
 
 // VecMem include(s).
@@ -122,11 +116,8 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
 
   // Output stats
   std::uint64_t n_spacepoints = 0;
-  std::uint64_t n_seeds = 0;
   std::uint64_t n_seeds_cuda = 0;
-  std::uint64_t n_found_tracks = 0;
   std::uint64_t n_found_tracks_cuda = 0;
-  std::uint64_t n_fitted_tracks = 0;
   std::uint64_t n_fitted_tracks_cuda = 0;
 
   /*****************************
@@ -141,7 +132,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
       traccc::data_format::json);
 
   // B field value
-  const traccc::vector3 field_vec(seeding_opts);
   const auto host_field = traccc::details::make_magnetic_field(bfield_opts);
   const auto device_field = traccc::cuda::make_magnetic_field(
       host_field, (accelerator_opts.use_gpu_texture_memory
@@ -167,13 +157,7 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
   const traccc::seedfinder_config seedfinder_config(seeding_opts);
   const traccc::seedfilter_config seedfilter_config(seeding_opts);
   const traccc::spacepoint_grid_config spacepoint_grid_config(seeding_opts);
-  traccc::host::seeding_algorithm sa(seedfinder_config, spacepoint_grid_config,
-                                     seedfilter_config, host_mr,
-                                     logger().clone("HostSeedingAlg"));
   const traccc::track_params_estimation_config track_params_estimation_config;
-  traccc::host::track_params_estimation tp(
-      track_params_estimation_config, host_mr,
-      logger().clone("HostTrackParEstAlg"));
 
   vecmem::cuda::stream_wrapper vecmem_stream;
   traccc::cuda::stream_wrapper stream{vecmem_stream.stream()};
@@ -202,9 +186,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
   cfg.propagation = propagation_config;
 
   // Finding algorithm object
-  traccc::host::combinatorial_kalman_filter_algorithm host_finding(
-      cfg, host_mr, logger().clone("HostFindingAlg"));
-
   auto device_fitting =
       std::make_unique<traccc::cuda::kalman_fitting_algorithm>(
           cfg.kalman_smoother, mr, async_copy, stream,
@@ -221,10 +202,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
     // Instantiate host containers/collections
     traccc::edm::spacepoint_collection::host spacepoints_per_event{host_mr};
     traccc::edm::measurement_collection::host measurements_per_event{host_mr};
-    traccc::host::seeding_algorithm::output_type seeds{host_mr};
-    traccc::host::track_params_estimation::output_type params;
-    traccc::edm::track_container<traccc::default_algebra>::host
-        track_candidates{host_mr};
 
     traccc::edm::seed_collection::buffer seeds_cuda_buffer;
     traccc::bound_track_parameters_collection_types::buffer params_cuda_buffer(
@@ -283,15 +260,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
         stream.synchronize();
       }  // stop measuring seeding cuda timer
 
-      // CPU
-
-      if (accelerator_opts.compare_with_cpu) {
-        {
-          traccc::performance::timer t("Seeding  (cpu)", elapsedTimes);
-          seeds = sa(vecmem::get_data(spacepoints_per_event));
-        }
-      }  // stop measuring seeding cpu timer
-
       /*----------------------------
          Track params estimation
       ----------------------------*/
@@ -305,14 +273,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
         stream.synchronize();
       }  // stop measuring track params cuda timer
 
-      // CPU
-      if (accelerator_opts.compare_with_cpu) {
-        traccc::performance::timer t("Track params  (cpu)", elapsedTimes);
-        params = tp(vecmem::get_data(measurements_per_event),
-                    vecmem::get_data(spacepoints_per_event),
-                    vecmem::get_data(seeds), field_vec);
-      }  // stop measuring track params cpu timer
-
       /*------------------------
          Track Finding with CKF
         ------------------------*/
@@ -324,25 +284,11 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
             device_finding(detector_buffer, device_field,
                            measurements_cuda_buffer, params_cuda_buffer);
       }
-
-      if (accelerator_opts.compare_with_cpu) {
-        traccc::performance::timer t("Track finding with CKF (cpu)",
-                                     elapsedTimes);
-        track_candidates = host_finding(
-            host_det, host_field, vecmem::get_data(measurements_per_event),
-            vecmem::get_data(params));
-      }
     }  // Stop measuring wall time
 
-    /*----------------------------------
-      compare seeds from cpu and cuda
-      ----------------------------------*/
-
-    // Copy the seeds to the host for comparisons
+    // Copy the seeds to the host
     traccc::edm::seed_collection::host seeds_cuda{host_mr};
-    traccc::bound_track_parameters_collection_types::host params_cuda;
     async_copy(seeds_cuda_buffer, seeds_cuda)->wait();
-    async_copy(params_cuda_buffer, params_cuda)->wait();
 
     // Copy track candidates from device to host
     traccc::edm::track_container<traccc::default_algebra>::host
@@ -355,26 +301,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
                track_candidates_cuda.states)
         ->wait();
 
-    if (accelerator_opts.compare_with_cpu) {
-      // Show which event we are currently presenting the results for.
-      std::cout << "===>>> Event " << event << " <<<===" << std::endl;
-
-      // Compare the seeds made on the host and on the device
-      traccc::soa_comparator<traccc::edm::seed_collection> compare_seeds{
-          "seeds",
-          traccc::details::comparator_factory<
-              traccc::edm::seed_collection::const_device::const_proxy_type>{
-              vecmem::get_data(spacepoints_per_event),
-              vecmem::get_data(spacepoints_per_event)}};
-      compare_seeds(vecmem::get_data(seeds), vecmem::get_data(seeds_cuda));
-
-      // Compare the track parameters made on the host and on the device.
-      traccc::collection_comparator<traccc::bound_track_parameters<>>
-          compare_track_parameters{"track parameters"};
-      compare_track_parameters(vecmem::get_data(params),
-                               vecmem::get_data(params_cuda));
-    }
-
     /*----------------
          Statistics
       ---------------*/
@@ -382,11 +308,8 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
     details::print_fitted_tracks_statistics(track_candidates_cuda, logger());
     n_spacepoints += spacepoints_per_event.size();
     n_seeds_cuda += seeds_cuda.size();
-    n_seeds += seeds.size();
     n_found_tracks_cuda += track_candidates_cuda.tracks.size();
-    n_found_tracks += track_candidates.tracks.size();
     n_fitted_tracks_cuda += track_candidates_cuda.tracks.size();
-    n_fitted_tracks += track_candidates.tracks.size();
 
     /*------------
       Writer
@@ -432,13 +355,8 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
 
   std::cout << "==> Statistics ... " << std::endl;
   std::cout << "- read    " << n_spacepoints << " spacepoints" << std::endl;
-  std::cout << "- created  (cpu)  " << n_seeds << " seeds" << std::endl;
   std::cout << "- created (cuda)  " << n_seeds_cuda << " seeds" << std::endl;
-  std::cout << "- created  (cpu) " << n_found_tracks << " found tracks"
-            << std::endl;
   std::cout << "- created (cuda) " << n_found_tracks_cuda << " found tracks"
-            << std::endl;
-  std::cout << "- created  (cpu) " << n_fitted_tracks << " fitted tracks"
             << std::endl;
   std::cout << "- created (cuda) " << n_fitted_tracks_cuda << " fitted tracks"
             << std::endl;
