@@ -34,15 +34,15 @@ using Acts::detail::JsonFileFormat;
 class StrictDocumentSax : public nlohmann::json_sax<nlohmann::json> {
  public:
   bool null() override { return true; }
-  bool boolean(bool) override { return true; }
-  bool number_integer(number_integer_t) override { return true; }
-  bool number_unsigned(number_unsigned_t) override { return true; }
-  bool number_float(number_float_t value, const string_t&) override {
+  bool boolean(bool /*value*/) override { return true; }
+  bool number_integer(number_integer_t /*value*/) override { return true; }
+  bool number_unsigned(number_unsigned_t /*value*/) override { return true; }
+  bool number_float(number_float_t value, const string_t& /*token*/) override {
     return std::isfinite(value);
   }
-  bool string(string_t&) override { return true; }
-  bool binary(binary_t&) override { return false; }
-  bool start_object(std::size_t) override {
+  bool string(string_t& /*value*/) override { return true; }
+  bool binary(binary_t& /*value*/) override { return false; }
+  bool start_object(std::size_t /*elements*/) override {
     if (m_keys.size() >= 256) {
       return false;
     }
@@ -58,8 +58,8 @@ class StrictDocumentSax : public nlohmann::json_sax<nlohmann::json> {
   }
   bool start_array(std::size_t size) override { return start_object(size); }
   bool end_array() override { return end_object(); }
-  bool parse_error(std::size_t, const std::string&,
-                   const nlohmann::detail::exception&) override {
+  bool parse_error(std::size_t /*position*/, const std::string& /*lastToken*/,
+                   const nlohmann::detail::exception& /*error*/) override {
     return false;
   }
 

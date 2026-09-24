@@ -43,13 +43,15 @@ nlohmann::json fixture(const char* name) {
 
 class CustomMaterial final : public ISurfaceMaterial {
  public:
+  using ISurfaceMaterial::materialSlab;
   explicit CustomMaterial(double thickness)
       : m_slab(MaterialSlab::Vacuum(static_cast<float>(thickness))) {}
   CustomMaterial& scale(double factor) override {
     m_slab.scaleThickness(static_cast<float>(factor));
     return *this;
   }
-  const MaterialSlab& materialSlab(const Vector2&) const override {
+  const MaterialSlab& materialSlab(
+      const Vector2& /*localPosition*/) const override {
     return m_slab;
   }
   std::vector<AxisDirection> localAxisDirections() const override { return {}; }
@@ -61,7 +63,7 @@ class CustomMaterial final : public ISurfaceMaterial {
   MaterialSlab m_slab;
 };
 nlohmann::json encodeCustom(const CustomMaterial& m,
-                            Converter::EncodeContext&) {
+                            Converter::EncodeContext& /*context*/) {
   return {{"kind", "application-custom"},
           {"thickness", m.materialSlab(Vector2::Zero()).thickness()}};
 }

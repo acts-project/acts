@@ -15,8 +15,7 @@ endif()
 
 string(JSON legacy SET "${legacy}" Volumes entries "[]")
 string(
-    JSON
-    keyed_material
+    JSON keyed_material
     GET "${legacy}"
     Surfaces
     entries
@@ -25,8 +24,7 @@ string(
     material
 )
 string(
-    JSON
-    legacy
+    JSON legacy
     SET "${legacy}"
     KeyedSurfaces
     "[{\"key\":\"migration-test\",\"geometry_id\":0,\"material\":${keyed_material}}]"
@@ -51,8 +49,7 @@ if(NOT key STREQUAL "migration-test")
 endif()
 math(EXPR expected_count "${expected_count} + 1")
 string(
-    JSON
-    original_thickness
+    JSON original_thickness
     GET "${legacy}"
     Surfaces
     entries
@@ -65,8 +62,7 @@ string(
     thickness
 )
 string(
-    JSON
-    migrated_thickness
+    JSON migrated_thickness
     GET "${migrated}"
     surfaces
     0
@@ -98,8 +94,7 @@ if(NOT result EQUAL 0)
 endif()
 file(READ "${WORK}/quantized.json" quantized)
 string(
-    JSON
-    quantized_thickness
+    JSON quantized_thickness
     GET "${quantized}"
     surfaces
     0
