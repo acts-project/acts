@@ -12,6 +12,9 @@
 #include "detray/builders/surface_factory_interface.hpp"
 #include "detray/builders/volume_builder_interface.hpp"
 #include "detray/definitions/geometry.hpp"
+#include "detray/geometry/mask.hpp"
+#include "detray/geometry/shapes/concentric_cylinder2D.hpp"
+#include "detray/geometry/shapes/ring2D.hpp"
 #include "detray/geometry/surface.hpp"
 #include "detray/utils/concepts.hpp"
 #include "detray/utils/grid/concepts.hpp"
@@ -20,6 +23,7 @@
 // System include(s)
 #include <algorithm>
 #include <memory>
+#include <sstream>
 #include <string>
 
 namespace detray {
@@ -37,7 +41,9 @@ class volume_builder : public volume_builder_interface<detector_t> {
   static_assert(concepts::detector<detector_t>);
 
  public:
-  using scalar_t = dscalar<typename detector_t::algebra_type>;
+  using algebra_t = typename detector_t::algebra_type;
+  using scalar_t = dscalar<algebra_t>;
+  using surface_type = typename detector_t::surface_type;
   using volume_type = typename detector_t::volume_type;
   using geo_obj_ids = typename detector_t::geo_obj_ids;
 
@@ -226,6 +232,139 @@ class volume_builder : public volume_builder_interface<detector_t> {
 
     m_volume.template update_sf_link<surface_id::e_passive>(
         find_range(surface_id::e_passive));
+
+    // Make sure, the portals fit the volume boundaries, otherwise clip them
+    switch (m_volume.id()) {
+      case volume_id::e_cylinder: {
+        using masks = typename detector_t::masks;
+        using cylinder_t = mask<concentric_cylinder2D, algebra_t>;
+        using disc_t = mask<ring2D, algebra_t>;
+
+        if constexpr (detray::types::contains<masks, cylinder_t> &&
+                      detray::types::contains<masks, disc_t>) {
+          DETRAY_VERBOSE_HOST("Clipping portals to cylinder volume shape...");
+
+          auto& cyls =
+              m_masks.template get<masks::id::e_concentric_cylinder2D>();
+          auto& discs = m_masks.template get<masks::id::e_ring2D>();
+
+          constexpr auto inv{detail::invalid_value<scalar_t>()};
+
+          // Find z extent
+          scalar_t min_z{inv};
+          scalar_t max_z{-inv};
+          for (const surface_type& sf_desc : m_surfaces) {
+            if (sf_desc.is_portal() &&
+                sf_desc.mask().id() == masks::id::e_ring2D) {
+              const auto& t =
+                  m_transforms.at(sf_desc.transform()).translation();
+              min_z = math::min(min_z, t[2]);
+              max_z = math::max(max_z, t[2]);
+            }
+          }
+          if (min_z >= max_z) {
+            std::stringstream err{};
+            err << "Detected invalid cylinder volume extent: min z: " << min_z
+                << "mm, max z: " << max_z << "mm";
+            DETRAY_FATAL_HOST(err.str());
+            throw std::invalid_argument(err.str());
+          }
+
+          // Find radial extent and clip cylinders in z
+          scalar_t min_r{inv};
+          scalar_t max_r{-inv};
+          for (cylinder_t& c : cyls) {
+            const scalar_t r{c[concentric_cylinder2D::e_r]};
+            min_r = math::min(min_r, r);
+            max_r = math::max(max_r, r);
+
+            if ((c[concentric_cylinder2D::e_lower_z] < min_z &&
+                 c[concentric_cylinder2D::e_upper_z] < min_z) ||
+                (c[concentric_cylinder2D::e_lower_z] > max_z &&
+                 c[concentric_cylinder2D::e_upper_z] > max_z)) {
+              DETRAY_ERROR_HOST("Portal ["
+                                << c
+                                << "] lies completely outside cylinder volume '"
+                                << m_volume_name << "' z: [" << min_z << ", "
+                                << max_z << "] and needs to be removed!");
+              continue;
+            }
+
+            DETRAY_DEBUG_HOST("Cylinder: " << c);
+            c[concentric_cylinder2D::e_lower_z] =
+                math::max(min_z, c[concentric_cylinder2D::e_lower_z]);
+            c[concentric_cylinder2D::e_upper_z] =
+                math::min(max_z, c[concentric_cylinder2D::e_upper_z]);
+            DETRAY_DEBUG_HOST("-> clipped: " << c);
+          }
+
+          // Beampipe or world volume (no inner cylinder, r is exactly eq.)
+          if (min_r == max_r) {
+            min_r = 0.f;
+          }
+          if (min_r >= max_r) {
+            std::stringstream err{};
+            err << "Detected invalid cylinder volume extent: min r: " << min_r
+                << "mm, max r: " << max_r << "mm";
+            DETRAY_FATAL_HOST(err.str());
+            throw std::invalid_argument(err.str());
+          }
+
+          // Clip disc portals to cylinder radius
+          for (disc_t& d : discs) {
+            if ((d[ring2D::e_inner_r] < min_r &&
+                 d[ring2D::e_outer_r] < min_r) ||
+                (d[ring2D::e_inner_r] > max_r &&
+                 d[ring2D::e_outer_r] > max_r)) {
+              DETRAY_ERROR_HOST(
+                  "Portal ["
+                  << d << "] lies completely outside cylinder volume '"
+                  << m_volume_name << "' radius: [" << min_r << ", " << max_r
+                  << "] and needs to be removed!");
+              continue;
+            }
+            DETRAY_DEBUG_HOST("Disc: " << d);
+            d[ring2D::e_inner_r] = math::max(min_r, d[ring2D::e_inner_r]);
+            d[ring2D::e_outer_r] = math::min(max_r, d[ring2D::e_outer_r]);
+            DETRAY_DEBUG_HOST("-> clipped: " << d);
+          }
+        } else {
+          const std::string err{
+              "Detector with cylinder volumes does not contain cylinder and "
+              "disc types in metadata!"};
+          DETRAY_FATAL_HOST(err);
+          throw std::invalid_argument(err);
+        }
+        break;
+      }
+      case volume_id::e_rectangle: {
+        DETRAY_DEBUG_HOST(
+            "Portal clipping not implemented for rectangle volumes");
+        break;
+      }
+      case volume_id::e_trapezoid: {
+        DETRAY_DEBUG_HOST(
+            "Portal clipping not implemented for trapezoid volumes");
+        break;
+      }
+      case volume_id::e_cone: {
+        DETRAY_DEBUG_HOST("Portal clipping not implemented for cone volumes");
+        break;
+      }
+      case volume_id::e_cuboid: {
+        DETRAY_DEBUG_HOST("Portal clipping not implemented for cuboid volumes");
+        break;
+      }
+      case volume_id::e_unknown: {
+        DETRAY_WARN_HOST("Unknown volume shape: portal clipping impossible");
+        break;
+      }
+      default: {
+        const std::string err{"Unknown error during volume portal clipping"};
+        DETRAY_FATAL_HOST(err);
+        throw std::invalid_argument(err);
+      }
+    }
 
     // Update mask and transform index of surfaces and set the
     // correct index of the surface in container
