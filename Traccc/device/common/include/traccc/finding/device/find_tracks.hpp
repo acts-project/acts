@@ -13,6 +13,7 @@
 #include "traccc/finding/device/find_tracks_payload.hpp"
 
 // Project include(s).
+#include "traccc/definitions/primitives.hpp"
 #include "traccc/finding/finding_config.hpp"
 
 // Detray include(s)
@@ -52,6 +53,20 @@ struct find_tracks_shared_payload {
    * \ref shared_candidates
    */
   unsigned int& shared_candidates_size;
+
+  /**
+   * @brief Shared-memory array holding, for each input parameter handled by
+   * this block, the predicted chi2 and the measurement index of the best
+   * candidates selected for it so far.
+   *
+   * This is the entire state of the best-of-N selection: every other field
+   * of a @c candidate_link is a property of the input parameter, so the
+   * links themselves are only built once the selection has settled.
+   *
+   * @note Length is the block size times
+   *       @c finding_config::max_num_branches_per_surface.
+   */
+  std::pair<traccc::scalar, unsigned int>* shared_best_candidates;
 };
 
 /// Function for combinatorial finding.

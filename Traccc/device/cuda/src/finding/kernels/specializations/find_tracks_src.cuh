@@ -33,6 +33,9 @@ __global__ void find_tracks(
   std::pair<unsigned int, unsigned int>* shared_candidates =
       reinterpret_cast<std::pair<unsigned int, unsigned int>*>(
           &shared_insertion_mutex[blockDim.x]);
+  std::pair<traccc::scalar, unsigned int>* shared_best_candidates =
+      reinterpret_cast<std::pair<traccc::scalar, unsigned int>*>(
+          &shared_candidates[2 * blockDim.x]);
 
   cuda::barrier barrier;
   details::thread_id1 thread_id;
@@ -43,7 +46,8 @@ __global__ void find_tracks(
           .shared_num_out_params = shared_num_out_params,
           .shared_insertion_mutex = shared_insertion_mutex,
           .shared_candidates = shared_candidates,
-          .shared_candidates_size = shared_candidates_size});
+          .shared_candidates_size = shared_candidates_size,
+          .shared_best_candidates = shared_best_candidates});
 }
 
 }  // namespace kernels

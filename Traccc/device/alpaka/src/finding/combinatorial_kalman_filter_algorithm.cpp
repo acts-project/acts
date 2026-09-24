@@ -67,6 +67,9 @@ struct find_tracks {
     std::pair<unsigned int, unsigned int>* shared_candidates =
         reinterpret_cast<std::pair<unsigned int, unsigned int>*>(
             &shared_insertion_mutex[blockDimX]);
+    std::pair<traccc::scalar, unsigned int>* shared_best_candidates =
+        reinterpret_cast<std::pair<traccc::scalar, unsigned int>*>(
+            &shared_candidates[2 * blockDimX]);
 
     device::find_tracks<detector_t>(
         thread_id, barrier, cfg, *det_data, payload,
@@ -74,7 +77,8 @@ struct find_tracks {
             .shared_num_out_params = shared_num_out_params,
             .shared_insertion_mutex = shared_insertion_mutex,
             .shared_candidates = shared_candidates,
-            .shared_candidates_size = shared_candidates_size});
+            .shared_candidates_size = shared_candidates_size,
+            .shared_best_candidates = shared_best_candidates});
   }
 };
 
@@ -597,12 +601,15 @@ struct BlockSharedMemDynSizeBytes<
   ALPAKA_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(
       traccc::alpaka::kernels::find_tracks<detector_t> const& /* kernel */,
       TVec const& blockThreadExtent, TVec const& /* threadElemExtent */,
-      TArgs const&... /* args */
+      traccc::finding_config const& cfg, TArgs const&... /* args */
       ) -> std::size_t {
     return static_cast<std::size_t>(blockThreadExtent.prod()) *
                sizeof(unsigned long long int) +
            2 * static_cast<std::size_t>(blockThreadExtent.prod()) *
-               sizeof(std::pair<unsigned int, unsigned int>);
+               sizeof(std::pair<unsigned int, unsigned int>) +
+           static_cast<std::size_t>(blockThreadExtent.prod()) *
+               cfg.max_num_branches_per_surface *
+               sizeof(std::pair<traccc::scalar, unsigned int>);
   }
 };
 

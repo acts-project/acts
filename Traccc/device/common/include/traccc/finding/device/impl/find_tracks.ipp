@@ -138,8 +138,8 @@ TRACCC_HOST_DEVICE inline void find_tracks(
    * This loop keeps running until all threads have processed all of their
    * measurements.
    */
-  while (barrier.blockOr(curr_meas < num_meas ||
-                         shared_payload.shared_candidates_size > 0)) {
+  while (barrier.blockOr(curr_meas < num_meas) ||
+         shared_payload.shared_candidates_size > 0) {
     /*
      * The outer loop consists of three general components. The first
      * components is that each thread starts to fill a shared buffer of
@@ -169,9 +169,7 @@ TRACCC_HOST_DEVICE inline void find_tracks(
 
     barrier.blockBarrier();
 
-    std::optional<std::tuple<
-        typename edm::track_state_collection<algebra_t>::device::object_type,
-        unsigned int, unsigned int>>
+    std::optional<std::tuple<traccc::scalar, unsigned int, unsigned int>>
         result = std::nullopt;
 
     /*
@@ -206,54 +204,21 @@ TRACCC_HOST_DEVICE inline void find_tracks(
             meas, in_par, cfg.meas_calibration, is_line);
 
         if (chi2 <= cfg.chi2_max && chi2 >= 0.f) {
-          edm::track_state trk_state =
-              edm::make_track_state<algebra_t>(measurements, meas_idx);
-          trk_state.filtered_chi2() = chi2;
-
-          // Kalman filter status code
-          kalman_fitter_status res{kalman_fitter_status::ERROR_OTHER};
-
-          if (payload.step == 0 && !sf.has_material()) {
-            // Only do this for the actual seed measurement
-            res = kalman_fitter_status::SUCCESS;
-
-            trk_state.filtered_params() = in_par;
-
-            // Update measurement covariance
-            const auto V =
-                measurement_selector::calibrated_measurement_covariance<
-                    algebra_t, 2>(meas, cfg.meas_calibration);
-
-            auto& filtered_cov = trk_state.filtered_params().covariance();
-            getter::element(filtered_cov, e_bound_loc0, e_bound_loc0) =
-                getter::element(V, 0, 0);
-            getter::element(filtered_cov, e_bound_loc1, e_bound_loc1) =
-                getter::element(V, 1, 1);
-          } else {
-            // Run the Kalman update on a copy of the track
-            // parameters
-            res = gain_matrix_updater<algebra_t>{}(
-                trk_state, meas, in_par, cfg.meas_calibration, is_line);
-          }
-
-          TRACCC_DEBUG_DEVICE("KF status: %d", res);
-
           /*
-           * The $\chi^2$ value from the Kalman update should be less
-           * than `chi2_max`, and the fit should have succeeded. If
-           * both conditions are true, we emplace the state, the
-           * measurement index, and the thread ID into an optional
-           * value.
+           * The candidate passes the predicted $\chi^2$ cut, so it enters
+           * the best-of-N selection below. Note that no Kalman update is
+           * run here: the selection ranks purely on the predicted
+           * $\chi^2$, which the update does not modify, so the filtered
+           * parameters are only materialized afterwards, once per
+           * surviving link, rather than once per candidate.
            *
            * NOTE: Using the optional value here allows us to remove
            * the depth of if-statements which is important for code
            * quality but, more importantly, allows us to more easily
            * use block-wide synchronization primitives.
            */
-          if (res == kalman_fitter_status::SUCCESS) {
-            TRACCC_VERBOSE_DEVICE("Found measurement: %d", meas_idx);
-            result.emplace(trk_state, meas_idx, owner_local_thread_id);
-          }
+          TRACCC_VERBOSE_DEVICE("Found measurement: %d", meas_idx);
+          result.emplace(chi2, meas_idx, owner_local_thread_id);
         }
       }
     }
@@ -281,15 +246,10 @@ TRACCC_HOST_DEVICE inline void find_tracks(
          */
         const unsigned int meas_idx = std::get<1>(*result);
         const unsigned int owner_local_thread_id = std::get<2>(*result);
-        const unsigned int owner_global_thread_id =
-            owner_local_thread_id +
-            thread_id.getBlockDimX() * thread_id.getBlockIdX();
-        const traccc::scalar chi2 = std::get<0>(*result).filtered_chi2();
+        const traccc::scalar chi2 = std::get<0>(*result);
         assert(chi2 >= 0.f);
         unsigned long long int* mutex_ptr =
             &shared_payload.shared_insertion_mutex[owner_local_thread_id];
-        const unsigned int prev_link_idx =
-            payload.prev_links_idx + owner_global_thread_id;
 
         /*
          * The current thread will attempt to get a lock on the
@@ -370,6 +330,15 @@ TRACCC_HOST_DEVICE inline void find_tracks(
            *    we can trivially insert the value at index.
            */
           unsigned int l_pos = std::numeric_limits<unsigned int>::max();
+          /*
+           * The selection state lives in shared memory and is indexed by
+           * the owner's *local* thread ID, so it is cheap to scan and
+           * needs none of the owner's link data.
+           */
+          std::pair<traccc::scalar, unsigned int>* best =
+              &shared_payload
+                   .shared_best_candidates[owner_local_thread_id *
+                                           cfg.max_num_branches_per_surface];
           // No need to initialize this next variable. It always gets
           // a valid value in the proceeding expressions.
           float new_max;
@@ -385,9 +354,7 @@ TRACCC_HOST_DEVICE inline void find_tracks(
 
             for (unsigned int i = 0; i < cfg.max_num_branches_per_surface;
                  ++i) {
-              const traccc::scalar old_chi2 =
-                  tmp_links.at(i * payload.n_in_params + owner_global_thread_id)
-                      .chi2;
+              const traccc::scalar old_chi2 = best[i].first;
 
               if (old_chi2 > highest) {
                 highest = old_chi2;
@@ -401,18 +368,13 @@ TRACCC_HOST_DEVICE inline void find_tracks(
 
             for (unsigned int i = 0; i < cfg.max_num_branches_per_surface;
                  ++i) {
-              const traccc::scalar old_chi2 =
-                  tmp_links.at(i * payload.n_in_params + owner_global_thread_id)
-                      .chi2;
+              const traccc::scalar old_chi2 = best[i].first;
 
               if (i != l_pos && old_chi2 > new_max) {
                 new_max = static_cast<float>(old_chi2);
               }
 
-              assert(old_chi2 <= tmp_links
-                                     .at(l_pos * payload.n_in_params +
-                                         owner_global_thread_id)
-                                     .chi2);
+              assert(old_chi2 <= best[l_pos].first);
             }
 
             assert(chi2 <= new_max);
@@ -424,53 +386,28 @@ TRACCC_HOST_DEVICE inline void find_tracks(
           assert(l_pos < cfg.max_num_branches_per_surface);
 
           /*
-           * Now, simply insert the temporary link at the found
-           * position. Different cases for step 0 and other steps.
+           * We accept the new candidate under one of two conditions.
+           * First, if the best-of array is not yet full (i.e. if the
+           * index variable is not the maximum number of branches), we
+           * add it unconditionally. If the array _is_ full, we add the
+           * candidate if it has a lower $\chi^2$ value than the
+           * previous highest value. If the value is exactly equal, we
+           * use a tie-breaking mechanism, namely a comparison of the
+           * measurement indices. This tie breaker should be extremely
+           * rare and should not bias the physics results, but helps
+           * ensure that the output of this algorithm is deterministic.
            */
-          const unsigned int n_skipped =
-              payload.step == 0 ? 0 : links.at(prev_link_idx).n_skipped;
-          const unsigned int seed_idx = payload.step > 0
-                                            ? links.at(prev_link_idx).seed_idx
-                                            : owner_global_thread_id;
-          const scalar prev_chi2_sum =
-              payload.step > 0 ? links.at(prev_link_idx).chi2_sum : 0.f;
-          const unsigned int prev_ndf_sum =
-              payload.step > 0 ? links.at(prev_link_idx).ndf_sum : 0;
-
-          /*
-           * We add the new link under one of two conditions. First,
-           * if the best-of array is not yet full (i.e. if the index
-           * variable is not the maximum number of branches), we add
-           * it unconditionally. If the array _is_ full, we add the
-           * link if we have a link with a lower $\chi^2$ value than
-           * the previous highest value. If the value is exactly
-           * equal, we use a tie-breaking mechanism, namely a
-           * comparison of the measurement indices. This tie breaker
-           * should be extremely rare and should not bias the
-           * physics results, but helps ensure that the output of
-           * this algorithm is deterministic.
-           */
-          if (const unsigned int tmp_offset =
-                  l_pos * payload.n_in_params + owner_global_thread_id;
-              index != cfg.max_num_branches_per_surface ||
-              chi2 < tmp_links.at(tmp_offset).chi2 ||
-              (chi2 == tmp_links.at(tmp_offset).chi2 &&
-               meas_idx < tmp_links.at(tmp_offset).meas_idx)) {
-            tmp_links.at(tmp_offset) = {
-                .step = payload.step,
-                .previous_candidate_idx = prev_link_idx,
-                .meas_idx = meas_idx,
-                .seed_idx = seed_idx,
-                .n_skipped = n_skipped,
-                .n_consecutive_skipped = 0,
-                .chi2 = chi2,
-                .chi2_sum = prev_chi2_sum + chi2,
-                .ndf_sum =
-                    prev_ndf_sum +
-                    measurements.at(std::get<0>(*result).measurement_index())
-                        .dimensions()};
-
-            tmp_params.at(tmp_offset) = std::get<0>(*result).filtered_params();
+          if (index != cfg.max_num_branches_per_surface ||
+              chi2 < best[l_pos].first ||
+              (chi2 == best[l_pos].first && meas_idx < best[l_pos].second)) {
+            /*
+             * Only the $\chi^2$ and the measurement index are recorded
+             * here: every other field of a `candidate_link` is a
+             * property of the input parameter, so the link and its
+             * filtered parameters are both built after the selection
+             * has settled. See the materialization loop below.
+             */
+            best[l_pos] = {chi2, meas_idx};
           }
 
           /*
@@ -567,24 +504,115 @@ TRACCC_HOST_DEVICE inline void find_tracks(
         shared_payload.shared_insertion_mutex[thread_id.getLocalThreadIdX()]));
 
     /*
+     * The selection above has settled, so the links that survived it are
+     * now known. Materialize the filtered track parameters for those links
+     * -- and only for those links -- by running the Kalman update once per
+     * surviving link instead of once per candidate.
+     *
+     * This is a one-thread-one-parameter pass over this thread's own slice
+     * of `tmp_links`, so it needs no synchronization: every thread reads
+     * and writes only the slots belonging to its own input parameter.
+     *
+     * A failed update drops the selected link without substituting a
+     * lower-ranked measurement. If all selected updates fail, the input
+     * proceeds to the existing hole/tip handling below.
+     */
+    if (local_num_params > 0) {
+      const bound_track_parameters<>& in_par = in_params.at(in_param_id);
+      const detray::tracking_surface sf{det, in_par.surface_link()};
+      const bool is_line = traccc::detail::is_line(sf);
+
+      const std::pair<traccc::scalar, unsigned int>* best =
+          &shared_payload
+               .shared_best_candidates[thread_id.getLocalThreadIdX() *
+                                       cfg.max_num_branches_per_surface];
+
+      unsigned int n_materialized = 0;
+
+      for (unsigned int i = 0; i < local_num_params; ++i) {
+        const traccc::scalar chi2 = best[i].first;
+        const unsigned int meas_idx = best[i].second;
+        const edm::measurement meas = measurements.at(meas_idx);
+
+        bound_track_parameters<algebra_t> filtered_params;
+
+        // Kalman filter status code
+        kalman_fitter_status res{kalman_fitter_status::ERROR_OTHER};
+
+        if (payload.step == 0 && !sf.has_material()) {
+          // Only do this for the actual seed measurement
+          res = kalman_fitter_status::SUCCESS;
+
+          filtered_params = in_par;
+
+          // Update measurement covariance
+          const auto V =
+              measurement_selector::calibrated_measurement_covariance<algebra_t,
+                                                                      2>(
+                  meas, cfg.meas_calibration);
+
+          auto& filtered_cov = filtered_params.covariance();
+          getter::element(filtered_cov, e_bound_loc0, e_bound_loc0) =
+              getter::element(V, 0, 0);
+          getter::element(filtered_cov, e_bound_loc1, e_bound_loc1) =
+              getter::element(V, 1, 1);
+        } else {
+          filtered_params.set_surface_link(meas.surface_link());
+
+          res = gain_matrix_updater<algebra_t>{}(filtered_params, meas, in_par,
+                                                 cfg.meas_calibration, is_line);
+        }
+
+        TRACCC_DEBUG_DEVICE("KF status: %d", res);
+
+        if (res == kalman_fitter_status::SUCCESS) {
+          /*
+           * Both the link and its filtered parameters are written here,
+           * and only here. Writing at `n_materialized` rather than at
+           * `i` compacts the slice, so a failed update leaves no gap.
+           */
+          const unsigned int dst =
+              n_materialized * payload.n_in_params + in_param_id;
+
+          tmp_links.at(dst) = {.step = payload.step,
+                               .previous_candidate_idx = prev_link_idx,
+                               .meas_idx = meas_idx,
+                               .seed_idx = seed_idx,
+                               .n_skipped = n_skipped,
+                               .n_consecutive_skipped = 0,
+                               .chi2 = chi2,
+                               .chi2_sum = prev_chi2_sum + chi2,
+                               .ndf_sum = prev_ndf_sum + meas.dimensions()};
+
+          tmp_params.at(dst) = filtered_params;
+
+          ++n_materialized;
+        } else {
+          TRACCC_WARNING_DEVICE("Drop link: Kalman update failed");
+        }
+      }
+
+      local_num_params = n_materialized;
+    }
+
+    /*
      * If we found zero parameters and we can create a hole, add that hole
      * to the temporary link and parameter lists.
      */
     if (local_num_params == 0 && in_param_can_create_hole) {
-      const unsigned int in_offset = thread_id.getGlobalThreadIdX();
+      const unsigned int dst = in_param_id;
 
-      tmp_links.at(in_offset) = {
-          .step = payload.step,
-          .previous_candidate_idx = prev_link_idx,
-          .meas_idx = std::numeric_limits<unsigned int>::max(),
-          .seed_idx = seed_idx,
-          .n_skipped = n_skipped + 1,
-          .n_consecutive_skipped = n_consecutive_skipped + 1,
-          .chi2 = std::numeric_limits<traccc::scalar>::max(),
-          .chi2_sum = prev_chi2_sum,
-          .ndf_sum = prev_ndf_sum};
+      tmp_links.at(dst) = {.step = payload.step,
+                           .previous_candidate_idx = prev_link_idx,
+                           .meas_idx = std::numeric_limits<unsigned int>::max(),
+                           .seed_idx = seed_idx,
+                           .n_skipped = n_skipped + 1,
+                           .n_consecutive_skipped = n_consecutive_skipped + 1,
+                           .chi2 = std::numeric_limits<traccc::scalar>::max(),
+                           .chi2_sum = prev_chi2_sum,
+                           .ndf_sum = prev_ndf_sum};
 
-      tmp_params.at(in_offset) = in_params.at(in_param_id);
+      tmp_params.at(dst) = in_params.at(in_param_id);
 
       /*
        * If we created a hole, we now have a single output parameter!

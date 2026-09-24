@@ -205,14 +205,17 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
                                                                             h);
           vecmem::sycl::local_accessor<unsigned int> shared_num_out_params(1,
                                                                            h);
+          vecmem::sycl::local_accessor<std::pair<traccc::scalar, unsigned int>>
+              shared_best_candidates(
+                  deviceThreads * config.max_num_branches_per_surface, h);
 
           // Launch the kernel.
           h.parallel_for<
               kernels::find_tracks<detector_tag_selector_t<detector_t>>>(
               details::calculate1DimNdRange(n_threads, deviceThreads),
               [config, det = device_det.ptr(), payload, shared_insertion_mutex,
-               shared_candidates, shared_candidates_size,
-               shared_num_out_params](::sycl::nd_item<1> item) {
+               shared_candidates, shared_candidates_size, shared_num_out_params,
+               shared_best_candidates](::sycl::nd_item<1> item) {
                 // SYCL wrappers used in the algorithm.
                 const details::barrier barrier{item};
                 const details::thread_id thread_id{item};
@@ -223,7 +226,8 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
                     {.shared_num_out_params = shared_num_out_params[0],
                      .shared_insertion_mutex = &(shared_insertion_mutex[0]),
                      .shared_candidates = &(shared_candidates[0]),
-                     .shared_candidates_size = shared_candidates_size[0]});
+                     .shared_candidates_size = shared_candidates_size[0],
+                     .shared_best_candidates = &(shared_best_candidates[0])});
               });
         });
       });
