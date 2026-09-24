@@ -16,6 +16,40 @@ Examples in `docs/examples/material-map-v1/` cover homogeneous material
 (`minimal.json`), mapped surfaces (`surfaces.json`) and mapping templates
 (`templates.json`). Their relative `$schema` references support editor validation.
 
+@ref Acts::TrackingGeometryMaterialJsonConverter::Options "Options" controls
+precision and output settings. `acts.examples.json.TrackingGeometryMaterialJsonWriter` accepts a
+full `filePath` (including extension) and optional `options`, and implements the
+mapping algorithm's writer interface. Its `write(geometry)` exports existing
+surface material and rejects volume material. With `includeNonMaterial=True`,
+surfaces without material receive deferred one-bin proto-grid placeholders;
+their ranges and directions are resolved from geometry when mapping is initialized.
+DD4hep likewise constructs proto grids with explicitly deferred ranges. The
+writer preserves these specifications without resolving bounds or modifying the
+source geometry.
+
+`acts.IMaterialDecorator.fromFile` supports both formats. The new converter rejects
+legacy input with an error pointing to `ActsMaterialMapMigrate`.
+
+The JSON plugin also installs `ActsMaterialMapMigrate` in `bin` to migrate
+files written by the legacy material converter:
+
+```sh
+ActsMaterialMapMigrate old-material.json material.json
+ActsMaterialMapMigrate old-material.json.zst material.cbor.zst \
+    --material-fraction-bits 16 --compression-level 19
+```
+
+The input encoding is detected from its contents. The output extension selects
+JSON or CBOR, with optional zstd compression. Defaults preserve full float32
+precision, use four-space indentation and zstd level 9. `--indentation` changes
+text indentation; `--help` lists all options. Volume material causes migration
+to fail because version 1 only supports surfaces. The tool preserves material
+assignments and stable keys supported by the legacy reader; unrelated geometry
+annotations in decorated legacy files are not part of the new material format.
+Migration uses the legacy reader's semantics, including its default split factors
+(the legacy format does not store them) and normalization of single-bin axes;
+it cannot recover settings already lost by the legacy format.
+
 @include examples/material-map-v1/minimal.json
 
 ## Document and assignments

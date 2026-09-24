@@ -82,3 +82,10 @@ install(
     FILES schema/material-map-v1.schema.json
     DESTINATION ${CMAKE_INSTALL_DATADIR}/Acts/schema
 )
+
+add_executable(ActsMaterialMapMigrate bin/MaterialMapMigrate.cpp)
+target_link_libraries(ActsMaterialMapMigrate PRIVATE Acts::PluginJson)
+install(
+    TARGETS ActsMaterialMapMigrate
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT bin
+)

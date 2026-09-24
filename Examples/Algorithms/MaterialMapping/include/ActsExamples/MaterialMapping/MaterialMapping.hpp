@@ -55,7 +55,8 @@ class MaterialMapping : public IAlgorithm {
     /// The ACTS material mapper from the core component
     std::shared_ptr<Acts::MaterialMapper> materialMapper = nullptr;
 
-    /// The writer of the material
+    /// Outputs for the finalized material map. Each writer receives the same
+    /// assignments once, currently during destruction of this algorithm.
     std::vector<std::shared_ptr<IMaterialWriter>> materialWriters{};
   };
 
