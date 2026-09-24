@@ -20,8 +20,14 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 
-/// Writes versioned surface material maps as JSON or CBOR, optionally
-/// compressed.
+/// MaterialMapping output adapter for versioned JSON/CBOR surface material
+/// maps, optionally compressed. Add it to
+/// MaterialMapping::Config::materialWriters to serialize the finalized map
+/// using Acts::TrackingGeometryMaterialJsonConverter.
+///
+/// writeMaterial() implements the mapping output interface. The separate
+/// write() convenience method exports assignments directly from an existing
+/// geometry.
 class MaterialMapWriter final : public IMaterialWriter {
  public:
   /// Writer configuration.
