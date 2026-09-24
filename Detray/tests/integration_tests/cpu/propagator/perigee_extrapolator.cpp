@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// Keep verbose log level to avoid Debug-only template paths in CI checks.
+// Keep info log level to avoid Debug-only template paths in CI checks.
 #ifdef DETRAY_LOG_LVL
 #undef DETRAY_LOG_LVL
 #endif
-#define DETRAY_LOG_LVL 2
+#define DETRAY_LOG_LVL 1
 
 // Project include(s)
 #include "detray/propagator/perigee_extrapolator.hpp"
