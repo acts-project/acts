@@ -13,13 +13,6 @@ on:
     # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Detray/**"
-      - "cmake/**"
-      - "codegen/**"
-      - "thirdparty/**"
-      - "CMakeLists.txt"
-      - "CMakePresets.json"
-      - "CI/**"
-      - ".github/actions/**"
       - ".github/workflows/detray.yml"
       - ".github/detray-traccc-filters.yml"
   pull_request:
@@ -28,13 +21,6 @@ on:
     # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Detray/**"
-      - "cmake/**"
-      - "codegen/**"
-      - "thirdparty/**"
-      - "CMakeLists.txt"
-      - "CMakePresets.json"
-      - "CI/**"
-      - ".github/actions/**"
       - ".github/workflows/detray.yml"
       - ".github/detray-traccc-filters.yml"
   # The changes job applies path filtering to merge groups, which do not
