@@ -15,6 +15,9 @@
 #include "traccc/cuda/utils/make_magnetic_field.hpp"
 #include "traccc/seeding/detail/track_params_estimation_config.hpp"
 
+// VecMem include(s).
+#include <vecmem/utils/cuda/copy.hpp>
+
 // CUDA include(s).
 #include <cuda_runtime_api.h>
 
@@ -36,35 +39,13 @@ await_function_type get_await_function(await_strategy await_mode) {
 }
 }  // namespace
 
-full_chain_algorithm::full_chain_algorithm(
+full_chain_algorithm::shared_data::shared_data(
     vecmem::memory_resource& host_mr,
-    const clustering_config& clustering_config,
-    const seedfinder_config& finder_config,
-    const spacepoint_grid_config& grid_config,
-    const seedfilter_config& filter_config,
-    const gbts_seedfinder_config& gbts_config,
-    const track_params_estimation_config& track_params_estimation_config,
-    const finding_algorithm::config_type& finding_config,
-    const fitting_algorithm::config_type& fitting_config,
     const detector_design_description::host& det_descr,
     const detector_conditions_description::host& det_cond,
-    const magnetic_field& field, host_detector* detector,
-    std::unique_ptr<const traccc::Logger> logger, bool useGBTS,
-    await_strategy await_mode)
-    : messaging(logger->clone()),
-      m_host_mr(host_mr),
-      m_pinned_host_mr(),
-      m_cached_pinned_host_mr(m_pinned_host_mr),
-      m_vecmem_stream{},
-      m_stream{m_vecmem_stream.stream()},
-      m_device_mr(),
-      m_cached_device_mr(m_device_mr),
-      m_copy(m_stream.cudaStream()),
-      m_await_function(get_await_function(await_mode)),
-      m_field_vec{0.f, 0.f, finder_config.bFieldInZ},
+    const magnetic_field& field, const host_detector* detector)
+    : m_device_mr(),
       m_field(make_magnetic_field(field)),
-      m_det_descr(det_descr),
-      m_det_cond(det_cond),
       m_device_det_descr(
           [&]() {
             // number of elements in the detector design description
@@ -80,12 +61,50 @@ full_chain_algorithm::full_chain_algorithm(
             }
             return sizes;
           }(),
-          m_device_mr, &m_host_mr, vecmem::data::buffer_type::resizable),
+          m_device_mr, &host_mr, vecmem::data::buffer_type::resizable),
       m_device_det_cond(
           static_cast<detector_conditions_description::buffer::size_type>(
-              m_det_cond.get().size()),
+              det_cond.size()),
           m_device_mr),
-      m_detector(detector),
+      m_detector(detector) {
+  // Copy the detector (description) to the device.
+  vecmem::cuda::copy copy;
+  copy.setup(m_device_det_descr)->wait();
+  copy(vecmem::get_data(det_descr), m_device_det_descr)->wait();
+  copy(vecmem::get_data(det_cond), m_device_det_cond)->wait();
+  if (m_detector != nullptr) {
+    m_device_detector =
+        traccc::buffer_from_host_detector(*m_detector, m_device_mr, copy);
+  }
+}
+
+full_chain_algorithm::full_chain_algorithm(
+    vecmem::memory_resource& host_mr,
+    const clustering_config& clustering_config,
+    const seedfinder_config& finder_config,
+    const spacepoint_grid_config& grid_config,
+    const seedfilter_config& filter_config,
+    const gbts_seedfinder_config& gbts_config,
+    const track_params_estimation_config& track_params_estimation_config,
+    const finding_algorithm::config_type& finding_config,
+    const fitting_algorithm::config_type& fitting_config,
+    const shared_data& data, std::unique_ptr<const traccc::Logger> logger,
+    bool useGBTS, await_strategy await_mode)
+    : messaging(logger->clone()),
+      m_host_mr(host_mr),
+      m_pinned_host_mr(),
+      m_cached_pinned_host_mr(m_pinned_host_mr),
+      m_vecmem_stream{},
+      m_stream{m_vecmem_stream.stream()},
+      m_device_mr(),
+      m_cached_device_mr(m_device_mr),
+      m_copy(m_stream.cudaStream()),
+      m_await_function(get_await_function(await_mode)),
+      m_field(data.m_field),
+      m_device_det_descr(data.m_device_det_descr),
+      m_device_det_cond(data.m_device_det_cond),
+      m_detector(data.m_detector),
+      m_device_detector(data.m_device_detector),
       m_clusterization({m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy,
                        m_stream, clustering_config,
                        logger->cloneWithSuffix("ClusteringAlg"),
@@ -111,14 +130,6 @@ full_chain_algorithm::full_chain_algorithm(
                 m_copy, m_stream, logger->cloneWithSuffix("TrackFindingAlg")),
       m_fitting(fitting_config, {m_cached_device_mr, &m_cached_pinned_host_mr},
                 m_copy, m_stream, logger->cloneWithSuffix("TrackFittingAlg")),
-      m_clustering_config(clustering_config),
-      m_finder_config(finder_config),
-      m_grid_config(grid_config),
-      m_filter_config(filter_config),
-      m_gbts_config(gbts_config),
-      m_track_params_estimation_config(track_params_estimation_config),
-      m_finding_config(finding_config),
-      m_fitting_config(fitting_config),
       usingGBTS(useGBTS) {
   // Tell the user what device is being used.
   int device = 0;
@@ -128,97 +139,6 @@ full_chain_algorithm::full_chain_algorithm(
   std::cout << "Using CUDA device: " << props.name << " [id: " << device
             << ", bus: " << props.pciBusID << ", device: " << props.pciDeviceID
             << "]" << std::endl;
-
-  // Copy the detector (description) to the device.
-  m_copy.setup(m_device_det_descr)->wait();
-  m_copy(vecmem::get_data(m_det_descr.get()), m_device_det_descr)->wait();
-  m_copy(vecmem::get_data(m_det_cond.get()), m_device_det_cond)->wait();
-  if (m_detector != nullptr) {
-    m_device_detector =
-        traccc::buffer_from_host_detector(*m_detector, m_device_mr, m_copy);
-  }
-}
-
-full_chain_algorithm::full_chain_algorithm(const full_chain_algorithm& parent)
-    : messaging(parent.logger().clone()),
-      m_host_mr(parent.m_host_mr),
-      m_pinned_host_mr(),
-      m_cached_pinned_host_mr(m_pinned_host_mr),
-      m_vecmem_stream{},
-      m_stream{m_vecmem_stream.stream()},
-      m_device_mr(),
-      m_cached_device_mr(m_device_mr),
-      m_copy(m_stream.cudaStream()),
-      m_await_function(parent.m_await_function),
-      m_field_vec(parent.m_field_vec),
-      m_field(parent.m_field),
-      m_det_descr(parent.m_det_descr),
-      m_det_cond(parent.m_det_cond),
-      m_device_det_descr(
-          [&]() {
-            // number of elements in the detector design description
-            std::vector<unsigned int> sizes(parent.m_det_descr.get().size());
-            for (std::size_t i = 0; i < parent.m_det_descr.get().size(); ++i) {
-              auto this_design = parent.m_det_descr.get().at(i);
-              // now for each element, set the size to the largest size of
-              // that element across all modules
-              sizes[i] = std::max(static_cast<unsigned int>(
-                                      ((this_design.bin_edges_x()).size())),
-                                  static_cast<unsigned int>(
-                                      ((this_design.bin_edges_y()).size())));
-            }
-            return sizes;
-          }(),
-          m_device_mr, &m_host_mr, vecmem::data::buffer_type::resizable),
-      m_device_det_cond(
-          static_cast<detector_conditions_description::buffer::size_type>(
-              m_det_cond.get().size()),
-          m_device_mr),
-      m_detector(parent.m_detector),
-      m_clusterization({m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy,
-                       m_stream, parent.m_clustering_config,
-                       parent.logger().cloneWithSuffix("ClusteringAlg"),
-                       m_await_function),
-      m_measurement_sorting({m_cached_device_mr, &m_cached_pinned_host_mr},
-                            m_copy, m_stream,
-                            parent.logger().cloneWithSuffix("MeasSortingAlg")),
-      m_spacepoint_formation(
-          {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy, m_stream,
-          parent.logger().cloneWithSuffix("SpFormationAlg"), m_await_function),
-      m_seeding(
-          parent.m_finder_config, parent.m_grid_config, parent.m_filter_config,
-          {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy, m_stream,
-          parent.logger().cloneWithSuffix("SeedingAlg"), m_await_function),
-      m_gbts_seeding(parent.m_gbts_config,
-                     {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy,
-                     m_stream, parent.logger().cloneWithSuffix("GbtsAlg")),
-      m_track_parameter_estimation(
-          parent.m_track_params_estimation_config,
-          {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy, m_stream,
-          parent.logger().cloneWithSuffix("TrackParamEstAlg"),
-          m_await_function),
-      m_finding(parent.m_finding_config,
-                {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy,
-                m_stream, parent.logger().cloneWithSuffix("TrackFindingAlg")),
-      m_fitting(parent.m_fitting_config,
-                {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy,
-                m_stream, parent.logger().cloneWithSuffix("TrackFittingAlg")),
-      m_clustering_config(parent.m_clustering_config),
-      m_finder_config(parent.m_finder_config),
-      m_grid_config(parent.m_grid_config),
-      m_filter_config(parent.m_filter_config),
-      m_gbts_config(parent.m_gbts_config),
-      m_track_params_estimation_config(parent.m_track_params_estimation_config),
-      m_finding_config(parent.m_finding_config),
-      m_fitting_config(parent.m_fitting_config),
-      usingGBTS(parent.usingGBTS) {
-  m_copy.setup(m_device_det_descr)->wait();
-  m_copy(vecmem::get_data(m_det_descr.get()), m_device_det_descr)->wait();
-  m_copy(vecmem::get_data(m_det_cond.get()), m_device_det_cond)->wait();
-  if (m_detector != nullptr) {
-    m_device_detector =
-        traccc::buffer_from_host_detector(*m_detector, m_device_mr, m_copy);
-  }
 }
 
 full_chain_algorithm::~full_chain_algorithm() = default;

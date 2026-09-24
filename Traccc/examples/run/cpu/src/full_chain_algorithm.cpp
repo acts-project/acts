@@ -10,6 +10,16 @@
 
 namespace traccc {
 
+full_chain_algorithm::shared_data::shared_data(
+    vecmem::memory_resource&,
+    const detector_design_description::host& det_descr,
+    const detector_conditions_description::host& det_cond,
+    const magnetic_field& field, const host_detector* detector)
+    : m_det_descr(det_descr),
+      m_det_cond(det_cond),
+      m_field(field),
+      m_detector(detector) {}
+
 full_chain_algorithm::full_chain_algorithm(
     vecmem::memory_resource& mr, const clustering_algorithm::config_type&,
     const seedfinder_config& finder_config,
@@ -19,19 +29,16 @@ full_chain_algorithm::full_chain_algorithm(
     const track_params_estimation_config& track_params_estimation_config,
     const finding_algorithm::config_type& finding_config,
     const fitting_algorithm::config_type& fitting_config,
-    const detector_design_description::host& det_descr,
-    const detector_conditions_description::host& det_cond,
-    const magnetic_field& field, const host_detector* detector,
-    std::unique_ptr<const traccc::Logger> logger, const bool useGBTS,
-    await_strategy)
+    const shared_data& data, std::unique_ptr<const traccc::Logger> logger,
+    const bool useGBTS, await_strategy)
     : messaging(logger->clone()),
       m_mr(mr),
       m_copy{std::make_unique<vecmem::copy>()},
       m_field_vec{0.f, 0.f, finder_config.bFieldInZ},
-      m_field(field),
-      m_det_descr(det_descr),
-      m_det_cond(det_cond),
-      m_detector(detector),
+      m_field(data.m_field.get()),
+      m_det_descr(data.m_det_descr),
+      m_det_cond(data.m_det_cond),
+      m_detector(data.m_detector),
       m_clusterization(mr, logger->cloneWithSuffix("ClusteringAlg")),
       m_spacepoint_formation(mr, logger->cloneWithSuffix("SpFormationAlg")),
       m_seeding(finder_config, grid_config, filter_config, mr,
