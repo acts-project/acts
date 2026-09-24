@@ -337,7 +337,15 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  outer.addChild(builder.backend().makeBeampipe());
+  outer.addMaterial(
+      "Beampipe_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
+        using enum Acts::CylinderVolumeBounds::Face;
+        mat.configureFace(
+            OuterCylinder,
+            Acts::AxisSpec::DeferredEquidistant(kMatPhiBins, AxisRPhi),
+            Acts::AxisSpec::DeferredEquidistant(kMatZBins, AxisZ));
+        mat.addChild(builder.backend().makeBeampipe());
+      });
 
   using enum Acts::CylinderVolumeBounds::Face;
   addDirectLayerSubsystem(builder, outer, "Pixels", "pix",
@@ -373,7 +381,15 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayerGrouped(
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  outer.addChild(builder.backend().makeBeampipe());
+  outer.addMaterial(
+      "Beampipe_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
+        using enum Acts::CylinderVolumeBounds::Face;
+        mat.configureFace(
+            OuterCylinder,
+            Acts::AxisSpec::DeferredEquidistant(kMatPhiBins, AxisRPhi),
+            Acts::AxisSpec::DeferredEquidistant(kMatZBins, AxisZ));
+        mat.addChild(builder.backend().makeBeampipe());
+      });
 
   using enum Acts::CylinderVolumeBounds::Face;
   addDirectLayerGroupedSubsystem(builder, outer, "Pixels", "pix",
