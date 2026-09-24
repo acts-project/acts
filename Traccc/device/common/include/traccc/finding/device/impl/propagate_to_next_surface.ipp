@@ -82,7 +82,7 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
   // Pathlimit aborter
   typename detray::actor::pathlimit_aborter<scalar_t>::state aborter_state{};
   // Parameter updater
-  typename detray::actor::parameter_updater_state<algebra_t> updater_state{
+  typename detray::actor::parameter_updater_mbf_state<algebra_t> updater_state{
       cfg.propagation, in_par};
   // CKF-interactor
   traccc::details::ckf_interactor_t::state interactor_state;

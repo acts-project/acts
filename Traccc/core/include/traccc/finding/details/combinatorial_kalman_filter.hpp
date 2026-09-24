@@ -511,7 +511,8 @@ combinatorial_kalman_filter(
 
       typename detray::actor::pathlimit_aborter<scalar_type>::state
           aborter_state;
-      detray::actor::parameter_updater_state<typename detector_t::algebra_type>
+      detray::actor::parameter_updater_mbf_state<
+          typename detector_t::algebra_type>
           updater_state{prop_cfg, param};
       traccc::details::ckf_interactor_t::state interactor_state;
       typename detray::actor::momentum_aborter<scalar_type>::state
