@@ -76,6 +76,9 @@ class gbts_seeding_algorithm : public device::gbts_seeding_algorithm,
 
   /// @}
 
+  /// Wait for outstanding work on the algorithm stream or queue.
+  void synchronize() const override;
+
 };  // class gbts_seeding_algorithm
 
 }  // namespace traccc::sycl

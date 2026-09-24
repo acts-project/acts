@@ -106,4 +106,8 @@ void kalman_fitting_algorithm::fit_backward_kernel(
       });
 }
 
+void kalman_fitting_algorithm::synchronize() const {
+  stream().synchronize();
+}
+
 }  // namespace traccc::cuda

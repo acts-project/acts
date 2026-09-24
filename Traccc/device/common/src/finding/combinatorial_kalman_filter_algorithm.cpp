@@ -204,6 +204,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
             .tracks_view = {track_candidates_buffer},
         },
         smoothing_payload);
+
+    // Finish before releasing the progressive filter scratch buffers.
+    synchronize();
   }
 
   /*****************************************************************
@@ -464,6 +467,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
              .curr_links_idx = step_to_link_idx_map[step],
              .n_measurements = n_measurements,
              .step = step});
+
+        // Duplicate removal still reads the local last-measurement buffer.
+        synchronize();
       }
 
       // If no more CKF step is expected, the tips and links are
@@ -489,6 +495,8 @@ auto combinatorial_kalman_filter_algorithm::operator()(
 
           // Sort the key and values
           sort_param_ids_by_keys(keys_buffer, param_ids_buffer);
+          // The asynchronous sort still accesses the local keys.
+          synchronize();
         }
 
         /*****************************************************************
@@ -510,6 +518,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
              .tips_view = tips_buffer,
              .tip_lengths_view = tip_length_buffer,
              .tmp_jacobian_view = tmp_jacobian_buffer});
+
+        // Propagation must finish before this iteration releases param_ids.
+        synchronize();
       }
 
       n_in_params = n_candidates;
@@ -570,6 +581,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
                            best_tips_per_measurement_index_buffer,
                            best_tips_per_measurement_pval_buffer,
                            cfg.max_num_tracks_per_measurement});
+
+        // The gather kernel still accesses the local p-value buffer.
+        synchronize();
       }
 
       vecmem::data::vector_buffer<unsigned int> votes_per_tip_buffer(
@@ -601,6 +615,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
                          .min_measurement_voting_fraction =
                              cfg.min_measurement_voting_fraction});
 
+      // Finish reading the old lengths and the voting scratch buffers before
+      // replacing the lengths and leaving this scope.
+      synchronize();
       tip_length_buffer = std::move(new_tip_length_buffer);
     }
 
@@ -647,6 +664,10 @@ auto combinatorial_kalman_filter_algorithm::operator()(
            .jacobian_ptr = jacobian_buffer.ptr(),
            .link_predicted_parameter_view = link_predicted_parameter_buffer,
            .link_filtered_parameter_view = link_filtered_parameter_buffer});
+
+      // Track building reads the link, tip, and optional smoother buffers
+      // owned by this branch.
+      synchronize();
     }
   }
 

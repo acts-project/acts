@@ -93,6 +93,9 @@ auto gbts_seeding_algorithm::make_nodes(
   gbts_find_minmax_radius_kernel(
       {cfg.n_eta_bins, eta_bin_offsets_buf, node_params_buf, bin_rads_buf});
 
+  // Sorting and node creation still access the local sort keys and values.
+  synchronize();
+
   return node_making_output{std::move(reducedSP_buf),
                             std::move(node_params_buf),
                             std::move(node_phi_buf),

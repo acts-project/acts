@@ -116,6 +116,9 @@ kalman_fitting_algorithm::output_type kalman_fitting_algorithm::operator()(
     fit_backward_kernel(m_data->m_config, payload);
   }
 
+  // Complete fitting before releasing the scratch buffers and payload.
+  synchronize();
+
   // Return the fitted tracks.
   return output_tracks;
 }

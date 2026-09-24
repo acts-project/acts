@@ -32,4 +32,8 @@ auto kalman_fitting_algorithm::prepare_fit_payload(
       det, field, n_surfaces, payload);
 }
 
+void kalman_fitting_algorithm::synchronize() const {
+  stream().synchronize();
+}
+
 }  // namespace traccc::hip
