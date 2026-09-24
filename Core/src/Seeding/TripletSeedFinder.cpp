@@ -52,7 +52,7 @@ class Impl final : public TripletSeedFinder {
   }
 
   template <typename TopDoublets>
-  void createPixelTripletTopCandidates(
+  TopDoublets createPixelTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
@@ -485,8 +485,8 @@ class Impl final : public TripletSeedFinder {
       return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                              topDoublets, tripletTopCandidates);
     } else {
-      createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                      topDoublets, tripletTopCandidates);
+      return createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
     }
   }
 
@@ -499,8 +499,8 @@ class Impl final : public TripletSeedFinder {
       return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                              topDoublets, tripletTopCandidates);
     } else {
-      createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                      topDoublets, tripletTopCandidates);
+      return createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
     }
   }
 
@@ -513,8 +513,8 @@ class Impl final : public TripletSeedFinder {
       return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                              topDoublets, tripletTopCandidates);
     } else {
-      createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                      topDoublets, tripletTopCandidates);
+      return createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
     }
   }
 
