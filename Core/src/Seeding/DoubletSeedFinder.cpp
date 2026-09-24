@@ -144,8 +144,9 @@ class Impl final : public DoubletSeedFinder {
       if constexpr (useTime) {
         const ConstSpacePointProxy otherSp = container[indexO];
         const float t0O = otherSp.time() - fastHypot(rO, zO);
-        const float sigmaT0 = std::sqrt(varianceTM + otherSp.varianceT());
-        if (std::abs(t0O - t0M) > m_cfg.timeCutNSigma * sigmaT0) {
+        const float varianceT0 = varianceTM + otherSp.varianceT();
+        const float dt = t0O - t0M;
+        if (dt*dt > m_cfg.timeCutNVariance * varianceT0) {
           continue;
         }
       }
