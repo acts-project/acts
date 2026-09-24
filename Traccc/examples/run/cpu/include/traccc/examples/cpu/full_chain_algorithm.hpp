@@ -65,6 +65,35 @@ class full_chain_algorithm
 
   /// @}
 
+  /// Data shared by all instances of the algorithm
+  ///
+  /// It must outlive every algorithm that was constructed with it.
+  ///
+  struct shared_data {
+    /// Constructor
+    ///
+    /// @param host_mr This is not used anywhere. Allows templating CPU/Device
+    /// algorithm.
+    /// @param det_descr The detector design description
+    /// @param det_cond The detector conditions description
+    /// @param field The magnetic field
+    /// @param detector The host detector, or @c nullptr
+    ///
+    shared_data(vecmem::memory_resource& host_mr,
+                const detector_design_description::host& det_descr,
+                const detector_conditions_description::host& det_cond,
+                const magnetic_field& field, const host_detector* detector);
+
+    /// Detector description
+    std::reference_wrapper<const detector_design_description::host> m_det_descr;
+    std::reference_wrapper<const detector_conditions_description::host>
+        m_det_cond;
+    /// B field for the track finding and fitting
+    std::reference_wrapper<const magnetic_field> m_field;
+    /// Detector
+    const host_detector* m_detector;
+  };
+
   /// Algorithm constructor
   ///
   /// @param mr The memory resource to use for the intermediate and result
@@ -82,11 +111,8 @@ class full_chain_algorithm
       const track_params_estimation_config& track_params_estimation_config,
       const finding_algorithm::config_type& finding_config,
       const fitting_algorithm::config_type& fitting_config,
-      const detector_design_description::host& det_descr,
-      const detector_conditions_description::host& det_cond,
-      const magnetic_field& field, const host_detector* detector,
-      std::unique_ptr<const traccc::Logger> logger, const bool useGBTS = false,
-      await_strategy = await_strategy::sync_event);
+      const shared_data& data, std::unique_ptr<const traccc::Logger> logger,
+      const bool useGBTS = false, await_strategy = await_strategy::sync_event);
 
   /// Reconstruct track parameters in the entire detector
   ///
@@ -111,7 +137,7 @@ class full_chain_algorithm
   std::unique_ptr<vecmem::copy> m_copy;
   /// Constant B field for the (seed) track parameter estimation
   traccc::vector3 m_field_vec;
-  /// Constant B field for the track finding and fitting
+  /// B field for the track finding and fitting
   magnetic_field m_field;
 
   /// Detector description

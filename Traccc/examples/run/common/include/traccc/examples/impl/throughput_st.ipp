@@ -146,13 +146,16 @@ int throughput_st(std::string_view description, int argc, char* argv[],
       fitting_opts);
   fitting_cfg.propagation = propagation_config;
 
+  // Set up the data used by the full-chain algorithm.
+  const typename FULL_CHAIN_ALG::shared_data shared_data{
+      unpinned_host_mr, det_descr, det_cond, field, &detector};
+
   // Set up the full-chain algorithm.
   std::unique_ptr<FULL_CHAIN_ALG> alg = std::make_unique<FULL_CHAIN_ALG>(
       unpinned_host_mr, clustering_cfg, seedfinder_config,
       spacepoint_grid_config, seedfilter_config, gbts_config,
-      track_params_estimation_config, finding_cfg, fitting_cfg, det_descr,
-      det_cond, field, &detector, logger().clone("FullChainAlg"),
-      seeding_gbts_opts.useGBTS);
+      track_params_estimation_config, finding_cfg, fitting_cfg, shared_data,
+      logger().clone("FullChainAlg"), seeding_gbts_opts.useGBTS);
 
   // Seed the random number generator.
   if (throughput_opts.random_seed == 0) {
