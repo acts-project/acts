@@ -852,6 +852,16 @@ nlohmann::json TrackingGeometryMaterialJsonConverter::toJson(
 TrackingGeometryMaterial TrackingGeometryMaterialJsonConverter::fromJson(
     const nlohmann::json& encoded) const {
   check(!encoded.contains("volumes"), "version 1 does not support volumes");
+  if (encoded.contains("Surfaces") || encoded.contains("Volumes") ||
+      encoded.contains("acts-geometry-hierarchy-map")) {
+    throw std::invalid_argument(
+        "Legacy material format is not supported by "
+        "TrackingGeometryMaterialJsonConverter. "
+        "Convert the file with ActsMaterialMapMigrate <input> <output> first.");
+  }
+  check(
+      encoded.contains("header"),
+      "Material document is missing the required header (format and version)");
   const auto& header = encoded.at("header");
   check(header.at("format") == "acts-material-map",
         "unsupported material format");

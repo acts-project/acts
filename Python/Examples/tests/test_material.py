@@ -23,10 +23,53 @@ def test_material_root(conf_const):
 
 def test_json_material_decorator():
     config = MaterialMapJsonConverter.Config()
-    deco = JsonMaterialDecorator(
-        rConfig=config,
-        jFileName=str(
-            getOpenDataDetectorDirectory() / "config/odd-material-mapping-config.json"
-        ),
+    with pytest.warns(DeprecationWarning, match="Legacy JSON material APIs"):
+        deco = JsonMaterialDecorator(
+            rConfig=config,
+            jFileName=str(
+                getOpenDataDetectorDirectory()
+                / "config/odd-material-mapping-config.json"
+            ),
+            level=acts.logging.WARNING,
+        )
+
+
+def test_material_map_writer(tmp_path):
+    import json
+    from acts.examples import GenericDetector
+    from acts.examples.json import MaterialMapWriter, JsonMaterialWriter
+    from acts.json import TrackingGeometryMaterialJsonConverter
+
+    converter = TrackingGeometryMaterialJsonConverter()
+    output = tmp_path / "material.json"
+    options = TrackingGeometryMaterialJsonConverter.Options()
+    options.materialFractionBits = 16
+    writer = MaterialMapWriter(
+        filePath=output,
+        options=options,
+        includeNonMaterial=True,
         level=acts.logging.WARNING,
     )
+    detector = GenericDetector()
+    geometry = detector.trackingGeometry()
+    writer.write(geometry)
+    document = json.loads(output.read_text())
+    assert document["header"]["version"] == 1
+    assert document["surfaces"]
+    assert any(
+        entry["material"]["kind"] == "proto-grid" for entry in document["surfaces"]
+    )
+    material = converter.fromFile(output)
+    writer.writeMaterial(material)
+    assert json.loads(output.read_text()) == document
+
+    unsupported = acts.TrackingGeometryMaterial()
+    unsupported.volumeMaterials = {acts.GeometryIdentifier(): None}
+    with pytest.raises(ValueError, match="surface material only"):
+        writer.writeMaterial(unsupported)
+
+    # The compatibility writer warns only when explicitly instantiated.
+    with pytest.warns(DeprecationWarning, match="JsonMaterialWriter is deprecated"):
+        JsonMaterialWriter(
+            fileName=str(tmp_path / "legacy"), level=acts.logging.WARNING
+        )

@@ -148,9 +148,10 @@ def test_optional_material_keys(tmp_path):
     }
     path = tmp_path / "material.json"
     path.write_text(json.dumps(document))
-    loader = acts_json.JsonMaterialDecorator(
-        acts_json.MaterialMapJsonConverter.Config(), str(path), acts.logging.WARNING
-    )
+    with pytest.warns(DeprecationWarning, match="Legacy JSON material APIs"):
+        loader = acts_json.JsonMaterialDecorator(
+            acts_json.MaterialMapJsonConverter.Config(), str(path), acts.logging.WARNING
+        )
     loader.materialMaps.apply(geometry)
     assert isinstance(
         keyed["barrel/outer"].surfaceMaterial, acts.HomogeneousSurfaceMaterial

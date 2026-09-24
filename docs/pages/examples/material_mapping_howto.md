@@ -67,7 +67,7 @@ python Examples/Scripts/Python/geometry.py
 This writes `geometry-map.json` in the current directory (among other outputs).
 The relevant part is in `runGeometry()` in
 `Examples/Scripts/Python/geometry.py`, which configures a
-`MaterialMapJsonConverter` and a `JsonMaterialWriter`.
+`MaterialMapWriter`, which writes versioned surface material documents.
 
 > [!important]
 > The converter must be configured with `processNonMaterial=True`. Surfaces that
@@ -236,18 +236,18 @@ surfaces. The individual-surface
 @ref Acts::TrackingGeometryMaterial::apply(Acts::Surface&)const "apply(surface)"
 overload performs lookup and material assignment but cannot check uniqueness across other surfaces.
 
-@ref Acts::JsonMaterialDecorator reads JSON/CBOR into these maps and delegates its
-existing surface and volume decoration methods to Core. To apply a loaded map
-to a completed geometry, retrieve them with
-@ref Acts::JsonMaterialDecorator::materialMaps and call
-`loader.materialMaps().apply(geometry)` in C++ or
-`loader.materialMaps.apply(geometry)` in Python.
+@ref Acts::TrackingGeometryMaterialJsonConverter reads versioned JSON/CBOR
+into these maps. Call `converter.fromFile(path).apply(geometry)` in C++ or Python
+to apply them to a completed geometry. Python also provides
+`acts.IMaterialDecorator.fromFile(path)` for construction-time decoration.
+The deprecated JSON decorator remains available for legacy files, with a Python
+deprecation warning.
 
 - Applying a keyed map to Gen1 geometry is an error. Stable keys require Gen3
   material designators.
 - Keyed targets require a matching keyed entry. There is no fallback to a
   geometry ID when a key is missing.
-- Unkeyed targets continue to use the legacy `Surfaces` map by ID.
+- Unkeyed targets use geometry-ID assignments.
 - Unused file keys are allowed, so a larger or combined map can decorate a
   subset geometry.
 - An explicit vacuum payload is a valid assignment; an absent payload is not.

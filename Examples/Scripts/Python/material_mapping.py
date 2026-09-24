@@ -13,8 +13,6 @@ from acts import (
     GeometryContext,
 )
 
-from acts.json import MaterialMapJsonConverter
-
 from acts.examples import (
     Sequencer,
     WhiteBoard,
@@ -28,8 +26,7 @@ from acts.examples.root import (
 )
 
 from acts.examples.json import (
-    JsonMaterialWriter,
-    JsonFormat,
+    MaterialMapWriter,
 )
 
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
@@ -84,28 +81,12 @@ def runMaterialMapping(
     # Add the map writer(s)
     materialMapWriters = []
     # json map writer
-    jsonOutputMapFormatsDict = {"json": JsonFormat.Json, "cbor": JsonFormat.Cbor}
-    jsonOutputMapFormats = [
-        jsonOutputMapFormatsDict[f]
-        for f in outputMapFormats
-        if f in jsonOutputMapFormatsDict
-    ]
-    if jsonOutputMapFormats:
-        jmConverterCfg = MaterialMapJsonConverter.Config(
-            processSensitives=True,
-            processApproaches=True,
-            processRepresenting=True,
-            processBoundaries=True,
-            processVolumes=False,
-        )
-        # Suffix for the map file is added in the writer depending on the format
-        for writeFormat in jsonOutputMapFormats:
+    for extension in outputMapFormats:
+        if extension in ("json", "cbor"):
             materialMapWriters.append(
-                JsonMaterialWriter(
+                MaterialMapWriter(
                     level=loglevel,
-                    converterCfg=jmConverterCfg,
-                    fileName=outputFileBase + "_map",
-                    writeFormat=writeFormat,
+                    filePath=outputFileBase + "_map." + extension,
                 )
             )
     if "root" in outputMapFormats:

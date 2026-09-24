@@ -357,7 +357,14 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentBasicParsing) {
   Converter converter;
   auto document = fixture("minimal.json");
   document.erase("header");
-  BOOST_CHECK_THROW(converter.fromJson(document), nlohmann::json::exception);
+  BOOST_CHECK_THROW(converter.fromJson(document), std::invalid_argument);
+  const nlohmann::json legacy{
+      {"Surfaces", {{"entries", nlohmann::json::array()}}}};
+  BOOST_CHECK_EXCEPTION(
+      converter.fromJson(legacy), std::invalid_argument, [](const auto& error) {
+        return std::string(error.what()).find("ActsMaterialMapMigrate") !=
+               std::string::npos;
+      });
   document = fixture("minimal.json");
   document["header"] = nullptr;
   BOOST_CHECK_THROW(converter.fromJson(document), nlohmann::json::exception);

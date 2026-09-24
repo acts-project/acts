@@ -72,7 +72,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash, odd_de
     map_file_json = tmp_path / "material_mapping_map.json"
     assert map_file_json.exists()
     with map_file_json.open() as fh:
-        assert json.load(fh)
+        assert json.load(fh)["header"]["version"] == 1
 
     # mapped tracks output check
     map_file_mapped = tmp_path / "material_mapping_mapped.root"

@@ -27,6 +27,19 @@ material.apply(geometry);
 converter.toFile(material, "material.json");
 ```
 
+Python exposes the same file converter as
+`acts.json.TrackingGeometryMaterialJsonConverter`; its `Options` class controls
+precision and output settings. `acts.examples.json.MaterialMapWriter` accepts a
+full `filePath` (including extension) and optional `options`, and implements the
+mapping algorithm's writer interface. Its `write(geometry)` exports existing
+surface material and rejects volume material. With `includeNonMaterial=True`,
+surfaces without material receive deferred one-bin proto-grid placeholders;
+their ranges and directions are resolved from geometry when applied.
+
+`acts.IMaterialDecorator.fromFile` supports both formats. Legacy JSON APIs emit
+Python `DeprecationWarning` on construction; the strict new converter rejects
+legacy input with an error pointing to `ActsMaterialMapMigrate`.
+
 The JSON plugin also installs `ActsMaterialMapMigrate` in `bin` to migrate
 files written by the deprecated material converter:
 

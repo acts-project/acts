@@ -69,8 +69,26 @@ def _decoratorFromFile(file: Union[str, Path], **kwargs):
 
     kwargs.setdefault("level", ActsPythonBindings.logging.INFO)
 
-    if file.suffix in (".json", ".cbor"):
-        from .json import MaterialMapJsonConverter, JsonMaterialDecorator
+    if file.suffix in (".json", ".cbor", ".zst"):
+        from .json import (
+            TrackingGeometryMaterialJsonConverter,
+            MaterialMapDecorator,
+            MaterialMapJsonConverter,
+            JsonMaterialDecorator,
+        )
+
+        try:
+            material = TrackingGeometryMaterialJsonConverter().fromFile(file)
+        except ValueError as error:
+            if not str(error).startswith("Legacy material format"):
+                raise
+        else:
+            unsupported = set(kwargs) - {"level"}
+            if unsupported:
+                raise TypeError(
+                    f"Unsupported material reader options: {sorted(unsupported)}"
+                )
+            return MaterialMapDecorator(material)
 
         c = MaterialMapJsonConverter.Config()
         for k in kwargs.keys():

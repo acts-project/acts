@@ -16,6 +16,7 @@
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupReader.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupWriter.hpp"
+#include "ActsExamples/Io/Json/MaterialMapWriter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -29,6 +30,7 @@
 #include <nlohmann/json.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace Acts {
 class IMaterialDecorator;
@@ -59,6 +61,21 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
         .value("All", JsonFormat::All);
   }
 
+  {
+    auto cls =
+        py::class_<MaterialMapWriter, IMaterialWriter,
+                   std::shared_ptr<MaterialMapWriter>>(json,
+                                                       "MaterialMapWriter")
+            .def(py::init<const MaterialMapWriter::Config&, Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def("writeMaterial", &MaterialMapWriter::writeMaterial)
+            .def("write", &MaterialMapWriter::write)
+            .def_property_readonly("config", &MaterialMapWriter::config);
+    auto c =
+        py::class_<MaterialMapWriter::Config>(cls, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, filePath, includeNonMaterial, options);
+  }
+
   // Keep the deprecated material writer binding available during migration.
   {
     ACTS_PUSH_IGNORE_DEPRECATED()
@@ -66,7 +83,16 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
         py::class_<JsonMaterialWriter, IMaterialWriter,
                    std::shared_ptr<JsonMaterialWriter>>(json,
                                                         "JsonMaterialWriter")
-            .def(py::init<const JsonMaterialWriter::Config&, Logging::Level>(),
+            .def(py::init([](const JsonMaterialWriter::Config& config,
+                             Logging::Level level) {
+                   if (PyErr_WarnEx(PyExc_DeprecationWarning,
+                                    "JsonMaterialWriter is deprecated; use "
+                                    "MaterialMapWriter.",
+                                    1) < 0) {
+                     throw py::error_already_set();
+                   }
+                   return std::make_shared<JsonMaterialWriter>(config, level);
+                 }),
                  py::arg("config"), py::arg("level"))
             .def("writeMaterial", &JsonMaterialWriter::writeMaterial)
             .def("write", &JsonMaterialWriter::write)
