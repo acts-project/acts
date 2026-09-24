@@ -49,14 +49,14 @@ target_compile_definitions(
 # compressed output both fail with an explanatory error. All zstd use is
 # confined to the .cpp, so the definition stays private and the headers
 # compile identically either way.
-if(ACTS_USE_ZSTD STREQUAL "OFF")
-    message(STATUS "Json plugin: zstd support disabled (ACTS_USE_ZSTD=OFF)")
+if(ACTS_USE_ZSTD STREQUAL "NEVER")
+    message(STATUS "Json plugin: zstd support disabled (ACTS_USE_ZSTD=NEVER)")
 else()
     message(
         CHECK_START
         "Json plugin: checking for zstd (ACTS_USE_ZSTD=${ACTS_USE_ZSTD})"
     )
-    if(ACTS_USE_ZSTD STREQUAL "ON")
+    if(ACTS_USE_ZSTD STREQUAL "ALWAYS")
         find_package(ZSTD REQUIRED)
     else()
         find_package(ZSTD QUIET)
