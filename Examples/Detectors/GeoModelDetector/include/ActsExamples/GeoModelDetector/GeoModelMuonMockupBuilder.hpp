@@ -36,6 +36,13 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
     /// The station names to be built (e.g for barrel: BIL, BML etc)
     std::vector<std::string> stationNames{};
 
+    /// Tolerance by which each chamber (parent) volume is inflated w.r.t. the
+    /// GeoModel envelope, such that its boundaries do not coincide with the
+    /// boundaries of the child volumes (RPC / TGC / MDT multilayers). Barrel
+    /// chambers are not inflated along their width (local x), as neighbouring
+    /// sectors touch there.
+    double chamberEnvelope{0.5};  // mm
+
     /// Pointer to the volume bound factory to share the bounds across several
     /// volumes
     std::shared_ptr<Acts::VolumeBoundFactory> volumeBoundFactory =
@@ -120,6 +127,11 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
   void updateBounds(const Acts::GeometryContext& gctx,
                     const Acts::TrackingVolume& volume,
                     cylBounds& bounds) const;
+
+  /// @brief Return the chamber bounds inflated by Config::chamberEnvelope
+  std::shared_ptr<Acts::VolumeBounds> inflateChamberBounds(
+      const Acts::VolumeBounds& bounds,
+      Acts::VolumeBoundFactory& boundFactory) const;
 
   // Helper function returning the station idx from a box volume
   StationIdx getStationIdx(const Box_t& box) const;

@@ -75,7 +75,7 @@ def main():
     addParticleGun(
         seq,
         ParticleConfig(num=1, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
-        EtaConfig(0.5, 1.0),
+        EtaConfig(-3.0, 3.0, uniform=True),
         MomentumConfig(1 * u.GeV, 100 * u.GeV, transverse=True),
         rnd=rnd,
     )
@@ -86,15 +86,17 @@ def main():
     )
     seq.addAlgorithm(trkParamExtractor)
 
-    nav = acts.Navigator(trackingGeometry=trackingGeometry)
+    nav = acts.Navigator(acts.logging.INFO, trackingGeometry=trackingGeometry)
 
     stepper = acts.EigenStepper(field)
 
-    propagator = acts.examples.ConcretePropagator(acts.Propagator(stepper, nav))
+    propagator = acts.examples.ConcretePropagator(
+        acts.Propagator(stepper, nav, acts.logging.INFO)
+    )
 
     propagationAlgorithm = acts.examples.PropagationAlgorithm(
         propagatorImpl=propagator,
-        level=acts.logging.INFO,
+        level=acts.logging.VERBOSE,
         sterileLogger=sterileLogger,
         inputTrackParameters="params_particles_generated",
         outputSummaryCollection="propagation_summary",
