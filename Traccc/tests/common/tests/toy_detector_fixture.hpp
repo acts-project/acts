@@ -72,6 +72,7 @@ class ToyDetectorFixture : public testing::Test {
     // Write detector file
     auto writer_cfg = detray::io::detector_writer_config{}
                           .format(detray::io::format::json)
+                          .source("detray native")
                           .replace_files(true)
                           .write_grids(true)
                           .write_material(true)

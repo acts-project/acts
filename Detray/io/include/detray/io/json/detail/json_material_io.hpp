@@ -23,31 +23,20 @@ namespace detray::io {
 
 inline void to_json(nlohmann::ordered_json& j,
                     const homogeneous_material_header_payload& h) {
-  j["common"] = h.common;
-
-  if (h.sub_header.has_value()) {
-    const auto& mat_sub_header = h.sub_header.value();
-    j["slab_count"] = mat_sub_header.n_slabs;
-    j["rod_count"] = mat_sub_header.n_rods;
-    j["slab_surface_count"] = mat_sub_header.n_slab_surfaces;
-    j["rod_surface_count"] = mat_sub_header.n_rod_surfaces;
-  }
+  j["slab_count"] = h.n_slabs;
+  j["rod_count"] = h.n_rods;
+  j["slab_surface_count"] = h.n_slab_surfaces;
+  j["rod_surface_count"] = h.n_rod_surfaces;
 }
 
 inline void from_json(const nlohmann::ordered_json& j,
                       homogeneous_material_header_payload& h) {
-  h.common = j["common"];
-
   if (j.find("slab_count") != j.end() && j.find("rod_count") != j.end()) {
-    h.sub_header.emplace();
-    auto& mat_sub_header = h.sub_header.value();
-    mat_sub_header.n_slabs = j["slab_count"];
-    mat_sub_header.n_rods = j["rod_count"];
+    h.n_slabs = j["slab_count"];
+    h.n_rods = j["rod_count"];
     // Default surface counts to 0 to keep older files compatible
-    mat_sub_header.n_slab_surfaces =
-        j.value<std::size_t>("slab_surface_count", 0);
-    mat_sub_header.n_rod_surfaces =
-        j.value<std::size_t>("rod_surface_count", 0);
+    h.n_slab_surfaces = j.value<std::size_t>("slab_surface_count", 0);
+    h.n_rod_surfaces = j.value<std::size_t>("rod_surface_count", 0);
   }
 }
 
