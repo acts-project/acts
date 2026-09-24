@@ -27,21 +27,17 @@
 #include "Acts/Vertexing/AMVFInfo.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
-#include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-#include <array>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <numbers>
 #include <random>
-#include <span>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -56,24 +52,6 @@ using Acts::VectorHelpers::makeVector4;
 ACTS_LOCAL_LOGGER(getDefaultLogger("AMVFitterTests", Logging::INFO))
 
 using Covariance = BoundMatrix;
-
-static_assert(std::is_nothrow_move_constructible_v<AdaptiveMultiVertexFitter>);
-// Preserve source compatibility, including brace lists and the exact old type.
-ACTS_PUSH_IGNORE_DEPRECATED()
-using LegacyAddVertices = Result<void> (AdaptiveMultiVertexFitter::*)(
-    VertexFitProblem&, const std::vector<Vertex*>&, const VertexingOptions&,
-    AdaptiveMultiVertexFitter::Cache&) const;
-static_assert(requires(const AdaptiveMultiVertexFitter& fitter,
-                       VertexFitProblem& problem,
-                       const VertexingOptions& options,
-                       AdaptiveMultiVertexFitter::Cache& cache,
-                       Vertex* vertex) {
-  static_cast<LegacyAddVertices>(&AdaptiveMultiVertexFitter::addVtxToFit);
-  fitter.addVtxToFit(problem, {}, options, cache);
-  fitter.addVtxToFit(problem, {vertex}, options, cache);
-  fitter.addVtxToFit(problem, {vertex, vertex}, options, cache);
-});
-ACTS_POP_IGNORE_DEPRECATED()
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer;
 
@@ -270,8 +248,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   std::vector<Vertex> seedListCopy = vtxList;
 
   std::vector<Vertex*> vtxFitPtr = {&vtxList.at(0)};
-  auto res1 = fitter.addVtxToFit(state, std::span<Vertex* const>{vtxFitPtr},
-                                 vertexingOptions, cache);
+  auto res1 = fitter.addVtxToFit(state, vtxFitPtr, vertexingOptions, cache);
   ACTS_DEBUG("Tracks linked to each vertex AFTER fit:");
   int c = 0;
   for (auto& vtx : vtxPtrList) {
@@ -316,8 +293,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
                   seedListCopy.at(1).fullPosition(), 1_mm);
 
   vtxFitPtr = {&vtxList.at(2)};
-  auto res2 = fitter.addVtxToFit(state, std::span<Vertex* const>{vtxFitPtr},
-                                 vertexingOptions, cache);
+  auto res2 = fitter.addVtxToFit(state, vtxFitPtr, vertexingOptions, cache);
   BOOST_CHECK(res2.ok());
 
   // Now also the third vertex should have been modified and fitted
@@ -450,8 +426,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   state.addVertexToMultiMap(vtx);
 
   std::vector<Vertex*> vtxFitPtr = {&vtx};
-  auto res = fitter.addVtxToFit(state, std::span<Vertex* const>{vtxFitPtr},
-                                vertexingOptions, cache);
+  auto res = fitter.addVtxToFit(state, vtxFitPtr, vertexingOptions, cache);
 
   BOOST_CHECK(res.ok());
 
@@ -513,43 +488,14 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   constrainedState.addVertexToMultiMap(constrainedVtx);
 
   std::vector<Vertex*> constrainedVtxFitPtr = {&constrainedVtx};
-  auto constrainedRes = fitter.addVtxToFit(
-      constrainedState, std::span<Vertex* const>{constrainedVtxFitPtr},
-      vertexingOptions, constrainedCache);
+  auto constrainedRes =
+      fitter.addVtxToFit(constrainedState, constrainedVtxFitPtr,
+                         vertexingOptions, constrainedCache);
 
   BOOST_CHECK(constrainedRes.ok());
 
   CHECK_CLOSE_ABS(constrainedVtx.fullPosition(), vtx.fullPosition(), 1e-9);
   CHECK_CLOSE_ABS(constrainedVtx.fullCovariance(), vtx.fullCovariance(), 1e-9);
-
-  // Fit the same tracks again, this time through the abstract IVertexFitter
-  // interface, and check that the result agrees with the direct call above.
-  {
-    const IVertexFitter& iface = fitter;
-    auto ifaceCache = iface.makeCache(magFieldContext);
-
-    std::vector<InputTrack> inputTracks;
-    inputTracks.reserve(trks.size());
-    for (const auto& trk : trks) {
-      inputTracks.emplace_back(&trk);
-    }
-
-    VertexingOptions singleOptions(geoContext, magFieldContext);
-    singleOptions.useConstraintInFit = false;
-
-    auto ifaceRes = iface.fitSingle(inputTracks, singleOptions, ifaceCache);
-    BOOST_REQUIRE(ifaceRes.ok());
-
-    const Vertex& ifaceVtx = *ifaceRes;
-    ACTS_DEBUG("Vertex position via IVertexFitter: "
-               << ifaceVtx.position().transpose());
-
-    CHECK_CLOSE_ABS(trueVtxPos, ifaceVtx.position(), 60_um);
-    BOOST_CHECK_EQUAL(ifaceVtx.tracks().size(), trks.size());
-    for (std::size_t i = 0; i <= 3; i++) {
-      BOOST_CHECK_GT(ifaceVtx.fullCovariance()(i, i), 0.);
-    }
-  }
 }
 
 /// @brief Unit test for AdaptiveMultiVertexFitter
