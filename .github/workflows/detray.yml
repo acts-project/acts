@@ -13,13 +13,6 @@ on:
     # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Detray/**"
-      - "cmake/**"
-      - "codegen/**"
-      - "thirdparty/**"
-      - "CMakeLists.txt"
-      - "CMakePresets.json"
-      - "CI/**"
-      - ".github/actions/**"
       - ".github/workflows/detray.yml"
       - ".github/detray-traccc-filters.yml"
   pull_request:
@@ -28,13 +21,6 @@ on:
     # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Detray/**"
-      - "cmake/**"
-      - "codegen/**"
-      - "thirdparty/**"
-      - "CMakeLists.txt"
-      - "CMakePresets.json"
-      - "CI/**"
-      - ".github/actions/**"
       - ".github/workflows/detray.yml"
       - ".github/detray-traccc-filters.yml"
   # The changes job applies path filtering to merge groups, which do not
@@ -190,8 +176,6 @@ jobs:
       uses: ./.github/actions/dependencies
       with:
         compiler: g++
-        # Flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.1.0
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
@@ -297,8 +281,6 @@ jobs:
       with:
         compiler: g++
         flavor: ${{ matrix.PLATFORM.FLAVOR }}
-        # Flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.1.0
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
@@ -375,8 +357,6 @@ jobs:
       with:
         compiler: g++
         flavor: cuda13
-        # Flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.1.0
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
@@ -505,7 +485,6 @@ jobs:
       with:
         compiler: g++
         flavor: cuda13
-        DEPENDENCY_TAG: v24.1.0
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 

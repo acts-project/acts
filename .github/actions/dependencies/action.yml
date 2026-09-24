@@ -10,18 +10,6 @@ inputs:
     description: 'Secrets to pass to the action'
     required: false
     default: ''
-  spack_version:
-    description: 'Version of Spack to use'
-    required: false
-    default: '426ab4d83b93df5c1ace836bd12d514ab2074b77'
-  spack_repo_version:
-    description: 'Spack builtin packages repo commit (git SHA) to pin'
-    required: false
-    default: '6a3dd42c514510c234f203b5fef392162da80049'
-  DEPENDENCY_TAG:
-    description: 'Dependency tag to pull from'
-    required: false
-    default: 'v24.1.0'
   full_install:
     description: 'Whether to do a full dependency installation including Geant4 datasets and Python packages'
     required: false
@@ -96,6 +84,13 @@ runs:
       shell: bash
       run: echo "home=$(printf '%s' "$HOME" | tr -c 'A-Za-z0-9' '-')" >> "$GITHUB_OUTPUT"
 
+    # Version pins live in CI/dependencies/versions.env; this only exposes them
+    # for the cache key and the spack setup below.
+    - name: Read version pins
+      id: versions
+      shell: bash
+      run: grep -E '^[A-Z_]+=' CI/dependencies/versions.env >> "$GITHUB_OUTPUT"
+
     # Cached in place rather than via a staging directory: `~` and the workspace
     # are separate mounts in a container job, so staging meant copying the whole
     # tree on save and again on restore (~12 s a job) for no gain.
@@ -106,15 +101,14 @@ runs:
         path: |
           spack
           ~/.spack
-        key: spack-r5-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-scope.outputs.home }}-${{ inputs.spack_version }}-${{ inputs.spack_repo_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
+        key: spack-r5-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-scope.outputs.home }}-${{ steps.versions.outputs.SPACK_VERSION }}-${{ steps.versions.outputs.SPACK_REPO_VERSION }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Setup Spack from scratch
       if: steps.cache-restore.outputs.cache-hit != 'true'
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-        SPACK_VERSION: ${{ inputs.spack_version }}
-        SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
+        SPACK_REPO_VERSION: ${{ steps.versions.outputs.SPACK_REPO_VERSION }}
       run: |
         # This step clones spack and the builtin package repo itself, i.e.
         # before setup.sh gets a chance to authenticate github.com fetches.
@@ -144,8 +138,6 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-        SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
-        DEPENDENCY_TAG: ${{ inputs.DEPENDENCY_TAG }}
         CXXSTD: ${{ inputs.cxx_std }}
         ENV_FILE: ${{ inputs.env_file }}
         FULL_INSTALL: ${{ inputs.full_install }}
