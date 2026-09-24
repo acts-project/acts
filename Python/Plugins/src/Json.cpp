@@ -44,7 +44,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
             .def("fromFile", &Converter::fromFile, py::arg("path"));
     auto options =
         py::class_<Converter::Options>(cls, "Options").def(py::init<>());
-    ACTS_PYTHON_STRUCT(options, indentation, compressionLevel);
+    ACTS_PYTHON_STRUCT(options, indentation, compressionLevel,
+                       materialFractionBits);
     cls.def("toFile", &Converter::toFile, py::arg("material"), py::arg("path"),
             py::arg("options") = Converter::Options{});
   }
