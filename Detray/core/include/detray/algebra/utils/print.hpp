@@ -32,6 +32,13 @@ DETRAY_HOST std::ostream& operator<<(std::ostream& out, const vector_t& v) {
     out << v[i];
     if (i != size - 1) {
       out << ", ";
+      if constexpr (!std::is_scalar_v<detray::traits::scalar_t<vector_t>>) {
+        if (i + 1u < size) {
+          out << std::endl;
+        }
+      } else if (i + 1u < size) {
+        out << ", ";
+      }
     }
   }
   out << "]";
@@ -50,7 +57,14 @@ DETRAY_HOST std::ostream& operator<<(std::ostream& out, const vector_t& v) {
   out << "[";
   for (index_t i = 0; i < rows; ++i) {
     // Account for the sign of negative elements
-    out << std::setw(i == 0 ? 15 : 16) << element_getter_t{}(v, i, 0);
+    out << element_getter_t{}(v, i, 0);
+    if constexpr (!std::is_scalar_v<detray::traits::scalar_t<vector_t>>) {
+      if (i + 1u < rows) {
+        out << std::endl;
+      }
+    } else if (i + 1u < rows) {
+      out << ", ";
+    }
   }
   out << "]";
 

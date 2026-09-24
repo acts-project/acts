@@ -6,12 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// Algebra include(s).
-// #include "detray/plugins/algebra/array_definitions.hpp"
-// #include "detray/plugins/algebra/eigen_definitions.hpp"
-#include "algebra/vc_aos.hpp"
-#include "algebra/vc_soa.hpp"
-
 // Detray core include(s).
 #include "detray/definitions/containers.hpp"
 #include "detray/definitions/indexing.hpp"
@@ -21,9 +15,13 @@
 #include "detray/navigation/intersection/ray_intersector.hpp"
 #include "detray/tracks/ray.hpp"
 #include "detray/utils/logging.hpp"
+#include "detray/utils/type_list.hpp"
 
 // Detray benchmark include(s)
 #include "detray/benchmarks/types.hpp"
+
+// Algebra include(s).
+#include "algebra/array.hpp"
 
 // Detray test include(s)
 #include "detray/test/common/track_generators.hpp"
@@ -34,27 +32,24 @@
 
 // System include(s)
 #include <algorithm>
+#include <iostream>
 
 using namespace detray;
 
 static constexpr unsigned int theta_steps{2000u};
 static constexpr unsigned int phi_steps{2000u};
-static constexpr unsigned int n_surfaces{16u};
+static constexpr unsigned int n_surfaces{32u};
 
 /// Linear algebra implementation using SoA memory layout
-using algebra_v = detray::vc_soa<benchmarks::scalar>;
+using algebra_v = detray::benchmarks::algebra;
+using algebra_s = detray::array<benchmarks::value>;
 
-/// Linear algebra implementation using AoS memory layout
-// using algebra_array = detray::array<benchmarks::scalar>;
-using algebra_vc_aos = detray::vc_aos<benchmarks::scalar>;
-// using algebra_eigen = detray::eigen<benchmarks::scalar>;
-
-using algebra_s = algebra_vc_aos;
+static_assert(!std::same_as<algebra_v, algebra_s>);
 
 // Size of an SoA batch
-constexpr std::size_t simd_size{dscalar<algebra_v>::size()};
+constexpr std::size_t simd_size{algebra_v::size()};
 
-using ray_t = detail::ray<algebra_s>;
+using ray_t = detail::ray<detray::array<benchmarks::value>>;
 
 namespace {
 
@@ -89,11 +84,11 @@ std::vector<ray_t> generate_rays() {
 }
 
 /// Generate the translation distances to place the surfaces
-template <concepts::algebra algebra_t>
+template <concepts::aos algebra_t>
 dvector<dscalar<algebra_t>> get_dists(std::size_t n) {
   using scalar_t = dscalar<algebra_t>;
 
-  dvector<benchmarks::scalar> dists;
+  dvector<dscalar<algebra_t>> dists;
 
   for (std::size_t i = 1u; i <= n; ++i) {
     dists.push_back(static_cast<scalar_t>(i));
@@ -103,16 +98,17 @@ dvector<dscalar<algebra_t>> get_dists(std::size_t n) {
 }
 
 /// Specialization for hthe SOA memory layout (need n/simd_size samples)
-template <>
-dvector<dscalar<algebra_v>> get_dists<algebra_v>(std::size_t n) {
-  using scalar_t = dscalar<algebra_v>;
-  using value_t = typename algebra_v::value_type;
+template <concepts::soa algebra_t>
+dvector<dscalar<algebra_t>> get_dists(std::size_t n) {
+  using scalar_t = dscalar<algebra_t>;
+  using value_t = typename algebra_t::value_type;
 
   dvector<scalar_t> dists;
   dists.resize(static_cast<std::size_t>(std::ceil(n / simd_size)));
   for (std::size_t i = 0u; i < dists.size(); ++i) {
-    dists[i] = scalar_t::IndexesFromZero() +
-               scalar_t(static_cast<value_t>(i)) * simd_size + scalar_t(1.f);
+    dists[i] = detray::detail::iota<scalar_t>() +
+               detray::detail::one<scalar_t>() +
+               scalar_t(static_cast<value_t>(i)) * simd_size;
   }
 
   return dists;
@@ -123,6 +119,11 @@ dvector<dscalar<algebra_v>> get_dists<algebra_v>(std::size_t n) {
 /// This benchmark runs intersection with the planar intersector
 void BM_INTERSECT_PLANES_AOS(benchmark::State& state) {
   using mask_t = mask<rectangle2D, algebra_s, std::uint_least16_t>;
+
+  std::cout << "SoA algebra:" << std::endl;
+  detray::types::print<detray::types::list<algebra_v>>();
+  std::cout << "AoS algebra:" << std::endl;
+  detray::types::print<detray::types::list<algebra_s>>();
 
   auto dists = get_dists<algebra_s>(n_surfaces);
   auto [plane_descs, transforms] = test::planes_along_direction<algebra_s>(
@@ -304,7 +305,7 @@ void BM_INTERSECT_CYLINDERS_SOA(benchmark::State& state) {
   using mask_t = mask<cylinder2D, algebra_v, std::uint_least16_t>;
 
   std::vector<mask_t> masks;
-  for (const scalar_t r : get_dists<algebra_v>(n_surfaces)) {
+  for (const scalar_t& r : get_dists<algebra_v>(n_surfaces)) {
     masks.emplace_back(0u, r, -100.f, 100.f);
   }
 
@@ -426,7 +427,7 @@ void BM_INTERSECT_CONCENTRIC_CYLINDERS_SOA(benchmark::State& state) {
   using mask_t = mask<concentric_cylinder2D, algebra_v, std::uint_least16_t>;
 
   std::vector<mask_t> masks;
-  for (const scalar_t r : get_dists<algebra_v>(n_surfaces)) {
+  for (const scalar_t& r : get_dists<algebra_v>(n_surfaces)) {
     masks.emplace_back(0u, r, -100.f, 100.f);
   }
 

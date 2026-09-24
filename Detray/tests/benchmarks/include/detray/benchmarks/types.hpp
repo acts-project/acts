@@ -22,10 +22,10 @@ namespace detray::benchmarks {
 #define DETRAY_DEFINE_BENCHMARK_NAME(ALGEBRA) \
   static std::string plugin_name(#ALGEBRA);
 
-// Select algebra-plugin to compile the test with
-#if DETRAY_ALGEBRA_ARRAY
-using algebra = detray::array<DETRAY_CUSTOM_SCALARTYPE>;
-DETRAY_DEFINE_BENCHMARK_NAME(array)
+// Select the main algebra-plugin to compile the test with
+#if DETRAY_ALGEBRA_ARRAY_SOA
+using algebra = detray::array_soa<DETRAY_CUSTOM_SCALARTYPE, 8u>;
+DETRAY_DEFINE_BENCHMARK_NAME(array_soa)
 
 #elif DETRAY_ALGEBRA_EIGEN
 using algebra = detray::eigen<DETRAY_CUSTOM_SCALARTYPE>;
@@ -39,17 +39,17 @@ DETRAY_DEFINE_BENCHMARK_NAME(fastor)
 using algebra = detray::smatrix<DETRAY_CUSTOM_SCALARTYPE>;
 DETRAY_DEFINE_BENCHMARK_NAME(smatrix)
 
-#elif DETRAY_ALGEBRA_VC_AOS || DETRAY_ALGEBRA_VC_SOA
-
-#if DETRAY_ALGEBRA_VC_AOS
-using algebra = detray::vc_aos<DETRAY_CUSTOM_SCALARTYPE>;
-DETRAY_DEFINE_BENCHMARK_NAME(vc_aos)
-#endif
-
-#if DETRAY_ALGEBRA_VC_SOA
+#elif DETRAY_ALGEBRA_VC_SOA
 using algebra = detray::vc_soa<DETRAY_CUSTOM_SCALARTYPE>;
 DETRAY_DEFINE_BENCHMARK_NAME(vc_soa)
-#endif
+
+#elif DETRAY_ALGEBRA_VC_AOS
+using algebra = detray::vc_aos<DETRAY_CUSTOM_SCALARTYPE>;
+DETRAY_DEFINE_BENCHMARK_NAME(vc_aos)
+
+#elif DETRAY_ALGEBRA_ARRAY
+using algebra = detray::array<DETRAY_CUSTOM_SCALARTYPE>;
+DETRAY_DEFINE_BENCHMARK_NAME(array)
 
 #else
 #error \
@@ -57,6 +57,7 @@ DETRAY_DEFINE_BENCHMARK_NAME(vc_soa)
 #endif
 
 // Test algebra types
+using value = dvalue<algebra>;
 using scalar = dscalar<algebra>;
 using point2 = dpoint2D<algebra>;
 using point3 = dpoint3D<algebra>;

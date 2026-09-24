@@ -1529,7 +1529,8 @@ int main(int argc, char** argv) {
   // Iterate over reference (pilot) tracks for a rectangular telescope
   // geometry and Jacobian calculation
   using uniform_gen_t =
-      detail::random_numbers<scalar, std::uniform_real_distribution<scalar>>;
+      detail::random_numbers<test_algebra,
+                             std::uniform_real_distribution<scalar>>;
   using trk_generator_t = random_track_generator<track_type, uniform_gen_t>;
   trk_generator_t::configuration trk_gen_cfg{};
   trk_gen_cfg.seed(mc_seed);

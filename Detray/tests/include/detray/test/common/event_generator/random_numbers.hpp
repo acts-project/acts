@@ -12,6 +12,9 @@
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 
+// Algebra includes
+#include "algebra/utils/data_generator.hpp"
+
 // System include(s)
 #include <array>
 #include <limits>
@@ -20,13 +23,17 @@
 namespace detray::detail {
 
 /// Wrapper for CPU random number generatrion for the @c random_track_generator
-template <concepts::scalar scalar_t,
-          typename distribution_t = std::uniform_real_distribution<scalar_t>,
+template <concepts::algebra algebra_t,
+          typename distribution_t =
+              std::uniform_real_distribution<dvalue<algebra_t>>,
           typename engine_t = std::mt19937_64>
 struct random_numbers {
   using distribution_type = distribution_t;
   using engine_type = engine_t;
   using seed_type = typename engine_t::result_type;
+
+  using value_type = dvalue<algebra_t>;
+  using scalar_type = dscalar<algebra_t>;
 
   std::seed_seq m_seeds;
   engine_t m_engine;
@@ -51,31 +58,35 @@ struct random_numbers {
       : m_engine(std::move(other.m_engine)) {}
 
   /// Generate random numbers in a given range
-  DETRAY_HOST auto operator()(const darray<scalar_t, 2> range = {
-                                  -std::numeric_limits<scalar_t>::max(),
-                                  std::numeric_limits<scalar_t>::max()}) {
-    const scalar_t min{range[0]};
-    const scalar_t max{range[1]};
+  DETRAY_HOST scalar_type
+  operator()(const darray<value_type, 2> range = {
+                 -std::numeric_limits<value_type>::max(),
+                 std::numeric_limits<value_type>::max()}) {
+    const value_type min{range[0]};
+    const value_type max{range[1]};
     assert(min <= max);
 
     // Uniform
     if constexpr (std::is_same_v<distribution_t,
-                                 std::uniform_real_distribution<scalar_t>>) {
+                                 std::uniform_real_distribution<value_type>>) {
       return distribution_t(min, max)(m_engine);
 
       // Normal
     } else if constexpr (std::is_same_v<distribution_t,
-                                        std::normal_distribution<scalar_t>>) {
-      scalar_t mu{min + 0.5f * (max - min)};
+                                        std::normal_distribution<value_type>>) {
+      value_type mu{min + 0.5f * (max - min)};
       return distribution_t(mu, 0.5f / 3.0f * (max - min))(m_engine);
     }
   }
 
   /// Explicit normal distribution around a @param mean and @param stddev
-  DETRAY_HOST auto normal(const scalar_t mean, const scalar_t stddev) {
-    return (stddev == static_cast<scalar_t>(0))
-               ? mean
-               : std::normal_distribution<scalar_t>(mean, stddev)(m_engine);
+  DETRAY_HOST scalar_type normal(const value_type mean,
+                                 const value_type stddev) {
+    if (std::is_scalar_v<scalar_type>) {
+      return (stddev == static_cast<value_type>(0))
+                 ? mean
+                 : std::normal_distribution<value_type>(mean, stddev)(m_engine);
+    }
   }
 
   /// 50:50 coin toss

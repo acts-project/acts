@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "algebra/impl/vc_soa_constants.hpp"
 #include "algebra/impl/vc_soa_math.hpp"
 #include "detray/algebra/common/vector.hpp"
 #include "detray/algebra/concepts.hpp"
@@ -141,7 +142,7 @@ template <std::size_t N, concepts::value value_t,
 DETRAY_HOST_DEVICE constexpr algebra::storage::vector<N, Vc::Vector<value_t>,
                                                       array_t>
 normalize(const algebra::storage::vector<N, Vc::Vector<value_t>, array_t> &v) {
-  return (Vc::Vector<value_t>::One() / norm(v)) * v;
+  return (algebra::constants::one<Vc::Vector<value_t>>() / norm(v)) * v;
 
   // Less accurate, but faster
   // return Vc::reciprocal(norm(v)) * v;

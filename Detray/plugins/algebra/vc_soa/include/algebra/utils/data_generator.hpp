@@ -18,6 +18,16 @@
 
 namespace detray::algebra {
 
+/// Fill a @c Vc::Vector random values
+template <detray::concepts::scalar scalar_t>
+inline void fill_random_scalar(std::vector<scalar_t> &collection) {
+  // Generate a vector of the right type with random values
+  auto rand_obj = []() { return scalar_t::Random(); };
+
+  collection.resize(collection.capacity());
+  std::ranges::generate(collection, rand_obj);
+}
+
 /// Fill a @c Vc::Vector based vector with random values
 template <detray::concepts::vector vector_soa_t>
 inline void fill_random_vec(std::vector<vector_soa_t> &collection) {

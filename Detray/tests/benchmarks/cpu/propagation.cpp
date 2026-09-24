@@ -40,7 +40,8 @@ int main(int argc, char** argv) {
 
   using free_track_parameters_t = free_track_parameters<bench_algebra>;
   using uniform_gen_t =
-      detail::random_numbers<scalar, std::uniform_real_distribution<scalar>>;
+      detail::random_numbers<bench_algebra,
+                             std::uniform_real_distribution<scalar>>;
   using track_generator_t =
       random_track_generator<free_track_parameters_t, uniform_gen_t>;
 
@@ -91,7 +92,7 @@ int main(int argc, char** argv) {
           n_tracks);
 
   // Specific configuration for the random track generation
-  trk_cfg.seed(detail::random_numbers<scalar>::default_seed());
+  trk_cfg.seed(detail::random_numbers<bench_algebra>::default_seed());
 
   // Add additional tracks for warmup
   bench_cfg.n_warmup(static_cast<int>(

@@ -116,6 +116,9 @@ class helix {
       : helix(track.pos(), track.time(), track.dir(), track.qop(),
               sample_field(mag_field, track.pos())) {}
 
+  /// @returns the number of parameters needed to the define the track
+  static consteval std::size_t n_param() { return 8u; }
+
   /// @returns the radius of helix
   DETRAY_HOST_DEVICE
   scalar_type radius() const { return _R; }
@@ -123,6 +126,41 @@ class helix {
   /// @returns the position after propagating the path length of s
   DETRAY_HOST_DEVICE
   point3_type operator()(const scalar_type s) const { return this->pos(s); }
+
+  /// Convenience access to the track parameters - const
+  /// @note Compliance with track interface
+  DETRAY_HOST_DEVICE scalar_type operator[](std::size_t i) const {
+    if (i < 3u) {
+      return _pos[i];
+    } else if (i == 3u) {
+      return _time;
+    } else if (i < 7u) {
+      assert(i >= 4u);
+      return _t0[i - 4u];
+    } else if (i == 6u) {
+      return _qop;
+    } else {
+      assert(false);
+      return _qop;
+    }
+  }
+
+  /// Convenience access to the track parameters - non-const
+  /// @note Compliance with track interface
+  DETRAY_HOST_DEVICE scalar_type &operator[](std::size_t i) {
+    if (i < 3u) {
+      return _pos[i];
+    } else if (i == 3u) {
+      return _time;
+    } else if (i < 7u) {
+      return _t0[i - 7u];
+    } else if (i == 6u) {
+      return _qop;
+    } else {
+      assert(false);
+      return _qop;
+    }
+  }
 
   /// @returns the position after propagating the path length of s
   DETRAY_HOST_DEVICE

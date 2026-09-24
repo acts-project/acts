@@ -222,7 +222,8 @@ GTEST_TEST(detray_simulation, uniform_track_generator_with_range) {
 GTEST_TEST(detray_simulation, random_track_generator_uniform) {
   // Use deterministic random number generator for testing
   using uniform_gen_t =
-      detail::random_numbers<scalar, std::uniform_real_distribution<scalar>>;
+      detail::random_numbers<test_algebra,
+                             std::uniform_real_distribution<scalar>>;
   using trk_generator_t =
       random_track_generator<free_track_parameters<test_algebra>,
                              uniform_gen_t>;
@@ -302,7 +303,7 @@ GTEST_TEST(detray_simulation, random_track_generator_uniform) {
 GTEST_TEST(detray_simulation, random_track_generator_normal) {
   // Use deterministic random number generator for testing
   using normal_gen_t =
-      detail::random_numbers<scalar, std::normal_distribution<scalar>>;
+      detail::random_numbers<test_algebra, std::normal_distribution<scalar>>;
   using trk_generator_t =
       random_track_generator<free_track_parameters<test_algebra>, normal_gen_t>;
 

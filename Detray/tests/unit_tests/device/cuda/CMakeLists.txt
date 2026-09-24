@@ -65,3 +65,24 @@ foreach(algebra ${algebras})
         PRIVATE ${algebra}=${algebra}
     )
 endforeach()
+
+# Build the SoA layout unittests
+if(DETRAY_ARRAY_SOA_PLUGIN)
+    message(STATUS "Building detray CUDA SoA unit tests")
+
+    # Unit tests for the SoA layout
+    detray_add_unit_test(cuda_array_soa
+       # "algebra.cu"
+       "stepper_cuda_kernel.hpp"
+       "stepper_cuda.cpp"
+       "stepper_cuda_kernel.cu"
+       LINK_LIBRARIES GTest::gtest_main
+        CUDA::cudart vecmem::cuda covfie::cuda detray::core
+       detray::algebra_array detray::algebra_array_soa detray::test_common detray::test_utils
+    )
+
+    target_compile_definitions(
+        detray_unit_test_cuda_array_soa
+        PRIVATE array_soa=array_soa
+    )
+endif()

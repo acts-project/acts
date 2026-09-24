@@ -42,6 +42,10 @@ namespace detray::test {
 static constexpr char filenames[] = "array-";
 DETRAY_DEFINE_TEST_TYPES(array)
 
+#elif DETRAY_ALGEBRA_ARRAY_SOA
+static constexpr char filenames[] = "array_soa-";
+DETRAY_DEFINE_TEST_TYPES(array_soa)
+
 #elif DETRAY_ALGEBRA_EIGEN
 static constexpr char filenames[] = "eigen-";
 DETRAY_DEFINE_TEST_TYPES(eigen)
@@ -69,6 +73,7 @@ DETRAY_DEFINE_TEST_TYPES(vc_soa)
 // Test algebra types
 using algebra = algebra_type<DETRAY_CUSTOM_SCALARTYPE>;
 using index = dindex_type<algebra>;
+using value = dvalue<algebra>;
 using scalar = dscalar<algebra>;
 using point2 = dpoint2D<algebra>;
 using point3 = dpoint3D<algebra>;

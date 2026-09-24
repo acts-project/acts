@@ -52,7 +52,7 @@ class KalmanFittingTests {
 
   // Use deterministic random number generator for testing
   using uniform_gen_t =
-      detray::detail::random_numbers<scalar,
+      detray::detail::random_numbers<traccc::default_algebra,
                                      std::uniform_real_distribution<scalar>>;
 
   /// Verify that pull distributions follow the normal distribution
