@@ -21,6 +21,10 @@ namespace detray {
 
 /// Map volume indices to volume names and vice versa
 struct name_map {
+
+  /// Ensure default constructor is present for some HIP builds
+  constexpr name_map() = default;
+
   /// @brief set the name of the detector
   DETRAY_HOST void set_detector_name(const std::string_view name) {
     detector_name = name;
