@@ -83,11 +83,13 @@ std::vector<std::byte> encodeJson(const nlohmann::json& payload,
 /// need to know or declare the format. The file name is used only to make
 /// error messages point at the offending file.
 ///
+/// @param strictDocument Reject duplicate keys, nonfinite numbers and binary values
 /// @param data the encoded bytes
 /// @param origin file the data came from, used for diagnostics only
 /// @return the decoded JSON document
 nlohmann::json decodeJson(std::span<const std::byte> data,
-                          const std::filesystem::path& origin = {});
+                          const std::filesystem::path& origin = {},
+                          bool strictDocument = false);
 
 /// Write a JSON payload to a file, in the format its name implies.
 ///
@@ -101,8 +103,10 @@ void writeJsonFile(const std::filesystem::path& path,
 
 /// Read a JSON payload from a file, whatever format it is in.
 ///
+/// @param strictDocument Reject duplicate keys, nonfinite numbers and binary values
 /// @param path the file to read
 /// @return the decoded JSON document
-nlohmann::json readJsonFile(const std::filesystem::path& path);
+nlohmann::json readJsonFile(const std::filesystem::path& path,
+                            bool strictDocument = false);
 
 }  // namespace Acts::detail

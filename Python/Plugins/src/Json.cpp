@@ -13,6 +13,7 @@
 #include "ActsPlugins/Json/JsonSurfacesReader.hpp"
 #include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
 #include "ActsPlugins/Json/TrackingGeometryJsonConverter.hpp"
+#include "ActsPlugins/Json/TrackingGeometryMaterialJsonConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -35,6 +36,19 @@ using namespace ActsPython;
 using namespace ActsExamples;
 
 PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
+  {
+    using Converter = TrackingGeometryMaterialJsonConverter;
+    auto cls =
+        py::class_<Converter>(json, "TrackingGeometryMaterialJsonConverter")
+            .def(py::init<>())
+            .def("fromFile", &Converter::fromFile, py::arg("path"));
+    auto options =
+        py::class_<Converter::Options>(cls, "Options").def(py::init<>());
+    ACTS_PYTHON_STRUCT(options, indentation, compressionLevel);
+    cls.def("toFile", &Converter::toFile, py::arg("material"), py::arg("path"),
+            py::arg("options") = Converter::Options{});
+  }
+
   {
     py::class_<JsonMaterialDecorator, IMaterialDecorator,
                std::shared_ptr<JsonMaterialDecorator>>(json,

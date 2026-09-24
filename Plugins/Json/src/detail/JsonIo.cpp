@@ -10,8 +10,10 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <format>
 #include <fstream>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -26,13 +28,52 @@ using Acts::detail::JsonCompression;
 using Acts::detail::JsonEncoding;
 using Acts::detail::JsonFileFormat;
 
+// Validate the original token stream before constructing a DOM, which would
+// otherwise silently overwrite duplicate object keys. This is opt-in so the
+// legacy readers retain their existing behavior, for both JSON and CBOR.
+class StrictDocumentSax : public nlohmann::json_sax<nlohmann::json> {
+ public:
+  bool null() override { return true; }
+  bool boolean(bool /*value*/) override { return true; }
+  bool number_integer(number_integer_t /*value*/) override { return true; }
+  bool number_unsigned(number_unsigned_t /*value*/) override { return true; }
+  bool number_float(number_float_t value, const string_t& /*token*/) override {
+    return std::isfinite(value);
+  }
+  bool string(string_t& /*value*/) override { return true; }
+  bool binary(binary_t& /*value*/) override { return false; }
+  bool start_object(std::size_t /*elements*/) override {
+    if (m_keys.size() >= 256) {
+      return false;
+    }
+    m_keys.emplace_back();
+    return true;
+  }
+  bool key(string_t& keyValue) override {
+    return m_keys.back().insert(keyValue).second;
+  }
+  bool end_object() override {
+    m_keys.pop_back();
+    return true;
+  }
+  bool start_array(std::size_t size) override { return start_object(size); }
+  bool end_array() override { return end_object(); }
+  bool parse_error(std::size_t /*position*/, const std::string& /*lastToken*/,
+                   const nlohmann::detail::exception& /*error*/) override {
+    return false;
+  }
+
+ private:
+  std::vector<std::set<std::string>> m_keys;
+};
+
 /// zstd frame magic number 0xFD2FB528, little endian as it appears on disk.
 constexpr std::array<std::byte, 4> kZstdMagic{std::byte{0x28}, std::byte{0xB5},
                                               std::byte{0x2F}, std::byte{0xFD}};
 
 bool hasZstdMagic(std::span<const std::byte> data) {
   return data.size() >= kZstdMagic.size() &&
-         std::equal(kZstdMagic.begin(), kZstdMagic.end(), data.begin());
+         std::ranges::equal(kZstdMagic, data.first(kZstdMagic.size()));
 }
 
 /// Copy any contiguous byte-like range into a byte buffer.
@@ -155,7 +196,8 @@ std::vector<std::byte> Acts::detail::encodeJson(const nlohmann::json& payload,
 }
 
 nlohmann::json Acts::detail::decodeJson(std::span<const std::byte> data,
-                                        const std::filesystem::path& origin) {
+                                        const std::filesystem::path& origin,
+                                        bool strictDocument) {
   std::vector<std::byte> decompressed;
   bool wasCompressed = hasZstdMagic(data);
   if (wasCompressed) {
@@ -190,6 +232,15 @@ nlohmann::json Acts::detail::decodeJson(std::span<const std::byte> data,
         origin.string(), stage, lead));
   }
 
+  if (strictDocument) {
+    StrictDocumentSax validator;
+    auto format = isText ? nlohmann::json::input_format_t::json
+                         : nlohmann::json::input_format_t::cbor;
+    if (!nlohmann::json::sax_parse(data.begin(), data.end(), &validator,
+                                   format)) {
+      throw std::invalid_argument("Invalid JSON/CBOR document");
+    }
+  }
   try {
     if (isText) {
       return nlohmann::json::parse(asStringView(data));
@@ -221,7 +272,8 @@ void Acts::detail::writeJsonFile(const std::filesystem::path& path,
   }
 }
 
-nlohmann::json Acts::detail::readJsonFile(const std::filesystem::path& path) {
+nlohmann::json Acts::detail::readJsonFile(const std::filesystem::path& path,
+                                          bool strictDocument) {
   if (!std::filesystem::exists(path)) {
     throw std::invalid_argument(
         std::format("File '{}' does not exist", path.string()));
@@ -247,5 +299,5 @@ nlohmann::json Acts::detail::readJsonFile(const std::filesystem::path& path) {
     throw std::runtime_error(std::format("Failed to read '{}'", path.string()));
   }
 
-  return decodeJson(data, path);
+  return decodeJson(data, path, strictDocument);
 }
