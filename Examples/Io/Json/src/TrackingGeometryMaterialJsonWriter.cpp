@@ -13,9 +13,7 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinAdjustment.hpp"
 
-#include <algorithm>
 #include <stdexcept>
 #include <vector>
 
@@ -36,24 +34,12 @@ void TrackingGeometryMaterialJsonWriter::writeMaterial(
 }
 
 void TrackingGeometryMaterialJsonWriter::write(
-    const Acts::GeometryContext& gctx, const Acts::TrackingGeometry& geometry) {
+    const Acts::TrackingGeometry& geometry) {
   std::vector<const Acts::Surface*> surfaces;
   Acts::SurfaceMaterialMaps materials;
   geometry.visitSurfaces(
       [&](const Acts::Surface* surface) {
         auto payload = surface->surfaceMaterialSharedPtr();
-        // Legacy DD4hep proto materials defer their ranges using zero-width
-        // axes. Resolve these with the same helper as material mapping.
-        if (const auto* proto =
-                dynamic_cast<const Acts::ProtoSurfaceMaterial*>(payload.get());
-            proto != nullptr &&
-            std::ranges::any_of(
-                proto->binning().binningData(),
-                [](const auto& axis) { return axis.min == axis.max; })) {
-          payload = std::make_shared<Acts::ProtoSurfaceMaterial>(
-              Acts::adjustBinUtility(proto->binning(), *surface, gctx),
-              proto->mappingType(), proto->materialKey());
-        }
         if (!payload && m_config.includeNonMaterial) {
           payload = std::make_shared<Acts::ProtoGridSurfaceMaterial>(
               Acts::MultiAxisSpec2D({Acts::AxisSpec::DeferredEquidistant(1),

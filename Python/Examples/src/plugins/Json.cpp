@@ -72,7 +72,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
             .def("writeMaterial",
                  &TrackingGeometryMaterialJsonWriter::writeMaterial)
             .def("write", &TrackingGeometryMaterialJsonWriter::write,
-                 py::arg("gctx"), py::arg("geometry"))
+                 py::arg("geometry"))
             .def_property_readonly("config",
                                    &TrackingGeometryMaterialJsonWriter::config);
     auto c =

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsPlugins/Json/TrackingGeometryMaterialJsonConverter.hpp"
@@ -54,10 +53,8 @@ class TrackingGeometryMaterialJsonWriter final : public IMaterialWriter {
   /// Export existing material assignments from geometry, preserving stable
   /// keys. Surfaces without material are omitted unless includeNonMaterial is
   /// set.
-  /// @param gctx Geometry context used to resolve placeholder ranges
   /// @param geometry Geometry to export
-  void write(const Acts::GeometryContext& gctx,
-             const Acts::TrackingGeometry& geometry);
+  void write(const Acts::TrackingGeometry& geometry);
 
   /// @return Output configuration
   const Config& config() const { return m_config; }

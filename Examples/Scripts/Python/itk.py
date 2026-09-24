@@ -82,7 +82,7 @@ def runITk(
                 filePath=json_dir / (outname + ".json"),
             )
 
-            jmw.write(context.recoGeoContext, trackingGeometry)
+            jmw.write(trackingGeometry)
 
 
 if "__main__" == __name__:

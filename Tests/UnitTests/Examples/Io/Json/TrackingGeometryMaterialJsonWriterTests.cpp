@@ -16,12 +16,10 @@
 #include "ActsExamples/Io/Json/TrackingGeometryMaterialJsonWriter.hpp"
 #include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
 
-#include <numbers>
-
 using namespace Acts;
 using namespace ActsExamples;
 
-BOOST_AUTO_TEST_CASE(ExportLegacyProtoMaterialPlaceholderRanges) {
+BOOST_AUTO_TEST_CASE(ExportPreservesDeferredProtoMaterialRanges) {
   auto world = std::make_shared<TrackingVolume>(
       Transform3::Identity(),
       std::make_shared<CylinderVolumeBounds>(0., 100., 200.), "world");
@@ -29,12 +27,11 @@ BOOST_AUTO_TEST_CASE(ExportLegacyProtoMaterialPlaceholderRanges) {
   auto surface =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30., 100.);
   surface->assignGeometryId(GeometryIdentifier().withSensitive(1));
-  // DD4hep uses zero-width ranges until the surface bounds are available.
-  BinUtility bins(8, -std::numbers::pi, std::numbers::pi, closed,
-                  AxisDirection::AxisPhi);
-  bins += BinUtility(3, 0., 0., open, AxisDirection::AxisZ);
-  auto proto = std::make_shared<ProtoSurfaceMaterial>(
-      bins, MappingType::Default, "cylinder");
+  auto proto = std::make_shared<ProtoGridSurfaceMaterial>(
+      MultiAxisSpec2D(
+          {AxisSpec::DeferredEquidistant(8, AxisDirection::AxisRPhi),
+           AxisSpec::DeferredEquidistant(3, AxisDirection::AxisZ)}),
+      MappingType::Default, "cylinder");
   surface->assignSurfaceMaterial(proto);
   world->addSurface(surface);
   TrackingGeometry geometry(world, nullptr, {}, getDummyLogger(), false);
@@ -44,21 +41,22 @@ BOOST_AUTO_TEST_CASE(ExportLegacyProtoMaterialPlaceholderRanges) {
     TrackingGeometryMaterialJsonWriter::Config config;
     config.filePath = tmp.path() / (std::string("material") + extension);
     TrackingGeometryMaterialJsonWriter(config, Logging::WARNING)
-        .write(GeometryContext::dangerouslyDefaultConstruct(), geometry);
+        .write(geometry);
     const auto material =
         TrackingGeometryMaterialJsonConverter{}.fromFile(config.filePath);
-    const auto* decoded = dynamic_cast<const ProtoSurfaceMaterial*>(
+    const auto* decoded = dynamic_cast<const ProtoGridSurfaceMaterial*>(
         material.keyedSurfaces.at("cylinder").material.get());
     BOOST_REQUIRE(decoded != nullptr);
-    const auto& axes = decoded->binning().binningData();
+    const auto& axes = decoded->binning().axisSpecs();
     BOOST_REQUIRE_EQUAL(axes.size(), 2);
-    BOOST_CHECK_EQUAL(axes[0].bins(), 8);
-    BOOST_CHECK_EQUAL(axes[1].bins(), 3);
-    BOOST_CHECK_EQUAL(axes[1].min, -100.);
-    BOOST_CHECK_EQUAL(axes[1].max, 100.);
+    BOOST_CHECK_EQUAL(axes[0].asEquidistant().nBins, 8);
+    BOOST_CHECK_EQUAL(axes[1].asEquidistant().nBins, 3);
+    for (const auto& axis : axes) {
+      BOOST_CHECK(!axis.asEquidistant().min);
+      BOOST_CHECK(!axis.asEquidistant().max);
+    }
   }
   // Export must leave the geometry's original placeholder untouched.
   BOOST_CHECK(surface->surfaceMaterialSharedPtr() == proto);
-  BOOST_CHECK_EQUAL(proto->binning().binningData()[1].min, 0.);
-  BOOST_CHECK_EQUAL(proto->binning().binningData()[1].max, 0.);
+  BOOST_CHECK(proto->binning().isDeferred());
 }

@@ -454,7 +454,7 @@ def test_json_material_writer(tmp_path, fmt):
 
     jmw = TrackingGeometryMaterialJsonWriter(level=acts.logging.WARNING, filePath=out)
     assert not out.exists()
-    jmw.write(acts.GeometryContext.dangerouslyDefaultConstruct(), trackingGeometry)
+    jmw.write(trackingGeometry)
 
     from acts.json import TrackingGeometryMaterialJsonConverter
 

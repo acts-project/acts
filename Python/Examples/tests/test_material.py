@@ -55,7 +55,7 @@ def test_material_map_writer(tmp_path):
     )
     detector = GenericDetector()
     geometry = detector.trackingGeometry()
-    writer.write(acts.GeometryContext.dangerouslyDefaultConstruct(), geometry)
+    writer.write(geometry)
     document = json.loads(output.read_text())
     assert document["header"]["version"] == 1
     assert document["surfaces"]
