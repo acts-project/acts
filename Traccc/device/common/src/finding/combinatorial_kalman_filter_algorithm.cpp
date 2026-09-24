@@ -19,6 +19,10 @@ namespace traccc::device {
 struct combinatorial_kalman_filter_algorithm::data {
   /// The (finding) algorithm configuration
   finding_config m_config;
+
+  /// Cached post-CKF expected-layer patterns from the last operator() call.
+  mutable std::vector<expected_layer_pattern_type>
+      m_last_expected_layer_patterns;
 };
 
 combinatorial_kalman_filter_algorithm::combinatorial_kalman_filter_algorithm(
@@ -48,6 +52,32 @@ combinatorial_kalman_filter_algorithm::combinatorial_kalman_filter_algorithm(
 combinatorial_kalman_filter_algorithm::
     ~combinatorial_kalman_filter_algorithm() = default;
 
+const std::vector<expected_layer_pattern_type>&
+combinatorial_kalman_filter_algorithm::last_expected_layer_patterns() const {
+  assert(m_data);
+  return m_data->m_last_expected_layer_patterns;
+}
+
+void combinatorial_kalman_filter_algorithm::update_expected_layer_mapping(
+    const expected_layer_mapping_entry* map, std::size_t map_size) {
+  assert(m_data);
+  m_data->m_config.expected_layer_map = map;
+  m_data->m_config.expected_layer_map_size = map_size;
+}
+
+void combinatorial_kalman_filter_algorithm::set_last_expected_layer_patterns(
+    std::vector<expected_layer_pattern_type> patterns) const {
+  assert(m_data);
+  m_data->m_last_expected_layer_patterns = std::move(patterns);
+}
+
+void combinatorial_kalman_filter_algorithm::
+    collect_expected_layer_patterns_on_ckf_tracks(
+        const detector_buffer&, const magnetic_field&,
+        const edm::measurement_collection::const_view&,
+        const bound_track_parameters_collection_types::const_view&,
+        const output_type&) const {}
+
 auto combinatorial_kalman_filter_algorithm::operator()(
     const detector_buffer& det, const magnetic_field& bfield,
     const edm::measurement_collection::const_view& measurements_view,
@@ -60,6 +90,7 @@ auto combinatorial_kalman_filter_algorithm::operator()(
   assert(input_is_valid(measurements_view));
 
   const finding_config& cfg = m_data->m_config;
+  m_data->m_last_expected_layer_patterns.clear();
 
   const move_only_any device_detector = create_device_detector(det);
 
@@ -687,6 +718,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
               << std::endl;
   }
 
+  // Run optional backend-specific expected-layer collection.
+  collect_expected_layer_patterns_on_ckf_tracks(det, bfield, measurements_view,
+                                                seeds, track_candidates_buffer);
   synchronize();
 
   return track_candidates_buffer;

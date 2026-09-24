@@ -12,6 +12,7 @@
 
 // Project include(s).
 #include "traccc/cuda/fitting/kalman_fitting_algorithm.hpp"
+#include "traccc/finding/actors/expected_layer_pattern_collector.hpp"
 #include "traccc/finding/device/combinatorial_kalman_filter_algorithm.hpp"
 
 namespace traccc::cuda {
@@ -28,6 +29,10 @@ class combinatorial_kalman_filter_algorithm
       std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
       std::unique_ptr<traccc::cuda::kalman_fitting_algorithm> kf_fitter =
           nullptr);
+
+  /// Keep post-CKF expected-layer map in sync with runtime configuration.
+  void update_expected_layer_mapping(const expected_layer_mapping_entry* map,
+                                     std::size_t map_size) override;
 
  private:
   /// @name Function(s) inherited from
@@ -209,6 +214,16 @@ class combinatorial_kalman_filter_algorithm
       const detector_buffer& det) const override;
 
   void synchronize() const override;
+
+  /// Compute expected-layer patterns from finalized CKF tracks.
+  void collect_expected_layer_patterns_on_ckf_tracks(
+      const detector_buffer& det, const magnetic_field& bfield,
+      const edm::measurement_collection::const_view& measurements,
+      const bound_track_parameters_collection_types::const_view& seeds,
+      const output_type& tracks) const override;
+
+  /// Configuration snapshot used by post-CKF expected-layer extraction.
+  finding_config m_expected_layer_config;
 
   /// @}
 
