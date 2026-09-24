@@ -14,9 +14,10 @@ combinatorial_kalman_filter_algorithm::combinatorial_kalman_filter_algorithm(
     const config_type& config, const traccc::memory_resource& mr,
     const vecmem::copy& copy, queue_wrapper& queue,
     std::unique_ptr<const Logger> logger,
-    std::unique_ptr<traccc::sycl::kalman_fitting_algorithm> kf_fitter)
+    std::unique_ptr<traccc::sycl::kalman_fitting_algorithm> kf_fitter,
+    await_function_type await_func)
     : device::combinatorial_kalman_filter_algorithm(
           config, mr, copy, std::move(logger), std::move(kf_fitter)),
-      sycl::algorithm_base(queue) {}
+      sycl::algorithm_base(queue, std::move(await_func)) {}
 
 }  // namespace traccc::sycl

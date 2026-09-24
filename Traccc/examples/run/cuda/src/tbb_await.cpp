@@ -24,8 +24,9 @@ void CUDART_CB suspend_stream_callback(void* tag) {
 }
 }  // namespace
 
-void tbb_await_callback(vecmem::abstract_event& /*event*/,
+void tbb_await_callback(vecmem::abstract_event& event,
                         const stream_wrapper& stream) {
+  event.ignore();  // ignore the event, as it is not needed for resumption
   cudaError_t err = cudaSuccess;
   auto suspend_point =
       tbb::task::suspend_point{};  // suspension point address must remain valid
