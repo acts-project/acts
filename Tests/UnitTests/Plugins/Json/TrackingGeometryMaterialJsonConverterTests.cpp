@@ -68,7 +68,7 @@ nlohmann::json encodeCustom(const CustomMaterial& m,
           {"thickness", m.materialSlab(Vector2::Zero()).thickness()}};
 }
 std::unique_ptr<const ISurfaceMaterial> decodeCustom(
-    const nlohmann::json& j, const Converter::DecodeContext&) {
+    const nlohmann::json& j, const Converter::DecodeContext& /*context*/) {
   return std::make_unique<CustomMaterial>(j.at("thickness").get<double>());
 }
 }  // namespace
