@@ -84,7 +84,7 @@ ActsExamples::buildTelescopeDetectorGen3(
 
   // The rectangle bounds for plane surface
   const auto pBounds =
-      std::make_shared<const Acts::RectangleBounds>(bounds[0], bounds[1]);
+      std::make_shared<Acts::RectangleBounds>(bounds[0], bounds[1]);
 
   // Material of the surfaces
   Acts::Material silicon = Acts::Material::fromMassDensity(
@@ -98,13 +98,11 @@ ActsExamples::buildTelescopeDetectorGen3(
   // in case of AxisZ
   Acts::RotationMatrix3 rotation = Acts::RotationMatrix3::Identity();
   if (rotDirection == Acts::AxisDirection::AxisX) {
-    rotation.col(0) = Acts::Vector3(0, 0, -1);
-    rotation.col(1) = Acts::Vector3(0, 1, 0);
-    rotation.col(2) = Acts::Vector3(1, 0, 0);
+    Acts::AngleAxis3 rot{90._degree, Acts::Vector3::UnitY()};
+    rotation = rot.toRotationMatrix();
   } else if (rotDirection == Acts::AxisDirection::AxisY) {
-    rotation.col(0) = Acts::Vector3(1, 0, 0);
-    rotation.col(1) = Acts::Vector3(0, 0, -1);
-    rotation.col(2) = Acts::Vector3(0, 1, 0);
+    Acts::AngleAxis3 rot{90._degree, Acts::Vector3::UnitX()};
+    rotation = rot.toRotationMatrix();
   }
 
   Blueprint::Config cfg;
@@ -162,7 +160,7 @@ ActsExamples::buildTelescopeDetectorGen3(
     // Get the surface part 1
     auto surface = detElement->surface().getSharedPtr();
 
-    // Local 2D- corner point of the rectangle bounds (4 corners)
+    // Local 2D corner point of the rectangle bounds (4 corners)
     std::vector<Acts::Vector2> localCorners = pBounds->vertices();
 
     // Convert into global 3D Coordinates
@@ -206,7 +204,7 @@ ActsExamples::buildTelescopeDetectorGen3(
     }
 
     auto layerVol = std::make_unique<TrackingVolume>(
-        Acts::Transform3{trans}, layerBounds, "parent" + std::to_string(i));
+        Acts::Transform3{trans}, layerBounds, std::format("parent_{:}", i));
 
     // Get the surface part 2
     layerVol->addSurface(surface);
