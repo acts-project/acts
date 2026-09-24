@@ -31,24 +31,36 @@ class Impl final : public TripletSeedFinder {
 
   const DerivedConfig& config() const override { return m_cfg; }
 
-  /// Time of a space point corrected for the time of flight from the origin.
-  /// The speed of light is 1 in ACTS units, so the correction is simply the
-  /// distance of the space point from the origin.
-  static float timeOfFlightCorrected(const ConstSpacePointProxy& sp) {
-    return sp.time() - fastHypot(sp.zr()[0], sp.zr()[1]);
+  /// Straight line distance between two space points.
+  static float distance(const ConstSpacePointProxy& a,
+                        const ConstSpacePointProxy& b) {
+    return fastHypot(a.xy()[0] - b.xy()[0], a.xy()[1] - b.xy()[1],
+                     a.zr()[0] - b.zr()[0]);
   }
 
-  /// Tests the time compatibility of the three space points of a triplet by
-  /// forming the chi2 of their time of flight corrected times with respect to
-  /// their mean, and comparing it to `timeChi2Max`.
-  bool passesTimeCut(const ConstSpacePointProxy& spT, float t0B,
-                     float varianceTB, float t0M, float varianceTM) const {
-    const float t0T = timeOfFlightCorrected(spT);
-    const float t0Mean = (t0B + t0M + t0T) / 3;
-    const float chi2 = square(t0B - t0Mean) / varianceTB +
-                       square(t0M - t0Mean) / varianceTM +
-                       square(t0T - t0Mean) / spT.varianceT();
-    return chi2 <= m_cfg.timeChi2Max;
+  /// Tests the time compatibility of the three space points of a triplet. The
+  /// bottom and top times are transported to the middle space point along
+  /// straight lines at the speed of light (which is 1 in ACTS units), assuming
+  /// an outgoing particle. The chi2 of the three times with respect to their
+  /// inverse variance weighted mean is then compared to `timeChi2Max`.
+  ///
+  /// @param tBAtM Bottom space point time transported to the middle space point
+  bool passesTimeCut(const ConstSpacePointProxy& spM,
+                     const ConstSpacePointProxy& spT, float tBAtM,
+                     float varianceTB, float tM, float varianceTM) const {
+    const float tTAtM = spT.time() - distance(spM, spT);
+    const float varianceTT = spT.varianceT();
+    // chi2 with respect to the weighted mean, written in closed form for three
+    // measurements to avoid divisions:
+    //   chi2 = (V_T dt_BM^2 + V_M dt_BT^2 + V_B dt_MT^2) /
+    //          (V_B V_M + V_B V_T + V_M V_T)
+    const float chi2Numerator = varianceTT * square(tBAtM - tM) +
+                                varianceTM * square(tBAtM - tTAtM) +
+                                varianceTB * square(tM - tTAtM);
+    const float chi2Denominator = varianceTB * varianceTM +
+                                  varianceTB * varianceTT +
+                                  varianceTM * varianceTT;
+    return chi2Numerator <= m_cfg.timeChi2Max * chi2Denominator;
   }
 
   template <typename TopDoublets>
@@ -60,19 +72,19 @@ class Impl final : public TripletSeedFinder {
     const float varianceZM = spM.varianceZ();
     const float varianceRM = spM.varianceR();
 
-    // time of flight corrected times of the middle and bottom space points.
-    // both are fixed for this call, only the top space point varies in the
-    // loop below. only filled when the time cut is enabled
-    [[maybe_unused]] float t0M = 0;
+    // times of the middle space point and of the bottom space point transported
+    // to the middle one. both are fixed for this call, only the top space
+    // point varies in the loop below. only filled when the time cut is enabled
+    [[maybe_unused]] float tM = 0;
     [[maybe_unused]] float varianceTM = 0;
-    [[maybe_unused]] float t0B = 0;
+    [[maybe_unused]] float tBAtM = 0;
     [[maybe_unused]] float varianceTB = 0;
     if constexpr (useTime) {
-      t0M = timeOfFlightCorrected(spM);
+      tM = spM.time();
       varianceTM = spM.varianceT();
       const ConstSpacePointProxy spB =
           spacePoints[bottomDoublet.spacePointIndex()];
-      t0B = timeOfFlightCorrected(spB);
+      tBAtM = spB.time() + distance(spB, spM);
       varianceTB = spB.varianceT();
     }
 
@@ -145,7 +157,7 @@ class Impl final : public TripletSeedFinder {
       // check the time compatibility of the three space points. placed after
       // the cheaper r-z slope cut above, and before the curvature computation
       if constexpr (useTime) {
-        if (!passesTimeCut(spacePoints[spT], t0B, varianceTB, t0M,
+        if (!passesTimeCut(spM, spacePoints[spT], tBAtM, varianceTB, tM,
                            varianceTM)) {
           continue;
         }
@@ -228,18 +240,18 @@ class Impl final : public TripletSeedFinder {
     const float Ub0 = bottomDoublet.u();
     const float Vb0 = bottomDoublet.v();
 
-    // time of flight corrected times of the middle and bottom space points.
-    // only filled when the time cut is enabled
-    [[maybe_unused]] float t0M = 0;
+    // times of the middle space point and of the bottom space point transported
+    // to the middle one. only filled when the time cut is enabled
+    [[maybe_unused]] float tM = 0;
     [[maybe_unused]] float varianceTM = 0;
-    [[maybe_unused]] float t0B = 0;
+    [[maybe_unused]] float tBAtM = 0;
     [[maybe_unused]] float varianceTB = 0;
     if constexpr (useTime) {
-      t0M = timeOfFlightCorrected(spM);
+      tM = spM.time();
       varianceTM = spM.varianceT();
       const ConstSpacePointProxy spBTime =
           spacePoints[bottomDoublet.spacePointIndex()];
-      t0B = timeOfFlightCorrected(spBTime);
+      tBAtM = spBTime.time() + distance(spBTime, spM);
       varianceTB = spBTime.varianceT();
     }
 
@@ -307,8 +319,8 @@ class Impl final : public TripletSeedFinder {
       // check the time compatibility of the three space points, before the
       // expensive strip coordinate transformation below
       if constexpr (useTime) {
-        if (!passesTimeCut(spacePoints[topDoublet.spacePointIndex()], t0B,
-                           varianceTB, t0M, varianceTM)) {
+        if (!passesTimeCut(spM, spacePoints[topDoublet.spacePointIndex()],
+                           tBAtM, varianceTB, tM, varianceTM)) {
           continue;
         }
       }

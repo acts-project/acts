@@ -333,8 +333,9 @@ class DoubletSeedFinder {
     /// Parameter which can loosen the tolerance of the track seed to form a
     /// helix. This is useful for e.g. misaligned seeding.
     float helixCutTolerance = 1;
-    /// Maximum allowed difference of the time of flight corrected times of the
-    /// two space points, expressed in units of their combined time variance.
+    /// Maximum allowed squared difference of the times of the two space points,
+    /// corrected for the time of flight between them, expressed in units of
+    /// their combined time variance (i.e. the square of the number of sigmas).
     /// Only used when `useTime` is enabled. See the note there on placement.
     float timeCutNVariance = 25;
 

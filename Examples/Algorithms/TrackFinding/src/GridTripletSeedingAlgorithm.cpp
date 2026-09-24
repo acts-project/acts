@@ -306,7 +306,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   bottomDoubletFinderConfig.minPt = m_cfg.minPt;
   bottomDoubletFinderConfig.helixCutTolerance = m_cfg.helixCutTolerance;
   bottomDoubletFinderConfig.useTime = m_cfg.useTimeDoubletCut;
-  bottomDoubletFinderConfig.timeCutNSigma = m_cfg.doubletTimeCutNSigma;
+  bottomDoubletFinderConfig.timeCutNVariance =
+      m_cfg.doubletTimeCutNSigma * m_cfg.doubletTimeCutNSigma;
   // Vertex-z constraint takes the single experimentCuts slot when enabled;
   // otherwise fall back to the (optional) ITk fast-tracking cuts. The top
   // doublet config below is copied from this one, so the delegate is shared.

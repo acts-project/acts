@@ -52,12 +52,12 @@ class Impl final : public DoubletSeedFinder {
     const float varianceZM = middleSp.varianceZ();
     const float varianceRM = middleSp.varianceR();
 
-    // time of flight corrected time of the middle space point and its
-    // variance. only filled when the time cut is enabled
-    [[maybe_unused]] float t0M = 0;
+    // time of the middle space point and its variance. only filled when the
+    // time cut is enabled
+    [[maybe_unused]] float tM = 0;
     [[maybe_unused]] float varianceTM = 0;
     if constexpr (useTime) {
-      t0M = middleSp.time() - fastHypot(rM, zM);
+      tM = middleSp.time();
       varianceTM = middleSp.varianceT();
     }
 
@@ -137,16 +137,22 @@ class Impl final : public DoubletSeedFinder {
         continue;
       }
 
-      // check the time compatibility of the two space points. the times are
-      // corrected for the time of flight from the origin, so that they are
-      // directly comparable. placed after the cheap range checks above to
-      // avoid the square roots for candidates that are rejected anyway
+      // check the time compatibility of the two space points. the time
+      // difference is corrected for the time of flight along the straight line
+      // between them, assuming an outgoing particle at the speed of light
+      // (which is 1 in ACTS units). placed after the cheap range checks above
+      // to avoid the square root for candidates that are rejected anyway
       if constexpr (useTime) {
         const ConstSpacePointProxy otherSp = container[indexO];
-        const float t0O = otherSp.time() - fastHypot(rO, zO);
-        const float varianceT0 = varianceTM + otherSp.varianceT();
-        const float dt = t0O - t0M;
-        if (dt*dt > m_cfg.timeCutNVariance * varianceT0) {
+        const float distance = fastHypot(xO - xM, yO - yM, zO - zM);
+        float dt = 0;
+        if constexpr (isBottomCandidate) {
+          dt = tM - otherSp.time() - distance;
+        } else {
+          dt = otherSp.time() - tM - distance;
+        }
+        const float varianceDt = varianceTM + otherSp.varianceT();
+        if (dt * dt > m_cfg.timeCutNVariance * varianceDt) {
           continue;
         }
       }

@@ -183,8 +183,9 @@ class TripletSeedFinder {
     /// `sortedByCotTheta` are true. Set to infinity (default) to disable.
     float cotThetaDiffMax = std::numeric_limits<float>::infinity();
 
-    /// Maximum allowed chi2 of the three time of flight corrected times of the
-    /// triplet with respect to their mean. Only used when `useTime` is enabled.
+    /// Maximum allowed chi2 of the three times of the triplet, transported to
+    /// the middle space point, with respect to their inverse variance weighted
+    /// mean. Only used when `useTime` is enabled.
     float timeChi2Max = 15;
   };
 
