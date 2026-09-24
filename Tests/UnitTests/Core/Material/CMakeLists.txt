@@ -21,3 +21,5 @@ add_unittest(Material MaterialTests.cpp)
 add_unittest(ProtoSurfaceMaterial ProtoSurfaceMaterialTests.cpp)
 add_unittest(ProtoVolumeMaterial ProtoVolumeMaterialTests.cpp)
 add_unittest(PropagatorMaterialAssigner PropagatorMaterialAssignerTests.cpp)
+
+add_unittest(TrackingGeometryMaterial TrackingGeometryMaterialTests.cpp)
