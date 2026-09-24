@@ -114,7 +114,7 @@ ActsExamples::buildTelescopeDetectorGen3(
                                         envelope_y[1] * 1_mm};
   cfg.envelope[AxisDirection::AxisZ] = {envelope_z[0] * 1_mm,
                                         envelope_z[1] * 1_mm};
-  // cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+
   Blueprint root{cfg};
 
   auto& cubcontainer = root.addCuboidContainer("CuboidContainer", rotDirection);
@@ -140,8 +140,6 @@ ActsExamples::buildTelescopeDetectorGen3(
     auto stereo = stereoAngles[i];
     trafo *= Acts::AngleAxis3(stereo, Acts::Vector3::UnitZ());
 
-    // std::cout << trafo.matrix() << std::endl;
-
     // Create the detector element
     std::shared_ptr<TelescopeDetectorElement> detElement = nullptr;
 
@@ -156,9 +154,6 @@ ActsExamples::buildTelescopeDetectorGen3(
       throw std::invalid_argument(
           "Only TelescopeSurfaceType::Plane is currently supported, not "
           "TelescopeSurfaceType::Disc");
-      //   detElement = std::make_shared<TelescopeDetectorElement>(
-      //       id, std::make_shared<Acts::Transform3>(trafo), rBounds, 1._um,
-      //       surfaceMaterial);
     }
     detectorStore.push_back(detElement);
 
@@ -221,8 +216,6 @@ ActsExamples::buildTelescopeDetectorGen3(
     cubcontainer.addChild(std::move(layerNode));
   }
 
-  //   std::ofstream os{"telescope.dot"};
-  //   root.graphviz(os);
   auto trackingGeometry = root.construct({}, gctx, logger);
 
   return trackingGeometry;
