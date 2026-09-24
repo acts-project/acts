@@ -55,7 +55,7 @@ The following cmake options are available and can also be specified explicitly f
 | --- | --- | --- |
 | DETRAY_SET_LOGGING  | Set log level (NONE, WARN, INFO, VERBOSE, DEBUG) | INFO |
 | DETRAY_BUILD_CUDA  | Build the CUDA sources included in detray | ON (if available) |
-| DETRAY_BUILD_SYCL  | Build the SYCL sources included in detray | OFF |
+| DETRAY_BUILD_HIP  | Build the HIP sources included in detray | OFF |
 | DETRAY_BUILD_UNITTESTS  | Build the detray unit tests | OFF |
 | DETRAY_BUILD_INTEGRATIONTESTS  | Build the detray integration tests | OFF |
 | DETRAY_BUILD_ALL_TESTS  | Build the detray unit and integration tests | OFF |
