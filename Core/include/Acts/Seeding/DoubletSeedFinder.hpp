@@ -334,9 +334,9 @@ class DoubletSeedFinder {
     /// helix. This is useful for e.g. misaligned seeding.
     float helixCutTolerance = 1;
     /// Maximum allowed difference of the time of flight corrected times of the
-    /// two space points, expressed in units of their combined time resolution.
+    /// two space points, expressed in units of their combined time variance.
     /// Only used when `useTime` is enabled. See the note there on placement.
-    float timeCutNSigma = 5;
+    float timeCutNVariance = 25;
 
     /// Type alias for delegate to apply experiment specific cuts during doublet
     /// finding
