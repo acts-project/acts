@@ -21,6 +21,7 @@
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MergedMaterialMarker.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -330,6 +331,7 @@ BOOST_AUTO_TEST_CASE(Disc) {
   auto material = std::make_shared<HomogeneousSurfaceMaterial>(
       MaterialSlab::Nothing());  // vacuum
   disc2->assignSurfaceMaterial(material);
+  disc2->assignGeometryId(GeometryIdentifier().withBoundary(7));
   portal1 = Portal{
       gctx, {.alongNormal = {disc1, *vol1}, .oppositeNormal = {disc1, *vol2}}};
   portal2 = Portal{
@@ -337,6 +339,9 @@ BOOST_AUTO_TEST_CASE(Disc) {
   BOOST_CHECK_THROW(
       Portal::merge(gctx, portal1, portal2, AxisDirection::AxisR, *logger),
       PortalMergingException);
+
+  disc2->assignSurfaceMaterial(std::make_shared<ProtoSurfaceMaterial>(
+      BinUtility{}, MappingType::Default, "original/disc"));
 
   // In "keep going" mode, the same merge succeeds: the material is discarded
   // and the merged surface is tagged with a MergedMaterialMarker.
@@ -351,9 +356,33 @@ BOOST_AUTO_TEST_CASE(Disc) {
   BOOST_REQUIRE(mergedKeepGoing.surface().surfaceMaterial() != nullptr);
   BOOST_CHECK(dynamic_cast<const MergedMaterialMarker*>(
                   mergedKeepGoing.surface().surfaceMaterial()) != nullptr);
+  const auto& marker = dynamic_cast<const MergedMaterialMarker&>(
+      *mergedKeepGoing.surface().surfaceMaterial());
+  BOOST_REQUIRE_EQUAL(marker.origins().size(), 1u);
+  BOOST_CHECK_EQUAL(*marker.origins()[0].materialKey, "original/disc");
+  BOOST_CHECK(marker.origins()[0].geometryId == disc2->geometryId());
   // The marker carries no physical material
   BOOST_CHECK(mergedKeepGoing.surface().surfaceMaterial()->materialSlab(
                   Vector2{0., 0.}) == MaterialSlab::Nothing());
+  // Merging a marker again keeps the original provenance, not the
+  // intermediate merged surface's identity.
+  disc2->assignSurfaceMaterial(
+      std::make_unique<MergedMaterialMarker>(marker.origins()));
+  disc1->assignSurfaceMaterial(std::make_shared<ProtoSurfaceMaterial>(
+      BinUtility{}, MappingType::Default, "original/inner-disc"));
+  portal1 = Portal{
+      gctx, {.alongNormal = {disc1, *vol1}, .oppositeNormal = {disc1, *vol2}}};
+  portal2 = Portal{
+      gctx, {.alongNormal = {disc2, *vol3}, .oppositeNormal = {disc2, *vol4}}};
+  auto nested =
+      Portal::merge(gctx, portal1, portal2, AxisDirection::AxisR, *logger,
+                    PortalMaterialMergePolicy::eDiscardAndMark);
+  const auto& nestedMarker = dynamic_cast<const MergedMaterialMarker&>(
+      *nested.surface().surfaceMaterial());
+  BOOST_REQUIRE_EQUAL(nestedMarker.origins().size(), 2u);
+  BOOST_CHECK_EQUAL(*nestedMarker.origins()[0].materialKey,
+                    "original/inner-disc");
+  BOOST_CHECK_EQUAL(*nestedMarker.origins()[1].materialKey, "original/disc");
 }
 
 BOOST_AUTO_TEST_SUITE_END()  // Merging

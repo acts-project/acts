@@ -131,11 +131,12 @@ ACTS_POP_IGNORE_DEPRECATED()
 }  // namespace
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
-    CylinderVolumeBounds::Face face, const AxisSpec& loc0,
-    const AxisSpec& loc1) {
-  impl().m_designator = detail::merge(
-      impl().m_designator,
-      detail::CylinderProtoDesignator(face, loc0, loc1, prefix()));
+    CylinderVolumeBounds::Face face, const AxisSpec& loc0, const AxisSpec& loc1,
+    std::optional<std::string> materialKey) {
+  impl().m_designator =
+      detail::merge(impl().m_designator,
+                    detail::CylinderProtoDesignator(face, loc0, loc1, prefix(),
+                                                    std::move(materialKey)));
   return *this;
 }
 
@@ -161,10 +162,12 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
 }
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
-    CuboidVolumeBounds::Face face, const AxisSpec& loc0, const AxisSpec& loc1) {
+    CuboidVolumeBounds::Face face, const AxisSpec& loc0, const AxisSpec& loc1,
+    std::optional<std::string> materialKey) {
   impl().m_designator =
       detail::merge(impl().m_designator,
-                    detail::CuboidProtoDesignator(face, loc0, loc1, prefix()));
+                    detail::CuboidProtoDesignator(face, loc0, loc1, prefix(),
+                                                  std::move(materialKey)));
   return *this;
 }
 
