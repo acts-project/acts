@@ -35,10 +35,6 @@ class TrackingGeometryMaterialJsonWriter final : public IMaterialWriter {
   struct Config {
     /// Full output path; the extension selects the encoding and compression.
     std::filesystem::path filePath;
-    /// Geometry context used to resolve legacy proto-material placeholder
-    /// ranges.
-    Acts::GeometryContext geoContext =
-        Acts::GeometryContext::dangerouslyDefaultConstruct();
     /// Add deferred one-bin grid placeholders for surfaces without material.
     bool includeNonMaterial = false;
     /// Precision, indentation and compression settings.
@@ -58,8 +54,10 @@ class TrackingGeometryMaterialJsonWriter final : public IMaterialWriter {
   /// Export existing material assignments from geometry, preserving stable
   /// keys. Surfaces without material are omitted unless includeNonMaterial is
   /// set.
+  /// @param gctx Geometry context used to resolve placeholder ranges
   /// @param geometry Geometry to export
-  void write(const Acts::TrackingGeometry& geometry);
+  void write(const Acts::GeometryContext& gctx,
+             const Acts::TrackingGeometry& geometry);
 
   /// @return Output configuration
   const Config& config() const { return m_config; }

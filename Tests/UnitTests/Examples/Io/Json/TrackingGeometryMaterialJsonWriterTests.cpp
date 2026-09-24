@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(ExportLegacyProtoMaterialPlaceholderRanges) {
     TrackingGeometryMaterialJsonWriter::Config config;
     config.filePath = tmp.path() / (std::string("material") + extension);
     TrackingGeometryMaterialJsonWriter(config, Logging::WARNING)
-        .write(geometry);
+        .write(GeometryContext::dangerouslyDefaultConstruct(), geometry);
     const auto material =
         TrackingGeometryMaterialJsonConverter{}.fromFile(config.filePath);
     const auto* decoded = dynamic_cast<const ProtoSurfaceMaterial*>(

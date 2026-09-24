@@ -36,7 +36,7 @@ void TrackingGeometryMaterialJsonWriter::writeMaterial(
 }
 
 void TrackingGeometryMaterialJsonWriter::write(
-    const Acts::TrackingGeometry& geometry) {
+    const Acts::GeometryContext& gctx, const Acts::TrackingGeometry& geometry) {
   std::vector<const Acts::Surface*> surfaces;
   Acts::SurfaceMaterialMaps materials;
   geometry.visitSurfaces(
@@ -51,8 +51,7 @@ void TrackingGeometryMaterialJsonWriter::write(
                 proto->binning().binningData(),
                 [](const auto& axis) { return axis.min == axis.max; })) {
           payload = std::make_shared<Acts::ProtoSurfaceMaterial>(
-              Acts::adjustBinUtility(proto->binning(), *surface,
-                                     m_config.geoContext),
+              Acts::adjustBinUtility(proto->binning(), *surface, gctx),
               proto->mappingType(), proto->materialKey());
         }
         if (!payload && m_config.includeNonMaterial) {

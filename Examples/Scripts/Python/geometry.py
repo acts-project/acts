@@ -89,11 +89,10 @@ def runGeometry(
                 jmw = TrackingGeometryMaterialJsonWriter(
                     level=acts.logging.VERBOSE,
                     includeNonMaterial=True,
-                    geoContext=context.recoGeoContext,
                     filePath=outputDir / "geometry-map.json",
                 )
 
-                jmw.write(trackingGeometry)
+                jmw.write(context.recoGeoContext, trackingGeometry)
 
         if serializeGeometryJson:
             converter = TrackingGeometryJsonConverter(level=acts.logging.INFO)

@@ -71,13 +71,14 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
                  py::arg("config"), py::arg("level"))
             .def("writeMaterial",
                  &TrackingGeometryMaterialJsonWriter::writeMaterial)
-            .def("write", &TrackingGeometryMaterialJsonWriter::write)
+            .def("write", &TrackingGeometryMaterialJsonWriter::write,
+                 py::arg("gctx"), py::arg("geometry"))
             .def_property_readonly("config",
                                    &TrackingGeometryMaterialJsonWriter::config);
     auto c =
         py::class_<TrackingGeometryMaterialJsonWriter::Config>(cls, "Config")
             .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, filePath, geoContext, includeNonMaterial, options);
+    ACTS_PYTHON_STRUCT(c, filePath, includeNonMaterial, options);
   }
 
   // Keep the deprecated material writer binding available during migration.

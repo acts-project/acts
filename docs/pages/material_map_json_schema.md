@@ -31,7 +31,7 @@ Python exposes the same file converter as
 `acts.json.TrackingGeometryMaterialJsonConverter`; its `Options` class controls
 precision and output settings. `acts.examples.json.TrackingGeometryMaterialJsonWriter` accepts a
 full `filePath` (including extension) and optional `options`, and implements the
-mapping algorithm's writer interface. Its `write(geometry)` exports existing
+mapping algorithm's writer interface. Its `write(gctx, geometry)` exports existing
 surface material and rejects volume material. With `includeNonMaterial=True`,
 surfaces without material receive deferred one-bin proto-grid placeholders;
 their ranges and directions are resolved from geometry when applied.
