@@ -40,14 +40,7 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
   std::vector<ChannelStep> cSteps;
   Bin2D bstart = {0, 0};
   Bin2D bend = {0, 0};
-
-  // NOTE on the bin-edge loops below: they deliberately index the axis rather
-  // than calling IAxis::getBinEdges(). For an equidistant axis getBinEdges()
-  // materialises the complete edge vector on every call, so reading the two or
-  // three edges a hit actually crosses used to allocate nBins+1 doubles per
-  // axis per hit. With a 1150 x 1450 segmentation that dominated digitisation.
-  // getBinLowerBound() is O(1) and needs no allocation.
-  //
+    
   // Index convention: getBinEdges()[i] == getBinLowerBound(i + 1), and the bin
   // indices here are zero-based (getBin() is one-based, hence the -1 above), so
   // ib <= nBins - 1 and getBinLowerBound(ib + 1) is always in range.
