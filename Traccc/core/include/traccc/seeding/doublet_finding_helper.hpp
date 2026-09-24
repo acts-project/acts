@@ -72,12 +72,49 @@ bool TRACCC_HOST_DEVICE doublet_finding_helper::isCompatible(
     zOrigin = sp1.z() * deltaR - sp1.radius() * cotTheta;
   }
 
-  if ((deltaR >= config.deltaRMax) || (deltaR <= config.deltaRMin) ||
+  scalar deltaRMin, deltaRMax;
+  if constexpr (otherSpType == details::spacepoint_type::bottom) {
+    deltaRMin = config.get_deltaRMinBottomSP();
+    deltaRMax = config.get_deltaRMaxBottomSP();
+  } else {
+    deltaRMin = config.get_deltaRMinTopSP();
+    deltaRMax = config.get_deltaRMaxTopSP();
+  }
+
+  if ((deltaR >= deltaRMax) || (deltaR <= deltaRMin) ||
       (math::fabs(cotTheta) >= config.cotThetaMax * deltaR) ||
       (zOrigin <= config.collisionRegionMin * deltaR) ||
       (zOrigin >= config.collisionRegionMax * deltaR) ||
       math::fabs(cotTheta) >= config.deltaZMax) {
     return false;
+  }
+
+  if (config.doubletDPhiCut) {
+    // Azimuthal separation of the two spacepoints, compared to the maximum
+    // separation that a track with an impact parameter up to
+    // doubletDPhiD0Max can produce between the two radii
+    const scalar rInner = math::min(sp1.radius(), sp2.radius());
+    const scalar rOuter = math::max(sp1.radius(), sp2.radius());
+    const scalar d0 = config.get_doubletDPhiD0Max();
+    const scalar swing = math::fabs(
+        math::asin(math::min(1.f, d0 / math::max(sp2.radius(), 1.f))) -
+        math::asin(math::min(1.f, d0 / math::max(sp1.radius(), 1.f))));
+    scalar dPhi = sp2.phi() - sp1.phi();
+    if (dPhi > constant<scalar>::pi) {
+      dPhi -= 2.f * constant<scalar>::pi;
+    } else if (dPhi < -constant<scalar>::pi) {
+      dPhi += 2.f * constant<scalar>::pi;
+    }
+    const scalar bound = config.doubletDPhiConst +
+                         config.doubletDPhiSlope * (rOuter - rInner) +
+                         math::min(config.doubletDPhiCap, swing);
+    if (math::fabs(dPhi) > bound) {
+      return false;
+    }
+  }
+
+  if (!config.interactionPointCut) {
+    return true;
   }
 
   /*

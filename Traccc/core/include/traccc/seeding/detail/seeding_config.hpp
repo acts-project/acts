@@ -13,6 +13,7 @@
 #include "traccc/definitions/qualifiers.hpp"
 
 // System include(s).
+#include <limits>
 #include <numbers>
 
 namespace traccc {
@@ -49,6 +50,41 @@ struct seedfinder_config {
 
   // maximum distance in mm in z between measurements in one seed
   float deltaZMax = 450 * unit<float>::mm;
+  // minimum/maximum distance in mm in r between the middle and the bottom
+  // spacepoint of a seed. Negative values fall back to deltaRMin/deltaRMax
+  float deltaRMinBottomSP = -1.f;
+  float deltaRMaxBottomSP = -1.f;
+  // minimum/maximum distance in mm in r between the middle and the top
+  // spacepoint of a seed. Negative values fall back to deltaRMin/deltaRMax
+  float deltaRMinTopSP = -1.f;
+  float deltaRMaxTopSP = -1.f;
+  // radial range in mm in which spacepoints are considered as the middle
+  // spacepoint of a seed
+  float rMinMiddle = 0.f;
+  float rMaxMiddle = std::numeric_limits<float>::infinity();
+  // z range in mm in which spacepoints are considered as the middle
+  // spacepoint of a seed
+  float zMinMiddle = -std::numeric_limits<float>::infinity();
+  float zMaxMiddle = std::numeric_limits<float>::infinity();
+  // enable the cut on the compatibility between the interaction point and
+  // the doublet, based on the minimum helix radius
+  bool interactionPointCut = true;
+  // enable the cut on the azimuthal separation of the two spacepoints of a
+  // doublet, based on the maximum separation that a track with an impact
+  // parameter up to doubletDPhiD0Max can produce
+  bool doubletDPhiCut = false;
+  // impact parameter in mm used in the azimuthal separation cut. Negative
+  // values fall back to impactMax
+  float doubletDPhiD0Max = -1.f;
+  // constant term of the azimuthal separation bound
+  float doubletDPhiConst = 0.015f;
+  // radial slope of the azimuthal separation bound in 1/mm
+  float doubletDPhiSlope = 2.0e-4f / unit<float>::mm;
+  // upper limit of the impact parameter term of the azimuthal separation
+  // bound
+  float doubletDPhiCap = 10.f;
+  // maximum difference of the cot(theta) of the two doublets of a triplet
+  float cotThetaDiffMax = std::numeric_limits<float>::infinity();
 
   // FIXME: this is not used yet
   //        float upperPtResolutionPerSeed = 20* Acts::GeV;
@@ -108,6 +144,29 @@ struct seedfinder_config {
   int phiBinDeflectionCoverage = 1;
 
   std::array<unsigned int, 2> neighbor_scope{1, 1};
+
+  // Effective doublet radial windows, taking the fallback into account
+  TRACCC_HOST_DEVICE
+  float get_deltaRMinBottomSP() const {
+    return deltaRMinBottomSP < 0.f ? deltaRMin : deltaRMinBottomSP;
+  }
+  TRACCC_HOST_DEVICE
+  float get_deltaRMaxBottomSP() const {
+    return deltaRMaxBottomSP < 0.f ? deltaRMax : deltaRMaxBottomSP;
+  }
+  TRACCC_HOST_DEVICE
+  float get_deltaRMinTopSP() const {
+    return deltaRMinTopSP < 0.f ? deltaRMin : deltaRMinTopSP;
+  }
+  TRACCC_HOST_DEVICE
+  float get_deltaRMaxTopSP() const {
+    return deltaRMaxTopSP < 0.f ? deltaRMax : deltaRMaxTopSP;
+  }
+  // Effective impact parameter of the azimuthal separation cut
+  TRACCC_HOST_DEVICE
+  float get_doubletDPhiD0Max() const {
+    return doubletDPhiD0Max < 0.f ? impactMax : doubletDPhiD0Max;
+  }
 
   TRACCC_HOST_DEVICE
   std::size_t get_num_rbins() const {

@@ -55,6 +55,10 @@ bool TRACCC_HOST_DEVICE triplet_finding_helper::isCompatible(
 
   scalar deltaCotTheta = lb.cotTheta() - lt.cotTheta();
   scalar deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
+
+  if (deltaCotTheta2 > config.cotThetaDiffMax * config.cotThetaDiffMax) {
+    return false;
+  }
   scalar error{0.f};
   scalar dCotThetaMinusError2{0.f};
 
