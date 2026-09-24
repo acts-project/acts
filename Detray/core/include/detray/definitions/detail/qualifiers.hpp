@@ -48,7 +48,7 @@
 #define DETRAY_INLINE
 #endif
 
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) || defined(__HIP__)
 #define DETRAY_NO_INLINE __noinline__
 #else
 #define DETRAY_NO_INLINE
