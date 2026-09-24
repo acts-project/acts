@@ -89,7 +89,8 @@ struct measurement_smearer {
     subspace<traccc::default_algebra, 6u, 2u> subs(indices);
 
     if (meas_dim == 1u) {
-      const auto proj = subs.projector<1u>();
+      const auto proj =
+          subs.projector<1u>().to_dense<traccc::default_algebra>();
       matrix_type<1u, 1u> meas = proj * bound_params.vector();
 
       if constexpr (std::is_same_v<typename mask_t::local_frame,
@@ -106,7 +107,8 @@ struct measurement_smearer {
             static_cast<float>(getter::element(meas, 0u, 0u) + offset[0]);
       }
     } else if (meas_dim == 2u) {
-      const auto proj = subs.projector<2u>();
+      const auto proj =
+          subs.projector<2u>().to_dense<traccc::default_algebra>();
       matrix_type<2u, 1u> meas = proj * bound_params.vector();
 
       iomeas.local0 =

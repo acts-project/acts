@@ -226,9 +226,9 @@ TRACCC_HOST_DEVICE inline void find_tracks(
 
             auto& filtered_cov = trk_state.filtered_params().covariance();
             getter::element(filtered_cov, e_bound_loc0, e_bound_loc0) =
-                getter::element(V, 0, 0);
+                getter::element<0, 0>(V);
             getter::element(filtered_cov, e_bound_loc1, e_bound_loc1) =
-                getter::element(V, 1, 1);
+                getter::element<1, 1>(V);
           } else {
             // Run the Kalman update on a copy of the track
             // parameters

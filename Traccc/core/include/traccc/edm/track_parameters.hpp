@@ -8,6 +8,7 @@
 #pragma once
 
 // traccc include
+#include "detray/algebra/concepts.hpp"
 #include "traccc/definitions/common.hpp"
 #include "traccc/definitions/math.hpp"
 #include "traccc/definitions/primitives.hpp"
@@ -49,13 +50,15 @@ using bound_track_parameters_collection_types =
     collection_types<bound_track_parameters<>>;
 
 // Wrap the phi of a track parameter vector to [-pi,pi]
-template <detray::concepts::algebra algebra_t>
-TRACCC_HOST_DEVICE constexpr bool normalize_angles(
-    bound_vector<algebra_t>& vec) {
+//
+// The vector must have a row for every bound index, because this reads
+// @c e_bound_theta and @c e_bound_phi out of it.
+template <detray::concepts::column_matrix<e_bound_size> vec_t>
+TRACCC_HOST_DEVICE constexpr bool normalize_angles(vec_t& vec) {
   traccc::scalar phi;
   traccc::scalar theta;
 
-  const traccc::scalar in_theta{getter::element(vec, e_bound_theta, 0)};
+  const traccc::scalar in_theta{getter::element<e_bound_theta, 0>(vec)};
   if (math::fmod(in_theta, 2.f * constant<traccc::scalar>::pi) == 0.f ||
       in_theta == 0.f) {
     TRACCC_WARNING_HOST_DEVICE("Hit theta pole before normalization: %f",
@@ -64,7 +67,7 @@ TRACCC_HOST_DEVICE constexpr bool normalize_angles(
   }
 
   std::tie(phi, theta) =
-      detail::wrap_phi_theta(getter::element(vec, e_bound_phi, 0), in_theta);
+      detail::wrap_phi_theta(getter::element<e_bound_phi, 0>(vec), in_theta);
 
   if (theta <= 0.f || theta >= 2.f * constant<traccc::scalar>::pi) {
     TRACCC_WARNING_HOST_DEVICE("Hit theta pole after normalization: %f", theta);
@@ -75,8 +78,8 @@ TRACCC_HOST_DEVICE constexpr bool normalize_angles(
   assert(math::fabs(phi) <= constant<traccc::scalar>::pi);
   assert(theta <= constant<traccc::scalar>::pi);
 
-  getter::element(vec, e_bound_phi, 0) = phi;
-  getter::element(vec, e_bound_theta, 0) = theta;
+  getter::element<e_bound_phi, 0>(vec) = phi;
+  getter::element<e_bound_theta, 0>(vec) = theta;
 
   return true;
 }
@@ -85,7 +88,7 @@ TRACCC_HOST_DEVICE constexpr bool normalize_angles(
 template <detray::concepts::algebra algebra_t>
 TRACCC_HOST_DEVICE constexpr bool normalize_angles(
     bound_parameters_vector<algebra_t>& param_vec) {
-  return normalize_angles<algebra_t>(param_vec.vector());
+  return normalize_angles(param_vec.vector());
 }
 
 /// Covariance inflation used for track fitting
