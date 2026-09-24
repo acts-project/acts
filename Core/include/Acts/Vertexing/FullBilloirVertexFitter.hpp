@@ -99,13 +99,13 @@ class FullBilloirVertexFitter final : public IVertexFitter {
 
  private:
   /// Fit with an explicit seed and caller-provided magnetic field cache.
-  /// @param tracks Tracks to fit
-  /// @param options Contexts and constraint settings
+  /// @param paramVector Tracks to fit
+  /// @param vertexingOptions Contexts and constraint settings
   /// @param fieldCache Magnetic field cache
   /// @param seedPosition Initial linearization point
   /// @return Fitted vertex or a fitting error
-  Result<Vertex> fitImpl(std::span<const InputTrack> tracks,
-                         const VertexingOptions& options,
+  Result<Vertex> fitImpl(std::span<const InputTrack> paramVector,
+                         const VertexingOptions& vertexingOptions,
                          MagneticFieldProvider::Cache& fieldCache,
                          const Vector4& seedPosition) const;
 
