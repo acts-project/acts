@@ -402,6 +402,50 @@ def scan(
 
 
 @app.command()
+def check(
+    repo_root: Annotated[
+        Path, typer.Option(help="Root directory of the repository")
+    ] = Path.cwd(),
+):
+    """
+    Check that the dependency versions are consistent.
+
+    Fails unless there is exactly one DEPENDENCY_TAG (the pin in
+    CI/dependencies/versions.env) and every spack-container image, e.g. the
+    devcontainer's, uses that same version. Fix a failure with bump-spack.
+    """
+    bumper = VersionBumper(repo_root)
+    versions = bumper.scan_versions()
+
+    dependency_tags = versions["dependency_tags"]
+    if len(dependency_tags) != 1:
+        files = ", ".join(
+            str(f.relative_to(repo_root))
+            for f in versions["files_with_dependency_tags"]
+        )
+        console.print(
+            f"[red]Expected exactly one DEPENDENCY_TAG, found {', '.join(sorted(dependency_tags)) or 'none'} in: {files or 'no files'}[/red]"
+        )
+        raise typer.Exit(1)
+
+    (dependency_tag,) = dependency_tags
+    expected = dependency_tag.removeprefix("v")
+    mismatched = versions["spack_container_versions"] - {expected}
+    if mismatched:
+        files = ", ".join(
+            str(f.relative_to(repo_root))
+            for f in versions["files_with_spack_container"]
+        )
+        console.print(
+            f"[red]spack-container version(s) {', '.join(sorted(mismatched))} in {files} do not match DEPENDENCY_TAG {dependency_tag}[/red]"
+        )
+        console.print(f"[dim]Run: CI/bump_versions.py bump-spack {expected}[/dim]")
+        raise typer.Exit(1)
+
+    console.print(f"[green]✓[/green] Dependency versions consistent: {dependency_tag}")
+
+
+@app.command()
 def bump_docker_tag(
     new_tag: Annotated[str, typer.Argument(help="New Docker tag to use (e.g., 84)")],
     repo_root: Annotated[
