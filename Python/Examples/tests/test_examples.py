@@ -539,8 +539,10 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
 
     csv_dir = tmp_path / "csv"
     root_file = tmp_path / "measurements.root"
+    cluster_file = tmp_path / "clusters.root"
 
     assert not root_file.exists()
+    assert not cluster_file.exists()
     assert not csv_dir.exists()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
@@ -551,12 +553,14 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
     s.run()
 
     assert root_file.exists()
+    assert cluster_file.exists()
     assert csv_dir.exists()
 
     assert len(list(csv_dir.iterdir())) == 3 * s.config.events
     assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
 
     assert_root_hash(root_file.name, root_file)
+    assert_root_hash(cluster_file.name, cluster_file)
 
 
 @pytest.mark.parametrize(
@@ -629,8 +633,10 @@ def test_digitization_example_input(
 
     csv_dir = tmp_path / "csv"
     root_file = tmp_path / "measurements.root"
+    cluster_file = tmp_path / "clusters.root"
 
     assert not root_file.exists()
+    assert not cluster_file.exists()
     assert not csv_dir.exists()
 
     assert_root_hash(
@@ -652,12 +658,14 @@ def test_digitization_example_input(
     s.run()
 
     assert root_file.exists()
+    assert cluster_file.exists()
     assert csv_dir.exists()
 
     assert len(list(csv_dir.iterdir())) == 3 * pgs.config.events
     assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
 
     assert_root_hash(root_file.name, root_file)
+    assert_root_hash(cluster_file.name, cluster_file)
 
 
 def test_digitization_config_example(trk_geo, tmp_path):
