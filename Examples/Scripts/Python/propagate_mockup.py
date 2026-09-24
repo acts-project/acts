@@ -45,7 +45,11 @@ def main():
         action="store_true",
         help="Also write detailed propagation steps",
     )
-    parser.add_argument("--obj", action="store_true", help="Dump the mockup geometry into obj visualization")
+    parser.add_argument(
+        "--obj",
+        action="store_true",
+        help="Dump the mockup geometry into obj visualization",
+    )
     args = parser.parse_args()
 
     output_dir = Path(args.outDir)
@@ -60,13 +64,18 @@ def main():
         logLevel=acts.logging.INFO,
     )
 
-    seq = acts.examples.Sequencer(events=args.nEvents, numThreads=1, outputDir=output_dir, logLevel=acts.logging.INFO)
+    seq = acts.examples.Sequencer(
+        events=args.nEvents,
+        numThreads=1,
+        outputDir=output_dir,
+        logLevel=acts.logging.INFO,
+    )
     rnd = acts.examples.RandomNumbers(seed=42)
 
     addParticleGun(
         seq,
         ParticleConfig(num=1, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
-        EtaConfig(-3., 3.),
+        EtaConfig(0.5, 1.0),
         MomentumConfig(1 * u.GeV, 100 * u.GeV, transverse=True),
         rnd=rnd,
     )
@@ -77,14 +86,11 @@ def main():
     )
     seq.addAlgorithm(trkParamExtractor)
 
-    nav = acts.Navigator(
-        trackingGeometry=trackingGeometry)
+    nav = acts.Navigator(trackingGeometry=trackingGeometry)
 
     stepper = acts.EigenStepper(field)
 
-    propagator = acts.examples.ConcretePropagator(
-        acts.Propagator(stepper, nav)
-    )
+    propagator = acts.examples.ConcretePropagator(acts.Propagator(stepper, nav))
 
     propagationAlgorithm = acts.examples.PropagationAlgorithm(
         propagatorImpl=propagator,
