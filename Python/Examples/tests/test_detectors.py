@@ -88,7 +88,7 @@ def test_telescopeGen3_geometry():
         positions=[10 * i for i in range(n_surfaces)],
         stereos=[0] * n_surfaces,
         rotDirection=0,
-        Gen3=True,
+        gen3=True,
     )
     detector = acts.examples.TelescopeDetector(config)
     trackingGeometry = detector.trackingGeometry()
@@ -147,7 +147,7 @@ def test_telescopeGen3_geant4_geometry(rotDirection):
         stereos=[0] * n_surfaces,
         offsets=[10, -20],
         rotDirection=rotDirection,
-        Gen3=True,
+        gen3=True,
     )
     detector = acts.examples.TelescopeDetector(config)
     trackingGeometry = detector.trackingGeometry()
