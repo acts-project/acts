@@ -12,6 +12,8 @@
 #include "traccc/edm/seed_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/edm/track_parameters.hpp"
+#include "traccc/geometry/detector.hpp"
+#include "traccc/geometry/host_detector.hpp"
 #include "traccc/seeding/detail/track_params_estimation_config.hpp"
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/messaging.hpp"
@@ -57,6 +59,23 @@ class track_params_estimation
       const edm::spacepoint_collection::const_view& spacepoints,
       const edm::seed_collection::const_view& seeds,
       const vector3& bfield) const override;
+
+  /// Callable operator for track_params_esitmation, for spacepoints made of
+  /// one or two measurements
+  ///
+  /// @param det The detector object
+  /// @param measurements All measurements of the event
+  /// @param spacepoints All spacepoints of the event
+  /// @param seeds The reconstructed track seeds of the event
+  /// @param bfield (Temporary) Magnetic field vector
+  /// @return A vector of bound track parameters
+  ///
+  output_type operator()(
+      const host_detector& det,
+      const edm::measurement_collection::const_view& measurements,
+      const edm::spacepoint_collection::const_view& spacepoints,
+      const edm::seed_collection::const_view& seeds,
+      const vector3& bfield) const;
 
  private:
   const track_params_estimation_config m_config;
