@@ -333,11 +333,10 @@ class DoubletSeedFinder {
     /// Parameter which can loosen the tolerance of the track seed to form a
     /// helix. This is useful for e.g. misaligned seeding.
     float helixCutTolerance = 1;
-    /// Maximum allowed squared difference of the times of the two space points,
-    /// corrected for the time of flight between them, expressed in units of
-    /// their combined time variance (i.e. the square of the number of sigmas).
-    /// Only used when `useTime` is enabled. See the note there on placement.
-    float timeCutNVariance = 25;
+    /// Maximum allowed difference of the times of the two space points,
+    /// corrected for the time of flight between them, in units of their
+    /// combined time resolution. Only used when `useTime` is enabled.
+    float timeCutNSigma = 5;
 
     /// Type alias for delegate to apply experiment specific cuts during doublet
     /// finding
@@ -362,6 +361,9 @@ class DoubletSeedFinder {
     /// Squared minimum helix diameter derived from magnetic field and minimum
     /// pT
     float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
+    /// Squared time cut in units of sigma, allowing the cut to be applied on
+    /// the combined time variance
+    float timeCutNSigma2 = std::numeric_limits<float>::quiet_NaN();
   };
 
   /// Computes additional quantities from the middle space point which can be

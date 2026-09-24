@@ -152,7 +152,7 @@ class Impl final : public DoubletSeedFinder {
           dt = otherSp.time() - tM - distance;
         }
         const float varianceDt = varianceTM + otherSp.varianceT();
-        if (dt * dt > m_cfg.timeCutNVariance * varianceDt) {
+        if (dt * dt > m_cfg.timeCutNSigma2 * varianceDt) {
           continue;
         }
       }
@@ -363,6 +363,7 @@ DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
   // bFieldInZ is in (pT/radius) natively, no need for conversion
   const float pTPerHelixRadius = bFieldInZ;
   minHelixDiameter2 = square(minPt * 2 / pTPerHelixRadius) * helixCutTolerance;
+  timeCutNSigma2 = square(timeCutNSigma);
 }
 
 MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(
