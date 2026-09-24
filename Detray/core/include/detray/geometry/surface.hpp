@@ -383,11 +383,12 @@ class surface {
 };
 
 template <concepts::detector detector_t, typename descr_t>
-DETRAY_HOST_DEVICE surface(const detector_t &, const descr_t &)
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE surface(const detector_t &, const descr_t &)
     -> surface<detector_t>;
 
 template <concepts::detector detector_t>
-DETRAY_HOST_DEVICE surface(const detector_t &, const geometry::identifier)
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE surface(const detector_t &,
+                                           const geometry::identifier)
     -> surface<detector_t>;
 
 }  // namespace detray::geometry

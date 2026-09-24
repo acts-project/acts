@@ -20,21 +20,6 @@ on:
     paths:
       - "Traccc/**"
       - "Detray/**"
-      - "Core/**"
-      - "Plugins/**"
-      - "Fatras/**"
-      - "Alignment/**"
-      - "Examples/**"
-      - "Tests/**"
-      - "Python/**"
-      - "cmake/**"
-      - "codegen/**"
-      - "thirdparty/**"
-      - "CMakeLists.txt"
-      - "CMakePresets.json"
-      - "version_number"
-      - "CI/**"
-      - ".github/actions/**"
       - ".github/workflows/traccc.yml"
       - ".github/detray-traccc-filters.yml"
   pull_request:
@@ -44,21 +29,6 @@ on:
     paths:
       - "Traccc/**"
       - "Detray/**"
-      - "Core/**"
-      - "Plugins/**"
-      - "Fatras/**"
-      - "Alignment/**"
-      - "Examples/**"
-      - "Tests/**"
-      - "Python/**"
-      - "cmake/**"
-      - "codegen/**"
-      - "thirdparty/**"
-      - "CMakeLists.txt"
-      - "CMakePresets.json"
-      - "version_number"
-      - "CI/**"
-      - ".github/actions/**"
       - ".github/workflows/traccc.yml"
       - ".github/detray-traccc-filters.yml"
   # The changes job applies path filtering to merge groups, which do not
@@ -218,8 +188,6 @@ jobs:
         with:
           compiler: ${{ matrix.platform.compiler || 'g++' }}
           flavor: ${{ matrix.platform.flavor }}
-          # Flavors need v24.0.0 or newer.
-          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -345,7 +313,6 @@ jobs:
         with:
           compiler: g++
           flavor: cuda13
-          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 

@@ -341,8 +341,7 @@ int seq_run(const traccc::opts::input_data& input_opts,
       for (unsigned int i = 0; i < track_states.tracks.size(); i++) {
         host_detector_visitor<traccc::detector_type_list>(
             polymorphic_detector,
-            [&]<typename detector_traits_t>(
-                const typename detector_traits_t::host& det) {
+            [&]<detray::concepts::detector detector_t>(const detector_t& det) {
               fit_performance_writer.write(
                   track_states.tracks.at(i), track_states.states,
                   measurements_per_event, det, evt_data);

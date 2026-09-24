@@ -505,8 +505,6 @@ jobs:
         with:
           compiler: g++
           flavor: cuda13
-          # Flavors need v24.0.0 or newer.
-          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -626,8 +624,6 @@ jobs:
         with:
           compiler: g++
           flavor: cuda13
-          # Flavors need v24.0.0 or newer.
-          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -692,8 +688,6 @@ jobs:
         with:
           compiler: g++
           flavor: cuda13
-          # Flavors need v24.0.0 or newer.
-          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -760,8 +754,6 @@ jobs:
         with:
           compiler: g++
           flavor: cuda13
-          # Flavors need v24.0.0 or newer.
-          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -834,8 +826,6 @@ jobs:
         with:
           compiler: g++
           flavor: cuda13
-          # Flavors need v24.0.0 or newer.
-          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -1285,7 +1275,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup CMVFS
-        uses: cvmfs-contrib/github-action-cvmfs@10197e000cc0add8e54ac4fb73d3ed44e2de72b4 # v5.5
+        uses: cvmfs-contrib/github-action-cvmfs@72f2a8d366043978d6aebee154bc9ed321c2f2a8 # v5.6
 
       - name: Restore ccache
         id: ccache-restore

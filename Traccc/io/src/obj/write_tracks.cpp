@@ -58,13 +58,13 @@ void write_tracks(std::string_view filename,
 
       // Find the detector surface that this measurement sits on.
       const auto global = host_detector_visitor<detector_type_list>(
-          detector, [meas]<typename detector_traits_t>(
-                        const typename detector_traits_t::host& d) {
+          detector,
+          [meas]<detray::concepts::detector detector_t>(const detector_t& d) {
             detray::tracking_surface surface{d, meas.surface_link()};
             return surface.local_to_global(
                 {},
-                edm::get_measurement_local<
-                    typename detector_traits_t::host::algebra_type>(meas),
+                edm::get_measurement_local<typename detector_t::algebra_type>(
+                    meas),
                 {});
           });
 

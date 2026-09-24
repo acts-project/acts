@@ -30,17 +30,17 @@
 namespace traccc {
 
 bool kalman_filter_comparison(
-    const traccc::default_detector::host& det,
-    const traccc::default_detector::host::name_map& names,
+    const traccc::default_detector_traits::host& det,
+    const traccc::default_detector_traits::host::name_map& names,
     const traccc::magnetic_field& bfield,
     const detray::propagation_validation_config<float>& cfg,
-    const traccc::seed_generator<traccc::default_detector::host>::config&
+    const traccc::seed_generator<traccc::default_detector_traits::host>::config&
         smearing_cfg,
     std::unique_ptr<const traccc::Logger> ilogger,
     const std::vector<traccc::free_track_parameters<traccc::default_algebra>>&
         tracks,
     std::vector<vecmem::vector<traccc::propagation_validator::candidate_type<
-        traccc::default_detector::host>>>& truth_traces_fw,
+        traccc::default_detector_traits::host>>>& truth_traces_fw,
     edm::measurement_collection::const_device device_measurements,
     traccc::edm::track_container<traccc::default_algebra>::host&
         track_container) {
@@ -51,7 +51,7 @@ bool kalman_filter_comparison(
   // 'false' if any failures were detected
   bool test_successful{true};
 
-  using detector_t = traccc::default_detector::host;
+  using detector_t = traccc::default_detector_traits::host;
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = detray::dscalar<algebra_t>;
   using b_field_t =

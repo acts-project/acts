@@ -77,10 +77,16 @@ struct bin_content_sequence {
 GTEST_TEST(detray_acceleration_structures, spatial_grid) {
   // Non-owning, 3D cartesian, replacing grid
   using grid_t = grid<test_algebra, axes<cuboid3D>, bins::single<scalar>>;
+  using grid_device_t = grid<test_algebra, axes<cuboid3D>, bins::single<scalar>,
+                             simple_serializer, const_device_container_types>;
   using spatial_grid_t = spatial_grid_impl<grid_t>;
+  using spatial_grid_device_t = spatial_grid_impl<grid_device_t>;
 
   static_assert(concepts::grid<spatial_grid_t>);
   static_assert(concepts::accelerator<spatial_grid_t>);
+
+  static_assert(concepts::grid<spatial_grid_device_t>);
+  static_assert(concepts::accelerator<spatial_grid_device_t>);
 
   // Fill the bin data for every test
   // bin test entries
@@ -99,6 +105,9 @@ GTEST_TEST(detray_acceleration_structures, spatial_grid) {
   cartesian_3D<is_owning, host_container_types> axes_own(
       std::move(edge_ranges_cp), std::move(bin_edges_cp));
   spatial_grid_t grid_3D(std::move(bin_data_cp), std::move(axes_own));
+  spatial_grid_t::const_view_type grid_view =
+      detray::get_data(std::as_const(grid_3D));
+  spatial_grid_device_t grid_3D_dev(grid_view);
 
   // Test the bin view
   point3 p = {-10.f, -20.f, 0.f};
@@ -111,13 +120,27 @@ GTEST_TEST(detray_acceleration_structures, spatial_grid) {
   const auto joined_view1 = detray::views::join(bview1);
   const auto grid_search1 = grid_3D.search(p, search_window_size);
 
+  const auto bview1_dev = axis::detail::bin_view(grid_3D_dev, search_window);
+  const auto joined_view1_dev = detray::views::join(bview1_dev);
+  const auto grid_search1_dev = grid_3D_dev.search(p, search_window_size);
+
   static_assert(detray::ranges::bidirectional_range<decltype(bview1)>);
   static_assert(detray::ranges::bidirectional_range<decltype(joined_view1)>);
   static_assert(detray::ranges::bidirectional_range<decltype(grid_search1)>);
 
+  static_assert(detray::ranges::bidirectional_range<decltype(bview1_dev)>);
+  static_assert(
+      detray::ranges::bidirectional_range<decltype(joined_view1_dev)>);
+  static_assert(
+      detray::ranges::bidirectional_range<decltype(grid_search1_dev)>);
+
   ASSERT_EQ(bview1.size(), 1u);
   ASSERT_EQ(joined_view1.size(), 1u);
   ASSERT_EQ(grid_search1.size(), 1u);
+
+  ASSERT_EQ(bview1_dev.size(), 1u);
+  ASSERT_EQ(joined_view1_dev.size(), 1u);
+  ASSERT_EQ(grid_search1_dev.size(), 1u);
 
   for (auto bin : bview1) {
     for (auto entry : bin) {
@@ -131,6 +154,21 @@ GTEST_TEST(detray_acceleration_structures, spatial_grid) {
 
   for (scalar entry : grid_search1) {
     EXPECT_EQ(entry, grid_3D.bin(0).value()) << "bin entry: " << entry;
+  }
+
+  // Device grid test
+  for (auto bin : bview1_dev) {
+    for (auto entry : bin) {
+      EXPECT_EQ(entry, grid_3D_dev.bin(0).value()) << "bin entry: " << entry;
+    }
+  }
+
+  for (scalar entry : joined_view1_dev) {
+    EXPECT_EQ(entry, grid_3D_dev.bin(0).value()) << "bin entry: " << entry;
+  }
+
+  for (scalar entry : grid_search1_dev) {
+    EXPECT_EQ(entry, grid_3D_dev.bin(0).value()) << "bin entry: " << entry;
   }
 
   //
@@ -148,13 +186,27 @@ GTEST_TEST(detray_acceleration_structures, spatial_grid) {
   const auto joined_view2 = detray::views::join(bview2);
   const auto grid_search2 = grid_3D.search(p, search_window_size);
 
+  const auto bview2_dev = axis::detail::bin_view(grid_3D_dev, search_window);
+  const auto joined_view2_dev = detray::views::join(bview2_dev);
+  const auto grid_search2_dev = grid_3D_dev.search(p, search_window_size);
+
   static_assert(detray::ranges::bidirectional_range<decltype(bview2)>);
   static_assert(detray::ranges::bidirectional_range<decltype(joined_view2)>);
   static_assert(detray::ranges::bidirectional_range<decltype(grid_search2)>);
 
+  static_assert(detray::ranges::bidirectional_range<decltype(bview2_dev)>);
+  static_assert(
+      detray::ranges::bidirectional_range<decltype(joined_view2_dev)>);
+  static_assert(
+      detray::ranges::bidirectional_range<decltype(grid_search2_dev)>);
+
   ASSERT_EQ(bview2.size(), 8u);
   ASSERT_EQ(joined_view2.size(), 8u);
   ASSERT_EQ(grid_search2.size(), 8u);
+
+  ASSERT_EQ(bview2_dev.size(), 8u);
+  ASSERT_EQ(joined_view2_dev.size(), 8u);
+  ASSERT_EQ(grid_search2_dev.size(), 8u);
 
   for (auto [i, bin] : detray::views::enumerate(bview2)) {
     for (scalar entry : bin) {
@@ -167,6 +219,20 @@ GTEST_TEST(detray_acceleration_structures, spatial_grid) {
   }
 
   for (auto [i, entry] : detray::views::enumerate(grid_search2)) {
+    EXPECT_EQ(entry, expected[i]) << "bin entry: " << entry;
+  }
+
+  for (auto [i, bin] : detray::views::enumerate(bview2_dev)) {
+    for (scalar entry : bin) {
+      EXPECT_EQ(entry, expected[i]) << "bin entry: " << entry;
+    }
+  }
+
+  for (auto [i, entry] : detray::views::enumerate(joined_view2_dev)) {
+    EXPECT_EQ(entry, expected[i]) << "bin entry: " << entry;
+  }
+
+  for (auto [i, entry] : detray::views::enumerate(grid_search2_dev)) {
     EXPECT_EQ(entry, expected[i]) << "bin entry: " << entry;
   }
 
@@ -186,13 +252,27 @@ GTEST_TEST(detray_acceleration_structures, spatial_grid) {
   const auto joined_view3 = detray::views::join(bview3);
   const auto grid_search3 = grid_3D.search(p, search_window_size);
 
+  const auto bview3_dev = axis::detail::bin_view(grid_3D_dev, search_window);
+  const auto joined_view3_dev = detray::views::join(bview3_dev);
+  const auto grid_search3_dev = grid_3D_dev.search(p, search_window_size);
+
   static_assert(detray::ranges::bidirectional_range<decltype(bview3)>);
   static_assert(detray::ranges::bidirectional_range<decltype(joined_view3)>);
   static_assert(detray::ranges::bidirectional_range<decltype(grid_search3)>);
 
+  static_assert(detray::ranges::bidirectional_range<decltype(bview3_dev)>);
+  static_assert(
+      detray::ranges::bidirectional_range<decltype(joined_view3_dev)>);
+  static_assert(
+      detray::ranges::bidirectional_range<decltype(grid_search3_dev)>);
+
   ASSERT_EQ(bview3.size(), 27u);
   ASSERT_EQ(joined_view3.size(), 27u);
   ASSERT_EQ(grid_search3.size(), 27u);
+
+  ASSERT_EQ(bview3_dev.size(), 27u);
+  ASSERT_EQ(joined_view3_dev.size(), 27u);
+  ASSERT_EQ(grid_search3_dev.size(), 27u);
 
   for (auto [i, bin] : detray::views::enumerate(bview3)) {
     for (scalar entry : bin) {
@@ -207,6 +287,20 @@ GTEST_TEST(detray_acceleration_structures, spatial_grid) {
   for (auto [i, entry] : detray::views::enumerate(grid_search3)) {
     EXPECT_EQ(entry, expected[i]) << "bin entry: " << entry;
   }
+
+  for (auto [i, bin] : detray::views::enumerate(bview3_dev)) {
+    for (scalar entry : bin) {
+      EXPECT_EQ(entry, expected[i]) << "bin entry: " << entry;
+    }
+  }
+
+  for (auto [i, entry] : detray::views::enumerate(joined_view3_dev)) {
+    EXPECT_EQ(entry, expected[i]) << "bin entry: " << entry;
+  }
+
+  for (auto [i, entry] : detray::views::enumerate(grid_search3_dev)) {
+    EXPECT_EQ(entry, expected[i]) << "bin entry: " << entry;
+  }
 }
 
 /// Test bin entry retrieval
@@ -214,11 +308,18 @@ GTEST_TEST(detray_acceleration_structures, spatial_grid_complete_population) {
   // Non-owning, 3D cartesian, completing grid (4 dims and sort)
   using grid_t =
       grid<test_algebra, decltype(ax_n_own), bins::static_array<scalar, 4>,
-           simple_serializer, host_container_types, false>;
+           simple_serializer, host_container_types, is_n_owning>;
+  using grid_device_t =
+      grid<test_algebra, axes<cuboid3D>, bins::static_array<scalar, 4>,
+           simple_serializer, const_device_container_types>;
   using spatial_grid_t = spatial_grid_impl<grid_t>;
+  using spatial_grid_device_t = spatial_grid_impl<grid_device_t>;
 
   static_assert(concepts::grid<spatial_grid_t>);
   static_assert(concepts::accelerator<spatial_grid_t>);
+
+  static_assert(concepts::grid<spatial_grid_device_t>);
+  static_assert(concepts::accelerator<spatial_grid_device_t>);
 
   // init
   spatial_grid_t::bin_container_type bin_data{};
@@ -226,6 +327,7 @@ GTEST_TEST(detray_acceleration_structures, spatial_grid_complete_population) {
 
   // Create non-owning grid
   spatial_grid_t g3c(&bin_data, ax_n_own);
+
   // Fill and read
   point3 p = {-4.5f, -4.5f, 4.5f};
   g3c.template populate<complete<>>(p, 4.f);
@@ -277,6 +379,50 @@ GTEST_TEST(detray_acceleration_structures, spatial_grid_complete_population) {
   for (scalar entry : grid_search3) {
     EXPECT_EQ(entry, 4.f);
   }
+
+  // Copy data that will be moved into the data owning types
+  using grid_own_t = grid_t::template type<is_owning>;
+
+  dvector<scalar> bin_edges_cp(bin_edges);
+  dvector<dsized_index_range> edge_ranges_cp(edge_ranges);
+  spatial_grid_t::bin_container_type bin_data_cp(bin_data);
+
+  cartesian_3D<is_owning, host_container_types> axes_own(
+      std::move(edge_ranges_cp), std::move(bin_edges_cp));
+  spatial_grid_impl<grid_own_t> g3c_own(std::move(bin_data_cp),
+                                        std::move(axes_own));
+  spatial_grid_t::const_view_type grid_view =
+      detray::get_data(std::as_const(g3c_own));
+  spatial_grid_device_t g3c_dev(grid_view);
+
+  for (scalar entry : g3c_dev.search(p)) {
+    EXPECT_EQ(entry, 4.f);
+  }
+
+  search_window_size[0] = 0;
+  search_window_size[1] = 0;
+
+  const auto grid_search1_dev = g3c_dev.search(p, search_window_size);
+
+  static_assert(
+      detray::ranges::bidirectional_range<decltype(grid_search1_dev)>);
+
+  ASSERT_EQ(grid_search1_dev.size(), 4u);
+
+  for (scalar entry : grid_search1_dev) {
+    EXPECT_EQ(entry, 4.f);
+  }
+
+  // Search with neighbourhood
+  search_window_size[0] = 1;
+  search_window_size[1] = 1;
+
+  const auto grid_search2_dev = g3c_dev.search(p, search_window_size);
+  ASSERT_EQ(grid_search2_dev.size(), 20u);
+
+  for (scalar entry : grid_search2_dev) {
+    EXPECT_EQ(entry, 4.f);
+  }
 }
 
 /// Test bin entry retrieval
@@ -285,11 +431,18 @@ GTEST_TEST(detray_acceleration_structures,
   // Non-owning, 3D cartesian, completing grid (4 dims and sort)
   using grid_t =
       grid<test_algebra, decltype(ax_n_own), bins::static_array<scalar, 4>,
-           simple_serializer, host_container_types, false>;
+           simple_serializer, host_container_types, is_n_owning>;
+  using grid_device_t =
+      grid<test_algebra, axes<cuboid3D>, bins::static_array<scalar, 4>,
+           simple_serializer, const_device_container_types>;
   using spatial_grid_t = spatial_grid_impl<grid_t>;
+  using spatial_grid_device_t = spatial_grid_impl<grid_device_t>;
 
   static_assert(concepts::grid<spatial_grid_t>);
   static_assert(concepts::accelerator<spatial_grid_t>);
+
+  static_assert(concepts::grid<spatial_grid_device_t>);
+  static_assert(concepts::accelerator<spatial_grid_device_t>);
 
   // init
   spatial_grid_t::bin_container_type bin_data{};
@@ -358,6 +511,47 @@ GTEST_TEST(detray_acceleration_structures,
   ASSERT_EQ(grid_search4.size(), 7u);
 
   for (scalar entry : grid_search4) {
+    EXPECT_TRUE(entry == 5.f || entry == 6.f || entry == 7.f);
+  }
+
+  // Copy data that will be moved into the data owning types
+  using grid_own_t = grid_t::template type<is_owning>;
+
+  dvector<scalar> bin_edges_cp(bin_edges);
+  dvector<dsized_index_range> edge_ranges_cp(edge_ranges);
+  spatial_grid_t::bin_container_type bin_data_cp(bin_data);
+
+  cartesian_3D<is_owning, host_container_types> axes_own(
+      std::move(edge_ranges_cp), std::move(bin_edges_cp));
+  spatial_grid_impl<grid_own_t> g3ra_own(std::move(bin_data_cp),
+                                         std::move(axes_own));
+  spatial_grid_t::const_view_type grid_view =
+      detray::get_data(std::as_const(g3ra_own));
+  spatial_grid_device_t g3ra_dev(grid_view);
+
+  search_window_size[0] = 0;
+  search_window_size[1] = 0;
+
+  const auto grid_search1_dev = g3ra_dev.search(p, search_window_size);
+
+  static_assert(
+      detray::ranges::bidirectional_range<decltype(grid_search1_dev)>);
+
+  // The grid bin is already filled with 3 values when the device version is
+  // built
+  ASSERT_EQ(grid_search1_dev.size(), 3u);
+
+  for (scalar entry : grid_search1_dev) {
+    EXPECT_TRUE(entry == 5.f || entry == 6.f || entry == 7.f);
+  }
+
+  search_window_size[0] = 1;
+  search_window_size[1] = 1;
+
+  const auto grid_search2_dev = g3ra_dev.search(p, search_window_size);
+  ASSERT_EQ(grid_search2_dev.size(), 7u);
+
+  for (scalar entry : grid_search2_dev) {
     EXPECT_TRUE(entry == 5.f || entry == 6.f || entry == 7.f);
   }
 }
