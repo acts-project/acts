@@ -131,6 +131,32 @@ struct measurement_selector {
     return V;
   }
 
+  /// Set the position covariance of the seed track parameters from the seed
+  /// measurement
+  ///
+  /// Only the coordinates measured by the measurement are set, the
+  /// covariance of an unmeasured coordinate keeps its value from the seed
+  ///
+  /// @param cov the covariance of the seed track parameters
+  /// @param measurement the seed measurement
+  /// @param cfg how to apply calibrations
+  ///
+  template <detray::concepts::algebra algebra_t, typename measurement_backend_t>
+  TRACCC_HOST_DEVICE static void set_seed_measurement_covariance(
+      detray::bound_matrix<algebra_t>& cov,
+      const edm::measurement<measurement_backend_t>& measurement,
+      const config& cfg) {
+    const auto V =
+        calibrated_measurement_covariance<algebra_t, 2>(measurement, cfg);
+    const auto subs = measurement.subspace();
+    const auto meas0 = static_cast<unsigned int>(subs[0]);
+    getter::element(cov, meas0, meas0) = getter::element(V, 0, 0);
+    if (measurement.dimensions() == 2u) {
+      const auto meas1 = static_cast<unsigned int>(subs[1]);
+      getter::element(cov, meas1, meas1) = getter::element(V, 1, 1);
+    }
+  }
+
   /// Calculate the predicted chi2
   ///
   /// @brief Based on "Application of Kalman filtering to track and vertex

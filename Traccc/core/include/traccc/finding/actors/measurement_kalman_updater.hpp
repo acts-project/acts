@@ -151,16 +151,8 @@ struct measurement_updater : detray::base_actor {
       if (cand.chi2 <= std::numeric_limits<scalar_t>::epsilon() &&
           !sf.has_material()) {
         // Update measurement covariance
-        const auto V =
-            measurement_selector::calibrated_measurement_covariance<algebra_t,
-                                                                    2>(
-                meas, updater_state.m_calib_cfg);
-
-        auto& filtered_cov = bound_param.covariance();
-        getter::element(filtered_cov, e_bound_loc0, e_bound_loc0) =
-            getter::element(V, 0, 0);
-        getter::element(filtered_cov, e_bound_loc1, e_bound_loc1) =
-            getter::element(V, 1, 1);
+        measurement_selector::set_seed_measurement_covariance<algebra_t>(
+            bound_param.covariance(), meas, updater_state.m_calib_cfg);
 
         TRACCC_DEBUG_HOST("-> Updated track parameters:\n" << bound_param);
 

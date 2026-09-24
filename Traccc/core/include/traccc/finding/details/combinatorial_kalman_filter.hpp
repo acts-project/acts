@@ -260,15 +260,9 @@ combinatorial_kalman_filter(
             trk_state.filtered_params() = in_param;
 
             // Update measurement covariance
-            const auto V =
-                measurement_selector::calibrated_measurement_covariance<
-                    algebra_type, 2>(meas, config.meas_calibration);
-
-            auto& filtered_cov = trk_state.filtered_params().covariance();
-            getter::element(filtered_cov, e_bound_loc0, e_bound_loc0) =
-                getter::element(V, 0, 0);
-            getter::element(filtered_cov, e_bound_loc1, e_bound_loc1) =
-                getter::element(V, 1, 1);
+            measurement_selector::set_seed_measurement_covariance<algebra_type>(
+                trk_state.filtered_params().covariance(), meas,
+                config.meas_calibration);
           }
         } else {
           // Run the Kalman update on the track state
