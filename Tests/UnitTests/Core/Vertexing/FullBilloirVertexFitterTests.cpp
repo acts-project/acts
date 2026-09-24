@@ -23,6 +23,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -142,6 +143,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   vertexFitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
   vertexFitterCfg.trackLinearizer
       .connect<&HelicalTrackLinearizer::linearizeTrack>(&linearizer);
+  vertexFitterCfg.bField = bField;
   VertexFitter billoirFitter(vertexFitterCfg);
   auto fieldCache = bField->makeCache(magFieldContext);
   // Vertexing options for default tracks
@@ -288,6 +290,60 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
         "Testing FullBilloirVertexFitter with custom tracks (with vertex "
         "constraint).") {
       fit(customBilloirFitter, customInputTracks, customVfOptionsConstr);
+    }
+    BOOST_TEST_CONTEXT(
+        "Testing FullBilloirVertexFitter through the IVertexFitter "
+        "interface.") {
+      const IVertexFitter& iface = billoirFitter;
+      VertexFitInput input{inputTracks, Vector4::Zero(), std::nullopt};
+      BOOST_CHECK_THROW(
+          static_cast<void>(
+              static_cast<const IVertexFitter&>(customBilloirFitter)
+                  .fit(input, geoContext, magFieldContext)),
+          std::invalid_argument);
+
+      // Both unconstrained and constrained fits agree with the direct API.
+      for (const auto* options : {&vfOptions, &vfOptionsConstr}) {
+        input.seedPosition = options->constraint.fullPosition();
+        input.constraint = options->useConstraintInFit
+                               ? std::optional<Vertex>(options->constraint)
+                               : std::nullopt;
+        auto result = iface.fit(input, geoContext, magFieldContext);
+        auto direct = billoirFitter.fit(inputTracks, *options, fieldCache);
+        BOOST_REQUIRE(result.ok());
+        BOOST_REQUIRE(direct.ok());
+        CHECK_CLOSE_ABS(result->fullPosition(), direct->fullPosition(), 1e-9);
+        CHECK_CLOSE_ABS(result->fullCovariance(), direct->fullCovariance(),
+                        1e-9);
+        BOOST_CHECK_EQUAL(result->tracks().size(), inputTracks.size());
+      }
+
+      // A constraint must not replace an explicitly supplied seed.
+      std::optional<Vector4> firstLinearizationPoint;
+      auto recordLinearization = [&](const BoundTrackParameters& params,
+                                     double time, const Surface& surface,
+                                     const GeometryContext& gctx,
+                                     const MagneticFieldContext& mctx,
+                                     MagneticFieldProvider::Cache& cache) {
+        if (!firstLinearizationPoint) {
+          Vector4 point;
+          point.head<3>() = surface.center(gctx);
+          point[3] = time;
+          firstLinearizationPoint = point;
+        }
+        return linearizer.linearizeTrack(params, time, surface, gctx, mctx,
+                                         cache);
+      };
+      auto seedConfig = vertexFitterCfg;
+      seedConfig.trackLinearizer.connect(recordLinearization);
+      VertexFitter seedFitter(seedConfig);
+      input.seedPosition = input.constraint->fullPosition();
+      input.seedPosition[0] += 0.1;
+      input.seedPosition[3] += 0.1;
+      auto seeded = seedFitter.fit(input, geoContext, magFieldContext);
+      BOOST_REQUIRE(seeded.ok());
+      BOOST_REQUIRE(firstLinearizationPoint.has_value());
+      CHECK_CLOSE_ABS(*firstLinearizationPoint, input.seedPosition, 1e-12);
     }
   }
 }

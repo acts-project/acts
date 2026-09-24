@@ -15,9 +15,12 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+
+#include <span>
 
 namespace Acts {
 
@@ -45,7 +48,7 @@ namespace Acts {
 /// ACTS White Paper: Cross-Covariance Matrices in the Billoir Vertex Fit
 /// https://acts.readthedocs.io/en/latest/white_papers/billoir-covariances.html
 /// Author(s) Russo, F
-class FullBilloirVertexFitter {
+class FullBilloirVertexFitter final : public IVertexFitter {
  public:
   /// Configuration options for the Billoir vertex fitter.
   struct Config {
@@ -57,6 +60,15 @@ class FullBilloirVertexFitter {
 
     /// Track linearizer
     TrackLinearizer trackLinearizer;
+
+    /// Magnetic field provider, used to create a field cache for
+    /// the interface fit overload. This has to be the same field that the track
+    /// linearizer uses.
+    ///
+    /// Optional: it is required only to drive this fitter through the
+    /// @c IVertexFitter interface. Callers using @c fit directly supply their
+    /// own field cache and can leave this unset.
+    std::shared_ptr<const MagneticFieldProvider> bField;
   };
 
   /// @brief Constructor for user-defined InputTrack type
@@ -66,21 +78,7 @@ class FullBilloirVertexFitter {
   explicit FullBilloirVertexFitter(
       const Config& cfg,
       std::unique_ptr<const Logger> logger =
-          getDefaultLogger("FullBilloirVertexFitter", Logging::INFO))
-      : m_cfg(cfg), m_logger(std::move(logger)) {
-    if (!m_cfg.extractParameters.connected()) {
-      throw std::invalid_argument(
-          "FullBilloirVertexFitter: "
-          "No function to extract parameters "
-          "provided.");
-    }
-
-    if (!m_cfg.trackLinearizer.connected()) {
-      throw std::invalid_argument(
-          "FullBilloirVertexFitter: "
-          "No track linearizer provided.");
-    }
-  }
+          getDefaultLogger("FullBilloirVertexFitter", Logging::INFO));
 
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
@@ -89,11 +87,28 @@ class FullBilloirVertexFitter {
   /// @param fieldCache The magnetic field cache
   ///
   /// @return Fitted vertex
-  Result<Vertex> fit(const std::vector<InputTrack>& paramVector,
+  Result<Vertex> fit(std::span<const InputTrack> paramVector,
                      const VertexingOptions& vertexingOptions,
                      MagneticFieldProvider::Cache& fieldCache) const;
 
+  /// @copydoc IVertexFitter::fit
+  /// @note Requires Config::bField to match the linearizer's provider.
+  /// @throws std::invalid_argument if Config::bField is missing
+  Result<Vertex> fit(const VertexFitInput& input, const GeometryContext& gctx,
+                     const MagneticFieldContext& mctx) const override;
+
  private:
+  /// Fit with an explicit seed and caller-provided magnetic field cache.
+  /// @param paramVector Tracks to fit
+  /// @param vertexingOptions Contexts and constraint settings
+  /// @param fieldCache Magnetic field cache
+  /// @param seedPosition Initial linearization point
+  /// @return Fitted vertex or a fitting error
+  Result<Vertex> fitImpl(std::span<const InputTrack> paramVector,
+                         const VertexingOptions& vertexingOptions,
+                         MagneticFieldProvider::Cache& fieldCache,
+                         const Vector4& seedPosition) const;
+
   /// Configuration object
   Config m_cfg;
 
@@ -101,7 +116,7 @@ class FullBilloirVertexFitter {
   std::unique_ptr<const Logger> m_logger;
 
   /// Private access to logging instance
-  const Logger& logger() const { return *m_logger; }
+  const Logger& logger() const;
 };
 
 }  // namespace Acts

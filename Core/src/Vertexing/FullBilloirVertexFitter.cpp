@@ -14,6 +14,9 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
+#include <stdexcept>
+#include <utility>
+
 namespace {
 
 /// @struct BilloirTrack
@@ -56,10 +59,55 @@ struct BilloirVertex {
 
 }  // namespace
 
+Acts::FullBilloirVertexFitter::FullBilloirVertexFitter(
+    const Config& cfg, std::unique_ptr<const Logger> logger)
+    : m_cfg(cfg), m_logger(std::move(logger)) {
+  if (!m_cfg.extractParameters.connected()) {
+    throw std::invalid_argument(
+        "FullBilloirVertexFitter: "
+        "No function to extract parameters "
+        "provided.");
+  }
+
+  if (!m_cfg.trackLinearizer.connected()) {
+    throw std::invalid_argument(
+        "FullBilloirVertexFitter: "
+        "No track linearizer provided.");
+  }
+}
+
 Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
-    const std::vector<InputTrack>& paramVector,
+    const VertexFitInput& input, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx) const {
+  if (m_cfg.bField == nullptr) {
+    throw std::invalid_argument(
+        "FullBilloirVertexFitter: Config::bField is required to use this "
+        "fitter through the IVertexFitter interface.");
+  }
+  auto fieldCache = m_cfg.bField->makeCache(mctx);
+  VertexingOptions options =
+      input.constraint ? VertexingOptions(gctx, mctx, *input.constraint)
+                       : VertexingOptions(gctx, mctx);
+  return fitImpl(input.tracks, options, fieldCache, input.seedPosition);
+}
+
+const Acts::Logger& Acts::FullBilloirVertexFitter::logger() const {
+  return *m_logger;
+}
+
+Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
+    std::span<const InputTrack> paramVector,
     const VertexingOptions& vertexingOptions,
     MagneticFieldProvider::Cache& fieldCache) const {
+  return fitImpl(paramVector, vertexingOptions, fieldCache,
+                 vertexingOptions.constraint.fullPosition());
+}
+
+Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fitImpl(
+    std::span<const InputTrack> paramVector,
+    const VertexingOptions& vertexingOptions,
+    MagneticFieldProvider::Cache& fieldCache,
+    const Vector4& seedPosition) const {
   unsigned int nTracks = paramVector.size();
   double chi2 = std::numeric_limits<double>::max();
 
@@ -91,7 +139,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
   std::vector<BilloirTrack> billoirTracks;
   std::vector<Vector3> trackMomenta;
   // Initial guess of the 4D vertex position
-  Vector4 linPoint = vertexingOptions.constraint.fullPosition();
+  Vector4 linPoint = seedPosition;
   Vertex fittedVertex;
 
   for (int nIter = 0; nIter < m_cfg.maxIterations; ++nIter) {
