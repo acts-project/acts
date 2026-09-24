@@ -29,7 +29,7 @@ from acts.examples import (
     GenericDetector,
 )
 from acts.examples.json import (
-    MaterialMapWriter,
+    TrackingGeometryMaterialJsonWriter,
     JsonFormat,
 )
 
@@ -452,7 +452,7 @@ def test_json_material_writer(tmp_path, fmt):
 
     assert not out.exists()
 
-    jmw = MaterialMapWriter(level=acts.logging.WARNING, filePath=out)
+    jmw = TrackingGeometryMaterialJsonWriter(level=acts.logging.WARNING, filePath=out)
     assert not out.exists()
     jmw.write(trackingGeometry)
 

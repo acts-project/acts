@@ -37,14 +37,17 @@ def test_json_material_decorator():
 def test_material_map_writer(tmp_path):
     import json
     from acts.examples import GenericDetector
-    from acts.examples.json import MaterialMapWriter, JsonMaterialWriter
+    from acts.examples.json import (
+        TrackingGeometryMaterialJsonWriter,
+        JsonMaterialWriter,
+    )
     from acts.json import TrackingGeometryMaterialJsonConverter
 
     converter = TrackingGeometryMaterialJsonConverter()
     output = tmp_path / "material.json"
     options = TrackingGeometryMaterialJsonConverter.Options()
     options.materialFractionBits = 16
-    writer = MaterialMapWriter(
+    writer = TrackingGeometryMaterialJsonWriter(
         filePath=output,
         options=options,
         includeNonMaterial=True,

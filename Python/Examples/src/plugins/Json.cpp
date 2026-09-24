@@ -16,7 +16,7 @@
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupReader.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupWriter.hpp"
-#include "ActsExamples/Io/Json/MaterialMapWriter.hpp"
+#include "ActsExamples/Io/Json/TrackingGeometryMaterialJsonWriter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -63,16 +63,20 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
 
   {
     auto cls =
-        py::class_<MaterialMapWriter, IMaterialWriter,
-                   std::shared_ptr<MaterialMapWriter>>(json,
-                                                       "MaterialMapWriter")
-            .def(py::init<const MaterialMapWriter::Config&, Logging::Level>(),
+        py::class_<TrackingGeometryMaterialJsonWriter, IMaterialWriter,
+                   std::shared_ptr<TrackingGeometryMaterialJsonWriter>>(
+            json, "TrackingGeometryMaterialJsonWriter")
+            .def(py::init<const TrackingGeometryMaterialJsonWriter::Config&,
+                          Logging::Level>(),
                  py::arg("config"), py::arg("level"))
-            .def("writeMaterial", &MaterialMapWriter::writeMaterial)
-            .def("write", &MaterialMapWriter::write)
-            .def_property_readonly("config", &MaterialMapWriter::config);
+            .def("writeMaterial",
+                 &TrackingGeometryMaterialJsonWriter::writeMaterial)
+            .def("write", &TrackingGeometryMaterialJsonWriter::write)
+            .def_property_readonly("config",
+                                   &TrackingGeometryMaterialJsonWriter::config);
     auto c =
-        py::class_<MaterialMapWriter::Config>(cls, "Config").def(py::init<>());
+        py::class_<TrackingGeometryMaterialJsonWriter::Config>(cls, "Config")
+            .def(py::init<>());
     ACTS_PYTHON_STRUCT(c, filePath, includeNonMaterial, options);
   }
 
@@ -87,7 +91,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
                              Logging::Level level) {
                    if (PyErr_WarnEx(PyExc_DeprecationWarning,
                                     "JsonMaterialWriter is deprecated; use "
-                                    "MaterialMapWriter.",
+                                    "TrackingGeometryMaterialJsonWriter.",
                                     1) < 0) {
                      throw py::error_already_set();
                    }

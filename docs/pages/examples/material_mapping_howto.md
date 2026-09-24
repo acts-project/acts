@@ -67,7 +67,7 @@ python Examples/Scripts/Python/geometry.py
 This writes `geometry-map.json` in the current directory (among other outputs).
 The relevant part is in `runGeometry()` in
 `Examples/Scripts/Python/geometry.py`, which configures a
-`MaterialMapWriter`, which writes versioned surface material documents.
+`TrackingGeometryMaterialJsonWriter`, which writes versioned surface material documents.
 
 > [!important]
 > The converter must be configured with `processNonMaterial=True`. Surfaces that

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Json/MaterialMapWriter.hpp"
+#include "ActsExamples/Io/Json/TrackingGeometryMaterialJsonWriter.hpp"
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -18,21 +18,23 @@
 #include <vector>
 
 namespace ActsExamples {
-MaterialMapWriter::MaterialMapWriter(const Config& config,
-                                     Acts::Logging::Level /*level*/)
+TrackingGeometryMaterialJsonWriter::TrackingGeometryMaterialJsonWriter(
+    const Config& config, Acts::Logging::Level /*level*/)
     : m_config(config) {
   if (m_config.filePath.empty()) {
-    throw std::invalid_argument("MaterialMapWriter needs an output file path");
+    throw std::invalid_argument(
+        "TrackingGeometryMaterialJsonWriter needs an output file path");
   }
 }
 
-void MaterialMapWriter::writeMaterial(
+void TrackingGeometryMaterialJsonWriter::writeMaterial(
     const Acts::TrackingGeometryMaterial& material) {
   Acts::TrackingGeometryMaterialJsonConverter{}.toFile(
       material, m_config.filePath, m_config.options);
 }
 
-void MaterialMapWriter::write(const Acts::TrackingGeometry& geometry) {
+void TrackingGeometryMaterialJsonWriter::write(
+    const Acts::TrackingGeometry& geometry) {
   std::vector<const Acts::Surface*> surfaces;
   Acts::SurfaceMaterialMaps materials;
   geometry.visitSurfaces(
@@ -54,7 +56,8 @@ void MaterialMapWriter::write(const Acts::TrackingGeometry& geometry) {
   geometry.visitVolumes([](const Acts::TrackingVolume* volume) {
     if (volume->volumeMaterial() != nullptr) {
       throw std::invalid_argument(
-          "MaterialMapWriter supports surface material only; volume material "
+          "TrackingGeometryMaterialJsonWriter supports surface material only; "
+          "volume material "
           "cannot be exported");
     }
   });

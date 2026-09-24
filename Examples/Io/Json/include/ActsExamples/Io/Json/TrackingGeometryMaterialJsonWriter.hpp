@@ -28,7 +28,7 @@ namespace ActsExamples {
 /// writeMaterial() implements the mapping output interface. The separate
 /// write() convenience method exports assignments directly from an existing
 /// geometry.
-class MaterialMapWriter final : public IMaterialWriter {
+class TrackingGeometryMaterialJsonWriter final : public IMaterialWriter {
  public:
   /// Writer configuration.
   struct Config {
@@ -43,7 +43,8 @@ class MaterialMapWriter final : public IMaterialWriter {
   /// Construct a writer.
   /// @param config Output configuration
   /// @param level Logging level
-  MaterialMapWriter(const Config& config, Acts::Logging::Level level);
+  TrackingGeometryMaterialJsonWriter(const Config& config,
+                                     Acts::Logging::Level level);
 
   /// Write assignments. Volume material is unsupported and rejected.
   /// @param material Material assignments

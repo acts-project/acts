@@ -26,7 +26,7 @@ from acts.examples.root import (
 )
 
 from acts.examples.json import (
-    MaterialMapWriter,
+    TrackingGeometryMaterialJsonWriter,
 )
 
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
@@ -84,7 +84,7 @@ def runMaterialMapping(
     for extension in outputMapFormats:
         if extension in ("json", "cbor"):
             materialMapWriters.append(
-                MaterialMapWriter(
+                TrackingGeometryMaterialJsonWriter(
                     level=loglevel,
                     filePath=outputFileBase + "_map." + extension,
                 )

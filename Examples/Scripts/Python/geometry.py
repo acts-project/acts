@@ -18,7 +18,7 @@ from acts.examples import (
 
 from acts.examples.json import (
     JsonSurfacesWriter,
-    MaterialMapWriter,
+    TrackingGeometryMaterialJsonWriter,
 )
 
 
@@ -86,7 +86,7 @@ def runGeometry(
             writer.write(context)
 
             if outputMaterialMap and ievt == 0:
-                jmw = MaterialMapWriter(
+                jmw = TrackingGeometryMaterialJsonWriter(
                     level=acts.logging.VERBOSE,
                     includeNonMaterial=True,
                     filePath=outputDir / "geometry-map.json",

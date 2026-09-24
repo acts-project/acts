@@ -15,7 +15,7 @@ from acts.examples import (
 
 from acts.examples.json import (
     JsonSurfacesWriter,
-    MaterialMapWriter,
+    TrackingGeometryMaterialJsonWriter,
 )
 
 
@@ -76,7 +76,7 @@ def runITk(
             if not material:
                 outname = "geometry-map"
 
-            jmw = MaterialMapWriter(
+            jmw = TrackingGeometryMaterialJsonWriter(
                 level=acts.logging.VERBOSE,
                 includeNonMaterial=True,
                 filePath=json_dir / (outname + ".json"),
