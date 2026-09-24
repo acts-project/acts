@@ -50,10 +50,11 @@ constexpr std::size_t kMatZBins = 10;
 constexpr std::size_t kMatRBins = 10;
 
 auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
-                         std::regex layerFilter) {
-  return [&builder, det = std::move(det), layerFilter = std::move(layerFilter)](
-             const std::optional<dd4hep::DetElement>& elem,
-             Acts::detail::LayerNodePtr layer)
+                         std::regex layerFilter,
+                         Acts::CylinderVolumeBounds::Face barrelMaterialFace) {
+  return [&builder, det = std::move(det), layerFilter = std::move(layerFilter),
+          barrelMaterialFace](const std::optional<dd4hep::DetElement>& elem,
+                              Acts::detail::LayerNodePtr layer)
              -> Acts::detail::BlueprintNodePtr {
     layer->setEnvelope(detail::kLayerEnvelope);
 
@@ -79,8 +80,11 @@ auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
           builder.backend().constant("{}_b{}_sf_b_phi", det, layerIdx),
           builder.backend().constant("{}_b_sf_b_z", det)};
 
-      // Barrel: thin cylindrical shell -> outer mantle face carries material
-      matNode->configureFace(OuterCylinder,
+      // Barrel: thin cylindrical shell -> one mantle face carries material.
+      // Which face (inner vs. outer) is a per-subsystem convention (Pixel
+      // uses outer, ShortStrips/LongStrips use inner) chosen so that no two
+      // radially-stacked layers independently claim the same fused portal.
+      matNode->configureFace(barrelMaterialFace,
                              Acts::AxisSpec::DeferredEquidistant(
                                  kMatPhiBins, Acts::AxisDirection::AxisRPhi),
                              Acts::AxisSpec::DeferredEquidistant(
@@ -114,10 +118,10 @@ auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
   };
 }
 
-void addDirectLayerSubsystem(const BlueprintBuilder& builder,
-                             Acts::ContainerBlueprintNode& outer,
-                             std::string assembly, std::string det,
-                             const std::regex& layerFilter) {
+void addDirectLayerSubsystem(
+    const BlueprintBuilder& builder, Acts::ContainerBlueprintNode& outer,
+    std::string assembly, std::string det, const std::regex& layerFilter,
+    Acts::CylinderVolumeBounds::Face barrelMaterialFace) {
   const auto assemblyElement = builder.findDetElementByName(assembly);
   if (!assemblyElement.has_value()) {
     throw std::runtime_error(
@@ -131,8 +135,8 @@ void addDirectLayerSubsystem(const BlueprintBuilder& builder,
   auto containerNode = std::make_shared<Acts::CylinderContainerBlueprintNode>(
       assemblyName, Acts::AxisDirection::AxisZ);
 
-  auto layerCustomizer =
-      makeLayerCustomizer(builder, std::move(det), layerFilter);
+  auto layerCustomizer = makeLayerCustomizer(builder, std::move(det),
+                                             layerFilter, barrelMaterialFace);
 
   auto addLayerChildren = [&](const auto& elements, auto makeNode) {
     for (const auto& element : elements) {
@@ -167,10 +171,10 @@ void addDirectLayerSubsystem(const BlueprintBuilder& builder,
   outer.addChild(std::move(containerNode));
 }
 
-void addBarrelEndcapSubsystem(const BlueprintBuilder& builder,
-                              Acts::ContainerBlueprintNode& outer,
-                              std::string assembly, std::string det,
-                              const std::regex& layerFilter) {
+void addBarrelEndcapSubsystem(
+    const BlueprintBuilder& builder, Acts::ContainerBlueprintNode& outer,
+    std::string assembly, std::string det, const std::regex& layerFilter,
+    Acts::CylinderVolumeBounds::Face barrelMaterialFace) {
   const auto assemblyElement = builder.findDetElementByName(assembly);
   if (!assemblyElement.has_value()) {
     throw std::runtime_error(
@@ -181,7 +185,8 @@ void addBarrelEndcapSubsystem(const BlueprintBuilder& builder,
       .setAssembly(*assemblyElement)
       .setSensorAxes("XYZ", "XZY")
       .setLayerFilter(layerFilter)
-      .onLayer(makeLayerCustomizer(builder, std::move(det), layerFilter))
+      .onLayer(makeLayerCustomizer(builder, std::move(det), layerFilter,
+                                   barrelMaterialFace))
       .onContainer([](const auto&, Acts::ContainerBlueprintNode& node) {
         node.setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
         node.setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
@@ -190,10 +195,10 @@ void addBarrelEndcapSubsystem(const BlueprintBuilder& builder,
       .addTo(outer);
 }
 
-void addDirectLayerGroupedSubsystem(const BlueprintBuilder& builder,
-                                    Acts::ContainerBlueprintNode& outer,
-                                    std::string assembly, std::string det,
-                                    const std::regex& layerFilter) {
+void addDirectLayerGroupedSubsystem(
+    const BlueprintBuilder& builder, Acts::ContainerBlueprintNode& outer,
+    std::string assembly, std::string det, const std::regex& layerFilter,
+    Acts::CylinderVolumeBounds::Face barrelMaterialFace) {
   const auto assemblyElement = builder.findDetElementByName(assembly);
   if (!assemblyElement.has_value()) {
     throw std::runtime_error(
@@ -207,8 +212,8 @@ void addDirectLayerGroupedSubsystem(const BlueprintBuilder& builder,
   auto containerNode = std::make_shared<Acts::CylinderContainerBlueprintNode>(
       assemblyName, Acts::AxisDirection::AxisZ);
 
-  auto layerCustomizer =
-      makeLayerCustomizer(builder, std::move(det), layerFilter);
+  auto layerCustomizer = makeLayerCustomizer(builder, std::move(det),
+                                             layerFilter, barrelMaterialFace);
 
   auto sensorToLayerKey = [&](const dd4hep::DetElement& elem) {
     auto current = elem;
@@ -292,12 +297,22 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
         mat.addChild(builder.backend().makeBeampipe());
       });
 
+  // Per-subsystem barrel material face: matches the ODDs own convention
+  // (Pixel layers carry material on their outer face, ShortStrips/LongStrips
+  // on their inner face) so that no two radially-stacked layers independently
+  // claim the same fused portal. Hardcoded here rather than read from the
+  // DD4hep XML, since that annotation is ODD-specific and not guaranteed to
+  // be available for other detector geometries.
+  using enum Acts::CylinderVolumeBounds::Face;
   addBarrelEndcapSubsystem(builder, outer, "Pixels", "pix",
-                           ActsPlugins::DD4hep::detail::kPixelLayerFilter);
+                           ActsPlugins::DD4hep::detail::kPixelLayerFilter,
+                           OuterCylinder);
   addBarrelEndcapSubsystem(builder, outer, "ShortStrips", "ss",
-                           ActsPlugins::DD4hep::detail::kShortStripLayerFilter);
+                           ActsPlugins::DD4hep::detail::kShortStripLayerFilter,
+                           InnerCylinder);
   addBarrelEndcapSubsystem(builder, outer, "LongStrips", "ls",
-                           ActsPlugins::DD4hep::detail::kLongStripLayerFilter);
+                           ActsPlugins::DD4hep::detail::kLongStripLayerFilter,
+                           InnerCylinder);
 
   return root.construct(BlueprintOptions{}, gctx, logger);
 }
@@ -324,12 +339,16 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
 
   outer.addChild(builder.backend().makeBeampipe());
 
+  using enum Acts::CylinderVolumeBounds::Face;
   addDirectLayerSubsystem(builder, outer, "Pixels", "pix",
-                          ActsPlugins::DD4hep::detail::kPixelLayerFilter);
+                          ActsPlugins::DD4hep::detail::kPixelLayerFilter,
+                          OuterCylinder);
   addDirectLayerSubsystem(builder, outer, "ShortStrips", "ss",
-                          ActsPlugins::DD4hep::detail::kShortStripLayerFilter);
+                          ActsPlugins::DD4hep::detail::kShortStripLayerFilter,
+                          InnerCylinder);
   addDirectLayerSubsystem(builder, outer, "LongStrips", "ls",
-                          ActsPlugins::DD4hep::detail::kLongStripLayerFilter);
+                          ActsPlugins::DD4hep::detail::kLongStripLayerFilter,
+                          InnerCylinder);
 
   return root.construct(BlueprintOptions{}, gctx, logger);
 }
@@ -356,15 +375,16 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayerGrouped(
 
   outer.addChild(builder.backend().makeBeampipe());
 
-  addDirectLayerGroupedSubsystem(
-      builder, outer, "Pixels", "pix",
-      ActsPlugins::DD4hep::detail::kPixelLayerFilter);
+  using enum Acts::CylinderVolumeBounds::Face;
+  addDirectLayerGroupedSubsystem(builder, outer, "Pixels", "pix",
+                                 ActsPlugins::DD4hep::detail::kPixelLayerFilter,
+                                 OuterCylinder);
   addDirectLayerGroupedSubsystem(
       builder, outer, "ShortStrips", "ss",
-      ActsPlugins::DD4hep::detail::kShortStripLayerFilter);
+      ActsPlugins::DD4hep::detail::kShortStripLayerFilter, InnerCylinder);
   addDirectLayerGroupedSubsystem(
       builder, outer, "LongStrips", "ls",
-      ActsPlugins::DD4hep::detail::kLongStripLayerFilter);
+      ActsPlugins::DD4hep::detail::kLongStripLayerFilter, InnerCylinder);
 
   return root.construct(BlueprintOptions{}, gctx, logger);
 }
