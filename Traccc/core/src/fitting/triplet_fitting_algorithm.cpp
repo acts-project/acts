@@ -28,10 +28,9 @@ triplet_fitting_algorithm::output_type triplet_fitting_algorithm::operator()(
   return host_detector_magnetic_field_visitor<detector_type_list,
                                               bfield_type_list<scalar>>(
       det, field,
-      [&]<typename detector_t, typename bfield_view_t>(
-          const typename detector_t::host& detector,
-          const bfield_view_t bfield) {
-        traccc::triplet_fitter<typename detector_t::host, bfield_view_t> fitter{
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detector_t& detector, const bfield_view_t bfield) {
+        traccc::triplet_fitter<detector_t, bfield_view_t> fitter{
             detector, bfield, m_config};
 
         return details::triplet_fitting<default_algebra>(

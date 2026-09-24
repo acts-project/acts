@@ -69,11 +69,16 @@ void from_json(const nlohmann::json& j, volumeMaterialPointer& material);
 /// Convert surfaceMaterialPointer to JSON
 /// @param j Destination JSON object
 /// @param material Source surfaceMaterialPointer to convert
+/// @deprecated Use SurfaceMaterialJsonConverter::toJson instead
+[[deprecated("use SurfaceMaterialJsonConverter")]]
 void to_json(nlohmann::json& j, const surfaceMaterialPointer& material);
 
 /// Convert JSON to surfaceMaterialPointer
 /// @param j Source JSON object
 /// @param material Destination surfaceMaterialPointer to populate
+/// @note the caller takes ownership of the returned raw pointer
+/// @deprecated Use SurfaceMaterialJsonConverter::fromJson instead
+[[deprecated("use SurfaceMaterialJsonConverter")]]
 void from_json(const nlohmann::json& j, surfaceMaterialPointer& material);
 
 /// JSON serialization mapping for MappingType enum

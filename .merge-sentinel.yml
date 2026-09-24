@@ -37,25 +37,28 @@ rules:
      - "main"
      - "develop/*"
     paths:
-     # Both spellings: the glob engine here is undocumented, so which one is
-     # recursive cannot be assumed.
+     # Keep in sync with .github/detray-traccc-filters.yml and the workflow.
+     # Include direct and nested files for the sentinel glob matcher.
      - "Detray/*"
      - "Detray/**/*"
      - ".github/workflows/detray.yml"
+     - ".github/detray-traccc-filters.yml"
     required_pattern:
      - "Detray / *"
 
-  # Without this the Traccc jobs run on a queue entry but do not gate it:
-  # pending only blocks when required, and they take ~25 minutes, so the
-  # aggregate would go green long before they report. A Detray-only change
-  # still runs them (traccc.yml triggers on Detray/** too) and a *failure*
-  # fails the gate whether required or not -- only the wait is missing there.
+  # Require Traccc for all inputs that trigger it, including Detray changes,
+  # so the gate waits for these jobs before allowing a merge.
   - branch_filter:
      - "main"
      - "develop/*"
     paths:
+     # Keep in sync with .github/detray-traccc-filters.yml and the workflow.
+     # Include direct and nested files for the sentinel glob matcher.
      - "Traccc/*"
      - "Traccc/**/*"
+     - "Detray/*"
+     - "Detray/**/*"
      - ".github/workflows/traccc.yml"
+     - ".github/detray-traccc-filters.yml"
     required_pattern:
      - "Traccc / *"

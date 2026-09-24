@@ -495,7 +495,7 @@ GTEST_TEST(detray_grid, multi_axis) {
   // Transfer to an owning multi-axis, which uses vecmem::device_vector
   cartesian_3D<is_owning, host_container_types>::view_type axes_view =
       get_data(axes_own);
-  cartesian_3D<is_owning, device_container_types> axes_device(axes_view);
+  cartesian_3D<is_owning, const_device_container_types> axes_device(axes_view);
 
   // Get single axis objects
   auto x_axis_device = axes_device.get_axis<label::e_x>();

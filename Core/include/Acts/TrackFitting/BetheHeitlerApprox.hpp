@@ -179,32 +179,6 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
                                double noChangeLimit,
                                double singleGaussianLimit);
 
-  /// Construct the Bethe-Heitler approximation description with two
-  /// parameterizations, one for lower ranges, one for higher ranges.
-  /// Is it assumed that the lower limit of the high-x/x0 data is equal
-  /// to the upper limit of the low-x/x0 data.
-  ///
-  /// @param lowData data for the lower x/x0 range
-  /// @param highData data for the higher x/x0 range
-  /// @param lowTransform whether the low data need to be transformed
-  /// @param highTransform whether the high data need to be transformed
-  /// @param lowLimit the upper limit for the low data
-  /// @param highLimit the upper limit for the high data
-  /// @param clampToRange whether to clamp the input x/x0 to the allowed range
-  /// @param noChangeLimit limit below which no change is applied
-  /// @param singleGaussianLimit limit below which a single Gaussian is used
-  /// @deprecated Use constructor taking std::vector<RangeData> instead
-  [[deprecated("Use constructor taking std::vector<RangeData> instead")]]
-  PolynomialBetheHeitlerApprox(const Data &lowData, const Data &highData,
-                               bool lowTransform, bool highTransform,
-                               double lowLimit, double highLimit,
-                               bool clampToRange, double noChangeLimit,
-                               double singleGaussianLimit)
-      : PolynomialBetheHeitlerApprox(
-            {{0.0, lowLimit, lowData, lowTransform},
-             {lowLimit, highLimit, highData, highTransform}},
-            clampToRange, noChangeLimit, singleGaussianLimit) {}
-
   /// Returns the number of components the returned mixture will have
   /// @return Number of components in the mixture
   std::size_t maxComponents() const override {
@@ -243,9 +217,6 @@ class PolynomialBetheHeitlerApprox : public BetheHeitlerApprox {
   double m_noChangeLimit = 0;
   double m_singleGaussianLimit = 0;
 };
-
-/// @deprecated Use PolynomialBetheHeitlerApprox instead
-using AtlasBetheHeitlerApprox = PolynomialBetheHeitlerApprox;
 
 /// Creates a @ref PolynomialBetheHeitlerApprox object based on a default
 /// configuration, stored as static data in the source code.

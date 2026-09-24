@@ -33,7 +33,7 @@ class bin_storage : public detray::ranges::view_interface<
 
  public:
   /// Bin type: single or static_array
-  using bin_type = bin_t;
+  using bin_type = detray::ranges::range_value_t<bin_range_t>;
   /// Backend storage type for the grid
   using bin_container_type = vector_t<bin_t>;
 

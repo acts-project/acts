@@ -11,6 +11,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
@@ -24,9 +25,11 @@ std::unique_ptr<Acts::ISurfaceMaterialAccumulator::State>
 Acts::BinnedSurfaceMaterialAccumulator::createState(
     const GeometryContext& gctx) const {
   auto state = std::make_unique<State>();
+  state->materialSurfaceRegistry.emplace(m_cfg.materialSurfaces);
 
   /// Create the surface accumulation
-  for (const auto& surface : m_cfg.materialSurfaces) {
+  for (const auto& [registeredId, surface] :
+       state->materialSurfaceRegistry->surfaces()) {
     GeometryIdentifier geoID = surface->geometryId();
 
     // Get the Surface Material
@@ -166,4 +169,17 @@ Acts::BinnedSurfaceMaterialAccumulator::finalizeMaterial(
   }
 
   return sMaterials;
+}
+
+Acts::TrackingGeometryMaterial
+Acts::BinnedSurfaceMaterialAccumulator::finalizeMaps(
+    ISurfaceMaterialAccumulator::State& state,
+    const GeometryContext& gctx) const {
+  auto* concrete = dynamic_cast<State*>(&state);
+  if (concrete == nullptr || !concrete->materialSurfaceRegistry) {
+    throw std::invalid_argument(
+        "State was not created by this material accumulator");
+  }
+  return concrete->materialSurfaceRegistry->materialMaps(
+      finalizeMaterial(state, gctx));
 }

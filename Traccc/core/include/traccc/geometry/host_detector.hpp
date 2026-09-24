@@ -20,35 +20,33 @@ namespace traccc {
 /// Typeless, owning, host detector object
 class host_detector {
  public:
-  template <typename detector_traits_t>
-  void set(typename detector_traits_t::host&& obj)
-    requires(is_detector_traits<detector_traits_t>)
-  {
-    m_obj.set<typename detector_traits_t::host>(std::move(obj));
+  /// @tparam T either a detray metadata or detector type (checked by the trait)
+  /// @{
+  template <typename T>
+  void set(detray::detector_host_t<T>&& obj) {
+    m_obj.set<detray::detector_host_t<T>>(std::move(obj));
   }
 
-  template <typename detector_traits_t>
-  bool is() const
-    requires(is_detector_traits<detector_traits_t>)
-  {
-    return (type() == typeid(typename detector_traits_t::host));
+  template <typename T>
+  bool is() const {
+    return (type() == typeid(detray::detector_host_t<T>));
   }
 
   const std::type_info& type() const { return m_obj.type(); }
 
-  template <typename detector_traits_t>
-  const typename detector_traits_t::host& as() const
-    requires(is_detector_traits<detector_traits_t>)
-  {
-    return m_obj.as<typename detector_traits_t::host>();
+  template <typename T>
+  const detray::detector_host_t<T>& as() const {
+    return m_obj.as<detray::detector_host_t<T>>();
   }
+  /// @}
 
  private:
   move_only_any m_obj;
 };
 
 /// @brief Helper function for `host_detector_visitor`
-template <typename callable_t, typename detector_t, typename... detector_ts>
+template <typename callable_t, detray::concepts::detector detector_t,
+          detray::concepts::detector... detector_ts>
 auto host_detector_visitor_helper(const host_detector& host_detector,
                                   callable_t&& callable,
                                   std::tuple<detector_t, detector_ts...>*) {

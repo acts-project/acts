@@ -285,8 +285,7 @@ AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
 Matrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   // calculate the transformation to local coordinates
-  Vector3 localPosition =
-      inverseTransform(localToGlobalTransform(gctx)) * position;
+  Vector3 localPosition = localToGlobalTransform(gctx).inverse() * position;
   double localPhi = VectorHelpers::phi(localPosition);
 
   Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();

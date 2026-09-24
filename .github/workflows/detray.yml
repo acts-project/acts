@@ -10,19 +10,21 @@ on:
       - 'releases'
       - 'release/**'
       - 'gh-readonly-queue/**'
+    # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Detray/**"
       - ".github/workflows/detray.yml"
+      - ".github/detray-traccc-filters.yml"
   pull_request:
     branches:
       - main
+    # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Detray/**"
       - ".github/workflows/detray.yml"
-  # merge_group does not support path filters, so this runs on every queue
-  # entry targeting main, not just ones touching Detray/. Only required via
-  # merge-sentinel's "Detray / *" pattern, which is itself path-gated, so a
-  # non-Detray entry running this wastes compute but doesn't block merging.
+      - ".github/detray-traccc-filters.yml"
+  # The changes job applies path filtering to merge groups, which do not
+  # support the workflow-level path filters above.
   merge_group:
     types: [checks_requested]
 
@@ -45,9 +47,34 @@ env:
 
 # All the different build/test jobs.
 jobs:
+  # Like Builds/changes, gate jobs rather than suppressing check reporting.
+  # PR/push triggers already filter paths; only merge groups need a checkout
+  # and a comparison against the base SHA carried by the event.
+  changes:
+    if: github.event_name == 'merge_group'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      relevant: ${{ steps.filter.outputs.detray }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          base: ${{ github.event.merge_group.base_sha }}
+          ref: ${{ github.event.merge_group.head_sha }}
+          filters: .github/detray-traccc-filters.yml
 
   # Native build jobs.
-  native:
+  host-native:
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
 
     # The different build modes to test.
     strategy:
@@ -64,7 +91,7 @@ jobs:
 
     # The system to run on.
     runs-on: ${{ matrix.PLATFORM.OS }}
-    name: "native (${{ matrix.PLATFORM.OS }})"
+    name: "CPU - Build (${{ matrix.BUILD_TYPE }}, float, ${{ matrix.PLATFORM.OS }})"
 
     # The build/test steps to execute.
     steps:
@@ -74,10 +101,11 @@ jobs:
         persist-credentials: false
     # Run the CMake configuration. Test that the metadata generation runs
     - name: Configure
-      run: cmake --preset detray-full-fp64
+      run: cmake --preset detray-full-fp32
                  -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }}
                  -DDETRAY_FAIL_ON_WARNINGS=ON
                  -DDETRAY_SET_LOGGING=DEBUG
+                 -DDETRAY_EIGEN_PLUGIN=OFF
                  -DDETRAY_SMATRIX_PLUGIN=OFF
                  -DDETRAY_FASTOR_PLUGIN=OFF
                  -DDETRAY_VC_AOS_PLUGIN=OFF
@@ -93,6 +121,11 @@ jobs:
 
   # Containerised build jobs.
   host-container:
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
 
     # The different build modes to test.
     strategy:
@@ -103,7 +136,7 @@ jobs:
         BUILD_TYPE: ["Release", "Debug"]
         SCALAR_TYPE: ["float", "double"]
         PLATFORM:
-          - NAME: "HOST"
+          - NAME: "CPU"
             CXX_STANDARD: "20"
             CONTAINER: "ghcr.io/acts-project/ubuntu2604:91"
             # detray-full-fp32 turns benchmarks on, so Google Benchmark has to
@@ -120,7 +153,7 @@ jobs:
     # BUILD_TYPE and SCALAR_TYPE are in the name because merge-sentinel
     # deduplicates result items by normalised name: without them all four legs
     # collapse into one check and a failing leg is masked by a passing one.
-    name: "host-container (${{ matrix.PLATFORM.NAME }}, C++${{ matrix.PLATFORM.CXX_STANDARD }}, ${{ matrix.BUILD_TYPE }}, ${{ matrix.SCALAR_TYPE }})"
+    name: "${{ matrix.PLATFORM.NAME }} (${{ matrix.BUILD_TYPE }}, ${{ matrix.SCALAR_TYPE }})"
 
     # Use BASH as the shell from the image.
     defaults:
@@ -144,8 +177,6 @@ jobs:
       uses: ./.github/actions/dependencies
       with:
         compiler: g++
-        # Flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.1.0
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
@@ -192,6 +223,11 @@ jobs:
   # Containerised build jobs. Debug compile checks only -- nothing here is
   # executed. CUDA has its own build/test pair below.
   device-container:
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
 
     # The different build modes to test.
     strategy:
@@ -225,7 +261,7 @@ jobs:
       # fall back to the anonymous, heavily rate limited bucket.
       packages: read
     # SCALAR_TYPE belongs in the name; see the note on `host-container`.
-    name: "device-container (${{ matrix.PLATFORM.NAME }}, C++${{ matrix.PLATFORM.CXX_STANDARD }}, ${{ matrix.SCALAR_TYPE }})"
+    name: "${{ matrix.PLATFORM.NAME }} - Build (${{ matrix.BUILD_TYPE }}, ${{ matrix.SCALAR_TYPE }})"
 
     # Use BASH as the shell from the image.
     defaults:
@@ -246,8 +282,6 @@ jobs:
       with:
         compiler: g++
         flavor: ${{ matrix.PLATFORM.FLAVOR }}
-        # Flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.1.0
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
@@ -291,7 +325,12 @@ jobs:
   # build down to what the GPU job actually runs.
   # ─────────────────────────────────────────────────────────────────────
   cuda:
-    name: "cuda (${{ matrix.SCALAR_TYPE }})"
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
+    name: "CUDA - Build (Release, ${{ matrix.SCALAR_TYPE }})"
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
@@ -319,8 +358,6 @@ jobs:
       with:
         compiler: g++
         flavor: cuda13
-        # Flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.1.0
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
@@ -346,6 +383,7 @@ jobs:
           -DDETRAY_USE_SYSTEM_EIGEN3=ON \
           -DDETRAY_USE_SYSTEM_VECMEM=ON \
           -DDETRAY_USE_SYSTEM_COVFIE=ON \
+          -DDETRAY_USE_SYSTEM_BENCHMARK=ON \
           -DDETRAY_USE_SYSTEM_GOOGLETEST=ON \
           -DDETRAY_USE_SYSTEM_NLOHMANN=ON \
           -S ${GITHUB_WORKSPACE}/Detray \
@@ -405,6 +443,8 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────
   cuda-test:
     needs: [cuda]
+    if: ${{ !cancelled() && needs.cuda.result == 'success' }}
+    name: "CUDA - Test (Release, float)"
     runs-on: [self-hosted, linux, x64, gpu-nvidia]
     permissions:
       contents: read
@@ -448,7 +488,6 @@ jobs:
       with:
         compiler: g++
         flavor: cuda13
-        DEPENDENCY_TAG: v24.1.0
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 

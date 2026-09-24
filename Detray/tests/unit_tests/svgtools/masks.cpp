@@ -40,7 +40,7 @@ GTEST_TEST(svgtools, masks) {
   const auto axes = actsvg::draw::x_y_axes("axes", {-250, 250}, {-250, 250},
                                            actsvg::style::stroke());
 
-  using toy_detector_t = detray::detector<detray::test::toy_metadata>;
+  using toy_detector_t = detray::host::detector<detray::test::toy_metadata>;
   using algebra_t = typename toy_detector_t::algebra_type;
   using transform3_t = detray::dtransform3D<algebra_t>;
 

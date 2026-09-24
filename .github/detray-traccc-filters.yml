@@ -1,0 +1,12 @@
+# Build these packages only for package changes or their CI configuration.
+# Keep the workflow push/pull_request paths and .merge-sentinel.yml in sync.
+detray:
+  - 'Detray/**'
+  - '.github/workflows/detray.yml'
+  - '.github/detray-traccc-filters.yml'
+
+traccc:
+  - 'Traccc/**'
+  - 'Detray/**'
+  - '.github/workflows/traccc.yml'
+  - '.github/detray-traccc-filters.yml'

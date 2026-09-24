@@ -8,6 +8,7 @@
 #pragma once
 
 // Project include(s).
+#include "traccc/definitions/math.hpp"
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/device/concepts/thread_id.hpp"
 #include "traccc/gbts_seeding/gbts_seeding_config.hpp"
@@ -28,37 +29,55 @@ TRACCC_HOST_DEVICE inline void gbts_compress_graph(
       payload.num_neighbours);
   const vecmem::device_vector<const unsigned int> d_neighbours(
       payload.neighbours);
-  const vecmem::device_vector<const int> d_reIndexer(payload.reIndexer);
+  const vecmem::device_vector<const unsigned int> d_num_outgoing_edges(
+      payload.num_outgoing_edges);
+  const vecmem::device_vector<const unsigned int> d_reIndexer(
+      payload.reIndexer);
   vecmem::device_vector<unsigned int> d_output_graph(payload.output_graph);
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
   const unsigned int gridDimX = thread_id.getGridDimX();
 
-  for (unsigned int globalIndex = globalIdx; globalIndex < payload.nEdges;
+  const unsigned int nEdgesTotal = d_num_outgoing_edges.back();
+  const unsigned int nEdges = math::min(nEdgesTotal, payload.nEdgesMax);
+  for (unsigned int globalIndex = globalIdx; globalIndex < nEdges;
        globalIndex += blockDimX * gridDimX) {
-    const int newIdx = d_reIndexer[globalIndex];
-    if (newIdx == -1) {
+    const unsigned int scan = d_reIndexer[globalIndex];
+    const unsigned int prev =
+        (globalIndex == 0u) ? 0u : d_reIndexer[globalIndex - 1u];
+    if (scan == prev) {
+      continue;
+    }
+    const unsigned int newIdx = scan - 1u;
+    if (newIdx >= payload.nConnectedEdgesMax) {
       continue;
     }
 
     // Row-major output graph: each edge owns a contiguous block of
-    // edge_size = 2 + 1 + nMaxNei ints ([node1, node2, nNei,
-    // nei0..neiN-1]).
-    const unsigned int edge_size = 2u + 1u + payload.nMaxNei;
-    const unsigned int pos = edge_size * static_cast<unsigned int>(newIdx);
+    // nei_start + nMaxNei ints ([node1, node2, nNei, nei0..neiN-1]).
+    const unsigned int edge_size = gbts_consts::nei_start + payload.nMaxNei;
+    const unsigned int pos = edge_size * newIdx;
 
     const uint2 edge_nodes = d_edge_nodes[globalIndex];
     d_output_graph[pos + gbts_consts::node1] = d_orig_node_index[edge_nodes.x];
     d_output_graph[pos + gbts_consts::node2] = d_orig_node_index[edge_nodes.y];
 
     const unsigned char nNei = d_num_neighbours[globalIndex];
-    d_output_graph[pos + gbts_consts::nNei] = nNei;
     const unsigned int nei_pos = payload.nMaxNei * globalIndex;
+    // Neighbours beyond the capacity were dropped above and are dropped
+    // from the row, so every index in the compacted graph is in bounds.
+    unsigned int kept = 0u;
     for (unsigned int k = 0u; k < nNei; k++) {
-      d_output_graph[pos + gbts_consts::nei_start + k] =
-          static_cast<unsigned int>(d_reIndexer[d_neighbours[nei_pos + k]]);
+      // Every recorded neighbour is itself kept.
+      const unsigned int nei = d_reIndexer[d_neighbours[nei_pos + k]] - 1u;
+      if (nei >= payload.nConnectedEdgesMax) {
+        continue;
+      }
+      d_output_graph[pos + gbts_consts::nei_start + kept] = nei;
+      ++kept;
     }
+    d_output_graph[pos + gbts_consts::nNei] = kept;
   }
 }
 
