@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsPlugins/Json/TrackingGeometryMaterialJsonConverter.hpp"
@@ -34,6 +35,10 @@ class TrackingGeometryMaterialJsonWriter final : public IMaterialWriter {
   struct Config {
     /// Full output path; the extension selects the encoding and compression.
     std::filesystem::path filePath;
+    /// Geometry context used to resolve legacy proto-material placeholder
+    /// ranges.
+    Acts::GeometryContext geoContext =
+        Acts::GeometryContext::dangerouslyDefaultConstruct();
     /// Add deferred one-bin grid placeholders for surfaces without material.
     bool includeNonMaterial = false;
     /// Precision, indentation and compression settings.

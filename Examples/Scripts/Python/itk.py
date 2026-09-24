@@ -79,6 +79,7 @@ def runITk(
             jmw = TrackingGeometryMaterialJsonWriter(
                 level=acts.logging.VERBOSE,
                 includeNonMaterial=True,
+                geoContext=context.recoGeoContext,
                 filePath=json_dir / (outname + ".json"),
             )
 
