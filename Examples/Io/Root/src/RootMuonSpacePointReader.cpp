@@ -9,9 +9,9 @@
 #include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsExamples/Io/Root/RootUtility.hpp"
-#include "Acts/Utilities/StringHelpers.hpp"
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -69,27 +69,6 @@ ProcessCode RootMuonSpacePointReader::read(const AlgorithmContext& context) {
     // The space point buckets are ordered sequentially
     if (bucketIdx + 1 != outSpacePoints.size()) {
       outSpacePoints.emplace_back();
-
-      Vector3 toSectorTranslation{
-        m_toSectorFrameTranslationX->at(spIdx),
-        m_toSectorFrameTranslationY->at(spIdx),
-        m_toSectorFrameTranslationZ->at(spIdx)
-      };
-      SquareMatrix<3> toSectorRotation{};
-      toSectorRotation.col(0) = makeDirectionFromPhiTheta<double>(
-            m_toSectorFrameLinearCol0Phi->at(spIdx) * 1._degree,
-            m_toSectorFrameLinearCol0Theta->at(spIdx) * 1._degree);
-      toSectorRotation.col(1) = makeDirectionFromPhiTheta<double>(
-            m_toSectorFrameLinearCol1Phi->at(spIdx) * 1._degree,
-            m_toSectorFrameLinearCol1Theta->at(spIdx) * 1._degree);
-      toSectorRotation.col(2) = makeDirectionFromPhiTheta<double>(
-            m_toSectorFrameLinearCol2Phi->at(spIdx) * 1._degree,
-            m_toSectorFrameLinearCol2Theta->at(spIdx) * 1._degree);
-
-      outSpacePoints.back().setToSectorFrameTransform(toSectorTranslation,
-                                                      toSectorRotation);
-      ACTS_VERBOSE("Loaded new space point bucket with transformation "
-          << toString(outSpacePoints.back().toSectorFrameTransform()));
     }
     MuonSpacePoint& newSp{outSpacePoints.back().emplace_back()};
     newSp.setGeometryId(GeometryIdentifier{m_geometryId->at(spIdx)});
@@ -111,7 +90,24 @@ ProcessCode RootMuonSpacePointReader::read(const AlgorithmContext& context) {
     newSp.setTime(m_time->at(spIdx));
     newSp.setCovariance(m_covLoc0->at(spIdx), m_covLoc1->at(spIdx),
                         m_covT->at(spIdx));
-    ACTS_VERBOSE("Loaded new space point " << newSp);
+
+    Vector3 toSectorTranslation{m_toSectorFrameTranslationX->at(spIdx),
+                                m_toSectorFrameTranslationY->at(spIdx),
+                                m_toSectorFrameTranslationZ->at(spIdx)};
+    SquareMatrix<3> toSectorRotation{};
+    toSectorRotation.col(0) = makeDirectionFromPhiTheta<double>(
+        m_toSectorFrameLinearCol0Phi->at(spIdx) * 1._degree,
+        m_toSectorFrameLinearCol0Theta->at(spIdx) * 1._degree);
+    toSectorRotation.col(1) = makeDirectionFromPhiTheta<double>(
+        m_toSectorFrameLinearCol1Phi->at(spIdx) * 1._degree,
+        m_toSectorFrameLinearCol1Theta->at(spIdx) * 1._degree);
+    toSectorRotation.col(2) = makeDirectionFromPhiTheta<double>(
+        m_toSectorFrameLinearCol2Phi->at(spIdx) * 1._degree,
+        m_toSectorFrameLinearCol2Theta->at(spIdx) * 1._degree);
+    newSp.setToSectorTransform(toSectorTranslation, toSectorRotation);
+    ACTS_VERBOSE("Loaded new space point "
+                 << newSp << " with transform "
+                 << toString(newSp.toSectorTransform()));
   }
 
   m_outputContainer(context, std::move(outSpacePoints));

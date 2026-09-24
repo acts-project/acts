@@ -108,10 +108,10 @@ void addTrackFinding(py::module& mex) {
       inverseA, doSecondPhase, zRange, cotThetaRange, cotThetaMinBinSize,
       zMinBinSize);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(MuonHoughSeeder, mex, "MuonHoughSeeder",
-                                inTruthSegments, inSpacePoints, outHoughMax,
-                                nBinsTanTheta, nBinsY0, nBinsTanPhi, nBinsX0,
-                                dumpVisualization, extendWithPhi, visualizationFunction);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      MuonHoughSeeder, mex, "MuonHoughSeeder", inTruthSegments, inSpacePoints,
+      outHoughMax, nBinsTanTheta, nBinsY0, nBinsTanPhi, nBinsX0,
+      dumpVisualization, extendWithPhi, visualizationFunction);
 
   {
     using Alg = TrackParamsEstimationAlgorithm;

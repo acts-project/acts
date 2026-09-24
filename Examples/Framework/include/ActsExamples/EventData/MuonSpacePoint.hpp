@@ -155,6 +155,8 @@ class MuonSpacePoint {
   const Acts::Vector3& planeNormal() const { return m_norm; }
   /// @brief Returns the vector pointing to the next wire / strip
   const Acts::Vector3& toNextSensor() const { return m_toNext; }
+  /// @brief Returns the transformation from the local frame to the sector frame
+  const Acts::Transform3& toSectorTransform() const { return m_toSectorTrf; }
   /// @brief Returns the space point covariance values
   const std::array<double, 3>& covariance() const { return m_cov; }
   /// @brief Returns the drift radius
@@ -177,6 +179,12 @@ class MuonSpacePoint {
   /// @param toNextSensor: Vector pointing to the next sensor
   void defineCoordinates(Acts::Vector3&& pos, Acts::Vector3&& sensorDir,
                          Acts::Vector3&& toNextSensor);
+  /// @brief Define the transformation from the local frame to the sector frame
+  void setToSectorTransform(const Acts::Vector3& translation,
+                            const Acts::SquareMatrix<3>& rotation) {
+    m_toSectorTrf.translation() = translation;
+    m_toSectorTrf.linear() = rotation;
+  }
   /// @brief Define the space point radius
   void setRadius(const double r);
   /// @brief Define the time of the space point measurement
@@ -188,6 +196,8 @@ class MuonSpacePoint {
 
  private:
   MuonId m_id{};
+  Acts::Transform3 m_toSectorTrf{Acts::Transform3::Identity()};
+
   Acts::Vector3 m_pos{Acts::Vector3::Zero()};
   Acts::Vector3 m_dir{Acts::Vector3::Zero()};
   Acts::Vector3 m_toNext{Acts::Vector3::Zero()};
@@ -202,25 +212,8 @@ class MuonSpacePoint {
 static_assert(Acts::Experimental::CompositeSpacePoint<MuonSpacePoint>);
 /// @brief Abbrivation of the MuonSpacePoint container as a jagged vector of
 ///        space point objects. The inner vector represents a collection of
-///        space points that are close-by together in space, a so-called bucket,
-///        and they share the same transformation to the global frame.
-class MuonSpacePointBucket : public std::vector<MuonSpacePoint> {
- public:
-  using Base = std::vector<MuonSpacePoint>;
-  using Base::Base;
-  /// @brief Define the transformation from the local frame to the sector frame
-  void setToSectorFrameTransform(const Acts::Vector3& translation, 
-                                 const Acts::SquareMatrix<3>& rotation) {
-    m_toSectorFrameTransform.translation() = translation;
-    m_toSectorFrameTransform.linear() = rotation;
-  }
-  /// @brief Returns the transformation from the local frame to the sector frame
-  const Acts::Transform3& toSectorFrameTransform() const {
-    return m_toSectorFrameTransform;
-  }
- private:
-  Acts::Transform3 m_toSectorFrameTransform{Acts::Transform3::Identity()};
-};
+///        space points that are close-by together in space, a so-called bucket.
+using MuonSpacePointBucket = std::vector<MuonSpacePoint>;
 using MuonSpacePointContainer = std::vector<MuonSpacePointBucket>;
 
 /// @brief ostream operator of the Muon space point Identifier

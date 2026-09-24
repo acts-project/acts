@@ -4,12 +4,9 @@ import argparse
 
 import acts
 
-from acts.examples import (
-    CsvMuonSpacePointReader,
-    CsvMuonSegmentReader
-)
-
+from acts.examples import CsvMuonSpacePointReader, CsvMuonSegmentReader
 from acts.examples.ActsExamplesPythonBindingsRoot import RootMuonSpacePointReader
+
 u = acts.UnitConstants
 rnd = acts.examples.RandomNumbers(seed=42)
 
