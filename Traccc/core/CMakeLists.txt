@@ -65,6 +65,7 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/utils/impl/detray_conversion.ipp"
   "include/traccc/utils/type_traits.hpp"
   "include/traccc/utils/memory_resource.hpp"
+  "include/traccc/utils/stream_synchronizing_allocator.hpp"
   "include/traccc/utils/seed_generator.hpp"
   "include/traccc/utils/subspace.hpp"
   "include/traccc/utils/logging.hpp"

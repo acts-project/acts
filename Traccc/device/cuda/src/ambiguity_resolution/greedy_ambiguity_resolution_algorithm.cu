@@ -26,6 +26,9 @@
 #include "traccc/cuda/ambiguity_resolution/greedy_ambiguity_resolution_algorithm.hpp"
 #include "traccc/definitions/math.hpp"
 
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
+
 // Thrust include(s).
 #include <thrust/execution_policy.h>
 // Suppress warning (error at -Werror) from CUB/Thrust.
@@ -119,9 +122,9 @@ greedy_ambiguity_resolution_algorithm::operator()(
   cudaStream_t stream = details::get_stream(m_stream);
 
   // The Thrust policy to use.
-  auto thrust_policy =
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(m_mr.main)))
-          .on(stream);
+  auto thrust_policy = thrust::cuda::par_nosync(
+                           stream_synchronizing_allocator(m_mr.main, m_stream))
+                           .on(stream);
 
   const unsigned int n_tracks = tracks_view.tracks.capacity();
 
