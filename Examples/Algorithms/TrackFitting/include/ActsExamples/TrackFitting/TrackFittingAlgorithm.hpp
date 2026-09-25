@@ -18,6 +18,8 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
+#include <atomic>
+#include <cstddef>
 #include <memory>
 #include <string>
 
@@ -64,11 +66,19 @@ class TrackFittingAlgorithm final : public IAlgorithm {
   /// @return a process code to steer the algporithm flow
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 
+  /// Framework finalize method of the fitting algorithm
+  /// Prints some cross-event statistics on fitted tracks
+  ProcessCode finalize() final;
+
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
+
+  mutable std::atomic<std::size_t> m_nFittedTracks{0};
+  mutable std::atomic<std::size_t> m_nTotalMeasurements{0};
+  mutable std::atomic<std::size_t> m_nEvents{0};
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
