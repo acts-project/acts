@@ -217,13 +217,6 @@ void gbts_seeding_algorithm::gbts_bin_spacepoints_kernel(
   ::alpaka::exec<Acc>(details::get_queue(queue()),
                       makeWorkDiv<Acc>(n_blocks, n_threads),
                       kernels::gbts_bin_spacepoints{}, payload);
-
-  // Turn the per-bin node counts into the node offsets.
-  vecmem::device_vector<unsigned int> d_eta_node_counter(
-      payload.eta_node_counter);
-  details::exclusive_scan(details::get_queue(queue()), mr(),
-                          d_eta_node_counter.begin(), d_eta_node_counter.end(),
-                          d_eta_node_counter.begin());
 }
 
 void gbts_seeding_algorithm::gbts_sort_nodes_kernel(
@@ -232,10 +225,10 @@ void gbts_seeding_algorithm::gbts_sort_nodes_kernel(
   // carrying the full spacepoint index along as the value.
   details::sort_by_key(
       details::get_queue(queue()), mr(), payload.sort_keys.ptr(),
-      payload.sort_keys.ptr() + payload.nNodes, payload.sort_values.ptr());
+      payload.sort_keys.ptr() + payload.nSp, payload.sort_values.ptr());
 
   const unsigned int n_threads = 256;
-  const unsigned int n_blocks = 1 + (payload.nNodes - 1) / n_threads;
+  const unsigned int n_blocks = 1 + (payload.nSp - 1) / n_threads;
   ::alpaka::exec<Acc>(details::get_queue(queue()),
                       makeWorkDiv<Acc>(n_blocks, n_threads),
                       kernels::gbts_sort_nodes{}, payload);

@@ -33,7 +33,7 @@ struct gbts_match_graph_edges_payload {
   /// (outer, inner) node indices per edge
   vecmem::data::vector_view<const uint2> edge_nodes;
   /// Per node: [node] and [node + 1] are the begin and end of the bucket of
-  /// edges entering the node (nNodes + 1 entries).
+  /// edges entering the node (nSp + 1 entries).
   vecmem::data::vector_view<const unsigned int> num_outgoing_edges;
   /// Output: number of accepted neighbours per edge (0..nMaxNei)
   vecmem::data::vector_view<unsigned char> num_neighbours;

@@ -231,8 +231,6 @@ class gbts_seeding_algorithm
     vecmem::data::vector_buffer<float> bin_rads;
     /// Per-eta node offsets, nEtaBins + 1 entries
     vecmem::data::vector_buffer<unsigned int> eta_bin_offsets;
-    /// Number of GBTS nodes (0 == nothing to do)
-    unsigned int nNodes = 0;
   };
 
   /// Outputs of the graph-making stage that are consumed by seed extraction.
@@ -257,7 +255,7 @@ class gbts_seeding_algorithm
       vecmem::data::vector_buffer<unsigned int> node_index,
       vecmem::data::vector_buffer<float> bin_rads,
       vecmem::data::vector_buffer<unsigned int> eta_bin_offsets,
-      const unsigned int nNodes, const unsigned int nSp,
+      const unsigned int nSp,
       vecmem::data::vector_buffer<unsigned int>& counters_buf,
       vecmem::vector<unsigned int>& h_counters) const;
 
