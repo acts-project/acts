@@ -39,6 +39,9 @@ add_library(
     "src/seeding/triplet_seeding_algorithm.hip"
     "include/traccc/hip/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
     "src/seeding/silicon_pixel_spacepoint_formation_algorithm.hip"
+    # GBTS seed finding code.
+    "include/traccc/hip/gbts_seeding/gbts_seeding_algorithm.hpp"
+    "src/gbts_seeding/gbts_seeding_algorithm.hip"
     # Track finding code.
     "include/traccc/hip/finding/combinatorial_kalman_filter_algorithm.hpp"
     "src/finding/combinatorial_kalman_filter_algorithm_build_measurement_ranges_buffer.hip"
