@@ -136,7 +136,9 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
       (n_threads + deviceThreads - 1) / deviceThreads;
   const std::size_t deviceSharedMem =
       deviceThreads * sizeof(unsigned long long int) +
-      2 * deviceThreads * sizeof(std::pair<unsigned int, unsigned int>);
+      2 * deviceThreads * sizeof(std::pair<unsigned int, unsigned int>) +
+      deviceThreads * config.max_num_branches_per_surface *
+          sizeof(std::pair<traccc::scalar, unsigned int>);
 
   // Launch the kernel for the appropriate detector type.
   detector_buffer_visitor<detector_type_list>(
