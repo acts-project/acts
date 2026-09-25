@@ -343,6 +343,23 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
   addBarrelEndcapSubsystem(builder, outer, "Pixels", "pix",
                            ActsPlugins::DD4hep::detail::kPixelLayerFilter,
                            OuterCylinder);
+
+  // Passive Support Tube (PST): a thin carbon-fiber support cylinder between
+  // the Pixel and ShortStrips subsystems. It is not a tracker sub-detector,
+  // just a single passive tube-shaped element with its own material, so it
+  // is inserted directly rather than via addBarrelEndcapSubsystem.
+  if (const auto pstElement = builder.findDetElementByName("PST");
+      pstElement.has_value()) {
+    outer.addMaterial(
+        "PST_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
+          mat.configureFace(
+              OuterCylinder,
+              Acts::AxisSpec::DeferredEquidistant(kMatPhiBins, AxisRPhi),
+              Acts::AxisSpec::DeferredEquidistant(kMatZBins, AxisZ));
+          mat.addChild(builder.backend().makePassiveCylinder(*pstElement));
+        });
+  }
+
   addBarrelEndcapSubsystem(builder, outer, "ShortStrips", "ss",
                            ActsPlugins::DD4hep::detail::kShortStripLayerFilter,
                            InnerCylinder);
