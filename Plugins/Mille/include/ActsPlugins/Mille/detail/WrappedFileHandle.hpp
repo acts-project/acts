@@ -10,7 +10,7 @@
 #include <cstdio>
 #include <filesystem>
 
-namespace ActsPlugins::ActsToMille {
+namespace ActsPlugins {
 
 /// @brief helper to wrap a file handle
 class WrappedFileHandle {
@@ -32,4 +32,4 @@ class WrappedFileHandle {
   std::filesystem::path m_path{};
 };
 
-}  // namespace ActsPlugins::ActsToMille
+}  // namespace ActsPlugins

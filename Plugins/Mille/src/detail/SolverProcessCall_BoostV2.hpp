@@ -14,18 +14,19 @@
 #include <boost/process/start_dir.hpp>
 #include <boost/process/stdio.hpp>
 
-namespace ActsPlugins::ActsToMille {
+namespace ActsPlugins {
 // With boost v1.88+, the v2 process API is default
-ActsPlugins::ActsToMille::ChildProcessStatus runChildProcessBoost(
+ActsPlugins::MpSolverStatus runChildProcessBoost(
     const std::string& program, const std::vector<std::string>& args,
-    const std::filesystem::path& runDir,
-    const WrappedFileHandle& outputHandle) {
+    const std::filesystem::path& runDir, const WrappedFileHandle& outputHandle,
+    const Acts::Logger& logger) {
   using namespace boost::process;
 
   // find the pede installation
   auto thePede = environment::find_executable(program);
   if (thePede.empty()) {
-    return ActsPlugins::ActsToMille::ChildProcessStatus::ProgNotFound;
+    ACTS_ERROR("Failed to find the solver program '" << program << "'");
+    return ActsPlugins::MpSolverStatus::ProgNotFound;
   }
 
   boost::asio::io_context io;
@@ -39,8 +40,9 @@ ActsPlugins::ActsToMille::ChildProcessStatus runChildProcessBoost(
                      stdio);
   theProcess.wait();
   if (theProcess.exit_code() != 0) {
-    return ChildProcessStatus::FailedRun;
+    ACTS_ERROR("Failed to run the solver process!");
+    return MpSolverStatus::FailedRun;
   }
-  return ChildProcessStatus::OK;
+  return MpSolverStatus::OK;
 }
-}  // namespace ActsPlugins::ActsToMille
+}  // namespace ActsPlugins

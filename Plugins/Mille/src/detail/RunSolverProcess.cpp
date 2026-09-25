@@ -8,6 +8,7 @@
 
 #include "ActsPlugins/Mille/detail/RunSolverProcess.hpp"
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Mille/detail/WrappedFileHandle.hpp"
 
 #include <filesystem>
@@ -21,23 +22,25 @@
 #include "SolverProcessCall_BoostV1.hpp"
 #endif
 
-ActsPlugins::ActsToMille::ChildProcessStatus
-ActsPlugins::ActsToMille::runSolverProcess(
+ActsPlugins::MpSolverStatus ActsPlugins::runSolverProcess(
     const std::string& program, const std::vector<std::string>& args,
-    const std::filesystem::path& runDir,
-    const std::filesystem::path& outputDest) {
+    const std::filesystem::path& runDir, const Acts::Logger& logger,
+    const std::optional<std::filesystem::path>& redirectOutput) {
   // work dir has to exist - caller's responsibility
   if (!std::filesystem::exists(runDir)) {
-    return ActsPlugins::ActsToMille::ChildProcessStatus::FailedWorkDir;
+    ACTS_ERROR("Run directory '" << runDir
+                                 << "' does not exist, will not run solver");
+    return ActsPlugins::MpSolverStatus::FailedWorkDir;
   }
 
   WrappedFileHandle outputHandle;  // defaults to "do not redirect"
 
-  if (!outputDest.empty()) {
-    outputHandle = WrappedFileHandle(outputDest);
+  if (redirectOutput.has_value()) {
+    outputHandle = WrappedFileHandle(*redirectOutput);
     if (!outputHandle.isRedirected()) {
-      return ActsPlugins::ActsToMille::ChildProcessStatus::FailedRedirectStdout;
+      ACTS_ERROR("Failed to redirect output to '" << *redirectOutput << "'");
+      return ActsPlugins::MpSolverStatus::FailedRedirectStdout;
     }
   }
-  return runChildProcessBoost(program, args, runDir, outputHandle);
+  return runChildProcessBoost(program, args, runDir, outputHandle, logger);
 }

@@ -12,7 +12,7 @@
 #include "ActsPlugins/Mille/MillePedeError.hpp"
 #include "ActsPlugins/Mille/MillePedeSolver.hpp"
 
-using namespace ActsPlugins::ActsToMille;
+using namespace ActsPlugins;
 
 BOOST_AUTO_TEST_SUITE(MillePedeSolverBuiltin)
 

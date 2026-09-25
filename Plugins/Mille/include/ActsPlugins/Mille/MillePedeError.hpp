@@ -11,7 +11,7 @@
 #include <system_error>
 #include <type_traits>
 
-namespace ActsPlugins::ActsToMille {
+namespace ActsPlugins {
 /// Error codes for Millepede run
 /// @ingroup errors
 enum class MillePedeError {
@@ -26,14 +26,13 @@ enum class MillePedeError {
 /// Create error code from MillePedeError
 /// @param e The error code enum value
 /// @return Standard error code
-std::error_code make_error_code(ActsToMille::MillePedeError e);
+std::error_code make_error_code(MillePedeError e);
 /// @endcond
 
-}  // namespace ActsPlugins::ActsToMille
+}  // namespace ActsPlugins
 
 namespace std {
 // register with STL
 template <>
-struct is_error_code_enum<ActsPlugins::ActsToMille::MillePedeError>
-    : std::true_type {};
+struct is_error_code_enum<ActsPlugins::MillePedeError> : std::true_type {};
 }  // namespace std

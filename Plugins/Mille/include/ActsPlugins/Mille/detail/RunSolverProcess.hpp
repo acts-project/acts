@@ -12,13 +12,16 @@
 /// as a child process, without bringing in additional
 /// external dependencies.
 
+#include "Acts/Utilities/Logger.hpp"
+
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <vector>
 
-namespace ActsPlugins::ActsToMille {
+namespace ActsPlugins {
 
-enum class ChildProcessStatus {
+enum class MpSolverStatus {
   OK = 0,
   ProgNotFound = 1,
   FailedRedirectStdout = 2,
@@ -32,12 +35,13 @@ enum class ChildProcessStatus {
 /// @param args: command line args
 /// @param runDir: Directory to run in. Caller is responsible for ensuring
 /// validity.
-/// @param outputDest: if not empty, redirect output to a file instead
-/// of printing to the host stdout
+/// @param logger: A logger instance
+/// @param redirectOutput: if set, redirect pede output to file
+/// of given name instead of printing to the host stdout
 /// @return the call outcome as a status code
-ChildProcessStatus runSolverProcess(
+MpSolverStatus runSolverProcess(
     const std::string& program, const std::vector<std::string>& args,
-    const std::filesystem::path& runDir,
-    const std::filesystem::path& outputDest = "");
+    const std::filesystem::path& runDir, const Acts::Logger& logger,
+    const std::optional<std::filesystem::path>& redirectOutput = std::nullopt);
 
-}  // namespace ActsPlugins::ActsToMille
+}  // namespace ActsPlugins

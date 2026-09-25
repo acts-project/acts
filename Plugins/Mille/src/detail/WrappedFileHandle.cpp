@@ -12,7 +12,7 @@
 #include <filesystem>
 #include <utility>
 
-namespace ActsPlugins::ActsToMille {
+namespace ActsPlugins {
 
 /// @brief helper to wrap a file handle
 WrappedFileHandle::WrappedFileHandle(const std::filesystem::path& outf)
@@ -54,4 +54,4 @@ const std::filesystem::path& WrappedFileHandle::path() const {
   return m_path;
 }
 
-}  // namespace ActsPlugins::ActsToMille
+}  // namespace ActsPlugins

@@ -19,18 +19,15 @@
 #include <string>
 #include <tuple>
 
-namespace ActsPlugins::ActsToMille {
+namespace ActsPlugins {
 
 Acts::Result<MillePedeSolver::MpResult> MillePedeSolver::solve(
     const Config& cfg) const {
   ACTS_INFO("=== Proceeding to run Millepede-II alignment fit ===");
 
   // determine where the user wishes to run
-  std::filesystem::path workDir = std::filesystem::current_path();
-
-  if (!cfg.workDir.empty()) {
-    workDir = cfg.workDir;
-  }
+  std::filesystem::path workDir =
+      cfg.workDir.value_or(std::filesystem::current_path());
 
   // create the work dir if it does not exist already
   if (!std::filesystem::exists(workDir)) {
@@ -57,19 +54,19 @@ Acts::Result<MillePedeSolver::MpResult> MillePedeSolver::solve(
 
   ACTS_INFO(" Calling pede, this may take a while depending on problem size");
   // now run the fit
-  ChildProcessStatus pedeProcessStatus =
-      runSolverProcess("pede", mpArgs, workDir, cfg.redirectStdout);
+  MpSolverStatus pedeProcessStatus =
+      runSolverProcess("pede", mpArgs, workDir, logger(), cfg.redirectStdout);
 
-  if (pedeProcessStatus == ChildProcessStatus::ProgNotFound) {
+  if (pedeProcessStatus == MpSolverStatus::ProgNotFound) {
     ACTS_ERROR("Pede executable could not be found, aborting!");
     return Acts::Result<MpResult>::failure(
         MillePedeError::InstallationNotFound);
   }
-  if (pedeProcessStatus == ChildProcessStatus::FailedWorkDir) {
+  if (pedeProcessStatus == MpSolverStatus::FailedWorkDir) {
     ACTS_ERROR("Could not navigate to the run directory `" << workDir
                                                            << "`, aborting!");
     return Acts::Result<MpResult>::failure(MillePedeError::SolverCrash);
-  } else if (pedeProcessStatus != ChildProcessStatus::OK) {
+  } else if (pedeProcessStatus != MpSolverStatus::OK) {
     ACTS_ERROR("Pede invocation failed. Did not run alignment.");
     return Acts::Result<MpResult>::failure(MillePedeError::SolverCrash);
   }
@@ -197,20 +194,20 @@ MillePedeSolver::MpExitStatus MillePedeSolver::interpretExit(int theExitCode) {
 
 std::filesystem::path MillePedeSolver::copyIfRequested(
     const std::filesystem::path& originalLoc,
-    const std::filesystem::path& userLoc) const {
+    const std::optional<std::filesystem::path>& userLoc) const {
   if (!std::filesystem::exists(originalLoc)) {
     return "";
-  } else if (userLoc.empty()) {
+  } else if (!userLoc.has_value()) {
     return originalLoc;
   } else {
     if (!std::filesystem::copy_file(
-            originalLoc, userLoc,
+            originalLoc, *userLoc,
             std::filesystem::copy_options::overwrite_existing)) {
       ACTS_WARNING(" Failed to copy output file " << originalLoc << " to "
-                                                  << userLoc);
+                                                  << *userLoc);
       return originalLoc;
     }
-    return userLoc;
+    return *userLoc;
   }
 }
-}  // namespace ActsPlugins::ActsToMille
+}  // namespace ActsPlugins

@@ -19,7 +19,7 @@ class MillePedeErrorCategory : public std::error_category {
 
   // Return what each enum means in text.
   std::string message(int c) const final {
-    using ActsPlugins::ActsToMille::MillePedeError;
+    using ActsPlugins::MillePedeError;
     using enum MillePedeError;
 
     switch (static_cast<MillePedeError>(c)) {
@@ -40,8 +40,7 @@ class MillePedeErrorCategory : public std::error_category {
 
 }  // namespace
 
-std::error_code ActsPlugins::ActsToMille::make_error_code(
-    ActsPlugins::ActsToMille::MillePedeError e) {
+std::error_code ActsPlugins::make_error_code(ActsPlugins::MillePedeError e) {
   static MillePedeErrorCategory c;
   return {static_cast<int>(e), c};
 }

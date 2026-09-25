@@ -14,7 +14,7 @@
 #include <filesystem>
 #include <vector>
 
-namespace ActsPlugins::ActsToMille {
+namespace ActsPlugins {
 
 /// class wrapping an external call to the 'pede' solver
 /// program of the Millepede-II alignment toolkit.
@@ -36,23 +36,23 @@ class MillePedeSolver {
     /// steering file with run options
     std::string steeringFile = "pedeSteerMaster.txt";
 
-    /// directory to run in. Empty = current work dir
-    std::filesystem::path workDir = "";
+    /// directory to run in. Default: current work dir
+    std::optional<std::filesystem::path> workDir;
 
     /// extra CLI options
     std::vector<std::string> extraOpts = {};
 
-    /// destination for result file - if empty, keep original
-    std::string resFileName = "";
+    /// destination for result file - default: keep original
+    std::optional<std::string> resFileName;
     /// destination for the cout/cerr printout
-    /// from pede - if empty, send to parent
-    std::string redirectStdout = "";
-    /// destination for the log file - if empty, keep original
-    std::string logFileName = "";
-    /// destination for the histogram file - if empty, keep original
-    std::string histoFileName = "";
-    /// destination for the eigenvector file - if empty, keep original
-    std::string evFileName = "";
+    /// from pede - default: print to terminal
+    std::optional<std::string> redirectStdout;
+    /// destination for the log file - default: keep original
+    std::optional<std::string> logFileName;
+    /// destination for the histogram file - default: keep original
+    std::optional<std::string> histoFileName;
+    /// destination for the eigenvector file - default: keep original
+    std::optional<std::string> evFileName;
   };
 
   /// @brief package the result of the alignment fit
@@ -103,11 +103,11 @@ class MillePedeSolver {
   /// @param userLoc: Desired final location of the file. If empty, no copy will be made.
   std::filesystem::path copyIfRequested(
       const std::filesystem::path& originalLoc,
-      const std::filesystem::path& userLoc) const;
+      const std::optional<std::filesystem::path>& userLoc) const;
 
   std::unique_ptr<const Acts::Logger> m_logger;  /// logger
 
   /// Private access to the logger
   const Acts::Logger& logger() const { return *m_logger; }
 };
-}  // namespace ActsPlugins::ActsToMille
+}  // namespace ActsPlugins

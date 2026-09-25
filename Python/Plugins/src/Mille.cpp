@@ -15,7 +15,7 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using ActsPlugins::ActsToMille::MillePedeSolver;
+using ActsPlugins::MillePedeSolver;
 
 PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
   {
