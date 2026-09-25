@@ -202,9 +202,6 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
               ActsPlugins::GeoModel::volumePosInSpace(parent),
               parent->getLogVol()->getShape(), boundFactory);
 
-      // auto chamberVolume = std::make_unique<Acts::TrackingVolume>(
-      //     *parentVolume, std::format("{:}_Chamber_{:d}", station, volNum));
-      // chamberVolume->assignGeometryId(geoId.withVolume(volNum));
       auto chamberVolume = std::make_unique<Acts::TrackingVolume>(
           parentVolume->localToGlobalTransform(gctx),
           inflateChamberBounds(parentVolume->volumeBounds(), boundFactory),
@@ -329,7 +326,7 @@ GeoModelMuonMockupBuilder::buildChildChamber(
           "This MDT does not have tubes, what does it have?");
     }
     mwCfg.binning = {
-        {Acts::AxisDirection::AxisY, 1u},  // shift axis, expansion 2
+        {Acts::AxisDirection::AxisY, 1u},   // shift axis, expansion 2
         {Acts::AxisDirection::AxisZ, 0u}};  // layer axis, expansion 1
     mwCfg.shiftDirection = Acts::AxisDirection::AxisY;
 
