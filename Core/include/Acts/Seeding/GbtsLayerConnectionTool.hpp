@@ -26,15 +26,6 @@ class GbtsLayerConnectionTool {
  public:
   /// Struct to hold r and z bounds for a given detector layer
   struct LayerDescription {
-    /// Constructor for filling detector layer information
-    /// @param minR_ minimum radius of layer
-    /// @param maxR_ maximum radius of layer
-    /// @param minZ_ minimum z coordinate of layer
-    /// @param maxZ_ maximum z coordinate of layer
-    /// @param gbtsId_ GBTS id of layer
-    LayerDescription(float minR_, float maxR_, float minZ_, float maxZ_,
-                     GbtsExperimentLayerId gbtsId_);
-
     /// Minimum radius
     float minR{};
     /// Maximum radius

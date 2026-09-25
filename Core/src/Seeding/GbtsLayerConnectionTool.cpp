@@ -13,11 +13,6 @@
 
 namespace Acts::Experimental {
 
-GbtsLayerConnectionTool::LayerDescription::LayerDescription(
-    float minR_, float maxR_, float minZ_, float maxZ_,
-    GbtsExperimentLayerId gbtsId_)
-    : minR(minR_), maxR(maxR_), minZ(minZ_), maxZ(maxZ_), gbtsId(gbtsId_) {}
-
 GbtsLayerConnectionTool::GbtsLayerConnectionTool(
     const Config& config, std::unique_ptr<const Logger> logger)
     : m_cfg(config), m_logger(std::move(logger)) {

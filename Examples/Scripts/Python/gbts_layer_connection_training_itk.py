@@ -88,15 +88,14 @@ addDigiParticleSelection(
 addGbtsTraining(
     s,
     selectedParticles="particles_selected",
-    geometryFile=geo_dir / "itk-hgtd/gbts_layer_geometry.txt",
-    outputConnectionTable=outputDir / "new_implementation_symm_1000k_singleMu.txt",
+    geometryFile=geo_dir / "itk-hgtd/gbts_layers.json",
+    outputConnectionTable=outputDir / "new_implementation_symm_1000k_singleMu.json",
     probThreshold=-1.0,
     zMinTol=0.2340,
     zMaxTol=0.2340,
     rMinTol=2.5337,
     rMaxTol=2.5337,
     doSymmetrization=True,
-    useOldFormatting=True,
     logLevel=acts.logging.INFO,
 )
 

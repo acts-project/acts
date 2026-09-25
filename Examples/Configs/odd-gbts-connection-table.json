@@ -1,0 +1,72 @@
+{
+    "connections": [
+        {
+            "outer": 4,
+            "inner": 3
+        },
+        {
+            "outer": 3,
+            "inner": 2
+        },
+        {
+            "outer": 2,
+            "inner": 1
+        },
+        {
+            "outer": 1,
+            "inner": 8
+        },
+        {
+            "outer": 9,
+            "inner": 8
+        },
+        {
+            "outer": 10,
+            "inner": 8
+        },
+        {
+            "outer": 12,
+            "inner": 8
+        },
+        {
+            "outer": 1,
+            "inner": 9
+        },
+        {
+            "outer": 10,
+            "inner": 9
+        },
+        {
+            "outer": 11,
+            "inner": 9
+        },
+        {
+            "outer": 12,
+            "inner": 9
+        },
+        {
+            "outer": 1,
+            "inner": 10
+        },
+        {
+            "outer": 11,
+            "inner": 10
+        },
+        {
+            "outer": 12,
+            "inner": 10
+        },
+        {
+            "outer": 13,
+            "inner": 12
+        },
+        {
+            "outer": 14,
+            "inner": 13
+        },
+        {
+            "outer": 15,
+            "inner": 14
+        }
+    ]
+}

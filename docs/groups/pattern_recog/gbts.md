@@ -58,11 +58,6 @@ else. The adaptive @f$\tau@f$ correction of @ref gbts-graph asks whether three
 layers are radially consecutive, and the two innermost-layer cuts of the same
 section ask how deep a layer sits. GBTS therefore runs on any layer numbering.
 
-> [!note]
-> One reader of the ATLAS numbering survives, and it sits outside the core
-> algorithm: the examples algorithm decodes the volume id, to pick the strip
-> layers out of an ATLAS connection table.
-
 Which layer pairs may be joined by an edge is a list of
 @ref Acts::Experimental::GbtsLayerConnection, each naming a source (outer) and a
 destination (inner) layer. @ref Acts::Experimental::GbtsGeometry combines the
@@ -89,7 +84,7 @@ configured from.
 > `Examples/Scripts/Python/gbts_layer_connection_training_itk.py` and
 > `gbts_layer_connection_training_odd.py` scripts drive it for the ITk and the
 > Open Data Detector. `ActsExamples::GraphBasedSeedingAlgorithm` reads the
-> resulting table, in ATLAS' connector file format, and hands the pairs it
+> resulting table, from a JSON file, and hands the pairs it
 > lists to the geometry.
 
 ## Graph nodes {#gbts-nodes}
@@ -255,7 +250,7 @@ the angle. Wide clusters in the pixel endcap are dropped entirely
 
 > [!note]
 > The seeder takes the table itself as `tauLookupTable`, not a path to it;
-> `ActsExamples::GraphBasedSeedingAlgorithm` parses it from ATLAS' text format.
+> `ActsExamples::GraphBasedSeedingAlgorithm` reads it from a JSON file.
 > It is only consulted for pixel barrel layers, and the ACTS examples framework
 > does not currently provide cluster widths or local positions, so this path is
 > exercised only by experiment-side integrations that supply them through
