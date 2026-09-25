@@ -2,6 +2,7 @@ acts_add_library(
     ExamplesAlignmentMillePede
     src/MillePedeAlignmentSandbox.cpp
     src/ActsSolverFromMille.cpp
+    src/MillePedeSolverAlgorithm.cpp
 )
 target_include_directories(
     ActsExamplesAlignmentMillePede
