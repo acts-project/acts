@@ -111,8 +111,6 @@ def main():
     )
 
     args = parser.parse_args()
-
-    gContext = acts.GeometryContext.dangerouslyDefaultConstruct()
     logLevel = logging.INFO
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))

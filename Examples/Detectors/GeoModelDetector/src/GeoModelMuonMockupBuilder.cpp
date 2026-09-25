@@ -123,16 +123,9 @@ GeoModelMuonMockupBuilder::trackingGeometry(
   while (it != boundingBoxes.end()) {
     // Current station index
     StationIdx currentIdx = getStationIdx(*it);
-    std::cout << "currentIdx=" << stationIdxToString(currentIdx) << std::endl;
-    std::cin.ignore();
     const bool isBarrel =
         (currentIdx == StationIdx ::BI || currentIdx == StationIdx ::BM ||
          currentIdx == StationIdx ::BO);
-
-    if (isBarrel) {
-      std::cout << "isBarrel: " << isBarrel << std::endl;
-      std::cin.ignore();
-    }
 
     // Find the range of boxes for the current station
     auto rangeEnd = std::find_if(it, boundingBoxes.end(),
@@ -336,7 +329,7 @@ GeoModelMuonMockupBuilder::buildChildChamber(
           "This MDT does not have tubes, what does it have?");
     }
     mwCfg.binning = {
-        {Acts::AxisDirection::AxisY, 15u},  // shift axis, expansion 2
+        {Acts::AxisDirection::AxisY, 1u},  // shift axis, expansion 2
         {Acts::AxisDirection::AxisZ, 0u}};  // layer axis, expansion 1
     mwCfg.shiftDirection = Acts::AxisDirection::AxisY;
 
@@ -346,8 +339,8 @@ GeoModelMuonMockupBuilder::buildChildChamber(
     ACTS_DEBUG("Childr trk vol " << trVol->geometryId() << " with bounds "
                                  << trVol->volumeBounds());
     NodePtr_t staticNode = std::make_shared<Node_t>(std::move(trVol));
-    // staticNode->setNavigationPolicyFactory(
-    //     mdtBuilder.createNavigationPolicyFactory(gctx));
+    staticNode->setNavigationPolicyFactory(
+        mdtBuilder.createNavigationPolicyFactory(gctx));
     return staticNode;
   }
   trVol = std::make_unique<Acts::TrackingVolume>(*box.volume, box.name);
