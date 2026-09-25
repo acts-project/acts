@@ -128,6 +128,15 @@ class DD4hepBackend {
   /// @throws std::runtime_error if the shape is neither tube- nor disc-like.
   /// @return Transform and cylinder volume bounds of the element.
   Acts::PassiveVolumeShape passiveVolumeShape(const Element& element) const;
+  
+  /// Create a static blueprint node for a passive tube-shaped element, e.g.
+  /// the ODD's support tube (PST). Unlike @ref makeBeampipe, the resulting
+  /// volume uses the element's own inner and outer radius rather than
+  /// assuming a solid cylinder down to r=0.
+  /// @param element DD4hep element describing the passive tube.
+  /// @return Shared pointer to the generated blueprint node.
+  std::shared_ptr<Acts::StaticBlueprintNode> makePassiveCylinder(
+      const Element& element) const;
 
   /// Return the DD4hep world detector element.
   /// @return Root detector element of the DD4hep hierarchy.

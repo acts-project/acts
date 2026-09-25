@@ -231,6 +231,30 @@ Acts::PassiveVolumeShape DD4hepBackend::passiveVolumeShape(
   return {discTransform,
           std::make_shared<Acts::CylinderVolumeBounds>(
               discBounds->rMin(), discBounds->rMax(), discThickness / 2.0)};
+          }
+std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makePassiveCylinder(
+    const Element& element) const {
+  const auto tgTransform = element.nominal().worldTransformation();
+  auto [bounds, transform, thickness] =
+      ActsPlugins::TGeoSurfaceConverter::cylinderComponents(
+          *element.placement().ptr()->GetVolume()->GetShape(),
+          tgTransform.GetRotationMatrix(), tgTransform.GetTranslation(), "XYZ",
+          m_cfg.lengthScale);
+
+  if (bounds == nullptr) {
+    ACTS_ERROR("Element '" << element.name()
+                           << "' shape could not be converted to cylinder.");
+    throw std::runtime_error(
+        "Passive cylinder element shape could not be converted to cylinder.");
+  }
+
+  const double medR = bounds->get(Acts::CylinderBounds::eR);
+  auto volumeBounds = std::make_shared<Acts::CylinderVolumeBounds>(
+      medR - thickness / 2.0, medR + thickness / 2.0,
+      bounds->get(Acts::CylinderBounds::eHalfLengthZ));
+  auto volume = std::make_unique<Acts::TrackingVolume>(transform, volumeBounds,
+                                                       element.name());
+  return std::make_shared<Acts::StaticBlueprintNode>(std::move(volume));
 }
 
 }  // namespace ActsPlugins::DD4hep
