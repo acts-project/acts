@@ -315,6 +315,7 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
     auto [hpOff, nHitsForFilter] = rowBounds(hitsTable, "particle_id");
     auto hpidFilterArr =
         colValues<arrow::UInt64Array>(hitsTable, "particle_id");
+    particleIdsWithHits.reserve(static_cast<std::size_t>(nHitsForFilter));
     for (std::int64_t i = 0; i < nHitsForFilter; ++i) {
       particleIdsWithHits.insert(hpidFilterArr->Value(hpOff + i));
     }
@@ -342,6 +343,7 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
   // barcode map keyed by ColliderML particle_id, not row index (particle_ids
   // are not 0-based consecutive row indices).
   std::unordered_map<std::uint64_t, SimBarcode> cmlPidToActsBarcode;
+  cmlPidToActsBarcode.reserve(static_cast<std::size_t>(nParticles));
 
   SimParticleContainer::sequence_type particleSeq;
   particleSeq.reserve(static_cast<std::size_t>(nParticles));
@@ -421,7 +423,14 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
   if (needMeasurements) {
     measurements.reserve(static_cast<std::size_t>(nHits));
     clusters.reserve(static_cast<std::size_t>(nHits));
+    measParticlesMap.reserve(static_cast<std::size_t>(nHits));
   }
+  hitIndexToMeas.reserve(static_cast<std::size_t>(nHits));
+
+  // Reused across hits: clearing retains each vector's capacity, avoiding a
+  // malloc/free pair per hit for what is otherwise a fresh 1-2 element
+  // vector every iteration.
+  DigitizedParameters dParams;
 
   for (std::int64_t i = 0; i < nHits; ++i) {
     const std::uint8_t cmlDet = detArr->Value(hOff + i);
@@ -501,7 +510,10 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
       }
       const Acts::Vector2& lp = localResult.value();
 
-      DigitizedParameters dParams;
+      dParams.indices.clear();
+      dParams.values.clear();
+      dParams.variances.clear();
+      dParams.cluster = Cluster{};
       dParams.cluster.globalPosition = globalPos;
       for (const auto& [idx, sigma] : sigmaIt->second) {
         dParams.indices.push_back(idx);
