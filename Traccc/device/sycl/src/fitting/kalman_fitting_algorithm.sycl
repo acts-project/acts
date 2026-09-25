@@ -172,4 +172,8 @@ void kalman_fitting_algorithm::fit_backward_kernel(
       });
 }
 
+void kalman_fitting_algorithm::synchronize() const {
+  details::get_queue(queue()).wait_and_throw();
+}
+
 }  // namespace traccc::sycl

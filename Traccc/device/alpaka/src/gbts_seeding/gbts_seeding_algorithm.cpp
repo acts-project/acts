@@ -206,9 +206,9 @@ struct gbts_convert_seeds {
 gbts_seeding_algorithm::gbts_seeding_algorithm(
     const gbts_seedfinder_config& cfg, const memory_resource& mr,
     const vecmem::copy& copy, alpaka::queue& q,
-    std::unique_ptr<const Logger> logger)
+    std::unique_ptr<const Logger> logger, await_function_type await_func)
     : device::gbts_seeding_algorithm(cfg, mr, copy, std::move(logger)),
-      alpaka::algorithm_base{q} {}
+      alpaka::algorithm_base{q, std::move(await_func)} {}
 
 void gbts_seeding_algorithm::gbts_bin_spacepoints_kernel(
     const device::gbts_bin_spacepoints_payload& payload) const {
@@ -367,6 +367,10 @@ void gbts_seeding_algorithm::gbts_convert_seeds_kernel(
   ::alpaka::exec<Acc>(details::get_queue(queue()),
                       makeWorkDiv<Acc>(n_blocks, n_threads),
                       kernels::gbts_convert_seeds{}, payload);
+}
+
+void gbts_seeding_algorithm::synchronize() const {
+  queue().synchronize();
 }
 
 }  // namespace traccc::alpaka

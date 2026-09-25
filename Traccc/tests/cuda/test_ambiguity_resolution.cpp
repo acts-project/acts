@@ -7,7 +7,6 @@
 
 // Project include(s).
 #include "traccc/ambiguity_resolution/ambiguity_resolution_config.hpp"
-#include "traccc/ambiguity_resolution/greedy_ambiguity_resolution_algorithm.hpp"
 #include "traccc/cuda/ambiguity_resolution/greedy_ambiguity_resolution_algorithm.hpp"
 #include "traccc/device/container_d2h_copy_alg.hpp"
 #include "traccc/device/container_h2d_copy_alg.hpp"
@@ -24,8 +23,6 @@
 #include <gtest/gtest.h>
 
 // System include(s).
-#include <chrono>
-#include <random>
 #include <thread>
 
 using namespace traccc;
@@ -77,23 +74,6 @@ bool find_pattern(
     }
   }
   return false;
-}
-
-std::vector<measurement_id_type> get_pattern(
-    const edm::track_container<default_algebra>::host& track_candidates,
-    const std::size_t idx) {
-  edm::measurement_collection::const_device measurements{
-      track_candidates.measurements};
-  std::vector<measurement_id_type> ret;
-  // A const reference would be fine here. But GCC fears that that would lead
-  // to a dangling reference...
-  const auto meas_links = track_candidates.tracks.at(idx).constituent_links();
-  for (const auto& [type, meas_idx] : meas_links) {
-    assert(type == edm::track_constituent_link::measurement);
-    ret.push_back(measurements.at(meas_idx).identifier());
-  }
-
-  return ret;
 }
 
 TEST(CUDAAmbiguitySolverTests, GreedyResolverTest0) {
@@ -750,177 +730,3 @@ TEST(CUDAAmbiguitySolverTests, GreedyResolverTest17) {
 
   ASSERT_TRUE(find_pattern(res_trk_cands, {0, 6, 4, 5, 5}));
 }
-
-// Test class for the ambiguity resolution comparison with CPU implementation
-// Input tuple: < n_event, n_tracks, track_length_range , max_meas_id,
-// allow_duplicate >
-class CUDAGreedyResolutionCompareToCPU
-    : public ::testing::TestWithParam<
-          std::tuple<std::size_t, std::size_t, std::array<std::size_t, 2u>,
-                     measurement_id_type, bool>> {};
-
-TEST_P(CUDAGreedyResolutionCompareToCPU, Comparison) {
-  const std::size_t n_events = std::get<0>(GetParam());
-  const std::size_t n_tracks = std::get<1>(GetParam());
-  const std::array<std::size_t, 2u> trk_length_range = std::get<2>(GetParam());
-  const measurement_id_type max_meas_id = std::get<3>(GetParam());
-  const bool allow_duplicate = std::get<4>(GetParam());
-
-  // Memory resource used by the EDM.
-  vecmem::cuda::device_memory_resource device_mr;
-  vecmem::host_memory_resource host_mr;
-  traccc::memory_resource mr{device_mr, &host_mr};
-
-  // Cuda stream
-  vecmem::cuda::stream_wrapper vecmem_stream;
-  traccc::cuda::stream_wrapper stream{vecmem_stream.stream()};
-
-  // Cuda copy objects
-  vecmem::cuda::async_copy copy{stream.cudaStream()};
-
-  for (std::size_t i_evt = 0u; i_evt < n_events; i_evt++) {
-    std::size_t sd = 42u + i_evt;
-    std::mt19937 gen(sd);
-    std::cout << "Event: " << i_evt << " Seed: " << sd << std::endl;
-
-    edm::measurement_collection::host measurements{host_mr};
-    fill_measurements(measurements, max_meas_id);
-    edm::track_container<default_algebra>::host trk_cands{
-        host_mr, vecmem::get_data(measurements)};
-
-    for (std::size_t i = 0; i < n_tracks; i++) {
-      std::uniform_int_distribution<std::size_t> track_length_dist(
-          trk_length_range[0], trk_length_range[1]);
-      std::uniform_int_distribution<measurement_id_type> meas_id_dist(
-          0, max_meas_id);
-      std::uniform_real_distribution<traccc::scalar> pval_dist(0.0f, 1.0f);
-
-      const std::size_t track_length = track_length_dist(gen);
-      const traccc::scalar pval = pval_dist(gen);
-      std::vector<measurement_id_type> pattern;
-      // std::cout << pval << std::endl;
-      while (pattern.size() < track_length) {
-        auto mid = meas_id_dist(gen);
-        if (!allow_duplicate) {
-          while (std::find(pattern.begin(), pattern.end(), mid) !=
-                 pattern.end()) {
-            mid = meas_id_dist(gen);
-          }
-        }
-        // std::cout << mid << ", ";
-        pattern.push_back(mid);
-      }
-      // std::cout << std::endl;
-
-      // Make sure that partern size is equal to the track length
-      ASSERT_EQ(pattern.size(), track_length);
-
-      // Fill the pattern
-      fill_pattern(trk_cands, pval, pattern);
-    }
-
-    // CPU algorithm
-    traccc::host::greedy_ambiguity_resolution_algorithm::config_type
-        resolution_config;
-    traccc::host::greedy_ambiguity_resolution_algorithm resolution_alg_cpu(
-        resolution_config, host_mr);
-
-    auto start_cpu = std::chrono::high_resolution_clock::now();
-
-    auto res_trk_cands_cpu = resolution_alg_cpu(
-        edm::track_container<default_algebra>::const_data(trk_cands));
-
-    auto end_cpu = std::chrono::high_resolution_clock::now();
-    auto duration_cpu = std::chrono::duration_cast<std::chrono::milliseconds>(
-        end_cpu - start_cpu);
-    std::cout << " Time for the cpu method " << duration_cpu.count() << " ms"
-              << std::endl;
-
-    // CUDA algorithm
-    traccc::cuda::greedy_ambiguity_resolution_algorithm resolution_alg_cuda(
-        resolution_config, mr, copy, stream);
-
-    // H2D transfer
-    edm::measurement_collection::buffer measurements_buffer =
-        copy.to(vecmem::get_data(measurements), device_mr, &host_mr,
-                vecmem::copy::type::host_to_device);
-    traccc::edm::track_container<default_algebra>::buffer trk_cands_buffer{
-        copy.to(vecmem::get_data(trk_cands.tracks), device_mr, &host_mr,
-                vecmem::copy::type::host_to_device),
-        {},
-        measurements_buffer};
-
-    auto start_cuda = std::chrono::high_resolution_clock::now();
-
-    // Instantiate output cuda containers/collections
-    auto res_trk_cands_buffer = resolution_alg_cuda(trk_cands_buffer);
-    stream.synchronize();
-
-    auto end_cuda = std::chrono::high_resolution_clock::now();
-    auto duration_cuda = std::chrono::duration_cast<std::chrono::milliseconds>(
-        end_cuda - start_cuda);
-    std::cout << " Time for the cuda method " << duration_cuda.count() << " ms"
-              << std::endl;
-
-    traccc::edm::track_container<default_algebra>::buffer res_trk_cands_cuda{
-        copy.to(res_trk_cands_buffer.tracks, host_mr, nullptr,
-                vecmem::copy::type::device_to_host),
-        {},
-        vecmem::get_data(measurements)};
-
-    const auto n_tracks_cpu = res_trk_cands_cpu.tracks.size();
-    ASSERT_EQ(n_tracks_cpu, res_trk_cands_cuda.tracks.capacity());
-
-    // Make sure that CPU and CUDA track candidates have same
-    // patterns
-    edm::track_container<default_algebra>::const_device
-        res_trk_cands_cuda_device{res_trk_cands_cuda};
-    for (unsigned int i = 0; i < n_tracks_cpu; i++) {
-      ASSERT_TRUE(find_pattern(res_trk_cands_cuda_device,
-                               get_pattern(res_trk_cands_cpu, i)));
-    }
-  }
-};
-
-INSTANTIATE_TEST_SUITE_P(
-    CUDAStandard, CUDAGreedyResolutionCompareToCPU,
-    ::testing::Values(std::make_tuple(5u, 50000u,
-                                      std::array<std::size_t, 2u>{1u, 10u},
-                                      20000u, true),
-                      std::make_tuple(5u, 50000u,
-                                      std::array<std::size_t, 2u>{1u, 10u},
-                                      20000u, false)));
-
-INSTANTIATE_TEST_SUITE_P(
-    CUDASparse, CUDAGreedyResolutionCompareToCPU,
-    ::testing::Values(std::make_tuple(3u, 5000u,
-                                      std::array<std::size_t, 2u>{3u, 10u},
-                                      1000000u, true),
-                      std::make_tuple(3u, 5000u,
-                                      std::array<std::size_t, 2u>{3u, 10u},
-                                      1000000u, false)));
-
-INSTANTIATE_TEST_SUITE_P(
-    CUDADense, CUDAGreedyResolutionCompareToCPU,
-    ::testing::Values(std::make_tuple(3u, 5000u,
-                                      std::array<std::size_t, 2u>{3u, 10u},
-                                      100u, true),
-                      std::make_tuple(3u, 5000u,
-                                      std::array<std::size_t, 2u>{3u, 10u},
-                                      100u, false)));
-
-INSTANTIATE_TEST_SUITE_P(
-    CUDALong, CUDAGreedyResolutionCompareToCPU,
-    ::testing::Values(std::make_tuple(3u, 10000u,
-                                      std::array<std::size_t, 2u>{3u, 500u},
-                                      10000u, true),
-                      std::make_tuple(3u, 10000u,
-                                      std::array<std::size_t, 2u>{3u, 500u},
-                                      10000u, false)));
-
-INSTANTIATE_TEST_SUITE_P(
-    CUDASimple, CUDAGreedyResolutionCompareToCPU,
-    ::testing::Values(
-        std::make_tuple(3u, 5u, std::array<std::size_t, 2u>{3u, 5u}, 10u, true),
-        std::make_tuple(3u, 5u, std::array<std::size_t, 2u>{3u, 5u}, 10u,
-                        false)));

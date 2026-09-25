@@ -61,6 +61,11 @@ option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 set(ACTS_CODEGEN_PREBUILT_DIR "" CACHE PATH "Directory holding pre-generated code; a generated file found there is used verbatim instead of being regenerated. Defaults to prebuilt-codegen/ next to this file when it exists, which is what release source archives ship")
 option(ACTS_CODEGEN_REQUIRE_PREBUILT "Fail the configure step instead of running the code generators when pre-generated code is missing" OFF)
 # external library options
+set(ACTS_USE_ZSTD "AUTO" CACHE STRING "zstd support: AUTO (use if available), ALWAYS (required), NEVER (disabled)")
+set_property(CACHE ACTS_USE_ZSTD PROPERTY STRINGS AUTO ALWAYS NEVER)
+if(NOT ACTS_USE_ZSTD MATCHES "^(AUTO|ALWAYS|NEVER)$")
+    message(FATAL_ERROR "ACTS_USE_ZSTD must be AUTO, ALWAYS, or NEVER (got '${ACTS_USE_ZSTD}')")
+endif()
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
