@@ -118,6 +118,14 @@ repos:
       additional_dependencies: ["typer", "rich", "pyyaml"]
       pass_filenames: false
 
+    - id: dependency_versions
+      name: dependency versions consistent
+      entry: CI/bump_versions.py check
+      language: python
+      files: ^(\.github/(workflows|actions)/.*\.ya?ml|\.devcontainer/Dockerfile|CI/.*\.(sh|env|py)|docs/.*\.md)$
+      additional_dependencies: ["typer", "rich"]
+      pass_filenames: false
+
   - repo: https://github.com/woodruffw/zizmor-pre-commit
     rev: v1.29.0   # check latest
     hooks:

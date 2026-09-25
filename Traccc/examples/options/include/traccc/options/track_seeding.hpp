@@ -19,8 +19,7 @@ namespace traccc::opts {
 class track_seeding : public interface,
                       public config_provider<seedfinder_config>,
                       public config_provider<seedfilter_config>,
-                      public config_provider<spacepoint_grid_config>,
-                      public config_provider<vector3> {
+                      public config_provider<spacepoint_grid_config> {
  public:
   /// Constructor
   track_seeding();
@@ -34,8 +33,6 @@ class track_seeding : public interface,
   explicit operator seedfilter_config() const override;
   /// Configuration provider for the spacepoint grid
   explicit operator spacepoint_grid_config() const override;
-  /// Configuration provider for the constant magnetic field assumed
-  explicit operator vector3() const override;
 
   /// @}
 

@@ -37,6 +37,29 @@ def test_generic_geometry():
     assert count_surfaces(trackingGeometry) == 18728
 
 
+def test_tracking_geometry_keeps_detector_alive():
+    """The tracking geometry only shares ownership of the surfaces. The
+    detector elements they reference through the non-owning
+    Surface::m_placement are owned by the detector, so holding on to the
+    geometry has to keep the detector alive as well."""
+    import gc
+    import weakref
+
+    detector = acts.examples.GenericDetector()
+    detectorAlive = weakref.ref(detector)
+    trackingGeometry = detector.trackingGeometry()
+
+    del detector
+    gc.collect()
+
+    assert detectorAlive() is not None, (
+        "detector was destroyed while the tracking geometry is still alive, "
+        "leaving Surface::m_placement dangling"
+    )
+    # the geometry is still usable
+    assert count_surfaces(trackingGeometry) == 18728
+
+
 def test_telescope_geometry():
     n_surfaces = 10
 

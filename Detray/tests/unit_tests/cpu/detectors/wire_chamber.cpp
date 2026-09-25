@@ -29,4 +29,10 @@ GTEST_TEST(detray_detectors, wire_chamber) {
 
   // Check general consistency of the detector
   detail::check_consistency(wire_det, true, names);
+
+  // Device detector type
+  auto det_view = detray::get_data(wire_det);
+  device::detector<wire_chamber_metadata<test::algebra>> wire_det_dev(det_view);
+
+  detray::detail::check_consistency(wire_det_dev, true, names);
 }

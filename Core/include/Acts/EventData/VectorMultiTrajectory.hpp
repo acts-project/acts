@@ -383,6 +383,7 @@ class VectorMultiTrajectoryBase {
 }  // namespace detail_vmt
 
 class VectorMultiTrajectory;
+class ConstVectorMultiTrajectory;
 
 template <>
 struct IsReadOnlyMultiTrajectory<VectorMultiTrajectory> : std::false_type {};
@@ -398,6 +399,10 @@ class VectorMultiTrajectory final
  public:
   VectorMultiTrajectory() = default;
   using VectorMultiTrajectoryBase::VectorMultiTrajectoryBase;
+
+  /// Construct from const container
+  /// @param other Const container to copy from
+  explicit VectorMultiTrajectory(const ConstVectorMultiTrajectory& other);
 
   /// Get statistics about memory usage
   /// @return Statistics object
@@ -570,8 +575,6 @@ static_assert(
     MutableMultiTrajectoryBackend<VectorMultiTrajectory>,
     "VectorMultiTrajectory does not fulfill MutableMultiTrajectoryBackend");
 
-class ConstVectorMultiTrajectory;
-
 template <>
 struct IsReadOnlyMultiTrajectory<ConstVectorMultiTrajectory> : std::true_type {
 };
@@ -687,5 +690,9 @@ class ConstVectorMultiTrajectory final
 static_assert(
     ConstMultiTrajectoryBackend<ConstVectorMultiTrajectory>,
     "ConctVectorMultiTrajectory does not fulfill ConstMultiTrajectoryBackend");
+
+inline VectorMultiTrajectory::VectorMultiTrajectory(
+    const ConstVectorMultiTrajectory& other)
+    : VectorMultiTrajectoryBase{other} {}
 
 }  // namespace Acts

@@ -9,6 +9,7 @@
 
 // Local include(s).
 #include "traccc/alpaka/utils/algorithm_base.hpp"
+#include "traccc/alpaka/utils/await.hpp"
 
 // Project include(s).
 #include "traccc/gbts_seeding/device/gbts_seeding_algorithm.hpp"
@@ -31,11 +32,13 @@ class gbts_seeding_algorithm : public device::gbts_seeding_algorithm,
   ///             and host memory blocks
   /// @param q The Alpaka queue to perform the operations in
   /// @param logger The logger instance to use
+  /// @param await_func The function to use for synchronizing events
   ///
   gbts_seeding_algorithm(
       const gbts_seedfinder_config& cfg, const memory_resource& mr,
       const vecmem::copy& copy, alpaka::queue& q,
-      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
+      await_function_type await_func = await_sync_event);
 
  private:
   /// @name Function(s) inherited from @c
@@ -48,37 +51,33 @@ class gbts_seeding_algorithm : public device::gbts_seeding_algorithm,
       const device::gbts_sort_nodes_payload& payload) const override;
   void gbts_find_minmax_radius_kernel(
       const device::gbts_find_minmax_radius_payload& payload) const override;
-  void gbts_make_graph_edges_kernel(
-      const device::gbts_make_graph_edges_payload& payload) const override;
-  void gbts_link_graph_edges_kernel(
-      const device::gbts_link_graph_edges_payload& payload) const override;
+  void gbts_build_edge_work_list_kernel(
+      const device::gbts_build_edge_work_list_payload& payload) const override;
+  void gbts_count_graph_edges_kernel(
+      const device::gbts_count_graph_edges_payload& payload) const override;
+  void gbts_fill_graph_edges_kernel(
+      const device::gbts_fill_graph_edges_payload& payload) const override;
   void gbts_match_graph_edges_kernel(
       const device::gbts_match_graph_edges_payload& payload) const override;
-  void gbts_reindex_edges_kernel(
-      const device::gbts_reindex_edges_payload& payload) const override;
   void gbts_compress_graph_kernel(
       const device::gbts_compress_graph_payload& payload) const override;
   void gbts_run_cca_iteration_kernel(
       const device::gbts_run_cca_iteration_payload& payload) const override;
-  void gbts_count_terminus_edges_kernel(
-      const device::gbts_count_terminus_edges_payload& payload) const override;
-  void gbts_add_terminus_to_path_store_kernel(
-      const device::gbts_add_terminus_to_path_store_payload& payload)
-      const override;
+  void gbts_finish_cca_kernel(
+      const device::gbts_finish_cca_payload& payload) const override;
+  void gbts_count_paths_kernel(
+      const device::gbts_count_paths_payload& payload) const override;
   void gbts_fill_path_store_kernel(
       const device::gbts_fill_path_store_payload& payload) const override;
-  void gbts_fit_segments_kernel(
-      const device::gbts_fit_segments_payload& payload) const override;
-  void gbts_reset_edge_bids_kernel(
-      const device::gbts_reset_edge_bids_payload& payload) const override;
-  void gbts_rebid_seeds_for_edges_kernel(
-      const device::gbts_rebid_seeds_for_edges_payload& payload) const override;
   void gbts_bid_seeds_for_hits_kernel(
       const device::gbts_bid_seeds_for_hits_payload& payload) const override;
   void gbts_convert_seeds_kernel(
       const device::gbts_convert_seeds_payload& payload) const override;
 
   /// @}
+
+  /// Wait for outstanding work on the algorithm stream or queue.
+  void synchronize() const override;
 
 };  // class gbts_seeding_algorithm
 
