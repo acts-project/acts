@@ -187,10 +187,46 @@ void addBarrelEndcapSubsystem(
       .setLayerFilter(layerFilter)
       .onLayer(makeLayerCustomizer(builder, std::move(det), layerFilter,
                                    barrelMaterialFace))
-      .onContainer([](const auto&, Acts::ContainerBlueprintNode& node) {
-        node.setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
-        node.setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
-                                 Acts::VolumeResizeStrategy::Gap);
+      .onContainer([&builder](const dd4hep::DetElement& elem,
+                              Acts::detail::ContainerNodePtr node)
+                       -> Acts::detail::BlueprintNodePtr {
+        node->setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
+        node->setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
+                                  Acts::VolumeResizeStrategy::Gap);
+
+        // This callback fires for every container node the barrelEndcap()
+        // builder creates: each endcap sub-container, the barrel
+        // sub-container, and the combined top-level Z-stack. Only the
+        // *barrel* sub-container (e.g. "PixelBarrel") carries
+        // negative/positive boundary material per the ODD convention; the
+        // combined top-level node must be left alone, since its own
+        // negative/positive discs get fused with its radial neighbor's cap
+        // in the outer AxisR stack, and Acts refuses to fuse two portals
+        // that both carry material.
+        if (!std::string{builder.backend().nameOf(elem)}.ends_with("Barrel")) {
+          return node;
+        }
+
+        // Container-level material: negative/positive disc faces only. The
+        // outer face is deliberately left alone here -- it collides with the
+        // outermost layer's own material designation on the fused portal
+        // where this container meets its radial neighbor (see the Kategorie
+        // 2 investigation).
+        using enum Acts::CylinderVolumeBounds::Face;
+        auto mat = std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
+            node->name() + "_boundary_mat");
+        mat->configureFace(NegativeDisc,
+                           Acts::AxisSpec::DeferredEquidistant(
+                               kMatRBins, Acts::AxisDirection::AxisR),
+                           Acts::AxisSpec::DeferredEquidistant(
+                               kMatPhiBins, Acts::AxisDirection::AxisPhi));
+        mat->configureFace(PositiveDisc,
+                           Acts::AxisSpec::DeferredEquidistant(
+                               kMatRBins, Acts::AxisDirection::AxisR),
+                           Acts::AxisSpec::DeferredEquidistant(
+                               kMatPhiBins, Acts::AxisDirection::AxisPhi));
+        mat->addChild(std::move(node));
+        return mat;
       })
       .addTo(outer);
 }
