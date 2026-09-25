@@ -5,6 +5,9 @@
  * Mozilla Public License Version 2.0
  */
 
+// Project include(s).
+#include "traccc/utils/stream_ordered_allocator.hpp"
+
 // Local include(s).
 #include "../utils/utils.hpp"
 #include "traccc/hip/finding/combinatorial_kalman_filter_algorithm.hpp"
@@ -20,9 +23,6 @@
 
 // HIP include(s).
 #include <hip/hip_runtime.h>
-
-// System include(s).
-#include <memory_resource>
 
 namespace traccc::hip {
 
@@ -54,13 +54,12 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
 // a backend specify way. :-(
 #if defined(__HIP_PLATFORM_AMD__)
         auto policy = thrust::hip::par_nosync(
-                          std::pmr::polymorphic_allocator(&(mr().main)))
+                          stream_ordered_allocator(mr().main, stream()))
                           .on(str);
 #elif defined(__HIP_PLATFORM_NVIDIA__)
-        auto policy =
-            thrust::cuda::par_nosync(
-                std::pmr::polymorphic_allocator(&(mr().main)))
-                .on(str);
+        auto policy = thrust::cuda::par_nosync(
+                          stream_ordered_allocator(mr().main, stream()))
+                          .on(str);
 #else
 #error "Unrecognised HIP platform."
 #endif

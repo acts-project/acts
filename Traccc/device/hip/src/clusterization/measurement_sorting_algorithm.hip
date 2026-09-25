@@ -17,15 +17,15 @@
 // VecMem include(s).
 #include <vecmem/containers/data/vector_buffer.hpp>
 
+// Project include(s).
+#include "traccc/utils/stream_ordered_allocator.hpp"
+
 // Thrust include(s).
 #include <thrust/execution_policy.h>
 #include <thrust/sort.h>
 
 // HIP include(s).
 #include <hip/hip_runtime.h>
-
-// System include(s).
-#include <memory_resource>
 
 namespace traccc::hip {
 namespace kernels {
@@ -90,11 +90,11 @@ measurement_sorting_algorithm::operator()(
   // a backend specify way. :-(
 #if defined(__HIP_PLATFORM_AMD__)
   auto policy =
-      thrust::hip::par_nosync(std::pmr::polymorphic_allocator(&(m_mr.main)))
+      thrust::hip::par_nosync(stream_ordered_allocator(m_mr.main, m_stream))
           .on(stream);
 #elif defined(__HIP_PLATFORM_NVIDIA__)
   auto policy =
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(m_mr.main)))
+      thrust::cuda::par_nosync(stream_ordered_allocator(m_mr.main, m_stream))
           .on(stream);
 #else
 #error "Unrecognised HIP platform."

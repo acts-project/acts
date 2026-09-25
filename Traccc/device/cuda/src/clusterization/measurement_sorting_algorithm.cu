@@ -18,12 +18,12 @@
 #include <vecmem/containers/data/vector_buffer.hpp>
 #include <vecmem/utils/copy.hpp>
 
+// Project include(s).
+#include "traccc/utils/stream_ordered_allocator.hpp"
+
 // Thrust include(s).
 #include <thrust/execution_policy.h>
 #include <thrust/sort.h>
-
-// System include(s).
-#include <memory_resource>
 
 namespace traccc::cuda {
 namespace kernels {
@@ -84,7 +84,7 @@ measurement_sorting_algorithm::operator()(
   cudaStream_t stream = details::get_stream(m_stream);
   // Set up the Thrust execution policy.
   auto policy =
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(m_mr.main)))
+      thrust::cuda::par_nosync(stream_ordered_allocator(m_mr.main, m_stream))
           .on(stream);
 
   // Sorting keys and index sequence.

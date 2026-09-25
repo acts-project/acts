@@ -34,7 +34,9 @@
 
 // System include(s).
 #include <algorithm>
-#include <memory_resource>
+
+// Project include(s).
+#include "traccc/utils/stream_ordered_allocator.hpp"
 
 // Thrust include(s).
 #include <thrust/execution_policy.h>
@@ -173,7 +175,7 @@ void gbts_seeding_algorithm::gbts_bin_spacepoints_kernel(
   vecmem::device_vector<unsigned int> d_eta_node_counter(
       payload.eta_node_counter);
   thrust::exclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(stream_ordered_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       d_eta_node_counter.begin(), d_eta_node_counter.end(),
       d_eta_node_counter.begin());
@@ -186,7 +188,7 @@ void gbts_seeding_algorithm::gbts_sort_nodes_kernel(
   vecmem::device_vector<unsigned long long int> d_sort_keys(payload.sort_keys);
   vecmem::device_vector<unsigned int> d_sort_values(payload.sort_values);
   thrust::sort_by_key(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(stream_ordered_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       d_sort_keys.begin(),
       d_sort_keys.begin() + static_cast<int>(payload.nNodes),
@@ -231,7 +233,7 @@ void gbts_seeding_algorithm::gbts_count_graph_edges_kernel(
   vecmem::device_vector<unsigned int> d_num_outgoing_edges(
       payload.num_outgoing_edges);
   thrust::inclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(stream_ordered_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       d_num_outgoing_edges.begin(), d_num_outgoing_edges.end(),
       d_num_outgoing_edges.begin());
@@ -257,7 +259,7 @@ void gbts_seeding_algorithm::gbts_match_graph_edges_kernel(
 
   // Compact the kept edges with a prefix sum over their 0/1 flags.
   thrust::inclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(stream_ordered_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       payload.kept.ptr(), payload.kept.ptr() + payload.nEdgesMax,
       payload.reIndexer.ptr());
@@ -301,7 +303,7 @@ void gbts_seeding_algorithm::gbts_count_paths_kernel(
   // Path offsets of the path store.
   vecmem::device_vector<unsigned int> d_path_counts(payload.path_counts);
   thrust::inclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(stream_ordered_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       d_path_counts.begin(), d_path_counts.begin() + payload.nConnectedEdges,
       d_path_counts.begin());
