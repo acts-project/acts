@@ -37,6 +37,57 @@ struct CenterReferenceGenerator : public IReferenceGenerator {
   }
 };
 
+/// A struct to access the shifted center of surface applying a shift on the
+/// corresponding coordinate
+///
+/// This generator will provide only one filling point and hence
+/// only a single bin in the indexed grid.
+struct ShiftedCenterReferenceGenerator : public IReferenceGenerator {
+  /// The global to local volume's frame
+  Transform3 globalToLocal{Transform3::Identity()};
+
+  /// The direction orthogonal to the shift direction
+  AxisDirection layerDir{AxisDirection::AxisY};
+
+  /// The direction along the shift direction
+  AxisDirection shiftDir{AxisDirection::AxisX};
+
+  /// The lowest bin edge in the grid along the direction opposite to the shift
+  /// direction, it is needed to extract the correct index of the shifts vector
+  double layerLow{0.};
+
+  /// The layer pitch
+  /// it is needed to extract the correct index of the shifts vector
+  double layerPitch{0.};
+
+  /// The vector with the shifts per layer
+  /// if empty, exception is thrown
+  std::vector<double> shifts;
+
+  /// Helper to access the Center point of for filling the grid
+  ///
+  /// @param gctx the geometry context of this operation
+  /// @param surface the surface for which the reference point is to be accessed
+  ///
+  /// @return a vector of reference points for filling
+  const std::vector<Vector3> references(const GeometryContext& gctx,
+                                        const Surface& surface) const override {
+    if (shifts.empty()) {
+      throw std::invalid_argument(
+          "The ShiftedCenetrReference generator called without shifts vector.");
+    }
+
+    Vector3 cLocal = globalToLocal * surface.center(gctx);
+
+    const double lc = VectorHelpers::cast(cLocal, layerDir);
+    const auto bin = static_cast<std::size_t>(
+        std::floor((lc - layerLow) / layerPitch));  // 0-based layer bin
+
+    cLocal[toUnderlying(shiftDir)] += shifts.at(bin);  // shift along shiftDir
+    return {globalToLocal.inverse() * cLocal};
+  }
+};
+
 /// A struct to access reference positions based on bin values
 ///
 /// @tparam bVAL the binning value to be used for the binning position call

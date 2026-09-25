@@ -36,7 +36,7 @@
 int main() {
   // Toy detector
   using metadata_t = detray::tutorial::toy_metadata;
-  using toy_detector_t = detray::detector<metadata_t>;
+  using toy_detector_t = detray::host::detector<metadata_t>;
   using algebra_t = typename toy_detector_t::algebra_type;
 
   /// Type that holds the intersection information

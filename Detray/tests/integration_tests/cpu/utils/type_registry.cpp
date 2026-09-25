@@ -40,7 +40,7 @@ GTEST_TEST(detray_utils, mapped_type_registry) {
   using namespace detray;
 
   using metadata_t = test::toy_metadata;
-  using detector_t = detector<metadata_t>;
+  using detector_t = host::detector<metadata_t>;
   using test_algebra_t = detector_t::algebra_type;
   using mask_types = typename detector_t::masks;
   using mask_id = detector_t::masks::id;

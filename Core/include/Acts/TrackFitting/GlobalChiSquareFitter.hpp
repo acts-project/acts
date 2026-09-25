@@ -1291,7 +1291,7 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
       auto propagatorInitResult =
-          m_propagator.initialize(propagatorState, params);
+          m_propagator.initialize(propagatorState, params, nullptr);
       if (!propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
@@ -1457,7 +1457,7 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
       auto propagatorInitResult =
-          m_propagator.initialize(propagatorState, params);
+          m_propagator.initialize(propagatorState, params, nullptr);
       if (!propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
@@ -1603,7 +1603,7 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
       auto propagatorInitResult =
-          m_propagator.initialize(propagatorState, params);
+          m_propagator.initialize(propagatorState, params, nullptr);
       if (!propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());

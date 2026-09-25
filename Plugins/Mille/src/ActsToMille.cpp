@@ -20,6 +20,7 @@
 
 #include <Eigen/src/Core/Matrix.h>
 #include <Mille/MilleDataStructures.h>
+#include <Mille/MilleRecord.h>
 
 #include "Mille/MilleDecoder.h"
 
@@ -43,6 +44,10 @@ unsigned long globalIndexSurfToParam(unsigned long surfaceIndex,
 
 void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
                  MilleRecord& record, bool removeUnconstrainedTrackPar) {
+  // spawn a local buffer to be able to assemble the record without lock
+  // contention.
+  std::unique_ptr<Mille::MilleRecord> milleLocalBuf = record.spawnLocalBuffer();
+
   // prepare the vectors to interface to Mille
   std::vector<int> globalIndices(state.alignmentDof, 0.);
   std::vector<double> globalDeriv(state.alignmentDof, 0.);
@@ -116,7 +121,7 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
       ++iPar;
     }
     // write a measurement to the ongoing Mille record.
-    record.addData(
+    milleLocalBuf->addData(
         // residual
         state.residual(iMeas),
         // sigma
@@ -227,7 +232,7 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
       localDeriv[iPar] = eigenVecs(iPar, iMeas);
     }
     // and write a pseudo-measurement to Mille.
-    record.addData(
+    milleLocalBuf->addData(
         // residual == 0 for pseudo-measurements
         0,
         // EV == weight = 1/sigma^2
@@ -238,7 +243,9 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
         localDeriv, globalIndices, globalDeriv);
   }
   // track is fully written - end the record in Mille
-  record.writeRecord();
+  // NB: This will automatically propagate the local buffer content to
+  // the parent instance passed by the caller.
+  milleLocalBuf->writeRecord();
 }
 
 Mille::MilleDecoder::ReadResult unpackMilleRecord(

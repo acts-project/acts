@@ -33,11 +33,6 @@ track_gbts_seeding::track_gbts_seeding() : interface("GBTS Options") {
   m_desc.add_options()(
       "min_pt", po::value(&min_pt)->default_value(min_pt),
       "min_pt to scale other cuts by with reference to 900 MeV [MeV]");
-  m_desc.add_options()("max_edges_factor",
-                       po::value(&gbts_config.max_edges_factor)
-                           ->default_value(gbts_config.max_edges_factor),
-                       "number of edges allocated for per node ");
-
   m_desc.add_options()(
       "min_delta_phi",
       po::value(&gbts_config.gbts_dphi_window_params.min_delta_phi)
@@ -112,6 +107,17 @@ track_gbts_seeding::track_gbts_seeding() : interface("GBTS Options") {
                        po::value(&gbts_config.max_num_neighbours)
                            ->default_value(gbts_config.max_num_neighbours),
                        "max connected neighbours for each edge");
+  m_desc.add_options()(
+      "max_edges_per_spacepoint",
+      po::value(&gbts_config.max_edges_per_spacepoint)
+          ->default_value(gbts_config.max_edges_per_spacepoint),
+      "edge buffer capacity per spacepoint (edges beyond it are dropped)");
+  m_desc.add_options()(
+      "max_connected_edges_per_spacepoint",
+      po::value(&gbts_config.max_connected_edges_per_spacepoint)
+          ->default_value(gbts_config.max_connected_edges_per_spacepoint),
+      "compacted graph capacity per spacepoint (connected edges beyond it "
+      "are dropped)");
   // set CLI tuning for seed extraction kalman filter
   m_desc.add_options()(
       "sigmaMS",
@@ -240,8 +246,6 @@ std::unique_ptr<configuration_printable> track_gbts_seeding::as_printable()
       "gbts config directory ", config_dir));
   // Graph building flags
   cat->add_child(std::make_unique<configuration_kv_pair>(
-      "max edges factor ", std::format("{}", gbts_config.max_edges_factor)));
-  cat->add_child(std::make_unique<configuration_kv_pair>(
       "min_delta_phi ",
       std::format("{:.5f} ",
                   gbts_config.gbts_dphi_window_params.min_delta_phi)));
@@ -290,6 +294,12 @@ std::unique_ptr<configuration_printable> track_gbts_seeding::as_printable()
                   gbts_config.gbts_match_graph_edges_params.cut_deta_max)));
   cat->add_child(std::make_unique<configuration_kv_pair>(
       "max neighbours ", std::format("{} ", gbts_config.max_num_neighbours)));
+  cat->add_child(std::make_unique<configuration_kv_pair>(
+      "max edges per spacepoint ",
+      std::format("{} ", gbts_config.max_edges_per_spacepoint)));
+  cat->add_child(std::make_unique<configuration_kv_pair>(
+      "max connected edges per spacepoint ",
+      std::format("{} ", gbts_config.max_connected_edges_per_spacepoint)));
   // Seed extraction flags
   cat->add_child(std::make_unique<configuration_kv_pair>(
       "sigmaMS ",

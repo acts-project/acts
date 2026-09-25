@@ -9,6 +9,7 @@
 
 // Local include(s).
 #include "traccc/sycl/utils/algorithm_base.hpp"
+#include "traccc/sycl/utils/await.hpp"
 
 // Project include(s).
 #include "traccc/finding/device/combinatorial_kalman_filter_algorithm.hpp"
@@ -30,7 +31,8 @@ class combinatorial_kalman_filter_algorithm
       const vecmem::copy& copy, queue_wrapper& queue,
       std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
       std::unique_ptr<traccc::sycl::kalman_fitting_algorithm> kf_fitter =
-          nullptr);
+          nullptr,
+      await_function_type await_func = await_sync_event);
 
  private:
   /// @name Function(s) inherited from

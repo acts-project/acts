@@ -14,6 +14,9 @@
 // Vecmem include(s)
 #include <vecmem/containers/vector.hpp>
 
+// System include(s)
+#include <cassert>
+
 namespace detray {
 
 /// Device vector class with a minimized memory footprint
@@ -33,6 +36,7 @@ struct compact_device_vector {
   using reverse_iterator = std::reverse_iterator<iterator>;
   using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
+  /// Constructor from a vecmem vector view
   DETRAY_HOST_DEVICE explicit compact_device_vector(
       const vecmem::data::vector_view<value_type>& data)
       : m_ptr(data.ptr()), m_size(data.size()) {}
@@ -49,9 +53,16 @@ struct compact_device_vector {
   }
 
   DETRAY_HOST_DEVICE
-  reference operator[](size_type pos) { return m_ptr[pos]; }
+  reference operator[](size_type pos) {
+    assert(pos < size());
+    return m_ptr[pos];
+  }
+
   DETRAY_HOST_DEVICE
-  const_reference operator[](size_type pos) const { return m_ptr[pos]; }
+  const_reference operator[](size_type pos) const {
+    assert(pos < size());
+    return m_ptr[pos];
+  }
 
   DETRAY_HOST_DEVICE
   reference front() {

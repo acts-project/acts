@@ -77,7 +77,7 @@ class HasherT {
     if constexpr (HasFinalize<H>) {
       m_hasher.Final(digest.data());
     } else {
-      boost::hash2::digest<kDigestSize> result = m_hasher.result();
+      auto result = m_hasher.result();
       std::copy(result.data(), result.data() + kDigestSize, digest.begin());
     }
     return digest;

@@ -730,7 +730,7 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   // Payloads DONE, let's actually build a detray detector from them.
 
   using detector_t =
-      detray::detector<detray::default_metadata<detray::array<double>>>;
+      detray::host::detector<detray::default_metadata<detray::array<double>>>;
 
   // build detector
   detray::detector_builder<detector_t::metadata> detectorBuilder{};

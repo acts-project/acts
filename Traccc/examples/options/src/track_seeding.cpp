@@ -110,10 +110,6 @@ track_seeding::operator spacepoint_grid_config() const {
   return {m_seedfinder};
 }
 
-track_seeding::operator vector3() const {
-  return {0.f, 0.f, m_seedfinder.bFieldInZ};
-}
-
 void track_seeding::read(const po::variables_map&) {
   m_seedfinder.zMin = m_z_range[0] * unit<float>::mm;
   m_seedfinder.zMax = m_z_range[1] * unit<float>::mm;

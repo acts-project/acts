@@ -53,7 +53,7 @@ passive_matches = [ 'Passive' ]
 print('* Conversion yielded', len(ssurfaces))
 
 # Write them to an obj file
-drawContext = acts.GeometryContext()
+drawContext = acts.GeometryContext.dangerouslyDefaultConstruct()
 sensitiveRgb = [ 0, 150, 150 ]
 passiveRgb = [ 150, 150, 0]
 segments = 64 # how many segments to approximate a full circle
