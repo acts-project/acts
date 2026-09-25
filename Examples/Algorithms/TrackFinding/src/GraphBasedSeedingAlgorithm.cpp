@@ -11,6 +11,7 @@
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
@@ -24,7 +25,6 @@
 #include <iostream>
 #include <map>
 #include <numbers>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -371,24 +371,12 @@ GraphBasedSeedingAlgorithm::layerNumbering(
     auto actsVolId = geoId.volume();
     auto actsLayId = geoId.layer();
     auto mod_id = geoId.sensitive();
-    auto bounds_vect = surface->bounds().values();
     auto center = surface->center(gctx);
 
-    // make bounds global
-    Acts::Vector3 globalFakeMom(1, 1, 1);
-    Acts::Vector2 min_bound_local =
-        Acts::Vector2(bounds_vect[0], bounds_vect[1]);
-    Acts::Vector2 max_bound_local =
-        Acts::Vector2(bounds_vect[2], bounds_vect[3]);
-    Acts::Vector3 min_bound_global =
-        surface->localToGlobal(gctx, min_bound_local, globalFakeMom);
-    Acts::Vector3 max_bound_global =
-        surface->localToGlobal(gctx, max_bound_local, globalFakeMom);
-
-    // checking that not wrong way round
-    if (min_bound_global(0) > max_bound_global(0)) {
-      min_bound_global.swap(max_bound_global);
-    }
+    // A polygonal surface gives its corners whatever the segment count is,
+    // curved bounds an approximation of that resolution.
+    const std::vector<Acts::Vector3> &corners =
+        surface->polyhedronRepresentation(gctx, 4u).vertices;
 
     float rc = 0.0;
     float minBound = 100000.0;
@@ -434,24 +422,18 @@ GraphBasedSeedingAlgorithm::layerNumbering(
       rc = std::sqrt(center(0) * center(0) +
                      center(1) * center(1));  // barrel center in r
       // bounds of z
-      if (min_bound_global(2) < minBound) {
-        minBound = min_bound_global(2);
-      }
-      if (max_bound_global(2) > maxBound) {
-        maxBound = max_bound_global(2);
+      for (const Acts::Vector3 &corner : corners) {
+        minBound = std::min(minBound, static_cast<float>(corner(2)));
+        maxBound = std::max(maxBound, static_cast<float>(corner(2)));
       }
     } else if (barrelEc == Acts::Experimental::GbtsLayerType::Endcap) {
       rc = center(2);  // not barrel center in Z
       // bounds of r
-      float min = std::sqrt(min_bound_global(0) * min_bound_global(0) +
-                            min_bound_global(1) * min_bound_global(1));
-      float max = std::sqrt(max_bound_global(0) * max_bound_global(0) +
-                            max_bound_global(1) * max_bound_global(1));
-      if (min < minBound) {
-        minBound = min;
-      }
-      if (max > maxBound) {
-        maxBound = max;
+      for (const Acts::Vector3 &corner : corners) {
+        const auto r = static_cast<float>(
+            std::sqrt(corner(0) * corner(0) + corner(1) * corner(1)));
+        minBound = std::min(minBound, r);
+        maxBound = std::max(maxBound, r);
       }
     } else {
       throw std::runtime_error(
