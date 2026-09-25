@@ -367,6 +367,27 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
                            ActsPlugins::DD4hep::detail::kLongStripLayerFilter,
                            InnerCylinder);
 
+  // Solenoid: a passive aluminum tube-shaped element outside LongStrips,
+  // structurally identical to the beampipe/PST case. Unlike PST, its ODD XML
+  // carries both a `layer_material surface="representing"` (-> outer face,
+  // same convention as PST/beampipe) and a `boundary_material surface="inner"`
+  // (-> inner face) on the same element.
+  if (const auto solenoidElement = builder.findDetElementByName("Solenoid");
+      solenoidElement.has_value()) {
+    outer.addMaterial(
+        "Solenoid_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
+          mat.configureFace(
+              InnerCylinder,
+              Acts::AxisSpec::DeferredEquidistant(kMatPhiBins, AxisRPhi),
+              Acts::AxisSpec::DeferredEquidistant(kMatZBins, AxisZ));
+          mat.configureFace(
+              OuterCylinder,
+              Acts::AxisSpec::DeferredEquidistant(kMatPhiBins, AxisRPhi),
+              Acts::AxisSpec::DeferredEquidistant(kMatZBins, AxisZ));
+          mat.addChild(builder.backend().makePassiveCylinder(*solenoidElement));
+        });
+  }
+
   return root.construct(BlueprintOptions{}, gctx, logger);
 }
 
