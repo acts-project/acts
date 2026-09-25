@@ -21,6 +21,26 @@ detray_add_unit_test(cpu
    LINK_LIBRARIES GTest::gtest GTest::gtest_main detray::test_utils detray::core
 )
 
+# The known-substructure matrix test is very slow to compile, so it is opt-in
+# via DETRAY_BUILD_KNOWN_SUBSTRUCTURE_MATRIX_TEST (declared in the top level
+# CMakeLists.txt, which explains why). It gets its own target rather than being
+# a source of the test above, so that nothing of it is compiled when the option
+# is off, and its cost stays isolated to a target you can build and run on its
+# own when it is on.
+if(DETRAY_BUILD_KNOWN_SUBSTRUCTURE_MATRIX_TEST)
+    message(STATUS "Building the detray known-substructure matrix unit test")
+
+    # Links an algebra plugin rather than plain detray::core: the header's
+    # to_dense() needs dmatrix and getter::element, so it includes
+    # detray/definitions/algebra.hpp, which #errors without a plugin selected.
+    # The test itself is algebra agnostic, so one plugin is enough.
+    detray_add_unit_test(known_substructure_matrix
+       "utils/known_substructure_matrix.cpp"
+       LINK_LIBRARIES GTest::gtest GTest::gtest_main detray::test_utils
+       detray::core_array
+    )
+endif()
+
 # Macro setting up the CPU tests for a specific algebra plugin.
 macro(detray_add_cpu_test algebra)
     # Build the test executable.
@@ -97,6 +117,7 @@ macro(detray_add_cpu_test algebra)
        "utils/grids/populators.cpp"
        "utils/grids/serializers.cpp"
        "utils/hash_tree.cpp"
+       "utils/known_substructure_matrix_conversion.cpp"
        "utils/bounding_volume.cpp"
        "utils/curvilinear_frame.cpp"
        "utils/axis_rotation.cpp"
