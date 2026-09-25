@@ -232,15 +232,16 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     bool useTimeDoubletCut = false;
     /// Maximum allowed difference of the times of the two space points of a
     /// doublet, corrected for the time of flight between them, in units of
-    /// their combined time resolution. Only used when `useTimeDoubletCut` is enabled.
+    /// their combined time resolution. Only used when `useTimeDoubletCut` is
+    /// enabled.
     float doubletTimeCutNSigma = 5;
     /// Enable the cut on the time compatibility of the three space points of a
     /// triplet. Requires the input space points to carry time and time
     /// variance.
     bool useTimeTripletCut = false;
     /// Maximum allowed chi2 of the three times of a triplet, transported to the
-    /// middle space point, with respect to their weighted mean. Only used when `useTimeTripletCut`
-    /// is enabled.
+    /// middle space point, with respect to their weighted mean. Only used when
+    /// `useTimeTripletCut` is enabled.
     float tripletTimeChi2Max = 15;
 
     // other

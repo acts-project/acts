@@ -309,7 +309,7 @@ class DoubletSeedFinder {
     /// Enable cut on the compatibility between interaction point and doublet,
     /// this is an useful approximation to speed up the seeding
     bool interactionPointCut = false;
-    /// Enable the cut on the time compatibility 
+    /// Enable the cut on the time compatibility
     /// The space point container has to provide the
     /// `SpacePointColumns::Time` and `SpacePointColumns::VarianceT` columns
     bool useTime = false;
