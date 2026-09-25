@@ -21,14 +21,21 @@ BOOST_AUTO_TEST_SUITE(MillePedeSteeringTests)
 BOOST_AUTO_TEST_CASE(invalidSteeringDest) {
   MillePedeSteering::Config steerCfg;
   MillePedeSteering steer;
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  auto level = Acts::Logging::getFailureThreshold();
+  Acts::Logging::setFailureThreshold(Acts::Logging::MAX);
+#endif
   auto res =
       steer.generateSteeringFile("/invalid/location/wontWork.txt", steerCfg);
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  Acts::Logging::setFailureThreshold(level);
+#endif
   BOOST_CHECK(res.empty());
 }
 
 /// write a valid file
 BOOST_AUTO_TEST_CASE(validFileCheck) {
-  MillePedeSteering::Config steerCfg;
+  MillePedeSteering::Config steerCfg{.inputFiles = {"DummyBinary.dat"}};
   MillePedeSteering steer;
   const std::filesystem::path testSteer = "testSteer.txt";
   auto res = steer.generateSteeringFile(testSteer, steerCfg);
