@@ -55,7 +55,7 @@ inline auto link_points(const typename detector_t::geometry_context& context,
                         const detector_t& detector,
                         const detray::geometry::surface<detector_t>& d_portal,
                         typename detector_t::vector3_type dir,
-                        const double link_length,
+                        const typename detector_t::scalar_type link_length,
                         const std::size_t mask_idx = 0u) {
   assert(is_not_world_portal(d_portal));
 

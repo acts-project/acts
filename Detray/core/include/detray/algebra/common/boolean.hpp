@@ -23,7 +23,28 @@ constexpr bool all_of(bool b) {
 constexpr bool none_of(bool b) {
   return !b;
 }
-/// @}
+constexpr std::size_t count(bool b) {
+  return b ? 1u : 0u;
+}
+
+template <typename T, typename U>
+  requires(std::is_scalar_v<T> && std::convertible_to<U, T>)
+constexpr void set_if(T& value, const bool mask, const U new_value) {
+  value = mask ? static_cast<T>(new_value) : value;
+}
+
+template <typename T>
+  requires std::is_scalar_v<T>
+constexpr void set_zero(T& value, const bool mask) {
+  set_if(value, mask, static_cast<T>(0));
+}
+
+template <typename T>
+  requires std::is_scalar_v<T>
+constexpr void set_zero_inverted(T& value, const bool mask) {
+  set_if(value, !mask, static_cast<T>(0));
+}
+///@}
 
 }  // namespace algebra::boolean
 

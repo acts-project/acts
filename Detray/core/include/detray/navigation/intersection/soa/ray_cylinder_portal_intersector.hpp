@@ -94,7 +94,8 @@ struct ray_intersector_impl<concentric_cylindrical2D<algebra_t>, algebra_t,
     const scalar_type discr = rd_perp_inv_2 * rad_diff + k * k;
 
     // No intersection found for any cylinder
-    if (detray::detail::all_of(discr < 0.f)) [[unlikely]] {
+    if (detray::detail::all_of(discr < detail::zero<scalar_type>()))
+        [[unlikely]] {
       return {};
     }
 
@@ -105,23 +106,24 @@ struct ray_intersector_impl<concentric_cylindrical2D<algebra_t>, algebra_t,
     // Take the nearest solution in every lane
     auto is_smaller_sol = math::fabs(s1) < math::fabs(s2);
 
-    scalar_type path = 0.f;
-    path(is_smaller_sol) = s1;
-    path(!is_smaller_sol) = s2;
+    scalar_type path = detail::zero<scalar_type>();
+    detail::set_if(path, is_smaller_sol, s1);
+    detail::set_if(path, !is_smaller_sol, s2);
 
     // If any of the the near solutions is outside the overstepping
     // tolerance, take the far solution (if it exists)
     if (const auto outside_overstep_tol = path < overstep_tol;
         detray::detail::any_of(outside_overstep_tol) &&
-        detray::detail::all_of((discr > 0.f) || !outside_overstep_tol)) {
+        detray::detail::all_of((discr > detail::zero<scalar_type>()) ||
+                               !outside_overstep_tol)) {
       is_smaller_sol =
           (math::fabs(s1) >= math::fabs(s2)) && outside_overstep_tol;
-      path(is_smaller_sol) = s1;
-      path(!is_smaller_sol) = s2;
+      detail::set_if(path, is_smaller_sol, s1);
+      detail::set_if(path, !is_smaller_sol, s2);
     }
 
     point2_type loc;
-    loc[0] = 0.f;
+    loc[0] = detail::zero<scalar_type>();
     loc[1] = pos[2] + path * dir[2];
 
     return {path, loc};

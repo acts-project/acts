@@ -71,6 +71,7 @@ The following cmake options are available and can also be specified explicitly f
 | DETRAY_SMATRIX_PLUGIN | Build ROOT/SMatrix math plugin | OFF |
 | DETRAY_VC_AOS_PLUGIN | Build Vc based AoS math plugin | OFF |
 | DETRAY_VC_SOA_PLUGIN | Build Vc based SoA math plugin (currently only supports the ray-surface intersectors) | OFF |
+| DETRAY_ARRAY_SOA_PLUGIN | Build std::array based SoA math plugin (currently only supports the ray-surface intersectors) | OFF |
 | DETRAY_BUILD_TEST_UTILS  | Build the detray test utilities library (contains e.g. test detectors) | OFF |
 | DETRAY_BUILD_VALIDATION_TOOLS | Build detray validation suite | OFF |
 | DETRAY_SVG_DISPLAY | Build ActSVG display module | OFF |

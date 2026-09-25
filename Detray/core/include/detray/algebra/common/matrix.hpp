@@ -73,26 +73,12 @@ struct DETRAY_ALIGN(alignof(algebra::storage::vector<ROW, scalar_t, array_t>))
   DETRAY_HOST_DEVICE friend constexpr bool operator==(
       const matrix<A, S, R, C> &lhs, const matrix<A, S, R, C> &rhs);
 
-  /// Sets the trailing uninitialized values to zero.
-  /// @{
-  // AoS
+  /// Checks for equality over all columns
   template <std::size_t... I>
-  DETRAY_HOST_DEVICE
-    requires(!std::is_scalar_v<scalar_t>)
-  constexpr bool equal(const matrix &rhs,
-                       std::index_sequence<I...> /*unused*/) const {
+  DETRAY_HOST_DEVICE constexpr bool equal(
+      const matrix &rhs, std::index_sequence<I...> /*unused*/) const {
     return (... && (m_storage[I] == rhs[I]));
   }
-
-  // SoA
-  template <std::size_t... I>
-  DETRAY_HOST
-    requires(std::is_scalar_v<scalar_t>)
-  constexpr bool equal(const matrix &rhs,
-                       std::index_sequence<I...> /*unused*/) const {
-    return (... && ((m_storage[I].get() == rhs[I].get()).isFull()));
-  }
-  /// @}
 
   /// Arithmetic operators
   /// @{
