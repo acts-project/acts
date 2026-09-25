@@ -30,15 +30,19 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <array>
+#include <filesystem>
 #include <memory>
 #include <numbers>
 #include <set>
 
+#include <detray/builders/detail/material_deduplication.hpp>
 #include <detray/io/backend/geometry_reader.hpp>
 #include <detray/io/backend/geometry_writer.hpp>
 #include <detray/io/backend/homogeneous_material_reader.hpp>
@@ -46,13 +50,17 @@
 #include <detray/io/backend/material_map_reader.hpp>
 #include <detray/io/backend/surface_grid_reader.hpp>
 #include <detray/io/frontend/definitions.hpp>
+#include <detray/io/frontend/detector_reader.hpp>
+#include <detray/io/frontend/detector_reader_config.hpp>
 #include <detray/io/frontend/detector_writer.hpp>
 #include <detray/io/frontend/detector_writer_config.hpp>
 #include <detray/io/frontend/payloads.hpp>
 #include <detray/io/json/json_io.hpp>
+#include <detray/material/detail/material_accessor.hpp>
 #include <detray/plugins/svgtools/illustrator.hpp>
 #include <detray/plugins/svgtools/writer.hpp>
 #include <detray/utils/consistency_checker.hpp>
+#include <detray/utils/detector_statistics.hpp>
 #include <detray/utils/grid/concepts.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -66,6 +74,74 @@ using namespace Acts;
 using namespace ActsPlugins;
 
 namespace ActsTests {
+
+namespace {
+
+/// Visitor that returns the surface material slab at a local position
+template <typename scalar_t>
+struct GetMaterialSlab {
+  template <typename mat_coll_t, typename index_t, typename point_t>
+  auto operator()(const mat_coll_t& matColl, const index_t idx,
+                  const point_t& locPos) const
+      -> detray::material_slab<scalar_t> {
+    using material_t = typename mat_coll_t::value_type;
+
+    if constexpr (detray::concepts::material_map<material_t>) {
+      return detray::detail::material_accessor::get(
+          matColl, idx, typename material_t::point_type{locPos[0], locPos[1]});
+    } else if constexpr (std::same_as<material_t,
+                                      detray::material_slab<scalar_t>>) {
+      return matColl[idx];
+    } else {
+      return {};
+    }
+  }
+};
+
+/// @returns the total number of surface material entries in @p det
+template <typename detector_t>
+std::size_t nMaterialEntries(const detector_t& det) {
+  return detray::n_material_slabs(det) + detray::n_material_rods(det) +
+         detray::n_material_maps(det);
+}
+
+/// Check that every surface of @p det sees the same material as in @p refDet
+template <typename detector_t>
+void checkSameSurfaceMaterial(const detector_t& refDet, const detector_t& det) {
+  using scalar_t = typename detector_t::scalar_type;
+  using point2_t = typename detector_t::point2_type;
+
+  BOOST_REQUIRE_EQUAL(refDet.surfaces().size(), det.surfaces().size());
+
+  const std::array<point2_t, 5> locPositions{
+      point2_t{0., 0.}, point2_t{-1., 5.}, point2_t{0.5, -120.},
+      point2_t{45., 2.5}, point2_t{-3., 300.}};
+
+  for (std::size_t i = 0; i < det.surfaces().size(); ++i) {
+    const auto& refDesc = refDet.surfaces()[static_cast<detray::dindex>(i)];
+    const auto& desc = det.surfaces()[static_cast<detray::dindex>(i)];
+
+    BOOST_REQUIRE_EQUAL(refDesc.has_material(), desc.has_material());
+    if (!desc.has_material()) {
+      continue;
+    }
+    BOOST_CHECK(refDesc.material().id() == desc.material().id());
+
+    for (const auto& locPos : locPositions) {
+      const auto refSlab =
+          refDet.material_store().template visit<GetMaterialSlab<scalar_t>>(
+              refDesc.material(), locPos);
+      const auto slab =
+          det.material_store().template visit<GetMaterialSlab<scalar_t>>(
+              desc.material(), locPos);
+
+      BOOST_CHECK_MESSAGE(detray::detail::is_identical(refSlab, slab),
+                          "Material differs on surface " << i);
+    }
+  }
+}
+
+}  // namespace
 
 BOOST_AUTO_TEST_SUITE(DetrayConversion)
 
@@ -793,6 +869,102 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   //           << std::endl;
 
   detray::io::write_detector(detrayDetector, detrayNames, writer_cfg);
+}
+
+BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
+  using detector_t =
+      detray::host::detector<detray::default_metadata<detray::array<double>>>;
+
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+
+  CylindricalTrackingGeometry cGeometry(gctx, true);
+  std::shared_ptr<const TrackingGeometry> tGeometry =
+      cGeometry(*getDefaultLogger("Geo", Logging::INFO));
+
+  DetrayPayloadConverter::Config payloadCfg;
+  tGeometry->apply([&payloadCfg](const TrackingVolume& volume) {
+    if (volume.volumeName() == "Beampipe") {
+      payloadCfg.beampipeVolume = &volume;
+    }
+  });
+
+  DetrayGeometryConverter::Config cfg;
+  cfg.payloadConverter = std::make_shared<DetrayPayloadConverter>(
+      payloadCfg, getDefaultLogger("PayloadCnv", Logging::INFO));
+  // On by default
+  BOOST_CHECK(cfg.deduplicateMaterial);
+
+  vecmem::host_memory_resource mr;
+
+  auto convert = [&](bool deduplicate) {
+    auto converterCfg = cfg;
+    converterCfg.deduplicateMaterial = deduplicate;
+    DetrayGeometryConverter converter(
+        converterCfg, getDefaultLogger("GeoCnv", Logging::INFO));
+    return converter.convert<detector_t::metadata>(mr, gctx, tGeometry);
+  };
+
+  auto reference = convert(false);
+  auto deduplicated = convert(true);
+
+  const detector_t& refDet = *reference.detector;
+  detector_t& det = *deduplicated.detector;
+
+  BOOST_CHECK(detray::detail::check_consistency(refDet));
+  BOOST_CHECK(detray::detail::check_consistency(det));
+
+  // Same geometry
+  BOOST_CHECK_EQUAL(refDet.volumes().size(), det.volumes().size());
+  BOOST_CHECK_EQUAL(refDet.surfaces().size(), det.surfaces().size());
+
+  // Without deduplication, there is one material entry per surface
+  std::size_t nSurfacesWithMaterial = 0;
+  for (const auto& sfDesc : refDet.surfaces()) {
+    nSurfacesWithMaterial += sfDesc.has_material() ? 1u : 0u;
+  }
+  BOOST_CHECK_GT(nSurfacesWithMaterial, 0u);
+  BOOST_CHECK_EQUAL(nMaterialEntries(refDet), nSurfacesWithMaterial);
+
+  // Portals shared between volumes share their material
+  BOOST_TEST_MESSAGE("Material slabs: " << detray::n_material_slabs(refDet)
+                                        << " -> "
+                                        << detray::n_material_slabs(det));
+  BOOST_TEST_MESSAGE("Material maps: " << detray::n_material_maps(refDet)
+                                       << " -> "
+                                       << detray::n_material_maps(det));
+  BOOST_CHECK_LT(nMaterialEntries(det), nMaterialEntries(refDet));
+  BOOST_CHECK_LE(detray::n_material_slabs(det),
+                 detray::n_material_slabs(refDet));
+  BOOST_CHECK_LE(detray::n_material_maps(det), detray::n_material_maps(refDet));
+
+  // ... but every surface still sees the same material
+  checkSameSurfaceMaterial(refDet, det);
+
+  // The deduplicated detector writes one material entry per surface again,
+  // which can be read back
+  const std::filesystem::path outDir{"detray_material_deduplication"};
+  std::filesystem::remove_all(outDir);
+
+  auto writerCfg = detray::io::detector_writer_config{}
+                       .format(detray::io::format::json)
+                       .path(outDir.string())
+                       .replace_files(true)
+                       .write_grids(true)
+                       .write_material(true);
+  detray::io::write_detector(det, deduplicated.names, writerCfg);
+
+  detray::io::detector_reader_config readerCfg{};
+  readerCfg.do_check(true);
+  for (const auto& entry : std::filesystem::directory_iterator(outDir)) {
+    readerCfg.add_file(entry.path().string());
+  }
+  BOOST_CHECK_GE(readerCfg.files().size(), 3u);
+
+  const auto [readDet, readNames] =
+      detray::io::read_detector<detector_t>(mr, readerCfg);
+
+  BOOST_CHECK_EQUAL(nMaterialEntries(readDet), nMaterialEntries(refDet));
+  checkSameSurfaceMaterial(det, readDet);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -52,6 +52,14 @@ class DetrayGeometryConverter {
 
     /// Whether to convert surface grid information from ACTS to detray
     bool convertSurfaceGrids = true;
+
+    /// Whether identical surface material is shared between detray surfaces
+    /// instead of being copied for every surface. ACTS portals are split into
+    /// one detray portal surface per attached volume, which otherwise each
+    /// get their own copy of the portal material.
+    /// @note This only affects the built detector, the payloads keep one
+    ///       material entry per surface.
+    bool deduplicateMaterial = true;
   };
 
   /// @brief Combined result of a geometry conversion
@@ -116,6 +124,7 @@ class DetrayGeometryConverter {
 
     // ── Build detray detector from payloads ───────────────────────────────
     detray::detector_builder<metadata_t> detectorBuilder{};
+    detectorBuilder.deduplicate_material(m_cfg.deduplicateMaterial);
 
     detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
                                                           *payloads.detector);

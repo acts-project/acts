@@ -50,6 +50,13 @@ class volume_builder_interface {
   DETRAY_HOST
   virtual bool has_accel() const = 0;
 
+  /// Toggles whether surface material that is identical to material already
+  /// present in the detector is shared instead of being copied.
+  ///
+  /// @note Only material builders act on this flag, the default does nothing
+  DETRAY_HOST
+  virtual void deduplicate_material(bool /*toggle*/) { /* Do nothing */ }
+
   /// Sets the name @param volume_name for the volume
   DETRAY_HOST
   virtual void set_name(std::string volume_name) = 0;
@@ -139,6 +146,11 @@ class volume_decorator : public volume_builder_interface<detector_t> {
 
   DETRAY_HOST
   bool has_accel() const override { return m_builder->has_accel(); }
+
+  DETRAY_HOST
+  void deduplicate_material(bool toggle) override {
+    m_builder->deduplicate_material(toggle);
+  }
 
   DETRAY_HOST
   void set_name(std::string volume_name) override {
