@@ -86,6 +86,7 @@ jobs:
           --preset=github-ci-fpe
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_PLUGIN_ONNX=ON
+          -DACTS_INSTALL_PYTHON_EXAMPLE_SCRIPTS=ON
 
       - name: Build
         run: cmake --build build
@@ -123,6 +124,15 @@ jobs:
           source .env &&
           source install/python/setup.sh &&
           python -c "import acts; v = acts.Vector3(1,2,3)"
+
+      - name: Python example scripts sanity check after install
+        shell: bash
+        run: >
+          source .env &&
+          source install/bin/this_acts.sh &&
+          test -f "${ACTS_EXAMPLES_SCRIPTS}/full_chain_odd.py" &&
+          test -f "${ACTS_EXAMPLES_SCRIPTS}/../../Configs/odd-digi-smearing-config.json" &&
+          python "${ACTS_EXAMPLES_SCRIPTS}/material_recording.py" --help > /dev/null
 
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .

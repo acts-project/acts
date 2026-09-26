@@ -15,6 +15,8 @@ CMAKE_INSTALL_LIBDIR="@CMAKE_INSTALL_LIBDIR@"
 PROJECT_SOURCE_DIR="@PROJECT_SOURCE_DIR@"
 PROJECT_BINARY_DIR="@PROJECT_BINARY_DIR@"
 ACTS_BUILD_PYTHON_BINDINGS="@ACTS_BUILD_PYTHON_BINDINGS@"
+ACTS_INSTALL_PYTHON_EXAMPLE_SCRIPTS="@ACTS_INSTALL_PYTHON_EXAMPLE_SCRIPTS@"
+CMAKE_INSTALL_FULL_DATADIR="@CMAKE_INSTALL_FULL_DATADIR@"
 
 # TODO deal with ODD activation in one place
 ODD_PATH="@ODD_SOURCE_DIR@"
@@ -53,6 +55,15 @@ fi
 
 # ACTS project source directory
 export ACTS_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+
+# Make the Python example scripts available if they were installed
+if [ "${ACTS_INSTALL_PYTHON_EXAMPLE_SCRIPTS}" = "ON" ] || [ "${ACTS_INSTALL_PYTHON_EXAMPLE_SCRIPTS}" = "on" ]; then
+    if [[ "${IS_INSTALLED_VERSION}" == "ON" ]]; then
+        export ACTS_EXAMPLES_SCRIPTS="${CMAKE_INSTALL_FULL_DATADIR}/acts/Examples/Scripts/Python"
+    else
+        export ACTS_EXAMPLES_SCRIPTS="${PROJECT_SOURCE_DIR}/Examples/Scripts/Python"
+    fi
+fi
 
 # Make ODD available if possible
 if [ -d "${ODD_PATH}" ]; then
