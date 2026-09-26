@@ -5,6 +5,9 @@
  * Mozilla Public License Version 2.0
  */
 
+// Project include(s).
+#include "traccc/utils/stream_ordered_allocator.hpp"
+
 // Local include(s).
 #include "../utils/global_index.hpp"
 #include "../utils/hip_error_handling.hpp"
@@ -22,7 +25,6 @@
 
 // System include(s).
 #include <cassert>
-#include <memory_resource>
 
 namespace traccc::hip {
 namespace kernels {
@@ -76,11 +78,11 @@ void silicon_pixel_spacepoint_formation_algorithm::scan_spacepoint_flags(
 // a backend specific way. :-(
 #if defined(__HIP_PLATFORM_AMD__)
   auto policy =
-      thrust::hip::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::hip::par_nosync(stream_ordered_allocator(mr().main, stream()))
           .on(details::get_stream(stream()));
 #elif defined(__HIP_PLATFORM_NVIDIA__)
   auto policy =
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(stream_ordered_allocator(mr().main, stream()))
           .on(details::get_stream(stream()));
 #else
 #error "Unrecognised HIP platform."

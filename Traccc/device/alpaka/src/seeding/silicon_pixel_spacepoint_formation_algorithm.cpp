@@ -77,8 +77,7 @@ void silicon_pixel_spacepoint_formation_algorithm::count_spacepoints_kernel(
 void silicon_pixel_spacepoint_formation_algorithm::scan_spacepoint_flags(
     vecmem::data::vector_view<unsigned int>& spacepoint_flags) const {
   assert(spacepoint_flags.size_ptr() == nullptr);
-  details::inclusive_scan(details::get_queue(queue()), mr(),
-                          spacepoint_flags.ptr(),
+  details::inclusive_scan(queue(), mr(), spacepoint_flags.ptr(),
                           spacepoint_flags.ptr() + spacepoint_flags.capacity(),
                           spacepoint_flags.ptr());
 }

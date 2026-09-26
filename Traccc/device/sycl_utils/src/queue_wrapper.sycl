@@ -22,6 +22,11 @@ const void* queue_wrapper::queue() const {
   return m_queue;
 }
 
+void queue_wrapper::synchronize() const {
+  assert(m_queue != nullptr);
+  static_cast<::sycl::queue*>(m_queue)->wait_and_throw();
+}
+
 void queue_wrapper::enqueue_callback(std::function<void()> func) const {
   assert(m_queue != nullptr);
 

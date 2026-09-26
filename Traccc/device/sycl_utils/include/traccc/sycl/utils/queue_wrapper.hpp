@@ -39,6 +39,9 @@ class queue_wrapper {
   /// Access a typeless pointer to the managed @c sycl::queue object
   const void* queue() const;
 
+  /// Wait for all queued tasks and report asynchronous errors
+  void synchronize() const;
+
   void enqueue_callback(std::function<void()> func) const;
 
  private:

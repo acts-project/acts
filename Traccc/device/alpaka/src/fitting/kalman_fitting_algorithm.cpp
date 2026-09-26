@@ -116,8 +116,8 @@ void kalman_fitting_algorithm::prepare_track_fit_order(
   // Sort the key to get the sorted parameter ids
   vecmem::device_vector<device::sort_key> keys_device(track_sort_keys);
   vecmem::device_vector<unsigned int> track_indices_device(track_indices);
-  details::sort_by_key(details::get_queue(queue()), mr(), keys_device.begin(),
-                       keys_device.end(), track_indices_device.begin());
+  details::sort_by_key(queue(), mr(), keys_device.begin(), keys_device.end(),
+                       track_indices_device.begin());
 }
 
 void kalman_fitting_algorithm::fit_prelude_kernel(
