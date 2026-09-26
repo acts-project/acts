@@ -226,8 +226,17 @@ struct circular {
   /// @returns an index of a remapped bin
   DETRAY_HOST_DEVICE
   constexpr int wrap(const int ibin, const std::size_t nbins) const {
-    const auto bins = static_cast<int>(nbins);
-    return (bins + (ibin % bins)) % bins;
+    const auto snbins = static_cast<int>(nbins);
+    // Assume that the ibin value is within one period of a valid bin index,
+    // i.e. within [-nbins, 2 * nbins)
+    assert(ibin >= -snbins && ibin < 2 * snbins);
+    // Handle the case of ibin being negative first; because we assume we
+    // are within one period, adding the number of bins will put us in the
+    // positive regime [0, 2 * nbins)
+    const int x{ibin + (ibin < 0 ? snbins : 0)};
+    // Then move into the desired regime [0, nbins) by subtracting the number
+    // of bins.
+    return x - (x >= snbins ? snbins : 0);
   }
 
   /// Map a range of bins into the axis range: observe periodic bounds
