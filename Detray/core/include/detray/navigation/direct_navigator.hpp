@@ -194,27 +194,28 @@ class direct_navigator {
 
   /// Initialize the direct navigation flow on the first/last external surface
   template <typename track_t>
-  DETRAY_HOST_DEVICE inline void init(const track_t &track, state &navigation,
+  DETRAY_HOST_DEVICE inline bool init(const track_t &track, state &navigation,
                                       const navigation::config &cfg,
                                       const context_type &ctx) const {
-    DETRAY_VERBOSE_HOST_DEVICE("Called 'init()':");
-    assert(navigation.has_next_external());
-
-    // Clean up state
-    navigation.clear_cache();
-
-    // Update the next candidate
-    update(track, navigation, cfg, ctx);
-
-    DETRAY_VERBOSE_HOST_DEVICE("Init complete!");
+    return update(track, navigation, cfg, ctx, navigation::request::e_init);
   }
 
   /// Update the navigation status on the current next external and switch
-  /// to the following external surface if the current one was reached
+  /// to the following external surface if the current one was reached.
+  /// Initializes the navigation flow first, if requested (@param first)
   template <typename track_t>
-  DETRAY_HOST_DEVICE inline bool update(const track_t &track, state &navigation,
-                                        const navigation::config &cfg,
-                                        const context_type &ctx = {}) const {
+  DETRAY_HOST_DEVICE inline bool update(
+      const track_t &track, state &navigation, const navigation::config &cfg,
+      const context_type &ctx = {},
+      const navigation::request first = navigation::request::e_none) const {
+    if (first == navigation::request::e_init) {
+      DETRAY_VERBOSE_HOST_DEVICE("Called 'init()':");
+      assert(navigation.has_next_external());
+
+      // Clean up state
+      navigation.clear_cache();
+    }
+
     DETRAY_VERBOSE_HOST_DEVICE("Called 'update()'");
     DETRAY_DEBUG_HOST(" -> Trust level: " << navigation.trust_level());
 
@@ -301,6 +302,35 @@ class direct_navigator {
 
     return !is_init;
   }
+
+  /// The direct navigator never requests a local navigation: the update is
+  /// done in one go
+  /// @{
+  template <typename track_t>
+  DETRAY_HOST_DEVICE inline navigation::update_result update_cache(
+      const track_t &track, state &navigation, const navigation::config &cfg,
+      const context_type &ctx = {}) const {
+    return {navigation::request::e_none, update(track, navigation, cfg, ctx)};
+  }
+
+  DETRAY_HOST_DEVICE inline navigation::request next_request(
+      const state & /*navigation*/, const navigation::request /*last*/) const {
+    return navigation::request::e_none;
+  }
+
+  template <typename track_t>
+  DETRAY_HOST_DEVICE inline void perform(const navigation::request req,
+                                         const track_t &track,
+                                         state &navigation,
+                                         const navigation::config &cfg,
+                                         const context_type &ctx) const {
+    assert(req == navigation::request::e_init &&
+           "The direct navigator does not request local navigations");
+    if (req == navigation::request::e_init) {
+      init(track, navigation, cfg, ctx);
+    }
+  }
+  /// @}
 };
 
 }  // namespace detray
