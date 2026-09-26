@@ -17,6 +17,7 @@
 #include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -61,6 +62,9 @@ class DirectNavigator {
     /// The far limit to resolve surfaces
     double farLimit = std::numeric_limits<double>::max();
 
+    /// The ordered sequence of surfaces to walk through
+    std::vector<const Surface*> surfaceSequence;
+
     /// Set the plain navigator options
     /// @param options The plain navigator options to copy
     void setPlainOptions(const NavigatorPlainOptions& options) {
@@ -76,7 +80,8 @@ class DirectNavigator {
   struct State {
     /// Constructor from options
     /// @param options_ The navigator options
-    explicit State(const Options& options_) : options(options_) {}
+    explicit State(const Options& options_)
+        : options(options_), additional(VoidNavigator::Options(options_)) {}
 
     /// Configuration options for the direct navigator
     Options options;
@@ -101,13 +106,16 @@ class DirectNavigator {
     /// Navigation state - external interface: a break has been detected
     bool navigationBreak = false;
 
+    /// State of the navigator that offers the additional surfaces
+    VoidNavigator::State additional;
+
     /// Navigation statistics
     NavigatorStatistics statistics;
 
     /// Get the current navigation surface
     /// @return Reference to the surface at the current surface index
     const Surface& navSurface() const {
-      return *options.externalSurfaces.at(surfaceIndex);
+      return *options.surfaceSequence.at(surfaceIndex);
     }
 
     /// Move to the next surface in the sequence
@@ -124,8 +132,7 @@ class DirectNavigator {
     /// @return True if no more surfaces remain in the propagation direction
     bool endOfSurfaces() const {
       if (direction == Direction::Forward()) {
-        return surfaceIndex >=
-               static_cast<int>(options.externalSurfaces.size());
+        return surfaceIndex >= static_cast<int>(options.surfaceSequence.size());
       }
       return surfaceIndex < 0;
     }
@@ -134,7 +141,7 @@ class DirectNavigator {
     /// @return Number of surfaces left to process in the propagation direction
     int remainingSurfaces() const {
       if (direction == Direction::Forward()) {
-        return options.externalSurfaces.size() - surfaceIndex;
+        return options.surfaceSequence.size() - surfaceIndex;
       }
       return surfaceIndex + 1;
     }
@@ -145,7 +152,7 @@ class DirectNavigator {
     void resetSurfaceIndex() {
       surfaceIndex = direction == Direction::Forward()
                          ? -1
-                         : static_cast<int>(options.externalSurfaces.size());
+                         : static_cast<int>(options.surfaceSequence.size());
     }
   };
 
@@ -227,7 +234,7 @@ class DirectNavigator {
   [[nodiscard]] Result<void> initialize(
       State& state, const NavigatorInitializeArguments& args) const {
     ACTS_VERBOSE("Initialize. Surface sequence for navigation:");
-    for (const Surface* surface : state.options.externalSurfaces) {
+    for (const Surface* surface : state.options.surfaceSequence) {
       ACTS_VERBOSE(surface->geometryId()
                    << " - "
                    << surface->center(state.options.geoContext).transpose());
@@ -238,6 +245,7 @@ class DirectNavigator {
 
     state.startSurface = args.startSurface;
     state.targetSurface = args.targetSurface;
+    static_cast<void>(m_additional.initialize(state.additional, args));
 
     // We set the current surface to the start surface
     state.currentSurface = state.startSurface;
@@ -250,13 +258,13 @@ class DirectNavigator {
 
     // Find initial index.
     auto found =
-        std::ranges::find(state.options.externalSurfaces, state.startSurface);
+        std::ranges::find(state.options.surfaceSequence, state.startSurface);
 
-    if (found != state.options.externalSurfaces.end()) {
+    if (found != state.options.surfaceSequence.end()) {
       // The index should be the index before the start surface, depending on
       // the direction
       state.surfaceIndex =
-          std::distance(state.options.externalSurfaces.begin(), found);
+          std::distance(state.options.surfaceSequence.begin(), found);
       state.surfaceIndex += state.direction == Direction::Backward() ? 1 : -1;
     } else {
       ACTS_DEBUG(
@@ -274,7 +282,8 @@ class DirectNavigator {
   /// @brief Get the next target surface
   ///
   /// This function gets the next target surface for the propagation. For
-  /// the direct navigator this is always the next surface in the sequence.
+  /// the direct navigator this is the next surface in the sequence, unless an
+  /// additional surface is closer.
   ///
   /// @param state The navigation state
   /// @param position The current position
@@ -286,42 +295,11 @@ class DirectNavigator {
     // Navigator target always resets the current surface
     state.currentSurface = nullptr;
 
-    if (state.navigationBreak) {
-      return NavigationTarget::None();
-    }
-
-    ACTS_VERBOSE("DirectNavigator::nextTarget");
-
-    // Move the sequence to the next surface
-    state.nextSurface();
-
-    while (!state.endOfSurfaces()) {
-      ACTS_VERBOSE("Next surface candidate is "
-                   << state.navSurface().geometryId() << ". "
-                   << state.remainingSurfaces() << " out of "
-                   << state.options.externalSurfaces.size()
-                   << " surfaces remain to try.");
-
-      // Establish & update the surface status
-      // TODO we do not know the intersection index - passing the closer one
-      const Surface& surface = state.navSurface();
-      const double farLimit = std::numeric_limits<double>::max();
-      const NavigationTarget target = chooseIntersection(
-          state.options.geoContext, surface, position, direction,
-          BoundaryTolerance::Infinite(), state.options.nearLimit, farLimit,
-          state.options.surfaceTolerance);
-      if (target.isValid()) {
-        return target;
-      }
-
-      ACTS_VERBOSE("No valid intersection found with surface "
-                   << surface.geometryId() << ", trying next surface.");
-      state.nextSurface();
-    }
-
-    ACTS_VERBOSE("End of surfaces reached, navigation break.");
-    state.navigationBreak = true;
-    return NavigationTarget::None();
+    // The additional surfaces outlive the surface sequence
+    const TrackingVolume* noVolume = nullptr;
+    return m_additional.nextTarget(
+        state.additional, position, direction, noVolume,
+        [&] { return nextSequenceTarget(state, position, direction); });
   }
 
   /// @brief Check if the current target is still valid
@@ -357,13 +335,22 @@ class DirectNavigator {
                             const Surface& surface) const {
     static_cast<void>(position);
     static_cast<void>(direction);
-    static_cast<void>(surface);
+
+    ACTS_VERBOSE("DirectNavigator::handleSurfaceReached");
+
+    // Reaching an additional surface does not advance the sequence, unless
+    // the sequence targets the surface too
+    if (m_additional.handleAdditionalSurfaceReached(state.additional,
+                                                    surface)) {
+      state.currentSurface = &surface;
+      ACTS_VERBOSE("Current surface set to additional surface "
+                   << surface.geometryId());
+      return;
+    }
 
     if (state.navigationBreak) {
       return;
     }
-
-    ACTS_VERBOSE("DirectNavigator::handleSurfaceReached");
 
     // Set the current surface
     state.currentSurface = &state.navSurface();
@@ -372,6 +359,47 @@ class DirectNavigator {
   }
 
  private:
+  /// Get the next surface of the sequence
+  NavigationTarget nextSequenceTarget(State& state, const Vector3& position,
+                                      const Vector3& direction) const {
+    if (state.navigationBreak) {
+      return NavigationTarget::None();
+    }
+
+    ACTS_VERBOSE("DirectNavigator::nextTarget");
+
+    // Move the sequence to the next surface
+    state.nextSurface();
+
+    while (!state.endOfSurfaces()) {
+      ACTS_VERBOSE("Next surface candidate is "
+                   << state.navSurface().geometryId() << ". "
+                   << state.remainingSurfaces() << " out of "
+                   << state.options.surfaceSequence.size()
+                   << " surfaces remain to try.");
+
+      // Establish & update the surface status
+      // TODO we do not know the intersection index - passing the closer one
+      const Surface& surface = state.navSurface();
+      const double farLimit = std::numeric_limits<double>::max();
+      const NavigationTarget target = chooseIntersection(
+          state.options.geoContext, surface, position, direction,
+          BoundaryTolerance::Infinite(), state.options.nearLimit, farLimit,
+          state.options.surfaceTolerance);
+      if (target.isValid()) {
+        return target;
+      }
+
+      ACTS_VERBOSE("No valid intersection found with surface "
+                   << surface.geometryId() << ", trying next surface.");
+      state.nextSurface();
+    }
+
+    ACTS_VERBOSE("End of surfaces reached, navigation break.");
+    state.navigationBreak = true;
+    return NavigationTarget::None();
+  }
+
   NavigationTarget chooseIntersection(
       const GeometryContext& gctx, const Surface& surface,
       const Vector3& position, const Vector3& direction,
@@ -396,6 +424,9 @@ class DirectNavigator {
   const Logger& logger() const { return *m_logger; }
 
   std::unique_ptr<const Logger> m_logger;
+
+  /// Offers the additional surfaces on top of the surface sequence
+  VoidNavigator m_additional;
 };
 
 }  // namespace Acts

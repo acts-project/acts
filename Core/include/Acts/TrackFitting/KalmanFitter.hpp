@@ -289,7 +289,7 @@ class KalmanFitter {
     using result_type = KalmanFitterResult<traj_t>;
 
     /// The target surface aborter
-    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
+    SurfaceReached targetReached;
 
     /// Allows retrieving measurements for a surface
     std::unordered_map<const Surface*, SourceLink> inputMeasurements;
@@ -769,16 +769,22 @@ class KalmanFitter {
     }
 
     if constexpr (!isDirectNavigator) {
-      // Add the measurement surface as external surface to navigator.
-      // We will try to hit those surface by ignoring boundary checks.
+      // Relax the bounds check, so the navigator targets a measurement
+      // surface even where the track misses it
       for (const auto& [surface, _] : inputMeasurements) {
-        propagatorOptions.navigation.appendExternalSurface(*surface);
+        propagatorOptions.navigation.registerExtendedSurface(*surface);
       }
     } else {
       assert(sSequence != nullptr &&
              "DirectNavigator requires a surface sequence for KalmanFitter");
       // Set the surface sequence
-      propagatorOptions.navigation.externalSurfaces = *sSequence;
+      propagatorOptions.navigation.surfaceSequence = *sSequence;
+    }
+
+    // The navigator stops on the target surface as the current surface
+    if (targetSurface != nullptr) {
+      propagatorOptions.navigation.registerAdditionalSurface(
+          *targetSurface, BoundaryTolerance::None());
     }
 
     // Catch the actor and set the measurements

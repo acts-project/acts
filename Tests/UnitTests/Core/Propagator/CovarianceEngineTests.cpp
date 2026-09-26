@@ -21,9 +21,11 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -213,6 +215,14 @@ BoundVector localToLocal(const propagator_t& prop, const BoundVector& local,
 
   BoundTrackParameters start{src.getSharedPtr(), local, std::nullopt,
                              ParticleHypothesis::pion()};
+
+  // The perturbed start can be past the destination
+  const Intersection3D intersection =
+      dst.intersect(gctx, start.position(gctx), start.direction(),
+                    BoundaryTolerance::Infinite())
+          .closest();
+  options.direction =
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   auto res = prop.propagate(start, dst, options).value();
   auto endParameters = res.endParameters.value();

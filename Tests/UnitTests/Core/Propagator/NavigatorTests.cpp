@@ -13,7 +13,6 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
@@ -30,7 +29,7 @@
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Surfaces/LineSurface.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -40,8 +39,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
-#include "Acts/Visualization/GeometryView3D.hpp"
-#include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsTests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
@@ -66,22 +63,21 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 void step(Vector3& pos, const Vector3& dir, double stepSize) {
   pos += stepSize * dir;
 }
-void step(const Acts::GeometryContext& geoCtx, Vector3& pos, const Vector3& dir,
-          const NavigationTarget& target, const Logger& logger) {
-  BOOST_CHECK_EQUAL(target.isNone(), false);
-  auto isect = target.surface()
-                   .intersect(tgContext, pos, dir, target.boundaryTolerance())
-                   .closest();
-  BOOST_CHECK(isect.isValid());
 
-  step(pos, dir, isect.pathLength());
-  BOOST_CHECK((target.position() - pos).norm() < Acts::s_onSurfaceTolerance);
-  auto locPos = target.surface().globalToLocal(geoCtx, pos, dir);
+void step(Vector3& pos, const Vector3& dir, const NavigationTarget& target,
+          const Logger& logger) {
+  BOOST_REQUIRE(!target.isNone());
+  Intersection3D intersection =
+      target.surface()
+          .intersect(tgContext, pos, dir, target.boundaryTolerance())
+          .closest();
+  BOOST_REQUIRE(intersection.isValid());
+
+  step(pos, dir, intersection.pathLength());
+  BOOST_CHECK_LT((target.position() - pos).norm(), s_onSurfaceTolerance);
+  auto locPos = target.surface().globalToLocal(tgContext, pos, dir);
   BOOST_CHECK(locPos.ok());
-  ACTS_INFO("Navigation is now at "
-            << target << ", " << target.surface().bounds()
-            << ", position: " << toString(pos) << ", locPos: "
-            << toString(locPos.ok() ? *locPos : Acts::Vector2::Zero()));
+  ACTS_VERBOSE("Step to " << target << ", position: " << toString(pos));
 }
 
 void step(Vector3& pos, const Vector3& dir, const Surface& surface) {
@@ -100,7 +96,6 @@ void step(Vector3& pos, const Vector3& dir, const NavigationTarget& target) {
 /// @param [in] navSurf Number of navigation surfaces
 /// @param [in] navLay Number of navigation layers
 /// @param [in] navBound Number of navigation boundaries
-/// @param [in] extSurf Number of external surfaces
 bool testNavigatorStateVectors(Navigator::State& state, std::size_t navSurf,
                                std::size_t navLay, std::size_t navBound) {
   return ((state.navSurfaces.size() == navSurf) &&
@@ -607,7 +602,7 @@ createDenseTelescope(const GeometryContext& geoCtx) {
   return {std::move(detector), std::move(surfaces)};
 }
 
-BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
+BOOST_AUTO_TEST_CASE(Navigator_extended_surfaces) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
 
   auto [detector, surfaces] = createDenseTelescope(tgContext);
@@ -624,10 +619,9 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
   navCfg.resolvePassive = false;
   Navigator navigator(navCfg, logger().clone("Navigator"));
 
-  // check if we find no sensitive target starting from the middle without
-  // external surfaces
+  // No extension, so no sensitive target from the middle
   {
-    ACTS_INFO("Test 1: start in the middle without external surfaces");
+    ACTS_INFO("Test 1: start in the middle without an extension");
 
     Navigator::Options options(tgContext);
     Navigator::State state = navigator.makeState(options);
@@ -647,9 +641,9 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     BOOST_CHECK_NE(&target.surface(), surfaces.at(1));
   }
 
-  // check if we find a target starting from the top without external surfaces
+  // No extension, but the track crosses the top surface
   {
-    ACTS_INFO("Test 2: start from top without external surfaces");
+    ACTS_INFO("Test 2: start from top without an extension");
 
     Navigator::Options options(tgContext);
     Navigator::State state = navigator.makeState(options);
@@ -669,10 +663,9 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     BOOST_CHECK_EQUAL(&target.surface(), &surfaceTop);
   }
 
-  // check if we find a target starting from the bottom without external
-  // surfaces
+  // No extension, but the track crosses the bottom surface
   {
-    ACTS_INFO("Test 2: start from bottom without external surfaces");
+    ACTS_INFO("Test 3: start from bottom without an extension");
 
     Navigator::Options options(tgContext);
     Navigator::State state = navigator.makeState(options);
@@ -692,13 +685,12 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     BOOST_CHECK_EQUAL(&target.surface(), &surfaceBottom);
   }
 
-  // check if we find the top surface starting from the middle with external
-  // surfaces
+  // With an extension the top surface is targeted from the middle
   {
-    ACTS_INFO("Test 3: start in the middle with external surfaces");
+    ACTS_INFO("Test 4: start in the middle with an extension");
 
     Navigator::Options options(tgContext);
-    options.appendExternalSurface(surfaceTop);
+    options.registerExtendedSurface(surfaceTop);
     Navigator::State state = navigator.makeState(options);
 
     Vector3 position = Vector3::Zero();
@@ -716,13 +708,12 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     BOOST_CHECK_EQUAL(&target.surface(), &surfaceTop);
   }
 
-  // check if we find the bottom surface starting from the top with external
-  // surfaces
+  // With an extension the bottom surface is targeted from the top
   {
-    ACTS_INFO("Test 4: start from top with external surfaces");
+    ACTS_INFO("Test 5: start from top with an extension");
 
     Navigator::Options options(tgContext);
-    options.appendExternalSurface(surfaceBottom);
+    options.registerExtendedSurface(surfaceBottom);
     Navigator::State state = navigator.makeState(options);
 
     Vector3 position = {0, 0.5_m, 0};
@@ -740,13 +731,12 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     BOOST_CHECK_EQUAL(&target.surface(), &surfaceBottom);
   }
 
-  // check if we find the top surface starting from the bottom with external
-  // surfaces
+  // With an extension the top surface is targeted from the bottom
   {
-    ACTS_INFO("Test 5: start from bottom with external surfaces");
+    ACTS_INFO("Test 6: start from bottom with an extension");
 
     Navigator::Options options(tgContext);
-    options.appendExternalSurface(surfaceTop);
+    options.registerExtendedSurface(surfaceTop);
     Navigator::State state = navigator.makeState(options);
 
     Vector3 position = {0, -0.5_m, 0};
@@ -1042,7 +1032,7 @@ BOOST_AUTO_TEST_CASE(NavigationStartOnBoundaryGen1) {
   BOOST_CHECK_EQUAL(initializeOnBoundary(-Vector3::UnitX()), volume1);
 }
 
-BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
+BOOST_AUTO_TEST_CASE(ExtendedSurfacesGen3) {
   Blueprint::Config bluePrintCfg{};
 
   ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
@@ -1052,8 +1042,6 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
   bluePrintCfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
   Blueprint root{bluePrintCfg};
 
-  ObjVisualization3D visualHelper{};
-
   auto& container = root.addStaticVolume(
       Transform3::Identity(),
       std::make_shared<CuboidVolumeBounds>(10._m, 10._m, 10._m), "world");
@@ -1061,16 +1049,16 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
   const Transform3 volRot{AngleAxis3{90._degree, Vector3::UnitX()} *
                           AngleAxis3{90._degree, Vector3::UnitY()}};
 
-  std::shared_ptr<Surface> planeSurf1, planeSurf2{};
+  std::shared_ptr<Surface> planeSurf1;
+  std::shared_ptr<Surface> planeSurf2;
   std::vector<std::shared_ptr<Surface>> straws{};
   auto startSurface = Surface::makeShared<PlaneSurface>(
       volRot, std::make_shared<RectangleBounds>(40._cm, 40._cm));
   {
-    /// Construct a cuboid volume with 80 x 40 x 20 cm which is 1 m apart from
-    /// the origin and contains two plane surfaces. The first plane is on the
-    /// negative X hemisphere and the other one on the positive. Shift both
-    /// surface by few cm in the local z-axis to distinguish them later in the
-    /// geometry
+    // Construct a cuboid volume with 80 x 40 x 20 cm which is 1 m apart from
+    // the origin and contains two plane surfaces. The first plane is on the
+    // negative x side and the other one on the positive side. Shift both
+    // surfaces by a few cm along the local z-axis to separate them.
     auto volume = std::make_unique<TrackingVolume>(
         Translation3{1._m, 0., 0.} * volRot,
         std::make_shared<CuboidVolumeBounds>(40._cm, 20._cm, 10._cm),
@@ -1095,14 +1083,6 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
     volume->addSurface(planeSurf1);
     volume->addSurface(planeSurf2);
 
-    GeometryView3D::drawSurface(visualHelper, *planeSurf1, tgContext,
-                                Transform3::Identity());
-    GeometryView3D::drawSurface(visualHelper, *planeSurf2, tgContext,
-                                Transform3::Identity());
-
-    GeometryView3D::drawVolume(visualHelper, *volume, tgContext,
-                               Transform3::Identity());
-
     TryAllNavigationPolicy::Config tryAllConfig;
     tryAllConfig.portals = true;
     tryAllConfig.sensitives = true;
@@ -1113,8 +1093,8 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
                 .add<TryAllNavigationPolicy>(tryAllConfig)
                 .asUniquePtr());
   }
-  /// Place a second volume another m behind. This time it has two layers of
-  /// straws
+  // Place a second volume 1.5 m further out. This volume has two layers of
+  // straws.
   constexpr double strawPitch = 10._cm;
   {
     auto bounds = std::make_shared<CuboidVolumeBounds>(40._cm, 22.5_cm, 10._cm);
@@ -1131,8 +1111,6 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
                             AngleAxis3{90._degree, Vector3::UnitY()};
       auto newStraw = straws.emplace_back(
           Surface::makeShared<StrawSurface>(strawTrf, strawBounds));
-      GeometryView3D::drawSurface(visualHelper, *newStraw, tgContext,
-                                  Transform3::Identity());
 
       newStraw->assignIsSensitive(true);
       const Vector3 secondTubePos =
@@ -1147,8 +1125,6 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
                              AngleAxis3{90._degree, Vector3::UnitY()};
       newStraw = straws.emplace_back(
           Surface::makeShared<StrawSurface>(strawTrf2, strawBounds));
-      GeometryView3D::drawSurface(visualHelper, *newStraw, tgContext,
-                                  Transform3::Identity());
 
       newStraw->assignIsSensitive(true);
     }
@@ -1164,31 +1140,28 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
     MultiWireVolumeBuilder mwBuilder{mwCfg};
     volume = mwBuilder.buildVolume();
 
-    GeometryView3D::drawVolume(visualHelper, *volume, tgContext,
-                               Transform3::Identity());
-
     container.addStaticVolume(std::move(volume))
         .setNavigationPolicyFactory(
             mwBuilder.createNavigationPolicyFactory(tgContext));
   }
 
-  visualHelper.write("ExternalTest.obj");
   auto trkGeo = root.construct(BlueprintOptions{}, tgContext, logger());
 
   const auto* planeVolume = trkGeo->findVolumeByName("planeSurfaceVol");
   BOOST_CHECK(planeVolume != nullptr);
   BOOST_CHECK(planeVolume->geometryId() != GeometryIdentifier{});
   BOOST_CHECK_EQUAL(planeVolume->surfaces().size(), 2u);
-  BOOST_CHECK(Acts::rangeContainsValue(planeVolume->surfaces(), *planeSurf1));
-  BOOST_CHECK(Acts::rangeContainsValue(planeVolume->surfaces(), *planeSurf2));
+  BOOST_CHECK(rangeContainsValue(planeVolume->surfaces(), *planeSurf1));
+  BOOST_CHECK(rangeContainsValue(planeVolume->surfaces(), *planeSurf2));
 
   const auto* mwVolume = trkGeo->findVolumeByName("MultiWireVolume");
   BOOST_CHECK(mwVolume != nullptr);
   BOOST_CHECK(mwVolume->geometryId() != GeometryIdentifier{});
   BOOST_CHECK(mwVolume->geometryId() != planeVolume->geometryId());
 
-  ACTS_INFO("Check geometry id of the two planes "
-            << planeSurf1->geometryId() << " & " << planeSurf2->geometryId());
+  ACTS_VERBOSE("Check geometry id of the two planes "
+               << planeSurf1->geometryId() << " & "
+               << planeSurf2->geometryId());
   BOOST_CHECK(planeSurf1->geometryId() != GeometryIdentifier{});
   BOOST_CHECK(planeSurf2->geometryId() != GeometryIdentifier{});
   BOOST_CHECK(planeSurf1->geometryId().withSensitive(0) ==
@@ -1200,7 +1173,7 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
       planeVolume);
 
   BOOST_CHECK(std::ranges::none_of(straws, [&](const auto& surface) -> bool {
-    ACTS_INFO("Check straw surface " << surface->geometryId());
+    ACTS_VERBOSE("Check straw surface " << surface->geometryId());
     if (surface->geometryId() == GeometryIdentifier{} ||
         surface->geometryId().sensitive() == 0) {
       return true;
@@ -1208,17 +1181,13 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
     return trkGeo->findVolume(surface->geometryId().withSensitive(0)) !=
            mwVolume;
   }));
-  /// Building and check of the tracking geometry completed... Now instantiate
-  /// the navigator
-
   Navigator::Config navCfg;
   navCfg.trackingGeometry = std::move(trkGeo);
 
-  Navigator navigator{
-      navCfg, getDefaultLogger("CassyNavigation", Logging::Level::VERBOSE)};
+  Navigator navigator{navCfg, getDefaultLogger("Navigator", logLevel)};
 
-  /// Test that we can navigate to the first plane surface only. We cannot hit
-  /// the second surface
+  // Without an extension the navigator reaches only the first plane, because
+  // the track misses the bounds of the second plane
   const Vector3 dirPlane1 = planeSurf1->center(tgContext).normalized();
   Vector3 start{Vector3::Zero()};
 
@@ -1240,7 +1209,7 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
     bottomPortPlane = firstPortal.surface().getSharedPtr().get();
     BOOST_CHECK_EQUAL(firstPortal.surface().geometryId().withBoundary(0),
                       planeVolume->geometryId());
-    step(tgContext, start, dirPlane1, firstPortal, logger());
+    step(start, dirPlane1, firstPortal, logger());
 
     navigator.handleSurfaceReached(state, start, dirPlane1,
                                    firstPortal.surface());
@@ -1251,7 +1220,7 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
     BOOST_CHECK(firstSurface.isSurfaceTarget());
     BOOST_CHECK_EQUAL(&firstSurface.surface(), planeSurf1.get());
 
-    step(tgContext, start, dirPlane1, firstSurface, logger());
+    step(start, dirPlane1, firstSurface, logger());
     navigator.handleSurfaceReached(state, start, dirPlane1,
                                    firstSurface.surface());
 
@@ -1260,12 +1229,12 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
     BOOST_CHECK(secondPortal.isPortalTarget());
     topPortPlane = secondPortal.surface().getSharedPtr().get();
 
-    step(tgContext, start, dirPlane1, secondPortal, logger());
+    step(start, dirPlane1, secondPortal, logger());
 
     navigator.handleSurfaceReached(state, start, dirPlane1,
                                    secondPortal.surface());
   }
-  /// next let's add the second plane surface as an external surface
+  // With an extension the navigator also targets the second plane
   {
     Navigator::Options options{tgContext};
     NavigatorInitializeArguments navArgs{};
@@ -1273,7 +1242,7 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
     navArgs.startSurface = startSurface.get();
     navArgs.position = start;
     navArgs.direction = dirPlane1;
-    options.appendExternalSurface(*planeSurf2);
+    options.registerExtendedSurface(*planeSurf2);
     Navigator::State state = navigator.makeState(options);
     BOOST_CHECK(navigator.initialize(state, navArgs).ok());
 
@@ -1284,10 +1253,9 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
       NavigationTarget target = navigator.nextTarget(state, start, dirPlane1);
 
       BOOST_CHECK_EQUAL(surf, &target.surface());
-      step(tgContext, start, dirPlane1, target, logger());
+      step(start, dirPlane1, target, logger());
       navigator.handleSurfaceReached(state, start, dirPlane1, target.surface());
-      /// The second plane cannot be hit by the navigator itself. It must have
-      /// infinite boundary tolerance
+      // Only the second plane carries the extended tolerance
       if (surf != planeSurf2.get()) {
         BOOST_CHECK(target.boundaryTolerance().isNone());
       } else {
@@ -1295,10 +1263,8 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
       }
     }
   }
-  /// Append again the second plane surface as an external surface. But leave
-  /// the volume before the plane can be reached. Then ensure that the plane
-  /// surface remains in the navigation stream
-
+  // As an additional surface, the plane is still reached after the track left
+  // its volume
   {
     const Vector3 posPlaneVolExit =
         planeVolume->localToGlobalTransform(tgContext) *
@@ -1306,8 +1272,7 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
     BOOST_CHECK(planeVolume->inside(tgContext, posPlaneVolExit));
     Navigator::Options options{tgContext};
     start.setZero();
-    options.appendExternalSurface(*planeSurf2);
-    options.keepUnreachedExternal = true;
+    options.registerAdditionalSurface(*planeSurf2);
     Navigator::State state = navigator.makeState(options);
     const Vector3 dir = posPlaneVolExit.normalized();
 
@@ -1319,22 +1284,21 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
 
     NavigationTarget portalTarget1 = navigator.nextTarget(state, start, dir);
     BOOST_CHECK(portalTarget1.isPortalTarget());
-    step(tgContext, start, dir, portalTarget1, logger());
+    step(start, dir, portalTarget1, logger());
     navigator.handleSurfaceReached(state, start, dir, portalTarget1.surface());
 
     NavigationTarget planeSurfTarget = navigator.nextTarget(state, start, dir);
     BOOST_CHECK(planeSurfTarget.isSurfaceTarget());
     BOOST_CHECK_EQUAL(&planeSurfTarget.surface(), planeSurf1.get());
-    step(tgContext, start, dir, planeSurfTarget, logger());
+    step(start, dir, planeSurfTarget, logger());
     navigator.handleSurfaceReached(state, start, dir,
                                    planeSurfTarget.surface());
 
     NavigationTarget sidePortalTarget = navigator.nextTarget(state, start, dir);
     BOOST_CHECK(sidePortalTarget.isPortalTarget());
-    step(tgContext, start, dir, sidePortalTarget, logger());
+    step(start, dir, sidePortalTarget, logger());
     navigator.handleSurfaceReached(state, start, dir,
                                    sidePortalTarget.surface());
-    BOOST_CHECK_EQUAL(state.stream.candidates().size(), 1u);
 
     NavigationTarget secondPlaneTarget =
         navigator.nextTarget(state, start, dir);
@@ -1343,21 +1307,18 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
     navigator.handleSurfaceReached(state, start, dir,
                                    secondPlaneTarget.surface());
   }
-  /// Setup the testing cases for the straw surfaces
-  ///
-  ///
+  // Test the straw surfaces
   BOOST_CHECK_EQUAL(straws.size(), 8u);
   for (std::size_t s = 0; s < straws.size(); s += 2u) {
-    /// Surface in the first tube layer
+    // Surface in the first tube layer
     const auto& straw1 = straws.at(s);
-    /// Surface in the second tube layer
+    // Surface in the second tube layer
     const auto& straw2 = straws.at(s + 1);
-    /// Setup the target a bit to the left from the straw center
+    // Aim a bit to the side of the straw center
     const Vector3 targetPos = straw1->localToGlobalTransform(tgContext) *
                               Vector3{2._cm, 3._cm, -10._cm};
 
     Navigator::Options options{tgContext};
-    options.keepUnreachedExternal = true;
 
     Navigator::State state = navigator.makeState(options);
     const Vector3 dir = targetPos.normalized();
@@ -1374,19 +1335,19 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
 
       BOOST_CHECK(navigator.initialize(state, navArgs).ok());
       target = navigator.nextTarget(state, start, dir);
-      /// Skip all the plane surface volume
+      // Step through everything before the multi-wire volume
       while (!target.isNone() && (target.surface().geometryId().volume() !=
                                       mwVolume->geometryId().volume() ||
                                   target.isPortalTarget())) {
-        step(tgContext, start, dir, target, logger());
+        step(start, dir, target, logger());
         navigator.handleSurfaceReached(state, start, dir, target.surface());
         target = navigator.nextTarget(state, start, dir);
-        ACTS_INFO(__LINE__ << " - Proceed to next target " << target);
+        ACTS_VERBOSE("Proceed to next target " << target);
       }
     };
     propagateToMwVolume();
     BOOST_CHECK(target.isSurfaceTarget());
-    step(tgContext, start, dir, target, logger());
+    step(start, dir, target, logger());
     navigator.handleSurfaceReached(state, start, dir, target.surface());
     BOOST_CHECK_EQUAL(&target.surface(), straw1.get());
     target = navigator.nextTarget(state, start, dir);
@@ -1395,15 +1356,14 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
     target = navigator.nextTarget(state, start, dir);
     BOOST_CHECK(target.isPortalTarget());
 
-    /// Include the neighbour tube as target and check whether the tubes
-    /// end up in the navigation. Cannot be done if the last two tubes
-    /// are tested
+    // Extend the neighbour tubes and check that the navigator targets them.
+    // The last two tubes have no neighbours.
     if (s + 2 == straws.size()) {
       continue;
     }
-    /// Append the two neighbour surfaces to the stream
-    options.appendExternalSurface(*straws.at(s + 2));
-    options.appendExternalSurface(*straws.at(s + 3));
+    // Extend the two neighbour surfaces
+    options.registerExtendedSurface(*straws.at(s + 2));
+    options.registerExtendedSurface(*straws.at(s + 3));
 
     state = navigator.makeState(options);
 
@@ -1413,19 +1373,18 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
     while (target.isSurfaceTarget()) {
       for (std::size_t s1 = 0; s1 < reached.size(); ++s1) {
         if (&target.surface() == straws.at(s + s1).get()) {
-          ACTS_INFO(__LINE__ << " - Target " << target << " is the " << s1
-                             << "-th surface.");
+          ACTS_VERBOSE("Target " << target << " is surface " << s1);
           reached[s1] = 1u;
           break;
         }
       }
-      step(tgContext, start, dir, target, logger());
+      step(start, dir, target, logger());
       navigator.handleSurfaceReached(state, start, dir, target.surface());
       target = navigator.nextTarget(state, start, dir);
-      ACTS_INFO(__LINE__ << " - Proceed to target " << target);
+      ACTS_VERBOSE("Proceed to target " << target);
     }
-    /// Check that all surfaces have been reached
-    BOOST_CHECK(!Acts::rangeContainsValue(reached, 0));
+    // Check that all surfaces have been reached
+    BOOST_CHECK(!rangeContainsValue(reached, 0));
   }
 }
 

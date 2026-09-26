@@ -224,9 +224,10 @@ class BoundaryTolerance {
   bool isTolerated(const Vector2& boundDelta,
                    const SquareMatrix2& boundToCartesian) const;
 
-  /// Define the ostream operator to print the object
-  /// @param ostr: Reference to the ostream
-  /// @param tolerance: Reference to the tolerance to print
+  /// Print the boundary tolerance
+  /// @param ostr Stream to which the tolerance is printed
+  /// @param tolerance The tolerance to print
+  /// @return The stream
   friend std::ostream& operator<<(std::ostream& ostr,
                                   const BoundaryTolerance& tolerance) {
     tolerance.print(ostr);
@@ -235,7 +236,7 @@ class BoundaryTolerance {
 
  private:
   /// Print method
-  /// @param ostr: Stream to which the object is printed
+  /// @param ostr Stream to which the object is printed
   void print(std::ostream& ostr) const;
 
   Variant m_variant;

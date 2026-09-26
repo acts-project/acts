@@ -89,9 +89,8 @@ ProcessCode TrackExtrapolationAlgorithm::execute(
         Acts::Direction::fromScalarZeroAsPositive(distance);
 
     auto propagateResult =
-        propagator.propagate<Options, Acts::ForcedSurfaceReached>(
-            track.createParametersFromState(trackState), *m_cfg.targetSurface,
-            trackOptions);
+        propagator.propagate(track.createParametersFromState(trackState),
+                             *m_cfg.targetSurface, trackOptions);
     if (!propagateResult.ok()) {
       return propagateResult.error();
     }

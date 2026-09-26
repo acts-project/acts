@@ -47,8 +47,6 @@ namespace Concepts {
 template <typename T>
 concept has_components = requires { typename T::components; };
 }  // namespace Concepts
-
-struct MultiStepperSurfaceReached;
 }  // namespace Acts
 
 using namespace Acts;
@@ -787,10 +785,7 @@ struct MultiStepperTester {
     // @TODO: Add test that checks the target aborter works correctly
 
     // Instantiate with target
-    using type_a =
-        decltype(propagator.template propagate<decltype(options),
-                                               MultiStepperSurfaceReached>(
-            pars, *surface, options));
+    using type_a = decltype(propagator.propagate(pars, *surface, options));
     static_assert(!std::is_same_v<type_a, void>);
 
     // Instantiate without target

@@ -33,12 +33,9 @@ auto MultiStepperLoop<S, R>::boundState(
   for (auto i = 0ul; i < numberComponents(state); ++i) {
     auto& cmpState = state.components[i].state;
 
-    // Force the component to be on the surface
-    // This needs to be done because of the `averageOnSurface`-option of the
-    // `MultiStepperSurfaceReached`-Aborter, which can be configured to end the
-    // propagation when the mean of all components reached the destination
-    // surface. Thus, it is not garantueed that all states are actually
-    // onSurface.
+    // Force the component to be on the surface. A component is on the
+    // surface only within the surface tolerance, and a caller can bind to a
+    // surface the components did not reach.
     cmpState.pars.template segment<3>(eFreePos0) =
         surface
             .intersect(state.options.geoContext,
