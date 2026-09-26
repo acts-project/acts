@@ -353,26 +353,32 @@ auto Propagator<S, N>::makeResult(propagator_state_t state,
 
     if (target != nullptr) {
       // We are at a surface, so we need to compute the bound state
-      const auto boundState = m_stepper.boundState(state.stepping, *target);
-      if (!boundState.ok()) {
-        ACTS_DEBUG("Failed to get bound state at current surface: "
-                   << boundState.error() << ": "
-                   << boundState.error().message());
-        return boundState.error();
+      const auto jacobian = m_stepper.transportToBound(state.stepping, *target);
+      if (!jacobian.ok()) {
+        ACTS_DEBUG("Failed to transport to current surface: "
+                   << jacobian.error() << ": " << jacobian.error().message());
+        return jacobian.error();
       }
-      result.endParameters = std::get<0>(*boundState);
-      if (state.stepping.covTransport) {
-        result.transportJacobian = std::get<1>(*boundState);
+      auto parameters = m_stepper.boundParameters(state.stepping, *target);
+      if (!parameters.ok()) {
+        ACTS_DEBUG("Failed to get bound parameters at current surface: "
+                   << parameters.error() << ": "
+                   << parameters.error().message());
+        return parameters.error();
+      }
+      result.endParameters = std::move(*parameters);
+      if (m_stepper.hasCovariance(state.stepping)) {
+        result.transportJacobian = *jacobian;
       }
     } else {
       if (!m_stepper.prepareCurvilinearState(state.stepping)) {
         ACTS_DEBUG("Failed to prepare curvilinear state.");
         return PropagatorError::Failure;
       }
-      const auto curvState = m_stepper.curvilinearState(state.stepping);
-      result.endParameters = std::get<0>(curvState);
-      if (state.stepping.covTransport) {
-        result.transportJacobian = std::get<1>(curvState);
+      const auto jacobian = m_stepper.transportToCurvilinear(state.stepping);
+      result.endParameters = m_stepper.curvilinearParameters(state.stepping);
+      if (m_stepper.hasCovariance(state.stepping)) {
+        result.transportJacobian = jacobian;
       }
     }
   }
@@ -389,7 +395,7 @@ void Propagator<S, N>::moveStateToResult(propagator_state_t& state,
   result.steps = state.steps;
   result.pathLength = state.pathLength;
 
-  result.statistics.stepping = state.stepping.statistics;
+  result.statistics.stepping = m_stepper.statistics(state.stepping);
   result.statistics.navigation = state.navigation.statistics;
 }
 

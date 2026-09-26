@@ -181,12 +181,13 @@ FreeToBoundMatrix freeToCurvilinearTransportJacobian(
 /// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
 ///        parametrisation to free parameters
 /// @param [in] freeParameters Free, nominal parametrisation
-Result<void> reinitializeJacobians(const GeometryContext& geoContext,
-                                   const Surface& surface,
-                                   FreeMatrix& freeTransportJacobian,
-                                   FreeVector& freeToPathDerivatives,
-                                   BoundToFreeMatrix& boundToFreeJacobian,
-                                   const FreeVector& freeParameters);
+/// @note The free parameters must be on @p surface
+void reinitializeJacobians(const GeometryContext& geoContext,
+                           const Surface& surface,
+                           FreeMatrix& freeTransportJacobian,
+                           FreeVector& freeToPathDerivatives,
+                           BoundToFreeMatrix& boundToFreeJacobian,
+                           const FreeVector& freeParameters);
 
 /// @brief This function reinitialises the state members required for the
 ///        covariance transport for curvilinear surfaces
@@ -218,11 +219,12 @@ void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
 /// @param [out] boundToFreeJacobian Jacobian from the local parametrisation
 ///        to free parameters
 /// @param [in] freeParameters Free, nominal parametrisation
-Result<void> reinitializeJacobians(const GeometryContext& geoContext,
-                                   const Surface& surface,
-                                   FreeVector& freeToPathDerivatives,
-                                   BoundToFreeMatrix& boundToFreeJacobian,
-                                   const FreeVector& freeParameters);
+/// @note The free parameters must be on @p surface
+void reinitializeJacobians(const GeometryContext& geoContext,
+                           const Surface& surface,
+                           FreeVector& freeToPathDerivatives,
+                           BoundToFreeMatrix& boundToFreeJacobian,
+                           const FreeVector& freeParameters);
 
 /// @brief Curvilinear overload of the above
 ///

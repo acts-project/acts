@@ -167,8 +167,6 @@ class RiddersStepper final {
   using Jacobian = BoundMatrix;
   /// The covariance type for the bound parameters
   using Covariance = BoundMatrix;
-  /// The type of the bound state returned by the `boundState` method
-  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
   /// Configuration struct for the RiddersStepper
   struct Config {
@@ -208,15 +206,9 @@ class RiddersStepper final {
     bool covTransport = false;
     /// The covariance of the last known bound parameters
     Covariance cov = Covariance::Zero();
-    /// The Jacobian of the last bound to bound transformation
-    Jacobian jacobian = Jacobian::Identity();
 
     /// The accumulated path length during the stepping process
     double pathAccumulated = 0;
-
-    /// Statistics for the stepper, such as the number of steps taken and the
-    /// number of successful steps
-    StepperStatistics statistics;
 
     // Parameters to reuse for curvilinear state
     /// The last propagation direction
@@ -284,33 +276,13 @@ class RiddersStepper final {
     if (!covariance.has_value()) {
       state.covTransport = false;
       state.cov = BoundMatrix::Zero();
-      // intentionally not resetting `jacobian` here as otherwise `update`
-      // break. this should be revisitted at some point - might be best to
-      // rework the stepper interface and how the jacobian is accessed
-
       return;
-    }
-
-    state.variationMap =
-        m_config.parameterVariation->variationMap(boundVector, *covariance);
-
-    for (const auto& [index, delta] : state.variationMap) {
-      BoundVector nudgedParams = boundVector;
-      nudgedParams[index] += delta;
-
-      state.secondaryStepperStates.push_back(
-          m_stepperImpl.makeState(state.primaryStepperState.options));
-      m_stepperImpl.initialize(state.secondaryStepperStates.back(),
-                               nudgedParams, std::nullopt, particleHypothesis,
-                               surface);
     }
 
     state.covTransport = true;
     state.cov = *covariance;
-    // same as above:
-    // intentionally not resetting `jacobian` here as otherwise `update`
-    // break. this should be revisitted at some point - might be best to
-    // rework the stepper interface and how the jacobian is accessed
+
+    resetSecondaryStates(state, boundVector, surface);
   }
 
   /// Get the magnetic field at the given position for the primary stepper state
@@ -488,71 +460,59 @@ class RiddersStepper final {
     return ss.str();
   }
 
-  /// Compute the bound state
+  /// Get the step size constraints of the primary stepper state
+  /// @param state the state of the RiddersStepper
+  /// @return the step size constraints
+  const ConstrainedStep& stepSize(const State& state) const {
+    return m_stepperImpl.stepSize(state.primaryStepperState);
+  }
+
+  /// Get the statistics of the primary stepper state
+  /// @param state the state of the RiddersStepper
+  /// @return the statistics
+  const StepperStatistics& statistics(const State& state) const {
+    return m_stepperImpl.statistics(state.primaryStepperState);
+  }
+
+  /// Get the path length
+  /// @param state the state of the RiddersStepper
+  /// @return the path length since the last initialization
+  double pathLength(const State& state) const { return state.pathAccumulated; }
+
+  /// Check if the state carries a covariance
+  /// @param state the state of the RiddersStepper
+  /// @return true if the covariance is transported
+  bool hasCovariance(const State& state) const { return state.covTransport; }
+
+  /// Get the covariance of the last transport
+  /// @param state the state of the RiddersStepper
+  /// @return the covariance
+  const Covariance& covariance(const State& state) const { return state.cov; }
+
+  /// Set the covariance of the last transport
+  /// @param state the state of the RiddersStepper
+  /// @param covariance the new covariance
+  void setCovariance(State& state, const Covariance& covariance) const {
+    state.cov = covariance;
+  }
+
+  /// Get the bound parameters of the primary stepper state
+  ///
+  /// The parameters carry the covariance of the last transport if the state
+  /// has a covariance.
+  ///
   /// @param state the state of the RiddersStepper
   /// @param surface the surface
-  /// @param transportCovariance flag indicating whether to transport the covariance to the bound parameters
-  /// @param freeToBoundCorrection the correction
-  /// @return the bound state
-  Result<BoundState> boundState(
-      State& state, const Surface& surface, bool transportCovariance = true,
-      const FreeToBoundCorrection& freeToBoundCorrection =
-          FreeToBoundCorrection(false)) const {
-    Result<BoundState> primaryResult = m_stepperImpl.boundState(
-        state.primaryStepperState, surface, false, freeToBoundCorrection);
-
-    if (!transportCovariance) {
-      std::get<1>(*primaryResult) = state.jacobian;
-      return primaryResult;
+  /// @return the bound parameters
+  Result<BoundParameters> boundParameters(const State& state,
+                                          const Surface& surface) const {
+    Result<BoundParameters> result =
+        m_stepperImpl.boundParameters(state.primaryStepperState, surface);
+    if (!result.ok() || !state.covTransport) {
+      return result;
     }
-
-    std::vector<BoundVector> boundVectors;
-    std::vector<double> pathLenghts;
-    boundVectors.reserve(state.secondaryStepperStates.size());
-    pathLenghts.reserve(state.secondaryStepperStates.size());
-    for (auto& secondaryState : state.secondaryStepperStates) {
-      const Result<BoundState> result = m_stepperImpl.boundState(
-          secondaryState, surface, false, freeToBoundCorrection);
-      if (!result.ok()) {
-        return result.error();
-      }
-      boundVectors.push_back(std::get<0>(*result).parameters());
-      pathLenghts.push_back(std::get<2>(*result));
-    }
-    const auto& referenceVector = std::get<0>(*primaryResult).parameters();
-
-    state.jacobian = BoundMatrix::Zero();
-    std::array<std::size_t, eBoundSize> numberOfVariationsPerParameter{};
-
-    for (std::size_t i = 0; i < state.variationMap.size(); ++i) {
-      const auto& [index, delta] = state.variationMap[i];
-      const auto& nudgedVector = boundVectors[i];
-
-      const auto diff = [&]() {
-        BoundVector d = nudgedVector - referenceVector;
-        d[eBoundPhi] = detail::difference_periodic(nudgedVector[eBoundPhi],
-                                                   referenceVector[eBoundPhi],
-                                                   2 * std::numbers::pi);
-        return d;
-      };
-
-      state.jacobian.col(index) += diff() / delta;
-      ++numberOfVariationsPerParameter[index];
-    }
-    for (std::size_t i = 0; i < eBoundSize; ++i) {
-      state.jacobian.col(i) /= numberOfVariationsPerParameter[i];
-    }
-
-    state.cov = state.jacobian * state.cov * state.jacobian.transpose();
-
-    BoundTrackParameters newParams(surface.getSharedPtr(), referenceVector,
-                                   state.cov, particleHypothesis(state));
-
-    state.variationMap =
-        m_config.parameterVariation->variationMap(referenceVector, state.cov);
-
-    return Result<BoundState>::success(
-        BoundState{std::move(newParams), state.jacobian, pathLenghts.front()});
+    return BoundParameters(surface.getSharedPtr(), result->parameters(),
+                           state.cov, particleHypothesis(state));
   }
 
   /// Prepare the stepper for the curvilinear transformation
@@ -567,14 +527,103 @@ class RiddersStepper final {
     return result;
   }
 
-  /// Compute the curvilinear state
+  /// Get the curvilinear parameters of the primary stepper state
+  ///
+  /// The parameters carry the covariance of the last transport if the state
+  /// has a covariance.
+  ///
   /// @param state the state of the RiddersStepper
-  /// @param transportCovariance flag indicating whether to transport the covariance to the curvilinear parameters
-  /// @return the curvilinear state
-  BoundState curvilinearState(State& state,
-                              bool transportCovariance = true) const {
-    if (!transportCovariance) {
-      return m_stepperImpl.curvilinearState(state.primaryStepperState, false);
+  /// @return the curvilinear parameters
+  BoundParameters curvilinearParameters(const State& state) const {
+    BoundParameters result =
+        m_stepperImpl.curvilinearParameters(state.primaryStepperState);
+    if (!state.covTransport) {
+      return result;
+    }
+    return BoundParameters(result.referenceSurface().getSharedPtr(),
+                           result.parameters(), state.cov,
+                           particleHypothesis(state));
+  }
+
+  /// Transport the covariance to a surface
+  ///
+  /// The jacobian is computed from the differences of the secondary stepper
+  /// states. Without a covariance the state does not change.
+  ///
+  /// @param state the state of the RiddersStepper
+  /// @param surface the surface
+  /// @param freeToBoundCorrection the correction, ignored
+  /// @return the jacobian, or a failure if the parameters cannot be expressed on @p surface
+  Result<Jacobian> transportToBound(
+      State& state, const Surface& surface,
+      [[maybe_unused]] const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const {
+    if (!state.covTransport) {
+      return Result<Jacobian>::success(Jacobian::Identity());
+    }
+
+    Result<BoundParameters> primaryResult =
+        m_stepperImpl.boundParameters(state.primaryStepperState, surface);
+    if (!primaryResult.ok()) {
+      return Result<Jacobian>::failure(primaryResult.error());
+    }
+
+    std::vector<BoundVector> boundVectors;
+    boundVectors.reserve(state.secondaryStepperStates.size());
+    for (const auto& secondaryState : state.secondaryStepperStates) {
+      const Result<BoundParameters> result =
+          m_stepperImpl.boundParameters(secondaryState, surface);
+      if (!result.ok()) {
+        return Result<Jacobian>::failure(result.error());
+      }
+      boundVectors.push_back(result->parameters());
+    }
+    const BoundVector& referenceVector = primaryResult->parameters();
+
+    Jacobian jacobian = Jacobian::Zero();
+    std::array<std::size_t, eBoundSize> numberOfVariationsPerParameter{};
+
+    for (std::size_t i = 0; i < state.variationMap.size(); ++i) {
+      const auto& [index, delta] = state.variationMap[i];
+      const auto& nudgedVector = boundVectors[i];
+
+      const auto diff = [&]() {
+        BoundVector d = nudgedVector - referenceVector;
+        d[eBoundPhi] = detail::difference_periodic(nudgedVector[eBoundPhi],
+                                                   referenceVector[eBoundPhi],
+                                                   2 * std::numbers::pi);
+        return d;
+      };
+
+      jacobian.col(index) += diff() / delta;
+      ++numberOfVariationsPerParameter[index];
+    }
+    for (std::size_t i = 0; i < eBoundSize; ++i) {
+      jacobian.col(i) /= numberOfVariationsPerParameter[i];
+    }
+
+    state.cov = jacobian * state.cov * jacobian.transpose();
+
+    // The secondary states restart on the surface, so the next jacobian starts
+    // here as well
+    resetSecondaryStates(state, referenceVector, surface);
+    for (auto& secondaryState : state.secondaryStepperStates) {
+      secondaryState.stepSize = state.primaryStepperState.stepSize;
+    }
+
+    return Result<Jacobian>::success(jacobian);
+  }
+
+  /// Transport the covariance to the curvilinear frame
+  ///
+  /// This steps all stepper states onto the curvilinear surface at the current
+  /// position. Without a covariance the state does not change.
+  ///
+  /// @param state the state of the RiddersStepper
+  /// @return the jacobian
+  Jacobian transportToCurvilinear(State& state) const {
+    if (!state.covTransport) {
+      return Jacobian::Identity();
     }
 
     const auto curvilinearSurface =
@@ -601,7 +650,8 @@ class RiddersStepper final {
       }
     }
 
-    return boundState(state, *curvilinearSurface, true).value();
+    // the surface is built at the current position, so this cannot fail
+    return transportToBound(state, *curvilinearSurface).value();
   }
 
   /// Update the state of the RiddersStepper
@@ -637,29 +687,6 @@ class RiddersStepper final {
                cov, particleHypothesis(state), *curvilinearSurface);
   }
 
-  /// Transport the covariance to curvilinear parameters
-  /// @param state the state of the RiddersStepper
-  void transportCovarianceToCurvilinear(State& state) const {
-    curvilinearState(state, true);
-  }
-
-  /// Transport the covariance to bound parameters
-  /// @param state the state of the RiddersStepper
-  /// @param surface the surface
-  /// @param freeToBoundCorrection the correction
-  /// @return Failure if the parameters cannot be expressed on the surface
-  Result<void> transportCovarianceToBound(
-      State& state, const Surface& surface,
-      const FreeToBoundCorrection& freeToBoundCorrection =
-          FreeToBoundCorrection(false)) const {
-    Result<BoundState> result =
-        boundState(state, surface, true, freeToBoundCorrection);
-    if (!result.ok()) {
-      return result.error();
-    }
-    return Result<void>::success();
-  }
-
   /// Perform a step
   /// @param state the state of the RiddersStepper
   /// @param propagationDirection the direction
@@ -687,6 +714,28 @@ class RiddersStepper final {
   }
 
  private:
+  /// Start the secondary states from variations of the given parameters
+  /// @param state the state of the RiddersStepper
+  /// @param boundVector the parameters to vary
+  /// @param surface the surface of the parameters
+  void resetSecondaryStates(State& state, const BoundVector& boundVector,
+                            const Surface& surface) const {
+    state.variationMap =
+        m_config.parameterVariation->variationMap(boundVector, state.cov);
+
+    state.secondaryStepperStates.clear();
+    for (const auto& [index, delta] : state.variationMap) {
+      BoundVector nudgedParams = boundVector;
+      nudgedParams[index] += delta;
+
+      state.secondaryStepperStates.push_back(
+          m_stepperImpl.makeState(state.primaryStepperState.options));
+      m_stepperImpl.initialize(state.secondaryStepperStates.back(),
+                               nudgedParams, std::nullopt,
+                               particleHypothesis(state), surface);
+    }
+  }
+
   /// The stepper configuration
   Config m_config;
 

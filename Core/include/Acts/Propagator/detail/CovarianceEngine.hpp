@@ -16,7 +16,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <tuple>
+#include <optional>
 
 namespace Acts::detail {
 
@@ -26,72 +26,33 @@ namespace Acts::detail {
 /// calculations are identical for @c StraightLineStepper and @c EigenStepper.
 /// As a consequence the methods can be located in a separate file.
 
-/// Create and return the bound state at the current position
+/// Create bound parameters from free parameters on a surface
 ///
-/// @brief It does not check if the transported state is at the surface, this
-///        needs to be guaranteed by the propagator
+/// @note It does not check if the free parameters are on the surface
 ///
 /// @param [in] geoContext The geometry context
-/// @param [in, out] boundCovariance The covariance matrix of the state
-/// @param [in, out] fullTransportJacobian Full jacobian since the last reset
-/// @param [in, out] freeTransportJacobian Global jacobian since the last reset
-/// @param [in, out] freeToPathDerivatives Path length derivatives of the free,
-///        nominal parameters
-/// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
-///        parametrisation to free parameters
-/// @param [in, out] freeParameters Free, nominal parametrisation
-/// @param [in] particleHypothesis Particle hypothesis
-/// @param [in] covTransport Decision whether the covariance transport should be
-///        performed
-/// @param [in] accumulatedPath Propagated distance
-/// @param [in] surface Target surface on which the state is represented
-/// @param [in] freeToBoundCorrection Correction for non-linearity effect during
-///        transform from free to bound
+/// @param [in] surface The surface of the bound parameters
+/// @param [in] freeParameters The free parameters
+/// @param [in] covariance The optional bound covariance on @p surface
+/// @param [in] particleHypothesis The particle hypothesis
 ///
-/// @return A bound state:
-///   - the parameters at the surface
-///   - the stepwise jacobian towards it (from last bound)
-///   - and the path length (from start - for ordering)
-///
-Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
+/// @return The bound parameters, or a failure if the free parameters cannot
+///         be expressed on @p surface
+Result<BoundTrackParameters> boundParameters(
     const GeometryContext& geoContext, const Surface& surface,
-    BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian,
-    const std::optional<FreeMatrix>& additionalFreeCovariance,
-    FreeVector& freeParameters, const ParticleHypothesis& particleHypothesis,
-    bool covTransport, double accumulatedPath,
-    const FreeToBoundCorrection& freeToBoundCorrection);
+    const FreeVector& freeParameters, std::optional<BoundMatrix> covariance,
+    const ParticleHypothesis& particleHypothesis);
 
-/// Create and return a curvilinear state at the current position
+/// Create curvilinear parameters from free parameters
 ///
-/// @brief This creates a curvilinear state.
+/// @param [in] freeParameters The free parameters
+/// @param [in] covariance The optional curvilinear covariance
+/// @param [in] particleHypothesis The particle hypothesis
 ///
-/// @param [in, out] boundCovariance The covariance matrix of the state
-/// @param [in, out] fullTransportJacobian Full jacobian since the last reset
-/// @param [in, out] freeTransportJacobian Global jacobian since the last reset
-/// @param [in, out] freeToPathDerivatives Path length derivatives of the free,
-///        nominal parameters
-/// @param [in, out] boundToFreeJacobian Projection jacobian of the last bound
-///        parametrisation to free parameters
-/// @param [in] freeParameters Free, nominal parametrisation
-/// @param [in] particleHypothesis Particle hypothesis
-/// @param [in] covTransport Decision whether the covariance transport should be
-///        performed
-/// @param [in] accumulatedPath Propagated distance
-///
-/// @return A curvilinear state:
-///   - the curvilinear parameters at given position
-///   - the stepweise jacobian towards it (from last bound)
-///   - and the path length (from start - for ordering)
-std::tuple<BoundTrackParameters, BoundMatrix, double> curvilinearState(
-    BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
-    FreeMatrix& transportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian,
-    const std::optional<FreeMatrix>& additionalFreeCovariance,
-    const FreeVector& freeParameters,
-    const ParticleHypothesis& particleHypothesis, bool covTransport,
-    double accumulatedPath);
+/// @return The curvilinear parameters at the free position
+BoundTrackParameters curvilinearParameters(
+    const FreeVector& freeParameters, std::optional<BoundMatrix> covariance,
+    const ParticleHypothesis& particleHypothesis);
 
 /// @brief Method for on-demand covariance transport of a bound/curvilinear to
 ///        another bound representation.
@@ -108,10 +69,8 @@ std::tuple<BoundTrackParameters, BoundMatrix, double> curvilinearState(
 /// @param [in] freeToBoundCorrection Correction for non-linearity effect during
 ///        transform from free to bound
 ///
-/// @note No check is done if the position is actually on the surface
-///
-/// @return Failure if the parameters cannot be expressed on the surface
-Result<void> transportCovarianceToBound(
+/// @note The free parameters must be on the surface
+void transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
