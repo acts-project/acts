@@ -40,7 +40,7 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
   std::vector<ChannelStep> cSteps;
   Bin2D bstart = {0, 0};
   Bin2D bend = {0, 0};
-    
+
   // Index convention: getBinEdges()[i] == getBinLowerBound(i + 1), and the bin
   // indices here are zero-based (getBin() is one-based, hence the -1 above), so
   // ib <= nBins - 1 and getBinLowerBound(ib + 1) is always in range.
