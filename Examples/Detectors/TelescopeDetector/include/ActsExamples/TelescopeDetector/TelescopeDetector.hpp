@@ -31,9 +31,13 @@ class TelescopeDetector : public Detector {
     std::array<double, 2> bounds{{25, 100}};
     double thickness{80 * Acts::UnitConstants::um};
     int surfaceType{0};
-    int binValue{2};
+    int rotDirection{2};
+    std::array<double, 2> envelope_x{{200, 200}};
+    std::array<double, 2> envelope_y{{200, 200}};
+    std::array<double, 2> envelope_z{{200, 200}};
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
     Acts::Logging::Level logLevel{Acts::Logging::WARNING};
+    bool gen3{false};
   };
 
   explicit TelescopeDetector(const Config& cfg);
