@@ -543,6 +543,9 @@ void addGeometryGen3(py::module_& m) {
           .def("incrementLayerIds",
                &GeometryIdentifierBlueprintNode::incrementLayerIds,
                py::arg("start") = 0)
+          .def("setDirectChildVolumeIdTo",
+               &GeometryIdentifierBlueprintNode::setDirectChildVolumeIdTo,
+               py::arg("value"), py::return_value_policy::reference_internal)
           .def("setAllVolumeIdsTo",
                &GeometryIdentifierBlueprintNode::setAllVolumeIdsTo,
                py::arg("value"))
