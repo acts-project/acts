@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -22,14 +23,20 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/AnyGridView.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 
+#include <algorithm>
+#include <limits>
 #include <optional>
+#include <set>
 
 #include <detray/geometry/shapes/annulus2D.hpp>
 #include <detray/geometry/shapes/concentric_cylinder2D.hpp>
@@ -252,79 +259,199 @@ detray::io::volume_payload DetrayPayloadConverter::convertVolume(
 }
 
 namespace {
-std::vector<const TrivialPortalLink*> decomposeToTrivials(
-    const PortalLinkBase& link, const Logger& logger) {
-  std::vector<const TrivialPortalLink*> trivials;
 
-  if (auto* trivial = dynamic_cast<const TrivialPortalLink*>(&link);
+/// A contiguous piece of a portal along its segmentation direction, expressed
+/// in the local frame of the portal surface, together with the volume the
+/// portal leads into on that piece (nullptr for the end of the world).
+struct PortalSegment {
+  double min;
+  double max;
+  const TrackingVolume* volume;
+};
+
+/// Direction along which a portal is split into segments. Cylinders are split
+/// in z and discs in r, which is what detray's multi-mask portals support. For
+/// planes, the direction is taken from the first composite or 1D grid link.
+AxisDirection segmentationDirection(const Portal& portal) {
+  switch (portal.surface().type()) {
+    using enum Surface::SurfaceType;
+    case Cylinder:
+      return AxisDirection::AxisZ;
+    case Disc:
+      return AxisDirection::AxisR;
+    case Plane:
+      for (auto dir : {Direction::AlongNormal(), Direction::OppositeNormal()}) {
+        const auto* link = portal.getLink(dir);
+        if (const auto* composite =
+                dynamic_cast<const CompositePortalLink*>(link);
+            composite != nullptr) {
+          return composite->direction();
+        }
+        if (const auto* grid = dynamic_cast<const GridPortalLink*>(link);
+            grid != nullptr && grid->dim() == 1) {
+          return grid->direction();
+        }
+      }
+      return AxisDirection::AxisX;
+    default:
+      throw std::runtime_error(
+          "Portal surface type is not supported by the detray conversion");
+  }
+}
+
+/// Offset of @p surface along @p direction, in the local frame of @p portalSurface
+double offsetAlong(const GeometryContext& gctx, const Surface& portalSurface,
+                   const Surface& surface, AxisDirection direction) {
+  const Vector3 offset = (portalSurface.localToGlobalTransform(gctx).inverse() *
+                          surface.localToGlobalTransform(gctx))
+                             .translation();
+  switch (direction) {
+    using enum AxisDirection;
+    case AxisZ:
+      return offset[eZ];
+    case AxisX:
+      return offset[eX];
+    case AxisY:
+      return offset[eY];
+    default:
+      // Radial extents of coplanar discs do not depend on the frame
+      return 0.;
+  }
+}
+
+/// Extent of @p surface along @p direction, in the local frame of @p portalSurface
+std::pair<double, double> extentAlong(const GeometryContext& gctx,
+                                      const Surface& portalSurface,
+                                      const Surface& surface,
+                                      AxisDirection direction) {
+  const double offset = offsetAlong(gctx, portalSurface, surface, direction);
+
+  if (const auto* cylinder =
+          dynamic_cast<const CylinderBounds*>(&surface.bounds());
+      cylinder != nullptr && direction == AxisDirection::AxisZ) {
+    const double hlZ = cylinder->get(CylinderBounds::eHalfLengthZ);
+    return {offset - hlZ, offset + hlZ};
+  }
+  if (const auto* radial = dynamic_cast<const RadialBounds*>(&surface.bounds());
+      radial != nullptr && direction == AxisDirection::AxisR) {
+    return {radial->get(RadialBounds::eMinR), radial->get(RadialBounds::eMaxR)};
+  }
+  if (const auto* rectangle =
+          dynamic_cast<const RectangleBounds*>(&surface.bounds());
+      rectangle != nullptr) {
+    if (direction == AxisDirection::AxisX) {
+      return {offset + rectangle->get(RectangleBounds::eMinX),
+              offset + rectangle->get(RectangleBounds::eMaxX)};
+    }
+    if (direction == AxisDirection::AxisY) {
+      return {offset + rectangle->get(RectangleBounds::eMinY),
+              offset + rectangle->get(RectangleBounds::eMaxY)};
+    }
+  }
+
+  throw std::runtime_error("Cannot segment portal surface along " +
+                           axisDirectionName(direction) +
+                           ": unsupported surface bounds");
+}
+
+/// Collect the segments of @p link along @p direction in the frame of
+/// @p portalSurface. Grid links are read from their bins, so this does not
+/// depend on the trivial links a grid was originally built from.
+void collectSegments(const GeometryContext& gctx, const Surface& portalSurface,
+                     const PortalLinkBase& link, AxisDirection direction,
+                     std::vector<PortalSegment>& segments) {
+  if (const auto* trivial = dynamic_cast<const TrivialPortalLink*>(&link);
       trivial != nullptr) {
-    trivials.push_back(trivial);
-  } else if (auto* composite = dynamic_cast<const CompositePortalLink*>(&link);
+    auto [min, max] =
+        extentAlong(gctx, portalSurface, trivial->surface(), direction);
+    segments.push_back({min, max, &trivial->volume()});
+  } else if (const auto* composite =
+                 dynamic_cast<const CompositePortalLink*>(&link);
              composite != nullptr) {
-    ACTS_VERBOSE("Converting composite portal link with "
-                 << composite->links().size() << " sub-links");
-    for (const auto& subLink : composite->links()) {
-      const auto* subTrivial = dynamic_cast<const TrivialPortalLink*>(&subLink);
+    for (const auto& child : composite->links()) {
+      collectSegments(gctx, portalSurface, child, direction, segments);
+    }
+  } else if (const auto* grid = dynamic_cast<const GridPortalLink*>(&link);
+             grid != nullptr) {
+    AnyGridConstView<const TrackingVolume*> view(grid->grid());
+    const auto nBins = view.multiAxisAny().getNBinsAny();
 
-      if (subTrivial == nullptr) {
-        throw std::runtime_error(
-            "Composite portal link contains non-trivial portal links");
-      } else {
-        trivials.push_back(subTrivial);
+    if (grid->dim() == 1 && grid->direction() == direction) {
+      const double offset =
+          offsetAlong(gctx, portalSurface, grid->surface(), direction);
+      const std::vector<double> edges =
+          grid->grid().axes().front()->getBinEdges();
+      for (std::size_t i = 0; i < nBins.at(0); ++i) {
+        const TrackingVolume* target = view.atLocalBins({i + 1});
+        if (target != nullptr) {
+          segments.push_back(
+              {edges[i] + offset, edges[i + 1] + offset, target});
+        }
+      }
+      return;
+    }
+
+    // Binning that detray portal masks cannot express is only convertible if
+    // the grid leads into a single volume everywhere.
+    std::set<const TrackingVolume*> targets;
+    if (grid->dim() == 1) {
+      for (std::size_t i0 = 1; i0 <= nBins.at(0); ++i0) {
+        targets.insert(view.atLocalBins({i0}));
+      }
+    } else {
+      for (std::size_t i0 = 1; i0 <= nBins.at(0); ++i0) {
+        for (std::size_t i1 = 1; i1 <= nBins.at(1); ++i1) {
+          targets.insert(view.atLocalBins({i0, i1}));
+        }
       }
     }
-  } else if (auto* grid = dynamic_cast<const GridPortalLink*>(&link);
-             grid != nullptr) {
-    ACTS_VERBOSE("Converting grid portal link with "
-                 << grid->artifactPortalLinks().size() << " link artifacts");
-    for (const auto& artifact : grid->artifactPortalLinks()) {
-      trivials.push_back(&artifact);
+    targets.erase(nullptr);
+    if (targets.size() != 1) {
+      throw std::runtime_error(
+          "Grid portal link binned along " +
+          axisDirectionName(grid->direction()) + " leads into " +
+          std::to_string(targets.size()) +
+          " volumes, detray portals can only be segmented along " +
+          axisDirectionName(direction));
     }
+    auto [min, max] =
+        extentAlong(gctx, portalSurface, grid->surface(), direction);
+    segments.push_back({min, max, *targets.begin()});
   } else {
     throw std::runtime_error(
         "Unknown portal link type, detray cannot handle this");
   }
-
-  return trivials;
 }
 
-/// Build a portal mask for a trivial child surface, expressed in the frame of
-/// the parent (merged) portal surface. This allows a single detray portal
-/// surface to carry one mask per neighbour volume (multi-mask portal).
-///
-/// Only concentric cylinders (z-binning) and rings/discs (r-binning) can be
-/// folded onto a single shared transform; everything else returns nullopt so
-/// the caller can fall back to emitting one surface per trivial.
-///
-/// @param gctx the geometry context
-/// @param parent the merged portal surface that provides the shared transform
-/// @param child the trivial child surface whose sub-region is encoded
-/// @returns the mask payload in the parent frame, or nullopt if unsupported
-std::optional<detray::io::mask_payload> convertPortalMask(
-    const GeometryContext& gctx, const Surface& parent, const Surface& child) {
-  using enum detray::io::shape_id;
+/// Sort @p segments, merge neighbours leading into the same volume, and absorb
+/// segments and gaps below @p tolerance into their neighbours.
+void normalizeSegments(std::vector<PortalSegment>& segments, double tolerance) {
+  std::ranges::sort(segments, {}, &PortalSegment::min);
 
-  detray::io::mask_payload payload =
-      DetrayPayloadConverter::convertMask(child.bounds(), true);
-
-  if (payload.shape == portal_cylinder2) {
-    // The child z-range is centered on the child transform: shift it into the
-    // parent frame. The detray reader folds the (parent) surface-transform z
-    // back into every mask, so this reconstructs the correct global z-range.
-    using enum detray::concentric_cylinder2D::boundaries;
-    const double dz = (parent.localToGlobalTransform(gctx).inverse() *
-                       child.localToGlobalTransform(gctx))
-                          .translation()[eZ];
-    payload.boundaries.at(e_lower_z) += dz;
-    payload.boundaries.at(e_upper_z) += dz;
-    return payload;
-  } else if (payload.shape == ring2) {
-    // Ring boundaries are inner_r/outer_r only and frame-independent for
-    // coplanar r-split children.
-    return payload;
+  std::vector<PortalSegment> result;
+  result.reserve(segments.size());
+  for (const auto& segment : segments) {
+    if (result.empty()) {
+      result.push_back(segment);
+      continue;
+    }
+    auto& previous = result.back();
+    const bool contiguous = segment.min - previous.max <= tolerance;
+    if (contiguous && segment.volume == previous.volume) {
+      previous.max = std::max(previous.max, segment.max);
+    } else if (contiguous && segment.max - segment.min < tolerance) {
+      previous.max = std::max(previous.max, segment.max);
+    } else if (contiguous && previous.max - previous.min < tolerance) {
+      previous = {previous.min, segment.max, segment.volume};
+    } else {
+      if (contiguous) {
+        // Close numerical gaps (or overlaps) between neighbours
+        previous.max = segment.min;
+      }
+      result.push_back(segment);
+    }
   }
-
-  return std::nullopt;
+  segments = std::move(result);
 }
 
 /// Check compatibility between ACTS surface type and detray material_id
@@ -349,152 +476,176 @@ std::pair<bool, detray::io::material_id> isGridMaterialCompatible(
 
 }  // namespace
 
-void DetrayPayloadConverter::handlePortalLink(
-    const GeometryContext& gctx, const TrackingVolume& volume,
-    detray::io::volume_payload& volPayload,
-    const std::function<std::size_t(const TrackingVolume*)>& volumeLookup,
-    std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
-    const PortalLinkBase& link) const {
-  std::vector<const TrivialPortalLink*> trivials =
-      decomposeToTrivials(link, logger());
-
-  // If ANY of the trivials point at the current volume, we don't handle this
-  // portal link at all, otherwise we would get a self-referencing volume link
-
-  if (std::ranges::any_of(
-          trivials, [&](const auto* t) { return &t->volume() == &volume; })) {
-    ACTS_VERBOSE("At least one trivial link points at this volume ("
-                 << volume.volumeName() << ") => skipping");
-    return;
-  }
-
-  // Multi-mask portal: a single detray portal surface can carry one mask per
-  // neighbour volume. This is possible for concentric cylinders (z-binning)
-  // and rings/discs (r-binning), where all sub-regions share the parent
-  // surface transform. For everything else we fall back to one surface per
-  // trivial below.
-  const Surface& parentSurface = link.surface();
-  const bool canMultiMask =
-      trivials.size() > 1 &&
-      (parentSurface.type() == Surface::SurfaceType::Cylinder ||
-       parentSurface.type() == Surface::SurfaceType::Disc);
-
-  if (canMultiMask) {
-    std::vector<detray::io::mask_payload> masks;
-    masks.reserve(trivials.size());
-    bool ok = true;
-    for (const auto* trivial : trivials) {
-      auto mask = convertPortalMask(gctx, parentSurface, trivial->surface());
-      if (!mask.has_value()) {
-        ok = false;
-        break;
-      }
-      mask->volume_link.link = volumeLookup(&trivial->volume());
-      masks.push_back(*mask);
-    }
-
-    if (ok) {
-      ACTS_VERBOSE("Converting " << trivials.size()
-                                 << " trivial portal links into a single "
-                                    "multi-mask portal in volume "
-                                 << volume.volumeName());
-      // Reuse convertSurface for the parent transform / source / portal type,
-      // then replace its single mask with the per-trivial masks.
-      auto& srfPayload = volPayload.surfaces.emplace_back(
-          convertSurface(gctx, parentSurface, true));
-      srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
-      srfPayload.masks = std::move(masks);
-
-      // All trivial child surfaces map to this single detray surface index so
-      // that material assignment can resolve them later.
-      for (const auto* trivial : trivials) {
-        surfaceIndices[&trivial->surface()] = srfPayload.index_in_coll.value();
-      }
-      return;
-    }
-
-    ACTS_VERBOSE("Multi-mask portal conversion not possible for volume "
-                 << volume.volumeName()
-                 << " => falling back to one surface per trivial");
-  }
-
-  for (const auto* trivial : trivials) {
-    ACTS_VERBOSE("Converting trivial portal link registered to volume "
-                 << volume.volumeName());
-    ACTS_VERBOSE(
-        "Portal link surface is: " << trivial->surface().toStream(gctx));
-    if (&trivial->volume() == &volume) {
-      ACTS_VERBOSE("~> points at this volume (" << volume.volumeName()
-                                                << ") => skipping");
-      return;
-    }
-
-    ACTS_VERBOSE("~> points at different volume ("
-                 << trivial->volume().volumeName()
-                 << ") => adding link to this volume (" << volume.volumeName()
-                 << ")");
-
-    // add the surface (including mask first)
-    auto& srfPayload = volPayload.surfaces.emplace_back(
-        convertSurface(gctx, trivial->surface(), true));
-    srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
-
-    // lookup the target volume index (we already converted this)
-    ACTS_VERBOSE("Target volume index for "
-                 << trivial->volume().volumeName() << ": "
-                 << volumeLookup(&trivial->volume()));
-    std::size_t targetVolumeIndex = volumeLookup(&trivial->volume());
-    srfPayload.masks.at(0).volume_link.link = targetVolumeIndex;
-    surfaceIndices[&trivial->surface()] = srfPayload.index_in_coll.value();
-  }
-}
-
-void DetrayPayloadConverter::makeEndOfWorld(
-    const GeometryContext& gctx, detray::io::volume_payload& volPayload,
-    std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
-    const Surface& surface) const {
-  ACTS_VERBOSE("Adding end of world surface");
-  auto& srfPayload =
-      volPayload.surfaces.emplace_back(convertSurface(gctx, surface, true));
-  srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
-
-  // Marker for end of world is MAX
-  srfPayload.masks.at(0).volume_link.link =
-      std::numeric_limits<std::size_t>::max();
-
-  surfaceIndices[&surface] = srfPayload.index_in_coll.value();
-}
-
 void DetrayPayloadConverter::handlePortal(
     const GeometryContext& gctx, const TrackingVolume& volume,
     detray::io::volume_payload& volPayload,
     const std::function<std::size_t(const TrackingVolume*)>& volumeLookup,
     std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
     const Portal& portal) const {
-  auto* lAlong = portal.getLink(Direction::AlongNormal());
-  auto* lOpposite = portal.getLink(Direction::OppositeNormal());
+  const auto* lAlong = portal.getLink(Direction::AlongNormal());
+  const auto* lOpposite = portal.getLink(Direction::OppositeNormal());
 
   if (lAlong == nullptr && lOpposite == nullptr) {
     // Sanity check: this shouldn't happen
     throw std::runtime_error("Portal link is not symmetric");
   }
 
-  if (lAlong != nullptr) {
-    handlePortalLink(gctx, volume, volPayload, volumeLookup, surfaceIndices,
-                     *lAlong);
-  } else {
-    // can't both be nullptr
-    assert(lOpposite != nullptr);
-    makeEndOfWorld(gctx, volPayload, surfaceIndices, lOpposite->surface());
+  const RegularSurface& portalSurface = portal.surface();
+  const AxisDirection direction = segmentationDirection(portal);
+
+  auto segmentsOf = [&](const PortalLinkBase* link) {
+    std::vector<PortalSegment> segments;
+    if (link != nullptr) {
+      collectSegments(gctx, portalSurface, *link, direction, segments);
+    }
+    return segments;
+  };
+
+  std::vector<PortalSegment> along = segmentsOf(lAlong);
+  std::vector<PortalSegment> opposite = segmentsOf(lOpposite);
+
+  auto leadsHere = [&](const PortalSegment& s) { return s.volume == &volume; };
+
+  // The link that leads into this volume tells us which part of the portal
+  // borders it. The other link provides the neighbours on that part.
+  const bool alongIsOwn = std::ranges::any_of(along, leadsHere);
+  if (!alongIsOwn && !std::ranges::any_of(opposite, leadsHere)) {
+    ACTS_ERROR("Portal on " << portalSurface.geometryId() << " of volume "
+                            << volume.volumeName()
+                            << " does not lead into that volume");
+    throw std::runtime_error("Portal does not lead into its volume");
+  }
+  const std::vector<PortalSegment>& own = alongIsOwn ? along : opposite;
+  const std::vector<PortalSegment>& other = alongIsOwn ? opposite : along;
+  const bool endOfWorld = (alongIsOwn ? lOpposite : lAlong) == nullptr;
+
+  // Clip every neighbour segment to the parts of the portal that border this
+  // volume. This keeps detray portal masks inside the volume they belong to.
+  std::vector<PortalSegment> segments;
+  for (const auto& ownSegment : own) {
+    if (!leadsHere(ownSegment)) {
+      continue;
+    }
+    if (endOfWorld) {
+      segments.push_back({ownSegment.min, ownSegment.max, nullptr});
+      continue;
+    }
+    for (const auto& otherSegment : other) {
+      if (leadsHere(otherSegment)) {
+        // Would be a self-referencing volume link
+        continue;
+      }
+      const double min = std::max(ownSegment.min, otherSegment.min);
+      const double max = std::min(ownSegment.max, otherSegment.max);
+      if (max > min) {
+        segments.push_back({min, max, otherSegment.volume});
+      }
+    }
   }
 
-  if (lOpposite != nullptr) {
-    handlePortalLink(gctx, volume, volPayload, volumeLookup, surfaceIndices,
-                     *lOpposite);
-  } else {
-    // can't both be nullptr
-    assert(lAlong != nullptr);
-    makeEndOfWorld(gctx, volPayload, surfaceIndices, lAlong->surface());
+  normalizeSegments(segments, m_cfg.portalSegmentTolerance);
+
+  // Parts of this volume's face without a neighbour become holes in detray
+  double ownLength = 0.;
+  for (const auto& ownSegment : own) {
+    if (leadsHere(ownSegment)) {
+      ownLength += ownSegment.max - ownSegment.min;
+    }
+  }
+  double coveredLength = 0.;
+  for (const auto& segment : segments) {
+    coveredLength += segment.max - segment.min;
+  }
+  if (ownLength - coveredLength > m_cfg.portalSegmentTolerance) {
+    ACTS_WARNING("Portal on " << portalSurface.geometryId() << " of volume "
+                              << volume.volumeName() << " only covers "
+                              << coveredLength << " of " << ownLength
+                              << " along " << axisDirectionName(direction)
+                              << " with neighbours");
+  }
+
+  if (segments.empty()) {
+    ACTS_VERBOSE("Portal on " << portalSurface.geometryId()
+                              << " has no neighbour for volume "
+                              << volume.volumeName() << " => skipping");
+    return;
+  }
+
+  ACTS_VERBOSE("Portal on " << portalSurface.geometryId() << " of volume "
+                            << volume.volumeName() << " is split into "
+                            << segments.size() << " segment(s) along "
+                            << axisDirectionName(direction));
+  for (const auto& segment : segments) {
+    ACTS_VERBOSE("~> [" << segment.min << ", " << segment.max << "] -> "
+                        << (segment.volume != nullptr
+                                ? segment.volume->volumeName()
+                                : std::string{"end of world"}));
+  }
+
+  auto linkOf = [&](const PortalSegment& segment) -> std::size_t {
+    return segment.volume != nullptr ? volumeLookup(segment.volume)
+                                     : std::numeric_limits<std::size_t>::max();
+  };
+
+  if (direction == AxisDirection::AxisZ || direction == AxisDirection::AxisR) {
+    // Concentric cylinders and rings: all segments share the portal surface
+    // transform, so a single detray portal with one mask per segment is used.
+    // Surface material defined on the portal surface lines up with it as is.
+    auto& srfPayload = volPayload.surfaces.emplace_back(
+        convertSurface(gctx, portalSurface, true));
+    srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
+
+    const detray::io::mask_payload baseMask = srfPayload.masks.at(0);
+    srfPayload.masks.clear();
+    for (const auto& segment : segments) {
+      auto& mask = srfPayload.masks.emplace_back(baseMask);
+      if (direction == AxisDirection::AxisZ) {
+        using enum detray::concentric_cylinder2D::boundaries;
+        mask.boundaries.at(e_lower_z) = segment.min;
+        mask.boundaries.at(e_upper_z) = segment.max;
+      } else {
+        using enum detray::ring2D::boundaries;
+        mask.boundaries.at(e_inner_r) = segment.min;
+        mask.boundaries.at(e_outer_r) = segment.max;
+      }
+      mask.volume_link.link = linkOf(segment);
+    }
+
+    surfaceIndices[&portalSurface] = srfPayload.index_in_coll.value();
+    return;
+  }
+
+  // Planes: detray rectangles are centered on their surface, so every segment
+  // gets its own surface, shifted along the segmentation direction.
+  if (segments.size() > 1 && portalSurface.hasMaterial()) {
+    ACTS_ERROR("Plane portal on " << portalSurface.geometryId()
+                                  << " carries material but is split into "
+                                  << segments.size() << " segments in volume "
+                                  << volume.volumeName());
+    throw DetrayUnsupportedMaterialException(
+        "Material on segmented plane portals is not supported");
+  }
+
+  const Transform3& portalTransform =
+      portalSurface.localToGlobalTransform(gctx);
+  for (const auto& segment : segments) {
+    const double center = 0.5 * (segment.min + segment.max);
+    const double halfLength = 0.5 * (segment.max - segment.min);
+    const bool dirX = direction == AxisDirection::AxisX;
+
+    auto& srfPayload = volPayload.surfaces.emplace_back(
+        convertSurface(gctx, portalSurface, true));
+    srfPayload.index_in_coll = volPayload.surfaces.size() - 1;
+    srfPayload.transform = DetrayConversionUtils::convertTransform(
+        portalTransform *
+        Translation3{dirX ? Vector3{center, 0, 0} : Vector3{0, center, 0}});
+
+    auto& mask = srfPayload.masks.at(0);
+    using enum detray::rectangle2D::boundaries;
+    mask.boundaries.at(dirX ? e_half_x : e_half_y) = halfLength;
+    mask.volume_link.link = linkOf(segment);
+
+    surfaceIndices[&portalSurface] = srfPayload.index_in_coll.value();
   }
 }
 
@@ -653,15 +804,21 @@ DetrayPayloadConverter::convertMaterial(
   ACTS_VERBOSE("Looping over " << volume.portals().size()
                                << " portals in volume " << volPayload.name);
 
-  // Portals need special treatment: we have decomposed them to their trivial
-  // portal links, and only registered a subset to them as well. We again need
-  // to decompose here, and only look for the portals that are actually found in
-  // the volume payload
+  // Cylinder and disc portals are converted into a single detray surface per
+  // volume, which carries the portal surface transform and one mask per
+  // neighbour. The material defined on the portal surface applies to it as is.
+  // Segmented plane portals with material are rejected in handlePortal.
   for (const auto& portal : volume.portals()) {
-    // First check, if the combined portal surface has material assigned at all,
-    // if not there's nothing to do
+    // First check, if the portal surface has material assigned at all, if not
+    // there's nothing to do
     const auto* surfaceMaterial = portal.surface().surfaceMaterial();
     if (surfaceMaterial == nullptr) {
+      continue;
+    }
+
+    auto srfIt = surfaceIndices.find(&portal.surface());
+    if (srfIt == surfaceIndices.end()) {
+      // The portal did not produce a surface in this volume
       continue;
     }
 
@@ -675,45 +832,13 @@ DetrayPayloadConverter::convertMaterial(
 
     printSurfaceInfo(*detrayMaterial, portal.surface());
 
-    // Have valid detray material, now we need to find the surfaces that are
-    // actually there in detray
+    ACTS_VERBOSE("Portal on surface " << portal.surface().geometryId()
+                                      << " in volume " << volPayload.name
+                                      << " has detray idx " << srfIt->second);
 
-    for (auto dir : {Direction::AlongNormal(), Direction::OppositeNormal()}) {
-      const auto* link = portal.getLink(dir);
-
-      if (link == nullptr) {
-        continue;
-      }
-      ACTS_VERBOSE("Processing dir=" << dir << " for portal on surface "
-                                     << portal.surface().geometryId());
-
-      std::vector<const TrivialPortalLink*> trivials =
-          decomposeToTrivials(*link, logger());
-
-      ACTS_VERBOSE("Portal link in volume "
-                   << volPayload.name << " has produced " << trivials.size()
-                   << " trivials");
-      for (const auto* trivial : trivials) {
-        auto srfIt = surfaceIndices.find(&trivial->surface());
-
-        if (srfIt == surfaceIndices.end()) {
-          // This trivial was not converted, skip
-          continue;
-        }
-
-        std::size_t srfIdx = srfIt->second;
-
-        ACTS_VERBOSE("Trivial portal link in volume "
-                     << volPayload.name << " has surface "
-                     << trivial->surface().geometryId() << " detray idx "
-                     << srfIdx);
-
-        // Assign (a copy of) the detray material to the surface payload
-        // associated with this trivial
-        assignMaterial(surfaceMaterial, *detrayMaterial, srfIdx,
-                       trivial->surface());
-      }
-    }
+    // Assign (a copy of) the detray material to the portal surface payload
+    assignMaterial(surfaceMaterial, *detrayMaterial, srfIt->second,
+                   portal.surface());
   }
 
   return {grids, homogeneous};
@@ -919,11 +1044,13 @@ DetrayPayloadConverter::convertTrackingGeometry(
   // Adjust volume indices in surfaces after swapping
   for (auto& vol : detPayload.volumes) {
     for (auto& srf : vol.surfaces) {
-      auto& mask = srf.masks.at(0);
-      if (mask.volume_link.link == beampipeIdx) {
-        mask.volume_link.link = 0;
-      } else if (mask.volume_link.link == 0) {
-        mask.volume_link.link = beampipeIdx;
+      // Portals can carry one mask per neighbour volume
+      for (auto& mask : srf.masks) {
+        if (mask.volume_link.link == beampipeIdx) {
+          mask.volume_link.link = 0;
+        } else if (mask.volume_link.link == 0) {
+          mask.volume_link.link = beampipeIdx;
+        }
       }
     }
   }
