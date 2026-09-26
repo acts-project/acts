@@ -65,8 +65,6 @@ class greedy_ambiguity_resolution_algorithm
   std::reference_wrapper<const vecmem::copy> m_copy;
   /// The CUDA stream to use
   stream_wrapper m_stream;
-  /// Warp size of the GPU being used
-  unsigned int m_warp_size;
 };
 
 }  // namespace traccc::cuda

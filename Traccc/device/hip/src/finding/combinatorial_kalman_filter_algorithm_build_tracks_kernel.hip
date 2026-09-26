@@ -34,7 +34,7 @@ void combinatorial_kalman_filter_algorithm::build_tracks_kernel(
     const measurement_selector::config& calib_cfg,
     const device::build_tracks_payload& payload) const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 2;
+  const unsigned int deviceThreads = 64;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
 

@@ -80,7 +80,7 @@ void triplet_seeding_algorithm::count_grid_capacities_kernel(
   squeue.throw_asynchronous();
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::count_grid_capacities>(
-        details::calculate1DimNdRange(payload.n_spacepoints, warp_size() * 4),
+        details::calculate1DimNdRange(payload.n_spacepoints, 128),
         [config = payload.config, phi_axis = payload.phi_axis,
          z_axis = payload.z_axis, spacepoints = payload.spacepoints,
          grid_capacities = payload.grid_capacities](::sycl::nd_item<1> item) {
@@ -97,7 +97,7 @@ void triplet_seeding_algorithm::populate_grid_kernel(
   squeue.throw_asynchronous();
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::populate_grid>(
-        details::calculate1DimNdRange(payload.n_spacepoints, warp_size() * 4),
+        details::calculate1DimNdRange(payload.n_spacepoints, 128),
         [config = payload.config, spacepoints = payload.spacepoints,
          grid = payload.grid,
          grid_prefix_sum = payload.grid_prefix_sum](::sycl::nd_item<1> item) {
@@ -113,7 +113,7 @@ void triplet_seeding_algorithm::count_doublets_kernel(
   squeue.throw_asynchronous();
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::count_doublets>(
-        details::calculate1DimNdRange(payload.n_spacepoints, warp_size() * 2),
+        details::calculate1DimNdRange(payload.n_spacepoints, 64),
         [config = payload.config, spacepoints = payload.spacepoints,
          grid = payload.grid, grid_prefix_sum = payload.grid_prefix_sum,
          doublet_counter = payload.doublet_counter,
@@ -132,7 +132,7 @@ void triplet_seeding_algorithm::find_doublets_kernel(
   squeue.throw_asynchronous();
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::find_doublets>(
-        details::calculate1DimNdRange(payload.n_doublets, warp_size() * 2),
+        details::calculate1DimNdRange(payload.n_doublets, 64),
         [config = payload.config, spacepoints = payload.spacepoints,
          grid = payload.grid, doublet_counter = payload.doublet_counter,
          mb_doublets = payload.mb_doublets,
@@ -150,7 +150,7 @@ void triplet_seeding_algorithm::count_triplets_kernel(
   squeue.throw_asynchronous();
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::count_triplets>(
-        details::calculate1DimNdRange(payload.nMidBot, warp_size() * 2),
+        details::calculate1DimNdRange(payload.nMidBot, 64),
         [config = payload.config, spacepoints = payload.spacepoints,
          grid = payload.grid, doublet_counter = payload.doublet_counter,
          mb_doublets = payload.mb_doublets, mt_doublets = payload.mt_doublets,
@@ -170,7 +170,7 @@ void triplet_seeding_algorithm::triplet_counts_reduction_kernel(
   squeue.throw_asynchronous();
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::reduce_triplet_counts>(
-        details::calculate1DimNdRange(payload.n_doublets, warp_size() * 2),
+        details::calculate1DimNdRange(payload.n_doublets, 64),
         [doublet_counter = payload.doublet_counter,
          spM_counter = payload.spM_counter,
          nTriplets = &(payload.nTriplets)](::sycl::nd_item<1> item) {
@@ -187,7 +187,7 @@ void triplet_seeding_algorithm::find_triplets_kernel(
   squeue.throw_asynchronous();
   squeue.submit([&](::sycl::handler& h) {
     h.parallel_for<kernels::find_triplets>(
-        details::calculate1DimNdRange(payload.nMidBot, warp_size() * 2),
+        details::calculate1DimNdRange(payload.nMidBot, 64),
         [finding_config = payload.finding_config,
          filter_config = payload.filter_config,
          spacepoints = payload.spacepoints, grid = payload.grid,
@@ -208,7 +208,7 @@ void triplet_seeding_algorithm::update_triplet_weights_kernel(
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
 
-  const unsigned int n_threads = warp_size() * 2;
+  const unsigned int n_threads = 64;
 
   // Check if device is capable of allocating sufficient local memory
   assert(sizeof(scalar) * payload.config.compatSeedLimit * n_threads <
@@ -240,7 +240,7 @@ void triplet_seeding_algorithm::select_seeds_kernel(
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
 
-  const unsigned int n_threads = warp_size() * 2;
+  const unsigned int n_threads = 64;
 
   // Check if device is capable of allocating sufficient local memory
   assert(sizeof(triplet) * payload.finder_config.maxSeedsPerSpM * n_threads <

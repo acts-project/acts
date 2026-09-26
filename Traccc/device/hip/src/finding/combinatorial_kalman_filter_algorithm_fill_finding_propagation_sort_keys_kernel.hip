@@ -34,7 +34,7 @@ void combinatorial_kalman_filter_algorithm::
         const device::fill_finding_propagation_sort_keys_payload& payload)
         const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 2;
+  const unsigned int deviceThreads = 64;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
 

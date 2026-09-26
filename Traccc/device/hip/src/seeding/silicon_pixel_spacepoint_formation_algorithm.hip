@@ -59,7 +59,7 @@ silicon_pixel_spacepoint_formation_algorithm::
 
 void silicon_pixel_spacepoint_formation_algorithm::count_spacepoints_kernel(
     const count_spacepoints_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks =
       (payload.n_measurements + n_threads - 1) / n_threads;
   hipLaunchKernelGGL(kernels::count_spacepoints, n_blocks, n_threads, 0,
@@ -93,7 +93,7 @@ void silicon_pixel_spacepoint_formation_algorithm::scan_spacepoint_flags(
 
 void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
     const form_spacepoints_kernel_payload& payload) const {
-  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_threads = 256;
   const unsigned int n_blocks =
       (payload.n_measurements + n_threads - 1) / n_threads;
   detector_buffer_visitor<detector_type_list>(
