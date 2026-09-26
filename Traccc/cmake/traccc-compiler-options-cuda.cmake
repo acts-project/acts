@@ -34,14 +34,14 @@ traccc_add_flag( CMAKE_CUDA_FLAGS "--use_fast_math" )
 traccc_add_flag( CMAKE_CUDA_FLAGS_DEBUG "-G --keep" )
 
 # Work around a bug in CUDA 12.8. Enabling the embedding of C++ source code in
-# generated PTX code causes a ptxas error. A solution was promised for
-# CUDA 13.1, but this has not yet surfaced.
-#
-# TODO: Add an upper bound to this statement when a fix in CUDA is presented.
-if(CUDAToolkit_VERSION VERSION_GREATER_EQUAL "12.8")
+# generated PTX code causes a ptxas error. Fixed in CUDA 13.1.
+if(
+    CUDAToolkit_VERSION VERSION_GREATER_EQUAL "12.8"
+    AND CUDAToolkit_VERSION VERSION_LESS "13.1"
+)
     message(
         STATUS
-        "Disabling C++ source in PTX in order to work around a bug in CUDA 12.8:"
+        "Disabling C++ source in PTX in order to work around a bug in CUDA 12.8:13.0"
     )
 else()
     traccc_add_flag( CMAKE_CUDA_FLAGS_DEBUG "-src-in-ptx" )
