@@ -74,6 +74,26 @@ def test_g4_algorithms():
     assert hasattr(Geant4Simulation, "Config")
 
 
+def test_track_finding_track_state_creator_factory():
+    cfg = TrackFindingAlgorithm.Config()
+    # the default creator is set explicitly
+    assert isinstance(
+        cfg.trackStateCreatorFactory, TrackFindingAlgorithm.TrackStateCreatorFactory
+    )
+
+    cfg.trackStateCreatorFactory = (
+        TrackFindingAlgorithm.makeDefaultTrackStateCreatorFactory()
+    )
+    cfg.inputMeasurements = "measurements"
+    cfg.inputInitialTrackParameters = "parameters"
+    cfg.outputTracks = "tracks"
+    TrackFindingAlgorithm(config=cfg, level=acts.logging.INFO)
+
+    cfg.trackStateCreatorFactory = None
+    with pytest.raises(ValueError, match="track state creator factory"):
+        TrackFindingAlgorithm(config=cfg, level=acts.logging.INFO)
+
+
 def test_special_algorithm_interfaces():
     # just assert they exists
     assert DigitizationAlgorithm
