@@ -168,15 +168,6 @@ void gbts_seeding_algorithm::gbts_bin_spacepoints_kernel(
   kernels::gbts_bin_spacepoints<<<n_blocks, n_threads, 0,
                                   details::get_stream(stream())>>>(payload);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
-
-  // Turn the per-bin node counts into the node offsets.
-  vecmem::device_vector<unsigned int> d_eta_node_counter(
-      payload.eta_node_counter);
-  thrust::exclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream())),
-      d_eta_node_counter.begin(), d_eta_node_counter.end(),
-      d_eta_node_counter.begin());
 }
 
 void gbts_seeding_algorithm::gbts_sort_nodes_kernel(
@@ -188,12 +179,11 @@ void gbts_seeding_algorithm::gbts_sort_nodes_kernel(
   thrust::sort_by_key(
       thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
           .on(details::get_stream(stream())),
-      d_sort_keys.begin(),
-      d_sort_keys.begin() + static_cast<int>(payload.nNodes),
+      d_sort_keys.begin(), d_sort_keys.begin() + static_cast<int>(payload.nSp),
       d_sort_values.begin());
 
   const unsigned int n_threads = 256;
-  const unsigned int n_blocks = 1 + (payload.nNodes - 1) / n_threads;
+  const unsigned int n_blocks = 1 + (payload.nSp - 1) / n_threads;
   kernels::gbts_sort_nodes<<<n_blocks, n_threads, 0,
                              details::get_stream(stream())>>>(payload);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
