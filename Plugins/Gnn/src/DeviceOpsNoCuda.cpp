@@ -48,6 +48,13 @@ Tensor<T> cudaSelectCols(const Tensor<T> & /*tensor*/,
 }
 
 template <typename T>
+Tensor<T> cudaGatherCols(const Tensor<T> & /*tensor*/,
+                         const std::vector<std::size_t> & /*indices*/,
+                         const ExecutionContext & /*execContext*/) {
+  throwNoCudaSupport("gatherCols on CUDA tensor");
+}
+
+template <typename T>
 Tensor<T> cudaMulPerColumn(const Tensor<T> & /*src*/,
                            const Tensor<T> & /*scales*/,
                            const ExecutionContext & /*execContext*/) {
@@ -73,6 +80,12 @@ template Tensor<float> cudaSelectCols(const Tensor<float> &,
                                       const ExecutionContext &);
 template Tensor<std::int64_t> cudaSelectCols(const Tensor<std::int64_t> &,
                                              const Tensor<bool> &,
+                                             const ExecutionContext &);
+template Tensor<float> cudaGatherCols(const Tensor<float> &,
+                                      const std::vector<std::size_t> &,
+                                      const ExecutionContext &);
+template Tensor<std::int64_t> cudaGatherCols(const Tensor<std::int64_t> &,
+                                             const std::vector<std::size_t> &,
                                              const ExecutionContext &);
 template Tensor<float> cudaMulPerColumn(const Tensor<float> &,
                                         const Tensor<float> &,
