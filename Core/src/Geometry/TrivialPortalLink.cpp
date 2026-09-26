@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
 
 #include <memory>
 
@@ -29,12 +30,10 @@ Result<const TrackingVolume*> TrivialPortalLink::resolveVolume(
 Result<const TrackingVolume*> TrivialPortalLink::resolveVolume(
     const GeometryContext& gctx, const Vector3& position,
     double tolerance) const {
-  static_cast<void>(gctx);
-  static_cast<void>(position);
-  static_cast<void>(tolerance);
-  assert(m_surface->isOnSurface(gctx, position, BoundaryTolerance::None(),
-                                tolerance) &&
-         "Trivial portal lookup point should be on surface");
+  if (!m_surface->isOnSurface(gctx, position, BoundaryTolerance::None(),
+                              tolerance)) {
+    return SurfaceError::GlobalPositionNotOnSurface;
+  }
   return m_volume;
 }
 
