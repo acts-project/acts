@@ -139,6 +139,7 @@ jobs:
           CI/public_api/test_check_deprecated_docs.py
           CI/test_check_unused_files.py
           CI/test_prune_ccache.py
+          CI/check_material_schema.py
 
   codegen_prebuilt:
     # Pre-generates the code the build would otherwise generate, then checks

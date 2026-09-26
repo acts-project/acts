@@ -1,0 +1,577 @@
+{
+    "$schema": "../../../Plugins/Json/schema/material-map-v1.schema.json",
+    "header": {
+        "format": "acts-material-map",
+        "version": 1,
+        "description": "Synthetic schema fixtures; these are not production converter output."
+    },
+    "surfaces": [
+        {
+            "target": {
+                "kind": "geometry-id",
+                "geometry_id": {
+                    "volume": 1,
+                    "sensitive": 256
+                }
+            },
+            "material": {
+                "kind": "homogeneous",
+                "settings": {
+                    "mapping_type": "sensor",
+                    "split_factor": 0.5
+                },
+                "slab": {
+                    "material": {
+                        "kind": "material",
+                        "radiation_length": 93.7,
+                        "interaction_length": 465.2,
+                        "relative_atomic_mass": 28.0855,
+                        "atomic_number": 14,
+                        "molar_density": 8.29e-05,
+                        "molar_electron_density": 0.0011606,
+                        "mean_excitation_energy": 1.73e-07
+                    },
+                    "thickness": 0.15
+                }
+            }
+        },
+        {
+            "target": {
+                "kind": "geometry-id",
+                "geometry_id": {
+                    "volume": 1,
+                    "sensitive": 512
+                }
+            },
+            "material": {
+                "kind": "homogeneous",
+                "settings": {
+                    "mapping_type": "default",
+                    "split_factor": 1
+                },
+                "slab": {
+                    "material": {
+                        "kind": "vacuum"
+                    },
+                    "thickness": 2
+                }
+            }
+        },
+        {
+            "target": {
+                "kind": "geometry-id",
+                "geometry_id": {
+                    "volume": 1,
+                    "sensitive": 768
+                }
+            },
+            "material": {
+                "kind": "binned",
+                "settings": {
+                    "mapping_type": "pre",
+                    "split_factor": 0
+                },
+                "binning": {
+                    "axes": [
+                        {
+                            "kind": "equidistant",
+                            "bins": 2,
+                            "range": [
+                                -10,
+                                10
+                            ],
+                            "boundary": "bound",
+                            "direction": "z"
+                        }
+                    ]
+                },
+                "values": [
+                    {
+                        "material": {
+                            "kind": "material",
+                            "radiation_length": 93.7,
+                            "interaction_length": 465.2,
+                            "relative_atomic_mass": 28.0855,
+                            "atomic_number": 14,
+                            "molar_density": 8.29e-05,
+                            "molar_electron_density": 0.0011606,
+                            "mean_excitation_energy": 1.73e-07
+                        },
+                        "thickness": 0.15
+                    },
+                    {
+                        "material": {
+                            "kind": "vacuum"
+                        },
+                        "thickness": 0
+                    }
+                ]
+            }
+        },
+        {
+            "target": {
+                "kind": "geometry-id",
+                "geometry_id": {
+                    "volume": 1,
+                    "sensitive": 1024
+                }
+            },
+            "material": {
+                "kind": "grid",
+                "settings": {
+                    "mapping_type": "default",
+                    "split_factor": 1
+                },
+                "axes": [
+                    {
+                        "kind": "equidistant",
+                        "bins": 2,
+                        "range": [
+                            -10,
+                            10
+                        ],
+                        "boundary": "open",
+                        "direction": "x"
+                    },
+                    {
+                        "kind": "variable",
+                        "edges": [
+                            -10,
+                            0,
+                            10
+                        ],
+                        "boundary": "closed",
+                        "direction": "y"
+                    }
+                ],
+                "storage": {
+                    "kind": "direct",
+                    "values": [
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 0
+                        },
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 0
+                        },
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 0
+                        },
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 0
+                        },
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 0
+                        },
+                        {
+                            "material": {
+                                "kind": "material",
+                                "radiation_length": 93.7,
+                                "interaction_length": 465.2,
+                                "relative_atomic_mass": 28.0855,
+                                "atomic_number": 14,
+                                "molar_density": 8.29e-05,
+                                "molar_electron_density": 0.0011606,
+                                "mean_excitation_energy": 1.73e-07
+                            },
+                            "thickness": 0.15
+                        },
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 2
+                        },
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 0
+                        },
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 0
+                        },
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 2
+                        },
+                        {
+                            "material": {
+                                "kind": "material",
+                                "radiation_length": 93.7,
+                                "interaction_length": 465.2,
+                                "relative_atomic_mass": 28.0855,
+                                "atomic_number": 14,
+                                "molar_density": 8.29e-05,
+                                "molar_electron_density": 0.0011606,
+                                "mean_excitation_energy": 1.73e-07
+                            },
+                            "thickness": 0.15
+                        },
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 0
+                        },
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 0
+                        },
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 0
+                        },
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 0
+                        },
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 0
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "target": {
+                "kind": "geometry-id",
+                "geometry_id": {
+                    "volume": 1,
+                    "sensitive": 1280
+                }
+            },
+            "material": {
+                "kind": "grid",
+                "settings": {
+                    "mapping_type": "default",
+                    "split_factor": 1
+                },
+                "axes": [
+                    {
+                        "kind": "equidistant",
+                        "bins": 1,
+                        "range": [
+                            -10,
+                            10
+                        ],
+                        "boundary": "bound"
+                    },
+                    {
+                        "kind": "equidistant",
+                        "bins": 1,
+                        "range": [
+                            -10,
+                            10
+                        ],
+                        "boundary": "bound"
+                    }
+                ],
+                "storage": {
+                    "kind": "indexed",
+                    "slabs": [
+                        {
+                            "material": {
+                                "kind": "vacuum"
+                            },
+                            "thickness": 0
+                        },
+                        {
+                            "material": {
+                                "kind": "material",
+                                "radiation_length": 93.7,
+                                "interaction_length": 465.2,
+                                "relative_atomic_mass": 28.0855,
+                                "atomic_number": 14,
+                                "molar_density": 8.29e-05,
+                                "molar_electron_density": 0.0011606,
+                                "mean_excitation_energy": 1.73e-07
+                            },
+                            "thickness": 0.15
+                        }
+                    ],
+                    "indices": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0
+                    ]
+                }
+            }
+        },
+        {
+            "target": {
+                "kind": "stable-key",
+                "key": "barrel/support-a",
+                "recorded_geometry_id": {
+                    "volume": 1
+                }
+            },
+            "material": {
+                "kind": "grid",
+                "settings": {
+                    "mapping_type": "default",
+                    "split_factor": 1
+                },
+                "axes": [
+                    {
+                        "kind": "equidistant",
+                        "bins": 1,
+                        "range": [
+                            -10,
+                            10
+                        ],
+                        "boundary": "bound"
+                    },
+                    {
+                        "kind": "equidistant",
+                        "bins": 1,
+                        "range": [
+                            -10,
+                            10
+                        ],
+                        "boundary": "bound"
+                    }
+                ],
+                "storage": {
+                    "kind": "globally-indexed",
+                    "store": "shared-silicon",
+                    "indices": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0
+                    ]
+                }
+            }
+        },
+        {
+            "target": {
+                "kind": "stable-key",
+                "key": "barrel/support-b",
+                "recorded_geometry_id": {
+                    "volume": 1
+                }
+            },
+            "material": {
+                "kind": "grid",
+                "settings": {
+                    "mapping_type": "default",
+                    "split_factor": 1
+                },
+                "axes": [
+                    {
+                        "kind": "equidistant",
+                        "bins": 1,
+                        "range": [
+                            -10,
+                            10
+                        ],
+                        "boundary": "bound"
+                    },
+                    {
+                        "kind": "equidistant",
+                        "bins": 1,
+                        "range": [
+                            -10,
+                            10
+                        ],
+                        "boundary": "bound"
+                    }
+                ],
+                "storage": {
+                    "kind": "globally-indexed",
+                    "store": "shared-silicon",
+                    "indices": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0
+                    ]
+                }
+            }
+        },
+        {
+            "target": {
+                "kind": "geometry-id",
+                "geometry_id": {
+                    "volume": 1,
+                    "sensitive": 2816
+                }
+            },
+            "material": null
+        },
+        {
+            "target": {
+                "kind": "geometry-id",
+                "geometry_id": {
+                    "volume": 1,
+                    "sensitive": 3072
+                }
+            },
+            "material": {
+                "kind": "binned",
+                "settings": {
+                    "mapping_type": "default",
+                    "split_factor": 1
+                },
+                "binning": {
+                    "axes": [
+                        {
+                            "kind": "equidistant",
+                            "bins": 2,
+                            "range": [
+                                -10,
+                                10
+                            ],
+                            "boundary": "bound",
+                            "direction": "x"
+                        },
+                        {
+                            "kind": "variable",
+                            "edges": [
+                                -10,
+                                -5,
+                                0,
+                                10
+                            ],
+                            "boundary": "bound",
+                            "direction": "y"
+                        }
+                    ]
+                },
+                "values": [
+                    {
+                        "material": {
+                            "kind": "material",
+                            "radiation_length": 93.7,
+                            "interaction_length": 465.2,
+                            "relative_atomic_mass": 28.0855,
+                            "atomic_number": 14,
+                            "molar_density": 8.29e-05,
+                            "molar_electron_density": 0.0011606,
+                            "mean_excitation_energy": 1.73e-07
+                        },
+                        "thickness": 0.15
+                    },
+                    {
+                        "material": {
+                            "kind": "vacuum"
+                        },
+                        "thickness": 0
+                    },
+                    {
+                        "material": {
+                            "kind": "vacuum"
+                        },
+                        "thickness": 0
+                    },
+                    {
+                        "material": {
+                            "kind": "material",
+                            "radiation_length": 93.7,
+                            "interaction_length": 465.2,
+                            "relative_atomic_mass": 28.0855,
+                            "atomic_number": 14,
+                            "molar_density": 8.29e-05,
+                            "molar_electron_density": 0.0011606,
+                            "mean_excitation_energy": 1.73e-07
+                        },
+                        "thickness": 0.15
+                    },
+                    {
+                        "material": {
+                            "kind": "material",
+                            "radiation_length": 93.7,
+                            "interaction_length": 465.2,
+                            "relative_atomic_mass": 28.0855,
+                            "atomic_number": 14,
+                            "molar_density": 8.29e-05,
+                            "molar_electron_density": 0.0011606,
+                            "mean_excitation_energy": 1.73e-07
+                        },
+                        "thickness": 0.15
+                    },
+                    {
+                        "material": {
+                            "kind": "vacuum"
+                        },
+                        "thickness": 0
+                    }
+                ]
+            }
+        }
+    ],
+    "slab_stores": {
+        "shared-silicon": [
+            {
+                "material": {
+                    "kind": "vacuum"
+                },
+                "thickness": 0
+            },
+            {
+                "material": {
+                    "kind": "material",
+                    "radiation_length": 93.7,
+                    "interaction_length": 465.2,
+                    "relative_atomic_mass": 28.0855,
+                    "atomic_number": 14,
+                    "molar_density": 8.29e-05,
+                    "molar_electron_density": 0.0011606,
+                    "mean_excitation_energy": 1.73e-07
+                },
+                "thickness": 0.15
+            },
+            {
+                "material": {
+                    "kind": "vacuum"
+                },
+                "thickness": 2
+            }
+        ]
+    }
+}
