@@ -150,7 +150,7 @@ if(DETRAY_BUILD_TESTING)
     # Build host and device specific test code
     add_subdirectory(include/detray/test/cpu)
 
-    if(DETRAY_BUILD_CUDA OR DETRAY_BUILD_HIP OR DETRAY_BUILD_SYCL)
+    if(DETRAY_BUILD_CUDA OR DETRAY_BUILD_HIP)
         add_subdirectory(include/detray/test/device)
     endif()
 

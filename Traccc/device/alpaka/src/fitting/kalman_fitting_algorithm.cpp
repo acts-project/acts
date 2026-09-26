@@ -89,9 +89,9 @@ struct fit_backward {
 kalman_fitting_algorithm::kalman_fitting_algorithm(
     const config_type& config, const traccc::memory_resource& mr,
     const vecmem::copy& copy, alpaka::queue& q,
-    std::unique_ptr<const Logger> logger)
+    std::unique_ptr<const Logger> logger, await_function_type await_func)
     : device::kalman_fitting_algorithm{config, mr, copy, std::move(logger)},
-      alpaka::algorithm_base{q} {}
+      alpaka::algorithm_base{q, std::move(await_func)} {}
 
 void kalman_fitting_algorithm::prepare_track_fit_order(
     const edm::track_collection<default_algebra>::const_view& tracks,
@@ -200,6 +200,10 @@ void kalman_fitting_algorithm::fit_backward_kernel(
                             kernels::fit_backward<fitter_t>{}, config,
                             payload.payload, payload.get_tpayload<fitter_t>());
       });
+}
+
+void kalman_fitting_algorithm::synchronize() const {
+  queue().synchronize();
 }
 
 }  // namespace traccc::alpaka

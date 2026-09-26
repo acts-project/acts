@@ -8,19 +8,20 @@
 #pragma once
 
 // Local include(s).
+#include "traccc/device/abstract_awaitable.hpp"
 #include "traccc/device/algorithm_base.hpp"
 #include "traccc/gbts_seeding/device/gbts_bid_seeds_for_hits.hpp"
 #include "traccc/gbts_seeding/device/gbts_bin_spacepoints.hpp"
+#include "traccc/gbts_seeding/device/gbts_build_edge_work_list.hpp"
 #include "traccc/gbts_seeding/device/gbts_compress_graph.hpp"
 #include "traccc/gbts_seeding/device/gbts_convert_seeds.hpp"
+#include "traccc/gbts_seeding/device/gbts_count_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_count_paths.hpp"
+#include "traccc/gbts_seeding/device/gbts_fill_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_fill_path_store.hpp"
 #include "traccc/gbts_seeding/device/gbts_find_minmax_radius.hpp"
 #include "traccc/gbts_seeding/device/gbts_finish_cca.hpp"
-#include "traccc/gbts_seeding/device/gbts_link_graph_edges.hpp"
-#include "traccc/gbts_seeding/device/gbts_make_graph_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_match_graph_edges.hpp"
-#include "traccc/gbts_seeding/device/gbts_reindex_edges.hpp"
 #include "traccc/gbts_seeding/device/gbts_run_cca_iteration.hpp"
 #include "traccc/gbts_seeding/device/gbts_sort_nodes.hpp"
 
@@ -42,6 +43,7 @@
 #include <cstdint>
 #include <memory>
 #include <utility>
+#include <vector>
 
 namespace traccc::device {
 
@@ -60,7 +62,8 @@ class gbts_seeding_algorithm
           const edm::spacepoint_collection::const_view&,
           const edm::measurement_collection::const_view&)>,
       public messaging,
-      public algorithm_base {
+      public algorithm_base,
+      public virtual abstract_awaitable {
  public:
   /// Constructor for the GBTS seed finding algorithm
   ///
@@ -90,13 +93,18 @@ class gbts_seeding_algorithm
       const override;
 
  protected:
+  /// Wait for outstanding device work before releasing local buffers.
+  virtual void synchronize() const = 0;
+
   /// @name Kernel launchers (to be implemented by backends)
   ///
   /// Each launcher receives the payload of the device function it runs;
   /// the payload types are defined in the per-function device headers.
   /// @{
 
-  /// Spacepoint-binning kernel launcher
+  /// Spacepoint-binning kernel launcher: runs the kernel, then turns the
+  /// per-bin node counts into the node offsets with an in-place exclusive
+  /// scan.
   ///
   /// @param payload The payload for the kernel
   ///
@@ -117,33 +125,36 @@ class gbts_seeding_algorithm
   virtual void gbts_find_minmax_radius_kernel(
       const gbts_find_minmax_radius_payload& payload) const = 0;
 
-  /// Graph edge-making kernel launcher
+  /// Edge work-list building kernel launcher (single block)
   ///
   /// @param payload The payload for the kernel
   ///
-  virtual void gbts_make_graph_edges_kernel(
-      const gbts_make_graph_edges_payload& payload) const = 0;
+  virtual void gbts_build_edge_work_list_kernel(
+      const gbts_build_edge_work_list_payload& payload) const = 0;
 
-  /// Graph edge-linking kernel launcher
+  /// Graph edge-counting kernel launcher: runs the kernel, then turns the
+  /// per-node edge counts into the edge buckets with an in-place inclusive
+  /// scan.
   ///
   /// @param payload The payload for the kernel
   ///
-  virtual void gbts_link_graph_edges_kernel(
-      const gbts_link_graph_edges_payload& payload) const = 0;
+  virtual void gbts_count_graph_edges_kernel(
+      const gbts_count_graph_edges_payload& payload) const = 0;
 
-  /// Graph edge-matching kernel launcher
+  /// Graph edge-filling kernel launcher
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  virtual void gbts_fill_graph_edges_kernel(
+      const gbts_fill_graph_edges_payload& payload) const = 0;
+
+  /// Graph edge-matching kernel launcher: runs the kernel, then re-indexes
+  /// the kept edges with an inclusive scan of the kept flags.
   ///
   /// @param payload The payload for the kernel
   ///
   virtual void gbts_match_graph_edges_kernel(
       const gbts_match_graph_edges_payload& payload) const = 0;
-
-  /// Edge re-indexing kernel launcher
-  ///
-  /// @param payload The payload for the kernel
-  ///
-  virtual void gbts_reindex_edges_kernel(
-      const gbts_reindex_edges_payload& payload) const = 0;
 
   /// Graph compression kernel launcher
   ///
@@ -210,16 +221,16 @@ class gbts_seeding_algorithm
     /// Reduced (x, y, z, w) per original spacepoint (used by seed
     /// extraction)
     vecmem::data::vector_buffer<float4> reducedSP;
-    /// Per-node (tau_min, tau_max, r, z) (used by graph making)
+    /// Per-node (tau_min, tau_max, r, z)
     vecmem::data::vector_buffer<float4> node_params;
-    /// Per-node phi (used by graph making)
+    /// Per-node phi
     vecmem::data::vector_buffer<float> node_phi;
-    /// Per-sorted-slot original spacepoint index (used by graph making)
+    /// Per-sorted-slot original spacepoint index
     vecmem::data::vector_buffer<unsigned int> node_index;
-    /// Per-eta (rmin, rmax) pair, host (used by graph making)
-    vecmem::vector<float> bin_rads;
-    /// Per-eta (begin, end) node ranges, host (used by graph making)
-    vecmem::vector<unsigned int> eta_bin_views;
+    /// Per-eta (rmin, rmax) pair
+    vecmem::data::vector_buffer<float> bin_rads;
+    /// Per-eta node offsets, nEtaBins + 1 entries
+    vecmem::data::vector_buffer<unsigned int> eta_bin_offsets;
     /// Number of GBTS nodes (0 == nothing to do)
     unsigned int nNodes = 0;
   };
@@ -238,15 +249,15 @@ class gbts_seeding_algorithm
       const edm::measurement_collection::const_view& measurements,
       const unsigned int nSp) const;
 
-  /// Stage 2: build, link, match and compress the edge graph. The per-node
+  /// Stage 2: count, fill, match and compress the edge graph. The per-node
   /// buffers are taken by value so they are released when this stage returns.
   graph_making_output create_edges(
       vecmem::data::vector_buffer<float4> node_params,
       vecmem::data::vector_buffer<float> node_phi,
       vecmem::data::vector_buffer<unsigned int> node_index,
-      const vecmem::vector<float>& bin_rads,
-      const vecmem::vector<unsigned int>& eta_bin_views,
-      const unsigned int nNodes,
+      vecmem::data::vector_buffer<float> bin_rads,
+      vecmem::data::vector_buffer<unsigned int> eta_bin_offsets,
+      const unsigned int nNodes, const unsigned int nSp,
       vecmem::data::vector_buffer<unsigned int>& counters_buf,
       vecmem::vector<unsigned int>& h_counters) const;
 
@@ -257,10 +268,22 @@ class gbts_seeding_algorithm
       const unsigned int nConnectedEdges, const unsigned int nSp,
       vecmem::vector<unsigned int>& h_counters) const;
 
+  /// Sort and de-duplicate the bin pairs of the configuration and derive
+  /// the per-pair tables the graph making needs (run by the constructor)
+  void prepare_bin_pairs();
+
   /// @}
 
   /// GBTS seed-finding configuration.
   gbts_seedfinder_config m_config;
+  /// Number of bin pairs in m_config.binTables
+  unsigned int m_nBinPairs = 0;
+  /// Largest number of bin pairs sharing one inner bin
+  unsigned int m_maxPairsPerBin1 = 0;
+  /// m_config.binTables as (bin1, bin2)
+  std::vector<uint2> m_bin_pairs;
+  /// Per bin pair: index of the first pair with the same bin1
+  std::vector<unsigned int> m_pair_group_begin;
 
   /// @name Device copies of the configuration tables, uploaded once at
   ///       construction and shared by every event.

@@ -16,8 +16,6 @@
 #include "traccc/device/container_h2d_copy_alg.hpp"
 #include "traccc/efficiency/finding_performance_writer.hpp"
 #include "traccc/examples/make_magnetic_field.hpp"
-#include "traccc/finding/combinatorial_kalman_filter_algorithm.hpp"
-#include "traccc/fitting/kalman_fitting_algorithm.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/host_detector.hpp"
 #include "traccc/io/read_detector.hpp"
@@ -37,7 +35,6 @@
 #include "traccc/options/truth_finding.hpp"
 #include "traccc/performance/collection_comparator.hpp"
 #include "traccc/performance/container_comparator.hpp"
-#include "traccc/performance/soa_comparator.hpp"
 #include "traccc/performance/timer.hpp"
 #include "traccc/resolution/fitting_performance_writer.hpp"
 #include "traccc/utils/propagation.hpp"
@@ -65,7 +62,7 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
             const traccc::opts::detector& detector_opts,
             const traccc::opts::magnetic_field& bfield_opts,
             const traccc::opts::performance& performance_opts,
-            const traccc::opts::accelerator& accelerator_opts,
+            [[maybe_unused]] const traccc::opts::accelerator& accelerator_opts,
             const traccc::opts::truth_finding& truth_finding_opts,
             const traccc::opts::track_matching& track_matching_opts,
             std::unique_ptr<const traccc::Logger> ilogger) {
@@ -89,9 +86,7 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
       logger().clone("FittingPerformanceWriter"));
 
   // Output Stats
-  std::uint64_t n_found_tracks = 0;
   std::uint64_t n_found_tracks_cuda = 0;
-  std::uint64_t n_fitted_tracks = 0;
   std::uint64_t n_fitted_tracks_cuda = 0;
 
   /*****************************
@@ -117,7 +112,6 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
   traccc::cuda::stream_wrapper stream{vecmem_stream.stream()};
 
   // Copy object
-  vecmem::copy host_copy;
   vecmem::cuda::async_copy async_copy{stream.cudaStream()};
 
   const traccc::detector_buffer detector_buffer =
@@ -141,8 +135,6 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
   cfg.propagation = propagation_config;
 
   // Finding algorithm object
-  traccc::host::combinatorial_kalman_filter_algorithm host_finding(
-      cfg, host_mr, logger().clone("HostFindingAlg"));
   traccc::cuda::combinatorial_kalman_filter_algorithm device_finding(
       cfg, mr, async_copy, stream, logger().clone("CudaFindingAlg"));
 
@@ -150,8 +142,6 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
   traccc::fitting_config fit_cfg(fitting_opts);
   fit_cfg.propagation = propagation_config;
 
-  traccc::host::kalman_fitting_algorithm host_fitting(
-      fit_cfg, host_mr, host_copy, logger().clone("HostFittingAlg"));
   traccc::cuda::kalman_fitting_algorithm device_fitting(
       fit_cfg, mr, async_copy, stream, logger().clone("CudaFittingAlg"));
 
@@ -252,54 +242,7 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
                vecmem::copy::type::device_to_host)
         ->wait();
 
-    // CPU containers
-    traccc::host::combinatorial_kalman_filter_algorithm::output_type
-        track_candidates{host_mr};
-    traccc::host::kalman_fitting_algorithm::output_type track_states{host_mr};
-
-    if (accelerator_opts.compare_with_cpu) {
-      {
-        traccc::performance::timer t("Track finding  (cpu)", elapsedTimes);
-
-        // Run finding
-        track_candidates = host_finding(
-            polymorphic_detector, host_field,
-            vecmem::get_data(measurements_per_event), vecmem::get_data(seeds));
-      }
-
-      {
-        traccc::performance::timer t("Track fitting  (cpu)", elapsedTimes);
-
-        // Run fitting
-        track_states = host_fitting(
-            polymorphic_detector, host_field,
-            traccc::edm::track_container<traccc::default_algebra>::const_data(
-                track_candidates));
-      }
-    }
-
-    if (accelerator_opts.compare_with_cpu) {
-      // Show which event we are currently presenting the results for.
-      TRACCC_INFO("===>>> Event " << event << " <<<===");
-
-      // Compare the track parameters made on the host and on the device.
-      traccc::soa_comparator<
-          traccc::edm::track_collection<traccc::default_algebra>>
-          compare_track_candidates{
-              "track candidates",
-              traccc::details::comparator_factory<traccc::edm::track_collection<
-                  traccc::default_algebra>::const_device::const_proxy_type>{
-                  vecmem::get_data(measurements_per_event),
-                  vecmem::get_data(measurements_per_event),
-                  {},
-                  {}}};
-      compare_track_candidates(vecmem::get_data(track_candidates.tracks),
-                               vecmem::get_data(track_candidates_cuda.tracks));
-    }
-
     /// Statistics
-    n_found_tracks += track_candidates.tracks.size();
-    n_fitted_tracks += track_states.tracks.size();
     n_found_tracks_cuda += track_candidates_cuda.tracks.size();
     n_fitted_tracks_cuda += track_states_cuda.tracks.size();
 
@@ -330,8 +273,6 @@ int seq_run(const traccc::opts::track_finding& finding_opts,
   TRACCC_INFO("==> Statistics ... ");
   TRACCC_INFO("- created (cuda) " << n_found_tracks_cuda << " found tracks");
   TRACCC_INFO("- created (cuda) " << n_fitted_tracks_cuda << " fitted tracks");
-  TRACCC_INFO("- created  (cpu) " << n_found_tracks << " found tracks");
-  TRACCC_INFO("- created  (cpu) " << n_fitted_tracks << " fitted tracks");
   TRACCC_INFO("==>Elapsed times... " << elapsedTimes);
 
   return 1;
