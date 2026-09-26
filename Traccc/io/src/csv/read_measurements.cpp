@@ -32,7 +32,8 @@ std::vector<measurement_id_type> read_measurements(
 
   if (detector) {
     host_detector_visitor<detector_type_list>(
-        *detector, [&]<typename detector_t>(const detector_t::host& det) {
+        *detector,
+        [&]<detray::concepts::detector detector_t>(const detector_t& det) {
           for (const auto& surface_desc : det.surfaces()) {
             acts_to_detray_id[surface_desc.source] =
                 surface_desc.identifier().value();
@@ -64,7 +65,7 @@ std::vector<measurement_id_type> read_measurements(
   // Contains the index of the new position at the entry of the old position
   std::vector<measurement_id_type> new_idx_map(measurements.size());
   if (do_sort) {
-    // Remeber index locations
+    // Remember index locations
     std::vector<unsigned int> idx(measurements.size());
     std::iota(idx.begin(), idx.end(), 0u);
 

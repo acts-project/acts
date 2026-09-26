@@ -144,7 +144,7 @@ TRACCC_HOST_DEVICE inline void find_tracks(
      * The outer loop consists of three general components. The first
      * components is that each thread starts to fill a shared buffer of
      * measurements. The buffer is twice the size of the block to
-     * accomodate any overflow.
+     * accommodate any overflow.
      *
      * Threads insert their measurements into the shared buffer until they
      * either run out of measurements, or until the shared buffer is full.
@@ -159,7 +159,7 @@ TRACCC_HOST_DEVICE inline void find_tracks(
               .fetch_add(1u);
 
       /*
-       * The buffer elemements are tuples of the measurement index and
+       * The buffer elements are tuples of the measurement index and
        * the index of the thread that originally inserted that
        * measurement.
        */
@@ -338,7 +338,7 @@ TRACCC_HOST_DEVICE inline void find_tracks(
           /*
            * Attempt to CAS the mutex with the same value as before
            * but with the lock bit switched. If this succeeds (e.g.
-           * the return value is as we assumed) then we have succes
+           * the return value is as we assumed) then we have success
            * fully locked and we set the `index` variable, which
            * indicates that we have the lock.
            */
@@ -370,8 +370,6 @@ TRACCC_HOST_DEVICE inline void find_tracks(
            *    we can trivially insert the value at index.
            */
           unsigned int l_pos = std::numeric_limits<unsigned int>::max();
-          const unsigned int p_offset =
-              owner_global_thread_id * cfg.max_num_branches_per_surface;
           // No need to initialize this next variable. It always gets
           // a valid value in the proceeding expressions.
           float new_max;
@@ -387,7 +385,9 @@ TRACCC_HOST_DEVICE inline void find_tracks(
 
             for (unsigned int i = 0; i < cfg.max_num_branches_per_surface;
                  ++i) {
-              const traccc::scalar old_chi2 = tmp_links.at(p_offset + i).chi2;
+              const traccc::scalar old_chi2 =
+                  tmp_links.at(i * payload.n_in_params + owner_global_thread_id)
+                      .chi2;
 
               if (old_chi2 > highest) {
                 highest = old_chi2;
@@ -401,13 +401,18 @@ TRACCC_HOST_DEVICE inline void find_tracks(
 
             for (unsigned int i = 0; i < cfg.max_num_branches_per_surface;
                  ++i) {
-              const traccc::scalar old_chi2 = tmp_links.at(p_offset + i).chi2;
+              const traccc::scalar old_chi2 =
+                  tmp_links.at(i * payload.n_in_params + owner_global_thread_id)
+                      .chi2;
 
               if (i != l_pos && old_chi2 > new_max) {
                 new_max = static_cast<float>(old_chi2);
               }
 
-              assert(old_chi2 <= tmp_links.at(p_offset + l_pos).chi2);
+              assert(old_chi2 <= tmp_links
+                                     .at(l_pos * payload.n_in_params +
+                                         owner_global_thread_id)
+                                     .chi2);
             }
 
             assert(chi2 <= new_max);
@@ -445,11 +450,13 @@ TRACCC_HOST_DEVICE inline void find_tracks(
            * physics results, but helps ensure that the output of
            * this algorithm is deterministic.
            */
-          if (index != cfg.max_num_branches_per_surface ||
-              chi2 < tmp_links.at(p_offset + l_pos).chi2 ||
-              (chi2 == tmp_links.at(p_offset + l_pos).chi2 &&
-               meas_idx < tmp_links.at(p_offset + l_pos).meas_idx)) {
-            tmp_links.at(p_offset + l_pos) = {
+          if (const unsigned int tmp_offset =
+                  l_pos * payload.n_in_params + owner_global_thread_id;
+              index != cfg.max_num_branches_per_surface ||
+              chi2 < tmp_links.at(tmp_offset).chi2 ||
+              (chi2 == tmp_links.at(tmp_offset).chi2 &&
+               meas_idx < tmp_links.at(tmp_offset).meas_idx)) {
+            tmp_links.at(tmp_offset) = {
                 .step = payload.step,
                 .previous_candidate_idx = prev_link_idx,
                 .meas_idx = meas_idx,
@@ -463,8 +470,7 @@ TRACCC_HOST_DEVICE inline void find_tracks(
                     measurements.at(std::get<0>(*result).measurement_index())
                         .dimensions()};
 
-            tmp_params.at(p_offset + l_pos) =
-                std::get<0>(*result).filtered_params();
+            tmp_params.at(tmp_offset) = std::get<0>(*result).filtered_params();
           }
 
           /*
@@ -565,8 +571,7 @@ TRACCC_HOST_DEVICE inline void find_tracks(
      * to the temporary link and parameter lists.
      */
     if (local_num_params == 0 && in_param_can_create_hole) {
-      const unsigned int in_offset =
-          thread_id.getGlobalThreadIdX() * cfg.max_num_branches_per_surface;
+      const unsigned int in_offset = thread_id.getGlobalThreadIdX();
 
       tmp_links.at(in_offset) = {
           .step = payload.step,

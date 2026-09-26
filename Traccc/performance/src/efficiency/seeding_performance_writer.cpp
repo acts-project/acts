@@ -162,7 +162,7 @@ void seeding_performance_writer::write(
       continue;
     }
 
-    // Count only charged particles which satisfiy pT_cut
+    // Count only charged particles which satisfy pT_cut
     if (ptc.charge == 0 ||
         vector::perp(ptc.momentum) < m_cfg.truth_config.pT_min ||
         ptc.vertex[2] < m_cfg.truth_config.z_min ||

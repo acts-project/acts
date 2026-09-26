@@ -1291,7 +1291,7 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
       auto propagatorInitResult =
-          m_propagator.initialize(propagatorState, params);
+          m_propagator.initialize(propagatorState, params, nullptr);
       if (!propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
@@ -1457,7 +1457,7 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
       auto propagatorInitResult =
-          m_propagator.initialize(propagatorState, params);
+          m_propagator.initialize(propagatorState, params, nullptr);
       if (!propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
@@ -1582,8 +1582,8 @@ class Gx2Fitter {
     // Propagate again with the final covariance matrix. This is necessary to
     // obtain the propagated covariance for each state.
     // We also need to recheck the result and find the tipIndex, because at this
-    // step, we will not ignore the boundary checks for measurement surfaces. We
-    // want to create trackstates only on surfaces, that we actually hit.
+    // step, we might still miss some surfaces. We want to create trackstates
+    // only on surfaces, that we actually hit.
     if (gx2fOptions.nUpdateMax > 0) {
       ACTS_VERBOSE("Propagate with the final covariance.");
       // update covariance
@@ -1591,6 +1591,12 @@ class Gx2Fitter {
 
       // set up the propagator
       PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
+      // Add the measurement surface as external surface to the navigator.
+      // We will try to hit those surface by ignoring boundary checks.
+      for (const auto& [surface, _] : inputMeasurements) {
+        propagatorOptions.navigation.appendExternalSurface(*surface);
+      }
+
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.multipleScattering = multipleScattering;
@@ -1603,7 +1609,7 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
       auto propagatorInitResult =
-          m_propagator.initialize(propagatorState, params);
+          m_propagator.initialize(propagatorState, params, nullptr);
       if (!propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());

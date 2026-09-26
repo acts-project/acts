@@ -36,7 +36,7 @@ namespace {
 
 test::transform3 Identity{};
 
-using detector_t = detector<test::toy_metadata>;
+using detector_t = host::detector<test::toy_metadata>;
 using algebra_t = typename detector_t::algebra_type;
 using scalar = dscalar<algebra_t>;
 using point3 = dpoint3D<algebra_t>;

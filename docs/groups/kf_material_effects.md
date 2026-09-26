@@ -167,7 +167,7 @@ and the local position and time entries are untouched:
   @ref Acts::computeEnergyLossRadiative (radiative).
 - Track fitters: @ref Acts::KalmanFitter, @ref Acts::CombinatorialKalmanFilter.
 - Standalone propagator actor: @ref Acts::MaterialInteractor.
-- Bethe–Heitler (GSF only): @ref Acts::AtlasBetheHeitlerApprox.
+- Bethe–Heitler (GSF only): @ref Acts::PolynomialBetheHeitlerApprox.
 
 The pointwise application and covariance update themselves live in internal
 (non-public) `detail` code; the snippets shown in the sections above are

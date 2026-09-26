@@ -290,9 +290,11 @@ __global__ __launch_bounds__(SORT_THREADS_PER_BLOCK) void sort_cells(
       local_max_module_index = std::max(local_max_module_index, module_index);
 
       assert(channel0 <= 0xFFFF);
-      smem.cell_attribute_cache.channel0[i] = channel0;
+      smem.cell_attribute_cache.channel0[i] =
+          static_cast<unsigned short>(channel0);
       assert(channel1 <= 0xFFFF);
-      smem.cell_attribute_cache.channel1[i] = channel1;
+      smem.cell_attribute_cache.channel1[i] =
+          static_cast<unsigned short>(channel1);
       smem.cell_attribute_cache.module_index[i] = module_index;
     }
 
@@ -314,16 +316,21 @@ __global__ __launch_bounds__(SORT_THREADS_PER_BLOCK) void sort_cells(
      */
     const auto module_index_clz = __clz(max_module_index - min_module_index);
     const unsigned int module_index_bits =
-        CHAR_BIT * sizeof(std::decay_t<decltype(module_index_clz)>) -
-        module_index_clz;
+        static_cast<unsigned int>(
+            CHAR_BIT * sizeof(std::decay_t<decltype(module_index_clz)>)) -
+        static_cast<unsigned int>(module_index_clz);
 
     const auto channel0_clz = __clz(max_channel0);
     const unsigned int channel0_bits =
-        CHAR_BIT * sizeof(std::decay_t<decltype(channel0_clz)>) - channel0_clz;
+        static_cast<unsigned int>(
+            CHAR_BIT * sizeof(std::decay_t<decltype(channel0_clz)>)) -
+        static_cast<unsigned int>(channel0_clz);
 
     const auto channel1_clz = __clz(max_channel1);
     const unsigned int channel1_bits =
-        CHAR_BIT * sizeof(std::decay_t<decltype(channel1_clz)>) - channel1_clz;
+        static_cast<unsigned int>(
+            CHAR_BIT * sizeof(std::decay_t<decltype(channel1_clz)>)) -
+        static_cast<unsigned int>(channel1_clz);
 
     const unsigned int total_bits =
         module_index_bits + channel0_bits + channel1_bits;

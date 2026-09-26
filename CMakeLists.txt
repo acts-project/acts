@@ -61,6 +61,11 @@ option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 set(ACTS_CODEGEN_PREBUILT_DIR "" CACHE PATH "Directory holding pre-generated code; a generated file found there is used verbatim instead of being regenerated. Defaults to prebuilt-codegen/ next to this file when it exists, which is what release source archives ship")
 option(ACTS_CODEGEN_REQUIRE_PREBUILT "Fail the configure step instead of running the code generators when pre-generated code is missing" OFF)
 # external library options
+set(ACTS_USE_ZSTD "AUTO" CACHE STRING "zstd support: AUTO (use if available), ALWAYS (required), NEVER (disabled)")
+set_property(CACHE ACTS_USE_ZSTD PROPERTY STRINGS AUTO ALWAYS NEVER)
+if(NOT ACTS_USE_ZSTD MATCHES "^(AUTO|ALWAYS|NEVER)$")
+    message(FATAL_ERROR "ACTS_USE_ZSTD must be AUTO, ALWAYS, or NEVER (got '${ACTS_USE_ZSTD}')")
+endif()
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
@@ -196,8 +201,6 @@ set_option_if(
     OR
     ACTS_BUILD_EXAMPLES_PYTHIA8
     OR
-    ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
-    OR
     ACTS_BUILD_EXAMPLES_ROOT
     OR
     ACTS_BUILD_EXAMPLES_CUDA_MUON_SEGMENT_FITTING
@@ -330,7 +333,10 @@ set(_acts_boost_version 1.78.0)
 set(_acts_dd4hep_version 1.26)
 set(_acts_geant4_version 11.1.3)
 set(_acts_edm4hep_version 1.0)
-set(_acts_edm4hep_fallback_version 0.10.5)
+# 0.99 is the first release providing the TrackerHit interface, the CovMatrix
+# types (edm4hep::TrackState::covMatrix), Track::Nholes and the
+# edm4hep::TrackParams enum, all of which the EDM4hep plugin relies on.
+set(_acts_edm4hep_fallback_version 0.99)
 set(_acts_eigen3_version 3.4.0)
 set(_acts_podio_version 1.0.1) # will try this first
 set(_acts_podio_fallback_version 0.17.4) # if not found, will try this one
@@ -338,7 +344,7 @@ set(_acts_doxygen_version 1.9.4)
 set(_acts_hepmc3_version 3.2.4)
 set(_acts_nlohmanjson_version 3.11.3)
 set(_acts_gbl_version 04.00.05)
-set(_acts_mille_version 01.00.05)
+set(_acts_mille_version 01.01.01)
 set(_acts_mp2_version 05.01.05)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_geomodel_version 6.8.0)

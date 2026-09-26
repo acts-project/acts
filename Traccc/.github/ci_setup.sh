@@ -5,7 +5,7 @@
 # Mozilla Public License Version 2.0
 #
 # This script is meant to configure the build/runtime environment of the
-# Docker contaners that are used in the project's CI configuration.
+# Docker containers that are used in the project's CI configuration.
 #
 # Usage: source .github/ci_setup.sh <platform name>
 #

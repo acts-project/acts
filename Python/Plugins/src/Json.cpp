@@ -41,7 +41,10 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
                                                        "JsonMaterialDecorator")
         .def(py::init<const MaterialMapJsonConverter::Config&,
                       const std::string&, Logging::Level>(),
-             py::arg("rConfig"), py::arg("jFileName"), py::arg("level"));
+             py::arg("rConfig"), py::arg("jFileName"), py::arg("level"))
+        .def_property_readonly("materialMaps",
+                               &JsonMaterialDecorator::materialMaps,
+                               py::return_value_policy::reference_internal);
   }
 
   {

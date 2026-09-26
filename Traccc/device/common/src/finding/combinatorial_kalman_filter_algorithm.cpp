@@ -71,9 +71,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
   edm::measurement_collection::const_view::size_type n_measurements = 0u;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(measurements_view, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_measurements = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_measurements = size.unsafe_get();
   } else {
     n_measurements = copy().get_size(measurements_view);
   }
@@ -86,9 +86,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
   bound_track_parameters_collection_types::const_view::size_type n_seeds = 0u;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(seeds, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_seeds = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_seeds = size.unsafe_get();
   } else {
     n_seeds = copy().get_size(seeds);
   }
@@ -204,6 +204,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
             .tracks_view = {track_candidates_buffer},
         },
         smoothing_payload);
+
+    // Finish before releasing the progressive filter scratch buffers.
+    synchronize();
   }
 
   /*****************************************************************
@@ -408,9 +411,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
 
         if (mr().host) {
           vecmem::async_size size = copy().get_size(links_buffer, *(mr().host));
-          // Here we could give control back to the caller, once our
-          // code allows for it. (coroutines...)
-          step_to_link_idx_map[step + 1] = size.get();
+          // Block or suspend execution until the size is available.
+          await(size);
+          step_to_link_idx_map[step + 1] = size.unsafe_get();
         } else {
           step_to_link_idx_map[step + 1] = copy().get_size(links_buffer);
         }
@@ -464,6 +467,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
              .curr_links_idx = step_to_link_idx_map[step],
              .n_measurements = n_measurements,
              .step = step});
+
+        // Duplicate removal still reads the local last-measurement buffer.
+        synchronize();
       }
 
       // If no more CKF step is expected, the tips and links are
@@ -489,6 +495,8 @@ auto combinatorial_kalman_filter_algorithm::operator()(
 
           // Sort the key and values
           sort_param_ids_by_keys(keys_buffer, param_ids_buffer);
+          // The asynchronous sort still accesses the local keys.
+          synchronize();
         }
 
         /*****************************************************************
@@ -510,6 +518,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
              .tips_view = tips_buffer,
              .tip_lengths_view = tip_length_buffer,
              .tmp_jacobian_view = tmp_jacobian_buffer});
+
+        // Propagation must finish before this iteration releases param_ids.
+        synchronize();
       }
 
       n_in_params = n_candidates;
@@ -533,9 +544,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
     unsigned int n_tips_total = 0u;
     if (mr().host) {
       vecmem::async_size size = copy().get_size(tips_buffer, *(mr().host));
-      // Here we could give control back to the caller, once our code
-      // allows for it. (coroutines...)
-      n_tips_total = size.get();
+      // Block or suspend execution until the size is available.
+      await(size);
+      n_tips_total = size.unsafe_get();
     } else {
       n_tips_total = copy().get_size(tips_buffer);
     }
@@ -570,6 +581,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
                            best_tips_per_measurement_index_buffer,
                            best_tips_per_measurement_pval_buffer,
                            cfg.max_num_tracks_per_measurement});
+
+        // The gather kernel still accesses the local p-value buffer.
+        synchronize();
       }
 
       vecmem::data::vector_buffer<unsigned int> votes_per_tip_buffer(
@@ -601,14 +615,16 @@ auto combinatorial_kalman_filter_algorithm::operator()(
                          .min_measurement_voting_fraction =
                              cfg.min_measurement_voting_fraction});
 
+      // Finish reading the old lengths and the voting scratch buffers before
+      // replacing the lengths and leaving this scope.
+      synchronize();
       tip_length_buffer = std::move(new_tip_length_buffer);
     }
 
     vecmem::vector<unsigned int> tips_length_host(mr().host);
     vecmem::copy::event_type ev = copy()(tip_length_buffer, tips_length_host);
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    ev->wait();
+    // Block or suspend execution until the copy is complete.
+    await(*ev);
     // The following is only necessary if filtering was not turned on. Since
     // with filtering on, the buffer is resizable, so the host vector would
     // already have the correct size.
@@ -647,6 +663,10 @@ auto combinatorial_kalman_filter_algorithm::operator()(
            .jacobian_ptr = jacobian_buffer.ptr(),
            .link_predicted_parameter_view = link_predicted_parameter_buffer,
            .link_filtered_parameter_view = link_filtered_parameter_buffer});
+
+      // Track building reads the link, tip, and optional smoother buffers
+      // owned by this branch.
+      synchronize();
     }
   }
 

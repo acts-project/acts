@@ -32,9 +32,9 @@ class Impl final : public TripletSeedFinder {
   const DerivedConfig& config() const override { return m_cfg; }
 
   template <typename TopDoublets>
-  void createPixelTripletTopCandidates(
+  TopDoublets createPixelTripletTopCandidates(
       const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
+      const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
     const float varianceZM = spM.varianceZ();
@@ -159,12 +159,13 @@ class Impl final : public TripletSeedFinder {
       // remove the top doublets that were skipped due to cotTheta sorting
       topDoublets = topDoublets.subrange(topDoubletOffset);
     }
+    return topDoublets;
   }
 
   template <typename TopDoublets>
-  void createStripTripletTopCandidates(
+  TopDoublets createStripTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
+      const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
     const float cosPhiM = spM.xy()[0] / rM;
@@ -403,47 +404,48 @@ class Impl final : public TripletSeedFinder {
       // subsequent bottom doublet (which has a larger approximate cotTheta)
       topDoublets = topDoublets.subrange(topDoubletOffset);
     }
+    return topDoublets;
   }
 
-  void createTripletTopCandidates(
+  DoubletsForMiddleSp::Range createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      DoubletsForMiddleSp::Range& topDoublets,
+      DoubletsForMiddleSp::Range topDoublets,
       TripletTopCandidates& tripletTopCandidates) const override {
     if constexpr (useStripInfo) {
-      createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                      topDoublets, tripletTopCandidates);
+      return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
     } else {
-      createPixelTripletTopCandidates(spM, bottomDoublet, topDoublets,
-                                      tripletTopCandidates);
+      return createPixelTripletTopCandidates(spM, bottomDoublet, topDoublets,
+                                             tripletTopCandidates);
     }
   }
 
-  void createTripletTopCandidates(
+  DoubletsForMiddleSp::Subset createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      DoubletsForMiddleSp::Subset& topDoublets,
+      DoubletsForMiddleSp::Subset topDoublets,
       TripletTopCandidates& tripletTopCandidates) const override {
     if constexpr (useStripInfo) {
-      createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                      topDoublets, tripletTopCandidates);
+      return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
     } else {
-      createPixelTripletTopCandidates(spM, bottomDoublet, topDoublets,
-                                      tripletTopCandidates);
+      return createPixelTripletTopCandidates(spM, bottomDoublet, topDoublets,
+                                             tripletTopCandidates);
     }
   }
 
-  void createTripletTopCandidates(
+  DoubletsForMiddleSp::Subset2 createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      DoubletsForMiddleSp::Subset2& topDoublets,
+      DoubletsForMiddleSp::Subset2 topDoublets,
       TripletTopCandidates& tripletTopCandidates) const override {
     if constexpr (useStripInfo) {
-      createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                      topDoublets, tripletTopCandidates);
+      return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
     } else {
-      createPixelTripletTopCandidates(spM, bottomDoublet, topDoublets,
-                                      tripletTopCandidates);
+      return createPixelTripletTopCandidates(spM, bottomDoublet, topDoublets,
+                                             tripletTopCandidates);
     }
   }
 

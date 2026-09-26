@@ -66,7 +66,7 @@ template <typename T>
 TRACCC_HOST_DEVICE inline __attribute__((always_inline)) T div_ieee754(T x,
                                                                        T y) {
   static_assert(std::is_same_v<T, double> || std::is_same_v<T, float>);
-#ifdef __CUDA_ARCH__
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
   if constexpr (std::is_same_v<T, double>) {
     return __ddiv_rn(x, y);
   } else {

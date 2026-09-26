@@ -56,7 +56,7 @@ namespace {
 
 using scalar_t = DETRAY_CUSTOM_SCALARTYPE;
 using algebra_t = detray::array<scalar_t>;
-using detector_t = detray::detector<detray::default_metadata<algebra_t>>;
+using detector_t = detray::host::detector<detray::default_metadata<algebra_t>>;
 using material_scan_config_t = detray::test::material_scan<detector_t>::config;
 using propagation_config_t = detray::propagation::config;
 using track_generator_config_t =

@@ -528,6 +528,20 @@ void addEventData(py::module_& m) {
   // BoundTrackParameters (alias for
   // GenericBoundTrackParameters<ParticleHypothesis>)
   py::class_<BoundTrackParameters>(m, "BoundTrackParameters")
+      .def_static(
+          "createCurvilinear",
+          py::overload_cast<const Vector4&, const Vector3&, double,
+                            std::optional<BoundMatrix>, ParticleHypothesis>(
+              &BoundTrackParameters::createCurvilinear),
+          py::arg("pos4"), py::arg("dir"), py::arg("qOverP"), py::arg("cov"),
+          py::arg("particleHypothesis"))
+      .def_static(
+          "createCurvilinear",
+          py::overload_cast<const Vector4&, double, double, double,
+                            std::optional<BoundMatrix>, ParticleHypothesis>(
+              &BoundTrackParameters::createCurvilinear),
+          py::arg("pos4"), py::arg("phi"), py::arg("theta"), py::arg("qOverP"),
+          py::arg("cov"), py::arg("particleHypothesis"))
       .def_property_readonly("parameters",
                              [](const BoundTrackParameters& self) {
                                return BoundVector(self.parameters());
