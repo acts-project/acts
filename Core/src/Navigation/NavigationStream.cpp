@@ -27,29 +27,16 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   const Vector3& position = queryPoint.position;
   const Vector3& direction = queryPoint.direction;
 
-  // De-duplicate by surface pointer first, so each surface is intersected only
-  // once in this pass, keeping the first occurrence (in insertion order). This
-  // reproduces the previous std::stable_sort + std::unique result (first-wins),
-  // but in place: it avoids the temporary buffer that std::stable_sort
-  // allocates on every call, which matters on this per-navigation hot path. The
-  // candidate count per volume is small, so the quadratic scan is cheap — but
-  // it is skipped entirely when the caller guarantees uniqueness. (Should a
-  // duplicate slip through regardless, the post-sort unique pass below still
-  // removes it; only the first-wins tolerance selection is then not enforced.)
+  // De-duplicate by surface pointer. The first entry wins, so its tolerance is
+  // the one used.
   if (!candidatesAreUnique) {
-    ACTS_VERBOSE("NavigationStream::initialize() "
-                 << __LINE__ << " - Candidates not marked as unique\n"
-                 << m_candidates);
+    ACTS_VERBOSE("De-duplicate the candidates:" << m_candidates);
     std::size_t writeIdx = 0;
     for (std::size_t readIdx = 0; readIdx < m_candidates.size(); ++readIdx) {
       const Surface* surface = &m_candidates[readIdx].surface();
       bool alreadySeen = false;
       for (std::size_t k = 0; k < writeIdx; ++k) {
         if (&m_candidates[k].surface() == surface) {
-          /// Ensure that the external surfaces survive the duplicate removal
-          if (m_candidates[readIdx].boundaryTolerance().isInfinite()) {
-            std::swap(m_candidates[readIdx], m_candidates[k]);
-          }
           alreadySeen = true;
           break;
         }
@@ -123,9 +110,7 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
 
   // Sort the candidates by path length
   std::ranges::sort(m_candidates, NavigationTarget::pathLengthOrder);
-  ACTS_VERBOSE("NavigationStream::initialize() "
-               << __LINE__ << " - Sorted candidates before duplicate removal:\n"
-               << m_candidates);
+  ACTS_VERBOSE("Sorted candidates:" << m_candidates);
 
   // If we have duplicates, we expect them to be close by in path length, so we
   // don't need to re-sort Remove duplicates on basis of the surface pointer
@@ -154,24 +139,11 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
 bool NavigationStream::update(const GeometryContext& gctx,
                               const QueryPoint& queryPoint,
                               const Logger& logger, double onSurfaceTolerance) {
+  ACTS_VERBOSE("Update from position " << toString(queryPoint.position)
+                                       << " and direction "
+                                       << toString(queryPoint.direction));
   // Loop over the (currently valid) candidates and update
-  ACTS_VERBOSE("NavigationStream::update() "
-               << __LINE__ << " - Update with new query point "
-               << toString(queryPoint.position)
-               << ", direction: " << toString(queryPoint.direction));
-  if (m_currentIndex == std::nullopt) {
-    ACTS_VERBOSE(
-        "NavigationStream::update() - Initialize the index of the stream "
-        "first");
-    m_currentIndex = 0;
-  }
-  if (!isValid()) {
-    ACTS_VERBOSE(
-        "NavigationStream::update() - No valid candidate is left in the "
-        "stream");
-    return false;
-  }
-  do {
+  for (; m_currentIndex < m_candidates.size(); ++m_currentIndex) {
     // Get the candidate, and resolve the tuple
     NavigationTarget& candidate = currentCandidate();
     // Get the surface from the object intersection
@@ -190,33 +162,18 @@ bool NavigationStream::update(const GeometryContext& gctx,
       // Valid solution is either on surface or updates the distance
       if (intersection.isValid()) {
         candidate.intersection() = intersection;
-        ACTS_VERBOSE("NavigationStream::update() "
-                     << __LINE__ << " Update candidate " << candidate);
+        ACTS_VERBOSE("Updated candidate " << candidate);
         return true;
       }
     }
-  } while (switchToNextCandidate());
+  }
   // No candidate was reachable
   return false;
 }
 
-void NavigationStream::reset(const bool keepBoundLess) {
-  if (!keepBoundLess) {
-    m_candidates.clear();
-  } else {
-    if (m_currentIndex.has_value()) {
-      m_candidates.erase(m_candidates.begin(),
-                         m_candidates.begin() +
-                             std::min(*m_currentIndex, m_candidates.size()));
-    }
-    auto [begin, end] = std::ranges::remove_if(
-        m_candidates, [](const NavigationTarget& target) {
-          return target.pathLength() < 0. ||
-                 !target.boundaryTolerance().isInfinite();
-        });
-    m_candidates.erase(begin, end);
-  }
-  m_currentIndex.reset();
+void NavigationStream::reset() {
+  m_candidates.clear();
+  m_currentIndex = 0;
 }
 
 void NavigationStream::addSurfaceCandidate(
