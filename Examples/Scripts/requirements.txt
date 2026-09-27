@@ -10,7 +10,7 @@ awkward==2.14.0
     #   uproot
 awkward-cpp==57
     # via awkward
-boost-histogram==1.7.2
+boost-histogram==1.8.1
     # via hist
 click==8.5.0
     # via histoprint
@@ -24,13 +24,13 @@ cramjam==2.12.1
     # via uproot
 cycler==0.12.1
     # via matplotlib
-fonttools==4.65.0
+fonttools==4.66.0
     # via matplotlib
 fsspec==2026.9.0
     # via
     #   awkward
     #   uproot
-hist==2.11.0
+hist==2.12.0
     # via -r Examples/Scripts/requirements.in
 histoprint==2.7.1
     # via hist
@@ -94,7 +94,7 @@ pydantic-core==2.46.5
     # via pydantic
 pygments==2.21.0
     # via rich
-pyparsing==3.3.2
+pyparsing==3.3.3
     # via matplotlib
 python-dateutil==2.9.0.post0
     # via
@@ -125,7 +125,7 @@ typing-inspection==0.4.4
     # via pydantic
 tzdata==2026.4 ; sys_platform == 'emscripten' or sys_platform == 'win32'
     # via pandas
-uhi==1.1.1
+uhi==1.2.0
     # via
     #   histoprint
     #   mplhep
