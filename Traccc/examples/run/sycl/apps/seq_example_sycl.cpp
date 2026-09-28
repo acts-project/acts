@@ -15,7 +15,6 @@
 #include "traccc/io/utils.hpp"
 
 // algorithms
-#include "traccc/device/container_d2h_copy_alg.hpp"
 #include "traccc/gbts_seeding/gbts_seeding_config.hpp"
 #include "traccc/sycl/clusterization/clusterization_algorithm.hpp"
 #include "traccc/sycl/clusterization/measurement_sorting_algorithm.hpp"

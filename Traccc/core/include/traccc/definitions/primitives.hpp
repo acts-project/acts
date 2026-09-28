@@ -30,10 +30,8 @@ using detray::algebra::array::operator+;
 using scalar = detray::dscalar<default_algebra>;
 using point2 = detray::dpoint2D<default_algebra>;
 using vector2 = point2;
-using variance2 = point2;
 using point3 = detray::dpoint3D<default_algebra>;
 using vector3 = detray::dvector3D<default_algebra>;
-using variance3 = point3;
 using transform3 = detray::dtransform3D<default_algebra>;
 
 namespace getter = detray::getter;

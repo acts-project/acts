@@ -12,8 +12,6 @@
 #include "traccc/cuda/seeding/triplet_seeding_algorithm.hpp"
 #include "traccc/cuda/utils/make_magnetic_field.hpp"
 #include "traccc/definitions/common.hpp"
-#include "traccc/device/container_d2h_copy_alg.hpp"
-#include "traccc/device/container_h2d_copy_alg.hpp"
 #include "traccc/efficiency/finding_performance_writer.hpp"
 #include "traccc/efficiency/nseed_performance_writer.hpp"
 #include "traccc/efficiency/seeding_performance_writer.hpp"

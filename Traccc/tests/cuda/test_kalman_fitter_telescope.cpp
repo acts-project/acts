@@ -13,7 +13,6 @@
 #include "traccc/geometry/host_detector.hpp"
 #include "traccc/io/detector.hpp"
 #include "traccc/io/utils.hpp"
-#include "traccc/performance/details/is_same_object.hpp"
 #include "traccc/resolution/fitting_performance_writer.hpp"
 #include "traccc/simulation/event_generators.hpp"
 #include "traccc/simulation/simulator.hpp"

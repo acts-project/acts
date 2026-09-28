@@ -50,10 +50,4 @@ inline TRACCC_HOST_DEVICE bool operator<(const triplet& lhs,
   return lhs.weight < rhs.weight;
 }
 
-/// Declare all triplet collection types
-using triplet_collection_types = collection_types<triplet>;
-
-/// Declare all triplet container types
-using triplet_container_types = container_types<std::monostate, triplet>;
-
 }  // namespace traccc

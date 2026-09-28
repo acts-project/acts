@@ -40,17 +40,6 @@ TRACCC_HOST_DEVICE void get_measurement_local(
     const edm::measurement<measurement_backend_t>& meas,
     detray::dmatrix<algebra_t, D, 1>& pos);
 
-/// Get the local position variance of a measurement as a 2D vector
-///
-/// @tparam algebra_t The algebra type used to describe the tracks
-///
-/// @param meas The measurement to extract the local position from
-/// @param pos The 2D vector to fill with the local variance of the measurement
-///
-template <detray::concepts::algebra algebra_t, typename measurement_backend_t>
-TRACCC_HOST_DEVICE detray::dvector2D<algebra_t> get_measurement_variance(
-    const edm::measurement<measurement_backend_t>& meas);
-
 /// Get the covariance of a measurement as a matrix
 ///
 /// @tparam algebra_t The algebra type used to describe the tracks

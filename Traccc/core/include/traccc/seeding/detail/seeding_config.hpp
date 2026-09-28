@@ -114,12 +114,6 @@ struct seedfinder_config {
     return static_cast<std::size_t>(rMax + vector::norm(beamPos));
   }
 
-  TRACCC_HOST_DEVICE
-  unsigned int get_max_neighbor_bins() const {
-    unsigned int t = neighbor_scope[0] + neighbor_scope[1] + 1;
-    return t * t;
-  }
-
   // Configure unset parameters
   TRACCC_HOST_DEVICE
   void setup() {

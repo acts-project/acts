@@ -14,8 +14,6 @@
 #include "traccc/alpaka/utils/queue.hpp"
 #include "traccc/alpaka/utils/vecmem_objects.hpp"
 #include "traccc/definitions/common.hpp"
-#include "traccc/device/container_d2h_copy_alg.hpp"
-#include "traccc/device/container_h2d_copy_alg.hpp"
 #include "traccc/efficiency/finding_performance_writer.hpp"
 #include "traccc/efficiency/nseed_performance_writer.hpp"
 #include "traccc/efficiency/seeding_performance_writer.hpp"

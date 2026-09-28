@@ -48,7 +48,4 @@ struct lin_circle {
   const scalar& V() const { return m_V; }
 };
 
-/// Declare all lin_circle collection types
-using lin_circle_collection_types = collection_types<lin_circle>;
-
 }  // namespace traccc

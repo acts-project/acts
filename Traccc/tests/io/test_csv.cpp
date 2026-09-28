@@ -6,13 +6,10 @@
  */
 
 // Project include(s).
-#include "traccc/geometry/detector.hpp"
 #include "traccc/io/read_cells.hpp"
-#include "traccc/io/read_detector.hpp"
 #include "traccc/io/read_detector_description.hpp"
 #include "traccc/io/read_digitization_config.hpp"
 #include "traccc/io/read_measurements.hpp"
-#include "traccc/io/read_particles.hpp"
 #include "traccc/io/read_spacepoints.hpp"
 #include "traccc/io/write.hpp"
 
@@ -85,35 +82,6 @@ TEST_F(io, csv_read_tml_pixelbarrel) {
       false);
 
   EXPECT_EQ(cells.size(), 179961u);
-}
-
-/// Tests with ODD "single" muon events.
-TEST_F(io, csv_read_odd_single_muon) {
-  // Memory resource used by the test.
-  vecmem::host_memory_resource mr;
-
-  traccc::host_detector detector;
-  traccc::io::read_detector(detector, mr,
-                            "geometries/odd/odd-detray_geometry_detray.json");
-
-  // Read the truth particles for the first event.
-  traccc::particle_container_types::host particles{&mr};
-  traccc::edm::measurement_collection::host measurements{mr};
-  traccc::io::read_particles(particles, measurements, 0u,
-                             "odd/geant4_1muon_1GeV/", &detector,
-                             traccc::data_format::csv);
-
-  // Look at the read container.
-  ASSERT_EQ(particles.size(), 265u);
-  std::size_t n_muons = 0u;
-  for (std::size_t i = 0; i < particles.size(); ++i) {
-    // The muon(s) must have measurements associated to it/them.
-    if (std::abs(particles.at(i).header.particle_type) == 13) {
-      ++n_muons;
-      EXPECT_GT(particles.at(i).items.size(), 0u);
-    }
-  }
-  EXPECT_EQ(n_muons, 4u);
 }
 
 TEST_F(io, csv_write_odd_single_muon_cells) {

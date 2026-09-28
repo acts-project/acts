@@ -50,21 +50,7 @@ using QueueType = ::alpaka::Blocking;
 using QueueType = ::alpaka::NonBlocking;
 #endif
 
-using Host = ::alpaka::DevCpu;
 using Queue = ::alpaka::Queue<Acc, QueueType>;
-
-template <typename TAcc>
-consteval Idx getWarpSize() {
-  if constexpr (::alpaka::accMatchesTags<TAcc, ::alpaka::TagGpuCudaRt,
-                                         ::alpaka::TagGpuSyclIntel>) {
-    return 32;
-  }
-  if constexpr (::alpaka::accMatchesTags<TAcc, ::alpaka::TagGpuHipRt>) {
-    return 64;
-  } else {
-    return 4;
-  }
-}
 
 template <typename TAcc>
 inline WorkDiv makeWorkDiv(Idx blocks, Idx threadsOrElements) {

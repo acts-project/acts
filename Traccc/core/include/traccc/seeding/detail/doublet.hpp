@@ -30,10 +30,4 @@ inline TRACCC_HOST_DEVICE bool operator==(const doublet& lhs,
       lhs.sp2.bin_idx == rhs.sp2.bin_idx && lhs.sp2.sp_idx == rhs.sp2.sp_idx);
 }
 
-/// Declare all doublet collection types
-using doublet_collection_types = collection_types<doublet>;
-
-/// Declare all doublet container types
-using doublet_container_types = container_types<std::monostate, doublet>;
-
 }  // namespace traccc

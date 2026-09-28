@@ -11,8 +11,6 @@
 #include "traccc/cuda/utils/stream_wrapper.hpp"
 #include "traccc/definitions/common.hpp"
 #include "traccc/definitions/primitives.hpp"
-#include "traccc/device/container_d2h_copy_alg.hpp"
-#include "traccc/device/container_h2d_copy_alg.hpp"
 #include "traccc/examples/make_magnetic_field.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/host_detector.hpp"
