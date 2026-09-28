@@ -188,8 +188,13 @@ struct get_material_slab {
     using material_t = typename mat_coll_t::value_type;
 
     if constexpr (concepts::material_map<material_t>) {
-      return detail::material_accessor::get(
-          mat_coll, idx, typename material_t::point_type{loc_p[0], loc_p[1]});
+      // The test surfaces only carry 2D material maps
+      if constexpr (material_t::dim == 2) {
+        return detail::material_accessor::get(
+            mat_coll, idx, typename material_t::point_type{loc_p[0], loc_p[1]});
+      } else {
+        return {};
+      }
     } else if constexpr (std::same_as<material_t, material_slab<scalar>>) {
       return detail::material_accessor::get(mat_coll, idx, loc_p);
     } else {
