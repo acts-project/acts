@@ -90,8 +90,8 @@ void bind_const_vector(py::module_ &m, const char *name) {
 }
 
 using algebra_t = detray::array<scalar_t>;
-using detector_t = detray::detector<detray::default_metadata<algebra_t>>;
-using toy_detector_t = detray::detector<detray::toy_metadata<algebra_t>>;
+using detector_t = detray::host::detector<detray::default_metadata<algebra_t>>;
+using toy_detector_t = detray::host::detector<detray::toy_metadata<algebra_t>>;
 using volume_descriptor_t = detector_t::volume_type;
 using volume_container_t = detector_t::volume_container;
 using surface_descriptor_t = detector_t::surface_type;

@@ -54,7 +54,7 @@ struct gbts_bin_spacepoints_payload {
   vecmem::data::vector_view<const std::pair<float, float>> layer_geo;
   /// Output: reduced (x, y, z, cluster width) per spacepoint after filtering
   vecmem::data::vector_view<float4> reducedSP;
-  /// Output: nEtaBins + 1 counters, all atomically incremented.
+  /// Output: nEtaBins + 1 counters.
   vecmem::data::vector_view<unsigned int> eta_node_counter;
   /// Output: one 64-bit node sort key per accepted spacepoint
   /// Which is used to sort the nodes by (eta bin, phi, spacepoint index) before

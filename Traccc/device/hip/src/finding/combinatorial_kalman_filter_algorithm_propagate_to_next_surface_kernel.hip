@@ -53,15 +53,17 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
   detector_buffer_magnetic_field_visitor<detector_type_list,
                                          hip::bfield_type_list<scalar>>(
       detector, field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view&,
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>&,
           const bfield_view_t& bfield) {
-        using detector_t = typename detector_traits_t::device;
+        using detector_device_t = detray::detector_device_t<detector_t>;
         using propagator_t =
-            traccc::details::ckf_propagator_t<detector_t, bfield_view_t>;
+            traccc::details::ckf_propagator_t<detector_device_t, bfield_view_t>;
 
-        const vecmem::data::vector_buffer<detector_t>& device_detector_buffer =
-            device_detector.as<vecmem::data::vector_buffer<detector_t>>();
+        const vecmem::data::vector_buffer<detector_device_t>&
+            device_detector_buffer =
+                device_detector
+                    .as<vecmem::data::vector_buffer<detector_device_t>>();
 
         // The kernel name carries a top level comma, which the launch macro
         // can not take, so it is passed through a function pointer.

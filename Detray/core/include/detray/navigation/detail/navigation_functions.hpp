@@ -175,7 +175,7 @@ template <typename track_t, typename navigation_state_t, typename context_t>
 DETRAY_HOST_DEVICE
 // Not inlining this function gives NVIDIA GPUs more opportunities to
 // reconverge threads when this (very large) function is called.
-#if defined(__CUDACC__)
+#if defined(__CUDACC__) || defined(__HIP__)
     DETRAY_NO_INLINE
 #else
     DETRAY_INLINE
