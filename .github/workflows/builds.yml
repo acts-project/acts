@@ -151,23 +151,7 @@ jobs:
 
       - name: sccache statistics and shutdown
         if: always() && steps.sccache-start.outcome == 'success'
-        shell: bash
-        run: |
-          # Startup may have failed, or dependencies may have failed before
-          # the readiness check. Stop a daemon only if its socket exists.
-          if [[ ! -S "$SCCACHE_SERVER_UDS" ]]; then
-            exit 0
-          fi
-          {
-            echo '### sccache (CERN S3)'
-            echo "Remote mode: $SCCACHE_S3_RW_MODE"
-            if [[ "$SCCACHE_S3_RW_MODE" == READ_ONLY ]]; then
-              echo 'sccache 0.18.0 counts skipped writes on read-only misses as cache write errors.'
-            fi
-            echo '```text'
-          } >> "$GITHUB_STEP_SUMMARY"
-          sccache --stop-server | tee -a "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
+        uses: ./.github/actions/sccache/stats
 
   linux_examples_test:
     runs-on: [self-hosted, linux, x64, husk-size-standard]

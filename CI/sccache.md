@@ -15,6 +15,7 @@ Storage: `https://s3.cern.ch`, region `cern`, bucket `cache`, prefix
 reads do not refresh expiry.
 
 Startup overlaps dependency installation. Before CMake, the workflow waits for
-readiness and disables caching with a warning if startup fails. It stops the
-daemon in an `always()` step, recording statistics in the job log and summary.
+readiness and disables caching with a warning if startup fails. The
+[stats action](../.github/actions/sccache/stats/action.yml) stops the daemon in an
+`always()` step, recording statistics in the job log and summary.
 In sccache 0.18.0, read-only misses count as `Cache write errors` even though no upload is attempted.
