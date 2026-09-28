@@ -1324,11 +1324,12 @@ def test_geomodel_G4(tmp_path):
 
     assert (out_dir / "obj").exists()
 
+
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not geomodelEnabled, reason="Geomodel not set up")
 @pytest.mark.slow
 def test_geomodel_G4_propagation(tmp_path):
-        script = (
+    script = (
         Path(__file__).parent.parent.parent.parent
         / "Examples"
         / "Scripts"
