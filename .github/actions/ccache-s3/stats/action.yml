@@ -1,0 +1,12 @@
+name: 'ccache snapshot statistics'
+description: 'Write ccache statistics to the job log and summary'
+runs:
+  using: composite
+  steps:
+    - name: ccache statistics
+      shell: bash
+      run: |
+        echo '### ccache snapshot pilot' >> "$GITHUB_STEP_SUMMARY"
+        echo '```text' >> "$GITHUB_STEP_SUMMARY"
+        ccache --show-stats --verbose | tee -a "$GITHUB_STEP_SUMMARY"
+        echo '```' >> "$GITHUB_STEP_SUMMARY"

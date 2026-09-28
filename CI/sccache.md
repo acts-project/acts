@@ -1,6 +1,8 @@
 # CERN S3 compiler cache
 
-`Builds / linux_ubuntu` uses the [sccache action](../.github/actions/sccache/action.yml)
+`Builds / linux_ubuntu` currently trials [ccache snapshots](ccache-snapshots.md).
+
+The original pilot uses the [sccache action](../.github/actions/sccache/action.yml)
 (Linux x64). Only `main` pushes publish; branches, PRs, and merge queue builds
 read anonymously.
 

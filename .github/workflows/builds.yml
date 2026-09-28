@@ -31,7 +31,7 @@ concurrency:
 
 # Jobs using ccache save from `main` only: a PR-written cache is readable by
 # that PR alone, but still evicts `main`'s entries from the shared 10 GB.
-# linux_ubuntu pilots sccache with CERN S3 instead; see CI/sccache.md.
+# linux_ubuntu pilots ccache snapshots in CERN S3; see CI/ccache-snapshots.md.
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
@@ -47,6 +47,10 @@ jobs:
     # Branch pushes, PRs and merge queue builds use a separate, secret-free environment.
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || 's3-sccache-read' }}
+    # Serialize main publishers. PR jobs keep independent concurrency groups.
+    concurrency:
+      group: ccache-snapshot-linux-ubuntu-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'publish' || github.run_id }}
+      cancel-in-progress: false
     permissions:
       contents: read
       # Authenticated GHCR reads: the spack buildcache is pulled from
@@ -55,6 +59,8 @@ jobs:
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
     env:
+      CCACHE_DIR: ${{ github.workspace }}/ccache-snapshot
+      CCACHE_BASEDIR: ${{ github.workspace }}
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
@@ -64,16 +70,6 @@ jobs:
           lfs: true
           persist-credentials: false
 
-      - name: Set up sccache
-        id: sccache-start
-        uses: ./.github/actions/sccache
-        with:
-          key-prefix: acts-sccache/linux_ubuntu/v1/
-          read-only: ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
-          # Only the protected main environment supplies these credentials.
-          access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.S3_ACCESS_KEY_ID || '' }}
-          secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.S3_SECRET_ACCESS_KEY || '' }}
-
       - name: Install dependencies
         uses: ./.github/actions/dependencies
         with:
@@ -81,24 +77,28 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      - name: Check sccache startup
-        id: sccache-ready
-        shell: bash
-        run: bash .github/actions/sccache/wait.sh
+      - name: Restore ccache snapshot
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./.github/actions/ccache-s3
+        with:
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/linux_ubuntu/v1/
+
+      - name: Reset ccache statistics
+        run: ccache --zero-stats
 
       - name: Configure
-        env:
-          CACHE_LAUNCHER: ${{ steps.sccache-ready.outputs.launcher }}
         run: >
           CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci-fpe
-          -DCMAKE_CXX_COMPILER_LAUNCHER="$CACHE_LAUNCHER"
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_PLUGIN_ONNX=ON
 
       - name: Build
-        run: cmake --build build
+        id: build
+        run: python3 CI/ccache_snapshot.py measure cmake --build build
 
       - name: Build docs examples
         # these are excluded from the ALL target, but we want to test them here
@@ -149,9 +149,20 @@ jobs:
           CI/dependencies/run.sh .env
           ctest --test-dir build-downstream --output-on-failure
 
-      - name: sccache statistics and shutdown
-        if: always() && steps.sccache-start.outcome == 'success'
-        uses: ./.github/actions/sccache/stats
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
+
+      - name: Publish ccache snapshot
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./.github/actions/ccache-s3
+        with:
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/linux_ubuntu/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
   linux_examples_test:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
