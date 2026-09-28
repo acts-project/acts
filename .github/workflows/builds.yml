@@ -47,10 +47,6 @@ jobs:
     # Branch pushes, PRs and merge queue builds use a separate, secret-free environment.
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || 's3-sccache-read' }}
-    # Serialize main publishers. PR jobs keep independent concurrency groups.
-    concurrency:
-      group: ccache-snapshot-linux-ubuntu-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'publish' || github.run_id }}
-      cancel-in-progress: false
     permissions:
       contents: read
       # Authenticated GHCR reads: the spack buildcache is pulled from

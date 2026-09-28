@@ -9,7 +9,8 @@ Storage: `https://s3.cern.ch`, region `cern`, bucket `cache`, prefix
 `acts-sccache/ccache-snapshots/<repository>/linux_ubuntu/v1/`.
 
 Main uploads an immutable tar of the 500 MB cache, then updates `latest.json`.
-Publishers are serialized; older runs cannot replace newer snapshots. Restores
+Publication adds no concurrency group. Overlapping uploads may leave an older
+valid snapshot as latest; ccache still validates entries when using them. Restores
 verify the checksum and extract into staging. Failed transfers are nonfatal.
 The tar is uncompressed since ccache already compresses entries. The existing
 30-day lifecycle applies to both snapshots and the pointer.

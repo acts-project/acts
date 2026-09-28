@@ -126,7 +126,9 @@ def test_failed_upload_preserves_pointer(client, cache):
 
 
 @pytest.mark.parametrize("run,attempt", [(9, 5), (10, 1)])
-def test_old_or_duplicate_run_cannot_replace_snapshot(client, cache, run, attempt):
+def test_old_or_duplicate_run_skips_already_published_snapshot(
+    client, cache, run, attempt
+):
     publish(client, cache)
     writes = client.writes.copy()
     publish(client, cache, run, attempt)

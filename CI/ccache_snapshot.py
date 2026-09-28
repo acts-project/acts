@@ -5,7 +5,7 @@
 # ///
 """Restore/publish bounded ccache snapshots; keep compilation lookups local.
 
-Publish callers must serialize by prefix (the pilot uses job concurrency).
+Overlapping publishers may leave an older valid snapshot as latest.
 Readers are always anonymous. Remote cache failures never fail the build.
 """
 
@@ -102,6 +102,8 @@ def restore(client, bucket, prefix, cache):
 
 
 def publish(client, bucket, prefix, cache, run_number, run_id, attempt):
+    # Best-effort freshness check, not a lock: another publisher may finish
+    # after this read. An older snapshot is still safe for ccache to use.
     order = (run_number, attempt)
     current = read_manifest(client, bucket, prefix)
     if current and (current["run_number"], current["run_attempt"]) >= order:
