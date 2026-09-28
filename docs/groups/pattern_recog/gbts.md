@@ -263,13 +263,14 @@ the angle. Wide clusters in the pixel endcap are dropped entirely
 
 ## Configuration {#gbts-configuration}
 
-The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
+The cuts that build and link the doublets live on
+@ref Acts::Experimental::GbtsGraphBuilder "GbtsGraphBuilder::Config", which
+`GraphBasedSeedingAlgorithm` takes as `graphConfig` and exposes to Python as
+`GbtsGraphBuilderConfig`:
 
 | Option | Stage | Effect |
 | --- | --- | --- |
-| `useStripConnections` | @ref gbts-geometry | take the strip layer connections from the connector file instead of the pixel ones |
 | `minPt` | @ref gbts-graph | drives the curvature and @f$\phi@f$-window bounds |
-| `nMaxPhiSlice` | @ref gbts-graph | sets the base @f$\phi@f$ sliding-window width |
 | `minDeltaRadius`, `maxAbsTau` | @ref gbts-graph | doublet acceptance |
 | `minZ0`, `maxZ0`, `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet |
 | `tauRatioCut`, `cutDPhiMax`, `cutDCurvMax` | @ref gbts-graph | edge-to-edge linking tolerances |
@@ -278,11 +279,26 @@ The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrac
 | `nMaxEdges` | @ref gbts-graph | hard cap on the edge array (2M by default); exceeding it costs efficiency |
 | `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxBarrelOrder` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
 | `z0HistogramMaxBarrelOrder`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that depth in the pixel barrel |
+| `ccaMaxIterations` | @ref gbts-graph | cap on the connected component iterations |
+| `minSeedLevel` | @ref gbts-extraction | chain length a candidate must reach |
+| `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
+
+The graph applies the last three when it picks the chain heads, so they sit
+with the graph rather than with the seeder that reads those chains back out.
+
+The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
+
+| Option | Stage | Effect |
+| --- | --- | --- |
+| `nMaxPhiSlice` | @ref gbts-nodes | sets the @f$\phi@f$ slice width, and with it the base sliding-window width the graph uses |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
 | `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |
-| `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `useClusterWidthCuts`, `tauLookupTable` | @ref gbts-ml | cluster-width based @f$\tau@f$ windows |
 | `maxEndcapClusterWidth`, `moduleHalfLengthY`, `moduleEdgeTolerance` | @ref gbts-ml | cluster-width acceptance and module-edge handling |
+
+`useStripConnections`, which takes the strip layer connections from the
+connector file instead of the pixel ones, is read where the file is loaded and
+so sits on `GraphBasedSeedingAlgorithm::Config` itself.
 
 @ref Acts::Experimental::GbtsTrackingFilter "GbtsTrackingFilter::Config"
 separately controls the chain-following filter of @ref gbts-extraction "seed extraction":
