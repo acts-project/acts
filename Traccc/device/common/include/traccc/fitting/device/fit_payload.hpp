@@ -10,6 +10,9 @@
 // Project include(s).
 #include "traccc/edm/track_container.hpp"
 
+// Detray include(s)
+#include <detray/core/concepts.hpp>
+
 // VecMem include(s).
 #include <vecmem/containers/data/jagged_vector_view.hpp>
 #include <vecmem/containers/data/vector_view.hpp>
@@ -36,12 +39,13 @@ struct fit_payload {
 };
 
 /// (Templated) Payload for the fitting function(s)
-template <typename detector_t, typename bfield_t, typename surface_t>
+template <detray::concepts::device_view detector_view_t, typename bfield_t,
+          typename surface_t>
 struct fit_tpayload {
   /**
    * @brief View object to the detector description
    */
-  detector_t det;
+  detector_view_t det;
 
   /**
    * @brief View object to the magnetic field description

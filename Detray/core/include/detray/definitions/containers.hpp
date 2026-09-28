@@ -41,9 +41,7 @@ template <class... types>
 using dtuple = detray::tuple<types...>;
 
 /// @brief Bundle container type definitions
-template <template <typename...> class vector_t = dvector,
-          template <typename...> class jagged_vector_t = djagged_vector,
-          template <typename, typename> class map_t = dmap>
+template <template <typename...> class vector_t = dvector>
 struct container_types {
   template <typename T>
   using vector_type = vector_t<T>;
@@ -53,16 +51,24 @@ struct container_types {
 
   template <typename T, std::size_t kDIM>
   using array_type = darray<T, kDIM>;
+};
 
+/// @brief Bundle container type definitions
+template <template <typename...> class vector_t = dvector>
+struct const_container_types {
   template <typename T>
-  using jagged_vector_type = jagged_vector_t<T>;
+  using vector_type = vector_t<std::add_const_t<T>>;
 
-  template <typename K, typename T>
-  using map_type = map_t<K, T>;
+  template <class... T>
+  using tuple_type = dtuple<std::add_const_t<T>...>;
+
+  template <typename T, std::size_t kDIM>
+  using array_type = darray<std::add_const_t<T>, kDIM>;
 };
 
 /// Defining some common types
 using host_container_types = container_types<>;
+using const_host_container_types = const_container_types<>;
 
 namespace detail {
 

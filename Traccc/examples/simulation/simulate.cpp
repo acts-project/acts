@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
       logger->cloneWithSuffix("Options")};
 
   /// Type declarations
-  using host_detector_type = traccc::default_detector::host;
+  using host_detector_type = traccc::default_detector_traits::host;
   using uniform_gen_t =
       detray::detail::random_numbers<scalar,
                                      std::uniform_real_distribution<scalar>>;

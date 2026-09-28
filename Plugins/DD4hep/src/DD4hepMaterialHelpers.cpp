@@ -11,45 +11,49 @@
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cstddef>
-#include <numbers>
 #include <ostream>
+#include <stdexcept>
 
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
 
 using namespace Acts;
 
-std::shared_ptr<ProtoSurfaceMaterial> ActsPlugins::createProtoMaterial(
+std::shared_ptr<ProtoGridSurfaceMaterial> ActsPlugins::createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
     const std::vector<std::pair<const std::string, BinningOption> >& binning,
     const Logger& logger) {
-  using namespace std::string_literals;
-
-  // Create the bin utility
-  BinUtility bu;
-  // Loop over the bins
-  for (auto& bin : binning) {
-    AxisDirection bval = axisDirectionFromName(bin.first);
-    BinningOption bopt = bin.second;
-    double min = 0.;
-    double max = 0.;
-    if (bopt == closed) {
-      min = -std::numbers::pi;
-      max = std::numbers::pi;
-    }
-    int bins = params.get<int>(valueTag + "_"s + bin.first);
-    ACTS_VERBOSE("  - material binning for " << bin.first << " on " << valueTag
-                                             << ": " << bins);
-    if (bins >= 1) {
-      bu += BinUtility(bins, min, max, bopt, bval);
-    }
+  if (binning.size() != 2) {
+    throw std::invalid_argument("DD4hep surface material requires two axes");
   }
-  return std::make_shared<ProtoSurfaceMaterial>(bu);
+  const bool cylinder = std::ranges::any_of(binning, [](const auto& axis) {
+    return axisDirectionFromName(axis.first) == AxisDirection::AxisZ;
+  });
+  auto axisSpec = [&](const auto& axis) {
+    auto direction = axisDirectionFromName(axis.first);
+    if (cylinder && direction == AxisDirection::AxisPhi) {
+      direction = AxisDirection::AxisRPhi;
+    }
+    const int bins = params.get<int>(valueTag + "_" + axis.first);
+    ACTS_VERBOSE("  - material binning for " << axis.first << " on " << valueTag
+                                             << ": " << bins);
+    // An omitted legacy dimension is homogeneous, represented by one bin.
+    // Keep ranges deferred; material mapping resolves them from the surface.
+    return AxisSpec::Equidistant(
+        static_cast<std::size_t>(std::max(1, bins)), std::nullopt, std::nullopt,
+        axis.second == closed ? AxisBoundaryType::Closed
+                              : AxisBoundaryType::Bound,
+        direction);
+  };
+  return std::make_shared<ProtoGridSurfaceMaterial>(
+      MultiAxisSpec2D({axisSpec(binning[0]), axisSpec(binning[1])}));
 }
 
 void ActsPlugins::addLayerProtoMaterial(

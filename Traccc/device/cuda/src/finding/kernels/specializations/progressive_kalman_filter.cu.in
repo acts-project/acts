@@ -20,12 +20,12 @@
 namespace traccc::cuda {
 
 using bfield_t = covfie::field<@BFIELD_NAME@>::view_t;
-using propagator_t = traccc::details::pkf_propagator_t<@DETECTOR_NAME@::device, bfield_t>;
+using propagator_t = traccc::details::pkf_propagator_t<detray::detector_device_t<traccc::@DETECTOR_NAME@>, bfield_t>;
 
 template void progressive_kalman_filter<propagator_t>(
     const dim3& grid_size, const dim3& block_size, std::size_t shared_mem_size,
     const cudaStream_t& stream, const finding_config&,
-    const @DETECTOR_NAME@::device::const_view_type&,
+    const detray::detector_view_t<traccc::@DETECTOR_NAME@>&,
     const typename propagator_t::stepper_type::magnetic_field_type&,
     const vecmem::data::jagged_vector_view<
         typename propagator_t::detector_type::surface_type>&,

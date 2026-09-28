@@ -1,38 +1,12 @@
-# Merge-group filters: include shared build inputs as well as the package.
-# Keep these conservative when the standalone builds gain new dependencies.
+# Build these packages only for package changes or their CI configuration.
 # Keep the workflow push/pull_request paths and .merge-sentinel.yml in sync.
 detray:
   - 'Detray/**'
-  # Standalone Detray uses ACTS' header compilation and codegen modules.
-  - 'cmake/**'
-  - 'codegen/**'
-  - 'thirdparty/**'
-  - 'CMakeLists.txt'
-  - 'CMakePresets.json'
-  - 'CI/**'
-  - '.github/actions/**'
   - '.github/workflows/detray.yml'
   - '.github/detray-traccc-filters.yml'
 
 traccc:
   - 'Traccc/**'
   - 'Detray/**'
-  # Traccc/extern/acts builds the colocated ACTS tree, including Core and
-  # plugins. Keep the source roots conservative as its presets evolve.
-  - 'Core/**'
-  - 'Plugins/**'
-  - 'Fatras/**'
-  - 'Alignment/**'
-  - 'Examples/**'
-  - 'Tests/**'
-  - 'Python/**'
-  - 'cmake/**'
-  - 'codegen/**'
-  - 'thirdparty/**'
-  - 'CMakeLists.txt'
-  - 'CMakePresets.json'
-  - 'version_number'
-  - 'CI/**'
-  - '.github/actions/**'
   - '.github/workflows/traccc.yml'
   - '.github/detray-traccc-filters.yml'

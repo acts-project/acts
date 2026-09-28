@@ -73,12 +73,12 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
 
   // Launch the kernel for the appropriate detector type.
   detector_buffer_visitor<detector_type_list>(
-      detector, [&]<typename detector_traits_t>(
-                    const typename detector_traits_t::view& det) {
-        using detector_t = typename detector_traits_t::device;
+      detector, [&]<detray::concepts::detector detector_t>(
+                    const detray::detector_view_t<detector_t>& det) {
+        using detector_device_t = detray::detector_device_t<detector_t>;
 
-        hipLaunchKernelGGL(kernels::find_tracks<detector_t>, deviceBlocks,
-                           deviceThreads, deviceSharedMem,
+        hipLaunchKernelGGL(kernels::find_tracks<detector_device_t>,
+                           deviceBlocks, deviceThreads, deviceSharedMem,
                            details::get_stream(stream()), config, det, payload);
         TRACCC_HIP_ERROR_CHECK(hipGetLastError());
       });

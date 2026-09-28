@@ -42,7 +42,8 @@ void addDetector(py::module& mex) {
   {
     py::class_<Detector, std::shared_ptr<Detector>>(mex, "DetectorBase")
         .def("nominalGeometryContext", &Detector::nominalGeometryContext)
-        .def("trackingGeometry", &Detector::trackingGeometry)
+        .def("trackingGeometry", &Detector::trackingGeometry,
+             py::keep_alive<0, 1>())
         .def("contextDecorators", &Detector::contextDecorators)
         .def("__enter__",
              [](const std::shared_ptr<Detector>& self) { return self; })

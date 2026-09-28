@@ -73,3 +73,16 @@ void exampleDesignateHomogeneousMaterial(Acts::BlueprintNode& parent) {
   });
   //! [Designate Homogeneous Material]
 }
+
+/// Designate a face using a stable assignment key.
+void exampleDesignateKeyedMaterial(
+    Acts::MaterialDesignatorBlueprintNode& material) {
+  //! [Designate Keyed Material]
+  using Acts::AxisSpec;
+  using Acts::CylinderVolumeBounds;
+  material.configureFace(CylinderVolumeBounds::Face::OuterCylinder,
+                         AxisSpec::DeferredEquidistant(40),
+                         AxisSpec::DeferredEquidistant(80),
+                         "tracker/barrel/outer");
+  //! [Designate Keyed Material]
+}
