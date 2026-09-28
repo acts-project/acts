@@ -56,7 +56,6 @@ jobs:
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
     env:
       CCACHE_DIR: ${{ github.workspace }}/ccache-snapshot
-      CCACHE_BASEDIR: ${{ github.workspace }}
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
