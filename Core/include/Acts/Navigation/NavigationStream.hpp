@@ -91,7 +91,7 @@ class NavigationStream {
   /// The number of active candidates
   /// @return Number of remaining candidates from current position onwards
   std::size_t remainingCandidates() const {
-    return (m_candidates.size() - m_currentIndex);
+    return m_candidates.size() - m_currentIndex;
   }
 
   /// Fill one surface into the candidate vector
