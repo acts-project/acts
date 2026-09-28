@@ -184,6 +184,10 @@ ProcessCode RootPatternRecognitionPerformanceWriter::finalize() {
     writeFloat(eff_particle, "eff_particles");
     writeFloat(fakeRatio_particle, "fakeratio_particles");
     writeFloat(duplicationRatio_particle, "duplicateratio_particles");
+    writeFloat(static_cast<float>(s.meanCompleteness()),
+               std::format("meancompleteness_{}", labelPlural).c_str());
+    writeFloat(static_cast<float>(s.meanPurity()),
+               std::format("meanpurity_{}", labelPlural).c_str());
 
     if (m_matchingTree != nullptr) {
       m_matchingTree->Write();

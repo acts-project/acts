@@ -13,6 +13,7 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <format>
+#include <optional>
 #include <utility>
 
 namespace ActsExamples {
@@ -55,53 +56,62 @@ void PatternRecognitionPerformanceCollector::fill(
     const TrackParticleMatching& trackParticleMatching,
     const ParticleTrackMatching& particleTrackMatching,
     const InverseMultimap<SimBarcode>& particleMeasurementsMap) {
+  std::string labelPlural = std::format("{}s", m_cfg.label);
+
   std::size_t unmatched = 0;
   std::size_t missingRefSurface = 0;
 
-  std::string labelPlural = std::format("{}s", m_cfg.label);
-
   for (const auto& track : tracks) {
     m_stats.nTotalTracks++;
+    m_stats.nTotalMeasurements += track.nMeasurements();
+    m_stats.nTotalOutliers += track.nOutliers();
+    m_stats.nTotalHoles += track.nHoles();
+    m_stats.nTotalSharedHits += track.nSharedHits();
 
-    if (!track.hasReferenceSurface()) {
-      missingRefSurface++;
-      continue;
-    }
+    // Plots and quantities below require track parameters at a reference
+    // surface. Everything else (matching, integrated counts) is computed
+    // regardless of whether a reference surface is available.
+    std::optional<Acts::BoundTrackParameters> fittedParameters;
+    if (track.hasReferenceSurface()) {
+      fittedParameters = track.createParametersAtReference();
 
-    Acts::BoundTrackParameters fittedParameters =
-        track.createParametersAtReference();
+      m_trackSummaryPlotTool.fill(*fittedParameters, track.nTrackStates(),
+                                  track.nMeasurements(), track.nOutliers(),
+                                  track.nHoles(), track.nSharedHits());
 
-    m_trackSummaryPlotTool.fill(fittedParameters, track.nTrackStates(),
-                                track.nMeasurements(), track.nOutliers(),
-                                track.nHoles(), track.nSharedHits());
+      for (const auto& [key, volumes] : m_cfg.subDetectorTrackSummaryVolumes) {
+        std::size_t nTrackStates{};
+        std::size_t nMeasurements{};
+        std::size_t nOutliers{};
+        std::size_t nHoles{};
+        std::size_t nSharedHits{};
 
-    for (const auto& [key, volumes] : m_cfg.subDetectorTrackSummaryVolumes) {
-      std::size_t nTrackStates{};
-      std::size_t nMeasurements{};
-      std::size_t nOutliers{};
-      std::size_t nHoles{};
-      std::size_t nSharedHits{};
-
-      for (auto state : track.trackStatesReversed()) {
-        if (!state.hasReferenceSurface() ||
-            !volumes.contains(state.referenceSurface().geometryId().volume())) {
-          continue;
+        for (auto state : track.trackStatesReversed()) {
+          if (!state.hasReferenceSurface() ||
+              !volumes.contains(
+                  state.referenceSurface().geometryId().volume())) {
+            continue;
+          }
+          nTrackStates++;
+          nMeasurements +=
+              static_cast<std::size_t>(state.typeFlags().isMeasurement());
+          nOutliers += static_cast<std::size_t>(state.typeFlags().isOutlier());
+          nHoles += static_cast<std::size_t>(state.typeFlags().isHole());
+          nSharedHits +=
+              static_cast<std::size_t>(state.typeFlags().isSharedHit());
         }
-        nTrackStates++;
-        nMeasurements +=
-            static_cast<std::size_t>(state.typeFlags().isMeasurement());
-        nOutliers += static_cast<std::size_t>(state.typeFlags().isOutlier());
-        nHoles += static_cast<std::size_t>(state.typeFlags().isHole());
-        nSharedHits +=
-            static_cast<std::size_t>(state.typeFlags().isSharedHit());
+        m_subDetectorSummaryTools.at(key).fill(*fittedParameters, nTrackStates,
+                                               nMeasurements, nOutliers, nHoles,
+                                               nSharedHits);
       }
-      m_subDetectorSummaryTools.at(key).fill(fittedParameters, nTrackStates,
-                                             nMeasurements, nOutliers, nHoles,
-                                             nSharedHits);
+    } else {
+      m_stats.nTotalTracksMissingRefSurface++;
+      missingRefSurface++;
     }
 
     auto imatched = trackParticleMatching.find(track.index());
     if (imatched == trackParticleMatching.end()) {
+      m_stats.nTotalUnmatchedTracks++;
       unmatched++;
       continue;
     }
@@ -115,14 +125,22 @@ void PatternRecognitionPerformanceCollector::fill(
       m_stats.nTotalDuplicateTracks++;
     }
 
-    m_fakePlotTool.fill(fittedParameters, particleMatch.classification ==
-                                              TrackMatchClassification::Fake);
-    m_duplicationPlotTool.fill(
-        fittedParameters,
-        particleMatch.classification == TrackMatchClassification::Duplicate);
+    if (fittedParameters.has_value()) {
+      m_fakePlotTool.fill(
+          *fittedParameters,
+          particleMatch.classification == TrackMatchClassification::Fake);
+      m_duplicationPlotTool.fill(
+          *fittedParameters,
+          particleMatch.classification == TrackMatchClassification::Duplicate);
+    }
 
     if (particleMatch.particle.has_value() &&
         particleMeasurementsMap.contains(particleMatch.particle.value())) {
+      auto matchedParticle = particles.find(particleMatch.particle.value());
+      if (matchedParticle == particles.end()) {
+        continue;
+      }
+
       const auto measurements =
           particleMeasurementsMap.equal_range(particleMatch.particle.value());
 
@@ -136,7 +154,12 @@ void PatternRecognitionPerformanceCollector::fill(
       double completeness = static_cast<double>(nMatchedHits) / nParticleHits;
       double purity = static_cast<double>(nMatchedHits) / nTrackMeasurements;
 
-      m_trackQualityPlotTool.fill(fittedParameters, completeness, purity);
+      m_stats.nTotalQualityTracks++;
+      m_stats.sumCompleteness += completeness;
+      m_stats.sumPurity += purity;
+
+      m_trackQualityPlotTool.fill(matchedParticle->initialState(), completeness,
+                                  purity);
     }
   }
 
@@ -225,6 +248,23 @@ void PatternRecognitionPerformanceCollector::logSummary() const {
   ACTS_LOG_WITH_LOGGER(log, Acts::Logging::DEBUG,
                        "nTotalFake" << m_cfg.label << "s            = "
                                     << m_stats.nTotalFakeTracks);
+  ACTS_LOG_WITH_LOGGER(log, Acts::Logging::DEBUG,
+                       "nTotalUnmatched" << m_cfg.label << "s       = "
+                                         << m_stats.nTotalUnmatchedTracks);
+  ACTS_LOG_WITH_LOGGER(log, Acts::Logging::DEBUG,
+                       "nTotal" << m_cfg.label << "s MissingRefSurface = "
+                                << m_stats.nTotalTracksMissingRefSurface);
+  ACTS_LOG_WITH_LOGGER(
+      log, Acts::Logging::DEBUG,
+      "nTotalMeasurements          = " << m_stats.nTotalMeasurements);
+  ACTS_LOG_WITH_LOGGER(
+      log, Acts::Logging::DEBUG,
+      "nTotalOutliers              = " << m_stats.nTotalOutliers);
+  ACTS_LOG_WITH_LOGGER(log, Acts::Logging::DEBUG,
+                       "nTotalHoles                 = " << m_stats.nTotalHoles);
+  ACTS_LOG_WITH_LOGGER(
+      log, Acts::Logging::DEBUG,
+      "nTotalSharedHits            = " << m_stats.nTotalSharedHits);
 
   ACTS_LOG_WITH_LOGGER(log, Acts::Logging::INFO,
                        "Efficiency with "
@@ -251,6 +291,12 @@ void PatternRecognitionPerformanceCollector::logSummary() const {
       log, Acts::Logging::INFO,
       "Duplicate ratio with particles (nDuplicateParticles/nTrueParticles) = "
           << duplicationRatio_particle);
+  ACTS_LOG_WITH_LOGGER(log, Acts::Logging::INFO,
+                       "Mean completeness with " << labelPlural << " = "
+                                                 << m_stats.meanCompleteness());
+  ACTS_LOG_WITH_LOGGER(
+      log, Acts::Logging::INFO,
+      "Mean purity with " << labelPlural << " = " << m_stats.meanPurity());
 }
 
 }  // namespace ActsExamples
