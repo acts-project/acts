@@ -76,7 +76,7 @@ runs:
       # PATH contains only the fixed runner-temp directory with the verified binary.
       run: | # zizmor: ignore[github-env]
         archive="$RUNNER_TEMP/sccache.tar.gz"
-        curl --fail --location --retry 3 \
+        curl --fail --location --retry 3 --proto '=https' --proto-redir '=https' \
           https://github.com/mozilla/sccache/releases/download/v0.18.0/sccache-v0.18.0-x86_64-unknown-linux-musl.tar.gz \
           --output "$archive"
         echo "45f1447fbe231e3037bde351ef70677dd212216c8d62ae7ca409fecc4d6acc89  $archive" | sha256sum --check
