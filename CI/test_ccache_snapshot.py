@@ -184,12 +184,3 @@ def test_cache_failure_does_not_fail_build(monkeypatch):
     monkeypatch.setattr(snapshot, "make_client", unavailable)
     monkeypatch.setattr(sys, "argv", ["snapshot", "restore"])
     assert snapshot.main() == 0
-
-
-def test_measure_preserves_build_failure(monkeypatch):
-    monkeypatch.setattr(
-        sys,
-        "argv",
-        ["snapshot", "measure", sys.executable, "-c", "raise SystemExit(7)"],
-    )
-    assert snapshot.main() == 7

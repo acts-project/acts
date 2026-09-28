@@ -98,7 +98,7 @@ jobs:
 
       - name: Build
         id: build
-        run: python3 CI/ccache_snapshot.py measure cmake --build build
+        run: cmake --build build
 
       - name: Build docs examples
         # these are excluded from the ALL target, but we want to test them here

@@ -18,7 +18,6 @@ import re
 import subprocess
 import tarfile
 import tempfile
-import time
 import uuid
 
 
@@ -88,21 +87,14 @@ def restore(client, bucket, prefix, cache):
     with tempfile.TemporaryDirectory(dir=cache.parent) as directory:
         staging = Path(directory)
         archive = staging / "snapshot.tar"
-        start = time.monotonic()
         client.download_file(bucket, manifest["key"], str(archive))
         if digest(archive) != manifest["sha256"]:
             raise ValueError("ccache snapshot checksum mismatch")
-        report(
-            f"ccache download and verification: {time.monotonic() - start:.2f}s "
-            f"({archive.stat().st_size / 1024**2:.1f} MiB)"
-        )
-        start = time.monotonic()
         unpacked = staging / "unpacked"
         unpacked.mkdir()
         extract(archive, unpacked)
         cache.rmdir()
         unpacked.rename(cache)
-        report(f"ccache extraction: {time.monotonic() - start:.2f}s")
         report(
             f"ccache restored main run {manifest['run_number']}, "
             f"attempt {manifest['run_attempt']}"
@@ -118,7 +110,6 @@ def publish(client, bucket, prefix, cache, run_number, run_id, attempt):
     subprocess.run(["ccache", "--cleanup"], check=True)
     with tempfile.TemporaryDirectory(dir=cache.parent) as directory:
         archive = Path(directory) / "snapshot.tar"
-        start = time.monotonic()
         # ccache already compresses entries. Avoid a second compression pass.
         with tarfile.open(archive, "w:") as output:
             for entry in sorted(cache.iterdir()):
@@ -131,11 +122,6 @@ def publish(client, bucket, prefix, cache, run_number, run_id, attempt):
             "run_attempt": attempt,
             "commit": os.environ.get("GITHUB_SHA", ""),
         }
-        report(
-            f"ccache packing and checksum: {time.monotonic() - start:.2f}s "
-            f"({archive.stat().st_size / 1024**2:.1f} MiB)"
-        )
-        start = time.monotonic()
         client.upload_file(str(archive), bucket, manifest["key"])
         # A failed/cancelled upload cannot replace the currently usable snapshot.
         client.put_object(
@@ -145,7 +131,9 @@ def publish(client, bucket, prefix, cache, run_number, run_id, attempt):
             ContentType="application/json",
             CacheControl="no-cache",
         )
-        report(f"ccache upload and publication: {time.monotonic() - start:.2f}s")
+        report(
+            f"ccache snapshot published ({archive.stat().st_size / 1024**2:.1f} MiB)"
+        )
 
 
 def make_client(writable):
@@ -174,16 +162,8 @@ def make_client(writable):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("operation", choices=["restore", "publish", "measure"])
-    parser.add_argument("command", nargs=argparse.REMAINDER)
+    parser.add_argument("operation", choices=["restore", "publish"])
     args = parser.parse_args()
-    start = time.monotonic()
-    if args.operation == "measure":
-        result = subprocess.run(args.command)
-        report(
-            f"ccache build: {time.monotonic() - start:.2f}s (exit {result.returncode})"
-        )
-        return result.returncode
     writable = args.operation == "publish"
     if writable and not (
         os.environ.get("GITHUB_EVENT_NAME") == "push"
@@ -216,8 +196,6 @@ def main():
             flush=True,
         )
         report(f"ccache snapshot {args.operation}: failed ({type(error).__name__})")
-    finally:
-        report(f"ccache {args.operation} total: {time.monotonic() - start:.2f}s")
     return 0
 
 
