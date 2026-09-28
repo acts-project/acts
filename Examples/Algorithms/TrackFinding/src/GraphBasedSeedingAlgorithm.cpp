@@ -419,15 +419,15 @@ GraphBasedSeedingAlgorithm::layerNumbering(
     }
 
     if (barrelEc == Acts::Experimental::GbtsLayerType::Barrel) {
-      rc = std::sqrt(center(0) * center(0) +
-                     center(1) * center(1));  // barrel center in r
+      rc = std::sqrt(center.x() * center.x() +
+                     center.y() * center.y());  // barrel center in r
       // bounds of z
       for (const Acts::Vector3 &corner : corners) {
         minBound = std::min(minBound, static_cast<float>(corner.z()));
         maxBound = std::max(maxBound, static_cast<float>(corner.z()));
       }
     } else if (barrelEc == Acts::Experimental::GbtsLayerType::Endcap) {
-      rc = center(2);  // not barrel center in Z
+      rc = center.z();  // not barrel center in Z
       // bounds of r
       for (const Acts::Vector3 &corner : corners) {
         const auto r = static_cast<float>(
