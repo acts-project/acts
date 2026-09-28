@@ -514,6 +514,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     trackfinding "trackfinding | single muon | truth estimated seeding" trackfinding_1muon/truth_estimated
     trackfinding "trackfinding | single muon | default seeding" trackfinding_1muon/seeded
     trackfinding "trackfinding | single muon | orthogonal seeding" trackfinding_1muon/orthogonal
+    trackfinding "trackfinding | single muon | GBTS seeding" trackfinding_1muon/gbts
 
     trackfinding "trackfinding | 4 muon x 50 vertices | default seeding" trackfinding_4muon_50vertices
     vertexing "trackfinding | 4 muon x 50 vertices | default seeding" trackfinding_4muon_50vertices CI/physmon/config/vertexing_4muon_50vertices.yml

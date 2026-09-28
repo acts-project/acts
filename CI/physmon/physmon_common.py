@@ -14,6 +14,8 @@ PhysmonSetup = collections.namedtuple(
         "field",
         "digiConfig",
         "geoSel",
+        "gbtsLayerMap",
+        "gbtsConnectionTable",
         "outdir",
     ],
 )
@@ -42,6 +44,8 @@ def makeSetup() -> PhysmonSetup:
         decorators=decorators,
         digiConfig=srcdir / "Examples/Configs/odd-digi-smearing-config.json",
         geoSel=srcdir / "Examples/Configs/odd-seeding-config.json",
+        gbtsLayerMap=srcdir / "Examples/Configs/odd-gbts-layer-map.txt",
+        gbtsConnectionTable=srcdir / "Examples/Configs/odd-gbts-connection-table.txt",
         field=acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T)),
         outdir=Path(args.outdir),
     )
