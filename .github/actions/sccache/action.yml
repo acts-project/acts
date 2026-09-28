@@ -52,8 +52,9 @@ runs:
           *) echo '::error::read-only must be true or false'; exit 1 ;;
         esac
         : "${CACHE_KEY_PREFIX:?Set the key-prefix input}"
-        # Ignore any pre-existing host configuration on self-hosted runners.
-        : > "$RUNNER_TEMP/sccache.toml"
+        # Startup includes a remote storage check; allow for network delays.
+        # Use a job-specific config instead of any existing host settings.
+        echo 'server_startup_timeout_ms = 60000' > "$RUNNER_TEMP/sccache.toml"
         {
           echo "SCCACHE_BUCKET=$CACHE_BUCKET"
           echo "SCCACHE_ENDPOINT=$CACHE_ENDPOINT"
@@ -98,5 +99,16 @@ runs:
           # rejects even empty credentials when anonymous access is enabled.
           unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
         fi
-        sccache --start-server
-        sccache --zero-stats
+        # The daemon otherwise discards stderr, hiding the cause of timeouts.
+        export SCCACHE_ERROR_LOG="$RUNNER_TEMP/sccache-startup.log"
+        export SCCACHE_LOG=sccache=info
+        : > "$SCCACHE_ERROR_LOG"
+        if sccache --start-server; then
+          sccache --zero-stats
+        else
+          status=$?
+          echo '::group::sccache startup diagnostics'
+          cat "$SCCACHE_ERROR_LOG"
+          echo '::endgroup::'
+          exit "$status"
+        fi
