@@ -28,14 +28,11 @@ namespace traccc::device {
 /// function
 ///
 /// Each spacepoint is read once: it is assigned a GBTS layer (or rejected),
-/// its reduced parameters are written, its eta bin's node count is bumped,
-/// and its node sort key is appended to the compacted key array, all in a
-/// single pass.
+/// its reduced parameters are written and its node sort key is written at
+/// its own index, all in a single pass.
 struct gbts_bin_spacepoints_payload {
   /// Number of spacepoints in the event
   unsigned int nSp;
-  /// Number of eta bins
-  unsigned int nEtaBins;
   /// All spacepoints in the event
   edm::spacepoint_collection::const_view spacepoints;
   /// All measurements in the event (used to look up surface IDs)
@@ -54,14 +51,12 @@ struct gbts_bin_spacepoints_payload {
   vecmem::data::vector_view<const std::pair<float, float>> layer_geo;
   /// Output: reduced (x, y, z, cluster width) per spacepoint after filtering
   vecmem::data::vector_view<float4> reducedSP;
-  /// Output: nEtaBins + 1 counters.
-  vecmem::data::vector_view<unsigned int> eta_node_counter;
-  /// Output: one 64-bit node sort key per accepted spacepoint
-  /// Which is used to sort the nodes by (eta bin, phi, spacepoint index) before
-  /// the node-making kernel runs.
+  /// Output: one 64-bit node sort key per spacepoint, used to sort the nodes
+  /// by (eta bin, phi, spacepoint index). Rejected spacepoints get
+  /// @c gbts_sort_key_rejected.
   vecmem::data::vector_view<unsigned long long int> sort_keys;
-  /// Output: the full spacepoint index matching each @c sort_keys slot;
-  /// sorted alongside the keys by the gbts_sort_nodes launcher
+  /// Output: the spacepoint index of each @c sort_keys slot; sorted
+  /// alongside the keys by the gbts_sort_nodes launcher
   vecmem::data::vector_view<unsigned int> sort_values;
   /// Size of the volume-to-layer map (for bounds checking)
   unsigned long int volumeMapSize;
@@ -77,8 +72,7 @@ struct gbts_bin_spacepoints_payload {
 ///
 /// Per-spacepoint binning kernel: look up the GBTS layer via the
 /// volume / surface map, optionally apply a cluster-width cut, and on
-/// acceptance write the reduced (x, y, z, width) tuple, bump the node's eta
-/// bin count and append its node sort key.
+/// acceptance write the reduced (x, y, z, width) tuple and the node sort key.
 ///
 /// @param[in] thread_id Thread identifier for the kernel launch
 /// @param[in] payload   The global memory payload
