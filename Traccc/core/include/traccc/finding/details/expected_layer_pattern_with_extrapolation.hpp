@@ -102,11 +102,11 @@ collect_expected_layer_pattern_from_perigee(
 #if defined(__CUDA_ARCH__)
     using perigee_nav_t = detray::direct_navigator<
         detector_t, detray::ranges::single_view<perigee_surface_t>>;
-    using perigee_extrapolation_propagator_t =
+    using perigee_propagator_t =
         detray::propagator<stepper_t, perigee_nav_t, detray::actor_chain<>>;
 
-    perigee_extrapolation_propagator_t perigee_to_perigee{config.propagation};
-    typename perigee_extrapolation_propagator_t::state perigee_state(
+    perigee_propagator_t to_perigee{config.propagation};
+    typename perigee_propagator_t::state perigee_state(
         free_seed, field, det, perigee_view, config.propagation.context);
     perigee_state.set_particle(traccc::detail::correct_particle_hypothesis(
         config.ptc_hypothesis, free_seed));
@@ -116,8 +116,8 @@ collect_expected_layer_pattern_from_perigee(
     perigee_state.navigation().set_direction(
         detray::navigation::direction::e_backward);
 
-    perigee_to_perigee.propagate(perigee_state);
-    const bool perigee_finished = perigee_to_perigee.finished(perigee_state);
+    to_perigee.propagate(perigee_state);
+    const bool perigee_finished = to_perigee.finished(perigee_state);
     const bool perigee_invalid = perigee_state.stepping()().is_invalid();
     if (!perigee_finished || perigee_invalid) {
       const auto nav_status =
@@ -186,7 +186,7 @@ collect_expected_layer_pattern_from_perigee(
       perigee_actor_chain_t>;
 
   detray::propagation::config prop_cfg{config.propagation};
-  perigee_propagator_t perigee_to_first(prop_cfg);
+  perigee_propagator_t perigee_to_det_layers(prop_cfg);
   typename perigee_propagator_t::state perigee_propagation(
       perigee_free, field, det, config.propagation.context);
   perigee_propagation.set_particle(traccc::detail::correct_particle_hypothesis(
@@ -213,7 +213,7 @@ collect_expected_layer_pattern_from_perigee(
   expected_layer_collector_state.mapper.entries = map;
   expected_layer_collector_state.mapper.size = map_size;
 
-  perigee_to_first.propagate(
+  perigee_to_det_layers.propagate(
       perigee_propagation,
       detray::tie(aborter_state, updater_state, interactor_state,
                   momentum_aborter_state, expected_layer_collector_state));
