@@ -145,12 +145,18 @@ jobs:
           CI/dependencies/run.sh .env
           ctest --test-dir build-downstream --output-on-failure
 
+      - name: Clean ccache before publication
+        id: ccache-cleanup
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+        run: ccache --cleanup
+
       - name: ccache statistics
         if: always()
         uses: ./.github/actions/ccache-s3/stats
 
       - name: Publish ccache snapshot
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        if: ${{ !cancelled() && steps.ccache-cleanup.outcome == 'success' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3

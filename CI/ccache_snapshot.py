@@ -15,7 +15,6 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
-import subprocess
 import tarfile
 import tempfile
 import uuid
@@ -109,7 +108,6 @@ def publish(client, bucket, prefix, cache, run_number, run_id, attempt):
     if current and (current["run_number"], current["run_attempt"]) >= order:
         report("ccache publication skipped: an equal or newer main run exists")
         return
-    subprocess.run(["ccache", "--cleanup"], check=True)
     with tempfile.TemporaryDirectory(dir=cache.parent) as directory:
         archive = Path(directory) / "snapshot.tar"
         # ccache already compresses entries. Avoid a second compression pass.

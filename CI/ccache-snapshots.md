@@ -8,7 +8,9 @@ The pilot reuses the `s3-sccache` environment and its `S3_ACCESS_KEY_ID` /
 Storage: `https://s3.cern.ch`, region `cern`, bucket `cache`, prefix
 `acts-sccache/ccache-snapshots/<repository>/linux_ubuntu/v1/`.
 
-Main uploads an immutable tar of the 500 MB cache, then updates `latest.json`.
+Main runs `ccache --cleanup` in the build environment, then uploads an immutable
+tar of the 500 MB cache and updates `latest.json`. The transfer helper only needs
+access to the cache directory, not a ccache installation.
 Publication adds no concurrency group. Overlapping uploads may leave an older
 valid snapshot as latest; ccache still validates entries when using them. Restores
 verify the checksum and extract into staging. Failed transfers are nonfatal.

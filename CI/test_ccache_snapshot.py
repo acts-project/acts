@@ -42,7 +42,8 @@ class FakeS3:
 
 @pytest.fixture
 def client(monkeypatch):
-    monkeypatch.setattr(snapshot.subprocess, "run", lambda *args, **kwargs: None)
+    # Transfer must work on hosts without ccache or other build tools.
+    monkeypatch.setenv("PATH", "")
     monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
     return FakeS3()
 
