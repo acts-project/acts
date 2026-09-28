@@ -64,13 +64,6 @@ jobs:
           lfs: true
           persist-credentials: false
 
-      - name: Install dependencies
-        uses: ./.github/actions/dependencies
-        with:
-          compiler: g++
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          env_file: .env
-
       - name: Set up sccache
         id: sccache-start
         uses: ./.github/actions/sccache
@@ -81,12 +74,26 @@ jobs:
           access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.S3_ACCESS_KEY_ID || '' }}
           secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.S3_SECRET_ACCESS_KEY || '' }}
 
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Check sccache startup
+        id: sccache-ready
+        shell: bash
+        run: bash .github/actions/sccache/wait.sh
+
       - name: Configure
+        env:
+          CACHE_LAUNCHER: ${{ steps.sccache-ready.outputs.launcher }}
         run: >
           CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci-fpe
-          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER="$CACHE_LAUNCHER"
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_PLUGIN_ONNX=ON
 
@@ -146,6 +153,11 @@ jobs:
         if: always() && steps.sccache-start.outcome == 'success'
         shell: bash
         run: |
+          # Startup may have failed, or dependencies may have failed before
+          # the readiness check. Stop a daemon only if its socket exists.
+          if [[ ! -S "$SCCACHE_SERVER_UDS" ]]; then
+            exit 0
+          fi
           {
             echo '### sccache (CERN S3)'
             echo "Remote mode: $SCCACHE_S3_RW_MODE"

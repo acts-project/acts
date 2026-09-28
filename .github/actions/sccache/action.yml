@@ -1,5 +1,5 @@
 name: 'S3 sccache'
-description: 'Install and start sccache with S3 storage on Linux x64'
+description: 'Install sccache and start it in the background with S3 storage on Linux x64'
 
 inputs:
   read-only:
@@ -88,6 +88,7 @@ runs:
     - name: Start sccache
       shell: bash
       env:
+        ACTION_PATH: ${{ github.action_path }}
         AWS_ACCESS_KEY_ID: ${{ inputs.access-key-id }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.secret-access-key }}
       run: |
@@ -103,12 +104,6 @@ runs:
         export SCCACHE_ERROR_LOG="$RUNNER_TEMP/sccache-startup.log"
         export SCCACHE_LOG=sccache=info
         : > "$SCCACHE_ERROR_LOG"
-        if sccache --start-server; then
-          sccache --zero-stats
-        else
-          status=$?
-          echo '::group::sccache startup diagnostics'
-          cat "$SCCACHE_ERROR_LOG"
-          echo '::endgroup::'
-          exit "$status"
-        fi
+        rm -f "$RUNNER_TEMP/sccache-startup.status"
+        nohup bash "$ACTION_PATH/start.sh" \
+          > "$RUNNER_TEMP/sccache-startup-client.log" 2>&1 < /dev/null &

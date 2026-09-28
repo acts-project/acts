@@ -14,6 +14,7 @@ Storage: `https://s3.cern.ch`, region `cern`, bucket `cache`, prefix
 `acts-sccache/linux_ubuntu/v1/`. Objects expire 30 days after writing;
 reads do not refresh expiry.
 
-The workflow selects the CMake launcher and stops the daemon in an `always()`
-step, recording statistics in both the job log and summary. In sccache 0.18.0,
-read-only misses count as `Cache write errors` even though no upload is attempted.
+Startup overlaps dependency installation. Before CMake, the workflow waits for
+readiness and disables caching with a warning if startup fails. It stops the
+daemon in an `always()` step, recording statistics in the job log and summary.
+In sccache 0.18.0, read-only misses count as `Cache write errors` even though no upload is attempted.
