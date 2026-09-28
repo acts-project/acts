@@ -423,8 +423,8 @@ GraphBasedSeedingAlgorithm::layerNumbering(
                      center(1) * center(1));  // barrel center in r
       // bounds of z
       for (const Acts::Vector3 &corner : corners) {
-        minBound = std::min(minBound, static_cast<float>(corner(2)));
-        maxBound = std::max(maxBound, static_cast<float>(corner(2)));
+        minBound = std::min(minBound, static_cast<float>(corner.z()));
+        maxBound = std::max(maxBound, static_cast<float>(corner.z()));
       }
     } else if (barrelEc == Acts::Experimental::GbtsLayerType::Endcap) {
       rc = center(2);  // not barrel center in Z
