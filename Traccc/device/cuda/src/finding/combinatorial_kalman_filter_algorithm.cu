@@ -111,7 +111,7 @@ void combinatorial_kalman_filter_algorithm::
       output_expected_layer_patterns_buffer(n_tracks, mr().main);
   copy().setup(output_expected_layer_patterns_buffer)->wait();
 
-  const auto expected_layer_map_size = static_cast<
+  const unsigned int expected_layer_map_size = static_cast<
       vecmem::data::vector_buffer<expected_layer_mapping_entry>::size_type>(
       m_expected_layer_config.expected_layer_map_size);
   vecmem::data::vector_buffer<expected_layer_mapping_entry>
