@@ -93,6 +93,10 @@ runs:
         if [[ "$SCCACHE_S3_RW_MODE" == READ_WRITE ]]; then
           : "${AWS_ACCESS_KEY_ID:?Set the access-key-id input for writes}"
           : "${AWS_SECRET_ACCESS_KEY:?Set the secret-access-key input for writes}"
+        else
+          # Empty action inputs still become environment variables. sccache
+          # rejects even empty credentials when anonymous access is enabled.
+          unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
         fi
         sccache --start-server
         sccache --zero-stats
