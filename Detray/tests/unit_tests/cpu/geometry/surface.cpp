@@ -147,16 +147,17 @@ GTEST_TEST(detray_geometry, surface_toy_detector) {
   ASSERT_NEAR(center[2], -827.5f, tol);
 
   // Surface normal
-  const auto z_axis = vector3{0.f, 0.f, 1.f};
-  const vector3 normal_3D = disc.normal(ctx, point3{0.f, 0.f, 0.f});
-  const vector3 normal_2D = disc.normal(ctx, point2{0.f, 0.f});
+  const vector3 z_axis{0.f, 0.f, 1.f};
+  vector3 normal = disc.normal(ctx, point3{0.f, 0.f, 0.f});
   // trigger all code paths
-  ASSERT_NEAR(normal_3D[0], z_axis[0], tol);
-  ASSERT_NEAR(normal_3D[1], z_axis[1], tol);
-  ASSERT_NEAR(normal_3D[2], z_axis[2], tol);
-  ASSERT_NEAR(normal_2D[0], z_axis[0], tol);
-  ASSERT_NEAR(normal_2D[1], z_axis[1], tol);
-  ASSERT_NEAR(normal_2D[2], z_axis[2], tol);
+  ASSERT_NEAR(normal[0], z_axis[0], tol);
+  ASSERT_NEAR(normal[1], z_axis[1], tol);
+  ASSERT_NEAR(normal[2], z_axis[2], tol);
+
+  normal = disc.normal(ctx, point2{0.f, 0.f});
+  ASSERT_NEAR(normal[0], z_axis[0], tol);
+  ASSERT_NEAR(normal[1], z_axis[1], tol);
+  ASSERT_NEAR(normal[2], z_axis[2], tol);
 
   // Cos incidence angle
   vector3 dir = vector::normalize(vector3{1.f, 0.f, 1.f});
@@ -236,8 +237,15 @@ GTEST_TEST(detray_geometry, surface_toy_detector) {
   // Surface normal
   // trigger all code paths
   global = rec.transform(ctx).vector_to_global(z_axis);
-  ASSERT_EQ(rec.normal(ctx, point3{0.f, 0.f, 0.f}), global);
-  ASSERT_EQ(rec.normal(ctx, point2{0.f, 0.f}), global);
+  normal = rec.normal(ctx, point3{0.f, 0.f, 0.f});
+  ASSERT_NEAR(normal[0], global[0], tol);
+  ASSERT_NEAR(normal[1], global[1], tol);
+  ASSERT_NEAR(normal[2], global[2], tol);
+
+  normal = rec.normal(ctx, point2{0.f, 0.f});
+  ASSERT_NEAR(normal[0], global[0], tol);
+  ASSERT_NEAR(normal[1], global[1], tol);
+  ASSERT_NEAR(normal[2], global[2], tol);
 
   // Incidence angle
   dir = vector::normalize(global);

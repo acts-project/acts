@@ -24,9 +24,9 @@ namespace traccc::cuda {
 kalman_fitting_algorithm::kalman_fitting_algorithm(
     const config_type& config, const traccc::memory_resource& mr,
     const vecmem::copy& copy, const stream_wrapper& str,
-    std::unique_ptr<const Logger> logger)
+    std::unique_ptr<const Logger> logger, await_function_type await_func)
     : device::kalman_fitting_algorithm{config, mr, copy, std::move(logger)},
-      cuda::algorithm_base{str} {}
+      cuda::algorithm_base{str, std::move(await_func)} {}
 
 void kalman_fitting_algorithm::fit_prelude_kernel(
     const device::fit_prelude_payload& payload) const {
@@ -104,6 +104,10 @@ void kalman_fitting_algorithm::fit_backward_kernel(
             nBlocks, nThreads, 0, details::get_stream(stream()), config,
             payload.payload, payload.get_tpayload<fitter_t>());
       });
+}
+
+void kalman_fitting_algorithm::synchronize() const {
+  stream().synchronize();
 }
 
 }  // namespace traccc::cuda

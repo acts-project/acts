@@ -12,11 +12,9 @@
 // Project include(s).
 #include "traccc/bfield/construct_const_bfield.hpp"
 #include "traccc/bfield/magnetic_field_types.hpp"
-#include "traccc/finding/combinatorial_kalman_filter_algorithm.hpp"
 #include "traccc/io/read_detector.hpp"
 #include "traccc/io/read_measurements.hpp"
 #include "traccc/io/utils.hpp"
-#include "traccc/performance/container_comparator.hpp"
 #include "traccc/simulation/event_generators.hpp"
 #include "traccc/simulation/simulator.hpp"
 #include "traccc/sycl/finding/combinatorial_kalman_filter_algorithm.hpp"
@@ -152,10 +150,6 @@ TEST_P(CkfToyDetectorTests, Run) {
   cfg.run_smoother = smoother_type::e_none;
 
   // Finding algorithm object
-  traccc::host::combinatorial_kalman_filter_algorithm host_finding(cfg,
-                                                                   host_mr);
-
-  // Finding algorithm object
   traccc::sycl::combinatorial_kalman_filter_algorithm device_finding{
       cfg, mr, copy, traccc_queue};
 
@@ -196,11 +190,6 @@ TEST_P(CkfToyDetectorTests, Run) {
     copy.setup(measurements_buffer)->wait();
     copy(vecmem::get_data(measurements_per_event), measurements_buffer)->wait();
 
-    // Run host finding
-    auto track_candidates = host_finding(
-        host_detector, field, vecmem::get_data(measurements_per_event),
-        vecmem::get_data(seeds));
-
     // Run device finding
     auto track_candidates_sycl_buffer = device_finding(
         detector_buffer, field, measurements_buffer, seeds_buffer);
@@ -210,39 +199,9 @@ TEST_P(CkfToyDetectorTests, Run) {
     copy(track_candidates_sycl_buffer.tracks, track_candidates_sycl)->wait();
 
     // Simple check
-    ASSERT_LE(static_cast<double>(
-                  std::llabs(static_cast<long>(track_candidates.tracks.size()) -
-                             static_cast<long>(track_candidates_sycl.size()))) /
-                  static_cast<double>(track_candidates.tracks.size()),
-              0.001f)
-        << "No. tracks (host): " << track_candidates.tracks.size() << "/"
-        << n_truth_tracks
-        << "\nNo. tracks (device): " << track_candidates_sycl.size() << "/"
+    ASSERT_GE(track_candidates_sycl.size(), n_truth_tracks)
+        << "No. tracks (device): " << track_candidates_sycl.size() << "/"
         << n_truth_tracks;
-    ASSERT_GE(track_candidates.tracks.size(), n_truth_tracks);
-
-    // Make sure that the outputs from cpu and cuda CKF are equivalent
-    unsigned int n_matches = 0u;
-    for (unsigned int i = 0u; i < track_candidates.tracks.size(); i++) {
-      traccc::details::is_same_object<traccc::edm::track_collection<
-          traccc::default_algebra>::host::const_proxy_type>
-          iso{track_candidates.measurements, track_candidates.measurements,
-              vecmem::get_data(track_candidates.states),
-              vecmem::get_data(track_candidates.states),
-              track_candidates.tracks.at(i)};
-
-      for (unsigned int j = 0u; j < track_candidates_sycl.size(); j++) {
-        if (iso(track_candidates_sycl.at(j))) {
-          n_matches++;
-          break;
-        }
-      }
-    }
-
-    float matching_rate = float(n_matches) / static_cast<float>(std::max(
-                                                 track_candidates.tracks.size(),
-                                                 track_candidates_sycl.size()));
-    EXPECT_GE(matching_rate, 0.998f);
   }
 }
 

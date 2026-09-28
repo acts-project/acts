@@ -321,6 +321,10 @@ void triplet_seeding_algorithm::select_seeds_kernel(
       payload.triplets, payload.seeds);
 }
 
+void triplet_seeding_algorithm::synchronize() const {
+  queue().synchronize();
+}
+
 }  // namespace traccc::alpaka
 
 // Define the required trait needed for Dynamic shared memory allocation.

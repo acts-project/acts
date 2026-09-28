@@ -253,6 +253,9 @@ auto triplet_seeding_algorithm::operator()(
        spacepoints, grid_buffer, triplet_counter_spM_buffer,
        triplet_counter_midBot_buffer, triplet_buffer, seed_buffer});
 
+  // Complete seed selection before releasing its intermediate buffers.
+  synchronize();
+
   // Return the seed buffer.
   return seed_buffer;
 }

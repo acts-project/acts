@@ -13,7 +13,8 @@
 
 namespace traccc::alpaka {
 
-void tbb_await_callback(vecmem::abstract_event& /*event*/, const queue& queue) {
+void tbb_await_callback(vecmem::abstract_event& event, const queue& queue) {
+  event.ignore();  // ignore the event, as it is not needed for resumption
   tbb::task::suspend([&queue](auto suspend_point) {
     queue.enqueue_callback(
         [suspend_point]() { tbb::task::resume(suspend_point); });

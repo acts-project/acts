@@ -22,8 +22,8 @@ namespace traccc::device {
 struct gbts_find_minmax_radius_payload {
   /// Number of eta bins
   unsigned int nEtaBins;
-  /// Per-eta (begin, end) node range, as 2*nEtaBins flat ints
-  vecmem::data::vector_view<const unsigned int> eta_bin_views;
+  /// Per-eta node offsets.
+  vecmem::data::vector_view<const unsigned int> eta_bin_offsets;
   /// Per-node (tau_min, tau_max, r, z) (only r is read here)
   vecmem::data::vector_view<const float4> node_params;
   /// Output: per-eta (rmin, rmax) pair, flat (2*nEtaBins floats)

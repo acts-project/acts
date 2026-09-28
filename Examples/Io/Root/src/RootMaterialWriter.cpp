@@ -66,6 +66,10 @@ void RootMaterialWriter::writeMaterial(
 
   const auto& surfaceMaps = detMaterial.surfaceMaterials;
   const auto& volumeMaps = detMaterial.volumeMaterials;
+  if (!detMaterial.keyedSurfaces.empty()) {
+    throw std::invalid_argument(
+        "ROOT material output does not support stable keys; use JSON");
+  }
 
   // Write the surface material maps
   ActsPlugins::RootMaterialMapIo accessor(m_cfg.accessorConfig,

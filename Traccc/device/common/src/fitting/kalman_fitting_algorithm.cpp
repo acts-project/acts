@@ -61,9 +61,9 @@ kalman_fitting_algorithm::output_type kalman_fitting_algorithm::operator()(
   if (mr().host) {
     vecmem::async_sizes sizes =
         copy().get_sizes(input_tracks.tracks, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    auto& temp = sizes.get();
+    // Block or suspend execution until the sizes are available.
+    await(sizes);
+    const auto& temp = sizes.unsafe_get();
     candidate_sizes = {temp.begin(), temp.end()};
   } else {
     candidate_sizes = copy().get_sizes(input_tracks.tracks);
@@ -115,6 +115,9 @@ kalman_fitting_algorithm::output_type kalman_fitting_algorithm::operator()(
     fit_forward_kernel(m_data->m_config, payload);
     fit_backward_kernel(m_data->m_config, payload);
   }
+
+  // Complete fitting before releasing the scratch buffers and payload.
+  synchronize();
 
   // Return the fitted tracks.
   return output_tracks;

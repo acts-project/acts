@@ -142,6 +142,10 @@ void RootMaterialMapIo::write(TFile& rFile,
                               const TrackingGeometryMaterial& detectorMaterial,
                               const Options& options) {
   const auto& surfaceMaterials = detectorMaterial.surfaceMaterials;
+  if (!detectorMaterial.keyedSurfaces.empty()) {
+    throw std::invalid_argument(
+        "ROOT material output does not support stable keys; use JSON");
+  }
   for (const auto& [geoID, sMaterial] : surfaceMaterials) {
     write(rFile, geoID, *sMaterial, options);
   }

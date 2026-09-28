@@ -8,6 +8,7 @@
 #pragma once
 
 // Local include(s).
+#include "traccc/device/abstract_awaitable.hpp"
 #include "traccc/device/algorithm_base.hpp"
 #include "traccc/fitting/device/fit_payload.hpp"
 
@@ -35,7 +36,8 @@ class kalman_fitting_algorithm
           const detector_buffer&, const magnetic_field&,
           const edm::track_container<default_algebra>::const_view&)>,
       public messaging,
-      public algorithm_base {
+      public algorithm_base,
+      public virtual abstract_awaitable {
  public:
   /// Configuration type
   using config_type = fitting_config;
@@ -131,6 +133,9 @@ class kalman_fitting_algorithm
                                    const fit_payload& payload) const = 0;
 
  protected:
+  /// Wait for outstanding device work before releasing local buffers.
+  virtual void synchronize() const = 0;
+
   /// @name Type(s)/function(s) used internally by the algorithm
   /// @{
 
