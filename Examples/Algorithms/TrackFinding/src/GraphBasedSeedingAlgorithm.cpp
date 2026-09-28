@@ -16,6 +16,7 @@
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsPlugins/Json/GbtsConfigJsonConverter.hpp"
 #include "ActsPlugins/Json/detail/JsonIo.hpp"
@@ -258,7 +259,7 @@ GraphBasedSeedingAlgorithm::layerNumbering(
 
         // A polygonal surface gives its corners whatever the segment count
         // is, curved bounds an approximation of that resolution.
-        const std::vector<Acts::Vector3> &corners =
+        const std::vector<Acts::Vector3> corners =
             surface->polyhedronRepresentation(gctx, 4u).vertices;
 
         float rc = 0.0;
@@ -292,8 +293,7 @@ GraphBasedSeedingAlgorithm::layerNumbering(
         Acts::Experimental::GbtsLayerType barrelEc = find->second.type;
 
         if (barrelEc == Acts::Experimental::GbtsLayerType::Barrel) {
-          rc = std::sqrt(center.x() * center.x() +
-                         center.y() * center.y());  // barrel center in r
+          rc = Acts::fastHypot(center.x(), center.y());  // barrel center in r
           // bounds of z
           for (const Acts::Vector3 &corner : corners) {
             minBound = std::min(minBound, static_cast<float>(corner.z()));
@@ -303,8 +303,8 @@ GraphBasedSeedingAlgorithm::layerNumbering(
           rc = center.z();  // not barrel center in Z
           // bounds of r
           for (const Acts::Vector3 &corner : corners) {
-            const auto r = static_cast<float>(
-                std::sqrt(corner.x() * corner.x() + corner.y() * corner.y()));
+            const auto r =
+                static_cast<float>(Acts::fastHypot(corner.x(), corner.y()));
             minBound = std::min(minBound, r);
             maxBound = std::max(maxBound, r);
           }
