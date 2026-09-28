@@ -10,18 +10,20 @@
 
 #include <boost/process.hpp>
 
-namespace ActsPlugins {
-ActsPlugins::MpSolverStatus runChildProcessBoost(
-    const std::string& program, const std::vector<std::string>& args,
-    const std::filesystem::path& runDir, const WrappedFileHandle& outputHandle,
-    const Acts::Logger& logger) {
+namespace ActsPlugins::detail {
+
+MpSolverStatus runChildProcessBoost(const std::string& program,
+                                    const std::vector<std::string>& args,
+                                    const std::filesystem::path& runDir,
+                                    const WrappedFileHandle& outputHandle,
+                                    const Acts::Logger& logger) {
   namespace bp = boost::process;
 
   // find the pede installation
   auto thePede = bp::search_path(program);
   if (thePede.empty()) {
     ACTS_ERROR("Failed to find the solver program '" << program << "'");
-    return ActsPlugins::MpSolverStatus::ProgNotFound;
+    return MpSolverStatus::ProgNotFound;
   }
 
   bp::child theProcess;
@@ -40,4 +42,4 @@ ActsPlugins::MpSolverStatus runChildProcessBoost(
   return MpSolverStatus::OK;
 }
 
-}  // namespace ActsPlugins
+}  // namespace ActsPlugins::detail

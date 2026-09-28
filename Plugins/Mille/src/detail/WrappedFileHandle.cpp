@@ -6,13 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsPlugins/Mille/detail/WrappedFileHandle.hpp"
+#include "WrappedFileHandle.hpp"
 
 #include <cstdio>
-#include <filesystem>
 #include <utility>
 
-namespace ActsPlugins {
+namespace ActsPlugins::detail {
 
 /// @brief helper to wrap a file handle
 WrappedFileHandle::WrappedFileHandle(const std::filesystem::path& outf)
@@ -54,4 +53,4 @@ const std::filesystem::path& WrappedFileHandle::path() const {
   return m_path;
 }
 
-}  // namespace ActsPlugins
+}  // namespace ActsPlugins::detail

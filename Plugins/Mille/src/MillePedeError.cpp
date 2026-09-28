@@ -40,7 +40,7 @@ class MillePedeErrorCategory : public std::error_category {
 
 }  // namespace
 
-std::error_code ActsPlugins::make_error_code(ActsPlugins::MillePedeError e) {
+std::error_code ActsPlugins::make_error_code(MillePedeError e) {
   static MillePedeErrorCategory c;
   return {static_cast<int>(e), c};
 }

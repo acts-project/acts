@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsPlugins/Mille/MillePedeError.hpp"
@@ -21,7 +22,7 @@ namespace ActsPlugins {
 class MillePedeSolver {
  public:
   /// @brief abstract summary of the exit codes returned by pede.
-  enum class MpExitStatus {
+  enum class ExitStatus {
     NotFinishedOrCrashed,  /// job is still running or crashed before exiting
     NominalExit,           /// nominal exit
     TolerableWarnings,     /// exit with tolerable warnings, considered ok
@@ -56,56 +57,32 @@ class MillePedeSolver {
   };
 
   /// @brief package the result of the alignment fit
-  struct MpResult {
+  struct Result {
     int exitCode = -1;  /// raw pede exit code
-    MpExitStatus exitStatus =
-        MpExitStatus::NotFinishedOrCrashed;  /// summary exit status
-    std::string exitMessage = "";            /// detailed exit message
-    std::filesystem::path resultsFile;  /// file containing parameter results
-    std::filesystem::path logFile;      /// log file
-    std::filesystem::path histoFile;    /// file with validation histograms
-    std::filesystem::path evFile;       /// file with eigenvectors
+    ExitStatus exitStatus =
+        ExitStatus::NotFinishedOrCrashed;  /// summary exit status
+    std::string exitMessage = "";          /// detailed exit message
+    std::filesystem::path resultsFile;     /// file containing parameter results
+    std::filesystem::path logFile;         /// log file
+    std::filesystem::path histoFile;       /// file with validation histograms
+    std::filesystem::path evFile;          /// file with eigenvectors
   };
 
   /// @brief constructor - nothing to do as minimal internal state carried
-  explicit MillePedeSolver(Acts::Logging::Level level = Acts::Logging::INFO)
-      : m_logger(Acts::getDefaultLogger("MillePedeSolver", level)) {}
+  explicit MillePedeSolver(std::unique_ptr<const Acts::Logger> _logger =
+                               Acts::getDefaultLogger("MillePedeSolver",
+                                                      Acts::Logging::INFO))
+      : m_logger(std::move(_logger)) {}
 
   /// @brief Runs the solving.
   /// Can take some time for large fits.
   /// Will invoke pede, await the exit, and parse
   /// the output.
   /// @param cfg: The configuration to use
-  Acts::Result<MpResult> solve(const Config& cfg) const;
+  Acts::Result<Result> solve(const Config& cfg) const;
 
  private:
-  /// @brief translation of the detailed pede code to a summary status
-  /// Will translate the range of ~30 possible MP exit codes to a simplified
-  /// enum value that gives a high-level summary of the status.
-  /// @param theExitCode: The integer exit code found in the millepede.end file
-  static MpExitStatus interpretExit(int theExitCode);
-
-  /// @brief Reads the `millepede.end` file and parses its content
-  /// @param mpend: The file to read, assumed that the user has checked for existence before
-  /// @return a tuple containing the original integer exit code, a simplified exit status enum,
-  /// and the additional status message emitted by pede.
-  std::tuple<int, MpExitStatus, std::string> readDetailedExit(
-      const std::filesystem::path& mpend) const;
-
-  /// @brief Utility method to check if an output exists, copy it if the user requested a relocation,
-  /// and returns the final resolved output location, which will be:
-  /// - if the output does not exist: empty path
-  /// - if the output does exist and was not relocated: original location
-  /// - if the output does exist, and was relocated: user-specified location
-  /// - if the output does exist, was requested for relocation but the copy
-  /// failed: original location
-  /// @param originalLoc: Original expected location of the file
-  /// @param userLoc: Desired final location of the file. If empty, no copy will be made.
-  std::filesystem::path copyIfRequested(
-      const std::filesystem::path& originalLoc,
-      const std::optional<std::filesystem::path>& userLoc) const;
-
-  std::unique_ptr<const Acts::Logger> m_logger;  /// logger
+  std::unique_ptr<const Acts::Logger> m_logger;
 
   /// Private access to the logger
   const Acts::Logger& logger() const { return *m_logger; }

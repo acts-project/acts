@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace ActsPlugins {
+namespace ActsPlugins::detail {
 
 enum class MpSolverStatus {
   OK = 0,
@@ -44,4 +44,4 @@ MpSolverStatus runSolverProcess(
     const std::filesystem::path& runDir, const Acts::Logger& logger,
     const std::optional<std::filesystem::path>& redirectOutput = std::nullopt);
 
-}  // namespace ActsPlugins
+}  // namespace ActsPlugins::detail

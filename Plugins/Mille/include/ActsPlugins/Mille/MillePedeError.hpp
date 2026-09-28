@@ -12,6 +12,7 @@
 #include <type_traits>
 
 namespace ActsPlugins {
+
 /// Error codes for Millepede run
 /// @ingroup errors
 enum class MillePedeError {

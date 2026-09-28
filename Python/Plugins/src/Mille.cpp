@@ -21,11 +21,11 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
   {
     auto ps = py::class_<MillePedeSolver, std::shared_ptr<MillePedeSolver>>(
                   mille, "MillePedeSolver")
-                  .def(py::init<Acts::Logging::Level>())
+                  .def(py::init<std::unique_ptr<Acts::Logger>>())
                   .def("solve", &MillePedeSolver::solve);
 
     auto mr =
-        py::class_<MillePedeSolver::MpResult>(ps, "MpResult").def(py::init<>());
+        py::class_<MillePedeSolver::Result>(ps, "Result").def(py::init<>());
     ACTS_PYTHON_STRUCT(mr, exitCode, exitStatus, exitMessage, resultsFile,
                        logFile, histoFile, evFile);
 

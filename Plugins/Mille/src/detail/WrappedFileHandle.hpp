@@ -7,10 +7,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <cstdio>
 #include <filesystem>
 
-namespace ActsPlugins {
+namespace ActsPlugins::detail {
 
 /// @brief helper to wrap a file handle
 class WrappedFileHandle {
@@ -32,4 +33,4 @@ class WrappedFileHandle {
   std::filesystem::path m_path{};
 };
 
-}  // namespace ActsPlugins
+}  // namespace ActsPlugins::detail

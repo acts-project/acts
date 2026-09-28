@@ -33,9 +33,8 @@ BOOST_AUTO_TEST_CASE(BuiltInSiTracker) {
   // the internal exit code should be zero
   BOOST_CHECK_EQUAL(res->exitCode, 0);
   // and the zero exit code should resolve to a "nominal exit"
-  BOOST_CHECK_EQUAL(
-      static_cast<int>(res->exitStatus),
-      static_cast<int>(MillePedeSolver::MpExitStatus::NominalExit));
+  BOOST_CHECK_EQUAL(static_cast<int>(res->exitStatus),
+                    static_cast<int>(MillePedeSolver::ExitStatus::NominalExit));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

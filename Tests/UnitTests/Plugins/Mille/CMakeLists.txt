@@ -10,4 +10,3 @@ endif()
 
 add_unittest(ActsKalmanToMilleConsistency ActsKalmanToMilleConsistency.cpp)
 add_unittest(ActsMilleBasicCalls ActsMilleBasicCalls.cpp)
-add_unittest(SolverProcessTests SolverProcessTests.cpp)

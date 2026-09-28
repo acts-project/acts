@@ -6,12 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsPlugins/Mille/detail/RunSolverProcess.hpp"
+#include "RunSolverProcess.hpp"
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsPlugins/Mille/detail/WrappedFileHandle.hpp"
 
 #include <filesystem>
+
+#include "WrappedFileHandle.hpp"
 
 // The mechanics of launching a child in Boost::Process vary
 // between versions before and after 1.88. Make sure to
@@ -22,7 +23,8 @@
 #include "SolverProcessCall_BoostV1.hpp"
 #endif
 
-ActsPlugins::MpSolverStatus ActsPlugins::runSolverProcess(
+namespace ActsPlugins::detail {
+MpSolverStatus runSolverProcess(
     const std::string& program, const std::vector<std::string>& args,
     const std::filesystem::path& runDir, const Acts::Logger& logger,
     const std::optional<std::filesystem::path>& redirectOutput) {
@@ -30,7 +32,7 @@ ActsPlugins::MpSolverStatus ActsPlugins::runSolverProcess(
   if (!std::filesystem::exists(runDir)) {
     ACTS_ERROR("Run directory '" << runDir
                                  << "' does not exist, will not run solver");
-    return ActsPlugins::MpSolverStatus::FailedWorkDir;
+    return MpSolverStatus::FailedWorkDir;
   }
 
   WrappedFileHandle outputHandle;  // defaults to "do not redirect"
@@ -39,8 +41,9 @@ ActsPlugins::MpSolverStatus ActsPlugins::runSolverProcess(
     outputHandle = WrappedFileHandle(*redirectOutput);
     if (!outputHandle.isRedirected()) {
       ACTS_ERROR("Failed to redirect output to '" << *redirectOutput << "'");
-      return ActsPlugins::MpSolverStatus::FailedRedirectStdout;
+      return MpSolverStatus::FailedRedirectStdout;
     }
   }
   return runChildProcessBoost(program, args, runDir, outputHandle, logger);
 }
+}  // namespace ActsPlugins::detail
