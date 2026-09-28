@@ -52,6 +52,8 @@ inline void find_doublets(
   // where the doublets are recorded.
   const unsigned int mid_bot_start_idx = middle_sp_counter.m_posMidBot;
   const unsigned int mid_top_start_idx = middle_sp_counter.m_posMidTop;
+  const unsigned int mid_bot_count = middle_sp_counter.m_nMidBot;
+  const unsigned int mid_top_count = middle_sp_counter.m_nMidTop;
 
   // The running indices for the middle-bottom and middle-top pairs.
   unsigned int mid_bot_idx = 0, mid_top_idx = 0;
@@ -107,9 +109,17 @@ inline void find_doublets(
                 traccc::details::spacepoint_type::bottom>(middle_sp, other_sp,
                                                           config)) {
           // Add it as a candidate to the middle-bottom container.
-          const unsigned int pos = mid_bot_start_idx + mid_bot_idx++;
-          assert(pos < mb_doublets.size());
-          mb_doublets.at(pos) = {{other_bin_idx, other_sp_idx}, globalIndex};
+          //
+          // WARNING: We must imperatively check if the current index is
+          // within the limit the count kernel computed, because the count
+          // and find kernels may produce different floating point results
+          // and different doublet counts! This condition handles the case
+          // where the find kernel finds _more_ outputs.
+          if (mid_bot_idx < mid_bot_count) {
+            const unsigned int pos = mid_bot_start_idx + mid_bot_idx++;
+            assert(pos < mb_doublets.size());
+            mb_doublets.at(pos) = {{other_bin_idx, other_sp_idx}, globalIndex};
+          }
         }
         // Check if this spacepoint is a compatible "top" spacepoint to
         // the thread's "middle" spacepoint.
@@ -117,12 +127,35 @@ inline void find_doublets(
                 traccc::details::spacepoint_type::top>(middle_sp, other_sp,
                                                        config)) {
           // Add it as a candidate to the middle-top container.
-          const unsigned int pos = mid_top_start_idx + mid_top_idx++;
-          assert(pos < mt_doublets.size());
-          mt_doublets.at(pos) = {{other_bin_idx, other_sp_idx}, globalIndex};
+          if (mid_top_idx < mid_top_count) {
+            const unsigned int pos = mid_top_start_idx + mid_top_idx++;
+            assert(pos < mt_doublets.size());
+            mt_doublets.at(pos) = {{other_bin_idx, other_sp_idx}, globalIndex};
+          }
         }
       }
     }
+  }
+
+  // See the warning above; here we handle the cases where the find kernel
+  // finds _fewer_ doublets.
+  for (; mid_bot_idx < mid_bot_count; ++mid_bot_idx) {
+    const unsigned int pos = mid_bot_start_idx + mid_bot_idx;
+    assert(pos < mb_doublets.size());
+    // Add a sentinel mid-bot doublet
+    mb_doublets.at(pos) = {
+        {std::numeric_limits<unsigned int>::max(),
+         std::numeric_limits<unsigned int>::max()},
+        std::numeric_limits<device_doublet::link_type>::max()};
+  }
+  for (; mid_top_idx < mid_top_count; ++mid_top_idx) {
+    const unsigned int pos = mid_top_start_idx + mid_top_idx;
+    assert(pos < mt_doublets.size());
+    // Add a sentinel mid-top doublet
+    mt_doublets.at(pos) = {
+        {std::numeric_limits<unsigned int>::max(),
+         std::numeric_limits<unsigned int>::max()},
+        std::numeric_limits<device_doublet::link_type>::max()};
   }
 }
 

@@ -115,6 +115,12 @@ inline void select_seeds(
   for (unsigned int i = spM_counter.posTriplets; i < end_triplets_spM; ++i) {
     device_triplet aTriplet = triplets[i];
 
+    if (aTriplet.spB == std::numeric_limits<unsigned int>::max() &&
+        aTriplet.spM == std::numeric_limits<unsigned int>::max() &&
+        aTriplet.spT == std::numeric_limits<unsigned int>::max()) [[unlikely]] {
+      continue;
+    }
+
     // spacepoints bottom and top for this triplet
     const unsigned int spB_idx = aTriplet.spB;
     const edm::spacepoint_collection::const_device::const_proxy_type spB =

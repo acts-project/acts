@@ -38,6 +38,13 @@ inline void update_triplet_weights(
   // Current work item
   device_triplet this_triplet = triplets.at(globalIndex);
 
+  if (this_triplet.spB == std::numeric_limits<unsigned int>::max() &&
+      this_triplet.spM == std::numeric_limits<unsigned int>::max() &&
+      this_triplet.spT == std::numeric_limits<unsigned int>::max())
+      [[unlikely]] {
+    return;
+  }
+
   const edm::spacepoint_collection::const_device::const_proxy_type current_spT =
       spacepoints.at(this_triplet.spT);
 
@@ -74,6 +81,14 @@ inline void update_triplet_weights(
     }
 
     const device_triplet other_triplet = triplets[i];
+
+    if (other_triplet.spB == std::numeric_limits<unsigned int>::max() &&
+        other_triplet.spM == std::numeric_limits<unsigned int>::max() &&
+        other_triplet.spT == std::numeric_limits<unsigned int>::max())
+        [[unlikely]] {
+      continue;
+    }
+
     const edm::spacepoint_collection::const_device::const_proxy_type other_spT =
         spacepoints.at(other_triplet.spT);
 
