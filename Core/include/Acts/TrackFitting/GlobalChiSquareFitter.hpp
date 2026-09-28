@@ -950,7 +950,7 @@ class Gx2Fitter {
           // Fill the track state
           trackStateProxy.smoothed() = boundParams.parameters();
           trackStateProxy.smoothedCovariance() =
-              stepper.covariance(state.stepping);
+              stepper.covariance(state.stepping).value();
 
           trackStateProxy.jacobian() = *transportRes;
           trackStateProxy.pathLength() = stepper.pathLength(state.stepping);
@@ -1055,7 +1055,7 @@ class Gx2Fitter {
           // Fill the track state
           trackStateProxy.smoothed() = boundParams.parameters();
           trackStateProxy.smoothedCovariance() =
-              stepper.covariance(state.stepping);
+              stepper.covariance(state.stepping).value();
 
           trackStateProxy.jacobian() = *transportRes;
           trackStateProxy.pathLength() = stepper.pathLength(state.stepping);
@@ -1144,7 +1144,7 @@ class Gx2Fitter {
           // Fill the track state
           trackStateProxy.smoothed() = res->parameters();
           trackStateProxy.smoothedCovariance() =
-              stepper.covariance(state.stepping);
+              stepper.covariance(state.stepping).value();
 
           trackStateProxy.jacobian() = *transportRes;
           trackStateProxy.pathLength() = stepper.pathLength(state.stepping);

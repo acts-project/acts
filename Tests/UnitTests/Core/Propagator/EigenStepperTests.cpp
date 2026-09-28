@@ -178,8 +178,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
-  BOOST_CHECK(!esState.covTransport);
-  BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
+  BOOST_CHECK(!esState.cov.has_value());
   BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
 
@@ -198,8 +197,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
                                                 ParticleHypothesis::pion0());
   es.initialize(esState, ncp);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK(esState.covTransport);
-  BOOST_CHECK_EQUAL(esState.cov, cov);
+  BOOST_CHECK(esState.cov.has_value());
+  BOOST_CHECK_EQUAL(*esState.cov, cov);
 }
 
 /// These tests are aiming to test the functions of the EigenStepper
@@ -279,17 +278,15 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // The covariance transport
   esState.cov = cov;
   es.transportToCurvilinear(esState);
-  BOOST_CHECK_NE(esState.cov, cov);
+  BOOST_CHECK_NE(*esState.cov, cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
 
   // Perform a step without and with covariance transport
-  esState.cov = cov;
-
-  esState.covTransport = false;
+  esState.cov.reset();
   es.step(esState, navDir, nullptr).value();
-  CHECK_CLOSE_COVARIANCE(esState.cov, cov, eps);
+  BOOST_CHECK(!esState.cov.has_value());
   BOOST_CHECK_NE(es.position(esState).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(esState), newMom.normalized());
   BOOST_CHECK_EQUAL(es.charge(esState), charge);
@@ -297,9 +294,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
 
-  esState.covTransport = true;
+  esState.cov = cov;
   es.step(esState, navDir, nullptr).value();
-  CHECK_CLOSE_COVARIANCE(esState.cov, cov, eps);
+  CHECK_CLOSE_COVARIANCE(*esState.cov, cov, eps);
   BOOST_CHECK_NE(es.position(esState).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(esState), newMom.normalized());
   BOOST_CHECK_EQUAL(es.charge(esState), charge);
@@ -327,7 +324,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
     std::decay_t<decltype(state)> copy = es.makeState(esOptions);
     es.initialize(copy, cp);
     copy.pars = state.pars;
-    copy.covTransport = state.covTransport;
     copy.cov = state.cov;
     copy.jacToGlobal = state.jacToGlobal;
     copy.jacTransport = state.jacTransport;
@@ -356,8 +352,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, esState.jacToGlobal);
   BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
-  BOOST_CHECK(esStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
+  BOOST_CHECK(esStateCopy.cov.has_value());
+  BOOST_CHECK_EQUAL(*esStateCopy.cov, cov2);
   BOOST_CHECK_EQUAL(es.position(esStateCopy),
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
@@ -427,7 +423,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Transport the covariance in the context of a surface
   BOOST_CHECK(es.transportToBound(esState, *plane).ok());
-  BOOST_CHECK_NE(esState.cov, cov);
+  BOOST_CHECK_NE(*esState.cov, cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
@@ -443,7 +439,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_REL(es.absoluteMomentum(esState), absMom, eps);
   BOOST_CHECK_EQUAL(es.charge(esState), charge);
   CHECK_CLOSE_OR_SMALL(es.time(esState), time, eps, eps);
-  CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
+  CHECK_CLOSE_COVARIANCE(*esState.cov, Covariance(2. * cov), eps);
 
   // Test a case where no step size adjustment is required
   esState.options.stepTolerance = 2. * 4.4258e+09;

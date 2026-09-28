@@ -202,10 +202,9 @@ class RiddersStepper final {
     /// and the corresponding deltas applied to them
     BoundParameterVariation variationMap;
 
-    /// Flag indicating whether covariance transport is enabled
-    bool covTransport = false;
-    /// The covariance of the last known bound parameters
-    Covariance cov = Covariance::Zero();
+    /// The covariance of the last known bound parameters, set if the
+    /// covariance is transported
+    std::optional<Covariance> cov;
 
     /// The accumulated path length during the stepping process
     double pathAccumulated = 0;
@@ -273,14 +272,10 @@ class RiddersStepper final {
     m_stepperImpl.initialize(state.primaryStepperState, boundVector,
                              std::nullopt, particleHypothesis, surface);
 
-    if (!covariance.has_value()) {
-      state.covTransport = false;
-      state.cov = BoundMatrix::Zero();
+    state.cov = covariance;
+    if (!state.cov.has_value()) {
       return;
     }
-
-    state.covTransport = true;
-    state.cov = *covariance;
 
     resetSecondaryStates(state, boundVector, surface);
   }
@@ -482,18 +477,25 @@ class RiddersStepper final {
   /// Check if the state carries a covariance
   /// @param state the state of the RiddersStepper
   /// @return true if the covariance is transported
-  bool hasCovariance(const State& state) const { return state.covTransport; }
+  bool hasCovariance(const State& state) const { return state.cov.has_value(); }
 
   /// Get the covariance of the last transport
   /// @param state the state of the RiddersStepper
-  /// @return the covariance
-  const Covariance& covariance(const State& state) const { return state.cov; }
+  /// @return the covariance, or no value if the state does not carry one
+  const std::optional<Covariance>& covariance(const State& state) const {
+    return state.cov;
+  }
 
   /// Set the covariance of the last transport
+  ///
+  /// It does nothing if the state does not carry a covariance.
+  ///
   /// @param state the state of the RiddersStepper
   /// @param covariance the new covariance
   void setCovariance(State& state, const Covariance& covariance) const {
-    state.cov = covariance;
+    if (state.cov.has_value()) {
+      *state.cov = covariance;
+    }
   }
 
   /// Get the bound parameters of the primary stepper state
@@ -508,11 +510,11 @@ class RiddersStepper final {
                                           const Surface& surface) const {
     Result<BoundParameters> result =
         m_stepperImpl.boundParameters(state.primaryStepperState, surface);
-    if (!result.ok() || !state.covTransport) {
+    if (!result.ok() || !state.cov.has_value()) {
       return result;
     }
     return BoundParameters(surface.getSharedPtr(), result->parameters(),
-                           state.cov, particleHypothesis(state));
+                           *state.cov, particleHypothesis(state));
   }
 
   /// Prepare the stepper for the curvilinear transformation
@@ -537,11 +539,11 @@ class RiddersStepper final {
   BoundParameters curvilinearParameters(const State& state) const {
     BoundParameters result =
         m_stepperImpl.curvilinearParameters(state.primaryStepperState);
-    if (!state.covTransport) {
+    if (!state.cov.has_value()) {
       return result;
     }
     return BoundParameters(result.referenceSurface().getSharedPtr(),
-                           result.parameters(), state.cov,
+                           result.parameters(), *state.cov,
                            particleHypothesis(state));
   }
 
@@ -558,7 +560,7 @@ class RiddersStepper final {
       State& state, const Surface& surface,
       [[maybe_unused]] const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const {
-    if (!state.covTransport) {
+    if (!state.cov.has_value()) {
       return Result<Jacobian>::success(Jacobian::Identity());
     }
 
@@ -602,7 +604,7 @@ class RiddersStepper final {
       jacobian.col(i) /= numberOfVariationsPerParameter[i];
     }
 
-    state.cov = jacobian * state.cov * jacobian.transpose();
+    *state.cov = jacobian * *state.cov * jacobian.transpose();
 
     // The secondary states restart on the surface, so the next jacobian starts
     // here as well
@@ -622,7 +624,7 @@ class RiddersStepper final {
   /// @param state the state of the RiddersStepper
   /// @return the jacobian
   Jacobian transportToCurvilinear(State& state) const {
-    if (!state.covTransport) {
+    if (!state.cov.has_value()) {
       return Jacobian::Identity();
     }
 
@@ -676,9 +678,7 @@ class RiddersStepper final {
               double qOverP, double time) const {
     const auto curvilinearSurface =
         CurvilinearSurface(position, direction).surface();
-    const std::optional<BoundMatrix> cov =
-        state.covTransport ? std::optional<BoundMatrix>(state.cov)
-                           : std::nullopt;
+    const std::optional<BoundMatrix> cov = state.cov;
     initialize(state,
                transformFreeToBoundParameters(
                    position, time, direction, qOverP, *curvilinearSurface,
@@ -721,7 +721,7 @@ class RiddersStepper final {
   void resetSecondaryStates(State& state, const BoundVector& boundVector,
                             const Surface& surface) const {
     state.variationMap =
-        m_config.parameterVariation->variationMap(boundVector, state.cov);
+        m_config.parameterVariation->variationMap(boundVector, *state.cov);
 
     state.secondaryStepperStates.clear();
     for (const auto& [index, delta] : state.variationMap) {

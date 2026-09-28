@@ -95,11 +95,9 @@ class EigenStepper final {
     /// Particle hypothesis
     ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
-    /// Covariance matrix (and indicator)
-    /// associated with the initial error on track parameters
-    bool covTransport = false;
-    /// Covariance matrix for track parameter uncertainties
-    Covariance cov = Covariance::Zero();
+    /// Covariance matrix for track parameter uncertainties, set if the
+    /// covariance is transported
+    std::optional<Covariance> cov;
 
     /// Jacobian from local to the global frame
     BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
@@ -350,22 +348,29 @@ class EigenStepper final {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   /// @return True if the covariance is transported
-  bool hasCovariance(const State& state) const { return state.covTransport; }
+  bool hasCovariance(const State& state) const { return state.cov.has_value(); }
 
   /// Get the covariance at the anchor
   ///
   /// The anchor is the frame of the last initialization, transport or update.
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  /// @return The covariance at the anchor
-  const Covariance& covariance(const State& state) const { return state.cov; }
+  /// @return The covariance at the anchor, or no value if the state does not
+  ///         carry a covariance
+  const std::optional<Covariance>& covariance(const State& state) const {
+    return state.cov;
+  }
 
   /// Set the covariance at the anchor
+  ///
+  /// It does nothing if the state does not carry a covariance.
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] covariance The new covariance at the anchor
   void setCovariance(State& state, const Covariance& covariance) const {
-    state.cov = covariance;
+    if (state.cov.has_value()) {
+      *state.cov = covariance;
+    }
   }
 
   /// Get the bound parameters at the current position
@@ -407,6 +412,7 @@ class EigenStepper final {
   /// @param [in] freeParams Free parameters that will be written into @p state
   /// @param [in] boundParams Corresponding bound parameters used to update jacToGlobal in @p state
   /// @param [in] covariance The covariance that will be written into @p state
+  ///                        if the state carries a covariance
   /// @param [in] surface The surface used to update the jacToGlobal
   void update(State& state, const FreeVector& freeParams,
               const BoundVector& boundParams, const Covariance& covariance,

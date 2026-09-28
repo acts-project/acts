@@ -92,8 +92,7 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
   Stepper::State state = stepper.makeState(options);
   stepper.initialize(state, cp);
 
-  BOOST_CHECK(!state.covTransport);
-  BOOST_CHECK_EQUAL(state.cov, Covariance::Zero());
+  BOOST_CHECK(!state.cov.has_value());
   BOOST_CHECK_EQUAL(state.pVector[0], pos.x());
   BOOST_CHECK_EQUAL(state.pVector[1], pos.y());
   BOOST_CHECK_EQUAL(state.pVector[2], pos.z());
@@ -120,8 +119,8 @@ BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
   Stepper::State state = stepper.makeState(options);
   stepper.initialize(state, cp);
 
-  BOOST_CHECK(state.covTransport);
-  BOOST_CHECK_EQUAL(state.cov, cov);
+  BOOST_CHECK(state.cov.has_value());
+  BOOST_CHECK_EQUAL(*state.cov, cov);
   BOOST_CHECK_EQUAL(state.pVector[0], pos.x());
   BOOST_CHECK_EQUAL(state.pVector[1], pos.y());
   BOOST_CHECK_EQUAL(state.pVector[2], pos.z());
@@ -304,7 +303,7 @@ BOOST_AUTO_TEST_CASE(Step) {
 
   auto state = stepper.makeState(options);
   stepper.initialize(state, cp);
-  state.covTransport = false;
+  state.cov.reset();
 
   // ensure step does not result in an error
   auto res = stepper.step(state, Direction::Backward(), nullptr);
@@ -342,7 +341,6 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
 
   auto state = stepper.makeState(options);
   stepper.initialize(state, cp);
-  state.covTransport = true;
 
   // ensure step does not result in an error
   auto res = stepper.step(state, Direction::Backward(), nullptr);
@@ -368,7 +366,7 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   BOOST_CHECK_EQUAL(stepper.charge(state), charge);
 
   stepper.transportToCurvilinear(state);
-  BOOST_CHECK_NE(state.cov, cov);
+  BOOST_CHECK_NE(*state.cov, cov);
 }
 
 // test state reset method
@@ -383,7 +381,6 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   auto state = stepper.makeState(options);
   stepper.initialize(state, cp);
-  state.covTransport = true;
 
   // ensure step does not result in an error
   BOOST_CHECK(stepper.step(state, Direction::Backward(), nullptr).ok());
@@ -417,7 +414,6 @@ BOOST_AUTO_TEST_CASE(Reset) {
     std::copy(std::begin(other.parameters), std::end(other.parameters),
               std::begin(copy.parameters));
     copy.cov = other.cov;
-    copy.covTransport = other.covTransport;
     copy.pathAccumulated = other.pathAccumulated;
     copy.stepSize = other.stepSize;
     copy.previousStepSize = other.previousStepSize;
@@ -440,8 +436,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
   stepper.initialize(stateCopy, cp.parameters(), *cp.covariance(),
                      cp.particleHypothesis(), cp.referenceSurface());
   // Test all components
-  BOOST_CHECK(stateCopy.covTransport);
-  BOOST_CHECK_EQUAL(stateCopy.cov, newCov);
+  BOOST_CHECK(stateCopy.cov.has_value());
+  BOOST_CHECK_EQUAL(*stateCopy.cov, newCov);
   BOOST_CHECK_EQUAL(stepper.position(stateCopy),
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),

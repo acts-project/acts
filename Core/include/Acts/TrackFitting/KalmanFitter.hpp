@@ -511,7 +511,7 @@ class KalmanFitter {
         // Fill the track state
         trackStateProxy.predicted() = res->parameters();
         trackStateProxy.predictedCovariance() =
-            stepper.covariance(state.stepping);
+            stepper.covariance(state.stepping).value();
 
         trackStateProxy.jacobian() = *transportRes;
         trackStateProxy.pathLength() = stepper.pathLength(state.stepping);
@@ -625,7 +625,7 @@ class KalmanFitter {
         // Fill the track state
         trackStateProxy.predicted() = res->parameters();
         trackStateProxy.predictedCovariance() =
-            stepper.covariance(state.stepping);
+            stepper.covariance(state.stepping).value();
 
         trackStateProxy.jacobian() = *transportRes;
         trackStateProxy.pathLength() = stepper.pathLength(state.stepping);

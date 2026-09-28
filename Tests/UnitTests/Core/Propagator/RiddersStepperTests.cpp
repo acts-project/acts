@@ -81,13 +81,14 @@ BOOST_AUTO_TEST_CASE(ridders_stepper_repeated_transport) {
 
   const auto firstJacobian = stepper.transportToBound(state, *surface);
   BOOST_REQUIRE(firstJacobian.ok());
-  const BoundMatrix firstCovariance = stepper.covariance(state);
+  const BoundMatrix firstCovariance = stepper.covariance(state).value();
   BOOST_CHECK(!firstJacobian->isIdentity(1e-3));
 
   const auto secondJacobian = stepper.transportToBound(state, *surface);
   BOOST_REQUIRE(secondJacobian.ok());
   CHECK_CLOSE_ABS(*secondJacobian, BoundMatrix(BoundMatrix::Identity()), 1e-6);
-  CHECK_CLOSE_COVARIANCE(stepper.covariance(state), firstCovariance, 1e-6);
+  CHECK_CLOSE_COVARIANCE(stepper.covariance(state).value(), firstCovariance,
+                         1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

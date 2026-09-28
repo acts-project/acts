@@ -415,7 +415,7 @@ struct GsfActor {
         // Fill the track state
         trackStateProxy.predicted() = res->parameters();
         trackStateProxy.predictedCovariance() =
-            singleStepper.covariance(singleState.stepping);
+            singleStepper.covariance(singleState.stepping).value();
 
         trackStateProxy.pathLength() =
             singleStepper.pathLength(singleState.stepping);
@@ -532,7 +532,7 @@ struct GsfActor {
         // Fill the track state
         trackStateProxy.predicted() = res->parameters();
         trackStateProxy.predictedCovariance() =
-            singleStepper.covariance(singleState);
+            singleStepper.covariance(singleState).value();
 
         trackStateProxy.pathLength() = singleStepper.pathLength(singleState);
 

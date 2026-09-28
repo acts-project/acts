@@ -71,8 +71,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   BOOST_CHECK_EQUAL(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(slsState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(slsState.derivative, FreeVector::Zero());
-  BOOST_CHECK(!slsState.covTransport);
-  BOOST_CHECK_EQUAL(slsState.cov, Covariance::Zero());
+  BOOST_CHECK(!slsState.cov.has_value());
   CHECK_CLOSE_OR_SMALL(sls.position(slsState), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(sls.direction(slsState), dir.normalized(), eps, eps);
   CHECK_CLOSE_REL(sls.absoluteMomentum(slsState), absMom, eps);
@@ -95,8 +94,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
                                                 ParticleHypothesis::pion0());
   sls.initialize(slsState, ncp);
   BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK(slsState.covTransport);
-  BOOST_CHECK_EQUAL(slsState.cov, cov);
+  BOOST_CHECK(slsState.cov.has_value());
+  BOOST_CHECK_EQUAL(*slsState.cov, cov);
 }
 
 /// These tests are aiming to test the functions of the StraightLineStepper
@@ -174,19 +173,17 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // The covariance transport
   slsState.cov = cov;
   sls.transportToCurvilinear(slsState);
-  BOOST_CHECK_NE(slsState.cov, cov);
+  BOOST_CHECK_NE(*slsState.cov, cov);
   BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(slsState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(slsState.derivative, FreeVector::Zero());
 
   // Perform a step without and with covariance transport
-  slsState.cov = cov;
-
-  slsState.covTransport = false;
+  slsState.cov.reset();
   double h = sls.step(slsState, navDir, nullptr).value();
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), h * navDir);
-  CHECK_CLOSE_COVARIANCE(slsState.cov, cov, 1e-6);
+  BOOST_CHECK(!slsState.cov.has_value());
   BOOST_CHECK_GT(sls.position(slsState).norm(), newPos.norm());
   CHECK_CLOSE_ABS(sls.direction(slsState), newMom.normalized(), 1e-6);
   CHECK_CLOSE_ABS(sls.absoluteMomentum(slsState), newMom.norm(), 1e-6);
@@ -195,11 +192,11 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(slsState.derivative, FreeVector::Zero());
   BOOST_CHECK_EQUAL(slsState.jacTransport, FreeMatrix::Identity());
 
-  slsState.covTransport = true;
+  slsState.cov = cov;
   double h2 = sls.step(slsState, navDir, nullptr).value();
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(h2, h);
-  CHECK_CLOSE_COVARIANCE(slsState.cov, cov, 1e-6);
+  CHECK_CLOSE_COVARIANCE(*slsState.cov, cov, 1e-6);
   BOOST_CHECK_GT(sls.position(slsState).norm(), newPos.norm());
   CHECK_CLOSE_ABS(sls.direction(slsState), newMom.normalized(), 1e-6);
   CHECK_CLOSE_ABS(sls.absoluteMomentum(slsState), newMom.norm(), 1e-6);
@@ -233,8 +230,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_NE(slsStateCopy.jacToGlobal, slsState.jacToGlobal);
   BOOST_CHECK_EQUAL(slsStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(slsStateCopy.derivative, FreeVector::Zero());
-  BOOST_CHECK(slsStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(slsStateCopy.cov, cov2);
+  BOOST_CHECK(slsStateCopy.cov.has_value());
+  BOOST_CHECK_EQUAL(*slsStateCopy.cov, cov2);
   CHECK_CLOSE_ABS(sls.position(slsStateCopy),
                   freeParams.template segment<3>(eFreePos0), 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsStateCopy),
@@ -307,7 +304,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Transport the covariance in the context of a surface
   BOOST_CHECK(
       sls.transportToBound(slsState, *plane, freeToBoundCorrection).ok());
-  BOOST_CHECK_NE(slsState.cov, cov);
+  BOOST_CHECK_NE(*slsState.cov, cov);
   BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(slsState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(slsState.derivative, FreeVector::Zero());
@@ -322,7 +319,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_OR_SMALL(sls.position(slsState), pos, eps, eps);
   BOOST_CHECK_EQUAL(sls.charge(slsState), charge);
   CHECK_CLOSE_OR_SMALL(sls.time(slsState), time, eps, eps);
-  CHECK_CLOSE_COVARIANCE(slsState.cov, Covariance(2. * cov), 1e-6);
+  CHECK_CLOSE_COVARIANCE(*slsState.cov, Covariance(2. * cov), 1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

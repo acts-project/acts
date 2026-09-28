@@ -94,7 +94,7 @@ class ScopedGsfInfoPrinterAndChecker {
                 << ", weight: " << cmp.weight() << ", status: " << cmp.status()
                 << ", qop: " << singleStepper.qOverP(cmp.state())
                 << ", det(cov): "
-                << singleStepper.covariance(cmp.state()).determinant());
+                << singleStepper.covariance(cmp.state()).value().determinant());
     }
   }
 
@@ -363,6 +363,7 @@ Result<void> applyMultipleScattering(propagator_state_t &state,
     }
 
     assert(singleStepper.covariance(singleState.stepping)
+               .value()
                .array()
                .isFinite()
                .all() &&

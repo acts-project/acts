@@ -228,7 +228,7 @@ struct MultiStepperTester {
       BOOST_CHECK_EQUAL(cmp.state().derivative, FreeVector::Zero());
       if constexpr (!Cov) {
         BOOST_CHECK_EQUAL(cmp.state().jacToGlobal, BoundToFreeMatrix::Zero());
-        BOOST_CHECK_EQUAL(cmp.state().cov, BoundMatrix::Zero());
+        BOOST_CHECK(!cmp.state().cov.has_value());
       }
     }
 
@@ -243,7 +243,7 @@ struct MultiStepperTester {
     if constexpr (Concepts::has_components<MultiState>) {
       BOOST_CHECK(!state.covTransport);
       for (const auto &cmp : state.components) {
-        BOOST_CHECK_EQUAL(cmp.state.covTransport, Cov);
+        BOOST_CHECK_EQUAL(cmp.state.cov.has_value(), Cov);
       }
     }
   }
@@ -302,7 +302,7 @@ struct MultiStepperTester {
 
       for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {
         BOOST_CHECK_EQUAL(cmp.state().pars, single_state.pars);
-        BOOST_CHECK_EQUAL(cmp.state().cov, single_state.cov);
+        BOOST_CHECK(cmp.state().cov == single_state.cov);
         if constexpr (requires { cmp.state().jacTransport; }) {
           BOOST_CHECK_EQUAL(cmp.state().jacTransport,
                             single_state.jacTransport);
@@ -390,7 +390,7 @@ struct MultiStepperTester {
         },
         [](auto &cmp) -> decltype(auto) { return cmp.weight(); },
         [](auto &cmp) -> decltype(auto) { return (cmp.state().pars); },
-        [](auto &cmp) -> decltype(auto) { return (cmp.state().cov); },
+        [](auto &cmp) -> decltype(auto) { return (*cmp.state().cov); },
         [](auto &cmp) -> decltype(auto) { return (cmp.state().derivative); },
         [](auto &cmp) -> decltype(auto) { return (cmp.state().jacToGlobal); });
 

@@ -122,10 +122,8 @@ class AtlasStepper {
     // result
     double parameters[eBoundSize] = {0., 0., 0., 0., 0., 0.};
     /// Covariance at the anchor, i.e. the frame of the last initialization,
-    /// transport or update
-    Covariance cov = Covariance::Zero();
-    /// Flag indicating whether covariance transport is enabled
-    bool covTransport = false;
+    /// transport or update, set if the covariance is transported
+    std::optional<Covariance> cov;
 
     // accumulated path length cache
     /// Accumulated path length during propagation
@@ -238,10 +236,8 @@ class AtlasStepper {
     }
 
     // prepare the jacobian if we have a covariance
-    state.covTransport = cov.has_value();
-    if (state.covTransport) {
-      // copy the covariance matrix
-      state.cov = *cov;
+    state.cov = cov;
+    if (state.cov.has_value()) {
       state.useJacobian = true;
       const auto transform =
           surface.referenceFrame(state.options.geoContext, pos, dir);
@@ -555,22 +551,29 @@ class AtlasStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   /// @return True if the covariance is transported
-  bool hasCovariance(const State& state) const { return state.covTransport; }
+  bool hasCovariance(const State& state) const { return state.cov.has_value(); }
 
   /// Get the covariance at the anchor
   ///
   /// The anchor is the frame of the last initialization, transport or update.
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  /// @return The covariance at the anchor
-  const Covariance& covariance(const State& state) const { return state.cov; }
+  /// @return The covariance at the anchor, or no value if the state does not
+  ///         carry a covariance
+  const std::optional<Covariance>& covariance(const State& state) const {
+    return state.cov;
+  }
 
   /// Set the covariance at the anchor
+  ///
+  /// It does nothing if the state does not carry a covariance.
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] covariance The new covariance at the anchor
   void setCovariance(State& state, const Covariance& covariance) const {
-    state.cov = covariance;
+    if (state.cov.has_value()) {
+      *state.cov = covariance;
+    }
   }
 
   /// Get the bound parameters at the current position
@@ -587,8 +590,7 @@ class AtlasStepper {
                  state.pVector[3]);
     return BoundTrackParameters::create(
         state.options.geoContext, surface.getSharedPtr(), pos4,
-        direction(state), qOverP(state), optionalCovariance(state),
-        state.particleHypothesis);
+        direction(state), qOverP(state), state.cov, state.particleHypothesis);
   }
 
   /// @brief If necessary fill additional members needed for
@@ -613,9 +615,9 @@ class AtlasStepper {
   BoundParameters curvilinearParameters(const State& state) const {
     Vector4 pos4(state.pVector[0], state.pVector[1], state.pVector[2],
                  state.pVector[3]);
-    return BoundTrackParameters::createCurvilinear(
-        pos4, direction(state), qOverP(state), optionalCovariance(state),
-        state.particleHypothesis);
+    return BoundTrackParameters::createCurvilinear(pos4, direction(state),
+                                                   qOverP(state), state.cov,
+                                                   state.particleHypothesis);
   }
 
   /// The state update method
@@ -782,7 +784,6 @@ class AtlasStepper {
     }
 
     state.cov = covariance;
-    state.covTransport = true;
     state.useJacobian = true;
 
     // declare the state as ready
@@ -817,7 +818,7 @@ class AtlasStepper {
   /// @param [in,out] state State of the stepper
   /// @return The jacobian from the previous anchor to the curvilinear frame
   Jacobian transportToCurvilinear(State& state) const {
-    if (!state.covTransport) {
+    if (!state.cov.has_value()) {
       return Jacobian::Identity();
     }
 
@@ -958,7 +959,7 @@ class AtlasStepper {
 
     Eigen::Map<Eigen::Matrix<double, eBoundSize, eBoundSize, Eigen::RowMajor>>
         J(jacobian);
-    state.cov = J * state.cov * J.transpose();
+    *state.cov = J * *state.cov * J.transpose();
     Jacobian jac = J;
 
     const auto curvilinearSurface =
@@ -988,7 +989,7 @@ class AtlasStepper {
           SurfaceError::GlobalPositionNotOnSurface);
     }
 
-    if (!state.covTransport) {
+    if (!state.cov.has_value()) {
       return Result<Jacobian>::success(Jacobian::Identity());
     }
 
@@ -1202,7 +1203,7 @@ class AtlasStepper {
 
     Eigen::Map<Eigen::Matrix<double, eBoundSize, eBoundSize, Eigen::RowMajor>>
         J(jacobian);
-    state.cov = J * state.cov * J.transpose();
+    *state.cov = J * *state.cov * J.transpose();
     Jacobian jac = J;
 
     reanchor(state, surface);
@@ -1541,14 +1542,7 @@ class AtlasStepper {
     Result<BoundVector> boundParams = transformFreeToBoundParameters(
         freeParams, surface, state.options.geoContext);
     assert(boundParams.ok());
-    update(state, freeParams, *boundParams, state.cov, surface);
-  }
-
-  std::optional<Covariance> optionalCovariance(const State& state) const {
-    if (!state.covTransport) {
-      return std::nullopt;
-    }
-    return state.cov;
+    update(state, freeParams, *boundParams, *state.cov, surface);
   }
 
   std::shared_ptr<const MagneticFieldProvider> m_bField;

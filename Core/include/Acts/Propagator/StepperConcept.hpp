@@ -111,7 +111,7 @@ concept SingleStepper =
       requires requires(const Stepper& cs, const State& ct) {
         {
           cs.covariance(ct)
-        } -> std::same_as<const typename Stepper::Covariance&>;
+        } -> std::same_as<const std::optional<typename Stepper::Covariance>&>;
         { cs.stepSize(ct) } -> std::same_as<const ConstrainedStep&>;
       };
     };

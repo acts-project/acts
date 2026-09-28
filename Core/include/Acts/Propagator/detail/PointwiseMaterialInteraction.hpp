@@ -201,6 +201,10 @@ PointwiseMaterialEffects performMaterialInteraction(
   stepper.update(state.stepping, position, direction, nextQOverP, time);
   //! [energy loss update]
 
+  if (!stepper.hasCovariance(state.stepping)) {
+    return effects;
+  }
+
   // Convenience method to update a variance given a change and noise update
   // mode
   const auto updateVariance = [](double variance, double change,
@@ -213,7 +217,7 @@ PointwiseMaterialEffects performMaterialInteraction(
 
   // update covariance matrix
   //! [covariance update]
-  BoundMatrix covariance = stepper.covariance(state.stepping);
+  BoundMatrix covariance = *stepper.covariance(state.stepping);
   covariance(eBoundPhi, eBoundPhi) = updateVariance(
       covariance(eBoundPhi, eBoundPhi), effects.variancePhi, noiseUpdateMode);
   covariance(eBoundTheta, eBoundTheta) =
