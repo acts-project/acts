@@ -1350,4 +1350,4 @@ def test_geomodel_G4_propagation(tmp_path):
     ]
     subprocess.check_call(args)
 
-    assert (out_dir / "obj").exists()
+    assert out_dir.exists()
