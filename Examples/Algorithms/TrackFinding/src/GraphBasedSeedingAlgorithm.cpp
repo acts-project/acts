@@ -431,7 +431,7 @@ GraphBasedSeedingAlgorithm::layerNumbering(
       // bounds of r
       for (const Acts::Vector3 &corner : corners) {
         const auto r = static_cast<float>(
-            std::sqrt(corner(0) * corner(0) + corner(1) * corner(1)));
+            std::sqrt(corner.x() * corner.x() + corner.y() * corner.y()));
         minBound = std::min(minBound, r);
         maxBound = std::max(maxBound, r);
       }
