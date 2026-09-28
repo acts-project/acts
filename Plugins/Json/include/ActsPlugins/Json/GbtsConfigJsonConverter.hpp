@@ -22,12 +22,14 @@ namespace Acts::Experimental {
 /// @addtogroup json_plugin
 /// @{
 
+/// @cond
 NLOHMANN_JSON_SERIALIZE_ENUM(GbtsLayerType, {{GbtsLayerType::Barrel, "barrel"},
                                              {GbtsLayerType::Endcap, "endcap"}})
 
 NLOHMANN_JSON_SERIALIZE_ENUM(GbtsLayerTechnology,
                              {{GbtsLayerTechnology::Pixel, "pixel"},
                               {GbtsLayerTechnology::Strip, "strip"}})
+/// @endcond
 
 /// Convert GbtsLayerConnection to JSON
 /// @param j Destination JSON object
