@@ -29,8 +29,9 @@ concurrency:
   # and a cancellation reads as a failure to the queue, ejecting the PR.
   cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
-# ccache is saved from `main` only: a PR-written cache is readable by that PR
-# alone, but still evicts `main`'s entries from the shared 10 GB.
+# Jobs using ccache save from `main` only: a PR-written cache is readable by
+# that PR alone, but still evicts `main`'s entries from the shared 10 GB.
+# linux_ubuntu pilots sccache with CERN S3 instead; see CI/sccache.md.
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
@@ -42,6 +43,10 @@ env:
 jobs:
   linux_ubuntu:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
+    # Restrict s3-sccache to the main branch in GitHub environment settings.
+    # Branch pushes, PRs and merge queue builds use a separate, secret-free environment.
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || 's3-sccache-read' }}
     permissions:
       contents: read
       # Authenticated GHCR reads: the spack buildcache is pulled from
@@ -50,9 +55,6 @@ jobs:
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
     env:
-      # The FPE build evicted objects during compilation at 500 MB. Cache
-      # retention removes superseded main archives to make room for this.
-      CCACHE_MAXSIZE: 1G
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
@@ -62,6 +64,16 @@ jobs:
           lfs: true
           persist-credentials: false
 
+      - name: Set up sccache
+        id: sccache-start
+        uses: ./.github/actions/sccache
+        with:
+          key-prefix: acts-sccache/linux_ubuntu/v1/
+          read-only: ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+          # Only the protected main environment supplies these credentials.
+          access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.S3_ACCESS_KEY_ID || '' }}
+          secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.S3_SECRET_ACCESS_KEY || '' }}
+
       - name: Install dependencies
         uses: ./.github/actions/dependencies
         with:
@@ -69,21 +81,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+      - name: Check sccache startup
+        id: sccache-ready
+        shell: bash
+        run: bash .github/actions/sccache/wait.sh
 
       - name: Configure
+        env:
+          CACHE_LAUNCHER: ${{ steps.sccache-ready.outputs.launcher }}
         run: >
-          ccache -z &&
           CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci-fpe
+          -DCMAKE_CXX_COMPILER_LAUNCHER="$CACHE_LAUNCHER"
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_PLUGIN_ONNX=ON
 
@@ -93,16 +103,6 @@ jobs:
       - name: Build docs examples
         # these are excluded from the ALL target, but we want to test them here
         run: cmake --build build --target docs-examples
-
-      - name: ccache stats
-        run: ccache -s
-
-      - name: Save ccache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always() && github.ref == 'refs/heads/main'
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
         run: >
@@ -148,6 +148,10 @@ jobs:
         run: >
           CI/dependencies/run.sh .env
           ctest --test-dir build-downstream --output-on-failure
+
+      - name: sccache statistics and shutdown
+        if: always() && steps.sccache-start.outcome == 'success'
+        uses: ./.github/actions/sccache/stats
 
   linux_examples_test:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
