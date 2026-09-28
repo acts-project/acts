@@ -1323,3 +1323,30 @@ def test_geomodel_G4(tmp_path):
     subprocess.check_call(args)
 
     assert (out_dir / "obj").exists()
+
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.skipif(not geomodelEnabled, reason="Geomodel not set up")
+@pytest.mark.slow
+def test_geomodel_G4_propagation(tmp_path):
+        script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "propagate_mockup.py"
+    )
+    assert script.exists()
+    mockup_det = "Muon"
+    out_dir = tmp_path / "geomodel_g4_muon_propagation"
+    out_dir.mkdir()
+    args = [
+        "python3",
+        str(script),
+        "--mockupDetector",
+        str(mockup_det),
+        "--outDir",
+        str(out_dir),
+    ]
+    subprocess.check_call(args)
+
+    assert (out_dir / "obj").exists()
