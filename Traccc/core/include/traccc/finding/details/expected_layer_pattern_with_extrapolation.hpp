@@ -107,9 +107,9 @@ collect_expected_layer_pattern_from_perigee(
 
     perigee_propagator_t to_perigee{config.propagation};
     typename perigee_propagator_t::state perigee_state(
-        free_seed, field, det, perigee_view, config.propagation.context);
+        bound_params, field, det, perigee_view, config.propagation.context);
     perigee_state.set_particle(traccc::detail::correct_particle_hypothesis(
-        config.ptc_hypothesis, free_seed));
+        config.ptc_hypothesis, bound_params));
     perigee_state.stepping()
         .template set_constraint<detray::step::constraint::e_accuracy>(
             config.propagation.stepping.step_constraint);
@@ -125,7 +125,7 @@ collect_expected_layer_pattern_from_perigee(
       const auto nav_target =
           perigee_state.navigation().target().surface().identifier().value();
       const auto nav_current =
-          perigee_state.navigation().geomtry_identifier().value();
+          perigee_state.navigation().geometry_identifier().value();
       TRACCC_WARNING_HOST_DEVICE(
           "Perigee extrapolation (CUDA direct navigator) failed: finished=%u "
           "invalid=%u nav_alive=%u nav_status=%u path=%f target_id=%llu "
@@ -145,14 +145,14 @@ collect_expected_layer_pattern_from_perigee(
     perigee_extrapolator_t perigee_extrapolator{config.propagation};
 
     typename perigee_extrapolator_t::state perigee_state(
-        free_seed, field, det, perigee_view, config.propagation.context);
+        bound_params, field, det, perigee_view, config.propagation.context);
     perigee_state.set_particle(traccc::detail::correct_particle_hypothesis(
-        config.ptc_hypothesis, free_seed));
+        config.ptc_hypothesis, bound_params));
     perigee_state.stepping()
         .template set_constraint<detray::step::constraint::e_accuracy>(
             config.propagation.stepping.step_constraint);
 
-    (void)perigee_extrapolator.extrapolate(perigee_state);
+    perigee_extrapolator.extrapolate(perigee_state);
     if (!perigee_extrapolator.finished(perigee_state) ||
         perigee_state.stepping()().is_invalid()) {
       TRACCC_WARNING_HOST_DEVICE(
@@ -198,13 +198,15 @@ collect_expected_layer_pattern_from_perigee(
   typename detray::actor::pathlimit_aborter<traccc::scalar>::state
       aborter_state{};
   detray::actor::parameter_updater_state<typename detector_t::algebra_type>
-      updater_state{prop_cfg, bound_params};
+      updater_state{prop_cfg};
   traccc::details::ckf_interactor_t::state interactor_state{};
   typename detray::actor::momentum_aborter<traccc::scalar>::state
       momentum_aborter_state{};
   typename expected_layer_pattern_collector<expected_layer_table_mapper>::state
       expected_layer_collector_state{};
 
+  // Start at perigee without associating the updater with a detector surface.
+  updater_state.init(perigee_free);
   updater_state.notify_on_initial(true);
   momentum_aborter_state.min_pT(static_cast<traccc::scalar>(config.min_pT));
   momentum_aborter_state.min_p(static_cast<traccc::scalar>(config.min_p));
