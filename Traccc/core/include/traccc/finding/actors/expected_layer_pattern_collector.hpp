@@ -67,10 +67,10 @@ struct expected_layer_table_mapper {
       return {};
     }
 
-    const auto value = barcode.value();
+    const auto value = geo_id.value();
     for (std::size_t i = 0u; i < size; ++i) {
       const auto& entry = entries[i];
-      if (entry.barcode == value) {
+      if (entry.geo_id == value) {
         return {true, entry.pattern_index, entry.layer_index};
       }
     }
@@ -82,7 +82,7 @@ struct expected_layer_table_mapper {
 /// Collector actor for expected-layer-pattern bitmasks.
 ///
 /// The mapper must return:
-/// - valid = true if the barcode can be mapped
+/// - valid = true if the geo_id can be mapped
 /// - pattern_index in [0,3]
 /// - layer_index in [0,31]
 template <typename mapper_t = null_expected_layer_mapper>
@@ -94,7 +94,7 @@ struct expected_layer_pattern_collector : detray::base_actor {
   struct state {
     /// Target bitmask to update.
     pattern_type* pattern{nullptr};
-    /// Mapping from detray barcode to (pattern index, layer index).
+    /// Mapping from detray geo_id to (pattern index, layer index).
     mapper_type mapper{};
 
     /// Optional guard against repeated updates on the same surface.
@@ -122,12 +122,12 @@ struct expected_layer_pattern_collector : detray::base_actor {
     // Avoid double counting if navigator revisits the same sensitive.
     if (actor_state.deduplicate_consecutive_surfaces &&
         actor_state.has_last_surface &&
-        sf_barcode == actor_state.last_surface) {
+        geo_id == actor_state.last_surface) {
       ++actor_state.n_skipped;
       return;
     }
 
-    actor_state.last_surface = sf_barcode;
+    actor_state.last_surface = geo_id;
     actor_state.has_last_surface = true;
 
     if (actor_state.pattern == nullptr) {
@@ -135,7 +135,7 @@ struct expected_layer_pattern_collector : detray::base_actor {
       return;
     }
 
-    const mapping_result_type mapping = actor_state.mapper(sf_barcode);
+    const mapping_result_type mapping = actor_state.mapper(geo_id);
     if (!mapping.valid || mapping.pattern_index >= 4u ||
         mapping.layer_index >=
             static_cast<unsigned int>(sizeof(unsigned int) * 8u)) {

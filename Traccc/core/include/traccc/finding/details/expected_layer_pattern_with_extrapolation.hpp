@@ -34,15 +34,15 @@
 
 namespace traccc::details {
 
-/// Build an expected-layer pattern from a sequence of detector barcodes.
+/// Build an expected-layer pattern from a sequence of detector geometry identifiers.
 template <typename geo_id_range_t>
 TRACCC_HOST_DEVICE inline expected_layer_pattern_type
-collect_expected_layer_pattern(const barcode_range_t& geo_ids,
+collect_expected_layer_pattern(const geo_id_range_t& geo_ids,
                                const expected_layer_table_mapper& mapper) {
   expected_layer_pattern_type pattern{};
 
-  for (const auto& barcode : barcodes) {
-    const auto mapping = mapper(barcode);
+  for (const auto& geo_id : geo_ids) {
+    const auto mapping = mapper(geo_id);
     if (!mapping.valid || mapping.pattern_index >= pattern.size() ||
         mapping.layer_index >=
             static_cast<unsigned int>(sizeof(unsigned int) * 8u)) {
