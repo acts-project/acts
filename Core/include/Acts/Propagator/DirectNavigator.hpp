@@ -136,7 +136,7 @@ class DirectNavigator {
     /// @return Number of surfaces left to process in the propagation direction
     int remainingSurfaces() const {
       if (direction == Direction::Forward()) {
-        return options.surfaceSequence.size() - surfaceIndex;
+        return static_cast<int>(options.surfaceSequence.size()) - surfaceIndex;
       }
       return surfaceIndex + 1;
     }
