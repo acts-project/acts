@@ -4,7 +4,7 @@
 its direct-mode manifests. Only `main` pushes publish; other runs read anonymously.
 
 The pilot reuses the `s3-sccache` environment and its `S3_ACCESS_KEY_ID` /
-`S3_SECRET_ACCESS_KEY` secrets. Other runs use `s3-sccache-read`.
+`S3_SECRET_ACCESS_KEY` secrets for main pushes. Other runs need no environment.
 Storage: `https://s3.cern.ch`, region `cern`, bucket `cache`, prefix
 `acts-sccache/ccache-snapshots/<repository>/linux_ubuntu/v1/`.
 
