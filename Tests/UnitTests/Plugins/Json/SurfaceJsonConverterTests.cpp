@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
+#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiamondBounds.hpp"
@@ -23,14 +24,17 @@
 #include "Acts/Surfaces/PointBounds.hpp"
 #include "Acts/Surfaces/PointSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 
+#include <array>
 #include <fstream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include <nlohmann/json.hpp>
@@ -283,6 +287,38 @@ BOOST_AUTO_TEST_CASE(DiamondPlaneSurfaceRoundTripTests) {
   BOOST_CHECK_EQUAL(diamondPlaneTest->geometryId(),
                     diamondPlaneRef->geometryId());
   BOOST_CHECK_EQUAL(diamondPlaneTest->bounds(), diamondPlaneRef->bounds());
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceBoundsDecouplingTests) {
+  Transform3 trf(Transform3::Identity());
+  auto planeRef = Surface::makeShared<PlaneSurface>(
+      trf, std::make_shared<RectangleBounds>(4., 6.));
+
+  nlohmann::json jPlane = SurfaceJsonConverter::toJson(gctx, *planeRef);
+
+  // Surface and bounds each carry their own discriminator, so neither needs
+  // the concatenated "kind" the decoder used to be keyed on
+  BOOST_CHECK(!jPlane.contains("kind"));
+  BOOST_CHECK(!jPlane["bounds"].contains("kind"));
+  BOOST_CHECK_EQUAL(jPlane["type"], "PlaneSurface");
+  BOOST_CHECK_EQUAL(jPlane["bounds"]["type"], "RectangleBounds");
+
+  // ConvexPolygonBounds<N> resolves through the single ConvexPolygonBounds
+  // bounds decoder, whatever N was written
+  std::array<Vector2, 4> vertices{Vector2(-1., -1.), Vector2(1., -1.),
+                                  Vector2(1., 1.), Vector2(-1., 1.)};
+  auto polyRef = Surface::makeShared<PlaneSurface>(
+      trf, std::make_shared<ConvexPolygonBounds<4>>(vertices));
+  auto polyTest = SurfaceJsonConverter::fromJson(
+      SurfaceJsonConverter::toJson(gctx, *polyRef));
+  BOOST_CHECK_EQUAL(polyTest->bounds().type(), SurfaceBounds::eConvexPolygon);
+  BOOST_CHECK(polyTest->bounds().values() == polyRef->bounds().values());
+
+  // A surface paired with bounds it cannot store is a decode-time error
+  nlohmann::json jMismatch = jPlane;
+  jMismatch["type"] = "CylinderSurface";
+  BOOST_CHECK_THROW(SurfaceJsonConverter::fromJson(jMismatch),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

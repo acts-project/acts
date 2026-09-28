@@ -1,0 +1,109 @@
+name: 'S3 sccache'
+description: 'Install sccache and start it in the background with S3 storage on Linux x64'
+
+inputs:
+  read-only:
+    description: 'Use anonymous read-only access; set false only for trusted publishing builds'
+    required: false
+    default: 'true'
+  key-prefix:
+    description: 'S3 object prefix shared by compatible builds'
+    required: true
+  endpoint:
+    description: 'S3 endpoint URL'
+    required: false
+    default: 'https://s3.cern.ch'
+  region:
+    description: 'S3 signing region'
+    required: false
+    default: 'cern'
+  bucket:
+    description: 'S3 bucket name'
+    required: false
+    default: 'cache'
+  access-key-id:
+    description: 'S3 access key ID, required for writes'
+    required: false
+    default: ''
+  secret-access-key:
+    description: 'S3 secret access key, required for writes'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Configure sccache
+      shell: bash
+      env:
+        CACHE_READ_ONLY: ${{ inputs.read-only }}
+        CACHE_ENDPOINT: ${{ inputs.endpoint }}
+        CACHE_REGION: ${{ inputs.region }}
+        CACHE_BUCKET: ${{ inputs.bucket }}
+        CACHE_KEY_PREFIX: ${{ inputs.key-prefix }}
+      run: |
+        if [[ "$RUNNER_OS/$RUNNER_ARCH" != Linux/X64 ]]; then
+          echo '::error::This sccache action currently supports Linux x64 only.'
+          exit 1
+        fi
+        case "$CACHE_READ_ONLY" in
+          true) cache_mode=READ_ONLY ;;
+          false) cache_mode=READ_WRITE ;;
+          *) echo '::error::read-only must be true or false'; exit 1 ;;
+        esac
+        : "${CACHE_KEY_PREFIX:?Set the key-prefix input}"
+        # Startup includes a remote storage check; allow for network delays.
+        # Use a job-specific config instead of any existing host settings.
+        echo 'server_startup_timeout_ms = 60000' > "$RUNNER_TEMP/sccache.toml"
+        {
+          echo "SCCACHE_BUCKET=$CACHE_BUCKET"
+          echo "SCCACHE_ENDPOINT=$CACHE_ENDPOINT"
+          echo "SCCACHE_REGION=$CACHE_REGION"
+          echo "SCCACHE_S3_KEY_PREFIX=$CACHE_KEY_PREFIX"
+          echo "SCCACHE_S3_RW_MODE=$cache_mode"
+          echo "SCCACHE_S3_NO_CREDENTIALS=$CACHE_READ_ONLY"
+          echo "SCCACHE_BASEDIRS=$GITHUB_WORKSPACE"
+          echo "SCCACHE_DIR=$RUNNER_TEMP/sccache"
+          echo "SCCACHE_CONF=$RUNNER_TEMP/sccache.toml"
+          echo "SCCACHE_SERVER_UDS=$RUNNER_TEMP/sccache.sock"
+          # Credentials are available only at startup. Keep the daemon alive
+          # through tests until the caller's final statistics/shutdown step.
+          echo 'SCCACHE_IDLE_TIMEOUT=0'
+          echo 'AWS_EC2_METADATA_DISABLED=true'
+        } >> "$GITHUB_ENV"
+
+    - name: Install sccache
+      shell: bash
+      # PATH contains only the fixed runner-temp directory with the verified binary.
+      run: | # zizmor: ignore[github-env]
+        archive="$RUNNER_TEMP/sccache.tar.gz"
+        curl --fail --location --retry 3 --proto '=https' --proto-redir '=https' \
+          https://github.com/mozilla/sccache/releases/download/v0.18.0/sccache-v0.18.0-x86_64-unknown-linux-musl.tar.gz \
+          --output "$archive"
+        echo "45f1447fbe231e3037bde351ef70677dd212216c8d62ae7ca409fecc4d6acc89  $archive" | sha256sum --check
+        mkdir -p "$RUNNER_TEMP/sccache-bin"
+        tar -xzf "$archive" --strip-components=1 -C "$RUNNER_TEMP/sccache-bin"
+        echo "$RUNNER_TEMP/sccache-bin" >> "$GITHUB_PATH"
+
+    - name: Start sccache
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        AWS_ACCESS_KEY_ID: ${{ inputs.access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.secret-access-key }}
+      run: |
+        if [[ "$SCCACHE_S3_RW_MODE" == READ_WRITE ]]; then
+          : "${AWS_ACCESS_KEY_ID:?Set the access-key-id input for writes}"
+          : "${AWS_SECRET_ACCESS_KEY:?Set the secret-access-key input for writes}"
+        else
+          # Empty action inputs still become environment variables. sccache
+          # rejects even empty credentials when anonymous access is enabled.
+          unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+        fi
+        # The daemon otherwise discards stderr, hiding the cause of timeouts.
+        export SCCACHE_ERROR_LOG="$RUNNER_TEMP/sccache-startup.log"
+        export SCCACHE_LOG=sccache=info
+        : > "$SCCACHE_ERROR_LOG"
+        rm -f "$RUNNER_TEMP/sccache-startup.status"
+        nohup bash "$ACTION_PATH/start.sh" \
+          > "$RUNNER_TEMP/sccache-startup-client.log" 2>&1 < /dev/null &

@@ -13,7 +13,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AMVFInfo.hpp"
-#include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/TrackLinearizer.hpp"
@@ -23,8 +22,6 @@
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <algorithm>
-#include <initializer_list>
-#include <span>
 
 namespace Acts {
 
@@ -35,12 +32,12 @@ namespace Acts {
 ///   `Identification of b-jets and investigation of the discovery potential
 ///   of a Higgs boson in the WH−−>lvbb¯ channel with the ATLAS experiment`
 ///
-class AdaptiveMultiVertexFitter final : public IVertexFitter {
+class AdaptiveMultiVertexFitter {
   /// @brief Per-vertex scratch data of the adaptive multi-vertex fitter
   ///
-  /// This is the fitter-private counterpart of @ref VertexFitCandidate .
-  /// Everything here is regenerated during fitting and carries no meaning for
-  /// a caller. It lives in the fitter cache rather than in the fit problem.
+  /// This is the fitter-private counterpart of @c VertexFitCandidate: everything
+  /// here is regenerated during fitting and carries no meaning for a caller. It
+  /// lives in the fitter cache rather than in the fit problem.
   ///
   /// @note @c linPoint and @c oldPosition must be initialised to the seed
   /// position of the corresponding vertex when the scratch entry is first
@@ -75,7 +72,7 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
   /// Holds everything that is scratch data of a running fit: the annealing
   /// state, the impact point estimator state, the magnetic field cache and the
   /// per-vertex linearization bookkeeping. The data describing *what* is being
-  /// fitted lives in @ref VertexFitProblem instead.
+  /// fitted lives in @c VertexFitProblem instead.
   struct Cache {
     /// Constructor for the multi-vertex fitter cache
     /// @param field Magnetic field provider for track extrapolation
@@ -84,17 +81,6 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
           const Acts::MagneticFieldContext& magContext)
         : ipState{field.makeCache(magContext)},
           fieldCache(field.makeCache(magContext)) {}
-
-    /// Cache scratch data is owned by one caller and cannot be copied.
-    Cache(const Cache&) = delete;
-    /// Cache scratch data cannot be copy-assigned.
-    /// @return Reference to this cache.
-    Cache& operator=(const Cache&) = delete;
-    /// Transfer ownership of the scratch data.
-    Cache(Cache&&) = default;
-    /// Transfer ownership of the scratch data.
-    /// @return Reference to this cache.
-    Cache& operator=(Cache&&) = default;
 
     /// Drop the scratch data associated with @p vtx
     ///
@@ -118,7 +104,7 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
     std::map<const Vertex*, VertexScratch> vertexScratch;
 
     /// Construct a cache adopting an already existing impact point estimator
-    /// state and magnetic field cache. Used by the deprecated @ref State based
+    /// state and magnetic field cache. Used by the deprecated @c State based
     /// entry points, which own those two caches themselves.
     /// @param ipStateIn Impact point estimator state to adopt
     /// @param fieldCacheIn Magnetic field cache to adopt
@@ -186,9 +172,6 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
       Config cfg, std::unique_ptr<const Logger> logger = getDefaultLogger(
                       "AdaptiveMultiVertexFitter", Logging::INFO));
 
-  /// Move constructor
-  AdaptiveMultiVertexFitter(AdaptiveMultiVertexFitter&&) noexcept = default;
-
   /// @brief Adds a new vertex to an existing multi-vertex fit.
   /// 1. The 3D impact parameters are calculated for all tracks associated
   /// with newVertex.
@@ -205,43 +188,9 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
   ///
   /// @return Result<void> object
   Result<void> addVtxToFit(VertexFitProblem& problem,
-                           std::span<Vertex* const> newVertices,
-                           const VertexingOptions& vertexingOptions,
-                           Cache& cache) const;
-
-  /// @brief Compatibility overload for vector callers.
-  /// @deprecated Pass a span of vertex pointers instead.
-  /// @param problem The multi-vertex fit problem
-  /// @param newVertices Vertices to be added to the fit
-  /// @param vertexingOptions Vertexing options
-  /// @param cache Fitter cache
-  /// @return Result indicating success or failure of the fit
-  [[deprecated("Pass std::span<Vertex* const> to addVtxToFit instead")]]
-  Result<void> addVtxToFit(VertexFitProblem& problem,
                            const std::vector<Vertex*>& newVertices,
                            const VertexingOptions& vertexingOptions,
-                           Cache& cache) const {
-    return addVtxToFit(problem, std::span<Vertex* const>{newVertices},
-                       vertexingOptions, cache);
-  }
-
-  /// @brief Compatibility overload for brace-initialized vertex lists.
-  /// @deprecated Pass a span of vertex pointers instead.
-  /// @param problem The multi-vertex fit problem
-  /// @param newVertices Vertices to be added to the fit
-  /// @param vertexingOptions Vertexing options
-  /// @param cache Fitter cache
-  /// @return Result indicating success or failure of the fit
-  [[deprecated("Pass std::span<Vertex* const> to addVtxToFit instead")]]
-  Result<void> addVtxToFit(VertexFitProblem& problem,
-                           std::initializer_list<Vertex*> newVertices,
-                           const VertexingOptions& vertexingOptions,
-                           Cache& cache) const {
-    return addVtxToFit(
-        problem,
-        std::span<Vertex* const>{newVertices.begin(), newVertices.size()},
-        vertexingOptions, cache);
-  }
+                           Cache& cache) const;
 
   /// @brief Performs a simultaneous fit of all vertices in
   /// problem.vertices
@@ -255,34 +204,6 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
                    const VertexingOptions& vertexingOptions,
                    Cache& cache) const;
 
-  /// @copydoc IVertexFitter::makeCache
-  IVertexFitter::Cache makeCache(
-      const MagneticFieldContext& mctx) const override {
-    return IVertexFitter::Cache{std::in_place_type<Cache>,
-                                *m_cfg.ipEst.config().bField, mctx};
-  }
-
-  /// @copydoc IVertexFitter::fit
-  Result<void> fit(VertexFitProblem& problem,
-                   const VertexingOptions& vertexingOptions,
-                   IVertexFitter::Cache& cache) const override {
-    return fit(problem, vertexingOptions, cache.as<Cache>());
-  }
-
-  /// @copydoc IVertexFitter::addVertices
-  Result<void> addVertices(VertexFitProblem& problem,
-                           std::span<Vertex* const> newVertices,
-                           const VertexingOptions& vertexingOptions,
-                           IVertexFitter::Cache& cache) const override {
-    return addVtxToFit(problem, newVertices, vertexingOptions,
-                       cache.as<Cache>());
-  }
-
-  /// @copydoc IVertexFitter::fitSingle
-  Result<Vertex> fitSingle(std::span<const InputTrack> trackVector,
-                           const VertexingOptions& vertexingOptions,
-                           IVertexFitter::Cache& cache) const override;
-
   // Backwards compatibility: the pre-split fitter state and the entry points
   // taking it. Both are adapters on top of the interface above, which they
   // reproduce exactly: the state is decomposed into a problem and a cache on
@@ -295,10 +216,10 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
 
   /// @brief The fitter state
   ///
-  /// @deprecated Split into @ref VertexFitProblem, which describes the
-  /// vertices to be fitted and is owned by the caller, and @ref Cache, which
-  /// holds the fitter's scratch data. Construct those two separately and use
-  /// the corresponding @ref fit and @ref addVtxToFit overloads instead.
+  /// @deprecated Split into @c VertexFitProblem, which describes the vertices
+  /// to be fitted and is owned by the caller, and @c Cache, which holds the
+  /// fitter's scratch data. Construct those two separately and use the
+  /// corresponding @c fit and @c addVtxToFit overloads instead.
   struct State {
     /// Constructor for multi-vertex fitter state
     /// @param field Magnetic field provider for track extrapolation
@@ -370,8 +291,7 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
 
   /// @brief Adds a new vertex to an existing multi-vertex fit
   ///
-  /// @deprecated Use the overload taking a @ref VertexFitProblem and a
-  /// @ref Cache
+  /// @deprecated Use the overload taking a @c VertexFitProblem and a @c Cache
   ///
   /// @param state Fitter state
   /// @param newVertices Vertex to be added to fit
@@ -379,7 +299,7 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
   ///
   /// @return Result<void> object
   [[deprecated(
-      "Use addVtxToFit(VertexFitProblem&, std::span<Vertex* const>, const "
+      "Use addVtxToFit(VertexFitProblem&, const std::vector<Vertex*>&, const "
       "VertexingOptions&, Cache&)")]]
   Result<void> addVtxToFit(State& state,
                            const std::vector<Vertex*>& newVertices,
@@ -388,8 +308,7 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
   /// @brief Performs a simultaneous fit of all vertices in
   /// state.vertexCollection
   ///
-  /// @deprecated Use the overload taking a @ref VertexFitProblem and a
-  /// @ref Cache
+  /// @deprecated Use the overload taking a @c VertexFitProblem and a @c Cache
   ///
   /// @param state Fitter state
   /// @param vertexingOptions Vertexing options
@@ -401,7 +320,7 @@ class AdaptiveMultiVertexFitter final : public IVertexFitter {
 
  private:
   /// Configuration object
-  Config m_cfg;
+  const Config m_cfg;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

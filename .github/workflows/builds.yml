@@ -29,8 +29,9 @@ concurrency:
   # and a cancellation reads as a failure to the queue, ejecting the PR.
   cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
-# ccache is saved from `main` only: a PR-written cache is readable by that PR
-# alone, but still evicts `main`'s entries from the shared 10 GB.
+# Jobs using ccache save from `main` only: a PR-written cache is readable by
+# that PR alone, but still evicts `main`'s entries from the shared 10 GB.
+# linux_ubuntu pilots sccache with CERN S3 instead; see CI/sccache.md.
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
@@ -42,6 +43,10 @@ env:
 jobs:
   linux_ubuntu:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
+    # Restrict s3-sccache to the main branch in GitHub environment settings.
+    # Branch pushes, PRs and merge queue builds use a separate, secret-free environment.
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || 's3-sccache-read' }}
     permissions:
       contents: read
       # Authenticated GHCR reads: the spack buildcache is pulled from
@@ -50,9 +55,6 @@ jobs:
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
     env:
-      # The FPE build evicted objects during compilation at 500 MB. Cache
-      # retention removes superseded main archives to make room for this.
-      CCACHE_MAXSIZE: 1G
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
@@ -62,6 +64,16 @@ jobs:
           lfs: true
           persist-credentials: false
 
+      - name: Set up sccache
+        id: sccache-start
+        uses: ./.github/actions/sccache
+        with:
+          key-prefix: acts-sccache/linux_ubuntu/v1/
+          read-only: ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+          # Only the protected main environment supplies these credentials.
+          access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.S3_ACCESS_KEY_ID || '' }}
+          secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.S3_SECRET_ACCESS_KEY || '' }}
+
       - name: Install dependencies
         uses: ./.github/actions/dependencies
         with:
@@ -69,21 +81,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+      - name: Check sccache startup
+        id: sccache-ready
+        shell: bash
+        run: bash .github/actions/sccache/wait.sh
 
       - name: Configure
+        env:
+          CACHE_LAUNCHER: ${{ steps.sccache-ready.outputs.launcher }}
         run: >
-          ccache -z &&
           CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci-fpe
+          -DCMAKE_CXX_COMPILER_LAUNCHER="$CACHE_LAUNCHER"
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_PLUGIN_ONNX=ON
 
@@ -93,16 +103,6 @@ jobs:
       - name: Build docs examples
         # these are excluded from the ALL target, but we want to test them here
         run: cmake --build build --target docs-examples
-
-      - name: ccache stats
-        run: ccache -s
-
-      - name: Save ccache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always() && github.ref == 'refs/heads/main'
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
         run: >
@@ -148,6 +148,10 @@ jobs:
         run: >
           CI/dependencies/run.sh .env
           ctest --test-dir build-downstream --output-on-failure
+
+      - name: sccache statistics and shutdown
+        if: always() && steps.sccache-start.outcome == 'success'
+        uses: ./.github/actions/sccache/stats
 
   linux_examples_test:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
@@ -1386,23 +1390,9 @@ jobs:
     runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
     permissions:
       contents: read
-    # setup.sh picks the stack flavour from the container's os-release, so the
-    # image decides which nightly is exercised. This is the image run-lcg-view
-    # used before the move to husk, kept deliberately:
-    #
-    #   * the ubuntu24 flavour builds against the container's own gcc, while the
-    #     el9 one takes its toolchain from /cvmfs/sw.hsf.org — a repository the
-    #     `cvmfs` label does not bind in, so an alma9 container cannot configure
-    #     at all until the fleet mounts it;
-    #   * el9 additionally aborts load_geo_MuSIC_v2 with a heap error during
-    #     teardown (see the k4ActsTracking notes below), which ubuntu24 does not.
-    #
-    # ccache and wget come from this image; nothing has to be installed.
-    #
-    # Upstream only publishes `latest`, so this is pinned by digest to keep it
-    # from moving underneath us — it has to be rolled by hand to pick up a new
-    # base image, unlike the tagged acts images bump_versions.py maintains.
-    container: registry.cern.ch/ghcr.io/aidasoft/ubuntu2404@sha256:18af2d37575bd03a4249473991a7576cc2b2b3de3233927350e73db37955c17d
+    # Key4hep selects its default LCG provider and compiler for AlmaLinux 9.
+    # Exercise the platform used by most Key4hep users with C++23.
+    container: registry.cern.ch/ghcr.io/acts-project/alma9-base:88
     env:
       KEY4HEP_VIEW: /cvmfs/sw-nightlies.hsf.org/key4hep
       # Each run compiles a fresh checkout, so ctime/mtime always differ.
@@ -1419,6 +1409,8 @@ jobs:
         with:
           path: acts
           persist-credentials: false
+      - name: Install test-data download tool
+        run: dnf install -y wget
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: key4hep/k4ActsTracking
@@ -1446,11 +1438,12 @@ jobs:
           echo "::group::Configure Acts"
           cmake -B build -S . -GNinja \
             -DACTS_BUILD_PLUGIN_DD4HEP=ON \
+            -DACTS_BUILD_PLUGIN_EDM4HEP=ON \
             -DACTS_BUILD_PLUGIN_JSON=ON \
             -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
             -DACTS_BUILD_PLUGIN_ROOT=ON \
             -DCMAKE_INSTALL_PREFIX="$(pwd)/install" \
-            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_STANDARD=23 \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           echo "::endgroup::"
           echo "::group::Build and Install Acts"
@@ -1465,7 +1458,7 @@ jobs:
           ccache -z
           echo "::group::Configure k4ActsTracking"
           cmake -B build -S . -GNinja \
-            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_STANDARD=23 \
             -DCMAKE_INSTALL_PREFIX="$(pwd)/install" \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           echo "::endgroup::"

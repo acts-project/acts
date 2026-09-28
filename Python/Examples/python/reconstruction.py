@@ -56,6 +56,10 @@ SeedFinderConfigArg = namedtuple(
         "rMaxMiddle",
         "helixCutTolerance",
         "toleranceParam",
+        "useTimeDoubletCut",
+        "doubletTimeCutNSigma",
+        "useTimeTripletCut",
+        "tripletTimeChi2Max",
         "deltaR",  # (min,max)
         "deltaRBottomSP",  # (min,max)
         "deltaRTopSP",  # (min,max)
@@ -64,7 +68,7 @@ SeedFinderConfigArg = namedtuple(
         "r",  # (min,max)
         "z",  # (min,max)
     ],
-    defaults=[None] * 23 + [(None, None)] * 7,
+    defaults=[None] * 27 + [(None, None)] * 7,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -1110,6 +1114,10 @@ def addGridTripletSeeding(
             maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
             maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
             useDeltaRinsteadOfTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
+            useTimeDoubletCut=seedFinderConfigArg.useTimeDoubletCut,
+            doubletTimeCutNSigma=seedFinderConfigArg.doubletTimeCutNSigma,
+            useTimeTripletCut=seedFinderConfigArg.useTimeTripletCut,
+            tripletTimeChi2Max=seedFinderConfigArg.tripletTimeChi2Max,
             useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
             numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
             zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,

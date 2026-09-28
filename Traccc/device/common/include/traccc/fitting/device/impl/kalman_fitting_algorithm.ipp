@@ -62,7 +62,7 @@ auto kalman_fitting_algorithm::prepare_fit_payload_helper(
             vecmem::data::vector_view<device::fit_tpayload<
                 detector_view_t, bfield_view_t, surface_t>>(1u, &host_tpayload),
             device_tpayload)
-            ->ignore();
+            ->wait();
 
         // Create the result payload object.
         fit_payload result{det, field};

@@ -13,7 +13,6 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 
 #include <algorithm>
-#include <span>
 
 namespace Acts {
 
@@ -106,9 +105,8 @@ Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::find(
     }
 
     // Perform the fit
-    auto fitResult = m_cfg.vertexFitter.addVtxToFit(
-        fitProblem, std::span<Vertex* const>{newVerticesPtr}, vertexingOptions,
-        fitCache);
+    auto fitResult = m_cfg.vertexFitter.addVtxToFit(fitProblem, newVerticesPtr,
+                                                    vertexingOptions, fitCache);
     if (!fitResult.ok()) {
       return fitResult.error();
     }

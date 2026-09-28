@@ -157,7 +157,7 @@ Result<void> AdaptiveMultiVertexFitter::fit(
 }
 
 Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
-    VertexFitProblem& problem, std::span<Vertex* const> newVertices,
+    VertexFitProblem& problem, const std::vector<Vertex*>& newVertices,
     const VertexingOptions& vertexingOptions, Cache& cache) const {
   for (const auto& newVertex : newVertices) {
     if (problem.candidates[newVertex].trackLinks.empty()) {
@@ -168,11 +168,10 @@ Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
     }
   }
 
-  std::vector<Vertex*> verticesToFit(newVertices.begin(), newVertices.end());
+  std::vector<Vertex*> verticesToFit = newVertices;
 
   // List of vertices added in last iteration
-  std::vector<Vertex*> lastIterAddedVertices(newVertices.begin(),
-                                             newVertices.end());
+  std::vector<Vertex*> lastIterAddedVertices = newVertices;
   // List of vertices added in current iteration
   std::vector<Vertex*> currentIterAddedVertices;
 
@@ -233,58 +232,6 @@ Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
   }
 
   return {};
-}
-
-Result<Vertex> AdaptiveMultiVertexFitter::fitSingle(
-    std::span<const InputTrack> trackVector,
-    const VertexingOptions& vertexingOptions,
-    IVertexFitter::Cache& anyCache) const {
-  if (trackVector.empty()) {
-    ACTS_ERROR("Empty track collection handed to fitSingle.");
-    return VertexingError::EmptyInput;
-  }
-
-  Cache& cache = anyCache.as<Cache>();
-
-  Vertex vtx(vertexingOptions.constraint.fullPosition());
-  if (vertexingOptions.constraint.fullCovariance() != SquareMatrix4::Zero()) {
-    vtx.setFullCovariance(vertexingOptions.constraint.fullCovariance());
-  } else {
-    // Without a constraint the fit starts from an essentially unconstrained
-    // vertex. The fitter requires a non-zero covariance to start from.
-    vtx.setFullCovariance(SquareMatrix4(SquareMatrix4::Identity() * 1e+8));
-  }
-
-  VertexFitProblem problem;
-  problem.vertices.push_back(&vtx);
-
-  VertexFitCandidate& candidate = problem.candidates[&vtx];
-  candidate.seedPosition = vtx.fullPosition();
-  if (vertexingOptions.useConstraintInFit) {
-    candidate.constraint = vertexingOptions.constraint;
-  }
-  candidate.trackLinks.assign(trackVector.begin(), trackVector.end());
-
-  for (const auto& trk : trackVector) {
-    problem.tracksAtVertices.try_emplace(std::make_pair(trk, &vtx),
-                                         m_cfg.extractParameters(trk), trk);
-  }
-  problem.addVertexToMultiMap(vtx);
-
-  if (auto res = fit(problem, vertexingOptions, cache); !res.ok()) {
-    return res.error();
-  }
-
-  // Copy the fitted tracks back onto the returned vertex
-  std::vector<TrackAtVertex> tracksAtVertex;
-  tracksAtVertex.reserve(trackVector.size());
-  for (const auto& trk : candidate.trackLinks) {
-    tracksAtVertex.push_back(
-        problem.tracksAtVertices.at(std::make_pair(trk, &vtx)));
-  }
-  vtx.setTracksAtVertex(std::move(tracksAtVertex));
-
-  return vtx;
 }
 
 bool AdaptiveMultiVertexFitter::isAlreadyInList(
@@ -564,8 +511,7 @@ Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
   Cache cache(std::move(state.ipState), std::move(state.fieldCache));
   decomposeState(state, problem, cache);
 
-  auto res = addVtxToFit(problem, std::span<Vertex* const>{newVertices},
-                         vertexingOptions, cache);
+  auto res = addVtxToFit(problem, newVertices, vertexingOptions, cache);
 
   recomposeState(state, problem, cache);
   return res;

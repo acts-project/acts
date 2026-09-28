@@ -7,11 +7,18 @@
 # Declare the core library test(s).
 traccc_add_test(core
    "test_algorithm.cpp"
+   "test_axis.cpp"
+   "test_copy.cpp"
+   "test_grid2.cpp"
+   "test_populator.cpp"
    "test_pvalue.cpp"
+   "test_ranges.cpp"
+   "test_serializer.cpp"
+   "test_simulation.cpp"
    "test_subspace.cpp"
    "particle.cpp"
-   LINK_LIBRARIES GTest::gtest_main traccc_tests_common
-   traccc::core traccc::io
+   LINK_LIBRARIES GTest::gtest_main vecmem::core traccc_tests_common
+   traccc::core traccc::io traccc::performance traccc::simulation
 )
 
 if(TRACCC_USE_ROOT)

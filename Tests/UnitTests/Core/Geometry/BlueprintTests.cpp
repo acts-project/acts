@@ -18,6 +18,7 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/PadBlueprintNode.hpp"
@@ -1479,6 +1480,117 @@ BOOST_AUTO_TEST_CASE(PadBlueprintNodeNestedInContainer) {
                     padCyl.get(CylinderVolumeBounds::eMaxR) + 5_mm);
   BOOST_CHECK_EQUAL(worldCyl.get(CylinderVolumeBounds::eHalfLengthZ),
                     padCyl.get(CylinderVolumeBounds::eHalfLengthZ) + 5_mm);
+}
+
+BOOST_DATA_TEST_CASE(GeometryIdentifierWrappingPadBlueprintNode,
+                     boost::unit_test::data::make({false, true}),
+                     distinguishChild) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {5_mm, 5_mm};
+  cfg.envelope[AxisDirection::AxisR] = {5_mm, 5_mm};
+  Blueprint root{cfg};
+
+  // World -> geometry ID setter -> Pad -> child.
+  auto& geometryId = root.withGeometryIdentifier();
+  geometryId.setAllVolumeIdsTo(42);
+
+  ExtentEnvelope padEnvelope = ExtentEnvelope::Zero();
+  padEnvelope[AxisDirection::AxisZ] = {10_mm, 10_mm};
+  padEnvelope[AxisDirection::AxisR] = {1_mm, 10_mm};
+  auto pad = std::make_shared<PadBlueprintNode>("Pad", padEnvelope);
+  geometryId.addChild(pad);
+
+  BlueprintNode* childParent = pad.get();
+  if (distinguishChild) {
+    // Distinguish the child's ID from the enclosing pad's ID.
+    childParent = &pad->withGeometryIdentifier().setLayerIdTo(1);
+  }
+  childParent->addStaticVolume(std::make_unique<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm), "child"));
+
+  if (!distinguishChild) {
+    // The volume setter recurses into the pad, giving Pad and child identical
+    // full IDs unless the child has a distinct layer component. Their portal
+    // IDs collide as well, which is detected first during geometry closure.
+    Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
+    BOOST_CHECK_EXCEPTION(
+        root.construct({}, gctx, *logger), std::invalid_argument,
+        [](const std::invalid_argument& error) {
+          return std::string{error.what()}.find("Duplicate portal ID:") !=
+                 std::string::npos;
+        });
+    return;
+  }
+
+  auto trackingGeometry = root.construct({}, gctx, *logger);
+  auto lookup = nameLookup(*trackingGeometry);
+
+  BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 3u);
+  BOOST_CHECK_EQUAL(lookup("Pad").geometryId(),
+                    GeometryIdentifier{}.withVolume(42));
+  BOOST_CHECK_EQUAL(lookup("child").geometryId(),
+                    GeometryIdentifier{}.withVolume(42).withLayer(1));
+  BOOST_CHECK_NE(lookup("World").geometryId().volume(), 42u);
+}
+
+BOOST_DATA_TEST_CASE(DirectChildVolumeIdWrappingPadBlueprintNode,
+                     boost::unit_test::data::make({false, true}),
+                     assignChildId) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {5_mm, 5_mm};
+  cfg.envelope[AxisDirection::AxisR] = {5_mm, 5_mm};
+  Blueprint root{cfg};
+
+  auto& geometryId = root.withGeometryIdentifier();
+  geometryId.setLayerIdTo(3).setDirectChildVolumeIdTo(42);
+
+  ExtentEnvelope padEnvelope = ExtentEnvelope::Zero();
+  padEnvelope[AxisDirection::AxisZ] = {10_mm, 10_mm};
+  padEnvelope[AxisDirection::AxisR] = {1_mm, 10_mm};
+  auto pad = std::make_shared<PadBlueprintNode>("Pad", padEnvelope);
+  geometryId.addChild(pad);
+
+  auto child = std::make_unique<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm), "child");
+  if (assignChildId) {
+    child->assignGeometryId(GeometryIdentifier{}.withVolume(43).withLayer(7));
+  }
+  pad->addStaticVolume(std::move(child));
+
+  auto trackingGeometry = root.construct({}, gctx, *logger);
+  auto lookup = nameLookup(*trackingGeometry);
+  BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 3u);
+  BOOST_CHECK_EQUAL(lookup("Pad").geometryId(),
+                    GeometryIdentifier{}.withVolume(42).withLayer(3));
+  if (assignChildId) {
+    BOOST_CHECK_EQUAL(lookup("child").geometryId(),
+                      GeometryIdentifier{}.withVolume(43).withLayer(7));
+  } else {
+    BOOST_CHECK_NE(lookup("child").geometryId().volume(), 0u);
+    BOOST_CHECK_NE(lookup("child").geometryId().volume(), 42u);
+    BOOST_CHECK_EQUAL(lookup("child").geometryId().layer(), 0u);
+  }
+  BOOST_CHECK_NE(lookup("World").geometryId().volume(), 42u);
+}
+
+BOOST_AUTO_TEST_CASE(DirectChildVolumeIdRejectsExistingVolumeId) {
+  Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
+  Blueprint root{Blueprint::Config{}};
+  auto& geometryId = root.withGeometryIdentifier();
+  geometryId.setDirectChildVolumeIdTo(42);
+  auto child = std::make_unique<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 30_mm), "child");
+  child->assignGeometryId(GeometryIdentifier{}.withVolume(43));
+  geometryId.addStaticVolume(std::move(child));
+
+  BOOST_CHECK_EXCEPTION(root.construct({}, gctx, *logger), std::logic_error,
+                        [](const std::logic_error& error) {
+                          return std::string{error.what()} ==
+                                 "Volume already has a volume ID";
+                        });
 }
 
 BOOST_AUTO_TEST_CASE(PadBlueprintNodeReferenceAxisBounds) {
