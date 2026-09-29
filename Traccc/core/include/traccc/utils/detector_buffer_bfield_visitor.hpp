@@ -20,9 +20,10 @@ auto detector_buffer_magnetic_field_visitor(
       bfield, [&detector_buffer,
                &callable]<typename bfield_t>(const bfield_t& concrete_bfield) {
         return detector_buffer_visitor<detector_list_t>(
-            detector_buffer,
-            [&concrete_bfield, &callable]<typename detector_t>(
-                const detector_t::view& concrete_detector_view) {
+            detector_buffer, [&concrete_bfield,
+                              &callable]<detray::concepts::detector detector_t>(
+                                 const detray::detector_view_t<detector_t>&
+                                     concrete_detector_view) {
               return callable.template operator()<detector_t>(
                   concrete_detector_view, concrete_bfield);
             });

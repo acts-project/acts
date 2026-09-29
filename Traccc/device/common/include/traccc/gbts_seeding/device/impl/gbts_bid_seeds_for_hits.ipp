@@ -26,8 +26,7 @@ TRACCC_HOST_DEVICE inline void gbts_bid_seeds_for_hits(
   const vecmem::device_vector<const unsigned int> d_output_graph(
       payload.output_graph);
   const vecmem::device_vector<const int2> d_path_store(payload.path_store);
-  const vecmem::device_vector<const char> d_seed_ambiguity(
-      payload.seed_ambiguity);
+  vecmem::device_vector<char> d_seed_ambiguity(payload.seed_ambiguity);
   const vecmem::device_vector<const int2> d_seed_proposals(
       payload.seed_proposals);
   vecmem::device_vector<unsigned long long int> d_hit_bids(payload.hit_bids);
@@ -36,12 +35,22 @@ TRACCC_HOST_DEVICE inline void gbts_bid_seeds_for_hits(
   const unsigned int blockDimX = thread_id.getBlockDimX();
   const unsigned int gridDimX = thread_id.getGridDimX();
 
-  for (unsigned int prop_idx = globalIdx; prop_idx < payload.nProps;
+  const unsigned int path_count =
+      vecmem::device_vector<const unsigned int>(payload.path_count)[0];
+  const unsigned int nPaths =
+      (path_count < payload.nPathsMax) ? path_count : payload.nPathsMax;
+  for (unsigned int prop_idx = globalIdx; prop_idx < nPaths;
        prop_idx += blockDimX * gridDimX) {
-    if (d_seed_ambiguity[prop_idx] == -2) {
+    const int2 prop = d_seed_proposals[prop_idx];
+    if (prop.y < 0) {
       continue;
     }
-    const int2 prop = d_seed_proposals[prop_idx];
+    // A proposal that lost its edge bid is rejected.
+    if (d_seed_ambiguity[prop_idx] != 0) {
+      d_seed_ambiguity[prop_idx] = -2;
+      continue;
+    }
+    d_seed_ambiguity[prop_idx] = 1;
     const unsigned long long int seed_bid =
         (static_cast<unsigned long long int>(prop.x) << 32) |
         (static_cast<unsigned long long int>(prop_idx));

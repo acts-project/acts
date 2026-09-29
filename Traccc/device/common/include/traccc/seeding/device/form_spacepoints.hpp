@@ -34,9 +34,10 @@ namespace traccc::device {
 /// @param[in] spacepoint_index_view The prefix sum of the spacepoint flags
 /// @param[out] spacepoints_view     Collection of spacepoints
 ///
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 TRACCC_HOST_DEVICE inline void form_spacepoints(
-    global_index_t globalIndex, typename detector_t::view det_view,
+    global_index_t globalIndex,
+    const detray::detector_view_t<detector_t> det_view,
     const edm::measurement_collection::const_view& measurements_view,
     const vecmem::data::vector_view<const unsigned int>& spacepoint_index_view,
     edm::spacepoint_collection::view spacepoints_view);

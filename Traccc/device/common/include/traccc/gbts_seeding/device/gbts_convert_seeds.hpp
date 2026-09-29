@@ -22,13 +22,15 @@ namespace traccc::device {
 /// (Global Event Data) Payload for the @c traccc::device::gbts_convert_seeds
 /// function
 struct gbts_convert_seeds_payload {
-  /// Number of seed proposals
-  unsigned int nProps;
-  /// Number of accepted seeds (nProps - nRejectedProps)
-  unsigned int nSeeds;
+  /// Capacity of the path store (maximum number of paths)
+  unsigned int nPathsMax;
+  /// Expected number of paths, only used to size the kernel launch
+  unsigned int nPathsGrid;
+  /// Device-side number of paths (clamped to nPathsMax by the kernel)
+  vecmem::data::vector_view<const unsigned int> path_count;
   /// Maximum number of neighbours retained per edge
   unsigned int max_num_neighbours;
-  /// Per-seed-proposal (path_store index, level)
+  /// Per-seed-proposal (quality, path-store index), index -1 if empty
   vecmem::data::vector_view<const int2> seed_proposals;
   /// Per-seed-proposal ambiguity tag
   vecmem::data::vector_view<const char> seed_ambiguity;

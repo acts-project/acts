@@ -184,7 +184,7 @@ TEST_P(PropagatorWithRkStepper, rk4_propagator_const_bfield) {
   using bfield_t = bfield::const_field_t<scalar>;
 
   // Toy detector
-  using detector_t = detector<test::toy_metadata>;
+  using detector_t = host::detector<test::toy_metadata>;
 
   // Runge-Kutta propagation
   using navigator_t =
@@ -285,7 +285,7 @@ TEST_P(PropagatorWithRkStepper, rk4_propagator_inhom_bfield) {
   using bfield_t = bfield::inhom_field_t<scalar>;
 
   // Toy detector
-  using detector_t = detector<test::toy_metadata>;
+  using detector_t = host::detector<test::toy_metadata>;
 
   // Runge-Kutta propagation
   using navigator_t =

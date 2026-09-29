@@ -107,6 +107,9 @@ class triplet_seeding_algorithm : public device::triplet_seeding_algorithm,
   void select_seeds_kernel(
       const select_seeds_kernel_payload& payload) const override;
 
+  /// Wait for outstanding work on the algorithm stream or queue.
+  void synchronize() const override;
+
 };  // class triplet_seeding_algorithm
 
 }  // namespace traccc::alpaka

@@ -13,14 +13,9 @@ on:
     # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Detray/**"
-      - "cmake/**"
-      - "codegen/**"
-      - "thirdparty/**"
-      - "CMakeLists.txt"
-      - "CMakePresets.json"
-      - "CI/**"
-      - ".github/actions/**"
       - ".github/workflows/detray.yml"
+      - ".github/actions/ccache-s3/**"
+      - "CI/ccache_snapshot.py*"
       - ".github/detray-traccc-filters.yml"
   pull_request:
     branches:
@@ -28,14 +23,9 @@ on:
     # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Detray/**"
-      - "cmake/**"
-      - "codegen/**"
-      - "thirdparty/**"
-      - "CMakeLists.txt"
-      - "CMakePresets.json"
-      - "CI/**"
-      - ".github/actions/**"
       - ".github/workflows/detray.yml"
+      - ".github/actions/ccache-s3/**"
+      - "CI/ccache_snapshot.py*"
       - ".github/detray-traccc-filters.yml"
   # The changes job applies path filtering to merge groups, which do not
   # support the workflow-level path filters above.
@@ -52,12 +42,10 @@ concurrency:
 permissions:
   contents: read
 
-# ccache is saved from `main` only: a PR-written cache is readable by that PR
-# alone, but still evicts `main`'s entries from the shared 10 GB.
+# Compiler caches use CERN S3 snapshots; only main publishes.
 env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
-  CCACHE_KEY_SUFFIX: r1
 
 # All the different build/test jobs.
 jobs:
@@ -83,7 +71,7 @@ jobs:
           filters: .github/detray-traccc-filters.yml
 
   # Native build jobs.
-  native:
+  host-native:
     needs: changes
     # !cancelled() allows PR/push jobs through when changes is skipped.
     if: >-
@@ -105,7 +93,7 @@ jobs:
 
     # The system to run on.
     runs-on: ${{ matrix.PLATFORM.OS }}
-    name: "native (${{ matrix.PLATFORM.OS }})"
+    name: "CPU - Build (${{ matrix.BUILD_TYPE }}, float, ${{ matrix.PLATFORM.OS }})"
 
     # The build/test steps to execute.
     steps:
@@ -115,10 +103,11 @@ jobs:
         persist-credentials: false
     # Run the CMake configuration. Test that the metadata generation runs
     - name: Configure
-      run: cmake --preset detray-full-fp64
+      run: cmake --preset detray-full-fp32
                  -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }}
                  -DDETRAY_FAIL_ON_WARNINGS=ON
                  -DDETRAY_SET_LOGGING=DEBUG
+                 -DDETRAY_EIGEN_PLUGIN=OFF
                  -DDETRAY_SMATRIX_PLUGIN=OFF
                  -DDETRAY_FASTOR_PLUGIN=OFF
                  -DDETRAY_VC_AOS_PLUGIN=OFF
@@ -149,7 +138,7 @@ jobs:
         BUILD_TYPE: ["Release", "Debug"]
         SCALAR_TYPE: ["float", "double"]
         PLATFORM:
-          - NAME: "HOST"
+          - NAME: "CPU"
             CXX_STANDARD: "20"
             CONTAINER: "ghcr.io/acts-project/ubuntu2604:91"
             # detray-full-fp32 turns benchmarks on, so Google Benchmark has to
@@ -166,7 +155,7 @@ jobs:
     # BUILD_TYPE and SCALAR_TYPE are in the name because merge-sentinel
     # deduplicates result items by normalised name: without them all four legs
     # collapse into one check and a failing leg is masked by a passing one.
-    name: "host-container (${{ matrix.PLATFORM.NAME }}, C++${{ matrix.PLATFORM.CXX_STANDARD }}, ${{ matrix.BUILD_TYPE }}, ${{ matrix.SCALAR_TYPE }})"
+    name: "${{ matrix.PLATFORM.NAME }} (${{ matrix.BUILD_TYPE }}, ${{ matrix.SCALAR_TYPE }})"
 
     # Use BASH as the shell from the image.
     defaults:
@@ -190,8 +179,6 @@ jobs:
       uses: ./.github/actions/dependencies
       with:
         compiler: g++
-        # Flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.1.0
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
@@ -276,7 +263,7 @@ jobs:
       # fall back to the anonymous, heavily rate limited bucket.
       packages: read
     # SCALAR_TYPE belongs in the name; see the note on `host-container`.
-    name: "device-container (${{ matrix.PLATFORM.NAME }}, C++${{ matrix.PLATFORM.CXX_STANDARD }}, ${{ matrix.SCALAR_TYPE }})"
+    name: "${{ matrix.PLATFORM.NAME }} - Build (${{ matrix.BUILD_TYPE }}, ${{ matrix.SCALAR_TYPE }})"
 
     # Use BASH as the shell from the image.
     defaults:
@@ -297,8 +284,6 @@ jobs:
       with:
         compiler: g++
         flavor: ${{ matrix.PLATFORM.FLAVOR }}
-        # Flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.1.0
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
@@ -342,12 +327,14 @@ jobs:
   # build down to what the GPU job actually runs.
   # ─────────────────────────────────────────────────────────────────────
   cuda:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     needs: changes
     # !cancelled() allows PR/push jobs through when changes is skipped.
     if: >-
       !cancelled() && (github.event_name != 'merge_group' ||
       (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
-    name: "cuda (${{ matrix.SCALAR_TYPE }})"
+    name: "CUDA - Build (Release, ${{ matrix.SCALAR_TYPE }})"
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
@@ -375,19 +362,15 @@ jobs:
       with:
         compiler: g++
         flavor: cuda13
-        # Flavors need v24.0.0 or newer.
-        DEPENDENCY_TAG: v24.1.0
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
-    - name: Restore ccache
-      id: ccache-restore
-      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+    - name: Restore ccache snapshot
+      uses: ./.github/actions/ccache-s3
+      continue-on-error: true
+      timeout-minutes: 10
       with:
-        path: ${{ env.CCACHE_DIR }}
-        key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.SCALAR_TYPE }}-${{ github.sha }}
-        restore-keys: |
-          ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.SCALAR_TYPE }}-
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/cuda/${{ runner.os }}-${{ runner.arch }}/${{ matrix.SCALAR_TYPE }}/v1/
 
     # Release, not the preset's RelWithDebInfo: RelWithDebInfo adds
     # `-lineinfo -src-in-ptx`, which costs compile time and buys nothing that
@@ -402,6 +385,7 @@ jobs:
           -DDETRAY_USE_SYSTEM_EIGEN3=ON \
           -DDETRAY_USE_SYSTEM_VECMEM=ON \
           -DDETRAY_USE_SYSTEM_COVFIE=ON \
+          -DDETRAY_USE_SYSTEM_BENCHMARK=ON \
           -DDETRAY_USE_SYSTEM_GOOGLETEST=ON \
           -DDETRAY_USE_SYSTEM_NLOHMANN=ON \
           -S ${GITHUB_WORKSPACE}/Detray \
@@ -417,12 +401,23 @@ jobs:
     - name: ccache stats
       run: ccache -s
 
-    - name: Save ccache
-      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      if: always() && github.ref == 'refs/heads/main'
+    - name: Clean ccache before publication
+      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      shell: bash
+      run: |
+        ccache --cleanup
+
+    - name: Publish ccache snapshot
+      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      timeout-minutes: 10
+      uses: ./.github/actions/ccache-s3
       with:
-        path: ${{ env.CCACHE_DIR }}
-        key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+        operation: publish
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/cuda/${{ runner.os }}-${{ runner.arch }}/${{ matrix.SCALAR_TYPE }}/v1/
+        access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+        secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
     # Finds nothing today: `.ptx` is only kept when a target opts into `--keep`
     # via `detray_add_cuda_artifact_dir_to_target`
@@ -462,6 +457,7 @@ jobs:
   cuda-test:
     needs: [cuda]
     if: ${{ !cancelled() && needs.cuda.result == 'success' }}
+    name: "CUDA - Test (Release, float)"
     runs-on: [self-hosted, linux, x64, gpu-nvidia]
     permissions:
       contents: read
@@ -505,7 +501,6 @@ jobs:
       with:
         compiler: g++
         flavor: cuda13
-        DEPENDENCY_TAG: v24.1.0
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 

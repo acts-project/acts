@@ -8,6 +8,7 @@
 #pragma once
 
 // Library include(s).
+#include "traccc/device/abstract_awaitable.hpp"
 #include "traccc/device/algorithm_base.hpp"
 #include "traccc/edm/device/sort_key.hpp"
 #include "traccc/finding/device/build_tracks.hpp"
@@ -52,7 +53,8 @@ class combinatorial_kalman_filter_algorithm
           const edm::measurement_collection::const_view&,
           const bound_track_parameters_collection_types::const_view&)>,
       public messaging,
-      public algorithm_base {
+      public algorithm_base,
+      public virtual abstract_awaitable {
  public:
   /// Configuration type
   using config_type = finding_config;

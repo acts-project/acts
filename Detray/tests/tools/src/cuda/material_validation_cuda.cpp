@@ -44,7 +44,7 @@ using namespace detray;
 int main(int argc, char **argv) {
   // Use the most general type to be able to read in all detector files
   using metadata_t = test::default_metadata;
-  using detector_t = detector<metadata_t>;
+  using detector_t = host::detector<metadata_t>;
 
   // Filter out the google test flags
   ::testing::InitGoogleTest(&argc, argv);
