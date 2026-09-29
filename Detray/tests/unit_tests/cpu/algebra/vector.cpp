@@ -249,7 +249,7 @@ TEST_F(detray_algebra, dot_product_with_ops) {
   ASSERT_NEAR(detray::vector::dot(v1 + v2, v2), 76.f, this->epsilon());
   ASSERT_NEAR(detray::vector::dot(v1, v2 - v1), 12.f, this->epsilon());
   ASSERT_NEAR(detray::vector::dot(v1 + v2, v1 - v2), -36.f, this->epsilon());
-  ASSERT_NEAR(detray::vector::dot(v1 + v2, 2 * v2), 152.f, this->epsilon());
+  ASSERT_NEAR(detray::vector::dot(v1 + v2, 2.f * v2), 152.f, this->epsilon());
 }
 
 // This test checks to see if the `cross` function can handle when one of its
@@ -267,7 +267,7 @@ TEST_F(detray_algebra, cross_product_add_sub) {
   ASSERT_NEAR(v[1], ans[1], this->epsilon());
   ASSERT_NEAR(v[2], ans[2], this->epsilon());
 
-  v = detray::vector::cross(v3 - 2 * v1, 3 * (v1 + v2));
+  v = detray::vector::cross(v3 - 2.f * v1, 3.f * (v1 + v2));
   ans = {342.f, 12.f, -180.f};
 
   ASSERT_NEAR(v[0], ans[0], this->epsilon());

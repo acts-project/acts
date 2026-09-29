@@ -136,3 +136,11 @@ if(DETRAY_VC_SOA_PLUGIN)
         LINK_LIBRARIES GTest::gtest GTest::gtest_main detray::core_vc_soa  detray::test_common
     )
 endif()
+
+# Build the std::array SoA algebra test
+if(DETRAY_ARRAY_SOA_PLUGIN)
+    detray_add_unit_test(cpu_array_soa
+        "algebra/array_soa.cpp"
+        LINK_LIBRARIES GTest::gtest GTest::gtest_main detray::core_array_soa  detray::test_common
+    )
+endif()

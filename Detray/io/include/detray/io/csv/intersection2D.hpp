@@ -122,7 +122,7 @@ inline void write_intersection2D(
     const std::string &file_name,
     const std::vector<std::vector<intersection_t>> &intersections_per_track,
     const bool replace = true) {
-  using sf_desc_t = decltype(intersections_per_track.at(0).at(0).surface());
+  using sf_desc_t = typename intersection_t::surface_type;
   using mask_link_t = typename sf_desc_t::mask_link;
 
   // Don't write over existing data

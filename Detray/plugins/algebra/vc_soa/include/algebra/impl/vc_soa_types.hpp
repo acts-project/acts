@@ -12,6 +12,7 @@
 #include "algebra/impl/vc_aos_approximately_equal.hpp"
 #include "algebra/impl/vc_aos_transform3.hpp"
 #include "algebra/impl/vc_soa_casts.hpp"
+#include "algebra/impl/vc_soa_constants.hpp"
 #include "algebra/impl/vc_soa_getter.hpp"
 #include "detray/algebra/common/matrix.hpp"
 #include "detray/algebra/common/vector.hpp"
@@ -21,6 +22,7 @@
 // System include(s).
 #include <array>
 #include <cstddef>
+#include <limits>
 
 // Vc include(s).
 #ifdef _MSC_VER
@@ -125,3 +127,52 @@ struct dimensions<algebra::vc_soa::storage_type<T, N>> {
 }  // namespace traits
 
 }  // namespace detray
+
+namespace std {
+
+/// Numeric limits of a simd scalar: the constants of the value type, the
+/// values broadcast to every lane
+template <detray::concepts::value T>
+struct numeric_limits<detray::algebra::vc_soa::scalar_type<T>>
+    : public numeric_limits<T> {
+  using simd_t = detray::algebra::vc_soa::scalar_type<T>;
+
+  DETRAY_HOST_DEVICE
+  static constexpr simd_t min() noexcept {
+    return simd_t(numeric_limits<T>::min());
+  }
+  DETRAY_HOST_DEVICE
+  static constexpr simd_t max() noexcept {
+    return simd_t(numeric_limits<T>::max());
+  }
+  DETRAY_HOST_DEVICE
+  static constexpr simd_t lowest() noexcept {
+    return simd_t(numeric_limits<T>::lowest());
+  }
+  DETRAY_HOST_DEVICE
+  static constexpr simd_t epsilon() noexcept {
+    return simd_t(numeric_limits<T>::epsilon());
+  }
+  DETRAY_HOST_DEVICE
+  static constexpr simd_t round_error() noexcept {
+    return simd_t(numeric_limits<T>::round_error());
+  }
+  DETRAY_HOST_DEVICE
+  static constexpr simd_t infinity() noexcept {
+    return simd_t(numeric_limits<T>::infinity());
+  }
+  DETRAY_HOST_DEVICE
+  static constexpr simd_t quiet_NaN() noexcept {
+    return simd_t(numeric_limits<T>::quiet_NaN());
+  }
+  DETRAY_HOST_DEVICE
+  static constexpr simd_t signaling_NaN() noexcept {
+    return simd_t(numeric_limits<T>::signaling_NaN());
+  }
+  DETRAY_HOST_DEVICE
+  static constexpr simd_t denorm_min() noexcept {
+    return simd_t(numeric_limits<T>::denorm_min());
+  }
+};
+
+}  // namespace std

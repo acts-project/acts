@@ -10,13 +10,20 @@
 
 #if DETRAY_ALGEBRA_ARRAY
 #include "algebra/array.hpp"
-#elif DETRAY_ALGEBRA_EIGEN
+#endif
+#if DETRAY_ALGEBRA_ARRAY_SOA
+#include "algebra/array_soa.hpp"
+#endif
+#if DETRAY_ALGEBRA_EIGEN
 #include "algebra/eigen.hpp"
-#elif DETRAY_ALGEBRA_FASTOR
+#endif
+#if DETRAY_ALGEBRA_FASTOR
 #include "algebra/fastor.hpp"
-#elif DETRAY_ALGEBRA_SMATRIX
+#endif
+#if DETRAY_ALGEBRA_SMATRIX
 #include "algebra/smatrix.hpp"
-#elif DETRAY_ALGEBRA_VC_AOS || DETRAY_ALGEBRA_VC_SOA
+#endif
+#if DETRAY_ALGEBRA_VC_AOS || DETRAY_ALGEBRA_VC_SOA
 
 #if DETRAY_ALGEBRA_VC_AOS
 #include "algebra/vc_aos.hpp"
@@ -26,12 +33,18 @@
 #include "algebra/vc_soa.hpp"
 #endif
 
-#else
+#endif  // DETRAY_ALGEBRA_VC_AOS || DETRAY_ALGEBRA_VC_SOA
+
+#if !DETRAY_ALGEBRA_ARRAY && !DETRAY_ALGEBRA_ARRAY_SOA && \
+    !DETRAY_ALGEBRA_EIGEN && !DETRAY_ALGEBRA_FASTOR &&    \
+    !DETRAY_ALGEBRA_SMATRIX && !DETRAY_ALGEBRA_VC_AOS &&  \
+    !DETRAY_ALGEBRA_VC_SOA
 #error "No algebra plugin selected! Please link to one of the algebra plugins."
 #endif
 
 // Algebra-plugins include(s)
 #include "detray/algebra/common/boolean.hpp"
+#include "detray/algebra/common/constants.hpp"
 #include "detray/algebra/common/math.hpp"
 #include "detray/algebra/utils/approximately_equal.hpp"
 #include "detray/algebra/utils/casts.hpp"
