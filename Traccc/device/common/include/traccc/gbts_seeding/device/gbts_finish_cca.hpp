@@ -23,8 +23,8 @@ namespace traccc::device {
 struct gbts_finish_cca_payload {
   /// Number of edges in the compacted graph
   unsigned int nConnectedEdges;
-  /// Maximum number of neighbours retained per edge
-  unsigned int max_num_neighbours;
+  /// Capacity of the compacted graph, the column stride of output_graph
+  unsigned int nConnectedEdgesMax;
   /// Minimum level (path length in edges) of a seed root
   unsigned char minLevel;
   /// Compacted graph from gbts_compress_graph

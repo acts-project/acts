@@ -30,8 +30,8 @@ TRACCC_HOST_DEVICE inline void gbts_finish_cca(
   vecmem::device_vector<int2> d_outgoing_paths(payload.outgoing_paths);
   vecmem::device_vector<unsigned char> d_has_parent(payload.has_parent);
 
-  // Row-major output graph: each edge owns [nei0..].
-  const unsigned int edge_size = payload.max_num_neighbours;
+  // Column-major output graph: neighbour k of an edge is in column k.
+  const unsigned int nei_stride = payload.nConnectedEdgesMax;
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
@@ -46,10 +46,9 @@ TRACCC_HOST_DEVICE inline void gbts_finish_cca(
       d_outgoing_paths[globalIndex] = int2{0, -1};
       continue;
     }
-    const unsigned int edge_pos = edge_size * globalIndex;
     const unsigned int nNei = d_output_num_neighbours[globalIndex];
     for (unsigned int k = 0u; k < nNei; ++k) {
-      d_has_parent[d_output_graph[edge_pos + k]] = 1u;
+      d_has_parent[d_output_graph[k * nei_stride + globalIndex]] = 1u;
     }
     d_outgoing_paths[globalIndex].y =
         static_cast<int>(level >= payload.minLevel) - 1;

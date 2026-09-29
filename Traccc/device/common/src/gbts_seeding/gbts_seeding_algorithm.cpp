@@ -302,6 +302,8 @@ auto gbts_seeding_algorithm::extract_seeds(
     vecmem::vector<unsigned int>& h_counters) const
     -> edm::seed_collection::buffer {
   const gbts_seedfinder_config& cfg = m_config;
+  // The column stride of the output graph is its capacity.
+  const unsigned int nConnectedEdgesMax = output_num_neighbours.capacity();
 
   // 6. Find longest segments with CCA.
   vecmem::data::vector_buffer<unsigned char> levels_buf(nConnectedEdges,
@@ -324,7 +326,7 @@ auto gbts_seeding_algorithm::extract_seeds(
 
   gbts_run_cca_iteration_payload cca{
       .nConnectedEdges = nConnectedEdges,
-      .max_num_neighbours = cfg.max_num_neighbours,
+      .nConnectedEdgesMax = nConnectedEdgesMax,
       .output_graph = output_graph,
       .output_num_neighbours = output_num_neighbours,
       .levels = levels_buf,
@@ -338,7 +340,7 @@ auto gbts_seeding_algorithm::extract_seeds(
   }
   gbts_finish_cca_kernel({
       .nConnectedEdges = nConnectedEdges,
-      .max_num_neighbours = cfg.max_num_neighbours,
+      .nConnectedEdgesMax = nConnectedEdgesMax,
       .minLevel = cfg.minLevel,
       .output_graph = output_graph,
       .output_num_neighbours = output_num_neighbours,
@@ -386,7 +388,7 @@ auto gbts_seeding_algorithm::extract_seeds(
       .nPathsGrid = nPathsGrid,
       .path_count = path_count,
       .nConnectedEdges = nConnectedEdges,
-      .max_num_neighbours = cfg.max_num_neighbours,
+      .nConnectedEdgesMax = nConnectedEdgesMax,
       .path_store = path_store_buf,
       .output_graph = output_graph,
       .output_edge_nodes = output_edge_nodes,
