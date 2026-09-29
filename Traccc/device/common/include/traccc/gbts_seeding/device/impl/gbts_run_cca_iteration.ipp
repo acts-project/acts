@@ -60,33 +60,31 @@ TRACCC_HOST_DEVICE inline void gbts_run_cca_iteration(
     const unsigned int nNeighbours =
         d_output_graph[edge_pos + gbts_consts::nNei];
 
-    // The level is one more than the highest neighbour level.
     unsigned int maxNeighbourLevel = 0u;
+    int nPathsBelow = 0;
+
+    // This loop finds the maximum level among neighbours and the number of
+    // paths below this edge in one loop. We want to count paths below only
+    // for neighbours which are of the maximum level among neighbours, so we
+    // can keep a running count and reset that to zero if we encounter a
+    // neighbour with a new, higher level.
     for (unsigned int k = 0u; k < nNeighbours; ++k) {
       const unsigned int neighbourIdx =
           d_output_graph[edge_pos + gbts_consts::nei_start + k];
       const unsigned int neighbourLevel = d_levels[neighbourIdx];
       if (neighbourLevel > maxNeighbourLevel) {
         maxNeighbourLevel = neighbourLevel;
+        nPathsBelow = 0;
       }
-    }
-    unsigned int level = 1u + maxNeighbourLevel;
-    if (level > unsettledLevel) {
-      level = unsettledLevel;
+      if (neighbourLevel == maxNeighbourLevel) {
+        nPathsBelow += 1 + (firstSweep ? 0 : d_outgoing_paths[neighbourIdx].x);
+      }
     }
 
-    // Paths below the edge. One for every neighbour on a longest path, plus
-    // the paths below that neighbour.
-    int nPathsBelow = 0;
-    if (level < unsettledLevel) {
-      for (unsigned int k = 0u; k < nNeighbours; ++k) {
-        const unsigned int neighbourIdx =
-            d_output_graph[edge_pos + gbts_consts::nei_start + k];
-        if (d_levels[neighbourIdx] + 1u == level) {
-          nPathsBelow +=
-              1 + (firstSweep ? 0 : d_outgoing_paths[neighbourIdx].x);
-        }
-      }
+    unsigned int level = 1u + maxNeighbourLevel;
+    if (level >= unsettledLevel) {
+      nPathsBelow = 0;
+      level = unsettledLevel;
     }
 
     if (firstSweep || (d_levels[edgeIdx] != level) ||
