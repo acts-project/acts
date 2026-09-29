@@ -77,17 +77,17 @@ class LandauDistribution {
   LandauDistribution &operator=(LandauDistribution &&) = default;
 
   /// Scaling for most probable value
-  static constexpr double scaleFactorMPV = -0.222783;
+  static constexpr double kScaleFactorMPV = -0.222783;
   /// Scaling for FWHM
-  static constexpr double scaleFactorFwhm = 4.018646;
+  static constexpr double kScaleFactorFwhm = 4.018646;
 
   /// Construct from energy loss and FWHM
   ///
   /// @param energyLoss the (unscaled) most probable energy loss value
   /// @param energyLossFwhm the full width at half maximum of the energy loss
   static LandauDistribution fromFwhm(double energyLoss, double energyLossFwhm) {
-    double scale = energyLossFwhm / scaleFactorFwhm;
-    double location = energyLoss - scale * scaleFactorMPV;
+    double scale = energyLossFwhm / kScaleFactorFwhm;
+    double location = energyLoss - scale * kScaleFactorMPV;
     return LandauDistribution(location, scale);
   }
 
