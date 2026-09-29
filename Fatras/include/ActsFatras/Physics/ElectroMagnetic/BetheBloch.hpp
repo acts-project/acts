@@ -23,6 +23,17 @@ namespace ActsFatras {
 /// fluctuations from a Landau distribution. No secondaries are generated
 /// for the removed energy.
 struct BetheBloch {
+  /// Scaling for most probable value
+  /// @deprecated Use LandauDistribution::scaleFactorMPV instead. This alias is kept
+  ///             for backward compatibility and will be removed.
+  [[deprecated("Use LandauDistribution::kScaleFactorMPV instead")]]
+  double scaleFactorMPV = 1.;
+  /// Scaling for Sigma
+  /// @deprecated Use LandauDistribution::scaleFactorFwhm instead. This alias is kept
+  ///             for backward compatibility and will be removed.
+  [[deprecated("Use LandauDistribution::kScaleFactorFwhm instead")]]
+  double scaleFactorSigma = 1.;
+
   /// Simulate energy loss and update the particle parameters.
   ///
   /// @param[in]     generator is the random number generator
