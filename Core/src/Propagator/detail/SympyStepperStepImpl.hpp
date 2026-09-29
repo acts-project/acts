@@ -185,7 +185,6 @@ Result<double> detail::sympyStep(const SympyStepper& stepper,
 
   state.pathAccumulated += h;
   ++state.nSteps;
-  state.nStepTrials += nStepTrials;
 
   ++state.statistics.nSuccessfulSteps;
   if (propDir != Direction::fromScalarZeroAsPositive(initialH)) {
