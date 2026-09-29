@@ -110,18 +110,6 @@ void inclusive_scan(Queue &q, const memory_resource &mr, InputIterator first,
 #endif
 }
 
-template <typename InputIterator, typename OutputIterator>
-void exclusive_scan(Queue &q, const memory_resource &mr, InputIterator first,
-                    InputIterator last, OutputIterator d_first) {
-  auto execPolicy = getExecutionPolicy(q, mr);
-
-#if defined(ALPAKA_ACC_SYCL_ENABLED)
-  oneapi::dpl::exclusive_scan(execPolicy, first, last, d_first, 0u);
-#else
-  thrust::exclusive_scan(execPolicy, first, last, d_first);
-#endif
-}
-
 template <typename InputIt, typename OutputIt, typename Compare>
 OutputIt unique_copy(Queue &q, const memory_resource &mr, InputIt first,
                      InputIt last, OutputIt d_first, Compare comp) {

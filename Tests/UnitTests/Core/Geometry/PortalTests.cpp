@@ -650,7 +650,7 @@ BOOST_AUTO_TEST_CASE(Construction) {
       Transform3{Translation3{Vector3{0, 0, 5_mm}}},
       std::make_shared<RadialBounds>(50_mm, 100_mm));
 
-  BOOST_CHECK_THROW(std::make_unique<Portal>(
+  BOOST_CHECK_THROW(auto p = std::make_unique<Portal>(
                         gctx, std::make_unique<TrivialPortalLink>(disc1, *vol1),
                         std::make_unique<TrivialPortalLink>(disc2, *vol1)),
                     PortalFusingException);

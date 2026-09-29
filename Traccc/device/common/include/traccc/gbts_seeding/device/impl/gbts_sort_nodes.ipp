@@ -24,11 +24,15 @@ template <concepts::thread_id1 thread_id_t>
 TRACCC_HOST_DEVICE inline void gbts_sort_nodes(
     const thread_id_t& thread_id, const gbts_sort_nodes_payload& payload) {
   const vecmem::device_vector<const float4> d_reducedSP(payload.reducedSP);
+  const vecmem::device_vector<const unsigned long long int> d_sort_keys(
+      payload.sort_keys);
   const vecmem::device_vector<const unsigned int> d_sort_values(
       payload.sort_values);
   vecmem::device_vector<float4> d_node_params(payload.node_params);
   vecmem::device_vector<float> d_node_phi(payload.node_phi);
   vecmem::device_vector<unsigned int> d_node_index(payload.node_index);
+  vecmem::device_vector<unsigned int> d_eta_bin_offsets(
+      payload.eta_bin_offsets);
   const vecmem::device_vector<const float> d_tau_lut(payload.tau_lut);
 
   const gbts_sort_nodes_params& ap = payload.gbts_sort_nodes_params;
@@ -37,8 +41,33 @@ TRACCC_HOST_DEVICE inline void gbts_sort_nodes(
   const unsigned int blockDimX = thread_id.getBlockDimX();
   const unsigned int gridDimX = thread_id.getGridDimX();
 
-  for (unsigned int globalIndex = globalIdx; globalIndex < payload.nNodes;
+  // Eta bin of a sorted key, nEtaBins for the rejected keys.
+  const unsigned int nEtaBins = payload.nEtaBins;
+  auto eta_bin_of = [&](const unsigned int slot) {
+    const unsigned long long int bin =
+        d_sort_keys[slot] >> gbts_sort_key_eta_shift;
+    return (bin < nEtaBins) ? static_cast<unsigned int>(bin) : nEtaBins;
+  };
+
+  for (unsigned int globalIndex = globalIdx; globalIndex < payload.nSp;
        globalIndex += blockDimX * gridDimX) {
+    // The first slot of every bin writes the offsets of the bins starting
+    // there. The first rejected slot (bin nEtaBins) gives the node count.
+    const unsigned int bin = eta_bin_of(globalIndex);
+    const unsigned int first_bin =
+        (globalIndex == 0u) ? 0u : eta_bin_of(globalIndex - 1u) + 1u;
+    for (unsigned int b = first_bin; b <= bin; ++b) {
+      d_eta_bin_offsets[b] = globalIndex;
+    }
+    if (globalIndex + 1u == payload.nSp) {
+      for (unsigned int b = bin + 1u; b <= nEtaBins; ++b) {
+        d_eta_bin_offsets[b] = payload.nSp;
+      }
+    }
+    if (bin == nEtaBins) {
+      continue;
+    }
+
     const unsigned int srcIdx = d_sort_values[globalIndex];
     const float4 sp = d_reducedSP[srcIdx];
 
