@@ -9,9 +9,12 @@
 #pragma once
 
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
+#include <array>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -87,6 +90,11 @@ class MaterialJsonDecodeContext {
  public:
   /// Default construction, no store table is available
   MaterialJsonDecodeContext() = default;
+
+  /// Local axes of the owning surface, when known. Used only to disambiguate
+  /// legacy one-dimensional proto binning (in particular phi on a disc or
+  /// cylinder) at the I/O boundary.
+  std::optional<std::array<AxisDirection, 2>> surfaceAxes;
 
   /// Install the slab store table of the document
   ///

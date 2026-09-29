@@ -47,8 +47,6 @@ std::shared_ptr<const ISurfaceMaterial> resolve(
     };
     checkProtoKey(dynamic_cast<const ProtoSurfaceMaterial*>(
         found->second.material.get()));
-    checkProtoKey(dynamic_cast<const ProtoGridSurfaceMaterial*>(
-        found->second.material.get()));
     if (dynamic_cast<const MergedMaterialMarker*>(
             found->second.material.get()) != nullptr) {
       throw std::invalid_argument("Merged material marker cannot supply key '" +

@@ -8,6 +8,7 @@
 
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
@@ -36,6 +37,7 @@
 #include "ActsPlugins/Json/GeometryJsonKeys.hpp"
 #include "ActsPlugins/Json/SurfaceBoundsJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
+#include "ActsPlugins/Json/detail/MaterialJsonContext.hpp"
 
 #include <memory>
 #include <stdexcept>
@@ -166,6 +168,12 @@ void Acts::to_json(nlohmann::json& j,
   const auto& material = std::get<1>(surface);
   if (material != nullptr) {
     j[jsonKey().materialkey] = SurfaceMaterialJsonConverter::toJson(*material);
+    // A generated geometry-dump placeholder is opt-in. An explicitly
+    // assigned proto, including a homogeneous one, remains a mapping request.
+    if (std::get<0>(surface)->surfaceMaterial() == nullptr &&
+        dynamic_cast<const ProtoSurfaceMaterial*>(material.get()) != nullptr) {
+      j[jsonKey().materialkey][jsonKey().mapkey] = false;
+    }
   }
 }
 
@@ -322,8 +330,11 @@ std::shared_ptr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
 
   if (j.find(jsonKey().materialkey) != j.end() &&
       !j[jsonKey().materialkey].empty()) {
-    mutableSf->assignSurfaceMaterial(
-        SurfaceMaterialJsonConverter::fromJson(j[jsonKey().materialkey]));
+    SurfaceMaterialJsonConverter::DecodeContext context;
+    context.surfaceAxes = mutableSf->localAxes();
+    mutableSf->assignSurfaceMaterial(SurfaceMaterialJsonConverter::fromJson(
+        j[jsonKey().materialkey],
+        SurfaceMaterialJsonConverter::Config::defaultConfig(), &context));
   }
   return mutableSf;
 }

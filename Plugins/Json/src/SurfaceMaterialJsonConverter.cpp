@@ -93,27 +93,6 @@ nlohmann::json protoToJson(const ProtoSurfaceMaterial& material,
   nlohmann::json jMaterial;
   jMaterial[jsonKey().typekey] = kProtoTag;
   jMaterial[jsonKey().maptype] = nlohmann::json(material.mappingType());
-  // A proto material without any actual binning is not mapped onto
-  jMaterial[jsonKey().mapkey] = false;
-  const BinUtility& bUtility = material.binning();
-  for (const auto& bData : bUtility.binningData()) {
-    if (bData.bins() > 1) {
-      jMaterial[jsonKey().mapkey] = true;
-      break;
-    }
-  }
-  if (material.materialKey()) {
-    jMaterial["material_key"] = *material.materialKey();
-  }
-  jMaterial[jsonKey().binkey] = nlohmann::json(bUtility);
-  return jMaterial;
-}
-
-nlohmann::json protoGridToJson(const ProtoGridSurfaceMaterial& material,
-                               EncodeContext& /*ctx*/) {
-  nlohmann::json jMaterial;
-  jMaterial[jsonKey().typekey] = kProtoGridTag;
-  jMaterial[jsonKey().maptype] = nlohmann::json(material.mappingType());
   jMaterial[jsonKey().mapkey] = true;
   if (material.materialKey()) {
     jMaterial["material_key"] = *material.materialKey();
@@ -266,33 +245,104 @@ std::unique_ptr<const ISurfaceMaterial> binnedFromJson(
       bUtility, std::move(matrix), 1., readMappingType(jMaterial));
 }
 
-std::unique_ptr<const ISurfaceMaterial> protoFromJson(
-    const nlohmann::json& jMaterial, const DecodeContext& /*ctx*/) {
-  BinUtility bUtility;
+/// Legacy proto ranges and transforms were replaced by the surface bounds
+/// during mapping. Convert the binning intent here, not in the material class.
+MultiAxisSpec2D legacyProtoBinning(const nlohmann::json& jMaterial,
+                                   const DecodeContext& ctx) {
+  BinUtility binning;
   if (jMaterial.contains(jsonKey().binkey) &&
       !jMaterial.at(jsonKey().binkey).is_null()) {
-    from_json(jMaterial.at(jsonKey().binkey), bUtility);
+    from_json(jMaterial.at(jsonKey().binkey), binning);
   }
-  return std::make_unique<const ProtoSurfaceMaterial>(
-      bUtility, readMappingType(jMaterial),
-      jMaterial.contains("material_key")
-          ? std::make_optional(jMaterial.at("material_key").get<std::string>())
-          : std::nullopt);
+  const auto& data = binning.binningData();
+  if (data.empty()) {
+    return MultiAxisSpec2D(
+        {AxisSpec::DeferredEquidistant(1), AxisSpec::DeferredEquidistant(1)});
+  }
+  if (data.size() > 2) {
+    throw std::invalid_argument(
+        "Legacy proto surface material has more than two axes");
+  }
+  using enum AxisDirection;
+  auto directions = ctx.surfaceAxes;
+  if (!directions) {
+    for (const auto& axis : data) {
+      switch (axis.binvalue) {
+        case AxisX:
+        case AxisY:
+          directions = std::array{AxisX, AxisY};
+          break;
+        case AxisR:
+          directions = std::array{AxisR, AxisPhi};
+          break;
+        case AxisZ:
+        case AxisRPhi:
+          directions = std::array{AxisRPhi, AxisZ};
+          break;
+        default:
+          break;
+      }
+      if (directions) {
+        break;
+      }
+    }
+  }
+  if (!directions) {
+    throw std::invalid_argument(
+        "Legacy phi-only proto material requires the owning surface axes; "
+        "use axis_specs for standalone payloads");
+  }
+  std::array<AxisSpec, 2> specs{
+      AxisSpec::DeferredEquidistant(1, (*directions)[0]),
+      AxisSpec::DeferredEquidistant(1, (*directions)[1])};
+  std::array<bool, 2> assigned{false, false};
+  for (const auto& axis : data) {
+    auto direction = axis.binvalue;
+    // A cylinder's canonical first local coordinate is r*phi.
+    if (direction == AxisPhi && (*directions)[0] == AxisRPhi) {
+      direction = AxisRPhi;
+    }
+    std::size_t index = direction == (*directions)[0] ? 0 : 1;
+    if (direction != (*directions)[index] || assigned[index]) {
+      throw std::invalid_argument(
+          "Invalid legacy proto surface axis directions");
+    }
+    assigned[index] = true;
+    if (axis.subBinningData) {
+      throw std::invalid_argument("Legacy proto sub-binning is not supported");
+    }
+    // Ranges and boundary conditions are supplied by the owning surface.
+    if (axis.type == equidistant) {
+      specs[index] = AxisSpec::DeferredEquidistant(axis.bins(), direction);
+    } else {
+      const auto& boundaries = axis.boundaries();
+      std::vector<double> edges(boundaries.begin(), boundaries.end());
+      specs[index] =
+          AxisSpec::Variable(std::move(edges), std::nullopt, direction)
+              .toDeferred();
+    }
+  }
+  return MultiAxisSpec2D(std::move(specs));
 }
 
-std::unique_ptr<const ISurfaceMaterial> protoGridFromJson(
-    const nlohmann::json& jMaterial, const DecodeContext& /*ctx*/) {
-  MultiAxisSpec spec =
-      MultiAxisSpecJsonConverter::fromJson(jMaterial.at("axis_specs"));
-  if (spec.size() != 2u) {
-    throw std::invalid_argument(
-        "SurfaceMaterialJsonConverter: proto grid material needs exactly two "
-        "axis specs");
-  }
-  MultiAxisSpec2D spec2D{
-      std::array<AxisSpec, 2u>{spec.axisSpec(0u), spec.axisSpec(1u)}};
-  return std::make_unique<const ProtoGridSurfaceMaterial>(
-      spec2D, readMappingType(jMaterial),
+std::unique_ptr<const ISurfaceMaterial> protoFromJson(
+    const nlohmann::json& jMaterial, const DecodeContext& ctx) {
+  MultiAxisSpec2D binning = [&]() {
+    if (!jMaterial.contains("axis_specs") &&
+        jMaterial.at(jsonKey().typekey) != kProtoGridTag) {
+      return legacyProtoBinning(jMaterial, ctx);
+    }
+    MultiAxisSpec spec =
+        MultiAxisSpecJsonConverter::fromJson(jMaterial.at("axis_specs"));
+    if (spec.size() != 2u) {
+      throw std::invalid_argument(
+          "SurfaceMaterialJsonConverter: proto material needs exactly two axis "
+          "specs");
+    }
+    return MultiAxisSpec2D({spec.axisSpec(0), spec.axisSpec(1)});
+  }();
+  return std::make_unique<const ProtoSurfaceMaterial>(
+      binning, readMappingType(jMaterial),
       jMaterial.contains("material_key")
           ? std::make_optional(jMaterial.at("material_key").get<std::string>())
           : std::nullopt);
@@ -402,7 +452,6 @@ SurfaceMaterialJsonConverter::Config makeDefaultConfig() {
   cfg.encoder.registerFunction(homogeneousToJson);
   cfg.encoder.registerFunction(binnedToJson);
   cfg.encoder.registerFunction(protoToJson);
-  cfg.encoder.registerFunction(protoGridToJson);
   cfg.encoder.registerFunction(mergedMarkerToJson);
   // One concrete class covers the whole grid material family, the storage
   // backend is a runtime variant rather than a template parameter
@@ -411,7 +460,7 @@ SurfaceMaterialJsonConverter::Config makeDefaultConfig() {
   cfg.decoder.registerKind(kHomogeneousTag, homogeneousFromJson);
   cfg.decoder.registerKind(kBinnedTag, binnedFromJson);
   cfg.decoder.registerKind(kProtoTag, protoFromJson);
-  cfg.decoder.registerKind(kProtoGridTag, protoGridFromJson);
+  cfg.decoder.registerKind(kProtoGridTag, protoFromJson);
   cfg.decoder.registerKind(kMergedMarkerTag, mergedMarkerFromJson);
   cfg.decoder.registerKind(kGridTag, gridFromJson);
 

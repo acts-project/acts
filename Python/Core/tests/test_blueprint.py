@@ -113,9 +113,7 @@ def test_optional_material_keys(tmp_path):
     def collect(surface):
         material = surface.surfaceMaterial
         if (
-            isinstance(
-                material, (acts.ProtoSurfaceMaterial, acts.ProtoGridSurfaceMaterial)
-            )
+            isinstance(material, acts.ProtoSurfaceMaterial)
             and material.materialKey is not None
         ):
             keyed[material.materialKey] = surface
