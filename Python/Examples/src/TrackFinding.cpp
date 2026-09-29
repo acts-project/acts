@@ -89,12 +89,11 @@ void addTrackFinding(py::module& mex) {
     patchKwargsConstructor(c);
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(GraphBasedSeedingAlgorithm, mex,
-                                "GraphBasedSeedingAlgorithm", inputSpacePoints,
-                                outputSeeds, seedFinderConfig, layerMappingFile,
-                                connectorInputFile, lutInputFile,
-                                trackingGeometry, fillModuleCsv, inputClusters,
-                                bFieldInZ);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      GraphBasedSeedingAlgorithm, mex, "GraphBasedSeedingAlgorithm",
+      inputSpacePoints, outputSeeds, seedFinderConfig, layerMappingFile,
+      connectorInputFile, lutInputFile, trackingGeometry, fillModuleCsv,
+      inputClusters, bFieldInZ);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,
