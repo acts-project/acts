@@ -168,16 +168,41 @@ def test_manifest_cannot_reference_another_namespace(client, cache):
 
 
 @pytest.mark.parametrize(
-    "event,ref", [("pull_request", "refs/pull/1/merge"), ("push", "refs/heads/feature")]
+    "event,ref,opt_in,allowed",
+    [
+        ("push", "refs/heads/main", "false", True),
+        ("push", "refs/heads/feature", "true", False),
+        ("pull_request", "refs/heads/main", "true", False),
+        ("merge_group", "refs/heads/main", "true", False),
+        ("schedule", "refs/heads/main", "false", False),
+        ("schedule", "refs/heads/main", "true", True),
+        ("workflow_dispatch", "refs/heads/main", "false", False),
+        ("workflow_dispatch", "refs/heads/main", "true", True),
+        ("workflow_dispatch", "refs/heads/feature", "true", False),
+    ],
 )
-def test_only_main_pushes_publish(monkeypatch, event, ref):
+def test_publication_policy(monkeypatch, event, ref, opt_in, allowed):
     monkeypatch.setenv("GITHUB_EVENT_NAME", event)
     monkeypatch.setenv("GITHUB_REF", ref)
+    monkeypatch.setenv("CACHE_ALLOW_MAIN_NON_PUSH", opt_in)
     monkeypatch.setattr(sys, "argv", ["snapshot", "publish"])
+    for key, value in {
+        "CACHE_BUCKET": "cache",
+        "CACHE_PREFIX": "pilot/",
+        "CCACHE_DIR": "/unused",
+        "GITHUB_RUN_NUMBER": "1",
+        "GITHUB_RUN_ID": "1",
+        "GITHUB_RUN_ATTEMPT": "1",
+    }.items():
+        monkeypatch.setenv(key, value)
+    connected, published = [], []
     monkeypatch.setattr(
-        snapshot, "make_client", lambda *_: pytest.fail("Must not connect")
+        snapshot, "make_client", lambda writable: connected.append(writable)
     )
+    monkeypatch.setattr(snapshot, "publish", lambda *args: published.append(args))
     assert snapshot.main() == 0
+    assert bool(connected) == allowed
+    assert bool(published) == allowed
 
 
 def test_cache_failure_does_not_fail_build(monkeypatch):

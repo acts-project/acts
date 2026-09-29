@@ -1,12 +1,7 @@
 name: Compiler cache retention
 
 on:
-  # Only trusted main runs can trigger deletion; no PR artifacts or source
-  # are consumed. Checkout below always uses main, not the triggering SHA.
-  workflow_run: # zizmor: ignore[dangerous-triggers]
-    workflows: [Builds, Analysis, Detray, PyPI]
-    branches: [main]
-    types: [completed]
+  # Kept for manual cleanup of archives from before the S3 cutover.
   workflow_dispatch:
     inputs:
       apply:
@@ -22,11 +17,7 @@ concurrency:
 
 jobs:
   prune:
-    if: >-
-      github.repository == 'acts-project/acts' &&
-      ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
-      (github.event.workflow_run.head_repository.full_name == github.repository &&
-      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'schedule')))
+    if: github.repository == 'acts-project/acts' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -39,7 +30,7 @@ jobs:
       - name: Retain newest compiler caches
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLY: ${{ github.event_name == 'workflow_run' || inputs.apply }}
+          APPLY: ${{ inputs.apply }}
         run: |
           args=()
           if [[ "$APPLY" == "true" ]]; then

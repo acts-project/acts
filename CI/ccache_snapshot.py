@@ -166,10 +166,17 @@ def main():
     args = parser.parse_args()
     writable = args.operation == "publish"
     if writable and not (
-        os.environ.get("GITHUB_EVENT_NAME") == "push"
-        and os.environ.get("GITHUB_REF") == "refs/heads/main"
+        os.environ.get("GITHUB_REF") == "refs/heads/main"
+        and (
+            os.environ.get("GITHUB_EVENT_NAME") == "push"
+            or (
+                os.environ.get("CACHE_ALLOW_MAIN_NON_PUSH") == "true"
+                and os.environ.get("GITHUB_EVENT_NAME")
+                in ("schedule", "workflow_dispatch")
+            )
+        )
     ):
-        report("ccache publication skipped: only main pushes may publish")
+        report("ccache publication skipped: only authorized main runs may publish")
         return 0
     try:
         client = make_client(writable)
