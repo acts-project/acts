@@ -26,7 +26,7 @@ FrustumNavigationPolicy::FrustumNavigationPolicy(const GeometryContext &gctx,
     m_boxes.push_back(std::make_unique<BoundingBox>(vol.boundingBox(gctx)));
     prims.push_back(m_boxes.back().get());
   }
-  m_topBox = 
+  m_topBox =
       Acts::BoundingBoxHierarchy::makeOctree(m_boxes, prims, config.depth);
 }
 

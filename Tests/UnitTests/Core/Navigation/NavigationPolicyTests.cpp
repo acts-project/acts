@@ -895,7 +895,7 @@ BOOST_AUTO_TEST_CASE(FrustumNavigationPolicyTest) {
   auto& cub = root->addCuboidContainer("Container", AxisDirection::AxisZ);
   auto cubBounds = std::make_shared<CuboidVolumeBounds>(20_mm, 20_mm, 20_mm);
   auto childCub = std::make_unique<TrackingVolume>(Transform3::Identity(),
-		            			   cubBounds, "child");
+                                                   cubBounds, "child");
   Acts::Experimental::FrustumNavigationPolicy::Config frustumConfig{2};
   Acts::GeometryIdentifier id = Acts::GeometryIdentifier().withVolume(1);
   childCub->assignGeometryId(id);
@@ -907,25 +907,25 @@ BOOST_AUTO_TEST_CASE(FrustumNavigationPolicyTest) {
   for (int x = -3; x < 4; x += 2) {
     for (int y = -3; y < 4; y += 2) {
       for (int z = -3; z < 4; z += 2) {
-	auto childVol = std::make_unique<TrackingVolume>(
-	    Transform3::Identity() *
-	        Translation3{Vector3{x * 5_mm, y * 5_mm, z * 5_mm}},
-	    childBounds,
-	    "child_" + std::to_string(x) + "_" + std::to_string(y) + "_" +
-	        std::to_string(z));
-	Acts::GeometryIdentifier chId = id.withLayer(chamberId++);
-	childVol->assignGeometryId(chId);
-	auto staticNode = 
-	    std::make_shared<Acts::StaticBlueprintNode>(std::move(childVol));
-	nodes.push_back(std::move(staticNode));
-	cubNode->addChild(nodes.back());
+        auto childVol = std::make_unique<TrackingVolume>(
+            Transform3::Identity() *
+                Translation3{Vector3{x * 5_mm, y * 5_mm, z * 5_mm}},
+            childBounds,
+            "child_" + std::to_string(x) + "_" + std::to_string(y) + "_" +
+                std::to_string(z));
+        Acts::GeometryIdentifier chId = id.withLayer(chamberId++);
+        childVol->assignGeometryId(chId);
+        auto staticNode =
+            std::make_shared<Acts::StaticBlueprintNode>(std::move(childVol));
+        nodes.push_back(std::move(staticNode));
+        cubNode->addChild(nodes.back());
       }
     }
   }
   std::shared_ptr<Acts::NavigationPolicyFactory> factory =
       std::make_shared<Acts::NavigationPolicyFactory>(
-  	  Acts::NavigationPolicyFactory{}
-	      .add<Acts::Experimental::FrustumNavigationPolicy>(frustumConfig));
+          Acts::NavigationPolicyFactory{}
+              .add<Acts::Experimental::FrustumNavigationPolicy>(frustumConfig));
   cubNode->setNavigationPolicyFactory(factory);
   cub.addChild(cubNode);
   auto tGeometry = root->construct({}, gctx, *logger);
@@ -937,12 +937,11 @@ BOOST_AUTO_TEST_CASE(FrustumNavigationPolicyTest) {
   NavigationPolicyStateManager stateManager;
   std::unique_ptr<Acts::Experimental::FrustumNavigationPolicy> frustumPolicy =
       std::make_unique<Acts::Experimental::FrustumNavigationPolicy>(
-	   gctx, *vol, *logger, frustumConfig);
+          gctx, *vol, *logger, frustumConfig);
   frustumPolicy->createState(gctx, args, stateManager, *logger);
   auto policyState = stateManager.currentState();
   frustumPolicy->initializeCandidates(gctx, args, policyState, stream, *logger);
-  main.initialize(gctx, {Vector3{1, 1, 1}, Vector3{1, 1, 1}},
-		  *logger,BoundaryTolerance::None());
+  main.initialize(gctx, {Vector3{1, 1, 1}, Vector3{1, 1, 1}}, *logger);
   BOOST_CHECK_EQUAL(main.candidates().size(), 10);
 }
 
