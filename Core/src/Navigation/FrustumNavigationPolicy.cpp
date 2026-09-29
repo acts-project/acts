@@ -53,8 +53,8 @@ void FrustumNavigationPolicy::initializeCandidates(
           // be added when the intersection reaches the child volume. Only add
           // portals from the top-level volume to volumes it doesn't contain.
           if (tvol->geometryId() == this->m_id) {
-            Acts::Result<const TrackingVolume *> pvolr =
-                portal.resolveVolume(gctx, portal.surface().center(gctx), frustum.dir());
+            Acts::Result<const TrackingVolume *> pvolr = portal.resolveVolume(
+                gctx, portal.surface().center(gctx), frustum.dir());
             if (pvolr.ok()) {
               const TrackingVolume *pvol = *pvolr;
               if (tvol->inside(gctx, pvol->center(gctx))) {
