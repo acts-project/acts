@@ -251,7 +251,10 @@ class TryAllNavigator final {
 
     state.startSurface = args.startSurface;
     state.targetSurface = args.targetSurface;
-    static_cast<void>(m_additional.initialize(state.additional, args));
+    if (Result<void> res = m_additional.initialize(state.additional, args);
+        !res.ok()) {
+      return res.error();
+    }
 
     const TrackingVolume* startVolume = args.startVolume;
 

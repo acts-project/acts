@@ -64,14 +64,10 @@ struct PathLimitReached {
 /// a propagation without a target surface
 struct NoTargetAborter {};
 
-/// This is the condition that the target surface has been reached. It aborts
-/// the propagation once the navigator reports the target as the current
-/// surface, and it does not steer the propagation towards it.
+/// Aborts once the navigator reports the target surface as the current surface.
 ///
-/// @note The navigator steers the propagation onto the target surface. The
-///       propagator hands its target surface to the navigator. An actor that
-///       stops on a surface of its own registers it as an additional surface
-///       of the navigator.
+/// @note It does not steer. The navigator does, so an actor with its own target
+///       registers it as an additional surface of the navigator.
 struct SurfaceReached {
   /// Target surface to reach for propagation termination
   const Surface* surface = nullptr;
@@ -89,10 +85,8 @@ struct SurfaceReached {
   /// @return true if abort condition is met (surface reached)
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
+  bool checkAbort(propagator_state_t& state, const stepper_t& /*stepper*/,
                   const navigator_t& navigator, const Logger& logger) const {
-    static_cast<void>(stepper);
-
     if (surface == nullptr ||
         navigator.currentSurface(state.navigation) != surface) {
       return false;

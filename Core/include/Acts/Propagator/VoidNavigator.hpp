@@ -204,7 +204,7 @@ class VoidNavigator {
       return nextCandidate();
     }
 
-    // The other navigator can have no candidate for one step only
+    // Ask the other navigator again if it had no candidate
     if (!state.heldBack.has_value() || state.heldBack->isNone()) {
       state.heldBack = nextCandidate();
     }
@@ -297,13 +297,15 @@ class VoidNavigator {
           state.options.geoContext, position, direction,
           surface.boundaryTolerance, state.options.surfaceTolerance);
 
-      // The stepper decides whether the surface is reached, so everything
-      // ahead and on the position is offered
+      // Offer what is ahead, and what is on the position unless reached, so a
+      // kept surface is not reached again without a step
+      const bool offerOnSurface = !additional.reached;
       for (const auto [intersectionIndex, intersection] :
            enumerate(multiIntersection)) {
+        const bool onSurface =
+            intersection.status() == IntersectionStatus::onSurface;
         if (!intersection.isValid() ||
-            (intersection.status() != IntersectionStatus::onSurface &&
-             intersection.pathLength() <= 0) ||
+            (onSurface ? !offerOnSurface : intersection.pathLength() <= 0) ||
             intersection.pathLength() > state.options.farLimit) {
           continue;
         }
