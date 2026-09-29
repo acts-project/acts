@@ -11,6 +11,9 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Fetching covfie as part of the traccc project")
 
+# Disregard the global C++ flags, to avoid any unhelpful warnings.
+set(CMAKE_CXX_FLAGS)
+
 # Declare where to get covfie from.
 set(TRACCC_COVFIE_SOURCE
     "URL;https://github.com/acts-project/covfie/archive/refs/tags/v0.15.4.tar.gz;URL_MD5;80de9b43644c59d8239fb8cc184c6276"

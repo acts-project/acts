@@ -88,8 +88,6 @@ backgroundGeometryOptions() {
   lOptions.name = "layer";
   lOptions.surfaceStyles = Acts::GeometryHierarchyMap<ActsPlugins::Svg::Style>(
       {{geoID, backgroundStyle()}});
-  lOptions.moduleInfo = false;
-  lOptions.gridInfo = false;
   lOptions.zRange = {-100, 100};
   lOptions.phiRange = {-0.2, 0.2};
 

@@ -62,12 +62,11 @@ struct transform3 {
   template <std::size_t N>
   using array_type = array_t<scalar_type, N>;
 
-  /// 3-element "vector" type (does not observe translations)
+  /// Vector and point types
+  using vector2 = algebra::storage::vector<2u, scalar_type, array_t>;
   using vector3 = algebra::storage::vector<3u, scalar_type, array_t>;
-  /// Point in 3D space (does observe translations)
+  using point2 = vector2;
   using point3 = vector3;
-  /// Point in 2D space
-  using point2 = algebra::storage::vector<2u, scalar_type, array_t>;
 
   /// 4x4 matrix type (Last row is {0, 0, 0, 1} and can be omitted)
   using matrix44 = algebra::storage::matrix<array_t, scalar_type, 3u, 4u>;
@@ -249,6 +248,16 @@ struct transform3 {
   ///
   /// @param m is the rotation matrix
   /// @param v is the vector to be rotated
+  template <concepts::vector2D vector2_type>
+  DETRAY_HOST_DEVICE constexpr auto rotate(const matrix44 &m,
+                                           const vector2_type &v) const {
+    return m[e_x] * v[0] + m[e_y] * v[1];
+  }
+
+  /// Rotate a vector into / from a frame
+  ///
+  /// @param m is the rotation matrix
+  /// @param v is the vector to be rotated
   template <concepts::vector3D vector3_type>
   DETRAY_HOST_DEVICE constexpr auto rotate(const matrix44 &m,
                                            const vector3_type &v) const {
@@ -291,6 +300,20 @@ struct transform3 {
   DETRAY_HOST_DEVICE
   constexpr const matrix44 &matrix_inverse() const { return _data_inv; }
 
+  /// This method transform from a point from the local 2D cartesian frame
+  ///  to the global 3D cartesian frame
+  ///
+  /// @tparam point_type 3D point
+  ///
+  /// @param v is the point to be transformed
+  ///
+  /// @return a global point
+  template <concepts::point2D point2_type>
+  DETRAY_HOST_DEVICE constexpr auto point_to_global(
+      const point2_type &p) const {
+    return rotate(_data, p) + _data[e_t];
+  }
+
   /// This method transform from a point from the local 3D cartesian frame
   ///  to the global 3D cartesian frame
   ///
@@ -318,8 +341,22 @@ struct transform3 {
     return rotate(_data_inv, p) + _data_inv[e_t];
   }
 
+  /// This method transform from a vector from the local 2D cartesian frame
+  /// to the global 3D cartesian frame
+  ///
+  /// @tparam vector3_type 3D vector
+  ///
+  /// @param v is the vector to be transformed
+  ///
+  /// @return a vector in global coordinates
+  template <concepts::vector2D vector2_type>
+  DETRAY_HOST_DEVICE constexpr auto vector_to_global(
+      const vector2_type &v) const {
+    return rotate(_data, v);
+  }
+
   /// This method transform from a vector from the local 3D cartesian frame
-  ///  to the global 3D cartesian frame
+  /// to the global 3D cartesian frame
   ///
   /// @tparam vector3_type 3D vector
   ///

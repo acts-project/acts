@@ -154,13 +154,7 @@ struct jacobian_engine {
     free_to_bound_jacobian_submatrix_type dangle_ddir =
         matrix::zero<free_to_bound_jacobian_submatrix_type>();
 
-    const scalar_type theta{vector::theta(dir)};
-    const scalar_type phi{vector::phi(dir)};
-
-    const scalar_type cos_theta{math::cos(theta)};
-    const scalar_type sin_theta{math::sin(theta)};
-    const scalar_type cos_phi{math::cos(phi)};
-    const scalar_type sin_phi{math::sin(phi)};
+    const scalar_type perp{vector::perp(dir)};
 
     // Assert the integrity of the local matrix wrt to the globally
     // defined track parameterization.
@@ -176,16 +170,19 @@ struct jacobian_engine {
 
     // Set d(phi, theta)/d(n_x, n_y, n_z)
     // @note This codes have a serious bug when theta is equal to zero...
+    const scalar_type iperp = scalar_type{1} / perp;
+    const scalar_type iperp2 = iperp * iperp;
     getter::element(dangle_ddir, e_submatrix_bound_phi, e_submatrix_free_dir0) =
-        -sin_phi / sin_theta;
+        -dir[1] * iperp2;
     getter::element(dangle_ddir, e_submatrix_bound_phi, e_submatrix_free_dir1) =
-        cos_phi / sin_theta;
+        dir[0] * iperp2;
+    const scalar_type zoperp = dir[2] * iperp;
     getter::element(dangle_ddir, e_submatrix_bound_theta,
-                    e_submatrix_free_dir0) = cos_phi * cos_theta;
+                    e_submatrix_free_dir0) = dir[0] * zoperp;
     getter::element(dangle_ddir, e_submatrix_bound_theta,
-                    e_submatrix_free_dir1) = sin_phi * cos_theta;
+                    e_submatrix_free_dir1) = dir[1] * zoperp;
     getter::element(dangle_ddir, e_submatrix_bound_theta,
-                    e_submatrix_free_dir2) = -sin_theta;
+                    e_submatrix_free_dir2) = -perp;
 
     return dangle_ddir;
   }

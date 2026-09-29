@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
 #include "detray/definitions/containers.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
@@ -24,9 +25,12 @@
 #include "detray/navigation/navigation_state.hpp"
 #include "detray/tracks/ray.hpp"
 
+// System include(s)
+#include <limits>
+
 namespace detray {
 
-template <typename detector_t, typename surface_t = void>
+template <concepts::detector detector_t, typename surface_t = void>
 class direct_navigator {
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
@@ -81,8 +85,9 @@ class direct_navigator {
 
       // Set the index into the external surface sequence to the beginning
       // or end of the container
-      m_next_external =
-          is_forward() ? 0 : static_cast<dist_t>(m_sequence.size()) - 1;
+      m_next_external = is_forward()
+                            ? dist_t{0}
+                            : static_cast<dist_t>(m_sequence.size() - 1u);
 
       // Update the target with the next external surface
       this->target().set_surface(next_external());

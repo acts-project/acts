@@ -42,8 +42,18 @@ class AlignmentDecorator : public IContextDecorator {
   /// of the validity interval.
   using IOV = std::array<std::size_t, 2>;
 
+  /// Which geometry context(s) of the AlgorithmContext to decorate.
+  enum class Target {
+    eSim,   ///< only the simulation geometry
+    eReco,  ///< only the reconstruction geometry
+    eBoth,  ///< both, i.e. a misaligned but perfectly known detector
+  };
+
   /// Configuration struct
   struct Config {
+    /// Which geometry context(s) to decorate
+    Target target = Target::eBoth;
+
     /// I/O mode - this if for showcase examples where the alignment data is
     /// read
     std::vector<std::tuple<IOV, std::shared_ptr<IAlignmentStore>>>

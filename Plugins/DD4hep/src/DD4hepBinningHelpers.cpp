@@ -14,6 +14,65 @@ using namespace Acts;
 
 namespace ActsPlugins {
 
+std::vector<std::tuple<AxisSpec, std::size_t>>
+DD4hepBinningHelpers::convertAxisSpecs(const dd4hep::DetElement &dd4hepElement,
+                                       const std::string &bname) {
+  std::vector<std::tuple<AxisSpec, std::size_t>> axisSpecs;
+
+  for (const auto &[ab, axisDir] : allowedBinnings) {
+    auto type =
+        getParamOr<std::string>(bname + "_" + ab + "_type", dd4hepElement, "");
+    if (!type.empty()) {
+      // Equidistant or variable binning
+      AxisType aType =
+          type == "equidistant" ? AxisType::Equidistant : AxisType::Variable;
+      int nBins = getParamOr<int>(bname + "_" + ab + "_n", dd4hepElement, 0);
+      int nExpansion =
+          getParamOr<int>(bname + "_" + ab + "_exp", dd4hepElement, 0);
+      // Indicate auto-range checking
+      bool autoRange = getParamOr<bool>(bname + "_" + ab + "_autorange",
+                                        dd4hepElement, false);
+      if (aType == AxisType::Equidistant) {
+        if (autoRange) {
+          // Deferred binning: the consumer determines range and boundary type
+          axisSpecs.emplace_back(AxisSpec::DeferredEquidistant(nBins, axisDir),
+                                 nExpansion);
+        } else {
+          // Equidistant binning
+          double minDefault =
+              axisDir == AxisDirection::AxisPhi ? -std::numbers::pi : 0.;
+          double maxDefault =
+              axisDir == AxisDirection::AxisPhi ? std::numbers::pi : 0.;
+          auto min = getParamOr<double>(bname + "_" + ab + "_min",
+                                        dd4hepElement, minDefault);
+          auto max = getParamOr<double>(bname + "_" + ab + "_max",
+                                        dd4hepElement, maxDefault);
+          // The boundary type is not expressible in DD4hep, the consumer
+          // determines it from the surface
+          axisSpecs.emplace_back(
+              AxisSpec::Equidistant(nBins, min, max, std::nullopt, axisDir),
+              nExpansion);
+        }
+      } else {
+        // Variable binning
+        std::vector<double> edges;
+        for (int ib = 0; ib <= nBins; ++ib) {
+          edges.push_back(getParamOr<double>(
+              bname + "_" + ab + "_b" + std::to_string(ib), dd4hepElement, 0.));
+        }
+        axisSpecs.emplace_back(
+            AxisSpec::Variable(std::move(edges), std::nullopt, axisDir),
+            nExpansion);
+      }
+    }
+  }
+  return axisSpecs;
+}
+
+// The definition does not carry the deprecation attribute, so it needs the
+// suppression
+ACTS_PUSH_IGNORE_DEPRECATED()
+
 std::vector<std::tuple<DirectedProtoAxis, std::size_t>>
 DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
                                      const std::string &bname) {
@@ -77,5 +136,7 @@ DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
   }
   return protoBinnings;
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace ActsPlugins

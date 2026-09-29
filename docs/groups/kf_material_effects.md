@@ -118,7 +118,9 @@ momentum:
 > non-Gaussian, it cannot be modelled adequately by this pointwise Gaussian
 > update; electron fitting should therefore use the
 > @ref Acts::GaussianSumFitter "GSF", which models the Bethe–Heitler
-> distribution as a Gaussian mixture.
+> distribution as a Gaussian mixture (see @ref gsf). The same mixture machinery
+> can optionally be enabled *inside* the CKF for bremsstrahlung recovery during
+> track finding; see @ref gsf-ckf-brem.
 
 **Energy-loss straggling (variance).** The fluctuation of the ionization loss is
 described by the **Landau–Vavilov** distribution. Its full width at half maximum
@@ -165,7 +167,7 @@ and the local position and time entries are untouched:
   @ref Acts::computeEnergyLossRadiative (radiative).
 - Track fitters: @ref Acts::KalmanFitter, @ref Acts::CombinatorialKalmanFilter.
 - Standalone propagator actor: @ref Acts::MaterialInteractor.
-- Bethe–Heitler (GSF only): @ref Acts::AtlasBetheHeitlerApprox.
+- Bethe–Heitler (GSF only): @ref Acts::PolynomialBetheHeitlerApprox.
 
 The pointwise application and covariance update themselves live in internal
 (non-public) `detail` code; the snippets shown in the sections above are

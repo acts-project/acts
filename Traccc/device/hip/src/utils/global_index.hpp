@@ -10,6 +10,9 @@
 // Project include(s).
 #include "traccc/device/global_index.hpp"
 
+// HIP include(s).
+#include <hip/hip_runtime.h>
+
 namespace traccc::hip::details {
 
 /// Function creating a global index in a 1D HIP kernel

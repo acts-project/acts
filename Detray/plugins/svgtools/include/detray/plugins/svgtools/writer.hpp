@@ -15,6 +15,7 @@
 #include "actsvg/core.hpp"
 
 // System include(s)
+#include <array>
 #include <ios>
 #include <string>
 #include <vector>

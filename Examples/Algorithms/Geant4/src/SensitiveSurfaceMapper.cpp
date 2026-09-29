@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsExamples/Geant4/AlgebraConverters.hpp"
@@ -175,7 +176,8 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
       rotation << g4Rotation->xx(), g4Rotation->yx(), g4Rotation->zx(),
           g4Rotation->xy(), g4Rotation->yy(), g4Rotation->zy(),
           g4Rotation->xz(), g4Rotation->yz(), g4Rotation->zz();
-      localG4ToGlobal = motherTransform * (translation * rotation);
+      localG4ToGlobal =
+          motherTransform * Acts::makeTransform3(rotation, g4RelPosition);
     }
   }
 

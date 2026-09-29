@@ -141,7 +141,7 @@ class host_container : public container_base<header_t, item_t, vecmem::vector,
   }
 
   /**
-   * @breif Get number of items of jagged vector
+   * @brief Get number of items of jagged vector
    */
   TRACCC_HOST
   typename base_type::size_type total_size() const {

@@ -17,6 +17,8 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "ActsPlugins/ActSVG/SvgUtils.hpp"
 
@@ -57,12 +59,18 @@ void runPlanarTests(const Surface& surface, const Svg::Style& style,
                             static_cast<double>(xyObject._y_range[1]));
 
   Svg::toFile({xyObject, xyAxes}, xyObject._id + ".svg");
-  // As sheet
-  auto svgSheet = Svg::Sheet::xy(svgTemplate, identification + "_sheet");
-  Svg::toFile({svgSheet}, svgSheet._id + ".svg");
 }
 
 BOOST_AUTO_TEST_SUITE(ActSvg)
+
+// actsvg 0.4.57 removed the sheet displays; the entry point is kept as a
+// deprecated stub so callers get a diagnostic rather than a missing symbol.
+BOOST_AUTO_TEST_CASE(SurfaceSheetThrows) {
+  Svg::ProtoSurface pSurface;
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  BOOST_CHECK_THROW(Svg::Sheet::xy(pSurface, "sheet"), std::runtime_error);
+  ACTS_POP_IGNORE_DEPRECATED()
+}
 
 BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   // Planar style
@@ -100,7 +108,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   rotation.col(0) = localX;
   rotation.col(1) = localY;
   rotation.col(2) = localZ;
-  transform = Transform3(Translation3(center) * rotation);
+  transform = makeTransform3(rotation, center);
   // Create the module surface
   auto trapeozidPlaneTransformed =
       Surface::makeShared<PlaneSurface>(transform, trapezoidBounds);
@@ -122,7 +130,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   frotation.col(0) = flocalX;
   frotation.col(1) = localY;
   frotation.col(2) = flocalZ;
-  auto ftransform = Transform3(Translation3(center) * frotation);
+  auto ftransform = makeTransform3(frotation, center);
   // Create the module surface
   auto ftrapeozidPlaneTransformed =
       Surface::makeShared<PlaneSurface>(ftransform, trapezoidBounds);

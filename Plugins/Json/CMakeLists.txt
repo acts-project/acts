@@ -2,6 +2,7 @@ acts_add_library(
     PluginJson
     src/AlgebraJsonConverter.cpp
     src/ExtentJsonConverter.cpp
+    src/AxisSpecJsonConverter.cpp
     src/GridJsonConverter.cpp
     src/GeometryIdentifierJsonConverter.cpp
     src/IndexGridNavigationJsonConverter.cpp
@@ -11,6 +12,7 @@ acts_add_library(
     src/ProtoAxisJsonConverter.cpp
     src/SurfaceBoundsJsonConverter.cpp
     src/SurfaceJsonConverter.cpp
+    src/SurfaceMaterialJsonConverter.cpp
     src/UtilitiesJsonConverter.cpp
     src/VolumeBoundsJsonConverter.cpp
     src/VolumeJsonConverter.cpp
@@ -22,6 +24,7 @@ acts_add_library(
     src/SeedingConfigJsonConverter.cpp
     src/TrackingGeometryJsonConverter.cpp
     src/BetheHeitlerApproxJsonConverter.cpp
+    src/detail/JsonIo.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
@@ -41,5 +44,33 @@ target_compile_definitions(
     ActsPluginJson
     PRIVATE JSON_DISABLE_ENUM_SERIALIZATION=1
 )
+
+# zstd is optional: without it, reading a compressed file and requesting
+# compressed output both fail with an explanatory error. All zstd use is
+# confined to the .cpp, so the definition stays private and the headers
+# compile identically either way.
+if(ACTS_USE_ZSTD STREQUAL "NEVER")
+    message(STATUS "Json plugin: zstd support disabled (ACTS_USE_ZSTD=NEVER)")
+else()
+    message(
+        CHECK_START
+        "Json plugin: checking for zstd (ACTS_USE_ZSTD=${ACTS_USE_ZSTD})"
+    )
+    if(ACTS_USE_ZSTD STREQUAL "ALWAYS")
+        find_package(ZSTD REQUIRED)
+    else()
+        find_package(ZSTD QUIET)
+    endif()
+    if(ZSTD_FOUND)
+        message(CHECK_PASS "found, compression enabled")
+        target_link_libraries(ActsPluginJson PRIVATE ZSTD::ZSTD)
+        target_compile_definitions(
+            ActsPluginJson
+            PRIVATE ACTS_JSON_ZSTD_SUPPORT=1
+        )
+    else()
+        message(CHECK_PASS "not found, continuing without compression")
+    endif()
+endif()
 
 acts_compile_headers(PluginJson GLOB include/**/*.hpp)

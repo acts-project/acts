@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/algebra/common/math.hpp"
 #include "detray/algebra/concepts.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 

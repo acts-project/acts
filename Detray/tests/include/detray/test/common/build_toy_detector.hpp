@@ -18,6 +18,7 @@
 #include "detray/builders/material_map_generator.hpp"
 #include "detray/builders/surface_factory.hpp"
 #include "detray/builders/volume_builder.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/core/detector.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/indexing.hpp"
@@ -337,7 +338,8 @@ struct extent2D {
 /// @param v_builder the builder of the volume that should be decorated
 ///
 /// @returns the decorated volume builder and surface factory
-template <typename detector_builder_t, typename detector_t, typename config_t>
+template <typename detector_builder_t, concepts::detector detector_t,
+          typename config_t>
 volume_builder_interface<detector_t> *decorate_material(
     config_t &cfg, detector_builder_t &det_builder,
     volume_builder_interface<detector_t> *v_builder) {
@@ -376,7 +378,7 @@ volume_builder_interface<detector_t> *decorate_material(
 ///                          of this factory (assumes no material maps are used)
 ///
 /// @returns the decorated volume builder and surface factory
-template <typename detector_t>
+template <concepts::detector detector_t>
 std::shared_ptr<surface_factory_interface<detector_t>> decorate_material(
     toy_det_config<typename detector_t::scalar_type> &cfg,
     std::unique_ptr<surface_factory_interface<detector_t>> sf_factory,
@@ -441,7 +443,7 @@ std::shared_ptr<surface_factory_interface<detector_t>> decorate_material(
 /// @param link_east portal volume link of the left disc
 /// @param link_west portal volume link of the right disc
 /// @param add_material decorate material maps to portals
-template <typename detector_t>
+template <concepts::detector detector_t>
 void add_cylinder_portals(volume_builder_interface<detector_t> *v_builder,
                           toy_det_config<typename detector_t::scalar_type> &cfg,
                           const typename detector_t::scalar_type lower_z,
@@ -589,7 +591,7 @@ inline void add_disc_grid(
 /// @param[in] cfg config for the toy detector
 /// @param[in] sf_factory (material) factory to get the cylinder extent from
 /// @param[out] vol_bounds boundary struct
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline void get_volume_extent(
     toy_det_config<typename detector_t::scalar_type> &cfg,
     const std::shared_ptr<surface_factory_interface<detector_t>> &sf_factory,
@@ -1067,7 +1069,7 @@ inline void add_connector_portals(
 ///
 /// @param beampipe_builder volume builder for the beampipe volume
 /// @param cfg config for the toy detector
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline void add_beampipe_portals(
     volume_builder_interface<detector_t> *beampipe_builder,
     toy_det_config<typename detector_t::scalar_type> &cfg) {
@@ -1145,7 +1147,7 @@ inline void add_beampipe_portals(
 /// @param cfg config for the toy detector
 /// @param neg_edc_lay_sizes indices and z-extent of the endcap volumes of one
 ///                          detector side (positive or negative)
-template <typename detector_t, typename layer_size_cont_t>
+template <concepts::detector detector_t, typename layer_size_cont_t>
 inline void add_beampipe_portals(
     volume_builder_interface<detector_t> *beampipe_builder,
     toy_det_config<typename detector_t::scalar_type> &cfg,

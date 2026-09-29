@@ -1,0 +1,48 @@
+name: Compiler cache retention
+
+on:
+  # Only trusted main runs can trigger deletion; no PR artifacts or source
+  # are consumed. Checkout below always uses main, not the triggering SHA.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
+    workflows: [Builds, Analysis, Detray, PyPI]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Delete superseded main compiler-cache archives
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: ccache-retention
+  cancel-in-progress: false
+
+jobs:
+  prune:
+    if: >-
+      github.repository == 'acts-project/acts' &&
+      ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event.workflow_run.head_repository.full_name == github.repository &&
+      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'schedule')))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Retain newest compiler caches
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLY: ${{ github.event_name == 'workflow_run' || inputs.apply }}
+        run: |
+          args=()
+          if [[ "$APPLY" == "true" ]]; then
+            args+=(--apply)
+          fi
+          python3 CI/prune_ccache.py "${args[@]}"

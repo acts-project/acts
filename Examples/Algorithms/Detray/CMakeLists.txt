@@ -12,6 +12,7 @@ target_link_libraries(
         Acts::ExamplesPropagation
         Acts::PluginDetray
         Acts::PluginCovfie
+        detray::test_utils
 )
 
 acts_compile_headers(ExamplesDetray GLOB "include/**/*.hpp")

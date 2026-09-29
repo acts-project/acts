@@ -15,6 +15,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
+#include <cstdint>
 #include <numbers>
 #include <vector>
 
@@ -78,9 +79,9 @@ class CylindricalSpacePointGrid
     /// numPhiNeighbors (in the configuration of the BinFinders) is configured
     /// to return 1 neighbor on either side of the current phi-bin (and you want
     /// to cover the full phi-range of minPT), leave this at 1.
-    int phiBinDeflectionCoverage = 1;
+    std::uint32_t phiBinDeflectionCoverage = 1;
     /// maximum number of phi bins
-    int maxPhiBins = 10000;
+    std::uint32_t maxPhiBins = 10000;
     /// enable non equidistant binning in z
     std::vector<float> zBinEdges{};
     /// enable non equidistant binning in r
@@ -89,12 +90,14 @@ class CylindricalSpacePointGrid
     /// magnetic field
     float bFieldInZ = 0 * UnitConstants::T;
 
-    /// bin finder for bottom space points
-    std::optional<GridBinFinder<3ul>> bottomBinFinder;
-    /// bin finder for top space points
-    std::optional<GridBinFinder<3ul>> topBinFinder;
+    /// bin finder for bottom space points. Defaults to the neighbouring bins
+    /// in phi and z, and the same bin in r.
+    GridBinFinder<GridType::DIM> bottomBinFinder{1, 1, 0};
+    /// bin finder for top space points. Defaults to the neighbouring bins in
+    /// phi and z, and the same bin in r.
+    GridBinFinder<GridType::DIM> topBinFinder{1, 1, 0};
     /// navigation structure for the grid
-    std::array<std::vector<std::size_t>, 3ul> navigation;
+    std::array<std::vector<std::size_t>, GridType::DIM> navigation;
   };
 
   /// Construct a cylindrical space point grid with the given configuration and

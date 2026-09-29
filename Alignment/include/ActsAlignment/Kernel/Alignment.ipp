@@ -42,7 +42,7 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
   auto fitRes = m_fitter.fit(begin, end, sParameters, fitOptions, tracks);
 
   if (!fitRes.ok()) {
-    ACTS_WARNING("Fit failure");
+    ACTS_WARNING("Fit failure: " << fitRes.error().message());
     return fitRes.error();
   }
   // The fit results

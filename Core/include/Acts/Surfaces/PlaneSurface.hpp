@@ -73,6 +73,8 @@ class PlaneSurface : public RegularSurface {
                         std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
  public:
+  ~PlaneSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other The source PlaneSurface for assignment

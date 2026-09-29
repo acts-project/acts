@@ -81,7 +81,7 @@ def runITk(
                 processBoundaries=True,
                 processVolumes=True,
                 processNonMaterial=True,
-                context=context.geoContext,
+                context=context.recoGeoContext,
             )
 
             outname = "material-map"

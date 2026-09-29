@@ -187,7 +187,10 @@ class BinningData {
   ///
   /// @param dpAxis is the ProtoAxis object
   ///
-  explicit BinningData(const DirectedProtoAxis& dpAxis)
+  /// @deprecated Use BinningData(const IAxis&) with a directed axis instead
+  [[deprecated(
+      "Use BinningData(const IAxis&) with a directed axis "
+      "instead")]] explicit BinningData(const DirectedProtoAxis& dpAxis)
       : BinningData(dpAxis.getAxisDirection(), dpAxis.getAxis()) {}
 
   /// Constructor from an axis direction and a type-erased axis

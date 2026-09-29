@@ -58,7 +58,7 @@ generation::generation() : interface("Particle Generation Options") {
                        po::value(&pdg_number)->default_value(pdg_number),
                        "PDG number for the particle type");
   m_desc.add_options()("no-multiple-scattering",
-                       "Do not inlcude multiple scattering");
+                       "Do not include multiple scattering");
   m_desc.add_options()("no-energy-loss", "Do not include energy loss");
 }
 

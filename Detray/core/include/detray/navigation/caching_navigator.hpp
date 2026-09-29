@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algorithms.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/indexing.hpp"
@@ -23,6 +24,9 @@
 #include "detray/navigation/navigator_base.hpp"
 #include "detray/tracks/ray.hpp"
 #include "detray/utils/logging.hpp"
+
+// System include(s)
+#include <limits>
 
 namespace detray {
 
@@ -44,7 +48,7 @@ static constexpr std::size_t default_cache_size{8u};
 /// @tparam inspector_t is a validation inspector that can record information
 ///         about the navigation state at different points of the nav. flow.
 /// @tparam intersection_t candidate type
-template <typename detector_t,
+template <concepts::detector detector_t,
           std::size_t k_cache_capacity = navigation::default_cache_size,
           typename inspector_t = navigation::void_inspector,
           typename intersection_t = intersection2D<
@@ -149,7 +153,7 @@ class caching_navigator
       // Insert the first candidate
       if (this->n_candidates() == 0) [[unlikely]] {
         this->candidates()[0] = new_candidate;
-        this->last_index(this->last_index() + 1);
+        this->last_index(static_cast<dist_t>(this->last_index() + 1));
         assert(this->next_index() <= this->last_index() + 1);
         assert(static_cast<std::size_t>(this->last_index()) < k_cache_capacity);
         return;
@@ -166,7 +170,12 @@ class caching_navigator
                            new_candidate.path()) <= 1.f * unit<scalar_t>::um);
       };
 
-      // Do not add the same surface (intersection) multiple times
+      // Make sure that surfaces don't appear multiple times in the navigation
+      // cache. If the search window is opened on a grid that contains an entire
+      // neighbourhood in every bin, a neighbourhood lookup will result in
+      // surfaces appearing multiple times in the cache. If this appears too
+      // often, the cache can contain only this surface, leading to the
+      // navigator getting stuck on that surface.
       const auto is_clash_at_pos = [this, &new_candidate,
                                     &is_overlap_at_pos](std::size_t index) {
         return (this->candidates()[index].surface().identifier() ==

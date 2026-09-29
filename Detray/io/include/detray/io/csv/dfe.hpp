@@ -40,8 +40,11 @@
 #include <cassert>
 #include <cstdint>
 #include <fstream>
+#include <iomanip>
+#include <limits>
 #include <ostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>

@@ -59,7 +59,7 @@ void DD4hepDetectorSurfaceFactory::recursiveConstruct(
   // Check if any surface binnning can be detected
   int sBinning = getParamOr<int>("acts_surface_binning_dim", dd4hepElement, 0);
   if (sBinning > 0) {
-    cache.binnings = DD4hepBinningHelpers::convertBinning(
+    cache.binnings = DD4hepBinningHelpers::convertAxisSpecs(
         dd4hepElement, "acts_surface_binning");
   }
 
@@ -154,11 +154,13 @@ void DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
       getParamOr<bool>(prefix + "_proto_material", dd4hepElement, false);
   if (protoMaterial) {
     ACTS_VERBOSE(" - proto material binning for passive surface found.");
-    auto materialBinning = DD4hepBinningHelpers::convertBinning(
+    auto materialBinning = DD4hepBinningHelpers::convertAxisSpecs(
         dd4hepElement, prefix + "_proto_material_binning");
-    std::vector<DirectedProtoAxis> pmBinning = {};
-    for (const auto& [dpAxis, bins] : materialBinning) {
-      pmBinning.emplace_back(dpAxis);
+    // Deferred binning: the range is taken from the surface during mapping
+    // TODO the collected binning is not yet attached to the surface
+    std::vector<AxisSpec> pmBinning = {};
+    for (const auto& [axisSpec, bins] : materialBinning) {
+      pmBinning.emplace_back(axisSpec.toDeferred());
     }
   } else if (options.convertMaterial) {
     ACTS_VERBOSE(" - direct conversion of DD4hep material triggered.");

@@ -29,6 +29,10 @@ target_compile_definitions(
         DETRAY_ALGEBRA_SMATRIX
 )
 
-detray_test_public_headers( detray_algebra_smatrix
-   "algebra/smatrix.hpp"
+# Compile all headers one-by-one.
+detray_compile_headers(
+    algebra_smatrix
+    detray::algebra_smatrix
+    "include/algebra/*.hpp"
+    "include/algebra/**/*.hpp"
 )

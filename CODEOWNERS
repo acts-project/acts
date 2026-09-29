@@ -33,6 +33,7 @@ CI/check_unused_files.py @AJPfleger
 Detray/** @niermann999
 Plugins/Covfie/** @stephenswat
 Plugins/Detray/** @niermann999
+Plugins/Traccc/** @krasznaa
 thirdparty/covfie/** @stephenswat
 thirdparty/traccc/** @stephenswat
 Plugins/Gnn/** @benjaminhuth
@@ -41,3 +42,5 @@ pyproject.toml @benjaminhuth
 **/*Gsf* @benjaminhuth
 **/*GaussianSumFitter* @benjaminhuth
 Traccc/** @stephenswat
+Traccc/core/** @krasznaa
+Traccc/device/** @krasznaa

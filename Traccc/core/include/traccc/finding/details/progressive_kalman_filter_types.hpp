@@ -37,7 +37,7 @@ using pkf_actor_chain_t =
                         parameter_updater_t,
                         detray::actor::momentum_aborter<traccc::scalar>>;
 
-template <typename detector_t, typename bfield_t>
+template <detray::concepts::detector detector_t, typename bfield_t>
 using pkf_propagator_t =
     detray::propagator<pkf_stepper_t<bfield_t>,
                        detray::caching_navigator<std::add_const_t<detector_t>>,

@@ -17,7 +17,7 @@ namespace traccc {
 
 /// Item: doublet of middle-bottom or middle-top
 struct doublet {
-  // midle spacepoint location in internal spacepoint container
+  // middle spacepoint location in internal spacepoint container
   sp_location sp1;
   // bottom (or top) spacepoint location in internal spacepoint container
   sp_location sp2;

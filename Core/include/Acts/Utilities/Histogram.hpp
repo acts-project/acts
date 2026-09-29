@@ -10,11 +10,17 @@
 
 #include "Acts/Utilities/RangeXD.hpp"
 
+#include <algorithm>
 #include <array>
+#include <cassert>
+#include <cmath>
+#include <concepts>
+#include <ranges>
 #include <string>
 #include <tuple>
 
 #include <boost/histogram.hpp>
+#include <boost/histogram/accumulators/weighted_sum.hpp>
 
 namespace Acts::Experimental {
 
@@ -36,8 +42,10 @@ using AxisVariant =
     boost::histogram::axis::variant<BoostVariableAxis, BoostRegularAxis,
                                     BoostLogAxis>;
 
-/// @brief Underlying Boost type for histograms
-using BoostHist = decltype(boost::histogram::make_histogram(
+/// @brief Underlying Boost type for @c Histogram
+///
+/// Weighted-sum accumulator, so every bin carries a content and a variance.
+using BoostHist = decltype(boost::histogram::make_weighted_histogram(
     std::declval<std::vector<AxisVariant>>()));
 
 /// @brief Underlying Boost type for ProfileHistogram
@@ -47,7 +55,9 @@ using BoostProfileHist = decltype(boost::histogram::make_profile(
 /// @brief Multi-dimensional histogram wrapper using boost::histogram for data collection
 ///
 /// This class wraps boost::histogram to provide a ROOT-independent histogram
-/// implementation with compile-time dimensionality.
+/// implementation with compile-time dimensionality. Every bin carries a
+/// content and an error: @c fill() gives the usual @f$ \sqrt{N} @f$ error,
+/// while @c setBin() can write an arbitrary value/error pair, e.g. from a fit.
 ///
 /// @tparam Dim Number of dimensions
 template <std::size_t Dim>
@@ -62,7 +72,8 @@ class Histogram {
             const std::array<AxisVariant, Dim>& axes)
       : m_name(std::move(name)),
         m_title(std::move(title)),
-        m_hist(boost::histogram::make_histogram(axes.begin(), axes.end())) {}
+        m_hist(boost::histogram::make_weighted_histogram(
+            std::vector<AxisVariant>(axes.begin(), axes.end()))) {}
 
   /// Copy constructor
   /// @param other The other histogram to copy from
@@ -89,6 +100,62 @@ class Histogram {
     std::apply([this](auto... v) { m_hist(v...); }, std::tuple_cat(values));
   }
 
+  /// Set the content of a single bin, discarding whatever was there before
+  ///
+  /// @param indices Zero-based bin index per axis, excluding under-/overflow
+  /// @param content The content to store
+  /// @remark Indices must be in `[0, axis.size())` for every axis
+  /// @remark The bin's error is set to @f$ \sqrt{content} @f$, matching the
+  ///         error @c fill() would give a bin with that many entries. Use
+  ///         @c setBin to set an arbitrary value/error pair instead.
+  void setBinContent(const std::array<int, Dim>& indices, double content) {
+    std::apply(
+        [&](auto... i) {
+          m_hist.at(i...) =
+              boost::histogram::accumulators::weighted_sum<double>(content);
+        },
+        indices);
+  }
+
+  /// Set the content and error of a single bin, discarding whatever was
+  /// there before
+  ///
+  /// @param indices Zero-based bin index per axis, excluding under-/overflow
+  /// @param content The content to store
+  /// @param error The uncertainty on @p content
+  /// @remark Indices must be in `[0, axis.size())` for every axis
+  void setBin(const std::array<int, Dim>& indices, double content,
+              double error) {
+    std::apply(
+        [&](auto... i) {
+          m_hist.at(i...) =
+              boost::histogram::accumulators::weighted_sum<double>(
+                  content, error * error);
+        },
+        indices);
+  }
+
+  /// Get the content of a single bin
+  ///
+  /// @param indices Zero-based bin index per axis, excluding under-/overflow
+  /// @return The bin content
+  /// @remark Indices must be in `[0, axis.size())` for every axis
+  double binContent(const std::array<int, Dim>& indices) const {
+    return std::apply([&](auto... i) { return m_hist.at(i...).value(); },
+                      indices);
+  }
+
+  /// Get the error of a single bin
+  ///
+  /// @param indices Zero-based bin index per axis, excluding under-/overflow
+  /// @return The uncertainty on the bin content
+  /// @remark Indices must be in `[0, axis.size())` for every axis
+  double binError(const std::array<int, Dim>& indices) const {
+    return std::apply(
+        [&](auto... i) { return std::sqrt(m_hist.at(i...).variance()); },
+        indices);
+  }
+
   /// Get histogram name
   /// @return The histogram name
   const std::string& name() const { return m_name; }
@@ -104,6 +171,73 @@ class Histogram {
   /// Direct access to boost::histogram (for converters and tests)
   /// @return The underlying boost histogram
   const BoostHist& histogram() const { return m_hist; }
+
+  /// Extract the distribution along the last axis at a fixed bin of the
+  /// other axes
+  ///
+  /// Equivalent to ROOT's `TH2::ProjectionY(name, xBin + 1, xBin + 1)` for a
+  /// 2D histogram, or `TH3::ProjectionZ(name, xBin + 1, xBin + 1, yBin + 1,
+  /// yBin + 1)` for a 3D one.
+  ///
+  /// @param outerBins Zero-based bin index for every axis but the last, in
+  ///                  axis order
+  /// @return A 1D histogram over the last axis
+  /// @remark Every entry of @p outerBins must be in range for its axis
+  Histogram<1> sliceLastAxis(const std::array<int, Dim - 1>& outerBins) const {
+    const auto& lastAxis = m_hist.axis(Dim - 1);
+
+    assert(std::ranges::all_of(std::views::iota(std::size_t{0}, Dim - 1),
+                               [&](std::size_t d) {
+                                 return outerBins[d] >= 0 &&
+                                        outerBins[d] < m_hist.axis(d).size();
+                               }) &&
+           "outer bin index out of range");
+
+    std::string sliceName = m_name + "_slice";
+    for (const int bin : outerBins) {
+      sliceName += "_" + std::to_string(bin);
+    }
+
+    std::array<AxisVariant, 1> axes = {lastAxis};
+    Histogram<1> slice(std::move(sliceName), m_title, axes);
+
+    for (int k = 0; k < lastAxis.size(); ++k) {
+      std::array<int, Dim> indices{};
+      std::ranges::copy(outerBins, indices.begin());
+      indices[Dim - 1] = k;
+      slice.setBin({k}, binContent(indices), binError(indices));
+    }
+
+    return slice;
+  }
+
+  /// Extract the distribution along the last axis at a fixed bin of the
+  /// other axes, given as individual bin indices rather than an array
+  ///
+  /// @param outerBins Zero-based bin index for every axis but the last, in
+  ///                  axis order
+  /// @return A 1D histogram over the last axis
+  /// @remark Every entry of @p outerBins must be in range for its axis
+  template <std::integral... Ints>
+    requires(sizeof...(Ints) + 1 == Dim)
+  Histogram<1> sliceLastAxis(Ints... outerBins) const {
+    return sliceLastAxis(
+        std::array<int, Dim - 1>{static_cast<int>(outerBins)...});
+  }
+
+  /// Total content of the histogram's in-range bins
+  ///
+  /// The ROOT-independent equivalent of `TH1::GetEntries()` on a filled
+  /// histogram.
+  ///
+  /// @return The sum of all in-range bin contents
+  double totalContent() const {
+    double total = 0;
+    for (auto&& bin : boost::histogram::indexed(m_hist)) {
+      total += (*bin).value();
+    }
+    return total;
+  }
 
  private:
   std::string m_name;
@@ -211,8 +345,10 @@ class Efficiency {
              const std::array<AxisVariant, Dim>& axes)
       : m_name(std::move(name)),
         m_title(std::move(title)),
-        m_accepted(boost::histogram::make_histogram(axes.begin(), axes.end())),
-        m_total(boost::histogram::make_histogram(axes.begin(), axes.end())) {}
+        m_accepted(boost::histogram::make_weighted_histogram(
+            std::vector<AxisVariant>(axes.begin(), axes.end()))),
+        m_total(boost::histogram::make_weighted_histogram(
+            std::vector<AxisVariant>(axes.begin(), axes.end()))) {}
 
   /// Fill efficiency histogram
   ///
@@ -266,12 +402,16 @@ using Efficiency2 = Efficiency<2>;
 ///
 /// @param hist2d The 2D histogram to project
 /// @return A 1D histogram containing the projection
+/// @note Unlike ROOT's `TH2::ProjectionX`, the sum runs over the under- and
+///       overflow bins of the Y axis as well.
 Histogram1 projectionX(const Histogram2& hist2d);
 
 /// Project a 2D histogram onto the Y axis (axis 1)
 ///
 /// @param hist2d The 2D histogram to project
 /// @return A 1D histogram containing the projection
+/// @note Unlike ROOT's `TH2::ProjectionY`, the sum runs over the under- and
+///       overflow bins of the X axis as well.
 Histogram1 projectionY(const Histogram2& hist2d);
 
 /// Extract bin edges from an AxisVariant

@@ -14,10 +14,12 @@
 #include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 
 #include <detray/builders/detector_builder.hpp>
+#include <detray/core/concepts.hpp>
 #include <detray/io/backend/geometry_reader.hpp>
 #include <detray/io/backend/homogeneous_material_reader.hpp>
 #include <detray/io/backend/material_map_reader.hpp>
@@ -57,10 +59,10 @@ class DetrayGeometryConverter {
   /// Bundles the built detray detector together with the detray volume/surface
   /// name map.
   /// @tparam metadata_t the detector metadata type
-  template <typename metadata_t>
+  template <detray::concepts::metadata metadata_t>
   struct DetrayGeometry {
     /// The built detray detector
-    std::shared_ptr<detray::detector<metadata_t>> detector;
+    std::shared_ptr<detray::host::detector<metadata_t>> detector;
 
     /// The detray volume and surface name map
     detray::name_map names;
@@ -96,12 +98,12 @@ class DetrayGeometryConverter {
   ///    detray::detector_builder.
   ///
   /// @return The built detray detector together with its name map.
-  template <typename metadata_t>
+  template <detray::concepts::metadata metadata_t>
   DetrayGeometry<metadata_t> convert(
       vecmem::memory_resource& mr, const Acts::GeometryContext& gctx,
       const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
       const std::string& detectorName = "") const {
-    using detector_t = detray::detector<metadata_t>;
+    using detector_t = detray::host::detector<metadata_t>;
 
     if (trackingGeometry == nullptr) {
       throw std::invalid_argument(
@@ -119,8 +121,44 @@ class DetrayGeometryConverter {
                                                           *payloads.detector);
 
     if (m_cfg.convertMaterial) {
-      detray::io::homogeneous_material_reader::from_payload<detector_t>(
-          detectorBuilder, *payloads.homogeneousMaterial);
+      if (!payloads.homogeneousMaterial) {
+        ACTS_DEBUG("No homogeneous material payload found, skipping");
+      } else {
+        const auto& materialVolumes = payloads.homogeneousMaterial->volumes;
+        ACTS_DEBUG("Found homogeneous material payload with "
+                   << materialVolumes.size() << " volumes");
+
+        auto hasMaterialType =
+            [&materialVolumes](detray::io::material_id type) {
+              return std::ranges::any_of(
+                  materialVolumes, [type](const auto& volume) {
+                    return std::ranges::any_of(
+                        volume.surface_mat,
+                        [type](const auto& sm) { return sm.type == type; });
+                  });
+            };
+
+        if (hasMaterialType(detray::io::material_id::slab) &&
+            !detray::concepts::has_material_slabs<detector_t>) {
+          throw std::invalid_argument(
+              "DetrayGeometryConverter: the tracking geometry contains "
+              "homogeneous material slabs, but the target Detray metadata "
+              "type does not support material slabs");
+        }
+        if (hasMaterialType(detray::io::material_id::rod) &&
+            !detray::concepts::has_material_rods<detector_t>) {
+          throw std::invalid_argument(
+              "DetrayGeometryConverter: the tracking geometry contains "
+              "homogeneous material rods, but the target Detray metadata "
+              "type does not support material rods");
+        }
+
+        if constexpr (detray::concepts::has_material_slabs<detector_t> ||
+                      detray::concepts::has_material_rods<detector_t>) {
+          detray::io::homogeneous_material_reader::from_payload<detector_t>(
+              detectorBuilder, *payloads.homogeneousMaterial);
+        }
+      }
 
       detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
           from_payload<detector_t>(detectorBuilder,

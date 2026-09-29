@@ -48,7 +48,7 @@ struct fill_finding_propagation_sort_keys_payload {
 /// Function used for fill key container
 ///
 /// @param[in] globalIndex   The index of the current thread
-/// @param[inout] payload      The function call payload
+/// @param[in,out] payload      The function call payload
 ///
 TRACCC_HOST_DEVICE inline void fill_finding_propagation_sort_keys(
     global_index_t globalIndex,

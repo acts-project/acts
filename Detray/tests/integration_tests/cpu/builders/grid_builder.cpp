@@ -37,7 +37,7 @@ using scalar = test::scalar;
 using point3 = test::point3;
 using vector3 = test::vector3;
 
-using detector_t = detector<test::toy_metadata>;
+using detector_t = host::detector<test::toy_metadata>;
 
 }  // anonymous namespace
 

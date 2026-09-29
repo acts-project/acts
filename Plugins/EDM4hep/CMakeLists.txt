@@ -64,6 +64,29 @@ target_compile_options(ActsPodioEdm PRIVATE "-Wno-old-style-cast")
 podio_add_root_io_dict(ActsPodioEdmDict ActsPodioEdm "${headers}" ${_output_folder}/src/selection.xml)
 add_library(Acts::ActsPodioEdmDict ALIAS ActsPodioEdmDict)
 
+# podio 1.8's PODIO_ADD_ROOT_IO_DICT puts ${Python3_INCLUDE_DIRS} on the dict
+# target as a bare PUBLIC path, unlike the generator-expression call beside it.
+# We export this target, and CMake refuses to export an INTERFACE include
+# directory that lives under the source tree -- which Python's does whenever
+# the dependency stack is installed inside the build workspace, as it is in
+# CI. Consumers of a ROOT dictionary need no Python headers, so drop the bare
+# entries from the usage requirements; the dictionary's own compile keeps them
+# via INCLUDE_DIRECTORIES, which PUBLIC set as well. A no-op on podio 1.7,
+# where every entry is already a generator expression.
+foreach(
+    _prop
+    IN
+    ITEMS INTERFACE_INCLUDE_DIRECTORIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+)
+    get_target_property(_dirs ActsPodioEdmDict ${_prop})
+    if(_dirs)
+        list(FILTER _dirs INCLUDE REGEX "^\\$<")
+        set_property(TARGET ActsPodioEdmDict PROPERTY ${_prop} "${_dirs}")
+    endif()
+endforeach()
+unset(_prop)
+unset(_dirs)
+
 target_compile_options(ActsPodioEdmDict PRIVATE "-Wno-old-style-cast")
 
 install(

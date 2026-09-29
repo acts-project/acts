@@ -16,6 +16,7 @@
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Material/MergedMaterialMarker.hpp"
+#include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
@@ -214,6 +215,19 @@ Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
   const bool aHasMaterial = aPortal.m_surface->hasMaterial();
   const bool bHasMaterial = bPortal.m_surface->hasMaterial();
   const bool hadMaterial = aHasMaterial || bHasMaterial;
+  std::vector<MergedMaterialMarker::Origin> materialOrigins;
+  for (const Surface* surface :
+       {aPortal.m_surface.get(), bPortal.m_surface.get()}) {
+    if (const auto* marker = dynamic_cast<const MergedMaterialMarker*>(
+            surface->surfaceMaterial())) {
+      materialOrigins.insert(materialOrigins.end(), marker->origins().begin(),
+                             marker->origins().end());
+    } else if (surface->hasMaterial()) {
+      materialOrigins.emplace_back(
+          surface->geometryId(),
+          detail::materialKey(surface->surfaceMaterial()));
+    }
+  }
 
   if (hadMaterial) {
     std::stringstream ss;
@@ -301,7 +315,7 @@ Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
     // Tag the merged surface so the lossy merge remains discoverable
     // downstream.
     merged.m_surface->assignSurfaceMaterial(
-        std::make_shared<MergedMaterialMarker>());
+        std::make_unique<MergedMaterialMarker>(std::move(materialOrigins)));
   }
 
   return merged;

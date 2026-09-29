@@ -115,6 +115,7 @@ Result<double> MultiStepperLoop<S, R>::step(
     // surface, reweight the components, perform no step and return 0
     if (*state.stepCounterAfterFirstComponentOnSurface >=
         m_stepLimitAfterFirstComponentOnSurface) {
+      //! [step limit]
       for (auto& cmp : components) {
         if (cmp.status != Status::onSurface) {
           cmp.status = Status::unreachable;
@@ -129,6 +130,7 @@ Result<double> MultiStepperLoop<S, R>::step(
 
       removeMissedComponents(state);
       reweightComponents(state);
+      //! [step limit]
 
       ACTS_VERBOSE(components.size()
                    << " components left after removing missed components");

@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
+#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
 
 #include <map>
@@ -24,6 +25,7 @@ namespace Acts {
 class Surface;
 
 /// @brief Interface for the material mapping, this is the accumulation step
+/// @ingroup material_mapping
 class ISurfaceMaterialAccumulator {
  public:
   /// The state of the material accumulator, this is used
@@ -65,6 +67,16 @@ class ISurfaceMaterialAccumulator {
   /// @return Map of geometry IDs to finalized surface material objects
   virtual std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
   finalizeMaterial(State& state, const GeometryContext& gctx) const = 0;
+
+  /// Finalize material assignments, including stable keys when supported.
+  /// The default adapts the existing ID-only finalizeMaterial implementation.
+  /// @param state State created by this accumulator
+  /// @param gctx Geometry context
+  /// @return Finalized material maps
+  virtual TrackingGeometryMaterial finalizeMaps(
+      State& state, const GeometryContext& gctx) const {
+    return {finalizeMaterial(state, gctx), {}};
+  }
 };
 
 }  // namespace Acts

@@ -9,6 +9,7 @@
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -29,11 +30,34 @@ namespace Acts {
 using VectorHelpers::perp;
 using VectorHelpers::phi;
 
+namespace {
+
+/// Bin edges are derived from the surfaces but consumed as local coordinates of
+/// the representative surface. Subtracting its translation puts them in the
+/// same frame. Phi is rotated by @c createEquidistantAxis instead, and R is
+/// invariant under the translations applied here.
+double axisFrameOffset(AxisDirection aDir, const Transform3& transform) {
+  using enum AxisDirection;
+  switch (aDir) {
+    case AxisX:
+      return transform.translation().x();
+    case AxisY:
+      return transform.translation().y();
+    case AxisZ:
+      return transform.translation().z();
+    default:
+      return 0.;
+  }
+}
+
+}  // namespace
+
 SurfaceArray SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
     std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt,
-    const Transform3& transform, std::uint8_t maxNeighborDistance) const {
+    const Transform3& transform, SurfaceArray::NeighborWindow neighborWindow,
+    std::uint8_t overfill) const {
   using enum AxisDirection;
 
   const std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
@@ -62,15 +86,16 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnCylinder(
   ACTS_VERBOSE("- projection surface is: " << surface->toString(gctx));
 
   return SurfaceArray(gctx, std::move(surfaces), std::move(surface),
-                      layerTolerance, {*pAxisPhi, *pAxisZ},
-                      maxNeighborDistance);
+                      layerTolerance, {*pAxisPhi, *pAxisZ}, neighborWindow,
+                      overfill);
 }
 
 SurfaceArray SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> protoLayerOpt,
-    const Transform3& transform, std::uint8_t maxNeighborDistance) const {
+    const Transform3& transform, SurfaceArray::NeighborWindow neighborWindow,
+    std::uint8_t overfill) const {
   using enum AxisDirection;
 
   const std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
@@ -114,15 +139,16 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnCylinder(
                                       << bins0 * bins1 << " bins.");
 
   return SurfaceArray(gctx, std::move(surfaces), std::move(surface),
-                      layerTolerance, {*pAxisPhi, *pAxisZ},
-                      maxNeighborDistance);
+                      layerTolerance, {*pAxisPhi, *pAxisZ}, neighborWindow,
+                      overfill);
 }
 
 SurfaceArray SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
     std::size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt,
-    const Transform3& transform, std::uint8_t maxNeighborDistance) const {
+    const Transform3& transform, SurfaceArray::NeighborWindow neighborWindow,
+    std::uint8_t overfill) const {
   using enum AxisDirection;
 
   const std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
@@ -164,15 +190,16 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnDisc(
                                       << bins0 * bins1 << " bins.");
 
   return SurfaceArray(gctx, std::move(surfaces), std::move(surface),
-                      layerThickness, {*pAxisR, *pAxisPhi},
-                      maxNeighborDistance);
+                      layerThickness, {*pAxisR, *pAxisPhi}, neighborWindow,
+                      overfill);
 }
 
 SurfaceArray SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> protoLayerOpt,
-    const Transform3& transform, std::uint8_t maxNeighborDistance) const {
+    const Transform3& transform, SurfaceArray::NeighborWindow neighborWindow,
+    std::uint8_t overfill) const {
   using enum AxisDirection;
 
   const std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
@@ -270,8 +297,8 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnDisc(
                                       << bins0 * bins1 << " bins.");
 
   return SurfaceArray(gctx, std::move(surfaces), std::move(surface),
-                      layerThickness, {*pAxisR, *pAxisPhi},
-                      maxNeighborDistance);
+                      layerThickness, {*pAxisR, *pAxisPhi}, neighborWindow,
+                      overfill);
 }
 
 /// SurfaceArrayCreator interface method - create an array on a plane
@@ -280,7 +307,7 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnPlane(
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
     std::size_t bins2, AxisDirection aDir,
     std::optional<ProtoLayer> protoLayerOpt, const Transform3& transform,
-    std::uint8_t maxNeighborDistance) const {
+    SurfaceArray::NeighborWindow neighborWindow, std::uint8_t overfill) const {
   using enum AxisDirection;
 
   const std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
@@ -305,14 +332,16 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnPlane(
       const auto pAxis2 =
           createEquidistantAxis(gctx, surfacesRaw, AxisBoundaryType::Bound,
                                 AxisZ, protoLayer, fullTransform, bins2);
+      const Vector3 shift = fullTransform.translation();
       auto surface = Surface::makeShared<PlaneSurface>(
-          fullTransform,
-          std::make_shared<RectangleBounds>(
-              Vector2(protoLayer.min(AxisY), protoLayer.min(AxisZ)),
-              Vector2(protoLayer.max(AxisY), protoLayer.max(AxisZ))));
+          fullTransform, std::make_shared<RectangleBounds>(
+                             Vector2(protoLayer.min(AxisY) - shift.y(),
+                                     protoLayer.min(AxisZ) - shift.z()),
+                             Vector2(protoLayer.max(AxisY) - shift.y(),
+                                     protoLayer.max(AxisZ) - shift.z())));
       return SurfaceArray(gctx, std::move(surfaces), std::move(surface),
-                          layerTolerance, {*pAxis1, *pAxis2},
-                          maxNeighborDistance);
+                          layerTolerance, {*pAxis1, *pAxis2}, neighborWindow,
+                          overfill);
     }
     case AxisY: {
       const auto pAxis1 =
@@ -321,14 +350,16 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnPlane(
       const auto pAxis2 =
           createEquidistantAxis(gctx, surfacesRaw, AxisBoundaryType::Bound,
                                 AxisZ, protoLayer, fullTransform, bins2);
+      const Vector3 shift = fullTransform.translation();
       auto surface = Surface::makeShared<PlaneSurface>(
-          fullTransform,
-          std::make_shared<RectangleBounds>(
-              Vector2(protoLayer.min(AxisX), protoLayer.min(AxisY)),
-              Vector2(protoLayer.max(AxisX), protoLayer.max(AxisY))));
+          fullTransform, std::make_shared<RectangleBounds>(
+                             Vector2(protoLayer.min(AxisX) - shift.x(),
+                                     protoLayer.min(AxisZ) - shift.z()),
+                             Vector2(protoLayer.max(AxisX) - shift.x(),
+                                     protoLayer.max(AxisZ) - shift.z())));
       return SurfaceArray(gctx, std::move(surfaces), std::move(surface),
-                          layerTolerance, {*pAxis1, *pAxis2},
-                          maxNeighborDistance);
+                          layerTolerance, {*pAxis1, *pAxis2}, neighborWindow,
+                          overfill);
     }
     case AxisZ: {
       const auto pAxis1 =
@@ -337,14 +368,16 @@ SurfaceArray SurfaceArrayCreator::surfaceArrayOnPlane(
       const auto pAxis2 =
           createEquidistantAxis(gctx, surfacesRaw, AxisBoundaryType::Bound,
                                 AxisY, protoLayer, fullTransform, bins2);
+      const Vector3 shift = fullTransform.translation();
       auto surface = Surface::makeShared<PlaneSurface>(
-          fullTransform,
-          std::make_shared<RectangleBounds>(
-              Vector2(protoLayer.min(AxisX), protoLayer.min(AxisY)),
-              Vector2(protoLayer.max(AxisX), protoLayer.max(AxisY))));
+          fullTransform, std::make_shared<RectangleBounds>(
+                             Vector2(protoLayer.min(AxisX) - shift.x(),
+                                     protoLayer.min(AxisY) - shift.y()),
+                             Vector2(protoLayer.max(AxisX) - shift.x(),
+                                     protoLayer.max(AxisY) - shift.y())));
       return SurfaceArray(gctx, std::move(surfaces), std::move(surface),
-                          layerTolerance, {*pAxis1, *pAxis2},
-                          maxNeighborDistance);
+                          layerTolerance, {*pAxis1, *pAxis2}, neighborWindow,
+                          overfill);
     }
     default:
       break;
@@ -469,8 +502,10 @@ std::unique_ptr<const IAxis> SurfaceArrayCreator::createVariableAxis(
       return s->referencePosition(gctx, AxisZ).z();
     });
 
-    binEdges.push_back(protoLayer.min(AxisZ));
-    binEdges.push_back(protoLayer.max(AxisZ));
+    const double frameOffset = axisFrameOffset(AxisZ, transform);
+
+    binEdges.push_back(protoLayer.min(AxisZ) - frameOffset);
+    binEdges.push_back(protoLayer.max(AxisZ) - frameOffset);
 
     // the z-center position of the previous surface
     double previous = keys.front()->referencePosition(gctx, AxisZ).z();
@@ -480,7 +515,8 @@ std::unique_ptr<const IAxis> SurfaceArrayCreator::createVariableAxis(
       // positions in the binning direction of the current and previous
       // surface
       binEdges.push_back(
-          0.5 * (previous + (*surface)->referencePosition(gctx, AxisZ).z()));
+          0.5 * (previous + (*surface)->referencePosition(gctx, AxisZ).z()) -
+          frameOffset);
       previous = (*surface)->referencePosition(gctx, AxisZ).z();
     }
   } else {  // AxisR
@@ -527,8 +563,9 @@ std::unique_ptr<const IAxis> SurfaceArrayCreator::createEquidistantAxis(
   }
   // check the binning type first
 
-  double minimum = protoLayer.min(aDir, false);
-  double maximum = protoLayer.max(aDir, false);
+  const double frameOffset = axisFrameOffset(aDir, transform);
+  double minimum = protoLayer.min(aDir, false) - frameOffset;
+  double maximum = protoLayer.max(aDir, false) - frameOffset;
 
   std::size_t binNumber = 0;
   if (nBins == 0) {
@@ -538,9 +575,6 @@ std::unique_ptr<const IAxis> SurfaceArrayCreator::createEquidistantAxis(
     // use bin count
     binNumber = nBins;
   }
-
-  // bind matcher & context with binning type
-  auto matcher = m_cfg.surfaceMatcher;
 
   // now check the binning value
   if (aDir == AxisPhi) {
@@ -559,14 +593,15 @@ std::unique_ptr<const IAxis> SurfaceArrayCreator::createEquidistantAxis(
             return phi(s->referencePosition(gctx, AxisR));
           });
 
-      // rotate to max phi module plus one half step
-      // this should make sure that phi wrapping at +- pi
-      // never falls on a module center
+      // Rotate the highest-phi module centre onto the last bin centre, so the
+      // wrap-around at +-pi never falls on a module centre. @p transform is
+      // the representative surface's local-to-global map, so the lookup sees
+      // `localPhi = globalPhi - angle`.
       const double surfaceMax = phi(maxElem->referencePosition(gctx, AxisR));
       const double gridStep =
           2 * std::numbers::pi / static_cast<double>(binNumber);
       const double gridMax = std::numbers::pi - 0.5 * gridStep;
-      const double angle = gridMax - surfaceMax;
+      const double angle = surfaceMax - gridMax;
 
       // replace given transform ref
       transform = transform * AngleAxis3(angle, Vector3::UnitZ());

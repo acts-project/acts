@@ -25,7 +25,7 @@ namespace traccc::device {
 ///
 /// @param[in] globalIndex    The index of the current thread
 /// @param[in] dc_view        Collection of doublet counters
-/// @param[inout] spM_tc_view Collection of triplet counters per middle
+/// @param[in,out] spM_tc_view Collection of triplet counters per middle
 /// spacepoint
 /// @param[out] num_triplets  The total number of triplets
 TRACCC_HOST_DEVICE

@@ -414,7 +414,8 @@ class EigenStepper final {
   /// @param [in] surface is the surface to which the covariance is forwarded to
   /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   /// @note no check is done if the position is actually on the surface
-  void transportCovarianceToBound(
+  /// @return Failure if the parameters cannot be expressed on the surface
+  Result<void> transportCovarianceToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;

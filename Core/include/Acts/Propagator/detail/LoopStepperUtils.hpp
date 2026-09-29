@@ -8,12 +8,8 @@
 
 #pragma once
 
-#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
-#include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Result.hpp"
 
-#include <optional>
 #include <type_traits>
 
 namespace Acts::detail {
@@ -55,7 +51,6 @@ struct LoopComponentProxyBase {
   auto pathAccumulated() const { return cmp.state.pathAccumulated; }
   const auto& pars() const { return cmp.state.pars; }
   const auto& derivative() const { return cmp.state.derivative; }
-  const auto& jacTransport() const { return cmp.state.jacTransport; }
   const auto& cov() const { return cmp.state.cov; }
   const auto& jacobian() const { return cmp.state.jacobian; }
   const auto& jacToGlobal() const { return cmp.state.jacToGlobal; }
@@ -96,7 +91,6 @@ struct LoopComponentProxy
   using Base::derivative;
   using Base::jacobian;
   using Base::jacToGlobal;
-  using Base::jacTransport;
   using Base::pars;
   using Base::pathAccumulated;
   using Base::singleState;
@@ -119,7 +113,6 @@ struct LoopComponentProxy
   auto& pathAccumulated() { return cmp.state.pathAccumulated; }
   auto& pars() { return cmp.state.pars; }
   auto& derivative() { return cmp.state.derivative; }
-  auto& jacTransport() { return cmp.state.jacTransport; }
   auto& cov() { return cmp.state.cov; }
   auto& jacobian() { return cmp.state.jacobian; }
   auto& jacToGlobal() { return cmp.state.jacToGlobal; }
@@ -134,22 +127,23 @@ struct LoopComponentProxy
         cmp.state, state.navigation, state.options, state.geoContext);
   }
 
-  Result<typename SingleStepper::BoundState> boundState(
-      const Surface& surface, bool transportCov,
-      const FreeToBoundCorrection& freeToBoundCorrection) {
-    return detail::boundState(
-        all_state.options.geoContext, surface, cov(), jacobian(),
-        jacTransport(), derivative(), jacToGlobal(), std::nullopt, pars(),
-        all_state.particleHypothesis, all_state.covTransport && transportCov,
-        cmp.state.pathAccumulated, freeToBoundCorrection);
-  }
-
-  void update(const FreeVector& freeParams, const BoundVector& boundParams,
-              const Covariance& covariance, const Surface& surface) {
-    cmp.state.pars = freeParams;
-    cmp.state.cov = covariance;
-    cmp.state.jacToGlobal =
-        surface.boundToFreeJacobian(all_state.geoContext, boundParams);
+  /// Update the component to the parameters of a filter step
+  ///
+  /// It goes through the single stepper, so that the component ends up in the
+  /// same state a single-stepper fitter leaves its state in. A single state
+  /// caches values that follow from its parameters, and a plain write to
+  /// @c pars() leaves those stale.
+  ///
+  /// @param stepper the multi-stepper this component belongs to
+  /// @param freeParams the new free parameters
+  /// @param boundParams the same parameters, bound to @p surface
+  /// @param covariance the new covariance
+  /// @param surface the surface the parameters are bound to
+  void update(const loop_stepper_t& stepper, const FreeVector& freeParams,
+              const BoundVector& boundParams, const Covariance& covariance,
+              const Surface& surface) {
+    singleStepper(stepper).update(cmp.state, freeParams, boundParams,
+                                  covariance, surface);
   }
 };
 

@@ -17,7 +17,10 @@ function download {
   tarname=$(basename "$URL")
   curl -SL "$URL" -o "$tarname"
   echo "$HASH $tarname" | sha256sum -c
-  tar -xf "$tarname"
+  # --no-same-owner: as root tar would otherwise restore the uid/gid that
+  # packed the archive, which fails with EINVAL wherever that uid is outside
+  # the container's user namespace mapping.
+  tar --no-same-owner -xf "$tarname"
 }
 
 mkdir -p "${MODEL_STORAGE}"

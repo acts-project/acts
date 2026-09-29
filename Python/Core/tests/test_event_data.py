@@ -207,7 +207,7 @@ def test_space_point_proxy_fails_loud_after_disown():
     assert via_index.x == pytest.approx(1.0)
 
     # Transfer the container away (same mechanism as a whiteboard write).
-    tb.consume_spacepoints(container)
+    tb.consumeSpacePoints(container)
 
     # Every previously-obtained handle now fails loud rather than segfaulting.
     with pytest.raises(ValueError, match="consumed"):
@@ -232,7 +232,7 @@ def test_seed_proxy_fails_loud_after_disown():
     assert seed.quality == pytest.approx(0.9)
     assert via_index.quality == pytest.approx(0.9)
 
-    tb.consume_seeds(container)
+    tb.consumeSeeds(container)
 
     with pytest.raises(ValueError, match="consumed"):
         _ = seed.quality

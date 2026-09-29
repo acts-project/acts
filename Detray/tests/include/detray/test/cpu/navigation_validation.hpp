@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/propagator/line_stepper.hpp"
 #include "detray/propagator/rk_stepper.hpp"
 #include "detray/tracks/ray.hpp"
@@ -39,7 +40,7 @@ namespace detray::test {
 /// @brief Test class that runs the navigation check on a given detector.
 ///
 /// @note The lifetime of the detector needs to be guaranteed.
-template <typename detector_t, template <typename> class scan_type>
+template <concepts::detector detector_t, template <typename> class scan_type>
 class navigation_validation : public test::fixture_base<> {
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
@@ -358,11 +359,11 @@ class navigation_validation : public test::fixture_base<> {
   std::shared_ptr<test::whiteboard> m_whiteboard{nullptr};
 };
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 using straight_line_navigation =
     navigation_validation<detector_t, detray::ray_scan>;
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 using helix_navigation = navigation_validation<detector_t, detray::helix_scan>;
 
 }  // namespace detray::test

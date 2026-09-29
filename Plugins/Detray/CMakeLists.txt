@@ -20,12 +20,9 @@ target_link_libraries(
     ActsPluginDetray
     PUBLIC
         Acts::PluginJson
-        detray::core
         detray::core_array
         detray::io
         detray::detectors
-        detray::svgtools
-        detray::test_utils
         vecmem::core
 )
 

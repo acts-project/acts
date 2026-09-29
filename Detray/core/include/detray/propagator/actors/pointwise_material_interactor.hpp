@@ -22,6 +22,9 @@
 #include "detray/utils/geometry_utils.hpp"
 #include "detray/utils/logging.hpp"
 
+// System include(s)
+#include <limits>
+
 namespace detray::actor {
 
 template <concepts::algebra algebra_t>

@@ -77,8 +77,6 @@ class CylinderVolumeBounds : public VolumeBounds {
     eHalfLengthZ = 2,
     eHalfPhiSector = 3,
     eAveragePhi = 4,
-    eBevelMinZ = 5,
-    eBevelMaxZ = 6,
     eSize
   };
 
@@ -103,11 +101,8 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param halfz The half length in z
   /// @param halfphi The half lopening angle
   /// @param avgphi The average phi value
-  /// @param bevelMinZ The bevel angle, in radians, for the negative side
-  /// @param bevelMaxZ The bevel angle, in radians, for the positive side
   CylinderVolumeBounds(double rmin, double rmax, double halfz,
-                       double halfphi = std::numbers::pi, double avgphi = 0.,
-                       double bevelMinZ = 0., double bevelMaxZ = 0.);
+                       double halfphi = std::numbers::pi, double avgphi = 0.);
 
   /// Constructor - from a fixed size array
   ///

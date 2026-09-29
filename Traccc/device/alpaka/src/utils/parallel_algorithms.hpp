@@ -54,18 +54,6 @@ inline auto getExecutionPolicy([[maybe_unused]] Queue &q,
 #endif
 }
 
-template <typename RandomAccessIterator, typename Compare>
-void sort(Queue &q, const memory_resource mr, RandomAccessIterator first,
-          RandomAccessIterator last, Compare comp) {
-  auto execPolicy = getExecutionPolicy(q, mr);
-
-#if defined(ALPAKA_ACC_SYCL_ENABLED)
-  oneapi::dpl::sort(execPolicy, first, last, comp);
-#else
-  thrust::sort(execPolicy, first, last, comp);
-#endif
-}
-
 template <typename RandomAccessIterator1, typename RandomAccessIterator2,
           typename Compare>
 void sort_by_key(Queue &q, const memory_resource &mr,
@@ -131,17 +119,6 @@ OutputIt unique_copy(Queue &q, const memory_resource &mr, InputIt first,
   return oneapi::dpl::unique_copy(execPolicy, first, last, d_first, comp);
 #else
   return thrust::unique_copy(execPolicy, first, last, d_first, comp);
-#endif
-}
-
-template <typename InputIterator, typename UnaryFunction>
-void for_each(Queue &q, const memory_resource &mr, InputIterator first,
-              InputIterator last, UnaryFunction f) {
-  auto execPolicy = getExecutionPolicy(q, mr);
-#if defined(ALPAKA_ACC_SYCL_ENABLED)
-  oneapi::dpl::for_each(execPolicy, first, last, f);
-#else
-  thrust::for_each(execPolicy, first, last, f);
 #endif
 }
 

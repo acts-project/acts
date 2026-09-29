@@ -111,6 +111,8 @@ class DiscSurface : public RegularSurface {
               const Transform3& shift);
 
  public:
+  ~DiscSurface() override = default;
+
   /// Assignment operator
   ///
   /// @param other The source sourface for the assignment

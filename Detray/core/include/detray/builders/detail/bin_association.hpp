@@ -21,6 +21,7 @@
 #include "detray/utils/ranges.hpp"
 
 // System include(s)
+#include <limits>
 #include <vector>
 
 namespace detray::detail {

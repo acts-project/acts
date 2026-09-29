@@ -36,6 +36,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 
 namespace Acts {
@@ -108,6 +109,13 @@ struct CombinatorialKalmanFilterOptions {
   /// Skip the pre propagation call. This effectively skips the first surface
   /// @note This is useful if the first surface should not be considered in a second reverse pass
   bool skipPrePropagationUpdate = false;
+
+  /// Whether to record track states on material-only (non-sensitive) surfaces.
+  /// Material effects are applied either way, only the record is dropped.
+  /// @note Keep enabled if the surfaces themselves are needed, e.g. for a refit
+  ///       with the `DirectNavigator`. Must stay enabled with a
+  ///       multi-component stepper.
+  bool recordMaterialStates = true;
 };
 
 /// Options for the combinatorial Kalman filter with bremsstrahlung recovery.
@@ -165,6 +173,10 @@ struct CombinatorialKalmanFilterResult {
 
   /// Track state candidates buffer which can be used by the track state creator
   std::vector<TrackStateProxy> trackStateCandidates;
+
+  /// Transport jacobians of skipped material surfaces, folded into the next
+  /// recorded track state to keep the jacobian chain intact
+  BoundMatrix accumulatedJacobian = BoundMatrix::Identity();
 
   /// Indicator if track finding has been done
   bool finished = false;
@@ -254,6 +266,9 @@ class CombinatorialKalmanFilter {
 
     /// Skip the pre propagation call. This effectively skips the first surface
     bool skipPrePropagationUpdate = false;
+
+    /// @see CombinatorialKalmanFilterOptions::recordMaterialStates
+    bool recordMaterialStates = true;
 
     /// Calibration context for the finding run
     const CalibrationContext* calibrationContextPtr{nullptr};
@@ -485,13 +500,17 @@ class CombinatorialKalmanFilter {
         stepper.initialize(state.stepping, multiBoundParameters);
       }
 
+      // `initialize` re-roots the jacobian chain at this branch
+      result.accumulatedJacobian = BoundMatrix::Identity();
+
       // Reset the navigation state
       // Set targetSurface to nullptr for forward filtering
-      state.navigation.options.startSurface = &currentState.referenceSurface();
-      state.navigation.options.targetSurface = nullptr;
       auto navInitRes = navigator.initialize(
-          state.navigation, stepper.position(state.stepping),
-          stepper.direction(state.stepping), state.options.direction);
+          state.navigation, {.position = stepper.position(state.stepping),
+                             .direction = stepper.direction(state.stepping),
+                             .propagationDirection = state.options.direction,
+                             .startSurface = &currentState.referenceSurface(),
+                             .targetSurface = nullptr});
       if (!navInitRes.ok()) {
         ACTS_DEBUG("Navigation initialization failed: " << navInitRes.error());
         return navInitRes.error();
@@ -561,7 +580,11 @@ class CombinatorialKalmanFilter {
       if (isMaterialOnly) {
         stepper.transportCovarianceToCurvilinear(state.stepping);
       } else {
-        stepper.transportCovarianceToBound(state.stepping, surface);
+        Result<void> transportRes =
+            stepper.transportCovarianceToBound(state.stepping, surface);
+        if (!transportRes.ok()) {
+          return transportRes.error();
+        }
       }
 
       // Update state and stepper with pre material effects
@@ -573,6 +596,29 @@ class CombinatorialKalmanFilter {
         ACTS_DEBUG("Material interaction failed during reset: "
                    << materialPreRes.error().message());
         return materialPreRes.error();
+      }
+
+      if constexpr (!IsMultiStepper) {
+        if (isMaterialOnly && !recordMaterialStates) {
+          ACTS_VERBOSE("Skip material track state on surface "
+                       << surface.geometryId());
+
+          // keep the jacobian segment the transport above just closed
+          result.accumulatedJacobian =
+              state.stepping.jacobian * result.accumulatedJacobian;
+
+          // apply the post material effects and return early, skipping the
+          // track state creation below
+          const Result<void> materialPostRes = performMaterialInteraction(
+              state, stepper, surface,
+              detail::determineMaterialUpdateMode(
+                  state, navigator, MaterialUpdateMode::PostUpdate));
+          if (!materialPostRes.ok()) {
+            ACTS_DEBUG("Material interaction failed during post-update: "
+                       << materialPostRes.error().message());
+          }
+          return materialPostRes;
+        }
       }
 
       // Bind the transported state to the current surface
@@ -606,6 +652,15 @@ class CombinatorialKalmanFilter {
         return boundStateRes.error();
       }
       auto& boundState = *boundStateRes;
+
+      if constexpr (!IsMultiStepper) {
+        if (!recordMaterialStates) {
+          // prepend the jacobians of the surfaces skipped since the last state
+          std::get<1>(boundState) =
+              std::get<1>(boundState) * result.accumulatedJacobian;
+          result.accumulatedJacobian = BoundMatrix::Identity();
+        }
+      }
 
       auto currentBranch = result.activeBranches.back();
       TrackIndexType prevTip = currentBranch.tipIndex();
@@ -982,10 +1037,8 @@ class CombinatorialKalmanFilter {
                                      *brem.componentCache);
         }
 
-        detail::Gsf::applyMultipleScattering(state, stepper, surface,
-                                             updateMode, logger());
-
-        return Result<void>::success();
+        return detail::Gsf::applyMultipleScattering(state, stepper, surface,
+                                                    updateMode, logger());
       }
     }
 
@@ -1161,6 +1214,16 @@ class CombinatorialKalmanFilter {
     combKalmanActor.energyLoss = tfOptions.energyLoss;
     combKalmanActor.skipPrePropagationUpdate =
         tfOptions.skipPrePropagationUpdate;
+    if constexpr (IsMultiStepper) {
+      // there is no single transport jacobian to fold into the next state
+      if (!tfOptions.recordMaterialStates) {
+        throw std::invalid_argument(
+            "recordMaterialStates cannot be disabled with a multi-component "
+            "stepper");
+      }
+    } else {
+      combKalmanActor.recordMaterialStates = tfOptions.recordMaterialStates;
+    }
     combKalmanActor.actorLogger = m_actorLogger.get();
     combKalmanActor.updaterLogger = m_updaterLogger.get();
     combKalmanActor.calibrationContextPtr = &tfOptions.calibrationContext.get();
@@ -1189,15 +1252,14 @@ class CombinatorialKalmanFilter {
     }
 
     auto propState =
-        m_propagator
-            .template makeState<PropagatorOptions, StubPathLimitReached>(
-                propOptions);
+        m_propagator.template makeState<PropagatorOptions, NoTargetAborter,
+                                        StubPathLimitReached>(propOptions);
 
     if constexpr (!IsMultiStepper) {
       const auto initResult =
-          m_propagator
-              .template initialize<decltype(propState), StubPathLimitReached>(
-                  propState, initialParameters);
+          m_propagator.template initialize<decltype(propState), NoTargetAborter,
+                                           StubPathLimitReached>(
+              propState, initialParameters, nullptr);
       if (!initResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: " << initResult.error());
         return initResult.error();
@@ -1209,9 +1271,9 @@ class CombinatorialKalmanFilter {
           initialParameters.particleHypothesis());
 
       const auto initResult =
-          m_propagator
-              .template initialize<decltype(propState), StubPathLimitReached>(
-                  propState, multiBoundInitialParameters);
+          m_propagator.template initialize<decltype(propState), NoTargetAborter,
+                                           StubPathLimitReached>(
+              propState, multiBoundInitialParameters, nullptr);
       if (!initResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: " << initResult.error());
         return initResult.error();

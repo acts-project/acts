@@ -11,14 +11,13 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Seeding/TrackParamsEstimationError.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Zip.hpp"
+#include "Acts/Utilities/Result.hpp"
 
-#include <array>
-#include <optional>
-#include <stdexcept>
+#include <cstddef>
+#include <span>
 
 namespace Acts {
 
@@ -34,26 +33,6 @@ namespace Acts {
 /// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerGeometry/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
 ///
 /// @{
-
-/// Estimate free track parameters from three space points.
-///
-/// This is a purely spatial estimation, i.e. the time parameter will be set to
-/// 0.
-///
-/// @param sp0 is the bottom space point
-/// @param sp1 is the middle space point
-/// @param sp2 is the top space point
-/// @param bField is the magnetic field vector
-///
-/// @return the free parameters
-/// @deprecated Use the version of estimateTrackParamsFromSeed with time
-///             information instead.
-[[deprecated(
-    "Use the version of estimateTrackParamsFromSeed with time information "
-    "instead.")]]
-FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
-                                       const Vector3& sp2,
-                                       const Vector3& bField);
 
 /// Estimate free track parameters from three space points.
 ///
@@ -78,48 +57,6 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, double t0,
                                        Vector3* tangent1 = nullptr,
                                        Vector3* tangent2 = nullptr);
 
-/// Estimate free track parameters from three space points
-///
-/// @tparam space_point_range_t The type of space point range
-///
-/// @param spRange is the range of space points
-/// @param bField is the magnetic field vector
-///
-/// @return the free parameters
-/// @deprecated The broadly templated versions of estimateTrackParamsFromSeed
-///             will be removed in the future.
-template <std::ranges::range space_point_range_t>
-[[deprecated(
-    "The broadly templated versions of estimateTrackParamsFromSeed will be "
-    "removed in the future.")]]
-FreeVector estimateTrackParamsFromSeed(space_point_range_t spRange,
-                                       const Vector3& bField) {
-  // Check the number of provided space points
-  if (spRange.size() != 3) {
-    throw std::invalid_argument(
-        "There should be exactly three space points provided.");
-  }
-
-  // The global positions of the bottom, middle and space points
-  std::array<Vector3, 3> spPositions = {Vector3::Zero(), Vector3::Zero(),
-                                        Vector3::Zero()};
-  std::array<std::optional<double>, 3> spTimes = {std::nullopt, std::nullopt,
-                                                  std::nullopt};
-  // The first, second and third space point are assumed to be bottom, middle
-  // and top space point, respectively
-  for (auto [sp, spPosition, spTime] :
-       Acts::zip(spRange, spPositions, spTimes)) {
-    if (sp == nullptr) {
-      throw std::invalid_argument("Empty space point found.");
-    }
-    spPosition = Vector3(sp->x(), sp->y(), sp->z());
-    spTime = sp->t();
-  }
-
-  return estimateTrackParamsFromSeed(spPositions[0], spTimes[0].value_or(0),
-                                     spPositions[1], spPositions[2], bField);
-}
-
 /// Estimate bound track parameters from three space points
 ///
 /// @param gctx is the geometry context
@@ -135,31 +72,6 @@ FreeVector estimateTrackParamsFromSeed(space_point_range_t spRange,
 Result<BoundVector> estimateTrackParamsFromSeed(
     const GeometryContext& gctx, const Surface& surface, const Vector3& sp0,
     double t0, const Vector3& sp1, const Vector3& sp2, const Vector3& bField);
-
-/// Estimate bound track parameters from three space points
-///
-/// @tparam space_point_range_t The type of space point range
-///
-/// @param gctx is the geometry context
-/// @param spRange is the range of space points
-/// @param surface is the surface of the bottom space point. The estimated bound
-///                track parameters will be represented at this surface.
-/// @param bField is the magnetic field vector
-///
-/// @return bound parameters
-/// @deprecated The broadly templated versions of estimateTrackParamsFromSeed
-///             will be removed in the future.
-template <std::ranges::range space_point_range_t>
-[[deprecated(
-    "The broadly templated versions of estimateTrackParamsFromSeed will be "
-    "removed in the future.")]]
-Result<BoundVector> estimateTrackParamsFromSeed(const GeometryContext& gctx,
-                                                space_point_range_t spRange,
-                                                const Surface& surface,
-                                                const Vector3& bField) {
-  const FreeVector freeParams = estimateTrackParamsFromSeed(spRange, bField);
-  return transformFreeToBoundParameters(freeParams, surface, gctx);
-}
 
 /// Configuration for the estimation of the covariance matrix of the track
 /// parameters with `estimateTrackParamCovariance`.
@@ -202,6 +114,41 @@ struct EstimateTrackParamCovarianceConfig {
 BoundMatrix estimateTrackParamCovariance(
     const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
     bool hasTime);
+
+/// Estimate free track parameters from an ordered set of N >= 3 space points.
+///
+/// Least-squares generalization of @ref estimateTrackParamsFromSeed. A Taubin
+/// circle fit transverse to the field, optionally refined geometrically, and a
+/// linear fit of the field coordinate against the transverse arc length. Points
+/// are taken in track order and are not sorted.
+///
+/// The parameters are expressed at `spacePoints[referenceIndex]`, by default
+/// the first one. The fit itself does not depend on that choice: every point
+/// contributes to the same helix, and the reference only selects where it is
+/// evaluated. Reporting at a point deeper in the detector lets a downstream
+/// track finder start where the hit density, and with it the combinatorics, is
+/// lower, at the cost of a longer extrapolation back to the beam line.
+///
+/// A vanishing curvature degenerates to a line and only the direction is
+/// estimated. Without a field q/p stays zero.
+///
+/// Weights are relative (e.g. inverse-variance) factors on every fit stage. An
+/// empty span means uniform, a non-empty one must match `spacePoints` in size.
+///
+/// @param spacePoints the ordered global space point positions
+/// @param bField the homogeneous magnetic field vector
+/// @param t0 the time assigned to the reference point (eFreeTime)
+/// @param geometricRefineIterations number of Gauss-Newton refinement
+///        iterations on top of the algebraic circle fit (0 disables it)
+/// @param weights optional per-point weights for all fit stages
+///        (empty span = uniform)
+/// @param referenceIndex index of the space point the parameters are expressed
+///        at; must be a valid index into `spacePoints`
+/// @return the free parameters at the reference point, or an error
+Result<FreeVector> estimateTrackParamsFromSpacePoints(
+    std::span<const Vector3> spacePoints, const Vector3& bField, double t0 = 0,
+    std::size_t geometricRefineIterations = 0,
+    std::span<const double> weights = {}, std::size_t referenceIndex = 0);
 
 /// @}
 

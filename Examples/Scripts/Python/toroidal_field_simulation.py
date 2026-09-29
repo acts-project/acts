@@ -168,7 +168,7 @@ def main():
 
     args = parser.parse_args()
 
-    gContext = acts.GeometryContext()
+    gContext = acts.GeometryContext.dangerouslyDefaultConstruct()
     logLevel = logging.INFO
 
     print("🧲 Starting GeoModel Toroid Field Simulation")

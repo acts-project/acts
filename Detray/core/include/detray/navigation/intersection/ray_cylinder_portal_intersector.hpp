@@ -18,6 +18,7 @@
 #include "detray/tracks/ray.hpp"
 
 // System include(s)
+#include <limits>
 #include <type_traits>
 
 namespace detray {

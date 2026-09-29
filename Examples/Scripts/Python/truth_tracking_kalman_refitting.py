@@ -7,7 +7,7 @@ import acts.examples
 from acts.examples.root import (
     RootTrackStatesWriter,
     RootTrackSummaryWriter,
-    RootTrackFitterPerformanceWriter,
+    RootTrackParameterPerformanceWriter,
 )
 
 from truth_tracking_kalman import runTruthTrackingKalman
@@ -95,7 +95,7 @@ def runRefittingKf(
     )
 
     s.addWriter(
-        RootTrackFitterPerformanceWriter(
+        RootTrackParameterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",

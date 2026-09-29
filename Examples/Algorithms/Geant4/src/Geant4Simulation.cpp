@@ -136,7 +136,9 @@ ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
   // Register the input particle read handle
   eventStore().inputParticles = &m_inputParticles;
 
-  eventStore().geoContext = ctx.geoContext;
+  // Only reaches the user actions. The G4 geometry itself is not context aware,
+  // so use Fatras to simulate a misaligned detector.
+  eventStore().geoContext = ctx.simGeoContext;
 
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   {

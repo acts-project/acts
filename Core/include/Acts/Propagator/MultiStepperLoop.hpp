@@ -428,9 +428,8 @@ class MultiStepperLoop final {
   /// @param [in] weight Weight of the component to add
   ///
   /// @note: It is not ensured that the weights are normalized afterwards
-  /// @note This function makes no garantuees about how new components are
-  /// initialized, it is up to the caller to ensure that all components are
-  /// valid in the end.
+  /// @note The component is initialized through the single stepper, so its
+  /// jacobians are set whenever @p pars carries a covariance.
   /// @note The returned component-proxy is only garantueed to be valid until
   /// the component number is again modified
   /// @return ComponentProxy for the newly added component or error
@@ -751,14 +750,19 @@ class MultiStepperLoop final {
   /// @param [in] freeToBoundCorrection Flag steering non-linear correction during global to local correction
   /// to
   /// @note no check is done if the position is actually on the surface
-  void transportCovarianceToBound(
+  /// @return Failure if the parameters cannot be expressed on the surface
+  Result<void> transportCovarianceToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const {
     for (auto& component : state.components) {
-      m_singleStepper.transportCovarianceToBound(component.state, surface,
-                                                 freeToBoundCorrection);
+      Result<void> result = m_singleStepper.transportCovarianceToBound(
+          component.state, surface, freeToBoundCorrection);
+      if (!result.ok()) {
+        return result.error();
+      }
     }
+    return Result<void>::success();
   }
 
   /// Perform a Runge-Kutta track parameter propagation step

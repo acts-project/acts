@@ -117,7 +117,7 @@ struct BenchmarkStepper {
     const auto propagationBenchResult = microBenchmark(
         [&] {
           auto state = propagator.makeState(options);
-          auto initRes = propagator.initialize(state, pars);
+          auto initRes = propagator.initialize(state, pars, nullptr);
           if (!initRes.ok()) {
             ACTS_ERROR("initialization failed: " << initRes.error());
             return;

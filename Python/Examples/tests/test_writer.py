@@ -36,11 +36,11 @@ from acts.examples.json import (
 try:
     from acts.examples import (
         PythonPatternRecognitionPerformanceWriter,
-        PythonTrackFitterPerformanceWriter,
+        PythonTrackParameterPerformanceWriter,
     )
 except ImportError:
     PythonPatternRecognitionPerformanceWriter = None
-    PythonTrackFitterPerformanceWriter = None
+    PythonTrackParameterPerformanceWriter = None
 
 from acts.examples.odd import getOpenDataDetectorDirectory
 
@@ -351,13 +351,13 @@ def test_root_writer_interface(writer_name, conf_const, tmp_path, trk_geo):
     "writer",
     [
         PythonPatternRecognitionPerformanceWriter,
-        PythonTrackFitterPerformanceWriter,
+        PythonTrackParameterPerformanceWriter,
     ],
 )
 @pytest.mark.root
 @pytest.mark.skipif(
     PythonPatternRecognitionPerformanceWriter is None
-    or PythonTrackFitterPerformanceWriter is None,
+    or PythonTrackParameterPerformanceWriter is None,
     reason="Python performance writers not available",
 )
 def test_python_writer_interface(writer, conf_const, tmp_path, trk_geo):
@@ -376,6 +376,8 @@ def test_python_writer_interface(writer, conf_const, tmp_path, trk_geo):
             kw[k] = "collection"
         if k == "surfaceByIdentifier":
             kw[k] = trk_geo.geoIdSurfaceMap()
+        if k == "fitFunction":
+            kw[k] = lambda hist, rng: None
 
     assert conf_const(writer, **kw)
 

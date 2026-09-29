@@ -528,6 +528,20 @@ void addEventData(py::module_& m) {
   // BoundTrackParameters (alias for
   // GenericBoundTrackParameters<ParticleHypothesis>)
   py::class_<BoundTrackParameters>(m, "BoundTrackParameters")
+      .def_static(
+          "createCurvilinear",
+          py::overload_cast<const Vector4&, const Vector3&, double,
+                            std::optional<BoundMatrix>, ParticleHypothesis>(
+              &BoundTrackParameters::createCurvilinear),
+          py::arg("pos4"), py::arg("dir"), py::arg("qOverP"), py::arg("cov"),
+          py::arg("particleHypothesis"))
+      .def_static(
+          "createCurvilinear",
+          py::overload_cast<const Vector4&, double, double, double,
+                            std::optional<BoundMatrix>, ParticleHypothesis>(
+              &BoundTrackParameters::createCurvilinear),
+          py::arg("pos4"), py::arg("phi"), py::arg("theta"), py::arg("qOverP"),
+          py::arg("cov"), py::arg("particleHypothesis"))
       .def_property_readonly("parameters",
                              [](const BoundTrackParameters& self) {
                                return BoundVector(self.parameters());
@@ -556,8 +570,8 @@ void addEventData(py::module_& m) {
   // replicating what the whiteboard does, so proxy tether failures can be
   // tested without acts.examples.
   auto mt = m.def_submodule("_testing");
-  mt.def("consume_spacepoints", [](std::unique_ptr<SpacePointContainer>) {});
-  mt.def("consume_seeds", [](std::unique_ptr<SeedContainer>) {});
+  mt.def("consumeSpacePoints", [](std::unique_ptr<SpacePointContainer>) {});
+  mt.def("consumeSeeds", [](std::unique_ptr<SeedContainer>) {});
 }
 
 }  // namespace ActsPython

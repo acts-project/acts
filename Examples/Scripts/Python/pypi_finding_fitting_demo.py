@@ -97,7 +97,7 @@ def runPypiFindingFittingDemo(
             track = acts.examples.ProtoTrack()
             for sp in sorted(spacepoints, key=lambda sp: sp.r):
                 for sl in sp.sourceLinks:
-                    isl = acts.examples.IndexSourceLink.FromSourceLink(sl)
+                    isl = acts.examples.IndexSourceLink.fromSourceLink(sl)
                     track.append(isl.index())
 
             prototracks = acts.examples.ProtoTrackContainer()
@@ -147,7 +147,7 @@ def runPypiFindingFittingDemo(
             measurement_to_sourcelink = {}
             for sp in spacepoints:
                 for sl in sp.sourceLinks:
-                    isl = acts.examples.IndexSourceLink.FromSourceLink(sl)
+                    isl = acts.examples.IndexSourceLink.fromSourceLink(sl)
                     meas_id = isl.index()
                     measurement_to_spacepoint[meas_id] = sp
                     measurement_to_sourcelink[meas_id] = sl
@@ -162,11 +162,11 @@ def runPypiFindingFittingDemo(
                 for meas_id in prototrack:
                     sp = measurement_to_spacepoint[meas_id]
                     sl = measurement_to_sourcelink[meas_id]
-                    isl = acts.examples.IndexSourceLink.FromSourceLink(sl)
+                    isl = acts.examples.IndexSourceLink.fromSourceLink(sl)
                     sf = surface_map[isl.geometryId()]
 
                     trackState = track.appendTrackState()
-                    trackState.typeFlags.isMeasurement = True
+                    trackState.typeFlags.setIsMeasurement()
                     trackState.uncalibratedSourceLink = sl
                     trackState.referenceSurface = sf
 
@@ -194,17 +194,25 @@ def runPypiFindingFittingDemo(
     cfg_finder.inputTrackParticleMatching = "track_particle_matching"
     cfg_finder.inputParticleTrackMatching = "particle_track_matching"
     cfg_finder.inputParticleMeasurementsMap = "particle_measurements_map"
+    cfg_finder.subDetectorTrackSummaryVolumes = {
+        "pixel": {7, 8, 9},
+        "sstrip": {12, 13, 14},
+        "lstrip": {16, 17, 18},
+    }
     perfWriterFinder = acts.examples.PythonPatternRecognitionPerformanceWriter(
         cfg_finder, acts.logging.INFO
     )
     s.addWriter(perfWriterFinder)
 
     # Add track fitter performance writer
-    cfg_fitter = acts.examples.PythonTrackFitterPerformanceWriter.Config()
+    import acts.examples.scipy as acts_scipy
+
+    cfg_fitter = acts.examples.PythonTrackParameterPerformanceWriter.Config()
     cfg_fitter.inputTracks = "fitted_tracks"
     cfg_fitter.inputParticles = "particles"
     cfg_fitter.inputTrackParticleMatching = "track_particle_matching"
-    perfWriterFitter = acts.examples.PythonTrackFitterPerformanceWriter(
+    cfg_fitter.fitFunction = acts_scipy.makeScipyHistogramFitFunction()
+    perfWriterFitter = acts.examples.PythonTrackParameterPerformanceWriter(
         cfg_fitter, acts.logging.INFO
     )
     s.addWriter(perfWriterFitter)

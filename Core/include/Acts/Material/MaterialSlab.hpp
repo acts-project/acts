@@ -22,6 +22,7 @@
 
 #if defined(__clang__) && defined(__x86_64__)
 #pragma float_control(push)
+#pragma float_control(precise, on)
 #pragma float_control(except, on)
 #endif
 

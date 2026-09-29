@@ -14,7 +14,6 @@
 #include "traccc/device/container_d2h_copy_alg.hpp"
 #include "traccc/device/container_h2d_copy_alg.hpp"
 #include "traccc/examples/make_magnetic_field.hpp"
-#include "traccc/fitting/kalman_fitting_algorithm.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/geometry/host_detector.hpp"
 #include "traccc/io/read_detector.hpp"
@@ -28,7 +27,6 @@
 #include "traccc/options/program_options.hpp"
 #include "traccc/options/track_fitting.hpp"
 #include "traccc/options/track_propagation.hpp"
-#include "traccc/performance/soa_comparator.hpp"
 #include "traccc/performance/timer.hpp"
 #include "traccc/resolution/fitting_performance_writer.hpp"
 #include "traccc/utils/propagation.hpp"
@@ -86,7 +84,6 @@ int main(int argc, char* argv[]) {
       logger().clone("FittingPerformanceWriter"));
 
   // Output Stats
-  std::size_t n_fitted_tracks = 0;
   std::size_t n_fitted_tracks_cuda = 0;
 
   /*****************************
@@ -112,7 +109,6 @@ int main(int argc, char* argv[]) {
   traccc::cuda::stream_wrapper stream{vecmem_stream.stream()};
 
   // Copy object
-  vecmem::copy host_copy;
   vecmem::cuda::async_copy async_copy{stream.cudaStream()};
 
   const traccc::detector_buffer detector_buffer =
@@ -132,8 +128,6 @@ int main(int argc, char* argv[]) {
   traccc::fitting_config fit_cfg(fitting_opts);
   fit_cfg.propagation = propagation_opts;
 
-  traccc::host::kalman_fitting_algorithm host_fitting(
-      fit_cfg, host_mr, host_copy, logger().clone("HostFittingAlg"));
   traccc::cuda::kalman_fitting_algorithm device_fitting(
       fit_cfg, mr, async_copy, stream, logger().clone("CudaFittingAlg"));
 
@@ -152,14 +146,12 @@ int main(int argc, char* argv[]) {
         truth_track_candidates{host_mr};
 
     host_detector_visitor<detector_type_list>(
-        polymorphic_detector, [&]<typename detector_traits_t>(
-                                  const typename detector_traits_t::host& det) {
-          typename traccc::seed_generator<
-              typename detector_traits_t::host>::config seed_cfg{};
+        polymorphic_detector,
+        [&]<detray::concepts::detector detector_t>(const detector_t& det) {
+          typename traccc::seed_generator<detector_t>::config seed_cfg{};
           seed_cfg.initial_sigmas = stddevs;
           // Seed generator
-          traccc::seed_generator<typename detector_traits_t::host> sg(det,
-                                                                      seed_cfg);
+          traccc::seed_generator<detector_t> sg(det, seed_cfg);
           evt_data.generate_truth_candidates(truth_track_candidates,
                                              truth_measurements, sg, host_mr);
         });
@@ -197,50 +189,14 @@ int main(int argc, char* argv[]) {
                vecmem::copy::type::device_to_host)
         ->wait();
 
-    // CPU container(s)
-    traccc::host::kalman_fitting_algorithm::output_type track_states{host_mr};
-
-    if (accelerator_opts.compare_with_cpu) {
-      {
-        traccc::performance::timer t("Track fitting  (cpu)", elapsedTimes);
-
-        // Run fitting
-        track_states = host_fitting(
-            polymorphic_detector, host_field,
-            traccc::edm::track_container<traccc::default_algebra>::const_data(
-                truth_track_candidates));
-      }
-    }
-
-    if (accelerator_opts.compare_with_cpu) {
-      // Show which event we are currently presenting the results for.
-      std::cout << "===>>> Event " << event << " <<<===" << std::endl;
-
-      // Compare the track parameters made on the host and on the device.
-      traccc::soa_comparator<
-          traccc::edm::track_collection<traccc::default_algebra>>
-          compare_track_fits{
-              "track fits",
-              traccc::details::comparator_factory<traccc::edm::track_collection<
-                  traccc::default_algebra>::const_device::const_proxy_type>{
-                  truth_track_candidates.measurements,
-                  truth_track_candidates.measurements,
-                  vecmem::get_data(track_states.states),
-                  vecmem::get_data(track_states_cuda.states)}};
-      compare_track_fits(vecmem::get_data(track_states.tracks),
-                         vecmem::get_data(track_states_cuda.tracks));
-    }
-
     // Statistics
-    n_fitted_tracks += track_states.tracks.size();
     n_fitted_tracks_cuda += track_states_cuda.tracks.size();
 
     if (performance_opts.run) {
       for (unsigned int i = 0; i < track_states_cuda.tracks.size(); i++) {
         host_detector_visitor<detector_type_list>(
             polymorphic_detector,
-            [&]<typename detector_traits_t>(
-                const typename detector_traits_t::host& det) {
+            [&]<detray::concepts::detector detector_t>(const detector_t& det) {
               fit_performance_writer.write(track_states_cuda.tracks.at(i),
                                            track_states_cuda.states,
                                            truth_measurements, det, evt_data);
@@ -255,8 +211,6 @@ int main(int argc, char* argv[]) {
 
   std::cout << "==> Statistics ... " << std::endl;
   std::cout << "- created (cuda) " << n_fitted_tracks_cuda << " fitted tracks"
-            << std::endl;
-  std::cout << "- created  (cpu) " << n_fitted_tracks << " fitted tracks"
             << std::endl;
   std::cout << "==>Elapsed times...\n" << elapsedTimes << std::endl;
 

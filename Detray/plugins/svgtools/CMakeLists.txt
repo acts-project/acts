@@ -24,5 +24,17 @@ target_link_libraries(
     INTERFACE detray::core detray::io actsvg::core actsvg::meta
 )
 
+# Compile all headers (including the ones under detail/) one-by-one.
+detray_compile_headers(
+    svgtools
+    detray::svgtools
+    "include/detray/plugins/svgtools/*.hpp"
+    "include/detray/plugins/svgtools/**/*.hpp"
+)
+if(TARGET detray_svgtools_HEADERS)
+    # The svgtools headers need an algebra plugin to compile.
+    target_link_libraries(detray_svgtools_HEADERS PRIVATE detray::core_array)
+endif()
+
 # Clean up.
 unset(_detray_svgtools_public_headers)

@@ -20,7 +20,7 @@ template <typename propagator_t, typename bfield_t>
 void propagate_to_next_surface(
     const dim3& grid_size, const dim3& block_size, std::size_t shared_mem_size,
     const cudaStream_t& stream, const finding_config& cfg,
-    const typename propagator_t::detector_type::const_view_type& det_data,
+    const typename propagator_t::detector_type* det_data_ptr,
     const bfield_t& field_data,
     const device::propagate_to_next_surface_payload& payload);
 

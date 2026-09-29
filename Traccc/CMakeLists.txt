@@ -325,7 +325,9 @@ if(TRACCC_SETUP_DPL)
     # compile flags that OneDPL sets.
     set_target_properties(
         oneDPL
-        PROPERTIES INTERFACE_COMPILE_OPTIONS "" INTERFACE_LINK_LIBRARIES ""
+        PROPERTIES
+            INTERFACE_COMPILE_OPTIONS ""
+            INTERFACE_LINK_LIBRARIES TBB::tbb
     )
 endif()
 

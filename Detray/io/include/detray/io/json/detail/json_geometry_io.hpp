@@ -18,6 +18,7 @@
 // System include(s)
 #include <array>
 #include <optional>
+#include <stdexcept>
 #include <vector>
 
 /// @brief  The detray JSON I/O is written in such a way that it

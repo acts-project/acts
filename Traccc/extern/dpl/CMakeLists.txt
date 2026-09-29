@@ -11,6 +11,9 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building oneDPL as part of the TRACCC project")
 
+# Disregard the global C++ flags, to avoid any unhelpful warnings.
+set(CMAKE_CXX_FLAGS)
+
 # Declare where to get DPL from.
 set(TRACCC_DPL_SOURCE
     "URL;https://github.com/uxlfoundation/oneDPL/archive/refs/tags/oneDPL-2022.11.0-release.tar.gz;URL_MD5;d42f971a7fb53574e511e207b22151cd;PATCH_COMMAND;patch;-p1;-i;${CMAKE_CURRENT_SOURCE_DIR}/oneDPL-2022.11.0.patch"

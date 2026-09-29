@@ -96,11 +96,11 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                           clusters);
 
   TrackFitterFunction::GeneralFitterOptions options{
-      ctx.geoContext,
+      ctx.recoGeoContext,
       ctx.magFieldContext,
       ctx.calibContext,
       pSurface.get(),
-      Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext),
+      Acts::PropagatorPlainOptions(ctx.recoGeoContext, ctx.magFieldContext),
       false};
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
@@ -133,7 +133,7 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
 
     ACTS_VERBOSE("Initial 4 position: "
-                 << initialParams.fourPosition(ctx.geoContext).transpose());
+                 << initialParams.fourPosition(ctx.recoGeoContext).transpose());
     ACTS_VERBOSE(
         "Initial direction: " << initialParams.direction().transpose());
     ACTS_VERBOSE("Initial momentum: " << initialParams.absoluteMomentum());
@@ -172,7 +172,16 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
   }
 
-  ACTS_DEBUG("Fitted tracks: " << trackContainer->size());
+  std::size_t nTracks = trackContainer->size();
+  std::size_t nMeasurements = 0;
+  for (const auto& track : tracks) {
+    nMeasurements += track.nMeasurements();
+  }
+  m_nFittedTracks += nTracks;
+  m_nTotalMeasurements += nMeasurements;
+  ++m_nEvents;
+
+  ACTS_DEBUG("Fitted tracks: " << nTracks);
 
   if (m_cfg.linkForward) {
     for (auto track : tracks) {
@@ -193,6 +202,23 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
           std::move(*trackStateContainer))};
 
   m_outputTracks(ctx, std::move(constTracks));
+  return ProcessCode::SUCCESS;
+}
+
+ProcessCode TrackFittingAlgorithm::finalize() {
+  std::size_t nTracks = m_nFittedTracks.load();
+  std::size_t nEvents = m_nEvents.load();
+
+  ACTS_INFO("Fitted " << nTracks << " tracks in " << nEvents << " events");
+  if (nEvents > 0) {
+    ACTS_INFO("  Average tracks/event : " << static_cast<double>(nTracks) /
+                                                 static_cast<double>(nEvents));
+  }
+  if (nTracks > 0) {
+    ACTS_INFO("  Average measurements/track : "
+              << static_cast<double>(m_nTotalMeasurements.load()) /
+                     static_cast<double>(nTracks));
+  }
   return ProcessCode::SUCCESS;
 }
 

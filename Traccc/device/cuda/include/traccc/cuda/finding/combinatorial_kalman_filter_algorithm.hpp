@@ -9,6 +9,7 @@
 
 // Local include(s).
 #include "traccc/cuda/utils/algorithm_base.hpp"
+#include "traccc/cuda/utils/await.hpp"
 
 // Project include(s).
 #include "traccc/cuda/fitting/kalman_fitting_algorithm.hpp"
@@ -27,7 +28,8 @@ class combinatorial_kalman_filter_algorithm
       const vecmem::copy& copy, const stream_wrapper& str,
       std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
       std::unique_ptr<traccc::cuda::kalman_fitting_algorithm> kf_fitter =
-          nullptr);
+          nullptr,
+      await_function_type await_func = await_sync_event);
 
  private:
   /// @name Function(s) inherited from
@@ -161,7 +163,8 @@ class combinatorial_kalman_filter_algorithm
   ///
   void propagate_to_next_surface_kernel(
       unsigned int n_threads, const finding_config& config,
-      const detector_buffer& det, const magnetic_field& bfield,
+      const detector_buffer& det, const move_only_any& device_detector,
+      const magnetic_field& bfield,
       const device::propagate_to_next_surface_payload& payload) const override;
 
   /// Launch the @c gather_best_tips_per_measurement kernel
@@ -203,6 +206,11 @@ class combinatorial_kalman_filter_algorithm
       unsigned int n_threads, bool run_mbf_smoother,
       const measurement_selector::config& calib_cfg,
       const device::build_tracks_payload& payload) const override;
+
+  move_only_any create_device_detector(
+      const detector_buffer& det) const override;
+
+  void synchronize() const override;
 
   /// @}
 

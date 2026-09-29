@@ -1,6 +1,6 @@
 # TRACCC library, part of the ACTS project (R&D line)
 #
-# (c) 2023-2025 CERN for the benefit of the ACTS project
+# (c) 2023-2026 CERN for the benefit of the ACTS project
 #
 # Mozilla Public License Version 2.0
 
@@ -44,6 +44,8 @@ traccc_add_executable( seeding_example_alpaka "apps/seeding_example_alpaka.cpp"
 traccc_add_library( traccc_examples_alpaka examples_alpaka SHARED
    "include/traccc/examples/alpaka/full_chain_algorithm.hpp"
    "src/full_chain_algorithm.cpp"
+   "include/traccc/examples/alpaka/tbb_await.hpp"
+   "src/tbb_await.cpp"
 )
 target_link_libraries(
     traccc_examples_alpaka
@@ -56,6 +58,7 @@ target_link_libraries(
         traccc::alpaka
         traccc_examples_common
         ${EXTRA_LIBS}
+    PRIVATE TBB::tbb
 )
 
 traccc_add_executable( throughput_st_alpaka "apps/throughput_st.cpp"

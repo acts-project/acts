@@ -194,9 +194,10 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
     // Start from truth curvilinear parameters (direction, q/p)
     const Acts::Vector3 startDir = particle.direction();  // unit vector
     const auto qOverP = particle.qOverP();                // ACTS units
+    // The perigee surface is not aligned, so either context works
     auto intersection =
         pSurface
-            ->intersect(ctx.geoContext, particle.position(), startDir,
+            ->intersect(ctx.recoGeoContext, particle.position(), startDir,
                         Acts::BoundaryTolerance::Infinite())
             .closest();
 
@@ -212,7 +213,7 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
 
       // get the truth perigee parameter
       auto lpResult =
-          pSurface->globalToLocal(ctx.geoContext, position, startDir);
+          pSurface->globalToLocal(ctx.recoGeoContext, position, startDir);
       if (lpResult.ok()) {
         perigeeD0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
         perigeeZ0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
@@ -257,7 +258,7 @@ ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
 
     // Propagation options (need event contexts)
     using PropOptions = PropagatorT::Options<>;
-    PropOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+    PropOptions pOptions(ctx.recoGeoContext, ctx.magFieldContext);
 
     // Choose propagation direction based on the closest intersection
     pOptions.direction =

@@ -33,7 +33,7 @@ def runTruthTrackingGx2f(
         RootParticleReader,
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
-        RootTrackFitterPerformanceWriter,
+        RootTrackParameterPerformanceWriter,
     )
 
     from acts.examples.reconstruction import (
@@ -183,7 +183,7 @@ def runTruthTrackingGx2f(
     )
 
     s.addWriter(
-        RootTrackFitterPerformanceWriter(
+        RootTrackParameterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",

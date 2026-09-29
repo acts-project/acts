@@ -8,6 +8,9 @@
 
 #pragma once
 
+// Project include(s)
+#include "detray/algebra/concepts.hpp"
+
 // Actsvg include(s)
 #include "actsvg/core.hpp"
 

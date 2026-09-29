@@ -102,10 +102,11 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   FreeToBoundCorrection freeToBoundCorrection(false);
   std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(position, direction).planeSurface();
-  detail::transportCovarianceToBound(
-      tgContext, *surface, covariance, jacobian, transportJacobian, derivatives,
-      boundToFreeJacobian, additionalFreeCovariance, parameters,
-      freeToBoundCorrection);
+  BOOST_CHECK(detail::transportCovarianceToBound(
+                  tgContext, *surface, covariance, jacobian, transportJacobian,
+                  derivatives, boundToFreeJacobian, additionalFreeCovariance,
+                  parameters, freeToBoundCorrection)
+                  .ok());
 
   BOOST_CHECK_NE(covariance, Covariance::Identity());
   BOOST_CHECK_NE(jacobian, 2. * Jacobian::Identity());
@@ -218,9 +219,9 @@ BoundVector localToLocal(const propagator_t& prop, const BoundVector& local,
 
   BOOST_CHECK_EQUAL(&endParameters.referenceSurface(), &dst);
 
-  BoundVector out = endParameters.parameters();
-  out[eBoundTime] = local[eBoundTime];
-  return out;
+  // The time is transported along the path to the destination surface, so it
+  // is part of the comparison against the analytical jacobian.
+  return endParameters.parameters();
 }
 
 propagator_t makePropagator(const Vector3& bField) {

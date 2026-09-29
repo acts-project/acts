@@ -391,7 +391,8 @@ class StraightLineStepper final {
   /// @note no check is done if the position is actually on the surface
   /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   ///
-  void transportCovarianceToBound(
+  /// @return Failure if the parameters cannot be expressed on the surface
+  Result<void> transportCovarianceToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;
@@ -427,8 +428,9 @@ class StraightLineStepper final {
       FreeMatrix D = FreeMatrix::Identity();
       D.block<3, 3>(0, 4) = SquareMatrix<3>::Identity() * h;
       // Extend the calculation by the time propagation
-      // Evaluate dt/dlambda
-      D(3, 7) = h * m * m * state.pars[eFreeQOverP] / dtds;
+      // d(t)/d(q/p) = h m^2 (q/p) / (q^2 dt/ds), with the q^2 folded into p
+      // via p = |q| / |q/p|.
+      D(3, 7) = h * m * m / (p * p * state.pars[eFreeQOverP] * dtds);
       // Set the derivative factor the time
       state.derivative(3) = dtds;
       // Update jacobian and derivative

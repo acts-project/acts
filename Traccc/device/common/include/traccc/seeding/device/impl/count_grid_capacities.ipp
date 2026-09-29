@@ -18,8 +18,8 @@ namespace traccc::device {
 TRACCC_HOST_DEVICE
 inline void count_grid_capacities(
     const global_index_t globalIndex, const seedfinder_config& config,
-    const details::spacepoint_grid_types::host::axis_p0_type& phi_axis,
-    const details::spacepoint_grid_types::host::axis_p1_type& z_axis,
+    const traccc::details::spacepoint_grid_types::host::axis_p0_type& phi_axis,
+    const traccc::details::spacepoint_grid_types::host::axis_p1_type& z_axis,
     const edm::spacepoint_collection::const_view& spacepoints_view,
     vecmem::data::vector_view<unsigned int> grid_capacities_view) {
   // Check if anything needs to be done.

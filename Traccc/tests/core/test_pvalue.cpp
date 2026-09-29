@@ -19,7 +19,7 @@
 
 using namespace traccc;
 
-// Test gamma function for pvalue evaulation
+// Test gamma function for pvalue evaluation
 TEST(pvalue, compare_with_root) {
   // zero chisquare -> pvalue = 1
   EXPECT_FLOAT_EQ(prob(0.f, 0.1f), 1.f);

@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/core/name_map.hpp"
 #include "detray/definitions/containers.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
@@ -39,7 +40,7 @@ namespace detray {
 /// accelerator data structure, e.g. portals reside in a brute force
 /// accelerator (a simple vector), while sensitive surfaces are usually sorted
 /// into a spatial grid.
-template <typename detector_t>  // @TODO: This needs a concept
+template <concepts::detector detector_t>  // @TODO: This needs a concept
 class tracking_volume {
   /// Linear algebra types
   using algebra_type = typename detector_t::algebra_type;

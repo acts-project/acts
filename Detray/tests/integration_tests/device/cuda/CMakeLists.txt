@@ -33,7 +33,7 @@ foreach(algebra ${algebras})
        "propagator_cuda_kernel.cu"
        LINK_LIBRARIES GTest::gtest_main CUDA::cudart vecmem::cuda covfie::cuda
                        detray::core detray::algebra_${algebra} detray::test_device
-                       detray::test_common
+                       detray::test_common_cuda
     )
 
     target_compile_definitions(
@@ -53,7 +53,7 @@ detray_add_integration_test(telescope_detector_cuda
                            "telescope_navigation_validation.cpp"
                             LINK_LIBRARIES GTest::gtest GTest::gtest_main
                             vecmem::cuda detray::core_array
-                            detray::test_cuda detray::test_common
+                            detray::test_cuda detray::test_common_cuda
 )
 
 set_tests_properties(
@@ -68,7 +68,7 @@ detray_add_integration_test(toy_detector_cuda
                            "toy_detector_navigation_validation.cpp"
                             LINK_LIBRARIES GTest::gtest GTest::gtest_main
                             vecmem::cuda covfie::cuda detray::core_array
-                            detray::test_cuda detray::test_common
+                            detray::test_cuda detray::test_common_cuda
 )
 
 set_tests_properties(
@@ -83,7 +83,7 @@ detray_add_integration_test(wire_chamber_cuda
                            "wire_chamber_navigation_validation.cpp"
                             LINK_LIBRARIES GTest::gtest GTest::gtest_main
                             vecmem::cuda detray::core_array
-                            detray::test_cuda detray::test_common
+                            detray::test_cuda detray::test_common_cuda
 )
 
 set_tests_properties(

@@ -10,7 +10,11 @@
 
 // Project include(s)
 #include "detray/definitions/algebra.hpp"
+#include "detray/definitions/containers.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
+
+// System include(s)
+#include <cstdint>
 
 namespace detray {
 

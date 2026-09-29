@@ -183,11 +183,16 @@ std::vector<Vector2> AnnulusBounds::vertices(
 
 SquareMatrix2 AnnulusBounds::boundToCartesianJacobian(
     const Vector2& lposition) const {
+  // the bound coordinates are polar in the surface's own cartesian frame, so
+  // the average phi of the sector does not enter: `DiscSurface::localToGlobal`
+  // places `(r, phi)` at `(r cos phi, r sin phi)` whatever the bounds are
+  const double cosPhi = std::cos(lposition[1]);
+  const double sinPhi = std::sin(lposition[1]);
   SquareMatrix2 j;
-  j(0, 0) = std::cos(lposition[1] - get(eAveragePhi));
-  j(0, 1) = -lposition[0] * std::sin(lposition[1] - get(eAveragePhi));
-  j(1, 0) = std::sin(lposition[1] - get(eAveragePhi));
-  j(1, 1) = lposition[0] * std::cos(lposition[1] - get(eAveragePhi));
+  j(0, 0) = cosPhi;
+  j(0, 1) = -lposition[0] * sinPhi;
+  j(1, 0) = sinPhi;
+  j(1, 1) = lposition[0] * cosPhi;
   return j;
 }
 

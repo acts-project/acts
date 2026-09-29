@@ -34,7 +34,7 @@
 int main() {
   // Toy detector
   using metadata_t = detray::tutorial::toy_metadata;
-  using toy_detector_t = detray::detector<metadata_t>;
+  using toy_detector_t = detray::host::detector<metadata_t>;
 
   using algebra_t = metadata_t::algebra_type;
   using scalar = detray::tutorial::scalar;

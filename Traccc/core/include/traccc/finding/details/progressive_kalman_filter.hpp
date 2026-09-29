@@ -15,7 +15,6 @@
 #include "traccc/finding/finding_config.hpp"
 #include "traccc/finding/measurement_selector.hpp"
 #include "traccc/finding/track_state_candidate.hpp"
-#include "traccc/sanity/contiguous_on.hpp"
 #include "traccc/utils/logging.hpp"
 #include "traccc/utils/particle.hpp"
 #include "traccc/utils/prob.hpp"
@@ -48,7 +47,7 @@ namespace traccc::details {
 ///
 /// @return A struct that contains information about the found track
 ///
-template <typename detector_t, typename bfield_t>
+template <detray::concepts::detector detector_t, typename bfield_t>
 TRACCC_HOST_DEVICE inline track_stats<typename detector_t::scalar_type>
 progressive_kalman_filter(
     const detector_t& det, const bfield_t& field,

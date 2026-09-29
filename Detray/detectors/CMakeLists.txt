@@ -27,6 +27,21 @@ target_link_libraries(
 
 unset(_detray_detector_headers)
 
+# Compile all headers one-by-one.
+detray_compile_headers(
+    detectors
+    detray::detectors
+    "include/detray/detectors/*.hpp"
+    "include/detray/detectors/**/*.hpp"
+)
+if(TARGET detray_detectors_HEADERS)
+    # The detector headers need an algebra plugin to compile.
+    target_link_libraries(
+        detray_detectors_HEADERS
+        PRIVATE detray::core_array detray::io_array
+    )
+endif()
+
 # Create the metadata headers
 if(NOT "${DETRAY_GENERATE_METADATA}" STREQUAL "")
     message(STATUS "Configuring detray detector types...")

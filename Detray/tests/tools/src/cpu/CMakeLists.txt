@@ -13,12 +13,6 @@ include(CMakeFindDependencyMacro)
 find_dependency(Boost COMPONENTS program_options)
 
 # Generate test detectors
-detray_add_executable(generate_toy_detector
-                      "generate_toy_detector.cpp"
-                      LINK_LIBRARIES Boost::program_options detray::tools
-                      detray::io detray::test_common detray::test_utils detray::core_array
-)
-
 detray_add_executable(generate_wire_chamber
                       "generate_wire_chamber.cpp"
                       LINK_LIBRARIES Boost::program_options detray::tools
@@ -31,26 +25,10 @@ detray_add_executable(generate_telescope_detector
                       detray::io detray::test_common detray::test_utils detray::core_array
 )
 
-if(DETRAY_SVG_DISPLAY)
-    # Build the visualization executable.
-    detray_add_executable(detector_display
-                        "detector_display.cpp"
-                        LINK_LIBRARIES Boost::program_options detray::core_array detray::io detray::tools
-                        detray::svgtools
-    )
-endif()
-
 if(DETRAY_BUILD_TESTING)
     # Build the navigation validation executable.
     detray_add_executable(navigation_validation
                         "navigation_validation.cpp"
-                        LINK_LIBRARIES GTest::gtest GTest::gtest_main
-                        Boost::program_options detray::core_array detray::test_cpu detray::tools
-    )
-
-    # Build the material validation executable.
-    detray_add_executable(material_validation
-                        "material_validation.cpp"
                         LINK_LIBRARIES GTest::gtest GTest::gtest_main
                         Boost::program_options detray::core_array detray::test_cpu detray::tools
     )

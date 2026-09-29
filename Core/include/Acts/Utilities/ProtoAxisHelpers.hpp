@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <span>
@@ -17,6 +18,10 @@
 #include <vector>
 
 namespace Acts::ProtoAxisHelpers {
+
+// A deprecated declaration only silences directly named types, not the ones it
+// names as template arguments or uses in its body
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 /// @brief Get the number of bins from a ProtoAxis
 /// @param axis DirectedProtoAxis object
@@ -131,12 +136,14 @@ inline std::size_t maxBin(std::span<const DirectedProtoAxis> axes,
   std::vector<BinningData> binningDataVec;
   binningDataVec.reserve(axes.size());
   for (const auto& axis : axes) {
-    binningDataVec.emplace_back(axis);
+    binningDataVec.emplace_back(axis.getAxisDirection(), axis.getAxis());
   }
   if (ba >= binningDataVec.size()) {
     return 0;
   }
   return (binningDataVec.at(ba).bins() - 1);
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 }  // namespace Acts::ProtoAxisHelpers

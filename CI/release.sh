@@ -41,18 +41,43 @@ echo "- Updated version_bumber"
 
 run git add .zenodo.json CITATION.cff version_number
 run git commit -n -m"Bump version to $version"
+
+RELEASE_TARGET=${RELEASE_TARGET:-$(git rev-parse HEAD)}
+
+# Build and verify the source archive before anything is pushed, so that a
+# problem with it leaves no bumped commit and no release behind. Building it
+# locally rather than downloading it from GitHub is what makes that ordering
+# possible, since there is nothing to download until the commit is pushed.
+#
+# This archive is not the one GitHub generates for the tag: it additionally
+# carries the generated code in `prebuilt-codegen/`, which lets a build from it
+# skip the code generators and the downloads they need.
+archive="acts-${version}.tar.gz"
+archive_prefix="acts-${version#v}"
+run uv run --no-project "$SCRIPT_DIR/pregenerate_codegen.py" \
+  --output prebuilt-codegen
+run "$SCRIPT_DIR/make_source_archive.sh" \
+  --output "$archive" \
+  --prebuilt prebuilt-codegen \
+  --revision "$RELEASE_TARGET" \
+  --prefix "$archive_prefix"
+
+# Check the archive the way a consumer sees it: unpacked, with nothing pointing
+# at the generated code, and with any fall back to running a generator fatal.
+rm -rf release-verify
+mkdir release-verify
+run tar xzf "$archive" -C release-verify
+run cmake -S "release-verify/${archive_prefix}/CI/codegen_prebuilt_check" \
+  -B release-verify/build
+run cmake --build release-verify/build
+rm -rf release-verify prebuilt-codegen
+
 CI=${CI:-}
 if [ -n "$CI" ]; then
   run git push
 fi
 
 run git cliff --tag "$version" --latest --unreleased -o release.md
-
-RELEASE_TARGET=${RELEASE_TARGET:-$(git rev-parse HEAD)}
-
-repo_name=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
-
-run curl "https://github.com/${repo_name}/archive/${RELEASE_TARGET}.tar.gz" -L -o "acts-${version}.tar.gz"
 
 set +e
 ! gh release view "$version" > /dev/null 2>&1

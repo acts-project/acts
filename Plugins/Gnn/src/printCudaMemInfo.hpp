@@ -33,12 +33,12 @@ inline void printCudaMemInfo(const Acts::Logger& logger) {
     ACTS_VERBOSE("Current CUDA device: " << device);
     ACTS_VERBOSE("Memory (used / total) [in MB]: " << (total - free) / mb
                                                    << " / " << total / mb);
-  } else {
-    ACTS_VERBOSE("No memory info, CUDA disabled");
+    return;
   }
-#else
-  ACTS_VERBOSE("No memory info, CUDA disabled");
 #endif
+  // Nothing to report: CUDA is compiled out, or the level would discard the
+  // query above anyway.
+  ACTS_VERBOSE("No memory info, CUDA disabled");
 }
 
 }  // namespace

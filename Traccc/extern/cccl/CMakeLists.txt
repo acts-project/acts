@@ -11,6 +11,9 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building CCCL as part of the TRACCC project")
 
+# Disregard the global C++ flags, to avoid any unhelpful warnings.
+set(CMAKE_CXX_FLAGS)
+
 # Declare where to get Thrust from.
 set(TRACCC_CCCL_SOURCE
     "URL;https://github.com/NVIDIA/cccl/archive/refs/tags/v2.7.0.tar.gz;URL_MD5;83e431ebcb0a5c055fbd927754bec951"

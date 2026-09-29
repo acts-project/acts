@@ -138,8 +138,8 @@ void event_data::setup_csv(bool use_acts_geom_source, const host_detector* det,
   std::map<geometry_id, geometry_id> acts_to_detray_id;
   if (use_acts_geom_source) {
     host_detector_visitor<detector_type_list>(
-        *det, [&acts_to_detray_id]<typename detector_traits_t>(
-                  const typename detector_traits_t::host& d) {
+        *det, [&acts_to_detray_id]<detray::concepts::detector detector_t>(
+                  const detector_t& d) {
           for (const auto& surface_desc : d.surfaces()) {
             acts_to_detray_id[surface_desc.source] =
                 surface_desc.identifier().value();
@@ -317,7 +317,7 @@ void event_data::fill_cca_result(
   }
 
   for (auto const& [ms, cluster] : found_meas_to_cluster_map) {
-    std::map<uint64_t, std::size_t> meas_counts;
+    std::map<std::uint64_t, std::size_t> meas_counts;
 
     // Cells from CCL
     for (const auto& cell1 : cluster) {

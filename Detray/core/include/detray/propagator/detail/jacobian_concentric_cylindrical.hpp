@@ -72,9 +72,6 @@ struct jacobian<concentric_cylindrical2D<algebra_t>> {
     bound_to_free_jacobian_submatrix_type bound_pos_to_free_pos_derivative =
         matrix::zero<bound_to_free_jacobian_submatrix_type>();
 
-    const scalar_type r{vector::perp(pos)};
-    const scalar_type phi{vector::phi(pos)};
-
     // Assert the integrity of the local matrix wrt to the globally
     // defined track parameterization.
     static_assert(e_bound_loc1 == e_bound_loc0 + 1);
@@ -88,9 +85,9 @@ struct jacobian<concentric_cylindrical2D<algebra_t>> {
     constexpr unsigned int e_submatrix_free_pos2 = 2u;
 
     getter::element(bound_pos_to_free_pos_derivative, e_submatrix_free_pos0,
-                    e_submatrix_bound_loc0) = -r * math::sin(phi);
+                    e_submatrix_bound_loc0) = -pos[1];
     getter::element(bound_pos_to_free_pos_derivative, e_submatrix_free_pos1,
-                    e_submatrix_bound_loc0) = r * math::cos(phi);
+                    e_submatrix_bound_loc0) = pos[0];
     getter::element(bound_pos_to_free_pos_derivative, e_submatrix_free_pos2,
                     e_submatrix_bound_loc1) = 1.f;
 
@@ -115,8 +112,8 @@ struct jacobian<concentric_cylindrical2D<algebra_t>> {
     free_to_bound_jacobian_submatrix_type free_pos_to_bound_pos_derivative =
         matrix::zero<free_to_bound_jacobian_submatrix_type>();
 
-    const scalar_type r_inv{1.f / vector::perp(pos)};
-    const scalar_type phi{vector::phi(pos)};
+    const scalar_type ir2 =
+        scalar_type{1} / (pos[0] * pos[0] + pos[1] * pos[1]);
 
     // Assert the integrity of the local matrix wrt to the globally
     // defined track parameterization.
@@ -131,9 +128,9 @@ struct jacobian<concentric_cylindrical2D<algebra_t>> {
     constexpr unsigned int e_submatrix_free_pos2 = 2u;
 
     getter::element(free_pos_to_bound_pos_derivative, e_submatrix_bound_loc0,
-                    e_submatrix_free_pos0) = -r_inv * math::sin(phi);
+                    e_submatrix_free_pos0) = -pos[1] * ir2;
     getter::element(free_pos_to_bound_pos_derivative, e_submatrix_bound_loc0,
-                    e_submatrix_free_pos1) = r_inv * math::cos(phi);
+                    e_submatrix_free_pos1) = pos[0] * ir2;
     getter::element(free_pos_to_bound_pos_derivative, e_submatrix_bound_loc1,
                     e_submatrix_free_pos2) = 1.f;
 

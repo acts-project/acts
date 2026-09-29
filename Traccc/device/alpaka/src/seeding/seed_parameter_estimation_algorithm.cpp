@@ -41,10 +41,11 @@ struct estimate_track_params {
 seed_parameter_estimation_algorithm::seed_parameter_estimation_algorithm(
     const track_params_estimation_config& config,
     const traccc::memory_resource& mr, const vecmem::copy& copy,
-    alpaka::queue& q, std::unique_ptr<const Logger> logger)
+    alpaka::queue& q, std::unique_ptr<const Logger> logger,
+    await_function_type await_func)
     : device::seed_parameter_estimation_algorithm(config, mr, copy,
                                                   std::move(logger)),
-      alpaka::algorithm_base(q) {}
+      alpaka::algorithm_base(q, std::move(await_func)) {}
 
 void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
     const struct estimate_seed_params_kernel_payload& payload) const {

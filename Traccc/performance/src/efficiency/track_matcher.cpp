@@ -24,16 +24,16 @@ std::string stepped_percentage::get_name() const {
   return std::string(buffer);
 }
 
-std::optional<uint64_t> stepped_percentage::operator()(
-    const std::vector<std::vector<uint64_t>>& p) const {
-  std::multiset<uint64_t> cnt;
+std::optional<std::uint64_t> stepped_percentage::operator()(
+    const std::vector<std::vector<std::uint64_t>>& p) const {
+  std::multiset<std::uint64_t> cnt;
 
   /*
    * Record all the particle identifiers in a multiset in order to count
    * them.
    */
-  for (const std::vector<uint64_t>& i : p) {
-    for (uint64_t j : i) {
+  for (const std::vector<std::uint64_t>& i : p) {
+    for (std::uint64_t j : i) {
       cnt.insert(j);
     }
   }
@@ -46,7 +46,7 @@ std::optional<uint64_t> stepped_percentage::operator()(
        n <= p.size() &&
        (static_cast<float>(n) / static_cast<float>(p.size())) > m_min_ratio;
        --n) {
-    for (uint64_t i : cnt) {
+    for (std::uint64_t i : cnt) {
       if (cnt.count(i) == n) {
         return {i};
       }
@@ -64,16 +64,16 @@ std::string exact::get_name() const {
   return std::string(buffer);
 }
 
-std::optional<uint64_t> exact::operator()(
-    const std::vector<std::vector<uint64_t>>& p) const {
-  std::multiset<uint64_t> cnt;
+std::optional<std::uint64_t> exact::operator()(
+    const std::vector<std::vector<std::uint64_t>>& p) const {
+  std::multiset<std::uint64_t> cnt;
 
   /*
    * Record all the particle identifiers in a multiset in order to count
    * them.
    */
-  for (const std::vector<uint64_t>& i : p) {
-    for (uint64_t j : i) {
+  for (const std::vector<std::uint64_t>& i : p) {
+    for (std::uint64_t j : i) {
       cnt.insert(j);
     }
   }
@@ -81,7 +81,7 @@ std::optional<uint64_t> exact::operator()(
   /*
    * Find a particle which matches every single spacepoint.
    */
-  for (uint64_t i : cnt) {
+  for (std::uint64_t i : cnt) {
     if (cnt.count(i) == p.size()) {
       return {i};
     }

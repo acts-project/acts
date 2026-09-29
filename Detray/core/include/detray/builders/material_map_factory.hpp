@@ -35,7 +35,7 @@ namespace detray {
 ///
 /// @tparam detector_t type of detector that contains the material
 /// @tparam index_t local bin index type
-template <typename detector_t, typename index_t = dindex>
+template <concepts::detector detector_t, typename index_t = dindex>
 class material_map_factory final : public factory_decorator<detector_t> {
   using mask_id = typename detector_t::masks::id;
   using material_id = typename detector_t::material::id;

@@ -156,10 +156,10 @@ void Acts::EigenStepper<E>::transportCovarianceToCurvilinear(
 }
 
 template <typename E>
-void Acts::EigenStepper<E>::transportCovarianceToBound(
+Acts::Result<void> Acts::EigenStepper<E>::transportCovarianceToBound(
     State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
-  detail::transportCovarianceToBound(
+  return detail::transportCovarianceToBound(
       state.options.geoContext, surface, state.cov, state.jacobian,
       state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
       state.pars, freeToBoundCorrection);

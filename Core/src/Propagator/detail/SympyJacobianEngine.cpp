@@ -19,7 +19,6 @@ void sympy::boundToBoundTransportJacobian(
     const GeometryContext& geoContext, const Surface& surface,
     const FreeVector& freeParameters,
     const BoundToFreeMatrix& boundToFreeJacobian,
-    const FreeMatrix& freeTransportJacobian,
     FreeToBoundMatrix& freeToBoundJacobian,
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian) {
@@ -36,17 +35,18 @@ void sympy::boundToBoundTransportJacobian(
   // Calculate the full jacobian from the local/bound parameters at the start
   // surface to local/bound parameters at the final surface
   // @note jac(locA->locB) = jac(gloB->locB)*(1+
-  // pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
+  // pathCorrectionFactor(gloB))*jac(locA->gloB)
 
   boundToBoundTransportJacobianImpl(
-      freeToBoundJacobian.data(), freeTransportJacobian.data(),
-      boundToFreeJacobian.data(), freeToPathDerivatives.data(),
-      freeToPath.data(), fullTransportJacobian.data());
+      std::span<const double, 48>(freeToBoundJacobian.data(), 48),
+      std::span<const double, 48>(boundToFreeJacobian.data(), 48),
+      std::span<const double, 8>(freeToPathDerivatives.data(), 8),
+      std::span<const double, 8>(freeToPath.data(), 8),
+      std::span<double, 36>(fullTransportJacobian.data(), 36));
 }
 
 void sympy::boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
-    const FreeMatrix& freeTransportJacobian,
     FreeToBoundMatrix& freeToBoundJacobian,
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian) {
@@ -56,12 +56,14 @@ void sympy::boundToCurvilinearTransportJacobian(
   // Calculate the full jocobian from the local parameters at the start surface
   // to curvilinear parameters
   // @note jac(locA->locB) = jac(gloB->locB)*(1+
-  // pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
+  // pathCorrectionFactor(gloB))*jac(locA->gloB)
 
   boundToCurvilinearTransportJacobianImpl(
-      freeToBoundJacobian.data(), freeTransportJacobian.data(),
-      boundToFreeJacobian.data(), freeToPathDerivatives.data(),
-      direction.data(), fullTransportJacobian.data());
+      std::span<const double, 48>(freeToBoundJacobian.data(), 48),
+      std::span<const double, 48>(boundToFreeJacobian.data(), 48),
+      std::span<const double, 8>(freeToPathDerivatives.data(), 8),
+      std::span<const double, 3>(direction.data(), 3),
+      std::span<double, 36>(fullTransportJacobian.data(), 36));
 }
 
 }  // namespace Acts::detail
