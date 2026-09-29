@@ -349,8 +349,8 @@ GraphBasedSeedingAlgorithm::layerNumbering(
                << actsLayId << ", "  // lay
                << mod_id << ", "     // module
                << gbtsId << ","      // Gbts id
-               << center(2) << ", "  // z
-               << std::sqrt(center(0) * center(0) + center(1) * center(1))  // r
+               << center.z() << ", "  // z
+               << Acts::fastHypot(center.x(), center.y())  // r
                << "\n";
         }
       });
