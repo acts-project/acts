@@ -66,7 +66,9 @@ class ProtoSurfaceMaterial final : public ISurfaceMaterial {
   ProtoSurfaceMaterial(ProtoSurfaceMaterial&& smproxy) noexcept = default;
 
   /// Destructor
-  ~ProtoSurfaceMaterial() override = default;
+  /// Defined out of line so ActsCore owns the vtable and RTTI used when
+  /// dispatching material across shared-library boundaries.
+  ~ProtoSurfaceMaterial() override;
 
   /// Assignment operator
   ///
@@ -85,7 +87,7 @@ class ProtoSurfaceMaterial final : public ISurfaceMaterial {
   /// Scale operation - dummy implementation
   ///
   /// @return Reference to this object
-  ProtoSurfaceMaterial& scale(double /*factor*/) final { return (*this); }
+  ProtoSurfaceMaterial& scale(double /*factor*/) override { return *this; }
 
   /// Stable identity of the material assignment, if configured
   /// @return Optional stable material assignment key
@@ -95,20 +97,20 @@ class ProtoSurfaceMaterial final : public ISurfaceMaterial {
 
   /// Return the two-dimensional binning specification
   /// @return Reference to the binning
-  const MultiAxisSpec2D& binning() const { return (m_binning); }
+  const MultiAxisSpec2D& binning() const { return m_binning; }
 
   /// Return method for full material description of the Surface - from local
   /// coordinates
   ///
   /// @return will return dummy material
-  const MaterialSlab& materialSlab(const Vector2& /*lp*/) const final {
-    return (m_materialSlab);
+  const MaterialSlab& materialSlab(const Vector2& /*lp*/) const override {
+    return m_materialSlab;
   }
 
   /// @copydoc ISurfaceMaterial::localAxisDirections() const
   /// A placeholder has no lookup grid. Axis directions are validated and
   /// ordered when the binning is resolved for material mapping.
-  std::vector<AxisDirection> localAxisDirections() const final { return {}; }
+  std::vector<AxisDirection> localAxisDirections() const override { return {}; }
 
   using ISurfaceMaterial::materialSlab;
 
@@ -116,7 +118,7 @@ class ProtoSurfaceMaterial final : public ISurfaceMaterial {
   ///
   /// @param sl is the output stream
   /// @return The output stream
-  std::ostream& toStream(std::ostream& sl) const final {
+  std::ostream& toStream(std::ostream& sl) const override {
     sl << "Acts::ProtoSurfaceMaterial : " << std::endl;
     sl << m_binning << std::endl;
     return sl;

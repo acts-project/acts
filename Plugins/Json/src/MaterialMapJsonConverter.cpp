@@ -260,11 +260,11 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
     const auto type = jEntry.value("type", std::string{});
     using enum AxisDirection;
     if (type == "CylinderSurface") {
-      context.surfaceAxes = std::array{AxisRPhi, AxisZ};
+      context.setSurfaceAxes({AxisRPhi, AxisZ});
     } else if (type == "DiscSurface") {
-      context.surfaceAxes = std::array{AxisR, AxisPhi};
+      context.setSurfaceAxes({AxisR, AxisPhi});
     } else if (type == "PlaneSurface") {
-      context.surfaceAxes = std::array{AxisX, AxisY};
+      context.setSurfaceAxes({AxisX, AxisY});
     }
     surfaceMap.try_emplace(
         hierarchySurfaceMap.idAt(i),

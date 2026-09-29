@@ -264,7 +264,7 @@ MultiAxisSpec2D legacyProtoBinning(const nlohmann::json& jMaterial,
         "Legacy proto surface material has more than two axes");
   }
   using enum AxisDirection;
-  auto directions = ctx.surfaceAxes;
+  auto directions = ctx.surfaceAxes();
   if (!directions) {
     for (const auto& axis : data) {
       switch (axis.binvalue) {

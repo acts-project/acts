@@ -331,7 +331,7 @@ std::shared_ptr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
   if (j.find(jsonKey().materialkey) != j.end() &&
       !j[jsonKey().materialkey].empty()) {
     SurfaceMaterialJsonConverter::DecodeContext context;
-    context.surfaceAxes = mutableSf->localAxes();
+    context.setSurfaceAxes(mutableSf->localAxes());
     mutableSf->assignSurfaceMaterial(SurfaceMaterialJsonConverter::fromJson(
         j[jsonKey().materialkey],
         SurfaceMaterialJsonConverter::Config::defaultConfig(), &context));
