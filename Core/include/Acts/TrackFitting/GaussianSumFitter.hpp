@@ -393,9 +393,12 @@ struct GaussianSumFitter {
           },
           sParameters.particleHypothesis());
 
-      auto state = m_propagator.makeState(bwdPropOptions);
+      auto state = m_propagator.template makeState<OptionsType, SurfaceReached>(
+          bwdPropOptions);
 
-      auto initRes = m_propagator.initialize(state, inflatedParams, &target);
+      auto initRes =
+          m_propagator.template initialize<decltype(state), SurfaceReached>(
+              state, inflatedParams, &target);
       if (!initRes.ok()) {
         return ResultType::failure(initRes.error());
       }

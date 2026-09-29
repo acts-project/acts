@@ -288,6 +288,11 @@ def vacuumTrackParameterAndBeamspotPropagation(
             pos4, acts.Vector3(*mom), qOverP, None, particle_hypothesis
         )
         target = acts.Surface.createPerigee(acts.Vector3(beamspot[0], beamspot[1], 0.0))
+        # The point of closest approach can be behind the vertex
+        toBeamspot = np.array([beamspot[0] - vtx[0], beamspot[1] - vtx[1]])
+        propagator_options.direction = acts.Direction.fromScalarZeroAsPositive(
+            float(np.dot(toBeamspot, mom[:2]))
+        )
         result = propagator.propagateToSurface(start, target, propagator_options)
         beamspot_pocas[i] = np.array(result.parameters)[:5]
     return beamspot_pocas
