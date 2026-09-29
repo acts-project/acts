@@ -23,8 +23,7 @@ Publication uploads an immutable tar, then updates `latest.json`. There is no
 extra concurrency group; overlapping uploads may leave an older valid snapshot
 as latest. Restores verify checksums and extract into staging. Transfer failures
 are nonfatal. Entries are already compressed, so the tar is uncompressed. The
-existing 30-day S3 lifecycle applies to snapshots and pointers. The old GitHub
-cache retention workflow remains available for manual cleanup only.
+existing 30-day S3 lifecycle applies to snapshots and pointers.
 
 Compare GitHub's restore, build, and publish step durations and ccache statistics.
 Do not set `CCACHE_BASEDIR`: path rewriting breaks source-path FPE masks.
