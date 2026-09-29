@@ -168,25 +168,6 @@ void gbts_seeding_algorithm::gbts_bin_spacepoints_kernel(
   hipLaunchKernelGGL(kernels::gbts_bin_spacepoints, n_blocks, n_threads, 0,
                      details::get_stream(stream()), payload);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
-
-  // Turn the per-bin node counts into the node offsets.
-  vecmem::device_vector<unsigned int> d_eta_node_counter(
-      payload.eta_node_counter);
-  // Set up the Thrust execution policy. Unfortunately this has to be done in
-  // a backend specific way. :-(
-#if defined(__HIP_PLATFORM_AMD__)
-  auto policy =
-      thrust::hip::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream()));
-#elif defined(__HIP_PLATFORM_NVIDIA__)
-  auto policy =
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream()));
-#else
-#error "Unrecognised HIP platform."
-#endif
-  thrust::exclusive_scan(policy, d_eta_node_counter.begin(),
-                         d_eta_node_counter.end(), d_eta_node_counter.begin());
 }
 
 void gbts_seeding_algorithm::gbts_sort_nodes_kernel(
@@ -209,11 +190,11 @@ void gbts_seeding_algorithm::gbts_sort_nodes_kernel(
 #error "Unrecognised HIP platform."
 #endif
   thrust::sort_by_key(policy, d_sort_keys.begin(),
-                      d_sort_keys.begin() + static_cast<int>(payload.nNodes),
+                      d_sort_keys.begin() + static_cast<int>(payload.nSp),
                       d_sort_values.begin());
 
   const unsigned int n_threads = 256;
-  const unsigned int n_blocks = 1 + (payload.nNodes - 1) / n_threads;
+  const unsigned int n_blocks = 1 + (payload.nSp - 1) / n_threads;
   hipLaunchKernelGGL(kernels::gbts_sort_nodes, n_blocks, n_threads, 0,
                      details::get_stream(stream()), payload);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
