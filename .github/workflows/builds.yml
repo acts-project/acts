@@ -72,12 +72,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      - name: Restore ccache snapshot
+      - name: Set up ccache snapshots
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/linux_ubuntu/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
       - name: Reset ccache statistics
         run: ccache --zero-stats
@@ -92,7 +94,6 @@ jobs:
           -DACTS_BUILD_PLUGIN_ONNX=ON
 
       - name: Build
-        id: build
         run: cmake --build build
 
       - name: Build docs examples
@@ -145,25 +146,17 @@ jobs:
           ctest --test-dir build-downstream --output-on-failure
 
       - name: Clean ccache before publication
-        id: ccache-cleanup
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        continue-on-error: true
-        run: ccache --cleanup
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          if ! ccache --cleanup; then
+            echo '::warning::ccache cleanup failed; skipping snapshot publication'
+            echo 'CCACHE_SNAPSHOT_SKIP_SAVE=true' >> "$GITHUB_ENV"
+          fi
 
       - name: ccache statistics
         if: always()
         uses: ./.github/actions/ccache-s3/stats
-
-      - name: Publish ccache snapshot
-        if: ${{ !cancelled() && steps.ccache-cleanup.outcome == 'success' }}
-        continue-on-error: true
-        timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
-        with:
-          operation: publish
-          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/linux_ubuntu/v1/
-          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
-          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
   linux_examples_test:
     runs-on: [self-hosted, linux, x64, husk-size-standard]

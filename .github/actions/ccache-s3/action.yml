@@ -1,9 +1,6 @@
 name: 'ccache S3 snapshots'
-description: 'Restore or publish a complete local ccache snapshot in CERN S3'
+description: 'Restore ccache from CERN S3 and publish after successful main jobs'
 inputs:
-  operation:
-    description: 'restore (anonymous) or publish (main pushes only)'
-    default: restore
   key-prefix:
     description: 'Snapshot namespace for this repository and build variant'
     required: true
@@ -14,19 +11,7 @@ inputs:
     description: 'S3 secret key; required only for publication'
     default: ''
 runs:
-  using: composite
-  steps:
-    - name: Transfer ccache snapshot
-      shell: bash
-      env:
-        ACTION_PATH: ${{ github.action_path }}
-        CACHE_OPERATION: ${{ inputs.operation }}
-        CACHE_PREFIX: ${{ inputs.key-prefix }}
-        CACHE_ENDPOINT: https://s3.cern.ch
-        CACHE_REGION: cern
-        CACHE_BUCKET: cache
-        AWS_ACCESS_KEY_ID: ${{ inputs.access-key-id }}
-        AWS_SECRET_ACCESS_KEY: ${{ inputs.secret-access-key }}
-        AWS_EC2_METADATA_DISABLED: 'true'
-      run: |
-        uv run --locked --no-project --no-build "$ACTION_PATH/../../../CI/ccache_snapshot.py" "$CACHE_OPERATION"
+  using: node24
+  main: action.cjs
+  post: action.cjs
+  post-if: success()
