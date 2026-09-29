@@ -14,6 +14,8 @@ on:
     paths:
       - "Detray/**"
       - ".github/workflows/detray.yml"
+      - ".github/actions/ccache-s3/**"
+      - "CI/ccache_snapshot.py*"
       - ".github/detray-traccc-filters.yml"
   pull_request:
     branches:
@@ -22,6 +24,8 @@ on:
     paths:
       - "Detray/**"
       - ".github/workflows/detray.yml"
+      - ".github/actions/ccache-s3/**"
+      - "CI/ccache_snapshot.py*"
       - ".github/detray-traccc-filters.yml"
   # The changes job applies path filtering to merge groups, which do not
   # support the workflow-level path filters above.
@@ -38,12 +42,10 @@ concurrency:
 permissions:
   contents: read
 
-# ccache is saved from `main` only: a PR-written cache is readable by that PR
-# alone, but still evicts `main`'s entries from the shared 10 GB.
+# Compiler caches use CERN S3 snapshots; only main publishes.
 env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
-  CCACHE_KEY_SUFFIX: r1
 
 # All the different build/test jobs.
 jobs:
@@ -325,6 +327,8 @@ jobs:
   # build down to what the GPU job actually runs.
   # ─────────────────────────────────────────────────────────────────────
   cuda:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     needs: changes
     # !cancelled() allows PR/push jobs through when changes is skipped.
     if: >-
@@ -361,14 +365,12 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
-    - name: Restore ccache
-      id: ccache-restore
-      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+    - name: Restore ccache snapshot
+      uses: ./.github/actions/ccache-s3
+      continue-on-error: true
+      timeout-minutes: 10
       with:
-        path: ${{ env.CCACHE_DIR }}
-        key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.SCALAR_TYPE }}-${{ github.sha }}
-        restore-keys: |
-          ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.SCALAR_TYPE }}-
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/cuda/${{ runner.os }}-${{ runner.arch }}/${{ matrix.SCALAR_TYPE }}/v1/
 
     # Release, not the preset's RelWithDebInfo: RelWithDebInfo adds
     # `-lineinfo -src-in-ptx`, which costs compile time and buys nothing that
@@ -399,12 +401,23 @@ jobs:
     - name: ccache stats
       run: ccache -s
 
-    - name: Save ccache
-      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      if: always() && github.ref == 'refs/heads/main'
+    - name: Clean ccache before publication
+      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      shell: bash
+      run: |
+        ccache --cleanup
+
+    - name: Publish ccache snapshot
+      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      timeout-minutes: 10
+      uses: ./.github/actions/ccache-s3
       with:
-        path: ${{ env.CCACHE_DIR }}
-        key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+        operation: publish
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/cuda/${{ runner.os }}-${{ runner.arch }}/${{ matrix.SCALAR_TYPE }}/v1/
+        access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+        secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
     # Finds nothing today: `.ptx` is only kept when a target opts into `--keep`
     # via `detray_add_cuda_artifact_dir_to_target`
