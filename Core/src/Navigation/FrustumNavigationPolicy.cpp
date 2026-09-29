@@ -26,7 +26,8 @@ FrustumNavigationPolicy::FrustumNavigationPolicy(const GeometryContext &gctx,
     m_boxes.push_back(std::make_unique<BoundingBox>(vol.boundingBox(gctx)));
     prims.push_back(m_boxes.back().get());
   }
-  m_topBox = Acts::BoundingBoxHierarchy::makeOctree(m_boxes, prims, config.depth);
+  m_topBox = 
+      Acts::BoundingBoxHierarchy::makeOctree(m_boxes, prims, config.depth);
 }
 
 void FrustumNavigationPolicy::initializeCandidates(
@@ -38,9 +39,9 @@ void FrustumNavigationPolicy::initializeCandidates(
   auto &s = state.as<State>();
   ACTS_DEBUG("Frustum origin " << s.frustum.origin() << ", frustum dir "
                                << s.frustum.dir());
-  Frustum3 frustum=s.frustum;
+  Frustum3 frustum = s.frustum;
   Acts::BoundingBoxHierarchy::visitIntersecting(
-      s.frustum,m_topBox,
+      s.frustum, m_topBox,
       [this, &gctx, &stream, &logger, &frustum](const Volume &entity) {
         const TrackingVolume *tvol =
             dynamic_cast<const TrackingVolume *>(&entity);
@@ -68,8 +69,7 @@ void FrustumNavigationPolicy::initializeCandidates(
             stream.addPortalCandidate(portal);
           }
         }
-      }
-  );
+      });
 }
 
 void FrustumNavigationPolicy::connect(NavigationDelegate &delegate) const {
@@ -85,7 +85,7 @@ bool FrustumNavigationPolicy::isValid(const GeometryContext &,
   double costheta =
       args.position.normalized().dot(s.frustum.origin().normalized());
   // Compare to half the frustum opening angle
-  if ( costheta < std::cos(s.openingAngle / 2)) {
+  if (costheta < std::cos(s.openingAngle / 2)) {
     ACTS_DEBUG("FrustumNavigationPolicy: outside frustum");
     return false;
   } else {
