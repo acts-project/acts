@@ -19,6 +19,7 @@
 #include "traccc/utils/propagation.hpp"
 
 // Detray include(s).
+#include <detray/navigation/navigation_sync.hpp>
 #include <detray/utils/tuple_helpers.hpp>
 
 namespace traccc::device {
@@ -117,10 +118,13 @@ TRACCC_HOST_DEVICE inline void propagate_to_next_surface(
   ckf_aborter_state.min_step_length = cfg.min_step_length_for_next_surface;
   ckf_aborter_state.max_count = cfg.max_step_counts_for_next_surface;
 
-  // Propagate to the next surface
+  // Propagate to the next surface. Synchronize the local navigations (volume
+  // switches) across the threads of a warp
   propagator.propagate(
-      propagation, detray::tie(aborter_state, updater_state, interactor_state,
-                               momentum_aborter_state, ckf_aborter_state));
+      propagation,
+      detray::tie(aborter_state, updater_state, interactor_state,
+                  momentum_aborter_state, ckf_aborter_state),
+      detray::navigation::warp_sync{});
 
   // If a surface found, add the parameter for the next step
   if (ckf_aborter_state.success) {
