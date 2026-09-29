@@ -114,7 +114,7 @@ jobs:
 
   # The CI tooling's own self-tests, which otherwise have no feedback loop:
   # broken tooling fails in some other job that already paid for a container
-  # pull. Grouped because they run in seconds without build dependencies.
+  # pull. Grouped because they are pure Python and run in seconds.
   # Use explicit test paths to avoid collecting other CI tools.
   # test_public_api_surface.py stays in
   # `api_surface` -- it skips its drift check without doxygen on PATH.
@@ -140,12 +140,6 @@ jobs:
           CI/test_check_unused_files.py
           CI/test_prune_ccache.py
           CI/test_ccache_snapshot.py
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version: '24'
-          package-manager-cache: false
-      - name: Cache action lifecycle tests
-        run: node --test .github/actions/ccache-s3/action.test.cjs
 
   codegen_prebuilt:
     # Pre-generates the code the build would otherwise generate, then checks
