@@ -127,6 +127,20 @@ class DD4hepBackend {
   std::shared_ptr<Acts::StaticBlueprintNode> makePassiveCylinder(
       const Element& element) const;
 
+  /// Create a static blueprint node for a passive disc-shaped element, e.g.
+  /// the ODD's pixel endplates. Unlike @ref makePassiveCylinder, this expects
+  /// the element's shape to be wide and thin (radial extent larger than its
+  /// z half-length), the disc equivalent of a tube.
+  /// @param element DD4hep element describing the passive disc.
+  /// @param volumeName Name for the created volume. Defaults to the
+  ///        element's own DD4hep name, but callers must pass an explicit,
+  ///        unique name if @p element's name is reused across multiple
+  ///        instances (e.g. the ODD's negative/positive pixel endplates are
+  ///        both named "PixelEndplate" in DD4hep).
+  /// @return Shared pointer to the generated blueprint node.
+  std::shared_ptr<Acts::StaticBlueprintNode> makePassiveDisc(
+      const Element& element, std::string volumeName = {}) const;
+
   /// Return the DD4hep world detector element.
   /// @return Root detector element of the DD4hep hierarchy.
   Element world() const;

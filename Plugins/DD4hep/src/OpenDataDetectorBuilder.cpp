@@ -194,6 +194,40 @@ void addBarrelEndcapSubsystem(
         node->setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
                                   Acts::VolumeResizeStrategy::Gap);
 
+        // Pixel endplates: passive carbon-fiber discs beyond the outermost
+        // endcap layer on each side (z=-1950mm / +1950mm). In the ODD XML
+        // they share the same layer_pattern as the sensitive endcap layers
+        // (`PixelEndcapN\d|PixelEndplate`), but carry no sensitive modules of
+        // their own, so the generic sensor-layer discovery that populates
+        // `node` never finds them. Added here as an extra static child of
+        // whichever endcap container actually has one as a direct DD4hep
+        // child -- only PixelEndcapN/PixelEndcapP do, so this is a no-op for
+        // every other container this callback fires for.
+        using enum Acts::CylinderVolumeBounds::Face;
+        for (const auto& child : builder.backend().children(elem)) {
+          if (builder.backend().nameOf(child) != "PixelEndplate") {
+            continue;
+          }
+          auto endplateMat =
+              std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
+                  node->name() + "_endplate_mat");
+          endplateMat->configureFace(
+              NegativeDisc,
+              Acts::AxisSpec::DeferredEquidistant(kMatRBins,
+                                                  Acts::AxisDirection::AxisR),
+              Acts::AxisSpec::DeferredEquidistant(
+                  kMatPhiBins, Acts::AxisDirection::AxisPhi));
+          endplateMat->configureFace(
+              PositiveDisc,
+              Acts::AxisSpec::DeferredEquidistant(kMatRBins,
+                                                  Acts::AxisDirection::AxisR),
+              Acts::AxisSpec::DeferredEquidistant(
+                  kMatPhiBins, Acts::AxisDirection::AxisPhi));
+          endplateMat->addChild(builder.backend().makePassiveDisc(
+              child, node->name() + "_PixelEndplate"));
+          node->addChild(std::move(endplateMat));
+        }
+
         // This callback fires for every container node the barrelEndcap()
         // builder creates: each endcap sub-container, the barrel
         // sub-container, and the combined top-level Z-stack. Only the
@@ -212,7 +246,6 @@ void addBarrelEndcapSubsystem(
         // outermost layer's own material designation on the fused portal
         // where this container meets its radial neighbor (see the Kategorie
         // 2 investigation).
-        using enum Acts::CylinderVolumeBounds::Face;
         auto mat = std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
             node->name() + "_boundary_mat");
         mat->configureFace(NegativeDisc,
