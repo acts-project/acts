@@ -26,7 +26,7 @@ FrustumNavigationPolicy::FrustumNavigationPolicy(const GeometryContext &gctx,
     m_boxes.push_back(std::make_unique<BoundingBox>(vol.boundingBox(gctx)));
     prims.push_back(m_boxes.back().get());
   }
-  m_topBox = make_octree(m_boxes, prims, config.depth);
+  m_topBox = Acts::BoundingBoxHierarchy::makeOctree(m_boxes, prims, config.depth);
 }
 
 void FrustumNavigationPolicy::initializeCandidates(
@@ -38,12 +38,12 @@ void FrustumNavigationPolicy::initializeCandidates(
   auto &s = state.as<State>();
   ACTS_DEBUG("Frustum origin " << s.frustum.origin() << ", frustum dir "
                                << s.frustum.dir());
-  const BoundingBox *topBoxCopy = m_topBox;
-  while (topBoxCopy != nullptr) {
-    if (topBoxCopy->intersect(s.frustum)) {
-      if (topBoxCopy->hasEntity()) {
+  Frustum3 frustum=s.frustum;
+  Acts::BoundingBoxHierarchy::visitIntersecting(
+      s.frustum,m_topBox,
+      [this, &gctx, &stream, &logger, &frustum](const Volume &entity) {
         const TrackingVolume *tvol =
-            dynamic_cast<const TrackingVolume *>(topBoxCopy->entity());
+            dynamic_cast<const TrackingVolume *>(&entity);
         ACTS_DEBUG("get portals from volume " << tvol->volumeName());
         const auto &portals = tvol->portals();
         for (const auto &portal : portals) {
@@ -51,9 +51,9 @@ void FrustumNavigationPolicy::initializeCandidates(
           // top-level volume to its child volumes. If we want these, they will
           // be added when the intersection reaches the child volume. Only add
           // portals from the top-level volume to volumes it doesn't contain.
-          if (tvol->geometryId() == m_id) {
+          if (tvol->geometryId() == this->m_id) {
             Acts::Result<const TrackingVolume *> pvolr =
-                portal.resolveVolume(gctx, s.frustum.origin(), s.frustum.dir());
+                portal.resolveVolume(gctx, frustum.origin(), frustum.dir());
             if (pvolr.ok()) {
               const TrackingVolume *pvol = *pvolr;
               if (tvol->inside(gctx, pvol->center(gctx))) {
@@ -68,14 +68,8 @@ void FrustumNavigationPolicy::initializeCandidates(
             stream.addPortalCandidate(portal);
           }
         }
-        topBoxCopy = topBoxCopy->getSkip();
-      } else {
-        topBoxCopy = topBoxCopy->getLeftChild();
       }
-    } else {
-      topBoxCopy = topBoxCopy->getSkip();
-    }
-  }
+  );
 }
 
 void FrustumNavigationPolicy::connect(NavigationDelegate &delegate) const {
