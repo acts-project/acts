@@ -142,6 +142,10 @@ TRACCC_HOST_DEVICE inline void gbts_fill_path_store(
     if (length < payload.minLevel) {
       continue;
     }
+    // If the seed in an odd length set the state1 to be the final state
+    if (toggle) {
+      state1 = state2;
+    }
     // state1 is the final state
     //  can cut more strongly now the fit is done
     if (math::fabs(state1.m_X[2]) * fit_params.final_curv_cut_tighten *
