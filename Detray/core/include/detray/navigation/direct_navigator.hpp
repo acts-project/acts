@@ -31,7 +31,7 @@
 
 namespace detray {
 
-template <typename detector_t, typename surface_sequence_t = void>
+template <concepts::detector detector_t, typename surface_sequence_t = void>
 class direct_navigator {
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
