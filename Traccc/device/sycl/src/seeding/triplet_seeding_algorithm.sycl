@@ -20,6 +20,8 @@
 #include "traccc/seeding/device/count_triplets.hpp"
 #include "traccc/seeding/device/find_doublets.hpp"
 #include "traccc/seeding/device/find_triplets.hpp"
+#include "traccc/seeding/device/make_mid_bot_lincircles.hpp"
+#include "traccc/seeding/device/make_mid_top_lincircles.hpp"
 #include "traccc/seeding/device/populate_grid.hpp"
 #include "traccc/seeding/device/reduce_triplet_counts.hpp"
 #include "traccc/seeding/device/select_seeds.hpp"
@@ -43,6 +45,14 @@ class count_doublets;
 
 /// Class identifying the kernel running @c traccc::device::find_doublets
 class find_doublets;
+
+/// Class identifying the kernel running @c
+/// traccc::device::make_mid_bot_lincircles
+class make_mid_bot_lincircles;
+
+/// Class identifying the kernel running @c
+/// traccc::device::make_mid_top_lincircles
+class make_mid_top_lincircles;
 
 /// Class identifying the kernel running @c traccc::device::count_triplets
 class count_triplets;
@@ -144,6 +154,42 @@ void triplet_seeding_algorithm::find_doublets_kernel(
   });
 }
 
+void triplet_seeding_algorithm::make_mid_bot_lincircles_kernel(
+    const make_mid_bot_lincircles_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::make_mid_bot_lincircles>(
+        details::calculate1DimNdRange(payload.nMidBot, 128),
+        [mb_doublets = payload.mb_doublets,
+         doublet_counter = payload.doublet_counter,
+         spacepoints = payload.spacepoints, grid = payload.grid,
+         mb_circles = payload.mb_circles](::sycl::nd_item<1> item) {
+          device::make_mid_bot_lincircles(details::global_index(item),
+                                          mb_doublets, doublet_counter,
+                                          spacepoints, grid, mb_circles);
+        });
+  });
+}
+
+void triplet_seeding_algorithm::make_mid_top_lincircles_kernel(
+    const make_mid_top_lincircles_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::make_mid_top_lincircles>(
+        details::calculate1DimNdRange(payload.nMidTop, 128),
+        [mt_doublets = payload.mt_doublets,
+         doublet_counter = payload.doublet_counter,
+         spacepoints = payload.spacepoints, grid = payload.grid,
+         mt_circles = payload.mt_circles](::sycl::nd_item<1> item) {
+          device::make_mid_top_lincircles(details::global_index(item),
+                                          mt_doublets, doublet_counter,
+                                          spacepoints, grid, mt_circles);
+        });
+  });
+}
+
 void triplet_seeding_algorithm::count_triplets_kernel(
     const count_triplets_kernel_payload& payload) const {
   ::sycl::queue& squeue = details::get_queue(queue());
@@ -155,11 +201,13 @@ void triplet_seeding_algorithm::count_triplets_kernel(
          grid = payload.grid, doublet_counter = payload.doublet_counter,
          mb_doublets = payload.mb_doublets, mt_doublets = payload.mt_doublets,
          spM_counter = payload.spM_counter,
-         midBot_counter = payload.midBot_counter](::sycl::nd_item<1> item) {
+         midBot_counter = payload.midBot_counter,
+         mb_circles = payload.mb_circles,
+         mt_circles = payload.mt_circles](::sycl::nd_item<1> item) {
           device::count_triplets(details::global_index(item), config,
                                  spacepoints, grid, doublet_counter,
                                  mb_doublets, mt_doublets, spM_counter,
-                                 midBot_counter);
+                                 midBot_counter, mb_circles, mt_circles);
         });
   });
 }
@@ -193,12 +241,13 @@ void triplet_seeding_algorithm::find_triplets_kernel(
          spacepoints = payload.spacepoints, grid = payload.grid,
          doublet_counter = payload.doublet_counter,
          mt_doublets = payload.mt_doublets, spM_tc = payload.spM_tc,
-         midBot_tc = payload.midBot_tc,
+         midBot_tc = payload.midBot_tc, mb_circles = payload.mb_circles,
+         mt_circles = payload.mt_circles,
          triplets = payload.triplets](::sycl::nd_item<1> item) {
           device::find_triplets(details::global_index(item), finding_config,
                                 filter_config, spacepoints, grid,
                                 doublet_counter, mt_doublets, spM_tc, midBot_tc,
-                                triplets);
+                                mb_circles, mt_circles, triplets);
         });
   });
 }

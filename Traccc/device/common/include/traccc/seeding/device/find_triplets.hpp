@@ -16,8 +16,12 @@
 // Project include(s).
 #include "traccc/definitions/qualifiers.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
+#include "traccc/seeding/detail/lin_circle.hpp"
 #include "traccc/seeding/detail/seeding_config.hpp"
 #include "traccc/seeding/detail/spacepoint_grid.hpp"
+
+// VecMem include(s).
+#include <vecmem/containers/data/vector_view.hpp>
 
 namespace traccc::device {
 
@@ -36,6 +40,8 @@ namespace traccc::device {
 /// @param[in] spM_tc_view       Collection with the number of triplets per spM
 /// @param[in] tc_view           Collection with the number of triplets per
 /// midBot doublet
+/// @param[in] mid_bot_circle_view Linearised circles of the midBot doublets
+/// @param[in] mid_top_circle_view Linearised circles of the midTop doublets
 /// @param[out] triplet_view     Collection of triplets
 ///
 TRACCC_HOST_DEVICE
@@ -48,6 +54,8 @@ inline void find_triplets(
     const device_doublet_collection_types::const_view& mid_top_doublet_view,
     const triplet_counter_spM_collection_types::const_view& spM_tc_view,
     const triplet_counter_collection_types::const_view& tc_view,
+    vecmem::data::vector_view<const lin_circle> mid_bot_circle_view,
+    vecmem::data::vector_view<const lin_circle> mid_top_circle_view,
     device_triplet_collection_types::view triplet_view);
 
 }  // namespace traccc::device

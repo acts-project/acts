@@ -72,6 +72,20 @@ class triplet_seeding_algorithm : public device::triplet_seeding_algorithm,
   void find_doublets_kernel(
       const find_doublets_kernel_payload& payload) const override;
 
+  /// Middle-bottom linearised circle making kernel launcher
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  void make_mid_bot_lincircles_kernel(
+      const make_mid_bot_lincircles_kernel_payload& payload) const override;
+
+  /// Middle-top linearised circle making kernel launcher
+  ///
+  /// @param payload The payload for the kernel
+  ///
+  void make_mid_top_lincircles_kernel(
+      const make_mid_top_lincircles_kernel_payload& payload) const override;
+
   /// Triplet counting kernel launcher
   ///
   /// @param payload The payload for the kernel

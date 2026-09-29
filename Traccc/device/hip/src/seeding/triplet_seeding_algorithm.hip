@@ -18,6 +18,8 @@
 #include "traccc/seeding/device/count_triplets.hpp"
 #include "traccc/seeding/device/find_doublets.hpp"
 #include "traccc/seeding/device/find_triplets.hpp"
+#include "traccc/seeding/device/make_mid_bot_lincircles.hpp"
+#include "traccc/seeding/device/make_mid_top_lincircles.hpp"
 #include "traccc/seeding/device/populate_grid.hpp"
 #include "traccc/seeding/device/reduce_triplet_counts.hpp"
 #include "traccc/seeding/device/select_seeds.hpp"
@@ -71,6 +73,30 @@ __global__ void find_doublets(
                         doublet_counter, mb_doublets, mt_doublets);
 }
 
+/// HIP kernel for running @c traccc::device::make_mid_bot_lincircles
+__global__ void make_mid_bot_lincircles(
+    device::device_doublet_collection_types::const_view mb_doublet_view,
+    device::doublet_counter_collection_types::const_view doublet_count_view,
+    edm::spacepoint_collection::const_view spacepoint_view,
+    traccc::details::spacepoint_grid_types::const_view sp_grid_view,
+    vecmem::data::vector_view<lin_circle> out_view) {
+  device::make_mid_bot_lincircles(details::global_index1(), mb_doublet_view,
+                                  doublet_count_view, spacepoint_view,
+                                  sp_grid_view, out_view);
+}
+
+/// HIP kernel for running @c traccc::device::make_mid_top_lincircles
+__global__ void make_mid_top_lincircles(
+    device::device_doublet_collection_types::const_view mt_doublet_view,
+    device::doublet_counter_collection_types::const_view doublet_count_view,
+    edm::spacepoint_collection::const_view spacepoint_view,
+    traccc::details::spacepoint_grid_types::const_view sp_grid_view,
+    vecmem::data::vector_view<lin_circle> out_view) {
+  device::make_mid_top_lincircles(details::global_index1(), mt_doublet_view,
+                                  doublet_count_view, spacepoint_view,
+                                  sp_grid_view, out_view);
+}
+
 /// HIP kernel for running @c traccc::device::count_triplets
 __global__ void count_triplets(
     seedfinder_config config,
@@ -80,10 +106,12 @@ __global__ void count_triplets(
     device::device_doublet_collection_types::const_view mb_doublets,
     device::device_doublet_collection_types::const_view mt_doublets,
     device::triplet_counter_spM_collection_types::view spM_counter,
-    device::triplet_counter_collection_types::view midBot_counter) {
+    device::triplet_counter_collection_types::view midBot_counter,
+    vecmem::data::vector_view<const lin_circle> midBot_circles,
+    vecmem::data::vector_view<const lin_circle> midTop_circles) {
   device::count_triplets(details::global_index1(), config, spacepoints, sp_grid,
                          doublet_counter, mb_doublets, mt_doublets, spM_counter,
-                         midBot_counter);
+                         midBot_counter, midBot_circles, midTop_circles);
 }
 
 /// HIP kernel for running @c traccc::device::reduce_triplet_counts
@@ -104,10 +132,13 @@ __global__ void find_triplets(
     device::device_doublet_collection_types::const_view mt_doublets,
     device::triplet_counter_spM_collection_types::const_view spM_tc,
     device::triplet_counter_collection_types::const_view midBot_tc,
+    vecmem::data::vector_view<const lin_circle> midBot_circles,
+    vecmem::data::vector_view<const lin_circle> midTop_circles,
     device::device_triplet_collection_types::view triplet_view) {
   device::find_triplets(details::global_index1(), config, filter_config,
                         spacepoints, sp_grid, doublet_counter, mt_doublets,
-                        spM_tc, midBot_tc, triplet_view);
+                        spM_tc, midBot_tc, midBot_circles, midTop_circles,
+                        triplet_view);
 }
 
 /// HIP kernel for running @c traccc::device::update_triplet_weights
@@ -210,6 +241,28 @@ void triplet_seeding_algorithm::find_doublets_kernel(
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
 }
 
+void triplet_seeding_algorithm::make_mid_bot_lincircles_kernel(
+    const make_mid_bot_lincircles_kernel_payload& payload) const {
+  const unsigned int n_threads = 128;
+  const unsigned int n_blocks = (payload.nMidBot + n_threads - 1) / n_threads;
+  hipLaunchKernelGGL(kernels::make_mid_bot_lincircles, n_blocks, n_threads, 0,
+                     details::get_stream(stream()), payload.mb_doublets,
+                     payload.doublet_counter, payload.spacepoints, payload.grid,
+                     payload.mb_circles);
+  TRACCC_HIP_ERROR_CHECK(hipGetLastError());
+}
+
+void triplet_seeding_algorithm::make_mid_top_lincircles_kernel(
+    const make_mid_top_lincircles_kernel_payload& payload) const {
+  const unsigned int n_threads = 128;
+  const unsigned int n_blocks = (payload.nMidTop + n_threads - 1) / n_threads;
+  hipLaunchKernelGGL(kernels::make_mid_top_lincircles, n_blocks, n_threads, 0,
+                     details::get_stream(stream()), payload.mt_doublets,
+                     payload.doublet_counter, payload.spacepoints, payload.grid,
+                     payload.mt_circles);
+  TRACCC_HIP_ERROR_CHECK(hipGetLastError());
+}
+
 void triplet_seeding_algorithm::count_triplets_kernel(
     const count_triplets_kernel_payload& payload) const {
   const unsigned int n_threads = warp_size() * 2;
@@ -218,7 +271,8 @@ void triplet_seeding_algorithm::count_triplets_kernel(
                      details::get_stream(stream()), payload.config,
                      payload.spacepoints, payload.grid, payload.doublet_counter,
                      payload.mb_doublets, payload.mt_doublets,
-                     payload.spM_counter, payload.midBot_counter);
+                     payload.spM_counter, payload.midBot_counter,
+                     payload.mb_circles, payload.mt_circles);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
 }
 
@@ -241,7 +295,8 @@ void triplet_seeding_algorithm::find_triplets_kernel(
                      details::get_stream(stream()), payload.finding_config,
                      payload.filter_config, payload.spacepoints, payload.grid,
                      payload.doublet_counter, payload.mt_doublets,
-                     payload.spM_tc, payload.midBot_tc, payload.triplets);
+                     payload.spM_tc, payload.midBot_tc, payload.mb_circles,
+                     payload.mt_circles, payload.triplets);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
 }
 
