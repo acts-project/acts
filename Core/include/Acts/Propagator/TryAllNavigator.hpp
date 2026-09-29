@@ -355,6 +355,7 @@ class TryAllNavigator final {
   /// @param state The navigation state
   /// @param position The current position
   /// @param direction The current direction
+  /// @param surface The surface reached
   void handleSurfaceReached(State& state, const Vector3& position,
                             const Vector3& direction,
                             const Surface& surface) const {

@@ -79,7 +79,6 @@ struct SurfaceReached {
   /// @tparam navigator_t Type of the navigator
   ///
   /// @param [in,out] state The propagation state object
-  /// @param [in] stepper Stepper used for propagation
   /// @param [in] navigator Navigator used for propagation
   /// @param logger a logger instance
   /// @return true if abort condition is met (surface reached)
