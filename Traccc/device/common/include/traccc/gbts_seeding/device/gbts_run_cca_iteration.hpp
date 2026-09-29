@@ -33,6 +33,8 @@ struct gbts_run_cca_iteration_payload {
   unsigned int max_num_neighbours;
   /// Compacted graph from gbts_compress_graph
   vecmem::data::vector_view<const unsigned int> output_graph;
+  /// Number of neighbours per compacted edge
+  vecmem::data::vector_view<const unsigned char> output_num_neighbours;
   /// In/out: per-edge level, the longest path from the edge in edges,
   /// initialised to 1
   vecmem::data::vector_view<unsigned char> levels;

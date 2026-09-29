@@ -35,6 +35,10 @@ struct gbts_fill_path_store_payload {
   vecmem::data::vector_view<int2> path_store;
   /// Compacted graph (read for per-edge neighbour lookup)
   vecmem::data::vector_view<const unsigned int> output_graph;
+  /// (node1, node2) original spacepoint indices per compacted edge
+  vecmem::data::vector_view<const uint2> output_edge_nodes;
+  /// Number of neighbours per compacted edge
+  vecmem::data::vector_view<const unsigned char> output_num_neighbours;
   /// Per-edge CCA level array
   vecmem::data::vector_view<const unsigned char> levels;
   /// Per-edge (subtree path count, terminus flag) from CCA

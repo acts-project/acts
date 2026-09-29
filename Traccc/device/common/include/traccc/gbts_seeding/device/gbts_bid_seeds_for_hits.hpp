@@ -29,11 +29,8 @@ struct gbts_bid_seeds_for_hits_payload {
   unsigned int nPathsGrid;
   /// Device-side number of paths (clamped to nPathsMax by the kernel)
   vecmem::data::vector_view<const unsigned int> path_count;
-  /// Per-edge row stride in the output graph (= nei_start +
-  /// max_num_neighbours)
-  unsigned int edge_size;
-  /// Compacted graph from gbts_compress_graph
-  vecmem::data::vector_view<const unsigned int> output_graph;
+  /// (node1, node2) original spacepoint indices per compacted edge
+  vecmem::data::vector_view<const uint2> output_edge_nodes;
   /// Per-seed-proposal (quality, path-store index), index -1 if empty
   vecmem::data::vector_view<const int2> seed_proposals;
   /// Per-path (edge index, parent path-store index or -1) entries

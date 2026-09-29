@@ -23,8 +23,8 @@ template <concepts::thread_id1 thread_id_t>
 TRACCC_HOST_DEVICE inline void gbts_bid_seeds_for_hits(
     const thread_id_t& thread_id,
     const gbts_bid_seeds_for_hits_payload& payload) {
-  const vecmem::device_vector<const unsigned int> d_output_graph(
-      payload.output_graph);
+  const vecmem::device_vector<const uint2> d_output_edge_nodes(
+      payload.output_edge_nodes);
   const vecmem::device_vector<const int2> d_path_store(payload.path_store);
   vecmem::device_vector<char> d_seed_ambiguity(payload.seed_ambiguity);
   const vecmem::device_vector<const int2> d_seed_proposals(
@@ -59,15 +59,13 @@ TRACCC_HOST_DEVICE inline void gbts_bid_seeds_for_hits(
     while (path.y >= 0) {
       path = d_path_store[static_cast<unsigned int>(path.y)];
       const unsigned int sp_idx =
-          d_output_graph[payload.edge_size * static_cast<unsigned int>(path.x) +
-                         gbts_consts::node1];
+          d_output_edge_nodes[static_cast<unsigned int>(path.x)].x;
       vecmem::device_atomic_ref<unsigned long long int> atomic_bid(
           d_hit_bids[sp_idx]);
       atomic_bid.fetch_max(seed_bid);
     }
     const unsigned int sp_idx =
-        d_output_graph[payload.edge_size * static_cast<unsigned int>(path.x) +
-                       gbts_consts::node2];
+        d_output_edge_nodes[static_cast<unsigned int>(path.x)].y;
     vecmem::device_atomic_ref<unsigned long long int> atomic_bid(
         d_hit_bids[sp_idx]);
     atomic_bid.fetch_max(seed_bid);

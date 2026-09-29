@@ -38,18 +38,21 @@ struct gbts_compress_graph_payload {
   vecmem::data::vector_view<const unsigned int> neighbours;
   /// Inclusive prefix sum of the per-edge "kept" flags.
   vecmem::data::vector_view<const unsigned int> reIndexer;
-  /// Output: compacted graph in row-major layout; each edge owns a block
-  /// of edge_size = nei_start + nMaxNei ints (node1, node2, nNei,
-  /// nei0..neiN-1).
+  /// Output: compacted neighbour lists in row-major layout; each edge owns
+  /// a block of nMaxNei ints (nei0..neiN-1)
   vecmem::data::vector_view<unsigned int> output_graph;
+  /// Output: (node1, node2) original spacepoint indices per compacted edge
+  vecmem::data::vector_view<uint2> output_edge_nodes;
+  /// Output: number of neighbours per compacted edge
+  vecmem::data::vector_view<unsigned char> output_num_neighbours;
 };
 
 /// @brief Pack kept edges into the compact "output graph" layout.
 ///
 /// Each thread processes one original edge. If it survived re-indexing, the
-/// thread writes a record at its compact slot containing the
-/// source/destination original-SP indices, the neighbour count, and up to
-/// nMaxNei remapped neighbour indices.
+/// thread writes, at its compact slot, the source/destination original-SP
+/// indices, the neighbour count, and up to nMaxNei remapped neighbour
+/// indices.
 ///
 /// @param[in] thread_id Thread identifier for the kernel launch
 /// @param[in] payload   The global memory payload
