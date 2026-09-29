@@ -94,11 +94,6 @@ class caching_navigator
         const track_t &, state_t &, const navigation::config &, const ctx_t &,
         const bool);
 
-    template <typename track_t, typename state_t, typename ctx_t>
-    friend constexpr void navigation::volume_switch(const track_t &, state_t &,
-                                                    const navigation::config &,
-                                                    const ctx_t &);
-
     using base_type =
         navigation::base_state<state, detector_type, k_cache_capacity,
                                inspector_type, intersection_type>;
@@ -343,18 +338,9 @@ class caching_navigator
         navigation.set_no_trust();
       }
     }
-    // Re-initialize the volume (actor flagged 'no trust' or previous trust
-    // level update failed)
-    if (navigation.trust_level() == navigation::trust_level::e_no_trust) {
-      DETRAY_VERBOSE_HOST_DEVICE("Called 'update()' - no trust");
-
-      constexpr bool resolve_overstepping{true};
-      navigation::local_navigation(track, navigation, cfg, ctx,
-                                   resolve_overstepping);
-      return is_init;
-    }
-
-    return !is_init;
+    // Re-initialization of the volume (actor flagged 'no trust' or previous
+    // trust level update failed) is requested by the navigator base
+    return navigation.trust_level() == navigation::trust_level::e_no_trust;
   }
 
   /// Helper to evict all unreachable/invalid candidates from the cache:
