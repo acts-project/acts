@@ -279,9 +279,9 @@ class gbts_seeding_algorithm
   /// Largest number of bin pairs sharing one inner bin
   unsigned int m_maxPairsPerBin1 = 0;
   /// m_config.binTables as (bin1, bin2)
-  std::vector<uint2> m_bin_pairs;
+  vecmem::data::vector_buffer<uint2> m_bin_pairs_buffer;
   /// Per bin pair: index of the first pair with the same bin1
-  std::vector<unsigned int> m_pair_group_begin;
+  vecmem::data::vector_buffer<unsigned int> m_pair_group_begin_buffer;
 
   /// @name Device copies of the configuration tables, uploaded once at
   ///       construction and shared by every event.

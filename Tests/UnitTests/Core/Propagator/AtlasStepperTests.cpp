@@ -92,8 +92,7 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
   Stepper::State state = stepper.makeState(options);
   stepper.initialize(state, cp);
 
-  BOOST_CHECK(!state.covTransport);
-  BOOST_CHECK_EQUAL(state.covariance, nullptr);
+  BOOST_CHECK(!state.cov.has_value());
   BOOST_CHECK_EQUAL(state.pVector[0], pos.x());
   BOOST_CHECK_EQUAL(state.pVector[1], pos.y());
   BOOST_CHECK_EQUAL(state.pVector[2], pos.z());
@@ -120,8 +119,8 @@ BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
   Stepper::State state = stepper.makeState(options);
   stepper.initialize(state, cp);
 
-  BOOST_CHECK(state.covTransport);
-  BOOST_CHECK_EQUAL(*state.covariance, cov);
+  BOOST_CHECK(state.cov.has_value());
+  BOOST_CHECK_EQUAL(*state.cov, cov);
   BOOST_CHECK_EQUAL(state.pVector[0], pos.x());
   BOOST_CHECK_EQUAL(state.pVector[1], pos.y());
   BOOST_CHECK_EQUAL(state.pVector[2], pos.z());
@@ -247,7 +246,9 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
   std::shared_ptr<PlaneSurface> plane =
       CurvilinearSurface(pos, unitDir).planeSurface();
 
-  auto&& [pars, jac, pathLength] = stepper.boundState(state, *plane).value();
+  const Jacobian jac = stepper.transportToBound(state, *plane).value();
+  const auto pars = stepper.boundParameters(state, *plane).value();
+  const double pathLength = stepper.pathLength(state);
   // check parameters
   CHECK_CLOSE_ABS(pars.position(geoCtx), pos, eps);
   CHECK_CLOSE_ABS(pars.time(), time, eps);
@@ -274,7 +275,9 @@ BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
   Stepper::State state = stepper.makeState(options);
   stepper.initialize(state, cp);
 
-  auto&& [pars, jac, pathLength] = stepper.curvilinearState(state);
+  const Jacobian jac = stepper.transportToCurvilinear(state);
+  const auto pars = stepper.curvilinearParameters(state);
+  const double pathLength = stepper.pathLength(state);
   // check parameters
   CHECK_CLOSE_ABS(pars.position(geoCtx), pos, eps);
   CHECK_CLOSE_ABS(pars.time(), time, eps);
@@ -300,7 +303,7 @@ BOOST_AUTO_TEST_CASE(Step) {
 
   auto state = stepper.makeState(options);
   stepper.initialize(state, cp);
-  state.covTransport = false;
+  state.cov.reset();
 
   // ensure step does not result in an error
   auto res = stepper.step(state, Direction::Backward(), nullptr);
@@ -338,7 +341,6 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
 
   auto state = stepper.makeState(options);
   stepper.initialize(state, cp);
-  state.covTransport = true;
 
   // ensure step does not result in an error
   auto res = stepper.step(state, Direction::Backward(), nullptr);
@@ -363,8 +365,8 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   CHECK_CLOSE_ABS(stepper.absoluteMomentum(state), absMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state), charge);
 
-  stepper.transportCovarianceToCurvilinear(state);
-  BOOST_CHECK_NE(state.cov, cov);
+  stepper.transportToCurvilinear(state);
+  BOOST_CHECK_NE(*state.cov, cov);
 }
 
 // test state reset method
@@ -379,7 +381,6 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   auto state = stepper.makeState(options);
   stepper.initialize(state, cp);
-  state.covTransport = true;
 
   // ensure step does not result in an error
   BOOST_CHECK(stepper.step(state, Direction::Backward(), nullptr).ok());
@@ -412,10 +413,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
     copy.pVector = other.pVector;
     std::copy(std::begin(other.parameters), std::end(other.parameters),
               std::begin(copy.parameters));
-    copy.covariance = other.covariance;
-    copy.covTransport = other.covTransport;
-    std::copy(std::begin(other.jacobian), std::end(other.jacobian),
-              std::begin(copy.jacobian));
+    copy.cov = other.cov;
     copy.pathAccumulated = other.pathAccumulated;
     copy.stepSize = other.stepSize;
     copy.previousStepSize = other.previousStepSize;
@@ -438,8 +436,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
   stepper.initialize(stateCopy, cp.parameters(), *cp.covariance(),
                      cp.particleHypothesis(), cp.referenceSurface());
   // Test all components
-  BOOST_CHECK(stateCopy.covTransport);
-  BOOST_CHECK_EQUAL(*stateCopy.covariance, newCov);
+  BOOST_CHECK(stateCopy.cov.has_value());
+  BOOST_CHECK_EQUAL(*stateCopy.cov, newCov);
   BOOST_CHECK_EQUAL(stepper.position(stateCopy),
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
