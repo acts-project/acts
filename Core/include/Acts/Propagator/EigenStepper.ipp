@@ -124,7 +124,7 @@ void Acts::EigenStepper<E>::update(State& state, const FreeVector& freeParams,
                                    const Surface& surface) const {
   state.pars = freeParams;
   if (state.cov.has_value()) {
-    *state.cov = covariance;
+    state.cov = covariance;
   }
   state.jacToGlobal = surface.boundToFreeJacobian(
       state.options.geoContext, freeParams.template segment<3>(eFreePos0),

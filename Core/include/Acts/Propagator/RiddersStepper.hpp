@@ -21,6 +21,7 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -488,14 +489,18 @@ class RiddersStepper final {
 
   /// Set the covariance of the last transport
   ///
-  /// It does nothing if the state does not carry a covariance.
+  /// The state must already carry a covariance, because the stepper only
+  /// transports the Jacobian while it has one.
   ///
   /// @param state the state of the RiddersStepper
   /// @param covariance the new covariance
+  /// @throws std::logic_error if the state does not carry a covariance
   void setCovariance(State& state, const Covariance& covariance) const {
-    if (state.cov.has_value()) {
-      *state.cov = covariance;
+    if (!state.cov.has_value()) {
+      throw std::logic_error(
+          "Cannot set the covariance of a state without a covariance");
     }
+    state.cov = covariance;
   }
 
   /// Get the bound parameters of the primary stepper state

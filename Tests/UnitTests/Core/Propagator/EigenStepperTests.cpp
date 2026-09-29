@@ -53,6 +53,7 @@
 #include <memory>
 #include <numbers>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -181,6 +182,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK(!esState.cov.has_value());
   BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
+  BOOST_CHECK_THROW(es.setCovariance(esState, Covariance::Identity()),
+                    std::logic_error);
 
   // Test without charge and covariance matrix
   BoundTrackParameters ncp = BoundTrackParameters::createCurvilinear(
@@ -199,6 +202,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK(esState.cov.has_value());
   BOOST_CHECK_EQUAL(*esState.cov, cov);
+
+  es.setCovariance(esState, 2. * cov);
+  BOOST_CHECK_EQUAL(*esState.cov, 2. * cov);
 }
 
 /// These tests are aiming to test the functions of the EigenStepper

@@ -28,6 +28,7 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 
@@ -324,14 +325,18 @@ class StraightLineStepper final {
 
   /// Set the covariance at the anchor
   ///
-  /// It does nothing if the state does not carry a covariance.
+  /// The state must already carry a covariance, because the stepper only
+  /// transports the Jacobian while it has one.
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] covariance The new covariance at the anchor
+  /// @throws std::logic_error if the state does not carry a covariance
   void setCovariance(State& state, const Covariance& covariance) const {
-    if (state.cov.has_value()) {
-      *state.cov = covariance;
+    if (!state.cov.has_value()) {
+      throw std::logic_error(
+          "Cannot set the covariance of a state without a covariance");
     }
+    state.cov = covariance;
   }
 
   /// Get the bound parameters at the current position
