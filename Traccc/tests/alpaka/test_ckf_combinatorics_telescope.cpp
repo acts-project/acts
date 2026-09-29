@@ -120,7 +120,7 @@ TEST_P(CkfCombinatoricsTelescopeTests, Run) {
   // Run simulator
   auto sim = traccc::simulator<host_detector_type, b_field_t, generator_type,
                                writer_type>(
-      ptc, n_events, host_detector.as<detector_traits>(),
+      ptc, n_events, host_detector.as<host_detector_type>(),
       field.as_field<traccc::const_bfield_backend_t<traccc::scalar>>(),
       std::move(generator), std::move(smearer_writer_cfg), path.native());
   sim.run();
@@ -130,7 +130,7 @@ TEST_P(CkfCombinatoricsTelescopeTests, Run) {
    *****************************/
 
   // Seed generator
-  seed_generator<host_detector_type> sg(host_detector.as<detector_traits>(),
+  seed_generator<host_detector_type> sg(host_detector.as<host_detector_type>(),
                                         seed_cfg);
 
   // Finding algorithm configuration

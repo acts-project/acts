@@ -1157,19 +1157,9 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
     mwCfg.transform = volume->localToGlobalTransform(tgContext);
     mwCfg.bounds = bounds;
     mwCfg.name = "MultiWireVolume";
+    mwCfg.shiftDirection = AxisDirection::AxisY;
 
-    mwCfg.binning = {{AxisSpec::Equidistant(
-                          static_cast<std::size_t>(std::lround(
-                              2. * bounds->get(eHalfLengthY) / strawPitch)),
-                          -bounds->get(eHalfLengthY), bounds->get(eHalfLengthY),
-                          AxisBoundaryType::Bound, AxisDirection::AxisY),
-                      1u},
-                     {AxisSpec::Equidistant(
-                          static_cast<std::size_t>(std::lround(
-                              2 * bounds->get(eHalfLengthZ) / strawPitch)),
-                          -bounds->get(eHalfLengthZ), bounds->get(eHalfLengthZ),
-                          AxisBoundaryType::Bound, AxisDirection::AxisZ),
-                      1u}};
+    mwCfg.binning = {{AxisDirection::AxisY, 1u}, {AxisDirection::AxisZ, 1u}};
 
     MultiWireVolumeBuilder mwBuilder{mwCfg};
     volume = mwBuilder.buildVolume();
@@ -1178,7 +1168,8 @@ BOOST_AUTO_TEST_CASE(ExternalSurfacesGen3) {
                                Transform3::Identity());
 
     container.addStaticVolume(std::move(volume))
-        .setNavigationPolicyFactory(mwBuilder.createNavigationPolicyFactory());
+        .setNavigationPolicyFactory(
+            mwBuilder.createNavigationPolicyFactory(tgContext));
   }
 
   visualHelper.write("ExternalTest.obj");

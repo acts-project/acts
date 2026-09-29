@@ -130,20 +130,6 @@
             }
         },
         {
-            "name": "detray-sycl",
-            "displayName": "SYCL Developer Configuration",
-            "inherits": [
-                "detray-dev-fp32"
-            ],
-            "cacheVariables": {
-                "DETRAY_BUILD_SYCL": "TRUE",
-                "DETRAY_FASTOR_PLUGIN": "FALSE",
-                "DETRAY_VC_AOS_PLUGIN": "FALSE",
-                "DETRAY_VC_SOA_PLUGIN": "FALSE",
-                "DETRAY_SMATRIX_PLUGIN": "FALSE"
-            }
-        },
-        {
             "name": "detray-hip",
             "displayName": "HIP Developer Configuration",
             "inherits": [
@@ -155,16 +141,6 @@
                 "DETRAY_VC_AOS_PLUGIN": "FALSE",
                 "DETRAY_VC_SOA_PLUGIN": "FALSE",
                 "DETRAY_SMATRIX_PLUGIN": "FALSE"
-            }
-        },
-        {
-            "name": "detray-smatrix",
-            "displayName": "SMatrix Developer Configuration",
-            "inherits": [
-                "detray-default-fp64"
-            ],
-            "cacheVariables": {
-                "DETRAY_SMATRIX_PLUGIN": "TRUE"
             }
         },
         {
@@ -181,28 +157,8 @@
                 "DETRAY_BUILD_UNITTESTS": "TRUE",
                 "DETRAY_BUILD_INTEGRATIONTESTS": "TRUE",
                 "DETRAY_BUILD_CLI_TOOLS": "FALSE",
-                "DETRAY_BUILD_BENCHMARKS": "FALSE",
-                "DETRAY_BUILD_TUTORIALS": "FALSE",
-                "DETRAY_FAIL_ON_WARNINGS": "TRUE",
-                "DETRAY_EIGEN_PLUGIN": "TRUE"
-            }
-        },
-        {
-            "name": "detray-gitlab-sycl-ci",
-            "displayName": "Gitlab SYCL CI Configuration",
-            "inherits": [
-                "detray-default-fp32",
-                "detray-sycl"
-            ],
-            "cacheVariables": {
-                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
-                "BUILD_TESTING": "TRUE",
-                "DETRAY_BUILD_HOST": "FALSE",
-                "DETRAY_BUILD_UNITTESTS": "TRUE",
-                "DETRAY_BUILD_INTEGRATIONTESTS": "TRUE",
-                "DETRAY_BUILD_CLI_TOOLS": "FALSE",
-                "DETRAY_BUILD_BENCHMARKS": "FALSE",
-                "DETRAY_BUILD_TUTORIALS": "FALSE",
+                "DETRAY_BUILD_BENCHMARKS": "TRUE",
+                "DETRAY_BUILD_TUTORIALS": "TRUE",
                 "DETRAY_FAIL_ON_WARNINGS": "TRUE",
                 "DETRAY_EIGEN_PLUGIN": "TRUE"
             }
