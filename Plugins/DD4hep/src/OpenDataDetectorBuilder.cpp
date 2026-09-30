@@ -174,94 +174,123 @@ void addDirectLayerSubsystem(
 void addBarrelEndcapSubsystem(
     const BlueprintBuilder& builder, Acts::ContainerBlueprintNode& outer,
     std::string assembly, std::string det, const std::regex& layerFilter,
-    Acts::CylinderVolumeBounds::Face barrelMaterialFace) {
+    Acts::CylinderVolumeBounds::Face barrelMaterialFace,
+    bool hasOuterBoundaryMaterial) {
   const auto assemblyElement = builder.findDetElementByName(assembly);
   if (!assemblyElement.has_value()) {
     throw std::runtime_error(
         std::format("Could not find assembly '{}'", assembly));
   }
 
-  builder.barrelEndcap()
-      .setAssembly(*assemblyElement)
-      .setSensorAxes("XYZ", "XZY")
-      .setLayerFilter(layerFilter)
-      .onLayer(makeLayerCustomizer(builder, std::move(det), layerFilter,
-                                   barrelMaterialFace))
-      .onContainer([&builder](const dd4hep::DetElement& elem,
-                              Acts::detail::ContainerNodePtr node)
-                       -> Acts::detail::BlueprintNodePtr {
-        node->setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
-        node->setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
-                                  Acts::VolumeResizeStrategy::Gap);
+  auto topNode =
+      builder.barrelEndcap()
+          .setAssembly(*assemblyElement)
+          .setSensorAxes("XYZ", "XZY")
+          .setLayerFilter(layerFilter)
+          .onLayer(makeLayerCustomizer(builder, std::move(det), layerFilter,
+                                       barrelMaterialFace))
+          .onContainer([&builder](const dd4hep::DetElement& elem,
+                                  Acts::detail::ContainerNodePtr node)
+                           -> Acts::detail::BlueprintNodePtr {
+            node->setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
+            node->setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
+                                      Acts::VolumeResizeStrategy::Gap);
 
-        // Pixel endplates: passive carbon-fiber discs beyond the outermost
-        // endcap layer on each side (z=-1950mm / +1950mm). In the ODD XML
-        // they share the same layer_pattern as the sensitive endcap layers
-        // (`PixelEndcapN\d|PixelEndplate`), but carry no sensitive modules of
-        // their own, so the generic sensor-layer discovery that populates
-        // `node` never finds them. Added here as an extra static child of
-        // whichever endcap container actually has one as a direct DD4hep
-        // child -- only PixelEndcapN/PixelEndcapP do, so this is a no-op for
-        // every other container this callback fires for.
-        using enum Acts::CylinderVolumeBounds::Face;
-        for (const auto& child : builder.backend().children(elem)) {
-          if (builder.backend().nameOf(child) != "PixelEndplate") {
-            continue;
-          }
-          auto endplateMat =
-              std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
-                  node->name() + "_endplate_mat");
-          endplateMat->configureFace(
-              NegativeDisc,
-              Acts::AxisSpec::DeferredEquidistant(kMatRBins,
-                                                  Acts::AxisDirection::AxisR),
-              Acts::AxisSpec::DeferredEquidistant(
-                  kMatPhiBins, Acts::AxisDirection::AxisPhi));
-          endplateMat->configureFace(
-              PositiveDisc,
-              Acts::AxisSpec::DeferredEquidistant(kMatRBins,
-                                                  Acts::AxisDirection::AxisR),
-              Acts::AxisSpec::DeferredEquidistant(
-                  kMatPhiBins, Acts::AxisDirection::AxisPhi));
-          endplateMat->addChild(builder.backend().makePassiveDisc(
-              child, node->name() + "_PixelEndplate"));
-          node->addChild(std::move(endplateMat));
-        }
+            // Pixel endplates: passive carbon-fiber discs beyond the outermost
+            // endcap layer on each side (z=-1950mm / +1950mm). In the ODD XML
+            // they share the same layer_pattern as the sensitive endcap layers
+            // (`PixelEndcapN\d|PixelEndplate`), but carry no sensitive modules of
+            // their own, so the generic sensor-layer discovery that populates
+            // `node` never finds them. Added here as an extra static child of
+            // whichever endcap container actually has one as a direct DD4hep
+            // child -- only PixelEndcapN/PixelEndcapP do, so this is a no-op
+            // for every other container this callback fires for.
+            using enum Acts::CylinderVolumeBounds::Face;
+            for (const auto& child : builder.backend().children(elem)) {
+              if (builder.backend().nameOf(child) != "PixelEndplate") {
+                continue;
+              }
+              auto endplateMat =
+                  std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
+                      node->name() + "_endplate_mat");
+              endplateMat->configureFace(
+                  NegativeDisc,
+                  Acts::AxisSpec::DeferredEquidistant(
+                      kMatRBins, Acts::AxisDirection::AxisR),
+                  Acts::AxisSpec::DeferredEquidistant(
+                      kMatPhiBins, Acts::AxisDirection::AxisPhi));
+              endplateMat->configureFace(
+                  PositiveDisc,
+                  Acts::AxisSpec::DeferredEquidistant(
+                      kMatRBins, Acts::AxisDirection::AxisR),
+                  Acts::AxisSpec::DeferredEquidistant(
+                      kMatPhiBins, Acts::AxisDirection::AxisPhi));
+              endplateMat->addChild(builder.backend().makePassiveDisc(
+                  child, node->name() + "_PixelEndplate"));
+              node->addChild(std::move(endplateMat));
+            }
 
-        // This callback fires for every container node the barrelEndcap()
-        // builder creates: each endcap sub-container, the barrel
-        // sub-container, and the combined top-level Z-stack. Only the
-        // *barrel* sub-container (e.g. "PixelBarrel") carries
-        // negative/positive boundary material per the ODD convention; the
-        // combined top-level node must be left alone, since its own
-        // negative/positive discs get fused with its radial neighbor's cap
-        // in the outer AxisR stack, and Acts refuses to fuse two portals
-        // that both carry material.
-        if (!std::string{builder.backend().nameOf(elem)}.ends_with("Barrel")) {
-          return node;
-        }
+            // This callback fires for every container node the barrelEndcap()
+            // builder creates: each endcap sub-container, the barrel
+            // sub-container, and the combined top-level Z-stack. Only the
+            // *barrel* sub-container (e.g. "PixelBarrel") carries
+            // negative/positive boundary material per the ODD convention; the
+            // combined top-level node must be left alone, since its own
+            // negative/positive discs get fused with its radial neighbor's cap
+            // in the outer AxisR stack, and Acts refuses to fuse two portals
+            // that both carry material.
+            if (!std::string{builder.backend().nameOf(elem)}.ends_with(
+                    "Barrel")) {
+              return node;
+            }
 
-        // Container-level material: negative/positive disc faces only. The
-        // outer face is deliberately left alone here -- it collides with the
-        // outermost layer's own material designation on the fused portal
-        // where this container meets its radial neighbor (see the Kategorie
-        // 2 investigation).
-        auto mat = std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
-            node->name() + "_boundary_mat");
-        mat->configureFace(NegativeDisc,
-                           Acts::AxisSpec::DeferredEquidistant(
-                               kMatRBins, Acts::AxisDirection::AxisR),
-                           Acts::AxisSpec::DeferredEquidistant(
-                               kMatPhiBins, Acts::AxisDirection::AxisPhi));
-        mat->configureFace(PositiveDisc,
-                           Acts::AxisSpec::DeferredEquidistant(
-                               kMatRBins, Acts::AxisDirection::AxisR),
-                           Acts::AxisSpec::DeferredEquidistant(
-                               kMatPhiBins, Acts::AxisDirection::AxisPhi));
-        mat->addChild(std::move(node));
-        return mat;
-      })
-      .addTo(outer);
+            // Container-level material: negative/positive disc faces. The outer
+            // face is handled separately below, on the fully Z-stacked
+            // top-level node returned by build() -- not here, since
+            // materializing it on this "Barrel" sub-container (before it gets
+            // Z-stacked together with the endcaps) collides with the subsequent
+            // radius-unification across the whole Z-stack (see the Kategorie 2
+            // investigation).
+            auto mat = std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
+                node->name() + "_boundary_mat");
+            mat->configureFace(NegativeDisc,
+                               Acts::AxisSpec::DeferredEquidistant(
+                                   kMatRBins, Acts::AxisDirection::AxisR),
+                               Acts::AxisSpec::DeferredEquidistant(
+                                   kMatPhiBins, Acts::AxisDirection::AxisPhi));
+            mat->configureFace(PositiveDisc,
+                               Acts::AxisSpec::DeferredEquidistant(
+                                   kMatRBins, Acts::AxisDirection::AxisR),
+                               Acts::AxisSpec::DeferredEquidistant(
+                                   kMatPhiBins, Acts::AxisDirection::AxisPhi));
+            mat->addChild(std::move(node));
+            return mat;
+          })
+          .build();
+
+  if (!hasOuterBoundaryMaterial) {
+    outer.addChild(std::move(topNode));
+    return;
+  }
+
+  // Outer boundary_material: wrap the fully Z-stacked, radius-unified
+  // top-level node returned by build() -- not accessible via onContainer,
+  // since BarrelEndcapAssembler constructs this node directly and adds it as
+  // a child without ever routing it back through that callback. Doing it
+  // here, after the Z-stack's radius has already been unified across
+  // barrel+endcaps, avoids the "merged when stacking" conflict that occurs
+  // when materializing the outer face on a raw pre-stack constituent (see
+  // the Kategorie 2 investigation).
+  using enum Acts::CylinderVolumeBounds::Face;
+  auto outerMat = std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
+      assembly + "_outer_mat");
+  outerMat->configureFace(OuterCylinder,
+                          Acts::AxisSpec::DeferredEquidistant(
+                              kMatPhiBins, Acts::AxisDirection::AxisRPhi),
+                          Acts::AxisSpec::DeferredEquidistant(
+                              kMatZBins, Acts::AxisDirection::AxisZ));
+  outerMat->addChild(std::move(topNode));
+  outer.addChild(std::move(outerMat));
 }
 
 void addDirectLayerGroupedSubsystem(
@@ -373,9 +402,18 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
   // DD4hep XML, since that annotation is ODD-specific and not guaranteed to
   // be available for other detector geometries.
   using enum Acts::CylinderVolumeBounds::Face;
+  // PixelBarrel's own "outer" boundary_material flag shares the exact same
+  // binning constants (mat_pix_barrel_bPhi/bZ) as every individual Pixel
+  // layer's own "outer" layer_material flag -- unlike the LongStrips/Solenoid
+  // case, this isn't two distinct designations that happen to coincide, it's
+  // the same one, re-stated at the container level. Confirmed in Gen1: no
+  // separate container-boundary surface exists anywhere near the Pixel
+  // barrel's outer radius, only the outermost layer's own material. Enabling
+  // it here would double-count that layer's material at a second, nearby but
+  // distinct radius instead of reproducing Gen1's single merged surface.
   addBarrelEndcapSubsystem(builder, outer, "Pixels", "pix",
                            ActsPlugins::DD4hep::detail::kPixelLayerFilter,
-                           OuterCylinder);
+                           OuterCylinder, /*hasOuterBoundaryMaterial=*/false);
 
   // Passive Support Tube (PST): a thin carbon-fiber support cylinder between
   // the Pixel and ShortStrips subsystems. It is not a tracker sub-detector,
@@ -395,10 +433,17 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
 
   addBarrelEndcapSubsystem(builder, outer, "ShortStrips", "ss",
                            ActsPlugins::DD4hep::detail::kShortStripLayerFilter,
-                           InnerCylinder);
+                           InnerCylinder, /*hasOuterBoundaryMaterial=*/true);
+  // LongStripBarrel has no "outer" boundary_material flag of its own in the
+  // XML, but that is only because the adjacent Solenoid's own "inner" flag
+  // is meant to cover this shared boundary instead -- an assumption that
+  // holds in Gen1, where the two volumes are snapped together with no gap,
+  // but not in Gen3, where VolumeAttachmentStrategy::Gap keeps them apart at
+  // their true, distinct radii (see the LongStrips/Solenoid investigation).
+  // Materializing it here restores full coverage of that boundary.
   addBarrelEndcapSubsystem(builder, outer, "LongStrips", "ls",
                            ActsPlugins::DD4hep::detail::kLongStripLayerFilter,
-                           InnerCylinder);
+                           InnerCylinder, /*hasOuterBoundaryMaterial=*/true);
 
   // Solenoid: a passive aluminum tube-shaped element outside LongStrips,
   // structurally identical to the beampipe/PST case. Unlike PST, its ODD XML
