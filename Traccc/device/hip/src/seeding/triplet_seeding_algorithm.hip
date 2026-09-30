@@ -156,11 +156,11 @@ triplet_seeding_algorithm::triplet_seeding_algorithm(
     const spacepoint_grid_config& grid_config,
     const seedfilter_config& filter_config, const traccc::memory_resource& mr,
     const vecmem::copy& copy, const stream_wrapper& str,
-    std::unique_ptr<const Logger> logger)
+    std::unique_ptr<const Logger> logger, await_function_type await_func)
     : device::triplet_seeding_algorithm(finder_config, grid_config,
                                         filter_config, mr, copy,
                                         std::move(logger)),
-      hip::algorithm_base{str} {}
+      hip::algorithm_base{str, std::move(await_func)} {}
 
 void triplet_seeding_algorithm::count_grid_capacities_kernel(
     const count_grid_capacities_kernel_payload& payload) const {
@@ -263,12 +263,18 @@ void triplet_seeding_algorithm::select_seeds_kernel(
   const unsigned int n_threads = warp_size() * 2;
   const unsigned int n_blocks =
       (payload.n_doublets + n_threads - 1) / n_threads;
-  hipLaunchKernelGGL(kernels::select_seeds, n_blocks, n_threads, 0,
+  hipLaunchKernelGGL(kernels::select_seeds, n_blocks, n_threads,
+                     sizeof(device::device_triplet) *
+                         payload.finder_config.maxSeedsPerSpM * n_threads,
                      details::get_stream(stream()), payload.finder_config,
                      payload.filter_config, payload.spacepoints, payload.grid,
                      payload.spM_tc, payload.midBot_tc, payload.triplets,
                      payload.seeds);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
+}
+
+void triplet_seeding_algorithm::synchronize() const {
+  stream().synchronize();
 }
 
 }  // namespace traccc::hip

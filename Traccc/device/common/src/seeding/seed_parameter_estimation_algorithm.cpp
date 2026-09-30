@@ -35,10 +35,10 @@ auto seed_parameter_estimation_algorithm::operator()(
   // Get the number of seeds. In an asynchronous way if possible.
   edm::seed_collection::const_view::size_type n_seeds = 0u;
   if (mr().host) {
-    const vecmem::async_size size = copy().get_size(seeds, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_seeds = size.get();
+    vecmem::async_size size = copy().get_size(seeds, *(mr().host));
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_seeds = size.unsafe_get();
   } else {
     n_seeds = copy().get_size(seeds);
   }

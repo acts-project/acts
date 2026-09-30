@@ -9,7 +9,6 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Utilities/Diagnostics.hpp"
 
 #include <stdexcept>
 
@@ -34,23 +33,6 @@ MaterialSlab ISurfaceMaterial::materialSlab(const Vector2& lp, Direction pDir,
                                             MaterialUpdateMode mode) const {
   // The plain material properties associated to this bin
   MaterialSlab plainMatProp = materialSlab(lp);
-  // Scale if you have material to scale
-  if (!plainMatProp.isVacuum()) {
-    double scaleFactor = factor(pDir, mode);
-    if (scaleFactor == 0.) {
-      return MaterialSlab::Nothing();
-    }
-    plainMatProp.scaleThickness(scaleFactor);
-  }
-  return plainMatProp;
-}
-
-MaterialSlab ISurfaceMaterial::materialSlab(const Vector3& gp, Direction pDir,
-                                            MaterialUpdateMode mode) const {
-  // The plain material properties associated to this bin
-  ACTS_PUSH_IGNORE_DEPRECATED()
-  MaterialSlab plainMatProp = materialSlab(gp);
-  ACTS_POP_IGNORE_DEPRECATED()
   // Scale if you have material to scale
   if (!plainMatProp.isVacuum()) {
     double scaleFactor = factor(pDir, mode);

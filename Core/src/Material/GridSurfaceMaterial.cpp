@@ -157,13 +157,6 @@ const MaterialSlab& GridSurfaceMaterial::materialSlab(const Vector2& lp) const {
       m_storage);
 }
 
-const MaterialSlab& GridSurfaceMaterial::materialSlab(
-    const Vector3& /*gp*/) const {
-  throw std::logic_error(
-      "GridSurfaceMaterial: global (Vector3) material lookup is not "
-      "supported, use materialSlab(const Vector2&) instead.");
-}
-
 ISurfaceMaterial& GridSurfaceMaterial::scale(double factor) {
   std::visit(
       overloaded{

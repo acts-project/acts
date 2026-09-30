@@ -8,7 +8,6 @@
 // Local include(s).
 #include "traccc/options/clusterization.hpp"
 
-#include "traccc/clusterization/clusterization_algorithm.hpp"
 #include "traccc/examples/utils/printable.hpp"
 
 namespace traccc::opts {
@@ -38,10 +37,6 @@ clusterization::clusterization() : interface("Clusterization Options") {
 
 clusterization::operator clustering_config() const {
   return m_config;
-}
-
-clusterization::operator host::clusterization_algorithm::config_type() const {
-  return {};
 }
 
 std::unique_ptr<configuration_printable> clusterization::as_printable() const {

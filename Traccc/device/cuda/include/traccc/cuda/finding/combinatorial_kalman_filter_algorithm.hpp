@@ -9,6 +9,7 @@
 
 // Local include(s).
 #include "traccc/cuda/utils/algorithm_base.hpp"
+#include "traccc/cuda/utils/await.hpp"
 
 // Project include(s).
 #include "traccc/cuda/fitting/kalman_fitting_algorithm.hpp"
@@ -27,7 +28,8 @@ class combinatorial_kalman_filter_algorithm
       const vecmem::copy& copy, const stream_wrapper& str,
       std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
       std::unique_ptr<traccc::cuda::kalman_fitting_algorithm> kf_fitter =
-          nullptr);
+          nullptr,
+      await_function_type await_func = await_sync_event);
 
  private:
   /// @name Function(s) inherited from

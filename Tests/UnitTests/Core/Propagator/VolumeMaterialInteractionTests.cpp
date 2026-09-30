@@ -71,6 +71,10 @@ struct Stepper {
   ParticleHypothesis particleHypothesis(const StepperState& state) const {
     return state.particleHypothesis;
   };
+
+  bool hasCovariance(const StepperState& state) const {
+    return state.covTransport;
+  }
 };
 
 /// @brief Simplified navigator

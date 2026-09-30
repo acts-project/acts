@@ -1,0 +1,163 @@
+{
+    "Surfaces": {
+        "acts-geometry-hierarchy-map": {
+            "format-version": 0,
+            "value-identifier": "Material Surface Map"
+        },
+        "entries": [
+            {
+                "approach": 1,
+                "layer": 2,
+                "value": {
+                    "material": {
+                        "binUtility": {
+                            "binningdata": [
+                                {
+                                    "bins": 2,
+                                    "max": 100.0,
+                                    "min": -100.0,
+                                    "option": "open",
+                                    "type": "equidistant",
+                                    "value": "AxisZ"
+                                }
+                            ]
+                        },
+                        "data": [
+                            [
+                                {
+                                    "material": [
+                                        93.69999694824219,
+                                        465.20001220703125,
+                                        28.085500717163086,
+                                        14.0,
+                                        8.292535494547337e-05
+                                    ],
+                                    "thickness": 0.15000000596046448
+                                },
+                                {
+                                    "material": null,
+                                    "thickness": 0.0
+                                }
+                            ]
+                        ],
+                        "mapMaterial": true,
+                        "mappingType": "Default",
+                        "type": "binned"
+                    }
+                },
+                "volume": 1
+            },
+            {
+                "boundary": 1,
+                "value": {
+                    "material": {
+                        "data": [
+                            [
+                                {
+                                    "material": [
+                                        93.69999694824219,
+                                        465.20001220703125,
+                                        28.085500717163086,
+                                        14.0,
+                                        8.292535494547337e-05
+                                    ],
+                                    "thickness": 0.15000000596046448
+                                }
+                            ]
+                        ],
+                        "mapMaterial": true,
+                        "mappingType": "PreMapping",
+                        "type": "homogeneous"
+                    }
+                },
+                "volume": 1
+            },
+            {
+                "layer": 4,
+                "value": {
+                    "material": {
+                        "accessor": {
+                            "grid": {
+                                "axes": [
+                                    {
+                                        "bins": 1,
+                                        "boundary_type": "Bound",
+                                        "range": [
+                                            -100.0,
+                                            100.0
+                                        ],
+                                        "type": "Equidistant"
+                                    },
+                                    {
+                                        "bins": 1,
+                                        "boundary_type": "Bound",
+                                        "range": [
+                                            -100.0,
+                                            100.0
+                                        ],
+                                        "type": "Equidistant"
+                                    }
+                                ],
+                                "data": [
+                                    [
+                                        [
+                                            1,
+                                            1
+                                        ],
+                                        1
+                                    ]
+                                ]
+                            },
+                            "storage_vector": [
+                                {
+                                    "material": null,
+                                    "thickness": 0.0
+                                },
+                                {
+                                    "material": [
+                                        93.69999694824219,
+                                        465.20001220703125,
+                                        28.085500717163086,
+                                        14.0,
+                                        8.292535494547337e-05
+                                    ],
+                                    "thickness": 0.15000000596046448
+                                }
+                            ],
+                            "type": "indexed"
+                        },
+                        "mapMaterial": true,
+                        "type": "grid"
+                    }
+                },
+                "volume": 2
+            }
+        ]
+    },
+    "Volumes": {
+        "acts-geometry-hierarchy-map": {
+            "format-version": 0,
+            "value-identifier": "Material Volume Map"
+        },
+        "entries": [
+            {
+                "value": {
+                    "material": {
+                        "data": [
+                            [
+                                93.69999694824219,
+                                465.20001220703125,
+                                28.085500717163086,
+                                14.0,
+                                8.292535494547337e-05
+                            ]
+                        ],
+                        "mapMaterial": true,
+                        "type": "homogeneous"
+                    }
+                },
+                "volume": 1
+            }
+        ]
+    }
+}

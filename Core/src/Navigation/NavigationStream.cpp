@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
 
@@ -19,23 +20,17 @@ namespace Acts {
 
 bool NavigationStream::initialize(const GeometryContext& gctx,
                                   const QueryPoint& queryPoint,
-                                  const BoundaryTolerance& cTolerance,
+                                  const Logger& logger,
                                   const double onSurfaceTolerance,
                                   const bool candidatesAreUnique) {
   // Position and direction from the query point
   const Vector3& position = queryPoint.position;
   const Vector3& direction = queryPoint.direction;
 
-  // De-duplicate by surface pointer first, so each surface is intersected only
-  // once in this pass, keeping the first occurrence (in insertion order). This
-  // reproduces the previous std::stable_sort + std::unique result (first-wins),
-  // but in place: it avoids the temporary buffer that std::stable_sort
-  // allocates on every call, which matters on this per-navigation hot path. The
-  // candidate count per volume is small, so the quadratic scan is cheap — but
-  // it is skipped entirely when the caller guarantees uniqueness. (Should a
-  // duplicate slip through regardless, the post-sort unique pass below still
-  // removes it; only the first-wins tolerance selection is then not enforced.)
+  // De-duplicate by surface pointer. The first entry wins, so its tolerance is
+  // the one used.
   if (!candidatesAreUnique) {
+    ACTS_VERBOSE("De-duplicate the candidates:" << m_candidates);
     std::size_t writeIdx = 0;
     for (std::size_t readIdx = 0; readIdx < m_candidates.size(); ++readIdx) {
       const Surface* surface = &m_candidates[readIdx].surface();
@@ -64,8 +59,9 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
     // Get the surface from the object intersection
     const Surface& surface = candidate.surface();
     // Intersect the surface
-    auto multiIntersection = surface.intersect(gctx, position, direction,
-                                               cTolerance, onSurfaceTolerance);
+    auto multiIntersection =
+        surface.intersect(gctx, position, direction,
+                          candidate.boundaryTolerance(), onSurfaceTolerance);
 
     bool firstValid = multiIntersection.at(0).isValid();
     bool secondValid = multiIntersection.at(1).isValid();
@@ -114,6 +110,7 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
 
   // Sort the candidates by path length
   std::ranges::sort(m_candidates, NavigationTarget::pathLengthOrder);
+  ACTS_VERBOSE("Sorted candidates:" << m_candidates);
 
   // If we have duplicates, we expect them to be close by in path length, so we
   // don't need to re-sort Remove duplicates on basis of the surface pointer
@@ -136,15 +133,15 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
                       NavigationTarget::None());
 
   m_currentIndex = 0;
-  if (m_candidates.empty()) {
-    return false;
-  }
-  return true;
+  return isValid();
 }
 
 bool NavigationStream::update(const GeometryContext& gctx,
                               const QueryPoint& queryPoint,
-                              double onSurfaceTolerance) {
+                              const Logger& logger, double onSurfaceTolerance) {
+  ACTS_VERBOSE("Update from position " << toString(queryPoint.position)
+                                       << " and direction "
+                                       << toString(queryPoint.direction));
   // Loop over the (currently valid) candidates and update
   for (; m_currentIndex < m_candidates.size(); ++m_currentIndex) {
     // Get the candidate, and resolve the tuple
@@ -165,6 +162,7 @@ bool NavigationStream::update(const GeometryContext& gctx,
       // Valid solution is either on surface or updates the distance
       if (intersection.isValid()) {
         candidate.intersection() = intersection;
+        ACTS_VERBOSE("Updated candidate " << candidate);
         return true;
       }
     }

@@ -51,7 +51,7 @@
 namespace traccc::sycl {
 namespace kernels {
 
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 struct find_tracks {};
 
 struct condense_tracks {};
@@ -68,7 +68,7 @@ struct progressive_kalman_filter {};
 template <detray::concepts::detector detector_t, typename bfield_t>
 struct propagate_to_next_surface {};
 
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 struct create_device_detector {};
 
 struct gather_best_tips_per_measurement {};
@@ -96,10 +96,10 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
     const edm::measurement_collection::const_view::size_type n_measurements,
     const edm::measurement_collection::const_view& measurements) const {
   return detector_buffer_visitor<detector_type_list>(
-      det, [&]<typename detector_traits_t>(
-               const typename detector_traits_t::view& det) {
+      det, [&]<detray::concepts::detector detector_t>(
+               const detray::detector_view_t<detector_t>& det) {
         // Construct an appropriate device detector object.
-        typename detector_traits_t::device device_det{det};
+        detray::detector_device_t<detector_t> device_det{det};
 
         // Create the result buffer.
         vecmem::data::vector_buffer<
@@ -139,14 +139,14 @@ void combinatorial_kalman_filter_algorithm::progressive_kalman_filter_kernel(
   detector_buffer_magnetic_field_visitor<detector_type_list,
                                          sycl::bfield_type_list<scalar>>(
       detector, field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view& det,
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>& det,
           const bfield_view_t& bfield) {
-        using detector_t = typename detector_traits_t::device;
+        using detector_t = detray::detector_device_t<detector_t>;
         using surface_t = typename detector_t::surface_type;
 
         // Copy the detector data to device memory.
-        vecmem::data::vector_buffer<typename detector_traits_t::view>
+        vecmem::data::vector_buffer<detray::detector_view_t<detector_t>>
             device_det(1u, mr().main);
         copy().setup(device_det)->ignore();
         copy()({1u, &det}, device_det)->ignore();
@@ -163,7 +163,7 @@ void combinatorial_kalman_filter_algorithm::progressive_kalman_filter_kernel(
         // surface.
         squeue.submit([&](::sycl::handler& h) {
           h.parallel_for<kernels::progressive_kalman_filter<
-              detector_tag_selector_t<detector_traits_t>,
+              detector_tag_selector_t<detector_t>,
               bfield_tag_selector_t<typename bfield_view_t::backend_t>>>(
               details::calculate1DimNdRange(n_seeds, warp_size() * 4),
               [config, det = device_det.ptr(), bfield, sf_sequences,
@@ -186,10 +186,10 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
   detector_buffer_visitor<detector_type_list>(
-      detector, [&]<typename detector_traits_t>(
-                    const typename detector_traits_t::view& det) {
+      detector, [&]<detray::concepts::detector detector_t>(
+                    const detray::detector_view_t<detector_t>& det) {
         // Copy the detector data to device memory.
-        vecmem::data::vector_buffer<typename detector_traits_t::view>
+        vecmem::data::vector_buffer<detray::detector_view_t<detector_t>>
             device_det(1u, mr().main);
         copy().setup(device_det)->ignore();
         copy()({1u, &det}, device_det)->ignore();
@@ -208,7 +208,7 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
 
           // Launch the kernel.
           h.parallel_for<
-              kernels::find_tracks<detector_tag_selector_t<detector_traits_t>>>(
+              kernels::find_tracks<detector_tag_selector_t<detector_t>>>(
               details::calculate1DimNdRange(n_threads, deviceThreads),
               [config, det = device_det.ptr(), payload, shared_insertion_mutex,
                shared_candidates, shared_candidates_size,
@@ -218,7 +218,7 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
                 const details::thread_id thread_id{item};
 
                 // Call the device function to find tracks.
-                device::find_tracks<typename detector_traits_t::device>(
+                device::find_tracks<detray::detector_device_t<detector_t>>(
                     thread_id, barrier, config, *det, payload,
                     {.shared_num_out_params = shared_num_out_params[0],
                      .shared_insertion_mutex = &(shared_insertion_mutex[0]),
@@ -344,29 +344,31 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
   detector_buffer_magnetic_field_visitor<detector_type_list,
                                          sycl::bfield_type_list<scalar>>(
       detector, field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view&,
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>&,
           const bfield_view_t& bfield) {
+        using detector_device_t = detray::detector_device_t<detector_t>;
+
         // The detector was already built in global memory by
         // create_device_detector, which dispatched over the same detector
         // type list, so this is the type it stored there.
-        const vecmem::data::vector_buffer<typename detector_traits_t::device>&
+        const vecmem::data::vector_buffer<detector_device_t>&
             device_detector_buffer =
-                device_detector.as<vecmem::data::vector_buffer<
-                    typename detector_traits_t::device>>();
+                device_detector
+                    .as<vecmem::data::vector_buffer<detector_device_t>>();
 
         // Launch the kernel to propagate all active tracks to the next
         // surface.
         squeue.submit([&](::sycl::handler& h) {
           h.parallel_for<kernels::propagate_to_next_surface<
-              detector_tag_selector_t<detector_traits_t>,
+              detector_tag_selector_t<detector_t>,
               bfield_tag_selector_t<typename bfield_view_t::backend_t>>>(
               details::calculate1DimNdRange(n_threads, warp_size() * 4),
               [config, det = device_detector_buffer.ptr(), bfield,
                payload](::sycl::nd_item<1> item) {
                 device::propagate_to_next_surface<
-                    traccc::details::ckf_propagator_t<
-                        typename detector_traits_t::device, bfield_view_t>,
+                    traccc::details::ckf_propagator_t<detector_device_t,
+                                                      bfield_view_t>,
                     bfield_view_t>(details::global_index(item), config, det,
                                    bfield, payload);
               });
@@ -379,9 +381,9 @@ move_only_any combinatorial_kalman_filter_algorithm::create_device_detector(
   ::sycl::queue& squeue = details::get_queue(queue());
   squeue.throw_asynchronous();
   return detector_buffer_visitor<detector_type_list>(
-      det, [&]<typename detector_traits_t>(
-               const typename detector_traits_t::view& det_view) {
-        using device_detector_t = typename detector_traits_t::device;
+      det, [&]<detray::concepts::detector detector_t>(
+               const detray::detector_view_t<detector_t>& det_view) {
+        using device_detector_t = detray::detector_device_t<detector_t>;
 
         static_assert(
             std::is_trivially_destructible_v<device_detector_t>,
@@ -394,7 +396,7 @@ move_only_any combinatorial_kalman_filter_algorithm::create_device_detector(
         // thread of every propagation kernel.
         squeue.submit([&](::sycl::handler& h) {
           h.single_task<kernels::create_device_detector<
-              detector_tag_selector_t<detector_traits_t>>>(
+              detector_tag_selector_t<detector_t>>>(
               [det_view, out = buffer.ptr()]() {
                 new (out) device_detector_t(det_view);
               });

@@ -32,7 +32,8 @@ std::vector<measurement_id_type> read_measurements(
 
   if (detector) {
     host_detector_visitor<detector_type_list>(
-        *detector, [&]<typename detector_t>(const detector_t::host& det) {
+        *detector,
+        [&]<detray::concepts::detector detector_t>(const detector_t& det) {
           for (const auto& surface_desc : det.surfaces()) {
             acts_to_detray_id[surface_desc.source] =
                 surface_desc.identifier().value();

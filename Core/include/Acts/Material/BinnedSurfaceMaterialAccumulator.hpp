@@ -10,8 +10,11 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
+#include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
 #include "Acts/Material/interface/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <optional>
 
 namespace Acts {
 
@@ -38,6 +41,9 @@ class BinnedSurfaceMaterialAccumulator final
     /// The accumulated material per geometry ID
     std::map<GeometryIdentifier, AccumulatedSurfaceMaterial>
         accumulatedMaterial;
+
+    /// Validated surface identities captured by createState.
+    std::optional<detail::MaterialSurfaceRegistry> materialSurfaceRegistry;
   };
 
   /// Constructor
@@ -79,6 +85,14 @@ class BinnedSurfaceMaterialAccumulator final
   std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
   finalizeMaterial(ISurfaceMaterialAccumulator::State& state,
                    const GeometryContext& gctx) const override;
+
+  /// Finalize assignments with the stable keys captured when creating state.
+  /// @param state State created by this accumulator
+  /// @param gctx Geometry context
+  /// @return Finalized keyed and ID-only material maps
+  TrackingGeometryMaterial finalizeMaps(
+      ISurfaceMaterialAccumulator::State& state,
+      const GeometryContext& gctx) const override;
 
  private:
   /// Access method to the logger

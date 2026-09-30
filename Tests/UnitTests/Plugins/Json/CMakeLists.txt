@@ -8,11 +8,20 @@ add_unittest(GridJsonConverter GridJsonConverterTests.cpp)
 add_unittest(IndexGridNavigationJsonConverter IndexGridNavigationJsonConverterTests.cpp)
 add_unittest(MaterialJsonConverter MaterialJsonConverterTests.cpp)
 add_unittest(MaterialMapJsonConverter MaterialMapJsonConverterTests.cpp)
+# Generates the material map example shown in the JSON plugin documentation and
+# fails if the committed file has gone stale.
+add_unittest(
+    MaterialJsonDocumentation
+    MaterialJsonDocumentationTests.cpp
+    "${PROJECT_SOURCE_DIR}/docs/examples/material_map_example.json"
+)
+
 add_unittest(AxisSpecJsonConverter AxisSpecJsonConverterTests.cpp)
 add_unittest(ProtoAxisJsonConverter ProtoAxisJsonConverterTests.cpp)
 add_unittest(UtilitiesJsonConverter UtilitiesJsonConverterTests.cpp)
 add_unittest(SurfaceBoundsJsonConverter SurfaceBoundsJsonConverterTests.cpp)
 add_unittest(SurfaceJsonConverter SurfaceJsonConverterTests.cpp)
+add_unittest(SurfaceMaterialJsonConverter SurfaceMaterialJsonConverterTests.cpp)
 add_unittest(VolumeBoundsJsonConverter VolumeBoundsJsonConverterTests.cpp)
 add_unittest(TrackParametersJsonConverter TrackParametersJsonConverterTests.cpp)
 add_unittest(JsonSurfacesReader JsonSurfacesReaderTests.cpp)

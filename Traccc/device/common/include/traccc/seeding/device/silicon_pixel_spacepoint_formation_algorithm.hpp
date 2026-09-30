@@ -8,6 +8,7 @@
 #pragma once
 
 // Local include(s).
+#include "traccc/device/abstract_awaitable.hpp"
 #include "traccc/device/algorithm_base.hpp"
 
 // Project include(s).
@@ -33,7 +34,8 @@ class silicon_pixel_spacepoint_formation_algorithm
           const detector_buffer&,
           const edm::measurement_collection::const_view&)>,
       public messaging,
-      public algorithm_base {
+      public algorithm_base,
+      public virtual abstract_awaitable {
  public:
   /// Constructor for spacepoint_formation algorithm
   ///

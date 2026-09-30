@@ -45,8 +45,8 @@ struct JsonFileFormat {
 
 /// Whether this build can read and write zstd compressed payloads.
 ///
-/// zstd is an optional dependency: when it is not found at configure time,
-/// writing compressed output and reading a compressed file both throw.
+/// zstd is an optional dependency: when it is disabled or not found in AUTO
+/// mode, writing compressed output and reading a compressed file both throw.
 ///
 /// @return true if zstd support was compiled in
 bool zstdSupported();

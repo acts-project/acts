@@ -59,7 +59,7 @@ class fitting_performance_writer : public messaging {
   /// @param measurements All reconstructed measurements
   /// @param det detector object
   /// @param evt_map event map to find the truth values
-  template <typename detector_t>
+  template <detray::concepts::detector detector_t>
   void write(const edm::track_collection<
                  traccc::default_algebra>::host::proxy_type track,
              const edm::track_state_collection<traccc::default_algebra>::host&

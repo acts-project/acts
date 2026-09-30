@@ -40,7 +40,7 @@ GTEST_TEST(detray_builders, surface_factory) {
   using namespace detray;
 
   using metadata_t = test::default_metadata;
-  using detector_t = detector<metadata_t>;
+  using detector_t = host::detector<metadata_t>;
   using transform3 = dtransform3D<typename detector_t::algebra_type>;
 
   //
@@ -207,7 +207,7 @@ GTEST_TEST(detray_builders, volume_builder) {
   vecmem::host_memory_resource host_mr;
 
   using metadata_t = test::default_metadata;
-  using detector_t = detector<metadata_t>;
+  using detector_t = host::detector<metadata_t>;
   using transform3 = typename detector_t::transform3_type;
 
   detector_t d(host_mr);

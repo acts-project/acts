@@ -26,7 +26,8 @@ namespace traccc::device {
 namespace detail {
 
 struct Tracklet {
-  unsigned int nodes[traccc::device::gbts_consts::max_cca_iter + 1];
+  unsigned int
+      nodes[traccc::device::gbts_consts::max_seed_candidate_length + 1];
   int size;
 };
 
@@ -90,22 +91,30 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
   const bool use_dropout = payload.gbts_convert_seeds_params.use_dropout;
 
   // Row-major output graph: each edge owns a contiguous block of
-  // edge_size = 2 + 1 + max_num_neighbours ints.
-  const unsigned int edge_size = 2u + 1u + payload.max_num_neighbours;
+  // nei_start + max_num_neighbours ints ([node1, node2, nNei, nei0..]).
+  const unsigned int edge_size =
+      gbts_consts::nei_start + payload.max_num_neighbours;
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
   const unsigned int gridDimX = thread_id.getGridDimX();
 
-  for (unsigned int prop_idx = globalIdx; prop_idx < payload.nProps;
+  const unsigned int path_count =
+      vecmem::device_vector<const unsigned int>(payload.path_count)[0];
+  const unsigned int nPaths =
+      (path_count < payload.nPathsMax) ? path_count : payload.nPathsMax;
+  for (unsigned int prop_idx = globalIdx; prop_idx < nPaths;
        prop_idx += blockDimX * gridDimX) {
+    const int2 prop = d_seed_proposals[prop_idx];
+    if (prop.y < 0) {
+      continue;
+    }
     if (d_seed_ambiguity[prop_idx] == -2) {
       continue;
     }
     char best_for_hit = 0;
     detail::Tracklet seed;
     seed.size = 0;
-    const int2 prop = d_seed_proposals[prop_idx];
     int2 path = int2{0, prop.y};
     while (path.y >= 0) {
       path = d_path_store[static_cast<unsigned int>(path.y)];

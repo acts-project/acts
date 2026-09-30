@@ -43,7 +43,7 @@ class PropagationValidation
           std::tuple<scalar, unsigned int, float, float>> {};
 
 TEST_P(PropagationValidation, forward_backward) {
-  using detector_t = detector<toy_metadata<test_algebra>>;
+  using detector_t = host::detector<toy_metadata<test_algebra>>;
   using algebra_t = detector_t::algebra_type;
   using bfield_t = bfield::const_field_t<scalar>;
   using track_t = free_track_parameters<algebra_t>;

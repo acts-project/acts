@@ -1,0 +1,84 @@
+/** TRACCC library, part of the ACTS project (R&D line)
+ *
+ * (c) 2026 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+#pragma once
+
+// Local include(s).
+#include "traccc/hip/utils/algorithm_base.hpp"
+#include "traccc/hip/utils/await.hpp"
+
+// Project include(s).
+#include "traccc/gbts_seeding/device/gbts_seeding_algorithm.hpp"
+
+namespace traccc::hip {
+
+/// @brief Main algorithm for performing GBTS seeding on a HIP device.
+///
+/// This algorithm returns a buffer which is not necessarily filled yet. A
+/// synchronisation statement is required before destroying this buffer.
+///
+class gbts_seeding_algorithm : public device::gbts_seeding_algorithm,
+                               public hip::algorithm_base {
+ public:
+  /// Constructor for the GBTS seed finding algorithm
+  ///
+  /// @param cfg The GBTS seed finding configuration
+  /// @param mr The memory resource(s) to use in the algorithm
+  /// @param copy The copy object to use for copying data between device
+  ///             and host memory blocks
+  /// @param str The HIP stream to perform the operations in
+  /// @param logger The logger instance to use
+  /// @param await_func The function to use for synchronizing events
+  ///
+  gbts_seeding_algorithm(
+      const gbts_seedfinder_config& cfg, const memory_resource& mr,
+      const vecmem::copy& copy, const stream_wrapper& str,
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
+      await_function_type await_func = await_sync_event);
+
+ private:
+  /// @name Function(s) inherited from @c
+  /// traccc::device::gbts_seeding_algorithm
+  /// @{
+
+  void gbts_bin_spacepoints_kernel(
+      const device::gbts_bin_spacepoints_payload& payload) const override;
+  void gbts_sort_nodes_kernel(
+      const device::gbts_sort_nodes_payload& payload) const override;
+  void gbts_find_minmax_radius_kernel(
+      const device::gbts_find_minmax_radius_payload& payload) const override;
+  void gbts_build_edge_work_list_kernel(
+      const device::gbts_build_edge_work_list_payload& payload) const override;
+  void gbts_count_graph_edges_kernel(
+      const device::gbts_count_graph_edges_payload& payload) const override;
+  void gbts_fill_graph_edges_kernel(
+      const device::gbts_fill_graph_edges_payload& payload) const override;
+  void gbts_match_graph_edges_kernel(
+      const device::gbts_match_graph_edges_payload& payload) const override;
+  void gbts_compress_graph_kernel(
+      const device::gbts_compress_graph_payload& payload) const override;
+  void gbts_run_cca_iteration_kernel(
+      const device::gbts_run_cca_iteration_payload& payload) const override;
+  void gbts_finish_cca_kernel(
+      const device::gbts_finish_cca_payload& payload) const override;
+  void gbts_count_paths_kernel(
+      const device::gbts_count_paths_payload& payload) const override;
+  void gbts_fill_path_store_kernel(
+      const device::gbts_fill_path_store_payload& payload) const override;
+  void gbts_bid_seeds_for_hits_kernel(
+      const device::gbts_bid_seeds_for_hits_payload& payload) const override;
+  void gbts_convert_seeds_kernel(
+      const device::gbts_convert_seeds_payload& payload) const override;
+
+  /// @}
+
+  /// Wait for outstanding work on the algorithm stream or queue.
+  void synchronize() const override;
+
+};  // class gbts_seeding_algorithm
+
+}  // namespace traccc::hip

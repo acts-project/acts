@@ -62,7 +62,8 @@ void addTrackFinding(py::module& mex) {
       zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit, seedWeightIncrement,
       numSeedIncrement, seedConfirmation, centralSeedConfirmationRange,
       forwardSeedConfirmationRange, maxSeedsPerSpMConf,
-      maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useExtraCuts,
+      maxQualitySeedsPerSpMConf, useDeltaRinsteadOfTopRadius, useTimeDoubletCut,
+      doubletTimeCutNSigma, useTimeTripletCut, tripletTimeChi2Max, useExtraCuts,
       inputVertices, vertexZNSigma, vertexZMargin);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
@@ -89,11 +90,11 @@ void addTrackFinding(py::module& mex) {
     patchKwargsConstructor(c);
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(GraphBasedSeedingAlgorithm, mex,
-                                "GraphBasedSeedingAlgorithm", inputSpacePoints,
-                                outputSeeds, seedFinderConfig, layerMappingFile,
-                                connectorInputFile, lutInputFile,
-                                trackingGeometry, fillModuleCsv, inputClusters);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      GraphBasedSeedingAlgorithm, mex, "GraphBasedSeedingAlgorithm",
+      inputSpacePoints, outputSeeds, seedFinderConfig, layerMappingFile,
+      connectorInputFile, lutInputFile, trackingGeometry, fillModuleCsv,
+      inputClusters, bFieldInZ);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,
