@@ -85,7 +85,9 @@ void addDetector(py::module& mex) {
     auto d =
         py::class_<TelescopeDetector, Detector,
                    std::shared_ptr<TelescopeDetector>>(mex, "TelescopeDetector")
-            .def(py::init<const TelescopeDetector::Config&>());
+            .def(py::init<const TelescopeDetector::Config&>())
+            .def("getReferenceSurface", &TelescopeDetector::getReferenceSurface,
+                 py::arg("position"), py::arg("halfX"), py::arg("halfY"));
 
     auto c =
         py::class_<TelescopeDetector::Config>(d, "Config").def(py::init<>());
