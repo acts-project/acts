@@ -118,6 +118,83 @@ auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
   };
 }
 
+// Beampipe material, identical across all three construction methods.
+void addBeampipe(const BlueprintBuilder& builder,
+                 Acts::ContainerBlueprintNode& outer) {
+  using enum Acts::CylinderVolumeBounds::Face;
+  outer.addMaterial(
+      "Beampipe_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
+        mat.configureFace(OuterCylinder,
+                          Acts::AxisSpec::DeferredEquidistant(
+                              kMatPhiBins, Acts::AxisDirection::AxisRPhi),
+                          Acts::AxisSpec::DeferredEquidistant(
+                              kMatZBins, Acts::AxisDirection::AxisZ));
+        mat.addChild(builder.backend().makeBeampipe());
+      });
+}
+
+// A single standalone passive tube-shaped element (e.g. PST, Solenoid):
+// looked up by name, materialized on the given faces, and added as a child
+// of `outer`. A no-op if `elementName` does not exist in this geometry.
+// Identical across all three construction methods.
+void addPassiveCylinder(
+    const BlueprintBuilder& builder, Acts::ContainerBlueprintNode& outer,
+    const std::string& elementName,
+    std::initializer_list<Acts::CylinderVolumeBounds::Face> faces) {
+  const auto element = builder.findDetElementByName(elementName);
+  if (!element.has_value()) {
+    return;
+  }
+  outer.addMaterial(
+      elementName + "_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
+        for (const auto face : faces) {
+          mat.configureFace(face,
+                            Acts::AxisSpec::DeferredEquidistant(
+                                kMatPhiBins, Acts::AxisDirection::AxisRPhi),
+                            Acts::AxisSpec::DeferredEquidistant(
+                                kMatZBins, Acts::AxisDirection::AxisZ));
+        }
+        mat.addChild(builder.backend().makePassiveCylinder(*element));
+      });
+}
+
+// Pixel endplates: passive carbon-fiber discs beyond the outermost endcap
+// layer on each side (z=-1950mm / +1950mm). In the ODD XML they share the
+// same layer_pattern as the sensitive endcap layers
+// (`PixelEndcapN\d|PixelEndplate`), but carry no sensitive modules of their
+// own, so the generic sensor-layer discovery that populates `endcapNode`
+// never finds them. Added here as an extra static child of whichever endcap
+// element actually has one as a direct DD4hep child -- only
+// PixelEndcapN/PixelEndcapP do, so this is a no-op everywhere else. Shared
+// across all three construction methods, each of which builds its own
+// per-endcap node differently but always has both the DD4hep endcap element
+// and its resulting node available at the same point.
+void addPixelEndplateIfPresent(const BlueprintBuilder& builder,
+                               const dd4hep::DetElement& endcapElement,
+                               Acts::BlueprintNode& endcapNode) {
+  using enum Acts::CylinderVolumeBounds::Face;
+  for (const auto& child : builder.backend().children(endcapElement)) {
+    if (builder.backend().nameOf(child) != "PixelEndplate") {
+      continue;
+    }
+    auto endplateMat = std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
+        endcapNode.name() + "_endplate_mat");
+    endplateMat->configureFace(NegativeDisc,
+                               Acts::AxisSpec::DeferredEquidistant(
+                                   kMatRBins, Acts::AxisDirection::AxisR),
+                               Acts::AxisSpec::DeferredEquidistant(
+                                   kMatPhiBins, Acts::AxisDirection::AxisPhi));
+    endplateMat->configureFace(PositiveDisc,
+                               Acts::AxisSpec::DeferredEquidistant(
+                                   kMatRBins, Acts::AxisDirection::AxisR),
+                               Acts::AxisSpec::DeferredEquidistant(
+                                   kMatPhiBins, Acts::AxisDirection::AxisPhi));
+    endplateMat->addChild(builder.backend().makePassiveDisc(
+        child, endcapNode.name() + "_PixelEndplate"));
+    endcapNode.addChild(std::move(endplateMat));
+  }
+}
+
 void addDirectLayerSubsystem(
     const BlueprintBuilder& builder, Acts::ContainerBlueprintNode& outer,
     std::string assembly, std::string det, const std::regex& layerFilter,
@@ -144,6 +221,7 @@ void addDirectLayerSubsystem(
       node->setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
       node->setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
                                 Acts::VolumeResizeStrategy::Gap);
+      addPixelEndplateIfPresent(builder, element, *node);
       containerNode->addChild(std::move(node));
     }
   };
@@ -196,39 +274,8 @@ void addBarrelEndcapSubsystem(
             node->setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
                                       Acts::VolumeResizeStrategy::Gap);
 
-            // Pixel endplates: passive carbon-fiber discs beyond the outermost
-            // endcap layer on each side (z=-1950mm / +1950mm). In the ODD XML
-            // they share the same layer_pattern as the sensitive endcap layers
-            // (`PixelEndcapN\d|PixelEndplate`), but carry no sensitive modules of
-            // their own, so the generic sensor-layer discovery that populates
-            // `node` never finds them. Added here as an extra static child of
-            // whichever endcap container actually has one as a direct DD4hep
-            // child -- only PixelEndcapN/PixelEndcapP do, so this is a no-op
-            // for every other container this callback fires for.
             using enum Acts::CylinderVolumeBounds::Face;
-            for (const auto& child : builder.backend().children(elem)) {
-              if (builder.backend().nameOf(child) != "PixelEndplate") {
-                continue;
-              }
-              auto endplateMat =
-                  std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
-                      node->name() + "_endplate_mat");
-              endplateMat->configureFace(
-                  NegativeDisc,
-                  Acts::AxisSpec::DeferredEquidistant(
-                      kMatRBins, Acts::AxisDirection::AxisR),
-                  Acts::AxisSpec::DeferredEquidistant(
-                      kMatPhiBins, Acts::AxisDirection::AxisPhi));
-              endplateMat->configureFace(
-                  PositiveDisc,
-                  Acts::AxisSpec::DeferredEquidistant(
-                      kMatRBins, Acts::AxisDirection::AxisR),
-                  Acts::AxisSpec::DeferredEquidistant(
-                      kMatPhiBins, Acts::AxisDirection::AxisPhi));
-              endplateMat->addChild(builder.backend().makePassiveDisc(
-                  child, node->name() + "_PixelEndplate"));
-              node->addChild(std::move(endplateMat));
-            }
+            addPixelEndplateIfPresent(builder, elem, *node);
 
             // This callback fires for every container node the barrelEndcap()
             // builder creates: each endcap sub-container, the barrel
@@ -357,6 +404,7 @@ void addDirectLayerGroupedSubsystem(
     endcapNode->setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
     endcapNode->setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
                                     Acts::VolumeResizeStrategy::Gap);
+    addPixelEndplateIfPresent(builder, endcap, *endcapNode);
     containerNode->addChild(std::move(endcapNode));
   }
 
@@ -385,15 +433,7 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  outer.addMaterial(
-      "Beampipe_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
-        using enum Acts::CylinderVolumeBounds::Face;
-        mat.configureFace(
-            OuterCylinder,
-            Acts::AxisSpec::DeferredEquidistant(kMatPhiBins, AxisRPhi),
-            Acts::AxisSpec::DeferredEquidistant(kMatZBins, AxisZ));
-        mat.addChild(builder.backend().makeBeampipe());
-      });
+  addBeampipe(builder, outer);
 
   // Per-subsystem barrel material face: matches the ODDs own convention
   // (Pixel layers carry material on their outer face, ShortStrips/LongStrips
@@ -417,19 +457,8 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
 
   // Passive Support Tube (PST): a thin carbon-fiber support cylinder between
   // the Pixel and ShortStrips subsystems. It is not a tracker sub-detector,
-  // just a single passive tube-shaped element with its own material, so it
-  // is inserted directly rather than via addBarrelEndcapSubsystem.
-  if (const auto pstElement = builder.findDetElementByName("PST");
-      pstElement.has_value()) {
-    outer.addMaterial(
-        "PST_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
-          mat.configureFace(
-              OuterCylinder,
-              Acts::AxisSpec::DeferredEquidistant(kMatPhiBins, AxisRPhi),
-              Acts::AxisSpec::DeferredEquidistant(kMatZBins, AxisZ));
-          mat.addChild(builder.backend().makePassiveCylinder(*pstElement));
-        });
-  }
+  // just a single passive tube-shaped element with its own material.
+  addPassiveCylinder(builder, outer, "PST", {OuterCylinder});
 
   addBarrelEndcapSubsystem(builder, outer, "ShortStrips", "ss",
                            ActsPlugins::DD4hep::detail::kShortStripLayerFilter,
@@ -450,21 +479,8 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
   // carries both a `layer_material surface="representing"` (-> outer face,
   // same convention as PST/beampipe) and a `boundary_material surface="inner"`
   // (-> inner face) on the same element.
-  if (const auto solenoidElement = builder.findDetElementByName("Solenoid");
-      solenoidElement.has_value()) {
-    outer.addMaterial(
-        "Solenoid_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
-          mat.configureFace(
-              InnerCylinder,
-              Acts::AxisSpec::DeferredEquidistant(kMatPhiBins, AxisRPhi),
-              Acts::AxisSpec::DeferredEquidistant(kMatZBins, AxisZ));
-          mat.configureFace(
-              OuterCylinder,
-              Acts::AxisSpec::DeferredEquidistant(kMatPhiBins, AxisRPhi),
-              Acts::AxisSpec::DeferredEquidistant(kMatZBins, AxisZ));
-          mat.addChild(builder.backend().makePassiveCylinder(*solenoidElement));
-        });
-  }
+  addPassiveCylinder(builder, outer, "Solenoid",
+                     {InnerCylinder, OuterCylinder});
 
   return root.construct(BlueprintOptions{}, gctx, logger);
 }
@@ -489,26 +505,21 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  outer.addMaterial(
-      "Beampipe_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
-        using enum Acts::CylinderVolumeBounds::Face;
-        mat.configureFace(
-            OuterCylinder,
-            Acts::AxisSpec::DeferredEquidistant(kMatPhiBins, AxisRPhi),
-            Acts::AxisSpec::DeferredEquidistant(kMatZBins, AxisZ));
-        mat.addChild(builder.backend().makeBeampipe());
-      });
+  addBeampipe(builder, outer);
 
   using enum Acts::CylinderVolumeBounds::Face;
   addDirectLayerSubsystem(builder, outer, "Pixels", "pix",
                           ActsPlugins::DD4hep::detail::kPixelLayerFilter,
                           OuterCylinder);
+  addPassiveCylinder(builder, outer, "PST", {OuterCylinder});
   addDirectLayerSubsystem(builder, outer, "ShortStrips", "ss",
                           ActsPlugins::DD4hep::detail::kShortStripLayerFilter,
                           InnerCylinder);
   addDirectLayerSubsystem(builder, outer, "LongStrips", "ls",
                           ActsPlugins::DD4hep::detail::kLongStripLayerFilter,
                           InnerCylinder);
+  addPassiveCylinder(builder, outer, "Solenoid",
+                     {InnerCylinder, OuterCylinder});
 
   return root.construct(BlueprintOptions{}, gctx, logger);
 }
@@ -533,26 +544,21 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayerGrouped(
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  outer.addMaterial(
-      "Beampipe_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
-        using enum Acts::CylinderVolumeBounds::Face;
-        mat.configureFace(
-            OuterCylinder,
-            Acts::AxisSpec::DeferredEquidistant(kMatPhiBins, AxisRPhi),
-            Acts::AxisSpec::DeferredEquidistant(kMatZBins, AxisZ));
-        mat.addChild(builder.backend().makeBeampipe());
-      });
+  addBeampipe(builder, outer);
 
   using enum Acts::CylinderVolumeBounds::Face;
   addDirectLayerGroupedSubsystem(builder, outer, "Pixels", "pix",
                                  ActsPlugins::DD4hep::detail::kPixelLayerFilter,
                                  OuterCylinder);
+  addPassiveCylinder(builder, outer, "PST", {OuterCylinder});
   addDirectLayerGroupedSubsystem(
       builder, outer, "ShortStrips", "ss",
       ActsPlugins::DD4hep::detail::kShortStripLayerFilter, InnerCylinder);
   addDirectLayerGroupedSubsystem(
       builder, outer, "LongStrips", "ls",
       ActsPlugins::DD4hep::detail::kLongStripLayerFilter, InnerCylinder);
+  addPassiveCylinder(builder, outer, "Solenoid",
+                     {InnerCylinder, OuterCylinder});
 
   return root.construct(BlueprintOptions{}, gctx, logger);
 }
