@@ -32,7 +32,7 @@ You can then simply run `pytest` from the repository root.
 
 Tests are grouped by optional dependency using pytest markers: `csv`, `obj`, `root`, `json`,
 `slow`, `edm4hep`, `odd`, `hepmc3`, and `pypi`. `pypi` marks the subset that only exercises what
-the PyPI wheel actually provides (see @ref python_installation) — this is what `cibuildwheel`
+the PyPI wheel actually provides (see @ref python_bindings) — this is what `cibuildwheel`
 runs as the wheel smoke test. Run one marker's subset with:
 
 ```console

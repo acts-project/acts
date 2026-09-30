@@ -16,12 +16,9 @@
 
     <tab type="usergroup" title="Python Bindings" url="[none]">
       <tab type="user" url="@ref python_bindings" visible="yes" title="Overview"/>
-      <tab type="user" url="@ref python_installation" visible="yes" title="Installation"/>
-      <tab type="user" url="@ref python_getting_started" visible="yes" title="Getting started"/>
       <tab type="user" url="@ref python_custom_algorithms" visible="yes" title="Custom algorithms"/>
       <tab type="user" url="@ref python_data_io" visible="yes" title="Data reading and writing"/>
       <tab type="user" url="@ref python_performance_plotting" visible="yes" title="Performance evaluation and plotting"/>
-      <tab type="user" url="@ref python_caveats" visible="yes" title="Best practices and caveats"/>
     </tab>
 
     <tab type="usergroup" title="Contribution" url="[none]">

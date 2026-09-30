@@ -5,7 +5,7 @@
 # Reader/writer inventory
 
 Every reader and writer is a `SequenceElement` added via `s.addReader(...)`/`s.addWriter(...)`.
-Formats available depend on which plugins were built (see @ref python_installation for what the
+Formats available depend on which plugins were built (see @ref python_bindings for what the
 PyPI wheel includes):
 
 - **CSV** (`acts.examples`) — always available: `Csv{Particle,Measurement,SimHit,SpacePoint,
