@@ -16,6 +16,7 @@ on:
       - ".github/workflows/detray.yml"
       - ".github/actions/ccache-s3/**"
       - "CI/ccache_snapshot.py*"
+      - "CI/ccache_stats.sh"
       - ".github/detray-traccc-filters.yml"
   pull_request:
     branches:
@@ -26,6 +27,7 @@ on:
       - ".github/workflows/detray.yml"
       - ".github/actions/ccache-s3/**"
       - "CI/ccache_snapshot.py*"
+      - "CI/ccache_stats.sh"
       - ".github/detray-traccc-filters.yml"
   # The changes job applies path filtering to merge groups, which do not
   # support the workflow-level path filters above.
@@ -109,9 +111,9 @@ jobs:
       run: |
         if [[ "$RUNNER_OS" == Linux ]]; then
           sudo apt-get update
-          sudo apt-get install -y ccache
+          sudo apt-get install -y ccache jq
         else
-          brew install ccache
+          brew install ccache jq
         fi
 
     - name: Restore ccache snapshot
@@ -513,8 +515,9 @@ jobs:
         source ${GITHUB_WORKSPACE}/.env
         cmake --build build --target all detray_headers
 
-    - name: ccache stats
-      run: ccache -s
+    - name: ccache statistics
+      if: always()
+      uses: ./.github/actions/ccache-s3/stats
 
     - name: Clean ccache before publication
       if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'

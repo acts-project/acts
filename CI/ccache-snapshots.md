@@ -30,3 +30,10 @@ existing 30-day S3 lifecycle applies to snapshots and pointers.
 
 Compare GitHub's restore, build, and publish step durations and ccache statistics.
 Do not set `CCACHE_BASEDIR`: path rewriting breaks source-path FPE masks.
+
+Job logs include a compact `CCACHE_STATS ` JSON record before explicit cleanup.
+The reporter checks jq and ccache JSON support; failures warn without emitting
+a measurement or failing the build. EIC and Key4hep counters cover both build
+phases. Wheels report inside their build environment before tests; a wheel
+compilation/repair failure before that hook produces no record. Missing records
+must not be treated as zero.

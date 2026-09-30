@@ -142,15 +142,15 @@ jobs:
           CI/dependencies/run.sh .env
           ctest --test-dir build-downstream --output-on-failure
 
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
+
       - name: Clean ccache before publication
         id: ccache-cleanup
         if: ${{ !cancelled() && steps.build.outcome == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         run: ccache --cleanup
-
-      - name: ccache statistics
-        if: always()
-        uses: ./.github/actions/ccache-s3/stats
 
       - name: Publish ccache snapshot
         if: ${{ !cancelled() && steps.ccache-cleanup.outcome == 'success' }}
@@ -364,8 +364,9 @@ jobs:
       - name: Build
         run: cmake --build build
 
-      - name: ccache stats
-        run: ccache -s
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -472,6 +473,7 @@ jobs:
               - '.github/actions/dependencies/**'
               - '.github/actions/ccache-s3/**'
               - 'CI/ccache_snapshot.py*'
+              - 'CI/ccache_stats.sh'
               - 'CI/dependencies/**'
             cuda_muon:
               # ActsUnitTestCudaMuonSpacePoint is the only target built. It
@@ -500,6 +502,7 @@ jobs:
               - '.github/actions/dependencies/**'
               - '.github/actions/ccache-s3/**'
               - 'CI/ccache_snapshot.py*'
+              - 'CI/ccache_stats.sh'
               - 'CI/dependencies/**'
 
   # ─────────────────────────────────────────────────────────────────────
@@ -589,8 +592,9 @@ jobs:
           source ${GITHUB_WORKSPACE}/.env
           cmake --build build
 
-      - name: ccache stats
-        run: ccache -s
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -750,8 +754,9 @@ jobs:
       - name: Build
         run: cmake --build build
 
-      - name: ccache stats
-        run: ccache -s
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -827,8 +832,9 @@ jobs:
       - name: Build
         run: cmake --build build --target ActsUnitTestCudaMuonSpacePoint ActsUnitTestCudaMuonHoughMaximum
 
-      - name: ccache stats
-        run: ccache -s
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -1017,8 +1023,11 @@ jobs:
           cmake --build build
 
       - name: ccache stats
+        if: always()
+        continue-on-error: true
         run: >
           source "${LCG_VIEW}/setup.sh" &&
+          bash CI/ccache_stats.sh &&
           ccache -s
 
       - name: Clean ccache before publication
@@ -1128,8 +1137,10 @@ jobs:
 
       - name: ccache stats
         if: always() && steps.configure.outcome == 'success'
+        continue-on-error: true
         run: >
           source "${LCG_VIEW}/setup.sh" &&
+          bash CI/ccache_stats.sh &&
           ccache -s
 
       - name: Clean ccache before publication
@@ -1309,8 +1320,9 @@ jobs:
       - name: Build
         run: cmake --build build
 
-      - name: ccache stats
-        run: ccache -s
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -1453,7 +1465,6 @@ jobs:
             export CMAKE_CXX_COMPILER_LAUNCHER=ccache
             pushd EICrecon
             echo "::group::EICrecon configure phase"
-            ccache -z && \
             cmake -B build -S . \
               -GNinja \
               -DActs_ROOT=$CMAKE_INSTALL_PREFIX
@@ -1463,6 +1474,23 @@ jobs:
             echo "::endgroup::"
             popd
 
+            ccache -s
+
+      - name: ccache statistics
+        if: always()
+        continue-on-error: true
+        uses: eic/docker-run-action@05c870b4c087fa65d5da3d7474a4b5e594a903d7 # v4.1
+        with:
+          image: "ghcr.io/eic/eic_ci_without_acts:nightly"
+          options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache -e CCACHE_MAXSIZE=${{ env.CCACHE_MAXSIZE }}
+          shell: bash
+          run: |
+            for script in /.singularity.d/env/*.sh; do
+              if [ -f "$script" ]; then
+                . "$script"
+              fi
+            done
+            bash /work/acts/CI/ccache_stats.sh
             ccache -s
 
       - name: Create comment body header
@@ -1584,7 +1612,6 @@ jobs:
           popd
 
           pushd k4ActsTracking
-          ccache -z
           echo "::group::Configure k4ActsTracking"
           cmake -B build -S . -GNinja \
             -DCMAKE_CXX_STANDARD=23 \
@@ -1612,6 +1639,15 @@ jobs:
           echo "::group::ccache statistics"
           ccache -s
           popd
+
+      - name: ccache statistics
+        if: always()
+        continue-on-error: true
+        shell: bash
+        run: |
+          source "${KEY4HEP_VIEW}/setup.sh"
+          bash acts/CI/ccache_stats.sh
+          ccache -s
 
       - name: Clean ccache before publication
         if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'

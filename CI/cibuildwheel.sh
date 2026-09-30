@@ -21,15 +21,19 @@ export CIBW_MANYLINUX_X86_64_IMAGE="manylinux_2_34" # based on almalinux9
 export CIBW_SKIP="*-musllinux* *-manylinux_i686"
 # Versions come from CI/dependencies/versions.env, like every other CI job.
 SETUP_CMD="bash {package}/CI/dependencies/setup.sh -d deps -e env.sh"
-export CIBW_BEFORE_ALL_LINUX="dnf install -y bc ccache && ${SETUP_CMD}"
-export CIBW_BEFORE_ALL_MACOS="brew install ninja ccache && ${SETUP_CMD}"
+export CIBW_BEFORE_ALL_LINUX="dnf install -y bc ccache jq && ${SETUP_CMD}"
+export CIBW_BEFORE_ALL_MACOS="brew install ninja ccache jq && ${SETUP_CMD}"
 # Linux wheels build in a container: the job's ccache ceiling must be passed
 # explicitly or the container uses ccache's default (5 GB).
 export CIBW_ENVIRONMENT_PASS="CI GITHUB_TOKEN CCACHE_MAXSIZE"
 export CIBW_BEFORE_BUILD="ccache -z"
 export CIBW_ENVIRONMENT_LINUX="CMAKE_PREFIX_PATH=\$PWD/deps/venv:\$PWD/deps/view CCACHE_DIR=/host${CCACHE_DIR} LD_LIBRARY_PATH=\$PWD/deps/view/lib64:\$PWD/deps/view/lib:\$PWD/deps/venv/lib64:\$PWD/deps/venv/lib"
 export CIBW_ENVIRONMENT_MACOS="CMAKE_PREFIX_PATH=\$PWD/deps/venv:\$PWD/deps/view CCACHE_DIR=${CCACHE_DIR} MACOSX_DEPLOYMENT_TARGET=26.0"
-export CIBW_BEFORE_TEST="ccache --cleanup || true; ccache -s && uv pip install -r {package}/Python/Examples/tests/requirements.txt"
+# Use the tooling checkout, including when the package is an older release.
+STATS_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/ccache_stats.sh"
+TEST_SETUP="ccache --cleanup || true; ccache -s; uv pip install -r {package}/Python/Examples/tests/requirements.txt"
+export CIBW_BEFORE_TEST_LINUX="bash '/host${STATS_SCRIPT}'; ${TEST_SETUP}"
+export CIBW_BEFORE_TEST_MACOS="bash '${STATS_SCRIPT}'; ${TEST_SETUP}"
 export CIBW_TEST_COMMAND="pytest {package}/Python/Examples/tests -m pypi -v"
 # patchelf 0.17.2 (pinned in the manylinux image) corrupts auditwheel-vendored
 # libs (e.g. libzstd) it repairs, causing a segfault at import time. Force a

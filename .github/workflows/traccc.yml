@@ -23,6 +23,7 @@ on:
       - ".github/workflows/traccc.yml"
       - ".github/actions/ccache-s3/**"
       - "CI/ccache_snapshot.py*"
+      - "CI/ccache_stats.sh"
       - ".github/detray-traccc-filters.yml"
   pull_request:
     branches:
@@ -34,6 +35,7 @@ on:
       - ".github/workflows/traccc.yml"
       - ".github/actions/ccache-s3/**"
       - "CI/ccache_snapshot.py*"
+      - "CI/ccache_stats.sh"
       - ".github/detray-traccc-filters.yml"
   # The changes job applies path filtering to merge groups, which do not
   # support the workflow-level path filters above.
