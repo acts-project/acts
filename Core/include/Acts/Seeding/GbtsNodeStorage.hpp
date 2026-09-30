@@ -13,6 +13,7 @@
 #include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
+#include "Acts/Seeding/GbtsTauLookupTable.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 
 #include <cassert>
@@ -166,7 +167,7 @@ class GbtsNodeStorage final {
   /// @param tauLut Per-cluster-width tau bounds
   GbtsNodeStorage(const Config& config,
                   std::shared_ptr<const GbtsGeometry> geometry,
-                  detail::GbtsTauLookupTable tauLut);
+                  GbtsTauLookupTable tauLut);
 
   /// Get eta bin info by index
   /// @param idx Eta bin index
@@ -252,7 +253,7 @@ class GbtsNodeStorage final {
 
   std::shared_ptr<const GbtsGeometry> m_geometry;
 
-  detail::GbtsTauLookupTable m_tauLut;
+  GbtsTauLookupTable m_tauLut;
 
   /// Nodes ordered by (eta bin, phi). Carries the caller's index and the packed
   /// (x, y, z, r) position, plus the derived data as dynamic columns.
