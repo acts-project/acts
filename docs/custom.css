@@ -1,3 +1,10 @@
 #doc-content {
   padding-top: 0 !important;
 }
+
+/* The Python landing page supplies its own Next steps links. */
+body:has(#python-bindings-overview) .header .summary,
+body:has(#python-bindings-overview) .contents > h2.groupheader,
+body:has(#python-bindings-overview) .contents > table.memberdecls {
+  display: none;
+}

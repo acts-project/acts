@@ -34,17 +34,8 @@ whiteboard rather than go through a typed handle.
 ships two ready-to-use examples that read ROOT files without the ROOT plugin — read them for a
 complete, working `IReader` implementation, including buffered reads across events.
 
-# Building a `TrackContainer` by hand
-
-To produce tracks in a custom algorithm, create an `acts.examples.TrackContainer`, call
-`makeTrack()`, and fill its parameters and states.
-
-`Examples/Scripts/Python/pypi_finding_fitting_demo.py` is the canonical worked example: a
-complete, ROOT-free chain with a custom Python track finder (turning space points into
-`ProtoTrack`s) and a custom Python track fitter (turning `ProtoTrack`s into a `TrackContainer`),
-followed by truth matching and the ROOT-free performance writers from
-@ref python_performance_plotting. It only uses what the PyPI wheel provides — copy it as a
-starting point.
+The [PyPI finding and fitting demo](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/pypi_finding_fitting_demo.py)
+shows custom Python track-finding and fitting algorithms in a complete chain.
 
 # Python algorithms and the GIL
 

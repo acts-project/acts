@@ -2,12 +2,20 @@
 @ingroup python_bindings
 @brief Extracting efficiency/resolution numbers from a `Sequencer` run, and plotting them.
 
-# ROOT-free performance writers
+# Performance writers
 
-`acts.examples.PythonPatternRecognitionPerformanceWriter` produces efficiency, fake-rate,
-duplication, and track-summary histograms. `PythonTrackParameterPerformanceWriter` produces
-residual, pull, efficiency, and track-summary histograms. Both expose the results in memory with
-`.histograms()`; neither needs ROOT.
+ACTS has two output options for the same performance evaluation. Each pair below uses the same
+collector and produces the same main histogram families. The Python writer returns histograms
+through `.histograms()` after `s.run()`; the ROOT writer saves them in a ROOT file. ROOT output
+also includes some summary objects and can include matching details.
+
+| Evaluation | In-memory Python output (PyPI or source) | ROOT file output (ROOT-enabled source build) |
+| :--- | :--- | :--- |
+| Pattern recognition: efficiency, fake and duplicate tracks | `PythonPatternRecognitionPerformanceWriter` | `RootPatternRecognitionPerformanceWriter` |
+| Track parameters: residuals, pulls, efficiency | `PythonTrackParameterPerformanceWriter` | `RootTrackParameterPerformanceWriter` |
+
+The pairs take the same input collections and use similar configurations. For example, this
+configures the Python pattern-recognition writer:
 
 ```python
 cfg = acts.examples.PythonPatternRecognitionPerformanceWriter.Config()
@@ -22,17 +30,27 @@ s.run()
 histograms = writer.histograms()
 ```
 
-The track-parameter writer also needs `cfg.fitFunction` for its Gaussian fits; use
-`acts.examples.scipy.makeScipyHistogramFitFunction()` without ROOT. See
-`Examples/Scripts/Python/pypi_finding_fitting_demo.py` for both writers in a complete chain.
+For ROOT output, use `acts.examples.root.RootPatternRecognitionPerformanceWriter`, set the same
+input collection fields on its `Config`, and set `filePath`. See the
+[PyPI finding and fitting demo](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/pypi_finding_fitting_demo.py)
+for the Python writers and the
+[truth-tracking Kalman example](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/truth_tracking_kalman.py)
+for ROOT output.
+
+## Fit backend
+
+The track-parameter writers fit residual and pull distributions to extract mean and width
+profiles. The ROOT writer uses the ROOT fit backend. For the Python writer, set
+`cfg.fitFunction = acts.examples.scipy.makeScipyHistogramFitFunction()` to use SciPy instead.
 
 `TrackTruthMatcher(doubleMatching=True)` is the standard way to produce the
 `inputTrackParticleMatching`/`inputParticleTrackMatching` collections these writers need.
 
 ## Available histograms
 
-The keys depend on the writer and its configuration. This table groups the main families;
-`pT`, `eta`, and `phi` variants are often available alongside the examples shown.
+The histogram families are shared across output formats. The keys below are from the Python
+writers' `.histograms()` dictionaries; the ROOT writers save corresponding histogram objects.
+Names depend on configuration, and `pT`, `eta`, and `phi` variants are often available.
 
 | Writer | Family | Example keys | Result |
 | :--- | :--- | :--- | :--- |

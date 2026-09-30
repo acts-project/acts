@@ -1,22 +1,22 @@
 @defgroup python_data_io Data Reading and Writing
 @ingroup python_bindings
-@brief The reader/writer inventory, including the ROOT-free path used by the PyPI wheel.
+@brief Readers and writers available in the PyPI wheel and optional source builds.
 
 # Reader/writer inventory
 
-Every reader and writer is a `SequenceElement` added via `s.addReader(...)`/`s.addWriter(...)`.
-Formats available depend on which plugins were built (see @ref python_bindings for what the
-PyPI wheel includes):
+Add readers with `s.addReader(...)` and writers with `s.addWriter(...)`. Availability depends on
+the build configuration (see @ref python_bindings):
 
-- **CSV** (`acts.examples`) — always available: `Csv{Particle,Measurement,SimHit,SpacePoint,
-  Track,TrackParameter,ProtoTrack}{Reader,Writer}`, plus a few detector-specific ones.
-- **ROOT** (`acts.examples.root`, source builds only) — `Root{Particle,Vertex,SimHit,
-  TrackSummary,MaterialTrack,...}{Reader,Writer}`.
-- **EDM4hep/podio** (`acts.examples.edm4hep`, source builds only) — `PodioReader`/`PodioWriter`.
-- **HepMC3** (`acts.examples.hepmc3`) — `HepMC3Reader`/`HepMC3Writer`.
-- **Arrow/Parquet** (`acts.examples.arrow`) — **built into the PyPI wheel**, see below.
-- **JSON** (`acts.json`, `acts.examples.json`) — geometry, material maps, and lookup tables, not
-  event data.
+- **Only in a full installation, when enabled:**
+  - ROOT (`acts.examples.root`): readers and writers for particles, sim hits, tracks, vertices,
+    material, and performance output.
+  - EDM4hep/podio (`acts.examples.edm4hep`): `PodioReader` and `PodioWriter`.
+- **Also in the PyPI wheel:**
+  - CSV (`acts.examples`): readers and writers for common event collections.
+  - Arrow/Parquet (`acts.examples.arrow`): `ParquetReader` and `ParquetWriter`.
+  - HepMC3 (`acts.examples.hepmc3`): `HepMC3Reader` and `HepMC3Writer`.
+  - Uproot (`acts.examples.uproot`): Python readers for particle and sim-hit ROOT files.
+  - JSON (`acts.json`, `acts.examples.json`): geometry and material data, not event data.
 
 # The ROOT-free path (PyPI wheel)
 
@@ -52,12 +52,6 @@ ROOT files from elsewhere but don't have (or want) a ROOT-enabled ACTS build. Th
 complete, real-world example of a custom `IReader` (see @ref python_custom_algorithms), including
 buffered multi-event reads.
 
-## ROOT-free fitting and evaluation
-
-`acts.examples.scipy.makeScipyHistogramFitFunction()` provides a Gaussian-fit backend for the
-performance writers below, replacing the ROOT-based fit used by `ActsPlugins::RootHistogramFit`.
-See @ref python_performance_plotting.
-
 # Geometry without DD4hep
 
 Load a `TrackingGeometry` from a JSON dump instead of building it from DD4hep or Geant4 — this is
@@ -72,5 +66,6 @@ trackingGeometry = converter.fromFile(gctx, "geometry.json")
 ```
 
 Material maps can be attached the same way with `acts.json.JsonMaterialDecorator`.
-`Examples/Scripts/Python/geometry.py` shows how to produce such a JSON dump from an existing
-`TrackingGeometry` (`toFile`/`toJson`), for example from a source build with DD4hep enabled.
+The [geometry example](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/geometry.py)
+shows how to produce such a JSON dump from an existing `TrackingGeometry` (`toFile`/`toJson`),
+for example from a source build with DD4hep enabled.
