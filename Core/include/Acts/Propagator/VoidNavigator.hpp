@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/NavigatorInitializeArguments.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
@@ -25,7 +26,6 @@
 
 namespace Acts {
 
-class TrackingVolume;
 class IVolumeMaterial;
 
 /// @brief A navigator without a tracking geometry
@@ -178,12 +178,17 @@ class VoidNavigator {
   NavigationTarget nextTarget(State& state, const Vector3& position,
                               const Vector3& direction) const {
     state.currentSurface = nullptr;
-    return closest(state, position, direction, nullptr);
+    return closest(state, position, direction, nullptr, false);
   }
 
   /// Returns the closer of the next candidate of another navigator and the
   /// closest additional surface. The candidate is held back, not skipped,
   /// while an additional surface is closer.
+  ///
+  /// While the other navigator has a candidate, an additional surface competes
+  /// only if it is crossed inside the current volume. The stepper tests only
+  /// the target it gets, so a held back candidate is never found unreachable,
+  /// and the other navigator would never reach the volume boundary.
   ///
   /// @param state The navigation state
   /// @param position The current position
@@ -209,8 +214,8 @@ class VoidNavigator {
       state.heldBack = nextCandidate();
     }
 
-    if (const NavigationTarget additional =
-            closest(state, position, direction, volume);
+    if (const NavigationTarget additional = closest(
+            state, position, direction, volume, !state.heldBack->isNone());
         !additional.isNone()) {
       NavigationTarget& candidate = state.heldBack.value();
       if (!candidate.isNone()) {
@@ -276,10 +281,12 @@ class VoidNavigator {
   }
 
  private:
-  /// Closest additional surface ahead of the position
+  /// Closest additional surface ahead of the position, crossed inside
+  /// @p volume if @p insideVolume is set and the volume is known
   NavigationTarget closest(const State& state, const Vector3& position,
                            const Vector3& direction,
-                           const TrackingVolume* volume) const {
+                           const TrackingVolume* volume,
+                           bool insideVolume) const {
     NavigationTarget closest = NavigationTarget::None();
 
     for (const State::AdditionalSurfaceState& additional :
@@ -307,6 +314,11 @@ class VoidNavigator {
         if (!intersection.isValid() ||
             (onSurface ? !offerOnSurface : intersection.pathLength() <= 0) ||
             intersection.pathLength() > state.options.farLimit) {
+          continue;
+        }
+        if (insideVolume && volume != nullptr &&
+            !volume->inside(state.options.geoContext, intersection.position(),
+                            state.options.surfaceTolerance)) {
           continue;
         }
         if (closest.isNone() ||
