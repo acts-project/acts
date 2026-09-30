@@ -31,7 +31,7 @@ FrustumNavigationPolicy::FrustumNavigationPolicy(const GeometryContext &gctx,
 }
 
 void FrustumNavigationPolicy::initializeCandidates(
-    const GeometryContext &gctx, const NavigationArguments &,
+    const GeometryContext &gctx, const NavigationArguments & /*args*/,
     NavigationPolicyState &state, AppendOnlyNavigationStream &stream,
     const Logger &logger) const {
   ACTS_DEBUG("FrustumNavigationPolicy Candidates initialization for volume "
@@ -76,7 +76,7 @@ void FrustumNavigationPolicy::connect(NavigationDelegate &delegate) const {
   connectDefault<FrustumNavigationPolicy>(delegate);
 }
 
-bool FrustumNavigationPolicy::isValid(const GeometryContext &,
+bool FrustumNavigationPolicy::isValid(const GeometryContext & /*gctx*/,
                                       const NavigationArguments &args,
                                       NavigationPolicyState &state,
                                       const Logger &logger) const {
@@ -95,7 +95,7 @@ bool FrustumNavigationPolicy::isValid(const GeometryContext &,
 }
 
 void FrustumNavigationPolicy::createState(
-    const GeometryContext &, const NavigationArguments &args,
+    const GeometryContext & /*gctx*/, const NavigationArguments &args,
     NavigationPolicyStateManager &stateManager, const Logger &logger) const {
   ACTS_DEBUG("create FrustumNavigationPolicy state");
   auto &s = stateManager.pushState<State>();
