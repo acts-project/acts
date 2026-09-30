@@ -337,7 +337,8 @@ set(_acts_edm4hep_version 1.0)
 # types (edm4hep::TrackState::covMatrix), Track::Nholes and the
 # edm4hep::TrackParams enum, all of which the EDM4hep plugin relies on.
 set(_acts_edm4hep_fallback_version 0.99)
-set(_acts_eigen3_version 5.0.1)
+set(_acts_eigen3_version 5.0.1) # used when building Eigen from source
+set(_acts_eigen3_min_version 3.4.0) # minimum version accepted for a system Eigen3
 set(_acts_podio_version 1.0.1) # will try this first
 set(_acts_podio_fallback_version 0.17.4) # if not found, will try this one
 set(_acts_doxygen_version 1.9.4)
@@ -407,10 +408,10 @@ if(ACTS_SETUP_EIGEN3)
         find_package(Eigen3 REQUIRED CONFIG)
 
         if(DEFINED Eigen3_VERSION)
-            if(Eigen3_VERSION VERSION_LESS _acts_eigen3_version)
+            if(Eigen3_VERSION VERSION_LESS _acts_eigen3_min_version)
                 message(
                     FATAL_ERROR
-                    "Eigen3 ${Eigen3_VERSION} is too old (need >= 3.4.0)"
+                    "Eigen3 ${Eigen3_VERSION} is too old (need >= ${_acts_eigen3_min_version})"
                 )
             endif()
             if(Eigen3_VERSION VERSION_GREATER_EQUAL 6.0.0)
