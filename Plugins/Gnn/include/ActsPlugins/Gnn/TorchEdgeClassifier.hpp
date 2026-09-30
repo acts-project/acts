@@ -12,6 +12,7 @@
 #include "ActsPlugins/Gnn/Stages.hpp"
 
 #include <memory>
+#include <optional>
 
 /// @cond
 namespace torch::jit {
@@ -40,6 +41,12 @@ class TorchEdgeClassifier final : public EdgeClassificationBase {
     bool undirected = false;
     /// Device to run inference on
     Device device = Device::Cuda();
+    /// Device to run the model on, independent of the device the pipeline
+    /// tensors live on. Unset (the default) runs the model on the pipeline
+    /// device, which is the historical behaviour. Set it to pin the model, e.g.
+    /// to Device::Mps() to run it on the Apple GPU while the tensors stay on
+    /// the host.
+    std::optional<Device> modelDevice = std::nullopt;
     /// Whether to use edge features
     bool useEdgeFeatures = false;
   };
