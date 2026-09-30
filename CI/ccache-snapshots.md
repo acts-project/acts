@@ -17,7 +17,8 @@ before later tests. LCG nightly only publishes after a successful configure.
 Cleanup and statistics run where ccache is available: the job container, sourced
 LCG/Key4hep view, EIC Docker container, or wheel build environment. Wheels clean
 before tests; failures before that point rely on ccache's automatic size cleanup.
-Cache limits are 500 MB, except `linux_ubuntu` and Analysis at 1 GB.
+Cache limits are 500 MB, with 1 GB for `linux_ubuntu`, Analysis, Detray
+container CPU Debug, and Traccc Debug/RelWithDebInfo builds.
 Traccc CUDA Debug caches only C++ compilation so its PTX check still gets
 fresh intermediate files; other CUDA and HIP builds also cache device compilation.
 

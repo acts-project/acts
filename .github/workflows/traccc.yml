@@ -74,6 +74,8 @@ jobs:
           filters: .github/detray-traccc-filters.yml
 
   containers:
+    env:
+      CCACHE_MAXSIZE: ${{ matrix.build == 'Release' && '500M' || '1G' }}
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     needs: changes
