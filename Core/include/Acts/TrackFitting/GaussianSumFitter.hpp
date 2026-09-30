@@ -19,6 +19,7 @@
 #include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
+#include "Acts/TrackFitting/detail/MeasurementSurfaces.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -170,8 +171,8 @@ struct GaussianSumFitter {
 
       if (options.useExtendedSurfaces) {
         for (auto it = begin; it != end; ++it) {
-          propOptions.navigation.registerExtendedSurface(
-              *options.extensions.surfaceAccessor(*it));
+          Acts::detail::registerMeasurementSurface(
+              propOptions.navigation, *options.extensions.surfaceAccessor(*it));
         }
       }
 
@@ -192,8 +193,8 @@ struct GaussianSumFitter {
 
       if (options.useExtendedSurfaces) {
         for (auto it = begin; it != end; ++it) {
-          propOptions.navigation.registerExtendedSurface(
-              *options.extensions.surfaceAccessor(*it));
+          Acts::detail::registerMeasurementSurface(
+              propOptions.navigation, *options.extensions.surfaceAccessor(*it));
         }
       }
 

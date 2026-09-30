@@ -23,6 +23,7 @@
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
+#include "Acts/TrackFitting/detail/MeasurementSurfaces.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -782,7 +783,8 @@ class KalmanFitter {
       // Relax the bounds check, so the navigator targets a measurement
       // surface even where the track misses it
       for (const auto& [surface, _] : inputMeasurements) {
-        propagatorOptions.navigation.registerExtendedSurface(*surface);
+        Acts::detail::registerMeasurementSurface(propagatorOptions.navigation,
+                                                 *surface);
       }
     } else {
       assert(sSequence != nullptr &&
