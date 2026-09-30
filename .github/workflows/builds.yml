@@ -369,14 +369,14 @@ jobs:
         uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         shell: bash
         run: |
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
@@ -597,14 +597,14 @@ jobs:
         uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         shell: bash
         run: |
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
@@ -759,14 +759,14 @@ jobs:
         uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         shell: bash
         run: |
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
@@ -837,14 +837,14 @@ jobs:
         uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         shell: bash
         run: |
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
@@ -1031,7 +1031,7 @@ jobs:
           ccache -s
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         shell: bash
         run: |
@@ -1039,7 +1039,7 @@ jobs:
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
@@ -1144,7 +1144,7 @@ jobs:
           ccache -s
 
       - name: Clean ccache before publication
-        if: always() && steps.configure.outcome == 'success'
+        if: ${{ !cancelled() && steps.configure.outcome == 'success' }}
         continue-on-error: true
         shell: bash
         run: |
@@ -1152,7 +1152,7 @@ jobs:
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && steps.configure.outcome == 'success'
+        if: ${{ !cancelled() && steps.configure.outcome == 'success' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
@@ -1325,14 +1325,14 @@ jobs:
         uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         shell: bash
         run: |
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
@@ -1511,7 +1511,7 @@ jobs:
           retention-days: 5
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         uses: eic/docker-run-action@05c870b4c087fa65d5da3d7474a4b5e594a903d7 # v4.1
         with:
@@ -1527,7 +1527,7 @@ jobs:
             ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./acts/.github/actions/ccache-s3
@@ -1650,7 +1650,7 @@ jobs:
           ccache -s
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         shell: bash
         run: |
@@ -1658,7 +1658,7 @@ jobs:
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./acts/.github/actions/ccache-s3
@@ -1716,7 +1716,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: ./.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
