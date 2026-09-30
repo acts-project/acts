@@ -11,7 +11,6 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsPlugins/Json/GbtsConfigJsonConverter.hpp"
-#include "ActsPlugins/Json/detail/JsonIo.hpp"
 
 #include <stdexcept>
 #include <utility>
@@ -49,10 +48,7 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
   ACTS_INFO("LayerConnectionTool chosen");
 
   m_cfg.gbtsLayerConnectionToolConfig.detectorGeometry =
-      Acts::detail::readJsonFile(m_cfg.geometryFileDir)
-          .at("layers")
-          .get<std::vector<
-              Acts::Experimental::GbtsLayerConnectionTool::LayerDescription>>();
+      Acts::Experimental::readGbtsLayerDescriptions(m_cfg.geometryFileDir);
 
   m_layerConnectionTool.emplace(
       m_cfg.gbtsLayerConnectionToolConfig,
@@ -67,8 +63,7 @@ ProcessCode GbtsTrainingAlgorithm::finalize() {
     // swap order as we want outward -> inward ordering
     connections.push_back({.src = layerPair.second, .dst = layerPair.first});
   }
-  Acts::detail::writeJsonFile(
-      m_cfg.outputFileDir, nlohmann::json{{"connections", connections}}, 4, 0);
+  Acts::Experimental::writeGbtsConnections(m_cfg.outputFileDir, connections);
 
   return ProcessCode::SUCCESS;
 }

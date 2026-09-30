@@ -14,12 +14,12 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
+#include "Acts/Seeding/GbtsTauLookupTable.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
-#include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsPlugins/Json/GbtsConfigJsonConverter.hpp"
-#include "ActsPlugins/Json/detail/JsonIo.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -48,9 +48,7 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
 
   // read which layers may be connected
   auto connections =
-      Acts::detail::readJsonFile(m_cfg.connectorInputFile)
-          .at("connections")
-          .get<std::vector<Acts::Experimental::GbtsLayerConnection>>();
+      Acts::Experimental::readGbtsConnections(m_cfg.connectorInputFile);
 
   // keep the connections between layers of the seeded technology
   const Acts::Experimental::GbtsLayerTechnology seededTechnology =
@@ -78,9 +76,7 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // the cluster width cuts are the only user of the tau lookup table
   if (m_cfg.seedFinderConfig.useClusterWidthCuts) {
     m_cfg.seedFinderConfig.tauLookupTable =
-        Acts::detail::readJsonFile(m_cfg.lutInputFile)
-            .at("tauLookupTable")
-            .get<Acts::Experimental::detail::GbtsTauLookupTable>();
+        Acts::Experimental::readGbtsTauLookupTable(m_cfg.lutInputFile);
   }
 
   // create the TrigInDetSiLayers (Logical Layers),
@@ -170,9 +166,7 @@ GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
 
   // one entry per surface of a layer, sensitive 0 for a whole geometry layer
   for (const Acts::Experimental::GbtsLayerConfig &layer :
-       Acts::detail::readJsonFile(m_cfg.layerMappingFile)
-           .at("layers")
-           .get<std::vector<Acts::Experimental::GbtsLayerConfig>>()) {
+       Acts::Experimental::readGbtsLayers(m_cfg.layerMappingFile)) {
     for (const Acts::GeometryIdentifier &surface : layer.surfaces) {
       const ActsIDs actsId{surface.volume() * 100 + surface.layer(),
                            surface.sensitive()};
@@ -243,6 +237,112 @@ void GraphBasedSeedingAlgorithm::resolveLayerIndices(
   }
 }
 
+void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
+    const Acts::Surface &surface, const Acts::GeometryContext &gctx,
+    std::vector<Acts::Experimental::GbtsLayerDescription> &inputVector,
+    std::vector<std::size_t> &countVector) const {
+  Acts::GeometryIdentifier geoId = surface.geometryId();
+  auto actsVolId = geoId.volume();
+  auto actsLayId = geoId.layer();
+  auto mod_id = geoId.sensitive();
+  auto center = surface.center(gctx);
+
+  // A polygonal surface gives its corners whatever the segment count
+  // is, curved bounds an approximation of that resolution.
+  const std::vector<Acts::Vector3> corners =
+      surface.polyhedronRepresentation(gctx, 4u).vertices;
+
+  float rc = 0.0;
+  float minBound = std::numeric_limits<float>::infinity();
+  float maxBound = -std::numeric_limits<float>::infinity();
+
+  // convert to Gbts ID
+  auto actsJointId = actsVolId * 100 + actsLayId;
+  // here the key needs to be pair of(vol*100+lay, 0)
+  auto key = ActsIDs{actsJointId, 0};
+  auto find = m_actsGbtsMap.find(key);
+
+  // check to see if key exists
+  if (find == m_actsGbtsMap.end()) {
+    key = ActsIDs{actsJointId, mod_id};
+    find = m_actsGbtsMap.find(key);
+  }
+
+  // a surface off the GBTS layers takes no part in the seeding
+  if (find == m_actsGbtsMap.end()) {
+    ACTS_DEBUG("Key not found in Gbts map for volume id: "
+               << actsVolId << ", layer id: " << actsLayId
+               << ", sensitive id: " << mod_id);
+    return;  // skip this surface
+  }
+
+  const Acts::Experimental::GbtsExperimentLayerId gbtsId = find->second.layerId;
+
+  // a variable that says if barrrel, 0 = barrel
+  Acts::Experimental::GbtsLayerType barrelEc = find->second.type;
+
+  if (barrelEc == Acts::Experimental::GbtsLayerType::Barrel) {
+    rc = Acts::fastHypot(center.x(), center.y());  // barrel center in r
+    // bounds of z
+    for (const Acts::Vector3 &corner : corners) {
+      minBound = std::min(minBound, static_cast<float>(corner.z()));
+      maxBound = std::max(maxBound, static_cast<float>(corner.z()));
+    }
+  } else if (barrelEc == Acts::Experimental::GbtsLayerType::Endcap) {
+    rc = center.z();  // not barrel center in Z
+    // bounds of r
+    for (const Acts::Vector3 &corner : corners) {
+      const auto r =
+          static_cast<float>(Acts::fastHypot(corner.x(), corner.y()));
+      minBound = std::min(minBound, r);
+      maxBound = std::max(maxBound, r);
+    }
+  } else {
+    throw std::runtime_error("Invalid barrel/endcap assignment for GbtsLayer");
+  }
+
+  const auto currentIndex =
+      find_if(inputVector.begin(), inputVector.end(),
+              [gbtsId](auto n) { return n.id == gbtsId; });
+  if (currentIndex != inputVector.end()) {  // not end so does exist
+    const auto index = static_cast<std::size_t>(
+        std::distance(inputVector.begin(), currentIndex));
+    inputVector[index].refCoord += rc;
+    inputVector[index].minBound =
+        std::min(inputVector[index].minBound, minBound);
+    inputVector[index].maxBound =
+        std::max(inputVector[index].maxBound, maxBound);
+    countVector[index] += 1;  // increase count at the index
+
+  } else {  // end so doesn't exists
+    // make new if one with Gbts ID doesn't exist:
+    inputVector.push_back(Acts::Experimental::GbtsLayerDescription{
+        .id = gbtsId,
+        .type = barrelEc,
+        .technology = find->second.technology,
+        .refCoord = rc,
+        .minBound = minBound,
+        .maxBound = maxBound});
+    // so the element exists and not divinding by 0
+    countVector.push_back(1);
+  }
+
+  // add to file each time,
+  // print to csv for each module, no repeats so dont need to make
+  // map for averaging
+  if (m_cfg.fillModuleCsv) {
+    std::fstream fout;
+    fout.open("ACTS_modules.csv", std::ios::out | std::ios::app);
+    fout << actsVolId << ", "                        // vol
+         << actsLayId << ", "                        // lay
+         << mod_id << ", "                           // module
+         << gbtsId << ","                            // Gbts id
+         << center.z() << ", "                       // z
+         << Acts::fastHypot(center.x(), center.y())  // r
+         << "\n";
+  }
+}
+
 std::vector<Acts::Experimental::GbtsLayerDescription>
 GraphBasedSeedingAlgorithm::layerNumbering(
     const Acts::GeometryContext &gctx) const {
@@ -251,108 +351,7 @@ GraphBasedSeedingAlgorithm::layerNumbering(
 
   m_cfg.trackingGeometry->visitSurfaces(
       [this, &inputVector, &countVector, &gctx](const Acts::Surface *surface) {
-        Acts::GeometryIdentifier geoId = surface->geometryId();
-        auto actsVolId = geoId.volume();
-        auto actsLayId = geoId.layer();
-        auto mod_id = geoId.sensitive();
-        auto center = surface->center(gctx);
-
-        // A polygonal surface gives its corners whatever the segment count
-        // is, curved bounds an approximation of that resolution.
-        const std::vector<Acts::Vector3> corners =
-            surface->polyhedronRepresentation(gctx, 4u).vertices;
-
-        float rc = 0.0;
-        float minBound = std::numeric_limits<float>::infinity();
-        float maxBound = -std::numeric_limits<float>::infinity();
-
-        // convert to Gbts ID
-        auto actsJointId = actsVolId * 100 + actsLayId;
-        // here the key needs to be pair of(vol*100+lay, 0)
-        auto key = ActsIDs{actsJointId, 0};
-        auto find = m_actsGbtsMap.find(key);
-
-        // check to see if key exists
-        if (find == m_actsGbtsMap.end()) {
-          key = ActsIDs{actsJointId, mod_id};
-          find = m_actsGbtsMap.find(key);
-        }
-
-        // a surface off the GBTS layers takes no part in the seeding
-        if (find == m_actsGbtsMap.end()) {
-          ACTS_DEBUG("Key not found in Gbts map for volume id: "
-                     << actsVolId << ", layer id: " << actsLayId
-                     << ", sensitive id: " << mod_id);
-          return;  // skip this surface in the visitor
-        }
-
-        const Acts::Experimental::GbtsExperimentLayerId gbtsId =
-            find->second.layerId;
-
-        // a variable that says if barrrel, 0 = barrel
-        Acts::Experimental::GbtsLayerType barrelEc = find->second.type;
-
-        if (barrelEc == Acts::Experimental::GbtsLayerType::Barrel) {
-          rc = Acts::fastHypot(center.x(), center.y());  // barrel center in r
-          // bounds of z
-          for (const Acts::Vector3 &corner : corners) {
-            minBound = std::min(minBound, static_cast<float>(corner.z()));
-            maxBound = std::max(maxBound, static_cast<float>(corner.z()));
-          }
-        } else if (barrelEc == Acts::Experimental::GbtsLayerType::Endcap) {
-          rc = center.z();  // not barrel center in Z
-          // bounds of r
-          for (const Acts::Vector3 &corner : corners) {
-            const auto r =
-                static_cast<float>(Acts::fastHypot(corner.x(), corner.y()));
-            minBound = std::min(minBound, r);
-            maxBound = std::max(maxBound, r);
-          }
-        } else {
-          throw std::runtime_error(
-              "Invalid barrel/endcap assignment for GbtsLayer");
-        }
-
-        const auto currentIndex =
-            find_if(inputVector.begin(), inputVector.end(),
-                    [gbtsId](auto n) { return n.id == gbtsId; });
-        if (currentIndex != inputVector.end()) {  // not end so does exist
-          const auto index = static_cast<std::size_t>(
-              std::distance(inputVector.begin(), currentIndex));
-          inputVector[index].refCoord += rc;
-          inputVector[index].minBound =
-              std::min(inputVector[index].minBound, minBound);
-          inputVector[index].maxBound =
-              std::max(inputVector[index].maxBound, maxBound);
-          countVector[index] += 1;  // increase count at the index
-
-        } else {  // end so doesn't exists
-          // make new if one with Gbts ID doesn't exist:
-          inputVector.push_back(Acts::Experimental::GbtsLayerDescription{
-              .id = gbtsId,
-              .type = barrelEc,
-              .technology = find->second.technology,
-              .refCoord = rc,
-              .minBound = minBound,
-              .maxBound = maxBound});
-          // so the element exists and not divinding by 0
-          countVector.push_back(1);
-        }
-
-        // add to file each time,
-        // print to csv for each module, no repeats so dont need to make
-        // map for averaging
-        if (m_cfg.fillModuleCsv) {
-          std::fstream fout;
-          fout.open("ACTS_modules.csv", std::ios::out | std::ios::app);
-          fout << actsVolId << ", "  // vol
-               << actsLayId << ", "  // lay
-               << mod_id << ", "     // module
-               << gbtsId << ","      // Gbts id
-               << center.z() << ", "  // z
-               << Acts::fastHypot(center.x(), center.y())  // r
-               << "\n";
-        }
+        addSurfaceToGbtsLayers(*surface, gctx, inputVector, countVector);
       });
 
   for (std::size_t i = 0; i < inputVector.size(); i++) {

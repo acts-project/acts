@@ -145,6 +145,17 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// @param geometry The geometry the indices belong to
   void resolveLayerIndices(const Acts::Experimental::GbtsGeometry &geometry);
 
+  /// Add a surface of the tracking geometry to the description of its GBTS
+  /// layer: the reference coordinates are summed and the bounds extended.
+  /// @param surface The surface to add
+  /// @param gctx The geometry context
+  /// @param inputVector The layer descriptions, one per GBTS layer seen so far
+  /// @param countVector The number of surfaces added to each layer description
+  void addSurfaceToGbtsLayers(
+      const Acts::Surface &surface, const Acts::GeometryContext &gctx,
+      std::vector<Acts::Experimental::GbtsLayerDescription> &inputVector,
+      std::vector<std::size_t> &countVector) const;
+
   /// makes the geometry objects used by GBTS that correspond to the objects in
   /// the connection table for ease these are sometimes called "logical layers"
   std::vector<Acts::Experimental::GbtsLayerDescription> layerNumbering(
