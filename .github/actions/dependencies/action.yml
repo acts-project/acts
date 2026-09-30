@@ -68,7 +68,7 @@ runs:
       if: startsWith(runner.os, 'macos')
       shell: bash
       run: |
-        brew install ninja ccache
+        brew install ninja ccache jq
 
     # Half of what is cached lives at ~/.spack, so an entry is only usable by a
     # runner with the same HOME. Container jobs get /github/home, ubuntu-latest

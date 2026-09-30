@@ -45,6 +45,7 @@ rules:
      - ".github/actions/ccache-s3/*"
      - ".github/actions/ccache-s3/**/*"
      - "CI/ccache_snapshot.py*"
+     - "CI/ccache_stats.sh"
      - ".github/detray-traccc-filters.yml"
     required_pattern:
      - "Detray / *"
@@ -62,6 +63,10 @@ rules:
      - "Detray/*"
      - "Detray/**/*"
      - ".github/workflows/traccc.yml"
+     - ".github/actions/ccache-s3/*"
+     - ".github/actions/ccache-s3/**/*"
+     - "CI/ccache_snapshot.py*"
+     - "CI/ccache_stats.sh"
      - ".github/detray-traccc-filters.yml"
     required_pattern:
      - "Traccc / *"
