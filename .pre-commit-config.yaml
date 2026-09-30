@@ -48,7 +48,6 @@ repos:
       language: system
       entry: CI/check_license.py --fix
       files: \.(cpp|hpp|ipp|cu|cuh|hip|sycl)$
-      exclude: ^Traccc/
 
     - id: include_guards
       name: include_guards
