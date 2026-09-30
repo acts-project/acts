@@ -139,7 +139,7 @@ jobs:
         run: |
           PATCHED_VERSION="$(cat acts/version_number).$(cat build_version.txt)"
           echo "Patch to version $PATCHED_VERSION"
-          python3 -m pip install change-wheel-version==0.6.0
+          uv tool install --python "$(command -v python3)" change-wheel-version==0.6.0
           cd wheelhouse
           for f in ./*.whl; do
             change_wheel_version $f --version $PATCHED_VERSION --delete-old-wheel

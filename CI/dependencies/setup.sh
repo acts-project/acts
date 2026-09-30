@@ -434,17 +434,18 @@ retry_transient spack -e "${env_dir}" install --fail-fast --use-buildcache only 
 checkpoint "Spack install complete"
 end_section
 
+start_section "Ensure uv is available"
+if ! command -v uv &> /dev/null ; then
+  echo "uv not found, installing uv"
+  curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="${destination}/uv" sh
+  export PATH="${destination}/uv:${PATH}"
+  checkpoint "uv installation complete"
+fi
+end_section
+
 start_section "Patch up Geant4 data directory"
 if [ "${full_install:-false}" == "true" ]; then
-  if ! which uv &> /dev/null ; then
-    echo "uv not found, installing uv"
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    UV_EXE="/root/.local/bin/uv"
-    checkpoint "uv installation complete"
-  else
-    UV_EXE=$(which uv)
-  fi
-  $UV_EXE run "$SCRIPT_DIR/download_geant4_datasets.py" -j8 --config "${view_dir}/bin/geant4-config"
+  uv run "$SCRIPT_DIR/download_geant4_datasets.py" -j8 --config "${view_dir}/bin/geant4-config"
   checkpoint "Geant4 datasets download complete"
 fi
 geant4_dir=$(spack -e "${env_dir}" location -i geant4)
@@ -460,22 +461,27 @@ end_section
 
 start_section "Prepare python environment"
 "${view_dir}/bin/python3" -m venv --system-site-packages "$venv_dir"
-# NOTE: pip, not uv, on purpose. The venv is deliberately --system-site-packages
-# so that the packages the spack view already provides (numpy and everything
-# built against it) are reused rather than replaced. pip honours that and skips
-# them; uv ignores system site-packages entirely and installs its own PyPI wheel
-# over the top, which silently swaps out the spack-built stack.
-retry_transient "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
+# uv does not reuse packages inherited through --system-site-packages. Exclude
+# the distributions supplied by the Spack view so it cannot shadow the native
+# stack (in particular numpy) with PyPI wheels. Spack's versions take precedence
+# over the test requirements for these packages. Keep this list for later
+# installs in jobs that source the generated environment file.
+spack_python_excludes="${venv_dir}/spack-python-excludes.txt"
+"${view_dir}/bin/python3" -I -c '
+from importlib.metadata import distributions
+print("\n".join(sorted({dist.metadata["Name"] for dist in distributions()})))
+' > "$spack_python_excludes"
+retry_transient uv pip install --python "${venv_dir}/bin/python3" --excludes "$spack_python_excludes" pyyaml jinja2
 if [ "${full_install:-false}" == "true" ]; then
-  retry_transient "${venv_dir}/bin/python3" -m pip install -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt"
-  retry_transient "${venv_dir}/bin/python3" -m pip install histcmp==0.10.0 matplotlib
-  retry_transient "${venv_dir}/bin/python3" -m pip install pytest-md-report
+  retry_transient uv pip install --python "${venv_dir}/bin/python3" --excludes "$spack_python_excludes" \
+    -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt" histcmp==0.10.0 matplotlib pytest-md-report
 fi
 checkpoint "Python environment prepared"
 end_section
 
 start_section "Set environment variables"
 set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
+set_env ACTS_SPACK_PYTHON_EXCLUDES "$spack_python_excludes"
 # lib64 carries CUDA's own libraries (e.g. cusparse): the view merges
 # packages' lib64/ trees there rather than into lib/, and prebuilt binaries
 # that dlopen them at runtime (rather than being linked with a baked RPATH)
