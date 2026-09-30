@@ -40,6 +40,9 @@ shows custom Python track-finding and fitting algorithms in a complete chain.
 # Python algorithms and the GIL
 
 `Sequencer.run()` releases the Python GIL while C++ algorithms execute. Calls back into Python
-(`execute`, `read`, `initialize`, `finalize`, and `name`) acquire it again, so Python steps do not
-run Python code in parallel across events. If your algorithm shares state that is not safe to
-access concurrently, such as a model or library handle, use `numThreads=1`.
+(`execute`, `read`, `initialize`, `finalize`, and `name`) acquire it again. On a regular CPython
+build, CPU-bound Python code in these callbacks therefore runs one thread at a time and can
+become a bottleneck, while C++ steps can still run in parallel. Event callbacks on the same
+algorithm object may interleave, especially when a native call releases the GIL. If the
+algorithm changes state shared between events, synchronize that state; `numThreads=1` is an
+option when the state cannot safely be shared.
