@@ -102,11 +102,10 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   FreeToBoundCorrection freeToBoundCorrection(false);
   std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(position, direction).planeSurface();
-  BOOST_CHECK(detail::transportCovarianceToBound(
-                  tgContext, *surface, covariance, jacobian, transportJacobian,
-                  derivatives, boundToFreeJacobian, additionalFreeCovariance,
-                  parameters, freeToBoundCorrection)
-                  .ok());
+  detail::transportCovarianceToBound(
+      tgContext, *surface, covariance, jacobian, transportJacobian, derivatives,
+      boundToFreeJacobian, additionalFreeCovariance, parameters,
+      freeToBoundCorrection);
 
   BOOST_CHECK_NE(covariance, Covariance::Identity());
   BOOST_CHECK_NE(jacobian, 2. * Jacobian::Identity());
@@ -115,12 +114,32 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   BOOST_CHECK_NE(boundToFreeJacobian, 4. * BoundToFreeMatrix::Identity());
   BOOST_CHECK_EQUAL(parameters, startParameters);
 
-  // Produce a curvilinear state without covariance matrix
-  auto curvResult = detail::curvilinearState(
-      covariance, jacobian, transportJacobian, derivatives, boundToFreeJacobian,
-      std::nullopt, parameters, particleHypothesis, false, 1337.);
-  BOOST_CHECK(!std::get<0>(curvResult).covariance().has_value());
-  BOOST_CHECK_EQUAL(std::get<2>(curvResult), 1337.);
+  // Produce curvilinear parameters without covariance matrix
+  auto curvPars = detail::curvilinearParameters(parameters, std::nullopt,
+                                                particleHypothesis);
+  BOOST_CHECK(!curvPars.covariance().has_value());
+  CHECK_CLOSE_ABS(curvPars.position(tgContext), position, 1e-12);
+  CHECK_CLOSE_ABS(curvPars.direction(), direction, 1e-12);
+
+  // Produce curvilinear parameters with covariance matrix
+  curvPars =
+      detail::curvilinearParameters(parameters, covariance, particleHypothesis);
+  BOOST_CHECK(curvPars.covariance().has_value());
+  BOOST_CHECK_EQUAL(*curvPars.covariance(), covariance);
+
+  // Produce bound parameters without covariance matrix
+  auto boundPars = detail::boundParameters(tgContext, *surface, parameters,
+                                           std::nullopt, particleHypothesis)
+                       .value();
+  BOOST_CHECK(!boundPars.covariance().has_value());
+  BOOST_CHECK_EQUAL(&boundPars.referenceSurface(), surface.get());
+
+  // Produce bound parameters with covariance matrix
+  boundPars = detail::boundParameters(tgContext, *surface, parameters,
+                                      covariance, particleHypothesis)
+                  .value();
+  BOOST_CHECK(boundPars.covariance().has_value());
+  BOOST_CHECK_EQUAL(*boundPars.covariance(), covariance);
 
   // Reset
   covariance = Covariance::Identity();
@@ -128,64 +147,14 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   transportJacobian = 3. * FreeMatrix::Identity();
   derivatives << 9., 10., 11., 12., 13., 14., 15., 16.;
   boundToFreeJacobian = 4. * BoundToFreeMatrix::Identity();
-
-  // Produce a curvilinear state with covariance matrix
-  curvResult = detail::curvilinearState(
-      covariance, jacobian, transportJacobian, derivatives, boundToFreeJacobian,
-      additionalFreeCovariance, parameters, particleHypothesis, true, 1337.);
-  BOOST_CHECK(std::get<0>(curvResult).covariance().has_value());
-  BOOST_CHECK_NE(*(std::get<0>(curvResult).covariance()),
-                 Covariance::Identity());
-  BOOST_CHECK_NE(std::get<1>(curvResult), 2. * Jacobian::Identity());
-  BOOST_CHECK_EQUAL(std::get<2>(curvResult), 1337.);
-
-  // Produce a bound state without covariance matrix
-  auto covarianceBefore = covariance;
-  auto boundResult =
-      detail::boundState(
-          tgContext, *surface, covariance, jacobian, transportJacobian,
-          derivatives, boundToFreeJacobian, additionalFreeCovariance,
-          parameters, particleHypothesis, false, 1337., freeToBoundCorrection)
-          .value();
-  BOOST_CHECK(std::get<0>(curvResult).covariance().has_value());
-  BOOST_CHECK_EQUAL(*(std::get<0>(curvResult).covariance()), covarianceBefore);
-  BOOST_CHECK_EQUAL(std::get<2>(boundResult), 1337.);
-
-  // Reset
-  covariance = Covariance::Identity();
-  jacobian = 2. * Jacobian::Identity();
-  transportJacobian = 3. * FreeMatrix::Identity();
-  derivatives << 9., 10., 11., 12., 13., 14., 15., 16.;
-  boundToFreeJacobian = 4. * BoundToFreeMatrix::Identity();
-
-  // Produce a bound state with covariance matrix
-  boundResult =
-      detail::boundState(tgContext, *surface, covariance, jacobian,
-                         transportJacobian, derivatives, boundToFreeJacobian,
-                         additionalFreeCovariance, parameters,
-                         ParticleHypothesis::pion(), true, 1337.,
-                         freeToBoundCorrection)
-          .value();
-  BOOST_CHECK(std::get<0>(boundResult).covariance().has_value());
-  BOOST_CHECK_NE(*(std::get<0>(boundResult).covariance()),
-                 Covariance::Identity());
-  BOOST_CHECK_NE(std::get<1>(boundResult), 2. * Jacobian::Identity());
-  BOOST_CHECK_EQUAL(std::get<2>(boundResult), 1337.);
-
-  // Reset
   freeToBoundCorrection.apply = true;
 
-  // Produce a bound state with free to bound correction
-  boundResult =
-      detail::boundState(tgContext, *surface, covariance, jacobian,
-                         transportJacobian, derivatives, boundToFreeJacobian,
-                         additionalFreeCovariance, parameters,
-                         ParticleHypothesis::pion(), true, 1337.,
-                         freeToBoundCorrection)
-          .value();
-  BOOST_CHECK(std::get<0>(boundResult).covariance().has_value());
-  BOOST_CHECK_NE(*(std::get<0>(boundResult).covariance()),
-                 Covariance::Identity());
+  // Transport to the surface with free to bound correction
+  detail::transportCovarianceToBound(
+      tgContext, *surface, covariance, jacobian, transportJacobian, derivatives,
+      boundToFreeJacobian, additionalFreeCovariance, parameters,
+      freeToBoundCorrection);
+  BOOST_CHECK_NE(covariance, Covariance::Identity());
 }
 
 std::pair<BoundVector, BoundMatrix> boundToBound(const BoundVector& parIn,

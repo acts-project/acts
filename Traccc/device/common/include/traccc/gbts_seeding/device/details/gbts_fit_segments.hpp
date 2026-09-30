@@ -201,7 +201,7 @@ TRACCC_HOST_DEVICE inline bool gbts_kalman_update(
 
   // Measurement update of the r-z line.
   for (unsigned int i = 0u; i < 2u; i++) {
-    new_ts->m_Y[i] += Dx * new_ts->m_Cy(0, static_cast<int>(i)) * resid_y;
+    new_ts->m_Y[i] += Dy * new_ts->m_Cy(0, static_cast<int>(i)) * resid_y;
   }
 
   // z0 cut: extrapolate the line back to r = 0 and reject large |z0|.

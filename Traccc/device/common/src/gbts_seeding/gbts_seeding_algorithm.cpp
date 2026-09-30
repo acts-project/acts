@@ -123,15 +123,6 @@ auto gbts_seeding_algorithm::create_edges(
     vecmem::vector<unsigned int>& h_counters) const -> graph_making_output {
   const gbts_seedfinder_config& cfg = m_config;
 
-  // Per bin pair tables.
-  vecmem::data::vector_buffer<uint2> bin_pairs_buf(m_nBinPairs, mr().main);
-  copy().setup(bin_pairs_buf)->ignore();
-  copy()(vecmem::get_data(m_bin_pairs), bin_pairs_buf)->ignore();
-  vecmem::data::vector_buffer<unsigned int> pair_group_begin_buf(m_nBinPairs,
-                                                                 mr().main);
-  copy().setup(pair_group_begin_buf)->ignore();
-  copy()(vecmem::get_data(m_pair_group_begin), pair_group_begin_buf)->ignore();
-
   // 1. Work list: one item per (bin pair, chunk of the inner bin).
   constexpr unsigned int chunk_size = gbts_consts::edge_chunk_size;
   const unsigned int nWorkMax =
@@ -144,7 +135,7 @@ auto gbts_seeding_algorithm::create_edges(
   copy().setup(work_items_buf)->ignore();
   gbts_build_edge_work_list_kernel({
       .nBinPairs = m_nBinPairs,
-      .bin_pairs = bin_pairs_buf,
+      .bin_pairs = m_bin_pairs_buffer,
       .eta_bin_offsets = eta_bin_offsets,
       .bin_rads = bin_rads,
       .gbts_dphi_window_params = cfg.gbts_dphi_window_params,
@@ -192,7 +183,7 @@ auto gbts_seeding_algorithm::create_edges(
       .node_params = node_params,
       .node_phi = node_phi,
       .gbts_make_graph_edges_params = cfg.gbts_make_graph_edges_params,
-      .pair_group_begin = pair_group_begin_buf,
+      .pair_group_begin = m_pair_group_begin_buffer,
       .edge_counts = edge_counts_buf,
       .num_outgoing_edges = num_outgoing_edges_buf,
       .edge_params_maker = edge_params_maker,
@@ -520,17 +511,25 @@ void gbts_seeding_algorithm::prepare_bin_pairs() {
   }
   m_nBinPairs = static_cast<unsigned int>(binTables.size());
   m_maxPairsPerBin1 = 0;
-  m_bin_pairs.resize(m_nBinPairs);
-  m_pair_group_begin.resize(m_nBinPairs);
+  std::vector<uint2> bin_pairs(m_nBinPairs);
+  std::vector<unsigned int> pair_group_begin(m_nBinPairs);
   unsigned int run = 0;
   for (unsigned int i = 0; i < m_nBinPairs; i++) {
     const bool same_bin1 =
         (i > 0) && (binTables[i - 1].first == binTables[i].first);
     run = same_bin1 ? run + 1 : 1;
     m_maxPairsPerBin1 = std::max(m_maxPairsPerBin1, run);
-    m_bin_pairs[i] = uint2{binTables[i].first, binTables[i].second};
-    m_pair_group_begin[i] = same_bin1 ? m_pair_group_begin[i - 1] : i;
+    bin_pairs[i] = uint2{binTables[i].first, binTables[i].second};
+    pair_group_begin[i] = same_bin1 ? pair_group_begin[i - 1] : i;
   }
+  m_bin_pairs_buffer =
+      vecmem::data::vector_buffer<uint2>(m_nBinPairs, mr().main);
+  m_pair_group_begin_buffer =
+      vecmem::data::vector_buffer<unsigned int>(m_nBinPairs, mr().main);
+  copy().setup(m_bin_pairs_buffer)->ignore();
+  copy().setup(m_pair_group_begin_buffer)->ignore();
+  copy()(vecmem::get_data(bin_pairs), m_bin_pairs_buffer)->ignore();
+  copy()(vecmem::get_data(pair_group_begin), m_pair_group_begin_buffer)->wait();
 }
 
 auto gbts_seeding_algorithm::operator()(
