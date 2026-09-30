@@ -23,7 +23,6 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
-#include "Acts/TrackFitting/detail/MeasurementSurfaces.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -590,8 +589,7 @@ class ReferenceTrajectoryBuilder {
     if constexpr (!isDirectNavigator) {
       if (sSequence != nullptr) {
         for (const Surface* surface : *sSequence) {
-          Acts::detail::registerMeasurementSurface(propagatorOptions.navigation,
-                                                   *surface);
+          propagatorOptions.navigation.registerMeasurementSurface(*surface);
         }
       }
     } else {

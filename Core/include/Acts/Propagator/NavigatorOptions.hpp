@@ -106,6 +106,12 @@ struct NavigatorPlainOptions {
     additionalSurfaces.emplace_back(&surface, boundaryTolerance, volume,
                                     dropAfterReached);
   }
+
+  /// Make the navigator reach a measurement surface without a bounds check. A
+  /// surface of the tracking geometry is extended. A free surface has no
+  /// geometry identifier, so it is offered as an additional surface.
+  /// @param surface The measurement surface
+  void registerMeasurementSurface(const Surface& surface);
 };
 
 }  // namespace Acts
