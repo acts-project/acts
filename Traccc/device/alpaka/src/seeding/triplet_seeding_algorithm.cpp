@@ -83,7 +83,7 @@ struct find_doublets {
       TAcc const& acc, seedfinder_config config,
       edm::spacepoint_collection::const_view spacepoints,
       traccc::details::spacepoint_grid_types::const_view sp_grid,
-      device::doublet_counter_collection_types::const_view doublet_counter,
+      device::doublet_counter_collection_types::view doublet_counter,
       device::device_doublet_collection_types::view mb_doublets,
       device::device_doublet_collection_types::view mt_doublets) const {
     auto const globalThreadIdx =

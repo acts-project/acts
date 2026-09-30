@@ -98,11 +98,11 @@ inline void find_triplets(
   for (unsigned int i = mt_start_idx; i < mt_end_idx; ++i) {
     const sp_location spT_loc = mid_top_doublet_device[i].sp2;
 
-    if (spT_loc.bin_idx == std::numeric_limits<unsigned int>::max() &&
-        spT_loc.sp_idx == std::numeric_limits<unsigned int>::max())
-        [[unlikely]] {
-      continue;
-    }
+    // Sentinels should never be accessed, because m_nMidTop is updated to
+    // exclude them; this assert checks whether that assumption actually
+    // holds.
+    assert(spT_loc.bin_idx != std::numeric_limits<unsigned int>::max() &&
+           spT_loc.sp_idx != std::numeric_limits<unsigned int>::max());
 
     const unsigned int spT_idx = sp_grid.bin(spT_loc.bin_idx)[spT_loc.sp_idx];
     const edm::spacepoint_collection::const_device::const_proxy_type spT =
