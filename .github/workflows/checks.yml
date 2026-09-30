@@ -78,7 +78,7 @@ jobs:
       - name: Install clang
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang libeigen3-dev libboost-dev parallel
+          sudo apt-get install -y clang libboost-dev parallel
       - name: Check
         run: >
           CI/missing_include_check.sh

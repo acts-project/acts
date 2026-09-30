@@ -63,7 +63,7 @@ jobs:
       - name: Install APT packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y graphviz texlive-bibtex-extra libeigen3-dev libboost-dev cmake
+          sudo apt-get install -y graphviz texlive-bibtex-extra libboost-dev cmake
 
       - name: Configure
         run: >
