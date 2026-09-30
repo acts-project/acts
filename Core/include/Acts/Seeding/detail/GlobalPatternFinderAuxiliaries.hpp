@@ -43,14 +43,17 @@ concept GlobPatFinderHit = requires(const Hit_t hit,
     { hit.isPrecision() } -> std::same_as<bool>;
     /// Compare two hits for equality
     { hit == otherHit } -> std::same_as<bool>;
+    /// Whether two hits represent overlapping detector information. This relation may 
+    /// be less restrictive than operator== and is used when determining whether 
+    /// reconstructed patterns share detector information.
+    { hit.overlaps(otherHit) } -> std::same_as<bool>;
 };
 
 template<typename T, typename Hit_t>
 concept PatternTopology = 
     GlobPatFinderHit<Hit_t> && 
     requires(const Hit_t& hit1, 
-             const Hit_t& hit2,
-             const Hit_t& hit) {
+             const Hit_t& hit2) {
     typename T::GroupIdx;
     typename T::LayerIdx;
     requires std::unsigned_integral<typename T::GroupIdx>;
@@ -59,7 +62,7 @@ concept PatternTopology =
     { T::nGroups } -> std::convertible_to<typename T::GroupIdx>;
     { T::layerSorter(hit1, hit2) } -> std::same_as<bool>;
     { T::sameLayer(hit1, hit2) } -> std::same_as<bool>;
-    { T::groupIndex(hit) } -> std::convertible_to<typename T::GroupIdx>;
+    { T::groupIndex(hit1) } -> std::convertible_to<typename T::GroupIdx>;
 };
 
 template<typename Sector_t>

@@ -504,8 +504,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::resolveOverlaps(
             }
             const std::size_t nSharedInGroup = std::ranges::count_if(hitsA, [&](const OrderedHit& hitA){
                 return std::ranges::any_of(hitsB, [&hitA](const OrderedHit& hitB) {
-                    return hitA->spacePoint()->primaryMeasurement() == 
-                           hitB->spacePoint()->primaryMeasurement();
+                    return hitA->overlaps(*hitB);
                 });
             });
             nSharedHits += nSharedInGroup;
