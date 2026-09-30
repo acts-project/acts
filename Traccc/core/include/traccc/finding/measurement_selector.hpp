@@ -151,10 +151,26 @@ struct measurement_selector {
         calibrated_measurement_covariance<algebra_t, 2>(measurement, cfg);
     const auto subs = measurement.subspace();
     const auto meas0 = static_cast<unsigned int>(subs[0]);
-    getter::element(cov, meas0, meas0) = getter::element(V, 0, 0);
+    // WARNING: This code relies on the fact that the subspace always
+    // permutes loc0 and loc1.
+    assert(meas0 == e_bound_loc0 || meas0 == e_bound_loc1);
+    if (meas0 == e_bound_loc0) {
+      getter::element(cov, e_bound_loc0, e_bound_loc0) =
+          getter::element(V, 0, 0);
+    } else {
+      getter::element(cov, e_bound_loc1, e_bound_loc1) =
+          getter::element(V, 0, 0);
+    }
     if (measurement.dimensions() == 2u) {
       const auto meas1 = static_cast<unsigned int>(subs[1]);
-      getter::element(cov, meas1, meas1) = getter::element(V, 1, 1);
+      assert(meas1 == e_bound_loc0 || meas1 == e_bound_loc1);
+      if (meas1 == e_bound_loc0) {
+        getter::element(cov, e_bound_loc0, e_bound_loc0) =
+            getter::element(V, 1, 1);
+      } else {
+        getter::element(cov, e_bound_loc1, e_bound_loc1) =
+            getter::element(V, 1, 1);
+      }
     }
   }
 
