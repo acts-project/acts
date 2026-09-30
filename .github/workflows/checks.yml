@@ -139,9 +139,11 @@ jobs:
           --with-requirements CI/self_tests/requirements.txt
           python -m pytest -q
           CI/dependencies/test_select_lockfile.py
+          CI/dependencies/test_python_environment.py
           CI/public_api/test_check_deprecated_docs.py
           CI/test_check_unused_files.py
           CI/test_ccache_snapshot.py
+          CI/test_cibuildwheel.py
 
   codegen_prebuilt:
     # Pre-generates the code the build would otherwise generate, then checks

@@ -38,7 +38,7 @@ export CIBW_TEST_COMMAND="pytest {package}/Python/Examples/tests -m pypi -v"
 # patchelf 0.17.2 (pinned in the manylinux image) corrupts auditwheel-vendored
 # libs (e.g. libzstd) it repairs, causing a segfault at import time. Force a
 # newer patchelf until manylinux ships a stable release with the fix.
-export CIBW_REPAIR_WHEEL_COMMAND_LINUX="uv tool install --force --prerelease allow patchelf==0.19.0.0rc1 && auditwheel repair -w {dest_dir} {wheel}"
+export CIBW_REPAIR_WHEEL_COMMAND_LINUX="uv tool install --force --prerelease allow patchelf==0.19.0.0rc1 && PATH=\"\$(uv tool dir --bin):\$PATH\" auditwheel repair -w {dest_dir} {wheel}"
 # spack's thrift links the python.org framework's openssl while Arrow links
 # spack's own, giving delocate two different libssl.3.dylib to vendor. The
 # wrapper collapses them onto spack's copy first; see the script for details.

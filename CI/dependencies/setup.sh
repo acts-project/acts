@@ -462,16 +462,19 @@ end_section
 start_section "Prepare python environment"
 "${view_dir}/bin/python3" -m venv --system-site-packages "$venv_dir"
 # uv does not reuse packages inherited through --system-site-packages. Exclude
-# the distributions supplied by the Spack view so it cannot shadow the native
-# stack (in particular numpy) with PyPI wheels. Spack's versions take precedence
-# over the test requirements for these packages. Keep this list for later
-# installs in jobs that source the generated environment file.
+# distributions visible to the target venv so it cannot shadow the native stack
+# (in particular numpy) with PyPI wheels. Inspect the venv, not the view: Python
+# can resolve the view's symlinked interpreter to a different base prefix when
+# creating a venv, so packages visible in the view may not be inherited.
+# Inherited versions take precedence over the test requirements. Keep this list
+# for later installs in jobs that source the generated environment file.
 spack_python_excludes="${venv_dir}/spack-python-excludes.txt"
-"${view_dir}/bin/python3" -I -c '
+"${venv_dir}/bin/python3" -I -c '
 from importlib.metadata import distributions
 print("\n".join(sorted({dist.metadata["Name"] for dist in distributions()})))
 ' > "$spack_python_excludes"
 retry_transient uv pip install --python "${venv_dir}/bin/python3" --excludes "$spack_python_excludes" pyyaml jinja2
+"${venv_dir}/bin/python3" -c 'import yaml, jinja2'
 if [ "${full_install:-false}" == "true" ]; then
   retry_transient uv pip install --python "${venv_dir}/bin/python3" --excludes "$spack_python_excludes" \
     -r "${SCRIPT_DIR}/../../Python/Examples/tests/requirements.txt" histcmp==0.10.0 matplotlib pytest-md-report
