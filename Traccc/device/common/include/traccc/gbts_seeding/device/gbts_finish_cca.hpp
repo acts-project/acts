@@ -29,6 +29,8 @@ struct gbts_finish_cca_payload {
   unsigned char minLevel;
   /// Compacted graph from gbts_compress_graph
   vecmem::data::vector_view<const unsigned int> output_graph;
+  /// Number of neighbours per compacted edge
+  vecmem::data::vector_view<const unsigned char> output_num_neighbours;
   /// Per-edge level from gbts_run_cca_iteration
   vecmem::data::vector_view<const unsigned char> levels;
   /// In/out: per-edge (subtree path count, terminus flag: 0 = seed root
