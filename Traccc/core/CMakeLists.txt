@@ -54,7 +54,6 @@ traccc_add_library( traccc_core core TYPE SHARED
   "src/bfield/construct_const_bfield.cpp"
   # Geometry description.
   "include/traccc/geometry/detector.hpp"
-  "include/traccc/geometry/pixel_data.hpp"
   "include/traccc/geometry/detector_design_description.hpp"
   "include/traccc/geometry/detector_conditions_description.hpp"
   # Utilities.

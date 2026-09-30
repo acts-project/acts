@@ -32,14 +32,7 @@ template <detray::concepts::algebra algebra_t = traccc::default_algebra>
 using bound_parameters_vector = detray::bound_parameters_vector<algebra_t>;
 
 template <detray::concepts::algebra algebra_t = traccc::default_algebra>
-using free_vector = typename free_track_parameters<algebra_t>::vector_type;
-
-template <detray::concepts::algebra algebra_t = traccc::default_algebra>
 using bound_vector = typename bound_parameters_vector<algebra_t>::vector_type;
-
-template <detray::concepts::algebra algebra_t = traccc::default_algebra>
-using bound_covariance =
-    typename bound_track_parameters<algebra_t>::covariance_type;
 
 template <detray::concepts::algebra algebra_t = traccc::default_algebra>
 using bound_matrix = detray::bound_matrix<algebra_t>;

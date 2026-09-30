@@ -53,11 +53,6 @@ struct subspace {
   template <size_type ROWS, size_type COLS>
   using matrix_type = detray::dmatrix<algebra_t, ROWS, COLS>;
 
-  using subspace_vector = matrix_type<kSize, 1u>;
-  using fullspace_vector = matrix_type<kFullSize, 1u>;
-  using projection_matrix = matrix_type<kSize, kFullSize>;
-  using expansion_matrix = matrix_type<kFullSize, kSize>;
-
   static constexpr size_type size = kSize;
   static constexpr size_type fullSize = kFullSize;
 

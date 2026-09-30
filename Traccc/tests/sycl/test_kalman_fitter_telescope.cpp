@@ -8,11 +8,9 @@
 // Project include(s).
 #include "traccc/bfield/construct_const_bfield.hpp"
 #include "traccc/bfield/magnetic_field_types.hpp"
-#include "traccc/device/container_d2h_copy_alg.hpp"
 #include "traccc/edm/track_container.hpp"
 #include "traccc/io/detector.hpp"
 #include "traccc/io/utils.hpp"
-#include "traccc/performance/details/is_same_object.hpp"
 #include "traccc/resolution/fitting_performance_writer.hpp"
 #include "traccc/simulation/event_generators.hpp"
 #include "traccc/simulation/simulator.hpp"

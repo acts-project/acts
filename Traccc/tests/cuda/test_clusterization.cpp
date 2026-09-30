@@ -11,7 +11,6 @@
 #include "traccc/cuda/clusterization/clusterization_algorithm.hpp"
 #include "traccc/definitions/common.hpp"
 #include "traccc/geometry/detector_design_description.hpp"
-#include "traccc/performance/collection_comparator.hpp"
 
 // VecMem include(s).
 #include <vecmem/memory/cuda/managed_memory_resource.hpp>
@@ -20,6 +19,9 @@
 
 // GTest include(s).
 #include <gtest/gtest.h>
+
+// System include(s).
+#include <cmath>
 
 using namespace traccc;
 
@@ -66,18 +68,30 @@ void run_clustering_test(
   ASSERT_EQ(copy.get_size(measurements_buffer), references.size());
   ASSERT_EQ(copy.get_size(measurements_buffer_wdjs), references.size());
 
-  auto check_all_matched = [&references](const auto& meas) {
+  // Two measurements match if they are on the same surface, and their
+  // positions and variances agree to within a relative uncertainty.
+  auto is_same_measurement = [](const auto& a, const auto& b, scalar unc) {
+    auto is_same_scalar = [unc](scalar lhs, scalar rhs) {
+      return std::abs(lhs - rhs) <=
+             unc * ((std::abs(lhs) + std::abs(rhs)) / 2.f);
+    };
+    return (a.surface_link() == b.surface_link()) &&
+           is_same_scalar(a.local_position()[0], b.local_position()[0]) &&
+           is_same_scalar(a.local_position()[1], b.local_position()[1]) &&
+           is_same_scalar(a.local_variance()[0], b.local_variance()[0]) &&
+           is_same_scalar(a.local_variance()[1], b.local_variance()[1]);
+  };
+
+  auto check_all_matched = [&references,
+                            &is_same_measurement](const auto& meas) {
     for (unsigned int i = 0; i < meas.size(); ++i) {
       const auto test = meas.at(i);
-      // 0.01 % uncertainty
-      auto iso = traccc::details::is_same_object<
-          edm::measurement_collection::const_device::object_type>(test,
-                                                                  0.0001f);
       bool matched = false;
 
       for (std::size_t j = 0; j < references.size(); ++j) {
         const auto ref = references.at(j);
-        if (iso(ref)) {
+        // 0.01 % uncertainty
+        if (is_same_measurement(ref, test, 0.0001f)) {
           matched = true;
           break;
         }

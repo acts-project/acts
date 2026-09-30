@@ -38,8 +38,6 @@ traccc_add_test(
     test_grid2.cu
     test_spacepoint_formation.cpp
     test_thrust.cu
-    test_sync.cu
-    test_array_wrapper.cu
     test_mutex.cu
     test_unique_lock.cu
     test_sanity_contiguous_on.cu

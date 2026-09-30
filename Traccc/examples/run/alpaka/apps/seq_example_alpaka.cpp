@@ -16,7 +16,6 @@
 #include "traccc/alpaka/seeding/triplet_seeding_algorithm.hpp"
 #include "traccc/alpaka/utils/queue.hpp"
 #include "traccc/alpaka/utils/vecmem_objects.hpp"
-#include "traccc/device/container_d2h_copy_alg.hpp"
 #include "traccc/efficiency/seeding_performance_writer.hpp"
 #include "traccc/examples/make_magnetic_field.hpp"
 #include "traccc/fitting/kalman_filter/kalman_fitter.hpp"
@@ -37,7 +36,6 @@
 #include "traccc/options/track_gbts_seeding.hpp"
 #include "traccc/options/track_propagation.hpp"
 #include "traccc/options/track_seeding.hpp"
-#include "traccc/performance/container_comparator.hpp"
 #include "traccc/performance/timer.hpp"
 #include "traccc/utils/propagation.hpp"
 

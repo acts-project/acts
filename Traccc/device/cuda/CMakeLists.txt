@@ -29,7 +29,6 @@ traccc_add_library( traccc_cuda cuda TYPE SHARED
   "src/utils/cuda_error_handling.cpp"
   "src/utils/global_index.hpp"
   "src/utils/magnetic_field_types.hpp"
-  "src/utils/sync.cuh"
   "src/utils/thread_id.hpp"
   "src/utils/utils.hpp"
   "src/utils/utils.cpp"

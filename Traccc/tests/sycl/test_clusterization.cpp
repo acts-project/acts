@@ -10,7 +10,6 @@
 #include "traccc/definitions/common.hpp"
 #include "traccc/geometry/detector_conditions_description.hpp"
 #include "traccc/geometry/detector_design_description.hpp"
-#include "traccc/performance/collection_comparator.hpp"
 #include "traccc/sycl/clusterization/clusterization_algorithm.hpp"
 
 // VecMem include(s).
@@ -19,6 +18,9 @@
 
 // GTest include(s).
 #include <gtest/gtest.h>
+
+// System include(s).
+#include <cmath>
 
 using namespace traccc;
 
@@ -91,16 +93,28 @@ TEST(SYCLClustering, SingleModule) {
                         {1u, 1u},
                         1u});
 
+  // Two measurements match if they are on the same surface, and their
+  // positions and variances agree to within a relative uncertainty.
+  auto is_same_measurement = [](const auto& a, const auto& b, scalar unc) {
+    auto is_same_scalar = [unc](scalar lhs, scalar rhs) {
+      return std::abs(lhs - rhs) <=
+             unc * ((std::abs(lhs) + std::abs(rhs)) / 2.f);
+    };
+    return (a.surface_link() == b.surface_link()) &&
+           is_same_scalar(a.local_position()[0], b.local_position()[0]) &&
+           is_same_scalar(a.local_position()[1], b.local_position()[1]) &&
+           is_same_scalar(a.local_variance()[0], b.local_variance()[0]) &&
+           is_same_scalar(a.local_variance()[1], b.local_variance()[1]);
+  };
+
   for (unsigned int i = 0; i < measurements.size(); ++i) {
     const auto test = measurements.at(i);
-    // 0.01 % uncertainty
-    auto iso = traccc::details::is_same_object<
-        edm::measurement_collection::const_device::object_type>(test, 0.0001f);
     bool matched = false;
 
     for (std::size_t j = 0; j < references.size(); ++j) {
       const auto ref = references.at(j);
-      if (iso(ref)) {
+      // 0.01 % uncertainty
+      if (is_same_measurement(ref, test, 0.0001f)) {
         matched = true;
         break;
       }

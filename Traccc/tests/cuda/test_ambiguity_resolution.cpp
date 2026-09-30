@@ -8,8 +8,6 @@
 // Project include(s).
 #include "traccc/ambiguity_resolution/ambiguity_resolution_config.hpp"
 #include "traccc/cuda/ambiguity_resolution/greedy_ambiguity_resolution_algorithm.hpp"
-#include "traccc/device/container_d2h_copy_alg.hpp"
-#include "traccc/device/container_h2d_copy_alg.hpp"
 #include "traccc/utils/memory_resource.hpp"
 
 // VecMem include(s).

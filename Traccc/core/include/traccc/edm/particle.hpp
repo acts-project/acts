@@ -37,7 +37,5 @@ inline bool operator<(const particle& lhs, const particle& rhs) {
 
 /// Declare all particle collection types
 using particle_collection_types = collection_types<particle>;
-/// Declare all particle container types
-using particle_container_types = container_types<particle, unsigned int>;
 
 }  // namespace traccc

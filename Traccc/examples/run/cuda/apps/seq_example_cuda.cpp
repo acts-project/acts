@@ -17,7 +17,6 @@
 #include "traccc/cuda/seeding/triplet_seeding_algorithm.hpp"
 #include "traccc/cuda/utils/make_magnetic_field.hpp"
 #include "traccc/cuda/utils/stream_wrapper.hpp"
-#include "traccc/device/container_d2h_copy_alg.hpp"
 #include "traccc/efficiency/seeding_performance_writer.hpp"
 #include "traccc/examples/make_magnetic_field.hpp"
 #include "traccc/gbts_seeding/gbts_seeding_config.hpp"
@@ -41,7 +40,6 @@
 #include "traccc/options/track_propagation.hpp"
 #include "traccc/options/track_resolution.hpp"
 #include "traccc/options/track_seeding.hpp"
-#include "traccc/performance/container_comparator.hpp"
 #include "traccc/performance/timer.hpp"
 #include "traccc/utils/propagation.hpp"
 

@@ -252,29 +252,6 @@ struct measurement_selector {
 
     return cand;
   }
-
-  /// Measurement selection (collection of compatible measurements)
-  ///
-  /// @param bound_params predicted bound track parameters
-  /// @param measurements the measurement container
-  /// @param meas_range contains the index ranges into the measurements
-  /// @param cfg the calibration configuration
-  /// @param is_line whether the measurement belong to a line surface
-  ///
-  /// @returns a collection of compatible measurements, sorted by pred.
-  /// chi2
-  template <detray::concepts::algebra algebra_t>
-  TRACCC_HOST_DEVICE static vecmem::vector<candidate_measurement>
-  find_compatible_measurements(
-      const bound_track_parameters<algebra_t>& /*bound_params*/,
-      const typename edm::measurement_collection::const_device&
-      /*measurements*/,
-      vecmem::device_vector<unsigned int> /*meas_ranges*/,
-      const config& /*cfg*/, const bool /*is_line*/) {
-    /* TODO: Implement*/
-    assert(false);
-    return {};
-  }
 };
 
 }  // namespace traccc
