@@ -1,9 +1,11 @@
 @defgroup python_bindings Python Bindings
 @brief Use ACTS from Python, with the PyPI wheel or a source build.
 
-<span id="python-bindings-overview"></span>The `pyacts` distribution is imported as `acts`.
-It exposes the core library, Fatras, and the
-Examples framework. A source build can also expose optional plugins.
+<span id="python-bindings-overview"></span>The Python bindings primarily expose the ACTS
+Examples framework: configure readers, algorithms, and writers in a `Sequencer` to run tracking
+workflows. Selected Core types are bound where the Examples workflows need them. The bindings do
+not aim to expose every Core tool directly to Python; use Core functionality through the
+Examples algorithms.
 
 ## Installation
 
@@ -12,6 +14,10 @@ Install the [PyPI package](https://pypi.org/project/pyacts/) with:
 ```console
 pip install pyacts
 ```
+
+> [!warning]
+> The PyPI distribution is named `pyacts`, but the Python module is imported as `acts`. The
+> wheel includes the Examples framework, Fatras, and selected Core bindings.
 
 The wheel includes `.pyi` type stubs and supports Linux and macOS with Python 3.11 or newer.
 
@@ -24,8 +30,9 @@ cmake --build <build>
 source <build>/this_acts_withdeps.sh
 ```
 
-Enable optional plugins with their CMake options (for example,
-`-DACTS_BUILD_PLUGIN_ROOT=ON`). A source build needs Python development headers.
+Enable optional components with their CMake options. For ROOT readers, writers, and evaluation,
+use `-DACTS_BUILD_EXAMPLES_ROOT=ON`; this also enables the ROOT plugin. A source build needs Python
+development headers.
 
 | Capability | PyPI (`pyacts`) | Full installation (source build) |
 | :--- | :--- | :--- |

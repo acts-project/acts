@@ -3,7 +3,7 @@ import matplotlib
 matplotlib.use("Agg")
 
 
-def test_plotting():
+def test_plotting(tmp_path):
     #! [Plotting an ACTS histogram]
     import matplotlib.pyplot as plt
     import acts
@@ -16,7 +16,7 @@ def test_plotting():
 
     fig, ax = plt.subplots()
     hist.plot(ax=ax)
-    fig.savefig("demo_histogram.png")
+    fig.savefig(tmp_path / "demo_histogram.png")
     #! [Plotting an ACTS histogram]
 
     plt.close(fig)

@@ -18,7 +18,7 @@ the build configuration (see @ref python_bindings):
   - Uproot (`acts.examples.uproot`): Python readers for particle and sim-hit ROOT files.
   - JSON (`acts.json`, `acts.examples.json`): geometry and material data, not event data.
 
-# The ROOT-free path (PyPI wheel)
+# Working without the ROOT plugin
 
 ## Arrow/Parquet
 
@@ -50,7 +50,7 @@ your `TrackingGeometry`.
 using [uproot](https://uproot.readthedocs.io/) instead of the ROOT plugin — useful when you have
 ROOT files from elsewhere but don't have (or want) a ROOT-enabled ACTS build. They double as a
 complete, real-world example of a custom `IReader` (see @ref python_custom_algorithms), including
-buffered multi-event reads.
+buffered multi-event reads. Install `uproot` and `numpy` separately to use them.
 
 # Geometry without DD4hep
 

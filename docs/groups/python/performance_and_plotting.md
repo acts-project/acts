@@ -14,8 +14,8 @@ also includes some summary objects and can include matching details.
 | Pattern recognition: efficiency, fake and duplicate tracks | `PythonPatternRecognitionPerformanceWriter` | `RootPatternRecognitionPerformanceWriter` |
 | Track parameters: residuals, pulls, efficiency | `PythonTrackParameterPerformanceWriter` | `RootTrackParameterPerformanceWriter` |
 
-The pairs take the same input collections and use similar configurations. For example, this
-configures the Python pattern-recognition writer:
+The pattern-recognition pair takes the same input collections and uses similar configurations.
+With a `Sequencer` and truth matcher already configured, add the Python writer like this:
 
 ```python
 cfg = acts.examples.PythonPatternRecognitionPerformanceWriter.Config()
@@ -41,7 +41,10 @@ for ROOT output.
 
 The track-parameter writers fit residual and pull distributions to extract mean and width
 profiles. The ROOT writer uses the ROOT fit backend. For the Python writer, set
-`cfg.fitFunction = acts.examples.scipy.makeScipyHistogramFitFunction()` to use SciPy instead.
+`cfg.fitFunction = acts.examples.scipy.makeScipyHistogramFitFunction()` to use SciPy instead;
+install `scipy` and `numpy` separately. The ROOT track-parameter writer also supports evaluation
+at individual track states and against calibrated measurements. The Python writer currently
+evaluates track reference parameters against truth particles.
 
 `TrackTruthMatcher(doubleMatching=True)` is the standard way to produce the
 `inputTrackParticleMatching`/`inputParticleTrackMatching` collections these writers need.
@@ -89,10 +92,10 @@ measured ACTS output; regenerate them with
 ![Illustrative tracking efficiency versus transverse momentum.](python/tracking_efficiency.svg){width=450px}
 ![Illustrative track-parameter residual distribution.](python/track_residual.svg){width=450px}
 
-For a one-dimensional histogram, `boost_histogram.Histogram(histograms["res_d0"])` gives a
+For a one-dimensional profile from this writer,
+`boost_histogram.Histogram(histograms["nMeasurements_vs_eta"])` gives a
 [boost-histogram](https://boost-histogram.readthedocs.io/) object for rebinning or other plotting
-tools. With track-state evaluation, the first two parameter names become `loc0` and `loc1`
-instead of `d0` and `z0`.
+tools.
 
 For geometry and track visualization (not histogram plotting), see
 `acts.examples.visualization.PyVisualization2D` and `TrackVisualizerAlg`, and
