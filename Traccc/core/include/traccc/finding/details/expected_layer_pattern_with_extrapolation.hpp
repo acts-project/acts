@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 /** TRACCC library, part of the ACTS project (R&D line)
  *
  * (c) 2026 CERN for the benefit of the ACTS project
@@ -28,13 +36,17 @@
 #include <detray/propagator/propagator.hpp>
 #include <detray/utils/ranges/single.hpp>
 
+// VecMem include(s).
+#include <vecmem/containers/data/vector_view.hpp>
+
 // System include(s).
 #include <limits>
 #include <vector>
 
 namespace traccc::details {
 
-/// Build an expected-layer pattern from a sequence of detector geometry identifiers.
+/// Build an expected-layer pattern from a sequence of detector geometry
+/// identifiers.
 template <typename geo_id_range_t>
 TRACCC_HOST_DEVICE inline expected_layer_pattern_type
 collect_expected_layer_pattern(const geo_id_range_t& geo_ids,
@@ -55,21 +67,19 @@ collect_expected_layer_pattern(const geo_id_range_t& geo_ids,
   return pattern;
 }
 
-/// Build an expected-layer pattern for a track by extrapolating from the
-/// perigee to the first sensitive surface.
+/// Build an expected-layer pattern for a track by extrapolating outward from
+/// perigee to sensitive detector layers.
 template <typename detector_t, typename bfield_t, typename track_t>
 TRACCC_HOST_DEVICE inline expected_layer_pattern_type
 collect_expected_layer_pattern_from_perigee(
     const detector_t& det, const bfield_t& field, const track_t& track,
-    const finding_config& config, const expected_layer_mapping_entry* map,
-    std::size_t map_size) {
+    const finding_config& config,
+    const vecmem::data::vector_view<const expected_layer_mapping_entry>& map) {
   expected_layer_pattern_type pattern{};
 
-  if (map == nullptr || map_size == 0u) {
+  if (map.size() == 0u) {
     TRACCC_INFO_HOST_DEVICE(
-        "Expected-layer pattern collection skipped: map=%p size=%llu",
-        static_cast<const void*>(map),
-        static_cast<unsigned long long>(map_size));
+        "Expected-layer pattern collection skipped: empty mapping");
     return pattern;
   }
 
@@ -77,9 +87,6 @@ collect_expected_layer_pattern_from_perigee(
 
   // Start from fitted/found bound parameters on the current surface.
   const auto bound_params = track.params();
-  const detray::tracking_surface sf{det, bound_params.surface_link()};
-  const auto free_seed = sf.bound_to_free_vector(
-      typename detector_t::geometry_context{}, bound_params);
 
   // Extrapolate to perigee first, then propagate outward for layer tagging.
   using nav_link_t = typename detector_t::surface_type::navigation_link;
@@ -174,13 +181,14 @@ collect_expected_layer_pattern_from_perigee(
     return pattern;
   }
 
-  // Run a CKF-like actor chain with expected-layer collector enabled.
-  using perigee_actor_chain_t = detray::actor_chain<
-      detray::actor::pathlimit_aborter<traccc::scalar>,
-      detray::actor::parameter_updater<traccc::default_algebra,
-                                       ckf_interactor_t>,
-      detray::actor::momentum_aborter<traccc::scalar>,
-      expected_layer_pattern_collector<expected_layer_table_mapper>>;
+  // Propagate outward through detector surfaces with expected layer pattern
+  // collection enabled.
+  using perigee_actor_chain_t =
+      detray::actor_chain<detray::actor::pathlimit_aborter<traccc::scalar>,
+                          detray::actor::parameter_updater<
+                              traccc::default_algebra, ckf_interactor_t>,
+                          detray::actor::momentum_aborter<traccc::scalar>,
+                          expected_layer_pattern_collector>;
   using perigee_propagator_t = detray::propagator<
       stepper_t, detray::caching_navigator<std::add_const_t<detector_t>>,
       perigee_actor_chain_t>;
@@ -197,12 +205,13 @@ collect_expected_layer_pattern_from_perigee(
 
   typename detray::actor::pathlimit_aborter<traccc::scalar>::state
       aborter_state{};
+  // Configure the updater; initialize its perigee state below.
   detray::actor::parameter_updater_state<typename detector_t::algebra_type>
       updater_state{prop_cfg};
   traccc::details::ckf_interactor_t::state interactor_state{};
   typename detray::actor::momentum_aborter<traccc::scalar>::state
       momentum_aborter_state{};
-  typename expected_layer_pattern_collector<expected_layer_table_mapper>::state
+  typename expected_layer_pattern_collector::state
       expected_layer_collector_state{};
 
   // Start at perigee without associating the updater with a detector surface.
@@ -212,8 +221,8 @@ collect_expected_layer_pattern_from_perigee(
   momentum_aborter_state.min_p(static_cast<traccc::scalar>(config.min_p));
   // Write collected layer bits into caller-provided output pattern.
   expected_layer_collector_state.pattern = &pattern;
-  expected_layer_collector_state.mapper.entries = map;
-  expected_layer_collector_state.mapper.size = map_size;
+  expected_layer_collector_state.mapper.entries = map.ptr();
+  expected_layer_collector_state.mapper.size = map.size();
 
   perigee_to_det_layers.propagate(
       perigee_propagation,
@@ -238,8 +247,8 @@ expected_layer_patterns_from_perigee(
     const detector_t& det, const bfield_t& field,
     const typename traccc::edm::track_container<
         typename detector_t::algebra_type>::const_device& tracks,
-    const finding_config& config, const expected_layer_mapping_entry* map,
-    std::size_t map_size) {
+    const finding_config& config,
+    const vecmem::data::vector_view<const expected_layer_mapping_entry>& map) {
   std::vector<expected_layer_pattern_type> patterns;
   patterns.reserve(tracks.tracks.size());
 
@@ -247,7 +256,7 @@ expected_layer_patterns_from_perigee(
   for (std::size_t track_index = 0u; track_index < tracks.tracks.size();
        ++track_index) {
     patterns.push_back(collect_expected_layer_pattern_from_perigee(
-        det, field, tracks.tracks.at(track_index), config, map, map_size));
+        det, field, tracks.tracks.at(track_index), config, map));
   }
 
   return patterns;

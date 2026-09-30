@@ -19,14 +19,6 @@ combinatorial_kalman_filter_algorithm::combinatorial_kalman_filter_algorithm(
     await_function_type await_func)
     : device::combinatorial_kalman_filter_algorithm(
           config, mr, copy, std::move(logger), std::move(kf_fitter)),
-      cuda::algorithm_base(str, std::move(await_func)),
-      m_expected_layer_config(config) {}
+      cuda::algorithm_base(str, std::move(await_func)) {}
 
-void combinatorial_kalman_filter_algorithm::update_expected_layer_mapping(
-    const expected_layer_mapping_entry* map, std::size_t map_size) {
-  device::combinatorial_kalman_filter_algorithm::update_expected_layer_mapping(
-      map, map_size);
-  m_expected_layer_config.expected_layer_map = map;
-  m_expected_layer_config.expected_layer_map_size = map_size;
-}
 }  // namespace traccc::cuda

@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 /** TRACCC library, part of the ACTS project (R&D line)
  *
  * (c) 2026 CERN for the benefit of the ACTS project
@@ -34,20 +42,6 @@ struct expected_layer_mapping_entry {
   unsigned int layer_index{0u};
 };
 
-/// Default mapper that disables pattern updates.
-struct null_expected_layer_mapper {
-  struct result {
-    bool valid{false};
-    unsigned int pattern_index{0u};
-    unsigned int layer_index{0u};
-  };
-
-  TRACCC_HOST_DEVICE constexpr result operator()(
-      const detray::geometry::identifier&) const {
-    return {};
-  }
-};
-
 /// Mapper that uses a flat lookup table of geometry identifier entries.
 struct expected_layer_table_mapper {
   using entry_type = expected_layer_mapping_entry;
@@ -82,19 +76,18 @@ struct expected_layer_table_mapper {
 /// Collector actor for expected-layer-pattern bitmasks.
 ///
 /// The mapper must return:
-/// - valid = true if the geo_id can be mapped
+/// - valid = true if the barcode can be mapped
 /// - pattern_index in [0,3]
 /// - layer_index in [0,31]
-template <typename mapper_t = null_expected_layer_mapper>
 struct expected_layer_pattern_collector : detray::base_actor {
   using pattern_type = std::array<unsigned int, 4>;
-  using mapper_type = mapper_t;
+  using mapper_type = expected_layer_table_mapper;
   using mapping_result_type = typename mapper_type::result;
 
   struct state {
     /// Target bitmask to update.
     pattern_type* pattern{nullptr};
-    /// Mapping from detray geo_id to (pattern index, layer index).
+    /// Mapping from detray geometry identifier to (pattern index, layer index).
     mapper_type mapper{};
 
     /// Optional guard against repeated updates on the same surface.
@@ -117,12 +110,12 @@ struct expected_layer_pattern_collector : detray::base_actor {
       return;
     }
 
-    const detray::geometry::identifier geo_id = navigation.geometry_identifier();
+    const detray::geometry::identifier geo_id =
+        navigation.geometry_identifier();
 
     // Avoid double counting if navigator revisits the same sensitive.
     if (actor_state.deduplicate_consecutive_surfaces &&
-        actor_state.has_last_surface &&
-        geo_id == actor_state.last_surface) {
+        actor_state.has_last_surface && geo_id == actor_state.last_surface) {
       ++actor_state.n_skipped;
       return;
     }

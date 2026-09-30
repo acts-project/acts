@@ -57,8 +57,10 @@ traccc_add_library( traccc_cuda cuda TYPE SHARED
   "src/clusterization/kernels/reify_cluster_data.cu"
   # Track finding algorithm(s).
   "include/traccc/cuda/finding/combinatorial_kalman_filter_algorithm.hpp"
+  "include/traccc/cuda/finding/expected_layer_pattern_algorithm.hpp"
   "src/finding/combinatorial_kalman_filter_algorithm.cpp"
   "src/finding/combinatorial_kalman_filter_algorithm.cu"
+  "src/finding/expected_layer_pattern_algorithm.cu"
   "src/finding/kernels/fill_finding_propagation_sort_keys.cu"
   "src/finding/kernels/fill_finding_propagation_sort_keys.cuh"
   "src/finding/kernels/fill_finding_duplicate_removal_sort_keys.cu"

@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 /** TRACCC library, part of the ACTS project (R&D line)
  *
  * (c) 2026 CERN for the benefit of the ACTS project
@@ -41,18 +49,11 @@ __global__ void collect_expected_layer_patterns_kernel(
   }
 
   const detector_t det(det_data);
-  const vecmem::device_vector<const expected_layer_mapping_entry>
-      expected_layer_map(expected_layer_map_view);
-
-  const expected_layer_mapping_entry* expected_layer_map_ptr =
-      (expected_layer_map.size() > 0u) ? expected_layer_map.data() : nullptr;
-
   // Re-extrapolate each final track from perigee and collect expected layers.
   output_patterns.at(track_idx) =
       traccc::details::collect_expected_layer_pattern_from_perigee(
           det, field_data, tracks.tracks.at(track_idx), config,
-          expected_layer_map_ptr,
-          static_cast<std::size_t>(expected_layer_map.size()));
+          expected_layer_map_view);
 }
 
 }  // namespace kernels

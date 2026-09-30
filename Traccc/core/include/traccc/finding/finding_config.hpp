@@ -150,9 +150,8 @@ struct finding_config {
   unsigned int initial_links_per_seed = 100;
   /// @}
 
-  /// Optional mapping table for expected-layer patterns.
-  const expected_layer_mapping_entry *expected_layer_map{nullptr};
-  std::size_t expected_layer_map_size{0u};
+  /// Collect expected-layer patterns from reconstructed tracks
+  bool collect_expected_layer_patterns = false;
 };
 
 }  // namespace traccc
