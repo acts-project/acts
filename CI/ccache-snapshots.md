@@ -1,6 +1,6 @@
 # CERN S3 compiler caches
 
-Builds, Analysis, Detray CUDA, and PyPI wheels restore local ccache snapshots,
+Builds, Analysis, Detray, Traccc, and PyPI wheels restore local ccache snapshots,
 including direct-mode manifests. Restores are anonymous. Main pushes publish;
 PyPI additionally permits scheduled/manual nightly builds of main. Explicit
 release-ref wheel builds are read-only. Writers use the protected `s3-sccache`
@@ -17,7 +17,9 @@ before later tests. LCG nightly only publishes after a successful configure.
 Cleanup and statistics run where ccache is available: the job container, sourced
 LCG/Key4hep view, EIC Docker container, or wheel build environment. Wheels clean
 before tests; failures before that point rely on ccache's automatic size cleanup.
-Cache limits remain 500 MB, except Analysis's existing 1 GB limit.
+Cache limits are 500 MB, except `linux_ubuntu` and Analysis at 1 GB.
+Traccc CUDA Debug caches only C++ compilation so its PTX check still gets
+fresh intermediate files; other CUDA and HIP builds also cache device compilation.
 
 Publication uploads an immutable tar, then updates `latest.json`. There is no
 extra concurrency group; overlapping uploads may leave an older valid snapshot

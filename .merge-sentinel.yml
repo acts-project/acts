@@ -62,6 +62,9 @@ rules:
      - "Detray/*"
      - "Detray/**/*"
      - ".github/workflows/traccc.yml"
+     - ".github/actions/ccache-s3/*"
+     - ".github/actions/ccache-s3/**/*"
+     - "CI/ccache_snapshot.py*"
      - ".github/detray-traccc-filters.yml"
     required_pattern:
      - "Traccc / *"

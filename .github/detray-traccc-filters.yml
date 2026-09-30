@@ -11,4 +11,6 @@ traccc:
   - 'Traccc/**'
   - 'Detray/**'
   - '.github/workflows/traccc.yml'
+  - '.github/actions/ccache-s3/**'
+  - 'CI/ccache_snapshot.py*'
   - '.github/detray-traccc-filters.yml'
