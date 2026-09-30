@@ -24,14 +24,10 @@ namespace ActsFatras {
 /// for the removed energy.
 struct BetheBloch {
   /// Scaling for most probable value
-  /// @deprecated Use LandauDistribution::scaleFactorMPV instead. This alias is kept
-  ///             for backward compatibility and will be removed.
-  [[deprecated("Use LandauDistribution::kScaleFactorMPV instead")]]
+  /// unused with new implementation in LandauDistribution.hpp
   double scaleFactorMPV = 1.;
   /// Scaling for Sigma
-  /// @deprecated Use LandauDistribution::scaleFactorFwhm instead. This alias is kept
-  ///             for backward compatibility and will be removed.
-  [[deprecated("Use LandauDistribution::kScaleFactorFwhm instead")]]
+  /// unused with new implementation in LandauDistribution.hpp
   double scaleFactorSigma = 1.;
 
   /// Simulate energy loss and update the particle parameters.
