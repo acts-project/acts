@@ -67,7 +67,7 @@ jobs:
 
       - name: Configure
         run: >
-          cmake -B build -S . -DACTS_BUILD_DOCS=ON
+          cmake -B build -S . -DACTS_BUILD_DOCS=ON -DACTS_USE_SYSTEM_EIGEN3=OFF
 
       - name: Build documentation
         run: >
