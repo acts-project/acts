@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -231,7 +232,7 @@ struct measurement_selector {
     TRACCC_VERBOSE_HOST_DEVICE("Have %d measurement(s) on surface %d...",
                                up - lo, sf_idx);
 
-    // Find the best fitting measurement by prediced chi2
+    // Find the best fitting measurement by predicted chi2
     // TODO: Load balancing
     for (unsigned int meas_idx = lo; meas_idx < up; meas_idx++) {
       TRACCC_VERBOSE_HOST_DEVICE("-> measurement %d:", meas_idx);

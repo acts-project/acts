@@ -53,11 +53,6 @@ cmake --build <build> -- ActsPythonBindings
 The build creates a setup script `$BUILD/this_acts_withdeps.sh` which modifies
 `$PYTHONPATH` so that you can import the `acts` module in Python.
 
-> [!warning]
-> The old flag `ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS` is **deprecated**.
-> Use `ACTS_BUILD_PYTHON_BINDINGS` (together with `ACTS_BUILD_EXAMPLES` if
-> needed) instead.
-
 # Minimal example
 
 Here is a minimal example of a Python script using the bindings, which sets up

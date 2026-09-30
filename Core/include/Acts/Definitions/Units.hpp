@@ -239,6 +239,8 @@ constexpr double c = 1.0;
 /// Computed from CODATA 2018 constants to double precision.
 constexpr double hbar =
     6.582119569509066e-25 * UnitConstants::GeV * UnitConstants::s;
+/// Avogadro constant
+constexpr double kAvogadro = 6.02214076e23 / UnitConstants::mol;
 }  // namespace PhysicalConstants
 
 }  // namespace Acts

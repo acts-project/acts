@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -26,6 +27,9 @@
 #include "traccc/sycl/seeding/triplet_seeding_algorithm.hpp"
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/propagation.hpp"
+
+// Local includes(s).
+#include "traccc/examples/await_strategy.hpp"
 
 // VecMem include(s).
 #include <vecmem/memory/binary_page_memory_resource.hpp>
@@ -85,7 +89,8 @@ class full_chain_algorithm
       const detector_design_description::host& det_descr,
       const detector_conditions_description::host& det_cond,
       const magnetic_field& field, host_detector* detector,
-      std::unique_ptr<const traccc::Logger> logger, bool useGBTS = false);
+      std::unique_ptr<const traccc::Logger> logger, bool useGBTS = false,
+      await_strategy await_mode = await_strategy::sync_event);
 
   /// Copy constructor
   ///
@@ -131,6 +136,8 @@ class full_chain_algorithm
   mutable vecmem::binary_page_memory_resource m_cached_device_mr;
   /// Memory copy object
   mutable vecmem::sycl::async_copy m_copy;
+  /// The function for awaiting asynchronous operations
+  await_function_type m_await_function;
 
   /// Constant B field for the (seed) track parameter estimation
   traccc::vector3 m_field_vec;

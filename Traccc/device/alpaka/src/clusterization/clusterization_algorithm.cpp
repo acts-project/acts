@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/alpaka/clusterization/clusterization_algorithm.hpp"
@@ -41,17 +42,16 @@ struct ccl_kernel {
       vecmem::data::vector_view<unsigned char> adjc_backup_view,
       vecmem::data::vector_view<device::details::fallback_index_t>
           adjv_backup_view,
-      uint32_t* backup_mutex_ptr,
+      std::uint32_t* backup_mutex_ptr,
       vecmem::data::vector_view<unsigned int> disjoint_set_view,
       vecmem::data::vector_view<unsigned int> cluster_size_view,
       edm::measurement_collection::view measurements_view) const {
     details::thread_id1 thread_id(acc);
 
     auto& partition_start =
-        ::alpaka::declareSharedVar<std::size_t, __COUNTER__>(acc);
+        ::alpaka::declareSharedVar<unsigned int, __COUNTER__>(acc);
     auto& partition_end =
-        ::alpaka::declareSharedVar<std::size_t, __COUNTER__>(acc);
-    auto& outi = ::alpaka::declareSharedVar<std::size_t, __COUNTER__>(acc);
+        ::alpaka::declareSharedVar<unsigned int, __COUNTER__>(acc);
 
     device::details::index_t* const shared_v =
         ::alpaka::getDynSharedMem<device::details::index_t>(acc);
@@ -60,15 +60,15 @@ struct ccl_kernel {
     vecmem::data::vector_view<device::details::index_t> gf_view{
         cfg.max_partition_size(), shared_v + cfg.max_partition_size()};
 
-    vecmem::device_atomic_ref<uint32_t> backup_mutex(*backup_mutex_ptr);
+    vecmem::device_atomic_ref<std::uint32_t> backup_mutex(*backup_mutex_ptr);
 
     alpaka::barrier<TAcc> barry_r(&acc);
 
-    device::ccl_kernel(
-        cfg, thread_id, cells_view, det_descr_view, det_cond_view,
-        partition_start, partition_end, outi, f_view, gf_view, f_backup_view,
-        gf_backup_view, adjc_backup_view, adjv_backup_view, backup_mutex,
-        disjoint_set_view, cluster_size_view, barry_r, measurements_view);
+    device::ccl_kernel(cfg, thread_id, cells_view, det_descr_view,
+                       det_cond_view, partition_start, partition_end, f_view,
+                       gf_view, f_backup_view, gf_backup_view, adjc_backup_view,
+                       adjv_backup_view, backup_mutex, disjoint_set_view,
+                       cluster_size_view, barry_r, measurements_view);
   }
 
 };  // struct ccl_kernel
@@ -93,9 +93,9 @@ struct reify_cluster_data {
 clusterization_algorithm::clusterization_algorithm(
     const traccc::memory_resource& mr, const vecmem::copy& copy,
     alpaka::queue& q, const config_type& config,
-    std::unique_ptr<const Logger> logger)
+    std::unique_ptr<const Logger> logger, await_function_type await_func)
     : device::clusterization_algorithm(mr, copy, config, std::move(logger)),
-      alpaka::algorithm_base(q) {}
+      alpaka::algorithm_base(q, std::move(await_func)) {}
 
 bool clusterization_algorithm::input_is_contiguous(
     const edm::silicon_cell_collection::const_view&) const {

@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "detray/builders/surface_factory_interface.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/core/detail/data_context.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/geometry.hpp"
@@ -30,7 +31,7 @@ namespace detray {
 /// @brief Generates a number of surfaces along a given direction
 ///
 /// @tparam detector_t the type of detector the volume belongs to.
-template <typename detector_t, typename mask_shape_t = rectangle2D,
+template <concepts::detector detector_t, typename mask_shape_t = rectangle2D,
           typename trajectory_t =
               detail::ray<typename detector_t::algebra_type>>
 class telescope_generator final : public surface_factory_interface<detector_t> {

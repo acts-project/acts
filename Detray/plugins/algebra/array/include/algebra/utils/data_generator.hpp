@@ -83,7 +83,7 @@ inline void fill_random_matrix(std::vector<matrix_t> &collection) {
   std::mt19937 mt(rd());
   std::uniform_real_distribution<scalar_t> dist(0.f, 1.f);
   auto rand_obj = [&]() {
-    matrix_t m;
+    matrix_t m{};
 
     for (std::size_t j = 0u; j < m.size(); ++j) {
       for (std::size_t i = 0u; i < m[0].size(); ++i) {

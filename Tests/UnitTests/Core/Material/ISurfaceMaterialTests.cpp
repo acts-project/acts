@@ -30,10 +30,6 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
     return m_fullMaterial;
   }
 
-  const MaterialSlab& materialSlab(const Vector3& /*gp*/) const override {
-    return m_fullMaterial;
-  }
-
   using ISurfaceMaterial::materialSlab;
 
   std::ostream& toStream(std::ostream& sl) const override {

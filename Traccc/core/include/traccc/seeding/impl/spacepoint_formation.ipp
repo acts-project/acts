@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -23,7 +24,7 @@ TRACCC_HOST_DEVICE inline bool is_valid_measurement(
   return (meas.dimensions() == 2u);
 }
 
-template <typename spacepoint_backend_t, typename detector_t,
+template <typename spacepoint_backend_t, detray::concepts::detector detector_t,
           typename measurement_backend_t>
 TRACCC_HOST_DEVICE inline void fill_pixel_spacepoint(
     edm::spacepoint<spacepoint_backend_t>& sp, const detector_t& det,

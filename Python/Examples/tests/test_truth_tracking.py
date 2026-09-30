@@ -513,6 +513,97 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
             assert_root_hash(fn, fp)
 
 
+def test_refitting_beamspot_constraint(tmp_path, generic_detector_config):
+    """A configured beam spot constraint has to actually influence the refit.
+
+    It used to be silently dropped, leaving the refit identical whether or not
+    one was configured. The particle gun puts every vertex at the origin, so the
+    d0 residual is just the fitted d0 and a constraint at (0, 0) has to sharpen
+    it.
+    """
+    import uproot
+    import numpy as np
+
+    import acts.examples.root
+
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    def refit_d0_resolution(beamSpotConstraint, label):
+        outputDir = tmp_path / label
+        outputDir.mkdir(parents=True, exist_ok=True)
+        seq = runTruthTrackingKalman(
+            trackingGeometry=generic_detector_config.trackingGeometry,
+            field=field,
+            digiConfigFile=generic_detector_config.digiConfigFile,
+            outputDir=outputDir,
+            s=Sequencer(events=25, numThreads=1),
+        )
+
+        seq.addAlgorithm(
+            acts.examples.RefittingAlgorithm(
+                level=acts.logging.INFO,
+                inputTracks="kf_tracks",
+                outputTracks="kf_refit_tracks",
+                fit=acts.examples.makeKalmanFitterFunction(
+                    generic_detector_config.trackingGeometry,
+                    field,
+                    multipleScattering=True,
+                    energyLoss=True,
+                    reverseFilteringMomThreshold=0 * u.GeV,  # direct smoothing
+                    reverseFilteringCovarianceScaling=100.0,
+                    freeToBoundCorrection=acts.examples.FreeToBoundCorrection(False),
+                    chi2Cut=float("inf"),
+                    useJosephFormulation=False,
+                    level=acts.logging.INFO,
+                ),
+                beamSpotConstraint=beamSpotConstraint,
+            )
+        )
+        seq.addAlgorithm(
+            acts.examples.TrackTruthMatcher(
+                level=acts.logging.INFO,
+                inputTracks="kf_refit_tracks",
+                inputParticles="particles_selected",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                outputTrackParticleMatching=f"{label}_track_particle_matching",
+                outputParticleTrackMatching=f"{label}_particle_track_matching",
+            )
+        )
+        summary = outputDir / "tracksummary_refit.root"
+        seq.addWriter(
+            acts.examples.root.RootTrackSummaryWriter(
+                level=acts.logging.INFO,
+                inputTracks="kf_refit_tracks",
+                inputParticles="particles_selected",
+                inputTrackParticleMatching=f"{label}_track_particle_matching",
+                filePath=str(summary),
+            )
+        )
+
+        with generic_detector_config.detector:
+            seq.run()
+
+        with uproot.open(f"{summary}:tracksummary") as tree:
+            res = np.concatenate(tree["res_eLOC0_fit"].array(library="np"))
+        # Unmatched tracks have no truth to compare against.
+        return float(np.std(res[np.isfinite(res)]))
+
+    # Narrow transversely, long longitudinally: constraining z0 as tightly as d0
+    # would fight the real measurements.
+    constraint = acts.SquareMatrix2.Zero()
+    constraint[0, 0] = (5 * u.um) ** 2
+    constraint[1, 1] = (55 * u.mm) ** 2
+
+    assert refit_d0_resolution(None, "unconstrained") == pytest.approx(
+        0.01534, abs=1e-4
+    )
+    assert refit_d0_resolution(constraint, "constrained") == pytest.approx(
+        0.00287, abs=1e-4
+    )
+
+
 def test_measurement_access(tmp_path, generic_detector_config):
     from truth_tracking_kalman import runTruthTrackingKalman
 
@@ -625,140 +716,3 @@ def test_measurement_access(tmp_path, generic_detector_config):
 
         with failure_threshold(acts.logging.ERROR):
             seq.run()
-
-
-def test_measurement_creation():
-    meas_properties = [
-        {
-            "geometryId": acts.GeometryIdentifier(798),
-            "indices": [0],
-            "parameters": [1.0],
-            "covariance": [0.1],
-        },
-        {
-            "geometryId": acts.GeometryIdentifier(123),
-            "indices": [0, 1],
-            "parameters": [1.0, 2.0],
-            "covariance": [0.1, 0.1],
-        },
-        {
-            "geometryId": acts.GeometryIdentifier(456),
-            "indices": [0, 1, 4],
-            "parameters": [3.0, 4.0, 5.0],
-            "covariance": [0.2, 0.2, 0.2],
-        },
-    ]
-
-    container = acts.examples.MeasurementContainer()
-    container.reserve(3)
-    for meas_prop in meas_properties:
-        meas = container.emplaceMeasurement(**meas_prop)
-
-    for i in range(len(meas_properties)):
-        meas = container[i]
-        meas_prop = meas_properties[i]
-
-        dim = len(meas_prop["indices"])
-        assert meas.geometryId.value == meas_prop["geometryId"].value
-        assert [meas_prop["indices"][i] == meas.subspaceIndices[i] for i in range(dim)]
-        indices = meas_prop["indices"]
-        assert [
-            meas_prop["parameters"][i] == meas.fullParameters[indices[i]]
-            for i in range(dim)
-        ]
-        assert [
-            meas_prop["covariance"][i] == meas.fullCovariance[indices[i], indices[i]]
-            for i in range(dim)
-        ]
-
-    assert len(container) == 3
-
-    # Build a subset from indices 0 and 2 and verify it mirrors the container data
-    subset = acts.examples.MeasurementSubset(container, [0, 2])
-    assert len(subset) == 2
-
-    # Iteration covers exactly the selected measurements in order
-    subset_list = list(subset)
-    assert len(subset_list) == 2
-    assert subset_list[0].index == 0
-    assert subset_list[1].index == 2
-
-    # __getitem__ by subset position
-    assert subset[0].index == 0
-    assert subset[1].index == 2
-
-    # getMeasurement by original-container index
-    assert (
-        subset.getMeasurement(0).geometryId.value
-        == meas_properties[0]["geometryId"].value
-    )
-    assert (
-        subset.getMeasurement(2).geometryId.value
-        == meas_properties[2]["geometryId"].value
-    )
-
-    # Measurement data is consistent with the container entries
-    for pos, orig_idx in enumerate([0, 2]):
-        meas = subset[pos]
-        meas_prop = meas_properties[orig_idx]
-        dim = len(meas_prop["indices"])
-        assert meas.geometryId.value == meas_prop["geometryId"].value
-        indices = meas_prop["indices"]
-        assert [meas.subspaceIndices[i] == meas_prop["indices"][i] for i in range(dim)]
-        assert [
-            meas.fullParameters[indices[i]] == meas_prop["parameters"][i]
-            for i in range(dim)
-        ]
-
-
-def test_measurement_map_creation():
-    from acts.examples import (
-        MeasurementParticlesMap,
-        MeasurementSimHitsMap,
-        ParticleMeasurementsMap,
-        SimBarcode,
-        SimHitMeasurementsMap,
-    )
-
-    # MeasurementSimHitsMap: meas 0 → simhits {10, 11}, meas 1 → simhit {20}
-    m = MeasurementSimHitsMap()
-    m.insert(0, 10)
-    m.insert(0, 11)  # same key — multi-map
-    m.insert(1, 20)
-    assert len(m) == 3
-
-    assert 0 in m
-    assert 2 not in m
-
-    vals = m.valuesFor(0)
-    assert sorted(vals) == [10, 11]
-    assert m.valuesFor(1) == [20]
-    assert m.valuesFor(99) == []
-
-    pairs = list(m)
-    assert len(pairs) == 3
-    assert all(isinstance(k, int) and isinstance(v, int) for k, v in pairs)
-
-    inv = m.invert()
-    assert isinstance(inv, SimHitMeasurementsMap)
-    assert len(inv) == 3
-    assert inv.valuesFor(10) == [0]
-    assert inv.valuesFor(11) == [0]
-    assert inv.valuesFor(20) == [1]
-
-    # MeasurementParticlesMap: meas 0 came from two particles, meas 1 from one
-    bc0 = SimBarcode()
-    bc0.particle = 1
-    bc1 = SimBarcode()
-    bc1.particle = 2
-    mp = MeasurementParticlesMap()
-    mp.insert(0, bc0)
-    mp.insert(0, bc1)  # same measurement, two particles
-    mp.insert(1, bc0)
-    assert len(mp) == 3
-
-    assert mp.valuesFor(0) == [bc0, bc1]
-
-    inv_p = mp.invert()
-    assert isinstance(inv_p, ParticleMeasurementsMap)
-    assert len(inv_p) == 3

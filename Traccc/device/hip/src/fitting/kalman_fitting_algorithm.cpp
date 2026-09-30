@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/hip/fitting/kalman_fitting_algorithm.hpp"
@@ -19,9 +20,9 @@ namespace traccc::hip {
 kalman_fitting_algorithm::kalman_fitting_algorithm(
     const config_type& config, const traccc::memory_resource& mr,
     const vecmem::copy& copy, const stream_wrapper& str,
-    std::unique_ptr<const Logger> logger)
+    std::unique_ptr<const Logger> logger, await_function_type await_func)
     : device::kalman_fitting_algorithm{config, mr, copy, std::move(logger)},
-      hip::algorithm_base{str} {}
+      hip::algorithm_base{str, await_func} {}
 
 auto kalman_fitting_algorithm::prepare_fit_payload(
     const detector_buffer& det, const magnetic_field& field,
@@ -30,6 +31,10 @@ auto kalman_fitting_algorithm::prepare_fit_payload(
   return prepare_fit_payload_helper<detector_type_list,
                                     hip::bfield_type_list<scalar>>(
       det, field, n_surfaces, payload);
+}
+
+void kalman_fitting_algorithm::synchronize() const {
+  stream().synchronize();
 }
 
 }  // namespace traccc::hip

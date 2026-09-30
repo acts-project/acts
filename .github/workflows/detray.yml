@@ -10,19 +10,27 @@ on:
       - 'releases'
       - 'release/**'
       - 'gh-readonly-queue/**'
+    # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Detray/**"
       - ".github/workflows/detray.yml"
+      - ".github/actions/ccache-s3/**"
+      - "CI/ccache_snapshot.py*"
+      - "CI/ccache_stats.sh"
+      - ".github/detray-traccc-filters.yml"
   pull_request:
     branches:
       - main
+    # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Detray/**"
       - ".github/workflows/detray.yml"
-  # merge_group does not support path filters, so this runs on every queue
-  # entry targeting main, not just ones touching Detray/. Only required via
-  # merge-sentinel's "Detray / *" pattern, which is itself path-gated, so a
-  # non-Detray entry running this wastes compute but doesn't block merging.
+      - ".github/actions/ccache-s3/**"
+      - "CI/ccache_snapshot.py*"
+      - "CI/ccache_stats.sh"
+      - ".github/detray-traccc-filters.yml"
+  # The changes job applies path filtering to merge groups, which do not
+  # support the workflow-level path filters above.
   merge_group:
     types: [checks_requested]
 
@@ -36,21 +44,49 @@ concurrency:
 permissions:
   contents: read
 
-# ccache is saved from `main` only: a PR-written cache is readable by that PR
-# alone, but still evicts `main`'s entries from the shared 10 GB.
+# Compiler caches use CERN S3 snapshots; only main publishes.
 env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
-  CCACHE_KEY_SUFFIX: r1
 
 # All the different build/test jobs.
 jobs:
+  # Like Builds/changes, gate jobs rather than suppressing check reporting.
+  # PR/push triggers already filter paths; only merge groups need a checkout
+  # and a comparison against the base SHA carried by the event.
+  changes:
+    if: github.event_name == 'merge_group'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      relevant: ${{ steps.filter.outputs.detray }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          base: ${{ github.event.merge_group.base_sha }}
+          ref: ${{ github.event.merge_group.head_sha }}
+          filters: .github/detray-traccc-filters.yml
 
   # Native build jobs.
-  native:
+  host-native:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
 
     # The different build modes to test.
     strategy:
+      # A broken platform must not cancel the other: which of the two is
+      # affected is the useful part of the signal.
+      fail-fast: false
       matrix:
         BUILD_TYPE: ["Debug"]
         PLATFORM:
@@ -61,7 +97,7 @@ jobs:
 
     # The system to run on.
     runs-on: ${{ matrix.PLATFORM.OS }}
-    name: "native (${{ matrix.PLATFORM.OS }})"
+    name: "CPU - Build (${{ matrix.BUILD_TYPE }}, float, ${{ matrix.PLATFORM.OS }})"
 
     # The build/test steps to execute.
     steps:
@@ -69,12 +105,35 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
+    - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+    - name: Install ccache
+      shell: bash
+      run: |
+        if [[ "$RUNNER_OS" == Linux ]]; then
+          sudo apt-get update
+          sudo apt-get install -y ccache jq
+        else
+          brew install ccache jq
+        fi
+
+    - name: Restore ccache snapshot
+      uses: ./.github/actions/ccache-s3
+      continue-on-error: true
+      timeout-minutes: 10
+      with:
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/host-native/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.OS }}/${{ matrix.BUILD_TYPE }}/v1/
+
+    - name: Reset ccache statistics
+      run: ccache --zero-stats
+
     # Run the CMake configuration. Test that the metadata generation runs
     - name: Configure
-      run: cmake --preset detray-full-fp64
+      run: cmake --preset detray-full-fp32
+                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
                  -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }}
                  -DDETRAY_FAIL_ON_WARNINGS=ON
                  -DDETRAY_SET_LOGGING=DEBUG
+                 -DDETRAY_EIGEN_PLUGIN=OFF
                  -DDETRAY_SMATRIX_PLUGIN=OFF
                  -DDETRAY_FASTOR_PLUGIN=OFF
                  -DDETRAY_VC_AOS_PLUGIN=OFF
@@ -88,27 +147,63 @@ jobs:
       run: cmake --build build --config ${{ matrix.BUILD_TYPE }}
                  --target all detray_headers -- -j 2
 
+    - name: ccache statistics
+      if: always()
+      uses: ./.github/actions/ccache-s3/stats
+
+    - name: Clean ccache before publication
+      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      run: ccache --cleanup
+
+    - name: Publish ccache snapshot
+      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      timeout-minutes: 10
+      uses: ./.github/actions/ccache-s3
+      with:
+        operation: publish
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/host-native/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.OS }}/${{ matrix.BUILD_TYPE }}/v1/
+        access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+        secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+
   # Containerised build jobs.
   host-container:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
 
     # The different build modes to test.
     strategy:
+      # A broken scalar type or build mode must not cancel the others: which of
+      # the legs is affected is the useful part of the signal.
+      fail-fast: false
       matrix:
         BUILD_TYPE: ["Release", "Debug"]
         SCALAR_TYPE: ["float", "double"]
         PLATFORM:
-          - NAME: "HOST"
+          - NAME: "CPU"
             CXX_STANDARD: "20"
-            CONTAINER: "ghcr.io/acts-project/ubuntu2404:69"
-            OPTIONS: -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_FASTOR_PLUGIN=OFF -DDETRAY_SMATRIX_PLUGIN=OFF -DDETRAY_VC_AOS_PLUGIN=OFF -DDETRAY_VC_SOA_PLUGIN=OFF
+            CONTAINER: "ghcr.io/acts-project/ubuntu2604:91"
+            # detray-full-fp32 turns benchmarks on, so Google Benchmark has to
+            # come from the flavor too -- the other legs disable them instead.
+            OPTIONS: -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_FASTOR_PLUGIN=OFF -DDETRAY_SMATRIX_PLUGIN=OFF -DDETRAY_VC_AOS_PLUGIN=OFF -DDETRAY_VC_SOA_PLUGIN=OFF -DDETRAY_USE_SYSTEM_EIGEN3=ON -DDETRAY_USE_SYSTEM_VECMEM=ON -DDETRAY_USE_SYSTEM_COVFIE=ON -DDETRAY_USE_SYSTEM_GOOGLETEST=ON -DDETRAY_USE_SYSTEM_NLOHMANN=ON -DDETRAY_USE_SYSTEM_BENCHMARK=ON
 
     # The system to run on.
     runs-on: ubuntu-latest
     container: ${{ matrix.PLATFORM.CONTAINER }}
+    permissions:
+      contents: read
+      # Authenticated GHCR reads for the spack buildcache.
+      packages: read
     # BUILD_TYPE and SCALAR_TYPE are in the name because merge-sentinel
     # deduplicates result items by normalised name: without them all four legs
     # collapse into one check and a failing leg is masked by a passing one.
-    name: "host-container (${{ matrix.PLATFORM.NAME }}, C++${{ matrix.PLATFORM.CXX_STANDARD }}, ${{ matrix.BUILD_TYPE }}, ${{ matrix.SCALAR_TYPE }})"
+    name: "${{ matrix.PLATFORM.NAME }} (${{ matrix.BUILD_TYPE }}, ${{ matrix.SCALAR_TYPE }})"
 
     # Use BASH as the shell from the image.
     defaults:
@@ -117,6 +212,7 @@ jobs:
 
     # Set the path to the test data files
     env:
+      CCACHE_MAXSIZE: ${{ matrix.BUILD_TYPE == 'Debug' && '1G' || '500M' }}
       DETRAY_DATA_DIRECTORY: ${{ github.workspace }}/Detray/data/
       DETRAY_BFIELD_FILE: ${{ github.workspace }}/Detray/data/odd-bfield_v0_9_0.cvf
 
@@ -126,14 +222,36 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
+
+    # Same install as the device legs below, on the plain host stack.
+    - name: Install dependencies
+      uses: ./.github/actions/dependencies
+      with:
+        compiler: g++
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env_file: .env
+
     # Get the data files for the tests
     - name: Download data files
       run: Detray/data/detray_data_get_files.sh
+
+    - name: Restore ccache snapshot
+      uses: ./.github/actions/ccache-s3
+      continue-on-error: true
+      timeout-minutes: 10
+      with:
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/host-container/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.NAME }}/${{ matrix.BUILD_TYPE }}/${{ matrix.SCALAR_TYPE }}/v1/
+
+    - name: Reset ccache statistics
+      run: ccache --zero-stats
+
     # Run the CMake configuration.
     - name: Configure
       run: |
+        source ${GITHUB_WORKSPACE}/.env
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --preset detray-full-fp32 \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DDETRAY_FAIL_ON_WARNINGS=ON \
           -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }} \
@@ -145,18 +263,43 @@ jobs:
     # `detray_headers` has to be asked for by name.
     - name: Build
       run: |
+        source ${GITHUB_WORKSPACE}/.env
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --build build --target all detray_headers -- -j $(nproc)
-    # Run the unit test(s).
+
+    - name: ccache statistics
+      if: always()
+      uses: ./.github/actions/ccache-s3/stats
+
+    - name: Clean ccache before publication
+      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      run: ccache --cleanup
+
+    - name: Publish ccache snapshot
+      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      timeout-minutes: 10
+      uses: ./.github/actions/ccache-s3
+      with:
+        operation: publish
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/host-container/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.NAME }}/${{ matrix.BUILD_TYPE }}/${{ matrix.SCALAR_TYPE }}/v1/
+        access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+        secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+
+    # Run the unit test(s). They link the flavor's shared libraries, so the
+    # environment is needed here too.
     - name: Full Test
       if: "matrix.BUILD_TYPE == 'Release'"
       run: |
+        source ${GITHUB_WORKSPACE}/.env
         cd build
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         ctest --output-on-failure
     - name: Unit Tests
       if: "matrix.BUILD_TYPE == 'Debug'"
       run: |
+        source ${GITHUB_WORKSPACE}/.env
         cd build
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         ctest -R detray_unit_test_. -E "._eigen|._fastor|._vc_aos" --output-on-failure --no-tests=error
@@ -164,17 +307,32 @@ jobs:
   # Containerised build jobs. Debug compile checks only -- nothing here is
   # executed. CUDA has its own build/test pair below.
   device-container:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
 
     # The different build modes to test.
     strategy:
+      # A broken scalar type must not cancel the other: which of the two is
+      # affected is the useful part of the signal.
+      fail-fast: false
       matrix:
         BUILD_TYPE: ["Debug"]
         SCALAR_TYPE: ["float", "double"]
         PLATFORM:
           - NAME: "HIP-AMD"
             CXX_STANDARD: "20"
-            CONTAINER: "ghcr.io/acts-project/ubuntu2404_rocm_oneapi:69"
-            OPTIONS: -DCMAKE_PREFIX_PATH=/opt/rocm/lib/cmake/ -DCMAKE_HIP_PLATFORM=amd -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_BENCHMARKS=OFF -DDETRAY_BUILD_INTEGRATIONTESTS=OFF
+            CONTAINER: "ghcr.io/acts-project/ubuntu2604:91"
+            FLAVOR: "rocm7"
+            # vecmem comes from the flavor like everything else: HIP::hiprt is
+            # found through vecmem's FindHIPToolkit.cmake, which 1.26.0 added to
+            # the installed language helpers and vecmem-config puts on
+            # CMAKE_MODULE_PATH. The pinned tag carries 1.27.0.
+            OPTIONS: -DCMAKE_HIP_PLATFORM=amd -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_BENCHMARKS=OFF -DDETRAY_BUILD_INTEGRATIONTESTS=OFF -DDETRAY_USE_SYSTEM_EIGEN3=ON -DDETRAY_USE_SYSTEM_VECMEM=ON -DDETRAY_USE_SYSTEM_COVFIE=ON -DDETRAY_USE_SYSTEM_GOOGLETEST=ON -DDETRAY_USE_SYSTEM_NLOHMANN=ON
           #- NAME: "HIP-NVIDIA"
           #  CXX_STANDARD: "20"
           #  CONTAINER:
@@ -183,8 +341,13 @@ jobs:
     # The system to run on.
     runs-on: ubuntu-latest
     container: ${{ matrix.PLATFORM.CONTAINER }}
+    permissions:
+      contents: read
+      # Authenticated GHCR reads for the spack buildcache; without it reads
+      # fall back to the anonymous, heavily rate limited bucket.
+      packages: read
     # SCALAR_TYPE belongs in the name; see the note on `host-container`.
-    name: "device-container (${{ matrix.PLATFORM.NAME }}, C++${{ matrix.PLATFORM.CXX_STANDARD }}, ${{ matrix.SCALAR_TYPE }})"
+    name: "${{ matrix.PLATFORM.NAME }} - Build (${{ matrix.BUILD_TYPE }}, ${{ matrix.SCALAR_TYPE }})"
 
     # Use BASH as the shell from the image.
     defaults:
@@ -197,11 +360,35 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
+
+    # The whole ROCm toolchain -- hip, the AMD clang fork, rocthrust, vecmem --
+    # comes from here, which is what lets this run on the plain OS image above.
+    - name: Install dependencies
+      uses: ./.github/actions/dependencies
+      with:
+        compiler: g++
+        flavor: ${{ matrix.PLATFORM.FLAVOR }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env_file: .env
+
+    - name: Restore ccache snapshot
+      uses: ./.github/actions/ccache-s3
+      continue-on-error: true
+      timeout-minutes: 10
+      with:
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/device-container/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.NAME }}/${{ matrix.BUILD_TYPE }}/${{ matrix.SCALAR_TYPE }}/v1/
+
+    - name: Reset ccache statistics
+      run: ccache --zero-stats
+
     # Run the CMake configuration.
     - name: Configure
       run: |
+        source ${GITHUB_WORKSPACE}/.env
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --preset detray-full-fp32 \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_HIP_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DCMAKE_CUDA_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DCMAKE_HIP_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
@@ -220,8 +407,29 @@ jobs:
     # `detray_headers` has to be asked for by name.
     - name: Build
       run: |
+        source ${GITHUB_WORKSPACE}/.env
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --build build --target all detray_headers
+
+    - name: ccache statistics
+      if: always()
+      uses: ./.github/actions/ccache-s3/stats
+
+    - name: Clean ccache before publication
+      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      run: ccache --cleanup
+
+    - name: Publish ccache snapshot
+      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      timeout-minutes: 10
+      uses: ./.github/actions/ccache-s3
+      with:
+        operation: publish
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/device-container/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.NAME }}/${{ matrix.BUILD_TYPE }}/${{ matrix.SCALAR_TYPE }}/v1/
+        access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+        secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
   # ─────────────────────────────────────────────────────────────────────
   # CUDA build on an ordinary CPU runner, handing the build tree to `cuda-test`
@@ -235,16 +443,19 @@ jobs:
   # build down to what the GPU job actually runs.
   # ─────────────────────────────────────────────────────────────────────
   cuda:
-    name: "cuda (${{ matrix.SCALAR_TYPE }})"
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
+    name: "CUDA - Build (Release, ${{ matrix.SCALAR_TYPE }})"
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
       packages: read
-    # registry.cern.ch is a pull-through cache for ghcr.io, usable because this
-    # job runs inside CERN. Tag 87 rather than the 69 the compile-check jobs
-    # pin: it has to match the tag `cuda-test` runs, and that is the CUDA
-    # runtime known to work against the driver on the GPU nodes.
-    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_cuda:87
+    container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
 
     strategy:
       # A broken scalar type must not cancel the other: which of the two is
@@ -262,41 +473,69 @@ jobs:
       with:
         persist-credentials: false
 
-    - name: Restore ccache
-      id: ccache-restore
-      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+    - name: Install dependencies
+      uses: ./.github/actions/dependencies
       with:
-        path: ${{ env.CCACHE_DIR }}
-        key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.SCALAR_TYPE }}-${{ github.sha }}
-        restore-keys: |
-          ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.SCALAR_TYPE }}-
+        compiler: g++
+        flavor: cuda13
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env_file: .env
+
+    - name: Restore ccache snapshot
+      uses: ./.github/actions/ccache-s3
+      continue-on-error: true
+      timeout-minutes: 10
+      with:
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/cuda/${{ runner.os }}-${{ runner.arch }}/${{ matrix.SCALAR_TYPE }}/v1/
 
     # Release, not the preset's RelWithDebInfo: RelWithDebInfo adds
     # `-lineinfo -src-in-ptx`, which costs compile time and buys nothing that
     # is read back here.
     - name: Configure
       run: |
+        source ${GITHUB_WORKSPACE}/.env
         ccache -z
         cmake --preset detray-github-cuda-ci \
+          -DCMAKE_CUDA_COMPILER_LAUNCHER=ccache \
           -DCMAKE_BUILD_TYPE=Release \
           -DDETRAY_CUSTOM_SCALARTYPE=${{ matrix.SCALAR_TYPE }} \
+          -DDETRAY_USE_SYSTEM_EIGEN3=ON \
+          -DDETRAY_USE_SYSTEM_VECMEM=ON \
+          -DDETRAY_USE_SYSTEM_COVFIE=ON \
+          -DDETRAY_USE_SYSTEM_BENCHMARK=ON \
+          -DDETRAY_USE_SYSTEM_GOOGLETEST=ON \
+          -DDETRAY_USE_SYSTEM_NLOHMANN=ON \
           -S ${GITHUB_WORKSPACE}/Detray \
           -B build
 
     # The per-header TU targets are EXCLUDE_FROM_ALL, so `detray_headers` has
     # to be asked for by name.
     - name: Build
-      run: cmake --build build --target all detray_headers
+      run: |
+        source ${GITHUB_WORKSPACE}/.env
+        cmake --build build --target all detray_headers
 
-    - name: ccache stats
-      run: ccache -s
+    - name: ccache statistics
+      if: always()
+      uses: ./.github/actions/ccache-s3/stats
 
-    - name: Save ccache
-      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      if: always() && github.ref == 'refs/heads/main'
+    - name: Clean ccache before publication
+      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      shell: bash
+      run: |
+        ccache --cleanup
+
+    - name: Publish ccache snapshot
+      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      timeout-minutes: 10
+      uses: ./.github/actions/ccache-s3
       with:
-        path: ${{ env.CCACHE_DIR }}
-        key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+        operation: publish
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/cuda/${{ runner.os }}-${{ runner.arch }}/${{ matrix.SCALAR_TYPE }}/v1/
+        access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+        secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
     # Finds nothing today: `.ptx` is only kept when a target opts into `--keep`
     # via `detray_add_cuda_artifact_dir_to_target`
@@ -335,17 +574,14 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────
   cuda-test:
     needs: [cuda]
+    if: ${{ !cancelled() && needs.cuda.result == 'success' }}
+    name: "CUDA - Test (Release, float)"
     runs-on: [self-hosted, linux, x64, gpu-nvidia]
     permissions:
       contents: read
       packages: read
     container:
-      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_cuda:87
-      # Required. Without it the daemon never applies the nvidia runtime hook,
-      # so the driver bits are not injected: the image carries the CUDA toolkit
-      # but the container gets no device and no nvidia-smi. Confirmed by
-      # removing it, at which point the Check GPU step below failed with
-      # "nvidia-smi: command not found".
+      image: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:91
       options: --gpus all
 
     env:
@@ -376,6 +612,16 @@ jobs:
     - name: Check GPU
       run: nvidia-smi
 
+    # Not a rebuild: the binaries RPATH into the spack view, so it has to
+    # exist at the same workspace path. Same lockfile, same result.
+    - name: Install dependencies
+      uses: ./.github/actions/dependencies
+      with:
+        compiler: g++
+        flavor: cuda13
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env_file: .env
+
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
         name: detray-cuda-build
@@ -390,7 +636,9 @@ jobs:
     # rename stops the regex matching, ctest's default is to report success on
     # an empty set and the job goes green having run nothing.
     - name: Test
-      run: ctest --test-dir build --output-on-failure --no-tests=error -R ".*cuda.*"
+      run: |
+        source ${GITHUB_WORKSPACE}/.env
+        ctest --test-dir build --output-on-failure --no-tests=error -R ".*cuda.*"
 
     # Some CUDA binaries are not registered with ctest, so run them directly.
     # A loop rather than `find -exec`: find reports its own exit status, not
@@ -398,6 +646,7 @@ jobs:
     # `bash -eo pipefail`, so the first non-zero exit fails the step.
     - name: Run unregistered CUDA binaries
       run: |
+        source ${GITHUB_WORKSPACE}/.env
         cd build
         while IFS= read -r -d '' binary; do
           echo "::group::${binary}"

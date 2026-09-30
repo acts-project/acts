@@ -1,13 +1,15 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 // Local include(s).
+#include "traccc/device/abstract_awaitable.hpp"
 #include "traccc/device/algorithm_base.hpp"
 #include "traccc/device/prefix_sum_element.hpp"
 #include "traccc/edm/device/device_doublet.hpp"
@@ -38,7 +40,8 @@ class triplet_seeding_algorithm
     : public algorithm<edm::seed_collection::buffer(
           const edm::spacepoint_collection::const_view&)>,
       public messaging,
-      public algorithm_base {
+      public algorithm_base,
+      public virtual abstract_awaitable {
  public:
   /// Constructor for the seed finding algorithm
   ///
@@ -68,6 +71,9 @@ class triplet_seeding_algorithm
       const edm::spacepoint_collection::const_view& spacepoints) const override;
 
  protected:
+  /// Wait for outstanding device work before releasing local buffers.
+  virtual void synchronize() const = 0;
+
   /// @name Function(s) to be implemented by derived classes
   /// @{
 

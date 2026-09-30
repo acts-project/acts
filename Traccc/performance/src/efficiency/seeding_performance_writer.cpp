@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/efficiency/seeding_performance_writer.hpp"
@@ -162,7 +163,7 @@ void seeding_performance_writer::write(
       continue;
     }
 
-    // Count only charged particles which satisfiy pT_cut
+    // Count only charged particles which satisfy pT_cut
     if (ptc.charge == 0 ||
         vector::perp(ptc.momentum) < m_cfg.truth_config.pT_min ||
         ptc.vertex[2] < m_cfg.truth_config.z_min ||

@@ -19,26 +19,26 @@ SphericalSpacePointGrid::SphericalSpacePointGrid(
     : GridBase(std::move(_logger)), m_cfg(config) {
   if (m_cfg.phiMin < -std::numbers::pi_v<float> ||
       m_cfg.phiMax > std::numbers::pi_v<float>) {
-    throw std::runtime_error(
+    throw std::invalid_argument(
         "SphericalSpacePointGrid: phiMin (" + std::to_string(m_cfg.phiMin) +
         ") and/or phiMax (" + std::to_string(m_cfg.phiMax) +
         ") are outside the allowed phi range, defined as "
         "[-std::numbers::pi_v<float>, std::numbers::pi_v<float>]");
   }
   if (m_cfg.phiMin > m_cfg.phiMax) {
-    throw std::runtime_error(
+    throw std::invalid_argument(
         "SphericalSpacePointGrid: phiMin is bigger then phiMax");
   }
   if (m_cfg.rMin > m_cfg.rMax) {
-    throw std::runtime_error(
+    throw std::invalid_argument(
         "SphericalSpacePointGrid: rMin is bigger then rMax");
   }
   if (m_cfg.etaMin > m_cfg.etaMax) {
-    throw std::runtime_error(
+    throw std::invalid_argument(
         "SphericalSpacePointGrid: etaMin is bigger than etaMax");
   }
 
-  const int phiBins = Acts::detail::computeSpacePointGridPhiBins(
+  const std::uint32_t phiBins = Acts::detail::computeSpacePointGridPhiBins(
       {.minPt = m_cfg.minPt,
        .bFieldInZ = m_cfg.bFieldInZ,
        .rMax = m_cfg.rMax,
@@ -57,7 +57,7 @@ SphericalSpacePointGrid::SphericalSpacePointGrid(
 
   // If etaBinEdges is not defined, calculate equidistant eta edges.
   if (m_cfg.etaBinEdges.empty()) {
-    const float etaBinSize = m_cfg.deltaEtaMax;
+    const float etaBinSize = m_cfg.etaBinSize;
     const float etaBins =
         std::max(1.f, std::floor((m_cfg.etaMax - m_cfg.etaMin) / etaBinSize));
 
@@ -94,8 +94,8 @@ SphericalSpacePointGrid::SphericalSpacePointGrid(
 
   GridType grid(std::make_tuple(std::move(phiAxis), std::move(cotThetaAxis),
                                 std::move(rAxis)));
-  initializeGrid(std::move(grid), m_cfg.bottomBinFinder.value(),
-                 m_cfg.topBinFinder.value(), m_cfg.navigation);
+  initializeGrid(std::move(grid), m_cfg.bottomBinFinder, m_cfg.topBinFinder,
+                 m_cfg.navigation);
 }
 
 void SphericalSpacePointGrid::sortBinsByR(

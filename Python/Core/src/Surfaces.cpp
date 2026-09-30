@@ -129,9 +129,7 @@ void addSurfaces(py::module_& m) {
         .value("R", CylinderBounds::BoundValues::eR)
         .value("HalfLengthZ", CylinderBounds::BoundValues::eHalfLengthZ)
         .value("HalfPhiSector", CylinderBounds::BoundValues::eHalfPhiSector)
-        .value("AveragePhi", CylinderBounds::BoundValues::eAveragePhi)
-        .value("BevelMinZ", CylinderBounds::BoundValues::eBevelMinZ)
-        .value("BevelMaxZ", CylinderBounds::BoundValues::eBevelMaxZ);
+        .value("AveragePhi", CylinderBounds::BoundValues::eAveragePhi);
   }
 
   {

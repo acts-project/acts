@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Seeding/GbtsLayerDescription.hpp"
+
 #include <cstdint>
 
 namespace Acts::Experimental {
@@ -17,9 +19,9 @@ namespace Acts::Experimental {
 /// @c dst the inner one.
 struct GbtsLayerConnection {
   /// Outer layer id.
-  std::uint32_t src{};
+  GbtsExperimentLayerId src{};
   /// Inner layer id.
-  std::uint32_t dst{};
+  GbtsExperimentLayerId dst{};
 };
 
 }  // namespace Acts::Experimental

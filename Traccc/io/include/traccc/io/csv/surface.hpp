@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -16,7 +17,7 @@ namespace traccc::io::csv {
 
 /// Type to read information into about the detector modules/surfaces
 struct surface {
-  uint64_t geometry_id = 0;
+  std::uint64_t geometry_id = 0;
   float cx = 0.f, cy = 0.f, cz = 0.f;
   float rot_xu = 0.f, rot_xv = 0.f, rot_xw = 0.f;
   float rot_yu = 0.f, rot_yv = 0.f, rot_yw = 0.f;

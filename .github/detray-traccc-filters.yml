@@ -1,0 +1,18 @@
+# Build these packages only for package changes or their CI configuration.
+# Keep the workflow push/pull_request paths and .merge-sentinel.yml in sync.
+detray:
+  - 'Detray/**'
+  - '.github/workflows/detray.yml'
+  - '.github/actions/ccache-s3/**'
+  - 'CI/ccache_snapshot.py*'
+  - 'CI/ccache_stats.sh'
+  - '.github/detray-traccc-filters.yml'
+
+traccc:
+  - 'Traccc/**'
+  - 'Detray/**'
+  - '.github/workflows/traccc.yml'
+  - '.github/actions/ccache-s3/**'
+  - 'CI/ccache_snapshot.py*'
+  - 'CI/ccache_stats.sh'
+  - '.github/detray-traccc-filters.yml'

@@ -125,7 +125,7 @@ and they contain all the dependencies required to build ACTS.
 
 > [!note]
 > Most containers are only build for the `x86_64` platform. If you are on an
-> `aarch64` (such as a recent Mac), you'll need to use the `ubuntu2404`
+> `aarch64` (such as a recent Mac), you'll need to use the `ubuntu2604`
 > container, which is built for `aarch64` and `x86_64`!
 
 Furthermore, we are also testing on, but do not provide the corresponding containers:
@@ -144,13 +144,13 @@ available tags, e.g. for the `ubuntu2004` image, you can use the following
 command:
 
 ```console
-docker search --list-tags ghcr.io/acts-project/ubuntu2404
+docker search --list-tags ghcr.io/acts-project/ubuntu2604
 ```
 
-The following command then downloads a stable tag of the `ubuntu2404` image:
+The following command then downloads a stable tag of the `ubuntu2604` image:
 
 ```console
-docker pull ghcr.io/acts-project/ubuntu2404:87
+docker pull ghcr.io/acts-project/ubuntu2604:90
 ```
 
 This should print the image id as part of the output. You can also find out the
@@ -233,6 +233,19 @@ source files or documentation.
 
 # Build options {#build-options}
 
+Optional zstd compression is controlled by the global string setting
+`ACTS_USE_ZSTD`:
+
+- `AUTO` (default): enable compression if zstd is found; otherwise continue without it.
+- `ALWAYS`: require zstd, failing configuration if it is unavailable.
+- `NEVER`: disable compression and skip zstd discovery, even if it is installed.
+
+For reproducible builds, select `-DACTS_USE_ZSTD=ALWAYS` or `-DACTS_USE_ZSTD=NEVER`
+explicitly. Currently, zstd is used by the JSON plugin when
+`ACTS_BUILD_PLUGIN_JSON` is enabled.
+Uncompressed JSON and CBOR remain available in all modes; reading or writing
+compressed files requires zstd support.
+
 CMake options can be set by adding `-D<OPTION>=<VALUE>` to the configuration
 command. The following command would e.g. enable the unit tests
 
@@ -253,6 +266,7 @@ components.
 | ACTS_FORCE_ASSERTIONS                         | Force assertions regardless of build<br>type<br> type: `bool`, default: `OFF`                                                                                                                                                                                               |
 | ACTS_CODEGEN_PREBUILT_DIR                     | Directory holding pre-generated code; a<br>generated file found there is used<br>verbatim instead of being regenerated.<br>Defaults to prebuilt-codegen/ next to<br>this file when it exists, which is what<br>release source archives ship<br> type: `path`, default: `""` |
 | ACTS_CODEGEN_REQUIRE_PREBUILT                 | Fail the configure step instead of<br>running the code generators when pre-<br>generated code is missing<br> type: `bool`, default: `OFF`                                                                                                                                   |
+| ACTS_USE_ZSTD                                 | zstd support: AUTO (use if available),<br>ALWAYS (required), NEVER (disabled)<br> type: `string`, default: `AUTO`                                                                                                                                                           |
 | ACTS_USE_SYSTEM_LIBS                          | Use system libraries by default<br> type: `bool`, default: `OFF`                                                                                                                                                                                                            |
 | ACTS_USE_SYSTEM_ACTSVG                        | Use the ActSVG system library<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                                                                      |
 | ACTS_USE_SYSTEM_COVFIE                        | Use a system-provided covfie<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                                                       |

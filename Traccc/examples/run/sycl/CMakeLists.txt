@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2021-2026 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #
 # Set up the "throughput applications".
@@ -10,6 +12,8 @@
 traccc_add_library( traccc_examples_sycl examples_sycl SHARED
    "include/traccc/examples/sycl/full_chain_algorithm.hpp"
    "src/full_chain_algorithm.cpp"
+   "include/traccc/examples/sycl/tbb_await.hpp"
+   "src/tbb_await.cpp"
 )
 target_link_libraries(
     traccc_examples_sycl
@@ -22,6 +26,7 @@ target_link_libraries(
         traccc::device_common
         traccc::sycl
         traccc_examples_common
+    PRIVATE TBB::tbb
 )
 
 traccc_add_executable( throughput_st_sycl "apps/throughput_st.cpp"

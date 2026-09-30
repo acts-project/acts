@@ -86,14 +86,15 @@ class ScopedGsfInfoPrinterAndChecker {
   void print_component_stats() const {
     std::size_t i = 0;
     for (auto cmp : m_stepper.constComponentIterable(m_state.stepping)) {
-      auto getVector = [&](auto idx) {
-        return cmp.pars().template segment<3>(idx).transpose();
-      };
-      ACTS_VERBOSE("  #" << i++ << " pos: " << getVector(eFreePos0) << ", dir: "
-                         << getVector(eFreeDir0) << ", weight: " << cmp.weight()
-                         << ", status: " << cmp.status()
-                         << ", qop: " << cmp.pars()[eFreeQOverP]
-                         << ", det(cov): " << cmp.cov().determinant());
+      const auto &singleStepper = cmp.singleStepper(m_stepper);
+      ACTS_VERBOSE(
+          "  #" << i++
+                << " pos: " << singleStepper.position(cmp.state()).transpose()
+                << ", dir: " << singleStepper.direction(cmp.state()).transpose()
+                << ", weight: " << cmp.weight() << ", status: " << cmp.status()
+                << ", qop: " << singleStepper.qOverP(cmp.state())
+                << ", det(cov): "
+                << singleStepper.covariance(cmp.state()).value().determinant());
     }
   }
 
@@ -131,7 +132,7 @@ class ScopedGsfInfoPrinterAndChecker {
     // Some initial printing
     checks(true);
     ACTS_VERBOSE("Gsf step "
-                 << state.stepping.steps << " at mean position "
+                 << state.steps << " at mean position "
                  << stepper.position(state.stepping).transpose()
                  << " with direction "
                  << stepper.direction(state.stepping).transpose()
@@ -297,8 +298,11 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
 
     auto proxy = tmpStates.traj.getTrackState(idx);
 
-    cmp.pars() = MultiTrajectoryHelpers::freeFiltered(state.geoContext, proxy);
-    cmp.cov() = proxy.filteredCovariance();
+    // The same update the KF and the single-stepper CKF apply after a filter
+    // step, so a component ends up in the same state a single stepper would
+    cmp.update(
+        stepper, MultiTrajectoryHelpers::freeFiltered(state.geoContext, proxy),
+        proxy.filtered(), proxy.filteredCovariance(), proxy.referenceSurface());
     cmp.weight() = tmpStates.weights.at(idx);
   }
 
@@ -324,10 +328,7 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
     BoundTrackParameters bound(surface.getSharedPtr(), pars, cov,
                                stepper.particleHypothesis(state.stepping));
 
-    auto cmp = stepper.addComponent(state.stepping, std::move(bound), weight);
-
-    // the component starts here, but on the trajectory the multi state is on
-    cmp.pathAccumulated() = state.stepping.pathAccumulated;
+    stepper.addComponent(state.stepping, std::move(bound), weight);
   }
 }
 
@@ -361,7 +362,11 @@ Result<void> applyMultipleScattering(propagator_state_t &state,
       return materialInteractionRes.error();
     }
 
-    assert(singleState.stepping.cov.array().isFinite().all() &&
+    assert(singleStepper.covariance(singleState.stepping)
+               .value()
+               .array()
+               .isFinite()
+               .all() &&
            "covariance not finite after multi scattering");
   }
 

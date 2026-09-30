@@ -140,9 +140,10 @@ ACTS_ARROW_EXPORT std::shared_ptr<arrow::Table> withEventId(
 ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> particleSchema();
 
 /// Schema for the per-event track table emitted by
-/// @c ArrowTrackOutputConverter. The @c t column is nullable at the outer
-/// level so writers running with @c writeTime=false can emit a single null
-/// per event row instead of an opened list of N inner nulls.
+/// @c ArrowTrackOutputConverter. The @c t and @c hit_ids columns are nullable
+/// at the outer level, so a writer lacking time info or a measurement →
+/// sim-hit map emits one null per event row instead of N inner nulls.
+/// @c measurement_ids is always written; only @c hit_ids needs truth.
 ACTS_ARROW_EXPORT std::shared_ptr<arrow::Schema> trackSchema();
 
 /// Schema for the per-event simulated-hit table emitted by

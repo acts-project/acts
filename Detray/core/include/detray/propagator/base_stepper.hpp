@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/pdg_particle.hpp"
@@ -80,7 +81,7 @@ class base_stepper {
     }
 
     /// Sets track parameters from bound track parameter.
-    template <typename detector_t>
+    template <concepts::detector detector_t>
     DETRAY_HOST_DEVICE state(const bound_track_parameters_type &bound_params,
                              const detector_t &det,
                              const typename detector_t::geometry_context &ctx) {

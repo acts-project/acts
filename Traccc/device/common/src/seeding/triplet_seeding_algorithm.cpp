@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/seeding/device/triplet_seeding_algorithm.hpp"
@@ -62,9 +63,9 @@ auto triplet_seeding_algorithm::operator()(
   edm::spacepoint_collection::const_view::size_type n_spacepoints = 0u;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(spacepoints, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_spacepoints = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_spacepoints = size.unsafe_get();
   } else {
     n_spacepoints = copy().get_size(spacepoints);
   }
@@ -114,9 +115,9 @@ auto triplet_seeding_algorithm::operator()(
   if (mr().host) {
     vecmem::async_size size =
         copy().get_size(grid_prefix_sum_buffer, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_spacepoints = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_spacepoints = size.unsafe_get();
   } else {
     n_spacepoints = copy().get_size(grid_prefix_sum_buffer);
   }
@@ -147,9 +148,9 @@ auto triplet_seeding_algorithm::operator()(
   if (mr().host) {
     vecmem::async_size size =
         copy().get_size(doublet_counter_buffer, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_doublets = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_doublets = size.unsafe_get();
   } else {
     n_doublets = copy().get_size(doublet_counter_buffer);
   }
@@ -207,9 +208,9 @@ auto triplet_seeding_algorithm::operator()(
   if (mr().host) {
     vecmem::async_size size =
         copy().get_size(triplet_counter_midBot_buffer, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_midBotTriplets = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_midBotTriplets = size.unsafe_get();
   } else {
     n_midBotTriplets = copy().get_size(triplet_counter_midBot_buffer);
   }
@@ -252,6 +253,9 @@ auto triplet_seeding_algorithm::operator()(
       {n_doublets, m_data->m_finder_config, m_data->m_filter_config,
        spacepoints, grid_buffer, triplet_counter_spM_buffer,
        triplet_counter_midBot_buffer, triplet_buffer, seed_buffer});
+
+  // Complete seed selection before releasing its intermediate buffers.
+  synchronize();
 
   // Return the seed buffer.
   return seed_buffer;

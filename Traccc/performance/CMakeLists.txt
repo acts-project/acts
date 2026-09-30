@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2022-2025 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Project include(s).
 include(traccc-compiler-options-cpp)
@@ -32,11 +34,9 @@ traccc_add_library( traccc_performance performance TYPE SHARED
    "src/resolution/stat_plot_tool.cpp"
    # Utils
    "include/traccc/utils/event_data.hpp"
-   "include/traccc/utils/fill_track_container.hpp"
    "src/utils/event_data.cpp"
    "include/traccc/utils/helpers.hpp"
    "include/traccc/utils/ranges.hpp"
-   "include/traccc/utils/transcribe_to_trace.hpp"
    "src/utils/helpers.hpp"
    "src/utils/helpers.cpp"
    # Value/object comparison code.
@@ -64,9 +64,6 @@ traccc_add_library( traccc_performance performance TYPE SHARED
    "include/traccc/performance/impl/container_comparator.ipp"
    "include/traccc/performance/soa_comparator.hpp"
    "include/traccc/performance/impl/soa_comparator.ipp"
-   # Truth propagation comparison
-   "include/traccc/performance/kalman_filter_comparison.hpp"
-   "src/performance/kalman_filter_comparison.cpp"
    # Performance time measurement code.
    "include/traccc/performance/timer.hpp"
    "src/performance/timer.cpp"

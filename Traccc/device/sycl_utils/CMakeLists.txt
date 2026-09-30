@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2021-2026 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # We need the SYCL language in this directory.
 include(vecmem-check-language)
@@ -16,7 +18,7 @@ include(traccc-compiler-options-sycl)
 # Set up the build of the traccc::sycl_utils library.
 traccc_add_library( traccc_sycl_utils sycl_utils TYPE SHARED
   "include/traccc/sycl/utils/queue_wrapper.hpp"
-  "src/queue_wrapper.cpp"
+  "src/queue_wrapper.sycl"
   "include/traccc/sycl/utils/make_magnetic_field.hpp"
   "src/make_magnetic_field.sycl"
 )

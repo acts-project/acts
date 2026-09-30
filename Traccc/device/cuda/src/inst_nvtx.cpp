@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 /* Copyright (c) 2014, NVIDIA CORPORATION. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,11 +48,12 @@
 #include "nvtx3/nvToolsExt.h"
 
 namespace {
-uint32_t __attribute__((no_instrument_function)) djb2(const std::string &str) {
-  uint32_t hash = 5381u;
+std::uint32_t __attribute__((no_instrument_function)) djb2(
+    const std::string &str) {
+  std::uint32_t hash = 5381u;
 
   for (auto &chr : str) {
-    hash = 33u * hash + static_cast<uint32_t>(chr);
+    hash = 33u * hash + static_cast<std::uint32_t>(chr);
   }
 
   return hash;

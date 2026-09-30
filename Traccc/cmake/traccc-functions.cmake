@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2021-2023 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # DISCOVERY_TIMEOUT in gtest_discover_tests(...) requires at least CMake 3.10.
 cmake_minimum_required(VERSION 3.10)
@@ -123,7 +125,7 @@ function(traccc_add_test name)
         target_link_libraries(${test_exe_name} PRIVATE ${ARG_LINK_LIBRARIES})
     endif()
 
-    # Discover all of the tests from the execuable, and set them up as individual
+    # Discover all of the tests from the executable, and set them up as individual
     # CTest tests. All the while ensuring that they would find their data files.
     gtest_discover_tests(
         ${test_exe_name}

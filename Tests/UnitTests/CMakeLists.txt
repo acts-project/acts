@@ -4,6 +4,10 @@
 # extended by setting the `unittest_extra_libraries` variables before
 # calling the macro.
 
+# any arguments after the source file are passed to the test executable on the
+# ctest command line, e.g. paths that the test needs but cannot know itself.
+# The test reads them from boost::unit_test::framework::master_test_suite().
+
 add_custom_target(unit_tests)
 
 macro(add_unittest _name _source)
@@ -27,8 +31,14 @@ macro(add_unittest _name _source)
     if(ACTS_TESTS_HAS_WNO_C2Y_EXTENSIONS)
         target_compile_options(${_target} PRIVATE -Wno-c2y-extensions)
     endif()
-    # register as unittest executable
-    add_test(NAME ${_name} COMMAND ${_target})
+    # register as unittest executable. Extra arguments go behind the --
+    # separator, where Boost.Test wants everything that is not one of its own
+    # options, and arrive as master_test_suite().argv
+    if(${ARGC} GREATER 2)
+        add_test(NAME ${_name} COMMAND ${_target} -- ${ARGN})
+    else()
+        add_test(NAME ${_name} COMMAND ${_target})
+    endif()
     add_dependencies(unit_tests ${_target})
 endmacro()
 

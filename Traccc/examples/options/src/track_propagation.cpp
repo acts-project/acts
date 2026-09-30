@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Project include(s).
 #include "traccc/options/track_propagation.hpp"
@@ -60,7 +61,7 @@ track_propagation::track_propagation()
       "accumulated-noise-factor",
       po::value(&(m_config.navigation.accumulated_error))
           ->default_value(m_config.navigation.accumulated_error),
-      "Scale factor on the total track path length to model accumualted "
+      "Scale factor on the total track path length to model accumulated "
       "noise [%]");
 
   m_desc.add_options()(
@@ -85,7 +86,7 @@ track_propagation::track_propagation()
       "accumulated-noise-factor",
       po::value(&(m_config.navigation.accumulated_error))
           ->default_value(m_config.navigation.accumulated_error),
-      "Scale factor on the total track path length to model accumualted "
+      "Scale factor on the total track path length to model accumulated "
       "noise [%]");
 
   m_desc.add_options()(

@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,7 +14,7 @@
 
 namespace traccc::details {
 
-/// Check the covariance matirx and try to make it positive semi-definite
+/// Check the covariance matrix and try to make it positive semi-definite
 ///
 /// @param[out] cov  covariance matrix
 /// @param[in] min_var variance threshold below which to flag an error

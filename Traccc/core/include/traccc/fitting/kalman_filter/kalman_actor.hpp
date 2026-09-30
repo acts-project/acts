@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -347,7 +348,7 @@ struct kalman_actor : detray::base_actor {
     TRACCC_VERBOSE_HOST_DEVICE("Actor: Kalman Fitter (status %d)...",
                                actor_state.fit_result);
 
-    // Allow to count holes after the intial track states
+    // Allow to count holes after the initial track states
     if (actor_state.do_precise_hole_count && actor_state.finished()) {
       if (navigation.is_on_sensitive()) {
         TRACCC_VERBOSE_HOST_DEVICE(
@@ -547,7 +548,7 @@ struct kalman_actor : detray::base_actor {
         TRACCC_DEBUG_HOST_DEVICE("Encountered overlap, jump to next surface");
       }
 
-      // Signal that paramter update is needed
+      // Signal that parameter update is needed
       res.status = detray::actor::status::e_success;
     } else if (navigation.direction() ==
                    detray::navigation::direction::e_forward &&

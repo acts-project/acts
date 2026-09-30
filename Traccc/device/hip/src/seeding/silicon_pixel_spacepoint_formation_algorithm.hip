@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "../utils/global_index.hpp"
@@ -36,14 +37,12 @@ __global__ void __launch_bounds__(1024, 1) count_spacepoints(
 }
 
 /// Kernel wrapping @c device::form_spacepoints
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 __global__ void __launch_bounds__(1024, 1) form_spacepoints(
-    typename detector_t::view detector,
+    detray::detector_view_t<detector_t> detector,
     edm::measurement_collection::const_view measurements,
     vecmem::data::vector_view<const unsigned int> spacepoint_index,
-    edm::spacepoint_collection::view spacepoints)
-  requires(traccc::is_detector_traits<detector_t>)
-{
+    edm::spacepoint_collection::view spacepoints) {
   device::form_spacepoints<detector_t>(details::global_index1(), detector,
                                        measurements, spacepoint_index,
                                        spacepoints);
@@ -54,10 +53,11 @@ __global__ void __launch_bounds__(1024, 1) form_spacepoints(
 silicon_pixel_spacepoint_formation_algorithm::
     silicon_pixel_spacepoint_formation_algorithm(
         const traccc::memory_resource& mr, const vecmem::copy& copy,
-        const stream_wrapper& str, std::unique_ptr<const Logger> logger)
+        const stream_wrapper& str, std::unique_ptr<const Logger> logger,
+        await_function_type await_func)
     : device::silicon_pixel_spacepoint_formation_algorithm(mr, copy,
                                                            std::move(logger)),
-      hip::algorithm_base(str) {}
+      hip::algorithm_base(str, std::move(await_func)) {}
 
 void silicon_pixel_spacepoint_formation_algorithm::count_spacepoints_kernel(
     const count_spacepoints_kernel_payload& payload) const {
@@ -99,12 +99,12 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
   const unsigned int n_blocks =
       (payload.n_measurements + n_threads - 1) / n_threads;
   detector_buffer_visitor<detector_type_list>(
-      payload.detector, [&]<typename detector_traits_t>(
-                            const typename detector_traits_t::view& det) {
-        hipLaunchKernelGGL(
-            kernels::form_spacepoints<detector_traits_t>, n_blocks, n_threads,
-            0, details::get_stream(stream()), det, payload.measurements,
-            payload.spacepoint_index, payload.spacepoints);
+      payload.detector, [&]<detray::concepts::detector detector_t>(
+                            const detray::detector_view_t<detector_t>& det) {
+        hipLaunchKernelGGL(kernels::form_spacepoints<detector_t>, n_blocks,
+                           n_threads, 0, details::get_stream(stream()), det,
+                           payload.measurements, payload.spacepoint_index,
+                           payload.spacepoints);
       });
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
   // The base class destroys the prefix sum buffer right after this call, so

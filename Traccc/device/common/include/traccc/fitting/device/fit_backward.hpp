@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -53,7 +54,7 @@ TRACCC_HOST_DEVICE inline void fit_backward(
     fitter.update_statistics(fitter_state);
 
     // Assume that this branch is only called if the forward fit was
-    // successfull (track param are alive)
+    // successful (track param are alive)
     fitter.check_fitting_result(fitter_state, kalman_fitter_status::SUCCESS,
                                 fit_status);
 

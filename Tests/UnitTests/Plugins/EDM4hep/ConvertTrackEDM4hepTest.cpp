@@ -26,10 +26,14 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
+#include <array>
 #include <numbers>
 #include <random>
 
+#include <edm4hep/Constants.h>
 #include <edm4hep/TrackCollection.h>
+#include <edm4hep/TrackState.h>
+#include <edm4hep/TrackerHit3DCollection.h>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -257,14 +261,184 @@ BOOST_AUTO_TEST_CASE(CovariancePacking) {
        6, 6, 6, 6, 6, 6;
   // clang-format on
 
-  std::array<float, 21> values{};
-  EDM4hepUtil::detail::packCovariance(m, values.data());
+  edm4hep::CovMatrix6f values{};
+  EDM4hepUtil::detail::packCovariance(m, values);
 
   BoundMatrix m2;
   m2.setZero();
-  EDM4hepUtil::detail::unpackCovariance(values.data(), m2);
+  EDM4hepUtil::detail::unpackCovariance(values, m2);
 
   CHECK_CLOSE_ABS(m, m2, 1e-9);
+}
+
+// The packed covariance has to follow the EDM4hep parameter order
+// (edm4hep::TrackParams: d0, phi, omega, z0, tanLambda, time), which is a
+// different permutation from the order used internally by
+// detail::Parameters::values (d0, z0, phi, tanLambda, omega, time). A
+// pack/unpack round trip cannot catch a mismatch here, since it would be
+// symmetric, so check the absolute slots against EDM4hep's own accessor.
+BOOST_AUTO_TEST_CASE(CovariancePackingConvention) {
+  // values index -> edm4hep parameter it represents
+  constexpr std::array<edm4hep::TrackParams, 6> params{
+      edm4hep::TrackParams::d0,         // values[0]
+      edm4hep::TrackParams::z0,         // values[1]
+      edm4hep::TrackParams::phi,        // values[2]
+      edm4hep::TrackParams::tanLambda,  // values[3]
+      edm4hep::TrackParams::omega,      // values[4]
+      edm4hep::TrackParams::time,       // values[5]
+  };
+
+  // Distinct, symmetric entries so every slot is identifiable
+  SquareMatrix<6> m;
+  for (std::size_t i = 0; i < 6; ++i) {
+    for (std::size_t j = 0; j < 6; ++j) {
+      m(i, j) = 10. * std::min(i, j) + std::max(i, j);
+    }
+  }
+
+  edm4hep::TrackState trackState{};
+  EDM4hepUtil::detail::packCovariance(m, trackState.covMatrix);
+
+  for (std::size_t i = 0; i < 6; ++i) {
+    for (std::size_t j = 0; j < 6; ++j) {
+      BOOST_TEST_INFO_SCOPE("values index (" << i << ", " << j << ")");
+      BOOST_CHECK_EQUAL(trackState.getCovMatrix(params.at(i), params.at(j)),
+                        static_cast<float>(m(i, j)));
+    }
+  }
+}
+
+// The hit lookup has to be invoked in the order the track states are emitted
+// (inside-out), not in the outside-in order they are iterated internally: a
+// stateful callback would otherwise associate its hits with the wrong states.
+BOOST_AUTO_TEST_CASE(HitLookupInvocationOrder) {
+  TrackContainer tracks(std::make_shared<VectorTrackContainer>(),
+                        std::make_shared<VectorMultiTrajectory>());
+  auto track = tracks.makeTrack();
+
+  BoundVector par;
+  par << 1_mm, 5_mm, 0.1, std::numbers::pi / 2. * 0.9, -1 / 1_GeV, 5_ns;
+  track.parameters() = par;
+  track.covariance() = BoundMatrix::Identity();
+  track.setReferenceSurface(
+      Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 0}));
+
+  // Appended innermost first, so the internal reverse iteration visits them
+  // outermost first.
+  const std::array<double, 3> zs{100, 200, 300};
+  for (double z : zs) {
+    auto ts = track.appendTrackState(TrackStatePropMask::Smoothed);
+    ts.typeFlags().setIsMeasurement();
+    ts.smoothed() = par;
+    ts.smoothedCovariance() = BoundMatrix::Identity();
+    ts.setReferenceSurface(
+        Surface::makeShared<PerigeeSurface>(Vector3{0, 0, z}));
+  }
+
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext mctx{};
+  ConstantBField field{Vector3{0, 0, 2_T}};
+
+  edm4hep::TrackerHit3DCollection hitCollection;
+  std::vector<edm4hep::TrackerHit3D> hitByZ;
+  for (double z : zs) {
+    auto hit = hitCollection.create();
+    hit.setPosition({0, 0, z});
+    hitByZ.push_back(hit);
+  }
+
+  std::vector<double> seen;
+  EDM4hepUtil::TrackerHitLookup lookup =
+      [&](const AnyConstTrackStateProxy& state)
+      -> std::optional<edm4hep::TrackerHit> {
+    double z = state.referenceSurface().center(gctx).z();
+    seen.push_back(z);
+    for (std::size_t i = 0; i < zs.size(); ++i) {
+      if (std::abs(z - zs[i]) < 1e-6) {
+        return hitByZ[i];
+      }
+    }
+    return std::nullopt;
+  };
+
+  edm4hep::TrackCollection outTracks;
+  auto to = outTracks.create();
+  EDM4hepUtil::writeTrack(gctx, mctx, track, to, field, lookup);
+
+  // Invoked once per measurement state, inside-out
+  BOOST_REQUIRE_EQUAL(seen.size(), zs.size());
+  for (std::size_t i = 0; i < zs.size(); ++i) {
+    BOOST_TEST_INFO_SCOPE("lookup call #" << i);
+    CHECK_CLOSE_ABS(seen[i], zs[i], 1e-6);
+  }
+
+  // ... and the hits are attached in that same order
+  BOOST_REQUIRE_EQUAL(to.trackerHits_size(), zs.size());
+  for (std::size_t i = 0; i < zs.size(); ++i) {
+    BOOST_TEST_INFO_SCOPE("tracker hit #" << i);
+    CHECK_CLOSE_ABS(to.getTrackerHits(i).getPosition().z, zs[i], 1e-6);
+  }
+}
+
+namespace {
+/// Bz grows with |z|, so the field at a track's point of closest approach
+/// differs from the field at its perigee reference point.
+class ZGradientField : public MagneticFieldProvider {
+ public:
+  explicit ZGradientField(double b0) : m_b0(b0) {}
+
+  Cache makeCache(const MagneticFieldContext& /*mctx*/) const override {
+    return Cache(std::in_place_type<int>, 0);
+  }
+
+  Result<Vector3> getField(const Vector3& position,
+                           Cache& /*cache*/) const override {
+    return Result<Vector3>::success(
+        Vector3{0, 0, m_b0 * (1 + 0.001 * std::abs(position.z()))});
+  }
+
+ private:
+  double m_b0;
+};
+}  // namespace
+
+// The field is sampled at the point of closest approach, which for parameters
+// already on a perigee is d0/z0 away from the reference point. Both sides have
+// to sample at the same place, or q/p comes back biased in a non-uniform field.
+BOOST_AUTO_TEST_CASE(NonUniformFieldRoundTrip) {
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext mctx{};
+  ZGradientField field{2_T};
+
+  BoundVector par;
+  par << 50_mm, 300_mm, 0.7, 1.1, 1. / 2_GeV, 0;
+  BoundMatrix cov = BoundMatrix::Identity() * 1e-6;
+
+  TrackContainer tracks(std::make_shared<VectorTrackContainer>(),
+                        std::make_shared<VectorMultiTrajectory>());
+  auto track = tracks.makeTrack();
+  track.parameters() = par;
+  track.covariance() = cov;
+  track.setReferenceSurface(
+      Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 0}));
+
+  auto ts = track.appendTrackState(TrackStatePropMask::Smoothed);
+  ts.typeFlags().setIsMeasurement();
+  ts.smoothed() = par;
+  ts.smoothedCovariance() = cov;
+  ts.setReferenceSurface(
+      Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 300_mm}));
+
+  edm4hep::TrackCollection edm4hepTracks;
+  auto to = edm4hepTracks.create();
+  EDM4hepUtil::writeTrack(gctx, mctx, track, to, field);
+
+  TrackContainer readTracks(std::make_shared<VectorTrackContainer>(),
+                            std::make_shared<VectorMultiTrajectory>());
+  auto read = readTracks.makeTrack();
+  EDM4hepUtil::readTrack(gctx, mctx, to, read, field);
+
+  CHECK_CLOSE_OR_SMALL(track.parameters(), read.parameters(), 1e-5, 1e-8);
 }
 
 BOOST_AUTO_TEST_CASE(RoundTripTests) {
@@ -352,7 +526,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
 
   for (const auto& track : tracks) {
     auto to = edm4hepTracks.create();
-    EDM4hepUtil::writeTrack(gctx, track, to, Bz, *logger);
+    EDM4hepUtil::writeTrack(gctx, track, to, Bz, {}, *logger);
   }
 
   BOOST_CHECK_EQUAL(edm4hepTracks.size(), tracks.size());
@@ -373,7 +547,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
 
   for (const auto edm4hepTrack : edm4hepTracksConst) {
     auto track = readTracks.makeTrack();
-    EDM4hepUtil::readTrack(edm4hepTrack, track, Bz, *logger);
+    EDM4hepUtil::readTrack(gctx, edm4hepTrack, track, Bz, *logger);
   }
 
   BOOST_CHECK_EQUAL(tracks.size(), readTracks.size());
@@ -390,6 +564,11 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     CHECK_CLOSE_OR_SMALL(orig.covariance(), read.covariance(), 1e-5, 1e-8);
     BOOST_CHECK_EQUAL(orig.referenceSurface().center(gctx),
                       read.referenceSurface().center(gctx));
+
+    // Track summary quantities have to survive the round trip as well
+    CHECK_CLOSE_OR_SMALL(orig.chi2(), read.chi2(), 1e-5, 1e-8);
+    BOOST_CHECK_EQUAL(orig.nDoF(), read.nDoF());
+    BOOST_CHECK_EQUAL(orig.nHoles(), read.nHoles());
 
     auto origTsIt = orig.trackStatesReversed().begin();
     auto readTsIt = read.trackStatesReversed().begin();

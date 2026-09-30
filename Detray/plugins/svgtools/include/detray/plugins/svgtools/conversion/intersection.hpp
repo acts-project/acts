@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/geometry/surface.hpp"
 #include "detray/utils/invalid_values.hpp"
 
@@ -22,7 +23,7 @@
 namespace detray::svgtools::conversion {
 
 /// @returns The proto intersection of a detray intersection.
-template <typename detector_t, typename intersection_t>
+template <concepts::detector detector_t, typename intersection_t>
 inline auto intersection(const detector_t& detector,
                          const std::vector<intersection_t>& intersections,
                          const typename detector_t::vector3_type& dir = {},

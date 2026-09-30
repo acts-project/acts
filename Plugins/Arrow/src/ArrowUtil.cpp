@@ -180,7 +180,9 @@ std::shared_ptr<arrow::Schema> trackSchema() {
       arrow::field("theta", nullableFloatList(), false),
       arrow::field("qop", nullableFloatList(), false),
       arrow::field("majority_particle_id", arrow::list(arrow::uint64()), false),
-      arrow::field("hit_ids", arrow::list(arrow::list(arrow::uint32())), false),
+      arrow::field("measurement_ids", arrow::list(arrow::list(arrow::uint32())),
+                   false),
+      arrow::field("hit_ids", arrow::list(arrow::list(arrow::uint32())), true),
       arrow::field("track_id", arrow::list(arrow::uint16()), false),
       arrow::field("t", nullableFloatList(), true),
   });

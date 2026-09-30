@@ -17,7 +17,6 @@
 
 // System include(s)
 #include <string_view>
-#include <utility>
 #include <vector>
 
 namespace detray {
@@ -75,8 +74,8 @@ struct matrix_unaryOP_bm : public matrix_bm<matrix_t> {
   using base_type = matrix_bm<matrix_t>;
 
   matrix_unaryOP_bm() = delete;
-  explicit matrix_unaryOP_bm(benchmark_base::configuration cfg)
-      : base_type{std::move(cfg)} {}
+  explicit matrix_unaryOP_bm(const benchmark_base::configuration& cfg)
+      : base_type{cfg} {}
   matrix_unaryOP_bm(const matrix_unaryOP_bm& bm) = default;
   matrix_unaryOP_bm& operator=(matrix_unaryOP_bm& other) = default;
 
@@ -106,8 +105,8 @@ struct matrix_binaryOP_bm : public matrix_bm<matrix_t> {
   using base_type = matrix_bm<matrix_t>;
 
   matrix_binaryOP_bm() = delete;
-  explicit matrix_binaryOP_bm(benchmark_base::configuration cfg)
-      : base_type{std::move(cfg)} {}
+  explicit matrix_binaryOP_bm(const benchmark_base::configuration& cfg)
+      : base_type{cfg} {}
   matrix_binaryOP_bm(const matrix_binaryOP_bm& bm) = default;
   matrix_binaryOP_bm& operator=(matrix_binaryOP_bm& other) = default;
 
@@ -138,8 +137,8 @@ struct matrix_vector_bm : public matrix_bm<matrix_t> {
   std::vector<vector_t> v;
 
   matrix_vector_bm() = delete;
-  explicit matrix_vector_bm(benchmark_base::configuration cfg)
-      : base_type{std::move(cfg)} {
+  explicit matrix_vector_bm(const benchmark_base::configuration& cfg)
+      : base_type{cfg} {
     v.reserve(static_cast<std::size_t>(this->m_cfg.n_samples()));
 
     detray::algebra::fill_random_vec(v);

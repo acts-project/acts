@@ -8,16 +8,13 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
-
-#include <fstream>
-#include <map>
-#include <mutex>
 
 // Convenience shorthand
 
@@ -40,6 +37,12 @@ class JsonMaterialDecorator : public IMaterialDecorator {
                         const std::string& jFileName,
                         Acts::Logging::Level level);
 
+  /// Parsed, format-independent maps for applying to a completed geometry.
+  /// @return Material maps read from the input file
+  const TrackingGeometryMaterial& materialMaps() const {
+    return m_materialMaps;
+  }
+
   /// Decorate a surface
   ///
   /// @param surface the non-cost surface that is decorated
@@ -52,8 +55,7 @@ class JsonMaterialDecorator : public IMaterialDecorator {
 
  private:
   MaterialMapJsonConverter::Config m_readerConfig;
-  SurfaceMaterialMaps m_surfaceMaterialMap;
-  VolumeMaterialMaps m_volumeMaterialMap;
+  TrackingGeometryMaterial m_materialMaps;
 
   std::unique_ptr<const Logger> m_logger;
 

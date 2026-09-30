@@ -31,6 +31,7 @@ macro(detray_add_cpu_test algebra)
        "propagator/propagation_validation.cpp"
        "propagator/covariance_transport.cpp"
        "propagator/guided_navigator.cpp"
+       "propagator/perigee_extrapolator.cpp"
        "propagator/propagation_caching_navigator.cpp"
        "propagator/propagation_direct_navigator.cpp"
        "utils/type_registry.cpp"

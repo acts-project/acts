@@ -38,6 +38,12 @@ class TripletSeeder {
 
     /// Cache for triplet top candidates during seed formation
     TripletTopCandidates tripletTopCandidates;
+
+    /// Cursors into the bottom space point groups, advanced as the middle
+    /// space points are swept in ascending radius
+    std::vector<SpacePointContainer::ConstRange> bottomSpGroups;
+    /// Cursors into the top space point groups, advanced the same way
+    std::vector<SpacePointContainer::ConstRange> topSpGroups;
   };
 
   /// Construct a TripletSeeder with optional logger.
@@ -63,9 +69,9 @@ class TripletSeeder {
                             const TripletSeedFinder& tripletFinder,
                             const ITripletSeedFilter& filter,
                             const SpacePointContainer& spacePoints,
-                            SpacePointContainer::ConstSubset& bottomSps,
+                            SpacePointContainer::ConstSubset bottomSps,
                             const ConstSpacePointProxy& middleSp,
-                            SpacePointContainer::ConstSubset& topSps,
+                            SpacePointContainer::ConstSubset topSps,
                             SeedContainer& outputSeeds) const;
 
   /// Create all possible seeds from bottom, middle, and top space points.
@@ -86,9 +92,9 @@ class TripletSeeder {
       const DoubletSeedFinder& topFinder,
       const TripletSeedFinder& tripletFinder, const ITripletSeedFilter& filter,
       const SpacePointContainer& spacePoints,
-      const std::span<SpacePointContainer::ConstRange>& bottomSpGroups,
+      std::span<const SpacePointContainer::ConstRange> bottomSpGroups,
       const SpacePointContainer::ConstRange& middleSpGroup,
-      const std::span<SpacePointContainer::ConstRange>& topSpGroups,
+      std::span<const SpacePointContainer::ConstRange> topSpGroups,
       const std::pair<float, float>& radiusRangeForMiddle,
       SeedContainer& outputSeeds) const;
 

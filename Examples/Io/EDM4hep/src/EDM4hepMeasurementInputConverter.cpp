@@ -31,29 +31,37 @@ EDM4hepMeasurementInputConverter::EDM4hepMeasurementInputConverter(
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement output collection");
   }
-  if (m_cfg.dd4hepDetector == nullptr) {
-    throw std::invalid_argument("Missing DD4hep detector");
+  const bool hasDetector = m_cfg.dd4hepDetector != nullptr;
+  const bool hasMapper = static_cast<bool>(m_cfg.geometryMapper);
+  if (hasDetector == hasMapper) {
+    throw std::invalid_argument(
+        "EDM4hepMeasurementInputConverter: exactly one of dd4hepDetector or "
+        "geometryMapper must be set");
   }
 
   m_outputMeasurements.initialize(m_cfg.outputMeasurements);
   m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
   m_outputClusters.maybeInitialize(m_cfg.outputClusters);
 
-  m_geometryMapper = [detector = m_cfg.dd4hepDetector](std::uint64_t cellId) {
-    const auto& vm = detector->dd4hepDetector().volumeManager();
-    const auto detElement = vm.lookupDetElement(cellId);
+  if (hasMapper) {
+    m_geometryMapper = m_cfg.geometryMapper;
+  } else {
+    m_geometryMapper = [detector = m_cfg.dd4hepDetector](std::uint64_t cellId) {
+      const auto& vm = detector->dd4hepDetector().volumeManager();
+      const auto detElement = vm.lookupDetElement(cellId);
 
-    const auto* ext =
-        detElement.extension<ActsPlugins::DD4hepDetectorElementExtension>(
-            false);
-    if (ext == nullptr) {
-      throw std::runtime_error(
-          "EDM4hepMeasurementInputConverter: DetElement has no "
-          "DD4hepDetectorElementExtension for cellId " +
-          std::to_string(cellId));
-    }
-    return ext->detectorElement().surface().geometryId();
-  };
+      const auto* ext =
+          detElement.extension<ActsPlugins::DD4hepDetectorElementExtension>(
+              false);
+      if (ext == nullptr) {
+        throw std::runtime_error(
+            "EDM4hepMeasurementInputConverter: DetElement has no "
+            "DD4hepDetectorElementExtension for cellId " +
+            std::to_string(cellId));
+      }
+      return ext->detectorElement().surface().geometryId();
+    };
+  }
 }
 
 ProcessCode EDM4hepMeasurementInputConverter::convert(

@@ -1,11 +1,18 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+// Project include(s).
+#include "traccc/geometry/detector.hpp"
+
+// Detray include(s)
+#include <detray/core/concepts.hpp>
 
 // CUDA include(s).
 #include <cuda_runtime.h>
@@ -21,9 +28,9 @@ namespace traccc::cuda {
 /// @param in     View of the detector to build from
 /// @param out    Global memory to construct the detector into
 ///
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 void create_device_detector(const cudaStream_t& stream,
-                            typename detector_t::const_view_type in,
+                            const detray::detector_view_t<detector_t> in,
                             detector_t* out);
 
 }  // namespace traccc::cuda

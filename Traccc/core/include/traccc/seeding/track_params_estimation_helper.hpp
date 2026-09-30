@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -65,7 +66,7 @@ inline TRACCC_HOST_DEVICE void seed_to_bound_param_vector(
   // Define a new coordinate frame with its origin at the bottom space
   // point, z axis long the magnetic field direction and y axis
   // perpendicular to vector from the bottom to middle space point.
-  // Hence, the projection of the middle space point on the tranverse
+  // Hence, the projection of the middle space point on the transverse
   // plane will be located at the x axis of the new frame.
   vector3 relVec = sp_global_positions[1] - sp_global_positions[0];
   vector3 newZAxis = vector::normalize(bfield);

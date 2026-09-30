@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-
 #include <limits>
 
 namespace Acts {
@@ -23,6 +21,9 @@ static constexpr double s_epsilon = 3 * std::numeric_limits<double>::epsilon();
 ///       to include the units header unnecessarily. With the native length
 ///       unit of mm this corresponds to 0.1um.
 static constexpr double s_onSurfaceTolerance = 1e-4;
+
+/// Tolerance for transform equivalence checks
+static constexpr double s_transformEquivalentTolerance = 1e-9;
 
 /// Tolerance in radians for a phi sector to count as the full azimuth
 ///

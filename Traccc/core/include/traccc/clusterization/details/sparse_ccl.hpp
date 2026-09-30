@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2024 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -17,14 +18,14 @@
 
 namespace traccc::details {
 
-/// Implemementation of SparseCCL, following
+/// Implementation of SparseCCL, following
 /// [DOI: 10.1109/DASIP48288.2019.9049184]
 ///
 /// Requires cells to be sorted in column major
 
 /// Find root of the tree for entry @param e
 ///
-/// @param labels an equivalance table
+/// @param labels an equivalence table
 ///
 /// @return the root of @param e
 ///
@@ -33,7 +34,7 @@ TRACCC_HOST_DEVICE inline unsigned int find_root(
 
 /// Create a union of two entries @param e1 and @param e2
 ///
-/// @param labels an equivalance table
+/// @param labels an equivalence table
 ///
 /// @return the rleast common ancestor of the entries
 ///
@@ -65,7 +66,7 @@ template <typename T1, typename T2>
 TRACCC_HOST_DEVICE inline bool is_far_enough(const edm::silicon_cell<T1>& a,
                                              const edm::silicon_cell<T2>& b);
 
-/// Sparce CCL algorithm
+/// Sparse CCL algorithm
 ///
 /// @param cells is the cell collection
 /// @param labels is the vector of the output indices (to which cluster a cell

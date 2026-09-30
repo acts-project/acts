@@ -29,6 +29,8 @@ namespace detray {
 template <typename detector_t>
 class homogeneous_volume_material_builder final
     : public volume_decorator<detector_t> {
+  static_assert(concepts::detector<detector_t>);
+
  public:
   using scalar_type = dscalar<typename detector_t::algebra_type>;
 

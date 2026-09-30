@@ -93,13 +93,22 @@ using RotationMatrix3 = SquareMatrix3;
 /// @brief Rotation defined by an angle around a rotation axis in 3D
 using AngleAxis3 = Eigen::AngleAxis<double>;
 
-/// @brief 2D affine transformation stored as a compact 2x3 matrix
-using Transform2 = Eigen::Transform<double, 2, Eigen::AffineCompact>;
-/// @brief 3D affine transformation stored as a 4x4 matrix
-using Transform3 = Eigen::Transform<double, 3, Eigen::Affine>;
+/// @brief 2D rigid transformation, see @ref Acts::Transform3
+using Transform2 = Eigen::Transform<double, 2, Eigen::Isometry>;
+/// @brief 3D rigid transformation (rotation/reflection plus translation)
+///
+/// The linear part is required to be orthogonal: geometry, navigation and
+/// propagation invert it by transposition and read the local frame axes off it
+/// directly. Scaling or shearing is therefore a compile error - use
+/// @ref Acts::AffineTransform3 for a general transformation.
+using Transform3 = Eigen::Transform<double, 3, Eigen::Isometry>;
 
-/// Tolerance for transform equivalence checks
-constexpr double s_transformEquivalentTolerance = 1e-9;
+/// @brief 3D general affine transformation, allowing scaling and shearing
+///
+/// Names the transformations arriving from external geometry sources. They
+/// have to be converted to a @ref Acts::Transform3 explicitly before ACTS
+/// geometry can be built from them.
+using AffineTransform3 = Eigen::Transform<double, 3, Eigen::Affine>;
 
 /// @}
 

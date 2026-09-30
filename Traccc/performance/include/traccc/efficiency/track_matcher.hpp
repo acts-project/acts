@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2023 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -37,8 +38,8 @@ struct track_matcher {
    * @return The matched particle identifier, or nothing if no particle
    * matches.
    */
-  virtual std::optional<uint64_t> operator()(
-      const std::vector<std::vector<uint64_t>>& v) const = 0;
+  virtual std::optional<std::uint64_t> operator()(
+      const std::vector<std::vector<std::uint64_t>>& v) const = 0;
   /**
    * @brief Default destructor
    */
@@ -63,8 +64,8 @@ struct stepped_percentage : track_matcher {
 
   virtual std::string get_name() const override final;
 
-  virtual std::optional<uint64_t> operator()(
-      const std::vector<std::vector<uint64_t>>&) const override final;
+  virtual std::optional<std::uint64_t> operator()(
+      const std::vector<std::vector<std::uint64_t>>&) const override final;
 
  private:
   scalar m_min_ratio;
@@ -81,7 +82,7 @@ struct exact : track_matcher {
 
   virtual std::string get_name() const override final;
 
-  virtual std::optional<uint64_t> operator()(
-      const std::vector<std::vector<uint64_t>>&) const override final;
+  virtual std::optional<std::uint64_t> operator()(
+      const std::vector<std::vector<std::uint64_t>>&) const override final;
 };
 }  // namespace traccc

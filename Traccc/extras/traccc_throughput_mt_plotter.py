@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+
+# This file is part of the ACTS project.
 #
-# TRACCC library, part of the ACTS project (R&D line)
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# (c) 2023 CERN for the benefit of the ACTS project
-#
-# Mozilla Public License Version 2.0
-#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Python import(s).
 import argparse
@@ -219,7 +220,7 @@ def drawPerMuSamplePlots(inputs, samples, canvas, output, maxThreads, graphicsOp
         # canvas is printed.
         profiles = []
 
-        # Get minimum-maximum throghput values for this sample.
+        # Get minimum-maximum throughput values for this sample.
         min_max_throughput = getMinMaxThroughput(inputs, sample)
 
         # The legend for all of the platforms used.
@@ -390,7 +391,7 @@ def main():
     """C(++)-style main function"""
 
     # Parse the command line arguments.
-    parser = argparse.ArgumentParser(description="Multi-Threaded Throghput Plotter")
+    parser = argparse.ArgumentParser(description="Multi-Threaded Throughput Plotter")
     parser.add_argument("csv_file", nargs="+", help="CSV file name:Platform name")
     parser.add_argument(
         "-o", "--output", help="Output PDF file name", default="output.pdf"
@@ -446,8 +447,8 @@ def main():
     canvas = ROOT.TCanvas("canvas", "Throughput Canvas", 800, 600)
     canvas.cd()
 
-    # Draw the per-mu-sample througput plots. The return value is a list
-    # of best througput values per mu value for each platform.
+    # Draw the per-mu-sample throughput plots. The return value is a list
+    # of best throughput values per mu value for each platform.
     maxThroughputs = drawPerMuSamplePlots(
         inputs, samples, canvas, args.output, maxThreads, graphicsOptions
     )

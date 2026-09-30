@@ -241,6 +241,12 @@ ProcessCode FatrasSimulation::execute(const AlgorithmContext &ctx) const {
     ACTS_ERROR("event " << ctx.eventNumber << " particle " << failed.particle
                         << " failed to simulate with error " << failed.error
                         << ": " << failed.error.message());
+
+    {
+      std::lock_guard<std::mutex> lock(m_counters.failedParticlesMutex);
+      ++m_counters.nFailedParticles;
+      ++m_counters.failedParticlesByError[failed.error];
+    }
   }
 
   ACTS_DEBUG(particlesInitialUnordered.size()
@@ -280,6 +286,17 @@ ProcessCode FatrasSimulation::execute(const AlgorithmContext &ctx) const {
   m_outputParticles(ctx, std::move(particlesSimulated));
   m_outputSimHits(ctx, std::move(simHits));
 
+  return ProcessCode::SUCCESS;
+}
+
+ProcessCode FatrasSimulation::finalize() {
+  if (m_counters.nFailedParticles > 0) {
+    ACTS_ERROR(m_counters.nFailedParticles << " particles failed to simulate");
+    for (const auto &[errorCode, count] : m_counters.failedParticlesByError) {
+      ACTS_ERROR("  " << errorCode.message() << " (code " << errorCode.value()
+                      << "): " << count << " times");
+    }
+  }
   return ProcessCode::SUCCESS;
 }
 

@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -82,7 +83,7 @@ void grid_attach_fill_test(grid2_view<host_grid2_attach> grid_view);
 void grid_attach_assign_test(grid2_view<host_grid2_attach> grid_view);
 
 // read test function for grid array
-template <template <typename, size_t> class array_type>
+template <template <typename, std::size_t> class array_type>
 void grid_array_test(array_type<grid2_view<host_grid2_attach>, 2> grid_array,
                      vecmem::data::vector_view<point3>& outputs_data);
 

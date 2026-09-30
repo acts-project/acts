@@ -177,7 +177,7 @@ def __generate_benchmark_dict(
 
                     nvidia_smi.nvmlShutdown()
 
-                except NVMLError as e:
+                except nvidia_smi.NVMLError as e:
                     print(e)
 
             except ModuleNotFoundError:

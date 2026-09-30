@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/geometry/concepts.hpp"
 #include "detray/geometry/mask.hpp"
 #include "detray/io/frontend/definitions.hpp"
@@ -30,7 +31,7 @@ struct unknown_type {
 /// Select mask shapes
 /// @{
 /// How to select shape types during construction for a given detector type
-template <typename detector_t>
+template <concepts::detector detector_t>
 struct mask_shape_selector {
   using algebra_t = typename detector_t::algebra_type;
   using link_t = typename detector_t::surface_type::navigation_link;
@@ -48,7 +49,7 @@ struct mask_shape_selector {
 };
 
 /// Type registry containing only the shapes required by the @tparam detector_t
-template <typename detector_t>
+template <concepts::detector detector_t>
 using filtered_shape_registry =
     types::mapped_registry<io::shape_registry, mask_shape_selector<detector_t>>;
 
@@ -102,12 +103,12 @@ struct mat_map_frame_selector {
 /// @}
 
 /// Type registry for the coord. frames required by the @tparam detector_t
-template <typename detector_t>
+template <concepts::detector detector_t>
 using mat_frame_registry = types::mapped_registry<typename detector_t::material,
                                                   mat_map_frame_selector>;
 
 /// How to select frame types during construction for a given detector type
-template <typename detector_t>
+template <concepts::detector detector_t>
 struct mat_map_selector {
   template <typename F>
   using type =
@@ -116,7 +117,7 @@ struct mat_map_selector {
 };
 
 /// Type registry for the shapes required by the @tparam detector_t
-template <typename detector_t>
+template <concepts::detector detector_t>
 using filtered_material_map_registry = types::mapped_registry<
     io::material_registry<typename detector_t::algebra_type>,
     mat_map_selector<detector_t>>;

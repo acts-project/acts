@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -24,6 +25,9 @@
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
 #include <algorithm>
+#include <array>
+#include <cstdint>
+#include <memory>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
@@ -55,8 +59,9 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
   TrackContainer tracks(trackContainer, trackStateContainer);
 
-  auto perigeeSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-      Acts::Vector3{0., 0., 0.});
+  std::shared_ptr<const Acts::Surface> perigeeSurface =
+      Acts::Surface::makeShared<Acts::PerigeeSurface>(
+          Acts::Vector3{0., 0., 0.});
 
   // The following code is only necessary if a beamspot constraint is in use but
   // unguarded for lifetime and simplicity reasons. The Core KF does not support
@@ -84,6 +89,9 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     beamSpotTrackState.allocateCalibrated(beamSpotMeasValue,
                                           Acts::SquareMatrix2::Zero());
   }
+
+  beamSpotTrackState.setProjectorSubspaceIndices(
+      std::array<std::uint8_t, 2>{Acts::eBoundLoc0, Acts::eBoundLoc1});
 
   Acts::SourceLink testSL{42};
   beamSpotTrackState.setUncalibratedSourceLink(std::move(testSL));
@@ -115,6 +123,22 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
       continue;
     }
 
+    // Reusing the track parameters on the beam spot perigee is only valid if
+    // the track is already expressed with respect to it.
+    const auto& refSurface = track.referenceSurface();
+    const bool useBeamSpotConstraint = m_cfg.beamSpotConstraint.has_value();
+    if (useBeamSpotConstraint && *perigeeSurface != refSurface) {
+      ACTS_ERROR("Track " << itrack
+                          << " is not parametrized on the beam spot perigee "
+                             "surface, cannot apply the beam spot constraint");
+      return ProcessCode::ABORT;
+    }
+
+    // The fitter matches measurements by surface pointer, so with a beamspot
+    // constraint the fit has to start on the very surface that carries it.
+    const std::shared_ptr<const Acts::Surface> initialSurface =
+        useBeamSpotConstraint ? perigeeSurface : refSurface.getSharedPtr();
+
     TrackFitterFunction::GeneralFitterOptions options{
         ctx.recoGeoContext,
         ctx.magFieldContext,
@@ -123,9 +147,9 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
         Acts::PropagatorPlainOptions(ctx.recoGeoContext, ctx.magFieldContext),
         true};
 
-    Acts::BoundTrackParameters initialParams(
-        track.referenceSurface().getSharedPtr(), track.parameters(),
-        track.covariance(), track.particleHypothesis());
+    Acts::BoundTrackParameters initialParams(initialSurface, track.parameters(),
+                                             track.covariance(),
+                                             track.particleHypothesis());
 
     if (initialParams.covariance()) {
       for (auto i = 0ul; i < m_cfg.initialVarInflation.size(); ++i) {
@@ -152,11 +176,10 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
       continue;
     }
 
-    if (m_cfg.beamSpotConstraint.has_value()) {
+    if (useBeamSpotConstraint) {
       RefittingCalibrator::RefittingSourceLink beamSpotSL{
           beamSpotConstTrackState};
       trackSourceLinks.emplace_back(Acts::SourceLink{beamSpotSL});
-      surfSequence.push_back(perigeeSurface.get());
     }
 
     std::ranges::reverse(surfSequence);
