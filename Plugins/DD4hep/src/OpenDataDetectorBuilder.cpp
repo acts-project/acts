@@ -195,10 +195,38 @@ void addPixelEndplateIfPresent(const BlueprintBuilder& builder,
   }
 }
 
+// Barrel container boundary_material: negative/positive disc faces on the
+// "*Barrel" container as a whole, on top of (and independent from) whatever
+// material its individual layers already carry. Per the ODD convention this
+// only ever applies to barrel containers, never to endcaps -- their own
+// Z-facing boundary is deliberately left unmaterialized at the container
+// level, since it would otherwise collide with this same designation once
+// barrel and endcaps are Z-stacked together and their touching faces get
+// fused into one portal. Shared across all three construction methods.
+Acts::detail::BlueprintNodePtr addBarrelBoundaryMaterial(
+    Acts::detail::ContainerNodePtr node) {
+  using enum Acts::CylinderVolumeBounds::Face;
+  auto mat = std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
+      node->name() + "_boundary_mat");
+  mat->configureFace(NegativeDisc,
+                     Acts::AxisSpec::DeferredEquidistant(
+                         kMatRBins, Acts::AxisDirection::AxisR),
+                     Acts::AxisSpec::DeferredEquidistant(
+                         kMatPhiBins, Acts::AxisDirection::AxisPhi));
+  mat->configureFace(PositiveDisc,
+                     Acts::AxisSpec::DeferredEquidistant(
+                         kMatRBins, Acts::AxisDirection::AxisR),
+                     Acts::AxisSpec::DeferredEquidistant(
+                         kMatPhiBins, Acts::AxisDirection::AxisPhi));
+  mat->addChild(std::move(node));
+  return mat;
+}
+
 void addDirectLayerSubsystem(
     const BlueprintBuilder& builder, Acts::ContainerBlueprintNode& outer,
     std::string assembly, std::string det, const std::regex& layerFilter,
-    Acts::CylinderVolumeBounds::Face barrelMaterialFace) {
+    Acts::CylinderVolumeBounds::Face barrelMaterialFace,
+    bool hasOuterBoundaryMaterial) {
   const auto assemblyElement = builder.findDetElementByName(assembly);
   if (!assemblyElement.has_value()) {
     throw std::runtime_error(
@@ -215,38 +243,63 @@ void addDirectLayerSubsystem(
   auto layerCustomizer = makeLayerCustomizer(builder, std::move(det),
                                              layerFilter, barrelMaterialFace);
 
-  auto addLayerChildren = [&](const auto& elements, auto makeNode) {
+  auto addLayerChildren = [&](const auto& elements, auto makeNode,
+                              bool isBarrel) {
     for (const auto& element : elements) {
       auto node = makeNode(element);
       node->setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
       node->setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
                                 Acts::VolumeResizeStrategy::Gap);
       addPixelEndplateIfPresent(builder, element, *node);
-      containerNode->addChild(std::move(node));
+      if (isBarrel) {
+        containerNode->addChild(addBarrelBoundaryMaterial(std::move(node)));
+      } else {
+        containerNode->addChild(std::move(node));
+      }
     }
   };
 
-  addLayerChildren(barrels, [&](const auto& barrel) {
-    return builder.layers()
-        .barrel()
-        .setSensorAxes("XYZ")
-        .setLayerFilter(layerFilter)
-        .setContainer(barrel)
-        .onLayer(layerCustomizer)
-        .build();
-  });
+  addLayerChildren(
+      barrels,
+      [&](const auto& barrel) {
+        return builder.layers()
+            .barrel()
+            .setSensorAxes("XYZ")
+            .setLayerFilter(layerFilter)
+            .setContainer(barrel)
+            .onLayer(layerCustomizer)
+            .build();
+      },
+      /*isBarrel=*/true);
 
-  addLayerChildren(endcaps, [&](const auto& endcap) {
-    return builder.layers()
-        .endcap()
-        .setSensorAxes("XZY")
-        .setLayerFilter(layerFilter)
-        .setContainer(endcap)
-        .onLayer(layerCustomizer)
-        .build();
-  });
+  addLayerChildren(
+      endcaps,
+      [&](const auto& endcap) {
+        return builder.layers()
+            .endcap()
+            .setSensorAxes("XZY")
+            .setLayerFilter(layerFilter)
+            .setContainer(endcap)
+            .onLayer(layerCustomizer)
+            .build();
+      },
+      /*isBarrel=*/false);
 
-  outer.addChild(std::move(containerNode));
+  if (!hasOuterBoundaryMaterial) {
+    outer.addChild(std::move(containerNode));
+    return;
+  }
+
+  using enum Acts::CylinderVolumeBounds::Face;
+  auto outerMat = std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
+      assembly + "_outer_mat");
+  outerMat->configureFace(OuterCylinder,
+                          Acts::AxisSpec::DeferredEquidistant(
+                              kMatPhiBins, Acts::AxisDirection::AxisRPhi),
+                          Acts::AxisSpec::DeferredEquidistant(
+                              kMatZBins, Acts::AxisDirection::AxisZ));
+  outerMat->addChild(std::move(containerNode));
+  outer.addChild(std::move(outerMat));
 }
 
 void addBarrelEndcapSubsystem(
@@ -274,7 +327,6 @@ void addBarrelEndcapSubsystem(
             node->setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
                                       Acts::VolumeResizeStrategy::Gap);
 
-            using enum Acts::CylinderVolumeBounds::Face;
             addPixelEndplateIfPresent(builder, elem, *node);
 
             // This callback fires for every container node the barrelEndcap()
@@ -285,33 +337,17 @@ void addBarrelEndcapSubsystem(
             // combined top-level node must be left alone, since its own
             // negative/positive discs get fused with its radial neighbor's cap
             // in the outer AxisR stack, and Acts refuses to fuse two portals
-            // that both carry material.
+            // that both carry material. The outer cylinder face is handled
+            // separately below, on the fully Z-stacked top-level node returned
+            // by build() -- not here, since materializing it on this "Barrel"
+            // sub-container (before it gets Z-stacked together with the
+            // endcaps) collides with the subsequent radius-unification across
+            // the whole Z-stack (see the Kategorie 2 investigation).
             if (!std::string{builder.backend().nameOf(elem)}.ends_with(
                     "Barrel")) {
               return node;
             }
-
-            // Container-level material: negative/positive disc faces. The outer
-            // face is handled separately below, on the fully Z-stacked
-            // top-level node returned by build() -- not here, since
-            // materializing it on this "Barrel" sub-container (before it gets
-            // Z-stacked together with the endcaps) collides with the subsequent
-            // radius-unification across the whole Z-stack (see the Kategorie 2
-            // investigation).
-            auto mat = std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
-                node->name() + "_boundary_mat");
-            mat->configureFace(NegativeDisc,
-                               Acts::AxisSpec::DeferredEquidistant(
-                                   kMatRBins, Acts::AxisDirection::AxisR),
-                               Acts::AxisSpec::DeferredEquidistant(
-                                   kMatPhiBins, Acts::AxisDirection::AxisPhi));
-            mat->configureFace(PositiveDisc,
-                               Acts::AxisSpec::DeferredEquidistant(
-                                   kMatRBins, Acts::AxisDirection::AxisR),
-                               Acts::AxisSpec::DeferredEquidistant(
-                                   kMatPhiBins, Acts::AxisDirection::AxisPhi));
-            mat->addChild(std::move(node));
-            return mat;
+            return addBarrelBoundaryMaterial(std::move(node));
           })
           .build();
 
@@ -343,7 +379,8 @@ void addBarrelEndcapSubsystem(
 void addDirectLayerGroupedSubsystem(
     const BlueprintBuilder& builder, Acts::ContainerBlueprintNode& outer,
     std::string assembly, std::string det, const std::regex& layerFilter,
-    Acts::CylinderVolumeBounds::Face barrelMaterialFace) {
+    Acts::CylinderVolumeBounds::Face barrelMaterialFace,
+    bool hasOuterBoundaryMaterial) {
   const auto assemblyElement = builder.findDetElementByName(assembly);
   if (!assemblyElement.has_value()) {
     throw std::runtime_error(
@@ -388,7 +425,7 @@ void addDirectLayerGroupedSubsystem(
     barrelNode->setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
     barrelNode->setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
                                     Acts::VolumeResizeStrategy::Gap);
-    containerNode->addChild(std::move(barrelNode));
+    containerNode->addChild(addBarrelBoundaryMaterial(std::move(barrelNode)));
   }
 
   for (const auto& endcap : endcaps) {
@@ -408,7 +445,21 @@ void addDirectLayerGroupedSubsystem(
     containerNode->addChild(std::move(endcapNode));
   }
 
-  outer.addChild(std::move(containerNode));
+  if (!hasOuterBoundaryMaterial) {
+    outer.addChild(std::move(containerNode));
+    return;
+  }
+
+  using enum Acts::CylinderVolumeBounds::Face;
+  auto outerMat = std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
+      assembly + "_outer_mat");
+  outerMat->configureFace(OuterCylinder,
+                          Acts::AxisSpec::DeferredEquidistant(
+                              kMatPhiBins, Acts::AxisDirection::AxisRPhi),
+                          Acts::AxisSpec::DeferredEquidistant(
+                              kMatZBins, Acts::AxisDirection::AxisZ));
+  outerMat->addChild(std::move(containerNode));
+  outer.addChild(std::move(outerMat));
 }
 
 }  // namespace
@@ -510,14 +561,14 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
   using enum Acts::CylinderVolumeBounds::Face;
   addDirectLayerSubsystem(builder, outer, "Pixels", "pix",
                           ActsPlugins::DD4hep::detail::kPixelLayerFilter,
-                          OuterCylinder);
+                          OuterCylinder, /*hasOuterBoundaryMaterial=*/false);
   addPassiveCylinder(builder, outer, "PST", {OuterCylinder});
   addDirectLayerSubsystem(builder, outer, "ShortStrips", "ss",
                           ActsPlugins::DD4hep::detail::kShortStripLayerFilter,
-                          InnerCylinder);
+                          InnerCylinder, /*hasOuterBoundaryMaterial=*/true);
   addDirectLayerSubsystem(builder, outer, "LongStrips", "ls",
                           ActsPlugins::DD4hep::detail::kLongStripLayerFilter,
-                          InnerCylinder);
+                          InnerCylinder, /*hasOuterBoundaryMaterial=*/true);
   addPassiveCylinder(builder, outer, "Solenoid",
                      {InnerCylinder, OuterCylinder});
 
@@ -549,14 +600,17 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayerGrouped(
   using enum Acts::CylinderVolumeBounds::Face;
   addDirectLayerGroupedSubsystem(builder, outer, "Pixels", "pix",
                                  ActsPlugins::DD4hep::detail::kPixelLayerFilter,
-                                 OuterCylinder);
+                                 OuterCylinder,
+                                 /*hasOuterBoundaryMaterial=*/false);
   addPassiveCylinder(builder, outer, "PST", {OuterCylinder});
   addDirectLayerGroupedSubsystem(
       builder, outer, "ShortStrips", "ss",
-      ActsPlugins::DD4hep::detail::kShortStripLayerFilter, InnerCylinder);
+      ActsPlugins::DD4hep::detail::kShortStripLayerFilter, InnerCylinder,
+      /*hasOuterBoundaryMaterial=*/true);
   addDirectLayerGroupedSubsystem(
       builder, outer, "LongStrips", "ls",
-      ActsPlugins::DD4hep::detail::kLongStripLayerFilter, InnerCylinder);
+      ActsPlugins::DD4hep::detail::kLongStripLayerFilter, InnerCylinder,
+      /*hasOuterBoundaryMaterial=*/true);
   addPassiveCylinder(builder, outer, "Solenoid",
                      {InnerCylinder, OuterCylinder});
 
