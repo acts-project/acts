@@ -35,6 +35,9 @@ TRACCC_HOST_DEVICE inline void gbts_compress_graph(
   const vecmem::device_vector<const unsigned int> d_reIndexer(
       payload.reIndexer);
   vecmem::device_vector<unsigned int> d_output_graph(payload.output_graph);
+  vecmem::device_vector<uint2> d_output_edge_nodes(payload.output_edge_nodes);
+  vecmem::device_vector<unsigned char> d_output_num_neighbours(
+      payload.output_num_neighbours);
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
@@ -56,13 +59,12 @@ TRACCC_HOST_DEVICE inline void gbts_compress_graph(
     }
 
     // Row-major output graph: each edge owns a contiguous block of
-    // nei_start + nMaxNei ints ([node1, node2, nNei, nei0..neiN-1]).
-    const unsigned int edge_size = gbts_consts::nei_start + payload.nMaxNei;
-    const unsigned int pos = edge_size * newIdx;
+    // nMaxNei ints ([nei0..neiN-1]).
+    const unsigned int pos = payload.nMaxNei * newIdx;
 
     const uint2 edge_nodes = d_edge_nodes[globalIndex];
-    d_output_graph[pos + gbts_consts::node1] = d_orig_node_index[edge_nodes.x];
-    d_output_graph[pos + gbts_consts::node2] = d_orig_node_index[edge_nodes.y];
+    d_output_edge_nodes[newIdx] =
+        uint2{d_orig_node_index[edge_nodes.x], d_orig_node_index[edge_nodes.y]};
 
     const unsigned char nNei = d_num_neighbours[globalIndex];
     const unsigned int nei_pos = payload.nMaxNei * globalIndex;
@@ -75,10 +77,10 @@ TRACCC_HOST_DEVICE inline void gbts_compress_graph(
       if (nei >= payload.nConnectedEdgesMax) {
         continue;
       }
-      d_output_graph[pos + gbts_consts::nei_start + kept] = nei;
+      d_output_graph[pos + kept] = nei;
       ++kept;
     }
-    d_output_graph[pos + gbts_consts::nNei] = kept;
+    d_output_num_neighbours[newIdx] = static_cast<unsigned char>(kept);
   }
 }
 

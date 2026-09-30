@@ -24,13 +24,14 @@ TRACCC_HOST_DEVICE inline void gbts_finish_cca(
     const thread_id_t& thread_id, const gbts_finish_cca_payload& payload) {
   const vecmem::device_vector<const unsigned int> d_output_graph(
       payload.output_graph);
+  const vecmem::device_vector<const unsigned char> d_output_num_neighbours(
+      payload.output_num_neighbours);
   const vecmem::device_vector<const unsigned char> d_levels(payload.levels);
   vecmem::device_vector<int2> d_outgoing_paths(payload.outgoing_paths);
   vecmem::device_vector<unsigned char> d_has_parent(payload.has_parent);
 
-  // Row-major output graph: each edge owns [node1, node2, nNei, nei0..].
-  const unsigned int edge_size =
-      gbts_consts::nei_start + payload.max_num_neighbours;
+  // Row-major output graph: each edge owns [nei0..].
+  const unsigned int edge_size = payload.max_num_neighbours;
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
@@ -46,9 +47,9 @@ TRACCC_HOST_DEVICE inline void gbts_finish_cca(
       continue;
     }
     const unsigned int edge_pos = edge_size * globalIndex;
-    const unsigned int nNei = d_output_graph[edge_pos + gbts_consts::nNei];
+    const unsigned int nNei = d_output_num_neighbours[globalIndex];
     for (unsigned int k = 0u; k < nNei; ++k) {
-      d_has_parent[d_output_graph[edge_pos + gbts_consts::nei_start + k]] = 1u;
+      d_has_parent[d_output_graph[edge_pos + k]] = 1u;
     }
     d_outgoing_paths[globalIndex].y =
         static_cast<int>(level >= payload.minLevel) - 1;

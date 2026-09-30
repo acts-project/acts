@@ -29,16 +29,14 @@ struct gbts_convert_seeds_payload {
   unsigned int nPathsGrid;
   /// Device-side number of paths (clamped to nPathsMax by the kernel)
   vecmem::data::vector_view<const unsigned int> path_count;
-  /// Maximum number of neighbours retained per edge
-  unsigned int max_num_neighbours;
   /// Per-seed-proposal (quality, path-store index), index -1 if empty
   vecmem::data::vector_view<const int2> seed_proposals;
   /// Per-seed-proposal ambiguity tag
   vecmem::data::vector_view<const char> seed_ambiguity;
   /// Per-path (edge index, parent path-store index or -1) entries
   vecmem::data::vector_view<const int2> path_store;
-  /// Compacted graph from gbts_compress_graph
-  vecmem::data::vector_view<const unsigned int> output_graph;
+  /// (node1, node2) original spacepoint indices per compacted edge
+  vecmem::data::vector_view<const uint2> output_edge_nodes;
   /// Reduced (x, y, z, r) per original spacepoint
   vecmem::data::vector_view<const float4> reducedSP;
   /// Output: 3-SP seeds appended to this resizable buffer
