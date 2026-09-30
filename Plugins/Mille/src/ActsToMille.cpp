@@ -265,13 +265,14 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
     return res;
   }
 
-  // initialise the components of the target state which we will touch
-  targetState.measurementDim = 0;
-
-  // Still here - we got a valid record! Let's write it into our target state.
+  // Still here - we got a valid record! Build it in a fresh state and only
+  // hand it over at the end: nothing may carry over from a previous record
+  // (callers reuse the target state across records), and on a read error the
+  // target state stays untouched.
   // In the following, we emulate what MillePede-II is doing internally.
   // This is somewhat approximate, as we do not run any of the cleaning /
   // conditioning performed by MP-II.
+  ActsAlignment::detail::TrackAlignmentState state;
 
   // Step 1: Parameter discovery
   // Goal: Identify all existing parameters and assign internal indices.
@@ -279,16 +280,23 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
   int lastLocal = 0;
   std::set<int> seenGlobalLabels;
   std::set<int> seenSurfaceLabels;
-  // a measurement with a residual of identical zero is typically a
-  // correlation constraint encoded as pseudo-measurement
-  targetState.measurementDim =
-      std::count_if(measurements.begin(), measurements.end(),
-                    [](const Mille::MilleMeasurement& measurement) {
-                      return measurement.measurement != 0;
-                    });
+  // Need distinction: measurement on surface vs. correlation term.
+  // The reason is that ACTS only counts surface measurements, and stores
+  // the correlation information directly in the track parameter covariance.
+  // MillePede considers constraints to be additional measurements.
+  // A MillePede pseudomeasurement has residual 0 and no global derivatives.
+  // The same criterion sizes the matrices and fills them below.
+  auto isMeasurementOnSurface = [](const Mille::MilleMeasurement& measurement) {
+    return measurement.measurement != 0 ||
+           !measurement.globalDerivatives.empty();
+  };
+  state.measurementDim = std::count_if(measurements.begin(), measurements.end(),
+                                       isMeasurementOnSurface);
 
   // discover labels in use
   for (const Mille::MilleMeasurement& measurement : measurements) {
+    seenGlobalLabels.insert(measurement.globalLabels.begin(),
+                            measurement.globalLabels.end());
     if (measurement.localLabels.empty()) {
       continue;
     }
@@ -296,74 +304,74 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
         measurement.localLabels.begin(), measurement.localLabels.end());
     firstLocal = std::min(firstLocal, *minLabel);
     lastLocal = std::max(lastLocal, *maxLabel);
-    seenGlobalLabels.insert(measurement.globalLabels.begin(),
-                            measurement.globalLabels.end());
   }
   if (lastLocal < firstLocal) {
     return Mille::MilleDecoder::ReadResult::error;
   }
-  targetState.trackParametersDim = lastLocal - firstLocal + 1;
-  targetState.alignmentDof = seenGlobalLabels.size();
+  state.trackParametersDim = lastLocal - firstLocal + 1;
 
+  // A surface is on the track if any of its labels appears: Mille does not
+  // write zero derivatives, so any single label (e.g. the first one) may be
+  // missing from a record.
   for (int label : seenGlobalLabels) {
-    if ((label - 1) % Acts::eAlignmentSize == 0) {
-      seenSurfaceLabels.insert((label - 1) / Acts::eAlignmentSize);
-    }
-  };
+    seenSurfaceLabels.insert((label - 1) / Acts::eAlignmentSize);
+  }
 
   /// the trackAlignmentState uses an internal indexing for alignment
   /// parameters - so remap the indices to replicate this internal logic.
+  /// Surfaces are numbered in the order of their global labels, and the
+  /// derivative matrix gets all parameters of every surface on the track,
+  /// as in the TrackAlignmentState that the record was written from.
   std::map<int, int> globalToInternal;
-
-  /// try to map indices from the global indexed surface list, if we have it.
-  unsigned long iExtra = 0;
-  for (auto [surface, index] : idxedAlignSurfaces) {
-    if (seenSurfaceLabels.contains(index)) {
-      targetState.alignedSurfaces.emplace(surface,
-                                          std::make_pair(index, iExtra++));
-    }
-  }
-
-  // now use this to fill our internal "global to local" mapping function
-  for (auto [surface, indices] : targetState.alignedSurfaces) {
-    auto [globIx, intIx] = indices;
+  std::map<std::size_t, std::size_t> surfaceToInternal;
+  for (int surfaceLabel : seenSurfaceLabels) {
+    const std::size_t intIx = surfaceToInternal.size();
+    surfaceToInternal.emplace(surfaceLabel, intIx);
     for (std::size_t iAli = 0; iAli < Acts::eAlignmentSize; ++iAli) {
-      globalToInternal.emplace(globalIndexSurfToParam(globIx, iAli),
+      globalToInternal.emplace(globalIndexSurfToParam(surfaceLabel, iAli),
                                internalIndexSurfToParam(intIx, iAli));
     }
   }
+  state.alignmentDof = Acts::eAlignmentSize * surfaceToInternal.size();
+
+  /// link the surfaces back to the geometry, if we have the indexed list
+  for (auto [surface, index] : idxedAlignSurfaces) {
+    if (auto it = surfaceToInternal.find(index);
+        it != surfaceToInternal.end()) {
+      state.alignedSurfaces.emplace(surface, std::make_pair(index, it->second));
+    }
+  }
+  // a label of a surface that the indexed list does not know
+  if (!idxedAlignSurfaces.empty() &&
+      state.alignedSurfaces.size() != surfaceToInternal.size()) {
+    return Mille::MilleDecoder::ReadResult::error;
+  }
 
   // Now we have the needed information to initialise our matrices
-  targetState.measurementCovariance = Acts::DynamicMatrix::Zero(
-      targetState.measurementDim, targetState.measurementDim);
+  state.measurementCovariance =
+      Acts::DynamicMatrix::Zero(state.measurementDim, state.measurementDim);
 
-  targetState.projectionMatrix = Acts::DynamicMatrix::Zero(
-      targetState.measurementDim, targetState.trackParametersDim);
+  state.projectionMatrix =
+      Acts::DynamicMatrix::Zero(state.measurementDim, state.trackParametersDim);
 
-  targetState.alignmentToResidualDerivative = Acts::DynamicMatrix::Zero(
-      targetState.measurementDim, targetState.alignmentDof);
+  state.alignmentToResidualDerivative =
+      Acts::DynamicMatrix::Zero(state.measurementDim, state.alignmentDof);
 
-  targetState.trackParametersCovariance = Acts::DynamicMatrix::Zero(
-      targetState.trackParametersDim, targetState.trackParametersDim);
+  state.trackParametersCovariance = Acts::DynamicMatrix::Zero(
+      state.trackParametersDim, state.trackParametersDim);
 
-  targetState.residual = Acts::DynamicVector::Zero(targetState.measurementDim);
+  state.residual = Acts::DynamicVector::Zero(state.measurementDim);
 
   /// Second loop - fill the matrices
 
   std::size_t iMeas = 0;
   for (const auto& measurement : measurements) {
-    // need distinction: Measurement on surface vs. correlation term.
-    // The reason is that ACTS only counts surface measurements, and stores
-    // the correlation information directly in the track parameter covariance.
-    // MillePede considers constraints to be additional measurements.
-    // A MillePede pseudomeasurement has residual 0 and no global derivatives.
-    bool isMeasurementOnSurface = (measurement.measurement != 0 ||
-                                   !measurement.globalDerivatives.empty());
+    const bool onSurface = isMeasurementOnSurface(measurement);
     // surface measurements populate the residual vector and measurement
     // covariance matrix
-    if (isMeasurementOnSurface) {
-      targetState.residual(iMeas) = measurement.measurement;
-      targetState.measurementCovariance(iMeas, iMeas) =
+    if (onSurface) {
+      state.residual(iMeas) = measurement.measurement;
+      state.measurementCovariance(iMeas, iMeas) =
           measurement.uncertainty * measurement.uncertainty;
     }
     // loop over all track parameters affecting this measurement
@@ -371,8 +379,8 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
       // find out where to book it in the ACTS matrix
       unsigned int localIndex = measurement.localLabels[iLoc] - firstLocal;
       // if we are a surface measurement, fill the projection matrix
-      if (isMeasurementOnSurface) {
-        targetState.projectionMatrix(iMeas, localIndex) =
+      if (onSurface) {
+        state.projectionMatrix(iMeas, localIndex) =
             measurement.localDerivatives[iLoc];
       }
       // now fill the covariance matrix by looping over all products of (local)
@@ -382,7 +390,7 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
         // again determine where to book the column index
         unsigned int localIndex2 = measurement.localLabels[jLoc] - firstLocal;
         // and update the covariance.
-        targetState.trackParametersCovariance(localIndex, localIndex2) +=
+        state.trackParametersCovariance(localIndex, localIndex2) +=
             measurement.localDerivatives[iLoc] *
             measurement.localDerivatives[jLoc] / measurement.uncertainty /
             measurement.uncertainty;
@@ -393,29 +401,31 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
          ++iGlob) {
       // find out where to book - here we need to map to the ACTS track-level
       // indexing scheme
-      int internalAliIndex = globalToInternal[measurement.globalLabels[iGlob]];
+      // (every label is mapped: its surface was registered above)
+      const int internalAliIndex =
+          globalToInternal.at(measurement.globalLabels[iGlob]);
       // and update the alignment-to-residual derivative matrix.
-      targetState.alignmentToResidualDerivative(iMeas, internalAliIndex) =
+      state.alignmentToResidualDerivative(iMeas, internalAliIndex) =
           measurement.globalDerivatives[iGlob];
     }
     // increment the measurement-on-surface index every time we finish
     // processing one.
-    if (isMeasurementOnSurface) {
+    if (onSurface) {
       ++iMeas;
     }
   }
 
   /// (carefully) invert the covariance - upstairs, we filled it as a weight
   /// matrix
-  auto solver = targetState.trackParametersCovariance.ldlt();
-  targetState.trackParametersCovariance =
-      solver.solve(Acts::DynamicMatrix::Identity(
-          targetState.trackParametersDim, targetState.trackParametersDim));
+  auto solver = state.trackParametersCovariance.ldlt();
+  state.trackParametersCovariance = solver.solve(Acts::DynamicMatrix::Identity(
+      state.trackParametersDim, state.trackParametersDim));
 
   /// and calculate the dependent members
   /// (first and second derivatives, chi2) of the state.
-  ActsAlignment::detail::finaliseTrackAlignState(targetState);
+  ActsAlignment::detail::finaliseTrackAlignState(state);
 
+  targetState = std::move(state);
   return res;
 }
 
