@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/units.hpp"
 #include "detray/navigation/caching_navigator.hpp"
@@ -51,12 +52,12 @@ using free_matrix_t = free_matrix<test_algebra>;
 constexpr std::size_t cache_size{navigation::default_cache_size};
 
 // Navigator
-template <typename detector_t, typename inspector_t>
+template <concepts::detector detector_t, typename inspector_t>
 using navigator_w_insp_t =
     caching_navigator<detector_t, cache_size, inspector_t>;
-template <typename detector_t>
+template <concepts::detector detector_t>
 using navigator_t = navigator_w_insp_t<detector_t, navigation::void_inspector>;
-template <typename detector_t>
+template <concepts::detector detector_t>
 using intersection_t = typename navigator_t<detector_t>::intersection_type;
 
 // Stepper

@@ -31,16 +31,13 @@ namespace Acts {
 
 CylinderVolumeBounds::CylinderVolumeBounds(double rmin, double rmax,
                                            double halfz, double halfphi,
-                                           double avgphi, double bevelMinZ,
-                                           double bevelMaxZ)
+                                           double avgphi)
     : m_values() {
   m_values[eMinR] = rmin;
   m_values[eMaxR] = rmax;
   m_values[eHalfLengthZ] = halfz;
   m_values[eHalfPhiSector] = halfphi;
   m_values[eAveragePhi] = avgphi;
-  m_values[eBevelMinZ] = bevelMinZ;
-  m_values[eBevelMaxZ] = bevelMaxZ;
   checkConsistency();
   buildSurfaceBounds();
 }
@@ -65,8 +62,6 @@ CylinderVolumeBounds::CylinderVolumeBounds(const CylinderBounds& cBounds,
   m_values[eHalfLengthZ] = cBounds.get(CylinderBounds::eHalfLengthZ);
   m_values[eHalfPhiSector] = cBounds.get(CylinderBounds::eHalfPhiSector);
   m_values[eAveragePhi] = cBounds.get(CylinderBounds::eAveragePhi);
-  m_values[eBevelMinZ] = cBounds.get(CylinderBounds::eBevelMinZ);
-  m_values[eBevelMaxZ] = cBounds.get(CylinderBounds::eBevelMaxZ);
   buildSurfaceBounds();
 }
 
@@ -82,8 +77,6 @@ CylinderVolumeBounds::CylinderVolumeBounds(const RadialBounds& rBounds,
   m_values[eHalfLengthZ] = 0.5 * thickness;
   m_values[eHalfPhiSector] = rBounds.get(RadialBounds::eHalfPhiSector);
   m_values[eAveragePhi] = rBounds.get(RadialBounds::eAveragePhi);
-  m_values[eBevelMinZ] = 0.;
-  m_values[eBevelMaxZ] = 0.;
   buildSurfaceBounds();
 }
 
@@ -92,28 +85,10 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
   std::vector<OrientedSurface> oSurfaces;
   oSurfaces.reserve(6);
 
-  Translation3 vMinZ(0., 0., -get(eHalfLengthZ));
-  Translation3 vMaxZ(0., 0., get(eHalfLengthZ));
-  // Set up transform for beveled edges if they are defined
-  double bevelMinZ = get(eBevelMinZ);
-  double bevelMaxZ = get(eBevelMaxZ);
-  Transform3 transMinZ, transMaxZ;
-  if (bevelMinZ != 0.) {
-    double sy = 1 - 1 / std::cos(bevelMinZ);
-    transMinZ = transform * vMinZ *
-                Eigen::AngleAxisd(-bevelMinZ, Eigen::Vector3d(1., 0., 0.)) *
-                Eigen::Scaling(1., 1. + sy, 1.);
-  } else {
-    transMinZ = transform * vMinZ;
-  }
-  if (bevelMaxZ != 0.) {
-    double sy = 1 - 1 / std::cos(bevelMaxZ);
-    transMaxZ = transform * vMaxZ *
-                Eigen::AngleAxisd(bevelMaxZ, Eigen::Vector3d(1., 0., 0.)) *
-                Eigen::Scaling(1., 1. + sy, 1.);
-  } else {
-    transMaxZ = transform * vMaxZ;
-  }
+  const Transform3 transMinZ =
+      transform * Translation3(0., 0., -get(eHalfLengthZ));
+  const Transform3 transMaxZ =
+      transform * Translation3(0., 0., get(eHalfLengthZ));
   // [0] Bottom Disc (negative z)
   auto dSurface = Surface::makeShared<DiscSurface>(transMinZ, m_discBounds);
   oSurfaces.emplace_back(std::move(dSurface), Direction::AlongNormal());
@@ -162,12 +137,10 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
 void CylinderVolumeBounds::buildSurfaceBounds() {
   if (get(eMinR) > s_epsilon) {
     m_innerCylinderBounds = std::make_shared<const CylinderBounds>(
-        get(eMinR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi),
-        get(eBevelMinZ), get(eBevelMaxZ));
+        get(eMinR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi));
   }
   m_outerCylinderBounds = std::make_shared<const CylinderBounds>(
-      get(eMaxR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi),
-      get(eBevelMinZ), get(eBevelMaxZ));
+      get(eMaxR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi));
   m_discBounds = std::make_shared<const RadialBounds>(
       get(eMinR), get(eMaxR), get(eHalfPhiSector), get(eAveragePhi));
 
@@ -181,10 +154,9 @@ std::ostream& CylinderVolumeBounds::toStream(std::ostream& os) const {
   detail::OstreamStateGuard guard{os};
   os << std::fixed << std::setprecision(5);
   os << "CylinderVolumeBounds: (rMin, rMax, halfZ, halfPhi, "
-        "averagePhi, minBevelZ, maxBevelZ) = ";
+        "averagePhi) = ";
   os << get(eMinR) << ", " << get(eMaxR) << ", " << get(eHalfLengthZ) << ", "
-     << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ", "
-     << get(eBevelMinZ) << ", " << get(eBevelMaxZ);
+     << get(eHalfPhiSector) << ", " << get(eAveragePhi);
   return os;
 }
 
@@ -276,12 +248,6 @@ void CylinderVolumeBounds::checkConsistency() {
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
     throw std::invalid_argument(
         "CylinderVolumeBounds: invalid phi positioning.");
-  }
-  if (get(eBevelMinZ) != detail::radian_sym(get(eBevelMinZ))) {
-    throw std::invalid_argument("CylinderBounds: invalid bevel at min Z.");
-  }
-  if (get(eBevelMaxZ) != detail::radian_sym(get(eBevelMaxZ))) {
-    throw std::invalid_argument("CylinderBounds: invalid bevel at max Z.");
   }
 }
 

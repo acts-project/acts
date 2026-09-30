@@ -56,12 +56,6 @@ configuration does or does not find, and it requires a navigable geometry.
 The intersection-based assigner is the default in the Examples workflow. The
 propagation-based one remains available and is useful as a cross-check.
 
-**Deprecated interface.** @ref Acts::SurfaceMaterialMapper and
-@ref Acts::VolumeMaterialMapper are the older, monolithic mappers that combined
-assignment and accumulation and were hard-wired to a propagator and navigator.
-They are deprecated in favour of @ref Acts::MaterialMapper composed with the
-assigner and accumulator described above.
-
 Related components:
 
 - @ref Acts::MaterialInteractionAssignment implements the assignment logic that

@@ -13,8 +13,6 @@
 
 // algorithms
 #include "traccc/gbts_seeding/gbts_seeding_config.hpp"
-#include "traccc/seeding/seeding_algorithm.hpp"
-#include "traccc/seeding/track_params_estimation.hpp"
 #include "traccc/sycl/gbts_seeding/gbts_seeding_algorithm.hpp"
 #include "traccc/sycl/seeding/seed_parameter_estimation_algorithm.hpp"
 #include "traccc/sycl/seeding/triplet_seeding_algorithm.hpp"
@@ -27,8 +25,6 @@
 
 // performance
 #include "traccc/efficiency/seeding_performance_writer.hpp"
-#include "traccc/performance/collection_comparator.hpp"
-#include "traccc/performance/soa_comparator.hpp"
 #include "traccc/performance/timer.hpp"
 
 // options
@@ -62,7 +58,7 @@ int seq_run(const traccc::opts::detector& detector_opts,
             const traccc::opts::track_gbts_seeding& seeding_gbts_opts,
             const traccc::opts::input_data& input_opts,
             const traccc::opts::performance& performance_opts,
-            const traccc::opts::accelerator& accelerator_opts,
+            [[maybe_unused]] const traccc::opts::accelerator& accelerator_opts,
             std::unique_ptr<const traccc::Logger> ilogger, bool usingGBTS) {
   TRACCC_LOCAL_LOGGER(std::move(ilogger));
 
@@ -87,9 +83,8 @@ int seq_run(const traccc::opts::detector& detector_opts,
       logger().clone("SeedingPerformanceWriter"));
 
   // Output stats
-  uint64_t n_spacepoints = 0;
-  uint64_t n_seeds = 0;
-  uint64_t n_seeds_sycl = 0;
+  std::uint64_t n_spacepoints = 0;
+  std::uint64_t n_seeds_sycl = 0;
 
   /*****************************
    * Build a geometry
@@ -105,7 +100,6 @@ int seq_run(const traccc::opts::detector& detector_opts,
       traccc::buffer_from_host_detector(host_det, device_mr, copy);
   vecmem_queue.synchronize();
 
-  const traccc::vector3 field_vec(seeding_opts);
   const auto host_field = traccc::details::make_magnetic_field(bfield_opts);
   const auto device_field =
       traccc::sycl::make_magnetic_field(host_field, traccc_queue);
@@ -117,13 +111,7 @@ int seq_run(const traccc::opts::detector& detector_opts,
   const traccc::seedfinder_config seedfinder_config(seeding_opts);
   const traccc::seedfilter_config seedfilter_config(seeding_opts);
   const traccc::spacepoint_grid_config spacepoint_grid_config(seeding_opts);
-  traccc::host::seeding_algorithm sa(seedfinder_config, spacepoint_grid_config,
-                                     seedfilter_config, host_mr,
-                                     logger().clone("HostSeedingAlg"));
   const traccc::track_params_estimation_config track_params_estimation_config;
-  traccc::host::track_params_estimation tp(
-      track_params_estimation_config, host_mr,
-      logger().clone("HostTrackParEstAlg"));
 
   traccc::sycl::triplet_seeding_algorithm sa_sycl{
       seedfinder_config,
@@ -148,8 +136,6 @@ int seq_run(const traccc::opts::detector& detector_opts,
     // Instantiate host containers/collections
     traccc::edm::measurement_collection::host measurements_per_event{host_mr};
     traccc::edm::spacepoint_collection::host spacepoints_per_event{host_mr};
-    traccc::host::seeding_algorithm::output_type seeds{host_mr};
-    traccc::host::track_params_estimation::output_type params{&host_mr};
 
     // Instantiate sycl containers/collections
     traccc::edm::seed_collection::buffer seeds_sycl_buffer;
@@ -203,13 +189,6 @@ int seq_run(const traccc::opts::detector& detector_opts,
         vecmem_queue.synchronize();
       }  // stop measuring seeding sycl timer
 
-      // CPU
-
-      if (accelerator_opts.compare_with_cpu) {
-        traccc::performance::timer t("Seeding  (cpu)", elapsedTimes);
-        seeds = sa(vecmem::get_data(spacepoints_per_event));
-      }  // stop measuring seeding cpu timer
-
       /*----------------------------
         Track params estimation
         ----------------------------*/
@@ -223,45 +202,13 @@ int seq_run(const traccc::opts::detector& detector_opts,
                     spacepoints_sycl_buffer, seeds_sycl_buffer);
       }  // stop measuring track params sycl timer
 
-      // CPU
-      if (accelerator_opts.compare_with_cpu) {
-        traccc::performance::timer t("Track params  (cpu)", elapsedTimes);
-        params = tp(vecmem::get_data(measurements_per_event),
-                    vecmem::get_data(spacepoints_per_event),
-                    vecmem::get_data(seeds), field_vec);
-      }  // stop measuring track params cpu timer
-
     }  // Stop measuring wall time
 
-    /*----------------------------------
-      compare seeds from cpu and sycl
-      ----------------------------------*/
-
-    // Copy the seeds to the host for comparison.
+    // Copy the seeds and the track parameters to the host.
     traccc::edm::seed_collection::host seeds_sycl{host_mr};
     traccc::bound_track_parameters_collection_types::host params_sycl{&host_mr};
     copy(seeds_sycl_buffer, seeds_sycl)->wait();
     copy(params_sycl_buffer, params_sycl)->wait();
-
-    if (accelerator_opts.compare_with_cpu) {
-      // Show which event we are currently presenting the results for.
-      TRACCC_INFO("===>>> Event " << event << " <<<===");
-
-      // Compare the seeds made on the host and on the device
-      traccc::soa_comparator<traccc::edm::seed_collection> compare_seeds{
-          "seeds",
-          traccc::details::comparator_factory<
-              traccc::edm::seed_collection::const_device::const_proxy_type>{
-              vecmem::get_data(spacepoints_per_event),
-              vecmem::get_data(spacepoints_per_event)}};
-      compare_seeds(vecmem::get_data(seeds), vecmem::get_data(seeds_sycl));
-
-      // Compare the track parameters made on the host and on the device.
-      traccc::collection_comparator<traccc::bound_track_parameters<>>
-          compare_track_parameters{"track parameters"};
-      compare_track_parameters(vecmem::get_data(params),
-                               vecmem::get_data(params_sycl));
-    }
 
     /*----------------
          Statistics
@@ -269,7 +216,6 @@ int seq_run(const traccc::opts::detector& detector_opts,
 
     n_spacepoints += spacepoints_per_event.size();
     n_seeds_sycl += seeds_sycl.size();
-    n_seeds += seeds.size();
 
     /*------------
       Writer
@@ -292,7 +238,6 @@ int seq_run(const traccc::opts::detector& detector_opts,
 
   TRACCC_INFO("==> Statistics ... ");
   TRACCC_INFO("- read    " << n_spacepoints << " spacepoints");
-  TRACCC_INFO("- created  (cpu)  " << n_seeds << " seeds");
   TRACCC_INFO("- created (sycl) " << n_seeds_sycl << " seeds");
   TRACCC_INFO("==>Elapsed times... " << elapsedTimes);
 

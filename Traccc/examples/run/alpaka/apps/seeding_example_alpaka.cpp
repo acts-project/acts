@@ -21,9 +21,7 @@
 #include "traccc/efficiency/seeding_performance_writer.hpp"
 #include "traccc/efficiency/track_filter.hpp"
 #include "traccc/examples/make_magnetic_field.hpp"
-#include "traccc/finding/combinatorial_kalman_filter_algorithm.hpp"
 #include "traccc/fitting/kalman_filter/kalman_fitter.hpp"
-#include "traccc/fitting/kalman_fitting_algorithm.hpp"
 #include "traccc/gbts_seeding/gbts_seeding_config.hpp"
 #include "traccc/geometry/detector.hpp"
 #include "traccc/io/read_detector.hpp"
@@ -44,13 +42,9 @@
 #include "traccc/options/track_propagation.hpp"
 #include "traccc/options/track_seeding.hpp"
 #include "traccc/options/truth_finding.hpp"
-#include "traccc/performance/collection_comparator.hpp"
-#include "traccc/performance/soa_comparator.hpp"
 #include "traccc/performance/timer.hpp"
 #include "traccc/resolution/fitting_performance_writer.hpp"
 #include "traccc/seeding/detail/track_params_estimation_config.hpp"
-#include "traccc/seeding/seeding_algorithm.hpp"
-#include "traccc/seeding/track_params_estimation.hpp"
 #include "traccc/utils/propagation.hpp"
 
 // System include(s).
@@ -70,7 +64,7 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
             const traccc::opts::detector& detector_opts,
             const traccc::opts::magnetic_field& bfield_opts,
             const traccc::opts::performance& performance_opts,
-            const traccc::opts::accelerator& accelerator_opts,
+            [[maybe_unused]] const traccc::opts::accelerator& accelerator_opts,
             const traccc::opts::truth_finding& truth_finding_opts,
             const traccc::opts::seed_matching& seed_matching_opts,
             const traccc::opts::track_matching& track_matching_opts,
@@ -113,13 +107,10 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
   }
 
   // Output stats
-  uint64_t n_spacepoints = 0;
-  uint64_t n_seeds = 0;
-  uint64_t n_seeds_alpaka = 0;
-  uint64_t n_found_tracks = 0;
-  uint64_t n_found_tracks_alpaka = 0;
-  uint64_t n_fitted_tracks = 0;
-  uint64_t n_fitted_tracks_alpaka = 0;
+  std::uint64_t n_spacepoints = 0;
+  std::uint64_t n_seeds_alpaka = 0;
+  std::uint64_t n_found_tracks_alpaka = 0;
+  std::uint64_t n_fitted_tracks_alpaka = 0;
 
   /*****************************
    * Build a geometry
@@ -127,7 +118,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
 
   // B field value and its type
   const auto field = traccc::details::make_magnetic_field(bfield_opts);
-  const traccc::vector3 field_vec(seeding_opts);
 
   // Detector view object
   traccc::host_detector host_det;
@@ -136,7 +126,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
                             detector_opts.grid_file);
 
   // Copy objects
-  vecmem::copy host_copy;
   vecmem::copy& copy = vo.copy();
   vecmem::copy& async_copy = vo.async_copy();
 
@@ -150,13 +139,7 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
   const traccc::seedfinder_config seedfinder_config(seeding_opts);
   const traccc::seedfilter_config seedfilter_config(seeding_opts);
   const traccc::spacepoint_grid_config spacepoint_grid_config(seeding_opts);
-  traccc::host::seeding_algorithm sa(seedfinder_config, spacepoint_grid_config,
-                                     seedfilter_config, host_mr,
-                                     logger().clone("HostSeedingAlg"));
   const traccc::track_params_estimation_config track_params_estimation_config;
-  traccc::host::track_params_estimation tp(
-      track_params_estimation_config, host_mr,
-      logger().clone("HostTrackParEstAlg"));
 
   // Alpaka Algorithms
   traccc::alpaka::triplet_seeding_algorithm sa_alpaka{
@@ -181,8 +164,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
   cfg.propagation = propagation_config;
 
   // Finding algorithm object
-  traccc::host::combinatorial_kalman_filter_algorithm host_finding(
-      cfg, host_mr, logger().clone("HostFindingAlg"));
   traccc::alpaka::combinatorial_kalman_filter_algorithm device_finding(
       cfg, mr, copy, queue, logger().clone("AlpakaFindingAlg"));
 
@@ -190,8 +171,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
   traccc::fitting_config fit_cfg(fitting_opts);
   fit_cfg.propagation = propagation_config;
 
-  traccc::host::kalman_fitting_algorithm host_fitting(
-      fit_cfg, host_mr, host_copy, logger().clone("HostFittingAlg"));
   traccc::alpaka::kalman_fitting_algorithm device_fitting(
       fit_cfg, mr, copy, queue, logger().clone("AlpakaFittingAlg"));
 
@@ -203,12 +182,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
     // Instantiate host containers/collections
     traccc::edm::spacepoint_collection::host spacepoints_per_event{host_mr};
     traccc::edm::measurement_collection::host measurements_per_event{host_mr};
-    traccc::host::seeding_algorithm::output_type seeds{host_mr};
-    traccc::host::track_params_estimation::output_type params;
-    traccc::edm::track_container<traccc::default_algebra>::host
-        track_candidates{host_mr};
-    traccc::edm::track_container<traccc::default_algebra>::host track_states{
-        host_mr};
 
     traccc::edm::seed_collection::buffer seeds_alpaka_buffer;
     traccc::bound_track_parameters_collection_types::buffer
@@ -272,13 +245,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
         queue.synchronize();
       }
 
-      // CPU
-
-      if (accelerator_opts.compare_with_cpu) {
-        traccc::performance::timer t("Seeding  (cpu)", elapsedTimes);
-        seeds = sa(vecmem::get_data(spacepoints_per_event));
-      }  // stop measuring seeding cpu timer
-
       /*----------------------------
       Track params estimation
       ----------------------------*/
@@ -293,14 +259,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
         queue.synchronize();
       }  // stop measuring track params alpaka timer
 
-      // CPU
-      if (accelerator_opts.compare_with_cpu) {
-        traccc::performance::timer t("Track params  (cpu)", elapsedTimes);
-        params = tp(vecmem::get_data(measurements_per_event),
-                    vecmem::get_data(spacepoints_per_event),
-                    vecmem::get_data(seeds), field_vec);
-      }  // stop measuring track params cpu timer
-
       /*------------------------
          Track Finding with CKF
         ------------------------*/
@@ -311,14 +269,6 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
         track_candidates_alpaka_buffer =
             device_finding(detector_buffer, field, measurements_alpaka_buffer,
                            params_alpaka_buffer);
-      }
-
-      if (accelerator_opts.compare_with_cpu) {
-        traccc::performance::timer t("Track finding with CKF (cpu)",
-                                     elapsedTimes);
-        track_candidates = host_finding(
-            host_det, field, vecmem::get_data(measurements_per_event),
-            vecmem::get_data(params));
       }
 
       /*------------------------
@@ -333,27 +283,11 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
             detector_buffer, field, track_candidates_alpaka_buffer);
       }
 
-      if (accelerator_opts.compare_with_cpu) {
-        traccc::performance::timer t("Track fitting with KF (cpu)",
-                                     elapsedTimes);
-        track_states = host_fitting(
-            host_det, field,
-            traccc::edm::track_container<traccc::default_algebra>::const_data(
-                track_candidates));
-      }
-
     }  // Stop measuring wall time
 
-    /*----------------------------------
-      compare seeds from cpu and alpaka
-      ----------------------------------*/
-
-    // Copy the seeds to the host for comparisons
+    // Copy the seeds to the host
     traccc::edm::seed_collection::host seeds_alpaka{host_mr};
-    traccc::bound_track_parameters_collection_types::host params_alpaka{
-        &host_mr};
     async_copy(seeds_alpaka_buffer, seeds_alpaka)->wait();
-    async_copy(params_alpaka_buffer, params_alpaka)->wait();
 
     // Copy track candidates from device to host
     traccc::edm::track_collection<traccc::default_algebra>::host
@@ -369,52 +303,14 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
     async_copy(track_states_alpaka_buffer.states, track_states_alpaka.states)
         ->wait();
 
-    if (accelerator_opts.compare_with_cpu) {
-      // Show which event we are currently presenting the results for.
-      std::cout << "===>>> Event " << event << " <<<===" << std::endl;
-
-      // Compare the seeds made on the host and on the device
-      traccc::soa_comparator<traccc::edm::seed_collection> compare_seeds{
-          "seeds",
-          traccc::details::comparator_factory<
-              traccc::edm::seed_collection::const_device::const_proxy_type>{
-              vecmem::get_data(spacepoints_per_event),
-              vecmem::get_data(spacepoints_per_event)}};
-      compare_seeds(vecmem::get_data(seeds), vecmem::get_data(seeds_alpaka));
-
-      // Compare the track parameters made on the host and on the device.
-      traccc::collection_comparator<traccc::bound_track_parameters<>>
-          compare_track_parameters{"track parameters"};
-      compare_track_parameters(vecmem::get_data(params),
-                               vecmem::get_data(params_alpaka));
-
-      // Compare the track candidates made on the host and on the
-      // device
-      traccc::soa_comparator<
-          traccc::edm::track_collection<traccc::default_algebra>>
-          compare_track_candidates{
-              "track candidates",
-              traccc::details::comparator_factory<traccc::edm::track_collection<
-                  traccc::default_algebra>::const_device::const_proxy_type>{
-                  vecmem::get_data(measurements_per_event),
-                  vecmem::get_data(measurements_per_event),
-                  {},
-                  {}}};
-      compare_track_candidates(vecmem::get_data(track_candidates.tracks),
-                               vecmem::get_data(track_candidates_alpaka));
-    }
-
     /*----------------
          Statistics
       ---------------*/
 
     n_spacepoints += spacepoints_per_event.size();
     n_seeds_alpaka += seeds_alpaka.size();
-    n_seeds += seeds.size();
     n_found_tracks_alpaka += track_candidates_alpaka.size();
-    n_found_tracks += track_candidates.tracks.size();
     n_fitted_tracks_alpaka += track_states_alpaka.tracks.size();
-    n_fitted_tracks += track_states.tracks.size();
 
     /*------------
       Writer
@@ -425,9 +321,10 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
                                   input_opts.use_acts_geom_source, &host_det,
                                   input_opts.format, false);
 
-      sd_performance_writer.write(
-          vecmem::get_data(seeds), vecmem::get_data(spacepoints_per_event),
-          vecmem::get_data(measurements_per_event), evt_data);
+      sd_performance_writer.write(vecmem::get_data(seeds_alpaka),
+                                  vecmem::get_data(spacepoints_per_event),
+                                  vecmem::get_data(measurements_per_event),
+                                  evt_data);
     }
   }
 
@@ -441,14 +338,9 @@ int seq_run(const traccc::opts::track_seeding& seeding_opts,
 
   std::cout << "==> Statistics ... " << std::endl;
   std::cout << "- read    " << n_spacepoints << " spacepoints" << std::endl;
-  std::cout << "- created  (cpu)  " << n_seeds << " seeds" << std::endl;
   std::cout << "- created (alpaka)  " << n_seeds_alpaka << " seeds"
             << std::endl;
-  std::cout << "- created  (cpu) " << n_found_tracks << " found tracks"
-            << std::endl;
   std::cout << "- created (alpaka) " << n_found_tracks_alpaka << " found tracks"
-            << std::endl;
-  std::cout << "- created  (cpu) " << n_fitted_tracks << " fitted tracks"
             << std::endl;
   std::cout << "- created (alpaka) " << n_fitted_tracks_alpaka
             << " fitted tracks" << std::endl;

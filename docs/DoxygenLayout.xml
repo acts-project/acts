@@ -11,6 +11,7 @@
     <tab type="usergroup" title="Material mapping" url="[none]">
       <tab type="user" url="@ref material_mapping_howto" visible="yes" title="Mapping material for a detector"/>
       <tab type="user" url="@ref material_mapping" visible="yes" title="Components and design"/>
+      <tab type="user" url="@ref material_map_json_format" visible="yes" title="Material map JSON format"/>
     </tab>
 
     <tab type="usergroup" title="Contribution" url="[none]">

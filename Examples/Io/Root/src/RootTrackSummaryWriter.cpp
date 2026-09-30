@@ -347,13 +347,15 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
     // Get the majority truth particle to this track
     auto match = trackParticleMatching.find(track.index());
+    if (match != trackParticleMatching.end()) {
+      trackClassification = match->second.classification;
+    }
     bool foundMajorityParticle = false;
     // Get the truth particle info
     if (match != trackParticleMatching.end() &&
         match->second.particle.has_value()) {
       // Get the barcode of the majority truth particle
       majorityParticleId = match->second.particle.value();
-      trackClassification = match->second.classification;
       nMajorityHits = match->second.contributingParticles.front().hitCount;
 
       // Find the truth particle via the barcode

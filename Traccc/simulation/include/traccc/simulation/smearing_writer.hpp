@@ -66,12 +66,12 @@ struct smearing_writer : detray::base_actor {
                   .native()),
           m_meas_smearer(writer_cfg.smearer) {}
 
-    uint64_t particle_id = 0u;
+    std::uint64_t particle_id = 0u;
     particle_writer m_particle_writer;
     hit_writer m_hit_writer;
     measurement_writer m_meas_writer;
     measurement_hit_id_writer m_measurement_hit_id_writer;
-    uint64_t m_hit_count = 0u;
+    std::uint64_t m_hit_count = 0u;
     smearer_t m_meas_smearer;
 
     void set_seed(const uint_fast64_t sd) { m_meas_smearer.set_seed(sd); }

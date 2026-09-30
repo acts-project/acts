@@ -5,7 +5,7 @@
 # Mozilla Public License Version 2.0
 #
 # This script is meant to configure the build/runtime environment of the
-# Docker contaners that are used in the project's CI configuration.
+# Docker containers that are used in the project's CI configuration.
 #
 # Usage: source .github/ci_setup.sh <platform name>
 #
@@ -25,10 +25,4 @@ if [[ "${PLATFORM_NAME}" == *"SYCL"* ]]; then
       source /opt/intel/oneapi/setvars.sh --include-intel-llvm
       export CPATH=${OLD_CPATH}
    fi
-fi
-
-if [[ "${PLATFORM_NAME}" == *"HIP"* ]]; then
-  export CC=`which clang`
-  export CXX=`which clang++`
-  export LD_LIBRARY_PATH=/opt/rocm/lib:${LD_LIBRARY_PATH}
 fi

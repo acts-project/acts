@@ -16,22 +16,23 @@ on:
       - 'releases'
       - 'release/**'
       - 'gh-readonly-queue/**'
+    # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Traccc/**"
       - "Detray/**"
       - ".github/workflows/traccc.yml"
+      - ".github/detray-traccc-filters.yml"
   pull_request:
     branches:
       - main
+    # Keep in sync with .github/detray-traccc-filters.yml and .merge-sentinel.yml.
     paths:
       - "Traccc/**"
       - "Detray/**"
       - ".github/workflows/traccc.yml"
-  # merge_group does not support path filters, so this runs on every queue
-  # entry targeting main, not just ones touching Traccc/ or Detray/. Only
-  # required via merge-sentinel's "Traccc / *" pattern, which is itself
-  # path-gated, so a non-Traccc entry running this wastes compute but doesn't
-  # block merging.
+      - ".github/detray-traccc-filters.yml"
+  # The changes job applies path filtering to merge groups, which do not
+  # support the workflow-level path filters above.
   merge_group:
     types: [checks_requested]
 
@@ -42,7 +43,33 @@ concurrency:
   cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
 jobs:
+  # Like Builds/changes, gate jobs rather than suppressing check reporting.
+  # PR/push triggers already filter paths; only merge groups need a checkout
+  # and a comparison against the base SHA carried by the event.
+  changes:
+    if: github.event_name == 'merge_group'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      relevant: ${{ steps.filter.outputs.traccc }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          base: ${{ github.event.merge_group.base_sha }}
+          ref: ${{ github.event.merge_group.head_sha }}
+          filters: .github/detray-traccc-filters.yml
+
   containers:
+    needs: changes
+    # !cancelled() allows PR/push jobs through when changes is skipped.
+    if: >-
+      !cancelled() && (github.event_name != 'merge_group' ||
+      (needs.changes.result == 'success' && needs.changes.outputs.relevant == 'true'))
     name: ${{ matrix.platform.name }}-${{ matrix.build }}
     runs-on: ubuntu-latest
     container: ${{ matrix.platform.container }}
@@ -58,11 +85,12 @@ jobs:
       fail-fast: false
       matrix:
         platform:
+          # Build Alpaka alongside the host backend, as on the GPU legs.
+          # Release runs both test suites; Debug also compiles Alpaka.
           - name: CPU
             container: ghcr.io/acts-project/ubuntu2604:91
-            options: --preset host-fp32
+            options: --preset host-fp32 -DTRACCC_BUILD_ALPAKA=ON
             run_tests: true
-            enable_cuda: false
             flavor: ""
           # Distinct name because merge-sentinel deduplicates result items by
           # normalised name: two legs called CPU collapse into one check.
@@ -70,7 +98,6 @@ jobs:
             container: ghcr.io/acts-project/ubuntu2604:91
             options: --preset host-fp64
             run_tests: false
-            enable_cuda: false
             flavor: ""
         build:
           - Release
@@ -86,13 +113,16 @@ jobs:
           # tests strictly need: this leg pays for their device code either
           # way, and trimming would drop the toy-detector CKF tests from the
           # GPU run.
+          #
+          # TRACCC_BUILD_ALPAKA is additive: alpaka's targets are gated on it
+          # alone, so the alpaka backend rides along without a second baseline
+          # build. The flavor's alpaka is built `backend=serial,cuda`.
           - platform:
               name: CUDA
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset cuda-fp32
+              options: --preset cuda-fp32-ci -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_CUDA_ENABLE=ON
               run_tests: false
               upload_build: true
-              enable_cuda: true
               flavor: cuda13
             build: Release
           # Debug exists for the FP64 PTX check, which needs the `--keep` that
@@ -102,9 +132,8 @@ jobs:
           - platform:
               name: CUDA
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset cuda-fp32 -DTRACCC_BUILD_TESTING=FALSE
+              options: --preset cuda-fp32-ci -DTRACCC_BUILD_TESTING=FALSE
               run_tests: false
-              enable_cuda: true
               flavor: cuda13
             build: Debug
           # Distinct name for the sentinel dedup reason above -- as plain CUDA
@@ -114,31 +143,37 @@ jobs:
           - platform:
               name: CUDA_FP64
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset cuda-fp64 -DTRACCC_BUILD_TESTING=FALSE
+              options: --preset cuda-fp64-ci -DTRACCC_BUILD_TESTING=FALSE
               run_tests: false
-              enable_cuda: true
               flavor: cuda13
             build: Release
+          # Compile check: no runner has an AMD GPU, but tests/hip is built.
+          # TRACCC_USE_SYSTEM_ROCTHRUST keeps Thrust matched to the flavor's
+          # hip; CMAKE_HIP_ARCHITECTURES narrows the gfx list to gfx90a.
+          #
+          # TRACCC_BUILD_ALPAKA is additive as on the CUDA leg above; the
+          # flavor's alpaka is built `backend=serial,hip`. RelWithDebInfo
+          # because ROCm 7's device compiler crashes on device/alpaka at -O3
+          # (#5877, ROCm/llvm-project#3995).
           - platform:
-              name: "ALPAKA_CPU"
+              name: "HIP"
               container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset alpaka-fp32
-              run_tests: true
-              enable_cuda: false
-              flavor: ""
-            build: Release
-          - platform:
-              name: "ALPAKA_CUDA"
-              container: ghcr.io/acts-project/ubuntu2604:91
-              options: --preset alpaka-fp32 -Dalpaka_ACC_GPU_CUDA_ENABLE=ON -DTRACCC_FAIL_ON_WARNINGS=OFF -DTRACCC_BUILD_CUDA_UTILS=ON
+              options: --preset hip-fp32-ci -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20
               run_tests: false
-              enable_cuda: true
-              flavor: cuda13
-            build: Release
-          # ALPAKA_HIP is dropped here: it's still on the pre-spack
-          # ubuntu2404_rocm image (no `flavor`, so it never gets a dependency
-          # install this PR would touch), and the HIP alpaka migration lands
-          # in a later PR in this stack.
+              flavor: rocm7
+            build: RelWithDebInfo
+          # Same leg at Release, clang-hosted because alpaka's HIP backend
+          # wants a clang *host* compiler. Disabled: the -O3 ICE is in ROCm's
+          # own LLVM regardless of host, fixed upstream by llvm 4a77ce7c6f51
+          # (llvm/llvm-project#201263) but in no released ROCm yet.
+          # - platform:
+          #     name: "HIP"
+          #     container: ghcr.io/acts-project/ubuntu2604_clang22:91
+          #     compiler: clang++-22
+          #     options: --preset hip-fp32-ci -DCMAKE_HIP_PLATFORM=amd -DCMAKE_HIP_ARCHITECTURES=gfx90a -DTRACCC_USE_SYSTEM_ROCTHRUST=ON -DTRACCC_BUILD_ALPAKA=ON -Dalpaka_ACC_GPU_HIP_ENABLE=ON -Dalpaka_DISABLE_VENDOR_RNG=ON -DCMAKE_HIP_COMPILE_FEATURES=hip_std_20 -DCMAKE_C_COMPILER=clang-22 -DCMAKE_CXX_COMPILER=clang++-22
+          #     run_tests: false
+          #     flavor: rocm7
+          #   build: Release
     # Use BASH as the shell from the images.
     defaults:
       run:
@@ -151,17 +186,20 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/dependencies
         with:
-          compiler: g++
+          compiler: ${{ matrix.platform.compiler || 'g++' }}
           flavor: ${{ matrix.platform.flavor }}
-          # Ahead of the repo default: flavors need v24.0.0 or newer.
-          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      # vecmem, covfie and alpaka come from spack on every leg: the host
-      # lockfile carries them and each flavor overlays its own build, so no
+      # vecmem, covfie, alpaka, actsvg and TBB come from spack on every leg: the
+      # host lockfile carries them and each flavor overlays its own build, so no
       # per-leg gating is needed. TRACCC_USE_SYSTEM_ALPAKA is unconditional
-      # because traccc only acts on it under TRACCC_SETUP_ALPAKA.
+      # because traccc only acts on it under TRACCC_SETUP_ALPAKA. actsvg is
+      # needed because extern/acts forces ACTS_BUILD_PLUGIN_ACTSVG on for
+      # detray's validation tools, so without the flag every leg compiles it.
+      #
+      # TBB too: the FetchContent oneTBB turns IPO on, which under a clang
+      # host is ThinLTO, leaving bitcode the ROCm linker cannot read.
 
       - name: Configure
         run: |
@@ -174,10 +212,11 @@ jobs:
             -DACTS_USE_SYSTEM_COVFIE=ON \
             -DACTS_USE_SYSTEM_VECMEM=ON \
             -DACTS_USE_SYSTEM_EIGEN3=ON \
-            -DACTS_ENABLE_CUDA=${{ matrix.platform.enable_cuda && 'ON' || 'OFF' }} \
+            -DACTS_USE_SYSTEM_ACTSVG=ON \
             -DTRACCC_USE_SYSTEM_VECMEM=ON \
             -DTRACCC_USE_SYSTEM_COVFIE=ON \
             -DTRACCC_USE_SYSTEM_ALPAKA=ON \
+            -DTRACCC_USE_SYSTEM_TBB=ON \
             -DDETRAY_USE_SYSTEM_NLOHMANN=ON \
             -DDETRAY_USE_SYSTEM_GOOGLETEST=ON \
             -DTRACCC_USE_SYSTEM_GOOGLETEST_DEFAULT=ON \
@@ -231,6 +270,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────
   cuda-test:
     needs: [containers]
+    if: ${{ !cancelled() && needs.containers.result == 'success' }}
     runs-on: [self-hosted, linux, x64, gpu-nvidia]
     permissions:
       contents: read
@@ -273,7 +313,6 @@ jobs:
         with:
           compiler: g++
           flavor: cuda13
-          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 

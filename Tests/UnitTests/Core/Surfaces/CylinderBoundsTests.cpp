@@ -37,8 +37,6 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsConstruction) {
   const double halfZ = 10.;
   const double halfPhi = std::numbers::pi / 2.;
   const double averagePhi = std::numbers::pi / 2.;
-  const double bevelMinZ = -std::numbers::pi / 4.;
-  const double bevelMaxZ = std::numbers::pi / 6.;
 
   BOOST_CHECK_EQUAL(CylinderBounds(radius, halfZ).type(),
                     SurfaceBounds::eCylinder);
@@ -46,13 +44,6 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsConstruction) {
                     SurfaceBounds::eCylinder);
   BOOST_CHECK_EQUAL(CylinderBounds(radius, halfZ, halfPhi, averagePhi).type(),
                     SurfaceBounds::eCylinder);
-  BOOST_CHECK_EQUAL(
-      CylinderBounds(radius, halfZ, std::numbers::pi, 0., bevelMinZ).type(),
-      SurfaceBounds::eCylinder);
-  BOOST_CHECK_EQUAL(
-      CylinderBounds(radius, halfZ, std::numbers::pi, 0., bevelMinZ, bevelMaxZ)
-          .type(),
-      SurfaceBounds::eCylinder);
 
   /// Test copy construction;
   CylinderBounds cylinderBounds(radius, halfZ);
@@ -104,16 +95,12 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsException) {
 BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   // CylinderBounds object of radius 0.5 and halfZ 20
   const double radius = 0.5;
-  const double halfZ = 20.;                        // != 10.
-  const double halfPhi = std::numbers::pi / 4.;    // != pi/2
-  const double averagePhi = 0.;                    // != pi/2
-  const double bevelMinZ = std::numbers::pi / 4.;  // != -pi/4
-  const double bevelMaxZ = std::numbers::pi / 6.;
+  const double halfZ = 20.;                      // != 10.
+  const double halfPhi = std::numbers::pi / 4.;  // != pi/2
+  const double averagePhi = 0.;                  // != pi/2
 
   CylinderBounds cylinderBoundsObject(radius, halfZ);
   CylinderBounds cylinderBoundsSegment(radius, halfZ, halfPhi, averagePhi);
-  CylinderBounds cylinderBoundsBeveledObject(radius, halfZ, std::numbers::pi,
-                                             0., bevelMinZ, bevelMaxZ);
 
   /// Test for type()
   BOOST_CHECK_EQUAL(cylinderBoundsObject.type(), SurfaceBounds::eCylinder);
@@ -125,21 +112,11 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   const Vector2 beyondEnd{0, 30.};
   const Vector2 unitZ{0., 1.};
   const Vector2 unitPhi{1., 0.};
-  const Vector2 withinBevelMin{0.5, -20.012};
-  const Vector2 outsideBevelMin{0.5, -40.};
   const BoundaryTolerance tolerance = BoundaryTolerance::AbsoluteEuclidean(0.1);
-  const BoundaryTolerance lessTolerance =
-      BoundaryTolerance::AbsoluteEuclidean(0.01);
 
   BOOST_CHECK(cylinderBoundsObject.inside(atPiBy2, tolerance));
   BOOST_CHECK(!cylinderBoundsSegment.inside(unitPhi, tolerance));
   BOOST_CHECK(cylinderBoundsObject.inside(origin, tolerance));
-
-  BOOST_CHECK(!cylinderBoundsObject.inside(withinBevelMin, lessTolerance));
-  BOOST_CHECK(
-      cylinderBoundsBeveledObject.inside(withinBevelMin, lessTolerance));
-  BOOST_CHECK(
-      !cylinderBoundsBeveledObject.inside(outsideBevelMin, lessTolerance));
 
   /// Test for r()
   CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eR), radius, 1e-6);
@@ -157,19 +134,12 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eHalfLengthZ), halfZ,
                   1e-6);
 
-  /// Test for bevelMinZ/MaxZ
-  CHECK_CLOSE_REL(cylinderBoundsBeveledObject.get(CylinderBounds::eBevelMinZ),
-                  bevelMinZ, 1e-6);
-  CHECK_CLOSE_REL(cylinderBoundsBeveledObject.get(CylinderBounds::eBevelMaxZ),
-                  bevelMaxZ, 1e-6);
-
   /// Test for dump
   boost::test_tools::output_test_stream dumpOutput;
   cylinderBoundsObject.toStream(dumpOutput);
   BOOST_CHECK(dumpOutput.is_equal(
       "Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, "
-      "averagePhi, bevelMinZ, bevelMaxZ) = (0.5000000, 20.0000000, 3.1415927, "
-      "0.0000000, 0.0000000, 0.0000000)"));
+      "averagePhi) = (0.5000000, 20.0000000, 3.1415927, 0.0000000)"));
 }
 
 /// Unit test for testing CylinderBounds assignment

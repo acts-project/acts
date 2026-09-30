@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/units.hpp"
@@ -94,7 +95,7 @@ class rk_stepper final
           const magnetic_field_t& mag_field)
         : base_state(t), m_magnetic_field(mag_field) {}
 
-    template <typename detector_t>
+    template <concepts::detector detector_t>
     DETRAY_HOST_DEVICE state(const bound_track_parameters_type& bound_params,
                              const magnetic_field_t& mag_field,
                              const detector_t& det,

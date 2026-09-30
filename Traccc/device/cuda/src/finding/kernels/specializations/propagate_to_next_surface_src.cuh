@@ -19,12 +19,12 @@ namespace traccc::cuda {
 namespace kernels {
 
 template <typename propagator_t, typename bfield_t>
-__global__ __launch_bounds__(128) void propagate_to_next_surface(
+__global__ __launch_bounds__(128, 5) void propagate_to_next_surface(
     const __grid_constant__ finding_config cfg,
     const typename propagator_t::detector_type* __restrict__ const det_data_ptr,
     const __grid_constant__ bfield_t field_data,
     const __grid_constant__ device::propagate_to_next_surface_payload payload) {
-  // TODO: Reenable this this additional checks for compilation with the ABI
+  // TODO: Re-enable this this additional checks for compilation with the ABI
   // enabled.
   // TRACCC_CUDA_SPILL_TO_SHARED_MEMORY;
 

@@ -9,7 +9,10 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/geometry/surface.hpp"
+
+// Detray plugins include(s)
 #include "detray/plugins/svgtools/meta/proto/information_section.hpp"
 
 // Actsvg include(s)
@@ -34,7 +37,7 @@ inline std::string point_to_string(point3_t point) {
 }
 
 /// @returns the information section for a detray surface.
-template <typename detector_t>
+template <concepts::detector detector_t>
 inline auto information_section(
     const typename detector_t::geometry_context& context,
     const detray::geometry::surface<detector_t>& d_surface) {

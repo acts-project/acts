@@ -82,7 +82,7 @@ void grid_attach_fill_test(grid2_view<host_grid2_attach> grid_view);
 void grid_attach_assign_test(grid2_view<host_grid2_attach> grid_view);
 
 // read test function for grid array
-template <template <typename, size_t> class array_type>
+template <template <typename, std::size_t> class array_type>
 void grid_array_test(array_type<grid2_view<host_grid2_attach>, 2> grid_array,
                      vecmem::data::vector_view<point3>& outputs_data);
 

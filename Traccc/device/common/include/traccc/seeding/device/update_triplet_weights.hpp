@@ -30,7 +30,7 @@ namespace traccc::device {
 /// @param[in] tc_view       Collection of triplet counts per midBot doublet
 /// @param[in] data Array for temporary storage of quality parameters for
 /// comparison of triplets
-/// @param[inout] triplet_view Collection of triplets
+/// @param[in,out] triplet_view Collection of triplets
 ///
 TRACCC_HOST_DEVICE
 inline void update_triplet_weights(

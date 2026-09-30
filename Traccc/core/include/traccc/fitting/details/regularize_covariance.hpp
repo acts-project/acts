@@ -13,7 +13,7 @@
 
 namespace traccc::details {
 
-/// Check the covariance matirx and try to make it positive semi-definite
+/// Check the covariance matrix and try to make it positive semi-definite
 ///
 /// @param[out] cov  covariance matrix
 /// @param[in] min_var variance threshold below which to flag an error

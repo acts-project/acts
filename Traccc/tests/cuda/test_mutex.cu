@@ -13,12 +13,12 @@
 #include "../../device/cuda/src/utils/cuda_error_handling.hpp"
 #include "traccc/device/mutex.hpp"
 
-__global__ void mutex_add_kernel(uint32_t *out, uint32_t *lock) {
+__global__ void mutex_add_kernel(std::uint32_t *out, std::uint32_t *lock) {
   traccc::device::mutex m(*lock);
 
   if (threadIdx.x == 0) {
     m.lock();
-    uint32_t tmp = *out;
+    std::uint32_t tmp = *out;
     tmp += 1;
     *out = tmp;
     m.unlock();
@@ -28,16 +28,16 @@ __global__ void mutex_add_kernel(uint32_t *out, uint32_t *lock) {
 TEST(CUDAMutex, MassAdditionKernel) {
   vecmem::cuda::managed_memory_resource mr;
 
-  vecmem::unique_alloc_ptr<uint32_t> out =
-      vecmem::make_unique_alloc<uint32_t>(mr);
-  vecmem::unique_alloc_ptr<uint32_t> lock =
-      vecmem::make_unique_alloc<uint32_t>(mr);
+  vecmem::unique_alloc_ptr<std::uint32_t> out =
+      vecmem::make_unique_alloc<std::uint32_t>(mr);
+  vecmem::unique_alloc_ptr<std::uint32_t> lock =
+      vecmem::make_unique_alloc<std::uint32_t>(mr);
 
-  TRACCC_CUDA_ERROR_CHECK(cudaMemset(lock.get(), 0, sizeof(uint32_t)));
-  TRACCC_CUDA_ERROR_CHECK(cudaMemset(out.get(), 0, sizeof(uint32_t)));
+  TRACCC_CUDA_ERROR_CHECK(cudaMemset(lock.get(), 0, sizeof(std::uint32_t)));
+  TRACCC_CUDA_ERROR_CHECK(cudaMemset(out.get(), 0, sizeof(std::uint32_t)));
 
-  uint32_t n_blocks = 262144;
-  uint32_t n_threads = 32;
+  std::uint32_t n_blocks = 262144;
+  std::uint32_t n_threads = 32;
 
   mutex_add_kernel<<<n_blocks, n_threads>>>(out.get(), lock.get());
 

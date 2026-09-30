@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/utils/consistency_checker.hpp"
 #include "detray/utils/logging.hpp"
@@ -85,7 +86,7 @@ bool compare_files(const std::string& file_name1, const std::string& file_name2,
 
 /// Full IO round trip for a given detector
 /// @returns a detector read back in from the writer files
-template <std::size_t CAP = 0u, typename detector_t>
+template <std::size_t CAP = 0u, concepts::detector detector_t>
 auto test_detector_json_io(
     const detector_t& det, const typename detector_t::name_map& names,
     std::map<std::string, std::string, std::less<>>& file_names,
@@ -190,7 +191,7 @@ GTEST_TEST(io, json_telescope_detector_reader) {
 GTEST_TEST(io, json_toy_geometry) {
   using metadata_t = test::toy_metadata;
   using test_algebra = metadata_t::algebra_type;
-  using detector_t = detector<metadata_t>;
+  using detector_t = host::detector<metadata_t>;
   using scalar = test::scalar;
 
   // Toy detector
@@ -220,13 +221,13 @@ GTEST_TEST(io, json_toy_geometry) {
   // Read the toy detector into the default detector type
   using default_metadata_t = test::default_metadata;
   detector_builder<default_metadata_t> comp_builder;
-  io::json_converter<detector<default_metadata_t>, io::geometry_reader>
+  io::json_converter<host::detector<default_metadata_t>, io::geometry_reader>
       comp_geo_reader;
   comp_geo_reader.read(comp_builder, file_name);
   volume_name_map.clear_names();
   auto comp_det = comp_builder.build(host_mr, volume_name_map);
 
-  using mask_id = detector<default_metadata_t>::masks::id;
+  using mask_id = host::detector<default_metadata_t>::masks::id;
   const auto& masks = comp_det.mask_store();
 
   EXPECT_EQ(comp_det.volumes().size(), 22u);

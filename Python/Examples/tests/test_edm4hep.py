@@ -392,8 +392,11 @@ def test_edm4hep_tracks_writer(tmp_path):
                 r = math.sqrt(rp.x**2 + rp.y**2)
                 assert r > 25
 
-            assert locs[0] == cppyy.gbl.edm4hep.TrackState.AtLastHit
-            assert locs[-1] == cppyy.gbl.edm4hep.TrackState.AtFirstHit
+            # Track states are written following the EDM4hep/LCIO convention:
+            # the AtIP state first (skipped above), then the measurement states
+            # ordered inside-out.
+            assert locs[0] == cppyy.gbl.edm4hep.TrackState.AtFirstHit
+            assert locs[-1] == cppyy.gbl.edm4hep.TrackState.AtLastHit
 
             assert perigee is not None
             rp = perigee.referencePoint

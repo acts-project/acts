@@ -27,14 +27,14 @@ namespace detray::tutorial {
 
 // Detector
 using metadata_t = detray::tutorial::toy_metadata;
-using detector_host_t = detector<metadata_t, host_container_types>;
-using detector_device_t = detector<metadata_t, device_container_types>;
+using host_detector_t = host::detector<metadata_t>;
+using device_detector_t = device::detector<metadata_t>;
 
 using algebra_t = metadata_t::algebra_type;
 using scalar = detray::tutorial::scalar;
 
 // Navigator
-using navigator_t = caching_navigator<detector_device_t>;
+using navigator_t = caching_navigator<device_detector_t>;
 
 // Stepper
 using host_field_t = covfie::field<detray::bfield::inhom_bknd_t<scalar>>;
@@ -56,7 +56,7 @@ using track_t = detray::free_track_parameters<detray::tutorial::algebra_t>;
 
 /// Propagation tutorial function
 void propagation(
-    typename detector_host_t::view_type det_data,
+    typename host_detector_t::view_type det_data,
     typename device_field_t::view_t field_data,
     const vecmem::data::vector_view<free_track_parameters<algebra_t>>
         tracks_data);

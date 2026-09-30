@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "detray/builders/surface_factory_interface.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/core/detail/data_context.hpp"
 #include "detray/definitions/detail/qualifiers.hpp"
 #include "detray/definitions/geometry.hpp"
@@ -29,7 +30,7 @@ namespace detray {
 /// @brief Generates a portal box around a volume that already contains surfaces
 ///
 /// @tparam detector_t the type of detector the volume belongs to.
-template <typename detector_t>
+template <concepts::detector detector_t>
 class cuboid_portal_generator final
     : public surface_factory_interface<detector_t> {
   using algebra_type = typename detector_t::algebra_type;

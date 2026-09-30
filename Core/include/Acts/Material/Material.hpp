@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+
 #include <iosfwd>
 #include <limits>
 #include <optional>
-
-#include <Eigen/Dense>
 
 namespace Acts {
 

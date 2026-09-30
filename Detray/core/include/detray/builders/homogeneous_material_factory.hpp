@@ -172,7 +172,7 @@ class material_data {
 /// @c material_data .
 ///
 /// @tparam detector_t type of detector that contains the material
-template <typename detector_t>
+template <concepts::detector detector_t>
 class homogeneous_material_factory final
     : public factory_decorator<detector_t> {
   using mask_id = typename detector_t::masks::id;

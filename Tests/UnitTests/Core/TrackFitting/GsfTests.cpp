@@ -241,6 +241,28 @@ BOOST_AUTO_TEST_CASE(SmoothedParametersOnMeasurementStates) {
   BOOST_CHECK_EQUAL(nMeasurementStates, sourceLinks.size());
 }
 
+// Every state carries the jacobian of the segment that ends at it
+BOOST_AUTO_TEST_CASE(JacobianOnAllStates) {
+  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+
+  auto multi_pars = makeParameters();
+  auto measurements =
+      createMeasurements(tester.simPropagator, tester.geoCtx, tester.magCtx,
+                         multi_pars, tester.resolutions, rng);
+  auto sourceLinks = tester.prepareSourceLinks(measurements.sourceLinks);
+  auto options = makeDefaultGsfOptions();
+
+  auto res = gsfZero.fit(sourceLinks.begin(), sourceLinks.end(), multi_pars,
+                         options, tracks);
+  BOOST_REQUIRE(res.ok());
+
+  for (const auto ts : res->trackStatesReversed()) {
+    BOOST_REQUIRE(ts.hasJacobian());
+    BOOST_CHECK(ts.jacobian().allFinite());
+    BOOST_CHECK_NE(ts.jacobian().determinant(), 0.);
+  }
+}
+
 BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
   TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
   using namespace GsfConstants;

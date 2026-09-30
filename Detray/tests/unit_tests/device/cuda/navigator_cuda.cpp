@@ -129,10 +129,10 @@ TEST(navigator_cuda, navigator) {
   copy(position_records_buffer, position_records_device)->wait();
 
   for (unsigned int i = 0u; i < volume_records_host.size(); i++) {
-    EXPECT_EQ(volume_records_host[i].size(), volume_records_device[i].size());
+    ASSERT_EQ(volume_records_host[i].size(), volume_records_device[i].size());
 
     for (unsigned int j = 0u; j < volume_records_host[i].size(); j++) {
-      EXPECT_EQ(volume_records_host[i][j], volume_records_device[i][j]);
+      ASSERT_EQ(volume_records_host[i][j], volume_records_device[i][j]);
 
       auto& pos_host = position_records_host[i][j];
       auto& pos_device = position_records_device[i][j];

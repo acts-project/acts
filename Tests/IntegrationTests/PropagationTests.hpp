@@ -25,6 +25,7 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
@@ -274,8 +275,7 @@ inline Acts::Transform3 createCurvilinearTransform(
   rotation.col(0) = unitU;
   rotation.col(1) = unitV;
   rotation.col(2) = unitW;
-  Translation3 offset(params.position(geoCtx));
-  Transform3 toGlobal = offset * rotation;
+  Transform3 toGlobal = makeTransform3(rotation, params.position(geoCtx));
 
   return toGlobal;
 }

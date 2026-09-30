@@ -16,7 +16,7 @@ namespace traccc::io::csv {
 
 /// Type to read information into about the detector modules/surfaces
 struct surface {
-  uint64_t geometry_id = 0;
+  std::uint64_t geometry_id = 0;
   float cx = 0.f, cy = 0.f, cz = 0.f;
   float rot_xu = 0.f, rot_xv = 0.f, rot_xw = 0.f;
   float rot_yu = 0.f, rot_yv = 0.f, rot_yw = 0.f;

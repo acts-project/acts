@@ -16,8 +16,8 @@
 #include "traccc/device/mutex.hpp"
 #include "traccc/device/unique_lock.hpp"
 
-__global__ void unique_lock_add_kernel_try_lock(uint32_t *out,
-                                                uint32_t *_lock) {
+__global__ void unique_lock_add_kernel_try_lock(std::uint32_t *out,
+                                                std::uint32_t *_lock) {
   traccc::device::mutex m(*_lock);
 
   if (threadIdx.x == 0) {
@@ -27,35 +27,35 @@ __global__ void unique_lock_add_kernel_try_lock(uint32_t *out,
       lock.lock();
     }
 
-    uint32_t tmp = *out;
+    std::uint32_t tmp = *out;
     tmp += 1;
     *out = tmp;
   }
 }
 
-__global__ void unique_lock_add_kernel_defer_lock(uint32_t *out,
-                                                  uint32_t *_lock) {
+__global__ void unique_lock_add_kernel_defer_lock(std::uint32_t *out,
+                                                  std::uint32_t *_lock) {
   traccc::device::mutex m(*_lock);
   traccc::device::unique_lock lock(m, std::defer_lock);
 
   if (threadIdx.x == 0) {
     lock.lock();
 
-    uint32_t tmp = *out;
+    std::uint32_t tmp = *out;
     tmp += 1;
     *out = tmp;
   }
 }
 
-__global__ void unique_lock_add_kernel_adopt_lock(uint32_t *out,
-                                                  uint32_t *_lock) {
+__global__ void unique_lock_add_kernel_adopt_lock(std::uint32_t *out,
+                                                  std::uint32_t *_lock) {
   traccc::device::mutex m(*_lock);
 
   if (threadIdx.x == 0) {
     m.lock();
     traccc::device::unique_lock lock(m, std::adopt_lock);
 
-    uint32_t tmp = *out;
+    std::uint32_t tmp = *out;
     tmp += 1;
     *out = tmp;
   }
@@ -64,16 +64,16 @@ __global__ void unique_lock_add_kernel_adopt_lock(uint32_t *out,
 TEST(CUDAUniqueLock, MassAdditionKernelTryLock) {
   vecmem::cuda::managed_memory_resource mr;
 
-  vecmem::unique_alloc_ptr<uint32_t> out =
-      vecmem::make_unique_alloc<uint32_t>(mr);
-  vecmem::unique_alloc_ptr<uint32_t> lock =
-      vecmem::make_unique_alloc<uint32_t>(mr);
+  vecmem::unique_alloc_ptr<std::uint32_t> out =
+      vecmem::make_unique_alloc<std::uint32_t>(mr);
+  vecmem::unique_alloc_ptr<std::uint32_t> lock =
+      vecmem::make_unique_alloc<std::uint32_t>(mr);
 
-  TRACCC_CUDA_ERROR_CHECK(cudaMemset(lock.get(), 0, sizeof(uint32_t)));
-  TRACCC_CUDA_ERROR_CHECK(cudaMemset(out.get(), 0, sizeof(uint32_t)));
+  TRACCC_CUDA_ERROR_CHECK(cudaMemset(lock.get(), 0, sizeof(std::uint32_t)));
+  TRACCC_CUDA_ERROR_CHECK(cudaMemset(out.get(), 0, sizeof(std::uint32_t)));
 
-  uint32_t n_blocks = 262144;
-  uint32_t n_threads = 32;
+  std::uint32_t n_blocks = 262144;
+  std::uint32_t n_threads = 32;
 
   unique_lock_add_kernel_try_lock<<<n_blocks, n_threads>>>(out.get(),
                                                            lock.get());
@@ -87,16 +87,16 @@ TEST(CUDAUniqueLock, MassAdditionKernelTryLock) {
 TEST(CUDAUniqueLock, MassAdditionKernelDeferLock) {
   vecmem::cuda::managed_memory_resource mr;
 
-  vecmem::unique_alloc_ptr<uint32_t> out =
-      vecmem::make_unique_alloc<uint32_t>(mr);
-  vecmem::unique_alloc_ptr<uint32_t> lock =
-      vecmem::make_unique_alloc<uint32_t>(mr);
+  vecmem::unique_alloc_ptr<std::uint32_t> out =
+      vecmem::make_unique_alloc<std::uint32_t>(mr);
+  vecmem::unique_alloc_ptr<std::uint32_t> lock =
+      vecmem::make_unique_alloc<std::uint32_t>(mr);
 
-  TRACCC_CUDA_ERROR_CHECK(cudaMemset(lock.get(), 0, sizeof(uint32_t)));
-  TRACCC_CUDA_ERROR_CHECK(cudaMemset(out.get(), 0, sizeof(uint32_t)));
+  TRACCC_CUDA_ERROR_CHECK(cudaMemset(lock.get(), 0, sizeof(std::uint32_t)));
+  TRACCC_CUDA_ERROR_CHECK(cudaMemset(out.get(), 0, sizeof(std::uint32_t)));
 
-  uint32_t n_blocks = 262144;
-  uint32_t n_threads = 32;
+  std::uint32_t n_blocks = 262144;
+  std::uint32_t n_threads = 32;
 
   unique_lock_add_kernel_defer_lock<<<n_blocks, n_threads>>>(out.get(),
                                                              lock.get());
@@ -110,16 +110,16 @@ TEST(CUDAUniqueLock, MassAdditionKernelDeferLock) {
 TEST(CUDAUniqueLock, MassAdditionKernelAdoptLock) {
   vecmem::cuda::managed_memory_resource mr;
 
-  vecmem::unique_alloc_ptr<uint32_t> out =
-      vecmem::make_unique_alloc<uint32_t>(mr);
-  vecmem::unique_alloc_ptr<uint32_t> lock =
-      vecmem::make_unique_alloc<uint32_t>(mr);
+  vecmem::unique_alloc_ptr<std::uint32_t> out =
+      vecmem::make_unique_alloc<std::uint32_t>(mr);
+  vecmem::unique_alloc_ptr<std::uint32_t> lock =
+      vecmem::make_unique_alloc<std::uint32_t>(mr);
 
-  TRACCC_CUDA_ERROR_CHECK(cudaMemset(lock.get(), 0, sizeof(uint32_t)));
-  TRACCC_CUDA_ERROR_CHECK(cudaMemset(out.get(), 0, sizeof(uint32_t)));
+  TRACCC_CUDA_ERROR_CHECK(cudaMemset(lock.get(), 0, sizeof(std::uint32_t)));
+  TRACCC_CUDA_ERROR_CHECK(cudaMemset(out.get(), 0, sizeof(std::uint32_t)));
 
-  uint32_t n_blocks = 262144;
-  uint32_t n_threads = 32;
+  std::uint32_t n_blocks = 262144;
+  std::uint32_t n_threads = 32;
 
   unique_lock_add_kernel_adopt_lock<<<n_blocks, n_threads>>>(out.get(),
                                                              lock.get());

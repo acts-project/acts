@@ -21,7 +21,7 @@ namespace Acts {
 namespace {
 
 template <bool isBottomCandidate, bool interactionPointCut, bool sortedByR,
-          bool experimentCuts>
+          bool experimentCuts, bool useTime>
 class Impl final : public DoubletSeedFinder {
  public:
   explicit Impl(const DerivedConfig& config) : m_cfg(config) {}
@@ -35,13 +35,12 @@ class Impl final : public DoubletSeedFinder {
   /// @param middleSp Space point candidate to be used as middle SP in a seed
   /// @param middleSpInfo Information about the middle space point
   /// @param candidateSps Range or subet of space points to be used as candidates
-  ///   for middle SP in a seed. In case of `sortedByR` - an offset will be
-  ///   applied based on the middle SP radius.
+  ///   for middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
   template <typename CandidateSps>
   void createDoubletsImpl(const ConstSpacePointProxy& middleSp,
                           const MiddleSpInfo& middleSpInfo,
-                          CandidateSps& candidateSps,
+                          CandidateSps candidateSps,
                           DoubletsForMiddleSp& compatibleDoublets) const {
     const float impactMax =
         isBottomCandidate ? -m_cfg.impactMax : m_cfg.impactMax;
@@ -52,6 +51,15 @@ class Impl final : public DoubletSeedFinder {
     const float rM = middleSp.zr()[1];
     const float varianceZM = middleSp.varianceZ();
     const float varianceRM = middleSp.varianceR();
+
+    // time of the middle space point and its variance. only filled when the
+    // time cut is enabled
+    [[maybe_unused]] float tM = 0;
+    [[maybe_unused]] float varianceTM = 0;
+    if constexpr (useTime) {
+      tM = middleSp.time();
+      varianceTM = middleSp.varianceT();
+    }
 
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
@@ -69,28 +77,6 @@ class Impl final : public DoubletSeedFinder {
       return iDeltaR2 * ((varianceZM + varianceZO) +
                          (cotTheta * cotTheta) * (varianceRM + varianceRO));
     };
-
-    if constexpr (sortedByR) {
-      // find the first SP inside the radius region of interest and update
-      // the iterator so we don't need to look at the other SPs again
-      std::uint32_t offset = 0;
-      for (ConstSpacePointProxy otherSp : candidateSps) {
-        if constexpr (isBottomCandidate) {
-          // if r-distance is too big, try next SP in bin
-          if (rM - otherSp.zr()[1] <= m_cfg.deltaRMax) {
-            break;
-          }
-        } else {
-          // if r-distance is too small, try next SP in bin
-          if (otherSp.zr()[1] - rM >= m_cfg.deltaRMin) {
-            break;
-          }
-        }
-
-        ++offset;
-      }
-      candidateSps = candidateSps.subrange(offset);
-    }
 
     const SpacePointContainer& container = candidateSps.container();
     for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
@@ -149,6 +135,26 @@ class Impl final : public DoubletSeedFinder {
                             m_cfg.collisionRegionMin * deltaR,
                             m_cfg.collisionRegionMax * deltaR)) {
         continue;
+      }
+
+      // check the time compatibility of the two space points. the time
+      // difference is corrected for the time of flight along the straight line
+      // between them, assuming an outgoing particle at the speed of light
+      // (which is 1 in ACTS units). placed after the cheap range checks above
+      // to avoid the square root for candidates that are rejected anyway
+      if constexpr (useTime) {
+        const ConstSpacePointProxy otherSp = container[indexO];
+        const float distance = fastHypot(xO - xM, yO - yM, zO - zM);
+        float dt = 0;
+        if constexpr (isBottomCandidate) {
+          dt = tM - otherSp.time() - distance;
+        } else {
+          dt = otherSp.time() - tM - distance;
+        }
+        const float varianceDt = varianceTM + otherSp.varianceT();
+        if (dt * dt > m_cfg.timeCutNSigma2 * varianceDt) {
+          continue;
+        }
       }
 
       // if interactionPointCut is false we apply z cuts before coordinate
@@ -274,7 +280,7 @@ class Impl final : public DoubletSeedFinder {
 
   void createDoublets(const ConstSpacePointProxy& middleSp,
                       const MiddleSpInfo& middleSpInfo,
-                      SpacePointContainer::ConstSubset& candidateSps,
+                      SpacePointContainer::ConstSubset candidateSps,
                       DoubletsForMiddleSp& compatibleDoublets) const override {
     createDoubletsImpl(middleSp, middleSpInfo, candidateSps,
                        compatibleDoublets);
@@ -282,7 +288,7 @@ class Impl final : public DoubletSeedFinder {
 
   void createDoublets(const ConstSpacePointProxy& middleSp,
                       const MiddleSpInfo& middleSpInfo,
-                      SpacePointContainer::ConstRange& candidateSps,
+                      SpacePointContainer::ConstRange candidateSps,
                       DoubletsForMiddleSp& compatibleDoublets) const override {
     createDoubletsImpl(middleSp, middleSpInfo, candidateSps,
                        compatibleDoublets);
@@ -303,11 +309,12 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
   using InteractionPointCutOptions = BooleanOptions;
   using SortedByROptions = BooleanOptions;
   using ExperimentCutsOptions = BooleanOptions;
+  using UseTimeOptions = BooleanOptions;
 
   using DoubletOptions =
       boost::mp11::mp_product<boost::mp11::mp_list, IsBottomCandidateOptions,
                               InteractionPointCutOptions, SortedByROptions,
-                              ExperimentCutsOptions>;
+                              ExperimentCutsOptions, UseTimeOptions>;
 
   std::unique_ptr<DoubletSeedFinder> result;
   boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
@@ -317,6 +324,7 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     using InteractionPointCut = boost::mp11::mp_at_c<OptionType, 1>;
     using SortedByR = boost::mp11::mp_at_c<OptionType, 2>;
     using ExperimentCuts = boost::mp11::mp_at_c<OptionType, 3>;
+    using UseTime = boost::mp11::mp_at_c<OptionType, 4>;
 
     const bool configIsBottomCandidate =
         config.candidateDirection == Direction::Backward();
@@ -324,7 +332,8 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     if (configIsBottomCandidate != IsBottomCandidate::value ||
         config.interactionPointCut != InteractionPointCut::value ||
         config.spacePointsSortedByRadius != SortedByR::value ||
-        config.experimentCuts.connected() != ExperimentCuts::value) {
+        config.experimentCuts.connected() != ExperimentCuts::value ||
+        config.useTime != UseTime::value) {
       return;  // skip if the configuration does not match
     }
 
@@ -338,7 +347,7 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     // create the implementation for the given configuration
     result = std::make_unique<
         Impl<IsBottomCandidate::value, InteractionPointCut::value,
-             SortedByR::value, ExperimentCuts::value>>(config);
+             SortedByR::value, ExperimentCuts::value, UseTime::value>>(config);
   });
   if (result == nullptr) {
     throw std::runtime_error(
@@ -354,6 +363,7 @@ DoubletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
   // bFieldInZ is in (pT/radius) natively, no need for conversion
   const float pTPerHelixRadius = bFieldInZ;
   minHelixDiameter2 = square(minPt * 2 / pTPerHelixRadius) * helixCutTolerance;
+  timeCutNSigma2 = square(timeCutNSigma);
 }
 
 MiddleSpInfo DoubletSeedFinder::computeMiddleSpInfo(

@@ -41,6 +41,7 @@ SeedFinderConfigArg = namedtuple(
         "impactMax",
         "deltaPhiMax",
         "interactionPointCut",
+        "deltaZMin",
         "deltaZMax",
         "maxPtScattering",
         "zBinEdges",
@@ -53,6 +54,12 @@ SeedFinderConfigArg = namedtuple(
         "forwardSeedConfirmationRange",
         "rMinMiddle",
         "rMaxMiddle",
+        "helixCutTolerance",
+        "toleranceParam",
+        "useTimeDoubletCut",
+        "doubletTimeCutNSigma",
+        "useTimeTripletCut",
+        "tripletTimeChi2Max",
         "deltaR",  # (min,max)
         "deltaRBottomSP",  # (min,max)
         "deltaRTopSP",  # (min,max)
@@ -61,7 +68,7 @@ SeedFinderConfigArg = namedtuple(
         "r",  # (min,max)
         "z",  # (min,max)
     ],
-    defaults=[None] * 20 + [(None, None)] * 7,
+    defaults=[None] * 27 + [(None, None)] * 7,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -81,8 +88,9 @@ SeedFilterConfigArg = namedtuple(
         "maxQualitySeedsPerSpMConf",
         "useDeltaRorTopRadius",
         "deltaRMin",
+        "deltaInvHelixDiameter",
     ],
-    defaults=[None] * 11,
+    defaults=[None] * 12,
 )
 
 SpacePointGridConfigArg = namedtuple(
@@ -333,12 +341,13 @@ def addSeeding(
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackParameterSmearing.hpp
-    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z)
+    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, deltaZMin, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, rMinMiddle, rMaxMiddle, helixCutTolerance, toleranceParam, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z)
         SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z.
+        deltaZMin defaults to -deltaZMax when only deltaZMax is set, for the triplet seeding algorithms (GridTriplet, OrthogonalTriplet).
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFinderOptionsArg :  SeedFinderOptionsArg(bFieldInZ, beamPos)
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
-    seedFilterConfigArg : SeedFilterConfigArg(compatSeedWeight, compatSeedLimit, numSeedIncrement, seedWeightIncrement, seedConfirmation, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRorTopRadius)
+    seedFilterConfigArg : SeedFilterConfigArg(compatSeedWeight, compatSeedLimit, numSeedIncrement, seedWeightIncrement, seedConfirmation, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRorTopRadius, deltaInvHelixDiameter)
                                 Defaults specified in Core/include/Acts/Seeding/SeedFilterConfig.hpp
     spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, maxPhiBins, impactMax)
                                 SpacePointGridConfigArg settings. phi is specified as a tuple of (min,max).
@@ -461,6 +470,7 @@ def addSeeding(
                 s,
                 spacePoints,
                 seedFinderConfigArg,
+                seedFinderOptionsArg,
                 trackingGeometry,
                 logLevel,
                 layerMappingConfigFile,
@@ -1058,7 +1068,11 @@ def addGridTripletSeeding(
             phiMax=spacePointGridConfigArg.phi[1],
             phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
             maxPhiBins=spacePointGridConfigArg.maxPhiBins,
-            zBinEdges=spacePointGridConfigArg.zBinEdges,
+            zBinEdges=(
+                spacePointGridConfigArg.zBinEdges
+                if spacePointGridConfigArg.zBinEdges is not None
+                else seedFinderConfigArg.zBinEdges
+            ),
             zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
             rMinMiddle=seedFinderConfigArg.rMinMiddle,
             rMaxMiddle=seedFinderConfigArg.rMaxMiddle,
@@ -1066,16 +1080,28 @@ def addGridTripletSeeding(
             rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
             deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
             deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
-            deltaZMin=None,
-            deltaZMax=None,
+            # deltaZ is a signed doublet cut (DoubletSeedFinder.cpp); deltaZMax
+            # alone historically meant "maximum |deltaZ|", so when deltaZMin is
+            # not given explicitly it defaults to -deltaZMax rather than the
+            # C++ default of -inf, to keep the cut symmetric.
+            deltaZMin=(
+                seedFinderConfigArg.deltaZMin
+                if seedFinderConfigArg.deltaZMin is not None
+                else (
+                    -seedFinderConfigArg.deltaZMax
+                    if seedFinderConfigArg.deltaZMax is not None
+                    else None
+                )
+            ),
+            deltaZMax=seedFinderConfigArg.deltaZMax,
             interactionPointCut=seedFinderConfigArg.interactionPointCut,
             collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
-            helixCutTolerance=None,
+            helixCutTolerance=seedFinderConfigArg.helixCutTolerance,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
             radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
-            toleranceParam=None,
-            deltaInvHelixDiameter=None,
+            toleranceParam=seedFinderConfigArg.toleranceParam,
+            deltaInvHelixDiameter=seedFilterConfigArg.deltaInvHelixDiameter,
             compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
             impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
             zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
@@ -1089,7 +1115,14 @@ def addGridTripletSeeding(
             maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
             maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
             useDeltaRinsteadOfTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
+            useTimeDoubletCut=seedFinderConfigArg.useTimeDoubletCut,
+            doubletTimeCutNSigma=seedFinderConfigArg.doubletTimeCutNSigma,
+            useTimeTripletCut=seedFinderConfigArg.useTimeTripletCut,
+            tripletTimeChi2Max=seedFinderConfigArg.tripletTimeChi2Max,
             useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
+            numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
+            zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
+            zBinNeighborsBottom=seedingAlgorithmConfigArg.zBinNeighborsBottom,
         ),
     )
     sequence.addAlgorithm(seedingAlg)
@@ -1150,26 +1183,36 @@ def addOrthogonalTripletSeeding(
             zMax=seedFinderConfigArg.z[1],
             phiMin=spacePointGridConfigArg.phi[0],
             phiMax=spacePointGridConfigArg.phi[1],
-            phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
-            maxPhiBins=spacePointGridConfigArg.maxPhiBins,
-            zBinEdges=spacePointGridConfigArg.zBinEdges,
-            zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
+            # Note: OrthogonalTripletSeedingAlgorithm is KD-tree based and has
+            # no grid/bin-finder config (no phiBinDeflectionCoverage,
+            # maxPhiBins, zBinEdges, zBinsCustomLooping, zBinNeighborsTop/
+            # Bottom, numPhiNeighbors); do not forward those here.
             rMinMiddle=seedFinderConfigArg.rMinMiddle,
             rMaxMiddle=seedFinderConfigArg.rMaxMiddle,
             useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
             rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
             deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
             deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
-            deltaZMin=None,
-            deltaZMax=None,
+            # See addGridTripletSeeding for why deltaZMin falls back to
+            # -deltaZMax rather than the C++ default.
+            deltaZMin=(
+                seedFinderConfigArg.deltaZMin
+                if seedFinderConfigArg.deltaZMin is not None
+                else (
+                    -seedFinderConfigArg.deltaZMax
+                    if seedFinderConfigArg.deltaZMax is not None
+                    else None
+                )
+            ),
+            deltaZMax=seedFinderConfigArg.deltaZMax,
             interactionPointCut=seedFinderConfigArg.interactionPointCut,
             collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
-            helixCutTolerance=None,
+            helixCutTolerance=seedFinderConfigArg.helixCutTolerance,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
             radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
-            toleranceParam=None,
-            deltaInvHelixDiameter=None,
+            toleranceParam=seedFinderConfigArg.toleranceParam,
+            deltaInvHelixDiameter=seedFilterConfigArg.deltaInvHelixDiameter,
             compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
             impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
             zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
@@ -1420,6 +1463,7 @@ def addGbtsSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     seedFinderConfigArg: SeedFinderConfigArg,
+    seedFinderOptionsArg: SeedFinderOptionsArg,
     trackingGeometry: acts.TrackingGeometry,
     logLevel: acts.logging.Level = None,
     layerMappingConfigFile: Union[Path, str] = None,
@@ -1449,6 +1493,9 @@ def addGbtsSeeding(
         trackingGeometry=trackingGeometry,
         fillModuleCsv=False,
         inputClusters="clusters",
+        **acts.examples.defaultKWArgs(
+            bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+        ),
     )
 
     sequence.addAlgorithm(seedingAlg)
@@ -2545,6 +2592,9 @@ def addVertexFitting(
     spatialBinExtent: Optional[float] = None,
     temporalBinExtent: Optional[float] = None,
     simultaneousSeeds: Optional[int] = None,
+    tracksMaxZinterval: Optional[float] = None,
+    spatialWindow: Optional[List[float]] = None,
+    temporalWindow: Optional[List[float]] = None,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     writeTrackInfo: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -2657,6 +2707,9 @@ def addVertexFitting(
                 spatialBinExtent=spatialBinExtent,
                 temporalBinExtent=temporalBinExtent,
                 simultaneousSeeds=simultaneousSeeds,
+                tracksMaxZinterval=tracksMaxZinterval,
+                temporalWindow=temporalWindow,
+                spatialWindow=spatialWindow,
             ),
         )
         s.addAlgorithm(findVertices)

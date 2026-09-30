@@ -1,6 +1,6 @@
 # TRACCC library, part of the ACTS project (R&D line)
 #
-# (c) 2021-2025 CERN for the benefit of the ACTS project
+# (c) 2021-2026 CERN for the benefit of the ACTS project
 #
 # Mozilla Public License Version 2.0
 
@@ -11,6 +11,7 @@ include(traccc-compiler-options-cpp)
 traccc_add_library(traccc_examples_common examples_common TYPE SHARED
    "include/traccc/examples/make_magnetic_field.hpp"
    "src/make_magnetic_field.cpp"
+   "include/traccc/examples/await_strategy.hpp"
    "include/traccc/examples/print_fitted_tracks_statistics.hpp"
    "src/print_fitted_tracks_statistics.cpp"
    "include/traccc/examples/throughput_mt.hpp"

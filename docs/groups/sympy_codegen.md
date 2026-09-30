@@ -7,9 +7,10 @@
 > interface and the rest of the propagation machinery see @ref propagation.
 
 The @ref Acts::SympyStepper does not contain a hand-written Runge-Kutta step.
-Its two inner kernels — `rk4_vacuum` and `rk4_dense` — are emitted at build
-time by `Core/src/Propagator/generate_sympy_stepper.py`, which derives them
-symbolically with [sympy](https://www.sympy.org) and prints them as C++.
+Its two inner kernels — the vacuum one and the dense one, each emitted with and
+without covariance transport — come out of
+`Core/src/Propagator/generate_sympy_stepper.py` at build time, which derives
+them symbolically with [sympy](https://www.sympy.org) and prints them as C++.
 
 ## Why generate them
 
@@ -181,8 +182,8 @@ so the generator forms the chain-rule product as well and checks the two agree
 (`Derivation.check_same`).
 
 @f$\lambda@f$ and @f$M_{\lambda\lambda}@f$ are constant across a vacuum step, so
-it carries the scaled form into itself; `rk4_dense` moves @f$\lambda@f$ and
-converts explicitly. The stepper state holds the scaled form, and
+it carries the scaled form into itself; the dense kernel moves
+@f$\lambda@f$ and converts explicitly. The stepper state holds the scaled form, and
 `detail::sympy::toScaledBoundToFree` and its inverse convert where the
 covariance engine wants the plain Jacobian. The convention is singular at
 @f$\lambda = 0@f$, where the plain column already is.

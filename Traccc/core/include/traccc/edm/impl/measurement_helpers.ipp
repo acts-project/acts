@@ -19,7 +19,7 @@ TRACCC_HOST_DEVICE detray::dpoint2D<algebra_t> get_measurement_local(
 }
 
 template <detray::concepts::algebra algebra_t, typename measurement_backend_t,
-          std::integral size_t, size_t D>
+          std::integral size_type, size_type D>
 TRACCC_HOST_DEVICE void get_measurement_local(
     const edm::measurement<measurement_backend_t>& meas,
     detray::dmatrix<algebra_t, D, 1>& pos) {
@@ -62,7 +62,7 @@ TRACCC_HOST_DEVICE detray::dvector2D<algebra_t> get_measurement_variance(
 }
 
 template <detray::concepts::algebra algebra_t, typename measurement_backend_t,
-          std::integral size_t, size_t D>
+          std::integral size_type, size_type D>
 TRACCC_HOST_DEVICE void get_measurement_covariance(
     const edm::measurement<measurement_backend_t>& meas,
     detray::dmatrix<algebra_t, D, D>& cov) {

@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/detail/cuda_definitions.hpp"
 
 // Detray test include(s)
@@ -14,21 +15,20 @@
 
 namespace detray {
 
-template <typename bfield_bknd_t, typename detector_t>
+template <typename bfield_bknd_t, concepts::detector detector_t>
 __global__ void propagator_test_kernel(
     typename detector_t::view_type det_data, const propagation::config cfg,
     covfie::field_view<bfield_bknd_t> field_data,
     vecmem::data::vector_view<test_track> tracks_data,
     vecmem::data::jagged_vector_view<step_record<test_algebra>> steps_data) {
   int gid = threadIdx.x + blockIdx.x * blockDim.x;
-  using detector_device_t =
-      detector<typename detector_t::metadata, device_container_types>;
+  using device_detector_t = device::detector<typename detector_t::metadata>;
 
   static_assert(std::is_same_v<typename detector_t::view_type,
-                               typename detector_device_t::view_type>,
+                               typename device_detector_t::view_type>,
                 "Host and device detector views do not match");
 
-  detector_device_t det(det_data);
+  device_detector_t det(det_data);
   vecmem::device_vector<test_track> tracks(tracks_data);
   vecmem::jagged_device_vector<step_record<test_algebra>> steps(steps_data);
 
@@ -37,7 +37,7 @@ __global__ void propagator_test_kernel(
   }
 
   auto stepr = rk_stepper_t<covfie::field_view<bfield_bknd_t>>{};
-  auto nav = navigator_t<detector_device_t>{};
+  auto nav = navigator_t<device_detector_t>{};
 
   // Create propagator
   using propagator_device_t =
@@ -68,7 +68,7 @@ __global__ void propagator_test_kernel(
 }
 
 /// Launch the device kernel
-template <typename bfield_bknd_t, typename detector_t>
+template <typename bfield_bknd_t, concepts::detector detector_t>
 void propagator_test(
     typename detector_t::view_type det_view, const propagation::config& cfg,
     covfie::field_view<bfield_bknd_t> field_data,
@@ -87,20 +87,18 @@ void propagator_test(
 }
 
 /// Explicit instantiation for a constant magnetic field
-template void
-propagator_test<bfield::const_bknd_t<dscalar<test_algebra>>,
-                detector<toy_metadata<test_algebra>, host_container_types>>(
-    detector<toy_metadata<test_algebra>, host_container_types>::view_type,
+template void propagator_test<bfield::const_bknd_t<dscalar<test_algebra>>,
+                              host::detector<toy_metadata<test_algebra>>>(
+    host::detector<toy_metadata<test_algebra>>::view_type,
     const propagation::config&,
     covfie::field_view<bfield::const_bknd_t<dscalar<test_algebra>>>,
     vecmem::data::vector_view<test_track>&,
     vecmem::data::jagged_vector_view<step_record<test_algebra>>&);
 
 /// Explicit instantiation for an inhomogeneous magnetic field
-template void
-propagator_test<bfield::cuda::inhom_bknd_t<dscalar<test_algebra>>,
-                detector<toy_metadata<test_algebra>, host_container_types>>(
-    detector<toy_metadata<test_algebra>, host_container_types>::view_type,
+template void propagator_test<bfield::cuda::inhom_bknd_t<dscalar<test_algebra>>,
+                              host::detector<toy_metadata<test_algebra>>>(
+    host::detector<toy_metadata<test_algebra>>::view_type,
     const propagation::config&,
     covfie::field_view<bfield::cuda::inhom_bknd_t<dscalar<test_algebra>>>,
     vecmem::data::vector_view<test_track>&,

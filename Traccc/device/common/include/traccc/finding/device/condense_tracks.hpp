@@ -91,7 +91,7 @@ struct condense_tracks_payload {
 /// optional predicted/filtered parameters, and emit tips on the last step.
 ///
 /// @param[in] thread_id The index of the current thread
-/// @param[inout] payload The function call payload
+/// @param[in,out] payload The function call payload
 ///
 TRACCC_HOST_DEVICE inline void condense_tracks(
     global_index_t thread_id, const condense_tracks_payload& payload) {
@@ -140,8 +140,7 @@ TRACCC_HOST_DEVICE inline void condense_tracks(
   }
 
   for (unsigned int i = 0; i < num_parameters; ++i) {
-    const unsigned int in_offset =
-        in_param_id * payload.max_num_branches_per_surface + i;
+    const unsigned int in_offset = i * payload.n_in_params + in_param_id;
     const unsigned int param_out_index = idx + i;
     const unsigned int link_out_index =
         param_out_index + payload.curr_links_idx;

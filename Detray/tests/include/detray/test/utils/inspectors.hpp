@@ -14,6 +14,7 @@
 #endif
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/definitions/math.hpp"
 #include "detray/navigation/detail/print_state.hpp"
@@ -129,7 +130,8 @@ namespace navigation {
 
 /// A navigation inspector that relays information about the encountered
 /// objects whenever the navigator reaches one or more status flags
-template <typename detector_t, template <typename...> class vector_t = dvector,
+template <concepts::detector detector_t,
+          template <typename...> class vector_t = dvector,
           status... navigation_status>
 struct object_tracer {
   using candidate_record_t = intersection_record<detector_t>;

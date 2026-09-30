@@ -93,18 +93,22 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeoModel, gm) {
             .def("constructMS", &GeoMuonMockupExperiment::constructMS);
     auto c = py::class_<GeoMuonMockupExperiment::Config>(f, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c,
-                       /// General properties
-                       dumpTree, dbName,
-                       /// Mdt properties
-                       innerTubeRadius, tubeWallThickness, nTubeLayers, nTubes,
-                       mdtFoamThickness, multiLayerSeparation,
-                       /// Rpc properties
-                       nRpcGasGaps, nRpcAlongZ, nRpcAlongPhi,
-                       /// Station properties
-                       barrelRadii, nSectors, nEtaStations, stationDistInZ,
-                       stationDistInR, endCapWheelLowR, bigWheelDistZ,
-                       buildEndcaps, nInnerMultiplets, nInnerGasGapsPerMl);
+    ACTS_PYTHON_STRUCT(
+        c,
+        /// General properties
+        dumpTree, dbName,
+        /// Mdt properties
+        innerTubeRadius, tubeWallThickness, nTubeLayers, nTubes,
+        mdtFoamThickness, multiLayerSeparation,
+        /// Rpc properties
+        nRpcGasGaps, nRpcAlongZ, nRpcAlongPhi,
+        /// Station properties
+        barrelRadii, nSectors, nEtaStations, stationDistInZ, stationDistInR,
+        endCapWheelLowR, bigWheelDistZ, buildEndcaps, buildBarrel,
+        nInnerMultiplets, nInnerGasGapsPerMl,
+        /// Build extra volumes to model the passive absorber material
+        buildAbsorbers, absorberMaterials, nAbsorberSectors, nAbsorberZ,
+        absorberRelWidth, endCapAbsorberZ);
   }
 
   /// Module splitting
