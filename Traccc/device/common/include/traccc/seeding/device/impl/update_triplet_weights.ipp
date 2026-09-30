@@ -37,9 +37,14 @@ inline void update_triplet_weights(
 
   // Current work item
   device_triplet this_triplet = triplets.at(globalIndex);
+  const auto this_spT_idx = this_triplet.spT;
+
+  if (this_spT_idx == std::numeric_limits<unsigned int>::max()) [[unlikely]] {
+    return;
+  }
 
   const edm::spacepoint_collection::const_device::const_proxy_type current_spT =
-      spacepoints.at(this_triplet.spT);
+      spacepoints.at(this_spT_idx);
 
   const scalar currentTop_r = current_spT.radius();
 
@@ -74,8 +79,16 @@ inline void update_triplet_weights(
     }
 
     const device_triplet other_triplet = triplets[i];
+
+    const auto other_spT_idx = other_triplet.spT;
+
+    if (other_spT_idx == std::numeric_limits<unsigned int>::max())
+        [[unlikely]] {
+      continue;
+    }
+
     const edm::spacepoint_collection::const_device::const_proxy_type other_spT =
-        spacepoints.at(other_triplet.spT);
+        spacepoints.at(other_spT_idx);
 
     // compared top SP should have at least deltaRMin distance
     const scalar otherTop_r = other_spT.radius();

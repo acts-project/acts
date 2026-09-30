@@ -160,7 +160,7 @@ class triplet_seeding_algorithm
     /// The populated spacepoint grid
     const traccc::details::spacepoint_grid_types::const_view& grid;
     /// The doublet counter collection
-    const doublet_counter_collection_types::const_view& doublet_counter;
+    doublet_counter_collection_types::view& doublet_counter;
     /// The middle-bottom doublet collection to fill
     device_doublet_collection_types::view& mb_doublets;
     /// The middle-top doublet collection to fill
