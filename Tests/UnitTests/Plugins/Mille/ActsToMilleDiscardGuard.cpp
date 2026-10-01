@@ -89,6 +89,10 @@ BOOST_AUTO_TEST_CASE(MeasuredParametersAreKept) {
   auto logger = Acts::getDefaultLogger("ActsToMilleDiscardGuard",
                                        Acts::Logging::WARNING, &logStream);
 
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  // the warning below is expected: do not fail on it
+  Acts::Logging::ScopedFailureThreshold threshold{Acts::Logging::FATAL};
+#endif
   const std::string fname = "ActsToMilleDiscardGuard.dat";
   {
     std::unique_ptr<Mille::MilleRecord> out = Mille::spawnMilleRecord(fname);

@@ -44,6 +44,12 @@ unsigned long globalIndexSurfToParam(unsigned long surfaceIndex,
 
 }  // namespace
 
+const Acts::Logger& defaultLogger() {
+  static const std::unique_ptr<const Acts::Logger> logger =
+      Acts::getDefaultLogger("ActsToMille", Acts::Logging::INFO);
+  return *logger;
+}
+
 void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
                  MilleRecord& record, bool removeUnconstrainedTrackPar,
                  const Acts::Logger& logger) {
@@ -71,18 +77,6 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
   // parameters to stabilise the system
   std::set<std::size_t> skippedTrackParams = {};
   if (removeUnconstrainedTrackPar) {
-    // A parameter that a measurement projects onto is constrained by it (its
-    // variance is bounded by the measurement variance) and must stay a local
-    // parameter: without it, the measurement would be written with its
-    // alignment derivatives but without its dependence on the track.
-    // The precision is deliberately 0 (exact): H only selects the measured
-    // parameters (entries 0 or 1), and Mille drops only exactly-zero local
-    // derivatives.
-    std::vector<bool> isMeasured(state.trackParametersDim, false);
-    for (std::size_t k = 0; k < state.trackParametersDim; ++k) {
-      isMeasured[k] = !state.projectionMatrix.col(k).isZero(0.);
-    }
-
     // collect (sorted by covariance) the indices of all track parameters.
     // A multimap: parameters with equal variances must all be considered.
     std::multimap<double, std::size_t> trkParByCov;
@@ -96,7 +90,14 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
     for (const auto& [sigmaSquared, index] : trkParByCov) {
       // a jump of 1e6 is indicative that we are not in Kansas anymore
       if (prev != 0 && sigmaSquared > 1e6 * prev) {
-        if (isMeasured[index]) {
+        // A parameter that a measurement projects onto is constrained by it
+        // (its variance is bounded by the measurement variance) and must stay
+        // a local parameter: without it, the measurement would be written
+        // with its alignment derivatives but without its dependence on the
+        // track. The precision is deliberately 0 (exact): H only selects the
+        // measured parameters (entries 0 or 1), and Mille drops only
+        // exactly-zero local derivatives.
+        if (!state.projectionMatrix.col(index).isZero(0.)) {
           // keep it, and leave prev unchanged: the decisions on the other
           // parameters are the same as without this check
           ++nKeptMeasured;
@@ -291,7 +292,8 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
     Mille::IMilleReader& reader,
     ActsAlignment::detail::TrackAlignmentState& targetState,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
-        idxedAlignSurfaces) {
+        idxedAlignSurfaces,
+    const Acts::Logger& logger) {
   /// book a decoder
   Mille::MilleDecoder decoder;
   // vector to hold the extracted measurements
@@ -339,6 +341,12 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
       // derivatives but no local derivatives has lost its track parameters
       // when it was written, and cannot be placed in the track model.
       if (!measurement.globalLabels.empty()) {
+        ACTS_ERROR(
+            "Mille record with an entry that has alignment derivatives "
+            "(first label "
+            << measurement.globalLabels.front()
+            << ") but no local derivatives: its track parameters were "
+               "dropped when it was written. Skipping the record.");
         return Mille::MilleDecoder::ReadResult::error;
       }
       continue;
@@ -351,6 +359,7 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
                             measurement.globalLabels.end());
   }
   if (lastLocal < firstLocal) {
+    ACTS_ERROR("Mille record without local derivatives. Skipping the record.");
     return Mille::MilleDecoder::ReadResult::error;
   }
   state.trackParametersDim = lastLocal - firstLocal + 1;
@@ -389,6 +398,10 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
   // a label of a surface that the indexed list does not know
   if (!idxedAlignSurfaces.empty() &&
       state.alignedSurfaces.size() != surfaceToInternal.size()) {
+    ACTS_ERROR("Mille record with alignment labels of "
+               << surfaceToInternal.size() - state.alignedSurfaces.size()
+               << " surface(s) missing from the indexed alignable surfaces. "
+                  "Skipping the record.");
     return Mille::MilleDecoder::ReadResult::error;
   }
 

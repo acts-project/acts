@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
 #include "ActsPlugins/Mille/ActsToMille.hpp"
 
@@ -189,6 +190,10 @@ BOOST_AUTO_TEST_CASE(UnknownSurfaceIsReadError) {
   BOOST_REQUIRE(reader != nullptr);
   BOOST_REQUIRE(reader->open(fname));
 
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  // the read error below is expected: do not fail on it
+  Acts::Logging::ScopedFailureThreshold threshold{Acts::Logging::FATAL};
+#endif
   ActsAlignment::detail::TrackAlignmentState state;
   BOOST_REQUIRE(ActsPlugins::ActsToMille::unpackMilleRecord(
                     *reader, state, idxedAlignSurfaces) ==
@@ -231,6 +236,10 @@ BOOST_AUTO_TEST_CASE(GlobalsWithoutLocalsIsReadError) {
   BOOST_REQUIRE(reader != nullptr);
   BOOST_REQUIRE(reader->open(fname));
 
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  // the read error below is expected: do not fail on it
+  Acts::Logging::ScopedFailureThreshold threshold{Acts::Logging::FATAL};
+#endif
   ActsAlignment::detail::TrackAlignmentState state;
   BOOST_REQUIRE(ActsPlugins::ActsToMille::unpackMilleRecord(
                     *reader, state, idxedAlignSurfaces) ==

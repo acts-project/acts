@@ -23,6 +23,11 @@ namespace ActsPlugins::ActsToMille {
 /// provided by Mille/MilleFactory.h
 using Mille::MilleRecord;
 
+/// @brief Logger used by the functions of this namespace when the caller
+/// does not pass one: prints at INFO level and above. It is created once.
+/// @return the default logger
+const Acts::Logger& defaultLogger();
+
 /// @brief Dump a Kalman track encoded as a TrackAlignmentState into
 /// a Mille record.
 /// @param state: Alignment state to dump.
@@ -37,7 +42,7 @@ using Mille::MilleRecord;
 /// removal criterion would have dropped.
 void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
                  MilleRecord& record, bool removeUnconstrainedTrackPar = true,
-                 const Acts::Logger& logger = Acts::getDummyLogger());
+                 const Acts::Logger& logger = defaultLogger());
 
 /// @brief read one record (= track or (constrained) track pair) from
 /// a Mille binary into the equivalent matrices of a TrackAlignmentState.
@@ -50,13 +55,15 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
 /// the internal `alignedSurfaces` member of the state will be configured to
 /// link back to the correct surfaces, and a record with an alignment label
 /// of a surface not in this list is a read error.
+/// @param logger Logger, reports why a record could not be read.
 /// @return a ReadResult enum with 3 possible states to indicate the outcome- ok / end-of-file / read-error.
 /// The targetState will only be modified if the result is 'ok'.
 Mille::MilleDecoder::ReadResult unpackMilleRecord(
     Mille::IMilleReader& reader,
     ActsAlignment::detail::TrackAlignmentState& targetState,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
-        idxedAlignSurfaces);
+        idxedAlignSurfaces,
+    const Acts::Logger& logger = defaultLogger());
 
 /// Writes an alignment outcome into a text file in the format
 /// used by Millepede. Allows the constants to be processed
