@@ -202,4 +202,44 @@ BOOST_AUTO_TEST_CASE(UnknownSurfaceIsReadError) {
   BOOST_CHECK_EQUAL(state.alignedSurfaces.size(), 2u);
 }
 
+BOOST_AUTO_TEST_CASE(GlobalsWithoutLocalsIsReadError) {
+  std::vector<std::shared_ptr<Acts::Surface>> surfaces;
+  std::unordered_map<const Acts::Surface*, std::size_t> idxedAlignSurfaces;
+  for (std::size_t s = 0; s < 2; ++s) {
+    surfaces.push_back(Acts::Surface::makeShared<Acts::PlaneSurface>(
+        Acts::Transform3::Identity(),
+        std::make_shared<Acts::RectangleBounds>(10., 10.)));
+    idxedAlignSurfaces.emplace(surfaces.back().get(), s);
+  }
+
+  const std::string fname = "ActsMilleReadGlobalsWithoutLocals.dat";
+  {
+    std::unique_ptr<Mille::MilleRecord> out = Mille::spawnMilleRecord(fname);
+    BOOST_REQUIRE(out != nullptr);
+    writeRecord(*out, {{0.01f, 0}, {0.02f, 1}});
+    // second record: the hit on surface 1 has alignment derivatives but its
+    // only local derivative is zero, which Mille does not write
+    out->addData(0.01f, 0.1f, std::vector<unsigned int>{1u},
+                 std::vector<double>{1.0}, std::vector<int>{label(0, 0)},
+                 std::vector<double>{derivative(0, 0)});
+    out->addData(0.02f, 0.1f, std::vector<unsigned int>{2u},
+                 std::vector<double>{0.0}, std::vector<int>{label(1, 0)},
+                 std::vector<double>{derivative(1, 0)});
+    out->writeRecord();
+  }
+  auto reader = Mille::spawnMilleReader(fname);
+  BOOST_REQUIRE(reader != nullptr);
+  BOOST_REQUIRE(reader->open(fname));
+
+  ActsAlignment::detail::TrackAlignmentState state;
+  BOOST_REQUIRE(ActsPlugins::ActsToMille::unpackMilleRecord(
+                    *reader, state, idxedAlignSurfaces) ==
+                Mille::MilleDecoder::ReadResult::OK);
+  BOOST_CHECK(ActsPlugins::ActsToMille::unpackMilleRecord(*reader, state,
+                                                          idxedAlignSurfaces) ==
+              Mille::MilleDecoder::ReadResult::error);
+  // a failed read leaves the state untouched
+  BOOST_CHECK_EQUAL(state.alignmentDof, 2 * Acts::eAlignmentSize);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

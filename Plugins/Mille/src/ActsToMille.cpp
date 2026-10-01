@@ -334,15 +334,21 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
 
   // discover labels in use
   for (const Mille::MilleMeasurement& measurement : measurements) {
-    seenGlobalLabels.insert(measurement.globalLabels.begin(),
-                            measurement.globalLabels.end());
     if (measurement.localLabels.empty()) {
+      // A measurement always depends on the track. An entry with alignment
+      // derivatives but no local derivatives has lost its track parameters
+      // when it was written, and cannot be placed in the track model.
+      if (!measurement.globalLabels.empty()) {
+        return Mille::MilleDecoder::ReadResult::error;
+      }
       continue;
     }
     auto [minLabel, maxLabel] = std::minmax_element(
         measurement.localLabels.begin(), measurement.localLabels.end());
     firstLocal = std::min(firstLocal, *minLabel);
     lastLocal = std::max(lastLocal, *maxLabel);
+    seenGlobalLabels.insert(measurement.globalLabels.begin(),
+                            measurement.globalLabels.end());
   }
   if (lastLocal < firstLocal) {
     return Mille::MilleDecoder::ReadResult::error;
