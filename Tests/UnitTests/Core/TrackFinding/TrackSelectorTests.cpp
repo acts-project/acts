@@ -77,6 +77,7 @@ struct MockTrack {
   unsigned int nHoles() const { return m_nHoles; }
   unsigned int nOutliers() const { return m_nOutliers; }
   unsigned int nSharedHits() const { return m_nSharedHits; }
+  unsigned int nSplitHits() const { return m_nSplitHits; }
   float chi2() const { return m_chi2; }
   unsigned int nDoF() const { return m_nDoF; }
 
@@ -159,6 +160,7 @@ struct MockTrack {
   unsigned int m_nHoles = 0;
   unsigned int m_nOutliers = 0;
   unsigned int m_nSharedHits = 0;
+  unsigned int m_nSplitHits = 0;
   float m_chi2 = 0.F;
   unsigned int m_nDoF = 0;
   double m_qOverP = 1.;
