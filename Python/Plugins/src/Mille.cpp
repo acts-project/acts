@@ -16,25 +16,7 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using ActsPlugins::MillePedeResultReader;
 using ActsPlugins::MillePedeSolver;
-using ParameterResult = ActsPlugins::MillePedeResultReader::ParameterResult;
-
-namespace ActsPython {
-
-/// @brief Propagate to a target surface, throwing an exception if the
-/// result is invalid.
-std::vector<ParameterResult> unwrapParameterResults(
-    Acts::Result<std::vector<ParameterResult>> res) {
-  if (!res.ok()) {
-    std::stringstream ss;
-    ss << "Reading parameter results failed with error: \""
-       << res.error().message() << "\"";
-    throw std::runtime_error{ss.str()};
-  }
-  return *res;
-}
-}  // namespace ActsPython
 
 PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
   {
@@ -55,19 +37,15 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
   }
 
   {
-    auto ms =
-        py::class_<MillePedeResultReader,
-                   std::shared_ptr<MillePedeResultReader>>(
-            mille, "MillePedeResultReader")
-            .def(py::init<std::unique_ptr<Acts::Logger>>())
-            .def("readParameters", [](const MillePedeResultReader& self,
-                                      const std::filesystem::path& mpFile) {
-              return ActsPython::unwrapParameterResults(
-                  self.readParameters(mpFile));
-            });
+    // unwrap Acts::Result - will throw in case of an error-result
+    mille.def("readMillePedeResult", [](const std::filesystem::path& mpFile,
+                                        const Acts::Logger& logger) {
+      return ActsPlugins::readMillePedeResult(mpFile, logger).value();
+    });
 
-    auto c =
-        py::class_<ParameterResult>(ms, "ParameterResult").def(py::init<>());
+    auto c = py::class_<ActsPlugins::MillePedeParameterResult>(
+                 mille, "MillePedeParameterResult")
+                 .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, label, val, start, delta, sigma, nRecords);
   }

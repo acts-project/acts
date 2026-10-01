@@ -8,6 +8,7 @@
 
 #include "ActsPlugins/Mille/MillePedeResultReader.hpp"
 
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsPlugins/Mille/MillePedeError.hpp"
 
@@ -19,13 +20,13 @@ using namespace ActsPlugins;
 
 namespace {
 
-std::optional<ActsPlugins::MillePedeResultReader::ParameterResult> parseMpLine(
+std::optional<ActsPlugins::MillePedeParameterResult> parseMpLine(
     const std::string& resLine, const Acts::Logger& logger) {
   // skip blank lines
   if (resLine.empty()) {
     return std::nullopt;
   }
-  ActsPlugins::MillePedeResultReader::ParameterResult par;
+  ActsPlugins::MillePedeParameterResult par;
   par.sigma = -1;
   par.nRecords = -1;
   std::stringstream sstr(resLine);
@@ -61,14 +62,14 @@ std::optional<ActsPlugins::MillePedeResultReader::ParameterResult> parseMpLine(
 }
 }  // namespace
 
-Acts::Result<std::vector<MillePedeResultReader::ParameterResult>>
-MillePedeResultReader::readParameters(
-    const std::filesystem::path& mpFile) const {
-  std::vector<ParameterResult> res;
+Acts::Result<std::vector<MillePedeParameterResult>>
+ActsPlugins::readMillePedeResult(const std::filesystem::path& mpFile,
+                                 const Acts::Logger& logger) {
+  std::vector<MillePedeParameterResult> res;
   std::ifstream resFile(mpFile);
   if (!resFile.is_open()) {
     ACTS_ERROR(" Failed to read the MP results file '" << mpFile << "'");
-    return Acts::Result<std::vector<ParameterResult>>::failure(
+    return Acts::Result<std::vector<MillePedeParameterResult>>::failure(
         MillePedeError::SolutionNotReadable);
   }
   while (!resFile.eof()) {

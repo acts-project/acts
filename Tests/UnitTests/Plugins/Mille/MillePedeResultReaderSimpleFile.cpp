@@ -17,17 +17,17 @@
 #include <fstream>
 
 using namespace ActsPlugins;
-using ParameterResult = MillePedeResultReader::ParameterResult;
 
 BOOST_AUTO_TEST_SUITE(MillePedeResultReaderSimpleFile)
 
-bool operator==(const ParameterResult &r1, const ParameterResult &r2) {
+bool operator==(const MillePedeParameterResult &r1,
+                const MillePedeParameterResult &r2) {
   return (r1.label == r2.label && r1.val == r2.val && r1.start == r2.start &&
           r1.delta == r2.delta && r1.sigma == r2.sigma &&
           r1.nRecords == r2.nRecords);
 }
 
-std::ostream &operator<<(std::ostream &str, const ParameterResult &p) {
+std::ostream &operator<<(std::ostream &str, const MillePedeParameterResult &p) {
   str << std::format(
       " [ Label {}, Val {}, Start {}, Delta {}, Sigma {}, NRecords {} ]",
       p.label, p.val, p.start, p.delta, p.sigma, p.nRecords);
@@ -36,12 +36,13 @@ std::ostream &operator<<(std::ostream &str, const ParameterResult &p) {
 
 /// catch a missing steering file
 BOOST_AUTO_TEST_CASE(ReadSimpleFile) {
+  auto logger = Acts::getDefaultLogger("ReadSimpleFile", Acts::Logging::INFO);
   std::filesystem::path dummyFileName("testResult.txt");
   std::ofstream dummyResultFile(dummyFileName);
   dummyResultFile << " # this is a comment line and will be ignored."
                   << std::endl;
 
-  std::vector<ParameterResult> dummyResults{
+  std::vector<MillePedeParameterResult> dummyResults{
       {1, 0.01, 0.00, 0.01, 0.001, 144},
       {41, -0.07, 0.00, -0.07, 0.001, 86},
       {99, -0.015, 10.00, -0.0, 0.0031, 1446},
@@ -51,8 +52,7 @@ BOOST_AUTO_TEST_CASE(ReadSimpleFile) {
                     << " " << sigma << " " << nRec << std::endl;
   }
   dummyResultFile.close();
-  MillePedeResultReader reader;
-  auto res = reader.readParameters(dummyFileName);
+  auto res = ActsPlugins::readMillePedeResult(dummyFileName, *logger);
   BOOST_CHECK(res.ok());
   BOOST_CHECK_EQUAL(res->size(), dummyResults.size());
   for (std::size_t i = 0; i < res->size(); ++i) {
@@ -65,16 +65,10 @@ BOOST_AUTO_TEST_CASE(ReadInvalidFile) {
   // message. To prevent the ACTS CI from
   // interpreting this as a failure,
   // we temporarily disable the failure threshold
-  // just for the corresponding call.
-  MillePedeResultReader reader;
-#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
-  auto level = Acts::Logging::getFailureThreshold();
-  Acts::Logging::setFailureThreshold(Acts::Logging::MAX);
-#endif
-  auto res = reader.readParameters("/this/does/hopefully/not/exist?");
-#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
-  Acts::Logging::setFailureThreshold(level);
-#endif
+  Acts::Logging::ScopedFailureThreshold threshold{Acts::Logging::Level::MAX};
+  auto logger = Acts::getDefaultLogger("ReadSimpleFile", Acts::Logging::INFO);
+
+  auto res = readMillePedeResult("/this/does/hopefully/not/exist?", *logger);
   BOOST_CHECK(!res.ok());
   BOOST_CHECK_EQUAL(res.error(), MillePedeError::SolutionNotReadable);
 }
