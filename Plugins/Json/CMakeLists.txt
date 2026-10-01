@@ -24,6 +24,7 @@ acts_add_library(
     src/SeedingConfigJsonConverter.cpp
     src/TrackingGeometryJsonConverter.cpp
     src/BetheHeitlerApproxJsonConverter.cpp
+    src/GbtsConfigJsonConverter.cpp
     src/detail/JsonIo.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )

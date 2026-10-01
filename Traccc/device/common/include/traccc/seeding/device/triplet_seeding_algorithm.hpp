@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -159,7 +160,7 @@ class triplet_seeding_algorithm
     /// The populated spacepoint grid
     const traccc::details::spacepoint_grid_types::const_view& grid;
     /// The doublet counter collection
-    const doublet_counter_collection_types::const_view& doublet_counter;
+    doublet_counter_collection_types::view& doublet_counter;
     /// The middle-bottom doublet collection to fill
     device_doublet_collection_types::view& mb_doublets;
     /// The middle-top doublet collection to fill

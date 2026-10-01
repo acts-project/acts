@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -29,11 +30,8 @@ struct gbts_bid_seeds_for_hits_payload {
   unsigned int nPathsGrid;
   /// Device-side number of paths (clamped to nPathsMax by the kernel)
   vecmem::data::vector_view<const unsigned int> path_count;
-  /// Per-edge row stride in the output graph (= nei_start +
-  /// max_num_neighbours)
-  unsigned int edge_size;
-  /// Compacted graph from gbts_compress_graph
-  vecmem::data::vector_view<const unsigned int> output_graph;
+  /// (node1, node2) original spacepoint indices per compacted edge
+  vecmem::data::vector_view<const uint2> output_edge_nodes;
   /// Per-seed-proposal (quality, path-store index), index -1 if empty
   vecmem::data::vector_view<const int2> seed_proposals;
   /// Per-path (edge index, parent path-store index or -1) entries

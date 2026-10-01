@@ -120,7 +120,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
       .def_readwrite("convertMaterial",
                      &DetrayGeometryConverter::Config::convertMaterial)
       .def_readwrite("convertSurfaceGrids",
-                     &DetrayGeometryConverter::Config::convertSurfaceGrids);
+                     &DetrayGeometryConverter::Config::convertSurfaceGrids)
+      .def_readwrite("deduplicateMaterial",
+                     &DetrayGeometryConverter::Config::deduplicateMaterial);
 
   using DetrayGeometryODD =
       DetrayGeometryConverter::DetrayGeometry<DetrayMetaDataODD>;

@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -23,8 +24,8 @@ template <concepts::thread_id1 thread_id_t>
 TRACCC_HOST_DEVICE inline void gbts_bid_seeds_for_hits(
     const thread_id_t& thread_id,
     const gbts_bid_seeds_for_hits_payload& payload) {
-  const vecmem::device_vector<const unsigned int> d_output_graph(
-      payload.output_graph);
+  const vecmem::device_vector<const uint2> d_output_edge_nodes(
+      payload.output_edge_nodes);
   const vecmem::device_vector<const int2> d_path_store(payload.path_store);
   vecmem::device_vector<char> d_seed_ambiguity(payload.seed_ambiguity);
   const vecmem::device_vector<const int2> d_seed_proposals(
@@ -59,15 +60,13 @@ TRACCC_HOST_DEVICE inline void gbts_bid_seeds_for_hits(
     while (path.y >= 0) {
       path = d_path_store[static_cast<unsigned int>(path.y)];
       const unsigned int sp_idx =
-          d_output_graph[payload.edge_size * static_cast<unsigned int>(path.x) +
-                         gbts_consts::node1];
+          d_output_edge_nodes[static_cast<unsigned int>(path.x)].x;
       vecmem::device_atomic_ref<unsigned long long int> atomic_bid(
           d_hit_bids[sp_idx]);
       atomic_bid.fetch_max(seed_bid);
     }
     const unsigned int sp_idx =
-        d_output_graph[payload.edge_size * static_cast<unsigned int>(path.x) +
-                       gbts_consts::node2];
+        d_output_edge_nodes[static_cast<unsigned int>(path.x)].y;
     vecmem::device_atomic_ref<unsigned long long int> atomic_bid(
         d_hit_bids[sp_idx]);
     atomic_bid.fetch_max(seed_bid);
