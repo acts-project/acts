@@ -37,10 +37,8 @@ struct strip_pair_write_visitor {
     }
   }
 };
-template <detray::concepts::detector detector_t>
 TRACCC_HOST_DEVICE inline void find_strip_pairs(
     const global_index_t globalIndex,
-    const detray::detector_view_t<detector_t> det_view,
     const edm::measurement_collection::const_view& measurements_view,
     const strip_measurement_surface_info_collection_types::const_view&
         surface_infos_view,
@@ -49,7 +47,6 @@ TRACCC_HOST_DEVICE inline void find_strip_pairs(
     unsigned int& overlap_position,
     strip_pair_collection_types::view opposite_pairs_view,
     strip_pair_collection_types::view overlap_pairs_view) {
-  (void)det_view;
   const edm::measurement_collection::const_device measurements(
       measurements_view);
   const strip_measurement_surface_info_collection_types::const_device

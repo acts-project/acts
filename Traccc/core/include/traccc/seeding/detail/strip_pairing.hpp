@@ -21,6 +21,29 @@
 
 namespace traccc::details {
 
+struct measurement_surface_before {
+  template <typename measurement_t>
+  TRACCC_HOST_DEVICE bool operator()(const measurement_t& measurement,
+                                     const unsigned int surface_index) const {
+    return measurement.surface_link().index() < surface_index;
+  }
+};
+
+struct measurement_surface_before_or_equal {
+  template <typename measurement_t>
+  TRACCC_HOST_DEVICE bool operator()(const measurement_t& measurement,
+                                     const unsigned int surface_index) const {
+    return measurement.surface_link().index() <= surface_index;
+  }
+};
+
+struct strip_rule_before {
+  TRACCC_HOST_DEVICE bool operator()(const strip_pairing_rule& rule,
+                                     const std::uint64_t surface_link) const {
+    return rule.reference_surface_link < surface_link;
+  }
+};
+
 template <typename measurement_collection_t>
 TRACCC_HOST_DEVICE inline unsigned int lower_measurement_bound(
     const measurement_collection_t& measurements,
@@ -28,17 +51,8 @@ TRACCC_HOST_DEVICE inline unsigned int lower_measurement_bound(
   // Measurement sorting compares detray barcodes by surface index, not by
   // their full encoded value. Use the same key for this binary search.
   const auto surface_index = detray::geometry::identifier{surface_link}.index();
-  unsigned int first = 0u;
-  unsigned int last = static_cast<unsigned int>(measurements.size());
-  while (first < last) {
-    const unsigned int middle = first + (last - first) / 2u;
-    if (measurements.at(middle).surface_link().index() < surface_index) {
-      first = middle + 1u;
-    } else {
-      last = middle;
-    }
-  }
-  return first;
+  return collection_bound(measurements, surface_index,
+                          measurement_surface_before{});
 }
 
 template <typename measurement_collection_t>
@@ -46,34 +60,16 @@ TRACCC_HOST_DEVICE inline unsigned int upper_measurement_bound(
     const measurement_collection_t& measurements,
     const std::uint64_t surface_link) {
   const auto surface_index = detray::geometry::identifier{surface_link}.index();
-  unsigned int first = 0u;
-  unsigned int last = static_cast<unsigned int>(measurements.size());
-  while (first < last) {
-    const unsigned int middle = first + (last - first) / 2u;
-    if (measurements.at(middle).surface_link().index() <= surface_index) {
-      first = middle + 1u;
-    } else {
-      last = middle;
-    }
-  }
-  return first;
+  return collection_bound(measurements, surface_index,
+                          measurement_surface_before_or_equal{});
 }
 
 /// Rules are sorted by the full reference barcode, independently of measurement
 /// sorting (which uses the surface index).
 template <typename rules_t>
 TRACCC_HOST_DEVICE inline unsigned int lower_strip_rule_bound(
-    const rules_t& rules, std::uint64_t link) {
-  unsigned int first = 0u, last = static_cast<unsigned int>(rules.size());
-  while (first < last) {
-    const auto middle = first + (last - first) / 2u;
-    if (rules.at(middle).reference_surface_link < link) {
-      first = middle + 1u;
-    } else {
-      last = middle;
-    }
-  }
-  return first;
+    const rules_t& rules, const std::uint64_t surface_link) {
+  return collection_bound(rules, surface_link, strip_rule_before{});
 }
 
 template <typename measurement_t>
@@ -136,9 +132,11 @@ TRACCC_HOST_DEVICE inline bool match_strip_pair(
   }
 }
 
-/// Shared enumeration makes count and write passes select identical pairs.
-/// Geometry and rules must be immutable for both passes. Rules must contain
-/// exactly one entry per directed surface pair; reverse pairs are not implicit.
+/// Shared enumeration keeps the count and write passes' pair selection logic in
+/// one place. Their callers must nevertheless guard against a floating-point
+/// cut-boundary disagreement between the separately compiled kernels. Geometry
+/// and rules must be immutable for both passes. Rules must contain exactly one
+/// entry per directed surface pair; reverse pairs are not implicit.
 template <typename measurements_t, typename surfaces_t, typename rules_t,
           typename visitor_t>
 TRACCC_HOST_DEVICE inline void visit_strip_pairs(

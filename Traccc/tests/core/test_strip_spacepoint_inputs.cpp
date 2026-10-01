@@ -46,11 +46,11 @@ void add_measurement(measurements_t& measurements, unsigned int index,
 strip_measurement_surface_info linear_info(std::uint64_t link) {
   strip_measurement_surface_info info{};
   info.surface_link = link;
-  info.origin = {100., 0., 0.};
-  info.local_u = {0., 0., 1.};
-  info.local_v = {0., 1., 0.};
-  info.linear = {1u, 10u, 1., 20., 0.};
-  info.index_mapping = {0u, 10u, 1., 1., 5., false};
+  info.origin = {100.f, 0.f, 0.f};
+  info.local_u = {0.f, 0.f, 1.f};
+  info.local_v = {0.f, 1.f, 0.f};
+  info.linear = {1u, 10u, 1.f, 20.f, 0.f};
+  info.index_mapping = {0u, 10u, 1.f, 1.f, 5.f, false};
   return info;
 }
 
@@ -67,17 +67,17 @@ TEST(strip_spacepoint_inputs, index_rounding_and_invalid_input) {
   add_measurement(measurements, 0u, -3.f);
   const auto measurement = measurements.at(0u);
   // Odd linear strip counts truncate the half-integer before range checks.
-  strip_index_mapping mapping{0u, 5u, 1., 1., 2.5, false};
+  strip_index_mapping mapping{0u, 5u, 1.f, 1.f, 2.5f, false};
   EXPECT_EQ(details::measured_strip_index(measurement, mapping), 0);
   mapping.check_before_truncation = true;
   EXPECT_EQ(details::measured_strip_index(measurement, mapping), -1);
 
   measurements.at(0u).local_position()[1] = 0.f;
-  mapping = {1u, 10u, 0.01, -1., 4.5, true};
+  mapping = {1u, 10u, 0.01f, -1.f, 4.5f, true};
   EXPECT_EQ(details::measured_strip_index(measurement, mapping), 4);
-  mapping.pitch = 0.;
+  mapping.pitch = 0.f;
   EXPECT_EQ(details::measured_strip_index(measurement, mapping), -1);
-  mapping.pitch = 0.01;
+  mapping.pitch = 0.01f;
   measurements.at(0u).local_position()[1] =
       std::numeric_limits<scalar>::quiet_NaN();
   EXPECT_EQ(details::measured_strip_index(measurements.at(0u), mapping), -1);
@@ -92,7 +92,7 @@ TEST(strip_spacepoint_inputs, linear_frame_and_event_beamspot) {
       details::make_strip_material(measurements.at(0u), info, point3{});
   ASSERT_EQ(material.valid, 1u);
   EXPECT_EQ(material.center[0], scalar{100});
-  EXPECT_EQ(material.center[1], scalar{0.5});
+  EXPECT_EQ(material.center[1], scalar{0.5f});
   EXPECT_EQ(material.direction[2], scalar{-20});
   EXPECT_EQ(material.half_length, scalar{10});
   const auto shifted = details::make_strip_material(measurements.at(0u), info,
@@ -102,8 +102,8 @@ TEST(strip_spacepoint_inputs, linear_frame_and_event_beamspot) {
   EXPECT_EQ(shifted.trajectory[1], material.trajectory[1] - scalar{4});
   EXPECT_EQ(shifted.trajectory[2], material.trajectory[2] - scalar{6});
   // A different frame orientation requires no barrel/endcap classification.
-  info.local_u = {1., 0., 0.};
-  info.local_v = {0., 0., 1.};
+  info.local_u = {1.f, 0.f, 0.f};
+  info.local_v = {0.f, 0.f, 1.f};
   const auto rotated =
       details::make_strip_material(measurements.at(0u), info, point3{});
   EXPECT_EQ(rotated.direction[0], scalar{-20});
@@ -113,19 +113,21 @@ TEST(strip_spacepoint_inputs, linear_frame_and_event_beamspot) {
 TEST(strip_spacepoint_inputs, radial_geometry_without_region_flag) {
   radial_strip_geometry geometry{};
   geometry.n_strips = 1u;
-  geometry.angular_pitch = 0.01;
-  geometry.min_radius = 10.;
-  geometry.max_radius = 20.;
-  const auto first = details::radial_strip_position_at_radius(0, 10., geometry);
+  geometry.angular_pitch = 0.01f;
+  geometry.min_radius = 10.f;
+  geometry.max_radius = 20.f;
+  const auto first =
+      details::radial_strip_position_at_radius(0, 10.f, geometry);
   const auto second =
-      details::radial_strip_position_at_radius(0, 20., geometry);
-  EXPECT_DOUBLE_EQ(first.u, 10.);
-  EXPECT_DOUBLE_EQ(first.v, 0.);
-  EXPECT_DOUBLE_EQ(second.u, 20.);
+      details::radial_strip_position_at_radius(0, 20.f, geometry);
+  EXPECT_FLOAT_EQ(first[0], 10.f);
+  EXPECT_FLOAT_EQ(first[1], 0.f);
+  EXPECT_FLOAT_EQ(second[0], 20.f);
   geometry.local_frame = strip_local_frame::polar;
-  const auto polar = details::radial_strip_position_at_radius(0, 10., geometry);
-  EXPECT_DOUBLE_EQ(polar.u, 10.);
-  EXPECT_DOUBLE_EQ(polar.v, 0.);
+  const auto polar =
+      details::radial_strip_position_at_radius(0, 10.f, geometry);
+  EXPECT_FLOAT_EQ(polar[0], 10.f);
+  EXPECT_FLOAT_EQ(polar[1], 0.f);
 }
 
 TEST(strip_spacepoint_inputs, signed_difference_and_inclusive_windows) {
@@ -198,7 +200,7 @@ TEST(strip_spacepoint_inputs, arbitrary_rule_count_and_barcode_order) {
                              reverse);
   EXPECT_TRUE(reverse.indices.empty());
   // Both passes reject an invalid candidate geometry identically.
-  surfaces.front().index_mapping.pitch = 0.;
+  surfaces.front().index_mapping.pitch = 0.f;
   pair_collector invalid;
   details::visit_strip_pairs(0u, measurements, surfaces, rules, beam_spot,
                              invalid);

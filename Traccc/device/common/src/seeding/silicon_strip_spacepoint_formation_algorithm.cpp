@@ -21,7 +21,6 @@ silicon_strip_spacepoint_formation_algorithm::
     : messaging(std::move(logger)), algorithm_base(mr, copy) {}
 
 auto silicon_strip_spacepoint_formation_algorithm::operator()(
-    const detector_buffer& det,
     const edm::measurement_collection::const_view& measurements,
     const strip_measurement_surface_info_collection_types::const_view&
         surface_infos,
@@ -43,8 +42,8 @@ auto silicon_strip_spacepoint_formation_algorithm::operator()(
   copy().setup(pair_counter_buffer)->ignore();
   copy().memset(pair_counter_buffer, 0)->ignore();
   count_strip_pairs_kernel(
-      {n_measurements, det, measurements, surface_infos, pairing_rules,
-       beam_spot, pair_counter_buffer.ptr()[0], pair_counter_buffer.ptr()[1]});
+      {n_measurements, measurements, surface_infos, pairing_rules, beam_spot,
+       pair_counter_buffer.ptr()[0], pair_counter_buffer.ptr()[1]});
 
   vecmem::vector<unsigned int> pair_counter_host(mr().host ? mr().host
                                                            : &(mr().main));
@@ -59,11 +58,21 @@ auto silicon_strip_spacepoint_formation_algorithm::operator()(
   copy().setup(opposite_pairs_buffer)->ignore();
   copy().setup(overlap_pairs_buffer)->ignore();
 
+  // The count and find kernels evaluate the same floating-point predicates,
+  // but separate kernel compilations are not guaranteed to produce identical
+  // decisions at a cut boundary. Initialise every slot with invalid
+  // measurement indices so that an overestimate by the count kernel leaves a
+  // sentinel which the formation kernel can safely ignore. The bounds check in
+  // the find kernel provides the complementary protection when it finds more
+  // pairs than were counted.
+  copy().memset(opposite_pairs_buffer, 0xff)->ignore();
+  copy().memset(overlap_pairs_buffer, 0xff)->ignore();
+
   if ((n_opposite_pairs + n_overlap_pairs) > 0u) {
     copy().memset(pair_counter_buffer, 0)->ignore();
     find_strip_pairs_kernel(
-        {n_measurements, det, measurements, surface_infos, pairing_rules,
-         beam_spot, pair_counter_buffer.ptr()[0], pair_counter_buffer.ptr()[1],
+        {n_measurements, measurements, surface_infos, pairing_rules, beam_spot,
+         pair_counter_buffer.ptr()[0], pair_counter_buffer.ptr()[1],
          opposite_pairs_buffer, overlap_pairs_buffer});
   }
 
@@ -75,12 +84,12 @@ auto silicon_strip_spacepoint_formation_algorithm::operator()(
   copy().setup(overlap_spacepoints)->ignore();
 
   if (n_opposite_pairs > 0u) {
-    form_spacepoints_kernel({n_opposite_pairs, det, measurements,
+    form_spacepoints_kernel({n_opposite_pairs, measurements,
                              opposite_pairs_buffer, surface_infos, beam_spot,
                              opposite_spacepoints});
   }
   if (n_overlap_pairs > 0u) {
-    form_spacepoints_kernel({n_overlap_pairs, det, measurements,
+    form_spacepoints_kernel({n_overlap_pairs, measurements,
                              overlap_pairs_buffer, surface_infos, beam_spot,
                              overlap_spacepoints});
   }
