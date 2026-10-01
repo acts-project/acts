@@ -55,6 +55,58 @@ template <class M>
 using scalar_t = typename scalar<M>::type;
 /// @}
 
+/// Assertions on the symmetry of a matrix
+/// @{
+template <class M>
+struct static_symmetric_assertable {
+  static constexpr bool value = false;
+};
+
+/// True iff we can assert statically that a matrix type is symmetric
+///
+/// @note This does not mean that the type is statically symmetric, it only
+/// means we can assert that fact using @c static_symmetric_v.
+template <class M>
+inline constexpr bool static_symmetric_assertable_v =
+    static_symmetric_assertable<M>::value;
+
+template <class M>
+struct static_symmetric {
+  static constexpr bool value = false;
+};
+
+/// True iff we can assert statically that a matrix type is symmetric, _and_
+/// the type is actually symmetric
+template <class M>
+inline constexpr bool static_symmetric_v = static_symmetric<M>::value;
+/// @}
+
+/// Assertions on the diagonality of a matrix
+/// @{
+template <class M>
+struct static_diagonal_assertable {
+  static constexpr bool value = false;
+};
+
+/// True iff we can assert statically whether a matrix type is diagonal
+///
+/// @note This does not mean that the type is statically diagonal, it only
+/// means we can assert that fact using @c static_diagonal_v.
+template <class M>
+inline constexpr bool static_diagonal_assertable_v =
+    static_diagonal_assertable<M>::value;
+
+template <class M>
+struct static_diagonal {
+  static constexpr bool value = false;
+};
+
+/// True iff we can assert statically that a matrix type is diagonal, _and_
+/// the type is actually diagonal
+template <class M>
+inline constexpr bool static_diagonal_v = static_diagonal<M>::value;
+/// @}
+
 /// Vector type that is compatible with the matrix
 /// @{
 template <class M>
