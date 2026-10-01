@@ -1,8 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <algorithm>
 #include <array>
@@ -14,9 +16,7 @@
 #include <vecmem/utils/cuda/async_copy.hpp>
 #include <vecmem/utils/cuda/stream_wrapper.hpp>
 
-#include "tests/test_detectors.hpp"
 #include "traccc/cuda/seeding/silicon_strip_spacepoint_formation_algorithm.hpp"
-#include "traccc/geometry/detector.hpp"
 
 namespace {
 using namespace traccc;
@@ -32,7 +32,6 @@ class CUDAStripSpacepointFormation : public ::testing::Test {
   edm::measurement_collection::host measurements{host_mr};
   strip_measurement_surface_info_collection_types::host surfaces{&host_mr};
   strip_pairing_rule_collection_types::host rules{&host_mr};
-  detector_buffer detector;
 
   struct point {
     std::array<float, 3> position;
@@ -44,18 +43,6 @@ class CUDAStripSpacepointFormation : public ::testing::Test {
   };
 
   void SetUp() override {
-    detray::mask<detray::rectangle2D, default_algebra> rectangle{0u, 1000.f,
-                                                                 1000.f};
-    detray::tel_det_config config{rectangle};
-    config.positions(std::vector<scalar>{20.f, 40.f, 60.f});
-    config.pilot_track(
-        detray::detail::ray<default_algebra>{{0, 0, 0}, 0, {1, 0, 0}, -1});
-    auto [geometry, names] = build_telescope_detector(host_mr, config);
-    host_detector host_geometry;
-    host_geometry.set<telescope_detector>(std::move(geometry));
-    detector = buffer_from_host_detector(host_geometry, device_mr, copy);
-    stream.synchronize();
-
     // Adapter geometry: orthogonal strips cross at (100, 0, 0).
     // Use synthetic identifiers; Strip formation consumes the adapter geometry.
     for (unsigned int i = 0; i < 3; ++i) {
@@ -65,13 +52,13 @@ class CUDAStripSpacepointFormation : public ::testing::Test {
           {{0.f, 0.f}, {0.f, 0.f}, 1u, 0.f, 0.f, 0u, link, {1u, 0u}, i});
       strip_measurement_surface_info info{};
       info.surface_link = link.value();
-      info.origin = {100., 0., 0.};
-      info.local_u = i == 0 ? std::array<double, 3>{0., 0., 1.}
-                            : std::array<double, 3>{0., 1., 0.};
-      info.local_v = i == 0 ? std::array<double, 3>{0., 1., 0.}
-                            : std::array<double, 3>{0., 0., 1.};
-      info.linear = {1u, 1u, 1., 20., 0.};
-      info.index_mapping = {0u, 1u, 1., 1., 0., true};
+      info.origin = {100.f, 0.f, 0.f};
+      info.local_u = i == 0 ? std::array<scalar, 3>{0.f, 0.f, 1.f}
+                            : std::array<scalar, 3>{0.f, 1.f, 0.f};
+      info.local_v = i == 0 ? std::array<scalar, 3>{0.f, 1.f, 0.f}
+                            : std::array<scalar, 3>{0.f, 0.f, 1.f};
+      info.linear = {1u, 1u, 1.f, 20.f, 0.f};
+      info.index_mapping = {0u, 1u, 1.f, 1.f, 0.f, true};
       info.spacepoint_variance_r = 0.1f;
       info.spacepoint_variance_z = 0.2f;
       surfaces.push_back(info);
@@ -96,8 +83,8 @@ class CUDAStripSpacepointFormation : public ::testing::Test {
                                 vecmem::copy::type::host_to_device);
     cuda::silicon_strip_spacepoint_formation_algorithm algorithm{mr, copy,
                                                                  stream};
-    auto output = algorithm(detector, device_measurements, device_surfaces,
-                            device_rules, beam_spot);
+    auto output = algorithm(device_measurements, device_surfaces, device_rules,
+                            beam_spot);
     auto read = [&](const auto& buffer) {
       std::vector<point> points;
       const auto size = copy.get_size(buffer);
@@ -173,8 +160,8 @@ TEST_F(CUDAStripSpacepointFormation, rejected_pair_window) {
 TEST_F(CUDAStripSpacepointFormation, parallel_strips) {
   // Pairs pass the selection, but have no valid spacepoint intersection.
   for (auto& surface : surfaces) {
-    surface.local_u = {0., 0., 1.};
-    surface.local_v = {0., 1., 0.};
+    surface.local_u = {0.f, 0.f, 1.f};
+    surface.local_v = {0.f, 1.f, 0.f};
   }
   const auto output = run();
   EXPECT_TRUE(output.standard.empty());

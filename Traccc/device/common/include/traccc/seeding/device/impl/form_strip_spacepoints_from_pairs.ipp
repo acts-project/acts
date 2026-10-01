@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,10 +14,8 @@
 
 namespace traccc::device {
 
-template <detray::concepts::detector detector_t>
 TRACCC_HOST_DEVICE inline void form_strip_spacepoints_from_pairs(
     const global_index_t globalIndex,
-    const detray::detector_view_t<detector_t> det_view,
     const edm::measurement_collection::const_view& measurements_view,
     const strip_pair_collection_types::const_view& pairs_view,
     const strip_measurement_surface_info_collection_types::const_view&
@@ -32,9 +31,17 @@ TRACCC_HOST_DEVICE inline void form_strip_spacepoints_from_pairs(
     return;
   }
 
-  (void)det_view;
   edm::spacepoint_collection::device spacepoints(spacepoints_view);
   const strip_pair pair = pairs.at(globalIndex);
+  // A count pass may very rarely overestimate the number of pairs found by the
+  // write pass because the two kernels can evaluate floating-point cut
+  // boundaries differently. Pair buffers are pre-filled with sentinel indices;
+  // reject those, as well as any other invalid index, before dereferencing the
+  // measurement collection.
+  if ((pair.measurement_index_1 >= measurements.size()) ||
+      (pair.measurement_index_2 >= measurements.size())) {
+    return;
+  }
   const edm::measurement first_meas = measurements.at(pair.measurement_index_1);
   const edm::measurement second_meas =
       measurements.at(pair.measurement_index_2);

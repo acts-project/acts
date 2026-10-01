@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -12,7 +13,6 @@
 #include "traccc/device/global_index.hpp"
 #include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
-#include "traccc/geometry/detector.hpp"
 #include "traccc/seeding/detail/strip_pair.hpp"
 #include "traccc/seeding/strip_spacepoint_formation_data.hpp"
 
@@ -20,10 +20,8 @@ namespace traccc::device {
 
 /// Form a spacepoint from a compatible pair using static strip geometry.
 /// The pair carries measurement indices and explicit endpoint tolerances.
-template <detray::concepts::detector detector_t>
 TRACCC_HOST_DEVICE inline void form_strip_spacepoints_from_pairs(
     global_index_t globalIndex,
-    const detray::detector_view_t<detector_t> det_view,
     const edm::measurement_collection::const_view& measurements_view,
     const strip_pair_collection_types::const_view& pairs_view,
     const strip_measurement_surface_info_collection_types::const_view&

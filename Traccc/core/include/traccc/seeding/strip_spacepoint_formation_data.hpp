@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -34,32 +35,32 @@ enum class strip_pairing_coordinate : unsigned int {
 struct strip_index_mapping {
   unsigned int component{0u};
   unsigned int count{0u};
-  double pitch{0.};
-  double scale{1.};
-  double offset{0.};
+  scalar pitch{0.f};
+  scalar scale{1.f};
+  scalar offset{0.f};
   bool check_before_truncation{true};
 };
 
 struct linear_strip_geometry {
   unsigned int n_rows{0u};
   unsigned int n_strips{0u};
-  double pitch{0.};
-  double row_length{0.};
-  double row_coordinate{0.};
+  scalar pitch{0.f};
+  scalar row_length{0.f};
+  scalar row_coordinate{0.f};
 };
 
 /// One radial strip row, selected by the adapter. Radius bounds are in the
 /// surface frame; strip angles and angular pitch are about the strip focus.
 struct radial_strip_geometry {
   unsigned int n_strips{0u};
-  double angular_pitch{0.};
-  double min_radius{0.};
-  double max_radius{0.};
-  double stereo_angle{0.};
-  double focal_radius{0.};
-  double frame_chord{0.};
-  double sin_stereo{0.};
-  double cos_stereo{1.};
+  scalar angular_pitch{0.f};
+  scalar min_radius{0.f};
+  scalar max_radius{0.f};
+  scalar stereo_angle{0.f};
+  scalar focal_radius{0.f};
+  scalar frame_chord{0.f};
+  scalar sin_stereo{0.f};
+  scalar cos_stereo{1.f};
   strip_local_frame local_frame{strip_local_frame::cartesian};
 };
 
@@ -68,9 +69,9 @@ struct radial_strip_geometry {
 struct strip_measurement_surface_info {
   std::uint64_t surface_link{invalid_strip_surface_link};
   strip_geometry_model geometry_model{strip_geometry_model::linear};
-  std::array<double, 3> origin{};
-  std::array<double, 3> local_u{};
-  std::array<double, 3> local_v{};
+  std::array<scalar, 3> origin{};
+  std::array<scalar, 3> local_u{};
+  std::array<scalar, 3> local_v{};
   strip_index_mapping index_mapping{};
   linear_strip_geometry linear{};
   radial_strip_geometry radial{};

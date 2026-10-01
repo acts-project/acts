@@ -19,10 +19,6 @@
 
 namespace traccc::details {
 
-TRACCC_HOST_DEVICE inline scalar dot3(const vector3& a, const vector3& b) {
-  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-}
-
 /// Intersect strip lines with beam-spot planes, with explicit endpoint
 /// allowances.
 TRACCC_HOST_DEVICE inline bool make_strip_spacepoint(
@@ -34,16 +30,18 @@ TRACCC_HOST_DEVICE inline bool make_strip_spacepoint(
     const scalar strip_length_gap_tolerance,
     const scalar strip_length_tolerance) {
   const scalar strip_length_limit = scalar{1} + strip_length_tolerance;
-  const scalar first_denominator = dot3(first_direction, second_normal);
-  const scalar second_denominator = dot3(second_direction, first_normal);
+  const scalar first_denominator =
+      detray::vector::dot(first_direction, second_normal);
+  const scalar second_denominator =
+      detray::vector::dot(second_direction, first_normal);
   if ((first_half_length <= 0.f) || (second_half_length <= 0.f) ||
       (std::abs(first_denominator) < 1e-12f) ||
       (std::abs(second_denominator) < 1e-12f)) {
     return false;
   }
 
-  const scalar a = -dot3(first_trajectory, second_normal);
-  const scalar c = -dot3(second_trajectory, first_normal);
+  const scalar a = -detray::vector::dot(first_trajectory, second_normal);
+  const scalar c = -detray::vector::dot(second_trajectory, first_normal);
   const scalar first_one_over_strip = 0.5f / first_half_length;
   const scalar second_one_over_strip = 0.5f / second_half_length;
   const scalar first_pre_cut =
@@ -60,7 +58,7 @@ TRACCC_HOST_DEVICE inline bool make_strip_spacepoint(
   scalar n = c / second_denominator;
 
   if (strip_length_gap_tolerance != 0.f) {
-    const scalar cs = dot3(first_direction, second_direction) *
+    const scalar cs = detray::vector::dot(first_direction, second_direction) *
                       first_one_over_strip * first_one_over_strip;
     if (std::abs(cs) < 1e-12f) {
       return false;

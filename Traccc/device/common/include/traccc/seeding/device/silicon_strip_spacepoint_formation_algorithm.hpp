@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -15,7 +16,6 @@
 
 #include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
-#include "traccc/geometry/detector_buffer.hpp"
 #include "traccc/seeding/detail/strip_pair.hpp"
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/memory_resource.hpp"
@@ -37,7 +37,6 @@ struct strip_spacepoint_formation_output {
 ///
 class silicon_strip_spacepoint_formation_algorithm
     : public algorithm<strip_spacepoint_formation_output(
-          const detector_buffer&,
           const edm::measurement_collection::const_view&,
           const strip_measurement_surface_info_collection_types::const_view&,
           const strip_pairing_rule_collection_types::const_view&,
@@ -58,7 +57,6 @@ class silicon_strip_spacepoint_formation_algorithm
 
   /// Construct spacepoints from pairs of 1D silicon strip measurements
   ///
-  /// @param det Detector object
   /// @param measurements A collection of measurements
   /// @param surface_infos Static strip surface information
   /// @param pairing_rules Sorted, unique directed surface-pair rules
@@ -66,7 +64,6 @@ class silicon_strip_spacepoint_formation_algorithm
   /// @return Separate standard and overlap spacepoint buffers
   ///
   output_type operator()(
-      const detector_buffer& det,
       const edm::measurement_collection::const_view& measurements,
       const strip_measurement_surface_info_collection_types::const_view&
           surface_infos,
@@ -81,8 +78,6 @@ class silicon_strip_spacepoint_formation_algorithm
   struct count_strip_pairs_kernel_payload {
     /// The number of measurements in the event.
     edm::measurement_collection::const_view::size_type n_measurements;
-    /// The detector object.
-    const detector_buffer& detector;
     /// The input measurements.
     const edm::measurement_collection::const_view& measurements;
     /// Static strip surface information.
@@ -104,8 +99,6 @@ class silicon_strip_spacepoint_formation_algorithm
   struct find_strip_pairs_kernel_payload {
     /// The number of measurements in the event.
     edm::measurement_collection::const_view::size_type n_measurements;
-    /// The detector object.
-    const detector_buffer& detector;
     /// The input measurements.
     const edm::measurement_collection::const_view& measurements;
     /// Static strip surface information.
@@ -130,8 +123,6 @@ class silicon_strip_spacepoint_formation_algorithm
   struct form_spacepoints_kernel_payload {
     /// The number of compatible strip pairs in the event.
     strip_pair_collection_types::const_view::size_type n_pairs;
-    /// The detector object.
-    const detector_buffer& detector;
     /// The input measurements.
     const edm::measurement_collection::const_view& measurements;
     /// The compatible strip pairs.
