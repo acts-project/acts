@@ -30,7 +30,7 @@ function(traccc_add_alpaka_library fullname basename)
     endif()
 
     # Create the library.
-    alpaka_add_library( ${fullname} ${ARG_TYPE} ${_sources} )
+    alpaka_add_library(${fullname} ${ARG_TYPE} ${_sources})
 
     # Set up how clients should find its headers.
     if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/")
@@ -89,7 +89,7 @@ function(traccc_add_alpaka_test name)
 
     # Create the test executable.
     set(test_exe_name "traccc_test_${name}")
-    alpaka_add_executable( ${test_exe_name} ${ARG_UNPARSED_ARGUMENTS} )
+    alpaka_add_executable(${test_exe_name} ${ARG_UNPARSED_ARGUMENTS})
     if(ARG_LINK_LIBRARIES)
         target_link_libraries(${test_exe_name} PRIVATE ${ARG_LINK_LIBRARIES})
     endif()
