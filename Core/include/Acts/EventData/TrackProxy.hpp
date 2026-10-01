@@ -546,13 +546,7 @@ class TrackProxy
     nHoles() = other.nHoles();
     nOutliers() = other.nOutliers();
     nSharedHits() = other.nSharedHits();
-    // The split hit column is optional: copy it only if both sides have it
-    if constexpr (requires { other.nSplitHits(); }) {
-      if (hasColumn(detail_tp::kSplitHitsKey) &&
-          other.hasColumn(detail_tp::kSplitHitsKey)) {
-        nSplitHits() = other.nSplitHits();
-      }
-    }
+    nSplitHits() = other.nSplitHits();
     chi2() = other.chi2();
     nDoF() = other.nDoF();
 
