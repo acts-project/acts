@@ -113,6 +113,7 @@ class silicon_cell : public BASE {
   TRACCC_HOST_DEVICE
   const auto& module_index() const { return BASE::template get<4>(); }
   TRACCC_HOST_DEVICE
+  // carries the real Athena Identifier alongside each cell
   auto& rdo_id() { return BASE::template get<5>(); }
   TRACCC_HOST_DEVICE
   const auto& rdo_id() const { return BASE::template get<5>(); }
