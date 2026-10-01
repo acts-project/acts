@@ -100,7 +100,9 @@ jobs:
           uv pip install --system --python "$(command -v python)" -r CI/fpe_masks/requirements.txt
       - name: Check
         run: >
-          CI/check_fpe_masks.py --token ${{ secrets.GITHUB_TOKEN }}
+          CI/check_fpe_masks.py --token "$GITHUB_TOKEN"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   unused_files:
     runs-on: ubuntu-slim
