@@ -153,15 +153,10 @@ Result<void> Navigator::initialize(
 
   resolveExtendedSurfaces(state);
 
-  state.additionalSurfaces.clear();
-  state.additionalSurfaces.reserve(state.options.additionalSurfaces.size());
-  for (const AdditionalSurface& additional : state.options.additionalSurfaces) {
-    if (additional.surface == nullptr) {
-      throw std::invalid_argument("Navigator: additional surface is nullptr");
-    }
-    state.additionalSurfaces.push_back({&additional, false});
+  if (Result<void> res = m_additional.initialize(state.additional, args);
+      !res.ok()) {
+    return res.error();
   }
-  state.pendingTarget.reset();
 
   // @TODO: Implement fast initialization with Gen3. This requires the volume
   // lookup to work properly
@@ -293,116 +288,14 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
   // Reset the current surface
   state.currentSurface = nullptr;
 
-  if (inactive(state)) {
-    return NavigationTarget::None();
-  }
-
-  if (state.additionalSurfaces.empty()) {
-    return nextStagedTarget(state, position, direction);
-  }
-
-  // Hold the staged candidate back and hand out the closer one
-  if (!state.pendingTarget.has_value()) {
-    state.pendingTarget = nextStagedTarget(state, position, direction);
-  }
-
-  if (const NavigationTarget additionalTarget =
-          nextAdditionalTarget(state, position, direction);
-      !additionalTarget.isNone()) {
-    NavigationTarget& staged = state.pendingTarget.value();
-    if (!staged.isNone()) {
-      // The stored path length is stale by the distance travelled since
-      const Intersection3D refreshed =
-          staged.surface()
-              .intersect(state.options.geoContext, position, direction,
-                         staged.boundaryTolerance(),
-                         state.options.surfaceTolerance)
-              .at(staged.intersectionIndex());
-      // Keep the stored one if the straight-line estimate lost the surface
-      if (refreshed.isValid()) {
-        staged.intersection() = refreshed;
-      }
-    }
-    // A tie goes to the staged candidate
-    if (staged.isNone() ||
-        additionalTarget.pathLength() < staged.intersection().pathLength()) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Target set to additional surface "
-                   << additionalTarget.surface().geometryId()
-                   << " at path length " << additionalTarget.pathLength());
-      return additionalTarget;
-    }
-  }
-
-  const NavigationTarget staged = state.pendingTarget.value();
-  state.pendingTarget.reset();
-  return staged;
-}
-
-NavigationTarget Navigator::nextAdditionalTarget(
-    const State& state, const Vector3& position,
-    const Vector3& direction) const {
-  NavigationTarget closest = NavigationTarget::None();
-
-  for (const State::AdditionalSurfaceState& additional :
-       state.additionalSurfaces) {
-    if (additional.reached && additional.entry->dropAfterReached) {
-      continue;
-    }
-    if (additional.entry->volume != nullptr &&
-        additional.entry->volume != state.currentVolume) {
-      continue;
-    }
-
-    // The closer solution can be behind the propagation, so check all
-    const MultiIntersection3D multiIntersection =
-        additional.entry->surface->intersect(
-            state.options.geoContext, position, direction,
-            additional.entry->boundaryTolerance,
-            state.options.surfaceTolerance);
-
-    for (const auto [intersectionIndex, intersection] :
-         enumerate(multiIntersection)) {
-      if (!intersection.isValid() ||
-          !detail::checkPathLength(intersection.pathLength(),
-                                   state.options.nearLimit,
-                                   state.options.farLimit)) {
-        continue;
-      }
-      if (closest.isNone() ||
-          intersection.pathLength() < closest.pathLength()) {
-        closest = NavigationTarget(
-            intersection, static_cast<IntersectionIndex>(intersectionIndex),
-            *additional.entry->surface, additional.entry->boundaryTolerance);
-      }
-    }
-  }
-
-  return closest;
-}
-
-bool Navigator::stagedTargetIs(const State& state,
-                               const Surface& surface) const {
-  auto targets = [&surface](const auto& list,
-                            const std::optional<std::size_t>& index) {
-    return index.has_value() && index.value() < list.size() &&
-           &list.at(index.value()).surface() == &surface;
-  };
-
-  if (m_geometryVersion == GeometryVersion::Gen3) {
-    return state.stream.isValid() &&
-           &state.stream.currentCandidate().surface() == &surface;
-  }
-  switch (state.navigationStage) {
-    case Stage::surfaceTarget:
-      return targets(state.navSurfaces, state.navSurfaceIndex);
-    case Stage::layerTarget:
-      return targets(state.navLayers, state.navLayerIndex);
-    case Stage::boundaryTarget:
-      return targets(state.navBoundaries, state.navBoundaryIndex);
-    default:
-      return false;
-  }
+  // The additional surfaces outlive the staged navigation
+  return m_additional.nextTarget(
+      state.additional, position, direction, state.currentVolume, [&] {
+        if (inactive(state)) {
+          return NavigationTarget::None();
+        }
+        return nextStagedTarget(state, position, direction);
+      });
 }
 
 NavigationTarget Navigator::nextStagedTarget(State& state,
@@ -494,33 +387,25 @@ bool Navigator::checkTargetValid(State& state, const Vector3& position,
 void Navigator::handleSurfaceReached(State& state, const Vector3& position,
                                      const Vector3& direction,
                                      const Surface& surface) const {
-  if (inactive(state)) {
+  ACTS_VERBOSE(volInfo(state) << "Entering Navigator::handleSurfaceReached.");
+
+  // Reaching an additional surface does not advance the staged navigation,
+  // unless it also staged the surface
+  if (m_additional.handleAdditionalSurfaceReached(state.additional, surface)) {
+    ACTS_VERBOSE(volInfo(state)
+                 << "Reached additional surface " << surface.geometryId());
+    state.currentSurface = &surface;
     return;
   }
 
-  ACTS_VERBOSE(volInfo(state) << "Entering Navigator::handleSurfaceReached.");
+  if (inactive(state)) {
+    return;
+  }
 
   state.currentSurface = &surface;
 
   ACTS_VERBOSE(volInfo(state)
                << "Current surface: " << state.currentSurface->geometryId());
-
-  // Reaching an additional surface does not advance the staged navigation,
-  // unless it also staged the surface
-  if (!state.additionalSurfaces.empty()) {
-    auto itr = std::ranges::find_if(
-        state.additionalSurfaces,
-        [&surface](const State::AdditionalSurfaceState& additional) {
-          return additional.entry->surface == &surface;
-        });
-    if (itr != state.additionalSurfaces.end()) {
-      itr->reached = true;
-      if (!stagedTargetIs(state, surface)) {
-        ACTS_VERBOSE(volInfo(state) << "Reached additional surface.");
-        return;
-      }
-    }
-  }
 
   // handling portals in gen3 configuration
   if (m_geometryVersion == GeometryVersion::Gen3) {
