@@ -43,29 +43,10 @@ class GbtsLayerConnectionTool {
     /// List of detector layers
     std::vector<LayerDescription> detectorGeometry{};
 
-    // tolerances used for assigning layer ID's
-
-    /// Tolerance on minimum z value
-    float zMinTol = 0.2340f;
-    /// Tolerance on maximum z value
-    float zMaxTol = 0.2340f;
-    /// Tolerance on minimum radius value
-    float rMinTol = 2.5337f;
-    /// Tolerance on maximum radius value
-    float rMaxTol = 2.5337f;
-
     /// Symmeterize layer connection table
     bool doSymmetrization = false;
     /// Minimum probability cut applied to layer transitions
     float probThreshold = -1;
-  };
-
-  /// Container for track layer hit information
-  struct HitCoordinates {
-    /// Radius value of hit
-    float r{};
-    /// z value of hit
-    float z{};
   };
 
   /// pair of layer transitions
@@ -99,8 +80,9 @@ class GbtsLayerConnectionTool {
           getDefaultLogger("GbtsLayerConnectionTool", Logging::Level::INFO));
 
   /// converts layer hits to layer transitions
-  /// @param track the layer hits of a particle
-  void addTrack(std::span<const HitCoordinates> track);
+  /// @param track the GBTS layer of every hit of a particle, in the order it
+  ///              passed them, empty for a hit on none of the layers
+  void addTrack(std::span<const std::optional<GbtsExperimentLayerId>> track);
 
   /// Creates the connection table
   /// @return layer pairs
@@ -109,12 +91,6 @@ class GbtsLayerConnectionTool {
  private:
   /// returns the Acts logger
   const Logger& logger() const { return *m_logger; }
-
-  /// Finds the Gbts Coordinate of a given hits coordinate
-  /// @param hit the coordinates of the particle hit on a layer
-  /// @return gbts coordinate
-  std::optional<GbtsExperimentLayerId> findGbtsIdByCoord(
-      const HitCoordinates& hit) const;
 
   /// gets the index to the vector of detector layers via an GBTS id
   /// @param gbtsId Gbts Id of layer
