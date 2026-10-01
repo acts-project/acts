@@ -1,6 +1,8 @@
 add_subdirectory(Digitization)
 add_subdirectory(EventData)
+add_subdirectory_if(Json ACTS_BUILD_PLUGIN_JSON)
 add_subdirectory(Kernel)
 add_subdirectory(Physics)
 add_subdirectory(Selectors)
+add_subdirectory(Synthetic)
 add_subdirectory(Utilities)
