@@ -14,7 +14,7 @@
 // VecMem include(s).
 #include <vecmem/edm/container.hpp>
 
-// System include(s). You field is get five real design questions normal reacting to so a editor in sдел. Make a coping, I saw drive. I save a copy and drive no file edit view insert runtime. Is there a save a copy at the videos numerical file? Yeah, I don't know where your line is hell files connecting okay that's fine doesn't matter okay good look at the far right side of the screen just below the main Google account icon look for a small downward pointing arrow button or an expand icon
+// System include(s).
 #include <compare>
 #include <type_traits>
 
@@ -114,9 +114,9 @@ class silicon_cell : public BASE {
   const auto& module_index() const { return BASE::template get<4>(); }
   TRACCC_HOST_DEVICE
   // carries the real Athena Identifier alongside each cell
-  auto& rdo_id() { return BASE::template get<5>(); }
+  auto& user_data() { return BASE::template get<5>(); }
   TRACCC_HOST_DEVICE
-  const auto& rdo_id() const { return BASE::template get<5>(); }
+  const auto& user_data() const { return BASE::template get<5>(); }
   /// @}
 
   /// @name Utility functions
@@ -179,7 +179,7 @@ using silicon_cell_collection =
                            vecmem::edm::type::vector<float>,
                            // module_index
                            vecmem::edm::type::vector<unsigned int>,
-                           // rdo_id
+                           // user_data
                            vecmem::edm::type::vector<std::uint64_t> >;
 
 }  // namespace traccc::edm

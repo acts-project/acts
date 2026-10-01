@@ -153,7 +153,7 @@ void read_cells(edm::silicon_cell_collection::host& cells,
     // Add the cells to the output.
     for (const csv::cell& cell : cellz) {
       cells.push_back(
-          {cell.channel0, cell.channel1, cell.value, cell.timestamp, ddIndex, static_cast<std::uint64_t>(cell.measurement_id)});
+          {cell.channel0, cell.channel1, cell.value, cell.timestamp, ddIndex, DEFAULT_RDO_ID});
     }
   }
 }
