@@ -117,7 +117,7 @@ if(DETRAY_EIGEN_PLUGIN)
 endif()
 # Build the Fastor tests.
 if(DETRAY_FASTOR_PLUGIN)
-    detray_add_cpu_test( fastor )
+    detray_add_cpu_test(fastor)
 endif()
 
 # Build the SMatrix tests.

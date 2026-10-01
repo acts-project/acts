@@ -106,11 +106,10 @@ addDigiParticleSelection(
 addGbtsTraining(
     s,
     selectedParticles="particles_selected",
-    geometryFile=configDir / "odd-gbts-layer-geometry.txt",
-    outputConnectionTable=outputDir / "odd-gbts-connection-table.txt",
+    geometryFile=configDir / "odd-gbts-layer-map.json",
+    outputConnectionTable=outputDir / "odd-gbts-connection-table.json",
     probThreshold=args.prob_threshold,
     doSymmetrization=True,
-    useOldFormatting=True,
     logLevel=acts.logging.INFO,
 )
 

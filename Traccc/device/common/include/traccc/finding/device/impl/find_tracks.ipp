@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -220,15 +221,9 @@ TRACCC_HOST_DEVICE inline void find_tracks(
             trk_state.filtered_params() = in_par;
 
             // Update measurement covariance
-            const auto V =
-                measurement_selector::calibrated_measurement_covariance<
-                    algebra_t, 2>(meas, cfg.meas_calibration);
-
-            auto& filtered_cov = trk_state.filtered_params().covariance();
-            getter::element(filtered_cov, e_bound_loc0, e_bound_loc0) =
-                getter::element(V, 0, 0);
-            getter::element(filtered_cov, e_bound_loc1, e_bound_loc1) =
-                getter::element(V, 1, 1);
+            measurement_selector::set_seed_measurement_covariance<algebra_t>(
+                trk_state.filtered_params().covariance(), meas,
+                cfg.meas_calibration);
           } else {
             // Run the Kalman update on a copy of the track
             // parameters

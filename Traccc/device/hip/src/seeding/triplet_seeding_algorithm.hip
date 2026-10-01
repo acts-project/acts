@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Library include(s).
 #include "../utils/global_index.hpp"
@@ -64,7 +65,7 @@ __global__ void find_doublets(
     seedfinder_config config,
     edm::spacepoint_collection::const_view spacepoints,
     traccc::details::spacepoint_grid_types::const_view sp_grid,
-    device::doublet_counter_collection_types::const_view doublet_counter,
+    device::doublet_counter_collection_types::view doublet_counter,
     device::device_doublet_collection_types::view mb_doublets,
     device::device_doublet_collection_types::view mt_doublets) {
   device::find_doublets(details::global_index1(), config, spacepoints, sp_grid,

@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -237,6 +238,10 @@ class gbts_seeding_algorithm
   struct graph_making_output {
     /// Compacted, row-major graph
     vecmem::data::vector_buffer<unsigned int> output_graph;
+    /// (node1, node2) original spacepoint indices per compacted edge
+    vecmem::data::vector_buffer<uint2> output_edge_nodes;
+    /// Number of neighbours per compacted edge
+    vecmem::data::vector_buffer<unsigned char> output_num_neighbours;
     /// Number of edges that survived re-indexing (0 == nothing to do)
     unsigned int nConnectedEdges = 0;
   };
@@ -262,6 +267,8 @@ class gbts_seeding_algorithm
   /// Stage 3: run the CCA, extract paths, fit and disambiguate into seeds.
   edm::seed_collection::buffer extract_seeds(
       vecmem::data::vector_buffer<unsigned int>& output_graph,
+      vecmem::data::vector_buffer<uint2>& output_edge_nodes,
+      vecmem::data::vector_buffer<unsigned char>& output_num_neighbours,
       vecmem::data::vector_buffer<float4>& reducedSP,
       const unsigned int nConnectedEdges, const unsigned int nSp,
       vecmem::vector<unsigned int>& h_counters) const;

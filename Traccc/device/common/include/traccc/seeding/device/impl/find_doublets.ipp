@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -23,11 +24,11 @@ inline void find_doublets(
     const global_index_t globalIndex, const seedfinder_config& config,
     const edm::spacepoint_collection::const_view& spacepoints_view,
     const traccc::details::spacepoint_grid_types::const_view& sp_view,
-    const doublet_counter_collection_types::const_view& dc_view,
+    const doublet_counter_collection_types::view& dc_view,
     device_doublet_collection_types::view mb_doublets_view,
     device_doublet_collection_types::view mt_doublets_view) {
   // Check if anything needs to be done.
-  const doublet_counter_collection_types::const_device doublet_counts(dc_view);
+  doublet_counter_collection_types::device doublet_counts(dc_view);
   if (globalIndex >= doublet_counts.size()) {
     return;
   }
@@ -51,6 +52,8 @@ inline void find_doublets(
   // where the doublets are recorded.
   const unsigned int mid_bot_start_idx = middle_sp_counter.m_posMidBot;
   const unsigned int mid_top_start_idx = middle_sp_counter.m_posMidTop;
+  const unsigned int mid_bot_count = middle_sp_counter.m_nMidBot;
+  const unsigned int mid_top_count = middle_sp_counter.m_nMidTop;
 
   // The running indices for the middle-bottom and middle-top pairs.
   unsigned int mid_bot_idx = 0, mid_top_idx = 0;
@@ -106,9 +109,17 @@ inline void find_doublets(
                 traccc::details::spacepoint_type::bottom>(middle_sp, other_sp,
                                                           config)) {
           // Add it as a candidate to the middle-bottom container.
-          const unsigned int pos = mid_bot_start_idx + mid_bot_idx++;
-          assert(pos < mb_doublets.size());
-          mb_doublets.at(pos) = {{other_bin_idx, other_sp_idx}, globalIndex};
+          //
+          // WARNING: We must imperatively check if the current index is
+          // within the limit the count kernel computed, because the count
+          // and find kernels may produce different floating point results
+          // and different doublet counts! This condition handles the case
+          // where the find kernel finds _more_ outputs.
+          if (mid_bot_idx < mid_bot_count) {
+            const unsigned int pos = mid_bot_start_idx + mid_bot_idx++;
+            assert(pos < mb_doublets.size());
+            mb_doublets.at(pos) = {{other_bin_idx, other_sp_idx}, globalIndex};
+          }
         }
         // Check if this spacepoint is a compatible "top" spacepoint to
         // the thread's "middle" spacepoint.
@@ -116,12 +127,40 @@ inline void find_doublets(
                 traccc::details::spacepoint_type::top>(middle_sp, other_sp,
                                                        config)) {
           // Add it as a candidate to the middle-top container.
-          const unsigned int pos = mid_top_start_idx + mid_top_idx++;
-          assert(pos < mt_doublets.size());
-          mt_doublets.at(pos) = {{other_bin_idx, other_sp_idx}, globalIndex};
+          if (mid_top_idx < mid_top_count) {
+            const unsigned int pos = mid_top_start_idx + mid_top_idx++;
+            assert(pos < mt_doublets.size());
+            mt_doublets.at(pos) = {{other_bin_idx, other_sp_idx}, globalIndex};
+          }
         }
       }
     }
+  }
+
+  // Account for a discrepancy between the counting and finding kernel by
+  // keeping an updated count of the number of mid-bot and mid-top doublets.
+  // We'll write this back to memory if our final count does not agree with
+  // the new count.
+  //
+  // NOTE: The value of m_nMidBot is never read again, so we don't actually
+  // update it.
+  if (mid_top_idx != middle_sp_counter.m_nMidTop) {
+    doublet_counts.at(globalIndex).m_nMidTop = mid_top_idx;
+  }
+
+  // See the warning above; here we handle the cases where the find kernel
+  // finds _fewer_ doublets.
+  //
+  // NOTE: Because the mid-top spacepoints are guarded by the write to
+  // m_nMidTop above, we don't need to add sentinel values there.
+  for (; mid_bot_idx < mid_bot_count; ++mid_bot_idx) {
+    const unsigned int pos = mid_bot_start_idx + mid_bot_idx;
+    assert(pos < mb_doublets.size());
+    // Add a sentinel mid-bot doublet
+    mb_doublets.at(pos) = {
+        {std::numeric_limits<unsigned int>::max(),
+         std::numeric_limits<unsigned int>::max()},
+        std::numeric_limits<device_doublet::link_type>::max()};
   }
 }
 
