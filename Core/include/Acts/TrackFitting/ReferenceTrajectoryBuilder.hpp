@@ -589,7 +589,7 @@ class ReferenceTrajectoryBuilder {
     if constexpr (!isDirectNavigator) {
       if (sSequence != nullptr) {
         for (const Surface* surface : *sSequence) {
-          propagatorOptions.navigation.registerExtendedSurface(*surface);
+          propagatorOptions.navigation.registerMeasurementSurface(*surface);
         }
       }
     } else {
