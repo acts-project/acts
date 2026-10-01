@@ -66,10 +66,37 @@ class PatternRecognitionPerformanceCollector {
     std::size_t nTotalMatchedTracks = 0;
     std::size_t nTotalFakeTracks = 0;
     std::size_t nTotalDuplicateTracks = 0;
+    std::size_t nTotalUnmatchedTracks = 0;
+    std::size_t nTotalTracksMissingRefSurface = 0;
+    std::size_t nTotalMeasurements = 0;
+    std::size_t nTotalOutliers = 0;
+    std::size_t nTotalHoles = 0;
+    std::size_t nTotalSharedHits = 0;
     std::size_t nTotalParticles = 0;
     std::size_t nTotalMatchedParticles = 0;
     std::size_t nTotalDuplicateParticles = 0;
     std::size_t nTotalFakeParticles = 0;
+
+    /// Number of tracks for which completeness/purity could be computed,
+    /// i.e. that have a matched truth particle contributing hits.
+    std::size_t nTotalQualityTracks = 0;
+    /// Sum of completeness over @c nTotalQualityTracks tracks.
+    double sumCompleteness = 0;
+    /// Sum of purity over @c nTotalQualityTracks tracks.
+    double sumPurity = 0;
+
+    /// Mean completeness across all tracks with a computed completeness.
+    double meanCompleteness() const {
+      return nTotalQualityTracks > 0
+                 ? sumCompleteness / static_cast<double>(nTotalQualityTracks)
+                 : 0;
+    }
+    /// Mean purity across all tracks with a computed purity.
+    double meanPurity() const {
+      return nTotalQualityTracks > 0
+                 ? sumPurity / static_cast<double>(nTotalQualityTracks)
+                 : 0;
+    }
   };
 
   /// Return accumulated event counts.
