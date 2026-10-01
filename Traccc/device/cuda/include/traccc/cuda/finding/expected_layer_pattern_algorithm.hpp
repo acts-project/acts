@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -26,8 +27,7 @@ namespace traccc::cuda {
 /// Collect expected detector-layer patterns from finalized tracks.
 class expected_layer_pattern_algorithm : public cuda::algorithm_base {
  public:
-  using output_type =
-      vecmem::data::vector_buffer<expected_layer_pattern_type>;
+  using output_type = vecmem::data::vector_buffer<expected_layer_pattern_type>;
 
   expected_layer_pattern_algorithm(const finding_config& config,
                                    const traccc::memory_resource& mr,

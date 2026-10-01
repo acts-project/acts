@@ -1,16 +1,17 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
-#include "./kernels/collect_expected_layer_patterns.cuh"
-#include "traccc/cuda/finding/expected_layer_pattern_algorithm.hpp"
 #include "../utils/cuda_error_handling.hpp"
 #include "../utils/magnetic_field_types.hpp"
 #include "../utils/utils.hpp"
+#include "./kernels/collect_expected_layer_patterns.cuh"
+#include "traccc/cuda/finding/expected_layer_pattern_algorithm.hpp"
 
 // Project include(s).
 #include "traccc/utils/detector_buffer_bfield_visitor.hpp"
@@ -33,13 +34,13 @@ expected_layer_pattern_algorithm::operator()(
   m_copy.get().setup(output_patterns)->wait();
 
   if (n_tracks == 0u || expected_layer_map.size() == 0u) {
-        if (n_tracks != 0u) {
-            TRACCC_CUDA_ERROR_CHECK(cudaMemsetAsync(
-                    output_patterns.ptr(), 0,
-                    n_tracks * sizeof(expected_layer_pattern_type),
-                    details::get_stream(stream())));
-            stream().synchronize();
-        }
+    if (n_tracks != 0u) {
+      TRACCC_CUDA_ERROR_CHECK(
+          cudaMemsetAsync(output_patterns.ptr(), 0,
+                          n_tracks * sizeof(expected_layer_pattern_type),
+                          details::get_stream(stream())));
+      stream().synchronize();
+    }
     return output_patterns;
   }
 
@@ -47,9 +48,10 @@ expected_layer_pattern_algorithm::operator()(
   vecmem::data::vector_buffer<expected_layer_mapping_entry> device_map(
       map_size, m_mr.main);
   m_copy.get().setup(device_map)->wait();
-  m_copy.get()(vecmem::data::vector_view<const expected_layer_mapping_entry>(
-                   map_size, expected_layer_map.ptr()),
-               device_map)
+  m_copy
+      .get()(vecmem::data::vector_view<const expected_layer_mapping_entry>(
+                 map_size, expected_layer_map.ptr()),
+             device_map)
       ->wait();
 
   const vecmem::data::vector_view<const expected_layer_mapping_entry>
@@ -62,16 +64,15 @@ expected_layer_pattern_algorithm::operator()(
           const bfield_view_t& field) {
         constexpr unsigned int n_threads = 128u;
         const unsigned int n_blocks =
-            static_cast<unsigned int>((n_tracks + n_threads - 1u) /
-                                      n_threads);
+            static_cast<unsigned int>((n_tracks + n_threads - 1u) / n_threads);
         collect_expected_layer_patterns<detray::detector_device_t<detector_t>,
-                        bfield_view_t>(
+                                        bfield_view_t>(
             n_blocks, n_threads, 0u, details::get_stream(stream()), detector,
             field, {tracks}, m_config, device_map_view, output_patterns);
       });
 
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
-    stream().synchronize();
+  stream().synchronize();
   return output_patterns;
 }
 

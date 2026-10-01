@@ -6,13 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
-
 // Project include(s).
 #include "traccc/edm/track_container.hpp"
 #include "traccc/finding/details/combinatorial_kalman_filter_types.hpp"
