@@ -33,6 +33,7 @@ class PortalShellBase;
 class MaterialDesignatorBlueprintNode;
 class PortalDesignatorBlueprintNode;
 class StaticBlueprintNode;
+class OffAxisBlueprintNode;
 class LayerBlueprintNode;
 class GeometryIdentifierBlueprintNode;
 
@@ -193,6 +194,18 @@ class BlueprintNode {
       const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
       const std::string& volumeName = "undefined",
       const std::function<void(StaticBlueprintNode& cylinder)>& callback = {});
+
+  /// Convenience method for creating an @ref Acts::OffAxisBlueprintNode.
+  /// This node wraps one off-axis subtree in an on-axis cylindrical envelope so
+  /// parent cylinder stacks can remain strictly co-axial.
+  /// @param name The name of the wrapper volume.
+  /// @param axisTransform The reference transform of the co-axial parent axis.
+  /// @param callback An optional callback that receives the node as an argument
+  /// @return Reference to the newly created off-axis blueprint node
+  OffAxisBlueprintNode& addOffAxisContainer(
+      const std::string& name,
+      const Transform3& axisTransform = Transform3::Identity(),
+      const std::function<void(OffAxisBlueprintNode& offAxis)>& callback = {});
 
   /// Convenience method for creating a cylinder specialization of @ref Acts::ContainerBlueprintNode.
   /// @param name The name of the container node. This name is only reflected
