@@ -1,0 +1,168 @@
+{
+    "$schema": "../../../Plugins/Json/schema/material-map-v1.schema.json",
+    "header": {
+        "format": "acts-material-map",
+        "version": 1
+    },
+    "surfaces": [
+        {
+            "target": {
+                "kind": "geometry-id",
+                "geometry_id": {
+                    "volume": 1,
+                    "sensitive": 2048
+                }
+            },
+            "material": {
+                "kind": "proto",
+                "settings": {
+                    "mapping_type": "default",
+                    "split_factor": 1
+                },
+                "binning": {
+                    "axes": []
+                }
+            }
+        },
+        {
+            "target": {
+                "kind": "stable-key",
+                "key": "endcap/foil",
+                "recorded_geometry_id": {}
+            },
+            "material": {
+                "kind": "proto-grid",
+                "settings": {
+                    "mapping_type": "post",
+                    "split_factor": 1
+                },
+                "material_key": "endcap/foil",
+                "axes": [
+                    {
+                        "kind": "equidistant",
+                        "bins": 8
+                    },
+                    {
+                        "kind": "deferred-variable",
+                        "normalized_edges": [
+                            0,
+                            0.25,
+                            1
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "target": {
+                "kind": "geometry-id",
+                "geometry_id": {
+                    "volume": 1,
+                    "sensitive": 2304
+                }
+            },
+            "material": {
+                "kind": "proto",
+                "settings": {
+                    "mapping_type": "default",
+                    "split_factor": 1
+                },
+                "material_key": "nested/template",
+                "binning": {
+                    "axes": [
+                        {
+                            "kind": "subdivided",
+                            "base": {
+                                "kind": "equidistant",
+                                "bins": 2,
+                                "range": [
+                                    -10,
+                                    10
+                                ],
+                                "boundary": "bound",
+                                "direction": "x"
+                            },
+                            "mode": "replace",
+                            "subdivision": {
+                                "kind": "variable",
+                                "edges": [
+                                    -10,
+                                    -5,
+                                    0
+                                ],
+                                "boundary": "bound",
+                                "direction": "x"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "target": {
+                "kind": "geometry-id",
+                "geometry_id": {
+                    "volume": 1,
+                    "sensitive": 2560
+                }
+            },
+            "material": {
+                "kind": "merged-material-marker",
+                "origins": [
+                    {
+                        "geometry_id": {},
+                        "material_key": "discarded/left"
+                    },
+                    {
+                        "geometry_id": {},
+                        "material_key": "discarded/right"
+                    }
+                ]
+            }
+        },
+        {
+            "target": {
+                "kind": "geometry-id",
+                "geometry_id": {
+                    "volume": 1,
+                    "sensitive": 3328
+                }
+            },
+            "material": {
+                "kind": "proto",
+                "settings": {
+                    "mapping_type": "default",
+                    "split_factor": 1
+                },
+                "binning": {
+                    "axes": [
+                        {
+                            "kind": "subdivided",
+                            "base": {
+                                "kind": "equidistant",
+                                "bins": 2,
+                                "range": [
+                                    -10,
+                                    10
+                                ],
+                                "boundary": "bound",
+                                "direction": "x"
+                            },
+                            "mode": "repeat",
+                            "subdivision": {
+                                "kind": "variable",
+                                "edges": [
+                                    -10,
+                                    -8,
+                                    0
+                                ],
+                                "boundary": "bound",
+                                "direction": "x"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
