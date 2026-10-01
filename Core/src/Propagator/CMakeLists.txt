@@ -4,6 +4,7 @@ target_sources(
         EigenStepperError.cpp
         MultiStepperError.cpp
         NavigatorError.cpp
+        NavigatorOptions.cpp
         SympyStepper.cpp
         detail/SympyStepVacuumJac.cpp
         detail/SympyStepVacuumNoJac.cpp
