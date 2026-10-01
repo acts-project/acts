@@ -42,6 +42,11 @@ class OpenDataDetector final : public DD4hepDetectorBase {
     /// Select the conversion style used to construct the Gen3 ODD geometry.
     ConstructionMethod constructionMethod = ConstructionMethod::BarrelEndcap;
 
+    /// Optional decorator to load a material map onto the constructed
+    /// geometry. It is applied after construction, once geometry identifiers
+    /// are assigned, and replaces the designated proto material.
+    std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator = nullptr;
+
     /// Envelope for the blueprint root (world volume). Values in mm.
     Acts::ExtentEnvelope blueprintEnvelope =
         Acts::ExtentEnvelope::Zero()
