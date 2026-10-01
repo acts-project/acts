@@ -12,11 +12,13 @@
 #include "ActsPlugins/Mille/Helpers.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <cstddef>
 #include <iostream>
 #include <map>
 #include <numeric>
 #include <set>
+#include <vector>
 
 #include <Eigen/src/Core/Matrix.h>
 #include <Mille/MilleDataStructures.h>
@@ -43,7 +45,8 @@ unsigned long globalIndexSurfToParam(unsigned long surfaceIndex,
 }  // namespace
 
 void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
-                 MilleRecord& record, bool removeUnconstrainedTrackPar) {
+                 MilleRecord& record, bool removeUnconstrainedTrackPar,
+                 const Acts::Logger& logger) {
   // spawn a local buffer to be able to assemble the record without lock
   // contention.
   std::unique_ptr<Mille::MilleRecord> milleLocalBuf = record.spawnLocalBuffer();
@@ -68,20 +71,56 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
   // parameters to stabilise the system
   std::set<std::size_t> skippedTrackParams = {};
   if (removeUnconstrainedTrackPar) {
-    // collect (sorted by covariance) the indices of all track parameters
-    std::map<double, int> trkParByCov;
+    // A parameter that a measurement projects onto is constrained by it (its
+    // variance is bounded by the measurement variance) and must stay a local
+    // parameter: without it, the measurement would be written with its
+    // alignment derivatives but without its dependence on the track.
+    // The precision is deliberately 0 (exact): H only selects the measured
+    // parameters (entries 0 or 1), and Mille drops only exactly-zero local
+    // derivatives.
+    std::vector<bool> isMeasured(state.trackParametersDim, false);
+    for (std::size_t k = 0; k < state.trackParametersDim; ++k) {
+      isMeasured[k] = !state.projectionMatrix.col(k).isZero(0.);
+    }
+
+    // collect (sorted by covariance) the indices of all track parameters.
+    // A multimap: parameters with equal variances must all be considered.
+    std::multimap<double, std::size_t> trkParByCov;
     for (std::size_t k = 0; k < state.trackParametersDim; ++k) {
       trkParByCov.emplace(state.trackParametersCovariance(k, k), k);
     }
 
     // now, loop through the parameter list and look for huge jumps.
+    std::size_t nKeptMeasured = 0;
     double prev = 0;
-    for (auto& [sigmaSquared, index] : trkParByCov) {
+    for (const auto& [sigmaSquared, index] : trkParByCov) {
       // a jump of 1e6 is indicative that we are not in Kansas anymore
       if (prev != 0 && sigmaSquared > 1e6 * prev) {
+        if (isMeasured[index]) {
+          // keep it, and leave prev unchanged: the decisions on the other
+          // parameters are the same as without this check
+          ++nKeptMeasured;
+          continue;
+        }
         skippedTrackParams.insert(index);
       } else {
         prev = sigmaSquared;
+      }
+    }
+    if (nKeptMeasured > 0) {
+      // warn once, the criterion can misfire on every track of a detector
+      static std::atomic<bool> warned{false};
+      if (logger.doPrint(Acts::Logging::WARNING) && !warned.exchange(true)) {
+        ACTS_WARNING("removeUnconstrainedTrackPar: kept "
+                     << nKeptMeasured
+                     << " measured track parameter(s) of a track that the "
+                        "variance-jump criterion flagged as unconstrained. The "
+                        "criterion compares variances of different units; "
+                        "consider removeUnconstrainedTrackPar = false. "
+                        "Further occurrences are reported at DEBUG level.");
+      } else {
+        ACTS_DEBUG("removeUnconstrainedTrackPar: kept "
+                   << nKeptMeasured << " measured track parameter(s)");
       }
     }
   }

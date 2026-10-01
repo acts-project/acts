@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 
 #include "Mille/IMilleReader.h"
@@ -30,9 +31,13 @@ using Mille::MilleRecord;
 /// Used for R&D, recommending the GBL track model (under development)
 /// for production use.
 /// @param removeUnconstrainedTrackPar If enabled, will remove
-/// poorly constrained parameters from the (local) track fits.
+/// poorly constrained parameters from the (local) track fits. Parameters
+/// that a measurement projects onto are always kept.
+/// @param logger Logger, reports measured parameters that the
+/// removal criterion would have dropped.
 void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
-                 MilleRecord& record, bool removeUnconstrainedTrackPar = true);
+                 MilleRecord& record, bool removeUnconstrainedTrackPar = true,
+                 const Acts::Logger& logger = Acts::getDummyLogger());
 
 /// @brief read one record (= track or (constrained) track pair) from
 /// a Mille binary into the equivalent matrices of a TrackAlignmentState.
