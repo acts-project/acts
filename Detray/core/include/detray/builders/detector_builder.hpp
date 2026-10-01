@@ -20,6 +20,7 @@
 #include <vecmem/memory/memory_resource.hpp>
 
 // System include(s)
+#include <ios>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -54,6 +55,24 @@ class detector_builder {
 
   /// @returns the name of the detector under construction
   DETRAY_HOST std::string_view name() const { return m_detector_name; }
+
+  /// Toggles whether identical surface material (homogeneous material and
+  /// material maps) is shared between surfaces instead of being copied for
+  /// every surface. Applies to all volumes and overrides the setting of the
+  /// individual material builders. Off by default.
+  ///
+  /// @note The material links of the surfaces are no longer unique, i.e.
+  /// several surfaces (possibly in different volumes) can point to the same
+  /// material entry.
+  DETRAY_HOST void deduplicate_material(bool toggle) {
+    m_deduplicate_material = toggle;
+    DETRAY_VERBOSE_HOST("Deduplicate material: " << std::boolalpha << toggle);
+  }
+
+  /// @returns whether identical surface material is shared between surfaces
+  DETRAY_HOST bool deduplicate_material() const {
+    return m_deduplicate_material;
+  }
 
   /// Add a new volume builder that will build a volume of the shape given by
   /// @param id
@@ -123,6 +142,7 @@ class detector_builder {
     DETRAY_VERBOSE_HOST("Start building the volumes...");
     for (auto& vol_builder : m_volumes) {
       DETRAY_VERBOSE_HOST("-> Build: " << vol_builder->name());
+      vol_builder->deduplicate_material(m_deduplicate_material);
       vol_builder->build(det);
     }
 
@@ -179,6 +199,8 @@ class detector_builder {
  private:
   /// Name of the new detector
   std::string m_detector_name{"detray_detector"};
+  /// Share identical surface material between surfaces
+  bool m_deduplicate_material{false};
   /// Data structure that holds a volume builder for every detector volume
   volume_data_t<std::unique_ptr<volume_builder_interface<detector_type>>>
       m_volumes{};

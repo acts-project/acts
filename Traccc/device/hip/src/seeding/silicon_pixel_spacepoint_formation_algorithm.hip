@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "../utils/global_index.hpp"
@@ -52,10 +53,11 @@ __global__ void __launch_bounds__(1024, 1) form_spacepoints(
 silicon_pixel_spacepoint_formation_algorithm::
     silicon_pixel_spacepoint_formation_algorithm(
         const traccc::memory_resource& mr, const vecmem::copy& copy,
-        const stream_wrapper& str, std::unique_ptr<const Logger> logger)
+        const stream_wrapper& str, std::unique_ptr<const Logger> logger,
+        await_function_type await_func)
     : device::silicon_pixel_spacepoint_formation_algorithm(mr, copy,
                                                            std::move(logger)),
-      hip::algorithm_base(str) {}
+      hip::algorithm_base(str, std::move(await_func)) {}
 
 void silicon_pixel_spacepoint_formation_algorithm::count_spacepoints_kernel(
     const count_spacepoints_kernel_payload& payload) const {

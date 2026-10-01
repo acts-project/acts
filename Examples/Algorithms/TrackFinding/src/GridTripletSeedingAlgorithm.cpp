@@ -227,10 +227,24 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     });
   }
 
+  // time is only copied into the core space points when one of the time cuts
+  // is enabled, so that the columns are not allocated and filled for the much
+  // more common case of seeding without time
+  const bool useTime = m_cfg.useTimeDoubletCut || m_cfg.useTimeTripletCut;
+  const Acts::SpacePointColumns timeColumns =
+      Acts::SpacePointColumns::Time | Acts::SpacePointColumns::VarianceT;
+  if (useTime && !spacePoints.hasColumns(timeColumns)) {
+    ACTS_ERROR(
+        "Time based seeding cuts are enabled but the input space points do not "
+        "provide time and time variance");
+    return ProcessCode::ABORT;
+  }
+
   Acts::SpacePointContainer coreSpacePoints(
       Acts::SpacePointColumns::CopiedFromIndex |
       Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
-      Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR);
+      Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR |
+      (useTime ? timeColumns : Acts::SpacePointColumns::None));
   coreSpacePoints.reserve(grid.numberOfSpacePoints());
   std::vector<Acts::SpacePointIndexRange> gridSpacePointRanges;
   gridSpacePointRanges.reserve(grid.numberOfBins());
@@ -247,6 +261,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
                                         static_cast<float>(sp.r())};
       newSp.varianceZ() = static_cast<float>(sp.varianceZ());
       newSp.varianceR() = static_cast<float>(sp.varianceR());
+      if (useTime) {
+        newSp.time() = static_cast<float>(sp.time());
+        newSp.varianceT() = static_cast<float>(sp.varianceT());
+      }
     }
     std::uint32_t end = coreSpacePoints.size();
     gridSpacePointRanges.emplace_back(begin, end);
@@ -287,6 +305,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   bottomDoubletFinderConfig.cotThetaMax = m_cfg.cotThetaMax;
   bottomDoubletFinderConfig.minPt = m_cfg.minPt;
   bottomDoubletFinderConfig.helixCutTolerance = m_cfg.helixCutTolerance;
+  bottomDoubletFinderConfig.useTime = m_cfg.useTimeDoubletCut;
+  bottomDoubletFinderConfig.timeCutNSigma = m_cfg.doubletTimeCutNSigma;
   // Vertex-z constraint takes the single experimentCuts slot when enabled;
   // otherwise fall back to the (optional) ITk fast-tracking cuts. The top
   // doublet config below is copied from this one, so the delegate is shared.
@@ -320,6 +340,8 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   tripletFinderConfig.impactMax = m_cfg.impactMax;
   tripletFinderConfig.helixCutTolerance = m_cfg.helixCutTolerance;
   tripletFinderConfig.toleranceParam = m_cfg.toleranceParam;
+  tripletFinderConfig.useTime = m_cfg.useTimeTripletCut;
+  tripletFinderConfig.timeChi2Max = m_cfg.tripletTimeChi2Max;
   auto tripletFinder =
       Acts::TripletSeedFinder::create(Acts::TripletSeedFinder::DerivedConfig(
           tripletFinderConfig, m_cfg.bFieldInZ));

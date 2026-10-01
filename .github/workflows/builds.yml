@@ -29,19 +29,21 @@ concurrency:
   # and a cancellation reads as a failure to the queue, ejecting the PR.
   cancel-in-progress: ${{ github.event_name != 'merge_group' }}
 
-# ccache is saved from `main` only: a PR-written cache is readable by that PR
-# alone, but still evicts `main`'s entries from the shared 10 GB.
+# Compiler caches use CERN S3 snapshots; see CI/ccache-snapshots.md.
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
-  CCACHE_KEY_SUFFIX: r2
   ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
 jobs:
   linux_ubuntu:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
+    # Restrict s3-sccache to the main branch in GitHub environment settings.
+    # Anonymous reads need no environment; only main pushes access write secrets.
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     permissions:
       contents: read
       # Authenticated GHCR reads: the spack buildcache is pulled from
@@ -50,9 +52,8 @@ jobs:
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
     env:
-      # The FPE build evicted objects during compilation at 500 MB. Cache
-      # retention removes superseded main archives to make room for this.
       CCACHE_MAXSIZE: 1G
+      CCACHE_DIR: ${{ github.workspace }}/ccache-snapshot
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
@@ -69,40 +70,32 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Restore ccache snapshot
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./.github/actions/ccache-s3
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/linux_ubuntu/v1/
+
+      - name: Reset ccache statistics
+        run: ccache --zero-stats
 
       - name: Configure
         run: >
-          ccache -z &&
           CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci-fpe
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_PLUGIN_ONNX=ON
 
       - name: Build
+        id: build
         run: cmake --build build
 
       - name: Build docs examples
         # these are excluded from the ALL target, but we want to test them here
         run: cmake --build build --target docs-examples
-
-      - name: ccache stats
-        run: ccache -s
-
-      - name: Save ccache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always() && github.ref == 'refs/heads/main'
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
         run: >
@@ -148,6 +141,27 @@ jobs:
         run: >
           CI/dependencies/run.sh .env
           ctest --test-dir build-downstream --output-on-failure
+
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
+
+      - name: Clean ccache before publication
+        id: ccache-cleanup
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+        run: ccache --cleanup
+
+      - name: Publish ccache snapshot
+        if: ${{ !cancelled() && steps.ccache-cleanup.outcome == 'success' }}
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./.github/actions/ccache-s3
+        with:
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/linux_ubuntu/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
   linux_examples_test:
     runs-on: [self-hosted, linux, x64, husk-size-standard]
@@ -295,6 +309,8 @@ jobs:
           git push
 
   linux_ubuntu_extra:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     runs-on: [self-hosted, linux, x64, husk-size-standard]
     permissions:
       contents: read
@@ -328,14 +344,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      - name: Restore ccache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        id: ccache-restore
+      - name: Restore ccache snapshot
+        uses: ./.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.image }}-${{ matrix.std }}-${{ matrix.cxx }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.image }}-${{ matrix.std }}-${{ matrix.cxx }}-
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/linux_ubuntu_extra/${{ runner.os }}-${{ runner.arch }}/${{ matrix.image }}-${{ matrix.std }}-${{ matrix.cxx }}/v1/
 
       - name: Configure
         run: >
@@ -350,15 +364,27 @@ jobs:
       - name: Build
         run: cmake --build build
 
-      - name: ccache stats
-        run: ccache -s
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
 
-      - name: Save ccache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always() && github.ref == 'refs/heads/main'
+      - name: Clean ccache before publication
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        shell: bash
+        run: |
+          ccache --cleanup
+
+      - name: Publish ccache snapshot
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./.github/actions/ccache-s3
         with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/linux_ubuntu_extra/${{ runner.os }}-${{ runner.arch }}/${{ matrix.image }}-${{ matrix.std }}-${{ matrix.cxx }}/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
       - name: Unit tests
         run: >
@@ -445,6 +471,9 @@ jobs:
               # The jobs themselves and the dependency setup they run
               - '.github/workflows/builds.yml'
               - '.github/actions/dependencies/**'
+              - '.github/actions/ccache-s3/**'
+              - 'CI/ccache_snapshot.py*'
+              - 'CI/ccache_stats.sh'
               - 'CI/dependencies/**'
             cuda_muon:
               # ActsUnitTestCudaMuonSpacePoint is the only target built. It
@@ -471,6 +500,9 @@ jobs:
               # The jobs themselves and the dependency setup they run
               - '.github/workflows/builds.yml'
               - '.github/actions/dependencies/**'
+              - '.github/actions/ccache-s3/**'
+              - 'CI/ccache_snapshot.py*'
+              - 'CI/ccache_stats.sh'
               - 'CI/dependencies/**'
 
   # ─────────────────────────────────────────────────────────────────────
@@ -483,6 +515,8 @@ jobs:
   # GNN build even if the filter above has gone stale.
   # ─────────────────────────────────────────────────────────────────────
   gnn_build:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     needs: changes
     if: github.event_name != 'pull_request' || needs.changes.outputs.gnn == 'true'
     runs-on: [self-hosted, linux, x64, husk-size-standard]
@@ -508,14 +542,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Restore ccache snapshot
+        uses: ./.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/gnn_build/${{ runner.os }}-${{ runner.arch }}/v1/
 
       # Compiles the `#else` arms of `#ifdef ACTS_GNN_WITH_CUDA`, which the
       # configure below excludes. That definition is on ActsPluginGnn alone, so
@@ -560,15 +592,27 @@ jobs:
           source ${GITHUB_WORKSPACE}/.env
           cmake --build build
 
-      - name: ccache stats
-        run: ccache -s
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
 
-      - name: Save ccache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always() && github.ref == 'refs/heads/main'
+      - name: Clean ccache before publication
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        shell: bash
+        run: |
+          ccache --cleanup
+
+      - name: Publish ccache snapshot
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./.github/actions/ccache-s3
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/gnn_build/${{ runner.os }}-${{ runner.arch }}/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
       # The integration test binaries are the bulk of the tree and nothing
       # downstream runs them; object files are dead weight after linking.
@@ -667,6 +711,8 @@ jobs:
           pytest -rsFExw -k gpu -v
 
   gnn_tensorrt:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     needs: changes
     if: github.event_name != 'pull_request' || needs.changes.outputs.gnn == 'true'
     runs-on: [self-hosted, linux, x64, husk-size-standard]
@@ -691,14 +737,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Restore ccache snapshot
+        uses: ./.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/gnn_tensorrt/${{ runner.os }}-${{ runner.arch }}/v1/
 
       - name: Configure
         run: >
@@ -710,15 +754,27 @@ jobs:
       - name: Build
         run: cmake --build build
 
-      - name: ccache stats
-        run: ccache -s
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
 
-      - name: Save ccache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always() && github.ref == 'refs/heads/main'
+      - name: Clean ccache before publication
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        shell: bash
+        run: |
+          ccache --cleanup
+
+      - name: Publish ccache snapshot
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./.github/actions/ccache-s3
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/gnn_tensorrt/${{ runner.os }}-${{ runner.arch }}/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
   # ─────────────────────────────────────────────────────────────────────
   # CUDA muon segment fitting. Only ActsUnitTestCudaMuonSpacePoint is built:
@@ -727,6 +783,8 @@ jobs:
   # that already.
   # ─────────────────────────────────────────────────────────────────────
   cuda_muon_build:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     needs: changes
     if: github.event_name != 'pull_request' || needs.changes.outputs.cuda_muon == 'true'
     runs-on: [self-hosted, linux, x64, husk-size-standard]
@@ -757,14 +815,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Restore ccache snapshot
+        uses: ./.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/cuda_muon_build/${{ runner.os }}-${{ runner.arch }}/v1/
 
       - name: Configure
         run: >
@@ -776,15 +832,27 @@ jobs:
       - name: Build
         run: cmake --build build --target ActsUnitTestCudaMuonSpacePoint ActsUnitTestCudaMuonHoughMaximum
 
-      - name: ccache stats
-        run: ccache -s
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
 
-      - name: Save ccache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always() && github.ref == 'refs/heads/main'
+      - name: Clean ccache before publication
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        shell: bash
+        run: |
+          ccache --cleanup
+
+      - name: Publish ccache snapshot
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./.github/actions/ccache-s3
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/cuda_muon_build/${{ runner.os }}-${{ runner.arch }}/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" .
@@ -853,6 +921,8 @@ jobs:
   # fail on a missing /cvmfs.
   # ─────────────────────────────────────────────────────────────────────
   lcg:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     name: lcg_${{ matrix.tag }}
     runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
     permissions:
@@ -928,14 +998,16 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Set up uv for cache transfers
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        continue-on-error: true
+
+      - name: Restore ccache snapshot
+        uses: ./.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.tag }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.tag }}-
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg/${{ runner.os }}-${{ runner.arch }}/${{ matrix.tag }}/v1/
 
       - name: Configure
         run: >
@@ -951,16 +1023,31 @@ jobs:
           cmake --build build
 
       - name: ccache stats
+        if: always()
+        continue-on-error: true
         run: >
           source "${LCG_VIEW}/setup.sh" &&
+          bash CI/ccache_stats.sh &&
           ccache -s
 
-      - name: Save ccache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always() && github.ref == 'refs/heads/main'
+      - name: Clean ccache before publication
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        shell: bash
+        run: |
+          source "${LCG_VIEW}/setup.sh"
+          ccache --cleanup
+
+      - name: Publish ccache snapshot
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./.github/actions/ccache-s3
         with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg/${{ runner.os }}-${{ runner.arch }}/${{ matrix.tag }}/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
       - name: Unit tests
         if: matrix.tests
@@ -991,6 +1078,8 @@ jobs:
   # to the matrix context from a job-level condition (which GitHub evaluates
   # before expanding the matrix).
   lcg_dev4:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     name: lcg_dev4_alma9_gcc15
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
@@ -1018,14 +1107,16 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Set up uv for cache transfers
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        continue-on-error: true
+
+      - name: Restore ccache snapshot
+        uses: ./.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg_dev4/${{ runner.os }}-${{ runner.arch }}/v1/
 
       - name: Configure
         id: configure
@@ -1046,16 +1137,30 @@ jobs:
 
       - name: ccache stats
         if: always() && steps.configure.outcome == 'success'
+        continue-on-error: true
         run: >
           source "${LCG_VIEW}/setup.sh" &&
+          bash CI/ccache_stats.sh &&
           ccache -s
 
-      - name: Save ccache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Clean ccache before publication
         if: always() && steps.configure.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          source "${LCG_VIEW}/setup.sh"
+          ccache --cleanup
+
+      - name: Publish ccache snapshot
+        if: always() && steps.configure.outcome == 'success'
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./.github/actions/ccache-s3
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg_dev4/${{ runner.os }}-${{ runner.arch }}/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
       # github-script runs as a JS action, so it does not depend on gh being
       # installed in the alma9-base image.
@@ -1164,6 +1269,8 @@ jobs:
             });
 
   macos:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     runs-on: macos-26
     permissions:
       contents: read
@@ -1193,16 +1300,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      - name: Restore ccache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        id: ccache-restore
+      - name: Restore ccache snapshot
+        uses: ./.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
         env:
           DYLD_LIBRARY_PATH: ""
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/macos/${{ runner.os }}-${{ runner.arch }}/v1/
 
       - name: Configure
         run: >
@@ -1215,15 +1320,27 @@ jobs:
       - name: Build
         run: cmake --build build
 
-      - name: ccache stats
-        run: ccache -s
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
 
-      - name: Save ccache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always() && github.ref == 'refs/heads/main'
+      - name: Clean ccache before publication
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        shell: bash
+        run: |
+          ccache --cleanup
+
+      - name: Publish ccache snapshot
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./.github/actions/ccache-s3
         with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/macos/${{ runner.os }}-${{ runner.arch }}/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
       - name: Unit tests
         run: >
@@ -1259,6 +1376,8 @@ jobs:
         run: ctest --test-dir build-downstream --output-on-failure
 
   external_eic-shell:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -1277,14 +1396,16 @@ jobs:
       - name: Setup CMVFS
         uses: cvmfs-contrib/github-action-cvmfs@72f2a8d366043978d6aebee154bc9ed321c2f2a8 # v5.6
 
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Set up uv for cache transfers
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        continue-on-error: true
+
+      - name: Restore ccache snapshot
+        uses: ./acts/.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/external_eic-shell/${{ runner.os }}-${{ runner.arch }}/v1/
 
       - name: Build ACTS
         id: build-acts
@@ -1292,7 +1413,7 @@ jobs:
         continue-on-error: false
         with:
           image: "ghcr.io/eic/eic_ci_without_acts:nightly"
-          options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache
+          options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache -e CCACHE_MAXSIZE=${{ env.CCACHE_MAXSIZE }}
           shell: bash
           run: |
             for script in /.singularity.d/env/*.sh; do
@@ -1330,7 +1451,7 @@ jobs:
         continue-on-error: true
         with:
           image: "ghcr.io/eic/eic_ci_without_acts:nightly"
-          options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache
+          options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache -e CCACHE_MAXSIZE=${{ env.CCACHE_MAXSIZE }}
           shell: bash
           run: |
             for script in /.singularity.d/env/*.sh; do
@@ -1344,7 +1465,6 @@ jobs:
             export CMAKE_CXX_COMPILER_LAUNCHER=ccache
             pushd EICrecon
             echo "::group::EICrecon configure phase"
-            ccache -z && \
             cmake -B build -S . \
               -GNinja \
               -DActs_ROOT=$CMAKE_INSTALL_PREFIX
@@ -1354,6 +1474,23 @@ jobs:
             echo "::endgroup::"
             popd
 
+            ccache -s
+
+      - name: ccache statistics
+        if: always()
+        continue-on-error: true
+        uses: eic/docker-run-action@05c870b4c087fa65d5da3d7474a4b5e594a903d7 # v4.1
+        with:
+          image: "ghcr.io/eic/eic_ci_without_acts:nightly"
+          options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache -e CCACHE_MAXSIZE=${{ env.CCACHE_MAXSIZE }}
+          shell: bash
+          run: |
+            for script in /.singularity.d/env/*.sh; do
+              if [ -f "$script" ]; then
+                . "$script"
+              fi
+            done
+            bash /work/acts/CI/ccache_stats.sh
             ccache -s
 
       - name: Create comment body header
@@ -1373,16 +1510,38 @@ jobs:
           path: comment-50-external-failure.md
           retention-days: 5
 
-      - name: Save ccache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always() && github.ref == 'refs/heads/main'
+      - name: Clean ccache before publication
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        uses: eic/docker-run-action@05c870b4c087fa65d5da3d7474a4b5e594a903d7 # v4.1
         with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+          image: "ghcr.io/eic/eic_ci_without_acts:nightly"
+          options: -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache -e CCACHE_MAXSIZE=${{ env.CCACHE_MAXSIZE }}
+          shell: bash
+          run: |
+            for script in /.singularity.d/env/*.sh; do
+              if [ -f "$script" ]; then
+                . "$script"
+              fi
+            done
+            ccache --cleanup
+
+      - name: Publish ccache snapshot
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./acts/.github/actions/ccache-s3
+        with:
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/external_eic-shell/${{ runner.os }}-${{ runner.arch }}/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
   # Sources the key4hep nightly view straight out of the job container: the
   # `cvmfs` label binds the repositories in, so nothing has to mount them.
   external_key4hep-nightlies:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     runs-on: [self-hosted, linux, x64, husk-size-standard, cvmfs]
     permissions:
       contents: read
@@ -1413,14 +1572,16 @@ jobs:
           path: k4ActsTracking
           persist-credentials: false
 
-      - name: Restore ccache
-        id: ccache-restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Set up uv for cache transfers
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        continue-on-error: true
+
+      - name: Restore ccache snapshot
+        uses: ./acts/.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-          restore-keys: |
-            ccache-${{ runner.os }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/external_key4hep-nightlies/${{ runner.os }}-${{ runner.arch }}/v1/
 
       - name: Build Key4hep dependents
         id: build
@@ -1451,7 +1612,6 @@ jobs:
           popd
 
           pushd k4ActsTracking
-          ccache -z
           echo "::group::Configure k4ActsTracking"
           cmake -B build -S . -GNinja \
             -DCMAKE_CXX_STANDARD=23 \
@@ -1480,12 +1640,33 @@ jobs:
           ccache -s
           popd
 
-      - name: Save ccache
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: always() && github.ref == 'refs/heads/main'
+      - name: ccache statistics
+        if: always()
+        continue-on-error: true
+        shell: bash
+        run: |
+          source "${KEY4HEP_VIEW}/setup.sh"
+          bash acts/CI/ccache_stats.sh
+          ccache -s
+
+      - name: Clean ccache before publication
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        shell: bash
+        run: |
+          source "${KEY4HEP_VIEW}/setup.sh"
+          ccache --cleanup
+
+      - name: Publish ccache snapshot
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./acts/.github/actions/ccache-s3
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/external_key4hep-nightlies/${{ runner.os }}-${{ runner.arch }}/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
       - name: Create comment body
         if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
@@ -1506,6 +1687,8 @@ jobs:
 
 
   linux_ubuntu_python_wheel:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -1515,12 +1698,33 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up uv for cache transfers
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+
+      - name: Restore ccache snapshot
+        uses: ./.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
+        with:
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/linux_ubuntu_python_wheel/${{ runner.os }}-${{ runner.arch }}/v1/
+
       - name: Build wheel
         uses: ./.github/actions/cibuildwheel_wrapper
         with:
           package-dir: .
           cibw-build: "cp313-*"
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish ccache snapshot
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: ./.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
+        with:
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/linux_ubuntu_python_wheel/${{ runner.os }}-${{ runner.arch }}/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

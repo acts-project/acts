@@ -119,25 +119,16 @@ FreeToBoundMatrix detail::freeToCurvilinearTransportJacobian(
          (freeTransportJacobian - freeToPathDerivatives * sfactors);
 }
 
-Result<void> detail::reinitializeJacobians(
-    const GeometryContext& geoContext, const Surface& surface,
-    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
-    BoundToFreeMatrix& boundToFreeJacobian, const FreeVector& freeParameters) {
+void detail::reinitializeJacobians(const GeometryContext& geoContext,
+                                   const Surface& surface,
+                                   FreeMatrix& freeTransportJacobian,
+                                   FreeVector& freeToPathDerivatives,
+                                   BoundToFreeMatrix& boundToFreeJacobian,
+                                   const FreeVector& freeParameters) {
   // Reset the jacobians
   freeTransportJacobian = FreeMatrix::Identity();
-  freeToPathDerivatives = FreeVector::Zero();
-
-  // Get the local position
-  const Vector3 position = freeParameters.segment<3>(eFreePos0);
-  const Vector3 direction = freeParameters.segment<3>(eFreeDir0);
-  auto lpResult = surface.globalToLocal(geoContext, position, direction);
-  if (!lpResult.ok()) {
-    return lpResult.error();
-  }
-  // Reset the jacobian from local to global
-  boundToFreeJacobian =
-      surface.boundToFreeJacobian(geoContext, position, direction);
-  return Result<void>::success();
+  reinitializeJacobians(geoContext, surface, freeToPathDerivatives,
+                        boundToFreeJacobian, freeParameters);
 }
 
 void detail::reinitializeJacobians(FreeMatrix& freeTransportJacobian,
@@ -149,23 +140,15 @@ void detail::reinitializeJacobians(FreeMatrix& freeTransportJacobian,
   reinitializeJacobians(freeToPathDerivatives, boundToFreeJacobian, direction);
 }
 
-Result<void> detail::reinitializeJacobians(
-    const GeometryContext& geoContext, const Surface& surface,
-    FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
-    const FreeVector& freeParameters) {
+void detail::reinitializeJacobians(const GeometryContext& geoContext,
+                                   const Surface& surface,
+                                   FreeVector& freeToPathDerivatives,
+                                   BoundToFreeMatrix& boundToFreeJacobian,
+                                   const FreeVector& freeParameters) {
   freeToPathDerivatives = FreeVector::Zero();
-
-  // Get the local position
-  const Vector3 position = freeParameters.segment<3>(eFreePos0);
-  const Vector3 direction = freeParameters.segment<3>(eFreeDir0);
-  if (auto lpResult = surface.globalToLocal(geoContext, position, direction);
-      !lpResult.ok()) {
-    return lpResult.error();
-  }
-  // Reset the jacobian from local to global
-  boundToFreeJacobian =
-      surface.boundToFreeJacobian(geoContext, position, direction);
-  return Result<void>::success();
+  boundToFreeJacobian = surface.boundToFreeJacobian(
+      geoContext, freeParameters.segment<3>(eFreePos0),
+      freeParameters.segment<3>(eFreeDir0));
 }
 
 void detail::reinitializeJacobians(FreeVector& freeToPathDerivatives,
