@@ -19,12 +19,7 @@ self-test job with `python -m pytest CI/check_material_schema.py`.
 The new API is declared in
 `ActsPlugins/Json/TrackingGeometryMaterialJsonConverter.hpp`. For example:
 
-```cpp
-Acts::TrackingGeometryMaterialJsonConverter converter;
-auto material = converter.fromFile("material.cbor.zst");
-material.apply(geometry);
-converter.toFile(material, "material.json");
-```
+@snippet{trimleft} examples/material_map_json.cpp Read and write material map
 
 Python exposes the same file converter as
 `acts.json.TrackingGeometryMaterialJsonConverter`.
