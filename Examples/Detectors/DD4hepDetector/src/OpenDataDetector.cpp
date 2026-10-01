@@ -8,6 +8,7 @@
 
 #include "ActsExamples/DD4hepDetector/OpenDataDetector.hpp"
 
+#include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/DD4hep/OpenDataDetectorBuilder.hpp"
 #include "ActsPlugins/Root/TGeoAxes.hpp"
@@ -22,28 +23,38 @@ OpenDataDetector::OpenDataDetector(const Config& cfg,
                                    const Acts::GeometryContext& gctx)
     : DD4hepDetectorBase{cfg}, m_cfg{cfg} {
   ACTS_INFO("OpenDataDetector construct");
+  std::unique_ptr<Acts::TrackingGeometry> trackingGeometry;
   switch (m_cfg.constructionMethod) {
     case Config::ConstructionMethod::BarrelEndcap:
-      m_trackingGeometry =
-          ActsPlugins::DD4hep::buildOpenDataDetectorBarrelEndcap(
-              dd4hepDetector(), gctx, logger());
+      trackingGeometry = ActsPlugins::DD4hep::buildOpenDataDetectorBarrelEndcap(
+          dd4hepDetector(), gctx, logger());
       break;
     case Config::ConstructionMethod::DirectLayer:
-      m_trackingGeometry =
-          ActsPlugins::DD4hep::buildOpenDataDetectorDirectLayer(
-              dd4hepDetector(), gctx, logger());
+      trackingGeometry = ActsPlugins::DD4hep::buildOpenDataDetectorDirectLayer(
+          dd4hepDetector(), gctx, logger());
       break;
     case Config::ConstructionMethod::DirectLayerGrouped:
-      m_trackingGeometry =
+      trackingGeometry =
           ActsPlugins::DD4hep::buildOpenDataDetectorDirectLayerGrouped(
               dd4hepDetector(), gctx, logger());
       break;
     case Config::ConstructionMethod::TGeo:
-      m_trackingGeometry =
+      trackingGeometry =
           ActsPlugins::DD4hep::buildOpenDataDetectorBarrelEndcapViaTGeo(
               *dd4hepDetector().world().placement().ptr(), gctx, logger());
       break;
   }
+
+  // Blueprint construction does not apply a material decorator, so load the
+  // material map here, now that the geometry identifiers are assigned
+  if (m_cfg.materialDecorator != nullptr) {
+    ACTS_INFO("Decorating the tracking geometry with material");
+    trackingGeometry->apply([this](Acts::Surface& surface) {
+      m_cfg.materialDecorator->decorate(surface);
+    });
+  }
+
+  m_trackingGeometry = std::move(trackingGeometry);
 }
 
 auto OpenDataDetector::config() const -> const Config& {

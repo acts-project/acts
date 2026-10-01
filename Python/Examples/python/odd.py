@@ -54,6 +54,7 @@ def getOpenDataDetector(
     Parameters
     ----------
     materialDecorator: Material Decorator, take RootMaterialDecorator if non is given
+      (Gen1 only; Gen3 applies a decorator only if one is given)
     odd_dir: if not given, try to get via ODD_PATH environment variable
     logLevel: logging level
     constructionMethod: Gen3 conversion method enum value of
@@ -117,18 +118,18 @@ def getOpenDataDetector(
             )
             raise RuntimeError(msg)
 
-    if materialDecorator is None:
-        materialDecorator = _defaultMaterialDecorator(odd_dir, customLogLevel)
-
     if gen3:
         if misaligned:
             raise ValueError("Gen3 ODD currently does not support misalignment")
 
+        # No default material map for Gen3: the shipped ODD map is keyed by
+        # Gen1 geometry identifiers. Only an explicitly given decorator is applied.
         oddConfig = acts.examples.dd4hep.OpenDataDetector.Config(
             xmlFileNames=xml_files,
             name="OpenDataDetector",
             logLevel=customLogLevel(),
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
+            materialDecorator=materialDecorator,
         )
         if constructionMethod is not None:
             oddConfig.constructionMethod = constructionMethod
@@ -142,6 +143,9 @@ def getOpenDataDetector(
 
         return detector
     else:
+        if materialDecorator is None:
+            materialDecorator = _defaultMaterialDecorator(odd_dir, customLogLevel)
+
         volumeRadiusCutsMap = {
             28: [850.0],  # LStrip negative z
             30: [850.0],  # LStrip positive z
