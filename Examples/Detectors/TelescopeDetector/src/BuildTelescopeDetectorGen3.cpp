@@ -122,9 +122,9 @@ ActsExamples::buildTelescopeDetectorGen3(
     // The translation without rotation yet
     Acts::Vector3 transVec;
     if (rotDirection == Acts::AxisDirection::AxisX) {
-      transVec = Acts::Vector3(positions[i], offsets[0], offsets[1]);
+      transVec = Acts::Vector3(positions[i], offsets[1], -offsets[0]);
     } else if (rotDirection == Acts::AxisDirection::AxisY) {
-      transVec = Acts::Vector3(offsets[0], positions[i], offsets[1]);
+      transVec = Acts::Vector3(offsets[0], positions[i], -offsets[1]);
     } else {  // AxisZ
       transVec = Acts::Vector3(offsets[0], offsets[1], positions[i]);
     }
