@@ -44,7 +44,7 @@ GbtsLayerConnectionTool::GbtsLayerConnectionTool(
 }
 
 void GbtsLayerConnectionTool::addTrack(
-    std::span<const std::optional<GbtsExperimentLayerId>> track) {
+    std::span<const GbtsExperimentLayerId> track) {
   if (track.size() < 2) {
     ACTS_WARNING("Track only has one measurement, skipping");
     return;
@@ -52,21 +52,16 @@ void GbtsLayerConnectionTool::addTrack(
 
   // update map with track layer transitions
   for (std::uint32_t id = 0; id + 1 < track.size(); id++) {
-    const auto& index1 = track[id];
-    const auto& index2 = track[id + 1];
+    const GbtsExperimentLayerId index1 = track[id];
+    const GbtsExperimentLayerId index2 = track[id + 1];
 
-    // skip nonexistent layers ids
-    if (!index1 || !index2) {
-      continue;
-    }
-
-    if (index1.value() == index2.value()) {
+    if (index1 == index2) {
       ACTS_WARNING("Track transitions between same layer, skipping");
 
       continue;
     }
 
-    m_layerPairs[{index1.value(), index2.value()}] += 1;
+    m_layerPairs[{index1, index2}] += 1;
   }
 
   m_totalTracks++;

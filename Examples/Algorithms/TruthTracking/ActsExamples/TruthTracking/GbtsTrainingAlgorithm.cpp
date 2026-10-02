@@ -153,9 +153,8 @@ ProcessCode GbtsTrainingAlgorithm::execute(const AlgorithmContext& ctx) const {
     ACTS_VERBOSE(measurements.size()
                  << " measurements for particle " << particle);
 
-    // the time and the GBTS layer of every hit
-    std::vector<std::pair<
-        double, std::optional<Acts::Experimental::GbtsExperimentLayerId>>>
+    // the time and the GBTS layer of every hit on one of the layers
+    std::vector<std::pair<double, Acts::Experimental::GbtsExperimentLayerId>>
         hits;
 
     hits.reserve(measurements.size());
@@ -188,17 +187,16 @@ ProcessCode GbtsTrainingAlgorithm::execute(const AlgorithmContext& ctx) const {
                    << measurement.geometryId().volume()
                    << " Layer: " << measurement.geometryId().layer()
                    << " Surface: " << measurement.geometryId().sensitive());
-        hits.emplace_back(simHitIt->time(), std::nullopt);
-      } else {
-        hits.emplace_back(simHitIt->time(), *layer);
+        continue;
       }
+
+      hits.emplace_back(simHitIt->time(), *layer);
     }
 
     // the layers in the order the particle passed them
     std::ranges::sort(hits, {}, [](const auto& hit) { return hit.first; });
 
-    std::vector<std::optional<Acts::Experimental::GbtsExperimentLayerId>>
-        layers;
+    std::vector<Acts::Experimental::GbtsExperimentLayerId> layers;
 
     layers.reserve(hits.size());
 

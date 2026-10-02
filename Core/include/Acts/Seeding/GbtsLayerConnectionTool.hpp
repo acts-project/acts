@@ -80,9 +80,9 @@ class GbtsLayerConnectionTool {
           getDefaultLogger("GbtsLayerConnectionTool", Logging::Level::INFO));
 
   /// converts layer hits to layer transitions
-  /// @param track the GBTS layer of every hit of a particle, in the order it
-  ///              passed them, empty for a hit on none of the layers
-  void addTrack(std::span<const std::optional<GbtsExperimentLayerId>> track);
+  /// @param track the GBTS layers of the hits of a particle, in the order it
+  ///              passed them
+  void addTrack(std::span<const GbtsExperimentLayerId> track);
 
   /// Creates the connection table
   /// @return layer pairs
