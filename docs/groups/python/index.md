@@ -43,14 +43,12 @@ development headers.
 
 | Capability | PyPI (`pyacts`) | Full installation (source build) |
 | :--- | :--- | :--- |
-| Plugins | Arrow, JSON, and FPE monitoring; no ROOT, DD4hep, or Geant4 | Optional plugins enabled through CMake |
-| I/O | CSV, Parquet, and ASCII HepMC3; particle and sim-hit ROOT files via Python `uproot` readers | Same formats, plus native ROOT and EDM4hep when enabled |
-| Geometry | Load tracking geometry from JSON; GenericDetector examples | Can also build detector geometry with DD4hep/ODD or TGeo when enabled |
-| Evaluation | In-memory performance writers and plotting in Python | Same Python writers, plus ROOT performance writers when enabled |
+| Plugins | Arrow, JSON | All available plugins, including ROOT, DD4hep, or Geant4 |
+| I/O | CSV, Parquet, particle and sim-hit ROOT `uproot` readers | Additionally native ROOT and EDM4hep |
+| Geometry | `GenericDetector`, Tracking geometry from JSON | Directly build detector geometries with DD4hep or TGeo |
+| Evaluation | In-memory performance writers and plotting in Python | Additionally native ROOT performance writers |
 
-Optional features in the full installation depend on which components and dependencies you build.
-
-## Getting started
+# Getting started
 
 An `acts.examples.Sequencer` runs readers, algorithms, and writers over events. This first script
 generates muons and prints them; it works with the PyPI wheel:
