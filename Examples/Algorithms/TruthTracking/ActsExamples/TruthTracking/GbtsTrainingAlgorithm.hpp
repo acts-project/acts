@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Seeding/GbtsLayerConnectionTool.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -18,6 +21,8 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <map>
+#include <optional>
 #include <string>
 
 namespace ActsExamples {
@@ -42,6 +47,9 @@ class GbtsTrainingAlgorithm final : public IAlgorithm {
         gbtsLayerConnectionToolConfig;
     /// geometry file used for creating layers
     std::string geometryFileDir{};
+    /// detector the layers are made of, their r and z extent is taken from
+    /// the sensitive surfaces of each layer
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// output directory for layer connection table
     std::string outputFileDir{};
   };
@@ -82,6 +90,10 @@ class GbtsTrainingAlgorithm final : public IAlgorithm {
       this, "MeasurementSimHitsMap"};
   /// mutex used for thread safety
   mutable std::mutex m_gbtsLayerConnectionToolMutex;
+  /// GBTS layer of every surface of the layer file: the layer of a surface is
+  /// the one of its module or, without one, the one of its whole layer
+  Acts::GeometryHierarchyMap<Acts::Experimental::GbtsExperimentLayerId>
+      m_surfaceLayers;
   /// layer connection tool from core
   mutable std::optional<Acts::Experimental::GbtsLayerConnectionTool>
       m_layerConnectionTool;
