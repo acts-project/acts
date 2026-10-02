@@ -13,7 +13,7 @@ and matrix variants. The original `linux_ubuntu/v1/` prefix is unchanged.
 Each new variant starts cold until its first main publication.
 
 Restore and publish remain explicit so jobs retain saves after failures and
-before later tests. LCG nightly only publishes after a successful configure.
+before later tests. Cancelled jobs skip cleanup and publication. LCG nightly only publishes after a successful configure.
 Cleanup and statistics run where ccache is available: the job container, sourced
 LCG/Key4hep view, EIC Docker container, or wheel build environment. Wheels clean
 before tests; failures before that point rely on ccache's automatic size cleanup.

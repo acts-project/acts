@@ -78,7 +78,11 @@ jobs:
             # resolution rather than uv preferring the currently pinned versions.
             rm -f "$output_txt"
 
-            uv pip compile --universal --python-version "$PYTHON_VERSION" "$input" -o "$output_txt"
+            extra_args=()
+            if [[ "$folder" == "Python/Examples/tests" ]]; then
+              extra_args+=(--generate-hashes)
+            fi
+            uv pip compile --universal --python-version "$PYTHON_VERSION" "${extra_args[@]}" "$input" -o "$output_txt"
           done
 
       - name: Detect changes
