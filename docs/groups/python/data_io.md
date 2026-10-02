@@ -7,14 +7,17 @@
 Add readers with `s.addReader(...)`, converters with `s.addAlgorithm(...)`, and writers with
 `s.addWriter(...)`. The available formats depend on the build (see @ref python_bindings):
 
-| Format | Python module | Availability and use |
-| :--- | :--- | :--- |
-| CSV | `acts.examples` | PyPI or source; readers and writers for common ACTS event collections. |
-| Parquet | `acts.examples.arrow` | PyPI or source; reads and writes Arrow tables. Converters connect tables to ACTS event collections. |
-| HepMC3 | `acts.examples.hepmc3` | PyPI or source; ASCII event files without ROOT. ROOT-format HepMC3 files require ROOT support. |
-| ROOT | `acts.examples.root` | ROOT-enabled source build; native readers and writers for particles, sim hits, tracks, vertices, material, and performance output. |
-| ROOT via Uproot | `acts.examples.uproot` | PyPI or source; Python readers for ACTS particle and sim-hit ROOT files. Install `uproot` and `numpy` separately. |
-| EDM4hep/podio | `acts.examples.edm4hep` | EDM4hep-enabled source build; `PodioReader` and `PodioWriter`. |
+| Format | Python module | Available in PyPI | Use |
+| :--- | :--- | :---: | :--- |
+| CSV | `acts.examples` | ✓ | Readers and writers for common ACTS event collections. |
+| Parquet | `acts.examples.arrow` | ✓ | Reads and writes Arrow tables; converters connect them to ACTS event collections. |
+| HepMC3 (ASCII) | `acts.examples.hepmc3` | ✓ | Reads and writes HepMC3 event files without ROOT. |
+| ROOT (native) | `acts.examples.root` | ✗ | Readers and writers for particles, sim hits, tracks, vertices, material, and performance output. |
+| ROOT via Uproot | `acts.examples.uproot` | ✓ | Python readers for ACTS particle and sim-hit ROOT files; install `uproot` and `numpy` separately. |
+| EDM4hep/podio | `acts.examples.edm4hep` | ✗ | `PodioReader` and `PodioWriter`. |
+
+✓ is included in the PyPI wheel; ✗ requires a source build with the corresponding component
+enabled. HepMC3 ROOT-format files also require ROOT support.
 
 ## Parquet and Arrow tables
 
@@ -65,10 +68,10 @@ using [uproot](https://uproot.readthedocs.io/) without a ROOT-enabled ACTS build
 `uproot` and `numpy` to be installed separately. For their `IReader` implementation, see
 @ref python_custom_algorithms.
 
-# Geometry without DD4hep
+# Loading detector geometry from JSON
 
-Load a `TrackingGeometry` from a JSON dump instead of building it from DD4hep or Geant4 — this is
-how you get a real detector geometry into a PyPI-only script:
+To use a `TrackingGeometry` built with detector tooling such as DD4hep or TGeo in a PyPI-only
+script, export it to JSON in a source build and load the JSON file:
 
 ```python
 import acts.json
@@ -81,4 +84,4 @@ trackingGeometry = converter.fromFile(gctx, "geometry.json")
 Material maps can be attached the same way with `acts.json.JsonMaterialDecorator`.
 The [geometry example](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/geometry.py)
 shows how to produce such a JSON dump from an existing `TrackingGeometry` (`toFile`/`toJson`),
-for example from a source build with DD4hep enabled.
+using a source build with the relevant detector tooling enabled.
