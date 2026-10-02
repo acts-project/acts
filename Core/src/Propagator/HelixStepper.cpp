@@ -45,21 +45,23 @@ HelixCoefficients helixCoefficients(double theta2) {
   // first omitted term is below 1e-17 at the threshold.
   if (theta2 < 1e-3) {
     const double t2 = theta2;
-    const double t4 = t2 * t2;
-    const double t6 = t4 * t2;
-    c.f1 = 1. - t2 / 6. + t4 / 120. - t6 / 5040.;
-    c.f2 = 1. / 2. - t2 / 24. + t4 / 720. - t6 / 40320.;
-    c.g2 = 1. / 6. - t2 / 120. + t4 / 5040. - t6 / 362880.;
-    c.h1 = 1. / 3. - t2 / 30. + t4 / 840. - t6 / 45360.;
-    c.h2 = 1. / 8. - t2 / 144. + t4 / 5760. - t6 / 403200.;
+    c.f1 = 1. + t2 * (-1. / 6. + t2 * (1. / 120. + t2 * (-1. / 5040.)));
+    c.f2 = 1. / 2. + t2 * (-1. / 24. + t2 * (1. / 720. + t2 * (-1. / 40320.)));
+    c.g2 =
+        1. / 6. + t2 * (-1. / 120. + t2 * (1. / 5040. + t2 * (-1. / 362880.)));
+    c.h1 = 1. / 3. + t2 * (-1. / 30. + t2 * (1. / 840. + t2 * (-1. / 45360.)));
+    c.h2 =
+        1. / 8. + t2 * (-1. / 144. + t2 * (1. / 5760. + t2 * (-1. / 403200.)));
     return c;
   }
   const double theta = std::sqrt(theta2);
-  const double sinTheta = std::sin(theta);
-  const double cosTheta = std::cos(theta);
+  // Half-angle forms: two trigonometric calls, and 1 - cos(theta) without
+  // the cancellation
   const double halfSin = std::sin(0.5 * theta);
-  // 1 - cos(theta) without the cancellation
+  const double halfCos = std::cos(0.5 * theta);
+  const double sinTheta = 2. * halfSin * halfCos;
   const double oneMinusCos = 2. * halfSin * halfSin;
+  const double cosTheta = 1. - oneMinusCos;
   const double theta3 = theta2 * theta;
   c.f1 = sinTheta / theta;
   c.f2 = oneMinusCos / theta2;
@@ -224,9 +226,7 @@ Result<HelixStepper::Jacobian> HelixStepper::transportToBound(
 }
 
 Result<double> HelixStepper::step(State& state, Direction propDir,
-                                  const IVolumeMaterial* material) const {
-  static_cast<void>(material);
-
+                                  const IVolumeMaterial* /*material*/) const {
   const Vector3 pos = position(state);
   const Vector3 dir = direction(state);
   const double qop = qOverP(state);
