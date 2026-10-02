@@ -4,15 +4,20 @@
 
 # Performance writers
 
-ACTS has two output options for the same performance evaluation. Each pair below uses the same
+ACTS has two output options for the same performance evaluation. Each pair uses the same
 collector and produces the same main histogram families. The Python writer returns histograms
 through `.histograms()` after `s.run()`; the ROOT writer saves them in a ROOT file. ROOT output
 also includes some summary objects and can include matching details.
 
-| Evaluation | In-memory Python output (PyPI or source) | ROOT file output (ROOT-enabled source build) |
-| :--- | :--- | :--- |
-| Pattern recognition: efficiency, fake and duplicate tracks | `PythonPatternRecognitionPerformanceWriter` | `RootPatternRecognitionPerformanceWriter` |
-| Track parameters: residuals, pulls, efficiency | `PythonTrackParameterPerformanceWriter` | `RootTrackParameterPerformanceWriter` |
+- **Pattern recognition** (efficiency, fake and duplicate tracks):
+  `PythonPatternRecognitionPerformanceWriter` for in-memory output, or
+  `RootPatternRecognitionPerformanceWriter` for a ROOT file.
+- **Track parameters** (residuals, pulls, efficiency):
+  `PythonTrackParameterPerformanceWriter` for in-memory output, or
+  `RootTrackParameterPerformanceWriter` for a ROOT file.
+
+The Python writers are available from PyPI or a source build. The ROOT writers require a
+ROOT-enabled source build.
 
 The pattern-recognition pair takes the same input collections and uses similar configurations.
 With a `Sequencer` and truth matcher already configured, add the Python writer like this:
@@ -85,17 +90,31 @@ histograms["trackeff_vs_pT"].plot()
 plt.savefig("tracking_efficiency.svg")
 ```
 
-The following plots illustrate the efficiency and residual views. They use example data, not
-measured ACTS output; regenerate them with
+The following plots illustrate the efficiency and residual views. They use randomly sampled
+example counts, not measured ACTS output. The efficiency bars show binomial standard errors;
+the residual-count bars show square-root count uncertainties. Regenerate them with
 `docs/examples/generate_python_performance_plots.py`.
 
 ![Illustrative tracking efficiency versus transverse momentum.](python/tracking_efficiency.svg){width=450px}
 ![Illustrative track-parameter residual distribution.](python/track_residual.svg){width=450px}
 
-For a one-dimensional profile from this writer,
-`boost_histogram.Histogram(histograms["nMeasurements_vs_eta"])` gives a
-[boost-histogram](https://boost-histogram.readthedocs.io/) object for rebinning or other plotting
-tools.
+ACTS `Histogram1` and `ProfileHistogram1` objects can also be converted to
+[boost-histogram](https://boost-histogram.readthedocs.io/) objects for rebinning or other
+plotting tools. The converted histogram can also be serialized with Python's `pickle`, so you
+can save it and load it in a later analysis. For example, after the pattern-recognition writer
+has run:
+
+```python
+import pickle
+
+import boost_histogram as bh
+
+measurements = bh.Histogram(histograms["nMeasurements_vs_eta"])
+with open("n_measurements.pkl", "wb") as output:
+    pickle.dump(measurements, output)
+```
+
+For an `Efficiency1`, convert its `.accepted` and `.total` histograms separately.
 
 For geometry and track visualization (not histogram plotting), see
 `acts.examples.visualization.PyVisualization2D` and `TrackVisualizerAlg`, and
