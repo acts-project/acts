@@ -29,11 +29,77 @@
 #include <limits>
 #include <map>
 #include <numbers>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 namespace ActsExamples {
+
+namespace {
+
+/// Restate, per layer pair, the tau ratio tolerance the seeder used to derive
+/// per triplet. A pair between two pixel barrel layers is widened unless it
+/// steps one layer outwards, and a pair that leaves the pixel barrel is widened
+/// too. A pair with a strip layer at either end is widened again.
+///
+/// @param connections The layer pairs, whose cuts are filled in
+/// @param layers The layer descriptions, for technology, type and radius
+/// @param base Tolerance of a pair that is widened by nothing
+/// @param corr Widening of a pair that skips a layer or leaves the barrel
+/// @param corrStrip Widening of a pair with a strip layer at either end
+void assignTauRatioCuts(
+    std::vector<Acts::Experimental::GbtsLayerConnection> &connections,
+    const std::vector<Acts::Experimental::GbtsLayerDescription> &layers,
+    float base, float corr, float corrStrip) {
+  using Acts::Experimental::GbtsExperimentLayerId;
+  using Acts::Experimental::GbtsLayerDescription;
+  using Acts::Experimental::GbtsLayerTechnology;
+  using Acts::Experimental::GbtsLayerType;
+
+  // inside-out ordinal of each pixel barrel layer, by the rule GbtsGeometry
+  // applies when barrelOrder is left unset
+  std::vector<const GbtsLayerDescription *> pixelBarrel;
+  for (const GbtsLayerDescription &layer : layers) {
+    if (layer.type == GbtsLayerType::Barrel &&
+        layer.technology == GbtsLayerTechnology::Pixel) {
+      pixelBarrel.push_back(&layer);
+    }
+  }
+  std::ranges::sort(pixelBarrel, {}, [](const GbtsLayerDescription *l) {
+    return std::pair{l->refCoord, l->id};
+  });
+  std::map<GbtsExperimentLayerId, std::int32_t> barrelOrder;
+  for (std::size_t i = 0; i < pixelBarrel.size(); ++i) {
+    barrelOrder.emplace(pixelBarrel[i]->id, pixelBarrel[i]->barrelOrder >= 0
+                                                ? pixelBarrel[i]->barrelOrder
+                                                : static_cast<std::int32_t>(i));
+  }
+
+  std::set<GbtsExperimentLayerId> strips;
+  for (const GbtsLayerDescription &layer : layers) {
+    if (layer.technology == GbtsLayerTechnology::Strip) {
+      strips.insert(layer.id);
+    }
+  }
+
+  for (auto &connection : connections) {
+    const auto src = barrelOrder.find(connection.src);  // outer
+    const auto dst = barrelOrder.find(connection.dst);  // inner
+
+    const bool inBarrel = src != barrelOrder.end() && dst != barrelOrder.end();
+    const bool skipsLayer = inBarrel && src->second - dst->second != 1;
+    const bool leavesBarrel =
+        dst != barrelOrder.end() && src == barrelOrder.end();
+    const bool touchesStrip =
+        strips.contains(connection.src) || strips.contains(connection.dst);
+
+    connection.tauRatioCut = base + (skipsLayer || leavesBarrel ? corr : 0.f) +
+                             (touchesStrip ? corrStrip : 0.f);
+  }
+}
+
+}  // namespace
 
 GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
     const Config &cfg, std::unique_ptr<const Acts::Logger> logger)
@@ -83,6 +149,13 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // as well as a map that tracks there index in m_layerGeometry
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
+
+  // the seeder cuts a triplet on what its two layer pairs carry, so the
+  // tolerances are worked out here rather than there
+  assignTauRatioCuts(connections, layerGeometry,
+                     m_cfg.seedFinderConfig.tauRatioCut,
+                     m_cfg.useAdaptiveCuts ? m_cfg.tauRatioCorr : 0.f,
+                     m_cfg.tauRatioCorrStrip);
 
   // initialise the object that holds all the geometry information needed for
   // the algorithm
@@ -385,9 +458,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("hitShareThreshold: " << cfg1.hitShareThreshold);
   ACTS_DEBUG("maxEndcapClusterWidth: " << cfg1.maxEndcapClusterWidth);
   ACTS_DEBUG("validateTriplets: " << cfg1.validateTriplets);
-  ACTS_DEBUG("useAdaptiveCuts: " << cfg1.useAdaptiveCuts);
   ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
-  ACTS_DEBUG("tauRatioCorr: " << cfg1.tauRatioCorr);
   ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
   ACTS_DEBUG("d0Max: " << cfg1.d0Max);
   ACTS_DEBUG("cutDPhiMax: " << cfg1.cutDPhiMax);

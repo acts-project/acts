@@ -53,9 +53,14 @@ constexpr float kDiscMaxR = 220.f;
 /// createLinkingScheme.py.
 constexpr float kEtaBinWidth = 0.2f;
 
-/// One layer of the toy detector. The ids follow ATLAS, which the seeder still
-/// keys on: 80000 is the innermost barrel layer (extra z0 cuts) and barrel ids
-/// 1000 apart are adjacent.
+/// Tau ratio tolerances the toy detector puts on its layer pairs, matching the
+/// constants GBTS was tuned with.
+constexpr float kTauRatioCut = 0.007f;
+constexpr float kTauRatioCorr = 0.006f;
+constexpr float kTauRatioCorrStrip = 0.03f;
+
+/// One layer of the toy detector. The ids follow ATLAS, but the seeder does not
+/// read them: it orders the pixel barrel layers by radius.
 struct LayerSpec {
   Experimental::GbtsExperimentLayerId id{};
   GbtsLayerType type{};
@@ -150,10 +155,29 @@ std::shared_ptr<Experimental::GbtsGeometry> makeGeometry(
     layers.push_back(layer);
   }
 
+  // the tolerances an ATLAS-like experiment would put on its own pairs: one
+  // leaving the pixel barrel scatters more, and one with a strip at either end
+  // more again, since its two doublets resolve the shared node separately
+  const auto layerOf = [&detector](Experimental::GbtsExperimentLayerId id) {
+    return *std::ranges::find(detector.layers, id, &LayerSpec::id);
+  };
+  const auto isPixelBarrel = [&](Experimental::GbtsExperimentLayerId id) {
+    const LayerSpec& layer = layerOf(id);
+    return layer.technology == GbtsLayerTechnology::Pixel &&
+           layer.type == GbtsLayerType::Barrel;
+  };
+  const auto isStrip = [&](Experimental::GbtsExperimentLayerId id) {
+    return layerOf(id).technology == GbtsLayerTechnology::Strip;
+  };
+
   std::vector<Experimental::GbtsLayerConnection> connections;
   connections.reserve(detector.links.size());
   for (const auto& [src, dst] : detector.links) {
-    connections.push_back({src, dst});
+    const float cut =
+        kTauRatioCut +
+        ((isPixelBarrel(dst) && !isPixelBarrel(src)) ? kTauRatioCorr : 0.f) +
+        ((isStrip(src) || isStrip(dst)) ? kTauRatioCorrStrip : 0.f);
+    connections.push_back({src, dst, cut});
   }
 
   return std::make_shared<Experimental::GbtsGeometry>(layers, connections,
@@ -555,8 +579,8 @@ BOOST_AUTO_TEST_CASE(LayerBinningTilesTheBins) {
   BOOST_CHECK(!geometry->binGroups().empty());
   for (const Experimental::GbtsBinGroup& group : geometry->binGroups()) {
     BOOST_CHECK_LT(group.bin, geometry->numBins());
-    for (const std::uint32_t link : group.links) {
-      BOOST_CHECK_LT(link, geometry->numBins());
+    for (const Experimental::GbtsBinLink& link : group.links) {
+      BOOST_CHECK_LT(link.bin, geometry->numBins());
     }
   }
 }
