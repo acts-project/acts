@@ -81,14 +81,10 @@ for name, histogram in sorted(writer.histograms().items()):
 ## Plotting
 
 One-dimensional `Histogram1`, `ProfileHistogram1`, and `Efficiency1` objects support `.plot()`
-with matplotlib and mplhep:
+with matplotlib and mplhep. For example, `histograms["trackeff_vs_pT"].plot()` plots tracking
+efficiency. This tested snippet uses a sample histogram:
 
-```python
-import matplotlib.pyplot as plt
-
-histograms["trackeff_vs_pT"].plot()
-plt.savefig("tracking_efficiency.svg")
-```
+@snippet{trimleft} examples/test_performance_and_plotting.py Plotting an ACTS histogram
 
 The following plots illustrate the efficiency and residual views. They use randomly sampled
 example counts, not measured ACTS output. The efficiency bars show binomial standard errors;
