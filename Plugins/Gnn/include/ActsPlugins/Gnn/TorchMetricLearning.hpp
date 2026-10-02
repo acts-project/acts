@@ -44,10 +44,7 @@ class TorchMetricLearning final : public GraphConstructionBase {
     /// Device to run inference on
     Device device = Device::Cuda();
     /// Device to run the model on, independent of the device the pipeline
-    /// tensors live on. Unset (the default) runs the model on the pipeline
-    /// device, which is the historical behaviour. Set it to pin the model, e.g.
-    /// to Device::Mps() to run it on the Apple GPU while the tensors stay on
-    /// the host.
+    /// tensors live on. 
     std::optional<Device> modelDevice = std::nullopt;
 
     /// Scaling factor for phi coordinate in edge features
