@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
@@ -58,13 +59,15 @@ class CustomMaterial final : public ISurfaceMaterial {
   MaterialSlab m_slab;
 };
 nlohmann::json encodeCustom(const CustomMaterial& m,
-                            Converter::EncodeContext& /*context*/) {
+                            Converter::EncodeContext& context) {
   return {{"kind", "application-custom"},
-          {"thickness", m.materialSlab(Vector2::Zero()).thickness()}};
+          {"thickness",
+           m.materialSlab(Vector2::Zero()).thickness() / context.lengthUnit()}};
 }
 std::unique_ptr<const ISurfaceMaterial> decodeCustom(
-    const nlohmann::json& j, const Converter::DecodeContext& /*context*/) {
-  return std::make_unique<CustomMaterial>(j.at("thickness").get<double>());
+    const nlohmann::json& j, const Converter::DecodeContext& context) {
+  return std::make_unique<CustomMaterial>(j.at("thickness").get<double>() *
+                                          context.lengthUnit());
 }
 }  // namespace
 
@@ -100,6 +103,112 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentExamples) {
   BOOST_CHECK(
       std::get<GridSurfaceMaterial::GloballyIndexed>(a->storage()).material ==
       std::get<GridSurfaceMaterial::GloballyIndexed>(b->storage()).material);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialDocumentUnits) {
+  Converter converter;
+  auto document = fixture("minimal.json");
+  document["header"]["units"] = {{"length", "cm"},
+                                 {"angle", "deg"},
+                                 {"energy", "MeV"},
+                                 {"material_amount", "mmol"}};
+  const auto originalSlab = document["surfaces"][0]["material"]["slab"];
+  const auto encoded = converter.toJson(converter.fromJson(document));
+  BOOST_CHECK(encoded["header"]["units"] ==
+              fixture("minimal.json")["header"]["units"]);
+  const auto& slab = encoded["surfaces"][0]["material"]["slab"];
+  BOOST_CHECK_CLOSE_FRACTION(slab["thickness"].get<double>(),
+                             originalSlab["thickness"].get<double>() * 10.,
+                             1e-6);
+  for (const auto* field :
+       {"radiation_length", "interaction_length", "molar_density",
+        "molar_electron_density", "mean_excitation_energy"}) {
+    const std::string name(field);
+    const double factor = name.ends_with("length")    ? 10.
+                          : name.ends_with("density") ? 1e-6
+                                                      : 1e-3;
+    BOOST_CHECK_CLOSE_FRACTION(
+        slab["material"][field].get<double>(),
+        originalSlab["material"][field].get<double>() * factor, 1e-6);
+  }
+
+  // Exercise binned, direct, indexed and shared storage with noncanonical
+  // units.
+  auto surfaces = fixture("surfaces.json");
+  const auto baseline = converter.toJson(converter.fromJson(surfaces));
+  surfaces["header"]["units"] = document["header"]["units"];
+  const auto rescaled = converter.toJson(converter.fromJson(surfaces));
+  auto checkSlabs = [&](auto&& self, const nlohmann::json& before,
+                        const nlohmann::json& after) -> void {
+    if (before.is_object() && before.contains("thickness")) {
+      BOOST_CHECK_CLOSE_FRACTION(after.at("thickness").get<double>(),
+                                 before.at("thickness").get<double>() * 10.,
+                                 1e-6);
+      if (before.at("material").at("kind") == "material") {
+        for (const auto* field : {"molar_density", "molar_electron_density"}) {
+          BOOST_CHECK_CLOSE_FRACTION(
+              after.at("material").at(field).get<double>(),
+              before.at("material").at(field).get<double>() * 1e-6, 1e-6);
+        }
+      }
+    } else if (before.is_object()) {
+      for (const auto& [key, value] : before.items()) {
+        self(self, value, after.at(key));
+      }
+    } else if (before.is_array()) {
+      for (std::size_t i = 0; i < before.size(); ++i) {
+        self(self, before.at(i), after.at(i));
+      }
+    }
+  };
+  checkSlabs(checkSlabs, baseline, rescaled);
+
+  auto templates = fixture("templates.json");
+  templates["header"]["units"] = document["header"]["units"];
+  auto& protoAxes = templates["surfaces"][1]["material"]["axes"];
+  protoAxes[0] = {{"kind", "equidistant"},
+                  {"bins", 2},
+                  {"direction", "phi"},
+                  {"range", {-180., 180.}}};
+  auto& binning = templates["surfaces"][0]["material"]["binning"];
+  binning["transform"] = {
+      {"rotation", {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}}},
+      {"translation", {1., 2., 3.}}};
+  const auto output = converter.toJson(converter.fromJson(templates));
+  const auto& axes = output["surfaces"].back()["material"]["axes"];
+  BOOST_CHECK_CLOSE_FRACTION(axes[0]["range"][1].get<double>(),
+                             180. * UnitConstants::degree, 1e-12);
+  BOOST_CHECK(axes[1] == protoAxes[1]);  // Normalized edges stay dimensionless.
+  BOOST_CHECK(output["surfaces"][0]["material"]["binning"]["transform"]
+                    ["translation"] == nlohmann::json({10., 20., 30.}));
+  for (const auto* direction : {"x", "rphi", "eta", "theta"}) {
+    protoAxes[0]["direction"] = direction;
+    const auto converted = converter.toJson(converter.fromJson(templates));
+    const double factor = std::string(direction) == "eta" ? 1.
+                          : std::string(direction) == "theta"
+                              ? UnitConstants::degree
+                              : 10.;
+    BOOST_CHECK_CLOSE_FRACTION(converted["surfaces"]
+                                   .back()["material"]["axes"][0]["range"][1]
+                                   .get<double>(),
+                               180. * factor, 1e-12);
+  }
+
+  for (const auto* key : {"length", "angle", "energy", "material_amount"}) {
+    auto invalid = document;
+    invalid["header"]["units"][key] = "unknown";
+    BOOST_CHECK_EXCEPTION(converter.fromJson(invalid), std::invalid_argument,
+                          [&](const auto& error) {
+                            return std::string(error.what()).find(key) !=
+                                   std::string::npos;
+                          });
+    invalid["header"]["units"].erase(key);
+    BOOST_CHECK_THROW(converter.fromJson(invalid), nlohmann::json::exception);
+  }
+  document["header"]["units"]["length"] = "GeV";
+  BOOST_CHECK_THROW(converter.fromJson(document), std::invalid_argument);
+  document["header"].erase("units");
+  BOOST_CHECK_THROW(converter.fromJson(document), nlohmann::json::exception);
 }
 
 BOOST_AUTO_TEST_CASE(MaterialDocumentDescription) {
@@ -151,6 +260,8 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentPhysicalPropertiesAndStorage) {
       encoded.at("surfaces").at(0).at("target").at("geometry_id");
   BOOST_CHECK_EQUAL(encodedId.at("passive").get<unsigned int>(), 255u);
   BOOST_CHECK(!encodedId.contains("approach"));
+  BOOST_CHECK_EQUAL(encodedId.at("portal").get<unsigned int>(), 255u);
+  BOOST_CHECK(!encodedId.contains("boundary"));
   const auto recovered = converter.fromJson(encoded);
   BOOST_CHECK(source.description() == recovered.description());
   const auto& material = *recovered.surfaceMaterials.at(id);
@@ -290,6 +401,17 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentExtensionDispatchAndFiles) {
       std::make_shared<CustomMaterial>(7.23751);
   const auto encoded = converter.toJson(source);
   BOOST_CHECK_THROW(Converter().fromJson(encoded), std::invalid_argument);
+  auto centimeters = encoded;
+  centimeters["header"]["units"]["length"] = "cm";
+  const auto scaled = converter.fromJson(centimeters);
+  BOOST_CHECK_CLOSE_FRACTION(scaled.surfaceMaterials.begin()
+                                 ->second->materialSlab(Vector2::Zero())
+                                 .thickness(),
+                             source.surfaceMaterials.begin()
+                                     ->second->materialSlab(Vector2::Zero())
+                                     .thickness() *
+                                 10.,
+                             1e-6);
   const auto decoded = converter.fromJson(encoded);
   BOOST_CHECK(dynamic_cast<const CustomMaterial*>(
                   decoded.surfaceMaterials.begin()->second.get()) != nullptr);

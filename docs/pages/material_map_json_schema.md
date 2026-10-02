@@ -33,9 +33,10 @@ An empty assignment list is valid.
 | `geometry-id` | Exact `geometry_id`, without hierarchy wildcards |
 | `stable-key` | Exact `key`; `recorded_geometry_id` is diagnostic only |
 
-Geometry IDs use integer components `volume`, `boundary`, `layer`, `passive`,
+Geometry IDs use integer components `volume`, `portal`, `layer`, `passive`,
 `sensitive` and `extra`. Omitted components mean **zero, never wildcards**.
-`passive` names the shared approach/passive bit field. Packed IDs are not supported.
+`portal` names the boundary bit field; `passive` names the shared approach/passive
+bit field. Packed IDs are not supported.
 Stable keys are nonempty and case-sensitive. Duplicate identities are errors;
 a proto payload's `material_key`, when present on a keyed assignment, must match.
 
@@ -46,8 +47,27 @@ record lost material and cannot be applied as physical material.
 
 ## Values and units
 
-Format units are **mm**, **radians**, **GeV** and **mol/mm³**, independent of build
-units. Relative atomic mass and atomic number are dimensionless.
+The required `header.units` declares base units by name. Writers use:
+
+```json
+"units": {"length": "mm", "angle": "rad", "energy": "GeV", "material_amount": "mol"}
+```
+
+| Quantity | Accepted units |
+| --- | --- |
+| `length` | `nm`, `um`, `mm`, `cm`, `m` |
+| `angle` | `rad`, `mrad`, `deg` |
+| `energy` | `eV`, `keV`, `MeV`, `GeV`, `TeV` |
+| `material_amount` | `mol`, `mmol`, `kmol` |
+
+Readers convert to Acts units and reject unknown or dimensionally wrong names.
+Both molar densities use **material_amount / length³**; there is no compound-unit
+parser. Changing a length unit therefore also requires rescaling density values.
+Lengths cover slab thickness, material lengths, translations and length-valued
+axes. `phi`/`theta` use the angle unit; `eta` and normalized deferred edges are
+dimensionless. Axis ranges without a direction use the length unit; `rphi` uses
+length with azimuth in radians. Relative atomic mass and atomic number are
+dimensionless.
 Material fields preserve radiation and interaction lengths, relative atomic mass,
 atomic number, molar density, molar electron density and mean excitation energy.
 The last two are stored independently rather than reconstructed from the others.
@@ -59,6 +79,10 @@ type (`default`, `pre`, `post`, `sensor`) and split factor in [0,1]. Proto mater
 require split factor 1.
 
 ## Axes and storage
+
+@ref Acts::BinUtility "BinUtility" is being phased out. Its binned/proto and
+subdivided-axis encodings are retained for compatibility. Prefer
+@ref Acts::GridSurfaceMaterial and @ref Acts::ProtoGridSurfaceMaterial for new code.
 
 Arrays are dense, flat and zero-based, with **axis 0 varying fastest**:
 `offset = i0 + size0 * i1`. This differs from native @ref Acts::MultiAxis "MultiAxis" storage order;
@@ -106,7 +130,9 @@ can be applied to a particular geometry.
 
 The schema rejects unknown fields. The reader ignores unused fields except
 `volumes`, which is rejected. @ref Acts::TrackingGeometryMaterialJsonConverter::Config "Config" supports custom material dispatchers;
-custom kinds also need an extended schema for offline validation.
+custom kinds also need an extended schema for offline validation. Encoder and
+decoder contexts expose unit factors for custom payloads; encoding divides by
+the factor and decoding multiplies by it.
 
 Legacy conversion follows decode → @ref Acts::TrackingGeometryMaterial "TrackingGeometryMaterial" → new encode.
 It cannot recover information already lost by the legacy reader or format,

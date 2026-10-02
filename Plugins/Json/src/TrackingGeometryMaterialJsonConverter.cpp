@@ -42,6 +42,19 @@ void check(bool condition, const std::string& message) {
   }
 }
 
+double unit(
+    const nlohmann::json& units, const char* dimension,
+    std::initializer_list<std::pair<std::string_view, double>> supported) {
+  const auto name = units.at(dimension).get<std::string>();
+  for (const auto& [symbol, factor] : supported) {
+    if (name == symbol) {
+      return factor;
+    }
+  }
+  throw std::invalid_argument("unsupported " + std::string(dimension) +
+                              " unit '" + name + "'");
+}
+
 void array(const nlohmann::json& j, std::size_t min,
            std::size_t max = std::numeric_limits<std::size_t>::max()) {
   check(j.is_array() && j.size() >= min && j.size() <= max,
@@ -78,7 +91,7 @@ nlohmann::json encodeId(GeometryIdentifier id) {
   for (auto [name, value] :
        std::initializer_list<std::pair<const char*, std::uint64_t>>{
            {"volume", id.volume()},
-           {"boundary", id.boundary()},
+           {"portal", id.boundary()},
            {"layer", id.layer()},
            {"passive", id.passive()},
            {"sensitive", id.sensitive()},
@@ -96,7 +109,7 @@ GeometryIdentifier decodeId(const nlohmann::json& j) {
   };
   return GeometryIdentifier()
       .withVolume(field("volume", GeometryIdentifier::getMaxVolume()))
-      .withBoundary(field("boundary", GeometryIdentifier::getMaxBoundary()))
+      .withBoundary(field("portal", GeometryIdentifier::getMaxBoundary()))
       .withLayer(field("layer", GeometryIdentifier::getMaxLayer()))
       .withPassive(field("passive", GeometryIdentifier::getMaxApproach()))
       .withSensitive(field("sensitive", GeometryIdentifier::getMaxSensitive()))
@@ -116,12 +129,13 @@ std::string direction(AxisDirection d) {
   return directions.at(static_cast<std::size_t>(d));
 }
 
-double axisUnit(std::optional<AxisDirection> d) {
+double axisUnit(std::optional<AxisDirection> d, double length = lengthUnit,
+                double angle = UnitConstants::rad) {
   using enum AxisDirection;
-  if (d == AxisPhi || d == AxisTheta || d == AxisEta) {
-    return 1.;
+  if (d == AxisPhi || d == AxisTheta) {
+    return angle;
   }
-  return lengthUnit;
+  return d == AxisEta ? 1. : length;
 }
 
 AxisBoundaryType boundary(const nlohmann::json& j) {
@@ -152,7 +166,8 @@ std::string boundary(AxisBoundaryType b) {
   throw std::invalid_argument("invalid boundary");
 }
 
-Transform3 decodeTransform(const nlohmann::json& j) {
+Transform3 decodeTransform(const nlohmann::json& j,
+                           const DecodeContext& context) {
   array(j.at("rotation"), 3, 3);
   array(j.at("translation"), 3, 3);
   Transform3 t = Transform3::Identity();
@@ -161,7 +176,8 @@ Transform3 decodeTransform(const nlohmann::json& j) {
     for (int c = 0; c < 3; ++c) {
       t.linear()(r, c) = j.at("rotation").at(r).at(c).get<double>();
     }
-    t.translation()[r] = j.at("translation").at(r).get<double>() * lengthUnit;
+    t.translation()[r] =
+        j.at("translation").at(r).get<double>() * context.lengthUnit();
   }
   return t;
 }
@@ -180,12 +196,12 @@ nlohmann::json encodeTransform(const Transform3& t) {
   return j;
 }
 
-float decodeLength(const nlohmann::json& j) {
+float decodeLength(const nlohmann::json& j, const DecodeContext& context) {
   if (j.is_string() && j == "infinity") {
     return std::numeric_limits<float>::infinity();
   }
   auto v = j.get<double>();
-  return finiteFloat(v * lengthUnit);
+  return finiteFloat(v * context.lengthUnit());
 }
 
 nlohmann::json encodeLength(float v) {
@@ -195,7 +211,7 @@ nlohmann::json encodeLength(float v) {
   return v / lengthUnit;
 }
 
-Material decodeMaterial(const nlohmann::json& j) {
+Material decodeMaterial(const nlohmann::json& j, const DecodeContext& context) {
   auto kind = j.at("kind").get<std::string>();
   if (kind == "vacuum") {
     return Material::Vacuum();
@@ -203,12 +219,14 @@ Material decodeMaterial(const nlohmann::json& j) {
   check(kind == "material", "unsupported composition kind");
   auto ar = finiteFloat(j.at("relative_atomic_mass").get<double>());
   return Material::fromMolarDensity(
-      decodeLength(j.at("radiation_length")),
-      decodeLength(j.at("interaction_length")), ar,
+      decodeLength(j.at("radiation_length"), context),
+      decodeLength(j.at("interaction_length"), context), ar,
       finiteFloat(j.at("atomic_number").get<double>()),
-      finiteFloat(j.at("molar_density").get<double>() * densityUnit),
-      finiteFloat(j.at("molar_electron_density").get<double>() * densityUnit),
-      finiteFloat(j.at("mean_excitation_energy").get<double>() * energyUnit));
+      finiteFloat(j.at("molar_density").get<double>() * context.densityUnit()),
+      finiteFloat(j.at("molar_electron_density").get<double>() *
+                  context.densityUnit()),
+      finiteFloat(j.at("mean_excitation_energy").get<double>() *
+                  context.energyUnit()));
 }
 
 nlohmann::json encodeMaterial(const Material& m) {
@@ -227,10 +245,10 @@ nlohmann::json encodeMaterial(const Material& m) {
   return j;
 }
 
-MaterialSlab decodeSlab(const nlohmann::json& j) {
+MaterialSlab decodeSlab(const nlohmann::json& j, const DecodeContext& context) {
   return MaterialSlab(
-      decodeMaterial(j.at("material")),
-      finiteFloat(j.at("thickness").get<double>() * lengthUnit));
+      decodeMaterial(j.at("material"), context),
+      finiteFloat(j.at("thickness").get<double>() * context.lengthUnit()));
 }
 
 nlohmann::json encodeSlab(const MaterialSlab& slab) {
@@ -238,12 +256,13 @@ nlohmann::json encodeSlab(const MaterialSlab& slab) {
           {"thickness", slab.thickness() / lengthUnit}};
 }
 
-std::vector<MaterialSlab> decodeSlabs(const nlohmann::json& j) {
+std::vector<MaterialSlab> decodeSlabs(const nlohmann::json& j,
+                                      const DecodeContext& context) {
   array(j, 1);
   std::vector<MaterialSlab> result;
   result.reserve(j.size());
   for (const auto& v : j) {
-    result.emplace_back(decodeSlab(v));
+    result.emplace_back(decodeSlab(v, context));
   }
   return result;
 }
@@ -275,7 +294,8 @@ nlohmann::json settings(const ISurfaceMaterial& m) {
        m.factor(Direction::Backward(), MaterialUpdateMode::PreUpdate)}};
 }
 
-AxisSpec decodeAxis(const nlohmann::json& j, bool deferred) {
+AxisSpec decodeAxis(const nlohmann::json& j, bool deferred,
+                    const DecodeContext& context) {
   const auto kind = j.at("kind").get<std::string>();
   std::optional<AxisDirection> d;
   std::optional<AxisBoundaryType> b;
@@ -293,8 +313,10 @@ AxisSpec decodeAxis(const nlohmann::json& j, bool deferred) {
     std::optional<double> max;
     if (j.contains("range")) {
       array(j.at("range"), 2, 2);
-      min = j.at("range").at(0).get<double>() * axisUnit(d);
-      max = j.at("range").at(1).get<double>() * axisUnit(d);
+      min = j.at("range").at(0).get<double>() *
+            axisUnit(d, context.lengthUnit(), context.angleUnit());
+      max = j.at("range").at(1).get<double>() *
+            axisUnit(d, context.lengthUnit(), context.angleUnit());
     }
     check(deferred || min.has_value(), "resolved axis requires range");
     return AxisSpec::Equidistant(n, min, max, b, d);
@@ -306,7 +328,9 @@ AxisSpec decodeAxis(const nlohmann::json& j, bool deferred) {
   std::vector<double> edges;
   for (const auto& e : j.at(field)) {
     edges.emplace_back(e.get<double>() *
-                       (kind == "variable" ? axisUnit(d) : 1.));
+                       (kind == "variable" ? axisUnit(d, context.lengthUnit(),
+                                                      context.angleUnit())
+                                           : 1.));
   }
   return kind == "variable" ? AxisSpec::Variable(edges, b, d)
                             : AxisSpec::DeferredVariable(edges, b, d);
@@ -342,11 +366,12 @@ nlohmann::json encodeAxis(const AxisSpec& axis) {
   return j;
 }
 
-BinningData decodeBinAxis(const nlohmann::json& j, unsigned int depth = 0) {
+BinningData decodeBinAxis(const nlohmann::json& j, const DecodeContext& context,
+                          unsigned int depth = 0) {
   using enum AxisDirection;
   check(depth < 32, "binning refinement nesting exceeds 32");
   if (j.at("kind") != "subdivided") {
-    auto spec = decodeAxis(j, false);
+    auto spec = decodeAxis(j, false, context);
     check(spec.direction().has_value(), "BinUtility axis requires direction");
     check(spec.boundaryType() != AxisBoundaryType::Open,
           "BinUtility has no guard cells");
@@ -367,8 +392,8 @@ BinningData decodeBinAxis(const nlohmann::json& j, unsigned int depth = 0) {
   }
   check(j.at("base").at("kind") != "subdivided",
         "refinement base must be resolved");
-  auto base = decodeBinAxis(j.at("base"), depth + 1);
-  auto sub = decodeBinAxis(j.at("subdivision"), depth + 1);
+  auto base = decodeBinAxis(j.at("base"), context, depth + 1);
+  auto sub = decodeBinAxis(j.at("subdivision"), context, depth + 1);
   check(base.binvalue == sub.binvalue && base.option == sub.option,
         "refinement axis mismatch");
   auto mode = j.at("mode").get<std::string>();
@@ -419,18 +444,19 @@ nlohmann::json encodeBinAxis(const BinningData& b) {
          {"mode", b.subBinningAdditive ? "replace" : "repeat"},
          {"subdivision", encodeBinAxis(*b.subBinningData)}};
   }
-  const auto decoded = decodeBinAxis(j);
+  const auto decoded = decodeBinAxis(j, DecodeContext{});
   check(decoded.bins() == b.bins(), "refinement bin count cannot be preserved");
   return j;
 }
 
 BinUtility decodeBinning(const nlohmann::json& j, std::size_t min,
-                         std::size_t max) {
+                         std::size_t max, const DecodeContext& context) {
   array(j.at("axes"), min, max);
-  BinUtility b(j.contains("transform") ? decodeTransform(j.at("transform"))
-                                       : Transform3::Identity());
+  BinUtility b(j.contains("transform")
+                   ? decodeTransform(j.at("transform"), context)
+                   : Transform3::Identity());
   for (const auto& a : j.at("axes")) {
-    b += BinUtility(decodeBinAxis(a));
+    b += BinUtility(decodeBinAxis(a, context));
   }
   return b;
 }
@@ -471,10 +497,10 @@ nlohmann::json encodeHomogeneousSurface(const HomogeneousSurfaceMaterial& m,
 }
 
 std::unique_ptr<const ISurfaceMaterial> decodeHomogeneousSurface(
-    const nlohmann::json& j, const DecodeContext& /*context*/) {
+    const nlohmann::json& j, const DecodeContext& context) {
   auto [split, mapping] = settings(j.at("settings"));
-  return std::make_unique<HomogeneousSurfaceMaterial>(decodeSlab(j.at("slab")),
-                                                      split, mapping);
+  return std::make_unique<HomogeneousSurfaceMaterial>(
+      decodeSlab(j.at("slab"), context), split, mapping);
 }
 
 nlohmann::json encodeBinned(const BinnedSurfaceMaterial& m,
@@ -492,9 +518,9 @@ nlohmann::json encodeBinned(const BinnedSurfaceMaterial& m,
 }
 
 std::unique_ptr<const ISurfaceMaterial> decodeBinned(
-    const nlohmann::json& j, const DecodeContext& /*context*/) {
+    const nlohmann::json& j, const DecodeContext& context) {
   auto [split, mapping] = settings(j.at("settings"));
-  auto bins = decodeBinning(j.at("binning"), 1, 2);
+  auto bins = decodeBinning(j.at("binning"), 1, 2, context);
   auto n0 = bins.binningData()[0].bins();
   auto n1 = bins.dimensions() == 2 ? bins.binningData()[1].bins() : 1;
   auto count = product(n0, n1);
@@ -502,7 +528,8 @@ std::unique_ptr<const ISurfaceMaterial> decodeBinned(
   MaterialSlabMatrix matrix(n1);
   for (std::size_t i1 = 0; i1 < n1; ++i1) {
     for (std::size_t i0 = 0; i0 < n0; ++i0) {
-      matrix[i1].emplace_back(decodeSlab(j.at("values").at(i0 + n0 * i1)));
+      matrix[i1].emplace_back(
+          decodeSlab(j.at("values").at(i0 + n0 * i1), context));
     }
   }
   return std::make_unique<BinnedSurfaceMaterial>(bins, std::move(matrix), split,
@@ -521,11 +548,11 @@ nlohmann::json encodeProtoSurface(const ProtoSurfaceMaterial& m,
 }
 
 std::unique_ptr<const ISurfaceMaterial> decodeProtoSurface(
-    const nlohmann::json& j, const DecodeContext& /*context*/) {
+    const nlohmann::json& j, const DecodeContext& context) {
   auto [split, mapping] = settings(j.at("settings"));
   check(split == 1, "proto surface split factor must be one");
   return std::make_unique<ProtoSurfaceMaterial>(
-      decodeBinning(j.at("binning"), 0, 2), mapping, materialKey(j));
+      decodeBinning(j.at("binning"), 0, 2, context), mapping, materialKey(j));
 }
 
 nlohmann::json encodeProtoGrid(const ProtoGridSurfaceMaterial& m,
@@ -543,13 +570,13 @@ nlohmann::json encodeProtoGrid(const ProtoGridSurfaceMaterial& m,
 }
 
 std::unique_ptr<const ISurfaceMaterial> decodeProtoGrid(
-    const nlohmann::json& j, const DecodeContext& /*context*/) {
+    const nlohmann::json& j, const DecodeContext& context) {
   array(j.at("axes"), 2, 2);
   auto [split, mapping] = settings(j.at("settings"));
   check(split == 1, "proto grid split factor must be one");
   MultiAxisSpec2D axes(
-      std::array<AxisSpec, 2>{decodeAxis(j.at("axes").at(0), true),
-                              decodeAxis(j.at("axes").at(1), true)});
+      std::array<AxisSpec, 2>{decodeAxis(j.at("axes").at(0), true, context),
+                              decodeAxis(j.at("axes").at(1), true, context)});
   return std::make_unique<ProtoGridSurfaceMaterial>(axes, mapping,
                                                     materialKey(j));
 }
@@ -635,8 +662,8 @@ std::unique_ptr<const ISurfaceMaterial> decodeGrid(
   array(j.at("axes"), 2, 2);
   auto [split, mapping] = settings(j.at("settings"));
   MultiAxisSpec2D spec(
-      std::array<AxisSpec, 2>{decodeAxis(j.at("axes").at(0), false),
-                              decodeAxis(j.at("axes").at(1), false)});
+      std::array<AxisSpec, 2>{decodeAxis(j.at("axes").at(0), false, context),
+                              decodeAxis(j.at("axes").at(1), false, context)});
   auto axes = spec.buildMultiAxis();
   const auto n = axes->getNBins();
   auto count = product(n[0] + 2, n[1] + 2);
@@ -649,7 +676,7 @@ std::unique_ptr<const ISurfaceMaterial> decodeGrid(
     for (std::size_t i1 = 0; i1 < n[1] + 2; ++i1) {
       for (std::size_t i0 = 0; i0 < n[0] + 2; ++i0) {
         slabs[axes->getGlobalBinFromLocalBins({i0, i1})] =
-            decodeSlab(storage.at("values").at(i0 + (n[0] + 2) * i1));
+            decodeSlab(storage.at("values").at(i0 + (n[0] + 2) * i1), context);
       }
     }
     result = std::move(slabs);
@@ -657,7 +684,7 @@ std::unique_ptr<const ISurfaceMaterial> decodeGrid(
     Converter::SlabStore shared;
     std::vector<MaterialSlab> local;
     if (kind == "indexed") {
-      local = decodeSlabs(storage.at("slabs"));
+      local = decodeSlabs(storage.at("slabs"), context);
     } else {
       check(kind == "globally-indexed", "unknown grid storage kind");
       const auto name = storage.at("store").get<std::string>();
@@ -688,6 +715,60 @@ std::unique_ptr<const ISurfaceMaterial> decodeGrid(
 }  // namespace
 
 namespace Acts {
+
+TrackingGeometryMaterialJsonConverter::DecodeContext::DecodeContext()
+    : m_units{::lengthUnit, UnitConstants::rad, ::energyUnit,
+              UnitConstants::mol} {}
+
+double TrackingGeometryMaterialJsonConverter::EncodeContext::lengthUnit()
+    const {
+  return ::lengthUnit;
+}
+
+double TrackingGeometryMaterialJsonConverter::EncodeContext::angleUnit() const {
+  return UnitConstants::rad;
+}
+
+double TrackingGeometryMaterialJsonConverter::EncodeContext::energyUnit()
+    const {
+  return ::energyUnit;
+}
+
+double
+TrackingGeometryMaterialJsonConverter::EncodeContext::materialAmountUnit()
+    const {
+  return UnitConstants::mol;
+}
+
+double TrackingGeometryMaterialJsonConverter::EncodeContext::densityUnit()
+    const {
+  return materialAmountUnit() / (lengthUnit() * lengthUnit() * lengthUnit());
+}
+
+double TrackingGeometryMaterialJsonConverter::DecodeContext::lengthUnit()
+    const {
+  return m_units[0];
+}
+
+double TrackingGeometryMaterialJsonConverter::DecodeContext::angleUnit() const {
+  return m_units[1];
+}
+
+double TrackingGeometryMaterialJsonConverter::DecodeContext::energyUnit()
+    const {
+  return m_units[2];
+}
+
+double
+TrackingGeometryMaterialJsonConverter::DecodeContext::materialAmountUnit()
+    const {
+  return m_units[3];
+}
+
+double TrackingGeometryMaterialJsonConverter::DecodeContext::densityUnit()
+    const {
+  return materialAmountUnit() / (lengthUnit() * lengthUnit() * lengthUnit());
+}
 
 std::string TrackingGeometryMaterialJsonConverter::EncodeContext::storeId(
     const SlabStore& store) {
@@ -740,10 +821,16 @@ nlohmann::json TrackingGeometryMaterialJsonConverter::toJson(
   check(material.volumeMaterials.empty(),
         "material document version 1 supports surface material only; "
         "volume assignments cannot be serialized");
-  nlohmann::json j{
-      {"$schema", "urn:acts:material-map:1"},
-      {"header", {{"format", "acts-material-map"}, {"version", 1}}},
-      {"surfaces", nlohmann::json::array()}};
+  nlohmann::json j{{"$schema", "urn:acts:material-map:1"},
+                   {"header",
+                    {{"format", "acts-material-map"},
+                     {"version", 1},
+                     {"units",
+                      {{"length", "mm"},
+                       {"angle", "rad"},
+                       {"energy", "GeV"},
+                       {"material_amount", "mol"}}}}},
+                   {"surfaces", nlohmann::json::array()}};
   if (material.description()) {
     j["header"]["description"] = *material.description();
   }
@@ -800,13 +887,24 @@ TrackingGeometryMaterial TrackingGeometryMaterialJsonConverter::fromJson(
     result.setDescription(header.at("description").get<std::string>());
   }
   DecodeContext context;
+  const auto& units = header.at("units");
+  using namespace UnitConstants;
+  context.m_units = {
+      unit(units, "length",
+           {{"nm", nm}, {"um", um}, {"mm", mm}, {"cm", cm}, {"m", m}}),
+      unit(units, "angle", {{"rad", rad}, {"mrad", mrad}, {"deg", degree}}),
+      unit(
+          units, "energy",
+          {{"eV", eV}, {"keV", keV}, {"MeV", MeV}, {"GeV", GeV}, {"TeV", TeV}}),
+      unit(units, "material_amount",
+           {{"mol", mol}, {"mmol", 1e-3 * mol}, {"kmol", 1e3 * mol}})};
   if (encoded.contains("slab_stores")) {
     for (const auto& [name, slabs] :
          encoded.at("slab_stores").get_ref<const nlohmann::json::object_t&>()) {
       check(!name.empty(), "empty slab store name");
-      context.m_stores.try_emplace(
-          name,
-          std::make_shared<std::vector<MaterialSlab>>(decodeSlabs(slabs)));
+      context.m_stores.try_emplace(name,
+                                   std::make_shared<std::vector<MaterialSlab>>(
+                                       decodeSlabs(slabs, context)));
     }
   }
   array(encoded.at("surfaces"), 0);
