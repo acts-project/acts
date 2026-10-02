@@ -246,6 +246,63 @@ void addOuterBoundaryMaterial(Acts::ContainerBlueprintNode& outer,
                     });
 }
 
+// Synthetic "calorimeter material collector" barrel: a thin annular cylinder
+// with no corresponding DD4hep element, sitting in the radial gap between
+// the Solenoid (rmax=1200mm) and the ECal barrel (rmin=1250mm) -- only 50mm
+// wide in total, so the collector is centered in it with as much clearance
+// as that gap allows on either side (~15mm to the Solenoid, ~25mm to the
+// ECal). Added as one more radial shell of `outer`, exactly like @ref
+// addPassiveCylinder adds the Solenoid -- its z half-length is nominal,
+// since `outer`'s own radial stacking resizes every one of its shells (this
+// one included) to a shared z-extent anyway, the same mechanism already
+// governing e.g. the Solenoid's own cylinder. The matching two disc faces,
+// at the tracker's own z extremes, are materialized separately by @ref
+// finalizeOuter, once that shared z-extent is actually known.
+//
+// Acts::MaterialInteractionAssignment::assign() attributes every recorded
+// material interaction to its single nearest materialized surface. Without
+// this collector, interactions in the tracker-calorimeter gap (cables,
+// support structure, or calorimeter material reaching slightly inward) would
+// be misattributed to the Solenoid's own outer face or another nearby
+// tracker surface instead. Shared across all three construction methods.
+void addCaloMaterialCollector(const BlueprintBuilder& builder,
+                              Acts::ContainerBlueprintNode& outer) {
+  constexpr double kRMin = 1215 * Acts::UnitConstants::mm;
+  constexpr double kRMax = 1225 * Acts::UnitConstants::mm;
+  constexpr double kHalfZ = 3000 * Acts::UnitConstants::mm;
+
+  outer.addMaterial(
+      "CaloMaterialCollectorBarrel_mat",
+      [&](Acts::MaterialDesignatorBlueprintNode& mat) {
+        configureCylinderFace(mat, Face::OuterCylinder);
+        mat.addChild(builder.backend().makeMaterialCollector(
+            kRMin, kRMax, kHalfZ, 0.0, "CaloMaterialCollectorBarrel"));
+      });
+}
+
+// Wraps the fully assembled `outer` AxisR stack in Negative/PositiveDisc
+// material and adds it to `root`, then returns the constructed geometry.
+// This is the disc-equivalent of @ref addOuterBoundaryMaterial: `outer`'s
+// own two flat faces can only be materialized once its full radial stack is
+// assembled (with its shared z-extent resized to fit every radial shell,
+// including the Kategorie-2-style calorimeter collector above), since any
+// earlier constituent's disc material would be fused away during that
+// process. These faces are exactly where the collector's own cylinder ends,
+// so together the three faces form the requested two-discs-plus-one-barrel
+// cage around the tracker. Shared across all three construction methods.
+std::unique_ptr<Acts::TrackingGeometry> finalizeOuter(
+    Acts::Blueprint& root,
+    std::shared_ptr<Acts::CylinderContainerBlueprintNode> outer,
+    const Acts::GeometryContext& gctx, const Acts::Logger& logger) {
+  root.addMaterial("OpenDataDetector_disc_mat",
+                   [&](Acts::MaterialDesignatorBlueprintNode& mat) {
+                     configureDiscFace(mat, Face::NegativeDisc);
+                     configureDiscFace(mat, Face::PositiveDisc);
+                     mat.addChild(std::move(outer));
+                   });
+  return root.construct(Acts::BlueprintOptions{}, gctx, logger);
+}
+
 // Adds `node` (either a barrel or an endcap sub-container) as a Z-stacked
 // child of `containerNode`, applying the uniform Gap attachment/resize
 // strategy plus whichever additional per-role material a barrel or endcap
@@ -446,8 +503,10 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
   blueprintCfg.envelope = ActsPlugins::DD4hep::detail::kBlueprintEnvelope;
   Blueprint root{blueprintCfg};
 
-  auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
-  outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
+  auto outerNode = std::make_shared<CylinderContainerBlueprintNode>(
+      "OpenDataDetector", AxisR);
+  outerNode->setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
+  auto& outer = *outerNode;
 
   addBeampipe(builder, outer);
 
@@ -498,7 +557,9 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
   addPassiveCylinder(builder, outer, "Solenoid",
                      {InnerCylinder, OuterCylinder});
 
-  return root.construct(BlueprintOptions{}, gctx, logger);
+  addCaloMaterialCollector(builder, outer);
+
+  return finalizeOuter(root, std::move(outerNode), gctx, logger);
 }
 
 std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
@@ -518,8 +579,10 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
   blueprintCfg.envelope = ActsPlugins::DD4hep::detail::kBlueprintEnvelope;
   Blueprint root{blueprintCfg};
 
-  auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
-  outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
+  auto outerNode = std::make_shared<CylinderContainerBlueprintNode>(
+      "OpenDataDetector", AxisR);
+  outerNode->setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
+  auto& outer = *outerNode;
 
   addBeampipe(builder, outer);
 
@@ -537,7 +600,9 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
   addPassiveCylinder(builder, outer, "Solenoid",
                      {InnerCylinder, OuterCylinder});
 
-  return root.construct(BlueprintOptions{}, gctx, logger);
+  addCaloMaterialCollector(builder, outer);
+
+  return finalizeOuter(root, std::move(outerNode), gctx, logger);
 }
 
 std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayerGrouped(
@@ -557,8 +622,10 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayerGrouped(
   blueprintCfg.envelope = ActsPlugins::DD4hep::detail::kBlueprintEnvelope;
   Blueprint root{blueprintCfg};
 
-  auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
-  outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
+  auto outerNode = std::make_shared<CylinderContainerBlueprintNode>(
+      "OpenDataDetector", AxisR);
+  outerNode->setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
+  auto& outer = *outerNode;
 
   addBeampipe(builder, outer);
 
@@ -579,7 +646,9 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayerGrouped(
   addPassiveCylinder(builder, outer, "Solenoid",
                      {InnerCylinder, OuterCylinder});
 
-  return root.construct(BlueprintOptions{}, gctx, logger);
+  addCaloMaterialCollector(builder, outer);
+
+  return finalizeOuter(root, std::move(outerNode), gctx, logger);
 }
 
 }  // namespace ActsPlugins::DD4hep

@@ -245,6 +245,17 @@ std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makePassiveDisc(
   return std::make_shared<Acts::StaticBlueprintNode>(std::move(volume));
 }
 
+std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makeMaterialCollector(
+    double rMin, double rMax, double halfLengthZ, double zCenter,
+    const std::string& name) const {
+  auto volumeBounds =
+      std::make_shared<Acts::CylinderVolumeBounds>(rMin, rMax, halfLengthZ);
+  const Acts::Transform3 transform{Acts::Translation3(0., 0., zCenter)};
+  auto volume =
+      std::make_unique<Acts::TrackingVolume>(transform, volumeBounds, name);
+  return std::make_shared<Acts::StaticBlueprintNode>(std::move(volume));
+}
+
 }  // namespace ActsPlugins::DD4hep
 
 // Explicit template instantiation for DD4hepBackend. Ensures all template

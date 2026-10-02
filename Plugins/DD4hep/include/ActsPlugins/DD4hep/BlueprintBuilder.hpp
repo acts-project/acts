@@ -141,6 +141,23 @@ class DD4hepBackend {
   std::shared_ptr<Acts::StaticBlueprintNode> makePassiveDisc(
       const Element& element, std::string volumeName = {}) const;
 
+  /// Create a static blueprint node for a synthetic material-collector
+  /// volume: a plain tube or annular disc with explicit bounds and no
+  /// corresponding DD4hep element. Used to place bookkeeping surfaces just
+  /// outside the tracker's own envelope so that, during material mapping,
+  /// interactions originating in nearby non-tracker material (e.g. in the
+  /// gap before the calorimeter) are attributed to these surfaces instead of
+  /// being misattributed to the nearest real tracker surface.
+  /// @param rMin Inner radius of the collector volume.
+  /// @param rMax Outer radius of the collector volume.
+  /// @param halfLengthZ Half-length along z of the collector volume.
+  /// @param zCenter Position of the volume's center along z.
+  /// @param name Name for the created volume.
+  /// @return Shared pointer to the generated blueprint node.
+  std::shared_ptr<Acts::StaticBlueprintNode> makeMaterialCollector(
+      double rMin, double rMax, double halfLengthZ, double zCenter,
+      const std::string& name) const;
+
   /// Return the DD4hep world detector element.
   /// @return Root detector element of the DD4hep hierarchy.
   Element world() const;
