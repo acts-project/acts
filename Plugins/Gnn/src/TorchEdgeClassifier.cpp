@@ -35,30 +35,13 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
                                          std::unique_ptr<const Logger> _logger)
     : m_logger(std::move(_logger)), m_cfg(cfg) {
   c10::InferenceMode guard(true);
-  if (cfg.device.isMps()) {
-    throw std::invalid_argument(
-        "MPS is not a device the pipeline tensors can live on: configure it as "
-        "modelDevice instead of device");
-  }
-  // Loading the model on the CPU and moving it in operator() is the historical
-  // behaviour when no model device is configured
-  const torch::Device device =
-      cfg.modelDevice.has_value()
-          ? detail::toTorchDevice(*cfg.modelDevice)
-          : (cfg.device.isCuda() ? detail::toTorchDevice(cfg.device)
-                                 : torch::Device(torch::kCPU));
 
   ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
                                     << TORCH_VERSION_MINOR << "."
                                     << TORCH_VERSION_PATCH);
 
-  try {
-    m_model = std::make_unique<torch::jit::Module>();
-    *m_model = torch::jit::load(m_cfg.modelPath, device);
-    m_model->eval();
-  } catch (const c10::Error& e) {
-    throw std::invalid_argument("Failed to load models: " + e.msg());
-  }
+  m_model =
+      detail::loadTorchModel(m_cfg.modelPath, cfg.device, cfg.modelDevice);
 }
 
 TorchEdgeClassifier::~TorchEdgeClassifier() {}

@@ -44,4 +44,27 @@ torch::Device toTorchDevice(const Device &device) {
   throw std::invalid_argument("Unknown device type");
 }
 
+std::unique_ptr<torch::jit::Module> loadTorchModel(
+    const std::string &modelPath, const Device &device,
+    const std::optional<Device> &modelDevice) {
+  if (device.isMps()) {
+    throw std::invalid_argument(
+        "MPS is not a device the pipeline tensors can live on: configure it as "
+        "modelDevice instead of device");
+  }
+  const torch::Device loadDevice =
+      modelDevice.has_value() ? toTorchDevice(*modelDevice)
+                              : (device.isCuda() ? toTorchDevice(device)
+                                                 : torch::Device(torch::kCPU));
+
+  try {
+    auto model = std::make_unique<torch::jit::Module>(
+        torch::jit::load(modelPath, loadDevice));
+    model->eval();
+    return model;
+  } catch (const c10::Error &e) {
+    throw std::invalid_argument("Failed to load models: " + e.msg());
+  }
+}
+
 }  // namespace ActsPlugins::detail

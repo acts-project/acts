@@ -10,6 +10,11 @@
 
 #include "ActsPlugins/Gnn/Tensor.hpp"
 
+#include <memory>
+#include <optional>
+#include <string>
+
+#include <torch/script.h>
 #include <torch/torch.h>
 
 namespace ActsPlugins::detail {
@@ -25,5 +30,19 @@ namespace ActsPlugins::detail {
 /// @throws std::runtime_error if the backend is not available
 /// @throws std::invalid_argument if the device type is unknown
 torch::Device toTorchDevice(const Device &device);
+
+/// Load a TorchScript model for a pipeline stage.
+///
+/// The model is loaded on @p modelDevice if set; otherwise on @p device if it
+/// is a CUDA device, else on the CPU (the historical behaviour).
+///
+/// @param modelPath path to the TorchScript file
+/// @param device the device the pipeline tensors live on
+/// @param modelDevice the optional device the model runs on
+/// @return the loaded model in eval mode
+/// @throws std::invalid_argument if @p device is MPS or the model fails to load
+std::unique_ptr<torch::jit::Module> loadTorchModel(
+    const std::string &modelPath, const Device &device,
+    const std::optional<Device> &modelDevice);
 
 }  // namespace ActsPlugins::detail
