@@ -2,7 +2,13 @@
     "$schema": "../../../Plugins/Json/schema/material-map-v1.schema.json",
     "header": {
         "format": "acts-material-map",
-        "version": 1
+        "version": 1,
+        "units": {
+            "length": "mm",
+            "angle": "rad",
+            "energy": "GeV",
+            "material_amount": "mol"
+        }
     },
     "surfaces": [
         {

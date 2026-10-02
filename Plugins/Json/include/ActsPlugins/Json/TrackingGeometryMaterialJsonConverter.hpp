@@ -13,6 +13,7 @@
 #include "Acts/Utilities/TypeDispatcher.hpp"
 #include "ActsPlugins/Json/JsonKindDispatcher.hpp"
 
+#include <array>
 #include <filesystem>
 #include <map>
 #include <memory>
@@ -34,6 +35,23 @@ class TrackingGeometryMaterialJsonConverter {
   /// Per-document encoding state, also available to application encoders.
   class EncodeContext {
    public:
+    /// Conversion factor from document length to Acts units.
+    /// @return Unit scale
+    double lengthUnit() const;
+    /// Conversion factor from document angle to Acts units.
+    /// @return Unit scale
+    double angleUnit() const;
+    /// Conversion factor from document energy to Acts units.
+    /// @return Unit scale
+    double energyUnit() const;
+    /// Conversion factor from document amount of material to Acts units.
+    /// @return Unit scale
+    double materialAmountUnit() const;
+    /// Conversion factor from document molar density (amount / length cubed) to
+    /// Acts units.
+    /// @return Unit scale
+    double densityUnit() const;
+
     /// Register a store, preserving sharing by allocation identity.
     /// @param store Non-null allocation
     /// @return Stable name within this document
@@ -46,6 +64,25 @@ class TrackingGeometryMaterialJsonConverter {
   /// Per-document decoding state, also available to application decoders.
   class DecodeContext {
    public:
+    /// Construct with canonical output units.
+    DecodeContext();
+    /// Conversion factor from document length to Acts units.
+    /// @return Unit scale
+    double lengthUnit() const;
+    /// Conversion factor from document angle to Acts units.
+    /// @return Unit scale
+    double angleUnit() const;
+    /// Conversion factor from document energy to Acts units.
+    /// @return Unit scale
+    double energyUnit() const;
+    /// Conversion factor from document amount of material to Acts units.
+    /// @return Unit scale
+    double materialAmountUnit() const;
+    /// Conversion factor from document molar density (amount / length cubed) to
+    /// Acts units.
+    /// @return Unit scale
+    double densityUnit() const;
+
     /// Resolve a shared slab store by its document name.
     /// @param name Store name in the material payload
     /// @return Shared allocation, preserving identity across payloads
@@ -54,6 +91,7 @@ class TrackingGeometryMaterialJsonConverter {
 
    private:
     friend class TrackingGeometryMaterialJsonConverter;
+    std::array<double, 4> m_units;
     std::map<std::string, SlabStore, std::less<std::string>> m_stores;
   };
   /// Concrete surface encoder dispatch.

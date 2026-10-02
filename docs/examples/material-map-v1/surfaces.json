@@ -3,7 +3,13 @@
     "header": {
         "format": "acts-material-map",
         "version": 1,
-        "description": "Synthetic schema fixtures; these are not production converter output."
+        "description": "Synthetic schema fixtures; these are not production converter output.",
+        "units": {
+            "length": "mm",
+            "angle": "rad",
+            "energy": "GeV",
+            "material_amount": "mol"
+        }
     },
     "surfaces": [
         {

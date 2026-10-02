@@ -20,11 +20,56 @@
                 },
                 "description": {
                     "type": "string"
+                },
+                "units": {
+                    "type": "object",
+                    "properties": {
+                        "length": {
+                            "enum": [
+                                "nm",
+                                "um",
+                                "mm",
+                                "cm",
+                                "m"
+                            ]
+                        },
+                        "angle": {
+                            "enum": [
+                                "rad",
+                                "mrad",
+                                "deg"
+                            ]
+                        },
+                        "energy": {
+                            "enum": [
+                                "eV",
+                                "keV",
+                                "MeV",
+                                "GeV",
+                                "TeV"
+                            ]
+                        },
+                        "material_amount": {
+                            "enum": [
+                                "mol",
+                                "mmol",
+                                "kmol"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "length",
+                        "angle",
+                        "energy",
+                        "material_amount"
+                    ],
+                    "additionalProperties": false
                 }
             },
             "required": [
                 "format",
-                "version"
+                "version",
+                "units"
             ],
             "additionalProperties": false
         },
@@ -108,12 +153,6 @@
                     "maximum": 255,
                     "default": 0
                 },
-                "boundary": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "maximum": 255,
-                    "default": 0
-                },
                 "layer": {
                     "type": "integer",
                     "minimum": 0,
@@ -133,6 +172,12 @@
                     "default": 0
                 },
                 "extra": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255,
+                    "default": 0
+                },
+                "portal": {
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 255,
@@ -164,7 +209,7 @@
                     "const": "infinity"
                 }
             ],
-            "description": "Positive length in mm or the literal infinity; NaN and numeric infinities are forbidden."
+            "description": "Positive length in header.units.length or the literal infinity; NaN and numeric infinities are forbidden."
         },
         "material": {
             "oneOf": [
@@ -226,7 +271,7 @@
                     "additionalProperties": false
                 }
             ],
-            "description": "Physical properties: mm, dimensionless Ar/Z, mol/mm^3 densities, GeV excitation energy. All seven properties are explicit."
+            "description": "Physical properties use header.units: length, dimensionless Ar/Z, material_amount/length^3 densities, and energy. All seven properties are explicit."
         },
         "slab": {
             "type": "object",
@@ -244,7 +289,7 @@
                 "thickness"
             ],
             "additionalProperties": false,
-            "description": "Thickness in mm. Vacuum at zero thickness represents Nothing; vacuum with positive thickness retains its extent."
+            "description": "Thickness in header.units.length. Vacuum at zero thickness represents Nothing; vacuum with positive thickness retains its extent."
         },
         "transform": {
             "type": "object",
@@ -276,7 +321,7 @@
                 "translation"
             ],
             "additionalProperties": false,
-            "description": "Rigid local-to-global transform: p_global = rotation * p_frame + translation. Row-major rotation; translation in mm. Semantic validation checks a proper orthonormal rotation."
+            "description": "Rigid local-to-global transform: p_global = rotation * p_frame + translation. Row-major rotation; translation in header.units.length. Semantic validation checks a proper orthonormal rotation."
         },
         "axis": {
             "oneOf": [
