@@ -288,7 +288,6 @@ def main():
     actsInternalSolution = outputDir / "ActsInternalAlignment.txt"
     actsViaMilleSolution = outputDir / "ActsViaMilleAlignment.txt"
     MillePedeSolution = outputDir / "MillePedeAlignment.txt"
-
     # configure the solver and steering file for Millepede.
     # For this example, we use the defaults for everything and
     # only touch the file names
@@ -298,8 +297,14 @@ def main():
         resFileName=str(MillePedeSolution),
         redirectStdout=str(outputDir / "MillepedeAlignment.log"),
     )
-    steerCfg = MillePedeSteeringConfig()
-    steerCfg.inputFiles = [str(milleBinaryName)]
+    steerCfg = MillePedeSteeringConfig(inputFiles=[str(milleBinaryName)])
+
+    # eqc = [
+    #     MillePedeEqualityConstraint(
+    #     labelsAndWeights = [(3 * k+ j,1) for k in range(9) ],
+    #     constraint = 0.
+    # ) for j in range(6)]
+    # steerCfg.constraints = eqc
 
     # More Boilerplate code - for setting up the sequence
 
