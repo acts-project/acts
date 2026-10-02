@@ -37,11 +37,25 @@ macro(add_plugin_binding_if _name _dependency _flag)
     set(PLUGIN_NAME "${_name}")
     set(PLUGIN_BUILD_FLAG "${_flag}")
 
-    configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/python/plugin.py.in
-        ${_python_dir}/acts/${_name_lower}.py
-        @ONLY
+    # allow a plugin-specific module file
+    # in case the general one does not
+    # deliver the intended behaviour
+    set(_plugin_python_file
+        ${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}.py
     )
+    if(EXISTS ${_plugin_python_file})
+        configure_file(
+            ${_plugin_python_file}
+            ${_python_dir}/acts/${_name_lower}.py
+            @ONLY
+        )
+    else()
+        configure_file(
+            ${CMAKE_CURRENT_SOURCE_DIR}/python/plugin.py.in
+            ${_python_dir}/acts/${_name_lower}.py
+            @ONLY
+        )
+    endif()
     install(
         FILES ${_python_dir}/acts/${_name_lower}.py
         DESTINATION ${_acts_python_install_dir}
