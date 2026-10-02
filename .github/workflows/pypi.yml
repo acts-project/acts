@@ -1,6 +1,8 @@
 name: PyPI
 
-# Nightly builds on schedule; release builds triggered manually via workflow_dispatch
+# Nightly builds on schedule, but uploading to test PyPI requires a manual
+# trigger (test PyPI storage is limited); release builds and their uploads
+# are triggered manually via workflow_dispatch
 on:
   schedule:
     - cron: '5 3 * * *'
@@ -14,7 +16,6 @@ on:
 env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
-  CCACHE_KEY_SUFFIX: r2
 
 permissions: {}
 
@@ -51,10 +52,13 @@ jobs:
           path: acts-source.tar.gz
 
   build_wheels:
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.acts_ref == '')) && 's3-sccache' || '' }}
     needs: prepare
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    permissions: {}
+    permissions:
+      contents: read
     strategy:
       max-parallel: 1
       fail-fast: false
@@ -64,6 +68,16 @@ jobs:
          - macos-26
 
     steps:
+      # Cache/build tooling comes from the workflow revision, not a release tag.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: cache-tools
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            CI
+
       - name: Download source tarball
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -83,18 +97,37 @@ jobs:
         run: cat build_version.txt
 
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
 
       - name: Determine CIBW_BUILD
         id: cibw
         run: echo "build=$(acts/CI/supported_python_versions.py --cibw)" >> "$GITHUB_OUTPUT"
 
+      - name: Restore ccache snapshot
+        uses: ./cache-tools/.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
+        with:
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/pypi/build_wheels/${{ matrix.os }}-${{ runner.arch }}/v1/
+
       - name: Build wheels
-        uses: ./acts/.github/actions/cibuildwheel_wrapper
+        uses: ./cache-tools/.github/actions/cibuildwheel_wrapper
         with:
           package-dir: acts
           cibw-build: ${{ steps.cibw.outputs.build }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish ccache snapshot
+        if: ${{ !cancelled() && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.acts_ref == '')) }}
+        uses: ./cache-tools/.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
+        with:
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/pypi/build_wheels/${{ matrix.os }}-${{ runner.arch }}/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          allow-main-non-push: 'true'
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -106,7 +139,7 @@ jobs:
         run: |
           PATCHED_VERSION="$(cat acts/version_number).$(cat build_version.txt)"
           echo "Patch to version $PATCHED_VERSION"
-          python3 -m pip install change-wheel-version==0.6.0
+          uv tool install --python "$(command -v python3)" change-wheel-version==0.6.0
           cd wheelhouse
           for f in ./*.whl; do
             change_wheel_version $f --version $PATCHED_VERSION --delete-old-wheel
@@ -120,7 +153,7 @@ jobs:
 
   upload_pypi_test:
     needs: build_wheels
-    if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.acts_ref == ''
     environment:
       name: testpypi
       url: https://test.pypi.org/project/pyacts

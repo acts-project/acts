@@ -56,13 +56,28 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsRoundTripTests) {
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceBoundsValueCountTests) {
-  // CylinderBounds gained eBevelMinZ/eBevelMaxZ after this format was already
-  // in use, so payloads written before that carry four values, not six.
   nlohmann::json jShort;
   jShort["type"] = "CylinderBounds";
-  jShort["values"] = std::vector<double>{30., 200., std::numbers::pi, 0.};
+  jShort["values"] = std::vector<double>{30., 200., std::numbers::pi};
   BOOST_CHECK_THROW(
       SurfaceBoundsJsonConverter::fromJson<CylinderBounds>(jShort),
+      std::invalid_argument);
+
+  // CylinderBounds used to carry two bevel angles after the four values.
+  nlohmann::json jLegacy;
+  jLegacy["type"] = "CylinderBounds";
+  jLegacy["values"] =
+      std::vector<double>{30., 200., std::numbers::pi, 0., 0., 0.};
+  auto legacy = SurfaceBoundsJsonConverter::fromJson<CylinderBounds>(jLegacy);
+  BOOST_CHECK_EQUAL(legacy->values().size(), 4u);
+  BOOST_CHECK_EQUAL(legacy->get(CylinderBounds::eR), 30.);
+
+  nlohmann::json jBeveled;
+  jBeveled["type"] = "CylinderBounds";
+  jBeveled["values"] =
+      std::vector<double>{30., 200., std::numbers::pi, 0., 0.1, 0.};
+  BOOST_CHECK_THROW(
+      SurfaceBoundsJsonConverter::fromJson<CylinderBounds>(jBeveled),
       std::invalid_argument);
 
   nlohmann::json jLong;

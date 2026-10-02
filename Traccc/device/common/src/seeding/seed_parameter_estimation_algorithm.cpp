@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/seeding/device/seed_parameter_estimation_algorithm.hpp"
@@ -35,10 +36,10 @@ auto seed_parameter_estimation_algorithm::operator()(
   // Get the number of seeds. In an asynchronous way if possible.
   edm::seed_collection::const_view::size_type n_seeds = 0u;
   if (mr().host) {
-    const vecmem::async_size size = copy().get_size(seeds, *(mr().host));
-    // Here we could give control back to the caller, once our code allows
-    // for it. (coroutines...)
-    n_seeds = size.get();
+    vecmem::async_size size = copy().get_size(seeds, *(mr().host));
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_seeds = size.unsafe_get();
   } else {
     n_seeds = copy().get_size(seeds);
   }

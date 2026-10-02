@@ -10,6 +10,7 @@
 
 // Project include(s).
 #include "detray/builders/detail/bin_association.hpp"
+#include "detray/core/concepts.hpp"
 #include "detray/utils/grid/axis.hpp"
 #include "detray/utils/grid/concepts.hpp"
 #include "detray/utils/grid/populators.hpp"
@@ -95,7 +96,7 @@ struct fill_by_pos {
 /// @param vol the volume the grid belongs to
 /// @param ctx the geometry context
 struct bin_associator {
-  template <typename detector_t, typename volume_type,
+  template <concepts::detector detector_t, typename volume_type,
             concepts::surface_grid grid_t, typename... Args>
   DETRAY_HOST auto operator()(grid_t &grid, detector_t &det,
                               const volume_type &vol,

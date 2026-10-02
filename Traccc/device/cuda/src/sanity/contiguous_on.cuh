@@ -1,10 +1,10 @@
-/**
- * traccc library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -139,7 +139,7 @@ bool is_contiguous_on(P&& projection, vecmem::memory_resource& mr,
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 
   // Launch the second kernel, which will check if the values are unique.
-  uint32_t grid_size_rd =
+  std::uint32_t grid_size_rd =
       (copy.get_size(iout) + block_size_2d - 1) / block_size_2d;
   dim3 all_unique_grid_size(grid_size_rd, grid_size_rd);
   dim3 all_unique_block_size(block_size_2d, block_size_2d);

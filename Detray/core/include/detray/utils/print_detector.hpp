@@ -53,7 +53,7 @@ struct material_printer {
 }  // namespace detail
 
 /// Print basic information about the detector @param det
-template <typename detector_t>
+template <concepts::detector detector_t>
 DETRAY_HOST inline std::string print_detector(
     const detector_t &det, const typename detector_t::name_map &names = {}) {
   // Gathers navigation information across navigator update calls

@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -16,6 +17,9 @@
 
 // VecMem include(s).
 #include <vecmem/memory/memory_resource.hpp>
+
+// System include(s).
+#include <numbers>
 
 namespace traccc {
 
@@ -80,8 +84,8 @@ inline std::pair<axis2::circular<>, axis2::regular<>> get_axes(
 
     // divide 2pi by angle delta to get number of phi-bins
     // size is always 2pi even for regions of interest
-    phiBins =
-        static_cast<detray::dindex>(std::llround(2 * M_PI / deltaPhi + 0.5));
+    phiBins = static_cast<detray::dindex>(
+        std::llround(2 * std::numbers::pi_v<scalar> / deltaPhi + 0.5));
     // need to scale the number of phi bins accordingly to the number of
     // consecutive phi bins in the seed making step.
     // Each individual bin should be approximately a fraction (depending on
@@ -118,7 +122,7 @@ inline TRACCC_HOST_DEVICE bool is_valid_sp(const seedfinder_config& config,
     return false;
   }
 
-  return (static_cast<size_t>(vector::perp(vector2{
+  return (static_cast<std::size_t>(vector::perp(vector2{
               sp.x() - config.beamPos[0], sp.y() - config.beamPos[1]})) <
           config.get_num_rbins());
 }

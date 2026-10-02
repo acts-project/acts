@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -56,7 +57,7 @@ class nseed_performance_writer {
         measurements_view};
 
     for (SeedIt s = sb; s != se; ++s) {
-      std::vector<std::vector<uint64_t>> particle_ids;
+      std::vector<std::vector<std::uint64_t>> particle_ids;
 
       std::transform(
           s->cbegin(), s->cend(), std::back_inserter(particle_ids),
@@ -73,7 +74,7 @@ class nseed_performance_writer {
 
             const auto& ptcs = em.m_meas_to_ptc_map.find(meas)->second;
 
-            std::vector<uint64_t> ptc_ids;
+            std::vector<std::uint64_t> ptc_ids;
 
             for (auto const& [ptc, _] : ptcs) {
               ptc_ids.push_back(ptc.particle_id);
@@ -82,7 +83,7 @@ class nseed_performance_writer {
             return ptc_ids;
           });
 
-      std::optional<uint64_t> pid = _matcher->operator()(particle_ids);
+      std::optional<std::uint64_t> pid = _matcher->operator()(particle_ids);
 
       if (pid) {
         _stats.true_seeds++;

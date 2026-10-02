@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -25,7 +26,7 @@ namespace traccc::device {
 ///
 /// @param[in] globalIndex    The index of the current thread
 /// @param[in] dc_view        Collection of doublet counters
-/// @param[inout] spM_tc_view Collection of triplet counters per middle
+/// @param[in,out] spM_tc_view Collection of triplet counters per middle
 /// spacepoint
 /// @param[out] num_triplets  The total number of triplets
 TRACCC_HOST_DEVICE

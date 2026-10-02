@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "src/fitting/kernels/specializations/fit_backward_src.cuh"
@@ -20,7 +21,7 @@
 namespace traccc::cuda {
 
 using fitter =
-    traccc::details::kalman_fitter_t<@DETECTOR_NAME@::device,
+    traccc::details::kalman_fitter_t<detray::detector_device_t<traccc::@DETECTOR_NAME@>,
                                      covfie::field<@BFIELD_NAME@>::view_t>;
 
 template void fit_backward<fitter>(

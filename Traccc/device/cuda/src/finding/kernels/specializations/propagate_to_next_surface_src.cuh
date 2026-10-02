@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -19,12 +20,12 @@ namespace traccc::cuda {
 namespace kernels {
 
 template <typename propagator_t, typename bfield_t>
-__global__ __launch_bounds__(128) void propagate_to_next_surface(
+__global__ __launch_bounds__(128, 5) void propagate_to_next_surface(
     const __grid_constant__ finding_config cfg,
     const typename propagator_t::detector_type* __restrict__ const det_data_ptr,
     const __grid_constant__ bfield_t field_data,
     const __grid_constant__ device::propagate_to_next_surface_payload payload) {
-  // TODO: Reenable this this additional checks for compilation with the ABI
+  // TODO: Re-enable this this additional checks for compilation with the ABI
   // enabled.
   // TRACCC_CUDA_SPILL_TO_SHARED_MEMORY;
 

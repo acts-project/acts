@@ -52,7 +52,7 @@ class CylinderVolumeStack : public VolumeStack {
   ///      to be aligned in @c z and cannot have a rotation
   ///      in @c x or @c y.
   /// @pre The volumes all need to have @c CylinerVolumeBounds
-  ///      and cannot have a @f$\phi@f$ sector or bevels.
+  ///      and cannot have a @f$\phi@f$ sector.
   /// @note Preconditions are checked on construction
   CylinderVolumeStack(
       const GeometryContext& gctx, std::vector<Volume*>& volumes,
@@ -79,7 +79,7 @@ class CylinderVolumeStack : public VolumeStack {
   ///      to be aligned in @c z and cannot have a rotation
   ///      in @c x or @c y.
   /// @pre The volumes all need to have @c CylinerVolumeBounds
-  ///      and cannot have a @f$\phi@f$ sector or bevels.
+  ///      and cannot have a @f$\phi@f$ sector.
   /// @note Preconditions are checked on construction
   CylinderVolumeStack(
       const GeometryContext& gctx, std::vector<Volume*>& volumes,
@@ -175,11 +175,11 @@ class CylinderVolumeStack : public VolumeStack {
       std::vector<VolumeTuple>& volumes, const Logger& logger);
 
   /// Helper functions that checks if the cylinder volume bounds
-  /// given do not contain any phi sectors or bevels.
+  /// given do not contain any phi sectors.
   /// @param bounds is the cylinder volume bounds
   /// @param logger is the logger
-  static void checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
-                                const Logger& logger);
+  static void checkNoPhiSector(const CylinderVolumeBounds& bounds,
+                               const Logger& logger);
 
   Transform3 m_groupTransform{};
 };

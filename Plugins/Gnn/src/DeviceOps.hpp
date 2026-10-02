@@ -55,6 +55,13 @@ template <typename T>
 Tensor<T> cudaSelectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
                          const ExecutionContext &execContext);
 
+/// Gather the columns of @p tensor listed in @p indices, in that order.
+/// @p indices is on the host and already bounds checked.
+template <typename T>
+Tensor<T> cudaGatherCols(const Tensor<T> &tensor,
+                         const std::vector<std::size_t> &indices,
+                         const ExecutionContext &execContext);
+
 /// Scale each column of @p src by the matching entry of @p scales.
 template <typename T>
 Tensor<T> cudaMulPerColumn(const Tensor<T> &src, const Tensor<T> &scales,

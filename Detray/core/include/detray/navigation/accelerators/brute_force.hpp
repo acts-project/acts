@@ -9,6 +9,7 @@
 #pragma once
 
 // Detray include(s).
+#include "detray/core/concepts.hpp"
 #include "detray/core/detail/container_buffers.hpp"
 #include "detray/core/detail/container_views.hpp"
 #include "detray/definitions/algorithms.hpp"
@@ -70,7 +71,7 @@ class brute_force_collection {
     }
 
     /// @returns the complete surface range of the search volume
-    template <typename detector_t, typename track_t,
+    template <concepts::detector detector_t, typename track_t,
               concepts::arithmetic window_size_t>
     DETRAY_HOST_DEVICE constexpr auto search(
         const detector_t& /*det*/,

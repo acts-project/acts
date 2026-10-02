@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s).
+#include "detray/core/concepts.hpp"
 #include "detray/geometry/tracking_volume.hpp"
 
 // System include(s)
@@ -18,14 +19,14 @@
 
 namespace detray {
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 class surface_factory_interface;
 
-template <typename detector_t>
+template <concepts::detector detector_t>
 class volume_decorator;
 
 /// @brief Interface for volume builders (and volume builder decorators)
-template <typename detector_t>
+template <concepts::detector detector_t>
 class volume_builder_interface {
   // Access protected methods
   friend class volume_decorator<detector_t>;
@@ -48,6 +49,13 @@ class volume_builder_interface {
   /// @returns whether sensitive surfaces are added to the brute force method
   DETRAY_HOST
   virtual bool has_accel() const = 0;
+
+  /// Toggles whether surface material that is identical to material already
+  /// present in the detector is shared instead of being copied.
+  ///
+  /// @note Only material builders act on this flag, the default does nothing
+  DETRAY_HOST
+  virtual void deduplicate_material(bool /*toggle*/) { /* Do nothing */ }
 
   /// Sets the name @param volume_name for the volume
   DETRAY_HOST
@@ -108,7 +116,7 @@ class volume_builder_interface {
 ///
 /// Can be volume builders that introduce special sorting/memory layout, or
 /// accelerator builders, like the grid builder.
-template <typename detector_t>
+template <concepts::detector detector_t>
 class volume_decorator : public volume_builder_interface<detector_t> {
  public:
   using scalar_t = dscalar<typename detector_t::algebra_type>;
@@ -138,6 +146,11 @@ class volume_decorator : public volume_builder_interface<detector_t> {
 
   DETRAY_HOST
   bool has_accel() const override { return m_builder->has_accel(); }
+
+  DETRAY_HOST
+  void deduplicate_material(bool toggle) override {
+    m_builder->deduplicate_material(toggle);
+  }
 
   DETRAY_HOST
   void set_name(std::string volume_name) override {

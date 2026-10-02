@@ -15,6 +15,8 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
 
 template <typename E>
 Acts::EigenStepper<E>::EigenStepper(
@@ -47,7 +49,6 @@ void Acts::EigenStepper<E>::initialize(State& state,
 
   state.pathAccumulated = 0;
   state.nSteps = 0;
-  state.nStepTrials = 0;
   state.stepSize = ConstrainedStep();
   state.stepSize.setAccuracy(state.options.initialStepSize);
   state.stepSize.setUser(state.options.maxStepSize);
@@ -57,28 +58,22 @@ void Acts::EigenStepper<E>::initialize(State& state,
   state.pars = freeParams;
 
   // Init the jacobian matrix if needed
-  state.covTransport = cov.has_value();
-  if (state.covTransport) {
-    state.cov = *cov;
+  state.cov = cov;
+  if (state.cov.has_value()) {
     state.jacToGlobal = surface.boundToFreeJacobian(
         state.options.geoContext, freeParams.segment<3>(eFreePos0),
         freeParams.segment<3>(eFreeDir0));
-    state.jacobian = BoundMatrix::Identity();
     state.jacTransport = FreeMatrix::Identity();
     state.derivative = FreeVector::Zero();
   }
 }
 
 template <typename E>
-auto Acts::EigenStepper<E>::boundState(
-    State& state, const Surface& surface, bool transportCov,
-    const FreeToBoundCorrection& freeToBoundCorrection) const
-    -> Result<BoundState> {
-  return detail::boundState(
-      state.options.geoContext, surface, state.cov, state.jacobian,
-      state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
-      state.pars, state.particleHypothesis, state.covTransport && transportCov,
-      state.pathAccumulated, freeToBoundCorrection);
+auto Acts::EigenStepper<E>::boundParameters(const State& state,
+                                            const Surface& surface) const
+    -> Result<BoundParameters> {
+  return detail::boundParameters(state.options.geoContext, surface, state.pars,
+                                 state.cov, state.particleHypothesis);
 }
 
 template <typename E>
@@ -116,13 +111,10 @@ bool Acts::EigenStepper<E>::prepareCurvilinearState(State& state) const {
 }
 
 template <typename E>
-auto Acts::EigenStepper<E>::curvilinearState(State& state,
-                                             bool transportCov) const
-    -> BoundState {
-  return detail::curvilinearState(
-      state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, std::nullopt, state.pars, state.particleHypothesis,
-      state.covTransport && transportCov, state.pathAccumulated);
+auto Acts::EigenStepper<E>::curvilinearParameters(const State& state) const
+    -> BoundParameters {
+  return detail::curvilinearParameters(state.pars, state.cov,
+                                       state.particleHypothesis);
 }
 
 template <typename E>
@@ -131,10 +123,14 @@ void Acts::EigenStepper<E>::update(State& state, const FreeVector& freeParams,
                                    const Covariance& covariance,
                                    const Surface& surface) const {
   state.pars = freeParams;
-  state.cov = covariance;
+  if (state.cov.has_value()) {
+    state.cov = covariance;
+  }
   state.jacToGlobal = surface.boundToFreeJacobian(
       state.options.geoContext, freeParams.template segment<3>(eFreePos0),
       freeParams.template segment<3>(eFreeDir0));
+  state.jacTransport = FreeMatrix::Identity();
+  state.derivative = FreeVector::Zero();
 }
 
 template <typename E>
@@ -148,21 +144,37 @@ void Acts::EigenStepper<E>::update(State& state, const Vector3& uposition,
 }
 
 template <typename E>
-void Acts::EigenStepper<E>::transportCovarianceToCurvilinear(
-    State& state) const {
+auto Acts::EigenStepper<E>::transportToCurvilinear(State& state) const
+    -> Jacobian {
+  Jacobian jacobian = Jacobian::Identity();
+  if (!state.cov.has_value()) {
+    return jacobian;
+  }
   detail::transportCovarianceToCurvilinear(
-      state.cov, state.jacobian, state.jacTransport, state.derivative,
+      *state.cov, jacobian, state.jacTransport, state.derivative,
       state.jacToGlobal, std::nullopt, direction(state));
+  return jacobian;
 }
 
 template <typename E>
-void Acts::EigenStepper<E>::transportCovarianceToBound(
+auto Acts::EigenStepper<E>::transportToBound(
     State& state, const Surface& surface,
-    const FreeToBoundCorrection& freeToBoundCorrection) const {
+    const FreeToBoundCorrection& freeToBoundCorrection) const
+    -> Result<Jacobian> {
+  if (!surface.isOnSurface(state.options.geoContext, position(state),
+                           direction(state), BoundaryTolerance::Infinite())) {
+    return Result<Jacobian>::failure(SurfaceError::GlobalPositionNotOnSurface);
+  }
+
+  Jacobian jacobian = Jacobian::Identity();
+  if (!state.cov.has_value()) {
+    return Result<Jacobian>::success(jacobian);
+  }
   detail::transportCovarianceToBound(
-      state.options.geoContext, surface, state.cov, state.jacobian,
+      state.options.geoContext, surface, *state.cov, jacobian,
       state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
       state.pars, freeToBoundCorrection);
+  return Result<Jacobian>::success(jacobian);
 }
 
 template <typename E>
@@ -307,7 +319,7 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
   }
 
   // When doing error propagation, update the associated Jacobian matrix
-  if (state.covTransport) {
+  if (state.cov.has_value()) {
     // using the direction before updated below
 
     // The step transport matrix in global coordinates
@@ -358,7 +370,7 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
       h / 6. * (sd.k1 + 2. * (sd.k2 + sd.k3) + sd.k4);
   (state.pars.template segment<3>(eFreeDir0)).normalize();
 
-  if (state.covTransport) {
+  if (state.cov.has_value()) {
     // using the updated direction
     state.derivative.template head<3>() =
         state.pars.template segment<3>(eFreeDir0);
@@ -367,7 +379,6 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
 
   state.pathAccumulated += h;
   ++state.nSteps;
-  state.nStepTrials += nStepTrials;
 
   ++state.statistics.nSuccessfulSteps;
   if (propDir != Direction::fromScalarZeroAsPositive(initialH)) {

@@ -9,8 +9,13 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/geometry/surface.hpp"
+#include "detray/utils/logging.hpp"
+#include "detray/utils/ranges.hpp"
+
+// Detray plugins include(s)
 #include "detray/plugins/svgtools/conversion/detector.hpp"
 #include "detray/plugins/svgtools/conversion/grid.hpp"
 #include "detray/plugins/svgtools/conversion/information_section.hpp"
@@ -27,8 +32,6 @@
 #include "detray/plugins/svgtools/meta/proto/eta_lines.hpp"
 #include "detray/plugins/svgtools/styling/styling.hpp"
 #include "detray/plugins/svgtools/utils/groups.hpp"
-#include "detray/utils/logging.hpp"
-#include "detray/utils/ranges.hpp"
 
 // Actsvg include(s)
 #include "actsvg/meta.hpp"
@@ -54,7 +57,7 @@ namespace detray::svgtools {
 /// issues (for instance regarding information boxes). Furthermore, to view
 /// information boxes, they must be enabled in the constructor. Furthermore the
 /// svg viewer (opening the file after it is created) must support animations.
-template <typename detector_t>
+template <concepts::detector detector_t>
 class illustrator {
   using point3 = typename detector_t::point3_type;
   using point3_container = std::vector<point3>;

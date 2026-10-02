@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -72,7 +73,7 @@ TRACCC_HOST_DEVICE inline void aggregate_cluster(
 
   const unsigned int partition_size = end - start;
 
-  index_t j = static_cast<index_t>(cid);
+  unsigned int j = cid;
 
   while (j < partition_size) {
     const unsigned int pos = j + start;
@@ -151,8 +152,9 @@ TRACCC_HOST_DEVICE inline void aggregate_cluster(
   out.local_position() = utils::to_float_array<default_algebra>(position);
   out.local_variance() = utils::to_float_array<default_algebra>(var);
   out.surface_link() = module_cd.geometry_id();
-  // Set a unique identifier for the measurement.
-  out.identifier() = link;
+  // Set a unique identifier for the measurement as the index
+  // of the first cell of the cluster.
+  out.identifier() = cid + start;
   // Set the dimensionality of the measurement.
   out.dimensions() = module_dd.dimensions();
   // Set the measurement's subspace.

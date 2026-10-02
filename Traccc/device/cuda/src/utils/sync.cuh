@@ -1,11 +1,16 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2022 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+// System include(s).
+#include <cstdint>
+#include <utility>
 
 namespace traccc::cuda {
 /**
@@ -31,16 +36,16 @@ namespace traccc::cuda {
  *
  * @note This function forces thread synchronization.
  */
-__device__ __forceinline__ std::pair<uint32_t, uint32_t>
-warp_indexed_ballot_sync(bool predicate, uint32_t mask = 0xFFFFFFFFu) {
-  uint32_t vote = __ballot_sync(mask, predicate);
+__device__ __forceinline__ std::pair<std::uint32_t, std::uint32_t>
+warp_indexed_ballot_sync(bool predicate, std::uint32_t mask = 0xFFFFFFFFu) {
+  std::uint32_t vote = __ballot_sync(mask, predicate);
 
   /*
    * The total number of threads which return true is simply the population
    * count of the voting result, which is to say the number of true bits in
    * its binary expansion.
    */
-  uint32_t tot = __popc(vote);
+  std::uint32_t tot = __popc(vote);
 
   /*
    * The index is the population count of the vote mask, but only for bits
@@ -48,7 +53,7 @@ warp_indexed_ballot_sync(bool predicate, uint32_t mask = 0xFFFFFFFFu) {
    * mask over the voting result, nulling any bits that are _higher_ than
    * the thread index!
    */
-  uint32_t idx = __popc(vote & ~(0xFFFFFFFFu << (threadIdx.x % warpSize)));
+  std::uint32_t idx = __popc(vote & ~(0xFFFFFFFFu << (threadIdx.x % warpSize)));
 
   return {tot, idx};
 }

@@ -44,7 +44,7 @@ struct PathLimitReached {
 
     // Check if the maximum allowed step size has to be updated
     double distance =
-        std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
+        std::abs(internalLimit) - std::abs(stepper.pathLength(state.stepping));
     double tolerance = state.options.surfaceTolerance;
     bool limitReached = (std::abs(distance) < std::abs(tolerance));
     if (limitReached) {
@@ -60,6 +60,10 @@ struct PathLimitReached {
     return false;
   }
 };
+
+/// Tag used in place of a target aborter type to build a propagator state for
+/// a propagation without a target surface
+struct NoTargetAborter {};
 
 /// This is the condition that the Surface has been reached it then triggers a
 /// propagation abort

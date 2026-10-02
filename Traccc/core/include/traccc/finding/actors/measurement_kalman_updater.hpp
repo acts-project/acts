@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -66,7 +67,7 @@ struct measurement_updater : detray::base_actor {
     /// Statistics for the current track
     track_stats<scalar_t> m_stats{};
 
-    /// Congfig params
+    /// Config params
     float max_chi2{0.f};
     /// Max no. of track states this actor can accumulate
     std::uint_least16_t max_n_track_states{100u};
@@ -151,16 +152,8 @@ struct measurement_updater : detray::base_actor {
       if (cand.chi2 <= std::numeric_limits<scalar_t>::epsilon() &&
           !sf.has_material()) {
         // Update measurement covariance
-        const auto V =
-            measurement_selector::calibrated_measurement_covariance<algebra_t,
-                                                                    2>(
-                meas, updater_state.m_calib_cfg);
-
-        auto& filtered_cov = bound_param.covariance();
-        getter::element(filtered_cov, e_bound_loc0, e_bound_loc0) =
-            getter::element(V, 0, 0);
-        getter::element(filtered_cov, e_bound_loc1, e_bound_loc1) =
-            getter::element(V, 1, 1);
+        measurement_selector::set_seed_measurement_covariance<algebra_t>(
+            bound_param.covariance(), meas, updater_state.m_calib_cfg);
 
         TRACCC_DEBUG_HOST("-> Updated track parameters:\n" << bound_param);
 

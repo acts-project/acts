@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2023 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -17,7 +18,7 @@ namespace traccc {
 
 /// Item: doublet of middle-bottom or middle-top
 struct doublet {
-  // midle spacepoint location in internal spacepoint container
+  // middle spacepoint location in internal spacepoint container
   sp_location sp1;
   // bottom (or top) spacepoint location in internal spacepoint container
   sp_location sp2;

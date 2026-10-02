@@ -1,12 +1,14 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
+#include <detray/core/concepts.hpp>
 #include <detray/geometry/mask.hpp>
 #include <detray/geometry/shapes/line.hpp>
 #include <detray/geometry/surface.hpp>
@@ -17,7 +19,7 @@
 namespace traccc::detail {
 
 /// @returns true if the surface has "line" shape
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 [[nodiscard]] TRACCC_HOST_DEVICE bool constexpr is_line(
     const detray::geometry::surface<detector_t> sf) {
   using algebra_t = typename detector_t::algebra_type;

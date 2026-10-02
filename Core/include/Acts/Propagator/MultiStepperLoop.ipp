@@ -13,50 +13,25 @@
 #include "Acts/Propagator/MultiStepperError.hpp"
 
 #include <algorithm>
+#include <optional>
 #include <vector>
 
 namespace Acts {
 
 template <Concepts::SingleStepper S, typename R>
-auto MultiStepperLoop<S, R>::boundState(
-    State& state, const Surface& surface, bool transportCov,
-    const FreeToBoundCorrection& freeToBoundCorrection) const
-    -> Result<BoundState> {
+auto MultiStepperLoop<S, R>::boundParameters(const State& state,
+                                             const Surface& surface) const
+    -> Result<BoundParameters> {
   assert(!state.components.empty());
 
   MultiComponentBoundTrackParameters params(
-      surface.getSharedPtr(), transportCov, state.particleHypothesis);
+      surface.getSharedPtr(), state.covTransport, state.particleHypothesis);
   params.reserve(numberComponents(state));
 
-  double accumulatedPathLength = 0.0;
-
-  for (auto i = 0ul; i < numberComponents(state); ++i) {
-    auto& cmpState = state.components[i].state;
-
-    // Force the component to be on the surface
-    // This needs to be done because of the `averageOnSurface`-option of the
-    // `MultiStepperSurfaceReached`-Aborter, which can be configured to end the
-    // propagation when the mean of all components reached the destination
-    // surface. Thus, it is not garantueed that all states are actually
-    // onSurface.
-    cmpState.pars.template segment<3>(eFreePos0) =
-        surface
-            .intersect(state.options.geoContext,
-                       cmpState.pars.template segment<3>(eFreePos0),
-                       cmpState.pars.template segment<3>(eFreeDir0),
-                       BoundaryTolerance::Infinite())
-            .closest()
-            .position();
-
-    auto bs = m_singleStepper.boundState(cmpState, surface, transportCov,
-                                         freeToBoundCorrection);
-
-    if (bs.ok()) {
-      const auto& btp = std::get<BoundTrackParameters>(*bs);
-      params.pushComponent(state.components[i].weight, btp.parameters(),
-                           btp.covariance());
-      accumulatedPathLength +=
-          std::get<double>(*bs) * state.components[i].weight;
+  for (const auto& cmp : state.components) {
+    auto bp = m_singleStepper.boundParameters(cmp.state, surface);
+    if (bp.ok()) {
+      params.pushComponent(cmp.weight, bp->parameters(), bp->covariance());
     }
   }
 
@@ -66,34 +41,63 @@ auto MultiStepperLoop<S, R>::boundState(
 
   params.normalizeWeights();
 
-  return BoundState{params, Jacobian::Zero(), accumulatedPathLength};
+  return params;
 }
 
 template <Concepts::SingleStepper S, typename R>
-auto MultiStepperLoop<S, R>::curvilinearState(State& state,
-                                              bool transportCov) const
-    -> BoundState {
+auto MultiStepperLoop<S, R>::curvilinearParameters(const State& state) const
+    -> BoundParameters {
   assert(!state.components.empty());
 
   std::vector<std::tuple<double, Vector4, Vector3, double, BoundMatrix>> cmps;
   cmps.reserve(numberComponents(state));
-  double accumulatedPathLength = 0.0;
 
-  for (auto i = 0ul; i < numberComponents(state); ++i) {
-    const auto [cp, jac, pl] = m_singleStepper.curvilinearState(
-        state.components[i].state, transportCov);
+  for (const auto& cmp : state.components) {
+    const auto cp = m_singleStepper.curvilinearParameters(cmp.state);
 
-    cmps.emplace_back(state.components[i].weight,
-                      cp.fourPosition(state.options.geoContext), cp.direction(),
-                      cp.qOverP(),
+    cmps.emplace_back(cmp.weight, cp.fourPosition(state.options.geoContext),
+                      cp.direction(), cp.qOverP(),
                       cp.covariance().value_or(BoundMatrix::Zero()));
-    accumulatedPathLength += state.components[i].weight * pl;
   }
 
-  return BoundState{
-      MultiComponentBoundTrackParameters::createCurvilinear(
-          state.options.geoContext, cmps, state.particleHypothesis),
-      Jacobian::Zero(), accumulatedPathLength};
+  return MultiComponentBoundTrackParameters::createCurvilinear(
+      state.options.geoContext, cmps, state.particleHypothesis);
+}
+
+template <Concepts::SingleStepper S, typename R>
+auto MultiStepperLoop<S, R>::transportToBound(
+    State& state, const Surface& surface,
+    const FreeToBoundCorrection& freeToBoundCorrection) const
+    -> Result<Jacobian> {
+  assert(!state.components.empty());
+
+  const std::size_t selected = Reducer::index(state);
+  assert(selected < state.components.size());
+  Result<Jacobian> jacobian = Result<Jacobian>::success(Jacobian::Identity());
+
+  for (std::size_t i = 0; i < state.components.size(); ++i) {
+    auto& cmpState = state.components[i].state;
+
+    // Force the component onto the surface. `MultiStepperSurfaceReached` can
+    // end the propagation once the mean of the components reached the surface,
+    // so a single component is not necessarily on it.
+    cmpState.pars.template segment<3>(eFreePos0) =
+        surface
+            .intersect(state.options.geoContext,
+                       cmpState.pars.template segment<3>(eFreePos0),
+                       cmpState.pars.template segment<3>(eFreeDir0),
+                       BoundaryTolerance::Infinite())
+            .closest()
+            .position();
+
+    auto res = m_singleStepper.transportToBound(cmpState, surface,
+                                                freeToBoundCorrection);
+    if (i == selected) {
+      jacobian = std::move(res);
+    }
+  }
+
+  return jacobian;
 }
 
 template <Concepts::SingleStepper S, typename R>

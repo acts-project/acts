@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -14,10 +15,13 @@
 #include <alpaka/alpaka.hpp>
 #pragma GCC diagnostic pop
 
+// System include(s).
+#include <cstdint>
+
 namespace traccc::alpaka {
 
 using Dim = ::alpaka::DimInt<1>;
-using Idx = uint32_t;
+using Idx = std::uint32_t;
 using WorkDiv = ::alpaka::WorkDivMembers<Dim, Idx>;
 
 // Get alpaka accelerator - based on alpaka/examples/ExampleDefaultAcc.hpp

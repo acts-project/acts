@@ -20,7 +20,7 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:87
+    container: ghcr.io/acts-project/ubuntu2604:90
     # Only pull_request and push-to-main are handled below (PR mode / push
     # mode). Analysis also runs on merge_group, which matches neither, so
     # skip the job outright instead of paying for checkout+deps to do nothing.
@@ -174,7 +174,7 @@ jobs:
           git status
 
       - name: Run sonar-scanner (PR mode)
-        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
+        uses: SonarSource/sonarqube-scan-action@ba9859eae8dd6bd29e412f25ddbbef3d032000f4 # v8.2.2
         if: github.event.workflow_run.event == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -190,7 +190,7 @@ jobs:
             --define sonar.pullrequest.base=${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
 
       - name: Run sonar-scanner (push mode)
-        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
+        uses: SonarSource/sonarqube-scan-action@ba9859eae8dd6bd29e412f25ddbbef3d032000f4 # v8.2.2
         if: github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

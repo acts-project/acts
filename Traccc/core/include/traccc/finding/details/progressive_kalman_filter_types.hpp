@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -37,7 +38,7 @@ using pkf_actor_chain_t =
                         parameter_updater_t,
                         detray::actor::momentum_aborter<traccc::scalar>>;
 
-template <typename detector_t, typename bfield_t>
+template <detray::concepts::detector detector_t, typename bfield_t>
 using pkf_propagator_t =
     detray::propagator<pkf_stepper_t<bfield_t>,
                        detray::caching_navigator<std::add_const_t<detector_t>>,

@@ -8,6 +8,11 @@
 
 #include "ActsPlugins/Json/JsonMaterialDecorator.hpp"
 
+#include "Acts/Geometry/TrackingVolume.hpp"
+
+#include <fstream>
+#include <stdexcept>
+
 namespace Acts {
 
 JsonMaterialDecorator::JsonMaterialDecorator(
@@ -34,33 +39,22 @@ JsonMaterialDecorator::JsonMaterialDecorator(
     ifj >> jin;
   }
 
-  auto maps = jmConverter.jsonToMaterialMaps(jin);
-  m_surfaceMaterialMap = maps.first;
-  m_volumeMaterialMap = maps.second;
+  m_materialMaps = jmConverter.jsonToMaterialMaps(jin);
   ACTS_VERBOSE("JSON material description read complete");
 }
 
 void JsonMaterialDecorator::decorate(Surface& surface) const {
-  ACTS_VERBOSE("Processing surface: " << surface.geometryId());
-  // Try to find the surface in the map
-  auto sMaterial = m_surfaceMaterialMap.find(surface.geometryId());
-  if (sMaterial != m_surfaceMaterialMap.end()) {
-    ACTS_VERBOSE("-> Found material for surface, assigning");
-    surface.assignSurfaceMaterial(sMaterial->second);
-  }
+  m_materialMaps.apply(surface);
 }
 
-/// Decorate a TrackingVolume
-///
-/// @param volume the non-cost volume that is decorated
 void JsonMaterialDecorator::decorate(TrackingVolume& volume) const {
-  ACTS_VERBOSE("Processing volume: " << volume.geometryId());
-  // Clear the material if registered to do so
-  // Try to find the volume in the map
-  auto vMaterial = m_volumeMaterialMap.find(volume.geometryId());
-  if (vMaterial != m_volumeMaterialMap.end()) {
-    ACTS_VERBOSE("-> Found material for volume, assigning");
-    volume.assignVolumeMaterial(vMaterial->second);
+  if (!m_materialMaps.keyedSurfaces.empty() && volume.portals().empty()) {
+    throw std::invalid_argument(
+        "Cannot apply a keyed material map to Gen1 geometry: stable material "
+        "keys require Gen3 material designators. Use a Gen1 map indexed by "
+        "geometry ID or apply this map to the matching Gen3 geometry.");
   }
+  m_materialMaps.apply(volume);
 }
+
 }  // namespace Acts

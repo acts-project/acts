@@ -15,6 +15,7 @@
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/GbtsNodeStorage.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
+#include "Acts/Seeding/GbtsTauLookupTable.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -38,7 +39,7 @@ class GraphBasedTrackSeeder {
 
     /// Accepted tau range per cluster width bin, needed by the cluster width
     /// cuts and ignored without them.
-    detail::GbtsTauLookupTable tauLookupTable;
+    GbtsTauLookupTable tauLookupTable;
 
     /// Take the strip-to-strip layer connections from the connector file
     /// instead of the pixel-to-pixel ones. Read where the file is loaded, not
@@ -127,11 +128,13 @@ class GraphBasedTrackSeeder {
     float phiWindowFarSlope = 2.2e-4f / UnitConstants::mm;
     /// Incoming edge count below which a node is accepted without a tau match.
     std::uint32_t matchBeforeCreateMaxEdges = 2;
-    /// Layers whose nodes are cut against the z0 histogram of their outer
-    /// neighbourhood, and whose isolated nodes are skipped.
-    std::vector<GbtsExperimentLayerId> z0HistogramLayerIds{80000};
-    /// Layers `matchBeforeCreate` applies to, when it is enabled.
-    std::vector<GbtsExperimentLayerId> matchBeforeCreateLayerIds{80000, 81000};
+    /// Highest pixel barrel layer, counted inside out, whose nodes are cut
+    /// against the z0 histogram of their outer neighbourhood and whose
+    /// isolated nodes are skipped. Negative disables the cut.
+    std::int32_t z0HistogramMaxBarrelOrder = 0;
+    /// Highest pixel barrel layer, counted inside out, `matchBeforeCreate`
+    /// applies to when it is enabled. Negative disables it.
+    std::int32_t matchBeforeCreateMaxBarrelOrder = 1;
     /// Half-width of the z0 window a node is matched against in the histogram.
     float z0Resolution = 2.5f * UnitConstants::mm;
     /// Maximum radius of pixel detector
@@ -292,8 +295,8 @@ class GraphBasedTrackSeeder {
     std::uint32_t firstIt{};
     /// window half-width;
     float deltaPhi{};
-    /// GBTS layer ID of the bin
-    GbtsExperimentLayerId layerId{};
+    /// Inside-out pixel barrel ordinal of the bin's layer, -1 for the rest.
+    std::int32_t barrelOrder{-1};
     /// Type of the bin's layer.
     GbtsLayerType type{};
     /// Technology of the bin's layer.

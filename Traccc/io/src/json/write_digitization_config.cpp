@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "write_digitization_config.hpp"
@@ -36,7 +37,7 @@ nlohmann::json module_digi_config_to_json(
   nlohmann::json entry;
 
   // Write geometry identifier fields — only write non-zero ones
-  // ie the top most value in geometry sructure
+  // ie the top most value in geometry structure
   if (geoId.volume() != 0)
     entry["volume"] = geoId.volume();
   if (geoId.layer() != 0)

@@ -241,15 +241,22 @@ class ReferenceTrajectoryBuilder {
         if (isTargetReached) {
           ACTS_VERBOSE("Setting parameters at target surface");
 
-          auto res = stepper.boundState(state.stepping, *targetReached.surface);
+          auto transportRes =
+              stepper.transportToBound(state.stepping, *targetReached.surface);
+          if (!transportRes.ok()) {
+            ACTS_DEBUG("Error while transporting to the target surface: "
+                       << transportRes.error() << " "
+                       << transportRes.error().message());
+            return transportRes.error();
+          }
+          auto res =
+              stepper.boundParameters(state.stepping, *targetReached.surface);
           if (!res.ok()) {
-            ACTS_DEBUG("Error while acquiring bound state for target surface: "
+            ACTS_DEBUG("Error while binding to the target surface: "
                        << res.error() << " " << res.error().message());
             return res.error();
-          } else {
-            const auto& [boundParams, jacobian, pathLength] = *res;
-            result.referenceParameters = boundParams;
           }
+          result.referenceParameters = std::move(*res);
         }
 
         result.finished = true;
@@ -273,8 +280,11 @@ class ReferenceTrajectoryBuilder {
                                const stepper_t& stepper,
                                const navigator_t& navigator,
                                result_type& result) const {
-      stepper.transportCovarianceToBound(state.stepping, surface,
-                                         freeToBoundCorrection);
+      auto transportRes = stepper.transportToBound(state.stepping, surface,
+                                                   freeToBoundCorrection);
+      if (!transportRes.ok()) {
+        return transportRes.error();
+      }
 
       const Result<detail::PointwiseMaterialEffects> materialInteractionPreRes =
           detail::performMaterialInteraction(
@@ -297,19 +307,18 @@ class ReferenceTrajectoryBuilder {
       ConstTrackStateProxy trackStateProxyConst{trackStateProxy};
 
       trackStateProxy.setReferenceSurface(surface.getSharedPtr());
-      auto res = stepper.boundState(state.stepping, surface, false,
-                                    freeToBoundCorrection);
+      auto res = stepper.boundParameters(state.stepping, surface);
       if (!res.ok()) {
         ACTS_DEBUG("Propagate to surface " << surface.geometryId()
                                            << " failed: " << res.error());
         return res.error();
       }
-      const auto& [boundParams, jacobian, pathLength] = *res;
 
-      trackStateProxy.predicted() = boundParams.parameters();
-      trackStateProxy.predictedCovariance() = state.stepping.cov;
-      trackStateProxy.jacobian() = jacobian;
-      trackStateProxy.pathLength() = pathLength;
+      trackStateProxy.predicted() = res->parameters();
+      trackStateProxy.predictedCovariance() =
+          stepper.covariance(state.stepping).value();
+      trackStateProxy.jacobian() = *transportRes;
+      trackStateProxy.pathLength() = stepper.pathLength(state.stepping);
 
       auto typeFlags = trackStateProxy.typeFlags();
       typeFlags.setHasParameters();
@@ -580,14 +589,14 @@ class ReferenceTrajectoryBuilder {
     if constexpr (!isDirectNavigator) {
       if (sSequence != nullptr) {
         for (const Surface* surface : *sSequence) {
-          propagatorOptions.navigation.appendExternalSurface(*surface);
+          propagatorOptions.navigation.registerMeasurementSurface(*surface);
         }
       }
     } else {
       assert(sSequence != nullptr &&
              "DirectNavigator requires a surface sequence for "
              "ReferenceTrajectory");
-      propagatorOptions.navigation.externalSurfaces = *sSequence;
+      propagatorOptions.navigation.surfaceSequence = *sSequence;
     }
 
     auto& actor = propagatorOptions.actorList.template get<Actor>();
@@ -609,7 +618,7 @@ class ReferenceTrajectoryBuilder {
     auto propagatorState = m_propagator.makeState(propagatorOptions);
 
     auto propagatorInitResult =
-        m_propagator.initialize(propagatorState, sParameters);
+        m_propagator.initialize(propagatorState, sParameters, nullptr);
     if (!propagatorInitResult.ok()) {
       ACTS_DEBUG("Propagation initialization failed: "
                  << propagatorInitResult.error());

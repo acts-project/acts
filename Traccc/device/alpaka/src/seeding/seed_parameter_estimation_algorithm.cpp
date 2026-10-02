@@ -1,9 +1,11 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 //
 // Local include(s).
 #include "traccc/alpaka/seeding/seed_parameter_estimation_algorithm.hpp"
@@ -41,10 +43,11 @@ struct estimate_track_params {
 seed_parameter_estimation_algorithm::seed_parameter_estimation_algorithm(
     const track_params_estimation_config& config,
     const traccc::memory_resource& mr, const vecmem::copy& copy,
-    alpaka::queue& q, std::unique_ptr<const Logger> logger)
+    alpaka::queue& q, std::unique_ptr<const Logger> logger,
+    await_function_type await_func)
     : device::seed_parameter_estimation_algorithm(config, mr, copy,
                                                   std::move(logger)),
-      alpaka::algorithm_base(q) {}
+      alpaka::algorithm_base(q, std::move(await_func)) {}
 
 void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
     const struct estimate_seed_params_kernel_payload& payload) const {

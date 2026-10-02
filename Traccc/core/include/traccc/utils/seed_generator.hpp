@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2024 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -14,6 +15,7 @@
 #include "traccc/utils/trigonometric_helpers.hpp"
 
 // detray include(s).
+#include <detray/core/concepts.hpp>
 #include <detray/definitions/navigation.hpp>  // < navigation::direction
 #include <detray/geometry/identifier.hpp>
 #include <detray/geometry/tracking_surface.hpp>
@@ -25,7 +27,7 @@
 namespace traccc {
 
 /// Seed track parameter generator
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 struct seed_generator {
   using algebra_type = typename detector_t::algebra_type;
   using ctx_t = typename detector_t::geometry_context;

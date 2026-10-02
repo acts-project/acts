@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -62,7 +63,7 @@ struct build_tracks_payload {
 ///
 /// @param[in] globalIndex         The index of the current thread
 /// @param[in] cfg                    Track finding config object
-/// @param[inout] payload      The function call payload
+/// @param[in,out] payload      The function call payload
 ///
 TRACCC_HOST_DEVICE inline void build_tracks(
     global_index_t globalIndex, bool run_mbf,

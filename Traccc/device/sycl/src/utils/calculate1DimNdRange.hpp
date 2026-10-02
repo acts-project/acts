@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2024 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -12,7 +13,7 @@
 
 namespace traccc::sycl::details {
 
-/// Function that calculates 1 dim nd range for sycl kernel execution
+/// Function that calculates 1 dim nd-range for sycl kernel execution
 ///
 /// @param[in] globalSize       The global execution range of the kernel
 /// @param[in] localSize        Desired Work group size of the kernel

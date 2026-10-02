@@ -107,7 +107,9 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIoHomogeneousReadWrite) {
   auto iFile = TFile::Open("RootMaterialMapIoHomogeneousTests.root", "READ");
   BOOST_REQUIRE(iFile != nullptr);
 
-  auto [surfaceMapsRead, volumeMapsRead] = accessor.read(*iFile, options);
+  auto mapsRead = accessor.read(*iFile, options);
+  const auto& surfaceMapsRead = mapsRead.surfaceMaterials;
+  const auto& volumeMapsRead = mapsRead.volumeMaterials;
   BOOST_REQUIRE_EQUAL(surfaceMapsRead.size(), surfaceMaterials.size());
   BOOST_REQUIRE_EQUAL(volumeMapsRead.size(), 0);
 
@@ -150,7 +152,9 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIoBinnedReadWrite) {
   // Let's read it back
   auto iFile = TFile::Open("RootMaterialMapIoBinnedTests.root", "READ");
   BOOST_REQUIRE(iFile != nullptr);
-  auto [surfaceMapsRead, volumeMapsRead] = accessor.read(*iFile, options);
+  auto mapsRead = accessor.read(*iFile, options);
+  const auto& surfaceMapsRead = mapsRead.surfaceMaterials;
+  const auto& volumeMapsRead = mapsRead.volumeMaterials;
   BOOST_REQUIRE_EQUAL(surfaceMapsRead.size(), surfaceMaterials.size());
   BOOST_REQUIRE_EQUAL(volumeMapsRead.size(), 0);
 
@@ -217,8 +221,9 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIoBinnedReadWrite) {
   // Let's read it back
   iFile = TFile::Open("RootMaterialMapIoBinnedIndexedTests.root", "READ");
   BOOST_REQUIRE(iFile != nullptr);
-  auto [surfaceMapsIndexedRead, volumeMapsIndexedRead] =
-      accessorIndexed.read(*iFile, optionsIndexed);
+  auto mapsIndexedRead = accessorIndexed.read(*iFile, optionsIndexed);
+  const auto& surfaceMapsIndexedRead = mapsIndexedRead.surfaceMaterials;
+  const auto& volumeMapsIndexedRead = mapsIndexedRead.volumeMaterials;
   BOOST_REQUIRE_EQUAL(surfaceMapsIndexedRead.size(), surfaceMaterials.size());
   BOOST_REQUIRE_EQUAL(volumeMapsIndexedRead.size(), 0);
 

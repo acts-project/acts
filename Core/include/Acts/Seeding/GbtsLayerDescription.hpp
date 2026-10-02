@@ -8,7 +8,10 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+
 #include <cstdint>
+#include <vector>
 
 namespace Acts::Experimental {
 
@@ -36,10 +39,29 @@ struct GbtsLayerDescription final {
   GbtsLayerTechnology technology{GbtsLayerTechnology::Pixel};
   /// Reference coordinate (r for barrel, z for endcap).
   float refCoord{};
+  /// Thickness in the reference direction
+  /// max r - min r for the barrel, max z - min z for endcap
+  float layerThickness{};
   /// Minimum boundary coordinate.
   float minBound{};
   /// Maximum boundary coordinate.
   float maxBound{};
+  /// Position of the layer in the inside-out ordering of the pixel barrel,
+  /// -1 for every other layer. Derived from `refCoord` when left unset; set it
+  /// on every pixel barrel layer or on none of them.
+  std::int32_t barrelOrder{-1};
+};
+
+/// A GBTS layer and the detector surfaces it is made of
+struct GbtsLayerConfig final {
+  /// Id of the layer, as the layer connections refer to it
+  GbtsExperimentLayerId id{};
+  /// Whether the layer is a barrel or an endcap layer
+  GbtsLayerType type{};
+  /// Sensor technology of the layer
+  GbtsLayerTechnology technology{};
+  /// Surfaces of the layer
+  std::vector<GeometryIdentifier> surfaces;
 };
 
 }  // namespace Acts::Experimental

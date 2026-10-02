@@ -221,14 +221,14 @@ struct iota : public detray::ranges::iota_view<incr_t> {
 
 // deduction guides
 template <concepts::interval interval_t>
-DETRAY_HOST_DEVICE iota(interval_t &&interval)
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE iota(interval_t &&interval)
     -> iota<std::remove_cvref_t<decltype(detray::detail::get<0>(interval))>>;
 
 template <concepts::index I>
-DETRAY_HOST_DEVICE iota(I start, I end) -> iota<I>;
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE iota(I start, I end) -> iota<I>;
 
 template <concepts::index I>
-DETRAY_HOST_DEVICE iota(I start) -> iota<I>;
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE iota(I start) -> iota<I>;
 
 }  // namespace views
 

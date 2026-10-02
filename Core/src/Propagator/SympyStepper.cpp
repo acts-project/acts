@@ -10,16 +10,17 @@
 
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
+#include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/SympyBoundToFreeScaling.hpp"
 #include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
 #include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
-#include "Acts/Propagator/detail/SympyStepperDenseStep.hpp"
-#include "Acts/Propagator/detail/SympyStepperStatus.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
 
 #include <cmath>
 #include <span>
 
-#include "codegen/sympy_stepper_math.hpp"
+#include "detail/SympyStepperStep.hpp"
 
 namespace Acts {
 
@@ -49,7 +50,6 @@ void SympyStepper::initialize(State& state, const BoundVector& boundParams,
 
   state.pathAccumulated = 0;
   state.nSteps = 0;
-  state.nStepTrials = 0;
   state.stepSize = ConstrainedStep();
   state.stepSize.setAccuracy(state.options.initialStepSize);
   state.stepSize.setUser(state.options.maxStepSize);
@@ -58,49 +58,24 @@ void SympyStepper::initialize(State& state, const BoundVector& boundParams,
 
   state.pars = freeParams;
   state.field.reset();
+  state.dtds = detail::sympyDtds(state);
 
   // Init the jacobian matrix if needed
-  state.covTransport = cov.has_value();
-  if (state.covTransport) {
-    // set the covariance transport flag to true and copy
-    state.cov = *cov;
+  state.cov = cov;
+  if (state.cov.has_value()) {
     state.jacToGlobal = surface.boundToFreeJacobian(
         state.options.geoContext, freeParams.segment<3>(eFreePos0),
         freeParams.segment<3>(eFreeDir0));
     detail::sympy::toScaledBoundToFree(state.jacToGlobal,
                                        freeParams[eFreeQOverP]);
-    state.jacobian = BoundMatrix::Identity();
     state.derivative = FreeVector::Zero();
   }
 }
 
-Result<std::tuple<SympyStepper::BoundParameters, BoundMatrix, double>>
-SympyStepper::boundState(
-    State& state, const Surface& surface, bool transportCov,
-    const FreeToBoundCorrection& freeToBoundCorrection) const {
-  const bool transport = state.covTransport && transportCov;
-  std::optional<FreeMatrix> additionalFreeCovariance;
-  if (transport) {
-    additionalFreeCovariance =
-        state.materialEffectsAccumulator.computeAdditionalFreeCovariance(
-            direction(state));
-  }
-  state.materialEffectsAccumulator.reset();
-  // The engine reads the jacobian and reinitializes it for the new surface, so
-  // convert to plain before the call and back to scaled after. Without
-  // transport the engine does not touch the jacobian.
-  if (transport) {
-    detail::sympy::fromScaledBoundToFree(state.jacToGlobal, qOverP(state));
-  }
-  auto result = detail::sympy::boundState(
-      state.options.geoContext, surface, state.cov, state.jacobian,
-      state.derivative, state.jacToGlobal, additionalFreeCovariance, state.pars,
-      state.particleHypothesis, transport, state.pathAccumulated,
-      freeToBoundCorrection);
-  if (transport) {
-    detail::sympy::toScaledBoundToFree(state.jacToGlobal, qOverP(state));
-  }
-  return result;
+Result<SympyStepper::BoundParameters> SympyStepper::boundParameters(
+    const State& state, const Surface& surface) const {
+  return detail::boundParameters(state.options.geoContext, surface, state.pars,
+                                 state.cov, state.particleHypothesis);
 }
 
 bool SympyStepper::prepareCurvilinearState(State& state) const {
@@ -109,27 +84,10 @@ bool SympyStepper::prepareCurvilinearState(State& state) const {
   return true;
 }
 
-std::tuple<SympyStepper::BoundParameters, BoundMatrix, double>
-SympyStepper::curvilinearState(State& state, bool transportCov) const {
-  const bool transport = state.covTransport && transportCov;
-  std::optional<FreeMatrix> additionalFreeCovariance;
-  if (transport) {
-    additionalFreeCovariance =
-        state.materialEffectsAccumulator.computeAdditionalFreeCovariance(
-            direction(state));
-  }
-  state.materialEffectsAccumulator.reset();
-  if (transport) {
-    detail::sympy::fromScaledBoundToFree(state.jacToGlobal, qOverP(state));
-  }
-  auto result = detail::sympy::curvilinearState(
-      state.cov, state.jacobian, state.derivative, state.jacToGlobal,
-      additionalFreeCovariance, state.pars, state.particleHypothesis, transport,
-      state.pathAccumulated);
-  if (transport) {
-    detail::sympy::toScaledBoundToFree(state.jacToGlobal, qOverP(state));
-  }
-  return result;
+SympyStepper::BoundParameters SympyStepper::curvilinearParameters(
+    const State& state) const {
+  return detail::curvilinearParameters(state.pars, state.cov,
+                                       state.particleHypothesis);
 }
 
 void SympyStepper::update(State& state, const FreeVector& freeParams,
@@ -138,20 +96,23 @@ void SympyStepper::update(State& state, const FreeVector& freeParams,
                           const Surface& surface) const {
   state.pars = freeParams;
   state.field.reset();
-  state.cov = covariance;
-  if (state.covTransport) {
+  state.dtds = detail::sympyDtds(state);
+  if (state.cov.has_value()) {
+    state.cov = covariance;
     state.jacToGlobal = surface.boundToFreeJacobian(
         state.options.geoContext, freeParams.template segment<3>(eFreePos0),
         freeParams.template segment<3>(eFreeDir0));
     detail::sympy::toScaledBoundToFree(state.jacToGlobal,
                                        freeParams[eFreeQOverP]);
+    state.derivative = FreeVector::Zero();
   }
+  state.materialEffectsAccumulator.reset();
 }
 
 void SympyStepper::update(State& state, const Vector3& uposition,
                           const Vector3& udirection, double qOverP,
                           double time) const {
-  if (state.covTransport) {
+  if (state.cov.has_value()) {
     detail::sympy::rescaleBoundToFree(state.jacToGlobal,
                                       state.pars[eFreeQOverP], qOverP);
   }
@@ -159,188 +120,72 @@ void SympyStepper::update(State& state, const Vector3& uposition,
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
   state.pars[eFreeQOverP] = qOverP;
+  state.dtds = detail::sympyDtds(state);
   state.field.reset();
 }
 
-void SympyStepper::transportCovarianceToCurvilinear(State& state) const {
-  if (!state.covTransport) {
-    return;
+SympyStepper::Jacobian SympyStepper::transportToCurvilinear(
+    State& state) const {
+  Jacobian jacobian = Jacobian::Identity();
+  if (!state.cov.has_value()) {
+    state.materialEffectsAccumulator.reset();
+    return jacobian;
   }
+  const std::optional<FreeMatrix> additionalFreeCovariance =
+      state.materialEffectsAccumulator.computeAdditionalFreeCovariance(
+          direction(state));
+  state.materialEffectsAccumulator.reset();
   detail::sympy::fromScaledBoundToFree(state.jacToGlobal, qOverP(state));
   detail::sympy::transportCovarianceToCurvilinear(
-      state.cov, state.jacobian, state.derivative, state.jacToGlobal,
-      std::nullopt, state.pars.template segment<3>(eFreeDir0));
+      *state.cov, jacobian, state.derivative, state.jacToGlobal,
+      additionalFreeCovariance, state.pars.template segment<3>(eFreeDir0));
   detail::sympy::toScaledBoundToFree(state.jacToGlobal, qOverP(state));
+  return jacobian;
 }
 
-void SympyStepper::transportCovarianceToBound(
+Result<SympyStepper::Jacobian> SympyStepper::transportToBound(
     State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
-  if (!state.covTransport) {
-    return;
+  if (!surface.isOnSurface(state.options.geoContext, position(state),
+                           direction(state), BoundaryTolerance::Infinite())) {
+    return Result<Jacobian>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
+
+  Jacobian jacobian = Jacobian::Identity();
+  if (!state.cov.has_value()) {
+    state.materialEffectsAccumulator.reset();
+    return Result<Jacobian>::success(jacobian);
+  }
+  const std::optional<FreeMatrix> additionalFreeCovariance =
+      state.materialEffectsAccumulator.computeAdditionalFreeCovariance(
+          direction(state));
+  state.materialEffectsAccumulator.reset();
   detail::sympy::fromScaledBoundToFree(state.jacToGlobal, qOverP(state));
   detail::sympy::transportCovarianceToBound(
-      state.options.geoContext, surface, state.cov, state.jacobian,
-      state.derivative, state.jacToGlobal, std::nullopt, state.pars,
+      state.options.geoContext, surface, *state.cov, jacobian, state.derivative,
+      state.jacToGlobal, additionalFreeCovariance, state.pars,
       freeToBoundCorrection);
   detail::sympy::toScaledBoundToFree(state.jacToGlobal, qOverP(state));
+  return Result<Jacobian>::success(jacobian);
 }
 
 Result<double> SympyStepper::step(State& state, Direction propDir,
                                   const IVolumeMaterial* material) const {
-  double h = state.stepSize.value() * propDir;
-
-  const double initialH = h;
-
-  const Vector3 pos = position(state);
-  const Vector3 dir = direction(state);
-  const double t = time(state);
-  const double qop = qOverP(state);
-  const double pabs = absoluteMomentum(state);
-  const double m = particleHypothesis(state).mass();
-
-  if (state.options.doDense && material != nullptr &&
-      pabs < state.options.dense.momentumCutOff) {
-    return EigenStepperError::StepInvalid;
-  }
-
-  const auto getB = [this, &state](std::span<const double, 3> p) {
-    return getField(state, {p[0], p[1], p[2]});
-  };
-
-  if (!state.field.has_value()) {
-    auto fieldRes = getField(state, pos);
-    if (!fieldRes.ok()) {
-      return fieldRes.error();
-    }
-    state.field = *fieldRes;
-  }
-  Vector3 lastField = *state.field;
-
-  // Read once: the kernel writes through spans that point into `state`, so a
-  // later read would be ordered behind all of its stores.
-  const double stepTolerance = state.options.stepTolerance;
-
-  const auto calcStepSizeScaling = [&](const double errorEstimate_) -> double {
-    // For details about these values see ATL-SOFT-PUB-2009-001
-    constexpr double lower = 0.25;
-    constexpr double upper = 4.0;
-    // This is given by the order of the Runge-Kutta method
-    constexpr double exponent = 0.25;
-
-    double x = stepTolerance / errorEstimate_;
-
-    if constexpr (exponent == 0.25) {
-      // This is 3x faster than std::pow
-      x = std::sqrt(std::sqrt(x));
-    } else {
-      x = std::pow(x, exponent);
-    }
-
-    return std::clamp(x, lower, upper);
-  };
-
-  std::size_t nStepTrials = 0;
-  double errorEstimate = 0.;
-
-  while (true) {
-    ++nStepTrials;
-    ++state.statistics.nAttemptedSteps;
-
-    // For details about the factor 4 see ATL-SOFT-PUB-2009-001
-    detail::Rk4Status status{};
-    std::error_code fieldError;
-    const std::span<const double, 3> startPos(pos.data(), 3);
-    const std::span<const double, 3> startDir(dir.data(), 3);
-    const std::span<double, 3> endPos(
-        state.pars.template segment<3>(eFreePos0).data(), 3);
-    const std::span<double, 3> endDir(
-        state.pars.template segment<3>(eFreeDir0).data(), 3);
-    const std::span<double, 8> derivative(state.derivative.data(), 8);
-    const std::span<double> jac =
-        state.covTransport ? std::span<double>(state.jacToGlobal.data(),
-                                               state.jacToGlobal.size())
-                           : std::span<double>();
-    if (!state.options.doDense || material == nullptr) {
-      status = rk4_vacuum(startPos, startDir, t, h, qop, m, pabs,
-                          std::span<const double, 3>(state.field->data(), 3),
-                          getB, errorEstimate, 4 * stepTolerance, fieldError,
-                          endPos, state.pars[eFreeTime], endDir,
-                          std::span<double, 3>(lastField.data(), 3), derivative,
-                          jac);
-    } else {
-      status =
-          detail::sympyDenseStep(*this, state, *material, h, 4 * stepTolerance,
-                                 errorEstimate, lastField, fieldError, jac);
-    }
-    if (status == detail::Rk4Status::FieldError) {
-      return fieldError;
-    }
-    // Protect against division by zero
-    errorEstimate = std::max(1e-20, errorEstimate);
-
-    if (status == detail::Rk4Status::Accepted) {
-      break;
-    }
-
-    ++state.statistics.nRejectedSteps;
-
-    const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
-    h *= stepSizeScaling;
-
-    // If step size becomes too small the particle remains at the initial
-    // place
-    if (std::abs(h) < std::abs(state.options.stepSizeCutOff)) {
-      // Not moving due to too low momentum needs an aborter
-      return EigenStepperError::StepSizeStalled;
-    }
-
-    // If the parameter is off track too much or given stepSize is not
-    // appropriate
-    if (nStepTrials > state.options.maxRungeKuttaStepTrials) {
-      // Too many trials, have to abort
-      return EigenStepperError::StepSizeAdjustmentFailed;
-    }
-  }
-
-  // O(h^3) away from the step end point, close enough to seed the next step
-  state.field = lastField;
-
-  state.pathAccumulated += h;
-  ++state.nSteps;
-  state.nStepTrials += nStepTrials;
-
-  ++state.statistics.nSuccessfulSteps;
-  if (propDir != Direction::fromScalarZeroAsPositive(initialH)) {
-    ++state.statistics.nReverseSteps;
-  }
-  state.statistics.pathLength += h;
-  state.statistics.absolutePathLength += std::abs(h);
-
-  const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
-  const double nextAccuracy = std::abs(h * stepSizeScaling);
-  const double previousAccuracy = std::abs(state.stepSize.accuracy());
-  const double initialStepLength = std::abs(initialH);
-  if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
-    state.stepSize.setAccuracy(nextAccuracy);
-  }
-
   if (state.options.doDense &&
       (material != nullptr || !state.materialEffectsAccumulator.isVacuum())) {
-    if (state.materialEffectsAccumulator.isVacuum()) {
-      state.materialEffectsAccumulator.initialize(
-          state.options.maxXOverX0Step, particleHypothesis(state), pabs);
+    if (state.cov.has_value()) {
+      return detail::sympyStep<detail::SympyStepMode::Dense, true>(
+          *this, state, propDir, material);
     }
-
-    Material mat =
-        material != nullptr ? material->material(pos) : Material::Vacuum();
-
-    state.materialEffectsAccumulator.accumulate(mat, propDir * h, qop,
-                                                qOverP(state));
+    return detail::sympyStep<detail::SympyStepMode::Dense, false>(
+        *this, state, propDir, material);
   }
-
-  return h;
+  if (state.cov.has_value()) {
+    return detail::sympyStep<detail::SympyStepMode::Vacuum, true>(
+        *this, state, propDir, nullptr);
+  }
+  return detail::sympyStep<detail::SympyStepMode::Vacuum, false>(
+      *this, state, propDir, nullptr);
 }
 
 }  // namespace Acts

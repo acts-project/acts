@@ -9,6 +9,7 @@
 #pragma once
 
 // Project include(s)
+#include "detray/core/concepts.hpp"
 #include "detray/definitions/algebra.hpp"
 #include "detray/io/csv/dfe.hpp"
 #include "detray/io/utils/create_path.hpp"
@@ -54,7 +55,7 @@ struct bound_track_parameters {
 
 /// Read free track parameters from csv file
 /// @returns vector of free track parameters
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 inline auto read_free_track_params(const std::string &file_name) {
   using algebra_t = typename detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;

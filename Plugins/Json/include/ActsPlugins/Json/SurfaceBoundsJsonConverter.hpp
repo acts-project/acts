@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "ActsPlugins/Json/ActsJson.hpp"
 
@@ -17,6 +18,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -51,6 +53,17 @@ template <typename bounds_t>
 std::shared_ptr<const bounds_t> fromJson(const nlohmann::json& j) {
   const std::size_t kValues = bounds_t::BoundValues::eSize;
   std::vector<double> bVector = j["values"];
+  // CylinderBounds used to carry two bevel angles. Accept that layout as long
+  // as both bevels are zero, because a bevel cannot be represented anymore.
+  if constexpr (std::is_same_v<bounds_t, CylinderBounds>) {
+    if (bVector.size() == kValues + 2) {
+      if (bVector[kValues] != 0. || bVector[kValues + 1] != 0.) {
+        throw std::invalid_argument(
+            "Beveled CylinderBounds are no longer supported");
+      }
+      bVector.resize(kValues);
+    }
+  }
   // Guard the copy_n below: a shorter payload would read past the vector. This
   // is reachable for bounds that gained values after the format was in use.
   if (bVector.size() != kValues) {
