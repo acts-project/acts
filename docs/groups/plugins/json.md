@@ -6,5 +6,5 @@ The file format written by the material converters is documented in
 @ref material_map_json_format.
 
 The @ref material_map_json_schema describes the versioned material
-format handled by `Acts::TrackingGeometryMaterialJsonConverter`. Legacy material
+format handled by @ref Acts::TrackingGeometryMaterialJsonConverter. Legacy material
 converters retain the previous format.

@@ -1,8 +1,8 @@
 @page material_map_json_schema Material map schema
 
-Version 1 stores **surface material**. `Acts::TrackingGeometryMaterialJsonConverter`
+Version 1 stores **surface material**. @ref Acts::TrackingGeometryMaterialJsonConverter
 reads and writes JSON or CBOR, optionally compressed with zstd. `toJson`/`fromJson`
-convert documents; `toFile`/`fromFile` handle files. `Options` controls indentation
+convert documents; `toFile`/`fromFile` handle files. @ref Acts::TrackingGeometryMaterialJsonConverter::Options "Options" controls indentation
 and compression level. Applying material to geometry is a separate operation:
 
 @snippet{trimleft} examples/material_map_json.cpp Read and write material map
@@ -22,7 +22,7 @@ Examples in `docs/examples/material-map-v1/` cover homogeneous material
 
 `header` contains `format: "acts-material-map"`, `version: 1`, and an optional
 human-readable `description`. Unknown versions are rejected. Read or change the
-description through `TrackingGeometryMaterial::description()` and `setDescription()`.
+description through @ref Acts::TrackingGeometryMaterial::description "description()" and @ref Acts::TrackingGeometryMaterial::setDescription "setDescription()".
 The optional root `$schema` identifies the schema; it is not fetched by the reader.
 
 `surfaces` contains material assignments; `slab_stores` holds shared grid data.
@@ -61,21 +61,21 @@ require split factor 1.
 ## Axes and storage
 
 Arrays are dense, flat and zero-based, with **axis 0 varying fastest**:
-`offset = i0 + size0 * i1`. This differs from native MultiAxis storage order;
+`offset = i0 + size0 * i1`. This differs from native @ref Acts::MultiAxis "MultiAxis" storage order;
 the converter handles the permutation.
 
 - Binned surfaces store regular cells only, with one or two axes.
 - Grid surfaces have two resolved axes and include underflow and overflow cells
   on both axes, including bound/closed axes. Each extent is `bins + 2`.
 - `open` uses guard cells, `bound` clamps, and `closed` wraps. Intervals include
-  the lower edge and exclude the upper edge. BinUtility `open` maps to `bound`.
+  the lower edge and exclude the upper edge. @ref Acts::BinUtility "BinUtility" `open` maps to `bound`.
 - Equidistant axes have a range and bin count; variable axes have increasing
   edges. Grid lookup uses surface-local coordinates in axis order.
 - Binned/proto material may carry a rigid local-to-global transform: a row-major
   3×3 rotation and a translation vector. An omitted transform is identity.
-- Subdivided BinUtility axes preserve their base and subdivision: `replace`
+- Subdivided @ref Acts::BinUtility "BinUtility" axes preserve their base and subdivision: `replace`
   refines one matching interval; `repeat` tiles the subdivision in every base bin.
-  Legacy `theta`/`mag` BinUtility directions and custom coordinate callbacks
+  Legacy `theta`/`mag` @ref Acts::BinUtility "BinUtility" directions and custom coordinate callbacks
   are not supported.
 
 Proto-grid axes may defer ranges, directions and boundary behavior to geometry.
@@ -105,10 +105,10 @@ and resolves deferred axes. Schema validity alone does not guarantee that a map
 can be applied to a particular geometry.
 
 The schema rejects unknown fields. The reader ignores unused fields except
-`volumes`, which is rejected. `Config` supports custom material dispatchers;
+`volumes`, which is rejected. @ref Acts::TrackingGeometryMaterialJsonConverter::Config "Config" supports custom material dispatchers;
 custom kinds also need an extended schema for offline validation.
 
-Legacy conversion follows decode → `TrackingGeometryMaterial` → new encode.
+Legacy conversion follows decode → @ref Acts::TrackingGeometryMaterial "TrackingGeometryMaterial" → new encode.
 It cannot recover information already lost by the legacy reader or format,
 such as omitted settings, guard cells, store sharing or independent material
 properties. Existing legacy converters retain their behavior.
