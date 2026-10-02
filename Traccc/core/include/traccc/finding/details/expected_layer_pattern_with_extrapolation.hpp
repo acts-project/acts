@@ -129,18 +129,14 @@ collect_expected_layer_pattern_from_perigee(
     if (!perigee_finished || perigee_invalid) {
       const auto nav_status =
           static_cast<unsigned int>(perigee_state.navigation().status());
-      const auto nav_target =
-          perigee_state.navigation().target().surface().identifier().value();
       const auto nav_current =
           perigee_state.navigation().geometry_identifier().value();
       TRACCC_WARNING_HOST_DEVICE(
           "Perigee extrapolation (CUDA direct navigator) failed: finished=%u "
-          "invalid=%u nav_alive=%u nav_status=%u path=%f target_id=%llu "
-          "current_id=%llu",
+          "invalid=%u nav_alive=%u nav_status=%u path=%f current_id=%llu",
           perigee_finished ? 1u : 0u, perigee_invalid ? 1u : 0u,
           perigee_state.navigation().is_alive() ? 1u : 0u, nav_status,
           static_cast<double>(perigee_state.stepping().path_length()),
-          static_cast<unsigned long long>(nav_target),
           static_cast<unsigned long long>(nav_current));
       return typename stepper_t::free_track_parameters_type{};
     }
