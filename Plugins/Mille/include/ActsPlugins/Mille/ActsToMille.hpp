@@ -23,11 +23,6 @@ namespace ActsPlugins::ActsToMille {
 /// provided by Mille/MilleFactory.h
 using Mille::MilleRecord;
 
-/// @brief Logger used by the functions of this namespace when the caller
-/// does not pass one: prints at INFO level and above. It is created once.
-/// @return the default logger
-const Acts::Logger& defaultLogger();
-
 /// @brief Dump a Kalman track encoded as a TrackAlignmentState into
 /// a Mille record.
 /// @param state: Alignment state to dump.
@@ -41,8 +36,8 @@ const Acts::Logger& defaultLogger();
 /// @param logger Logger, reports measured parameters that the
 /// removal criterion would have dropped.
 void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
-                 MilleRecord& record, bool removeUnconstrainedTrackPar = true,
-                 const Acts::Logger& logger = defaultLogger());
+                 MilleRecord& record, bool removeUnconstrainedTrackPar,
+                 const Acts::Logger& logger);
 
 /// @brief read one record (= track or (constrained) track pair) from
 /// a Mille binary into the equivalent matrices of a TrackAlignmentState.
@@ -63,7 +58,7 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
     ActsAlignment::detail::TrackAlignmentState& targetState,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
         idxedAlignSurfaces,
-    const Acts::Logger& logger = defaultLogger());
+    const Acts::Logger& logger);
 
 /// Writes an alignment outcome into a text file in the format
 /// used by Millepede. Allows the constants to be processed

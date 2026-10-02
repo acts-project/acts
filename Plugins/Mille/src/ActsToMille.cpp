@@ -44,12 +44,6 @@ unsigned long globalIndexSurfToParam(unsigned long surfaceIndex,
 
 }  // namespace
 
-const Acts::Logger& defaultLogger() {
-  static const std::unique_ptr<const Acts::Logger> logger =
-      Acts::getDefaultLogger("ActsToMille", Acts::Logging::INFO);
-  return *logger;
-}
-
 void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
                  MilleRecord& record, bool removeUnconstrainedTrackPar,
                  const Acts::Logger& logger) {

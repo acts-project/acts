@@ -74,6 +74,8 @@ void writeRecord(Mille::MilleRecord& record, const std::vector<Hit>& hits) {
 BOOST_AUTO_TEST_SUITE(ActsMilleReadRecordSequenceTests)
 
 BOOST_AUTO_TEST_CASE(ReuseStateAcrossRecords) {
+  ACTS_LOCAL_LOGGER(
+      Acts::getDefaultLogger("ReuseStateAcrossRecords", Acts::Logging::INFO));
   // the alignable surfaces and their indices in the geometry
   std::vector<std::shared_ptr<Acts::Surface>> surfaces;
   std::unordered_map<const Acts::Surface*, std::size_t> idxedAlignSurfaces;
@@ -117,7 +119,7 @@ BOOST_AUTO_TEST_CASE(ReuseStateAcrossRecords) {
   ActsAlignment::detail::TrackAlignmentState state;
   for (const auto& hits : records) {
     BOOST_REQUIRE(ActsPlugins::ActsToMille::unpackMilleRecord(
-                      *reader, state, idxedAlignSurfaces) ==
+                      *reader, state, idxedAlignSurfaces, logger()) ==
                   Mille::MilleDecoder::ReadResult::OK);
 
     std::set<std::size_t> onTrack;
@@ -163,12 +165,14 @@ BOOST_AUTO_TEST_CASE(ReuseStateAcrossRecords) {
       }
     }
   }
-  BOOST_CHECK(ActsPlugins::ActsToMille::unpackMilleRecord(*reader, state,
-                                                          idxedAlignSurfaces) ==
+  BOOST_CHECK(ActsPlugins::ActsToMille::unpackMilleRecord(
+                  *reader, state, idxedAlignSurfaces, logger()) ==
               Mille::MilleDecoder::ReadResult::atEof);
 }
 
 BOOST_AUTO_TEST_CASE(UnknownSurfaceIsReadError) {
+  ACTS_LOCAL_LOGGER(
+      Acts::getDefaultLogger("UnknownSurfaceIsReadError", Acts::Logging::INFO));
   std::vector<std::shared_ptr<Acts::Surface>> surfaces;
   std::unordered_map<const Acts::Surface*, std::size_t> idxedAlignSurfaces;
   for (std::size_t s = 0; s < 2; ++s) {
@@ -196,11 +200,11 @@ BOOST_AUTO_TEST_CASE(UnknownSurfaceIsReadError) {
 #endif
   ActsAlignment::detail::TrackAlignmentState state;
   BOOST_REQUIRE(ActsPlugins::ActsToMille::unpackMilleRecord(
-                    *reader, state, idxedAlignSurfaces) ==
+                    *reader, state, idxedAlignSurfaces, logger()) ==
                 Mille::MilleDecoder::ReadResult::OK);
   BOOST_CHECK_EQUAL(state.alignmentDof, 2 * Acts::eAlignmentSize);
-  BOOST_CHECK(ActsPlugins::ActsToMille::unpackMilleRecord(*reader, state,
-                                                          idxedAlignSurfaces) ==
+  BOOST_CHECK(ActsPlugins::ActsToMille::unpackMilleRecord(
+                  *reader, state, idxedAlignSurfaces, logger()) ==
               Mille::MilleDecoder::ReadResult::error);
   // a failed read leaves the state untouched
   BOOST_CHECK_EQUAL(state.alignmentDof, 2 * Acts::eAlignmentSize);
@@ -208,6 +212,8 @@ BOOST_AUTO_TEST_CASE(UnknownSurfaceIsReadError) {
 }
 
 BOOST_AUTO_TEST_CASE(GlobalsWithoutLocalsIsReadError) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("GlobalsWithoutLocalsIsReadError",
+                                           Acts::Logging::INFO));
   std::vector<std::shared_ptr<Acts::Surface>> surfaces;
   std::unordered_map<const Acts::Surface*, std::size_t> idxedAlignSurfaces;
   for (std::size_t s = 0; s < 2; ++s) {
@@ -242,10 +248,10 @@ BOOST_AUTO_TEST_CASE(GlobalsWithoutLocalsIsReadError) {
 #endif
   ActsAlignment::detail::TrackAlignmentState state;
   BOOST_REQUIRE(ActsPlugins::ActsToMille::unpackMilleRecord(
-                    *reader, state, idxedAlignSurfaces) ==
+                    *reader, state, idxedAlignSurfaces, logger()) ==
                 Mille::MilleDecoder::ReadResult::OK);
-  BOOST_CHECK(ActsPlugins::ActsToMille::unpackMilleRecord(*reader, state,
-                                                          idxedAlignSurfaces) ==
+  BOOST_CHECK(ActsPlugins::ActsToMille::unpackMilleRecord(
+                  *reader, state, idxedAlignSurfaces, logger()) ==
               Mille::MilleDecoder::ReadResult::error);
   // a failed read leaves the state untouched
   BOOST_CHECK_EQUAL(state.alignmentDof, 2 * Acts::eAlignmentSize);
