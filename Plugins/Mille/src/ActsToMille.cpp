@@ -329,22 +329,15 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
   int lastLocal = 0;
   std::set<int> seenGlobalLabels;
   std::set<int> seenSurfaceLabels;
-  // Need distinction: measurement on surface vs. correlation term.
-  // The reason is that ACTS only counts surface measurements, and stores
-  // the correlation information directly in the track parameter covariance.
-  // MillePede considers constraints to be additional measurements.
-  // A surface measurement projects onto a single track parameter. A
-  // pseudo-measurement is an eigenvector of the correlation term: it has no
-  // global derivatives, and generally several local ones. Its residual is not
-  // zero, as it keeps the smoothed track at the minimum of the local fit.
-  // The same criterion sizes the matrices and fills them below.
-  auto isMeasurementOnSurface = [](const Mille::MilleMeasurement& measurement) {
-    return !measurement.globalDerivatives.empty() ||
-           (measurement.localLabels.size() <= 1 &&
-            measurement.measurement != 0);
-  };
-  state.measurementDim = std::count_if(measurements.begin(), measurements.end(),
-                                       isMeasurementOnSurface);
+  // Every entry of the record is a measurement of the local fit, as in
+  // MillePede: the surface measurements, and the pseudo-measurements that
+  // encode the track model (for dumpToMille, the Kalman correlations). There
+  // is no need to tell them apart, which the record could not do reliably
+  // anyway. A pseudo-measurement has no alignment derivatives, and its
+  // residual enters the right-hand side: the chi2 derivatives below are those
+  // of the local fit chi2, minimised over the track parameters, for any track
+  // model written to the record.
+  state.measurementDim = measurements.size();
 
   // discover labels in use
   for (const Mille::MilleMeasurement& measurement : measurements) {
@@ -434,25 +427,20 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
 
   /// Second loop - fill the matrices
 
-  std::size_t iMeas = 0;
-  for (const auto& measurement : measurements) {
-    const bool onSurface = isMeasurementOnSurface(measurement);
-    // surface measurements populate the residual vector and measurement
-    // covariance matrix
-    if (onSurface) {
-      state.residual(iMeas) = measurement.measurement;
-      state.measurementCovariance(iMeas, iMeas) =
-          measurement.uncertainty * measurement.uncertainty;
-    }
+  for (std::size_t iMeas = 0; iMeas < measurements.size(); ++iMeas) {
+    const Mille::MilleMeasurement& measurement = measurements[iMeas];
+    // every entry populates the residual vector and measurement covariance
+    // matrix
+    state.residual(iMeas) = measurement.measurement;
+    state.measurementCovariance(iMeas, iMeas) =
+        measurement.uncertainty * measurement.uncertainty;
     // loop over all track parameters affecting this measurement
     for (std::size_t iLoc = 0; iLoc < measurement.localLabels.size(); ++iLoc) {
       // find out where to book it in the ACTS matrix
       unsigned int localIndex = measurement.localLabels[iLoc] - firstLocal;
-      // if we are a surface measurement, fill the projection matrix
-      if (onSurface) {
-        state.projectionMatrix(iMeas, localIndex) =
-            measurement.localDerivatives[iLoc];
-      }
+      // fill the projection matrix
+      state.projectionMatrix(iMeas, localIndex) =
+          measurement.localDerivatives[iLoc];
       // now fill the covariance matrix by looping over all products of (local)
       // derivatives
       for (std::size_t jLoc = 0; jLoc < measurement.localLabels.size();
@@ -477,11 +465,6 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
       // and update the alignment-to-residual derivative matrix.
       state.alignmentToResidualDerivative(iMeas, internalAliIndex) =
           measurement.globalDerivatives[iGlob];
-    }
-    // increment the measurement-on-surface index every time we finish
-    // processing one.
-    if (onSurface) {
-      ++iMeas;
     }
   }
 

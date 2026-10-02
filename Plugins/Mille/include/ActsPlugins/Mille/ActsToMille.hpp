@@ -43,6 +43,11 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
 /// a Mille binary into the equivalent matrices of a TrackAlignmentState.
 /// Allows to use Mille to collect tracks across multiple events and
 /// align them with the ACTS solver, and to validate the outputs of dumpToMille.
+/// As in Millepede, every entry of the record is a measurement of the state:
+/// for a record from dumpToMille, the surface measurements come first, followed
+/// by the pseudo-measurements of the track model (no alignment derivatives).
+/// The chi2 derivatives are those of the local fit chi2, minimised over the
+/// track parameters.
 /// @param reader: A Mille Reader, connected to a valid input file.
 /// @param targetState: The TrackAlignmentState to populate. It is overwritten
 /// completely, so the same state can be reused for consecutive records.
