@@ -57,7 +57,8 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
 /// of a surface not in this list is a read error.
 /// @param logger Logger, reports why a record could not be read.
 /// @return a ReadResult enum with 3 possible states to indicate the outcome- ok / end-of-file / read-error.
-/// The targetState will only be modified if the result is 'ok'.
+/// The targetState will only be modified if the result is 'ok'. Empty records
+/// are skipped: a result of 'ok' always comes with the next track.
 Mille::MilleDecoder::ReadResult unpackMilleRecord(
     Mille::IMilleReader& reader,
     ActsAlignment::detail::TrackAlignmentState& targetState,

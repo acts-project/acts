@@ -308,9 +308,15 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
   std::vector<Mille::MilleMeasurement> measurements;
   // attempt to decode the next record from the binary
   auto res = decoder.decode(reader, measurements);
+  // An empty record holds no track: skip it, as it does not contribute in
+  // MillePede either. A result of 'ok' always comes with the next track.
+  while (res == Mille::MilleDecoder::ReadResult::OK && measurements.empty()) {
+    ACTS_DEBUG("Skipping an empty Mille record.");
+    res = decoder.decode(reader, measurements);
+  }
 
   // if we are EoF or encountered an error, return the result.
-  if (res != Mille::MilleDecoder::ReadResult::OK || measurements.empty()) {
+  if (res != Mille::MilleDecoder::ReadResult::OK) {
     return res;
   }
 
