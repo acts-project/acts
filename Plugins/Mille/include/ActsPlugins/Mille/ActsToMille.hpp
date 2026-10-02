@@ -26,7 +26,8 @@ using Mille::MilleRecord;
 /// @brief Dump a Kalman track encoded as a TrackAlignmentState into
 /// a Mille record.
 /// @param state: Alignment state to dump.
-/// @param record: Mille record to write to.
+/// @param record: Mille record to write to. May be shared between threads:
+/// every call writes its track to a record of its own.
 /// Note: Not very efficient - we have to "un-fit" the kalman track.
 /// Used for R&D, recommending the GBL track model (under development)
 /// for production use.
