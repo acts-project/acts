@@ -17,12 +17,12 @@
 #include "traccc/seeding/device/count_spacepoints.hpp"
 #include "traccc/seeding/device/form_spacepoints.hpp"
 
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
+
 // Thrust include(s).
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
-
-// System include(s).
-#include <memory_resource>
 
 namespace traccc::cuda {
 namespace kernels {
@@ -73,7 +73,8 @@ void silicon_pixel_spacepoint_formation_algorithm::scan_spacepoint_flags(
     vecmem::data::vector_view<unsigned int>& spacepoint_flags) const {
   assert(spacepoint_flags.size_ptr() == nullptr);
   thrust::inclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(
+          stream_synchronizing_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       spacepoint_flags.ptr(),
       spacepoint_flags.ptr() + spacepoint_flags.capacity(),

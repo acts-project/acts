@@ -105,6 +105,7 @@ addDigiParticleSelection(
 
 addGbtsTraining(
     s,
+    trackingGeometry,
     selectedParticles="particles_selected",
     geometryFile=configDir / "odd-gbts-layer-map.json",
     outputConnectionTable=outputDir / "odd-gbts-connection-table.json",
