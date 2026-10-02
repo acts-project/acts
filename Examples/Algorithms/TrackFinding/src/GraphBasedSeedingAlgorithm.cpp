@@ -58,8 +58,8 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   std::map<Acts::Experimental::GbtsExperimentLayerId,
            Acts::Experimental::GbtsLayerTechnology>
       layerTechnology;
-  for (const auto &[actsId, gbtsId] : m_actsGbtsMap) {
-    layerTechnology.emplace(gbtsId.layerId, gbtsId.technology);
+  for (const GbtsLayerInfo &layerInfo : m_actsGbtsMap) {
+    layerTechnology.emplace(layerInfo.layerId, layerInfo.technology);
   }
   const auto isSeededTechnology =
       [&](Acts::Experimental::GbtsExperimentLayerId id) {
@@ -86,11 +86,9 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
 
   // initialise the object that holds all the geometry information needed for
   // the algorithm
-  auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
+  m_geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
       layerGeometry, connections, m_cfg.etaBinWidth, m_cfg.gbtsZ0Range,
       this->logger());
-
-  resolveLayerIndices(*geometry);
 
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
@@ -103,10 +101,10 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   m_finder = Acts::Experimental::GraphBasedTrackSeeder(
       Acts::Experimental::GraphBasedTrackSeeder::DerivedConfig(
           m_cfg.seedFinderConfig),
-      geometry, this->logger().cloneWithSuffix("GbtsFinder"));
+      m_geometry, this->logger().cloneWithSuffix("GbtsFinder"));
 
   m_filter = Acts::Experimental::GbtsTrackingFilter(
-      m_cfg.trackingFilterConfig, geometry,
+      m_cfg.trackingFilterConfig, m_geometry,
       this->logger().cloneWithSuffix("GbtsFilter"));
 
   printConfig();
@@ -159,25 +157,23 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   return ProcessCode::SUCCESS;
 }
 
-std::map<GraphBasedSeedingAlgorithm::ActsIDs,
-         GraphBasedSeedingAlgorithm::GbtsIDs>
+Acts::GeometryHierarchyMap<GraphBasedSeedingAlgorithm::GbtsLayerInfo>
 GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
-  std::map<ActsIDs, GbtsIDs> actsToGbtsMap;
+  std::vector<Acts::GeometryHierarchyMap<GbtsLayerInfo>::InputElement>
+      actsToGbtsMap;
 
   // one entry per surface of a layer, sensitive 0 for a whole geometry layer
   for (const Acts::Experimental::GbtsLayerConfig &layer :
        Acts::Experimental::readGbtsLayers(m_cfg.layerMappingFile)) {
     for (const Acts::GeometryIdentifier &surface : layer.surfaces) {
-      const ActsIDs actsId{surface.volume() * 100 + surface.layer(),
-                           surface.sensitive()};
-      const GbtsIDs gbtsId{.layerId = layer.id,
-                           .type = layer.type,
-                           .technology = layer.technology};
-      actsToGbtsMap.insert({actsId, gbtsId});
+      const GbtsLayerInfo layerInfo{.layerId = layer.id,
+                                    .type = layer.type,
+                                    .technology = layer.technology};
+      actsToGbtsMap.emplace_back(surface, layerInfo);
     }
   }
 
-  return actsToGbtsMap;
+  return Acts::GeometryHierarchyMap<GbtsLayerInfo>(std::move(actsToGbtsMap));
 }
 
 std::optional<Acts::Experimental::GbtsLayerIndex>
@@ -192,49 +188,20 @@ GraphBasedSeedingAlgorithm::gbtsLayerIndex(
 
   const auto &indexSourceLink = sourceLink.front().get<IndexSourceLink>();
 
-  const auto actsVolId =
-      static_cast<std::uint32_t>(indexSourceLink.geometryId().volume());
-  const auto actsLayId =
-      static_cast<std::uint32_t>(indexSourceLink.geometryId().layer());
-  const auto actsModId =
-      static_cast<std::uint32_t>(indexSourceLink.geometryId().sensitive());
+  const Acts::GeometryIdentifier geoId = indexSourceLink.geometryId();
 
-  // Search for vol, lay and module=0, if doesn't esist (end) then search
-  // for full thing vol*100+lay as first number in pair then 0 or mod id
-  const std::uint64_t actsJointId = std::uint64_t{actsVolId} * 100 + actsLayId;
-
-  // here the key needs to be pair of(vol*100+lay, 0)
-  ActsIDs key{actsJointId, 0};
-  auto find = m_actsGbtsMap.find(key);
-
-  // if end then make new key of (vol*100+lay, modid)
-  if (find == m_actsGbtsMap.end()) {
-    key = ActsIDs{actsJointId, actsModId};  // mod ID
-    find = m_actsGbtsMap.find(key);
-  }
+  // the entry of the module or, without one, the one of its whole layer
+  const auto find = m_actsGbtsMap.find(geoId);
 
   // a space point off the GBTS layers takes no part in the seeding
   if (find == m_actsGbtsMap.end()) {
-    ACTS_DEBUG("Key not found in Gbts map for volume id: "
-               << actsVolId << " and layer id: " << actsLayId);
+    ACTS_DEBUG("No GBTS layer for volume: "
+               << geoId.volume() << " Layer: " << geoId.layer()
+               << " Surface: " << geoId.sensitive());
     return std::nullopt;
   }
 
-  return find->second.layerIndex;
-}
-
-void GraphBasedSeedingAlgorithm::resolveLayerIndices(
-    const Acts::Experimental::GbtsGeometry &geometry) {
-  for (auto &[actsId, gbtsId] : m_actsGbtsMap) {
-    const std::optional<Acts::Experimental::GbtsLayerIndex> index =
-        geometry.layerIndex(gbtsId.layerId);
-
-    if (!index.has_value()) {
-      ACTS_WARNING("No GBTS layer for ID: " << gbtsId.layerId);
-    }
-
-    gbtsId.layerIndex = index;
-  }
+  return m_geometry->layerIndex(find->layerId);
 }
 
 void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
@@ -257,29 +224,20 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
   float maxBound = -std::numeric_limits<float>::infinity();
 
   // convert to Gbts ID
-  auto actsJointId = actsVolId * 100 + actsLayId;
-  // here the key needs to be pair of(vol*100+lay, 0)
-  auto key = ActsIDs{actsJointId, 0};
-  auto find = m_actsGbtsMap.find(key);
-
-  // check to see if key exists
-  if (find == m_actsGbtsMap.end()) {
-    key = ActsIDs{actsJointId, mod_id};
-    find = m_actsGbtsMap.find(key);
-  }
+  const auto find = m_actsGbtsMap.find(geoId);
 
   // a surface off the GBTS layers takes no part in the seeding
   if (find == m_actsGbtsMap.end()) {
-    ACTS_DEBUG("Key not found in Gbts map for volume id: "
-               << actsVolId << ", layer id: " << actsLayId
-               << ", sensitive id: " << mod_id);
+    ACTS_DEBUG("No GBTS layer for volume: "
+               << geoId.volume() << " Layer: " << geoId.layer()
+               << " Surface: " << geoId.sensitive());
     return;  // skip this surface
   }
 
-  const Acts::Experimental::GbtsExperimentLayerId gbtsId = find->second.layerId;
+  const Acts::Experimental::GbtsExperimentLayerId gbtsId = find->layerId;
 
   // a variable that says if barrrel, 0 = barrel
-  Acts::Experimental::GbtsLayerType barrelEc = find->second.type;
+  Acts::Experimental::GbtsLayerType barrelEc = find->type;
 
   if (barrelEc == Acts::Experimental::GbtsLayerType::Barrel) {
     rc = Acts::fastHypot(center.x(), center.y());  // barrel center in r
@@ -316,13 +274,13 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
 
   } else {  // end so doesn't exists
     // make new if one with Gbts ID doesn't exist:
-    inputVector.push_back(Acts::Experimental::GbtsLayerDescription{
-        .id = gbtsId,
-        .type = barrelEc,
-        .technology = find->second.technology,
-        .refCoord = rc,
-        .minBound = minBound,
-        .maxBound = maxBound});
+    inputVector.push_back(
+        Acts::Experimental::GbtsLayerDescription{.id = gbtsId,
+                                                 .type = barrelEc,
+                                                 .technology = find->technology,
+                                                 .refCoord = rc,
+                                                 .minBound = minBound,
+                                                 .maxBound = maxBound});
     // so the element exists and not divinding by 0
     countVector.push_back(1);
   }
