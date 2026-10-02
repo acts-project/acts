@@ -12,8 +12,8 @@ Add readers with `s.addReader(...)`, converters with `s.addAlgorithm(...)`, and 
 | CSV | `acts.examples` | PyPI or source; readers and writers for common ACTS event collections. |
 | Parquet | `acts.examples.arrow` | PyPI or source; reads and writes Arrow tables. Converters connect tables to ACTS event collections. |
 | HepMC3 | `acts.examples.hepmc3` | PyPI or source; ASCII event files without ROOT. ROOT-format HepMC3 files require ROOT support. |
-| ROOT via Uproot | `acts.examples.uproot` | PyPI or source; Python readers for ACTS particle and sim-hit ROOT files. Install `uproot` and `numpy` separately. |
 | ROOT | `acts.examples.root` | ROOT-enabled source build; native readers and writers for particles, sim hits, tracks, vertices, material, and performance output. |
+| ROOT via Uproot | `acts.examples.uproot` | PyPI or source; Python readers for ACTS particle and sim-hit ROOT files. Install `uproot` and `numpy` separately. |
 | EDM4hep/podio | `acts.examples.edm4hep` | EDM4hep-enabled source build; `PodioReader` and `PodioWriter`. |
 
 ## Parquet and Arrow tables
