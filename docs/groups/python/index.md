@@ -64,9 +64,3 @@ or the [truth-tracking Kalman example](https://github.com/acts-project/acts/blob
 (source build). Their helper signatures and default keys are in
 [simulation.py](https://github.com/acts-project/acts/blob/main/Python/Examples/python/simulation.py)
 and [reconstruction.py](https://github.com/acts-project/acts/blob/main/Python/Examples/python/reconstruction.py).
-
-## Next steps
-
-- @ref python_custom_algorithms "Custom algorithms" — add Python readers and algorithms.
-- @ref python_data_io "Data reading and writing" — choose event and geometry formats.
-- @ref python_performance_plotting "Performance evaluation and plotting" — inspect and plot results.
