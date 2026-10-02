@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
   cfg_hel_scan.name("wire_chamber_helix_scan");
   // Let the Newton algorithm dynamically choose tol. based on approx. error
   cfg_hel_scan.mask_tolerance(detray::detail::invalid_value<scalar>());
-  cfg_hel_scan.track_generator().n_tracks(10000u);
+  cfg_hel_scan.track_generator().n_tracks(1000u);
   cfg_hel_scan.track_generator().randomize_charge(true);
   cfg_hel_scan.track_generator().eta_range(-1.f, 1.f);
   // TODO: Fails for smaller momenta

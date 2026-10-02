@@ -99,8 +99,7 @@ template <concepts::scalar scalar_t, concepts::transform3D transform_t>
 DETRAY_HOST_DEVICE constexpr auto cast_to(const transform_t& trf) {
   using new_trf3_t = typename transform_t::template other_type<scalar_t>;
 
-  return new_trf3_t{::detray::algebra::cast_to<scalar_t>(trf.matrix()),
-                    ::detray::algebra::cast_to<scalar_t>(trf.matrix_inverse())};
+  return new_trf3_t{::detray::algebra::cast_to<scalar_t>(trf.matrix())};
 }
 
 }  // namespace detray::algebra
