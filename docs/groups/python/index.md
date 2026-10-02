@@ -44,7 +44,7 @@ development headers.
 | Capability | PyPI (`pyacts`) | Full installation (source build) |
 | :--- | :--- | :--- |
 | Plugins | Arrow, JSON, and FPE monitoring; no ROOT, DD4hep, or Geant4 | Optional plugins enabled through CMake |
-| I/O | CSV, Parquet, and HepMC3; ROOT files via Python `uproot` readers | Same formats, plus ROOT and EDM4hep when enabled |
+| I/O | CSV, Parquet, and ASCII HepMC3; particle and sim-hit ROOT files via Python `uproot` readers | Same formats, plus native ROOT and EDM4hep when enabled |
 | Geometry | Load tracking geometry from JSON; GenericDetector examples | Can also build detector geometry with DD4hep/ODD when enabled |
 | Evaluation | In-memory performance writers and plotting in Python | Same Python writers, plus ROOT performance writers when enabled |
 

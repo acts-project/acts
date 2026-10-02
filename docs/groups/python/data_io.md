@@ -2,28 +2,25 @@
 @ingroup python_bindings
 @brief Readers and writers available in the PyPI wheel and optional source builds.
 
-# Reader/writer inventory
+# Event input and output
 
-Add readers with `s.addReader(...)` and writers with `s.addWriter(...)`. Availability depends on
-the build configuration (see @ref python_bindings):
+Add readers with `s.addReader(...)`, converters with `s.addAlgorithm(...)`, and writers with
+`s.addWriter(...)`. The available formats depend on the build (see @ref python_bindings):
 
-- **Only in a full installation, when enabled:**
-  - ROOT (`acts.examples.root`): readers and writers for particles, sim hits, tracks, vertices,
-    material, and performance output.
-  - EDM4hep/podio (`acts.examples.edm4hep`): `PodioReader` and `PodioWriter`.
-- **Also in the PyPI wheel:**
-  - CSV (`acts.examples`): readers and writers for common event collections.
-  - Arrow/Parquet (`acts.examples.arrow`): `ParquetReader` and `ParquetWriter`.
-  - HepMC3 (`acts.examples.hepmc3`): `HepMC3Reader` and `HepMC3Writer`.
-  - Uproot (`acts.examples.uproot`): Python readers for particle and sim-hit ROOT files.
-  - JSON (`acts.json`, `acts.examples.json`): geometry and material data, not event data.
+| Format | Python module | Availability and use |
+| :--- | :--- | :--- |
+| CSV | `acts.examples` | PyPI or source; readers and writers for common ACTS event collections. |
+| Parquet | `acts.examples.arrow` | PyPI or source; reads and writes Arrow tables. Converters connect tables to ACTS event collections. |
+| HepMC3 | `acts.examples.hepmc3` | PyPI or source; ASCII event files without ROOT. ROOT-format HepMC3 files require ROOT support. |
+| ROOT via Uproot | `acts.examples.uproot` | PyPI or source; Python readers for ACTS particle and sim-hit ROOT files. Install `uproot` and `numpy` separately. |
+| ROOT | `acts.examples.root` | ROOT-enabled source build; native readers and writers for particles, sim hits, tracks, vertices, material, and performance output. |
+| EDM4hep/podio | `acts.examples.edm4hep` | EDM4hep-enabled source build; `PodioReader` and `PodioWriter`. |
 
-# Working without the ROOT plugin
+## Parquet and Arrow tables
 
-## Arrow/Parquet
-
-`acts.examples.arrow.ParquetReader`/`ParquetWriter` read and write whole event collections as
-sharded Parquet files, with an explicit expected schema:
+There is one `ParquetReader` for the configured Parquet collections, rather than a separate
+reader for each ACTS data type. It places one Arrow table per collection on the event whiteboard.
+Configure a directory and an expected schema for each collection:
 
 ```python
 import acts.arrow  # module-level table schemas, e.g. acts.arrow.particleSchema()
@@ -38,19 +35,35 @@ reader = acts.examples.arrow.ParquetReader(
 s.addReader(reader)
 ```
 
-`ColliderMLRelease1InputConverter` reads the [ColliderML](https://huggingface.co/CERN) Release 1
-Parquet schema directly into `particles`, `simhits`, `measurements`, and the associated index
-maps, including a geometry-ID remapping CSV (`geoIdMapPath`) between the dataset's geometry and
-your `TrackingGeometry`.
+The example makes an Arrow table available as `particles_arrow`; it does not create an ACTS
+`SimParticleContainer`. Add an input converter for the dataset's schema when ACTS algorithms need
+event collections. The current bindings include `ColliderMLRelease1InputConverter` for the
+ColliderML Release 1 particle, hit, and optional track tables; other Parquet schemas need a
+matching converter.
 
-## Uproot readers
+For output, `ArrowParticleOutputConverter`, `ArrowSimHitOutputConverter`, and
+`ArrowTrackOutputConverter` turn ACTS collections into Arrow tables. One `ParquetWriter` can then
+write those tables to separate collection directories. See the
+[Parquet round-trip test](https://github.com/acts-project/acts/blob/main/Python/Examples/tests/test_arrow.py)
+for a particle example and the
+[full-chain example](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/full_chain_odd.py)
+for particle, hit, and track output.
+
+## HepMC3 event files
+
+`HepMC3Reader` reads ASCII `.hepmc`/`.hepmc3` files into HepMC3 events. Use
+`HepMC3InputConverter` to turn those events into ACTS particles and vertices. In the other
+direction, `HepMC3OutputConverter` creates HepMC3 events for `HepMC3Writer`. These ASCII paths
+work without ROOT. Reading or writing HepMC3 ROOT files requires a ROOT-enabled build with
+HepMC3 ROOT I/O support.
+
+## Reading ACTS ROOT files with Uproot
 
 `acts.examples.uproot` provides `UprootParticleReader` and `UprootSimHitReader`: pure-Python
 `IReader`s that read the exact file format written by `RootParticleWriter`/`RootSimHitWriter`,
-using [uproot](https://uproot.readthedocs.io/) instead of the ROOT plugin — useful when you have
-ROOT files from elsewhere but don't have (or want) a ROOT-enabled ACTS build. They double as a
-complete, real-world example of a custom `IReader` (see @ref python_custom_algorithms), including
-buffered multi-event reads. Install `uproot` and `numpy` separately to use them.
+using [uproot](https://uproot.readthedocs.io/) without a ROOT-enabled ACTS build. They require
+`uproot` and `numpy` to be installed separately. For their `IReader` implementation, see
+@ref python_custom_algorithms.
 
 # Geometry without DD4hep
 
