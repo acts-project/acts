@@ -297,14 +297,30 @@ def main():
         resFileName=str(MillePedeSolution),
         redirectStdout=str(outputDir / "MillepedeAlignment.log"),
     )
-    steerCfg = MillePedeSteeringConfig(inputFiles=[str(milleBinaryName)])
+
+    # EXAMPLE: This is how you could introduce global
+    # equality constraints to prevent a 3D
+    # translation of the entire detector:
+    # The sum of all global movements
+    # (labels = 6 * sensor_index
+    #           + 0...6 (counts degrees of freedom)
+    #           + 1 )
+    # is required to be 0 in each
+    # translation directions (1..3)
+    # Will not apply this as it would be inconsistent
+    # with the ACTS solver setup, and we want to
+    # compare side-by-side.
 
     # eqc = [
     #     MillePedeEqualityConstraint(
-    #     labelsAndWeights = [(3 * k+ j,1) for k in range(9) ],
+    #     labelsAndWeights = [(1 + 6 * k+ j,1) for k in range(9) ],
     #     constraint = 0.
-    # ) for j in range(6)]
-    # steerCfg.constraints = eqc
+    # ) for j in range(3)]
+
+    steerCfg = MillePedeSteeringConfig(
+        inputFiles=[str(milleBinaryName)],
+        # constraints = eqc             # this would enable constraints
+    )
 
     # More Boilerplate code - for setting up the sequence
 
