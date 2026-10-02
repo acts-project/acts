@@ -1,7 +1,7 @@
 @defgroup python_bindings Python Bindings
 @brief Use ACTS from Python, with the PyPI wheel or a source build.
 
-The Python bindings primarily expose the ACTS Examples framework: configure readers, algorithms, and writers in a `Sequencer` to run tracking
+The Python bindings primarily expose the ACTS Examples framework: configure readers, algorithms, and writers in a @ref ActsExamples::Sequencer "Sequencer" to run tracking
 workflows. Selected Core types are bound where the Examples workflows need them. The bindings do
 not aim to expose every Core tool directly to Python; use Core functionality through the
 Examples algorithms.
@@ -33,24 +33,25 @@ For a **source build**, enable the Python bindings and Examples framework, then 
 
 ```console
 cmake -B <build> -S <source> -DACTS_BUILD_PYTHON_BINDINGS=ON -DACTS_BUILD_EXAMPLES=ON
-cmake --build <build>
+cmake --build <build> --target ActsPythonBindings
 source <build>/this_acts_withdeps.sh
 ```
 
 Enable optional components with their CMake options. For ROOT readers, writers, and evaluation,
 use `-DACTS_BUILD_EXAMPLES_ROOT=ON`; this also enables the ROOT plugin. A source build needs Python
-development headers.
+development headers. The `ActsPythonBindings` target builds the enabled bindings, and the setup
+script adds the built modules and dependencies to your environment.
 
 | Capability | PyPI (`pyacts`) | Full installation (source build) |
 | :--- | :--- | :--- |
 | Plugins | Arrow, JSON | All available plugins, including ROOT, DD4hep, or Geant4 |
 | I/O | CSV, Parquet, particle and sim-hit ROOT `uproot` readers | Additionally native ROOT and EDM4hep |
-| Geometry | `GenericDetector`, Tracking geometry from JSON | Directly build detector geometries with DD4hep or TGeo |
+| Geometry | [GenericDetector](https://github.com/acts-project/acts/blob/main/Examples/Detectors/GenericDetector/include/ActsExamples/GenericDetector/GenericDetector.hpp), tracking geometry from JSON | Directly build detector geometries with DD4hep or TGeo |
 | Evaluation | In-memory performance writers and plotting in Python | Additionally native ROOT performance writers |
 
 # Getting started
 
-An `acts.examples.Sequencer` runs readers, algorithms, and writers over events. This first script
+An @ref ActsExamples::Sequencer "acts.examples.Sequencer" runs readers, algorithms, and writers over events. This first script
 generates muons and prints them; it works with the PyPI wheel:
 
 @snippet{trimleft} examples/test_python_getting_started.py First Python run

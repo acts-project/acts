@@ -778,6 +778,10 @@ INPUT                  = index.md \
                          experimental.md \
                          ../Core/include \
                          ../Fatras/include \
+                         ../Examples/Framework/include/ActsExamples/Framework/IAlgorithm.hpp \
+                         ../Examples/Framework/include/ActsExamples/Framework/IReader.hpp \
+                         ../Examples/Framework/include/ActsExamples/Framework/ProcessCode.hpp \
+                         ../Examples/Framework/include/ActsExamples/Framework/Sequencer.hpp \
                          ../Plugins/ActSVG/include \
                          ../Plugins/Covfie/include \
                          ../Plugins/DD4hep/include \
@@ -878,7 +882,8 @@ EXCLUDE_SYMBOLS        = Acts::*detail* \
 # command).
 
 EXAMPLE_PATH           = . \
-                         ../Core
+                         ../Core \
+                         ../Examples/Scripts/Python
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the
 # EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp and

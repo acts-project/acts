@@ -195,7 +195,7 @@ def setup(app):
         "contribution/release": "https://acts-project.github.io/howto_release.html",
         "contribution/run_formatting": "https://acts-project.github.io/formatting.html",
         "contribution/physmon": "https://acts-project.github.io/physmon.html",
-        "contribution/root_hash_checks": "https://acts-project.github.io/python_bindings.html#root_file_hashes",
+        "contribution/root_hash_checks": "https://acts-project.github.io/python_testing.html#root_file_hashes",
         "contribution/documentation_build": "https://acts-project.github.io/building_acts.html",
         "misc/spack": "https://acts-project.github.io/howto_spack.html",
     }
