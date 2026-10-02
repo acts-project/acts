@@ -170,7 +170,7 @@ struct GaussianSumFitter {
 
       if (options.useExtendedSurfaces) {
         for (auto it = begin; it != end; ++it) {
-          propOptions.navigation.registerExtendedSurface(
+          propOptions.navigation.registerMeasurementSurface(
               *options.extensions.surfaceAccessor(*it));
         }
       }
@@ -192,7 +192,7 @@ struct GaussianSumFitter {
 
       if (options.useExtendedSurfaces) {
         for (auto it = begin; it != end; ++it) {
-          propOptions.navigation.registerExtendedSurface(
+          propOptions.navigation.registerMeasurementSurface(
               *options.extensions.surfaceAccessor(*it));
         }
       }

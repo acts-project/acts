@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "ActsPlugins/Mille/MillePedeResultReader.hpp"
 #include "ActsPlugins/Mille/MillePedeSolver.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
@@ -32,6 +33,20 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
     auto sc =
         py::class_<MillePedeSolver::Config>(ps, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(sc, steeringFile, workDir, extraOpts, resFileName,
-                       logFileName, histoFileName, evFileName);
+                       redirectStdout, logFileName, histoFileName, evFileName);
+  }
+
+  {
+    // unwrap Acts::Result - will throw in case of an error-result
+    mille.def("readMillePedeResult", [](const std::filesystem::path& mpFile,
+                                        const Acts::Logger& logger) {
+      return ActsPlugins::readMillePedeResult(mpFile, logger).value();
+    });
+
+    auto c = py::class_<ActsPlugins::MillePedeParameterResult>(
+                 mille, "MillePedeParameterResult")
+                 .def(py::init<>());
+
+    ACTS_PYTHON_STRUCT(c, label, val, start, delta, sigma, nRecords);
   }
 }
