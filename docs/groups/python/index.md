@@ -62,6 +62,3 @@ or the [truth-tracking Kalman example](https://github.com/acts-project/acts/blob
 (source build). Their helper signatures and default keys are in
 [simulation.py](https://github.com/acts-project/acts/blob/main/Python/Examples/python/simulation.py)
 and [reconstruction.py](https://github.com/acts-project/acts/blob/main/Python/Examples/python/reconstruction.py).
-
-See [Performance evaluation and plotting](performance_and_plotting.md) to inspect the output of
-tracking workflows.
