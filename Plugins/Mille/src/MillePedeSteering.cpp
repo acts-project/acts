@@ -75,16 +75,15 @@ void addSolutionMethod(std::ofstream& out, const Config& conf,
 
 void addConstraint(std::ofstream& out, const EqualityConstraint& constraint,
                    const Acts::Logger& /*logger*/) {
-  out << std::format("Constraint {}", constraint.constraint);
+  out << std::format("Constraint {:.6f}", constraint.constraint) << std::endl;
   for (const auto& [label, weight] : constraint.labelsAndWeights) {
-    out << std::format("    {}     {}", label, weight) << std::endl;
+    out << std::format("    {}     {:.6f}", label, weight) << std::endl;
   }
   out << std::endl;
 }
 
 void addConstraintsBlock(std::ofstream& out, const Config& conf,
                          const Acts::Logger& logger) {
-  out << "* Constraints to respect in the fit " << std::endl;
   for (const EqualityConstraint& con : conf.constraints) {
     addConstraint(out, con, logger);
   }
@@ -141,12 +140,15 @@ Acts::Result<std::filesystem::path> ActsPlugins::generateMillePedeSteeringFile(
   theSteer << "*** Auto-generated Millepede steering file from ACTS *** "
            << std::endl;
 
-  std::filesystem::path consFile = "";
   if (!config.constraints.empty()) {
-    consFile = destination;
-    consFile.replace_extension("cons");
+    std::filesystem::path consFile = destination;
+    consFile.replace_extension("cons.txt");
     theSteer << "*** Constraints file " << std::endl;
-    theSteer << consFile << std::endl;
+    if (consFile.is_relative()) {
+      consFile = std::filesystem::current_path() / consFile;
+    }
+    theSteer << consFile.string() << std::endl;
+    std::cout << consFile.string() << std::endl;
     std::ofstream theCons(consFile);
     if (!theSteer.is_open()) {
       ACTS_ERROR("Unable to create the MP constraints file " << consFile);
