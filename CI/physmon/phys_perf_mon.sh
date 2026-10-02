@@ -280,7 +280,7 @@ function trackfinding() {
 
     default_config="CI/physmon/config/default.yml"
 
-    if [ -f $refdir/$path/performance_seeding.root ]; then
+    if [ -f $outdir/data/$path/performance_seeding.root ] || [ -f $refdir/$path/performance_seeding.root ]; then
         run_histcmp \
             $outdir/data/$path/performance_seeding.root \
             $refdir/$path/performance_seeding.root \
