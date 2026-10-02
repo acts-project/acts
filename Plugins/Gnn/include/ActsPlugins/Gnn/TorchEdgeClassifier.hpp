@@ -42,7 +42,7 @@ class TorchEdgeClassifier final : public EdgeClassificationBase {
     /// Device to run inference on
     Device device = Device::Cuda();
     /// Device to run the model on, independent of the device the pipeline
-    /// tensors live on. 
+    /// tensors live on.
     std::optional<Device> modelDevice = std::nullopt;
     /// Whether to use edge features
     bool useEdgeFeatures = false;

@@ -44,7 +44,7 @@ class TorchMetricLearning final : public GraphConstructionBase {
     /// Device to run inference on
     Device device = Device::Cuda();
     /// Device to run the model on, independent of the device the pipeline
-    /// tensors live on. 
+    /// tensors live on.
     std::optional<Device> modelDevice = std::nullopt;
 
     /// Scaling factor for phi coordinate in edge features
