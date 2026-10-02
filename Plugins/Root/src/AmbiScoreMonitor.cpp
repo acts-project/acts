@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsPlugins/Root/AmbiScoreMonitor.hpp"
+
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 
 #include <TFile.h>
@@ -20,7 +21,7 @@ void Acts::saveScoreMonitor(
     const std::vector<std::string>& optionalFunctions) {
   // Open ROOT file for writing
   TFile* file = TFile::Open(monitorFilePath.c_str(), "UPDATE");
-  if (!file || file->IsZombie()) {
+  if (!file == nullptr || file->IsZombie()) {
     throw std::runtime_error("Could not create ROOT file: " + monitorFilePath);
   }
 
