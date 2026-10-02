@@ -2,10 +2,7 @@
 @ingroup python_bindings
 @brief Writing your own `IAlgorithm` or `IReader` in Python, and moving data through the whiteboard.
 
-Every step in a `Sequencer` — reader, algorithm, or writer — implements a small C++ interface.
-Python subclasses of `acts.examples.IAlgorithm` and `acts.examples.IReader` are accepted directly
-by `Sequencer.addAlgorithm()`/`addReader()`, alongside the built-in bindings, so you can write a
-custom step without touching C++.
+Most readers, algorithms, and writers that come with ACTS are writtend in C++. However, it is also possible to add Python subclasses of `acts.examples.IAlgorithm` and `acts.examples.IReader` directly to the `Sequencer`. This allows to implement custom functionality without touching C++.
 
 # A minimal algorithm
 
@@ -13,7 +10,7 @@ custom step without touching C++.
 
 Points to note:
 
-- The constructor must call the base class `__init__` (`acts.examples.IAlgorithm.__init__(self,
+- The constructor must call the base class constructor (`acts.examples.IAlgorithm.__init__(self,
   name, level)`) before doing anything else.
 - `execute(self, context)` is the only method you must override; it returns an
   `acts.examples.ProcessCode` (`SUCCESS`, `SKIP`, `ABORT`, or `END`).
@@ -35,14 +32,13 @@ ships two ready-to-use examples that read ROOT files without the ROOT plugin —
 complete, working `IReader` implementation, including buffered reads across events.
 
 The [PyPI finding and fitting demo](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/pypi_finding_fitting_demo.py)
-shows custom Python track-finding and fitting algorithms in a complete chain.
+shows dummy Python track-finding and fitting algorithms in a complete chain.
 
 # Python algorithms and the GIL
 
-`Sequencer.run()` releases the Python GIL while C++ algorithms execute. Calls back into Python
-(`execute`, `read`, `initialize`, `finalize`, and `name`) acquire it again. On a regular CPython
-build, CPU-bound Python code in these callbacks therefore runs one thread at a time and can
-become a bottleneck, while C++ steps can still run in parallel. Event callbacks on the same
-algorithm object may interleave, especially when a native call releases the GIL. If the
-algorithm changes state shared between events, synchronize that state; `numThreads=1` is an
-option when the state cannot safely be shared.
+Regular CPython uses a Global Interpreter Lock (GIL) that ensures only on thread is executing python code at the same time. `Sequencer.run()` releases the GIL while C++ algorithms execute.
+
+Calls back into Python such as `IAlgorithm.execute` acquire it again. This is not a problem usually, but means, that a custom Python algorithm will run single-threaded and can become a bottleneck, regardless of the `numThreads` configuration of the `Sequencer`.
+
+> [!warning]
+> If you define callbacks into C++ in plain python, and C++ code can mutate their states, this can lead to correctness issues.

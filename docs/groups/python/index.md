@@ -1,27 +1,34 @@
 @defgroup python_bindings Python Bindings
 @brief Use ACTS from Python, with the PyPI wheel or a source build.
 
-<span id="python-bindings-overview"></span>The Python bindings primarily expose the ACTS
-Examples framework: configure readers, algorithms, and writers in a `Sequencer` to run tracking
+The Python bindings primarily expose the ACTS Examples framework: configure readers, algorithms, and writers in a `Sequencer` to run tracking
 workflows. Selected Core types are bound where the Examples workflows need them. The bindings do
 not aim to expose every Core tool directly to Python; use Core functionality through the
 Examples algorithms.
 
-## Installation
+# Installation
 
-Install the [PyPI package](https://pypi.org/project/pyacts/) with:
+The easiest way to get the ACTS Python bindings is via [PyPI](https://pypi.org/project/pyacts/):
 
 ```console
 pip install pyacts
 ```
 
+The `pyacts` distribution includes bindings for the core library, Fatras, and
+the Examples framework.
+
 > [!warning]
-> The PyPI distribution is named `pyacts`, but the Python module is imported as `acts`. The
-> wheel includes the Examples framework, Fatras, and selected Core bindings.
+> The PyPI package does not include all optional plugins (e.g. DD4hep/ODD, Geant4, ROOT).
+> To use those, build from source with the relevant CMake options enabled.
+
+> [!note]
+> Even though the name of the PyPI package is `pyacts`, the python module must be imported
+> as `import acts`.
+
 
 The wheel includes `.pyi` type stubs and supports Linux and macOS with Python 3.11 or newer.
 
-For a source build, enable the Python bindings and Examples framework, then load the generated
+For a **source build**, enable the Python bindings and Examples framework, then load the generated
 `<build>/this_acts_withdeps.sh` script before importing `acts`:
 
 ```console
@@ -50,8 +57,8 @@ generates muons and prints them; it works with the PyPI wheel:
 
 @snippet{trimleft} examples/test_python_getting_started.py First Python run
 
-The helpers in `acts.examples.simulation` and `acts.examples.reconstruction` add later stages
-and connect their data keys. For complete chains, see the
+For convenience, the package contains helpers in `acts.examples.simulation` and `acts.examples.reconstruction` that add entire workflow steps with `addXYZ`-functions (such as simulation, seeding, ...)
+and connect their data keys. For full flexibility, the underlying sequencer algorithms can be directly configured as well. For simple but complete chains, see the
 [PyPI finding and fitting demo](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/pypi_finding_fitting_demo.py)
 or the [truth-tracking Kalman example](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/truth_tracking_kalman.py)
 (source build). Their helper signatures and default keys are in

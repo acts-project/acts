@@ -37,7 +37,7 @@ for the Python writers and the
 [truth-tracking Kalman example](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/truth_tracking_kalman.py)
 for ROOT output.
 
-## Fit backend
+## Resolution fit backend
 
 The track-parameter writers fit residual and pull distributions to extract mean and width
 profiles. The ROOT writer uses the ROOT fit backend. For the Python writer, set
