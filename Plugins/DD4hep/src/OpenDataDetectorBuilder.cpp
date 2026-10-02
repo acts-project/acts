@@ -228,10 +228,14 @@ Acts::detail::BlueprintNodePtr addBarrelBoundaryMaterial(
 
 // Outer boundary_material: the OuterCylinder face of a fully assembled
 // subsystem, added to `outer`. Must run on the fully Z-stacked, radius-
-// unified top-level node -- never on one of its still-unstacked constituents
-// -- since materializing it any earlier collides with the subsequent
-// radius-unification across the whole Z-stack (see the Kategorie 2
-// investigation). Shared across all three construction methods.
+// unified top-level node -- never on one of its still-unstacked constituents.
+// A constituent's outer face is later merged with its Z-neighbors' into the
+// larger unified surface, and Blueprint construction aborts when a portal
+// face carrying designated material has to be merged.
+// For BarrelEndcap this cannot happen in the onContainer callback either:
+// BarrelEndcapAssembler creates the top-level node itself and never routes it
+// through that callback, so the material is attached to the node returned by
+// build(). Shared across all three construction methods.
 void addOuterBoundaryMaterial(Acts::ContainerBlueprintNode& outer,
                               Acts::detail::BlueprintNodePtr node,
                               const std::string& assembly) {
@@ -339,10 +343,10 @@ void addBarrelEndcapSubsystem(const BlueprintBuilder& builder,
             // cap in the outer AxisR stack, and Acts refuses to fuse two
             // portals that both carry material. The outer cylinder face is
             // handled separately below, on the fully Z-stacked top-level node
-            // returned by build() -- not here, since materializing it on this
-            // "Barrel" sub-container (before it gets Z-stacked together with
-            // the endcaps) collides with the subsequent radius-unification
-            // across the whole Z-stack (see the Kategorie 2 investigation).
+            // returned by build() -- not here, since on this "Barrel"
+            // sub-container the face would later be merged with the endcaps'
+            // outer faces, which aborts construction for a face carrying
+            // material (see @ref addOuterBoundaryMaterial).
             if (!builder.backend().nameOf(elem).ends_with("Barrel")) {
               return node;
             }
@@ -453,7 +457,7 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
   // claim the same fused portal. Hardcoded here rather than read from the
   // DD4hep XML, since that annotation is ODD-specific and not guaranteed to
   // be available for other detector geometries.
-  using enum CylinderVolumeBounds::Face;
+  using enum Face;
   // PixelBarrel's own "outer" boundary_material flag shares the exact same
   // binning constants (mat_pix_barrel_bPhi/bZ) as every individual Pixel
   // layer's own "outer" layer_material flag -- unlike the LongStrips/Solenoid
@@ -519,7 +523,7 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
 
   addBeampipe(builder, outer);
 
-  using enum CylinderVolumeBounds::Face;
+  using enum Face;
   addDirectLayerSubsystem(builder, outer, "Pixels", "pix",
                           ActsPlugins::DD4hep::detail::kPixelLayerFilter,
                           OuterCylinder, /*hasOuterBoundaryMaterial=*/false);
@@ -558,7 +562,7 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayerGrouped(
 
   addBeampipe(builder, outer);
 
-  using enum CylinderVolumeBounds::Face;
+  using enum Face;
   addDirectLayerGroupedSubsystem(builder, outer, "Pixels", "pix",
                                  ActsPlugins::DD4hep::detail::kPixelLayerFilter,
                                  OuterCylinder,
