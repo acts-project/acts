@@ -285,8 +285,12 @@ jobs:
       contents: read
     if: github.ref == 'refs/heads/main'
     steps:
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          enable-cache: false
+
       - name: Install dependencies
-        run: pip3 install spyral-cli==1.1.2
+        run: uv tool install --no-build spyral-cli==1.1.2
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -296,9 +300,10 @@ jobs:
       - name: Store metrics
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          RUNTIME_METRIC_DEPLOY_SSH_KEY: ${{ secrets.RUNTIME_METRIC_DEPLOY_SSH_KEY }}
         run: |
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-          ssh-add - <<< "${{ secrets.RUNTIME_METRIC_DEPLOY_SSH_KEY }}"
+          ssh-add - <<< "$RUNTIME_METRIC_DEPLOY_SSH_KEY"
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           git clone git@github.com:acts-project/runtime_metrics.git
@@ -701,7 +706,8 @@ jobs:
         run: |
           source .env
           source build/this_acts_withdeps.sh
-          python3 -m pip install -r Python/Examples/tests/requirements.txt
+          uv pip install --python "$(command -v python3)" \
+            --excludes "$ACTS_SPACK_PYTHON_EXCLUDES" -r Python/Examples/tests/requirements.txt
           # No real test for the ModuleMap yet; at least assert the CUDA-only
           # extension is present and importable.
           python3 -c "from acts.gnn import ModuleMapCuda"
@@ -998,9 +1004,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up uv for cache transfers
+      - name: Set up uv for Python tests and cache transfers
         uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
-        continue-on-error: true
 
       - name: Restore ccache snapshot
         uses: ./.github/actions/ccache-s3
@@ -1068,10 +1073,13 @@ jobs:
         run: |
           source "${LCG_VIEW}/setup.sh"
           source build/this_acts_withdeps.sh
-          python3 -m pip install -r Python/Examples/tests/requirements.txt
+          # CVMFS is read-only; install test dependencies into a local venv
+          # using the same interpreter as the LCG build.
+          uv venv --python "$(command -v python3)" --system-site-packages .venv
+          uv pip install --no-build --require-hashes --python .venv/bin/python -r Python/Examples/tests/requirements.txt
           # plotting tests with mplhep fail because an ancient mplhep version in
           # LCG overrides the mplhep version in our venv
-          pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
+          .venv/bin/python -m pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
 
   # This moving nightly view is independent of PR changes. Keep it separate
   # from the release-view matrix so it can run only on main without referring
