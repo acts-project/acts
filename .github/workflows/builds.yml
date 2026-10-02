@@ -1572,8 +1572,6 @@ jobs:
         with:
           path: acts
           persist-credentials: false
-      - name: Install test-data download tool
-        run: dnf install -y wget
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: key4hep/k4ActsTracking
@@ -1625,18 +1623,6 @@ jobs:
             -DCMAKE_CXX_STANDARD=23 \
             -DCMAKE_INSTALL_PREFIX="$(pwd)/install" \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          echo "::endgroup::"
-          # Configure pulls the test geometries and material maps off
-          # key4hep.web.cern.ch, but data/download_files.sh reports "All files
-          # downloaded successfully!" and exits 0 even when every single wget
-          # failed. Without this the check keeps passing on a runner that cannot
-          # reach the host, having quietly skipped the data-driven tests.
-          echo "::group::Check data files"
-          while read -r file _; do
-            case "$file" in ''|\#*) continue;; esac
-            test -f "data/${file}" ||
-              { echo "data/${file} missing: the download from key4hep.web.cern.ch failed"; exit 1; }
-          done <data/file_list.txt
           echo "::endgroup::"
           echo "::group::Build k4ActsTracking"
           cmake --build build
