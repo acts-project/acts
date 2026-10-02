@@ -31,6 +31,9 @@
 #include "traccc/geometry/detector_buffer.hpp"
 #include "traccc/utils/detector_buffer_bfield_visitor.hpp"
 
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
+
 // Thrust include(s).
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
@@ -75,7 +78,7 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
         // Fill it with Thrust's help.
         thrust::upper_bound(
             thrust::cuda::par_nosync(
-                std::pmr::polymorphic_allocator(&(mr().main)))
+                stream_synchronizing_allocator(mr().main, stream()))
                 .on(details::get_stream(stream())),
             measurements_device.surface_link().begin(),
             // We have to use this ugly form here, because if the
@@ -164,7 +167,8 @@ void combinatorial_kalman_filter_algorithm::condense_tracks_kernel(
       out_params_per_in_param_vector(out_params_per_in_param);
   vecmem::device_vector<unsigned int> params_index_vector(params_index);
   thrust::inclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(
+          stream_synchronizing_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       out_params_per_in_param_vector.begin(),
       out_params_per_in_param_vector.end(), params_index_vector.begin());
@@ -204,7 +208,8 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_last_measurement(
   assert(link_last_measurement.size_ptr() == nullptr);
   assert(param_ids.size_ptr() == nullptr);
   thrust::sort_by_key(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(
+          stream_synchronizing_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       link_last_measurement.ptr(),
       link_last_measurement.ptr() + link_last_measurement.capacity(),
@@ -248,10 +253,11 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_keys(
   assert(keys.capacity() == param_ids.capacity());
   assert(keys.size_ptr() == nullptr);
   assert(param_ids.size_ptr() == nullptr);
-  thrust::sort_by_key(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream())),
-      keys.ptr(), keys.ptr() + keys.capacity(), param_ids.ptr());
+  thrust::sort_by_key(thrust::cuda::par_nosync(
+                          stream_synchronizing_allocator(mr().main, stream()))
+                          .on(details::get_stream(stream())),
+                      keys.ptr(), keys.ptr() + keys.capacity(),
+                      param_ids.ptr());
 }
 
 void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
