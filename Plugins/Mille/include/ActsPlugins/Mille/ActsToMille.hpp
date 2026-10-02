@@ -26,7 +26,8 @@ using Mille::MilleRecord;
 /// @brief Dump a Kalman track encoded as a TrackAlignmentState into
 /// a Mille record.
 /// @param state: Alignment state to dump.
-/// @param record: Mille record to write to.
+/// @param record: Mille record to write to. May be shared between threads:
+/// every call writes its track to a record of its own.
 /// Note: Not very efficient - we have to "un-fit" the kalman track.
 /// Used for R&D, recommending the GBL track model (under development)
 /// for production use.
@@ -43,6 +44,11 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
 /// a Mille binary into the equivalent matrices of a TrackAlignmentState.
 /// Allows to use Mille to collect tracks across multiple events and
 /// align them with the ACTS solver, and to validate the outputs of dumpToMille.
+/// As in Millepede, every entry of the record is a measurement of the state:
+/// for a record from dumpToMille, the surface measurements come first, followed
+/// by the pseudo-measurements of the track model (no alignment derivatives).
+/// The chi2 derivatives are those of the local fit chi2, minimised over the
+/// track parameters.
 /// @param reader: A Mille Reader, connected to a valid input file.
 /// @param targetState: The TrackAlignmentState to populate. It is overwritten
 /// completely, so the same state can be reused for consecutive records.
@@ -52,7 +58,8 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
 /// of a surface not in this list is a read error.
 /// @param logger Logger, reports why a record could not be read.
 /// @return a ReadResult enum with 3 possible states to indicate the outcome- ok / end-of-file / read-error.
-/// The targetState will only be modified if the result is 'ok'.
+/// The targetState will only be modified if the result is 'ok'. Empty records
+/// are skipped: a result of 'ok' always comes with the next track.
 Mille::MilleDecoder::ReadResult unpackMilleRecord(
     Mille::IMilleReader& reader,
     ActsAlignment::detail::TrackAlignmentState& targetState,

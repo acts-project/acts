@@ -135,19 +135,28 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanToMille) {
   // now compare the results!
 
   BOOST_CHECK_EQUAL(millePedeState.alignmentDof, alignState.alignmentDof);
-  BOOST_CHECK_EQUAL(millePedeState.measurementDim, alignState.measurementDim);
   BOOST_CHECK_EQUAL(millePedeState.trackParametersDim,
                     alignState.trackParametersDim);
 
-  BOOST_CHECK_EQUAL(millePedeState.residual, alignState.residual);
-  BOOST_CHECK_EQUAL(millePedeState.chi2, alignState.chi2);
-  BOOST_CHECK_EQUAL(millePedeState.measurementCovariance,
-                    alignState.measurementCovariance);
-  BOOST_CHECK_EQUAL(millePedeState.projectionMatrix,
+  // The record holds the surface measurements first, followed by the
+  // pseudo-measurements of the Kalman correlations. The reader keeps both as
+  // measurements: the surface measurements are the leading rows.
+  const Eigen::Index nMeas = alignState.measurementDim;
+  BOOST_REQUIRE_GT(millePedeState.measurementDim, alignState.measurementDim);
+
+  BOOST_CHECK_EQUAL(millePedeState.residual.head(nMeas), alignState.residual);
+  BOOST_CHECK_EQUAL(
+      millePedeState.measurementCovariance.topLeftCorner(nMeas, nMeas),
+      alignState.measurementCovariance);
+  BOOST_CHECK_EQUAL(millePedeState.projectionMatrix.topRows(nMeas),
                     alignState.projectionMatrix);
 
-  BOOST_CHECK_EQUAL(millePedeState.alignmentToResidualDerivative,
+  BOOST_CHECK_EQUAL(millePedeState.alignmentToResidualDerivative.topRows(nMeas),
                     alignState.alignmentToResidualDerivative);
+  // the pseudo-measurements do not depend on the alignment
+  BOOST_CHECK(millePedeState.alignmentToResidualDerivative
+                  .bottomRows(millePedeState.measurementDim - nMeas)
+                  .isZero(0.));
 
   // for the track parameter covariance, we only compare the regularised version
   // (differences expected in poorly constrained parameters). Also increase the
@@ -187,10 +196,16 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanToMille) {
   // approximate equivalence as a result.
   // Here, the role of the minor / non-measured dimensions is smaller
   // and we can go back to the built-in isApprox.
-  BOOST_CHECK(millePedeState.residualCovariance.isApprox(
-      alignState.residualCovariance, 1.e-6));
-  BOOST_CHECK(millePedeState.alignmentToChi2Derivative.isApprox(
-      alignState.alignmentToChi2Derivative, 1.e-6));
+  BOOST_CHECK(millePedeState.residualCovariance.topLeftCorner(nMeas, nMeas)
+                  .isApprox(alignState.residualCovariance, 1.e-6));
   BOOST_CHECK(millePedeState.alignmentToChi2SecondDerivative.isApprox(
       alignState.alignmentToChi2SecondDerivative, 1.e-6));
+  // The pseudo-residuals keep the smoothed track at the minimum of the local
+  // fit, so the chi2 derivative is the one at fixed track parameters. The
+  // Kalman state itself does not include the correlation term in it.
+  const Acts::DynamicVector chi2DerivativeAtSmoothedTrack =
+      2 * alignState.alignmentToResidualDerivative.transpose() *
+      alignState.measurementCovariance.inverse() * alignState.residual;
+  BOOST_CHECK(millePedeState.alignmentToChi2Derivative.isApprox(
+      chi2DerivativeAtSmoothedTrack, 1.e-6));
 }
