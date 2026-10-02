@@ -37,9 +37,6 @@ macro(add_plugin_binding_if _name _dependency _flag)
     set(PLUGIN_NAME "${_name}")
     set(PLUGIN_BUILD_FLAG "${_flag}")
 
-    set(_plugin_python_file
-        ${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}.py
-    )
     # by default, we only expose "Config" objects as
     # kwargs-style constructors
     set(SYMBOLS_FOR_KWARGS Config)
