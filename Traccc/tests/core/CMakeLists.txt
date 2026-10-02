@@ -23,6 +23,15 @@ traccc_add_test(core
    traccc::core traccc::io traccc::performance traccc::simulation
 )
 
+# Test the host-side strip inputs and the device-common Strip SP kernels
+# independently of a concrete accelerator backend.
+traccc_add_test(strip_spacepoint
+   "test_strip_spacepoint_inputs.cpp"
+   "test_strip_spacepoint_migration.cpp"
+   LINK_LIBRARIES GTest::gtest_main vecmem::core traccc_tests_common
+   traccc::core traccc::device_common detray::core
+)
+
 if(TRACCC_USE_ROOT)
     find_package(ROOT COMPONENTS Core RIO Hist REQUIRED)
     target_link_libraries(traccc_test_core PRIVATE ROOT::Core)
