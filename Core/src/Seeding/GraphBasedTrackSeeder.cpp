@@ -685,10 +685,6 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   // edge sits at level -1 and `minSeedLevel` may be configured to 0.
   const int minLevelAddTriplets = int{minLevel} - 1;
 
-  if (maxLevel < minLevel) {
-    return;
-  }
-
   std::vector<detail::GbtsEdge*> vChainHeads;
 
   vChainHeads.reserve(nEdges / 2);
