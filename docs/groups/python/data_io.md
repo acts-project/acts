@@ -2,7 +2,7 @@
 @ingroup python_bindings
 @brief Readers and writers available in the PyPI wheel and optional source builds.
 
-# Event input and output
+# Event data input and output
 
 Add readers with `s.addReader(...)`, converters with `s.addAlgorithm(...)`, and writers with
 `s.addWriter(...)`. The available formats depend on the build (see @ref python_bindings):
