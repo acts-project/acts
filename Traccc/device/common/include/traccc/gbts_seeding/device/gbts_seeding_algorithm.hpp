@@ -236,7 +236,7 @@ class gbts_seeding_algorithm
 
   /// Outputs of the graph-making stage that are consumed by seed extraction.
   struct graph_making_output {
-    /// Compacted, row-major graph
+    /// Compacted, column-major graph
     vecmem::data::vector_buffer<unsigned int> output_graph;
     /// (node1, node2) original spacepoint indices per compacted edge
     vecmem::data::vector_buffer<uint2> output_edge_nodes;
