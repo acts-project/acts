@@ -51,4 +51,8 @@ void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
       });
 }
 
+void seed_parameter_estimation_algorithm::synchronize() const {
+  details::get_queue(queue()).wait_and_throw();
+}
+
 }  // namespace traccc::sycl
