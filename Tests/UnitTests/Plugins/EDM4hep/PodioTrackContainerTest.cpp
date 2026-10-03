@@ -221,6 +221,9 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     t.nSharedHits() = 99;
     BOOST_CHECK_EQUAL(pTrack.getData().nSharedHits, 99);
 
+    t.nSplitHits() = 98;
+    BOOST_CHECK_EQUAL(pTrack.getData().nSplitHits, 98);
+
     auto gctx = GeometryContext::dangerouslyDefaultConstruct();
     t.setReferenceSurface(free);
     const auto& free2 = t.referenceSurface();
@@ -302,6 +305,8 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     BOOST_CHECK_EQUAL(t.nOutliers(), 77);
 
     BOOST_CHECK_EQUAL(t.nSharedHits(), 99);
+
+    BOOST_CHECK_EQUAL(t.nSplitHits(), 98);
 
     BOOST_CHECK_EQUAL(t.tipIndex(), 2);
     BOOST_CHECK_EQUAL(t.nTrackStates(), 3);
