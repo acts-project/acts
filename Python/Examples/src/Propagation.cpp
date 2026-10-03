@@ -9,6 +9,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/HelixStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -68,6 +69,11 @@ void addPropagation(py::module& mex) {
   // Eigen stepper based propagator
   {
     addConcretePropagator<EigenStepper<>, Navigator>(mex, "Eigen");
+  }
+
+  // Helix stepper based propagator
+  {
+    addConcretePropagator<HelixStepper, Navigator>(mex, "Helix");
   }
 
   // ATLAS stepper based propagator
