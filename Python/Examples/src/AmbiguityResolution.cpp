@@ -29,8 +29,8 @@ void addAmbiguityResolution(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ScoreBasedAmbiguityResolutionAlgorithm, mex,
       "ScoreBasedAmbiguityResolutionAlgorithm", inputTracks, configFile,
-      outputTracks, minScore, minScoreSharedTracks, maxShared, minUnshared,
-      maxSharedTracksPerMeasurement, useAmbiguityScoring);
+      monitorFile, outputTracks, minScore, minScoreSharedTracks, maxShared,
+      minUnshared, maxSharedTracksPerMeasurement, useAmbiguityScoring);
 }
 
 }  // namespace ActsPython
