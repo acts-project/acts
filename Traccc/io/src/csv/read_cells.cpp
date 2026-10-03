@@ -150,6 +150,9 @@ void read_cells(edm::silicon_cell_collection::host& cells,
       ddIndex = it->second;
     }
 
+    // Default placeholder for RDO ID
+    constexpr std::uint64_t DEFAULT_RDO_ID = 0;
+
     // Add the cells to the output.
     for (const csv::cell& cell : cellz) {
       cells.push_back(
