@@ -427,6 +427,7 @@ void calculateTrackQuantities(track_proxy_t track)
   track.nHoles() = 0;
   track.nMeasurements() = 0;
   track.nSharedHits() = 0;
+  track.nSplitHits() = 0;
   track.nOutliers() = 0;
 
   for (const auto &trackState : track.trackStatesReversed()) {
@@ -439,6 +440,9 @@ void calculateTrackQuantities(track_proxy_t track)
     } else if (typeFlags.isMeasurement()) {
       if (typeFlags.isSharedHit()) {
         track.nSharedHits()++;
+      }
+      if (typeFlags.isSplitHit()) {
+        track.nSplitHits()++;
       }
       track.nMeasurements()++;
       track.chi2() += trackState.chi2();
