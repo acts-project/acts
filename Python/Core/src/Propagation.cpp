@@ -15,6 +15,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
+#include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
@@ -80,9 +81,15 @@ void addPropagator(py::module_& m, const std::string& prefix) {
 /// @param m The Python module to which the functions will be bound
 void addPropagation(py::module_& m) {
   {
+    py::class_<StepperPlainOptions>(m, "StepperPlainOptions")
+        .def_readwrite("maxStepSize", &StepperPlainOptions::maxStepSize);
+  }
+
+  {
     py::class_<PropagatorPlainOptions>(m, "PropagatorPlainOptions")
         .def(py::init<const GeometryContext&, const MagneticFieldContext&>(),
              py::arg("geoContext"), py::arg("magFieldContext"))
+        .def_readwrite("stepping", &PropagatorPlainOptions::stepping)
         .def_readwrite("maxSteps", &PropagatorPlainOptions::maxSteps)
         .def_readwrite("pathLimit", &PropagatorPlainOptions::pathLimit)
         .def_readwrite("loopProtection",
