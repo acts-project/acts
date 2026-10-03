@@ -153,10 +153,10 @@ full_chain_algorithm::output_type full_chain_algorithm::operator()(
       ->ignore();
 
   // Run the clusterization (asynchronously).
-  const auto unsorted_measurements =
+  auto unsorted_measurements =
       m_clusterization(cells_buffer, m_device_det_descr, m_device_det_cond);
   const measurement_sorting_algorithm::output_type measurements =
-      m_measurement_sorting(unsorted_measurements);
+      m_measurement_sorting(std::move(unsorted_measurements));
 
   // If we have a Detray detector, run the track finding and fitting.
   if (m_detector != nullptr) {
@@ -170,7 +170,8 @@ full_chain_algorithm::output_type full_chain_algorithm::operator()(
       seeds = m_seeding(spacepoints);
     }
     const seed_parameter_estimation_algorithm::output_type track_params =
-        m_track_parameter_estimation(m_field, measurements, spacepoints, seeds);
+        m_track_parameter_estimation(m_field, measurements, spacepoints,
+                                     std::move(seeds));
 
     // Run the track finding (asynchronously).
     const finding_algorithm::output_type track_candidates =
@@ -211,10 +212,10 @@ bound_track_parameters_collection_types::host full_chain_algorithm::seeding(
       ->ignore();
 
   // Run the clusterization (asynchronously).
-  const auto unsorted_measurements =
+  auto unsorted_measurements =
       m_clusterization(cells_buffer, m_device_det_descr, m_device_det_cond);
   const measurement_sorting_algorithm::output_type measurements =
-      m_measurement_sorting(unsorted_measurements);
+      m_measurement_sorting(std::move(unsorted_measurements));
 
   // If we have a Detray detector, run the track finding and fitting.
   if (m_detector != nullptr) {
@@ -228,7 +229,8 @@ bound_track_parameters_collection_types::host full_chain_algorithm::seeding(
       seeds = m_seeding(spacepoints);
     }
     const seed_parameter_estimation_algorithm::output_type track_params =
-        m_track_parameter_estimation(m_field, measurements, spacepoints, seeds);
+        m_track_parameter_estimation(m_field, measurements, spacepoints,
+                                     std::move(seeds));
 
     // Copy a limited amount of result data back to the host.
     const auto host_seeds =

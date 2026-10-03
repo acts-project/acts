@@ -53,6 +53,9 @@ struct seed_parameter_estimation_algorithm
 
   /// @}
 
+  /// Wait for outstanding work on the algorithm stream.
+  void synchronize() const override;
+
 };  // struct seed_parameter_estimation_algorithm
 
 }  // namespace traccc::hip

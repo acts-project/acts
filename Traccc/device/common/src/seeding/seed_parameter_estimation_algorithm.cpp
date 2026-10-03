@@ -61,4 +61,25 @@ auto seed_parameter_estimation_algorithm::operator()(
   return result;
 }
 
+auto seed_parameter_estimation_algorithm::operator()(
+    const magnetic_field& bfield,
+    const edm::measurement_collection::const_view& measurements,
+    const edm::spacepoint_collection::const_view& spacepoints,
+    edm::seed_collection::buffer&& seeds) const -> output_type {
+  // Take ownership of the seeds, so that they are released when this
+  // function returns.
+  const edm::seed_collection::buffer owned_seeds = std::move(seeds);
+
+  // Run the algorithm on a view of the seeds.
+  output_type result =
+      (*this)(bfield, measurements, spacepoints,
+              static_cast<edm::seed_collection::const_view>(owned_seeds));
+
+  // The kernel must finish before the seed buffer is released.
+  synchronize();
+
+  // Return the result.
+  return result;
+}
+
 }  // namespace traccc::device
