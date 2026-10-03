@@ -16,9 +16,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/// Number of threads per Warp
-#define WARP_SIZE warpSize
-
 /// Helper macro used for checking  , type return values.
 #define DETRAY_HIP_ERROR_CHECK(ans)       \
   {                                       \
