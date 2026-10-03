@@ -9,8 +9,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "ActsPlugins/Gnn/detail/TensorVectorConversion.hpp"
+#include "ActsPlugins/Gnn/detail/TorchDevice.hpp"
 
 #include <iostream>
+#include <stdexcept>
 
 #include <torch/torch.h>
 
@@ -112,6 +114,33 @@ BOOST_AUTO_TEST_CASE(test_slicing) {
   const auto test_vec = tensor2DToVector<float>(tensor);
 
   BOOST_CHECK_EQUAL(test_vec, ref_vec);
+}
+
+// The torch device a stage runs its model on is resolved (and checked) up
+// front, so an unavailable backend is reported instead of silently running
+// somewhere else
+BOOST_AUTO_TEST_CASE(test_to_torch_device) {
+  BOOST_CHECK(toTorchDevice(ActsPlugins::Device::Cpu()).is_cpu());
+
+  if (at::hasMPS()) {
+    BOOST_CHECK_EQUAL(toTorchDevice(ActsPlugins::Device::Mps()).type(),
+                      torch::kMPS);
+  } else {
+    BOOST_CHECK_THROW(toTorchDevice(ActsPlugins::Device::Mps()),
+                      std::runtime_error);
+  }
+
+  if (torch::cuda::is_available()) {
+    BOOST_CHECK_EQUAL(toTorchDevice(ActsPlugins::Device::Cuda(0)).type(),
+                      torch::kCUDA);
+    BOOST_CHECK_THROW(
+        toTorchDevice(ActsPlugins::Device::Cuda(
+            static_cast<std::size_t>(torch::cuda::device_count()))),
+        std::runtime_error);
+  } else {
+    BOOST_CHECK_THROW(toTorchDevice(ActsPlugins::Device::Cuda()),
+                      std::runtime_error);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

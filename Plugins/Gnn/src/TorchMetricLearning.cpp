@@ -9,6 +9,7 @@
 #include "ActsPlugins/Gnn/TorchMetricLearning.hpp"
 
 #include "ActsPlugins/Gnn/detail/TensorVectorConversion.hpp"
+#include "ActsPlugins/Gnn/detail/TorchDevice.hpp"
 #include "ActsPlugins/Gnn/detail/buildEdges.hpp"
 
 #ifdef ACTS_GNN_WITH_CUDA
@@ -16,6 +17,7 @@
 #endif
 
 #include <numbers>
+#include <stdexcept>
 
 #include <torch/script.h>
 #include <torch/torch.h>
@@ -32,34 +34,13 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
                                          std::unique_ptr<const Logger> _logger)
     : m_logger(std::move(_logger)), m_cfg(cfg) {
   c10::InferenceMode guard(true);
-  torch::Device device = torch::kCPU;
-
-  if (cfg.device.isCuda()) {
-    if (!torch::cuda::is_available()) {
-      throw std::runtime_error(
-          "CUDA device requested but CUDA is not available");
-    }
-    if (cfg.device.index >=
-        static_cast<std::size_t>(torch::cuda::device_count())) {
-      throw std::runtime_error(
-          "CUDA device index " + std::to_string(cfg.device.index) +
-          " is out of range (" + std::to_string(torch::cuda::device_count()) +
-          " devices available)");
-    }
-    device = torch::Device(torch::kCUDA, cfg.device.index);
-  }
 
   ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
                                     << TORCH_VERSION_MINOR << "."
                                     << TORCH_VERSION_PATCH);
 
-  try {
-    m_model = std::make_unique<torch::jit::Module>();
-    *m_model = torch::jit::load(m_cfg.modelPath, device);
-    m_model->eval();
-  } catch (const c10::Error &e) {
-    throw std::invalid_argument("Failed to load models: " + e.msg());
-  }
+  m_model =
+      detail::loadTorchModel(m_cfg.modelPath, cfg.device, cfg.modelDevice);
 }
 
 TorchMetricLearning::~TorchMetricLearning() {}
@@ -68,16 +49,16 @@ PipelineTensors TorchMetricLearning::operator()(
     std::vector<float> &inputValues, std::size_t numNodes,
     const std::vector<std::uint64_t> & /*moduleIds*/,
     const ExecutionContext &execContext) {
+  // The model runs on its configured device if there is one, else on the
+  // device the pipeline tensors live on
   const auto device =
-      execContext.device.type == Device::Type::eCUDA
-          ? torch::Device(torch::kCUDA, execContext.device.index)
-          : torch::kCPU;
+      detail::toTorchDevice(m_cfg.modelDevice.value_or(execContext.device));
   ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
 
   // add a protection to avoid calling for kCPU
 #ifndef ACTS_GNN_WITH_CUDA
-  assert(device == torch::Device(torch::kCPU));
+  assert(!device.is_cuda());
 #else
   std::optional<c10::cuda::CUDAGuard> device_guard;
   if (device.is_cuda()) {

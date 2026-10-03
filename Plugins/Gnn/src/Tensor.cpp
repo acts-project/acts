@@ -27,6 +27,12 @@ TensorPtr createTensorMemory(std::size_t nbytes,
     return TensorPtr(ptr,
                      [](void *p) { delete[] static_cast<std::byte *>(p); });
   }
+  if (execContext.device.type == Device::Type::eMPS) {
+    throw std::invalid_argument(
+        "Cannot create a tensor on an MPS device: MPS is only supported as the "
+        "device a stage runs its model on, the pipeline tensors have to be on "
+        "CPU or CUDA");
+  }
   return cudaCreateTensorMemory(nbytes, execContext);
 }
 

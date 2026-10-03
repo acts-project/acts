@@ -10,6 +10,9 @@
 
 #include "ActsPlugins/Gnn/Tensor.hpp"
 
+#include <sstream>
+#include <stdexcept>
+
 using namespace Acts;
 using namespace ActsPlugins;
 
@@ -448,6 +451,29 @@ BOOST_AUTO_TEST_CASE(tensor_edge_selection_with_features_cuda) {
 }
 
 #endif
+
+BOOST_AUTO_TEST_CASE(device_mps_description) {
+  const auto mps = Device::Mps();
+  BOOST_CHECK(mps.isMps());
+  BOOST_CHECK(!mps.isCpu());
+  BOOST_CHECK(!mps.isCuda());
+  BOOST_CHECK_EQUAL(mps, Device::Mps());
+
+  std::stringstream ss;
+  ss << mps;
+  BOOST_CHECK_EQUAL(ss.str(), "MPS");
+}
+
+// MPS only describes where a stage runs its model, so there is no tensor
+// memory on it
+BOOST_AUTO_TEST_CASE(tensor_create_mps_throws) {
+  const ExecutionContext execContextMps{Device::Mps(), {}};
+  BOOST_CHECK_THROW(Tensor<float>::Create({2, 2}, execContextMps),
+                    std::invalid_argument);
+
+  auto cpuTensor = createCpuTensor<float>({1.f, 2.f, 3.f, 4.f}, {2, 2});
+  BOOST_CHECK_THROW(cpuTensor.clone(execContextMps), std::invalid_argument);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
