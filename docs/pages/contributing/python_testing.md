@@ -1,87 +1,22 @@
-@defgroup python_bindings Python Bindings
-@brief Python bindings for the ACTS tracking toolkit, available via PyPI or built from source.
+@page python_testing Python-based testing
 
-# Installation from PyPI
+Python bindings are exercised through `pytest`, in addition to the doc-example snippets used by
+@ref python_bindings.
 
-The easiest way to get the ACTS Python bindings is via [PyPI](https://pypi.org/project/pyacts/):
+# Running the tests
 
-```console
-pip install pyacts
-```
+A number of unit tests based on the `pytest` library are shipped with the repository, under
+`$REPO_ROOT/Python/Core/tests`, `Python/Fatras/tests`, and `Python/Examples/tests`. They cover
+the public API of the Python bindings, and a set of tests also execute the standalone example
+scripts under `Examples/Scripts/Python/`.
 
-A nightly development build is also available from [TestPyPI](https://test.pypi.org/project/pyacts/):
-
-```console
-pip install -i https://test.pypi.org/simple pyacts
-```
-
-The `pyacts` distribution includes bindings for the core library, Fatras, and
-the Examples framework.
-
-> [!warning]
-> The PyPI package does not include all optional plugins (e.g. DD4hep/ODD, Geant4, ROOT).
-> To use those, build from source with the relevant CMake options enabled.
-
-> [!note]
-> Even though the name of the PyPI package is `pyacts`, the python module must be imported
-> as `import acts`.
-
-# Building from source
-
-To use the full Python bindings including optional components such as DD4hep/ODD, Geant4, ROOT, build ACTS from
-source with `ACTS_BUILD_PYTHON_BINDINGS=ON`.
+To run these tests, `pytest` and a few other dependencies need to be installed:
 
 ```console
-cmake -B <build> -S <source> -DACTS_BUILD_PYTHON_BINDINGS=ON
+pip install -r Python/Examples/tests/requirements.txt
 ```
 
-Bindings for additional components (plugins, Examples framework) are built automatically if
-they are enabled.
-
-```console
-cmake -B <build> -S <source> -DACTS_BUILD_PYTHON_BINDINGS=ON -DACTS_BUILD_EXAMPLES=ON
-```
-
-Building requires a Python installation including the development headers.
-You can then build the special target `ActsPythonBindings` to build everything
-that can be accessed from Python:
-
-```console
-cmake --build <build> -- ActsPythonBindings
-```
-
-The build creates a setup script `$BUILD/this_acts_withdeps.sh` which modifies
-`$PYTHONPATH` so that you can import the `acts` module in Python.
-
-# Minimal example
-
-Here is a minimal example of a Python script using the bindings, which sets up
-particle propagation and runs a few events.
-
-@snippet{trimleft} examples/test_generic.py Basic propagation example with GenericDetector
-
-## Python based example scripts
-
-The repository contains a set of example scripts that can be used to execute various workflows.
-They can be found in `$REPO_ROOT/Examples/Scripts/Python`. Make sure you have run
-
-```console
-source $BUILD/this_acts_withdeps.sh
-```
-
-to make sure Python can find the `acts` module.
-
-## Python based unit tests
-
-A number of unit tests based on the `pytest` library are shipped with the
-repository. They are located under `$REPO_ROOT/Examples/Python/tests`, and
-intend to cover the public API of the Python bindings. A set of tests also
-execute the standalone example scripts.
-
-To run these Python based tests, `pytest` and a few other dependencies need
-to be installed. They can be installed via `pip install -r
-Examples/Python/tests/requirements.txt` from the repository root.  You can
-then simply run `pytest` from the repository root.
+You can then simply run `pytest` from the repository root.
 
 > [!tip]
 > It is **strongly recommended** to use a [virtual
@@ -93,6 +28,17 @@ then simply run `pytest` from the repository root.
 > ```
 > to create a local virtual environment, and then run the `pip` command above.
 
+## Markers
+
+Tests are grouped by optional dependency using pytest markers: `csv`, `obj`, `root`, `json`,
+`slow`, `edm4hep`, `odd`, `hepmc3`, and `pypi`. `pypi` marks the subset that only exercises what
+the PyPI wheel actually provides (see @ref python_bindings) — this is what `cibuildwheel`
+runs as the wheel smoke test. Run one marker's subset with:
+
+```console
+pytest -m odd
+```
+
 ## ROOT file hash regression checks {#root_file_hashes}
 
 In a number of cases, the python based test suite will run hash based regression tests against ROOT files that are
@@ -101,7 +47,7 @@ entry of each `TTree` found in a file. These entry hashes are then sorted, conca
 This procedure ensures that if the ROOT file content changes, the hash changes, while also giving the same hash when the events
 stored in the file are reordered.
 
-The tests are implemented by looking up a reference hash from a central data file `$REPO_ROOT/Examples/Python/tests/root_file_hashes.txt`
+The tests are implemented by looking up a reference hash from a central data file `$REPO_ROOT/Python/Examples/tests/root_file_hashes.txt`
 that looks like
 
 ```none
@@ -152,7 +98,7 @@ If any hash mismatches are observed, the corresponding tests will fail, and `pyt
 The ROOT files produced by tests have changed since the last recorded reference.
 This can be be expected if e.g. the underlying algorithm changed, or it can be a test failure symptom.
 Please manually check the output files listed below and make sure that their content is correct.
-If it is, you can update the test reference file Examples/Python/tests/root_file_hashes.txt with the new hashes below.
+If it is, you can update the test reference file Python/Examples/tests/root_file_hashes.txt with the new hashes below.
 
 test_seeding__estimatedparams.root: 8bbc97cb3d4777c61dd0b483a1c8268fc8411ad182c35bc731e5ed222450deca
 test_material_recording__geant4_material_tracks.root: 019ce62ce378efa5c02a94768039686ed3cdfbd60c115c1f0cab2cbc53def57b
@@ -162,12 +108,12 @@ test_ckf_tracks_example_full_seeding__tracksummary_ckf.root: 9e4d14169f20961be38
 test_ckf_tracks_example_truth_estimate__tracksummary_ckf.root: 3d56b26788163852e2c1f7288920f60a505bd14deeabb6f9189b680fcd90bfc5
 test_ckf_tracks_example_truth_smeared__tracksummary_ckf.root: ca2ce4069d2a2388c3d3c826dec8bea9f9d1e622239a20f8b985784d6c546c6e
 =========================================== short test summary info =====================================================
-FAILED Examples/Python/tests/test_examples.py::test_seeding
-FAILED Examples/Python/tests/test_examples.py::test_material_recording
-FAILED Examples/Python/tests/test_examples.py::test_material_mapping
-FAILED Examples/Python/tests/test_examples.py::test_ckf_tracks_example_full_seeding
-FAILED Examples/Python/tests/test_examples.py::test_ckf_tracks_example_truth_estimate
-FAILED Examples/Python/tests/test_examples.py::test_ckf_tracks_example_truth_smeared
+FAILED Python/Examples/tests/test_examples.py::test_seeding
+FAILED Python/Examples/tests/test_examples.py::test_material_recording
+FAILED Python/Examples/tests/test_examples.py::test_material_mapping
+FAILED Python/Examples/tests/test_examples.py::test_ckf_tracks_example_full_seeding
+FAILED Python/Examples/tests/test_examples.py::test_ckf_tracks_example_truth_estimate
+FAILED Python/Examples/tests/test_examples.py::test_ckf_tracks_example_truth_smeared
 ================================== 6 failed, 183 passed in 199.82s (0:03:19) ============================================
 ```
 
