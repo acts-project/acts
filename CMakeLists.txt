@@ -116,6 +116,7 @@ option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
 option(ACTS_BUILD_PYTHON_WHEEL "Settings to build for python deployment with scikit-build-core" OFF)
 option(ACTS_BUILD_PYTHON_BINDINGS "Build python bindings for all enabled components" OFF)
 option(ACTS_GENERATE_PYTHON_STUBS "Generate Python stub files (.pyi) using pybind11-stubgen via uv" OFF)
+option(ACTS_INSTALL_PYTHON_EXAMPLE_SCRIPTS "Install the Python example scripts and the configuration files they use" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
@@ -180,9 +181,13 @@ endif()
 # NOTE: ordering is important here. dependencies must come before dependees
 include(ActsOptionHelpers)
 
+# the python example scripts need the examples python bindings
+set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_INSTALL_PYTHON_EXAMPLE_SCRIPTS)
 # any examples component activates the general examples option
 set_option_if(
     ACTS_BUILD_EXAMPLES
+    ACTS_INSTALL_PYTHON_EXAMPLE_SCRIPTS
+    OR
     ACTS_BUILD_EXAMPLES_DD4HEP
     OR
     ACTS_BUILD_EXAMPLES_EDM4HEP

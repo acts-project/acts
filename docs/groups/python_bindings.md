@@ -71,6 +71,17 @@ source $BUILD/this_acts_withdeps.sh
 
 to make sure Python can find the `acts` module.
 
+The scripts can also be installed, together with the configuration files in
+`Examples/Configs` that they read, by configuring with
+`-DACTS_INSTALL_PYTHON_EXAMPLE_SCRIPTS=ON`. They are then placed in
+`<prefix>/share/acts/Examples/Scripts/Python`, and the installed
+`this_acts.sh` exports that directory as `ACTS_EXAMPLES_SCRIPTS`:
+
+```console
+source <prefix>/bin/this_acts_withdeps.sh
+python3 $ACTS_EXAMPLES_SCRIPTS/full_chain_odd.py -n1
+```
+
 ## Python based unit tests
 
 A number of unit tests based on the `pytest` library are shipped with the

@@ -365,4 +365,20 @@ foreach(f ${py_files})
     )
 endforeach()
 
+# Optionally install the example scripts together with the configuration files
+# they read. The source tree layout is mirrored so that the scripts can still
+# locate Examples/Configs relative to their own location.
+if(ACTS_INSTALL_PYTHON_EXAMPLE_SCRIPTS)
+    install(
+        DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Scripts/Python/
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/acts/Examples/Scripts/Python
+        USE_SOURCE_PERMISSIONS
+        PATTERN "__pycache__" EXCLUDE
+    )
+    install(
+        DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Configs/
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/acts/Examples/Configs
+    )
+endif()
+
 # Finally copy the python files
