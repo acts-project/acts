@@ -14,7 +14,7 @@ cffi==2.1.1 ; platform_python_implementation != 'PyPy'
     # via cryptography
 colorama==0.4.6 ; sys_platform == 'win32'
     # via typer
-cryptography==50.0.1
+cryptography==50.0.2
     # via pyjwt
 frozenlist==1.8.0
     # via
@@ -40,7 +40,7 @@ pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementatio
     # via cffi
 pygments==2.21.0
     # via rich
-pyjwt==2.15.0
+pyjwt==2.15.1
     # via gidgethub
 rich==15.0.0
     # via

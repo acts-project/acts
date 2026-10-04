@@ -10,7 +10,7 @@ awkward==2.14.0
     #   uproot
 awkward-cpp==57
     # via awkward
-boost-histogram==1.7.2
+boost-histogram==1.8.1
     # via hist
 click==8.5.0
     # via histoprint
@@ -20,11 +20,11 @@ contourpy==1.3.3 ; python_full_version < '3.12'
     # via matplotlib
 contourpy==1.4.0 ; python_full_version >= '3.12'
     # via matplotlib
-cramjam==2.12.1
+cramjam==2.13.0
     # via uproot
 cycler==0.12.1
     # via matplotlib
-fonttools==4.66.0
+fonttools==4.66.1
     # via matplotlib
 fsspec==2026.9.0
     # via
@@ -123,7 +123,7 @@ typing-extensions==4.16.0
     #   typing-inspection
 typing-inspection==0.4.4
     # via pydantic
-tzdata==2026.4 ; sys_platform == 'emscripten' or sys_platform == 'win32'
+tzdata==2026.5 ; sys_platform == 'emscripten' or sys_platform == 'win32'
     # via pandas
 uhi==1.2.0
     # via
@@ -133,5 +133,5 @@ uproot==5.7.6
     # via -r Examples/Scripts/requirements.in
 xxhash==4.0.1
     # via uproot
-zipp==4.1.0 ; python_full_version < '3.12'
+zipp==4.1.1 ; python_full_version < '3.12'
     # via importlib-metadata
