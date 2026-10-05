@@ -264,6 +264,7 @@ class TrackProxy
   using Base::nMeasurements;
   using Base::nOutliers;
   using Base::nSharedHits;
+  using Base::nSplitHits;
   using Base::phi;
   using Base::qOverP;
   using Base::stemIndex;
@@ -508,8 +509,8 @@ class TrackProxy
   /// - Covariance matrix at reference surface
   /// - Particle hypothesis
   /// - Reference surface (shared pointer is copied)
-  /// - Track summary data (nMeasurements, nHoles, nOutliers, nSharedHits, chi2,
-  /// nDoF)
+  /// - Track summary data (nMeasurements, nHoles, nOutliers, nSharedHits,
+  /// nSplitHits, chi2, nDoF)
   /// - All dynamic track columns
   ///
   /// **What does NOT get copied:**
@@ -545,6 +546,7 @@ class TrackProxy
     nHoles() = other.nHoles();
     nOutliers() = other.nOutliers();
     nSharedHits() = other.nSharedHits();
+    nSplitHits() = other.nSplitHits();
     chi2() = other.chi2();
     nDoF() = other.nDoF();
 
