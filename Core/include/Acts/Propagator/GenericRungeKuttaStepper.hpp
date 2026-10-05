@@ -54,10 +54,12 @@ class IVolumeMaterial;
 ///   d(T)/dr = (q/p) [T x] dB/dr,  d(T)/dT = -(q/p) [B x],
 ///   d(T)/d(q/p) = T x B.
 ///
-/// The stepper computes dB/dr with central finite differences of the field,
-/// so the jacobian is exact up to the O(epsilon^2) error of the gradient, see
-/// @ref Options::fieldGradientEpsilon. Without the gradient term
-/// (@ref Options::includeFieldGradient) the jacobian is not exact.
+/// The stepper takes dB/dr from the field provider. If the provider does not
+/// implement the gradient, the stepper computes it with central finite
+/// differences of the field, so the jacobian is exact up to the O(epsilon^2)
+/// error of the gradient, see @ref Options::fieldGradientEpsilon. Without the
+/// gradient term (@ref Options::includeFieldGradient) the jacobian is not
+/// exact.
 ///
 /// After the step, the stepper normalises the direction to unit length. This
 /// is part of the discrete step, so the stepper also applies its derivative
@@ -90,13 +92,8 @@ class GenericRungeKuttaStepper final {
   /// Type alias for covariance matrix
   using Covariance = BoundMatrix;
 
-  /// Magnetic field and its spatial gradient at one position
-  struct FieldAndGradient {
-    /// Magnetic field vector
-    Vector3 field = Vector3::Zero();
-    /// Spatial gradient of the field, with gradient(i, j) = dB_i / dx_j
-    SquareMatrix3 gradient = SquareMatrix3::Zero();
-  };
+  /// Type alias for the magnetic field and its gradient
+  using FieldAndGradient = MagneticFieldProvider::FieldAndGradient;
 
   /// Error estimate for the adaptive step size
   ///
@@ -139,7 +136,8 @@ class GenericRungeKuttaStepper final {
     /// Include the field gradient in the transport jacobian
     bool includeFieldGradient = true;
 
-    /// Distance of the field lookups for the finite-difference gradient.
+    /// Distance of the field lookups for the finite-difference gradient, if
+    /// the field provider does not implement the gradient.
     ///
     /// The truncation error of the central difference is of order epsilon^2.
     /// The round-off error is of order eps_machine |B| / epsilon, which is
