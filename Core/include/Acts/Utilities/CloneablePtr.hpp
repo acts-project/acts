@@ -72,10 +72,10 @@ class CloneablePtr {
   /// Copy assignment. Invokes the cloner if the source is non-null.
   /// @param other The CloneablePtr to copy from
   /// @return Reference to this
-  CloneablePtr& operator=(const CloneablePtr& other) noexcept {
+  CloneablePtr& operator=(const CloneablePtr& other) {
     if (this != &other) {
-      m_ptr = other.m_ptr ? other.m_cloner(*other.m_ptr) : nullptr;
-      m_cloner = other.m_cloner;
+      // Keep the object and its cloner together if either copy throws.
+      *this = CloneablePtr(other);
     }
     return *this;
   }
