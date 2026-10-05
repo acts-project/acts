@@ -44,7 +44,9 @@ def runMaterialValidation(
         ParticleConfig(
             num=tracksPerEvent, pdg=acts.PdgParticle.eMuon, randomizeCharge=True
         ),
-        EtaConfig(*etaRange),
+        # uniform in eta like the recording, so the comparison per eta bin
+        # weighs the tracks within a bin the same way
+        EtaConfig(*etaRange, uniform=True),
         PhiConfig(*phiRange),
         rnd=rnd,
     )
