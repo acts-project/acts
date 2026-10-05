@@ -419,7 +419,8 @@ void addFramework(py::module& mex) {
                                         [](const py::object& /*self*/) {
                                           return FpeMonitor::isSupported();
                                         })
-          .def_static("context", []() { return FpeMonitorContext(); });
+          .def_static("context",
+                      []() { return std::make_unique<FpeMonitorContext>(); });
 
   fpe.def_property_readonly("result", py::overload_cast<>(&FpeMonitor::result),
                             py::return_value_policy::reference_internal)
