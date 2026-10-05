@@ -14,12 +14,12 @@
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Propagator/ButcherTableau.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
+#include "Acts/Propagator/detail/ButcherTableau.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 
 #include <optional>
@@ -37,7 +37,7 @@ class IVolumeMaterial;
 ///
 ///   dy/ds = f(y) = (T, 1/beta, (q/p) T x B(r), 0),
 ///
-/// with any explicit @ref ButcherTableau. It is not optimised. It is meant as a
+/// with any explicit @ref detail::ButcherTableau. It is not optimised. It is meant as a
 /// reference to compare other steppers against.
 ///
 /// The transport jacobian is the exact derivative of the discrete step. The
@@ -79,8 +79,8 @@ class GenericRungeKuttaStepper final {
     std::shared_ptr<const MagneticFieldProvider> bField;
 
     /// Runge-Kutta tableau
-    std::shared_ptr<const ButcherTableau> tableau =
-        ButcherTableau::dormandPrince54();
+    std::shared_ptr<const detail::ButcherTableau> tableau =
+        detail::ButcherTableau::dormandPrince54();
   };
 
   /// Runtime options for Runge-Kutta propagation.
@@ -515,7 +515,7 @@ class GenericRungeKuttaStepper final {
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Runge-Kutta tableau
-  std::shared_ptr<const ButcherTableau> m_tableau;
+  std::shared_ptr<const detail::ButcherTableau> m_tableau;
 };
 
 template <>

@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Propagator/ButcherTableau.hpp"
+#include "Acts/Propagator/detail/ButcherTableau.hpp"
 
 #include <cmath>
 #include <numeric>
 #include <stdexcept>
 
-namespace Acts {
+namespace Acts::detail {
 
 ButcherTableau::ButcherTableau(std::string name, unsigned order,
                                unsigned embeddedOrder, std::vector<double> c,
@@ -181,4 +181,4 @@ std::shared_ptr<const ButcherTableau> ButcherTableau::verner98() {
   return tableau;
 }
 
-}  // namespace Acts
+}  // namespace Acts::detail
