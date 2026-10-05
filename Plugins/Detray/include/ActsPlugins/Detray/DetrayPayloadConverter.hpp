@@ -205,7 +205,7 @@ class DetrayPayloadConverter {
 
     /// Whether to convert material information from ACTS to detray
     bool convertMaterial = true;
-    
+
     /// Whether identical surface material is shared between detray surfaces
     /// instead of being copied for every surface. ACTS portals are split into
     /// one detray portal surface per attached volume, which otherwise each

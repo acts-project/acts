@@ -90,7 +90,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
                          &DetrayPayloadConverter::Config::convertSurfaceGrids)
           .def_readwrite("deduplicateMaterial",
                          &DetrayPayloadConverter::Config::deduplicateMaterial)
->>>>>>> 9b4fb0807 (Adress comments)
+>>>>>>> 9b4fb0807 (Address comments)
           .def_property(
               "beampipeVolume",
               [](const DetrayPayloadConverter::Config& cfg) {
