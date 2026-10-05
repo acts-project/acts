@@ -248,6 +248,20 @@ class volume_builder : public volume_builder_interface<detector_t> {
               m_masks.template get<masks::id::e_concentric_cylinder2D>();
           auto& discs = m_masks.template get<masks::id::e_ring2D>();
 
+          if (cyls.empty()) {
+            const std::string err{
+                "No cylinder portals found in construction of cylindrical "
+                "volume"};
+            DETRAY_FATAL_HOST(err);
+            throw std::invalid_argument(err);
+          }
+          if (discs.empty()) {
+            const std::string err{
+                "No disc portals found in construction of cylindrical volume"};
+            DETRAY_FATAL_HOST(err);
+            throw std::invalid_argument(err);
+          }
+
           constexpr auto inv{detail::invalid_value<scalar_t>()};
 
           // Find z extent
@@ -274,28 +288,31 @@ class volume_builder : public volume_builder_interface<detector_t> {
           scalar_t min_r{inv};
           scalar_t max_r{-inv};
           for (cylinder_t& c : cyls) {
-            const scalar_t r{c[concentric_cylinder2D::e_r]};
-            min_r = math::min(min_r, r);
-            max_r = math::max(max_r, r);
+            // Only look at portal surfaces for the min max radius
+            if (c.volume_link() != m_volume.index()) {
+              const scalar_t r{c[concentric_cylinder2D::e_r]};
+              min_r = math::min(min_r, r);
+              max_r = math::max(max_r, r);
+            }
 
             if ((c[concentric_cylinder2D::e_lower_z] < min_z &&
                  c[concentric_cylinder2D::e_upper_z] < min_z) ||
                 (c[concentric_cylinder2D::e_lower_z] > max_z &&
                  c[concentric_cylinder2D::e_upper_z] > max_z)) {
-              DETRAY_ERROR_HOST("Portal ["
-                                << c
-                                << "] lies completely outside cylinder volume '"
-                                << m_volume_name << "' z: [" << min_z << ", "
-                                << max_z << "] and needs to be removed!");
+              DETRAY_INFO_HOST("Portal ["
+                               << c
+                               << "] lies completely outside cylinder volume '"
+                               << m_volume_name << "' z: [" << min_z << ", "
+                               << max_z << "] and needs to be removed!");
               continue;
             }
 
-            DETRAY_DEBUG_HOST("Cylinder: " << c);
+            DETRAY_INFO_HOST("Cylinder: " << c);
             c[concentric_cylinder2D::e_lower_z] =
                 math::max(min_z, c[concentric_cylinder2D::e_lower_z]);
             c[concentric_cylinder2D::e_upper_z] =
                 math::min(max_z, c[concentric_cylinder2D::e_upper_z]);
-            DETRAY_DEBUG_HOST("-> clipped: " << c);
+            DETRAY_INFO_HOST("-> clipped: " << c);
           }
 
           // Beampipe or world volume (no inner cylinder, r is exactly eq.)
@@ -323,10 +340,10 @@ class volume_builder : public volume_builder_interface<detector_t> {
                   << "] and needs to be removed!");
               continue;
             }
-            DETRAY_DEBUG_HOST("Disc: " << d);
+            DETRAY_INFO_HOST("Disc: " << d);
             d[ring2D::e_inner_r] = math::max(min_r, d[ring2D::e_inner_r]);
             d[ring2D::e_outer_r] = math::min(max_r, d[ring2D::e_outer_r]);
-            DETRAY_DEBUG_HOST("-> clipped: " << d);
+            DETRAY_INFO_HOST("-> clipped: " << d);
           }
         } else {
           const std::string err{
