@@ -15,8 +15,10 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
+#include <utility>
 
 namespace Acts {
 
@@ -48,12 +50,38 @@ using KeyedSurfaceMaterialMaps =
 /// Surface and volume material assignments.
 /// Keyed assignments are stored separately and must never be matched by ID.
 struct TrackingGeometryMaterial {
+  /// Construct empty material assignments.
+  TrackingGeometryMaterial() = default;
+
+  /// Construct from material assignment maps.
+  /// @param surfaces Unkeyed surface assignments
+  /// @param volumes Volume assignments
+  /// @param keyed Stable-key surface assignments
+  TrackingGeometryMaterial(SurfaceMaterialMaps surfaces,
+                           VolumeMaterialMaps volumes,
+                           KeyedSurfaceMaterialMaps keyed = {})
+      : surfaceMaterials(std::move(surfaces)),
+        volumeMaterials(std::move(volumes)),
+        keyedSurfaces(std::move(keyed)) {}
+
   /// Unkeyed surface assignments indexed by geometry ID.
   SurfaceMaterialMaps surfaceMaterials{};
   /// Volume assignments indexed by geometry ID.
   VolumeMaterialMaps volumeMaterials{};
   /// Surface assignments indexed by stable string key.
   KeyedSurfaceMaterialMaps keyedSurfaces{};
+
+  /// Read the optional document description, ignored when applying material.
+  /// @return Description, or std::nullopt if absent
+  const std::optional<std::string>& description() const {
+    return m_description;
+  }
+
+  /// Set or remove the document description. Empty descriptions are allowed.
+  /// @param description Text, or std::nullopt to remove the description
+  void setDescription(std::optional<std::string> description) {
+    m_description = std::move(description);
+  }
 
   /// Apply material to a completed geometry, checking surface identities and
   /// resolving all surface assignments before modifying the geometry.
@@ -74,6 +102,9 @@ struct TrackingGeometryMaterial {
   /// Apply volume material by geometry identifier.
   /// @param volume Volume whose material is updated
   void apply(TrackingVolume& volume) const;
+
+ private:
+  std::optional<std::string> m_description;
 };
 
 }  // namespace Acts
