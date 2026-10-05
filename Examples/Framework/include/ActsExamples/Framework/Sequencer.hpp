@@ -38,11 +38,8 @@ class FpeFailure : public std::runtime_error {
   using std::runtime_error::runtime_error;
 };
 
-/// Error raised for an invalid sequencer configuration.
 class SequenceConfigurationException : public std::runtime_error {
  public:
-  /// Construct the error with an explanatory message.
-  /// @param message Description of the invalid configuration.
   explicit SequenceConfigurationException(const std::string &message)
       : std::runtime_error{"Sequence configuration error: " + message} {}
 };
@@ -54,19 +51,13 @@ class SequenceConfigurationException : public std::runtime_error {
 /// back to a file.
 class Sequencer {
  public:
-  /// Source location and type of a floating-point exception to mask.
   struct FpeMask {
-    /// Source file suffix to match.
     std::string file;
-    /// Half-open source line range to match.
     std::pair<std::size_t, std::size_t> lines;
-    /// Floating-point exception type to match.
     ActsPlugins::FpeType type{};
-    /// Maximum number of matching exceptions to mask.
     std::size_t count = 0;
   };
 
-  /// Configuration for the event loop and floating-point exception monitoring.
   struct Config {
     /// number of events to skip at the beginning
     std::size_t skip = 0;
@@ -99,48 +90,37 @@ class Sequencer {
     std::size_t fpeStackTraceLength = 8;
   };
 
-  /// Construct a sequencer with the supplied configuration.
-  /// @param cfg The event-loop configuration.
   explicit Sequencer(const Config &cfg);
 
   /// Add a context decorator to the set of context decorators.
   ///
-  /// @param decorator The decorator to add.
   /// @throws std::invalid_argument if the decorator is NULL.
   void addContextDecorator(std::shared_ptr<IContextDecorator> decorator);
 
   /// Add a reader to the set of readers.
   ///
-  /// @param reader The reader to add.
   /// @throws std::invalid_argument if the reader is NULL.
   void addReader(std::shared_ptr<IReader> reader);
 
   /// Append an algorithm to the sequence of algorithms.
   ///
-  /// @param algorithm The algorithm to add.
   /// @throws std::invalid_argument if the algorithm is NULL.
   void addAlgorithm(std::shared_ptr<IAlgorithm> algorithm);
 
   /// Append a sequence element to the sequence
   ///
-  /// @param element The element to add.
   /// @throws std::invalid_argument if the element is NULL.
   void addElement(const std::shared_ptr<SequenceElement> &element);
 
   /// Add a writer to the set of writers.
   ///
-  /// @param writer The writer to add.
   /// @throws std::invalid_argument if the writer is NULL.
   void addWriter(std::shared_ptr<IWriter> writer);
 
   /// Add an alias to the whiteboard.
-  /// @param aliasName The alias to create.
-  /// @param objectName The existing object name.
   void addWhiteboardAlias(const std::string &aliasName,
                           const std::string &objectName);
 
-  /// Return the combined floating-point exception results from all elements.
-  /// @return The merged results from all sequence elements.
   ActsPlugins::FpeMonitor::Result fpeResult() const;
 
   /// Run the event loop.
@@ -172,7 +152,6 @@ class Sequencer {
   int run();
 
   /// Get const access to the config
-  /// @return The sequencer configuration.
   const Config &config() const { return m_cfg; }
 
  private:

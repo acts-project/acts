@@ -9,6 +9,5 @@
 #pragma once
 
 namespace ActsExamples {
-/// Result of processing an event in a sequence element.
 enum class ProcessCode { SUCCESS, SKIP, ABORT, END };
-}  // namespace ActsExamples
+}

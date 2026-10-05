@@ -1,6 +1,6 @@
 @defgroup python_performance_plotting Performance Evaluation and Plotting
 @ingroup python_bindings
-@brief Extracting efficiency/resolution numbers from a @ref ActsExamples::Sequencer "Sequencer" run, and plotting them.
+@brief Extracting efficiency/resolution numbers from a `Sequencer` run, and plotting them.
 
 # Performance writers
 
@@ -10,25 +10,25 @@ through `.histograms()` after `s.run()`; the ROOT writer saves them in a ROOT fi
 also includes some summary objects and can include matching details.
 
 - **Pattern recognition** (efficiency, fake and duplicate tracks):
-  [PythonPatternRecognitionPerformanceWriter](https://github.com/acts-project/acts/blob/main/Python/Examples/src/PythonSpecific.cpp) for in-memory output, or
-  [RootPatternRecognitionPerformanceWriter](https://github.com/acts-project/acts/blob/main/Examples/Io/Root/include/ActsExamples/Io/Root/RootPatternRecognitionPerformanceWriter.hpp) for a ROOT file.
+  `PythonPatternRecognitionPerformanceWriter` for in-memory output, or
+  `RootPatternRecognitionPerformanceWriter` for a ROOT file.
 - **Track parameters** (residuals, pulls, efficiency):
-  [PythonTrackParameterPerformanceWriter](https://github.com/acts-project/acts/blob/main/Python/Examples/src/PythonSpecific.cpp) for in-memory output, or
-  [RootTrackParameterPerformanceWriter](https://github.com/acts-project/acts/blob/main/Examples/Io/Root/include/ActsExamples/Io/Root/RootTrackParameterPerformanceWriter.hpp) for a ROOT file.
+  `PythonTrackParameterPerformanceWriter` for in-memory output, or
+  `RootTrackParameterPerformanceWriter` for a ROOT file.
 
 The Python writers are available from PyPI or a source build. The ROOT writers require a
 ROOT-enabled source build.
 
 The pattern-recognition pair takes the same input collections and uses similar configurations.
-With a @ref ActsExamples::Sequencer "Sequencer" and truth matcher already configured, add the Python writer like this:
+With a `Sequencer` and truth matcher already configured, add the Python writer like this:
 
-@snippet{trimleft} pypi_finding_fitting_demo.py Python pattern-recognition performance writer
+@snippet{trimleft} "../Examples/Scripts/Python/pypi_finding_fitting_demo.py" Python pattern-recognition performance writer
 
 The [PyPI demo test](https://github.com/acts-project/acts/blob/main/Python/Examples/tests/test_examples.py)
 executes this example. After `s.run()`, retrieve the results with
 `histograms = perfWriterFinder.histograms()`.
 
-For ROOT output, use [acts.examples.root.RootPatternRecognitionPerformanceWriter](https://github.com/acts-project/acts/blob/main/Examples/Io/Root/include/ActsExamples/Io/Root/RootPatternRecognitionPerformanceWriter.hpp), set the same
+For ROOT output, use `acts.examples.root.RootPatternRecognitionPerformanceWriter`, set the same
 input collection fields on its `Config`, and set `filePath`. See the
 [PyPI finding and fitting demo](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/pypi_finding_fitting_demo.py)
 for the Python writers and the
@@ -44,7 +44,7 @@ install `scipy` and `numpy` separately. The ROOT track-parameter writer also sup
 at individual track states and against calibrated measurements. The Python writer currently
 evaluates track reference parameters against truth particles.
 
-[TrackTruthMatcher](https://github.com/acts-project/acts/blob/main/Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackTruthMatcher.hpp) with `doubleMatching=True` is the standard way to produce the
+`TrackTruthMatcher(doubleMatching=True)` is the standard way to produce the
 `inputTrackParticleMatching`/`inputParticleTrackMatching` collections these writers need.
 
 ## Available histograms
@@ -60,7 +60,7 @@ for name, histogram in sorted(histograms.items()):
 
 ## Plotting
 
-One-dimensional @ref Acts::Experimental::Histogram "Histogram1", @ref Acts::Experimental::ProfileHistogram "ProfileHistogram1", and @ref Acts::Experimental::Efficiency "Efficiency1" objects support `.plot()`
+One-dimensional `Histogram1`, `ProfileHistogram1`, and `Efficiency1` objects support `.plot()`
 with matplotlib and mplhep:
 
 ```python
@@ -78,7 +78,7 @@ the residual-count bars show square-root count uncertainties. Regenerate them wi
 ![Illustrative tracking efficiency versus transverse momentum.](python/tracking_efficiency.svg){width=450px}
 ![Illustrative track-parameter residual distribution.](python/track_residual.svg){width=450px}
 
-ACTS @ref Acts::Experimental::Histogram "Histogram1" and @ref Acts::Experimental::ProfileHistogram "ProfileHistogram1" objects can also be converted to
+ACTS `Histogram1` and `ProfileHistogram1` objects can also be converted to
 [boost-histogram](https://boost-histogram.readthedocs.io/) objects for rebinning or other
 plotting tools. The converted histogram can also be serialized with Python's `pickle`, so you
 can save it and load it in a later analysis. For example, after the pattern-recognition writer
@@ -94,10 +94,10 @@ with open("n_measurements.pkl", "wb") as output:
     pickle.dump(measurements, output)
 ```
 
-For an @ref Acts::Experimental::Efficiency "Efficiency1", convert its `.accepted` and `.total` histograms separately.
+For an `Efficiency1`, convert its `.accepted` and `.total` histograms separately.
 
 For geometry and track visualization (not histogram plotting), see
-[PyVisualization2D](https://github.com/acts-project/acts/blob/main/Python/Examples/python/visualization.py) and [TrackVisualizerAlg](https://github.com/acts-project/acts/blob/main/Python/Examples/python/visualization.py) from `acts.examples.visualization`, and
+`acts.examples.visualization.PyVisualization2D` and `TrackVisualizerAlg`, and
 `Examples/Scripts/generic_plotter.py` for the YAML-configured plotting tool used by physmon.
 
 > [!note]

@@ -28,7 +28,6 @@ class IReader : public SequenceElement {
   /// std::numeric_limits<std::size_t>::max()) if undefined.
   ///
   /// The upper limit is exclusive, i.e. [0,3) means events 0, 1, and 2.
-  /// @return The half-open event range available from this reader.
   virtual std::pair<std::size_t, std::size_t> availableEvents() const = 0;
 
   /// Read data for the requested event and write it into the event store.
@@ -36,11 +35,10 @@ class IReader : public SequenceElement {
   /// As a result of the parallelization and/or skipping events, this method
   /// will most likely not be called in order. Implementations must use the
   /// event number provided to select the proper data to be read.
-  /// @param context The current event context.
-  /// @return The processing status for this event.
   virtual ProcessCode read(const AlgorithmContext& context) = 0;
 
-  /// Instruct this reader to skip over a fixed number of events.
+  /// Instructs this reader to skip over a fixed number of events
+  /// @param events
   /// @return Process code indicating if the skip was successful
   virtual ProcessCode skip(std::size_t /*events*/) {
     return ProcessCode::SUCCESS;
@@ -48,21 +46,17 @@ class IReader : public SequenceElement {
 
   /// Internal execute method forwards to the read method as mutable
   /// @param context The algorithm context
-  /// @return The processing status from read().
   ProcessCode internalExecute(const AlgorithmContext& context) final {
     return read(context);
   }
 
   /// Fulfill the algorithm interface
-  /// @return Success by default.
   ProcessCode initialize() override { return ProcessCode::SUCCESS; }
 
   /// Fulfill the algorithm interface
-  /// @return Success by default.
   ProcessCode finalize() override { return ProcessCode::SUCCESS; }
 
   /// Return the type for debug output
-  /// @return "Reader".
   std::string_view typeName() const override { return "Reader"; }
 };
 

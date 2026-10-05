@@ -2,8 +2,6 @@
 
 /// @namespace ActsFatras The ACTS Fatras fast simulation plugin
 
-/// @namespace ActsExamples The ACTS Examples framework namespace
-
 /// @namespace ActsPlugins The ACTS plugins namespace: All plugins go here.
 
 /// @namespace ActsAlignment The ACTS Alignment module
