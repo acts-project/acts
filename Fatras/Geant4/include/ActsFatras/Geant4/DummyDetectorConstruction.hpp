@@ -24,6 +24,15 @@ G4RunManager* ensureGeant4RunManager();
 /// Construct a dummy Geant4 detector.
 class DummyDetectorConstruction : public G4VUserDetectorConstruction {
  public:
+  DummyDetectorConstruction() = default;
+
+  // Owns the world volumes and must not duplicate their ownership.
+  DummyDetectorConstruction(const DummyDetectorConstruction&) = delete;
+  DummyDetectorConstruction& operator=(const DummyDetectorConstruction&) =
+      delete;
+  DummyDetectorConstruction(DummyDetectorConstruction&&) = delete;
+  DummyDetectorConstruction& operator=(DummyDetectorConstruction&&) = delete;
+
   /// Destructor
   ~DummyDetectorConstruction() override;
 
