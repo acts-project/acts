@@ -79,18 +79,15 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
           .def(py::init<>())
           .def_readwrite("sensitiveStrategy",
                          &DetrayPayloadConverter::Config::sensitiveStrategy)
-<<<<<<< HEAD
           .def_readwrite(
               "portalSegmentTolerance",
               &DetrayPayloadConverter::Config::portalSegmentTolerance)
-=======
           .def_readwrite("convertMaterial",
                          &DetrayPayloadConverter::Config::convertMaterial)
           .def_readwrite("convertSurfaceGrids",
                          &DetrayPayloadConverter::Config::convertSurfaceGrids)
           .def_readwrite("deduplicateMaterial",
                          &DetrayPayloadConverter::Config::deduplicateMaterial)
->>>>>>> 9b4fb0807 (Address comments)
           .def_property(
               "beampipeVolume",
               [](const DetrayPayloadConverter::Config& cfg) {

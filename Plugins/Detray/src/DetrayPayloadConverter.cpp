@@ -963,9 +963,6 @@ detray::io::detector_payload DetrayPayloadConverter::convertTrackingGeometry(
         if (!dthmPayload.has_value()) {
           dthmPayload.emplace();
         }
-        // NOTE: Currently, it'll always be populated by at least the
-        // homogeneous NOTE: Volume association is internal to
-        // `detray::io::material_volume_payload`
         dthmPayload->volumes.emplace_back(std::move(homogeneous));
       }
 
