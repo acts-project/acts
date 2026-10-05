@@ -176,7 +176,7 @@ def main():
     if args.map != "":
         materialDecorator = acts.IMaterialDecorator.fromFile(args.map)
 
-    detector = getOpenDataDetector(materialDecorator)
+    detector = getOpenDataDetector(materialDecorator, gen3=True)
     trackingGeometry = detector.trackingGeometry()
 
     materialSurfaces = trackingGeometry.extractMaterialSurfaces()

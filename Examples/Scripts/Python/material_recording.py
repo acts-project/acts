@@ -139,7 +139,7 @@ def main():
 
     detector = None
     if args.input == "":
-        detector = getOpenDataDetector()
+        detector = getOpenDataDetector(gen3=True)
     elif args.input.endswith(".gdml"):
         detector = acts.examples.geant4.GdmlDetector(path=args.input)
     elif args.input.endswith(".sqlite") or args.input.endswith(".db"):
