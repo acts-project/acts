@@ -75,9 +75,14 @@ constexpr std::size_t kBarrelContainerBoundaryRBins = 150;
 // reuses the Solenoid's bin count.
 constexpr std::size_t kLongStripOuterBoundaryZBins = kSolenoidZBins;
 
-// No Gen1 equivalent exists for the synthetic calorimeter collector or the
-// tracker's own outer disc boundary; kept as the original placeholder.
-constexpr std::size_t kNoGen1EquivalentBins = 10;
+// Calorimeter collector (no Gen1 equivalent). It carries nearly all of the
+// calorimeter material, which changes steeply across the barrel-endcap
+// transition (1 < |eta| < 2), so it needs fine bins: 100 z bins over the
+// resized collector length give ~80mm bins, i.e. < 0.03 in eta at |eta| ~ 1.5.
+constexpr std::size_t kCaloCollectorZBins = 100;
+// The tracker's outer disc boundary at the z extremes collects the endcap
+// calorimeter material.
+constexpr std::size_t kCaloCollectorDiscRBins = 100;
 
 // Configures `face` as a cylinder mantle: bins in (RPhi, Z). Used wherever a
 // thin cylindrical shell carries material on one of its two mantle faces --
@@ -311,8 +316,8 @@ void addCaloMaterialCollector(const BlueprintBuilder& builder,
   outer.addMaterial(
       "CaloMaterialCollectorBarrel_mat",
       [&](Acts::MaterialDesignatorBlueprintNode& mat) {
-        configureCylinderFace(mat, Face::OuterCylinder, kNoGen1EquivalentBins,
-                              kNoGen1EquivalentBins);
+        configureCylinderFace(mat, Face::OuterCylinder, kMatPhiBins,
+                              kCaloCollectorZBins);
         mat.addChild(builder.backend().makeMaterialCollector(
             kRMin, kRMax, kHalfZ, 0.0, "CaloMaterialCollectorBarrel"));
       });
@@ -332,15 +337,14 @@ std::unique_ptr<Acts::TrackingGeometry> finalizeOuter(
     Acts::Blueprint& root,
     std::shared_ptr<Acts::CylinderContainerBlueprintNode> outer,
     const Acts::GeometryContext& gctx, const Acts::Logger& logger) {
-  root.addMaterial(
-      "OpenDataDetector_disc_mat",
-      [&](Acts::MaterialDesignatorBlueprintNode& mat) {
-        configureDiscFace(mat, Face::NegativeDisc, kNoGen1EquivalentBins,
-                          kNoGen1EquivalentBins);
-        configureDiscFace(mat, Face::PositiveDisc, kNoGen1EquivalentBins,
-                          kNoGen1EquivalentBins);
-        mat.addChild(std::move(outer));
-      });
+  root.addMaterial("OpenDataDetector_disc_mat",
+                   [&](Acts::MaterialDesignatorBlueprintNode& mat) {
+                     configureDiscFace(mat, Face::NegativeDisc, kMatPhiBins,
+                                       kCaloCollectorDiscRBins);
+                     configureDiscFace(mat, Face::PositiveDisc, kMatPhiBins,
+                                       kCaloCollectorDiscRBins);
+                     mat.addChild(std::move(outer));
+                   });
   return root.construct(Acts::BlueprintOptions{}, gctx, logger);
 }
 
