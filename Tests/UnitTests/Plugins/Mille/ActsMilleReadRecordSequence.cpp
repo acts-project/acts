@@ -18,6 +18,7 @@
 #include "ActsPlugins/Mille/ActsToMille.hpp"
 
 #include <algorithm>
+#include <fstream>
 #include <map>
 #include <memory>
 #include <set>
@@ -255,6 +256,68 @@ BOOST_AUTO_TEST_CASE(GlobalsWithoutLocalsIsReadError) {
               Mille::MilleDecoder::ReadResult::error);
   // a failed read leaves the state untouched
   BOOST_CHECK_EQUAL(state.alignmentDof, 2 * Acts::eAlignmentSize);
+}
+
+BOOST_AUTO_TEST_CASE(EmptyRecordIsSkipped) {
+  ACTS_LOCAL_LOGGER(
+      Acts::getDefaultLogger("EmptyRecordIsSkipped", Acts::Logging::INFO));
+  std::vector<std::shared_ptr<Acts::Surface>> surfaces;
+  std::unordered_map<const Acts::Surface*, std::size_t> idxedAlignSurfaces;
+  for (std::size_t s = 0; s < nSurfaces; ++s) {
+    surfaces.push_back(Acts::Surface::makeShared<Acts::PlaneSurface>(
+        Acts::Transform3::Identity(),
+        std::make_shared<Acts::RectangleBounds>(10., 10.)));
+    idxedAlignSurfaces.emplace(surfaces.back().get(), s);
+  }
+
+  // Mille does not write an empty record, but a file can contain one (e.g.
+  // from concurrent writing). The binary format has no file header: write the
+  // two tracks to separate files, and join them with a record that holds only
+  // its header word.
+  const std::vector<Hit> first = {{0.01f, 0}, {0.02f, 1}};
+  const std::vector<Hit> second = {{0.03f, 2}, {0.04f, 3}, {0.05f, 4}};
+  const std::string fnameFirst = "ActsMilleReadEmptyRecord_first.dat";
+  const std::string fnameSecond = "ActsMilleReadEmptyRecord_second.dat";
+  for (const auto& [name, hits] :
+       {std::pair{fnameFirst, first}, std::pair{fnameSecond, second}}) {
+    std::unique_ptr<Mille::MilleRecord> out = Mille::spawnMilleRecord(name);
+    BOOST_REQUIRE(out != nullptr);
+    writeRecord(*out, hits);
+  }
+  const std::string fname = "ActsMilleReadEmptyRecord.dat";
+  {
+    std::ofstream out(fname, std::ios::binary);
+    out << std::ifstream(fnameFirst, std::ios::binary).rdbuf();
+    // record length (two per word), then the header word: float 0, int 0
+    const int recordLength = 2;
+    const float headerFloat = 0.f;
+    const int headerInt = 0;
+    out.write(reinterpret_cast<const char*>(&recordLength),
+              sizeof(recordLength));
+    out.write(reinterpret_cast<const char*>(&headerFloat), sizeof(headerFloat));
+    out.write(reinterpret_cast<const char*>(&headerInt), sizeof(headerInt));
+    out << std::ifstream(fnameSecond, std::ios::binary).rdbuf();
+  }
+
+  auto reader = Mille::spawnMilleReader(fname);
+  BOOST_REQUIRE(reader != nullptr);
+  BOOST_REQUIRE(reader->open(fname));
+
+  // one state for all records, as in ActsSolverFromMille: a result of 'ok'
+  // must come with the next track, not leave the previous one in the state
+  ActsAlignment::detail::TrackAlignmentState state;
+  BOOST_REQUIRE(ActsPlugins::ActsToMille::unpackMilleRecord(
+                    *reader, state, idxedAlignSurfaces, logger()) ==
+                Mille::MilleDecoder::ReadResult::OK);
+  BOOST_CHECK_EQUAL(state.measurementDim, first.size());
+  BOOST_REQUIRE(ActsPlugins::ActsToMille::unpackMilleRecord(
+                    *reader, state, idxedAlignSurfaces, logger()) ==
+                Mille::MilleDecoder::ReadResult::OK);
+  BOOST_CHECK_EQUAL(state.measurementDim, second.size());
+  BOOST_CHECK_EQUAL(state.alignedSurfaces.size(), second.size());
+  BOOST_CHECK(ActsPlugins::ActsToMille::unpackMilleRecord(
+                  *reader, state, idxedAlignSurfaces, logger()) ==
+              Mille::MilleDecoder::ReadResult::atEof);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

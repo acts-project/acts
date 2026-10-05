@@ -159,10 +159,13 @@ ProcessCode MillePedeAlignmentSandbox::execute(
     cov(4, 4) = 0.05;
     cov(5, 5) = 1e8;
 
-    // Collect source links from this track
+    // Collect source links from this track. Iterate backwards: tracks that
+    // are only backward-linked (e.g. ambiguity resolution output, which only
+    // sets the tip index) have no stem index, and the fitter matches the
+    // source links to surfaces regardless of order.
     trackSourceLinks.clear();
     trackSourceLinks.reserve(track.nTrackStates());
-    for (const auto& state : track.trackStates()) {
+    for (const auto& state : track.trackStatesReversed()) {
       if (state.hasUncalibratedSourceLink()) {
         trackSourceLinks.push_back(state.getUncalibratedSourceLink());
       }
