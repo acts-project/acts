@@ -112,7 +112,7 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
   ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
 
   std::vector<OutputSeedProperties> vOutputSeeds;
-  extractSeedsFromTheGraph(maxLevel, graphStats.first, nodeStorage, edgeStorage,
+  extractSeedsFromTheGraph(graphStats.first, nodeStorage, edgeStorage,
                            vOutputSeeds, filter);
 
   ACTS_DEBUG("GBTS created " << vOutputSeeds.size() << " seeds");
@@ -674,8 +674,7 @@ std::uint32_t GraphBasedTrackSeeder::runCCA(
 }
 
 void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
-    std::uint32_t maxLevel, std::uint32_t nEdges,
-    const GbtsNodeStorage& nodeStorage,
+    std::uint32_t nEdges, const GbtsNodeStorage& nodeStorage,
     std::vector<detail::GbtsEdge>& edgeStorage,
     std::vector<OutputSeedProperties>& vOutputSeeds,
     const GbtsTrackingFilter& filter) const {
