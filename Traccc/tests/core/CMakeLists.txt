@@ -12,6 +12,7 @@ traccc_add_test(core
    "test_axis.cpp"
    "test_copy.cpp"
    "test_grid2.cpp"
+   "test_kalman_filter_toy_detector.cpp"
    "test_populator.cpp"
    "test_pvalue.cpp"
    "test_ranges.cpp"
@@ -21,6 +22,8 @@ traccc_add_test(core
    "particle.cpp"
    LINK_LIBRARIES GTest::gtest_main vecmem::core traccc_tests_common
    traccc::core traccc::io traccc::performance traccc::simulation
+   detray::core detray::io detray::test_common detray::validation_utils
+   covfie::core
 )
 
 if(TRACCC_USE_ROOT)
