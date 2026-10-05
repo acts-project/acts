@@ -64,9 +64,9 @@ TEST_P(CkfToyDetectorTests, Run) {
   const std::string path = name + "/";
   detray::io::detector_reader_config reader_cfg{};
   reader_cfg.do_check(true).add_files(
-      (path / "toy_detector_geometry.json").native(),
-      (path / "toy_detector_surface_grids.json").native(),
-      (path / "toy_detector_homogeneous_material.json").native());
+      path + "toy_detector_geometry.json",
+      path + "toy_detector_surface_grids.json",
+      path + "toy_detector_homogeneous_material.json");
 
   auto [io_det, names] =
       detray::io::read_detector_json<traccc::default_detector>(host_mr,
