@@ -37,8 +37,8 @@ class IVolumeMaterial;
 ///
 ///   dy/ds = f(y) = (T, 1/beta, (q/p) T x B(r), 0),
 ///
-/// with any explicit @ref detail::ButcherTableau. It is not optimised. It is meant as a
-/// reference to compare other steppers against.
+/// with any explicit @ref detail::ButcherTableau. It is not optimised. It is
+/// meant as a reference to compare other steppers against.
 ///
 /// The transport jacobian is the exact derivative of the discrete step. The
 /// stepper differentiates each stage with the chain rule,
@@ -47,9 +47,8 @@ class IVolumeMaterial;
 ///   D = I + h sum_i b_i dK_i,
 ///
 /// so it works for every tableau. J_f includes the field gradient term
-/// (q/p) [T x] dB/dr. The stepper takes the gradient from the field provider,
-/// or computes it with finite differences if the provider does not implement
-/// it.
+/// (q/p) [T x] dB/dr. The stepper computes the gradient with central finite
+/// differences of the field.
 ///
 /// With embedded weights the stepper adapts the step size to
 /// @ref StepperPlainOptions::stepTolerance. The error estimate is the maximum
@@ -72,6 +71,14 @@ class GenericRungeKuttaStepper final {
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
   using Covariance = BoundMatrix;
+
+  /// Magnetic field and its spatial gradient at one position
+  struct FieldAndGradient {
+    /// Magnetic field vector
+    Vector3 field = Vector3::Zero();
+    /// Spatial gradient of the field, with gradient(i, j) = dB_i / dx_j
+    SquareMatrix3 gradient = SquareMatrix3::Zero();
+  };
 
   /// Configuration for the Runge-Kutta stepper.
   struct Config {
@@ -98,8 +105,7 @@ class GenericRungeKuttaStepper final {
     /// Include the field gradient in the transport jacobian
     bool includeFieldGradient = true;
 
-    /// Distance of the field lookups for the finite-difference gradient, if
-    /// the field provider does not implement the gradient
+    /// Distance of the field lookups for the finite-difference gradient
     double fieldGradientEpsilon = 10 * UnitConstants::um;
 
     /// Include the maximum difference of the jacobian and the embedded
@@ -155,7 +161,7 @@ class GenericRungeKuttaStepper final {
 
     /// Magnetic field at the current position, reused as the first stage of
     /// the next step. Reset whenever the position is set from outside.
-    std::optional<MagneticFieldProvider::FieldAndGradient> field;
+    std::optional<FieldAndGradient> field;
 
     /// Whether @ref field contains the gradient
     bool fieldHasGradient = false;
@@ -507,8 +513,8 @@ class GenericRungeKuttaStepper final {
   /// @param [in] pos The position of the lookup
   /// @param [in] withGradient Whether the gradient is needed
   /// @return The field and the gradient, which is zero without @p withGradient
-  Result<MagneticFieldProvider::FieldAndGradient> getFieldAndGradient(
-      State& state, const Vector3& pos, bool withGradient) const;
+  Result<FieldAndGradient> getFieldAndGradient(State& state, const Vector3& pos,
+                                               bool withGradient) const;
 
  private:
   /// Magnetic field inside of the detector

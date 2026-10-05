@@ -26,7 +26,7 @@ namespace Acts {
 
 namespace {
 
-using FieldAndGradient = MagneticFieldProvider::FieldAndGradient;
+using FieldAndGradient = GenericRungeKuttaStepper::FieldAndGradient;
 
 /// Cross product matrix W with W * v = u x v
 SquareMatrix3 crossMatrix(const Vector3& u) {
@@ -241,18 +241,32 @@ GenericRungeKuttaStepper::transportToBound(
 
 Result<FieldAndGradient> GenericRungeKuttaStepper::getFieldAndGradient(
     State& state, const Vector3& pos, bool withGradient) const {
+  FieldAndGradient result;
+  Result<Vector3> field = getField(state, pos);
+  if (!field.ok()) {
+    return Result<FieldAndGradient>::failure(field.error());
+  }
+  result.field = *field;
   if (!withGradient) {
-    Result<Vector3> field = getField(state, pos);
-    if (!field.ok()) {
-      return Result<FieldAndGradient>::failure(field.error());
+    return Result<FieldAndGradient>::success(result);
+  }
+
+  // Central finite differences, with an error proportional to epsilon^2
+  const double epsilon = state.options.fieldGradientEpsilon;
+  for (std::size_t j = 0; j < 3; ++j) {
+    Vector3 delta = Vector3::Zero();
+    delta[j] = epsilon;
+    Result<Vector3> plus = getField(state, pos + delta);
+    if (!plus.ok()) {
+      return Result<FieldAndGradient>::failure(plus.error());
     }
-    return Result<FieldAndGradient>::success({*field, SquareMatrix3::Zero()});
+    Result<Vector3> minus = getField(state, pos - delta);
+    if (!minus.ok()) {
+      return Result<FieldAndGradient>::failure(minus.error());
+    }
+    result.gradient.col(j) = (*plus - *minus) / (2. * epsilon);
   }
-  if (m_bField->providesFieldGradient()) {
-    return m_bField->getFieldAndGradient(pos, state.fieldCache);
-  }
-  return getFieldAndGradientNumerically(*m_bField, pos, state.fieldCache,
-                                        state.options.fieldGradientEpsilon);
+  return Result<FieldAndGradient>::success(result);
 }
 
 Result<double> GenericRungeKuttaStepper::step(

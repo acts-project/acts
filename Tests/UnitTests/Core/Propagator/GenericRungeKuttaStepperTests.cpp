@@ -46,7 +46,7 @@ const MagneticFieldContext mfContext;
 
 constexpr double infinity = std::numeric_limits<double>::infinity();
 
-/// A smooth, non-uniform field with an analytic gradient
+/// A smooth, non-uniform field
 ///
 ///   B = (s a y z, -s a x z, B0 + s a (x^2 + y^2)), s = B0 / L^2, a = 1/2
 class SmoothField final : public MagneticFieldProvider {
@@ -55,8 +55,7 @@ class SmoothField final : public MagneticFieldProvider {
     explicit Cache(const MagneticFieldContext& /*mctx*/) {}
   };
 
-  SmoothField(double b0, double length, bool withGradient)
-      : m_b0(b0), m_length(length), m_withGradient(withGradient) {}
+  SmoothField(double b0, double length) : m_b0(b0), m_length(length) {}
 
   MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const override {
@@ -64,44 +63,18 @@ class SmoothField final : public MagneticFieldProvider {
   }
 
   Result<Vector3> getField(
-      const Vector3& position,
+      const Vector3& p,
       MagneticFieldProvider::Cache& /*cache*/) const override {
-    return Result<Vector3>::success(evaluate(position).field);
-  }
-
-  bool providesFieldGradient() const override { return m_withGradient; }
-
-  Result<FieldAndGradient> getFieldAndGradient(
-      const Vector3& position,
-      MagneticFieldProvider::Cache& /*cache*/) const override {
-    if (!m_withGradient) {
-      return Result<FieldAndGradient>::failure(
-          MagneticFieldError::NotImplemented);
-    }
-    return Result<FieldAndGradient>::success(evaluate(position));
+    constexpr double a = 0.5;
+    const double s = m_b0 / (m_length * m_length);
+    return Result<Vector3>::success(
+        Vector3(s * a * p.y() * p.z(), -s * a * p.x() * p.z(),
+                m_b0 + s * a * (p.x() * p.x() + p.y() * p.y())));
   }
 
  private:
-  FieldAndGradient evaluate(const Vector3& p) const {
-    constexpr double a = 0.5;
-    const double s = m_b0 / (m_length * m_length);
-    const double x = p.x();
-    const double y = p.y();
-    const double z = p.z();
-    FieldAndGradient result;
-    result.field =
-        Vector3(s * a * y * z, -s * a * x * z, m_b0 + s * a * (x * x + y * y));
-    // clang-format off
-    result.gradient <<          0.,  s * a * z,  s * a * y,
-                        -s * a * z,         0., -s * a * x,
-                     2 * s * a * x, 2 * s * a * y,        0.;
-    // clang-format on
-    return result;
-  }
-
   double m_b0;
   double m_length;
-  bool m_withGradient;
 };
 
 FreeVector makeStart(const Vector3& pos, const Vector3& dir, double qop) {
@@ -330,7 +303,7 @@ BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_convergence,
           ? Case{ButcherTableau::dormandPrince54(), 1. / 1_GeV, {8, 16, 32}}
           : Case{ButcherTableau::verner98(), 1. / 0.1_GeV, {8, 12, 18}};
 
-  auto field = std::make_shared<SmoothField>(2_T, 1_m, true);
+  auto field = std::make_shared<SmoothField>(2_T, 1_m);
   const FreeVector start =
       makeStart(Vector3(100., -50., 20.), Vector3(1., 0.3, 0.2), testCase.qop);
   const double pathLength = 1_m;
@@ -378,8 +351,8 @@ BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_jacobian) {
   const double pathLength = 1_m;
   const auto options = fixedStepOptions(pathLength / 16);
 
-  auto analyticField = std::make_shared<SmoothField>(2_T, 1_m, true);
-  const GenericRungeKuttaStepper stepper(analyticField);
+  auto field = std::make_shared<SmoothField>(2_T, 1_m);
+  const GenericRungeKuttaStepper stepper(field);
 
   FreeMatrix numeric;
   for (std::size_t j = 0; j < eFreeSize; ++j) {
@@ -402,14 +375,6 @@ BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_jacobian) {
   // directly.
   CHECK_CLOSE_OR_SMALL(analytic.jacTransport, numeric, 1e-5, 1e-5);
 
-  // A field without the analytic gradient falls back to finite differences
-  auto numericField = std::make_shared<SmoothField>(2_T, 1_m, false);
-  const GenericRungeKuttaStepper numericStepper(numericField);
-  const auto fallback =
-      propagateFree(numericStepper, options, start, pathLength, true);
-  CHECK_CLOSE_OR_SMALL(fallback.jacTransport, analytic.jacTransport, 1e-6,
-                       1e-8);
-
   // Without the gradient term the jacobian is wrong
   auto noGradientOptions = options;
   noGradientOptions.includeFieldGradient = false;
@@ -424,7 +389,7 @@ BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_adaptive,
                      boost::unit_test::data::make({0, 1}), tableauIndex) {
   const auto tableau = tableauIndex == 0 ? ButcherTableau::dormandPrince54()
                                          : ButcherTableau::verner98();
-  auto field = std::make_shared<SmoothField>(2_T, 1_m, true);
+  auto field = std::make_shared<SmoothField>(2_T, 1_m);
   const FreeVector start =
       makeStart(Vector3(100., -50., 20.), Vector3(1., 0.3, 0.2), 1. / 1_GeV);
   const double pathLength = 1_m;
