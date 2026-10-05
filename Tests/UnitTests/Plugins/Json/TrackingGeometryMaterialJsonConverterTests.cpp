@@ -147,8 +147,9 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentUnits) {
       if (before.at("material").at("kind") == "material") {
         for (const auto* field : {"molar_density", "molar_electron_density"}) {
           BOOST_CHECK_CLOSE_FRACTION(
-              after.at("material").at(field).get<double>(),
-              before.at("material").at(field).get<double>() * 1e-6, 1e-6);
+              after.at("material").at(field).template get<double>(),
+              before.at("material").at(field).template get<double>() * 1e-6,
+              1e-6);
         }
       }
     } else if (before.is_object()) {
