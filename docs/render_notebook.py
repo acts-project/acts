@@ -39,6 +39,7 @@ imports -- has to be in the environment it is run in, e.g. via `uv run --with`.
 
 import re
 import sys
+from importlib.metadata import distribution
 from pathlib import Path
 from typing import Annotated
 
@@ -146,7 +147,18 @@ def main(
         notebook, {"metadata": {"path": str(source.parent)}}
     )
 
-    markdown, resources = MarkdownExporter().from_notebook_node(notebook)
+    # uv can install this script and its --with dependencies in separate
+    # environments. Jupyter's default search paths then follow sys.prefix
+    # rather than the environment containing nbconvert's template data.
+    nbconvert_dist = distribution("nbconvert")
+    template_basedirs = [
+        str(nbconvert_dist.locate_file(file).parent.parent)
+        for file in nbconvert_dist.files or []
+        if file.as_posix().endswith("nbconvert/templates/markdown/conf.json")
+    ]
+    markdown, resources = MarkdownExporter(
+        extra_template_basedirs=template_basedirs
+    ).from_notebook_node(notebook)
     markdown = add_page_id(
         to_doxygen_math(markdown),
         page_id,
