@@ -37,7 +37,7 @@ class IVolumeMaterial;
 ///
 ///   dy/ds = f(y) = (T, 1/beta, (q/p) T x B(r), 0),
 ///
-/// with any explicit @ref detail::ButcherTableau. It is not optimised. It is
+/// with any explicit `detail::ButcherTableau`. It is not optimised. It is
 /// meant as a reference to compare other steppers against.
 ///
 /// The transport jacobian is the exact derivative of the discrete step. The
