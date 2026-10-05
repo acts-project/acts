@@ -19,14 +19,19 @@ ScopedTimer::ScopedTimer(const std::string& name, const Logger& logger,
   m_start = clock_type::now();
 }
 
-ScopedTimer::~ScopedTimer() {
-  auto end = clock_type::now();
-  auto duration =
-      std::chrono::duration_cast<std::chrono::microseconds>(end - m_start);
-  if (m_logger->doPrint(m_lvl)) {
-    std::ostringstream oss;
-    oss << m_name << " took " << (duration.count() * 1e-3) << " ms";
-    m_logger->log(m_lvl, oss.str());
+ScopedTimer::~ScopedTimer() noexcept {
+  try {
+    auto end = clock_type::now();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - m_start);
+    if (m_logger->doPrint(m_lvl)) {
+      std::ostringstream oss;
+      oss << m_name << " took "
+          << (static_cast<double>(duration.count()) * 1e-3) << " ms";
+      m_logger->log(m_lvl, oss.str());
+    }
+  } catch (...) {
+    // Timing output is best effort and must not interrupt stack unwinding.
   }
 }
 
@@ -36,14 +41,14 @@ AveragingScopedTimer::AveragingScopedTimer(const std::string& name,
     : m_name(name), m_lvl(lvl), m_logger(&logger) {}
 
 void AveragingScopedTimer::addSample(std::chrono::nanoseconds duration) {
-  const double ns = static_cast<double>(duration.count());
+  const auto ns = static_cast<double>(duration.count());
   m_sumDuration.fetch_add(ns, std::memory_order_relaxed);
   m_sumDurationSquared.fetch_add(ns * ns, std::memory_order_relaxed);
   m_nSamples.fetch_add(1, std::memory_order_relaxed);
 }
 
 AveragingScopedTimer::Sample::Sample(AveragingScopedTimer& parent)
-    : m_parent(&parent), m_start(clock_type::now()) {}
+    : m_parent(&parent) {}
 
 AveragingScopedTimer::Sample::Sample(Sample&& other) noexcept
     : m_parent(other.m_parent), m_start(other.m_start) {
@@ -65,24 +70,30 @@ AveragingScopedTimer::Sample::~Sample() {
   }
 }
 
-AveragingScopedTimer::~AveragingScopedTimer() {
-  if (m_logger->doPrint(m_lvl)) {
-    const double sumDuration = m_sumDuration.load(std::memory_order_relaxed);
-    const double sumDurationSquared =
-        m_sumDurationSquared.load(std::memory_order_relaxed);
-    const std::size_t nSamples = m_nSamples.load(std::memory_order_relaxed);
-    std::ostringstream oss;
-    if (nSamples > 0) {
-      double mean = sumDuration / nSamples;
-      double stddev = std::sqrt(sumDurationSquared / nSamples - mean * mean);
-      oss << m_name << " took " << (sumDuration * 1e-6) << " ms total, "
-          << (mean * 1e-3) << " us +- " << (stddev * 1e-3)
-          << " us per sample (#" << nSamples << ")";
-    } else {
-      oss << m_name << " took " << (sumDuration * 1e-6)
-          << " ms total (no samples)";
+AveragingScopedTimer::~AveragingScopedTimer() noexcept {
+  try {
+    if (m_logger->doPrint(m_lvl)) {
+      const double sumDuration = m_sumDuration.load(std::memory_order_relaxed);
+      const double sumDurationSquared =
+          m_sumDurationSquared.load(std::memory_order_relaxed);
+      const std::size_t nSamples = m_nSamples.load(std::memory_order_relaxed);
+      std::ostringstream oss;
+      if (nSamples > 0) {
+        const auto sampleCount = static_cast<double>(nSamples);
+        double mean = sumDuration / sampleCount;
+        double stddev =
+            std::sqrt(sumDurationSquared / sampleCount - mean * mean);
+        oss << m_name << " took " << (sumDuration * 1e-6) << " ms total, "
+            << (mean * 1e-3) << " us +- " << (stddev * 1e-3)
+            << " us per sample (#" << nSamples << ")";
+      } else {
+        oss << m_name << " took " << (sumDuration * 1e-6)
+            << " ms total (no samples)";
+      }
+      m_logger->log(m_lvl, oss.str());
     }
-    m_logger->log(m_lvl, oss.str());
+  } catch (...) {
+    // Timing output is best effort and must not interrupt stack unwinding.
   }
 }
 
