@@ -80,9 +80,13 @@ constexpr std::size_t kLongStripOuterBoundaryZBins = kSolenoidZBins;
 // transition (1 < |eta| < 2), so it needs fine bins: 100 z bins over the
 // resized collector length give ~80mm bins, i.e. < 0.03 in eta at |eta| ~ 1.5.
 constexpr std::size_t kCaloCollectorZBins = 100;
-// The tracker's outer disc boundary at the z extremes collects the endcap
-// calorimeter material.
-constexpr std::size_t kCaloCollectorDiscRBins = 100;
+// The disc collectors carry the endcap calorimeter material. Its inner edge
+// (0 -> ~105 X0 between r ~205mm and ~320mm, i.e. 3.0 < |eta| < 3.45) needs
+// fine radial bins: 400 bins over the disc give ~3mm. The calorimeter is
+// nearly phi-symmetric, so 36 phi bins suffice and keep the bin count (and
+// thus the statistics per bin) at that of 144 x 100.
+constexpr std::size_t kCaloCollectorDiscRBins = 400;
+constexpr std::size_t kCaloCollectorDiscPhiBins = 36;
 
 // Configures `face` as a cylinder mantle: bins in (RPhi, Z). Used wherever a
 // thin cylindrical shell carries material on one of its two mantle faces --
@@ -294,7 +298,7 @@ void addOuterBoundaryMaterial(Acts::ContainerBlueprintNode& outer,
 // wide in total, so the collector is centered in it with as much clearance
 // as that gap allows on either side (~15mm to the Solenoid, ~25mm to the
 // ECal). Added as one more radial shell of the tracker stack, exactly like
-// @ref addPassiveCylinder adds the Solenoid. Its z half-length (3160mm) is
+// @ref addPassiveCylinder adds the Solenoid. Its z half-length (3154mm) is
 // deliberately the longest of all tracker shells, so that it sets the
 // tracker's z-extent: it lies beyond every tracker envelope (|z| <= 3150mm),
 // so every subsystem is lengthened with gap volumes at its ends (Gap resize
@@ -302,6 +306,11 @@ void addOuterBoundaryMaterial(Acts::ContainerBlueprintNode& outer,
 // material faces of its outermost endcap layer, which can't be merged with
 // the other shells' end faces during the radial stacking. The matching two
 // disc collectors sit just beyond, see @ref addCaloMaterialCollectorDisc.
+// The exact value 1215mm * 3180mm / 1225mm = 3154mm makes the line from the
+// origin through the end of the material face (r=1215mm) hit the disc
+// collectors' material faces (|z|=3180mm) exactly at their outer edge
+// (r=1225mm): tracks from the origin then cross exactly one of the two
+// collectors, with neither overlap (double counting) nor gap.
 // Material is designated on the inner face (r=1215mm): the outer face is
 // the outer face of the whole tracker, which is merged with the disc
 // collectors' outer faces when they are stacked along z.
@@ -316,7 +325,7 @@ void addCaloMaterialCollector(const BlueprintBuilder& builder,
                               Acts::ContainerBlueprintNode& outer) {
   constexpr double kRMin = 1215 * Acts::UnitConstants::mm;
   constexpr double kRMax = 1225 * Acts::UnitConstants::mm;
-  constexpr double kHalfZ = 3160 * Acts::UnitConstants::mm;
+  constexpr double kHalfZ = 3154 * Acts::UnitConstants::mm;
 
   outer.addMaterial(
       "CaloMaterialCollectorBarrel_mat",
@@ -360,7 +369,7 @@ void addCaloMaterialCollectorDisc(const BlueprintBuilder& builder,
       name + "_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
         configureDiscFace(mat,
                           positive ? Face::PositiveDisc : Face::NegativeDisc,
-                          kMatPhiBins, kCaloCollectorDiscRBins);
+                          kCaloCollectorDiscPhiBins, kCaloCollectorDiscRBins);
         mat.addChild(builder.backend().makeMaterialCollector(
             kRMin, kRMax, kHalfZ, positive ? kAbsZ : -kAbsZ, name));
       });
