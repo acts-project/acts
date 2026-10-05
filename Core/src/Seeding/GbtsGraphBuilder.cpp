@@ -91,8 +91,6 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
   edgeStorage.reserve(maxEdges);
 
-  std::uint32_t nEdges = 0;
-
   // scale factor to get indexes of binned beamspot
   const float z0HistoCoeff =
       detail::kGbtsZ0HistogramBins / (m_cfg.maxZ0 - m_cfg.minZ0 + 1e-6f);
@@ -187,7 +185,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
     for (SpacePointIndex n1Idx = B1.nodes.first; n1Idx < B1.nodes.second;
          ++n1Idx) {
       // initialization using the top watermark of the edge storage
-      edgeInfo[n1Idx].firstEdge = nEdges;
+      edgeInfo[n1Idx].firstEdge =
+          static_cast<std::uint32_t>(edgeStorage.size());
 
       // the counter for the incoming graph edges created for n1
       std::uint16_t numCreatedEdges = 0;
@@ -391,13 +390,14 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
           const float dPhi2 = curv * r2c;
           const float dPhi1 = curv * r1c;
 
-          if (nEdges < maxEdges) {
+          if (edgeStorage.size() < maxEdges) {
+            const auto outEdgeIdx =
+                static_cast<std::uint32_t>(edgeStorage.size());
+
             edgeStorage.emplace_back(n1Idx, n2Idx, barrelOrder2, expEta, curv,
                                      phi1 + dPhi1);
 
             ++numCreatedEdges;
-
-            const std::uint32_t outEdgeIdx = nEdges;
 
             const float uat2 = invExpEta;
             const float phi2u = phi2 + dPhi2;
@@ -504,7 +504,6 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
               nConnections++;
             }
-            nEdges++;
           }
         }  // loop over n2 (outer) nodes inside a sliding window on n2 bin
       }  // loop over sliding windows associated with n2 bins
@@ -531,19 +530,18 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
     }  // loop over n1 (inner) nodes
   }  // loop over bin groups: a single n1 bin and multiple n2 bins
 
-  if (nEdges >= maxEdges) {
+  if (edgeStorage.size() >= maxEdges) {
     ACTS_WARNING(
         "Maximum number of graph edges exceeded - possible efficiency loss "
-        << nEdges);
+        << edgeStorage.size());
   }
-  graph.nEdges = nEdges;
   graph.nConnections = nConnections;
   return graph;
 }
 
 std::uint32_t GbtsGraphBuilder::runCCA(GbtsGraph& graph) const {
-  const std::uint32_t nEdges = graph.nEdges;
   std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
+  const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
 
   std::uint32_t maxLevel = 0;
 
@@ -614,8 +612,8 @@ std::uint32_t GbtsGraphBuilder::runCCA(GbtsGraph& graph) const {
 
 std::vector<detail::GbtsEdge*> GbtsGraphBuilder::extractChainHeads(
     GbtsGraph& graph) const {
-  const std::uint32_t nEdges = graph.nEdges;
   std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
+  const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
 
   const auto minLevel = static_cast<std::uint8_t>(m_cfg.minSeedLevel);
   // `addTriplets` accepts a chain one level short. Signed: an uncollected

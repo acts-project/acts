@@ -26,11 +26,8 @@ namespace Acts::Experimental {
 
 /// The doublet graph of the GBTS workflow, as built by `GbtsGraphBuilder`.
 struct GbtsGraph {
-  /// The graph edges, i.e. the doublets. Only the first `nEdges` are in use.
+  /// The graph edges, i.e. the doublets.
   std::vector<detail::GbtsEdge> edgeStorage;
-
-  /// Number of edges in the graph.
-  std::uint32_t nEdges = 0;
 
   /// Number of links between edges.
   std::uint32_t nConnections = 0;

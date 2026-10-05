@@ -92,10 +92,11 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
   GbtsGraph graph =
       graphBuilder.buildTheGraph(roi, nodeStorage, options.bFieldInZ);
 
-  ACTS_DEBUG("Created graph with " << graph.nEdges << " edges and "
-                                   << graph.nConnections << " edge links");
+  ACTS_DEBUG("Created graph with " << graph.edgeStorage.size()
+                                   << " edges and " << graph.nConnections
+                                   << " edge links");
 
-  if (graph.nEdges == 0 || graph.nConnections == 0) {
+  if (graph.edgeStorage.empty() || graph.nConnections == 0) {
     ACTS_WARNING("Missing edges or edge connections");
   }
 
