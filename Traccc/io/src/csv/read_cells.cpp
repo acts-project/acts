@@ -150,13 +150,13 @@ void read_cells(edm::silicon_cell_collection::host& cells,
       ddIndex = it->second;
     }
 
-    // Default placeholder for RDO ID
-    constexpr std::uint64_t DEFAULT_RDO_ID = 0;
+    // Default placeholder for USER DATA
+    constexpr std::uint64_t DEFAULT_USER_DATA = 0;
 
     // Add the cells to the output.
     for (const csv::cell& cell : cellz) {
       cells.push_back(
-          {cell.channel0, cell.channel1, cell.value, cell.timestamp, ddIndex, DEFAULT_RDO_ID});
+          {cell.channel0, cell.channel1, cell.value, cell.timestamp, ddIndex, DEFAULT_USER_DATA});
     }
   }
 }
