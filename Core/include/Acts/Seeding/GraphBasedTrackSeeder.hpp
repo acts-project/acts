@@ -329,13 +329,12 @@ class GraphBasedTrackSeeder {
                        std::vector<detail::GbtsEdge>& edgeStorage) const;
 
   /// Extract seed candidates from the graph.
-  /// @param maxLevel Maximum level in the graph
   /// @param nEdges Number of edges
   /// @param nodeStorage Storage containing the graph nodes
   /// @param edgeStorage Storage containing edges
   /// @param vOutputSeeds Output vector for seed candidates
   /// @param filter Tracking filter to be applied
-  void extractSeedsFromTheGraph(std::uint32_t maxLevel, std::uint32_t nEdges,
+  void extractSeedsFromTheGraph(std::uint32_t nEdges,
                                 const GbtsNodeStorage& nodeStorage,
                                 std::vector<detail::GbtsEdge>& edgeStorage,
                                 std::vector<OutputSeedProperties>& vOutputSeeds,
