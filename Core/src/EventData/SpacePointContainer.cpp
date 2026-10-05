@@ -79,6 +79,10 @@ SpacePointContainer &SpacePointContainer::operator=(
 }
 
 void SpacePointContainer::copyColumns(const SpacePointContainer &other) {
+  // Assignment replaces the schema as well as the stored values. Rebuild all
+  // lookup pointers so no entry refers to an old or destroyed column.
+  m_allColumns.clear();
+  m_dynamicColumns.clear();
   m_allColumns.reserve(other.m_allColumns.size());
   m_dynamicColumns.reserve(other.m_dynamicColumns.size());
 
@@ -108,6 +112,8 @@ void SpacePointContainer::copyColumns(const SpacePointContainer &other) {
 }
 
 void SpacePointContainer::moveColumns(SpacePointContainer &other) noexcept {
+  m_allColumns.clear();
+  m_dynamicColumns.clear();
   m_allColumns.reserve(other.m_allColumns.size());
   m_dynamicColumns.reserve(other.m_dynamicColumns.size());
 
