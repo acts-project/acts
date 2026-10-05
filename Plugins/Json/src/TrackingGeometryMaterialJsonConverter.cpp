@@ -606,50 +606,51 @@ std::unique_ptr<const ISurfaceMaterial> decodeMarker(
   return std::make_unique<MergedMaterialMarker>(origins);
 }
 
+template <typename Storage>
+nlohmann::json encodeGridStorage(const Storage& s, const GridSurfaceMaterial& m,
+                                 EncodeContext& context) {
+  nlohmann::json storage;
+  const auto n = m.multiAxis().getNBins();
+  if constexpr (std::is_same_v<Storage, GridSurfaceMaterial::Direct>) {
+    storage = {{"kind", "direct"}, {"values", nlohmann::json::array()}};
+  } else if constexpr (std::is_same_v<Storage, GridSurfaceMaterial::Indexed>) {
+    storage = {{"kind", "indexed"},
+               {"slabs", encodeSlabs(s.material)},
+               {"indices", nlohmann::json::array()}};
+  } else {
+    storage = {{"kind", "globally-indexed"},
+               {"store", context.storeId(s.material)},
+               {"indices", nlohmann::json::array()}};
+  }
+  for (std::size_t i1 = 0; i1 < n[1] + 2; ++i1) {
+    for (std::size_t i0 = 0; i0 < n[0] + 2; ++i0) {
+      auto bin = m.multiAxis().getGlobalBinFromLocalBins({i0, i1});
+      if constexpr (std::is_same_v<Storage, GridSurfaceMaterial::Direct>) {
+        storage["values"].emplace_back(encodeSlab(s.at(bin)));
+      } else {
+        const auto size = [&] {
+          if constexpr (std::is_same_v<Storage, GridSurfaceMaterial::Indexed>) {
+            return s.material.size();
+          } else {
+            return s.material->size();
+          }
+        }();
+        check(s.indices.at(bin) < size, "grid slab index out of range");
+        storage["indices"].emplace_back(s.indices.at(bin));
+      }
+    }
+  }
+  return storage;
+}
+
 nlohmann::json encodeGrid(const GridSurfaceMaterial& m,
                           EncodeContext& context) {
   nlohmann::json axes = nlohmann::json::array();
   for (const auto& a : m.binning().axisSpecs()) {
     axes.emplace_back(encodeAxis(a));
   }
-  nlohmann::json storage;
-  const auto n = m.multiAxis().getNBins();
-  std::visit(
-      [&]<typename T>(const T& s) {
-        using Storage = std::decay_t<decltype(s)>;
-        if constexpr (std::is_same_v<Storage, GridSurfaceMaterial::Direct>) {
-          storage = {{"kind", "direct"}, {"values", nlohmann::json::array()}};
-        } else if constexpr (std::is_same_v<Storage,
-                                            GridSurfaceMaterial::Indexed>) {
-          storage = {{"kind", "indexed"},
-                     {"slabs", encodeSlabs(s.material)},
-                     {"indices", nlohmann::json::array()}};
-        } else {
-          storage = {{"kind", "globally-indexed"},
-                     {"store", context.storeId(s.material)},
-                     {"indices", nlohmann::json::array()}};
-        }
-        for (std::size_t i1 = 0; i1 < n[1] + 2; ++i1) {
-          for (std::size_t i0 = 0; i0 < n[0] + 2; ++i0) {
-            auto bin = m.multiAxis().getGlobalBinFromLocalBins({i0, i1});
-            if constexpr (std::is_same_v<Storage,
-                                         GridSurfaceMaterial::Direct>) {
-              storage["values"].emplace_back(encodeSlab(s.at(bin)));
-            } else {
-              const auto size = [&] {
-                if constexpr (std::is_same_v<Storage,
-                                             GridSurfaceMaterial::Indexed>) {
-                  return s.material.size();
-                } else {
-                  return s.material->size();
-                }
-              }();
-              check(s.indices.at(bin) < size, "grid slab index out of range");
-              storage["indices"].emplace_back(s.indices.at(bin));
-            }
-          }
-        }
-      },
+  const auto storage = std::visit(
+      [&](const auto& value) { return encodeGridStorage(value, m, context); },
       m.storage());
   return {{"kind", "grid"},
           {"settings", settings(m)},

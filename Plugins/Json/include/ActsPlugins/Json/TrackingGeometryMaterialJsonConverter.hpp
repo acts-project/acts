@@ -59,7 +59,7 @@ class TrackingGeometryMaterialJsonConverter {
 
    private:
     friend class TrackingGeometryMaterialJsonConverter;
-    std::map<std::string, SlabStore, std::less<std::string>> m_stores;
+    std::map<std::string, SlabStore, std::less<>> m_stores;
   };
   /// Per-document decoding state, also available to application decoders.
   class DecodeContext {
@@ -92,7 +92,7 @@ class TrackingGeometryMaterialJsonConverter {
    private:
     friend class TrackingGeometryMaterialJsonConverter;
     std::array<double, 4> m_units;
-    std::map<std::string, SlabStore, std::less<std::string>> m_stores;
+    std::map<std::string, SlabStore, std::less<>> m_stores;
   };
   /// Concrete surface encoder dispatch.
   using SurfaceEncoder =
