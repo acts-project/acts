@@ -17,6 +17,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldError.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/GenericRungeKuttaStepper.hpp"
@@ -46,7 +47,7 @@ const MagneticFieldContext mfContext;
 
 constexpr double infinity = std::numeric_limits<double>::infinity();
 
-/// A smooth, non-uniform field
+/// A smooth, non-uniform field with an optional analytic gradient
 ///
 ///   B = (s a y z, -s a x z, B0 + s a (x^2 + y^2)), s = B0 / L^2, a = 1/2
 class SmoothField final : public MagneticFieldProvider {
@@ -55,7 +56,8 @@ class SmoothField final : public MagneticFieldProvider {
     explicit Cache(const MagneticFieldContext& /*mctx*/) {}
   };
 
-  SmoothField(double b0, double length) : m_b0(b0), m_length(length) {}
+  SmoothField(double b0, double length, bool withGradient = false)
+      : m_b0(b0), m_length(length), m_withGradient(withGradient) {}
 
   MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const override {
@@ -63,18 +65,44 @@ class SmoothField final : public MagneticFieldProvider {
   }
 
   Result<Vector3> getField(
-      const Vector3& p,
+      const Vector3& position,
       MagneticFieldProvider::Cache& /*cache*/) const override {
-    constexpr double a = 0.5;
-    const double s = m_b0 / (m_length * m_length);
-    return Result<Vector3>::success(
-        Vector3(s * a * p.y() * p.z(), -s * a * p.x() * p.z(),
-                m_b0 + s * a * (p.x() * p.x() + p.y() * p.y())));
+    return Result<Vector3>::success(evaluate(position).field);
+  }
+
+  bool providesFieldGradient() const override { return m_withGradient; }
+
+  Result<FieldAndGradient> getFieldAndGradient(
+      const Vector3& position,
+      MagneticFieldProvider::Cache& /*cache*/) const override {
+    if (!m_withGradient) {
+      return Result<FieldAndGradient>::failure(
+          MagneticFieldError::NotImplemented);
+    }
+    return Result<FieldAndGradient>::success(evaluate(position));
   }
 
  private:
+  FieldAndGradient evaluate(const Vector3& p) const {
+    constexpr double a = 0.5;
+    const double s = m_b0 / (m_length * m_length);
+    const double x = p.x();
+    const double y = p.y();
+    const double z = p.z();
+    FieldAndGradient result;
+    result.field =
+        Vector3(s * a * y * z, -s * a * x * z, m_b0 + s * a * (x * x + y * y));
+    // clang-format off
+    result.gradient <<          0.,  s * a * z,  s * a * y,
+                        -s * a * z,         0., -s * a * x,
+                     2 * s * a * x, 2 * s * a * y,        0.;
+    // clang-format on
+    return result;
+  }
+
   double m_b0;
   double m_length;
+  bool m_withGradient;
 };
 
 FreeVector makeStart(const Vector3& pos, const Vector3& dir, double qop) {
@@ -382,6 +410,15 @@ BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_jacobian) {
       propagateFree(stepper, noGradientOptions, start, pathLength, true);
   BOOST_CHECK_GT((noGradient.jacTransport - numeric).cwiseAbs().maxCoeff(),
                  1e-3);
+
+  // The analytic gradient of the provider gives the same jacobian as the
+  // finite differences
+  auto analyticField = std::make_shared<SmoothField>(2_T, 1_m, true);
+  const GenericRungeKuttaStepper analyticStepper(analyticField);
+  const auto withProviderGradient =
+      propagateFree(analyticStepper, options, start, pathLength, true);
+  CHECK_CLOSE_OR_SMALL(withProviderGradient.jacTransport, analytic.jacTransport,
+                       1e-6, 1e-8);
 }
 
 /// The adaptive step size meets the tolerance.

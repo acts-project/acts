@@ -47,8 +47,9 @@ class IVolumeMaterial;
 ///   D = I + h sum_i b_i dK_i,
 ///
 /// so it works for every tableau. J_f includes the field gradient term
-/// (q/p) [T x] dB/dr. The stepper computes the gradient with central finite
-/// differences of the field.
+/// (q/p) [T x] dB/dr. The stepper takes the gradient from the field provider,
+/// or computes it with central finite differences of the field if the
+/// provider does not implement it.
 ///
 /// With embedded weights the stepper adapts the step size to
 /// @ref StepperPlainOptions::stepTolerance. The error estimate is the maximum
@@ -72,13 +73,8 @@ class GenericRungeKuttaStepper final {
   /// Type alias for covariance matrix
   using Covariance = BoundMatrix;
 
-  /// Magnetic field and its spatial gradient at one position
-  struct FieldAndGradient {
-    /// Magnetic field vector
-    Vector3 field = Vector3::Zero();
-    /// Spatial gradient of the field, with gradient(i, j) = dB_i / dx_j
-    SquareMatrix3 gradient = SquareMatrix3::Zero();
-  };
+  /// Type alias for the magnetic field and its gradient
+  using FieldAndGradient = MagneticFieldProvider::FieldAndGradient;
 
   /// Configuration for the Runge-Kutta stepper.
   struct Config {
@@ -105,7 +101,8 @@ class GenericRungeKuttaStepper final {
     /// Include the field gradient in the transport jacobian
     bool includeFieldGradient = true;
 
-    /// Distance of the field lookups for the finite-difference gradient
+    /// Distance of the field lookups for the finite-difference gradient, if
+    /// the field provider does not implement the gradient
     double fieldGradientEpsilon = 10 * UnitConstants::um;
 
     /// Include the maximum difference of the jacobian and the embedded
