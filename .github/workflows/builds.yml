@@ -970,7 +970,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for Python tests and cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
 
       - name: Restore ccache snapshot
         uses: ./.github/actions/ccache-s3
@@ -1081,7 +1081,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         continue-on-error: true
 
       - name: Restore ccache snapshot
@@ -1370,7 +1370,7 @@ jobs:
         uses: cvmfs-contrib/github-action-cvmfs@72f2a8d366043978d6aebee154bc9ed321c2f2a8 # v5.6
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         continue-on-error: true
 
       - name: Restore ccache snapshot
@@ -1544,7 +1544,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         continue-on-error: true
 
       - name: Restore ccache snapshot
@@ -1658,7 +1658,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
 
       - name: Restore ccache snapshot
         uses: ./.github/actions/ccache-s3
