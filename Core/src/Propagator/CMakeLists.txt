@@ -3,8 +3,8 @@ target_sources(
     PRIVATE
         ButcherTableau.cpp
         EigenStepperError.cpp
-        HelixStepper.cpp
         GenericRungeKuttaStepper.cpp
+        HelixStepper.cpp
         MultiStepperError.cpp
         NavigatorError.cpp
         NavigatorOptions.cpp

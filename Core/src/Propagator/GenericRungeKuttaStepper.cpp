@@ -103,8 +103,7 @@ GenericRungeKuttaStepper::GenericRungeKuttaStepper(const Config& config)
 
 GenericRungeKuttaStepper::State GenericRungeKuttaStepper::makeState(
     const Options& options) const {
-  State state{options, m_bField->makeCache(options.magFieldContext)};
-  return state;
+  return State{options, m_bField->makeCache(options.magFieldContext)};
 }
 
 void GenericRungeKuttaStepper::initialize(State& state,
@@ -257,9 +256,8 @@ Result<FieldAndGradient> GenericRungeKuttaStepper::getFieldAndGradient(
 }
 
 Result<double> GenericRungeKuttaStepper::step(
-    State& state, Direction propDir, const IVolumeMaterial* material) const {
-  static_cast<void>(material);
-
+    State& state, Direction propDir,
+    const IVolumeMaterial* /*material*/) const {
   const ButcherTableau& tableau = *m_tableau;
   const std::size_t nStages = tableau.stages();
   const bool withJacobian = state.cov.has_value();
@@ -379,6 +377,14 @@ Result<double> GenericRungeKuttaStepper::step(
     }
   }
 
+  // The field at the end is the first stage of the next step. Look it up
+  // before the state changes, so that a failure leaves the state unchanged.
+  auto endField =
+      getFieldAndGradient(state, end.segment<3>(eFreePos0), withGradient);
+  if (!endField.ok()) {
+    return endField.error();
+  }
+
   const Vector3 endDir = end.segment<3>(eFreeDir0);
   const double endDirNorm = endDir.norm();
 
@@ -400,13 +406,6 @@ Result<double> GenericRungeKuttaStepper::step(
 
   end.segment<3>(eFreeDir0) /= endDirNorm;
   state.pars = end;
-
-  // The field at the end is the first stage of the next step.
-  auto endField =
-      getFieldAndGradient(state, end.segment<3>(eFreePos0), withGradient);
-  if (!endField.ok()) {
-    return endField.error();
-  }
   state.field = *endField;
   state.fieldHasGradient = withGradient;
 
