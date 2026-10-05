@@ -21,7 +21,6 @@ namespace detray {
 
 /// Map volume indices to volume names and vice versa
 struct name_map {
-
   /// Ensure default constructor is present for some HIP builds
   constexpr name_map() = default;
 
