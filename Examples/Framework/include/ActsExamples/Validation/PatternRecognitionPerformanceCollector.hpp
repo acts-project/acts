@@ -88,13 +88,13 @@ class PatternRecognitionPerformanceCollector {
     /// Mean completeness across all tracks with a computed completeness.
     double meanCompleteness() const {
       return nTotalQualityTracks > 0
-                 ? sumCompleteness / static_cast<double>(nTotalQualityTracks)
+                 ? sumCompleteness / nTotalQualityTracks
                  : 0;
     }
     /// Mean purity across all tracks with a computed purity.
     double meanPurity() const {
       return nTotalQualityTracks > 0
-                 ? sumPurity / static_cast<double>(nTotalQualityTracks)
+                 ? sumPurity / nTotalQualityTracks
                  : 0;
     }
   };
