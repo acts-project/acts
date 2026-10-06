@@ -11,6 +11,8 @@
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
+#include <cmath>
+#include <limits>
 #include <stdexcept>
 
 #include <boost/mp11.hpp>
@@ -20,8 +22,21 @@ namespace Acts {
 
 namespace {
 
+/// How the cuts on deltaZ and on the collision region are made, chosen in
+/// create(). Where a range is symmetric about zero, it is tested with one
+/// comparison on the absolute value; an unbounded deltaZ range rejects no
+/// candidate, so its cut is not made.
+enum class ZCuts {
+  /// two comparisons each
+  eGeneral,
+  /// symmetric deltaZ range and collision region
+  eSymmetric,
+  /// symmetric collision region, unbounded deltaZ range
+  eSymmetricNoDeltaZ,
+};
+
 template <bool isBottomCandidate, bool interactionPointCut, bool sortedByR,
-          bool experimentCuts, bool useTime>
+          bool experimentCuts, bool useTime, ZCuts zCuts>
 class Impl final : public DoubletSeedFinder {
  public:
   explicit Impl(const DerivedConfig& config) : m_cfg(config) {}
@@ -70,6 +85,11 @@ class Impl final : public DoubletSeedFinder {
       // prediction
       return static_cast<bool>(static_cast<int>(value < min) |
                                static_cast<int>(value > max));
+    };
+    // Same result as outsideRangeCheck(value, -max, max) for every input, but
+    // one comparison instead of two.
+    const auto outsideSymmetricRange = [](const float value, const float max) {
+      return std::abs(value) > max;
     };
 
     const auto calculateError = [&](float varianceZO, float varianceRO,
@@ -121,8 +141,15 @@ class Impl final : public DoubletSeedFinder {
         deltaZ = zO - zM;
       }
 
-      if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
-        continue;
+      if constexpr (zCuts == ZCuts::eGeneral) {
+        if (outsideRangeCheck(deltaZ, m_cfg.deltaZMin, m_cfg.deltaZMax)) {
+          continue;
+        }
+      } else if constexpr (zCuts == ZCuts::eSymmetric) {
+        // deltaZMin is -deltaZMax
+        if (outsideSymmetricRange(deltaZ, m_cfg.deltaZMax)) {
+          continue;
+        }
       }
 
       // the longitudinal impact parameter zOrigin is defined as (zM - rM *
@@ -131,9 +158,18 @@ class Impl final : public DoubletSeedFinder {
       // collisionRegion by deltaR to avoid divisions
       const float zOriginTimesDeltaR = zM * deltaR - rM * deltaZ;
       // check if duplet origin on z axis within collision region
-      if (outsideRangeCheck(zOriginTimesDeltaR,
-                            m_cfg.collisionRegionMin * deltaR,
-                            m_cfg.collisionRegionMax * deltaR)) {
+      // symmetric: collisionRegionMin * deltaR is exactly
+      // -(collisionRegionMax * deltaR), since negation is exact
+      bool outsideCollisionRegion = false;
+      if constexpr (zCuts != ZCuts::eGeneral) {
+        outsideCollisionRegion = outsideSymmetricRange(
+            zOriginTimesDeltaR, m_cfg.collisionRegionMax * deltaR);
+      } else {
+        outsideCollisionRegion = outsideRangeCheck(
+            zOriginTimesDeltaR, m_cfg.collisionRegionMin * deltaR,
+            m_cfg.collisionRegionMax * deltaR);
+      }
+      if (outsideCollisionRegion) {
         continue;
       }
 
@@ -165,8 +201,7 @@ class Impl final : public DoubletSeedFinder {
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
-        if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                              m_cfg.cotThetaMax * deltaR)) {
+        if (outsideSymmetricRange(deltaZ, m_cfg.cotThetaMax * deltaR)) {
           continue;
         }
 
@@ -253,8 +288,7 @@ class Impl final : public DoubletSeedFinder {
       // check if duplet cotTheta is within the region of interest
       // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
       // cotThetaMax by deltaR to avoid division
-      if (outsideRangeCheck(deltaZ, -m_cfg.cotThetaMax * deltaR,
-                            m_cfg.cotThetaMax * deltaR)) {
+      if (outsideSymmetricRange(deltaZ, m_cfg.cotThetaMax * deltaR)) {
         continue;
       }
 
@@ -310,11 +344,30 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
   using SortedByROptions = BooleanOptions;
   using ExperimentCutsOptions = BooleanOptions;
   using UseTimeOptions = BooleanOptions;
+  using ZCutsOptions = boost::mp11::mp_list<
+      std::integral_constant<ZCuts, ZCuts::eGeneral>,
+      std::integral_constant<ZCuts, ZCuts::eSymmetric>,
+      std::integral_constant<ZCuts, ZCuts::eSymmetricNoDeltaZ>>;
 
   using DoubletOptions =
       boost::mp11::mp_product<boost::mp11::mp_list, IsBottomCandidateOptions,
                               InteractionPointCutOptions, SortedByROptions,
-                              ExperimentCutsOptions, UseTimeOptions>;
+                              ExperimentCutsOptions, UseTimeOptions,
+                              ZCutsOptions>;
+
+  // Compared exactly: only an exactly symmetric range gives the same cut.
+  const bool symmetricCollisionRegion =
+      config.collisionRegionMin == -config.collisionRegionMax;
+  const bool unboundedDeltaZ =
+      config.deltaZMin == -std::numeric_limits<float>::infinity() &&
+      config.deltaZMax == std::numeric_limits<float>::infinity();
+  ZCuts configZCuts = ZCuts::eGeneral;
+  if (symmetricCollisionRegion && unboundedDeltaZ) {
+    configZCuts = ZCuts::eSymmetricNoDeltaZ;
+  } else if (symmetricCollisionRegion &&
+             config.deltaZMin == -config.deltaZMax) {
+    configZCuts = ZCuts::eSymmetric;
+  }
 
   std::unique_ptr<DoubletSeedFinder> result;
   boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
@@ -325,6 +378,7 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     using SortedByR = boost::mp11::mp_at_c<OptionType, 2>;
     using ExperimentCuts = boost::mp11::mp_at_c<OptionType, 3>;
     using UseTime = boost::mp11::mp_at_c<OptionType, 4>;
+    using ZCutsOption = boost::mp11::mp_at_c<OptionType, 5>;
 
     const bool configIsBottomCandidate =
         config.candidateDirection == Direction::Backward();
@@ -333,7 +387,7 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
         config.interactionPointCut != InteractionPointCut::value ||
         config.spacePointsSortedByRadius != SortedByR::value ||
         config.experimentCuts.connected() != ExperimentCuts::value ||
-        config.useTime != UseTime::value) {
+        config.useTime != UseTime::value || configZCuts != ZCutsOption::value) {
       return;  // skip if the configuration does not match
     }
 
@@ -345,9 +399,9 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     }
 
     // create the implementation for the given configuration
-    result = std::make_unique<
-        Impl<IsBottomCandidate::value, InteractionPointCut::value,
-             SortedByR::value, ExperimentCuts::value, UseTime::value>>(config);
+    result = std::make_unique<Impl<
+        IsBottomCandidate::value, InteractionPointCut::value, SortedByR::value,
+        ExperimentCuts::value, UseTime::value, ZCutsOption::value>>(config);
   });
   if (result == nullptr) {
     throw std::runtime_error(
