@@ -221,30 +221,27 @@ class SensitiveSurfaceMapper::CandidateIndex {
     return m_annulusIndices;
   }
 
-  /// Index of the first candidate whose center compares equal to
-  /// @p position, i.e. the one a linear scan in candidate order would find
-  std::optional<std::size_t> firstCenterMatch(
-      const Acts::Vector3& position) const {
-    const auto matches = [&](std::size_t i) {
-      return m_comparator.compare<3>(m_centers[i], position) == 0;
+  /// Indices of all candidates whose center compares equal to @p position,
+  /// in ascending order. The first one is what a linear scan in candidate
+  /// order would find.
+  std::vector<std::size_t> centerMatches(const Acts::Vector3& position) const {
+    std::vector<std::size_t> result;
+    const auto check = [&](const std::vector<std::size_t>& indices) {
+      for (const std::size_t i : indices) {
+        if (m_comparator.compare<3>(m_centers[i], position) == 0) {
+          result.push_back(i);
+        }
+      }
     };
     const auto cell = m_useGrid ? cellOf(position) : std::nullopt;
     if (!cell.has_value()) {
       for (std::size_t i = 0; i < m_centers.size(); ++i) {
-        if (matches(i)) {
-          return i;
+        if (m_comparator.compare<3>(m_centers[i], position) == 0) {
+          result.push_back(i);
         }
       }
-      return std::nullopt;
+      return result;
     }
-    std::size_t first = m_centers.size();
-    const auto check = [&](const std::vector<std::size_t>& indices) {
-      for (const std::size_t i : indices) {
-        if (i < first && matches(i)) {
-          first = i;
-        }
-      }
-    };
     check(m_unbinned);
     for (std::int64_t dx = -1; dx <= 1; ++dx) {
       for (std::int64_t dy = -1; dy <= 1; ++dy) {
@@ -256,10 +253,8 @@ class SensitiveSurfaceMapper::CandidateIndex {
         }
       }
     }
-    if (first == m_centers.size()) {
-      return std::nullopt;
-    }
-    return first;
+    std::ranges::sort(result);
+    return result;
   }
 
  private:
@@ -433,9 +428,9 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
   // solid. So only annulus candidates before the first center match need the
   // centroid check.
   const Acts::Surface* mappedSurface = nullptr;
-  const auto centerMatch = candidates->firstCenterMatch(g4AbsPosition);
+  const auto centerMatches = candidates->centerMatches(g4AbsPosition);
   const std::size_t nBeforeCenterMatch =
-      centerMatch.value_or(candidates->size());
+      centerMatches.empty() ? candidates->size() : centerMatches.front();
   for (const std::size_t i : candidates->annulusIndices()) {
     if (i >= nBeforeCenterMatch) {
       break;
@@ -472,11 +467,49 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
       break;
     }
   }
-  if (mappedSurface == nullptr && centerMatch.has_value()) {
+  if (mappedSurface == nullptr && !centerMatches.empty()) {
+    std::size_t centerMatch = centerMatches.front();
+    if (centerMatches.size() > 1) {
+      // Several surfaces share this center, e.g. concentric cylinders. Take
+      // the one whose extent, in the frame of the G4 volume, is closest to
+      // the bounding box of the G4 solid. Ties keep the candidate order.
+      G4ThreeVector g4SolidMin;
+      G4ThreeVector g4SolidMax;
+      g4LogicalVolume->GetSolid()->BoundingLimits(g4SolidMin, g4SolidMax);
+      const Acts::Vector3 solidMin = convertPosition(g4SolidMin);
+      const Acts::Vector3 solidMax = convertPosition(g4SolidMax);
+      const Acts::Transform3 globalToG4 = localG4ToGlobal.inverse();
+
+      double bestDistance = std::numeric_limits<double>::infinity();
+      for (const std::size_t i : centerMatches) {
+        Acts::Vector3 surfaceMin =
+            Acts::Vector3::Constant(std::numeric_limits<double>::infinity());
+        Acts::Vector3 surfaceMax = -surfaceMin;
+        for (const auto& vertex :
+             candidates->surface(i).polyhedronRepresentation(gctx).vertices) {
+          const Acts::Vector3 vertexG4 = globalToG4 * vertex;
+          surfaceMin = surfaceMin.cwiseMin(vertexG4);
+          surfaceMax = surfaceMax.cwiseMax(vertexG4);
+        }
+        const double distance = (surfaceMin - solidMin).cwiseAbs().sum() +
+                                (surfaceMax - solidMax).cwiseAbs().sum();
+        ACTS_VERBOSE("Surface " << candidates->surface(i).geometryId()
+                                << " has extent distance " << distance);
+        // False for a non-finite distance, e.g. NaN vertices or none at all
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          centerMatch = i;
+        }
+      }
+      ACTS_DEBUG(centerMatches.size()
+                 << " surfaces share the center, chose "
+                 << candidates->surface(centerMatch).geometryId()
+                 << " by extent for " << volumeName);
+    }
     ACTS_DEBUG("Successful match with center: "
-               << candidates->center(*centerMatch).transpose()
+               << candidates->center(centerMatch).transpose()
                << ", G4-position: " << g4AbsPosition.transpose());
-    mappedSurface = &candidates->surface(*centerMatch);
+    mappedSurface = &candidates->surface(centerMatch);
   }
 
   Acts::detail::TransformComparator trfSorter{};
