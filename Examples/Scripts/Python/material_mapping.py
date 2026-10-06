@@ -273,11 +273,17 @@ if "__main__" == __name__:
 
     materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 
+    # Gen3 faces carry stable material keys (see OpenDataDetectorBuilder.cpp);
+    # the ROOT material-map writer rejects any map with keyed surfaces
+    # (Plugins/Root/src/RootMaterialMapIo.cpp), so Gen3 maps are JSON-only.
+    # Gen1 never sets keys, so ROOT stays available there.
+    outputMapFormats = ["json"] if gen3 else ["json", "root"]
+
     runMaterialMapping(
         materialSurfaces,
         inputFile=Path(args.input),
         outputFileBase=args.output,
-        outputMapFormats=["json", "root"],
+        outputMapFormats=outputMapFormats,
         loglevel=logLevel,
         outputMaterialTracks=args.material_tracks_name,
         treeName=args.tree_name,
