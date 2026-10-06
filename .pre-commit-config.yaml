@@ -25,7 +25,7 @@ repos:
     - id: black-jupyter
 
   - repo: https://github.com/BlankSpruce/gersemi-pre-commit
-    rev: 0.27.7
+    rev: 0.29.1
     hooks:
     - id: gersemi
       args: ["-i", "--no-warn-about-unknown-commands"]
@@ -43,12 +43,19 @@ repos:
 
   - repo: local
     hooks:
+    - id: material-schema
+      name: Validate material schema and examples
+      language: python
+      entry: python CI/check_material_schema.py
+      additional_dependencies: ["jsonschema>=4.18,<5"]
+      files: ^(Plugins/Json/schema/|docs/examples/material-map-v1/|CI/check_material_schema\.py$)
+      pass_filenames: false
+
     - id: license
       name: license
       language: system
       entry: CI/check_license.py --fix
       files: \.(cpp|hpp|ipp|cu|cuh|hip|sycl)$
-      exclude: ^Traccc/
 
     - id: include_guards
       name: include_guards
@@ -116,6 +123,14 @@ repos:
       language: python
       files: ^(CITATION\.cff|\.zenodo\.json|AUTHORS)$
       additional_dependencies: ["typer", "rich", "pyyaml"]
+      pass_filenames: false
+
+    - id: dependency_versions
+      name: dependency versions consistent
+      entry: CI/bump_versions.py check
+      language: python
+      files: ^(\.github/(workflows|actions)/.*\.ya?ml|\.devcontainer/Dockerfile|CI/.*\.(sh|env|py)|docs/.*\.md)$
+      additional_dependencies: ["typer", "rich"]
       pass_filenames: false
 
   - repo: https://github.com/woodruffw/zizmor-pre-commit

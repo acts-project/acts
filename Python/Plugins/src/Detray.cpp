@@ -35,7 +35,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
   using namespace ActsPlugins;
 
   using DetrayMetaDataODD = detray::odd_metadata<detray::array<float>>;
-  using DetrayDetectorODD = detray::detector<DetrayMetaDataODD>;
+  using DetrayDetectorODD = detray::host::detector<DetrayMetaDataODD>;
 
   py::class_<DetrayDetectorODD::name_map>(detray, "DetrayDetectorODDNameMap");
 
@@ -81,6 +81,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
           .def(py::init<>())
           .def_readwrite("sensitiveStrategy",
                          &DetrayPayloadConverter::Config::sensitiveStrategy)
+          .def_readwrite(
+              "portalSegmentTolerance",
+              &DetrayPayloadConverter::Config::portalSegmentTolerance)
           .def_property(
               "beampipeVolume",
               [](const DetrayPayloadConverter::Config& cfg) {
@@ -120,7 +123,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
       .def_readwrite("convertMaterial",
                      &DetrayGeometryConverter::Config::convertMaterial)
       .def_readwrite("convertSurfaceGrids",
-                     &DetrayGeometryConverter::Config::convertSurfaceGrids);
+                     &DetrayGeometryConverter::Config::convertSurfaceGrids)
+      .def_readwrite("deduplicateMaterial",
+                     &DetrayGeometryConverter::Config::deduplicateMaterial);
 
   using DetrayGeometryODD =
       DetrayGeometryConverter::DetrayGeometry<DetrayMetaDataODD>;

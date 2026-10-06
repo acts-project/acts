@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "write_tracks.hpp"
@@ -58,13 +59,13 @@ void write_tracks(std::string_view filename,
 
       // Find the detector surface that this measurement sits on.
       const auto global = host_detector_visitor<detector_type_list>(
-          detector, [meas]<typename detector_traits_t>(
-                        const typename detector_traits_t::host& d) {
+          detector,
+          [meas]<detray::concepts::detector detector_t>(const detector_t& d) {
             detray::tracking_surface surface{d, meas.surface_link()};
             return surface.local_to_global(
                 {},
-                edm::get_measurement_local<
-                    typename detector_traits_t::host::algebra_type>(meas),
+                edm::get_measurement_local<typename detector_t::algebra_type>(
+                    meas),
                 {});
           });
 

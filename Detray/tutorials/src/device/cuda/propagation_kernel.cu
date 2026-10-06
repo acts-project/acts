@@ -16,7 +16,7 @@ inline constexpr scalar path_limit{2.f * detray::unit<scalar>::m};
 
 /// Kernel that runs the entire propagation loop
 __global__ void propagation_kernel(
-    typename detray::tutorial::detector_host_t::view_type det_data,
+    typename detray::tutorial::host_detector_t::view_type det_data,
     typename detray::tutorial::device_field_t::view_t field_data,
     const vecmem::data::vector_view<detray::tutorial::track_t> tracks_data) {
   int gid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -29,7 +29,7 @@ __global__ void propagation_kernel(
   }
 
   // Setup of the device-side detector
-  detray::tutorial::detector_device_t det(det_data);
+  detray::tutorial::device_detector_t det(det_data);
 
   // Create propagator from a stepper and a navigator
   propagation::config cfg{};
@@ -52,7 +52,7 @@ __global__ void propagation_kernel(
   p.propagate(state, actor_states);
 }
 
-void propagation(typename detray::tutorial::detector_host_t::view_type det_data,
+void propagation(typename detray::tutorial::host_detector_t::view_type det_data,
                  typename detray::tutorial::device_field_t::view_t field_data,
                  const vecmem::data::vector_view<track_t> tracks_data) {
   int thread_dim = 2 * WARP_SIZE;

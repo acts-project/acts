@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -114,10 +115,17 @@ inline void select_seeds(
   for (unsigned int i = spM_counter.posTriplets; i < end_triplets_spM; ++i) {
     device_triplet aTriplet = triplets[i];
 
-    // spacepoints bottom and top for this triplet
+    // spacepoints bottom for this triplet
     const unsigned int spB_idx = aTriplet.spB;
+
+    // Guard against the sentinel value for invalid triplets.
+    if (spB_idx == std::numeric_limits<unsigned int>::max()) [[unlikely]] {
+      continue;
+    }
+
     const edm::spacepoint_collection::const_device::const_proxy_type spB =
         spacepoints.at(spB_idx);
+    // spacepoints top for this triplet
     const unsigned int spT_idx = aTriplet.spT;
     const edm::spacepoint_collection::const_device::const_proxy_type spT =
         spacepoints.at(spT_idx);

@@ -87,6 +87,15 @@ class GeometryIdentifierBlueprintNode : public BlueprintNode {
   GeometryIdentifierBlueprintNode& setAllVolumeIdsTo(
       GeometryIdentifier::Value volumeId);
 
+  /// @brief Set the volume ID of direct child volumes without changing descendants
+  /// @param volumeId The volume ID to set
+  /// @return Reference to this node for method chaining
+  /// @note Applies to each volume added to the parent by the child node during
+  /// finalization. Other geometry ID components are preserved.
+  /// @note Will throw if a direct child volume already has a volume ID assigned
+  GeometryIdentifierBlueprintNode& setDirectChildVolumeIdTo(
+      GeometryIdentifier::Value volumeId);
+
   /// Predicate function to compare two @ref Acts::TrackingVolume with each other to determine their *closure order*.
   using CompareVolumes =
       std::function<bool(const TrackingVolume&, const TrackingVolume&)>;
