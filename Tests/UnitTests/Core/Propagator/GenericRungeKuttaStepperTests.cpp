@@ -30,12 +30,16 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <stdexcept>
 #include <vector>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
+
+// The test contexts print the name of the tableau
+BOOST_TEST_DONT_PRINT_LOG_VALUE(std::shared_ptr<const Acts::ButcherTableau>)
 
 namespace ActsTests {
 
@@ -322,23 +326,32 @@ BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_constant_field) {
   CHECK_CLOSE_OR_SMALL(refJac, helixJac, 1e-8, 1e-8);
 }
 
+namespace {
+
+struct ConvergenceCase {
+  std::shared_ptr<const ButcherTableau> tableau;
+  double qop{};
+  std::vector<int> stepCounts;
+
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const ConvergenceCase& testCase) {
+    return os << testCase.tableau->name();
+  }
+};
+
+// The ninth-order error needs a strongly bent track to stay above the
+// round-off while the step size halves
+const std::vector<ConvergenceCase> convergenceCases = {
+    {ButcherTableau::classicalRk4(), 1. / 1_GeV, {8, 16, 32}},
+    {ButcherTableau::dormandPrince54(), 1. / 1_GeV, {8, 16, 32}},
+    {ButcherTableau::verner98(), 1. / 0.1_GeV, {8, 12, 18}},
+};
+
+}  // namespace
+
 /// The fixed-step global error falls with the order of the tableau.
 BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_convergence,
-                     boost::unit_test::data::make({0, 1, 2}), tableauIndex) {
-  struct Case {
-    std::shared_ptr<const ButcherTableau> tableau;
-    double qop{};
-    std::vector<int> stepCounts;
-  };
-  // The ninth-order error needs a strongly bent track to stay above the
-  // round-off while the step size halves
-  const Case testCase =
-      tableauIndex == 0
-          ? Case{ButcherTableau::classicalRk4(), 1. / 1_GeV, {8, 16, 32}}
-      : tableauIndex == 1
-          ? Case{ButcherTableau::dormandPrince54(), 1. / 1_GeV, {8, 16, 32}}
-          : Case{ButcherTableau::verner98(), 1. / 0.1_GeV, {8, 12, 18}};
-
+                     boost::unit_test::data::make(convergenceCases), testCase) {
   auto field = std::make_shared<SmoothField>(2_T, 1_m);
   const FreeVector start =
       makeStart(Vector3(100., -50., 20.), Vector3(1., 0.3, 0.2), testCase.qop);
@@ -348,7 +361,7 @@ BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_convergence,
   // still shows in the ratios.
   GenericRungeKuttaStepper::Config config{field, ButcherTableau::verner98()};
   const GenericRungeKuttaStepper reference(config);
-  const FreeVector exact =
+  const FreeVector referencePars =
       propagateFree(reference, fixedStepOptions(pathLength / 1024), start,
                     pathLength, false)
           .pars;
@@ -361,7 +374,8 @@ BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_convergence,
         propagateFree(stepper, fixedStepOptions(pathLength / nSteps), start,
                       pathLength, false)
             .pars;
-    errors.push_back((end - exact).segment<3>(eFreePos0).cwiseAbs().maxCoeff());
+    errors.push_back(
+        (end - referencePars).segment<3>(eFreePos0).cwiseAbs().maxCoeff());
   }
 
   BOOST_TEST_CONTEXT(testCase.tableau->name()
@@ -420,21 +434,29 @@ BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_jacobian) {
                  1e-3);
 }
 
-/// The adaptive step size meets the tolerance.
+/// The adaptive step size meets the tolerance. Only tableaus with embedded
+/// weights adapt the step size, so the test does not use classicalRk4.
 BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_adaptive,
-                     boost::unit_test::data::make({0, 1}), tableauIndex) {
-  const auto tableau = tableauIndex == 0 ? ButcherTableau::dormandPrince54()
-                                         : ButcherTableau::verner98();
+                     boost::unit_test::data::make(
+                         std::vector<std::shared_ptr<const ButcherTableau>>{
+                             ButcherTableau::dormandPrince54(),
+                             ButcherTableau::verner98()}),
+                     tableau) {
   auto field = std::make_shared<SmoothField>(2_T, 1_m);
   const FreeVector start =
       makeStart(Vector3(100., -50., 20.), Vector3(1., 0.3, 0.2), 1. / 1_GeV);
   const double pathLength = 1_m;
 
   GenericRungeKuttaStepper::Config config{field, ButcherTableau::verner98()};
-  const FreeVector exact = propagateFree(GenericRungeKuttaStepper(config),
-                                         fixedStepOptions(pathLength / 1024),
-                                         start, pathLength, false)
-                               .pars;
+  // There is no closed-form solution in this field. The reference is the
+  // fixed-step Verner 9(8) solution with 1024 steps. Its error is many orders
+  // of magnitude below the tolerances, also for the adaptive Verner 9(8)
+  // case, which takes far fewer steps.
+  const FreeVector referencePars =
+      propagateFree(GenericRungeKuttaStepper(config),
+                    fixedStepOptions(pathLength / 1024), start, pathLength,
+                    false)
+          .pars;
 
   config.tableau = tableau;
   const GenericRungeKuttaStepper stepper(config);
@@ -445,8 +467,10 @@ BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_adaptive,
     options.stepTolerance = tolerance;
     const auto state =
         propagateFree(stepper, options, start, pathLength, false);
-    const double error =
-        (state.pars - exact).segment<3>(eFreePos0).cwiseAbs().maxCoeff();
+    const double error = (state.pars - referencePars)
+                             .segment<3>(eFreePos0)
+                             .cwiseAbs()
+                             .maxCoeff();
     BOOST_TEST_CONTEXT(tableau->name()
                        << " tolerance " << tolerance << " error " << error
                        << " steps " << state.nSteps) {
@@ -520,16 +544,19 @@ BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_neutral_time) {
 
 /// A failed field lookup returns the error and leaves the state unchanged,
 /// both for a stage and for the end of the step.
+///
+/// The explicit Euler method has a single stage at the start, so only the
+/// lookup at the end of the step can fail.
 BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_field_failure,
-                     boost::unit_test::data::make({0, 1}), tableauIndex) {
-  // The explicit Euler method has a single stage at the start, so only the
-  // lookup at the end of the step can fail.
-  const auto tableau =
-      tableauIndex == 0 ? ButcherTableau::classicalRk4()
-                        : std::make_shared<const ButcherTableau>(
-                              "Euler", 1, 0, std::vector<double>{0.},
-                              std::vector<std::vector<double>>{{}},
-                              std::vector<double>{1.}, std::vector<double>{});
+                     boost::unit_test::data::make(
+                         std::vector<std::shared_ptr<const ButcherTableau>>{
+                             ButcherTableau::classicalRk4(),
+                             std::make_shared<const ButcherTableau>(
+                                 "Euler", 1, 0, std::vector<double>{0.},
+                                 std::vector<std::vector<double>>{{}},
+                                 std::vector<double>{1.},
+                                 std::vector<double>{})}),
+                     tableau) {
   auto field = std::make_shared<BoundedField>(Vector3(0., 0., 2_T), 50_cm);
   const GenericRungeKuttaStepper stepper(
       GenericRungeKuttaStepper::Config{field, tableau});
