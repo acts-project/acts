@@ -31,6 +31,18 @@ class Impl final : public TripletSeedFinder {
 
   const DerivedConfig& config() const override { return m_cfg; }
 
+  /// Squared uncertainty on the cotTheta difference of a triplet: the errors of
+  /// the bottom-middle and middle-top pairs and the correlation term of the
+  /// middle space point. Never negative.
+  template <typename top_doublet_t>
+  static float cotThetaError2(const top_doublet_t& topDoublet, float erB,
+                              float iDeltaRB, float cotThetaAvg2,
+                              float varianceRM, float varianceZM) {
+    return topDoublet.er() + erB +
+           2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
+               topDoublet.iDeltaR();
+  }
+
   /// Straight line distance between two space points.
   static float distance(const ConstSpacePointProxy& a,
                         const ConstSpacePointProxy& b) {
@@ -125,11 +137,9 @@ class Impl final : public TripletSeedFinder {
       const float deltaCotTheta = cotThetaB - cotThetaT;
       const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
 
-      // error2 is expensive and only matters once deltaCotTheta2 > <scatter>:
-      // both cot-theta cuts have the form deltaCotTheta2 > error2 + <scatter>
-      // with error2 >= 0. Compute it lazily, at most once.
-      float error2 = 0;
-      bool haveError2 = false;
+      // The squared error (error2) is never negative, so each cut below can
+      // only fire once deltaCotTheta2 exceeds the scattering term alone; only
+      // then is the error worked out.
 
       // Apply a cut on the compatibility between the r-z slope of the two
       // seed segments. This is done by comparing the squared difference
@@ -141,23 +151,21 @@ class Impl final : public TripletSeedFinder {
       // (scatteringInRegion2). This assumes gaussian error propagation which
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
-      if (deltaCotTheta2 > scatteringInRegion2) {
-        error2 = topDoublet.er() + erB +
-                 2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
-                     topDoublet.iDeltaR();
-        haveError2 = true;
-        if (deltaCotTheta2 > error2 + scatteringInRegion2) {
-          if constexpr (sortedByCotTheta) {
-            // skip top SPs based on cotTheta sorting when producing triplets
-            // break if cotTheta from bottom SP < cotTheta from top SP because
-            // the SP are sorted by cotTheta
-            if (cotThetaB < cotThetaT) {
-              break;
-            }
-            topDoubletOffset = topDoubletIndex + 1;
+      if (deltaCotTheta2 > scatteringInRegion2 &&
+          deltaCotTheta2 > cotThetaError2(topDoublet, erB, iDeltaRB,
+                                          cotThetaAvg2, varianceRM,
+                                          varianceZM) +
+                               scatteringInRegion2) {
+        if constexpr (sortedByCotTheta) {
+          // skip top SPs based on cotTheta sorting when producing triplets
+          // break if cotTheta from bottom SP < cotTheta from top SP because
+          // the SP are sorted by cotTheta
+          if (cotThetaB < cotThetaT) {
+            break;
           }
-          continue;
+          topDoubletOffset = topDoubletIndex + 1;
         }
+        continue;
       }
 
       // check the time compatibility of the three space points. placed after
@@ -194,14 +202,12 @@ class Impl final : public TripletSeedFinder {
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
       const float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
-      // compute error2 now if the cheap check above skipped it
-      if (!haveError2) {
-        error2 = topDoublet.er() + erB +
-                 2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
-                     topDoublet.iDeltaR();
-      }
       // if deltaTheta larger than allowed scattering for calculated pT, skip
-      if (deltaCotTheta2 > error2 + p2scatterSigma) {
+      if (deltaCotTheta2 > p2scatterSigma &&
+          deltaCotTheta2 > cotThetaError2(topDoublet, erB, iDeltaRB,
+                                          cotThetaAvg2, varianceRM,
+                                          varianceZM) +
+                               p2scatterSigma) {
         if constexpr (sortedByCotTheta) {
           if (cotThetaB < cotThetaT) {
             break;
@@ -418,11 +424,9 @@ class Impl final : public TripletSeedFinder {
       const float deltaCotTheta = cotThetaB - cotThetaT;
       const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
 
-      // error2 is expensive and only matters once deltaCotTheta2 > <scatter>:
-      // both cot-theta cuts have the form deltaCotTheta2 > error2 + <scatter>
-      // with error2 >= 0. Compute it lazily, at most once.
-      float error2 = 0;
-      bool haveError2 = false;
+      // The squared error (error2) is never negative, so each cut below can
+      // only fire once deltaCotTheta2 exceeds the scattering term alone; only
+      // then is the error worked out.
 
       // Apply a cut on the compatibility between the r-z slope of the two
       // seed segments. This is done by comparing the squared difference
@@ -434,15 +438,13 @@ class Impl final : public TripletSeedFinder {
       // (scatteringInRegion2). This assumes gaussian error propagation which
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
-      if (deltaCotTheta2 > scatteringInRegion2) {
-        error2 = topDoublet.er() + erB +
-                 2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
-                     topDoublet.iDeltaR();
-        haveError2 = true;
-        if (deltaCotTheta2 > error2 + scatteringInRegion2) {
-          // skip top SPs based on cotTheta sorting when producing triplets
-          continue;
-        }
+      if (deltaCotTheta2 > scatteringInRegion2 &&
+          deltaCotTheta2 > cotThetaError2(topDoublet, erB, iDeltaRB,
+                                          cotThetaAvg2, varianceRM,
+                                          varianceZM) +
+                               scatteringInRegion2) {
+        // skip top SPs based on cotTheta sorting when producing triplets
+        continue;
       }
 
       const float rMxy =
@@ -479,14 +481,12 @@ class Impl final : public TripletSeedFinder {
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
       const float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
-      // compute error2 now if the cheap check above skipped it
-      if (!haveError2) {
-        error2 = topDoublet.er() + erB +
-                 2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
-                     topDoublet.iDeltaR();
-      }
       // if deltaTheta larger than allowed scattering for calculated pT, skip
-      if (deltaCotTheta2 > error2 + p2scatterSigma) {
+      if (deltaCotTheta2 > p2scatterSigma &&
+          deltaCotTheta2 > cotThetaError2(topDoublet, erB, iDeltaRB,
+                                          cotThetaAvg2, varianceRM,
+                                          varianceZM) +
+                               p2scatterSigma) {
         continue;
       }
 
