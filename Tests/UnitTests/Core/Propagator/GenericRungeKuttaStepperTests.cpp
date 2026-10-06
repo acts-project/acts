@@ -40,6 +40,7 @@ using Acts::VectorHelpers::makeVector4;
 
 // The test contexts print the name of the tableau
 BOOST_TEST_DONT_PRINT_LOG_VALUE(std::shared_ptr<const Acts::ButcherTableau>)
+BOOST_TEST_DONT_PRINT_LOG_VALUE(Acts::GenericRungeKuttaStepper::ErrorEstimation)
 
 namespace ActsTests {
 
@@ -151,7 +152,7 @@ typename stepper_t::State propagateFree(
 
 GenericRungeKuttaStepper::Options fixedStepOptions(double stepSize) {
   GenericRungeKuttaStepper::Options options(tgContext, mfContext);
-  options.adaptiveStepSize = false;
+  options.errorEstimation = GenericRungeKuttaStepper::ErrorEstimation::None;
   options.initialStepSize = stepSize;
   options.maxStepSize = stepSize;
   return options;
@@ -434,14 +435,35 @@ BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_jacobian) {
                  1e-3);
 }
 
-/// The adaptive step size meets the tolerance. Only tableaus with embedded
-/// weights adapt the step size, so the test does not use classicalRk4.
+namespace {
+
+using ErrorEstimation = GenericRungeKuttaStepper::ErrorEstimation;
+
+struct AdaptiveCase {
+  std::shared_ptr<const ButcherTableau> tableau;
+  ErrorEstimation errorEstimation{};
+
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const AdaptiveCase& testCase) {
+    return os << testCase.tableau->name() << " "
+              << (testCase.errorEstimation == ErrorEstimation::Embedded
+                      ? "embedded"
+                      : "step doubling");
+  }
+};
+
+const std::vector<AdaptiveCase> adaptiveCases = {
+    {ButcherTableau::dormandPrince54(), ErrorEstimation::Embedded},
+    {ButcherTableau::verner98(), ErrorEstimation::Embedded},
+    {ButcherTableau::classicalRk4(), ErrorEstimation::StepDoubling},
+    {ButcherTableau::dormandPrince54(), ErrorEstimation::StepDoubling},
+};
+
+}  // namespace
+
+/// The adaptive step size meets the tolerance.
 BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_adaptive,
-                     boost::unit_test::data::make(
-                         std::vector<std::shared_ptr<const ButcherTableau>>{
-                             ButcherTableau::dormandPrince54(),
-                             ButcherTableau::verner98()}),
-                     tableau) {
+                     boost::unit_test::data::make(adaptiveCases), testCase) {
   auto field = std::make_shared<SmoothField>(2_T, 1_m);
   const FreeVector start =
       makeStart(Vector3(100., -50., 20.), Vector3(1., 0.3, 0.2), 1. / 1_GeV);
@@ -458,9 +480,10 @@ BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_adaptive,
                     false)
           .pars;
 
-  config.tableau = tableau;
+  config.tableau = testCase.tableau;
   const GenericRungeKuttaStepper stepper(config);
   GenericRungeKuttaStepper::Options options(tgContext, mfContext);
+  options.errorEstimation = testCase.errorEstimation;
   options.initialStepSize = 10_m;
   double previousError = infinity;
   for (double tolerance : {1e-4, 1e-7, 1e-10}) {
@@ -471,9 +494,8 @@ BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_adaptive,
                              .segment<3>(eFreePos0)
                              .cwiseAbs()
                              .maxCoeff();
-    BOOST_TEST_CONTEXT(tableau->name()
-                       << " tolerance " << tolerance << " error " << error
-                       << " steps " << state.nSteps) {
+    BOOST_TEST_CONTEXT(testCase << " tolerance " << tolerance << " error "
+                                << error << " steps " << state.nSteps) {
       BOOST_CHECK_GT(state.statistics.nRejectedSteps, 0u);
       // The global error is the sum of the local errors
       BOOST_CHECK_LT(error, 10. * tolerance * state.nSteps);
@@ -483,30 +505,62 @@ BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_adaptive,
   }
 }
 
-/// A tableau without embedded weights takes the given step size, also if the
-/// options ask for an adaptive step size.
-BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_fixed_without_embedded) {
+/// The embedded error estimate needs a tableau with embedded weights.
+BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_embedded_without_weights) {
   auto field = std::make_shared<SmoothField>(2_T, 1_m);
   const GenericRungeKuttaStepper stepper(
       GenericRungeKuttaStepper::Config{field, ButcherTableau::classicalRk4()});
   GenericRungeKuttaStepper::Options options(tgContext, mfContext);
-  BOOST_REQUIRE(options.adaptiveStepSize);
-  options.stepTolerance = 1e-12;
-  options.initialStepSize = 10_cm;
+  BOOST_REQUIRE(options.errorEstimation == ErrorEstimation::Embedded);
+  BOOST_CHECK_THROW(stepper.makeState(options), std::invalid_argument);
+
+  // The options in the state can change after makeState
+  options.errorEstimation = ErrorEstimation::StepDoubling;
+  auto state = stepper.makeState(options);
+  stepper.initialize(state, BoundTrackParameters::createCurvilinear(
+                                Vector4::Zero(), Vector3::UnitX(), 1. / 1_GeV,
+                                std::nullopt, ParticleHypothesis::pion()));
+  state.options.errorEstimation = ErrorEstimation::Embedded;
+  BOOST_CHECK_THROW(
+      static_cast<void>(stepper.step(state, Direction::Forward(), nullptr)),
+      std::invalid_argument);
+}
+
+/// Without rejections, step doubling equals fixed steps of h/2.
+BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_step_doubling_halves) {
+  auto field = std::make_shared<SmoothField>(2_T, 1_m);
+  const GenericRungeKuttaStepper stepper(
+      GenericRungeKuttaStepper::Config{field, ButcherTableau::classicalRk4()});
   const FreeVector start =
       makeStart(Vector3(100., -50., 20.), Vector3(1., 0.3, 0.2), 1. / 1_GeV);
 
-  const auto state = propagateFree(stepper, options, start, 1_m, true);
-  BOOST_CHECK_EQUAL(state.nSteps, 10u);
-  BOOST_CHECK_EQUAL(state.statistics.nRejectedSteps, 0u);
-  CHECK_CLOSE_ABS(state.stepSize.accuracy(), 10_cm, 1e-12);
+  GenericRungeKuttaStepper::Options options(tgContext, mfContext);
+  options.errorEstimation = ErrorEstimation::StepDoubling;
+  options.stepTolerance = infinity;
+  options.initialStepSize = 10_cm;
+  options.maxStepSize = 10_cm;
+  const auto doubling = propagateFree(stepper, options, start, 1_m, true);
+  const auto halves =
+      propagateFree(stepper, fixedStepOptions(5_cm), start, 1_m, true);
+
+  BOOST_CHECK_EQUAL(doubling.nSteps, 10u);
+  BOOST_CHECK_EQUAL(halves.nSteps, 20u);
+  BOOST_CHECK_EQUAL(doubling.statistics.nRejectedSteps, 0u);
+  CHECK_CLOSE_ABS(doubling.pars, halves.pars, 1e-12);
+  CHECK_CLOSE_OR_SMALL(doubling.jacTransport, halves.jacTransport, 1e-12,
+                       1e-12);
 }
 
 /// The jacobian in the error estimate makes the adaptive steps smaller.
-BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_jacobian_in_error_estimate) {
+BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_jacobian_in_error_estimate,
+                     boost::unit_test::data::make(std::vector<ErrorEstimation>{
+                         ErrorEstimation::Embedded,
+                         ErrorEstimation::StepDoubling}),
+                     errorEstimation) {
   auto field = std::make_shared<SmoothField>(2_T, 1_m);
   const GenericRungeKuttaStepper stepper(field);
   GenericRungeKuttaStepper::Options options(tgContext, mfContext);
+  options.errorEstimation = errorEstimation;
   options.stepTolerance = 1e-7;
   options.initialStepSize = 10_m;
   const FreeVector start =

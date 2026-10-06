@@ -101,8 +101,20 @@ GenericRungeKuttaStepper::GenericRungeKuttaStepper(const Config& config)
   }
 }
 
+void GenericRungeKuttaStepper::checkErrorEstimation(
+    const Options& options) const {
+  if (options.errorEstimation == ErrorEstimation::Embedded &&
+      !m_tableau->hasEmbedded()) {
+    throw std::invalid_argument("GenericRungeKuttaStepper: the tableau " +
+                                m_tableau->name() +
+                                " has no embedded weights for the error "
+                                "estimate");
+  }
+}
+
 GenericRungeKuttaStepper::State GenericRungeKuttaStepper::makeState(
     const Options& options) const {
+  checkErrorEstimation(options);
   return State{options, m_bField->makeCache(options.magFieldContext)};
 }
 
@@ -272,11 +284,13 @@ Result<FieldAndGradient> GenericRungeKuttaStepper::getFieldAndGradient(
 Result<double> GenericRungeKuttaStepper::step(
     State& state, Direction propDir,
     const IVolumeMaterial* /*material*/) const {
+  checkErrorEstimation(state.options);
+
   const ButcherTableau& tableau = *m_tableau;
   const std::size_t nStages = tableau.stages();
   const bool withJacobian = state.cov.has_value();
   const bool withGradient = withJacobian && state.options.includeFieldGradient;
-  const bool adaptive = state.options.adaptiveStepSize && tableau.hasEmbedded();
+  const ErrorEstimation errorEstimation = state.options.errorEstimation;
 
   if (!state.field.has_value() || (withGradient && !state.fieldHasGradient)) {
     auto fieldRes = getFieldAndGradient(state, position(state), withGradient);
@@ -294,35 +308,42 @@ Result<double> GenericRungeKuttaStepper::step(
 
   const double stepTolerance = state.options.stepTolerance;
   // Step size control of Hairer, Nørsett, Wanner, Solving Ordinary
-  // Differential Equations I, 2nd ed., Section II.4: the error of the lower
-  // order q of the pair scales with h^(q+1). The safety factor 0.9 and the
-  // maximum growth 5 are in the ranges recommended there. The minimum 0.2 is
-  // the value of their DOPRI5 code.
+  // Differential Equations I, 2nd ed., Section II.4: an error estimate of
+  // order q scales with h^(q+1). The safety factor 0.9 and the maximum growth
+  // 5 are in the ranges recommended there. The minimum 0.2 is the value of
+  // their DOPRI5 code.
+  const unsigned estimateOrder =
+      errorEstimation == ErrorEstimation::Embedded
+          ? std::min(tableau.order(), tableau.embeddedOrder())
+          : tableau.order();
   const auto calcStepSizeScaling = [&](const double errorEstimate) -> double {
     constexpr double safety = 0.9;
     constexpr double lower = 0.2;
     constexpr double upper = 5.0;
-    const double exponent =
-        1. / (std::min(tableau.order(), tableau.embeddedOrder()) + 1);
+    const double exponent = 1. / (estimateOrder + 1);
     const double x = safety * std::pow(stepTolerance / errorEstimate, exponent);
     return std::clamp(x, lower, upper);
   };
 
-  const double initialH = state.stepSize.value() * propDir;
-  double h = initialH;
+  struct TableauStep {
+    // With the normalised direction and its derivative
+    FreeVector end;
+    FreeMatrix jacobian;
+    // Solution minus embedded solution, before the normalisation
+    FreeVector embeddedDiff;
+    FreeMatrix embeddedJacDiff;
+  };
 
   std::vector<FreeVector> k(nStages);
   std::vector<FreeMatrix> dk(withJacobian ? nStages : 0);
-  FreeVector end;
-  double errorEstimate = 0.;
-  std::size_t nStepTrials = 0;
 
-  while (true) {
-    ++nStepTrials;
-    ++state.statistics.nAttemptedSteps;
+  const auto tableauStep = [&](const FreeVector& pars,
+                               const FieldAndGradient& parsField,
+                               const double h) -> Result<TableauStep> {
+    TableauStep result;
 
     for (std::size_t i = 0; i < nStages; ++i) {
-      FreeVector stage = start;
+      FreeVector stage = pars;
       FreeMatrix dStage;
       if (withJacobian) {
         dStage.setIdentity();
@@ -338,7 +359,7 @@ Result<double> GenericRungeKuttaStepper::step(
         }
       }
 
-      FieldAndGradient field = startField;
+      FieldAndGradient field = parsField;
       if (i > 0) {
         auto fieldRes = getFieldAndGradient(state, stage.segment<3>(eFreePos0),
                                             withGradient);
@@ -354,30 +375,120 @@ Result<double> GenericRungeKuttaStepper::step(
       }
     }
 
-    end = start;
+    result.end = pars;
     for (std::size_t i = 0; i < nStages; ++i) {
-      end += h * tableau.b(i) * k[i];
+      result.end += h * tableau.b(i) * k[i];
     }
 
-    if (!adaptive) {
+    if (errorEstimation == ErrorEstimation::Embedded) {
+      result.embeddedDiff = FreeVector::Zero();
+      for (std::size_t i = 0; i < nStages; ++i) {
+        result.embeddedDiff += h * (tableau.b(i) - tableau.bEmbedded(i)) * k[i];
+      }
+      if (withJacobian && state.options.jacobianInErrorEstimate) {
+        result.embeddedJacDiff = FreeMatrix::Zero();
+        for (std::size_t i = 0; i < nStages; ++i) {
+          result.embeddedJacDiff +=
+              h * (tableau.b(i) - tableau.bEmbedded(i)) * dk[i];
+        }
+      }
+    }
+
+    // The direction is normalised after the step, with the derivative
+    // d(T/|T|)/dT = (I - T T^T / |T|^2) / |T|.
+    const Vector3 endDir = result.end.segment<3>(eFreeDir0);
+    const double endDirNorm = endDir.norm();
+    if (withJacobian) {
+      result.jacobian = FreeMatrix::Identity();
+      for (std::size_t i = 0; i < nStages; ++i) {
+        result.jacobian += h * tableau.b(i) * dk[i];
+      }
+      const Vector3 unitDir = endDir / endDirNorm;
+      const SquareMatrix3 normalisation =
+          (SquareMatrix3::Identity() - unitDir * unitDir.transpose()) /
+          endDirNorm;
+      result.jacobian.middleRows<3>(eFreeDir0) =
+          (normalisation * result.jacobian.middleRows<3>(eFreeDir0)).eval();
+    }
+    result.end.segment<3>(eFreeDir0) /= endDirNorm;
+
+    return result;
+  };
+
+  // q/p does not change in vacuum, so it does not contribute
+  const auto errorNorm = [](const FreeVector& diff) {
+    return std::max({diff.segment<3>(eFreePos0).cwiseAbs().maxCoeff(),
+                     std::abs(diff[eFreeTime]),
+                     diff.segment<3>(eFreeDir0).cwiseAbs().maxCoeff()});
+  };
+
+  const double initialH = state.stepSize.value() * propDir;
+  double h = initialH;
+
+  TableauStep result;
+  double errorEstimate = 0.;
+  std::size_t nStepTrials = 0;
+
+  while (true) {
+    ++nStepTrials;
+    ++state.statistics.nAttemptedSteps;
+
+    auto fullStep = tableauStep(start, startField, h);
+    if (!fullStep.ok()) {
+      return fullStep.error();
+    }
+
+    if (errorEstimation == ErrorEstimation::None) {
+      result = std::move(*fullStep);
       break;
     }
 
-    FreeVector diff = FreeVector::Zero();
-    for (std::size_t i = 0; i < nStages; ++i) {
-      diff += h * (tableau.b(i) - tableau.bEmbedded(i)) * k[i];
-    }
-    errorEstimate =
-        std::max({diff.segment<3>(eFreePos0).cwiseAbs().maxCoeff(),
-                  std::abs(diff[eFreeTime]),
-                  diff.segment<3>(eFreeDir0).cwiseAbs().maxCoeff()});
-    if (withJacobian && state.options.jacobianInErrorEstimate) {
-      FreeMatrix jacDiff = FreeMatrix::Zero();
-      for (std::size_t i = 0; i < nStages; ++i) {
-        jacDiff += h * (tableau.b(i) - tableau.bEmbedded(i)) * dk[i];
+    if (errorEstimation == ErrorEstimation::Embedded) {
+      result = std::move(*fullStep);
+      errorEstimate = errorNorm(result.embeddedDiff);
+      if (withJacobian && state.options.jacobianInErrorEstimate) {
+        errorEstimate = std::max(errorEstimate,
+                                 result.embeddedJacDiff.cwiseAbs().maxCoeff());
       }
-      errorEstimate = std::max(errorEstimate, jacDiff.cwiseAbs().maxCoeff());
+    } else {
+      // Hairer, Nørsett, Wanner, Section II.4: the error of the two half
+      // steps is (y_{h/2} - y_h) / (2^p - 1) to leading order.
+      auto firstHalf = tableauStep(start, startField, h / 2);
+      if (!firstHalf.ok()) {
+        return firstHalf.error();
+      }
+      auto midField = getFieldAndGradient(
+          state, firstHalf->end.segment<3>(eFreePos0), withGradient);
+      if (!midField.ok()) {
+        return midField.error();
+      }
+      auto secondHalf = tableauStep(firstHalf->end, *midField, h / 2);
+      if (!secondHalf.ok()) {
+        return secondHalf.error();
+      }
+
+      result = std::move(*secondHalf);
+      const double scale = 1. / (std::pow(2., tableau.order()) - 1.);
+      errorEstimate = scale * errorNorm(result.end - fullStep->end);
+      if (withJacobian) {
+        result.jacobian = (result.jacobian * firstHalf->jacobian).eval();
+        if (state.options.jacobianInErrorEstimate) {
+          // Each half step projects out the direction perturbations along
+          // the direction, but the full step does not, so the two paths
+          // differ at O(h) there. The bound parameters do not have these
+          // perturbations, so leave them out.
+          const Vector3 startDir = start.segment<3>(eFreeDir0);
+          FreeMatrix projection = FreeMatrix::Identity();
+          projection.block<3, 3>(eFreeDir0, eFreeDir0) -=
+              startDir * startDir.transpose();
+          const FreeMatrix jacDiff =
+              (result.jacobian - fullStep->jacobian) * projection;
+          errorEstimate =
+              std::max(errorEstimate, scale * jacDiff.cwiseAbs().maxCoeff());
+        }
+      }
     }
+
     // Avoid a division by zero in the step size scaling
     errorEstimate = std::max(errorEstimate, std::numeric_limits<double>::min());
 
@@ -400,38 +511,22 @@ Result<double> GenericRungeKuttaStepper::step(
 
   // The field at the end is the first stage of the next step. Look it up
   // before the state changes, so that a failure leaves the state unchanged.
-  auto endField =
-      getFieldAndGradient(state, end.segment<3>(eFreePos0), withGradient);
+  auto endField = getFieldAndGradient(state, result.end.segment<3>(eFreePos0),
+                                      withGradient);
   if (!endField.ok()) {
     return endField.error();
   }
 
-  const Vector3 endDir = end.segment<3>(eFreeDir0);
-  const double endDirNorm = endDir.norm();
-
   if (withJacobian) {
-    FreeMatrix stepJacobian = FreeMatrix::Identity();
-    for (std::size_t i = 0; i < nStages; ++i) {
-      stepJacobian += h * tableau.b(i) * dk[i];
-    }
-    // The direction is normalised after the step, with the derivative
-    // d(T/|T|)/dT = (I - T T^T / |T|^2) / |T|.
-    const Vector3 unitDir = endDir / endDirNorm;
-    const SquareMatrix3 normalisation =
-        (SquareMatrix3::Identity() - unitDir * unitDir.transpose()) /
-        endDirNorm;
-    stepJacobian.middleRows<3>(eFreeDir0) =
-        (normalisation * stepJacobian.middleRows<3>(eFreeDir0)).eval();
-    state.jacTransport = (stepJacobian * state.jacTransport).eval();
+    state.jacTransport = (result.jacobian * state.jacTransport).eval();
   }
 
-  end.segment<3>(eFreeDir0) /= endDirNorm;
-  state.pars = end;
+  state.pars = result.end;
   state.field = *endField;
   state.fieldHasGradient = withGradient;
 
   if (withJacobian) {
-    state.derivative = motion(end, state.field->field, time.dtds);
+    state.derivative = motion(state.pars, state.field->field, time.dtds);
   }
 
   state.pathAccumulated += h;
@@ -444,7 +539,7 @@ Result<double> GenericRungeKuttaStepper::step(
   state.statistics.pathLength += h;
   state.statistics.absolutePathLength += std::abs(h);
 
-  if (adaptive) {
+  if (errorEstimation != ErrorEstimation::None) {
     const double nextAccuracy =
         std::abs(h * calcStepSizeScaling(errorEstimate));
     const double previousAccuracy = std::abs(state.stepSize.accuracy());

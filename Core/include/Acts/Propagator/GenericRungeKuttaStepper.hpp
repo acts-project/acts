@@ -63,14 +63,13 @@ class IVolumeMaterial;
 /// is part of the discrete step, so the stepper also applies its derivative
 /// (I - T T^T / |T|^2) / |T| to the direction rows of D.
 ///
-/// With embedded weights the stepper adapts the step size to
-/// @ref StepperPlainOptions::stepTolerance. The error estimate is the maximum
-/// norm of the difference between the solution and the embedded solution,
-/// before the direction is normalised. It uses the position (mm), the time
-/// (mm) and the dimensionless direction components with the same absolute
-/// tolerance. In vacuum q/p does not change, so it does not contribute. The
-/// step size control follows Hairer, Nørsett, Wanner, Solving Ordinary
-/// Differential Equations I, 2nd ed., Section II.4.
+/// The stepper adapts the step size to @ref StepperPlainOptions::stepTolerance
+/// with one of two error estimates, see @ref ErrorEstimation. The error
+/// estimate is the maximum norm of the position (mm), the time (mm) and the
+/// dimensionless direction components, with the same absolute tolerance. In
+/// vacuum q/p does not change, so it does not contribute. The step size
+/// control follows Hairer, Nørsett, Wanner, Solving Ordinary Differential
+/// Equations I, 2nd ed., Section II.4.
 ///
 /// As for @ref HelixStepper, a step to the straight-line distance of a surface
 /// can pass it, and the next step goes back. A target aborter must accept an
@@ -99,6 +98,22 @@ class GenericRungeKuttaStepper final {
     SquareMatrix3 gradient = SquareMatrix3::Zero();
   };
 
+  /// Error estimate for the adaptive step size
+  ///
+  /// Both use the same tolerance. The embedded estimate is for the lower-order
+  /// solution, so the propagated solution is usually 100 to 1000 times more
+  /// accurate than the tolerance. Step doubling estimates the propagated
+  /// solution itself, so its local error is about the tolerance.
+  enum class ErrorEstimation {
+    /// Fixed step size
+    None,
+    /// Solution minus embedded solution. Needs embedded weights.
+    Embedded,
+    /// One step of h against two steps of h/2, which are propagated. Works
+    /// for every tableau, at about three times the cost.
+    StepDoubling,
+  };
+
   /// Configuration for the Runge-Kutta stepper.
   struct Config {
     /// Magnetic field provider
@@ -118,9 +133,8 @@ class GenericRungeKuttaStepper final {
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
-    /// Adapt the step size to the error estimate. The stepper uses the given
-    /// step size if this is false or if the tableau has no embedded weights.
-    bool adaptiveStepSize = true;
+    /// Error estimate for the adaptive step size
+    ErrorEstimation errorEstimation = ErrorEstimation::Embedded;
 
     /// Include the field gradient in the transport jacobian
     bool includeFieldGradient = true;
@@ -134,10 +148,8 @@ class GenericRungeKuttaStepper final {
     /// lookups usually stay in one cell.
     double fieldGradientEpsilon = 10 * UnitConstants::um;
 
-    /// Include the maximum difference of the jacobian and the embedded
-    /// jacobian in the error estimate. The embedded jacobian is
-    /// I + h sum_i bEmbedded_i dK_i. Its entries have mixed units, and the
-    /// stepper compares all of them with the same tolerance.
+    /// Include the jacobian in the error estimate. Its entries have mixed
+    /// units, and the stepper uses the same tolerance for all of them.
     bool jacobianInErrorEstimate = false;
 
     /// Set plain stepper options
@@ -220,6 +232,8 @@ class GenericRungeKuttaStepper final {
   /// Create a state object
   /// @param options Stepper options
   /// @return State object
+  /// @throws std::invalid_argument for an embedded error estimate without
+  ///         embedded weights
   State makeState(const Options& options) const;
 
   /// Initialize the state from bound track parameters
@@ -528,6 +542,8 @@ class GenericRungeKuttaStepper final {
   /// @param propDir is the direction of propagation
   /// @param material is ignored, the stepper propagates in vacuum only
   /// @return the result of the step
+  /// @throws std::invalid_argument for an embedded error estimate without
+  ///         embedded weights
   ///
   /// @note The state contains the desired step size. It can be negative during
   ///       backwards track propagation, and since the step size is adaptive,
@@ -545,6 +561,11 @@ class GenericRungeKuttaStepper final {
                                                bool withGradient) const;
 
  private:
+  /// @param options Stepper options
+  /// @throws std::invalid_argument for an embedded error estimate without
+  ///         embedded weights
+  void checkErrorEstimation(const Options& options) const;
+
   /// Magnetic field inside of the detector
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
