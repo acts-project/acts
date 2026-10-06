@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts::detail {
+namespace Acts {
 
 /// @brief Coefficients of an explicit Runge-Kutta method
 ///
@@ -102,4 +102,4 @@ class ButcherTableau {
   std::vector<double> m_bEmbedded;
 };
 
-}  // namespace Acts::detail
+}  // namespace Acts

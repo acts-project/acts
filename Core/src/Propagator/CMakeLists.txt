@@ -1,6 +1,7 @@
 target_sources(
     ActsCore
     PRIVATE
+        ButcherTableau.cpp
         EigenStepperError.cpp
         GenericRungeKuttaStepper.cpp
         HelixStepper.cpp
@@ -19,7 +20,6 @@ target_sources(
         detail/PointwiseMaterialInteraction.cpp
         detail/CovarianceEngine.cpp
         detail/JacobianEngine.cpp
-        detail/ButcherTableau.cpp
         detail/SympyCovarianceEngine.cpp
         detail/SympyJacobianEngine.cpp
 )

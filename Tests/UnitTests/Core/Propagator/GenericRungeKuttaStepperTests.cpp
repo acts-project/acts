@@ -18,10 +18,10 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Propagator/ButcherTableau.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/GenericRungeKuttaStepper.hpp"
 #include "Acts/Propagator/HelixStepper.hpp"
-#include "Acts/Propagator/detail/ButcherTableau.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
@@ -34,7 +34,6 @@
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using Acts::detail::ButcherTableau;
 using Acts::VectorHelpers::makeVector4;
 
 namespace ActsTests {

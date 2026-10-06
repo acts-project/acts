@@ -272,7 +272,7 @@ Result<FieldAndGradient> GenericRungeKuttaStepper::getFieldAndGradient(
 Result<double> GenericRungeKuttaStepper::step(
     State& state, Direction propDir,
     const IVolumeMaterial* /*material*/) const {
-  const detail::ButcherTableau& tableau = *m_tableau;
+  const ButcherTableau& tableau = *m_tableau;
   const std::size_t nStages = tableau.stages();
   const bool withJacobian = state.cov.has_value();
   const bool withGradient = withJacobian && state.options.includeFieldGradient;
