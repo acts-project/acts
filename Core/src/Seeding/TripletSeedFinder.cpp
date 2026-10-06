@@ -137,9 +137,9 @@ class Impl final : public TripletSeedFinder {
       const float deltaCotTheta = cotThetaB - cotThetaT;
       const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
 
-      // The squared error (error2) is never negative, so each cut below can
-      // only fire once deltaCotTheta2 exceeds the scattering term alone; only
-      // then is the error worked out.
+      // cotThetaError2 is never negative, so each cut below can only fire once
+      // deltaCotTheta2 exceeds its scattering term alone; only then is the
+      // error computed.
 
       // Apply a cut on the compatibility between the r-z slope of the two
       // seed segments. This is done by comparing the squared difference
@@ -424,9 +424,9 @@ class Impl final : public TripletSeedFinder {
       const float deltaCotTheta = cotThetaB - cotThetaT;
       const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
 
-      // The squared error (error2) is never negative, so each cut below can
-      // only fire once deltaCotTheta2 exceeds the scattering term alone; only
-      // then is the error worked out.
+      // cotThetaError2 is never negative, so each cut below can only fire once
+      // deltaCotTheta2 exceeds its scattering term alone; only then is the
+      // error computed.
 
       // Apply a cut on the compatibility between the r-z slope of the two
       // seed segments. This is done by comparing the squared difference
