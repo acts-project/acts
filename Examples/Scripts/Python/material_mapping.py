@@ -242,9 +242,15 @@ if "__main__" == __name__:
     TrackingGeometryMaterialJsonConverter().toFile(
         mapping.material, args.output + "_map.json"
     )
-    RootMaterialWriter(
-        level=logLevel, filePath=args.output + "_map.root"
-    ).writeMaterial(mapping.material)
+    # Gen3 faces carry stable material keys (see OpenDataDetectorBuilder.cpp);
+    # the ROOT material-map writer rejects any map with keyed surfaces
+    # (Plugins/Root/src/RootMaterialMapIo.cpp), so Gen3 maps are JSON-only.
+    # Gen1 never sets keys, so ROOT stays available there.
+    if not gen3:
+        RootMaterialWriter(
+            level=logLevel, filePath=args.output + "_map.root"
+        ).writeMaterial(mapping.material)
+
 
     # The calo material collector surfaces are just catch-alls to keep
     # calorimeter material from leaking onto tracker surfaces; they don't
