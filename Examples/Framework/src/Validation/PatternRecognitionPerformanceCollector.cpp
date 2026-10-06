@@ -135,11 +135,10 @@ void PatternRecognitionPerformanceCollector::fill(
     }
 
     if (particleMatch.particle.has_value() &&
-        particleMeasurementsMap.contains(particleMatch.particle.value())) {
-      auto matchedParticle = particles.find(particleMatch.particle.value());
-      if (matchedParticle == particles.end()) {
-        continue;
-      }
+        particleMeasurementsMap.contains(particleMatch.particle.value()) &&
+        particles.contains(particleMatch.particle.value())) {
+      const auto matchedParticle =
+          particles.find(particleMatch.particle.value());
 
       const auto measurements =
           particleMeasurementsMap.equal_range(particleMatch.particle.value());
