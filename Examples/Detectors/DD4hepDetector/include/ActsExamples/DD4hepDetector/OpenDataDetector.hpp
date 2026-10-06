@@ -9,8 +9,11 @@
 #pragma once
 
 #include "Acts/Geometry/Extent.hpp"
+#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+
+#include <optional>
 
 namespace Acts {
 class GeometryContext;
@@ -42,10 +45,10 @@ class OpenDataDetector final : public DD4hepDetectorBase {
     /// Select the conversion style used to construct the Gen3 ODD geometry.
     ConstructionMethod constructionMethod = ConstructionMethod::BarrelEndcap;
 
-    /// Optional decorator to load a material map onto the constructed
-    /// geometry. It is applied after construction, once geometry identifiers
-    /// are assigned, and replaces the designated proto material.
-    std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator = nullptr;
+    /// Optional material map to load onto the constructed geometry. Applied
+    /// after construction, once geometry identifiers are assigned, replacing
+    /// the designated proto material.
+    std::optional<Acts::TrackingGeometryMaterial> materialMaps = std::nullopt;
 
     /// Envelope for the blueprint root (world volume). Values in mm.
     Acts::ExtentEnvelope blueprintEnvelope =
