@@ -59,6 +59,13 @@ ButcherTableau::ButcherTableau(std::string name, unsigned order,
       m_a[i * s + j] = a[i][j];
     }
   }
+
+  // Exact equality, so that the last stage is exactly at the end
+  const std::size_t last = s - 1;
+  m_firstSameAsLast = s > 1 && m_c[last] == 1. && m_b[last] == 0.;
+  for (std::size_t j = 0; j < last && m_firstSameAsLast; ++j) {
+    m_firstSameAsLast = m_a[last * s + j] == m_b[j];
+  }
 }
 
 std::shared_ptr<const ButcherTableau> ButcherTableau::classicalRk4() {

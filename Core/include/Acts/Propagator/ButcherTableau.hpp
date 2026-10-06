@@ -69,6 +69,10 @@ class ButcherTableau {
   /// @return true if the tableau has embedded weights
   bool hasEmbedded() const { return !m_bEmbedded.empty(); }
 
+  /// @return true if the last stage is at the end of the step (FSAL), so
+  ///         its field is the field at the end
+  bool firstSameAsLast() const { return m_firstSameAsLast; }
+
   /// @param i Stage index
   /// @return the node of stage @p i
   double c(std::size_t i) const { return m_c[i]; }
@@ -119,6 +123,7 @@ class ButcherTableau {
   std::vector<double> m_a;
   std::vector<double> m_b;
   std::vector<double> m_bEmbedded;
+  bool m_firstSameAsLast = false;
 };
 
 }  // namespace Acts

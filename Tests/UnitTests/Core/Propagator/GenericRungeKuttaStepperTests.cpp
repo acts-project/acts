@@ -111,6 +111,34 @@ class BoundedField final : public MagneticFieldProvider {
   double m_xMax;
 };
 
+/// A constant field that counts its lookups
+class CountingField final : public MagneticFieldProvider {
+ public:
+  struct Cache {
+    explicit Cache(const MagneticFieldContext& /*mctx*/) {}
+  };
+
+  explicit CountingField(const Vector3& field) : m_field(field) {}
+
+  MagneticFieldProvider::Cache makeCache(
+      const MagneticFieldContext& mctx) const override {
+    return MagneticFieldProvider::Cache(std::in_place_type<Cache>, mctx);
+  }
+
+  Result<Vector3> getField(
+      const Vector3& /*p*/,
+      MagneticFieldProvider::Cache& /*cache*/) const override {
+    ++m_lookups;
+    return Result<Vector3>::success(m_field);
+  }
+
+  std::size_t lookups() const { return m_lookups; }
+
+ private:
+  Vector3 m_field;
+  mutable std::size_t m_lookups = 0;
+};
+
 FreeVector makeStart(const Vector3& pos, const Vector3& dir, double qop) {
   FreeVector start = FreeVector::Zero();
   start.segment<3>(eFreePos0) = pos;
@@ -549,6 +577,31 @@ BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_step_doubling_halves) {
   CHECK_CLOSE_ABS(doubling.pars, halves.pars, 1e-12);
   CHECK_CLOSE_OR_SMALL(doubling.jacTransport, halves.jacTransport, 1e-12,
                        1e-12);
+}
+
+/// An FSAL tableau reuses the field of its last stage at the end.
+BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_first_same_as_last) {
+  BOOST_CHECK(ButcherTableau::dormandPrince54()->firstSameAsLast());
+  BOOST_CHECK(!ButcherTableau::classicalRk4()->firstSameAsLast());
+  BOOST_CHECK(!ButcherTableau::verner98()->firstSameAsLast());
+
+  const FreeVector start =
+      makeStart(Vector3::Zero(), Vector3(1., 0.3, 0.2), 1. / 1_GeV);
+  for (const auto& tableau :
+       {ButcherTableau::classicalRk4(), ButcherTableau::dormandPrince54()}) {
+    auto field = std::make_shared<CountingField>(Vector3(0., 0., 2_T));
+    const GenericRungeKuttaStepper stepper(
+        GenericRungeKuttaStepper::Config{field, tableau});
+    propagateFree(stepper, fixedStepOptions(10_cm), start, 1_m, false);
+
+    // The start, then per step the stages after the first and the end
+    const std::size_t s = tableau->stages();
+    const std::size_t expected =
+        1 + 10 * (tableau->firstSameAsLast() ? s - 1 : s);
+    BOOST_TEST_CONTEXT(tableau->name()) {
+      BOOST_CHECK_EQUAL(field->lookups(), expected);
+    }
+  }
 }
 
 /// The jacobian in the error estimate makes the adaptive steps smaller.

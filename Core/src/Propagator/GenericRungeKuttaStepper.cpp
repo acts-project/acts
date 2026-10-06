@@ -329,6 +329,8 @@ Result<double> GenericRungeKuttaStepper::step(
     // With the normalised direction and its derivative
     FreeVector end;
     FreeMatrix jacobian;
+    // Only for an FSAL tableau
+    std::optional<FieldAndGradient> endField;
     // Solution minus embedded solution, before the normalisation
     FreeVector embeddedDiff;
     FreeMatrix embeddedJacDiff;
@@ -342,6 +344,7 @@ Result<double> GenericRungeKuttaStepper::step(
                                const double h) -> Result<TableauStep> {
     TableauStep result;
 
+    FieldAndGradient lastField = parsField;
     for (std::size_t i = 0; i < nStages; ++i) {
       FreeVector stage = pars;
       FreeMatrix dStage;
@@ -368,6 +371,7 @@ Result<double> GenericRungeKuttaStepper::step(
         }
         field = *fieldRes;
       }
+      lastField = field;
 
       k[i] = motion(stage, field.field, time.dtds);
       if (withJacobian) {
@@ -378,6 +382,9 @@ Result<double> GenericRungeKuttaStepper::step(
     result.end = pars;
     for (std::size_t i = 0; i < nStages; ++i) {
       result.end += h * tableau.b(i) * k[i];
+    }
+    if (tableau.firstSameAsLast()) {
+      result.endField = lastField;
     }
 
     if (errorEstimation == ErrorEstimation::Embedded) {
@@ -457,12 +464,18 @@ Result<double> GenericRungeKuttaStepper::step(
       if (!firstHalf.ok()) {
         return firstHalf.error();
       }
-      auto midField = getFieldAndGradient(
-          state, firstHalf->end.segment<3>(eFreePos0), withGradient);
-      if (!midField.ok()) {
-        return midField.error();
+      FieldAndGradient midField;
+      if (firstHalf->endField.has_value()) {
+        midField = *firstHalf->endField;
+      } else {
+        auto fieldRes = getFieldAndGradient(
+            state, firstHalf->end.segment<3>(eFreePos0), withGradient);
+        if (!fieldRes.ok()) {
+          return fieldRes.error();
+        }
+        midField = *fieldRes;
       }
-      auto secondHalf = tableauStep(firstHalf->end, *midField, h / 2);
+      auto secondHalf = tableauStep(firstHalf->end, midField, h / 2);
       if (!secondHalf.ok()) {
         return secondHalf.error();
       }
@@ -511,10 +524,13 @@ Result<double> GenericRungeKuttaStepper::step(
 
   // The field at the end is the first stage of the next step. Look it up
   // before the state changes, so that a failure leaves the state unchanged.
-  auto endField = getFieldAndGradient(state, result.end.segment<3>(eFreePos0),
-                                      withGradient);
-  if (!endField.ok()) {
-    return endField.error();
+  if (!result.endField.has_value()) {
+    auto endField = getFieldAndGradient(state, result.end.segment<3>(eFreePos0),
+                                        withGradient);
+    if (!endField.ok()) {
+      return endField.error();
+    }
+    result.endField = *endField;
   }
 
   if (withJacobian) {
@@ -522,7 +538,7 @@ Result<double> GenericRungeKuttaStepper::step(
   }
 
   state.pars = result.end;
-  state.field = *endField;
+  state.field = result.endField;
   state.fieldHasGradient = withGradient;
 
   if (withJacobian) {
