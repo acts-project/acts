@@ -8,7 +8,6 @@
 
 #include "ActsExamples/DD4hepDetector/OpenDataDetector.hpp"
 
-#include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/DD4hep/OpenDataDetectorBuilder.hpp"
 #include "ActsPlugins/Root/TGeoAxes.hpp"
@@ -45,13 +44,11 @@ OpenDataDetector::OpenDataDetector(const Config& cfg,
       break;
   }
 
-  // Blueprint construction does not apply a material decorator, so load the
-  // material map here, now that the geometry identifiers are assigned
-  if (m_cfg.materialDecorator != nullptr) {
-    ACTS_INFO("Decorating the tracking geometry with material");
-    trackingGeometry->apply([this](Acts::Surface& surface) {
-      m_cfg.materialDecorator->decorate(surface);
-    });
+  // Blueprint construction does not apply any material, so load the map
+  // here, now that geometry identifiers are assigned.
+  if (m_cfg.materialMaps.has_value()) {
+    ACTS_INFO("Applying material map to the tracking geometry");
+    m_cfg.materialMaps->apply(*trackingGeometry);
   }
 
   m_trackingGeometry = std::move(trackingGeometry);
