@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <string>
 #include <vector>
@@ -190,9 +191,9 @@ BOOST_DATA_TEST_CASE(SharedCenterConcentricCylinders,
     cylinders.push_back(Acts::Surface::makeShared<Acts::CylinderSurface>(
         Acts::Transform3::Identity(),
         std::make_shared<Acts::CylinderBounds>(r + 10_um, 250_mm)));
-    tubes.push_back(
-        world.place(new G4Tubs("Tube", r, r + 20_um, 250_mm, 0., 2. * M_PI),
-                    "Sensor", Acts::Vector3::Zero()));
+    tubes.push_back(world.place(
+        new G4Tubs("Tube", r, r + 20_um, 250_mm, 0., 2. * std::numbers::pi),
+        "Sensor", Acts::Vector3::Zero()));
   }
   std::vector<const Acts::Surface*> surfaces;
   for (const auto& cylinder : cylinders) {
