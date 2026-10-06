@@ -252,15 +252,23 @@ if "__main__" == __name__:
         default="material_tracks",
         help="Input material track collection name",
     )
+    p.add_argument(
+        "--gen1",
+        action="store_true",
+        help="Map onto the Gen1 (Layer-based) geometry instead of Gen3 "
+        "(default). Does not require re-recording: material recording is "
+        "independent of the Gen1/Gen3 ACTS geometry split.",
+    )
 
     args = p.parse_args()
     logLevel = logging.INFO
+    gen3 = not args.gen1
 
     matDeco = None
     if args.matconfig != "":
         matDeco = acts.IMaterialDecorator.fromFile(args.matconfig)
 
-    detector = getOpenDataDetector(matDeco, gen3=True)
+    detector = getOpenDataDetector(matDeco, gen3=gen3)
     trackingGeometry = detector.trackingGeometry()
 
     materialSurfaces = trackingGeometry.extractMaterialSurfaces()
@@ -283,21 +291,23 @@ if "__main__" == __name__:
     # assigned GeometryIdentifier belongs to the fused portal, not to the
     # collector TrackingVolume's own geometryId). Constants mirror
     # addCaloMaterialCollector/addCaloMaterialCollectorDisc in
-    # Plugins/DD4hep/src/OpenDataDetectorBuilder.cpp.
+    # Plugins/DD4hep/src/OpenDataDetectorBuilder.cpp. Gen3-only: Gen1's
+    # Layer-based geometry has no such collector volumes.
     excludeSurfaceIds = set()
-    for surface in materialSurfaces:
-        bounds = surface.bounds
-        if (
-            isinstance(bounds, acts.CylinderBounds)
-            and abs(bounds.values()[0] - 1215.0) < 0.5
-            and abs(bounds.values()[1] - 3154.0) < 1.0
-        ):
-            excludeSurfaceIds.add(surface.geometryId.value)  # barrel collector
-        elif (
-            isinstance(bounds, acts.RadialBounds)
-            and abs(bounds.values()[1] - 1225.0) < 0.5
-        ):
-            excludeSurfaceIds.add(surface.geometryId.value)  # disc collectors
+    if gen3:
+        for surface in materialSurfaces:
+            bounds = surface.bounds
+            if (
+                isinstance(bounds, acts.CylinderBounds)
+                and abs(bounds.values()[0] - 1215.0) < 0.5
+                and abs(bounds.values()[1] - 3154.0) < 1.0
+            ):
+                excludeSurfaceIds.add(surface.geometryId.value)  # barrel collector
+            elif (
+                isinstance(bounds, acts.RadialBounds)
+                and abs(bounds.values()[1] - 1225.0) < 0.5
+            ):
+                excludeSurfaceIds.add(surface.geometryId.value)  # disc collectors
 
     plotEtaSurfaceDistance(
         args.output + "_mapped.root",
