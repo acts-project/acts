@@ -176,7 +176,9 @@ class SensitiveSurfaceMapper {
   /// not mapped to 'missing_g4_volumes.obj' in the working directory
   /// @param writeMissingSurfacesAsObj write the sensitive surfaces that
   /// where not mapped to 'missing_acts_surfaces.obj' in the working directory
-  /// @return Returns true only if all sensitive surfaces where mapped
+  /// @return Returns true only if all sensitive surfaces where mapped. Surfaces
+  /// with a sensitive geometry id that are not flagged sensitive
+  /// (`Acts::Surface::isSensitive`) are not required to be mapped.
   bool checkMapping(const State& state, const Acts::GeometryContext& gctx,
                     bool writeMissingG4VolsAsObj = false,
                     bool writeMissingSurfacesAsObj = false) const;

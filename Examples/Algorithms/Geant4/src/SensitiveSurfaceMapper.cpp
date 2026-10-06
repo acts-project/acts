@@ -548,7 +548,19 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
 bool SensitiveSurfaceMapper::checkMapping(
     const State& state, const Acts::GeometryContext& gctx,
     bool writeMissingG4VolsAsObj, bool writeMissingSurfacesAsObj) const {
-  auto allSurfaces = m_cfg.candidateSurfaces->queryAll();
+  // Candidates have a sensitive geometry id. Only those also flagged
+  // sensitive (e.g. by their placement) are sensors that need a mapping;
+  // others, like passive surfaces that a Gen3 layer gives a sensitive id,
+  // are not.
+  std::vector<const Acts::Surface*> allSurfaces;
+  std::size_t nNotFlaggedSensitive = 0;
+  for (const auto* surface : m_cfg.candidateSurfaces->queryAll()) {
+    if (surface->isSensitive()) {
+      allSurfaces.push_back(surface);
+    } else {
+      ++nNotFlaggedSensitive;
+    }
+  }
   std::ranges::sort(allSurfaces);
 
   std::vector<const Acts::Surface*> found;
@@ -566,6 +578,12 @@ bool SensitiveSurfaceMapper::checkMapping(
                       found.end(), std::back_inserter(missing));
 
   ACTS_INFO("Number of overall sensitive surfaces: " << allSurfaces.size());
+  if (nNotFlaggedSensitive > 0) {
+    ACTS_INFO(
+        "Number of surfaces with a sensitive geometry id that are not "
+        "flagged sensitive, not required to be mapped: "
+        << nNotFlaggedSensitive);
+  }
   ACTS_INFO("Number of mapped volume->surface mappings: " << found.size());
   ACTS_INFO(
       "Number of sensitive surfaces that are not mapped: " << missing.size());
