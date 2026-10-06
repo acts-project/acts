@@ -796,8 +796,12 @@ def test_pypi_finding_fitting_demo(tmp_path, generic_detector_config):
         finderHistograms = perfWriterFinder.histograms()
         fitterHistograms = perfWriterFitter.histograms()
 
-        assert len(finderHistograms) == 79
+        assert len(finderHistograms) == 80
         assert len(fitterHistograms) == 236
+
+        # One entry per event in the track multiplicity histogram
+        assert "nTracks" in finderHistograms
+        assert finderHistograms["nTracks"].histogram.values().sum() == 1
 
         expectedKeys = {
             "nStates_vs_eta",

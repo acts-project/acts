@@ -77,6 +77,9 @@ class PythonPatternRecognitionPerformanceWriter final
     TrackQualityPlotTool::Config trackQualityPlotToolConfig;
     /// Optional per-subdetector track summary plots.
     std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
+    /// Binning of the per-event track multiplicity histogram.
+    Acts::Experimental::AxisVariant nTracksBinning =
+        PatternRecognitionPerformanceCollector::Config{}.nTracksBinning;
   };
 
   PythonPatternRecognitionPerformanceWriter(Config cfg,
@@ -90,7 +93,7 @@ class PythonPatternRecognitionPerformanceWriter final
                 m_cfg.duplicationPlotToolConfig,
                 m_cfg.trackSummaryPlotToolConfig,
                 m_cfg.trackQualityPlotToolConfig,
-                m_cfg.subDetectorTrackSummaryVolumes},
+                m_cfg.subDetectorTrackSummaryVolumes, m_cfg.nTracksBinning},
             logger().clone()) {
     if (m_cfg.inputParticles.empty()) {
       throw std::invalid_argument("Missing particles input collection");
@@ -163,6 +166,9 @@ class PythonPatternRecognitionPerformanceWriter final
     for (const auto& [name, prof] : coll.trackQualityPlotTool().profiles()) {
       insertUniqueHistogram(d, name, prof);
     }
+
+    const auto& nTracks = coll.nTracksHistogram();
+    insertUniqueHistogram(d, nTracks.name(), nTracks);
 
     return d;
   }
@@ -374,7 +380,7 @@ void addPythonSpecific(py::module_& mex) {
                        inputParticleMeasurementsMap, label, effPlotToolConfig,
                        fakePlotToolConfig, duplicationPlotToolConfig,
                        trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
-                       subDetectorTrackSummaryVolumes);
+                       subDetectorTrackSummaryVolumes, nTracksBinning);
   }
 
   {

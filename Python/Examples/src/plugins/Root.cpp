@@ -265,7 +265,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         inputParticleMeasurementsMap, label, filePath, fileMode,
         effPlotToolConfig, fakePlotToolConfig, duplicationPlotToolConfig,
         trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
-        subDetectorTrackSummaryVolumes, writeMatchingDetails);
+        subDetectorTrackSummaryVolumes, writeMatchingDetails, nTracksBinning);
 
     ACTS_PYTHON_DECLARE_WRITER(RootNuclearInteractionParametersWriter, root,
                                "RootNuclearInteractionParametersWriter",

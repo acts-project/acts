@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -45,6 +46,10 @@ class PatternRecognitionPerformanceCollector {
     /// Optional per-subdetector track summary plots, keyed by name.
     /// The value is the set of geometry volume IDs to include.
     std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
+
+    /// Binning of the per-event track multiplicity histogram
+    Acts::Experimental::AxisVariant nTracksBinning =
+        Acts::Experimental::BoostRegularAxis(1000, -0.5, 999.5, "N");
   };
 
   PatternRecognitionPerformanceCollector(
@@ -95,6 +100,10 @@ class PatternRecognitionPerformanceCollector {
   const TrackQualityPlotTool& trackQualityPlotTool() const {
     return m_trackQualityPlotTool;
   }
+  /// Per-event track multiplicity
+  const Acts::Experimental::Histogram1& nTracksHistogram() const {
+    return m_nTracksHistogram;
+  }
   /// @}
 
  private:
@@ -109,6 +118,7 @@ class PatternRecognitionPerformanceCollector {
   TrackSummaryPlotTool m_trackSummaryPlotTool;
   std::map<std::string, TrackSummaryPlotTool> m_subDetectorSummaryTools;
   TrackQualityPlotTool m_trackQualityPlotTool;
+  Acts::Experimental::Histogram1 m_nTracksHistogram;
 
   Stats m_stats;
 };

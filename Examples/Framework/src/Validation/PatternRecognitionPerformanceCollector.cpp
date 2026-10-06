@@ -12,6 +12,8 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <array>
+#include <cctype>
 #include <format>
 #include <utility>
 
@@ -39,7 +41,17 @@ PatternRecognitionPerformanceCollector::PatternRecognitionPerformanceCollector(
       m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig,
                              m_logger->level()),
       m_trackQualityPlotTool(m_cfg.trackQualityPlotToolConfig,
-                             m_logger->level()) {
+                             m_logger->level()),
+      m_nTracksHistogram([&]() {
+        std::string labelTitle = m_cfg.label;
+        if (!labelTitle.empty()) {
+          labelTitle[0] = static_cast<char>(std::toupper(labelTitle[0]));
+        }
+        return Acts::Experimental::Histogram1(
+            std::format("n{}s", labelTitle),
+            std::format("Number of {}s per event", m_cfg.label),
+            std::array{m_cfg.nTracksBinning});
+      }()) {
   for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
     TrackSummaryPlotTool::Config subConfig = m_cfg.trackSummaryPlotToolConfig;
     subConfig.prefix = key;
@@ -57,6 +69,8 @@ void PatternRecognitionPerformanceCollector::fill(
     const InverseMultimap<SimBarcode>& particleMeasurementsMap) {
   std::size_t unmatched = 0;
   std::size_t missingRefSurface = 0;
+
+  m_nTracksHistogram.fill({static_cast<double>(tracks.size())});
 
   std::string labelPlural = std::format("{}s", m_cfg.label);
 
