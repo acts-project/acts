@@ -1,14 +1,14 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/options/clusterization.hpp"
 
-#include "traccc/clusterization/clusterization_algorithm.hpp"
 #include "traccc/examples/utils/printable.hpp"
 
 namespace traccc::opts {
@@ -38,10 +38,6 @@ clusterization::clusterization() : interface("Clusterization Options") {
 
 clusterization::operator clustering_config() const {
   return m_config;
-}
-
-clusterization::operator host::clusterization_algorithm::config_type() const {
-  return {};
 }
 
 std::unique_ptr<configuration_printable> clusterization::as_printable() const {

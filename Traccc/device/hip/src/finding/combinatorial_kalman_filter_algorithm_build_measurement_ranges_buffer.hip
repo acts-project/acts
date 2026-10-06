@@ -1,9 +1,13 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
 
 // Local include(s).
 #include "../utils/utils.hpp"
@@ -21,9 +25,6 @@
 // HIP include(s).
 #include <hip/hip_runtime.h>
 
-// System include(s).
-#include <memory_resource>
-
 namespace traccc::hip {
 
 vecmem::data::vector_buffer<edm::measurement_collection::const_view::size_type>
@@ -32,10 +33,10 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
     const edm::measurement_collection::const_view::size_type n_measurements,
     const edm::measurement_collection::const_view& measurements) const {
   return detector_buffer_visitor<detector_type_list>(
-      det, [&]<typename detector_traits_t>(
-               const typename detector_traits_t::view& det) {
+      det, [&]<detray::concepts::detector detector_t>(
+               const detray::detector_view_t<detector_t>& det) {
         // Construct an appropriate device detector object.
-        typename detector_traits_t::device device_det{det};
+        detray::detector_device_t<detector_t> device_det{det};
 
         // Create the result buffer.
         vecmem::data::vector_buffer<
@@ -54,13 +55,12 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
 // a backend specify way. :-(
 #if defined(__HIP_PLATFORM_AMD__)
         auto policy = thrust::hip::par_nosync(
-                          std::pmr::polymorphic_allocator(&(mr().main)))
+                          stream_synchronizing_allocator(mr().main, stream()))
                           .on(str);
 #elif defined(__HIP_PLATFORM_NVIDIA__)
-        auto policy =
-            thrust::cuda::par_nosync(
-                std::pmr::polymorphic_allocator(&(mr().main)))
-                .on(str);
+        auto policy = thrust::cuda::par_nosync(
+                          stream_synchronizing_allocator(mr().main, stream()))
+                          .on(str);
 #else
 #error "Unrecognised HIP platform."
 #endif

@@ -252,7 +252,7 @@
                 "CMAKE_FIND_FRAMEWORK": "LAST",
                 "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
                 "CMAKE_BUILD_TYPE": "Release",
-                "ACTS_FORCE_ASSERTIONS": "ON",
+                "ACTS_FORCE_ASSERTIONS": "OFF",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_PYTHON_WHEEL": "ON",
                 "ACTS_BUILD_PYTHON_BINDINGS": "ON",

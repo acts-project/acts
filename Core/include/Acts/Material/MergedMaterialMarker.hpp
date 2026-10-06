@@ -9,10 +9,13 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
 #include <iosfwd>
+#include <optional>
+#include <string>
 #include <vector>
 
 namespace Acts {
@@ -31,6 +34,24 @@ namespace Acts {
 /// discoverable downstream (e.g. when inspecting or writing out the geometry).
 class MergedMaterialMarker final : public ISurfaceMaterial {
  public:
+  /// Identity of an input whose material was discarded. IDs can be zero
+  /// when merging takes place before geometry closure.
+  struct Origin {
+    /// Geometry ID of the original surface before merging.
+    GeometryIdentifier geometryId;
+    /// Stable assignment key of the original surface, if configured.
+    std::optional<std::string> materialKey;
+  };
+
+  /// Construct a marker retaining the original inputs of a lossy merge.
+  /// @param origins Original inputs, flattened across repeated merges
+  explicit MergedMaterialMarker(std::vector<Origin> origins)
+      : m_origins(std::move(origins)) {}
+
+  /// Original material assignments lost during merging
+  /// @return Original input identities, flattened across repeated merges
+  const std::vector<Origin>& origins() const { return m_origins; }
+
   /// Default constructor
   MergedMaterialMarker() = default;
 
@@ -64,6 +85,8 @@ class MergedMaterialMarker final : public ISurfaceMaterial {
   std::ostream& toStream(std::ostream& sl) const override;
 
  private:
+  std::vector<Origin> m_origins;
+
   /// The marker carries no material
   MaterialSlab m_slab = MaterialSlab::Nothing();
 };

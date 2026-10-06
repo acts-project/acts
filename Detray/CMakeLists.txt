@@ -91,8 +91,6 @@ option(
     ${CMAKE_CUDA_COMPILER}
 )
 
-option(DETRAY_BUILD_SYCL "Build the SYCL sources included in detray" OFF)
-
 # Check if HIP is available
 option(DETRAY_BUILD_HIP "Build the HIP sources included in detray" OFF)
 
@@ -100,7 +98,7 @@ cmake_dependent_option(
     DETRAY_BUILD_HOST
     "Build the host sources included in detray"
     ON
-    "DETRAY_BUILD_CUDA OR DETRAY_BUILD_SYCL OR DETRAY_BUILD_HIP"
+    "DETRAY_BUILD_CUDA OR DETRAY_BUILD_HIP"
     ON
 )
 
@@ -166,13 +164,6 @@ if(${DETRAY_BUILD_CUDA} AND ${CMAKE_CUDA_STANDARD} LESS 20)
     message(
         SEND_ERROR
         "CMAKE_CUDA_STANDARD=${CMAKE_CUDA_STANDARD}, but detray requires C++>=20"
-    )
-endif()
-
-if(${DETRAY_BUILD_SYCL} AND ${CMAKE_SYCL_STANDARD} LESS 20)
-    message(
-        SEND_ERROR
-        "CMAKE_SYCL_STANDARD=${CMAKE_SYCL_STANDARD}, but detray requires C++>=20"
     )
 endif()
 

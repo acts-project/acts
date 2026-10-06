@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -26,7 +27,8 @@ namespace traccc::device {
 namespace detail {
 
 struct Tracklet {
-  unsigned int nodes[traccc::device::gbts_consts::max_cca_iter + 1];
+  unsigned int
+      nodes[traccc::device::gbts_consts::max_seed_candidate_length + 1];
   int size;
 };
 
@@ -76,8 +78,8 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
   const vecmem::device_vector<const char> d_seed_ambiguity(
       payload.seed_ambiguity);
   const vecmem::device_vector<const int2> d_path_store(payload.path_store);
-  const vecmem::device_vector<const unsigned int> d_output_graph(
-      payload.output_graph);
+  const vecmem::device_vector<const uint2> d_output_edge_nodes(
+      payload.output_edge_nodes);
   const vecmem::device_vector<const float4> d_sp_params(payload.reducedSP);
   vecmem::device_vector<unsigned long long int> d_hit_bids(payload.hit_bids);
 
@@ -89,35 +91,36 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
       payload.gbts_convert_seeds_params.tight_bid_cot_threshold;
   const bool use_dropout = payload.gbts_convert_seeds_params.use_dropout;
 
-  // Row-major output graph: each edge owns a contiguous block of
-  // edge_size = 2 + 1 + max_num_neighbours ints.
-  const unsigned int edge_size = 2u + 1u + payload.max_num_neighbours;
-
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
   const unsigned int gridDimX = thread_id.getGridDimX();
 
-  for (unsigned int prop_idx = globalIdx; prop_idx < payload.nProps;
+  const unsigned int path_count =
+      vecmem::device_vector<const unsigned int>(payload.path_count)[0];
+  const unsigned int nPaths =
+      (path_count < payload.nPathsMax) ? path_count : payload.nPathsMax;
+  for (unsigned int prop_idx = globalIdx; prop_idx < nPaths;
        prop_idx += blockDimX * gridDimX) {
+    const int2 prop = d_seed_proposals[prop_idx];
+    if (prop.y < 0) {
+      continue;
+    }
     if (d_seed_ambiguity[prop_idx] == -2) {
       continue;
     }
     char best_for_hit = 0;
     detail::Tracklet seed;
     seed.size = 0;
-    const int2 prop = d_seed_proposals[prop_idx];
     int2 path = int2{0, prop.y};
     while (path.y >= 0) {
       path = d_path_store[static_cast<unsigned int>(path.y)];
       seed.nodes[seed.size++] =
-          d_output_graph[edge_size * static_cast<unsigned int>(path.x) +
-                         gbts_consts::node1];
+          d_output_edge_nodes[static_cast<unsigned int>(path.x)].x;
       best_for_hit +=
           (prop_idx == (d_hit_bids[seed.nodes[seed.size - 1]] & 0xFFFFFFFFLL));
     }
     seed.nodes[seed.size++] =
-        d_output_graph[edge_size * static_cast<unsigned int>(path.x) +
-                       gbts_consts::node2];
+        d_output_edge_nodes[static_cast<unsigned int>(path.x)].y;
     best_for_hit +=
         (prop_idx == (d_hit_bids[seed.nodes[seed.size - 1]] & 0xFFFFFFFFLL));
 

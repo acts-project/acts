@@ -166,7 +166,7 @@ def runPypiFindingFittingDemo(
                     sf = surface_map[isl.geometryId()]
 
                     trackState = track.appendTrackState()
-                    trackState.typeFlags.isMeasurement = True
+                    trackState.typeFlags.setIsMeasurement()
                     trackState.uncalibratedSourceLink = sl
                     trackState.referenceSurface = sf
 

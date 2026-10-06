@@ -81,7 +81,7 @@ inline auto run_navigation_validation(
   vecmem::cuda::copy cuda_cpy;
 
   // Copy the detector to device and get its view
-  auto det_buffer = detray::get_buffer(det, *dev_mr, cuda_cpy);
+  const auto det_buffer = detray::get_buffer(det, *dev_mr, cuda_cpy);
   auto det_view = detray::get_data(det_buffer);
 
   // Move truth intersection traces data to device

@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "../utils/hip_error_handling.hpp"
@@ -45,9 +46,9 @@ __global__ void create_device_detector(typename detector_t::const_view_type in,
 move_only_any combinatorial_kalman_filter_algorithm::create_device_detector(
     const detector_buffer& det) const {
   return detector_buffer_visitor<detector_type_list>(
-      det, [&]<typename detector_traits_t>(
-               const typename detector_traits_t::view& det_view) {
-        using device_detector_t = typename detector_traits_t::device;
+      det, [&]<detray::concepts::detector detector_t>(
+               const detray::detector_view_t<detector_t>& det_view) {
+        using device_detector_t = detray::detector_device_t<detector_t>;
 
         static_assert(
             std::is_trivially_destructible_v<device_detector_t>,

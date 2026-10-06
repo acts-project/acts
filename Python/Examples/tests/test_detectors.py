@@ -37,6 +37,29 @@ def test_generic_geometry():
     assert count_surfaces(trackingGeometry) == 18728
 
 
+def test_tracking_geometry_keeps_detector_alive():
+    """The tracking geometry only shares ownership of the surfaces. The
+    detector elements they reference through the non-owning
+    Surface::m_placement are owned by the detector, so holding on to the
+    geometry has to keep the detector alive as well."""
+    import gc
+    import weakref
+
+    detector = acts.examples.GenericDetector()
+    detectorAlive = weakref.ref(detector)
+    trackingGeometry = detector.trackingGeometry()
+
+    del detector
+    gc.collect()
+
+    assert detectorAlive() is not None, (
+        "detector was destroyed while the tracking geometry is still alive, "
+        "leaving Surface::m_placement dangling"
+    )
+    # the geometry is still usable
+    assert count_surfaces(trackingGeometry) == 18728
+
+
 def test_telescope_geometry():
     n_surfaces = 10
 
@@ -44,7 +67,28 @@ def test_telescope_geometry():
         bounds=[100, 100],
         positions=[10 * i for i in range(n_surfaces)],
         stereos=[0] * n_surfaces,
-        binValue=0,
+        rotDirection=0,
+    )
+    detector = acts.examples.TelescopeDetector(config)
+    trackingGeometry = detector.trackingGeometry()
+    contextDecorators = detector.contextDecorators()
+
+    assert detector is not None
+    assert trackingGeometry is not None
+    assert contextDecorators is not None
+
+    assert count_surfaces(trackingGeometry) == n_surfaces
+
+
+def test_telescopeGen3_geometry():
+    n_surfaces = 10
+
+    config = acts.examples.TelescopeDetector.Config(
+        bounds=[100, 100],
+        positions=[10 * i for i in range(n_surfaces)],
+        stereos=[0] * n_surfaces,
+        rotDirection=0,
+        gen3=True,
     )
     detector = acts.examples.TelescopeDetector(config)
     trackingGeometry = detector.trackingGeometry()
@@ -58,8 +102,8 @@ def test_telescope_geometry():
 
 
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 is not set up")
-@pytest.mark.parametrize("binValue", [0, 1, 2])
-def test_telescope_geant4_geometry(binValue):
+@pytest.mark.parametrize("rotDirection", [0, 1, 2])
+def test_telescope_geant4_geometry(rotDirection):
     from acts.examples.geant4 import SensitiveSurfaceMapper
 
     n_surfaces = 6
@@ -69,7 +113,41 @@ def test_telescope_geant4_geometry(binValue):
         positions=[30 * (i + 1) for i in range(n_surfaces)],
         stereos=[0] * n_surfaces,
         offsets=[10, -20],
-        binValue=binValue,
+        rotDirection=rotDirection,
+    )
+    detector = acts.examples.TelescopeDetector(config)
+    trackingGeometry = detector.trackingGeometry()
+    gctx = detector.nominalGeometryContext()
+
+    # every sensitive surface has to be backed by a Geant4 volume in the same place
+    smmConfig = SensitiveSurfaceMapper.Config()
+    smmConfig.materialMappings = ["Silicon"]
+    mapper = SensitiveSurfaceMapper.create(
+        smmConfig, acts.logging.INFO, trackingGeometry
+    )
+
+    state = SensitiveSurfaceMapper.State()
+    mapper.remapSensitiveNames(
+        state, gctx, detector, acts.Transform3(acts.Vector3(0, 0, 0))
+    )
+
+    assert mapper.checkMapping(state, gctx, False, False)
+
+
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 is not set up")
+@pytest.mark.parametrize("rotDirection", [0, 1, 2])
+def test_telescopeGen3_geant4_geometry(rotDirection):
+    from acts.examples.geant4 import SensitiveSurfaceMapper
+
+    n_surfaces = 6
+
+    config = acts.examples.TelescopeDetector.Config(
+        bounds=[100, 200],
+        positions=[30 * (i + 1) for i in range(n_surfaces)],
+        stereos=[0] * n_surfaces,
+        offsets=[10, -20],
+        rotDirection=rotDirection,
+        gen3=True,
     )
     detector = acts.examples.TelescopeDetector(config)
     trackingGeometry = detector.trackingGeometry()

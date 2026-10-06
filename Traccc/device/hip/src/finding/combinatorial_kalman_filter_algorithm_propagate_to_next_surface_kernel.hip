@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "../utils/global_index.hpp"
@@ -53,15 +54,17 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
   detector_buffer_magnetic_field_visitor<detector_type_list,
                                          hip::bfield_type_list<scalar>>(
       detector, field,
-      [&]<typename detector_traits_t, typename bfield_view_t>(
-          const typename detector_traits_t::view&,
+      [&]<detray::concepts::detector detector_t, typename bfield_view_t>(
+          const detray::detector_view_t<detector_t>&,
           const bfield_view_t& bfield) {
-        using detector_t = typename detector_traits_t::device;
+        using detector_device_t = detray::detector_device_t<detector_t>;
         using propagator_t =
-            traccc::details::ckf_propagator_t<detector_t, bfield_view_t>;
+            traccc::details::ckf_propagator_t<detector_device_t, bfield_view_t>;
 
-        const vecmem::data::vector_buffer<detector_t>& device_detector_buffer =
-            device_detector.as<vecmem::data::vector_buffer<detector_t>>();
+        const vecmem::data::vector_buffer<detector_device_t>&
+            device_detector_buffer =
+                device_detector
+                    .as<vecmem::data::vector_buffer<detector_device_t>>();
 
         // The kernel name carries a top level comma, which the launch macro
         // can not take, so it is passed through a function pointer.
