@@ -46,22 +46,41 @@ class IVolumeMaterial;
 ///   dY_i = I + h sum_j a_ij dK_j,  dK_i = J_f(Y_i) dY_i,
 ///   D = I + h sum_i b_i dK_i,
 ///
-/// so it works for every tableau. J_f includes the field gradient term
-/// (q/p) [T x] dB/dr. The stepper computes the gradient with central finite
-/// differences of the field.
+/// so it works for every tableau. Here dY_i, dK_i and D are the derivatives
+/// of the stage, of the stage slope and of the step by the free parameters at
+/// the start of the step. J_f = df/dy has the non-zero blocks
+///
+///   d(r)/dT = I,  d(t)/d(q/p) = d(1/beta)/d(q/p),
+///   d(T)/dr = (q/p) [T x] dB/dr,  d(T)/dT = -(q/p) [B x],
+///   d(T)/d(q/p) = T x B.
+///
+/// The stepper computes dB/dr with central finite differences of the field,
+/// so the jacobian is exact up to the O(epsilon^2) error of the gradient, see
+/// @ref Options::fieldGradientEpsilon. Without the gradient term
+/// (@ref Options::includeFieldGradient) the jacobian is not exact.
+///
+/// After the step, the stepper normalises the direction to unit length. This
+/// is part of the discrete step, so the stepper also applies its derivative
+/// (I - T T^T / |T|^2) / |T| to the direction rows of D.
 ///
 /// With embedded weights the stepper adapts the step size to
 /// @ref StepperPlainOptions::stepTolerance. The error estimate is the maximum
-/// of the position (mm), time (mm) and direction components of the difference
-/// between the solution and the embedded solution.
+/// norm of the difference between the solution and the embedded solution,
+/// before the direction is normalised. It uses the position (mm), the time
+/// (mm) and the dimensionless direction components with the same absolute
+/// tolerance. In vacuum q/p does not change, so it does not contribute. The
+/// step size control follows Hairer, Nørsett, Wanner, Solving Ordinary
+/// Differential Equations I, 2nd ed., Section II.4.
 ///
 /// As for @ref HelixStepper, a step to the straight-line distance of a surface
 /// can pass it, and the next step goes back. A target aborter must accept an
 /// intersection that far behind the track.
 ///
 /// @note The order of a tableau only holds in a smooth field. An interpolated
-///       field map is only continuous at its cell edges, so there every
-///       tableau is only accurate to about second order.
+///       field map is continuous but not differentiable at the cell faces.
+///       A step that crosses a face has a local error of order h^2 for every
+///       tableau. The number of crossings does not decrease with h, so in a
+///       field map every tableau is only accurate to about second order.
 /// @note The stepper propagates in vacuum only. It ignores volume material.
 class GenericRungeKuttaStepper final {
  public:
@@ -85,7 +104,8 @@ class GenericRungeKuttaStepper final {
     /// Magnetic field provider
     std::shared_ptr<const MagneticFieldProvider> bField;
 
-    /// Runge-Kutta tableau
+    /// Runge-Kutta tableau. It is shared, so that all steppers can use the
+    /// static built-in tableaus without a copy.
     std::shared_ptr<const ButcherTableau> tableau =
         ButcherTableau::dormandPrince54();
   };
@@ -105,11 +125,19 @@ class GenericRungeKuttaStepper final {
     /// Include the field gradient in the transport jacobian
     bool includeFieldGradient = true;
 
-    /// Distance of the field lookups for the finite-difference gradient
+    /// Distance of the field lookups for the finite-difference gradient.
+    ///
+    /// The truncation error of the central difference is of order epsilon^2.
+    /// The round-off error is of order eps_machine |B| / epsilon, which is
+    /// about 1e-14 |B| per mm for 10 um. This is far below the gradient of a
+    /// real field. 10 um is also small compared with a field-map cell, so the
+    /// lookups usually stay in one cell.
     double fieldGradientEpsilon = 10 * UnitConstants::um;
 
     /// Include the maximum difference of the jacobian and the embedded
-    /// jacobian in the error estimate
+    /// jacobian in the error estimate. The embedded jacobian is
+    /// I + h sum_i bEmbedded_i dK_i. Its entries have mixed units, and the
+    /// stepper compares all of them with the same tolerance.
     bool jacobianInErrorEstimate = false;
 
     /// Set plain stepper options

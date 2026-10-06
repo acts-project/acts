@@ -293,11 +293,17 @@ Result<double> GenericRungeKuttaStepper::step(
       timeDerivative(state.particleHypothesis, start[eFreeQOverP]);
 
   const double stepTolerance = state.options.stepTolerance;
+  // Step size control of Hairer, Nørsett, Wanner, Solving Ordinary
+  // Differential Equations I, 2nd ed., Section II.4: the error of the lower
+  // order q of the pair scales with h^(q+1). The safety factor 0.9 and the
+  // maximum growth 5 are in the ranges recommended there. The minimum 0.2 is
+  // the value of their DOPRI5 code.
   const auto calcStepSizeScaling = [&](const double errorEstimate) -> double {
     constexpr double safety = 0.9;
     constexpr double lower = 0.2;
     constexpr double upper = 5.0;
-    const double exponent = 1. / (tableau.embeddedOrder() + 1);
+    const double exponent =
+        1. / (std::min(tableau.order(), tableau.embeddedOrder()) + 1);
     const double x = safety * std::pow(stepTolerance / errorEstimate, exponent);
     return std::clamp(x, lower, upper);
   };
@@ -372,6 +378,7 @@ Result<double> GenericRungeKuttaStepper::step(
       }
       errorEstimate = std::max(errorEstimate, jacDiff.cwiseAbs().maxCoeff());
     }
+    // Avoid a division by zero in the step size scaling
     errorEstimate = std::max(errorEstimate, std::numeric_limits<double>::min());
 
     if (errorEstimate <= stepTolerance) {

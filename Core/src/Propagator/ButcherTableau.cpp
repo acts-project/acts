@@ -44,8 +44,13 @@ ButcherTableau::ButcherTableau(std::string name, unsigned order,
                                   " must have one coefficient per previous "
                                   "stage");
     }
+    // The round-off of the row sum grows with the size of the coefficients,
+    // so the tolerance is relative to the sum of their magnitudes.
     const double rowSum = std::accumulate(a[i].begin(), a[i].end(), 0.);
-    if (std::abs(rowSum - m_c[i]) > 1e-14) {
+    const double rowNorm = std::accumulate(
+        a[i].begin(), a[i].end(), 0.,
+        [](double sum, double aij) { return sum + std::abs(aij); });
+    if (std::abs(rowSum - m_c[i]) > 1e-13 * (1. + rowNorm)) {
       throw std::invalid_argument("ButcherTableau " + m_name + ": row " +
                                   std::to_string(i) +
                                   " does not sum to its node");
@@ -86,7 +91,13 @@ std::shared_ptr<const ButcherTableau> ButcherTableau::dormandPrince54() {
 }
 
 std::shared_ptr<const ButcherTableau> ButcherTableau::verner98() {
-  // The exact coefficients are rationals and rationals times sqrt(6).
+  // Coefficients from J. H. Verner, https://www.sfu.ca/~jverner/, file
+  // RKV98.IIa.Efficient.000000349.081210.CoeffsOnlyRADandFLOATS.
+  //
+  // The exact coefficients are rationals and rationals times sqrt(6). Where
+  // the numerator or the denominator does not fit into 53 bits, a double
+  // literal cannot hold the rational exactly, so the code gives the decimal
+  // value of the rational instead.
   const double sqrt6 = std::sqrt(6.);
   static const auto tableau = std::make_shared<const ButcherTableau>(
       "Verner98", 9, 8,

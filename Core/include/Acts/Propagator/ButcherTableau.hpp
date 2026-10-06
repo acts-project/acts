@@ -24,9 +24,16 @@ namespace Acts {
 /// the solution y_1 = y + h * sum_i b(i) * K_i and optionally an embedded
 /// solution with the weights @ref bEmbedded for an error estimate.
 ///
-/// Applied to the first-order system of the free parameters, a tableau is the
-/// same as the Runge-Kutta-Nyström method with the coefficients A^2 and b A,
-/// so any tableau for a first-order system works for the equation of motion.
+/// The equation of motion is a second-order equation for the position. A
+/// tableau with the coefficients A and b, applied to the first-order system of
+/// the free parameters, is the same as the general Runge-Kutta-Nyström method
+/// with the position coefficients A^2 and b A (Hairer, Nørsett, Wanner,
+/// Solving Ordinary Differential Equations I, 2nd ed., Springer 1993, Section
+/// II.14).
+///
+/// @note The Runge-Kutta-Nyström step of @ref EigenStepper and of the ATLAS
+///       stepper is a different fourth-order method than @ref classicalRk4
+///       on the first-order system, so the two do not give the same result.
 class ButcherTableau {
  public:
   /// Construct and validate a tableau.
@@ -80,15 +87,27 @@ class ButcherTableau {
   double bEmbedded(std::size_t i) const { return m_bEmbedded[i]; }
 
   /// The classical fourth-order method without an embedded solution
+  /// (W. Kutta, Z. Math. Phys. 46 (1901) 435-453; Hairer, Nørsett, Wanner,
+  /// Solving Ordinary Differential Equations I, Section II.1)
   /// @return the shared tableau
   static std::shared_ptr<const ButcherTableau> classicalRk4();
 
-  /// The Dormand-Prince 5(4) pair (Dormand, Prince 1980)
+  /// The Dormand-Prince 5(4) pair RK5(4)7M (J. R. Dormand, P. J. Prince,
+  /// A family of embedded Runge-Kutta formulae, J. Comput. Appl. Math. 6
+  /// (1980) 19-26, Table 2; Hairer, Nørsett, Wanner, Solving Ordinary
+  /// Differential Equations I, Section II.5, DOPRI5). The stepper propagates
+  /// the fifth-order solution and uses the fourth-order solution for the
+  /// error estimate.
   /// @return the shared tableau
   static std::shared_ptr<const ButcherTableau> dormandPrince54();
 
-  /// The "most efficient" Verner 9(8) pair (J. H. Verner, Numerical
-  /// Algorithms 53, 2010), with the coefficients of OrdinaryDiffEq.jl `Vern9`
+  /// The "most efficient" Verner 9(8) pair. The method is described in
+  /// J. H. Verner, Numerically optimal Runge-Kutta pairs with interpolants,
+  /// Numerical Algorithms 53 (2010) 383-396, doi:10.1007/s11075-009-9290-3.
+  /// The coefficients are from J. H. Verner, https://www.sfu.ca/~jverner/,
+  /// file RKV98.IIa.Efficient.000000349.081210.CoeffsOnlyRADandFLOATS. The
+  /// stepper propagates the ninth-order solution and uses the eighth-order
+  /// solution for the error estimate.
   /// @return the shared tableau
   static std::shared_ptr<const ButcherTableau> verner98();
 
