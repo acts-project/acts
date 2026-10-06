@@ -17,6 +17,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -24,6 +25,7 @@
 class G4VPhysicalVolume;
 
 namespace Acts {
+class GeometryObject;
 class Surface;
 }  // namespace Acts
 
@@ -56,6 +58,21 @@ struct SensitiveCandidatesBase {
   /// @return a vector of sensitive surfaces
   virtual std::vector<const Acts::Surface*> queryAll() const = 0;
 
+  /// Get the region of the tracking geometry that `queryPosition` resolves a
+  /// given position to, e.g. a layer or a tracking volume
+  ///
+  /// All positions in the same region must yield the same candidate list.
+  /// The mapper then queries the candidates and builds its lookup only once
+  /// per region. The default disables this caching.
+  ///
+  /// @param gctx the geometry context
+  /// @param position the position to look for sensitive surfaces
+  ///
+  /// @return the region (may be nullptr if there is none), or std::nullopt
+  ///         if the candidates can not be cached by region
+  virtual std::optional<const Acts::GeometryObject*> queryRegion(
+      const Acts::GeometryContext& gctx, const Acts::Vector3& position) const;
+
   virtual ~SensitiveCandidatesBase() = default;
 };
 
@@ -70,6 +87,10 @@ struct SensitiveCandidates : public SensitiveCandidatesBase {
       const Acts::Vector3& position) const override;
 
   std::vector<const Acts::Surface*> queryAll() const override;
+
+  std::optional<const Acts::GeometryObject*> queryRegion(
+      const Acts::GeometryContext& gctx,
+      const Acts::Vector3& position) const override;
 
  private:
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeo{};
@@ -165,6 +186,16 @@ class SensitiveSurfaceMapper {
   Config m_cfg;
 
  private:
+  class CandidateIndex;
+  struct Cache;
+
+  /// Recursive implementation of the public `remapSensitiveNames`, with the
+  /// candidate lookup cache shared over the whole Geant4 tree
+  void remapSensitiveNames(State& state, Cache& cache,
+                           const Acts::GeometryContext& gctx,
+                           G4VPhysicalVolume* g4PhysicalVolume,
+                           const Acts::Transform3& motherTransform) const;
+
   /// Private access method to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
 
