@@ -16,7 +16,6 @@
 #include <cstddef>
 #include <iostream>
 #include <map>
-#include <mutex>
 #include <numeric>
 #include <set>
 #include <vector>
@@ -47,7 +46,6 @@ unsigned long globalIndexSurfToParam(unsigned long surfaceIndex,
 /// content into the parent record, then writes the parent, under two separate
 /// locks: another thread can move its own track into the parent in between,
 /// and both tracks end up in one record.
-std::mutex milleWriteMutex;
 
 }  // namespace
 
@@ -300,7 +298,6 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
   // track is fully written - end the record in Mille
   // NB: This will automatically propagate the local buffer content to
   // the parent instance passed by the caller.
-  std::lock_guard lock(milleWriteMutex);
   milleLocalBuf->writeRecord();
 }
 
