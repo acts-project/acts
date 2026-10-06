@@ -95,8 +95,8 @@ int throughput_st(std::string_view description, int argc, char* argv[],
       *(host_mr == nullptr ? &unpinned_host_mr : host_mr);
 
   // Construct the detector description object.
-  traccc::detector_design_description::host det_descr{input_host_mr};
-  traccc::detector_conditions_description::host det_cond{input_host_mr};
+  traccc::detector_design_description::host det_descr{unpinned_host_mr};
+  traccc::detector_conditions_description::host det_cond{unpinned_host_mr};
   traccc::io::read_detector_description(
       det_descr, det_cond, detector_opts.detector_file,
       detector_opts.digitization_file, detector_opts.conditions_file,
