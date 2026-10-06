@@ -103,7 +103,7 @@ class DoubletsForMiddleSp {
     /// Get space point index pair
     /// @return The space point index
     SpacePointIndex spacePointIndex() const {
-      return m_container->m_doublets[m_index].spacePoint;
+      return m_container->m_doublets[m_index].spacePointIndex;
     }
 
     /// Get cotangent of theta
@@ -235,15 +235,21 @@ class DoubletsForMiddleSp {
  private:
   /// Holds all stored quantities of one doublet.
   struct Doublet {
-    SpacePointIndex spacePoint{};
-
-    /// Parameters required to calculate a circle with a linear equation.
+    /// Space point index for the doublet
+    SpacePointIndex spacePointIndex{};
+    /// Cotangent of polar angle
     float cotTheta{};
+    /// Inverse delta R parameter
     float iDeltaR{};
+    /// Error in R coordinate
     float er{};
+    /// U coordinate parameter
     float u{};
+    /// V coordinate parameter
     float v{};
+    /// X coordinate
     float x{};
+    /// Y coordinate
     float y{};
   };
 
