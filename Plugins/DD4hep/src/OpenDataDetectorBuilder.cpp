@@ -88,28 +88,51 @@ constexpr std::size_t kCaloCollectorZBins = 100;
 constexpr std::size_t kCaloCollectorDiscRBins = 400;
 constexpr std::size_t kCaloCollectorDiscPhiBins = 36;
 
+// Short, stable label for a face, used to build a per-face material key (a
+// designator node can configure more than one face, e.g. the Solenoid's
+// Inner+Outer cylinder, or an endcap layer's Negative+PositiveDisc -- the
+// node's own name alone would not be unique in that case).
+std::string faceLabel(Face face) {
+  switch (face) {
+    case Face::NegativeDisc:
+      return "NegativeDisc";
+    case Face::PositiveDisc:
+      return "PositiveDisc";
+    case Face::OuterCylinder:
+      return "OuterCylinder";
+    case Face::InnerCylinder:
+      return "InnerCylinder";
+    default:
+      throw std::invalid_argument("faceLabel: unsupported face");
+  }
+}
+
 // Configures `face` as a cylinder mantle: bins in (RPhi, Z). Used wherever a
 // thin cylindrical shell carries material on one of its two mantle faces --
 // the beampipe/PST/Solenoid, barrel layers, and outer subsystem boundaries.
+// Stable key: derived from the designator node's own name plus the face, so
+// a map stays valid across GeometryIdentifier churn from geometry changes.
 void configureCylinderFace(Acts::MaterialDesignatorBlueprintNode& mat,
                            Face face, std::size_t phiBins, std::size_t zBins) {
   mat.configureFace(
       face,
       Acts::AxisSpec::DeferredEquidistant(phiBins,
                                           Acts::AxisDirection::AxisRPhi),
-      Acts::AxisSpec::DeferredEquidistant(zBins, Acts::AxisDirection::AxisZ));
+      Acts::AxisSpec::DeferredEquidistant(zBins, Acts::AxisDirection::AxisZ),
+      mat.name() + "_" + faceLabel(face));
 }
 
 // Configures `face` as a flat disc: bins in (R, Phi). Used for endcap layer
 // material, pixel endplates, and container-level Negative/PositiveDisc
-// boundary material.
+// boundary material. Stable key: see @ref configureCylinderFace.
 void configureDiscFace(Acts::MaterialDesignatorBlueprintNode& mat, Face face,
                        std::size_t phiBins, std::size_t rBins) {
   mat.configureFace(
       face,
       Acts::AxisSpec::DeferredEquidistant(rBins, Acts::AxisDirection::AxisR),
       Acts::AxisSpec::DeferredEquidistant(phiBins,
-                                          Acts::AxisDirection::AxisPhi));
+                                          Acts::AxisDirection::AxisPhi),
+      mat.name() + "_" + faceLabel(face));
 }
 
 // Every subsystem container in this file uses the same Gap attachment/resize
