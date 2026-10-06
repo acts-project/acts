@@ -17,6 +17,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldError.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ButcherTableau.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -76,6 +77,35 @@ class SmoothField final : public MagneticFieldProvider {
   double m_length;
 };
 
+/// A constant field that fails outside of |x| < xMax
+class BoundedField final : public MagneticFieldProvider {
+ public:
+  struct Cache {
+    explicit Cache(const MagneticFieldContext& /*mctx*/) {}
+  };
+
+  BoundedField(const Vector3& field, double xMax)
+      : m_field(field), m_xMax(xMax) {}
+
+  MagneticFieldProvider::Cache makeCache(
+      const MagneticFieldContext& mctx) const override {
+    return MagneticFieldProvider::Cache(std::in_place_type<Cache>, mctx);
+  }
+
+  Result<Vector3> getField(
+      const Vector3& p,
+      MagneticFieldProvider::Cache& /*cache*/) const override {
+    if (std::abs(p.x()) >= m_xMax) {
+      return Result<Vector3>::failure(MagneticFieldError::OutOfBounds);
+    }
+    return Result<Vector3>::success(m_field);
+  }
+
+ private:
+  Vector3 m_field;
+  double m_xMax;
+};
+
 FreeVector makeStart(const Vector3& pos, const Vector3& dir, double qop) {
   FreeVector start = FreeVector::Zero();
   start.segment<3>(eFreePos0) = pos;
@@ -87,10 +117,10 @@ FreeVector makeStart(const Vector3& pos, const Vector3& dir, double qop) {
 
 /// Propagate the free parameters over the path length and return the state.
 template <typename stepper_t>
-typename stepper_t::State propagateFree(const stepper_t& stepper,
-                                        typename stepper_t::Options options,
-                                        const FreeVector& start,
-                                        double pathLength, bool covTransport) {
+typename stepper_t::State propagateFree(
+    const stepper_t& stepper, typename stepper_t::Options options,
+    const FreeVector& start, double pathLength, bool covTransport,
+    const ParticleHypothesis& particleHypothesis = ParticleHypothesis::pion()) {
   typename stepper_t::State state = stepper.makeState(options);
   // Initialise from the start parameters, so that the direction columns of
   // the bound-to-free jacobian are orthogonal to the start direction.
@@ -101,7 +131,7 @@ typename stepper_t::State propagateFree(const stepper_t& stepper,
           start.segment<3>(eFreeDir0), start[eFreeQOverP],
           covTransport ? std::optional<BoundMatrix>(BoundMatrix::Identity())
                        : std::nullopt,
-          ParticleHypothesis::pion()));
+          particleHypothesis));
   // Keep the exact start values, the round trip through the bound
   // parameters changes them at the level of the round-off.
   state.pars = start;
@@ -137,6 +167,13 @@ BOOST_AUTO_TEST_CASE(butcher_tableau_validation) {
                     std::invalid_argument);
   BOOST_CHECK_NO_THROW(
       ButcherTableau("heun", 2, 1, {0., 1.}, {{}, {1.}}, {0.5, 0.5}, {1., 0.}));
+}
+
+BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_without_tableau) {
+  auto field = std::make_shared<ConstantBField>(Vector3(0., 0., 2_T));
+  BOOST_CHECK_THROW(GenericRungeKuttaStepper(
+                        GenericRungeKuttaStepper::Config{field, nullptr}),
+                    std::invalid_argument);
 }
 
 /// Check the order conditions of the built-in tableaus up to order 5. The
@@ -419,6 +456,104 @@ BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_adaptive,
       BOOST_CHECK_LT(error, previousError);
     }
     previousError = error;
+  }
+}
+
+/// A tableau without embedded weights takes the given step size, also if the
+/// options ask for an adaptive step size.
+BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_fixed_without_embedded) {
+  auto field = std::make_shared<SmoothField>(2_T, 1_m);
+  const GenericRungeKuttaStepper stepper(
+      GenericRungeKuttaStepper::Config{field, ButcherTableau::classicalRk4()});
+  GenericRungeKuttaStepper::Options options(tgContext, mfContext);
+  BOOST_REQUIRE(options.adaptiveStepSize);
+  options.stepTolerance = 1e-12;
+  options.initialStepSize = 10_cm;
+  const FreeVector start =
+      makeStart(Vector3(100., -50., 20.), Vector3(1., 0.3, 0.2), 1. / 1_GeV);
+
+  const auto state = propagateFree(stepper, options, start, 1_m, true);
+  BOOST_CHECK_EQUAL(state.nSteps, 10u);
+  BOOST_CHECK_EQUAL(state.statistics.nRejectedSteps, 0u);
+  CHECK_CLOSE_ABS(state.stepSize.accuracy(), 10_cm, 1e-12);
+}
+
+/// The jacobian in the error estimate makes the adaptive steps smaller.
+BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_jacobian_in_error_estimate) {
+  auto field = std::make_shared<SmoothField>(2_T, 1_m);
+  const GenericRungeKuttaStepper stepper(field);
+  GenericRungeKuttaStepper::Options options(tgContext, mfContext);
+  options.stepTolerance = 1e-7;
+  options.initialStepSize = 10_m;
+  const FreeVector start =
+      makeStart(Vector3(100., -50., 20.), Vector3(1., 0.3, 0.2), 1. / 1_GeV);
+
+  const auto withoutJacobian =
+      propagateFree(stepper, options, start, 1_m, true);
+  options.jacobianInErrorEstimate = true;
+  const auto withJacobian = propagateFree(stepper, options, start, 1_m, true);
+
+  BOOST_TEST_CONTEXT("steps " << withoutJacobian.nSteps << " "
+                              << withJacobian.nSteps) {
+    BOOST_CHECK_GT(withJacobian.nSteps, withoutJacobian.nSteps);
+  }
+  CHECK_CLOSE_ABS(withJacobian.pars, withoutJacobian.pars, 1e-6);
+}
+
+/// The time of a neutral particle does not depend on q/p, because its charge
+/// and so its momentum hypothesis are fixed.
+BOOST_AUTO_TEST_CASE(generic_runge_kutta_stepper_neutral_time) {
+  auto field = std::make_shared<ConstantBField>(Vector3::Zero());
+  const GenericRungeKuttaStepper stepper(field);
+  const auto options = fixedStepOptions(10_cm);
+  const FreeVector start =
+      makeStart(Vector3(1., 2., 3.), Vector3(1., 0.3, 0.2), 1. / 0.5_GeV);
+
+  const auto neutral = propagateFree(stepper, options, start, 1_m, true,
+                                     ParticleHypothesis::pion0());
+  BOOST_CHECK_EQUAL(neutral.jacTransport(eFreeTime, eFreeQOverP), 0.);
+
+  const auto charged = propagateFree(stepper, options, start, 1_m, true,
+                                     ParticleHypothesis::pion());
+  BOOST_CHECK_NE(charged.jacTransport(eFreeTime, eFreeQOverP), 0.);
+}
+
+/// A failed field lookup returns the error and leaves the state unchanged,
+/// both for a stage and for the end of the step.
+BOOST_DATA_TEST_CASE(generic_runge_kutta_stepper_field_failure,
+                     boost::unit_test::data::make({0, 1}), tableauIndex) {
+  // The explicit Euler method has a single stage at the start, so only the
+  // lookup at the end of the step can fail.
+  const auto tableau =
+      tableauIndex == 0 ? ButcherTableau::classicalRk4()
+                        : std::make_shared<const ButcherTableau>(
+                              "Euler", 1, 0, std::vector<double>{0.},
+                              std::vector<std::vector<double>>{{}},
+                              std::vector<double>{1.}, std::vector<double>{});
+  auto field = std::make_shared<BoundedField>(Vector3(0., 0., 2_T), 50_cm);
+  const GenericRungeKuttaStepper stepper(
+      GenericRungeKuttaStepper::Config{field, tableau});
+  const auto options = fixedStepOptions(1_m);
+  const FreeVector start =
+      makeStart(Vector3::Zero(), Vector3(1., 0., 0.), 1. / 1_GeV);
+
+  auto state = stepper.makeState(options);
+  stepper.initialize(
+      state, BoundTrackParameters::createCurvilinear(
+                 makeVector4(start.segment<3>(eFreePos0), start[eFreeTime]),
+                 start.segment<3>(eFreeDir0), start[eFreeQOverP],
+                 BoundMatrix::Identity(), ParticleHypothesis::pion()));
+  const FreeVector parsBefore = state.pars;
+  const FreeMatrix jacBefore = state.jacTransport;
+
+  BOOST_TEST_CONTEXT(tableau->name()) {
+    auto res = stepper.step(state, Direction::Forward(), nullptr);
+    BOOST_REQUIRE(!res.ok());
+    BOOST_CHECK(res.error() == MagneticFieldError::OutOfBounds);
+    BOOST_CHECK_EQUAL(state.pars, parsBefore);
+    BOOST_CHECK_EQUAL(state.jacTransport, jacBefore);
+    BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
+    BOOST_CHECK_EQUAL(state.nSteps, 0u);
   }
 }
 
