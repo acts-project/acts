@@ -11,6 +11,7 @@
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding/DoubletSeedFinder.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <vector>
@@ -221,57 +222,59 @@ class TripletSeedFinder {
   /// @return Reference to the configuration object
   virtual const DerivedConfig& config() const = 0;
 
-  /// Create triplets from the bottom, middle, and top space points.
+  /// Called with a bottom doublet and its triplet top candidates. The
+  /// candidates are only valid for the duration of the call.
+  using CandidatesSink =
+      Delegate<void(const DoubletsForMiddleSp::Proxy& /*bottomDoublet*/,
+                    const TripletTopCandidates& /*candidates*/)>;
+
+  /// Create the triplet top candidates of the bottom doublets of one middle
+  /// space point, and hand each bottom doublet's to @p sink.
   ///
-  /// @note If the configuration declares the doublets sorted by cotTheta, the
-  ///   returned view is the input advanced past the top doublets that can no
-  ///   longer be compatible with any bottom doublet of a larger cotTheta. A
-  ///   caller sweeping the bottom doublets in ascending cotTheta has to feed
-  ///   the returned view to the next call, and start over from the full
-  ///   collection for the next middle space point.
+  /// The bottom doublets are taken in turn. @p sink is called with the
+  /// triplet top candidates of each bottom doublet that has any, in the order
+  /// of the bottom doublets; a bottom doublet without candidates is not passed
+  /// on. If the configuration declares the doublets sorted by cotTheta, the
+  /// search for each bottom doublet starts in the top doublets where the
+  /// previous one's cuts left off. For pixel seeding this is a shortcut that
+  /// can skip top doublets a following bottom doublet would accept on its own.
+  /// Stops once no top doublets are left.
   ///
   /// @param spacePoints Space point container
   /// @param spM Space point candidate to be used as middle SP in a seed
-  /// @param bottomDoublet Bottom doublet to be used for triplet creation
+  /// @param bottomDoublets Bottom doublets to be used for triplet creation
   /// @param topDoublets Top doublets to be used for triplet creation
-  /// @param tripletTopCandidates Cache for triplet top candidates
-  /// @return The top doublets that can still be compatible with a subsequent
-  ///   bottom doublet, see the note above
-  [[nodiscard]] virtual DoubletsForMiddleSp::Range createTripletTopCandidates(
+  /// @param tripletTopCandidates Scratch buffer for the triplet top
+  ///   candidates; its contents are unspecified after the call
+  /// @param sink Called with each bottom doublet that has triplet top
+  ///   candidates
+  virtual void createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet,
+      DoubletsForMiddleSp::Range bottomDoublets,
       DoubletsForMiddleSp::Range topDoublets,
-      TripletTopCandidates& tripletTopCandidates) const = 0;
+      TripletTopCandidates& tripletTopCandidates,
+      const CandidatesSink& sink) const = 0;
 
-  /// Create triplets from the bottom, middle, and top space points.
+  /// Create the triplet top candidates of the bottom doublets of one middle
+  /// space point, and hand each bottom doublet's to @p sink. As the overload
+  /// above; this is the one used when the doublets are sorted by cotTheta, and
+  /// the search for each bottom doublet then starts in the top doublets where
+  /// the previous one's cuts left off.
   ///
   /// @param spacePoints Space point container
   /// @param spM Space point candidate to be used as middle SP in a seed
-  /// @param bottomDoublet Bottom doublet to be used for triplet creation
+  /// @param bottomDoublets Bottom doublets to be used for triplet creation
   /// @param topDoublets Top doublets to be used for triplet creation
-  /// @param tripletTopCandidates Cache for triplet top candidates
-  /// @return The top doublets that can still be compatible with a subsequent
-  ///   bottom doublet, see the note above
-  [[nodiscard]] virtual DoubletsForMiddleSp::Subset createTripletTopCandidates(
+  /// @param tripletTopCandidates Scratch buffer for the triplet top
+  ///   candidates; its contents are unspecified after the call
+  /// @param sink Called with each bottom doublet that has triplet top
+  ///   candidates
+  virtual void createTripletTopCandidates(
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      DoubletsForMiddleSp::Subset topDoublets,
-      TripletTopCandidates& tripletTopCandidates) const = 0;
-
-  /// Create triplets from the bottom, middle, and top space points.
-  ///
-  /// @param spacePoints Space point container
-  /// @param spM Space point candidate to be used as middle SP in a seed
-  /// @param bottomDoublet Bottom doublet to be used for triplet creation
-  /// @param topDoublets Top doublets to be used for triplet creation
-  /// @param tripletTopCandidates Cache for triplet top candidates
-  /// @return The top doublets that can still be compatible with a subsequent
-  ///   bottom doublet, see the note above
-  [[nodiscard]] virtual DoubletsForMiddleSp::Subset2 createTripletTopCandidates(
-      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet,
+      DoubletsForMiddleSp::Subset2 bottomDoublets,
       DoubletsForMiddleSp::Subset2 topDoublets,
-      TripletTopCandidates& tripletTopCandidates) const = 0;
+      TripletTopCandidates& tripletTopCandidates,
+      const CandidatesSink& sink) const = 0;
 };
 
 }  // namespace Acts
