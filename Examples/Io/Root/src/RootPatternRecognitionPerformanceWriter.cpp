@@ -20,6 +20,7 @@
 #include <TH2.h>
 #include <TProfile.h>
 #include <TTree.h>
+#include <TVectorDfwd.h>
 #include <TVectorFfwd.h>
 #include <TVectorT.h>
 
@@ -111,6 +112,12 @@ ProcessCode RootPatternRecognitionPerformanceWriter::finalize() {
     v[0] = f;
     m_outputFile->WriteObject(&v, name);
   };
+  // Double keeps integer counts exact well beyond float's 2^24 limit.
+  auto writeCount = [&](std::size_t n, const std::string& name) {
+    TVectorD v(1);
+    v[0] = static_cast<double>(n);
+    m_outputFile->WriteObject(&v, name.c_str());
+  };
 
   std::string labelPlural = std::format("{}s", m_cfg.label);
 
@@ -188,6 +195,31 @@ ProcessCode RootPatternRecognitionPerformanceWriter::finalize() {
                std::format("meancompleteness_{}", labelPlural).c_str());
     writeFloat(static_cast<float>(s.meanPurity()),
                std::format("meanpurity_{}", labelPlural).c_str());
+
+    writeCount(s.nTotalTracks, "nTotalTracks");
+    writeCount(s.nTotalMatchedTracks, "nTotalMatchedTracks");
+    writeCount(s.nTotalFakeTracks, "nTotalFakeTracks");
+    writeCount(s.nTotalDuplicateTracks, "nTotalDuplicateTracks");
+    writeCount(s.nTotalUnmatchedTracks, "nTotalUnmatchedTracks");
+    writeCount(s.nTotalTracksMissingRefSurface,
+               "nTotalTracksMissingRefSurface");
+    writeCount(s.nTotalMeasurements, "nTotalMeasurements");
+    writeCount(s.nTotalOutliers, "nTotalOutliers");
+    writeCount(s.nTotalHoles, "nTotalHoles");
+    writeCount(s.nTotalSharedHits, "nTotalSharedHits");
+    writeCount(s.nTotalParticles, "nTotalParticles");
+    writeCount(s.nTotalMatchedParticles, "nTotalMatchedParticles");
+    writeCount(s.nTotalDuplicateParticles, "nTotalDuplicateParticles");
+    writeCount(s.nTotalFakeParticles, "nTotalFakeParticles");
+    writeCount(s.nTotalQualityTracks, "nTotalQualityTracks");
+
+    for (const auto& [key, sub] : s.subDetectors) {
+      writeCount(sub.nTrackStates, key + "_nTrackStates");
+      writeCount(sub.nMeasurements, key + "_nMeasurements");
+      writeCount(sub.nOutliers, key + "_nOutliers");
+      writeCount(sub.nHoles, key + "_nHoles");
+      writeCount(sub.nSharedHits, key + "_nSharedHits");
+    }
 
     if (m_matchingTree != nullptr) {
       m_matchingTree->Write();

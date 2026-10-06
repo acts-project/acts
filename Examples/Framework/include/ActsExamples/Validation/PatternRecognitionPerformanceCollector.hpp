@@ -60,6 +60,15 @@ class PatternRecognitionPerformanceCollector {
             const ParticleTrackMatching& particleTrackMatching,
             const InverseMultimap<SimBarcode>& particleMeasurementsMap);
 
+  /// Integrated track-state counts within one sub-detector.
+  struct SubDetectorStats {
+    std::size_t nTrackStates = 0;
+    std::size_t nMeasurements = 0;
+    std::size_t nOutliers = 0;
+    std::size_t nHoles = 0;
+    std::size_t nSharedHits = 0;
+  };
+
   /// Summary count statistics accumulated across all filled events.
   struct Stats {
     std::size_t nTotalTracks = 0;
@@ -77,6 +86,10 @@ class PatternRecognitionPerformanceCollector {
     std::size_t nTotalDuplicateParticles = 0;
     std::size_t nTotalFakeParticles = 0;
 
+    /// Per-subdetector track-state counts summed over all tracks, keyed as
+    /// in @c Config::subDetectorTrackSummaryVolumes.
+    std::map<std::string, SubDetectorStats> subDetectors;
+
     /// Number of tracks for which completeness/purity could be computed,
     /// i.e. that have a matched truth particle contributing hits.
     std::size_t nTotalQualityTracks = 0;
@@ -87,15 +100,12 @@ class PatternRecognitionPerformanceCollector {
 
     /// Mean completeness across all tracks with a computed completeness.
     double meanCompleteness() const {
-      return nTotalQualityTracks > 0
-                 ? sumCompleteness / nTotalQualityTracks
-                 : 0;
+      return nTotalQualityTracks > 0 ? sumCompleteness / nTotalQualityTracks
+                                     : 0;
     }
     /// Mean purity across all tracks with a computed purity.
     double meanPurity() const {
-      return nTotalQualityTracks > 0
-                 ? sumPurity / nTotalQualityTracks
-                 : 0;
+      return nTotalQualityTracks > 0 ? sumPurity / nTotalQualityTracks : 0;
     }
   };
 

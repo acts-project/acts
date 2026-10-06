@@ -74,39 +74,43 @@ void PatternRecognitionPerformanceCollector::fill(
     std::optional<Acts::BoundTrackParameters> fittedParameters;
     if (track.hasReferenceSurface()) {
       fittedParameters = track.createParametersAtReference();
-
       m_trackSummaryPlotTool.fill(*fittedParameters, track.nTrackStates(),
                                   track.nMeasurements(), track.nOutliers(),
                                   track.nHoles(), track.nSharedHits());
-
-      for (const auto& [key, volumes] : m_cfg.subDetectorTrackSummaryVolumes) {
-        std::size_t nTrackStates{};
-        std::size_t nMeasurements{};
-        std::size_t nOutliers{};
-        std::size_t nHoles{};
-        std::size_t nSharedHits{};
-
-        for (auto state : track.trackStatesReversed()) {
-          if (!state.hasReferenceSurface() ||
-              !volumes.contains(
-                  state.referenceSurface().geometryId().volume())) {
-            continue;
-          }
-          nTrackStates++;
-          nMeasurements +=
-              static_cast<std::size_t>(state.typeFlags().isMeasurement());
-          nOutliers += static_cast<std::size_t>(state.typeFlags().isOutlier());
-          nHoles += static_cast<std::size_t>(state.typeFlags().isHole());
-          nSharedHits +=
-              static_cast<std::size_t>(state.typeFlags().isSharedHit());
-        }
-        m_subDetectorSummaryTools.at(key).fill(*fittedParameters, nTrackStates,
-                                               nMeasurements, nOutliers, nHoles,
-                                               nSharedHits);
-      }
     } else {
       m_stats.nTotalTracksMissingRefSurface++;
       missingRefSurface++;
+    }
+
+    for (const auto& [key, volumes] : m_cfg.subDetectorTrackSummaryVolumes) {
+      SubDetectorStats counts;
+      for (auto state : track.trackStatesReversed()) {
+        if (!state.hasReferenceSurface() ||
+            !volumes.contains(state.referenceSurface().geometryId().volume())) {
+          continue;
+        }
+        counts.nTrackStates++;
+        counts.nMeasurements +=
+            static_cast<std::size_t>(state.typeFlags().isMeasurement());
+        counts.nOutliers +=
+            static_cast<std::size_t>(state.typeFlags().isOutlier());
+        counts.nHoles += static_cast<std::size_t>(state.typeFlags().isHole());
+        counts.nSharedHits +=
+            static_cast<std::size_t>(state.typeFlags().isSharedHit());
+      }
+
+      SubDetectorStats& total = m_stats.subDetectors[key];
+      total.nTrackStates += counts.nTrackStates;
+      total.nMeasurements += counts.nMeasurements;
+      total.nOutliers += counts.nOutliers;
+      total.nHoles += counts.nHoles;
+      total.nSharedHits += counts.nSharedHits;
+
+      if (fittedParameters.has_value()) {
+        m_subDetectorSummaryTools.at(key).fill(
+            *fittedParameters, counts.nTrackStates, counts.nMeasurements,
+            counts.nOutliers, counts.nHoles, counts.nSharedHits);
+      }
     }
 
     auto imatched = trackParticleMatching.find(track.index());
@@ -264,6 +268,14 @@ void PatternRecognitionPerformanceCollector::logSummary() const {
   ACTS_LOG_WITH_LOGGER(
       log, Acts::Logging::DEBUG,
       "nTotalSharedHits            = " << m_stats.nTotalSharedHits);
+  for (const auto& [key, sub] : m_stats.subDetectors) {
+    ACTS_LOG_WITH_LOGGER(log, Acts::Logging::DEBUG,
+                         key << ": nTrackStates = " << sub.nTrackStates
+                             << ", nMeasurements = " << sub.nMeasurements
+                             << ", nOutliers = " << sub.nOutliers
+                             << ", nHoles = " << sub.nHoles
+                             << ", nSharedHits = " << sub.nSharedHits);
+  }
 
   ACTS_LOG_WITH_LOGGER(log, Acts::Logging::INFO,
                        "Efficiency with "
