@@ -53,8 +53,9 @@ def getOpenDataDetector(
     """This function sets up the open data detector. Requires DD4hep.
     Parameters
     ----------
-    materialDecorator: Material Decorator, take RootMaterialDecorator if non is given
-      (Gen1 only; Gen3 applies a decorator only if one is given)
+    materialDecorator: Material Decorator, take RootMaterialDecorator if non is given.
+      For Gen1 this is applied as-is; for Gen3, its materialMaps() are applied instead
+      (via Acts.TrackingGeometryMaterial.apply()), and only if a decorator is given.
     odd_dir: if not given, try to get via ODD_PATH environment variable
     logLevel: logging level
     constructionMethod: Gen3 conversion method enum value of
@@ -124,12 +125,18 @@ def getOpenDataDetector(
 
         # No default material map for Gen3: the shipped ODD map is keyed by
         # Gen1 geometry identifiers. Only an explicitly given decorator is applied.
+        # OpenDataDetector::Config takes the raw material maps rather than a
+        # decorator, applying them via Acts::TrackingGeometryMaterial::apply()
+        # instead of the (Gen1-oriented) IMaterialDecorator::decorate() path.
+        materialMaps = (
+            materialDecorator.materialMaps if materialDecorator is not None else None
+        )
         oddConfig = acts.examples.dd4hep.OpenDataDetector.Config(
             xmlFileNames=xml_files,
             name="OpenDataDetector",
             logLevel=customLogLevel(),
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
-            materialDecorator=materialDecorator,
+            materialMaps=materialMaps,
         )
         if constructionMethod is not None:
             oddConfig.constructionMethod = constructionMethod

@@ -85,7 +85,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsDD4hep, m) {
             "DirectLayerGrouped",
             OpenDataDetector::Config::ConstructionMethod::DirectLayerGrouped);
     ACTS_PYTHON_STRUCT(c, detectorElementFactory, blueprintEnvelope,
-                       layerEnvelope, constructionMethod, materialDecorator);
+                       layerEnvelope, constructionMethod, materialMaps);
 
     patchKwargsConstructor(c);
   }
