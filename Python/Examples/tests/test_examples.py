@@ -810,6 +810,52 @@ def test_pypi_finding_fitting_demo(tmp_path, generic_detector_config):
             f"{expectedKeys - set(finderHistograms)}"
         )
 
+        finderStats = perfWriterFinder.stats()
+        expectedStatsKeys = {
+            "nTotalTracks",
+            "nTotalMatchedTracks",
+            "nTotalFakeTracks",
+            "nTotalDuplicateTracks",
+            "nTotalUnmatchedTracks",
+            "nTotalTracksMissingRefSurface",
+            "nTotalMeasurements",
+            "nTotalOutliers",
+            "nTotalHoles",
+            "nTotalSharedHits",
+            "nTotalParticles",
+            "nTotalMatchedParticles",
+            "nTotalDuplicateParticles",
+            "nTotalFakeParticles",
+            "nTotalQualityTracks",
+            "efficiencyTracks",
+            "fakeRatioTracks",
+            "duplicateRatioTracks",
+            "efficiencyParticles",
+            "fakeRatioParticles",
+            "duplicateRatioParticles",
+            "meanCompleteness",
+            "meanPurity",
+            "subDetectors",
+        }
+        assert expectedStatsKeys <= set(
+            finderStats
+        ), f"missing stats keys: {expectedStatsKeys - set(finderStats)}"
+        assert finderStats["nTotalTracks"] > 0
+
+        expectedSubDetectorKeys = {
+            "nTrackStates",
+            "nMeasurements",
+            "nOutliers",
+            "nHoles",
+            "nSharedHits",
+        }
+        assert set(finderStats["subDetectors"]) == {"pixel", "sstrip", "lstrip"}
+        for name, sub in finderStats["subDetectors"].items():
+            assert expectedSubDetectorKeys <= set(sub), (
+                f"missing stats keys for {name}: "
+                f"{expectedSubDetectorKeys - set(sub)}"
+            )
+
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.odd
