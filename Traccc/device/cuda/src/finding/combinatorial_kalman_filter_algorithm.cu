@@ -7,7 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
-#include "../sanity/contiguous_on.cuh"
+#include "../sanity/ordered_on.cuh"
 #include "../utils/magnetic_field_types.hpp"
 #include "./kernels/build_tracks.cuh"
 #include "./kernels/condense_tracks.cuh"
@@ -25,7 +25,6 @@
 
 // Project include(s).
 #include "traccc/bfield/magnetic_field_types.hpp"
-#include "traccc/edm/device/identity_projector.hpp"
 #include "traccc/finding/details/combinatorial_kalman_filter_types.hpp"
 #include "traccc/finding/device/geo_id_surface_comparator.hpp"
 #include "traccc/geometry/detector_buffer.hpp"
@@ -48,9 +47,11 @@ namespace traccc::cuda {
 bool combinatorial_kalman_filter_algorithm::input_is_valid(
     const edm::measurement_collection::const_view& measurements) const {
   static constexpr std::size_t GEOMID_INDEX = 6u;
-  return is_contiguous_on<
+  // The measurements must be sorted by surface, not only grouped by it, for
+  // the CKF to find the measurement ranges of each surface.
+  return is_ordered_on<
       vecmem::device_vector<const detray::geometry::identifier>>(
-      device::identity_projector{}, mr().main, copy(), stream(),
+      device::geo_id_order_relation{}, mr().main, copy(), stream(),
       measurements.template get<GEOMID_INDEX>());
 }
 
