@@ -14,13 +14,6 @@
       <tab type="user" url="@ref material_map_json_format" visible="yes" title="Material map JSON format"/>
     </tab>
 
-    <tab type="usergroup" title="Python Bindings" url="[none]">
-      <tab type="user" url="@ref python_bindings" visible="yes" title="Overview"/>
-      <tab type="user" url="@ref python_custom_algorithms" visible="yes" title="Custom algorithms"/>
-      <tab type="user" url="@ref python_data_io" visible="yes" title="Data reading and writing"/>
-      <tab type="user" url="@ref python_performance_plotting" visible="yes" title="Performance evaluation and plotting"/>
-    </tab>
-
     <tab type="usergroup" title="Contribution" url="[none]">
       <tab type="user" url="@ref contribution_clang_tidy" visible="yes" title="Clang Tidy"/>
       <tab type="user" url="@ref howto_profiling" visible="yes" title="Profiling"/>

@@ -1,9 +1,15 @@
-@page python_testing Python-based testing
+@defgroup python_testing Python-based testing
+@ingroup python_bindings
+@brief Running the Python test suite and checking ROOT file hashes.
 
 Python bindings are exercised through `pytest`, in addition to the doc-example snippets used by
 @ref python_bindings.
 
 # Running the tests
+
+First configure and build the Python bindings, then load the generated environment as
+described in @ref python_bindings. Enable the optional components needed by the tests you want
+to run.
 
 A number of unit tests based on the `pytest` library are shipped with the repository, under
 `$REPO_ROOT/Python/Core/tests`, `Python/Fatras/tests`, and `Python/Examples/tests`. They cover
