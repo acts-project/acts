@@ -183,7 +183,10 @@ def main():
     if args.map != "":
         materialDecorator = acts.IMaterialDecorator.fromFile(args.map)
 
-    detector = getOpenDataDetector(materialDecorator, gen3=gen3)
+    # Gen1 has no calorimeter catch-all surface, so its material would
+    # otherwise be misattributed to the nearest tracker surface; Gen3
+    # has a dedicated collector, so its calorimeter can stay enabled.
+    detector = getOpenDataDetector(materialDecorator, gen3=gen3, buildCalorimeter=gen3)
     trackingGeometry = detector.trackingGeometry()
 
     materialSurfaces = trackingGeometry.extractMaterialSurfaces()
