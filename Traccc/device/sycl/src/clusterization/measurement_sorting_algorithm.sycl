@@ -18,6 +18,9 @@
 // Project include(s).
 #include "traccc/clusterization/device/measurement_sorting.hpp"
 
+// VecMem include(s).
+#include <vecmem/containers/data/vector_buffer.hpp>
+
 namespace traccc::sycl {
 namespace kernels {
 
@@ -32,54 +35,31 @@ class fill_sorted_measurements;
 measurement_sorting_algorithm::measurement_sorting_algorithm(
     const traccc::memory_resource& mr, const vecmem::copy& copy,
     queue_wrapper& queue, std::unique_ptr<const Logger> logger)
-    : messaging(std::move(logger)),
-      sycl::algorithm_base(queue),
-      m_mr{mr},
-      m_copy{copy} {}
+    : device::measurement_sorting_algorithm(mr, copy, std::move(logger)),
+      sycl::algorithm_base(queue) {}
 
-measurement_sorting_algorithm::output_type
-measurement_sorting_algorithm::operator()(
-    const edm::measurement_collection::const_view& measurements_view) const {
-  // Exit early if there are no measurements.
-  if (measurements_view.capacity() == 0) {
-    return {};
-  }
-
-  // Get the number of measurements.
-  edm::measurement_collection::const_view::size_type n_measurements = 0u;
-  if (m_mr.host) {
-    const vecmem::async_size size =
-        m_copy.get().get_size(measurements_view, *(m_mr.host));
-    n_measurements = size.get();
-  } else {
-    n_measurements = m_copy.get().get_size(measurements_view);
-  }
-
-  // Create the output buffer.
-  output_type result{measurements_view.capacity(), m_mr.main,
-                     vecmem::data::buffer_type::resizable};
-  m_copy.get().setup(result)->wait();
-  if (n_measurements == 0) {
-    return result;
-  }
-  m_copy.get()(measurements_view.size(), result.size())->wait();
-
-  ::sycl::queue& squeue = details::get_queue(queue());
-  auto policy = oneapi::dpl::execution::device_policy{queue};
+void measurement_sorting_algorithm::sorting_kernel(
+    const measurement_sorting_kernel_payload& payload) const {
+  const unsigned int n_measurements = payload.n_measurements;
+  ::sycl::queue& squeue = details::get_queue(this->queue());
+  auto policy = oneapi::dpl::execution::device_policy{squeue};
 
   // Sorting keys and index sequence.
   vecmem::data::vector_buffer<device::measurement_sort_key_t> keys(
-      n_measurements, m_mr.main);
-  vecmem::data::vector_buffer<unsigned int> indices(n_measurements, m_mr.main);
-  m_copy.get().setup(keys)->wait();
-  m_copy.get().setup(indices)->wait();
+      n_measurements, mr().main);
+  vecmem::data::vector_buffer<unsigned int> indices(n_measurements, mr().main);
+  copy().setup(keys)->wait();
+  copy().setup(indices)->wait();
+
+  const unsigned int num_threads = warp_size() * 8;
 
   // Sort the indices by the sorting keys, with a radix sort.
   squeue
       .submit([&](::sycl::handler& h) {
         h.parallel_for<kernels::fill_measurement_sort_keys>(
-            details::calculate1DimNdRange(n_measurements, warp_size() * 8),
-            [measurements_view, keys_view = vecmem::get_data(keys),
+            details::calculate1DimNdRange(n_measurements, num_threads),
+            [measurements_view = payload.measurements,
+             keys_view = vecmem::get_data(keys),
              indices_view =
                  vecmem::get_data(indices)](::sycl::nd_item<1> item) {
               device::fill_measurement_sort_keys(
@@ -95,8 +75,9 @@ measurement_sorting_algorithm::operator()(
   squeue
       .submit([&](::sycl::handler& h) {
         h.parallel_for<kernels::fill_sorted_measurements>(
-            details::calculate1DimNdRange(n_measurements, warp_size() * 8),
-            [measurements_view, output_view = vecmem::get_data(result),
+            details::calculate1DimNdRange(n_measurements, num_threads),
+            [measurements_view = payload.measurements,
+             output_view = vecmem::get_data(payload.output),
              sorted_indices_view =
                  vecmem::get_data(indices)](::sycl::nd_item<1> item) {
               device::fill_sorted_measurements(
@@ -105,9 +86,6 @@ measurement_sorting_algorithm::operator()(
             });
       })
       .wait_and_throw();
-
-  // Return the sorted buffer.
-  return result;
 }
 
 }  // namespace traccc::sycl
