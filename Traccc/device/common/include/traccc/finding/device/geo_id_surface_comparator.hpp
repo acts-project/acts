@@ -47,7 +47,7 @@ struct geo_id_order_relation {
   TRACCC_HOST_DEVICE bool operator()(
       const detray::geometry::identifier& lhs,
       const detray::geometry::identifier& rhs) const {
-    return !(rhs < lhs);
+    return (lhs <= rhs);
   }
 };  // struct geo_id_order_relation
 
