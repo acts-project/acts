@@ -112,7 +112,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     if (score == 0) {
       iTrack++;
       trackScore.push_back(score);
-      monitor.setZero();
+      
       if (scoreMonitor) {
         scoreMonitor->push_back(monitor);
       }
@@ -145,7 +145,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     if (score == 0) {
       iTrack++;
       trackScore.push_back(score);
-      monitor.setZero();
+      
       if (scoreMonitor) {
         scoreMonitor->push_back(monitor);
       }
@@ -264,7 +264,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     if (score == 0) {
       iTrack++;
       trackScore.push_back(score);
-      monitor.setZero();
+      
       if (scoreMonitor) {
         scoreMonitor->push_back(monitor);
       }
@@ -297,7 +297,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     if (score == 0) {
       iTrack++;
       trackScore.push_back(score);
-      monitor.setZero();
+      
       if (scoreMonitor) {
         scoreMonitor->push_back(monitor);
       }
