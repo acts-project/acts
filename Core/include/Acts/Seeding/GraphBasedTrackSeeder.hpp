@@ -15,6 +15,7 @@
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/GbtsNodeStorage.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
+#include "Acts/Seeding/GbtsTauLookupTable.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -38,7 +39,7 @@ class GraphBasedTrackSeeder {
 
     /// Accepted tau range per cluster width bin, needed by the cluster width
     /// cuts and ignored without them.
-    detail::GbtsTauLookupTable tauLookupTable;
+    GbtsTauLookupTable tauLookupTable;
 
     /// Take the strip-to-strip layer connections from the connector file
     /// instead of the pixel-to-pixel ones. Read where the file is loaded, not
@@ -328,13 +329,12 @@ class GraphBasedTrackSeeder {
                        std::vector<detail::GbtsEdge>& edgeStorage) const;
 
   /// Extract seed candidates from the graph.
-  /// @param maxLevel Maximum level in the graph
   /// @param nEdges Number of edges
   /// @param nodeStorage Storage containing the graph nodes
   /// @param edgeStorage Storage containing edges
   /// @param vOutputSeeds Output vector for seed candidates
   /// @param filter Tracking filter to be applied
-  void extractSeedsFromTheGraph(std::uint32_t maxLevel, std::uint32_t nEdges,
+  void extractSeedsFromTheGraph(std::uint32_t nEdges,
                                 const GbtsNodeStorage& nodeStorage,
                                 std::vector<detail::GbtsEdge>& edgeStorage,
                                 std::vector<OutputSeedProperties>& vOutputSeeds,

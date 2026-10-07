@@ -14,8 +14,10 @@ on:
     paths:
       - "Detray/**"
       - ".github/workflows/detray.yml"
+      - ".github/actions/dependencies/**"
       - ".github/actions/ccache-s3/**"
       - "CI/ccache_snapshot.py*"
+      - "CI/ccache_stats.sh"
       - ".github/detray-traccc-filters.yml"
   pull_request:
     branches:
@@ -24,8 +26,10 @@ on:
     paths:
       - "Detray/**"
       - ".github/workflows/detray.yml"
+      - ".github/actions/dependencies/**"
       - ".github/actions/ccache-s3/**"
       - "CI/ccache_snapshot.py*"
+      - "CI/ccache_stats.sh"
       - ".github/detray-traccc-filters.yml"
   # The changes job applies path filtering to merge groups, which do not
   # support the workflow-level path filters above.
@@ -72,6 +76,8 @@ jobs:
 
   # Native build jobs.
   host-native:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     needs: changes
     # !cancelled() allows PR/push jobs through when changes is skipped.
     if: >-
@@ -101,9 +107,31 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
+    - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+    - name: Install ccache
+      shell: bash
+      run: |
+        if [[ "$RUNNER_OS" == Linux ]]; then
+          sudo apt-get update
+          sudo apt-get install -y ccache jq
+        else
+          brew install ccache jq
+        fi
+
+    - name: Restore ccache snapshot
+      uses: ./.github/actions/ccache-s3
+      continue-on-error: true
+      timeout-minutes: 10
+      with:
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/host-native/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.OS }}/${{ matrix.BUILD_TYPE }}/v1/
+
+    - name: Reset ccache statistics
+      run: ccache --zero-stats
+
     # Run the CMake configuration. Test that the metadata generation runs
     - name: Configure
       run: cmake --preset detray-full-fp32
+                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
                  -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }}
                  -DDETRAY_FAIL_ON_WARNINGS=ON
                  -DDETRAY_SET_LOGGING=DEBUG
@@ -121,8 +149,30 @@ jobs:
       run: cmake --build build --config ${{ matrix.BUILD_TYPE }}
                  --target all detray_headers -- -j 2
 
+    - name: ccache statistics
+      if: always()
+      uses: ./.github/actions/ccache-s3/stats
+
+    - name: Clean ccache before publication
+      if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      continue-on-error: true
+      run: ccache --cleanup
+
+    - name: Publish ccache snapshot
+      if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      continue-on-error: true
+      timeout-minutes: 10
+      uses: ./.github/actions/ccache-s3
+      with:
+        operation: publish
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/host-native/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.OS }}/${{ matrix.BUILD_TYPE }}/v1/
+        access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+        secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+
   # Containerised build jobs.
   host-container:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     needs: changes
     # !cancelled() allows PR/push jobs through when changes is skipped.
     if: >-
@@ -164,6 +214,7 @@ jobs:
 
     # Set the path to the test data files
     env:
+      CCACHE_MAXSIZE: ${{ matrix.BUILD_TYPE == 'Debug' && '1G' || '500M' }}
       DETRAY_DATA_DIRECTORY: ${{ github.workspace }}/Detray/data/
       DETRAY_BFIELD_FILE: ${{ github.workspace }}/Detray/data/odd-bfield_v0_9_0.cvf
 
@@ -185,12 +236,24 @@ jobs:
     # Get the data files for the tests
     - name: Download data files
       run: Detray/data/detray_data_get_files.sh
+
+    - name: Restore ccache snapshot
+      uses: ./.github/actions/ccache-s3
+      continue-on-error: true
+      timeout-minutes: 10
+      with:
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/host-container/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.NAME }}/${{ matrix.BUILD_TYPE }}/${{ matrix.SCALAR_TYPE }}/v1/
+
+    - name: Reset ccache statistics
+      run: ccache --zero-stats
+
     # Run the CMake configuration.
     - name: Configure
       run: |
         source ${GITHUB_WORKSPACE}/.env
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --preset detray-full-fp32 \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DDETRAY_FAIL_ON_WARNINGS=ON \
           -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }} \
@@ -205,6 +268,27 @@ jobs:
         source ${GITHUB_WORKSPACE}/.env
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --build build --target all detray_headers -- -j $(nproc)
+
+    - name: ccache statistics
+      if: always()
+      uses: ./.github/actions/ccache-s3/stats
+
+    - name: Clean ccache before publication
+      if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      continue-on-error: true
+      run: ccache --cleanup
+
+    - name: Publish ccache snapshot
+      if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      continue-on-error: true
+      timeout-minutes: 10
+      uses: ./.github/actions/ccache-s3
+      with:
+        operation: publish
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/host-container/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.NAME }}/${{ matrix.BUILD_TYPE }}/${{ matrix.SCALAR_TYPE }}/v1/
+        access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+        secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+
     # Run the unit test(s). They link the flavor's shared libraries, so the
     # environment is needed here too.
     - name: Full Test
@@ -225,6 +309,8 @@ jobs:
   # Containerised build jobs. Debug compile checks only -- nothing here is
   # executed. CUDA has its own build/test pair below.
   device-container:
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     needs: changes
     # !cancelled() allows PR/push jobs through when changes is skipped.
     if: >-
@@ -287,12 +373,24 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         env_file: .env
 
+    - name: Restore ccache snapshot
+      uses: ./.github/actions/ccache-s3
+      continue-on-error: true
+      timeout-minutes: 10
+      with:
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/device-container/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.NAME }}/${{ matrix.BUILD_TYPE }}/${{ matrix.SCALAR_TYPE }}/v1/
+
+    - name: Reset ccache statistics
+      run: ccache --zero-stats
+
     # Run the CMake configuration.
     - name: Configure
       run: |
         source ${GITHUB_WORKSPACE}/.env
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --preset detray-full-fp32 \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_HIP_COMPILER_LAUNCHER=ccache \
           -DCMAKE_CXX_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DCMAKE_CUDA_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DCMAKE_HIP_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
@@ -314,6 +412,26 @@ jobs:
         source ${GITHUB_WORKSPACE}/.env
         source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --build build --target all detray_headers
+
+    - name: ccache statistics
+      if: always()
+      uses: ./.github/actions/ccache-s3/stats
+
+    - name: Clean ccache before publication
+      if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      continue-on-error: true
+      run: ccache --cleanup
+
+    - name: Publish ccache snapshot
+      if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      continue-on-error: true
+      timeout-minutes: 10
+      uses: ./.github/actions/ccache-s3
+      with:
+        operation: publish
+        key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/detray/device-container/${{ runner.os }}-${{ runner.arch }}/${{ matrix.PLATFORM.NAME }}/${{ matrix.BUILD_TYPE }}/${{ matrix.SCALAR_TYPE }}/v1/
+        access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+        secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
   # ─────────────────────────────────────────────────────────────────────
   # CUDA build on an ordinary CPU runner, handing the build tree to `cuda-test`
@@ -380,6 +498,7 @@ jobs:
         source ${GITHUB_WORKSPACE}/.env
         ccache -z
         cmake --preset detray-github-cuda-ci \
+          -DCMAKE_CUDA_COMPILER_LAUNCHER=ccache \
           -DCMAKE_BUILD_TYPE=Release \
           -DDETRAY_CUSTOM_SCALARTYPE=${{ matrix.SCALAR_TYPE }} \
           -DDETRAY_USE_SYSTEM_EIGEN3=ON \
@@ -398,18 +517,19 @@ jobs:
         source ${GITHUB_WORKSPACE}/.env
         cmake --build build --target all detray_headers
 
-    - name: ccache stats
-      run: ccache -s
+    - name: ccache statistics
+      if: always()
+      uses: ./.github/actions/ccache-s3/stats
 
     - name: Clean ccache before publication
-      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       continue-on-error: true
       shell: bash
       run: |
         ccache --cleanup
 
     - name: Publish ccache snapshot
-      if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       continue-on-error: true
       timeout-minutes: 10
       uses: ./.github/actions/ccache-s3

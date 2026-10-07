@@ -287,7 +287,9 @@ def vacuumTrackParameterAndBeamspotPropagation(
         start = acts.BoundTrackParameters.createCurvilinear(
             pos4, acts.Vector3(*mom), qOverP, None, particle_hypothesis
         )
-        target = acts.Surface.createPerigee(acts.Vector3(beamspot[0], beamspot[1], 0.0))
+        target = acts.Surface.createPerigee(
+            acts.Vector3(beamspot[0], beamspot[1], beamspot[2])
+        )
         # The point of closest approach can be behind the vertex
         toBeamspot = np.array([beamspot[0] - vtx[0], beamspot[1] - vtx[1]])
         propagator_options.direction = acts.Direction.fromScalarZeroAsPositive(

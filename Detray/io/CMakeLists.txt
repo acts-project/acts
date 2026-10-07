@@ -44,14 +44,14 @@ target_link_libraries(
 )
 
 # Set up libraries using particular algebra plugins.
-detray_add_library( detray_io_array io_array )
+detray_add_library(detray_io_array io_array)
 target_link_libraries(
     detray_io_array
     INTERFACE detray::io detray::algebra_array
 )
 
 if(DETRAY_EIGEN_PLUGIN)
-    detray_add_library( detray_io_eigen io_eigen )
+    detray_add_library(detray_io_eigen io_eigen)
     target_link_libraries(
         detray_io_eigen
         INTERFACE detray::io detray::algebra_eigen
@@ -59,7 +59,7 @@ if(DETRAY_EIGEN_PLUGIN)
 endif()
 
 if(DETRAY_SMATRIX_PLUGIN)
-    detray_add_library( detray_io_smatrix io_smatrix )
+    detray_add_library(detray_io_smatrix io_smatrix)
     target_link_libraries(
         detray_io_smatrix
         INTERFACE detray::io detray::algebra_smatrix
@@ -67,7 +67,7 @@ if(DETRAY_SMATRIX_PLUGIN)
 endif()
 
 if(DETRAY_VC_AOS_PLUGIN)
-    detray_add_library( detray_io_vc_aos io_vc_aos )
+    detray_add_library(detray_io_vc_aos io_vc_aos)
     target_link_libraries(
         detray_io_vc_aos
         INTERFACE detray::io detray::algebra_vc_aos

@@ -14,15 +14,19 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
+#include "Acts/Seeding/GbtsTauLookupTable.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
-#include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsPlugins/Json/GbtsConfigJsonConverter.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <numbers>
 #include <stdexcept>
@@ -30,118 +34,6 @@
 #include <vector>
 
 namespace ActsExamples {
-
-namespace {
-
-/// What the ATLAS connector file has to say: the eta bin width its layers were
-/// trained with, and the layer pairs the seeder may connect.
-struct ConnectorTable {
-  float etaBinWidth{};
-  std::vector<Acts::Experimental::GbtsLayerConnection> connections;
-};
-
-/// Read an ATLAS GBTS connector file: a `nLinks etaBinWidth` header, then per
-/// link a `index stage src dst height width nEntries` line followed by a
-/// height x width bin table. Only the layer ids survive - GbtsGeometry derives
-/// the bin table from the layer geometry, and the stages from the connections.
-///
-/// @param path Path to the connector file
-/// @param stripConnections Keep the strip connections instead of the pixel ones
-ConnectorTable readConnectorTable(const std::string &path,
-                                  bool stripConnections) {
-  std::ifstream inStream(path);
-  if (!inStream) {
-    throw std::runtime_error("Cannot open GBTS connector file '" + path + "'");
-  }
-
-  ConnectorTable table;
-
-  std::uint32_t nLinks{};
-  inStream >> nLinks >> table.etaBinWidth;
-
-  // the file's own stage column, which only fixes the order the connections
-  // are handed over in
-  std::vector<std::pair<std::uint32_t, Acts::Experimental::GbtsLayerConnection>>
-      staged;
-  staged.reserve(nLinks);
-
-  for (std::uint32_t l = 0; l < nLinks; l++) {
-    std::uint32_t lIdx{};
-    std::uint32_t stage{};
-    Acts::Experimental::GbtsExperimentLayerId src{};
-    Acts::Experimental::GbtsExperimentLayerId dst{};
-    std::uint32_t height{};
-    std::uint32_t width{};
-    std::uint32_t nEntries{};
-
-    inStream >> lIdx >> stage >> src >> dst >> height >> width >> nEntries;
-
-    std::uint32_t dummy{};
-    for (std::uint32_t i = 0; i < height * width; ++i) {
-      inStream >> dummy;
-    }
-
-    // ATLAS ITk volume ids: 12, 13 and 14 are the strip subdetectors. The
-    // table holds both technologies and only one of them is ever seeded.
-    const auto isStrip = [](Acts::Experimental::GbtsExperimentLayerId layerId) {
-      const auto volumeId = layerId / 1000;
-      return volumeId == 12 || volumeId == 13 || volumeId == 14;
-    };
-    if (isStrip(src) != stripConnections || isStrip(dst) != stripConnections) {
-      continue;
-    }
-
-    staged.emplace_back(stage,
-                        Acts::Experimental::GbtsLayerConnection{src, dst});
-  }
-
-  if (!inStream) {
-    throw std::runtime_error("Malformed GBTS connector file '" + path + "'");
-  }
-
-  std::ranges::stable_sort(staged, {},
-                           [](const auto &entry) { return entry.first; });
-
-  table.connections.reserve(staged.size());
-  for (const auto &[stage, connection] : staged) {
-    table.connections.push_back(connection);
-  }
-
-  return table;
-}
-
-/// Read an ATLAS GBTS tau lookup table: per line a cluster width, the bulk tau
-/// bounds and the near-edge ones. The width is dropped - a row is located by
-/// index, one row per `tauLutBinWidth` of cluster width, never searched.
-///
-/// @param path Path to the lookup table file
-Acts::Experimental::detail::GbtsTauLookupTable readTauLookupTable(
-    const std::filesystem::path &path) {
-  std::ifstream inStream(path);
-  if (!inStream) {
-    throw std::runtime_error("Cannot open GBTS tau lookup table '" +
-                             path.string() + "'");
-  }
-
-  Acts::Experimental::detail::GbtsTauLookupTable tauLut;
-
-  float clusterWidth{};
-  Acts::Experimental::detail::GbtsTauBounds bounds;
-  while (inStream >> clusterWidth >> bounds.minTau >> bounds.maxTau >>
-         bounds.minTauNearEdge >> bounds.maxTauNearEdge) {
-    tauLut.push_back(bounds);
-  }
-
-  if (!inStream.eof()) {
-    // ended on a parse error, not on a clean EOF
-    throw std::runtime_error("Malformed GBTS tau lookup table '" +
-                             path.string() + "'");
-  }
-
-  return tauLut;
-}
-
-}  // namespace
 
 GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
     const Config &cfg, std::unique_ptr<const Acts::Logger> logger)
@@ -155,13 +47,36 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   m_actsGbtsMap = makeActsGbtsMap();
 
   // read which layers may be connected
-  const ConnectorTable connectorTable = readConnectorTable(
-      m_cfg.connectorInputFile, m_cfg.seedFinderConfig.useStripConnections);
+  auto connections =
+      Acts::Experimental::readGbtsConnections(m_cfg.connectorInputFile);
+
+  // keep the connections between layers of the seeded technology
+  const Acts::Experimental::GbtsLayerTechnology seededTechnology =
+      m_cfg.seedFinderConfig.useStripConnections
+          ? Acts::Experimental::GbtsLayerTechnology::Strip
+          : Acts::Experimental::GbtsLayerTechnology::Pixel;
+  std::map<Acts::Experimental::GbtsExperimentLayerId,
+           Acts::Experimental::GbtsLayerTechnology>
+      layerTechnology;
+  for (const GbtsLayerInfo &layerInfo : m_actsGbtsMap) {
+    layerTechnology.emplace(layerInfo.layerId, layerInfo.technology);
+  }
+  const auto isSeededTechnology =
+      [&](Acts::Experimental::GbtsExperimentLayerId id) {
+        const auto technology = layerTechnology.find(id);
+        return technology != layerTechnology.end() &&
+               technology->second == seededTechnology;
+      };
+  std::erase_if(connections,
+                [&](const Acts::Experimental::GbtsLayerConnection &connection) {
+                  return !isSeededTechnology(connection.src) ||
+                         !isSeededTechnology(connection.dst);
+                });
 
   // the cluster width cuts are the only user of the tau lookup table
   if (m_cfg.seedFinderConfig.useClusterWidthCuts) {
     m_cfg.seedFinderConfig.tauLookupTable =
-        readTauLookupTable(m_cfg.lutInputFile);
+        Acts::Experimental::readGbtsTauLookupTable(m_cfg.lutInputFile);
   }
 
   // create the TrigInDetSiLayers (Logical Layers),
@@ -169,18 +84,11 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
-  // option that allows for adding custom eta binning (default is at 0.2)
-  const float etaBinWidth = m_cfg.etaBinWidthOverride != 0.0f
-                                ? m_cfg.etaBinWidthOverride
-                                : connectorTable.etaBinWidth;
-
   // initialise the object that holds all the geometry information needed for
   // the algorithm
-  auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
-      layerGeometry, connectorTable.connections, etaBinWidth, m_cfg.gbtsZ0Range,
+  m_geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
+      layerGeometry, connections, m_cfg.etaBinWidth, m_cfg.gbtsZ0Range,
       this->logger());
-
-  resolveLayerIndices(*geometry);
 
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
@@ -193,10 +101,10 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   m_finder = Acts::Experimental::GraphBasedTrackSeeder(
       Acts::Experimental::GraphBasedTrackSeeder::DerivedConfig(
           m_cfg.seedFinderConfig),
-      geometry, this->logger().cloneWithSuffix("GbtsFinder"));
+      m_geometry, this->logger().cloneWithSuffix("GbtsFinder"));
 
   m_filter = Acts::Experimental::GbtsTrackingFilter(
-      m_cfg.trackingFilterConfig, geometry,
+      m_cfg.trackingFilterConfig, m_geometry,
       this->logger().cloneWithSuffix("GbtsFilter"));
 
   printConfig();
@@ -249,43 +157,23 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   return ProcessCode::SUCCESS;
 }
 
-std::map<GraphBasedSeedingAlgorithm::ActsIDs,
-         GraphBasedSeedingAlgorithm::GbtsIDs>
+Acts::GeometryHierarchyMap<GraphBasedSeedingAlgorithm::GbtsLayerInfo>
 GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
-  std::map<ActsIDs, GbtsIDs> actsToGbtsMap;
+  std::vector<Acts::GeometryHierarchyMap<GbtsLayerInfo>::InputElement>
+      actsToGbtsMap;
 
-  // prepare the acts to gbts mapping file
-  // 0 in this file refers to no Gbts ID
-  std::ifstream data(m_cfg.layerMappingFile);
-  std::string line;
-  // row = physical module, column = ACTS ID components
-  std::vector<std::vector<std::string>> parsedCsv;
-  while (std::getline(data, line)) {
-    std::stringstream lineStream(line);
-    std::string cell;
-    std::vector<std::string> parsedRow;
-    while (std::getline(lineStream, cell, ',')) {
-      parsedRow.push_back(cell);
+  // one entry per surface of a layer, sensitive 0 for a whole geometry layer
+  for (const Acts::Experimental::GbtsLayerConfig &layer :
+       Acts::Experimental::readGbtsLayers(m_cfg.layerMappingFile)) {
+    for (const Acts::GeometryIdentifier &surface : layer.surfaces) {
+      const GbtsLayerInfo layerInfo{.layerId = layer.id,
+                                    .type = layer.type,
+                                    .technology = layer.technology};
+      actsToGbtsMap.emplace_back(surface, layerInfo);
     }
-
-    parsedCsv.push_back(parsedRow);
   }
 
-  // file in format ACTS_vol,ACTS_lay,ACTS_mod,gbtsId
-  for (auto i : parsedCsv) {
-    const auto actsVol = static_cast<std::uint32_t>(std::stoul(i[0]));
-    const auto actsLay = static_cast<std::uint32_t>(std::stoul(i[1]));
-    const auto actsMod = static_cast<std::uint32_t>(std::stoul(i[2]));
-    const auto gbts = static_cast<Acts::Experimental::GbtsExperimentLayerId>(
-        std::stoul(i[5]));
-    const auto etaMod = static_cast<std::uint32_t>(std::stoul(i[6]));
-    const std::uint32_t actsJoint = actsVol * 100 + actsLay;
-    const ActsIDs actsId{actsJoint, actsMod};
-    const GbtsIDs gbtsId{.layerId = gbts, .etaModule = etaMod};
-    actsToGbtsMap.insert({actsId, gbtsId});
-  }
-
-  return actsToGbtsMap;
+  return Acts::GeometryHierarchyMap<GbtsLayerInfo>(std::move(actsToGbtsMap));
 }
 
 std::optional<Acts::Experimental::GbtsLayerIndex>
@@ -300,62 +188,116 @@ GraphBasedSeedingAlgorithm::gbtsLayerIndex(
 
   const auto &indexSourceLink = sourceLink.front().get<IndexSourceLink>();
 
-  const auto actsVolId =
-      static_cast<std::uint32_t>(indexSourceLink.geometryId().volume());
-  const auto actsLayId =
-      static_cast<std::uint32_t>(indexSourceLink.geometryId().layer());
-  const auto actsModId =
-      static_cast<std::uint32_t>(indexSourceLink.geometryId().sensitive());
+  const Acts::GeometryIdentifier geoId = indexSourceLink.geometryId();
 
-  // dont want strips or HGTD
-  if (actsVolId == 2 || actsVolId == 22 || actsVolId == 23 || actsVolId == 24) {
+  // the entry of the module or, without one, the one of its whole layer
+  const auto find = m_actsGbtsMap.find(geoId);
+
+  // a space point off the GBTS layers takes no part in the seeding
+  if (find == m_actsGbtsMap.end()) {
+    ACTS_DEBUG("No GBTS layer for volume: "
+               << geoId.volume() << " Layer: " << geoId.layer()
+               << " Surface: " << geoId.sensitive());
     return std::nullopt;
   }
 
-  // Search for vol, lay and module=0, if doesn't esist (end) then search
-  // for full thing vol*100+lay as first number in pair then 0 or mod id
-  const std::uint64_t actsJointId = std::uint64_t{actsVolId} * 100 + actsLayId;
-
-  // here the key needs to be pair of(vol*100+lay, 0)
-  ActsIDs key{actsJointId, 0};
-  auto find = m_actsGbtsMap.find(key);
-
-  // if end then make new key of (vol*100+lay, modid)
-  if (find == m_actsGbtsMap.end()) {
-    key = ActsIDs{actsJointId, actsModId};  // mod ID
-    find = m_actsGbtsMap.find(key);
-  }
-
-  // warning if key not in map
-  if (find == m_actsGbtsMap.end()) {
-    ACTS_WARNING("Key not found in Gbts map for volume id: "
-                 << actsVolId << " and layer id: " << actsLayId);
-    return std::nullopt;
-  }
-
-  // now should be pixel with Gbts ID
-  if (find->second.layerId == 0) {
-    ACTS_WARNING("No assigned Gbts ID for key for volume id: "
-                 << actsVolId << " and layer id: " << actsLayId);
-  }
-
-  return find->second.layerIndex;
+  return m_geometry->layerIndex(find->layerId);
 }
 
-void GraphBasedSeedingAlgorithm::resolveLayerIndices(
-    const Acts::Experimental::GbtsGeometry &geometry) {
-  for (auto &[actsId, gbtsId] : m_actsGbtsMap) {
-    const Acts::Experimental::GbtsExperimentLayerId combinedId =
-        gbtsId.layerId * 1000 + gbtsId.etaModule;
+void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
+    const Acts::Surface &surface, const Acts::GeometryContext &gctx,
+    std::vector<Acts::Experimental::GbtsLayerDescription> &inputVector,
+    std::vector<std::size_t> &countVector) const {
+  Acts::GeometryIdentifier geoId = surface.geometryId();
+  auto actsVolId = geoId.volume();
+  auto actsLayId = geoId.layer();
+  auto mod_id = geoId.sensitive();
+  auto center = surface.center(gctx);
 
-    const std::optional<Acts::Experimental::GbtsLayerIndex> index =
-        geometry.layerIndex(combinedId);
+  // A polygonal surface gives its corners whatever the segment count
+  // is, curved bounds an approximation of that resolution.
+  const std::vector<Acts::Vector3> corners =
+      surface.polyhedronRepresentation(gctx, 4u).vertices;
 
-    if (!index.has_value()) {
-      ACTS_WARNING("No GBTS layer for combined ID: " << combinedId);
+  float rc = 0.0;
+  float minBound = std::numeric_limits<float>::infinity();
+  float maxBound = -std::numeric_limits<float>::infinity();
+
+  // convert to Gbts ID
+  const auto find = m_actsGbtsMap.find(geoId);
+
+  // a surface off the GBTS layers takes no part in the seeding
+  if (find == m_actsGbtsMap.end()) {
+    ACTS_DEBUG("No GBTS layer for volume: "
+               << geoId.volume() << " Layer: " << geoId.layer()
+               << " Surface: " << geoId.sensitive());
+    return;  // skip this surface
+  }
+
+  const Acts::Experimental::GbtsExperimentLayerId gbtsId = find->layerId;
+
+  // a variable that says if barrrel, 0 = barrel
+  Acts::Experimental::GbtsLayerType barrelEc = find->type;
+
+  if (barrelEc == Acts::Experimental::GbtsLayerType::Barrel) {
+    rc = Acts::fastHypot(center.x(), center.y());  // barrel center in r
+    // bounds of z
+    for (const Acts::Vector3 &corner : corners) {
+      minBound = std::min(minBound, static_cast<float>(corner.z()));
+      maxBound = std::max(maxBound, static_cast<float>(corner.z()));
     }
+  } else if (barrelEc == Acts::Experimental::GbtsLayerType::Endcap) {
+    rc = center.z();  // not barrel center in Z
+    // bounds of r
+    for (const Acts::Vector3 &corner : corners) {
+      const auto r =
+          static_cast<float>(Acts::fastHypot(corner.x(), corner.y()));
+      minBound = std::min(minBound, r);
+      maxBound = std::max(maxBound, r);
+    }
+  } else {
+    throw std::runtime_error("Invalid barrel/endcap assignment for GbtsLayer");
+  }
 
-    gbtsId.layerIndex = index;
+  const auto currentIndex =
+      find_if(inputVector.begin(), inputVector.end(),
+              [gbtsId](auto n) { return n.id == gbtsId; });
+  if (currentIndex != inputVector.end()) {  // not end so does exist
+    const auto index = static_cast<std::size_t>(
+        std::distance(inputVector.begin(), currentIndex));
+    inputVector[index].refCoord += rc;
+    inputVector[index].minBound =
+        std::min(inputVector[index].minBound, minBound);
+    inputVector[index].maxBound =
+        std::max(inputVector[index].maxBound, maxBound);
+    countVector[index] += 1;  // increase count at the index
+
+  } else {  // end so doesn't exists
+    // make new if one with Gbts ID doesn't exist:
+    inputVector.push_back(
+        Acts::Experimental::GbtsLayerDescription{.id = gbtsId,
+                                                 .type = barrelEc,
+                                                 .technology = find->technology,
+                                                 .refCoord = rc,
+                                                 .minBound = minBound,
+                                                 .maxBound = maxBound});
+    // so the element exists and not divinding by 0
+    countVector.push_back(1);
+  }
+
+  // add to file each time,
+  // print to csv for each module, no repeats so dont need to make
+  // map for averaging
+  if (m_cfg.fillModuleCsv) {
+    std::fstream fout;
+    fout.open("ACTS_modules.csv", std::ios::out | std::ios::app);
+    fout << actsVolId << ", "                        // vol
+         << actsLayId << ", "                        // lay
+         << mod_id << ", "                           // module
+         << gbtsId << ","                            // Gbts id
+         << center.z() << ", "                       // z
+         << Acts::fastHypot(center.x(), center.y())  // r
+         << "\n";
   }
 }
 
@@ -365,127 +307,10 @@ GraphBasedSeedingAlgorithm::layerNumbering(
   std::vector<Acts::Experimental::GbtsLayerDescription> inputVector;
   std::vector<std::size_t> countVector;
 
-  m_cfg.trackingGeometry->visitSurfaces([this, &inputVector, &countVector,
-                                         &gctx](const Acts::Surface *surface) {
-    Acts::GeometryIdentifier geoId = surface->geometryId();
-    auto actsVolId = geoId.volume();
-    auto actsLayId = geoId.layer();
-    auto mod_id = geoId.sensitive();
-    auto center = surface->center(gctx);
-
-    // A polygonal surface gives its corners whatever the segment count is,
-    // curved bounds an approximation of that resolution.
-    const std::vector<Acts::Vector3> &corners =
-        surface->polyhedronRepresentation(gctx, 4u).vertices;
-
-    float rc = 0.0;
-    float minBound = 100000.0;
-    float maxBound = -100000.0;
-
-    // convert to Gbts ID
-    auto actsJointId = actsVolId * 100 + actsLayId;
-    // here the key needs to be pair of(vol*100+lay, 0)
-    auto key = ActsIDs{actsJointId, 0};
-    auto find = m_actsGbtsMap.find(key);
-
-    // check to see if key exists
-    if (find == m_actsGbtsMap.end()) {
-      key = ActsIDs{actsJointId, mod_id};
-      find = m_actsGbtsMap.find(key);
-    }
-
-    if (find == m_actsGbtsMap.end()) {
-      ACTS_WARNING("Key not found in Gbts map for volume id: "
-                   << actsVolId << ", layer id: " << actsLayId
-                   << ", sensitive id: " << mod_id);
-      return;  // skip this surface in the visitor
-    }
-
-    const Acts::Experimental::GbtsExperimentLayerId gbtsId =
-        find->second.layerId;
-
-    Acts::Experimental::GbtsLayerType barrelEc =
-        Acts::Experimental::GbtsLayerType::Barrel;  // a variable that says if
-                                                    // barrrel, 0 = barrel
-    const std::uint32_t etaMod = find->second.etaModule;
-
-    // assign barrelEc depending on Gbts_layer
-    if (79 < gbtsId && gbtsId < 85) {  // 80s, barrel
-      barrelEc = Acts::Experimental::GbtsLayerType::Barrel;
-    } else if (89 < gbtsId && gbtsId < 99) {  // 90s positive
-      barrelEc = Acts::Experimental::GbtsLayerType::Endcap;
-    } else {  // 70s negative
-      barrelEc = Acts::Experimental::GbtsLayerType::Endcap;
-    }
-
-    if (barrelEc == Acts::Experimental::GbtsLayerType::Barrel) {
-      rc = std::sqrt(center.x() * center.x() +
-                     center.y() * center.y());  // barrel center in r
-      // bounds of z
-      for (const Acts::Vector3 &corner : corners) {
-        minBound = std::min(minBound, static_cast<float>(corner.z()));
-        maxBound = std::max(maxBound, static_cast<float>(corner.z()));
-      }
-    } else if (barrelEc == Acts::Experimental::GbtsLayerType::Endcap) {
-      rc = center.z();  // not barrel center in Z
-      // bounds of r
-      for (const Acts::Vector3 &corner : corners) {
-        const auto r = static_cast<float>(
-            std::sqrt(corner.x() * corner.x() + corner.y() * corner.y()));
-        minBound = std::min(minBound, r);
-        maxBound = std::max(maxBound, r);
-      }
-    } else {
-      throw std::runtime_error(
-          "Invalid barrel/endcap assignment for GbtsLayer");
-    }
-
-    const Acts::Experimental::GbtsExperimentLayerId combinedId =
-        gbtsId * 1000 + etaMod;
-
-    const auto currentIndex =
-        find_if(inputVector.begin(), inputVector.end(),
-                [combinedId](auto n) { return n.id == combinedId; });
-    if (currentIndex != inputVector.end()) {  // not end so does exist
-      const auto index = static_cast<std::size_t>(
-          std::distance(inputVector.begin(), currentIndex));
-      inputVector[index].refCoord += rc;
-      inputVector[index].minBound =
-          std::min(inputVector[index].minBound, minBound);
-      inputVector[index].maxBound =
-          std::max(inputVector[index].maxBound, maxBound);
-      countVector[index] += 1;  // increase count at the index
-
-    } else {  // end so doesn't exists
-      // make new if one with Gbts ID doesn't exist:
-      // every layer the examples framework feeds GBTS is a pixel layer
-      inputVector.push_back(Acts::Experimental::GbtsLayerDescription{
-          .id = combinedId,
-          .type = barrelEc,
-          .technology = Acts::Experimental::GbtsLayerTechnology::Pixel,
-          .refCoord = rc,
-          .minBound = minBound,
-          .maxBound = maxBound});
-      // so the element exists and not divinding by 0
-      countVector.push_back(1);
-    }
-
-    // add to file each time,
-    // print to csv for each module, no repeats so dont need to make
-    // map for averaging
-    if (m_cfg.fillModuleCsv) {
-      std::fstream fout;
-      fout.open("ACTS_modules.csv", std::ios::out | std::ios::app);
-      fout << actsVolId << ", "  // vol
-           << actsLayId << ", "  // lay
-           << mod_id << ", "     // module
-           << gbtsId << ","      // Gbts id
-           << etaMod << ","      // etaMod
-           << center(2) << ", "  // z
-           << std::sqrt(center(0) * center(0) + center(1) * center(1))  // r
-           << "\n";
-    }
-  });
+  m_cfg.trackingGeometry->visitSurfaces(
+      [this, &inputVector, &countVector, &gctx](const Acts::Surface *surface) {
+        addSurfaceToGbtsLayers(*surface, gctx, inputVector, countVector);
+      });
 
   for (std::size_t i = 0; i < inputVector.size(); i++) {
     inputVector[i].refCoord = inputVector[i].refCoord / countVector[i];
@@ -499,7 +324,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("layerMappingFile: " << m_cfg.layerMappingFile);
   ACTS_DEBUG("connectorInputFile: " << m_cfg.connectorInputFile);
   ACTS_DEBUG("lutInputFile: " << m_cfg.lutInputFile);
-  ACTS_DEBUG("etaBinWidthOverride: " << m_cfg.etaBinWidthOverride);
+  ACTS_DEBUG("etaBinWidth: " << m_cfg.etaBinWidth);
   ACTS_DEBUG("===== GraphBasedTrackSeeder =====");
   const auto &cfg1 = m_cfg.seedFinderConfig;
   ACTS_DEBUG("BeamSpotCorrection: " << cfg1.beamSpotCorrection);

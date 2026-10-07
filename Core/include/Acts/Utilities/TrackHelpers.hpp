@@ -15,6 +15,7 @@
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
+#include "Acts/EventData/TrackProxyCommon.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
@@ -428,6 +429,9 @@ void calculateTrackQuantities(track_proxy_t track)
   track.nSharedHits() = 0;
   track.nOutliers() = 0;
 
+  // The split hit column is optional, so only count if the track has it
+  unsigned int nSplitHits = 0;
+
   for (const auto &trackState : track.trackStatesReversed()) {
     ConstTrackStateTypeMap typeFlags = trackState.typeFlags();
 
@@ -439,9 +443,18 @@ void calculateTrackQuantities(track_proxy_t track)
       if (typeFlags.isSharedHit()) {
         track.nSharedHits()++;
       }
+      if (typeFlags.isSplitHit()) {
+        nSplitHits++;
+      }
       track.nMeasurements()++;
       track.chi2() += trackState.chi2();
       track.nDoF() += trackState.calibratedSize();
+    }
+  }
+
+  if constexpr (requires { track.nSplitHits(); }) {
+    if (track.hasColumn(detail_tp::kSplitHitsKey)) {
+      track.nSplitHits() = nSplitHits;
     }
   }
 }

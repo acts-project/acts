@@ -664,25 +664,17 @@ def addSeeding(
 
 def addGbtsTraining(
     s: acts.examples.Sequencer,
+    trackingGeometry: acts.TrackingGeometry,
     selectedParticles: str = "particles_selected",
-    geometryFile: str = "gbts_layer_geometry.txt",
-    outputConnectionTable: str = "layer_connection_table.txt",
+    geometryFile: str = "gbts_layers.json",
+    outputConnectionTable: str = "layer_connection_table.json",
     probThreshold: float = -1.0,
-    zMinTol: float = 0.2340,
-    zMaxTol: float = 0.2340,
-    rMinTol: float = 2.5337,
-    rMaxTol: float = 2.5337,
     doSymmetrization: bool = False,
-    useOldFormatting: bool = False,
     logLevel: acts.logging.Level = None,
 ):
     logLevel = acts.examples.defaultLogging(s, logLevel)()
 
     gbtsLayerConnectionToolConfig = acts.examples.GbtsLayerConnectionToolConfig(
-        zMinTol=zMinTol,
-        zMaxTol=zMaxTol,
-        rMinTol=rMinTol,
-        rMaxTol=rMaxTol,
         probThreshold=probThreshold,
         doSymmetrization=doSymmetrization,
     )
@@ -696,8 +688,8 @@ def addGbtsTraining(
         inputMeasurementSimHitsMap="measurement_simhits_map",
         gbtsLayerConnectionToolConfig=gbtsLayerConnectionToolConfig,
         geometryFileDir=str(geometryFile),
+        trackingGeometry=trackingGeometry,
         outputFileDir=str(outputConnectionTable),
-        useOldFormatting=useOldFormatting,
     )
 
     s.addAlgorithm(alg)
@@ -1990,7 +1982,7 @@ def addCKFTracks(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=trackFinder.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching=f"{prefix}ckf_track_particle_matching",
         outputParticleTrackMatching=f"{prefix}ckf_particle_track_matching",
@@ -2314,7 +2306,7 @@ def addGnn(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=convAlg.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="gnn_track_particle_matching",
         outputParticleTrackMatching="gnn_particle_track_matching",

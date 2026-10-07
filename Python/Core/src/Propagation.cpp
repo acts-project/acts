@@ -12,6 +12,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/HelixStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
@@ -134,6 +135,11 @@ void addPropagation(py::module_& m) {
     stepper.def(py::init<std::shared_ptr<const MagneticFieldProvider>>());
     addPropagator<EigenStepper<>, Navigator>(m, "Eigen");
     addPropagator<EigenStepper<>, VoidNavigator>(m, "EigenVoid");
+  }
+  {
+    auto stepper = py::class_<HelixStepper>(m, "HelixStepper");
+    stepper.def(py::init<std::shared_ptr<const MagneticFieldProvider>>());
+    addPropagator<HelixStepper, Navigator>(m, "Helix");
   }
   {
     auto stepper = py::class_<StraightLineStepper>(m, "StraightLineStepper");
