@@ -107,6 +107,18 @@ class MeasurementSelector {
   }
 };
 
+/// Count the measured local position coordinates of a measurement.
+Acts::SeedDeduplicator::Weight localPositionDimension(
+    const MeasurementContainer::ConstVariableProxy& measurement) {
+  Acts::SeedDeduplicator::Weight dimension = 0;
+  for (const auto index : measurement.subspaceIndexVector()) {
+    if (index == Acts::eBoundLoc0 || index == Acts::eBoundLoc1) {
+      ++dimension;
+    }
+  }
+  return dimension;
+}
+
 /// Collect the measurement keys of all space points of a seed.
 void collectSeedKeys(const ConstSeedProxy& seed,
                      std::vector<Acts::SeedDeduplicator::Key>& keys) {
@@ -121,6 +133,10 @@ void collectSeedKeys(const ConstSeedProxy& seed,
 }
 
 /// Collect the measurement keys of a track.
+///
+/// Outliers count as shared measurements. This is a choice: a seed
+/// measurement that the track rejected as an outlier can still make the seed a
+/// duplicate.
 void collectTrackKeys(const TrackProxy& track,
                       std::vector<Acts::SeedDeduplicator::Key>& keys) {
   keys.clear();
@@ -386,6 +402,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   Acts::SeedDeduplicator seedDeduplicator(m_cfg.seedDeduplicatorCfg);
   if (m_cfg.seedDeduplication) {
     seedDeduplicator.reset(measurements.size());
+    // a pixel and a strip space point both count 2
+    for (Index i = 0; i < measurements.size(); ++i) {
+      seedDeduplicator.setWeight(i, localPositionDimension(measurements.at(i)));
+    }
   }
   std::vector<Acts::SeedDeduplicator::Key> keys;
 

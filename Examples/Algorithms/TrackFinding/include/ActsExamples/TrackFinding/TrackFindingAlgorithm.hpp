@@ -118,7 +118,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Whether to use seed deduplication
     /// This is only available if `inputSeeds` is set.
     bool seedDeduplication = false;
-    /// Seed deduplication threshold, counted in measurements
+    /// Seed deduplication threshold, counted in measured local position
+    /// coordinates. A pixel and a strip space point both count 2.
     Acts::SeedDeduplicator::Config seedDeduplicatorCfg;
     /// Whether to stick on the seed measurements during track finding.
     /// This is only available if `inputSeeds` is set.
