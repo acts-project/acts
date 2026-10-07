@@ -56,7 +56,10 @@ __global__ void fill_sorted_measurements(
 measurement_sorting_algorithm::measurement_sorting_algorithm(
     const traccc::memory_resource& mr, const vecmem::copy& copy,
     const stream_wrapper& str, std::unique_ptr<const Logger> logger)
-    : messaging(std::move(logger)), m_mr{mr}, m_copy{copy}, m_stream{str} {}
+    : messaging(std::move(logger)),
+      hip::algorithm_base(str),
+      m_mr{mr},
+      m_copy{copy} {}
 
 measurement_sorting_algorithm::output_type
 measurement_sorting_algorithm::operator()(
@@ -85,18 +88,17 @@ measurement_sorting_algorithm::operator()(
   }
   m_copy.get()(measurements_view.size(), result.size())->ignore();
 
-  // Get a convenience variable for the stream that we'll be using.
-  hipStream_t stream = details::get_stream(m_stream);
+  hipStream_t str = details::get_stream(stream());
   // Set up the Thrust execution policy. Unfortunately this has to be done in
   // a backend specify way. :-(
 #if defined(__HIP_PLATFORM_AMD__)
   auto policy = thrust::hip::par_nosync(
-                    stream_synchronizing_allocator(m_mr.main, m_stream))
-                    .on(stream);
+                    stream_synchronizing_allocator(m_mr.main, stream()))
+                    .on(str);
 #elif defined(__HIP_PLATFORM_NVIDIA__)
   auto policy = thrust::cuda::par_nosync(
-                    stream_synchronizing_allocator(m_mr.main, m_stream))
-                    .on(stream);
+                    stream_synchronizing_allocator(m_mr.main, stream()))
+                    .on(str);
 #else
 #error "Unrecognised HIP platform."
 #endif
@@ -108,24 +110,25 @@ measurement_sorting_algorithm::operator()(
   m_copy.get().setup(keys)->ignore();
   m_copy.get().setup(indices)->ignore();
 
-  static constexpr unsigned int BLOCK_SIZE = 256;
-  const unsigned int n_blocks = (n_measurements + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  const unsigned int num_threads = warp_size() * 8;
+  const unsigned int num_blocks =
+      (n_measurements + num_threads - 1) / num_threads;
 
   // Sort the indices by the sorting keys, with a radix sort.
-  hipLaunchKernelGGL(kernels::fill_measurement_sort_keys, n_blocks, BLOCK_SIZE,
-                     0, stream, measurements_view, keys, indices);
+  hipLaunchKernelGGL(kernels::fill_measurement_sort_keys, num_blocks,
+                     num_threads, 0, str, measurements_view, keys, indices);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
   thrust::sort_by_key(policy, keys.ptr(), keys.ptr() + n_measurements,
                       indices.ptr());
 
   // Fill the output with the sorted measurements.
-  hipLaunchKernelGGL(kernels::fill_sorted_measurements, n_blocks, BLOCK_SIZE, 0,
-                     stream, measurements_view, result, indices);
+  hipLaunchKernelGGL(kernels::fill_sorted_measurements, num_blocks, num_threads,
+                     0, str, measurements_view, result, indices);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
 
   // The keys and indices buffers are released on return, so the kernels
   // using them must have finished by then.
-  m_stream.synchronize();
+  stream().synchronize();
 
   // Return the sorted buffer.
   return result;

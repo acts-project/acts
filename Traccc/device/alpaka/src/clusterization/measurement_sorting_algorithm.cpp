@@ -64,9 +64,12 @@ struct fill_sorted_measurements {
 }  // namespace kernels
 
 measurement_sorting_algorithm::measurement_sorting_algorithm(
-    const traccc::memory_resource& mr, const vecmem::copy& copy, queue& q,
-    std::unique_ptr<const Logger> logger)
-    : messaging(std::move(logger)), m_mr{mr}, m_copy{copy}, m_queue{q} {}
+    const traccc::memory_resource& mr, const vecmem::copy& copy,
+    alpaka::queue& q, std::unique_ptr<const Logger> logger)
+    : messaging(std::move(logger)),
+      alpaka::algorithm_base(q),
+      m_mr{mr},
+      m_copy{copy} {}
 
 measurement_sorting_algorithm::output_type
 measurement_sorting_algorithm::operator()(
@@ -95,8 +98,6 @@ measurement_sorting_algorithm::operator()(
   }
   m_copy.get()(measurements_view.size(), result.size())->ignore();
 
-  auto queue = details::get_queue(m_queue);
-
   // Sorting keys and index sequence.
   vecmem::data::vector_buffer<device::measurement_sort_key_t> keys(
       n_measurements, m_mr.main);
@@ -104,25 +105,26 @@ measurement_sorting_algorithm::operator()(
   m_copy.get().setup(keys)->wait();
   m_copy.get().setup(indices)->wait();
 
-  static constexpr unsigned int BLOCK_SIZE = 256;
-  const unsigned int n_blocks = (n_measurements + BLOCK_SIZE - 1) / BLOCK_SIZE;
-  auto workDiv = makeWorkDiv<Acc>(n_blocks, BLOCK_SIZE);
+  const unsigned int num_threads = warp_size() * 8;
+  const unsigned int num_blocks =
+      (n_measurements + num_threads - 1) / num_threads;
+  auto workDiv = makeWorkDiv<Acc>(num_blocks, num_threads);
 
   // Sort the indices by the sorting keys, with a radix sort.
-  ::alpaka::exec<Acc>(queue, workDiv, kernels::fill_measurement_sort_keys{},
-                      measurements_view, vecmem::get_data(keys),
-                      vecmem::get_data(indices));
-  details::sort_by_key(m_queue, m_mr, keys.ptr(), keys.ptr() + n_measurements,
+  ::alpaka::exec<Acc>(details::get_queue(queue()), workDiv,
+                      kernels::fill_measurement_sort_keys{}, measurements_view,
+                      vecmem::get_data(keys), vecmem::get_data(indices));
+  details::sort_by_key(queue(), m_mr, keys.ptr(), keys.ptr() + n_measurements,
                        indices.ptr());
 
   // Fill the output with the sorted measurements.
-  ::alpaka::exec<Acc>(queue, workDiv, kernels::fill_sorted_measurements{},
-                      measurements_view, vecmem::get_data(result),
-                      vecmem::get_data(indices));
+  ::alpaka::exec<Acc>(details::get_queue(queue()), workDiv,
+                      kernels::fill_sorted_measurements{}, measurements_view,
+                      vecmem::get_data(result), vecmem::get_data(indices));
 
   // The keys and indices buffers are released on return, so the kernels
   // using them must have finished by then.
-  m_queue.get().synchronize();
+  queue().synchronize();
 
   // Return the sorted buffer.
   return result;
