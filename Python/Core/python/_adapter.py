@@ -92,5 +92,8 @@ def _patch_config(m, itemsToKWargsFor=["Config"]):
 
         for thing in itemsToKWargsFor:
             if hasattr(cls, thing):
-                cls.__init__ = _make_config_adapter(cls.__init__)
+                # specifically for the magic "config"
+                # member, patch the init method
+                if thing == "Config":
+                    cls.__init__ = _make_config_adapter(cls.__init__)
                 _patchKwargsConstructor(getattr(cls, thing))

@@ -66,13 +66,13 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
                  .value("Inversion", Inversion)
                  .value("Diagonalization", Diagonalization)
                  .value("Decomposition", Decomposition)
-                 .value("FullMINRES", FullMINRES)
-                 .value("SparseMINRES", SparseMINRES)
-                 .value("FullMINRES_QLP", FullMINRES_QLP)
-                 .value("SparseMINRES_QLP", SparseMINRES_QLP)
-                 .value("FullLAPACK", FullLAPACK)
-                 .value("UnpackedLAPACK", UnpackedLAPACK)
-                 .value("SparsePARDISO", SparsePARDISO);
+                 .value("FullMinRes", FullMinRes)
+                 .value("SparseMinRes", SparseMinRes)
+                 .value("FullMinResQlp", FullMinResQlp)
+                 .value("SparseMinResQlp", SparseMinResQlp)
+                 .value("FullLapack", FullLapack)
+                 .value("UnpackedLapack", UnpackedLapack)
+                 .value("SparsePardiso", SparsePardiso);
 
     auto c = py::class_<ActsPlugins::MillePedeSteeringConfig>(
                  mille, "MillePedeSteeringConfig")

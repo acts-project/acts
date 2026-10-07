@@ -47,17 +47,18 @@ void addInputBlock(std::ofstream& out, const Config& conf,
 
 void addSolutionMethod(std::ofstream& out, const Config& conf,
                        const Acts::Logger& logger) {
+  using enum Strategy;
   static const std::map<Strategy, std::string> stratNames{
-      {Strategy::Inversion, "inversion"},
-      {Strategy::Diagonalization, "diagonalization"},
-      {Strategy::Decomposition, "decomposition"},
-      {Strategy::FullMINRES, "fullMINRES"},
-      {Strategy::SparseMINRES, "sparseMINRES"},
-      {Strategy::FullMINRES_QLP, "fullMINRES-QLP"},
-      {Strategy::SparseMINRES_QLP, "sparseMINRES-QLP"},
-      {Strategy::FullLAPACK, "fullLAPACK"},
-      {Strategy::UnpackedLAPACK, "unpackedLAPACK"},
-      {Strategy::SparsePARDISO, "sparsePARDISO"},
+      {Inversion, "inversion"},
+      {Diagonalization, "diagonalization"},
+      {Decomposition, "decomposition"},
+      {FullMinRes, "fullMINRES"},
+      {SparseMinRes, "sparseMINRES"},
+      {FullMinResQlp, "fullMINRES-QLP"},
+      {SparseMinResQlp, "sparseMINRES-QLP"},
+      {FullLapack, "fullLAPACK"},
+      {UnpackedLapack, "unpackedLAPACK"},
+      {SparsePardiso, "sparsePARDISO"},
   };
   auto found = stratNames.find(conf.strategy);
   if (found == stratNames.end()) {
