@@ -201,18 +201,10 @@ class DetrayPayloadConverter {
       DetectorElement
     };
     /// Name for the detector
-    std::string detectorName{"Detector"};
+    std::string detectorName{"ACTS_converted_detector"};
 
     /// Whether to convert material information from ACTS to detray
     bool convertMaterial = true;
-
-    /// Whether identical surface material is shared between detray surfaces
-    /// instead of being copied for every surface. ACTS portals are split into
-    /// one detray portal surface per attached volume, which otherwise each
-    /// get their own copy of the portal material.
-    /// @note This only affects the built detector, the payloads keep one
-    ///       material entry per surface.
-    bool deduplicateMaterial = true;
 
     /// Whether to convert surface grid information from ACTS to detray
     bool convertSurfaceGrids = true;
