@@ -90,7 +90,8 @@ class DoubletsForMiddleSp {
   /// Type alias for subset of index and cotTheta pairs
   using IndexAndCotThetaSubset = std::span<const IndexAndCotTheta>;
 
-  /// Sort doublets by cotTheta within given range
+  /// Sort doublets by cotTheta within given range. Allocates the sort's
+  /// storage on every call; the overload taking it does not.
   /// @param range Index range to sort within
   /// @param indexAndCotTheta Output vector containing sorted index and cotTheta pairs
   void sortByCotTheta(const IndexRange& range,
