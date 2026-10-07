@@ -45,8 +45,18 @@ measurement_sorting_algorithm::operator()(
   }
   copy()(measurements.size(), result.size())->ignore();
 
-  sorting_kernel(
-      {static_cast<unsigned int>(n_measurements), measurements, result});
+  // Sorting keys and index sequence.
+  vecmem::data::vector_buffer<measurement_sort_key_t> keys(n_measurements,
+                                                           mr().main);
+  vecmem::data::vector_buffer<unsigned int> indices(n_measurements, mr().main);
+  copy().setup(keys)->ignore();
+  copy().setup(indices)->ignore();
+
+  sorting_kernel({static_cast<unsigned int>(n_measurements), measurements,
+                  result, keys, indices});
+
+  // Complete measurement sorting before releasing its intermediate buffers.
+  synchronize();
 
   // Return the sorted buffer.
   return result;

@@ -44,13 +44,6 @@ void measurement_sorting_algorithm::sorting_kernel(
   ::sycl::queue& squeue = details::get_queue(this->queue());
   auto policy = oneapi::dpl::execution::device_policy{squeue};
 
-  // Sorting keys and index sequence.
-  vecmem::data::vector_buffer<device::measurement_sort_key_t> keys(
-      n_measurements, mr().main);
-  vecmem::data::vector_buffer<unsigned int> indices(n_measurements, mr().main);
-  copy().setup(keys)->wait();
-  copy().setup(indices)->wait();
-
   const unsigned int num_threads = warp_size() * 8;
 
   // Sort the indices by the sorting keys, with a radix sort.
@@ -59,33 +52,36 @@ void measurement_sorting_algorithm::sorting_kernel(
         h.parallel_for<kernels::fill_measurement_sort_keys>(
             details::calculate1DimNdRange(n_measurements, num_threads),
             [measurements_view = payload.measurements,
-             keys_view = vecmem::get_data(keys),
+             keys_view = vecmem::get_data(payload.keys),
              indices_view =
-                 vecmem::get_data(indices)](::sycl::nd_item<1> item) {
+                 vecmem::get_data(payload.indices)](::sycl::nd_item<1> item) {
               device::fill_measurement_sort_keys(
                   static_cast<unsigned int>(item.get_global_id(0)),
                   measurements_view, keys_view, indices_view);
             });
       })
       .wait_and_throw();
-  oneapi::dpl::sort_by_key(policy, keys.ptr(), keys.ptr() + n_measurements,
-                           indices.ptr());
+  oneapi::dpl::sort_by_key(policy, payload.keys.ptr(),
+                           payload.keys.ptr() + n_measurements,
+                           payload.indices.ptr());
 
   // Fill the output with the sorted measurements.
-  squeue
-      .submit([&](::sycl::handler& h) {
-        h.parallel_for<kernels::fill_sorted_measurements>(
-            details::calculate1DimNdRange(n_measurements, num_threads),
-            [measurements_view = payload.measurements,
-             output_view = vecmem::get_data(payload.output),
-             sorted_indices_view =
-                 vecmem::get_data(indices)](::sycl::nd_item<1> item) {
-              device::fill_sorted_measurements(
-                  static_cast<unsigned int>(item.get_global_id(0)),
-                  measurements_view, output_view, sorted_indices_view);
-            });
-      })
-      .wait_and_throw();
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::fill_sorted_measurements>(
+        details::calculate1DimNdRange(n_measurements, num_threads),
+        [measurements_view = payload.measurements,
+         output_view = vecmem::get_data(payload.output),
+         sorted_indices_view =
+             vecmem::get_data(payload.indices)](::sycl::nd_item<1> item) {
+          device::fill_sorted_measurements(
+              static_cast<unsigned int>(item.get_global_id(0)),
+              measurements_view, output_view, sorted_indices_view);
+        });
+  });
+}
+
+void measurement_sorting_algorithm::synchronize() const {
+  details::get_queue(queue()).wait_and_throw();
 }
 
 }  // namespace traccc::sycl
