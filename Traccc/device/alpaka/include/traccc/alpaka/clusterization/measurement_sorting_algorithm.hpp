@@ -45,6 +45,9 @@ class measurement_sorting_algorithm
   void sorting_kernel(
       const measurement_sorting_kernel_payload& payload) const override;
 
+  /// Wait for outstanding work on the algorithm stream or queue.
+  void synchronize() const override;
+
 };  // class measurement_sorting_algorithm
 
 }  // namespace traccc::alpaka

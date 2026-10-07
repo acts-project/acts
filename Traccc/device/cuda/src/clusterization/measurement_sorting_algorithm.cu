@@ -65,31 +65,25 @@ void measurement_sorting_algorithm::sorting_kernel(
                     stream_synchronizing_allocator(mr().main, stream()))
                     .on(str);
 
-  // Sorting keys and index sequence.
-  vecmem::data::vector_buffer<device::measurement_sort_key_t> keys(
-      n_measurements, mr().main);
-  vecmem::data::vector_buffer<unsigned int> indices(n_measurements, mr().main);
-  copy().setup(keys)->ignore();
-  copy().setup(indices)->ignore();
-
   const unsigned int num_threads = warp_size() * 8;
   const unsigned int num_blocks =
       (n_measurements + num_threads - 1) / num_threads;
 
   // Sort the indices by the sorting keys, with a radix sort.
   kernels::fill_measurement_sort_keys<<<num_blocks, num_threads, 0, str>>>(
-      payload.measurements, keys, indices);
+      payload.measurements, payload.keys, payload.indices);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
-  thrust::sort_by_key(policy, keys.ptr(), keys.ptr() + n_measurements,
-                      indices.ptr());
+  thrust::sort_by_key(policy, payload.keys.ptr(),
+                      payload.keys.ptr() + n_measurements,
+                      payload.indices.ptr());
 
   // Fill the output with the sorted measurements.
   kernels::fill_sorted_measurements<<<num_blocks, num_threads, 0, str>>>(
-      payload.measurements, payload.output, indices);
+      payload.measurements, payload.output, payload.indices);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+}
 
-  // The keys and indices buffers are released on return, so the kernels
-  // using them must have finished by then.
+void measurement_sorting_algorithm::synchronize() const {
   stream().synchronize();
 }
 
