@@ -92,20 +92,22 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
   GbtsGraph graph =
       graphBuilder.buildTheGraph(roi, nodeStorage, options.bFieldInZ);
 
-  ACTS_DEBUG("Created graph with " << graph.edgeStorage.size()
-                                   << " edges and " << graph.nConnections
-                                   << " edge links");
+  ACTS_DEBUG("Created graph with " << graph.edgeStorage.size() << " edges and "
+                                   << graph.nConnections << " edge links");
 
   if (graph.edgeStorage.empty() || graph.nConnections == 0) {
     ACTS_WARNING("Missing edges or edge connections");
   }
 
-  const std::uint32_t maxLevel = graphBuilder.runCCA(graph);
+  const GbtsGraphBuilder::Config& graphCfg = graphBuilder.config();
+
+  const std::uint32_t maxLevel = graph.runCCA(graphCfg.ccaMaxIterations);
 
   ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
 
   std::vector<detail::GbtsEdge*> vChainHeads =
-      graphBuilder.extractChainHeads(graph);
+      graph.extractChainHeads(graphCfg.minSeedLevel, graphCfg.addTriplets,
+                              graphCfg.maxAbsEtaAddTriplets);
 
   if (vChainHeads.empty()) {
     ACTS_WARNING("No chains passed minimum edge requirement");
@@ -141,12 +143,10 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   // the chain selection is the graph builder's, so that the chains it handed
   // back and the candidates built from them are cut the same way
   const GbtsGraphBuilder::Config& graphCfg = graphBuilder.config();
-  const auto minLevel = static_cast<std::uint8_t>(graphCfg.minSeedLevel);
   // `addTriplets` accepts a chain one level short. Signed: an uncollected
   // edge sits at level -1 and `minSeedLevel` may be configured to 0.
-  const int minLevelAddTriplets = int{minLevel} - 1;
-
-  //===== everything to hear should be in the new class
+  const std::int8_t minLevelAddTriplets =
+      static_cast<std::int8_t>(graphCfg.minSeedLevel - 1);
 
   // backtracking
 
@@ -179,12 +179,12 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     const std::uint32_t chainLength = static_cast<std::uint32_t>(rs.vs.size());
 
     if (!graphCfg.addTriplets) {
-      if (chainLength < minLevel) {
+      if (chainLength < graphCfg.minSeedLevel) {
         continue;
       }
     } else {
       if (seedAbsEta > graphCfg.maxAbsEtaAddTriplets) {
-        if (chainLength < minLevel) {
+        if (chainLength < graphCfg.minSeedLevel) {
           continue;
         }
       } else {

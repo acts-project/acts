@@ -16,7 +16,6 @@
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <array>
 #include <cstdint>
 #include <memory>
 #include <utility>
@@ -31,14 +30,31 @@ struct GbtsGraph {
 
   /// Number of links between edges.
   std::uint32_t nConnections = 0;
+
+  /// Run connected component analysis on the graph, updating the edge levels.
+  /// @param maxIterations Maximum number of connected-component iterations
+  /// @return The highest chain level any edge reached
+  std::uint32_t runCCA(std::uint32_t maxIterations);
+
+  /// extract edges that start a chain
+  /// @param minSeedLevel Chain length a seed candidate must reach
+  /// @param addTriplets Accept chains one level short within
+  ///        `maxAbsEtaAddTriplets`
+  /// @param maxAbsEtaAddTriplets The maximum |eta| at which `addTriplets`
+  ///        applies
+  /// @return The edges that start chains, ordered by length of chain, empty
+  ///         if no chain reached the required level
+  std::vector<detail::GbtsEdge*> extractChainHeads(std::uint8_t minSeedLevel,
+                                                   bool addTriplets,
+                                                   float maxAbsEtaAddTriplets);
 };
 
 /// Builds the doublet graph of the GBTS workflow.
 ///
 /// Turns a finalized `GbtsNodeStorage` into a graph whose edges are doublets
-/// and whose links are the doublet pairs that a triplet cut accepted, then
-/// grows chain levels over those links with a connected component analysis.
-/// `GraphBasedTrackSeeder` walks the result to produce seeds.
+/// and whose links are the doublet pairs that a triplet cut accepted.
+/// `GraphBasedTrackSeeder` grows chain levels over those links with
+/// `GbtsGraph::runCCA` and walks the result to produce seeds.
 ///
 /// The phi binning is the node storage's, so the sliding windows and the
 /// indexing they slide over cannot disagree.
@@ -182,7 +198,7 @@ class GbtsGraphBuilder {
 
     /// Chain length a seed candidate must reach: a triplet plus one
     /// confirmation.
-    std::uint32_t minSeedLevel = 3;
+    std::uint8_t minSeedLevel = 3;
 
     /// optionally add 3 sp seeds within a certain eta range
     ///
@@ -217,40 +233,7 @@ class GbtsGraphBuilder {
   GbtsGraph buildTheGraph(const GbtsRoiDescriptor& roi,
                           GbtsNodeStorage& nodeStorage, float bFieldInZ) const;
 
-  /// Run connected component analysis on the graph.
-  /// @param graph The graph, whose edge levels are updated
-  /// @return The highest chain level any edge reached
-  std::uint32_t runCCA(GbtsGraph& graph) const;
-
-  /// extract edges that start a chain
-  /// @param graph The graph
-  /// @return The edges that start chains, ordered by length of chain, empty
-  ///         if no chain reached the required level
-  std::vector<detail::GbtsEdge*> extractChainHeads(GbtsGraph& graph) const;
-
  private:
-  /// Check to see if z0 of segment is within the expected z range of the
-  /// beamspot
-  /// @param z0BitMask Sets allowed bins of allowed z value
-  /// @param z0 Estimated z0 of segments z value at beamspot
-  /// @param z0HistoCoeff Scalfactor that converts z coodindate into bin index
-  /// @return Whether segment is within beamspot range
-  bool checkZ0BitMask(std::uint16_t z0BitMask, float z0,
-                      float z0HistoCoeff) const;
-
-  /// Check a triplet against the pT and d0 cuts.
-  /// @param nodeView View of the node positions and layers
-  /// @param candidateTriplet The three graph nodes
-  /// @param tripletMinPt Minimum transverse momentum
-  /// @param tauRatio Tau ratio of the triplet
-  /// @param tauRatioCut Tau ratio cut threshold
-  /// @param bFieldInZ Magnetic field in z, in GeV/(e*mm)
-  /// @return Whether the triplet is accepted
-  bool validateTriplet(const detail::GbtsNodeView& nodeView,
-                       const std::array<SpacePointIndex, 3>& candidateTriplet,
-                       float tripletMinPt, float tauRatio, float tauRatioCut,
-                       float bFieldInZ) const;
-
   Config m_cfg;
 
   std::shared_ptr<const GbtsGeometry> m_geometry;

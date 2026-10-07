@@ -360,7 +360,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("minZ0: " << cfg2.minZ0);
   ACTS_DEBUG("maxZ0: " << cfg2.maxZ0);
   ACTS_DEBUG("maxOuterRadius: " << cfg2.maxOuterRadius);
-  ACTS_DEBUG("minSeedLevel: " << cfg2.minSeedLevel);
+  ACTS_DEBUG("minSeedLevel: " << static_cast<std::uint32_t>(cfg2.minSeedLevel));
   ACTS_DEBUG("addTriplets: " << cfg2.addTriplets);
   ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg2.maxAbsEtaAddTriplets);
   ACTS_DEBUG("===== GbtsTrackFilter =====");

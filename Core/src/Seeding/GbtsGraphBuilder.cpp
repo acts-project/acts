@@ -45,6 +45,142 @@ struct SlidingWindow {
   GbtsLayerTechnology technology{};
 };
 
+/// Check a triplet against the pT and d0 cuts.
+/// @param cfg Graph builder configuration
+/// @param nodeView View of the node positions and layers
+/// @param candidateTriplet The three graph nodes
+/// @param tripletMinPt Minimum transverse momentum
+/// @param tauRatio Tau ratio of the triplet
+/// @param tauRatioCut Tau ratio cut threshold
+/// @param bFieldInZ Magnetic field in z, in GeV/(e*mm)
+/// @return Whether the triplet is accepted
+bool validateTriplet(const GbtsGraphBuilder::Config& cfg,
+                     const detail::GbtsNodeView& nodeView,
+                     const std::array<SpacePointIndex, 3>& candidateTriplet,
+                     const float tripletMinPt, const float tauRatio,
+                     const float tauRatioCut, const float bFieldInZ) {
+  // conformal mapping with the center at the middle spacepoint
+
+  std::array<float, 2> u{};
+  std::array<float, 2> v{};
+
+  const detail::GbtsNodeProxy n0 = nodeView[candidateTriplet[1]];
+
+  const float x0 = n0.x();
+  const float y0 = n0.y();
+
+  const float r0 = n0.r();
+
+  const float cosA = x0 / r0;
+
+  const float sinA = y0 / r0;
+
+  for (std::uint32_t k = 0; k < 2; k++) {
+    const std::uint32_t spIdx = (k == 1) ? 2 : k;
+
+    const detail::GbtsNodeProxy nk = nodeView[candidateTriplet[spIdx]];
+
+    const float dx = nk.x() - x0;
+
+    const float dy = nk.y() - y0;
+
+    const float r2Inv = 1.0f / (dx * dx + dy * dy);
+
+    const float xn = dx * cosA + dy * sinA;
+
+    const float yn = -dx * sinA + dy * cosA;
+
+    u[k] = xn * r2Inv;
+    v[k] = yn * r2Inv;
+  }
+
+  const float du = u[0] - u[1];
+
+  if (du == 0.0) {
+    return false;
+  }
+
+  const float A = (v[0] - v[1]) / du;
+
+  const float B = v[1] - A * u[1];
+
+  const float d0 = r0 * (B * r0 - A);
+
+  if (std::abs(d0) > cfg.d0Max) {
+    return false;
+  }
+
+  if (B != 0.0) {  // straight-line track is OK
+
+    const float R = std::sqrt(1 + A * A) / B;
+
+    // 1T magnetic field used
+    const float pT = std::abs(bFieldInZ * R / 2);
+
+    if (pT < tripletMinPt) {
+      return false;
+    }
+
+    if (pT > 5 * tripletMinPt) {  // relatively high-pT track
+
+      if (tauRatio > 0.9f * tauRatioCut) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+/// Check to see if z0 of segment is within the expected z range of the
+/// beamspot
+/// @param cfg Graph builder configuration
+/// @param z0BitMask Sets allowed bins of allowed z value
+/// @param z0 Estimated z0 of segments z value at beamspot
+/// @param z0HistoCoeff Scalfactor that converts z coodindate into bin index
+/// @return Whether segment is within beamspot range
+bool checkZ0BitMask(const GbtsGraphBuilder::Config& cfg,
+                    const std::uint16_t z0BitMask, const float z0,
+                    const float z0HistoCoeff) {
+  if (z0BitMask == 0) {
+    return true;
+  }
+
+  // z0 is not yet range checked here -- doubletFilterRZ runs after this -- so
+  // a bin outside the histogram is reachable and must not reach the shift.
+  const auto isSet = [z0BitMask](const std::int32_t bin) {
+    return bin >= 0 && bin < detail::kGbtsZ0HistogramBins &&
+           ((z0BitMask >> bin) & 1) != 0;
+  };
+
+  const float dz = z0 - cfg.minZ0;
+  const std::int32_t z0BinIndex = static_cast<std::int32_t>(z0HistoCoeff * dz);
+
+  if (isSet(z0BinIndex)) {
+    return true;
+  }
+
+  // check adjacent bins as well
+
+  const float dzm = dz - cfg.z0Resolution;
+
+  std::int32_t nextBin = static_cast<std::int32_t>(z0HistoCoeff * dzm);
+
+  if (nextBin != z0BinIndex && isSet(nextBin)) {
+    return true;
+  }
+
+  const float dzp = dz + cfg.z0Resolution;
+
+  nextBin = static_cast<std::int32_t>(z0HistoCoeff * dzp);
+
+  if (nextBin != z0BinIndex && isSet(nextBin)) {
+    return true;
+  }
+
+  return false;
+}
+
 }  // namespace
 
 GbtsGraphBuilder::GbtsGraphBuilder(const Config& config,
@@ -331,7 +467,8 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
           const float z0 = z1c - r1c * tau;
 
           // check against a non-empty z0 histogram
-          if (useZ0Histogram && !checkZ0BitMask(nodeInfo, z0, z0HistoCoeff)) {
+          if (useZ0Histogram &&
+              !checkZ0BitMask(m_cfg, nodeInfo, z0, z0HistoCoeff)) {
             continue;
           }
 
@@ -481,9 +618,9 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                 const std::array<SpacePointIndex, 3> candidateTriplet = {
                     n1Idx, n2Idx, pS->n2};
 
-                if (!validateTriplet(nodeView, candidateTriplet, tripletPtMin,
-                                     absTauRatio, m_cfg.tauRatioCut,
-                                     bFieldInZ)) {
+                if (!validateTriplet(m_cfg, nodeView, candidateTriplet,
+                                     tripletPtMin, absTauRatio,
+                                     m_cfg.tauRatioCut, bFieldInZ)) {
                   continue;
                 }
               }
@@ -539,8 +676,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
   return graph;
 }
 
-std::uint32_t GbtsGraphBuilder::runCCA(GbtsGraph& graph) const {
-  std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
+std::uint32_t GbtsGraph::runCCA(const std::uint32_t maxIterations) {
   const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
 
   std::uint32_t maxLevel = 0;
@@ -564,7 +700,7 @@ std::uint32_t GbtsGraphBuilder::runCCA(GbtsGraph& graph) const {
   vNew.reserve(vOld.size());
 
   // generate proposals
-  for (; iter < m_cfg.ccaMaxIterations; iter++) {
+  for (; iter < maxIterations; iter++) {
     vNew.clear();
 
     for (detail::GbtsEdge* pS : vOld) {
@@ -610,15 +746,15 @@ std::uint32_t GbtsGraphBuilder::runCCA(GbtsGraph& graph) const {
   return maxLevel;
 }
 
-std::vector<detail::GbtsEdge*> GbtsGraphBuilder::extractChainHeads(
-    GbtsGraph& graph) const {
-  std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
+std::vector<detail::GbtsEdge*> GbtsGraph::extractChainHeads(
+    const std::uint8_t minSeedLevel, const bool addTriplets,
+    const float maxAbsEtaAddTriplets) {
   const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
 
-  const auto minLevel = static_cast<std::uint8_t>(m_cfg.minSeedLevel);
   // `addTriplets` accepts a chain one level short. Signed: an uncollected
   // edge sits at level -1 and `minSeedLevel` may be configured to 0.
-  const int minLevelAddTriplets = int{minLevel} - 1;
+  const std::int8_t minLevelAddTriplets =
+      static_cast<std::int8_t>(minSeedLevel - 1);
   std::vector<detail::GbtsEdge*> vChainHeads;
 
   vChainHeads.reserve(nEdges / 2);
@@ -626,15 +762,15 @@ std::vector<detail::GbtsEdge*> GbtsGraphBuilder::extractChainHeads(
   for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
     detail::GbtsEdge* pS = &edgeStorage[edgeIndex];
 
-    if (!m_cfg.addTriplets) {
-      if (pS->level < minLevel) {
+    if (!addTriplets) {
+      if (pS->level < minSeedLevel) {
         continue;
       }
     } else {  // eta-dependent cut
       const float edgeAbsEta = std::abs(-std::log(pS->p[0]));
 
-      if (edgeAbsEta > m_cfg.maxAbsEtaAddTriplets) {
-        if (pS->level < minLevel) {
+      if (edgeAbsEta > maxAbsEtaAddTriplets) {
+        if (pS->level < minSeedLevel) {
           continue;
         }
       } else {
@@ -657,123 +793,4 @@ std::vector<detail::GbtsEdge*> GbtsGraphBuilder::extractChainHeads(
   return vChainHeads;
 }
 
-bool GbtsGraphBuilder::validateTriplet(
-    const detail::GbtsNodeView& nodeView,
-    const std::array<SpacePointIndex, 3>& candidateTriplet,
-    const float tripletMinPt, const float tauRatio, const float tauRatioCut,
-    const float bFieldInZ) const {
-  // conformal mapping with the center at the middle spacepoint
-
-  std::array<float, 2> u{};
-  std::array<float, 2> v{};
-
-  const detail::GbtsNodeProxy n0 = nodeView[candidateTriplet[1]];
-
-  const float x0 = n0.x();
-  const float y0 = n0.y();
-
-  const float r0 = n0.r();
-
-  const float cosA = x0 / r0;
-
-  const float sinA = y0 / r0;
-
-  for (std::uint32_t k = 0; k < 2; k++) {
-    const std::uint32_t spIdx = (k == 1) ? 2 : k;
-
-    const detail::GbtsNodeProxy nk = nodeView[candidateTriplet[spIdx]];
-
-    const float dx = nk.x() - x0;
-
-    const float dy = nk.y() - y0;
-
-    const float r2Inv = 1.0f / (dx * dx + dy * dy);
-
-    const float xn = dx * cosA + dy * sinA;
-
-    const float yn = -dx * sinA + dy * cosA;
-
-    u[k] = xn * r2Inv;
-    v[k] = yn * r2Inv;
-  }
-
-  const float du = u[0] - u[1];
-
-  if (du == 0.0) {
-    return false;
-  }
-
-  const float A = (v[0] - v[1]) / du;
-
-  const float B = v[1] - A * u[1];
-
-  const float d0 = r0 * (B * r0 - A);
-
-  if (std::abs(d0) > m_cfg.d0Max) {
-    return false;
-  }
-
-  if (B != 0.0) {  // straight-line track is OK
-
-    const float R = std::sqrt(1 + A * A) / B;
-
-    // 1T magnetic field used
-    const float pT = std::abs(bFieldInZ * R / 2);
-
-    if (pT < tripletMinPt) {
-      return false;
-    }
-
-    if (pT > 5 * tripletMinPt) {  // relatively high-pT track
-
-      if (tauRatio > 0.9f * tauRatioCut) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
-bool GbtsGraphBuilder::checkZ0BitMask(const std::uint16_t z0BitMask,
-                                      const float z0,
-                                      const float z0HistoCoeff) const {
-  if (z0BitMask == 0) {
-    return true;
-  }
-
-  // z0 is not yet range checked here -- doubletFilterRZ runs after this -- so
-  // a bin outside the histogram is reachable and must not reach the shift.
-  const auto isSet = [z0BitMask](const std::int32_t bin) {
-    return bin >= 0 && bin < detail::kGbtsZ0HistogramBins &&
-           ((z0BitMask >> bin) & 1) != 0;
-  };
-
-  const float dz = z0 - m_cfg.minZ0;
-  const std::int32_t z0BinIndex = static_cast<std::int32_t>(z0HistoCoeff * dz);
-
-  if (isSet(z0BinIndex)) {
-    return true;
-  }
-
-  // check adjacent bins as well
-
-  const float dzm = dz - m_cfg.z0Resolution;
-
-  std::int32_t nextBin = static_cast<std::int32_t>(z0HistoCoeff * dzm);
-
-  if (nextBin != z0BinIndex && isSet(nextBin)) {
-    return true;
-  }
-
-  const float dzp = dz + m_cfg.z0Resolution;
-
-  nextBin = static_cast<std::int32_t>(z0HistoCoeff * dzp);
-
-  if (nextBin != z0BinIndex && isSet(nextBin)) {
-    return true;
-  }
-
-  return false;
-}
 }  // namespace Acts::Experimental
