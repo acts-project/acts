@@ -83,21 +83,18 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
         // Launch the kernel. The base class destroys the prefix sum buffer,
         // and this function destroys the detector view buffer, right after
         // this call. So the kernel must finish before returning.
-        squeue
-            .submit([&](::sycl::handler& h) {
-              h.parallel_for(
-                  details::calculate1DimNdRange(payload.n_measurements,
-                                                warp_size() * 8),
-                  [det_ptr = device_det.ptr(),
-                   measurements = payload.measurements,
-                   spacepoint_index = payload.spacepoint_index,
-                   spacepoints = payload.spacepoints](::sycl::nd_item<1> item) {
-                    device::form_spacepoints<detector_t>(
-                        details::global_index(item), *det_ptr, measurements,
-                        spacepoint_index, spacepoints);
-                  });
-            })
-            .wait_and_throw();
+        squeue.submit([&](::sycl::handler& h) {
+          h.parallel_for(
+              details::calculate1DimNdRange(payload.n_measurements,
+                                            warp_size() * 8),
+              [det_ptr = device_det.ptr(), measurements = payload.measurements,
+               spacepoint_index = payload.spacepoint_index,
+               spacepoints = payload.spacepoints](::sycl::nd_item<1> item) {
+                device::form_spacepoints<detector_t>(
+                    details::global_index(item), *det_ptr, measurements,
+                    spacepoint_index, spacepoints);
+              });
+        });
       });
 }
 

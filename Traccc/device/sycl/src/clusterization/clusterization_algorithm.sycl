@@ -141,17 +141,15 @@ void clusterization_algorithm::cluster_maker_kernel(
     const {
   const ::sycl::nd_range range =
       details::calculate1DimNdRange(num_cells, warp_size() * 8u);
-  details::get_queue(queue())
-      .submit([&](::sycl::handler& h) {
-        h.parallel_for<kernels::reify_cluster_data>(
-            range, [disjoint_set, permutation_map_view,
-                    cluster_data](::sycl::nd_item<1> item) {
-              device::reify_cluster_data(
-                  static_cast<unsigned int>(item.get_global_linear_id()),
-                  disjoint_set, permutation_map_view, cluster_data);
-            });
-      })
-      .wait_and_throw();
+  details::get_queue(queue()).submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::reify_cluster_data>(
+        range, [disjoint_set, permutation_map_view,
+                cluster_data](::sycl::nd_item<1> item) {
+          device::reify_cluster_data(
+              static_cast<unsigned int>(item.get_global_linear_id()),
+              disjoint_set, permutation_map_view, cluster_data);
+        });
+  });
 }
 
 }  // namespace traccc::sycl

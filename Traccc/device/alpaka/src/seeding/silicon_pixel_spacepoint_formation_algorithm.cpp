@@ -105,10 +105,6 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
                             kernels::form_spacepoints<detector_t>{},
                             device_det.ptr(), payload.measurements,
                             payload.spacepoint_index, payload.spacepoints);
-        // The base class destroys the prefix sum buffer, and this function
-        // destroys the detector view buffer, right after this call. So the
-        // kernel must finish before returning.
-        queue().synchronize();
       });
 }
 

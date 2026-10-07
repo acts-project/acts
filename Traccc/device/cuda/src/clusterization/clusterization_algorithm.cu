@@ -89,7 +89,7 @@ void clusterization_algorithm::ccl_kernel(
   // map buffers that the base class destroys without any further
   // synchronization, so the kernel must finish before returning.
   if (payload.config.sort_cells) {
-    stream().synchronize();
+    synchronize();
   }
 }
 
@@ -105,9 +105,6 @@ void clusterization_algorithm::cluster_maker_kernel(
                                 details::get_stream(stream())>>>(
       disjoint_set, permutation_map_view, cluster_data);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
-  // The base class destroys the input buffers right after this call, so
-  // the kernel must finish before returning.
-  stream().synchronize();
 }
 
 }  // namespace traccc::cuda
