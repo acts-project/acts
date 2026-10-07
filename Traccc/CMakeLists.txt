@@ -10,13 +10,193 @@
 cmake_minimum_required(VERSION 3.25)
 project(traccc VERSION 1.6.0 LANGUAGES CXX)
 
-# Set up the used C++ standard(s).
-set(CMAKE_CXX_STANDARD 20 CACHE STRING "The (host) C++ standard to use")
-set(CMAKE_CXX_EXTENSIONS FALSE CACHE BOOL "Disable (host) C++ extensions")
-set(CMAKE_CUDA_STANDARD 20 CACHE STRING "The (CUDA) C++ standard to use")
-set(CMAKE_CUDA_EXTENSIONS FALSE CACHE BOOL "Disable (CUDA) C++ extensions")
-set(CMAKE_SYCL_STANDARD 20 CACHE STRING "The (SYCL) C++ standard to use")
-set(CMAKE_HIP_STANDARD 20 CACHE STRING "The (HIP) C++ standard to use")
+# Standard CMake include(s).
+include(GNUInstallDirs)
+
+if(PROJECT_IS_TOP_LEVEL)
+    # Set up the used C++ standard(s).
+    set(CMAKE_CXX_STANDARD 20 CACHE STRING "The (host) C++ standard to use")
+    set(CMAKE_CXX_EXTENSIONS FALSE CACHE BOOL "Disable (host) C++ extensions")
+    set(CMAKE_CUDA_STANDARD 20 CACHE STRING "The (CUDA) C++ standard to use")
+    set(CMAKE_CUDA_EXTENSIONS FALSE CACHE BOOL "Disable (CUDA) C++ extensions")
+    set(CMAKE_SYCL_STANDARD 20 CACHE STRING "The (SYCL) C++ standard to use")
+    set(CMAKE_HIP_STANDARD 20 CACHE STRING "The (HIP) C++ standard to use")
+
+    # Set the CUDA architecture to build code for.
+    set(CMAKE_CUDA_ARCHITECTURES
+        "75"
+        CACHE STRING
+        "CUDA architectures to build device code for"
+    )
+
+    # Set the HIP architecture to build code for.
+    set(CMAKE_HIP_ARCHITECTURES
+        "gfx1101;gfx90a"
+        CACHE STRING
+        "HIP architectures to build device code for"
+    )
+
+    # Flag controlling whether warnings should make the build fail.
+    option(
+        TRACCC_FAIL_ON_WARNINGS
+        "Make the build fail on compiler/linker warnings"
+        FALSE
+    )
+
+    # Explicitly set the output directory for the binaries. Such that if this
+    # project is included by another project, the main project's configuration would
+    # win out.
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
+        "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}"
+        CACHE PATH
+        "Directory for the built binaries"
+    )
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
+        "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
+        CACHE PATH
+        "Directory for the built libraries"
+    )
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
+        "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
+        CACHE PATH
+        "Directory for the built static libraries"
+    )
+
+    # Temporary setting for the traccc::scalar type, until it can be removed.
+    set(TRACCC_CUSTOM_SCALARTYPE
+        "float"
+        CACHE STRING
+        "Scalar type to use in the TRACCC code"
+    )
+
+    # Temporary setting for the traccc device log level, until it can be removed.
+    set(TRACCC_DEVICE_LOG_LVL
+        "NONE"
+        CACHE STRING
+        "Log level for traccc and detray device code"
+    )
+
+    # Flags controlling which parts of traccc to build.
+    option(TRACCC_BUILD_CUDA "Build the traccc::cuda library" FALSE)
+    option(
+        TRACCC_BUILD_CUDA_UTILS
+        "Build the traccc::cuda_utils library"
+        ${TRACCC_BUILD_CUDA}
+    )
+    option(TRACCC_BUILD_HIP "Build the traccc::hip library" FALSE)
+    option(
+        TRACCC_BUILD_HIP_UTILS
+        "Build the traccc::hip_utils library"
+        ${TRACCC_BUILD_HIP}
+    )
+    option(TRACCC_BUILD_SYCL "Build the traccc::sycl library" FALSE)
+    option(
+        TRACCC_BUILD_SYCL_UTILS
+        "Build the traccc::sycl_utils library"
+        ${TRACCC_BUILD_SYCL}
+    )
+    option(
+        TRACCC_BUILD_ALPAKA
+        "Build the Alpaka sources included in traccc"
+        FALSE
+    )
+    option(
+        TRACCC_BUILD_IO
+        "Build the IO module (needed by examples, performance, testing)"
+        TRUE
+    )
+    option(TRACCC_BUILD_PERFORMANCE "Build the performance module" TRUE)
+    option(TRACCC_BUILD_SIMULATION "Build the simulation module" TRUE)
+    option(TRACCC_BUILD_TESTING "Build the (unit) tests of traccc" TRUE)
+    option(TRACCC_BUILD_EXAMPLES "Build the examples of traccc" TRUE)
+
+    # Flags controlling what traccc should use.
+    option(TRACCC_USE_SYSTEM_LIBS "Use system libraries be default" FALSE)
+    option(TRACCC_USE_SPACK_LIBS "Use Spack libraries by default" FALSE)
+    option(TRACCC_USE_ROOT "Use ROOT in the build (if needed)" TRUE)
+else()
+    # traccc is built as part of ACTS, and ACTS owns its configuration. So the
+    # traccc settings are normal variables, set from the ACTS options. A cache
+    # entry with the same name has no effect, so it is an error. Remove the
+    # entry, so that it only reports a stale entry from an older build once.
+    macro(traccc_set_from_acts name value)
+        if(DEFINED CACHE{${name}})
+            message(
+                SEND_ERROR
+                "${name} cannot be set when traccc is built as part of ACTS. "
+                "Use the ACTS_TRACCC_* options instead."
+            )
+            unset(${name} CACHE)
+        endif()
+        set(${name} "${value}")
+    endmacro()
+
+    # Settings with an ACTS_TRACCC_* option of their own.
+    traccc_set_from_acts(TRACCC_BUILD_CUDA "${ACTS_TRACCC_BUILD_CUDA}")
+    traccc_set_from_acts(TRACCC_BUILD_CUDA_UTILS "${ACTS_TRACCC_BUILD_CUDA}")
+    traccc_set_from_acts(TRACCC_BUILD_HIP "${ACTS_TRACCC_BUILD_HIP}")
+    traccc_set_from_acts(TRACCC_BUILD_HIP_UTILS "${ACTS_TRACCC_BUILD_HIP}")
+    traccc_set_from_acts(TRACCC_BUILD_SYCL "${ACTS_TRACCC_BUILD_SYCL}")
+    traccc_set_from_acts(TRACCC_BUILD_SYCL_UTILS "${ACTS_TRACCC_BUILD_SYCL}")
+    traccc_set_from_acts(TRACCC_BUILD_ALPAKA "${ACTS_TRACCC_BUILD_ALPAKA}")
+    traccc_set_from_acts(TRACCC_BUILD_IO "${ACTS_TRACCC_BUILD_IO}")
+    traccc_set_from_acts(
+        TRACCC_BUILD_PERFORMANCE
+        "${ACTS_TRACCC_BUILD_PERFORMANCE}"
+    )
+    traccc_set_from_acts(
+        TRACCC_BUILD_SIMULATION
+        "${ACTS_TRACCC_BUILD_SIMULATION}"
+    )
+    traccc_set_from_acts(TRACCC_BUILD_TESTING "${ACTS_TRACCC_BUILD_TESTS}")
+    traccc_set_from_acts(TRACCC_BUILD_EXAMPLES "${ACTS_TRACCC_BUILD_EXAMPLES}")
+    traccc_set_from_acts(
+        TRACCC_ENABLE_NVTX_PROFILING
+        "${ACTS_TRACCC_ENABLE_NVTX_PROFILING}"
+    )
+    traccc_set_from_acts(
+        TRACCC_SUPPORTED_DETECTORS
+        "${ACTS_TRACCC_SUPPORTED_DETECTORS}"
+    )
+    traccc_set_from_acts(TRACCC_CUSTOM_SCALARTYPE "${ACTS_TRACCC_SCALAR_TYPE}")
+    traccc_set_from_acts(
+        TRACCC_DEVICE_LOG_LVL
+        "${ACTS_TRACCC_DEVICE_LOG_LEVEL}"
+    )
+
+    # Settings that follow the general ACTS options.
+    traccc_set_from_acts(TRACCC_USE_ROOT "${ACTS_BUILD_PLUGIN_ROOT}")
+    traccc_set_from_acts(
+        TRACCC_FAIL_ON_WARNINGS
+        "${CMAKE_COMPILE_WARNING_AS_ERROR}"
+    )
+
+    # Dependencies. ACTS sets up all of them, except for the ones below.
+    traccc_set_from_acts(TRACCC_SETUP_VECMEM FALSE)
+    traccc_set_from_acts(TRACCC_USE_SYSTEM_VECMEM FALSE)
+    # Only the examples and oneDPL need TBB. Build it if it is not available.
+    traccc_set_from_acts(TRACCC_SETUP_TBB FALSE)
+    if(TRACCC_BUILD_EXAMPLES OR TRACCC_BUILD_SYCL)
+        find_package(TBB ${_acts_tbb_version} CONFIG)
+        if(NOT TBB_FOUND)
+            traccc_set_from_acts(TRACCC_SETUP_TBB TRUE)
+        endif()
+    endif()
+    traccc_set_from_acts(TRACCC_USE_SYSTEM_TBB FALSE)
+    traccc_set_from_acts(TRACCC_SETUP_THRUST TRUE)
+    traccc_set_from_acts(TRACCC_USE_SYSTEM_THRUST FALSE)
+    traccc_set_from_acts(TRACCC_SETUP_ROCTHRUST FALSE)
+    traccc_set_from_acts(TRACCC_USE_SYSTEM_ROCTHRUST FALSE)
+    traccc_set_from_acts(TRACCC_SETUP_DPL "${TRACCC_BUILD_SYCL}")
+    traccc_set_from_acts(TRACCC_USE_SYSTEM_DPL FALSE)
+    traccc_set_from_acts(TRACCC_SETUP_ALPAKA "${TRACCC_BUILD_ALPAKA}")
+    traccc_set_from_acts(TRACCC_USE_SYSTEM_ALPAKA FALSE)
+    traccc_set_from_acts(TRACCC_SETUP_COVFIE FALSE)
+    traccc_set_from_acts(TRACCC_USE_SYSTEM_COVFIE FALSE)
+    traccc_set_from_acts(TRACCC_SETUP_ACTS FALSE)
+    traccc_set_from_acts(TRACCC_SETUP_GOOGLETEST "${TRACCC_BUILD_TESTING}")
+    traccc_set_from_acts(TRACCC_USE_SYSTEM_GOOGLETEST FALSE)
+endif()
 
 if(${CMAKE_CXX_STANDARD} LESS 20)
     message(
@@ -25,101 +205,9 @@ if(${CMAKE_CXX_STANDARD} LESS 20)
     )
 endif()
 
-# Set the CUDA architecture to build code for.
-set(CMAKE_CUDA_ARCHITECTURES
-    "75"
-    CACHE STRING
-    "CUDA architectures to build device code for"
-)
-
-# Set the HIP architecture to build code for.
-set(CMAKE_HIP_ARCHITECTURES
-    "gfx1101;gfx90a"
-    CACHE STRING
-    "HIP architectures to build device code for"
-)
-
-# Flag controlling whether warnings should make the build fail.
-option(
-    TRACCC_FAIL_ON_WARNINGS
-    "Make the build fail on compiler/linker warnings"
-    FALSE
-)
-
-# Standard CMake include(s).
-include(GNUInstallDirs)
-
-# Explicitly set the output directory for the binaries. Such that if this
-# project is included by another project, the main project's configuration would
-# win out.
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
-    "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}"
-    CACHE PATH
-    "Directory for the built binaries"
-)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
-    "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
-    CACHE PATH
-    "Directory for the built libraries"
-)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
-    "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
-    CACHE PATH
-    "Directory for the built static libraries"
-)
-
 # Include the traccc CMake code.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(traccc-functions)
-
-# Temporary setting for the traccc::scalar type, until it can be removed.
-set(TRACCC_CUSTOM_SCALARTYPE
-    "float"
-    CACHE STRING
-    "Scalar type to use in the TRACCC code"
-)
-
-# Temporary setting for the traccc device log level, until it can be removed.
-set(TRACCC_DEVICE_LOG_LVL
-    "NONE"
-    CACHE STRING
-    "Log level for traccc and detray device code"
-)
-
-# Flags controlling which parts of traccc to build.
-option(TRACCC_BUILD_CUDA "Build the traccc::cuda library" FALSE)
-option(
-    TRACCC_BUILD_CUDA_UTILS
-    "Build the traccc::cuda_utils library"
-    ${TRACCC_BUILD_CUDA}
-)
-option(TRACCC_BUILD_HIP "Build the traccc::hip library" FALSE)
-option(
-    TRACCC_BUILD_HIP_UTILS
-    "Build the traccc::hip_utils library"
-    ${TRACCC_BUILD_HIP}
-)
-option(TRACCC_BUILD_SYCL "Build the traccc::sycl library" FALSE)
-option(
-    TRACCC_BUILD_SYCL_UTILS
-    "Build the traccc::sycl_utils library"
-    ${TRACCC_BUILD_SYCL}
-)
-option(TRACCC_BUILD_ALPAKA "Build the Alpaka sources included in traccc" FALSE)
-option(
-    TRACCC_BUILD_IO
-    "Build the IO module (needed by examples, performance, testing)"
-    TRUE
-)
-option(TRACCC_BUILD_PERFORMANCE "Build the performance module" TRUE)
-option(TRACCC_BUILD_SIMULATION "Build the simulation module" TRUE)
-option(TRACCC_BUILD_TESTING "Build the (unit) tests of traccc" TRUE)
-option(TRACCC_BUILD_EXAMPLES "Build the examples of traccc" TRUE)
-
-# Flags controlling what traccc should use.
-option(TRACCC_USE_SYSTEM_LIBS "Use system libraries be default" FALSE)
-option(TRACCC_USE_SPACK_LIBS "Use Spack libraries by default" FALSE)
-option(TRACCC_USE_ROOT "Use ROOT in the build (if needed)" TRUE)
 
 # Check CUDA and SYCL C++ standards
 if(${TRACCC_BUILD_CUDA} AND ${CMAKE_CUDA_STANDARD} LESS 20)
@@ -147,11 +235,13 @@ endif()
 # a working Python interpreter, and a list of supported detectors.
 find_package(Python COMPONENTS Interpreter REQUIRED)
 # The detector types supported by this build of traccc.
-set(TRACCC_SUPPORTED_DETECTORS
-    "default_detector;odd_detector;telescope_detector"
-    CACHE STRING
-    "Semicolon-separated list of detector types to support in this build"
-)
+if(PROJECT_IS_TOP_LEVEL)
+    set(TRACCC_SUPPORTED_DETECTORS
+        "default_detector;odd_detector;telescope_detector"
+        CACHE STRING
+        "Semicolon-separated list of detector types to support in this build"
+    )
+endif()
 
 # Set up build profiling for the project.
 if(CTEST_USE_LAUNCHERS)
