@@ -217,15 +217,18 @@ def drawResult(
         for k, v in truthInjected.items():
             central[2, np.where(labels == k)] = v
 
-    sigma[0, np.where(np.isfinite(actsInfo[:, 2]))] = actsInfo[
-        np.where(np.isfinite(actsInfo[:, 2])), 2
-    ]
-    sigma[1, np.where(np.isfinite(actsMilleInfo[:, 2]))] = actsMilleInfo[
-        np.where(np.isfinite(actsMilleInfo[:, 2])), 2
-    ]
-    sigma[3, np.where(np.isfinite(mp2Info[:, 2]))] = mp2Info[
-        np.where(np.isfinite(mp2Info[:, 2])), 2
-    ]
+    sigmaToUpdate = np.where(np.isfinite(actsInfo[:, 2])) and np.where(
+        actsInfo[:, 2] > 0
+    )
+    sigma[0, sigmaToUpdate] = actsInfo[sigmaToUpdate, 2]
+
+    sigmaToUpdate = np.where(np.isfinite(actsMilleInfo[:, 2])) and np.where(
+        actsMilleInfo[:, 2] > 0
+    )
+    sigma[1, sigmaToUpdate] = actsMilleInfo[sigmaToUpdate, 2]
+
+    sigmaToUpdate = np.where(np.isfinite(mp2Info[:, 2])) and np.where(mp2Info[:, 2] > 0)
+    sigma[3, sigmaToUpdate] = mp2Info[sigmaToUpdate, 2]
     formatDict = [
         {"label": "ACTS-internal", "fmt": "o", "color": "k", "markersize": 5},
         {"label": "ACTS via Mille", "fmt": "o", "color": "blue", "markersize": 5},
@@ -241,7 +244,7 @@ def drawResult(
         {"label": "Millepede-II", "fmt": "o", "color": "red", "markersize": 5},
     ]
 
-    plotAlignImpacts(labels, central, sigma, formatDict, fname, title)
+    plotAlignImpacts(labels, central, sigma, formatDict, fname, title, xLim=xLim)
 
 
 def main():
