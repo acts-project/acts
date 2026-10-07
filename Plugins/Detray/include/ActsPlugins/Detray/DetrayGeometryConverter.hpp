@@ -42,6 +42,9 @@ class DetrayGeometryConverter {
     /// payload conversion (e.g. the beampipe volume, sensitive surface
     /// strategy or the navigation/material dispatchers).
     std::shared_ptr<const DetrayPayloadConverter> payloadConverter;
+
+    /// Deduplicate material entries in the detraty detector data stores
+    bool deduplicateMaterial = true;
   };
 
   /// @brief Combined result of a geometry conversion
@@ -82,10 +85,10 @@ class DetrayGeometryConverter {
   ///     not set, it will be taken from the payloads or defaulted to empty)
   ///
   /// This method performs the following steps:
-  /// 1. It converts the ACTS tracking geometry into detray payloads using the
-  ///    configured DetrayPayloadConverter.
+  /// 1. It converts the ACTS tracking geometry into a detray detector payload
+  ///    using the configured DetrayPayloadConverter.
   /// 2. It builds a detray detector from the converted payloads using the
-  ///    detray::detector_builder.
+  ///    detray detector reader function.
   ///
   /// @return The built detray detector together with its name map.
   template <detray::concepts::metadata metadata_t>
@@ -100,20 +103,22 @@ class DetrayGeometryConverter {
           "DetrayGeometryConverter: trackingGeometry must not be null");
     }
 
-    // ── Convert TrackingGeometry → detray payloads ────────────────────────
-    auto payloads = m_cfg.payloadConverter->convertTrackingGeometry(
-        gctx, *trackingGeometry);
+    // ── Convert TrackingGeometry → detray payload ────────────────────────
+    detray::io::detector_payload payload =
+        m_cfg.payloadConverter->convertTrackingGeometry(gctx,
+                                                        *trackingGeometry);
 
     if (!detectorName.empty()) {
-      payloads.detector_name = detectorName;
+      payload.detector_name = detectorName;
     }
 
-    // ── Build detray detector from payloads ───────────────────────────────
+    // ── Build detray detector from payload ───────────────────────────────
     auto readerCfg = detray::io::detector_reader_config{};
     readerCfg.do_check(true).deduplicate(m_cfg.deduplicateMaterial);
-    const auto [detector, names] =
-        detray::io::read_detector<detector_t>(mr, readerCfg, payloads);
+    auto [detector, names] =
+        detray::io::read_detector<detector_t>(mr, readerCfg, payload);
 
+    // ── Have detray detector be managed by a shared pointer ──────────────
     DetrayGeometry<metadata_t> result{};
     result.detector = std::make_shared<detector_t>(std::move(detector));
     result.names = std::move(names);

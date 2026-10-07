@@ -141,8 +141,9 @@ auto read_detector(vecmem::memory_resource& resc,
     // No converters present: Input files cannot be handled
     if (!cfg.files().empty()) {
       const std::string err_msg{
-          "No converters compiled into the read_detector function: Cannot "
-          "handle file inputs!"};
+          "No converters compiled into the 'read_detector' function: Cannot "
+          "handle file inputs!\nUse e.g. the 'read_detector_json' function for "
+          "json files or add custom input converter types to 'read_detector'."};
       DETRAY_FATAL_HOST(err_msg);
       throw std::invalid_argument(err_msg);
     }
