@@ -31,18 +31,6 @@ class Impl final : public TripletSeedFinder {
 
   const DerivedConfig& config() const override { return m_cfg; }
 
-  /// Squared uncertainty on the cotTheta difference of a triplet: the errors of
-  /// the bottom-middle and middle-top pairs and the correlation term of the
-  /// middle space point. Never negative.
-  template <typename top_doublet_t>
-  static float cotThetaError2(const top_doublet_t& topDoublet, float erB,
-                              float iDeltaRB, float cotThetaAvg2,
-                              float varianceRM, float varianceZM) {
-    return topDoublet.er() + erB +
-           2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
-               topDoublet.iDeltaR();
-  }
-
   /// Straight line distance between two space points.
   static float distance(const ConstSpacePointProxy& a,
                         const ConstSpacePointProxy& b) {
@@ -134,12 +122,20 @@ class Impl final : public TripletSeedFinder {
       // use geometric average
       const float cotThetaAvg2 = cotThetaB * cotThetaT;
 
+      // squared error of the cotTheta difference: the errors of the spB-spM
+      // and spM-spT pairs and the correlation term for spM. Never negative:
+      // the middle space point's variances in the two pair errors and the
+      // correlation term add up to squares, and the outer space points' terms
+      // are not negative. So each cut below can only fire once deltaCotTheta2
+      // exceeds its scattering term alone, and the error is only computed then.
+      const auto error2 = [&, &top = topDoublet] {
+        return top.er() + erB +
+               2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
+                   top.iDeltaR();
+      };
+
       const float deltaCotTheta = cotThetaB - cotThetaT;
       const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
-
-      // cotThetaError2 is never negative, so each cut below can only fire once
-      // deltaCotTheta2 exceeds its scattering term alone; only then is the
-      // error computed.
 
       // Apply a cut on the compatibility between the r-z slope of the two
       // seed segments. This is done by comparing the squared difference
@@ -152,10 +148,7 @@ class Impl final : public TripletSeedFinder {
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > scatteringInRegion2 &&
-          deltaCotTheta2 > cotThetaError2(topDoublet, erB, iDeltaRB,
-                                          cotThetaAvg2, varianceRM,
-                                          varianceZM) +
-                               scatteringInRegion2) {
+          deltaCotTheta2 > error2() + scatteringInRegion2) {
         if constexpr (sortedByCotTheta) {
           // skip top SPs based on cotTheta sorting when producing triplets
           // break if cotTheta from bottom SP < cotTheta from top SP because
@@ -204,10 +197,7 @@ class Impl final : public TripletSeedFinder {
       const float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > p2scatterSigma &&
-          deltaCotTheta2 > cotThetaError2(topDoublet, erB, iDeltaRB,
-                                          cotThetaAvg2, varianceRM,
-                                          varianceZM) +
-                               p2scatterSigma) {
+          deltaCotTheta2 > error2() + p2scatterSigma) {
         if constexpr (sortedByCotTheta) {
           if (cotThetaB < cotThetaT) {
             break;
@@ -421,12 +411,19 @@ class Impl final : public TripletSeedFinder {
       const float averageCotTheta = 0.5f * (cotThetaB + cotThetaT);
       const float cotThetaAvg2 = averageCotTheta * averageCotTheta;
 
+      // squared error of the cotTheta difference: the errors of the spB-spM
+      // and spM-spT pairs and the correlation term for spM. Never negative,
+      // since every term is not negative. So each cut below can only fire once
+      // deltaCotTheta2 exceeds its scattering term alone, and the error is
+      // only computed then.
+      const auto error2 = [&, &top = topDoublet] {
+        return top.er() + erB +
+               2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
+                   top.iDeltaR();
+      };
+
       const float deltaCotTheta = cotThetaB - cotThetaT;
       const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
-
-      // cotThetaError2 is never negative, so each cut below can only fire once
-      // deltaCotTheta2 exceeds its scattering term alone; only then is the
-      // error computed.
 
       // Apply a cut on the compatibility between the r-z slope of the two
       // seed segments. This is done by comparing the squared difference
@@ -439,10 +436,7 @@ class Impl final : public TripletSeedFinder {
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > scatteringInRegion2 &&
-          deltaCotTheta2 > cotThetaError2(topDoublet, erB, iDeltaRB,
-                                          cotThetaAvg2, varianceRM,
-                                          varianceZM) +
-                               scatteringInRegion2) {
+          deltaCotTheta2 > error2() + scatteringInRegion2) {
         // skip top SPs based on cotTheta sorting when producing triplets
         continue;
       }
@@ -483,10 +477,7 @@ class Impl final : public TripletSeedFinder {
       const float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > p2scatterSigma &&
-          deltaCotTheta2 > cotThetaError2(topDoublet, erB, iDeltaRB,
-                                          cotThetaAvg2, varianceRM,
-                                          varianceZM) +
-                               p2scatterSigma) {
+          deltaCotTheta2 > error2() + p2scatterSigma) {
         continue;
       }
 
