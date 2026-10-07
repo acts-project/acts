@@ -150,6 +150,20 @@ else()
 endif()
 option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build Examples unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
 option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
+# traccc options, only relevant if ACTS_BUILD_TRACCC is ON
+option(ACTS_TRACCC_BUILD_CUDA "Build the traccc CUDA libraries" ${ACTS_ENABLE_CUDA})
+option(ACTS_TRACCC_BUILD_HIP "Build the traccc HIP libraries" OFF)
+option(ACTS_TRACCC_BUILD_SYCL "Build the traccc SYCL libraries" OFF)
+option(ACTS_TRACCC_BUILD_ALPAKA "Build the traccc Alpaka library" OFF)
+option(ACTS_TRACCC_BUILD_IO "Build the traccc IO library" ON)
+option(ACTS_TRACCC_BUILD_PERFORMANCE "Build the traccc performance library" OFF)
+option(ACTS_TRACCC_BUILD_SIMULATION "Build the traccc simulation library" OFF)
+option(ACTS_TRACCC_BUILD_TESTS "Build the traccc unit tests" ${ACTS_BUILD_UNITTESTS})
+option(ACTS_TRACCC_BUILD_EXAMPLES "Build the traccc examples" ${ACTS_BUILD_EXAMPLES})
+option(ACTS_TRACCC_ENABLE_NVTX_PROFILING "Instrument the traccc device code for NVTX profiling" OFF)
+set(ACTS_TRACCC_SUPPORTED_DETECTORS "default_detector;odd_detector;telescope_detector" CACHE STRING "Semicolon-separated list of detector types that traccc supports")
+set(ACTS_TRACCC_SCALAR_TYPE "float" CACHE STRING "Scalar type to use in the traccc code")
+set(ACTS_TRACCC_DEVICE_LOG_LEVEL "NONE" CACHE STRING "Log level for traccc and detray device code")
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
 option(ACTS_SETUP_BOOST "Explicitly set up Boost for the project" ON)
@@ -249,6 +263,24 @@ set_option_if(
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
 set_option_if(ACTS_BUILD_TRACCC ACTS_BUILD_PLUGIN_TRACCC)
+set_option_if(
+    ACTS_TRACCC_BUILD_PERFORMANCE
+    ACTS_TRACCC_BUILD_TESTS
+    OR
+    ACTS_TRACCC_BUILD_EXAMPLES
+)
+set_option_if(
+    ACTS_TRACCC_BUILD_SIMULATION
+    ACTS_TRACCC_BUILD_TESTS
+    OR
+    ACTS_TRACCC_BUILD_EXAMPLES
+)
+set_option_if(
+    ACTS_TRACCC_BUILD_IO
+    ACTS_TRACCC_BUILD_PERFORMANCE
+    OR
+    ACTS_TRACCC_BUILD_SIMULATION
+)
 # Required for traccc
 set_option_if(ACTS_SETUP_DETRAY ACTS_BUILD_TRACCC)
 set_option_if(ACTS_SETUP_COVFIE ACTS_SETUP_DETRAY)
@@ -695,9 +727,9 @@ if(ACTS_SETUP_DETRAY)
         # Some detray validation tools are used in optional traccc libraries
         set_option_if(
             DETRAY_BUILD_VALIDATION_TOOLS
-            TRACCC_BUILD_PERFORMANCE
+            ACTS_TRACCC_BUILD_PERFORMANCE
             OR
-            TRACCC_BUILD_TESTING
+            ACTS_TRACCC_BUILD_TESTS
         )
     endif()
 
@@ -705,24 +737,6 @@ if(ACTS_SETUP_DETRAY)
 endif()
 
 if(ACTS_BUILD_TRACCC)
-    # HACK: Temporary logic (aka technical debt) to make the traccc
-    # component work. Remove this ASAP.
-    option(TRACCC_USE_ROOT "" FALSE)
-    option(TRACCC_SETUP_ACTS "" FALSE)
-    option(TRACCC_SETUP_VECMEM "" FALSE)
-    option(TRACCC_SETUP_EIGEN3 "" FALSE)
-    option(TRACCC_SETUP_THRUST "" TRUE)
-    option(TRACCC_SETUP_COVFIE "" FALSE)
-    option(TRACCC_SETUP_DETRAY "" FALSE)
-    option(TRACCC_BUILD_CUDA "" ${ACTS_ENABLE_CUDA})
-    option(TRACCC_SETUP_TBB "" FALSE)
-    option(TRACCC_BUILD_IO "" TRUE)
-    option(TRACCC_BUILD_PERFORMANCE "" FALSE)
-    option(TRACCC_BUILD_SIMULATION "" FALSE)
-    option(TRACCC_BUILD_TESTING "" FALSE)
-    option(TRACCC_BUILD_EXAMPLES "" FALSE)
-    option(TRACCC_BUILD_BENCHMARKS "" FALSE)
-
     add_subdirectory(Traccc)
 endif()
 
