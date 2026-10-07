@@ -9,7 +9,7 @@
 #pragma once
 
 // Local include(s).
-#include "traccc/sycl/utils/queue_wrapper.hpp"
+#include "traccc/sycl/utils/algorithm_base.hpp"
 
 // Project include(s).
 #include "traccc/edm/measurement_collection.hpp"
@@ -36,13 +36,15 @@ namespace traccc::sycl {
 class measurement_sorting_algorithm
     : public algorithm<edm::measurement_collection::buffer(
           const edm::measurement_collection::const_view&)>,
-      public messaging {
+      public messaging,
+      public sycl::algorithm_base {
  public:
   /// Constructor for the algorithm
   ///
-  /// @param mr Unused, here for consistency of interface (see CUDA)
+  /// @param mr The memory resource(s) to use in the algorithm
   /// @param copy The copy object to use in the algorithm
   /// @param queue Wrapper for the for the SYCL queue for kernel invocation
+  /// @param logger The logger to use in the algorithm
   ///
   measurement_sorting_algorithm(
       const traccc::memory_resource& mr, const vecmem::copy& copy,
@@ -62,8 +64,6 @@ class measurement_sorting_algorithm
   traccc::memory_resource m_mr;
   /// Copy object to use in the algorithm
   std::reference_wrapper<const vecmem::copy> m_copy;
-  /// The SYCL queue to use
-  std::reference_wrapper<queue_wrapper> m_queue;
 };  // class measurement_sorting_algorithm
 
 }  // namespace traccc::sycl

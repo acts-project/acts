@@ -9,7 +9,7 @@
 #pragma once
 
 // Local include(s).
-#include "traccc/cuda/utils/stream_wrapper.hpp"
+#include "traccc/cuda/utils/algorithm_base.hpp"
 
 // Project include(s).
 #include "traccc/edm/measurement_collection.hpp"
@@ -36,12 +36,15 @@ namespace traccc::cuda {
 class measurement_sorting_algorithm
     : public algorithm<edm::measurement_collection::buffer(
           const edm::measurement_collection::const_view&)>,
-      public messaging {
+      public messaging,
+      public cuda::algorithm_base {
  public:
   /// Constructor for the algorithm
   ///
+  /// @param mr The memory resource(s) to use in the algorithm
   /// @param copy The copy object to use in the algorithm
   /// @param str The CUDA stream to schedule the measurement sorting in
+  /// @param logger The logger to use in the algorithm
   ///
   measurement_sorting_algorithm(
       const traccc::memory_resource& mr, const vecmem::copy& copy,
@@ -61,8 +64,6 @@ class measurement_sorting_algorithm
   traccc::memory_resource m_mr;
   /// Copy object to use in the algorithm
   std::reference_wrapper<const vecmem::copy> m_copy;
-  /// CUDA stream used by the algorithm
-  stream_wrapper m_stream;
 };  // class measurement_sorting_algorithm
 
 }  // namespace traccc::cuda

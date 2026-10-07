@@ -32,7 +32,10 @@ class fill_sorted_measurements;
 measurement_sorting_algorithm::measurement_sorting_algorithm(
     const traccc::memory_resource& mr, const vecmem::copy& copy,
     queue_wrapper& queue, std::unique_ptr<const Logger> logger)
-    : messaging(std::move(logger)), m_mr{mr}, m_copy{copy}, m_queue{queue} {}
+    : messaging(std::move(logger)),
+      sycl::algorithm_base(queue),
+      m_mr{mr},
+      m_copy{copy} {}
 
 measurement_sorting_algorithm::output_type
 measurement_sorting_algorithm::operator()(
@@ -61,7 +64,7 @@ measurement_sorting_algorithm::operator()(
   }
   m_copy.get()(measurements_view.size(), result.size())->wait();
 
-  ::sycl::queue& queue = details::get_queue(m_queue.get());
+  ::sycl::queue& squeue = details::get_queue(queue());
   auto policy = oneapi::dpl::execution::device_policy{queue};
 
   // Sorting keys and index sequence.
@@ -72,10 +75,10 @@ measurement_sorting_algorithm::operator()(
   m_copy.get().setup(indices)->wait();
 
   // Sort the indices by the sorting keys, with a radix sort.
-  queue
+  squeue
       .submit([&](::sycl::handler& h) {
         h.parallel_for<kernels::fill_measurement_sort_keys>(
-            details::calculate1DimNdRange(n_measurements, 256),
+            details::calculate1DimNdRange(n_measurements, warp_size() * 8),
             [measurements_view, keys_view = vecmem::get_data(keys),
              indices_view =
                  vecmem::get_data(indices)](::sycl::nd_item<1> item) {
@@ -89,10 +92,10 @@ measurement_sorting_algorithm::operator()(
                            indices.ptr());
 
   // Fill the output with the sorted measurements.
-  queue
+  squeue
       .submit([&](::sycl::handler& h) {
         h.parallel_for<kernels::fill_sorted_measurements>(
-            details::calculate1DimNdRange(n_measurements, 256),
+            details::calculate1DimNdRange(n_measurements, warp_size() * 8),
             [measurements_view, output_view = vecmem::get_data(result),
              sorted_indices_view =
                  vecmem::get_data(indices)](::sycl::nd_item<1> item) {

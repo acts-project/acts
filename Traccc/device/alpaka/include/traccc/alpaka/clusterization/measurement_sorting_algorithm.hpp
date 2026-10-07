@@ -9,7 +9,7 @@
 #pragma once
 
 // Local include(s).
-#include "traccc/alpaka/utils/queue.hpp"
+#include "traccc/alpaka/utils/algorithm_base.hpp"
 
 // Project include(s).
 #include "traccc/edm/measurement_collection.hpp"
@@ -38,15 +38,19 @@ namespace traccc::alpaka {
 class measurement_sorting_algorithm
     : public algorithm<edm::measurement_collection::buffer(
           const edm::measurement_collection::const_view&)>,
-      public messaging {
+      public messaging,
+      public alpaka::algorithm_base {
  public:
   /// Constructor for the algorithm
   ///
+  /// @param mr The memory resource(s) to use in the algorithm
   /// @param copy The copy object to use in the algorithm
   /// @param q The Alpaka queue to schedule the measurement sorting in
+  /// @param logger The logger to use in the algorithm
   ///
   measurement_sorting_algorithm(
-      const traccc::memory_resource& mr, const ::vecmem::copy& copy, queue& q,
+      const traccc::memory_resource& mr, const ::vecmem::copy& copy,
+      alpaka::queue& q,
       std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
   /// Callable operator performing the sorting on a container
@@ -62,8 +66,6 @@ class measurement_sorting_algorithm
   traccc::memory_resource m_mr;
   /// Copy object to use in the algorithm
   std::reference_wrapper<const ::vecmem::copy> m_copy;
-  /// The Alpaka queue to use
-  std::reference_wrapper<queue> m_queue;
 
 };  // class measurement_sorting_algorithm
 
