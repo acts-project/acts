@@ -71,15 +71,16 @@ source $BUILD/this_acts_withdeps.sh
 
 to make sure Python can find the `acts` module.
 
-The scripts can also be installed, together with the configuration files in
-`Examples/Configs` that they read, by configuring with
-`-DACTS_INSTALL_PYTHON_EXAMPLE_SCRIPTS=ON`. They are then placed in
-`<prefix>/share/acts/Examples/Scripts/Python`, and the installed
-`this_acts.sh` exports that directory as `ACTS_EXAMPLES_SCRIPTS`:
+The geometry and material mapping scripts (`geometry.py`,
+`material_recording.py`, `material_mapping.py` and `material_validation.py`)
+are installed to `<prefix>/share/acts/Examples/Scripts/Python`, alongside the
+material mapping helpers in `<prefix>/share/acts/Examples/Scripts/MaterialMapping`.
+The installed `this_acts.sh` exports the Python script directory as
+`ACTS_EXAMPLES_SCRIPTS`:
 
 ```console
 source <prefix>/bin/this_acts_withdeps.sh
-python3 $ACTS_EXAMPLES_SCRIPTS/full_chain_odd.py -n1
+python3 $ACTS_EXAMPLES_SCRIPTS/geometry.py
 ```
 
 ## Python based unit tests

@@ -365,20 +365,35 @@ foreach(f ${py_files})
     )
 endforeach()
 
-# Optionally install the example scripts together with the configuration files
-# they read. The source tree layout is mirrored so that the scripts can still
-# locate Examples/Configs relative to their own location.
-if(ACTS_INSTALL_PYTHON_EXAMPLE_SCRIPTS)
-    install(
-        DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Scripts/Python/
-        DESTINATION ${CMAKE_INSTALL_DATADIR}/acts/Examples/Scripts/Python
-        USE_SOURCE_PERMISSIONS
-        PATTERN "__pycache__" EXCLUDE
-    )
-    install(
-        DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Configs/
-        DESTINATION ${CMAKE_INSTALL_DATADIR}/acts/Examples/Configs
-    )
-endif()
+# Install the geometry and material mapping example scripts. The source tree
+# layout is mirrored below the data directory.
+set(_example_scripts_install_dir ${CMAKE_INSTALL_DATADIR}/acts/Examples/Scripts)
+install(
+    PROGRAMS
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/Python/geometry.py
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/Python/material_mapping.py
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/Python/material_recording.py
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/Python/material_validation.py
+    DESTINATION ${_example_scripts_install_dir}/Python
+)
+install(
+    PROGRAMS
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/MaterialMapping/writeMapConfig.py
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/MaterialMapping/configureMap.py
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/MaterialMapping/GeometryVisualisationAndMaterialHandling.py
+    DESTINATION ${_example_scripts_install_dir}/MaterialMapping
+)
+install(
+    FILES
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/MaterialMapping/Mat_map.C
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/MaterialMapping/Mat_map_surface_plot.C
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_ratio.C
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_dist.C
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_1D.C
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/MaterialMapping/Mat_map_detector_plot.C
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/MaterialMapping/materialPlotHelper.cpp
+        ${PROJECT_SOURCE_DIR}/Examples/Scripts/MaterialMapping/materialPlotHelper.hpp
+    DESTINATION ${_example_scripts_install_dir}/MaterialMapping
+)
 
 # Finally copy the python files
