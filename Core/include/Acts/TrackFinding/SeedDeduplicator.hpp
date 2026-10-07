@@ -22,9 +22,12 @@ namespace Acts {
 /// Measurements are dense keys in `[0, nKeys)`. The caller chooses which keys
 /// a seed contributes. Each key has a weight, 1 by default. A seed with the
 /// summed weight `seedScore` is a duplicate if one track holds keys of the
-/// summed weight `min(seedScore, max(1, minScore, seedScore -
-/// maxMissingScore))`. The scores of different tracks do not add up. Seeds can
-/// be queried in any order.
+/// summed weight
+///
+///   `min(seedScore, max(1, minScore, seedScore - maxMissingScore))`.
+///
+/// The scores of different tracks do not add up. Seeds can be queried in any
+/// order.
 class SeedDeduplicator {
  public:
   /// Type of the dense measurement key
