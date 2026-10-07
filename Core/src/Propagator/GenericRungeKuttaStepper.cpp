@@ -327,13 +327,13 @@ Result<double> GenericRungeKuttaStepper::step(
 
   struct TableauStep {
     // With the normalised direction and its derivative
-    FreeVector end;
-    FreeMatrix jacobian;
+    FreeVector end = FreeVector::Zero();
+    FreeMatrix jacobian = FreeMatrix::Zero();
     // Only for an FSAL tableau
     std::optional<FieldAndGradient> endField;
     // Solution minus embedded solution, before the normalisation
-    FreeVector embeddedDiff;
-    FreeMatrix embeddedJacDiff;
+    FreeVector embeddedDiff = FreeVector::Zero();
+    FreeMatrix embeddedJacDiff = FreeMatrix::Zero();
   };
 
   std::vector<FreeVector> k(nStages);
