@@ -14,6 +14,10 @@ namespace Acts::Experimental {
 
 namespace {
 
+/// Helper function  to check whether the portal sits on the original boundary 
+/// surface of the volume
+/// @param link: Pointer to the portallink to check
+/// @param volume: Reference to the volume which boundaries need to be found 
 bool leadsOutside(const PortalLinkBase *link, const TrackingVolume &volume) {
   const auto *trivialLink = dynamic_cast<const TrivialPortalLink *>(link);
   if (trivialLink == nullptr) {
