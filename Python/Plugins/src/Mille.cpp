@@ -67,7 +67,13 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
   {
     using enum ActsPlugins::MillePedeSolutionStrategy;
     mille.def("generateMillePedeSteeringFile",
-              &ActsPlugins::generateMillePedeSteeringFile);
+              [](const std::filesystem::path& destination,
+                 const ActsPlugins::MillePedeSteeringConfig& config,
+                 const Acts::Logger& logger) {
+                return ActsPlugins::generateMillePedeSteeringFile(
+                           destination, config, logger)
+                    .value();
+              });
 
     auto e = py::class_<ActsPlugins::MillePedeEqualityConstraint>(
                  mille, "MillePedeEqualityConstraint")
