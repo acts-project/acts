@@ -11,6 +11,8 @@
 #include "Acts/TrackFinding/SeedDeduplicator.hpp"
 
 #include <limits>
+#include <numeric>
+#include <span>
 #include <vector>
 
 using namespace Acts;
@@ -19,27 +21,42 @@ namespace ActsTests {
 
 using Key = SeedDeduplicator::Key;
 
+/// Find the smallest number of seed keys that one track must hold to make a
+/// seed of `nKeys` keys a duplicate
+Key requiredSharedKeys(const SeedDeduplicator::Config& config, Key nKeys) {
+  std::vector<Key> seed(nKeys);
+  std::iota(seed.begin(), seed.end(), Key{0});
+  for (Key nShared = 1; nShared <= nKeys; ++nShared) {
+    SeedDeduplicator dedup(config);
+    dedup.reset(nKeys);
+    dedup.addTrack(std::span(seed).first(nShared));
+    if (dedup.isDuplicate(seed)) {
+      return nShared;
+    }
+  }
+  return nKeys + 1;
+}
+
 BOOST_AUTO_TEST_SUITE(TrackFindingSuite)
 
-BOOST_AUTO_TEST_CASE(SeedDeduplicatorThreshold) {
+BOOST_AUTO_TEST_CASE(SeedDeduplicatorRequiredSharedScore) {
   // all keys, the default
-  SeedDeduplicator all({});
-  BOOST_CHECK_EQUAL(all.duplicateThreshold(1), 1u);
-  BOOST_CHECK_EQUAL(all.duplicateThreshold(3), 3u);
+  BOOST_CHECK_EQUAL(requiredSharedKeys({}, 1), 1u);
+  BOOST_CHECK_EQUAL(requiredSharedKeys({}, 3), 3u);
 
   // N - 1, never below 1
-  SeedDeduplicator relative({.minScore = 0, .maxMissingScore = 1});
-  BOOST_CHECK_EQUAL(relative.duplicateThreshold(1), 1u);
-  BOOST_CHECK_EQUAL(relative.duplicateThreshold(3), 2u);
-  BOOST_CHECK_EQUAL(relative.duplicateThreshold(6), 5u);
+  const SeedDeduplicator::Config relative{.minScore = 0, .maxMissingScore = 1};
+  BOOST_CHECK_EQUAL(requiredSharedKeys(relative, 1), 1u);
+  BOOST_CHECK_EQUAL(requiredSharedKeys(relative, 3), 2u);
+  BOOST_CHECK_EQUAL(requiredSharedKeys(relative, 6), 5u);
 
   // max(3, N - 2), never above N
-  SeedDeduplicator both({.minScore = 3, .maxMissingScore = 2});
-  BOOST_CHECK_EQUAL(both.duplicateThreshold(2), 2u);
-  BOOST_CHECK_EQUAL(both.duplicateThreshold(3), 3u);
-  BOOST_CHECK_EQUAL(both.duplicateThreshold(5), 3u);
-  BOOST_CHECK_EQUAL(both.duplicateThreshold(6), 4u);
-  BOOST_CHECK_EQUAL(both.duplicateThreshold(8), 6u);
+  const SeedDeduplicator::Config both{.minScore = 3, .maxMissingScore = 2};
+  BOOST_CHECK_EQUAL(requiredSharedKeys(both, 2), 2u);
+  BOOST_CHECK_EQUAL(requiredSharedKeys(both, 3), 3u);
+  BOOST_CHECK_EQUAL(requiredSharedKeys(both, 5), 3u);
+  BOOST_CHECK_EQUAL(requiredSharedKeys(both, 6), 4u);
+  BOOST_CHECK_EQUAL(requiredSharedKeys(both, 8), 6u);
 }
 
 BOOST_AUTO_TEST_CASE(SeedDeduplicatorAllKeys) {

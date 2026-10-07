@@ -27,11 +27,11 @@ void SeedDeduplicator::reset(std::size_t nKeys) {
   m_nTracks = 0;
 }
 
-SeedDeduplicator::Score SeedDeduplicator::duplicateThreshold(
-    Score total) const {
+SeedDeduplicator::Score SeedDeduplicator::requiredSharedScore(
+    Score seedScore) const {
   const Score relative =
-      total > m_cfg.maxMissingScore ? total - m_cfg.maxMissingScore : 0;
-  return std::min(total, std::max({Score{1}, m_cfg.minScore, relative}));
+      seedScore > m_cfg.maxMissingScore ? seedScore - m_cfg.maxMissingScore : 0;
+  return std::min(seedScore, std::max({Score{1}, m_cfg.minScore, relative}));
 }
 
 void SeedDeduplicator::addTrack(std::span<const Key> keys) {
@@ -57,7 +57,7 @@ bool SeedDeduplicator::isDuplicate(std::span<const Key> keys) const {
   if (remaining == 0) {
     return false;
   }
-  const Score threshold = duplicateThreshold(remaining);
+  const Score threshold = requiredSharedScore(remaining);
 
   // the score of each track which holds at least one seed key
   struct TrackScore {

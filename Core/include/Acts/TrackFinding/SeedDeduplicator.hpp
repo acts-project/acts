@@ -21,9 +21,10 @@ namespace Acts {
 ///
 /// Measurements are dense keys in `[0, nKeys)`. The caller chooses which keys
 /// a seed contributes. Each key has a weight, 1 by default. A seed with the
-/// summed weight `total` is a duplicate if one track holds keys of the summed
-/// weight `min(total, max(1, minScore, total - maxMissingScore))`. The scores
-/// of different tracks do not add up. Seeds can be queried in any order.
+/// summed weight `seedScore` is a duplicate if one track holds keys of the
+/// summed weight `min(seedScore, max(1, minScore, seedScore -
+/// maxMissingScore))`. The scores of different tracks do not add up. Seeds can
+/// be queried in any order.
 class SeedDeduplicator {
  public:
   /// Type of the dense measurement key
@@ -70,11 +71,6 @@ class SeedDeduplicator {
     return m_weights[key];
   }
 
-  /// @param total The summed weight of a seed
-  /// @return The score that one track must share with the seed to make the
-  ///         seed a duplicate
-  Score duplicateThreshold(Score total) const;
-
   /// Accept a track
   /// @param keys The keys of the measurements on the track
   void addTrack(std::span<const Key> keys);
@@ -89,6 +85,11 @@ class SeedDeduplicator {
       std::numeric_limits<std::uint32_t>::max();
   /// Number of tracks per seed query that need no heap allocation
   static constexpr std::size_t kInlineTracks = 8;
+
+  /// @param seedScore The summed weight of the seed keys
+  /// @return The score that one track must share with the seed to make the
+  ///         seed a duplicate
+  Score requiredSharedScore(Score seedScore) const;
 
   /// One accepted track on one key
   struct Node {
