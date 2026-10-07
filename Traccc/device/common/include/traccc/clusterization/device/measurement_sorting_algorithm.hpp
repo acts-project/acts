@@ -9,12 +9,16 @@
 #pragma once
 
 // Local include(s).
+#include "traccc/clusterization/device/measurement_sorting.hpp"
 #include "traccc/device/algorithm_base.hpp"
 
 // Project include(s).
 #include "traccc/edm/measurement_collection.hpp"
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/messaging.hpp"
+
+// VecMem include(s).
+#include <vecmem/containers/data/vector_buffer.hpp>
 
 // System include(s).
 #include <memory>
@@ -36,6 +40,10 @@ class measurement_sorting_algorithm
     const edm::measurement_collection::const_view& measurements;
     /// Output buffer receiving the sorted measurements.
     edm::measurement_collection::buffer& output;
+    /// Sorting keys.
+    vecmem::data::vector_buffer<measurement_sort_key_t>& keys;
+    /// Measurement indices sorted by the keys.
+    vecmem::data::vector_buffer<unsigned int>& indices;
   };
 
   /// Constructor for the measurement-sorting algorithm.
@@ -54,7 +62,12 @@ class measurement_sorting_algorithm
       const override;
 
  protected:
+  /// Wait for outstanding work before temporary buffers are released.
+  virtual void synchronize() const = 0;
+
   /// Launch the backend-specific measurement-sorting implementation.
+  /// Implementations may return with work outstanding; the common algorithm
+  /// synchronizes before releasing the temporary buffers.
   virtual void sorting_kernel(
       const measurement_sorting_kernel_payload& payload) const = 0;
 };
