@@ -241,7 +241,7 @@ void addPassiveCylinder(const BlueprintBuilder& builder,
         for (const auto face : faces) {
           configureCylinderFace(mat, face, kMatPhiBins, zBins);
         }
-        mat.addChild(builder.backend().makePassiveCylinder(*element));
+        mat.addChild(builder.backend().makePassiveElement(*element));
       });
 }
 
@@ -269,7 +269,7 @@ void addPixelEndplateIfPresent(const BlueprintBuilder& builder,
                       kPixelEndcapRBins);
     configureDiscFace(*endplateMat, Face::PositiveDisc, kMatPhiBins,
                       kPixelEndcapRBins);
-    endplateMat->addChild(builder.backend().makePassiveDisc(
+    endplateMat->addChild(builder.backend().makePassiveElement(
         child, endcapNode.name() + "_PixelEndplate"));
     endcapNode.addChild(std::move(endplateMat));
   }
