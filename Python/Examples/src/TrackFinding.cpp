@@ -93,8 +93,8 @@ void addTrackFinding(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       GraphBasedSeedingAlgorithm, mex, "GraphBasedSeedingAlgorithm",
       inputSpacePoints, outputSeeds, seedFinderConfig, layerMappingFile,
-      connectorInputFile, lutInputFile, trackingGeometry, fillModuleCsv,
-      inputClusters, bFieldInZ);
+      connectorInputFile, lutInputFile, roiZMin, roiZMax, trackingGeometry,
+      fillModuleCsv, inputClusters, bFieldInZ);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,
