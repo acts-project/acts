@@ -59,6 +59,7 @@
 #include <detray/io/frontend/detector_writer.hpp>
 #include <detray/io/frontend/detector_writer_config.hpp>
 #include <detray/io/frontend/payloads.hpp>
+#include <detray/io/json/detector_reader.hpp>
 #include <detray/io/json/json_io.hpp>
 #include <detray/material/detail/material_accessor.hpp>
 #include <detray/plugins/svgtools/illustrator.hpp>
@@ -850,8 +851,8 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
 }
 
 BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
-  using detector_t =
-      detray::host::detector<detray::default_metadata<detray::array<double>>>;
+  using metadata_t = detray::default_metadata<detray::array<double>>;
+  using detector_t = detray::host::detector<metadata_t>;
 
   auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
@@ -870,23 +871,23 @@ BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
   cfg.payloadConverter = std::make_shared<DetrayPayloadConverter>(
       payloadCfg, getDefaultLogger("PayloadCnv", Logging::INFO));
   // On by default
-  BOOST_CHECK(cfg.payloadConverter.deduplicateMaterial);
+  BOOST_CHECK(cfg.deduplicateMaterial);
 
   vecmem::host_memory_resource mr;
 
   auto convert = [&](bool deduplicate) {
     auto converterCfg = cfg;
-    converterCfg.payloadConverter.deduplicateMaterial = deduplicate;
+    converterCfg.deduplicateMaterial = deduplicate;
     DetrayGeometryConverter converter(
         converterCfg, getDefaultLogger("GeoCnv", Logging::INFO));
-    return converter.convert<detector_t::metadata>(mr, gctx, tGeometry);
+    return converter.convert<metadata_t>(mr, gctx, tGeometry);
   };
 
   auto reference = convert(false);
   auto deduplicated = convert(true);
 
   const detector_t& refDet = *reference.detector;
-  detector_t& det = *deduplicated.detector;
+  const detector_t& det = *deduplicated.detector;
 
   BOOST_CHECK(detray::detail::check_consistency(refDet));
   BOOST_CHECK(detray::detail::check_consistency(det));
@@ -926,6 +927,7 @@ BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
   auto writerCfg = detray::io::detector_writer_config{}
                        .format(detray::io::format::json)
                        .path(outDir.string())
+                       .source("ACTS unit test")
                        .replace_files(true)
                        .write_grids(true)
                        .write_material(true);
@@ -939,7 +941,7 @@ BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
   BOOST_CHECK_GE(readerCfg.files().size(), 3u);
 
   const auto [readDet, readNames] =
-      detray::io::read_detector<detector_t>(mr, readerCfg);
+      detray::io::read_detector_json<detector_t>(mr, readerCfg);
 
   BOOST_CHECK_EQUAL(nMaterialEntries(readDet), nMaterialEntries(refDet));
   checkSameSurfaceMaterial(det, readDet);
@@ -1021,8 +1023,9 @@ BOOST_AUTO_TEST_CASE(DetrayPortalSegmentation) {
   BOOST_REQUIRE_NE(cfg.beampipeVolume, nullptr);
 
   DetrayPayloadConverter converter(cfg, getDefaultLogger("Cnv", Logging::INFO));
-  auto payloads = converter.convertTrackingGeometry(gctx, *tGeometry);
-  const auto& detector = *payloads.detector;
+  detray::io::detector_payload payloads =
+      converter.convertTrackingGeometry(gctx, *tGeometry);
+  const auto& detector = payloads.geometry;
 
   std::map<std::size_t, std::string> names;
   for (const auto& volume : detector.volumes) {
@@ -1084,9 +1087,9 @@ BOOST_AUTO_TEST_CASE(DetrayPortalSegmentation) {
 
   // The portal material ends up on the portal surface of every volume
   // bordering the L0 | L1 portal, and only there
-  BOOST_REQUIRE_NE(payloads.homogeneousMaterial, nullptr);
+  BOOST_CHECK(payloads.homogeneous_material.has_value());
   std::set<std::string> withMaterial;
-  for (const auto& hMat : payloads.homogeneousMaterial->volumes) {
+  for (const auto& hMat : payloads.homogeneous_material->volumes) {
     const auto& volume = detector.volumes.at(hMat.volume_link.link);
     for (const auto& slab : hMat.surface_mat) {
       const auto& srf = volume.surfaces.at(slab.surface.link);
@@ -1131,15 +1134,13 @@ BOOST_AUTO_TEST_CASE(DetrayPortalSegmentation) {
   // The payload has to build into a consistent detray detector
   using detector_t =
       detray::host::detector<detray::default_metadata<detray::array<double>>>;
-  detray::detector_builder<detector_t::metadata> detectorBuilder{};
-  detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
-                                                        detector);
-  detray::io::homogeneous_material_reader::from_payload<detector_t>(
-      detectorBuilder, *payloads.homogeneousMaterial);
+
   vecmem::host_memory_resource mr;
-  detray::volume_builder_options builder_opts{};
-  detector_t detrayDetector(detectorBuilder.build(mr, builder_opts));
-  detray::detail::check_consistency(detrayDetector);
+  detray::io::detector_reader_config readerCfg{};
+  readerCfg.verbose_check(true).deduplicate(false);
+
+  const auto [readDet, readNames] =
+      detray::io::read_detector<detector_t>(mr, readerCfg, payloads);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
