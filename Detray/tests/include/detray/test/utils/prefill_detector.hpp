@@ -90,7 +90,8 @@ void prefill_detector(detector_t& d,
   v_mat_builder.add_surfaces(annulus_factory, ctx);
   v_mat_builder.add_surfaces(trapezoid_factory, ctx);
 
-  v_mat_builder.build(d);
+  const volume_builder_options builder_opts{};
+  v_mat_builder.build(d, builder_opts);
 }
 
 }  // namespace detray

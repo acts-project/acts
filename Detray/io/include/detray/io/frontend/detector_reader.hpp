@@ -87,7 +87,7 @@ auto read_detector(vecmem::memory_resource& resc,
   DETRAY_INFO_HOST("Done reading files");
 
   // Build and return the detector
-  auto det = det_builder.build(resc, names);
+  auto det = det_builder.build(resc, cfg.builder_options(), names);
 
   if (cfg.do_check()) {
     // This will throw an exception in case of inconsistencies

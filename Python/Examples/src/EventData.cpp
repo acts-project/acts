@@ -110,7 +110,8 @@ void addTrackStateTypeFlags(py::class_<Map>& cls) {
       .def_property_readonly("isMeasurement", &Map::isMeasurement)
       .def_property_readonly("isOutlier", &Map::isOutlier)
       .def_property_readonly("isHole", &Map::isHole)
-      .def_property_readonly("isSharedHit", &Map::isSharedHit);
+      .def_property_readonly("isSharedHit", &Map::isSharedHit)
+      .def_property_readonly("isSplitHit", &Map::isSplitHit);
 
   if constexpr (!Map::IsReadOnly) {
     cls.def_property("hasMeasurement", &Map::hasMeasurement,
@@ -118,7 +119,8 @@ void addTrackStateTypeFlags(py::class_<Map>& cls) {
         .def("setIsMeasurement", &Map::setIsMeasurement)
         .def_property("isOutlier", &Map::isOutlier, &Map::setIsOutlier)
         .def_property("isHole", &Map::isHole, &Map::setIsHole)
-        .def_property("isSharedHit", &Map::isSharedHit, &Map::setIsSharedHit);
+        .def_property("isSharedHit", &Map::isSharedHit, &Map::setIsSharedHit)
+        .def_property("isSplitHit", &Map::isSplitHit, &Map::setIsSplitHit);
   }
 }
 
@@ -263,9 +265,9 @@ void bindTrackProxyCommon(Cls& cls) {
         return self.outermostTrackState();
       });
 
-  // tipIndex/stemIndex/nMeasurements/nHoles/nOutliers/nSharedHits/chi2/nDoF
-  // are overloaded on const (by value) vs. mutable (by reference); the
-  // accessor lambdas below select the overload via self's constness.
+  // tipIndex/stemIndex/nMeasurements/nHoles/nOutliers/nSharedHits/nSplitHits/
+  // chi2/nDoF are overloaded on const (by value) vs. mutable (by reference);
+  // the accessor lambdas below select the overload via self's constness.
   bindScalar(cls, "tipIndex",
              [](auto& self) -> decltype(auto) { return self.tipIndex(); });
   bindScalar(cls, "stemIndex",
@@ -278,6 +280,8 @@ void bindTrackProxyCommon(Cls& cls) {
              [](auto& self) -> decltype(auto) { return self.nOutliers(); });
   bindScalar(cls, "nSharedHits",
              [](auto& self) -> decltype(auto) { return self.nSharedHits(); });
+  bindScalar(cls, "nSplitHits",
+             [](auto& self) -> decltype(auto) { return self.nSplitHits(); });
   bindScalar(cls, "chi2",
              [](auto& self) -> decltype(auto) { return self.chi2(); });
   bindScalar(cls, "nDoF",
@@ -681,6 +685,10 @@ void addEventData(py::module& mex) {
           .def_property_readonly("nSharedHits",
                                  col1D([](const auto& b) -> const auto& {
                                    return b.m_nSharedHits;
+                                 }))
+          .def_property_readonly("nSplitHits",
+                                 col1D([](const auto& b) -> const auto& {
+                                   return b.m_nSplitHits;
                                  }));
 
   WhiteBoardRegistry::registerClass(constTrackContainer);
