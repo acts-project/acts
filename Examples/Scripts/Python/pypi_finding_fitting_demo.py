@@ -166,7 +166,7 @@ def runPypiFindingFittingDemo(
                     sf = surface_map[isl.geometryId()]
 
                     trackState = track.appendTrackState()
-                    trackState.typeFlags.isMeasurement = True
+                    trackState.typeFlags.setIsMeasurement()
                     trackState.uncalibratedSourceLink = sl
                     trackState.referenceSurface = sf
 
@@ -187,6 +187,7 @@ def runPypiFindingFittingDemo(
         )
     )
 
+    #! [Python pattern-recognition performance writer]
     # Add track finder performance writer
     cfg_finder = acts.examples.PythonPatternRecognitionPerformanceWriter.Config()
     cfg_finder.inputTracks = "fitted_tracks"
@@ -203,6 +204,7 @@ def runPypiFindingFittingDemo(
         cfg_finder, acts.logging.INFO
     )
     s.addWriter(perfWriterFinder)
+    #! [Python pattern-recognition performance writer]
 
     # Add track fitter performance writer
     import acts.examples.scipy as acts_scipy

@@ -23,6 +23,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitter.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -405,6 +406,110 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
       4);
 
   ACTS_INFO("*** Test: Fit5Iterations -- Finish");
+}
+
+// This test checks that the fitter reaches a measurement on a free surface,
+// which is not part of the tracking geometry
+BOOST_AUTO_TEST_CASE(FreeMeasurementSurface) {
+  ACTS_INFO("*** Test: FreeMeasurementSurface -- Start");
+
+  std::default_random_engine rng(42);
+
+  ACTS_DEBUG("Create the detector");
+  const std::size_t nSurfaces = 5;
+  Detector detector;
+  detector.geometry = makeToyDetector(geoCtx, nSurfaces);
+
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
+
+  ACTS_DEBUG("Create the measurements");
+  using SimPropagator = Propagator<StraightLineStepper, Navigator>;
+  const SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  const auto measurements =
+      createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
+                         resMapAllPixel, rng);
+  auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
+
+  ACTS_DEBUG("Add a measurement on a free surface between two layers");
+  const Surface* firstSurface = detector.geometry->findSurface(
+      measurements.sourceLinks.front().m_geometryId);
+  BOOST_REQUIRE(firstSurface != nullptr);
+  Transform3 freeTransform = Transform3::Identity();
+  freeTransform.linear() =
+      firstSurface->localToGlobalTransform(geoCtx).linear();
+  freeTransform.translation() = Vector3(2.5_m, 0., 0.);
+  const auto freeSurface = Surface::makeShared<PlaneSurface>(
+      freeTransform, std::make_shared<RectangleBounds>(1_m, 1_m));
+  BOOST_REQUIRE_EQUAL(freeSurface->geometryId(), GeometryIdentifier{});
+  sourceLinks.emplace_back(
+      TestSourceLink(eBoundLoc0, eBoundLoc1, Vector2::Zero(),
+                     Vector2(25_um * 25_um, 50_um * 50_um).asDiagonal()));
+
+  // Resolve the source link without a geometry id to the free surface
+  struct FreeSurfaceAccessor {
+    const TrackingGeometry* geometry{};
+    const Surface* freeSurface{};
+
+    const Surface* operator()(const SourceLink& sourceLink) const {
+      const GeometryIdentifier geoId =
+          sourceLink.get<TestSourceLink>().m_geometryId;
+      return geoId == GeometryIdentifier{} ? freeSurface
+                                           : geometry->findSurface(geoId);
+    }
+  };
+  FreeSurfaceAccessor surfaceAccessor{detector.geometry.get(),
+                                      freeSurface.get()};
+
+  ACTS_DEBUG("Set up the fitter");
+  const Surface* rSurface = &parametersMeasurements.referenceSurface();
+
+  using RecoStepper = EigenStepper<>;
+  const auto recoPropagator =
+      makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
+
+  using RecoPropagator = decltype(recoPropagator);
+  using Gx2Fitter = Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
+  const Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+
+  Gx2FitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibratorStrict<VectorMultiTrajectory>>();
+  extensions.surfaceAccessor.connect<&FreeSurfaceAccessor::operator()>(
+      &surfaceAccessor);
+
+  const Gx2FitterOptions gx2fOptions(geoCtx, magCtx, calCtx, extensions,
+                                     PropagatorPlainOptions(geoCtx, magCtx),
+                                     rSurface, false, false,
+                                     FreeToBoundCorrection(false), 5, 0);
+
+  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+
+  ACTS_DEBUG("Fit the track");
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
+
+  BOOST_REQUIRE(res.ok());
+
+  const auto& track = *res;
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces + 1);
+  BOOST_CHECK_EQUAL(track.nDoF(), (nSurfaces + 1) * 2);
+  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  BOOST_CHECK_EQUAL(track.nOutliers(), 0u);
+
+  // The free surface carries a measurement state
+  bool freeSurfaceMeasured = false;
+  for (const auto trackState : track.trackStatesReversed()) {
+    if (&trackState.referenceSurface() == freeSurface.get()) {
+      freeSurfaceMeasured = trackState.typeFlags().isMeasurement();
+    }
+  }
+  BOOST_CHECK(freeSurfaceMeasured);
+
+  ACTS_INFO("*** Test: FreeMeasurementSurface -- Finish");
 }
 
 BOOST_AUTO_TEST_CASE(MixedDetector) {

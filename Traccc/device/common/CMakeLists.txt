@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2022-2026 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Project include(s).
 include(traccc-compiler-options-cpp)
@@ -74,14 +76,16 @@ traccc_add_library( traccc_device_common device_common
    "include/traccc/gbts_seeding/device/impl/gbts_sort_nodes.ipp"
    "include/traccc/gbts_seeding/device/gbts_find_minmax_radius.hpp"
    "include/traccc/gbts_seeding/device/impl/gbts_find_minmax_radius.ipp"
-   "include/traccc/gbts_seeding/device/gbts_make_graph_edges.hpp"
-   "include/traccc/gbts_seeding/device/impl/gbts_make_graph_edges.ipp"
-   "include/traccc/gbts_seeding/device/gbts_link_graph_edges.hpp"
-   "include/traccc/gbts_seeding/device/impl/gbts_link_graph_edges.ipp"
+   "include/traccc/gbts_seeding/device/gbts_build_edge_work_list.hpp"
+   "include/traccc/gbts_seeding/device/impl/gbts_build_edge_work_list.ipp"
+   "include/traccc/gbts_seeding/device/details/gbts_graph_edges_helpers.hpp"
+   "include/traccc/gbts_seeding/device/impl/gbts_graph_edges_helpers.ipp"
+   "include/traccc/gbts_seeding/device/gbts_count_graph_edges.hpp"
+   "include/traccc/gbts_seeding/device/impl/gbts_count_graph_edges.ipp"
+   "include/traccc/gbts_seeding/device/gbts_fill_graph_edges.hpp"
+   "include/traccc/gbts_seeding/device/impl/gbts_fill_graph_edges.ipp"
    "include/traccc/gbts_seeding/device/gbts_match_graph_edges.hpp"
    "include/traccc/gbts_seeding/device/impl/gbts_match_graph_edges.ipp"
-   "include/traccc/gbts_seeding/device/gbts_reindex_edges.hpp"
-   "include/traccc/gbts_seeding/device/impl/gbts_reindex_edges.ipp"
    "include/traccc/gbts_seeding/device/gbts_compress_graph.hpp"
    "include/traccc/gbts_seeding/device/impl/gbts_compress_graph.ipp"
    "include/traccc/gbts_seeding/device/gbts_run_cca_iteration.hpp"

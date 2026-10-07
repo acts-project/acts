@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -22,8 +23,8 @@ namespace traccc::device {
 struct gbts_find_minmax_radius_payload {
   /// Number of eta bins
   unsigned int nEtaBins;
-  /// Per-eta (begin, end) node range, as 2*nEtaBins flat ints
-  vecmem::data::vector_view<const unsigned int> eta_bin_views;
+  /// Per-eta node offsets.
+  vecmem::data::vector_view<const unsigned int> eta_bin_offsets;
   /// Per-node (tau_min, tau_max, r, z) (only r is read here)
   vecmem::data::vector_view<const float4> node_params;
   /// Output: per-eta (rmin, rmax) pair, flat (2*nEtaBins floats)

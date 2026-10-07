@@ -14,13 +14,13 @@ if(PROJECT_IS_TOP_LEVEL)
     include(detray-functions)
 
     # Basic flags for all build modes.
-    detray_add_flag( CMAKE_SYCL_FLAGS "-Wall" )
-    detray_add_flag( CMAKE_SYCL_FLAGS "-Wextra" )
-    detray_add_flag( CMAKE_SYCL_FLAGS "-Wno-unknown-cuda-version" )
-    detray_add_flag( CMAKE_SYCL_FLAGS "-Wshadow" )
-    detray_add_flag( CMAKE_SYCL_FLAGS "-Wunused-local-typedefs" )
+    detray_add_flag(CMAKE_SYCL_FLAGS "-Wall")
+    detray_add_flag(CMAKE_SYCL_FLAGS "-Wextra")
+    detray_add_flag(CMAKE_SYCL_FLAGS "-Wno-unknown-cuda-version")
+    detray_add_flag(CMAKE_SYCL_FLAGS "-Wshadow")
+    detray_add_flag(CMAKE_SYCL_FLAGS "-Wunused-local-typedefs")
     if(NOT WIN32)
-        detray_add_flag( CMAKE_SYCL_FLAGS "-pedantic" )
+        detray_add_flag(CMAKE_SYCL_FLAGS "-pedantic")
     endif()
 
     # Avoid issues coming from MSVC<->DPC++ argument differences.
@@ -32,6 +32,6 @@ if(PROJECT_IS_TOP_LEVEL)
 
     # Fail on warnings, if asked for that behaviour.
     if(DETRAY_FAIL_ON_WARNINGS)
-        detray_add_flag( CMAKE_SYCL_FLAGS "-Werror" )
+        detray_add_flag(CMAKE_SYCL_FLAGS "-Werror")
     endif()
 endif()

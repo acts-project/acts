@@ -111,7 +111,7 @@ struct cartesian_product : public ranges::cartesian_product_view<range_ts...> {
 
 // deduction guides
 template <detray::ranges::range... ranges_ts>
-DETRAY_HOST_DEVICE cartesian_product(ranges_ts &&...ranges)
+DETRAY_HOST_DEVICE_DEDUCTION_GUIDE cartesian_product(ranges_ts &&...ranges)
     -> cartesian_product<ranges_ts...>;
 
 }  // namespace views

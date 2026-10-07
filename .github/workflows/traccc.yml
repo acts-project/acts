@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2021-2026 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 name: Traccc
 
@@ -20,22 +22,11 @@ on:
     paths:
       - "Traccc/**"
       - "Detray/**"
-      - "Core/**"
-      - "Plugins/**"
-      - "Fatras/**"
-      - "Alignment/**"
-      - "Examples/**"
-      - "Tests/**"
-      - "Python/**"
-      - "cmake/**"
-      - "codegen/**"
-      - "thirdparty/**"
-      - "CMakeLists.txt"
-      - "CMakePresets.json"
-      - "version_number"
-      - "CI/**"
-      - ".github/actions/**"
       - ".github/workflows/traccc.yml"
+      - ".github/actions/dependencies/**"
+      - ".github/actions/ccache-s3/**"
+      - "CI/ccache_snapshot.py*"
+      - "CI/ccache_stats.sh"
       - ".github/detray-traccc-filters.yml"
   pull_request:
     branches:
@@ -44,22 +35,11 @@ on:
     paths:
       - "Traccc/**"
       - "Detray/**"
-      - "Core/**"
-      - "Plugins/**"
-      - "Fatras/**"
-      - "Alignment/**"
-      - "Examples/**"
-      - "Tests/**"
-      - "Python/**"
-      - "cmake/**"
-      - "codegen/**"
-      - "thirdparty/**"
-      - "CMakeLists.txt"
-      - "CMakePresets.json"
-      - "version_number"
-      - "CI/**"
-      - ".github/actions/**"
       - ".github/workflows/traccc.yml"
+      - ".github/actions/dependencies/**"
+      - ".github/actions/ccache-s3/**"
+      - "CI/ccache_snapshot.py*"
+      - "CI/ccache_stats.sh"
       - ".github/detray-traccc-filters.yml"
   # The changes job applies path filtering to merge groups, which do not
   # support the workflow-level path filters above.
@@ -71,6 +51,11 @@ concurrency:
   # Never cancel a merge_group run: it's a required check for a queue entry,
   # and a cancellation reads as a failure to the queue, ejecting the PR.
   cancel-in-progress: ${{ github.event_name != 'merge_group' }}
+
+# Compiler caches use CERN S3 snapshots; only main publishes.
+env:
+  CCACHE_DIR: ${{ github.workspace }}/ccache
+  CCACHE_MAXSIZE: 500M
 
 jobs:
   # Like Builds/changes, gate jobs rather than suppressing check reporting.
@@ -95,6 +80,10 @@ jobs:
           filters: .github/detray-traccc-filters.yml
 
   containers:
+    env:
+      CCACHE_MAXSIZE: ${{ matrix.build == 'Release' && '500M' || '1G' }}
+    environment:
+      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     needs: changes
     # !cancelled() allows PR/push jobs through when changes is skipped.
     if: >-
@@ -218,10 +207,18 @@ jobs:
         with:
           compiler: ${{ matrix.platform.compiler || 'g++' }}
           flavor: ${{ matrix.platform.flavor }}
-          # Flavors need v24.0.0 or newer.
-          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
+
+      - name: Restore ccache snapshot
+        uses: ./.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
+        with:
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/traccc/containers/${{ runner.os }}-${{ runner.arch }}/${{ matrix.platform.name }}/${{ matrix.build }}/v1/
+
+      - name: Reset ccache statistics
+        run: ccache --zero-stats
 
       # vecmem, covfie, alpaka, actsvg and TBB come from spack on every leg: the
       # host lockfile carries them and each flavor overlays its own build, so no
@@ -233,11 +230,16 @@ jobs:
       # TBB too: the FetchContent oneTBB turns IPO on, which under a clang
       # host is ThinLTO, leaving bitcode the ROCm linker cannot read.
 
+      # CUDA Debug must produce the intermediate PTX consumed by FP64 Compliance.
+      # Cache its host compilation only; Release CUDA and HIP use device caching too.
       - name: Configure
         run: |
           source ${GITHUB_WORKSPACE}/.env
           source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
           cmake \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_HIP_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CUDA_COMPILER_LAUNCHER=${{ matrix.build != 'Debug' && 'ccache' || '' }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.build }} \
             ${{ matrix.platform.options }} \
             -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
@@ -262,6 +264,27 @@ jobs:
           source ${GITHUB_WORKSPACE}/.env
           source ${GITHUB_WORKSPACE}/Traccc/.github/ci_setup.sh ${{ matrix.platform.name }}
           cmake --build build -- -j $(nproc)
+
+      - name: ccache statistics
+        if: always()
+        uses: ./.github/actions/ccache-s3/stats
+
+      - name: Clean ccache before publication
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+        run: ccache --cleanup
+
+      - name: Publish ccache snapshot
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+        timeout-minutes: 10
+        uses: ./.github/actions/ccache-s3
+        with:
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/traccc/containers/${{ runner.os }}-${{ runner.arch }}/${{ matrix.platform.name }}/${{ matrix.build }}/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+
       - name: Download data files
         if: "matrix.platform.run_tests"
         run: ${GITHUB_WORKSPACE}/Traccc/data/traccc_data_get_files.sh
@@ -345,7 +368,6 @@ jobs:
         with:
           compiler: g++
           flavor: cuda13
-          DEPENDENCY_TAG: v24.1.0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 

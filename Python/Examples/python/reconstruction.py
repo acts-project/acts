@@ -56,6 +56,10 @@ SeedFinderConfigArg = namedtuple(
         "rMaxMiddle",
         "helixCutTolerance",
         "toleranceParam",
+        "useTimeDoubletCut",
+        "doubletTimeCutNSigma",
+        "useTimeTripletCut",
+        "tripletTimeChi2Max",
         "deltaR",  # (min,max)
         "deltaRBottomSP",  # (min,max)
         "deltaRTopSP",  # (min,max)
@@ -64,7 +68,7 @@ SeedFinderConfigArg = namedtuple(
         "r",  # (min,max)
         "z",  # (min,max)
     ],
-    defaults=[None] * 23 + [(None, None)] * 7,
+    defaults=[None] * 27 + [(None, None)] * 7,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -466,6 +470,7 @@ def addSeeding(
                 s,
                 spacePoints,
                 seedFinderConfigArg,
+                seedFinderOptionsArg,
                 trackingGeometry,
                 logLevel,
                 layerMappingConfigFile,
@@ -659,25 +664,17 @@ def addSeeding(
 
 def addGbtsTraining(
     s: acts.examples.Sequencer,
+    trackingGeometry: acts.TrackingGeometry,
     selectedParticles: str = "particles_selected",
-    geometryFile: str = "gbts_layer_geometry.txt",
-    outputConnectionTable: str = "layer_connection_table.txt",
+    geometryFile: str = "gbts_layers.json",
+    outputConnectionTable: str = "layer_connection_table.json",
     probThreshold: float = -1.0,
-    zMinTol: float = 0.2340,
-    zMaxTol: float = 0.2340,
-    rMinTol: float = 2.5337,
-    rMaxTol: float = 2.5337,
     doSymmetrization: bool = False,
-    useOldFormatting: bool = False,
     logLevel: acts.logging.Level = None,
 ):
     logLevel = acts.examples.defaultLogging(s, logLevel)()
 
     gbtsLayerConnectionToolConfig = acts.examples.GbtsLayerConnectionToolConfig(
-        zMinTol=zMinTol,
-        zMaxTol=zMaxTol,
-        rMinTol=rMinTol,
-        rMaxTol=rMaxTol,
         probThreshold=probThreshold,
         doSymmetrization=doSymmetrization,
     )
@@ -691,8 +688,8 @@ def addGbtsTraining(
         inputMeasurementSimHitsMap="measurement_simhits_map",
         gbtsLayerConnectionToolConfig=gbtsLayerConnectionToolConfig,
         geometryFileDir=str(geometryFile),
+        trackingGeometry=trackingGeometry,
         outputFileDir=str(outputConnectionTable),
-        useOldFormatting=useOldFormatting,
     )
 
     s.addAlgorithm(alg)
@@ -1110,6 +1107,10 @@ def addGridTripletSeeding(
             maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
             maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
             useDeltaRinsteadOfTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
+            useTimeDoubletCut=seedFinderConfigArg.useTimeDoubletCut,
+            doubletTimeCutNSigma=seedFinderConfigArg.doubletTimeCutNSigma,
+            useTimeTripletCut=seedFinderConfigArg.useTimeTripletCut,
+            tripletTimeChi2Max=seedFinderConfigArg.tripletTimeChi2Max,
             useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
             numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
             zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
@@ -1454,6 +1455,7 @@ def addGbtsSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     seedFinderConfigArg: SeedFinderConfigArg,
+    seedFinderOptionsArg: SeedFinderOptionsArg,
     trackingGeometry: acts.TrackingGeometry,
     logLevel: acts.logging.Level = None,
     layerMappingConfigFile: Union[Path, str] = None,
@@ -1483,6 +1485,9 @@ def addGbtsSeeding(
         trackingGeometry=trackingGeometry,
         fillModuleCsv=False,
         inputClusters="clusters",
+        **acts.examples.defaultKWArgs(
+            bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+        ),
     )
 
     sequence.addAlgorithm(seedingAlg)
@@ -1977,7 +1982,7 @@ def addCKFTracks(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=trackFinder.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching=f"{prefix}ckf_track_particle_matching",
         outputParticleTrackMatching=f"{prefix}ckf_particle_track_matching",
@@ -2301,7 +2306,7 @@ def addGnn(
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
         inputTracks=convAlg.config.outputTracks,
-        inputParticles="particles_selected",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="gnn_track_particle_matching",
         outputParticleTrackMatching="gnn_particle_track_matching",

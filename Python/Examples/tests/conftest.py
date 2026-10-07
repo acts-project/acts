@@ -114,7 +114,9 @@ def assert_root_hash(request, root_file_exp_hashes):
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
-    docs_url = "https://acts.readthedocs.io/en/latest/examples/python_bindings.html#root-file-hash-regression-checks"
+    docs_url = (
+        "https://acts-project.github.io/group__python__testing.html#root_file_hashes"
+    )
     if len(hash_assertion_failures) > 0:
         terminalreporter.ensure_newline()
         terminalreporter.section(

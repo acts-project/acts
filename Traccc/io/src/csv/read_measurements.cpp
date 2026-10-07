@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "read_measurements.hpp"
@@ -32,7 +33,8 @@ std::vector<measurement_id_type> read_measurements(
 
   if (detector) {
     host_detector_visitor<detector_type_list>(
-        *detector, [&]<typename detector_t>(const detector_t::host& det) {
+        *detector,
+        [&]<detray::concepts::detector detector_t>(const detector_t& det) {
           for (const auto& surface_desc : det.surfaces()) {
             acts_to_detray_id[surface_desc.source] =
                 surface_desc.identifier().value();

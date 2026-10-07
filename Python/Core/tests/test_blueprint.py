@@ -1,3 +1,5 @@
+import math
+
 import pytest
 
 import acts
@@ -10,6 +12,37 @@ bv = acts.AxisDirection
 
 gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
 logLevel = acts.logging.VERBOSE
+
+
+def test_python_sensitive_modules_in_layer_blueprint():
+    surfaces = []
+    for i in range(8):
+        phi = i * math.tau / 8
+        transform = (
+            acts.Transform3(acts.Vector3(50 * math.cos(phi), 50 * math.sin(phi), 0))
+            * acts.AngleAxis3(phi + math.pi / 2, acts.Vector3(0, 0, 1))
+            * acts.AngleAxis3(math.pi / 2, acts.Vector3(1, 0, 0))
+        )
+        surface = acts.Surface.createPlane(transform, acts.RectangleBounds(10, 20))
+        surface.assignIsSensitive(True)
+        surfaces.append(surface)
+
+    root = acts.Blueprint(envelope=acts.ExtentEnvelope(r=[1 * mm, 1 * mm]))
+    layer = root.addLayer("sensitive-barrel")
+    layer.layerType = acts.LayerBlueprintNode.LayerType.Cylinder
+    layer.surfaces = surfaces
+    layer.envelope = acts.ExtentEnvelope(r=[1 * mm, 1 * mm], z=[1 * mm, 1 * mm])
+    options = acts.BlueprintOptions()
+    options.defaultNavigationPolicyFactory = acts.NavigationPolicyFactory.make().add(
+        acts.TryAllNavigationPolicy
+    )
+    geometry = root.construct(options, gctx, level=acts.logging.WARNING)
+    visited = []
+    geometry.visitSurfaces(visited.append)
+    assert len(visited) == len(surfaces)
+    assert all(surface.isSensitive for surface in visited)
+    assert all(surface.geometryId.sensitive != 0 for surface in visited)
+    assert len({surface.geometryId.value for surface in visited}) == len(surfaces)
 
 
 def test_zdirection_container_blueprint(tmp_path):
@@ -78,3 +111,80 @@ def test_zdirection_container_blueprint(tmp_path):
             assert vol.depth == 3
 
     write(root, 4)
+
+
+def test_optional_material_keys(tmp_path):
+    import json
+
+    acts_json = pytest.importorskip("acts.json")
+    root = acts.Blueprint(envelope=acts.ExtentEnvelope(r=[1 * mm, 2 * mm]))
+    designator = root.addMaterial("material")
+    axis = acts.AxisSpec.DeferredEquidistant(4)
+    designator.configureFace(
+        acts.CylinderVolumeBounds.Face.OuterCylinder,
+        axis,
+        axis,
+        materialKey="barrel/outer",
+    )
+    # Existing calls and explicit None remain valid.
+    designator.configureFace(acts.CylinderVolumeBounds.Face.NegativeDisc, axis, axis)
+    designator.configureFace(
+        acts.CylinderVolumeBounds.Face.PositiveDisc, axis, axis, materialKey=None
+    )
+    with pytest.raises(ValueError, match="already configured"):
+        designator.configureFace(
+            acts.CylinderVolumeBounds.Face.OuterCylinder, axis, axis, "duplicate"
+        )
+    designator.addStaticVolume(
+        acts.Transform3.Identity(),
+        acts.CylinderVolumeBounds(10 * mm, 20 * mm, 30 * mm),
+        name="barrel",
+    )
+    geometry = root.construct(acts.BlueprintOptions(), gctx, level=acts.logging.WARNING)
+    keyed = {}
+
+    def collect(surface):
+        material = surface.surfaceMaterial
+        if (
+            isinstance(
+                material, (acts.ProtoSurfaceMaterial, acts.ProtoGridSurfaceMaterial)
+            )
+            and material.materialKey is not None
+        ):
+            keyed[material.materialKey] = surface
+
+    geometry.visitSurfaces(collect, False)
+    assert set(keyed) == {"barrel/outer"}
+    assert keyed["barrel/outer"].surfaceMaterial.materialKey == "barrel/outer"
+
+    def legacy_section(name):
+        return {
+            "acts-geometry-hierarchy-map": {
+                "format-version": 0,
+                "value-identifier": name,
+            },
+            "entries": [],
+        }
+
+    payload = {
+        "type": "homogeneous",
+        "mapMaterial": True,
+        "data": [[{"material": None, "thickness": 0.0}]],
+    }
+    document = {
+        "Surfaces": legacy_section("Material Surface Map"),
+        "Volumes": legacy_section("Material Volume Map"),
+        "KeyedSurfaces": [
+            {"key": key, "geometry_id": 999, "material": payload}
+            for key in ["barrel/outer", "unused/other-detector"]
+        ],
+    }
+    path = tmp_path / "material.json"
+    path.write_text(json.dumps(document))
+    loader = acts_json.JsonMaterialDecorator(
+        acts_json.MaterialMapJsonConverter.Config(), str(path), acts.logging.WARNING
+    )
+    loader.materialMaps.apply(geometry)
+    assert isinstance(
+        keyed["barrel/outer"].surfaceMaterial, acts.HomogeneousSurfaceMaterial
+    )

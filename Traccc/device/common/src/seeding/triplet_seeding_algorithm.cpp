@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/seeding/device/triplet_seeding_algorithm.hpp"
@@ -252,6 +253,9 @@ auto triplet_seeding_algorithm::operator()(
       {n_doublets, m_data->m_finder_config, m_data->m_filter_config,
        spacepoints, grid_buffer, triplet_counter_spM_buffer,
        triplet_counter_midBot_buffer, triplet_buffer, seed_buffer});
+
+  // Complete seed selection before releasing its intermediate buffers.
+  synchronize();
 
   // Return the seed buffer.
   return seed_buffer;

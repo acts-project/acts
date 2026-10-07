@@ -57,11 +57,11 @@ using const_field_t = bfield::const_bknd_t<benchmarks::scalar>;
 
 template <concepts::metadata metadata_t, typename bfield_t,
           template <typename> class actor_chain_t>
-using hip_propagator_type =
-    propagator<rk_stepper<covfie::field_view<bfield_t>,
-                          typename detector<metadata_t>::algebra_type>,
-               caching_navigator<detector<metadata_t>>,
-               actor_chain_t<typename detector<metadata_t>::algebra_type>>;
+using hip_propagator_type = propagator<
+    rk_stepper<covfie::field_view<bfield_t>,
+               typename host::detector<metadata_t>::algebra_type>,
+    caching_navigator<device::detector<metadata_t>>,
+    actor_chain_t<typename host::detector<metadata_t>::algebra_type>>;
 
 /// Launch the propagation kernelfor benchmarking
 ///
@@ -134,7 +134,7 @@ struct hip_propagation_bm
         detray::get_buffer(vecmem::get_data(*tracks), *dev_mr, hip_cpy);
 
     // Copy the detector to device and get its view
-    auto det_buffer = detray::get_buffer(*det, *dev_mr, hip_cpy);
+    const auto det_buffer = detray::get_buffer(*det, *dev_mr, hip_cpy);
     auto det_view = detray::get_data(det_buffer);
 
     // Copy blueprint actor states to device

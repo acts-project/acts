@@ -22,6 +22,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 /// Forward declare cuda stream, to be able to use the header without cuda
 struct CUstream_st;
@@ -235,6 +236,22 @@ Tensor<T> selectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
 /// @return New tensor [R, M] in row-major layout containing only kept columns
 template <Acts::Concepts::arithmetic T>
 Tensor<T> selectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
+                     const ExecutionContext &execContext);
+
+/// Gather columns from a 2D row-major tensor by index.
+/// dst[r,k] = src[r,indices[k]]
+/// Unlike selectCols, the columns are taken in the order they are listed in,
+/// and a column listed more than once appears more than once in the result.
+/// @param tensor Source tensor [R, N] in row-major layout
+/// @param indices Column indices, each smaller than N
+/// @param execContext Device and stream for output allocation, must be on the
+///        device of @p tensor
+/// @return New tensor [R, K] in row-major layout, K = indices.size()
+/// @throws std::invalid_argument if an index is out of range or the devices
+///         differ
+template <Acts::Concepts::arithmetic T>
+Tensor<T> gatherCols(const Tensor<T> &tensor,
+                     const std::vector<std::size_t> &indices,
                      const ExecutionContext &execContext);
 
 /// Multiply each column of src with the corresponding scale value

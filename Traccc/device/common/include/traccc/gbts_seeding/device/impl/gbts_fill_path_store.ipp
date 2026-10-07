@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -29,6 +30,10 @@ TRACCC_HOST_DEVICE inline void gbts_fill_path_store(
   vecmem::device_vector<int2> d_path_store(payload.path_store);
   const vecmem::device_vector<const unsigned int> d_output_graph(
       payload.output_graph);
+  const vecmem::device_vector<const uint2> d_output_edge_nodes(
+      payload.output_edge_nodes);
+  const vecmem::device_vector<const unsigned char> d_output_num_neighbours(
+      payload.output_num_neighbours);
   const vecmem::device_vector<const unsigned char> d_levels(payload.levels);
   const vecmem::device_vector<const int2> d_outgoing_paths(
       payload.outgoing_paths);
@@ -41,9 +46,8 @@ TRACCC_HOST_DEVICE inline void gbts_fill_path_store(
   const gbts_fit_segments_params& fit_params = payload.gbts_fit_segments_params;
 
   // Row-major output graph: each edge owns a contiguous block of
-  // nei_start + max_num_neighbours ints ([node1, node2, nNei, nei0..]).
-  const unsigned int edge_size =
-      gbts_consts::nei_start + payload.max_num_neighbours;
+  // max_num_neighbours ints ([nei0..]).
+  const unsigned int edge_size = payload.max_num_neighbours;
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
@@ -76,13 +80,12 @@ TRACCC_HOST_DEVICE inline void gbts_fill_path_store(
     while (offset > 0u) {
       --offset;
       const unsigned int edge_pos = edge_size * cur_edge;
-      const unsigned int nNei = d_output_graph[edge_pos + gbts_consts::nNei];
+      const unsigned int nNei = d_output_num_neighbours[cur_edge];
       const unsigned char level = d_levels[cur_edge];
       unsigned int acc = 0u;
       bool found = false;
       for (unsigned int k = 0u; k < nNei; ++k) {
-        const unsigned int child =
-            d_output_graph[edge_pos + gbts_consts::nei_start + k];
+        const unsigned int child = d_output_graph[edge_pos + k];
         if (level != d_levels[child] + 1u) {
           continue;
         }
@@ -116,15 +119,12 @@ TRACCC_HOST_DEVICE inline void gbts_fill_path_store(
     bool toggle = false;
     details::edgeState state1;
     details::edgeState state2;
-    const unsigned int leaf_pos = edge_size * chain[depth - 1u];
-    const unsigned int nodeidx1 = d_output_graph[leaf_pos + gbts_consts::node1];
-    const traccc::float4 node1 = d_sp_reduced[nodeidx1];
-    const unsigned int nodeidx2 = d_output_graph[leaf_pos + gbts_consts::node2];
-    traccc::float4 node2 = d_sp_reduced[nodeidx2];
+    const uint2 leaf_nodes = d_output_edge_nodes[chain[depth - 1u]];
+    const traccc::float4 node1 = d_sp_reduced[leaf_nodes.x];
+    traccc::float4 node2 = d_sp_reduced[leaf_nodes.y];
     state1.initialize(node2, node1);
     for (unsigned int i = depth - 1u; i > 0u; --i) {
-      const unsigned int nodeidx =
-          d_output_graph[edge_size * chain[i - 1u] + gbts_consts::node2];
+      const unsigned int nodeidx = d_output_edge_nodes[chain[i - 1u]].y;
       node2 = d_sp_reduced[nodeidx];
       if (toggle) {
         if (!details::gbts_kalman_update(&state1, &state2, node2, fit_params,
@@ -141,6 +141,10 @@ TRACCC_HOST_DEVICE inline void gbts_fill_path_store(
     }
     if (length < payload.minLevel) {
       continue;
+    }
+    // If the seed in an odd length set the state1 to be the final state
+    if (toggle) {
+      state1 = state2;
     }
     // state1 is the final state
     //  can cut more strongly now the fit is done

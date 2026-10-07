@@ -36,7 +36,7 @@ namespace {
 
 test::transform3 Identity{};
 
-using detector_t = detector<test::toy_metadata>;
+using detector_t = host::detector<test::toy_metadata>;
 using algebra_t = typename detector_t::algebra_type;
 using scalar = dscalar<algebra_t>;
 using point3 = dpoint3D<algebra_t>;
@@ -55,7 +55,7 @@ struct mock_volume_builder : public volume_builder_interface<detector_t> {
   auto operator()() -> typename detector_t::volume_type& override {
     return m_vol;
   }
-  auto build(detector_t& /*unused*/,
+  auto build(detector_t& /*unused*/, const volume_builder_options& /*unused*/,
              typename detector_t::geometry_context /*mask*/ = {}) ->
       typename detector_t::volume_type* override {
     return &m_vol;

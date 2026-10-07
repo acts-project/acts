@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/options/track_seeding.hpp"
@@ -108,10 +109,6 @@ track_seeding::operator seedfilter_config() const {
 
 track_seeding::operator spacepoint_grid_config() const {
   return {m_seedfinder};
-}
-
-track_seeding::operator vector3() const {
-  return {0.f, 0.f, m_seedfinder.bFieldInZ};
 }
 
 void track_seeding::read(const po::variables_map&) {

@@ -37,7 +37,7 @@ using point3 = test::point3;
 /// Unittest: Test the construction of a collection of materials
 TEST(detray_builders, homogeneous_volume_material_builder) {
   using metadata_t = test::default_metadata;
-  using detector_t = detector<metadata_t>;
+  using detector_t = host::detector<metadata_t>;
   using transform3 = typename detector_t::transform3_type;
 
   constexpr auto material_id{detector_t::material::id::e_raw_material};
@@ -65,7 +65,8 @@ TEST(detray_builders, homogeneous_volume_material_builder) {
   mat_builder.set_material(argon_liquid<scalar>{});
 
   // Add the volume to the detector
-  mat_builder.build(d);
+  volume_builder_options builder_opts{};
+  mat_builder.build(d, builder_opts);
 
   // Test the material data
   EXPECT_EQ(d.volumes().size(), 1u);

@@ -40,7 +40,7 @@ GTEST_TEST(detray_builders, surface_factory) {
   using namespace detray;
 
   using metadata_t = test::default_metadata;
-  using detector_t = detector<metadata_t>;
+  using detector_t = host::detector<metadata_t>;
   using transform3 = dtransform3D<typename detector_t::algebra_type>;
 
   //
@@ -205,9 +205,10 @@ GTEST_TEST(detray_builders, volume_builder) {
   using namespace detray;
 
   vecmem::host_memory_resource host_mr;
+  const volume_builder_options builder_opts{};
 
   using metadata_t = test::default_metadata;
-  using detector_t = detector<metadata_t>;
+  using detector_t = host::detector<metadata_t>;
   using transform3 = typename detector_t::transform3_type;
 
   detector_t d(host_mr);
@@ -222,7 +223,7 @@ GTEST_TEST(detray_builders, volume_builder) {
 
   volume_builder<detector_t> vbuilder{volume_id::e_cylinder};
   vbuilder.add_surfaces(sf_factory);
-  vbuilder.build(d);
+  vbuilder.build(d, builder_opts);
 
   const auto& vol = d.volumes().back();
 

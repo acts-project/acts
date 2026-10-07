@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -25,7 +26,7 @@
 
 namespace traccc::propagation_validator {
 
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 using candidate_type = detray::intersection_record<detector_t>;
 
 /// Transcribe the hits for a particle to a candidate trace for the detray
@@ -38,7 +39,7 @@ using candidate_type = detray::intersection_record<detector_t>;
 /// @param n_hits_for_particle expected number of hits for the particle
 ///
 /// @returns a vector of intersection candidate records
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 auto transcribe_to_trace(const typename detector_t::geometry_context ctx,
                          const detector_t& det,
                          const traccc::io::csv::particle& ptc,
@@ -100,7 +101,7 @@ auto transcribe_to_trace(const typename detector_t::geometry_context ctx,
 /// @param n_meas_for_particle expected number of ,easurements for the particle
 ///
 /// @returns a vector of intersection candidate records
-template <typename detector_t>
+template <detray::concepts::detector detector_t>
 auto transcribe_to_trace(
     const typename detector_t::geometry_context ctx, const detector_t& det,
     const traccc::particle& ptc,

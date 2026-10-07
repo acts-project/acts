@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Test include(s).
 #include "tests/ckf_telescope_test.hpp"
@@ -120,7 +121,7 @@ TEST_P(CkfCombinatoricsTelescopeTests, Run) {
   // Run simulator
   auto sim = traccc::simulator<host_detector_type, b_field_t, generator_type,
                                writer_type>(
-      ptc, n_events, host_detector.as<detector_traits>(),
+      ptc, n_events, host_detector.as<host_detector_type>(),
       field.as_field<traccc::const_bfield_backend_t<traccc::scalar>>(),
       std::move(generator), std::move(smearer_writer_cfg), path.native());
   sim.run();
@@ -130,7 +131,7 @@ TEST_P(CkfCombinatoricsTelescopeTests, Run) {
    *****************************/
 
   // Seed generator
-  seed_generator<host_detector_type> sg(host_detector.as<detector_traits>(),
+  seed_generator<host_detector_type> sg(host_detector.as<host_detector_type>(),
                                         seed_cfg);
 
   // Finding algorithm configuration
