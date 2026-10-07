@@ -11,6 +11,8 @@
 #pragma once
 
 #include "Acts/EventData/SpacePointContainer.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
@@ -31,19 +33,14 @@ namespace ActsExamples {
 
 class GraphBasedSeedingAlgorithm final : public IAlgorithm {
  public:
-  using ActsIDs = std::array<std::uint64_t, 2>;
-
-  /// One module's entry in the layer mapping file, with the geometry
-  /// index resolved from it.
-  struct GbtsIDs {
+  /// One module's entry in the layer mapping file.
+  struct GbtsLayerInfo {
     /// GBTS layer id
     Acts::Experimental::GbtsExperimentLayerId layerId{};
     /// whether the layer is a barrel or an endcap layer
     Acts::Experimental::GbtsLayerType type{};
     /// sensor technology of the layer
     Acts::Experimental::GbtsLayerTechnology technology{};
-    /// index of `layerId`, unset if the geometry has no such layer
-    std::optional<Acts::Experimental::GbtsLayerIndex> layerIndex{};
   };
 
   struct Config {
@@ -111,14 +108,18 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// holds all objects either used in initialise or handed out of algorithm
   Config m_cfg{};
 
+  /// the geometry information the seeding works on
+  std::shared_ptr<Acts::Experimental::GbtsGeometry> m_geometry;
+
   /// actual seed finder algorithm
   std::optional<Acts::Experimental::GraphBasedTrackSeeder> m_finder;
 
   std::optional<Acts::Experimental::GbtsTrackingFilter> m_filter;
 
   /// conversion between ACTS labelling of volume, layer and modules to that
-  /// used by GBTS
-  std::map<ActsIDs, GbtsIDs> m_actsGbtsMap;
+  /// used by GBTS: the entry of a surface is the one of its module or, without
+  /// one, the one of its whole layer
+  Acts::GeometryHierarchyMap<GbtsLayerInfo> m_actsGbtsMap;
 
   /// used to define region of interest
   std::optional<Acts::Experimental::GbtsRoiDescriptor> m_internalRoi;
@@ -134,16 +135,12 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   /// make the map between ACTS geometry ID's and GBTS geometry ID's
-  std::map<ActsIDs, GbtsIDs> makeActsGbtsMap() const;
+  Acts::GeometryHierarchyMap<GbtsLayerInfo> makeActsGbtsMap() const;
 
   /// Resolve the GBTS layer index for a space point, or nullopt if it is not
   /// part of the GBTS geometry.
   std::optional<Acts::Experimental::GbtsLayerIndex> gbtsLayerIndex(
       const ConstSpacePointProxy &spacePoint) const;
-
-  /// Fill in `GbtsIDs::layerIndex` for every mapped module from the geometry.
-  /// @param geometry The geometry the indices belong to
-  void resolveLayerIndices(const Acts::Experimental::GbtsGeometry &geometry);
 
   /// Add a surface of the tracking geometry to the description of its GBTS
   /// layer: the reference coordinates are summed and the bounds extended.

@@ -68,6 +68,9 @@ struct find_tracks {
     std::pair<unsigned int, unsigned int>* shared_candidates =
         reinterpret_cast<std::pair<unsigned int, unsigned int>*>(
             &shared_insertion_mutex[blockDimX]);
+    std::pair<traccc::scalar, unsigned int>* shared_best_candidates =
+        reinterpret_cast<std::pair<traccc::scalar, unsigned int>*>(
+            &shared_candidates[2 * blockDimX]);
 
     device::find_tracks<detector_t>(
         thread_id, barrier, cfg, *det_data, payload,
@@ -75,7 +78,8 @@ struct find_tracks {
             .shared_num_out_params = shared_num_out_params,
             .shared_insertion_mutex = shared_insertion_mutex,
             .shared_candidates = shared_candidates,
-            .shared_candidates_size = shared_candidates_size});
+            .shared_candidates_size = shared_candidates_size,
+            .shared_best_candidates = shared_best_candidates});
   }
 };
 
@@ -274,8 +278,7 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
 
         // Fill it with Thrust's help.
         details::upper_bound(
-            details::get_queue(queue()), mr(),
-            measurements_device.surface_link().begin(),
+            queue(), mr(), measurements_device.surface_link().begin(),
             // We have to use this ugly form here, because if the
             // measurement collection is resizable (which it often
             // is), the end() function cannot be used in host code.
@@ -374,9 +377,9 @@ void combinatorial_kalman_filter_algorithm::condense_tracks_kernel(
   const vecmem::device_vector<const unsigned int>
       out_params_per_in_param_vector(out_params_per_in_param);
   vecmem::device_vector<unsigned int> params_index_vector(params_index);
-  details::inclusive_scan(
-      details::get_queue(queue()), mr(), out_params_per_in_param_vector.begin(),
-      out_params_per_in_param_vector.end(), params_index_vector.begin());
+  details::inclusive_scan(queue(), mr(), out_params_per_in_param_vector.begin(),
+                          out_params_per_in_param_vector.end(),
+                          params_index_vector.begin());
 
   // Establish the kernel launch parameters.
   const unsigned int deviceThreads = warp_size() * 8;
@@ -414,7 +417,7 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_last_measurement(
   assert(link_last_measurement.size_ptr() == nullptr);
   assert(param_ids.size_ptr() == nullptr);
   details::sort_by_key(
-      details::get_queue(queue()), mr(), link_last_measurement.ptr(),
+      queue(), mr(), link_last_measurement.ptr(),
       link_last_measurement.ptr() + link_last_measurement.capacity(),
       param_ids.ptr());
 }
@@ -455,8 +458,8 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_keys(
   assert(keys.capacity() == param_ids.capacity());
   assert(keys.size_ptr() == nullptr);
   assert(param_ids.size_ptr() == nullptr);
-  details::sort_by_key(details::get_queue(queue()), mr(), keys.ptr(),
-                       keys.ptr() + keys.capacity(), param_ids.ptr());
+  details::sort_by_key(queue(), mr(), keys.ptr(), keys.ptr() + keys.capacity(),
+                       param_ids.ptr());
 }
 
 void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
@@ -599,12 +602,15 @@ struct BlockSharedMemDynSizeBytes<
   ALPAKA_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(
       traccc::alpaka::kernels::find_tracks<detector_t> const& /* kernel */,
       TVec const& blockThreadExtent, TVec const& /* threadElemExtent */,
-      TArgs const&... /* args */
+      traccc::finding_config const& cfg, TArgs const&... /* args */
       ) -> std::size_t {
     return static_cast<std::size_t>(blockThreadExtent.prod()) *
                sizeof(unsigned long long int) +
            2 * static_cast<std::size_t>(blockThreadExtent.prod()) *
-               sizeof(std::pair<unsigned int, unsigned int>);
+               sizeof(std::pair<unsigned int, unsigned int>) +
+           static_cast<std::size_t>(blockThreadExtent.prod()) *
+               cfg.max_num_branches_per_surface *
+               sizeof(std::pair<traccc::scalar, unsigned int>);
   }
 };
 

@@ -76,6 +76,10 @@ EXCLUDE_FILES = (
     "SNIPPETS.md",
     "tex-mml-chtml.js",
     "tgeo_aux.py.in",
+    # Pytest collects these examples; Doxygen includes the group by ID.
+    "docs/examples/test_generic.py",
+    "docs/examples/test_performance_and_plotting.py",
+    "docs/groups/python/performance_and_plotting.md",
     "todo.md",
     # Detray python tests for auto-generated code
     "Detray/codegen/detray-sympy/tests/test_assumptions_D.py",
