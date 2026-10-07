@@ -23,6 +23,7 @@ inline constexpr HashedString kMeasurementsKey = hashString("nMeasurements");
 inline constexpr HashedString kHolesKey = hashString("nHoles");
 inline constexpr HashedString kOutliersKey = hashString("nOutliers");
 inline constexpr HashedString kSharedHitsKey = hashString("nSharedHits");
+inline constexpr HashedString kSplitHitsKey = hashString("nSplitHits");
 inline constexpr HashedString kChi2Key = hashString("chi2");
 inline constexpr HashedString kNdfKey = hashString("ndf");
 inline constexpr HashedString kNextKey = hashString("next");
@@ -145,6 +146,22 @@ class TrackProxyCommon {
   {
     return derived()
         .template component<unsigned int, detail_tp::kSharedHitsKey>();
+  }
+
+  /// Return the number of split hits for this track.
+  /// @return The number of split hits
+  unsigned int nSplitHits() const {
+    return derived()
+        .template component<unsigned int, detail_tp::kSplitHitsKey>();
+  }
+
+  /// Return a mutable reference to the number of split hits.
+  /// @return Mutable reference to the number of split hits
+  unsigned int& nSplitHits()
+    requires(!read_only)
+  {
+    return derived()
+        .template component<unsigned int, detail_tp::kSplitHitsKey>();
   }
 
   /// Return the local chi-squared contribution.

@@ -74,6 +74,8 @@ void addMaterial(py::module_& m) {
         .def_readwrite("material", &KeyedSurfaceMaterial::material);
     py::class_<TrackingGeometryMaterial>(m, "TrackingGeometryMaterial")
         .def(py::init<>())
+        .def_property("description", &TrackingGeometryMaterial::description,
+                      &TrackingGeometryMaterial::setDescription)
         .def_readwrite("surfaceMaterials",
                        &TrackingGeometryMaterial::surfaceMaterials)
         .def_readwrite("volumeMaterials",

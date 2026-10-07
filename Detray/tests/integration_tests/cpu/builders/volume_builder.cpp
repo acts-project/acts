@@ -70,6 +70,8 @@ GTEST_TEST(detray_builders, tracking_volume_construction) {
   vecmem::host_memory_resource host_mr;
   detector_t d(host_mr);
   auto geo_ctx = typename detector_t::geometry_context{};
+  volume_builder_options builder_opts{};
+
   // ensure there is a data offset that needs to be handled correctly
   prefill_detector(d, geo_ctx);
   const dindex first_trf{d.transform_store().size()};
@@ -197,7 +199,7 @@ GTEST_TEST(detray_builders, tracking_volume_construction) {
   //
   // Adds all surfaces to the detector
   //
-  vbuilder.build(d);
+  vbuilder.build(d, builder_opts);
 
   //
   // check results

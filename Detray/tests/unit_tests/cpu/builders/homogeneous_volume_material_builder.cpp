@@ -65,7 +65,8 @@ TEST(detray_builders, homogeneous_volume_material_builder) {
   mat_builder.set_material(argon_liquid<scalar>{});
 
   // Add the volume to the detector
-  mat_builder.build(d);
+  volume_builder_options builder_opts{};
+  mat_builder.build(d, builder_opts);
 
   // Test the material data
   EXPECT_EQ(d.volumes().size(), 1u);
