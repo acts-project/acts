@@ -88,7 +88,7 @@ def getTelescopeDetector():
     positions = [30, 60, 90, 120, 150, 180, 210, 240, 270]
     stereos = [0] * len(positions)
     detector = TelescopeDetector(
-        bounds=bounds, positions=positions, stereos=stereos, binValue=1
+        bounds=bounds, positions=positions, stereos=stereos, rotDirection=1
     )
 
     return detector
@@ -287,14 +287,14 @@ def main():
     milleBinaryName = outputDir / "MilleBinary.root"
     actsInternalSolution = outputDir / "ActsInternalAlignment.txt"
     actsViaMilleSolution = outputDir / "ActsViaMilleAlignment.txt"
-    MillePedeSolution = outputDir / "MillePedeAlignment.txt"
+    millePedeSolution = outputDir / "MillePedeAlignment.txt"
     # configure the solver and steering file for Millepede.
     # For this example, we use the defaults for everything and
     # only touch the file names
     solverCfg = MillePedeSolver.Config(
         steeringFile="mpsteer.txt",
         workDir="mpTmp",
-        resFileName=str(MillePedeSolution),
+        resFileName=str(millePedeSolution),
         redirectStdout=str(outputDir / "MillepedeAlignment.log"),
     )
 
@@ -476,7 +476,7 @@ def main():
     # so we can read them the same way
     res_actsInternal = readMillePedeResult(str(actsInternalSolution), logger)
     res_actsViaMille = readMillePedeResult(str(actsViaMilleSolution), logger)
-    res_MillepedeII = readMillePedeResult(str(MillePedeSolution), logger)
+    res_MillepedeII = readMillePedeResult(str(millePedeSolution), logger)
 
     # visualise the outcome!
     drawResult(res_actsInternal, res_actsViaMille, res_MillepedeII, {3: 0.20})
