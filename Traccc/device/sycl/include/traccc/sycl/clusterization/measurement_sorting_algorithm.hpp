@@ -10,6 +10,7 @@
 
 // Local include(s).
 #include "traccc/sycl/utils/algorithm_base.hpp"
+#include "traccc/sycl/utils/await.hpp"
 
 // Project include(s).
 #include "traccc/clusterization/device/measurement_sorting_algorithm.hpp"
@@ -34,11 +35,13 @@ class measurement_sorting_algorithm
   /// @param copy The copy object to use in the algorithm
   /// @param queue Wrapper for the for the SYCL queue for kernel invocation
   /// @param logger The logger to use in the algorithm
+  /// @param await_func The function used to synchronize events
   ///
   measurement_sorting_algorithm(
       const traccc::memory_resource& mr, const vecmem::copy& copy,
       queue_wrapper& queue,
-      std::unique_ptr<const Logger> logger = getDummyLogger().clone());
+      std::unique_ptr<const Logger> logger = getDummyLogger().clone(),
+      await_function_type await_func = await_sync_event);
 
  private:
   /// Run the measurement-sorting kernels on the SYCL queue.

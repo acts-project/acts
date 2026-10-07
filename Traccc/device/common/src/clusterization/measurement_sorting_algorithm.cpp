@@ -31,7 +31,9 @@ measurement_sorting_algorithm::operator()(
   edm::measurement_collection::const_view::size_type n_measurements = 0u;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(measurements, *(mr().host));
-    n_measurements = size.get();
+    // Block or suspend execution until the size is available.
+    await(size);
+    n_measurements = size.unsafe_get();
   } else {
     n_measurements = copy().get_size(measurements);
   }
