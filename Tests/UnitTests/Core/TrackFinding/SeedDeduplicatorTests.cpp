@@ -39,7 +39,7 @@ Key requiredSharedKeys(const SeedDeduplicator::Config& config, Key nKeys) {
 
 BOOST_AUTO_TEST_SUITE(TrackFindingSuite)
 
-BOOST_AUTO_TEST_CASE(SeedDeduplicatorRequiredSharedScore) {
+BOOST_AUTO_TEST_CASE(SeedDeduplicatorThreshold) {
   // all keys, the default
   BOOST_CHECK_EQUAL(requiredSharedKeys({}, 1), 1u);
   BOOST_CHECK_EQUAL(requiredSharedKeys({}, 3), 3u);

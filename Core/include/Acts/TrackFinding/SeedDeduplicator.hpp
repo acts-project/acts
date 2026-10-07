@@ -92,7 +92,7 @@ class SeedDeduplicator {
   /// @param seedScore The summed weight of the seed keys
   /// @return The score that one track must share with the seed to make the
   ///         seed a duplicate
-  Score requiredSharedScore(Score seedScore) const;
+  Score duplicateThreshold(Score seedScore) const;
 
   /// One accepted track on one key
   struct Node {
