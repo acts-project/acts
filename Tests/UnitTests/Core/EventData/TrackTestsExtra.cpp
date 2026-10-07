@@ -260,6 +260,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   t2.nSharedHits() = 69;
   BOOST_CHECK_EQUAL(t.nSharedHits(), 69);
 
+  t2.nSplitHits() = 70;
+  BOOST_CHECK_EQUAL(t.nSplitHits(), 70);
+
   t2.chi2() = 555.0;
   BOOST_CHECK_EQUAL(t2.chi2(), 555.0);
 
@@ -509,6 +512,7 @@ BOOST_AUTO_TEST_CASE(ProxyAccessorHasColumn) {
   BOOST_CHECK(ConstProxyAccessor<unsigned int>("ndf").hasColumn(track));
   BOOST_CHECK(ConstProxyAccessor<unsigned int>("nOutliers").hasColumn(track));
   BOOST_CHECK(ConstProxyAccessor<unsigned int>("nSharedHits").hasColumn(track));
+  BOOST_CHECK(ConstProxyAccessor<unsigned int>("nSplitHits").hasColumn(track));
 
   // Test custom track container column
   BOOST_CHECK(ConstProxyAccessor<std::string>("customString").hasColumn(track));

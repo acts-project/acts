@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "../utils/barrier.hpp"
@@ -34,7 +35,9 @@
 
 // System include(s).
 #include <algorithm>
-#include <memory_resource>
+
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
 
 // Thrust include(s).
 #include <thrust/execution_policy.h>
@@ -168,15 +171,6 @@ void gbts_seeding_algorithm::gbts_bin_spacepoints_kernel(
   kernels::gbts_bin_spacepoints<<<n_blocks, n_threads, 0,
                                   details::get_stream(stream())>>>(payload);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
-
-  // Turn the per-bin node counts into the node offsets.
-  vecmem::device_vector<unsigned int> d_eta_node_counter(
-      payload.eta_node_counter);
-  thrust::exclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream())),
-      d_eta_node_counter.begin(), d_eta_node_counter.end(),
-      d_eta_node_counter.begin());
 }
 
 void gbts_seeding_algorithm::gbts_sort_nodes_kernel(
@@ -185,15 +179,15 @@ void gbts_seeding_algorithm::gbts_sort_nodes_kernel(
   // carrying the full spacepoint index along as the value.
   vecmem::device_vector<unsigned long long int> d_sort_keys(payload.sort_keys);
   vecmem::device_vector<unsigned int> d_sort_values(payload.sort_values);
-  thrust::sort_by_key(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream())),
-      d_sort_keys.begin(),
-      d_sort_keys.begin() + static_cast<int>(payload.nNodes),
-      d_sort_values.begin());
+  thrust::sort_by_key(thrust::cuda::par_nosync(
+                          stream_synchronizing_allocator(mr().main, stream()))
+                          .on(details::get_stream(stream())),
+                      d_sort_keys.begin(),
+                      d_sort_keys.begin() + static_cast<int>(payload.nSp),
+                      d_sort_values.begin());
 
   const unsigned int n_threads = 256;
-  const unsigned int n_blocks = 1 + (payload.nNodes - 1) / n_threads;
+  const unsigned int n_blocks = 1 + (payload.nSp - 1) / n_threads;
   kernels::gbts_sort_nodes<<<n_blocks, n_threads, 0,
                              details::get_stream(stream())>>>(payload);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
@@ -231,7 +225,8 @@ void gbts_seeding_algorithm::gbts_count_graph_edges_kernel(
   vecmem::device_vector<unsigned int> d_num_outgoing_edges(
       payload.num_outgoing_edges);
   thrust::inclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(
+          stream_synchronizing_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       d_num_outgoing_edges.begin(), d_num_outgoing_edges.end(),
       d_num_outgoing_edges.begin());
@@ -257,7 +252,8 @@ void gbts_seeding_algorithm::gbts_match_graph_edges_kernel(
 
   // Compact the kept edges with a prefix sum over their 0/1 flags.
   thrust::inclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(
+          stream_synchronizing_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       payload.kept.ptr(), payload.kept.ptr() + payload.nEdgesMax,
       payload.reIndexer.ptr());
@@ -301,7 +297,8 @@ void gbts_seeding_algorithm::gbts_count_paths_kernel(
   // Path offsets of the path store.
   vecmem::device_vector<unsigned int> d_path_counts(payload.path_counts);
   thrust::inclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(
+          stream_synchronizing_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       d_path_counts.begin(), d_path_counts.begin() + payload.nConnectedEdges,
       d_path_counts.begin());

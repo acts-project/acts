@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/alpaka/gbts_seeding/gbts_seeding_algorithm.hpp"
@@ -217,25 +218,18 @@ void gbts_seeding_algorithm::gbts_bin_spacepoints_kernel(
   ::alpaka::exec<Acc>(details::get_queue(queue()),
                       makeWorkDiv<Acc>(n_blocks, n_threads),
                       kernels::gbts_bin_spacepoints{}, payload);
-
-  // Turn the per-bin node counts into the node offsets.
-  vecmem::device_vector<unsigned int> d_eta_node_counter(
-      payload.eta_node_counter);
-  details::exclusive_scan(details::get_queue(queue()), mr(),
-                          d_eta_node_counter.begin(), d_eta_node_counter.end(),
-                          d_eta_node_counter.begin());
 }
 
 void gbts_seeding_algorithm::gbts_sort_nodes_kernel(
     const device::gbts_sort_nodes_payload& payload) const {
   // Order the nodes by their (eta bin, phi, spacepoint index bits) keys,
   // carrying the full spacepoint index along as the value.
-  details::sort_by_key(
-      details::get_queue(queue()), mr(), payload.sort_keys.ptr(),
-      payload.sort_keys.ptr() + payload.nNodes, payload.sort_values.ptr());
+  details::sort_by_key(queue(), mr(), payload.sort_keys.ptr(),
+                       payload.sort_keys.ptr() + payload.nSp,
+                       payload.sort_values.ptr());
 
   const unsigned int n_threads = 256;
-  const unsigned int n_blocks = 1 + (payload.nNodes - 1) / n_threads;
+  const unsigned int n_blocks = 1 + (payload.nSp - 1) / n_threads;
   ::alpaka::exec<Acc>(details::get_queue(queue()),
                       makeWorkDiv<Acc>(n_blocks, n_threads),
                       kernels::gbts_sort_nodes{}, payload);
@@ -272,9 +266,9 @@ void gbts_seeding_algorithm::gbts_count_graph_edges_kernel(
   // Turn the per-node counts into the edge buckets.
   vecmem::device_vector<unsigned int> d_num_outgoing_edges(
       payload.num_outgoing_edges);
-  details::inclusive_scan(
-      details::get_queue(queue()), mr(), d_num_outgoing_edges.begin(),
-      d_num_outgoing_edges.end(), d_num_outgoing_edges.begin());
+  details::inclusive_scan(queue(), mr(), d_num_outgoing_edges.begin(),
+                          d_num_outgoing_edges.end(),
+                          d_num_outgoing_edges.begin());
 }
 
 void gbts_seeding_algorithm::gbts_fill_graph_edges_kernel(
@@ -296,7 +290,7 @@ void gbts_seeding_algorithm::gbts_match_graph_edges_kernel(
                       kernels::gbts_match_graph_edges{}, payload);
 
   // Compact the kept edges with a prefix sum over their 0/1 flags.
-  details::inclusive_scan(details::get_queue(queue()), mr(), payload.kept.ptr(),
+  details::inclusive_scan(queue(), mr(), payload.kept.ptr(),
                           payload.kept.ptr() + payload.nEdgesMax,
                           payload.reIndexer.ptr());
 }
@@ -337,9 +331,9 @@ void gbts_seeding_algorithm::gbts_count_paths_kernel(
                       kernels::gbts_count_paths{}, payload);
   // Path offsets of the path store.
   vecmem::device_vector<unsigned int> d_path_counts(payload.path_counts);
-  details::inclusive_scan(
-      details::get_queue(queue()), mr(), d_path_counts.begin(),
-      d_path_counts.begin() + payload.nConnectedEdges, d_path_counts.begin());
+  details::inclusive_scan(queue(), mr(), d_path_counts.begin(),
+                          d_path_counts.begin() + payload.nConnectedEdges,
+                          d_path_counts.begin());
 }
 
 void gbts_seeding_algorithm::gbts_fill_path_store_kernel(

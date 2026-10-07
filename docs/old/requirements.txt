@@ -16,19 +16,19 @@ attrs==26.1.0
     # via aiohttp
 babel==2.18.0
     # via sphinx
-breathe==4.36.0
+breathe==5.1.0
     # via -r docs/old/requirements.in
 certifi==2026.7.22
     # via requests
 cffi==2.1.1 ; platform_python_implementation != 'PyPy'
     # via cryptography
-charset-normalizer==3.5.1
+charset-normalizer==3.5.2
     # via requests
 colorama==0.4.6 ; sys_platform == 'win32'
     # via
     #   sphinx
     #   typer
-cryptography==50.0.1
+cryptography==50.0.2
     # via pyjwt
 docutils==0.21.2
     # via
@@ -42,7 +42,7 @@ frozenlist==1.8.0
     #   aiosignal
 fsspec==2026.9.0
     # via -r docs/old/requirements.in
-gidgethub==5.4.0
+gidgethub==6.0.0
     # via -r docs/old/requirements.in
 idna==3.20
     # via
@@ -60,13 +60,13 @@ markdown-it-py==3.0.0
     #   mdit-py-plugins
     #   myst-parser
     #   rich
-markupsafe==3.0.3
+markupsafe==3.0.4
     # via jinja2
 mdit-py-plugins==0.6.1
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
-multidict==6.9.0
+multidict==6.9.1
     # via
     #   aiohttp
     #   yarl
@@ -88,9 +88,9 @@ pygments==2.21.0
     # via
     #   rich
     #   sphinx
-pyjwt==2.14.0
+pyjwt==2.15.1
     # via gidgethub
-python-dotenv==1.2.3
+python-dotenv==1.2.4
     # via -r docs/old/requirements.in
 pyyaml==6.0.3
     # via myst-parser
@@ -135,6 +135,7 @@ typing-extensions==4.16.0
     # via
     #   aiohttp
     #   aiosignal
+    #   gidgethub
     #   pydantic
     #   pydantic-core
     #   typing-inspection

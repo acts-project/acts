@@ -76,6 +76,17 @@ class LandauDistribution {
   /// @return Reference to this distribution object
   LandauDistribution &operator=(LandauDistribution &&) = default;
 
+  /// Construct from energy loss and FWHM
+  ///
+  /// @param energyLoss the (unscaled) most probable energy loss value
+  /// @param energyLossFwhm the full width at half maximum of the energy loss
+  /// @return A LandauDistribution configured with the derived location and scale
+  static LandauDistribution fromFwhm(double energyLoss, double energyLossFwhm) {
+    double scale = energyLossFwhm / kScaleFactorFwhm;
+    double location = energyLoss - scale * kScaleFactorMPV;
+    return LandauDistribution(location, scale);
+  }
+
   /// Reset any possible internal state. Noop, since there is no internal state.
   void reset() {}
   /// Return the currently configured distribution parameters.
@@ -119,6 +130,11 @@ class LandauDistribution {
   param_type m_cfg;
 
   static double quantile(double z);
+
+  /// Scaling for most probable value
+  static constexpr double kScaleFactorMPV = -0.222783;
+  /// Scaling for FWHM
+  static constexpr double kScaleFactorFwhm = 4.018646;
 };
 
 }  // namespace ActsFatras

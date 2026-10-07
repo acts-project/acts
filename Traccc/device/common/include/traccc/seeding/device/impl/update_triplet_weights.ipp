@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -36,9 +37,14 @@ inline void update_triplet_weights(
 
   // Current work item
   device_triplet this_triplet = triplets.at(globalIndex);
+  const auto this_spT_idx = this_triplet.spT;
+
+  if (this_spT_idx == std::numeric_limits<unsigned int>::max()) [[unlikely]] {
+    return;
+  }
 
   const edm::spacepoint_collection::const_device::const_proxy_type current_spT =
-      spacepoints.at(this_triplet.spT);
+      spacepoints.at(this_spT_idx);
 
   const scalar currentTop_r = current_spT.radius();
 
@@ -73,8 +79,16 @@ inline void update_triplet_weights(
     }
 
     const device_triplet other_triplet = triplets[i];
+
+    const auto other_spT_idx = other_triplet.spT;
+
+    if (other_spT_idx == std::numeric_limits<unsigned int>::max())
+        [[unlikely]] {
+      continue;
+    }
+
     const edm::spacepoint_collection::const_device::const_proxy_type other_spT =
-        spacepoints.at(other_triplet.spT);
+        spacepoints.at(other_spT_idx);
 
     // compared top SP should have at least deltaRMin distance
     const scalar otherTop_r = other_spT.radius();

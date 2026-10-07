@@ -369,7 +369,7 @@ struct EigenStepperDenseExtension {
     // Change of the momentum per path length
     // dPds = dPdE * dEds
     dPds[0] = g * energy[0] / initialMomentum;
-    if (state.covTransport) {
+    if (state.cov.has_value()) {
       // Calculate the change of the energy loss per path length and
       // inverse momentum
       if (state.options.dense.includeGradient) {
@@ -410,7 +410,7 @@ struct EigenStepperDenseExtension {
     dPds[i] = g * energy[i] / currentMomentum;
     qop[i] = stepper.charge(state) / currentMomentum;
     // Calculate term for later error propagation
-    if (state.covTransport) {
+    if (state.cov.has_value()) {
       dLdl[i] = (-qop[i] * qop[i] * g * energy[i] *
                      (3. - (currentMomentum * currentMomentum) /
                                (energy[i] * energy[i])) -

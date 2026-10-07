@@ -8,6 +8,9 @@
 
 #pragma once
 
+// Project include(s)
+#include "detray/builders/volume_builder_interface.hpp"
+
 // System include(s)
 #include <ostream>
 #include <string>
@@ -19,6 +22,8 @@ namespace detray::io {
 struct detector_reader_config {
   /// Input files
   std::vector<std::string> m_files;
+  /// Volume builder options
+  detray::volume_builder_options m_builder_opts{};
   /// Run detector consistency check after reading
   bool m_do_check{true};
   /// Verbosity of the detector consistency check
@@ -27,6 +32,10 @@ struct detector_reader_config {
   /// Getters
   /// @{
   const std::vector<std::string>& files() const { return m_files; }
+  const detray::volume_builder_options& builder_options() const {
+    return m_builder_opts;
+  }
+  bool deduplicate() const { return m_builder_opts.deduplicate(); }
   bool do_check() const { return m_do_check; }
   bool verbose_check() const { return m_verbose; }
   /// @}
@@ -35,6 +44,10 @@ struct detector_reader_config {
   /// @{
   detector_reader_config& add_file(const std::string& file_name) {
     m_files.push_back(file_name);
+    return *this;
+  }
+  detector_reader_config& deduplicate(bool toggle) {
+    m_builder_opts.deduplicate(toggle);
     return *this;
   }
   detector_reader_config& do_check(const bool check) {
@@ -55,10 +68,12 @@ struct detector_reader_config {
                                   const detector_reader_config& cfg) {
     out << "\nDetector reader\n"
         << "----------------------------\n"
-        << "  Detector files:       : \n";
+        << "  Detector files        : \n";
     for (const auto& file_name : cfg.files()) {
       out << "    -> " << file_name << "\n";
     }
+    out << "  Deduplicate data      : " << std::boolalpha << cfg.deduplicate()
+        << std::noboolalpha << "\n";
 
     return out;
   }

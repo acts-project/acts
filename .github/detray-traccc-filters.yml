@@ -3,10 +3,18 @@
 detray:
   - 'Detray/**'
   - '.github/workflows/detray.yml'
+  - '.github/actions/dependencies/**'
+  - '.github/actions/ccache-s3/**'
+  - 'CI/ccache_snapshot.py*'
+  - 'CI/ccache_stats.sh'
   - '.github/detray-traccc-filters.yml'
 
 traccc:
   - 'Traccc/**'
   - 'Detray/**'
   - '.github/workflows/traccc.yml'
+  - '.github/actions/dependencies/**'
+  - '.github/actions/ccache-s3/**'
+  - 'CI/ccache_snapshot.py*'
+  - 'CI/ccache_stats.sh'
   - '.github/detray-traccc-filters.yml'
