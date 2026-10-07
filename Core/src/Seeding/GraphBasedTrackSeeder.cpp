@@ -15,6 +15,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <numbers>
 #include <span>
@@ -98,9 +99,12 @@ void GraphBasedTrackSeeder::createSeeds(
     ACTS_WARNING("Missing edges or edge connections");
   }
 
-  const std::uint32_t maxLevel = graph.runCCA(m_cfg.ccaMaxIterations);
+  // the best path per edge settles its own levels
+  if (!m_cfg.bestPathPerEdge) {
+    const std::uint32_t maxLevel = graph.runCCA(m_cfg.ccaMaxIterations);
 
-  ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
+    ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
+  }
 
   std::vector<OutputSeedProperties> vOutputSeeds;
   extractSeedsFromTheGraph(nodeStorage, graph, vOutputSeeds, filter,
@@ -126,63 +130,40 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     const GbtsNodeStorage& nodeStorage, GbtsGraph& graph,
     std::vector<OutputSeedProperties>& vOutputSeeds,
     const GbtsTrackingFilter& filter, const bool withFits) const {
-  std::vector<detail::GbtsEdge*> vChainHeads = graph.extractChainHeads(
-      m_cfg.minSeedLevel, m_cfg.addTriplets, m_cfg.maxAbsEtaAddTriplets);
-
-  if (vChainHeads.empty()) {
-    ACTS_WARNING("No chains passed minimum edge requirement");
-    return;
-  }
-
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
   // `addTriplets` accepts a chain one level short. Signed: an uncollected
   // edge sits at level -1 and `minSeedLevel` may be configured to 0.
   const std::int8_t minLevelAddTriplets =
       static_cast<std::int8_t>(m_cfg.minSeedLevel - 1);
 
-  // backtracking
-
   std::vector<SeedCandidateProperties> vSeedCandidates;
-
-  vSeedCandidates.reserve(vChainHeads.size());
 
   std::vector<std::pair<float, std::uint32_t>> vArgSort;
 
-  vArgSort.reserve(vChainHeads.size());
-
   std::uint32_t seedCounter = 0;
 
-  GbtsTrackingFilter::State filterState{};
-
-  for (detail::GbtsEdge* pS : vChainHeads) {
-    if (pS->level == -1) {
-      continue;
-    }
-
-    detail::GbtsEdgeState rs =
-        filter.followTrack(filterState, nodeView, graph.edgeStorage, *pS);
-
-    if (!rs.initialized) {
-      continue;
-    }
-
-    const float seedAbsEta = std::abs(-std::log(pS->p[0]));
+  // Turn the fitted chain of a head edge into a seed candidate, marking its
+  // edges as collected if asked to.
+  const auto addCandidate = [&](const detail::GbtsEdgeState& rs,
+                                const detail::GbtsEdge& head,
+                                const bool maskEdges) {
+    const float seedAbsEta = std::abs(-std::log(head.p[0]));
 
     const std::uint32_t chainLength = static_cast<std::uint32_t>(rs.vs.size());
 
     if (!m_cfg.addTriplets) {
       if (chainLength < m_cfg.minSeedLevel) {
-        continue;
+        return;
       }
     } else {
       if (seedAbsEta > m_cfg.maxAbsEtaAddTriplets) {
         if (chainLength < m_cfg.minSeedLevel) {
-          continue;
+          return;
         }
       } else {
         if (minLevelAddTriplets > 0 &&
             chainLength < static_cast<std::uint32_t>(minLevelAddTriplets)) {
-          continue;
+          return;
         }
       }
     }
@@ -190,7 +171,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     std::vector<SpacePointIndex> vN;
 
     for (auto sIt = rs.vs.rbegin(); sIt != rs.vs.rend(); ++sIt) {
-      if (seedAbsEta > m_cfg.edgeMaskMinEta) {
+      if (maskEdges && seedAbsEta > m_cfg.edgeMaskMinEta) {
         // mark as collected
         (*sIt)->level = -1;
       }
@@ -204,7 +185,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     // a triplet is accepted if it makes it up to this point
     if (vN.size() < 3) {
-      continue;
+      return;
     }
 
     const auto origSeedSize = static_cast<std::uint32_t>(vN.size());
@@ -280,6 +261,41 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     vArgSort.emplace_back(origSeedQuality, seedCounter);
 
     ++seedCounter;
+  };
+
+  if (m_cfg.bestPathPerEdge) {
+    extractBestPathPerEdge(nodeView, graph, filter, addCandidate);
+  } else {
+    std::vector<detail::GbtsEdge*> vChainHeads = graph.extractChainHeads(
+        m_cfg.minSeedLevel, m_cfg.addTriplets, m_cfg.maxAbsEtaAddTriplets);
+
+    if (vChainHeads.empty()) {
+      ACTS_WARNING("No chains passed minimum edge requirement");
+      return;
+    }
+
+    // backtracking
+
+    vSeedCandidates.reserve(vChainHeads.size());
+
+    vArgSort.reserve(vChainHeads.size());
+
+    GbtsTrackingFilter::State filterState{};
+
+    for (detail::GbtsEdge* pS : vChainHeads) {
+      if (pS->level == -1) {
+        continue;
+      }
+
+      detail::GbtsEdgeState rs =
+          filter.followTrack(filterState, nodeView, graph.edgeStorage, *pS);
+
+      if (!rs.initialized) {
+        continue;
+      }
+
+      addCandidate(rs, *pS, true);
+    }
   }
 
   // clone removal code goes below ...
@@ -390,6 +406,162 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
       vOutputSeeds.emplace_back(seed.seedQuality, newSeed);
     }
+  }
+}
+
+template <typename add_candidate_t>
+void GraphBasedTrackSeeder::extractBestPathPerEdge(
+    const detail::GbtsNodeView& nodeView, GbtsGraph& graph,
+    const GbtsTrackingFilter& filter, add_candidate_t& addCandidate) const {
+  std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
+  const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
+  const auto minLevel = static_cast<std::uint32_t>(m_cfg.minSeedLevel);
+
+  // The level of an edge is the length of the longest chain of edges going
+  // outwards from it. `vNei` holds the edges further in, which were all
+  // created after the edge, so a single pass in edge order settles it. Longer
+  // chains than `ccaMaxIterations` edges are unsettled and take no part.
+  const auto maxLength = static_cast<std::uint32_t>(m_cfg.ccaMaxIterations);
+  const std::uint32_t unsettled = maxLength + 1;
+  std::vector<std::uint32_t> level(nEdges, 1);
+  for (std::uint32_t e = 0; e < nEdges; ++e) {
+    const detail::GbtsEdge& edge = edgeStorage[e];
+    const std::uint32_t next = std::min(level[e] + 1, unsettled);
+    for (std::uint32_t k = 0; k < edge.nNei; ++k) {
+      std::uint32_t& innerLevel = level[edge.vNei[k]];
+      innerLevel = std::max(innerLevel, next);
+    }
+  }
+
+  // A root has no settled edge further in. Every path goes from an edge
+  // inwards to a root, each step to an edge one level up, i.e. along the
+  // longest chain outwards of the root.
+  std::vector<char> isRoot(nEdges, 1);
+  for (std::uint32_t e = 0; e < nEdges; ++e) {
+    const detail::GbtsEdge& edge = edgeStorage[e];
+    for (std::uint32_t k = 0; k < edge.nNei; ++k) {
+      if (level[edge.vNei[k]] <= maxLength) {
+        isRoot[e] = 0;
+        break;
+      }
+    }
+  }
+
+  // The longest path from an edge to a root, zero if none, to skip the edges
+  // and branches that cannot give a long enough path. The edges further in
+  // come later, so a single pass backwards settles it.
+  std::vector<std::uint32_t> rootReach(nEdges, 0);
+  for (std::uint32_t e = nEdges; e-- > 0;) {
+    if (level[e] > maxLength) {
+      continue;
+    }
+    if (isRoot[e] != 0) {
+      rootReach[e] = 1;
+      continue;
+    }
+    const detail::GbtsEdge& edge = edgeStorage[e];
+    for (std::uint32_t k = 0; k < edge.nNei; ++k) {
+      const std::uint32_t inner = edge.vNei[k];
+      if (level[inner] == level[e] + 1 && rootReach[inner] > 0) {
+        rootReach[e] = std::max(rootReach[e], rootReach[inner] + 1);
+      }
+    }
+  }
+
+  // Depth first search from every edge inwards, fitting on the way; the best
+  // complete path wins the edge.
+  struct Frame {
+    std::uint32_t edge{};
+    std::uint32_t next{};
+    detail::GbtsEdgeState state;
+  };
+  std::vector<Frame> stack(maxLength);
+  std::vector<std::uint32_t> path(maxLength);
+  std::vector<std::uint32_t> bestPath(maxLength);
+
+  for (std::uint32_t head = 0; head < nEdges; ++head) {
+    detail::GbtsEdge& headEdge = edgeStorage[head];
+
+    // `addTriplets` accepts a path one edge short at low eta
+    std::uint32_t minLength = minLevel;
+    if (m_cfg.addTriplets && minLength > 0 &&
+        std::abs(-std::log(headEdge.p[0])) <= m_cfg.maxAbsEtaAddTriplets) {
+      --minLength;
+    }
+
+    if (level[head] > maxLength || rootReach[head] < minLength) {
+      continue;
+    }
+
+    std::uint32_t depth = 0;
+    Frame& first = stack[0];
+    first.edge = head;
+    first.next = 0;
+    first.state.initialize(headEdge, nodeView, filter.m_cfg.initialVarianceX,
+                           filter.m_cfg.initialVarianceY);
+    if (!filter.update(nodeView, headEdge, first.state)) {
+      continue;
+    }
+
+    float bestQuality = std::numeric_limits<float>::max();
+    std::uint32_t bestLength = 0;
+    detail::GbtsEdgeState bestState;
+
+    while (true) {
+      Frame& frame = stack[depth];
+      const detail::GbtsEdge& edge = edgeStorage[frame.edge];
+
+      if (frame.next == 0 && isRoot[frame.edge] != 0) {
+        // a complete path, scored as the seed quality
+        const std::uint32_t length = depth + 1;
+        const float quality = -frame.state.j / static_cast<float>(length + 1);
+        if (length >= minLength && quality < bestQuality) {
+          bestQuality = quality;
+          bestLength = length;
+          bestState = frame.state;
+          for (std::uint32_t d = 0; d <= depth; ++d) {
+            bestPath[d] = stack[d].edge;
+          }
+        }
+      }
+
+      bool descended = false;
+      while (frame.next < edge.nNei) {
+        const std::uint32_t inner = edge.vNei[frame.next++];
+        // one level up, towards a root far enough in
+        if (level[inner] != level[frame.edge] + 1 || rootReach[inner] == 0 ||
+            depth + 1 + rootReach[inner] < minLength) {
+          continue;
+        }
+        Frame& nextFrame = stack[depth + 1];
+        nextFrame.state = frame.state;
+        if (!filter.update(nodeView, edgeStorage[inner], nextFrame.state)) {
+          continue;
+        }
+        nextFrame.edge = inner;
+        nextFrame.next = 0;
+        ++depth;
+        descended = true;
+        break;
+      }
+      if (descended) {
+        continue;
+      }
+      if (depth == 0) {
+        break;
+      }
+      --depth;
+    }
+
+    if (bestLength == 0) {
+      continue;
+    }
+
+    bestState.vs.clear();
+    for (std::uint32_t d = 0; d < bestLength; ++d) {
+      bestState.vs.push_back(&edgeStorage[bestPath[d]]);
+    }
+    addCandidate(bestState, headEdge, false);
   }
 }
 

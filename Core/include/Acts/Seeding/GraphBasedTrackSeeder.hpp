@@ -49,6 +49,11 @@ class GraphBasedTrackSeeder {
 
     // Seed extraction options
 
+    /// Extract one seed candidate per edge: the best fitted path from the edge
+    /// inwards to an edge nothing further in links to, stepping along the
+    /// longest chains outwards, as the traccc GPU GBTS does. Without it the
+    /// longest chain inwards is followed from every edge, with edge masking.
+    bool bestPathPerEdge = true;
     /// Maximum number of connected-component iterations.
     std::uint32_t ccaMaxIterations = 15;
     /// Chain length a seed candidate must reach: a triplet plus one
@@ -66,7 +71,7 @@ class GraphBasedTrackSeeder {
     std::uint32_t minSplitSeedSize = 4;
     /// Largest seed size that is split.
     std::uint32_t maxSplitSeedSize = 5;
-    /// Minimum eta for edge masking.
+    /// Minimum eta for edge masking, without `bestPathPerEdge`.
     float edgeMaskMinEta = 1.5;
     /// Threshold for hit sharing between seeds.
     float hitShareThreshold = 0.49;
@@ -211,7 +216,8 @@ class GraphBasedTrackSeeder {
 
   /// Extract seed candidates from the graph.
   /// @param nodeStorage Storage containing the graph nodes
-  /// @param graph The graph, after the connected component analysis
+  /// @param graph The graph, after the connected component analysis unless
+  ///        `bestPathPerEdge`
   /// @param vOutputSeeds Output vector for seed candidates
   /// @param filter Tracking filter to be applied
   /// @param withFits Whether the fit of the filter to each seed is kept
@@ -220,6 +226,18 @@ class GraphBasedTrackSeeder {
                                 std::vector<OutputSeedProperties>& vOutputSeeds,
                                 const GbtsTrackingFilter& filter,
                                 bool withFits) const;
+
+  /// Extract the best fitted path from every edge inwards to a root edge
+  /// and hand it to @p addCandidate.
+  /// @param nodeView View of the node positions and layers
+  /// @param graph The graph
+  /// @param filter Tracking filter fitting the paths
+  /// @param addCandidate Called with the fitted path and its head edge
+  template <typename add_candidate_t>
+  void extractBestPathPerEdge(const detail::GbtsNodeView& nodeView,
+                              GbtsGraph& graph,
+                              const GbtsTrackingFilter& filter,
+                              add_candidate_t& addCandidate) const;
 
   /// Estimate the inverse radius of the circle through three nodes.
   /// @param nodeView View of the node positions and layers
