@@ -10,9 +10,7 @@
 
 #include "Acts/TrackFinding/SeedDeduplicator.hpp"
 
-#include <array>
 #include <limits>
-#include <ranges>
 #include <vector>
 
 using namespace Acts;
@@ -23,25 +21,25 @@ using Key = SeedDeduplicator::Key;
 
 BOOST_AUTO_TEST_SUITE(TrackFindingSuite)
 
-BOOST_AUTO_TEST_CASE(SeedDeduplicatorRequiredScore) {
+BOOST_AUTO_TEST_CASE(SeedDeduplicatorThreshold) {
   // all keys, the default
   SeedDeduplicator all({});
-  BOOST_CHECK_EQUAL(all.requiredScore(1), 1u);
-  BOOST_CHECK_EQUAL(all.requiredScore(3), 3u);
+  BOOST_CHECK_EQUAL(all.duplicateThreshold(1), 1u);
+  BOOST_CHECK_EQUAL(all.duplicateThreshold(3), 3u);
 
   // N - 1, never below 1
   SeedDeduplicator relative({.minScore = 0, .maxMissingScore = 1});
-  BOOST_CHECK_EQUAL(relative.requiredScore(1), 1u);
-  BOOST_CHECK_EQUAL(relative.requiredScore(3), 2u);
-  BOOST_CHECK_EQUAL(relative.requiredScore(6), 5u);
+  BOOST_CHECK_EQUAL(relative.duplicateThreshold(1), 1u);
+  BOOST_CHECK_EQUAL(relative.duplicateThreshold(3), 2u);
+  BOOST_CHECK_EQUAL(relative.duplicateThreshold(6), 5u);
 
   // max(3, N - 2), never above N
   SeedDeduplicator both({.minScore = 3, .maxMissingScore = 2});
-  BOOST_CHECK_EQUAL(both.requiredScore(2), 2u);
-  BOOST_CHECK_EQUAL(both.requiredScore(3), 3u);
-  BOOST_CHECK_EQUAL(both.requiredScore(5), 3u);
-  BOOST_CHECK_EQUAL(both.requiredScore(6), 4u);
-  BOOST_CHECK_EQUAL(both.requiredScore(8), 6u);
+  BOOST_CHECK_EQUAL(both.duplicateThreshold(2), 2u);
+  BOOST_CHECK_EQUAL(both.duplicateThreshold(3), 3u);
+  BOOST_CHECK_EQUAL(both.duplicateThreshold(5), 3u);
+  BOOST_CHECK_EQUAL(both.duplicateThreshold(6), 4u);
+  BOOST_CHECK_EQUAL(both.duplicateThreshold(8), 6u);
 }
 
 BOOST_AUTO_TEST_CASE(SeedDeduplicatorAllKeys) {
@@ -124,18 +122,6 @@ BOOST_AUTO_TEST_CASE(SeedDeduplicatorWeights) {
   dedup.setWeight(8, 0);
   dedup.addTrack(std::vector<Key>{8});
   BOOST_CHECK(!dedup.isDuplicate(std::vector<Key>{8}));
-}
-
-BOOST_AUTO_TEST_CASE(SeedDeduplicatorRanges) {
-  SeedDeduplicator dedup({});
-  dedup.reset(10);
-
-  const std::array<int, 3> values = {2, 4, 6};
-  dedup.addTrack(values | std::views::transform(
-                              [](int v) { return static_cast<Key>(v); }));
-  BOOST_CHECK(
-      dedup.isDuplicate(std::views::iota(Key{2}, Key{7}) |
-                        std::views::filter([](Key k) { return k % 2 == 0; })));
 }
 
 BOOST_AUTO_TEST_CASE(SeedDeduplicatorReset) {

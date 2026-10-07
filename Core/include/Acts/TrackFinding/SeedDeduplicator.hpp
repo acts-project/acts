@@ -8,17 +8,12 @@
 
 #pragma once
 
-#include <algorithm>
 #include <cassert>
-#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-#include <ranges>
-#include <utility>
+#include <span>
 #include <vector>
-
-#include <boost/container/small_vector.hpp>
 
 namespace Acts {
 
@@ -76,74 +71,24 @@ class SeedDeduplicator {
   }
 
   /// @param total The summed weight of a seed
-  /// @return The shared score which makes the seed a duplicate
-  Score requiredScore(Score total) const;
+  /// @return The score that one track must share with the seed to make the
+  ///         seed a duplicate
+  Score duplicateThreshold(Score total) const;
 
   /// Accept a track
   /// @param keys The keys of the measurements on the track
-  template <std::ranges::input_range range_t>
-    requires std::convertible_to<std::ranges::range_value_t<range_t>, Key>
-  void addTrack(range_t&& keys) {
-    const auto track = static_cast<std::uint32_t>(m_nTracks);
-    for (const Key key : keys) {
-      assert(key < m_heads.size() && "Key out of range");
-      const std::uint32_t head = m_heads[key];
-      // a key that occurs twice on a track counts once
-      if (head != kNone && m_nodes[head].track == track) {
-        continue;
-      }
-      m_heads[key] = static_cast<std::uint32_t>(m_nodes.size());
-      m_nodes.push_back({track, head});
-    }
-    ++m_nTracks;
-  }
+  void addTrack(std::span<const Key> keys);
 
   /// Check if one accepted track holds enough of the seed keys
   /// @param keys The keys of the seed, each key at most once
   /// @return True if the seed is a duplicate
-  template <std::ranges::forward_range range_t>
-    requires std::convertible_to<std::ranges::range_value_t<range_t>, Key>
-  bool isDuplicate(range_t&& keys) const {
-    Score remaining = 0;
-    for (const Key key : keys) {
-      remaining += weight(key);
-    }
-    if (remaining == 0) {
-      return false;
-    }
-    const Score required = requiredScore(remaining);
-
-    // the score of each track which holds at least one seed key
-    boost::container::small_vector<std::pair<std::uint32_t, Score>, 8> scores;
-    Score best = 0;
-    for (const Key key : keys) {
-      const Weight w = m_weights[key];
-      for (std::uint32_t node = m_heads[key]; node != kNone;
-           node = m_nodes[node].next) {
-        const std::uint32_t track = m_nodes[node].track;
-        auto it = std::ranges::find(scores, track,
-                                    &std::pair<std::uint32_t, Score>::first);
-        if (it == scores.end()) {
-          it = scores.emplace(scores.end(), track, 0);
-        }
-        it->second += w;
-        if (it->second >= required) {
-          return true;
-        }
-        best = std::max(best, it->second);
-      }
-      remaining -= w;
-      // no track can reach the threshold with the keys that are left
-      if (best + remaining < required) {
-        return false;
-      }
-    }
-    return false;
-  }
+  bool isDuplicate(std::span<const Key> keys) const;
 
  private:
   static constexpr std::uint32_t kNone =
       std::numeric_limits<std::uint32_t>::max();
+  /// Number of tracks per seed query that need no heap allocation
+  static constexpr std::size_t kInlineTracks = 8;
 
   /// One accepted track on one key
   struct Node {
