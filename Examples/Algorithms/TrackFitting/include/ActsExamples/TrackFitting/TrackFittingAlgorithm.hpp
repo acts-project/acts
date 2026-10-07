@@ -51,6 +51,7 @@ class TrackFittingAlgorithm final : public IAlgorithm {
     /// Forward-link all tracks after fitting, enabling inside-out track state
     /// iteration via TrackProxy::trackStates(). Off by default.
     bool linkForward = false;
+    std::shared_ptr<const Acts::Surface> referenceSurface;
   };
 
   /// Constructor of the fitting algorithm

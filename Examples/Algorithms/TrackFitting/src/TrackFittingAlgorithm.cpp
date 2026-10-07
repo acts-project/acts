@@ -85,9 +85,13 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     return ProcessCode::ABORT;
   }
 
-  // Construct a perigee surface as the target surface
-  auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-      Acts::Vector3{0., 0., 0.});
+  // // Construct a perigee surface as the target surface
+  // auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
+  //     Acts::Vector3{0., 0., 0.});
+
+  // Construct a surface of chosen type as the target surface (default is
+  // perigee)
+  auto pSurface = m_cfg.referenceSurface;
 
   // Measurement calibrator must be instantiated here, because we need the
   // measurements to construct it. The other extensions are hold by the

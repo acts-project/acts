@@ -1711,6 +1711,7 @@ def addKalmanTracks(
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     linkForward: bool = False,
+    referenceSurface: acts.Surface = acts.Surface.createPerigee(acts.Vector3(0, 0, 0)),
     useJosephFormulation: bool = False,
     useReferenceTrajectory: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1754,6 +1755,7 @@ def addKalmanTracks(
         fit=fitFunction,
         calibrator=calibrator,
         linkForward=linkForward,
+        referenceSurface=referenceSurface,
     )
     s.addAlgorithm(fitAlg)
     s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
