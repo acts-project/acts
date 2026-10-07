@@ -340,7 +340,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("minPt: " << cfg1.minPt);
   ACTS_DEBUG("useEtaBinning: " << cfg1.useEtaBinning);
   ACTS_DEBUG("doubletFilterRZ: " << cfg1.doubletFilterRZ);
-  ACTS_DEBUG("nMaxEdges: " << cfg1.nMaxEdges);
+  ACTS_DEBUG("maxEdgesPerSP: " << cfg1.maxEdgesPerSP);
   ACTS_DEBUG("minDeltaRadius: " << cfg1.minDeltaRadius);
   ACTS_DEBUG("edgeMaskMinEta: " << cfg1.edgeMaskMinEta);
   ACTS_DEBUG("hitShareThreshold: " << cfg1.hitShareThreshold);
