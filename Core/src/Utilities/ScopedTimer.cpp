@@ -10,6 +10,7 @@
 
 #include <chrono>
 #include <cmath>
+#include <exception>
 
 namespace Acts {
 
@@ -31,7 +32,8 @@ ScopedTimer::~ScopedTimer() noexcept {
       m_logger->log(m_lvl, oss.str());
     }
   } catch (...) {
-    // Timing output is best effort and must not interrupt stack unwinding.
+    // Logging failures, including threshold violations, are fatal.
+    std::terminate();
   }
 }
 
@@ -93,7 +95,8 @@ AveragingScopedTimer::~AveragingScopedTimer() noexcept {
       m_logger->log(m_lvl, oss.str());
     }
   } catch (...) {
-    // Timing output is best effort and must not interrupt stack unwinding.
+    // Logging failures, including threshold violations, are fatal.
+    std::terminate();
   }
 }
 

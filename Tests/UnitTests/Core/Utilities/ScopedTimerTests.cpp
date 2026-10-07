@@ -11,10 +11,18 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 
+#include <cerrno>
+#include <cstdlib>
+#include <exception>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+
+#if defined(__unix__) || defined(__APPLE__)
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
 
 namespace ActsTests {
 namespace {
@@ -62,6 +70,50 @@ void checkDestruction(const Acts::Logger& logger) {
   });
 }
 
+#if defined(__unix__) || defined(__APPLE__)
+// Each timer/branch runs in its own child so termination cannot mask failures
+// in another destructor or stop the test runner.
+void checkTermination(const Acts::Logger& logger) {
+  for (int kind : {0, 1, 2}) {
+    for (bool unwind : {false, true}) {
+      const auto child = fork();
+      BOOST_REQUIRE(child >= 0);
+      if (child == 0) {
+        std::set_terminate([] { std::_Exit(42); });
+        try {
+          auto failIfRequested = [&] {
+            if (unwind) {
+              throw std::logic_error("original exception");
+            }
+          };
+          if (kind == 0) {
+            Acts::ScopedTimer timer("simple", logger);
+            failIfRequested();
+          } else {
+            Acts::AveragingScopedTimer timer("averaging", logger);
+            if (kind == 2) {
+              auto sample = timer.sample();
+            }
+            failIfRequested();
+          }
+        } catch (...) {
+          std::_Exit(43);  // A swallowed logging failure during unwinding.
+        }
+        std::_Exit(44);  // A swallowed logging failure on normal destruction.
+      }
+      int status = 0;
+      pid_t waited;
+      do {
+        waited = waitpid(child, &status, 0);
+      } while (waited == -1 && errno == EINTR);
+      BOOST_REQUIRE_EQUAL(waited, child);
+      BOOST_REQUIRE(WIFEXITED(status));
+      BOOST_CHECK_EQUAL(WEXITSTATUS(status), 42);
+    }
+  }
+}
+#endif
+
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(ScopedTimerTests)
@@ -91,25 +143,36 @@ BOOST_AUTO_TEST_CASE(LoggingOutput) {
   BOOST_CHECK(output.str().find("us per sample (#1)") != std::string::npos);
 }
 
-BOOST_AUTO_TEST_CASE(ThrowingFilter) {
+#if defined(__unix__) || defined(__APPLE__)
+BOOST_AUTO_TEST_CASE(ThrowingFilterTerminates) {
   std::ostringstream output;
   Acts::Logger logger(
       std::make_unique<Acts::Logging::DefaultPrintPolicy>(&output),
       std::make_unique<ThrowingFilterPolicy>());
   BOOST_CHECK_THROW(logger.doPrint(Acts::Logging::INFO), int);
-  checkDestruction(logger);
+  checkTermination(logger);
   BOOST_CHECK(output.str().empty());
 }
 
-BOOST_AUTO_TEST_CASE(ThrowingOutput) {
+BOOST_AUTO_TEST_CASE(ThrowingOutputTerminates) {
   ThrowingStreamBuffer buffer;
   std::ostream output(&buffer);
   output.exceptions(std::ios::badbit | std::ios::failbit);
   auto logger = Acts::getDefaultLogger("timers", Acts::Logging::INFO, &output);
   BOOST_CHECK_THROW(logger->log(Acts::Logging::INFO, "test"), std::exception);
   output.clear();
-  checkDestruction(*logger);
+  checkTermination(*logger);
 }
+
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+BOOST_AUTO_TEST_CASE(FailureThresholdTerminates) {
+  Acts::Logging::ScopedFailureThreshold threshold(Acts::Logging::INFO);
+  std::ostringstream output;
+  auto logger = Acts::getDefaultLogger("timers", Acts::Logging::INFO, &output);
+  checkTermination(*logger);
+}
+#endif
+#endif
 
 BOOST_AUTO_TEST_CASE(DisabledOutput) {
   checkDestruction(Acts::getDummyLogger());

@@ -48,7 +48,7 @@ class ScopedTimer {
   ///
   /// Automatically calculates and logs the duration between construction
   /// and destruction using the specified logger and level.
-  /// Exceptions from formatting or logging are suppressed.
+  /// Exceptions from formatting or logging terminate the process.
   ~ScopedTimer() noexcept;
 
   ScopedTimer(const ScopedTimer&) = delete;
@@ -112,7 +112,7 @@ class AveragingScopedTimer {
   ///
   /// Outputs total duration and per-sample statistics (mean ± stddev) if
   /// logging is enabled at the configured level.
-  /// Exceptions from formatting or logging are suppressed.
+  /// Exceptions from formatting or logging terminate the process.
   ~AveragingScopedTimer() noexcept;
   AveragingScopedTimer(const AveragingScopedTimer&) = delete;
   AveragingScopedTimer& operator=(const AveragingScopedTimer&) = delete;
