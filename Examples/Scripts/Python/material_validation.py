@@ -170,13 +170,20 @@ def main():
         action="store_true",
         help="Enable propagation validation",
     )
+    p.add_argument(
+        "--gen1",
+        action="store_true",
+        help="Validate against the Gen1 (Layer-based) geometry instead of "
+        "Gen3 (default).",
+    )
 
     args = p.parse_args()
+    gen3 = not args.gen1
     materialDecorator = None
     if args.map != "":
         materialDecorator = acts.IMaterialDecorator.fromFile(args.map)
 
-    detector = getOpenDataDetector(materialDecorator, gen3=True)
+    detector = getOpenDataDetector(materialDecorator, gen3=gen3)
     trackingGeometry = detector.trackingGeometry()
 
     materialSurfaces = trackingGeometry.extractMaterialSurfaces()
