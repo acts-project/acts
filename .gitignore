@@ -55,9 +55,3 @@ codegen/src/codegen.egg-info/
 # physmon reference histograms are fetched by content hash, not committed.
 # See CI/physmon/reference.sha256 and CI/physmon/reference.py
 /CI/physmon/reference/
-
-# Local debug tooling and generated material mapping output
-Material_Mapping_Plots/
-debug_launcher.sh
-debug_launcher_unoptimized.sh
-root_v6.40.02.Linux-almalinux9.8-x86_64-gcc11.5/
