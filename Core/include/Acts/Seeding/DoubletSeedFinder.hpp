@@ -21,8 +21,9 @@ namespace Acts {
 
 /// Container for doublets found by the doublet seed finder.
 ///
-/// Each doublet is stored as one record, so that adding a doublet is a single
-/// append and the triplet finder reads a doublet from one place.
+/// Each doublet is stored as one record. The triplet finder visits the
+/// doublets in cotTheta order, i.e. through an index, and reads several
+/// quantities of each; one record keeps them together in memory.
 class DoubletsForMiddleSp {
  public:
   /// Type alias for index type used in doublets container
@@ -45,14 +46,16 @@ class DoubletsForMiddleSp {
   void clear() { m_doublets.clear(); }
 
   /// Add a new doublet with associated parameters
-  /// @param sp space point index for the doublet
-  /// @param cotTheta Cotangent of polar angle
-  /// @param iDeltaR Inverse delta R parameter
-  /// @param er Error in R coordinate
-  /// @param u U coordinate parameter
-  /// @param v V coordinate parameter
-  /// @param x X coordinate
-  /// @param y Y coordinate
+  /// @param sp Index of the other space point of the doublet
+  /// @param cotTheta Cotangent of the doublet's polar angle
+  /// @param iDeltaR Inverse transverse distance between the space points
+  /// @param er Squared uncertainty of cotTheta
+  /// @param u U coordinate of the other space point in the conformal frame
+  /// @param v V coordinate of the other space point in the conformal frame
+  /// @param x X of the other space point relative to the middle one, in the
+  ///   frame rotated to the middle space point's direction
+  /// @param y Y of the other space point relative to the middle one, in the
+  ///   frame rotated to the middle space point's direction
   void emplace_back(SpacePointIndex sp, float cotTheta, float iDeltaR, float er,
                     float u, float v, float x, float y) {
     m_doublets.push_back({sp, cotTheta, iDeltaR, er, u, v, x, y});
@@ -235,21 +238,21 @@ class DoubletsForMiddleSp {
  private:
   /// Holds all stored quantities of one doublet.
   struct Doublet {
-    /// Space point index for the doublet
+    /// Index of the other space point of the doublet
     SpacePointIndex spacePointIndex{};
-    /// Cotangent of polar angle
+    /// Cotangent of the doublet's polar angle
     float cotTheta{};
-    /// Inverse delta R parameter
+    /// Inverse transverse distance between the space points
     float iDeltaR{};
-    /// Error in R coordinate
+    /// Squared uncertainty of cotTheta
     float er{};
-    /// U coordinate parameter
+    /// U coordinate of the other space point in the conformal frame
     float u{};
-    /// V coordinate parameter
+    /// V coordinate of the other space point in the conformal frame
     float v{};
-    /// X coordinate
+    /// X of the other space point relative to the middle one, rotated
     float x{};
-    /// Y coordinate
+    /// Y of the other space point relative to the middle one, rotated
     float y{};
   };
 
