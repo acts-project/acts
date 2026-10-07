@@ -112,7 +112,7 @@ class FrustumNavigationPolicy : public INavigationPolicy {
   // associated volume id
   GeometryIdentifier m_id;
 
-  // Portals of the top-level volume that lead to volumes outside it
+  // Top-level volume portals that represent the volume boundaries
   std::vector<const Portal*> m_cachedPortals;
 };
 
