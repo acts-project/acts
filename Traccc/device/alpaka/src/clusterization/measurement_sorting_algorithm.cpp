@@ -120,6 +120,10 @@ measurement_sorting_algorithm::operator()(
                       measurements_view, vecmem::get_data(result),
                       vecmem::get_data(indices));
 
+  // The keys and indices buffers are released on return, so the kernels
+  // using them must have finished by then.
+  m_queue.get().synchronize();
+
   // Return the sorted buffer.
   return result;
 }
