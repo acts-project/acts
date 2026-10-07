@@ -83,6 +83,9 @@ struct tel_det_config {
   trajectory_t<algebra_t> m_trajectory{};
   /// Safety envelope between the test surfaces and the portals
   scalar_t m_envelope{0.1f * unit<scalar_t>::mm};
+  /// Volume builder configuration
+  volume_builder_options m_builder_opts{.m_deduplicate = false,
+                                        .m_sort = false};
   /// Run detector consistency check after reading
   bool m_do_check{true};
 
@@ -130,6 +133,7 @@ struct tel_det_config {
     m_envelope = e;
     return *this;
   }
+  volume_builder_options &builder_options() { return m_builder_opts; }
   tel_det_config &do_check(const bool check) {
     m_do_check = check;
     return *this;
@@ -157,6 +161,9 @@ struct tel_det_config {
   }
   const trajectory_t<algebra_t> &pilot_track() const { return m_trajectory; }
   constexpr scalar_t envelope() const { return m_envelope; }
+  const volume_builder_options &builder_options() const {
+    return m_builder_opts;
+  }
   bool do_check() const { return m_do_check; }
   /// @}
 };
@@ -269,7 +276,7 @@ inline auto build_telescope_detector(
 
   // Build and return the detector and fill the name map
   typename detector_t::name_map name_map{};
-  auto det = det_builder.build(resource, name_map);
+  auto det = det_builder.build(resource, cfg.builder_options(), name_map);
 
   if (cfg.do_check()) {
     const bool verbose_check{false};
