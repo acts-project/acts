@@ -74,6 +74,8 @@
                 "ACTS_BUILD_PLUGIN_FPEMON": "ON",
                 "ACTS_BUILD_PLUGIN_GEOMODEL": "ON",
                 "ACTS_BUILD_PLUGIN_TRACCC": "ON",
+                "ACTS_TRACCC_BUILD_TESTS": "OFF",
+                "ACTS_TRACCC_BUILD_EXAMPLES": "OFF",
                 "ACTS_BUILD_PLUGIN_GEANT4": "ON",
                 "ACTS_BUILD_PLUGIN_GNN": "OFF",
                 "ACTS_BUILD_PLUGIN_ARROW": "ON",
