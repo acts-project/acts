@@ -3,7 +3,7 @@
 Version 1 stores **surface material**. @ref Acts::TrackingGeometryMaterialJsonConverter
 reads and writes JSON or CBOR, optionally compressed with zstd. `toJson`/`fromJson`
 convert documents; `toFile`/`fromFile` handle files. @ref Acts::TrackingGeometryMaterialJsonConverter::Options "Options" controls indentation
-and compression level. Applying material to geometry is a separate operation:
+compression level and optional material quantization. Applying material to geometry is a separate operation:
 
 @snippet{trimleft} examples/material_map_json.cpp Read and write material map
 
@@ -77,6 +77,19 @@ and interaction lengths; numeric NaN and infinities are outside the format.
 Slabs retain thickness, including for vacuum. Surface settings preserve mapping
 type (`default`, `pre`, `post`, `sensor`) and split factor in [0,1]. Proto materials
 require split factor 1.
+
+## Optional quantization
+
+@ref Acts::TrackingGeometryMaterialJsonConverter::Options::materialFractionBits
+controls the retained float32 fraction bits (0–23); the default 23 leaves values
+unchanged. Lower values improve compression by rounding built-in material
+properties and slab thickness to fewer bits. Rounding uses nearest, ties to even,
+with relative error at most `2^(-bits-1)` for normal values. Zeros, subnormals,
+infinities and values that would overflow are preserved.
+
+Geometry, axes, settings and custom payloads are unchanged. Quantization applies
+to canonical output units and does not change the schema or reader. It is
+available through `toJson` and `toFile`, including the Python options.
 
 ## Axes and storage
 
