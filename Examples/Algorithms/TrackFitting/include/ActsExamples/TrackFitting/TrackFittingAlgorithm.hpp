@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -51,7 +53,8 @@ class TrackFittingAlgorithm final : public IAlgorithm {
     /// Forward-link all tracks after fitting, enabling inside-out track state
     /// iteration via TrackProxy::trackStates(). Off by default.
     bool linkForward = false;
-    std::shared_ptr<const Acts::Surface> referenceSurface;
+    std::shared_ptr<const Acts::Surface> referenceSurface =
+        Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3::Zero());
   };
 
   /// Constructor of the fitting algorithm
