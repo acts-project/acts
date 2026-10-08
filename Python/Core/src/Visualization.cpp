@@ -103,6 +103,11 @@ void addVisualization(py::module& m) {
                   [](IVisualization3D& helper, const AnyConstTrackProxy& track,
                      const GeometryContext& gctx) {
                     EventDataView3D::drawTrack(helper, track, gctx);
+                  })
+      .def_static("drawCluster",
+                  [](IVisualization3D& helper, const AnyConstTrackProxy& track,
+                     const GeometryContext& gctx) {
+                    EventDataView3D::drawCluster(helper, track, gctx);
                   });
 
   py::class_<GeometryObject>(m, "GeometryObject");
