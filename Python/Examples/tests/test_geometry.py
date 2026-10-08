@@ -176,9 +176,18 @@ def test_odd_gen3(constructionMethod):
         assert visitor.num_surfaces > 0
         assert visitor.num_volumes > 0
 
-        assert visitor.num_surfaces == 19261
-        assert visitor.num_volumes == 109
-        assert visitor.num_portals == 437
+        # TGeo does not have material designation yet (no addMaterial /
+        # makePassiveElement / makeMaterialCollector calls on that backend),
+        # so it is still missing the extra portals/volumes the other
+        # construction methods now carry.
+        if constructionMethod == "TGeo":
+            assert visitor.num_surfaces == 19261
+            assert visitor.num_volumes == 109
+            assert visitor.num_portals == 437
+        else:
+            assert visitor.num_surfaces == 19325
+            assert visitor.num_volumes == 125
+            assert visitor.num_portals == 501
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
