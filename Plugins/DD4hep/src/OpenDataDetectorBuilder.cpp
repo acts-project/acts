@@ -460,7 +460,7 @@ void addSubsystemChild(const BlueprintBuilder& builder,
 
 void addDirectLayerSubsystem(const BlueprintBuilder& builder,
                              Acts::ContainerBlueprintNode& outer,
-                             std::string assembly, std::string det,
+                             const std::string& assembly, std::string det,
                              const std::regex& layerFilter,
                              Face barrelMaterialFace, std::size_t barrelZBins,
                              std::size_t endcapRBins,
@@ -510,7 +510,7 @@ void addDirectLayerSubsystem(const BlueprintBuilder& builder,
 
 void addBarrelEndcapSubsystem(const BlueprintBuilder& builder,
                               Acts::ContainerBlueprintNode& outer,
-                              std::string assembly, std::string det,
+                              const std::string& assembly, std::string det,
                               const std::regex& layerFilter,
                               Face barrelMaterialFace, std::size_t barrelZBins,
                               std::size_t endcapRBins,
@@ -562,7 +562,7 @@ void addBarrelEndcapSubsystem(const BlueprintBuilder& builder,
 
 void addDirectLayerGroupedSubsystem(
     const BlueprintBuilder& builder, Acts::ContainerBlueprintNode& outer,
-    std::string assembly, std::string det, const std::regex& layerFilter,
+    const std::string& assembly, std::string det, const std::regex& layerFilter,
     Face barrelMaterialFace, std::size_t barrelZBins, std::size_t endcapRBins,
     std::optional<std::size_t> outerBoundaryZBins) {
   const auto assemblyElement = findAssemblyOrThrow(builder, assembly);
