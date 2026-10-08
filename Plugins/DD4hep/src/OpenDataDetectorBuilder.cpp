@@ -151,61 +151,70 @@ dd4hep::DetElement findAssemblyOrThrow(const BlueprintBuilder& builder,
   return *assemblyElement;
 }
 
+Acts::detail::BlueprintNodePtr customizeLayer(
+    const BlueprintBuilder& builder, const std::string& det,
+    const std::regex& layerFilter, Face barrelMaterialFace,
+    std::size_t barrelZBins, std::size_t endcapRBins,
+    const std::optional<dd4hep::DetElement>& elem,
+    Acts::detail::LayerNodePtr layer) {
+  layer->setEnvelope(detail::kLayerEnvelope);
+
+  const std::string elemName =
+      elem.has_value() ? builder.backend().nameOf(*elem) : layer->name();
+  const int layerIdx = detail::layerIndexFromName(elemName, layerFilter);
+
+  using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
+  using enum SrfArrayNavPol::LayerType;
+
+  SrfArrayNavPol::Config navCfg;
+  navCfg.envelope = detail::kLayerEnvelope;
+
+  auto matNode = std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
+      layer->name() + "_mat");
+
+  if (layer->layerType() == Acts::LayerBlueprintNode::LayerType::Cylinder) {
+    // Barrel layer
+    navCfg.layerType = Cylinder;
+    navCfg.bins = {builder.backend().constant("{}_b{}_sf_b_phi", det, layerIdx),
+                   builder.backend().constant("{}_b_sf_b_z", det)};
+
+    // Barrel: thin cylindrical shell -> one mantle face carries material.
+    // Which face (inner vs. outer) is a per-subsystem convention (Pixel
+    // uses outer, ShortStrips/LongStrips use inner) chosen so that no two
+    // radially-stacked layers independently claim the same fused portal.
+    configureCylinderFace(*matNode, barrelMaterialFace, kMatPhiBins,
+                          barrelZBins);
+  } else {
+    // Endcap layer
+    navCfg.layerType = Disc;
+    navCfg.bins = {builder.backend().constant("{}_e_sf_b_r", det),
+                   builder.backend().constant("{}_e_sf_b_phi", det)};
+
+    // Endcap: thin disc "pancake" -> both flat faces carry material
+    configureDiscFace(*matNode, Face::NegativeDisc, kMatPhiBins, endcapRBins);
+    configureDiscFace(*matNode, Face::PositiveDisc, kMatPhiBins, endcapRBins);
+  }
+
+  layer->setNavigationPolicyFactory(Acts::NavigationPolicyFactory{}
+                                        .add<Acts::CylinderNavigationPolicy>()
+                                        .add<SrfArrayNavPol>(navCfg)
+                                        .asUniquePtr());
+
+  matNode->addChild(std::move(layer));
+  return matNode;
+}
+
 auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
                          std::regex layerFilter, Face barrelMaterialFace,
                          std::size_t barrelZBins, std::size_t endcapRBins) {
-  return [&builder, det = std::move(det), layerFilter = std::move(layerFilter),
-          barrelMaterialFace, barrelZBins,
-          endcapRBins](const std::optional<dd4hep::DetElement>& elem,
-                       Acts::detail::LayerNodePtr layer)
-             -> Acts::detail::BlueprintNodePtr {
-    layer->setEnvelope(detail::kLayerEnvelope);
-
-    const std::string elemName =
-        elem.has_value() ? builder.backend().nameOf(*elem) : layer->name();
-    const int layerIdx = detail::layerIndexFromName(elemName, layerFilter);
-
-    using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
-    using enum SrfArrayNavPol::LayerType;
-
-    SrfArrayNavPol::Config navCfg;
-    navCfg.envelope = detail::kLayerEnvelope;
-
-    auto matNode = std::make_shared<Acts::MaterialDesignatorBlueprintNode>(
-        layer->name() + "_mat");
-
-    if (layer->layerType() == Acts::LayerBlueprintNode::LayerType::Cylinder) {
-      // Barrel layer
-      navCfg.layerType = Cylinder;
-      navCfg.bins = {
-          builder.backend().constant("{}_b{}_sf_b_phi", det, layerIdx),
-          builder.backend().constant("{}_b_sf_b_z", det)};
-
-      // Barrel: thin cylindrical shell -> one mantle face carries material.
-      // Which face (inner vs. outer) is a per-subsystem convention (Pixel
-      // uses outer, ShortStrips/LongStrips use inner) chosen so that no two
-      // radially-stacked layers independently claim the same fused portal.
-      configureCylinderFace(*matNode, barrelMaterialFace, kMatPhiBins,
-                            barrelZBins);
-    } else {
-      // Endcap layer
-      navCfg.layerType = Disc;
-      navCfg.bins = {builder.backend().constant("{}_e_sf_b_r", det),
-                     builder.backend().constant("{}_e_sf_b_phi", det)};
-
-      // Endcap: thin disc "pancake" -> both flat faces carry material
-      configureDiscFace(*matNode, Face::NegativeDisc, kMatPhiBins, endcapRBins);
-      configureDiscFace(*matNode, Face::PositiveDisc, kMatPhiBins, endcapRBins);
-    }
-
-    layer->setNavigationPolicyFactory(Acts::NavigationPolicyFactory{}
-                                          .add<Acts::CylinderNavigationPolicy>()
-                                          .add<SrfArrayNavPol>(navCfg)
-                                          .asUniquePtr());
-
-    matNode->addChild(std::move(layer));
-    return matNode;
-  };
+  return
+      [&builder, det = std::move(det), layerFilter = std::move(layerFilter),
+       barrelMaterialFace, barrelZBins, endcapRBins](
+          const std::optional<dd4hep::DetElement>& elem,
+          Acts::detail::LayerNodePtr layer) -> Acts::detail::BlueprintNodePtr {
+        return customizeLayer(builder, det, layerFilter, barrelMaterialFace,
+                              barrelZBins, endcapRBins, elem, std::move(layer));
+      };
 }
 
 // Beampipe material, identical across all three construction methods.
