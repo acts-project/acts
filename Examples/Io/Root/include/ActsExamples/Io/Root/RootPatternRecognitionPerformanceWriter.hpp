@@ -73,6 +73,10 @@ class RootPatternRecognitionPerformanceWriter final
     /// Allows e.g. to do pixel/strip only plots based on a list of volumes
     std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
 
+    /// Binning of the per-event track multiplicity histogram
+    Acts::Experimental::AxisVariant nTracksBinning =
+        PatternRecognitionPerformanceCollector::Config{}.nTracksBinning;
+
     /// Write additional matching details to a TTree
     bool writeMatchingDetails = false;
   };

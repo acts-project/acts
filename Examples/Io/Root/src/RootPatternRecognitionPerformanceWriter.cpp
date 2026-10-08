@@ -48,7 +48,7 @@ RootPatternRecognitionPerformanceWriter::
               m_cfg.label, m_cfg.effPlotToolConfig, m_cfg.fakePlotToolConfig,
               m_cfg.duplicationPlotToolConfig, m_cfg.trackSummaryPlotToolConfig,
               m_cfg.trackQualityPlotToolConfig,
-              m_cfg.subDetectorTrackSummaryVolumes},
+              m_cfg.subDetectorTrackSummaryVolumes, m_cfg.nTracksBinning},
           logger().clone()) {
   // tracks collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
@@ -156,6 +156,9 @@ ProcessCode RootPatternRecognitionPerformanceWriter::finalize() {
     for (const auto& [key, tool] : m_collector.subDetectorSummaryTools()) {
       writeTrackSummaryPlots(tool);
     }
+
+    // Write track multiplicity histogram
+    toRoot(m_collector.nTracksHistogram())->Write();
 
     // Write track quality histograms
     for (const auto& [name, prof] :
