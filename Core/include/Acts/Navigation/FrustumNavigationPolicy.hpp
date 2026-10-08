@@ -65,11 +65,12 @@ class FrustumNavigationPolicy : public INavigationPolicy {
 
   /// Update the navigation state
   /// @param gctx The geometry context
+  /// @param args The navigation arguments, position and direction
   /// @param state The navigation state for this policy
   /// @param stream The navigation stream to update
   /// @param logger The logger
   void initializeCandidates(const GeometryContext& gctx,
-                            const NavigationArguments& /*args*/,
+                            const NavigationArguments& args,
                             NavigationPolicyState& state,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const;

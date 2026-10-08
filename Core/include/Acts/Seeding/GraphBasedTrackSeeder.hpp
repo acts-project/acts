@@ -86,8 +86,8 @@ class GraphBasedTrackSeeder {
     bool useEtaBinning = true;
     /// Apply RZ cuts on doublets.
     bool doubletFilterRZ = true;
-    /// Maximum number of Gbts edges/doublets.
-    std::uint32_t nMaxEdges = 2000000;
+    /// Maximum number of Gbts edges/doublets per space point.
+    float maxEdgesPerSP = 30.0f;
     /// Minimum delta radius between layers.
     float minDeltaRadius = 2.0 * Acts::UnitConstants::mm;
     /// Largest |cot(theta)| accepted for a doublet. The default corresponds to

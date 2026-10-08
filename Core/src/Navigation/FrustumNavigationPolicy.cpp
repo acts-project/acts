@@ -61,18 +61,20 @@ FrustumNavigationPolicy::FrustumNavigationPolicy(const GeometryContext &gctx,
 }
 
 void FrustumNavigationPolicy::initializeCandidates(
-    const GeometryContext & /*gctx*/, const NavigationArguments &args,
+    const GeometryContext &gctx, const NavigationArguments &args,
     NavigationPolicyState &state, AppendOnlyNavigationStream &stream,
     const Logger &logger) const {
   ACTS_VERBOSE("FrustumNavigationPolicy Candidates initialization for volume "
                << m_id);
   auto &s = state.as<State>();
+  // Reset the frustum from the NavigationArguments
   s.frustum = Frustum3(args.position, args.direction, s.openingAngle);
-
-  ACTS_VERBOSE("Frustum origin " << s.frustum.origin() << ", frustum dir "
-                                 << s.frustum.dir());
+  ACTS_DEBUG("Frustum origin " << s.frustum.origin() << ", frustum dir "
+                               << s.frustum.dir());
+  Frustum3 frustum = s.frustum;
   Acts::BoundingBoxHierarchy::visitIntersecting(
-      s.frustum, m_topBox, [this, &stream, &logger](const Volume &entity) {
+      frustum, m_topBox,
+      [this, &gctx, &stream, &logger, &frustum](const Volume &entity) {
         const TrackingVolume *tvol =
             dynamic_cast<const TrackingVolume *>(&entity);
         ACTS_VERBOSE("Get portals from volume " << tvol->volumeName());
@@ -118,8 +120,8 @@ void FrustumNavigationPolicy::createState(
     NavigationPolicyStateManager &stateManager, const Logger &logger) const {
   ACTS_DEBUG("create FrustumNavigationPolicy state");
   auto &s = stateManager.pushState<State>();
-  s.frustum = Frustum3(args.position, args.direction, std::numbers::pi / 4);
   s.openingAngle = std::numbers::pi / 4;
+  s.frustum = Frustum3(args.position, args.direction, s.openingAngle);
 }
 
 void FrustumNavigationPolicy::popState(

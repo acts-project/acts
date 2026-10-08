@@ -476,6 +476,7 @@ def addSeeding(
                 layerMappingConfigFile,
                 connectorInputConfigFile,
                 lutInputConfigFile,
+                outputSeeds=f"{prefix}seeds",
             )
         elif seedingAlgorithm == SeedingAlgorithm.HashingPrototype:
             logger.info("Using Hashing seeding")
@@ -1461,6 +1462,7 @@ def addGbtsSeeding(
     layerMappingConfigFile: Union[Path, str] = None,
     connectorInputConfigFile: Union[Path, str] = None,
     lutInputConfigFile: Optional[Union[Path, str]] = None,
+    outputSeeds: str = "seeds",
 ):
     """Gbts seeding"""
 
@@ -1477,7 +1479,7 @@ def addGbtsSeeding(
     seedingAlg = acts.examples.GraphBasedSeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=spacePoints,
-        outputSeeds="seeds",
+        outputSeeds=outputSeeds,
         seedFinderConfig=seedFinderConfig,
         layerMappingFile=layerMappingFile,
         connectorInputFile=connectorInputFileStr,
