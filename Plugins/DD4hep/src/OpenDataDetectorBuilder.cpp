@@ -12,6 +12,7 @@
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintOptions.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
@@ -28,6 +29,7 @@
 #include <memory>
 #include <optional>
 #include <regex>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -91,20 +93,13 @@ constexpr std::size_t kCaloCollectorDiscPhiBins = 36;
 // Short, stable label for a face, used to build a per-face material key (a
 // designator node can configure more than one face, e.g. the Solenoid's
 // Inner+Outer cylinder, or an endcap layer's Negative+PositiveDisc -- the
-// node's own name alone would not be unique in that case).
+// node's own name alone would not be unique in that case). Reuses the
+// existing Face stream operator (CylinderPortalShell::Face is just an alias
+// for CylinderVolumeBounds::Face) instead of duplicating the face names.
 std::string faceLabel(Face face) {
-  switch (face) {
-    case Face::NegativeDisc:
-      return "NegativeDisc";
-    case Face::PositiveDisc:
-      return "PositiveDisc";
-    case Face::OuterCylinder:
-      return "OuterCylinder";
-    case Face::InnerCylinder:
-      return "InnerCylinder";
-    default:
-      throw std::invalid_argument("faceLabel: unsupported face");
-  }
+  std::ostringstream oss;
+  oss << face;
+  return oss.str();
 }
 
 // Configures `face` as a cylinder mantle: bins in (RPhi, Z). Used wherever a
