@@ -61,12 +61,14 @@ FrustumNavigationPolicy::FrustumNavigationPolicy(const GeometryContext &gctx,
 }
 
 void FrustumNavigationPolicy::initializeCandidates(
-    const GeometryContext & /*gctx*/, const NavigationArguments & /*args*/,
+    const GeometryContext & /*gctx*/, const NavigationArguments &args,
     NavigationPolicyState &state, AppendOnlyNavigationStream &stream,
     const Logger &logger) const {
   ACTS_VERBOSE("FrustumNavigationPolicy Candidates initialization for volume "
                << m_id);
   auto &s = state.as<State>();
+  s.frustum = Frustum3(args.position, args.direction, s.openingAngle);
+
   ACTS_VERBOSE("Frustum origin " << s.frustum.origin() << ", frustum dir "
                                  << s.frustum.dir());
   Acts::BoundingBoxHierarchy::visitIntersecting(
