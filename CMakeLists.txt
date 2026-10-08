@@ -79,7 +79,7 @@ option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
 option(ACTS_USE_SYSTEM_MODULEMAPGRAPH "Use a system installation of ModuleMapGraph" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
+option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" OFF)
 option(ACTS_USE_SYSTEM_GBL "Use a system-provided General Broken Lines (GBL) from Mille" OFF)
 option(ACTS_USE_SYSTEM_MILLE "Use a system-provided Mille" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_MP2 "Use a system-provided Millepede-2" ${ACTS_USE_SYSTEM_LIBS})

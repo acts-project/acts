@@ -37,6 +37,8 @@ struct material_rod {
 
   /// Equality operator
   ///
+  /// @note: @c radius_in_X0 and @c radius_in_L0 are dependent quantities
+  ///
   /// @param rhs is the right hand side to be compared to
   DETRAY_HOST_DEVICE
   constexpr bool operator==(const material_rod<scalar_type>& rhs) const {

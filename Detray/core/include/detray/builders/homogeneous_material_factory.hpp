@@ -272,6 +272,8 @@ class homogeneous_material_factory final
   /// Clear old data
   DETRAY_HOST
   auto clear() -> void override {
+    base_factory::clear();
+
     m_links.clear();
     m_materials.clear();
     m_thickness.clear();
