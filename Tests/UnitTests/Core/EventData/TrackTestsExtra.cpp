@@ -16,9 +16,11 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Zip.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <numeric>
+#include <optional>
 
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;
@@ -460,6 +462,81 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
 
   for (const auto [e, ts] : zip(exp, t.trackStates())) {
     BOOST_CHECK_EQUAL(ts.jacobian(), BoundMatrix::Identity() * e);
+  }
+}
+
+// The reversal has no slot for the inverse of the old first jacobian. It
+// returns it, so a two-way stitch can put it on the state linked behind the
+// new tip.
+BOOST_AUTO_TEST_CASE(ReverseTrackStatesStitchJacobian) {
+  VectorTrackContainer vtc{};
+  VectorMultiTrajectory mtj{};
+  TrackContainer tc{vtc, mtj};
+
+  auto jacobian = [](double scale) {
+    BoundMatrix jac = BoundMatrix::Identity() * scale;
+    jac(eBoundLoc0, eBoundPhi) = 0.5 * scale;
+    return jac;
+  };
+
+  // The first pass: the first state carries the transport from the seed
+  auto first = tc.makeTrack();
+  for (std::size_t i = 0; i < 3; i++) {
+    first.appendTrackState().jacobian() = jacobian(2.0 + i);
+  }
+  first.linkForward();
+  auto firstMeasurement = first.innermostTrackState().value();
+
+  // The second pass starts at the first measurement and runs away from it.
+  // Its first state carries the transport from the first measurement.
+  auto second = tc.makeTrack();
+  for (std::size_t i = 0; i < 3; i++) {
+    second.appendTrackState().jacobian() = jacobian(5.0 + i);
+  }
+  second.linkForward();
+  const BoundMatrix secondStart = second.innermostTrackState()->jacobian();
+
+  // An empty track and a reversal without inversion return nothing
+  BOOST_CHECK(!tc.makeTrack().reverseTrackStates(true).has_value());
+  BOOST_CHECK(!first.reverseTrackStates().has_value());
+  first.reverseTrackStates();
+
+  std::optional<BoundMatrix> stitch = second.reverseTrackStates(true);
+  BOOST_REQUIRE(stitch.has_value());
+  CHECK_CLOSE_ABS(*stitch, secondStart.inverse(), 1e-12);
+
+  // Stitch the reversed second pass behind the first measurement
+  firstMeasurement.previous() = second.outermostTrackState().index();
+  firstMeasurement.jacobian() = *stitch;
+
+  // Every state now carries the transport from its previous state. The
+  // stem's slot is unused and zero.
+  std::vector<BoundMatrix> expected = {
+      jacobian(4.0),           jacobian(3.0),           jacobian(5.0).inverse(),
+      jacobian(6.0).inverse(), jacobian(7.0).inverse(), BoundMatrix::Zero()};
+  std::vector<BoundMatrix> actual;
+  tc.trackStateContainer().visitBackwards(
+      first.tipIndex(),
+      [&](const auto& ts) { actual.push_back(ts.jacobian()); });
+  BOOST_REQUIRE_EQUAL(actual.size(), expected.size());
+  for (const auto [exp, act] : zip(expected, actual)) {
+    CHECK_CLOSE_ABS(act, exp, 1e-12);
+  }
+
+  // Reversing the stitched track again restores the second pass jacobians
+  // and inverts the first pass ones. The old stem carried a zero jacobian,
+  // so there is nothing to return.
+  BOOST_CHECK(!first.reverseTrackStates(true).has_value());
+  expected = {jacobian(7.0),           jacobian(6.0),
+              jacobian(5.0),           jacobian(3.0).inverse(),
+              jacobian(4.0).inverse(), BoundMatrix::Zero()};
+  actual.clear();
+  tc.trackStateContainer().visitBackwards(
+      first.tipIndex(),
+      [&](const auto& ts) { actual.push_back(ts.jacobian()); });
+  BOOST_REQUIRE_EQUAL(actual.size(), expected.size());
+  for (const auto [exp, act] : zip(expected, actual)) {
+    CHECK_CLOSE_ABS(act, exp, 1e-12);
   }
 }
 
