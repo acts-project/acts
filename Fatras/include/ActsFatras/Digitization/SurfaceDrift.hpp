@@ -52,6 +52,11 @@ struct SurfaceDrift {
   ///                 (plane/disc: local x, y, normal; cylinder: tangential,
   ///                 axial, radial). A direction with no perpendicular
   ///                 component emulates a 3D pixel sensor / no Lorentz drift.
+  /// @param limitCylinderPathToChord On a cylinder, limit the segment length to
+  ///                 the longest straight chord through the curved layer,
+  ///                 2 sqrt(2 R thickness). The unrolled frame is flat, so
+  ///                 there the path thickness / |cos(incidence)| has no bound
+  ///                 for (almost) tangential directions.
   ///
   /// @note The readout is always emulated at the central surface,
   /// as the mask will be deployed there, and the measurement is
@@ -63,7 +68,8 @@ struct SurfaceDrift {
   Acts::Result<std::tuple<Segment2D, Segment3D>> toReadout(
       const Acts::GeometryContext& gctx, const Acts::Surface& surface,
       double thickness, const Acts::Vector3& pos, const Acts::Vector3& dir,
-      const Acts::Vector3& driftDir = Acts::Vector3(0., 0., 0.)) const;
+      const Acts::Vector3& driftDir = Acts::Vector3(0., 0., 0.),
+      bool limitCylinderPathToChord = false) const;
 };
 
 }  // namespace ActsFatras
