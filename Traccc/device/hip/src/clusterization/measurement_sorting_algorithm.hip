@@ -123,6 +123,10 @@ measurement_sorting_algorithm::operator()(
                      stream, measurements_view, result, indices);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
 
+  // The keys and indices buffers are released on return, so the kernels
+  // using them must have finished by then.
+  m_stream.synchronize();
+
   // Return the sorted buffer.
   return result;
 }

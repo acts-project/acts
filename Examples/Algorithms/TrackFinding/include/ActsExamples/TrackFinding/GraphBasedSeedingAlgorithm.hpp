@@ -84,6 +84,12 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// z0 range the eta bin table is built against
     Acts::Experimental::GbtsZ0Range gbtsZ0Range;
 
+    /// the region of interest along the beam line. Overrides
+    /// `seedFinderConfig.minZ0` and `maxZ0`.
+    float collisionRegionMin = -150. * Acts::UnitConstants::mm;
+    /// See @ref collisionRegionMin
+    float collisionRegionMax = 150. * Acts::UnitConstants::mm;
+
     /// holds detector information, used to make the geometry objects used by
     /// GBTS
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;

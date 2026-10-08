@@ -94,7 +94,8 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // set to entire detector
   // for pixel seeding, roi z bounds are used
 
-  m_internalRoi.emplace(-4.5, 4.5, -150., 150.);
+  m_internalRoi.emplace(-4.5, 4.5, m_cfg.collisionRegionMin,
+                        m_cfg.collisionRegionMax);
   m_cfg.seedFinderConfig.maxZ0 = m_internalRoi->zMax();
   m_cfg.seedFinderConfig.minZ0 = m_internalRoi->zMin();
 
@@ -325,6 +326,8 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("connectorInputFile: " << m_cfg.connectorInputFile);
   ACTS_DEBUG("lutInputFile: " << m_cfg.lutInputFile);
   ACTS_DEBUG("etaBinWidth: " << m_cfg.etaBinWidth);
+  ACTS_DEBUG("collisionRegionMin: " << m_cfg.collisionRegionMin);
+  ACTS_DEBUG("collisionRegionMax: " << m_cfg.collisionRegionMax);
   ACTS_DEBUG("===== GraphBasedTrackSeeder =====");
   const auto &cfg1 = m_cfg.seedFinderConfig;
   ACTS_DEBUG("BeamSpotCorrection: " << cfg1.beamSpotCorrection);
@@ -337,7 +340,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("minPt: " << cfg1.minPt);
   ACTS_DEBUG("useEtaBinning: " << cfg1.useEtaBinning);
   ACTS_DEBUG("doubletFilterRZ: " << cfg1.doubletFilterRZ);
-  ACTS_DEBUG("nMaxEdges: " << cfg1.nMaxEdges);
+  ACTS_DEBUG("maxEdgesPerSP: " << cfg1.maxEdgesPerSP);
   ACTS_DEBUG("minDeltaRadius: " << cfg1.minDeltaRadius);
   ACTS_DEBUG("edgeMaskMinEta: " << cfg1.edgeMaskMinEta);
   ACTS_DEBUG("hitShareThreshold: " << cfg1.hitShareThreshold);
