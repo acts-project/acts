@@ -131,7 +131,6 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
   }
 }
 
-// TODO: fix the extractSeedsFromGraph function
 void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     const GbtsNodeStorage& nodeStorage,
     std::vector<detail::GbtsEdge>& edgeStorage,
