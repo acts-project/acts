@@ -16,6 +16,25 @@
 
 namespace Acts::KalmanVertexUpdater::detail {
 
+/// Weight matrix G_k of the track parameters that enter the vertex fit, i.e.
+/// the inverse covariance of the bound parameters at the PCA: all of them if
+/// time is fitted, all but time otherwise. Both are computed once by the
+/// linearizer, so no matrix is inverted here.
+/// @tparam nBoundParams number of fitted bound parameters (5 or 6)
+/// @param linTrack the linearized track
+/// @return the weight matrix of the fitted bound parameters
+template <unsigned int nBoundParams>
+const SquareMatrix<nBoundParams>& trackParameterWeight(
+    const LinearizedTrack& linTrack) {
+  static_assert(nBoundParams == eBoundSize || nBoundParams == eBoundSize - 1,
+                "Either all bound parameters or all but time are fitted");
+  if constexpr (nBoundParams == eBoundSize) {
+    return linTrack.weightAtPCA;
+  } else {
+    return linTrack.weightAtPCAWithoutTime;
+  }
+}
+
 /// Cache object, the comments indicate the names of the variables in Ref. (1)
 /// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
 /// fit its spatial coordinates) or 4 (if we also fit time).
@@ -69,8 +88,6 @@ void calculateUpdate(const Vertex& vtx, const Acts::LinearizedTrack& linTrack,
       linTrack.parametersAtPCA.head<nBoundParams>();
   // c_k
   const ParameterVector constTerm = linTrack.constantTerm.head<nBoundParams>();
-  // TODO we could use `linTrack.weightAtPCA` but only if we would always fit
-  // time.
   // G_k
   // Note that, when removing a track, G_k -> - G_k, see Ref. (1).
   // Further note that, as we use the weighted formalism, the track weight
@@ -78,9 +95,8 @@ void calculateUpdate(const Vertex& vtx, const Acts::LinearizedTrack& linTrack,
   // with the track weight from the AMVF formalism. Here, we choose to
   // consider these two multiplicative factors directly in the updates of
   // newVertexWeight and newVertexPos.
-  const ParameterMatrix trkParamWeight =
-      linTrack.covarianceAtPCA.block<nBoundParams, nBoundParams>(0, 0)
-          .inverse();
+  const ParameterMatrix& trkParamWeight =
+      trackParameterWeight<nBoundParams>(linTrack);
 
   // Retrieve current position of the vertex and its current weight matrix
   const Vector<nDimVertex> oldVtxPos =
@@ -139,12 +155,9 @@ double trackParametersChi2(const LinearizedTrack& linTrack,
       linTrack.parametersAtPCA.head<nBoundParams>();
   // c_k
   const ParameterVector constTerm = linTrack.constantTerm.head<nBoundParams>();
-  // TODO we could use `linTrack.weightAtPCA` but only if we would always fit
-  // time.
   // G_k
-  const ParameterMatrix trkParamWeight =
-      linTrack.covarianceAtPCA.block<nBoundParams, nBoundParams>(0, 0)
-          .inverse();
+  const ParameterMatrix& trkParamWeight =
+      trackParameterWeight<nBoundParams>(linTrack);
 
   // A_k * \tilde{x_k}
   const ParameterVector posJacVtxPos = posJac * cache.newVertexPos;
@@ -331,12 +344,9 @@ void updateTrackWithVertexImpl(TrackAtVertex& track, const Vertex& vtx) {
       linTrack.parametersAtPCA.head<nBoundParams>();
   // c_k
   const ParameterVector constTerm = linTrack.constantTerm.head<nBoundParams>();
-  // TODO we could use `linTrack.weightAtPCA` but only if we would always fit
-  // time.
   // G_k
-  const ParameterMatrix trkParamWeight =
-      linTrack.covarianceAtPCA.block<nBoundParams, nBoundParams>(0, 0)
-          .inverse();
+  const ParameterMatrix& trkParamWeight =
+      trackParameterWeight<nBoundParams>(linTrack);
 
   // Cache object filled with zeros
   Cache<nDimVertex> cache;
