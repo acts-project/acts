@@ -70,9 +70,9 @@ path = "README.md"
 end-before = "## Quick start"
 
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
-path = "docs/groups/python_bindings.md"
-start-at = "# Installation from PyPI"
-end-before = "# Building from source"
+path = "docs/groups/python/index.md"
+start-at = "# Installation"
+end-before = "# Getting started"
 
 # Drop development-status badges that are not relevant for PyPI users
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
@@ -82,8 +82,8 @@ replacement = ""
 # Adapt the docs section: nest it below the README title and replace GitHub
 # alerts, which PyPI renders literally
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
-pattern = '(?m)^# Installation from PyPI'
-replacement = "## Installation from PyPI"
+pattern = '(?m)^# Installation'
+replacement = "## Installation"
 
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
 pattern = '> \[!warning\]'
