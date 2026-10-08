@@ -154,7 +154,12 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
 
   std::uint32_t nConnections = 0;
 
-  edgeStorage.reserve(m_cfg.nMaxEdges);
+  // Scales the maximum number of edges by the number of space points using the
+  // factor maxEdgesPerSP
+  const auto maxEdges = static_cast<std::size_t>(
+      m_cfg.maxEdgesPerSP * static_cast<float>(nodeStorage.numberOfNodes()));
+
+  edgeStorage.reserve(maxEdges);
 
   std::uint32_t nEdges = 0;
 
@@ -456,7 +461,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float dPhi2 = curv * r2c;
           const float dPhi1 = curv * r1c;
 
-          if (nEdges < m_cfg.nMaxEdges) {
+          if (nEdges < maxEdges) {
             edgeStorage.emplace_back(n1Idx, n2Idx, barrelOrder2, expEta, curv,
                                      phi1 + dPhi1);
 
@@ -595,7 +600,7 @@ std::pair<std::uint32_t, std::uint32_t> GraphBasedTrackSeeder::buildTheGraph(
     }  // loop over n1 (inner) nodes
   }  // loop over bin groups: a single n1 bin and multiple n2 bins
 
-  if (nEdges >= m_cfg.nMaxEdges) {
+  if (nEdges >= maxEdges) {
     ACTS_WARNING(
         "Maximum number of graph edges exceeded - possible efficiency loss "
         << nEdges);
