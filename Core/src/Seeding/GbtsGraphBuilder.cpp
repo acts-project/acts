@@ -796,10 +796,6 @@ std::vector<detail::GbtsEdge*> GbtsGraph::extractChainHeads(
     vChainHeads.push_back(pS);
   }
 
-  if (vChainHeads.empty()) {
-    return vChainHeads;
-  }
-
   std::ranges::sort(vChainHeads, std::ranges::greater{},
                     [](const detail::GbtsEdge* e) { return e->level; });
 
