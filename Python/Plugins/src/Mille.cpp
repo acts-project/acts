@@ -8,9 +8,11 @@
 
 #include "ActsPlugins/Mille/MillePedeResultReader.hpp"
 #include "ActsPlugins/Mille/MillePedeSolver.hpp"
+#include "ActsPlugins/Mille/MillePedeSteering.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
+#include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
@@ -48,5 +50,37 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
                  .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, label, val, start, delta, sigma, nRecords);
+  }
+  {
+    using enum ActsPlugins::MillePedeSolutionStrategy;
+    mille.def("generateMillePedeSteeringFile",
+              &ActsPlugins::generateMillePedeSteeringFile);
+
+    auto e = py::class_<ActsPlugins::MillePedeEqualityConstraint>(
+                 mille, "MillePedeEqualityConstraint")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT(e, labelsAndWeights, constraint);
+
+    auto s = py::enum_<ActsPlugins::MillePedeSolutionStrategy>(
+                 mille, "MillePedeSolutionStrategy")
+                 .value("Inversion", Inversion)
+                 .value("Diagonalization", Diagonalization)
+                 .value("Decomposition", Decomposition)
+                 .value("FullMinRes", FullMinRes)
+                 .value("SparseMinRes", SparseMinRes)
+                 .value("FullMinResQlp", FullMinResQlp)
+                 .value("SparseMinResQlp", SparseMinResQlp)
+                 .value("FullLapack", FullLapack)
+                 .value("UnpackedLapack", UnpackedLapack)
+                 .value("SparsePardiso", SparsePardiso);
+
+    auto c = py::class_<ActsPlugins::MillePedeSteeringConfig>(
+                 mille, "MillePedeSteeringConfig")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, strategy, minIterations, convergenceLimit, entriesCut,
+                       outlierDownweighting, downweightFractionCut, nOMPthreads,
+                       nIOthreads, matIter, printCounts, chi2Cut,
+                       monitorResiduals, monitorPulls, skipEmptyCons,
+                       countRecords, extraLines, constraints, inputFiles);
   }
 }
