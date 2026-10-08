@@ -31,7 +31,7 @@ designated and so skips step 1:
 ```console
 python material_recording.py -n 1000 -t 1000 -o odd_material_geant4
 python material_mapping.py -n 1000000 -i odd_material_geant4.root -o odd_material
-python material_validation.py -n 1000 -t 1000 -m odd_material_map.root -o odd_material_validated -p
+python material_validation.py -n 1000 -t 1000 -m odd_material_map.json -o odd_material_validated -p
 ```
 
 > [!tip]
@@ -331,10 +331,20 @@ Outputs:
 | File | Contents |
 |---|---|
 | `mydet_material_map.json` | the material map, human-readable |
-| `mydet_material_map.root` | the same map, for production use |
+| `mydet_material_map.root` | the same map, for production use — **Gen1 only, see below** |
 | `mydet_material_mapped.root` | recorded interactions that found a surface |
 | `mydet_material_unmapped.root` | recorded interactions that did not |
 | `mydet_material_eta_distance.svg` | diagnostic plot: mapping distance vs. η |
+
+> [!important]
+> **On Gen3, `_map.root` is not written at all.** Gen3 faces carry stable
+> material keys (see @ref material_mapping_stable_keys "above"), and the ROOT
+> material-map writer rejects any map containing keyed surfaces
+> (`Plugins/Root/src/RootMaterialMapIo.cpp`) — Gen3 maps are JSON-only.
+> `material_mapping.py` sets this automatically
+> (`outputMapFormats = ["json"] if gen3 else ["json", "root"]`), so if you omit
+> `--gen1`, pass the resulting `_map.json` to `--matconfig`/your own decorator,
+> not `_map.root`. Gen1 never sets keys, so `.root` stays available there.
 
 `_unmapped.root` is the one to look at when something is wrong. A large unmapped
 fraction means the material had nowhere to go — see
@@ -373,14 +383,20 @@ once construction has finished and geometry identifiers are assigned
 (`Examples/Detectors/DD4hepDetector/src/OpenDataDetector.cpp`), replacing the
 designated proto material in place. Unlike Gen1, there is no default material
 map for the Gen3 ODD — it is only applied when a decorator is explicitly passed
-in, since the shipped `data/odd-material-maps.root` is keyed by Gen1 geometry
-identifiers and cannot be resolved against the Gen3 geometry's stable keys.
+in. The shipped `data/odd-material-maps.root` cannot be used for this: it is an
+*unkeyed* map, indexed by the Gen1 geometry's own identifiers, while Gen3
+requires a matching keyed entry for every designated face and has no ID
+fallback (see @ref material_mapping_stable_keys "above") — applying it raises
+`Missing material for key '...'`. To get a map that actually works for Gen3,
+run @ref material_mapping_howto "steps 2-3" above (`material_recording.py` +
+`material_mapping.py`, both default to Gen3) to produce a fresh `_map.json`,
+and pass that.
 
 ## Step 5: validate
 
 ```console
 python Examples/Scripts/Python/material_validation.py \
-    -n 1000 -t 1000 -m mydet_material_map.root -o mydet_validated -p
+    -n 1000 -t 1000 -m mydet_material_map.json -o mydet_validated -p
 ```
 
 This re-records material, now from your mapped map instead of from Geant4, so
