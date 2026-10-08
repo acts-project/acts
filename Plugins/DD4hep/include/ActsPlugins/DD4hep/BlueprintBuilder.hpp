@@ -136,7 +136,7 @@ class DD4hepBackend {
   ///        both named "PixelEndplate" in DD4hep).
   /// @return Shared pointer to the generated blueprint node.
   std::shared_ptr<Acts::StaticBlueprintNode> makePassiveElement(
-      const Element& element, std::string volumeName = {}) const;
+      const Element& element, const std::string& volumeName = {}) const;
 
   /// Create a static blueprint node for a synthetic material-collector
   /// volume: a plain tube or annular disc with explicit bounds and no

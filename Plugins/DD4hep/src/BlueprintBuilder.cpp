@@ -190,7 +190,7 @@ std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makeBeampipe() const {
 }
 
 std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makePassiveElement(
-    const Element& element, std::string volumeName) const {
+    const Element& element, const std::string& volumeName) const {
   const auto tgTransform = element.nominal().worldTransformation();
   const auto& shape = *element.placement().ptr()->GetVolume()->GetShape();
   const auto* rotation = tgTransform.GetRotationMatrix();
