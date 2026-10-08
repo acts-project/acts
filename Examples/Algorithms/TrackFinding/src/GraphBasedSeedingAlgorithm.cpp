@@ -341,6 +341,10 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("maxEndcapClusterWidth: " << cfg1.maxEndcapClusterWidth);
   ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);
   ACTS_DEBUG("maxInvRadDiff: " << cfg1.maxInvRadDiff);
+  ACTS_DEBUG("ccaMaxIterations: " << cfg1.ccaMaxIterations);
+  ACTS_DEBUG("minSeedLevel: " << static_cast<std::uint32_t>(cfg1.minSeedLevel));
+  ACTS_DEBUG("addTriplets: " << cfg1.addTriplets);
+  ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg1.maxAbsEtaAddTriplets);
   ACTS_DEBUG("=====GbtsGraphBuilder=====");
   const auto &cfg2 = m_cfg.graphConfig;
   ACTS_DEBUG("matchBeforeCreate: " << cfg2.matchBeforeCreate);
@@ -360,9 +364,6 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("minZ0: " << cfg2.minZ0);
   ACTS_DEBUG("maxZ0: " << cfg2.maxZ0);
   ACTS_DEBUG("maxOuterRadius: " << cfg2.maxOuterRadius);
-  ACTS_DEBUG("minSeedLevel: " << static_cast<std::uint32_t>(cfg2.minSeedLevel));
-  ACTS_DEBUG("addTriplets: " << cfg2.addTriplets);
-  ACTS_DEBUG("maxAbsEtaAddTriplets: " << cfg2.maxAbsEtaAddTriplets);
   ACTS_DEBUG("===== GbtsTrackFilter =====");
   const auto &cfg3 = m_cfg.trackingFilterConfig;
   ACTS_DEBUG("sigmaMS: " << cfg3.sigmaMS);

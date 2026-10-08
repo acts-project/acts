@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <numbers>
 #include <span>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -188,7 +189,19 @@ GbtsGraphBuilder::GbtsGraphBuilder(const Config& config,
                                    std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(config),
       m_geometry(std::move(geometry)),
-      m_logger(std::move(logger)) {}
+      m_logger(std::move(logger)) {
+  // buildTheGraph pre-computes the loosest tau ratio threshold it can apply,
+  // which assumes the corrections only ever widen the cut.
+  if (m_cfg.tauRatioCorr < 0) {
+    throw std::invalid_argument(
+        "GbtsGraphBuilder: tauRatioCorr must not be negative");
+  }
+
+  if (m_cfg.tauRatioCorrStrip < 0) {
+    throw std::invalid_argument(
+        "GbtsGraphBuilder: tauRatioCorrStrip must not be negative");
+  }
+}
 
 GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
                                           GbtsNodeStorage& nodeStorage,
@@ -216,7 +229,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
 
   // the default sliding window along phi. Taken from the node storage so that
   // the windows and the phi indexing they slide over cannot disagree.
-  const float deltaPhi0 = 0.5f * nodeStorage.m_cfg.phiSliceWidth;
+  const float deltaPhi0 = 0.5f * nodeStorage.config().phiSliceWidth;
 
   std::uint32_t nConnections = 0;
 

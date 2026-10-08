@@ -189,26 +189,6 @@ class GbtsGraphBuilder {
     /// multiple of the strip half-length, so 1 is the strip itself. This is the
     /// same quantity as `TripletSeedFinder::Config::toleranceParam`.
     float maxStripLengthFraction = 1.1f;
-
-    /// Maximum number of connected-component iterations.
-    std::uint32_t ccaMaxIterations = 15;
-
-    // Chain selection options, shared with the seed extraction that reads the
-    // chains back out of the graph.
-
-    /// Chain length a seed candidate must reach: a triplet plus one
-    /// confirmation.
-    std::uint8_t minSeedLevel = 3;
-
-    /// optionally add 3 sp seeds within a certain eta range
-    ///
-    /// @note Worth little until `maxAbsEtaAddTriplets` is opened past
-    ///       `edgeMaskMinEta`; matters most where there are few layers.
-    bool addTriplets = false;
-
-    /// the maximum allowed eta value in which
-    /// three spacepoint seeds are passed through
-    float maxAbsEtaAddTriplets = 1.5;
   };
 
   /// @param config Configuration for the graph
@@ -220,8 +200,7 @@ class GbtsGraphBuilder {
                        Acts::getDefaultLogger("GbtsGraphBuilder",
                                               Acts::Logging::Level::INFO));
 
-  /// Access the configuration, which also carries the chain selection that
-  /// seed extraction has to agree with.
+  /// Access the configuration.
   /// @return The configuration
   const Config& config() const { return m_cfg; }
 
@@ -229,7 +208,7 @@ class GbtsGraphBuilder {
   /// @param roi Region of interest descriptor
   /// @param nodeStorage Data storage containing nodes
   /// @param bFieldInZ Magnetic field in z, in GeV/(e*mm)
-  /// @return The graph, with its edges and their edge and link counts
+  /// @return The graph, with its edges and their link counts
   GbtsGraph buildTheGraph(const GbtsRoiDescriptor& roi,
                           GbtsNodeStorage& nodeStorage, float bFieldInZ) const;
 

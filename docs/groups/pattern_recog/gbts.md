@@ -274,18 +274,14 @@ The cuts that build and link the doublets live on
 | `maxEdgesPerSP` | @ref gbts-graph | cap on the edge array per space point (30 by default); exceeding it costs efficiency |
 | `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxBarrelOrder` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
 | `z0HistogramMaxBarrelOrder`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that depth in the pixel barrel |
-| `ccaMaxIterations` | @ref gbts-graph | cap on the connected component iterations |
-| `minSeedLevel` | @ref gbts-extraction | chain length a candidate must reach |
-| `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
-
-The graph applies the last three when it picks the chain heads, so they sit
-with the graph rather than with the seeder that reads those chains back out.
-
 The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
 
 | Option | Stage | Effect |
 | --- | --- | --- |
 | `nMaxPhiSlice` | @ref gbts-nodes | sets the @f$\phi@f$ slice width, and with it the base sliding-window width the graph uses |
+| `ccaMaxIterations` | @ref gbts-graph | cap on the connected component iterations |
+| `minSeedLevel` | @ref gbts-extraction | chain length a candidate must reach |
+| `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
 | `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |
 | `useClusterWidthCuts`, `tauLookupTable` | @ref gbts-ml | cluster-width based @f$\tau@f$ windows |
