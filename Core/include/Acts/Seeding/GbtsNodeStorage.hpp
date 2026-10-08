@@ -36,33 +36,13 @@ class GbtsGraphBuilder;
 /// then orders the nodes by (eta bin, phi) into a space point container, with
 /// the derived per-node data in dynamic columns on that container.
 class GbtsNodeStorage final {
+  // Declared here so the public accessor can return it; defined privately
+  // below.
+  struct Config;
+
  public:
   /// Maximum `Config::phiSortBuckets`; sizes the fixed bucket array.
   static constexpr std::uint32_t kMaxPhiSortBuckets = 31;
-
-  /// Configuration for node loading.
-  struct Config {
-    /// Enable the cluster width cuts: wide endcap rejection and tau narrowing.
-    bool useClusterWidthCuts = false;
-    /// Maximum endcap cluster width, applied to pixel endcap nodes when
-    /// the cluster width cuts are enabled.
-    float maxEndcapClusterWidth = 0.35f;
-    /// Half-length in local y of a pixel module, against which the distance of
-    /// a cluster to the module edge is measured.
-    float moduleHalfLengthY = 10.f;
-    /// Distance to the module edge below which a cluster may be shortened,
-    /// which switches to the tau lookup table's near-edge bounds.
-    float moduleEdgeTolerance = 0.3f;
-    /// Width of the phi slice used to build the phi indexing.
-    float phiSliceWidth = 0.f;
-    /// Multiples of `phiSliceWidth` duplicated either side of the wrap-around,
-    /// so a sliding window never has to wrap.
-    float phiIndexMargin = 1.5f;
-    /// Buckets used to sort a bin by phi, at most `kMaxPhiSortBuckets`.
-    std::uint32_t phiSortBuckets = 31;
-    /// Cluster width covered by one bin of the tau lookup table.
-    float tauLutBinWidth = 0.05f;
-  };
 
   /// Filled storage is not relocatable: the column proxies point into the
   /// space point container held by value.
@@ -167,6 +147,30 @@ class GbtsNodeStorage final {
   // Only the seeder builds one, and only it and the graph walk the nodes.
   friend class GraphBasedTrackSeeder;
   friend class GbtsGraphBuilder;
+
+  /// Configuration for node loading.
+  struct Config {
+    /// Enable the cluster width cuts: wide endcap rejection and tau narrowing.
+    bool useClusterWidthCuts = false;
+    /// Maximum endcap cluster width, applied to pixel endcap nodes when
+    /// the cluster width cuts are enabled.
+    float maxEndcapClusterWidth = 0.35f;
+    /// Half-length in local y of a pixel module, against which the distance of
+    /// a cluster to the module edge is measured.
+    float moduleHalfLengthY = 10.f;
+    /// Distance to the module edge below which a cluster may be shortened,
+    /// which switches to the tau lookup table's near-edge bounds.
+    float moduleEdgeTolerance = 0.3f;
+    /// Width of the phi slice used to build the phi indexing.
+    float phiSliceWidth = 0.f;
+    /// Multiples of `phiSliceWidth` duplicated either side of the wrap-around,
+    /// so a sliding window never has to wrap.
+    float phiIndexMargin = 1.5f;
+    /// Buckets used to sort a bin by phi, at most `kMaxPhiSortBuckets`.
+    std::uint32_t phiSortBuckets = 31;
+    /// Cluster width covered by one bin of the tau lookup table.
+    float tauLutBinWidth = 0.05f;
+  };
 
   /// @param config Node loading configuration
   /// @param geometry Shared pointer to GBTS geometry
