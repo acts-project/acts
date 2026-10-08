@@ -93,6 +93,8 @@ EXCLUDE_FILES = (
     # Python uv files
     "Detray/codegen/detray-sympy/uv.lock",
     "Detray/python/detray/uv.lock",
+    # Generated PyPI readme, checked by CI/check_pypi_readme.py
+    "CI/pypi_readme.md",
     # TODO: remove after file is gone
     "Core/include/Acts/Utilities/ProtoAxisHelpers.hpp",
 )

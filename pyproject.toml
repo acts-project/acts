@@ -72,7 +72,23 @@ end-before = "## Quick start"
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
 path = "docs/groups/python/index.md"
 start-at = "# Installation"
-end-before = "# Getting started"
+end-before = "@snippet"
+
+# Resolve the Doxygen snippet of the "Getting started" section
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+text = "```python\n"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "docs/examples/test_python_getting_started.py"
+start-after = "#! [First Python run]\n"
+end-before = "    #! [First Python run]"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+text = "```\n"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "docs/groups/python/index.md"
+start-after = "First Python run\n"
 
 # Drop development-status badges that are not relevant for PyPI users
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
@@ -82,8 +98,13 @@ replacement = ""
 # Adapt the docs section: nest it below the README title and replace GitHub
 # alerts, which PyPI renders literally
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
-pattern = '(?m)^# Installation'
-replacement = "## Installation"
+pattern = '(?m)^# (Installation|Getting started)$'
+replacement = '## \1'
+
+# Dedent the snippet, which is nested in a test function
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '(?m)^    '
+replacement = ""
 
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
 pattern = '> \[!warning\]'
