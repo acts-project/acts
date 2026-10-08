@@ -15,12 +15,17 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/MultiAxisSpec.hpp"
 #include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
+#include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 #include "ActsPlugins/Json/detail/MaterialJsonContext.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -176,35 +181,77 @@ BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterialRoundTrip) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(ProtoSurfaceMaterialRoundTrip) {
-  ProtoSurfaceMaterial psm(testBinUtility2D(), MappingType::PreMapping);
-
-  nlohmann::json jMaterial = SurfaceMaterialJsonConverter::toJson(psm);
-  BOOST_CHECK_EQUAL(jMaterial["type"], "proto");
-  BOOST_CHECK_EQUAL(jMaterial["mapMaterial"], true);
-
-  auto read = roundTrip(psm);
-  BOOST_REQUIRE(read != nullptr);
-  const auto* typed = dynamic_cast<const ProtoSurfaceMaterial*>(read.get());
-  BOOST_REQUIRE(typed != nullptr);
-  BOOST_CHECK(typed->mappingType() == MappingType::PreMapping);
-  BOOST_CHECK(typed->binning() == psm.binning());
+BOOST_AUTO_TEST_CASE(LegacyProtoSurfaceMaterialReadOnly) {
+  using enum AxisDirection;
+  auto plane = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(10., 20.));
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20., 100.);
+  auto disc =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 10., 50.);
+  BinUtility cylindrical(4, -1., 1., closed, AxisPhi);
+  cylindrical += BinUtility(2, -1., 1., open, AxisZ);
+  BinUtility radial(3, 0., 1., open, AxisR);
+  radial += BinUtility(8, -1., 1., closed, AxisPhi);
+  std::vector<float> edges{-10., -5., 10.};
+  const std::vector<std::pair<BinUtility, std::shared_ptr<Surface>>> cases{
+      {BinUtility{}, plane},
+      {BinUtility(7, -1., 1., open, AxisX), plane},
+      {BinUtility(6, -1., 1., open, AxisY), plane},
+      {testBinUtility2D(), plane},
+      {cylindrical, cylinder},
+      {radial, disc},
+      {BinUtility(edges, open, AxisX), plane}};
+  for (const auto& [binning, surface] : cases) {
+    nlohmann::json legacy{{"type", "proto"},
+                          {"mapMaterial", true},
+                          {"mappingType", MappingType::PreMapping},
+                          {"material_key", "legacy/key"},
+                          {"binUtility", binning}};
+    auto material = SurfaceMaterialJsonConverter::fromJson(legacy);
+    const auto* proto =
+        dynamic_cast<const ProtoSurfaceMaterial*>(material.get());
+    BOOST_REQUIRE(proto != nullptr);
+    BOOST_CHECK(proto->mappingType() == MappingType::PreMapping);
+    BOOST_CHECK_EQUAL(*proto->materialKey(), "legacy/key");
+    const auto& specs = proto->binning();
+    BOOST_CHECK_EQUAL(specs.size(), 2u);
+    BOOST_CHECK(specs.isDeferred());
+    for (std::size_t i = 0; i < binning.binningData().size(); ++i) {
+      BOOST_CHECK_EQUAL(specs.axisSpec(i).nBins(), binning.bins(i));
+    }
+    BOOST_CHECK_NO_THROW(resolveMultiAxis(specs, *surface));
+    const auto rewritten = SurfaceMaterialJsonConverter::toJson(*proto);
+    BOOST_CHECK_EQUAL(rewritten["type"], "proto-grid");
+    BOOST_CHECK(!rewritten.contains("binUtility"));
+    auto reread = SurfaceMaterialJsonConverter::fromJson(rewritten);
+    BOOST_CHECK(dynamic_cast<const ProtoSurfaceMaterial&>(*reread).binning() ==
+                specs);
+  }
+  nlohmann::json missingBinning{{"type", "proto"}, {"mapMaterial", true}};
+  BOOST_CHECK(SurfaceMaterialJsonConverter::fromJson(missingBinning) !=
+              nullptr);
+  BinUtility threeAxes = testBinUtility2D();
+  threeAxes += BinUtility(2, -1., 1., open, AxisZ);
+  missingBinning["binUtility"] = threeAxes;
+  BOOST_CHECK_THROW(SurfaceMaterialJsonConverter::fromJson(missingBinning),
+                    std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(ProtoGridSurfaceMaterialRoundTrip) {
+BOOST_AUTO_TEST_CASE(ProtoSurfaceMaterialRoundTrip) {
   MultiAxisSpec2D spec{std::array<AxisSpec, 2u>{
       AxisSpec::Equidistant(4u, -1., 1., AxisBoundaryType::Bound,
                             AxisDirection::AxisX),
       AxisSpec::DeferredVariable({0., 0.25, 1.}, AxisBoundaryType::Bound,
                                  AxisDirection::AxisY)}};
-  ProtoGridSurfaceMaterial pgsm(spec, MappingType::PostMapping);
+  ProtoSurfaceMaterial pgsm(spec, MappingType::PostMapping);
 
   nlohmann::json jMaterial = SurfaceMaterialJsonConverter::toJson(pgsm);
   BOOST_CHECK_EQUAL(jMaterial["type"], "proto-grid");
 
   auto read = roundTrip(pgsm);
   BOOST_REQUIRE(read != nullptr);
-  const auto* typed = dynamic_cast<const ProtoGridSurfaceMaterial*>(read.get());
+  const auto* typed = dynamic_cast<const ProtoSurfaceMaterial*>(read.get());
   BOOST_REQUIRE(typed != nullptr);
   BOOST_CHECK(typed->mappingType() == MappingType::PostMapping);
   BOOST_CHECK(typed->binning() == pgsm.binning());
@@ -392,9 +439,7 @@ BOOST_AUTO_TEST_CASE(EncoderCoversAllSurfaceMaterials) {
       MaterialSlab(Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0), 1.)));
   materials.push_back(std::make_shared<const BinnedSurfaceMaterial>(
       testBinUtility2D(), testMatrix2D()));
-  materials.push_back(
-      std::make_shared<const ProtoSurfaceMaterial>(testBinUtility2D()));
-  materials.push_back(std::make_shared<const ProtoGridSurfaceMaterial>(
+  materials.push_back(std::make_shared<const ProtoSurfaceMaterial>(
       MultiAxisSpec2D{std::array<AxisSpec, 2u>{
           AxisSpec::Equidistant(2u, 0., 1., AxisBoundaryType::Bound,
                                 AxisDirection::AxisX),
@@ -422,10 +467,9 @@ BOOST_AUTO_TEST_CASE(EncoderCoversAllSurfaceMaterials) {
   BOOST_CHECK(cfg.encoder.hasFunction<HomogeneousSurfaceMaterial>());
   BOOST_CHECK(cfg.encoder.hasFunction<BinnedSurfaceMaterial>());
   BOOST_CHECK(cfg.encoder.hasFunction<ProtoSurfaceMaterial>());
-  BOOST_CHECK(cfg.encoder.hasFunction<ProtoGridSurfaceMaterial>());
   BOOST_CHECK(cfg.encoder.hasFunction<MergedMaterialMarker>());
   BOOST_CHECK(cfg.encoder.hasFunction<GridSurfaceMaterial>());
-  BOOST_CHECK_EQUAL(cfg.encoder.size(), 6u);
+  BOOST_CHECK_EQUAL(cfg.encoder.size(), 5u);
   BOOST_CHECK_EQUAL(cfg.decoder.size(), 6u);
 }
 
@@ -448,11 +492,11 @@ BOOST_AUTO_TEST_CASE(UnmappedMaterialYieldsNoMaterial) {
   jMaterial["mapMaterial"] = false;
   BOOST_CHECK(SurfaceMaterialJsonConverter::fromJson(jMaterial) == nullptr);
 
-  // A proto material without binning is flagged as not mapped on write
-  ProtoSurfaceMaterial psm{BinUtility{}};
+  // A homogeneous prototype is now explicitly represented by two one-bin axes.
+  ProtoSurfaceMaterial psm;
   nlohmann::json jProto = SurfaceMaterialJsonConverter::toJson(psm);
-  BOOST_CHECK_EQUAL(jProto["mapMaterial"], false);
-  BOOST_CHECK(SurfaceMaterialJsonConverter::fromJson(jProto) == nullptr);
+  BOOST_CHECK_EQUAL(jProto["mapMaterial"], true);
+  BOOST_CHECK(SurfaceMaterialJsonConverter::fromJson(jProto) != nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

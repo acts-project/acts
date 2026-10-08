@@ -82,7 +82,7 @@ require split factor 1.
 
 @ref Acts::BinUtility "BinUtility" is being phased out. Its binned/proto and
 subdivided-axis encodings are retained for compatibility. Prefer
-@ref Acts::GridSurfaceMaterial and @ref Acts::ProtoGridSurfaceMaterial for new code.
+@ref Acts::GridSurfaceMaterial and @ref Acts::ProtoSurfaceMaterial for new code.
 
 Arrays are dense, flat and zero-based, with **axis 0 varying fastest**:
 `offset = i0 + size0 * i1`. This differs from native @ref Acts::MultiAxis "MultiAxis" storage order;
@@ -102,10 +102,16 @@ the converter handles the permutation.
   Legacy `theta`/`mag` @ref Acts::BinUtility "BinUtility" directions and custom coordinate callbacks
   are not supported.
 
-Proto-grid axes may defer ranges, directions and boundary behavior to geometry.
+Writers emit `proto-grid` for @ref Acts::ProtoSurfaceMaterial, whose two axes
+may defer ranges, directions and boundary behavior to geometry. Legacy `proto`
+payloads are read only and converted into this representation. Missing axes
+become one-bin axes, subdivisions become normalized variable edges, and
+legacy cylinder `(phi, z)` directions become `(rphi, z)`. Legacy proto ranges
+and transforms are left to surface geometry, as they were during mapping.
 Deferred-variable edges run from 0 to 1 and scale to the resolved range.
 Explicit properties must agree with geometry. Resolved material cannot contain
-unresolved axes. Proto surface binning may have zero axes for homogeneous mapping.
+unresolved axes. Legacy proto surface binning may have zero axes for homogeneous
+mapping; new payloads use two one-bin axes.
 
 | Grid storage | Slab data |
 | --- | --- |

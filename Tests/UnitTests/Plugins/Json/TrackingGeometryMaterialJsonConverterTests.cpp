@@ -105,6 +105,31 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentExamples) {
       std::get<GridSurfaceMaterial::GloballyIndexed>(b->storage()).material);
 }
 
+BOOST_AUTO_TEST_CASE(MaterialDocumentLegacyProtoReadOnly) {
+  Converter converter;
+  const auto document = fixture("templates.json");
+  const auto decoded = converter.fromJson(document);
+  const auto encoded = converter.toJson(decoded);
+  for (const auto& entry : encoded["surfaces"]) {
+    const auto& material = entry["material"];
+    if (material["kind"] == "merged-material-marker") {
+      continue;
+    }
+    BOOST_CHECK_EQUAL(material["kind"], "proto-grid");
+    BOOST_CHECK(!material.contains("binning"));
+    BOOST_REQUIRE_EQUAL(material["axes"].size(), 2u);
+  }
+  // Both subdivision modes become equivalent normalized variable edges.
+  const auto& replace = encoded["surfaces"][1]["material"]["axes"][0];
+  BOOST_CHECK_EQUAL(replace["kind"], "deferred-variable");
+  BOOST_CHECK(replace["normalized_edges"] ==
+              nlohmann::json({0., 0.25, 0.5, 1.}));
+  const auto& repeat = encoded["surfaces"][3]["material"]["axes"][0];
+  BOOST_CHECK_EQUAL(repeat["kind"], "deferred-variable");
+  BOOST_CHECK_EQUAL(repeat["normalized_edges"].size(), 5u);
+  BOOST_CHECK(encoded == converter.toJson(converter.fromJson(encoded)));
+}
+
 BOOST_AUTO_TEST_CASE(MaterialDocumentUnits) {
   Converter converter;
   auto document = fixture("minimal.json");
@@ -180,8 +205,14 @@ BOOST_AUTO_TEST_CASE(MaterialDocumentUnits) {
   BOOST_CHECK_CLOSE_FRACTION(axes[0]["range"][1].get<double>(),
                              180. * UnitConstants::degree, 1e-12);
   BOOST_CHECK(axes[1] == protoAxes[1]);  // Normalized edges stay dimensionless.
-  BOOST_CHECK(output["surfaces"][0]["material"]["binning"]["transform"]
-                    ["translation"] == nlohmann::json({10., 20., 30.}));
+  BOOST_CHECK_EQUAL(output["surfaces"][0]["material"]["kind"], "proto-grid");
+  BOOST_CHECK(!output["surfaces"][0]["material"].contains("binning"));
+  // Resolved binned materials retain their transform and its length units.
+  surfaces["surfaces"][2]["material"]["binning"]["transform"] =
+      binning["transform"];
+  const auto resolved = converter.toJson(converter.fromJson(surfaces));
+  BOOST_CHECK(resolved["surfaces"][2]["material"]["binning"]["transform"]
+                      ["translation"] == nlohmann::json({10., 20., 30.}));
   for (const auto* direction : {"x", "rphi", "eta", "theta"}) {
     protoAxes[0]["direction"] = direction;
     const auto converted = converter.toJson(converter.fromJson(templates));
