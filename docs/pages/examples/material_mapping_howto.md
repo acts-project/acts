@@ -38,6 +38,13 @@ python material_validation.py -n 1000 -t 1000 -m odd_material_map.root -o odd_ma
 > Run these from `Examples/Scripts/Python`, or prefix each with
 > `python Examples/Scripts/Python/<script>.py ...` from the repository root.
 
+> [!tip]
+> All three scripts default to the Gen3 (blueprint) geometry; pass `--gen1` to
+> any of them to run against the Gen1 (Layer-based) geometry instead. Recording
+> is independent of the generation (the detailed Geant4 geometry does not
+> change), but mapping and validation build a Gen1 or Gen3
+> @ref Acts::TrackingGeometry accordingly.
+
 The rest of this page walks through the same chain for a detector that does not
 have a map yet.
 
@@ -151,6 +158,12 @@ These snippets are taken from `docs/examples/material_designation.cpp`, which is
 compiled as part of the `docs-examples` target, so they cannot drift from the
 API.
 
+For a complete, real detector exercising this end to end — beampipe, passive
+support structures, barrel/endcap sensitive layers and calorimeter material
+collectors all designated during construction — see
+`Plugins/DD4hep/src/OpenDataDetectorBuilder.cpp`. It is the Gen3 ODD's
+blueprint construction and the most complete worked example in the codebase.
+
 Faces are named per volume-bounds type: @ref Acts::CylinderVolumeBounds::Face
 (`OuterCylinder`, `InnerCylinder`, `PositiveDisc`, `NegativeDisc`),
 @ref Acts::CuboidVolumeBounds::Face (`NegativeXFace`, `PositiveXFace`, …) and
@@ -177,6 +190,31 @@ Things to know before you use it:
   to a warning, but it is lossy — the material is discarded and the surface is
   tagged with a @ref Acts::MergedMaterialMarker. Treat it as a debugging aid,
   not a fix.
+
+### Passive volumes and material collectors
+
+`configureFace` marks up faces of a blueprint node that already exists. For a
+DD4hep-backed Gen3 geometry, two `DD4hepBackend` helpers create such nodes in
+the first place, for volumes that carry material but have no sensitive
+detector elements of their own:
+
+- `DD4hepBackend::makePassiveElement` converts a passive DD4hep element (e.g.
+  the ODD's support tube, or its pixel endplates) into a plain tube- or
+  disc-shaped @ref Acts::StaticBlueprintNode, as opposed to a node assembled
+  from sensitive surfaces. The resulting node can then be wrapped in
+  `addMaterial` like any other.
+- `DD4hepBackend::makeMaterialCollector` creates a synthetic volume with no
+  corresponding DD4hep element at all: a catch-all surface placed just outside
+  the tracker envelope, so that material mapping attributes interactions in
+  nearby non-tracker material (e.g. the gap before the calorimeter) to a
+  dedicated surface instead of misattributing them to the nearest real tracker
+  surface. See `addCaloMaterialCollector`/`addCaloMaterialCollectorDisc` in
+  `OpenDataDetectorBuilder.cpp` for how the ODD uses this for its calorimeter.
+
+Both are currently DD4hep-only: the TGeo blueprint backend
+(`ActsPlugins::Root::TGeoBlueprintBuilderBackend`) has no equivalent yet, so a
+TGeo-built Gen3 geometry can designate faces on whatever nodes it has but
+cannot create new passive or collector volumes this way.
 
 > [!warning]
 > Blueprint-built geometry ignores material decorators.
@@ -296,10 +334,21 @@ Outputs:
 | `mydet_material_map.root` | the same map, for production use |
 | `mydet_material_mapped.root` | recorded interactions that found a surface |
 | `mydet_material_unmapped.root` | recorded interactions that did not |
+| `mydet_material_eta_distance.svg` | diagnostic plot: mapping distance vs. η |
 
 `_unmapped.root` is the one to look at when something is wrong. A large unmapped
 fraction means the material had nowhere to go — see
 @ref material_mapping_howto_troubleshooting "Troubleshooting".
+
+> [!note]
+> The `eta_distance.svg` plot is only produced when running `material_mapping.py`
+> as a script — it comes from `plotEtaSurfaceDistance()`, called in its
+> `__main__` block after `runMaterialMapping(...).run()`. If you call
+> `runMaterialMapping()` yourself as a library function, you do not get it for
+> free. On Gen3, the plot excludes the ODD's calorimeter collector surfaces
+> (see @ref material_mapping_howto_gen3 "above"), since they are catch-alls
+> rather than real mapping locations and would otherwise skew the distance
+> distribution.
 
 ## Step 4: use the map
 
@@ -309,8 +358,23 @@ Substitute your own detector and the map you just produced. This snippet comes
 from `docs/examples/test_material_map.py`, which runs as part of the pytest
 suite.
 
-`.json`, `.cbor` and `.root` are all accepted. This is exactly how the ODD picks
-up `data/odd-material-maps.root` by default.
+`.json`, `.cbor` and `.root` are all accepted. This is exactly how the Gen1 ODD
+picks up `data/odd-material-maps.root` by default.
+
+For the Gen3 ODD, loading works slightly differently from the generic snippet
+above. `getOpenDataDetector(gen3=True, materialDecorator=...)`
+(`Python/Examples/python/odd.py`) pulls `materialDecorator.materialMaps` out of
+the given decorator and passes it through as
+`OpenDataDetector::Config::materialMaps`
+(`Examples/Detectors/DD4hepDetector/include/ActsExamples/DD4hepDetector/OpenDataDetector.hpp`).
+The `OpenDataDetector` constructor applies it with
+@ref Acts::TrackingGeometryMaterial::apply "TrackingGeometryMaterial::apply()"
+once construction has finished and geometry identifiers are assigned
+(`Examples/Detectors/DD4hepDetector/src/OpenDataDetector.cpp`), replacing the
+designated proto material in place. Unlike Gen1, there is no default material
+map for the Gen3 ODD — it is only applied when a decorator is explicitly passed
+in, since the shipped `data/odd-material-maps.root` is keyed by Gen1 geometry
+identifiers and cannot be resolved against the Gen3 geometry's stable keys.
 
 ## Step 5: validate
 
@@ -402,6 +466,15 @@ distances, and the veto/re-assignment hooks to correct specific surfaces.
 **Validation disagrees with Geant4, but only with `-p`.** That is navigation,
 not mapping. The mapped material is fine; the navigator is not finding all of
 it.
+
+**Running `--gen1` against a detector with a calorimeter.** Gen1 geometry has
+no calorimeter catch-all collector surface — that is a Gen3-only addition, see
+@ref material_mapping_howto_gen3 "Designating material in Gen3" — so
+calorimeter material has nowhere correct to go and gets misattributed to the
+nearest tracker surface instead. The ODD scripts handle this automatically
+(`buildCalorimeter=gen3` in `getOpenDataDetector`,
+`Python/Examples/python/odd.py`); if you adapt them for your own Gen1 script,
+either disable the calorimeter or add an equivalent collector.
 
 ## Worked example, and the tests that guard this
 
