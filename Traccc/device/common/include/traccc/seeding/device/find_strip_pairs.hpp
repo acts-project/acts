@@ -23,8 +23,9 @@ TRACCC_HOST_DEVICE inline void find_strip_pairs(
     const strip_measurement_surface_info_collection_types::const_view&
         surface_infos_view,
     const strip_pairing_rule_collection_types::const_view& rules_view,
-    const point3& beam_spot, unsigned int& opposite_position,
-    unsigned int& overlap_position,
+    const point3& beam_spot,
+    vecmem::data::vector_view<const unsigned int> standard_offsets_view,
+    vecmem::data::vector_view<const unsigned int> overlap_offsets_view,
     strip_pair_collection_types::view opposite_pairs_view,
     strip_pair_collection_types::view overlap_pairs_view);
 

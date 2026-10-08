@@ -58,6 +58,15 @@ class silicon_strip_spacepoint_formation_algorithm
   void form_spacepoints_kernel(
       const form_spacepoints_kernel_payload& payload) const override;
 
+  void scan_offsets(
+      vecmem::data::vector_view<unsigned int> offsets) const override;
+
+  bool input_is_sorted(const edm::measurement_collection::const_view&
+                           measurements) const override;
+
+  void gather_spacepoints_kernel(
+      const gather_spacepoints_kernel_payload& payload) const override;
+
   /// @}
 
 };  // class silicon_strip_spacepoint_formation_algorithm

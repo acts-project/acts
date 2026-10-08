@@ -60,10 +60,10 @@ TRACCC_HOST_DEVICE inline bool make_strip_spacepoint(
   if (strip_length_gap_tolerance != 0.f) {
     const scalar cs = detray::vector::dot(first_direction, second_direction) *
                       first_one_over_strip * first_one_over_strip;
-    if (std::abs(cs) < 1e-12f) {
-      return false;
-    }
     if ((m > strip_length_limit) || (n > strip_length_limit)) {
+      if (std::abs(cs) < 1e-12f) {
+        return false;
+      }
       scalar dm = m - 1.f;
       const scalar dmn = (n - 1.f) * cs;
       if (dmn > dm) {
@@ -72,6 +72,9 @@ TRACCC_HOST_DEVICE inline bool make_strip_spacepoint(
       m -= dm;
       n -= dm / cs;
     } else if ((m < -strip_length_limit) || (n < -strip_length_limit)) {
+      if (std::abs(cs) < 1e-12f) {
+        return false;
+      }
       scalar dm = -(1.f + m);
       const scalar dmn = -(1.f + n) * cs;
       if (dmn > dm) {

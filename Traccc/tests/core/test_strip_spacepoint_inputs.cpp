@@ -219,6 +219,13 @@ TEST(strip_spacepoint_inputs, intersection_and_degenerate_pair) {
   EXPECT_EQ(position[0], scalar{100});
   EXPECT_EQ(position[1], scalar{0});
   EXPECT_EQ(position[2], scalar{0});
+  // Orthogonal strips have cs == 0, but require no endpoint correction.
+  // A nonzero gap allowance must not reject this valid intersection.
+  EXPECT_TRUE(details::make_strip_spacepoint(
+      position, point3{100.f, 0.f, 0.f}, vector3{0.f, 0.f, 20.f},
+      vector3{0.f, 20.f, 0.f}, vector3{200.f, 0.f, 0.f},
+      vector3{200.f, 0.f, 0.f}, vector3{0.f, 4000.f, 0.f},
+      vector3{0.f, 0.f, -4000.f}, 10.f, 10.f, 1.f, 0.01f));
   EXPECT_FALSE(details::make_strip_spacepoint(
       position, point3{100.f, 0.f, 0.f}, vector3{0.f, 0.f, 20.f},
       vector3{0.f, 0.f, 20.f}, vector3{200.f, 0.f, 0.f},

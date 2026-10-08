@@ -7,54 +7,76 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
+#include "../sanity/ordered_on.cuh"
 #include "../utils/cuda_error_handling.hpp"
 #include "../utils/global_index.hpp"
 #include "../utils/utils.hpp"
 #include "traccc/cuda/seeding/silicon_strip_spacepoint_formation_algorithm.hpp"
 
 // Project include(s).
+#include <thrust/execution_policy.h>
+#include <thrust/scan.h>
+
 #include "traccc/seeding/device/count_strip_pairs.hpp"
 #include "traccc/seeding/device/find_strip_pairs.hpp"
 #include "traccc/seeding/device/form_strip_spacepoints_from_pairs.hpp"
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
 
 namespace traccc::cuda {
 namespace kernels {
 
-__global__ void __launch_bounds__(1024, 1) count_strip_pairs_kernel(
+__global__ void count_strip_pairs_kernel(
     edm::measurement_collection::const_view measurements,
     strip_measurement_surface_info_collection_types::const_view surface_infos,
     strip_pairing_rule_collection_types::const_view pairing_rules,
-    point3 beam_spot, unsigned int& n_opposite_pairs,
-    unsigned int& n_overlap_pairs) {
+    point3 beam_spot, vecmem::data::vector_view<unsigned int> standard_counts,
+    vecmem::data::vector_view<unsigned int> overlap_counts) {
   device::count_strip_pairs(details::global_index1(), measurements,
                             surface_infos, pairing_rules, beam_spot,
-                            n_opposite_pairs, n_overlap_pairs);
+                            standard_counts, overlap_counts);
 }
 
-__global__ void __launch_bounds__(1024, 1) find_strip_pairs_kernel(
+__global__ void find_strip_pairs_kernel(
     edm::measurement_collection::const_view measurements,
     strip_measurement_surface_info_collection_types::const_view surface_infos,
     strip_pairing_rule_collection_types::const_view pairing_rules,
-    point3 beam_spot, unsigned int& opposite_position,
-    unsigned int& overlap_position,
+    point3 beam_spot,
+    vecmem::data::vector_view<const unsigned int> standard_offsets,
+    vecmem::data::vector_view<const unsigned int> overlap_offsets,
     strip_pair_collection_types::view opposite_pairs,
     strip_pair_collection_types::view overlap_pairs) {
   device::find_strip_pairs(details::global_index1(), measurements,
                            surface_infos, pairing_rules, beam_spot,
-                           opposite_position, overlap_position, opposite_pairs,
+                           standard_offsets, overlap_offsets, opposite_pairs,
                            overlap_pairs);
 }
 
-__global__ void
-__launch_bounds__(1024, 1) form_strip_spacepoints_from_pairs_kernel(
+__global__ void form_strip_spacepoints_from_pairs_kernel(
     edm::measurement_collection::const_view measurements,
     strip_pair_collection_types::const_view pairs,
     strip_measurement_surface_info_collection_types::const_view surface_infos,
-    point3 beam_spot, edm::spacepoint_collection::view spacepoints) {
+    point3 beam_spot, vecmem::data::vector_view<unsigned int> accepted,
+    edm::spacepoint_collection::view spacepoints) {
   device::form_strip_spacepoints_from_pairs(details::global_index1(),
                                             measurements, pairs, surface_infos,
-                                            beam_spot, spacepoints);
+                                            beam_spot, accepted, spacepoints);
 }
+
+__global__ void gather_strip_spacepoints_kernel(
+    edm::spacepoint_collection::const_view candidates,
+    vecmem::data::vector_view<const unsigned int> offsets,
+    edm::spacepoint_collection::view spacepoints) {
+  device::gather_strip_spacepoints(details::global_index1(), candidates,
+                                   offsets, spacepoints);
+}
+
+struct measurement_surface_order {
+  template <typename T1, typename T2>
+  TRACCC_HOST_DEVICE bool operator()(const edm::measurement<T1>& a,
+                                     const edm::measurement<T2>& b) const {
+    return a.surface_link().index() <= b.surface_link().index();
+  }
+};
 
 }  // namespace kernels
 
@@ -74,7 +96,7 @@ void silicon_strip_spacepoint_formation_algorithm::count_strip_pairs_kernel(
   kernels::count_strip_pairs_kernel<<<n_blocks, n_threads, 0,
                                       details::get_stream(stream())>>>(
       payload.measurements, payload.surface_infos, payload.pairing_rules,
-      payload.beam_spot, payload.n_opposite_pairs, payload.n_overlap_pairs);
+      payload.beam_spot, payload.standard_counts, payload.overlap_counts);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
@@ -86,7 +108,7 @@ void silicon_strip_spacepoint_formation_algorithm::find_strip_pairs_kernel(
   kernels::find_strip_pairs_kernel<<<n_blocks, n_threads, 0,
                                      details::get_stream(stream())>>>(
       payload.measurements, payload.surface_infos, payload.pairing_rules,
-      payload.beam_spot, payload.opposite_position, payload.overlap_position,
+      payload.beam_spot, payload.standard_offsets, payload.overlap_offsets,
       payload.opposite_pairs, payload.overlap_pairs);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
@@ -98,8 +120,37 @@ void silicon_strip_spacepoint_formation_algorithm::form_spacepoints_kernel(
   kernels::form_strip_spacepoints_from_pairs_kernel<<<
       n_blocks, n_threads, 0, details::get_stream(stream())>>>(
       payload.measurements, payload.pairs, payload.surface_infos,
-      payload.beam_spot, payload.spacepoints);
+      payload.beam_spot, payload.accepted, payload.spacepoints);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+  stream().synchronize();
+}
+
+void silicon_strip_spacepoint_formation_algorithm::scan_offsets(
+    vecmem::data::vector_view<unsigned int> offsets) const {
+  assert(offsets.size_ptr() == nullptr);
+  thrust::inclusive_scan(
+      thrust::cuda::par_nosync(
+          stream_synchronizing_allocator(mr().main, stream()))
+          .on(details::get_stream(stream())),
+      offsets.ptr(), offsets.ptr() + offsets.capacity(), offsets.ptr());
+}
+
+bool silicon_strip_spacepoint_formation_algorithm::input_is_sorted(
+    const edm::measurement_collection::const_view& measurements) const {
+  return is_ordered_on<edm::measurement_collection::const_device>(
+      kernels::measurement_surface_order{}, mr().main, copy(), stream(),
+      measurements);
+}
+
+void silicon_strip_spacepoint_formation_algorithm::gather_spacepoints_kernel(
+    const gather_spacepoints_kernel_payload& payload) const {
+  const unsigned int n_threads = warp_size() * 8;
+  const unsigned int n_blocks = (payload.n_pairs + n_threads - 1u) / n_threads;
+  kernels::gather_strip_spacepoints_kernel<<<n_blocks, n_threads, 0,
+                                             details::get_stream(stream())>>>(
+      payload.candidates, payload.offsets, payload.spacepoints);
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+  // The base class destroys candidate and flag buffers after this call.
   stream().synchronize();
 }
 

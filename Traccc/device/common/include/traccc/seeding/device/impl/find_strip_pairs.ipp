@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <vecmem/memory/device_atomic_ref.hpp>
+#include <vecmem/containers/device_vector.hpp>
 
 #include "traccc/seeding/detail/strip_geometry.hpp"
 #include "traccc/seeding/detail/strip_pairing.hpp"
@@ -17,8 +17,10 @@ namespace traccc::device {
 
 struct strip_pair_write_visitor {
   unsigned int reference_index;
-  unsigned int& standard_position;
-  unsigned int& overlap_position;
+  unsigned int standard_position;
+  unsigned int overlap_position;
+  unsigned int standard_end;
+  unsigned int overlap_end;
   vecmem::device_vector<strip_pair>& standard;
   vecmem::device_vector<strip_pair>& overlap;
   TRACCC_HOST_DEVICE void operator()(unsigned int candidate_index,
@@ -31,9 +33,13 @@ struct strip_pair_write_visitor {
     auto& counter = rule.category == strip_pair_category::standard
                         ? standard_position
                         : overlap_position;
-    const auto position =
-        vecmem::device_atomic_ref<unsigned int>(counter).fetch_add(1u);
-    if (position < output.size()) {
+    const auto end = rule.category == strip_pair_category::standard
+                         ? standard_end
+                         : overlap_end;
+    // Each measurement owns only the range assigned by the count/scan pass.
+    // Never overwrite the following measurement if find produces more pairs.
+    if ((counter < end) && (counter < output.size())) {
+      const auto position = counter++;
       output.at(position) = pair;
     }
   }
@@ -44,8 +50,9 @@ TRACCC_HOST_DEVICE inline void find_strip_pairs(
     const strip_measurement_surface_info_collection_types::const_view&
         surface_infos_view,
     const strip_pairing_rule_collection_types::const_view& rules_view,
-    const point3& beam_spot, unsigned int& opposite_position,
-    unsigned int& overlap_position,
+    const point3& beam_spot,
+    vecmem::data::vector_view<const unsigned int> standard_offsets_view,
+    vecmem::data::vector_view<const unsigned int> overlap_offsets_view,
     strip_pair_collection_types::view opposite_pairs_view,
     strip_pair_collection_types::view overlap_pairs_view) {
   const edm::measurement_collection::const_device measurements(
@@ -56,9 +63,21 @@ TRACCC_HOST_DEVICE inline void find_strip_pairs(
 
   vecmem::device_vector<strip_pair> opposite_pairs(opposite_pairs_view);
   vecmem::device_vector<strip_pair> overlap_pairs(overlap_pairs_view);
-  strip_pair_write_visitor visitor{static_cast<unsigned int>(globalIndex),
-                                   opposite_position, overlap_position,
-                                   opposite_pairs, overlap_pairs};
+  if (globalIndex >= measurements.size()) {
+    return;
+  }
+  const vecmem::device_vector<const unsigned int> standard_offsets(
+      standard_offsets_view);
+  const vecmem::device_vector<const unsigned int> overlap_offsets(
+      overlap_offsets_view);
+  strip_pair_write_visitor visitor{
+      static_cast<unsigned int>(globalIndex),
+      globalIndex == 0u ? 0u : standard_offsets.at(globalIndex - 1u),
+      globalIndex == 0u ? 0u : overlap_offsets.at(globalIndex - 1u),
+      standard_offsets.at(globalIndex),
+      overlap_offsets.at(globalIndex),
+      opposite_pairs,
+      overlap_pairs};
 
   details::visit_strip_pairs(static_cast<unsigned int>(globalIndex),
                              measurements, surface_infos, rules, beam_spot,

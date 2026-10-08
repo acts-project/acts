@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <limits>
+#include <numeric>
 
 #include <gtest/gtest.h>
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -53,40 +54,74 @@ TEST(strip_spacepoint_migration, count_fill_and_form_standard_and_overlap) {
   const auto meas_view = vecmem::get_data(measurements);
   const auto surfaces_view = vecmem::get_data(surfaces);
   const auto rules_view = vecmem::get_data(rules);
-  unsigned int n_standard = 0, n_overlap = 0;
+  vecmem::vector<unsigned int> standard_offsets(measurements.size(), 0u, &mr);
+  vecmem::vector<unsigned int> overlap_offsets(measurements.size(), 0u, &mr);
   // Include an out-of-range lane as in a rounded-up GPU launch.
   for (unsigned int i = 0; i < 4; ++i) {
     device::count_strip_pairs(i, meas_view, surfaces_view, rules_view, point3{},
-                              n_standard, n_overlap);
+                              vecmem::get_data(standard_offsets),
+                              vecmem::get_data(overlap_offsets));
   }
+  std::partial_sum(standard_offsets.begin(), standard_offsets.end(),
+                   standard_offsets.begin());
+  std::partial_sum(overlap_offsets.begin(), overlap_offsets.end(),
+                   overlap_offsets.begin());
+  const unsigned int n_standard = standard_offsets.back();
+  const unsigned int n_overlap = overlap_offsets.back();
   ASSERT_EQ(n_standard, 1u);
   ASSERT_EQ(n_overlap, 1u);
   strip_pair_collection_types::host standard(n_standard, &mr);
   strip_pair_collection_types::host overlap(n_overlap, &mr);
-  unsigned int pos_standard = 0, pos_overlap = 0;
   for (unsigned int i = 0; i < 4; ++i) {
     device::find_strip_pairs(
-        i, meas_view, surfaces_view, rules_view, point3{}, pos_standard,
-        pos_overlap, vecmem::get_data(standard), vecmem::get_data(overlap));
+        i, meas_view, surfaces_view, rules_view, point3{},
+        vecmem::get_data(standard_offsets), vecmem::get_data(overlap_offsets),
+        vecmem::get_data(standard), vecmem::get_data(overlap));
   }
-  ASSERT_EQ(pos_standard, n_standard);
-  ASSERT_EQ(pos_overlap, n_overlap);
   EXPECT_EQ(standard[0].measurement_index_2, 1u);
   EXPECT_EQ(overlap[0].measurement_index_2, 2u);
+  // Deliberately reserve no space for measurement zero. Find must not write
+  // into the following measurement's reserved slot, even if it finds a pair.
+  const strip_pair sentinel{std::numeric_limits<unsigned int>::max(),
+                            std::numeric_limits<unsigned int>::max(), 0.f, 0.f};
+  strip_pair_collection_types::host guarded_standard(1u, sentinel, &mr);
+  strip_pair_collection_types::host guarded_overlap(1u, sentinel, &mr);
+  vecmem::vector<unsigned int> underestimated_offsets{&mr};
+  underestimated_offsets.assign({0u, 1u, 1u});
+  device::find_strip_pairs(0u, meas_view, surfaces_view, rules_view, point3{},
+                           vecmem::get_data(underestimated_offsets),
+                           vecmem::get_data(underestimated_offsets),
+                           vecmem::get_data(guarded_standard),
+                           vecmem::get_data(guarded_overlap));
+  EXPECT_EQ(guarded_standard[0].measurement_index_1,
+            sentinel.measurement_index_1);
+  EXPECT_EQ(guarded_overlap[0].measurement_index_1,
+            sentinel.measurement_index_1);
   for (const auto* pairs : {&standard, &overlap}) {
     strip_pair_collection_types::host pairs_with_sentinel{&mr};
     pairs_with_sentinel.push_back(pairs->at(0));
     pairs_with_sentinel.push_back({std::numeric_limits<unsigned int>::max(),
                                    std::numeric_limits<unsigned int>::max(),
                                    0.f, 0.f});
-    edm::spacepoint_collection::buffer output(
-        2u, mr, vecmem::data::buffer_type::resizable);
-    copy.setup(output)->wait();
+    edm::spacepoint_collection::buffer candidates(2u, mr);
+    vecmem::vector<unsigned int> accepted(2u, 0u, &mr);
+    copy.setup(candidates)->wait();
     // Process a valid pair, an invalid sentinel, and an out-of-range lane.
     for (unsigned int i = 0; i < 3; ++i) {
       device::form_strip_spacepoints_from_pairs(
           i, meas_view, vecmem::get_data(pairs_with_sentinel), surfaces_view,
-          point3{}, output);
+          point3{}, vecmem::get_data(accepted), candidates);
+    }
+    EXPECT_EQ(accepted[0], 1u);
+    EXPECT_EQ(accepted[1], 0u);
+    std::partial_sum(accepted.begin(), accepted.end(), accepted.begin());
+    edm::spacepoint_collection::buffer output(accepted.back(), mr);
+    copy.setup(output)->wait();
+    const edm::spacepoint_collection::const_view candidates_view(candidates);
+    // Gather in reverse execution order to verify scanned destination indices.
+    for (unsigned int i = 3u; i > 0u; --i) {
+      device::gather_strip_spacepoints(i - 1u, candidates_view,
+                                       vecmem::get_data(accepted), output);
     }
     ASSERT_EQ(copy.get_size(output), 1u);
     edm::spacepoint_collection::device spacepoints{output};

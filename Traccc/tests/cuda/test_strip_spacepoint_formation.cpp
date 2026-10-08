@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <algorithm>
 #include <array>
 #include <vector>
 
@@ -204,12 +203,7 @@ TEST_F(CUDAStripSpacepointFormation, multiple_blocks_and_repeated_calls) {
     auto output = run();
     ASSERT_EQ(output.standard.size(), n_reference);
     ASSERT_EQ(output.overlap.size(), n_reference);
-    // Atomic append order is unspecified: compare by measurement identity.
-    const auto order = [](const point& a, const point& b) {
-      return a.first < b.first;
-    };
-    std::sort(output.standard.begin(), output.standard.end(), order);
-    std::sort(output.overlap.begin(), output.overlap.end(), order);
+    // Check the native output order; do not sort away scheduling differences.
     for (unsigned int i = 0; i < n_reference; ++i) {
       check_point(output.standard[i], i, n_reference);
       check_point(output.overlap[i], i, n_reference + 1u);

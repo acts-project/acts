@@ -8,6 +8,9 @@
 
 #pragma once
 
+// VecMem include(s).
+#include <vecmem/containers/device_vector.hpp>
+
 // Project include(s).
 #include "traccc/seeding/detail/spacepoint_formation.hpp"
 #include "traccc/seeding/detail/strip_geometry.hpp"
@@ -21,6 +24,7 @@ TRACCC_HOST_DEVICE inline void form_strip_spacepoints_from_pairs(
     const strip_measurement_surface_info_collection_types::const_view&
         surface_infos_view,
     const point3& beam_spot,
+    vecmem::data::vector_view<unsigned int> accepted_view,
     edm::spacepoint_collection::view spacepoints_view) {
   const edm::measurement_collection::const_device measurements(
       measurements_view);
@@ -31,6 +35,8 @@ TRACCC_HOST_DEVICE inline void form_strip_spacepoints_from_pairs(
     return;
   }
 
+  vecmem::device_vector<unsigned int> accepted_flags(accepted_view);
+  accepted_flags.at(globalIndex) = 0u;
   edm::spacepoint_collection::device spacepoints(spacepoints_view);
   const strip_pair pair = pairs.at(globalIndex);
   // A count pass may very rarely overestimate the number of pairs found by the
@@ -73,8 +79,7 @@ TRACCC_HOST_DEVICE inline void form_strip_spacepoints_from_pairs(
     return;
   }
 
-  const edm::spacepoint_collection::device::size_type i =
-      spacepoints.push_back_default();
+  const edm::spacepoint_collection::device::size_type i = globalIndex;
   edm::spacepoint_collection::device::proxy_type sp = spacepoints.at(i);
   sp.x() = static_cast<float>(position[0]);
   sp.y() = static_cast<float>(position[1]);
@@ -83,6 +88,36 @@ TRACCC_HOST_DEVICE inline void form_strip_spacepoints_from_pairs(
   sp.z_variance() = static_cast<float>(first_info.spacepoint_variance_z);
   sp.measurement_index_1() = pair.measurement_index_1;
   sp.measurement_index_2() = pair.measurement_index_2;
+  accepted_flags.at(globalIndex) = 1u;
+}
+
+/// Compact accepted spacepoints in pair order using inclusive flag offsets.
+TRACCC_HOST_DEVICE inline void gather_strip_spacepoints(
+    const global_index_t globalIndex,
+    const edm::spacepoint_collection::const_view& candidates_view,
+    vecmem::data::vector_view<const unsigned int> offsets_view,
+    edm::spacepoint_collection::view output_view) {
+  const edm::spacepoint_collection::const_device candidates(candidates_view);
+  if (globalIndex >= candidates.size()) {
+    return;
+  }
+  const vecmem::device_vector<const unsigned int> offsets(offsets_view);
+  const unsigned int end = offsets.at(globalIndex);
+  const unsigned int start =
+      globalIndex == 0u ? 0u : offsets.at(globalIndex - 1u);
+  if (end == start) {
+    return;
+  }
+  edm::spacepoint_collection::device output(output_view);
+  const auto source = candidates.at(globalIndex);
+  auto destination = output.at(end - 1u);
+  destination.x() = source.x();
+  destination.y() = source.y();
+  destination.z() = source.z();
+  destination.radius_variance() = source.radius_variance();
+  destination.z_variance() = source.z_variance();
+  destination.measurement_index_1() = source.measurement_index_1();
+  destination.measurement_index_2() = source.measurement_index_2();
 }
 
 }  // namespace traccc::device

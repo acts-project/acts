@@ -26,7 +26,9 @@ TRACCC_HOST_DEVICE inline void form_strip_spacepoints_from_pairs(
     const strip_pair_collection_types::const_view& pairs_view,
     const strip_measurement_surface_info_collection_types::const_view&
         surface_infos_view,
-    const point3& beam_spot, edm::spacepoint_collection::view spacepoints_view);
+    const point3& beam_spot,
+    vecmem::data::vector_view<unsigned int> accepted_view,
+    edm::spacepoint_collection::view spacepoints_view);
 
 }  // namespace traccc::device
 

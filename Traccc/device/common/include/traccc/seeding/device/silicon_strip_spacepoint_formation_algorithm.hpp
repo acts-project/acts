@@ -57,7 +57,7 @@ class silicon_strip_spacepoint_formation_algorithm
 
   /// Construct spacepoints from pairs of 1D silicon strip measurements
   ///
-  /// @param measurements A collection of measurements
+  /// @param measurements Measurements sorted by nondecreasing surface index
   /// @param surface_infos Static strip surface information
   /// @param pairing_rules Sorted, unique directed surface-pair rules
   /// @param beam_spot Beam-spot position for strip-plane construction
@@ -85,10 +85,9 @@ class silicon_strip_spacepoint_formation_algorithm
         surface_infos;
     const strip_pairing_rule_collection_types::const_view& pairing_rules;
     const point3& beam_spot;
-    /// Number of opposite-side strip pairs.
-    unsigned int& n_opposite_pairs;
-    /// Number of overlap strip pairs.
-    unsigned int& n_overlap_pairs;
+    /// Per-measurement counts, later scanned into inclusive offsets.
+    vecmem::data::vector_view<unsigned int> standard_counts;
+    vecmem::data::vector_view<unsigned int> overlap_counts;
   };
 
   /// Launch the strip pair counting kernel.
@@ -107,9 +106,9 @@ class silicon_strip_spacepoint_formation_algorithm
     const strip_pairing_rule_collection_types::const_view& pairing_rules;
     /// Beam-spot position.
     const point3& beam_spot;
-    /// Next positions in the two output pair buffers.
-    unsigned int& opposite_position;
-    unsigned int& overlap_position;
+    /// Inclusive per-measurement offsets in the two pair buffers.
+    vecmem::data::vector_view<const unsigned int> standard_offsets;
+    vecmem::data::vector_view<const unsigned int> overlap_offsets;
     /// Opposite-side and overlap strip pairs.
     strip_pair_collection_types::view& opposite_pairs;
     strip_pair_collection_types::view& overlap_pairs;
@@ -132,7 +131,8 @@ class silicon_strip_spacepoint_formation_algorithm
         surface_infos;
     /// Beam-spot position.
     const point3& beam_spot;
-    /// The output spacepoints.
+    /// One acceptance flag and candidate slot per pair.
+    vecmem::data::vector_view<unsigned int> accepted;
     edm::spacepoint_collection::view& spacepoints;
   };
 
@@ -142,6 +142,24 @@ class silicon_strip_spacepoint_formation_algorithm
   ///
   virtual void form_spacepoints_kernel(
       const form_spacepoints_kernel_payload& payload) const = 0;
+
+  /// Inclusive scan on the backend stream.
+  virtual void scan_offsets(
+      vecmem::data::vector_view<unsigned int> offsets) const = 0;
+
+  /// Check the surface-index ordering required by pair lookup.
+  virtual bool input_is_sorted(
+      const edm::measurement_collection::const_view& measurements) const = 0;
+
+  struct gather_spacepoints_kernel_payload {
+    unsigned int n_pairs;
+    const edm::spacepoint_collection::const_view& candidates;
+    vecmem::data::vector_view<const unsigned int> offsets;
+    edm::spacepoint_collection::view& spacepoints;
+  };
+
+  virtual void gather_spacepoints_kernel(
+      const gather_spacepoints_kernel_payload& payload) const = 0;
 
   /// @}
 

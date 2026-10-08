@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <vecmem/memory/device_atomic_ref.hpp>
+#include <vecmem/containers/device_vector.hpp>
 
 #include "traccc/seeding/detail/strip_geometry.hpp"
 #include "traccc/seeding/detail/strip_pairing.hpp"
@@ -32,8 +32,9 @@ TRACCC_HOST_DEVICE inline void count_strip_pairs(
     const strip_measurement_surface_info_collection_types::const_view&
         surface_infos_view,
     const strip_pairing_rule_collection_types::const_view& rules_view,
-    const point3& beam_spot, unsigned int& n_opposite_pairs,
-    unsigned int& n_overlap_pairs) {
+    const point3& beam_spot,
+    vecmem::data::vector_view<unsigned int> standard_counts_view,
+    vecmem::data::vector_view<unsigned int> overlap_counts_view) {
   const edm::measurement_collection::const_device measurements(
       measurements_view);
   const strip_measurement_surface_info_collection_types::const_device
@@ -46,13 +47,11 @@ TRACCC_HOST_DEVICE inline void count_strip_pairs(
                              measurements, surface_infos, rules, beam_spot,
                              visitor);
 
-  if (visitor.standard > 0u) {
-    vecmem::device_atomic_ref<unsigned int>(n_opposite_pairs)
-        .fetch_add(visitor.standard);
-  }
-  if (visitor.overlap > 0u) {
-    vecmem::device_atomic_ref<unsigned int>(n_overlap_pairs)
-        .fetch_add(visitor.overlap);
+  if (globalIndex < measurements.size()) {
+    vecmem::device_vector<unsigned int> standard_counts(standard_counts_view);
+    vecmem::device_vector<unsigned int> overlap_counts(overlap_counts_view);
+    standard_counts.at(globalIndex) = visitor.standard;
+    overlap_counts.at(globalIndex) = visitor.overlap;
   }
 }
 

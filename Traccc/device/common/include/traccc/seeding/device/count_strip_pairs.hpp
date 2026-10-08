@@ -23,8 +23,9 @@ TRACCC_HOST_DEVICE inline void count_strip_pairs(
     const strip_measurement_surface_info_collection_types::const_view&
         surface_infos_view,
     const strip_pairing_rule_collection_types::const_view& rules_view,
-    const point3& beam_spot, unsigned int& n_opposite_pairs,
-    unsigned int& n_overlap_pairs);
+    const point3& beam_spot,
+    vecmem::data::vector_view<unsigned int> standard_counts_view,
+    vecmem::data::vector_view<unsigned int> overlap_counts_view);
 
 }  // namespace traccc::device
 
