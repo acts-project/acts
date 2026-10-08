@@ -362,8 +362,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   Acts::PropagatorPlainOptions firstPropOptions(ctx.recoGeoContext,
                                                 ctx.magFieldContext);
   firstPropOptions.maxSteps = m_cfg.maxSteps;
-  firstPropOptions.direction = m_cfg.reverseSearch ? Acts::Direction::Backward()
-                                                   : Acts::Direction::Forward();
+  firstPropOptions.direction = Acts::Direction::Forward();
   firstPropOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
   firstPropOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
@@ -379,7 +378,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                   ctx.calibContext, extensions,
                                   firstPropOptions);
 
-  firstOptions.targetSurface = m_cfg.reverseSearch ? pSurface.get() : nullptr;
+  firstOptions.targetSurface = nullptr;
   firstOptions.recordMaterialStates = m_cfg.recordMaterialStates;
   firstOptions.betheHeitlerApprox =
       std::make_shared<Acts::PolynomialBetheHeitlerApprox>(
@@ -388,7 +387,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   TrackFinderOptions secondOptions(ctx.recoGeoContext, ctx.magFieldContext,
                                    ctx.calibContext, extensions,
                                    secondPropOptions);
-  secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
+  secondOptions.targetSurface = pSurface.get();
   secondOptions.skipPrePropagationUpdate = true;
   secondOptions.recordMaterialStates = m_cfg.recordMaterialStates;
   secondOptions.betheHeitlerApprox = firstOptions.betheHeitlerApprox;
@@ -613,33 +612,12 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
               // finalize the track candidate
 
-              bool doExtrapolate = true;
+              // the CKF already extrapolated the second pass to the perigee,
+              // and only these parameters hold every measurement once. do not
+              // smooth the stitched track, see `Config::twoWay`.
 
-              if (!m_cfg.reverseSearch) {
-                // these parameters are already extrapolated by the CKF and have
-                // the optimal resolution. note that we did not smooth all the
-                // states.
-
-                // only extrapolate if we did not do it already
-                doExtrapolate = !trackCandidate.hasReferenceSurface();
-              } else {
-                // smooth the full track and extrapolate to the reference
-
-                auto secondSmoothingResult = Acts::smoothTrack(
-                    ctx.recoGeoContext, trackCandidate, logger());
-                if (!secondSmoothingResult.ok()) {
-                  m_nFailedSmoothing++;
-                  ACTS_ERROR("Second smoothing for seed "
-                             << iSeed << " and track " << secondTrack.index()
-                             << " failed with error "
-                             << secondSmoothingResult.error());
-                  continue;
-                }
-
-                trackCandidate.reverseTrackStates(true);
-              }
-
-              if (doExtrapolate) {
+              // only extrapolate if we did not do it already
+              if (!trackCandidate.hasReferenceSurface()) {
                 auto secondExtrapolationResult =
                     Acts::extrapolateTrackToReferenceSurface(
                         trackCandidate, *pSurface, extrapolator,

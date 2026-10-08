@@ -109,11 +109,12 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Extrapolation strategy
     Acts::TrackExtrapolationStrategy extrapolationStrategy =
         Acts::TrackExtrapolationStrategy::firstOrLast;
-    /// Run finding in two directions
+    /// Run finding in two directions. The first pass runs outward from the
+    /// seed, the second pass inward from the first measurement to the
+    /// perigee. Only the perigee holds every measurement once. The second
+    /// pass starts from the smoothed first pass, so a smoother over the
+    /// stitched track counts the first pass twice.
     bool twoWay = true;
-    /// Whether to run the finding in seed parameter direction or reverse
-    /// direction
-    bool reverseSearch = false;
     /// Whether to use seed deduplication
     /// This is only available if `inputSeeds` is set.
     bool seedDeduplication = false;

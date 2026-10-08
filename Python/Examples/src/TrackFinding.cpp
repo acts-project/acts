@@ -170,10 +170,9 @@ void addTrackFinding(py::module& mex) {
         c, inputMeasurements, inputInitialTrackParameters, inputSeeds,
         outputTracks, trackingGeometry, magneticField, findTracks,
         findTracksBrem, measurementSelectorCfg, trackSelectorCfg, maxSteps,
-        twoWay, reverseSearch, seedDeduplication, stayOnSeed, pixelVolumeIds,
-        stripVolumeIds, maxPixelHoles, maxStripHoles, trimTracks,
-        recordMaterialStates, useJosephFormulation, constrainToVolumeIds,
-        endOfWorldVolumeIds);
+        twoWay, seedDeduplication, stayOnSeed, pixelVolumeIds, stripVolumeIds,
+        maxPixelHoles, maxStripHoles, trimTracks, recordMaterialStates,
+        useJosephFormulation, constrainToVolumeIds, endOfWorldVolumeIds);
   }
 }
 
