@@ -216,8 +216,7 @@ class surface_factory : public surface_factory_interface<detector_t> {
           }
         }
 
-        // Add surface with all links set (relative to the given
-        // containers)
+        // Add surface with all links set (relative to the given containers)
         mask_link_t mask_link{};
         mask_link.set_id(mask_id);
         const auto mask_idx{

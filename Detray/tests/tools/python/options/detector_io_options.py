@@ -20,7 +20,6 @@ import sys
 def detector_io_options():
 
     parser = argparse.ArgumentParser(add_help=False)
-
     parser.add_argument(
         "--geometry_file",
         "-geo",
@@ -38,6 +37,20 @@ def detector_io_options():
     )
     parser.add_argument(
         "--material_file", "-mat", help=("Detector material file"), default="", type=str
+    )
+    parser.add_argument(
+        "--no_check",
+        "-nchk",
+        help=("Turn OFF detector consistency check"),
+        default=True,
+        action="store_false",
+    )
+    parser.add_argument(
+        "--no_deduplication",
+        "-nddpl",
+        help=("Turn OFF detector data deduplication"),
+        default=True,
+        action="store_false",
     )
 
     return parser
@@ -66,6 +79,9 @@ def parse_detector_io_options(args, logging):
 
 
 def fill_reader_config(args, config):
+
+    config.doCheck = args.no_check
+    config.deduplicate = args.no_deduplication
 
     if not args.geometry_file:
         raise ValueError("Please specify a geometry input file!")

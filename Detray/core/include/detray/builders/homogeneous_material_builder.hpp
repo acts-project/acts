@@ -98,10 +98,56 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
     DETRAY_DEBUG_HOST("-> n_surfaces=" << this->surfaces().size());
 
     if (opt.deduplicate()) {
-      add_deduplicated_material(det);
+      DETRAY_VERBOSE_HOST("-> Deduplicate homogeneous material");
+
+      if constexpr (concepts::has_material_slabs<detector_t>) {
+        deduplicate<material_id::e_material_slab>(det);
+      }
+      if constexpr (concepts::has_material_rods<detector_t>) {
+        deduplicate<material_id::e_material_rod>(det);
+      }
     } else {
-      add_material(det);
+      const auto &material = det.material_store();
+
+      // Update the surface material links and shift them according to the
+      // number of material slabs/rods that were in the detector previously
+      for (auto &sf : this->surfaces()) {
+        DETRAY_DEBUG_HOST("-> sf=" << sf);
+        DETRAY_DEBUG_HOST("  -> material_id=" << sf.material().id());
+        if constexpr (concepts::has_material_slabs<detector_t>) {
+          if (sf.material().id() == material_id::e_material_slab) {
+            dindex offset =
+                material.template size<material_id::e_material_slab>();
+            DETRAY_DEBUG_HOST("-> update material slab offset: " << offset);
+            sf.update_material(offset);
+            DETRAY_DEBUG_HOST("-> material now: " << sf.material());
+          }
+
+          DETRAY_DEBUG_HOST(
+              "-> Appending "
+              << m_materials.template size<material_id::e_material_slab>()
+              << " slabs into detector materials");
+        }
+        if constexpr (concepts::has_material_rods<detector_t>) {
+          if (sf.material().id() == material_id::e_material_rod) {
+            DETRAY_DEBUG_HOST(
+                "-> update material rod offset: "
+                << material.template size<material_id::e_material_rod>());
+            sf.update_material(
+                material.template size<material_id::e_material_rod>());
+          }
+
+          DETRAY_DEBUG_HOST(
+              "-> Appending "
+              << m_materials.template size<material_id::e_material_rod>()
+              << " rods into detector materials");
+        }
+      }
     }
+
+    // Add material to the detector
+    det._materials.append(std::move(m_materials));
+    m_materials.clear_all();
 
     DETRAY_VERBOSE_HOST(
         "Successfully built homogeneous material for volume: " << this->name());
@@ -112,71 +158,6 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
   }
 
  private:
-  /// Append the material of the volume to the detector @param det and shift
-  /// the surface material links accordingly
-  DETRAY_HOST
-  void add_material(detector_t &det) {
-    const auto &material = det.material_store();
-
-    // Update the surface material links and shift them according to the
-    // number of material slabs/rods that were in the detector previously
-    for (auto &sf : this->surfaces()) {
-      DETRAY_DEBUG_HOST("-> sf=" << sf);
-      DETRAY_DEBUG_HOST("  -> material_id=" << sf.material().id());
-      if constexpr (concepts::has_material_slabs<detector_t>) {
-        if (sf.material().id() == material_id::e_material_slab) {
-          dindex offset =
-              material.template size<material_id::e_material_slab>();
-          DETRAY_DEBUG_HOST("-> update material slab offset: " << offset);
-          sf.update_material(offset);
-          DETRAY_DEBUG_HOST("-> material now: " << sf.material());
-        }
-
-        DETRAY_DEBUG_HOST(
-            "-> Appending "
-            << m_materials.template size<material_id::e_material_slab>()
-            << " slabs into detector materials");
-      }
-      if constexpr (concepts::has_material_rods<detector_t>) {
-        if (sf.material().id() == material_id::e_material_rod) {
-          DETRAY_DEBUG_HOST(
-              "-> update material rod offset: "
-              << material.template size<material_id::e_material_rod>());
-          sf.update_material(
-              material.template size<material_id::e_material_rod>());
-        }
-
-        DETRAY_DEBUG_HOST(
-            "-> Appending "
-            << m_materials.template size<material_id::e_material_rod>()
-            << " rods into detector materials");
-      }
-    }
-
-    // Add material to the detector
-    det._materials.append(std::move(m_materials));
-    m_materials.clear_all();
-  }
-
-  /// Add only the material of the volume to the detector @param det that is
-  /// not yet present there and link the surfaces to the existing entries
-  /// otherwise
-  DETRAY_HOST
-  void add_deduplicated_material(detector_t &det) {
-    DETRAY_VERBOSE_HOST("-> Deduplicate homogeneous material");
-
-    if constexpr (concepts::has_material_slabs<detector_t>) {
-      deduplicate<material_id::e_material_slab>(det);
-    }
-    if constexpr (concepts::has_material_rods<detector_t>) {
-      deduplicate<material_id::e_material_rod>(det);
-    }
-
-    // Add remaining material types, if any
-    det._materials.append(std::move(m_materials));
-    m_materials.clear_all();
-  }
-
   /// Deduplicate the material of type @tparam mat_id against the material in
   /// the detector @param det
   template <material_id mat_id>
@@ -190,7 +171,7 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
     [[maybe_unused]] const std::size_t n_before{det_coll.size()};
 
     // Global index for every volume local material entry
-    detail::homogeneous_material_lookup lookup{det_coll};
+    homogeneous_material_lookup lookup{det_coll};
     std::vector<dindex> global_idx;
     global_idx.reserve(local_coll.size());
     for (const auto &mat : local_coll) {
@@ -210,6 +191,71 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
                                      << mat_id << " to detector materials");
     local_coll.clear();
   }
+
+  /// @brief Lookup of identical homogeneous material entries in a collection.
+  ///
+  /// Holds a hash index over the collection @param coll, which has to outlive
+  /// the lookup. Entries that are appended to the collection via @c insert are
+  /// indexed as well.
+  template <typename collection_t>
+  class homogeneous_material_lookup {
+    using value_type = typename collection_t::value_type;
+
+   public:
+    /// Index all entries that are currently in the collection @param coll
+    DETRAY_HOST explicit homogeneous_material_lookup(collection_t &coll)
+        : m_coll{coll} {
+      for (dindex i = 0u; i < static_cast<dindex>(m_coll.size()); ++i) {
+        m_index.emplace(material_hash(m_coll[i]), i);
+      }
+    }
+
+    /// @returns a hash of a homogeneous material entry (slab or rod), which is
+    /// consistent with equality operator
+    template <typename material_entry_t>
+    DETRAY_HOST std::size_t material_hash(const material_entry_t &entry) const {
+      using scalar_t = typename material_entry_t::scalar_type;
+
+      const auto &mat = entry.get_material();
+      std::size_t seed{0u};
+      for (const scalar_t v :
+           {entry.thickness(), mat.X0(), mat.L0(), mat.Ar(), mat.Z()}) {
+        // Same combination as boost::hash_combine
+        seed ^= std::hash<scalar_t>{}(v) + 0x9e3779b9u + (seed << 6u) +
+                (seed >> 2u);
+      }
+      return seed;
+    }
+
+    /// @returns the index of an entry identical to @param entry in the
+    /// collection, if one exists
+    DETRAY_HOST std::optional<dindex> find(const value_type &entry) const {
+      auto [first, last] = m_index.equal_range(material_hash(entry));
+      for (auto itr = first; itr != last; ++itr) {
+        if (m_coll[itr->second] == entry) {
+          return itr->second;
+        }
+      }
+      return std::nullopt;
+    }
+
+    /// @returns the index of an entry identical to @param entry in the
+    /// collection. The entry is appended, if no such entry exists yet.
+    DETRAY_HOST dindex insert(const value_type &entry) {
+      if (auto idx = find(entry); idx.has_value()) {
+        return *idx;
+      }
+      const auto idx{static_cast<dindex>(m_coll.size())};
+      m_coll.push_back(entry);
+      m_index.emplace(material_hash(entry), idx);
+
+      return idx;
+    }
+
+   private:
+    collection_t &m_coll;
+    std::unordered_multimap<std::size_t, dindex> m_index{};
+  };
 
   // Material container for this volume
   typename detector_t::material_container m_materials{};
