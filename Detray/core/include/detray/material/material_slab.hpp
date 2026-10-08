@@ -41,6 +41,8 @@ struct material_slab {
 
   /// Equality operator
   ///
+  /// @note: @c thickness_in_X0 and @c thickness_in_L0 are dependent quantities
+  ///
   /// @param rhs is the right hand side to be compared to
   /// @return whether material and thickness match
   DETRAY_HOST_DEVICE
