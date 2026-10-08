@@ -15,6 +15,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <limits>
 #include <numeric>
 
 namespace Acts {
@@ -55,9 +57,17 @@ BroadTripletSeedFilter::BroadTripletSeedFilter(const Config& config,
                                                State& state, Cache& cache,
                                                const Logger& logger)
     : m_cfg(&config), m_state(&state), m_cache(&cache), m_logger(&logger) {
+  // Without seedConfirmation at most maxSeedsPerSpM + 1 seeds survive anyway
   state.candidatesCollector =
-      CandidatesForMiddleSp(this->config().maxSeedsPerSpMConf,
-                            this->config().maxQualitySeedsPerSpMConf);
+      this->config().seedConfirmation
+          ? CandidatesForMiddleSp(this->config().maxSeedsPerSpMConf,
+                                  this->config().maxQualitySeedsPerSpMConf)
+          : CandidatesForMiddleSp(
+                static_cast<CandidatesForMiddleSp::Size>(
+                    std::min<std::uint64_t>(
+                        std::uint64_t{this->config().maxSeedsPerSpM} + 1,
+                        CandidatesForMiddleSp::kNoSize)),
+                0);
 }
 
 bool BroadTripletSeedFilter::sufficientTopDoublets(
