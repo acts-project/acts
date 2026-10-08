@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -37,6 +38,9 @@ class MaterialEffectsAccumulator {
   double m_initialMomentum = 0;
 
   MaterialSlab m_accumulatedMaterial;
+
+  /// Sign of the accumulated material effects
+  Direction m_direction = Direction::Positive();
 
   double m_varAngle = 0;
   double m_varPosition = 0;
