@@ -57,6 +57,11 @@ TrackFittingAlgorithm::TrackFittingAlgorithm(
     throw std::invalid_argument("The configured calibrator needs clusters");
   }
 
+  if (m_cfg.referenceSurface == nullptr) {
+    m_cfg.referenceSurface =
+        Acts::Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3::Zero());
+  }
+
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
   m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
