@@ -153,23 +153,25 @@ TEST(CUDAClustering, SingleModule) {
 
   edm::measurement_collection::host references{mng_mr};
   references.push_back({{2.5f, 2.5f},
-                        {0.75f, 0.0833333f},
+                        {0.0833333f, 0.0833333f},
                         2u,
                         0.f,
                         0.f,
                         0u,
                         detray::geometry::identifier{0u},
                         {1u, 1u},
-                        0u});
+                        0u,
+                        {0.666667f, 0.f}});
   references.push_back({{6.5f, 5.5f},
-                        {0.483333f, 0.483333f},
+                        {0.0833333f, 0.0833333f},
                         2u,
                         0.f,
                         0.f,
                         0u,
                         detray::geometry::identifier{0u},
                         {1u, 1u},
-                        1u});
+                        1u,
+                        {0.4f, 0.4f}});
 
   std::vector<std::vector<unsigned int>> reference_disjoint_set{
       {0, 1, 2}, {3, 4, 5, 6, 7}};
@@ -197,23 +199,25 @@ TEST(CUDAClustering, SingleModuleUnsorted) {
 
   edm::measurement_collection::host references{mng_mr};
   references.push_back({{2.5f, 2.5f},
-                        {0.75f, 0.0833333f},
+                        {0.0833333f, 0.0833333f},
                         2u,
                         0.f,
                         0.f,
                         0u,
                         detray::geometry::identifier{0u},
                         {1u, 1u},
-                        0u});
+                        0u,
+                        {0.666667f, 0.f}});
   references.push_back({{6.5f, 5.5f},
-                        {0.483333f, 0.483333f},
+                        {0.0833333f, 0.0833333f},
                         2u,
                         0.f,
                         0.f,
                         0u,
                         detray::geometry::identifier{0u},
                         {1u, 1u},
-                        1u});
+                        1u,
+                        {0.4f, 0.4f}});
 
   std::vector<std::vector<unsigned int>> reference_disjoint_set{
       {5, 4, 1}, {7, 2, 3, 0, 6}};
