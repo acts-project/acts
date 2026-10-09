@@ -1,3 +1,4 @@
+add_unittest(DoubletSeedFinderSorting DoubletSeedFinderSortingTests.cpp)
 add_unittest(BinnedGroup BinnedGroupTests.cpp)
 add_unittest(BroadTripletSeedFilter BroadTripletSeedFilterTests.cpp)
 add_unittest(EstimateTrackParamsFromSeed EstimateTrackParamsFromSeedTest.cpp)
