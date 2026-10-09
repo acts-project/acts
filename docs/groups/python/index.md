@@ -42,6 +42,18 @@ use `-DACTS_BUILD_EXAMPLES_ROOT=ON`; this also enables the ROOT plugin. A source
 development headers. The `ActsPythonBindings` target builds the enabled bindings, and the setup
 script adds the built modules and dependencies to your environment.
 
+The geometry and material mapping scripts (`geometry.py`,
+`material_recording.py`, `material_mapping.py` and `material_validation.py`)
+are installed to `<prefix>/share/acts/Examples/Scripts/Python`, alongside the
+material mapping helpers in `<prefix>/share/acts/Examples/Scripts/MaterialMapping`.
+The installed `this_acts.sh` exports the Python script directory as
+`ACTS_EXAMPLES_SCRIPTS`:
+
+```console
+source <prefix>/bin/this_acts_withdeps.sh
+python3 $ACTS_EXAMPLES_SCRIPTS/geometry.py
+```
+
 | Capability | PyPI (`pyacts`) | Full installation (source build) |
 | :--- | :--- | :--- |
 | Plugins | Arrow, JSON | All available plugins, including ROOT, DD4hep, or Geant4 |
