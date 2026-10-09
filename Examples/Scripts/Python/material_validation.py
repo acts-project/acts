@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+from pathlib import Path
 
 import acts
 from acts import (
@@ -22,8 +23,25 @@ from acts.examples import (
 
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.root import RootMaterialTrackWriter
+from acts.json import JsonMaterialDecorator, MaterialMapJsonConverter
 
 u = acts.UnitConstants
+
+
+def loadMaterialDecorator(mapFile):
+    """Load binned or grid maps from ROOT, legacy or versioned JSON/CBOR files.
+
+    JSON/CBOR encoding and optional zstd compression are detected from contents.
+    ROOT maps use the existing binned/homogeneous material reader.
+    """
+    path = Path(mapFile)
+    if path.suffix == ".root":
+        return acts.IMaterialDecorator.fromFile(path)
+    return JsonMaterialDecorator(
+        rConfig=MaterialMapJsonConverter.Config(),
+        jFileName=str(path),
+        level=acts.logging.INFO,
+    )
 
 
 def runMaterialValidation(
@@ -131,7 +149,11 @@ def main():
     )
     p.add_argument("-j", "--threads", type=int, default=-1, help="Number of threads")
     p.add_argument(
-        "-m", "--map", type=str, default="", help="Input file for the material map"
+        "-m",
+        "--map",
+        type=str,
+        default="",
+        help="Material map: ROOT, legacy/versioned JSON or CBOR (including grid maps)",
     )
     p.add_argument(
         "--eta-range",
@@ -172,7 +194,7 @@ def main():
     args = p.parse_args()
     materialDecorator = None
     if args.map != "":
-        materialDecorator = acts.IMaterialDecorator.fromFile(args.map)
+        materialDecorator = loadMaterialDecorator(args.map)
 
     detector = getOpenDataDetector(materialDecorator)
     trackingGeometry = detector.trackingGeometry()
