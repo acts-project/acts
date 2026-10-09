@@ -5,6 +5,27 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "pyacts"
 dynamic = ["version", "readme"]
+description = "Python bindings for ACTS, an experiment-independent toolkit for charged particle track reconstruction"
+authors = [{ name = "ACTS Project" }]
+keywords = [
+    "tracking",
+    "track reconstruction",
+    "particle physics",
+    "high energy physics",
+    "HEP",
+]
+# No Python version classifiers: supported versions are derived from
+# requires-python, see CI/supported_python_versions.py
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering :: Physics",
+]
 # Single source of truth for the Python versions Acts supports. Drives the
 # cibuildwheel target matrix (see CI/supported_python_versions.py).
 requires-python = ">=3.11"
@@ -13,7 +34,12 @@ license-files = ["LICENSE"]
 
 [project.urls]
 Homepage = "https://acts-project.github.io"
+Documentation = "https://acts-project.github.io/group__python__bindings.html"
 Repository = "https://github.com/acts-project/acts"
+Issues = "https://github.com/acts-project/acts/issues"
+Changelog = "https://github.com/acts-project/acts/releases"
+Citation = "https://doi.org/10.5281/zenodo.5141418"
+Chat = "https://mattermost.web.cern.ch/acts/"
 
 [tool.scikit-build]
 wheel.packages = [] # Manage installation with cmake
@@ -36,11 +62,54 @@ content-type = "text/markdown"
 
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
 text = """
-<a href="https://github.com/acts-project/acts">
-    <img src="https://github.com/acts-project/acts/blob/main/docs/figures/acts_logo_colored.svg" alt="ACTS logo">
-</a>
+[![ACTS logo](https://raw.githubusercontent.com/acts-project/acts/main/docs/figures/acts_logo_colored.svg)](https://github.com/acts-project/acts)
 """
 
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
 path = "README.md"
 end-before = "## Quick start"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "docs/groups/python/index.md"
+start-at = "# Installation"
+end-before = "@snippet"
+
+# Resolve the Doxygen snippet of the "Getting started" section
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+text = "```python\n"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "docs/examples/test_python_getting_started.py"
+start-after = "#! [First Python run]\n"
+end-before = "    #! [First Python run]"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+text = "```\n"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "docs/groups/python/index.md"
+start-after = "First Python run\n"
+
+# Drop development-status badges that are not relevant for PyPI users
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\[!\[(?:Coverage|Status|Metrics)\]\([^\n]*\n'
+replacement = ""
+
+# Adapt the docs section: nest it below the README title and replace GitHub
+# alerts, which PyPI renders literally
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '(?m)^# (Installation|Getting started)$'
+replacement = '## \1'
+
+# Dedent the snippet, which is nested in a test function
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '(?m)^    '
+replacement = ""
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '> \[!warning\]'
+replacement = "> **Warning**"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '> \[!note\]'
+replacement = "> **Note**"
