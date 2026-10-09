@@ -97,7 +97,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
         unsigned nExistingPatterns {countPatterns(outPatterns, seed, seedCoords)};
         if (nExistingPatterns >= m_cfg.maxSeedAttempts) {
             // Try first to resolve overlaps and re-count the number of patterns containing the seed
-            outPatterns = resolveOverlaps(outPatterns);
+            outPatterns = resolveOverlaps(gctx, outPatterns);
             nExistingPatterns = countPatterns(outPatterns, seed, seedCoords);
             if (nExistingPatterns >= m_cfg.maxSeedAttempts) {
                 ACTS_VERBOSE(__func__<<"() Seed has already been used in "
@@ -198,7 +198,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
                 std::swap(startPatternBuff, endPatternBuff);
             }
             return startPatternBuff.size() > 1 
-                ? resolveOverlaps(startPatternBuff) 
+                ? resolveOverlaps(gctx, startPatternBuff) 
                 : PatternStateAuxVec{std::move(startPatternBuff.back())};
         };
 
@@ -223,7 +223,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
         }
         /** Ensure there are no overlaps */
         if (backwardExtended.size() > 1) {
-            backwardExtended = resolveOverlaps(backwardExtended);
+            backwardExtended = resolveOverlaps(gctx, backwardExtended);
         }
 
         for (PatternStateAux& pat : backwardExtended) {
@@ -238,7 +238,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
     }
     ACTS_VERBOSE(__func__<<"() Found in total "<<outPatterns.size()
         <<" patterns in eta before overlap removal");
-    return resolveOverlaps(outPatterns);
+    return resolveOverlaps(gctx, outPatterns);
 }
 template<GlobPatFinderHit Hit_t,
          SectorType Sector_t,
@@ -415,25 +415,20 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::isPhiCompatible(
     const PatternStateAux& pat,
     const Hit_t& hit) const 
 {
-    /** We check that the test hit is compatible with the pattern phi, if available, which is given by the first
-        *  phi measurement in the pattern. If the pattern doesn't have a phi yet, we check that the test hit is in 
-        *  the same pattern sector(s) */
-    const double testPhi {VectorHelpers::phi(hit.globalPosition(gctx))};
+    /** We check that the test hit is compatible with the pattern phi, if available.  
+     *  If not, we check that the test hit is in the same pattern sector. We expect
+     *  the test hit to be in the same emisphere as the pattern. */
+    const Vector3 pos {hit.globalPosition(gctx)};
     if (pat.nPhiLayers > 0) {
-        const double patPhiCov = pat.bendPlaneCov[0];
-        const double deltaPhiSigma {std::sqrt(patPhiCov + hit.phiVariance())};
-        const double deltaPhi {Acts::detail::difference_periodic(
-            pat.patPhi, testPhi, 2. * std::numbers::pi)};
-        if (std::abs(deltaPhi) > m_cfg.nPhiSigma * deltaPhiSigma) {
-            ACTS_VERBOSE(__func__<<"() The pattern with phi = "
-                <<inDeg(pat.patPhi)<<" +- "<<inDeg(std::sqrt(patPhiCov))
-                <<" is not compatible with the test hit with phi "
-                <<inDeg(testPhi) <<" +- "<<inDeg(std::sqrt(hit.phiVariance())));
+        if (std::abs(pat.angleToBendPlane(pos)) > m_cfg.phiTolerance) {
+            ACTS_VERBOSE(__func__<<"() The pattern with phi = "<<inDeg(pat.patPhi)
+                <<" is not compatible with the test hit with phi "<<inDeg(VectorHelpers::phi(pos))
+                <<" and angle to the bending plane of "<<inDeg(pat.angleToBendPlane(pos)));
             return false;
         }
     } else {
-        if (!pat.sector.insideSector(testPhi)) {
-            ACTS_VERBOSE(__func__<<"() The test hit with phi = "<<inDeg(testPhi)
+        if (!pat.sector.insideSector(VectorHelpers::phi(pos))) {
+            ACTS_VERBOSE(__func__<<"() The test hit with phi = "<<inDeg(VectorHelpers::phi(pos))
                 <<" is not inside the pattern sector: "<<static_cast<int>(pat.sector.sector()));
             return false;
         }            
@@ -510,6 +505,7 @@ template<GlobPatFinderHit Hit_t,
          PatternTopology<Hit_t> Topology_t>
 typename GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::PatternStateAuxVec
 GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::resolveOverlaps(
+    const GeometryContext& gctx,
     PatternStateAuxVec& toResolve) const 
 {
     ACTS_VERBOSE(__func__<<"() Resolving overlaps among "
@@ -517,7 +513,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::resolveOverlaps(
     PatternStateAuxVec outputPatterns{};
     outputPatterns.reserve(toResolve.size());
     /** Check if two patterns overlap in space */
-    auto areOverlapping = [this](const PatternStateAux& a, const PatternStateAux& b) {
+    auto areOverlapping = [&](const PatternStateAux& a, const PatternStateAux& b) {
         /** Check first the geometrical overlap */
         if(!a.sector.isNeighbour(b.sector)) {
             return false;
@@ -526,19 +522,22 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::resolveOverlaps(
         if (std::abs(a.patTheta - b.patTheta) > 2.*m_cfg.maxThetaSizeOverlap) {
             return false;
         }
-        if (a.nPhiLayers > 0 && b.nPhiLayers > 0) {
+        // Common reference radius: where the patterns actually live, e.g. the anchor hit of either one.
+        const double refR {a.lineAnchorHit->globalPosition(gctx).template head<2>().norm()};
+        if (a.nPhiLayers > 1 && b.nPhiLayers > 1) {
             using namespace Acts::UnitLiterals;
             if (std::abs(Acts::detail::difference_periodic(
-                    a.patPhi, b.patPhi, 2. * std::numbers::pi)) 
-                        > 5._degree) { /////// PUT THE ACCCEPTANCE!
+                    a.phiAtRadius(refR), 
+                    b.phiAtRadius(refR), 2. * std::numbers::pi)) 
+                        > 2.*m_cfg.phiTolerance) {
                 return false;
             }
         } else if (a.nPhiLayers > 0) {
-            if (!b.sector.insideSector(a.patPhi)) {
+            if (!b.sector.insideSector(a.phiAtRadius(refR))) {
                 return false;
             }
         } else if (b.nPhiLayers > 0) {
-            if (!a.sector.insideSector(b.patPhi)) {
+            if (!a.sector.insideSector(b.phiAtRadius(refR))) {
                 return false;
             }
         }
@@ -684,11 +683,6 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
         auto projOntoPhiPlane = [&pat](const Vector3& pos) -> Vector3 {
             return pos - (pos.dot(pat.bendPlaneNorm) - pat.patPhiOffset) * pat.bendPlaneNorm;
         };
-        auto phiPull = [&](const Hit_t& hit) {
-            return std::abs(Acts::detail::difference_periodic(
-                        VectorHelpers::phi(hit.globalPosition(gctx)), pat.patPhi, 2. * std::numbers::pi)
-                    ) / std::sqrt(hit.phiVariance());
-        };
 
         std::array<std::vector<Hit_t>, Topology_t::nGroups> phihitsPerGroup{
             onlyPhiProvider.getPhiOnlyHits(pat, gctx)};
@@ -738,7 +732,6 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
                 ACTS_VERBOSE(__func__<<"() Intersect distance from lower strip edge: "
                     <<stripIntersect<<", proj strip length: "<<stripProjLength);
                 
-                using namespace Acts::UnitLiterals;
                 constexpr double margin {10._mm};
                 if (stripIntersect < -margin || stripIntersect > (stripProjLength + margin)) {
                     ACTS_VERBOSE(__func__<<"() The pattern falls outside the test hit strip in eta - skip hit.");
@@ -750,7 +743,8 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
                         [&](const Hit_t& h){
                             return Topology_t::sameLayer(h, newHit); });
                     it != pat.phiOnlyHits.end()) {
-                    if (phiPull(*it) < phiPull(newHit)) {
+                    if (std::abs(pat.angleToBendPlane(it->globalPosition(gctx))) < 
+                            std::abs(pat.angleToBendPlane(newHitPos))) {
                         ACTS_VERBOSE(__func__<<"() A phi hit with better pull exists on same layer - skip hit.");
                         continue;
                     }

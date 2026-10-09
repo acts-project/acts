@@ -29,41 +29,6 @@ namespace {
 
 namespace Acts::Experimental::detail {
 
-template <GlobPatFinderHit Hit_t>
-double computePhiVariance(const Hit_t& hit,
-                          const Acts::GeometryContext& gctx) {
-    const auto* sp = hit.spacePoint();
-    using CovIdx = Acts::Experimental::detail::CompSpacePointAuxiliaries::ResidualIdx;
-    const Vector3& pos {hit.globalPosition(gctx)};
-    const Vector3 phiGrad {Acts::Vector3{-pos.y(), pos.x(), 0.} / 
-            Acts::hypotSquare(pos.x(), pos.y())};
-
-    if (sp->isStraw()) {
-        const double discVar {Acts::square(sp->driftRadius()) +
-            sp->covariance()[Acts::toUnderlying(CovIdx::bending)]};
-
-        return discVar / Acts::hypotSquare(pos.x(), pos.y()) +
-            Acts::square(hit.globalSensorDirection(gctx).dot(phiGrad)) * 
-                (sp->covariance()[Acts::toUnderlying(CovIdx::nonBending)] - discVar);   
-    }
-    /// Strip measuremets      
-    StripMeasurementDirections stripDirs {hit.stripMeasurementDirections(gctx)};
-    /** Helper method to compute the contribution of a 1D measurement to the residual variance */
-    auto oneDimContribution = [&](CovIdx idx, const Vector3& measDir) -> double {
-        return hit.spacePoint()->covariance()[Acts::toUnderlying(idx)] * 
-            Acts::square(measDir.dot(phiGrad));
-    };
-    if (!sp->measuresLoc1()) {
-        /// Only phi strip measurement
-        assert(!stripDirs.second);
-        return oneDimContribution(CovIdx::nonBending, stripDirs.first) + 
-               oneDimContribution(CovIdx::bending, hit.globalSensorDirection(gctx));    
-    }
-    return oneDimContribution(CovIdx::bending, stripDirs.first) + 
-        (stripDirs.second ? oneDimContribution(CovIdx::nonBending, *stripDirs.second) 
-                          : oneDimContribution(CovIdx::nonBending, hit.globalSensorDirection(gctx)));            
-}
-
 template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
@@ -441,6 +406,33 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::updatePatternPhi(
     ACTS_VERBOSE(__func__<<"() Updated pattern phi "
         <<inDeg(patPhi)<<", offset "<<patPhiOffset<<", BendPlaneCov "<<print(bendPlaneCov)
         <<", with "<<static_cast<int>(nPhiLayers)<<" phi hits and beamspot");
+}
+
+template <GlobPatFinderHit Hit_t, 
+          SectorType Sector_t, 
+          PatternTopology<Hit_t> Topology_t>
+double PatternStateAux<Hit_t, Sector_t, Topology_t>::angleToBendPlane(
+    const Vector3& pos) const 
+{
+    /* A point X has distance = n.X - s and signed coordinate along the plane
+     * rho  = e_r.X, with e_r = (n_y, -n_x). The atan of these gives the angle
+     * between the point and the plane, as seen from the origin. The angle is in (-pi, pi] */
+    const double dist{bendPlaneNorm.dot(pos) - patPhiOffset};
+    const double rho{bendPlaneNorm.y() * pos.x()
+                   - bendPlaneNorm.x() * pos.y()};
+    return std::atan2(dist, rho);
+}
+
+template <GlobPatFinderHit Hit_t, 
+          SectorType Sector_t, 
+          PatternTopology<Hit_t> Topology_t>
+double PatternStateAux<Hit_t, Sector_t, Topology_t>::phiAtRadius(
+    const double radius
+) const
+{
+    /** Approximate azimuth of the pattern's line at transverse distance R from the beam line
+     *  (phi + atan(s/R) ~ phi + s/R */
+    return patPhi + patPhiOffset / radius;
 }
 
 template <GlobPatFinderHit Hit_t, 
