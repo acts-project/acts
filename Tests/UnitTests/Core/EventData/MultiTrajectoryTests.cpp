@@ -390,8 +390,9 @@ BOOST_AUTO_TEST_CASE(TypedComponentsPreserveReferencesAndErrors) {
   BOOST_CHECK_THROW(state.component<double>("custom"_hash), std::bad_any_cast);
   BOOST_CHECK_THROW(state.component<int>("unknown"_hash), std::runtime_error);
   ConstVectorMultiTrajectory immutable(std::move(trajectory));
-  const auto& previous = immutable.getTrackState(state.index())
-                             .component<TrackIndexType, "previous"_hash>();
+  const auto immutableState = immutable.getTrackState(state.index());
+  const auto& previous =
+      immutableState.component<TrackIndexType, "previous"_hash>();
   BOOST_CHECK((&previous ==
                std::any_cast<const TrackIndexType*>(
                    immutable.component_impl("previous"_hash, state.index()))));

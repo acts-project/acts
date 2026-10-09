@@ -413,6 +413,11 @@ class ConstVectorTrackContainer final
         *this, key, itrack);
   }
 
+  /// Retrieve a const reference to a built-in or dynamic component.
+  /// @tparam Value Type of the component
+  /// @param key Component key
+  /// @param itrack Track index
+  /// @return Const reference to the component
   template <typename Value>
   const Value& componentTyped_impl(HashedString key, IndexType itrack) const {
     return detail_vtc::VectorTrackContainerBase::componentTyped_impl<Value,

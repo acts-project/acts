@@ -733,6 +733,11 @@ class ConstVectorMultiTrajectory final
         *this, key, istate);
   }
 
+  /// Retrieve a const reference to a built-in or dynamic component.
+  /// @tparam Value Type of the component
+  /// @param key Component key
+  /// @param istate Track-state index
+  /// @return Const reference to the component
   template <typename Value>
   const Value& componentTyped_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::componentTyped_impl<Value,
