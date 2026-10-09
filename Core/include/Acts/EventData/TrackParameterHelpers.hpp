@@ -20,7 +20,7 @@ namespace Acts {
 /// @tparam Derived Eigen expression type
 /// @param parameters Raw bound coordinates
 /// @return Global unit direction vector
-/// @throws std::domain_error for nonfinite direction coordinates
+/// @pre Direction coordinates are finite (asserted).
 /// @note This helper assumes the canonical global-spherical parametrization.
 template <typename Derived>
 Vector3 directionFromBoundParameters(
@@ -61,7 +61,7 @@ bool isFreeVectorValid(
 /// @param boundParams The bound parameters to normalize
 ///
 /// @return The normalized bound parameters
-/// @throws std::domain_error for nonfinite input
+/// @pre Inputs and arithmetic results are finite (asserted).
 inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
   return BoundParametrization::globalSpherical().canonicalize(boundParams);
 }
@@ -73,7 +73,7 @@ inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
 /// @param rhs The right hand side bound parameters
 ///
 /// @return The sum of the bound parameters
-/// @throws std::domain_error for nonfinite input
+/// @pre Inputs and arithmetic results are finite (asserted).
 inline BoundVector addBoundParameters(const BoundVector& lhs,
                                       const BoundVector& rhs) {
   return BoundParametrization::globalSpherical().update(lhs, rhs);
@@ -86,7 +86,7 @@ inline BoundVector addBoundParameters(const BoundVector& lhs,
 /// @param rhs The right hand side bound parameters
 ///
 /// @return The difference of the bound parameters
-/// @throws std::domain_error for nonfinite input
+/// @pre Inputs and arithmetic results are finite (asserted).
 inline BoundVector subtractBoundParameters(const BoundVector& lhs,
                                            const BoundVector& rhs) {
   return BoundParametrization::globalSpherical().difference(lhs, rhs);

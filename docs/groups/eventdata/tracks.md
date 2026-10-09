@@ -72,8 +72,13 @@ follow-up work.
 It permits axial directions. `isInDomain()` additionally checks whether the
 inverse direction derivative is sufficiently conditioned. The inverse Jacobian
 throws at a pole or below its transverse-fraction threshold; it includes input
-normalization when given a non-unit Cartesian direction. Invalid operation
-inputs produce exceptions in release builds as well.
+normalization when given a non-unit Cartesian direction. Computational methods
+assert caller preconditions: finite coordinates/covariance, nonzero finite
+Cartesian directions with representable norms, valid conditioning thresholds,
+and finite arithmetic results. These assertions disappear when `NDEBUG` is
+set (unless the build forces assertions). Use `isValid()` or `isInDomain()` for
+explicit runtime validation of coordinates. Chart singularities and conditioning
+failures still throw in release builds.
 
 `canonicalize(parameters, covariance)` returns both coordinates and covariance
 in the canonical basis. Folding theta across a pole reverses its covariance

@@ -14,6 +14,7 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
+#include <cassert>
 #include <cmath>
 #include <limits>
 #include <numbers>
@@ -34,6 +35,11 @@ namespace Acts {
 /// Currently only canonical global-spherical coordinates are supported. Values
 /// can represent the poles, but the inverse direction derivative is singular
 /// there. No alternative chart can be selected yet.
+///
+/// Computational methods require finite inputs and representable arithmetic
+/// results. These caller preconditions are checked with assertions. Use
+/// isValid() or isInDomain() for explicit validation of untrusted coordinates.
+/// Runtime chart singularities remain errors in release builds.
 class BoundParametrization {
  private:
   struct GlobalSpherical {
@@ -41,7 +47,7 @@ class BoundParametrization {
     Vector3 direction(const Eigen::MatrixBase<Derived>& parameters) const {
       const double phi = parameters[eBoundDir0];
       const double theta = parameters[eBoundDir1];
-      requireFiniteAngles(phi, theta);
+      assertFiniteAngles(phi, theta);
       return makeDirectionFromPhiTheta(phi, theta);
     }
 
@@ -58,7 +64,7 @@ class BoundParametrization {
         const Eigen::MatrixBase<Derived>& parameters) const {
       const double phi = parameters[eBoundDir0];
       const double theta = parameters[eBoundDir1];
-      requireFiniteAngles(phi, theta);
+      assertFiniteAngles(phi, theta);
       const double cp = std::cos(phi), sp = std::sin(phi);
       const double ct = std::cos(theta), st = std::sin(theta);
       Matrix<3, 2> jacobian;
@@ -68,7 +74,7 @@ class BoundParametrization {
 
     Matrix<2, 3> directionCoordinatesJacobian(
         const Vector3& direction, double minTransverse = 1e-12) const {
-      checkThreshold(minTransverse);
+      assertValidThreshold(minTransverse);
       const Vector3 unit = unitDirection(direction);
       const double transverse = std::hypot(unit.x(), unit.y());
       if (transverse <= minTransverse) {
@@ -85,7 +91,7 @@ class BoundParametrization {
     template <typename Derived>
     bool isInDomain(const Eigen::MatrixBase<Derived>& parameters,
                     double minTransverse = 1e-12) const {
-      checkThreshold(minTransverse);
+      assertValidThreshold(minTransverse);
       return isValid(parameters, true, 0.) && parameters[eBoundDir1] > 0. &&
              parameters[eBoundDir1] < std::numbers::pi &&
              std::sin(parameters[eBoundDir1]) > minTransverse;
@@ -117,7 +123,7 @@ class BoundParametrization {
     template <typename Derived>
     BoundVector canonicalize(
         const Eigen::MatrixBase<Derived>& parameters) const {
-      requireFinite(parameters);
+      assertFinite(parameters);
       BoundVector result = parameters;
       std::tie(result[eBoundDir0], result[eBoundDir1]) =
           detail::normalizePhiTheta(result[eBoundDir0], result[eBoundDir1]);
@@ -127,7 +133,7 @@ class BoundParametrization {
     template <typename Derived>
     BoundMatrix canonicalizationJacobian(
         const Eigen::MatrixBase<Derived>& parameters) const {
-      requireFinite(parameters);
+      assertFinite(parameters);
       const double theta = detail::radian_pos(parameters[eBoundDir1]);
       if (theta == 0. || theta == std::numbers::pi) {
         throw std::domain_error(
@@ -144,7 +150,7 @@ class BoundParametrization {
     std::pair<BoundVector, BoundMatrix> canonicalize(
         const Eigen::MatrixBase<Derived>& parameters,
         const Eigen::MatrixBase<Covariance>& covariance) const {
-      requireFinite(covariance);
+      assertFinite(covariance);
       const BoundMatrix jacobian = canonicalizationJacobian(parameters);
       BoundMatrix transformed = covariance;
       if (jacobian(eBoundDir1, eBoundDir1) < 0.) {
@@ -157,10 +163,10 @@ class BoundParametrization {
     template <typename Left, typename Right>
     BoundVector difference(const Eigen::MatrixBase<Left>& lhs,
                            const Eigen::MatrixBase<Right>& rhs) const {
-      requireFinite(lhs);
-      requireFinite(rhs);
+      assertFinite(lhs);
+      assertFinite(rhs);
       BoundVector result = lhs - rhs;
-      requireFinite(result);
+      assertFinite(result);
       result[eBoundDir0] = detail::radian_sym(result[eBoundDir0]);
       result[eBoundDir1] = detail::radian_sym(result[eBoundDir1]);
       return result;
@@ -173,27 +179,24 @@ class BoundParametrization {
     }
 
    private:
-    static void requireFiniteAngles(double phi, double theta) {
-      if (!std::isfinite(phi) || !std::isfinite(theta)) {
-        throw std::domain_error("Nonfinite bound direction coordinates");
-      }
+    static void assertFiniteAngles([[maybe_unused]] double phi,
+                                   [[maybe_unused]] double theta) {
+      assert(std::isfinite(phi) && std::isfinite(theta) &&
+             "Nonfinite bound direction coordinates");
     }
     template <typename Derived>
-    static void requireFinite(const Eigen::MatrixBase<Derived>& values) {
-      if (!values.allFinite()) {
-        throw std::domain_error("Nonfinite bound coordinates or covariance");
-      }
+    static void assertFinite(
+        [[maybe_unused]] const Eigen::MatrixBase<Derived>& values) {
+      assert(values.allFinite() && "Nonfinite bound coordinates or covariance");
     }
-    static void checkThreshold(double threshold) {
-      if (!std::isfinite(threshold) || threshold < 0. || threshold >= 1.) {
-        throw std::invalid_argument("Invalid direction conditioning threshold");
-      }
+    static void assertValidThreshold([[maybe_unused]] double threshold) {
+      assert(std::isfinite(threshold) && threshold >= 0. && threshold < 1. &&
+             "Invalid direction conditioning threshold");
     }
     static Vector3 unitDirection(const Vector3& direction) {
       const double norm = direction.stableNorm();
-      if (!direction.allFinite() || !std::isfinite(norm) || norm == 0.) {
-        throw std::domain_error("Direction must be finite and nonzero");
-      }
+      assert(direction.allFinite() && std::isfinite(norm) && norm > 0. &&
+             "Direction must be finite and nonzero with a representable norm");
       return direction / norm;
     }
   };
@@ -220,7 +223,7 @@ class BoundParametrization {
   /// @tparam Derived Eigen vector, map or expression type
   /// @param parameters Bound coordinates
   /// @return Global unit direction, including at the poles
-  /// @throws std::domain_error if the direction coordinates are not finite
+  /// @pre Direction coordinates are finite (asserted).
   template <typename Derived>
   Vector3 direction(const Eigen::MatrixBase<Derived>& parameters) const {
     return std::get<GlobalSpherical>(m_chart).direction(parameters);
@@ -229,7 +232,7 @@ class BoundParametrization {
   /// Encode a global direction into the two direction coordinates.
   /// @param direction Nonzero global direction; normalization is ignored
   /// @return Canonical direction coordinates; phi is zero at an exact pole
-  /// @throws std::domain_error for a zero or nonfinite direction
+  /// @pre Direction is finite and nonzero, with a representable norm (asserted).
   Vector2 directionCoordinates(const Vector3& direction) const {
     return std::get<GlobalSpherical>(m_chart).directionCoordinates(direction);
   }
@@ -238,7 +241,7 @@ class BoundParametrization {
   /// @tparam Derived Eigen vector, map or expression type
   /// @param parameters Bound coordinates
   /// @return A 3x2 Jacobian (rank deficient at the poles)
-  /// @throws std::domain_error for nonfinite direction coordinates
+  /// @pre Direction coordinates are finite (asserted).
   template <typename Derived>
   Matrix<3, 2> directionJacobian(
       const Eigen::MatrixBase<Derived>& parameters) const {
@@ -249,8 +252,9 @@ class BoundParametrization {
   /// @param direction Nonzero global direction; need not be normalized
   /// @param minTransverse Minimum transverse fraction for acceptable conditioning
   /// @return A 2x3 Jacobian including the derivative of normalization
+  /// @pre Direction is finite and nonzero, with a representable norm (asserted).
   /// @throws std::domain_error at a pole or below the conditioning threshold
-  /// @throws std::invalid_argument for an invalid threshold
+  /// @pre minTransverse is finite and in [0, 1) (asserted).
   Matrix<2, 3> directionCoordinatesJacobian(
       const Vector3& direction, double minTransverse = 1e-12) const {
     return std::get<GlobalSpherical>(m_chart).directionCoordinatesJacobian(
@@ -263,7 +267,7 @@ class BoundParametrization {
   /// @param parameters Bound coordinates, required to be canonical and finite
   /// @param minTransverse Minimum transverse fraction
   /// @return True inside the differentiable chart domain
-  /// @throws std::invalid_argument for an invalid threshold
+  /// @pre minTransverse is finite and in [0, 1) (asserted).
   template <typename Derived>
   bool isInDomain(const Eigen::MatrixBase<Derived>& parameters,
                   double minTransverse = 1e-12) const {
@@ -292,7 +296,7 @@ class BoundParametrization {
   /// @tparam Derived Eigen vector, map or expression type
   /// @param parameters Bound coordinates
   /// @return Canonical bound coordinates
-  /// @throws std::domain_error for nonfinite input
+  /// @pre Inputs and arithmetic results are finite (asserted).
   template <typename Derived>
   BoundVector canonicalize(const Eigen::MatrixBase<Derived>& parameters) const {
     return std::get<GlobalSpherical>(m_chart).canonicalize(parameters);
@@ -304,7 +308,8 @@ class BoundParametrization {
   /// @tparam Derived Eigen vector, map or expression type
   /// @param parameters Original bound coordinates
   /// @return Jacobian from the original to canonical coordinate basis
-  /// @throws std::domain_error for nonfinite input or exactly at a pole
+  /// @pre Input coordinates are finite (asserted).
+  /// @throws std::domain_error exactly at a pole
   template <typename Derived>
   BoundMatrix canonicalizationJacobian(
       const Eigen::MatrixBase<Derived>& parameters) const {
@@ -318,7 +323,8 @@ class BoundParametrization {
   /// @param parameters Original bound coordinates
   /// @param covariance Covariance in the original coordinate basis
   /// @return Canonical coordinates and transformed covariance
-  /// @throws std::domain_error for nonfinite input or an undefined derivative
+  /// @pre Input coordinates and covariance are finite (asserted).
+  /// @throws std::domain_error for an undefined derivative
   template <typename Derived, typename Covariance>
   std::pair<BoundVector, BoundMatrix> canonicalize(
       const Eigen::MatrixBase<Derived>& parameters,
@@ -333,7 +339,7 @@ class BoundParametrization {
   /// @param lhs Left bound coordinates
   /// @param rhs Right bound coordinates
   /// @return Residual suitable for a small filtering/smoothing update
-  /// @throws std::domain_error for nonfinite input
+  /// @pre Inputs and arithmetic results are finite (asserted).
   template <typename Left, typename Right>
   BoundVector difference(const Eigen::MatrixBase<Left>& lhs,
                          const Eigen::MatrixBase<Right>& rhs) const {
@@ -346,7 +352,7 @@ class BoundParametrization {
   /// @param parameters Original coordinates
   /// @param delta Small coordinate increment
   /// @return Canonical updated coordinates
-  /// @throws std::domain_error for nonfinite input
+  /// @pre Inputs and arithmetic results are finite (asserted).
   template <typename Parameters, typename Delta>
   BoundVector update(const Eigen::MatrixBase<Parameters>& parameters,
                      const Eigen::MatrixBase<Delta>& delta) const {
