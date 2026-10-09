@@ -170,7 +170,6 @@ class VectorMultiTrajectoryBase {
 
         h("meas", isMeas, weight(meas_size));
         h("measCov", isMeas, weight(meas_cov_size));
-        h("sourceLinks", isMeas, weight(sizeof(const SourceLink)));
         h("projectors", isMeas, weight(sizeof(SerializedSubspaceIndices)));
       }
 
@@ -196,6 +195,7 @@ class VectorMultiTrajectoryBase {
     TrackStateType::raw_type typeFlags{};
 
     IndexType iUncalibrated = kInvalid;
+    // Reserved: calibrated measurements do not store a second source link.
     IndexType iCalibratedSourceLink = kInvalid;
     IndexType measdim = kInvalid;
 

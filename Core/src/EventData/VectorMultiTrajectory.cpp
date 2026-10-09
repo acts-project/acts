@@ -72,9 +72,6 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
   m_measCovOffset.push_back(kInvalid);
 
   if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
-    m_sourceLinks.emplace_back(std::nullopt);
-    p.iCalibratedSourceLink = static_cast<IndexType>(m_sourceLinks.size() - 1);
-
     m_projectors.push_back(0);
     p.iprojector = static_cast<IndexType>(m_projectors.size() - 1);
   }
@@ -127,9 +124,6 @@ void VectorMultiTrajectory::addTrackStateComponents_impl(
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Calibrated) && p.iprojector == kInvalid) {
-    m_sourceLinks.emplace_back(std::nullopt);
-    p.iCalibratedSourceLink = static_cast<IndexType>(m_sourceLinks.size() - 1);
-
     m_projectors.push_back(0);
     p.iprojector = static_cast<IndexType>(m_projectors.size() - 1);
     allocated |= PropMask::Calibrated;
