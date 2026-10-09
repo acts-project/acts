@@ -12,27 +12,21 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsExamples/EventData/MuonHoughMaximum.hpp"
 #include "ActsExamples/EventData/MuonSegment.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
-#include "ActsPlugins/Json/TrackingGeometryJsonConverter.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <fstream>
 #include <limits>
 #include <vector>
-
-#include <nlohmann/json.hpp>
 
 namespace ActsTests {
 
@@ -266,65 +260,6 @@ BOOST_AUTO_TEST_CASE(muon_hough_seeder_drift_circle_sanity_phi_disabled) {
   BOOST_CHECK(foundExpectedMaximum);
 }
 
-BOOST_AUTO_TEST_CASE(seeder_from_spacepoints) {
-  ActsExamples::WhiteBoard eventStore{};
-  ActsExamples::AlgorithmContext ctx{0, 0, eventStore, 0};
+BOOST_AUTO_TEST_SUITE_END()
 
-  Acts::GeometryContext gctx =
-      Acts::GeometryContext::dangerouslyDefaultConstruct();
-
-  Acts::TrackingGeometryJsonConverter::Options geoCnvOpts{};
-  geoCnvOpts.writeMaterial = false;
-
-  Acts::TrackingGeometryJsonConverter geometryConverter;
-
-  auto trackingGeometry = geometryConverter.fromFile(
-      gctx, "/home/lmonaco/AthenaFirst/Samples/ActsTrackingGeometry.json",
-      geoCnvOpts);
-
-  if (trackingGeometry == nullptr) {
-    throw std::runtime_error("Failed to load tracking geometry");
-  }
-
-  ActsExamples::RootMuonSpacePointReader::Config cfgReader{};
-  cfgReader.filePath = "/home/lmonaco/AthenaFirst/Samples/ParticleGun_MU0.root";
-  cfgReader.treeName = "MuonSpacePoints";
-  cfgReader.outputSpacePoints = "MuonSpacePoints";
-  ActsExamples::RootMuonSpacePointReader reader{cfgReader, Acts::Logging::INFO};
-
-  BOOST_REQUIRE(reader.read(ctx) == ActsExamples::ProcessCode::SUCCESS);
-
-  ActsExamples::ReadDataHandle<ActsExamples::MuonSpacePointContainer>
-      spacePointHandle{
-          &reader,
-          "OutputSpacePoints",
-      };
-  spacePointHandle.initialize(cfgReader.outputSpacePoints);
-  const ActsExamples::MuonSpacePointContainer& t = spacePointHandle(ctx);
-
-  std::cout << "found " << t.size() << " buckets of spacepoints" << std::endl;
-
-  for (const auto& bucket : t) {
-    for (const auto& sp : bucket) {
-      const auto surface = trackingGeometry->findSurface(sp.geometryId());
-      if (surface == nullptr) {
-        throw std::runtime_error(std::format(
-            "Failed to find surface for space point with geometry ID: {}",
-            sp.geometryId()));
-      }
-      const Acts::Transform3 surf2global =
-          surface->localToGlobalTransform(gctx);
-      const Acts::Transform3& surf2sector = sp.toSectorTransform();
-      const Acts::Transform3 sector2global =
-          surf2global * surf2sector.inverse();
-      std::cout << "Spacepoint, surfaceToSector Trf:"
-                << Acts::toString(sp.toSectorTransform()) << std::endl
-                << " surfaceToGlobal Trf:" << Acts::toString(surf2global)
-                << std::endl
-                << " sectorToGlobal Trf:" << Acts::toString(sector2global)
-                << std::endl;
-    }
-  }
-}
-}
 }  // namespace ActsTests
