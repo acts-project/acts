@@ -241,7 +241,7 @@ class GlobalPatternFinder {
      *  @param gctx: Geometry context
      *  @param patterns: Vector of pattern states to which to add phi-only hits
      *  @return: Vector of added phi-only hits */
-    template<OnlyPhiHitsProvider<Hit_t, Topology_t, PatternStateAux> OnlyPhiProvider_t>
+    template<OnlyPhiHitsProvider<Hit_t, Topology_t, Sector_t> OnlyPhiProvider_t>
     void addPhiOnlyHits(const GeometryContext& gctx,
                         const BeamspotInfo& beamSpot,
                         const OnlyPhiProvider_t& onlyPhiProvider,
