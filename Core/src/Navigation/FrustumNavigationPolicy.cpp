@@ -61,7 +61,7 @@ FrustumNavigationPolicy::FrustumNavigationPolicy(const GeometryContext &gctx,
 }
 
 void FrustumNavigationPolicy::initializeCandidates(
-    const GeometryContext &gctx, const NavigationArguments &args,
+    const GeometryContext & /*gctx*/, const NavigationArguments &args,
     NavigationPolicyState &state, AppendOnlyNavigationStream &stream,
     const Logger &logger) const {
   ACTS_VERBOSE("FrustumNavigationPolicy Candidates initialization for volume "
