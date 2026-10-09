@@ -257,8 +257,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
   {
     using Tool = Geant4::RegionCreator;
     using Config = Tool::Config;
-    // shared_ptr holder: Geant4ConstructionOptions::regionCreators stores
-    // std::shared_ptr<RegionCreator>
     auto tool = py::class_<Tool, std::shared_ptr<Tool>>(mod, "RegionCreator")
                     .def(py::init<const Config&>(), py::arg("config"))
                     .def_property_readonly("config", &Tool::config);
