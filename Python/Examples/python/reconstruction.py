@@ -310,7 +310,7 @@ def addSeeding(
     paramEstimationSpacePoints: Optional[acts.examples.SeedSpacePointSelection] = None,
     paramEstimationRefineIterations: Optional[int] = None,
     paramEstimationWeight: Optional[Callable] = None,
-    gbtsSeedParameters: bool = True,
+    gbtsSeedParameters: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     trackParameterPerformance: bool = False,
@@ -377,7 +377,7 @@ def addSeeding(
         `TrackParamsEstimationAlgorithm.inverseRadiusPowerWeight`
     gbtsSeedParameters : bool
         GBTS seeding: use the fit of the GBTS tracking filter as the track
-        parameter estimate (default), instead of a fit to the space points
+        parameter estimate, instead of a fit to the space points (default)
     outputDirRoot : Path|str, path, None
         the output folder for ROOT output, None triggers no output
     trackParameterPerformance : bool, False
