@@ -45,22 +45,26 @@
  *  with the main @ref PatternStateAux object used by the GPF, are provided in the GlobalPatternFinderAuxiliaries.
  */
 namespace Acts::Experimental::detail {
-
+/** @brief Concept for a pattern seed selector */
 template<typename Selector_t, typename Hit_t>
 concept PatternSeedSelector = 
     GlobPatFinderHit<Hit_t> &&
     requires(const Selector_t& selector, 
              const Hit_t& hit) {
+    /// Whether the hit is good for seeding a pattern
     { selector.goodForSeeding(hit) } -> std::same_as<bool>;
+    /// The search window in the theta coordinate for compatible hits with a pattern
     { selector.thetaSearchWindow(hit) } -> std::same_as<double>;
 };
 
-template<typename Provider_t, typename Hit_t, typename Topology_t, typename Pattern_t>
+/** @brief Concept for a provider of phi-only hits given a pattern state */
+template<typename Provider_t, typename Hit_t, typename Topology_t, typename Sector_t>
 concept OnlyPhiHitsProvider = 
     GlobPatFinderHit<Hit_t> &&
+    SectorType<Sector_t> &&
     PatternTopology<Topology_t, Hit_t> &&
     requires(const Provider_t& provider,
-             const Pattern_t& pattern,
+             const PatternStateAux<Hit_t, Sector_t, Topology_t>& pattern,
              const GeometryContext& gctx) {
     { provider.getPhiOnlyHits(pattern, gctx) } 
         -> std::same_as<std::array<std::vector<Hit_t>, Topology_t::nGroups>>;
@@ -159,7 +163,7 @@ class GlobalPatternFinder {
      *  @param beamspotInfo: Beamspot information
      *  @return: Vector of found patterns */
     template<PatternSeedSelector<Hit_t> SeedSelector_t,
-             OnlyPhiHitsProvider<Hit_t, Topology_t, PatternStateAux> OnlyPhiProvider_t>
+             OnlyPhiHitsProvider<Hit_t, Topology_t, Sector_t> OnlyPhiProvider_t>
     std::vector<OutputPattern> 
     findPatterns(const GeometryContext& gctx,
                  const SearchTree_t& treeData,

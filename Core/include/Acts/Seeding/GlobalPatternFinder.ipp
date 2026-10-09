@@ -25,7 +25,7 @@ template<GlobPatFinderHit Hit_t,
          SectorType Sector_t,
          PatternTopology<Hit_t> Topology_t>
 template<PatternSeedSelector<Hit_t> SeedSelector_t,
-         OnlyPhiHitsProvider<Hit_t, Topology_t, typename GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::PatternStateAux> OnlyPhiProvider_t>
+         OnlyPhiHitsProvider<Hit_t, Topology_t, Sector_t> OnlyPhiProvider_t>
 std::vector<typename GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::OutputPattern> 
 GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatterns(
     const GeometryContext& gctx,
