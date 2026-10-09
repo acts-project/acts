@@ -138,6 +138,7 @@ ClusterContainer makeClusters(
 
     for (auto it = begin; it != end; ++it) {
       const auto& cellData = it->second;
+      cluster.geometryId = Acts::GeometryIdentifier(cellData.geometry_id);
       ActsFatras::Segmentizer::Segment2D dummySegment = {Acts::Vector2::Zero(),
                                                          Acts::Vector2::Zero()};
 

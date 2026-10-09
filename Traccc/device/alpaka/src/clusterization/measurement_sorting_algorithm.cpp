@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/alpaka/clusterization/measurement_sorting_algorithm.hpp"
@@ -111,13 +112,17 @@ measurement_sorting_algorithm::operator()(
   ::alpaka::exec<Acc>(queue, workDiv, kernels::fill_measurement_sort_keys{},
                       measurements_view, vecmem::get_data(keys),
                       vecmem::get_data(indices));
-  details::sort_by_key(queue, m_mr, keys.ptr(), keys.ptr() + n_measurements,
+  details::sort_by_key(m_queue, m_mr, keys.ptr(), keys.ptr() + n_measurements,
                        indices.ptr());
 
   // Fill the output with the sorted measurements.
   ::alpaka::exec<Acc>(queue, workDiv, kernels::fill_sorted_measurements{},
                       measurements_view, vecmem::get_data(result),
                       vecmem::get_data(indices));
+
+  // The keys and indices buffers are released on return, so the kernels
+  // using them must have finished by then.
+  m_queue.get().synchronize();
 
   // Return the sorted buffer.
   return result;

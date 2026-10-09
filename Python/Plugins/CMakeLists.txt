@@ -37,6 +37,18 @@ macro(add_plugin_binding_if _name _dependency _flag)
     set(PLUGIN_NAME "${_name}")
     set(PLUGIN_BUILD_FLAG "${_flag}")
 
+    # by default, we only expose "Config" objects as
+    # kwargs-style constructors
+    set(SYMBOLS_FOR_KWARGS Config)
+
+    # plugins may add additional symbols to expose this way
+    set(_extra_kwargs "${_name}_MAKE_EXTRA_KWARGS")
+    if(DEFINED ${_extra_kwargs})
+        list(APPEND SYMBOLS_FOR_KWARGS ${${_extra_kwargs}})
+    endif()
+    string(JOIN "\", \"" SYMBOLS_FOR_KWARGS_PY ${SYMBOLS_FOR_KWARGS})
+    set(SYMBOLS_FOR_KWARGS_PY "[\"${SYMBOLS_FOR_KWARGS_PY}\"]")
+
     configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/python/plugin.py.in
         ${_python_dir}/acts/${_name_lower}.py
@@ -47,6 +59,17 @@ macro(add_plugin_binding_if _name _dependency _flag)
         DESTINATION ${_acts_python_install_dir}
     )
 endmacro()
+
+if(ACTS_BUILD_PLUGIN_MILLE)
+    # Additional classes with kwarg-style
+    # ctors for the Mille plugin
+    set(Mille_MAKE_EXTRA_KWARGS
+        Result
+        MillePedeParameterResult
+        MillePedeSteeringConfig
+        MillePedeEqualityConstraint
+    )
+endif()
 
 add_plugin_binding_if(Arrow Acts::PluginArrow ACTS_BUILD_PLUGIN_ARROW)
 add_plugin_binding_if(Gnn Acts::PluginGnn ACTS_BUILD_PLUGIN_GNN)

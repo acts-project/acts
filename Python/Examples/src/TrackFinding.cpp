@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
@@ -86,14 +87,26 @@ void addTrackFinding(py::module& mex) {
     using Config = Acts::Experimental::GraphBasedTrackSeeder::Config;
     auto c =
         py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, minPt, nMaxPhiSlice);
+    ACTS_PYTHON_STRUCT(c, nMaxPhiSlice, minSeedLevel, addTriplets,
+                       maxAbsEtaAddTriplets);
+    patchKwargsConstructor(c);
+  }
+
+  {
+    using Config = Acts::Experimental::GbtsGraphBuilder::Config;
+    auto c =
+        py::class_<Config>(mex, "GbtsGraphBuilderConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, minPt, maxEdgesPerSP, minDeltaRadius, doubletFilterRZ,
+                       matchBeforeCreate, validateTriplets, useAdaptiveCuts,
+                       calibrateStrips, maxOuterRadius);
     patchKwargsConstructor(c);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       GraphBasedSeedingAlgorithm, mex, "GraphBasedSeedingAlgorithm",
-      inputSpacePoints, outputSeeds, seedFinderConfig, layerMappingFile,
-      connectorInputFile, lutInputFile, trackingGeometry, fillModuleCsv,
+      inputSpacePoints, outputSeeds, seedFinderConfig, graphConfig,
+      useStripConnections, layerMappingFile, connectorInputFile, lutInputFile,
+      collisionRegionMin, collisionRegionMax, trackingGeometry, fillModuleCsv,
       inputClusters, bFieldInZ);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
@@ -109,10 +122,10 @@ void addTrackFinding(py::module& mex) {
       inverseA, doSecondPhase, zRange, cotThetaRange, cotThetaMinBinSize,
       zMinBinSize);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(MuonHoughSeeder, mex, "MuonHoughSeeder",
-                                inTruthSegments, inSpacePoints, outHoughMax,
-                                nBinsTanTheta, nBinsY0, nBinsTanPhi, nBinsX0,
-                                dumpVisualization, visualizationFunction);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      MuonHoughSeeder, mex, "MuonHoughSeeder", inTruthSegments, inSpacePoints,
+      outHoughMax, nBinsTanTheta, nBinsY0, nBinsTanPhi, nBinsX0,
+      dumpVisualization, extendWithPhi, visualizationFunction);
 
   {
     using Alg = TrackParamsEstimationAlgorithm;

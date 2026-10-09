@@ -22,6 +22,7 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesTrackFinding
     PUBLIC Acts::ExamplesMagneticField
+    PRIVATE Acts::PluginJson
 )
 
 acts_compile_headers(ExamplesTrackFinding GLOB "include/**/*.hpp")

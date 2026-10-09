@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2021-2026 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Project include(s).
 include(traccc-compiler-options-cpp)
@@ -63,6 +65,7 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/utils/impl/detray_conversion.ipp"
   "include/traccc/utils/type_traits.hpp"
   "include/traccc/utils/memory_resource.hpp"
+  "include/traccc/utils/stream_synchronizing_allocator.hpp"
   "include/traccc/utils/seed_generator.hpp"
   "include/traccc/utils/subspace.hpp"
   "include/traccc/utils/logging.hpp"

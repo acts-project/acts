@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -107,7 +108,8 @@ TRACCC_HOST_DEVICE inline bool gbts_kalman_update(
   const float tau2 = ts->m_Y[1] * ts->m_Y[1];
   const float invSin2 = 1 + tau2;
 
-  const float lenCorr = (node1_params.w != -1) ? invSin2 : invSin2 / tau2;
+  // The scattering is in the layer of the previous node.
+  const float lenCorr = ts->m_head_node_type ? invSin2 / tau2 : invSin2;
   const float minPtFrac = fabsf(ts->m_X[2]) * KF_params.inv_max_curvature;
 
   const float corrMS = KF_params.sigmaMS * minPtFrac;  // MS angle at this pT
@@ -165,9 +167,9 @@ TRACCC_HOST_DEVICE inline bool gbts_kalman_update(
   const float resid_x = mx - new_ts->m_X[0];
   const float resid_y = my - new_ts->m_Y[0];
 
-  // r-z measurement error: sigma_y (*tau for strips, w < 0).
+  // r-z measurement error of the new node: sigma_y (*tau for endcaps, w < 0).
   float sigma_rz = 0;
-  if (!ts->m_head_node_type) {
+  if (node1_params.w >= 0) {
     sigma_rz = KF_params.sigma_y;
   } else {
     sigma_rz = KF_params.sigma_y * ts->m_Y[1];

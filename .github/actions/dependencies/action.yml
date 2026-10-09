@@ -38,6 +38,29 @@ runs:
     - name: Apt mirror
       uses: ./.github/actions/apt_mirror
 
+    # The Ubuntu build images do not include jq, which validates the JSON
+    # emitted by CI/ccache_stats.sh. macOS installs it with Homebrew below.
+    - name: Install jq for ccache statistics
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        if command -v jq >/dev/null 2>&1; then
+          exit 0
+        fi
+        privilege=()
+        if [ "$(id -u)" != 0 ]; then
+          privilege=(sudo)
+        fi
+        if command -v apt-get >/dev/null 2>&1; then
+          "${privilege[@]}" apt-get update
+          "${privilege[@]}" apt-get install -y --no-install-recommends jq
+        elif command -v dnf >/dev/null 2>&1; then
+          "${privilege[@]}" dnf install -y jq
+        else
+          echo "::error::Cannot install jq: no supported package manager found"
+          exit 1
+        fi
+
     # Spack is a Python program, so every image we can possibly run on already
     # ships a usable python3 -- and nothing downstream uses the interpreter this
     # action leaves behind (setup.sh builds a venv from the spack view and puts
@@ -68,7 +91,7 @@ runs:
       if: startsWith(runner.os, 'macos')
       shell: bash
       run: |
-        brew install ninja ccache
+        brew install ninja ccache jq
 
     # Half of what is cached lives at ~/.spack, so an entry is only usable by a
     # runner with the same HOME. Container jobs get /github/home, ubuntu-latest

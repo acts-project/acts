@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/gbts_seeding/device/gbts_seeding_algorithm.hpp"
@@ -223,11 +224,15 @@ auto gbts_seeding_algorithm::create_edges(
   // 5. Compress the kept edges into the output graph.
   const unsigned int nConnectedEdgesMax =
       cfg.max_connected_edges_per_spacepoint * nSp;
-  const unsigned int nIntsPerEdge =
-      gbts_consts::nei_start + cfg.max_num_neighbours;
   vecmem::data::vector_buffer<unsigned int> output_graph_buf(
-      nConnectedEdgesMax * nIntsPerEdge, mr().main);
+      nConnectedEdgesMax * cfg.max_num_neighbours, mr().main);
   copy().setup(output_graph_buf)->ignore();
+  vecmem::data::vector_buffer<uint2> output_edge_nodes_buf(nConnectedEdgesMax,
+                                                           mr().main);
+  copy().setup(output_edge_nodes_buf)->ignore();
+  vecmem::data::vector_buffer<unsigned char> output_num_neighbours_buf(
+      nConnectedEdgesMax, mr().main);
+  copy().setup(output_num_neighbours_buf)->ignore();
 
   gbts_compress_graph_kernel({
       .nEdgesMax = nEdgesMax,
@@ -240,6 +245,8 @@ auto gbts_seeding_algorithm::create_edges(
       .neighbours = neighbours_buf,
       .reIndexer = reIndexer_buf,
       .output_graph = output_graph_buf,
+      .output_edge_nodes = output_edge_nodes_buf,
+      .output_num_neighbours = output_num_neighbours_buf,
   });
 
   // The seed extraction needs the kept-edge count on the host.
@@ -277,7 +284,9 @@ auto gbts_seeding_algorithm::create_edges(
     TRACCC_WARNING("No connected edges were found");
     return graph_making_output{};
   }
-  return graph_making_output{std::move(output_graph_buf), nConnectedEdges};
+  return graph_making_output{
+      std::move(output_graph_buf), std::move(output_edge_nodes_buf),
+      std::move(output_num_neighbours_buf), nConnectedEdges};
 }
 
 // Stage 3:
@@ -286,6 +295,8 @@ auto gbts_seeding_algorithm::create_edges(
 // Finally, disambiguate them by seed-vs-edge and seed-vs-hit bidding.
 auto gbts_seeding_algorithm::extract_seeds(
     vecmem::data::vector_buffer<unsigned int>& output_graph,
+    vecmem::data::vector_buffer<uint2>& output_edge_nodes,
+    vecmem::data::vector_buffer<unsigned char>& output_num_neighbours,
     vecmem::data::vector_buffer<float4>& reducedSP,
     const unsigned int nConnectedEdges, const unsigned int nSp,
     vecmem::vector<unsigned int>& h_counters) const
@@ -315,6 +326,7 @@ auto gbts_seeding_algorithm::extract_seeds(
       .nConnectedEdges = nConnectedEdges,
       .max_num_neighbours = cfg.max_num_neighbours,
       .output_graph = output_graph,
+      .output_num_neighbours = output_num_neighbours,
       .levels = levels_buf,
       .outgoing_paths = outgoing_paths_buf,
       .iter = 0u,
@@ -329,6 +341,7 @@ auto gbts_seeding_algorithm::extract_seeds(
       .max_num_neighbours = cfg.max_num_neighbours,
       .minLevel = cfg.minLevel,
       .output_graph = output_graph,
+      .output_num_neighbours = output_num_neighbours,
       .levels = levels_buf,
       .outgoing_paths = outgoing_paths_buf,
       .has_parent = has_parent_buf,
@@ -376,6 +389,8 @@ auto gbts_seeding_algorithm::extract_seeds(
       .max_num_neighbours = cfg.max_num_neighbours,
       .path_store = path_store_buf,
       .output_graph = output_graph,
+      .output_edge_nodes = output_edge_nodes,
+      .output_num_neighbours = output_num_neighbours,
       .levels = levels_buf,
       .outgoing_paths = outgoing_paths_buf,
       .path_counts = path_counts_buf,
@@ -393,14 +408,11 @@ auto gbts_seeding_algorithm::extract_seeds(
       2 * nPathsMax, mr().main, vecmem::data::buffer_type::resizable);
   copy().setup(output_seeds)->ignore();
 
-  const unsigned int edge_size =
-      gbts_consts::nei_start + cfg.max_num_neighbours;
   gbts_bid_seeds_for_hits_kernel({
       .nPathsMax = nPathsMax,
       .nPathsGrid = nPathsGrid,
       .path_count = path_count,
-      .edge_size = edge_size,
-      .output_graph = output_graph,
+      .output_edge_nodes = output_edge_nodes,
       .seed_proposals = seed_proposals_buf,
       .path_store = path_store_buf,
       .seed_ambiguity = seed_ambiguity_buf,
@@ -411,11 +423,10 @@ auto gbts_seeding_algorithm::extract_seeds(
       .nPathsMax = nPathsMax,
       .nPathsGrid = nPathsGrid,
       .path_count = path_count,
-      .max_num_neighbours = cfg.max_num_neighbours,
       .seed_proposals = seed_proposals_buf,
       .seed_ambiguity = seed_ambiguity_buf,
       .path_store = path_store_buf,
-      .output_graph = output_graph,
+      .output_edge_nodes = output_edge_nodes,
       .reducedSP = reducedSP,
       .output_seeds = output_seeds,
       .hit_bids = hit_bids_buf,
@@ -575,7 +586,8 @@ auto gbts_seeding_algorithm::operator()(
   }
 
   // Stage 3: Create seeds from the graph edges.
-  return extract_seeds(graph.output_graph, nodes.reducedSP,
+  return extract_seeds(graph.output_graph, graph.output_edge_nodes,
+                       graph.output_num_neighbours, nodes.reducedSP,
                        graph.nConnectedEdges, nSp, h_counters);
 }
 
