@@ -2,6 +2,7 @@ target_sources(
     ActsCore
     PRIVATE
         EigenStepperError.cpp
+        GenericRungeKuttaStepper.cpp
         HelixStepper.cpp
         MultiStepperError.cpp
         NavigatorError.cpp
@@ -18,6 +19,7 @@ target_sources(
         detail/PointwiseMaterialInteraction.cpp
         detail/CovarianceEngine.cpp
         detail/JacobianEngine.cpp
+        detail/ButcherTableau.cpp
         detail/SympyCovarianceEngine.cpp
         detail/SympyJacobianEngine.cpp
 )
