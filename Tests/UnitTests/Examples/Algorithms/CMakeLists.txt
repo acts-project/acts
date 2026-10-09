@@ -1,3 +1,4 @@
 add_subdirectory_if(Alignment ACTS_BUILD_ALIGNMENT)
 add_subdirectory(Digitization)
+add_subdirectory_if(Geant4 ACTS_BUILD_EXAMPLES_GEANT4)
 add_subdirectory(TrackFinding)
