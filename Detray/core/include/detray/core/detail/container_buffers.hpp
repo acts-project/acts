@@ -179,7 +179,7 @@ auto get_buffer(const dvector_view<T>& vec_view, vecmem::memory_resource& mr,
   // TODO: Move this to detray copy util, which bundles vecmem copy object and
   // stream handle and gets this switch case right automatically
   if (cpy_type == detray::copy::async) {
-    cpy(vec_view, buff)->ignore();
+    cpy(vecmem::ignore_event, vec_view, buff);
   } else {
     cpy(vec_view, buff)->wait();
   }

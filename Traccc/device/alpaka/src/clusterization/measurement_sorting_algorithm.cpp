@@ -89,11 +89,11 @@ measurement_sorting_algorithm::operator()(
   // Create the output buffer.
   output_type result{measurements_view.capacity(), m_mr.main,
                      vecmem::data::buffer_type::resizable};
-  m_copy.get().setup(result)->ignore();
+  m_copy.get().setup(vecmem::ignore_event, result);
   if (n_measurements == 0) {
     return result;
   }
-  m_copy.get()(measurements_view.size(), result.size())->ignore();
+  m_copy.get()(vecmem::ignore_event, measurements_view.size(), result.size());
 
   auto queue = details::get_queue(m_queue);
 

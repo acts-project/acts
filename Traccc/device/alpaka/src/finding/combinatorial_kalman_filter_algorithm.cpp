@@ -270,7 +270,7 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
         vecmem::data::vector_buffer<
             edm::measurement_collection::const_view::size_type>
             result{device_det.surfaces().size(), mr().main};
-        copy().setup(result)->ignore();
+        copy().setup(vecmem::ignore_event, result);
 
         // Create a measurement device object for convenience.
         const edm::measurement_collection::const_device measurements_device{
@@ -315,8 +315,8 @@ void combinatorial_kalman_filter_algorithm::progressive_kalman_filter_kernel(
         // Copy the detector data to device memory.
         vecmem::data::vector_buffer<detray::detector_view_t<detector_t>>
             device_det(1u, mr().main);
-        copy().setup(device_det)->ignore();
-        copy()({1u, &det}, device_det)->ignore();
+        copy().setup(vecmem::ignore_event, device_det);
+        copy()(vecmem::ignore_event, {1u, &det}, device_det);
 
         // If the Kalman smoother should be run, obtain the real allocation
         vecmem::data::jagged_vector_view<surface_t> sf_sequences;
@@ -354,8 +354,8 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
         // Copy the detector data to device memory.
         vecmem::data::vector_buffer<detray::detector_view_t<detector_t>>
             device_det(1u, mr().main);
-        copy().setup(device_det)->ignore();
-        copy()({1u, &det}, device_det)->ignore();
+        copy().setup(vecmem::ignore_event, device_det);
+        copy().setup(vecmem::ignore_event, {1u, &det}, device_det);
 
         // Submit the kernel to the queue.
         ::alpaka::exec<Acc>(

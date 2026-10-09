@@ -62,10 +62,9 @@ cca_function_t get_f_with(traccc::clustering_config cfg) {
         static_cast<traccc::detector_conditions_description::buffer::size_type>(
             det_cond.size()),
         device_mr};
-    copy.setup(det_cond_buffer)->ignore();
-    copy(vecmem::get_data(det_cond), det_cond_buffer,
-         vecmem::copy::type::host_to_device)
-        ->ignore();
+    copy.setup(vecmem::ignore_event, det_cond_buffer);
+    copy(vecmem::ignore_event, vecmem::get_data(det_cond), det_cond_buffer,
+         vecmem::copy::type::host_to_device);
     traccc::edm::silicon_cell_collection::buffer cells_buffer{
         static_cast<traccc::edm::silicon_cell_collection::buffer::size_type>(
             cells.size()),

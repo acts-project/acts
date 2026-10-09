@@ -152,7 +152,7 @@ full_chain_algorithm::output_type full_chain_algorithm::operator()(
   // Create device copy of input collections
   edm::silicon_cell_collection::buffer cells_buffer(
       static_cast<unsigned int>(cells.size()), m_cached_device_mr);
-  m_copy(vecmem::get_data(cells), cells_buffer)->ignore();
+  m_copy(vecmem::ignore_event, vecmem::get_data(cells), cells_buffer);
 
   // Run the clusterization (asynchronously).
   const auto unsorted_measurements =
@@ -206,7 +206,7 @@ bound_track_parameters_collection_types::host full_chain_algorithm::seeding(
   // Create device copy of input collections
   edm::silicon_cell_collection::buffer cells_buffer(
       static_cast<unsigned int>(cells.size()), m_cached_device_mr);
-  m_copy(vecmem::get_data(cells), cells_buffer)->ignore();
+  m_copy(vecmem::ignore_event, vecmem::get_data(cells), cells_buffer);
 
   // Run the clusterization (asynchronously).
   const auto unsorted_measurements =
