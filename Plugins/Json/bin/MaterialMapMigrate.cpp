@@ -10,6 +10,10 @@
 #include "ActsPlugins/Json/TrackingGeometryMaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/detail/JsonIo.hpp"
 
+#ifdef ACTS_MATERIAL_MIGRATE_ROOT
+#include "ActsPlugins/Root/RootMaterialDecorator.hpp"
+#endif
+
 #include <charconv>
 #include <filesystem>
 #include <iostream>
@@ -21,6 +25,7 @@ namespace {
 constexpr std::string_view usage =
     "Usage: ActsMaterialMapMigrate INPUT OUTPUT [OPTIONS]\n"
     "Migrate legacy surface material maps to the version 1 format.\n"
+    "ROOT input (.root) requires ACTS_BUILD_PLUGIN_ROOT=ON.\n"
     "Input: JSON or CBOR, optionally zstd compressed (detected from content).\n"
     "Output: .json, .cbor, .json.zst or .cbor.zst.\n"
     "Volume material is not supported by version 1.\n\n"
@@ -40,6 +45,36 @@ T number(std::string_view text) {
   }
   return result;
 }
+
+Acts::TrackingGeometryMaterial readMaterial(
+    const std::filesystem::path& input) {
+  if (input.extension() == ".root") {
+#ifdef ACTS_MATERIAL_MIGRATE_ROOT
+    ActsPlugins::RootMaterialDecorator::Config config;
+    config.fileName = input.string();
+    auto material =
+        ActsPlugins::RootMaterialDecorator(config, Acts::Logging::WARNING)
+            .materialMaps();
+    if (material.surfaceMaterials.empty() && material.volumeMaterials.empty()) {
+      throw std::invalid_argument("No material maps found in ROOT input");
+    }
+    return material;
+#else
+    throw std::invalid_argument(
+        "ROOT input is unavailable in this build; rebuild with "
+        "ACTS_BUILD_PLUGIN_ROOT=ON");
+#endif
+  }
+  const auto document = Acts::detail::readJsonFile(input);
+  // Check the envelope before calling the legacy reader, which uses [].
+  if (!document.contains("Surfaces") || !document.contains("Volumes")) {
+    throw std::invalid_argument(
+        "Expected a legacy material map with Surfaces and Volumes");
+  }
+  Acts::MaterialMapJsonConverter legacy({}, Acts::Logging::WARNING);
+  return legacy.jsonToMaterialMaps(document);
+}
+
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -76,14 +111,7 @@ int main(int argc, char* argv[]) {
         std::filesystem::equivalent(input, output)) {
       throw std::invalid_argument("Input and output must be different files");
     }
-    const auto document = Acts::detail::readJsonFile(input);
-    // Check the envelope before calling the legacy reader, which uses [].
-    if (!document.contains("Surfaces") || !document.contains("Volumes")) {
-      throw std::invalid_argument(
-          "Expected a legacy material map with Surfaces and Volumes");
-    }
-    Acts::MaterialMapJsonConverter legacy({}, Acts::Logging::WARNING);
-    const auto material = legacy.jsonToMaterialMaps(document);
+    const auto material = readMaterial(input);
     Acts::TrackingGeometryMaterialJsonConverter().toFile(material, output,
                                                          options);
     std::cout << "Migrated "

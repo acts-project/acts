@@ -31,15 +31,24 @@ source geometry.
 legacy input with an error pointing to `ActsMaterialMapMigrate`.
 
 The JSON plugin also installs `ActsMaterialMapMigrate` in `bin` to migrate
-files written by the legacy material converter:
+files written by the legacy material converter or ROOT material writer:
 
 ```sh
 ActsMaterialMapMigrate old-material.json material.json
+ActsMaterialMapMigrate material.root material.json.zst
 ActsMaterialMapMigrate old-material.json.zst material.cbor.zst \
     --material-fraction-bits 16 --compression-level 19
 ```
 
-The input encoding is detected from its contents. The output extension selects
+ROOT inputs are selected by the `.root` extension and require a build with
+`ACTS_BUILD_PLUGIN_ROOT=ON`. They use the default ROOT material tree/folder names.
+ROOT migration preserves the assignments reconstructed by
+@ref ActsPlugins::RootMaterialDecorator; stable keys, mapping settings and
+independent electron-density/excitation-energy overrides are not stored by that
+format. Files with volume material are rejected, as are ROOT files containing
+no recognized material maps.
+
+For JSON/CBOR, input encoding is detected from its contents. The output extension selects
 JSON or CBOR, with optional zstd compression. Defaults preserve full float32
 precision, use four-space indentation and zstd level 9. `--indentation` changes
 text indentation; `--help` lists all options. Volume material causes migration

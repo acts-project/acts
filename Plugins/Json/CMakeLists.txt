@@ -85,6 +85,13 @@ install(
 
 add_executable(ActsMaterialMapMigrate bin/MaterialMapMigrate.cpp)
 target_link_libraries(ActsMaterialMapMigrate PRIVATE Acts::PluginJson)
+if(ACTS_BUILD_PLUGIN_ROOT)
+    target_link_libraries(ActsMaterialMapMigrate PRIVATE Acts::PluginRoot)
+    target_compile_definitions(
+        ActsMaterialMapMigrate
+        PRIVATE ACTS_MATERIAL_MIGRATE_ROOT
+    )
+endif()
 install(
     TARGETS ActsMaterialMapMigrate
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT bin
