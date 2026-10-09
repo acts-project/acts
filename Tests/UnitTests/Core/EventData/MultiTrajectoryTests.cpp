@@ -344,6 +344,48 @@ BOOST_AUTO_TEST_CASE(Accessors) {
   // superChi2Const(ts) = 66.66;
 }
 
+BOOST_AUTO_TEST_CASE(SourceLinksSurviveMixedCalibratedAllocation) {
+  VectorMultiTrajectory trajectory;
+  constexpr unsigned int count = 1024;
+  for (unsigned int i = 0; i < count; ++i) {
+    auto mask =
+        i % 2 == 0 ? TrackStatePropMask::None : TrackStatePropMask::Calibrated;
+    auto state = trajectory.makeTrackState(mask);
+    state.setUncalibratedSourceLink(SourceLink{i});
+    // Exercise deferred allocation and repeated allocation requests as well as
+    // vector growth. None of these may change another state's source link.
+    state.addComponents(TrackStatePropMask::Calibrated);
+    state.addComponents(TrackStatePropMask::Calibrated);
+    state.allocateCalibrated(2);
+    state.calibrated<2>().setConstant(static_cast<double>(i));
+    state.calibratedCovariance<2>().setIdentity();
+  }
+  VectorMultiTrajectory copy(trajectory);
+  ConstVectorMultiTrajectory immutable(std::move(copy));
+  VectorMultiTrajectory restored(immutable);
+  for (unsigned int i = 0; i < count; ++i) {
+    for (const auto* container : {&trajectory, &restored}) {
+      auto state = container->getTrackState(i);
+      BOOST_CHECK(state.hasUncalibratedSourceLink());
+      BOOST_CHECK_EQUAL(state.getUncalibratedSourceLink().get<unsigned int>(),
+                        i);
+      BOOST_CHECK_EQUAL(state.calibratedSize(), 2);
+      BOOST_CHECK_EQUAL(state.calibrated<2>()[0], i);
+      BOOST_CHECK_EQUAL(state.calibrated<2>()[1], i);
+    }
+    BOOST_CHECK_EQUAL(immutable.getTrackState(i)
+                          .getUncalibratedSourceLink()
+                          .get<unsigned int>(),
+                      i);
+  }
+  trajectory.clear();
+  auto state = trajectory.makeTrackState(TrackStatePropMask::Calibrated);
+  state.setUncalibratedSourceLink(SourceLink{count});
+  BOOST_CHECK_EQUAL(state.index(), 0);
+  BOOST_CHECK_EQUAL(state.getUncalibratedSourceLink().get<unsigned int>(),
+                    count);
+}
+
 BOOST_AUTO_TEST_CASE(ChangeSourceLinkType) {
   VectorMultiTrajectory mtj;
   auto ts = mtj.makeTrackState();
