@@ -91,9 +91,7 @@ GTEST_TEST(detray_grid, single_grid) {
   using grid_owning_t =
       grid<test_algebra, axes<cuboid3D>, bins::single<scalar>>;
 
-  using grid_n_owning_t =
-      grid<test_algebra, axes<cuboid3D>, bins::single<scalar>,
-           simple_serializer, host_container_types, is_n_owning>;
+  using grid_n_owning_t = typename grid_owning_t::template owning_type<false>;
 
   using grid_device_t = grid<test_algebra, axes<cuboid3D>, bins::single<scalar>,
                              simple_serializer, const_device_container_types>;
@@ -143,7 +141,11 @@ GTEST_TEST(detray_grid, single_grid) {
   EXPECT_EQ(z_axis.nbins(), 50u);
 
   // Create non-owning grid
-  grid_n_owning_t grid_n_own(&bin_data, ax_n_own);
+  grid_n_owning_t grid_n_own(grid_own);
+
+  // Check equality across owning and non-owning type
+  EXPECT_TRUE(grid_own == grid_n_own);
+  EXPECT_TRUE(grid_n_own == grid_own);
 
   // Test for consistency with owning grid
   EXPECT_EQ(grid_n_own.dim, grid_own.dim);
@@ -223,9 +225,7 @@ GTEST_TEST(detray_grid, dynamic_array) {
   using grid_owning_t =
       grid<test_algebra, axes<cuboid3D>, bins::dynamic_array<scalar>>;
 
-  using grid_n_owning_t =
-      grid<test_algebra, axes<cuboid3D>, bins::dynamic_array<scalar>,
-           simple_serializer, host_container_types, false>;
+  using grid_n_owning_t = typename grid_owning_t::template owning_type<false>;
 
   using grid_device_t =
       grid<test_algebra, axes<cuboid3D>, bins::dynamic_array<scalar>,
@@ -310,7 +310,10 @@ GTEST_TEST(detray_grid, dynamic_array) {
   EXPECT_TRUE(grid_own == grid_own2);
 
   // Create non-owning grid
-  grid_n_owning_t grid_n_own(&bin_data, ax_n_own);
+  grid_n_owning_t grid_n_own(grid_own);
+
+  EXPECT_TRUE(grid_own == grid_n_own);
+  EXPECT_TRUE(grid_n_own == grid_own);
 
   // Test for consistency with owning grid
   EXPECT_EQ(grid_n_own.dim, grid_own.dim);

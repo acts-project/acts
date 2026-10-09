@@ -86,7 +86,7 @@ TEST(detray_builders, homogeneous_material_factory) {
       {0.1f * unit<scalar>::mm,
        std::vector<scalar>{
            3.344f * unit<scalar>::mm, 101.6f * unit<scalar>::mm, 196.97f, 79,
-           19.32f * unit<scalar>::g / (1.f * unit<scalar>::cm3)},
+           static_cast<scalar>(19.32 * unit<double>::g / unit<double>::cm3)},
        material_state::e_solid});
 
   EXPECT_EQ(mat_factory->size(), 3u);

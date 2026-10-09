@@ -381,7 +381,7 @@ GTEST_TEST(detray_acceleration_structures, spatial_grid_complete_population) {
   }
 
   // Copy data that will be moved into the data owning types
-  using grid_own_t = grid_t::template type<is_owning>;
+  using grid_own_t = grid_t::template owning_type<is_owning>;
 
   dvector<scalar> bin_edges_cp(bin_edges);
   dvector<dsized_index_range> edge_ranges_cp(edge_ranges);
@@ -515,7 +515,7 @@ GTEST_TEST(detray_acceleration_structures,
   }
 
   // Copy data that will be moved into the data owning types
-  using grid_own_t = grid_t::template type<is_owning>;
+  using grid_own_t = grid_t::template owning_type<is_owning>;
 
   dvector<scalar> bin_edges_cp(bin_edges);
   dvector<dsized_index_range> edge_ranges_cp(edge_ranges);
