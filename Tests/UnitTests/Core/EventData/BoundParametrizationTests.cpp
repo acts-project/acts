@@ -52,7 +52,9 @@ BOOST_AUTO_TEST_CASE(Derivatives) {
       BoundVector values(1., 2., phi, theta, 0.01, 4.);
       const Vector3 dir = chart.direction(values);
       const auto forward = chart.directionJacobian(values);
-      const auto inverse = chart.directionCoordinatesJacobian(dir);
+      const auto inverseResult = chart.directionCoordinatesJacobian(dir);
+      BOOST_REQUIRE(inverseResult.ok());
+      const auto& inverse = *inverseResult;
       // The legacy helpers reconstruct sin(theta) from 1 - cos(theta)^2,
       // which loses precision near the poles. Finite differences below test
       // the new derivatives independently.
@@ -72,9 +74,12 @@ BOOST_AUTO_TEST_CASE(Derivatives) {
         CHECK_CLOSE_ABS(forward.col(i), numerical, 1e-8);
       }
       const Vector3 scaled = 2.5 * dir;
-      const auto scaledInverse = chart.directionCoordinatesJacobian(scaled);
+      const auto scaledResult = chart.directionCoordinatesJacobian(scaled);
+      BOOST_REQUIRE(scaledResult.ok());
+      const auto& scaledInverse = *scaledResult;
       for (int i = 0; i < 3; ++i) {
-        Vector3 plus = scaled, minus = scaled;
+        Vector3 plus = scaled;
+        Vector3 minus = scaled;
         plus[i] += h;
         minus[i] -= h;
         const Vector2 numerical = (chart.directionCoordinates(plus) -
@@ -96,20 +101,28 @@ BOOST_AUTO_TEST_CASE(PolesAndInvalidInputs) {
   BOOST_CHECK_EQUAL(chart.directionCoordinates(-Vector3::UnitZ()),
                     Vector2(0., std::numbers::pi));
   BOOST_CHECK(chart.directionJacobian(values).allFinite());
-  BOOST_CHECK_THROW(chart.directionCoordinatesJacobian(Vector3::UnitZ()),
-                    std::domain_error);
-  BOOST_CHECK_THROW(chart.canonicalizationJacobian(values), std::domain_error);
-  BOOST_CHECK_THROW(chart.canonicalize(values, BoundMatrix::Identity()),
-                    std::domain_error);
+  auto checkError = [](const auto& result, BoundParametrizationError error) {
+    BOOST_REQUIRE(!result.ok());
+    BOOST_CHECK(result.error() == error);
+    BOOST_CHECK_EQUAL(result.error().category().name(),
+                      "BoundParametrizationError");
+    BOOST_CHECK(!result.error().message().empty());
+  };
+  checkError(chart.directionCoordinatesJacobian(Vector3::UnitZ()),
+             BoundParametrizationError::SingularDirection);
+  checkError(chart.canonicalizationJacobian(values),
+             BoundParametrizationError::UndefinedCanonicalization);
+  checkError(chart.canonicalize(values, BoundMatrix::Identity()),
+             BoundParametrizationError::UndefinedCanonicalization);
   values[eBoundDir1] = std::numbers::pi;
   BOOST_CHECK(!chart.isInDomain(values, 0.));
-  BOOST_CHECK_THROW(chart.canonicalizationJacobian(values), std::domain_error);
+  checkError(chart.canonicalizationJacobian(values),
+             BoundParametrizationError::UndefinedCanonicalization);
   values[eBoundDir1] = 1e-8;
   BOOST_CHECK(chart.isInDomain(values, 1e-9));
   BOOST_CHECK(!chart.isInDomain(values, 1e-7));
-  BOOST_CHECK_THROW(
-      chart.directionCoordinatesJacobian(chart.direction(values), 1e-7),
-      std::domain_error);
+  checkError(chart.directionCoordinatesJacobian(chart.direction(values), 1e-7),
+             BoundParametrizationError::SingularDirection);
   values[eBoundDir0] = std::numeric_limits<double>::quiet_NaN();
   BOOST_CHECK(!chart.isValid(values));
   BOOST_CHECK(!chart.isInDomain(values));
@@ -137,16 +150,21 @@ BOOST_AUTO_TEST_CASE(PeriodicResidualAndCovarianceBasis) {
     BoundVector raw = lhs;
     raw[eBoundDir1] = theta;
     const Eigen::Map<const BoundVector> map(raw.data());
-    const auto [canonical, transformed] = chart.canonicalize(map, covMap);
+    const auto result = chart.canonicalize(map, covMap);
+    BOOST_REQUIRE(result.ok());
+    const auto& [canonical, transformed] = *result;
     CHECK_CLOSE_ABS(chart.direction(canonical), chart.direction(raw), 1e-14);
-    const BoundMatrix jacobian = chart.canonicalizationJacobian(map);
+    const auto jacobianResult = chart.canonicalizationJacobian(map);
+    BOOST_REQUIRE(jacobianResult.ok());
+    const BoundMatrix& jacobian = *jacobianResult;
     const double sign = (theta == -0.7 || theta == 3.8) ? -1. : 1.;
     BOOST_CHECK_EQUAL(transformed(eBoundLoc0, eBoundDir1), sign * 0.2);
     BOOST_CHECK_EQUAL(transformed(eBoundDir0, eBoundDir1), sign * -0.3);
     BOOST_CHECK_EQUAL(transformed(eBoundDir1, eBoundDir1), 1.);
     constexpr double h = 1e-6;
     for (int i = 0; i < eBoundSize; ++i) {
-      BoundVector plus = raw, minus = raw;
+      BoundVector plus = raw;
+      BoundVector minus = raw;
       plus[i] += h;
       minus[i] -= h;
       const BoundVector numerical =
