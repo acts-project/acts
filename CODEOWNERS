@@ -32,7 +32,6 @@
 CI/check_unused_files.py @AJPfleger
 Detray/** @niermann999
 Plugins/Covfie/** @stephenswat
-Plugins/Detray/** @niermann999
 thirdparty/covfie/** @stephenswat
 Plugins/Gnn/** @benjaminhuth
 Examples/Algorithms/TrackFindingGnn/** @benjaminhuth
