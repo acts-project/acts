@@ -64,7 +64,7 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
 
   filtered = predicted + K * (calibrated - H * predicted);
   // Normalize phi and theta
-  filtered = normalizeBoundParameters(filtered);
+  filtered = BoundParametrization::globalSpherical().canonicalize(filtered);
 
   const auto tmp = (BoundMatrix::Identity() - K * H).eval();
   if (!m_useJosephFormulation) {

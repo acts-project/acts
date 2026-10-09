@@ -62,10 +62,10 @@ Result<void> GainMatrixSmoother::calculate(AnyMutableTrackStateProxy ts,
   ACTS_VERBOSE("Prev. predicted parameters: " << prevPredicted.transpose());
 
   // Calculate the smoothed parameters
-  smoothed =
-      filtered + G * subtractBoundParameters(prevSmoothed, prevPredicted);
+  smoothed = filtered + G * BoundParametrization::globalSpherical().difference(
+                                prevSmoothed, prevPredicted);
   // Normalize phi and theta
-  smoothed = normalizeBoundParameters(smoothed);
+  smoothed = BoundParametrization::globalSpherical().canonicalize(smoothed);
 
   ACTS_VERBOSE("Smoothed parameters are: " << smoothed.transpose());
   ACTS_VERBOSE("Calculate smoothed covariance:");

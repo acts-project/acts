@@ -23,6 +23,7 @@ namespace Acts {
 /// @pre Direction coordinates are finite (asserted).
 /// @note This helper assumes the canonical global-spherical parametrization.
 template <typename Derived>
+[[deprecated("Use BoundParametrization::direction instead")]]
 Vector3 directionFromBoundParameters(
     const Eigen::MatrixBase<Derived>& parameters) {
   return BoundParametrization::globalSpherical().direction(parameters);
@@ -39,6 +40,7 @@ Vector3 directionFromBoundParameters(
 /// @param maxAbsEta The maximum allowed eta value
 ///
 /// @return True if the bound vector is valid
+[[deprecated("Use BoundParametrization::isValid instead")]]
 bool isBoundVectorValid(
     const BoundVector& v, bool validateAngleRange, double epsilon = 1e-6,
     double maxAbsEta = std::numeric_limits<double>::infinity());
@@ -62,6 +64,7 @@ bool isFreeVectorValid(
 ///
 /// @return The normalized bound parameters
 /// @pre Inputs and arithmetic results are finite (asserted).
+[[deprecated("Use BoundParametrization::canonicalize instead")]]
 inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
   return BoundParametrization::globalSpherical().canonicalize(boundParams);
 }
@@ -74,6 +77,7 @@ inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
 ///
 /// @return The sum of the bound parameters
 /// @pre Inputs and arithmetic results are finite (asserted).
+[[deprecated("Use BoundParametrization::update instead")]]
 inline BoundVector addBoundParameters(const BoundVector& lhs,
                                       const BoundVector& rhs) {
   return BoundParametrization::globalSpherical().update(lhs, rhs);
@@ -87,6 +91,7 @@ inline BoundVector addBoundParameters(const BoundVector& lhs,
 ///
 /// @return The difference of the bound parameters
 /// @pre Inputs and arithmetic results are finite (asserted).
+[[deprecated("Use BoundParametrization::difference instead")]]
 inline BoundVector subtractBoundParameters(const BoundVector& lhs,
                                            const BoundVector& rhs) {
   return BoundParametrization::globalSpherical().difference(lhs, rhs);

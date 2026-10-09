@@ -23,7 +23,7 @@ void MbfSmoother::calculateSmoothed(AnyMutableTrackStateProxy& ts,
                                                      filteredCovariance;
   smoothed = ts.filtered() - filteredCovariance * smallLambdaHat;
   // Normalize phi and theta
-  smoothed = normalizeBoundParameters(smoothed);
+  smoothed = BoundParametrization::globalSpherical().canonicalize(smoothed);
 }
 
 void MbfSmoother::visitNonMeasurement(

@@ -211,7 +211,17 @@ class BoundParametrization {
     }
   };
   using Variant = std::variant<GlobalSpherical>;
+  // The supported alternatives cannot make the variant valueless by throwing.
+  static_assert(std::is_nothrow_copy_constructible_v<Variant>);
+  static_assert(std::is_nothrow_copy_assignable_v<Variant>);
+  static_assert(std::is_nothrow_move_constructible_v<Variant>);
+  static_assert(std::is_nothrow_move_assignable_v<Variant>);
   Variant m_chart;
+
+  template <typename Visitor>
+  decltype(auto) visit(Visitor&& visitor) const {
+    return std::visit(std::forward<Visitor>(visitor), m_chart);
+  }
 
   explicit constexpr BoundParametrization(GlobalSpherical chart)
       : m_chart(chart) {}
@@ -236,7 +246,8 @@ class BoundParametrization {
   /// @pre Direction coordinates are finite (asserted).
   template <typename Derived>
   Vector3 direction(const Eigen::MatrixBase<Derived>& parameters) const {
-    return std::get<GlobalSpherical>(m_chart).direction(parameters);
+    return visit(
+        [&](const auto& chart) { return chart.direction(parameters); });
   }
 
   /// Encode a global direction into the two direction coordinates.
@@ -244,7 +255,9 @@ class BoundParametrization {
   /// @return Canonical direction coordinates; phi is zero at an exact pole
   /// @pre Direction is finite and nonzero, with a representable norm (asserted).
   Vector2 directionCoordinates(const Vector3& direction) const {
-    return std::get<GlobalSpherical>(m_chart).directionCoordinates(direction);
+    return visit([&](const auto& chart) {
+      return chart.directionCoordinates(direction);
+    });
   }
 
   /// Derivative of global unit direction with respect to direction coordinates.
@@ -255,7 +268,8 @@ class BoundParametrization {
   template <typename Derived>
   Matrix<3, 2> directionJacobian(
       const Eigen::MatrixBase<Derived>& parameters) const {
-    return std::get<GlobalSpherical>(m_chart).directionJacobian(parameters);
+    return visit(
+        [&](const auto& chart) { return chart.directionJacobian(parameters); });
   }
 
   /// Derivative of encoding with respect to a global Cartesian direction.
@@ -267,8 +281,9 @@ class BoundParametrization {
   /// @pre minTransverse is finite and in [0, 1) (asserted).
   Result<Matrix<2, 3>> directionCoordinatesJacobian(
       const Vector3& direction, double minTransverse = 1e-12) const {
-    return std::get<GlobalSpherical>(m_chart).directionCoordinatesJacobian(
-        direction, minTransverse);
+    return visit([&](const auto& chart) {
+      return chart.directionCoordinatesJacobian(direction, minTransverse);
+    });
   }
 
   /// Whether a bound state admits a sufficiently conditioned inverse
@@ -281,8 +296,9 @@ class BoundParametrization {
   template <typename Derived>
   bool isInDomain(const Eigen::MatrixBase<Derived>& parameters,
                   double minTransverse = 1e-12) const {
-    return std::get<GlobalSpherical>(m_chart).isInDomain(parameters,
-                                                         minTransverse);
+    return visit([&](const auto& chart) {
+      return chart.isInDomain(parameters, minTransverse);
+    });
   }
 
   /// Validate storage values and optional canonical ranges and eta acceptance.
@@ -298,8 +314,10 @@ class BoundParametrization {
       const Eigen::MatrixBase<Derived>& parameters,
       bool validateCoordinateRange = true, double epsilon = 1e-6,
       double maxAbsEta = std::numeric_limits<double>::infinity()) const {
-    return std::get<GlobalSpherical>(m_chart).isValid(
-        parameters, validateCoordinateRange, epsilon, maxAbsEta);
+    return visit([&](const auto& chart) {
+      return chart.isValid(parameters, validateCoordinateRange, epsilon,
+                           maxAbsEta);
+    });
   }
 
   /// Canonicalize coordinates without changing the represented direction.
@@ -309,7 +327,8 @@ class BoundParametrization {
   /// @pre Inputs and arithmetic results are finite (asserted).
   template <typename Derived>
   BoundVector canonicalize(const Eigen::MatrixBase<Derived>& parameters) const {
-    return std::get<GlobalSpherical>(m_chart).canonicalize(parameters);
+    return visit(
+        [&](const auto& chart) { return chart.canonicalize(parameters); });
   }
 
   /// Local covariance-basis transformation associated with canonicalization.
@@ -323,8 +342,9 @@ class BoundParametrization {
   template <typename Derived>
   Result<BoundMatrix> canonicalizationJacobian(
       const Eigen::MatrixBase<Derived>& parameters) const {
-    return std::get<GlobalSpherical>(m_chart).canonicalizationJacobian(
-        parameters);
+    return visit([&](const auto& chart) {
+      return chart.canonicalizationJacobian(parameters);
+    });
   }
 
   /// Canonicalize a state and transform its covariance into the same basis.
@@ -339,8 +359,9 @@ class BoundParametrization {
   Result<std::pair<BoundVector, BoundMatrix>> canonicalize(
       const Eigen::MatrixBase<Derived>& parameters,
       const Eigen::MatrixBase<Covariance>& covariance) const {
-    return std::get<GlobalSpherical>(m_chart).canonicalize(parameters,
-                                                           covariance);
+    return visit([&](const auto& chart) {
+      return chart.canonicalize(parameters, covariance);
+    });
   }
 
   /// Coordinate residual lhs - rhs, respecting this parametrization's topology.
@@ -353,7 +374,7 @@ class BoundParametrization {
   template <typename Left, typename Right>
   BoundVector difference(const Eigen::MatrixBase<Left>& lhs,
                          const Eigen::MatrixBase<Right>& rhs) const {
-    return std::get<GlobalSpherical>(m_chart).difference(lhs, rhs);
+    return visit([&](const auto& chart) { return chart.difference(lhs, rhs); });
   }
 
   /// Apply a small coordinate update and canonicalize the result.
@@ -366,7 +387,8 @@ class BoundParametrization {
   template <typename Parameters, typename Delta>
   BoundVector update(const Eigen::MatrixBase<Parameters>& parameters,
                      const Eigen::MatrixBase<Delta>& delta) const {
-    return std::get<GlobalSpherical>(m_chart).update(parameters, delta);
+    return visit(
+        [&](const auto& chart) { return chart.update(parameters, delta); });
   }
 };
 

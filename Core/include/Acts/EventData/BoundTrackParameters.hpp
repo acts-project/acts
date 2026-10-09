@@ -130,7 +130,7 @@ class BoundTrackParameters {
         m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis) {
     // TODO set `validateAngleRange` to `true` after fixing caller code
-    assert(isBoundVectorValid(m_params, false) &&
+    assert(BoundParametrization::globalSpherical().isValid(m_params, false) &&
            "Invalid bound parameters vector");
     assert(m_surface != nullptr && "Reference surface must not be null");
     normalizePhiTheta();
@@ -259,7 +259,7 @@ class BoundTrackParameters {
   /// @return Normalized direction vector
   [[deprecated("Use direction(gctx) instead")]]
   Vector3 direction() const {
-    return directionFromBoundParameters(m_params);
+    return BoundParametrization::globalSpherical().direction(m_params);
   }
   /// Absolute momentum.
   /// @return The absolute momentum magnitude
@@ -276,7 +276,8 @@ class BoundTrackParameters {
   /// @return Three-dimensional momentum vector
   [[deprecated("Use momentum(gctx) instead")]]
   Vector3 momentum() const {
-    return absoluteMomentum() * directionFromBoundParameters(m_params);
+    return absoluteMomentum() *
+           BoundParametrization::globalSpherical().direction(m_params);
   }
 
   /// Global azimuthal direction angle in radians.
@@ -295,7 +296,7 @@ class BoundTrackParameters {
   /// @param geoCtx Geometry context (unused by the canonical parametrization)
   /// @return Normalized global direction
   Vector3 direction(const GeometryContext& /*geoCtx*/) const {
-    return directionFromBoundParameters(m_params);
+    return BoundParametrization::globalSpherical().direction(m_params);
   }
   /// Global momentum vector.
   /// @param geoCtx Geometry context for direction interpretation
