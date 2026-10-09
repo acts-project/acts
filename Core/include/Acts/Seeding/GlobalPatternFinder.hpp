@@ -78,8 +78,8 @@ class GlobalPatternFinder {
         /********* Pattern bulding acceptance **********/ 
         /** @brief Number of standard deviations to consider for residual acceptance */
         double nResidualSigma {3.0};
-        /** @brief Number of standard deviations to consider for phi acceptance */
-        double nPhiSigma {3.0};
+        /** @brief Maximum phi difference [rad] allowed between two hits belonging to the same pattern */
+        double phiTolerance {3._degree};
         /** @brief Size of theta window in radians to search for comapatible hits with a pattern, tailored to the target pt cutoff */
         double maxThetaSizeOverlap {0.05};
         /** @brief Residual uncertainty to consider the hit as low confidence */
@@ -227,10 +227,12 @@ class GlobalPatternFinder {
      *  @return: number of good groups in the pattern */
     typename Topology_t::GroupIdx countGoodGroups(const PatternStateAux& pat) const;
     /** @brief Method to remove overlapping patterns
+     *  @param gctx: geometry context
      *  @param toResolve: pattern to be resolved
      *  @return: resolved patterns */
     PatternStateAuxVec
-    resolveOverlaps(PatternStateAuxVec& toResolve) const;
+    resolveOverlaps(const GeometryContext& gctx,
+                    PatternStateAuxVec& toResolve) const;
     /** @brief Method to add phi-only measurements to existing PatternStateAuxs
      *  @param gctx: Geometry context
      *  @param patterns: Vector of pattern states to which to add phi-only hits

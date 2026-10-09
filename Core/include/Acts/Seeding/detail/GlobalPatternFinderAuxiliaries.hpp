@@ -55,9 +55,6 @@ concept GlobPatFinderHit = requires(const Hit_t hit,
     /// the sensor direction and is always present. The second is provided only when it 
     /// differs from the sensor direction.
     { hit.stripMeasurementDirections(gctx) } -> std::same_as<StripMeasurementDirections>;
-    /// Cached variance of the spacepoint in the non-bending coordinate (phi in the toroidal 
-    /// field case). The method is called only for hits that measure the non-bending coordinate.
-    { hit.phiVariance() } -> std::same_as<double>;
     /// Whether the hit is a precision measurement
     { hit.isPrecision() } -> std::same_as<bool>;
     /// Whether two hits represent overlapping detector information. This relation may 
@@ -70,10 +67,6 @@ template <GlobPatFinderHit Hit_t>
 bool operator==(const Hit_t& lhs, const Hit_t& rhs) {
     return lhs.spacePoint() == rhs.spacePoint();
 }
-/** @brief Compute the variance of the phi coordinate for a given hit. */
-template <GlobPatFinderHit Hit_t>
-double computePhiVariance(const Hit_t& hit,
-                          const Acts::GeometryContext& gctx);
 
 /** @brief Concept defining the detector topology used by the pattern finder. The
  *  detector is assumed to be organized in layers, which are grouped into a number 
@@ -278,6 +271,12 @@ struct PatternStateAux {
      *  @param beamSpot: position of the beam spot */
     void updatePatternPhi(const GeometryContext& gctx,
                           const BeamspotInfo& beamSpot);
+    /** @brief Signed angle under which the pattern sees a point, relative to its bending plane.
+     *  @param pos: position to check
+     *  @return: the angle between the position and the bending plane */
+    double angleToBendPlane(const Vector3& pos) const;
+    /** @brief Return the pattern's phi at a given radius */
+    double phiAtRadius(const double R) const;
     /** @brief Return the mean normalized residual squared */
     double getMeanResidual2() const;
     /** @brief Method returning the number of groups
