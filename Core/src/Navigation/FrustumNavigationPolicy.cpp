@@ -8,70 +8,88 @@
 
 #include "Acts/Navigation/FrustumNavigationPolicy.hpp"
 
+#include "Acts/Geometry/TrivialPortalLink.hpp"
+
 namespace Acts::Experimental {
+
+namespace {
+
+/// Helper function  to check whether the portal sits on the original boundary
+/// surface of the volume
+/// @param link: Pointer to the portallink to check
+/// @param volume: Reference to the volume which boundaries need to be found
+bool leadsOutside(const PortalLinkBase *link, const TrackingVolume &volume) {
+  const auto *trivialLink = dynamic_cast<const TrivialPortalLink *>(link);
+  if (trivialLink == nullptr) {
+    return false;
+  }
+
+  const TrackingVolume *volumeLink = &trivialLink->volume();
+  if (volumeLink == &volume || volumeLink->motherVolume() == &volume) {
+    return false;
+  }
+  return true;
+}
+
+}  // namespace
 
 FrustumNavigationPolicy::FrustumNavigationPolicy(const GeometryContext &gctx,
                                                  const TrackingVolume &volume,
                                                  const Logger &logger,
                                                  const Config &config) {
-  ACTS_DEBUG("Constructing FrustumNavigationPolicy for volume "
-             << volume.volumeName());
+  ACTS_VERBOSE("Constructing FrustumNavigationPolicy for volume "
+               << volume.volumeName());
   m_id = volume.geometryId();
   std::vector<BoundingBox *> prims;
   m_boxes.push_back(std::make_unique<BoundingBox>(volume.boundingBox(gctx)));
   prims.push_back(m_boxes.back().get());
   for (auto &vol : volume.volumes()) {
-    ACTS_DEBUG("add volume " << vol.volumeName()
-                             << " to list of bounding boxes");
+    ACTS_VERBOSE("add volume " << vol.volumeName()
+                               << " to list of bounding boxes");
     m_boxes.push_back(std::make_unique<BoundingBox>(vol.boundingBox(gctx)));
     prims.push_back(m_boxes.back().get());
   }
   m_topBox =
       Acts::BoundingBoxHierarchy::makeOctree(m_boxes, prims, config.depth);
+
+  for (const auto &portal : volume.portals()) {
+    if (leadsOutside(portal.getLink(Direction::AlongNormal()), volume) ||
+        leadsOutside(portal.getLink(Direction::OppositeNormal()), volume)) {
+      m_cachedPortals.push_back(&portal);
+    }
+  }
 }
 
 void FrustumNavigationPolicy::initializeCandidates(
-    const GeometryContext &gctx, const NavigationArguments &args,
+    const GeometryContext & /*gctx*/, const NavigationArguments &args,
     NavigationPolicyState &state, AppendOnlyNavigationStream &stream,
     const Logger &logger) const {
-  ACTS_DEBUG("FrustumNavigationPolicy Candidates initialization for volume "
-             << m_id);
+  ACTS_VERBOSE("FrustumNavigationPolicy Candidates initialization for volume "
+               << m_id);
   auto &s = state.as<State>();
   // Reset the frustum from the NavigationArguments
   s.frustum = Frustum3(args.position, args.direction, s.openingAngle);
-  ACTS_DEBUG("Frustum origin " << s.frustum.origin() << ", frustum dir "
-                               << s.frustum.dir());
   Frustum3 frustum = s.frustum;
+  ACTS_VERBOSE("Frustum origin " << s.frustum.origin() << ", frustum dir "
+                                 << s.frustum.dir());
   Acts::BoundingBoxHierarchy::visitIntersecting(
-      frustum, m_topBox,
-      [this, &gctx, &stream, &logger, &frustum](const Volume &entity) {
+      frustum, m_topBox, [this, &stream, &logger](const Volume &entity) {
         const TrackingVolume *tvol =
             dynamic_cast<const TrackingVolume *>(&entity);
-        ACTS_DEBUG("get portals from volume " << tvol->volumeName());
-        const auto &portals = tvol->portals();
-        for (const auto &portal : portals) {
-          // To avoid including unnecessary portals, skip any portals from the
-          // top-level volume to its child volumes. If we want these, they will
-          // be added when the intersection reaches the child volume. Only add
-          // portals from the top-level volume to volumes it doesn't contain.
-          if (tvol->geometryId() == this->m_id) {
-            Acts::Result<const TrackingVolume *> pvolr = portal.resolveVolume(
-                gctx, portal.surface().center(gctx), frustum.dir());
-            if (pvolr.ok()) {
-              const TrackingVolume *pvol = *pvolr;
-              if (tvol->inside(gctx, pvol->center(gctx))) {
-                continue;
-              } else {
-                stream.addPortalCandidate(portal);
-              }
-            } else {
-              ACTS_DEBUG("unable to resolve portal volume");
-            }
-          } else {
+        ACTS_VERBOSE("Get portals from volume " << tvol->volumeName());
+        if (tvol->geometryId() == m_id) {
+          for (const Portal *portal : m_cachedPortals) {
+            stream.addPortalCandidate(*portal);
+          }
+        } else {
+          for (const auto &portal : tvol->portals()) {
             stream.addPortalCandidate(portal);
           }
         }
       });
+  ACTS_VERBOSE(
+      "FrustumNavigationPolicy Candidates initialization done for volume "
+      << this->m_id);
 }
 
 void FrustumNavigationPolicy::connect(NavigationDelegate &delegate) const {
