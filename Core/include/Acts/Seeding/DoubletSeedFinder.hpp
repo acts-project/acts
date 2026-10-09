@@ -14,6 +14,9 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
+#include <algorithm>
+#include <bit>
+#include <cmath>
 #include <cstdint>
 #include <vector>
 
@@ -101,6 +104,44 @@ class DoubletsForMiddleSp {
     std::ranges::sort(indexAndCotTheta, {}, [](const IndexAndCotTheta& item) {
       return item.cotTheta;
     });
+  }
+
+  /// Sort doublets using reusable integer-key storage. Finite, distinct
+  /// cotTheta values have the same ordering as the original float comparison.
+  /// Ties retain the original sort, including its ordering of equal entries.
+  /// @param range Index range to sort within
+  /// @param indexAndCotTheta Output sorted index and cotTheta pairs
+  /// @param scratch Reusable storage for the packed integer keys
+  void sortByCotTheta(const IndexRange& range,
+                      std::vector<IndexAndCotTheta>& indexAndCotTheta,
+                      std::vector<std::uint64_t>& scratch) const {
+    scratch.clear();
+    scratch.reserve(range.second - range.first);
+    for (Index i = range.first; i < range.second; ++i) {
+      const float cotTheta = m_cotTheta[i];
+      if (!std::isfinite(cotTheta)) {
+        sortByCotTheta(range, indexAndCotTheta);
+        return;
+      }
+      const auto bits = std::bit_cast<std::uint32_t>(cotTheta);
+      const auto ordered =
+          (bits & 0x80000000u) != 0u ? ~bits : bits ^ 0x80000000u;
+      scratch.push_back((static_cast<std::uint64_t>(ordered) << 32) | i);
+    }
+    std::sort(scratch.begin(), scratch.end());
+    for (std::size_t i = 1; i < scratch.size(); ++i) {
+      if (m_cotTheta[static_cast<Index>(scratch[i - 1])] ==
+          m_cotTheta[static_cast<Index>(scratch[i])]) {
+        sortByCotTheta(range, indexAndCotTheta);
+        return;
+      }
+    }
+    indexAndCotTheta.clear();
+    indexAndCotTheta.reserve(scratch.size());
+    for (const auto packed : scratch) {
+      const auto i = static_cast<Index>(packed);
+      indexAndCotTheta.emplace_back(i, m_cotTheta[i]);
+    }
   }
 
   /// Proxy accessor for a single doublet entry.

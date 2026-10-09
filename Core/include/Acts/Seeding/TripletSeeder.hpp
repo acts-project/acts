@@ -36,6 +36,9 @@ class TripletSeeder {
     /// Sorted container of top doublet indices with cotangent theta values
     std::vector<DoubletsForMiddleSp::IndexAndCotTheta> sortedTops;
 
+    /// Reusable integer sort keys for doublet ordering
+    std::vector<std::uint64_t> doubletSortKeys;
+
     /// Cache for triplet top candidates during seed formation
     TripletTopCandidates tripletTopCandidates;
 
