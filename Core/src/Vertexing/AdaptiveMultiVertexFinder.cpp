@@ -38,6 +38,10 @@ Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::find(
 
   int iteration = 0;
   std::vector<InputTrack> removedSeedTracks;
+  // Original input parameters and geometry are unchanged during a find call.
+  // Reuse the input z coordinate across vertex candidates, including recovery.
+  TrackZCache trackZCache;
+  trackZCache.reserve(allTracks.size());
   while (!seedTracks.empty() && iteration < m_cfg.maxIterations &&
          (m_cfg.addSingleTrackVertices || seedTracks.size() >= 2)) {
     Vertex currentConstraint = vertexingOptions.constraint;
@@ -78,9 +82,9 @@ Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::find(
 
     bool preparationFailed = false;
     for (Vertex* vtxPtr : newVerticesPtr) {
-      auto prepResult = canPrepareVertexForFit(searchTracks, seedTracks,
-                                               *vtxPtr, currentConstraint,
-                                               fitProblem, vertexingOptions);
+      auto prepResult = canPrepareVertexForFit(
+          searchTracks, seedTracks, *vtxPtr, currentConstraint, fitProblem,
+          vertexingOptions, trackZCache);
       if (!prepResult.ok()) {
         return prepResult.error();
       }
@@ -248,16 +252,20 @@ Result<double> AdaptiveMultiVertexFinder::getIPSignificance(
 
 Result<void> AdaptiveMultiVertexFinder::addCompatibleTracksToVertex(
     const std::vector<InputTrack>& tracks, Vertex& vtx,
-    VertexFitProblem& fitProblem,
-    const VertexingOptions& vertexingOptions) const {
+    VertexFitProblem& fitProblem, const VertexingOptions& vertexingOptions,
+    TrackZCache& trackZCache) const {
   for (const auto& trk : tracks) {
-    auto params = m_cfg.extractParameters(trk);
-    auto pos = params.position(vertexingOptions.geoContext);
+    auto [zIt, inserted] = trackZCache.try_emplace(trk, 0.);
+    if (inserted) {
+      zIt->second = m_cfg.extractParameters(trk).position(
+          vertexingOptions.geoContext)[eZ];
+    }
     // If track is too far away from vertex, do not consider checking the IP
     // significance
-    if (m_cfg.tracksMaxZinterval < std::abs(pos[eZ] - vtx.position()[eZ])) {
+    if (m_cfg.tracksMaxZinterval < std::abs(zIt->second - vtx.position()[eZ])) {
       continue;
     }
+    auto params = m_cfg.extractParameters(trk);
     auto sigRes = getIPSignificance(trk, vtx, vertexingOptions);
     if (!sigRes.ok()) {
       return sigRes.error();
@@ -279,7 +287,7 @@ Result<bool> AdaptiveMultiVertexFinder::canRecoverFromNoCompatibleTracks(
     const std::vector<InputTrack>& allTracks,
     const std::vector<InputTrack>& seedTracks, Vertex& vtx,
     const Vertex& currentConstraint, VertexFitProblem& fitProblem,
-    const VertexingOptions& vertexingOptions) const {
+    const VertexingOptions& vertexingOptions, TrackZCache& trackZCache) const {
   // Recover from cases where no compatible tracks to vertex
   // candidate were found
   // TODO: This is for now how it's done in athena... this look a bit
@@ -290,13 +298,12 @@ Result<bool> AdaptiveMultiVertexFinder::canRecoverFromNoCompatibleTracks(
     double newZ = 0;
     bool nearTrackFound = false;
     for (const auto& trk : seedTracks) {
-      auto pos =
-          m_cfg.extractParameters(trk).position(vertexingOptions.geoContext);
-      auto zDistance = std::abs(pos[eZ] - vtx.position()[eZ]);
+      const double z = trackZCache.at(trk);
+      auto zDistance = std::abs(z - vtx.position()[eZ]);
       if (zDistance < smallestDeltaZ) {
         smallestDeltaZ = zDistance;
         nearTrackFound = true;
-        newZ = pos[eZ];
+        newZ = z;
       }
     }
     if (nearTrackFound) {
@@ -308,7 +315,7 @@ Result<bool> AdaptiveMultiVertexFinder::canRecoverFromNoCompatibleTracks(
 
       // Try to add compatible track with adapted vertex position
       auto res = addCompatibleTracksToVertex(allTracks, vtx, fitProblem,
-                                             vertexingOptions);
+                                             vertexingOptions, trackZCache);
       if (!res.ok()) {
         return Result<bool>::failure(res.error());
       }
@@ -333,14 +340,14 @@ Result<bool> AdaptiveMultiVertexFinder::canPrepareVertexForFit(
     const std::vector<InputTrack>& allTracks,
     const std::vector<InputTrack>& seedTracks, Vertex& vtx,
     const Vertex& currentConstraint, VertexFitProblem& fitProblem,
-    const VertexingOptions& vertexingOptions) const {
+    const VertexingOptions& vertexingOptions, TrackZCache& trackZCache) const {
   // Add vertex info to fitter state
   fitProblem.candidates[&vtx] =
       VertexFitCandidate(currentConstraint, vtx.fullPosition());
 
   // Add all compatible tracks to vertex
-  auto resComp =
-      addCompatibleTracksToVertex(allTracks, vtx, fitProblem, vertexingOptions);
+  auto resComp = addCompatibleTracksToVertex(allTracks, vtx, fitProblem,
+                                             vertexingOptions, trackZCache);
   if (!resComp.ok()) {
     return Result<bool>::failure(resComp.error());
   }
@@ -348,7 +355,7 @@ Result<bool> AdaptiveMultiVertexFinder::canPrepareVertexForFit(
   // Try to recover from cases where adding compatible track was not possible
   auto resRec = canRecoverFromNoCompatibleTracks(allTracks, seedTracks, vtx,
                                                  currentConstraint, fitProblem,
-                                                 vertexingOptions);
+                                                 vertexingOptions, trackZCache);
   if (!resRec.ok()) {
     return Result<bool>::failure(resRec.error());
   }

@@ -225,6 +225,24 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
     CHECK_CLOSE_OR_SMALL(recoVtx.tracks()[0].vertexCompatibility,
                          expVtx.trk1Comp, relTol, small);
   }
+
+  // Reusing a finder/state with changed input positions must rebuild any
+  // per-call position cache. A common z translation leaves this constant-field
+  // fit unchanged apart from the vertex z coordinates.
+  const double zShift = 50_mm;
+  for (auto& trk : tracks) {
+    trk.parameters()[eBoundLoc1] += zShift;
+  }
+  const auto shiftedResult = finder.find(inputTracks, vertexingOptions, state);
+  BOOST_REQUIRE(shiftedResult.ok());
+  BOOST_REQUIRE_EQUAL(shiftedResult->size(), allVertices.size());
+  for (std::size_t i = 0; i < allVertices.size(); ++i) {
+    CHECK_CLOSE_ABS((*shiftedResult)[i].position(),
+                    allVertices[i].position() + Vector3(0., 0., zShift),
+                    1e-4_mm);
+    BOOST_CHECK_EQUAL((*shiftedResult)[i].tracks().size(),
+                      allVertices[i].tracks().size());
+  }
 }
 
 // Dummy user-defined InputTrackStub type
