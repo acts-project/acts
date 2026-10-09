@@ -18,13 +18,13 @@ set(CMAKE_CXX_FLAGS)
 
 # Declare where to get Alpaka from.
 set(TRACCC_ALPAKA_SOURCE
-    "URL;https://github.com/alpaka-group/alpaka/archive/refs/tags/2.1.1.tar.gz;URL_MD5;cbfb610731e2d24eb18d7b588d6a35a6"
+    "URL;https://github.com/alpaka-group/alpaka/archive/refs/tags/2.2.0.tar.gz;URL_MD5;c12ee1495974ec911c1a43e0ff4d8925"
     CACHE STRING
     "Source for Alpaka, when built as part of this project"
 )
 
 set(TRACCC_ALPAKA_PATCH
-    "PATCH_COMMAND;patch;-p1;-i;${CMAKE_CURRENT_SOURCE_DIR}/alpaka-2.0.0-sycl-enqueue-forward.patch"
+    ""
     CACHE STRING
     "Patch(es) for alpaka, when built as part of this project"
 )
