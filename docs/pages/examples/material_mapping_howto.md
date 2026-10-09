@@ -94,8 +94,8 @@ python Examples/Scripts/MaterialMapping/writeMapConfig.py geometry-map.json conf
 In `config-map.json`, for every surface category you want to map:
 
 - set `"mapMaterial": true`
-- set the `"bins"` entries under `"binUtility" -> "binningdata"` to the
-  granularity you want
+- set the `"bins"` entries under `"axis_specs"` to the granularity you want
+  (legacy maps use `"binUtility" -> "binningdata"`)
 
 A homogeneous surface is `1 x 1`. Start coarse: bins with no hits produce no
 material, and a fine binning with too few recorded tracks gives you a map full
@@ -133,9 +133,8 @@ marks up that child's volume faces as it is connected:
 @snippet{trimleft} examples/material_designation.cpp Designate Proto Material
 
 The two-axis form of @ref Acts::MaterialDesignatorBlueprintNode::configureFace
-attaches a @ref Acts::ProtoGridSurfaceMaterial — a binning specification with no
-content, which is exactly what the Gen1 JSON route produces via
-@ref Acts::ProtoSurfaceMaterial. It is the direct equivalent of setting
+attaches a @ref Acts::ProtoSurfaceMaterial — a binning specification with no
+content, which is also what the Gen1 JSON route produces. It is the direct equivalent of setting
 `"mapMaterial": true` plus a bin count, and it is what you want if you intend to
 run the mapping.
 
@@ -191,8 +190,8 @@ Things to know before you use it:
 Once construction is done the two generations converge completely. The
 designated material sits on ordinary surfaces, so `hasMaterial()` is true,
 `trackingGeometry.extractMaterialSurfaces()` collects them, and
-@ref Acts::BinnedSurfaceMaterialAccumulator consumes @ref Acts::ProtoGridSurfaceMaterial
-alongside @ref Acts::ProtoSurfaceMaterial. Steps 2 to 5 below are unchanged — just omit
+@ref Acts::BinnedSurfaceMaterialAccumulator consumes @ref Acts::ProtoSurfaceMaterial
+using its axis specifications. Steps 2 to 5 below are unchanged — just omit
 `--matconfig` in step 3, since the geometry already carries the designation.
 
 @anchor material_mapping_stable_keys
