@@ -84,6 +84,17 @@ using namespace ActsPlugins;
 
 namespace ActsTests {
 
+namespace {
+
+/// @returns the total number of surface material entries in @p det
+template <typename detector_t>
+std::size_t nMaterialEntries(const detector_t& det) {
+  return detray::n_material_slabs(det) + detray::n_material_rods(det) +
+         detray::n_material_maps(det);
+}
+
+}  // namespace
+
 BOOST_AUTO_TEST_SUITE(DetrayConversion)
 
 BOOST_AUTO_TEST_CASE(DetrayTransformConversion) {
@@ -811,6 +822,74 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   //           << std::endl;
 
   detray::io::write_detector(detrayDetector, detrayNames, writer_cfg);
+}
+
+/// Test that material gets deduplicated by the detray build process
+BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
+  using detector_t =
+      detray::host::detector<detray::default_metadata<detray::array<double>>>;
+
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+
+  CylindricalTrackingGeometry cGeometry(gctx, true);
+  std::shared_ptr<const TrackingGeometry> tGeometry =
+      cGeometry(*getDefaultLogger("Geo", Logging::INFO));
+
+  DetrayPayloadConverter::Config payloadCfg;
+  tGeometry->apply([&payloadCfg](const TrackingVolume& volume) {
+    if (volume.volumeName() == "Beampipe") {
+      payloadCfg.beampipeVolume = &volume;
+    }
+  });
+
+  DetrayGeometryConverter::Config cfg;
+  cfg.payloadConverter = std::make_shared<DetrayPayloadConverter>(
+      payloadCfg, getDefaultLogger("PayloadCnv", Logging::INFO));
+  // On by default
+  BOOST_CHECK(cfg.deduplicateMaterial);
+
+  vecmem::host_memory_resource mr;
+
+  auto convert = [&](bool deduplicate) {
+    auto converterCfg = cfg;
+    converterCfg.deduplicateMaterial = deduplicate;
+    DetrayGeometryConverter converter(
+        converterCfg, getDefaultLogger("GeoCnv", Logging::INFO));
+    return converter.convert<detector_t::metadata>(mr, gctx, tGeometry);
+  };
+
+  auto reference = convert(false);
+  auto deduplicated = convert(true);
+
+  const detector_t& refDet = *reference.detector;
+  const detector_t& det = *deduplicated.detector;
+
+  BOOST_CHECK(detray::detail::check_consistency(refDet));
+  BOOST_CHECK(detray::detail::check_consistency(det));
+
+  // Same geometry
+  BOOST_CHECK_EQUAL(refDet.volumes().size(), det.volumes().size());
+  BOOST_CHECK_EQUAL(refDet.surfaces().size(), det.surfaces().size());
+
+  // Without deduplication, there is one material entry per surface
+  std::size_t nSurfacesWithMaterial = 0;
+  for (const auto& sfDesc : refDet.surfaces()) {
+    nSurfacesWithMaterial += sfDesc.has_material() ? 1u : 0u;
+  }
+  BOOST_CHECK_GT(nSurfacesWithMaterial, 0u);
+  BOOST_CHECK_EQUAL(nMaterialEntries(refDet), nSurfacesWithMaterial);
+
+  // Portals shared between volumes share their material
+  BOOST_TEST_MESSAGE("Material slabs: " << detray::n_material_slabs(refDet)
+                                        << " -> "
+                                        << detray::n_material_slabs(det));
+  BOOST_TEST_MESSAGE("Material maps: " << detray::n_material_maps(refDet)
+                                       << " -> "
+                                       << detray::n_material_maps(det));
+  BOOST_CHECK_LT(nMaterialEntries(det), nMaterialEntries(refDet));
+  BOOST_CHECK_LE(detray::n_material_slabs(det),
+                 detray::n_material_slabs(refDet));
+  BOOST_CHECK_LE(detray::n_material_maps(det), detray::n_material_maps(refDet));
 }
 
 // Stack of z-segmented layers in r, with the segment boundaries chosen such

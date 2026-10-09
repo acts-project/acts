@@ -83,8 +83,8 @@ struct material {
            mass_to_molar_density(rhs.Ar(), rhs.mass_density()));
 
     return (m_x0 == rhs.X0() && m_l0 == rhs.L0() && m_ar == rhs.Ar() &&
-            m_z == rhs.Z() && m_mass_rho == rhs.mass_density()) &&
-           (m_has_density_effect_data && rhs.has_density_effect_data() &&
+            m_z == rhs.Z() && m_mass_rho == rhs.mass_density() &&
+            m_has_density_effect_data == rhs.has_density_effect_data() &&
             m_density == rhs.density_effect_data());
   }
 
@@ -94,6 +94,22 @@ struct material {
   DETRAY_HOST_DEVICE
   constexpr bool operator!=(const material<scalar_type> &rhs) const {
     return !(*this == rhs);
+  }
+
+  /// Boolean operator
+  DETRAY_HOST_DEVICE
+  constexpr explicit operator bool() const {
+    if (m_x0 == detail::invalid_value<scalar_type>()) {
+      return false;
+    }
+    // Cannot happen independently from X0 not being invalid
+    assert(m_l0 != detail::invalid_value<scalar_type>());
+    assert(m_ar != 0.f);
+    assert(m_z != 0.f);
+    assert(m_mass_rho != 0.f);
+    assert(m_molar_rho);
+
+    return true;
   }
 
   /// @returns the radition length. Infinity in case of vacuum.
@@ -165,9 +181,10 @@ struct material {
       return strm.str();
     }
     strm << "material: ";
-    strm << " X0 = " << m_x0;
-    strm << " | L0 = " << m_l0;
+    strm << " X0 = " << m_x0 << " mm";
+    strm << " | L0 = " << m_l0 << " mm";
     strm << " | Z = " << m_z;
+    strm << " | rho = " << m_mass_rho << " GeV/mm^3";
 
     strm << " | state = ";
     switch (m_state) {

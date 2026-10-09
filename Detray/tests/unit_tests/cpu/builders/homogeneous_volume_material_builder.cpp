@@ -45,7 +45,7 @@ TEST(detray_builders, homogeneous_volume_material_builder) {
   vecmem::host_memory_resource host_mr;
   detector_t d(host_mr);
 
-  EXPECT_TRUE(d.material_store().template empty<material_id>());
+  ASSERT_TRUE(d.material_store().template empty<material_id>());
 
   // Add material to a new volume
   auto vbuilder =
@@ -59,6 +59,7 @@ TEST(detray_builders, homogeneous_volume_material_builder) {
   sf_factory->push_back({surface_id::e_sensitive,
                          transform3(point3{0.f, 0.f, -1.f}), 1u,
                          std::vector<scalar>{10.f, 8.f}});
+
   mat_builder.add_surfaces(sf_factory);
 
   // Set volume material
@@ -74,6 +75,6 @@ TEST(detray_builders, homogeneous_volume_material_builder) {
   EXPECT_EQ(vol_desc.material().id(), material_id);
   EXPECT_EQ(vol_desc.material().index(), 0u);
   EXPECT_EQ(d.material_store().template size<material_id>(), 1u);
-  EXPECT_EQ(d.material_store().template get<material_id>()[0],
+  EXPECT_EQ(d.material_store().template get<material_id>().at(0),
             argon_liquid<scalar>{});
 }

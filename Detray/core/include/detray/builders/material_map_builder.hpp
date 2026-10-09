@@ -10,7 +10,6 @@
 
 // Project include(s).
 #include "detray/builders/bin_fillers.hpp"
-#include "detray/builders/detail/material_deduplication.hpp"
 #include "detray/builders/material_map_factory.hpp"
 #include "detray/builders/material_map_generator.hpp"
 #include "detray/builders/surface_factory_interface.hpp"
@@ -255,7 +254,8 @@ struct add_sf_material_map {
       auto mat_grid = mat_factory.new_grid(sf_mask, n_bins, {}, {}, axis_spans);
 
       // The detector only knows the non-owning grid types
-      using non_owning_t = typename decltype(mat_grid)::template type<false>;
+      using non_owning_t =
+          typename decltype(mat_grid)::template owning_type<false>;
 
       // Not every mask shape might be used for material maps, make sure the
       // type that was constructed by the grid factory is known by the detector
@@ -275,7 +275,7 @@ struct add_sf_material_map {
         if (deduplicate) {
           const auto& grid_coll = mat_store.template get<gid>();
           for (dindex i = 0u; i < grid_coll.size(); ++i) {
-            if (is_identical_grid(mat_grid, grid_coll.at(i))) {
+            if (mat_grid == grid_coll.at(i)) {
               DETRAY_VERBOSE_HOST("Found identical material grid at index "
                                   << i << ". Deduplicating...");
               return {gid, i};

@@ -44,7 +44,7 @@ import sys
 def run_cpu_material_validation(args, datadir, logging):
     # Configure the detector IO
     reader_cfg = fill_reader_config(args, detray.io.DetectorReaderConfig())
-    logging.info("Detector IO config\n" + reader_cfg)
+    logging.info("Detector IO config\n" + str(reader_cfg))
 
     # Configure material scan
     scan_cfg = detray.tests.MaterialScanConfig()
@@ -52,14 +52,14 @@ def run_cpu_material_validation(args, datadir, logging):
     scan_cfg.trackGenerator.uniformEta = True
     scan_cfg.overlapsTol = args.overlaps_tol
     scan_cfg.materialFile = os.path.join(datadir, "material_scan")
-    logging.info("Material scan config\n" + scan_cfg)
+    logging.info("Material scan config\n\n" + str(scan_cfg))
 
     # Configure material validation
     val_cfg = detray.tests.MaterialValidationConfig()
     fill_propagation_config(args, val_cfg.propagation)
     val_cfg.relativeError = args.material_tol / 100.0
     val_cfg.materialFile = os.path.join(datadir, "navigation_material_trace")
-    logging.info("Material validation config\n" + val_cfg)
+    logging.info("Material validation config\n\n" + str(val_cfg))
 
     # Read the detector
     det, names = detray.io.readDetector(detray.core.HostMemoryResource(), reader_cfg)
