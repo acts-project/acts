@@ -45,9 +45,8 @@ TRACCC_HOST_DEVICE inline void gbts_fill_path_store(
   const vecmem::device_vector<const float4> d_sp_reduced(payload.reducedSP);
   const gbts_fit_segments_params& fit_params = payload.gbts_fit_segments_params;
 
-  // Row-major output graph: each edge owns a contiguous block of
-  // max_num_neighbours ints ([nei0..]).
-  const unsigned int edge_size = payload.max_num_neighbours;
+  // Column-major output graph: neighbour k of an edge is in column k.
+  const unsigned int nei_stride = payload.nConnectedEdgesMax;
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
@@ -79,13 +78,12 @@ TRACCC_HOST_DEVICE inline void gbts_fill_path_store(
     chain[0] = root;
     while (offset > 0u) {
       --offset;
-      const unsigned int edge_pos = edge_size * cur_edge;
       const unsigned int nNei = d_output_num_neighbours[cur_edge];
       const unsigned char level = d_levels[cur_edge];
       unsigned int acc = 0u;
       bool found = false;
       for (unsigned int k = 0u; k < nNei; ++k) {
-        const unsigned int child = d_output_graph[edge_pos + k];
+        const unsigned int child = d_output_graph[k * nei_stride + cur_edge];
         if (level != d_levels[child] + 1u) {
           continue;
         }
