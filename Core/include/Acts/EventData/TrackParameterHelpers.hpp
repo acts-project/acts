@@ -9,8 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 
 #include <limits>
 
@@ -21,12 +20,12 @@ namespace Acts {
 /// @tparam Derived Eigen expression type
 /// @param parameters Raw bound coordinates
 /// @return Global unit direction vector
+/// @throws std::domain_error for nonfinite direction coordinates
 /// @note This helper assumes the canonical global-spherical parametrization.
 template <typename Derived>
 Vector3 directionFromBoundParameters(
     const Eigen::MatrixBase<Derived>& parameters) {
-  return makeDirectionFromPhiTheta(parameters[eBoundDir0],
-                                   parameters[eBoundDir1]);
+  return BoundParametrization::globalSpherical().direction(parameters);
 }
 
 /// Check if a bound vector is valid. This checks the following:
@@ -62,11 +61,9 @@ bool isFreeVectorValid(
 /// @param boundParams The bound parameters to normalize
 ///
 /// @return The normalized bound parameters
+/// @throws std::domain_error for nonfinite input
 inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
-  BoundVector result = boundParams;
-  std::tie(result[eBoundDir0], result[eBoundDir1]) =
-      detail::normalizePhiTheta(result[eBoundDir0], result[eBoundDir1]);
-  return result;
+  return BoundParametrization::globalSpherical().canonicalize(boundParams);
 }
 
 /// Add canonical global-spherical bound parameters, respecting angle
@@ -76,9 +73,10 @@ inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
 /// @param rhs The right hand side bound parameters
 ///
 /// @return The sum of the bound parameters
+/// @throws std::domain_error for nonfinite input
 inline BoundVector addBoundParameters(const BoundVector& lhs,
                                       const BoundVector& rhs) {
-  return normalizeBoundParameters(lhs + rhs);
+  return BoundParametrization::globalSpherical().update(lhs, rhs);
 }
 
 /// Subtract canonical global-spherical bound parameters, respecting angle
@@ -88,12 +86,10 @@ inline BoundVector addBoundParameters(const BoundVector& lhs,
 /// @param rhs The right hand side bound parameters
 ///
 /// @return The difference of the bound parameters
+/// @throws std::domain_error for nonfinite input
 inline BoundVector subtractBoundParameters(const BoundVector& lhs,
                                            const BoundVector& rhs) {
-  BoundVector result = lhs - rhs;
-  result[eBoundDir0] = detail::radian_sym(result[eBoundDir0]);
-  result[eBoundDir1] = detail::radian_sym(result[eBoundDir1]);
-  return result;
+  return BoundParametrization::globalSpherical().difference(lhs, rhs);
 }
 
 }  // namespace Acts

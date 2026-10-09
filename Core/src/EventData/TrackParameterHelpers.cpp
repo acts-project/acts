@@ -8,37 +8,12 @@
 
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 
-#include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-
-#include <numbers>
 
 bool Acts::isBoundVectorValid(const BoundVector& v, bool validateAngleRange,
                               double epsilon, double maxAbsEta) {
-  constexpr auto pi = std::numbers::pi_v<double>;
-
-  bool loc0Valid = std::isfinite(v[eBoundLoc0]);
-  bool loc1Valid = std::isfinite(v[eBoundLoc1]);
-  bool phiValid = std::isfinite(v[eBoundDir0]);
-  bool thetaValid = std::isfinite(v[eBoundDir1]);
-  bool qOverPValid = std::isfinite(v[eBoundQOverP]);
-  bool timeValid = std::isfinite(v[eBoundTime]);
-
-  if (validateAngleRange) {
-    phiValid = phiValid && (v[eBoundDir0] + epsilon >= -pi) &&
-               (v[eBoundDir0] - epsilon < pi);
-    thetaValid = thetaValid && (v[eBoundDir1] + epsilon >= 0) &&
-                 (v[eBoundDir1] - epsilon <= pi);
-  }
-
-  bool etaValid = true;
-  if (std::isfinite(maxAbsEta)) {
-    double eta = AngleHelpers::etaFromTheta(v[eBoundDir1]);
-    etaValid = std::isfinite(eta) && (std::abs(eta) - epsilon <= maxAbsEta);
-  }
-
-  return loc0Valid && loc1Valid && phiValid && thetaValid && qOverPValid &&
-         timeValid && etaValid;
+  return BoundParametrization::globalSpherical().isValid(v, validateAngleRange,
+                                                         epsilon, maxAbsEta);
 }
 
 bool Acts::isFreeVectorValid(const FreeVector& v, double epsilon,

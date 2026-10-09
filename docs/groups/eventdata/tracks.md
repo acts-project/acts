@@ -60,6 +60,30 @@ parametrization and accepts Eigen maps and expressions. No parameter object or
 additional stored metadata is needed. Existing parameter and proxy concepts do
 not require the new context overloads from client-defined types.
 
+`BoundParametrization::globalSpherical()` provides the current interpretation as
+an allocation-free value with private variant storage. It exposes direction
+encoding/decoding, forward and inverse derivatives, coordinate validation,
+canonicalization, differences and updates. It owns no surface or context and
+can be kept independently of either. The bound-vector helpers delegate to this
+canonical implementation. Geometry selection and alternative charts remain
+follow-up work.
+
+`isValid()` checks finite values, optional canonical ranges and eta acceptance.
+It permits axial directions. `isInDomain()` additionally checks whether the
+inverse direction derivative is sufficiently conditioned. The inverse Jacobian
+throws at a pole or below its transverse-fraction threshold; it includes input
+normalization when given a non-unit Cartesian direction. Invalid operation
+inputs produce exceptions in release builds as well.
+
+`canonicalize(parameters, covariance)` returns both coordinates and covariance
+in the canonical basis. Folding theta across a pole reverses its covariance
+cross terms. At an exact pole that canonicalization derivative is undefined,
+so covariance canonicalization throws; value-only canonicalization remains
+available. The phi wrapping seam uses local periodic coordinates. The legacy
+value-only normalization/update helpers do not transform a separate covariance.
+For an update with covariance, use `canonicalize(parameters + delta, covariance)`
+with the covariance in the uncanonicalized updated basis.
+
 Angular normalization, periodic residuals, bound/free Jacobians, material noise,
 and propagation algorithms still assume the canonical spherical coordinates.
 The neutral index names alone do not make those operations chart-independent.

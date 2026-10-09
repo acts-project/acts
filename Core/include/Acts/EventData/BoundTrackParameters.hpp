@@ -361,10 +361,7 @@ class BoundTrackParameters {
 
   /// Ensure phi and theta angles are within bounds.
   void normalizePhiTheta() {
-    auto [phi, theta] =
-        detail::normalizePhiTheta(m_params[eBoundDir0], m_params[eBoundDir1]);
-    m_params[eBoundDir0] = phi;
-    m_params[eBoundDir1] = theta;
+    m_params = BoundParametrization::globalSpherical().canonicalize(m_params);
   }
 
   /// Compare two bound track parameters for bitwise equality.
