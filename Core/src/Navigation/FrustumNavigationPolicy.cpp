@@ -69,12 +69,11 @@ void FrustumNavigationPolicy::initializeCandidates(
   auto &s = state.as<State>();
   // Reset the frustum from the NavigationArguments
   s.frustum = Frustum3(args.position, args.direction, s.openingAngle);
-  ACTS_DEBUG("Frustum origin " << s.frustum.origin() << ", frustum dir "
-                               << s.frustum.dir());
   Frustum3 frustum = s.frustum;
+  ACTS_VERBOSE("Frustum origin " << s.frustum.origin() << ", frustum dir "
+                                 << s.frustum.dir());
   Acts::BoundingBoxHierarchy::visitIntersecting(
-      frustum, m_topBox,
-      [this, &gctx, &stream, &logger, &frustum](const Volume &entity) {
+      frustum, m_topBox, [this, &stream, &logger](const Volume &entity) {
         const TrackingVolume *tvol =
             dynamic_cast<const TrackingVolume *>(&entity);
         ACTS_VERBOSE("Get portals from volume " << tvol->volumeName());
