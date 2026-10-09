@@ -388,16 +388,12 @@ GTEST_TEST(detray_builders, material_map_deduplication) {
   ASSERT_EQ(maps.size(), 3u * n_volumes);
 
   // The map content is identical for the first two map surfaces
-  EXPECT_TRUE(detail::is_identical_grid(maps[0], maps[0]));
-  EXPECT_TRUE(detail::is_identical_grid(maps[0], maps[1]));
-  EXPECT_TRUE(detail::is_identical_grid(maps[0], maps[3]));
-  EXPECT_FALSE(detail::is_identical_grid(maps[0], maps[2]));
+  EXPECT_TRUE(maps[0] == maps[0]);
+  EXPECT_TRUE(maps[0] == maps[1]);
+  EXPECT_TRUE(maps[0] == maps[3]);
   // Unique map in the first and second volume
-  EXPECT_FALSE(detail::is_identical_grid(maps[2], maps[5]));
-
-  // In contrast, the grid operator== compares the storage position of the
-  // non-owning grids
-  EXPECT_FALSE(maps[0] == maps[1]);
+  EXPECT_FALSE(maps[0] == maps[2]);
+  EXPECT_FALSE(maps[2] == maps[5]);
 
   // With deduplication: The shared material is only present once
   const auto &store = det.material_store();
