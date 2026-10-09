@@ -511,12 +511,16 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     auto& firstTracksForSeed = firstResult.value();
     for (auto& firstTrack : firstTracksForSeed) {
-      // TODO a copy of the track should not be necessary but is the safest way
-      //      with the current EDM
-      // TODO a lightweight copy without copying all the track state components
-      //      might be a solution
+      // Completed branches can share states. A single returned branch has no
+      // other surviving candidate to protect, so only copy its metadata.
+      // Multiple returned branches retain independent state copies.
       auto trackCandidate = tracksTemp.makeTrack();
-      trackCandidate.copyFrom(firstTrack);
+      if (firstTracksForSeed.size() == 1) {
+        trackCandidate.copyFromShallow(firstTrack);
+        trackCandidate.linkForward();
+      } else {
+        trackCandidate.copyFrom(firstTrack);
+      }
 
       Acts::Result<void> firstSmoothingResult{
           Acts::smoothTrack(ctx.recoGeoContext, trackCandidate, logger())};
@@ -579,12 +583,15 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
-              // TODO a copy of the track should not be necessary but is the
-              //      safest way with the current EDM
-              // TODO a lightweight copy without copying all the track state
-              //      components might be a solution
+              // Reversing a unique completed branch cannot affect another
+              // surviving second-pass candidate. Keep a deep copy otherwise.
               auto secondTrackCopy = tracksTemp.makeTrack();
-              secondTrackCopy.copyFrom(secondTrack);
+              if (secondTracksForSeed.size() == 1) {
+                secondTrackCopy.copyFromShallow(secondTrack);
+                secondTrackCopy.linkForward();
+              } else {
+                secondTrackCopy.copyFrom(secondTrack);
+              }
 
               // Note that this is only valid if there are no branches
               // We disallow this by breaking this look after a second track was
