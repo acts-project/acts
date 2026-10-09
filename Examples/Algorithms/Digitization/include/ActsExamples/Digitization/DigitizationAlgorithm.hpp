@@ -78,6 +78,11 @@ class DigitizationAlgorithm final : public IAlgorithm {
     /// Table 35.10)
     /// @NOTE The default is set to 0 because this works only well with Geant4
     double minEnergyDeposit = 0.0;  // 1000 * 3.65 * Acts::UnitConstants::eV;
+    /// On cylinder surfaces, limit the geometric path of a hit to the longest
+    /// straight chord through the curved layer, 2 sqrt(2 R thickness).
+    /// Otherwise an (almost) tangential hit direction gives a path of
+    /// thickness / |cos(incidence)|, possibly many times around the cylinder.
+    bool limitCylinderPathToChord = false;
     /// The digitizers per GeometryIdentifiers
     Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
 
