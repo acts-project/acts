@@ -26,7 +26,12 @@
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <array>
+#include <bit>
+#include <cmath>
+#include <cstdint>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <numbers>
 #include <random>
@@ -368,6 +373,115 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
     BOOST_CHECK_EQUAL(result[eY], constraintPos[eY]);
     CHECK_CLOSE_ABS(result[eZ], expectedZResult, 0.001_mm);
   }
+}
+
+// Independent full-scan reference for checking that density lookup preserves
+// every contribution, summation order, trial step and maximum tie decision.
+std::optional<std::pair<double, double>> referenceDensityMaximum(
+    const std::vector<GaussianTrackDensity::TrackEntry>& entries,
+    bool gaussianSteps) {
+  double maxZ = 0.;
+  double maxDensity = 0.;
+  double maxSecond = 0.;
+  for (const auto& trial : entries) {
+    double z = trial.z;
+    for (unsigned int step = 0; step < 3; ++step) {
+      double density = 0.;
+      double first = 0.;
+      double second = 0.;
+      for (const auto& entry : entries) {
+        if (entry.lowerBound < z && z < entry.upperBound) {
+          double delta = std::exp(entry.c0 + z * (entry.c1 + z * entry.c2));
+          double qPrime = entry.c1 + 2. * z * entry.c2;
+          double deltaPrime = delta * qPrime;
+          density += delta;
+          first += deltaPrime;
+          second += 2. * entry.c2 * delta + qPrime * deltaPrime;
+        }
+      }
+      if (second >= 0. || density <= 0.) {
+        break;
+      }
+      if (density > maxDensity) {
+        maxZ = z;
+        maxDensity = density;
+        maxSecond = second;
+      }
+      z += gaussianSteps
+               ? (density * first) / (first * first - density * second)
+               : -first / second;
+    }
+  }
+  if (maxSecond == 0.) {
+    return std::nullopt;
+  }
+  return std::pair{maxZ, std::sqrt(-(maxDensity / maxSecond))};
+}
+
+BOOST_AUTO_TEST_CASE(gaussian_density_lookup_matches_full_scan) {
+  auto check = [](const auto& entries) {
+    for (bool gaussianSteps : {false, true}) {
+      GaussianTrackDensity::Config cfg;
+      cfg.isGaussianShaped = gaussianSteps;
+      cfg.extractParameters.connect<&InputTrack::extractParameters>();
+      GaussianTrackDensity density(cfg);
+      GaussianTrackDensity::State state(0);
+      state.trackEntries = entries;
+      const auto expected = referenceDensityMaximum(entries, gaussianSteps);
+      // An empty input list leaves the precomputed entries in place.
+      const auto result = density.globalMaximumWithWidth(state, {});
+      BOOST_REQUIRE(result.ok());
+      const auto& actual = *result;
+      BOOST_REQUIRE_EQUAL(actual.has_value(), expected.has_value());
+      if (actual) {
+        BOOST_CHECK_EQUAL(std::bit_cast<std::uint64_t>(actual->first),
+                          std::bit_cast<std::uint64_t>(expected->first));
+        BOOST_CHECK_EQUAL(std::bit_cast<std::uint64_t>(actual->second),
+                          std::bit_cast<std::uint64_t>(expected->second));
+      }
+    }
+  };
+
+  std::mt19937 rng(42);
+  std::uniform_real_distribution<double> zDist(-200., 200.);
+  std::uniform_real_distribution<double> sigmaDist(0.01, 0.3);
+  for (std::size_t n : std::array<std::size_t, 7>{0, 1, 31, 32, 64, 128, 512}) {
+    std::vector<GaussianTrackDensity::TrackEntry> entries;
+    for (std::size_t i = 0; i < n; ++i) {
+      const double z = zDist(rng);
+      const double sigma = sigmaDist(rng);
+      const double variance = sigma * sigma;
+      entries.emplace_back(z, -z * z / (2. * variance), z / variance,
+                           -1. / (2. * variance), z - 12. * sigma,
+                           z + 12. * sigma);
+    }
+    check(entries);
+    std::ranges::reverse(entries);
+    check(entries);
+    // Broad overlapping supports trigger the bounded-work full-scan fallback.
+    for (auto& entry : entries) {
+      entry.lowerBound = -1000.;
+      entry.upperBound = 1000.;
+    }
+    check(entries);
+    if (!entries.empty()) {
+      entries.front().lowerBound = -std::numeric_limits<double>::infinity();
+      check(entries);
+      entries.front().upperBound = std::numeric_limits<double>::quiet_NaN();
+      check(entries);
+    }
+  }
+
+  // Exact and adjacent floating-point support boundaries, and empty supports.
+  std::vector<GaussianTrackDensity::TrackEntry> boundaryEntries;
+  for (unsigned int i = 0; i < 64; ++i) {
+    double z = static_cast<double>(i);
+    boundaryEntries.emplace_back(z, -z * z / 2., z, -0.5, z, z + 1.);
+    boundaryEntries.emplace_back(std::nextafter(z, z + 1.), -z * z / 2., z,
+                                 -0.5, z, z + 1.);
+    boundaryEntries.emplace_back(z, 0., 0., -0.5, z, z);
+  }
+  check(boundaryEntries);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
