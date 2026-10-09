@@ -24,6 +24,7 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/MultiAxisSpec.hpp"
+#include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 #include "ActsPlugins/Json/detail/MaterialJsonContext.hpp"

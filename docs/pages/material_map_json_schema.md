@@ -103,15 +103,11 @@ the converter handles the permutation.
   are not supported.
 
 Writers emit `proto-grid` for @ref Acts::ProtoSurfaceMaterial, whose two axes
-may defer ranges, directions and boundary behavior to geometry. Legacy `proto`
-payloads are read only and converted into this representation. Missing axes
-become one-bin axes, subdivisions become normalized variable edges, and
-legacy cylinder `(phi, z)` directions become `(rphi, z)`. Legacy proto ranges
-and transforms are left to surface geometry, as they were during mapping.
+may defer ranges, directions and boundary behavior to geometry.
 Deferred-variable edges run from 0 to 1 and scale to the resolved range.
 Explicit properties must agree with geometry. Resolved material cannot contain
-unresolved axes. Legacy proto surface binning may have zero axes for homogeneous
-mapping; new payloads use two one-bin axes.
+unresolved axes. Proto surface binning uses two one-bin axes for homogeneous
+mapping.
 
 | Grid storage | Slab data |
 | --- | --- |

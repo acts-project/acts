@@ -16,6 +16,7 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/Json/detail/JsonIo.hpp"
 #include "ActsPlugins/Json/detail/ProtoSurfaceMaterialConversion.hpp"
 
@@ -536,6 +537,8 @@ std::unique_ptr<const ISurfaceMaterial> decodeBinned(
                                                  mapping);
 }
 
+// Keep the deprecated conversion available only for reading legacy payloads.
+ACTS_PUSH_IGNORE_DEPRECATED()
 std::unique_ptr<const ISurfaceMaterial> decodeProtoSurface(
     const nlohmann::json& j, const DecodeContext& context) {
   auto [split, mapping] = settings(j.at("settings"));
@@ -545,6 +548,7 @@ std::unique_ptr<const ISurfaceMaterial> decodeProtoSurface(
           decodeBinning(j.at("binning"), 0, 2, context)),
       mapping, materialKey(j));
 }
+ACTS_POP_IGNORE_DEPRECATED()
 
 nlohmann::json encodeProtoGrid(const ProtoSurfaceMaterial& m,
                                EncodeContext& /*context*/) {

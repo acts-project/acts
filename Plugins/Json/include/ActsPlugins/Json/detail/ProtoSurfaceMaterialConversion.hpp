@@ -26,6 +26,8 @@ namespace Acts::detail {
 /// rphi coordinate.
 /// @param binning the legacy binning description
 /// @return the two-dimensional binning spec
+/// @deprecated Read proto-grid payloads with MultiAxisSpec2D instead
+[[deprecated("Read proto-grid payloads with MultiAxisSpec2D instead")]]
 inline MultiAxisSpec2D protoSurfaceMaterialBinning(const BinUtility& binning) {
   const auto& data = binning.binningData();
   if (data.size() > 2) {
@@ -67,8 +69,8 @@ inline MultiAxisSpec2D protoSurfaceMaterialBinning(const BinUtility& binning) {
     }
   }
   if (data.size() == 1) {
-    AxisDirection other;
-    switch (*specs[0].direction()) {
+    auto other = *specs[0].direction();
+    switch (other) {
       case AxisDirection::AxisX:
         other = AxisDirection::AxisY;
         break;

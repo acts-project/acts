@@ -15,6 +15,7 @@
 #include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/IMultiAxis.hpp"
 #include "ActsPlugins/Json/AxisSpecJsonConverter.hpp"
@@ -246,6 +247,8 @@ std::unique_ptr<const ISurfaceMaterial> binnedFromJson(
       bUtility, std::move(matrix), 1., readMappingType(jMaterial));
 }
 
+// Keep the deprecated conversion available only for reading legacy payloads.
+ACTS_PUSH_IGNORE_DEPRECATED()
 std::unique_ptr<const ISurfaceMaterial> protoFromJson(
     const nlohmann::json& jMaterial, const DecodeContext& /*ctx*/) {
   BinUtility bUtility;
@@ -259,6 +262,7 @@ std::unique_ptr<const ISurfaceMaterial> protoFromJson(
           ? std::make_optional(jMaterial.at("material_key").get<std::string>())
           : std::nullopt);
 }
+ACTS_POP_IGNORE_DEPRECATED()
 
 std::unique_ptr<const ISurfaceMaterial> protoGridFromJson(
     const nlohmann::json& jMaterial, const DecodeContext& /*ctx*/) {
