@@ -1,7 +1,8 @@
-"""Check both accumulator choices with deterministic recorded material tracks."""
+"""Map and validate binned/grid material with deterministic material tracks."""
 
 from array import array
 import json
+import math
 
 import pytest
 
@@ -176,3 +177,110 @@ def test_material_mapping_rejects_unsupported_choices(tmp_path):
             outputMapFormats=["root"],
             accumulator="grid",
         )
+
+
+@pytest.mark.parametrize(
+    "accumulator,schema,suffix",
+    [
+        ("binned", "legacy", ".root"),
+        ("binned", "legacy", ".json"),
+        ("grid", "legacy", ".json"),
+        ("grid", "legacy", ".cbor"),
+        ("grid", "versioned", ".json"),
+        ("grid", "versioned", ".cbor"),
+        ("grid", "versioned", ".json.zst"),
+        ("grid", "versioned", ".cbor.zst"),
+    ],
+)
+def test_material_validation_reads_mapped_material(
+    tmp_path, accumulator, schema, suffix
+):
+    from material_mapping import runMaterialMapping
+    from material_validation import loadMaterialDecorator, runMaterialValidation
+
+    ROOT = pytest.importorskip("ROOT")
+    source = material_surface(tmp_path)
+    input_file = tmp_path / "input.root"
+    write_material_tracks(input_file)
+    formats = ["json", "root"] if suffix == ".root" else ["json", "cbor"]
+    sequencer = runMaterialMapping(
+        [source],
+        input_file,
+        str(tmp_path / "mapped"),
+        outputMapFormats=formats,
+        loglevel=acts.logging.WARNING,
+        accumulator=accumulator,
+    )
+    sequencer.run()
+    del sequencer
+
+    map_file = tmp_path / ("mapped_map" + suffix)
+    if schema == "versioned":
+        maps = loadMaterialDecorator(tmp_path / "mapped_map.json").materialMaps
+        map_file = tmp_path / ("versioned_map" + suffix)
+        try:
+            TrackingGeometryMaterialJsonConverter().toFile(maps, map_file)
+        except RuntimeError as error:
+            if suffix.endswith(".zst") and "without zstd support" in str(error):
+                pytest.skip("ACTS was built without zstd support")
+            raise
+
+    # The mapped bin is at local (-5, -5). Move the target plane forward so
+    # fixed particle-gun directions from the origin cross that bin.
+    target = acts.Surface.createPlane(
+        acts.Transform3(acts.Vector3(0.0, 0.0, 10.0)), acts.RectangleBounds(10.0, 10.0)
+    )
+    target.assignGeometryId(source.geometryId)
+    loadMaterialDecorator(map_file).decorate(target)
+    assert target.surfaceMaterial is not None
+
+    eta = math.asinh(math.sqrt(2.0))
+    phi = 225.0 * acts.UnitConstants.degree
+    output = tmp_path / "validated"
+    sequencer = acts.examples.Sequencer(events=2, numThreads=1)
+    runMaterialValidation(
+        surfaces=[target],
+        s=sequencer,
+        tracksPerEvent=3,
+        etaRange=(eta, eta),
+        phiRange=(phi, phi),
+        outputFileBase=output,
+    ).run()
+    del sequencer
+
+    # The input tracks map to thickness 8/3; validation adds the incidence
+    # correction sqrt(1 + 5^2/10^2 + 5^2/10^2).
+    expected = (8.0 / 3.0) * math.sqrt(1.5)
+    result = ROOT.TFile.Open(str(output) + ".root")
+    tree = result.Get("material_tracks")
+    assert tree.GetEntries() == 6
+    for track in tree:
+        assert list(track.mat_step_length) == pytest.approx([expected])
+        assert track.t_X0 == pytest.approx(expected / 10.0)
+        assert track.t_L0 == pytest.approx(expected / 20.0)
+    result.Close()
+
+
+def test_material_validation_rejects_unknown_map(tmp_path):
+    from material_validation import loadMaterialDecorator
+
+    path = tmp_path / "unknown.json"
+    path.write_text(json.dumps({"surfaces": []}))
+    with pytest.raises(ValueError, match="Unrecognized material map format"):
+        loadMaterialDecorator(path)
+
+
+def test_material_validation_rejects_unsupported_version(tmp_path):
+    from material_validation import loadMaterialDecorator
+
+    path = tmp_path / "unsupported.json"
+    path.write_text(
+        json.dumps(
+            {
+                "header": {"format": "acts-material-map", "version": 2},
+                "surfaces": [],
+            }
+        )
+    )
+    with pytest.raises(ValueError, match="unsupported material document version"):
+        loadMaterialDecorator(path)

@@ -341,6 +341,19 @@ This re-records material, now from your mapped map instead of from Geant4, so
 you can compare the two. `-p` additionally runs a real propagator with a
 navigator and writes `mydet_validated_propagated.root`.
 
+Grid maps use the same validation command with JSON or CBOR input:
+
+```console
+python Examples/Scripts/Python/material_validation.py \
+    -n 1000 -t 1000 -m mydet_grid_map.json -o mydet_grid_validated -p
+```
+
+The reader automatically selects the legacy hierarchy-map or versioned material
+document schema and detects JSON/CBOR encoding from the contents. Versioned
+maps written by @ref Acts::TrackingGeometryMaterialJsonConverter are accepted,
+including `.json.zst` and `.cbor.zst` when built with zstd support. ROOT input
+continues to support binned and homogeneous maps.
+
 Comparing the default and `-p` outputs is worth doing: the default collection is
 navigation-independent, so a difference between them is a *navigation* problem
 (material the navigator does not reach), not a mapping problem.
