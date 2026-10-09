@@ -2421,6 +2421,7 @@ def addScoreBasedAmbiguityResolution(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     ambiVolumeFile: Optional[Union[Path, str]] = None,
+    ambiMonitorFile: Optional[Union[Path, str]] = None,
     writeTrackSummary: bool = True,
     writeTrackStates: bool = False,
     writePerformance: bool = True,
@@ -2436,6 +2437,7 @@ def addScoreBasedAmbiguityResolution(
         level=customLogLevel(),
         inputTracks=tracks,
         configFile=ambiVolumeFile,
+        monitorFile=ambiMonitorFile,
         outputTracks="ambiTracksScoreBased",
         **acts.examples.defaultKWArgs(
             minScore=config.minScore,

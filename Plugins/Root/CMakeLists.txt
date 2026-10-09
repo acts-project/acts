@@ -2,6 +2,7 @@ acts_add_library(
     PluginRoot
     src/BlueprintBuilder.cpp
     src/RootMaterialDecorator.cpp
+    src/AmbiScoreMonitor.cpp
     src/RootMaterialMapIo.cpp
     src/RootMaterialTrackIo.cpp
     src/RootMagneticFieldIo.cpp
