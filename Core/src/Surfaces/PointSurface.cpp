@@ -144,7 +144,6 @@ BoundToFreeMatrix PointSurface::boundToFreeJacobian(
 
   const RotationMatrix3 rframe = referenceFrame(gctx, position, direction);
   const Vector3 U = rframe.col(0);
-  const Vector3 V = rframe.col(1);
   const Vector3 T = rframe.col(2);
 
   // The local (x, y) position on the measurement plane
@@ -159,26 +158,21 @@ BoundToFreeMatrix PointSurface::boundToFreeJacobian(
   BoundToFreeMatrix jacToGlobal =
       Surface::boundToFreeJacobian(gctx, position, direction);
 
-  // For the global-Z frame branch the frame axes are
-  //   U = (-sinPhi, cosPhi, 0)
-  //   V = (-cosTheta cosPhi, -cosTheta sinPhi, sinTheta)
-  // with derivatives
-  //   dU/dPhi = cosTheta V - sinTheta T,   dU/dTheta = 0
-  //   dV/dPhi = -cosTheta U,               dV/dTheta = T
-  // and the free position on surface is P = c + loc0 U + loc1 V, so
-  //   dP/dPhi   = loc0 (cosTheta V - sinTheta T) - loc1 cosTheta U
-  //   dP/dTheta = loc1 T
-  // This generalizes the LineSurface patch, which keeps only the loc0 term
-  // (its second axis is fixed to the line). The closed form assumes the
-  // standard (Z-based) branch; near direction parallel to Z the frame uses the
-  // X-based fall-back and this correction is only approximate (as with the
-  // documented forward-eta limitation of the LineSurface).
-  const double cosTheta = direction.z();
-  const double sinTheta = VectorHelpers::perp(direction);
-
-  jacToGlobal.block<3, 1>(eFreePos0, eBoundDir0) =
-      loc0 * (cosTheta * V - sinTheta * T) - loc1 * cosTheta * U;
-  jacToGlobal.block<3, 1>(eFreePos0, eBoundDir1) = loc1 * T;
+  // Differentiate the same frame construction used by localToGlobal. The
+  // direction columns come from the selected parametrization; this also handles
+  // the X-based frame used near the global Z axis.
+  const Vector3 axis = std::abs(T.z()) < s_curvilinearProjTolerance
+                           ? Vector3::UnitZ()
+                           : Vector3::UnitX();
+  const double crossNorm = axis.cross(T).norm();
+  for (int i = 0; i < 2; ++i) {
+    const Vector3 dT = jacToGlobal.block<3, 1>(eFreeDir0, eBoundDir0 + i);
+    const Vector3 crossDerivative = axis.cross(dT);
+    const Vector3 dU =
+        (crossDerivative - U * U.dot(crossDerivative)) / crossNorm;
+    const Vector3 dV = dT.cross(U) + T.cross(dU);
+    jacToGlobal.block<3, 1>(eFreePos0, eBoundDir0 + i) = loc0 * dU + loc1 * dV;
+  }
 
   return jacToGlobal;
 }

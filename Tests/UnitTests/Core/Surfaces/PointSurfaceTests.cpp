@@ -212,29 +212,30 @@ FreeVector boundToFree(const PointSurface& surface, const BoundVector& b) {
 BOOST_AUTO_TEST_CASE(PointSurfaceBoundToFreeJacobian) {
   auto surface = Surface::makeShared<PointSurface>(Vector3(1., -2., 0.5));
 
-  // pick a non-forward direction (standard frame branch) and nonzero local so
-  // the frame-rotation correction is exercised
-  double phi = 0.6;
-  double theta = std::numbers::pi / 3.;
-  BoundVector b;
-  b << 0.7, -0.4, phi, theta, 0.5, 1.5;
+  // Exercise both frame branches with nonzero local coordinates.
+  for (double theta :
+       {0.001, std::numbers::pi / 3., std::numbers::pi - 0.001}) {
+    double phi = 0.6;
+    BoundVector b;
+    b << 0.7, -0.4, phi, theta, 0.5, 1.5;
 
-  FreeVector f0 = boundToFree(*surface, b);
-  Vector3 pos0 = f0.segment<3>(eFreePos0);
-  Vector3 dir0 = f0.segment<3>(eFreeDir0);
+    FreeVector f0 = boundToFree(*surface, b);
+    Vector3 pos0 = f0.segment<3>(eFreePos0);
+    Vector3 dir0 = f0.segment<3>(eFreeDir0);
 
-  BoundToFreeMatrix jac = surface->boundToFreeJacobian(tgContext, pos0, dir0);
+    BoundToFreeMatrix jac = surface->boundToFreeJacobian(tgContext, pos0, dir0);
 
-  double h = 1e-6;
-  for (int i = 0; i < static_cast<int>(eBoundSize); ++i) {
-    BoundVector bp = b;
-    BoundVector bm = b;
-    bp[i] += h;
-    bm[i] -= h;
-    FreeVector numeric =
-        (boundToFree(*surface, bp) - boundToFree(*surface, bm)) / (2 * h);
-    for (int j = 0; j < static_cast<int>(eFreeSize); ++j) {
-      BOOST_CHECK_SMALL(numeric[j] - jac(j, i), 1e-6);
+    double h = 1e-6;
+    for (int i = 0; i < static_cast<int>(eBoundSize); ++i) {
+      BoundVector bp = b;
+      BoundVector bm = b;
+      bp[i] += h;
+      bm[i] -= h;
+      FreeVector numeric =
+          (boundToFree(*surface, bp) - boundToFree(*surface, bm)) / (2 * h);
+      for (int j = 0; j < static_cast<int>(eFreeSize); ++j) {
+        BOOST_CHECK_SMALL(numeric[j] - jac(j, i), 1e-6);
+      }
     }
   }
 }

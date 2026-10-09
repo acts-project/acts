@@ -62,6 +62,23 @@ BOOST_AUTO_TEST_CASE(CanonicalDirectionUnderAlignment) {
     CHECK_CLOSE_ABS(free.segment<3>(eFreePos0), placement * Vector3(1., 2., 0.),
                     1e-14);
     CHECK_CLOSE_ABS(free.segment<3>(eFreeDir0), direction, 1e-14);
+    const auto forward = surface.boundToFreeJacobian(
+        gctx, free.segment<3>(eFreePos0), direction);
+    const auto inverse = surface.freeToBoundJacobian(
+        gctx, free.segment<3>(eFreePos0), direction);
+    CHECK_CLOSE_ABS((inverse * forward).eval(), BoundMatrix::Identity(), 1e-14);
+    constexpr double h = 1e-6;
+    for (int i = 0; i < static_cast<int>(eBoundSize); ++i) {
+      BoundVector plus = bound;
+      BoundVector minus = bound;
+      plus[i] += h;
+      minus[i] -= h;
+      const FreeVector numerical =
+          (transformBoundToFreeParameters(surface, gctx, plus) -
+           transformBoundToFreeParameters(surface, gctx, minus)) /
+          (2. * h);
+      CHECK_CLOSE_ABS(forward.col(i), numerical, 1e-8);
+    }
     const auto restored = transformFreeToBoundParameters(free, surface, gctx);
     BOOST_REQUIRE(restored.ok());
     CHECK_CLOSE_ABS(*restored, bound, 1e-14);

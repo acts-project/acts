@@ -281,6 +281,9 @@ class DiscSurface : public RegularSurface {
   /// @param direction global 3D momentum direction
   ///
   /// @return Jacobian from global to local
+  /// @pre The direction is normalized and nonsingular in the selected
+  /// parametrization. Use the parametrization's checked inverse derivative
+  /// when the direction may be singular.
   FreeToBoundMatrix freeToBoundJacobian(const GeometryContext& gctx,
                                         const Vector3& position,
                                         const Vector3& direction) const final;

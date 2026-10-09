@@ -12,7 +12,6 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
-#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/detail/OstreamStateGuard.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
@@ -262,7 +261,7 @@ BoundToFreeMatrix Surface::boundToFreeJacobian(const GeometryContext& gctx,
   jacToGlobal(eFreeTime, eBoundTime) = 1;
   // the momentum components
   jacToGlobal.block<3, 2>(eFreeDir0, eBoundDir0) =
-      sphericalToFreeDirectionJacobian(direction);
+      boundParametrization(gctx).directionJacobianFromUnitDirection(direction);
   jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
   return jacToGlobal;
 }
@@ -283,8 +282,13 @@ FreeToBoundMatrix Surface::freeToBoundJacobian(const GeometryContext& gctx,
   // Time component
   jacToLocal(eBoundTime, eFreeTime) = 1;
   // Directional and momentum elements for reference frame surface
-  jacToLocal.block<2, 3>(eBoundDir0, eFreeDir0) =
-      freeToSphericalDirectionJacobian(direction);
+  // The matrix-returning surface API requires a nonsingular direction.
+  // Keep its existing domain (no additional conditioning cutoff).
+  const auto directionJacobian =
+      boundParametrization(gctx).directionCoordinatesJacobianFromUnitDirection(
+          direction, 0.);
+  assert(directionJacobian.ok() && "Singular bound direction Jacobian");
+  jacToLocal.block<2, 3>(eBoundDir0, eFreeDir0) = *directionJacobian;
   jacToLocal(eBoundQOverP, eFreeQOverP) = 1;
   return jacToLocal;
 }

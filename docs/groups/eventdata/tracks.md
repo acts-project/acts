@@ -77,8 +77,18 @@ bound/free value conversions use this lookup. It currently returns the canonical
 global-spherical interpretation for every surface, including curvilinear planes;
 surface placement and alignment do not rotate the direction axes. Track proxies
 without a reference surface retain the canonical interpretation. No chart state
-is added to surfaces. Chart configuration, alternative charts and covariance
-transport through this interface remain follow-up work.
+is added to surfaces. Bound/free surface Jacobians use the same interpretation, including the
+curvilinear utility and the direction-dependent line/point position terms.
+Covariance transport retains its source-to-free-to-destination composition and
+path-length correction; reinitialization uses the destination interpretation.
+Chart configuration and alternative charts remain follow-up work.
+
+The matrix-returning surface and transport APIs retain a nonsingular-direction
+precondition. Their inverse derivatives use no additional conditioning cutoff.
+Use @ref Acts::BoundParametrization::directionCoordinatesJacobian for checked
+input handling. Propagating chart failures as `Result` through the legacy
+transport and stepper APIs remains follow-up work. Normalized-direction
+Jacobians avoid normalization and angle reconstruction in the propagation path.
 
 The canonical-only wrappers in @ref TrackParameterHelpers.hpp are deprecated:
 @ref Acts::directionFromBoundParameters, @ref Acts::isBoundVectorValid,
@@ -113,8 +123,8 @@ value-only normalization/update helpers do not transform a separate covariance.
 For an update with covariance, use `canonicalize(parameters + delta, covariance)`
 with the covariance in the uncanonicalized updated basis.
 
-Angular normalization, periodic residuals, bound/free Jacobians, material noise,
-and propagation algorithms still assume the canonical spherical coordinates.
+Angular normalization, periodic residuals, material noise, and specialized
+propagation algorithms still assume the canonical spherical coordinates.
 The neutral index names alone do not make those operations chart-independent.
 Custom coordinate ordering through `ACTS_PARAMETER_DEFINITIONS_HEADER` has been
 removed; the coordinate ordering is fixed.

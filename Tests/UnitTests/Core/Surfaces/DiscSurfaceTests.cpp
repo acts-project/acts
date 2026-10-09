@@ -14,6 +14,7 @@
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
@@ -53,6 +54,32 @@ GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 BOOST_AUTO_TEST_SUITE(SurfacesSuite)
+BOOST_AUTO_TEST_CASE(DiscParametrizationJacobians) {
+  Transform3 placement = Transform3::Identity();
+  placement.translate(Vector3(1., 2., 3.));
+  placement.rotate(AngleAxis3(0.4, Vector3::UnitX()));
+  const auto surface = Surface::makeShared<DiscSurface>(placement, 1., 5.);
+  const BoundVector bound(3., 0.7, 0.3, 1.2, 0.01, 2.);
+  const auto free = transformBoundToFreeParameters(*surface, tgContext, bound);
+  const auto forward = surface->boundToFreeJacobian(
+      tgContext, free.segment<3>(eFreePos0), free.segment<3>(eFreeDir0));
+  const auto inverse = surface->freeToBoundJacobian(
+      tgContext, free.segment<3>(eFreePos0), free.segment<3>(eFreeDir0));
+  CHECK_CLOSE_ABS((inverse * forward).eval(), BoundMatrix::Identity(), 1e-14);
+  constexpr double h = 1e-6;
+  for (int i = 0; i < static_cast<int>(eBoundSize); ++i) {
+    BoundVector plus = bound;
+    BoundVector minus = bound;
+    plus[i] += h;
+    minus[i] -= h;
+    const FreeVector numerical =
+        (transformBoundToFreeParameters(*surface, tgContext, plus) -
+         transformBoundToFreeParameters(*surface, tgContext, minus)) /
+        (2. * h);
+    CHECK_CLOSE_ABS(forward.col(i), numerical, 1e-8);
+  }
+}
+
 /// Unit tests for creating DiscSurface object
 BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
   /// Test default construction

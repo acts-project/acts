@@ -67,9 +67,15 @@ BOOST_AUTO_TEST_CASE(Derivatives) {
       BoundVector values(1., 2., phi, theta, 0.01, 4.);
       const Vector3 dir = chart.direction(values);
       const auto forward = chart.directionJacobian(values);
+      CHECK_CLOSE_ABS(chart.directionJacobianFromUnitDirection(dir), forward,
+                      1e-14);
+      const auto unitInverse =
+          chart.directionCoordinatesJacobianFromUnitDirection(dir);
+      BOOST_REQUIRE(unitInverse.ok());
       const auto inverseResult = chart.directionCoordinatesJacobian(dir);
       BOOST_REQUIRE(inverseResult.ok());
       const auto& inverse = *inverseResult;
+      CHECK_CLOSE_ABS(*unitInverse, inverse, 1e-12);
       // The legacy helpers reconstruct sin(theta) from 1 - cos(theta)^2,
       // which loses precision near the poles. Finite differences below test
       // the new derivatives independently.
@@ -101,6 +107,27 @@ BOOST_AUTO_TEST_CASE(Derivatives) {
                                    chart.directionCoordinates(minus)) /
                                   (2. * h);
         CHECK_CLOSE_ABS(scaledInverse.col(i), numerical, 1e-6);
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(UnitDirectionDerivativesNearPoles) {
+  for (double z : {-1., 1.}) {
+    for (double transverse : {0., 1e-14, 1e-10}) {
+      const Vector3 direction = Vector3(transverse, 0., z).normalized();
+      const auto forward = chart.directionJacobianFromUnitDirection(direction);
+      BOOST_CHECK(forward.allFinite());
+      const auto inverse =
+          chart.directionCoordinatesJacobianFromUnitDirection(direction);
+      if (transverse <= 1e-12) {
+        BOOST_REQUIRE(!inverse.ok());
+        BOOST_CHECK(inverse.error() ==
+                    BoundParametrizationError::SingularDirection);
+      } else {
+        BOOST_REQUIRE(inverse.ok());
+        CHECK_CLOSE_ABS((*inverse * forward).eval(), SquareMatrix2::Identity(),
+                        1e-14);
       }
     }
   }

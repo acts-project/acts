@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -74,6 +75,27 @@ BOOST_AUTO_TEST_CASE(jacobian_test) {
   CHECK_CLOSE_REL(c2fJacobian(eFreeDir2, eBoundTheta), -sinTheta, 1e-5);
   // Q/P parameter: stays as is
   CHECK_CLOSE_REL(c2fJacobian(eFreeQOverP, eBoundQOverP), 1, 1e-5);
+}
+
+BOOST_AUTO_TEST_CASE(SynthesizedPlaneUsesSameJacobians) {
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  for (const Vector3& direction :
+       {Vector3(0.3, 0.4, 0.5).normalized().eval(),
+        Vector3(1e-10, 0., 1.).normalized().eval(),
+        Vector3(1e-10, 0., -1.).normalized().eval()}) {
+    const Vector3 position(1., 2., 3.);
+    const CurvilinearSurface curvilinear(position, direction);
+    const auto plane = curvilinear.planeSurface();
+    BOOST_CHECK(curvilinear.boundParametrization().isGlobalSpherical());
+    BOOST_CHECK(plane->boundParametrization(gctx).isGlobalSpherical());
+    const auto forward = curvilinear.boundToFreeJacobian();
+    const auto inverse = curvilinear.freeToBoundJacobian();
+    CHECK_CLOSE_ABS(
+        forward, plane->boundToFreeJacobian(gctx, position, direction), 1e-14);
+    CHECK_CLOSE_ABS(
+        inverse, plane->freeToBoundJacobian(gctx, position, direction), 1e-14);
+    CHECK_CLOSE_ABS((inverse * forward).eval(), BoundMatrix::Identity(), 1e-14);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
