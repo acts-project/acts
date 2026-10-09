@@ -19,7 +19,9 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
+#include <cmath>
 #include <cstddef>
+#include <numbers>
 #include <optional>
 #include <utility>
 
@@ -160,6 +162,133 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   BOOST_CHECK(!c.isInside(transformPos((pos << -2, 3, 4.7).finished())));
   BOOST_CHECK(c.isInside(transformPos((pos << 0, 2, -4.7).finished())));
   BOOST_CHECK(!c.isInside(transformPos((pos << 5, 2, 14.).finished())));
+}
+
+// The field transformation of an (r,z) map depends on the azimuth of the
+// lookup position. A cached field cell must give the field at the azimuth of
+// the current lookup, not at the one of the position that filled the cache.
+BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz_cache_azimuth) {
+  // (Br,Bz) bilinear in r and z so interpolation should be exact
+  auto value = [](double r, double z) {
+    return Vector2(0.5 * r * z, 2. + 0.1 * z);
+  };
+
+  // map (x,y,z) -> (r,z)
+  auto transformPos = [](const Vector3& pos) {
+    return Vector2(perp(pos), pos.z());
+  };
+
+  // map (Br,Bz) -> (Bx,By,Bz)
+  auto transformBField = [](const Vector2& field, const Vector3& pos) {
+    const double r = perp(pos);
+    const double cosPhi = r > 0. ? pos.x() / r : 1.;
+    const double sinPhi = r > 0. ? pos.y() / r : 0.;
+    return Vector3(field.x() * cosPhi, field.x() * sinPhi, field.y());
+  };
+
+  // cells of size 1 in r and 2 in z
+  Axis rAxis(0.0, 4.0, 4u);
+  Axis zAxis(-5, 7, 6u);
+  Grid g(Type<Vector2>, std::move(rAxis), std::move(zAxis));
+  using Grid_t = decltype(g);
+  using BField_t = InterpolatedBFieldMap<Grid_t>;
+
+  for (std::size_t i = 1; i <= g.multiAxis().getNBins().at(0) + 1; ++i) {
+    for (std::size_t j = 1; j <= g.multiAxis().getNBins().at(1) + 1; ++j) {
+      Grid_t::index_t indices = {{i, j}};
+      const auto& llCorner = g.multiAxis().getLowerLeftBinEdge(indices);
+      g.atLocalBins(indices) = value(llCorner.at(0), llCorner.at(1));
+    }
+  }
+
+  BField_t b{{transformPos, transformBField, std::move(g)}};
+
+  auto expected = [&](const Vector3& pos) {
+    return transformBField(value(perp(pos), pos.z()), pos);
+  };
+
+  // fill the cache at phi = 0, in the cell r in [1,2), z in [-1,1)
+  auto bCacheAny = b.makeCache(mfContext);
+  BField_t::Cache& bCache = bCacheAny.as<BField_t::Cache>();
+  const Vector3 start(1.5, 0., 0.5);
+  CHECK_CLOSE_ABS(b.getField(start, bCacheAny).value(), expected(start), 1e-12);
+
+  // reuse the cached cell at other azimuths
+  for (double phi : {0.3, 1., 2., std::numbers::pi, -2.5, -0.7}) {
+    for (double r : {1.2, 1.5, 1.9}) {
+      const Vector3 pos(r * std::cos(phi), r * std::sin(phi), 0.8);
+      BOOST_CHECK(bCache.fieldCell->isInside(transformPos(pos)));
+      const Vector3 cached = b.getField(pos, bCacheAny).value();
+      CHECK_CLOSE_ABS(cached, expected(pos), 1e-12);
+      CHECK_CLOSE_ABS(cached, b.getField(pos).value(), 1e-12);
+    }
+  }
+}
+
+// Same for a (r,phi,z) map with cylindrical field components: a cached cell
+// spans a range in phi, so the rotation into Cartesian components must use
+// the azimuth of the current lookup.
+BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rphiz_cache_azimuth) {
+  // (Br,Bphi,Bz) linear in r and z, constant in phi
+  auto value = [](double r, double /*phi*/, double z) {
+    return Vector3(1. + 0.1 * r, 0.5 + 0.2 * z, 2.);
+  };
+
+  // map (x,y,z) -> (r,phi,z)
+  auto transformPos = [](const Vector3& pos) {
+    return Vector3(perp(pos), std::atan2(pos.y(), pos.x()), pos.z());
+  };
+
+  // map (Br,Bphi,Bz) -> (Bx,By,Bz)
+  auto transformBField = [](const Vector3& field, const Vector3& pos) {
+    const double r = perp(pos);
+    const double cosPhi = r > 0. ? pos.x() / r : 1.;
+    const double sinPhi = r > 0. ? pos.y() / r : 0.;
+    return Vector3(field.x() * cosPhi - field.y() * sinPhi,
+                   field.x() * sinPhi + field.y() * cosPhi, field.z());
+  };
+
+  // cells of size 1 in r, pi/2 in phi and 2 in z; the last bin of each axis
+  // only provides the upper corner values of the lookup domain
+  Axis rAxis(0.0, 4.0, 4u);
+  Axis phiAxis(-std::numbers::pi, 1.5 * std::numbers::pi, 5u);
+  Axis zAxis(-5, 7, 6u);
+  Grid g(Type<Vector3>, std::move(rAxis), std::move(phiAxis), std::move(zAxis));
+  using Grid_t = decltype(g);
+  using BField_t = InterpolatedBFieldMap<Grid_t>;
+
+  for (std::size_t i = 1; i <= g.multiAxis().getNBins().at(0) + 1; ++i) {
+    for (std::size_t j = 1; j <= g.multiAxis().getNBins().at(1) + 1; ++j) {
+      for (std::size_t k = 1; k <= g.multiAxis().getNBins().at(2) + 1; ++k) {
+        Grid_t::index_t indices = {{i, j, k}};
+        const auto& llCorner = g.multiAxis().getLowerLeftBinEdge(indices);
+        g.atLocalBins(indices) =
+            value(llCorner.at(0), llCorner.at(1), llCorner.at(2));
+      }
+    }
+  }
+
+  BField_t b{{transformPos, transformBField, std::move(g)}};
+
+  auto expected = [&](const Vector3& pos) {
+    const Vector3 local = transformPos(pos);
+    return transformBField(value(local.x(), local.y(), local.z()), pos);
+  };
+
+  // fill the cache at phi = -1.5, in the cell phi in [-pi/2, 0)
+  auto bCacheAny = b.makeCache(mfContext);
+  BField_t::Cache& bCache = bCacheAny.as<BField_t::Cache>();
+  const double r = 1.5;
+  const Vector3 start(r * std::cos(-1.5), r * std::sin(-1.5), 0.5);
+  CHECK_CLOSE_ABS(b.getField(start, bCacheAny).value(), expected(start), 1e-12);
+
+  for (double phi : {-1.2, -0.8, -0.1}) {
+    const Vector3 pos(r * std::cos(phi), r * std::sin(phi), 0.8);
+    BOOST_CHECK(bCache.fieldCell->isInside(transformPos(pos)));
+    const Vector3 cached = b.getField(pos, bCacheAny).value();
+    CHECK_CLOSE_ABS(cached, expected(pos), 1e-12);
+    CHECK_CLOSE_ABS(cached, b.getField(pos).value(), 1e-12);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
