@@ -1470,7 +1470,9 @@ def addGbtsSeeding(
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
     connectorInputFileStr = str(connectorInputConfigFile)
     lutInputConfigFileStr = str(lutInputConfigFile)
-    seedFinderConfig = acts.examples.GraphBasedSeedingConfig(
+    seedFinderConfig = acts.examples.GraphBasedSeedingConfig()
+
+    graphConfig = acts.examples.GbtsGraphBuilderConfig(
         **acts.examples.defaultKWArgs(
             minPt=seedFinderConfigArg.minPt,
         ),
@@ -1481,6 +1483,7 @@ def addGbtsSeeding(
         inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,
         seedFinderConfig=seedFinderConfig,
+        graphConfig=graphConfig,
         layerMappingFile=layerMappingFile,
         connectorInputFile=connectorInputFileStr,
         lutInputFile=lutInputConfigFileStr,
@@ -1711,6 +1714,7 @@ def addKalmanTracks(
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     linkForward: bool = False,
+    referenceSurface: acts.Surface = acts.Surface.createPerigee(acts.Vector3(0, 0, 0)),
     useJosephFormulation: bool = False,
     useReferenceTrajectory: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1754,6 +1758,7 @@ def addKalmanTracks(
         fit=fitFunction,
         calibrator=calibrator,
         linkForward=linkForward,
+        referenceSurface=referenceSurface,
     )
     s.addAlgorithm(fitAlg)
     s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
