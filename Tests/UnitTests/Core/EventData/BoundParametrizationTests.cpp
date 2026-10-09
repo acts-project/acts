@@ -38,11 +38,26 @@ BOOST_AUTO_TEST_CASE(ValuesMapsAndExpressions) {
   BOOST_CHECK_EQUAL(chart.direction(values + BoundVector::Zero()), expected);
   CHECK_CLOSE_ABS(chart.directionCoordinates(3. * expected), Vector2(0.3, 1.2),
                   1e-14);
+  BOOST_CHECK_EQUAL(chart.phi(map), 0.3);
+  BOOST_CHECK_EQUAL(chart.theta(constMap), 1.2);
   BOOST_CHECK(chart.isValid(constMap));
   BOOST_CHECK(chart.isInDomain(constMap));
   BOOST_CHECK_EQUAL(chart.canonicalize(map), values);
   BOOST_CHECK_EQUAL(chart.difference(map, constMap), BoundVector::Zero());
   BOOST_CHECK_EQUAL(chart.update(map, BoundVector::Zero()), values);
+}
+
+BOOST_AUTO_TEST_CASE(EncodingScaleAndSeam) {
+  for (double scale : {1e-200, 1., 1e200}) {
+    CHECK_CLOSE_ABS(
+        chart.directionCoordinates(scale * Vector3(1., 1., 1.)),
+        Vector2(std::numbers::pi / 4., std::atan2(std::sqrt(2.), 1.)), 1e-14);
+  }
+  // Preserve the signed atan2 endpoints used by free-to-bound conversion.
+  BOOST_CHECK_EQUAL(chart.directionCoordinates(Vector3(-1., 0., 0.))[0],
+                    std::numbers::pi);
+  BOOST_CHECK_EQUAL(chart.directionCoordinates(Vector3(-1., -0., 0.))[0],
+                    -std::numbers::pi);
 }
 
 BOOST_AUTO_TEST_CASE(Derivatives) {

@@ -267,6 +267,14 @@ BOOST_AUTO_TEST_CASE(AccessDerivedQuantities) {
   checkContext(anyTrack);
   checkContext(AnyConstTrackProxy(track));
 
+  auto unanchored = tc.makeTrack();
+  unanchored.parameters() = track.parameters();
+  unanchored.setParticleHypothesis(track.particleHypothesis());
+  BOOST_REQUIRE(!unanchored.hasReferenceSurface());
+  checkContext(unanchored);
+  checkContext(AnyMutableTrackProxy(unanchored));
+  checkContext(AnyConstTrackProxy(unanchored));
+
   // Check charge
   double expectedCharge =
       ParticleHypothesis::pion().extractCharge(track.qOverP());
