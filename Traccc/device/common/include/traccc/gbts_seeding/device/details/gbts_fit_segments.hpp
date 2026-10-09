@@ -206,7 +206,7 @@ TRACCC_HOST_DEVICE inline bool gbts_kalman_update(
   }
 
   // z0 cut: extrapolate the line back to r = 0 and reject large |z0|.
-  const float z0 = new_ts->m_Y[0] - new_ts->m_refY * ts->m_Y[1];
+  const float z0 = new_ts->m_Y[0] - new_ts->m_refY * new_ts->m_Y[1];
   if (math::fabs(z0) > max_z0) {
     return false;
   }
