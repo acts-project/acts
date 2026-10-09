@@ -17,12 +17,13 @@ namespace ActsExamples {
 ///
 /// MaterialMapping passes the same TrackingGeometryMaterial to each writer in
 /// its Config::materialWriters list, allowing one mapping run to produce
-/// several outputs (for example, a versioned JSON map and a ROOT map). Each
+/// several legacy outputs (for example, a JSON map and a ROOT map). Each
 /// writer owns its output configuration and serialization; the mapping
 /// algorithm remains independent of the file format.
 ///
-/// Writers are called once after map finalization, currently during destruction
-/// of MaterialMapping. They do not receive per-event material tracks.
+/// Writers are called during MaterialMapping::finalize(). They do not receive
+/// per-event material tracks. New callers can serialize
+/// MaterialMapping::material() directly after the sequencer has run.
 class IMaterialWriter {
  public:
   /// Virtual Destructor

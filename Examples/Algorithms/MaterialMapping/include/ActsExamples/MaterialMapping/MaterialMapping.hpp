@@ -16,6 +16,7 @@
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -56,7 +57,7 @@ class MaterialMapping : public IAlgorithm {
     std::shared_ptr<Acts::MaterialMapper> materialMapper = nullptr;
 
     /// Outputs for the finalized material map. Each writer receives the same
-    /// assignments once, currently during destruction of this algorithm.
+    /// assignments during finalization of this algorithm.
     std::vector<std::shared_ptr<IMaterialWriter>> materialWriters{};
   };
 
@@ -72,15 +73,21 @@ class MaterialMapping : public IAlgorithm {
   /// @param context The algorithm context for event consistency
   ProcessCode execute(const AlgorithmContext& context) const override;
 
-  /// Destructor
-  /// - it also writes out the file
-  ~MaterialMapping() override;
+  /// Finalize the material maps and invoke any configured legacy writers.
+  ProcessCode finalize() override;
+
+  /// Access the finalized material assignments after the sequencer has run.
+  /// @return Finalized surface and volume material assignments
+  /// @throws std::logic_error if the algorithm has not been finalized
+  const Acts::TrackingGeometryMaterial& material() const;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;  //!< internal config object
+
+  std::optional<Acts::TrackingGeometryMaterial> m_material;
 
   std::unique_ptr<Acts::MaterialMapper::State> m_mappingState{nullptr};
 

@@ -4,6 +4,7 @@ import argparse
 
 import acts
 import acts.examples
+from acts.json import TrackingGeometryMaterialJsonConverter
 
 from acts.examples import (
     WhiteBoard,
@@ -15,7 +16,6 @@ from acts.examples import (
 
 from acts.examples.json import (
     JsonSurfacesWriter,
-    TrackingGeometryMaterialJsonWriter,
 )
 
 
@@ -76,13 +76,12 @@ def runITk(
             if not material:
                 outname = "geometry-map"
 
-            jmw = TrackingGeometryMaterialJsonWriter(
-                level=acts.logging.VERBOSE,
-                includeNonMaterial=True,
-                filePath=json_dir / (outname + ".json"),
+            material = acts.TrackingGeometryMaterial.fromGeometry(
+                trackingGeometry, includeNonMaterial=True
             )
-
-            jmw.write(trackingGeometry)
+            TrackingGeometryMaterialJsonConverter().toFile(
+                material, json_dir / (outname + ".json")
+            )
 
 
 if "__main__" == __name__:

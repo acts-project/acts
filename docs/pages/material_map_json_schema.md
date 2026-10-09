@@ -16,16 +16,13 @@ Examples in `docs/examples/material-map-v1/` cover homogeneous material
 (`minimal.json`), mapped surfaces (`surfaces.json`) and mapping templates
 (`templates.json`). Their relative `$schema` references support editor validation.
 
-@ref Acts::TrackingGeometryMaterialJsonConverter::Options "Options" controls
-precision and output settings. `acts.examples.json.TrackingGeometryMaterialJsonWriter` accepts a
-full `filePath` (including extension) and optional `options`, and implements the
-mapping algorithm's writer interface. Its `write(geometry)` exports existing
-surface material and rejects volume material. With `includeNonMaterial=True`,
-surfaces without material receive deferred one-bin proto-grid placeholders;
-their ranges and directions are resolved from geometry when mapping is initialized.
-DD4hep likewise constructs proto grids with explicitly deferred ranges. The
-writer preserves these specifications without resolving bounds or modifying the
-source geometry.
+@ref Acts::TrackingGeometryMaterial::fromGeometry extracts assignments without
+modifying the geometry or resolving deferred binning. `includeNonMaterial=True`
+adds deferred one-bin proto grids for bare surfaces. Pass the result directly to
+@ref Acts::TrackingGeometryMaterialJsonConverter::toFile; volume assignments are
+preserved during extraction but rejected by the version 1 converter.
+After a mapping run, @ref ActsExamples::MaterialMapping::material exposes the
+finalized assignments for serialization in the same way.
 
 `acts.IMaterialDecorator.fromFile` supports both formats. The new converter rejects
 legacy input with an error pointing to `ActsMaterialMapMigrate`.

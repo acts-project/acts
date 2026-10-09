@@ -66,15 +66,13 @@ python Examples/Scripts/Python/geometry.py
 
 This writes `geometry-map.json` in the current directory (among other outputs).
 The relevant part is in `runGeometry()` in
-`Examples/Scripts/Python/geometry.py`, which configures a
-`TrackingGeometryMaterialJsonWriter`, which writes versioned surface material documents.
+`Examples/Scripts/Python/geometry.py`, which extracts assignments with
+@ref Acts::TrackingGeometryMaterial::fromGeometry and writes them using
+@ref Acts::TrackingGeometryMaterialJsonConverter::toFile.
 
 > [!important]
-> The converter must be configured with `processNonMaterial=True`. Surfaces that
-> do not already carry material are otherwise skipped entirely
-> (`Plugins/Json/src/MaterialMapJsonConverter.cpp:383`), so they never appear in
-> the dump and you have nothing to switch on. `geometry.py` already sets this;
-> if you write your own dumping script, do not omit it.
+> Use `includeNonMaterial=True` when extracting assignments to include deferred
+> proto grids for surfaces without material. `geometry.py` already does this.
 
 Point the script at your own detector by replacing the `getOpenDataDetector()`
 call at the bottom of the file.

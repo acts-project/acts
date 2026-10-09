@@ -46,6 +46,8 @@ void addMaterialMapping(py::module& mex) {
   {
     auto [alg, c] =
         declareAlgorithm<MaterialMapping, IAlgorithm>(mex, "MaterialMapping");
+    alg.def_property_readonly("material", &MaterialMapping::material,
+                              py::return_value_policy::reference_internal);
     c.def(py::init([](const Acts::GeometryContext& gc) {
             MaterialMapping::Config cfg;
             cfg.geoContext = gc;

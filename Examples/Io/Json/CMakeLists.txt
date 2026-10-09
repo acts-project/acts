@@ -2,7 +2,6 @@ acts_add_library(
     ExamplesIoJson
     src/JsonGeometryList.cpp
     src/JsonMaterialWriter.cpp
-    src/TrackingGeometryMaterialJsonWriter.cpp
     src/JsonSurfacesWriter.cpp
     src/JsonDigitizationConfig.cpp
 )

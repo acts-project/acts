@@ -15,7 +15,6 @@
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupReader.hpp"
 #include "ActsExamples/Io/Json/JsonTrackParamsLookupWriter.hpp"
-#include "ActsExamples/Io/Json/TrackingGeometryMaterialJsonWriter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -58,26 +57,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsJson, json) {
         .value("Json", JsonFormat::Json)
         .value("Cbor", JsonFormat::Cbor)
         .value("All", JsonFormat::All);
-  }
-
-  {
-    auto cls =
-        py::class_<TrackingGeometryMaterialJsonWriter, IMaterialWriter,
-                   std::shared_ptr<TrackingGeometryMaterialJsonWriter>>(
-            json, "TrackingGeometryMaterialJsonWriter")
-            .def(py::init<const TrackingGeometryMaterialJsonWriter::Config&,
-                          Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def("writeMaterial",
-                 &TrackingGeometryMaterialJsonWriter::writeMaterial)
-            .def("write", &TrackingGeometryMaterialJsonWriter::write,
-                 py::arg("geometry"))
-            .def_property_readonly("config",
-                                   &TrackingGeometryMaterialJsonWriter::config);
-    auto c =
-        py::class_<TrackingGeometryMaterialJsonWriter::Config>(cls, "Config")
-            .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, filePath, includeNonMaterial, options);
   }
 
   {

@@ -10,12 +10,10 @@ from acts import (
     IntersectionMaterialAssigner,
     BinnedSurfaceMaterialAccumulator,
     logging,
-    GeometryContext,
 )
 
 from acts.examples import (
     Sequencer,
-    WhiteBoard,
     MaterialMapping,
 )
 
@@ -25,29 +23,26 @@ from acts.examples.root import (
     RootMaterialWriter,
 )
 
-from acts.examples.json import (
-    TrackingGeometryMaterialJsonWriter,
-)
+from acts.json import TrackingGeometryMaterialJsonConverter
 
-from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 
 def runMaterialMapping(
     surfaces: list[Surface],
     inputFile: Path,
     outputFileBase: str,
-    outputMapFormats: list[str] = ["json", "root"],
     loglevel: acts.logging.Level = acts.logging.INFO,
     outputMaterialTracks: str = "material_tracks",
     treeName: str = "material_tracks",
+    s: Sequencer | None = None,
 ):
-    # Create a sequencer
-    print("Creating the sequencer with 1 thread (inter event information needed)")
+    """Configure mapping and return the sequencer and algorithm.
 
-    s = Sequencer(numThreads=1)
-
-    # IO for material tracks reading
-    wb = WhiteBoard(acts.logging.INFO)
+    After running the sequencer, serialize the algorithm's ``material`` result.
+    """
+    if s is None:
+        s = Sequencer(numThreads=1)
 
     # Read material step information from a ROOT TTRee
     s.addReader(
@@ -78,32 +73,12 @@ def runMaterialMapping(
     materialMapperConfig.surfaceMaterialAccumulator = materialAccumulator
     materialMapper = MaterialMapper(materialMapperConfig, loglevel)
 
-    # Add the map writer(s)
-    materialMapWriters = []
-    # json map writer
-    for extension in outputMapFormats:
-        if extension in ("json", "cbor"):
-            materialMapWriters.append(
-                TrackingGeometryMaterialJsonWriter(
-                    level=loglevel,
-                    filePath=outputFileBase + "_map." + extension,
-                )
-            )
-    if "root" in outputMapFormats:
-        materialMapWriters.append(
-            RootMaterialWriter(
-                level=loglevel,
-                filePath=outputFileBase + "_map.root",
-            )
-        )
-
     # Mapping Algorithm
     materialMappingConfig = MaterialMapping.Config()
     materialMappingConfig.materialMapper = materialMapper
     materialMappingConfig.inputMaterialTracks = outputMaterialTracks
     materialMappingConfig.mappedMaterialTracks = outputMaterialTracks + "_mapped"
     materialMappingConfig.unmappedMaterialTracks = outputMaterialTracks + "_unmapped"
-    materialMappingConfig.materialWriters = materialMapWriters
     materialMapping = MaterialMapping(materialMappingConfig, loglevel)
     s.addAlgorithm(materialMapping)
 
@@ -129,7 +104,7 @@ def runMaterialMapping(
         )
     )
 
-    return s
+    return s, materialMapping
 
 
 if "__main__" == __name__:
@@ -176,12 +151,19 @@ if "__main__" == __name__:
 
     materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 
-    runMaterialMapping(
+    s, mapping = runMaterialMapping(
         materialSurfaces,
         inputFile=Path(args.input),
         outputFileBase=args.output,
-        outputMapFormats=["json", "root"],
         loglevel=logLevel,
         outputMaterialTracks=args.material_tracks_name,
         treeName=args.tree_name,
-    ).run()
+        s=Sequencer(events=args.events, numThreads=1),
+    )
+    s.run()
+    TrackingGeometryMaterialJsonConverter().toFile(
+        mapping.material, args.output + "_map.json"
+    )
+    RootMaterialWriter(
+        level=logLevel, filePath=args.output + "_map.root"
+    ).writeMaterial(mapping.material)
