@@ -51,8 +51,8 @@ const Acts::GeometryContext tgContext =
 template <std::size_t N>
 bool denseProjectorUpdate(VectorMultiTrajectory::TrackStateProxy state,
                           bool joseph) {
-  const auto calibrated = state.calibrated<N>();
-  const auto calibratedCovariance = state.calibratedCovariance<N>();
+  const auto calibrated = state.template calibrated<N>();
+  const auto calibratedCovariance = state.template calibratedCovariance<N>();
   const FixedBoundSubspaceHelper<N> subspace(
       state.projectorSubspaceIndices<N>());
   const auto H = subspace.projector();
@@ -142,8 +142,8 @@ void compareCovarianceProjection() {
             state.filteredCovariance().setConstant(-222.0);
             state.chi2() = -333.0;
             state.allocateCalibrated(N);
-            state.calibrated<N>() = measurement;
-            state.calibratedCovariance<N>() = measurementCovariance;
+            state.template calibrated<N>() = measurement;
+            state.template calibratedCovariance<N>() = measurementCovariance;
             state.setProjectorSubspaceIndices(indices);
           }
           const bool expectedOk = denseProjectorUpdate<N>(expected, joseph);
