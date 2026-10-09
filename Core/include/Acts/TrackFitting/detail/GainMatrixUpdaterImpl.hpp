@@ -15,6 +15,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstddef>
+#include <type_traits>
 
 namespace Acts {
 
@@ -57,7 +58,13 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
 
   ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
-  if (K.hasNaN()) {
+  const bool finiteGain = [&] {
+    if constexpr (kMeasurementSize <= 2) {
+      return K.allFinite();
+    }
+    return false;
+  }();
+  if (!finiteGain && K.hasNaN()) {
     // set to error abort execution
     return Result<void>::failure(KalmanFitterError::UpdateFailed);
   }
@@ -66,7 +73,22 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
   // Normalize phi and theta
   filtered = normalizeBoundParameters(filtered);
 
-  const auto tmp = (BoundMatrix::Identity() - K * H).eval();
+  using CovarianceUpdate =
+      std::remove_cvref_t<decltype((BoundMatrix::Identity() - K * H).eval())>;
+  const auto tmp = [&]() -> CovarianceUpdate {
+    if constexpr (kMeasurementSize <= 2) {
+      if (finiteGain) {
+        // Each projector row selects one distinct column. Update only those
+        // columns, retaining the original products for non-finite gains.
+        CovarianceUpdate result = CovarianceUpdate::Identity();
+        for (std::size_t i = 0; i < kMeasurementSize; ++i) {
+          result.col(validSubspaceIndices[i]) -= K.col(i);
+        }
+        return result;
+      }
+    }
+    return (BoundMatrix::Identity() - K * H).eval();
+  }();
   if (!m_useJosephFormulation) {
     filteredCovariance = tmp * predictedCovariance;
   } else {
@@ -80,8 +102,16 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
   const ProjectedVector residual = calibrated - H * filtered;
   ACTS_VERBOSE("Residual: " << residual.transpose());
 
+  const ProjectedMatrix projectedGain = [&]() -> ProjectedMatrix {
+    if constexpr (kMeasurementSize <= 2) {
+      if (finiteGain) {
+        return subspaceHelper.template applyLeftOf<kMeasurementSize>(K);
+      }
+    }
+    return H * K;
+  }();
   const ProjectedMatrix m =
-      ((ProjectedMatrix::Identity() - H * K) * calibratedCovariance);
+      ((ProjectedMatrix::Identity() - projectedGain) * calibratedCovariance);
   const double chi2 = (residual.transpose() * m.inverse() * residual).value();
   ACTS_VERBOSE("Chi2: " << chi2);
 
