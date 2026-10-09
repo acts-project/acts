@@ -70,11 +70,11 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
   // usage
   double d0 = paramsAtPCA(BoundIndices::eBoundLoc0);
 
-  double phi = paramsAtPCA(BoundIndices::eBoundPhi);
+  double phi = paramsAtPCA(BoundIndices::eBoundDir0);
   double sinPhi = std::sin(phi);
   double cosPhi = std::cos(phi);
 
-  double theta = paramsAtPCA(BoundIndices::eBoundTheta);
+  double theta = paramsAtPCA(BoundIndices::eBoundDir1);
   double sinTheta = std::sin(theta);
   double tanTheta = std::tan(theta);
 
@@ -127,10 +127,10 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
     completeJacobian(eBoundLoc1, eLinPhi) = -d0 / tanTheta;
 
     // Derivatives of phi
-    completeJacobian(eBoundPhi, eLinPhi) = 1.;
+    completeJacobian(eBoundDir0, eLinPhi) = 1.;
 
     // Derivatives of theta
-    completeJacobian(eBoundTheta, eLinTheta) = 1.;
+    completeJacobian(eBoundDir1, eLinTheta) = 1.;
 
     // Derivatives of q/p
     completeJacobian(eBoundQOverP, eLinQOverP) = 1.;
@@ -178,12 +178,12 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
     completeJacobian(eBoundLoc1, eLinPhi) = rhoCotTheta * (1. - absRhoOverS);
 
     // Derivatives of phi
-    completeJacobian(eBoundPhi, eLinPos0) = -YoverS2;
-    completeJacobian(eBoundPhi, eLinPos1) = XoverS2;
-    completeJacobian(eBoundPhi, eLinPhi) = absRhoOverS;
+    completeJacobian(eBoundDir0, eLinPos0) = -YoverS2;
+    completeJacobian(eBoundDir0, eLinPos1) = XoverS2;
+    completeJacobian(eBoundDir0, eLinPhi) = absRhoOverS;
 
     // Derivatives of theta
-    completeJacobian(eBoundTheta, eLinTheta) = 1.;
+    completeJacobian(eBoundDir1, eLinTheta) = 1.;
 
     // Derivatives of q/p
     completeJacobian(eBoundQOverP, eLinQOverP) = 1.;

@@ -210,10 +210,10 @@ class AtlasStepper {
 
     const auto& Vp = boundParams;
 
-    double Sf = std::sin(Vp[eBoundPhi]);
-    double Cf = std::cos(Vp[eBoundPhi]);
-    double Se = std::sin(Vp[eBoundTheta]);
-    double Ce = std::cos(Vp[eBoundTheta]);
+    double Sf = std::sin(Vp[eBoundDir0]);
+    double Cf = std::cos(Vp[eBoundDir0]);
+    double Se = std::sin(Vp[eBoundDir1]);
+    double Ce = std::cos(Vp[eBoundDir1]);
 
     const Vector3 dir = {Cf * Se, Sf * Se, Ce};
     const auto pos = surface.localToGlobal(
@@ -657,10 +657,10 @@ class AtlasStepper {
     Vector3 pos(state.pVector[0], state.pVector[1], state.pVector[2]);
     Vector3 mom(state.pVector[4], state.pVector[5], state.pVector[6]);
 
-    double Sf = std::sin(boundParams[eBoundPhi]);
-    double Cf = std::cos(boundParams[eBoundPhi]);
-    double Se = std::sin(boundParams[eBoundTheta]);
-    double Ce = std::cos(boundParams[eBoundTheta]);
+    double Sf = std::sin(boundParams[eBoundDir0]);
+    double Cf = std::cos(boundParams[eBoundDir0]);
+    double Se = std::sin(boundParams[eBoundDir1]);
+    double Ce = std::cos(boundParams[eBoundDir1]);
 
     const auto transform =
         surface.referenceFrame(state.options.geoContext, pos, mom);

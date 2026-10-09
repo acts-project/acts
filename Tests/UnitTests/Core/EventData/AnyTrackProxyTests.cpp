@@ -253,6 +253,20 @@ BOOST_AUTO_TEST_CASE(AccessDerivedQuantities) {
 
   AnyMutableTrackProxy anyTrack(track);
 
+  const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+  auto checkContext = [&](const auto& proxy) {
+    BOOST_CHECK_EQUAL(proxy.phi(geoCtx), track.phi());
+    BOOST_CHECK_EQUAL(proxy.theta(geoCtx), track.theta());
+    BOOST_CHECK_EQUAL(proxy.direction(geoCtx), track.direction());
+    BOOST_CHECK_EQUAL(proxy.momentum(geoCtx), track.momentum());
+    BOOST_CHECK_EQUAL(proxy.transverseMomentum(geoCtx),
+                      track.transverseMomentum());
+    BOOST_CHECK_EQUAL(proxy.fourMomentum(geoCtx), track.fourMomentum());
+  };
+  checkContext(track);
+  checkContext(anyTrack);
+  checkContext(AnyConstTrackProxy(track));
+
   // Check charge
   double expectedCharge =
       ParticleHypothesis::pion().extractCharge(track.qOverP());

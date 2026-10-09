@@ -33,6 +33,39 @@ detailed information produced during track reconstruction.
 
 ---
 
+## Bound coordinates and physical observables
+
+`BoundVector` remains a six-component Eigen vector in the order
+`(loc0, loc1, dir0, dir1, q/p, time)`. Use `eBoundDir0` and `eBoundDir1`
+for the raw direction slots. `eBoundPhi` and `eBoundTheta` remain compatible
+aliases, deprecated in favor of the neutral names. `parameters()[index]` and `get<Index>()` always read stored coordinates;
+they do not calculate physical observables. Covariance rows and columns and
+measurement projector indices refer to that same stored basis. Integer indexing
+remains available and carries the same responsibility for interpreting the basis.
+
+Only the canonical global-spherical parametrization is currently supported:
+`dir0` is global phi and `dir1` is global theta. Bound parameters and track proxies
+provide `direction(gctx)`, `phi(gctx)`, `theta(gctx)`, `momentum(gctx)` and
+`transverseMomentum(gctx)` for physical observables. Track proxies also provide
+`fourMomentum(gctx)`. The context is unused for canonical direction interpretation;
+these overloads agree with the existing no-context accessors. The no-context
+`phi()`, `theta()`, `direction()`, `momentum()`, `transverseMomentum()` and proxy
+`fourMomentum()` overloads are deprecated; pass the caller's geometry context
+instead. Raw `get<Index>()` access remains available. Absolute momentum
+and charge depend only on q/p and the particle hypothesis and need no context.
+
+Raw-vector callers can use `directionFromBoundParameters(parameters)` from
+`TrackParameterHelpers.hpp`, which explicitly assumes the canonical
+parametrization and accepts Eigen maps and expressions. No parameter object or
+additional stored metadata is needed. Existing parameter and proxy concepts do
+not require the new context overloads from client-defined types.
+
+Angular normalization, periodic residuals, bound/free Jacobians, material noise,
+and propagation algorithms still assume the canonical spherical coordinates.
+The neutral index names alone do not make those operations chart-independent.
+Custom coordinate ordering through `ACTS_PARAMETER_DEFINITIONS_HEADER` has been
+removed; the coordinate ordering is fixed.
+
 ## Conceptual {#edm_track_conceptual}
 
 ### Architecture

@@ -60,7 +60,7 @@ BoundToFreeMatrix CurvilinearSurface::boundToFreeJacobian() const {
   // the time component
   jacobian(eFreeTime, eBoundTime) = 1;
   // the momentum components
-  jacobian.block<3, 2>(eFreeDir0, eBoundPhi) =
+  jacobian.block<3, 2>(eFreeDir0, eBoundDir0) =
       sphericalToFreeDirectionJacobian(m_direction);
   jacobian(eFreeQOverP, eBoundQOverP) = 1;
 
@@ -82,7 +82,7 @@ FreeToBoundMatrix CurvilinearSurface::freeToBoundJacobian() const {
   // Time component
   jacobian(eBoundTime, eFreeTime) = 1;
   // Directional and momentum elements for reference frame surface
-  jacobian.block<2, 3>(eBoundPhi, eFreeDir0) =
+  jacobian.block<2, 3>(eBoundDir0, eFreeDir0) =
       freeToSphericalDirectionJacobian(m_direction);
   jacobian(eBoundQOverP, eFreeQOverP) = 1;
 

@@ -205,19 +205,19 @@ BoundToFreeMatrix LineSurface::boundToFreeJacobian(
 
   // the projection of direction onto ref frame normal
   double ipdn = 1. / direction.dot(rframe.col(2));
-  // build the cross product of d(D)/d(eBoundPhi) components with y axis
+  // build the cross product of d(D)/d(eBoundDir0) components with y axis
   Vector3 dDPhiY = rframe.block<3, 1>(0, 1).cross(
-      jacToGlobal.block<3, 1>(eFreeDir0, eBoundPhi));
+      jacToGlobal.block<3, 1>(eFreeDir0, eBoundDir0));
   // and the same for the d(D)/d(eTheta) components
   Vector3 dDThetaY = rframe.block<3, 1>(0, 1).cross(
-      jacToGlobal.block<3, 1>(eFreeDir0, eBoundTheta));
+      jacToGlobal.block<3, 1>(eFreeDir0, eBoundDir1));
   // and correct for the x axis components
   dDPhiY -= rframe.block<3, 1>(0, 0) * (rframe.block<3, 1>(0, 0).dot(dDPhiY));
   dDThetaY -=
       rframe.block<3, 1>(0, 0) * (rframe.block<3, 1>(0, 0).dot(dDThetaY));
   // set the jacobian components for global d/ phi/Theta
-  jacToGlobal.block<3, 1>(eFreePos0, eBoundPhi) = dDPhiY * local.x() * ipdn;
-  jacToGlobal.block<3, 1>(eFreePos0, eBoundTheta) = dDThetaY * local.x() * ipdn;
+  jacToGlobal.block<3, 1>(eFreePos0, eBoundDir0) = dDPhiY * local.x() * ipdn;
+  jacToGlobal.block<3, 1>(eFreePos0, eBoundDir1) = dDThetaY * local.x() * ipdn;
 
   return jacToGlobal;
 }

@@ -54,7 +54,6 @@ endif()
 # core related options
 # Formatting needs to be preserved here for parsing
 # gersemi: off
-set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 # code generation related options

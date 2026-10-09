@@ -12,13 +12,6 @@
 
 #include <type_traits>
 
-// The user can override the track parameters ordering. If the preprocessor
-// variable is defined, it must point to a header file that contains the same
-// enum definitions for bound and free track parameters as given below.
-#ifdef ACTS_PARAMETER_DEFINITIONS_HEADER
-#include ACTS_PARAMETER_DEFINITIONS_HEADER
-#else
-
 namespace Acts {
 
 // Note:
@@ -41,9 +34,16 @@ enum BoundIndices : unsigned int {
   // while the others are defined in free space.
   eBoundLoc0 = 0,
   eBoundLoc1 = 1,
-  // Direction angles
-  eBoundPhi = 2,
-  eBoundTheta = 3,
+  // Raw direction coordinates in the bound parametrization.
+  eBoundDir0 = 2,
+  eBoundDir1 = 3,
+  // Legacy aliases for the canonical global-spherical parametrization.
+  eBoundPhi [[deprecated(
+      "Use eBoundDir0 for raw coordinates or phi(gctx) for global phi")]] =
+      eBoundDir0,
+  eBoundTheta [[deprecated(
+      "Use eBoundDir1 for raw coordinates or theta(gctx) for global theta")]] =
+      eBoundDir1,
   // Global inverse-momentum-like parameter, i.e. q/p or 1/p
   // The naming is inconsistent for the case of neutral track parameters where
   // the value is interpreted as 1/p not as q/p. This is intentional to avoid
@@ -81,17 +81,11 @@ enum FreeIndices : unsigned int {
   eFreeSize,
 };
 
-}  // namespace Acts
-#endif
-
-namespace Acts {
-
 // Ensure bound track parameters definition is valid.
 static_assert(std::is_enum_v<BoundIndices>,
               "'BoundIndices' must be an enum type");
 static_assert(std::is_convertible_v<BoundIndices, std::size_t>,
               "'BoundIndices' must be convertible to std::size_t");
-// Only the order can be user-defined
 static_assert(BoundIndices::eBoundSize == 6u,
               "Bound track parameters must have six components");
 
@@ -100,7 +94,6 @@ static_assert(std::is_enum_v<FreeIndices>,
               "'FreeIndices' must be an enum type");
 static_assert(std::is_convertible_v<FreeIndices, std::size_t>,
               "'FreeIndices' must be convertible to std::size_t");
-// Only the order can be user-defined
 static_assert(FreeIndices::eFreeSize == 8u,
               "Free track parameters must have eight components");
 
@@ -114,7 +107,10 @@ static_assert(eFreeDir1 == eFreeDir0 + 1u, "Direction must be continuous");
 static_assert(eFreeDir2 == eFreeDir0 + 2u, "Direction must be continuous");
 
 // Shorthand vector/matrix types related to bound track parameters.
-/// @brief Vector type for bound track parameters
+/// @brief Vector type for raw bound track coordinates.
+/// Direction slots, covariance rows and columns, and projector indices refer
+/// to the stored coordinate basis, not to derived physical observables.
+/// The canonical parametrization stores global phi/theta in dir0/dir1.
 using BoundVector = Vector<eBoundSize>;
 /// @brief Matrix type for bound track parameter transformations
 using BoundMatrix = Matrix<eBoundSize, eBoundSize>;

@@ -189,7 +189,8 @@ class BoundTrackParameters {
     return ipCov;
   }
 
-  /// Access a single parameter value identified by its index.
+  /// Access a raw coordinate identified by its index, not a physical
+  /// observable.
   ///
   /// @tparam kIndex Track parameter index
   /// @return The parameter value at the specified index
@@ -215,7 +216,7 @@ class BoundTrackParameters {
   Vector4 fourPosition(const GeometryContext& geoCtx) const {
     Vector4 pos4;
     pos4.segment<3>(ePos0) =
-        m_surface->localToGlobal(geoCtx, localPosition(), direction());
+        m_surface->localToGlobal(geoCtx, localPosition(), direction(geoCtx));
     pos4[eTime] = m_params[eBoundTime];
     return pos4;
   }
@@ -231,7 +232,7 @@ class BoundTrackParameters {
   /// select the appropriate transformation and might be a computationally
   /// expensive operation.
   Vector3 position(const GeometryContext& geoCtx) const {
-    return m_surface->localToGlobal(geoCtx, localPosition(), direction());
+    return m_surface->localToGlobal(geoCtx, localPosition(), direction(geoCtx));
   }
   /// Time coordinate.
   /// @return The time coordinate value
@@ -239,10 +240,16 @@ class BoundTrackParameters {
 
   /// Phi direction.
   /// @return The azimuthal angle phi in radians
-  double phi() const { return m_params[eBoundPhi]; }
+  [[deprecated("Use phi(gctx) instead")]]
+  double phi() const {
+    return m_params[eBoundDir0];
+  }
   /// Theta direction.
   /// @return The polar angle theta in radians
-  double theta() const { return m_params[eBoundTheta]; }
+  [[deprecated("Use theta(gctx) instead")]]
+  double theta() const {
+    return m_params[eBoundDir1];
+  }
   /// Charge over momentum.
   /// @return The charge over momentum ratio
   double qOverP() const { return m_params[eBoundQOverP]; }
@@ -250,9 +257,9 @@ class BoundTrackParameters {
   /// Unit direction three-vector, i.e. the normalized momentum
   /// three-vector.
   /// @return Normalized direction vector
+  [[deprecated("Use direction(gctx) instead")]]
   Vector3 direction() const {
-    return makeDirectionFromPhiTheta(m_params[eBoundPhi],
-                                     m_params[eBoundTheta]);
+    return directionFromBoundParameters(m_params);
   }
   /// Absolute momentum.
   /// @return The absolute momentum magnitude
@@ -261,12 +268,47 @@ class BoundTrackParameters {
   }
   /// Transverse momentum.
   /// @return The transverse momentum magnitude
+  [[deprecated("Use transverseMomentum(gctx) instead")]]
   double transverseMomentum() const {
-    return std::sin(m_params[eBoundTheta]) * absoluteMomentum();
+    return std::sin(m_params[eBoundDir1]) * absoluteMomentum();
   }
   /// Momentum three-vector.
   /// @return Three-dimensional momentum vector
-  Vector3 momentum() const { return absoluteMomentum() * direction(); }
+  [[deprecated("Use momentum(gctx) instead")]]
+  Vector3 momentum() const {
+    return absoluteMomentum() * directionFromBoundParameters(m_params);
+  }
+
+  /// Global azimuthal direction angle in radians.
+  /// @param geoCtx Geometry context (unused by the canonical parametrization)
+  /// @return Global phi
+  double phi(const GeometryContext& /*geoCtx*/) const {
+    return m_params[eBoundDir0];
+  }
+  /// Global polar direction angle in radians.
+  /// @param geoCtx Geometry context (unused by the canonical parametrization)
+  /// @return Global theta
+  double theta(const GeometryContext& /*geoCtx*/) const {
+    return m_params[eBoundDir1];
+  }
+  /// Global unit direction vector.
+  /// @param geoCtx Geometry context (unused by the canonical parametrization)
+  /// @return Normalized global direction
+  Vector3 direction(const GeometryContext& /*geoCtx*/) const {
+    return directionFromBoundParameters(m_params);
+  }
+  /// Global momentum vector.
+  /// @param geoCtx Geometry context for direction interpretation
+  /// @return Global momentum
+  Vector3 momentum(const GeometryContext& geoCtx) const {
+    return absoluteMomentum() * direction(geoCtx);
+  }
+  /// Transverse momentum relative to the global z axis.
+  /// @param geoCtx Geometry context for direction interpretation
+  /// @return Transverse momentum magnitude
+  double transverseMomentum(const GeometryContext& geoCtx) const {
+    return std::sin(theta(geoCtx)) * absoluteMomentum();
+  }
 
   /// Particle electric charge.
   /// @return The particle electric charge
@@ -294,7 +336,8 @@ class BoundTrackParameters {
   /// rotation matrix. For non-planar surfaces, it is the local-to-global
   /// rotation matrix of the tangential plane at the track position.
   RotationMatrix3 referenceFrame(const GeometryContext& geoCtx) const {
-    return m_surface->referenceFrame(geoCtx, position(geoCtx), momentum());
+    return m_surface->referenceFrame(geoCtx, position(geoCtx),
+                                     momentum(geoCtx));
   }
 
   /// Reflect the parameters in place.
@@ -319,9 +362,9 @@ class BoundTrackParameters {
   /// Ensure phi and theta angles are within bounds.
   void normalizePhiTheta() {
     auto [phi, theta] =
-        detail::normalizePhiTheta(m_params[eBoundPhi], m_params[eBoundTheta]);
-    m_params[eBoundPhi] = phi;
-    m_params[eBoundTheta] = theta;
+        detail::normalizePhiTheta(m_params[eBoundDir0], m_params[eBoundDir1]);
+    m_params[eBoundDir0] = phi;
+    m_params[eBoundDir1] = theta;
   }
 
   /// Compare two bound track parameters for bitwise equality.

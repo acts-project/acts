@@ -123,8 +123,8 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
       const auto& parametersAtPCA = linTrack.parametersAtPCA;
       double d0 = parametersAtPCA[BoundIndices::eBoundLoc0];
       double z0 = parametersAtPCA[BoundIndices::eBoundLoc1];
-      double phi = parametersAtPCA[BoundIndices::eBoundPhi];
-      double theta = parametersAtPCA[BoundIndices::eBoundTheta];
+      double phi = parametersAtPCA[BoundIndices::eBoundDir0];
+      double theta = parametersAtPCA[BoundIndices::eBoundDir1];
       double qOverP = parametersAtPCA[BoundIndices::eBoundQOverP];
       double t0 = parametersAtPCA[BoundIndices::eBoundTime];
 
@@ -320,8 +320,8 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
 
         // new refitted trackparameters
         BoundVector paramVec = BoundVector::Zero();
-        paramVec[eBoundPhi] = trackMomenta[iTrack](0);
-        paramVec[eBoundTheta] = trackMomenta[iTrack](1);
+        paramVec[eBoundDir0] = trackMomenta[iTrack](0);
+        paramVec[eBoundDir1] = trackMomenta[iTrack](1);
         paramVec[eBoundQOverP] = trackMomenta[iTrack](2);
         paramVec[eBoundTime] = linPoint[FreeIndices::eFreeTime];
         BoundTrackParameters refittedParams(

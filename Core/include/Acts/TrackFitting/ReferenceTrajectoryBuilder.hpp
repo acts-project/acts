@@ -511,9 +511,9 @@ class ReferenceTrajectoryBuilder {
                   freeParams.segment<3>(eFreeDir0), freeParams[eFreeQOverP],
                   true, true, true);
 
-          predictedCovariance(eBoundPhi, eBoundPhi) +=
+          predictedCovariance(eBoundDir0, eBoundDir0) +=
               materialEffects.variancePhi;
-          predictedCovariance(eBoundTheta, eBoundTheta) +=
+          predictedCovariance(eBoundDir1, eBoundDir1) +=
               materialEffects.varianceTheta;
           predictedCovariance(eBoundQOverP, eBoundQOverP) +=
               materialEffects.varianceQoverP;
@@ -563,9 +563,9 @@ class ReferenceTrajectoryBuilder {
                 freeParams.segment<3>(eFreeDir0), freeParams[eFreeQOverP], true,
                 true, true);
 
-        predictedCovariance(eBoundPhi, eBoundPhi) +=
+        predictedCovariance(eBoundDir0, eBoundDir0) +=
             materialEffects.variancePhi;
-        predictedCovariance(eBoundTheta, eBoundTheta) +=
+        predictedCovariance(eBoundDir1, eBoundDir1) +=
             materialEffects.varianceTheta;
         predictedCovariance(eBoundQOverP, eBoundQOverP) +=
             materialEffects.varianceQoverP;

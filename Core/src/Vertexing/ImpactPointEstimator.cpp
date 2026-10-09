@@ -233,8 +233,8 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
   double d0 = trkParams.parameters()[BoundIndices::eBoundLoc0];
   double z0 = trkParams.parameters()[BoundIndices::eBoundLoc1];
   // Momentum angles at 2D PCA
-  double phiP = trkParams.parameters()[BoundIndices::eBoundPhi];
-  double theta = trkParams.parameters()[BoundIndices::eBoundTheta];
+  double phiP = trkParams.parameters()[BoundIndices::eBoundDir0];
+  double theta = trkParams.parameters()[BoundIndices::eBoundDir1];
   // Functions of the polar angle theta for later use
   double sinTheta = std::sin(theta);
   double cotTheta = 1. / std::tan(theta);
@@ -496,8 +496,8 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
   const auto& params = (*result).parameters();
   const double d0 = params[BoundIndices::eBoundLoc0];
   const double z0 = params[BoundIndices::eBoundLoc1];
-  const double phi = params[BoundIndices::eBoundPhi];
-  const double theta = params[BoundIndices::eBoundTheta];
+  const double phi = params[BoundIndices::eBoundDir0];
+  const double theta = params[BoundIndices::eBoundDir1];
 
   double vs = std::sin(std::atan2(direction[1], direction[0]) - phi) * d0;
   double eta = AngleHelpers::etaFromTheta(theta);

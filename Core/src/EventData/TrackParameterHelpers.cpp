@@ -19,21 +19,21 @@ bool Acts::isBoundVectorValid(const BoundVector& v, bool validateAngleRange,
 
   bool loc0Valid = std::isfinite(v[eBoundLoc0]);
   bool loc1Valid = std::isfinite(v[eBoundLoc1]);
-  bool phiValid = std::isfinite(v[eBoundPhi]);
-  bool thetaValid = std::isfinite(v[eBoundTheta]);
+  bool phiValid = std::isfinite(v[eBoundDir0]);
+  bool thetaValid = std::isfinite(v[eBoundDir1]);
   bool qOverPValid = std::isfinite(v[eBoundQOverP]);
   bool timeValid = std::isfinite(v[eBoundTime]);
 
   if (validateAngleRange) {
-    phiValid = phiValid && (v[eBoundPhi] + epsilon >= -pi) &&
-               (v[eBoundPhi] - epsilon < pi);
-    thetaValid = thetaValid && (v[eBoundTheta] + epsilon >= 0) &&
-                 (v[eBoundTheta] - epsilon <= pi);
+    phiValid = phiValid && (v[eBoundDir0] + epsilon >= -pi) &&
+               (v[eBoundDir0] - epsilon < pi);
+    thetaValid = thetaValid && (v[eBoundDir1] + epsilon >= 0) &&
+                 (v[eBoundDir1] - epsilon <= pi);
   }
 
   bool etaValid = true;
   if (std::isfinite(maxAbsEta)) {
-    double eta = AngleHelpers::etaFromTheta(v[eBoundTheta]);
+    double eta = AngleHelpers::etaFromTheta(v[eBoundDir1]);
     etaValid = std::isfinite(eta) && (std::abs(eta) - epsilon <= maxAbsEta);
   }
 

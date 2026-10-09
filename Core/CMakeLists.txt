@@ -38,14 +38,6 @@ target_compile_definitions(
     PRIVATE ACTS_GEOMETRY_MODULE_ABI_TAG="${_acts_geometry_module_abi_tag}"
 )
 
-if(ACTS_PARAMETER_DEFINITIONS_HEADER)
-    target_compile_definitions(
-        ActsCore
-        PUBLIC
-            -DACTS_PARAMETER_DEFINITIONS_HEADER="${ACTS_PARAMETER_DEFINITIONS_HEADER}"
-    )
-endif()
-
 if(ACTS_SOURCELINK_SBO_SIZE)
     target_compile_definitions(
         ActsCore

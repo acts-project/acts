@@ -76,7 +76,7 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::ZScanVertexFinder::find(
     if (!m_cfg.disableAllWeights && (m_cfg.usePt || m_cfg.useLogPt)) {
       double Pt =
           std::abs(1. / params.parameters()[BoundIndices::eBoundQOverP]) *
-          std::sin(params.parameters()[BoundIndices::eBoundTheta]);
+          std::sin(params.parameters()[BoundIndices::eBoundDir1]);
       if (m_cfg.usePt) {
         z0AndWeight.second *= std::pow(Pt, m_cfg.expPt);
       } else {

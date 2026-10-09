@@ -79,8 +79,8 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   {
     Vector3 globalCoords = endParams.position(gctx);
     double globalTime = endParams.time();
-    double phi = perigeeParams(BoundIndices::eBoundPhi);
-    double theta = perigeeParams(BoundIndices::eBoundTheta);
+    double phi = perigeeParams(BoundIndices::eBoundDir0);
+    double theta = perigeeParams(BoundIndices::eBoundDir1);
     double qOvP = perigeeParams(BoundIndices::eBoundQOverP);
 
     paramVec << globalCoords, globalTime, phi, theta, qOvP;

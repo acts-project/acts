@@ -356,9 +356,9 @@ void updateTrackWithVertexImpl(TrackAtVertex& track, const Vertex& vtx) {
   // Get phi and theta and correct for possible periodicity changes
   const auto correctedPhiTheta =
       Acts::detail::normalizePhiTheta(newTrkMomentum(0), newTrkMomentum(1));
-  newTrkParams(BoundIndices::eBoundPhi) = correctedPhiTheta.first;     // phi
-  newTrkParams(BoundIndices::eBoundTheta) = correctedPhiTheta.second;  // theta
-  newTrkParams(BoundIndices::eBoundQOverP) = newTrkMomentum(2);        // qOverP
+  newTrkParams(BoundIndices::eBoundDir0) = correctedPhiTheta.first;   // phi
+  newTrkParams(BoundIndices::eBoundDir1) = correctedPhiTheta.second;  // theta
+  newTrkParams(BoundIndices::eBoundQOverP) = newTrkMomentum(2);       // qOverP
 
   // E_k^n
   const Matrix<nDimVertex, 3> crossCovVP =

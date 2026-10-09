@@ -176,9 +176,9 @@ BoundToFreeMatrix PointSurface::boundToFreeJacobian(
   const double cosTheta = direction.z();
   const double sinTheta = VectorHelpers::perp(direction);
 
-  jacToGlobal.block<3, 1>(eFreePos0, eBoundPhi) =
+  jacToGlobal.block<3, 1>(eFreePos0, eBoundDir0) =
       loc0 * (cosTheta * V - sinTheta * T) - loc1 * cosTheta * U;
-  jacToGlobal.block<3, 1>(eFreePos0, eBoundTheta) = loc1 * T;
+  jacToGlobal.block<3, 1>(eFreePos0, eBoundDir1) = loc1 * T;
 
   return jacToGlobal;
 }

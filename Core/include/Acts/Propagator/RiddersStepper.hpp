@@ -596,9 +596,9 @@ class RiddersStepper final {
 
       const auto diff = [&]() {
         BoundVector d = nudgedVector - referenceVector;
-        d[eBoundPhi] = detail::difference_periodic(nudgedVector[eBoundPhi],
-                                                   referenceVector[eBoundPhi],
-                                                   2 * std::numbers::pi);
+        d[eBoundDir0] = detail::difference_periodic(nudgedVector[eBoundDir0],
+                                                    referenceVector[eBoundDir0],
+                                                    2 * std::numbers::pi);
         return d;
       };
 
