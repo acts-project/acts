@@ -364,6 +364,39 @@ BOOST_AUTO_TEST_CASE(ChangeSourceLinkType) {
                     std::bad_any_cast);
 }
 
+BOOST_AUTO_TEST_CASE(TypedComponentsPreserveReferencesAndErrors) {
+  VectorMultiTrajectory trajectory;
+  trajectory.addColumn<int>("custom");
+  auto state = trajectory.makeTrackState();
+  auto check = [&]<typename Value>(HashedString key) {
+    BOOST_CHECK(
+        (&state.component<Value>(key) ==
+         std::any_cast<Value*>(trajectory.component_impl(key, state.index()))));
+    const auto& readOnly = std::as_const(state);
+    BOOST_CHECK(
+        (&readOnly.component<Value>(key) ==
+         std::any_cast<const Value*>(
+             std::as_const(trajectory).component_impl(key, state.index()))));
+  };
+  for (HashedString key : {"previous"_hash, "next"_hash, "predicted"_hash,
+                           "filtered"_hash, "smoothed"_hash, "measdim"_hash}) {
+    check.template operator()<TrackIndexType>(key);
+  }
+  check.template operator()<float>("chi2"_hash);
+  check.template operator()<double>("pathLength"_hash);
+  check.template operator()<TrackStateType::raw_type>("typeFlags"_hash);
+  check.template operator()<int>("custom"_hash);
+  BOOST_CHECK_THROW(state.component<int>("pathLength"_hash), std::bad_any_cast);
+  BOOST_CHECK_THROW(state.component<double>("custom"_hash), std::bad_any_cast);
+  BOOST_CHECK_THROW(state.component<int>("unknown"_hash), std::runtime_error);
+  ConstVectorMultiTrajectory immutable(std::move(trajectory));
+  const auto& previous = immutable.getTrackState(state.index())
+                             .component<TrackIndexType, "previous"_hash>();
+  BOOST_CHECK((&previous ==
+               std::any_cast<const TrackIndexType*>(
+                   immutable.component_impl("previous"_hash, state.index()))));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

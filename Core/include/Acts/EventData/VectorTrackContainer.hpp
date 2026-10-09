@@ -60,6 +60,49 @@ class VectorTrackContainerBase {
   // BEGIN INTERFACE HELPER
 
   /// @cond
+  // Built-in columns return their typed reference directly. Dynamic columns
+  // retain the any-cast path; wrong-type requests still throw bad_any_cast.
+  template <typename Value, bool EnsureConst, typename Instance>
+  static std::conditional_t<EnsureConst, const Value, Value>&
+  componentTyped_impl(Instance& instance, HashedString key, IndexType itrack) {
+    using Return = std::conditional_t<EnsureConst, const Value, Value>;
+    const auto checked = []<typename Stored>(Stored& value) -> Return& {
+      if constexpr (std::is_same_v<Stored, Return>) {
+        return value;
+      } else {
+        throw std::bad_any_cast{};
+      }
+    };
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      case "tipIndex"_hash:
+        return checked(instance.m_tipIndex[itrack]);
+      case "stemIndex"_hash:
+        return checked(instance.m_stemIndex[itrack]);
+      case "params"_hash:
+        return checked(instance.m_params[itrack]);
+      case "cov"_hash:
+        return checked(instance.m_cov[itrack]);
+      case "nMeasurements"_hash:
+        return checked(instance.m_nMeasurements[itrack]);
+      case "nHoles"_hash:
+        return checked(instance.m_nHoles[itrack]);
+      case "chi2"_hash:
+        return checked(instance.m_chi2[itrack]);
+      case "ndf"_hash:
+        return checked(instance.m_ndf[itrack]);
+      case "nOutliers"_hash:
+        return checked(instance.m_nOutliers[itrack]);
+      case "nSharedHits"_hash:
+        return checked(instance.m_nSharedHits[itrack]);
+      case "nSplitHits"_hash:
+        return checked(instance.m_nSplitHits[itrack]);
+      default:
+        return *std::any_cast<Return*>(
+            component_impl<EnsureConst>(instance, key, itrack));
+    }
+  }
+
   template <bool EnsureConst, typename T>
   static std::any component_impl(T& instance, HashedString key,
                                  IndexType itrack) {
@@ -239,8 +282,22 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
         *this, key, itrack);
   }
 
+  template <typename Value>
+  Value& componentTyped_impl(HashedString key, IndexType itrack) {
+    return detail_vtc::VectorTrackContainerBase::componentTyped_impl<Value,
+                                                                     false>(
+        *this, key, itrack);
+  }
+
   std::any component_impl(HashedString key, IndexType itrack) const {
     return detail_vtc::VectorTrackContainerBase::component_impl<true>(
+        *this, key, itrack);
+  }
+
+  template <typename Value>
+  const Value& componentTyped_impl(HashedString key, IndexType itrack) const {
+    return detail_vtc::VectorTrackContainerBase::componentTyped_impl<Value,
+                                                                     true>(
         *this, key, itrack);
   }
 
@@ -353,6 +410,13 @@ class ConstVectorTrackContainer final
   /// @return Component value as std::any
   std::any component_impl(HashedString key, IndexType itrack) const {
     return detail_vtc::VectorTrackContainerBase::component_impl<true>(
+        *this, key, itrack);
+  }
+
+  template <typename Value>
+  const Value& componentTyped_impl(HashedString key, IndexType itrack) const {
+    return detail_vtc::VectorTrackContainerBase::componentTyped_impl<Value,
+                                                                     true>(
         *this, key, itrack);
   }
 
