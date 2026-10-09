@@ -9,7 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrizationError.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -18,7 +20,6 @@
 #include <cmath>
 #include <limits>
 #include <numbers>
-#include <stdexcept>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -65,27 +66,31 @@ class BoundParametrization {
       const double phi = parameters[eBoundDir0];
       const double theta = parameters[eBoundDir1];
       assertFiniteAngles(phi, theta);
-      const double cp = std::cos(phi), sp = std::sin(phi);
-      const double ct = std::cos(theta), st = std::sin(theta);
+      const double cp = std::cos(phi);
+      const double sp = std::sin(phi);
+      const double ct = std::cos(theta);
+      const double st = std::sin(theta);
       Matrix<3, 2> jacobian;
       jacobian << -sp * st, cp * ct, cp * st, sp * ct, 0., -st;
       return jacobian;
     }
 
-    Matrix<2, 3> directionCoordinatesJacobian(
+    Result<Matrix<2, 3>> directionCoordinatesJacobian(
         const Vector3& direction, double minTransverse = 1e-12) const {
       assertValidThreshold(minTransverse);
-      const Vector3 unit = unitDirection(direction);
+      const double norm = direction.stableNorm();
+      const Vector3 unit = unitDirection(direction, norm);
       const double transverse = std::hypot(unit.x(), unit.y());
       if (transverse <= minTransverse) {
-        throw std::domain_error("Singular global-spherical direction Jacobian");
+        return Result<Matrix<2, 3>>::failure(
+            BoundParametrizationError::SingularDirection);
       }
       const double cp = unit.x() / transverse;
       const double sp = unit.y() / transverse;
       Matrix<2, 3> jacobian;
       jacobian << -sp / transverse, cp / transverse, 0., cp * unit.z(),
           sp * unit.z(), -transverse;
-      return jacobian / direction.stableNorm();
+      return Result<Matrix<2, 3>>::success(jacobian / norm);
     }
 
     template <typename Derived>
@@ -131,33 +136,36 @@ class BoundParametrization {
     }
 
     template <typename Derived>
-    BoundMatrix canonicalizationJacobian(
+    Result<BoundMatrix> canonicalizationJacobian(
         const Eigen::MatrixBase<Derived>& parameters) const {
       assertFinite(parameters);
       const double theta = detail::radian_pos(parameters[eBoundDir1]);
       if (theta == 0. || theta == std::numbers::pi) {
-        throw std::domain_error(
-            "Canonicalization derivative is undefined at a pole");
+        return Result<BoundMatrix>::failure(
+            BoundParametrizationError::UndefinedCanonicalization);
       }
       BoundMatrix jacobian = BoundMatrix::Identity();
       if (theta > std::numbers::pi) {
         jacobian(eBoundDir1, eBoundDir1) = -1.;
       }
-      return jacobian;
+      return Result<BoundMatrix>::success(jacobian);
     }
 
     template <typename Derived, typename Covariance>
-    std::pair<BoundVector, BoundMatrix> canonicalize(
+    Result<std::pair<BoundVector, BoundMatrix>> canonicalize(
         const Eigen::MatrixBase<Derived>& parameters,
         const Eigen::MatrixBase<Covariance>& covariance) const {
       assertFinite(covariance);
-      const BoundMatrix jacobian = canonicalizationJacobian(parameters);
+      const auto jacobian = canonicalizationJacobian(parameters);
+      if (!jacobian.ok()) {
+        return jacobian.error();
+      }
       BoundMatrix transformed = covariance;
-      if (jacobian(eBoundDir1, eBoundDir1) < 0.) {
+      if ((*jacobian)(eBoundDir1, eBoundDir1) < 0.) {
         transformed.row(eBoundDir1) *= -1.;
         transformed.col(eBoundDir1) *= -1.;
       }
-      return {canonicalize(parameters), transformed};
+      return std::pair{canonicalize(parameters), transformed};
     }
 
     template <typename Left, typename Right>
@@ -194,7 +202,9 @@ class BoundParametrization {
              "Invalid direction conditioning threshold");
     }
     static Vector3 unitDirection(const Vector3& direction) {
-      const double norm = direction.stableNorm();
+      return unitDirection(direction, direction.stableNorm());
+    }
+    static Vector3 unitDirection(const Vector3& direction, double norm) {
       assert(direction.allFinite() && std::isfinite(norm) && norm > 0. &&
              "Direction must be finite and nonzero with a representable norm");
       return direction / norm;
@@ -253,9 +263,9 @@ class BoundParametrization {
   /// @param minTransverse Minimum transverse fraction for acceptable conditioning
   /// @return A 2x3 Jacobian including the derivative of normalization
   /// @pre Direction is finite and nonzero, with a representable norm (asserted).
-  /// @throws std::domain_error at a pole or below the conditioning threshold
+  /// @note Returns SingularDirection at a pole or below the conditioning threshold.
   /// @pre minTransverse is finite and in [0, 1) (asserted).
-  Matrix<2, 3> directionCoordinatesJacobian(
+  Result<Matrix<2, 3>> directionCoordinatesJacobian(
       const Vector3& direction, double minTransverse = 1e-12) const {
     return std::get<GlobalSpherical>(m_chart).directionCoordinatesJacobian(
         direction, minTransverse);
@@ -309,9 +319,9 @@ class BoundParametrization {
   /// @param parameters Original bound coordinates
   /// @return Jacobian from the original to canonical coordinate basis
   /// @pre Input coordinates are finite (asserted).
-  /// @throws std::domain_error exactly at a pole
+  /// @note Returns UndefinedCanonicalization exactly at a pole.
   template <typename Derived>
-  BoundMatrix canonicalizationJacobian(
+  Result<BoundMatrix> canonicalizationJacobian(
       const Eigen::MatrixBase<Derived>& parameters) const {
     return std::get<GlobalSpherical>(m_chart).canonicalizationJacobian(
         parameters);
@@ -324,9 +334,9 @@ class BoundParametrization {
   /// @param covariance Covariance in the original coordinate basis
   /// @return Canonical coordinates and transformed covariance
   /// @pre Input coordinates and covariance are finite (asserted).
-  /// @throws std::domain_error for an undefined derivative
+  /// @note Propagates UndefinedCanonicalization for an undefined derivative.
   template <typename Derived, typename Covariance>
-  std::pair<BoundVector, BoundMatrix> canonicalize(
+  Result<std::pair<BoundVector, BoundMatrix>> canonicalize(
       const Eigen::MatrixBase<Derived>& parameters,
       const Eigen::MatrixBase<Covariance>& covariance) const {
     return std::get<GlobalSpherical>(m_chart).canonicalize(parameters,

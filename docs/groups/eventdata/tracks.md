@@ -71,20 +71,21 @@ follow-up work.
 `isValid()` checks finite values, optional canonical ranges and eta acceptance.
 It permits axial directions. `isInDomain()` additionally checks whether the
 inverse direction derivative is sufficiently conditioned. The inverse Jacobian
-throws at a pole or below its transverse-fraction threshold; it includes input
-normalization when given a non-unit Cartesian direction. Computational methods
+returns a failed `Result` at a pole or below its transverse-fraction threshold.
+It includes input normalization when given a non-unit Cartesian direction.
+Computational methods
 assert caller preconditions: finite coordinates/covariance, nonzero finite
 Cartesian directions with representable norms, valid conditioning thresholds,
 and finite arithmetic results. These assertions disappear when `NDEBUG` is
 set (unless the build forces assertions). Use `isValid()` or `isInDomain()` for
 explicit runtime validation of coordinates. Chart singularities and conditioning
-failures still throw in release builds.
+failures still return errors in release builds.
 
-`canonicalize(parameters, covariance)` returns both coordinates and covariance
-in the canonical basis. Folding theta across a pole reverses its covariance
+`canonicalize(parameters, covariance)` returns a `Result` containing coordinates
+and covariance in the canonical basis. Folding theta across a pole reverses its covariance
 cross terms. At an exact pole that canonicalization derivative is undefined,
-so covariance canonicalization throws; value-only canonicalization remains
-available. The phi wrapping seam uses local periodic coordinates. The legacy
+so covariance canonicalization returns a failed `Result`. Value-only
+canonicalization remains available. The phi wrapping seam uses local periodic coordinates. The legacy
 value-only normalization/update helpers do not transform a separate covariance.
 For an update with covariance, use `canonicalize(parameters + delta, covariance)`
 with the covariance in the uncanonicalized updated basis.

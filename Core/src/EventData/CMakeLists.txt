@@ -1,6 +1,7 @@
 target_sources(
     ActsCore
     PRIVATE
+        BoundParametrizationError.cpp
         PrintParameters.cpp
         TransformationHelpers.cpp
         CorrectedTransformationFreeToBound.cpp
