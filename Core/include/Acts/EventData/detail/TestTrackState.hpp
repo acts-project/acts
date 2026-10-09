@@ -66,8 +66,8 @@ struct TestTrackState {
 
     // create track parameters
     auto [trkPar, trkCov] = generateBoundParametersCovariance(rng, {});
-    // trkPar[eBoundPhi] = 45_degree;
-    // trkPar[eBoundTheta] = 90_degree;
+    // trkPar[eBoundDir0] = 45_degree;
+    // trkPar[eBoundDir1] = 90_degree;
     // trkPar[eBoundQOverP] = 5.;
     // predicted
     predicted = BoundTrackParameters(surface, trkPar, trkCov,

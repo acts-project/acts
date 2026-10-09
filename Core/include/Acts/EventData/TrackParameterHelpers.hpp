@@ -9,11 +9,25 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <limits>
 
 namespace Acts {
+
+/// Decode the direction of canonical global-spherical bound coordinates.
+/// Accepts vectors, Eigen maps and expressions without copying the full state.
+/// @tparam Derived Eigen expression type
+/// @param parameters Raw bound coordinates
+/// @return Global unit direction vector
+/// @note This helper assumes the canonical global-spherical parametrization.
+template <typename Derived>
+Vector3 directionFromBoundParameters(
+    const Eigen::MatrixBase<Derived>& parameters) {
+  return makeDirectionFromPhiTheta(parameters[eBoundDir0],
+                                   parameters[eBoundDir1]);
+}
 
 /// Check if a bound vector is valid. This checks the following:
 /// - All values are finite
@@ -43,20 +57,20 @@ bool isFreeVectorValid(
     const FreeVector& v, double epsilon = 1e-6,
     double maxAbsEta = std::numeric_limits<double>::infinity());
 
-/// Normalize the bound parameter angles
+/// Normalize the canonical global-spherical bound parameter angles
 ///
 /// @param boundParams The bound parameters to normalize
 ///
 /// @return The normalized bound parameters
 inline BoundVector normalizeBoundParameters(const BoundVector& boundParams) {
   BoundVector result = boundParams;
-  std::tie(result[eBoundPhi], result[eBoundTheta]) =
-      detail::normalizePhiTheta(result[eBoundPhi], result[eBoundTheta]);
+  std::tie(result[eBoundDir0], result[eBoundDir1]) =
+      detail::normalizePhiTheta(result[eBoundDir0], result[eBoundDir1]);
   return result;
 }
 
-/// Add bound parameters and take care of angle periodicity for phi and theta.
-/// This is intended for small differences only i.e. KF updates.
+/// Add canonical global-spherical bound parameters, respecting angle
+/// periodicity. This is intended for small differences only i.e. KF updates.
 ///
 /// @param lhs The left hand side bound parameters
 /// @param rhs The right hand side bound parameters
@@ -67,8 +81,8 @@ inline BoundVector addBoundParameters(const BoundVector& lhs,
   return normalizeBoundParameters(lhs + rhs);
 }
 
-/// Subtract bound parameters and take care of angle periodicity for phi and
-/// theta. This is intended for small differences only i.e. KF updates.
+/// Subtract canonical global-spherical bound parameters, respecting angle
+/// periodicity. This is intended for small differences only i.e. KF updates.
 ///
 /// @param lhs The left hand side bound parameters
 /// @param rhs The right hand side bound parameters
@@ -77,8 +91,8 @@ inline BoundVector addBoundParameters(const BoundVector& lhs,
 inline BoundVector subtractBoundParameters(const BoundVector& lhs,
                                            const BoundVector& rhs) {
   BoundVector result = lhs - rhs;
-  result[eBoundPhi] = detail::radian_sym(result[eBoundPhi]);
-  result[eBoundTheta] = detail::radian_sym(result[eBoundTheta]);
+  result[eBoundDir0] = detail::radian_sym(result[eBoundDir0]);
+  result[eBoundDir1] = detail::radian_sym(result[eBoundDir1]);
   return result;
 }
 

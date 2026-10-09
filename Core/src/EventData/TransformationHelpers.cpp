@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -18,8 +19,7 @@ Acts::FreeVector Acts::transformBoundToFreeParameters(
     const Acts::Surface& surface, const GeometryContext& geoCtx,
     const Acts::BoundVector& boundParams) {
   // convert angles to global unit direction vector
-  Vector3 direction = makeDirectionFromPhiTheta(boundParams[eBoundPhi],
-                                                boundParams[eBoundTheta]);
+  Vector3 direction = directionFromBoundParameters(boundParams);
 
   // convert local position to global position vector
   Vector2 local(boundParams[eBoundLoc0], boundParams[eBoundLoc1]);
@@ -56,8 +56,8 @@ Acts::Result<Acts::BoundVector> Acts::transformFreeToBoundParameters(
   bp[eBoundLoc1] = localPosition[ePos1];
 
   bp[eBoundTime] = freeParams[eFreeTime];
-  bp[eBoundPhi] = VectorHelpers::phi(direction);
-  bp[eBoundTheta] = VectorHelpers::theta(direction);
+  bp[eBoundDir0] = VectorHelpers::phi(direction);
+  bp[eBoundDir1] = VectorHelpers::theta(direction);
   bp[eBoundQOverP] = freeParams[eFreeQOverP];
   return Result<Acts::BoundVector>::success(bp);
 }
@@ -79,8 +79,8 @@ Acts::Result<Acts::BoundVector> Acts::transformFreeToBoundParameters(
   bp[eBoundLoc1] = localPosition[ePos1];
 
   bp[eBoundTime] = time;
-  bp[eBoundPhi] = VectorHelpers::phi(direction);
-  bp[eBoundTheta] = VectorHelpers::theta(direction);
+  bp[eBoundDir0] = VectorHelpers::phi(direction);
+  bp[eBoundDir1] = VectorHelpers::theta(direction);
   bp[eBoundQOverP] = qOverP;
   return Result<Acts::BoundVector>::success(bp);
 }
@@ -92,8 +92,8 @@ Acts::BoundVector Acts::transformFreeToCurvilinearParameters(double time,
   BoundVector bp = BoundVector::Zero();
   // local coordinates are zero by construction
   bp[eBoundTime] = time;
-  bp[eBoundPhi] = phi;
-  bp[eBoundTheta] = theta;
+  bp[eBoundDir0] = phi;
+  bp[eBoundDir1] = theta;
   bp[eBoundQOverP] = qOverP;
   return bp;
 }
@@ -103,8 +103,8 @@ Acts::BoundVector Acts::transformFreeToCurvilinearParameters(
   BoundVector bp = BoundVector::Zero();
   // local coordinates are zero by construction
   bp[eBoundTime] = time;
-  bp[eBoundPhi] = VectorHelpers::phi(direction);
-  bp[eBoundTheta] = VectorHelpers::theta(direction);
+  bp[eBoundDir0] = VectorHelpers::phi(direction);
+  bp[eBoundDir1] = VectorHelpers::theta(direction);
   bp[eBoundQOverP] = qOverP;
   return bp;
 }

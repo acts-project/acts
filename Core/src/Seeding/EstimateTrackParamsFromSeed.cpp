@@ -184,7 +184,7 @@ Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSeed(
 Acts::BoundMatrix Acts::estimateTrackParamCovariance(
     const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
     bool hasTime) {
-  assert((params[eBoundTheta] > 0 && params[eBoundTheta] < std::numbers::pi) &&
+  assert((params[eBoundDir1] > 0 && params[eBoundDir1] < std::numbers::pi) &&
          "Theta must be in the range (0, pi)");
 
   BoundMatrix result = BoundMatrix::Zero();
@@ -195,11 +195,11 @@ Acts::BoundMatrix Acts::estimateTrackParamCovariance(
 
     if (i == eBoundQOverP) {
       // note that we rely on the fact that sigma theta is already computed
-      double varianceTheta = result(eBoundTheta, eBoundTheta);
+      double varianceTheta = result(eBoundDir1, eBoundDir1);
 
       // contribution from sigma(q/pt)
       variance += std::pow(
-          config.initialSigmaQoverPt * std::sin(params[eBoundTheta]), 2);
+          config.initialSigmaQoverPt * std::sin(params[eBoundDir1]), 2);
 
       // contribution from sigma(pt)/pt
       variance += std::pow(config.initialSigmaPtRel * params[eBoundQOverP], 2);
@@ -207,7 +207,7 @@ Acts::BoundMatrix Acts::estimateTrackParamCovariance(
       // contribution from sigma(theta)
       variance +=
           varianceTheta *
-          std::pow(params[eBoundQOverP] / std::tan(params[eBoundTheta]), 2);
+          std::pow(params[eBoundQOverP] / std::tan(params[eBoundDir1]), 2);
     }
 
     if (i == eBoundTime && !hasTime) {

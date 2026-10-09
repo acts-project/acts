@@ -18,6 +18,33 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
+BOOST_AUTO_TEST_CASE(CanonicalDirectionMapsAndExpressions) {
+  static_assert(eBoundDir0 == eBoundPhi);
+  static_assert(eBoundDir1 == eBoundTheta);
+  static_assert(eBoundSize == 6);
+  static_assert(eFreeSize == 8);
+  static_assert(sizeof(BoundVector) == 6 * sizeof(double));
+  static_assert(sizeof(BoundMatrix) == 36 * sizeof(double));
+  BoundMatrix covariance = BoundMatrix::Zero();
+  Eigen::Map<BoundMatrix> covarianceMap(covariance.data());
+  covarianceMap(eBoundDir0, eBoundDir1) = 0.25;
+  BOOST_CHECK_EQUAL(covariance(eBoundPhi, eBoundTheta), 0.25);
+  BoundVector parameters = BoundVector::Zero();
+  Eigen::Map<BoundVector> map(parameters.data());
+  map[eBoundDir0] = 0.4;
+  map[eBoundDir1] = 1.2;
+  const Eigen::Map<const BoundVector> constMap(parameters.data());
+  const Vector3 expected = makeDirectionFromPhiTheta(0.4, 1.2);
+  BOOST_CHECK_EQUAL(directionFromBoundParameters(map), expected);
+  BOOST_CHECK_EQUAL(directionFromBoundParameters(constMap), expected);
+  BOOST_CHECK_EQUAL(
+      directionFromBoundParameters(parameters + BoundVector::Zero()), expected);
+  BOOST_CHECK_EQUAL(parameters[eBoundPhi], 0.4);
+  BOOST_CHECK_EQUAL(parameters[eBoundTheta], 1.2);
+  map[eBoundDir1] = 0.;
+  BOOST_CHECK_EQUAL(directionFromBoundParameters(map), Vector3::UnitZ());
+}
+
 BOOST_AUTO_TEST_CASE(isBoundVectorValiTest) {
   BOOST_CHECK(!isBoundVectorValid({1, 2, 3, 4, 5, 6}, true));
   BOOST_CHECK(isBoundVectorValid({1, 2, 1, 1, 5, 6}, true));
