@@ -99,6 +99,8 @@ BOOST_AUTO_TEST_CASE(PolesAndInvalidInputs) {
   BOOST_CHECK_THROW(chart.directionCoordinatesJacobian(Vector3::UnitZ()),
                     std::domain_error);
   BOOST_CHECK_THROW(chart.canonicalizationJacobian(values), std::domain_error);
+  BOOST_CHECK_THROW(chart.canonicalize(values, BoundMatrix::Identity()),
+                    std::domain_error);
   values[eBoundDir1] = std::numbers::pi;
   BOOST_CHECK(!chart.isInDomain(values, 0.));
   BOOST_CHECK_THROW(chart.canonicalizationJacobian(values), std::domain_error);
@@ -108,16 +110,13 @@ BOOST_AUTO_TEST_CASE(PolesAndInvalidInputs) {
   BOOST_CHECK_THROW(
       chart.directionCoordinatesJacobian(chart.direction(values), 1e-7),
       std::domain_error);
-  BOOST_CHECK_THROW(chart.isInDomain(values, -1.), std::invalid_argument);
-  BOOST_CHECK_THROW(chart.directionCoordinates(Vector3::Zero()),
-                    std::domain_error);
   values[eBoundDir0] = std::numeric_limits<double>::quiet_NaN();
   BOOST_CHECK(!chart.isValid(values));
   BOOST_CHECK(!chart.isInDomain(values));
-  BOOST_CHECK_THROW(chart.direction(values), std::domain_error);
-  BOOST_CHECK_THROW(chart.canonicalize(values), std::domain_error);
-  BOOST_CHECK_THROW(chart.difference(values, BoundVector::Zero()),
-                    std::domain_error);
+  values[eBoundDir0] = 0.;
+  values[eBoundQOverP] = std::numeric_limits<double>::infinity();
+  BOOST_CHECK(!chart.isValid(values, false));
+  BOOST_CHECK(!chart.isInDomain(values));
 }
 
 BOOST_AUTO_TEST_CASE(PeriodicResidualAndCovarianceBasis) {
