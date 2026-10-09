@@ -9,6 +9,7 @@ from acts import (
     MaterialMapper,
     IntersectionMaterialAssigner,
     BinnedSurfaceMaterialAccumulator,
+    GridSurfaceMaterialAccumulator,
     logging,
     GeometryContext,
 )
@@ -39,11 +40,29 @@ def runMaterialMapping(
     surfaces: list[Surface],
     inputFile: Path,
     outputFileBase: str,
-    outputMapFormats: list[str] = ["json", "root"],
+    outputMapFormats: list[str] | None = None,
     loglevel: acts.logging.Level = acts.logging.INFO,
     outputMaterialTracks: str = "material_tracks",
     treeName: str = "material_tracks",
+    accumulator: str = "binned",
 ):
+    """Map tracks with a binned or grid accumulator for validation.
+
+    Grid maps support JSON/CBOR output. The default writes JSON for grids,
+    and JSON plus ROOT for binned maps. Material track files always use ROOT.
+    """
+    accumulators = {
+        "binned": BinnedSurfaceMaterialAccumulator,
+        "grid": GridSurfaceMaterialAccumulator,
+    }
+    if accumulator not in accumulators:
+        raise ValueError("accumulator must be 'binned' or 'grid'")
+    if outputMapFormats is None:
+        outputMapFormats = ["json"] if accumulator == "grid" else ["json", "root"]
+    if accumulator == "grid" and "root" in outputMapFormats:
+        raise ValueError("Grid material maps require JSON or CBOR output")
+    accumulatorClass = accumulators[accumulator]
+
     # Create a sequencer
     print("Creating the sequencer with 1 thread (inter event information needed)")
 
@@ -68,12 +87,10 @@ def runMaterialMapping(
     materialAssingerConfig.surfaces = surfaces
     materialAssinger = IntersectionMaterialAssigner(materialAssingerConfig, loglevel)
 
-    # Accumulation setup : Binned surface material accumulator
-    materialAccumulatorConfig = BinnedSurfaceMaterialAccumulator.Config()
+    # Accumulation setup
+    materialAccumulatorConfig = accumulatorClass.Config()
     materialAccumulatorConfig.materialSurfaces = surfaces
-    materialAccumulator = BinnedSurfaceMaterialAccumulator(
-        materialAccumulatorConfig, loglevel
-    )
+    materialAccumulator = accumulatorClass(materialAccumulatorConfig, loglevel)
 
     # Mapper setup
     materialMapperConfig = MaterialMapper.Config()
@@ -170,6 +187,19 @@ if "__main__" == __name__:
     )
 
     p.add_argument(
+        "--accumulator",
+        choices=["binned", "grid"],
+        default="binned",
+        help="Material accumulator to use (default: binned)",
+    )
+    p.add_argument(
+        "--output-map-formats",
+        choices=["json", "cbor", "root"],
+        nargs="+",
+        help="Map formats (default: json for grid; json and root for binned)",
+    )
+
+    p.add_argument(
         "--tree-name",
         type=str,
         default="material_tracks",
@@ -199,8 +229,9 @@ if "__main__" == __name__:
         materialSurfaces,
         inputFile=Path(args.input),
         outputFileBase=args.output,
-        outputMapFormats=["json", "root"],
+        outputMapFormats=args.output_map_formats,
         loglevel=logLevel,
         outputMaterialTracks=args.material_tracks_name,
         treeName=args.tree_name,
+        accumulator=args.accumulator,
     ).run()

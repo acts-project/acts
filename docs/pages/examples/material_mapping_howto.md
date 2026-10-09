@@ -284,8 +284,27 @@ anyway. The script then reads those surfaces back out:
 @snippet{trimleft} examples/test_material_map.py Extract Material Surfaces
 
 and hands the resulting list to @ref Acts::IntersectionMaterialAssigner and
-@ref Acts::BinnedSurfaceMaterialAccumulator. That list is the *only* geometry
+the selected surface material accumulator. That list is the *only* geometry
 input the mapper gets, which is what makes it generation-agnostic.
+
+The default `--accumulator binned` uses
+@ref Acts::BinnedSurfaceMaterialAccumulator. To compare the same recorded tracks
+and prototype binning with @ref Acts::GridSurfaceMaterialAccumulator, run:
+
+```console
+python Examples/Scripts/Python/material_mapping.py \
+    -i mydet_geant4.root --matconfig geometry-map.json -o mydet_grid \
+    --accumulator grid
+```
+
+Grid accumulation produces @ref Acts::GridSurfaceMaterial with direct storage,
+including for homogeneous one-bin maps. It uses surface-local coordinates and
+supports remapping existing grid material. Both accumulators apply path
+correction, per-track averaging, empty-bin correction and stable-key assignment.
+Grid mode writes JSON by default; `--output-map-formats json cbor` selects both
+JSON and CBOR. Use the JSON map with `material_validation.py -m mydet_grid_map.json`
+to validate it. ROOT material-map output is available for binned mode only;
+the mapped and unmapped track files use ROOT in both modes.
 
 Outputs:
 
