@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -80,10 +81,20 @@ void addPropagator(py::module_& m, const std::string& prefix) {
 /// @brief Bind propagation related functions to the Python module
 /// @param m The Python module to which the functions will be bound
 void addPropagation(py::module_& m) {
+  py::class_<Direction>(m, "Direction")
+      .def_static("Forward", &Direction::Forward)
+      .def_static("Backward", &Direction::Backward)
+      .def_static("fromScalarZeroAsPositive",
+                  &Direction::fromScalarZeroAsPositive, py::arg("scalar"))
+      .def("sign", &Direction::sign)
+      .def("__eq__", &Direction::operator==)
+      .def("__repr__", &Direction::toString);
+
   {
     py::class_<PropagatorPlainOptions>(m, "PropagatorPlainOptions")
         .def(py::init<const GeometryContext&, const MagneticFieldContext&>(),
              py::arg("geoContext"), py::arg("magFieldContext"))
+        .def_readwrite("direction", &PropagatorPlainOptions::direction)
         .def_readwrite("maxSteps", &PropagatorPlainOptions::maxSteps)
         .def_readwrite("pathLimit", &PropagatorPlainOptions::pathLimit)
         .def_readwrite("loopProtection",
