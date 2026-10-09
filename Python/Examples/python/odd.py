@@ -44,7 +44,7 @@ def getOpenDataDetector(
     misaligned=False,
     odd_dir: Optional[Path] = None,
     logLevel=acts.logging.INFO,
-    gen3=False,
+    gen3=True,
     constructionMethod=None,
     buildTracker=True,
     buildCalorimeter=True,
