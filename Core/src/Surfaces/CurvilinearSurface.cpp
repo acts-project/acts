@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Utilities/JacobianHelpers.hpp"
 
 #include <iomanip>
 #include <ios>
@@ -61,7 +60,7 @@ BoundToFreeMatrix CurvilinearSurface::boundToFreeJacobian() const {
   jacobian(eFreeTime, eBoundTime) = 1;
   // the momentum components
   jacobian.block<3, 2>(eFreeDir0, eBoundDir0) =
-      sphericalToFreeDirectionJacobian(m_direction);
+      boundParametrization().directionJacobianFromUnitDirection(m_direction);
   jacobian(eFreeQOverP, eBoundQOverP) = 1;
 
   return jacobian;
@@ -82,8 +81,13 @@ FreeToBoundMatrix CurvilinearSurface::freeToBoundJacobian() const {
   // Time component
   jacobian(eBoundTime, eFreeTime) = 1;
   // Directional and momentum elements for reference frame surface
-  jacobian.block<2, 3>(eBoundDir0, eFreeDir0) =
-      freeToSphericalDirectionJacobian(m_direction);
+  // The matrix-returning surface API requires a nonsingular direction.
+  // Keep its existing domain (no additional conditioning cutoff).
+  const auto directionJacobian =
+      boundParametrization().directionCoordinatesJacobianFromUnitDirection(
+          m_direction, 0.);
+  assert(directionJacobian.ok() && "Singular bound direction Jacobian");
+  jacobian.block<2, 3>(eBoundDir0, eFreeDir0) = *directionJacobian;
   jacobian(eBoundQOverP, eFreeQOverP) = 1;
 
   return jacobian;

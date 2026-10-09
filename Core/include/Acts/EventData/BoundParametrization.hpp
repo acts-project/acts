@@ -92,22 +92,45 @@ class BoundParametrization {
       return jacobian;
     }
 
-    Result<Matrix<2, 3>> directionCoordinatesJacobian(
+    Matrix<3, 2> directionJacobianFromUnitDirection(
+        const Vector3& direction) const {
+      assertUnitDirection(direction);
+      const double transverse = std::hypot(direction.x(), direction.y());
+      // Encoding chooses phi = 0 at an exact pole.
+      const double cp = transverse == 0. ? 1. : direction.x() / transverse;
+      const double sp = transverse == 0. ? 0. : direction.y() / transverse;
+      Matrix<3, 2> jacobian;
+      jacobian << -direction.y(), cp * direction.z(), direction.x(),
+          sp * direction.z(), 0., -transverse;
+      return jacobian;
+    }
+
+    Result<Matrix<2, 3>> directionCoordinatesJacobianFromUnitDirection(
         const Vector3& direction, double minTransverse = 1e-12) const {
+      assertUnitDirection(direction);
       assertValidThreshold(minTransverse);
-      const double norm = direction.stableNorm();
-      const Vector3 unit = unitDirection(direction, norm);
-      const double transverse = std::hypot(unit.x(), unit.y());
+      const double transverse = std::hypot(direction.x(), direction.y());
       if (transverse <= minTransverse) {
         return Result<Matrix<2, 3>>::failure(
             BoundParametrizationError::SingularDirection);
       }
-      const double cp = unit.x() / transverse;
-      const double sp = unit.y() / transverse;
+      const double cp = direction.x() / transverse;
+      const double sp = direction.y() / transverse;
       Matrix<2, 3> jacobian;
-      jacobian << -sp / transverse, cp / transverse, 0., cp * unit.z(),
-          sp * unit.z(), -transverse;
-      return Result<Matrix<2, 3>>::success(jacobian / norm);
+      jacobian << -sp / transverse, cp / transverse, 0., cp * direction.z(),
+          sp * direction.z(), -transverse;
+      return Result<Matrix<2, 3>>::success(jacobian);
+    }
+
+    Result<Matrix<2, 3>> directionCoordinatesJacobian(
+        const Vector3& direction, double minTransverse = 1e-12) const {
+      const double norm = direction.stableNorm();
+      const auto jacobian = directionCoordinatesJacobianFromUnitDirection(
+          unitDirection(direction, norm), minTransverse);
+      if (!jacobian.ok()) {
+        return Result<Matrix<2, 3>>::failure(jacobian.error());
+      }
+      return Result<Matrix<2, 3>>::success(*jacobian / norm);
     }
 
     template <typename Derived>
@@ -218,6 +241,11 @@ class BoundParametrization {
       assert(std::isfinite(threshold) && threshold >= 0. && threshold < 1. &&
              "Invalid direction conditioning threshold");
     }
+    static void assertUnitDirection([[maybe_unused]] const Vector3& direction) {
+      assert(direction.allFinite() &&
+             std::abs(direction.squaredNorm() - 1.) < 1e-6 &&
+             "Direction must be a finite unit vector");
+    }
     static Vector3 unitDirection(const Vector3& direction, double norm) {
       assert(direction.allFinite() && std::isfinite(norm) && norm > 0. &&
              "Direction must be finite and nonzero with a representable norm");
@@ -306,6 +334,34 @@ class BoundParametrization {
       const Eigen::MatrixBase<Derived>& parameters) const {
     return visit(
         [&](const auto& chart) { return chart.directionJacobian(parameters); });
+  }
+
+  /// Derivative of global direction at coordinates encoded from a unit vector.
+  /// Avoids re-encoding angles and evaluating trigonometric functions in
+  /// surface and propagation Jacobians.
+  /// @param direction Global unit direction
+  /// @return A 3x2 Jacobian; at an exact pole uses the encoding convention phi = 0
+  /// @pre Direction is finite and normalized (asserted).
+  Matrix<3, 2> directionJacobianFromUnitDirection(
+      const Vector3& direction) const {
+    return visit([&](const auto& chart) {
+      return chart.directionJacobianFromUnitDirection(direction);
+    });
+  }
+
+  /// Derivative of encoding evaluated at a global unit direction.
+  /// Includes the tangent projection, without computing a normalization factor.
+  /// @param direction Global unit direction
+  /// @param minTransverse Minimum transverse fraction for acceptable conditioning
+  /// @return A 2x3 Jacobian or SingularDirection below the conditioning threshold
+  /// @pre Direction is finite and normalized (asserted).
+  /// @pre minTransverse is finite and in [0, 1) (asserted).
+  Result<Matrix<2, 3>> directionCoordinatesJacobianFromUnitDirection(
+      const Vector3& direction, double minTransverse = 1e-12) const {
+    return visit([&](const auto& chart) {
+      return chart.directionCoordinatesJacobianFromUnitDirection(direction,
+                                                                 minTransverse);
+    });
   }
 
   /// Derivative of encoding with respect to a global Cartesian direction.
