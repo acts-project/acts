@@ -168,17 +168,15 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   if (m_outputFreeParameters.isInitialized()) {
     std::vector<Acts::FreeVector> freeParameters;
     auto fieldCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
-    std::vector<Acts::Vector3> positions;
     freeParameters.reserve(seeds.size());
     for (std::size_t i = 0; i < seeds.size(); ++i) {
-      positions.clear();
-      for (const auto &spacePoint : seeds.at(i).spacePoints()) {
-        positions.emplace_back(spacePoint.x(), spacePoint.y(), spacePoint.z());
-      }
+      // space points innermost first
+      const auto outer = spacePoints[seeds.at(i).spacePointIndices().back()];
       // zeros for a seed without a fit
       freeParameters.push_back(
           Acts::Experimental::freeParametersFromGbtsSeedFit(
-              fits.at(i), positions, *m_cfg.magneticField, fieldCache)
+              fits.at(i), Acts::Vector3(outer.x(), outer.y(), outer.z()),
+              *m_cfg.magneticField, fieldCache)
               .value_or(Acts::FreeVector::Zero()));
     }
     m_outputFreeParameters(ctx, std::move(freeParameters));
