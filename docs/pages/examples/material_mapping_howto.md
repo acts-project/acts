@@ -94,8 +94,8 @@ python Examples/Scripts/MaterialMapping/writeMapConfig.py geometry-map.json conf
 In `config-map.json`, for every surface category you want to map:
 
 - set `"mapMaterial": true`
-- set the `"bins"` entries under `"binUtility" -> "binningdata"` to the
-  granularity you want
+- set the `"bins"` entries under `"axis_specs"` to the granularity you want
+  (legacy maps use `"binUtility" -> "binningdata"`)
 
 A homogeneous surface is `1 x 1`. Start coarse: bins with no hits produce no
 material, and a fine binning with too few recorded tracks gives you a map full
@@ -133,9 +133,8 @@ marks up that child's volume faces as it is connected:
 @snippet{trimleft} examples/material_designation.cpp Designate Proto Material
 
 The two-axis form of @ref Acts::MaterialDesignatorBlueprintNode::configureFace
-attaches a @ref Acts::ProtoGridSurfaceMaterial — a binning specification with no
-content, which is exactly what the Gen1 JSON route produces via
-@ref Acts::ProtoSurfaceMaterial. It is the direct equivalent of setting
+attaches a @ref Acts::ProtoSurfaceMaterial — a binning specification with no
+content, which is also what the Gen1 JSON route produces. It is the direct equivalent of setting
 `"mapMaterial": true` plus a bin count, and it is what you want if you intend to
 run the mapping.
 
@@ -191,8 +190,8 @@ Things to know before you use it:
 Once construction is done the two generations converge completely. The
 designated material sits on ordinary surfaces, so `hasMaterial()` is true,
 `trackingGeometry.extractMaterialSurfaces()` collects them, and
-@ref Acts::BinnedSurfaceMaterialAccumulator consumes @ref Acts::ProtoGridSurfaceMaterial
-alongside @ref Acts::ProtoSurfaceMaterial. Steps 2 to 5 below are unchanged — just omit
+@ref Acts::BinnedSurfaceMaterialAccumulator consumes @ref Acts::ProtoSurfaceMaterial
+using its axis specifications. Steps 2 to 5 below are unchanged — just omit
 `--matconfig` in step 3, since the geometry already carries the designation.
 
 @anchor material_mapping_stable_keys
@@ -285,8 +284,27 @@ anyway. The script then reads those surfaces back out:
 @snippet{trimleft} examples/test_material_map.py Extract Material Surfaces
 
 and hands the resulting list to @ref Acts::IntersectionMaterialAssigner and
-@ref Acts::BinnedSurfaceMaterialAccumulator. That list is the *only* geometry
+the selected surface material accumulator. That list is the *only* geometry
 input the mapper gets, which is what makes it generation-agnostic.
+
+The default `--accumulator binned` uses
+@ref Acts::BinnedSurfaceMaterialAccumulator. To compare the same recorded tracks
+and prototype binning with @ref Acts::GridSurfaceMaterialAccumulator, run:
+
+```console
+python Examples/Scripts/Python/material_mapping.py \
+    -i mydet_geant4.root --matconfig geometry-map.json -o mydet_grid \
+    --accumulator grid
+```
+
+Grid accumulation produces @ref Acts::GridSurfaceMaterial with direct storage,
+including for homogeneous one-bin maps. It uses surface-local coordinates and
+supports remapping existing grid material. Both accumulators apply path
+correction, per-track averaging, empty-bin correction and stable-key assignment.
+Grid mode writes JSON by default; `--output-map-formats json cbor` selects both
+JSON and CBOR. Use the JSON map with `material_validation.py -m mydet_grid_map.json`
+to validate it. ROOT material-map output is available for binned mode only;
+the mapped and unmapped track files use ROOT in both modes.
 
 Outputs:
 
@@ -322,6 +340,19 @@ python Examples/Scripts/Python/material_validation.py \
 This re-records material, now from your mapped map instead of from Geant4, so
 you can compare the two. `-p` additionally runs a real propagator with a
 navigator and writes `mydet_validated_propagated.root`.
+
+Grid maps use the same validation command with JSON or CBOR input:
+
+```console
+python Examples/Scripts/Python/material_validation.py \
+    -n 1000 -t 1000 -m mydet_grid_map.json -o mydet_grid_validated -p
+```
+
+The reader automatically selects the legacy hierarchy-map or versioned material
+document schema and detects JSON/CBOR encoding from the contents. Versioned
+maps written by @ref Acts::TrackingGeometryMaterialJsonConverter are accepted,
+including `.json.zst` and `.cbor.zst` when built with zstd support. ROOT input
+continues to support binned and homogeneous maps.
 
 Comparing the default and `-p` outputs is worth doing: the default collection is
 navigation-independent, so a difference between them is a *navigation* problem

@@ -15,6 +15,7 @@
 #include "Acts/Material/MergedMaterialMarker.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/IMultiAxis.hpp"
 #include "ActsPlugins/Json/AxisSpecJsonConverter.hpp"
@@ -22,6 +23,7 @@
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 #include "ActsPlugins/Json/detail/MaterialJsonContext.hpp"
+#include "ActsPlugins/Json/detail/ProtoSurfaceMaterialConversion.hpp"
 
 #include <array>
 #include <cstddef>
@@ -88,28 +90,7 @@ nlohmann::json binnedToJson(const BinnedSurfaceMaterial& material,
   return jMaterial;
 }
 
-nlohmann::json protoToJson(const ProtoSurfaceMaterial& material,
-                           EncodeContext& /*ctx*/) {
-  nlohmann::json jMaterial;
-  jMaterial[jsonKey().typekey] = kProtoTag;
-  jMaterial[jsonKey().maptype] = nlohmann::json(material.mappingType());
-  // A proto material without any actual binning is not mapped onto
-  jMaterial[jsonKey().mapkey] = false;
-  const BinUtility& bUtility = material.binning();
-  for (const auto& bData : bUtility.binningData()) {
-    if (bData.bins() > 1) {
-      jMaterial[jsonKey().mapkey] = true;
-      break;
-    }
-  }
-  if (material.materialKey()) {
-    jMaterial["material_key"] = *material.materialKey();
-  }
-  jMaterial[jsonKey().binkey] = nlohmann::json(bUtility);
-  return jMaterial;
-}
-
-nlohmann::json protoGridToJson(const ProtoGridSurfaceMaterial& material,
+nlohmann::json protoGridToJson(const ProtoSurfaceMaterial& material,
                                EncodeContext& /*ctx*/) {
   nlohmann::json jMaterial;
   jMaterial[jsonKey().typekey] = kProtoGridTag;
@@ -266,6 +247,8 @@ std::unique_ptr<const ISurfaceMaterial> binnedFromJson(
       bUtility, std::move(matrix), 1., readMappingType(jMaterial));
 }
 
+// Keep the deprecated conversion available only for reading legacy payloads.
+ACTS_PUSH_IGNORE_DEPRECATED()
 std::unique_ptr<const ISurfaceMaterial> protoFromJson(
     const nlohmann::json& jMaterial, const DecodeContext& /*ctx*/) {
   BinUtility bUtility;
@@ -274,11 +257,12 @@ std::unique_ptr<const ISurfaceMaterial> protoFromJson(
     from_json(jMaterial.at(jsonKey().binkey), bUtility);
   }
   return std::make_unique<const ProtoSurfaceMaterial>(
-      bUtility, readMappingType(jMaterial),
+      detail::protoSurfaceMaterialBinning(bUtility), readMappingType(jMaterial),
       jMaterial.contains("material_key")
           ? std::make_optional(jMaterial.at("material_key").get<std::string>())
           : std::nullopt);
 }
+ACTS_POP_IGNORE_DEPRECATED()
 
 std::unique_ptr<const ISurfaceMaterial> protoGridFromJson(
     const nlohmann::json& jMaterial, const DecodeContext& /*ctx*/) {
@@ -291,7 +275,7 @@ std::unique_ptr<const ISurfaceMaterial> protoGridFromJson(
   }
   MultiAxisSpec2D spec2D{
       std::array<AxisSpec, 2u>{spec.axisSpec(0u), spec.axisSpec(1u)}};
-  return std::make_unique<const ProtoGridSurfaceMaterial>(
+  return std::make_unique<const ProtoSurfaceMaterial>(
       spec2D, readMappingType(jMaterial),
       jMaterial.contains("material_key")
           ? std::make_optional(jMaterial.at("material_key").get<std::string>())
@@ -401,7 +385,6 @@ SurfaceMaterialJsonConverter::Config makeDefaultConfig() {
 
   cfg.encoder.registerFunction(homogeneousToJson);
   cfg.encoder.registerFunction(binnedToJson);
-  cfg.encoder.registerFunction(protoToJson);
   cfg.encoder.registerFunction(protoGridToJson);
   cfg.encoder.registerFunction(mergedMarkerToJson);
   // One concrete class covers the whole grid material family, the storage

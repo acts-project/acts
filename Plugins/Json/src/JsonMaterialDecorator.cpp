@@ -9,8 +9,9 @@
 #include "ActsPlugins/Json/JsonMaterialDecorator.hpp"
 
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "ActsPlugins/Json/TrackingGeometryMaterialJsonConverter.hpp"
+#include "ActsPlugins/Json/detail/JsonIo.hpp"
 
-#include <fstream>
 #include <stdexcept>
 
 namespace Acts {
@@ -24,22 +25,15 @@ JsonMaterialDecorator::JsonMaterialDecorator(
   Acts::MaterialMapJsonConverter jmConverter(rConfig, level);
 
   ACTS_VERBOSE("Reading JSON material description from: " << jFileName);
-  std::ifstream ifj(jFileName.c_str());
-  if (!ifj.good()) {
-    throw std::runtime_error{"Unable to open input JSON material file: " +
-                             jFileName};
-  }
-  nlohmann::json jin;
-
-  if (jFileName.find(".cbor") != std::string::npos) {
-    std::vector<std::uint8_t> iCbor((std::istreambuf_iterator<char>(ifj)),
-                                    std::istreambuf_iterator<char>());
-    jin = nlohmann::json::from_cbor(iCbor);
+  const auto jin = detail::readJsonFile(jFileName);
+  if (jin.contains("header")) {
+    m_materialMaps = TrackingGeometryMaterialJsonConverter{}.fromJson(jin);
+  } else if (jin.contains("Surfaces") && jin.contains("Volumes")) {
+    m_materialMaps = jmConverter.jsonToMaterialMaps(jin);
   } else {
-    ifj >> jin;
+    throw std::invalid_argument("Unrecognized material map format: " +
+                                jFileName);
   }
-
-  m_materialMaps = jmConverter.jsonToMaterialMaps(jin);
   ACTS_VERBOSE("JSON material description read complete");
 }
 

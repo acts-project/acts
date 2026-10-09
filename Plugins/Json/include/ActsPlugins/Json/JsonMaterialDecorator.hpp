@@ -25,8 +25,9 @@ namespace Acts {
 
 /// @brief Material decorator from Json format
 ///
-/// This reads in material maps for surfaces and volumes
-/// from a json file
+/// Reads legacy hierarchy maps and versioned material documents, including
+/// grid surface material. JSON/CBOR encoding and optional zstd compression are
+/// detected from the file contents.
 class JsonMaterialDecorator : public IMaterialDecorator {
  public:
   /// Constructor with configuration

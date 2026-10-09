@@ -42,8 +42,8 @@ payload is never guessed from the keys that happen to be present.
 |--------------------------|-------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------|
 | `homogeneous`            | @ref Acts::HomogeneousSurfaceMaterial                                                                        | `data`                                                    |
 | `binned`                 | @ref Acts::BinnedSurfaceMaterial                                                                             | `binUtility`, `data`                                      |
-| `proto`                  | @ref Acts::ProtoSurfaceMaterial                                                                              | `binUtility`                                              |
-| `proto-grid`             | @ref Acts::ProtoGridSurfaceMaterial                                                                          | `axis_specs`                                              |
+| `proto` (read only)      | @ref Acts::ProtoSurfaceMaterial                                                                              | `binUtility`                                              |
+| `proto-grid`             | @ref Acts::ProtoSurfaceMaterial                                                                          | `axis_specs`                                              |
 | `grid`                   | @ref Acts::GridSurfaceMaterial                                                                               | `accessor`                                                |
 | `merged-material-marker` | @ref Acts::MergedMaterialMarker                                                                              | none                                                      |
 
@@ -51,8 +51,8 @@ Two more keys are common to all of them:
 
 - `mapMaterial` steers the material mapping. Reading a payload with
   `mapMaterial: false` yields no material at all, so this is also how a surface
-  is flagged out of the mapping. Proto material without any binning is written
-  with `mapMaterial: false` for that reason.
+  is flagged out of the mapping. A homogeneous proto material is written with
+  two deferred one-bin axes and `mapMaterial: true`.
 - `mappingType` is one of `PreMapping`, `Default`, `PostMapping` or `Sensor`
   and tells the mapper where along the propagation the material should be
   assigned. It is absent from the `grid` and `merged-material-marker`
@@ -79,11 +79,20 @@ dimensional binning of the example gives a single row of two slabs.
 ### `proto` and `proto-grid`
 
 Binning instructions for the material mapping that carry no material yet.
-`proto` expresses the binning as a @ref Acts::BinUtility, exactly as `binned`
-does but without the `data`. `proto-grid` expresses it as an `axis_specs` list
+The legacy `proto` tag expresses binning as a @ref Acts::BinUtility and is
+accepted only when reading. It is converted to @ref Acts::ProtoSurfaceMaterial.
+Writers emit `proto-grid`, which expresses binning as an `axis_specs` list
 of @ref Acts::AxisSpec, which is the representation the grid based material
 uses; each spec has a `type`, a `bins` count, a `range`, a `boundary_type` and
 a `direction`. Exactly two specs are required.
+
+Legacy proto ranges and transforms were replaced by surface geometry during
+mapping. The reader therefore converts them to deferred axes, retains bin
+counts and boundary types, and normalizes variable edges (including flattened
+subdivisions). An omitted dimension becomes a single-bin axis; no dimensions
+become two positional single-bin axes. Cylinder `(phi, z)` binning becomes
+`(rphi, z)`. A lone `phi` axis is interpreted as disc binning; use explicit
+`rphi` for a one-dimensional cylinder prototype.
 
 ### `grid`
 

@@ -95,7 +95,7 @@ available through `toJson` and `toFile`, including the Python options.
 
 @ref Acts::BinUtility "BinUtility" is being phased out. Its binned/proto and
 subdivided-axis encodings are retained for compatibility. Prefer
-@ref Acts::GridSurfaceMaterial and @ref Acts::ProtoGridSurfaceMaterial for new code.
+@ref Acts::GridSurfaceMaterial and @ref Acts::ProtoSurfaceMaterial for new code.
 
 Arrays are dense, flat and zero-based, with **axis 0 varying fastest**:
 `offset = i0 + size0 * i1`. This differs from native @ref Acts::MultiAxis "MultiAxis" storage order;
@@ -115,10 +115,12 @@ the converter handles the permutation.
   Legacy `theta`/`mag` @ref Acts::BinUtility "BinUtility" directions and custom coordinate callbacks
   are not supported.
 
-Proto-grid axes may defer ranges, directions and boundary behavior to geometry.
+Writers emit `proto-grid` for @ref Acts::ProtoSurfaceMaterial, whose two axes
+may defer ranges, directions and boundary behavior to geometry.
 Deferred-variable edges run from 0 to 1 and scale to the resolved range.
 Explicit properties must agree with geometry. Resolved material cannot contain
-unresolved axes. Proto surface binning may have zero axes for homogeneous mapping.
+unresolved axes. Proto surface binning uses two one-bin axes for homogeneous
+mapping.
 
 | Grid storage | Slab data |
 | --- | --- |
