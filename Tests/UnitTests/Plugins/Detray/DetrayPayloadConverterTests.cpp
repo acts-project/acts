@@ -81,6 +81,17 @@ using namespace ActsPlugins;
 
 namespace ActsTests {
 
+namespace {
+
+/// @returns the total number of surface material entries in @p det
+template <typename detector_t>
+std::size_t nMaterialEntries(const detector_t& det) {
+  return detray::n_material_slabs(det) + detray::n_material_rods(det) +
+         detray::n_material_maps(det);
+}
+
+}  // namespace
+
 BOOST_AUTO_TEST_SUITE(DetrayConversion)
 
 BOOST_AUTO_TEST_CASE(DetrayTransformConversion) {
@@ -786,6 +797,7 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
   detray::io::write_detector(detrayDetector, detrayNames, writer_cfg);
 }
 
+/// Test that material gets deduplicated by the detray build process
 BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
   using metadata_t = detray::default_metadata<detray::array<double>>;
   using detector_t = detray::host::detector<metadata_t>;

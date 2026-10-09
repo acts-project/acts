@@ -9,7 +9,6 @@
 #pragma once
 
 // Project include(s).
-#include "detray/builders/detail/material_deduplication.hpp"
 #include "detray/builders/homogeneous_material_factory.hpp"
 #include "detray/builders/homogeneous_material_generator.hpp"
 #include "detray/builders/volume_builder.hpp"

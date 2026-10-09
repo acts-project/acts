@@ -107,7 +107,7 @@ TEST(detray_builders, material_map_factory) {
   add_material_data(
       mat_factory, mat_id::e_rectangle2D_map, 2u, t,
       {3.344f * unit<scalar>::mm, 101.6f * unit<scalar>::mm, 196.97f, 79,
-       19.32f * unit<scalar>::g / (1.f * unit<scalar>::cm3),
+       static_cast<scalar>(19.32 * unit<double>::g / unit<double>::cm3),
        material_state::e_solid});
 
   EXPECT_EQ(mat_factory->size(), 3u);
