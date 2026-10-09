@@ -277,8 +277,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceDriftChordLimit) {
   auto pathLength = [&](const Surface& surface, const Vector3& dir,
                         bool limit) {
     auto [segment2D, segment3D] =
-        psd.toReadout(geoCtx, surface, thickness, position, dir, noDrift,
-                      limit)
+        psd.toReadout(geoCtx, surface, thickness, position, dir, noDrift, limit)
             .value();
     return std::tuple{Vector3(segment3D[1] - segment3D[0]),
                       Vector2(segment2D[1] - segment2D[0])};

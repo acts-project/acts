@@ -18,10 +18,9 @@ Acts::Result<std::vector<Segmentizer::ChannelSegment>> Channelizer::channelize(
   // Drifted surface and scalor 2D to 3D segment
   // SurfaceDrift handles the surface-type-specific local frame internally
   // (plane/disc Cartesian, cylinder unrolled (rPhi, z))
-  const auto atReadoutPlane =
-      m_surfaceDrift.toReadout(gctx, surface, thickness, hit.position(),
-                               hit.direction(), driftDir,
-                               limitCylinderPathToChord);
+  const auto atReadoutPlane = m_surfaceDrift.toReadout(
+      gctx, surface, thickness, hit.position(), hit.direction(), driftDir,
+      limitCylinderPathToChord);
   if (!atReadoutPlane.ok()) {
     return atReadoutPlane.error();
   }

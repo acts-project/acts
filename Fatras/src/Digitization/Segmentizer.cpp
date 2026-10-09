@@ -119,9 +119,8 @@ std::vector<Segmentizer::ChannelSegment> Segmentizer::segments(
       const long long xhi = std::max(ustart0, uend0);
       for (long long ib = xlo + 1; ib <= xhi; ++ib) {
         const long long nPeriods = periodsOf0(ib);
-        const double x =
-            axis0.getBinLowerBound(ib - nPeriods * nBins0 + 1) +
-            nPeriods * period0;
+        const double x = axis0.getBinLowerBound(ib - nPeriods * nBins0 + 1) +
+                         nPeriods * period0;
         cSteps.push_back(ChannelStep{
             {(ustart0 < uend0 ? 1 : -1), 0}, {x, k * x + d}, start});
       }
