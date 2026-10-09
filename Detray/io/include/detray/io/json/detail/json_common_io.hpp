@@ -16,28 +16,54 @@ namespace detray::io {
 
 inline void to_json(nlohmann::ordered_json& j, const common_header_payload& h) {
   j["version"] = h.version;
-  j["detector"] = h.detector;
   j["date"] = h.date;
-  j["tag"] = h.tag;
+  j["metadata"] = h.metadata;
+  j["source"] = h.source;
 }
 
 inline void from_json(const nlohmann::ordered_json& j,
                       common_header_payload& h) {
-  h.version = j["version"];
-  h.detector = j["detector"];
-  h.date = j["date"];
-  h.tag = j["tag"];
+  h.version = j["common"]["version"];
+  h.date = j["common"]["date"];
+
+  if (j["common"].find("metadata") != j["common"].end()) {
+    h.metadata = j["common"]["metadata"];
+  } else {
+    h.metadata = "unknown";
+  }
+
+  if (j["common"].find("source") != j["common"].end()) {
+    h.source = j["common"]["source"];
+  } else {
+    h.source = "unknown";
+  }
 }
 
-inline void to_json(nlohmann::ordered_json& j, const header_payload<bool>& h) {
-  j["common"] = h.common;
-  // Do write the optional subheader here, but in the dedicated serializers
+inline void to_json(nlohmann::ordered_json& j, const tagged_header_payload& h) {
+  const common_header_payload& ch = h;
+  detray::io::to_json(j, ch);
+  j["detector"] = h.detector;
+  j["tag"] = h.tag;
 }
 
 inline void from_json(const nlohmann::ordered_json& j,
-                      header_payload<bool>& h) {
-  h.common = j["common"];
-  // Do not look at the optional subheader here
+                      tagged_header_payload& h) {
+  common_header_payload& ch = h;
+  detray::io::from_json(j, ch);
+  h.detector = j["common"]["detector"];
+  h.tag = j["common"]["tag"];
+}
+
+inline void to_json(nlohmann::ordered_json& j, const header_payload& h) {
+  const common_header_payload& ch = h;
+  detray::io::to_json(j, ch);
+  // Put additional converters for sub headers here ...
+}
+
+inline void from_json(const nlohmann::ordered_json& j, header_payload& h) {
+  common_header_payload& ch = h;
+  detray::io::from_json(j, ch);
+  // Put additional converters for sub headers here ...
 }
 
 /// Data links IO

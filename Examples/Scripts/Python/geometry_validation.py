@@ -146,7 +146,7 @@ def main():
         if args.output_json:
             print(">>> Outputting the detray geometry to json file ...")
             detray_out = prfx + "detray/"
-            detrayDetector.writeToJson(detrayNames, detray_out)
+            detrayDetector.writeToJson(detrayNames, "ACTS_geo_validation", detray_out)
             print(">>> Written to", detray_out)
 
     elif args.geo_mode == "geant4":

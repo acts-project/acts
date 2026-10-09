@@ -66,6 +66,7 @@ int main(int argc, char **argv) {
   writer_cfg.format(detray::io::format::json).replace_files(false);
   // Default output path
   writer_cfg.path("./wire_chamber/");
+  writer_cfg.source("Detray test detector");
 
   // Parse general options
   po::variables_map vm =

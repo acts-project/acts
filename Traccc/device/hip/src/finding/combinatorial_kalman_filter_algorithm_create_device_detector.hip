@@ -31,6 +31,7 @@ namespace kernels {
 /// The detector is built once rather than in every thread, so that the
 /// propagation kernels only carry a pointer to it.
 ///
+// TODO: Use detector concept as soon as HIP compiler can handle it
 template <typename detector_t>
 __global__ void create_device_detector(typename detector_t::const_view_type in,
                                        detector_t* out) {

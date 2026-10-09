@@ -19,21 +19,25 @@
 
 /// This tests the json io for the general file header information
 GTEST_TEST(io, json_header_payload) {
-  detray::io::header_payload<bool> h;
-  h.common.version = "v0.0.1";
-  h.common.detector = "test_detector";
-  h.common.tag = "test_file";
-  h.common.date = "01.01.2023";
+  detray::io::tagged_header_payload h;
+  h.version = "v0.0.1";
+  h.date = "01.01.2023";
+  h.metadata = "test_metatata";
+  h.source = "detray unit test";
+  h.detector = "test_detector";
+  h.tag = "test_detector_component";
 
   nlohmann::ordered_json j;
-  j["header"] = h;
+  j["header"]["common"] = h;
 
-  detray::io::header_payload<bool> ph = j["header"];
+  detray::io::tagged_header_payload ph = j["header"];
 
-  EXPECT_EQ(h.common.version, ph.common.version);
-  EXPECT_EQ(h.common.detector, ph.common.detector);
-  EXPECT_EQ(h.common.tag, ph.common.tag);
-  EXPECT_EQ(h.common.date, ph.common.date);
+  EXPECT_EQ(h.version, ph.version);
+  EXPECT_EQ(h.date, ph.date);
+  EXPECT_EQ(h.metadata, ph.metadata);
+  EXPECT_EQ(h.source, ph.source);
+  EXPECT_EQ(h.detector, ph.detector);
+  EXPECT_EQ(h.tag, ph.tag);
 }
 
 /// This tests the json io for a single index link
@@ -321,14 +325,14 @@ GTEST_TEST(io, json_surface_material_payload) {
 }
 
 /// This tests the json io for a material slab
-GTEST_TEST(io, json_detector_payload) {
-  detray::io::detector_payload d;
+GTEST_TEST(io, json_detector_geometry_payload) {
+  detray::io::detector_geometry_payload d;
   d.volumes = {detray::io::volume_payload{}, detray::io::volume_payload{}};
 
   nlohmann::ordered_json j;
   j["detector"] = d;
 
-  detray::io::detector_payload pd = j["detector"];
+  detray::io::detector_geometry_payload pd = j["detector"];
 
   EXPECT_EQ(d.volumes.size(), pd.volumes.size());
 }

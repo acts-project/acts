@@ -18,12 +18,8 @@
 #include <memory>
 #include <string>
 
-#include <detray/builders/detector_builder.hpp>
-#include <detray/core/concepts.hpp>
-#include <detray/io/backend/geometry_reader.hpp>
-#include <detray/io/backend/homogeneous_material_reader.hpp>
-#include <detray/io/backend/material_map_reader.hpp>
-#include <detray/io/backend/surface_grid_reader.hpp>
+#include <detray/io/frontend/detector_reader.hpp>
+#include <detray/io/frontend/detector_reader_config.hpp>
 #include <vecmem/memory/memory_resource.hpp>
 
 namespace ActsPlugins {
@@ -47,18 +43,7 @@ class DetrayGeometryConverter {
     /// strategy or the navigation/material dispatchers).
     std::shared_ptr<const DetrayPayloadConverter> payloadConverter;
 
-    /// Whether to convert material information from ACTS to detray
-    bool convertMaterial = true;
-
-    /// Whether to convert surface grid information from ACTS to detray
-    bool convertSurfaceGrids = true;
-
-    /// Whether identical surface material is shared between detray surfaces
-    /// instead of being copied for every surface. ACTS portals are split into
-    /// one detray portal surface per attached volume, which otherwise each
-    /// get their own copy of the portal material.
-    /// @note This only affects the built detector, the payloads keep one
-    ///       material entry per surface.
+    /// Deduplicate material entries in the detraty detector data stores
     bool deduplicateMaterial = true;
   };
 
@@ -100,10 +85,10 @@ class DetrayGeometryConverter {
   ///     not set, it will be taken from the payloads or defaulted to empty)
   ///
   /// This method performs the following steps:
-  /// 1. It converts the ACTS tracking geometry into detray payloads using the
-  ///    configured DetrayPayloadConverter.
+  /// 1. It converts the ACTS tracking geometry into a detray detector payload
+  ///    using the configured DetrayPayloadConverter.
   /// 2. It builds a detray detector from the converted payloads using the
-  ///    detray::detector_builder.
+  ///    detray detector reader function.
   ///
   /// @return The built detray detector together with its name map.
   template <detray::concepts::metadata metadata_t>
@@ -118,80 +103,25 @@ class DetrayGeometryConverter {
           "DetrayGeometryConverter: trackingGeometry must not be null");
     }
 
-    // ── Convert TrackingGeometry → detray payloads ────────────────────────
-    auto payloads = m_cfg.payloadConverter->convertTrackingGeometry(
-        gctx, *trackingGeometry);
-
-    // ── Build detray detector from payloads ───────────────────────────────
-    detray::detector_builder<metadata_t> detectorBuilder{};
-
-    detray::io::geometry_reader::from_payload<detector_t>(detectorBuilder,
-                                                          *payloads.detector);
-
-    if (m_cfg.convertMaterial) {
-      if (!payloads.homogeneousMaterial) {
-        ACTS_DEBUG("No homogeneous material payload found, skipping");
-      } else {
-        const auto& materialVolumes = payloads.homogeneousMaterial->volumes;
-        ACTS_DEBUG("Found homogeneous material payload with "
-                   << materialVolumes.size() << " volumes");
-
-        auto hasMaterialType =
-            [&materialVolumes](detray::io::material_id type) {
-              return std::ranges::any_of(
-                  materialVolumes, [type](const auto& volume) {
-                    return std::ranges::any_of(
-                        volume.surface_mat,
-                        [type](const auto& sm) { return sm.type == type; });
-                  });
-            };
-
-        if (hasMaterialType(detray::io::material_id::slab) &&
-            !detray::concepts::has_material_slabs<detector_t>) {
-          throw std::invalid_argument(
-              "DetrayGeometryConverter: the tracking geometry contains "
-              "homogeneous material slabs, but the target Detray metadata "
-              "type does not support material slabs");
-        }
-        if (hasMaterialType(detray::io::material_id::rod) &&
-            !detray::concepts::has_material_rods<detector_t>) {
-          throw std::invalid_argument(
-              "DetrayGeometryConverter: the tracking geometry contains "
-              "homogeneous material rods, but the target Detray metadata "
-              "type does not support material rods");
-        }
-
-        if constexpr (detray::concepts::has_material_slabs<detector_t> ||
-                      detray::concepts::has_material_rods<detector_t>) {
-          detray::io::homogeneous_material_reader::from_payload<detector_t>(
-              detectorBuilder, *payloads.homogeneousMaterial);
-        }
-      }
-
-      detray::io::material_map_reader<std::integral_constant<std::size_t, 2>>::
-          from_payload<detector_t>(detectorBuilder,
-                                   std::move(*payloads.materialGrids));
-    }
-
-    if (m_cfg.convertSurfaceGrids) {
-      detray::io::surface_grid_reader<typename detector_t::surface_type,
-                                      std::integral_constant<std::size_t, 0>,
-                                      std::integral_constant<std::size_t, 2>>::
-          template from_payload<detector_t>(detectorBuilder,
-                                            *payloads.surfaceGrids);
-    }
+    // ── Convert TrackingGeometry → detray payload ────────────────────────
+    detray::io::detector_payload payload =
+        m_cfg.payloadConverter->convertTrackingGeometry(gctx,
+                                                        *trackingGeometry);
 
     if (!detectorName.empty()) {
-      detectorBuilder.set_name(detectorName);
-    } else if (payloads.names.contains(0)) {
-      detectorBuilder.set_name(payloads.names.at(0));
+      payload.detector_name = detectorName;
     }
 
+    // ── Build detray detector from payload ───────────────────────────────
+    auto readerCfg = detray::io::detector_reader_config{};
+    readerCfg.do_check(true).deduplicate(m_cfg.deduplicateMaterial);
+    auto [detector, names] =
+        detray::io::read_detector<detector_t>(mr, readerCfg, payload);
+
+    // ── Have detray detector be managed by a shared pointer ──────────────
     DetrayGeometry<metadata_t> result{};
-    detray::volume_builder_options build_opts{};
-    build_opts.deduplicate(m_cfg.deduplicateMaterial);
-    result.detector = std::make_shared<detector_t>(
-        detectorBuilder.build(mr, build_opts, result.names));
+    result.detector = std::make_shared<detector_t>(std::move(detector));
+    result.names = std::move(names);
 
     return result;
   }

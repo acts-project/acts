@@ -52,7 +52,7 @@ void write_detector(detector_t& det, const typename detector_t::name_map& names,
     DETRAY_ERROR_HOST("Compactifying json files is not yet implemented");
   }
 
-  writer.write(det, names, mode, file_path);
+  writer.write(det, names, cfg.source(), mode, file_path);
 }
 
 }  // namespace detray::io
