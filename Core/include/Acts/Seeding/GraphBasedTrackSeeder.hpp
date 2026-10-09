@@ -15,6 +15,7 @@
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/GbtsNodeStorage.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
+#include "Acts/Seeding/GbtsSeedFit.hpp"
 #include "Acts/Seeding/GbtsTauLookupTable.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/detail/GbtsGraphTypes.hpp"
@@ -150,10 +151,12 @@ class GraphBasedTrackSeeder {
   /// @param filter Tracking filter to be applied
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
+  /// @param outputFits Fit of the tracking filter to each generated seed
   void createSeeds(GbtsNodeStorage& nodeStorage, const GbtsRoiDescriptor& roi,
                    const GbtsGraphBuilder& graphBuilder,
                    const GbtsTrackingFilter& filter, const Options& options,
-                   SeedContainer& outputSeeds) const;
+                   SeedContainer& outputSeeds,
+                   std::vector<GbtsSeedFit>* outputFits = nullptr) const;
 
  private:
   /// candidate seed metadata produced by the GBTS algorithm.
@@ -177,6 +180,8 @@ class GraphBasedTrackSeeder {
     std::vector<SpacePointIndex> nodes;
     /// Flag for seed splitting.
     bool forSeedSplitting{};
+    /// Fit of the tracking filter.
+    GbtsSeedFit fit;
   };
 
   /// Output seed metadata
@@ -190,6 +195,8 @@ class GraphBasedTrackSeeder {
     float seedQuality{};
     /// Index of spacepoints in seed.
     std::vector<std::uint32_t> spacePoints;
+    /// Fit of the tracking filter.
+    GbtsSeedFit fit;
   };
 
   DerivedConfig m_cfg;
@@ -206,10 +213,12 @@ class GraphBasedTrackSeeder {
   /// @param graph The graph, after the connected component analysis
   /// @param vOutputSeeds Output vector for seed candidates
   /// @param filter Tracking filter to be applied
+  /// @param withFits Whether the fit of the filter to each seed is kept
   void extractSeedsFromTheGraph(const GbtsNodeStorage& nodeStorage,
                                 GbtsGraph& graph,
                                 std::vector<OutputSeedProperties>& vOutputSeeds,
-                                const GbtsTrackingFilter& filter) const;
+                                const GbtsTrackingFilter& filter,
+                                bool withFits) const;
 
   /// Estimate the inverse radius of the circle through three nodes.
   /// @param nodeView View of the node positions and layers

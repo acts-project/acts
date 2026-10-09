@@ -81,6 +81,9 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// Geometric refinement iterations of the circle fit. Only
     /// @c SeedSpacePointSelection::All fits a circle, a triplet is exact.
     std::size_t geometricRefineIterations = 0;
+    /// Input free track parameters per seed, used instead of the fit to the
+    /// space points (optional).
+    std::optional<std::string> inputFreeParameters;
     /// Optional space point weight. Unset weights every point the same and,
     /// like the refinement, only @c SeedSpacePointSelection::All reads it.
     SpacePointWeight spacePointWeight;
@@ -133,6 +136,9 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   ReadDataHandle<ProtoTrackContainer> m_inputTracks{this, "InputTracks"};
   ReadDataHandle<std::vector<Acts::ParticleHypothesis>>
       m_inputParticleHypotheses{this, "InputParticleHypotheses"};
+
+  ReadDataHandle<std::vector<Acts::FreeVector>> m_inputFreeParameters{
+      this, "InputFreeParameters"};
 
   WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
       this, "OutputTrackParameters"};
