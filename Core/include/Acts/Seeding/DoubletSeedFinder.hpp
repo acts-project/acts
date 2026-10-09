@@ -109,6 +109,9 @@ class DoubletsForMiddleSp {
   /// Sort doublets using reusable integer-key storage. Finite, distinct
   /// cotTheta values have the same ordering as the original float comparison.
   /// Ties retain the original sort, including its ordering of equal entries.
+  /// @param range Index range to sort within
+  /// @param indexAndCotTheta Output sorted index and cotTheta pairs
+  /// @param scratch Reusable storage for the packed integer keys
   void sortByCotTheta(const IndexRange& range,
                       std::vector<IndexAndCotTheta>& indexAndCotTheta,
                       std::vector<std::uint64_t>& scratch) const {
@@ -121,7 +124,8 @@ class DoubletsForMiddleSp {
         return;
       }
       const auto bits = std::bit_cast<std::uint32_t>(cotTheta);
-      const auto ordered = (bits & 0x80000000u) ? ~bits : bits ^ 0x80000000u;
+      const auto ordered =
+          (bits & 0x80000000u) != 0u ? ~bits : bits ^ 0x80000000u;
       scratch.push_back((static_cast<std::uint64_t>(ordered) << 32) | i);
     }
     std::sort(scratch.begin(), scratch.end());
