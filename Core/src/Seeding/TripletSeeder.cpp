@@ -123,9 +123,9 @@ void createSeedsFromGroupsImpl(
   // combine doublets to triplets
   if (tripletFinder.config().sortedByCotTheta) {
     cache.bottomDoublets.sortByCotTheta({0, cache.bottomDoublets.size()},
-                                        cache.sortedBottoms);
+                                        cache.sortedBottoms, cache.sortScratch);
     cache.topDoublets.sortByCotTheta({0, cache.topDoublets.size()},
-                                     cache.sortedTops);
+                                     cache.sortedTops, cache.sortScratch);
 
     createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
                             cache.bottomDoublets.subset(cache.sortedBottoms),
