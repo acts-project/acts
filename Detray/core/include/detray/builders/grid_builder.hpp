@@ -45,7 +45,8 @@ class grid_builder : public volume_decorator<detector_t> {
   using spatial_grid_t =
       std::conditional_t<concepts::surface_accelerator<grid_t>, grid_t,
                          spatial_grid_impl<grid_t>>;
-  using spatial_grid_owning_t = typename spatial_grid_t::template type<true>;
+  using spatial_grid_owning_t =
+      typename spatial_grid_t::template owning_type<true>;
 
  public:
   using detector_type = detector_t;

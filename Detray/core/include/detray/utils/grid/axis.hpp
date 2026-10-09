@@ -233,7 +233,7 @@ class multi_axis {
   /// @}
 
  private:
-  /// Owning and non-owning range of edge offsets
+  /// Owning and non-owning range of offsets in the underlying edges cont.
   using edge_offset_range_t = std::conditional_t<
       is_owning, vector_type<dsized_index_range>,
       detray::ranges::subrange<const vector_type<dsized_index_range>>>;
@@ -259,7 +259,7 @@ class multi_axis {
 
   /// Find the corresponding (non-)owning type
   template <bool owning>
-  using type = multi_axis<owning, local_frame_t, axis_ts...>;
+  using owning_type = multi_axis<owning, local_frame_t, axis_ts...>;
 
   /// Default constructor
   constexpr multi_axis() = default;
@@ -444,12 +444,19 @@ class multi_axis {
   /// @returns whether the two axes are equal
   DETRAY_HOST_DEVICE constexpr auto operator==(const multi_axis &rhs) const
       -> bool {
-    if constexpr (!std::is_pointer_v<edge_range_t>) {
-      return m_edge_offsets == rhs.m_edge_offsets && m_edges == rhs.m_edges;
-    } else {
-      return m_edge_offsets == rhs.m_edge_offsets && *m_edges == *rhs.m_edges;
+    // Quick exit
+    if (nbins() != rhs.nbins()) {
+      return false;
     }
-    return false;
+    // If they point to the same data, the axes are equal
+    if (m_edges == rhs.m_edges && m_edge_offsets == rhs.m_edge_offsets) {
+      return true;
+    }
+
+    // Otherwise, compare the axes by value
+    return [&]<std::size_t... I>(std::index_sequence<I...>) {
+      return ((get_axis<I>() == rhs.template get_axis<I>()) && ...);
+    }(std::make_index_sequence<dim>{});
   }
 
   /// @returns a string stream that prints the multi axis details
@@ -525,7 +532,7 @@ class multi_axis {
     assert(bin_ranges[loc_idx][0] <= bin_ranges[loc_idx][1]);
   }
 
-  /// Data that the axes keep: index ranges in the edges container
+  /// Data that the axes keep: index ranges (per single axis) in the edges cont.
   edge_offset_range_t m_edge_offsets{};
   /// Contains all bin edges for all axes
   edge_range_t m_edges{};

@@ -570,7 +570,7 @@ class grid_factory {
           std::pair<typename grid_t::loc_bin_index, dindex>> &bin_capacities =
           {},
       const std::vector<std::vector<scalar_type>> &ax_bin_edges = {}) const {
-    using owning_grid_t = typename grid_t::template type<true>;
+    using owning_grid_t = typename grid_t::template owning_type<true>;
     using axes_t = typename owning_grid_t::axes_type;
 
     // Prepare data

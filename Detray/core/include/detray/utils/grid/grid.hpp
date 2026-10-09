@@ -77,8 +77,8 @@ class grid_impl {
 
   /// Find the corresponding (non-)owning grid type
   template <bool owning>
-  using type =
-      grid_impl<typename axes_t::template type<owning>, bin_t, serializer_t>;
+  using owning_type = grid_impl<typename axes_t::template owning_type<owning>,
+                                bin_t, serializer_t>;
 
   /// Make grid default constructible: Empty grid with empty axis
   grid_impl() = default;
@@ -94,31 +94,40 @@ class grid_impl {
       : m_bins(std::move(bin_data)), m_axes(std::move(axes)) {}
 
   /// Create grid from container pointers - non-owning (both grid and axes)
+  /// @{
+  /// const
   DETRAY_HOST_DEVICE
-  grid_impl(const bin_container_type *bin_data_ptr, const axes_type &axes,
-            const dindex offset = 0)
-      : m_bins(*bin_data_ptr, offset, axes.nbins()), m_axes(axes) {}
+  grid_impl(typename bin_storage::const_pointer_type const bin_data_ptr,
+            const axes_type &axes, const dindex offset = 0)
+      : m_bins(bin_data_ptr, offset, axes.nbins()), m_axes(axes) {}
 
-  /// Create grid from container pointers - non-owning (both grid and axes)
+  /// non-const
   DETRAY_HOST_DEVICE
-  grid_impl(bin_container_type *bin_data_ptr, axes_type &axes,
-            const dindex offset = 0u)
-      : m_bins(*bin_data_ptr, offset, axes.nbins()), m_axes(axes) {}
+  grid_impl(typename bin_storage::pointer_type const bin_data_ptr,
+            axes_type &axes, const dindex offset = 0u)
+      : m_bins(bin_data_ptr, offset, axes.nbins()), m_axes(axes) {}
 
-  /// Create grid from container pointers - non-owning (both grid and axes)
-  // TODO: const correctness
+  /// const
   DETRAY_HOST_DEVICE
-  grid_impl(const bin_container_type *bin_data_ptr, axes_type &&axes,
-            const dindex offset = 0)
-      : m_bins(*(const_cast<bin_container_type *>(bin_data_ptr)), offset,
-               axes.nbins()),
-        m_axes(std::move(axes)) {}
+  grid_impl(typename bin_storage::const_pointer_type const bin_data_ptr,
+            axes_type &&axes, const dindex offset = 0)
+      : m_bins(bin_data_ptr, offset, axes.nbins()), m_axes(std::move(axes)) {}
 
-  /// Create grid from container pointers - non-owning (both grid and axes)
+  /// non-const
   DETRAY_HOST_DEVICE
-  grid_impl(bin_container_type *bin_data_ptr, axes_type &&axes,
-            const dindex offset = 0u)
-      : m_bins(*bin_data_ptr, offset, axes.nbins()), m_axes(std::move(axes)) {}
+  grid_impl(typename bin_storage::pointer_type const bin_data_ptr,
+            axes_type &&axes, const dindex offset = 0u)
+      : m_bins(bin_data_ptr, offset, axes.nbins()), m_axes(std::move(axes)) {}
+  /// @}
+
+  /// Create non-owning grid from owning grid. A single owning grid cannot be
+  /// part of a grid collection, so the offset is 0
+  template <bool owner = is_owning>
+    requires(!owner)
+  DETRAY_HOST_DEVICE grid_impl(const owning_type<true> &owning_grid)
+      : m_bins(owning_grid.bins().data(), 0u, owning_grid.nbins()),
+        m_axes(owning_grid.axes().bin_edge_offsets(),
+               owning_grid.axes().bin_edges()) {}
 
   /// Device-side construction from a vecmem based view type
   template <concepts::device_view grid_view_t>
@@ -371,5 +380,35 @@ template <concepts::algebra algebra_t, typename axes_t, typename bin_t,
 using grid =
     grid_impl<coordinate_axes<axes_t, algebra_t, ownership, containers>, bin_t,
               simple_serializer>;
+
+/// Equality comparison across grids of owning and non-owning type
+///
+/// @param lhs the right-hand side of the comparison
+/// @param rhs the right-hand side of the comparison
+///
+/// @returns whether the two grids are equal
+template <concepts::grid grid_lhs_t, concepts::grid grid_rhs_t>
+  requires(!std::same_as<grid_lhs_t, grid_rhs_t> &&
+           (std::same_as<typename grid_lhs_t::template owning_type<false>,
+                         grid_rhs_t> ||
+            std::same_as<typename grid_rhs_t::template owning_type<false>,
+                         grid_lhs_t>))
+DETRAY_HOST_DEVICE constexpr bool operator==(const grid_lhs_t &lhs,
+                                             const grid_rhs_t &rhs) {
+  // Generate a non-owning grid from the owning grid and compare
+  if constexpr (grid_lhs_t::is_owning) {
+    typename grid_lhs_t::template owning_type<false> n_owning_lhs(lhs);
+
+    return (n_owning_lhs == rhs);
+
+  } else if constexpr (grid_rhs_t::is_owning) {
+    typename grid_rhs_t::template owning_type<false> n_owning_rhs(rhs);
+
+    return (n_owning_rhs == lhs);
+  } else {
+    // Cannot be reached as per requirements list
+    return false;
+  }
+}
 
 }  // namespace detray

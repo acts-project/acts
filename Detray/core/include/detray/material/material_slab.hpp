@@ -51,11 +51,10 @@ struct material_slab {
   DETRAY_HOST_DEVICE
   constexpr explicit operator bool() const {
     if (m_thickness <= std::numeric_limits<scalar_type>::epsilon() ||
-        m_thickness == std::numeric_limits<scalar_type>::max() ||
-        m_material == vacuum<scalar_type>() ||
-        m_material.mass_density() == 0.f || m_material.molar_density() == 0.f) {
+        m_thickness == std::numeric_limits<scalar_type>::max() || !m_material) {
       return false;
     }
+    assert(m_material != vacuum<scalar_type>());
     return true;
   }
 
