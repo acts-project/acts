@@ -19,7 +19,8 @@ Acts::FreeVector Acts::transformBoundToFreeParameters(
     const Acts::Surface& surface, const GeometryContext& geoCtx,
     const Acts::BoundVector& boundParams) {
   // convert angles to global unit direction vector
-  Vector3 direction = directionFromBoundParameters(boundParams);
+  Vector3 direction =
+      BoundParametrization::globalSpherical().direction(boundParams);
 
   // convert local position to global position vector
   Vector2 local(boundParams[eBoundLoc0], boundParams[eBoundLoc1]);

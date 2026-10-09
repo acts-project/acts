@@ -35,57 +35,73 @@ detailed information produced during track reconstruction.
 
 ## Bound coordinates and physical observables
 
-`BoundVector` remains a six-component Eigen vector in the order
-`(loc0, loc1, dir0, dir1, q/p, time)`. Use `eBoundDir0` and `eBoundDir1`
-for the raw direction slots. `eBoundPhi` and `eBoundTheta` remain compatible
-aliases, deprecated in favor of the neutral names. `parameters()[index]` and `get<Index>()` always read stored coordinates;
-they do not calculate physical observables. Covariance rows and columns and
-measurement projector indices refer to that same stored basis. Integer indexing
-remains available and carries the same responsibility for interpreting the basis.
+@ref Acts::BoundVector "BoundVector" remains a six-component Eigen vector in
+the order `(loc0, loc1, dir0, dir1, q/p, time)`. Use @ref Acts::eBoundDir0 and
+@ref Acts::eBoundDir1 for the raw direction slots. @ref Acts::eBoundPhi and
+@ref Acts::eBoundTheta remain compatible aliases, deprecated in favor of the
+neutral names. `parameters()[index]` and @ref Acts::BoundTrackParameters::get
+"get<Index>()" always read stored coordinates; they do not calculate physical
+observables. Covariance rows and columns and measurement projector indices refer
+to that same stored basis. Integer indexing remains available and carries the
+same responsibility for interpreting the basis.
 
 Only the canonical global-spherical parametrization is currently supported:
-`dir0` is global phi and `dir1` is global theta. Bound parameters and track proxies
-provide `direction(gctx)`, `phi(gctx)`, `theta(gctx)`, `momentum(gctx)` and
-`transverseMomentum(gctx)` for physical observables. Track proxies also provide
-`fourMomentum(gctx)`. The context is unused for canonical direction interpretation;
-these overloads agree with the existing no-context accessors. The no-context
-`phi()`, `theta()`, `direction()`, `momentum()`, `transverseMomentum()` and proxy
-`fourMomentum()` overloads are deprecated; pass the caller's geometry context
-instead. Raw `get<Index>()` access remains available. Absolute momentum
-and charge depend only on q/p and the particle hypothesis and need no context.
+`dir0` is global phi and `dir1` is global theta. @ref Acts::BoundTrackParameters
+"Bound parameters" and @ref Acts::TrackProxyCommon "track proxies" provide
+@ref Acts::BoundTrackParameters::direction "direction(gctx)",
+@ref Acts::BoundTrackParameters::phi "phi(gctx)",
+@ref Acts::BoundTrackParameters::theta "theta(gctx)",
+@ref Acts::BoundTrackParameters::momentum "momentum(gctx)" and
+@ref Acts::BoundTrackParameters::transverseMomentum "transverseMomentum(gctx)"
+for physical observables. Track proxies also provide
+@ref Acts::TrackProxyCommon::fourMomentum "fourMomentum(gctx)". The context is
+unused for canonical direction interpretation; these overloads agree with the
+existing no-context accessors. The no-context `phi()`, `theta()`, `direction()`,
+`momentum()`, `transverseMomentum()` and proxy `fourMomentum()` overloads are
+deprecated; pass the caller's geometry context instead. Raw `get<Index>()` access
+remains available. Absolute momentum and charge depend only on q/p and the
+particle hypothesis and need no context.
 
-Raw-vector callers can use `directionFromBoundParameters(parameters)` from
-`TrackParameterHelpers.hpp`, which explicitly assumes the canonical
-parametrization and accepts Eigen maps and expressions. No parameter object or
-additional stored metadata is needed. Existing parameter and proxy concepts do
-not require the new context overloads from client-defined types.
+@ref Acts::BoundParametrization::globalSpherical "BoundParametrization::globalSpherical()"
+provides the current interpretation as an allocation-free value with private
+variant storage. It exposes direction encoding/decoding, forward and inverse
+derivatives, coordinate validation, canonicalization, differences and updates.
+It owns no surface or context and can be kept independently of either.
+Raw-vector callers can use @ref Acts::BoundParametrization::direction
+"direction(parameters)", which accepts Eigen maps and expressions without a
+parameter object or additional stored metadata. Existing parameter and proxy
+concepts do not require the new context overloads from client-defined types.
+Geometry selection and alternative charts remain follow-up work.
 
-`BoundParametrization::globalSpherical()` provides the current interpretation as
-an allocation-free value with private variant storage. It exposes direction
-encoding/decoding, forward and inverse derivatives, coordinate validation,
-canonicalization, differences and updates. It owns no surface or context and
-can be kept independently of either. The bound-vector helpers delegate to this
-canonical implementation. Geometry selection and alternative charts remain
-follow-up work.
+The canonical-only wrappers in @ref TrackParameterHelpers.hpp are deprecated:
+@ref Acts::directionFromBoundParameters, @ref Acts::isBoundVectorValid,
+@ref Acts::normalizeBoundParameters, @ref Acts::addBoundParameters and
+@ref Acts::subtractBoundParameters. Use the corresponding
+@ref Acts::BoundParametrization "parametrization" operations instead. For
+explicitly canonical callers, construct it with `globalSpherical()`.
+@ref Acts::isFreeVectorValid remains independent of the bound parametrization.
 
-`isValid()` checks finite values, optional canonical ranges and eta acceptance.
-It permits axial directions. `isInDomain()` additionally checks whether the
-inverse direction derivative is sufficiently conditioned. The inverse Jacobian
-returns a failed `Result` at a pole or below its transverse-fraction threshold.
-It includes input normalization when given a non-unit Cartesian direction.
-Computational methods
-assert caller preconditions: finite coordinates/covariance, nonzero finite
-Cartesian directions with representable norms, valid conditioning thresholds,
-and finite arithmetic results. These assertions disappear when `NDEBUG` is
-set (unless the build forces assertions). Use `isValid()` or `isInDomain()` for
-explicit runtime validation of coordinates. Chart singularities and conditioning
-failures still return errors in release builds.
+@ref Acts::BoundParametrization::isValid "isValid()" checks finite values,
+optional canonical ranges and eta acceptance. It permits axial directions.
+@ref Acts::BoundParametrization::isInDomain "isInDomain()" additionally checks
+whether the inverse direction derivative is sufficiently conditioned.
+@ref Acts::BoundParametrization::directionCoordinatesJacobian "The inverse Jacobian"
+returns a failed @ref Acts::Result "Result" at a pole or below its
+transverse-fraction threshold. It includes input normalization when given a
+non-unit Cartesian direction. Computational methods assert caller preconditions:
+finite coordinates/covariance, nonzero finite Cartesian directions with
+representable norms, valid conditioning thresholds, and finite arithmetic
+results. These assertions disappear when `NDEBUG` is set (unless the build
+forces assertions). Use `isValid()` or `isInDomain()` for explicit runtime
+validation of coordinates. Chart singularities and conditioning failures still
+return errors in release builds.
 
-`canonicalize(parameters, covariance)` returns a `Result` containing coordinates
-and covariance in the canonical basis. Folding theta across a pole reverses its covariance
-cross terms. At an exact pole that canonicalization derivative is undefined,
-so covariance canonicalization returns a failed `Result`. Value-only
-canonicalization remains available. The phi wrapping seam uses local periodic coordinates. The legacy
+@ref Acts::BoundParametrization::canonicalize "canonicalize(parameters, covariance)"
+returns a `Result` containing coordinates and covariance in the canonical basis.
+Folding theta across a pole reverses its covariance cross terms. At an exact
+pole that canonicalization derivative is undefined, so covariance
+canonicalization returns a failed `Result`. Value-only canonicalization remains
+available. The phi wrapping seam uses local periodic coordinates. The legacy
 value-only normalization/update helpers do not transform a separate covariance.
 For an update with covariance, use `canonicalize(parameters + delta, covariance)`
 with the covariance in the uncanonicalized updated basis.

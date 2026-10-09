@@ -273,7 +273,8 @@ class TrackProxyCommon {
   /// @param geoCtx Geometry context (unused by the canonical parametrization)
   /// @return Normalized global direction
   Vector3 direction(const GeometryContext& /*geoCtx*/) const {
-    return directionFromBoundParameters(derived().parameters());
+    return BoundParametrization::globalSpherical().direction(
+        derived().parameters());
   }
   /// Global momentum vector.
   /// @param geoCtx Geometry context for direction interpretation
