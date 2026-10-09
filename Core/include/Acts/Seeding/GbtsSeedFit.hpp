@@ -13,7 +13,6 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 
 #include <optional>
-#include <span>
 
 namespace Acts::Experimental {
 
@@ -34,15 +33,17 @@ struct GbtsSeedFit final {
 /// Estimate free track parameters from the fit of the GBTS tracking filter.
 ///
 /// The momentum uses the field bending the seed in the transverse plane,
-/// Bz - cot(theta) * Br, averaged over its space points.
+/// Bz - cot(theta) * Br, halfway between its innermost and outermost space
+/// points. The fitted curvature holds for the seed as a whole, so the field at
+/// its innermost space point would not do where the field varies along it.
 ///
 /// @param fit Fit of the tracking filter
-/// @param spacePoints Positions of the space points of the seed
+/// @param outerPosition Position of the outermost space point of the seed
 /// @param magneticField Magnetic field
 /// @param fieldCache Magnetic field cache
 /// @return Free track parameters, or nothing without a fit or a field
 std::optional<FreeVector> freeParametersFromGbtsSeedFit(
-    const GbtsSeedFit& fit, std::span<const Vector3> spacePoints,
+    const GbtsSeedFit& fit, const Vector3& outerPosition,
     const MagneticFieldProvider& magneticField,
     MagneticFieldProvider::Cache& fieldCache);
 

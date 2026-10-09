@@ -16,26 +16,22 @@
 namespace Acts::Experimental {
 
 std::optional<FreeVector> freeParametersFromGbtsSeedFit(
-    const GbtsSeedFit& fit, std::span<const Vector3> spacePoints,
+    const GbtsSeedFit& fit, const Vector3& outerPosition,
     const MagneticFieldProvider& magneticField,
     MagneticFieldProvider::Cache& fieldCache) {
-  if (!fit.valid || spacePoints.empty()) {
+  if (!fit.valid) {
     return std::nullopt;
   }
 
-  double bendingField = 0;
-  for (const Vector3& position : spacePoints) {
-    const Result<Vector3> field = magneticField.getField(position, fieldCache);
-    if (!field.ok()) {
-      return std::nullopt;
-    }
-    const double r = fastHypot(position.x(), position.y());
-    const double br =
-        r > 0 ? (field->x() * position.x() + field->y() * position.y()) / r
-              : 0.;
-    bendingField += field->z() - fit.cotTheta * br;
+  const Vector3 position = 0.5 * (fit.position + outerPosition);
+  const Result<Vector3> field = magneticField.getField(position, fieldCache);
+  if (!field.ok()) {
+    return std::nullopt;
   }
-  bendingField /= static_cast<double>(spacePoints.size());
+  const double r = fastHypot(position.x(), position.y());
+  const double br =
+      r > 0 ? (field->x() * position.x() + field->y() * position.y()) / r : 0.;
+  const double bendingField = field->z() - fit.cotTheta * br;
   if (bendingField == 0) {
     return std::nullopt;
   }
