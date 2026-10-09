@@ -607,8 +607,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::resolveOverlaps(
 template<GlobPatFinderHit Hit_t,
          SectorType Sector_t,
          PatternTopology<Hit_t> Topology_t>
-template<OnlyPhiHitsProvider<Hit_t, Topology_t, 
-                             typename GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::PatternStateAux> OnlyPhiProvider_t>
+template<OnlyPhiHitsProvider<Hit_t, Topology_t, Sector_t> OnlyPhiProvider_t>
 void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
     const GeometryContext& gctx,
     const BeamspotInfo& beamspotInfo,
