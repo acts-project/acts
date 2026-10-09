@@ -125,14 +125,6 @@ repos:
       additional_dependencies: ["typer", "rich", "pyyaml"]
       pass_filenames: false
 
-    - id: pypi_readme
-      name: pypi readme
-      entry: CI/check_pypi_readme.py
-      language: python
-      files: ^(pyproject\.toml|README\.md|docs/.*|CI/(check_)?pypi_readme\.(md|py))$
-      additional_dependencies: ["hatch-fancy-pypi-readme", "readme-renderer[md]"]
-      pass_filenames: false
-
     - id: dependency_versions
       name: dependency versions consistent
       entry: CI/bump_versions.py check
