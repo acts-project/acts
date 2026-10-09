@@ -28,7 +28,8 @@ using Creator =
                             Container>;
 struct Calibrator {
   bool extra = false;
-  void calibrate(const Acts::GeometryContext&, const Acts::CalibrationContext&,
+  void calibrate([[maybe_unused]] const Acts::GeometryContext& gctx,
+                 [[maybe_unused]] const Acts::CalibrationContext& cctx,
                  const Acts::SourceLink& sl,
                  Container::TrackStateProxy state) const {
     int id = sl.get<int>();
@@ -50,7 +51,7 @@ struct Selector {
   std::size_t selected = 2;
   bool outlier = false;
   auto select(Creator::candidate_container_t& candidates, bool& isOutlier,
-              const Acts::Logger&) const {
+              [[maybe_unused]] const Acts::Logger& logger) const {
     std::ranges::reverse(candidates);
     isOutlier = outlier;
     using Range = std::pair<Creator::candidate_container_t::iterator,
