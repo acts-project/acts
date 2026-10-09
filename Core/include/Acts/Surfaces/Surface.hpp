@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
@@ -57,6 +58,17 @@ class Surface : public virtual GeometryObject,
                 public std::enable_shared_from_this<Surface> {
  public:
   friend struct GeometryContextOstreamWrapper<Surface>;
+
+  /// Resolve the interpretation of bound coordinates on this surface.
+  /// @param gctx Geometry context for the interpretation
+  /// @return A self-contained, allocation-free parametrization value
+  /// @note All surfaces currently use the global-spherical convention. Surface
+  /// placement and alignment do not rotate its direction axes. No chart state
+  /// is added to the surface, and the returned value borrows no context.
+  BoundParametrization boundParametrization(
+      const GeometryContext& /*gctx*/) const {
+    return BoundParametrization::globalSpherical();
+  }
 
   /// @enum SurfaceType
   ///

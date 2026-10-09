@@ -53,11 +53,28 @@ class BoundParametrization {
     }
 
     Vector2 directionCoordinates(const Vector3& direction) const {
-      const Vector3 unit = unitDirection(direction);
-      return {(unit.x() == 0. && unit.y() == 0.)
-                  ? 0.
-                  : detail::radian_sym(VectorHelpers::phi(unit)),
-              VectorHelpers::theta(unit)};
+      assert(direction.allFinite() && direction.cwiseAbs().maxCoeff() > 0. &&
+             std::isfinite(direction.stableNorm()) &&
+             "Direction must be finite and nonzero with a representable norm");
+      // Angles are scale invariant: no normalization is needed. Preserve the
+      // atan2 endpoint convention used by bound/free conversion at +/-pi.
+      return {
+          (direction.x() == 0. && direction.y() == 0.)
+              ? 0.
+              : VectorHelpers::phi(direction),
+          std::atan2(std::hypot(direction.x(), direction.y()), direction.z())};
+    }
+
+    template <typename Derived>
+    double phi(const Eigen::MatrixBase<Derived>& parameters) const {
+      assertFiniteAngles(parameters[eBoundDir0], parameters[eBoundDir1]);
+      return parameters[eBoundDir0];
+    }
+
+    template <typename Derived>
+    double theta(const Eigen::MatrixBase<Derived>& parameters) const {
+      assertFiniteAngles(parameters[eBoundDir0], parameters[eBoundDir1]);
+      return parameters[eBoundDir1];
     }
 
     template <typename Derived>
@@ -201,9 +218,6 @@ class BoundParametrization {
       assert(std::isfinite(threshold) && threshold >= 0. && threshold < 1. &&
              "Invalid direction conditioning threshold");
     }
-    static Vector3 unitDirection(const Vector3& direction) {
-      return unitDirection(direction, direction.stableNorm());
-    }
     static Vector3 unitDirection(const Vector3& direction, double norm) {
       assert(direction.allFinite() && std::isfinite(norm) && norm > 0. &&
              "Direction must be finite and nonzero with a representable norm");
@@ -250,9 +264,31 @@ class BoundParametrization {
         [&](const auto& chart) { return chart.direction(parameters); });
   }
 
+  /// Global azimuthal direction angle.
+  /// @tparam Derived Eigen vector, map or expression type
+  /// @param parameters Bound coordinates
+  /// @return Global phi in radians, preserving the stored canonical convention
+  /// @pre Direction coordinates are finite (asserted).
+  template <typename Derived>
+  double phi(const Eigen::MatrixBase<Derived>& parameters) const {
+    return visit([&](const auto& chart) { return chart.phi(parameters); });
+  }
+
+  /// Global polar direction angle.
+  /// @tparam Derived Eigen vector, map or expression type
+  /// @param parameters Bound coordinates
+  /// @return Global theta in radians
+  /// @pre Direction coordinates are finite (asserted).
+  template <typename Derived>
+  double theta(const Eigen::MatrixBase<Derived>& parameters) const {
+    return visit([&](const auto& chart) { return chart.theta(parameters); });
+  }
+
   /// Encode a global direction into the two direction coordinates.
   /// @param direction Nonzero global direction; normalization is ignored
-  /// @return Canonical direction coordinates; phi is zero at an exact pole
+  /// @return Direction coordinates with phi in [-pi, pi], zero at an exact pole
+  /// @note Preserves atan2's signed endpoint convention. Use canonicalize()
+  /// when the half-open canonical interval [-pi, pi) is required.
   /// @pre Direction is finite and nonzero, with a representable norm (asserted).
   Vector2 directionCoordinates(const Vector3& direction) const {
     return visit([&](const auto& chart) {

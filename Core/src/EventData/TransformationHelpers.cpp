@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/EventData/TrackParameterHelpers.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -18,9 +18,9 @@
 Acts::FreeVector Acts::transformBoundToFreeParameters(
     const Acts::Surface& surface, const GeometryContext& geoCtx,
     const Acts::BoundVector& boundParams) {
-  // convert angles to global unit direction vector
+  // decode global direction in the surface-selected parametrization
   Vector3 direction =
-      BoundParametrization::globalSpherical().direction(boundParams);
+      surface.boundParametrization(geoCtx).direction(boundParams);
 
   // convert local position to global position vector
   Vector2 local(boundParams[eBoundLoc0], boundParams[eBoundLoc1]);
@@ -57,8 +57,10 @@ Acts::Result<Acts::BoundVector> Acts::transformFreeToBoundParameters(
   bp[eBoundLoc1] = localPosition[ePos1];
 
   bp[eBoundTime] = freeParams[eFreeTime];
-  bp[eBoundDir0] = VectorHelpers::phi(direction);
-  bp[eBoundDir1] = VectorHelpers::theta(direction);
+  const Vector2 coordinates =
+      surface.boundParametrization(geoCtx).directionCoordinates(direction);
+  bp[eBoundDir0] = coordinates[0];
+  bp[eBoundDir1] = coordinates[1];
   bp[eBoundQOverP] = freeParams[eFreeQOverP];
   return Result<Acts::BoundVector>::success(bp);
 }
@@ -80,8 +82,10 @@ Acts::Result<Acts::BoundVector> Acts::transformFreeToBoundParameters(
   bp[eBoundLoc1] = localPosition[ePos1];
 
   bp[eBoundTime] = time;
-  bp[eBoundDir0] = VectorHelpers::phi(direction);
-  bp[eBoundDir1] = VectorHelpers::theta(direction);
+  const Vector2 coordinates =
+      surface.boundParametrization(geoCtx).directionCoordinates(direction);
+  bp[eBoundDir0] = coordinates[0];
+  bp[eBoundDir1] = coordinates[1];
   bp[eBoundQOverP] = qOverP;
   return Result<Acts::BoundVector>::success(bp);
 }

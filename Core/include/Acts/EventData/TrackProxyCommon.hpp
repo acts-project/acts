@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -258,23 +259,22 @@ class TrackProxyCommon {
   }
 
   /// Global azimuthal direction angle in radians.
-  /// @param geoCtx Geometry context (unused by the canonical parametrization)
+  /// @param geoCtx Geometry context for direction interpretation
   /// @return Global phi
-  double phi(const GeometryContext& /*geoCtx*/) const {
-    return derived().parameters()[eBoundDir0];
+  double phi(const GeometryContext& geoCtx) const {
+    return boundParametrization(geoCtx).phi(derived().parameters());
   }
   /// Global polar direction angle in radians.
-  /// @param geoCtx Geometry context (unused by the canonical parametrization)
+  /// @param geoCtx Geometry context for direction interpretation
   /// @return Global theta
-  double theta(const GeometryContext& /*geoCtx*/) const {
-    return derived().parameters()[eBoundDir1];
+  double theta(const GeometryContext& geoCtx) const {
+    return boundParametrization(geoCtx).theta(derived().parameters());
   }
   /// Global unit direction vector.
-  /// @param geoCtx Geometry context (unused by the canonical parametrization)
+  /// @param geoCtx Geometry context for direction interpretation
   /// @return Normalized global direction
-  Vector3 direction(const GeometryContext& /*geoCtx*/) const {
-    return BoundParametrization::globalSpherical().direction(
-        derived().parameters());
+  Vector3 direction(const GeometryContext& geoCtx) const {
+    return boundParametrization(geoCtx).direction(derived().parameters());
   }
   /// Global momentum vector.
   /// @param geoCtx Geometry context for direction interpretation
@@ -315,6 +315,16 @@ class TrackProxyCommon {
     p4[eEnergy] = std::sqrt(m * m + p3.squaredNorm());
 
     return p4;
+  }
+
+ private:
+  BoundParametrization boundParametrization(
+      const GeometryContext& geoCtx) const {
+    // Tracks without a reference surface retain their canonical interpretation.
+    if (!derived().hasReferenceSurface()) {
+      return BoundParametrization::globalSpherical();
+    }
+    return derived().referenceSurface().boundParametrization(geoCtx);
   }
 };
 

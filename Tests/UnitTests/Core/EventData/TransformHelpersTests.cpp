@@ -14,7 +14,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
@@ -35,6 +37,41 @@ constexpr auto eps = std::numeric_limits<double>::epsilon();
 namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
+
+BOOST_AUTO_TEST_CASE(CanonicalDirectionUnderAlignment) {
+  class AlignedElement : public DetectorElementStub {
+   public:
+    using DetectorElementStub::DetectorElementStub;
+    const Transform3& localToGlobalTransform(
+        const GeometryContext& gctx) const override {
+      return gctx.get<Transform3>();
+    }
+  };
+  AlignedElement element(Transform3::Identity(),
+                         std::make_shared<RectangleBounds>(10., 10.), 0.1);
+  const auto& surface = element.surface();
+  Transform3 aligned = Transform3::Identity();
+  aligned.translate(Vector3(4., 5., 6.));
+  aligned.rotate(AngleAxis3(0.7, Vector3::UnitY()));
+  const BoundVector bound(1., 2., 0.3, 1.2, 0.01, 4.);
+  const Vector3 direction = makeDirectionFromPhiTheta(0.3, 1.2);
+  for (const Transform3& placement : {Transform3::Identity(), aligned}) {
+    const GeometryContext gctx{placement};
+    BOOST_CHECK(surface.boundParametrization(gctx).isGlobalSpherical());
+    const auto free = transformBoundToFreeParameters(surface, gctx, bound);
+    CHECK_CLOSE_ABS(free.segment<3>(eFreePos0), placement * Vector3(1., 2., 0.),
+                    1e-14);
+    CHECK_CLOSE_ABS(free.segment<3>(eFreeDir0), direction, 1e-14);
+    const auto restored = transformFreeToBoundParameters(free, surface, gctx);
+    BOOST_REQUIRE(restored.ok());
+    CHECK_CLOSE_ABS(*restored, bound, 1e-14);
+    const auto restoredComponents = transformFreeToBoundParameters(
+        free.segment<3>(eFreePos0), free[eFreeTime], direction,
+        free[eFreeQOverP], surface, gctx);
+    BOOST_REQUIRE(restoredComponents.ok());
+    CHECK_CLOSE_ABS(*restoredComponents, bound, 1e-14);
+  }
+}
 
 BOOST_DATA_TEST_CASE(Parameters,
                      surfaces * posSymmetric * posSymmetric * ts * phis *

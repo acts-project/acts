@@ -71,7 +71,14 @@ Raw-vector callers can use @ref Acts::BoundParametrization::direction
 "direction(parameters)", which accepts Eigen maps and expressions without a
 parameter object or additional stored metadata. Existing parameter and proxy
 concepts do not require the new context overloads from client-defined types.
-Geometry selection and alternative charts remain follow-up work.
+@ref Acts::Surface::boundParametrization "surface.boundParametrization(gctx)"
+resolves the interpretation for a surface. Context-aware observables and
+bound/free value conversions use this lookup. It currently returns the canonical
+global-spherical interpretation for every surface, including curvilinear planes;
+surface placement and alignment do not rotate the direction axes. Track proxies
+without a reference surface retain the canonical interpretation. No chart state
+is added to surfaces. Chart configuration, alternative charts and covariance
+transport through this interface remain follow-up work.
 
 The canonical-only wrappers in @ref TrackParameterHelpers.hpp are deprecated:
 @ref Acts::directionFromBoundParameters, @ref Acts::isBoundVectorValid,

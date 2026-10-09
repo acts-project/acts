@@ -281,22 +281,22 @@ class BoundTrackParameters {
   }
 
   /// Global azimuthal direction angle in radians.
-  /// @param geoCtx Geometry context (unused by the canonical parametrization)
+  /// @param geoCtx Geometry context for direction interpretation
   /// @return Global phi
-  double phi(const GeometryContext& /*geoCtx*/) const {
-    return m_params[eBoundDir0];
+  double phi(const GeometryContext& geoCtx) const {
+    return m_surface->boundParametrization(geoCtx).phi(m_params);
   }
   /// Global polar direction angle in radians.
-  /// @param geoCtx Geometry context (unused by the canonical parametrization)
+  /// @param geoCtx Geometry context for direction interpretation
   /// @return Global theta
-  double theta(const GeometryContext& /*geoCtx*/) const {
-    return m_params[eBoundDir1];
+  double theta(const GeometryContext& geoCtx) const {
+    return m_surface->boundParametrization(geoCtx).theta(m_params);
   }
   /// Global unit direction vector.
-  /// @param geoCtx Geometry context (unused by the canonical parametrization)
+  /// @param geoCtx Geometry context for direction interpretation
   /// @return Normalized global direction
-  Vector3 direction(const GeometryContext& /*geoCtx*/) const {
-    return BoundParametrization::globalSpherical().direction(m_params);
+  Vector3 direction(const GeometryContext& geoCtx) const {
+    return m_surface->boundParametrization(geoCtx).direction(m_params);
   }
   /// Global momentum vector.
   /// @param geoCtx Geometry context for direction interpretation
