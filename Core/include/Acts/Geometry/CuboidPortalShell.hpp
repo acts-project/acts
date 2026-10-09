@@ -103,7 +103,8 @@ class CuboidStackPortalShell final : public CuboidPortalShell {
   /// Construct the portal shell stack from the given shells
   /// @param gctx The geometry context
   /// @param shells The shells to stack
-  /// @note The shells must be ordered in the given direction
+  /// @note The shells must be ordered in increasing local stack coordinates
+  ///       along the given direction. The supplied order is preserved.
   /// @param direction The stacking direction (along x/y/z axis) in local stack coordinates
   /// @param logger A logging instance for debugging
   /// @param materialPolicy How to treat material designated on faces that are

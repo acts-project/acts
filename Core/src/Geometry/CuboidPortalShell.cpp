@@ -161,24 +161,6 @@ CuboidStackPortalShell::CuboidStackPortalShell(
     throw std::invalid_argument("Invalid shell");
   }
 
-  std::ranges::sort(
-      m_shells, [*this, &gctx](const auto& shellA, const auto& shellB) {
-        switch (m_direction) {
-          case AxisX:
-            return (shellA->localToGlobalTransform(gctx).translation().x() <
-                    shellB->localToGlobalTransform(gctx).translation().x());
-          case AxisY:
-            return (shellA->localToGlobalTransform(gctx).translation().y() <
-                    shellB->localToGlobalTransform(gctx).translation().y());
-          case AxisZ:
-            return (shellA->localToGlobalTransform(gctx).translation().z() <
-                    shellB->localToGlobalTransform(gctx).translation().z());
-          default:
-            throw std::invalid_argument(
-                "CuboidPortalShell: Invalid axis direction");
-        }
-      });
-
   auto merge = [&](Face face) {
     std::vector<std::shared_ptr<Portal>> portals;
     std::ranges::transform(m_shells, std::back_inserter(portals),

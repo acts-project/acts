@@ -197,8 +197,9 @@ BOOST_AUTO_TEST_SUITE(CuboidStack)
 BOOST_DATA_TEST_CASE(XYZDirection,
                      boost::unit_test::data::make(AxisDirection::AxisX,
                                                   AxisDirection::AxisY,
-                                                  AxisDirection::AxisZ),
-                     dir) {
+                                                  AxisDirection::AxisZ) *
+                         boost::unit_test::data::make(0_degree, 180_degree),
+                     dir, angle) {
   AxisDirection dirOrth1{};
   AxisDirection dirOrth2{};
   std::size_t dirIdx = 0;
@@ -238,9 +239,14 @@ BOOST_DATA_TEST_CASE(XYZDirection,
       std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
           {boundDir, 100_mm}, {boundDirOrth1, 30_mm}, {boundDirOrth2, 100_mm}});
 
-  TrackingVolume vol1(Transform3{Translation3{Vector3::Unit(dirIdx) * -100_mm}},
+  // A half-turn reverses the global coordinate ordering while preserving
+  // the supplied order along the local stacking axis.
+  const Transform3 placement =
+      Translation3{Vector3{10_mm, 20_mm, 30_mm}} *
+      AngleAxis3{angle, Vector3::Unit((dirIdx + 1) % 3)};
+  TrackingVolume vol1(placement * Translation3{Vector3::Unit(dirIdx) * -100_mm},
                       bounds1);
-  TrackingVolume vol2(Transform3{Translation3{Vector3::Unit(dirIdx) * 100_mm}},
+  TrackingVolume vol2(placement * Translation3{Vector3::Unit(dirIdx) * 100_mm},
                       bounds2);
 
   SingleCuboidPortalShell shell1{gctx, vol1};
@@ -270,6 +276,8 @@ BOOST_DATA_TEST_CASE(XYZDirection,
         normal = -Vector3::UnitX();
         break;
     }
+
+    normal = placement.linear() * normal;
 
     const auto center1 = shell1.portal(face)->surface().center(gctx);
     const auto center2 = shell2.portal(face)->surface().center(gctx);
@@ -323,6 +331,8 @@ BOOST_DATA_TEST_CASE(XYZDirection,
         normal = -Vector3::UnitX();
         break;
     }
+
+    normal = placement.linear() * normal;
 
     BOOST_CHECK_EQUAL(shell1.portal(face), stack.portal(face));
     BOOST_CHECK_EQUAL(shell2.portal(face), stack.portal(face));
