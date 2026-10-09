@@ -15,10 +15,12 @@
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
@@ -160,6 +162,21 @@ CuboidStackPortalShell::CuboidStackPortalShell(
     ACTS_ERROR("Invalid shell");
     throw std::invalid_argument("Invalid shell");
   }
+
+  throw_assert(!m_shells.empty(), "CuboidStackPortalShell: No shells supplied");
+  const Transform3 globalToStack =
+      m_shells.front()->localToGlobalTransform(gctx).inverse();
+  throw_assert(
+      std::ranges::is_sorted(
+          m_shells, std::less{},
+          [&](const auto* shell) {
+            const Vector3 localPosition =
+                globalToStack *
+                shell->localToGlobalTransform(gctx).translation();
+            return localPosition[toUnderlying(m_direction)];
+          }),
+      "CuboidStackPortalShell: Shells must be ordered along the local stacking "
+      "axis");
 
   auto merge = [&](Face face) {
     std::vector<std::shared_ptr<Portal>> portals;

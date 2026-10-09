@@ -23,6 +23,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <cstddef>
 #include <initializer_list>
@@ -358,9 +359,22 @@ BOOST_DATA_TEST_CASE(XYZDirection,
   shell1 = SingleCuboidPortalShell{gctx, vol1};
   shell2 = SingleCuboidPortalShell{gctx, vol2};
 
+  BOOST_CHECK_THROW(CuboidStackPortalShell(gctx, {&shell2, &shell1}, dir),
+                    AssertionFailureException);
+  // Invalid ordering must be rejected before any portals are merged or fused.
+  BOOST_CHECK_NE(shell1.portal(backFace), shell2.portal(frontFace));
+  for (const auto face : sideFaces) {
+    BOOST_CHECK_NE(shell1.portal(face), shell2.portal(face));
+  }
+
   BOOST_CHECK_THROW(
       CuboidStackPortalShell(gctx, {&shell1, &shell2}, AxisDirection::AxisR),
       std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(EmptyStack) {
+  BOOST_CHECK_THROW(CuboidStackPortalShell(gctx, {}, AxisDirection::AxisZ),
+                    AssertionFailureException);
 }
 
 BOOST_AUTO_TEST_CASE(NestedStacks) {
