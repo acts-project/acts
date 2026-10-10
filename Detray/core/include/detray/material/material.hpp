@@ -183,9 +183,9 @@ struct material {
       return m_density.get_mean_excitation_energy();
     }
   }
+
   /// Return this component's compile-time mass fraction.
   /// @return ratio numerator divided by denominator, or an invalid value for a zero denominator
-
   DETRAY_HOST_DEVICE
   constexpr scalar_type fraction() const {
     if constexpr (ratio::num == 0) {
@@ -281,7 +281,8 @@ struct material {
   /// @param mass_rho mass density
   /// @return molar density
   DETRAY_HOST_DEVICE
-  constexpr scalar_type mass_to_molar_density(double ar, double mass_rho) {
+  constexpr scalar_type mass_to_molar_density(double ar,
+                                              double mass_rho) const {
     if (mass_rho == 0.) {
       return 0.f;
     }
