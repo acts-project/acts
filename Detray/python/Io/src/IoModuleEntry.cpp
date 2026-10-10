@@ -83,6 +83,16 @@ PYBIND11_MODULE(DetrayIoPythonBindings, m) {
           [](const reader_config_t &c) { return c.verbose_check(); },
           [](reader_config_t &c, bool v) { c.verbose_check(v); },
           "Verbosity of the detector consistency check")
+      .def_property(
+          "deduplicate",
+          [](const reader_config_t &c) { return c.deduplicate(); },
+          [](reader_config_t &c, bool v) { c.deduplicate(v); },
+          "Data deduplication in the detector")
+      .def_property(
+          "verboseCheck",
+          [](const reader_config_t &c) { return c.verbose_check(); },
+          [](reader_config_t &c, bool v) { c.verbose_check(v); },
+          "Verbosity of the detector consistency check")
       .def(
           "addFile",
           [](reader_config_t &c, const std::string &f) -> reader_config_t & {

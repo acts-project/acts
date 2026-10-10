@@ -45,7 +45,9 @@ class homogeneous_volume_material_builder final
   ///
   /// @param mat the material parameters
   DETRAY_HOST
-  void set_material(material<scalar_type> mat) { m_volume_material = mat; }
+  void set_material(const material<scalar_type> &mat) {
+    m_volume_material = mat;
+  }
 
   /// Add the volume and the material to the detector @param det
   DETRAY_HOST

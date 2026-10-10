@@ -10,7 +10,6 @@
 
 // Project include(s).
 #include "detray/builders/bin_fillers.hpp"
-#include "detray/builders/detail/material_deduplication.hpp"
 #include "detray/builders/material_map_factory.hpp"
 #include "detray/builders/material_map_generator.hpp"
 #include "detray/builders/surface_factory_interface.hpp"
@@ -113,36 +112,6 @@ class material_map_builder final : public volume_decorator<detector_t> {
       typename detector_t::volume_type* override {
     DETRAY_VERBOSE_HOST("Build material maps...");
 
-    // Ensure the material links are correct BEFORE the surfaces are built
-    // and potentially added to an acceleration data structure
-    add_material_maps(opt, det);
-
-    DETRAY_DEBUG_HOST(
-        "-> Let underlying builders construct the volume using correct "
-        "material links...");
-
-    DETRAY_VERBOSE_HOST(
-        "Successfully built material maps for volume: " << this->name());
-
-    // Construct the surfaces and give the volume to the next decorator
-    return volume_decorator<detector_t>::build(det, opt, ctx);
-  }
-
- private:
-  /// Check whether a surface with a given index @param sf_idx should receive
-  /// material from this builder
-  bool surface_has_map(const dindex sf_idx) const {
-    return m_bin_data.contains(sf_idx);
-  }
-
-  /// Build the material grid for every surface that has material, add it to
-  /// the detector @param det and set the global surface material link.
-  ///
-  /// @note The grids are built from the volume local masks in the builder,
-  /// since the surfaces are not yet added to the detector
-  void add_material_maps(const volume_builder_options& opt, detector_t& det) {
-    DETRAY_VERBOSE_HOST("Build material maps for surfaces...");
-
     // The total number of surfaces that will be built by this builder
     const dindex n_surfaces{static_cast<dindex>(this->surfaces().size())};
 
@@ -152,11 +121,13 @@ class material_map_builder final : public volume_decorator<detector_t> {
       }
 
       auto& sf_desc = this->surfaces().at(sf_idx);
+      [[maybe_unused]] const auto id{sf_desc.material().id()};
 
-      DETRAY_DEBUG_HOST("-> surface #" << sf_idx << " sf_desc = " << sf_desc);
+      DETRAY_VERBOSE_HOST("-> surface #" << sf_idx << " (mat. id = " << id
+                                         << ")");
 
       // The axis spans of the material map (if empty, the extent of the
-      // surface mask is used)
+      // surface mask(s) is used)
       darray<std::vector<scalar_type>, DIM> axis_spans{};
       if (auto axis_spans_itr = m_axis_spans.find(sf_idx);
           axis_spans_itr != m_axis_spans.end()) {
@@ -184,16 +155,37 @@ class material_map_builder final : public volume_decorator<detector_t> {
 
       sf_desc.material().set_index(mat_idx);
 
-      DETRAY_DEBUG_HOST("--> material link = " << sf_desc.material());
+      DETRAY_VERBOSE_HOST("--> material link = " << sf_desc.material());
     }
+
+    DETRAY_VERBOSE_HOST(
+        "Successfully built material maps for volume: " << this->name());
+
+    // Construct the surfaces and give the volume to the next decorator
+    return volume_decorator<detector_t>::build(det, opt, ctx);
   }
 
-  /// The surface this material map belongs to (index is volume local)
+ private:
+  /// Check whether a surface with a given index @param sf_idx should receive
+  /// material from this builder
+  bool surface_has_map(const dindex sf_idx) const {
+    // All maps should contain the same information per surface
+    assert(m_bin_data.contains(sf_idx) == m_n_bins.contains(sf_idx) &&
+           m_bin_data.contains(sf_idx) == m_axis_spans.contains(sf_idx));
+
+    return m_bin_data.contains(sf_idx);
+  }
+
+  /// Maps the volume-local surface index to a material map
+  /// @{
+  /// The bin content stored by global bin index
   std::map<dindex, std::vector<bin_data_type>> m_bin_data;
   /// Number of bins for the material grid axes
   std::map<dindex, darray<std::size_t, DIM>> m_n_bins{};
   /// The Axis spans for the material grid axes
   std::map<dindex, darray<std::vector<scalar_type>, DIM>> m_axis_spans{};
+  /// @}
+
   /// Helper to generate empty grids
   mat_map_factory_t m_factory{};
 };
@@ -219,43 +211,55 @@ struct add_sf_material_map {
       [[maybe_unused]] const darray<std::size_t, DIM>& n_bins,
       [[maybe_unused]] const darray<std::vector<scalar_t>, DIM>& axis_spans,
       [[maybe_unused]] material_store_t& mat_store,
-      [[maybe_unused]] const bool deduplicate = false) const {
+      [[maybe_unused]] const bool deduplicate) const {
     using mask_t = typename mask_coll_t::value_type;
 
     // No material maps for line surfaces
     if constexpr (!concepts::line_object<mask_t> && mask_t::shape::dim == DIM) {
-      // Map a grid onto the surface mask (the boundaries are taken from
-      // the @c axis_spans variable, if it is not empty)
+      // Make sure masks exist in the underlying volume builder and can be
+      // properly accessed
+      if (mask_coll.empty() && axis_spans.empty()) {
+        std::string err{
+            "No masks in volume builder: Cannot construct material map"};
+        DETRAY_FATAL_HOST(err);
+        throw std::invalid_argument(err);
+      }
+
+      // Map a grid onto the surface mask if no concrete axis spans are given
       mask_t sf_mask = {};
-      if constexpr (concepts::interval<index_range_t>) {
-        using index_t = typename index_range_t::index_type;
+      if (axis_spans.empty()) {
+        if constexpr (concepts::interval<index_range_t>) {
+          // Find the true surface extent over all masks
+          sf_mask = mask_coll.at(index.lower());
 
-        // Find the true surface extent over all masks
-        sf_mask = mask_coll.at(index.lower());
+          if (index.size() > 1u) {
+            using index_t = typename index_range_t::index_type;
+            const index_range_t other_masks{
+                index.lower() + 1u, static_cast<index_t>(index.size() - 1u)};
 
-        if (index.size() > 1u) {
-          const index_range_t other_masks{
-              index.lower() + 1u, static_cast<index_t>(index.size() - 1u)};
-
-          // Merge sub-masks
-          for (const auto& sub_mask :
-               detray::ranges::subrange(mask_coll, other_masks)) {
-            sf_mask = sf_mask + sub_mask;
+            // Merge sub-masks
+            for (const auto& sub_mask :
+                 detray::ranges::subrange(mask_coll, other_masks)) {
+              sf_mask = sf_mask + sub_mask;
+            }
           }
+        } else {
+          sf_mask = mask_coll.at(index);
         }
-      } else {
-        sf_mask = mask_coll.at(index);
+
+        DETRAY_VERBOSE_HOST(
+            "Mapping material grid onto surface mask: " << sf_mask);
       }
 
       auto mat_grid = mat_factory.new_grid(sf_mask, n_bins, {}, {}, axis_spans);
 
       // The detector only knows the non-owning grid types
-      using non_owning_t = typename decltype(mat_grid)::template type<false>;
+      using non_owning_t =
+          typename decltype(mat_grid)::template owning_type<false>;
 
-      // Not every mask shape might be used for material maps
+      // Not every mask shape might be used for material maps, make sure the
+      // type that was constructed by the grid factory is known by the detector
       if constexpr (types::contains<material_t, non_owning_t>) {
-        DETRAY_VERBOSE_HOST("Filling material grid...");
-
         // Add the material slabs to the grid
         for (const auto& bin : bin_data) {
           mat_grid.template populate<replace<>>(bin.local_bin_idx,
@@ -264,29 +268,37 @@ struct add_sf_material_map {
 
         constexpr auto gid{types::id<material_t, non_owning_t>};
 
+        DETRAY_VERBOSE_HOST("Filled material grid:" << gid << ":\n"
+                                                    << mat_grid.axes());
+
         // Look for an identical material grid in the detector
         if (deduplicate) {
           const auto& grid_coll = mat_store.template get<gid>();
           for (dindex i = 0u; i < grid_coll.size(); ++i) {
-            if (is_identical_grid(mat_grid, grid_coll[i])) {
-              DETRAY_VERBOSE_HOST(
-                  "Found identical material grid:" << gid << " at index " << i);
+            if (mat_grid == grid_coll.at(i)) {
+              DETRAY_VERBOSE_HOST("Found identical material grid at index "
+                                  << i << ". Deduplicating...");
               return {gid, i};
             }
           }
         }
 
         // Add the material grid to the detector
+        dindex grid_idx{static_cast<dindex>(mat_store.template size<gid>())};
         mat_store.template push_back<gid>(mat_grid);
-        DETRAY_VERBOSE_HOST("Built material grid:" << gid << ":\n"
-                                                   << mat_grid.axes());
+
+        DETRAY_VERBOSE_HOST("Added material grid to collection. New size: "
+                            << mat_store.template size<gid>());
 
         // Return the index of the new material map
-        return {gid, static_cast<dindex>(mat_store.template size<gid>() - 1u)};
+        return {gid, grid_idx};
       } else {
+        DETRAY_ERROR_HOST("Material grid type unknown to detector");
         return {material_t::id::e_none, dindex_invalid};
       }
     } else {
+      DETRAY_ERROR_HOST(
+          "Material map construction impossible for line surfaces");
       return {material_t::id::e_none, dindex_invalid};
     }
   }

@@ -247,7 +247,8 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
   DETRAY_HOST_DEVICE
   auto operator[](const size_type i) const -> grid_t {
     const size_type axes_offset{grid_t::dim * i};
-    return grid_t(&m_bins,
+    // The data pointer type of a dynamic bin storage contains two pointers
+    return grid_t(grid_t::bin_storage::data_ptr(m_bins),
                   multi_axis_t(m_bin_edge_offsets, m_bin_edges, axes_offset),
                   m_bin_offsets[i]);
   }
@@ -256,7 +257,8 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
   DETRAY_HOST_DEVICE
   auto at(const size_type i) const -> grid_t {
     const size_type axes_offset{grid_t::dim * i};
-    return grid_t(&m_bins,
+    // The data pointer type of a dynamic bin storage contains two pointers
+    return grid_t(grid_t::bin_storage::data_ptr(m_bins),
                   multi_axis_t(m_bin_edge_offsets, m_bin_edges, axes_offset),
                   m_bin_offsets.at(i));
   }
@@ -279,8 +281,8 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
   /// Add a new grid @param gr to the collection.
   /// @note this takes a data owning grid to transcribe the data from.
   template <typename other_grid_t>
-    requires std::constructible_from<typename grid_t::template type<true>,
-                                     other_grid_t>
+    requires std::constructible_from<
+        typename grid_t::template owning_type<true>, other_grid_t>
   DETRAY_HOST constexpr auto push_back(const other_grid_t &gr) noexcept(false)
       -> void {
     // Current offset into the global bin storage for the new grid
@@ -314,7 +316,8 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
   /// Insert data into a vector of bins
   DETRAY_HOST void insert_bin_data(
       vector_type<typename grid_t::bin_type> &bin_data,
-      const typename grid_t::template type<true>::bin_storage &grid_bins) {
+      const typename grid_t::template owning_type<true>::bin_storage
+          &grid_bins) {
     bin_data.insert(bin_data.end(), grid_bins.begin(), grid_bins.end());
   }
 
@@ -323,7 +326,7 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
   template <typename container_t>
   DETRAY_HOST void insert_bin_data(
       detray::detail::dynamic_bin_container<bin_t, container_t> &bin_data,
-      const grid_t::template type<true>::bin_storage &grid_bins) {
+      const grid_t::template owning_type<true>::bin_storage &grid_bins) {
     bin_data.append(grid_bins);
   }
 
