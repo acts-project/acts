@@ -107,7 +107,7 @@ void combinatorial_kalman_filter_algorithm::progressive_kalman_filter_kernel(
     const device::kalman_fitting_algorithm::fit_payload& smoothing_payload)
     const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 4;
+  const unsigned int deviceThreads = 128;
   const unsigned int deviceBlocks =
       (n_seeds + deviceThreads - 1) / deviceThreads;
 
@@ -142,7 +142,7 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
     const detector_buffer& detector,
     const device::find_tracks_payload& payload) const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 2;
+  const unsigned int deviceThreads = 64;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
   const std::size_t deviceSharedMem =
@@ -181,7 +181,7 @@ void combinatorial_kalman_filter_algorithm::condense_tracks_kernel(
       out_params_per_in_param_vector.end(), params_index_vector.begin());
 
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 8;
+  const unsigned int deviceThreads = 256;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
 
@@ -198,7 +198,7 @@ void combinatorial_kalman_filter_algorithm::
         const device::fill_finding_duplicate_removal_sort_keys_payload& payload)
         const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 8;
+  const unsigned int deviceThreads = 256;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
 
@@ -227,7 +227,7 @@ void combinatorial_kalman_filter_algorithm::remove_duplicates_kernel(
     unsigned int n_threads, const finding_config& config,
     const device::remove_duplicates_payload& payload) const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 8;
+  const unsigned int deviceThreads = 256;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
 
@@ -244,7 +244,7 @@ void combinatorial_kalman_filter_algorithm::
         const device::fill_finding_propagation_sort_keys_payload& payload)
         const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 2;
+  const unsigned int deviceThreads = 64;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
 
@@ -273,7 +273,7 @@ void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(
     const magnetic_field& field,
     const device::propagate_to_next_surface_payload& payload) const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 4;
+  const unsigned int deviceThreads = 128;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
 
@@ -321,7 +321,7 @@ void combinatorial_kalman_filter_algorithm::gather_measurement_votes_kernel(
     unsigned int n_threads,
     const device::gather_measurement_votes_payload& payload) const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 16;
+  const unsigned int deviceThreads = 512;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
 
@@ -335,7 +335,7 @@ void combinatorial_kalman_filter_algorithm::update_tip_length_buffer_kernel(
     unsigned int n_threads,
     const device::update_tip_length_buffer_payload& payload) const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 16;
+  const unsigned int deviceThreads = 512;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
 
@@ -350,7 +350,7 @@ void combinatorial_kalman_filter_algorithm::build_tracks_kernel(
     const measurement_selector::config& calib_cfg,
     const device::build_tracks_payload& payload) const {
   // Establish the kernel launch parameters.
-  const unsigned int deviceThreads = warp_size() * 2;
+  const unsigned int deviceThreads = 64;
   const unsigned int deviceBlocks =
       (n_threads + deviceThreads - 1) / deviceThreads;
 
