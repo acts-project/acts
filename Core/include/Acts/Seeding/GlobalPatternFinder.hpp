@@ -176,6 +176,17 @@ class GlobalPatternFinder {
     using OrderedHit = typename PatternStateAux::OrderedHit;
     using LineTestRes = typename PatternStateAux::LineTestRes;
 
+    /** @brief: Enum for possible outcomes of pattern line compatibility test */        
+    enum class LineTestDecision : uint8_t{
+        /** @brief Test successfull, add hit to pattern */
+        eAddHit,
+        /** @brief Test successfull with multiple pattern hits on same layer, branch the pattern */
+        eBranchPattern,
+        /** @brief Test failed, discard the hit */
+        eRejectHit
+    };
+    using LineTestResult_t = std::pair<LineTestDecision, LineTestRes>;
+
     /** @brief Method steering the global pattern building in the bending plane.
      *  @param gctx: Geometry context
      *  @param orderedSpacepoints: Search tree with spacepoints ordered by their corresponding coordinates
@@ -204,10 +215,10 @@ class GlobalPatternFinder {
      *  @param testHit: test hit information
      *  @param beamSpot: Beam spot position, needed to update the pattern line
      *  @return: result of the test, including the computed line residual and acceptance window */
-    LineTestRes checkLineCompatibility(const GeometryContext& gctx,
-                                       PatternStateAux& pat,
-                                       const OrderedHit& testHit,
-                                       const BeamspotInfo& beamSpot) const;
+    LineTestResult_t checkLineCompatibility(const GeometryContext& gctx,
+                                            PatternStateAux& pat,
+                                            const OrderedHit& testHit,
+                                            const BeamspotInfo& beamSpot) const;
     /** @brief Method to check the phi compatibility of a test hit with the pattern
      *  @param gctx: geometry context
      *  @param pat: pattern to be checked

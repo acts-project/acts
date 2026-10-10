@@ -227,7 +227,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
         }
 
         for (PatternStateAux& pat : backwardExtended) {
-            pat.meanNormResidual2 /= pat.nBendingLayers();
+            pat.meanNormResidual2 /= pat.nDoF;
             if (!passPatternCuts(pat)) {
                 continue;
             }
@@ -302,15 +302,14 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::extendPatterns(
             continue;
         }
         /** Check angular compatibility of the test hit and the pattern */
-        using LineTestDecision = PatternStateAux::LineTestDecision;
-        const auto [residual, resSigma, _, result] {checkLineCompatibility(gctx, pat, testHit, beamSpot)};
-        switch (result) {
+        const auto [decision, testRes] {checkLineCompatibility(gctx, pat, testHit, beamSpot)};
+        switch (decision) {
             case LineTestDecision::eAddHit: {
                 /** TO DO: Study feasibility of loosening the criteria for low-confidence hits with OR */
-                const bool lowConfidenceRes {resSigma > m_cfg.lowConfidenceResSigma && 
-                                             residual / resSigma > 2.};
+                const bool lowConfidenceRes {testRes.sigma > m_cfg.lowConfidenceResSigma && 
+                                             testRes.residual / testRes.sigma > 2.};
                 if (lowConfidenceRes) {
-                    ACTS_VERBOSE(__func__<<"() Low-confidence hit: residual pull "<<residual / resSigma);
+                    ACTS_VERBOSE(__func__<<"() Low-confidence hit: residual pull "<<testRes.residual / testRes.sigma);
                     /** If hit is compatible but with poor confidence, we create both a pattern with the hit and a pattern without the hit,
                      *  to keep also the possibility of rejecting this hit in the next iterations. First we make sure that the low-confidence
                      *  pattern is original, i.e. accumulating not seen hits */
@@ -323,11 +322,11 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::extendPatterns(
                     }
                     /** Add the new pattern to the list of next patterns */
                     endPatterns.push_back(pat);
-                    endPatterns.back().addHit(gctx, testHit, residual, resSigma, beamSpot);
+                    endPatterns.back().addHit(gctx, testHit, testRes, beamSpot);
                     break;
                 }
-                ACTS_VERBOSE(__func__<<"() Hit compatible - add to pattern. Residual pull "<<residual / resSigma);
-                pat.addHit(gctx, testHit, residual, resSigma, beamSpot);
+                ACTS_VERBOSE(__func__<<"() Hit compatible - add to pattern. Residual pull "<<testRes.residual / testRes.sigma);
+                pat.addHit(gctx, testHit, testRes, beamSpot);
                 break;
             }
             case LineTestDecision::eBranchPattern: {
@@ -340,12 +339,12 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::extendPatterns(
                 /** Branch the pattern: we clone it and overwrite the existing hit with the test hit */
                 ACTS_VERBOSE(__func__<<"() Hit compatible & on same layer of last added hit - branch pattern.");
                 endPatterns.push_back(pat);
-                endPatterns.back().overWriteHit(gctx, testHit, residual, resSigma, beamSpot);
+                endPatterns.back().overWriteHit(gctx, testHit, testRes, beamSpot);
                 break;
             }
             case LineTestDecision::eRejectHit: {
                 ACTS_VERBOSE(__func__<<"() Hit is not compatible with the pattern - reject hit. Residual pull "
-                    <<(resSigma > Acts::s_epsilon ? residual / resSigma : 0.0));
+                    <<(testRes.sigma > Acts::s_epsilon ? testRes.residual / testRes.sigma : 0.0));
                 break;
             }
         }
@@ -357,7 +356,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::extendPatterns(
 template<GlobPatFinderHit Hit_t,
          SectorType Sector_t,
          PatternTopology<Hit_t> Topology_t>
-typename GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::LineTestRes 
+GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::LineTestResult_t 
 GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
     const GeometryContext& gctx,
     PatternStateAux& pat,
@@ -367,14 +366,13 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
     if (testHit->spacePoint()->measuresLoc0() && !isPhiCompatible(gctx, pat, *testHit)) {
         ACTS_VERBOSE(__func__<<"() Test hit phi "<<VectorHelpers::phi(testHit->globalPosition(gctx))
             <<" not compatible with "<<PatternStateAux::brief(pat));
-        return LineTestRes{};
+        return std::make_pair(LineTestDecision::eRejectHit,LineTestRes{});
     }
     
     /** @brief Helper function to make the result
      *  @param decision The decision for the test result if the residual is within the acceptance window 
      *  @return The test result */
-    using LineTestDecision = PatternStateAux::LineTestDecision;
-    auto makeResult = [&](const LineTestDecision decision) -> LineTestRes {
+    auto makeResult = [&](const LineTestDecision decision) -> LineTestResult_t {
         LineTestRes res {pat.computeLineResidual(gctx, testHit, beamSpot)};
         double accWindow {(res.nDof==1u ? m_cfg.nResidualSigma : m_cut2Dof) * res.sigma};
         /** Loosen the window when we use the beamspot or when we are looking for hits in a new group, as
@@ -386,9 +384,9 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
             accWindow *= m_cfg.loosenAcceptanceFactor;
         }
         if (res.residual < accWindow) {
-            res.result = decision;
+            return std::make_pair(decision, res);
         }
-        return res;
+        return std::make_pair(LineTestDecision::eRejectHit, res);
     };
 
     if(testHit.globLayer != pat.lastInsertedHit.globLayer) {
@@ -397,11 +395,11 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
     }
     if (testHit == pat.lastInsertedHit) {
         ACTS_VERBOSE(__func__<<"() Test hit is the same as last inserted hit - reject.");
-        return LineTestRes{};
+        return std::make_pair(LineTestDecision::eRejectHit, LineTestRes{});
     }
     if (pat.lineAnchorHit.globLayer == pat.lastInsertedHit.globLayer) {
         ACTS_VERBOSE(__func__<<"() Test hit on same layer as seed with no prior hits - reject.");
-        return LineTestRes{};
+        return std::make_pair(LineTestDecision::eRejectHit, LineTestRes{});
     }
     return makeResult(LineTestDecision::eBranchPattern);
 }
