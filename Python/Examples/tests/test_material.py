@@ -30,3 +30,34 @@ def test_json_material_decorator():
         ),
         level=acts.logging.WARNING,
     )
+
+
+def test_material_map_export(tmp_path):
+    import json
+    from acts.examples import GenericDetector
+    from acts.json import TrackingGeometryMaterialJsonConverter
+
+    converter = TrackingGeometryMaterialJsonConverter()
+    output = tmp_path / "material.json"
+    options = TrackingGeometryMaterialJsonConverter.Options()
+    options.materialFractionBits = 16
+    detector = GenericDetector()
+    geometry = detector.trackingGeometry()
+    material = acts.TrackingGeometryMaterial.fromGeometry(
+        geometry, includeNonMaterial=True
+    )
+    converter.toFile(material, output, options)
+    document = json.loads(output.read_text())
+    assert document["header"]["version"] == 1
+    assert document["surfaces"]
+    assert any(
+        entry["material"]["kind"] == "proto-grid" for entry in document["surfaces"]
+    )
+    material = converter.fromFile(output)
+    converter.toFile(material, output, options)
+    assert json.loads(output.read_text()) == document
+
+    unsupported = acts.TrackingGeometryMaterial()
+    unsupported.volumeMaterials = {acts.GeometryIdentifier(): None}
+    with pytest.raises(ValueError, match="surface material only"):
+        converter.toFile(unsupported, output)

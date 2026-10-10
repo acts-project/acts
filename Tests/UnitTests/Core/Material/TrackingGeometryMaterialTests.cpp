@@ -40,6 +40,51 @@ std::shared_ptr<const ISurfaceMaterial> material(double thickness) {
 
 BOOST_AUTO_TEST_SUITE(TrackingGeometryMaterialTests)
 
+BOOST_AUTO_TEST_CASE(ExtractPreservesMaterialAndDeferredBinning) {
+  auto world = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(0., 100., 200.), "world");
+  world->assignGeometryId(GeometryIdentifier().withVolume(1));
+  auto volumeMaterial =
+      std::make_shared<HomogeneousVolumeMaterial>(Material::Vacuum());
+  world->assignVolumeMaterial(volumeMaterial);
+  auto surface =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30., 100.);
+  surface->assignGeometryId(GeometryIdentifier().withSensitive(1));
+  auto proto = std::make_shared<ProtoGridSurfaceMaterial>(
+      MultiAxisSpec2D(
+          {AxisSpec::DeferredEquidistant(8, AxisDirection::AxisRPhi),
+           AxisSpec::DeferredEquidistant(3, AxisDirection::AxisZ)}),
+      MappingType::Default, "cylinder");
+  surface->assignSurfaceMaterial(proto);
+  world->addSurface(surface);
+  auto bare =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 40., 100.);
+  bare->assignGeometryId(GeometryIdentifier().withSensitive(2));
+  world->addSurface(bare);
+  TrackingGeometry geometry(world, nullptr, {}, getDummyLogger(), false);
+
+  const auto material = TrackingGeometryMaterial::fromGeometry(geometry);
+  BOOST_CHECK(material.surfaceMaterials.empty());
+  BOOST_REQUIRE_EQUAL(material.keyedSurfaces.size(), 1);
+  BOOST_CHECK(material.keyedSurfaces.at("cylinder").material == proto);
+  BOOST_CHECK(material.volumeMaterials.at(world->geometryId()) ==
+              volumeMaterial);
+
+  const auto all = TrackingGeometryMaterial::fromGeometry(geometry, true);
+  BOOST_CHECK(all.keyedSurfaces.at("cylinder").material == proto);
+  const auto* placeholder = dynamic_cast<const ProtoGridSurfaceMaterial*>(
+      all.surfaceMaterials.at(bare->geometryId()).get());
+  BOOST_REQUIRE(placeholder != nullptr);
+  BOOST_CHECK(placeholder->binning().isDeferred());
+  for (const auto& axis : placeholder->binning().axisSpecs()) {
+    BOOST_CHECK_EQUAL(axis.asEquidistant().nBins, 1);
+  }
+  BOOST_CHECK(bare->surfaceMaterial() == nullptr);
+  BOOST_CHECK(surface->surfaceMaterialSharedPtr() == proto);
+  BOOST_CHECK(proto->binning().isDeferred());
+}
+
 BOOST_AUTO_TEST_CASE(ApplyGeometryResolvesKeysAndVolumesBeforeMutation) {
   auto world = std::make_shared<TrackingVolume>(
       Transform3::Identity(),

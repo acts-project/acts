@@ -51,17 +51,27 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash, odd_de
 
     s = Sequencer(events=2000, numThreads=1)
 
-    runMaterialMapping(
+    s, mapping = runMaterialMapping(
         surfaces=materialSurfaces,
         inputFile=material_recording / "geant4_material_tracks.root",
         outputFileBase=str(tmp_path / "material_mapping"),
-        outputMapFormats=["json", "root"],
         loglevel=acts.logging.INFO,
         outputMaterialTracks="material_tracks",
         treeName="material_tracks",
+        s=s,
     )
 
     s.run()
+
+    from acts.json import TrackingGeometryMaterialJsonConverter
+    from acts.examples.root import RootMaterialWriter
+
+    TrackingGeometryMaterialJsonConverter().toFile(
+        mapping.material, tmp_path / "material_mapping_map.json"
+    )
+    RootMaterialWriter(
+        level=acts.logging.INFO, filePath=str(tmp_path / "material_mapping_map.root")
+    ).writeMaterial(mapping.material)
 
     # root map output check
     map_file_root = tmp_path / "material_mapping_map.root"
@@ -72,7 +82,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash, odd_de
     map_file_json = tmp_path / "material_mapping_map.json"
     assert map_file_json.exists()
     with map_file_json.open() as fh:
-        assert json.load(fh)
+        assert json.load(fh)["header"]["version"] == 1
 
     # mapped tracks output check
     map_file_mapped = tmp_path / "material_mapping_mapped.root"

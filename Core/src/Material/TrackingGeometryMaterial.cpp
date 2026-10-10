@@ -62,6 +62,35 @@ std::shared_ptr<const ISurfaceMaterial> resolve(
 
 }  // namespace
 
+TrackingGeometryMaterial TrackingGeometryMaterial::fromGeometry(
+    const TrackingGeometry& geometry, bool includeNonMaterial) {
+  std::vector<const Surface*> surfaces;
+  SurfaceMaterialMaps materials;
+  geometry.visitSurfaces(
+      [&](const Surface* surface) {
+        auto payload = surface->surfaceMaterialSharedPtr();
+        if (!payload && includeNonMaterial) {
+          payload = std::make_shared<ProtoGridSurfaceMaterial>(
+              MultiAxisSpec2D({AxisSpec::DeferredEquidistant(1),
+                               AxisSpec::DeferredEquidistant(1)}));
+        }
+        if (payload) {
+          surfaces.push_back(surface);
+          materials.emplace(surface->geometryId(), std::move(payload));
+        }
+      },
+      false);
+  auto material = detail::MaterialSurfaceRegistry(surfaces).materialMaps(
+      std::move(materials));
+  geometry.visitVolumes([&](const TrackingVolume* volume) {
+    if (volume->volumeMaterial() != nullptr) {
+      material.volumeMaterials.emplace(volume->geometryId(),
+                                       volume->volumeMaterialPtr());
+    }
+  });
+  return material;
+}
+
 void TrackingGeometryMaterial::apply(Surface& surface) const {
   if (auto material = resolve(*this, surface)) {
     surface.assignSurfaceMaterial(std::move(material));
