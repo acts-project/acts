@@ -170,8 +170,15 @@ class material_map_builder final : public volume_decorator<detector_t> {
   /// material from this builder
   bool surface_has_map(const dindex sf_idx) const {
     // All maps should contain the same information per surface
-    assert(m_bin_data.contains(sf_idx) == m_n_bins.contains(sf_idx) &&
-           m_bin_data.contains(sf_idx) == m_axis_spans.contains(sf_idx));
+    assert(m_bin_data.contains(sf_idx) == m_n_bins.contains(sf_idx));
+
+    // Specific axis spans are given, but not for this surface: Intentional?
+    if (!m_axis_spans.empty() && m_bin_data.contains(sf_idx) &&
+        !m_axis_spans.contains(sf_idx)) {
+      DETRAY_WARN_HOST("No axis spans passed for surface (local index)"
+                       << sf_idx
+                       << "-> Using mask enxent to fit material map instead");
+    }
 
     return m_bin_data.contains(sf_idx);
   }

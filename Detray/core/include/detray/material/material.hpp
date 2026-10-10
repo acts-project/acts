@@ -246,7 +246,8 @@ struct material {
   }
   DETRAY_HOST_DEVICE
   /// @return [mass_density / A]
-  constexpr scalar_type mass_to_molar_density(double ar, double mass_rho) {
+  constexpr scalar_type mass_to_molar_density(double ar,
+                                              double mass_rho) const {
     if (mass_rho == 0.) {
       return 0.f;
     }
