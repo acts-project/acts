@@ -9,19 +9,10 @@
 #pragma once
 
 // Local include(s).
-#include "traccc/hip/utils/stream_wrapper.hpp"
+#include "traccc/hip/utils/algorithm_base.hpp"
 
 // Project include(s).
-#include "traccc/edm/measurement_collection.hpp"
-#include "traccc/utils/algorithm.hpp"
-#include "traccc/utils/memory_resource.hpp"
-#include "traccc/utils/messaging.hpp"
-
-// VecMem include(s).
-#include <vecmem/utils/copy.hpp>
-
-// System include(s).
-#include <functional>
+#include "traccc/clusterization/device/measurement_sorting_algorithm.hpp"
 
 namespace traccc::hip {
 
@@ -34,13 +25,12 @@ namespace traccc::hip {
 /// to the rescue.
 ///
 class measurement_sorting_algorithm
-    : public algorithm<edm::measurement_collection::buffer(
-          const edm::measurement_collection::const_view&)>,
-      public messaging {
+    : public device::measurement_sorting_algorithm,
+      public hip::algorithm_base {
  public:
   /// Constructor for the algorithm
   ///
-  /// @param mr Unused, here for consistency of interface (see CUDA)
+  /// @param mr The memory resource(s) to use in the algorithm
   /// @param copy The copy object to use in the algorithm
   /// @param str The HIP stream to schedule the measurement sorting in
   /// @param logger The logger to use in the algorithm
@@ -50,21 +40,14 @@ class measurement_sorting_algorithm
       const stream_wrapper& str,
       std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
-  /// Callable operator performing the sorting on a container
-  ///
-  /// @param measurements The measurements to sort
-  ///
-  [[nodiscard]] output_type operator()(
-      const edm::measurement_collection::const_view& measurements)
-      const override;
-
  private:
-  /// Memory resource(s) to use
-  traccc::memory_resource m_mr;
-  /// Copy object to use in the algorithm
-  std::reference_wrapper<const vecmem::copy> m_copy;
-  /// HIP stream used by the algorithm
-  stream_wrapper m_stream;
+  /// Run the measurement-sorting kernels on the HIP stream.
+  void sorting_kernel(
+      const measurement_sorting_kernel_payload& payload) const override;
+
+  /// Wait for outstanding work on the algorithm stream or queue.
+  void synchronize() const override;
+
 };  // class measurement_sorting_algorithm
 
 }  // namespace traccc::hip

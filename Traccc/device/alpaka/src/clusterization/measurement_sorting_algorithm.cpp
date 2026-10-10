@@ -17,6 +17,9 @@
 // Project include(s).
 #include "traccc/clusterization/device/measurement_sorting.hpp"
 
+// VecMem include(s).
+#include <vecmem/containers/data/vector_buffer.hpp>
+
 // System include(s).
 #include <memory_resource>
 
@@ -64,68 +67,38 @@ struct fill_sorted_measurements {
 }  // namespace kernels
 
 measurement_sorting_algorithm::measurement_sorting_algorithm(
-    const traccc::memory_resource& mr, const vecmem::copy& copy, queue& q,
-    std::unique_ptr<const Logger> logger)
-    : messaging(std::move(logger)), m_mr{mr}, m_copy{copy}, m_queue{q} {}
+    const traccc::memory_resource& mr, const vecmem::copy& copy,
+    alpaka::queue& q, std::unique_ptr<const Logger> logger)
+    : device::measurement_sorting_algorithm(mr, copy, std::move(logger)),
+      alpaka::algorithm_base(q) {}
 
-measurement_sorting_algorithm::output_type
-measurement_sorting_algorithm::operator()(
-    const edm::measurement_collection::const_view& measurements_view) const {
-  // Exit early if there are no measurements.
-  if (measurements_view.capacity() == 0) {
-    return {};
-  }
+void measurement_sorting_algorithm::sorting_kernel(
+    const measurement_sorting_kernel_payload& payload) const {
+  const unsigned int n_measurements = payload.n_measurements;
 
-  // Get the number of measurements.
-  edm::measurement_collection::const_view::size_type n_measurements = 0u;
-  if (m_mr.host) {
-    const vecmem::async_size size =
-        m_copy.get().get_size(measurements_view, *(m_mr.host));
-    n_measurements = size.get();
-  } else {
-    n_measurements = m_copy.get().get_size(measurements_view);
-  }
-
-  // Create the output buffer.
-  output_type result{measurements_view.capacity(), m_mr.main,
-                     vecmem::data::buffer_type::resizable};
-  m_copy.get().setup(result)->ignore();
-  if (n_measurements == 0) {
-    return result;
-  }
-  m_copy.get()(measurements_view.size(), result.size())->ignore();
-
-  auto queue = details::get_queue(m_queue);
-
-  // Sorting keys and index sequence.
-  vecmem::data::vector_buffer<device::measurement_sort_key_t> keys(
-      n_measurements, m_mr.main);
-  vecmem::data::vector_buffer<unsigned int> indices(n_measurements, m_mr.main);
-  m_copy.get().setup(keys)->wait();
-  m_copy.get().setup(indices)->wait();
-
-  static constexpr unsigned int BLOCK_SIZE = 256;
-  const unsigned int n_blocks = (n_measurements + BLOCK_SIZE - 1) / BLOCK_SIZE;
-  auto workDiv = makeWorkDiv<Acc>(n_blocks, BLOCK_SIZE);
+  const unsigned int num_threads = warp_size() * 8;
+  const unsigned int num_blocks =
+      (n_measurements + num_threads - 1) / num_threads;
+  auto workDiv = makeWorkDiv<Acc>(num_blocks, num_threads);
 
   // Sort the indices by the sorting keys, with a radix sort.
-  ::alpaka::exec<Acc>(queue, workDiv, kernels::fill_measurement_sort_keys{},
-                      measurements_view, vecmem::get_data(keys),
-                      vecmem::get_data(indices));
-  details::sort_by_key(m_queue, m_mr, keys.ptr(), keys.ptr() + n_measurements,
-                       indices.ptr());
+  ::alpaka::exec<Acc>(details::get_queue(queue()), workDiv,
+                      kernels::fill_measurement_sort_keys{},
+                      payload.measurements, vecmem::get_data(payload.keys),
+                      vecmem::get_data(payload.indices));
+  details::sort_by_key(queue(), mr(), payload.keys.ptr(),
+                       payload.keys.ptr() + n_measurements,
+                       payload.indices.ptr());
 
   // Fill the output with the sorted measurements.
-  ::alpaka::exec<Acc>(queue, workDiv, kernels::fill_sorted_measurements{},
-                      measurements_view, vecmem::get_data(result),
-                      vecmem::get_data(indices));
+  ::alpaka::exec<Acc>(details::get_queue(queue()), workDiv,
+                      kernels::fill_sorted_measurements{}, payload.measurements,
+                      vecmem::get_data(payload.output),
+                      vecmem::get_data(payload.indices));
+}
 
-  // The keys and indices buffers are released on return, so the kernels
-  // using them must have finished by then.
-  m_queue.get().synchronize();
-
-  // Return the sorted buffer.
-  return result;
+void measurement_sorting_algorithm::synchronize() const {
+  queue().synchronize();
 }
 
 }  // namespace traccc::alpaka
