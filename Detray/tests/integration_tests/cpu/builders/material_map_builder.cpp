@@ -166,9 +166,6 @@ struct get_material_slab {
 
 /// Integration test: material builder as volume builder decorator
 GTEST_TEST(detray_builders, decorator_material_map_builder) {
-  using test_algebra = typename detector_t::algebra_type;
-  using scalar = dscalar<test_algebra>;
-  using transform3 = dtransform3D<test_algebra>;
   using mask_id = typename detector_t::masks::id;
 
   using pt_cylinder_factory_t =

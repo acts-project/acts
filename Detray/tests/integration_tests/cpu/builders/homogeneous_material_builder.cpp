@@ -47,10 +47,6 @@ using transform3 = dtransform3D<typename detector_t::algebra_type>;
 using mat_id = typename detector_t::material::id;
 using bin_index_t = axis::multi_bin<2u>;
 
-using rectangle_factory = surface_factory<detector_t, rectangle2D>;
-using hom_mat_factory_t = homogeneous_material_factory<detector_t>;
-using map_factory_t = material_map_factory<detector_t, bin_index_t>;
-
 constexpr scalar tol{1e-8f};
 
 constexpr dindex n_volumes{3u};
@@ -67,6 +63,9 @@ constexpr dindex unique_slab_sf{1u};
 /// carry identical material
 detector_t build_detector(vecmem::memory_resource &mr,
                           const volume_builder_options &builder_opts) {
+  using rectangle_factory = surface_factory<detector_t, rectangle2D>;
+  using hom_mat_factory_t = homogeneous_material_factory<detector_t>;
+
   detector_builder_t det_builder{};
   det_builder.set_name("test_detector");
 
@@ -131,7 +130,6 @@ struct get_material_slab {
 
 /// Integration test: material builder as volume builder decorator
 GTEST_TEST(detray_builders, decorator_homogeneous_material_builder) {
-  using transform3 = typename detector_t::transform3_type;
   using mask_id = typename detector_t::masks::id;
   using material_id = typename detector_t::material::id;
 
@@ -267,7 +265,6 @@ GTEST_TEST(detray_builders, decorator_homogeneous_material_builder) {
 
 /// Integration test: homogeneous material on a sparse subset of surfaces
 GTEST_TEST(detray_builders, homogeneous_material_on_sparse_surfaces) {
-  using transform3 = typename detector_t::transform3_type;
   using material_id = typename detector_t::material::id;
 
   using rectangle_factory = surface_factory<detector_t, rectangle2D>;
@@ -387,9 +384,6 @@ GTEST_TEST(detray_builders, homogeneous_material_on_sparse_surfaces) {
 
 /// Integration test to build an empty cuboid volume with material
 GTEST_TEST(detray_builders, detector_builder_with_material) {
-  using namespace detray;
-
-  using transform3 = typename detector_t::transform3_type;
   using mask_id = typename detector_t::masks::id;
   using material_id = typename detector_t::material::id;
 
