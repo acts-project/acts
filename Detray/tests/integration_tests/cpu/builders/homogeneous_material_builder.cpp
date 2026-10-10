@@ -51,7 +51,7 @@ using rectangle_factory = surface_factory<detector_t, rectangle2D>;
 using hom_mat_factory_t = homogeneous_material_factory<detector_t>;
 using map_factory_t = material_map_factory<detector_t, bin_index_t>;
 
-constexpr scalar tol{std::numeric_limits<scalar>::epsilon()};
+constexpr scalar tol{1e-8f};
 
 constexpr dindex n_volumes{3u};
 
