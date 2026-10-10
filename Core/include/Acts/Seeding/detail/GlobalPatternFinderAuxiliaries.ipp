@@ -442,8 +442,7 @@ void
 PatternStateAux<Hit_t, Sector_t, Topology_t>::addHit(
     const GeometryContext& gctx,
     const OrderedHit& hit,
-    const double residual,
-    const double resSigma,
+    const LineTestRes& testRes,
     const BeamspotInfo& beamSpot) 
 {
     /** Add the new hit */
@@ -466,9 +465,9 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::addHit(
     prevLayerHit = lastInsertedHit;
     lastInsertedHit = hit;
 
-    meanNormResidual2 += Acts::square(residual / resSigma);
-    lastResSigma = resSigma;
-    lastResidual = residual;
+    meanNormResidual2 += Acts::square(testRes.residual / testRes.sigma);
+    nDoF += testRes.nDof;
+    lastHitTestRes = testRes;
 
     /** If the new compatible hit is in a different group, update the line anchor */
     if (isNewSGroup) {
@@ -484,8 +483,7 @@ void
 PatternStateAux<Hit_t, Sector_t, Topology_t>::overWriteHit(
     const GeometryContext& gctx,
     const OrderedHit& newHit,
-    const double newResidual,
-    const double newResSigma,
+    const LineTestRes& newTestRes,
     const BeamspotInfo& beamSpot) 
 {
     const auto group {Topology_t::groupIndex(*newHit)};
@@ -518,10 +516,10 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::overWriteHit(
         updatePhi = true;
     }
     /** Update the residual */
-    meanNormResidual2 += Acts::square(newResidual / newResSigma) - 
-                         Acts::square(lastResidual / lastResSigma);
-    lastResSigma = newResSigma;
-    lastResidual = newResidual;
+    meanNormResidual2 += Acts::square(newTestRes.residual / newTestRes.sigma) - 
+                         Acts::square(lastHitTestRes.residual / lastHitTestRes.sigma);
+    nDoF += newTestRes.nDof - lastHitTestRes.nDof;
+    lastHitTestRes = newTestRes;
 
     auto& stHits {hitsPerGroup[group]};
     if (stHits.back() != lastInsertedHit) {
@@ -564,7 +562,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::getMeanResidual2() const {
     if (isFinalized) {
         return meanNormResidual2;
     }
-    return meanNormResidual2 / nBendingLayers();
+    return meanNormResidual2 / nDoF;
 }
 
 template <GlobPatFinderHit Hit_t, 

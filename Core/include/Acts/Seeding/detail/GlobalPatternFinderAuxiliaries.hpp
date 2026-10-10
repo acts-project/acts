@@ -160,21 +160,11 @@ struct PatternStateAux {
         }
         void print(std::ostream& ostr) const;
     };
-    /** @brief: Enum for possible outcomes of pattern line compatibility test */        
-    enum class LineTestDecision : uint8_t{
-        /** @brief Test successfull, add hit to pattern */
-        eAddHit,
-        /** @brief Test successfull with multiple pattern hits on same layer, branch the pattern */
-        eBranchPattern,
-        /** @brief Test failed, discard the hit */
-        eRejectHit
-    };
     /** @brief : Small struct to encapsulate the result of the line compatibility test */
     struct LineTestRes  {
         double residual{0.};
         double sigma{0.};
-        uint8_t nDof{1u};
-        LineTestDecision result {LineTestDecision::eRejectHit};
+        uint8_t nDof{0u};
     };
     /** @brief Enum for the bending plane parameter covariance */
     enum class BendPlaneCov : std::int8_t {
@@ -217,8 +207,7 @@ struct PatternStateAux {
      *  @param resSigma: residual uncertainty of the hit */
     void addHit(const GeometryContext& gctx,
                 const OrderedHit& hit,
-                const double residual,
-                const double resSigma,
+                const LineTestRes& testRes,
                 const BeamspotInfo& beamSpot);
     /** @brief Overwrite the hits on the last layer with the new one
      *  @param gctx: geometry context
@@ -227,8 +216,7 @@ struct PatternStateAux {
      *  @param newResSigma: residual uncertainty of the new hit */
     void overWriteHit(const GeometryContext& gctx,
                       const OrderedHit& newHit,
-                      const double newResidual,
-                      const double newResSigma,
+                      const LineTestRes& newTestRes,
                       const BeamspotInfo& beamSpot);
     /** @brief Compute the contribution of the intrinsic covariance of the hit to the residual
      *  @param gctx: geometry context
@@ -312,9 +300,6 @@ struct PatternStateAux {
     double leverArm{0.};
     /** @brief Mean over eta hits of the square of their residual divided by residual uncertainty */
     double meanNormResidual2{0.};
-    /** @brief Residual & residual uncertainty of the last inserted hit (needed when replacing a hit) */
-    double lastResidual{0.};
-    double lastResSigma{0.};
     /** @brief Pattern phi, which is the phi of the bending plane where the pattern lies */
     double patPhi{0.};
     /** @brief Signed offset of the bending plane from the origin */
@@ -323,6 +308,10 @@ struct PatternStateAux {
     BendPlaneCov_t bendPlaneCov{};
     /** @brief Pattern theta, which is the value of the seed hit */
     double patTheta{0.};
+    /** @brief Total number of degrees of freedom of the pattern */
+    std::size_t nDoF{0u};
+    /** @brief Residual and its uncertainty of the last hit tested (needed when replacing a hit)  */
+    LineTestRes lastHitTestRes{};
     /** @brief Sector */
     Sector_t sector{static_cast<typename Sector_t::Index_t>(0u)};
     /** @brief Counts of precision / non-precision / phi layers  */
@@ -346,9 +335,9 @@ struct PatternStateAux {
     /** @brief Print the covariance matrix */
     static std::string print(const BendPlaneCov_t& cov) {
         std::ostringstream os;
-        os << "[varPhi: " << cov[static_cast<std::size_t>(BendPlaneCov::ePhiPhi)]
-           << ", varS: " << cov[static_cast<std::size_t>(BendPlaneCov::eSS)]
-           << ", covPhiS: " << cov[static_cast<std::size_t>(BendPlaneCov::ePhiS)] << "]";
+        os << "[varPhi: " << cov[toUnderlying(BendPlaneCov::ePhiPhi)]
+           << ", varS: " << cov[toUnderlying(BendPlaneCov::eSS)]
+           << ", covPhiS: " << cov[toUnderlying(BendPlaneCov::ePhiS)] << "]";
         return os.str();
     }
 
