@@ -125,7 +125,7 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
 
     // non-const access
     auto &det_coll = det._materials.template get<mat_id>();
-    const std::size_t offset{det_coll.size()};
+    const auto offset{static_cast<dindex>(det_coll.size())};
 
     // Conmpute the material indices
     std::vector<dindex> global_idx;

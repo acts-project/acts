@@ -124,7 +124,7 @@ class grid_impl {
   /// part of a grid collection, so the offset is 0
   template <bool owner = is_owning>
     requires(!owner)
-  DETRAY_HOST_DEVICE grid_impl(const owning_type<true> &owning_grid)
+  DETRAY_HOST_DEVICE explicit grid_impl(const owning_type<true> &owning_grid)
       : m_bins(owning_grid.bins().data(), 0u, owning_grid.nbins()),
         m_axes(owning_grid.axes().bin_edge_offsets(),
                owning_grid.axes().bin_edges()) {}
