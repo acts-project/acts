@@ -9,6 +9,7 @@
 #include "ActsPlugins/Gnn/TorchEdgeClassifier.hpp"
 
 #include "ActsPlugins/Gnn/detail/TensorVectorConversion.hpp"
+#include "ActsPlugins/Gnn/detail/TorchDevice.hpp"
 #include "ActsPlugins/Gnn/detail/Utils.hpp"
 
 #include <chrono>
@@ -16,6 +17,8 @@
 #ifdef ACTS_GNN_WITH_CUDA
 #include <c10/cuda/CUDAGuard.h>
 #endif
+
+#include <stdexcept>
 
 #include <torch/script.h>
 #include <torch/torch.h>
@@ -32,44 +35,23 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
                                          std::unique_ptr<const Logger> _logger)
     : m_logger(std::move(_logger)), m_cfg(cfg) {
   c10::InferenceMode guard(true);
-  torch::Device device = torch::kCPU;
-
-  if (cfg.device.isCuda()) {
-    if (!torch::cuda::is_available()) {
-      throw std::runtime_error(
-          "CUDA device requested but CUDA is not available");
-    }
-    if (cfg.device.index >=
-        static_cast<std::size_t>(torch::cuda::device_count())) {
-      throw std::runtime_error(
-          "CUDA device index " + std::to_string(cfg.device.index) +
-          " is out of range (" + std::to_string(torch::cuda::device_count()) +
-          " devices available)");
-    }
-    device = torch::Device(torch::kCUDA, cfg.device.index);
-  }
 
   ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
                                     << TORCH_VERSION_MINOR << "."
                                     << TORCH_VERSION_PATCH);
 
-  try {
-    m_model = std::make_unique<torch::jit::Module>();
-    *m_model = torch::jit::load(m_cfg.modelPath, device);
-    m_model->eval();
-  } catch (const c10::Error& e) {
-    throw std::invalid_argument("Failed to load models: " + e.msg());
-  }
+  m_model =
+      detail::loadTorchModel(m_cfg.modelPath, cfg.device, cfg.modelDevice);
 }
 
 TorchEdgeClassifier::~TorchEdgeClassifier() {}
 
 PipelineTensors TorchEdgeClassifier::operator()(
     PipelineTensors tensors, const ExecutionContext& execContext) {
+  // The model runs on its configured device if there is one, else on the
+  // device the pipeline tensors live on
   const auto device =
-      execContext.device.type == Device::Type::eCUDA
-          ? torch::Device(torch::kCUDA, execContext.device.index)
-          : torch::kCPU;
+      detail::toTorchDevice(m_cfg.modelDevice.value_or(execContext.device));
   decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4;
   t0 = std::chrono::high_resolution_clock::now();
   ACTS_DEBUG("Start edge classification, use " << device);
@@ -82,7 +64,7 @@ PipelineTensors TorchEdgeClassifier::operator()(
 
   // add a protection to avoid calling for kCPU
 #ifndef ACTS_GNN_WITH_CUDA
-  assert(device == torch::Device(torch::kCPU));
+  assert(!device.is_cuda());
 #else
   std::optional<c10::cuda::CUDAGuard> device_guard;
   if (device.is_cuda()) {
@@ -90,15 +72,25 @@ PipelineTensors TorchEdgeClassifier::operator()(
   }
 #endif
 
-  auto nodeFeatures = detail::actsToNonOwningTorchTensor(tensors.nodeFeatures);
+  // The tensors are wrapped in place, so they have to be brought to the model
+  // device if that is not the device they live on. This is a no-op unless a
+  // model device is configured.
+  const auto toModelDevice = [&device](torch::Tensor tensor) {
+    return tensor.device() == device ? tensor : tensor.to(device);
+  };
+
+  auto nodeFeatures =
+      toModelDevice(detail::actsToNonOwningTorchTensor(tensors.nodeFeatures));
   ACTS_DEBUG("nodeFeatures: " << detail::TensorDetails{nodeFeatures});
 
-  auto edgeIndex = detail::actsToNonOwningTorchTensor(tensors.edgeIndex);
+  auto edgeIndex =
+      toModelDevice(detail::actsToNonOwningTorchTensor(tensors.edgeIndex));
   ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
 
   std::optional<torch::Tensor> edgeFeatures;
   if (tensors.edgeFeatures.has_value()) {
-    edgeFeatures = detail::actsToNonOwningTorchTensor(*tensors.edgeFeatures);
+    edgeFeatures = toModelDevice(
+        detail::actsToNonOwningTorchTensor(*tensors.edgeFeatures));
     ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
   }
 
