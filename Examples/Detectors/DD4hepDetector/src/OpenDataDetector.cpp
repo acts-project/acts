@@ -22,28 +22,36 @@ OpenDataDetector::OpenDataDetector(const Config& cfg,
                                    const Acts::GeometryContext& gctx)
     : DD4hepDetectorBase{cfg}, m_cfg{cfg} {
   ACTS_INFO("OpenDataDetector construct");
+  std::unique_ptr<Acts::TrackingGeometry> trackingGeometry;
   switch (m_cfg.constructionMethod) {
     case Config::ConstructionMethod::BarrelEndcap:
-      m_trackingGeometry =
-          ActsPlugins::DD4hep::buildOpenDataDetectorBarrelEndcap(
-              dd4hepDetector(), gctx, logger());
+      trackingGeometry = ActsPlugins::DD4hep::buildOpenDataDetectorBarrelEndcap(
+          dd4hepDetector(), gctx, logger());
       break;
     case Config::ConstructionMethod::DirectLayer:
-      m_trackingGeometry =
-          ActsPlugins::DD4hep::buildOpenDataDetectorDirectLayer(
-              dd4hepDetector(), gctx, logger());
+      trackingGeometry = ActsPlugins::DD4hep::buildOpenDataDetectorDirectLayer(
+          dd4hepDetector(), gctx, logger());
       break;
     case Config::ConstructionMethod::DirectLayerGrouped:
-      m_trackingGeometry =
+      trackingGeometry =
           ActsPlugins::DD4hep::buildOpenDataDetectorDirectLayerGrouped(
               dd4hepDetector(), gctx, logger());
       break;
     case Config::ConstructionMethod::TGeo:
-      m_trackingGeometry =
+      trackingGeometry =
           ActsPlugins::DD4hep::buildOpenDataDetectorBarrelEndcapViaTGeo(
               *dd4hepDetector().world().placement().ptr(), gctx, logger());
       break;
   }
+
+  // Blueprint construction does not apply any material, so load the map
+  // here, now that geometry identifiers are assigned.
+  if (m_cfg.materialMaps.has_value()) {
+    ACTS_INFO("Applying material map to the tracking geometry");
+    m_cfg.materialMaps->apply(*trackingGeometry);
+  }
+
+  m_trackingGeometry = std::move(trackingGeometry);
 }
 
 auto OpenDataDetector::config() const -> const Config& {
