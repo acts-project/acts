@@ -89,8 +89,19 @@ GTEST_TEST(detray_utils, tuple_helpers) {
                                           dtuple<int, int, double, float>>);
 
   // Check unique element tuple type
+  static_assert(std::same_as<detail::unique_t<std::tuple<>>, std::tuple<>>);
+  static_assert(
+      std::same_as<detail::unique_t<std::tuple<int>>, std::tuple<int>>);
+  static_assert(std::same_as<detail::unique_t<std::tuple<int, float, double>>,
+                             std::tuple<int, float, double>>);
+  static_assert(
+      std::same_as<detail::unique_t<std::tuple<int, float, int, int, double>>,
+                   std::tuple<int, float, double>>);
+
   static_assert(std::same_as<detail::unique_t<dtuple<>>, dtuple<>>);
   static_assert(std::same_as<detail::unique_t<dtuple<int>>, dtuple<int>>);
+  static_assert(std::same_as<detail::unique_t<dtuple<int, float, double>>,
+                             dtuple<int, float, double>>);
   static_assert(std::same_as<detail::unique_t<dtuple<int, int>>, dtuple<int>>);
   static_assert(
       std::same_as<detail::unique_t<dtuple<int, int, int>>, dtuple<int>>);
@@ -98,5 +109,5 @@ GTEST_TEST(detray_utils, tuple_helpers) {
                              dtuple<int, float>>);
   static_assert(
       std::same_as<detail::unique_t<dtuple<int, float, int, int, double>>,
-                   dtuple<double, float, int>>);
+                   dtuple<int, float, double>>);
 }
