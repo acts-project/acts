@@ -342,8 +342,7 @@ struct parameter_transporter : base_actor {
       assert(!dest_sf.identifier().is_invalid());
       if (departure_params.surface_link() == dest_sf.identifier()) {
         DETRAY_VERBOSE_HOST_DEVICE(
-            "Actor: On initial surface (%d), parameter transport not "
-            "required",
+            "Actor: On initial surface (%d), parameter transport not required",
             dest_sf.index());
 
         // Notify observers?
@@ -382,9 +381,7 @@ struct parameter_transporter : base_actor {
       detray::detail::transport_covariance_to_bound_impl(
           old_cov, propagation_step_jacobian, new_cov);
     } else {
-      DETRAY_VERBOSE_HOST_DEVICE(
-          "Actor: Departure surface link invalid, setting covariance to "
-          "identity");
+      DETRAY_VERBOSE_HOST_DEVICE("Actor: Departure surface link invalid");
     }
 
     DETRAY_VERBOSE_HOST_DEVICE(
