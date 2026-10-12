@@ -51,6 +51,7 @@ if(ACTS_BUILD_PLUGIN_GEANT4 AND TARGET DD4hep::DDG4)
         PluginDD4hepGeant4
         SHARED
         src/DDG4/ActsMaterialRecorder.cpp
+        src/DDG4/ActsMaterialTrackWriter.cpp
     )
     target_link_libraries(
         ActsPluginDD4hepGeant4

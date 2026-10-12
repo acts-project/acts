@@ -271,11 +271,12 @@ slowest step, so record generously once and reuse the file.
 ### Recording a DD4hep detector with ddsim
 
 For a DD4hep detector, the recording can also run directly in `ddsim`, on the
-same Geant4 geometry DDG4 builds for the full simulation. The
-`ActsMaterialRecorder` DDG4 action writes the same file format. It is part of
-the `ActsPluginDD4hepGeant4` library, which is built when both the DD4hep and
-the Geant4 plugins are enabled and DD4hep comes with DDG4. With that library
-on `LD_LIBRARY_PATH`, e.g. after sourcing `this_acts.sh`:
+same Geant4 geometry DDG4 builds for the full simulation. Two DDG4 actions in
+the `ActsPluginDD4hepGeant4` library do this: the `ActsMaterialRecorder`
+stepping action collects the material tracks, and the `ActsMaterialTrackWriter`
+event action writes them in the same file format as above. The library is built
+when both the DD4hep and the Geant4 plugins are enabled and DD4hep comes with
+DDG4. With it on `LD_LIBRARY_PATH`, e.g. after sourcing `this_acts.sh`:
 
 ```console
 ddsim --steeringFile Examples/Scripts/Python/material_recording_ddsim.py \
@@ -284,9 +285,9 @@ ddsim --steeringFile Examples/Scripts/Python/material_recording_ddsim.py \
 
 The steering file shoots 1000 geantinos per event, uniform in
 \f$|\eta| < 4\f$; the gun can be adjusted on the command line, e.g. with
-`--gun.multiplicity`, `--gun.etaMin` and `--gun.etaMax`. The recorder only
-supports single-threaded running, so split large recordings into independent
-jobs with different `--random.seed` values.
+`--gun.multiplicity`, `--gun.etaMin` and `--gun.etaMax`. With
+`--numberOfThreads`, all threads write into the single output file. Every
+simulated track gets an entry, also if it crosses no recorded material.
 
 ## Step 3: run the mapping
 
