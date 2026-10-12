@@ -17,6 +17,7 @@ def test_material_document(tmp_path):
     material = converter.fromFile(FIXTURES / "material-map-v1/minimal.json")
     material.description = "Python round trip"
     options = TrackingGeometryMaterialJsonConverter.Options()
+    options.materialFractionBits = 16
     for suffix in (".json", ".cbor"):
         path = tmp_path / ("material" + suffix)
         converter.toFile(material, path, options)

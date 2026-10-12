@@ -12,6 +12,7 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsPlugins/Mille/MillePedeSolver.hpp"
+#include "ActsPlugins/Mille/MillePedeSteering.hpp"
 
 namespace ActsExamples {
 
@@ -22,6 +23,7 @@ class MillePedeSolverAlgorithm final : public IAlgorithm {
   /// configuration
   struct Config {
     ActsPlugins::MillePedeSolver::Config solverConfig;
+    ActsPlugins::MillePedeSteeringConfig steeringConfig;
   };
 
   /// Constructor of the sandbox algorithm
