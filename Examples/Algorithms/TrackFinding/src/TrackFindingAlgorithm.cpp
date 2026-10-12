@@ -575,7 +575,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                          << iSeed << " with error" << secondResult.error());
           } else {
             // store the original previous state and jacobian to restore them
-            // later
             auto originalFirstMeasurementPrevious = firstMeasurement.previous();
             const Acts::BoundMatrix originalFirstMeasurementJacobian =
                 firstMeasurement.jacobian();
@@ -597,9 +596,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
               firstMeasurement.previous() =
                   secondTrackCopy.outermostTrackState().index();
-              // The first measurement still carries the transport from the
-              // seed. After the stitch its previous state is the first state
-              // of the second pass, so it needs the transport from there.
+              // transport from the second pass to the first measurement
               if (stitchJacobian.has_value()) {
                 firstMeasurement.jacobian() = *stitchJacobian;
               }

@@ -615,13 +615,9 @@ class TrackProxy
   /// @note This is dangerous with branching track state sequences, as it will break them
   /// @note This also automatically forward-links the track!
   /// @param invertJacobians Whether to invert the Jacobians of the track states
-  /// @return With @p invertJacobians, the inverse of the jacobian of the old
-  ///         first track state. It is the transport from the new tip back to
-  ///         the start parameters of the old sequence. The reversal has no
-  ///         slot for it, so a caller that links a state behind the new tip
-  ///         must put it on that state. Empty otherwise, if the track has no
-  ///         track states, or if the old first state carried a zero jacobian,
-  ///         which is what an earlier reversal leaves on the stem.
+  /// @return With @p invertJacobians, the inverse of the old first jacobian,
+  ///         which has no slot in the reversed sequence. Empty otherwise, for
+  ///         a track without states, or if that jacobian is zero.
   std::optional<BoundMatrix> reverseTrackStates(bool invertJacobians = false)
     requires(!ReadOnly)
   {
