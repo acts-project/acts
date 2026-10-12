@@ -112,6 +112,14 @@ with warnings.catch_warnings():
     except ModuleNotFoundError:
         arrowEnabled = False
 
+    # The DDG4 material recording actions run in ddsim, which finds them through
+    # the .components file of their library on the library path
+    ddg4MaterialRecordingEnabled = shutil.which("ddsim") is not None and any(
+        os.path.exists(os.path.join(d, "libActsPluginDD4hepGeant4.components"))
+        for d in os.environ.get("LD_LIBRARY_PATH", "").split(os.pathsep)
+        if d
+    )
+
 isCI = os.environ.get("CI") is not None
 
 

@@ -1,10 +1,12 @@
 from pathlib import Path
 import json
+import subprocess
 
 
 from helpers import (
     geant4Enabled,
     dd4hepEnabled,
+    ddg4MaterialRecordingEnabled,
     assert_entries,
 )
 import pytest
@@ -34,6 +36,88 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
         assert fp.stat().st_size > 2**10 * 50
         assert_entries(fp, tn, ee)
         assert_root_hash(fn, fp)
+
+
+@pytest.mark.slow
+@pytest.mark.odd
+@pytest.mark.skipif(
+    not ddg4MaterialRecordingEnabled,
+    reason="ddsim or the DDG4 material recording actions not available",
+)
+@pytest.mark.parametrize("threads", [1, 2])
+def test_material_recording_ddsim(tmp_path, threads):
+    from acts.examples.odd import getOpenDataDetectorDirectory
+    from acts.examples.root import RootMaterialTrackReader, RootMaterialTrackWriter
+
+    steering = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples/Scripts/Python/material_recording_ddsim.py"
+    )
+    oddXml = getOpenDataDetectorDirectory() / "xml"
+    output = tmp_path / "ddsim_material_tracks.root"
+    events = 4
+    tracks = 50
+
+    # The tracker alone keeps the geometry construction fast
+    cmd = [
+        "ddsim",
+        "--steeringFile",
+        str(steering),
+        "--compactFile",
+        str(oddXml / "OpenDataDetectorDefs.xml"),
+        str(oddXml / "OpenDataDetectorTracker.xml"),
+        "--numberOfEvents",
+        str(events),
+        "--gun.multiplicity",
+        str(tracks),
+        "--numberOfThreads",
+        str(threads),
+        "--random.seed",
+        "42",
+        "--outputFile",
+        str(output),
+    ]
+    result = subprocess.run(
+        cmd, cwd=tmp_path, capture_output=True, text=True, check=False
+    )
+    assert (
+        result.returncode == 0
+    ), f"ddsim failed:\n{result.stdout[-5000:]}\n{result.stderr[-5000:]}"
+
+    # One entry per geantino, each of them crosses at least the beam pipe
+    assert output.exists()
+    assert_entries(output, "material_tracks", events * tracks)
+    import ROOT
+
+    rdf = ROOT.RDataFrame("material_tracks", str(output))
+    data = rdf.AsNumpy(["event_id", "t_X0"])
+    assert set(data["event_id"]) == set(range(events))
+    assert (data["t_X0"] > 0).all()
+
+    # Read back with the reader the material mapping uses
+    s = Sequencer(numThreads=1)
+    s.addReader(
+        RootMaterialTrackReader(
+            level=acts.logging.INFO,
+            outputMaterialTracks="material_tracks",
+            treeName="material_tracks",
+            fileList=[str(output)],
+            readCachedSurfaceInformation=False,
+        )
+    )
+    roundTrip = tmp_path / "round_trip.root"
+    s.addWriter(
+        RootMaterialTrackWriter(
+            level=acts.logging.INFO,
+            inputMaterialTracks="material_tracks",
+            treeName="material_tracks",
+            filePath=str(roundTrip),
+            prePostStep=True,
+            recalculateTotals=True,
+        )
+    )
+    s.run()
+    assert_entries(roundTrip, "material_tracks", events * tracks)
 
 
 @pytest.mark.slow
