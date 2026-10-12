@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <memory>
 #include <numbers>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -122,7 +123,7 @@ struct MappingResult {
 
 MappingResult runMapper(World& world,
                         const std::vector<const Acts::Surface*>& surfaces,
-                        bool cacheByRegion) {
+                        bool cacheByRegion, double cellSize = 1_mm) {
   auto candidates = std::make_shared<ListCandidates>();
   candidates->surfaces = surfaces;
   candidates->cacheByRegion = cacheByRegion;
@@ -130,6 +131,7 @@ MappingResult runMapper(World& world,
   SensitiveSurfaceMapper::Config cfg;
   cfg.volumeMappings = {"Sensor"};
   cfg.candidateSurfaces = candidates;
+  cfg.centerGridCellSize = cellSize;
 
   MappingResult result;
   result.mapper = std::make_shared<SensitiveSurfaceMapper>(
@@ -145,10 +147,14 @@ MappingResult runMapper(World& world,
 BOOST_AUTO_TEST_SUITE(Geant4SensitiveSurfaceMapperSuite)
 
 BOOST_DATA_TEST_CASE(CenterMatchingTolerance,
-                     boost::unit_test::data::make({false, true}),
-                     cacheByRegion) {
+                     boost::unit_test::data::make({false, true}) *
+                         boost::unit_test::data::make({0., 0.1_um, 10_um, 1_mm,
+                                                       1_m}),
+                     cacheByRegion, cellSize) {
+  // The cell size changes only the speed, never the matches. 0 disables the
+  // grid and 0.1 um falls back to the linear scan
   World world;
-  // Centers on and next to multiples of 1 mm
+  // Centers on and next to multiples of 1 mm (and of 10 um)
   const std::vector<Acts::Vector3> centers = {
       {0., 0., 0.}, {1., 2., -3.}, {1.5, 2.5, -3.5}, {-7.99997, 4., 12.}};
   std::vector<std::shared_ptr<Acts::Surface>> planes;
@@ -169,7 +175,7 @@ BOOST_DATA_TEST_CASE(CenterMatchingTolerance,
         "Sensor", center + Acts::Vector3(0., 0., 2. * kTolerance)));
   }
 
-  const auto result = runMapper(world, surfaces, cacheByRegion);
+  const auto result = runMapper(world, surfaces, cacheByRegion, cellSize);
   for (std::size_t i = 0; i < centers.size(); ++i) {
     BOOST_CHECK_EQUAL(result.surfaceOf(inside[i]), surfaces[i]);
     BOOST_CHECK_EQUAL(result.surfaceOf(outside[i]), nullptr);
@@ -247,6 +253,27 @@ BOOST_DATA_TEST_CASE(AnnulusCentroidAndCenterMatchFollowCandidateOrder,
   }
   const auto result = runMapper(world, surfaces, cacheByRegion);
   BOOST_CHECK_EQUAL(result.surfaceOf(box), surfaces.front());
+}
+
+BOOST_DATA_TEST_CASE(
+    CenterGridCellSizeLogging,
+    boost::unit_test::data::make({-1_mm, 0., 0.15_um, 0.25_um, 1_mm}) ^
+        boost::unit_test::data::make({false, false, true, false, false}) ^
+        boost::unit_test::data::make({true, true, false, false, false}),
+    cellSize, expectWarning, expectDisabledInfo) {
+  // The grid needs cells larger than twice the comparator tolerance (0.1 um).
+  // Smaller cells fall back to the linear scan with a warning, while an
+  // explicitly disabled grid is only reported at INFO level.
+  SensitiveSurfaceMapper::Config cfg;
+  cfg.centerGridCellSize = cellSize;
+  std::ostringstream log;
+  SensitiveSurfaceMapper mapper(
+      cfg, Acts::getDefaultLogger("SensitiveSurfaceMapper", Acts::Logging::INFO,
+                                  &log));
+  BOOST_CHECK_EQUAL(log.str().find("WARNING") != std::string::npos,
+                    expectWarning);
+  BOOST_CHECK_EQUAL(log.str().find("Center grid disabled") != std::string::npos,
+                    expectDisabledInfo);
 }
 
 BOOST_AUTO_TEST_CASE(CheckMappingRequiresOnlySurfacesFlaggedSensitive) {

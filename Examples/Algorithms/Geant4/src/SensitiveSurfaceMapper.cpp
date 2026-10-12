@@ -183,11 +183,13 @@ class SensitiveSurfaceMapper::CandidateIndex {
  public:
   /// @param surfaces the candidate surfaces, in the order they are matched
   /// @param gctx the geometry context to compute the centers
-  /// @param buildGrid whether to build the grid; without it the center
-  ///        lookup is a linear scan, which is cheaper for a single lookup
+  /// @param cellSize the cell size of the grid, must be larger than twice the
+  ///        comparator tolerance, or 0 to not build the grid; without it the
+  ///        center lookup is a linear scan, which is cheaper for a single
+  ///        lookup
   CandidateIndex(std::vector<const Acts::Surface*> surfaces,
-                 const Acts::GeometryContext& gctx, bool buildGrid)
-      : m_surfaces{std::move(surfaces)} {
+                 const Acts::GeometryContext& gctx, double cellSize)
+      : m_surfaces{std::move(surfaces)}, m_cellSize{cellSize} {
     m_centers.reserve(m_surfaces.size());
     for (const auto [i, surface] : Acts::enumerate(m_surfaces)) {
       m_centers.push_back(surface->center(gctx));
@@ -195,10 +197,7 @@ class SensitiveSurfaceMapper::CandidateIndex {
         m_annulusIndices.push_back(i);
       }
     }
-    // Two centers that compare equal must be at most one cell apart
-    m_useGrid = buildGrid && m_comparator.compare<3>(
-                                 Acts::Vector3::Zero(),
-                                 Acts::Vector3{0.5 * s_cellSize, 0., 0.}) != 0;
+    m_useGrid = m_cellSize > 0.;
     if (!m_useGrid) {
       return;
     }
@@ -265,17 +264,14 @@ class SensitiveSurfaceMapper::CandidateIndex {
     }
   };
 
-  /// Cell size of the center grid, much larger than the comparator tolerance
-  static constexpr double s_cellSize = 1. * Acts::UnitConstants::mm;
-
   /// Grid cell of a position, std::nullopt if it is not finite or too large
   /// to be binned. Such centers are always compared, such positions use the
   /// linear scan.
-  static std::optional<CellKey> cellOf(const Acts::Vector3& position) {
+  std::optional<CellKey> cellOf(const Acts::Vector3& position) const {
     constexpr double maxCell = 1e15;
     CellKey key{};
     for (std::size_t i = 0; i < 3; ++i) {
-      const double cell = std::floor(position[i] / s_cellSize);
+      const double cell = std::floor(position[i] / m_cellSize);
       // Also false for NaN
       if (!(std::abs(cell) < maxCell)) {
         return std::nullopt;
@@ -289,6 +285,7 @@ class SensitiveSurfaceMapper::CandidateIndex {
   std::vector<Acts::Vector3> m_centers;
   std::vector<std::size_t> m_annulusIndices;
   Acts::detail::TransformComparator m_comparator{};
+  double m_cellSize{0.};
   bool m_useGrid{false};
   std::unordered_map<CellKey, std::vector<std::size_t>, CellHash> m_grid;
   std::vector<std::size_t> m_unbinned;
@@ -303,8 +300,26 @@ struct SensitiveSurfaceMapper::Cache {
 };
 
 SensitiveSurfaceMapper::SensitiveSurfaceMapper(
-    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
-    : m_cfg(cfg), m_logger(std::move(logger)) {}
+    const Config& cfg, std::unique_ptr<const Acts::Logger> _logger)
+    : m_cfg(cfg), m_logger(std::move(_logger)) {
+  // Two centers that compare equal must be at most one cell apart
+  if (!(m_cfg.centerGridCellSize > 0.)) {
+    ACTS_INFO("Center grid disabled (centerGridCellSize = "
+              << m_cfg.centerGridCellSize / Acts::UnitConstants::mm
+              << " mm), candidate surface centers are compared one by one");
+  } else if (Acts::detail::TransformComparator{}.compare<3>(
+                 Acts::Vector3::Zero(),
+                 Acts::Vector3{0.5 * m_cfg.centerGridCellSize, 0., 0.}) == 0) {
+    ACTS_WARNING("centerGridCellSize = "
+                 << m_cfg.centerGridCellSize / Acts::UnitConstants::mm
+                 << " mm is not larger than twice the tolerance of the "
+                    "surface center comparison, falling back to comparing "
+                    "candidate surface centers one by one, which can be much "
+                    "slower");
+  } else {
+    m_centerGridCellSize = m_cfg.centerGridCellSize;
+  }
+}
 
 void SensitiveSurfaceMapper::remapSensitiveNames(
     State& state, const Acts::GeometryContext& gctx,
@@ -394,13 +409,13 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
                  .try_emplace(
                      region,
                      m_cfg.candidateSurfaces->queryPosition(gctx, vtxGlobal),
-                     gctx, true)
+                     gctx, m_centerGridCellSize)
                  .first;
       }
       candidates = &it->second;
     } else {
       uncachedCandidates.emplace(
-          m_cfg.candidateSurfaces->queryPosition(gctx, vtxGlobal), gctx, false);
+          m_cfg.candidateSurfaces->queryPosition(gctx, vtxGlobal), gctx, 0.);
       candidates = &*uncachedCandidates;
     }
 
@@ -415,7 +430,8 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
                                                     << g4AbsPosition.transpose()
                                                     << ", query all surfaces");
     if (!cache.all.has_value()) {
-      cache.all.emplace(m_cfg.candidateSurfaces->queryAll(), gctx, true);
+      cache.all.emplace(m_cfg.candidateSurfaces->queryAll(), gctx,
+                        m_centerGridCellSize);
     }
     candidates = &*cache.all;
   }
