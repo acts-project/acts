@@ -286,7 +286,8 @@ ddsim --steeringFile Examples/Scripts/Python/material_recording_ddsim.py \
 The steering file shoots 1000 geantinos per event, uniform in
 \f$|\eta| < 4\f$; the gun can be adjusted on the command line, e.g. with
 `--gun.multiplicity`, `--gun.etaMin` and `--gun.etaMax`. With
-`--numberOfThreads`, all threads write into the single output file. Every
+`--numberOfThreads`, which `ddsim` offers from DD4hep 1.38, all threads write
+into the single output file. Every
 simulated track gets an entry, also if it crosses no recorded material.
 
 ## Step 3: run the mapping

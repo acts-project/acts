@@ -53,6 +53,13 @@ def test_material_recording_ddsim(tmp_path, threads):
         if d
     ):
         pytest.skip("DDG4 material recording actions not built")
+    if threads > 1:
+        # ddsim only runs multi-threaded from DD4hep 1.38
+        ddsimHelp = subprocess.run(
+            ["ddsim", "--help"], capture_output=True, text=True, check=False
+        )
+        if "--numberOfThreads" not in ddsimHelp.stdout:
+            pytest.skip("ddsim does not support multi-threading")
 
     from acts.examples.odd import getOpenDataDetectorDirectory
     from acts.examples.root import RootMaterialTrackReader, RootMaterialTrackWriter
@@ -78,13 +85,13 @@ def test_material_recording_ddsim(tmp_path, threads):
         str(events),
         "--gun.multiplicity",
         str(tracks),
-        "--numberOfThreads",
-        str(threads),
         "--random.seed",
         "42",
         "--outputFile",
         str(output),
     ]
+    if threads > 1:
+        cmd += ["--numberOfThreads", str(threads)]
     result = subprocess.run(
         cmd, cwd=tmp_path, capture_output=True, text=True, check=False
     )

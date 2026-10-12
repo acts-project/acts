@@ -16,7 +16,8 @@ by sourcing `this_acts.sh`. Usage:
 
 Gun settings can be overridden on the command line, e.g. `--gun.etaMin`,
 `--gun.etaMax`, `--gun.multiplicity` or `--random.seed`. Multi-threaded
-running with `--numberOfThreads` writes a single output file.
+running with `--numberOfThreads`, available from DD4hep 1.38, writes a single
+output file.
 """
 
 from DDSim.DD4hepSimulation import DD4hepSimulation
@@ -49,8 +50,9 @@ def materialRecordingOutput(dd4hepSimulation):
     recorder.RecordElementFractions = False
     kernel.steppingAction().add(recorder)
 
-    # One writer, shared by all worker threads in multi-threaded running
-    shared = dd4hepSimulation.numberOfThreads > 1
+    # One writer, shared by all worker threads in multi-threaded running. The
+    # kernel knows the number of threads independently of the ddsim version.
+    shared = Kernel().NumberOfThreads > 1
     writer = EventAction(kernel, "ActsMaterialTrackWriter/MaterialTrackWriter", shared)
     writer.OutputFile = dd4hepSimulation.outputFile
     writer.TreeName = "material_tracks"
