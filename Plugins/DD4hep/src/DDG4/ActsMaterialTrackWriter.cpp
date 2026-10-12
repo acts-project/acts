@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <mutex>
 #include <string>
 
 #include <DDG4/Factories.h>
@@ -18,7 +19,6 @@
 #include <DDG4/Geant4EventAction.h>
 #include <DDG4/Geant4Kernel.h>
 #include <DDG4/Geant4RunAction.h>
-#include <G4AutoLock.hh>
 #include <G4Event.hh>
 #include <G4Run.hh>
 #include <TFile.h>
@@ -80,6 +80,9 @@ class ActsMaterialTrackWriter final : public dd4hep::sim::Geant4EventAction {
   std::unique_ptr<TFile> m_file;
   TTree* m_tree = nullptr;
   std::unique_ptr<ActsPlugins::RootMaterialTrackIo> m_trackIo;
+  /// Guards opening and closing the output file. Writing the events is
+  /// serialised by the shared action wrapper in multi-threaded running.
+  std::mutex m_fileMutex;
   /// Number of threads that ended their run, the last one closes the file
   int m_endedRuns = 0;
   bool m_written = false;
@@ -104,7 +107,7 @@ void ActsMaterialTrackWriter::configureFiber(
 }
 
 ActsMaterialTrackWriter::~ActsMaterialTrackWriter() {
-  G4AutoLock lock(mutex());
+  std::scoped_lock lock(m_fileMutex);
   if (m_file != nullptr) {
     warning("Not all threads ended their run, closing '%s' anyway.",
             m_outputFile.c_str());
@@ -113,7 +116,7 @@ ActsMaterialTrackWriter::~ActsMaterialTrackWriter() {
 }
 
 void ActsMaterialTrackWriter::beginRun(const G4Run* /*run*/) {
-  G4AutoLock lock(mutex());
+  std::scoped_lock lock(m_fileMutex);
   if (m_file != nullptr) {
     // Already opened by another thread
     return;
@@ -141,11 +144,12 @@ void ActsMaterialTrackWriter::beginRun(const G4Run* /*run*/) {
 }
 
 void ActsMaterialTrackWriter::endRun(const G4Run* /*run*/) {
-  G4AutoLock lock(mutex());
+  std::scoped_lock lock(m_fileMutex);
   // Counting ended runs rather than running threads, since a thread may only
   // start its run once another one already ended its own
   ++m_endedRuns;
-  const int nThreads = std::max(context()->kernel().master().numThreads(), 1);
+  const int nThreads = std::max(
+      context()->kernel().master().property("NumberOfThreads").value<int>(), 1);
   if (m_endedRuns < nThreads || m_file == nullptr) {
     return;
   }
