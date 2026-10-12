@@ -373,8 +373,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   FreeVector derivatives = FreeVector::Zero();
   derivatives.head<3>() = direction;
   const AlignmentToBoundMatrix& alignToBound =
-      planeSurfaceObject->alignmentToBoundDerivative(tgContext, globalPosition,
-                                                     direction, derivatives);
+      planeSurfaceObject
+          ->alignmentToBoundDerivative(tgContext, globalPosition, direction,
+                                       derivatives)
+          .value();
   const AlignmentToPathMatrix alignToloc0 =
       alignToBound.block<1, 6>(eBoundLoc0, eAlignmentCenter0);
   const AlignmentToPathMatrix alignToloc1 =

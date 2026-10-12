@@ -423,13 +423,12 @@ class Surface : public virtual GeometryObject,
   /// @param position global 3D position
   /// @param direction global 3D momentum direction
   ///
-  /// @return Jacobian from global to local
-  /// @pre The direction is normalized and nonsingular in the selected
-  /// parametrization. Use the parametrization's checked inverse derivative
-  /// when the direction may be singular.
-  virtual FreeToBoundMatrix freeToBoundJacobian(const GeometryContext& gctx,
-                                                const Vector3& position,
-                                                const Vector3& direction) const;
+  /// @pre The direction is normalized.
+  /// @return Jacobian from global to local, or a chart-domain error for a
+  /// singular direction.
+  virtual Result<FreeToBoundMatrix> freeToBoundJacobian(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. free parameters. The calculation is
@@ -534,8 +533,8 @@ class Surface : public virtual GeometryObject,
   /// length
   ///
   /// @return Derivative of bound track parameters w.r.t. local frame
-  /// alignment parameters
-  AlignmentToBoundMatrix alignmentToBoundDerivative(
+  /// alignment parameters, or a chart-domain error for a singular direction
+  Result<AlignmentToBoundMatrix> alignmentToBoundDerivative(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const FreeVector& pathDerivative) const;
 

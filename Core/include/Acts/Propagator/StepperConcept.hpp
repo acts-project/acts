@@ -31,7 +31,9 @@ concept CommonStepper = requires {
   typename Stepper::Covariance;
 
   requires requires(const Stepper& s, State& t) {
-    { s.transportToCurvilinear(t) } -> std::same_as<typename Stepper::Jacobian>;
+    {
+      s.transportToCurvilinear(t)
+    } -> std::same_as<Result<typename Stepper::Jacobian>>;
     { s.prepareCurvilinearState(t) } -> std::same_as<bool>;
 
     requires requires(const typename Stepper::BoundParameters& par) {

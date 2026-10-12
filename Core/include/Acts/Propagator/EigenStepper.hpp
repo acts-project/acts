@@ -440,7 +440,8 @@ class EigenStepper final {
   ///
   /// @param [in,out] state State of the stepper
   /// @return The jacobian from the previous anchor to the curvilinear frame
-  Jacobian transportToCurvilinear(State& state) const;
+  /// @note Chart-domain errors are returned when covariance transport fails.
+  Result<Jacobian> transportToCurvilinear(State& state) const;
 
   /// Transport the covariance to a surface at the current position
   ///

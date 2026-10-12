@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
   Stepper::State state = stepper.makeState(options);
   stepper.initialize(state, cp);
 
-  const Jacobian jac = stepper.transportToCurvilinear(state);
+  const Jacobian jac = stepper.transportToCurvilinear(state).value();
   const auto pars = stepper.curvilinearParameters(state);
   const double pathLength = stepper.pathLength(state);
   // check parameters
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   CHECK_CLOSE_ABS(stepper.absoluteMomentum(state), absMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state), charge);
 
-  stepper.transportToCurvilinear(state);
+  BOOST_REQUIRE(stepper.transportToCurvilinear(state).ok());
   BOOST_CHECK_NE(*state.cov, cov);
 }
 

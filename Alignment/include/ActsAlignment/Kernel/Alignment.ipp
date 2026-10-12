@@ -52,10 +52,13 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
       Acts::detail::globalTrackParametersCovariance(
           tracks.trackStateContainer(), track.tipIndex());
   // Calculate the alignment state
-  const auto alignState = detail::trackAlignmentState(
+  auto alignState = detail::trackAlignmentState(
       gctx, tracks.trackStateContainer(), track.tipIndex(),
       globalTrackParamsCov, idxedAlignSurfaces, alignMask);
-  if (alignState.alignmentDof == 0) {
+  if (!alignState.ok()) {
+    return alignState.error();
+  }
+  if (alignState->alignmentDof == 0) {
     ACTS_VERBOSE("No alignment dof on track!");
     return AlignmentError::NoAlignmentDofOnTrack;
   }

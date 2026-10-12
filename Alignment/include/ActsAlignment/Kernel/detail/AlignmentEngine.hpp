@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
 
 #include <unordered_map>
@@ -135,9 +136,9 @@ void solveAlignmentParameters(
 /// @param idxedAlignSurfaces The indexed surfaces to be aligned
 ///
 /// @return The track alignment state containing fundamental alignment
-/// ingredients
+/// ingredients, or an error from the alignment derivative
 template <typename traj_t>
-TrackAlignmentState trackAlignmentState(
+Acts::Result<TrackAlignmentState> trackAlignmentState(
     const Acts::GeometryContext& gctx, const traj_t& multiTraj,
     Acts::TrackIndexType entryIndex,
     const std::pair<Acts::DynamicMatrix,
@@ -271,9 +272,12 @@ TrackAlignmentState trackAlignmentState(
       Acts::FreeVector pathDerivative = Acts::FreeVector::Zero();
       pathDerivative.head<3>() = direction;
       // Get the derivative of bound parameters w.r.t. alignment parameters
-      Acts::AlignmentToBoundMatrix alignToBound =
-          surface->alignmentToBoundDerivative(gctx, position, direction,
-                                              pathDerivative);
+      const auto alignToBoundResult = surface->alignmentToBoundDerivative(
+          gctx, position, direction, pathDerivative);
+      if (!alignToBoundResult.ok()) {
+        return alignToBoundResult.error();
+      }
+      Acts::AlignmentToBoundMatrix alignToBound = *alignToBoundResult;
       // Set the degree of freedom per surface.
       // @Todo: don't allocate memory for fixed degree of freedom and consider surface/layer/volume wise align mask (instead of using global mask as now)
       resetAlignmentDerivative(alignToBound, alignMask);

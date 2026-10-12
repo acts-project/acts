@@ -587,7 +587,12 @@ class CombinatorialKalmanFilter {
       // Transport the covariance to the surface
       BoundMatrix jacobian;
       if (isMaterialOnly) {
-        jacobian = stepper.transportToCurvilinear(state.stepping);
+        const auto transportResult =
+            stepper.transportToCurvilinear(state.stepping);
+        if (!transportResult.ok()) {
+          return transportResult.error();
+        }
+        jacobian = *transportResult;
       } else {
         auto transportRes = stepper.transportToBound(state.stepping, surface);
         if (!transportRes.ok()) {

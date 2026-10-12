@@ -822,9 +822,18 @@ class AtlasStepper {
   ///
   /// @param [in,out] state State of the stepper
   /// @return The jacobian from the previous anchor to the curvilinear frame
-  Jacobian transportToCurvilinear(State& state) const {
+  /// @note Chart-domain errors are returned when covariance transport fails.
+  Result<Jacobian> transportToCurvilinear(State& state) const {
     if (!state.cov.has_value()) {
-      return Jacobian::Identity();
+      return Result<Jacobian>::success(Jacobian::Identity());
+    }
+    const auto chartJacobian =
+        CurvilinearSurface(direction(state))
+            .boundParametrization()
+            .directionCoordinatesJacobianFromUnitDirection(direction(state),
+                                                           0.);
+    if (!chartJacobian.ok()) {
+      return Result<Jacobian>::failure(chartJacobian.error());
     }
 
     double P[60];
@@ -971,7 +980,7 @@ class AtlasStepper {
         CurvilinearSurface(position(state), direction(state)).surface();
     reanchor(state, *curvilinearSurface);
 
-    return jac;
+    return Result<Jacobian>::success(jac);
   }
 
   /// Transport the covariance to a surface at the current position
@@ -996,6 +1005,13 @@ class AtlasStepper {
 
     if (!state.cov.has_value()) {
       return Result<Jacobian>::success(Jacobian::Identity());
+    }
+    const auto chartJacobian =
+        surface.boundParametrization(state.options.geoContext)
+            .directionCoordinatesJacobianFromUnitDirection(direction(state),
+                                                           0.);
+    if (!chartJacobian.ok()) {
+      return Result<Jacobian>::failure(chartJacobian.error());
     }
 
     Acts::Vector3 gp(state.pVector[0], state.pVector[1], state.pVector[2]);

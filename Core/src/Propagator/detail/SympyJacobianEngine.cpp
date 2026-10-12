@@ -15,7 +15,7 @@
 
 namespace Acts::detail {
 
-void sympy::boundToBoundTransportJacobian(
+Result<void> sympy::boundToBoundTransportJacobian(
     const GeometryContext& geoContext, const Surface& surface,
     const FreeVector& freeParameters,
     const BoundToFreeMatrix& boundToFreeJacobian,
@@ -24,13 +24,18 @@ void sympy::boundToBoundTransportJacobian(
     BoundMatrix& fullTransportJacobian) {
   const Vector3 position = freeParameters.segment<3>(eFreePos0);
   const Vector3 direction = freeParameters.segment<3>(eFreeDir0);
+  // Calculate the jacobian from free to bound at the final surface
+  const auto projection =
+      surface.freeToBoundJacobian(geoContext, position, direction);
+  if (!projection.ok()) {
+    return projection.error();
+  }
+  freeToBoundJacobian = *projection;
   // Calculate the derivative of path length at the final surface or the
   // point-of-closest approach w.r.t. free parameters
   const FreeToPathMatrix freeToPath =
       surface.freeToPathDerivative(geoContext, position, direction);
-  // Calculate the jacobian from free to bound at the final surface
-  freeToBoundJacobian =
-      surface.freeToBoundJacobian(geoContext, position, direction);
+
   // https://acts.readthedocs.io/en/latest/white_papers/correction-for-transport-jacobian.html
   // Calculate the full jacobian from the local/bound parameters at the start
   // surface to local/bound parameters at the final surface
@@ -43,15 +48,20 @@ void sympy::boundToBoundTransportJacobian(
       std::span<const double, 8>(freeToPathDerivatives.data(), 8),
       std::span<const double, 8>(freeToPath.data(), 8),
       std::span<double, 36>(fullTransportJacobian.data(), 36));
+  return Result<void>::success();
 }
 
-void sympy::boundToCurvilinearTransportJacobian(
+Result<void> sympy::boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     FreeToBoundMatrix& freeToBoundJacobian,
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian) {
   // Calculate the jacobian from global to local at the curvilinear surface
-  freeToBoundJacobian = CurvilinearSurface(direction).freeToBoundJacobian();
+  const auto projection = CurvilinearSurface(direction).freeToBoundJacobian();
+  if (!projection.ok()) {
+    return projection.error();
+  }
+  freeToBoundJacobian = *projection;
 
   // Calculate the full jocobian from the local parameters at the start surface
   // to curvilinear parameters
@@ -64,6 +74,7 @@ void sympy::boundToCurvilinearTransportJacobian(
       std::span<const double, 8>(freeToPathDerivatives.data(), 8),
       std::span<const double, 3>(direction.data(), 3),
       std::span<double, 36>(fullTransportJacobian.data(), 36));
+  return Result<void>::success();
 }
 
 }  // namespace Acts::detail

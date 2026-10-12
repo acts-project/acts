@@ -70,7 +70,8 @@ BoundTrackParameters curvilinearParameters(
 ///        transform from free to bound
 ///
 /// @note The free parameters must be on the surface
-void transportCovarianceToBound(
+/// @return Success, or a chart-domain error without modifying the state
+Result<void> transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
@@ -90,7 +91,8 @@ void transportCovarianceToBound(
 ///        parametrisation to free parameters
 /// @param [in] direction Normalised direction vector
 ///
-void transportCovarianceToCurvilinear(
+/// @return Success, or a chart-domain error without modifying the state
+Result<void> transportCovarianceToCurvilinear(
     BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian,

@@ -376,9 +376,12 @@ auto Propagator<S, N>::makeResult(propagator_state_t state,
         return PropagatorError::Failure;
       }
       const auto jacobian = m_stepper.transportToCurvilinear(state.stepping);
+      if (!jacobian.ok()) {
+        return jacobian.error();
+      }
       result.endParameters = m_stepper.curvilinearParameters(state.stepping);
       if (m_stepper.hasCovariance(state.stepping)) {
-        result.transportJacobian = jacobian;
+        result.transportJacobian = *jacobian;
       }
     }
   }

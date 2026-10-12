@@ -83,12 +83,24 @@ Covariance transport retains its source-to-free-to-destination composition and
 path-length correction; reinitialization uses the destination interpretation.
 Chart configuration and alternative charts remain follow-up work.
 
-The matrix-returning surface and transport APIs retain a nonsingular-direction
-precondition. Their inverse derivatives use no additional conditioning cutoff.
-Use @ref Acts::BoundParametrization::directionCoordinatesJacobian for checked
-input handling. Propagating chart failures as `Result` through the legacy
-transport and stepper APIs remains follow-up work. Normalized-direction
-Jacobians avoid normalization and angle reconstruction in the propagation path.
+@ref Acts::Surface::freeToBoundJacobian "Surface inverse Jacobians" and
+@ref Acts::Surface::alignmentToBoundDerivative "alignment derivatives" return
+@ref Acts::Result "Result" for chart-domain failures. The covariance engines,
+steppers (including curvilinear transport), material interactions and final
+propagation results propagate those errors. Exactly axial canonical directions
+return @ref Acts::BoundParametrizationError::SingularDirection when an inverse
+derivative is required. Value-only transport remains available without a
+covariance. The transport path introduces no additional conditioning cutoff;
+use @ref Acts::BoundParametrization::directionCoordinatesJacobian for an
+explicit threshold. Normalized-direction Jacobians avoid normalization and
+angle reconstruction in the propagation path.
+
+Callers of `freeToBoundJacobian`, `alignmentToBoundDerivative`, and
+`transportToCurvilinear` must check `.ok()` before accessing the returned
+matrix. The covariance engines return `Result<void>` and preserve their inputs
+on chart-domain failure. Sympy also retains its scaled Jacobian and accumulated
+material effects on failure. Multi-component transport reports a component
+failure immediately; earlier components may already have been transported.
 
 The canonical-only wrappers in @ref TrackParameterHelpers.hpp are deprecated:
 @ref Acts::directionFromBoundParameters, @ref Acts::isBoundVectorValid,

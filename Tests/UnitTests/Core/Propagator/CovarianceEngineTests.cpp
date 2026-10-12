@@ -77,9 +77,10 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   std::optional<FreeMatrix> additionalFreeCovariance;
 
   // Covariance transport to curvilinear coordinates
-  detail::transportCovarianceToCurvilinear(
-      covariance, jacobian, transportJacobian, derivatives, boundToFreeJacobian,
-      additionalFreeCovariance, direction);
+  BOOST_REQUIRE(detail::transportCovarianceToCurvilinear(
+                    covariance, jacobian, transportJacobian, derivatives,
+                    boundToFreeJacobian, additionalFreeCovariance, direction)
+                    .ok());
 
   // Tests to see that the right components are (un-)changed
   BOOST_CHECK_NE(covariance, Covariance::Identity());
@@ -102,10 +103,11 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   FreeToBoundCorrection freeToBoundCorrection(false);
   std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(position, direction).planeSurface();
-  detail::transportCovarianceToBound(
-      tgContext, *surface, covariance, jacobian, transportJacobian, derivatives,
-      boundToFreeJacobian, additionalFreeCovariance, parameters,
-      freeToBoundCorrection);
+  BOOST_REQUIRE(detail::transportCovarianceToBound(
+                    tgContext, *surface, covariance, jacobian,
+                    transportJacobian, derivatives, boundToFreeJacobian,
+                    additionalFreeCovariance, parameters, freeToBoundCorrection)
+                    .ok());
 
   BOOST_CHECK_NE(covariance, Covariance::Identity());
   BOOST_CHECK_NE(jacobian, 2. * Jacobian::Identity());
@@ -150,10 +152,11 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   freeToBoundCorrection.apply = true;
 
   // Transport to the surface with free to bound correction
-  detail::transportCovarianceToBound(
-      tgContext, *surface, covariance, jacobian, transportJacobian, derivatives,
-      boundToFreeJacobian, additionalFreeCovariance, parameters,
-      freeToBoundCorrection);
+  BOOST_REQUIRE(detail::transportCovarianceToBound(
+                    tgContext, *surface, covariance, jacobian,
+                    transportJacobian, derivatives, boundToFreeJacobian,
+                    additionalFreeCovariance, parameters, freeToBoundCorrection)
+                    .ok());
   BOOST_CHECK_NE(covariance, Covariance::Identity());
 }
 

@@ -288,11 +288,11 @@ struct MultiStepperTester {
       // Single stepper
       auto single_result =
           single_stepper.step(single_state, defaultNDir, nullptr);
-      single_stepper.transportToCurvilinear(single_state);
+      BOOST_REQUIRE(single_stepper.transportToCurvilinear(single_state).ok());
 
       // Multi stepper;
       auto multi_result = multi_stepper.step(multi_state, defaultNDir, nullptr);
-      multi_stepper.transportToCurvilinear(multi_state);
+      BOOST_REQUIRE(multi_stepper.transportToCurvilinear(multi_state).ok());
 
       // Check equality
       BOOST_REQUIRE(multi_result.ok());

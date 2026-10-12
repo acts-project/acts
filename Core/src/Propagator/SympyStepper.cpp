@@ -124,23 +124,28 @@ void SympyStepper::update(State& state, const Vector3& uposition,
   state.field.reset();
 }
 
-SympyStepper::Jacobian SympyStepper::transportToCurvilinear(
+Result<SympyStepper::Jacobian> SympyStepper::transportToCurvilinear(
     State& state) const {
   Jacobian jacobian = Jacobian::Identity();
   if (!state.cov.has_value()) {
     state.materialEffectsAccumulator.reset();
-    return jacobian;
+    return Result<Jacobian>::success(jacobian);
   }
   const std::optional<FreeMatrix> additionalFreeCovariance =
       state.materialEffectsAccumulator.computeAdditionalFreeCovariance(
           direction(state));
-  state.materialEffectsAccumulator.reset();
-  detail::sympy::fromScaledBoundToFree(state.jacToGlobal, qOverP(state));
-  detail::sympy::transportCovarianceToCurvilinear(
-      *state.cov, jacobian, state.derivative, state.jacToGlobal,
+  auto jacToGlobal = state.jacToGlobal;
+  detail::sympy::fromScaledBoundToFree(jacToGlobal, qOverP(state));
+  const auto transportResult = detail::sympy::transportCovarianceToCurvilinear(
+      *state.cov, jacobian, state.derivative, jacToGlobal,
       additionalFreeCovariance, state.pars.template segment<3>(eFreeDir0));
-  detail::sympy::toScaledBoundToFree(state.jacToGlobal, qOverP(state));
-  return jacobian;
+  if (!transportResult.ok()) {
+    return Result<Jacobian>::failure(transportResult.error());
+  }
+  detail::sympy::toScaledBoundToFree(jacToGlobal, qOverP(state));
+  state.jacToGlobal = jacToGlobal;
+  state.materialEffectsAccumulator.reset();
+  return Result<Jacobian>::success(jacobian);
 }
 
 Result<SympyStepper::Jacobian> SympyStepper::transportToBound(
@@ -159,13 +164,17 @@ Result<SympyStepper::Jacobian> SympyStepper::transportToBound(
   const std::optional<FreeMatrix> additionalFreeCovariance =
       state.materialEffectsAccumulator.computeAdditionalFreeCovariance(
           direction(state));
-  state.materialEffectsAccumulator.reset();
-  detail::sympy::fromScaledBoundToFree(state.jacToGlobal, qOverP(state));
-  detail::sympy::transportCovarianceToBound(
+  auto jacToGlobal = state.jacToGlobal;
+  detail::sympy::fromScaledBoundToFree(jacToGlobal, qOverP(state));
+  const auto transportResult = detail::sympy::transportCovarianceToBound(
       state.options.geoContext, surface, *state.cov, jacobian, state.derivative,
-      state.jacToGlobal, additionalFreeCovariance, state.pars,
-      freeToBoundCorrection);
-  detail::sympy::toScaledBoundToFree(state.jacToGlobal, qOverP(state));
+      jacToGlobal, additionalFreeCovariance, state.pars, freeToBoundCorrection);
+  if (!transportResult.ok()) {
+    return Result<Jacobian>::failure(transportResult.error());
+  }
+  detail::sympy::toScaledBoundToFree(jacToGlobal, qOverP(state));
+  state.jacToGlobal = jacToGlobal;
+  state.materialEffectsAccumulator.reset();
   return Result<Jacobian>::success(jacobian);
 }
 

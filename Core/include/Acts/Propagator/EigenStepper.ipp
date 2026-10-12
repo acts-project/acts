@@ -145,15 +145,18 @@ void Acts::EigenStepper<E>::update(State& state, const Vector3& uposition,
 
 template <typename E>
 auto Acts::EigenStepper<E>::transportToCurvilinear(State& state) const
-    -> Jacobian {
+    -> Result<Jacobian> {
   Jacobian jacobian = Jacobian::Identity();
   if (!state.cov.has_value()) {
-    return jacobian;
+    return Result<Jacobian>::success(jacobian);
   }
-  detail::transportCovarianceToCurvilinear(
+  const auto transportResult = detail::transportCovarianceToCurvilinear(
       *state.cov, jacobian, state.jacTransport, state.derivative,
       state.jacToGlobal, std::nullopt, direction(state));
-  return jacobian;
+  if (!transportResult.ok()) {
+    return Result<Jacobian>::failure(transportResult.error());
+  }
+  return Result<Jacobian>::success(jacobian);
 }
 
 template <typename E>
@@ -170,10 +173,13 @@ auto Acts::EigenStepper<E>::transportToBound(
   if (!state.cov.has_value()) {
     return Result<Jacobian>::success(jacobian);
   }
-  detail::transportCovarianceToBound(
+  const auto transportResult = detail::transportCovarianceToBound(
       state.options.geoContext, surface, *state.cov, jacobian,
       state.jacTransport, state.derivative, state.jacToGlobal, std::nullopt,
       state.pars, freeToBoundCorrection);
+  if (!transportResult.ok()) {
+    return Result<Jacobian>::failure(transportResult.error());
+  }
   return Result<Jacobian>::success(jacobian);
 }
 

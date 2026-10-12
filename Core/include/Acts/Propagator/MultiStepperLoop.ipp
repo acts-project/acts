@@ -92,6 +92,15 @@ auto MultiStepperLoop<S, R>::transportToBound(
 
     auto res = m_singleStepper.transportToBound(cmpState, surface,
                                                 freeToBoundCorrection);
+    // A chart failure invalidates the component covariance even if the reducer
+    // selected a different component. Preserve the existing handling of missed
+    // surfaces, but never silently retain a covariance in an invalid chart.
+    if (!res.ok() &&
+        res.error().category() ==
+            make_error_code(BoundParametrizationError::SingularDirection)
+                .category()) {
+      return Result<Jacobian>::failure(res.error());
+    }
     if (i == selected) {
       jacobian = std::move(res);
     }

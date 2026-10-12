@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(jacobian_test) {
   // (1a) Standard test with curvilinear not glazingly close to z axis
   Vector3 direction = Vector3(7., 8., 9.).normalized();
   CurvilinearSurface surface = CurvilinearSurface(direction);
-  FreeToBoundMatrix f2cJacobian = surface.freeToBoundJacobian();
+  FreeToBoundMatrix f2cJacobian = surface.freeToBoundJacobian().value();
 
   double phi = VectorHelpers::phi(direction);
   double theta = VectorHelpers::theta(direction);
@@ -89,11 +89,12 @@ BOOST_AUTO_TEST_CASE(SynthesizedPlaneUsesSameJacobians) {
     BOOST_CHECK(curvilinear.boundParametrization().isGlobalSpherical());
     BOOST_CHECK(plane->boundParametrization(gctx).isGlobalSpherical());
     const auto forward = curvilinear.boundToFreeJacobian();
-    const auto inverse = curvilinear.freeToBoundJacobian();
+    const auto inverse = curvilinear.freeToBoundJacobian().value();
     CHECK_CLOSE_ABS(
         forward, plane->boundToFreeJacobian(gctx, position, direction), 1e-14);
     CHECK_CLOSE_ABS(
-        inverse, plane->freeToBoundJacobian(gctx, position, direction), 1e-14);
+        inverse, plane->freeToBoundJacobian(gctx, position, direction).value(),
+        1e-14);
     CHECK_CLOSE_ABS((inverse * forward).eval(), BoundMatrix::Identity(), 1e-14);
   }
 }

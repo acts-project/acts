@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   BOOST_CHECK_EQUAL(es.outputStepSize(esState), originalStepSize);
 
   // Test the curvilinear state construction
-  const BoundMatrix curvJacobian = es.transportToCurvilinear(esState);
+  const BoundMatrix curvJacobian = es.transportToCurvilinear(esState).value();
   auto curvPars = es.curvilinearParameters(esState);
   CHECK_CLOSE_ABS(curvPars.position(tgContext), cp.position(tgContext), eps);
   CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), 10e-6);
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
 
   // The covariance transport
   esState.cov = cov;
-  es.transportToCurvilinear(esState);
+  BOOST_REQUIRE(es.transportToCurvilinear(esState).ok());
   BOOST_CHECK_NE(*esState.cov, cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
@@ -512,8 +512,8 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_covariance_matches_eigen) {
           eigenStepper.step(eigenState, Direction::Forward(), nullptr).ok());
     }
 
-    sympyStepper.transportToCurvilinear(sympyState);
-    eigenStepper.transportToCurvilinear(eigenState);
+    BOOST_REQUIRE(sympyStepper.transportToCurvilinear(sympyState).ok());
+    BOOST_REQUIRE(eigenStepper.transportToCurvilinear(eigenState).ok());
     const Covariance sympyCov = sympyStepper.covariance(sympyState).value();
     const Covariance eigenCov = eigenStepper.covariance(eigenState).value();
     // the tolerance scales with sqrt(var_i * var_j) which makes the small q/p
@@ -612,7 +612,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_dense_kernel_matches_vacuum_kernel) {
           (mode == 1 || (mode == 2 && i % 2 == 0)) ? &vacuum : nullptr;
       BOOST_REQUIRE(stepper.step(state, Direction::Forward(), material).ok());
     }
-    return stepper.transportToCurvilinear(state);
+    return stepper.transportToCurvilinear(state).value();
   };
 
   for (int track = 0; track < 4; ++track) {

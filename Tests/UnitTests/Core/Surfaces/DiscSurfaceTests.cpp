@@ -63,8 +63,11 @@ BOOST_AUTO_TEST_CASE(DiscParametrizationJacobians) {
   const auto free = transformBoundToFreeParameters(*surface, tgContext, bound);
   const auto forward = surface->boundToFreeJacobian(
       tgContext, free.segment<3>(eFreePos0), free.segment<3>(eFreeDir0));
-  const auto inverse = surface->freeToBoundJacobian(
-      tgContext, free.segment<3>(eFreePos0), free.segment<3>(eFreeDir0));
+  const auto inverse =
+      surface
+          ->freeToBoundJacobian(tgContext, free.segment<3>(eFreePos0),
+                                free.segment<3>(eFreeDir0))
+          .value();
   CHECK_CLOSE_ABS((inverse * forward).eval(), BoundMatrix::Identity(), 1e-14);
   constexpr double h = 1e-6;
   for (int i = 0; i < static_cast<int>(eBoundSize); ++i) {

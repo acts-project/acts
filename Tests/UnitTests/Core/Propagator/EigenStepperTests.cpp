@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(es.outputStepSize(esState), originalStepSize);
 
   // Test the curvilinear state construction
-  const BoundMatrix curvJacobian = es.transportToCurvilinear(esState);
+  const BoundMatrix curvJacobian = es.transportToCurvilinear(esState).value();
   auto curvPars = es.curvilinearParameters(esState);
   CHECK_CLOSE_ABS(curvPars.position(tgContext), cp.position(tgContext), eps);
   CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), 10e-6);
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // The covariance transport
   esState.cov = cov;
-  es.transportToCurvilinear(esState);
+  BOOST_REQUIRE(es.transportToCurvilinear(esState).ok());
   BOOST_CHECK_NE(*esState.cov, cov);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());

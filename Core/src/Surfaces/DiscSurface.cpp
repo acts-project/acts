@@ -227,9 +227,17 @@ BoundToFreeMatrix DiscSurface::boundToFreeJacobian(
   return jacToGlobal;
 }
 
-FreeToBoundMatrix DiscSurface::freeToBoundJacobian(
+Result<FreeToBoundMatrix> DiscSurface::freeToBoundJacobian(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
+  // Preserve the existing domain without an additional conditioning cutoff.
+  const auto directionJacobian =
+      boundParametrization(gctx).directionCoordinatesJacobianFromUnitDirection(
+          direction, 0.);
+  if (!directionJacobian.ok()) {
+    return Result<FreeToBoundMatrix>::failure(directionJacobian.error());
+  }
+
   using VectorHelpers::perp;
   using VectorHelpers::phi;
 
@@ -257,15 +265,10 @@ FreeToBoundMatrix DiscSurface::freeToBoundJacobian(
   // Time element
   jacToLocal(eBoundTime, eFreeTime) = 1;
   // Directional and momentum elements for reference frame surface
-  // The matrix-returning surface API requires a nonsingular direction.
-  // Keep its existing domain (no additional conditioning cutoff).
-  const auto directionJacobian =
-      boundParametrization(gctx).directionCoordinatesJacobianFromUnitDirection(
-          direction, 0.);
-  assert(directionJacobian.ok() && "Singular bound direction Jacobian");
+
   jacToLocal.block<2, 3>(eBoundDir0, eFreeDir0) = *directionJacobian;
   jacToLocal(eBoundQOverP, eFreeQOverP) = 1;
-  return jacToLocal;
+  return Result<FreeToBoundMatrix>::success(jacToLocal);
 }
 
 MultiIntersection3D DiscSurface::intersect(

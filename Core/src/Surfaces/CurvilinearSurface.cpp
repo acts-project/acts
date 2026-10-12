@@ -66,7 +66,15 @@ BoundToFreeMatrix CurvilinearSurface::boundToFreeJacobian() const {
   return jacobian;
 }
 
-FreeToBoundMatrix CurvilinearSurface::freeToBoundJacobian() const {
+Result<FreeToBoundMatrix> CurvilinearSurface::freeToBoundJacobian() const {
+  // Preserve the existing domain without an additional conditioning cutoff.
+  const auto directionJacobian =
+      boundParametrization().directionCoordinatesJacobianFromUnitDirection(
+          m_direction, 0.);
+  if (!directionJacobian.ok()) {
+    return Result<FreeToBoundMatrix>::failure(directionJacobian.error());
+  }
+
   // this is copied from the `Surface::freeToBoundJacobian`
   // implementation without bounds check and definite direction
 
@@ -81,16 +89,11 @@ FreeToBoundMatrix CurvilinearSurface::freeToBoundJacobian() const {
   // Time component
   jacobian(eBoundTime, eFreeTime) = 1;
   // Directional and momentum elements for reference frame surface
-  // The matrix-returning surface API requires a nonsingular direction.
-  // Keep its existing domain (no additional conditioning cutoff).
-  const auto directionJacobian =
-      boundParametrization().directionCoordinatesJacobianFromUnitDirection(
-          m_direction, 0.);
-  assert(directionJacobian.ok() && "Singular bound direction Jacobian");
+
   jacobian.block<2, 3>(eBoundDir0, eFreeDir0) = *directionJacobian;
   jacobian(eBoundQOverP, eFreeQOverP) = 1;
 
-  return jacobian;
+  return Result<FreeToBoundMatrix>::success(jacobian);
 }
 
 FreeToPathMatrix CurvilinearSurface::freeToPathDerivative() const {
