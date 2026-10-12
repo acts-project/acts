@@ -23,3 +23,5 @@ add_unittest(BoundToCurvilinearConversionTests BoundToCurvilinearConversionTests
 add_unittest(SympyStepper SympyStepperTests.cpp)
 add_unittest(RiddersStepper RiddersStepperTests.cpp)
 add_unittest(NavigationPolicyState NavigationPolicyStateTests.cpp)
+
+add_unittest(BoundChartError BoundChartErrorTests.cpp)
