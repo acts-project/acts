@@ -102,6 +102,21 @@ on chart-domain failure. Sympy also retains its scaled Jacobian and accumulated
 material effects on failure. Multi-component transport reports a component
 failure immediately; earlier components may already have been transported.
 
+The public extension API consists of the mathematical operations on
+@ref Acts::BoundParametrization, the surface Jacobians, and the operations
+required by @ref Acts::Concepts::CommonStepper and the other stepper concepts.
+Custom surface Jacobians must agree with
+@ref Acts::Surface::boundParametrization and propagate inverse-derivative
+failures through @ref Acts::Result. The unit-direction derivative methods are
+supported primitives for custom surfaces and steppers; their normalized-input
+preconditions avoid redundant work in transport.
+
+The covariance and Jacobian engines in `Acts::detail`, including their Sympy
+implementations, are internal helpers under the @ref versioning "API policy".
+Their installed headers allow use by template implementations but do not make
+them public API. Custom steppers can implement the public contract without
+using these engines. Parametrization storage and dispatch are also private.
+
 The canonical-only wrappers in @ref TrackParameterHelpers.hpp are deprecated:
 @ref Acts::directionFromBoundParameters, @ref Acts::isBoundVectorValid,
 @ref Acts::normalizeBoundParameters, @ref Acts::addBoundParameters and

@@ -33,6 +33,11 @@ namespace Acts {
 /// covariance matrices retain their existing Eigen storage. The private storage
 /// representation has no stable binary layout contract.
 ///
+/// The public operations define the coordinate interpretation used by surfaces
+/// and steppers. Both coordinate-based and unit-direction derivative methods
+/// are supported API for custom implementations. Concrete representations and
+/// visitor dispatch are private implementation details.
+///
 /// Currently only canonical global-spherical coordinates are supported. Values
 /// can represent the poles, but the inverse direction derivative is singular
 /// there. No alternative chart can be selected yet.

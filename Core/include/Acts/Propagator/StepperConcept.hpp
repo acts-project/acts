@@ -23,6 +23,12 @@ namespace Acts {
 namespace Concepts {
 
 /// @brief Concept that is satisfied by both single- and multi-steppers.
+///
+/// Public extension contract for custom steppers. Required operations must be
+/// accessible to propagation algorithms and actors. Fallible transport and
+/// parameter extraction return Result, including direction-parametrization
+/// failures. Internal covariance/Jacobian engines in Acts::detail are not part
+/// of this contract; implementations may perform these calculations themselves.
 template <typename Stepper, typename State = typename Stepper::State>
 concept CommonStepper = requires {
   typename Stepper::BoundParameters;
