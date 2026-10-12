@@ -147,13 +147,13 @@ std::vector<const Acts::Surface*> SensitiveCandidates::queryPosition(
   }
   return surfaces;
 }
-std::optional<const Acts::GeometryObject*> SensitiveCandidatesBase::queryRegion(
+const Acts::GeometryObject* SensitiveCandidatesBase::queryRegion(
     const Acts::GeometryContext& /*gctx*/,
     const Acts::Vector3& /*position*/) const {
-  return std::nullopt;
+  return nullptr;
 }
 
-std::optional<const Acts::GeometryObject*> SensitiveCandidates::queryRegion(
+const Acts::GeometryObject* SensitiveCandidates::queryRegion(
     const Acts::GeometryContext& gctx, const Acts::Vector3& position) const {
   // Must resolve the same object that `queryPosition` takes the surfaces from
   switch (m_trackingGeo->geometryVersion()) {
@@ -163,7 +163,7 @@ std::optional<const Acts::GeometryObject*> SensitiveCandidates::queryRegion(
     case Gen3:
       return m_trackingGeo->resolveLowestTrackingVolume(gctx, position).value();
   }
-  return std::nullopt;
+  return nullptr;
 }
 
 std::vector<const Acts::Surface*> SensitiveCandidates::queryAll() const {
@@ -385,14 +385,14 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
     auto vtx = convertPosition(g4Polyhedron->GetVertex(i));
     auto vtxGlobal = localG4ToGlobal * vtx;
 
-    if (const auto region =
+    if (const auto* region =
             m_cfg.candidateSurfaces->queryRegion(gctx, vtxGlobal);
-        region.has_value()) {
-      auto it = cache.regions.find(*region);
+        region != nullptr) {
+      auto it = cache.regions.find(region);
       if (it == cache.regions.end()) {
         it = cache.regions
                  .try_emplace(
-                     *region,
+                     region,
                      m_cfg.candidateSurfaces->queryPosition(gctx, vtxGlobal),
                      gctx, true)
                  .first;

@@ -24,7 +24,6 @@
 #include <algorithm>
 #include <memory>
 #include <numbers>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -63,13 +62,14 @@ struct ListCandidates : public SensitiveCandidatesBase {
     return surfaces;
   }
 
-  std::optional<const Acts::GeometryObject*> queryRegion(
+  const Acts::GeometryObject* queryRegion(
       const Acts::GeometryContext& /*gctx*/,
       const Acts::Vector3& /*position*/) const override {
-    if (!cacheByRegion) {
-      return std::nullopt;
+    // The first surface serves as the key of the single region
+    if (!cacheByRegion || surfaces.empty()) {
+      return nullptr;
     }
-    return nullptr;
+    return surfaces.front();
   }
 };
 

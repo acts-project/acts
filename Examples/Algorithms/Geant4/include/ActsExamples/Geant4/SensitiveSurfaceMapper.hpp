@@ -17,7 +17,6 @@
 
 #include <map>
 #include <memory>
-#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -65,12 +64,15 @@ struct SensitiveCandidatesBase {
   /// The mapper then queries the candidates and builds its lookup only once
   /// per region. The default disables this caching.
   ///
+  /// The returned pointer is only used as a key during one
+  /// `remapSensitiveNames` call and is never dereferenced. It must stay valid
+  /// and identify a single region for the duration of that call.
+  ///
   /// @param gctx the geometry context
   /// @param position the position to look for sensitive surfaces
   ///
-  /// @return the region (may be nullptr if there is none), or std::nullopt
-  ///         if the candidates can not be cached by region
-  virtual std::optional<const Acts::GeometryObject*> queryRegion(
+  /// @return the region, or nullptr if the candidates can not be cached
+  virtual const Acts::GeometryObject* queryRegion(
       const Acts::GeometryContext& gctx, const Acts::Vector3& position) const;
 
   virtual ~SensitiveCandidatesBase() = default;
@@ -88,7 +90,7 @@ struct SensitiveCandidates : public SensitiveCandidatesBase {
 
   std::vector<const Acts::Surface*> queryAll() const override;
 
-  std::optional<const Acts::GeometryObject*> queryRegion(
+  const Acts::GeometryObject* queryRegion(
       const Acts::GeometryContext& gctx,
       const Acts::Vector3& position) const override;
 
