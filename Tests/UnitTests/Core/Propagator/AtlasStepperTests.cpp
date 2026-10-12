@@ -21,6 +21,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldError.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -43,6 +44,7 @@
 #include <optional>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -190,9 +192,6 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   freeParams[eFreeDir2] = newUnitDir[eMom2];
   freeParams[eFreeQOverP] = charge / newAbsMom;
 
-  // WARNING for some reason there seems to be an additional flag that makes
-  //         the update method not do anything when it is set. Why?
-  state.state_ready = false;
   BOOST_CHECK(params.covariance().has_value());
   stepper.update(state, freeParams, params.parameters(), *params.covariance(),
                  *plane);
@@ -255,7 +254,7 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
   CHECK_CLOSE_ABS(pars.momentum(), absMom * unitDir, eps);
   BOOST_CHECK_EQUAL(pars.charge(), charge);
   BOOST_CHECK(pars.covariance().has_value());
-  BOOST_CHECK_NE(*pars.covariance(), cov);
+  CHECK_CLOSE_ABS(*pars.covariance(), cov, eps);
   // check Jacobian. should be identity since there was no propagation yet
   CHECK_CLOSE_ABS(jac, Jacobian(Jacobian::Identity()), eps);
   // check propagation length
@@ -284,7 +283,7 @@ BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
   CHECK_CLOSE_ABS(pars.momentum(), absMom * unitDir, eps);
   BOOST_CHECK_EQUAL(pars.charge(), charge);
   BOOST_CHECK(pars.covariance().has_value());
-  BOOST_CHECK_NE(*pars.covariance(), cov);
+  CHECK_CLOSE_ABS(*pars.covariance(), cov, eps);
   // check Jacobian. should be identity since there was no propagation yet
   CHECK_CLOSE_ABS(jac, Jacobian(Jacobian::Identity()), eps);
   // check propagation length
@@ -400,19 +399,12 @@ BOOST_AUTO_TEST_CASE(Reset) {
   auto copyState = [&](auto& field, const auto& other) {
     using field_t = std::decay_t<decltype(field)>;
     std::decay_t<decltype(other)> copy = stepper.makeState(options);
-    stepper.initialize(state, cp);
+    stepper.initialize(copy, cp);
 
-    copy.state_ready = other.state_ready;
-    copy.useJacobian = other.useJacobian;
-    copy.step = other.step;
-    copy.maxPathLength = other.maxPathLength;
-    copy.mcondition = other.mcondition;
-    copy.needgradient = other.needgradient;
     copy.newfield = other.newfield;
     copy.field = other.field;
     copy.pVector = other.pVector;
-    std::copy(std::begin(other.parameters), std::end(other.parameters),
-              std::begin(copy.parameters));
+    copy.derivativeReady = other.derivativeReady;
     copy.cov = other.cov;
     copy.pathAccumulated = other.pathAccumulated;
     copy.stepSize = other.stepSize;
@@ -421,11 +413,6 @@ BOOST_AUTO_TEST_CASE(Reset) {
     copy.fieldCache = MagneticFieldProvider::Cache(
         std::in_place_type<typename field_t::Cache>,
         other.fieldCache.template as<typename field_t::Cache>());
-
-    copy.debug = other.debug;
-    copy.debugString = other.debugString;
-    copy.debugPfxWidth = other.debugPfxWidth;
-    copy.debugMsgWidth = other.debugMsgWidth;
 
     return copy;
   };
@@ -440,11 +427,11 @@ BOOST_AUTO_TEST_CASE(Reset) {
   BOOST_CHECK_EQUAL(*stateCopy.cov, newCov);
   BOOST_CHECK_EQUAL(stepper.position(stateCopy),
                     freeParams.template segment<3>(eFreePos0));
-  BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
-                    freeParams.template segment<3>(eFreeDir0).normalized());
+  CHECK_CLOSE_ABS(stepper.direction(stateCopy),
+                  freeParams.template segment<3>(eFreeDir0).normalized(), eps);
   BOOST_CHECK_EQUAL(stepper.absoluteMomentum(stateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state));
+  BOOST_CHECK_EQUAL(stepper.charge(stateCopy), newCharge);
   BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(stateCopy.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(stateCopy.stepSize.value(), stepSize);
@@ -586,6 +573,198 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       state, getNavigationTarget(*target, BoundaryTolerance::Infinite()),
       navDir, ConstrainedStep::Type::Navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
+}
+
+// Record lookups in a non-uniform field so stale cached values are observable.
+class RecordingField final : public MagneticFieldProvider {
+ public:
+  mutable std::vector<Vector3> lookups;
+  mutable std::size_t failAt = std::numeric_limits<std::size_t>::max();
+
+  Cache makeCache(const MagneticFieldContext& /*mctx*/) const override {
+    return Cache(std::in_place_type<int>, 0);
+  }
+
+  Result<Vector3> getField(const Vector3& position,
+                           Cache& /*cache*/) const override {
+    lookups.push_back(position);
+    if (lookups.size() == failAt) {
+      return Result<Vector3>::failure(MagneticFieldError::OutOfBounds);
+    }
+    return Result<Vector3>::success(
+        Vector3(0., 0., 1_T + position.x() * (0.01_T / 1_mm)));
+  }
+};
+
+BOOST_AUTO_TEST_CASE(ReinitializeAndUpdateInvalidateField) {
+  auto field = std::make_shared<RecordingField>();
+  Stepper stepper(field);
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+  auto state = stepper.makeState(options);
+  const auto initial = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
+  stepper.initialize(state, initial);
+  BOOST_REQUIRE(stepper.step(state, Direction::Forward(), nullptr).ok());
+
+  const auto updated = BoundTrackParameters::createCurvilinear(
+      pos4 + Vector4(100_mm, 0., 0., 0.), unitDir, -charge / absMom,
+      std::nullopt, particleHypothesis);
+  stepper.initialize(state, updated);
+  BOOST_CHECK(!stepper.hasCovariance(state));
+  field->lookups.clear();
+  BOOST_REQUIRE(stepper.step(state, Direction::Forward(), nullptr).ok());
+  CHECK_CLOSE_ABS(field->lookups.front(), updated.position(geoCtx), eps);
+  // No Jacobian should be propagated after removing the covariance.
+  for (std::size_t i = eFreeSize; i < 56; ++i) {
+    BOOST_CHECK_EQUAL(state.pVector[i], 0.);
+  }
+  auto fresh = stepper.makeState(options);
+  stepper.initialize(fresh, updated);
+  BOOST_REQUIRE(stepper.step(fresh, Direction::Forward(), nullptr).ok());
+  CHECK_CLOSE_ABS(stepper.position(state), stepper.position(fresh), eps);
+  CHECK_CLOSE_ABS(stepper.direction(state), stepper.direction(fresh), eps);
+
+  // The component update must also invalidate a cached field.
+  stepper.update(state, pos, unitDir, charge / absMom, time);
+  field->lookups.clear();
+  BOOST_REQUIRE(stepper.step(state, Direction::Forward(), nullptr).ok());
+  CHECK_CLOSE_ABS(field->lookups.front(), pos, eps);
+
+  // A bound update must accept the supplied charge sign and enable covariance.
+  const FreeVector free = transformBoundToFreeParameters(
+      updated.referenceSurface(), geoCtx, updated.parameters());
+  stepper.update(state, free, updated.parameters(), cov,
+                 updated.referenceSurface());
+  BOOST_CHECK_EQUAL(stepper.qOverP(state), -charge / absMom);
+  BOOST_CHECK(stepper.hasCovariance(state));
+  field->lookups.clear();
+  BOOST_REQUIRE(stepper.step(state, Direction::Forward(), nullptr).ok());
+  CHECK_CLOSE_ABS(field->lookups.front(), updated.position(geoCtx), eps);
+}
+
+BOOST_AUTO_TEST_CASE(FieldQueriesAndFailuresDoNotPoisonCachedField) {
+  auto field = std::make_shared<RecordingField>();
+  Stepper stepper(field);
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+  auto state = stepper.makeState(options);
+  const auto initial = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
+  stepper.initialize(state, initial);
+  BOOST_REQUIRE(stepper.step(state, Direction::Forward(), nullptr).ok());
+  const auto parameters = state.pVector;
+  const Vector3 acceptedField = state.field;
+  const double path = state.pathAccumulated;
+  BOOST_REQUIRE(stepper.getField(state, Vector3(1000_mm, 0., 0.)).ok());
+  CHECK_CLOSE_ABS(state.field, acceptedField, 0.);
+
+  // Fail at the last stage, after a successful middle-stage lookup.
+  field->failAt = field->lookups.size() + 2;
+  const auto failed = stepper.step(state, Direction::Forward(), nullptr);
+  BOOST_REQUIRE(!failed.ok());
+  BOOST_CHECK(failed.error() == MagneticFieldError::OutOfBounds);
+  CHECK_CLOSE_ABS(state.field, acceptedField, 0.);
+  BOOST_CHECK_EQUAL_COLLECTIONS(state.pVector.begin(), state.pVector.end(),
+                                parameters.begin(), parameters.end());
+  BOOST_CHECK_EQUAL(state.pathAccumulated, path);
+  BOOST_CHECK_EQUAL(state.nSteps, 1u);
+  BOOST_CHECK_EQUAL(state.statistics.nSuccessfulSteps, 1u);
+}
+
+BOOST_AUTO_TEST_CASE(NeutralParticleDoesNotBend) {
+  Stepper stepper(magneticField);
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+  auto state = stepper.makeState(options);
+  const auto neutral =
+      ParticleHypothesis::pion0().withMomentumHypothesis(absMom);
+  const auto initial =
+      BoundTrackParameters::createCurvilinear(pos4, unitDir, 0., cov, neutral);
+  stepper.initialize(state, initial);
+  const auto result = stepper.step(state, Direction::Forward(), nullptr);
+  BOOST_REQUIRE(result.ok());
+  CHECK_CLOSE_ABS(stepper.direction(state), unitDir, eps);
+  CHECK_CLOSE_ABS(stepper.position(state), Vector3(pos + *result * unitDir),
+                  eps);
+  const double dtds = std::hypot(1., neutral.mass() / absMom);
+  CHECK_CLOSE_ABS(stepper.time(state), time + *result * dtds, eps);
+  const auto jac = stepper.transportToCurvilinear(state);
+  CHECK_CLOSE_ABS(jac(eBoundPhi, eBoundQOverP), 0., eps);
+  CHECK_CLOSE_ABS(jac(eBoundTheta, eBoundQOverP), 0., eps);
+  CHECK_CLOSE_ABS(jac(eBoundTime, eBoundQOverP), 0., eps);
+  BOOST_CHECK_EQUAL(stepper.qOverP(state), 0.);
+}
+
+BOOST_AUTO_TEST_CASE(TransportBeforeSteppingIncludesPathCorrections) {
+  Stepper stepper(magneticField);
+  Stepper::Options options(geoCtx, magCtx);
+  auto state = stepper.makeState(options);
+  const auto initial = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
+  stepper.initialize(state, initial);
+  auto target = CurvilinearSurface(pos, Vector3::UnitZ()).planeSurface();
+  const auto jac = stepper.transportToBound(state, *target).value();
+  const auto frame =
+      initial.referenceSurface().referenceFrame(geoCtx, pos, unitDir);
+  const double dtds = std::hypot(1., particleHypothesis.mass() / absMom);
+  for (int i = 0; i < 2; ++i) {
+    CHECK_CLOSE_ABS(jac(eBoundTime, i), -dtds * frame(2, i) / unitDir.z(), eps);
+  }
+  // Reanchoring must allow another transport without an intervening step.
+  const auto inverse = stepper.transportToCurvilinear(state);
+  CHECK_CLOSE_ABS(BoundMatrix(inverse * jac), BoundMatrix::Identity().eval(),
+                  1e-12);
+  CHECK_CLOSE_ABS(*state.cov, cov, 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(CurvilinearFrameNearBeam) {
+  Stepper stepper(magneticField);
+  Stepper::Options options(geoCtx, magCtx);
+  auto state = stepper.makeState(options);
+  const Vector3 nearBeam = Vector3(1e-3, 2e-3, 1.).normalized();
+  const auto initial = BoundTrackParameters::createCurvilinear(
+      pos4, nearBeam, charge / absMom, cov, particleHypothesis);
+  stepper.initialize(state, initial);
+  const auto jac = stepper.transportToCurvilinear(state);
+  CHECK_CLOSE_ABS(jac, BoundMatrix::Identity().eval(), 1e-10);
+  CHECK_CLOSE_ABS(*state.cov, cov, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(StepAdjustmentLimitsAndZeroStep) {
+  Stepper stepper(magneticField);
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = 1_m;
+  options.stepTolerance = 1e-20;
+  options.maxRungeKuttaStepTrials = 0;
+  auto state = stepper.makeState(options);
+  const auto initial = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
+  stepper.initialize(state, initial);
+  const auto parameters = state.pVector;
+  auto result = stepper.step(state, Direction::Forward(), nullptr);
+  BOOST_REQUIRE(!result.ok());
+  BOOST_CHECK(result.error() == EigenStepperError::StepSizeAdjustmentFailed);
+  BOOST_CHECK_EQUAL(state.statistics.nRejectedSteps, 1u);
+  BOOST_CHECK_EQUAL_COLLECTIONS(state.pVector.begin(), state.pVector.end(),
+                                parameters.begin(), parameters.end());
+
+  state.options.stepSizeCutOff = 1_m;
+  stepper.initialize(state, initial);
+  result = stepper.step(state, Direction::Forward(), nullptr);
+  BOOST_REQUIRE(!result.ok());
+  BOOST_CHECK(result.error() == EigenStepperError::StepSizeStalled);
+
+  stepper.initialize(state, initial);
+  stepper.updateStepSize(state, 0., ConstrainedStep::Type::Navigator);
+  result = stepper.step(state, Direction::Forward(), nullptr);
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK_EQUAL(*result, 0.);
+  BOOST_CHECK_EQUAL(state.nSteps, 0u);
+  BOOST_CHECK_EQUAL(state.statistics.nAttemptedSteps, 0u);
+  BOOST_CHECK_EQUAL(state.statistics.nSuccessfulSteps, 0u);
+  BOOST_CHECK_EQUAL_COLLECTIONS(state.pVector.begin(), state.pVector.end(),
+                                parameters.begin(), parameters.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
