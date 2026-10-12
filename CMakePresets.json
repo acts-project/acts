@@ -107,7 +107,8 @@
             "displayName": "GitHub-CI",
             "inherits": "ci-common",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "ACTS_BUILD_CALORIMETER": "ON"
             }
         },
         {
@@ -132,6 +133,7 @@
                 "ACTS_BUILD_ODD": "OFF",
                 "ACTS_BUILD_PYTHON_BINDINGS": "OFF",
                 "ACTS_BUILD_EXAMPLES": "OFF",
+                "ACTS_BUILD_CALORIMETER": "OFF",
                 "ACTS_BUILD_PLUGIN_TRACCC": "OFF",
                 "ACTS_BUILD_EXAMPLES_DD4HEP": "OFF",
                 "ACTS_BUILD_EXAMPLES_FASTJET": "OFF",

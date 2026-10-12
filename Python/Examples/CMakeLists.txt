@@ -18,7 +18,13 @@ set(py_files
 # Macro to add example bindings conditionally
 macro(add_examples_binding_if)
     set(_options)
-    set(_one_value_args NAME FLAG PLUGIN_IMPORT)
+    set(_one_value_args
+        NAME
+        FLAG
+        PLUGIN_IMPORT
+        SOURCE
+        PYTHON_EXTRA
+    )
     set(_multi_value_args LINK_LIBRARIES)
     cmake_parse_arguments(
         AEBI
@@ -55,7 +61,10 @@ macro(add_examples_binding_if)
         # automatically prefix the target name
         set(_target "ActsExamplesPythonBindings${AEBI_NAME}")
 
-        pybind11_add_module(${_target} src/plugins/${AEBI_NAME}.cpp)
+        if(NOT DEFINED AEBI_SOURCE)
+            set(AEBI_SOURCE src/plugins/${AEBI_NAME}.cpp)
+        endif()
+        pybind11_add_module(${_target} ${AEBI_SOURCE})
 
         install(TARGETS ${_target} DESTINATION ${_examples_python_install_dir})
 
@@ -90,12 +99,14 @@ macro(add_examples_binding_if)
         ${_python_dir}/acts/examples/${_name_lower}.py
         @ONLY
     )
-    # Augment the file if needed
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in")
-        file(
-            READ "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in"
-            _extra_content
+    # Augment the file if needed; components can keep helpers with their sources.
+    if(NOT DEFINED AEBI_PYTHON_EXTRA)
+        set(AEBI_PYTHON_EXTRA
+            "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in"
         )
+    endif()
+    if(EXISTS "${AEBI_PYTHON_EXTRA}")
+        file(READ "${AEBI_PYTHON_EXTRA}" _extra_content)
         file(
             APPEND "${_python_dir}/acts/examples/${_name_lower}.py"
             "\n${_extra_content}"
@@ -209,6 +220,14 @@ add_examples_binding_if(
     LINK_LIBRARIES Acts::ExamplesDetectorDD4hep
     FLAG ACTS_BUILD_EXAMPLES_DD4HEP
     PLUGIN_IMPORT TRUE
+)
+add_examples_binding_if(
+    NAME Nodd
+    SOURCE ${PROJECT_SOURCE_DIR}/Examples/Nodd/python/Nodd.cpp
+    PYTHON_EXTRA ${PROJECT_SOURCE_DIR}/Examples/Nodd/python/nodd.py
+    LINK_LIBRARIES Acts::ExamplesNodd
+    FLAG ACTS_BUILD_EXAMPLES_DD4HEP
+    PLUGIN_IMPORT FALSE
 )
 add_examples_binding_if(
     NAME EDM4hep

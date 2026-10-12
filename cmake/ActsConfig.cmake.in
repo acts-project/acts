@@ -90,6 +90,9 @@ endif()
 if(PluginHashing IN_LIST Acts_COMPONENTS)
     find_dependency(Annoy @ANNOY_VERSION@ CONFIG EXACT)
 endif()
+if(CalorimeterJets IN_LIST Acts_COMPONENTS)
+    find_dependency(FastJet @FastJet_VERSION@ EXACT)
+endif()
 
 # dependencies that we have built ourselves but cannot be
 # straightforwardly handed to cmake

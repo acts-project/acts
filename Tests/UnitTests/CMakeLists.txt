@@ -43,6 +43,7 @@ macro(add_unittest _name _source)
 endmacro()
 
 add_subdirectory_if(Core ACTS_BUILD_CORE_UNITTESTS)
+add_subdirectory_if(Calorimeter ACTS_BUILD_CALORIMETER)
 add_subdirectory_if(
     Examples
     ACTS_BUILD_EXAMPLES
