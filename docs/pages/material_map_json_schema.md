@@ -21,8 +21,8 @@ modifying the geometry or resolving deferred binning. `includeNonMaterial=True`
 adds deferred one-bin proto grids for bare surfaces. Pass the result directly to
 @ref Acts::TrackingGeometryMaterialJsonConverter::toFile; volume assignments are
 preserved during extraction but rejected by the version 1 converter.
-After a mapping run, @ref ActsExamples::MaterialMapping::material exposes the
-finalized assignments for serialization in the same way.
+After running the Python mapping example, `mapping.material` holds the finalized
+assignments for serialization in the same way.
 
 `acts.IMaterialDecorator.fromFile` supports both formats. The new converter rejects
 legacy input with an error pointing to `ActsMaterialMapMigrate`.
