@@ -90,17 +90,17 @@ int main(int argc, char* argv[]) {
   }
   try {
     Acts::TrackingGeometryMaterialJsonConverter::Options options;
-    for (int i = 3; i < argc; ++i) {
+    for (int i = 3; i < argc; i += 2) {
       const std::string_view option = argv[i];
-      if (++i == argc) {
+      if (i + 1 == argc) {
         throw std::invalid_argument("Missing value for " + std::string(option));
       }
       if (option == "--material-fraction-bits") {
-        options.materialFractionBits = number<unsigned int>(argv[i]);
+        options.materialFractionBits = number<unsigned int>(argv[i + 1]);
       } else if (option == "--compression-level") {
-        options.compressionLevel = number<int>(argv[i]);
+        options.compressionLevel = number<int>(argv[i + 1]);
       } else if (option == "--indentation") {
-        options.indentation = number<unsigned int>(argv[i]);
+        options.indentation = number<unsigned int>(argv[i + 1]);
       } else {
         throw std::invalid_argument("Unknown option: " + std::string(option));
       }

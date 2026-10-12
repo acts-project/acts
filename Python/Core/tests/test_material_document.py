@@ -84,13 +84,23 @@ def test_material_map_migration(tmp_path, material_migrator):
     assert "migration-test" in material.keyedSurfaces
     assert len(material.surfaceMaterials) == len(legacy["Surfaces"]["entries"])
     quantized = tmp_path / "quantized.json"
-    result = run(source, quantized, "--material-fraction-bits", 16)
+    result = run(
+        source,
+        quantized,
+        "--material-fraction-bits",
+        16,
+        "--indentation",
+        0,
+        "--compression-level",
+        19,
+    )
     assert result.returncode == 0, result.stderr
     TrackingGeometryMaterialJsonConverter().fromFile(quantized)
     for args in [
         (output, tmp_path / "invalid.json"),
         (source, source),
         (source, output, "--material-fraction-bits", "24"),
+        (source, output, "--indentation"),
     ]:
         assert run(*args).returncode != 0
 
@@ -102,24 +112,25 @@ def test_root_material_map_migration(tmp_path, material_migrator):
     source = tmp_path / "material.root"
     output = tmp_path / "material.json"
     geometry_id = (1 << 56) | (256 << 8)
+    data = {
+        "hGeoId": np.array([geometry_id], dtype=np.int64),
+        **{
+            name: np.array([value], dtype=np.float32)
+            for name, value in {
+                "t": 0.25,
+                "x0": 93.7,
+                "l0": 465.2,
+                "A": 28.0855,
+                "Z": 14.0,
+                "rho": 0.00233,
+            }.items()
+        },
+    }
     with uproot.recreate(source) as root:
-        root.mktree(
-            "HomogeneousMaterial",
-            {
-                "hGeoId": np.array([geometry_id], dtype=np.int64),
-                **{
-                    name: np.array([value], dtype=np.float32)
-                    for name, value in {
-                        "t": 0.25,
-                        "x0": 93.7,
-                        "l0": 465.2,
-                        "A": 28.0855,
-                        "Z": 14.0,
-                        "rho": 0.00233,
-                    }.items()
-                },
-            },
+        tree = root.mktree(
+            "HomogeneousMaterial", {name: values.dtype for name, values in data.items()}
         )
+        tree.extend(data)
 
     def run(path, target):
         return subprocess.run(

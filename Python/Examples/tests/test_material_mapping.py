@@ -87,11 +87,13 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash, odd_de
     # mapped tracks output check
     map_file_mapped = tmp_path / "material_mapping_mapped.root"
     assert map_file_mapped.exists()
+    assert_entries(map_file_mapped, "material_tracks", 2000)
     assert_root_hash(map_file_mapped.name, map_file_mapped)
 
     # unmapped tracks output check
     map_file_unmapped = tmp_path / "material_mapping_unmapped.root"
     assert map_file_unmapped.exists()
+    assert_entries(map_file_unmapped, "material_tracks", 2000)
     assert_root_hash(map_file_unmapped.name, map_file_unmapped)
 
     val_file = tmp_path / "material_validation.root"

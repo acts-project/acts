@@ -280,7 +280,7 @@ TrackingGeometryMaterial RootMaterialMapIo::read(TFile& rFile,
     }
     for (int i = 0; i < homogeneousMaterialTree->GetEntries(); ++i) {
       homogeneousMaterialTree->GetEntry(i);
-      // ROOT distinguishes Long_t and Long64_t, while int64_t's underlying
+      // ROOT distinguishes Long_t and Long64_t, while std::int64_t's underlying
       // type varies by platform. Read either leaf without a floating-point
       // conversion, which would lose geometry identifier bits.
       GeometryIdentifier geoID(geometryIdLeaf->GetValueLong64());

@@ -86,7 +86,7 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(RootSuite)
 
 BOOST_AUTO_TEST_CASE(HomogeneousGeometryIdBranchTypes) {
-  // Native int64_t uses long on Linux and long long on macOS. ROOT encodes
+  // Native std::int64_t uses long on Linux and long long on macOS. ROOT encodes
   // these as different branch types; both must preserve every ID bit.
   const auto id =
       GeometryIdentifier().withVolume(201).withSensitive(257).withExtra(3);

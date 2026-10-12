@@ -76,7 +76,7 @@ TrackingGeometryMaterial TrackingGeometryMaterial::fromGeometry(
         }
         if (payload) {
           surfaces.push_back(surface);
-          materials.emplace(surface->geometryId(), std::move(payload));
+          materials.try_emplace(surface->geometryId(), std::move(payload));
         }
       },
       false);
@@ -84,8 +84,8 @@ TrackingGeometryMaterial TrackingGeometryMaterial::fromGeometry(
       std::move(materials));
   geometry.visitVolumes([&](const TrackingVolume* volume) {
     if (volume->volumeMaterial() != nullptr) {
-      material.volumeMaterials.emplace(volume->geometryId(),
-                                       volume->volumeMaterialPtr());
+      material.volumeMaterials.try_emplace(volume->geometryId(),
+                                           volume->volumeMaterialPtr());
     }
   });
   return material;
