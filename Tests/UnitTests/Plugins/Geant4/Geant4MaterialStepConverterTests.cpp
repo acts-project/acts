@@ -14,9 +14,7 @@
 #include "ActsPlugins/Geant4/Geant4MaterialStepConverter.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-#include "G4DynamicParticle.hh"
 #include "G4Element.hh"
-#include "G4Geantino.hh"
 #include "G4Material.hh"
 #include "G4Step.hh"
 #include "G4StepPoint.hh"
@@ -169,15 +167,14 @@ BOOST_AUTO_TEST_CASE(Geant4MaterialTrackAccumulation) {
 BOOST_AUTO_TEST_CASE(Geant4MaterialTrackStart) {
   Geant4MaterialStepConverter converter(Geant4MaterialStepConverter::Config{});
 
+  // The start is taken from the track vertex only. An empty track avoids
+  // creating a particle, which would need the Geant4 particle tables and
+  // with them the Geant4 data sets.
   G4ThreeVector vertex(1. * mm, 2. * mm, 3. * mm);
   G4ThreeVector direction = G4ThreeVector(0., 1., 1.).unit();
-  auto* particle =
-      new G4DynamicParticle(G4Geantino::Definition(), direction, 1 * GeV);
-  G4Track track(particle, 0., vertex);
+  G4Track track;
   track.SetVertexPosition(vertex);
   track.SetVertexMomentumDirection(direction);
-  // The current direction must not matter, only the one at the vertex
-  track.SetMomentumDirection(G4ThreeVector(1., 0., 0.));
 
   RecordedMaterialTrack rmTrack = converter.startTrack(track);
   CHECK_CLOSE_ABS(rmTrack.first.first, Vector3(1_mm, 2_mm, 3_mm), 1e-9);
