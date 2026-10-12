@@ -64,7 +64,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -73,7 +73,7 @@ jobs:
       - name: Restore ccache snapshot
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/linux_ubuntu/v1/
 
@@ -144,7 +144,7 @@ jobs:
 
       - name: ccache statistics
         if: always()
-        uses: ./.github/actions/ccache-s3/stats
+        uses: $/.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         id: ccache-cleanup
@@ -156,7 +156,7 @@ jobs:
         if: ${{ !cancelled() && steps.ccache-cleanup.outcome == 'success' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/linux_ubuntu/v1/
@@ -187,7 +187,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           full_install: true
@@ -238,12 +238,12 @@ jobs:
           persist-credentials: false
 
       # Before this job's own apt-get; the upstream archive is slow from CERN.
-      - uses: ./.github/actions/apt_mirror
+      - uses: $/.github/actions/apt_mirror
 
       - run: apt-get update && apt-get install -y time
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           full_install: true
@@ -311,7 +311,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: ${{ matrix.cxx }}
           cxx_std: ${{ matrix.std }}
@@ -319,7 +319,7 @@ jobs:
           env_file: .env
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -340,7 +340,7 @@ jobs:
 
       - name: ccache statistics
         if: always()
-        uses: ./.github/actions/ccache-s3/stats
+        uses: $/.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -353,7 +353,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/linux_ubuntu_extra/${{ runner.os }}-${{ runner.arch }}/${{ matrix.image }}-${{ matrix.std }}-${{ matrix.cxx }}/v1/
@@ -509,7 +509,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           flavor: cuda13
@@ -517,7 +517,7 @@ jobs:
           env_file: .env
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -568,7 +568,7 @@ jobs:
 
       - name: ccache statistics
         if: always()
-        uses: ./.github/actions/ccache-s3/stats
+        uses: $/.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -581,7 +581,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/gnn_build/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -638,7 +638,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           flavor: cuda13
@@ -705,7 +705,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           flavor: cuda13
@@ -713,7 +713,7 @@ jobs:
           env_file: .env
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -731,7 +731,7 @@ jobs:
 
       - name: ccache statistics
         if: always()
-        uses: ./.github/actions/ccache-s3/stats
+        uses: $/.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -744,7 +744,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/gnn_tensorrt/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -783,7 +783,7 @@ jobs:
           apt-get install -y bc
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           flavor: cuda13
@@ -791,7 +791,7 @@ jobs:
           env_file: .env
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -809,7 +809,7 @@ jobs:
 
       - name: ccache statistics
         if: always()
-        uses: ./.github/actions/ccache-s3/stats
+        uses: $/.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -822,7 +822,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/cuda_muon_build/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -865,7 +865,7 @@ jobs:
           apt-get install -y bc
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           flavor: cuda13
@@ -977,7 +977,7 @@ jobs:
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -1016,7 +1016,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg/${{ runner.os }}-${{ runner.arch }}/${{ matrix.tag }}/v1/
@@ -1089,7 +1089,7 @@ jobs:
         continue-on-error: true
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -1132,7 +1132,7 @@ jobs:
         if: ${{ !cancelled() && steps.configure.outcome == 'success' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg_dev4/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -1271,14 +1271,14 @@ jobs:
           xcode-version: "26.3.0"
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: clang++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         env:
@@ -1299,7 +1299,7 @@ jobs:
 
       - name: ccache statistics
         if: always()
-        uses: ./.github/actions/ccache-s3/stats
+        uses: $/.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -1312,7 +1312,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/macos/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -1378,7 +1378,7 @@ jobs:
         continue-on-error: true
 
       - name: Restore ccache snapshot
-        uses: ./acts/.github/actions/ccache-s3
+        uses: $/acts/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -1507,7 +1507,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./acts/.github/actions/ccache-s3
+        uses: $/acts/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/external_eic-shell/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -1552,7 +1552,7 @@ jobs:
         continue-on-error: true
 
       - name: Restore ccache snapshot
-        uses: ./acts/.github/actions/ccache-s3
+        uses: $/acts/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -1624,7 +1624,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./acts/.github/actions/ccache-s3
+        uses: $/acts/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/external_key4hep-nightlies/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -1665,14 +1665,14 @@ jobs:
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/linux_ubuntu_python_wheel/${{ runner.os }}-${{ runner.arch }}/v1/
 
       - name: Build wheel
-        uses: ./.github/actions/cibuildwheel_wrapper
+        uses: $/.github/actions/cibuildwheel_wrapper
         with:
           package-dir: .
           cibw-build: "cp313-*"
@@ -1680,7 +1680,7 @@ jobs:
 
       - name: Publish ccache snapshot
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:

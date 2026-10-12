@@ -69,7 +69,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -101,7 +101,7 @@ jobs:
           path: PR_metadata.json
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -116,7 +116,7 @@ jobs:
         run: cmake --build build
       - name: ccache statistics
         if: always()
-        uses: ./.github/actions/ccache-s3/stats
+        uses: $/.github/actions/ccache-s3/stats
 
       # Before the tests: a failure there shouldn't cost us the objects.
       - name: Clean ccache before publication
@@ -130,7 +130,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/analysis/build_debug/${{ runner.os }}-${{ runner.arch }}/v1/
@@ -208,7 +208,7 @@ jobs:
           ln -sf /usr/bin/clang-22 /usr/bin/clang
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: clang++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

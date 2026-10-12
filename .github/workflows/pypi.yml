@@ -104,14 +104,14 @@ jobs:
         run: echo "build=$(acts/CI/supported_python_versions.py --cibw)" >> "$GITHUB_OUTPUT"
 
       - name: Restore ccache snapshot
-        uses: ./cache-tools/.github/actions/ccache-s3
+        uses: $/cache-tools/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/pypi/build_wheels/${{ matrix.os }}-${{ runner.arch }}/v1/
 
       - name: Build wheels
-        uses: ./cache-tools/.github/actions/cibuildwheel_wrapper
+        uses: $/cache-tools/.github/actions/cibuildwheel_wrapper
         with:
           package-dir: acts
           cibw-build: ${{ steps.cibw.outputs.build }}
@@ -119,7 +119,7 @@ jobs:
 
       - name: Publish ccache snapshot
         if: ${{ !cancelled() && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.acts_ref == '')) }}
-        uses: ./cache-tools/.github/actions/ccache-s3
+        uses: $/cache-tools/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:

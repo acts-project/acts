@@ -203,7 +203,7 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: ${{ matrix.platform.compiler || 'g++' }}
           flavor: ${{ matrix.platform.flavor }}
@@ -211,7 +211,7 @@ jobs:
           env_file: .env
 
       - name: Restore ccache snapshot
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10
         with:
@@ -267,7 +267,7 @@ jobs:
 
       - name: ccache statistics
         if: always()
-        uses: ./.github/actions/ccache-s3/stats
+        uses: $/.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -278,7 +278,7 @@ jobs:
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
-        uses: ./.github/actions/ccache-s3
+        uses: $/.github/actions/ccache-s3
         with:
           operation: publish
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/traccc/containers/${{ runner.os }}-${{ runner.arch }}/${{ matrix.platform.name }}/${{ matrix.build }}/v1/
@@ -364,7 +364,7 @@ jobs:
       # exist at the same workspace path. Same lockfile, same result, and the
       # spack cache keeps this a restore rather than an install.
       - name: Install dependencies
-        uses: ./.github/actions/dependencies
+        uses: $/.github/actions/dependencies
         with:
           compiler: g++
           flavor: cuda13
