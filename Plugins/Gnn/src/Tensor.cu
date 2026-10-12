@@ -111,6 +111,11 @@ namespace ActsPlugins::detail {
 TensorPtr cudaCreateTensorMemory(std::size_t nbytes,
                                  const ExecutionContext &ctx) {
   assert(ctx.stream.has_value());
+  if (ctx.memoryResource != nullptr) {
+    auto *mr = ctx.memoryResource;
+    return TensorPtr(mr->allocate(nbytes),
+                     [mr, nbytes](void *p) { mr->deallocate(p, nbytes); });
+  }
   auto stream = *ctx.stream;
   void *ptr{};
   ACTS_CUDA_CHECK(cudaMallocAsync(&ptr, nbytes, stream));
