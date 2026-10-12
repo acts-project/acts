@@ -194,6 +194,12 @@ BOOST_AUTO_TEST_CASE(LegacyProtoSurfaceMaterialReadOnly) {
   cylindrical += BinUtility(2, -1., 1., open, AxisZ);
   BinUtility radial(3, 0., 1., open, AxisR);
   radial += BinUtility(8, -1., 1., closed, AxisPhi);
+  // Legacy ODD prototypes use an open one-bin azimuth on full cylinders.
+  // The resolved geometry supplies the periodic boundary for these axes.
+  BinUtility cylindricalOpenPhi(1, -1., 1., open, AxisPhi);
+  cylindricalOpenPhi += BinUtility(10, -1., 1., open, AxisZ);
+  BinUtility radialOpenPhi(3, 0., 1., open, AxisR);
+  radialOpenPhi += BinUtility(1, -1., 1., open, AxisPhi);
   std::vector<float> edges{-10., -5., 10.};
   const std::vector<std::pair<BinUtility, std::shared_ptr<Surface>>> cases{
       {BinUtility{}, plane},
@@ -202,6 +208,8 @@ BOOST_AUTO_TEST_CASE(LegacyProtoSurfaceMaterialReadOnly) {
       {testBinUtility2D(), plane},
       {cylindrical, cylinder},
       {radial, disc},
+      {cylindricalOpenPhi, cylinder},
+      {radialOpenPhi, disc},
       {BinUtility(edges, open, AxisX), plane}};
   for (const auto& [binning, surface] : cases) {
     nlohmann::json legacy{{"type", "proto"},
@@ -221,7 +229,14 @@ BOOST_AUTO_TEST_CASE(LegacyProtoSurfaceMaterialReadOnly) {
     for (std::size_t i = 0; i < binning.binningData().size(); ++i) {
       BOOST_CHECK_EQUAL(specs.axisSpec(i).nBins(), binning.bins(i));
     }
-    BOOST_CHECK_NO_THROW(resolveMultiAxis(specs, *surface));
+    const auto axes = resolveMultiAxis(specs, *surface);
+    for (std::size_t i = 0; i < 2; ++i) {
+      const auto direction = axes->getAxis(i).getDirection();
+      if (direction == AxisPhi || direction == AxisRPhi) {
+        BOOST_CHECK(axes->getAxis(i).getBoundaryType() ==
+                    AxisBoundaryType::Closed);
+      }
+    }
     const auto rewritten = SurfaceMaterialJsonConverter::toJson(*proto);
     BOOST_CHECK_EQUAL(rewritten["type"], "proto-grid");
     BOOST_CHECK(!rewritten.contains("binUtility"));

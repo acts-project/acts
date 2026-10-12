@@ -3,6 +3,9 @@
 from array import array
 import json
 import math
+import shutil
+import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -179,11 +182,69 @@ def test_material_mapping_rejects_unsupported_choices(tmp_path):
         )
 
 
+@pytest.mark.parametrize("explicit_config", [False, True])
+def test_grid_mapping_cli_material_configuration(
+    tmp_path, monkeypatch, explicit_config
+):
+    import material_mapping
+    from material_validation import loadMaterialDecorator
+
+    surface = material_surface(tmp_path)
+    odd_config = tmp_path / "config"
+    odd_config.mkdir()
+    shutil.copy(
+        tmp_path / "prototype.json", odd_config / "odd-material-mapping-config.json"
+    )
+    input_file = tmp_path / "input.root"
+    write_material_tracks(input_file)
+
+    # Exercise actual prototype loading and mapping at the CLI boundary while
+    # replacing the expensive ODD construction with one material surface.
+    def detector(materialDecorator):
+        assert materialDecorator is not None
+        materialDecorator.decorate(surface)
+        geometry = SimpleNamespace(extractMaterialSurfaces=lambda: [surface])
+        return SimpleNamespace(trackingGeometry=lambda: geometry)
+
+    def odd_directory():
+        assert not explicit_config, "Explicit --matconfig must take precedence"
+        return tmp_path
+
+    monkeypatch.setattr(material_mapping, "getOpenDataDetector", detector)
+    monkeypatch.setattr(material_mapping, "getOpenDataDetectorDirectory", odd_directory)
+    arguments = [
+        "material_mapping.py",
+        "--accumulator",
+        "grid",
+        "--output-map-formats",
+        "cbor",
+        "-i",
+        str(input_file),
+        "-o",
+        str(tmp_path / "mapped"),
+        "-n2",
+    ]
+    if explicit_config:
+        arguments += ["--matconfig", str(tmp_path / "prototype.json")]
+    monkeypatch.setattr(sys, "argv", arguments)
+    material_mapping.main()
+
+    maps = loadMaterialDecorator(tmp_path / "mapped_map.cbor").materialMaps
+    json_map = tmp_path / "mapped-versioned.json"
+    TrackingGeometryMaterialJsonConverter().toFile(maps, json_map)
+    material = json.loads(json_map.read_text())["surfaces"][0]["material"]
+    assert material["kind"] == "grid"
+    # -n2 processes only the two non-empty input events; including the third
+    # empty crossing would change the mapped thickness from 4 to 8/3.
+    assert max(slab["thickness"] for slab in material["storage"]["values"]) == 4.0
+
+
 @pytest.mark.parametrize(
     "accumulator,schema,suffix",
     [
         ("binned", "legacy", ".root"),
         ("binned", "legacy", ".json"),
+        ("binned", "legacy", ".cbor"),
         ("grid", "legacy", ".json"),
         ("grid", "legacy", ".cbor"),
         ("grid", "versioned", ".json"),

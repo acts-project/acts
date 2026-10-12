@@ -297,6 +297,12 @@ python Examples/Scripts/Python/material_mapping.py \
     --accumulator grid
 ```
 
+For the ODD command-line example, grid mode defaults to
+`$ODD_PATH/config/odd-material-mapping-config.json` when `--matconfig` is omitted.
+This supplies prototype material instead of the ODD's default completed binned
+ROOT map, which the grid accumulator cannot remap. Pass the same explicit
+`--matconfig` to both accumulator modes when comparing bin-by-bin results.
+
 Grid accumulation produces @ref Acts::GridSurfaceMaterial with direct storage,
 including for homogeneous one-bin maps. It uses surface-local coordinates and
 supports remapping existing grid material. Both accumulators apply path
@@ -347,6 +353,11 @@ Grid maps use the same validation command with JSON or CBOR input:
 python Examples/Scripts/Python/material_validation.py \
     -n 1000 -t 1000 -m mydet_grid_map.json -o mydet_grid_validated -p
 ```
+
+The `-m` option accepts both binned and grid JSON/CBOR maps. The stored material
+type selects the reader automatically; no accumulator switch is needed for
+validation. For example, `-m mydet_material_map.cbor` reads a binned CBOR map,
+and `-m mydet_grid_map.cbor` reads a grid CBOR map.
 
 The reader automatically selects the legacy hierarchy-map or versioned material
 document schema and detects JSON/CBOR encoding from the contents. Versioned

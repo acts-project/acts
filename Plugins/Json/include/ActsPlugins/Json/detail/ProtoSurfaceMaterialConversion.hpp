@@ -21,9 +21,9 @@ namespace Acts::detail {
 
 /// Convert legacy proto binning at the I/O boundary. Proto ranges and
 /// transforms were replaced by the surface geometry during mapping, so keep
-/// ranges deferred. Flatten subdivisions into normalized variable edges and pad
-/// an omitted axis with one bin. Cylinder azimuth is expressed in the local
-/// rphi coordinate.
+/// ranges and boundary types deferred. Flatten subdivisions into normalized
+/// variable edges and pad an omitted axis with one bin. Cylinder azimuth is
+/// expressed in the local rphi coordinate.
 /// @param binning the legacy binning description
 /// @return the two-dimensional binning spec
 /// @deprecated Read proto-grid payloads with MultiAxisSpec2D instead
@@ -46,11 +46,8 @@ inline MultiAxisSpec2D protoSurfaceMaterialBinning(const BinUtility& binning) {
     if (cylinder && direction == AxisDirection::AxisPhi) {
       direction = AxisDirection::AxisRPhi;
     }
-    const auto boundary = axis.option == closed ? AxisBoundaryType::Closed
-                                                : AxisBoundaryType::Bound;
     if (axis.type == equidistant && !axis.subBinningData) {
-      specs[i] = AxisSpec::Equidistant(axis.bins(), std::nullopt, std::nullopt,
-                                       boundary, direction);
+      specs[i] = AxisSpec::DeferredEquidistant(axis.bins(), direction);
     } else {
       const auto& edges = axis.boundaries();
       if (edges.size() < 2 || !(axis.min < axis.max)) {
@@ -64,7 +61,7 @@ inline MultiAxisSpec2D protoSurfaceMaterialBinning(const BinUtility& binning) {
       }
       normalized.front() = 0.;
       normalized.back() = 1.;
-      specs[i] = AxisSpec::DeferredVariable(std::move(normalized), boundary,
+      specs[i] = AxisSpec::DeferredVariable(std::move(normalized), std::nullopt,
                                             direction);
     }
   }

@@ -45,6 +45,7 @@ def runMaterialMapping(
     outputMaterialTracks: str = "material_tracks",
     treeName: str = "material_tracks",
     accumulator: str = "binned",
+    events: int | None = None,
 ):
     """Map tracks with a binned or grid accumulator for validation.
 
@@ -66,7 +67,7 @@ def runMaterialMapping(
     # Create a sequencer
     print("Creating the sequencer with 1 thread (inter event information needed)")
 
-    s = Sequencer(numThreads=1)
+    s = Sequencer(numThreads=1, events=events)
 
     # IO for material tracks reading
     wb = WhiteBoard(acts.logging.INFO)
@@ -168,7 +169,7 @@ def runMaterialMapping(
     return s
 
 
-if "__main__" == __name__:
+def main():
     p = argparse.ArgumentParser()
 
     p.add_argument(
@@ -183,7 +184,10 @@ if "__main__" == __name__:
     )
 
     p.add_argument(
-        "--matconfig", type=str, default="", help="Material configuration file"
+        "--matconfig",
+        type=str,
+        default="",
+        help="Material configuration file (grid default: ODD mapping configuration)",
     )
 
     p.add_argument(
@@ -216,9 +220,18 @@ if "__main__" == __name__:
     args = p.parse_args()
     logLevel = logging.INFO
 
+    matconfig = args.matconfig
+    if matconfig == "" and args.accumulator == "grid":
+        matconfig = (
+            getOpenDataDetectorDirectory()
+            / "config"
+            / "odd-material-mapping-config.json"
+        )
+        print(f"Using ODD prototype material configuration: {matconfig}")
+
     matDeco = None
-    if args.matconfig != "":
-        matDeco = acts.IMaterialDecorator.fromFile(args.matconfig)
+    if matconfig != "":
+        matDeco = acts.IMaterialDecorator.fromFile(matconfig)
 
     detector = getOpenDataDetector(matDeco)
     trackingGeometry = detector.trackingGeometry()
@@ -234,4 +247,9 @@ if "__main__" == __name__:
         outputMaterialTracks=args.material_tracks_name,
         treeName=args.tree_name,
         accumulator=args.accumulator,
+        events=args.events,
     ).run()
+
+
+if "__main__" == __name__:
+    main()
