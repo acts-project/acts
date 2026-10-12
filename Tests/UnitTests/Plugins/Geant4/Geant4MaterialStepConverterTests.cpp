@@ -14,8 +14,6 @@
 #include "ActsPlugins/Geant4/Geant4MaterialStepConverter.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-#include <optional>
-
 #include "G4DynamicParticle.hh"
 #include "G4Element.hh"
 #include "G4Geantino.hh"
@@ -73,16 +71,19 @@ BOOST_AUTO_TEST_CASE(Geant4MaterialStepConversion) {
   G4ThreeVector direction = G4ThreeVector(1., 1., 0.).unit();
   G4Step step = makeStep(g4Silicon, position, direction, 2. * mm);
 
-  std::optional<MaterialInteraction> interaction = converter.convert(step);
-  BOOST_REQUIRE(interaction.has_value());
+  RecordedMaterialTrack track;
+  BOOST_CHECK(converter.addStep(step, track));
+  BOOST_REQUIRE_EQUAL(track.second.materialInteractions.size(), 1u);
+  const MaterialInteraction& interaction =
+      track.second.materialInteractions.front();
 
-  CHECK_CLOSE_ABS(interaction->position, Vector3(10_mm, 20_mm, 30_mm), 1e-9);
-  CHECK_CLOSE_ABS(interaction->direction, Vector3(1., 1., 0.).normalized(),
+  CHECK_CLOSE_ABS(interaction.position, Vector3(10_mm, 20_mm, 30_mm), 1e-9);
+  CHECK_CLOSE_ABS(interaction.direction, Vector3(1., 1., 0.).normalized(),
                   1e-9);
-  CHECK_CLOSE_REL(interaction->pathCorrection, 2_mm, 1e-9);
+  CHECK_CLOSE_REL(interaction.pathCorrection, 2_mm, 1e-9);
 
   // Material properties are stored in single precision
-  const auto& slab = interaction->materialSlab;
+  const auto& slab = interaction.materialSlab;
   CHECK_CLOSE_REL(slab.thickness(), 2_mm, 1e-9);
   CHECK_CLOSE_REL(slab.material().X0(), g4Silicon->GetRadlen() / mm * 1_mm,
                   1e-5);
@@ -93,8 +94,8 @@ BOOST_AUTO_TEST_CASE(Geant4MaterialStepConversion) {
   CHECK_CLOSE_REL(slab.material().massDensity(), 2.329_g / 1_cm3, 1e-5);
 
   // No element fractions unless requested
-  BOOST_CHECK(interaction->elementZ.empty());
-  BOOST_CHECK(interaction->elementFrac.empty());
+  BOOST_CHECK(interaction.elementZ.empty());
+  BOOST_CHECK(interaction.elementFrac.empty());
 }
 
 BOOST_AUTO_TEST_CASE(Geant4MaterialStepConversionMixture) {
@@ -104,22 +105,25 @@ BOOST_AUTO_TEST_CASE(Geant4MaterialStepConversionMixture) {
 
   G4Step step =
       makeStep(g4Water, G4ThreeVector(), G4ThreeVector(0., 0., 1.), 1. * cm);
-  std::optional<MaterialInteraction> interaction = converter.convert(step);
-  BOOST_REQUIRE(interaction.has_value());
+  RecordedMaterialTrack track;
+  BOOST_CHECK(converter.addStep(step, track));
+  BOOST_REQUIRE_EQUAL(track.second.materialInteractions.size(), 1u);
+  const MaterialInteraction& interaction =
+      track.second.materialInteractions.front();
 
   // Mass fraction weighted averages
   const double* fractions = g4Water->GetFractionVector();
   double expectedAr = fractions[0] * 1.008 + fractions[1] * 15.999;
   double expectedZ = fractions[0] * 1. + fractions[1] * 8.;
-  CHECK_CLOSE_REL(interaction->materialSlab.material().Ar(), expectedAr, 1e-5);
-  CHECK_CLOSE_REL(interaction->materialSlab.material().Z(), expectedZ, 1e-5);
+  CHECK_CLOSE_REL(interaction.materialSlab.material().Ar(), expectedAr, 1e-5);
+  CHECK_CLOSE_REL(interaction.materialSlab.material().Z(), expectedZ, 1e-5);
 
-  BOOST_REQUIRE_EQUAL(interaction->elementZ.size(), 2u);
-  BOOST_CHECK_EQUAL(interaction->elementZ[0], 1u);
-  BOOST_CHECK_EQUAL(interaction->elementZ[1], 8u);
-  BOOST_REQUIRE_EQUAL(interaction->elementFrac.size(), 2u);
-  CHECK_CLOSE_REL(interaction->elementFrac[0], fractions[0], 1e-5);
-  CHECK_CLOSE_REL(interaction->elementFrac[1], fractions[1], 1e-5);
+  BOOST_REQUIRE_EQUAL(interaction.elementZ.size(), 2u);
+  BOOST_CHECK_EQUAL(interaction.elementZ[0], 1u);
+  BOOST_CHECK_EQUAL(interaction.elementZ[1], 8u);
+  BOOST_REQUIRE_EQUAL(interaction.elementFrac.size(), 2u);
+  CHECK_CLOSE_REL(interaction.elementFrac[0], fractions[0], 1e-5);
+  CHECK_CLOSE_REL(interaction.elementFrac[1], fractions[1], 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE(Geant4MaterialStepConversionExcluded) {
@@ -129,26 +133,58 @@ BOOST_AUTO_TEST_CASE(Geant4MaterialStepConversionExcluded) {
 
   G4ThreeVector origin;
   G4ThreeVector zAxis(0., 0., 1.);
-  BOOST_CHECK(!converter.convert(makeStep(g4Water, origin, zAxis, 1. * mm))
-                   .has_value());
-  BOOST_CHECK(converter.convert(makeStep(g4Silicon, origin, zAxis, 1. * mm))
-                  .has_value());
+  RecordedMaterialTrack track;
+  BOOST_CHECK(
+      !converter.addStep(makeStep(g4Water, origin, zAxis, 1. * mm), track));
   // A step without material is not recorded
-  BOOST_CHECK(!converter.convert(makeStep(nullptr, origin, zAxis, 1. * mm))
-                   .has_value());
+  BOOST_CHECK(
+      !converter.addStep(makeStep(nullptr, origin, zAxis, 1. * mm), track));
+  BOOST_CHECK(track.second.materialInteractions.empty());
+  BOOST_CHECK_EQUAL(track.second.materialInX0, 0.);
+
+  BOOST_CHECK(
+      converter.addStep(makeStep(g4Silicon, origin, zAxis, 1. * mm), track));
+  BOOST_CHECK_EQUAL(track.second.materialInteractions.size(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(Geant4MaterialTrackAccumulation) {
+  Geant4MaterialStepConverter converter(Geant4MaterialStepConverter::Config{});
+
+  G4ThreeVector zAxis(0., 0., 1.);
+  RecordedMaterialTrack track;
+  converter.addStep(makeStep(g4Silicon, G4ThreeVector(), zAxis, 1. * mm),
+                    track);
+  converter.addStep(
+      makeStep(g4Water, G4ThreeVector(0., 0., 1. * mm), zAxis, 2. * mm), track);
+
+  BOOST_REQUIRE_EQUAL(track.second.materialInteractions.size(), 2u);
+  double expectedX0 =
+      1. * mm / g4Silicon->GetRadlen() + 2. * mm / g4Water->GetRadlen();
+  double expectedL0 = 1. * mm / g4Silicon->GetNuclearInterLength() +
+                      2. * mm / g4Water->GetNuclearInterLength();
+  CHECK_CLOSE_REL(track.second.materialInX0, expectedX0, 1e-5);
+  CHECK_CLOSE_REL(track.second.materialInL0, expectedL0, 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE(Geant4MaterialTrackStart) {
+  Geant4MaterialStepConverter converter(Geant4MaterialStepConverter::Config{});
+
   G4ThreeVector vertex(1. * mm, 2. * mm, 3. * mm);
   G4ThreeVector direction = G4ThreeVector(0., 1., 1.).unit();
   auto* particle =
       new G4DynamicParticle(G4Geantino::Definition(), direction, 1 * GeV);
   G4Track track(particle, 0., vertex);
   track.SetVertexPosition(vertex);
+  track.SetVertexMomentumDirection(direction);
+  // The current direction must not matter, only the one at the vertex
+  track.SetMomentumDirection(G4ThreeVector(1., 0., 0.));
 
-  auto [start, startDirection] = Geant4MaterialStepConverter::trackStart(track);
-  CHECK_CLOSE_ABS(start, Vector3(1_mm, 2_mm, 3_mm), 1e-9);
-  CHECK_CLOSE_ABS(startDirection, Vector3(0., 1., 1.).normalized(), 1e-9);
+  RecordedMaterialTrack rmTrack = converter.startTrack(track);
+  CHECK_CLOSE_ABS(rmTrack.first.first, Vector3(1_mm, 2_mm, 3_mm), 1e-9);
+  CHECK_CLOSE_ABS(rmTrack.first.second, Vector3(0., 1., 1.).normalized(), 1e-9);
+  BOOST_CHECK(rmTrack.second.materialInteractions.empty());
+  BOOST_CHECK_EQUAL(rmTrack.second.materialInX0, 0.);
+  BOOST_CHECK_EQUAL(rmTrack.second.materialInL0, 0.);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

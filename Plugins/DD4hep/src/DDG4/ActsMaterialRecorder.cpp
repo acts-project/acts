@@ -35,16 +35,30 @@ namespace ActsPlugins {
 /// @brief DDG4 stepping action that records the material seen by tracks
 ///
 /// This allows running a material recording with geantinos directly in
-/// ddsim, on the Geant4 geometry DDG4 builds from the DD4hep detector:
+/// `ddsim`, on the Geant4 geometry DDG4 builds from the DD4hep detector:
 ///
-/// @code{.sh}
-/// ddsim --compactFile detector.xml --enableGun --gun.particle geantino
+/// ```sh
+/// ddsim --compactFile detector.xml --enableGun --gun.particle geantino \
 ///       --gun.distribution eta --action.step ActsMaterialRecorder
-/// @endcode
+/// ```
 ///
-/// Every step through a material is recorded per track. At the end of each
-/// event, one entry per track is written to a ROOT tree in the format of
-/// @c ActsPlugins::RootMaterialTrackIo, which the ACTS material mapping reads.
+/// Each track is converted with @ref ActsPlugins::Geant4MaterialStepConverter
+/// into an @ref Acts::RecordedMaterialTrack. At the end of each event, one
+/// entry per track is written to a ROOT tree with
+/// @ref ActsPlugins::RootMaterialTrackIo, which the ACTS material mapping
+/// reads. Tracks that cross no recorded material are written without steps,
+/// so the output has exactly one entry per simulated track.
+///
+/// The action is configured through DDG4 properties:
+///
+/// | Property                 | Default                  | Meaning | |
+/// ------------------------ | ------------------------ |
+/// ------------------------------------------ | | `OutputFile`             |
+/// `material_tracks.root`   | output ROOT file                           | |
+/// `TreeName`               | `material_tracks`        | name of the output
+/// tree                    | | `ExcludeMaterials`       | `["Air", "Vacuum"]`
+/// | materials whose steps are not recorded     | | `RecordElementFractions` |
+/// `false`                  | record the element composition of the steps |
 ///
 /// Only single-threaded running is supported.
 class ActsMaterialRecorder final : public dd4hep::sim::Geant4SteppingAction {
@@ -160,19 +174,16 @@ void ActsMaterialRecorder::endEvent(const G4Event* event) {
 
 void ActsMaterialRecorder::operator()(const G4Step* step,
                                       G4SteppingManager* /*mgr*/) {
-  std::optional<Acts::MaterialInteraction> mInteraction =
-      m_stepConverter->convert(*step);
-  if (!mInteraction.has_value()) {
-    return;
-  }
-
   const G4Track& track = *step->GetTrack();
-  auto [it, inserted] = m_tracks.try_emplace(track.GetTrackID());
-  if (inserted) {
-    it->second.first =
-        ActsPlugins::Geant4MaterialStepConverter::trackStart(track);
+
+  // Every track gets an entry, also if it never crosses recorded material
+  auto it = m_tracks.find(track.GetTrackID());
+  if (it == m_tracks.end()) {
+    it =
+        m_tracks.emplace(track.GetTrackID(), m_stepConverter->startTrack(track))
+            .first;
   }
-  it->second.second.materialInteractions.push_back(std::move(*mInteraction));
+  m_stepConverter->addStep(*step, it->second);
 }
 
 }  // namespace ActsPlugins

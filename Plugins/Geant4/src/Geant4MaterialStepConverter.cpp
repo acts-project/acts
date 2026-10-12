@@ -14,6 +14,8 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <optional>
+#include <utility>
 
 #include <CLHEP/Units/SystemOfUnits.h>
 #include <G4Material.hh>
@@ -39,8 +41,30 @@ Acts::Vector3 convertDirection(const G4ThreeVector& g4vec) {
 
 namespace ActsPlugins {
 
-std::optional<Acts::MaterialInteraction> Geant4MaterialStepConverter::convert(
-    const G4Step& step) const {
+Acts::RecordedMaterialTrack Geant4MaterialStepConverter::startTrack(
+    const G4Track& track) const {
+  Acts::RecordedMaterialTrack rmTrack;
+  rmTrack.first = {convertPosition(track.GetVertexPosition()),
+                   convertDirection(track.GetVertexMomentumDirection())};
+  return rmTrack;
+}
+
+bool Geant4MaterialStepConverter::addStep(
+    const G4Step& step, Acts::RecordedMaterialTrack& track) const {
+  std::optional<Acts::MaterialInteraction> mInteraction =
+      materialInteraction(step);
+  if (!mInteraction.has_value()) {
+    return false;
+  }
+  Acts::RecordedMaterial& recorded = track.second;
+  recorded.materialInX0 += mInteraction->materialSlab.thicknessInX0();
+  recorded.materialInL0 += mInteraction->materialSlab.thicknessInL0();
+  recorded.materialInteractions.push_back(std::move(*mInteraction));
+  return true;
+}
+
+std::optional<Acts::MaterialInteraction>
+Geant4MaterialStepConverter::materialInteraction(const G4Step& step) const {
   const G4Material* materialPtr = step.GetPreStepPoint()->GetMaterial();
   if (materialPtr == nullptr) {
     return std::nullopt;
@@ -102,12 +126,6 @@ std::optional<Acts::MaterialInteraction> Geant4MaterialStepConverter::convert(
   }
 
   return mInteraction;
-}
-
-std::pair<Acts::Vector3, Acts::Vector3> Geant4MaterialStepConverter::trackStart(
-    const G4Track& track) {
-  return {convertPosition(track.GetVertexPosition()),
-          convertDirection(track.GetMomentumDirection())};
 }
 
 }  // namespace ActsPlugins

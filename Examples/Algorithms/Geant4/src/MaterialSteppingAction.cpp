@@ -8,12 +8,10 @@
 
 #include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
 
-#include "Acts/Material/MaterialInteraction.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 
 #include <cassert>
 #include <cstddef>
-#include <optional>
 #include <ostream>
 #include <unordered_map>
 #include <utility>
@@ -33,26 +31,23 @@ MaterialSteppingAction::MaterialSteppingAction(
 void MaterialSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
   assert(stepPtr != nullptr);
   const G4Step& step = *stepPtr;
-
-  std::optional<Acts::MaterialInteraction> mInteraction =
-      m_stepConverter.convert(step);
-  if (!mInteraction.has_value()) {
-    ACTS_VERBOSE("Skip step without recorded material.");
-    return;
-  }
-
-  ACTS_VERBOSE(
-      "Performing a step with step size = " << mInteraction->pathCorrection);
-
   assert(step.GetTrack() != nullptr);
   const G4Track& track = *step.GetTrack();
-  const std::size_t trackId = track.GetTrackID();
-  auto [it, inserted] = eventStore().materialTracks.try_emplace(trackId - 1);
-  if (inserted) {
-    it->second.first =
-        ActsPlugins::Geant4MaterialStepConverter::trackStart(track);
+
+  // Every track gets an entry, also if it never crosses recorded material
+  auto& materialTracks = eventStore().materialTracks;
+  const std::size_t trackId = track.GetTrackID() - 1;
+  auto it = materialTracks.find(trackId);
+  if (it == materialTracks.end()) {
+    it = materialTracks.emplace(trackId, m_stepConverter.startTrack(track))
+             .first;
   }
-  it->second.second.materialInteractions.push_back(std::move(*mInteraction));
+
+  if (m_stepConverter.addStep(step, it->second)) {
+    ACTS_VERBOSE("Recorded a step with step size = " << step.GetStepLength());
+  } else {
+    ACTS_VERBOSE("Skip step without recorded material.");
+  }
 }
 
 }  // namespace ActsExamples::Geant4
