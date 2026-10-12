@@ -26,7 +26,7 @@ from acts.examples.root import (
 
 from acts.json import TrackingGeometryMaterialJsonConverter
 
-from acts.examples.odd import getOpenDataDetector
+from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
 def runMaterialMapping(
@@ -115,7 +115,7 @@ def runMaterialMapping(
     return s, materialMapping
 
 
-if "__main__" == __name__:
+def main():
     p = argparse.ArgumentParser()
 
     p.add_argument(
@@ -130,7 +130,10 @@ if "__main__" == __name__:
     )
 
     p.add_argument(
-        "--matconfig", type=str, default="", help="Material configuration file"
+        "--matconfig",
+        type=str,
+        default="",
+        help="Material configuration file (grid default: ODD mapping configuration)",
     )
 
     p.add_argument(
@@ -168,9 +171,18 @@ if "__main__" == __name__:
     if args.accumulator == "grid" and "root" in outputMapFormats:
         p.error("Grid material maps require JSON or CBOR output")
 
+    matconfig = args.matconfig
+    if matconfig == "" and args.accumulator == "grid":
+        matconfig = (
+            getOpenDataDetectorDirectory()
+            / "config"
+            / "odd-material-mapping-config.json"
+        )
+        print(f"Using ODD prototype material configuration: {matconfig}")
+
     matDeco = None
-    if args.matconfig != "":
-        matDeco = acts.IMaterialDecorator.fromFile(args.matconfig)
+    if matconfig != "":
+        matDeco = acts.IMaterialDecorator.fromFile(matconfig)
 
     detector = getOpenDataDetector(matDeco)
     trackingGeometry = detector.trackingGeometry()
@@ -197,3 +209,7 @@ if "__main__" == __name__:
             TrackingGeometryMaterialJsonConverter().toFile(
                 mapping.material, args.output + "_map." + outputFormat
             )
+
+
+if "__main__" == __name__:
+    main()

@@ -3,6 +3,9 @@
 from array import array
 import json
 import math
+import shutil
+import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -129,54 +132,147 @@ def write_material_tracks(path):
 
 
 @pytest.mark.parametrize("accumulator", ["binned", "grid"])
-def test_material_mapping_accumulator_switch(tmp_path, accumulator):
+@pytest.mark.parametrize("custom_sequencer", [False, True])
+def test_material_mapping_accumulator_switch(tmp_path, accumulator, custom_sequencer):
     from material_mapping import runMaterialMapping
 
     surface = material_surface(tmp_path)
     input_file = tmp_path / "input.root"
     write_material_tracks(input_file)
     output = tmp_path / accumulator
-    sequencer = runMaterialMapping(
+    supplied_sequencer = (
+        acts.examples.Sequencer(events=2, numThreads=1) if custom_sequencer else None
+    )
+    sequencer, mapping = runMaterialMapping(
         [surface],
         input_file,
         str(output),
         loglevel=acts.logging.WARNING,
+        s=supplied_sequencer,
         accumulator=accumulator,
     )
+    if custom_sequencer:
+        assert sequencer is supplied_sequencer
     sequencer.run()
-    # MaterialMapping writes the finalized map on destruction.
-    del sequencer
+    TrackingGeometryMaterialJsonConverter().toFile(
+        mapping.material, tmp_path / f"{accumulator}_map.json"
+    )
     material = json.loads((tmp_path / f"{accumulator}_map.json").read_text())[
-        "Surfaces"
-    ]["entries"][0]["value"]["material"]
-    assert material["type"] == ("grid" if accumulator == "grid" else "binned")
+        "surfaces"
+    ][0]["material"]
+    assert material["kind"] == accumulator
     if accumulator == "grid":
-        data = material["accessor"]["grid"]["data"]
-        slab = next(slab for bins, slab in data if bins == [1, 1])
+        slabs = material["storage"]["values"]
         assert not (tmp_path / "grid_map.root").exists()
     else:
-        slab = material["data"][0][0]
+        slabs = material["values"]
+        from acts.examples.root import RootMaterialWriter
+
+        RootMaterialWriter(
+            level=acts.logging.WARNING, filePath=str(output) + "_map.root"
+        ).writeMaterial(mapping.material)
         assert (tmp_path / "binned_map.root").exists()
-    assert slab["thickness"] == pytest.approx(8.0 / 3.0)
+    assert max(slab["thickness"] for slab in slabs) == pytest.approx(
+        4.0 if custom_sequencer else 8.0 / 3.0
+    )
     assert (tmp_path / f"{accumulator}_mapped.root").exists()
     assert (tmp_path / f"{accumulator}_unmapped.root").exists()
 
 
-def test_material_mapping_rejects_unsupported_choices(tmp_path):
+def test_material_mapping_rejects_unsupported_choices(tmp_path, monkeypatch, capsys):
+    import material_mapping
     from material_mapping import runMaterialMapping
 
     with pytest.raises(ValueError, match="accumulator"):
         runMaterialMapping(
             [], tmp_path / "missing.root", "unused", accumulator="invalid"
         )
-    with pytest.raises(ValueError, match="JSON or CBOR"):
-        runMaterialMapping(
-            [],
-            tmp_path / "missing.root",
-            "unused",
-            outputMapFormats=["root"],
-            accumulator="grid",
-        )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "material_mapping.py",
+            "--accumulator",
+            "grid",
+            "--output-map-formats",
+            "root",
+        ],
+    )
+    with pytest.raises(SystemExit) as error:
+        material_mapping.main()
+    assert error.value.code == 2
+    assert "JSON or CBOR" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("explicit_config", [False, True])
+@pytest.mark.parametrize("accumulator", ["binned", "grid"])
+@pytest.mark.parametrize("formats", [None, ["json", "cbor"]])
+def test_mapping_cli_material_configuration(
+    tmp_path, monkeypatch, explicit_config, accumulator, formats
+):
+    import material_mapping
+    from material_validation import loadMaterialDecorator
+
+    surface = material_surface(tmp_path)
+    odd_config = tmp_path / "config"
+    odd_config.mkdir()
+    shutil.copy(
+        tmp_path / "prototype.json", odd_config / "odd-material-mapping-config.json"
+    )
+    input_file = tmp_path / "input.root"
+    write_material_tracks(input_file)
+
+    # Exercise actual prototype loading and mapping at the CLI boundary while
+    # replacing the expensive ODD construction with one material surface.
+    def detector(materialDecorator):
+        if explicit_config or accumulator == "grid":
+            assert materialDecorator is not None
+            materialDecorator.decorate(surface)
+        else:
+            assert materialDecorator is None
+        geometry = SimpleNamespace(extractMaterialSurfaces=lambda: [surface])
+        return SimpleNamespace(trackingGeometry=lambda: geometry)
+
+    def odd_directory():
+        assert not explicit_config, "Explicit --matconfig must take precedence"
+        assert accumulator == "grid", "Only grid mode defaults to prototype material"
+        return tmp_path
+
+    monkeypatch.setattr(material_mapping, "getOpenDataDetector", detector)
+    monkeypatch.setattr(material_mapping, "getOpenDataDetectorDirectory", odd_directory)
+    arguments = [
+        "material_mapping.py",
+        "--accumulator",
+        accumulator,
+        "-i",
+        str(input_file),
+        "-o",
+        str(tmp_path / "mapped"),
+        "-n2",
+    ]
+    if formats is not None:
+        arguments += ["--output-map-formats", *formats]
+    if explicit_config:
+        arguments += ["--matconfig", str(tmp_path / "prototype.json")]
+    monkeypatch.setattr(sys, "argv", arguments)
+    material_mapping.main()
+
+    suffix = "json" if formats is None else "cbor"
+    maps = loadMaterialDecorator(tmp_path / f"mapped_map.{suffix}").materialMaps
+    json_map = tmp_path / "mapped-versioned.json"
+    TrackingGeometryMaterialJsonConverter().toFile(maps, json_map)
+    material = json.loads(json_map.read_text())["surfaces"][0]["material"]
+    assert material["kind"] == accumulator
+    # -n2 processes only the two non-empty input events; including the third
+    # empty crossing would change the mapped thickness from 4 to 8/3.
+    slabs = (
+        material["storage"]["values"] if accumulator == "grid" else material["values"]
+    )
+    assert max(slab["thickness"] for slab in slabs) == 4.0
+    assert (tmp_path / "mapped_map.root").exists() == (
+        accumulator == "binned" and formats is None
+    )
+    assert (tmp_path / "mapped_map.cbor").exists() == (formats is not None)
 
 
 @pytest.mark.parametrize(
@@ -184,6 +280,7 @@ def test_material_mapping_rejects_unsupported_choices(tmp_path):
     [
         ("binned", "legacy", ".root"),
         ("binned", "legacy", ".json"),
+        ("binned", "legacy", ".cbor"),
         ("grid", "legacy", ".json"),
         ("grid", "legacy", ".cbor"),
         ("grid", "versioned", ".json"),
@@ -202,24 +299,41 @@ def test_material_validation_reads_mapped_material(
     source = material_surface(tmp_path)
     input_file = tmp_path / "input.root"
     write_material_tracks(input_file)
-    formats = ["json", "root"] if suffix == ".root" else ["json", "cbor"]
-    sequencer = runMaterialMapping(
+    sequencer, mapping = runMaterialMapping(
         [source],
         input_file,
         str(tmp_path / "mapped"),
-        outputMapFormats=formats,
         loglevel=acts.logging.WARNING,
         accumulator=accumulator,
     )
     sequencer.run()
-    del sequencer
 
     map_file = tmp_path / ("mapped_map" + suffix)
-    if schema == "versioned":
-        maps = loadMaterialDecorator(tmp_path / "mapped_map.json").materialMaps
-        map_file = tmp_path / ("versioned_map" + suffix)
+    if suffix == ".root":
+        from acts.examples.root import RootMaterialWriter
+
+        RootMaterialWriter(
+            level=acts.logging.WARNING, filePath=str(map_file)
+        ).writeMaterial(mapping.material)
+    elif schema == "legacy":
+        from acts.examples.json import JsonFormat, JsonMaterialWriter
+        from acts.json import MaterialMapJsonConverter
+
+        JsonMaterialWriter(
+            level=acts.logging.WARNING,
+            converterCfg=MaterialMapJsonConverter.Config(
+                processSensitives=True,
+                processApproaches=True,
+                processRepresenting=True,
+                processBoundaries=True,
+                processVolumes=False,
+            ),
+            fileName=str(tmp_path / "mapped_map"),
+            writeFormat=JsonFormat.Cbor if suffix == ".cbor" else JsonFormat.Json,
+        ).writeMaterial(mapping.material)
+    else:
         try:
-            TrackingGeometryMaterialJsonConverter().toFile(maps, map_file)
+            TrackingGeometryMaterialJsonConverter().toFile(mapping.material, map_file)
         except RuntimeError as error:
             if suffix.endswith(".zst") and "without zstd support" in str(error):
                 pytest.skip("ACTS was built without zstd support")
