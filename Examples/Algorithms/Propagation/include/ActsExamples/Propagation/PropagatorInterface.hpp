@@ -103,9 +103,6 @@ class ConcretePropagator : public PropagatorInterface {
       return resultTmp.error();
     }
 
-    // Collect internal stepping information
-    summary.nStepTrials = state.stepping.nStepTrials;
-
     auto result =
         m_propagator.makeResult(std::move(state), resultTmp, options, true);
     if (!result.ok()) {
@@ -123,6 +120,7 @@ class ConcretePropagator : public PropagatorInterface {
     summary.steps = std::move(steppingResults.steps);
 
     summary.statistics = resultValue.statistics;
+    summary.nStepTrials = resultValue.statistics.stepping.nAttemptedSteps;
 
     // Also set the material recording result - if configured
     if (cfg.recordMaterialInteractions) {

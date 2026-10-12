@@ -99,19 +99,18 @@ bool BoundaryTolerance::isTolerated(
 
 void BoundaryTolerance::print(std::ostream& ostr) const {
   if (isInfinite()) {
-    ostr << "infinite boundary tolerance";
+    ostr << "BoundaryTolerance::Infinite";
   } else if (isNone()) {
-    ostr << "strict boundary tolerance";
+    ostr << "BoundaryTolerance::None";
   } else if (hasAbsoluteEuclidean()) {
-    ostr << "boundary tolerance  dX < " << asAbsoluteEuclidean().tolerance;
+    ostr << "BoundaryTolerance::AbsoluteEuclidean(tolerance="
+         << asAbsoluteEuclidean().tolerance << ")";
   } else if (hasChi2Bound()) {
-    ostr << "boundary tolerance based on chi2 " << asChi2Bound().maxChi2
-         << " with weights:\n"
-         << asChi2Bound().weightMatrix() << "\n";
+    ostr << "BoundaryTolerance::Chi2Bound(maxChi2=" << asChi2Bound().maxChi2
+         << ")";
   } else if (hasChi2Cartesian()) {
-    ostr << "boundary tolerance based on cart chi2 "
-         << asChi2Cartesian().maxChi2 << " with weights:\n"
-         << asChi2Cartesian().weightMatrix() << "\n";
+    ostr << "BoundaryTolerance::Chi2Cartesian(maxChi2="
+         << asChi2Cartesian().maxChi2 << ")";
   }
 }
 

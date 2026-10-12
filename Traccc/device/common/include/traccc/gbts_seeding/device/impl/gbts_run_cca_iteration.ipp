@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -24,6 +25,8 @@ TRACCC_HOST_DEVICE inline void gbts_run_cca_iteration(
     const gbts_run_cca_iteration_payload& payload) {
   const vecmem::device_vector<const unsigned int> d_output_graph(
       payload.output_graph);
+  const vecmem::device_vector<const unsigned char> d_output_num_neighbours(
+      payload.output_num_neighbours);
   vecmem::device_vector<unsigned char> d_levels(payload.levels);
   vecmem::device_vector<int2> d_outgoing_paths(payload.outgoing_paths);
   vecmem::device_vector<unsigned int> d_changed(payload.changed);
@@ -43,9 +46,8 @@ TRACCC_HOST_DEVICE inline void gbts_run_cca_iteration(
   // edges.
   constexpr unsigned int unsettledLevel =
       gbts_consts::max_seed_candidate_length + 1u;
-  // Row-major output graph: each edge owns [node1, node2, nNei, nei0..].
-  const unsigned int edge_size =
-      gbts_consts::nei_start + payload.max_num_neighbours;
+  // Row-major output graph: each edge owns [nei0..].
+  const unsigned int edge_size = payload.max_num_neighbours;
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
@@ -57,36 +59,32 @@ TRACCC_HOST_DEVICE inline void gbts_run_cca_iteration(
     // expected to be found in the last edges.
     const unsigned int edgeIdx = nConnectedEdges - 1u - globalIndex;
     const unsigned int edge_pos = edge_size * edgeIdx;
-    const unsigned int nNeighbours =
-        d_output_graph[edge_pos + gbts_consts::nNei];
+    const unsigned int nNeighbours = d_output_num_neighbours[edgeIdx];
 
-    // The level is one more than the highest neighbour level.
     unsigned int maxNeighbourLevel = 0u;
+    int nPathsBelow = 0;
+
+    // This loop finds the maximum level among neighbours and the number of
+    // paths below this edge in one loop. We want to count paths below only
+    // for neighbours which are of the maximum level among neighbours, so we
+    // can keep a running count and reset that to zero if we encounter a
+    // neighbour with a new, higher level.
     for (unsigned int k = 0u; k < nNeighbours; ++k) {
-      const unsigned int neighbourIdx =
-          d_output_graph[edge_pos + gbts_consts::nei_start + k];
+      const unsigned int neighbourIdx = d_output_graph[edge_pos + k];
       const unsigned int neighbourLevel = d_levels[neighbourIdx];
       if (neighbourLevel > maxNeighbourLevel) {
         maxNeighbourLevel = neighbourLevel;
+        nPathsBelow = 0;
       }
-    }
-    unsigned int level = 1u + maxNeighbourLevel;
-    if (level > unsettledLevel) {
-      level = unsettledLevel;
+      if (neighbourLevel == maxNeighbourLevel) {
+        nPathsBelow += 1 + (firstSweep ? 0 : d_outgoing_paths[neighbourIdx].x);
+      }
     }
 
-    // Paths below the edge. One for every neighbour on a longest path, plus
-    // the paths below that neighbour.
-    int nPathsBelow = 0;
-    if (level < unsettledLevel) {
-      for (unsigned int k = 0u; k < nNeighbours; ++k) {
-        const unsigned int neighbourIdx =
-            d_output_graph[edge_pos + gbts_consts::nei_start + k];
-        if (d_levels[neighbourIdx] + 1u == level) {
-          nPathsBelow +=
-              1 + (firstSweep ? 0 : d_outgoing_paths[neighbourIdx].x);
-        }
-      }
+    unsigned int level = 1u + maxNeighbourLevel;
+    if (level >= unsettledLevel) {
+      nPathsBelow = 0;
+      level = unsettledLevel;
     }
 
     if (firstSweep || (d_levels[edgeIdx] != level) ||

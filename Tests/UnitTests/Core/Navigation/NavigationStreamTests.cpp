@@ -17,10 +17,10 @@
 
 using namespace Acts;
 
-ACTS_LOCAL_LOGGER(getDefaultLogger("NavigationStreamTests",
-                                   Logging::Level::VERBOSE));
-
 namespace ActsTests {
+
+ACTS_LOCAL_LOGGER(getDefaultLogger("NavigationStreamTests",
+                                   Logging::Level::INFO));
 
 // This creates a set of plane surfaces along the z axis
 std::vector<std::shared_ptr<Surface>> createPlaneSurfaces() {
@@ -73,7 +73,8 @@ std::vector<std::shared_ptr<Surface>> createCylinders() {
   Transform3 cTransform = Transform3::Identity();
   auto surfaceC = Surface::makeShared<CylinderSurface>(cTransform, 40., 20);
   surfaceC->assignGeometryId(GeometryIdentifier{}.withSensitive(8));
-  // Surface C:
+
+  // Surface D:
   // A concentric, but shifted cylinder with a radius of 50 and a half length of
   // 5
   Transform3 dTransform = Transform3::Identity();
@@ -87,14 +88,15 @@ std::vector<std::shared_ptr<Surface>> createCylinders() {
 
 auto gContext = GeometryContext::dangerouslyDefaultConstruct();
 
-NavigationStream makeStream(const std::span<std::shared_ptr<Surface>> surfaces,
-                            const BoundaryTolerance tol) {
-  NavigationStream nStreamTemplate{};
+// The stream intersects each candidate with the tolerance it was added with
+NavigationStream makeStream(std::span<const std::shared_ptr<Surface>> surfaces,
+                            const BoundaryTolerance& tolerance) {
+  NavigationStream stream;
   for (const auto& surface : surfaces) {
-    nStreamTemplate.addSurfaceCandidate(*surface, tol);
+    stream.addSurfaceCandidate(*surface, tolerance);
   }
-  BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 4u);
-  return nStreamTemplate;
+  BOOST_CHECK_EQUAL(stream.remainingCandidates(), 4u);
+  return stream;
 }
 
 BOOST_AUTO_TEST_SUITE(Navigation)

@@ -9,8 +9,10 @@
 #include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsExamples/Io/Root/RootUtility.hpp"
+
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
@@ -88,7 +90,24 @@ ProcessCode RootMuonSpacePointReader::read(const AlgorithmContext& context) {
     newSp.setTime(m_time->at(spIdx));
     newSp.setCovariance(m_covLoc0->at(spIdx), m_covLoc1->at(spIdx),
                         m_covT->at(spIdx));
-    ACTS_VERBOSE("Loaded new space point " << newSp);
+
+    Vector3 toSectorTranslation{m_toSectorFrameTranslationX->at(spIdx),
+                                m_toSectorFrameTranslationY->at(spIdx),
+                                m_toSectorFrameTranslationZ->at(spIdx)};
+    SquareMatrix<3> toSectorRotation{};
+    toSectorRotation.col(0) = makeDirectionFromPhiTheta<double>(
+        m_toSectorFrameLinearCol0Phi->at(spIdx) * 1._degree,
+        m_toSectorFrameLinearCol0Theta->at(spIdx) * 1._degree);
+    toSectorRotation.col(1) = makeDirectionFromPhiTheta<double>(
+        m_toSectorFrameLinearCol1Phi->at(spIdx) * 1._degree,
+        m_toSectorFrameLinearCol1Theta->at(spIdx) * 1._degree);
+    toSectorRotation.col(2) = makeDirectionFromPhiTheta<double>(
+        m_toSectorFrameLinearCol2Phi->at(spIdx) * 1._degree,
+        m_toSectorFrameLinearCol2Theta->at(spIdx) * 1._degree);
+    newSp.setToSectorTransform(toSectorTranslation, toSectorRotation);
+    ACTS_VERBOSE("Loaded new space point "
+                 << newSp << " with transform "
+                 << toString(newSp.toSectorTransform()));
   }
 
   m_outputContainer(context, std::move(outSpacePoints));

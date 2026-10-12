@@ -514,6 +514,7 @@ ProcessCode ColliderMLRelease1InputConverter::execute(
       dParams.values.clear();
       dParams.variances.clear();
       dParams.cluster = Cluster{};
+      dParams.cluster.geometryId = geoId;
       dParams.cluster.globalPosition = globalPos;
       for (const auto& [idx, sigma] : sigmaIt->second) {
         dParams.indices.push_back(idx);

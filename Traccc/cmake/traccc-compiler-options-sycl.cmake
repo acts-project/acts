@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2021-2023 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Include the helper function(s).
 include(traccc-functions)
@@ -19,24 +21,24 @@ endif()
 
 # Basic flags for all build modes.
 foreach(mode RELEASE RELWITHDEBINFO MINSIZEREL DEBUG)
-    traccc_add_flag( CMAKE_SYCL_FLAGS_${mode} "-Wall" )
-    traccc_add_flag( CMAKE_SYCL_FLAGS_${mode} "-Wextra" )
-    traccc_add_flag( CMAKE_SYCL_FLAGS_${mode} "-Wno-unknown-cuda-version" )
-    traccc_add_flag( CMAKE_SYCL_FLAGS_${mode} "-Wshadow" )
-    traccc_add_flag( CMAKE_SYCL_FLAGS_${mode} "-Wunused-local-typedefs" )
-    traccc_add_flag( CMAKE_SYCL_FLAGS_${mode} "-Wconversion" )
+    traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-Wall")
+    traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-Wextra")
+    traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-Wno-unknown-cuda-version")
+    traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-Wshadow")
+    traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-Wunused-local-typedefs")
+    traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-Wconversion")
 endforeach()
 
 if(NOT WIN32)
     foreach(mode RELEASE RELWITHDEBINFO MINSIZEREL DEBUG)
-        traccc_add_flag( CMAKE_SYCL_FLAGS_${mode} "-pedantic" )
+        traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-pedantic")
     endforeach()
 endif()
 
 # Fail on warnings, if asked for that behaviour.
 if(TRACCC_FAIL_ON_WARNINGS)
     foreach(mode RELEASE RELWITHDEBINFO MINSIZEREL DEBUG)
-        traccc_add_flag( CMAKE_SYCL_FLAGS_${mode} "-Werror" )
+        traccc_add_flag(CMAKE_SYCL_FLAGS_${mode} "-Werror")
     endforeach()
 endif()
 

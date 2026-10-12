@@ -106,7 +106,7 @@ ProcessCode ActsSolverFromMille::finalize() {
       ACTS_INFO("     Reading input record " << iRec);
     }
     res = ActsPlugins::ActsToMille::unpackMilleRecord(
-        *milleReader, state, alignResult.idxedAlignSurfaces);
+        *milleReader, state, alignResult.idxedAlignSurfaces, logger());
     if (res == Mille::MilleDecoder::ReadResult::OK) {
       alignmentStates.push_back(state);
     } else if (res == Mille::MilleDecoder::ReadResult::error) {

@@ -562,15 +562,16 @@ void fillGx2fSystem(
       doMaterial = doMaterial && scatteringMapId->second.materialIsValid();
     }
 
+    // Every state closes a transport segment, so its jacobian enters the
+    // jacobians from start even if the state itself is skipped
+    for (auto& jac : jacobianFromStart) {
+      jac = trackState.jacobian() * jac;
+    }
+
     // We only consider states with a measurement (and/or material)
     if (!stateHasMeasurement && !doMaterial) {
       ACTS_DEBUG("    Skip state.");
       continue;
-    }
-
-    // update all Jacobians from start
-    for (auto& jac : jacobianFromStart) {
-      jac = trackState.jacobian() * jac;
     }
 
     // Handle measurement
@@ -902,8 +903,8 @@ class Gx2Fitter {
         ACTS_DEBUG("    The surface contains a measurement.");
 
         // Transport the covariance to the surface
-        Result<void> transportRes = stepper.transportCovarianceToBound(
-            state.stepping, *surface, freeToBoundCorrection);
+        auto transportRes = stepper.transportToBound(state.stepping, *surface,
+                                                     freeToBoundCorrection);
         if (!transportRes.ok()) {
           return transportRes.error();
         }
@@ -923,13 +924,12 @@ class Gx2Fitter {
         {
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
           // Bind the transported state to the current surface
-          auto res = stepper.boundState(state.stepping, *surface, false,
-                                        freeToBoundCorrection);
+          auto res = stepper.boundParameters(state.stepping, *surface);
           if (!res.ok()) {
             return res.error();
           }
           // Not const since, we might need to update with scattering angles
-          auto& [boundParams, jacobian, pathLength] = *res;
+          auto& boundParams = *res;
 
           // For material surfaces, we also update the angles with the
           // available scattering information
@@ -949,10 +949,11 @@ class Gx2Fitter {
 
           // Fill the track state
           trackStateProxy.smoothed() = boundParams.parameters();
-          trackStateProxy.smoothedCovariance() = state.stepping.cov;
+          trackStateProxy.smoothedCovariance() =
+              stepper.covariance(state.stepping).value();
 
-          trackStateProxy.jacobian() = jacobian;
-          trackStateProxy.pathLength() = pathLength;
+          trackStateProxy.jacobian() = *transportRes;
+          trackStateProxy.pathLength() = stepper.pathLength(state.stepping);
 
           if (doMaterial) {
             stepper.update(state.stepping,
@@ -1007,8 +1008,8 @@ class Gx2Fitter {
             "a hole.");
 
         // Transport the covariance to the surface
-        Result<void> transportRes = stepper.transportCovarianceToBound(
-            state.stepping, *surface, freeToBoundCorrection);
+        auto transportRes = stepper.transportToBound(state.stepping, *surface,
+                                                     freeToBoundCorrection);
         if (!transportRes.ok()) {
           return transportRes.error();
         }
@@ -1028,13 +1029,12 @@ class Gx2Fitter {
         {
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
           // Bind the transported state to the current surface
-          auto res = stepper.boundState(state.stepping, *surface, false,
-                                        freeToBoundCorrection);
+          auto res = stepper.boundParameters(state.stepping, *surface);
           if (!res.ok()) {
             return res.error();
           }
           // Not const since, we might need to update with scattering angles
-          auto& [boundParams, jacobian, pathLength] = *res;
+          auto& boundParams = *res;
 
           // For material surfaces, we also update the angles with the
           // available scattering information
@@ -1054,10 +1054,11 @@ class Gx2Fitter {
 
           // Fill the track state
           trackStateProxy.smoothed() = boundParams.parameters();
-          trackStateProxy.smoothedCovariance() = state.stepping.cov;
+          trackStateProxy.smoothedCovariance() =
+              stepper.covariance(state.stepping).value();
 
-          trackStateProxy.jacobian() = jacobian;
-          trackStateProxy.pathLength() = pathLength;
+          trackStateProxy.jacobian() = *transportRes;
+          trackStateProxy.pathLength() = stepper.pathLength(state.stepping);
 
           stepper.update(state.stepping,
                          transformBoundToFreeParameters(
@@ -1114,6 +1115,13 @@ class Gx2Fitter {
           return Result<void>::success();
         }
 
+        // Transport the covariance to the surface
+        auto transportRes = stepper.transportToBound(state.stepping, *surface,
+                                                     freeToBoundCorrection);
+        if (!transportRes.ok()) {
+          return transportRes.error();
+        }
+
         auto& fittedStates = *result.fittedStates;
 
         // Add a <trackStateMask> TrackState entry multi trajectory. This
@@ -1128,19 +1136,18 @@ class Gx2Fitter {
         {
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
           // Bind the transported state to the current surface
-          auto res = stepper.boundState(state.stepping, *surface, false,
-                                        freeToBoundCorrection);
+          auto res = stepper.boundParameters(state.stepping, *surface);
           if (!res.ok()) {
             return res.error();
           }
-          const auto& [boundParams, jacobian, pathLength] = *res;
 
           // Fill the track state
-          trackStateProxy.smoothed() = boundParams.parameters();
-          trackStateProxy.smoothedCovariance() = state.stepping.cov;
+          trackStateProxy.smoothed() = res->parameters();
+          trackStateProxy.smoothedCovariance() =
+              stepper.covariance(state.stepping).value();
 
-          trackStateProxy.jacobian() = jacobian;
-          trackStateProxy.pathLength() = pathLength;
+          trackStateProxy.jacobian() = *transportRes;
+          trackStateProxy.pathLength() = stepper.pathLength(state.stepping);
         }
 
         // Get and set the type flags
@@ -1273,10 +1280,10 @@ class Gx2Fitter {
       // set up propagator and co
       PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
-      // Add the measurement surface as external surface to the navigator.
-      // We will try to hit those surface by ignoring boundary checks.
+      // Relax the bounds check, so the navigator targets a measurement
+      // surface even where the track misses it
       for (const auto& [surface, _] : inputMeasurements) {
-        propagatorOptions.navigation.appendExternalSurface(*surface);
+        propagatorOptions.navigation.registerMeasurementSurface(*surface);
       }
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
@@ -1439,10 +1446,10 @@ class Gx2Fitter {
       // Set up the propagator
       PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
-      // Add the measurement surface as external surface to the navigator.
-      // We will try to hit those surface by ignoring boundary checks.
+      // Relax the bounds check, so the navigator targets a measurement
+      // surface even where the track misses it
       for (const auto& [surface, _] : inputMeasurements) {
-        propagatorOptions.navigation.appendExternalSurface(*surface);
+        propagatorOptions.navigation.registerMeasurementSurface(*surface);
       }
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
@@ -1591,10 +1598,10 @@ class Gx2Fitter {
 
       // set up the propagator
       PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
-      // Add the measurement surface as external surface to the navigator.
-      // We will try to hit those surface by ignoring boundary checks.
+      // Relax the bounds check, so the navigator targets a measurement
+      // surface even where the track misses it
       for (const auto& [surface, _] : inputMeasurements) {
-        propagatorOptions.navigation.appendExternalSurface(*surface);
+        propagatorOptions.navigation.registerMeasurementSurface(*surface);
       }
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();

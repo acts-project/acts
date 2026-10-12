@@ -68,6 +68,30 @@ BOOST_AUTO_TEST_CASE(TrackStateTypeIsReadOnly) {
   static_assert(!MutableTrackStateTypeMap::IsReadOnly);
 }
 
+BOOST_AUTO_TEST_CASE(TrackStateTypeSharedSplitExclusive) {
+  TrackStateType type;
+
+  type.setIsSharedHit();
+  BOOST_CHECK(type.hasMeasurement());
+  BOOST_CHECK(type.isSharedHit());
+  BOOST_CHECK(!type.isSplitHit());
+
+  type.setIsSplitHit();
+  BOOST_CHECK(type.hasMeasurement());
+  BOOST_CHECK(type.isSplitHit());
+  BOOST_CHECK(!type.isSharedHit());
+
+  type.setIsSharedHit();
+  BOOST_CHECK(type.isSharedHit());
+  BOOST_CHECK(!type.isSplitHit());
+
+  type.setIsSplitHit();
+  type.setIsHole();
+  BOOST_CHECK(type.isHole());
+  BOOST_CHECK(!type.isSplitHit());
+  BOOST_CHECK(!type.isSharedHit());
+}
+
 BOOST_AUTO_TEST_CASE(ConstCorrectness) {
   // make mutable
   VectorMultiTrajectory t;

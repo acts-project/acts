@@ -24,8 +24,10 @@ namespace ActsFatras {
 /// for the removed energy.
 struct BetheBloch {
   /// Scaling for most probable value
+  /// unused with new implementation in LandauDistribution.hpp
   double scaleFactorMPV = 1.;
   /// Scaling for Sigma
+  /// unused with new implementation in LandauDistribution.hpp
   double scaleFactorSigma = 1.;
 
   /// Simulate energy loss and update the particle parameters.
@@ -47,15 +49,15 @@ struct BetheBloch {
     // most probable value
     const float energyLoss =
         Acts::computeEnergyLossLandau(slab, m, qOverP, absQ);
-    // Gaussian-equivalent sigma
-    const float energyLossSigma =
-        Acts::computeEnergyLossLandauSigma(slab, m, qOverP, absQ);
+
+    const float energyLossFwhm =
+        Acts::computeEnergyLossLandauFwhm(slab, m, qOverP, absQ);
 
     // Simulate the energy loss
-    // TODO landau location and scale parameters are not identical to the most
-    //      probable value and the Gaussian-equivalent sigma
-    LandauDistribution lossDistribution(scaleFactorMPV * energyLoss,
-                                        scaleFactorSigma * energyLossSigma);
+
+    LandauDistribution lossDistribution =
+        LandauDistribution::fromFwhm(energyLoss, energyLossFwhm);
+
     const double loss = lossDistribution(generator);
 
     // Apply the energy loss

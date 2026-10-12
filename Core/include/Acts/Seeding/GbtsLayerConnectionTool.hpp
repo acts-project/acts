@@ -26,15 +26,6 @@ class GbtsLayerConnectionTool {
  public:
   /// Struct to hold r and z bounds for a given detector layer
   struct LayerDescription {
-    /// Constructor for filling detector layer information
-    /// @param minR_ minimum radius of layer
-    /// @param maxR_ maximum radius of layer
-    /// @param minZ_ minimum z coordinate of layer
-    /// @param maxZ_ maximum z coordinate of layer
-    /// @param gbtsId_ GBTS id of layer
-    LayerDescription(float minR_, float maxR_, float minZ_, float maxZ_,
-                     GbtsExperimentLayerId gbtsId_);
-
     /// Minimum radius
     float minR{};
     /// Maximum radius
@@ -52,29 +43,10 @@ class GbtsLayerConnectionTool {
     /// List of detector layers
     std::vector<LayerDescription> detectorGeometry{};
 
-    // tolerances used for assigning layer ID's
-
-    /// Tolerance on minimum z value
-    float zMinTol = 0.2340f;
-    /// Tolerance on maximum z value
-    float zMaxTol = 0.2340f;
-    /// Tolerance on minimum radius value
-    float rMinTol = 2.5337f;
-    /// Tolerance on maximum radius value
-    float rMaxTol = 2.5337f;
-
     /// Symmeterize layer connection table
     bool doSymmetrization = false;
     /// Minimum probability cut applied to layer transitions
     float probThreshold = -1;
-  };
-
-  /// Container for track layer hit information
-  struct HitCoordinates {
-    /// Radius value of hit
-    float r{};
-    /// z value of hit
-    float z{};
   };
 
   /// pair of layer transitions
@@ -108,8 +80,9 @@ class GbtsLayerConnectionTool {
           getDefaultLogger("GbtsLayerConnectionTool", Logging::Level::INFO));
 
   /// converts layer hits to layer transitions
-  /// @param track the layer hits of a particle
-  void addTrack(std::span<const HitCoordinates> track);
+  /// @param track the GBTS layers of the hits of a particle, in the order it
+  ///              passed them
+  void addTrack(std::span<const GbtsExperimentLayerId> track);
 
   /// Creates the connection table
   /// @return layer pairs
@@ -118,12 +91,6 @@ class GbtsLayerConnectionTool {
  private:
   /// returns the Acts logger
   const Logger& logger() const { return *m_logger; }
-
-  /// Finds the Gbts Coordinate of a given hits coordinate
-  /// @param hit the coordinates of the particle hit on a layer
-  /// @return gbts coordinate
-  std::optional<GbtsExperimentLayerId> findGbtsIdByCoord(
-      const HitCoordinates& hit) const;
 
   /// gets the index to the vector of detector layers via an GBTS id
   /// @param gbtsId Gbts Id of layer

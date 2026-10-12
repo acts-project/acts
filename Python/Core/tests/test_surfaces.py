@@ -3,6 +3,35 @@ import pytest
 import acts
 
 
+@pytest.mark.parametrize(
+    "surface",
+    [
+        acts.Surface.createPlane(
+            acts.Transform3.Identity(), acts.RectangleBounds(10.0, 5.0)
+        ),
+        acts.Surface.createDisc(
+            acts.Transform3.Identity(), acts.RadialBounds(10.0, 20.0)
+        ),
+        acts.Surface.createCylinder(
+            acts.Transform3.Identity(), acts.CylinderBounds(20.0, 50.0)
+        ),
+    ],
+)
+def test_surface_sensitivity_is_independent_of_identifier(surface):
+    assert surface.isSensitive is False
+    identifier = acts.GeometryIdentifier(sensitive=7)
+    surface.assignGeometryId(identifier)
+    assert surface.isSensitive is False
+
+    surface.assignIsSensitive(isSensitive=True)
+    assert surface.isSensitive is True
+    assert surface.geometryId == identifier
+
+    surface.assignIsSensitive(False)
+    assert surface.isSensitive is False
+    assert surface.geometryId == identifier
+
+
 def test_surface_bounds_base_api():
     bounds = acts.RectangleBounds(10.0, 5.0)
 

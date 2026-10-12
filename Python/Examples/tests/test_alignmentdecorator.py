@@ -140,7 +140,7 @@ def test_alignmentdecorator_sim_reco_split(tmp_path, target):
         bounds=[200, 200],
         positions=LAYER_POSITIONS,
         stereos=[0] * len(LAYER_POSITIONS),
-        binValue=1,
+        rotDirection=1,
     )
     trackingGeometry = detector.trackingGeometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))

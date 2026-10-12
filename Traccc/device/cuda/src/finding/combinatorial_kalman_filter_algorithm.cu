@@ -1,12 +1,14 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "../sanity/contiguous_on.cuh"
+#include "../sanity/ordered_on.cuh"
 #include "../utils/magnetic_field_types.hpp"
 #include "./kernels/build_tracks.cuh"
 #include "./kernels/condense_tracks.cuh"
@@ -30,6 +32,9 @@
 #include "traccc/geometry/detector_buffer.hpp"
 #include "traccc/utils/detector_buffer_bfield_visitor.hpp"
 
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
+
 // Thrust include(s).
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
@@ -44,10 +49,16 @@ namespace traccc::cuda {
 bool combinatorial_kalman_filter_algorithm::input_is_valid(
     const edm::measurement_collection::const_view& measurements) const {
   static constexpr std::size_t GEOMID_INDEX = 6u;
+  // The measurements must be grouped by surface, and also sorted by it for
+  // the CKF to find the measurement ranges of each surface.
   return is_contiguous_on<
-      vecmem::device_vector<const detray::geometry::identifier>>(
-      device::identity_projector{}, mr().main, copy(), stream(),
-      measurements.template get<GEOMID_INDEX>());
+             vecmem::device_vector<const detray::geometry::identifier>>(
+             device::identity_projector{}, mr().main, copy(), stream(),
+             measurements.template get<GEOMID_INDEX>()) &&
+         is_ordered_on<
+             vecmem::device_vector<const detray::geometry::identifier>>(
+             device::geo_id_order_relation{}, mr().main, copy(), stream(),
+             measurements.template get<GEOMID_INDEX>());
 }
 
 vecmem::data::vector_buffer<edm::measurement_collection::const_view::size_type>
@@ -74,7 +85,7 @@ combinatorial_kalman_filter_algorithm::build_measurement_ranges_buffer(
         // Fill it with Thrust's help.
         thrust::upper_bound(
             thrust::cuda::par_nosync(
-                std::pmr::polymorphic_allocator(&(mr().main)))
+                stream_synchronizing_allocator(mr().main, stream()))
                 .on(details::get_stream(stream())),
             measurements_device.surface_link().begin(),
             // We have to use this ugly form here, because if the
@@ -136,7 +147,9 @@ void combinatorial_kalman_filter_algorithm::find_tracks_kernel(
       (n_threads + deviceThreads - 1) / deviceThreads;
   const std::size_t deviceSharedMem =
       deviceThreads * sizeof(unsigned long long int) +
-      2 * deviceThreads * sizeof(std::pair<unsigned int, unsigned int>);
+      2 * deviceThreads * sizeof(std::pair<unsigned int, unsigned int>) +
+      deviceThreads * config.max_num_branches_per_surface *
+          sizeof(std::pair<traccc::scalar, unsigned int>);
 
   // Launch the kernel for the appropriate detector type.
   detector_buffer_visitor<detector_type_list>(
@@ -161,7 +174,8 @@ void combinatorial_kalman_filter_algorithm::condense_tracks_kernel(
       out_params_per_in_param_vector(out_params_per_in_param);
   vecmem::device_vector<unsigned int> params_index_vector(params_index);
   thrust::inclusive_scan(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(
+          stream_synchronizing_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       out_params_per_in_param_vector.begin(),
       out_params_per_in_param_vector.end(), params_index_vector.begin());
@@ -201,7 +215,8 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_last_measurement(
   assert(link_last_measurement.size_ptr() == nullptr);
   assert(param_ids.size_ptr() == nullptr);
   thrust::sort_by_key(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
+      thrust::cuda::par_nosync(
+          stream_synchronizing_allocator(mr().main, stream()))
           .on(details::get_stream(stream())),
       link_last_measurement.ptr(),
       link_last_measurement.ptr() + link_last_measurement.capacity(),
@@ -245,10 +260,11 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_keys(
   assert(keys.capacity() == param_ids.capacity());
   assert(keys.size_ptr() == nullptr);
   assert(param_ids.size_ptr() == nullptr);
-  thrust::sort_by_key(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream())),
-      keys.ptr(), keys.ptr() + keys.capacity(), param_ids.ptr());
+  thrust::sort_by_key(thrust::cuda::par_nosync(
+                          stream_synchronizing_allocator(mr().main, stream()))
+                          .on(details::get_stream(stream())),
+                      keys.ptr(), keys.ptr() + keys.capacity(),
+                      param_ids.ptr());
 }
 
 void combinatorial_kalman_filter_algorithm::propagate_to_next_surface_kernel(

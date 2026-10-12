@@ -14,12 +14,15 @@
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Propagator/NavigatorError.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
 #include <cassert>
+#include <format>
 #include <sstream>
 
 namespace Acts {
@@ -82,6 +85,41 @@ bool Navigator::endOfWorldReached(const State& state) const {
   return state.currentVolume == nullptr;
 }
 
+void Navigator::resolveExtendedSurfaces(State& state) const {
+  state.extendedSurfaces.clear();
+  state.extendedSurfaces.reserve(state.options.extendedSurfaces.size());
+
+  for (const ExtendedSurface& extendedSurface :
+       state.options.extendedSurfaces) {
+    if (extendedSurface.surface == nullptr) {
+      throw std::invalid_argument("Navigator: extended surface is nullptr");
+    }
+
+    // Otherwise the extension is silently lost
+    const GeometryIdentifier geoId = extendedSurface.surface->geometryId();
+    if (m_cfg.trackingGeometry->findSurface(geoId) != extendedSurface.surface) {
+      throw std::invalid_argument(
+          std::format("Navigator: the extended surface {} is not part of "
+                      "the tracking geometry",
+                      geoId));
+    }
+
+    // Gen3 scopes to the volume of the surface, Gen1 to its layer
+    const TrackingVolume* volume = nullptr;
+    if (m_geometryVersion == GeometryVersion::Gen3) {
+      volume = m_cfg.trackingGeometry->findVolume(
+          geoId.withSensitive(0).withBoundary(0));
+      if (volume == nullptr) {
+        throw std::invalid_argument(std::format(
+            "Navigator: no volume found for the extended surface {}", geoId));
+      }
+    }
+
+    state.extendedSurfaces.emplace_back(
+        extendedSurface.surface, extendedSurface.boundaryTolerance, volume);
+  }
+}
+
 bool Navigator::navigationBreak(const State& state) const {
   return state.navigationBreak;
 }
@@ -111,15 +149,19 @@ Result<void> Navigator::initialize(
 
   if (m_geometryVersion == GeometryVersion::Gen3) {
     state.stream.reserve(m_cfg.candidatePreReserve);
-
-    state.freeCandidates.clear();
-    state.freeCandidates.reserve(state.options.externalSurfaces.size());
-    for (const Surface* candidate : state.options.externalSurfaces) {
-      if (candidate->geometryId() == GeometryIdentifier{}) {
-        state.freeCandidates.emplace_back(candidate, false);
-      }
-    }
   }
+
+  resolveExtendedSurfaces(state);
+
+  state.additionalSurfaces.clear();
+  state.additionalSurfaces.reserve(state.options.additionalSurfaces.size());
+  for (const AdditionalSurface& additional : state.options.additionalSurfaces) {
+    if (additional.surface == nullptr) {
+      throw std::invalid_argument("Navigator: additional surface is nullptr");
+    }
+    state.additionalSurfaces.push_back({&additional, false});
+  }
+  state.pendingTarget.reset();
 
   // @TODO: Implement fast initialization with Gen3. This requires the volume
   // lookup to work properly
@@ -255,6 +297,117 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
     return NavigationTarget::None();
   }
 
+  if (state.additionalSurfaces.empty()) {
+    return nextStagedTarget(state, position, direction);
+  }
+
+  // Hold the staged candidate back and hand out the closer one
+  if (!state.pendingTarget.has_value()) {
+    state.pendingTarget = nextStagedTarget(state, position, direction);
+  }
+
+  if (const NavigationTarget additionalTarget =
+          nextAdditionalTarget(state, position, direction);
+      !additionalTarget.isNone()) {
+    NavigationTarget& staged = state.pendingTarget.value();
+    if (!staged.isNone()) {
+      // The stored path length is stale by the distance travelled since
+      const Intersection3D refreshed =
+          staged.surface()
+              .intersect(state.options.geoContext, position, direction,
+                         staged.boundaryTolerance(),
+                         state.options.surfaceTolerance)
+              .at(staged.intersectionIndex());
+      // Keep the stored one if the straight-line estimate lost the surface
+      if (refreshed.isValid()) {
+        staged.intersection() = refreshed;
+      }
+    }
+    // A tie goes to the staged candidate
+    if (staged.isNone() ||
+        additionalTarget.pathLength() < staged.intersection().pathLength()) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "Target set to additional surface "
+                   << additionalTarget.surface().geometryId()
+                   << " at path length " << additionalTarget.pathLength());
+      return additionalTarget;
+    }
+  }
+
+  const NavigationTarget staged = state.pendingTarget.value();
+  state.pendingTarget.reset();
+  return staged;
+}
+
+NavigationTarget Navigator::nextAdditionalTarget(
+    const State& state, const Vector3& position,
+    const Vector3& direction) const {
+  NavigationTarget closest = NavigationTarget::None();
+
+  for (const State::AdditionalSurfaceState& additional :
+       state.additionalSurfaces) {
+    if (additional.reached && additional.entry->dropAfterReached) {
+      continue;
+    }
+    if (additional.entry->volume != nullptr &&
+        additional.entry->volume != state.currentVolume) {
+      continue;
+    }
+
+    // The closer solution can be behind the propagation, so check all
+    const MultiIntersection3D multiIntersection =
+        additional.entry->surface->intersect(
+            state.options.geoContext, position, direction,
+            additional.entry->boundaryTolerance,
+            state.options.surfaceTolerance);
+
+    for (const auto [intersectionIndex, intersection] :
+         enumerate(multiIntersection)) {
+      if (!intersection.isValid() ||
+          !detail::checkPathLength(intersection.pathLength(),
+                                   state.options.nearLimit,
+                                   state.options.farLimit)) {
+        continue;
+      }
+      if (closest.isNone() ||
+          intersection.pathLength() < closest.pathLength()) {
+        closest = NavigationTarget(
+            intersection, static_cast<IntersectionIndex>(intersectionIndex),
+            *additional.entry->surface, additional.entry->boundaryTolerance);
+      }
+    }
+  }
+
+  return closest;
+}
+
+bool Navigator::stagedTargetIs(const State& state,
+                               const Surface& surface) const {
+  auto targets = [&surface](const auto& list,
+                            const std::optional<std::size_t>& index) {
+    return index.has_value() && index.value() < list.size() &&
+           &list.at(index.value()).surface() == &surface;
+  };
+
+  if (m_geometryVersion == GeometryVersion::Gen3) {
+    return state.stream.isValid() &&
+           &state.stream.currentCandidate().surface() == &surface;
+  }
+  switch (state.navigationStage) {
+    case Stage::surfaceTarget:
+      return targets(state.navSurfaces, state.navSurfaceIndex);
+    case Stage::layerTarget:
+      return targets(state.navLayers, state.navLayerIndex);
+    case Stage::boundaryTarget:
+      return targets(state.navBoundaries, state.navBoundaryIndex);
+    default:
+      return false;
+  }
+}
+
+NavigationTarget Navigator::nextStagedTarget(State& state,
+                                             const Vector3& position,
+                                             const Vector3& direction) const {
   ACTS_VERBOSE(volInfo(state) << "Entering Navigator::nextTarget.");
 
   NavigationTarget nextTarget = tryGetNextTarget(state, position, direction);
@@ -352,6 +505,23 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
   ACTS_VERBOSE(volInfo(state)
                << "Current surface: " << state.currentSurface->geometryId());
 
+  // Reaching an additional surface does not advance the staged navigation,
+  // unless it also staged the surface
+  if (!state.additionalSurfaces.empty()) {
+    auto itr = std::ranges::find_if(
+        state.additionalSurfaces,
+        [&surface](const State::AdditionalSurfaceState& additional) {
+          return additional.entry->surface == &surface;
+        });
+    if (itr != state.additionalSurfaces.end()) {
+      itr->reached = true;
+      if (!stagedTargetIs(state, surface)) {
+        ACTS_VERBOSE(volInfo(state) << "Reached additional surface.");
+        return;
+      }
+    }
+  }
+
   // handling portals in gen3 configuration
   if (m_geometryVersion == GeometryVersion::Gen3) {
     if (state.navCandidate().isPortalTarget() &&
@@ -408,18 +578,6 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
         ACTS_VERBOSE(volInfo(state)
                      << "No more volume to progress to, stopping navigation.");
         state.navigationBreak = true;
-      }
-    }
-    // Mark reached free candidates
-    else if (&state.navCandidate().surface() == &surface &&
-             surface.geometryId() == GeometryIdentifier{}) {
-      auto freeItr = std::ranges::find_if(
-          state.freeCandidates,
-          [&surface](const std::pair<const Surface*, bool>& cand) {
-            return &surface == cand.first;
-          });
-      if (freeItr != state.freeCandidates.end()) {
-        freeItr->second = true;
       }
     }
     return;
@@ -574,21 +732,14 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
   // candidates; skip those outside the path-length window here at consumption
   // instead of copying the accepted ones out during resolution.
   ACTS_VERBOSE(volInfo(state)
-               << " Stream is valid " << state.stream.isValid()
-               << ", current index: "
-               << (state.stream.currentIndex() != std::nullopt
-                       ? std::format("{:}", *state.stream.currentIndex())
-                       : "n/a")
-               << ", candidates: " << state.stream.candidates().size());
+               << "Current candidate index is " << state.stream.currentIndex()
+               << " of " << state.stream.candidates().size());
 
   while (state.stream.isValid() &&
-         !detail::checkPathLength(state.stream.currentCandidate().pathLength(),
+         !detail::checkPathLength(state.navCandidate().pathLength(),
                                   state.options.nearLimit,
                                   state.navCandidatesFarLimit, logger())) {
-    ACTS_VERBOSE(volInfo(state)
-                 << " Skip invalid navigation target: "
-                 << (state.stream.isValid() ? state.navCandidate()
-                                            : NavigationTarget::None()));
+    ACTS_VERBOSE(volInfo(state) << "Skip candidate " << state.navCandidate());
     state.stream.switchToNextCandidate();
   }
 
@@ -654,16 +805,28 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   }
   ACTS_VERBOSE(volInfo(state) << "Searching for compatible candidates.");
 
-  state.resetStream();
-  if (!state.stream.candidates().empty()) {
-    ACTS_VERBOSE(volInfo(state) << " Carry over " << state.stream.candidates()
-                                << " unreached targets.\n"
-                                << state.stream.candidates());
-  }
+  state.stream.reset();
   AppendOnlyNavigationStream appendOnly{state.stream};
   NavigationArguments args;
   args.position = position;
   args.direction = direction;
+
+  // Extended surfaces go in first, because the de-duplication in
+  // NavigationStream::initialize keeps the first entry per surface
+  for (const State::ResolvedExtendedSurface& extendedSurface :
+       state.extendedSurfaces) {
+    if (extendedSurface.volume != state.currentVolume) {
+      continue;
+    }
+    ACTS_VERBOSE(volInfo(state)
+                 << "Append " << extendedSurface.surface->type() << " surface "
+                 << extendedSurface.surface->geometryId()
+                 << " with an extended boundary tolerance "
+                 << extendedSurface.boundaryTolerance);
+    appendOnly.addSurfaceCandidate(*extendedSurface.surface,
+                                   extendedSurface.boundaryTolerance);
+  }
+  const std::size_t nExtendedCandidates = state.stream.candidates().size();
 
   const INavigationPolicy* policy = state.currentVolume->navigationPolicy();
   if (policy == nullptr) {
@@ -679,42 +842,9 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
 
   ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
                               << " navigation candidates.");
-  // Track whether anything is appended beyond the policy candidates. External
-  // and free surfaces may duplicate a surface a policy already added; the
-  // policies of a volume themselves are expected to add disjoint candidates.
-  const std::size_t nPolicyCandidates = state.stream.candidates().size();
-  for (const Surface* surface : state.options.externalSurfaces) {
-    const GeometryIdentifier geoId = surface->geometryId();
-    // Don't add any surface which is not in the same volume (volume bits)
-    // or sub volume (extra bits)
-    if (geoId.withSensitive(0) != state.currentVolume->geometryId()) {
-      continue;
-    }
-    ACTS_VERBOSE(volInfo(state) << "Try to navigate to " << surface->type()
-                                << " surface " << geoId);
-    appendOnly.addSurfaceCandidate(*surface, BoundaryTolerance::Infinite());
-  }
-  bool pruneFreeCand{false};
-  if (!state.freeCandidates.empty()) {
-    for (const auto& [surface, wasReached] : state.freeCandidates) {
-      /// Don't process already reached surfaces again
-      if (wasReached) {
-        continue;
-      }
-      if (!state.options.freeSurfaceSelector.connected() ||
-          state.options.freeSurfaceSelector(state.options.geoContext,
-                                            *state.currentVolume, position,
-                                            direction, *surface)) {
-        ACTS_VERBOSE(volInfo(state)
-                     << "Append free " << surface->type() << " surface  \n"
-                     << surface->toStream(state.options.geoContext));
-        appendOnly.addSurfaceCandidate(*surface, BoundaryTolerance::Infinite());
-        pruneFreeCand = !state.options.freeSurfaceSelector.connected();
-      }
-    };
-  }
-  const bool candidatesAreUnique =
-      state.stream.candidates().size() == nPolicyCandidates;
+
+  // An extended surface can duplicate a policy candidate
+  const bool candidatesAreUnique = nExtendedCandidates == 0;
   state.stream.initialize(state.options.geoContext, {position, direction},
                           logger(), state.options.surfaceTolerance,
                           candidatesAreUnique);
@@ -724,24 +854,10 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
                << " navigation candidates after initialization.\n"
                << state.stream.candidates());
 
-  double farLimit = state.options.farLimit;
-  // If the user has not provided the selection delegate, then
-  // just apply a simple candidate pruning. Constrain the maximum
-  // reach of the navigation to the last portal in the state
-  if (pruneFreeCand) {
-    farLimit = state.options.nearLimit;
-    for (const auto& candidate : state.stream.candidates()) {
-      if (candidate.isPortalTarget()) {
-        farLimit = std::max(farLimit, candidate.intersection().pathLength() +
-                                          state.options.surfaceTolerance);
-      }
-    }
-  }
-
   // The candidates are consumed directly from the stream; the path-length
   // window is applied lazily while advancing the candidate index, so record
   // the far limit for this resolution.
-  state.navCandidatesFarLimit = farLimit;
+  state.navCandidatesFarLimit = state.options.farLimit;
 }
 
 void Navigator::resolveSurfaces(State& state, const Vector3& position,
@@ -767,22 +883,47 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
   navOpts.nearLimit = state.options.nearLimit;
   navOpts.farLimit = state.options.farLimit;
 
-  const auto layerId = layerSurface->geometryId().layer();
-  for (const Surface* surface : state.options.externalSurfaces) {
-    const GeometryIdentifier geoId = surface->geometryId();
-    if (geoId.layer() == layerId) {
-      navOpts.externalSurfaces.push_back(geoId);
+  // The layer resolves the surface, so only its own extended surfaces apply
+  const GeometryIdentifier layerId = layerSurface->geometryId();
+  boost::container::small_vector<const Surface*, 4> extended;
+  for (const State::ResolvedExtendedSurface& extendedSurface :
+       state.extendedSurfaces) {
+    const GeometryIdentifier geoId = extendedSurface.surface->geometryId();
+    if (geoId.volume() != layerId.volume() ||
+        geoId.layer() != layerId.layer()) {
+      continue;
     }
+    navOpts.extendedSurfaces.emplace_back(geoId,
+                                          extendedSurface.boundaryTolerance);
+    extended.push_back(extendedSurface.surface);
   }
+
+  auto isExtended = [&extended](const NavigationTarget& target) {
+    return rangeContainsValue(extended, &target.surface());
+  };
 
   // Request the compatible surfaces
   state.navSurfaces = currentLayer->compatibleSurfaces(
       state.options.geoContext, position, direction, navOpts);
+
+  // A relaxed bounds check can put the intersection outside the volume.
+  // Targeting it would step the propagation over the boundary.
+  if (!extended.empty()) {
+    auto outside = std::ranges::remove_if(
+        state.navSurfaces, [&](const NavigationTarget& target) {
+          return isExtended(target) &&
+                 !state.currentVolume->inside(state.options.geoContext,
+                                              target.intersection().position(),
+                                              state.options.surfaceTolerance);
+        });
+    state.navSurfaces.erase(outside.begin(), outside.end());
+  }
+
   // Sort the surfaces by path length.
-  // Special care is taken for the external surfaces which should always
+  // Special care is taken for the extended surfaces which should always
   // come first, so they are preferred to be targeted and hit first.
-  std::ranges::sort(state.navSurfaces, [&state](const NavigationTarget& a,
-                                                const NavigationTarget& b) {
+  std::ranges::sort(state.navSurfaces, [&](const NavigationTarget& a,
+                                           const NavigationTarget& b) {
     // Prefer to sort by path length. We assume surfaces are at the same
     // distance if the difference is smaller than the tolerance.
     if (std::abs(a.pathLength() - b.pathLength()) >
@@ -790,16 +931,15 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
       return NavigationTarget::pathLengthOrder(a, b);
     }
     // If the path length is practically the same, sort by geometry.
-    // First we check if one of the surfaces is external.
-    bool aIsExternal = a.boundaryTolerance().isInfinite();
-    bool bIsExternal = b.boundaryTolerance().isInfinite();
-    if (aIsExternal == bIsExternal) {
-      // If both are external or both are not external, sort by geometry
-      // identifier
+    // First we check if one of the surfaces is extended.
+    bool aIsExtended = isExtended(a);
+    bool bIsExtended = isExtended(b);
+    if (aIsExtended == bIsExtended) {
+      // If both carry one or both do not, sort by geometry identifier
       return a.surface().geometryId() < b.surface().geometryId();
     }
-    // If only one is external, it should come first
-    return aIsExternal;
+    // If only one is extended, it should come first
+    return aIsExtended;
   });
   // For now we implicitly remove overlapping surfaces.
   // For track finding it might be useful to discover overlapping surfaces

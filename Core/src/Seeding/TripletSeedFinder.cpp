@@ -24,21 +24,69 @@ namespace Acts {
 
 namespace {
 
-template <bool useStripInfo, bool sortedByCotTheta>
+template <bool useStripInfo, bool sortedByCotTheta, bool useTime>
 class Impl final : public TripletSeedFinder {
  public:
   explicit Impl(const DerivedConfig& config) : m_cfg(config) {}
 
   const DerivedConfig& config() const override { return m_cfg; }
 
+  /// Straight line distance between two space points.
+  static float distance(const ConstSpacePointProxy& a,
+                        const ConstSpacePointProxy& b) {
+    return fastHypot(a.xy()[0] - b.xy()[0], a.xy()[1] - b.xy()[1],
+                     a.zr()[0] - b.zr()[0]);
+  }
+
+  /// Tests the time compatibility of the three space points of a triplet. The
+  /// bottom and top times are transported to the middle space point along
+  /// straight lines at the speed of light (which is 1 in ACTS units), assuming
+  /// an outgoing particle. The chi2 of the three times with respect to their
+  /// inverse variance weighted mean is then compared to `timeChi2Max`.
+  ///
+  /// @param tBAtM Bottom space point time transported to the middle space point
+  bool passesTimeCut(const ConstSpacePointProxy& spM,
+                     const ConstSpacePointProxy& spT, float tBAtM,
+                     float varianceTB, float tM, float varianceTM) const {
+    const float tTAtM = spT.time() - distance(spM, spT);
+    const float varianceTT = spT.varianceT();
+    // chi2 with respect to the weighted mean, written in closed form for three
+    // measurements to avoid divisions:
+    //   chi2 = (V_T dt_BM^2 + V_M dt_BT^2 + V_B dt_MT^2) /
+    //          (V_B V_M + V_B V_T + V_M V_T)
+    const float chi2Numerator = varianceTT * square(tBAtM - tM) +
+                                varianceTM * square(tBAtM - tTAtM) +
+                                varianceTB * square(tM - tTAtM);
+    const float chi2Denominator = varianceTB * varianceTM +
+                                  varianceTB * varianceTT +
+                                  varianceTM * varianceTT;
+    return chi2Numerator <= m_cfg.timeChi2Max * chi2Denominator;
+  }
+
   template <typename TopDoublets>
   TopDoublets createPixelTripletTopCandidates(
-      const ConstSpacePointProxy& spM,
+      const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
     const float varianceZM = spM.varianceZ();
     const float varianceRM = spM.varianceR();
+
+    // times of the middle space point and of the bottom space point transported
+    // to the middle one. both are fixed for this call, only the top space
+    // point varies in the loop below. only filled when the time cut is enabled
+    [[maybe_unused]] float tM = 0;
+    [[maybe_unused]] float varianceTM = 0;
+    [[maybe_unused]] float tBAtM = 0;
+    [[maybe_unused]] float varianceTB = 0;
+    if constexpr (useTime) {
+      tM = spM.time();
+      varianceTM = spM.varianceT();
+      const ConstSpacePointProxy spB =
+          spacePoints[bottomDoublet.spacePointIndex()];
+      tBAtM = spB.time() + distance(spB, spM);
+      varianceTB = spB.varianceT();
+    }
 
     // Reserve enough space, in case current capacity is too little
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
@@ -104,6 +152,15 @@ class Impl final : public TripletSeedFinder {
           topDoubletOffset = topDoubletIndex + 1;
         }
         continue;
+      }
+
+      // check the time compatibility of the three space points. placed after
+      // the cheaper r-z slope cut above, and before the curvature computation
+      if constexpr (useTime) {
+        if (!passesTimeCut(spM, spacePoints[spT], tBAtM, varianceTB, tM,
+                           varianceTM)) {
+          continue;
+        }
       }
 
       const float dU = topDoublet.u() - Ub;
@@ -183,6 +240,21 @@ class Impl final : public TripletSeedFinder {
     const float Ub0 = bottomDoublet.u();
     const float Vb0 = bottomDoublet.v();
 
+    // times of the middle space point and of the bottom space point transported
+    // to the middle one. only filled when the time cut is enabled
+    [[maybe_unused]] float tM = 0;
+    [[maybe_unused]] float varianceTM = 0;
+    [[maybe_unused]] float tBAtM = 0;
+    [[maybe_unused]] float varianceTB = 0;
+    if constexpr (useTime) {
+      tM = spM.time();
+      varianceTM = spM.varianceT();
+      const ConstSpacePointProxy spBTime =
+          spacePoints[bottomDoublet.spacePointIndex()];
+      tBAtM = spBTime.time() + distance(spBTime, spM);
+      varianceTB = spBTime.varianceT();
+    }
+
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     const float iSinTheta2 = 1 + cotThetaB0 * cotThetaB0;
     const float sigmaSquaredPtDependent = iSinTheta2 * m_cfg.sigmapT2perRadius;
@@ -240,6 +312,15 @@ class Impl final : public TripletSeedFinder {
             break;
           }
           topDoubletOffset = topDoubletIndex + 1;
+          continue;
+        }
+      }
+
+      // check the time compatibility of the three space points, before the
+      // expensive strip coordinate transformation below
+      if constexpr (useTime) {
+        if (!passesTimeCut(spM, spacePoints[topDoublet.spacePointIndex()],
+                           tBAtM, varianceTB, tM, varianceTM)) {
           continue;
         }
       }
@@ -416,8 +497,8 @@ class Impl final : public TripletSeedFinder {
       return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                              topDoublets, tripletTopCandidates);
     } else {
-      return createPixelTripletTopCandidates(spM, bottomDoublet, topDoublets,
-                                             tripletTopCandidates);
+      return createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
     }
   }
 
@@ -430,8 +511,8 @@ class Impl final : public TripletSeedFinder {
       return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                              topDoublets, tripletTopCandidates);
     } else {
-      return createPixelTripletTopCandidates(spM, bottomDoublet, topDoublets,
-                                             tripletTopCandidates);
+      return createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
     }
   }
 
@@ -444,8 +525,8 @@ class Impl final : public TripletSeedFinder {
       return createStripTripletTopCandidates(spacePoints, spM, bottomDoublet,
                                              topDoublets, tripletTopCandidates);
     } else {
-      return createPixelTripletTopCandidates(spM, bottomDoublet, topDoublets,
-                                             tripletTopCandidates);
+      return createPixelTripletTopCandidates(spacePoints, spM, bottomDoublet,
+                                             topDoublets, tripletTopCandidates);
     }
   }
 
@@ -489,10 +570,11 @@ std::unique_ptr<TripletSeedFinder> TripletSeedFinder::create(
 
   using UseStripInfoOptions = BooleanOptions;
   using SortedByCotThetaOptions = BooleanOptions;
+  using UseTimeOptions = BooleanOptions;
 
   using TripletOptions =
       boost::mp11::mp_product<boost::mp11::mp_list, UseStripInfoOptions,
-                              SortedByCotThetaOptions>;
+                              SortedByCotThetaOptions, UseTimeOptions>;
 
   std::unique_ptr<TripletSeedFinder> result;
   boost::mp11::mp_for_each<TripletOptions>([&](auto option) {
@@ -500,9 +582,11 @@ std::unique_ptr<TripletSeedFinder> TripletSeedFinder::create(
 
     using UseStripInfo = boost::mp11::mp_at_c<OptionType, 0>;
     using SortedByCotTheta = boost::mp11::mp_at_c<OptionType, 1>;
+    using UseTime = boost::mp11::mp_at_c<OptionType, 2>;
 
     if (config.useStripInfo != UseStripInfo::value ||
-        config.sortedByCotTheta != SortedByCotTheta::value) {
+        config.sortedByCotTheta != SortedByCotTheta::value ||
+        config.useTime != UseTime::value) {
       return;  // skip if the configuration does not match
     }
 
@@ -514,9 +598,9 @@ std::unique_ptr<TripletSeedFinder> TripletSeedFinder::create(
     }
 
     // create the implementation for the given configuration
-    result =
-        std::make_unique<Impl<UseStripInfo::value, SortedByCotTheta::value>>(
-            config);
+    result = std::make_unique<
+        Impl<UseStripInfo::value, SortedByCotTheta::value, UseTime::value>>(
+        config);
   });
   if (result == nullptr) {
     throw std::runtime_error(

@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/alpaka/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp"
@@ -77,8 +78,7 @@ void silicon_pixel_spacepoint_formation_algorithm::count_spacepoints_kernel(
 void silicon_pixel_spacepoint_formation_algorithm::scan_spacepoint_flags(
     vecmem::data::vector_view<unsigned int>& spacepoint_flags) const {
   assert(spacepoint_flags.size_ptr() == nullptr);
-  details::inclusive_scan(details::get_queue(queue()), mr(),
-                          spacepoint_flags.ptr(),
+  details::inclusive_scan(queue(), mr(), spacepoint_flags.ptr(),
                           spacepoint_flags.ptr() + spacepoint_flags.capacity(),
                           spacepoint_flags.ptr());
 }

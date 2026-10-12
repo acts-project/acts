@@ -15,10 +15,9 @@
 
 namespace Acts {
 
-std::ostream& operator<<(
-    std::ostream& ostr,
-    const std::span<const Acts::NavigationTarget>& candidates) {
-  for (const auto& target : candidates) {
+std::ostream& operator<<(std::ostream& ostr,
+                         std::span<const NavigationTarget> candidates) {
+  for (const NavigationTarget& target : candidates) {
     ostr << "\n  -- " << target;
   }
   return ostr;

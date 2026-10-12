@@ -1,14 +1,18 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "../utils/utils.hpp"
 #include "./kernels/fill_fitting_sort_keys.hpp"
 #include "traccc/cuda/fitting/kalman_fitting_algorithm.hpp"
+
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
 
 // Thrust include(s).
 #include <thrust/execution_policy.h>
@@ -16,7 +20,6 @@
 
 // System include(s).
 #include <cassert>
-#include <memory_resource>
 
 namespace traccc::cuda {
 
@@ -41,10 +44,11 @@ void kalman_fitting_algorithm::prepare_track_fit_order(
   // Sort the key to get the sorted parameter ids
   vecmem::device_vector<device::sort_key> keys_device(track_sort_keys);
   vecmem::device_vector<unsigned int> track_indices_device(track_indices);
-  thrust::sort_by_key(
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&mr().main))
-          .on(details::get_stream(stream())),
-      keys_device.begin(), keys_device.end(), track_indices_device.begin());
+  thrust::sort_by_key(thrust::cuda::par_nosync(
+                          stream_synchronizing_allocator(mr().main, stream()))
+                          .on(details::get_stream(stream())),
+                      keys_device.begin(), keys_device.end(),
+                      track_indices_device.begin());
 }
 
 }  // namespace traccc::cuda

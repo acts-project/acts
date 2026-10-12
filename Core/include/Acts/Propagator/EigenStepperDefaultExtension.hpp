@@ -119,7 +119,7 @@ struct EigenStepperDefaultExtension {
     auto p = stepper.absoluteMomentum(state);
     auto dtds = fastHypot(1, m / p);
     state.pars[eFreeTime] += h * dtds;
-    if (state.covTransport) {
+    if (state.cov.has_value()) {
       state.derivative(3) = dtds;
     }
   }

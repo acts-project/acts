@@ -78,17 +78,17 @@ struct StepWiseActor {
     // Listen to the surface and create bound state where necessary
     auto surface = navigator.currentSurface(state.navigation);
     if (surface && surface->isSensitive()) {
-      // Create a bound state and log the jacobian
-      auto boundState = stepper.boundState(state.stepping, *surface).value();
-      result.jacobians.push_back(std::move(std::get<Jacobian>(boundState)));
-      result.paths.push_back(std::get<double>(boundState));
+      // Transport to the surface and log the jacobian
+      result.jacobians.push_back(
+          stepper.transportToBound(state.stepping, *surface).value());
+      result.paths.push_back(stepper.pathLength(state.stepping));
     }
     // Also store the jacobian and full path
     if (state.stage == PropagatorStage::postPropagation && !result.finalized) {
       // Set the last stepping parameter
-      result.paths.push_back(state.stepping.pathAccumulated);
+      result.paths.push_back(stepper.pathLength(state.stepping));
       // Set the full parameter
-      result.fullPath = state.stepping.pathAccumulated;
+      result.fullPath = stepper.pathLength(state.stepping);
       // Remember that you finalized this
       result.finalized = true;
     }

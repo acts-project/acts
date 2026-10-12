@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Project include(s).
 #include "../utils/cuda_error_handling.hpp"
@@ -24,6 +25,9 @@
 #include "./kernels/update_status.cuh"
 #include "traccc/cuda/ambiguity_resolution/greedy_ambiguity_resolution_algorithm.hpp"
 #include "traccc/definitions/math.hpp"
+
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
 
 // Thrust include(s).
 #include <thrust/execution_policy.h>
@@ -118,9 +122,9 @@ greedy_ambiguity_resolution_algorithm::operator()(
   cudaStream_t stream = details::get_stream(m_stream);
 
   // The Thrust policy to use.
-  auto thrust_policy =
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(m_mr.main)))
-          .on(stream);
+  auto thrust_policy = thrust::cuda::par_nosync(
+                           stream_synchronizing_allocator(m_mr.main, m_stream))
+                           .on(stream);
 
   const unsigned int n_tracks = tracks_view.tracks.capacity();
 

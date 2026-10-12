@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -231,14 +232,16 @@ class gbts_seeding_algorithm
     vecmem::data::vector_buffer<float> bin_rads;
     /// Per-eta node offsets, nEtaBins + 1 entries
     vecmem::data::vector_buffer<unsigned int> eta_bin_offsets;
-    /// Number of GBTS nodes (0 == nothing to do)
-    unsigned int nNodes = 0;
   };
 
   /// Outputs of the graph-making stage that are consumed by seed extraction.
   struct graph_making_output {
     /// Compacted, row-major graph
     vecmem::data::vector_buffer<unsigned int> output_graph;
+    /// (node1, node2) original spacepoint indices per compacted edge
+    vecmem::data::vector_buffer<uint2> output_edge_nodes;
+    /// Number of neighbours per compacted edge
+    vecmem::data::vector_buffer<unsigned char> output_num_neighbours;
     /// Number of edges that survived re-indexing (0 == nothing to do)
     unsigned int nConnectedEdges = 0;
   };
@@ -257,13 +260,15 @@ class gbts_seeding_algorithm
       vecmem::data::vector_buffer<unsigned int> node_index,
       vecmem::data::vector_buffer<float> bin_rads,
       vecmem::data::vector_buffer<unsigned int> eta_bin_offsets,
-      const unsigned int nNodes, const unsigned int nSp,
+      const unsigned int nSp,
       vecmem::data::vector_buffer<unsigned int>& counters_buf,
       vecmem::vector<unsigned int>& h_counters) const;
 
   /// Stage 3: run the CCA, extract paths, fit and disambiguate into seeds.
   edm::seed_collection::buffer extract_seeds(
       vecmem::data::vector_buffer<unsigned int>& output_graph,
+      vecmem::data::vector_buffer<uint2>& output_edge_nodes,
+      vecmem::data::vector_buffer<unsigned char>& output_num_neighbours,
       vecmem::data::vector_buffer<float4>& reducedSP,
       const unsigned int nConnectedEdges, const unsigned int nSp,
       vecmem::vector<unsigned int>& h_counters) const;
@@ -281,9 +286,9 @@ class gbts_seeding_algorithm
   /// Largest number of bin pairs sharing one inner bin
   unsigned int m_maxPairsPerBin1 = 0;
   /// m_config.binTables as (bin1, bin2)
-  std::vector<uint2> m_bin_pairs;
+  vecmem::data::vector_buffer<uint2> m_bin_pairs_buffer;
   /// Per bin pair: index of the first pair with the same bin1
-  std::vector<unsigned int> m_pair_group_begin;
+  vecmem::data::vector_buffer<unsigned int> m_pair_group_begin_buffer;
 
   /// @name Device copies of the configuration tables, uploaded once at
   ///       construction and shared by every event.

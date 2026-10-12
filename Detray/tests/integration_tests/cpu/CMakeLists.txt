@@ -31,6 +31,7 @@ macro(detray_add_cpu_test algebra)
        "propagator/propagation_validation.cpp"
        "propagator/covariance_transport.cpp"
        "propagator/guided_navigator.cpp"
+       "propagator/perigee_extrapolator.cpp"
        "propagator/propagation_caching_navigator.cpp"
        "propagator/propagation_direct_navigator.cpp"
        "utils/type_registry.cpp"
@@ -48,26 +49,26 @@ macro(detray_add_cpu_test algebra)
 endmacro()
 
 # Build the array tests.
-detray_add_cpu_test( array )
+detray_add_cpu_test(array)
 
 # Build the Eigen tests.
 if(DETRAY_EIGEN_PLUGIN)
-    detray_add_cpu_test( eigen )
+    detray_add_cpu_test(eigen)
 endif()
 
 # Build the Fastor tests.
 if(DETRAY_FASTOR_PLUGIN)
-    detray_add_cpu_test( fastor )
+    detray_add_cpu_test(fastor)
 endif()
 
 # Build the SMatrix tests.
 if(DETRAY_SMATRIX_PLUGIN)
-    detray_add_cpu_test( smatrix )
+    detray_add_cpu_test(smatrix)
 endif()
 
 # Build the Vc AoS tests.
 if(DETRAY_VC_AOS_PLUGIN)
-    detray_add_cpu_test( vc_aos )
+    detray_add_cpu_test(vc_aos)
 endif()
 
 # Detector navigation tests

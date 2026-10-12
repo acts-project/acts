@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -16,19 +17,25 @@
 #include <vecmem/containers/data/vector_view.hpp>
 #include <vecmem/containers/device_vector.hpp>
 
+// System include(s).
+#include <cstdint>
+#include <type_traits>
+
 namespace traccc::device {
 
 /// Key type used for sorting the measurements.
 ///
-/// A single 32 bit key, which is the measurement identifier assigned by the
-/// clusterization as the index of the first cell of the cluster. The key is
-/// unique for every measurement, and is sorted using a radix sort.
+/// A single 64 bit key, holding the index of the measurement's surface in the
+/// upper 32 bits and the measurement identifier assigned by the clusterization
+/// (the index of the first cell of the cluster) in the lower 32 bits. The key
+/// is unique for every measurement, and is sorted using a radix sort.
 ///
-/// @note This relies on the input cells being ordered by surface identifier
-///       so that ordering by cell index is the same as ordering by surface
-///       identifier.
+/// The measurements are ordered by surface first, as track finding looks up
+/// the measurements of a surface with a binary search over the surface links.
+/// Ordering by cell index alone is not enough for this, as the cell sorting
+/// only orders the cells within each module, not the modules themselves.
 ///
-using measurement_sort_key_t = unsigned int;
+using measurement_sort_key_t = std::uint64_t;
 
 /// Functor returning the sorting key of a measurement.
 class measurement_sort_key_getter {
@@ -50,7 +57,14 @@ class measurement_sort_key_getter {
   operator()(unsigned int index) const {
     const edm::measurement_collection::const_device measurements{
         m_measurements};
-    return measurements.identifier().at(index);
+    static_assert(sizeof(std::remove_cvref_t<
+                         decltype(measurements.identifier().at(index))>) <= 4u,
+                  "The measurement identifier must fit into 32 bits");
+    return (static_cast<measurement_sort_key_t>(
+                measurements.surface_link().at(index).index())
+            << 32u) |
+           static_cast<measurement_sort_key_t>(
+               measurements.identifier().at(index));
   }
 
  private:
