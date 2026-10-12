@@ -84,11 +84,10 @@ class CurvilinearSurface final {
   /// Calculate the jacobian from global to local which the surface knows best,
   /// hence the calculation is done here.
   ///
-  /// @return Jacobian from global to local
-  /// @pre The direction is normalized and nonsingular in the selected
-  /// parametrization. Use the parametrization's checked inverse derivative
-  /// when the direction may be singular.
-  FreeToBoundMatrix freeToBoundJacobian() const;
+  /// @pre The direction is normalized.
+  /// @return Jacobian from global to local, or a chart-domain error for a
+  /// singular direction.
+  Result<FreeToBoundMatrix> freeToBoundJacobian() const;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. free parameters. The calculation is

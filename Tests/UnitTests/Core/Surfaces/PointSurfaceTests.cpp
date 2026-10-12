@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(PointSurfaceJacobianRoundTrip) {
     const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
     const Vector3 pos = surface->localToGlobal(tgContext, local, dir);
     const FreeToBoundMatrix freeToBound =
-        surface->freeToBoundJacobian(tgContext, pos, dir);
+        surface->freeToBoundJacobian(tgContext, pos, dir).value();
     const BoundToFreeMatrix boundToFree =
         surface->boundToFreeJacobian(tgContext, pos, dir);
     CHECK_CLOSE_ABS(freeToBound * boundToFree, SquareMatrix<6>::Identity(),

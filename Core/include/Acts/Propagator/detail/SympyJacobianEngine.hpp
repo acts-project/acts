@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 class Surface;
@@ -41,13 +42,14 @@ namespace Acts::detail::sympy {
 ///
 /// @note jac(locA->locB) = jac(gloB->locB)*(1+
 ///       pathCorrectionFactor(gloB))*jac(locA->gloB)
-void boundToBoundTransportJacobian(const GeometryContext& geoContext,
-                                   const Surface& surface,
-                                   const FreeVector& freeParameters,
-                                   const BoundToFreeMatrix& boundToFreeJacobian,
-                                   FreeToBoundMatrix& freeToBoundJacobian,
-                                   const FreeVector& freeToPathDerivatives,
-                                   BoundMatrix& fullTransportJacobian);
+/// @return Success, or a chart-domain error without modifying the outputs
+Result<void> boundToBoundTransportJacobian(
+    const GeometryContext& geoContext, const Surface& surface,
+    const FreeVector& freeParameters,
+    const BoundToFreeMatrix& boundToFreeJacobian,
+    FreeToBoundMatrix& freeToBoundJacobian,
+    const FreeVector& freeToPathDerivatives,
+    BoundMatrix& fullTransportJacobian);
 
 /// @brief This function calculates the full jacobian from a given
 /// bound/curvilinear parameterisation from a surface to new curvilinear
@@ -68,7 +70,8 @@ void boundToBoundTransportJacobian(const GeometryContext& geoContext,
 /// @note The parameter @p surface is only required if projected to bound
 /// parameters. In the case of curvilinear parameters the geometry and the
 /// position is known and the calculation can be simplified
-void boundToCurvilinearTransportJacobian(
+/// @return Success, or a chart-domain error without modifying the outputs
+Result<void> boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     FreeToBoundMatrix& freeToBoundJacobian,
     const FreeVector& freeToPathDerivatives,

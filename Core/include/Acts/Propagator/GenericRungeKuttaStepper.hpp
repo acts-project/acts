@@ -525,8 +525,9 @@ class GenericRungeKuttaStepper final {
   /// the state does not change.
   ///
   /// @param [in,out] state State of the stepper
-  /// @return The jacobian from the previous anchor to the curvilinear frame
-  Jacobian transportToCurvilinear(State& state) const;
+  /// @return The jacobian from the previous anchor to the curvilinear frame,
+  ///         or a chart-domain error if covariance transport fails
+  Result<Jacobian> transportToCurvilinear(State& state) const;
 
   /// Transport the covariance to a surface at the current position
   ///
