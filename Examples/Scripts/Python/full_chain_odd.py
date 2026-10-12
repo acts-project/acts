@@ -24,6 +24,7 @@ from acts.examples.simulation import (
 from acts.examples.reconstruction import (
     addSeeding,
     SeedingAlgorithm,
+    SeedingAlgorithmConfigArg,
     CkfConfig,
     addCKFTracks,
     TrackSelectorConfig,
@@ -136,6 +137,18 @@ parser.add_argument(
     "--use-gbts",
     help="Use the Graph Based Track Seeding (GBTS) instead of triplet seeding",
     action="store_true",
+)
+parser.add_argument(
+    "--hough-vertex-seeding",
+    help="Constrain the triplet seeding to the vertex found by the Hough vertex finder "
+    "(single-collision events only, e.g. --gun-multiplicity 1)",
+    action="store_true",
+)
+parser.add_argument(
+    "--vertex-z-margin",
+    help="Half-width of the z-window around the Hough vertex for the seeding [mm]",
+    type=float,
+    default=10.0,
 )
 parser.add_argument(
     "--gbts-layer-map",
@@ -382,6 +395,16 @@ if args.reco:
                 connectorInputConfigFile=oddGbtsConnectionTable,
             )
             if args.use_gbts
+            else {}
+        ),
+        **(
+            dict(
+                houghVertexFinding=True,
+                seedingAlgorithmConfigArg=SeedingAlgorithmConfigArg(
+                    vertexZMargin=args.vertex_z_margin * u.mm
+                ),
+            )
+            if args.hough_vertex_seeding
             else {}
         ),
         initialSigmas=[
