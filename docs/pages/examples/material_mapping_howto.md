@@ -268,6 +268,26 @@ This step is independent of your surface choices — you only need to redo it if
 the detailed geometry changes, not when you retune binning. It is by far the
 slowest step, so record generously once and reuse the file.
 
+### Recording a DD4hep detector with ddsim
+
+For a DD4hep detector, the recording can also run directly in `ddsim`, on the
+same Geant4 geometry DDG4 builds for the full simulation. The
+`ActsMaterialRecorder` DDG4 action writes the same file format. It is part of
+the `ActsPluginDD4hepGeant4` library, which is built when both the DD4hep and
+the Geant4 plugins are enabled and DD4hep comes with DDG4. With that library
+on `LD_LIBRARY_PATH`, e.g. after sourcing `this_acts.sh`:
+
+```console
+ddsim --steeringFile Examples/Scripts/Python/material_recording_ddsim.py \
+      --compactFile mydet.xml -N 1000 --outputFile mydet_geant4.root
+```
+
+The steering file shoots 1000 geantinos per event, uniform in
+\f$|\eta| < 4\f$; the gun can be adjusted on the command line, e.g. with
+`--gun.multiplicity`, `--gun.etaMin` and `--gun.etaMax`. The recorder only
+supports single-threaded running, so split large recordings into independent
+jobs with different `--random.seed` values.
+
 ## Step 3: run the mapping
 
 ```console
