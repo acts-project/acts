@@ -13,8 +13,6 @@
 #include "ActsPlugins/Geant4/Geant4MaterialStepConverter.hpp"
 
 #include <memory>
-#include <string>
-#include <vector>
 
 #include <G4UserSteppingAction.hh>
 
@@ -35,8 +33,8 @@ class MaterialSteppingAction final : public G4UserSteppingAction {
   struct Config {
     std::shared_ptr<EventStore> eventStore;
 
-    std::vector<std::string> excludeMaterials = {};
-    bool recordElementFractions = false;
+    /// Configuration of the step to material conversion
+    ActsPlugins::Geant4MaterialStepConverter::Config stepConverter;
   };
 
   /// Construct the action

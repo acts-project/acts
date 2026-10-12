@@ -27,7 +27,7 @@ MaterialSteppingAction::MaterialSteppingAction(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4UserSteppingAction(),
       m_cfg(cfg),
-      m_stepConverter{cfg.excludeMaterials, cfg.recordElementFractions},
+      m_stepConverter(cfg.stepConverter),
       m_logger(std::move(logger)) {}
 
 void MaterialSteppingAction::UserSteppingAction(const G4Step* stepPtr) {

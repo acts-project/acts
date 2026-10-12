@@ -47,8 +47,8 @@ std::optional<Acts::MaterialInteraction> Geant4MaterialStepConverter::convert(
   }
   const G4Material& material = *materialPtr;
 
-  if (std::ranges::find(excludeMaterials, material.GetName()) !=
-      excludeMaterials.end()) {
+  if (std::ranges::find(m_cfg.excludeMaterials, material.GetName()) !=
+      m_cfg.excludeMaterials.end()) {
     return std::nullopt;
   }
 
@@ -87,7 +87,7 @@ std::optional<Acts::MaterialInteraction> Geant4MaterialStepConverter::convert(
   mInteraction.materialSlab = slab;
   mInteraction.pathCorrection = step.GetStepLength() * convertLengthToActs;
 
-  if (recordElementFractions) {
+  if (m_cfg.recordElementFractions) {
     if (nElements == 1) {
       mInteraction.elementZ.push_back(
           static_cast<unsigned int>(material.GetZ()));

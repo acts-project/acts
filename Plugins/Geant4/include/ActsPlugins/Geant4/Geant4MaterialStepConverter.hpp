@@ -28,11 +28,20 @@ namespace ActsPlugins {
 /// This is the per-step part of a material recording with geantinos: every
 /// step through a material becomes one @c Acts::MaterialInteraction, which
 /// are collected per track into an @c Acts::RecordedMaterialTrack.
-struct Geant4MaterialStepConverter {
-  /// Names of materials whose steps are not recorded
-  std::vector<std::string> excludeMaterials = {};
-  /// Whether to record the element composition of the stepped material
-  bool recordElementFractions = false;
+class Geant4MaterialStepConverter {
+ public:
+  /// Nested configuration struct
+  struct Config {
+    /// Names of materials whose steps are not recorded
+    std::vector<std::string> excludeMaterials = {};
+    /// Whether to record the element composition of the stepped material
+    bool recordElementFractions = false;
+  };
+
+  /// Constructor
+  ///
+  /// @param cfg the configuration
+  explicit Geant4MaterialStepConverter(const Config& cfg) : m_cfg(cfg) {}
 
   /// @brief Convert a single step
   ///
@@ -49,6 +58,13 @@ struct Geant4MaterialStepConverter {
   /// @return the vertex position and the initial direction of the track
   static std::pair<Acts::Vector3, Acts::Vector3> trackStart(
       const G4Track& track);
+
+  /// Readonly access to the configuration
+  /// @return the configuration
+  const Config& config() const { return m_cfg; }
+
+ private:
+  Config m_cfg;
 };
 
 /// @}

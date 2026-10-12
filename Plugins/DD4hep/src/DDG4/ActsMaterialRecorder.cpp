@@ -70,12 +70,12 @@ class ActsMaterialRecorder final : public dd4hep::sim::Geant4SteppingAction {
   std::string m_outputFile = "material_tracks.root";
   /// Name of the output tree
   std::string m_treeName = "material_tracks";
-  /// Names of materials whose steps are not recorded
-  std::vector<std::string> m_excludeMaterials = {"Air", "Vacuum"};
-  /// Whether to record the element composition of the stepped material
-  bool m_recordElementFractions = false;
+  /// Configuration of the step conversion, set through the properties
+  ActsPlugins::Geant4MaterialStepConverter::Config m_stepConverterCfg{
+      .excludeMaterials = {"Air", "Vacuum"}, .recordElementFractions = false};
 
-  ActsPlugins::Geant4MaterialStepConverter m_stepConverter;
+  /// Created at the start of the run, once the properties are set
+  std::optional<ActsPlugins::Geant4MaterialStepConverter> m_stepConverter;
 
   /// Material tracks of the current event, ordered by Geant4 track ID
   std::map<int, Acts::RecordedMaterialTrack> m_tracks;
@@ -92,8 +92,9 @@ ActsMaterialRecorder::ActsMaterialRecorder(dd4hep::sim::Geant4Context* context,
     : dd4hep::sim::Geant4SteppingAction(context, name) {
   declareProperty("OutputFile", m_outputFile);
   declareProperty("TreeName", m_treeName);
-  declareProperty("ExcludeMaterials", m_excludeMaterials);
-  declareProperty("RecordElementFractions", m_recordElementFractions);
+  declareProperty("ExcludeMaterials", m_stepConverterCfg.excludeMaterials);
+  declareProperty("RecordElementFractions",
+                  m_stepConverterCfg.recordElementFractions);
 
   runAction().callAtBegin(this, &ActsMaterialRecorder::beginRun);
   runAction().callAtEnd(this, &ActsMaterialRecorder::endRun);
@@ -111,8 +112,7 @@ void ActsMaterialRecorder::beginRun(const G4Run* /*run*/) {
   }
 
   // Properties are only set after construction, so configure here
-  m_stepConverter.excludeMaterials = m_excludeMaterials;
-  m_stepConverter.recordElementFractions = m_recordElementFractions;
+  m_stepConverter.emplace(m_stepConverterCfg);
 
   m_file.reset(TFile::Open(m_outputFile.c_str(), "RECREATE"));
   if (m_file == nullptr || m_file->IsZombie()) {
@@ -161,7 +161,7 @@ void ActsMaterialRecorder::endEvent(const G4Event* event) {
 void ActsMaterialRecorder::operator()(const G4Step* step,
                                       G4SteppingManager* /*mgr*/) {
   std::optional<Acts::MaterialInteraction> mInteraction =
-      m_stepConverter.convert(*step);
+      m_stepConverter->convert(*step);
   if (!mInteraction.has_value()) {
     return;
   }

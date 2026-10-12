@@ -67,7 +67,7 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(Geant4Suite)
 
 BOOST_AUTO_TEST_CASE(Geant4MaterialStepConversion) {
-  Geant4MaterialStepConverter converter;
+  Geant4MaterialStepConverter converter(Geant4MaterialStepConverter::Config{});
 
   G4ThreeVector position(10. * mm, 20. * mm, 30. * mm);
   G4ThreeVector direction = G4ThreeVector(1., 1., 0.).unit();
@@ -98,8 +98,9 @@ BOOST_AUTO_TEST_CASE(Geant4MaterialStepConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4MaterialStepConversionMixture) {
-  Geant4MaterialStepConverter converter;
-  converter.recordElementFractions = true;
+  Geant4MaterialStepConverter::Config cfg;
+  cfg.recordElementFractions = true;
+  Geant4MaterialStepConverter converter(cfg);
 
   G4Step step =
       makeStep(g4Water, G4ThreeVector(), G4ThreeVector(0., 0., 1.), 1. * cm);
@@ -122,8 +123,9 @@ BOOST_AUTO_TEST_CASE(Geant4MaterialStepConversionMixture) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4MaterialStepConversionExcluded) {
-  Geant4MaterialStepConverter converter;
-  converter.excludeMaterials = {"TestWater"};
+  Geant4MaterialStepConverter::Config cfg;
+  cfg.excludeMaterials = {"TestWater"};
+  Geant4MaterialStepConverter converter(cfg);
 
   G4ThreeVector origin;
   G4ThreeVector zAxis(0., 0., 1.);
