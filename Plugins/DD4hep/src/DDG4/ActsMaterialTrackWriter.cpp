@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsPlugins/Root/RootMaterialTrackIo.hpp"
 
 #include <algorithm>
@@ -25,7 +24,7 @@
 #include <TFile.h>
 #include <TTree.h>
 
-#include "RecordedMaterialTracks.hpp"
+#include "detail/RecordedMaterialTracks.hpp"
 
 namespace ActsPlugins {
 
@@ -169,7 +168,7 @@ void ActsMaterialTrackWriter::begin(const G4Event* /*event*/) {}
 void ActsMaterialTrackWriter::end(const G4Event* event) {
   // Serialised by the shared action wrapper in multi-threaded running
   const auto* recorded =
-      context()->event().extension<RecordedMaterialTracks>(false);
+      context()->event().extension<detail::RecordedMaterialTracks>(false);
   if (recorded == nullptr) {
     warning(
         "No recorded material tracks in event %d, is the "
@@ -178,9 +177,8 @@ void ActsMaterialTrackWriter::end(const G4Event* event) {
     return;
   }
 
-  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
   for (const auto& [trackId, track] : recorded->tracks) {
-    m_trackIo->write(gctx, event->GetEventID(), track);
+    m_trackIo->write(event->GetEventID(), track);
     m_tree->Fill();
   }
   m_nTracks += recorded->tracks.size();

@@ -12,7 +12,7 @@
 
 #include <map>
 
-namespace ActsPlugins {
+namespace ActsPlugins::detail {
 
 /// @brief Material tracks recorded in one event
 ///
@@ -23,4 +23,4 @@ struct RecordedMaterialTracks {
   std::map<int, Acts::RecordedMaterialTrack> tracks;
 };
 
-}  // namespace ActsPlugins
+}  // namespace ActsPlugins::detail

@@ -21,7 +21,7 @@
 #include <G4Step.hh>
 #include <G4Track.hh>
 
-#include "RecordedMaterialTracks.hpp"
+#include "detail/RecordedMaterialTracks.hpp"
 
 namespace ActsPlugins {
 
@@ -68,7 +68,7 @@ class ActsMaterialRecorder final : public dd4hep::sim::Geant4SteppingAction {
   std::optional<ActsPlugins::Geant4MaterialStepConverter> m_stepConverter;
 
   /// Tracks of the current event, owned by the DDG4 event
-  RecordedMaterialTracks* m_recorded = nullptr;
+  detail::RecordedMaterialTracks* m_recorded = nullptr;
 };
 
 ActsMaterialRecorder::ActsMaterialRecorder(dd4hep::sim::Geant4Context* context,
@@ -89,7 +89,8 @@ void ActsMaterialRecorder::beginRun(const G4Run* /*run*/) {
 
 void ActsMaterialRecorder::beginEvent(const G4Event* /*event*/) {
   // The DDG4 event takes ownership and deletes it after the event
-  m_recorded = context()->event().addExtension(new RecordedMaterialTracks());
+  m_recorded =
+      context()->event().addExtension(new detail::RecordedMaterialTracks());
 }
 
 void ActsMaterialRecorder::operator()(const G4Step* step,

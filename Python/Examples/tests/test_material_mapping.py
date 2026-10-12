@@ -1,12 +1,13 @@
 from pathlib import Path
 import json
+import os
+import shutil
 import subprocess
 
 
 from helpers import (
     geant4Enabled,
     dd4hepEnabled,
-    ddg4MaterialRecordingEnabled,
     assert_entries,
 )
 import pytest
@@ -40,12 +41,19 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
 
 @pytest.mark.slow
 @pytest.mark.odd
-@pytest.mark.skipif(
-    not ddg4MaterialRecordingEnabled,
-    reason="ddsim or the DDG4 material recording actions not available",
-)
 @pytest.mark.parametrize("threads", [1, 2])
 def test_material_recording_ddsim(tmp_path, threads):
+    if shutil.which("ddsim") is None:
+        pytest.skip("ddsim not available")
+    # ddsim finds the DDG4 actions through the .components file of their
+    # library on the library path
+    if not any(
+        Path(d, "libActsPluginDD4hepGeant4.components").exists()
+        for d in os.environ.get("LD_LIBRARY_PATH", "").split(os.pathsep)
+        if d
+    ):
+        pytest.skip("DDG4 material recording actions not built")
+
     from acts.examples.odd import getOpenDataDetectorDirectory
     from acts.examples.root import RootMaterialTrackReader, RootMaterialTrackWriter
 
