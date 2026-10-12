@@ -12,28 +12,18 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+/// @file
+/// Internal covariance-transport implementation shared by steppers.
+/// These helpers are not public API; see @ref versioning. Custom steppers may
+/// use them, but must not expose their implementation types in public
+/// interfaces.
+
 namespace Acts::detail {
 
 /// @brief These functions perform the calculation of the Jacobians for the
 /// the covariance transport. This is a purely algebraic problem the
 /// calculations are identical for @c StraightLineStepper and @c EigenStepper.
 /// As a consequence the methods can be located in a separate file.
-
-/// @brief Evaluate the projection Jacobian from free to curvilinear parameters
-///        without transport jacobian.
-///
-/// @param [in] direction Normalised direction vector
-///
-/// @return Projection Jacobian
-FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction);
-
-/// @brief Evaluate the projection Jacobian from curvilinear to free parameters
-///        without transport jacobian.
-///
-/// @param [in] direction Normalised direction vector
-///
-/// @return Projection Jacobian
-BoundToFreeMatrix curvilinearToFreeJacobian(const Vector3& direction);
 
 /// @brief This function calculates the full transport jacobian from a bound
 ///        curvilinear representation to a new bound representation

@@ -17,6 +17,12 @@ namespace Acts {
 class Surface;
 }
 
+/// @file
+/// Internal covariance-transport implementation shared by steppers.
+/// These helpers are not public API; see @ref versioning. Custom steppers may
+/// use them, but must not expose their implementation types in public
+/// interfaces.
+
 namespace Acts::detail::sympy {
 
 /// @brief These functions perform the transport of a covariance matrix using

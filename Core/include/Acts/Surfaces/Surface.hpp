@@ -387,18 +387,14 @@ class Surface : public virtual GeometryObject,
                                          const Vector3& position,
                                          const Vector3& direction) const;
 
-  /// Calculate the jacobian from local to global which the surface knows best,
-  /// hence the calculation is done here.
+  /// Calculate the Jacobian from bound to free parameters.
   ///
-  /// @note In principle, the input could also be a free parameters
-  /// vector as it could be transformed to a bound parameters. But the transform
-  /// might fail in case the parameters is not on surface. To avoid the check
-  /// inside this function, it takes directly the bound parameters as input
-  /// (then the check might be done where this function is called).
+  /// This is a public extension point for surface implementations. Overrides
+  /// must combine the surface's local-position derivatives with direction
+  /// derivatives consistent with boundParametrization().
   ///
-  /// @todo this mixes track parameterisation and geometry
-  /// should move to :
-  /// "Acts/EventData/detail/coordinate_transformations.hpp"
+  /// @pre The position is on the surface and the direction is normalized.
+  /// No on-surface check is performed.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
@@ -409,15 +405,14 @@ class Surface : public virtual GeometryObject,
                                                 const Vector3& position,
                                                 const Vector3& direction) const;
 
-  /// Calculate the jacobian from global to local which the surface knows best,
-  /// hence the calculation is done here.
+  /// Calculate the Jacobian from free to bound parameters.
   ///
-  /// @note It assumes the input free parameters is on surface, hence no
-  /// onSurface check is done inside this function.
+  /// This is a public extension point for surface implementations. Overrides
+  /// must use the same coordinate interpretation as boundParametrization() and
+  /// boundToFreeJacobian(), and propagate direction-parametrization failures
+  /// through the returned Result.
   ///
-  /// @todo this mixes track parameterisation and geometry
-  /// should move to :
-  /// "Acts/EventData/detail/coordinate_transformations.hpp"
+  /// @pre The position is on the surface. No on-surface check is performed.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position
