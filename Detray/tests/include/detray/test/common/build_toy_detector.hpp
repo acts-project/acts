@@ -153,6 +153,9 @@ struct toy_det_config {
   barrel_generator_config<scalar_t> m_barrel_factory_cfg{};
   /// Config for the module generation (endcaps)
   endcap_generator_config<scalar_t> m_endcap_factory_cfg{};
+  /// Volume builder configuration
+  volume_builder_options m_builder_opts{.m_deduplicate = false,
+                                        .m_sort = false};
   /// Run detector consistency check after reading
   bool m_do_check{true};
 
@@ -213,6 +216,7 @@ struct toy_det_config {
     m_disc_map_cfg.mapped_material = mat;
     return *this;
   }
+  volume_builder_options builder_options() { return m_builder_opts; }
   constexpr toy_det_config &do_check(const bool check) {
     m_do_check = check;
     return *this;
@@ -279,6 +283,9 @@ struct toy_det_config {
   }
   constexpr endcap_generator_config<scalar_t> &endcap_config() {
     return m_endcap_factory_cfg;
+  }
+  const volume_builder_options &builder_options() const {
+    return m_builder_opts;
   }
   constexpr bool do_check() const { return m_do_check; }
   /// @}
@@ -1332,7 +1339,7 @@ inline auto build_toy_detector(vecmem::memory_resource &resource,
 
   // Build and return the detector and fill the name map
   typename detector_t::name_map name_map{};
-  auto det = det_builder.build(resource, name_map);
+  auto det = det_builder.build(resource, cfg.builder_options(), name_map);
 
   if (cfg.do_check()) {
     const bool verbose_check{false};

@@ -110,6 +110,10 @@ measurement_sorting_algorithm::operator()(
       measurements_view, result, indices);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 
+  // The keys and indices buffers are released on return, so the kernels
+  // using them must have finished by then.
+  m_stream.synchronize();
+
   // Return the sorted buffer.
   return result;
 }

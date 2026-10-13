@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
@@ -59,12 +60,20 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// Magnetic field in z direction
     float bFieldInZ = 2 * Acts::UnitConstants::T;
 
+    /// keeps or disregards strip layers during parsing
+    bool useStripConnections = false;
+
     /// contains all the options used to steer the algorithm
     /// includes both user options available to change in the python script and
     /// those seen just be the algorithm
     Acts::Experimental::GraphBasedTrackSeeder::Config seedFinderConfig;
 
+    /// steers the chain-following filter of seed extraction
     Acts::Experimental::GbtsTrackingFilter::Config trackingFilterConfig;
+
+    /// steers doublet creation, edge linking and chain selection. `minZ0` and
+    /// `maxZ0` are overridden from the region of interest.
+    Acts::Experimental::GbtsGraphBuilder::Config graphConfig;
 
     /// the connection table (parsed from json file) used to make geoemetry cuts
     /// be GBTS
@@ -83,6 +92,12 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
 
     /// z0 range the eta bin table is built against
     Acts::Experimental::GbtsZ0Range gbtsZ0Range;
+
+    /// the region of interest along the beam line. Overrides
+    /// `seedFinderConfig.minZ0` and `maxZ0`.
+    float collisionRegionMin = -150. * Acts::UnitConstants::mm;
+    /// See @ref collisionRegionMin
+    float collisionRegionMax = 150. * Acts::UnitConstants::mm;
 
     /// holds detector information, used to make the geometry objects used by
     /// GBTS
@@ -114,6 +129,11 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// actual seed finder algorithm
   std::optional<Acts::Experimental::GraphBasedTrackSeeder> m_finder;
 
+  /// graph used in creating and extracting edges, edge connections
+  /// and valid chains
+  std::optional<Acts::Experimental::GbtsGraphBuilder> m_gbtsGraphBuilder;
+
+  /// filter used to extract seed candidates from graph
   std::optional<Acts::Experimental::GbtsTrackingFilter> m_filter;
 
   /// conversion between ACTS labelling of volume, layer and modules to that

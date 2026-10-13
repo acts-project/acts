@@ -276,7 +276,11 @@ jobs:
         if: always()
         with:
           name: physmon
-          path: physmon
+          # The GSF simulation is only an input to the GSF fits and no
+          # comparison reads it
+          path: |
+            physmon
+            !physmon/data/simulation_gsf
 
   linux_ubuntu_extra:
     environment:

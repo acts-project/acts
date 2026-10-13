@@ -102,14 +102,10 @@ void add_map_data(map_factory_t &mat_factory, std::size_t sf_index, scalar t,
 
 /// Build a detector with @c n_volumes cuboid volumes, in which some surfaces
 /// carry identical material
-detector_t build_detector(vecmem::memory_resource &mr, const bool dedup) {
+detector_t build_detector(vecmem::memory_resource &mr,
+                          const volume_builder_options &builder_opts) {
   detector_builder_t det_builder{};
   det_builder.set_name("material_deduplication");
-
-  // Off by default
-  EXPECT_FALSE(det_builder.deduplicate_material());
-  det_builder.deduplicate_material(dedup);
-  EXPECT_EQ(det_builder.deduplicate_material(), dedup);
 
   for (dindex v = 0u; v < n_volumes; ++v) {
     auto vbuilder = det_builder.new_volume(volume_id::e_cuboid);
@@ -177,7 +173,7 @@ detector_t build_detector(vecmem::memory_resource &mr, const bool dedup) {
     mat_builder->add_surfaces(portal_generator);
   }
 
-  return det_builder.build(mr);
+  return det_builder.build(mr, builder_opts);
 }
 
 /// @returns the material slab of the surface material at a local point
@@ -223,7 +219,9 @@ auto material_link(const detector_t &det, dindex vol_idx, dindex sf_idx) {
 /// Test the content comparison of material grids
 GTEST_TEST(detray_builders, material_deduplication_grid_comparison) {
   vecmem::host_memory_resource host_mr;
-  const detector_t det = build_detector(host_mr, false);
+  volume_builder_options builder_opts{};
+  builder_opts.deduplicate(false);
+  const detector_t det = build_detector(host_mr, builder_opts);
 
   const auto &maps =
       det.material_store().template get<mat_id::e_rectangle2D_map>();
@@ -257,9 +255,12 @@ GTEST_TEST(detray_builders, material_deduplication_grid_comparison) {
 /// with and without material deduplication
 GTEST_TEST(detray_builders, material_deduplication) {
   vecmem::host_memory_resource host_mr;
+  volume_builder_options builder_opts{};
 
-  const detector_t ref_det = build_detector(host_mr, false);
-  const detector_t det = build_detector(host_mr, true);
+  builder_opts.deduplicate(false);
+  const detector_t ref_det = build_detector(host_mr, builder_opts);
+  builder_opts.deduplicate(true);
+  const detector_t det = build_detector(host_mr, builder_opts);
 
   EXPECT_TRUE(detail::check_consistency(ref_det));
   EXPECT_TRUE(detail::check_consistency(det));

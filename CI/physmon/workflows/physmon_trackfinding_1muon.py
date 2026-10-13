@@ -138,6 +138,8 @@ def run_ckf_tracking(label, seeding):
             initialSigmaPtRel=0.1,
             initialVarInflation=[1.0] * 6,
             geoSelectionConfigFile=setup.geoSel,
+            layerMappingConfigFile=setup.gbtsLayerMap,  # only used by SeedingAlgorithm.Gbts
+            connectorInputConfigFile=setup.gbtsConnectionTable,  # only used by SeedingAlgorithm.Gbts
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
             outputDirRoot=tp,
         )
@@ -187,5 +189,6 @@ for label, seeding in [
     ("truth_estimated", SeedingAlgorithm.TruthEstimated),
     ("seeded", SeedingAlgorithm.GridTriplet),
     ("orthogonal", SeedingAlgorithm.OrthogonalTriplet),
+    ("gbts", SeedingAlgorithm.Gbts),
 ]:
     run_ckf_tracking(label, seeding)

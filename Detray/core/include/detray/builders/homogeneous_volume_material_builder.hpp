@@ -49,11 +49,12 @@ class homogeneous_volume_material_builder final
 
   /// Add the volume and the material to the detector @param det
   DETRAY_HOST
-  auto build(detector_t &det, typename detector_t::geometry_context ctx = {}) ->
+  auto build(detector_t &det, const volume_builder_options &opt,
+             typename detector_t::geometry_context ctx = {}) ->
       typename detector_t::volume_type * override {
     // Call the underlying volume builder(s)
     typename detector_t::volume_type *vol =
-        volume_decorator<detector_t>::build(det, ctx);
+        volume_decorator<detector_t>::build(det, opt, ctx);
 
     // Nothing left to do
     if (m_volume_material == detray::vacuum<scalar_type>{}) {

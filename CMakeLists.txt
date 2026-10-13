@@ -736,13 +736,6 @@ if(ACTS_BUILD_TRACCC)
     option(TRACCC_BUILD_EXAMPLES "" FALSE)
     option(TRACCC_BUILD_BENCHMARKS "" FALSE)
 
-    find_package(TBB ${_acts_tbb_version} CONFIG)
-    if(NOT TBB_FOUND)
-        set(TRACCC_SETUP_TBB TRUE CACHE BOOL "")
-    else()
-        set(TRACCC_SETUP_TBB FALSE CACHE BOOL "")
-    endif()
-
     add_subdirectory(Traccc)
 endif()
 

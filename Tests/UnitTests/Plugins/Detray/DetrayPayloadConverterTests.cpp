@@ -836,7 +836,8 @@ BOOST_AUTO_TEST_CASE(DetrayTrackingGeometryConversionTests) {
                                   std::integral_constant<std::size_t, 2>>::
       from_payload<detector_t>(detectorBuilder, surfaceGrids);
 
-  detector_t detrayDetector(detectorBuilder.build(mr));
+  detray::volume_builder_options builder_opts{};
+  detector_t detrayDetector(detectorBuilder.build(mr, builder_opts));
 
   // Checks and print
   detray::detail::check_consistency(detrayDetector);
@@ -952,7 +953,7 @@ BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
   checkSameSurfaceMaterial(refDet, det);
 
   // The deduplicated detector writes one material entry per surface again,
-  // which can be read back
+  // which can be read back without deduplication
   const std::filesystem::path outDir{"detray_material_deduplication"};
   std::filesystem::remove_all(outDir);
 
@@ -965,7 +966,7 @@ BOOST_AUTO_TEST_CASE(DetrayGeometryConversionMaterialDeduplication) {
   detray::io::write_detector(det, deduplicated.names, writerCfg);
 
   detray::io::detector_reader_config readerCfg{};
-  readerCfg.do_check(true);
+  readerCfg.do_check(true).deduplicate(false);
   for (const auto& entry : std::filesystem::directory_iterator(outDir)) {
     readerCfg.add_file(entry.path().string());
   }
@@ -1170,7 +1171,8 @@ BOOST_AUTO_TEST_CASE(DetrayPortalSegmentation) {
   detray::io::homogeneous_material_reader::from_payload<detector_t>(
       detectorBuilder, *payloads.homogeneousMaterial);
   vecmem::host_memory_resource mr;
-  detector_t detrayDetector(detectorBuilder.build(mr));
+  detray::volume_builder_options builder_opts{};
+  detector_t detrayDetector(detectorBuilder.build(mr, builder_opts));
   detray::detail::check_consistency(detrayDetector);
 }
 
