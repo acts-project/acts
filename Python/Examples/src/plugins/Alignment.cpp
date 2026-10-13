@@ -151,10 +151,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
                      &AA::Config::inputInitialTrackParameters)
       .def_readwrite("outputAlignmentParameters",
                      &AA::Config::outputAlignmentParameters)
-      .def_readwrite("outputAlignmentFile", &AA::Config::outputAlignmentFile)
-      .def_readwrite("outputAlignmentIndexFile",
-                     &AA::Config::outputAlignmentIndexFile)
-      .def_readwrite("trackingGeometry", &AA::Config::trackingGeometry)
       .def_readwrite("alignedDetElements", &AA::Config::alignedDetElements)
       .def_readwrite("chi2ONdfCutOff", &AA::Config::chi2ONdfCutOff)
       .def_readwrite("align", &AA::Config::align)
@@ -198,8 +194,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
       m, "AlignmentFunction");
 
   m.def("makeAlignmentFunction", &AA::makeAlignmentFunction,
-        py::arg("trackingGeometry"), py::arg("magneticField"),
-        py::arg("logLevel") = Acts::Logging::INFO);
+        py::arg("trackingGeometry"), py::arg("magneticField"));
 
   m.def("makeAlignedTransformUpdater",
         py::overload_cast<std::shared_ptr<MutableGeoIdAlignmentStore>>(
