@@ -29,7 +29,6 @@ from acts.examples import (
     GenericDetector,
 )
 from acts.examples.json import (
-    JsonMaterialWriter,
     JsonFormat,
 )
 
@@ -475,13 +474,12 @@ def test_json_material_writer(tmp_path, fmt):
 
     assert not out.exists()
 
-    jmw = JsonMaterialWriter(
-        level=acts.logging.WARNING, fileName=str(out.with_suffix("")), writeFormat=fmt
-    )
-    assert not out.exists()
-    jmw.write(trackingGeometry)
+    from acts.json import TrackingGeometryMaterialJsonConverter
 
-    assert out.stat().st_size > 1000
+    material = acts.TrackingGeometryMaterial.fromGeometry(trackingGeometry)
+    converter = TrackingGeometryMaterialJsonConverter()
+    converter.toFile(material, out)
+    converter.fromFile(out)
 
 
 @pytest.mark.csv

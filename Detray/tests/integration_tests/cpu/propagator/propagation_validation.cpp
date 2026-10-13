@@ -107,7 +107,7 @@ TEST_P(PropagationValidation, forward_backward) {
     // Only keep the sensitive surfaces
     intersection_trace_t module_trace{};
     for (const data_record_t& rec : intersection_trace) {
-      if (rec.intersection.surface().is_sensitive()) {
+      if (rec.intersection().surface().is_sensitive()) {
         module_trace.push_back(rec);
       }
     }
