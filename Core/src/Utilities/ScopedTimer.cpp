@@ -16,9 +16,7 @@ namespace Acts {
 
 ScopedTimer::ScopedTimer(const std::string& name, const Logger& logger,
                          Logging::Level lvl)
-    : m_name(name), m_lvl(lvl), m_logger(&logger) {
-  m_start = clock_type::now();
-}
+    : m_name(name), m_lvl(lvl), m_logger(&logger) {}
 
 ScopedTimer::~ScopedTimer() noexcept {
   try {

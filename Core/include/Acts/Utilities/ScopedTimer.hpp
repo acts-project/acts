@@ -57,10 +57,11 @@ class ScopedTimer {
   ScopedTimer& operator=(ScopedTimer&&) = delete;
 
  private:
-  std::string m_name;              ///< Identifier for the timed block
-  Logging::Level m_lvl;            ///< Logging level for output
-  const Logger* m_logger;          ///< Logger instance for output
-  clock_type::time_point m_start;  ///< Start time of the timer
+  std::string m_name;      ///< Identifier for the timed block
+  Logging::Level m_lvl;    ///< Logging level for output
+  const Logger* m_logger;  ///< Logger instance for output
+  clock_type::time_point m_start =
+      clock_type::now();  ///< Start time of the timer
 };
 
 /// @brief A timer class that measures and averages execution times of multiple samples

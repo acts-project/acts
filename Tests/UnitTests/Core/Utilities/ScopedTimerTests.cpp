@@ -102,7 +102,7 @@ void checkTermination(const Acts::Logger& logger) {
         std::_Exit(44);  // A swallowed logging failure on normal destruction.
       }
       int status = 0;
-      pid_t waited;
+      pid_t waited = 0;
       do {
         waited = waitpid(child, &status, 0);
       } while (waited == -1 && errno == EINTR);
