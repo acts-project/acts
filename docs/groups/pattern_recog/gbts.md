@@ -195,19 +195,24 @@ of the inner layer, and a negative limit switches the cut off:
 
 With the edge graph built, a cellular automaton assigns each edge a **level**:
 the length of the longest chain of linked edges ending at it. All edges start at
-level 1; in each iteration an edge whose level equals that of one of its
-neighbours proposes an increment, and the proposals are committed at the end of
-the iteration. The sweep repeats until nothing changes, or for at most 15
-iterations.
+level 1, and an edge's level is one more than the highest level of the edges
+linking to it. An edge only links to edges further in, which are always created
+after it, so a single sweep over the edges in creation order settles every
+level. Levels are capped at `maxSeedCandidateLength` + 1, and the edges at the
+cap take no part in the extraction, so longer chains are cut at their inner end.
 
 The level is the chain-length signal that drives extraction: an edge at level
-@f$L@f$ is the head of a chain spanning @f$L+1@f$ space points.
+@f$L@f$ is the inner end of a chain spanning @f$L+1@f$ space points. An edge
+that links to no edge below the cap is a **root**, and a second sweep, backwards,
+finds for every edge the longest chain inwards to a root that steps one level up
+at a time.
 
 ## Seed extraction {#gbts-extraction}
 
-Edges whose level clears the minimum chain length become **chain heads**, sorted
-by level so the longest chains are collected first. Each head is then followed
-back through the graph by @ref Acts::Experimental::GbtsTrackingFilter.
+Every edge whose chain to a root clears the minimum chain length is followed
+inwards through the graph by @ref Acts::Experimental::GbtsTrackingFilter, each
+step going to an edge one level up, and its best chain becomes the seed candidate
+of that edge.
 
 The filter is a small Kalman filter over the chain. It carries a state of two
 independent parts — a quadratic in the bending plane and a linear @f$z@f$ versus
@@ -220,7 +225,7 @@ two @f$\chi^2@f$ increments weighted by `weightX` and `weightY`. The score
 therefore counts the hits on the chain, discounted by how badly they fit the
 circle and the @f$z@f$ versus @f$r@f$ line. Where an edge has several
 neighbours the filter *branches*, recursing into each; the branch with the best
-accumulated score wins.
+score per space point wins.
 
 The result is a set of seed candidates. These are reduced in two passes:
 
@@ -279,7 +284,7 @@ The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackS
 | Option | Stage | Effect |
 | --- | --- | --- |
 | `nMaxPhiSlice` | @ref gbts-nodes | sets the @f$\phi@f$ slice width, and with it the base sliding-window width the graph uses |
-| `ccaMaxIterations` | @ref gbts-graph | cap on the connected component iterations |
+| `maxSeedCandidateLength` | @ref gbts-graph | cap on the length of the chains |
 | `minSeedLevel` | @ref gbts-extraction | chain length a candidate must reach |
 | `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |

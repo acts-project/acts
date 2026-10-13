@@ -51,16 +51,19 @@ struct GbtsEdgeState final {
   float s{};
 };
 
-/// Maximum number of edge states
-static constexpr std::uint32_t kGbtsMaxEdgeStates = 2500;
-
-/// State for the tracking filter, containing edge states and a global counter.
+/// State of the search for the best fitted chain from an edge.
 struct GbtsFilterState final {
-  std::vector<GbtsEdgeState*> stateVec;
+  /// Minimum number of edges of a complete chain.
+  std::uint32_t minChainLength{0};
 
-  std::array<GbtsEdgeState, kGbtsMaxEdgeStates> stateStore{};
+  std::vector<std::uint32_t> chain;
 
-  std::uint32_t globalStateCounter{0};
+  std::vector<std::uint32_t> bestChain;
+
+  /// Seed quality of the best chain, lower is better.
+  float bestQuality{0};
+
+  GbtsEdgeState bestState;
 };
 
 }  // namespace Acts::Experimental::detail

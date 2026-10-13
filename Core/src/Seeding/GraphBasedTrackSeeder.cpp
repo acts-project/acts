@@ -15,6 +15,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <numbers>
 #include <span>
@@ -99,12 +100,11 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
     ACTS_WARNING("Missing edges or edge connections");
   }
 
-  const std::uint32_t maxLevel = graph.runCCA(m_cfg.ccaMaxIterations);
-
-  ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
+  const detail::GbtsChainLevels levels =
+      graph.runCCA(m_cfg.maxSeedCandidateLength);
 
   std::vector<OutputSeedProperties> vOutputSeeds;
-  extractSeedsFromTheGraph(nodeStorage, graph, vOutputSeeds, filter);
+  extractSeedsFromTheGraph(nodeStorage, graph, levels, vOutputSeeds, filter);
 
   ACTS_DEBUG("GBTS created " << vOutputSeeds.size() << " seeds");
   if (vOutputSeeds.empty()) {
@@ -121,43 +121,27 @@ void GraphBasedTrackSeeder::createSeeds(GbtsNodeStorage& nodeStorage,
 
 void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     const GbtsNodeStorage& nodeStorage, GbtsGraph& graph,
+    const detail::GbtsChainLevels& levels,
     std::vector<OutputSeedProperties>& vOutputSeeds,
     const GbtsTrackingFilter& filter) const {
-  std::vector<detail::GbtsEdge*> vChainHeads = graph.extractChainHeads(
-      m_cfg.minSeedLevel, m_cfg.addTriplets, m_cfg.maxAbsEtaAddTriplets);
-
-  if (vChainHeads.empty()) {
-    ACTS_WARNING("No chains passed minimum edge requirement");
-    return;
-  }
-
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
-  // `addTriplets` accepts a chain one level short. Signed: an uncollected
-  // edge sits at level -1 and `minSeedLevel` may be configured to 0.
-  const std::int8_t minLevelAddTriplets =
-      static_cast<std::int8_t>(m_cfg.minSeedLevel - 1);
-
   // backtracking
 
   std::vector<SeedCandidateProperties> vSeedCandidates;
 
-  vSeedCandidates.reserve(vChainHeads.size());
-
   std::vector<std::pair<float, std::uint32_t>> vArgSort;
-
-  vArgSort.reserve(vChainHeads.size());
 
   std::uint32_t seedCounter = 0;
 
-  GbtsTrackingFilter::State filterState{};
+  detail::GbtsFilterState filterState{};
 
-  for (detail::GbtsEdge* pS : vChainHeads) {
-    if (pS->level == -1) {
-      continue;
-    }
+  const auto nEdges = static_cast<std::uint32_t>(graph.edgeStorage.size());
 
-    detail::GbtsEdgeState rs =
-        filter.followTrack(filterState, nodeView, graph.edgeStorage, *pS);
+  for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
+    detail::GbtsEdge* pS = &graph.edgeStorage[edgeIndex];
+
+    detail::GbtsEdgeState rs = followBestChain(
+        filterState, nodeView, graph.edgeStorage, levels, filter, edgeIndex);
 
     if (!rs.initialized) {
       continue;
@@ -165,33 +149,9 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     const float seedAbsEta = std::abs(-std::log(pS->p[0]));
 
-    const std::uint32_t chainLength = static_cast<std::uint32_t>(rs.vs.size());
-
-    if (!m_cfg.addTriplets) {
-      if (chainLength < m_cfg.minSeedLevel) {
-        continue;
-      }
-    } else {
-      if (seedAbsEta > m_cfg.maxAbsEtaAddTriplets) {
-        if (chainLength < m_cfg.minSeedLevel) {
-          continue;
-        }
-      } else {
-        if (minLevelAddTriplets > 0 &&
-            chainLength < static_cast<std::uint32_t>(minLevelAddTriplets)) {
-          continue;
-        }
-      }
-    }
-
     std::vector<SpacePointIndex> vN;
 
     for (auto sIt = rs.vs.rbegin(); sIt != rs.vs.rend(); ++sIt) {
-      if (seedAbsEta > m_cfg.edgeMaskMinEta) {
-        // mark as collected
-        (*sIt)->level = -1;
-      }
-
       if (sIt == rs.vs.rbegin()) {
         vN.push_back((*sIt)->n1);
       }
@@ -375,6 +335,86 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       vOutputSeeds.emplace_back(seed.seedQuality, newSeed);
     }
   }
+}
+
+detail::GbtsEdgeState GraphBasedTrackSeeder::followBestChain(
+    detail::GbtsFilterState& state, const detail::GbtsNodeView& nodeView,
+    std::vector<detail::GbtsEdge>& edgeStorage,
+    const detail::GbtsChainLevels& levels, const GbtsTrackingFilter& filter,
+    const std::uint32_t headIndex) const {
+  const detail::GbtsEdge& headEdge = edgeStorage[headIndex];
+
+  // `addTriplets` accepts a chain one edge short at low eta
+  state.minChainLength = m_cfg.minSeedLevel;
+  if (m_cfg.addTriplets && state.minChainLength > 0 &&
+      std::abs(-std::log(headEdge.p[0])) <= m_cfg.maxAbsEtaAddTriplets) {
+    --state.minChainLength;
+  }
+
+  if (levels.innerLength[headIndex] == 0 ||
+      levels.innerLength[headIndex] < state.minChainLength) {
+    return detail::GbtsEdgeState(false);
+  }
+
+  detail::GbtsEdgeState headState;
+  headState.initialize(headEdge, nodeView, filter.m_cfg.initialVarianceX,
+                       filter.m_cfg.initialVarianceY);
+  if (!filter.update(nodeView, headEdge, headState)) {
+    return detail::GbtsEdgeState(false);
+  }
+
+  state.bestQuality = std::numeric_limits<float>::max();
+  state.bestChain.clear();
+  searchBestChain(state, nodeView, edgeStorage, levels, filter, headIndex,
+                  headState);
+  if (state.bestChain.empty()) {
+    return detail::GbtsEdgeState(false);
+  }
+
+  detail::GbtsEdgeState best = state.bestState;
+  best.vs.clear();
+  for (const std::uint32_t edgeIndex : state.bestChain) {
+    best.vs.push_back(&edgeStorage[edgeIndex]);
+  }
+  return best;
+}
+
+void GraphBasedTrackSeeder::searchBestChain(
+    detail::GbtsFilterState& state, const detail::GbtsNodeView& nodeView,
+    const std::vector<detail::GbtsEdge>& edgeStorage,
+    const detail::GbtsChainLevels& levels, const GbtsTrackingFilter& filter,
+    const std::uint32_t edgeIndex,
+    const detail::GbtsEdgeState& edgeState) const {
+  state.chain.push_back(edgeIndex);
+
+  if (levels.innerLength[edgeIndex] == 1) {
+    const float quality =
+        -edgeState.j / static_cast<float>(state.chain.size() + 1);
+    if (state.chain.size() >= state.minChainLength &&
+        quality < state.bestQuality) {
+      state.bestQuality = quality;
+      state.bestState = edgeState;
+      state.bestChain = state.chain;
+    }
+  }
+
+  const detail::GbtsEdge& edge = edgeStorage[edgeIndex];
+  for (std::uint32_t nIdx = 0; nIdx < edge.nNei; ++nIdx) {
+    const std::uint32_t innerEdgeIdx = edge.vNei[nIdx];
+    if (levels.level[innerEdgeIdx] != levels.level[edgeIndex] + 1 ||
+        levels.innerLength[innerEdgeIdx] == 0 ||
+        state.chain.size() + levels.innerLength[innerEdgeIdx] <
+            state.minChainLength) {
+      continue;
+    }
+    detail::GbtsEdgeState innerState = edgeState;
+    if (filter.update(nodeView, edgeStorage[innerEdgeIdx], innerState)) {
+      searchBestChain(state, nodeView, edgeStorage, levels, filter,
+                      innerEdgeIdx, innerState);
+    }
+  }
+
+  state.chain.pop_back();
 }
 
 float GraphBasedTrackSeeder::estimateCurvature(

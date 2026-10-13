@@ -47,15 +47,12 @@ class GraphBasedTrackSeeder {
 
     // Seed extraction options
 
-    /// Maximum number of connected-component iterations.
-    std::uint32_t ccaMaxIterations = 15;
+    /// Longest chain of edges a seed candidate is built from.
+    std::uint32_t maxSeedCandidateLength = 15;
     /// Chain length a seed candidate must reach: a triplet plus one
     /// confirmation.
     std::uint8_t minSeedLevel = 3;
     /// optionally add 3 sp seeds within a certain eta range
-    ///
-    /// @note Worth little until `maxAbsEtaAddTriplets` is opened past
-    ///       `edgeMaskMinEta`; matters most where there are few layers.
     bool addTriplets = false;
     /// the maximum allowed eta value in which
     /// three spacepoint seeds are passed through
@@ -64,8 +61,6 @@ class GraphBasedTrackSeeder {
     std::uint32_t minSplitSeedSize = 4;
     /// Largest seed size that is split.
     std::uint32_t maxSplitSeedSize = 5;
-    /// Minimum eta for edge masking.
-    float edgeMaskMinEta = 1.5;
     /// Threshold for hit sharing between seeds.
     float hitShareThreshold = 0.49;
     /// Max seed eta value considered for splitting.
@@ -204,12 +199,45 @@ class GraphBasedTrackSeeder {
   /// Extract seed candidates from the graph.
   /// @param nodeStorage Storage containing the graph nodes
   /// @param graph The graph, after the connected component analysis
+  /// @param levels The chain levels of the graph edges
   /// @param vOutputSeeds Output vector for seed candidates
   /// @param filter Tracking filter to be applied
   void extractSeedsFromTheGraph(const GbtsNodeStorage& nodeStorage,
                                 GbtsGraph& graph,
+                                const detail::GbtsChainLevels& levels,
                                 std::vector<OutputSeedProperties>& vOutputSeeds,
                                 const GbtsTrackingFilter& filter) const;
+
+  /// Follow the best fitted chain inwards from an edge.
+  /// @param state State of the search
+  /// @param nodeView View of the node positions and layers
+  /// @param edgeStorage The graph edges
+  /// @param levels The chain levels of the graph edges
+  /// @param filter Tracking filter fitting the chains
+  /// @param headIndex Index of the edge to start from
+  /// @return The best chain, not initialized if there is none
+  detail::GbtsEdgeState followBestChain(
+      detail::GbtsFilterState& state, const detail::GbtsNodeView& nodeView,
+      std::vector<detail::GbtsEdge>& edgeStorage,
+      const detail::GbtsChainLevels& levels, const GbtsTrackingFilter& filter,
+      std::uint32_t headIndex) const;
+
+  /// Depth first search inwards from an edge, keeping the best complete chain.
+  /// @param state State of the search
+  /// @param nodeView View of the node positions and layers
+  /// @param edgeStorage The graph edges
+  /// @param levels The chain levels of the graph edges
+  /// @param filter Tracking filter fitting the chains
+  /// @param edgeIndex Index of the edge to continue from
+  /// @param edgeState Fitted state of the chain up to and including
+  ///        @p edgeIndex
+  void searchBestChain(detail::GbtsFilterState& state,
+                       const detail::GbtsNodeView& nodeView,
+                       const std::vector<detail::GbtsEdge>& edgeStorage,
+                       const detail::GbtsChainLevels& levels,
+                       const GbtsTrackingFilter& filter,
+                       std::uint32_t edgeIndex,
+                       const detail::GbtsEdgeState& edgeState) const;
 
   /// Estimate the inverse radius of the circle through three nodes.
   /// @param nodeView View of the node positions and layers

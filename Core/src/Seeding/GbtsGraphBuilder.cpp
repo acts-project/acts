@@ -689,117 +689,49 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
   return graph;
 }
 
-std::uint32_t GbtsGraph::runCCA(const std::uint32_t maxIterations) {
+detail::GbtsChainLevels GbtsGraph::runCCA(
+    const std::uint32_t maxSeedCandidateLength) const {
   const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
 
-  std::uint32_t maxLevel = 0;
-
-  std::uint32_t iter = 0;
-
-  std::vector<detail::GbtsEdge*> vOld;
-
+  // `vNei` only holds edges further in, which are created later, so one pass
+  // settles the levels
+  std::vector<std::uint32_t> level(nEdges, 1);
   for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
-    detail::GbtsEdge* pS = &(edgeStorage[edgeIndex]);
-    if (pS->nNei == 0) {
+    const detail::GbtsEdge& edge = edgeStorage[edgeIndex];
+    const std::uint32_t nextLevel =
+        std::min(level[edgeIndex] + 1, maxSeedCandidateLength + 1);
+    for (std::uint32_t nIdx = 0; nIdx < edge.nNei; ++nIdx) {
+      std::uint32_t& innerLevel = level[edge.vNei[nIdx]];
+      innerLevel = std::max(innerLevel, nextLevel);
+    }
+  }
+
+  // a root has no edge further in below the cap; going backwards settles the
+  // edges further in first, as they are created later
+  std::vector<std::uint32_t> innerLength(nEdges, 0);
+  for (std::uint32_t i = 0; i < nEdges; ++i) {
+    const std::uint32_t edgeIndex = nEdges - 1 - i;
+    if (level[edgeIndex] > maxSeedCandidateLength) {
       continue;
     }
-
-    // TODO: increment level for segments as they already have at least one
-    // neighbour
-    vOld.push_back(pS);
-  }
-
-  std::vector<detail::GbtsEdge*> vNew;
-  vNew.reserve(vOld.size());
-
-  // generate proposals
-  for (; iter < maxIterations; iter++) {
-    vNew.clear();
-
-    for (detail::GbtsEdge* pS : vOld) {
-      std::int32_t nextLevel = pS->level;
-
-      for (std::uint32_t nIdx = 0; nIdx < pS->nNei; ++nIdx) {
-        const std::uint32_t nextEdgeIdx = pS->vNei[nIdx];
-
-        const detail::GbtsEdge* pN = &(edgeStorage[nextEdgeIdx]);
-
-        if (pS->level == pN->level) {
-          nextLevel = pS->level + 1;
-          vNew.push_back(pS);
-          break;
-        }
-      }
-
-      // proposal
-      pS->next = static_cast<std::int8_t>(nextLevel);
-    }
-
-    // update
-
-    std::uint32_t nChanges = 0;
-
-    for (auto pS : vNew) {
-      if (pS->next != pS->level) {
-        nChanges++;
-        pS->level = pS->next;
-        // levels only grow from zero here, so the cast is safe
-        maxLevel = std::max(maxLevel, static_cast<std::uint32_t>(pS->level));
-      }
-    }
-
-    if (nChanges == 0) {
-      break;
-    }
-
-    vOld.swap(vNew);
-    vNew.clear();
-  }
-
-  return maxLevel;
-}
-
-std::vector<detail::GbtsEdge*> GbtsGraph::extractChainHeads(
-    const std::uint8_t minSeedLevel, const bool addTriplets,
-    const float maxAbsEtaAddTriplets) {
-  const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
-
-  // `addTriplets` accepts a chain one level short. Signed: an uncollected
-  // edge sits at level -1 and `minSeedLevel` may be configured to 0.
-  const std::int8_t minLevelAddTriplets =
-      static_cast<std::int8_t>(minSeedLevel - 1);
-  std::vector<detail::GbtsEdge*> vChainHeads;
-
-  vChainHeads.reserve(nEdges / 2);
-
-  for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
-    detail::GbtsEdge* pS = &edgeStorage[edgeIndex];
-
-    if (!addTriplets) {
-      if (pS->level < minSeedLevel) {
+    const detail::GbtsEdge& edge = edgeStorage[edgeIndex];
+    bool isRoot = true;
+    std::uint32_t length = 0;
+    for (std::uint32_t nIdx = 0; nIdx < edge.nNei; ++nIdx) {
+      const std::uint32_t innerEdgeIdx = edge.vNei[nIdx];
+      if (level[innerEdgeIdx] > maxSeedCandidateLength) {
         continue;
       }
-    } else {  // eta-dependent cut
-      const float edgeAbsEta = std::abs(-std::log(pS->p[0]));
-
-      if (edgeAbsEta > maxAbsEtaAddTriplets) {
-        if (pS->level < minSeedLevel) {
-          continue;
-        }
-      } else {
-        if (pS->level < minLevelAddTriplets) {
-          continue;
-        }
+      isRoot = false;
+      if (level[innerEdgeIdx] == level[edgeIndex] + 1 &&
+          innerLength[innerEdgeIdx] > 0) {
+        length = std::max(length, innerLength[innerEdgeIdx] + 1);
       }
     }
-
-    vChainHeads.push_back(pS);
+    innerLength[edgeIndex] = isRoot ? 1 : length;
   }
 
-  std::ranges::sort(vChainHeads, std::ranges::greater{},
-                    [](const detail::GbtsEdge* e) { return e->level; });
-
-  return vChainHeads;
+  return {.level = std::move(level), .innerLength = std::move(innerLength)};
 }
 
 }  // namespace Acts::Experimental
