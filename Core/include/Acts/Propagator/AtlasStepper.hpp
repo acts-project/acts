@@ -51,32 +51,13 @@ class IVolumeMaterial;
 /// @warning This implementation prioritizes speed and is not intended for
 /// production use. Use SympyStepper or EigenStepper for production tracking.
 ///
-/// The scalar, hand-expanded integration kernel minimizes arithmetic and uses
-/// a flat array for parameters and derivatives. It samples the magnetic field
-/// at the start, midpoint and end of a trial step, reuses the last sample for
-/// the next step, and uses a polynomial approximation to normalize the
-/// direction. Covariance transport neglects magnetic-field gradients. Volume
-/// material and the non-linear free-to-bound correction are not supported.
+/// Adapted from the ATLAS RungeKuttaPropagator in Athena, with ACTS-specific
+/// time propagation and error control. The integration kernel uses
+/// hand-expanded scalar expressions and approximate direction normalization.
+/// Covariance transport neglects magnetic-field gradients. Volume material and
+/// the non-linear free-to-bound correction are not supported.
 ///
-/// The ATLAS RungeKuttaPropagator was imported on 2016-09-21 in
-/// ACTS commit 947ff25463c926c6d6506486ece236450822d16a. The source is Athena's
-/// Tracking/TrkExtrapolation/TrkExRungeKuttaPropagator/src/RungeKuttaPropagator.cxx
-/// (rungeKuttaStep), with coordinate transforms from
-/// TrkExUtils/RungeKuttaUtils. See the [Athena
-/// source](https://gitlab.cern.ch/atlas/athena/-/blob/c5982a1efd76fe5528cc550f4dc0a87371ec1c67/Tracking/TrkExtrapolation/TrkExRungeKuttaPropagator/src/RungeKuttaPropagator.cxx).
-/// The import did not record an Athena revision. This is an independently
-/// adapted historical port, not a synchronized copy of current Athena.
-/// ACTS added time propagation and its own error control. In particular, this
-/// implementation omits Athena's:
-/// - rungeKuttaStepWithGradient, including field-gradient Jacobian terms;
-/// - short-step helix shortcut, which holds the field constant within a step;
-/// - dedicated straightLineStep fast path (neutral tracks use the RK kernel);
-/// - vectorized Trk::propJacobian helper, retaining the scalar expressions;
-/// - propagation-to-surface drivers, multi-surface search and ATLAS field
-///   services, whose roles belong to Propagator, navigation and field providers
-///   in ACTS.
-/// See also the [current Jacobian
-/// helper](https://gitlab.cern.ch/atlas/athena/-/blob/c5982a1efd76fe5528cc550f4dc0a87371ec1c67/Tracking/TrkExtrapolation/TrkExUtils/TrkExUtils/JacobianHelper.h).
+/// This historical port is maintained independently of Athena.
 class AtlasStepper {
  public:
   /// Type alias for bound track parameters
