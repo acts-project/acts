@@ -9,6 +9,9 @@
 # Project include(s).
 include(traccc-compiler-options-cpp)
 
+# Check that ACTS_FORCE_ASSERTIONS works
+acts_add_assertion_tests()
+
 # Set up a common library, shared by all of the tests.
 add_library(
     traccc_tests_common

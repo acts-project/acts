@@ -34,9 +34,7 @@ TRACCC_HOST_DEVICE bool mutex<T>::try_lock() {
   bool s = m_atomic.compare_exchange_strong(false_v, static_cast<T>(true),
                                             vecmem::memory_order::acquire);
 
-#ifndef NDEBUG
   m_is_locked |= s;
-#endif
 
   return s;
 }
