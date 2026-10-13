@@ -295,8 +295,9 @@ jobs:
     strategy:
       matrix:
         include:
+          # Keep the existing Clang build as the sole C++20 compatibility build.
           - image: ubuntu2604_clang22
-            std: 23
+            std: 20
             cxx: clang++-22
     # Templated tag, so CI/bump_versions.py cannot see it; bumped by hand.
     container: registry.cern.ch/ghcr.io/acts-project/${{ matrix.image }}:90

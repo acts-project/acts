@@ -189,7 +189,7 @@ jobs:
         SCALAR_TYPE: ["float", "double"]
         PLATFORM:
           - NAME: "CPU"
-            CXX_STANDARD: "20"
+            CXX_STANDARD: "23"
             CONTAINER: "ghcr.io/acts-project/ubuntu2604:91"
             # detray-full-fp32 turns benchmarks on, so Google Benchmark has to
             # come from the flavor too -- the other legs disable them instead.
@@ -327,7 +327,7 @@ jobs:
         SCALAR_TYPE: ["float", "double"]
         PLATFORM:
           - NAME: "HIP-AMD"
-            CXX_STANDARD: "20"
+            CXX_STANDARD: "23"
             CONTAINER: "ghcr.io/acts-project/ubuntu2604:91"
             FLAVOR: "rocm7"
             # vecmem comes from the flavor like everything else: HIP::hiprt is
@@ -336,7 +336,7 @@ jobs:
             # CMAKE_MODULE_PATH. The pinned tag carries 1.27.0.
             OPTIONS: -DCMAKE_HIP_PLATFORM=amd -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_BENCHMARKS=OFF -DDETRAY_BUILD_INTEGRATIONTESTS=OFF -DDETRAY_USE_SYSTEM_EIGEN3=ON -DDETRAY_USE_SYSTEM_VECMEM=ON -DDETRAY_USE_SYSTEM_COVFIE=ON -DDETRAY_USE_SYSTEM_GOOGLETEST=ON -DDETRAY_USE_SYSTEM_NLOHMANN=ON
           #- NAME: "HIP-NVIDIA"
-          #  CXX_STANDARD: "20"
+          #  CXX_STANDARD: "23"
           #  CONTAINER:
           #  OPTIONS: -DCMAKE_HIP_PLATFORM=nvidia -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_BENCHMARKS=OFF
 
@@ -498,6 +498,7 @@ jobs:
         source ${GITHUB_WORKSPACE}/.env
         ccache -z
         cmake --preset detray-github-cuda-ci \
+          -DCMAKE_CXX_STANDARD=23 \
           -DCMAKE_CUDA_COMPILER_LAUNCHER=ccache \
           -DCMAKE_BUILD_TYPE=Release \
           -DDETRAY_CUSTOM_SCALARTYPE=${{ matrix.SCALAR_TYPE }} \

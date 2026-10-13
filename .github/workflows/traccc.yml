@@ -242,6 +242,7 @@ jobs:
             -DCMAKE_CUDA_COMPILER_LAUNCHER=${{ matrix.build != 'Debug' && 'ccache' || '' }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.build }} \
             ${{ matrix.platform.options }} \
+            -DCMAKE_CXX_STANDARD=23 \
             -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
             -DACTS_USE_SYSTEM_COVFIE=ON \
             -DACTS_USE_SYSTEM_VECMEM=ON \
