@@ -154,8 +154,13 @@ Pointwise material physics computes a projected scattering variance independentl
 of the direction coordinates. A separate mapping produces the direction-noise
 block, with a direct diagonal calculation for the canonical spherical convention.
 Reference-trajectory rebuilding uses the reference surface's parametrization for
-this mapping. Pointwise stepper updates still explicitly assume a canonical
-covariance anchor; plumbing the active anchor is follow-up work. Noise removal
+this mapping. Pointwise material updates require callers to supply the active
+covariance anchor's parametrization separately from the material surface.
+Generic material interaction uses the curvilinear interpretation. KF and GSF
+use the bound surface interpretation. CKF retains the curvilinear interpretation
+for material-only transport until rebinding or a filtered-state update changes
+the anchor. The material helper neither selects an interpretation nor performs
+an additional covariance transport. Noise removal
 retains the existing diagonal-clamping behavior. Legacy
 @ref Acts::MaterialInteraction::sigmaPhi2 and
 @ref Acts::MaterialInteraction::sigmaTheta2 remain global angular diagnostics;

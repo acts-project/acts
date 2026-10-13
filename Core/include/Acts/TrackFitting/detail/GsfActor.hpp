@@ -241,6 +241,7 @@ struct GsfActor {
       if (haveMeasurement) {
         const Result<void> materialInteractionRes = applyMultipleScattering(
             state, stepper, surface,
+            surface.boundParametrization(state.options.geoContext),
             determineMaterialUpdateMode(state, navigator,
                                         MaterialUpdateMode::PreUpdate),
             logger());
@@ -250,6 +251,7 @@ struct GsfActor {
       } else {
         const Result<void> materialInteractionRes = applyMultipleScattering(
             state, stepper, surface,
+            surface.boundParametrization(state.options.geoContext),
             determineMaterialUpdateMode(state, navigator,
                                         MaterialUpdateMode::FullUpdate),
             logger());
@@ -346,6 +348,7 @@ struct GsfActor {
     if (m_cfg.multipleScattering && haveMaterial && haveMeasurement) {
       const Result<void> materialInteractionRes = applyMultipleScattering(
           state, stepper, surface,
+          surface.boundParametrization(state.options.geoContext),
           determineMaterialUpdateMode(state, navigator,
                                       MaterialUpdateMode::PostUpdate),
           logger());

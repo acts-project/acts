@@ -99,14 +99,16 @@ BOOST_AUTO_TEST_CASE(MaterialFailurePreservesState) {
   const double momentum = stepper.absoluteMomentum(state.stepping);
   const MaterialSlab slab(makeSilicon(), 1.);
   const auto result = detail::performMaterialInteraction(
-      state, stepper, slab, NoiseUpdateMode::addNoise, true, true);
+      state, stepper, slab, surface->boundParametrization(gctx),
+      NoiseUpdateMode::addNoise, true, true);
   BOOST_REQUIRE(!result.ok());
   BOOST_CHECK(result.error() == BoundParametrizationError::SingularDirection);
   BOOST_CHECK_EQUAL(stepper.absoluteMomentum(state.stepping), momentum);
   BOOST_CHECK_EQUAL(*stepper.covariance(state.stepping), covariance);
   state.stepping.cov.reset();
   BOOST_CHECK(detail::performMaterialInteraction(
-                  state, stepper, slab, NoiseUpdateMode::addNoise, true, true)
+                  state, stepper, slab, surface->boundParametrization(gctx),
+                  NoiseUpdateMode::addNoise, true, true)
                   .ok());
   BOOST_CHECK_LT(stepper.absoluteMomentum(state.stepping), momentum);
 
@@ -115,7 +117,8 @@ BOOST_AUTO_TEST_CASE(MaterialFailurePreservesState) {
   stepper.update(state.stepping, Vector3::Zero(), direction, 0.1, 0.);
   state.stepping.cov = covariance;
   const auto added = detail::performMaterialInteraction(
-      state, stepper, slab, NoiseUpdateMode::addNoise, true, false);
+      state, stepper, slab, surface->boundParametrization(gctx),
+      NoiseUpdateMode::addNoise, true, false);
   BOOST_REQUIRE(added.ok());
   const auto expected = detail::globalAngularScatteringVariances(
       direction, added->scatteringVariance);
@@ -124,7 +127,8 @@ BOOST_AUTO_TEST_CASE(MaterialFailurePreservesState) {
   BOOST_CHECK_CLOSE(after(eBoundDir1, eBoundDir1), 1. + expected[1], 1e-10);
   BOOST_CHECK_EQUAL(after(eBoundQOverP, eBoundQOverP), 1.);
   const auto removed = detail::performMaterialInteraction(
-      state, stepper, slab, NoiseUpdateMode::removeNoise, true, false);
+      state, stepper, slab, surface->boundParametrization(gctx),
+      NoiseUpdateMode::removeNoise, true, false);
   BOOST_REQUIRE(removed.ok());
   BOOST_CHECK(stepper.covariance(state.stepping)->isApprox(covariance, 1e-12));
 }
