@@ -168,7 +168,8 @@ inline std::array<double, 4> evaluateTrigonomics(const Vector3& direction) {
   const double z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
   const double cosTheta = z;
-  const double sinTheta = fastCathetus(1, z);
+  // Computing this from z loses precision for directions near the beam axis.
+  const double sinTheta = fastHypot(x, y);
   assert(sinTheta != 0 &&
          "VectorHelpers: Vector is parallel to the z-axis "
          "which leads to division by zero");

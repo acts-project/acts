@@ -151,6 +151,17 @@ BOOST_AUTO_TEST_CASE(EvaluateTrigonomics) {
   CHECK_CLOSE_ABS(std::sqrt(2.0 / 3.0), trig[3], 1e-6);  // sin(theta)
 }
 
+BOOST_AUTO_TEST_CASE(EvaluateTrigonomicsNearBeam) {
+  for (double z : {-1., 1.}) {
+    const Vector3 dir = Vector3(3e-12, -4e-12, z).normalized();
+    const auto [cosPhi, sinPhi, cosTheta, sinTheta] = evaluateTrigonomics(dir);
+    CHECK_CLOSE_ABS(cosPhi, 0.6, 1e-15);
+    CHECK_CLOSE_ABS(sinPhi, -0.8, 1e-15);
+    CHECK_CLOSE_ABS(cosTheta, z, 1e-15);
+    CHECK_CLOSE_REL(sinTheta, 5e-12, 1e-15);
+  }
+}
+
 BOOST_AUTO_TEST_CASE(CastAxisDirection) {
   using enum AxisDirection;
   Vector3 pos{3, 4, 5};

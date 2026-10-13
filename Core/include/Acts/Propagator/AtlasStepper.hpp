@@ -28,6 +28,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
@@ -122,7 +123,7 @@ class AtlasStepper {
     ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
     /// Flag indicating new magnetic field evaluation needed
-    bool newfield = true;
+    bool newField = true;
     /// Last accepted step's final field sample (an endpoint approximation)
     Vector3 field = Vector3::Zero();
     /// Storage pattern of pVector
@@ -514,7 +515,7 @@ class AtlasStepper {
         state.particleHypothesis.absoluteCharge() == 0.
             ? qop
             : std::copysign(std::max(std::abs(qop), minQOverP), qop);
-    state.newfield = true;
+    state.newField = true;
     state.derivativeReady = false;
   }
 
@@ -564,212 +565,28 @@ class AtlasStepper {
       return Result<Jacobian>::failure(prepared.error());
     }
 
-    const Vector3 gp = position(state);
-    const Vector3 mom = direction(state);
-    auto P = state.pVector;
+    const Vector3 pos = position(state);
+    const Vector3 dir = direction(state);
+    BoundToFreeMatrix transportJacobian =
+        Eigen::Map<const BoundToFreeMatrix>(state.pVector.data() + eFreeSize);
+    // Undo the kernel's q/p scaling of the position and direction derivatives.
+    const double inverseQOverP = qOverP(state) == 0. ? 0. : 1. / qOverP(state);
+    transportJacobian.block<3, 1>(eFreePos0, eBoundQOverP) *= inverseQOverP;
+    transportJacobian.block<3, 1>(eFreeDir0, eBoundQOverP) *= inverseQOverP;
 
-    double p = qOverP(state) == 0. ? 0. : 1. / qOverP(state);
-    P[40] *= p;
-    P[41] *= p;
-    P[42] *= p;
-    P[44] *= p;
-    P[45] *= p;
-    P[46] *= p;
-
-    const auto fFrame =
-        surface.referenceFrame(state.options.geoContext, gp, mom);
-
-    double Ax[3] = {fFrame(0, 0), fFrame(1, 0), fFrame(2, 0)};
-    double Ay[3] = {fFrame(0, 1), fFrame(1, 1), fFrame(2, 1)};
-    double S[3] = {fFrame(0, 2), fFrame(1, 2), fFrame(2, 2)};
-
-    // this is the projection of direction onto the local normal vector
-    double A = P[4] * S[0] + P[5] * S[1] + P[6] * S[2];
-
-    if (A != 0.) {
-      A = 1. / A;
-    }
-
-    S[0] *= A;
-    S[1] *= A;
-    S[2] *= A;
-
-    double s0 = P[8] * S[0] + P[9] * S[1] + P[10] * S[2];
-    double s1 = P[16] * S[0] + P[17] * S[1] + P[18] * S[2];
-    double s2 = P[24] * S[0] + P[25] * S[1] + P[26] * S[2];
-    double s3 = P[32] * S[0] + P[33] * S[1] + P[34] * S[2];
-    double s4 = P[40] * S[0] + P[41] * S[1] + P[42] * S[2];
-
-    // in case of line-type surfaces - we need to take into account that
-    // the reference frame changes with variations of all local
-    // parameters
-    if (surface.type() == Surface::Straw ||
-        surface.type() == Surface::Perigee) {
-      // vector from position to center
-      double x = P[0] - surface.center(state.options.geoContext).x();
-      double y = P[1] - surface.center(state.options.geoContext).y();
-      double z = P[2] - surface.center(state.options.geoContext).z();
-
-      // this is the projection of the direction onto the local y axis
-      double d = P[4] * Ay[0] + P[5] * Ay[1] + P[6] * Ay[2];
-
-      // this is cos(beta)
-      double a = (1. - d) * (1. + d);
-      if (a != 0.) {
-        a = 1. / a;  // i.e. 1./(1-d^2)
-      }
-
-      // that's the modified norm vector
-      double X = d * Ay[0] - P[4];  //
-      double Y = d * Ay[1] - P[5];  //
-      double Z = d * Ay[2] - P[6];  //
-
-      // d0 to d1
-      double d0 = P[12] * Ay[0] + P[13] * Ay[1] + P[14] * Ay[2];
-      double d1 = P[20] * Ay[0] + P[21] * Ay[1] + P[22] * Ay[2];
-      double d2 = P[28] * Ay[0] + P[29] * Ay[1] + P[30] * Ay[2];
-      double d3 = P[36] * Ay[0] + P[37] * Ay[1] + P[38] * Ay[2];
-      double d4 = P[44] * Ay[0] + P[45] * Ay[1] + P[46] * Ay[2];
-
-      s0 = (((P[8] * X + P[9] * Y + P[10] * Z) + x * (d0 * Ay[0] - P[12])) +
-            (y * (d0 * Ay[1] - P[13]) + z * (d0 * Ay[2] - P[14]))) *
-           (-a);
-
-      s1 = (((P[16] * X + P[17] * Y + P[18] * Z) + x * (d1 * Ay[0] - P[20])) +
-            (y * (d1 * Ay[1] - P[21]) + z * (d1 * Ay[2] - P[22]))) *
-           (-a);
-      s2 = (((P[24] * X + P[25] * Y + P[26] * Z) + x * (d2 * Ay[0] - P[28])) +
-            (y * (d2 * Ay[1] - P[29]) + z * (d2 * Ay[2] - P[30]))) *
-           (-a);
-      s3 = (((P[32] * X + P[33] * Y + P[34] * Z) + x * (d3 * Ay[0] - P[36])) +
-            (y * (d3 * Ay[1] - P[37]) + z * (d3 * Ay[2] - P[38]))) *
-           (-a);
-      s4 = (((P[40] * X + P[41] * Y + P[42] * Z) + x * (d4 * Ay[0] - P[44])) +
-            (y * (d4 * Ay[1] - P[45]) + z * (d4 * Ay[2] - P[46]))) *
-           (-a);
-    }
-
-    P[8] -= (s0 * P[4]);
-    P[9] -= (s0 * P[5]);
-    P[10] -= (s0 * P[6]);
-    P[11] -= (s0 * P[59]);
-    P[12] -= (s0 * P[56]);
-    P[13] -= (s0 * P[57]);
-    P[14] -= (s0 * P[58]);
-
-    P[16] -= (s1 * P[4]);
-    P[17] -= (s1 * P[5]);
-    P[18] -= (s1 * P[6]);
-    P[19] -= (s1 * P[59]);
-    P[20] -= (s1 * P[56]);
-    P[21] -= (s1 * P[57]);
-    P[22] -= (s1 * P[58]);
-
-    P[24] -= (s2 * P[4]);
-    P[25] -= (s2 * P[5]);
-    P[26] -= (s2 * P[6]);
-    P[27] -= (s2 * P[59]);
-    P[28] -= (s2 * P[56]);
-    P[29] -= (s2 * P[57]);
-    P[30] -= (s2 * P[58]);
-
-    P[32] -= (s3 * P[4]);
-    P[33] -= (s3 * P[5]);
-    P[34] -= (s3 * P[6]);
-    P[35] -= (s3 * P[59]);
-    P[36] -= (s3 * P[56]);
-    P[37] -= (s3 * P[57]);
-    P[38] -= (s3 * P[58]);
-
-    P[40] -= (s4 * P[4]);
-    P[41] -= (s4 * P[5]);
-    P[42] -= (s4 * P[6]);
-    P[43] -= (s4 * P[59]);
-    P[44] -= (s4 * P[56]);
-    P[45] -= (s4 * P[57]);
-    P[46] -= (s4 * P[58]);
-
-    double P3 = 0, P4 = 0, C = P[4] * P[4] + P[5] * P[5];
-    if (C > 1.e-20) {
-      C = 1. / C;
-      P3 = P[4] * C;
-      P4 = P[5] * C;
-      C = -std::sqrt(C);
-    } else {
-      C = -1.e10;
-      P3 = 1.;
-      P4 = 0.;
-    }
-
-    double MA[3] = {Ax[0], Ax[1], Ax[2]};
-    double MB[3] = {Ay[0], Ay[1], Ay[2]};
-    // Jacobian production of transport and to_local
-    if (surface.type() == Surface::Disc) {
-      // the vector from the disc surface to the p
-      const auto& sfc = surface.center(state.options.geoContext);
-      double d[3] = {P[0] - sfc(0), P[1] - sfc(1), P[2] - sfc(2)};
-      // this needs the transformation to polar coordinates
-      double RC = d[0] * Ax[0] + d[1] * Ax[1] + d[2] * Ax[2];
-      double RS = d[0] * Ay[0] + d[1] * Ay[1] + d[2] * Ay[2];
-      double R2 = RC * RC + RS * RS;
-
-      // inverse radius
-      double Ri = 1. / std::sqrt(R2);
-      MA[0] = (RC * Ax[0] + RS * Ay[0]) * Ri;
-      MA[1] = (RC * Ax[1] + RS * Ay[1]) * Ri;
-      MA[2] = (RC * Ax[2] + RS * Ay[2]) * Ri;
-      MB[0] = (RC * Ay[0] - RS * Ax[0]) * (Ri = 1. / R2);
-      MB[1] = (RC * Ay[1] - RS * Ax[1]) * Ri;
-      MB[2] = (RC * Ay[2] - RS * Ax[2]) * Ri;
-    }
-
-    double jacobian[eBoundSize * eBoundSize];
-    jacobian[0] = MA[0] * P[8] + MA[1] * P[9] + MA[2] * P[10];    // dL0/dL0
-    jacobian[1] = MA[0] * P[16] + MA[1] * P[17] + MA[2] * P[18];  // dL0/dL1
-    jacobian[2] = MA[0] * P[24] + MA[1] * P[25] + MA[2] * P[26];  // dL0/dPhi
-    jacobian[3] = MA[0] * P[32] + MA[1] * P[33] + MA[2] * P[34];  // dL0/dThe
-    jacobian[4] = MA[0] * P[40] + MA[1] * P[41] + MA[2] * P[42];  // dL0/dCM
-    jacobian[5] = 0.;                                             // dL0/dT
-
-    jacobian[6] = MB[0] * P[8] + MB[1] * P[9] + MB[2] * P[10];     // dL1/dL0
-    jacobian[7] = MB[0] * P[16] + MB[1] * P[17] + MB[2] * P[18];   // dL1/dL1
-    jacobian[8] = MB[0] * P[24] + MB[1] * P[25] + MB[2] * P[26];   // dL1/dPhi
-    jacobian[9] = MB[0] * P[32] + MB[1] * P[33] + MB[2] * P[34];   // dL1/dThe
-    jacobian[10] = MB[0] * P[40] + MB[1] * P[41] + MB[2] * P[42];  // dL1/dCM
-    jacobian[11] = 0.;                                             // dL1/dT
-
-    jacobian[12] = P3 * P[13] - P4 * P[12];  // dPhi/dL0
-    jacobian[13] = P3 * P[21] - P4 * P[20];  // dPhi/dL1
-    jacobian[14] = P3 * P[29] - P4 * P[28];  // dPhi/dPhi
-    jacobian[15] = P3 * P[37] - P4 * P[36];  // dPhi/dThe
-    jacobian[16] = P3 * P[45] - P4 * P[44];  // dPhi/dCM
-    jacobian[17] = 0.;                       // dPhi/dT
-
-    jacobian[18] = C * P[14];  // dThe/dL0
-    jacobian[19] = C * P[22];  // dThe/dL1
-    jacobian[20] = C * P[30];  // dThe/dPhi
-    jacobian[21] = C * P[38];  // dThe/dThe
-    jacobian[22] = C * P[46];  // dThe/dCM
-    jacobian[23] = 0.;         // dThe/dT
-
-    jacobian[24] = 0.;     // dCM /dL0
-    jacobian[25] = 0.;     // dCM /dL1
-    jacobian[26] = 0.;     // dCM /dPhi
-    jacobian[27] = 0.;     // dCM /dTheta
-    jacobian[28] = P[47];  // dCM /dCM
-    jacobian[29] = 0.;     // dCM/dT
-
-    jacobian[30] = P[11];  // dT/dL0
-    jacobian[31] = P[19];  // dT/dL1
-    jacobian[32] = P[27];  // dT/dPhi
-    jacobian[33] = P[35];  // dT/dThe
-    jacobian[34] = P[43];  // dT/dCM
-    jacobian[35] = P[51];  // dT/dT
-
-    Eigen::Map<Eigen::Matrix<double, eBoundSize, eBoundSize, Eigen::RowMajor>>
-        J(jacobian);
-    *state.cov = J * *state.cov * J.transpose();
-    Jacobian jac = J;
+    FreeVector pathDerivative = FreeVector::Zero();
+    pathDerivative.segment<3>(eFreePos0) = dir;
+    pathDerivative[eFreeTime] = state.pVector[59];
+    pathDerivative.segment<3>(eFreeDir0) =
+        Eigen::Map<const Vector3>(state.pVector.data() + 56);
+    const FreeToPathMatrix freeToPath =
+        surface.freeToPathDerivative(state.options.geoContext, pos, dir);
+    const FreeToBoundMatrix freeToBound =
+        surface.freeToBoundJacobian(state.options.geoContext, pos, dir);
+    const Jacobian jac =
+        freeToBound *
+        (transportJacobian + pathDerivative * (freeToPath * transportJacobian));
+    *state.cov = jac * *state.cov * jac.transpose();
 
     resetJacobian(state, surface);
 
@@ -806,11 +623,11 @@ class AtlasStepper {
     double* A = &(state.pVector[4]);  // Directions
     double* sA = &(state.pVector[56]);
     // A neutral particle must not bend in a magnetic field.
-    const double Pi = charge(state) == 0. ? 0. : 0.5 * qOverP(state);
+    const double halfQOverP = charge(state) == 0. ? 0. : 0.5 * qOverP(state);
     Vector3 f0, f;
 
     // if new field is required get it
-    if (state.newfield) {
+    if (state.newField) {
       const Vector3 pos(R[0], R[1], R[2]);
       // This is sd.B_first in EigenStepper
       auto fRes = getField(state, pos);
@@ -826,6 +643,9 @@ class AtlasStepper {
       // For details about these values see ATL-SOFT-PUB-2009-001
       constexpr double lower = 0.25;
       constexpr double upper = 4.0;
+      if (errorEstimate == 0.) {
+        return upper;
+      }
       // Fourth-order controller; two square roots avoid a general pow call.
       double x =
           std::sqrt(std::sqrt(state.options.stepTolerance / errorEstimate));
@@ -848,7 +668,7 @@ class AtlasStepper {
       ++state.statistics.nAttemptedSteps;
 
       // PS2 is h/(2*momentum) in EigenStepper
-      double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
+      double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = halfQOverP * h;
 
       // First point
       //
@@ -919,7 +739,6 @@ class AtlasStepper {
       if (!std::isfinite(errorEstimate)) {
         return EigenStepperError::StepInvalid;
       }
-      errorEstimate = std::max(1e-20, errorEstimate);
       if (!isErrorTolerable(errorEstimate)) {
         ++state.statistics.nRejectedSteps;
         const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
@@ -962,11 +781,11 @@ class AtlasStepper {
 
       // Evaluate the time propagation
       const double mOverP = mass / momentum;
-      double dtds = std::sqrt(1 + mOverP * mOverP);
+      double dtds = fastHypot(1., mOverP);
       state.pVector[3] += h * dtds;
       state.pVector[59] = dtds;
       state.field = f;
-      state.newfield = false;
+      state.newField = false;
       state.derivativeReady = true;
 
       if (withJacobian) {
@@ -1092,7 +911,8 @@ class AtlasStepper {
  private:
   /// Initialize the bound-to-free Jacobian at a new covariance anchor.
   void resetJacobian(State& state, const Surface& surface) const {
-    std::fill(state.pVector.begin() + eFreeSize, state.pVector.end(), 0.);
+    std::ranges::fill(state.pVector.begin() + eFreeSize, state.pVector.end(),
+                      0.);
     if (state.cov.has_value()) {
       Eigen::Map<BoundToFreeMatrix>(state.pVector.data() + eFreeSize) =
           surface.boundToFreeJacobian(state.options.geoContext, position(state),
@@ -1115,7 +935,7 @@ class AtlasStepper {
         curvature * direction(state).cross(*field);
     const double mOverP =
         particleHypothesis(state).mass() / absoluteMomentum(state);
-    state.pVector[59] = std::hypot(1., mOverP);
+    state.pVector[59] = fastHypot(1., mOverP);
     state.derivativeReady = true;
     return Result<void>::success();
   }

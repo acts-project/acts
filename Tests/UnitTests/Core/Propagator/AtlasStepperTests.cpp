@@ -32,6 +32,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsTests/CommonHelpers/Assertions.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
@@ -401,7 +402,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
     std::decay_t<decltype(other)> copy = stepper.makeState(options);
     stepper.initialize(copy, cp);
 
-    copy.newfield = other.newfield;
+    copy.newField = other.newField;
     copy.field = other.field;
     copy.pVector = other.pVector;
     copy.derivativeReady = other.derivativeReady;
@@ -687,7 +688,7 @@ BOOST_AUTO_TEST_CASE(NeutralParticleDoesNotBend) {
   CHECK_CLOSE_ABS(stepper.direction(state), unitDir, eps);
   CHECK_CLOSE_ABS(stepper.position(state), Vector3(pos + *result * unitDir),
                   eps);
-  const double dtds = std::hypot(1., neutral.mass() / absMom);
+  const double dtds = fastHypot(1., neutral.mass() / absMom);
   CHECK_CLOSE_ABS(stepper.time(state), time + *result * dtds, eps);
   const auto jac = stepper.transportToCurvilinear(state);
   CHECK_CLOSE_ABS(jac(eBoundPhi, eBoundQOverP), 0., eps);
@@ -707,7 +708,7 @@ BOOST_AUTO_TEST_CASE(TransportBeforeSteppingIncludesPathCorrections) {
   const auto jac = stepper.transportToBound(state, *target).value();
   const auto frame =
       initial.referenceSurface().referenceFrame(geoCtx, pos, unitDir);
-  const double dtds = std::hypot(1., particleHypothesis.mass() / absMom);
+  const double dtds = fastHypot(1., particleHypothesis.mass() / absMom);
   for (int i = 0; i < 2; ++i) {
     CHECK_CLOSE_ABS(jac(eBoundTime, i), -dtds * frame(2, i) / unitDir.z(), eps);
   }
@@ -722,13 +723,34 @@ BOOST_AUTO_TEST_CASE(CurvilinearFrameNearBeam) {
   Stepper stepper(magneticField);
   Stepper::Options options(geoCtx, magCtx);
   auto state = stepper.makeState(options);
-  const Vector3 nearBeam = Vector3(1e-3, 2e-3, 1.).normalized();
+  for (double transverse : {1e-3, 1e-12}) {
+    // phi = 0 avoids cancellation between the ill-conditioned angular columns.
+    const Vector3 nearBeam = Vector3(transverse, 0., 1.).normalized();
+    const auto initial = BoundTrackParameters::createCurvilinear(
+        pos4, nearBeam, charge / absMom, cov, particleHypothesis);
+    stepper.initialize(state, initial);
+    const auto jac = stepper.transportToCurvilinear(state);
+    CHECK_CLOSE_ABS(jac, BoundMatrix::Identity().eval(), 1e-10);
+    CHECK_CLOSE_ABS(*state.cov, cov, 1e-10);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ZeroErrorStepWithTightTolerance) {
+  Stepper stepper(std::make_shared<ConstantBField>(Vector3::Zero()));
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+  options.stepTolerance = 1e-24;
+  options.maxRungeKuttaStepTrials = 0;
+  auto state = stepper.makeState(options);
   const auto initial = BoundTrackParameters::createCurvilinear(
-      pos4, nearBeam, charge / absMom, cov, particleHypothesis);
+      pos4, unitDir, charge / absMom, std::nullopt, particleHypothesis);
   stepper.initialize(state, initial);
-  const auto jac = stepper.transportToCurvilinear(state);
-  CHECK_CLOSE_ABS(jac, BoundMatrix::Identity().eval(), 1e-10);
-  CHECK_CLOSE_ABS(*state.cov, cov, 1e-10);
+  const auto result = stepper.step(state, Direction::Forward(), nullptr);
+  BOOST_REQUIRE(result.ok());
+  BOOST_CHECK_EQUAL(*result, stepSize);
+  CHECK_CLOSE_ABS(stepper.position(state), Vector3(pos + stepSize * unitDir),
+                  eps);
+  BOOST_CHECK_EQUAL(state.statistics.nRejectedSteps, 0u);
 }
 
 BOOST_AUTO_TEST_CASE(StepAdjustmentLimitsAndZeroStep) {
