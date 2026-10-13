@@ -391,7 +391,6 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   const auto &cfg1 = m_cfg.seedFinderConfig;
   ACTS_DEBUG("nMaxPhiSlice: " << cfg1.nMaxPhiSlice);
   ACTS_DEBUG("useClusterWidthCuts: " << cfg1.useClusterWidthCuts);
-  ACTS_DEBUG("edgeMaskMinEta: " << cfg1.edgeMaskMinEta);
   ACTS_DEBUG("hitShareThreshold: " << cfg1.hitShareThreshold);
   ACTS_DEBUG("maxEndcapClusterWidth: " << cfg1.maxEndcapClusterWidth);
   ACTS_DEBUG("maxSeedSplitEta: " << cfg1.maxSeedSplitEta);

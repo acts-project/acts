@@ -49,20 +49,15 @@ class GraphBasedTrackSeeder {
 
     // Seed extraction options
 
-    /// Extract one seed candidate per edge: the best fitted path from the edge
-    /// inwards to an edge nothing further in links to, stepping along the
-    /// longest chains outwards, as the traccc GPU GBTS does. Without it the
-    /// longest chain inwards is followed from every edge, with edge masking.
-    bool bestPathPerEdge = true;
-    /// Maximum number of connected-component iterations.
+    /// Longest chain of edges taken into account. Edges in longer chains take
+    /// no part in the seed extraction.
     std::uint32_t ccaMaxIterations = 15;
     /// Chain length a seed candidate must reach: a triplet plus one
     /// confirmation.
     std::uint8_t minSeedLevel = 3;
     /// optionally add 3 sp seeds within a certain eta range
     ///
-    /// @note Worth little until `maxAbsEtaAddTriplets` is opened past
-    ///       `edgeMaskMinEta`; matters most where there are few layers.
+    /// @note Matters most where there are few layers.
     bool addTriplets = false;
     /// the maximum allowed eta value in which
     /// three spacepoint seeds are passed through
@@ -71,8 +66,6 @@ class GraphBasedTrackSeeder {
     std::uint32_t minSplitSeedSize = 4;
     /// Largest seed size that is split.
     std::uint32_t maxSplitSeedSize = 5;
-    /// Minimum eta for edge masking, without `bestPathPerEdge`.
-    float edgeMaskMinEta = 1.5;
     /// Threshold for hit sharing between seeds.
     float hitShareThreshold = 0.49;
     /// Max seed eta value considered for splitting.
@@ -216,8 +209,7 @@ class GraphBasedTrackSeeder {
 
   /// Extract seed candidates from the graph.
   /// @param nodeStorage Storage containing the graph nodes
-  /// @param graph The graph, after the connected component analysis unless
-  ///        `bestPathPerEdge`
+  /// @param graph The graph
   /// @param vOutputSeeds Output vector for seed candidates
   /// @param filter Tracking filter to be applied
   /// @param withFits Whether the fit of the filter to each seed is kept
