@@ -198,6 +198,10 @@ NeighborHoodIndices neighborHoodIndices(const IAxis& axis, std::size_t idx,
 /// template below adds only the hot path.
 class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
  public:
+  // the position-based overloads are implemented by the per-axis template
+  using SurfaceArray::ISurfaceGridLookup::at;
+  using SurfaceArray::ISurfaceGridLookup::neighbors;
+
   void fill(const GeometryContext& gctx,
             std::span<const Surface* const> surfaces) override {
     // scratch only: the bin contents survive as the zero-distance packs
