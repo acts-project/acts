@@ -15,11 +15,10 @@ if(ACTS_FORCE_ASSERTIONS)
     )
     include_directories(BEFORE SYSTEM ${CMAKE_CURRENT_LIST_DIR}/assert_include)
 
-    # Add assertions to standard libraries
-    add_compile_definitions(
-        $<$<COMPILE_LANGUAGE:CXX>:_GLIBCXX_ASSERTIONS>
-        $<$<COMPILE_LANGUAGE:CXX>:_LIBCPP_DEBUG>
-    )
+    # Add assertions to standard libraries. These go into the flags rather than
+    # the directory compile definitions, which ROOT_GENERATE_DICTIONARY copies
+    # into a custom command where a $<COMPILE_LANGUAGE> restriction is invalid.
+    string(APPEND CMAKE_CXX_FLAGS " -D_GLIBCXX_ASSERTIONS -D_LIBCPP_DEBUG")
 endif()
 
 # Register death tests that check the forced assertions actually fire. Each
