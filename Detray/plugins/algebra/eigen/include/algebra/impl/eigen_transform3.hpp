@@ -73,7 +73,6 @@ struct transform3 {
   /// @{
 
   Eigen::Transform<scalar_type, 3, Eigen::Affine> _data;
-  Eigen::Transform<scalar_type, 3, Eigen::Affine> _data_inv;
 
   /// @}
 
@@ -85,7 +84,7 @@ struct transform3 {
   /// @param z the z axis of the new frame, normal vector for planes
   DETRAY_HOST_DEVICE
   transform3(const vector3 &t, const vector3 &x, const vector3 &y,
-             const vector3 &z, bool get_inverse = true) {
+             const vector3 &z) {
     _data.setIdentity();
 
     auto &matrix = _data.matrix();
@@ -93,12 +92,6 @@ struct transform3 {
     matrix.template block<3, 1>(0, 1) = y;
     matrix.template block<3, 1>(0, 2) = z;
     matrix.template block<3, 1>(0, 3) = t;
-
-    if (get_inverse) {
-      _data_inv = _data.inverse();
-    } else {
-      _data_inv.setIdentity();
-    }
   }
 
   /// Constructor with arguments: t, z, x
@@ -107,9 +100,8 @@ struct transform3 {
   /// @param z the z axis of the new frame, normal vector for planes
   /// @param x the x axis of the new frame
   DETRAY_HOST_DEVICE
-  transform3(const vector3 &t, const vector3 &z, const vector3 &x,
-             bool get_inverse = true)
-      : transform3(t, x, z.cross(x), z, get_inverse) {}
+  transform3(const vector3 &t, const vector3 &z, const vector3 &x)
+      : transform3(t, x, z.cross(x), z) {}
 
   /// Constructor with arguments: translation
   ///
@@ -120,36 +112,13 @@ struct transform3 {
 
     auto &matrix = _data.matrix();
     matrix.template block<3, 1>(0, 3) = t;
-
-    _data_inv = _data.inverse();
   }
 
   /// Constructor with arguments: matrix
   ///
   /// @param m is the full 4x4 matrix
   DETRAY_HOST_DEVICE
-  explicit transform3(const matrix44 &m) {
-    _data.matrix() = m;
-
-    _data_inv = _data.inverse();
-  }
-
-  /// Constructor with arguments: matrix and its inverse
-  ///
-  /// @param m is the full 4x4 matrix
-  /// @param m_inv is the inverse to m
-  DETRAY_HOST_DEVICE
-  transform3(const matrix44 &m, const matrix44 &m_inv)
-      : _data{m}, _data_inv{m_inv} {
-    // The assertion will not hold for (casts to) int
-    if constexpr (std::floating_point<scalar_type>) {
-      [[maybe_unused]] constexpr auto epsilon{
-          std::numeric_limits<scalar_type>::epsilon()};
-      assert(algebra::approx_equal(matrix44(m * m_inv),
-                                   matrix44(matrix44::Identity()),
-                                   16.f * epsilon, 1e-6f));
-    }
-  }
+  explicit transform3(const matrix44 &m) { _data.matrix() = m; }
 
   /// Constructor with arguments: matrix as std::array of scalar
   ///
@@ -158,16 +127,11 @@ struct transform3 {
   explicit transform3(const array_type<16> &ma) {
     _data.matrix() << ma[0], ma[1], ma[2], ma[3], ma[4], ma[5], ma[6], ma[7],
         ma[8], ma[9], ma[10], ma[11], ma[12], ma[13], ma[14], ma[15];
-
-    _data_inv = _data.inverse();
   }
 
   /// Default constructor: set contents to identity matrices
   DETRAY_HOST_DEVICE
-  transform3() {
-    _data.setIdentity();
-    _data_inv.setIdentity();
-  }
+  transform3() { _data.setIdentity(); }
 
   /// Default constructors
   transform3(const transform3 &rhs) = default;
@@ -240,9 +204,18 @@ struct transform3 {
   constexpr const matrix44 &matrix() const { return _data.matrix(); }
 
   /// This method retrieves the 4x4 matrix of an inverse transform
+  ///
+  /// @note the rotation is assumed to be orthonormal, so that the inverse is
+  /// the transpose of the rotation and @c -R^T*t as the translation.
   DETRAY_HOST_DEVICE
-  constexpr const matrix44 &matrix_inverse() const {
-    return _data_inv.matrix();
+  constexpr matrix44 matrix_inverse() const {
+    matrix44 ret{matrix44::Identity()};
+
+    ret.template block<3, 3>(0, 0) = _data.linear().transpose();
+    ret.template block<3, 1>(0, 3) =
+        -(_data.linear().transpose() * _data.translation());
+
+    return ret;
   }
 
   /// This method transform from a point from the local 2D cartesian frame to
@@ -271,9 +244,9 @@ struct transform3 {
   template <typename derived_type>
     requires(Eigen::MatrixBase<derived_type>::RowsAtCompileTime == 3 &&
              Eigen::MatrixBase<derived_type>::ColsAtCompileTime == 1)
-  DETRAY_HOST_DEVICE constexpr auto point_to_local(
+  DETRAY_HOST_DEVICE constexpr point3 point_to_local(
       const Eigen::MatrixBase<derived_type> &v) const {
-    return (_data_inv * v);
+    return _data.linear().transpose() * (v - _data.translation());
   }
 
   /// This method transform from a vector from the local 3D cartesian frame to
@@ -301,9 +274,9 @@ struct transform3 {
   template <typename derived_type>
     requires(Eigen::MatrixBase<derived_type>::RowsAtCompileTime == 3 &&
              Eigen::MatrixBase<derived_type>::ColsAtCompileTime == 1)
-  DETRAY_HOST_DEVICE constexpr auto vector_to_local(
+  DETRAY_HOST_DEVICE constexpr vector3 vector_to_local(
       const Eigen::MatrixBase<derived_type> &v) const {
-    return (_data_inv.linear() * v);
+    return _data.linear().transpose() * v;
   }
 };  // struct transform3
 

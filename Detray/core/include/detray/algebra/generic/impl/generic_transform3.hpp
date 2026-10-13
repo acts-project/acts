@@ -63,7 +63,6 @@ struct transform3 {
   /// @name Data objects
   /// @{
   matrix44 _data{generic::math::identity<matrix44>()};
-  matrix44 _data_inv{generic::math::identity<matrix44>()};
 
   /// @}
 
@@ -78,7 +77,7 @@ struct transform3 {
   /// @param z the z axis of the new frame, normal vector for planes
   DETRAY_HOST_DEVICE
   transform3(const vector3 &t, const vector3 &x, const vector3 &y,
-             const vector3 &z, bool get_inverse = true) {
+             const vector3 &z) {
     element_getter{}(_data, 0, 0) = element_getter{}(x, 0);
     element_getter{}(_data, 1, 0) = element_getter{}(x, 1);
     element_getter{}(_data, 2, 0) = element_getter{}(x, 2);
@@ -95,10 +94,6 @@ struct transform3 {
     element_getter{}(_data, 1, 3) = element_getter{}(t, 1);
     element_getter{}(_data, 2, 3) = element_getter{}(t, 2);
     element_getter{}(_data, 3, 3) = 1.f;
-
-    if (get_inverse) {
-      _data_inv = matrix_inversion{}(_data);
-    }
   }
 
   /// Constructor with arguments: t, z, x
@@ -109,9 +104,8 @@ struct transform3 {
   ///
   /// @note y will be constructed by cross product
   DETRAY_HOST_DEVICE
-  transform3(const vector3 &t, const vector3 &z, const vector3 &x,
-             bool get_inverse = true)
-      : transform3(t, x, cross(z, x), z, get_inverse) {}
+  transform3(const vector3 &t, const vector3 &z, const vector3 &x)
+      : transform3(t, x, cross(z, x), z) {}
 
   /// Constructor with arguments: translation
   ///
@@ -134,46 +128,13 @@ struct transform3 {
     element_getter{}(_data, 1, 3) = element_getter{}(t, 1);
     element_getter{}(_data, 2, 3) = element_getter{}(t, 2);
     element_getter{}(_data, 3, 3) = 1.f;
-
-    _data_inv = matrix_inversion{}(_data);
   }
 
   /// Constructor with arguments: matrix
   ///
   /// @param m is the full 4x4 matrix
   DETRAY_HOST_DEVICE
-  explicit transform3(const matrix44 &m) : _data{m} {
-    _data_inv = matrix_inversion{}(_data);
-  }
-
-  /// Constructor with arguments: matrix and its inverse
-  ///
-  /// @param m is the full 4x4 matrix
-  /// @param m_inv is the inverse to m
-  DETRAY_HOST_DEVICE
-  transform3(const matrix44 &m, const matrix44 &m_inv)
-      : _data{m}, _data_inv{m_inv} {
-    // The assertion will not hold for (casts to) int
-    if constexpr (std::floating_point<scalar_type>) {
-      // The concrete type of matrix mult is not available at this point
-      auto prod = generic::math::zero<matrix44>();
-
-      constexpr element_getter elem{};
-
-      for (index_t i = 0; i < 4; ++i) {
-        for (index_t j = 0; j < 4; ++j) {
-          for (index_t k = 0; k < 4; ++k) {
-            elem(prod, k, j) += elem(m, k, i) * elem(m_inv, i, j);
-          }
-        }
-      }
-
-      [[maybe_unused]] constexpr auto epsilon{
-          std::numeric_limits<scalar_type>::epsilon()};
-      assert(algebra::approx_equal(prod, generic::math::identity<matrix44>(),
-                                   16.f * epsilon, 1e-6f));
-    }
-  }
+  explicit transform3(const matrix44 &m) : _data{m} {}
 
   /// Constructor with arguments: matrix as array of scalar
   ///
@@ -196,8 +157,6 @@ struct transform3 {
     element_getter{}(_data, 1, 3) = ma[7];
     element_getter{}(_data, 2, 3) = ma[11];
     element_getter{}(_data, 3, 3) = 1.f;
-
-    _data_inv = matrix_inversion{}(_data);
   }
 
   /// Equality operator
@@ -273,6 +232,38 @@ struct transform3 {
     return ret;
   }
 
+  /// Rotate a vector into / from a frame, but use the inverse of m
+  ///
+  /// @param m is the inverse of the rotation matrix
+  /// @param v is the vector to be rotated
+  DETRAY_HOST_DEVICE
+  static constexpr vector3 rotate_inv(const matrix44 &m, const vector3 &v) {
+    vector3 ret{0.f, 0.f, 0.f};
+
+    element_getter{}(ret, 0) +=
+        element_getter{}(m, 0, 0) * element_getter{}(v, 0);
+    element_getter{}(ret, 1) +=
+        element_getter{}(m, 0, 1) * element_getter{}(v, 0);
+    element_getter{}(ret, 2) +=
+        element_getter{}(m, 0, 2) * element_getter{}(v, 0);
+
+    element_getter{}(ret, 0) +=
+        element_getter{}(m, 1, 0) * element_getter{}(v, 1);
+    element_getter{}(ret, 1) +=
+        element_getter{}(m, 1, 1) * element_getter{}(v, 1);
+    element_getter{}(ret, 2) +=
+        element_getter{}(m, 1, 2) * element_getter{}(v, 1);
+
+    element_getter{}(ret, 0) +=
+        element_getter{}(m, 2, 0) * element_getter{}(v, 2);
+    element_getter{}(ret, 1) +=
+        element_getter{}(m, 2, 1) * element_getter{}(v, 2);
+    element_getter{}(ret, 2) +=
+        element_getter{}(m, 2, 2) * element_getter{}(v, 2);
+
+    return ret;
+  }
+
   /// This method retrieves the rotation of a transform
   DETRAY_HOST_DEVICE
   auto constexpr rotation() const {
@@ -313,7 +304,39 @@ struct transform3 {
 
   /// This method retrieves the 4x4 matrix of an inverse transform
   DETRAY_HOST_DEVICE
-  constexpr const matrix44 &matrix_inverse() const { return _data_inv; }
+  constexpr const matrix44 matrix_inverse() const {
+    matrix44 ret;
+
+    element_getter{}(ret, 0, 0) = element_getter{}(_data, 0, 0);
+    element_getter{}(ret, 0, 1) = element_getter{}(_data, 1, 0);
+    element_getter{}(ret, 0, 2) = element_getter{}(_data, 2, 0);
+    element_getter{}(ret, 1, 0) = element_getter{}(_data, 0, 1);
+    element_getter{}(ret, 1, 1) = element_getter{}(_data, 1, 1);
+    element_getter{}(ret, 1, 2) = element_getter{}(_data, 2, 1);
+    element_getter{}(ret, 2, 0) = element_getter{}(_data, 0, 2);
+    element_getter{}(ret, 2, 1) = element_getter{}(_data, 1, 2);
+    element_getter{}(ret, 2, 2) = element_getter{}(_data, 2, 2);
+
+    element_getter{}(ret, 0, 3) =
+        -(element_getter{}(_data, 0, 0) * element_getter{}(_data, 0, 3) +
+          element_getter{}(_data, 1, 0) * element_getter{}(_data, 1, 3) +
+          element_getter{}(_data, 2, 0) * element_getter{}(_data, 2, 3));
+    element_getter{}(ret, 1, 3) =
+        -(element_getter{}(_data, 0, 1) * element_getter{}(_data, 0, 3) +
+          element_getter{}(_data, 1, 1) * element_getter{}(_data, 1, 3) +
+          element_getter{}(_data, 2, 1) * element_getter{}(_data, 2, 3));
+    element_getter{}(ret, 2, 3) =
+        -(element_getter{}(_data, 0, 2) * element_getter{}(_data, 0, 3) +
+          element_getter{}(_data, 1, 2) * element_getter{}(_data, 1, 3) +
+          element_getter{}(_data, 2, 2) * element_getter{}(_data, 2, 3));
+
+    element_getter{}(ret, 3, 0) = 0;
+    element_getter{}(ret, 3, 1) = 0;
+    element_getter{}(ret, 3, 2) = 0;
+    element_getter{}(ret, 3, 3) = 1;
+
+    return ret;
+  }
 
   /// This method transform from a point from the local 2D cartesian frame to
   /// the global 3D cartesian frame
@@ -338,11 +361,10 @@ struct transform3 {
   /// This method transform from a vector from the global 3D cartesian frame
   /// into the local 3D cartesian frame
   DETRAY_HOST_DEVICE constexpr point3 point_to_local(const point3 &v) const {
-    const vector3 rg = rotate(_data_inv, v);
-
-    return {element_getter{}(rg, 0) + element_getter{}(_data_inv, 0, 3),
-            element_getter{}(rg, 1) + element_getter{}(_data_inv, 1, 3),
-            element_getter{}(rg, 2) + element_getter{}(_data_inv, 2, 3)};
+    const vector3 d{element_getter{}(v, 0) - element_getter{}(_data, 0, 3),
+                    element_getter{}(v, 1) - element_getter{}(_data, 1, 3),
+                    element_getter{}(v, 2) - element_getter{}(_data, 2, 3)};
+    return rotate_inv(_data, d);
   }
 
   /// This method transform from a vector from the local 2D cartesian frame to
@@ -362,7 +384,7 @@ struct transform3 {
   /// This method transform from a vector from the global 3D cartesian frame
   /// into the local 3D cartesian frame
   DETRAY_HOST_DEVICE constexpr vector3 vector_to_local(const vector3 &v) const {
-    return rotate(_data_inv, v);
+    return rotate_inv(_data, v);
   }
 
 };  // struct transform3
