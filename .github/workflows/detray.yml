@@ -49,7 +49,7 @@ permissions:
 # Compiler caches use CERN S3 snapshots; only main publishes.
 env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 500M
+  CCACHE_MAXSIZE: 2G
 
 # All the different build/test jobs.
 jobs:
@@ -214,7 +214,7 @@ jobs:
 
     # Set the path to the test data files
     env:
-      CCACHE_MAXSIZE: ${{ matrix.BUILD_TYPE == 'Debug' && '1G' || '500M' }}
+      CCACHE_MAXSIZE: ${{ matrix.BUILD_TYPE == 'Debug' && '4G' || '2G' }}
       DETRAY_DATA_DIRECTORY: ${{ github.workspace }}/Detray/data/
       DETRAY_BFIELD_FILE: ${{ github.workspace }}/Detray/data/odd-bfield_v0_9_0.cvf
 
