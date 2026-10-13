@@ -17,7 +17,7 @@ namespace Acts::Experimental {
 
 std::optional<FreeVector> freeParametersFromGbtsSeedFit(
     const GbtsSeedFit& fit, const Vector3& fieldPosition,
-    const MagneticFieldProvider& magneticField,
+    const Vector2& fieldDirection, const MagneticFieldProvider& magneticField,
     MagneticFieldProvider::Cache& fieldCache) {
   if (!fit.valid) {
     return std::nullopt;
@@ -28,22 +28,21 @@ std::optional<FreeVector> freeParametersFromGbtsSeedFit(
   if (!field.ok()) {
     return std::nullopt;
   }
-  const double r = fastHypot(fieldPosition.x(), fieldPosition.y());
-  const double br =
-      r > 0 ? field->head<2>().dot(fieldPosition.head<2>()) / r : 0.;
-  const double bendingField = field->z() - fit.cotTheta * br;
+  const double transverseField = field->head<2>().dot(fieldDirection);
+  const double bendingField = field->z() - fit.cotTheta * transverseField;
   if (bendingField == 0) {
     return std::nullopt;
   }
 
-  const double sinTheta = 1. / fastHypot(1., fit.cotTheta);
-  FreeVector free = FreeVector::Zero();
-  free.segment<3>(eFreePos0) = fit.position;
-  free[eFreeDir0] = std::cos(fit.phi) * sinTheta;
-  free[eFreeDir1] = std::sin(fit.phi) * sinTheta;
-  free[eFreeDir2] = fit.cotTheta * sinTheta;
-  free[eFreeQOverP] = fit.curvature / bendingField * sinTheta;
-  return free;
+  const Vector3 direction =
+      Vector3(std::cos(fit.phi), std::sin(fit.phi), fit.cotTheta).normalized();
+  const double qOverPt = fit.curvature / bendingField;
+
+  FreeVector params = FreeVector::Zero();
+  params.segment<3>(eFreePos0) = fit.position;
+  params.segment<3>(eFreeDir0) = direction;
+  params[eFreeQOverP] = qOverPt / fastHypot(1., fit.cotTheta);
+  return params;
 }
 
 }  // namespace Acts::Experimental

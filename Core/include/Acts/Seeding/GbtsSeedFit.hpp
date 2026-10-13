@@ -33,19 +33,17 @@ struct GbtsSeedFit final {
 /// Estimate free track parameters from the fit of the GBTS tracking filter.
 ///
 /// The momentum uses the field bending the seed in the transverse plane,
-/// Bz - cot(theta) * Br, at the given position. The fitted curvature holds for
-/// the seed as a whole, so a position inside the seed, such as halfway between
-/// its innermost and outermost space points, fits better than either end where
-/// the field varies along it.
+/// Bz - cot(theta) * Bt, with Bt the transverse field along the seed.
 ///
 /// @param fit Fit of the tracking filter
 /// @param fieldPosition Position at which the field is evaluated
+/// @param fieldDirection Unit transverse direction of the seed there
 /// @param magneticField Magnetic field
 /// @param fieldCache Magnetic field cache
 /// @return Free track parameters, or nothing without a fit or a field
 std::optional<FreeVector> freeParametersFromGbtsSeedFit(
     const GbtsSeedFit& fit, const Vector3& fieldPosition,
-    const MagneticFieldProvider& magneticField,
+    const Vector2& fieldDirection, const MagneticFieldProvider& magneticField,
     MagneticFieldProvider::Cache& fieldCache);
 
 }  // namespace Acts::Experimental
