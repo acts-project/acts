@@ -15,7 +15,9 @@ by sourcing `this_acts.sh`. Usage:
           --outputFile geant4_material_tracks.root
 
 Gun settings can be overridden on the command line, e.g. `--gun.etaMin`,
-`--gun.etaMax`, `--gun.multiplicity` or `--random.seed`. Multi-threaded
+`--gun.etaMax`, `--gun.multiplicity` or `--random.seed`. The recording can be
+limited to a cylinder, e.g. at the calorimeter face, with
+`--outputConfig.recordingMaxR` and `--outputConfig.recordingMaxZ` in mm. Multi-threaded
 running with `--numberOfThreads`, available from DD4hep 1.38, writes a single
 output file.
 """
@@ -37,10 +39,19 @@ SIM.gun.momentumMin = 1 * GeV
 SIM.gun.momentumMax = 1 * GeV
 SIM.gun.position = (0.0, 0.0, 0.0)
 
+# Limit the recording to a cylinder around the beam axis, e.g. to stop at the
+# calorimeter face, as radius and half length in mm. Not positive means no
+# limit.
+SIM.outputConfig.recordingMaxR = -1.0
+SIM.outputConfig.recordingMaxZ = -1.0
+
 
 def materialRecordingOutput(dd4hepSimulation):
     """Record material tracks to the output file, instead of the simulation output"""
+    # ddsim runs the steering file such that functions only see their own
+    # imports
     from DDG4 import EventAction, Kernel, SteppingAction
+    from g4units import mm
 
     kernel = Kernel().worker()
 
@@ -48,6 +59,8 @@ def materialRecordingOutput(dd4hepSimulation):
     recorder = SteppingAction(kernel, "ActsMaterialRecorder/MaterialRecorder")
     recorder.ExcludeMaterials = ["Air", "Vacuum"]
     recorder.RecordElementFractions = False
+    recorder.MaxR = float(dd4hepSimulation.outputConfig.recordingMaxR) * mm
+    recorder.MaxZ = float(dd4hepSimulation.outputConfig.recordingMaxZ) * mm
     kernel.steppingAction().add(recorder)
 
     # One writer, shared by all worker threads in multi-threaded running. The

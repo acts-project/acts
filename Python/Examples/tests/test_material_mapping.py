@@ -41,8 +41,12 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
 
 @pytest.mark.slow
 @pytest.mark.odd
-@pytest.mark.parametrize("threads", [1, 2])
-def test_material_recording_ddsim(tmp_path, threads):
+@pytest.mark.parametrize(
+    "threads,maxR",
+    [(1, None), (2, None), (1, 500.0)],
+    ids=["st", "mt", "region"],
+)
+def test_material_recording_ddsim(tmp_path, threads, maxR):
     if shutil.which("ddsim") is None:
         pytest.skip("ddsim not available")
     # ddsim finds the DDG4 actions through the .components file of their
@@ -92,6 +96,8 @@ def test_material_recording_ddsim(tmp_path, threads):
     ]
     if threads > 1:
         cmd += ["--numberOfThreads", str(threads)]
+    if maxR is not None:
+        cmd += ["--outputConfig.recordingMaxR", str(maxR)]
     result = subprocess.run(
         cmd, cwd=tmp_path, capture_output=True, text=True, check=False
     )
@@ -108,6 +114,13 @@ def test_material_recording_ddsim(tmp_path, threads):
     data = rdf.AsNumpy(["event_id", "t_X0"])
     assert set(data["event_id"]) == set(range(events))
     assert (data["t_X0"] > 0).all()
+
+    if maxR is not None:
+        # No recorded step ends outside the recording region
+        endR = rdf.Define(
+            "endR", "ROOT::VecOps::sqrt(mat_ex * mat_ex + mat_ey * mat_ey)"
+        ).AsNumpy(["endR"])["endR"]
+        assert max(r.max() for r in endR if len(r) > 0) <= maxR * (1 + 1e-6)
 
     # Read back with the reader the material mapping uses
     s = Sequencer(numThreads=1)
