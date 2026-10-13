@@ -45,6 +45,8 @@
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 #include "ActsPlugins/Json/detail/JsonIo.hpp"
 
+#include <array>
+#include <cstdint>
 #include <filesystem>
 #include <stdexcept>
 #include <unordered_set>
@@ -295,6 +297,15 @@ std::unique_ptr<Acts::INavigationPolicy> decodeSurfaceArrayNavigationPolicy(
   if (encoded.contains("envelope")) {
     cfg.envelope = encoded.at("envelope").get<Acts::ExtentEnvelope>();
   }
+  if (encoded.contains("neighborWindow")) {
+    const auto& jWindow = encoded.at("neighborWindow");
+    cfg.neighborWindow = Acts::SurfaceArray::NeighborWindow{
+        jWindow.at("min").get<std::array<std::uint8_t, 2>>(),
+        jWindow.at("max").get<std::array<std::uint8_t, 2>>()};
+  }
+  if (encoded.contains("overfill")) {
+    cfg.overfill = encoded.at("overfill").get<std::uint8_t>();
+  }
 
   return std::make_unique<Acts::SurfaceArrayNavigationPolicy>(gctx, volume,
                                                               logger, cfg);
@@ -338,6 +349,11 @@ nlohmann::json encodeSurfaceArrayNavigationPolicy(
   jPolicy["bins0"] = cfg.bins.first;
   jPolicy["bins1"] = cfg.bins.second;
   jPolicy["envelope"] = cfg.envelope;
+  if (cfg.neighborWindow.has_value()) {
+    jPolicy["neighborWindow"] = {{"min", cfg.neighborWindow->min},
+                                 {"max", cfg.neighborWindow->max}};
+  }
+  jPolicy["overfill"] = cfg.overfill;
   return jPolicy;
 }
 

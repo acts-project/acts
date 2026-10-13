@@ -15,7 +15,7 @@ on:
 
 env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 500M
+  CCACHE_MAXSIZE: 2G
 
 permissions: {}
 

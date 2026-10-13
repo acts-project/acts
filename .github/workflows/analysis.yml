@@ -36,7 +36,7 @@ env:
   # skips Examples plus the vendored Detray/Traccc trees. Watch `ccache -s`:
   # if the cache runs at ~100% of this it is evicting mid-build and the hit
   # rate collapses, which is what a too-small ceiling looks like.
-  CCACHE_MAXSIZE: 1G
+  CCACHE_MAXSIZE: 4G
   ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
 # NOTE this only builds core unittests to reduce the output size. if we
