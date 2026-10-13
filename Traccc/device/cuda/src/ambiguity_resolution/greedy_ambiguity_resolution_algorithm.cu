@@ -38,11 +38,18 @@
 #pragma GCC diagnostic pop
 #include <thrust/fill.h>
 #include <thrust/functional.h>
-#include <thrust/iterator/constant_iterator.h>
 #include <thrust/reduce.h>
 #include <thrust/sort.h>
 #include <thrust/transform.h>
 #include <thrust/unique.h>
+#include <thrust/version.h>
+
+// CCCL 3.4 deprecates Thrust's constant iterator; retain the CCCL 2.7 fallback.
+#if THRUST_VERSION >= 300400
+#include <cuda/iterator>
+#else
+#include <thrust/iterator/constant_iterator.h>
+#endif
 namespace traccc::cuda {
 
 struct identity_op {
@@ -237,9 +244,13 @@ greedy_ambiguity_resolution_algorithm::operator()(
   m_copy.get().setup(unique_meas_counts_buffer)->ignore();
 
   // Counting can be done using reduce_by_key and constant iterator
+#if THRUST_VERSION >= 300400
+  auto ones = ::cuda::make_constant_iterator(1);
+#else
+  auto ones = thrust::make_constant_iterator(1);
+#endif
   thrust::reduce_by_key(thrust_policy, flat_meas_ids_buffer.ptr(),
-                        flat_meas_ids_buffer.ptr() + n_cands_total,
-                        thrust::make_constant_iterator(1),
+                        flat_meas_ids_buffer.ptr() + n_cands_total, ones,
                         unique_meas_buffer.ptr(),
                         unique_meas_counts_buffer.ptr());
 

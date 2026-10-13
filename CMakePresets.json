@@ -198,6 +198,7 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
+                "CMAKE_CUDA_STANDARD": "23",
                 "CMAKE_CUDA_ARCHITECTURES": "75;86",
                 "TORCH_CUDA_ARCH_LIST": "7.5;8.6",
                 "ACTS_FORCE_ASSERTIONS": "ON",
