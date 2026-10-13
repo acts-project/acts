@@ -15,6 +15,13 @@
 // System include(s).
 #include <stdexcept>
 
+namespace {
+template <typename T>
+auto get_sized_view(unsigned int size, vecmem::data::vector_buffer<T>& buff) {
+  return vecmem::data::vector_view<T>(size, buff.ptr());
+}
+}  // namespace
+
 namespace traccc::device {
 
 struct combinatorial_kalman_filter_algorithm::data {
@@ -95,8 +102,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
   }
 
   // Prepare input parameters with seeds
-  bound_track_parameters_collection_types::buffer in_params_buffer(n_seeds,
-                                                                   mr().main);
+  unsigned int in_params_buffer_size = n_seeds;
+  bound_track_parameters_collection_types::buffer in_params_buffer(
+      in_params_buffer_size, mr().main);
   copy().setup(in_params_buffer)->ignore();
   copy()(seeds, in_params_buffer, vecmem::copy::type::device_to_device)
       ->ignore();
@@ -195,7 +203,8 @@ auto combinatorial_kalman_filter_algorithm::operator()(
     progressive_kalman_filter_kernel(
         n_seeds, cfg, det, bfield,
         {
-            .seeds_view = in_params_buffer,
+            .seeds_view =
+                get_sized_view(in_params_buffer_size, in_params_buffer),
             .measurements_view = measurements_view,
             .measurement_ranges_view = meas_ranges_buffer,
             .track_stats_view = track_stats_buffer,
@@ -208,6 +217,11 @@ auto combinatorial_kalman_filter_algorithm::operator()(
 
     // Finish before releasing the progressive filter scratch buffers.
     synchronize();
+
+    // Neither the seed copy nor the measurement ranges are needed by the
+    // fitting below.
+    in_params_buffer = {};
+    meas_ranges_buffer = {};
   }
 
   /*****************************************************************
@@ -215,10 +229,29 @@ auto combinatorial_kalman_filter_algorithm::operator()(
    *****************************************************************/
 
   else {
-    vecmem::data::vector_buffer<unsigned int> param_liveness_buffer =
-        vecmem::data::vector_buffer<unsigned int>(n_seeds, mr().main);
-    copy().setup(param_liveness_buffer)->ignore();
-    copy().memset(param_liveness_buffer, 1)->ignore();
+    vecmem::data::vector_buffer<unsigned int> in_params_liveness_buffer =
+        vecmem::data::vector_buffer<unsigned int>(in_params_buffer_size,
+                                                  mr().main);
+    copy().setup(in_params_liveness_buffer)->ignore();
+    copy().memset(in_params_liveness_buffer, 1)->ignore();
+
+    // These buffers are (re)allocated inside the step loop as needed and
+    // released explicitly once the loop has finished.
+    unsigned int updated_params_buffer_size = 0;
+    bound_track_parameters_collection_types::buffer updated_params_buffer;
+    vecmem::data::vector_buffer<unsigned int> updated_params_liveness_buffer;
+    unsigned int find_tracks_out_params_buffer_size = 0;
+    vecmem::data::vector_buffer<unsigned int> out_params_per_in_param_buffer;
+    vecmem::data::vector_buffer<unsigned int> out_params_index_buffer;
+    unsigned int find_tracks_tmp_links_buffer_size = 0;
+    vecmem::data::vector_buffer<candidate_link> tmp_links_buffer;
+    bound_track_parameters_collection_types::buffer tmp_params_buffer;
+    unsigned int param_ids_buffer_size = 0;
+    vecmem::data::vector_buffer<unsigned int> param_ids_buffer;
+    unsigned int link_last_measurement_buffer_size = 0;
+    vecmem::data::vector_buffer<unsigned int> link_last_measurement_buffer;
+    unsigned int keys_buffer_size = 0;
+    vecmem::data::vector_buffer<device::sort_key> keys_buffer;
 
     // Number of tracks per seed
     vecmem::data::vector_buffer<unsigned int> n_tracks_per_seed_buffer(
@@ -244,6 +277,7 @@ auto combinatorial_kalman_filter_algorithm::operator()(
     copy().setup(links_buffer)->ignore();
 
     // Buffers needed for MBF smoother (if enabled).
+    unsigned int tmp_jacobian_buffer_size = 0;
     vecmem::data::vector_buffer<bound_matrix<algebra_t>> jacobian_buffer,
         tmp_jacobian_buffer;
     bound_track_parameters_collection_types::buffer
@@ -288,12 +322,18 @@ auto combinatorial_kalman_filter_algorithm::operator()(
       const unsigned int n_max_candidates =
           n_in_params * cfg.max_num_branches_per_surface;
 
-      bound_track_parameters_collection_types::buffer updated_params_buffer(
-          n_max_candidates, mr().main);
-      copy().setup(updated_params_buffer)->ignore();
-      vecmem::data::vector_buffer<unsigned int> updated_liveness_buffer(
-          n_max_candidates, mr().main);
-      copy().setup(updated_liveness_buffer)->ignore();
+      // Allocate new memory for the updated buffers only if the existing
+      // buffers are not large enough.
+      if (n_max_candidates > updated_params_buffer_size) {
+        updated_params_buffer_size = n_max_candidates;
+        updated_params_buffer = bound_track_parameters_collection_types::buffer{
+            updated_params_buffer_size, mr().main};
+        copy().setup(updated_params_buffer)->ignore();
+        updated_params_liveness_buffer =
+            vecmem::data::vector_buffer<unsigned int>{
+                updated_params_buffer_size, mr().main};
+        copy().setup(updated_params_liveness_buffer)->ignore();
+      }
 
       // Reset the number of tracks per seed
       copy().memset(n_tracks_per_seed_buffer, 0)->ignore();
@@ -350,41 +390,66 @@ auto combinatorial_kalman_filter_algorithm::operator()(
       }
 
       {
-        vecmem::data::vector_buffer<unsigned int>
-            out_params_per_in_param_buffer(n_in_params, mr().main);
-        copy().setup(out_params_per_in_param_buffer)->ignore();
-        vecmem::data::vector_buffer<unsigned int> out_params_index_buffer(
-            n_in_params, mr().main);
-        copy().setup(out_params_index_buffer)->ignore();
-        vecmem::data::vector_buffer<candidate_link> tmp_links_buffer(
-            n_max_candidates, mr().main);
-        copy().setup(tmp_links_buffer)->ignore();
-        bound_track_parameters_collection_types::buffer tmp_params_buffer(
-            n_max_candidates, mr().main);
-        copy().setup(tmp_params_buffer)->ignore();
+        // Reallocate these vectors only if the existing buffers are not
+        // large enough to be reused.
+        if (n_in_params > find_tracks_out_params_buffer_size) {
+          find_tracks_out_params_buffer_size = n_in_params;
+          out_params_per_in_param_buffer =
+              vecmem::data::vector_buffer<unsigned int>{
+                  find_tracks_out_params_buffer_size, mr().main};
+          copy().setup(out_params_per_in_param_buffer)->ignore();
+          out_params_index_buffer = vecmem::data::vector_buffer<unsigned int>{
+              find_tracks_out_params_buffer_size, mr().main};
+          copy().setup(out_params_index_buffer)->ignore();
+        }
+
+        if (n_max_candidates > find_tracks_tmp_links_buffer_size) {
+          find_tracks_tmp_links_buffer_size = n_max_candidates;
+          tmp_links_buffer = vecmem::data::vector_buffer<candidate_link>{
+              find_tracks_tmp_links_buffer_size, mr().main};
+          copy().setup(tmp_links_buffer)->ignore();
+          tmp_params_buffer = bound_track_parameters_collection_types::buffer{
+              find_tracks_tmp_links_buffer_size, mr().main};
+          copy().setup(tmp_params_buffer)->ignore();
+        }
+
+        auto in_params_view = get_sized_view(n_in_params, in_params_buffer);
+        auto in_params_liveness_view =
+            get_sized_view(n_in_params, in_params_liveness_buffer);
+        auto updated_params_view =
+            get_sized_view(n_max_candidates, updated_params_buffer);
+        auto updated_params_liveness_view =
+            get_sized_view(n_max_candidates, updated_params_liveness_buffer);
+        auto out_params_per_in_param_view =
+            get_sized_view(n_in_params, out_params_per_in_param_buffer);
+        auto out_params_index_view =
+            get_sized_view(n_in_params, out_params_index_buffer);
+        auto tmp_params_view =
+            get_sized_view(n_max_candidates, tmp_params_buffer);
+        auto tmp_links_view =
+            get_sized_view(n_max_candidates, tmp_links_buffer);
 
         // Launch the track finding kernel.
         find_tracks_kernel(
             n_in_params, cfg, det,
             {.measurements_view = measurements_view,
-             .in_params_view = in_params_buffer,
-             .in_params_liveness_view = param_liveness_buffer,
+             .in_params_view = in_params_view,
+             .in_params_liveness_view = in_params_liveness_view,
              .n_in_params = n_in_params,
              .measurement_ranges_view = meas_ranges_buffer,
              .links_view = links_buffer,
              .prev_links_idx = (step == 0 ? 0 : step_to_link_idx_map[step - 1]),
              .step = step,
-             .out_params_per_in_param_view = out_params_per_in_param_buffer,
+             .out_params_per_in_param_view = out_params_per_in_param_view,
              .tips_view = tips_buffer,
              .tip_lengths_view = tip_length_buffer,
              .n_tracks_per_seed_view = n_tracks_per_seed_buffer,
-             .tmp_params_view = tmp_params_buffer,
-             .tmp_links_view = tmp_links_buffer});
+             .tmp_params_view = tmp_params_view,
+             .tmp_links_view = tmp_links_view});
 
         // Launch the track condensing kernel.
         condense_tracks_kernel(
-            n_in_params, out_params_per_in_param_buffer,
-            out_params_index_buffer,
+            n_in_params, out_params_per_in_param_view, out_params_index_view,
             {.n_in_params = n_in_params,
              .step = step,
              .curr_links_idx = step_to_link_idx_map[step],
@@ -394,21 +459,24 @@ auto combinatorial_kalman_filter_algorithm::operator()(
              .max_track_candidates_per_track =
                  cfg.max_track_candidates_per_track,
              .links_view = links_buffer,
-             .in_params_view = in_params_buffer,
-             .in_tmp_params_view = tmp_params_buffer,
-             .in_tmp_links_view = tmp_links_buffer,
-             .in_params_index_view = out_params_index_buffer,
-             .out_params_view = updated_params_buffer,
-             .out_params_liveness_view = updated_liveness_buffer,
+             .in_params_view = in_params_view,
+             .in_tmp_params_view = tmp_params_view,
+             .in_tmp_links_view = tmp_links_view,
+             .in_params_index_view = out_params_index_view,
+             .out_params_view = updated_params_view,
+             .out_params_liveness_view = updated_params_liveness_view,
              .tips_view = tips_buffer,
              .tip_lengths_view = tip_length_buffer,
              .jacobian_view = jacobian_buffer,
-             .tmp_jacobian_view = tmp_jacobian_buffer,
+             .tmp_jacobian_view = get_sized_view(
+                 std::min(n_in_params, tmp_jacobian_buffer.capacity()),
+                 tmp_jacobian_buffer),
              .link_predicted_parameter_view = link_predicted_parameter_buffer,
              .link_filtered_parameter_view = link_filtered_parameter_buffer});
 
         std::swap(in_params_buffer, updated_params_buffer);
-        std::swap(param_liveness_buffer, updated_liveness_buffer);
+        std::swap(in_params_liveness_buffer, updated_params_liveness_buffer);
+        std::swap(in_params_buffer_size, updated_params_buffer_size);
 
         if (mr().host) {
           vecmem::async_size size = copy().get_size(links_buffer, *(mr().host));
@@ -422,10 +490,19 @@ auto combinatorial_kalman_filter_algorithm::operator()(
             step_to_link_idx_map[step + 1] - step_to_link_idx_map[step];
       }
 
+      auto params_view = get_sized_view(n_candidates, in_params_buffer);
+      auto params_liveness_view =
+          get_sized_view(n_candidates, in_params_liveness_buffer);
+
       // Set up the buffer used in the next few steps
-      vecmem::data::vector_buffer<unsigned int> param_ids_buffer =
-          vecmem::data::vector_buffer<unsigned int>(n_candidates, mr().main);
-      copy().setup(param_ids_buffer)->ignore();
+      if (n_candidates > param_ids_buffer_size) {
+        param_ids_buffer_size = n_candidates;
+        param_ids_buffer = vecmem::data::vector_buffer<unsigned int>{
+            param_ids_buffer_size, mr().main};
+        copy().setup(param_ids_buffer)->ignore();
+      }
+
+      auto param_ids_view = get_sized_view(n_candidates, param_ids_buffer);
 
       /*
        * On later steps, we can duplicate removal which will attempt to
@@ -434,9 +511,16 @@ auto combinatorial_kalman_filter_algorithm::operator()(
        */
       if ((n_candidates > 0) &&
           (step >= cfg.duplicate_removal_minimum_length)) {
-        vecmem::data::vector_buffer<unsigned int> link_last_measurement_buffer(
-            n_candidates, mr().main);
-        copy().setup(link_last_measurement_buffer)->ignore();
+        if (n_candidates > link_last_measurement_buffer_size) {
+          link_last_measurement_buffer_size = n_candidates;
+          link_last_measurement_buffer =
+              vecmem::data::vector_buffer<unsigned int>{
+                  link_last_measurement_buffer_size, mr().main};
+          copy().setup(link_last_measurement_buffer)->ignore();
+        }
+
+        auto link_last_measurement_view =
+            get_sized_view(n_candidates, link_last_measurement_buffer);
 
         /*
          * First, we sort the tracks by the index of their final
@@ -445,15 +529,15 @@ auto combinatorial_kalman_filter_algorithm::operator()(
         fill_finding_duplicate_removal_sort_keys_kernel(
             n_candidates,
             {.links_view = links_buffer,
-             .param_liveness_view = param_liveness_buffer,
-             .link_last_measurement_view = link_last_measurement_buffer,
-             .param_ids_view = param_ids_buffer,
+             .param_liveness_view = params_liveness_view,
+             .link_last_measurement_view = link_last_measurement_view,
+             .param_ids_view = param_ids_view,
              .n_links = n_candidates,
              .curr_links_idx = step_to_link_idx_map[step],
              .n_measurements = n_measurements});
 
-        sort_param_ids_by_last_measurement(link_last_measurement_buffer,
-                                           param_ids_buffer);
+        sort_param_ids_by_last_measurement(link_last_measurement_view,
+                                           param_ids_view);
 
         /*
          * Then, we run the actual duplicate removal kernel.
@@ -461,16 +545,13 @@ auto combinatorial_kalman_filter_algorithm::operator()(
         remove_duplicates_kernel(
             n_candidates, cfg,
             {.links_view = links_buffer,
-             .link_last_measurement_view = link_last_measurement_buffer,
-             .param_ids_view = param_ids_buffer,
-             .param_liveness_view = param_liveness_buffer,
+             .link_last_measurement_view = link_last_measurement_view,
+             .param_ids_view = param_ids_view,
+             .param_liveness_view = params_liveness_view,
              .n_links = n_candidates,
              .curr_links_idx = step_to_link_idx_map[step],
              .n_measurements = n_measurements,
              .step = step});
-
-        // Duplicate removal still reads the local last-measurement buffer.
-        synchronize();
       }
 
       // If no more CKF step is expected, the tips and links are
@@ -484,50 +565,73 @@ auto combinatorial_kalman_filter_algorithm::operator()(
          * Get key and value for parameter sorting
          *****************************************************************/
         {
-          vecmem::data::vector_buffer<device::sort_key> keys_buffer(
-              n_candidates, mr().main);
-          copy().setup(keys_buffer)->ignore();
+          if (n_candidates > keys_buffer_size) {
+            keys_buffer_size = n_candidates;
+            keys_buffer = vecmem::data::vector_buffer<device::sort_key>{
+                keys_buffer_size, mr().main};
+            copy().setup(keys_buffer)->ignore();
+          }
+
+          auto keys_view = get_sized_view(n_candidates, keys_buffer);
 
           fill_finding_propagation_sort_keys_kernel(
-              n_candidates, {.params_view = in_params_buffer,
-                             .param_liveness_view = param_liveness_buffer,
-                             .keys_view = keys_buffer,
-                             .ids_view = param_ids_buffer});
+              n_candidates, {.params_view = params_view,
+                             .param_liveness_view = params_liveness_view,
+                             .keys_view = keys_view,
+                             .ids_view = param_ids_view});
 
           // Sort the key and values
-          sort_param_ids_by_keys(keys_buffer, param_ids_buffer);
-          // The asynchronous sort still accesses the local keys.
-          synchronize();
+          sort_param_ids_by_keys(keys_view, param_ids_view);
         }
 
         /*****************************************************************
          * Propagate to the next surface
          *****************************************************************/
-        if (cfg.run_smoother == smoother_type::e_mbf) {
+        if (cfg.run_smoother == smoother_type::e_mbf &&
+            n_candidates > tmp_jacobian_buffer_size) {
+          tmp_jacobian_buffer_size = n_candidates;
           tmp_jacobian_buffer = {n_candidates, mr().main};
         }
 
         propagate_to_next_surface_kernel(
             n_candidates, cfg, det, device_detector, bfield,
-            {.params_view = in_params_buffer,
-             .params_liveness_view = param_liveness_buffer,
-             .param_ids_view = param_ids_buffer,
+            {.params_view = params_view,
+             .params_liveness_view = params_liveness_view,
+             .param_ids_view = param_ids_view,
              .links_view = links_buffer,
              .prev_links_idx = step_to_link_idx_map[step],
              .step = step,
              .n_in_params = n_candidates,
              .tips_view = tips_buffer,
              .tip_lengths_view = tip_length_buffer,
-             .tmp_jacobian_view = tmp_jacobian_buffer});
-
-        // Propagation must finish before this iteration releases param_ids.
-        synchronize();
+             .tmp_jacobian_view =
+                 get_sized_view(n_candidates, tmp_jacobian_buffer)});
       }
 
       n_in_params = n_candidates;
     }
 
+    // Everything enqueued by the step loop must finish before its scratch
+    // memory is released.
+    synchronize();
+
+    // Release the temporary allocation cache and all of the per-step scratch
+    // buffers. Only the links, the tips, the tip lengths and the MBF smoother
+    // buffers are still needed by the track building below.
+    in_params_buffer = {};
+    in_params_liveness_buffer = {};
+    updated_params_buffer = {};
+    updated_params_liveness_buffer = {};
+    out_params_per_in_param_buffer = {};
+    out_params_index_buffer = {};
+    tmp_links_buffer = {};
+    tmp_params_buffer = {};
+    param_ids_buffer = {};
+    link_last_measurement_buffer = {};
+    keys_buffer = {};
     tmp_jacobian_buffer = {};
+    n_tracks_per_seed_buffer = {};
+    meas_ranges_buffer = {};
 
     TRACCC_DEBUG(
         "Final link buffer usage was "
