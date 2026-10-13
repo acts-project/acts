@@ -27,8 +27,15 @@
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
+#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <cmath>
+#include <numbers>
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -889,6 +896,58 @@ BOOST_AUTO_TEST_CASE(FrustumNavigationPolicyTest) {
   frustumPolicy->initializeCandidates(gctx, args, policyState, stream, *logger);
   main.initialize(gctx, {Vector3{1, 1, 1}, Vector3{1, 1, 1}}, *logger);
   BOOST_CHECK_EQUAL(main.candidates().size(), 10);
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceArrayPolicyNeighborWindowTest) {
+  // A barrel layer with 12 modules in phi and 3 modules in z at r = 30 mm
+  auto cylBounds = std::make_shared<CylinderVolumeBounds>(20_mm, 40_mm, 100_mm);
+  auto cylVolume = std::make_shared<TrackingVolume>(
+      Transform3::Identity(), cylBounds, "SurfaceArrayVolume");
+
+  auto moduleBounds = std::make_shared<RectangleBounds>(8_mm, 30_mm);
+  for (int iphi = 0; iphi < 12; ++iphi) {
+    const double phi = (iphi + 0.5) * 2 * std::numbers::pi / 12;
+    // The module normal points along r, the local y axis along z
+    RotationMatrix3 rotation;
+    rotation.col(0) = Vector3{-std::sin(phi), std::cos(phi), 0};
+    rotation.col(1) = Vector3::UnitZ();
+    rotation.col(2) = Vector3{std::cos(phi), std::sin(phi), 0};
+    for (int iz = -1; iz <= 1; ++iz) {
+      Transform3 transform = Transform3::Identity();
+      transform.linear() = rotation;
+      transform.translation() =
+          Vector3{30_mm * std::cos(phi), 30_mm * std::sin(phi), iz * 60_mm};
+      auto surface = Surface::makeShared<PlaneSurface>(transform, moduleBounds);
+      surface->assignIsSensitive(true);
+      cylVolume->addSurface(surface);
+    }
+  }
+
+  using enum SurfaceArrayNavigationPolicy::LayerType;
+
+  // Without a configured window, the policy uses the creator default
+  SurfaceArrayNavigationPolicy defaultPolicy(
+      gctx, *cylVolume, *logger,
+      SurfaceArrayNavigationPolicy::Config{.layerType = Cylinder,
+                                           .bins = {0, 0}});
+  const auto defaultWindow = defaultPolicy.surfaceArray().neighborWindow();
+  BOOST_CHECK_EQUAL(defaultWindow.max[0], 1);
+  BOOST_CHECK_EQUAL(defaultWindow.max[1], 2);
+
+  // A configured window reaches the surface array
+  SurfaceArrayNavigationPolicy windowPolicy(
+      gctx, *cylVolume, *logger,
+      SurfaceArrayNavigationPolicy::Config{
+          .layerType = Cylinder,
+          .bins = {0, 0},
+          .numberOfBinsFactor = 5.0,
+          .neighborWindow = SurfaceArray::NeighborWindow{{0, 1}, {1, 8}},
+          .overfill = 1});
+  const auto window = windowPolicy.surfaceArray().neighborWindow();
+  BOOST_CHECK_EQUAL(window.min[0], 0);
+  BOOST_CHECK_EQUAL(window.min[1], 1);
+  BOOST_CHECK_EQUAL(window.max[0], 1);
+  BOOST_CHECK_EQUAL(window.max[1], 8);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
