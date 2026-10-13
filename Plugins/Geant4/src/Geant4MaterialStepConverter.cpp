@@ -98,10 +98,14 @@ Geant4MaterialStepConverter::materialInteraction(const G4Step& step) const {
     }
   }
 
-  // Construct passed material slab for the step
+  // Construct passed material slab for the step, ACTS stores the material in
+  // single precision
   const Acts::MaterialSlab slab(
-      Acts::Material::fromMassDensity(X0, L0, Ar, Z, rho),
-      convertLengthToActs * step.GetStepLength());
+      Acts::Material::fromMassDensity(
+          static_cast<float>(X0), static_cast<float>(L0),
+          static_cast<float>(Ar), static_cast<float>(Z),
+          static_cast<float>(rho)),
+      static_cast<float>(convertLengthToActs * step.GetStepLength()));
 
   Acts::MaterialInteraction mInteraction;
   mInteraction.position =

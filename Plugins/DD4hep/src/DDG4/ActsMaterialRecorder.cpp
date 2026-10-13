@@ -185,8 +185,10 @@ void ActsMaterialRecorder::operator()(const G4Step* step,
   auto& tracks = m_recorded->tracks;
   auto it = tracks.find(track.GetTrackID());
   if (it == tracks.end()) {
-    it = tracks.emplace(track.GetTrackID(), m_stepConverter->startTrack(track))
-             .first;
+    it =
+        tracks
+            .try_emplace(track.GetTrackID(), m_stepConverter->startTrack(track))
+            .first;
   }
 
   if (!m_region.has_value()) {

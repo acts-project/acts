@@ -58,10 +58,6 @@ class ActsMaterialTrackWriter final : public dd4hep::sim::Geant4EventAction {
   /// @param threadContext the context of the thread
   void configureFiber(dd4hep::sim::Geant4Context* threadContext) override;
 
-  /// Begin-of-event callback (unused)
-  /// @param event the Geant4 event
-  void begin(const G4Event* event) override;
-
   /// Write the material tracks of the event
   /// @param event the Geant4 event
   void end(const G4Event* event) override;
@@ -130,6 +126,7 @@ void ActsMaterialTrackWriter::beginRun(const G4Run* /*run*/) {
   if (m_file == nullptr || m_file->IsZombie()) {
     except("Could not open output file '%s'.", m_outputFile.c_str());
   }
+  // Owned by the file, which deletes it when it is closed
   m_tree = new TTree(m_treeName.c_str(), "Recorded material tracks");
   m_tree->SetDirectory(m_file.get());
 
@@ -148,9 +145,10 @@ void ActsMaterialTrackWriter::endRun(const G4Run* /*run*/) {
   // Counting ended runs rather than running threads, since a thread may only
   // start its run once another one already ended its own
   ++m_endedRuns;
-  const int nThreads = std::max(
-      context()->kernel().master().property("NumberOfThreads").value<int>(), 1);
-  if (m_endedRuns < nThreads || m_file == nullptr) {
+  if (const int nThreads = std::max(
+          context()->kernel().master().property("NumberOfThreads").value<int>(),
+          1);
+      m_endedRuns < nThreads || m_file == nullptr) {
     return;
   }
   closeFile();
@@ -166,8 +164,6 @@ void ActsMaterialTrackWriter::closeFile() {
   m_written = true;
   info("Wrote %zu material tracks to '%s'.", m_nTracks, m_outputFile.c_str());
 }
-
-void ActsMaterialTrackWriter::begin(const G4Event* /*event*/) {}
 
 void ActsMaterialTrackWriter::end(const G4Event* event) {
   // Serialised by the shared action wrapper in multi-threaded running
