@@ -8,21 +8,23 @@
 
 #pragma once
 
+#include "Acts/Seeding/GbtsBinConnection.hpp"
+#include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <optional>
 #include <span>
-#include <unordered_map>
-#include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace Acts::Experimental {
 
-/// Builds the GBTS layer connection table from observed track hits.
-class GbtsLayerConnectionTool {
+/// Builds the GBTS eta bin connection table from observed track hits.
+class GbtsBinConnectionTool {
  public:
   /// Struct to hold r and z bounds for a given detector layer
   struct LayerDescription {
@@ -38,55 +40,34 @@ class GbtsLayerConnectionTool {
     GbtsExperimentLayerId gbtsId{};
   };
 
-  /// Configuration for the layer connection tool
+  /// Configuration for the bin connection tool
   struct Config {
     /// List of detector layers
     std::vector<LayerDescription> detectorGeometry{};
 
-    /// Symmeterize layer connection table
+    /// Symmeterize bin connection table
     bool doSymmetrization = false;
-    /// Minimum probability cut applied to layer transitions
-    float probThreshold = -1;
+    /// Minimum probability cut applied to bin transitions, -1 keeps them all
+    float probThreshold = 1e-4f;
   };
-
-  /// pair of layer transitions
-  using LayerIdPair = std::pair<GbtsExperimentLayerId, GbtsExperimentLayerId>;
-
-  /// Hash id used for unordered sets and maps
-  struct LayerIdPairHash {
-    /// operator to allow the lookup of std::pair objects
-    /// in unordered maps or sets
-    /// @param pair Layer transition pair
-    /// @return hash id
-    std::size_t operator()(const LayerIdPair& pair) const noexcept {
-      const auto h1 = std::hash<GbtsExperimentLayerId>{}(pair.first);
-      const auto h2 = std::hash<GbtsExperimentLayerId>{}(pair.second);
-
-      return h1 ^ (h2 << 1);
-    }
-  };
-
-  /// Container of pairs of layer transitions
-  using LayerIdPairs = std::unordered_set<LayerIdPair, LayerIdPairHash>;
-  /// Map of layer pair transitions, quantifying the amount of times they occur
-  using LayerIdPairMap =
-      std::unordered_map<LayerIdPair, std::uint32_t, LayerIdPairHash>;
 
   /// @param config Tool configuration
+  /// @param geometry The geometry whose eta bins are connected, built with the
+  ///                 same layers and eta bin width as the seeding it trains
   /// @param logger The Acts logger
-  explicit GbtsLayerConnectionTool(
-      const Config& config,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("GbtsLayerConnectionTool", Logging::Level::INFO));
+  GbtsBinConnectionTool(const Config& config,
+                        std::shared_ptr<const GbtsGeometry> geometry,
+                        std::unique_ptr<const Logger> logger = getDefaultLogger(
+                            "GbtsBinConnectionTool", Logging::Level::INFO));
 
-  /// converts layer hits to layer transitions
-  /// @param track the GBTS layers of the hits of a particle, in the order it
+  /// converts the bins of the hits of a track to bin transitions
+  /// @param track the GBTS bins of the hits of a particle, in the order it
   ///              passed them
-  void addTrack(std::span<const GbtsExperimentLayerId> track);
+  void addTrack(std::span<const GbtsLayerBin> track);
 
   /// Creates the connection table
-  /// @return layer pairs
-  GbtsLayerConnectionTool::LayerIdPairs createConnectionTable() const;
+  /// @return the bin connections, outer to inner bin
+  std::vector<GbtsBinConnection> createConnectionTable() const;
 
  private:
   /// returns the Acts logger
@@ -104,12 +85,20 @@ class GbtsLayerConnectionTool {
   std::optional<GbtsExperimentLayerId> oppositeSideLayer(
       GbtsExperimentLayerId layer) const;
 
-  /// Config for layer connection tool
+  /// finds the mirrored bin of a symmetrical detector: the bin of the opposite
+  /// side layer with the mirrored index, as the bins run with increasing eta
+  /// @param bin the bin to mirror
+  /// @return the bin on the opposite side
+  std::optional<GbtsLayerBin> oppositeSideBin(const GbtsLayerBin& bin) const;
+
+  /// Config for bin connection tool
   Config m_cfg;
+  /// The geometry the bins belong to
+  std::shared_ptr<const GbtsGeometry> m_geometry;
   /// Acts logger
   std::unique_ptr<const Acts::Logger> m_logger;
-  /// map of layer transition pairs
-  LayerIdPairMap m_layerPairs{};
+  /// number of transitions per pair of bins, inner bin first
+  std::map<std::pair<GbtsLayerBin, GbtsLayerBin>, std::uint32_t> m_binPairs{};
   /// total number of tracks used to train the table on
   std::uint32_t m_totalTracks = 0;
 };

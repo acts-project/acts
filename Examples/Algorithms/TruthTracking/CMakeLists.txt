@@ -19,6 +19,6 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesTruthTracking
-    PUBLIC Acts::ExamplesFramework
+    PUBLIC Acts::ExamplesFramework Acts::ExamplesTrackFinding
     PRIVATE Acts::PluginJson
 )

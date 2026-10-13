@@ -23,6 +23,6 @@ target_sources(
         GbtsTrackingFilter.cpp
         GraphBasedTrackSeeder.cpp
         GbtsRoiDescriptor.cpp
-        GbtsLayerConnectionTool.cpp
+        GbtsBinConnectionTool.cpp
         HoughAccumulatorSection.cpp
 )

@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/GbtsBinConnection.hpp"
 #include "Acts/Seeding/GbtsBinning.hpp"
-#include "Acts/Seeding/GbtsLayerConnection.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/detail/GbtsLayer.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -43,12 +43,12 @@ class GbtsGeometry final {
  public:
   /// Constructor
   /// @param layerDescriptions Layer descriptions for the layers
-  /// @param layerConnections Pairs of layers the seeder may connect
+  /// @param binConnections Pairs of eta bins the seeder may connect
   /// @param etaBinWidth Width of the eta bins each layer is split into
   /// @param z0Range z0 range the bin table is built against
   /// @param logger Logging instance, only used during construction
   GbtsGeometry(std::span<const GbtsLayerDescription> layerDescriptions,
-               std::span<const GbtsLayerConnection> layerConnections,
+               std::span<const GbtsBinConnection> binConnections,
                float etaBinWidth, const GbtsZ0Range& z0Range = {},
                const Logger& logger = getDummyLogger());
 
@@ -65,6 +65,13 @@ class GbtsGeometry final {
   /// @return The layer's index, or nullopt if this geometry has no such layer
   std::optional<GbtsLayerIndex> layerIndex(GbtsExperimentLayerId id) const;
 
+  /// Get the eta bin a hit on a layer falls into
+  /// @param idx Index of the layer the hit is on
+  /// @param z Global z of the hit
+  /// @param r Transverse radius of the hit
+  /// @return The index of the bin inside that layer
+  std::uint32_t etaBin(GbtsLayerIndex idx, float z, float r) const;
+
   /// Get the description a layer was built from
   /// @param idx Layer index
   /// @return Reference to the layer description
@@ -80,8 +87,8 @@ class GbtsGeometry final {
   }
 
   /// Get the eta bin pairs the graph is built over, in build order
-  /// @return The bin groups
-  std::span<const GbtsBinGroup> binGroups() const { return m_binGroups; }
+  /// @return The bin pairs
+  std::span<const GbtsBinPair> binPairs() const { return m_binPairs; }
 
  private:
   // The layer object is shared only with the classes that build the graph.
@@ -115,8 +122,8 @@ class GbtsGeometry final {
   /// Number of eta bins
   std::uint32_t m_nEtaBins{};
 
-  /// Bin groups
-  std::vector<GbtsBinGroup> m_binGroups;
+  /// Bin pairs, in build order
+  std::vector<GbtsBinPair> m_binPairs;
 };
 
 }  // namespace Acts::Experimental

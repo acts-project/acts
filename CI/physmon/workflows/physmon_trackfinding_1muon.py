@@ -28,6 +28,8 @@ from acts.examples.reconstruction import (
     TrackSelectorConfig,
 )
 
+from gbts_layer_connection_training_odd import runGbtsTrainingOdd
+
 from physmon_common import makeSetup
 
 u = acts.UnitConstants
@@ -44,6 +46,20 @@ def run_ckf_tracking(label, seeding):
         )
 
         tp = Path(temp)
+
+        # the connection table is trained with Fatras, not kept in the repository
+        gbtsConnectionTable = None
+        if seeding == SeedingAlgorithm.Gbts:
+            gbtsTraining = tp / "gbts_training"
+            runGbtsTrainingOdd(
+                trackingGeometry=setup.trackingGeometry,
+                field=setup.field,
+                digiConfigFile=setup.digiConfig,
+                layerMapFile=setup.gbtsLayerMap,
+                outputDir=gbtsTraining,
+                decorators=setup.decorators,
+            ).run()
+            gbtsConnectionTable = gbtsTraining / "odd-gbts-connection-table.json"
 
         for d in setup.decorators:
             s.addContextDecorator(d)
@@ -139,7 +155,7 @@ def run_ckf_tracking(label, seeding):
             initialVarInflation=[1.0] * 6,
             geoSelectionConfigFile=setup.geoSel,
             layerMappingConfigFile=setup.gbtsLayerMap,  # only used by SeedingAlgorithm.Gbts
-            connectorInputConfigFile=setup.gbtsConnectionTable,  # only used by SeedingAlgorithm.Gbts
+            connectorInputConfigFile=gbtsConnectionTable,  # only used by SeedingAlgorithm.Gbts
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
             outputDirRoot=tp,
         )

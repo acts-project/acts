@@ -669,13 +669,14 @@ def addGbtsTraining(
     selectedParticles: str = "particles_selected",
     geometryFile: str = "gbts_layers.json",
     outputConnectionTable: str = "layer_connection_table.json",
-    probThreshold: float = -1.0,
+    probThreshold: float = 1e-4,
     doSymmetrization: bool = False,
+    useLayerTilt: bool = False,
     logLevel: acts.logging.Level = None,
 ):
     logLevel = acts.examples.defaultLogging(s, logLevel)()
 
-    gbtsLayerConnectionToolConfig = acts.examples.GbtsLayerConnectionToolConfig(
+    gbtsBinConnectionToolConfig = acts.examples.GbtsBinConnectionToolConfig(
         probThreshold=probThreshold,
         doSymmetrization=doSymmetrization,
     )
@@ -687,10 +688,11 @@ def addGbtsTraining(
         inputMeasurements="measurements",
         inputSimHits="simhits",
         inputMeasurementSimHitsMap="measurement_simhits_map",
-        gbtsLayerConnectionToolConfig=gbtsLayerConnectionToolConfig,
+        gbtsBinConnectionToolConfig=gbtsBinConnectionToolConfig,
         geometryFileDir=str(geometryFile),
         trackingGeometry=trackingGeometry,
         outputFileDir=str(outputConnectionTable),
+        useLayerTilt=useLayerTilt,
     )
 
     s.addAlgorithm(alg)
