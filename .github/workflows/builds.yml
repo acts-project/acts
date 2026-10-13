@@ -984,12 +984,15 @@ jobs:
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg/${{ runner.os }}-${{ runner.arch }}/${{ matrix.tag }}/v1/
 
+      # Match ROOT in this LCG view; some stacks still require C++20.
       - name: Configure
         run: >
           source "${LCG_VIEW}/setup.sh" &&
+          cxx_standard=$(root-config --cxxstandard) &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci-lcg
+          -DCMAKE_CXX_STANDARD="${cxx_standard}"
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
       - name: Build
@@ -1096,14 +1099,17 @@ jobs:
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg_dev4/${{ runner.os }}-${{ runner.arch }}/v1/
 
+      # Match ROOT in this LCG view; some stacks still require C++20.
       - name: Configure
         id: configure
         continue-on-error: true
         run: >
           source "${LCG_VIEW}/setup.sh" &&
+          cxx_standard=$(root-config --cxxstandard) &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci-lcg
+          -DCMAKE_CXX_STANDARD="${cxx_standard}"
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
       - name: Build
