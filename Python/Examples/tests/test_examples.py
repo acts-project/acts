@@ -1373,6 +1373,10 @@ def test_geomodel_G4(tmp_path):
         str(mockup_det),
         "--outDir",
         str(out_dir),
+        # The script defaults to 100 events, which made this the slowest and
+        # most memory-hungry test; only the output is checked here.
+        "--nEvents",
+        "5",
     ]
     subprocess.check_call(args)
 
