@@ -77,9 +77,9 @@ struct helix_intersector_impl<cartesian2D<algebra_t>, algebra_t> {
     // a root: bracket expansion cannot succeed when no intersection exists.
     const vector3_t field = h.b_field();
     const scalar_t curvature = -h.qop() * h.B();
-    if (h.B() > 0.f && curvature != 0.f && h.radius() * h.B() >= 1e-6f &&
-        vector::dot(sn, field) == 0.f) {
-      const vector3_t field_axis = (1.f / h.B()) * field;
+    if (vector::dot(sn, field) == 0.f && curvature != 0.f &&
+        h.radius() * h.B() >= 1e-6f) {
+      const vector3_t field_axis = vector::normalize(field);
       // The transverse circle centre is offset from the initial position.
       const vector3_t center_offset =
           (1.f / curvature) * vector::cross(field_axis, h.dir());
