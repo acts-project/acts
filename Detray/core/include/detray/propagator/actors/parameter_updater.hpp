@@ -75,6 +75,8 @@ struct parameter_updater_state {
     // Set bound track parameters
     curvilinear_frame<algebra_t> cf(free_params);
     m_bound_params.set_parameter_vector(cf.m_bound_vec);
+    // A dummy covariance - should not be used
+    m_bound_params.set_covariance(matrix::identity<bound_matrix<algebra_t>>());
   }
 
   /// Start from bound track parameters
