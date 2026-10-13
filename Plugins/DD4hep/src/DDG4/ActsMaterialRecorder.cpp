@@ -46,8 +46,7 @@ struct RecordingRegion {
   double pathToBoundary(const G4ThreeVector& position,
                         const G4ThreeVector& direction) const {
     double pathR = std::numeric_limits<double>::infinity();
-    const double a = direction.perp2();
-    if (a > 0. && std::isfinite(maxR)) {
+    if (const double a = direction.perp2(); a > 0. && std::isfinite(maxR)) {
       const double b =
           position.x() * direction.x() + position.y() * direction.y();
       const double c = position.perp2() - maxR * maxR;
