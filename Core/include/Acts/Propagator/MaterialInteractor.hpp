@@ -105,10 +105,13 @@ struct MaterialInteractor {
         const double initialMomentum = stepper.absoluteMomentum(state.stepping);
 
         // Apply the material interactions
-        const detail::PointwiseMaterialEffects effects =
-            detail::performMaterialInteraction(state, stepper, slab,
-                                               noiseUpdateMode,
-                                               multipleScattering, energyLoss);
+        const auto effectsResult = detail::performMaterialInteraction(
+            state, stepper, slab, noiseUpdateMode, multipleScattering,
+            energyLoss);
+        if (!effectsResult.ok()) {
+          return effectsResult.error();
+        }
+        const auto& effects = *effectsResult;
 
         if (energyLoss) {
           using namespace UnitLiterals;
@@ -204,8 +207,10 @@ struct MaterialInteractor {
     mi.time = time;
     mi.direction = direction;
     mi.deltaP = initialMomentum - finalMomentum;
-    mi.sigmaPhi2 = effects.variancePhi;
-    mi.sigmaTheta2 = effects.varianceTheta;
+    const Vector2 globalVariances = detail::globalAngularScatteringVariances(
+        direction, effects.scatteringVariance);
+    mi.sigmaPhi2 = globalVariances[0];
+    mi.sigmaTheta2 = globalVariances[1];
     mi.sigmaQoP2 = effects.varianceQoverP;
     mi.surface = surface;
     mi.volume = InteractionVolume();

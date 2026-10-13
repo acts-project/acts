@@ -150,7 +150,18 @@ value-only normalization/update helpers do not transform a separate covariance.
 For an update with covariance, use `canonicalize(parameters + delta, covariance)`
 with the covariance in the uncanonicalized updated basis.
 
-Angular normalization, periodic residuals, material noise, and specialized
+Pointwise material physics computes a projected scattering variance independently
+of the direction coordinates. A separate mapping produces the direction-noise
+block, with a direct diagonal calculation for the canonical spherical convention.
+Reference-trajectory rebuilding uses the reference surface's parametrization for
+this mapping. Pointwise stepper updates still explicitly assume a canonical
+covariance anchor; plumbing the active anchor is follow-up work. Noise removal
+retains the existing diagonal-clamping behavior. Legacy
+@ref Acts::MaterialInteraction::sigmaPhi2 and
+@ref Acts::MaterialInteraction::sigmaTheta2 remain global angular diagnostics;
+nonzero scattering at a global pole has infinite phi variance.
+
+Angular normalization, periodic residuals, material updates, and specialized
 propagation algorithms still assume the canonical spherical coordinates.
 The neutral index names alone do not make those operations chart-independent.
 Custom coordinate ordering through `ACTS_PARAMETER_DEFINITIONS_HEADER` has been

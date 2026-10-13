@@ -25,3 +25,4 @@ add_unittest(RiddersStepper RiddersStepperTests.cpp)
 add_unittest(NavigationPolicyState NavigationPolicyStateTests.cpp)
 
 add_unittest(BoundChartError BoundChartErrorTests.cpp)
+add_unittest(PointwiseMaterialInteraction PointwiseMaterialInteractionTests.cpp)
