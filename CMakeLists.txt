@@ -313,17 +313,7 @@ if(PROJECT_IS_TOP_LEVEL)
 endif()
 
 # This needs to happen before we set up any targets
-if(ACTS_FORCE_ASSERTIONS)
-    message(
-        STATUS
-        "Injecting headers to force assertions. This can have side-effects, USE WITH CAUTION!"
-    )
-    include_directories(
-        BEFORE
-        SYSTEM
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/assert_include
-    )
-endif()
+include(ActsForceAssertions)
 
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the

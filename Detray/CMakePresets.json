@@ -8,7 +8,8 @@
                 "deprecated": true
             },
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "ACTS_FORCE_ASSERTIONS": "ON"
             }
         },
         {
