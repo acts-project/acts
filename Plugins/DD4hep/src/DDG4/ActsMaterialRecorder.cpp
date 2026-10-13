@@ -16,12 +16,12 @@
 #include <optional>
 #include <string>
 
+#include <CLHEP/Units/SystemOfUnits.h>
 #include <DDG4/Factories.h>
 #include <DDG4/Geant4Context.h>
 #include <DDG4/Geant4EventAction.h>
 #include <DDG4/Geant4RunAction.h>
 #include <DDG4/Geant4SteppingAction.h>
-#include <CLHEP/Units/SystemOfUnits.h>
 #include <G4Event.hh>
 #include <G4Run.hh>
 #include <G4Step.hh>
@@ -48,14 +48,15 @@ struct RecordingRegion {
     double pathR = std::numeric_limits<double>::infinity();
     const double a = direction.perp2();
     if (a > 0. && std::isfinite(maxR)) {
-      const double b = position.x() * direction.x() +
-                       position.y() * direction.y();
+      const double b =
+          position.x() * direction.x() + position.y() * direction.y();
       const double c = position.perp2() - maxR * maxR;
       pathR = (-b + std::sqrt(b * b - a * c)) / a;
     }
     double pathZ = std::numeric_limits<double>::infinity();
     if (direction.z() != 0. && std::isfinite(maxZ)) {
-      pathZ = (std::copysign(maxZ, direction.z()) - position.z()) / direction.z();
+      pathZ =
+          (std::copysign(maxZ, direction.z()) - position.z()) / direction.z();
     }
     return std::min(pathR, pathZ);
   }
@@ -64,8 +65,7 @@ struct RecordingRegion {
 /// Shorten the last step of @p track to @p length, and its material with it
 void clipLastStep(Acts::RecordedMaterialTrack& track, double length) {
   Acts::RecordedMaterial& recorded = track.second;
-  Acts::MaterialInteraction& interaction =
-      recorded.materialInteractions.back();
+  Acts::MaterialInteraction& interaction = recorded.materialInteractions.back();
   const Acts::MaterialSlab original = interaction.materialSlab;
   interaction.materialSlab =
       Acts::MaterialSlab(original.material(), static_cast<float>(length));
