@@ -11,6 +11,9 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/Interactions.hpp"
 
+#include <cassert>
+#include <limits>
+
 namespace Acts {
 
 MaterialUpdateMode detail::determineMaterialUpdateMode(
@@ -52,8 +55,7 @@ Result<MaterialSlab> detail::evaluateMaterialSlab(
 
 detail::PointwiseMaterialEffects detail::computeMaterialEffects(
     const MaterialSlab& slab, const ParticleHypothesis& particleHypothesis,
-    const Vector3& direction, float qOverP, bool multipleScattering,
-    bool energyLoss, bool covTransport) {
+    float qOverP, bool multipleScattering, bool energyLoss, bool covTransport) {
   PointwiseMaterialEffects result;
 
   const double mass = particleHypothesis.mass();
@@ -69,12 +71,7 @@ detail::PointwiseMaterialEffects detail::computeMaterialEffects(
       //! [scattering variance]
       const double theta0 =
           computeMultipleScatteringTheta0(slab, absPdg, mass, qOverP, absQ);
-      // sigmaPhi = theta0 / sin(theta)
-      const double sigmaPhi =
-          theta0 * (direction.norm() / VectorHelpers::perp(direction));
-      result.variancePhi = sigmaPhi * sigmaPhi;
-      // sigmaTheta = theta0
-      result.varianceTheta = theta0 * theta0;
+      result.scatteringVariance = theta0 * theta0;
       //! [scattering variance]
     }
     if (energyLoss) {
@@ -87,6 +84,49 @@ detail::PointwiseMaterialEffects detail::computeMaterialEffects(
   }
 
   return result;
+}
+
+Vector2 detail::globalAngularScatteringVariances(const Vector3& direction,
+                                                 double scatteringVariance) {
+  assert(direction.allFinite() &&
+         std::abs(direction.squaredNorm() - 1.) < 1e-6);
+  assert(std::isfinite(scatteringVariance) && scatteringVariance >= 0.);
+  if (scatteringVariance == 0.) {
+    return Vector2::Zero();
+  }
+  const double transverseSquared = direction.head<2>().squaredNorm();
+  return {transverseSquared == 0. ? std::numeric_limits<double>::infinity()
+                                  : scatteringVariance / transverseSquared,
+          scatteringVariance};
+}
+
+Result<Matrix<2, 2>> detail::scatteringNoise(
+    const BoundParametrization& parametrization, const Vector3& direction,
+    double scatteringVariance) {
+  assert(direction.allFinite() &&
+         std::abs(direction.squaredNorm() - 1.) < 1e-6);
+  assert(std::isfinite(scatteringVariance) && scatteringVariance >= 0.);
+  if (scatteringVariance == 0.) {
+    return Result<Matrix<2, 2>>::success(Matrix<2, 2>::Zero());
+  }
+  if (parametrization.isGlobalSpherical()) {
+    const Vector2 variances =
+        globalAngularScatteringVariances(direction, scatteringVariance);
+    if (!variances.allFinite()) {
+      return Result<Matrix<2, 2>>::failure(
+          BoundParametrizationError::SingularDirection);
+    }
+    return Result<Matrix<2, 2>>::success(Matrix<2, 2>(variances.asDiagonal()));
+  }
+  const auto jacobian =
+      parametrization.directionCoordinatesJacobianFromUnitDirection(direction,
+                                                                    0.);
+  if (!jacobian.ok()) {
+    return Result<Matrix<2, 2>>::failure(jacobian.error());
+  }
+  // The encoding derivative already includes the tangent projection I - d*d^T.
+  return Result<Matrix<2, 2>>::success(scatteringVariance * (*jacobian) *
+                                       jacobian->transpose());
 }
 
 }  // namespace Acts

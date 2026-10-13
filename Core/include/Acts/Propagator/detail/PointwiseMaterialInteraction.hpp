@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/BoundParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -104,15 +105,14 @@ Result<MaterialSlab> evaluateMaterialSlab(const propagator_state_t& state,
 /// Struct to hold the material effects computed at a pointwise interaction
 struct PointwiseMaterialEffects {
   double eLoss = 0;
-  double variancePhi = 0;
-  double varianceTheta = 0;
+  /// Projected physical scattering variance, independent of bound coordinates.
+  double scatteringVariance = 0;
   double varianceQoverP = 0;
 };
 
 /// Compute the material effects given a material slab and particle properties
 /// @param slab The material slab
 /// @param particleHypothesis The particle hypothesis
-/// @param direction The direction of the particle
 /// @param qOverP The charge over momentum of the particle
 /// @param multipleScattering Whether to compute multiple scattering effects
 /// @param energyLoss Whether to compute energy loss effects
@@ -120,8 +120,26 @@ struct PointwiseMaterialEffects {
 /// @return The computed material effects
 PointwiseMaterialEffects computeMaterialEffects(
     const MaterialSlab& slab, const ParticleHypothesis& particleHypothesis,
-    const Vector3& direction, float qOverP, bool multipleScattering,
-    bool energyLoss, bool covTransport);
+    float qOverP, bool multipleScattering, bool energyLoss, bool covTransport);
+
+/// Express isotropic scattering noise in a bound direction basis.
+/// Only the noise increment is projected; the existing covariance is untouched.
+/// @param parametrization Interpretation of the covariance direction coordinates
+/// @param direction Global unit direction
+/// @param scatteringVariance Projected physical scattering variance
+/// @pre Direction is normalized; scattering variance is finite and nonnegative.
+/// @return Direction noise block, or a singular-direction error
+Result<Matrix<2, 2>> scatteringNoise(
+    const BoundParametrization& parametrization, const Vector3& direction,
+    double scatteringVariance);
+
+/// Global angular variances for legacy material diagnostics.
+/// @param direction Global unit direction
+/// @param scatteringVariance Projected physical scattering variance
+/// @pre Direction is normalized; scattering variance is finite and nonnegative.
+/// @return Phi/theta variances; phi is infinite at a pole for nonzero scattering
+Vector2 globalAngularScatteringVariances(const Vector3& direction,
+                                         double scatteringVariance);
 
 /// Compute the material effects given the propagation state and material slab
 /// @tparam propagator_state_t The type of the propagator state
@@ -139,12 +157,11 @@ PointwiseMaterialEffects computeMaterialEffects(const propagator_state_t& state,
                                                 bool multipleScattering,
                                                 bool energyLoss) {
   const bool covTransport = stepper.hasCovariance(state.stepping);
-  const Vector3 direction = stepper.direction(state.stepping);
   const float qOverP = stepper.qOverP(state.stepping);
   const ParticleHypothesis& particleHypothesis =
       stepper.particleHypothesis(state.stepping);
 
-  return computeMaterialEffects(slab, particleHypothesis, direction, qOverP,
+  return computeMaterialEffects(slab, particleHypothesis, qOverP,
                                 multipleScattering, energyLoss, covTransport);
 }
 
@@ -158,18 +175,28 @@ PointwiseMaterialEffects computeMaterialEffects(const propagator_state_t& state,
 /// @param noiseUpdateMode The noise update mode
 /// @param multipleScattering Whether to compute multiple scattering effects
 /// @param energyLoss Whether to compute energy loss effects
-/// @return The computed material effects
+/// @return The computed effects, or a direction-noise mapping error
 template <typename propagator_state_t, typename stepper_t>
-PointwiseMaterialEffects performMaterialInteraction(
+Result<PointwiseMaterialEffects> performMaterialInteraction(
     propagator_state_t& state, const stepper_t& stepper,
     const MaterialSlab& slab, NoiseUpdateMode noiseUpdateMode,
     bool multipleScattering, bool energyLoss) {
   if (slab.isVacuum()) {
-    return {};
+    return PointwiseMaterialEffects{};
   }
 
   const PointwiseMaterialEffects effects = computeMaterialEffects(
       state, stepper, slab, multipleScattering, energyLoss);
+
+  // All current covariance anchors use the canonical convention. Selecting the
+  // active anchor explicitly is required before enabling other
+  // parametrizations.
+  const auto noise = scatteringNoise(BoundParametrization::globalSpherical(),
+                                     stepper.direction(state.stepping),
+                                     effects.scatteringVariance);
+  if (!noise.ok()) {
+    return noise.error();
+  }
 
   const Direction propDir = state.options.direction;
   const ParticleHypothesis& particleHypothesis =
@@ -219,10 +246,9 @@ PointwiseMaterialEffects performMaterialInteraction(
   //! [covariance update]
   BoundMatrix covariance = *stepper.covariance(state.stepping);
   covariance(eBoundDir0, eBoundDir0) = updateVariance(
-      covariance(eBoundDir0, eBoundDir0), effects.variancePhi, noiseUpdateMode);
-  covariance(eBoundDir1, eBoundDir1) =
-      updateVariance(covariance(eBoundDir1, eBoundDir1), effects.varianceTheta,
-                     noiseUpdateMode);
+      covariance(eBoundDir0, eBoundDir0), (*noise)(0, 0), noiseUpdateMode);
+  covariance(eBoundDir1, eBoundDir1) = updateVariance(
+      covariance(eBoundDir1, eBoundDir1), (*noise)(1, 1), noiseUpdateMode);
   covariance(eBoundQOverP, eBoundQOverP) =
       updateVariance(covariance(eBoundQOverP, eBoundQOverP),
                      effects.varianceQoverP, noiseUpdateMode);
@@ -244,7 +270,7 @@ PointwiseMaterialEffects performMaterialInteraction(
 /// @param multipleScattering Whether to compute multiple scattering effects
 /// @param energyLoss Whether to compute energy loss effects
 /// @param logger The logger to use for verbose output
-/// @return The computed material effects
+/// @return The computed effects, or a direction-noise mapping error
 template <typename propagator_state_t, typename stepper_t>
 Result<PointwiseMaterialEffects> performMaterialInteraction(
     propagator_state_t& state, const stepper_t& stepper, const Surface& surface,
@@ -262,8 +288,12 @@ Result<PointwiseMaterialEffects> performMaterialInteraction(
                                                     << updateMode);
   }
 
-  const PointwiseMaterialEffects effects = performMaterialInteraction(
+  const auto effectsResult = performMaterialInteraction(
       state, stepper, slab, noiseUpdateMode, multipleScattering, energyLoss);
+  if (!effectsResult.ok()) {
+    return effectsResult.error();
+  }
+  const PointwiseMaterialEffects& effects = *effectsResult;
 
   const Direction propDir = state.options.direction;
 
@@ -271,8 +301,8 @@ Result<PointwiseMaterialEffects> performMaterialInteraction(
                << surface.geometryId() << " with update mode: " << updateMode
                << " are :");
   ACTS_VERBOSE("eLoss = " << effects.eLoss * propDir << ", "
-                          << "variancePhi = " << effects.variancePhi << ", "
-                          << "varianceTheta = " << effects.varianceTheta << ", "
+                          << "scatteringVariance = "
+                          << effects.scatteringVariance << ", "
                           << "varianceQoverP = " << effects.varianceQoverP);
 
   return effects;
