@@ -289,6 +289,7 @@ class ReferenceTrajectoryBuilder {
       const Result<detail::PointwiseMaterialEffects> materialInteractionPreRes =
           detail::performMaterialInteraction(
               state, stepper, surface,
+              surface.boundParametrization(state.options.geoContext),
               detail::determineMaterialUpdateMode(
                   state, navigator, MaterialUpdateMode::PreUpdate),
               NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
@@ -331,6 +332,7 @@ class ReferenceTrajectoryBuilder {
       const Result<detail::PointwiseMaterialEffects>
           materialInteractionPostRes = detail::performMaterialInteraction(
               state, stepper, surface,
+              surface.boundParametrization(state.options.geoContext),
               detail::determineMaterialUpdateMode(
                   state, navigator, MaterialUpdateMode::PostUpdate),
               NoiseUpdateMode::addNoise, multipleScattering, energyLoss,

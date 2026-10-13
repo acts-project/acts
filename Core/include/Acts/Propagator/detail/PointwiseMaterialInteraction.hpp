@@ -172,6 +172,7 @@ PointwiseMaterialEffects computeMaterialEffects(const propagator_state_t& state,
 /// @param state The current propagator state
 /// @param stepper The stepper used for the propagation
 /// @param slab The material slab
+/// @param parametrization Interpretation of the active covariance anchor
 /// @param noiseUpdateMode The noise update mode
 /// @param multipleScattering Whether to compute multiple scattering effects
 /// @param energyLoss Whether to compute energy loss effects
@@ -179,8 +180,8 @@ PointwiseMaterialEffects computeMaterialEffects(const propagator_state_t& state,
 template <typename propagator_state_t, typename stepper_t>
 Result<PointwiseMaterialEffects> performMaterialInteraction(
     propagator_state_t& state, const stepper_t& stepper,
-    const MaterialSlab& slab, NoiseUpdateMode noiseUpdateMode,
-    bool multipleScattering, bool energyLoss) {
+    const MaterialSlab& slab, const BoundParametrization& parametrization,
+    NoiseUpdateMode noiseUpdateMode, bool multipleScattering, bool energyLoss) {
   if (slab.isVacuum()) {
     return PointwiseMaterialEffects{};
   }
@@ -188,12 +189,9 @@ Result<PointwiseMaterialEffects> performMaterialInteraction(
   const PointwiseMaterialEffects effects = computeMaterialEffects(
       state, stepper, slab, multipleScattering, energyLoss);
 
-  // All current covariance anchors use the canonical convention. Selecting the
-  // active anchor explicitly is required before enabling other
-  // parametrizations.
-  const auto noise = scatteringNoise(BoundParametrization::globalSpherical(),
-                                     stepper.direction(state.stepping),
-                                     effects.scatteringVariance);
+  const auto noise =
+      scatteringNoise(parametrization, stepper.direction(state.stepping),
+                      effects.scatteringVariance);
   if (!noise.ok()) {
     return noise.error();
   }
@@ -266,6 +264,7 @@ Result<PointwiseMaterialEffects> performMaterialInteraction(
 /// @param stepper The stepper used for the propagation
 /// @param surface The surface at which to perform the material interaction
 /// @param updateMode The material update mode
+/// @param parametrization Interpretation of the active covariance anchor
 /// @param noiseUpdateMode The noise update mode
 /// @param multipleScattering Whether to compute multiple scattering effects
 /// @param energyLoss Whether to compute energy loss effects
@@ -274,8 +273,9 @@ Result<PointwiseMaterialEffects> performMaterialInteraction(
 template <typename propagator_state_t, typename stepper_t>
 Result<PointwiseMaterialEffects> performMaterialInteraction(
     propagator_state_t& state, const stepper_t& stepper, const Surface& surface,
-    MaterialUpdateMode updateMode, NoiseUpdateMode noiseUpdateMode,
-    bool multipleScattering, bool energyLoss, const Logger& logger) {
+    const BoundParametrization& parametrization, MaterialUpdateMode updateMode,
+    NoiseUpdateMode noiseUpdateMode, bool multipleScattering, bool energyLoss,
+    const Logger& logger) {
   const Result<MaterialSlab> slabResult =
       evaluateMaterialSlab(state, stepper, surface, updateMode);
   if (!slabResult.ok()) {
@@ -289,7 +289,8 @@ Result<PointwiseMaterialEffects> performMaterialInteraction(
   }
 
   const auto effectsResult = performMaterialInteraction(
-      state, stepper, slab, noiseUpdateMode, multipleScattering, energyLoss);
+      state, stepper, slab, parametrization, noiseUpdateMode,
+      multipleScattering, energyLoss);
   if (!effectsResult.ok()) {
     return effectsResult.error();
   }
