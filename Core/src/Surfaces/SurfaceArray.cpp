@@ -714,6 +714,10 @@ struct SurfaceGridLookupImpl final : SurfaceGridLookupBase {
     setAxes(std::get<0>(m_axes), std::get<1>(m_axes));
   }
 
+  // keep the bin-index overloads from the base visible
+  using SurfaceGridLookupBase::at;
+  using SurfaceGridLookupBase::neighbors;
+
   std::span<const Surface* const> at(const GeometryContext& gctx,
                                      const Vector3& position,
                                      const Vector3& direction) const override {
