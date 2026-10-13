@@ -275,10 +275,15 @@ if(TRACCC_SETUP_THRUST)
         endif()
     else()
         if(CUDAToolkit_FOUND)
+            set(TRACCC_CCCL_DIAGNOSTIC WARNING)
+            if("$ENV{CI}")
+                set(TRACCC_CCCL_DIAGNOSTIC FATAL_ERROR)
+            endif()
             message(
-                WARNING
+                ${TRACCC_CCCL_DIAGNOSTIC}
                 "CUDA toolkit is available, but a bundled CCCL is to be used. This may lead to cross-version include path pollution and errors."
             )
+            unset(TRACCC_CCCL_DIAGNOSTIC)
         endif()
         add_subdirectory(extern/cccl)
     endif()
