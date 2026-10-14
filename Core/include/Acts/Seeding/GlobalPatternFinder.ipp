@@ -74,7 +74,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
                              const Hit_t& seed,
                              const SearchTree_t::coordinate_t& coords) -> unsigned {
         return std::ranges::count_if(patterns, [&](const PatternStateAux& pattern){
-            if (std::abs(pattern.patTheta - coords[thetaIdx]) > 2.*seedSelector.thetaSearchWindow(seed) ||
+            if (std::abs(pattern.patTheta - coords[thetaIdx]) > m_cfg.maxThetaSizeOverlap ||
                 !pattern.sector.isNeighbour(
                     Sector_t{static_cast<typename Sector_t::Index_t>(coords[sectorIdx])})) {
                 return false;
@@ -94,17 +94,11 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
            << ", "<< seedCoords[toUnderlying(HitCoords::eTheta)] << "]");
 
         /** check how many existing patterns contain this hit */
-        unsigned nExistingPatterns {countPatterns(outPatterns, seed, seedCoords)};
-        if (nExistingPatterns >= m_cfg.maxSeedAttempts) {
-            // Try first to resolve overlaps and re-count the number of patterns containing the seed
-            outPatterns = resolveOverlaps(gctx, outPatterns);
-            nExistingPatterns = countPatterns(outPatterns, seed, seedCoords);
-            if (nExistingPatterns >= m_cfg.maxSeedAttempts) {
-                ACTS_VERBOSE(__func__<<"() Seed has already been used in "
-                    <<static_cast<int>(nExistingPatterns)
-                    <<" patterns, which is above the limit - skip this seed.");
-                continue;
-            }   
+        if (countPatterns(outPatterns, seed, seedCoords) >= m_cfg.maxSeedAttempts) {
+            ACTS_VERBOSE(__func__<<"() Seed has already been used in "
+                <<static_cast<int>(countPatterns(outPatterns, seed, seedCoords))
+                <<" patterns, which is above the limit - skip this seed.");
+            continue; 
         }
         /** Define the search range. */
         typename SearchTree_t::range_t selectRange{};
@@ -165,7 +159,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
 
         /** Start pattern building from the seed */
         const auto seedItr {std::ranges::find_if(OrderedHits,
-            [&seed](const OrderedHit& c){ return *c == seed; })};
+            [&seedPtr](const OrderedHit& c){ return c.hitPtr == seedPtr; })};
         assert(seedItr != OrderedHits.end());
         const OrderedHit& seedCand {*seedItr};
 
@@ -180,10 +174,13 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
          *         to extend every active pattern and remove the ones not meeting continuation criteria. 
          *  @param begin The iterator pointing to the first hit to process. 
          *  @param end The iterator pointing to the end of the hit range.
+         *  @param applyCuts Finalize the resulting patterns and apply the quality cuts before the
+         *                   overlap removal.
          *  @param toExtend The pattern to extend.
          *  @return The vector of resulting patterns. */
         auto processHitRange = [&](const auto begin, 
                                    const auto end, 
+                                   const bool applyCuts,
                                    PatternStateAux&& toExtend) -> PatternStateAuxVec {
             startPatternBuff.clear();
             startPatternBuff.push_back(std::move(toExtend));
@@ -197,13 +194,21 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
                 // Swap the buffers for the next iteration
                 std::swap(startPatternBuff, endPatternBuff);
             }
-            return startPatternBuff.size() > 1 
-                ? resolveOverlaps(gctx, startPatternBuff) 
-                : PatternStateAuxVec{std::move(startPatternBuff.back())};
+            PatternStateAuxVec result{};
+            result.reserve(startPatternBuff.size());
+
+            for (PatternStateAux& pat : startPatternBuff) {
+                if (pat.isOverlap || (applyCuts && !passPatternCuts(pat))) {
+                    continue;
+                }
+                // Resolve patterns produced from the same pattern seed
+                insertIfBest(gctx, result, std::move(pat));
+            }
+            return result;
         };
 
         /** First search for compatible hits from the seed layer onwards */
-        PatternStateAuxVec forwardExtended {processHitRange(std::next(seedItr), OrderedHits.end(), std::move(patternSeed))};
+        PatternStateAuxVec forwardExtended {processHitRange(std::next(seedItr), OrderedHits.end(), /*applyCuts*/ false, std::move(patternSeed))};
 
         /** When inverting the search direction, update last inserted hit and line anchor */
         ACTS_VERBOSE(__func__<<"() Finished forward search, found "<<forwardExtended.size()<<" forward patterns, start backward search.");
@@ -214,31 +219,26 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
             ACTS_VERBOSE(__func__<<"() Start backward search for pattern "<<PatternStateAux::detailed(pat));
             pat.moveLineAnchorHit(seedCand);
             pat.lastInsertedHit = seedCand;
+            pat.lastHitTestRes = LineTestRes{};
 
-            /** Then try to proceed toward the innermost layer */
-            std::ranges::move(
-                processHitRange(std::reverse_iterator(seedItr), OrderedHits.rend(), std::move(pat)), 
-                std::back_inserter(backwardExtended)
-            );
-        }
-        /** Ensure there are no overlaps */
-        if (backwardExtended.size() > 1) {
-            backwardExtended = resolveOverlaps(gctx, backwardExtended);
-        }
-
-        for (PatternStateAux& pat : backwardExtended) {
-            pat.meanNormResidual2 /= pat.nDoF;
-            if (!passPatternCuts(pat)) {
-                continue;
+            for (PatternStateAux& backwardCand : 
+                    processHitRange(std::reverse_iterator(seedItr), OrderedHits.rend(), /*applyCuts*/ true, std::move(pat))) {
+                // Resolve siblings produced by different backward searches (one for each forward pattern)
+                insertIfBest(gctx, backwardExtended, std::move(backwardCand));
             }
-            ACTS_VERBOSE(__func__<<"() Add new pattern "<<PatternStateAux::detailed(pat));
-            pat.isFinalized = true;
-            outPatterns.push_back(std::move(pat));
+        }
+        // Siblings are now mutually non-overlapping: insert the survivors into the output
+        for (PatternStateAux& pat : backwardExtended) {
+            if (insertIfBest(gctx, outPatterns, std::move(pat))) {
+                ACTS_VERBOSE(__func__<<"() Added new pattern "<<PatternStateAux::detailed(outPatterns.back()));
+            } else {
+                ACTS_VERBOSE(__func__<<"() Pattern "<<PatternStateAux::detailed(pat)
+                    <<"\nnot added to output patterns because better patterns exist.");
+            }
         }
     }
-    ACTS_VERBOSE(__func__<<"() Found in total "<<outPatterns.size()
-        <<" patterns in eta before overlap removal");
-    return resolveOverlaps(gctx, outPatterns);
+    ACTS_VERBOSE(__func__<<"() Found in total "<<outPatterns.size()<<" patterns in eta.");
+    return outPatterns;
 }
 template<GlobPatFinderHit Hit_t,
          SectorType Sector_t,
@@ -442,20 +442,129 @@ bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::passPatternCuts(
 {
     /** Check that the pattern meets the minimum requirements for trigger and precision layers */
     if (pat.nTriggerLayers < m_cfg.minStripEtaLayers || 
-        pat.nPrecisionLayers < m_cfg.minPrecisionLayers ||
-        std::ranges::count_if(pat.hitsPerGroup, 
-            [this](const auto& hits) { return hits.size() >= m_cfg.minGroupLayers; }) < 2) {
+        pat.nPrecisionLayers < m_cfg.minPrecisionLayers) {
         ACTS_VERBOSE(__func__<<"() Pattern " << PatternStateAux::detailed(pat)
             << "\ndoes not meet minimum layer requirements - reject.");
         return false;
     }
     /** Check requirement on the residual */
-    if (pat.meanNormResidual2 > m_cfg.meanNormRes2Cut) {
+    if (pat.getMeanResidual2() > m_cfg.meanNormRes2Cut) {
         ACTS_VERBOSE(__func__<<"() Pattern " << PatternStateAux::detailed(pat)
             << "\ndoes not meet the mean norm residual2 cut - reject.");
         return false;
     }
+    if (countGoodGroups(pat) < m_cfg.minGroups) {
+        ACTS_VERBOSE(__func__<<"() Pattern " << PatternStateAux::detailed(pat)
+            << "\ndoes not meet the minimum number of groups with enough hits - reject.");
+        return false;
+    }
     return true;
+}
+
+template<GlobPatFinderHit Hit_t,
+         SectorType Sector_t,
+         PatternTopology<Hit_t> Topology_t>
+bool 
+GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::insertIfBest(
+    const GeometryContext& gctx,
+    PatternStateAuxVec& patterns, 
+    PatternStateAux&& cand) const 
+{
+    /** @brief Determine best pattern of two overlapping patterns */
+    auto isBetterOverlap = [&](const PatternStateAux& a, 
+                               const PatternStateAux& b) {
+        const int nGoodGroupDiff {countGoodGroups(a) - 
+                                  countGoodGroups(b)};
+        if (nGoodGroupDiff != 0) {
+            return nGoodGroupDiff > 0;
+        }
+        return isBetter(a,b);
+    };
+    std::vector<std::size_t> losers{};
+    for (const auto& [otherIdx, other] : Acts::enumerate(patterns)) {
+        if (!areOverlapping(gctx, other, cand)) {
+            continue;
+        }
+        if (isBetterOverlap(other, cand)) {
+            ACTS_VERBOSE(__func__<<"() Pattern "<<PatternStateAux::detailed(other)
+                <<"\nis BETTER than "<<PatternStateAux::detailed(cand));
+            return false;
+        } 
+        ACTS_VERBOSE(__func__<<"() Pattern "<<PatternStateAux::detailed(cand)
+            <<"\nis BETTER than "<<PatternStateAux::detailed(other));
+        losers.push_back(otherIdx);
+    }
+    for (auto it = losers.rbegin(); it != losers.rend(); ++it) {
+        if (*it + 1u != patterns.size()) {
+            patterns[*it] = std::move(patterns.back());
+        }
+        patterns.pop_back();
+    }
+    patterns.push_back(std::move(cand));
+    return true;
+}
+
+template<GlobPatFinderHit Hit_t,
+         SectorType Sector_t,
+         PatternTopology<Hit_t> Topology_t>
+bool 
+GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::areOverlapping(
+    const GeometryContext& gctx, 
+    const PatternStateAux& a, 
+    const PatternStateAux& b) const
+{
+    /** Check first the geometrical overlap */
+    if(!a.sector.isNeighbour(b.sector)) {
+        return false;
+    }
+    /** Check the angular difference between the seed hits */
+    if (std::abs(a.patTheta - b.patTheta) > m_cfg.maxThetaSizeOverlap) {
+        return false;
+    }
+    // Common reference radius: where the patterns actually live, e.g. the anchor hit of either one.
+    const double refR {a.lineAnchorHit->globalPosition(gctx).template head<2>().norm()};
+    if (a.nPhiLayers > 1 && b.nPhiLayers > 1) {
+        using namespace Acts::UnitLiterals;
+        if (std::abs(Acts::detail::difference_periodic(
+                a.phiAtRadius(refR), 
+                b.phiAtRadius(refR), 2. * std::numbers::pi)) 
+                    > 2.*m_cfg.phiTolerance) {
+            return false;
+        }
+    } else if (a.nPhiLayers > 0) {
+        if (!b.sector.insideSector(a.phiAtRadius(refR))) {
+            return false;
+        }
+    } else if (b.nPhiLayers > 0) {
+        if (!a.sector.insideSector(b.phiAtRadius(refR))) {
+            return false;
+        }
+    }
+    /** If we reach here, the patterns can overlap geometrically, so check the hit content */
+    std::size_t nSharedHits{0}, nSharedGroups{0};
+    for (std::size_t st{0u}; st < Topology_t::nGroups; ++st) {
+        const auto& hitsA {a.hitsPerGroup[st]};
+        const auto& hitsB {b.hitsPerGroup[st]};
+        if (hitsA.empty() || hitsB.empty()) {
+            continue;
+        }
+        const std::size_t nSharedInGroup = std::ranges::count_if(hitsA, [&](const OrderedHit& hitA){
+            return std::ranges::any_of(hitsB, [&hitA](const OrderedHit& hitB) {
+                return hitA->overlaps(*hitB);
+            });
+        });
+        nSharedHits += nSharedInGroup;
+        if (nSharedInGroup >= m_cfg.minGroupLayers) {
+            nSharedGroups++;
+        }
+    }
+    /** Overlap if more than 50% of the hits of the smaller pattern are shared */
+    const std::size_t minHits {std::min(a.nBendingLayers(), 
+                                        b.nBendingLayers())};
+    const std::size_t minGroups {std::min(countGoodGroups(a), 
+                                            countGoodGroups(b))};
+    return nSharedHits >= 0.5 *minHits && 
+           nSharedGroups >= std::min(2ul, minGroups);
 }
 
 template<GlobPatFinderHit Hit_t,
@@ -501,110 +610,6 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::countGoodGroups(
 template<GlobPatFinderHit Hit_t,
          SectorType Sector_t,
          PatternTopology<Hit_t> Topology_t>
-typename GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::PatternStateAuxVec
-GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::resolveOverlaps(
-    const GeometryContext& gctx,
-    PatternStateAuxVec& toResolve) const 
-{
-    ACTS_VERBOSE(__func__<<"() Resolving overlaps among "
-        <<toResolve.size()<<" patterns.");
-    PatternStateAuxVec outputPatterns{};
-    outputPatterns.reserve(toResolve.size());
-    /** Check if two patterns overlap in space */
-    auto areOverlapping = [&](const PatternStateAux& a, const PatternStateAux& b) {
-        /** Check first the geometrical overlap */
-        if(!a.sector.isNeighbour(b.sector)) {
-            return false;
-        }
-        /** Check the angular difference between the seed hits */
-        if (std::abs(a.patTheta - b.patTheta) > 2.*m_cfg.maxThetaSizeOverlap) {
-            return false;
-        }
-        // Common reference radius: where the patterns actually live, e.g. the anchor hit of either one.
-        const double refR {a.lineAnchorHit->globalPosition(gctx).template head<2>().norm()};
-        if (a.nPhiLayers > 1 && b.nPhiLayers > 1) {
-            using namespace Acts::UnitLiterals;
-            if (std::abs(Acts::detail::difference_periodic(
-                    a.phiAtRadius(refR), 
-                    b.phiAtRadius(refR), 2. * std::numbers::pi)) 
-                        > 2.*m_cfg.phiTolerance) {
-                return false;
-            }
-        } else if (a.nPhiLayers > 0) {
-            if (!b.sector.insideSector(a.phiAtRadius(refR))) {
-                return false;
-            }
-        } else if (b.nPhiLayers > 0) {
-            if (!a.sector.insideSector(b.phiAtRadius(refR))) {
-                return false;
-            }
-        }
-        /** If we reach here, the patterns can overlap geometrically, so check the hit content */
-        std::size_t nSharedHits{0}, nSharedGroups{0};
-        for (std::size_t st{0u}; st < Topology_t::nGroups; ++st) {
-            const auto& hitsA {a.hitsPerGroup[st]};
-            const auto& hitsB {b.hitsPerGroup[st]};
-            if (hitsA.empty() || hitsB.empty()) {
-                continue;
-            }
-            const std::size_t nSharedInGroup = std::ranges::count_if(hitsA, [&](const OrderedHit& hitA){
-                return std::ranges::any_of(hitsB, [&hitA](const OrderedHit& hitB) {
-                    return hitA->overlaps(*hitB);
-                });
-            });
-            nSharedHits += nSharedInGroup;
-            if (nSharedInGroup >= m_cfg.minGroupLayers) {
-                nSharedGroups++;
-            }
-        }
-        /** Overlap if more than 50% of the hits of the smaller pattern are shared */
-        const std::size_t minHits {std::min(a.nBendingLayers(), 
-                                            b.nBendingLayers())};
-        const std::size_t minGroups {std::min(countGoodGroups(a), 
-                                              countGoodGroups(b))};
-        return nSharedHits >= 0.5 *minHits && 
-               nSharedGroups >= std::min(2ul, minGroups);
-    };
-    /** Determine best pattern */
-    auto isBetterOverlap = [&](const PatternStateAux& a, const PatternStateAux& b) {
-        const int nGoodGroupDiff {countGoodGroups(a) - 
-                                  countGoodGroups(b)};
-        if (nGoodGroupDiff != 0) {
-            return nGoodGroupDiff > 0;
-        }
-        return isBetter(a,b);
-    };
-
-    for (auto it = toResolve.begin(); it != toResolve.end(); ++it) {
-        if (it->isOverlap) {
-            continue;
-        }
-        for (auto jt = std::next(it); jt != toResolve.end(); ++jt) {
-            if (jt->isOverlap || !areOverlapping(*it, *jt)) {
-                continue;
-            }
-            if (isBetterOverlap(*it, *jt)) {
-                ACTS_VERBOSE(__func__<<"() Pattern "<<PatternStateAux::detailed(*it)
-                    <<"\nis BETTER than "<<PatternStateAux::detailed(*jt));
-                jt->isOverlap = true;
-            } else {
-                it->isOverlap = true;
-                ACTS_VERBOSE(__func__<<"() Pattern "<<PatternStateAux::detailed(*jt)
-                    <<"\nis BETTER than "<<PatternStateAux::detailed(*it));
-                break;
-            }
-        }
-        if (!it->isOverlap) {
-            outputPatterns.push_back( std::move(*it));
-        }
-    }
-    ACTS_VERBOSE(__func__<<"() Patterns surviving overlap removal: "<< outputPatterns.size());
-    return outputPatterns;
-}
-
-template<GlobPatFinderHit Hit_t,
-         SectorType Sector_t,
-         PatternTopology<Hit_t> Topology_t>
 template<OnlyPhiHitsProvider<Hit_t, Topology_t, Sector_t> OnlyPhiProvider_t>
 void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
     const GeometryContext& gctx,
@@ -619,6 +624,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
 
         /** We use useBeamspot as a flag to indicate whether the pattern line has been determined successfully */
         pat.useBeamspot = true;
+        pat.needLineUpdate = true;
 
         if (groupHits.size() > 1) {
             // if we have >= 2 eta hits in the group, we use the furthestmost to define the pattern line
@@ -629,6 +635,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
             pat.updateLineParameters(gctx, BeamspotInfo{});
         }
         if (pat.useBeamspot && !groupHits.empty()) {
+            pat.needLineUpdate = true;
             // if we have only one eta hit or the layer separation is too small, to find the second hit 
             // we use the functionality of anchor hit
             pat.moveLineAnchorHit(groupHits.front());
@@ -639,6 +646,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
             pat.updateLineParameters(gctx, BeamspotInfo{});
         }
         if (pat.useBeamspot) {
+            pat.needLineUpdate = true;
             /** Define the closest hits in the upper and lewer groups */
             const OrderedHit *lowerHit{nullptr}, *upperHit{nullptr};
             for (const auto& [group, hits] : Acts::enumerate(pat.hitsPerGroup)) {
@@ -796,7 +804,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::convertToPattern(
             [](const OrderedHit& hit) { return hit.hitPtr; });
     }
     output.phiOnlyHits = std::move(candidate.phiOnlyHits);
-    output.meanNormResidual2 = candidate.meanNormResidual2;
+    output.meanNormResidual2 = candidate.getMeanResidual2();
     output.patTheta = candidate.patTheta;
     output.patPhi = candidate.patPhi;
     output.sector = Sector_t{candidate.sector.sector()};
