@@ -9,27 +9,20 @@
 #include "Acts/Seeding/GbtsSeedFit.hpp"
 
 #include "Acts/Utilities/MathHelpers.hpp"
-#include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
 
 namespace Acts::Experimental {
 
 std::optional<FreeVector> freeParametersFromGbtsSeedFit(
-    const GbtsSeedFit& fit, const Vector3& fieldPosition,
-    const Vector2& fieldDirection, const MagneticFieldProvider& magneticField,
-    MagneticFieldProvider::Cache& fieldCache) {
+    const GbtsSeedFit& fit, const Vector3& bField,
+    const Vector2& transverseDirection) {
   if (!fit.valid) {
     return std::nullopt;
   }
 
-  const Result<Vector3> field =
-      magneticField.getField(fieldPosition, fieldCache);
-  if (!field.ok()) {
-    return std::nullopt;
-  }
-  const double transverseField = field->head<2>().dot(fieldDirection);
-  const double bendingField = field->z() - fit.cotTheta * transverseField;
+  const double transverseField = bField.head<2>().dot(transverseDirection);
+  const double bendingField = bField.z() - fit.cotTheta * transverseField;
   if (bendingField == 0) {
     return std::nullopt;
   }

@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 
 #include <optional>
 
@@ -36,14 +35,11 @@ struct GbtsSeedFit final {
 /// Bz - cot(theta) * Bt, with Bt the transverse field along the seed.
 ///
 /// @param fit Fit of the tracking filter
-/// @param fieldPosition Position at which the field is evaluated
-/// @param fieldDirection Unit transverse direction of the seed there
-/// @param magneticField Magnetic field
-/// @param fieldCache Magnetic field cache
-/// @return Free track parameters, or nothing without a fit or a field
+/// @param bField Magnetic field at a point along the seed
+/// @param transverseDirection Unit transverse direction of the seed there
+/// @return Free track parameters, or nothing without a fit
 std::optional<FreeVector> freeParametersFromGbtsSeedFit(
-    const GbtsSeedFit& fit, const Vector3& fieldPosition,
-    const Vector2& fieldDirection, const MagneticFieldProvider& magneticField,
-    MagneticFieldProvider::Cache& fieldCache);
+    const GbtsSeedFit& fit, const Vector3& bField,
+    const Vector2& transverseDirection);
 
 }  // namespace Acts::Experimental

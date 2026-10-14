@@ -176,13 +176,18 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
       const Acts::Vector3 outerPosition(outer.x(), outer.y(), outer.z());
       const Acts::Vector3 fieldPosition =
           0.5 * (fits.at(i).position + outerPosition);
-      const Acts::Vector2 fieldDirection =
+      const Acts::Vector2 transverseDirection =
           (outerPosition - fits.at(i).position).head<2>().normalized();
+      const auto field =
+          m_cfg.magneticField->getField(fieldPosition, fieldCache);
+      if (!field.ok()) {
+        ACTS_ERROR("Field lookup error: " << field.error());
+        return ProcessCode::ABORT;
+      }
       // zeros for a seed without a fit
       freeParameters.push_back(
-          Acts::Experimental::freeParametersFromGbtsSeedFit(
-              fits.at(i), fieldPosition, fieldDirection, *m_cfg.magneticField,
-              fieldCache)
+          Acts::Experimental::freeParametersFromGbtsSeedFit(fits.at(i), *field,
+                                                            transverseDirection)
               .value_or(Acts::FreeVector::Zero()));
     }
     m_outputFreeParameters(ctx, std::move(freeParameters));
