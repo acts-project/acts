@@ -91,6 +91,16 @@ if(ACTS_BUILD_PLUGIN_ROOT)
         ActsMaterialMapMigrate
         PRIVATE ACTS_MATERIAL_MIGRATE_ROOT
     )
+    if(NOT APPLE)
+        # ROOT does not export its private dependencies (e.g. TBB via libImt)
+        # and libImt has no RPATH to them, so the linker cannot resolve them
+        # unless the environment happens to provide them. They are resolved
+        # at runtime instead, like for any other ROOT-based executable.
+        target_link_options(
+            ActsMaterialMapMigrate
+            PRIVATE "LINKER:--allow-shlib-undefined"
+        )
+    endif()
 endif()
 install(
     TARGETS ActsMaterialMapMigrate
