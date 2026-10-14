@@ -26,8 +26,10 @@ void MaterialEffectsAccumulator::initialize(
 void MaterialEffectsAccumulator::accumulate(const Material& material,
                                             double pathLength, double qOverPin,
                                             double qOverPout) {
-  const Direction direction = Direction::fromScalarZeroAsPositive(pathLength);
-  const MaterialSlab slab(material, std::abs(pathLength));
+  // Positive path length; direction applied at the end
+  m_direction = Direction::fromScalarZeroAsPositive(pathLength);
+  const double absPathLength = std::abs(pathLength);
+  const MaterialSlab slab(material, absPathLength);
 
   const float mass = m_particleHypothesis.mass();
   const float absQ = m_particleHypothesis.absoluteCharge();
@@ -40,7 +42,7 @@ void MaterialEffectsAccumulator::accumulate(const Material& material,
       material.isVacuum() ? 1
                           : static_cast<std::size_t>(std::ceil(
                                 slab.thicknessInX0() / m_maxXOverX0Step));
-  const double substep = pathLength / substepCount;
+  const double substep = absPathLength / substepCount;
 
   for (std::size_t i = 0; i < substepCount; ++i) {
     const double momentumMean =
@@ -57,10 +59,9 @@ void MaterialEffectsAccumulator::accumulate(const Material& material,
         m_accumulatedMaterial, absPdg, mass, qOverPmean, absQ);
 
     const double deltaVarTheta = square(theta0out) - square(theta0in);
-    const double deltaVarPos =
-        direction * m_varAngle * square(substep) +
-        2 * m_covAnglePosition * substep +
-        direction * deltaVarTheta * (square(substep) / 3);
+    const double deltaVarPos = m_varAngle * square(substep) +
+                               2 * m_covAnglePosition * substep +
+                               deltaVarTheta * (square(substep) / 3);
     const double deltaCovAnglePosition =
         m_varAngle * substep + deltaVarTheta * substep / 2;
     m_varAngle += deltaVarTheta;
@@ -113,7 +114,8 @@ MaterialEffectsAccumulator::computeAdditionalFreeCovariance(
     // uncertainty continuously. these terms are not included here.
   }
 
-  return additionalFreeCovariance;
+  // Backward propagation removes the effects again
+  return m_direction.sign() * additionalFreeCovariance;
 }
 
 }  // namespace Acts::detail
