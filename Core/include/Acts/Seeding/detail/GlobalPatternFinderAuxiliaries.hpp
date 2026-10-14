@@ -151,8 +151,8 @@ struct PatternStateAux {
         // Forward commonly used accessors for convenience
         const Hit_t* operator->() const { return hitPtr; }
         const Hit_t& operator*() const { return *hitPtr; }
-        bool operator==(const OrderedHit& other) const { return *hitPtr == *other.hitPtr; }
-        bool operator==(const Hit_t& other) const { return *hitPtr == other; }
+        bool operator==(const OrderedHit& other) const { return hitPtr == other.hitPtr; }
+        bool operator==(const Hit_t& other) const { return hitPtr == &other; }
         // Print and stream operator
         friend std::ostream& operator<<(std::ostream& ostr, const OrderedHit& c) {
             c.print(ostr);
@@ -298,8 +298,8 @@ struct PatternStateAux {
     Vector3 lineDir{Vector3::Zero()};
     /** @brief Distance between the two points defining the pattern line */
     double leverArm{0.};
-    /** @brief Mean over eta hits of the square of their residual divided by residual uncertainty */
-    double meanNormResidual2{0.};
+    /** @brief Sum over eta hits of the square of their residual divided by residual uncertainty */
+    double sumNormResidual2{0.};
     /** @brief Pattern phi, which is the phi of the bending plane where the pattern lies */
     double patPhi{0.};
     /** @brief Signed offset of the bending plane from the origin */
@@ -318,8 +318,6 @@ struct PatternStateAux {
     typename Topology_t::LayerIdx nPrecisionLayers{0u};
     typename Topology_t::LayerIdx nTriggerLayers{0u};
     typename Topology_t::LayerIdx nPhiLayers{0u};
-    /** @brief Flag to indicate if the pattern has been finalized */
-    bool isFinalized{false};
     /** @brief Flag to indicate if the pattern is overlapping with another one, used during overlap removal */
     bool isOverlap{false};
     /** @brief Whether we used the beamspot to compute the line parameters */

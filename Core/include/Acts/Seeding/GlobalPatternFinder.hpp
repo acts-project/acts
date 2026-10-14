@@ -84,8 +84,8 @@ class GlobalPatternFinder {
         double nResidualSigma {3.0};
         /** @brief Maximum phi difference [rad] allowed between two hits belonging to the same pattern */
         double phiTolerance {3._degree};
-        /** @brief Size of theta window in radians to search for comapatible hits with a pattern, tailored to the target pt cutoff */
-        double maxThetaSizeOverlap {0.05};
+        /** @brief Maximum theta difference [rad] allowed between two patterns to be considered overlapping */
+        double maxThetaSizeOverlap {5._degree};
         /** @brief Residual uncertainty to consider the hit as low confidence */
         double lowConfidenceResSigma {50};
         /** @brief How much loosen the acceptance window when using beamspot or searching in a new group of the detector */
@@ -227,27 +227,36 @@ class GlobalPatternFinder {
     bool isPhiCompatible(const GeometryContext& gctx,
                          const PatternStateAux& pat,
                          const Hit_t& hit) const;
-    /** @brief Method to check if a pattern passes the quality cuts
+    /** @brief Check if a pattern passes the quality cuts
      *  @param pattern: Pattern to be checked
      *  @return: true if the pattern passes the cuts, false otherwise */
     bool passPatternCuts(const PatternStateAux& pat) const;
-    /** @brief Method to compare two patterns and define which one is better.
+    /** @brief Method to insert a pattern into a vector if it is better than the existing patterns
+     *  @param gctx: geometry context
+     *  @param patterns: vector of patterns to insert into
+     *  @param candidate: candidate pattern to be inserted
+     *  @return: true if the candidate was inserted, false otherwise */
+    bool insertIfBest(const GeometryContext& gctx,
+                      PatternStateAuxVec& patterns, 
+                      PatternStateAux&& candidate) const;
+    /** @brief Check if two patterns overlap in space or in hit content
+     *  @param gctx: geometry context
+     *  @param a: first pattern
+     *  @param b: second pattern
+     *  @return: true if the patterns overlap, false otherwise */
+    bool areOverlapping(const GeometryContext& gctx, 
+                        const PatternStateAux& a, 
+                        const PatternStateAux& b) const;
+    /** @brief Compare two patterns and define which one is better.
      *  @param a: first pattern
      *  @param b: second pattern
      *  @return: true if pattern a is better than pattern b, false otherwise */
     static bool isBetter(const PatternStateAux& a, 
                          const PatternStateAux& b);
-    /** @brief Method to count the number of good groups in a pattern
+    /** @brief Count the number of good groups in a pattern
      *  @param pat: pattern to be checked
      *  @return: number of good groups in the pattern */
     typename Topology_t::GroupIdx countGoodGroups(const PatternStateAux& pat) const;
-    /** @brief Method to remove overlapping patterns
-     *  @param gctx: geometry context
-     *  @param toResolve: pattern to be resolved
-     *  @return: resolved patterns */
-    PatternStateAuxVec
-    resolveOverlaps(const GeometryContext& gctx,
-                    PatternStateAuxVec& toResolve) const;
     /** @brief Method to add phi-only measurements to existing PatternStateAuxs
      *  @param gctx: Geometry context
      *  @param patterns: Vector of pattern states to which to add phi-only hits
@@ -257,16 +266,14 @@ class GlobalPatternFinder {
                         const BeamspotInfo& beamSpot,
                         const OnlyPhiProvider_t& onlyPhiProvider,
                         PatternStateAuxVec& patterns) const;
-    /** @brief Method to convert a PatternStateAux into a GlobalPattern object
+    /** @brief Convert a PatternStateAux into a GlobalPattern object
      *  @param candidate: PatternStateAux to be converted
      *  @return: Converted GlobalPattern */
-    OutputPattern
-    convertToPattern(PatternStateAux&& candidate) const;
-    /** @brief Method to convert a vector of PatternStateAuxs into GlobalPattern objects
+    OutputPattern convertToPattern(PatternStateAux&& candidate) const;
+    /** @brief Convert a vector of PatternStateAuxs into GlobalPattern objects
      *  @param candidates: PatternStateAuxs to be converted
      *  @return: Vector of converted GlobalPatterns */
-    std::vector<OutputPattern> 
-    convertToPattern(PatternStateAuxVec&& candidates) const;
+    std::vector<OutputPattern> convertToPattern(PatternStateAuxVec&& candidates) const;
 
     /** @brief Global Pattern Recognition configuration */
     Config m_cfg;

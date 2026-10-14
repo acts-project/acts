@@ -152,7 +152,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::computeLineResidual(
         *  so the residual include the error in the phi direction. */
     const bool projectTestHit {!testHit->spacePoint()->measuresLoc0() || 
                                nPhiLayers == 0u};
-    const Vector3 testPos {projectTestHit ? projToPhiPlane(gctx,*testHit) 
+    const Vector3 testPos {projectTestHit ? projToPhiPlane(gctx, *testHit) 
                                           : testHit->globalPosition(gctx)};
     const Vector3 K {testPos - linePos};
     const double KdotD {K.dot(lineDir)};
@@ -167,6 +167,8 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::computeLineResidual(
     const Vector3 resDir {R / res.residual}; // Residual direction
     /** Alpha represents the extrapolation distance along the pattern line */
     const double alpha {KdotD / leverArm};
+    /** Unit vector along the bending plane */
+    const Vector2 eR {bendPlaneNorm.y(), -bendPlaneNorm.x()};
     
     /** Accumulate the derivatives of the scalar residual with respect to the common phi-plane angle. */
     double phiPlaneDerivativeAcc {0.};
@@ -206,7 +208,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::computeLineResidual(
         
         residualCovAcc += Acts::square(preFactor) 
             * intrinsicVariance(gctx, hit, trfDir, /*isProjected=*/true);
-        phiPlaneDerivativeAcc += preFactor * projFactor * Acts::fastHypot(pos.x(), pos.y());
+        phiPlaneDerivativeAcc += preFactor * projFactor * pos.head<2>().dot(eR);
         phiDisplDerivativeAcc += preFactor * projFactor;
     };
 
@@ -465,7 +467,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::addHit(
     prevLayerHit = lastInsertedHit;
     lastInsertedHit = hit;
 
-    meanNormResidual2 += Acts::square(testRes.residual / testRes.sigma);
+    sumNormResidual2 += Acts::square(testRes.residual / testRes.sigma);
     nDoF += testRes.nDof;
     lastHitTestRes = testRes;
 
@@ -516,8 +518,8 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::overWriteHit(
         updatePhi = true;
     }
     /** Update the residual */
-    meanNormResidual2 += Acts::square(newTestRes.residual / newTestRes.sigma) - 
-                         Acts::square(lastHitTestRes.residual / lastHitTestRes.sigma);
+    sumNormResidual2 += Acts::square(newTestRes.residual / newTestRes.sigma) - 
+                        Acts::square(lastHitTestRes.residual / lastHitTestRes.sigma);
     nDoF += newTestRes.nDof - lastHitTestRes.nDof;
     lastHitTestRes = newTestRes;
 
@@ -550,8 +552,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::isInPattern(
     const Hit_t& hit) const 
 {
     const auto& hits {hitsPerGroup[Topology_t::groupIndex(hit)]};
-    return std::ranges::find_if(hits, 
-        [&hit](const OrderedHit& c){ return *c == hit; }) != hits.end();                                           
+    return std::find(hits.begin(), hits.end(), hit) != hits.end();                                     
 }
 
 template <GlobPatFinderHit Hit_t, 
@@ -559,10 +560,7 @@ template <GlobPatFinderHit Hit_t,
           PatternTopology<Hit_t> Topology_t>
 double 
 PatternStateAux<Hit_t, Sector_t, Topology_t>::getMeanResidual2() const {
-    if (isFinalized) {
-        return meanNormResidual2;
-    }
-    return meanNormResidual2 / nDoF;
+    return sumNormResidual2 / std::max(1., static_cast<double>(nDoF));
 }
 
 template <GlobPatFinderHit Hit_t, 
