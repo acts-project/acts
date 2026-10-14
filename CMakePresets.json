@@ -151,7 +151,6 @@
             "displayName": "GitHub-CI CUDA muon segment fitting",
             "inherits": "ci-common",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
                 "CMAKE_CUDA_ARCHITECTURES": "75;86",
                 "ACTS_ENABLE_CUDA": "ON",
                 "ACTS_BUILD_EXAMPLES": "ON",

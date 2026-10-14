@@ -137,7 +137,7 @@ inline auto run_propagation_host(vecmem::memory_resource *mr,
     step_tracer_host_t::state tracer_state{*mr};
     typename pathlimit_aborter_t::state pathlimit_state{
         cfg.stepping.path_limit};
-    actor::parameter_updater_state<test_algebra> updater_state{cfg};
+    actor::parameter_updater_state<test_algebra> updater_state{cfg, trk};
     actor::pointwise_material_interactor<test_algebra>::state
         interactor_state{};
 
