@@ -142,53 +142,44 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
 
   using AA = ActsExamples::AlignmentAlgorithm;
 
-  // Config
-  py::class_<AA::Config>(m, "AlignmentAlgorithmConfig")
-      .def(py::init<>())
-      .def_readwrite("inputMeasurements", &AA::Config::inputMeasurements)
-      .def_readwrite("inputProtoTracks", &AA::Config::inputProtoTracks)
-      .def_readwrite("inputInitialTrackParameters",
-                     &AA::Config::inputInitialTrackParameters)
-      .def_readwrite("outputAlignmentParameters",
-                     &AA::Config::outputAlignmentParameters)
-      .def_readwrite("alignedDetElements", &AA::Config::alignedDetElements)
-      .def_readwrite("chi2ONdfCutOff", &AA::Config::chi2ONdfCutOff)
-      .def_readwrite("align", &AA::Config::align)
-      .def_readwrite("groups", &AA::Config::m_groups)
-      .def_readwrite("alignedTransformUpdater",
-                     &AA::Config::alignedTransformUpdater)
-      .def_readwrite("deltaChi2ONdfCutOff", &AA::Config::deltaChi2ONdfCutOff)
-      .def_readwrite("maxNumIterations", &AA::Config::maxNumIterations)
-      .def_readwrite("maxNumTracks", &AA::Config::maxNumTracks)
-      .def_property(
-          "iterationState",
-          [](const AA::Config& cfg) {
-            py::dict result;
-            for (const auto& [iter, mask] : cfg.iterationState) {
-              result[py::cast(iter)] =
-                  py::cast(static_cast<std::uint8_t>(mask.to_ulong()));
-            }
-            return result;
-          },
-          [](AA::Config& cfg, py::dict d) {
-            cfg.iterationState.clear();
-            for (auto item : d) {
-              unsigned int iter = item.first.cast<unsigned int>();
+  auto c =
+      py::class_<AA::Config>(m, "AlignmentAlgorithmConfig").def(py::init<>());
 
-              std::uint8_t mask_value;
-              if (py::isinstance<ActsAlignment::AlignmentMask>(item.second)) {
-                mask_value = static_cast<std::uint8_t>(
-                    item.second.cast<ActsAlignment::AlignmentMask>());
-              } else if (py::isinstance<py::int_>(item.second)) {
-                mask_value = item.second.cast<std::uint8_t>();
-              } else {
-                throw py::type_error(
-                    "iterationState value must be AlignmentMask or int");
-              }
+  ACTS_PYTHON_STRUCT(c, inputMeasurements, inputProtoTracks,
+                     inputInitialTrackParameters, outputAlignmentParameters,
+                     alignedDetElements, chi2ONdfCutOff, align,
+                     alignedTransformUpdater, deltaChi2ONdfCutOff,
+                     maxNumIterations, maxNumTracks, groups);
 
-              cfg.iterationState[iter] = std::bitset<6>(mask_value);
-            }
-          });
+  c.def_property(
+      "iterationState",
+      [](const AA::Config& cfg) {
+        py::dict result;
+        for (const auto& [iter, mask] : cfg.iterationState) {
+          result[py::cast(iter)] =
+              py::cast(static_cast<std::uint8_t>(mask.to_ulong()));
+        }
+        return result;
+      },
+      [](AA::Config& cfg, py::dict d) {
+        cfg.iterationState.clear();
+        for (auto item : d) {
+          unsigned int iter = item.first.cast<unsigned int>();
+
+          std::uint8_t mask_value;
+          if (py::isinstance<ActsAlignment::AlignmentMask>(item.second)) {
+            mask_value = static_cast<std::uint8_t>(
+                item.second.cast<ActsAlignment::AlignmentMask>());
+          } else if (py::isinstance<py::int_>(item.second)) {
+            mask_value = item.second.cast<std::uint8_t>();
+          } else {
+            throw py::type_error(
+                "iterationState value must be AlignmentMask or int");
+          }
+
+          cfg.iterationState[iter] = std::bitset<6>(mask_value);
+        }
+      });
 
   py::class_<AA::AlignmentFunction, std::shared_ptr<AA::AlignmentFunction>>(
       m, "AlignmentFunction");

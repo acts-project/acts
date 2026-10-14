@@ -111,7 +111,7 @@ class AlignmentAlgorithm final : public IAlgorithm {
     std::size_t maxNumIterations = 100;
     /// Number of tracks to be used for alignment
     int maxNumTracks = -1;
-    std::vector<AlignmentGroup> m_groups;
+    std::vector<AlignmentGroup> groups;
   };
 
   /// Constructor of the alignment algorithm
