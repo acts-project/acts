@@ -254,7 +254,6 @@ if "__main__" == __name__:
             level=logLevel, filePath=args.output + "_map.root"
         ).writeMaterial(mapping.material)
 
-
     # The calo material collector surfaces are just catch-alls to keep
     # calorimeter material from leaking onto tracker surfaces; they don't
     # represent a real, physically meaningful mapping location, so exclude
