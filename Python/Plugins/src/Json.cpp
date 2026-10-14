@@ -51,6 +51,8 @@ class MaterialMapDecorator final : public IMaterialDecorator {
     m_material.apply(volume);
   }
 
+  const TrackingGeometryMaterial& material() const { return m_material; }
+
  private:
   TrackingGeometryMaterial m_material;
 };
@@ -73,7 +75,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
     py::class_<MaterialMapDecorator, IMaterialDecorator,
                std::shared_ptr<MaterialMapDecorator>>(json,
                                                       "MaterialMapDecorator")
-        .def(py::init<TrackingGeometryMaterial>(), py::arg("material"));
+        .def(py::init<TrackingGeometryMaterial>(), py::arg("material"))
+        .def_property_readonly("materialMaps", &MaterialMapDecorator::material,
+                               py::return_value_policy::reference_internal);
   }
 
   {
