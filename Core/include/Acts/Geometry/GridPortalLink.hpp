@@ -115,6 +115,27 @@ class GridPortalLink : public PortalLinkBase {
       const std::shared_ptr<RegularSurface>& surface, TrackingVolume& volume,
       AxisDirection direction);
 
+  /// Factory function for a one-dimensional grid portal link from a
+  /// type-erased axis. Dispatches to the templated overload inside Core, so
+  /// callers do not instantiate every axis type themselves.
+  /// @param surface The surface
+  /// @param direction The binning direction
+  /// @param axis The axis to use for the binning
+  /// @return A unique pointer to the grid portal link
+  static std::unique_ptr<GridPortalLink> make(
+      const std::shared_ptr<RegularSurface>& surface, AxisDirection direction,
+      const IAxis& axis);
+
+  /// Factory function for a two-dimensional grid portal link from type-erased
+  /// axes, see the one-dimensional overload.
+  /// @param surface The surface
+  /// @param axis0 The first axis to use for the binning
+  /// @param axis1 The second axis to use for the binning
+  /// @return A unique pointer to the grid portal link
+  static std::unique_ptr<GridPortalLink> make(
+      const std::shared_ptr<RegularSurface>& surface, const IAxis& axis0,
+      const IAxis& axis1);
+
   /// Merge two grid portal links into a single one. The routine can merge
   /// one-dimensional, two-dimensional and mixed links. The merge will try to
   /// preserve equidistant binning in case bin widths match. Otherwise, the
