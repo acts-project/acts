@@ -585,10 +585,6 @@ void combinatorial_kalman_filter_algorithm::build_tracks_kernel(
                       payload);
 }
 
-void combinatorial_kalman_filter_algorithm::synchronize() const {
-  queue().synchronize();
-}
-
 }  // namespace traccc::alpaka
 
 namespace alpaka::trait {

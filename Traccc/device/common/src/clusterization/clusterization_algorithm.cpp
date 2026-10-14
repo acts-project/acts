@@ -193,6 +193,11 @@ clusterization_algorithm::execute_impl(
                          permutation_map_buffer);
   }
 
+  // Kernels must finish before the temporary buffers are released.
+  if (keep_disjoint_set || m_config.sort_cells) {
+    synchronize();
+  }
+
   // Return the reconstructed measurements.
   return {std::move(measurements), std::move(cluster_data)};
 }

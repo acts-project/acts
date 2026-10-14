@@ -82,6 +82,9 @@ auto silicon_pixel_spacepoint_formation_algorithm::operator()(
   form_spacepoints_kernel(
       {n_measurements, det, measurements, spacepoint_index_view, spacepoints});
 
+  // Complete forming spacepoints before releasing its buffers..
+  synchronize();
+
   // Return the reconstructed spacepoints.
   return spacepoints;
 }

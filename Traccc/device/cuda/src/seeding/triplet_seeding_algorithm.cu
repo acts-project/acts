@@ -276,8 +276,4 @@ void triplet_seeding_algorithm::select_seeds_kernel(
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
-void triplet_seeding_algorithm::synchronize() const {
-  stream().synchronize();
-}
-
 }  // namespace traccc::cuda

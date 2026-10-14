@@ -109,9 +109,6 @@ void silicon_pixel_spacepoint_formation_algorithm::form_spacepoints_kernel(
                            payload.spacepoints);
       });
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
-  // The base class destroys the prefix sum buffer right after this call, so
-  // the kernel must finish before returning.
-  stream().synchronize();
 }
 
 }  // namespace traccc::hip
