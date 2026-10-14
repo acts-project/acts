@@ -39,13 +39,19 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
 @pytest.mark.slow
 @pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-def test_material_mapping(material_recording, tmp_path, assert_root_hash, odd_detector):
+@pytest.mark.parametrize("gen3", [False, True], ids=["gen1", "gen3"])
+def test_material_mapping(
+    material_recording, tmp_path, assert_root_hash, request, gen3
+):
     from material_mapping import runMaterialMapping
     from material_validation import runMaterialValidation
 
     map_file = tmp_path / "material-map_tracks.root"
     assert not map_file.exists()
 
+    odd_detector = request.getfixturevalue(
+        "odd_detector_gen3" if gen3 else "odd_detector_gen1"
+    )
     trackingGeometry = odd_detector.trackingGeometry()
     materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 
@@ -69,14 +75,18 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash, odd_de
     TrackingGeometryMaterialJsonConverter().toFile(
         mapping.material, tmp_path / "material_mapping_map.json"
     )
-    RootMaterialWriter(
-        level=acts.logging.INFO, filePath=str(tmp_path / "material_mapping_map.root")
-    ).writeMaterial(mapping.material)
+    # Gen3 faces carry stable material keys, which the ROOT material-map
+    # writer rejects, so Gen3 maps are JSON-only.
+    if not gen3:
+        RootMaterialWriter(
+            level=acts.logging.INFO,
+            filePath=str(tmp_path / "material_mapping_map.root"),
+        ).writeMaterial(mapping.material)
 
-    # root map output check
-    map_file_root = tmp_path / "material_mapping_map.root"
-    assert map_file_root.exists()
-    assert_root_hash(map_file_root.name, map_file_root)
+        # root map output check
+        map_file_root = tmp_path / "material_mapping_map.root"
+        assert map_file_root.exists()
+        assert_root_hash(map_file_root.name, map_file_root)
 
     # json map output check
     map_file_json = tmp_path / "material_mapping_map.json"
@@ -103,7 +113,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash, odd_de
     s = Sequencer(events=10, numThreads=1)
 
     with getOpenDataDetector(
-        materialDecorator=acts.IMaterialDecorator.fromFile(map_file_json)
+        materialDecorator=acts.IMaterialDecorator.fromFile(map_file_json), gen3=gen3
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
         materialSurfaces = trackingGeometry.extractMaterialSurfaces()
