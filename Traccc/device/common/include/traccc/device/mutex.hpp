@@ -68,10 +68,6 @@ class mutex {
 
  private:
   const vecmem::device_atomic_ref<T> m_atomic;
-
-  // Not guarded by NDEBUG: forced assertions keep assert() live in builds
-  // that define it.
-  bool m_is_locked = false;
 };
 }  // namespace traccc::device
 
