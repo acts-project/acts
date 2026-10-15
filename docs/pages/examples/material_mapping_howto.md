@@ -191,26 +191,29 @@ Things to know before you use it:
 
 ### Passive volumes and material collectors
 
-`configureFace` marks up faces of a blueprint node that already exists. For a
-DD4hep-backed Gen3 geometry, two `DD4hepBackend` helpers create such nodes in
-the first place, for volumes that carry material but have no sensitive
-detector elements of their own:
+@ref Acts::MaterialDesignatorBlueprintNode::configureFace "configureFace" marks
+up faces of a blueprint node that already exists. For a DD4hep-backed Gen3
+geometry, two @ref ActsPlugins::DD4hep::DD4hepBackend "DD4hepBackend" helpers
+create such nodes in the first place, for volumes that carry material but have
+no sensitive detector elements of their own:
 
-- `DD4hepBackend::makePassiveElement` converts a passive DD4hep element (e.g.
-  the ODD's support tube, or its pixel endplates) into a plain tube- or
-  disc-shaped @ref Acts::StaticBlueprintNode, as opposed to a node assembled
-  from sensitive surfaces. The resulting node can then be wrapped in
-  `addMaterial` like any other.
-- `DD4hepBackend::makeMaterialCollector` creates a synthetic volume with no
-  corresponding DD4hep element at all: a catch-all surface placed just outside
-  the tracker envelope, so that material mapping attributes interactions in
+- @ref ActsPlugins::DD4hep::DD4hepBackend::makePassiveElement "DD4hepBackend::makePassiveElement"
+  converts a passive DD4hep element (e.g. the ODD's support tube, or its pixel
+  endplates) into a plain tube- or disc-shaped @ref Acts::StaticBlueprintNode,
+  as opposed to a node assembled from sensitive surfaces. The resulting node
+  can then be wrapped in @ref Acts::BlueprintNode::addMaterial "addMaterial"
+  like any other.
+- @ref ActsPlugins::DD4hep::DD4hepBackend::makeMaterialCollector "DD4hepBackend::makeMaterialCollector"
+  creates a synthetic volume with no corresponding DD4hep element at all: a
+  catch-all surface placed just outside the tracker envelope, so that material
+  mapping attributes interactions in
   nearby non-tracker material (e.g. the gap before the calorimeter) to a
   dedicated surface instead of misattributing them to the nearest real tracker
   surface. See `addCaloMaterialCollector`/`addCaloMaterialCollectorDisc` in
   `OpenDataDetectorBuilder.cpp` for how the ODD uses this for its calorimeter.
 
 Both are currently DD4hep-only: the TGeo blueprint backend
-(`ActsPlugins::Root::TGeoBlueprintBuilderBackend`) has no equivalent yet, so a
+(@ref ActsPlugins::TGeoBlueprintBuilderBackend) has no equivalent yet, so a
 TGeo-built Gen3 geometry can designate faces on whatever nodes it has but
 cannot create new passive or collector volumes this way.
 
@@ -338,8 +341,8 @@ Outputs:
 > material keys (see @ref material_mapping_stable_keys "above"), and the ROOT
 > material-map writer rejects any map containing keyed surfaces
 > (`Plugins/Root/src/RootMaterialMapIo.cpp`) — Gen3 maps are JSON-only.
-> `material_mapping.py` sets this automatically
-> (`outputMapFormats = ["json"] if gen3 else ["json", "root"]`), so if you omit
+> `material_mapping.py` sets this automatically (it only calls
+> `RootMaterialWriter` when running with `--gen1`), so if you omit
 > `--gen1`, pass the resulting `_map.json` to `--matconfig`/your own decorator,
 > not `_map.root`. Gen1 never sets keys, so `.root` stays available there.
 
@@ -350,9 +353,9 @@ fraction means the material had nowhere to go — see
 > [!note]
 > The `eta_distance.svg` plot is only produced when running `material_mapping.py`
 > as a script — it comes from `plotEtaSurfaceDistance()`, called in its
-> `__main__` block after `runMaterialMapping(...).run()`. If you call
-> `runMaterialMapping()` yourself as a library function, you do not get it for
-> free. On Gen3, the plot excludes the ODD's calorimeter collector surfaces
+> `__main__` block after the mapping sequencer has run and the map has been
+> written. If you call `runMaterialMapping()` yourself as a library function,
+> you do not get it for free. On Gen3, the plot excludes the ODD's calorimeter collector surfaces
 > (see @ref material_mapping_howto_gen3 "above"), since they are catch-alls
 > rather than real mapping locations and would otherwise skew the distance
 > distribution.
