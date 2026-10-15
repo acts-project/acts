@@ -493,6 +493,7 @@ def ddsim_input(ddsim_input_session, tmp_path):
 @pytest.mark.slow
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+@pytest.mark.xdist_group("heavy")
 def test_edm4hep_simhit_particle_reader(tmp_path, ddsim_input, odd_detector):
     detector = odd_detector
     from acts.examples.edm4hep import EDM4hepSimInputConverter
@@ -827,6 +828,7 @@ def test_edm4hep_podio_track_output_converter(tmp_path, odd_detector):
 
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+@pytest.mark.xdist_group("heavy")
 def test_edm4hep_reader(ddsim_input):
     from acts.examples.edm4hep import PodioReader
 
@@ -847,6 +849,7 @@ def test_edm4hep_reader(ddsim_input):
 
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+@pytest.mark.xdist_group("heavy")
 def test_edm4hep_writer_copy(ddsim_input, tmp_path):
     from acts.examples.edm4hep import PodioWriter, PodioReader
 
