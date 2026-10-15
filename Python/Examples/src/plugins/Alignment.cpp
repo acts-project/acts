@@ -11,9 +11,9 @@
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
 #include "ActsExamples/Alignment/AlignmentAlgorithm.hpp"
-#include "ActsExamples/DetectorCommons/AlignedTransformUpdater.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentDecorator.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentGenerator.hpp"
+#include "ActsExamples/DetectorCommons/ExampleAlignedTransformUpdater.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
@@ -75,22 +75,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
     py::class_<GeoIdAlignmentStore, IAlignmentStore,
                std::shared_ptr<GeoIdAlignmentStore>>(m, "GeoIdAlignmentStore")
         .def(py::init<
-             const std::unordered_map<GeometryIdentifier, Transform3>&>());
-  }
-
-  {
-    py::class_<MutableGeoIdAlignmentStore, GeoIdAlignmentStore,
-               std::shared_ptr<MutableGeoIdAlignmentStore>>(
-        m, "MutableGeoIdAlignmentStore")
-        .def(py::init<
              const std::unordered_map<GeometryIdentifier, Transform3>&>())
-        .def("setTransform", &MutableGeoIdAlignmentStore::setTransform,
+        .def("setTransform", &GeoIdAlignmentStore::setTransform,
              py::arg("geoId"), py::arg("transform"),
              "Update or insert a transform for a given geometry ID")
-        .def("getTransformMap",
-             py::overload_cast<>(&MutableGeoIdAlignmentStore::getTransformMap),
+        .def("getTransformMap", &GeoIdAlignmentStore::getTransformMap,
              py::return_value_policy::reference_internal,
-             "Get mutable access to the transform map");
+             "Get const access to the transform map");
   }
 
   {
@@ -189,10 +180,10 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
         py::arg("trackingGeometry"), py::arg("magneticField"));
 
   m.def("makeAlignedTransformUpdater",
-        py::overload_cast<std::shared_ptr<MutableGeoIdAlignmentStore>>(
+        py::overload_cast<std::shared_ptr<GeoIdAlignmentStore>>(
             &makeAlignedTransformUpdater),
         py::arg("store"),
-        "Create an aligned transform updater with a mutable store");
+        "Create an aligned transform updater with an alignment store");
 
   py::class_<AA, ActsExamples::IAlgorithm, std::shared_ptr<AA>>(
       m, "AlignmentAlgorithm")

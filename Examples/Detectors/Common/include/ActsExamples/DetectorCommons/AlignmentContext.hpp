@@ -72,6 +72,20 @@ class GeoIdAlignmentStore : public IAlignmentStore {
     return std::make_shared<GeoIdAlignmentStore>(m_transformMap);
   }
 
+  /// Update or insert a transform for a given geometry ID
+  /// @param geoId The geometry identifier
+  /// @param transform The new transform to store
+  void setTransform(Acts::GeometryIdentifier geoId,
+                    const Acts::Transform3& transform) {
+    m_transformMap[geoId] = transform;
+  }
+
+  /// Get const access to the transform map
+  const std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>&
+  getTransformMap() const {
+    return m_transformMap;
+  }
+
   /// @copydoc ITransformStore::contextualTransform
   const Acts::Transform3* contextualTransform(
       const Acts::Surface& surface) const override {
