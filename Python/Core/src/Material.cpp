@@ -145,7 +145,13 @@ void addMaterial(py::module_& m) {
                     }),
                 py::arg("config"), py::arg("level"))
             .def("createState", &BinnedSurfaceMaterialAccumulator::createState)
-            .def("accumulate", &BinnedSurfaceMaterialAccumulator::accumulate)
+            .def(
+                "accumulate",
+                py::overload_cast<
+                    ISurfaceMaterialAccumulator::State&, const GeometryContext&,
+                    const std::vector<MaterialInteraction>&,
+                    const std::vector<IAssignmentFinder::SurfaceAssignment>&>(
+                    &BinnedSurfaceMaterialAccumulator::accumulate, py::const_))
             .def("finalizeMaterial",
                  &BinnedSurfaceMaterialAccumulator::finalizeMaterial)
             .def("finalizeMaps",
@@ -168,7 +174,8 @@ void addMaterial(py::module_& m) {
                        py::arg("config"), py::arg("level"));
 
     auto c = py::class_<MaterialMapper::Config>(mm, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, assignmentFinder, surfaceMaterialAccumulator);
+    ACTS_PYTHON_STRUCT(c, assignmentFinder, surfaceMaterialAccumulator,
+                       numThreads);
   }
 
   {

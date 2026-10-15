@@ -12,15 +12,22 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/AccumulatedMaterialSlab.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/BinnedSurfaceMaterialAccumulator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/IntersectionMaterialAssigner.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialMapper.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Material/interface/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+
+#include <numbers>
+#include <random>
 
 using namespace Acts;
 
@@ -224,6 +231,118 @@ BOOST_AUTO_TEST_CASE(MaterialMapperFlowTest) {
 
   BOOST_CHECK(maps.surfaceMaterials.size() == 3);
   BOOST_CHECK(maps.volumeMaterials.empty());
+}
+
+BOOST_AUTO_TEST_CASE(MaterialMapperBatchMatchesSerial) {
+  std::vector<std::shared_ptr<Surface>> surfaces;
+  for (double r : {20., 30., 50., 80.}) {
+    surfaces.push_back(
+        Surface::makeShared<CylinderSurface>(Transform3::Identity(), r, 100.));
+  }
+  BinUtility binning(6, -std::numbers::pi, std::numbers::pi, closed,
+                     AxisDirection::AxisPhi);
+  binning += BinUtility(5, -100., 100., open, AxisDirection::AxisZ);
+  std::vector<const Surface*> surfacePtrs;
+  for (auto [is, surface] : enumerate(surfaces)) {
+    surface->assignGeometryId(GeometryIdentifier().withSensitive(is + 1));
+    surface->assignSurfaceMaterial(
+        std::make_shared<ProtoSurfaceMaterial>(binning));
+    surfacePtrs.push_back(surface.get());
+  }
+
+  IntersectionMaterialAssigner::Config assignerConfig;
+  assignerConfig.surfaces = surfacePtrs;
+  BinnedSurfaceMaterialAccumulator::Config accumulatorConfig;
+  accumulatorConfig.materialSurfaces = surfacePtrs;
+
+  MaterialMapper::Config mmConfig;
+  mmConfig.assignmentFinder =
+      std::make_shared<IntersectionMaterialAssigner>(assignerConfig);
+  mmConfig.surfaceMaterialAccumulator =
+      std::make_shared<BinnedSurfaceMaterialAccumulator>(accumulatorConfig);
+  MaterialMapper serialMapper(mmConfig);
+  mmConfig.numThreads = 4;
+  MaterialMapper parallelMapper(mmConfig);
+
+  // Straight tracks from the origin with interactions along the way, some of
+  // them leaving through the cylinder ends
+  std::mt19937 rng(7);
+  std::uniform_real_distribution<double> uniform(0., 1.);
+  std::vector<RecordedMaterialTrack> tracks(300);
+  for (auto& [startDir, recorded] : tracks) {
+    const double phi = std::numbers::pi * (2 * uniform(rng) - 1);
+    const double cotTheta = 2 * uniform(rng) - 1;
+    startDir = {Vector3::Zero(),
+                Vector3(std::cos(phi), std::sin(phi), cotTheta).normalized()};
+    for (double s = 1.; s < 120.; s += 0.5 + 4 * uniform(rng)) {
+      MaterialInteraction mi;
+      mi.position = s * startDir.second;
+      mi.direction = startDir.second;
+      mi.materialSlab =
+          MaterialSlab(Material::fromMassDensity(1 + 100 * uniform(rng),
+                                                 1 + 300 * uniform(rng), 10.,
+                                                 5., 1 + uniform(rng)),
+                       0.1 + uniform(rng));
+      recorded.materialInteractions.push_back(mi);
+    }
+  }
+
+  auto serialState = serialMapper.createState(tContext);
+  std::vector<std::pair<RecordedMaterialTrack, RecordedMaterialTrack>>
+      serialResults;
+  for (const auto& track : tracks) {
+    serialResults.push_back(
+        serialMapper.mapMaterial(*serialState, tContext, {}, track));
+  }
+
+  auto parallelState = parallelMapper.createState(tContext);
+  std::vector<std::pair<RecordedMaterialTrack, RecordedMaterialTrack>>
+      parallelResults;
+  for (std::size_t begin = 0; begin < tracks.size(); begin += 64) {
+    std::vector<const RecordedMaterialTrack*> batch;
+    for (std::size_t t = begin; t < std::min(begin + 64, tracks.size()); ++t) {
+      batch.push_back(&tracks[t]);
+    }
+    for (auto& result :
+         parallelMapper.mapMaterial(*parallelState, tContext, {}, batch)) {
+      parallelResults.push_back(std::move(result));
+    }
+  }
+
+  // Identical mapped and unmapped tracks
+  BOOST_REQUIRE_EQUAL(serialResults.size(), parallelResults.size());
+  std::size_t nMapped = 0;
+  for (std::size_t t = 0; t < serialResults.size(); ++t) {
+    for (auto [serial, parallel] :
+         {std::pair{&serialResults[t].first, &parallelResults[t].first},
+          std::pair{&serialResults[t].second, &parallelResults[t].second}}) {
+      const auto& sInteractions = serial->second.materialInteractions;
+      const auto& pInteractions = parallel->second.materialInteractions;
+      BOOST_REQUIRE_EQUAL(sInteractions.size(), pInteractions.size());
+      for (std::size_t i = 0; i < sInteractions.size(); ++i) {
+        BOOST_CHECK_EQUAL(sInteractions[i].surface, pInteractions[i].surface);
+        BOOST_CHECK(sInteractions[i].intersection ==
+                    pInteractions[i].intersection);
+      }
+      BOOST_CHECK_EQUAL(serial->second.materialInX0,
+                        parallel->second.materialInX0);
+    }
+    nMapped += serialResults[t].first.second.materialInteractions.size();
+  }
+  BOOST_CHECK_GT(nMapped, 0u);
+
+  // Identical maps
+  auto serialMaps = serialMapper.finalizeMaps(*serialState, tContext);
+  auto parallelMaps = parallelMapper.finalizeMaps(*parallelState, tContext);
+  BOOST_REQUIRE_EQUAL(serialMaps.surfaceMaterials.size(), surfaces.size());
+  BOOST_REQUIRE_EQUAL(parallelMaps.surfaceMaterials.size(), surfaces.size());
+  for (const auto& [key, material] : serialMaps.surfaceMaterials) {
+    auto* sm = dynamic_cast<const BinnedSurfaceMaterial*>(material.get());
+    auto* pm = dynamic_cast<const BinnedSurfaceMaterial*>(
+        parallelMaps.surfaceMaterials.at(key).get());
+    BOOST_REQUIRE(sm != nullptr && pm != nullptr);
+    BOOST_CHECK(sm->fullMaterial() == pm->fullMaterial());
+  }
 }
 
 BOOST_AUTO_TEST_CASE(MaterialMapperInvalidTest) {

@@ -17,11 +17,17 @@
 #include "Acts/Material/interface/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <span>
 #include <utility>
 #include <vector>
 
 namespace Acts {
+
+namespace detail {
+class WorkerPool;
+}  // namespace detail
 /// Class that implements the material mapping procedure
 /// @ingroup material_mapping
 class MaterialMapper {
@@ -33,6 +39,10 @@ class MaterialMapper {
     /// The material accumulator for surfaces
     std::shared_ptr<const ISurfaceMaterialAccumulator>
         surfaceMaterialAccumulator = nullptr;
+    /// Number of threads used by the batch @ref mapMaterial call, including
+    /// the calling thread. The assignment finder must be safe to call
+    /// concurrently when this is larger than one.
+    std::size_t numThreads = 1;
   };
 
   /// @brief nested state struct
@@ -79,6 +89,26 @@ class MaterialMapper {
       const MagneticFieldContext& mctx, const RecordedMaterialTrack& rmTrack,
       const Options& options = Options{}) const;
 
+  /// @brief Map the material interactions of a batch of tracks
+  ///
+  /// The assignment of the tracks runs concurrently on the configured number
+  /// of threads, the accumulation is delegated to the batch accumulation of
+  /// the surface material accumulator. The result is identical to calling
+  /// the single-track @ref mapMaterial for every track in order.
+  ///
+  /// @param state the state object holding the sub states
+  /// @param gctx the geometry context
+  /// @param mctx the magnetic field context
+  /// @param rmTracks the recorded material tracks, which are not copied
+  /// @param options the call options (see above)
+  ///
+  /// @return the mapped and unmapped material tracks, in input order
+  std::vector<std::pair<RecordedMaterialTrack, RecordedMaterialTrack>>
+  mapMaterial(State& state, const GeometryContext& gctx,
+              const MagneticFieldContext& mctx,
+              std::span<const RecordedMaterialTrack* const> rmTracks,
+              const Options& options = Options{}) const;
+
   /// Finalize the maps
   /// @param state Material mapping state containing collected data
   /// @param gctx Geometry context for finalization
@@ -93,8 +123,24 @@ class MaterialMapper {
   /// The configuration
   Config m_cfg;
 
+  /// The result of the assignment of a single track
+  struct TrackAssignment {
+    RecordedMaterialTrack mapped;
+    RecordedMaterialTrack unmapped;
+    std::vector<IAssignmentFinder::SurfaceAssignment> surfacesWithoutAssignment;
+  };
+
+  /// Assign the material of a single track, without accumulation
+  TrackAssignment assignTrack(const GeometryContext& gctx,
+                              const MagneticFieldContext& mctx,
+                              const RecordedMaterialTrack& rmTrack,
+                              const Options& options) const;
+
   /// The logger
   std::unique_ptr<const Logger> m_logger;
+
+  /// The worker pool for batch mapping, nullptr for serial execution
+  std::shared_ptr<detail::WorkerPool> m_pool;
 };
 
 }  // namespace Acts

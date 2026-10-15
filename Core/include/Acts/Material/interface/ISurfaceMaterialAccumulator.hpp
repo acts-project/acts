@@ -18,11 +18,15 @@
 
 #include <map>
 #include <memory>
+#include <span>
 #include <vector>
 
 namespace Acts {
 
 class Surface;
+namespace detail {
+class WorkerPool;
+}  // namespace detail
 
 /// @brief Interface for the material mapping, this is the accumulation step
 /// @ingroup material_mapping
@@ -57,6 +61,36 @@ class ISurfaceMaterialAccumulator {
       const std::vector<MaterialInteraction>& interactions,
       const std::vector<IAssignmentFinder::SurfaceAssignment>&
           surfacesWithoutAssignment) const = 0;
+
+  /// The accumulation input of a single track
+  struct TrackAccumulation {
+    /// The material interactions, with assigned surfaces
+    const std::vector<MaterialInteraction>* interactions = nullptr;
+    /// The candidate surfaces without assignment
+    const std::vector<IAssignmentFinder::SurfaceAssignment>*
+        surfacesWithoutAssignment = nullptr;
+  };
+
+  /// @brief Accumulate the material of a batch of tracks
+  ///
+  /// The result must be identical to calling the single-track
+  /// @ref accumulate for every track in order. The default does exactly that
+  /// and ignores @p pool; implementations can override this to process
+  /// independent parts of the accumulation concurrently.
+  ///
+  /// @param state is the state of the accumulator
+  /// @param gctx the geometry context
+  /// @param tracks the per-track accumulation inputs, in mapping order
+  /// @param pool optional worker pool, nullptr means serial execution
+  virtual void accumulate(State& state, const GeometryContext& gctx,
+                          std::span<const TrackAccumulation> tracks,
+                          detail::WorkerPool* pool) const {
+    static_cast<void>(pool);
+    for (const auto& track : tracks) {
+      accumulate(state, gctx, *track.interactions,
+                 *track.surfacesWithoutAssignment);
+    }
+  }
 
   /// Finalize the surface material maps
   ///
