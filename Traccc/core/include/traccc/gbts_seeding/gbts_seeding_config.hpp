@@ -44,8 +44,8 @@ struct gbts_layerInfo {
   }
 };
 
-// Named indices into the flat device counter buffer, mirroring the layout in
-// traccc/gbts_changes. One memset zeros all of them.
+// Named indices into the host counter vector, mirroring the layout in
+// traccc/gbts_changes.
 enum gbts_counter : unsigned int {
   nEdgesTotal,      // edges found by gbts_count_graph_edges (uncapped)
   nConnectedEdges,  // edges kept after the edge matching re-index
@@ -276,7 +276,7 @@ struct gbts_seedfinder_config {
 
   // Edge buffer capacity per spacepoint.
   // edges beyond the capacity are dropped.
-  unsigned int max_edges_per_spacepoint = 8;
+  unsigned int max_edges_per_spacepoint = 32;
   // Capacity of the compacted graph per spacepoint
   // connected edges beyond it are dropped.
   unsigned int max_connected_edges_per_spacepoint = 2;

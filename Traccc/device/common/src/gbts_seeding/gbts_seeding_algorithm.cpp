@@ -119,9 +119,8 @@ auto gbts_seeding_algorithm::create_edges(
     vecmem::data::vector_buffer<unsigned int> node_index,
     vecmem::data::vector_buffer<float> bin_rads,
     vecmem::data::vector_buffer<unsigned int> eta_bin_offsets,
-    const unsigned int nSp,
-    vecmem::data::vector_buffer<unsigned int>& counters_buf,
-    vecmem::vector<unsigned int>& h_counters) const -> graph_making_output {
+    const unsigned int nSp, vecmem::vector<unsigned int>& h_counters) const
+    -> graph_making_output {
   const gbts_seedfinder_config& cfg = m_config;
 
   // 1. Work list: one item per (bin pair, chunk of the inner bin).
@@ -170,8 +169,28 @@ auto gbts_seeding_algorithm::create_edges(
       .num_outgoing_edges = num_outgoing_edges_buf,
   });
 
-  // 3. Write the edges into their slots.
-  const unsigned int nEdgesMax = cfg.max_edges_per_spacepoint * nSp;
+  // 3. Write the edges into their slots. The buffers are sized by the edge
+  //    count, up to max_edges_per_spacepoint per spacepoint.
+  copy()(
+      vecmem::data::vector_view<unsigned int>{
+          1u, num_outgoing_edges_buf.ptr() + nSp},
+      vecmem::data::vector_view<unsigned int>{
+          1u, h_counters.data() + gbts_counter::nEdgesTotal})
+      ->wait();
+  const unsigned int nEdgesTotal = h_counters[gbts_counter::nEdgesTotal];
+  if (nEdgesTotal == 0u) {
+    TRACCC_WARNING("No graph edges were found");
+    return graph_making_output{};
+  }
+  const unsigned int nEdgesCapacity = cfg.max_edges_per_spacepoint * nSp;
+  if (nEdgesTotal > nEdgesCapacity) {
+    TRACCC_WARNING("Edge buffer capacity ("
+                   << nEdgesCapacity << ") exceeded, "
+                   << nEdgesTotal - nEdgesCapacity
+                   << " edges and the paths through them will be lost. "
+                      "Increase max_edges_per_spacepoint");
+  }
+  const unsigned int nEdgesMax = std::min(nEdgesTotal, nEdgesCapacity);
   vecmem::data::vector_buffer<uint2> edge_nodes_buf(nEdgesMax, mr().main);
   copy().setup(edge_nodes_buf)->ignore();
   vecmem::data::vector_buffer<short4> edge_params_buf(nEdgesMax, mr().main);
@@ -250,25 +269,11 @@ auto gbts_seeding_algorithm::create_edges(
   });
 
   // The seed extraction needs the kept-edge count on the host.
-  copy()(
-      vecmem::data::vector_view<unsigned int>{
-          1u, num_outgoing_edges_buf.ptr() + nSp},
-      vecmem::data::vector_view<unsigned int>{
-          1u, counters_buf.ptr() + gbts_counter::nEdgesTotal})
-      ->ignore();
   copy()(vecmem::data::vector_view<unsigned int>{1u, reIndexer_buf.ptr() +
                                                          (nEdgesMax - 1u)},
          vecmem::data::vector_view<unsigned int>{
-             1u, counters_buf.ptr() + gbts_counter::nConnectedEdges})
-      ->ignore();
-  copy()(counters_buf, h_counters)->wait();
-  if (h_counters[gbts_counter::nEdgesTotal] > nEdgesMax) {
-    TRACCC_WARNING("Edge buffer capacity ("
-                   << nEdgesMax << ") exceeded, "
-                   << h_counters[gbts_counter::nEdgesTotal] - nEdgesMax
-                   << " edges were dropped. "
-                      "Increase max_edges_per_spacepoint");
-  }
+             1u, h_counters.data() + gbts_counter::nConnectedEdges})
+      ->wait();
   unsigned int nConnectedEdges = h_counters[gbts_counter::nConnectedEdges];
   if (nConnectedEdges > nConnectedEdgesMax) {
     TRACCC_WARNING("Compacted graph capacity ("
@@ -567,19 +572,15 @@ auto gbts_seeding_algorithm::operator()(
   node_making_output nodes = make_nodes(spacepoints, measurements, nSp);
 
   // Named counters shared by the graph-making and seed-extraction stages.
-  vecmem::data::vector_buffer<unsigned int> counters_buf(
-      gbts_counter::nCounters, mr().main);
-  copy().setup(counters_buf)->ignore();
-  copy().memset(counters_buf, 0)->ignore();
   vecmem::vector<unsigned int> h_counters(gbts_counter::nCounters,
                                           mr().host ? mr().host : &(mr().main));
 
   // Stage 2: graph. The per-node buffers are moved in so they are released
   // when create_edges returns, along with the edge transients.
-  graph_making_output graph = create_edges(
-      std::move(nodes.node_params), std::move(nodes.node_phi),
-      std::move(nodes.node_index), std::move(nodes.bin_rads),
-      std::move(nodes.eta_bin_offsets), nSp, counters_buf, h_counters);
+  graph_making_output graph =
+      create_edges(std::move(nodes.node_params), std::move(nodes.node_phi),
+                   std::move(nodes.node_index), std::move(nodes.bin_rads),
+                   std::move(nodes.eta_bin_offsets), nSp, h_counters);
   if (graph.nConnectedEdges == 0) {
     // No connected edges survived graph making -> no seeds.
     return {0, mr().main};
