@@ -40,7 +40,7 @@ namespace ActsExamples {
 /// // - Next iteration sees the updated transforms automatically
 /// @endcode
 inline ActsAlignment::AlignedTransformUpdater makeAlignedTransformUpdater(
-    std::shared_ptr<GeoIdAlignmentStore> store) {
+    const std::shared_ptr<GeoIdAlignmentStore>& store) {
   return ActsAlignment::AlignedTransformUpdater(
       [store](Acts::SurfacePlacementBase* placement,
               const Acts::GeometryContext& /*gctx*/,
@@ -64,9 +64,8 @@ inline ActsAlignment::AlignedTransformUpdater makeAlignedTransformUpdater(
 /// This is useful when you want to collect the alignment results
 /// without creating a full alignment store
 inline ActsAlignment::AlignedTransformUpdater makeAlignedTransformUpdater(
-    std::shared_ptr<
-        std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3>>
-        transformMap) {
+    const std::shared_ptr<std::unordered_map<Acts::GeometryIdentifier,
+                                             Acts::Transform3>>& transformMap) {
   return ActsAlignment::AlignedTransformUpdater(
       [transformMap](Acts::SurfacePlacementBase* placement,
                      const Acts::GeometryContext& /*gctx*/,
