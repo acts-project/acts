@@ -107,4 +107,23 @@ measurement_sorting_algorithm::operator()(
   return result;
 }
 
+measurement_sorting_algorithm::output_type
+measurement_sorting_algorithm::operator()(
+    edm::measurement_collection::buffer&& measurements) const {
+  // Take ownership of the input, so that it is released when this function
+  // returns.
+  const edm::measurement_collection::buffer owned_measurements =
+      std::move(measurements);
+
+  // Sort a view of the input.
+  output_type result = (*this)(
+      static_cast<edm::measurement_collection::const_view>(owned_measurements));
+
+  // The sorting must finish before the input buffer is released.
+  details::get_queue(m_queue.get()).wait_and_throw();
+
+  // Return the sorted buffer.
+  return result;
+}
+
 }  // namespace traccc::sycl

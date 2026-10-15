@@ -58,6 +58,21 @@ class measurement_sorting_algorithm
       const edm::measurement_collection::const_view& measurements)
       const override;
 
+  /// Callable operator performing the sorting, consuming the input
+  ///
+  /// Unlike the view overload, this one blocks until the device work has
+  /// finished, and then releases the input buffer.
+  ///
+  /// @param measurements The measurements to sort
+  ///
+  [[nodiscard]] output_type operator()(
+      edm::measurement_collection::buffer&& measurements) const;
+
+  /// A const buffer cannot be consumed. Without this overload, moving from
+  /// one would silently select the view overload.
+  output_type operator()(const edm::measurement_collection::buffer&&) const =
+      delete;
+
  private:
   /// Memory resource(s) to use
   traccc::memory_resource m_mr;

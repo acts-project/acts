@@ -56,4 +56,8 @@ void seed_parameter_estimation_algorithm::estimate_seed_params_kernel(
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
+void seed_parameter_estimation_algorithm::synchronize() const {
+  stream().synchronize();
+}
+
 }  // namespace traccc::cuda
