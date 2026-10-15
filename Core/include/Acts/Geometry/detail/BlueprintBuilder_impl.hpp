@@ -14,6 +14,7 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintBuilder.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/FunctionComposition.hpp"
 
 namespace Acts {
@@ -694,6 +695,26 @@ BlueprintBuilder<BackendT>::barrelEndcap() const
   requires(detail::HasBarrelEndcapClassifier<BackendT>)
 {
   return BarrelEndcapAssembler(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+std::shared_ptr<StaticBlueprintNode>
+BlueprintBuilder<BackendT>::makePassiveElement(
+    const Element& element, const std::string& volumeName) const
+  requires(detail::HasPassiveVolumeShape<BackendT>)
+{
+  auto [transform, bounds] = m_backend.passiveVolumeShape(element);
+  if (bounds == nullptr) {
+    throw std::runtime_error(
+        "BlueprintBuilder::makePassiveElement: backend returned no bounds for "
+        "element '" +
+        m_backend.nameOf(element) + "'");
+  }
+  const std::string name =
+      volumeName.empty() ? m_backend.nameOf(element) : volumeName;
+  auto volume =
+      std::make_unique<TrackingVolume>(transform, std::move(bounds), name);
+  return std::make_shared<StaticBlueprintNode>(std::move(volume));
 }
 
 template <detail::BlueprintBackend BackendT>
