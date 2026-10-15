@@ -113,7 +113,72 @@ def assert_root_hash(request, root_file_exp_hashes):
     return fn
 
 
+# Per-test peak memory, enabled with ACTS_PYTEST_MEMORY_REPORT=1 (Linux only).
+# Used to decide which tests go into the "heavy" xdist group, so that the
+# memory-hungry ones never run concurrently. The peak of the test process is
+# reset before each test; for tests that run subprocesses only a new maximum
+# over all subprocesses so far is visible, so that column is a lower bound.
+_memory_report = os.environ.get("ACTS_PYTEST_MEMORY_REPORT", "0") == "1"
+_memory_peaks = []
+
+
+def _read_vm_hwm_mib():
+    with open("/proc/self/status") as fh:
+        for line in fh:
+            if line.startswith("VmHWM:"):
+                return int(line.split()[1]) // 1024
+    return 0
+
+
+def _children_max_rss_mib():
+    import resource
+
+    return resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss // 1024
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_protocol(item, nextitem):
+    if not _memory_report:
+        yield
+        return
+
+    with contextlib.suppress(OSError):
+        # Resets VmHWM to the current RSS
+        Path("/proc/self/clear_refs").write_text("5")
+    item._acts_children_max_rss_mib = _children_max_rss_mib()
+    yield
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    if _memory_report and call.when == "teardown":
+        # Attached to the report so that it reaches the xdist controller
+        children = _children_max_rss_mib()
+        if children <= getattr(item, "_acts_children_max_rss_mib", 0):
+            children = 0
+        outcome.get_result().user_properties.append(
+            ("peak_rss_mib", (_read_vm_hwm_mib(), children))
+        )
+
+
+def pytest_runtest_logreport(report):
+    if not _memory_report or report.when != "teardown":
+        return
+    for key, value in report.user_properties:
+        if key == "peak_rss_mib":
+            _memory_peaks.append((report.nodeid, *value))
+
+
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    if _memory_report and _memory_peaks:
+        terminalreporter.section("Peak memory per test (MiB)", sep="-")
+        terminalreporter.line(f"{'process':>8} {'subproc':>8}  test")
+        for nodeid, own, children in sorted(
+            _memory_peaks, key=lambda p: -max(p[1], p[2])
+        )[:30]:
+            terminalreporter.line(f"{own:8d} {children:8d}  {nodeid}")
+
     docs_url = (
         "https://acts-project.github.io/group__python__testing.html#root_file_hashes"
     )
