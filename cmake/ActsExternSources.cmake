@@ -36,7 +36,7 @@ mark_as_advanced(ACTS_NLOHMANN_JSON_SOURCE)
 # translate version string to the historical Mille release naming convention
 string(REPLACE "." "-" _acts_mille_release_string ${_acts_mille_version})
 set(ACTS_MILLE_SOURCE
-    "URL;https://github.com/millepede-project/mille/archive/refs/tags/V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=415da5f7da0c477985be6a807c175013a862f9685e568cb2632d533c37f246be"
+    "URL;https://github.com/millepede-project/mille/archive/refs/tags/V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=b765224b516d2c1840c84905b9df697858564b5851fd6926b8fe1d2d8a063505"
     CACHE STRING
     "Source to take Mille from"
 )
@@ -53,7 +53,7 @@ mark_as_advanced(ACTS_GBL_SOURCE)
 # translate version string to the historical Millepede release naming convention
 string(REPLACE "." "-" _acts_mp2_release_string ${_acts_mp2_version})
 set(ACTS_MP2_SOURCE
-    "URL;https://github.com/millepede-project/millepede-ii/archive/refs/tags/V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=037bbfcd3aca2d6497a5609f35bc4a96258d285290996468241dcedd9aa9d172"
+    "URL;https://github.com/millepede-project/millepede-ii/archive/refs/tags/V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=d9570fbdb0fce44a12c6bf5db41e8c734777acf2019f7d8381fb9ad55e2da1de"
     CACHE STRING
     "Source to take Millepede-II from"
 )
