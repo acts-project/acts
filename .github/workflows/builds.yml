@@ -210,10 +210,18 @@ jobs:
           PYTEST_MD_REPORT_VERBOSE: 0
           PYTEST_MD_REPORT_OUTPUT: pytest.md
           PYTEST_ADDOPTS: "-rs --durations=10"
+          # Per-test peak memory summary, see Python/Examples/tests/conftest.py
+          ACTS_PYTEST_MEMORY_REPORT: 1
         run: |
           source .env
           source build/this_acts_withdeps.sh
-          pytest -rfExw -k "not gnn" -v
+          nproc; grep -E 'MemTotal|MemAvailable|SwapTotal' /proc/meminfo
+          # Sample used memory (MiB) to measure the effect of parallel workers
+          (while sleep 10; do awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{print int((t-a)/1024)}' /proc/meminfo; done > mem.log) &
+          trap 'echo "Peak used memory: $(sort -n mem.log | tail -1) MiB"' EXIT
+          # loadgroup keeps the xdist_group("heavy") tests on one worker so the
+          # memory-hungry ones never run at the same time
+          pytest -rfExw -k "not gnn" -v -n 3 --dist loadgroup
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
