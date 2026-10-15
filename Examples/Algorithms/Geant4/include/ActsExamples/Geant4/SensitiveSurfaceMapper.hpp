@@ -59,15 +59,8 @@ struct SensitiveCandidatesBase {
   virtual std::vector<const Acts::Surface*> queryAll() const = 0;
 
   /// Get the region of the tracking geometry that `queryPosition` resolves a
-  /// given position to, e.g. a layer or a tracking volume
-  ///
-  /// All positions in the same region must yield the same candidate list.
-  /// The mapper then queries the candidates and builds its lookup only once
-  /// per region. The default disables this caching.
-  ///
-  /// The returned pointer is only used as a key during one
-  /// `remapSensitiveNames` call and is never dereferenced. It must stay valid
-  /// and identify a single region for the duration of that call.
+  /// given position to and return a pointer used as akey during one
+  /// `remapSensitiveNames` call.
   ///
   /// @param gctx the geometry context
   /// @param position the position to look for sensitive surfaces
@@ -137,11 +130,9 @@ class SensitiveSurfaceMapper {
     std::shared_ptr<SensitiveCandidatesBase> candidateSurfaces;
 
     /// Cell size of the grid over the candidate surface centers, which avoids
-    /// comparing a Geant4 position to every candidate center. It must be
-    /// larger than twice the tolerance of the center comparison, otherwise
-    /// the centers are compared one by one and a warning is emitted. A value
-    /// <= 0 disables the grid. Very large cells hold many centers each, which
-    /// makes the lookup approach the one-by-one comparison.
+    /// comparing a Geant4 position to every candidate center.
+    /// A warning is emitted if it's chosen too small.
+    /// If <=0 the grid is disabled and one-by-one check is done.
     double centerGridCellSize = 1. * Acts::UnitConstants::mm;
   };
 
