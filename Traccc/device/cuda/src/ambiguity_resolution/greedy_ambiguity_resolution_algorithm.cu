@@ -30,6 +30,14 @@
 #include "traccc/utils/stream_synchronizing_allocator.hpp"
 
 // Thrust include(s).
+#include <thrust/version.h>
+
+// Thrust 3.1 adds a new constant iterator, replacing the Thrust one.
+#if THRUST_VERSION >= 300100
+#include <cuda/iterator>
+#else
+#include <thrust/iterator/constant_iterator.h>
+#endif
 #include <thrust/execution_policy.h>
 // Suppress warning (error at -Werror) from CUB/Thrust.
 #pragma GCC diagnostic push
@@ -38,7 +46,6 @@
 #pragma GCC diagnostic pop
 #include <thrust/fill.h>
 #include <thrust/functional.h>
-#include <thrust/iterator/constant_iterator.h>
 #include <thrust/reduce.h>
 #include <thrust/sort.h>
 #include <thrust/transform.h>
@@ -239,7 +246,11 @@ greedy_ambiguity_resolution_algorithm::operator()(
   // Counting can be done using reduce_by_key and constant iterator
   thrust::reduce_by_key(thrust_policy, flat_meas_ids_buffer.ptr(),
                         flat_meas_ids_buffer.ptr() + n_cands_total,
+#if THRUST_VERSION >= 300100
+                        ::cuda::make_constant_iterator(1),
+#else
                         thrust::make_constant_iterator(1),
+#endif
                         unique_meas_buffer.ptr(),
                         unique_meas_counts_buffer.ptr());
 

@@ -34,7 +34,7 @@ env:
   CTEST_OUTPUT_ON_FAILURE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 500M
+  CCACHE_MAXSIZE: 2G
   ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
 jobs:
@@ -52,7 +52,7 @@ jobs:
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
     env:
-      CCACHE_MAXSIZE: 1G
+      CCACHE_MAXSIZE: 4G
       CCACHE_DIR: ${{ github.workspace }}/ccache-snapshot
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -295,8 +295,9 @@ jobs:
     strategy:
       matrix:
         include:
+          # Keep the existing Clang build as the sole C++20 compatibility build.
           - image: ubuntu2604_clang22
-            std: 23
+            std: 20
             cxx: clang++-22
     # Templated tag, so CI/bump_versions.py cannot see it; bumped by hand.
     container: registry.cern.ch/ghcr.io/acts-project/${{ matrix.image }}:90
@@ -983,12 +984,15 @@ jobs:
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg/${{ runner.os }}-${{ runner.arch }}/${{ matrix.tag }}/v1/
 
+      # Match ROOT in this LCG view; some stacks still require C++20.
       - name: Configure
         run: >
           source "${LCG_VIEW}/setup.sh" &&
+          cxx_standard=$(root-config --cxxstandard) &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci-lcg
+          -DCMAKE_CXX_STANDARD="${cxx_standard}"
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
       - name: Build
@@ -1095,14 +1099,17 @@ jobs:
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg_dev4/${{ runner.os }}-${{ runner.arch }}/v1/
 
+      # Match ROOT in this LCG view; some stacks still require C++20.
       - name: Configure
         id: configure
         continue-on-error: true
         run: >
           source "${LCG_VIEW}/setup.sh" &&
+          cxx_standard=$(root-config --cxxstandard) &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci-lcg
+          -DCMAKE_CXX_STANDARD="${cxx_standard}"
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
       - name: Build
