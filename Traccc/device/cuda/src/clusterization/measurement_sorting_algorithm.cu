@@ -19,12 +19,12 @@
 #include <vecmem/containers/data/vector_buffer.hpp>
 #include <vecmem/utils/copy.hpp>
 
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
+
 // Thrust include(s).
 #include <thrust/execution_policy.h>
 #include <thrust/sort.h>
-
-// System include(s).
-#include <memory_resource>
 
 namespace traccc::cuda {
 namespace kernels {
@@ -84,9 +84,9 @@ measurement_sorting_algorithm::operator()(
   // Get a convenience variable for the stream that we'll be using.
   cudaStream_t stream = details::get_stream(m_stream);
   // Set up the Thrust execution policy.
-  auto policy =
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(m_mr.main)))
-          .on(stream);
+  auto policy = thrust::cuda::par_nosync(
+                    stream_synchronizing_allocator(m_mr.main, m_stream))
+                    .on(stream);
 
   // Sorting keys and index sequence.
   vecmem::data::vector_buffer<device::measurement_sort_key_t> keys(
@@ -109,6 +109,10 @@ measurement_sorting_algorithm::operator()(
   kernels::fill_sorted_measurements<<<n_blocks, BLOCK_SIZE, 0, stream>>>(
       measurements_view, result, indices);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
+
+  // The keys and indices buffers are released on return, so the kernels
+  // using them must have finished by then.
+  m_stream.synchronize();
 
   // Return the sorted buffer.
   return result;

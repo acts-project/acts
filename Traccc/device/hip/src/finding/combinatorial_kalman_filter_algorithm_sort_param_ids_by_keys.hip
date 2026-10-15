@@ -6,6 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
+
 // Local include(s).
 #include "../utils/utils.hpp"
 #include "traccc/hip/finding/combinatorial_kalman_filter_algorithm.hpp"
@@ -19,7 +22,6 @@
 
 // System include(s).
 #include <cassert>
-#include <memory_resource>
 
 namespace traccc::hip {
 
@@ -36,13 +38,13 @@ void combinatorial_kalman_filter_algorithm::sort_param_ids_by_keys(
 // Set up the Thrust execution policy. Unfortunately this has to be done in
 // a backend specify way. :-(
 #if defined(__HIP_PLATFORM_AMD__)
-  auto policy =
-      thrust::hip::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(str);
+  auto policy = thrust::hip::par_nosync(
+                    stream_synchronizing_allocator(mr().main, stream()))
+                    .on(str);
 #elif defined(__HIP_PLATFORM_NVIDIA__)
-  auto policy =
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(str);
+  auto policy = thrust::cuda::par_nosync(
+                    stream_synchronizing_allocator(mr().main, stream()))
+                    .on(str);
 #else
 #error "Unrecognised HIP platform."
 #endif

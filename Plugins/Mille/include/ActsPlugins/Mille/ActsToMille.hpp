@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 
 #include "Mille/IMilleReader.h"
@@ -30,26 +31,34 @@ using Mille::MilleRecord;
 /// Used for R&D, recommending the GBL track model (under development)
 /// for production use.
 /// @param removeUnconstrainedTrackPar If enabled, will remove
-/// poorly constrained parameters from the (local) track fits.
+/// poorly constrained parameters from the (local) track fits. Parameters
+/// that a measurement projects onto are always kept.
+/// @param logger Logger, reports measured parameters that the
+/// removal criterion would have dropped.
 void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
-                 MilleRecord& record, bool removeUnconstrainedTrackPar = true);
+                 MilleRecord& record, bool removeUnconstrainedTrackPar,
+                 const Acts::Logger& logger);
 
 /// @brief read one record (= track or (constrained) track pair) from
 /// a Mille binary into the equivalent matrices of a TrackAlignmentState.
 /// Allows to use Mille to collect tracks across multiple events and
 /// align them with the ACTS solver, and to validate the outputs of dumpToMille.
 /// @param reader: A Mille Reader, connected to a valid input file.
-/// @param targetState: The TrackAlignmentState to populate.
+/// @param targetState: The TrackAlignmentState to populate. It is overwritten
+/// completely, so the same state can be reused for consecutive records.
 /// @param idxedAlignSurfaces: [optional]: Indexed alignment surfaces from the geometry. If passed,
 /// the internal `alignedSurfaces` member of the state will be configured to
-/// link back to the correct surfaces.
+/// link back to the correct surfaces, and a record with an alignment label
+/// of a surface not in this list is a read error.
+/// @param logger Logger, reports why a record could not be read.
 /// @return a ReadResult enum with 3 possible states to indicate the outcome- ok / end-of-file / read-error.
 /// The targetState will only be modified if the result is 'ok'.
 Mille::MilleDecoder::ReadResult unpackMilleRecord(
     Mille::IMilleReader& reader,
     ActsAlignment::detail::TrackAlignmentState& targetState,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
-        idxedAlignSurfaces);
+        idxedAlignSurfaces,
+    const Acts::Logger& logger);
 
 /// Writes an alignment outcome into a text file in the format
 /// used by Millepede. Allows the constants to be processed

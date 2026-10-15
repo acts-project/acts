@@ -111,7 +111,7 @@ def _tryImportRoot(*names: str):
 
 _propagators = []
 _concrete_propagators = []
-for stepper in ("Eigen", "Atlas", "StraightLine", "Sympy"):
+for stepper in ("Eigen", "Atlas", "Helix", "StraightLine", "Sympy"):
     _propagators.append(getattr(acts, f"{stepper}Propagator"))
     _concrete_propagators.append(
         getattr(

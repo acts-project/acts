@@ -34,7 +34,7 @@ env:
   CTEST_OUTPUT_ON_FAILURE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 500M
+  CCACHE_MAXSIZE: 2G
   ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
 jobs:
@@ -52,7 +52,7 @@ jobs:
       packages: read
     container: registry.cern.ch/ghcr.io/acts-project/ubuntu2604:90
     env:
-      CCACHE_MAXSIZE: 1G
+      CCACHE_MAXSIZE: 4G
       CCACHE_DIR: ${{ github.workspace }}/ccache-snapshot
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -276,37 +276,11 @@ jobs:
         if: always()
         with:
           name: physmon
-          path: physmon
-
-  linux_physmon_perf_report:
-    needs: [linux_physmon]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Install dependencies
-        run: pip3 install spyral-cli==1.1.2
-
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: physmon
-          path: physmon
-
-      - name: Store metrics
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-        run: |
-          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-          ssh-add - <<< "${{ secrets.RUNTIME_METRIC_DEPLOY_SSH_KEY }}"
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-          git clone git@github.com:acts-project/runtime_metrics.git
-          spyral maxima runtime_metrics/metrics.csv physmon/memory/*.csv -e $(date +%Y-%m-%dT%H-%M-%S) -e ${GITHUB_REF_NAME} -e ${GITHUB_REF} -e ${GITHUB_SHA}
-          cd runtime_metrics
-          git add -A
-          git commit -m"update metrics"
-          git push
+          # The GSF simulation is only an input to the GSF fits and no
+          # comparison reads it
+          path: |
+            physmon
+            !physmon/data/simulation_gsf
 
   linux_ubuntu_extra:
     environment:
@@ -321,8 +295,9 @@ jobs:
     strategy:
       matrix:
         include:
+          # Keep the existing Clang build as the sole C++20 compatibility build.
           - image: ubuntu2604_clang22
-            std: 23
+            std: 20
             cxx: clang++-22
     # Templated tag, so CI/bump_versions.py cannot see it; bumped by hand.
     container: registry.cern.ch/ghcr.io/acts-project/${{ matrix.image }}:90
@@ -369,14 +344,14 @@ jobs:
         uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         shell: bash
         run: |
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
@@ -597,14 +572,14 @@ jobs:
         uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         shell: bash
         run: |
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
@@ -701,7 +676,8 @@ jobs:
         run: |
           source .env
           source build/this_acts_withdeps.sh
-          python3 -m pip install -r Python/Examples/tests/requirements.txt
+          uv pip install --python "$(command -v python3)" \
+            --excludes "$ACTS_SPACK_PYTHON_EXCLUDES" -r Python/Examples/tests/requirements.txt
           # No real test for the ModuleMap yet; at least assert the CUDA-only
           # extension is present and importable.
           python3 -c "from acts.gnn import ModuleMapCuda"
@@ -759,14 +735,14 @@ jobs:
         uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         shell: bash
         run: |
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
@@ -837,14 +813,14 @@ jobs:
         uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         shell: bash
         run: |
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
@@ -998,9 +974,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
-        continue-on-error: true
+      - name: Set up uv for Python tests and cache transfers
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
 
       - name: Restore ccache snapshot
         uses: ./.github/actions/ccache-s3
@@ -1009,12 +984,15 @@ jobs:
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg/${{ runner.os }}-${{ runner.arch }}/${{ matrix.tag }}/v1/
 
+      # Match ROOT in this LCG view; some stacks still require C++20.
       - name: Configure
         run: >
           source "${LCG_VIEW}/setup.sh" &&
+          cxx_standard=$(root-config --cxxstandard) &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci-lcg
+          -DCMAKE_CXX_STANDARD="${cxx_standard}"
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
       - name: Build
@@ -1031,7 +1009,7 @@ jobs:
           ccache -s
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         shell: bash
         run: |
@@ -1039,7 +1017,7 @@ jobs:
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
@@ -1068,10 +1046,13 @@ jobs:
         run: |
           source "${LCG_VIEW}/setup.sh"
           source build/this_acts_withdeps.sh
-          python3 -m pip install -r Python/Examples/tests/requirements.txt
+          # CVMFS is read-only; install test dependencies into a local venv
+          # using the same interpreter as the LCG build.
+          uv venv --python "$(command -v python3)" --system-site-packages .venv
+          uv pip install --no-build --require-hashes --python .venv/bin/python -r Python/Examples/tests/requirements.txt
           # plotting tests with mplhep fail because an ancient mplhep version in
           # LCG overrides the mplhep version in our venv
-          pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
+          .venv/bin/python -m pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
 
   # This moving nightly view is independent of PR changes. Keep it separate
   # from the release-view matrix so it can run only on main without referring
@@ -1108,7 +1089,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         continue-on-error: true
 
       - name: Restore ccache snapshot
@@ -1118,14 +1099,17 @@ jobs:
         with:
           key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/builds/lcg_dev4/${{ runner.os }}-${{ runner.arch }}/v1/
 
+      # Match ROOT in this LCG view; some stacks still require C++20.
       - name: Configure
         id: configure
         continue-on-error: true
         run: >
           source "${LCG_VIEW}/setup.sh" &&
+          cxx_standard=$(root-config --cxxstandard) &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci-lcg
+          -DCMAKE_CXX_STANDARD="${cxx_standard}"
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
       - name: Build
@@ -1144,7 +1128,7 @@ jobs:
           ccache -s
 
       - name: Clean ccache before publication
-        if: always() && steps.configure.outcome == 'success'
+        if: ${{ !cancelled() && steps.configure.outcome == 'success' }}
         continue-on-error: true
         shell: bash
         run: |
@@ -1152,7 +1136,7 @@ jobs:
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && steps.configure.outcome == 'success'
+        if: ${{ !cancelled() && steps.configure.outcome == 'success' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
@@ -1325,14 +1309,14 @@ jobs:
         uses: ./.github/actions/ccache-s3/stats
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         shell: bash
         run: |
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./.github/actions/ccache-s3
@@ -1397,7 +1381,7 @@ jobs:
         uses: cvmfs-contrib/github-action-cvmfs@72f2a8d366043978d6aebee154bc9ed321c2f2a8 # v5.6
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         continue-on-error: true
 
       - name: Restore ccache snapshot
@@ -1511,7 +1495,7 @@ jobs:
           retention-days: 5
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         uses: eic/docker-run-action@05c870b4c087fa65d5da3d7474a4b5e594a903d7 # v4.1
         with:
@@ -1527,7 +1511,7 @@ jobs:
             ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./acts/.github/actions/ccache-s3
@@ -1564,8 +1548,6 @@ jobs:
         with:
           path: acts
           persist-credentials: false
-      - name: Install test-data download tool
-        run: dnf install -y wget
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: key4hep/k4ActsTracking
@@ -1573,7 +1555,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         continue-on-error: true
 
       - name: Restore ccache snapshot
@@ -1618,18 +1600,6 @@ jobs:
             -DCMAKE_INSTALL_PREFIX="$(pwd)/install" \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           echo "::endgroup::"
-          # Configure pulls the test geometries and material maps off
-          # key4hep.web.cern.ch, but data/download_files.sh reports "All files
-          # downloaded successfully!" and exits 0 even when every single wget
-          # failed. Without this the check keeps passing on a runner that cannot
-          # reach the host, having quietly skipped the data-driven tests.
-          echo "::group::Check data files"
-          while read -r file _; do
-            case "$file" in ''|\#*) continue;; esac
-            test -f "data/${file}" ||
-              { echo "data/${file} missing: the download from key4hep.web.cern.ch failed"; exit 1; }
-          done <data/file_list.txt
-          echo "::endgroup::"
           echo "::group::Build k4ActsTracking"
           cmake --build build
           echo "::endgroup::"
@@ -1650,7 +1620,7 @@ jobs:
           ccache -s
 
       - name: Clean ccache before publication
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         shell: bash
         run: |
@@ -1658,7 +1628,7 @@ jobs:
           ccache --cleanup
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./acts/.github/actions/ccache-s3
@@ -1699,7 +1669,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up uv for cache transfers
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
 
       - name: Restore ccache snapshot
         uses: ./.github/actions/ccache-s3
@@ -1716,7 +1686,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish ccache snapshot
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: ./.github/actions/ccache-s3
         continue-on-error: true
         timeout-minutes: 10

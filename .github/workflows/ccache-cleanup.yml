@@ -1,0 +1,48 @@
+name: ccache cleanup
+
+on:
+  schedule:
+    - cron: '23 2 * * *'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Report obsolete snapshots without deleting them
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ccache-cleanup
+  cancel-in-progress: false
+
+jobs:
+  prune:
+    if: github.repository == 'acts-project/acts' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-slim
+    environment: s3-sccache
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: false
+      - name: Prune obsolete snapshots
+        env:
+          CACHE_ENDPOINT: https://s3.cern.ch
+          CACHE_REGION: cern
+          CACHE_BUCKET: cache
+          CACHE_PREFIX: acts-sccache/ccache-snapshots/acts-project/acts/
+          AWS_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          AWS_EC2_METADATA_DISABLED: 'true'
+          DRY_RUN: ${{ inputs.dry-run }}
+        run: |
+          args=()
+          if [[ "$DRY_RUN" == true ]]; then
+            args+=(--dry-run)
+          fi
+          uv run --locked --no-project --no-build CI/ccache_snapshot.py prune "${args[@]}"

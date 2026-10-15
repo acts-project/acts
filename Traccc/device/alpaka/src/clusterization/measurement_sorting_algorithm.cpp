@@ -112,13 +112,17 @@ measurement_sorting_algorithm::operator()(
   ::alpaka::exec<Acc>(queue, workDiv, kernels::fill_measurement_sort_keys{},
                       measurements_view, vecmem::get_data(keys),
                       vecmem::get_data(indices));
-  details::sort_by_key(queue, m_mr, keys.ptr(), keys.ptr() + n_measurements,
+  details::sort_by_key(m_queue, m_mr, keys.ptr(), keys.ptr() + n_measurements,
                        indices.ptr());
 
   // Fill the output with the sorted measurements.
   ::alpaka::exec<Acc>(queue, workDiv, kernels::fill_sorted_measurements{},
                       measurements_view, vecmem::get_data(result),
                       vecmem::get_data(indices));
+
+  // The keys and indices buffers are released on return, so the kernels
+  // using them must have finished by then.
+  m_queue.get().synchronize();
 
   // Return the sorted buffer.
   return result;

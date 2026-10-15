@@ -287,7 +287,9 @@ def vacuumTrackParameterAndBeamspotPropagation(
         start = acts.BoundTrackParameters.createCurvilinear(
             pos4, acts.Vector3(*mom), qOverP, None, particle_hypothesis
         )
-        target = acts.Surface.createPerigee(acts.Vector3(beamspot[0], beamspot[1], 0.0))
+        target = acts.Surface.createPerigee(
+            acts.Vector3(beamspot[0], beamspot[1], beamspot[2])
+        )
         result = propagator.propagateToSurface(start, target, propagator_options)
         beamspot_pocas[i] = np.array(result.parameters)[:5]
     return beamspot_pocas

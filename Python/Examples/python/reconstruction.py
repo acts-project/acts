@@ -476,6 +476,7 @@ def addSeeding(
                 layerMappingConfigFile,
                 connectorInputConfigFile,
                 lutInputConfigFile,
+                outputSeeds=f"{prefix}seeds",
             )
         elif seedingAlgorithm == SeedingAlgorithm.HashingPrototype:
             logger.info("Using Hashing seeding")
@@ -664,24 +665,17 @@ def addSeeding(
 
 def addGbtsTraining(
     s: acts.examples.Sequencer,
+    trackingGeometry: acts.TrackingGeometry,
     selectedParticles: str = "particles_selected",
     geometryFile: str = "gbts_layers.json",
     outputConnectionTable: str = "layer_connection_table.json",
     probThreshold: float = -1.0,
-    zMinTol: float = 0.2340,
-    zMaxTol: float = 0.2340,
-    rMinTol: float = 2.5337,
-    rMaxTol: float = 2.5337,
     doSymmetrization: bool = False,
     logLevel: acts.logging.Level = None,
 ):
     logLevel = acts.examples.defaultLogging(s, logLevel)()
 
     gbtsLayerConnectionToolConfig = acts.examples.GbtsLayerConnectionToolConfig(
-        zMinTol=zMinTol,
-        zMaxTol=zMaxTol,
-        rMinTol=rMinTol,
-        rMaxTol=rMaxTol,
         probThreshold=probThreshold,
         doSymmetrization=doSymmetrization,
     )
@@ -695,6 +689,7 @@ def addGbtsTraining(
         inputMeasurementSimHitsMap="measurement_simhits_map",
         gbtsLayerConnectionToolConfig=gbtsLayerConnectionToolConfig,
         geometryFileDir=str(geometryFile),
+        trackingGeometry=trackingGeometry,
         outputFileDir=str(outputConnectionTable),
     )
 
@@ -1467,6 +1462,7 @@ def addGbtsSeeding(
     layerMappingConfigFile: Union[Path, str] = None,
     connectorInputConfigFile: Union[Path, str] = None,
     lutInputConfigFile: Optional[Union[Path, str]] = None,
+    outputSeeds: str = "seeds",
 ):
     """Gbts seeding"""
 
@@ -1474,7 +1470,9 @@ def addGbtsSeeding(
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
     connectorInputFileStr = str(connectorInputConfigFile)
     lutInputConfigFileStr = str(lutInputConfigFile)
-    seedFinderConfig = acts.examples.GraphBasedSeedingConfig(
+    seedFinderConfig = acts.examples.GraphBasedSeedingConfig()
+
+    graphConfig = acts.examples.GbtsGraphBuilderConfig(
         **acts.examples.defaultKWArgs(
             minPt=seedFinderConfigArg.minPt,
         ),
@@ -1483,8 +1481,9 @@ def addGbtsSeeding(
     seedingAlg = acts.examples.GraphBasedSeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=spacePoints,
-        outputSeeds="seeds",
+        outputSeeds=outputSeeds,
         seedFinderConfig=seedFinderConfig,
+        graphConfig=graphConfig,
         layerMappingFile=layerMappingFile,
         connectorInputFile=connectorInputFileStr,
         lutInputFile=lutInputConfigFileStr,
@@ -1715,6 +1714,7 @@ def addKalmanTracks(
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     linkForward: bool = False,
+    referenceSurface: acts.Surface = acts.Surface.createPerigee(acts.Vector3(0, 0, 0)),
     useJosephFormulation: bool = False,
     useReferenceTrajectory: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1758,6 +1758,7 @@ def addKalmanTracks(
         fit=fitFunction,
         calibrator=calibrator,
         linkForward=linkForward,
+        referenceSurface=referenceSurface,
     )
     s.addAlgorithm(fitAlg)
     s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
