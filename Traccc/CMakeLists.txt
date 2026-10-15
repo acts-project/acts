@@ -389,6 +389,19 @@ if(TRACCC_SETUP_ALPAKA)
         add_subdirectory(extern/alpaka)
     endif()
 endif()
+# Alpaka drops members under NDEBUG that its (now forced) asserts still use.
+if(ACTS_FORCE_ASSERTIONS AND TARGET alpaka::alpaka)
+    get_target_property(_alpaka_target alpaka::alpaka ALIASED_TARGET)
+    if(NOT _alpaka_target)
+        set(_alpaka_target alpaka::alpaka)
+    endif()
+    set_property(
+        TARGET ${_alpaka_target}
+        APPEND
+        PROPERTY INTERFACE_COMPILE_OPTIONS -UNDEBUG
+    )
+    unset(_alpaka_target)
+endif()
 
 # Set up covfie.
 option(TRACCC_SETUP_COVFIE "Set up the covfie target(s) explicitly" TRUE)
