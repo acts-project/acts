@@ -152,7 +152,7 @@ ProcessCode ActsSolverFromMille::finalize() {
     resFile.open(m_cfg.outFile);
     // also write in a text file format that can be parsed consistently with
     // Millepede output
-    ActsPlugins::ActsToMille::dumpAsMillepedeRes(alignResult, resFile);
+    ActsAlignment::dumpResult(alignResult, resFile);
     resFile.close();
   }
 

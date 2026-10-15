@@ -131,6 +131,13 @@ struct AlignmentResult {
   Acts::Result<void> result{Acts::Result<void>::success()};
 };
 
+/// @brief dump an alignment result to a text file,
+/// following the Millepede-II convention.
+/// @param result: The result to dump
+/// @param out: The stream to write to (file or iostream)
+void dumpResult(const ActsAlignment::AlignmentResult& result,
+                std::ostream& out);
+
 /// @brief KalmanFitter-based alignment implementation
 ///
 /// @tparam fitter_t Type of the fitter class
