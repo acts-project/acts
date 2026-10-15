@@ -1,0 +1,21 @@
+surfaces=107 rays=100000 repeats=7 seed=20261015
+octree build_us=66.375 fallback=0
+rz-tree build_us=28.625 fallback=0
+rz-linear build_us=9.333 fallback=0
+edge_checks=2230 passed
+ip equivalence=passed
+baseline us/ray=1.14814 min=1.14412 max=1.17285 exact_tests/ray=107
+octree us/ray=1.15408 min=1.14301 max=1.17003 exact_tests/ray=40.4276
+rz-tree us/ray=0.831008 min=0.824759 max=0.839589 exact_tests/ray=19.9658
+rz-linear us/ray=0.815927 min=0.809909 max=0.831494 exact_tests/ray=19.9658
+beamspot equivalence=passed
+baseline us/ray=1.15456 min=1.15023 max=1.18233 exact_tests/ray=107
+octree us/ray=1.16102 min=1.14609 max=1.17475 exact_tests/ray=40.4713
+rz-tree us/ray=0.88762 min=0.86731 max=0.901573 exact_tests/ray=19.961
+rz-linear us/ray=0.872277 min=0.863122 max=0.881035 exact_tests/ray=19.961
+displaced equivalence=passed
+baseline us/ray=0.95738 min=0.955067 max=0.961272 exact_tests/ray=107
+octree us/ray=0.702283 min=0.694553 max=0.735455 exact_tests/ray=14.0034
+rz-tree us/ray=0.470395 min=0.466129 max=0.478358 exact_tests/ray=7.27452
+rz-linear us/ray=0.531194 min=0.528573 max=0.548668 exact_tests/ray=7.27452
+fallback_checks=passed checksum=150829632
