@@ -333,7 +333,7 @@ jobs:
             # vecmem comes from the flavor like everything else: HIP::hiprt is
             # found through vecmem's FindHIPToolkit.cmake, which 1.26.0 added to
             # the installed language helpers and vecmem-config puts on
-            # CMAKE_MODULE_PATH. The pinned tag carries 1.27.0.
+            # CMAKE_MODULE_PATH. The pinned tag carries 1.28.0.
             OPTIONS: -DCMAKE_HIP_PLATFORM=amd -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_BENCHMARKS=OFF -DDETRAY_BUILD_INTEGRATIONTESTS=OFF -DDETRAY_USE_SYSTEM_EIGEN3=ON -DDETRAY_USE_SYSTEM_VECMEM=ON -DDETRAY_USE_SYSTEM_COVFIE=ON -DDETRAY_USE_SYSTEM_GOOGLETEST=ON -DDETRAY_USE_SYSTEM_NLOHMANN=ON
           #- NAME: "HIP-NVIDIA"
           #  CXX_STANDARD: "23"
