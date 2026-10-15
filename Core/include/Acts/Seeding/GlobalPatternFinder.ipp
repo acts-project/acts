@@ -74,7 +74,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
                              const Hit_t& seed,
                              const SearchTree_t::coordinate_t& coords) -> unsigned {
         return std::ranges::count_if(patterns, [&](const PatternStateAux& pattern){
-            if (std::abs(pattern.patTheta - coords[thetaIdx]) > m_cfg.maxThetaSizeOverlap ||
+            if (std::abs(pattern.patTheta - coords[thetaIdx]) > 2 * seedSelector.thetaSearchWindow(seed) ||
                 !pattern.sector.isNeighbour(
                     Sector_t{static_cast<typename Sector_t::Index_t>(coords[sectorIdx])})) {
                 return false;
@@ -164,8 +164,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
         const OrderedHit& seedCand {*seedItr};
 
         PatternStateAux patternSeed{gctx, seedCand, 
-            static_cast<typename Sector_t::Index_t>(seedCoords[sectorIdx]), 
-            beamspotInfo,
+            static_cast<typename Sector_t::Index_t>(seedCoords[sectorIdx]),
             &m_cfg, m_logger.get()};
    
         /** @brief Helper function to extend a given pattern with a set of hits. We can have pattern
@@ -174,13 +173,12 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
          *         to extend every active pattern and remove the ones not meeting continuation criteria. 
          *  @param begin The iterator pointing to the first hit to process. 
          *  @param end The iterator pointing to the end of the hit range.
-         *  @param applyCuts Finalize the resulting patterns and apply the quality cuts before the
-         *                   overlap removal.
+         *  @param isForward Whether the search is forward or backward in the hit range.
          *  @param toExtend The pattern to extend.
          *  @return The vector of resulting patterns. */
         auto processHitRange = [&](const auto begin, 
                                    const auto end, 
-                                   const bool applyCuts,
+                                   const bool isForward,
                                    PatternStateAux&& toExtend) -> PatternStateAuxVec {
             startPatternBuff.clear();
             startPatternBuff.push_back(std::move(toExtend));
@@ -198,9 +196,17 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
             result.reserve(startPatternBuff.size());
 
             for (PatternStateAux& pat : startPatternBuff) {
-                if (pat.isOverlap || (applyCuts && !passPatternCuts(pat))) {
+                if (pat.isOverlap) {
                     continue;
                 }
+                if (isForward) {
+                    // We need to update the last inserted hit and line anchor when the search direction is inverted
+                    pat.lastInsertedHit = seedCand;
+                    pat.moveLineAnchorHit(seedCand);
+                } else if (!passPatternCuts(pat)) {
+                    continue;
+                }
+                pat.syncState(gctx, beamspotInfo);
                 // Resolve patterns produced from the same pattern seed
                 insertIfBest(gctx, result, std::move(pat));
             }
@@ -208,7 +214,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
         };
 
         /** First search for compatible hits from the seed layer onwards */
-        PatternStateAuxVec forwardExtended {processHitRange(std::next(seedItr), OrderedHits.end(), /*applyCuts*/ false, std::move(patternSeed))};
+        PatternStateAuxVec forwardExtended {processHitRange(std::next(seedItr), OrderedHits.end(), /*isForward*/ true, std::move(patternSeed))};
 
         /** When inverting the search direction, update last inserted hit and line anchor */
         ACTS_VERBOSE(__func__<<"() Finished forward search, found "<<forwardExtended.size()<<" forward patterns, start backward search.");
@@ -217,12 +223,9 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
         
         for (PatternStateAux& pat : forwardExtended) {
             ACTS_VERBOSE(__func__<<"() Start backward search for pattern "<<PatternStateAux::detailed(pat));
-            pat.moveLineAnchorHit(seedCand);
-            pat.lastInsertedHit = seedCand;
-            pat.lastHitTestRes = LineTestRes{};
 
             for (PatternStateAux& backwardCand : 
-                    processHitRange(std::reverse_iterator(seedItr), OrderedHits.rend(), /*applyCuts*/ true, std::move(pat))) {
+                    processHitRange(std::reverse_iterator(seedItr), OrderedHits.rend(), /*isForward*/ false, std::move(pat))) {
                 // Resolve siblings produced by different backward searches (one for each forward pattern)
                 insertIfBest(gctx, backwardExtended, std::move(backwardCand));
             }
@@ -322,11 +325,11 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::extendPatterns(
                     }
                     /** Add the new pattern to the list of next patterns */
                     endPatterns.push_back(pat);
-                    endPatterns.back().addHit(gctx, testHit, testRes, beamSpot);
+                    endPatterns.back().addHit(testHit, testRes);
                     break;
                 }
                 ACTS_VERBOSE(__func__<<"() Hit compatible - add to pattern. Residual pull "<<testRes.residual / testRes.sigma);
-                pat.addHit(gctx, testHit, testRes, beamSpot);
+                pat.addHit(testHit, testRes);
                 break;
             }
             case LineTestDecision::eBranchPattern: {
@@ -339,7 +342,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::extendPatterns(
                 /** Branch the pattern: we clone it and overwrite the existing hit with the test hit */
                 ACTS_VERBOSE(__func__<<"() Hit compatible & on same layer of last added hit - branch pattern.");
                 endPatterns.push_back(pat);
-                endPatterns.back().overWriteHit(gctx, testHit, testRes, beamSpot);
+                endPatterns.back().overWriteHit(testHit, testRes);
                 break;
             }
             case LineTestDecision::eRejectHit: {
@@ -363,6 +366,10 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
     const OrderedHit& testHit,
     const BeamspotInfo& beamSpot) const
 {
+    const bool newLayer {testHit.globLayer != pat.lastInsertedHit.globLayer};
+    if (newLayer) {
+        pat.syncState(gctx, beamSpot);
+    }
     if (testHit->spacePoint()->measuresLoc0() && !isPhiCompatible(gctx, pat, *testHit)) {
         ACTS_VERBOSE(__func__<<"() Test hit phi "<<VectorHelpers::phi(testHit->globalPosition(gctx))
             <<" not compatible with "<<PatternStateAux::brief(pat));
@@ -389,8 +396,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
         return std::make_pair(LineTestDecision::eRejectHit, res);
     };
 
-    if(testHit.globLayer != pat.lastInsertedHit.globLayer) {
-        pat.updateLineParameters(gctx, beamSpot);
+    if(newLayer) {
         return makeResult(LineTestDecision::eAddHit);
     }
     if (testHit == pat.lastInsertedHit) {
@@ -550,7 +556,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::areOverlapping(
         }
         const std::size_t nSharedInGroup = std::ranges::count_if(hitsA, [&](const OrderedHit& hitA){
             return std::ranges::any_of(hitsB, [&hitA](const OrderedHit& hitB) {
-                return hitA->overlaps(*hitB);
+                return hitA == hitB || hitA->overlaps(*hitB);
             });
         });
         nSharedHits += nSharedInGroup;
@@ -617,66 +623,6 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
     const OnlyPhiProvider_t& onlyPhiProvider,
     PatternStateAuxVec& patterns) const 
 {
-    auto computePatternLineInGroup = [&](PatternStateAux& pat, 
-                                         const Hit_t& phiHit) -> bool {
-        const auto phiHitGroup {Topology_t::groupIndex(phiHit)};
-        const auto& groupHits {pat.hitsPerGroup[phiHitGroup]};
-
-        /** We use useBeamspot as a flag to indicate whether the pattern line has been determined successfully */
-        pat.useBeamspot = true;
-        pat.needLineUpdate = true;
-
-        if (groupHits.size() > 1) {
-            // if we have >= 2 eta hits in the group, we use the furthestmost to define the pattern line
-            const auto [minIt, maxIt] {std::ranges::minmax_element(groupHits, {},
-                [](const OrderedHit& c){ return c.globLayer; })};
-            pat.lineAnchorHit = *minIt;
-            pat.lastInsertedHit = *maxIt;
-            pat.updateLineParameters(gctx, BeamspotInfo{});
-        }
-        if (pat.useBeamspot && !groupHits.empty()) {
-            pat.needLineUpdate = true;
-            // if we have only one eta hit or the layer separation is too small, to find the second hit 
-            // we use the functionality of anchor hit
-            pat.moveLineAnchorHit(groupHits.front());
-            pat.lastInsertedHit = *std::ranges::max_element(groupHits, {},
-                [&](const OrderedHit& c){ 
-                    return (pat.projToPhiPlane(gctx, *c) - 
-                            pat.projToPhiPlane(gctx, *pat.lineAnchorHit)).norm(); }); 
-            pat.updateLineParameters(gctx, BeamspotInfo{});
-        }
-        if (pat.useBeamspot) {
-            pat.needLineUpdate = true;
-            /** Define the closest hits in the upper and lewer groups */
-            const OrderedHit *lowerHit{nullptr}, *upperHit{nullptr};
-            for (const auto& [group, hits] : Acts::enumerate(pat.hitsPerGroup)) {
-                if (hits.empty() || group == phiHitGroup) {
-                    continue;
-                }
-                if (Topology_t::layerSorter(*hits.front(), phiHit)) {
-                    const OrderedHit& lowerInGroup {*std::ranges::max_element(hits, {},
-                        [](const OrderedHit& c){ return c.globLayer; })};
-                    if (!lowerHit || lowerInGroup.globLayer > lowerHit->globLayer) {
-                        lowerHit = &lowerInGroup;
-                    }
-                } else {
-                    const OrderedHit& upperInGroup {*std::ranges::min_element(hits, {},
-                        [](const OrderedHit& c){ return c.globLayer; })};
-                    if (!upperHit || upperInGroup.globLayer < upperHit->globLayer) {
-                        upperHit = &upperInGroup;
-                    }
-                }
-            }
-            if (!lowerHit || !upperHit) {
-                return false;
-            }
-            pat.lineAnchorHit = *lowerHit;
-            pat.lastInsertedHit = *upperHit;
-            pat.updateLineParameters(gctx, BeamspotInfo{});
-        }
-        return !pat.useBeamspot;
-    };
-
     PatternStateAuxVec survivingPatterns{};
     survivingPatterns.reserve(patterns.size());
     for (PatternStateAux& pat : patterns) {
@@ -713,7 +659,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
                 }
 
                 if (!patterLineGroup || *patterLineGroup != group) {
-                    if (!computePatternLineInGroup(pat, newHit)) {
+                    if (!pat.defineLineAroundHit(gctx, newHit)) {
                         ACTS_VERBOSE(__func__<<"() Invalid projection model for group "<<group<<" - skip hit.");
                         continue;
                     }
@@ -756,9 +702,8 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
                     *it = std::move(newHit);
                 } else {
                     pat.phiOnlyHits.push_back(std::move(newHit));
-                    pat.nPhiLayers++;
                 }
-                pat.updatePatternPhi(gctx, beamspotInfo);
+                pat.updateBendPlane(gctx, beamspotInfo);
             }
         }
         if (pat.nPhiLayers < m_cfg.minPhiLayers) {

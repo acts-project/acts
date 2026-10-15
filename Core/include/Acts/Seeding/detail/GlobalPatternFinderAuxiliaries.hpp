@@ -160,6 +160,13 @@ struct PatternStateAux {
         }
         void print(std::ostream& ostr) const;
     };
+    /** @brief: Enum for the pattern state variables, needed when updating the pattern state */
+    enum class PatternStateVar : std::int8_t {
+        eBendPlane,  // Bending plane
+        eLineAnchor, // Line anchor
+        eLine,       // Line parameters
+        NVars        // Number of pattern state variables
+    };
     /** @brief : Small struct to encapsulate the result of the line compatibility test */
     struct LineTestRes  {
         double residual{0.};
@@ -182,7 +189,6 @@ struct PatternStateAux {
     explicit PatternStateAux(const GeometryContext& gctx,
                              const OrderedHit& seed,
                              const typename Sector_t::Index_t sector,
-                             const BeamspotInfo& beamSpot,
                              const Config* cfg,
                              const Logger* logger);
     /** @brief Move constructor
@@ -205,19 +211,15 @@ struct PatternStateAux {
      *  @param hit: hit to be added
      *  @param residual: residual of the hit
      *  @param resSigma: residual uncertainty of the hit */
-    void addHit(const GeometryContext& gctx,
-                const OrderedHit& hit,
-                const LineTestRes& testRes,
-                const BeamspotInfo& beamSpot);
+    void addHit(const OrderedHit& hit,
+                const LineTestRes& testRes);
     /** @brief Overwrite the hits on the last layer with the new one
      *  @param gctx: geometry context
      *  @param newHit: new hit to replace with
      *  @param newResidual: residual of the new hit 
      *  @param newResSigma: residual uncertainty of the new hit */
-    void overWriteHit(const GeometryContext& gctx,
-                      const OrderedHit& newHit,
-                      const LineTestRes& newTestRes,
-                      const BeamspotInfo& beamSpot);
+    void overWriteHit(const OrderedHit& newHit,
+                      const LineTestRes& newTestRes);
     /** @brief Compute the contribution of the intrinsic covariance of the hit to the residual
      *  @param gctx: geometry context
      *  @param hit: hit for which to compute the intrinsic variance
@@ -257,14 +259,33 @@ struct PatternStateAux {
     /** @brief Helper method to update the pattern phi and bending plane normal
      *  @param gctx: geometry context
      *  @param beamSpot: position of the beam spot */
-    void updatePatternPhi(const GeometryContext& gctx,
-                          const BeamspotInfo& beamSpot);
+    void updateBendPlane(const GeometryContext& gctx,
+                         const BeamspotInfo& beamSpot);
+    /** @brief Helper method to set the bending plane from the sector */
+    void setBendPlaneFromSector();
+    /** @brief Synchronize the pattern with the current state
+     *  @param gctx: geometry context
+     *  @param beamSpot: position of the beam spot */
+    void syncState(const GeometryContext& gctx,
+                   const BeamspotInfo& beamSpot);
+    /** @brief Book pattern state variables that need to be updated when syncState is called
+     *  @param vars: list of variables to update */
+    void setStateVars(const std::initializer_list<PatternStateVar>& vars);
     /** @brief Signed angle under which the pattern sees a point, relative to its bending plane.
      *  @param pos: position to check
      *  @return: the angle between the position and the bending plane */
     double angleToBendPlane(const Vector3& pos) const;
     /** @brief Return the pattern's phi at a given radius */
     double phiAtRadius(const double R) const;
+    /** @brief Return the unit vector along the bending plane */
+    Vector3 bendPlaneDir() const;
+    /** @brief Define the pattern line locally around a reference hit, using eta hits in its group
+     *         or, failing that, the closest hits in the groups below and above.
+     *  @param gctx: geometry context
+     *  @param refHit: reference hit
+     *  @return true if a line with sufficient lever arm was found */
+    bool defineLineAroundHit(const GeometryContext& gctx, 
+                             const Hit_t& refHit);
     /** @brief Return the mean normalized residual squared */
     double getMeanResidual2() const;
     /** @brief Method returning the number of groups
@@ -287,13 +308,15 @@ struct PatternStateAux {
     OrderedHit lastInsertedHit{};
     /** @brief Last hit in the second-to-last layer */
     OrderedHit prevLayerHit{};
-    /** @brief Line anchor hit */
+    /** @brief Line anchor hit, used as first point for the pattern line */
     OrderedHit lineAnchorHit{};
+    /** @brief Hit used as second point of the pattern line */
+    OrderedHit lineEndHit{};
     /** @brief Normal vector to the bending plane where the pattern lies */
     Vector3 bendPlaneNorm{Vector3::Zero()};
     /** @brief Position and direction of the pattern line. Both are constructed to be
-        *         within the bending plane of the pattern. We store them as vectors to
-        *         facilitate vector operations and avoid constructing them repeatedly. */
+     *         within the bending plane of the pattern. We store them as vectors to
+     *         facilitate vector operations and avoid constructing them repeatedly. */
     Vector3 linePos{Vector3::Zero()};
     Vector3 lineDir{Vector3::Zero()};
     /** @brief Distance between the two points defining the pattern line */
@@ -322,9 +345,10 @@ struct PatternStateAux {
     bool isOverlap{false};
     /** @brief Whether we used the beamspot to compute the line parameters */
     bool useBeamspot{false};
-    /** @brief Whether we need to update the pattern line the next time we find a hit in a new layer */
-    bool needLineUpdate{false};
-    
+    /** @brief Bookkeeping of the pattern state variables that need to be updated */
+    std::array<bool, toUnderlying(PatternStateVar::NVars)> needUpdate{
+        filledArray<bool, toUnderlying(PatternStateVar::NVars)>(false)};
+
     /** @brief Map collection of hits per station. A pattern is determined by the hits belonging to it. */
     std::array<std::vector<OrderedHit>, Topology_t::nGroups> hitsPerGroup{};
     /** @brief Array holding phi-only hits */
