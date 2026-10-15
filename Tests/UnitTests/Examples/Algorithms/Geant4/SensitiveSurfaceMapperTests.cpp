@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include <algorithm>
@@ -175,6 +176,10 @@ BOOST_DATA_TEST_CASE(CenterMatchingTolerance,
         "Sensor", center + Acts::Vector3(0., 0., 2. * kTolerance)));
   }
 
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  // The fallback warning for 0.1 um cells is expected: do not fail on it
+  Acts::Logging::ScopedFailureThreshold threshold{Acts::Logging::FATAL};
+#endif
   const auto result = runMapper(world, surfaces, cacheByRegion, cellSize);
   for (std::size_t i = 0; i < centers.size(); ++i) {
     BOOST_CHECK_EQUAL(result.surfaceOf(inside[i]), surfaces[i]);
@@ -267,6 +272,10 @@ BOOST_DATA_TEST_CASE(
   SensitiveSurfaceMapper::Config cfg;
   cfg.centerGridCellSize = cellSize;
   std::ostringstream log;
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  // The fallback warning is expected: do not fail on it
+  Acts::Logging::ScopedFailureThreshold threshold{Acts::Logging::FATAL};
+#endif
   SensitiveSurfaceMapper mapper(
       cfg, Acts::getDefaultLogger("SensitiveSurfaceMapper", Acts::Logging::INFO,
                                   &log));
