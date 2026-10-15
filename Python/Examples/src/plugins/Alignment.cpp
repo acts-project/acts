@@ -180,7 +180,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
         py::arg("trackingGeometry"), py::arg("magneticField"));
 
   m.def("makeAlignedTransformUpdater",
-        py::overload_cast<std::shared_ptr<GeoIdAlignmentStore>>(
+        py::overload_cast<const std::shared_ptr<GeoIdAlignmentStore>&>(
             &makeAlignedTransformUpdater),
         py::arg("store"),
         "Create an aligned transform updater with an alignment store");
