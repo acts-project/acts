@@ -22,3 +22,16 @@
 #else
 #define TRACCC_PRAGMA_UNROLL
 #endif
+
+/*
+ * Tell the device compiler that a pointer refers to global memory. Accesses
+ * through a pointer of unknown address space are emitted as generic loads and
+ * stores; this lets the compiler emit global ones instead. It is only needed
+ * where the address space cannot be inferred, such as behind a non-inlined
+ * function boundary. The claim is trusted without a check, so it must be true.
+ */
+#if defined(__CUDA_ARCH__)
+#define TRACCC_ASSUME_GLOBAL(ptr) __builtin_assume(__isGlobal(ptr))
+#else
+#define TRACCC_ASSUME_GLOBAL(ptr)
+#endif
