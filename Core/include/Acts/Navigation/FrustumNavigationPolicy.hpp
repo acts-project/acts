@@ -64,12 +64,11 @@ class FrustumNavigationPolicy : public INavigationPolicy {
                                    const Logger& logger, const Config& config);
 
   /// Update the navigation state
-  /// @param gctx The geometry context
   /// @param args The navigation arguments, position and direction
   /// @param state The navigation state for this policy
   /// @param stream The navigation stream to update
   /// @param logger The logger
-  void initializeCandidates(const GeometryContext& gctx,
+  void initializeCandidates(const GeometryContext& /*gctx*/,
                             const NavigationArguments& args,
                             NavigationPolicyState& state,
                             AppendOnlyNavigationStream& stream,
@@ -112,6 +111,9 @@ class FrustumNavigationPolicy : public INavigationPolicy {
 
   // associated volume id
   GeometryIdentifier m_id;
+
+  // Top-level volume portals that represent the volume boundaries
+  std::vector<const Portal*> m_cachedPortals;
 };
 
 static_assert(NavigationPolicyConcept<FrustumNavigationPolicy>);
