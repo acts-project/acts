@@ -15,7 +15,6 @@
 #include "Acts/Geometry/detail/BlueprintBuilder_impl.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
@@ -232,80 +231,6 @@ Acts::PassiveVolumeShape DD4hepBackend::passiveVolumeShape(
   return {discTransform,
           std::make_shared<Acts::CylinderVolumeBounds>(
               discBounds->rMin(), discBounds->rMax(), discThickness / 2.0)};
-          }
-std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makePassiveCylinder(
-    const Element& element) const {
-  const auto tgTransform = element.nominal().worldTransformation();
-  auto [bounds, transform, thickness] =
-      ActsPlugins::TGeoSurfaceConverter::cylinderComponents(
-          *element.placement().ptr()->GetVolume()->GetShape(),
-          tgTransform.GetRotationMatrix(), tgTransform.GetTranslation(), "XYZ",
-          m_cfg.lengthScale);
-
-  if (bounds == nullptr) {
-    ACTS_ERROR("Element '" << element.name()
-                           << "' shape could not be converted to cylinder.");
-    throw std::runtime_error(
-        "Passive cylinder element shape could not be converted to cylinder.");
-  }
-
-  const double medR = bounds->get(Acts::CylinderBounds::eR);
-  auto volumeBounds = std::make_shared<Acts::CylinderVolumeBounds>(
-      medR - thickness / 2.0, medR + thickness / 2.0,
-      bounds->get(Acts::CylinderBounds::eHalfLengthZ));
-  auto volume = std::make_unique<Acts::TrackingVolume>(transform, volumeBounds,
-                                                       element.name());
-  return std::make_shared<Acts::StaticBlueprintNode>(std::move(volume));
-}
-
-std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makePassiveDisc(
-std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makePassiveElement(
-    const Element& element, const std::string& volumeName) const {
-  const auto tgTransform = element.nominal().worldTransformation();
-  const auto& shape = *element.placement().ptr()->GetVolume()->GetShape();
-  const auto* rotation = tgTransform.GetRotationMatrix();
-  const auto* translation = tgTransform.GetTranslation();
-
-  const std::string& name = volumeName.empty() ? element.name() : volumeName;
-
-  // Try a tube-shaped conversion first: cylinderComponents only succeeds
-  // when the shape's z half-length exceeds its radial thickness (i.e.
-  // actual tube-like shapes, e.g. the ODD's support tube), and returns null
-  // bounds otherwise -- no exception, so falling through to the disc case
-  // below is safe.
-  auto [cylBounds, cylTransform, cylThickness] =
-      ActsPlugins::TGeoSurfaceConverter::cylinderComponents(
-          shape, rotation, translation, "XYZ", m_cfg.lengthScale);
-  if (cylBounds != nullptr) {
-    const double medR = cylBounds->get(Acts::CylinderBounds::eR);
-    auto volumeBounds = std::make_shared<Acts::CylinderVolumeBounds>(
-        medR - cylThickness / 2.0, medR + cylThickness / 2.0,
-        cylBounds->get(Acts::CylinderBounds::eHalfLengthZ));
-    auto volume = std::make_unique<Acts::TrackingVolume>(cylTransform,
-                                                         volumeBounds, name);
-    return std::make_shared<Acts::StaticBlueprintNode>(std::move(volume));
-  }
-
-  // Not tube-shaped -- try the opposite aspect ratio (radial extent larger
-  // than z half-length, e.g. the ODD's pixel endplates) via discComponents,
-  // which has no such aspect-ratio restriction.
-  auto [discBounds, discTransform, discThickness] =
-      ActsPlugins::TGeoSurfaceConverter::discComponents(
-          shape, rotation, translation, "XYZ", m_cfg.lengthScale);
-  if (discBounds == nullptr) {
-    ACTS_ERROR("Element '" << element.name()
-                           << "' shape could not be converted to either a "
-                              "cylinder or a disc.");
-    throw std::runtime_error(
-        "Passive element shape could not be converted to either a cylinder "
-        "or a disc.");
-  }
-
-  auto volumeBounds = std::make_shared<Acts::CylinderVolumeBounds>(
-      discBounds->rMin(), discBounds->rMax(), discThickness / 2.0);
-  auto volume =
-      std::make_unique<Acts::TrackingVolume>(discTransform, volumeBounds, name);
-  return std::make_shared<Acts::StaticBlueprintNode>(std::move(volume));
 }
 
 std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makeMaterialCollector(

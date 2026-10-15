@@ -128,29 +128,6 @@ class DD4hepBackend {
   /// @throws std::runtime_error if the shape is neither tube- nor disc-like.
   /// @return Transform and cylinder volume bounds of the element.
   Acts::PassiveVolumeShape passiveVolumeShape(const Element& element) const;
-  
-  /// Create a static blueprint node for a passive tube-shaped element, e.g.
-  /// the ODD's support tube (PST). Unlike @ref makeBeampipe, the resulting
-  /// volume uses the element's own inner and outer radius rather than
-  /// Create a static blueprint node for a passive tube- or disc-shaped
-  /// element, e.g. the ODD's support tube (PST) or its pixel endplates.
-  /// Unlike @ref makeBeampipe, the resulting volume uses the element's own
-  /// inner and outer radius (or inner/outer disc radius) rather than
-  /// assuming a solid cylinder down to r=0.
-  ///
-  /// The element's shape is converted as a tube if its z half-length
-  /// exceeds its radial thickness, and as a disc otherwise (radial extent
-  /// larger than z half-length) -- no prior knowledge of which is needed
-  /// from the caller.
-  /// @param element DD4hep element describing the passive tube or disc.
-  /// @param volumeName Name for the created volume. Defaults to the
-  ///        element's own DD4hep name, but callers must pass an explicit,
-  ///        unique name if @p element's name is reused across multiple
-  ///        instances (e.g. the ODD's negative/positive pixel endplates are
-  ///        both named "PixelEndplate" in DD4hep).
-  /// @return Shared pointer to the generated blueprint node.
-  std::shared_ptr<Acts::StaticBlueprintNode> makePassiveElement(
-      const Element& element, const std::string& volumeName = {}) const;
 
   /// Create a static blueprint node for a synthetic material-collector
   /// volume: a plain tube or annular disc with explicit bounds and no
