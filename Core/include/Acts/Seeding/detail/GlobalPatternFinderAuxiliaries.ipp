@@ -32,32 +32,60 @@ namespace Acts::Experimental::detail {
 template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
+void
+PatternStateAux<Hit_t, Sector_t, Topology_t>::syncState(
+    const GeometryContext& gctx,
+    const BeamspotInfo& beamSpot)
+{
+    if (needUpdate[toUnderlying(PatternStateVar::eBendPlane)]) {
+        updateBendPlane(gctx, beamSpot); 
+    }
+    if (needUpdate[toUnderlying(PatternStateVar::eLineAnchor)]) {
+        // eLineAnchor is only set by addHit when a new group is opened: the closest
+        // hit in another group is the previously added one
+        lineAnchorHit = prevLayerHit;
+        needUpdate[toUnderlying(PatternStateVar::eLineAnchor)] = false;
+        needUpdate[toUnderlying(PatternStateVar::eLine)] = true;
+    }
+    if (needUpdate[toUnderlying(PatternStateVar::eLine)]) {
+        updateLineParameters(gctx, beamSpot);
+    }
+}
+
+template <GlobPatFinderHit Hit_t, 
+          SectorType Sector_t, 
+          PatternTopology<Hit_t> Topology_t>
 void 
 PatternStateAux<Hit_t, Sector_t, Topology_t>::moveLineAnchorHit(
     const OrderedHit& refHit) 
 {
+    needUpdate[toUnderlying(PatternStateVar::eLineAnchor)] = false;
+    needUpdate[toUnderlying(PatternStateVar::eLine)] = true;
     // Treat first the special case where we have only one group
     if (countGroups() < 2) {
-        // If we call this method with only one group, it means that we inverted the hit search direction without
-        // finding any hit in other groups beside the initial one. So the anchor is the last added hit.
-        lineAnchorHit = lastInsertedHit;
+        const auto& hits {*std::ranges::find_if(hitsPerGroup, [](const auto& h){ return !h.empty(); })};
+        lineAnchorHit = *std::ranges::max_element(hits, std::ranges::less{},
+            [&refHit](const OrderedHit& hit){
+                return std::abs(hit.globLayer - refHit.globLayer); });
         return;
     }
-    // Find first the closest group to the reference group among the pattern groups
-    const auto& closestGroupIt = std::ranges::min_element(hitsPerGroup, std::ranges::less{},
-        [&refHit](const auto& hits){
-            if (hits.empty() || 
-                    Topology_t::groupIndex(*hits.front()) == Topology_t::groupIndex(*refHit)) {
-                return std::numeric_limits<int>::max();
+    const auto refGroup {Topology_t::groupIndex(*refHit)};
+    unsigned bestDist {std::numeric_limits<unsigned>::max()};
+    for (const auto& hits : hitsPerGroup) {
+        if (hits.empty() || Topology_t::groupIndex(*hits.front()) == refGroup) {
+            continue;
+        }
+        for (const auto& hit : hits) {
+            const unsigned dist = std::abs(hit.globLayer - refHit.globLayer);
+            if (dist < bestDist) {
+                bestDist = dist;
+                lineAnchorHit = hit;
             }
-            return std::abs(hits.front().globLayer - refHit.globLayer);
-        });
-
-    // Then find the closest hit in that group to the reference hit
-    const auto& hits {*closestGroupIt};
-    lineAnchorHit = *std::ranges::min_element(hits, std::ranges::less{},
-        [&refHit](const OrderedHit& hit){
-            return std::abs(hit.globLayer - refHit.globLayer); });
+            if (dist == 1u) {
+                return;
+            }
+        }
+    }
 }
 
 template <GlobPatFinderHit Hit_t, 
@@ -68,11 +96,10 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::updateLineParameters(
     const GeometryContext& gctx,
     const BeamspotInfo& beamSpot) 
 {
-    if (!needLineUpdate) {
-        return;
-    }
+    needUpdate[toUnderlying(PatternStateVar::eLine)] = false;
+    lineEndHit = lastInsertedHit;
     Vector3 pos1 {projToPhiPlane(gctx, *lineAnchorHit)};
-    Vector3 pos2 {projToPhiPlane(gctx, *lastInsertedHit)};
+    Vector3 pos2 {projToPhiPlane(gctx, *lineEndHit)};
     Vector3 d {pos2 - pos1};
     leverArm = d.norm();
     
@@ -86,7 +113,6 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::updateLineParameters(
         linePos = pos1;
     }
     lineDir = d / leverArm;
-    needLineUpdate = false;
 
     ACTS_VERBOSE(__func__<<"() Updated --> linePos: "<<toString(linePos)
         <<", lineDir: "<<toString(lineDir)<<", LeverArm: "
@@ -168,7 +194,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::computeLineResidual(
     /** Alpha represents the extrapolation distance along the pattern line */
     const double alpha {KdotD / leverArm};
     /** Unit vector along the bending plane */
-    const Vector2 eR {bendPlaneNorm.y(), -bendPlaneNorm.x()};
+    const Vector3 eR {bendPlaneDir()};
     
     /** Accumulate the derivatives of the scalar residual with respect to the common phi-plane angle. */
     double phiPlaneDerivativeAcc {0.};
@@ -208,7 +234,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::computeLineResidual(
         
         residualCovAcc += Acts::square(preFactor) 
             * intrinsicVariance(gctx, hit, trfDir, /*isProjected=*/true);
-        phiPlaneDerivativeAcc += preFactor * projFactor * pos.head<2>().dot(eR);
+        phiPlaneDerivativeAcc += preFactor * projFactor * pos.dot(eR);
         phiDisplDerivativeAcc += preFactor * projFactor;
     };
 
@@ -223,7 +249,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::computeLineResidual(
 
     /** Compute the covariance contributions of the second line point */
     const Vector3 pos2 {linePos + leverArm * lineDir};
-    covarianceTerm(*lastInsertedHit, pos2, -alpha, /*isProjected=*/true);
+    covarianceTerm(*lineEndHit, pos2, -alpha, /*isProjected=*/true);
 
     /** Compute the covariance contributions of the test hit */
     covarianceTerm(*testHit, testPos, 1., projectTestHit);
@@ -263,10 +289,12 @@ template <GlobPatFinderHit Hit_t,
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
 void 
-PatternStateAux<Hit_t, Sector_t, Topology_t>::updatePatternPhi(
+PatternStateAux<Hit_t, Sector_t, Topology_t>::updateBendPlane(
     const GeometryContext& gctx,
     const BeamspotInfo& beamSpot)
 {
+    needUpdate[toUnderlying(PatternStateVar::eBendPlane)] = false;
+    needUpdate[toUnderlying(PatternStateVar::eLine)] = true;
     /** Helper method to align the final solution with the previous one. */
     auto alignPhiAndStore = [&](double newPatphi) -> void {
         const double refPhi {sector.phi()};
@@ -279,82 +307,29 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::updatePatternPhi(
         patPhi = newPatphi;
         bendPlaneNorm = Vector3{-std::sin(patPhi), std::cos(patPhi), 0.};
     };
-    if (nPhiLayers == 0) {
-        /** If there are no phi hits, we just use the central phi of the sector,
-         *  with a standard deviation based on the expanded sector size. The plane passes
-         *  through the origin by construction, so s = 0 exactly. */
-        alignPhiAndStore(sector.phi());
-        patPhiOffset = 0.;
-        bendPlaneCov[Acts::toUnderlying(BendPlaneCov::ePhiPhi)] = Acts::square(sector.sectorSize()) / 3.;
-        bendPlaneCov[Acts::toUnderlying(BendPlaneCov::eSS)] = 0.;
-        bendPlaneCov[Acts::toUnderlying(BendPlaneCov::ePhiS)] = 0.;
-        ACTS_VERBOSE(__func__<<"() No phi hits in the pattern, set pattern phi "
-            <<inDeg(patPhi)<<", offset "<<patPhiOffset<<", BendPlaneCov "<<print(bendPlaneCov));
-        return;
-    }
-    /** Visits the phi-measuring hits without copying them into a temporary container. */
-    auto forEachPhiHit = [&](std::invocable<const Hit_t&> auto&& fn) -> void {
-        std::ranges::for_each(hitsPerGroup, [&](const std::vector<OrderedHit>& hits){
-            std::ranges::for_each(hits, [&](const OrderedHit& hit){
-                if (hit->spacePoint()->measuresLoc0()) {
-                    fn(*hit);
-                }
-            });
-        });
-        std::ranges::for_each(phiOnlyHits, [&](const Hit_t& hit){
-            if (hit.spacePoint()->measuresLoc0()) {
-                fn(hit);
-            }
-        });
-    };
 
-    if (nPhiLayers == 1) {
-        // When we ahve one hit, we have an exact solution: draw a line through the hit and the beamspot.
-        const Hit_t* phiHit {nullptr};
-        forEachPhiHit([&](const Hit_t& hit) { phiHit = &hit; });
-        assert(phiHit != nullptr);
-
-        const Vector2 bsPos {beamSpot.position.template head<2>()};
-        const Vector2 hitPos {phiHit->globalPosition(gctx).template head<2>()};
-        const Vector2 d {hitPos - bsPos};
-        alignPhiAndStore(std::atan2(d.y(), d.x()));
-        patPhiOffset = bendPlaneNorm.dot(beamSpot.position);
-
-        // Coordinates of the hit and the beamspot along the line, e_r = (n_y, -n_x)
-        const Vector2 eR {bendPlaneNorm.y(), -bendPlaneNorm.x()};
-        // Signed beamspot -> hit distance along e_r (flips sign if alignPhi rotated by 180 deg)
-        const double lever {d.dot(eR)};
-        // Beamspot & hit coordinates along e_R
-        const double rhoBS {bsPos.dot(eR)};
-        const double rhoHit {rhoBS + lever};
-
-        const double varBS {Acts::square(beamSpot.radius)};
-        const double varHit {intrinsicVariance(gctx, *phiHit, bendPlaneNorm, /*isProjected=*/false)};
-        const double invL2 {1. / Acts::square(lever)};
-        
-        bendPlaneCov[Acts::toUnderlying(BendPlaneCov::ePhiPhi)] = (varHit + varBS) * invL2;
-        bendPlaneCov[Acts::toUnderlying(BendPlaneCov::ePhiS)] = - (rhoBS * varHit + rhoHit * varBS) * invL2;
-        bendPlaneCov[Acts::toUnderlying(BendPlaneCov::eSS)] = 
-            (Acts::square(rhoBS) * varHit + Acts::square(rhoHit) * varBS) * invL2;;
-        ACTS_VERBOSE(__func__<<"() One phi hit in the pattern, set pattern phi "
-            <<inDeg(patPhi)<<", offset "<<patPhiOffset<<", BendPlaneCov "<<print(bendPlaneCov));
-        return;
-    }
-
-    // Use the previous phi value as the first estimate to freeze the weights of the linear regression
-    const Vector3 n0 {-std::sin(patPhi), std::cos(patPhi), 0.};
-
-    /** Positions are taken relative to the beam spot: this avoids the cancellation in the
-     *  centred moments and puts the beam spot at the origin, so it only adds its weight. */
+    /** Count the phi hits and accumulate the regression moments. The only approx is
+     *  that weights are frozen at the previous plane estimate. Positions are taken 
+     *  relative to the beam spot: this avoids the cancellation in the centred 
+     *  moments and puts the beam spot at the origin, so it only adds its weight.
+     *  We exploit that the sectorization is in phi, so everything is computed in
+     *  the transverse plane. */
     const Vector2 bsPos {beamSpot.position.template head<2>()};
+    nPhiLayers = 0u;
     double weightSum {0.}, Sxx {0.}, Sxy {0.}, Syy {0.};
     Vector2 centroid {Vector2::Zero()}; //Sx, Sy
-    forEachPhiHit([&](const Hit_t& hit){
+
+    auto accumulate = [&](const Hit_t& hit) -> void {
+        if (!hit.spacePoint()->measuresLoc0()) {
+            return;
+        }
+        nPhiLayers++;
         const double variance {
-            intrinsicVariance(gctx, hit, n0, /*isProjected=*/false)
+            intrinsicVariance(gctx, hit, bendPlaneNorm, /*isProjected=*/false)
         };
         if (variance < Acts::s_epsilon) {
-            ACTS_WARNING(__func__<<"() Skipping phi hit with zero variance: "<<*hit.spacePoint());
+            ACTS_ERROR("updateBendPlane() Phi hit with zero variance, hit:"
+                <<std::endl<<*hit.spacePoint());
             return;
         }
         double weight {1. / variance};
@@ -366,7 +341,21 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::updatePatternPhi(
         Sxx += wd.x() * d.x();
         Sxy += wd.x() * d.y();
         Syy += wd.y() * d.y();
+    };
+    std::ranges::for_each(hitsPerGroup, [&](const std::vector<OrderedHit>& hits){
+        std::ranges::for_each(hits, [&](const OrderedHit& hit){
+            accumulate(*hit);
+        });
     });
+    std::ranges::for_each(phiOnlyHits, [&](const Hit_t& hit){
+        accumulate(hit);
+    });
+
+    if (nPhiLayers == 0) {
+        setBendPlaneFromSector();
+        return;
+    }
+
     // Beam spot as an additional point measurement, sitting at the origin of the shifted frame
     weightSum += 1. / Acts::square(beamSpot.radius);
 
@@ -396,8 +385,8 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::updatePatternPhi(
     // Back to the original frame
     centroid += bsPos;
     patPhiOffset = bendPlaneNorm.template head<2>().dot(centroid);
-    // Centroid coordinate along the line, e_r = (n_y, -n_x)
-    const Vector2 eR {bendPlaneNorm.y(), -bendPlaneNorm.x()};
+    // Centroid coordinate along the line
+    const Vector2 eR {bendPlaneDir().template head<2>()};
     const double rhoCentroid {centroid.dot(eR)};
 
     bendPlaneCov[Acts::toUnderlying(BendPlaneCov::ePhiPhi)] = eigenValSeparationInv;
@@ -413,6 +402,25 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::updatePatternPhi(
 template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
+void
+PatternStateAux<Hit_t, Sector_t, Topology_t>::setBendPlaneFromSector()
+{
+    /** If there are no phi hits, we just use the central phi of the sector,
+     *  with a standard deviation based on the expanded sector size. The plane passes
+     *  through the origin by construction, so s = 0 exactly. */
+    patPhi = sector.phi();
+    bendPlaneNorm = Vector3{-std::sin(patPhi), std::cos(patPhi), 0.};
+    patPhiOffset = 0.;
+    bendPlaneCov[Acts::toUnderlying(BendPlaneCov::ePhiPhi)] = Acts::square(sector.sectorSize()) / 3.;
+    bendPlaneCov[Acts::toUnderlying(BendPlaneCov::eSS)] = 0.;
+    bendPlaneCov[Acts::toUnderlying(BendPlaneCov::ePhiS)] = 0.;
+    ACTS_VERBOSE(__func__<<"() No phi hits in the pattern, set pattern phi "
+        <<inDeg(patPhi)<<", offset "<<patPhiOffset<<", BendPlaneCov "<<print(bendPlaneCov));
+}
+
+template <GlobPatFinderHit Hit_t, 
+          SectorType Sector_t, 
+          PatternTopology<Hit_t> Topology_t>
 double PatternStateAux<Hit_t, Sector_t, Topology_t>::angleToBendPlane(
     const Vector3& pos) const 
 {
@@ -420,8 +428,7 @@ double PatternStateAux<Hit_t, Sector_t, Topology_t>::angleToBendPlane(
      * rho  = e_r.X, with e_r = (n_y, -n_x). The atan of these gives the angle
      * between the point and the plane, as seen from the origin. The angle is in (-pi, pi] */
     const double dist{bendPlaneNorm.dot(pos) - patPhiOffset};
-    const double rho{bendPlaneNorm.y() * pos.x()
-                   - bendPlaneNorm.x() * pos.y()};
+    const double rho {pos.dot(bendPlaneDir())};
     return std::atan2(dist, rho);
 }
 
@@ -429,8 +436,7 @@ template <GlobPatFinderHit Hit_t,
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
 double PatternStateAux<Hit_t, Sector_t, Topology_t>::phiAtRadius(
-    const double radius
-) const
+    const double radius) const
 {
     /** Approximate azimuth of the pattern's line at transverse distance R from the beam line
      *  (phi + atan(s/R) ~ phi + s/R */
@@ -440,12 +446,73 @@ double PatternStateAux<Hit_t, Sector_t, Topology_t>::phiAtRadius(
 template <GlobPatFinderHit Hit_t, 
           SectorType Sector_t, 
           PatternTopology<Hit_t> Topology_t>
+bool
+PatternStateAux<Hit_t, Sector_t, Topology_t>::defineLineAroundHit(
+    const GeometryContext& gctx, 
+    const Hit_t& refHit)
+{
+    const auto phiHitGroup {Topology_t::groupIndex(refHit)};
+    const auto& groupHits {hitsPerGroup[phiHitGroup]};
+
+    /** We use useBeamspot as a flag to indicate whether the pattern line 
+     *  has been determined with enough lever arm */
+    useBeamspot = true;
+
+    if (groupHits.size() > 1) {
+        // if we have >= 2 eta hits in the group, we use the furthestmost to define the pattern line
+        const auto [minIt, maxIt] {std::ranges::minmax_element(groupHits, {},
+            [](const OrderedHit& c){ return c.globLayer; })};
+        lineAnchorHit = *minIt;
+        lastInsertedHit = *maxIt;
+        updateLineParameters(gctx, BeamspotInfo{});
+    }
+    if (useBeamspot && !groupHits.empty()) {
+        // if we have only one eta hit or the layer separation is too small, to find the second hit 
+        // we use the functionality of anchor hit
+        moveLineAnchorHit(groupHits.front());
+        lastInsertedHit = *std::ranges::max_element(groupHits, {},
+            [&](const OrderedHit& c){ 
+                return (projToPhiPlane(gctx, *c) - 
+                        projToPhiPlane(gctx, *lineAnchorHit)).norm(); }); 
+        updateLineParameters(gctx, BeamspotInfo{});
+    }
+    if (useBeamspot) {
+        /** Define the closest hits in the upper and lewer groups */
+        const OrderedHit *lowerHit{nullptr}, *upperHit{nullptr};
+        for (const auto& [group, hits] : Acts::enumerate(hitsPerGroup)) {
+            if (hits.empty() || group == phiHitGroup) {
+                continue;
+            }
+            if (Topology_t::layerSorter(*hits.front(), refHit)) {
+                const OrderedHit& lowerInGroup {*std::ranges::max_element(hits, {},
+                    [](const OrderedHit& c){ return c.globLayer; })};
+                if (lowerHit == nullptr || lowerInGroup.globLayer > lowerHit->globLayer) {
+                    lowerHit = &lowerInGroup;
+                }
+            } else {
+                const OrderedHit& upperInGroup {*std::ranges::min_element(hits, {},
+                    [](const OrderedHit& c){ return c.globLayer; })};
+                if (upperHit == nullptr || upperInGroup.globLayer < upperHit->globLayer) {
+                    upperHit = &upperInGroup;
+                }
+            }
+        }
+        if (lowerHit == nullptr || upperHit == nullptr) {
+            return false;
+        }
+        lineAnchorHit = *lowerHit;
+        lastInsertedHit = *upperHit;
+        updateLineParameters(gctx, BeamspotInfo{});
+    }
+    return !useBeamspot;
+}
+template <GlobPatFinderHit Hit_t, 
+          SectorType Sector_t, 
+          PatternTopology<Hit_t> Topology_t>
 void 
 PatternStateAux<Hit_t, Sector_t, Topology_t>::addHit(
-    const GeometryContext& gctx,
     const OrderedHit& hit,
-    const LineTestRes& testRes,
-    const BeamspotInfo& beamSpot) 
+    const LineTestRes& testRes) 
 {
     /** Add the new hit */
     hitsPerGroup[Topology_t::groupIndex(*hit)].push_back(hit);
@@ -457,8 +524,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::addHit(
         nTriggerLayers++;
     }
     if (hit->spacePoint()->measuresLoc0()) {
-        nPhiLayers++;
-        updatePatternPhi(gctx, beamSpot);
+        setStateVars({PatternStateVar::eBendPlane});
     }
 
     /** Update the pointers to previous layer hit */
@@ -473,9 +539,9 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::addHit(
 
     /** If the new compatible hit is in a different group, update the line anchor */
     if (isNewSGroup) {
-        moveLineAnchorHit(hit);
+        setStateVars({PatternStateVar::eLineAnchor});
     }
-    needLineUpdate = true;
+    setStateVars({PatternStateVar::eLine});
 }
 
 template <GlobPatFinderHit Hit_t, 
@@ -483,10 +549,8 @@ template <GlobPatFinderHit Hit_t,
           PatternTopology<Hit_t> Topology_t>
 void 
 PatternStateAux<Hit_t, Sector_t, Topology_t>::overWriteHit(
-    const GeometryContext& gctx,
     const OrderedHit& newHit,
-    const LineTestRes& newTestRes,
-    const BeamspotInfo& beamSpot) 
+    const LineTestRes& newTestRes) 
 {
     const auto group {Topology_t::groupIndex(*newHit)};
     if (group != Topology_t::groupIndex(*lastInsertedHit) || 
@@ -508,14 +572,9 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::overWriteHit(
         }
     }
     /** Update the phi counts */
-    bool updatePhi {false};
-    if (lastInsertedHit->spacePoint()->measuresLoc0()) {
-        nPhiLayers--;
-        updatePhi = true;
-    }
-    if (newHit->spacePoint()->measuresLoc0()) {
-        nPhiLayers++;
-        updatePhi = true;
+    if (lastInsertedHit->spacePoint()->measuresLoc0() ||
+            newHit->spacePoint()->measuresLoc0()) {
+        setStateVars({PatternStateVar::eBendPlane});
     }
     /** Update the residual */
     sumNormResidual2 += Acts::square(newTestRes.residual / newTestRes.sigma) - 
@@ -538,10 +597,30 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::overWriteHit(
     stHits.push_back(newHit);
     lastInsertedHit = newHit;
 
-    if (updatePhi) {
-        updatePatternPhi(gctx, beamSpot);
+    setStateVars({PatternStateVar::eLine});
+}
+
+template <GlobPatFinderHit Hit_t, 
+          SectorType Sector_t, 
+          PatternTopology<Hit_t> Topology_t>
+Vector3
+PatternStateAux<Hit_t, Sector_t, Topology_t>::bendPlaneDir() const 
+{
+    // Here we heavily exploit the fact that the sectorization is in phi, so
+    // the normal and the direction of the bending plane are always in the transverse plane.
+    return Vector3{bendPlaneNorm.y(), -bendPlaneNorm.x(), 0.};
+}
+
+template <GlobPatFinderHit Hit_t, 
+          SectorType Sector_t, 
+          PatternTopology<Hit_t> Topology_t>
+void 
+PatternStateAux<Hit_t, Sector_t, Topology_t>::setStateVars(
+    const std::initializer_list<PatternStateVar>& vars)
+{
+    for (const PatternStateVar var : vars) {
+        needUpdate[toUnderlying(var)] = true;
     }
-    needLineUpdate = true;
 }
 
 template <GlobPatFinderHit Hit_t, 
@@ -604,8 +683,7 @@ template <GlobPatFinderHit Hit_t,
 PatternStateAux<Hit_t, Sector_t, Topology_t>::PatternStateAux(
     const GeometryContext& gctx,
     const OrderedHit& seed,
-    const typename Sector_t::Index_t sector,    
-    const BeamspotInfo& beamSpot,      
+    const typename Sector_t::Index_t sector,
     const Config* cfg,
     const Acts::Logger* logger)
         : cfg{cfg},
@@ -619,6 +697,9 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::PatternStateAux(
         /** Add the new hit */
         hitsPerGroup[Topology_t::groupIndex(*seed)].push_back(seed);
 
+        /** Initialize the bending plane */
+        setBendPlaneFromSector();
+
         /** Update the hit counts */
         if (seed->isPrecision()) {
             nPrecisionLayers++;
@@ -626,10 +707,9 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::PatternStateAux(
             nTriggerLayers++;
         }
         if (seed->spacePoint()->measuresLoc0()) {
-            nPhiLayers++;
+            setStateVars({PatternStateVar::eBendPlane});
         }
-        updatePatternPhi(gctx, beamSpot);
-        needLineUpdate = true;
+        setStateVars({PatternStateVar::eLine});
     }
 
 template<GlobPatFinderHit Hit_t, 
