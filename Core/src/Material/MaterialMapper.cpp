@@ -8,6 +8,8 @@
 
 #include "Acts/Material/MaterialMapper.hpp"
 
+#include "Acts/Utilities/detail/WorkerPool.hpp"
+
 Acts::MaterialMapper::MaterialMapper(const Config& cfg,
                                      std::unique_ptr<const Logger> mlogger)
     : m_cfg(cfg), m_logger(std::move(mlogger)) {
@@ -16,6 +18,9 @@ Acts::MaterialMapper::MaterialMapper(const Config& cfg,
   }
   if (m_cfg.surfaceMaterialAccumulator == nullptr) {
     throw std::invalid_argument("The surface material accumulator is not set");
+  }
+  if (m_cfg.numThreads > 1) {
+    m_pool = std::make_shared<detail::WorkerPool>(m_cfg.numThreads);
   }
 }
 
@@ -30,11 +35,9 @@ std::unique_ptr<Acts::MaterialMapper::State> Acts::MaterialMapper::createState(
   return state;
 }
 
-std::pair<Acts::RecordedMaterialTrack, Acts::RecordedMaterialTrack>
-Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
-                                  const MagneticFieldContext& mctx,
-                                  const RecordedMaterialTrack& rmTrack,
-                                  const Options& options) const {
+Acts::MaterialMapper::TrackAssignment Acts::MaterialMapper::assignTrack(
+    const GeometryContext& gctx, const MagneticFieldContext& mctx,
+    const RecordedMaterialTrack& rmTrack, const Options& options) const {
   // The recorded material track
   const auto& [starDir, recordedMaterial] = rmTrack;
   const auto& [position, direction] = starDir;
@@ -43,8 +46,7 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
                                                    direction);
 
   // The mapped and unmapped material
-  RecordedMaterialTrack mappedMaterial = {starDir, {}};
-  RecordedMaterialTrack unmappedMaterial = {starDir, {}};
+  TrackAssignment result{{starDir, {}}, {starDir, {}}, {}};
   // Assign the surface interactions
   auto [assigned, unassigned, emptyBinSurfaces] =
       MaterialInteractionAssignment::assign(
@@ -52,18 +54,10 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
           options.assignmentOptions);
 
   // Record the assigned ones - as mapped ones
-  mappedMaterial.second.materialInteractions.insert(
-      mappedMaterial.second.materialInteractions.end(), assigned.begin(),
-      assigned.end());
-
+  result.mapped.second.materialInteractions = std::move(assigned);
   // Record the unassigned ones - as unmapped ones
-  unmappedMaterial.second.materialInteractions.insert(
-      unmappedMaterial.second.materialInteractions.end(), unassigned.begin(),
-      unassigned.end());
-
-  // The material interactions
-  m_cfg.surfaceMaterialAccumulator->accumulate(
-      *state.surfaceMaterialAccumulatorState, gctx, assigned, emptyBinSurfaces);
+  result.unmapped.second.materialInteractions = std::move(unassigned);
+  result.surfacesWithoutAssignment = std::move(emptyBinSurfaces);
 
   // The function to calculate the total material before returning
   auto calculateTotalMaterial = [](RecordedMaterialTrack& rTrack) -> void {
@@ -73,10 +67,63 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
     }
   };
   // Fill the totals to the material tracks (useful for debugging)
-  calculateTotalMaterial(mappedMaterial);
-  calculateTotalMaterial(unmappedMaterial);
+  calculateTotalMaterial(result.mapped);
+  calculateTotalMaterial(result.unmapped);
+  return result;
+}
+
+std::pair<Acts::RecordedMaterialTrack, Acts::RecordedMaterialTrack>
+Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
+                                  const MagneticFieldContext& mctx,
+                                  const RecordedMaterialTrack& rmTrack,
+                                  const Options& options) const {
+  auto result = assignTrack(gctx, mctx, rmTrack, options);
+  // The material interactions
+  m_cfg.surfaceMaterialAccumulator->accumulate(
+      *state.surfaceMaterialAccumulatorState, gctx,
+      result.mapped.second.materialInteractions,
+      result.surfacesWithoutAssignment);
   // Return the mapped and unmapped material
-  return {mappedMaterial, unmappedMaterial};
+  return {std::move(result.mapped), std::move(result.unmapped)};
+}
+
+std::vector<std::pair<Acts::RecordedMaterialTrack, Acts::RecordedMaterialTrack>>
+Acts::MaterialMapper::mapMaterial(
+    State& state, const GeometryContext& gctx, const MagneticFieldContext& mctx,
+    std::span<const RecordedMaterialTrack* const> rmTracks,
+    const Options& options) const {
+  // The assignment of the tracks is independent: run it concurrently
+  std::vector<TrackAssignment> assignments(rmTracks.size());
+  auto assign = [&](std::size_t i) {
+    assignments[i] = assignTrack(gctx, mctx, *rmTracks[i], options);
+  };
+  if (m_pool != nullptr) {
+    m_pool->parallelFor(rmTracks.size(), assign);
+  } else {
+    for (std::size_t i = 0; i < rmTracks.size(); ++i) {
+      assign(i);
+    }
+  }
+
+  // The accumulation follows the track order, the accumulator decides
+  // which parts of it can run concurrently
+  std::vector<ISurfaceMaterialAccumulator::TrackAccumulation> accumulations;
+  accumulations.reserve(assignments.size());
+  for (const auto& assignment : assignments) {
+    accumulations.push_back({&assignment.mapped.second.materialInteractions,
+                             &assignment.surfacesWithoutAssignment});
+  }
+  m_cfg.surfaceMaterialAccumulator->accumulate(
+      *state.surfaceMaterialAccumulatorState, gctx, accumulations,
+      m_pool.get());
+
+  std::vector<std::pair<RecordedMaterialTrack, RecordedMaterialTrack>> result;
+  result.reserve(assignments.size());
+  for (auto& assignment : assignments) {
+    result.emplace_back(std::move(assignment.mapped),
+                        std::move(assignment.unmapped));
+  }
+  return result;
 }
 
 Acts::TrackingGeometryMaterial Acts::MaterialMapper::finalizeMaps(

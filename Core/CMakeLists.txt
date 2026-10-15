@@ -29,6 +29,9 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(ActsCore PUBLIC Boost::boost Eigen3::Eigen)
+
+find_package(Threads REQUIRED)
+target_link_libraries(ActsCore PRIVATE Threads::Threads)
 if(CMAKE_DL_LIBS)
     target_link_libraries(ActsCore PRIVATE ${CMAKE_DL_LIBS})
 endif()
