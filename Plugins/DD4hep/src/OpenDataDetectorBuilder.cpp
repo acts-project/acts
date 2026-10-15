@@ -240,13 +240,13 @@ void addPassiveCylinder(const BlueprintBuilder& builder,
   if (!element.has_value()) {
     return;
   }
-  outer.addMaterial(
-      elementName + "_mat", [&](Acts::MaterialDesignatorBlueprintNode& mat) {
-        for (const auto face : faces) {
-          configureCylinderFace(mat, face, kMatPhiBins, zBins);
-        }
-        mat.addChild(builder.backend().makePassiveElement(*element));
-      });
+  outer.addMaterial(elementName + "_mat",
+                    [&](Acts::MaterialDesignatorBlueprintNode& mat) {
+                      for (const auto face : faces) {
+                        configureCylinderFace(mat, face, kMatPhiBins, zBins);
+                      }
+                      mat.addChild(builder.makePassiveElement(*element));
+                    });
 }
 
 // Pixel endplates: passive carbon-fiber discs beyond the outermost endcap
@@ -273,7 +273,7 @@ void addPixelEndplateIfPresent(const BlueprintBuilder& builder,
                       kPixelEndcapRBins);
     configureDiscFace(*endplateMat, Face::PositiveDisc, kMatPhiBins,
                       kPixelEndcapRBins);
-    endplateMat->addChild(builder.backend().makePassiveElement(
+    endplateMat->addChild(builder.makePassiveElement(
         child, endcapNode.name() + "_PixelEndplate"));
     endcapNode.addChild(std::move(endplateMat));
   }

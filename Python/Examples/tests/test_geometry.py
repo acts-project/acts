@@ -177,7 +177,8 @@ def test_odd_gen3(constructionMethod):
         assert visitor.num_volumes > 0
 
         # TGeo does not have material designation yet (no addMaterial /
-        # makePassiveElement / makeMaterialCollector calls on that backend),
+        # makePassiveElement / makeMaterialCollector calls for that
+        # construction method),
         # so it is still missing the extra portals/volumes the other
         # construction methods now carry.
         if constructionMethod == "TGeo":

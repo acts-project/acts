@@ -192,30 +192,33 @@ Things to know before you use it:
 ### Passive volumes and material collectors
 
 @ref Acts::MaterialDesignatorBlueprintNode::configureFace "configureFace" marks
-up faces of a blueprint node that already exists. For a DD4hep-backed Gen3
-geometry, two @ref ActsPlugins::DD4hep::DD4hepBackend "DD4hepBackend" helpers
-create such nodes in the first place, for volumes that carry material but have
-no sensitive detector elements of their own:
+up faces of a blueprint node that already exists. Two helpers create such nodes
+in the first place, for volumes that carry material but have no sensitive
+detector elements of their own:
 
-- @ref ActsPlugins::DD4hep::DD4hepBackend::makePassiveElement "DD4hepBackend::makePassiveElement"
-  converts a passive DD4hep element (e.g. the ODD's support tube, or its pixel
-  endplates) into a plain tube- or disc-shaped @ref Acts::StaticBlueprintNode,
-  as opposed to a node assembled from sensitive surfaces. The resulting node
-  can then be wrapped in @ref Acts::BlueprintNode::addMaterial "addMaterial"
-  like any other.
+- @ref Acts::BlueprintBuilder::makePassiveElement "BlueprintBuilder::makePassiveElement"
+  converts a passive detector element (e.g. the ODD's support tube, or its
+  pixel endplates) into a plain tube- or disc-shaped
+  @ref Acts::StaticBlueprintNode, as opposed to a node assembled from sensitive
+  surfaces. The resulting node can then be wrapped in
+  @ref Acts::BlueprintNode::addMaterial "addMaterial" like any other. It is
+  available for every blueprint backend that can describe a passive element's
+  shape (`passiveVolumeShape()`); currently that is
+  @ref ActsPlugins::DD4hep::DD4hepBackend "DD4hepBackend".
 - @ref ActsPlugins::DD4hep::DD4hepBackend::makeMaterialCollector "DD4hepBackend::makeMaterialCollector"
   creates a synthetic volume with no corresponding DD4hep element at all: a
   catch-all surface placed just outside the tracker envelope, so that material
-  mapping attributes interactions in
-  nearby non-tracker material (e.g. the gap before the calorimeter) to a
-  dedicated surface instead of misattributing them to the nearest real tracker
-  surface. See `addCaloMaterialCollector`/`addCaloMaterialCollectorDisc` in
+  mapping attributes interactions in nearby non-tracker material (e.g. the gap
+  before the calorimeter) to a dedicated surface instead of misattributing them
+  to the nearest real tracker surface. See
+  `addCaloMaterialCollector`/`addCaloMaterialCollectorDisc` in
   `OpenDataDetectorBuilder.cpp` for how the ODD uses this for its calorimeter.
 
 Both are currently DD4hep-only: the TGeo blueprint backend
-(@ref ActsPlugins::TGeoBlueprintBuilderBackend) has no equivalent yet, so a
-TGeo-built Gen3 geometry can designate faces on whatever nodes it has but
-cannot create new passive or collector volumes this way.
+(@ref ActsPlugins::TGeoBlueprintBuilderBackend) does not implement
+`passiveVolumeShape()` and has no material-collector helper yet, so a TGeo-built
+Gen3 geometry can designate faces on whatever nodes it has but cannot create
+new passive or collector volumes this way.
 
 > [!warning]
 > Blueprint-built geometry ignores material decorators.
