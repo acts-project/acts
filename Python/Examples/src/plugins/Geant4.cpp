@@ -91,8 +91,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
     py::class_<State>(sm, "State").def(py::init<>());
 
     auto c = py::class_<Config>(sm, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, materialMappings, volumeMappings, candidateSurfaces,
-                       centerGridCellSize);
+    ACTS_PYTHON_STRUCT(c, materialMappings, volumeMappings, candidateSurfaces);
 
     sm.def("create",
            [](const Config& cfg, Logging::Level level,

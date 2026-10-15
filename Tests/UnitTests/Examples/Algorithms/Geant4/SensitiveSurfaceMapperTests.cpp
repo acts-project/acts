@@ -23,10 +23,10 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <memory>
 #include <numbers>
-#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -45,8 +45,8 @@ namespace {
 
 auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
 
-/// Default translation tolerance of `Acts::detail::TransformComparator`,
-/// which the mapper uses to compare surface centers and Geant4 positions
+/// Translation tolerance with which the mapper compares surface centers and
+/// Geant4 positions
 constexpr double kTolerance = 0.1_um;
 
 /// All surfaces are candidates for every position. With `cacheByRegion` they
@@ -126,7 +126,7 @@ struct MappingResult {
 
 MappingResult runMapper(World& world,
                         const std::vector<const Acts::Surface*>& surfaces,
-                        bool cacheByRegion, double cellSize = 1_mm) {
+                        bool cacheByRegion) {
   auto candidates = std::make_shared<ListCandidates>();
   candidates->surfaces = surfaces;
   candidates->cacheByRegion = cacheByRegion;
@@ -134,7 +134,6 @@ MappingResult runMapper(World& world,
   SensitiveSurfaceMapper::Config cfg;
   cfg.volumeMappings = {"Sensor"};
   cfg.candidateSurfaces = candidates;
-  cfg.centerGridCellSize = cellSize;
 
   MappingResult result;
   result.mapper = std::make_shared<SensitiveSurfaceMapper>(
@@ -150,12 +149,8 @@ MappingResult runMapper(World& world,
 BOOST_AUTO_TEST_SUITE(Geant4SensitiveSurfaceMapperSuite)
 
 BOOST_DATA_TEST_CASE(CenterMatchingTolerance,
-                     boost::unit_test::data::make({false, true}) *
-                         boost::unit_test::data::make({0., 0.1_um, 10_um, 1_mm,
-                                                       1_m}),
-                     cacheByRegion, cellSize) {
-  // The cell size changes only the speed, never the matches. 0 disables the
-  // grid and 0.1 um falls back to the linear scan
+                     boost::unit_test::data::make({false, true}),
+                     cacheByRegion) {
   World world;
   // Centers on and next to multiples of 1 mm (and of 10 um)
   const std::vector<Acts::Vector3> centers = {
@@ -171,18 +166,14 @@ BOOST_DATA_TEST_CASE(CenterMatchingTolerance,
   std::vector<const G4VPhysicalVolume*> outside;
   for (const auto& center : centers) {
     // Within the tolerance in every component. For the second and last
-    // center this crosses a multiple of 1 mm, i.e. a cell of the mapper
+    // center this crosses a multiple of 1 mm
     inside.push_back(world.placeBox(
         "Sensor", center + Acts::Vector3(-0.5, 0.5, -0.9) * kTolerance));
     outside.push_back(world.placeBox(
         "Sensor", center + Acts::Vector3(0., 0., 2. * kTolerance)));
   }
 
-#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
-  // The fallback warning for 0.1 um cells is expected: do not fail on it
-  Acts::Logging::ScopedFailureThreshold threshold{Acts::Logging::FATAL};
-#endif
-  const auto result = runMapper(world, surfaces, cacheByRegion, cellSize);
+  const auto result = runMapper(world, surfaces, cacheByRegion);
   for (std::size_t i = 0; i < centers.size(); ++i) {
     BOOST_CHECK_EQUAL(result.surfaceOf(inside[i]), surfaces[i]);
     BOOST_CHECK_EQUAL(result.surfaceOf(outside[i]), nullptr);
@@ -191,16 +182,16 @@ BOOST_DATA_TEST_CASE(CenterMatchingTolerance,
 }
 
 BOOST_DATA_TEST_CASE(FarAndNonFiniteCenters,
-                     boost::unit_test::data::make({false, true}) *
-                         boost::unit_test::data::make({0., 10_um, 1_mm, 1_m}),
-                     cacheByRegion, cellSize) {
-  // Centers far apart, which for small cells span more cells than the grid
-  // has bins per axis, a center too far away to be binned, and a center with
-  // a NaN component, which compares equal to everything in that component
+                     boost::unit_test::data::make({false, true}),
+                     cacheByRegion) {
+  // Centers far apart, centers just within and too far away to be indexed
+  // by the mapper (1000 km), and a center with a NaN component, which
+  // compares equal to everything in that component
   World world;
   const double nan = std::numeric_limits<double>::quiet_NaN();
   const std::vector<Acts::Vector3> centers = {
-      {0., 0., 0.}, {800_m, -800_m, 800_m}, {1e20, 0., 0.}, {nan, 5., 5.}};
+      {0., 0., 0.},  {800_m, -800_m, 800_m}, {1e20, 0., 0.},
+      {nan, 5., 5.}, {999_km, -1_m, 1_m},    {5e12, 0., 0.}};
   std::vector<std::shared_ptr<Acts::Surface>> planes;
   std::vector<const Acts::Surface*> surfaces;
   for (const auto& center : centers) {
@@ -208,21 +199,24 @@ BOOST_DATA_TEST_CASE(FarAndNonFiniteCenters,
     surfaces.push_back(planes.back().get());
   }
 
-  // Positions next to the bounding box of the binned centers and far outside
-  // of it, with the surface they are expected to be mapped to
+  // Positions next to the centers and far away from them, with the surface
+  // they are expected to be mapped to
   const std::vector<std::pair<Acts::Vector3, const Acts::Surface*>> expected = {
       {Acts::Vector3(-0.9, 0.5, -0.5) * kTolerance, surfaces[0]},
       {centers[1] + Acts::Vector3(0.9, -0.9, 0.9) * kTolerance, surfaces[1]},
       {centers[1] + Acts::Vector3(2., 0., 0.) * kTolerance, nullptr},
       {centers[2], surfaces[2]},
       {{-30_m, 5., 5. + 0.5 * kTolerance}, surfaces[3]},
-      {{-30_m, 5., 5. + 2. * kTolerance}, nullptr}};
+      {{-30_m, 5., 5. + 2. * kTolerance}, nullptr},
+      {centers[4] + Acts::Vector3(-0.9, 0.9, -0.9) * kTolerance, surfaces[4]},
+      {centers[4] + Acts::Vector3(0., 2., 0.) * kTolerance, nullptr},
+      {centers[5], surfaces[5]}};
   std::vector<const G4VPhysicalVolume*> boxes;
   for (const auto& entry : expected) {
     boxes.push_back(world.placeBox("Sensor", entry.first));
   }
 
-  const auto result = runMapper(world, surfaces, cacheByRegion, cellSize);
+  const auto result = runMapper(world, surfaces, cacheByRegion);
   for (std::size_t i = 0; i < expected.size(); ++i) {
     BOOST_CHECK_EQUAL(result.surfaceOf(boxes[i]), expected[i].second);
   }
@@ -274,6 +268,47 @@ BOOST_DATA_TEST_CASE(IdenticalSurfacesKeepCandidateOrder,
   BOOST_CHECK_EQUAL(result.surfaceOf(box), first.get());
 }
 
+BOOST_DATA_TEST_CASE(ManyIdenticalAndCoplanarCenters,
+                     boost::unit_test::data::make({false, true}),
+                     cacheByRegion) {
+  // Many surfaces with an identical center, whose components have an odd
+  // last mantissa bit, and many centers in one plane at a z value shared by
+  // hundreds of ALICE 3 sensors
+  World world;
+  const Acts::Vector3 shared{std::nextafter(37., 38.), std::nextafter(-41., 0.),
+                             std::nextafter(43., 44.)};
+  std::vector<std::shared_ptr<Acts::Surface>> planes;
+  for (int i = 0; i < 200; ++i) {
+    planes.push_back(makePlane(shared));
+  }
+  const auto* sharedBox = world.placeBox("Sensor", shared);
+
+  std::vector<const G4VPhysicalVolume*> inside;
+  std::vector<const G4VPhysicalVolume*> outside;
+  for (int ix = 0; ix < 30; ++ix) {
+    for (int iy = 0; iy < 30; ++iy) {
+      const Acts::Vector3 center{-100. + 7. * ix, -100. + 7. * iy,
+                                 1801.0500000000002};
+      planes.push_back(makePlane(center));
+      inside.push_back(world.placeBox(
+          "Sensor", center + Acts::Vector3(0.9, -0.9, 0.9) * kTolerance));
+      outside.push_back(world.placeBox(
+          "Sensor", center + Acts::Vector3(0., 0., -2.) * kTolerance));
+    }
+  }
+  std::vector<const Acts::Surface*> surfaces;
+  for (const auto& plane : planes) {
+    surfaces.push_back(plane.get());
+  }
+
+  const auto result = runMapper(world, surfaces, cacheByRegion);
+  BOOST_CHECK_EQUAL(result.surfaceOf(sharedBox), surfaces.front());
+  for (std::size_t i = 0; i < inside.size(); ++i) {
+    BOOST_CHECK_EQUAL(result.surfaceOf(inside[i]), surfaces[200 + i]);
+    BOOST_CHECK_EQUAL(result.surfaceOf(outside[i]), nullptr);
+  }
+}
+
 BOOST_DATA_TEST_CASE(AnnulusCentroidAndCenterMatchFollowCandidateOrder,
                      boost::unit_test::data::make({false, true}) *
                          boost::unit_test::data::make({false, true}),
@@ -298,31 +333,6 @@ BOOST_DATA_TEST_CASE(AnnulusCentroidAndCenterMatchFollowCandidateOrder,
   }
   const auto result = runMapper(world, surfaces, cacheByRegion);
   BOOST_CHECK_EQUAL(result.surfaceOf(box), surfaces.front());
-}
-
-BOOST_DATA_TEST_CASE(
-    CenterGridCellSizeLogging,
-    boost::unit_test::data::make({-1_mm, 0., 0.15_um, 0.25_um, 1_mm}) ^
-        boost::unit_test::data::make({false, false, true, false, false}) ^
-        boost::unit_test::data::make({true, true, false, false, false}),
-    cellSize, expectWarning, expectDisabledInfo) {
-  // The grid needs cells larger than twice the comparator tolerance (0.1 um).
-  // Smaller cells fall back to the linear scan with a warning, while an
-  // explicitly disabled grid is only reported at INFO level.
-  SensitiveSurfaceMapper::Config cfg;
-  cfg.centerGridCellSize = cellSize;
-  std::ostringstream log;
-#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
-  // The fallback warning is expected: do not fail on it
-  Acts::Logging::ScopedFailureThreshold threshold{Acts::Logging::FATAL};
-#endif
-  SensitiveSurfaceMapper mapper(
-      cfg, Acts::getDefaultLogger("SensitiveSurfaceMapper", Acts::Logging::INFO,
-                                  &log));
-  BOOST_CHECK_EQUAL(log.str().find("WARNING") != std::string::npos,
-                    expectWarning);
-  BOOST_CHECK_EQUAL(log.str().find("Center grid disabled") != std::string::npos,
-                    expectDisabledInfo);
 }
 
 BOOST_AUTO_TEST_CASE(CheckMappingRequiresOnlySurfacesFlaggedSensitive) {

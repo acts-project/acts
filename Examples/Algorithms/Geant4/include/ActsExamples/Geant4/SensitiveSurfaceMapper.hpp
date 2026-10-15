@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -128,12 +127,6 @@ class SensitiveSurfaceMapper {
 
     /// The sensitive surfaces that are being mapped to
     std::shared_ptr<SensitiveCandidatesBase> candidateSurfaces;
-
-    /// Cell size of the grid over the candidate surface centers, which avoids
-    /// comparing a Geant4 position to every candidate center.
-    /// A warning is emitted if it's chosen too small.
-    /// If <=0 the grid is disabled and one-by-one check is done.
-    double centerGridCellSize = 1. * Acts::UnitConstants::mm;
   };
 
   /// State object that counts the assignments and makes
@@ -202,9 +195,6 @@ class SensitiveSurfaceMapper {
 
   /// Private access method to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
-
-  /// Cell size of the center grid in use, 0 if it is disabled
-  double m_centerGridCellSize = 0.;
 
   /// The looging instance
   std::unique_ptr<const Acts::Logger> m_logger;

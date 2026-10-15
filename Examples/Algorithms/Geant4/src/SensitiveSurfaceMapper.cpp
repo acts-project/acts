@@ -13,11 +13,9 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/Axis.hpp"
-#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/MultiAxis.hpp"
+#include "Acts/Utilities/KDTree.hpp"
 #include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
@@ -28,6 +26,7 @@
 #include <limits>
 #include <optional>
 #include <ostream>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -177,20 +176,18 @@ std::vector<const Acts::Surface*> SensitiveCandidates::queryAll() const {
   return surfaces;
 }
 
-/// Candidate surfaces of one region together with their centers, and a grid
-/// over the centers. It finds the first candidate centered at a position
+/// Candidate surfaces of one region together with their centers, and a k-d
+/// tree over the centers. It finds the first candidate centered at a position
 /// without computing and comparing the centers of all candidates.
 class SensitiveSurfaceMapper::CandidateIndex {
  public:
   /// @param surfaces the candidate surfaces, in the order they are matched
   /// @param gctx the geometry context to compute the centers
-  /// @param cellSize the cell size of the grid, must be larger than twice the
-  ///        comparator tolerance, or 0 to not build the grid; without it the
-  ///        center lookup is a linear scan, which is cheaper for a single
-  ///        lookup
+  /// @param buildTree whether to build the tree; without it the center lookup
+  ///        is a linear scan, which is cheaper for a single lookup
   CandidateIndex(std::vector<const Acts::Surface*> surfaces,
-                 const Acts::GeometryContext& gctx, double cellSize)
-      : m_surfaces{std::move(surfaces)}, m_cellSize{cellSize} {
+                 const Acts::GeometryContext& gctx, bool buildTree)
+      : m_surfaces{std::move(surfaces)} {
     m_centers.reserve(m_surfaces.size());
     for (const auto [i, surface] : Acts::enumerate(m_surfaces)) {
       m_centers.push_back(surface->center(gctx));
@@ -198,42 +195,37 @@ class SensitiveSurfaceMapper::CandidateIndex {
         m_annulusIndices.push_back(i);
       }
     }
-    m_useGrid = m_cellSize > 0.;
-    if (!m_useGrid) {
+    if (!buildTree) {
       return;
     }
-    std::vector<std::pair<std::size_t, Acts::Vector3>> binned;
-    Acts::Vector3 lower =
-        Acts::Vector3::Constant(std::numeric_limits<double>::infinity());
-    Acts::Vector3 upper = -lower;
+    std::vector<std::size_t> indexed;
     for (const auto [i, center] : Acts::enumerate(m_centers)) {
-      if (const auto cell = cellCoordinates(center); cell.has_value()) {
-        binned.emplace_back(i, *cell);
-        lower = lower.cwiseMin(*cell);
-        upper = upper.cwiseMax(*cell);
+      if (isIndexable(center)) {
+        indexed.push_back(i);
       } else {
-        m_unbinned.push_back(i);
+        m_unindexed.push_back(i);
       }
     }
-    if (binned.empty()) {
-      return;
-    }
-    // Unit bins over the binned centers, or wider bins if they span more than
-    // `s_maxBins` cells, so that the global bin index can not overflow
-    const auto makeAxis = [&](std::size_t i) {
-      const double nCells = std::floor(upper[i] - lower[i]) + 1.;
-      if (nCells <= static_cast<double>(s_maxBins)) {
-        return CellAxis(lower[i], lower[i] + nCells,
-                        static_cast<std::size_t>(nCells));
-      }
-      return CellAxis(lower[i], upper[i], s_maxBins);
+    // Identical centers share one tree entry: the tree construction can
+    // recurse without end on many identical points
+    const auto lexicographic = [&](std::size_t a, std::size_t b) {
+      const Acts::Vector3& ca = m_centers[a];
+      const Acts::Vector3& cb = m_centers[b];
+      return std::tie(ca.x(), ca.y(), ca.z()) <
+             std::tie(cb.x(), cb.y(), cb.z());
     };
-    m_cellGrid.emplace(makeAxis(0), makeAxis(1), makeAxis(2));
-    m_cellGridMin = lower.array() - 1.;
-    m_cellGridMax = upper.array() + 1.;
-    for (const auto& [i, cell] : binned) {
-      m_grid[m_cellGrid->getGlobalBinFromPoint(cell)].push_back(i);
+    std::ranges::sort(indexed, lexicographic);
+    CenterTree::vector_t entries;
+    for (const std::size_t i : indexed) {
+      const Acts::Vector3& center = m_centers[i];
+      if (m_groups.empty() || center != m_centers[m_groups.back().front()]) {
+        m_groups.emplace_back();
+        entries.push_back(
+            {{center.x(), center.y(), center.z()}, m_groups.size() - 1});
+      }
+      m_groups.back().push_back(i);
     }
+    m_tree.emplace(std::move(entries));
   }
 
   bool empty() const { return m_surfaces.empty(); }
@@ -251,77 +243,60 @@ class SensitiveSurfaceMapper::CandidateIndex {
   /// order would find.
   std::vector<std::size_t> centerMatches(const Acts::Vector3& position) const {
     std::vector<std::size_t> result;
-    const auto check = [&](const std::vector<std::size_t>& indices) {
-      for (const std::size_t i : indices) {
-        if (m_comparator.compare<3>(m_centers[i], position) == 0) {
-          result.push_back(i);
-        }
+    const auto check = [&](std::size_t i) {
+      if (m_comparator.compare<3>(m_centers[i], position) == 0) {
+        result.push_back(i);
       }
     };
-    const auto cell = m_useGrid ? cellCoordinates(position) : std::nullopt;
-    if (!cell.has_value()) {
+    if (!m_tree.has_value() || !isIndexable(position)) {
       for (std::size_t i = 0; i < m_centers.size(); ++i) {
-        if (m_comparator.compare<3>(m_centers[i], position) == 0) {
-          result.push_back(i);
-        }
+        check(i);
       }
       return result;
     }
-    check(m_unbinned);
-    // A position more than one cell away from all binned centers can not
-    // match them
-    if (m_cellGrid.has_value() &&
-        (cell->array() >= m_cellGridMin.array()).all() &&
-        (cell->array() <= m_cellGridMax.array()).all()) {
-      for (const std::size_t bin : m_cellGrid->getNeighborHoodIndices(
-               m_cellGrid->getLocalBinsFromPoint(*cell))) {
-        if (const auto it = m_grid.find(bin); it != m_grid.end()) {
-          check(it->second);
-        }
-      }
+    std::ranges::for_each(m_unindexed, check);
+    CenterTree::range_t range;
+    for (std::size_t d = 0; d < 3; ++d) {
+      range.set(d, position[d] - s_searchMargin, position[d] + s_searchMargin);
     }
+    m_tree->rangeSearchMapDiscard(
+        range,
+        [&](const CenterTree::coordinate_t& /*center*/, std::size_t group) {
+          std::ranges::for_each(m_groups[group], check);
+        });
     std::ranges::sort(result);
     return result;
   }
 
  private:
-  using CellAxis =
-      Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Open>;
-  using CellGrid = Acts::MultiAxis<CellAxis, CellAxis, CellAxis>;
+  using CenterTree = Acts::KDTree<3, std::size_t>;
 
-  /// Positions further than this many cells from the origin are not binned
-  static constexpr double s_maxCells = 1e15;
-  /// Maximum number of bins per axis
-  static constexpr std::size_t s_maxBins = std::size_t{1} << 20;
+  /// Translation tolerance of the center comparison
+  static constexpr double s_tolerance = 0.1 * Acts::UnitConstants::um;
+  /// Half width of the tree search range around a position, larger than the
+  /// tolerance so that rounding of the range bounds can not exclude a match
+  static constexpr double s_searchMargin = 2. * s_tolerance;
+  /// Larger coordinates are not indexed: their rounding error would no
+  /// longer be negligible against the tolerance
+  static constexpr double s_maxCoordinate = 1000. * Acts::UnitConstants::km;
 
-  /// Position in units of the cell size, std::nullopt if it is not finite or
-  /// too far away to be binned. Such centers are always compared, such
-  /// positions use the linear scan.
-  std::optional<Acts::Vector3> cellCoordinates(
-      const Acts::Vector3& position) const {
-    Acts::Vector3 cell = position / m_cellSize;
+  /// Whether a position can be indexed. Other centers are always compared,
+  /// other positions use the linear scan.
+  static bool isIndexable(const Acts::Vector3& position) {
     // Also false for NaN
-    if (!(cell.array().abs() < s_maxCells).all()) {
-      return std::nullopt;
-    }
-    return cell;
+    return (position.array().abs() < s_maxCoordinate).all();
   }
 
   std::vector<const Acts::Surface*> m_surfaces;
   std::vector<Acts::Vector3> m_centers;
   std::vector<std::size_t> m_annulusIndices;
-  Acts::detail::TransformComparator m_comparator{};
-  double m_cellSize{0.};
-  bool m_useGrid{false};
-  /// Binning of the centers in cell coordinates, which keeps the bin indices
-  /// in range for any cell size
-  std::optional<CellGrid> m_cellGrid;
-  /// Cell coordinates within one cell of the binned centers
-  Acts::Vector3 m_cellGridMin = Acts::Vector3::Zero();
-  Acts::Vector3 m_cellGridMax = Acts::Vector3::Zero();
-  /// Binned centers by global bin of `m_cellGrid`
-  std::unordered_map<std::size_t, std::vector<std::size_t>> m_grid;
-  std::vector<std::size_t> m_unbinned;
+  /// Compares only positions, the rotation tolerance is not used
+  Acts::detail::TransformComparator m_comparator{
+      s_tolerance, 0.01 * Acts::UnitConstants::mrad};
+  /// Candidates with identical, indexable centers, by tree entry
+  std::vector<std::vector<std::size_t>> m_groups;
+  std::optional<CenterTree> m_tree;
+  std::vector<std::size_t> m_unindexed;
 };
 
 /// Candidate lookups shared over one traversal of the Geant4 tree
@@ -333,26 +308,8 @@ struct SensitiveSurfaceMapper::Cache {
 };
 
 SensitiveSurfaceMapper::SensitiveSurfaceMapper(
-    const Config& cfg, std::unique_ptr<const Acts::Logger> _logger)
-    : m_cfg(cfg), m_logger(std::move(_logger)) {
-  // Two centers that compare equal must be at most one cell apart
-  if (!(m_cfg.centerGridCellSize > 0.)) {
-    ACTS_INFO("Center grid disabled (centerGridCellSize = "
-              << m_cfg.centerGridCellSize / Acts::UnitConstants::mm
-              << " mm), candidate surface centers are compared one by one");
-  } else if (Acts::detail::TransformComparator{}.compare<3>(
-                 Acts::Vector3::Zero(),
-                 Acts::Vector3{0.5 * m_cfg.centerGridCellSize, 0., 0.}) == 0) {
-    ACTS_WARNING("centerGridCellSize = "
-                 << m_cfg.centerGridCellSize / Acts::UnitConstants::mm
-                 << " mm is not larger than twice the tolerance of the "
-                    "surface center comparison, falling back to comparing "
-                    "candidate surface centers one by one, which can be much "
-                    "slower");
-  } else {
-    m_centerGridCellSize = m_cfg.centerGridCellSize;
-  }
-}
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
+    : m_cfg(cfg), m_logger(std::move(logger)) {}
 
 void SensitiveSurfaceMapper::remapSensitiveNames(
     State& state, const Acts::GeometryContext& gctx,
@@ -442,13 +399,13 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
                  .try_emplace(
                      region,
                      m_cfg.candidateSurfaces->queryPosition(gctx, vtxGlobal),
-                     gctx, m_centerGridCellSize)
+                     gctx, true)
                  .first;
       }
       candidates = &it->second;
     } else {
       uncachedCandidates.emplace(
-          m_cfg.candidateSurfaces->queryPosition(gctx, vtxGlobal), gctx, 0.);
+          m_cfg.candidateSurfaces->queryPosition(gctx, vtxGlobal), gctx, false);
       candidates = &*uncachedCandidates;
     }
 
@@ -463,8 +420,7 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
                                                     << g4AbsPosition.transpose()
                                                     << ", query all surfaces");
     if (!cache.all.has_value()) {
-      cache.all.emplace(m_cfg.candidateSurfaces->queryAll(), gctx,
-                        m_centerGridCellSize);
+      cache.all.emplace(m_cfg.candidateSurfaces->queryAll(), gctx, true);
     }
     candidates = &*cache.all;
   }
