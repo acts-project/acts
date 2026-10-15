@@ -220,6 +220,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
               root, "RootMaterialWriter")
               .def(py::init<const Writer::Config&, Logging::Level>(),
                    py::arg("config"), py::arg("level"))
+              .def("writeMaterial", &Writer::writeMaterial, py::arg("material"))
               .def("write",
                    py::overload_cast<const TrackingGeometry&>(&Writer::write));
 

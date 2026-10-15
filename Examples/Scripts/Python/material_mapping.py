@@ -11,14 +11,10 @@ from acts import (
     BinnedSurfaceMaterialAccumulator,
     GridSurfaceMaterialAccumulator,
     logging,
-    GeometryContext,
 )
-
-from acts.json import MaterialMapJsonConverter
 
 from acts.examples import (
     Sequencer,
-    WhiteBoard,
     MaterialMapping,
 )
 
@@ -28,10 +24,7 @@ from acts.examples.root import (
     RootMaterialWriter,
 )
 
-from acts.examples.json import (
-    JsonMaterialWriter,
-    JsonFormat,
-)
+from acts.json import TrackingGeometryMaterialJsonConverter
 
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
@@ -40,17 +33,15 @@ def runMaterialMapping(
     surfaces: list[Surface],
     inputFile: Path,
     outputFileBase: str,
-    outputMapFormats: list[str] | None = None,
     loglevel: acts.logging.Level = acts.logging.INFO,
     outputMaterialTracks: str = "material_tracks",
     treeName: str = "material_tracks",
+    s: Sequencer | None = None,
     accumulator: str = "binned",
-    events: int | None = None,
 ):
-    """Map tracks with a binned or grid accumulator for validation.
+    """Configure binned or grid mapping and return the sequencer and algorithm.
 
-    Grid maps support JSON/CBOR output. The default writes JSON for grids,
-    and JSON plus ROOT for binned maps. Material track files always use ROOT.
+    After running the sequencer, serialize the algorithm's ``material`` result.
     """
     accumulators = {
         "binned": BinnedSurfaceMaterialAccumulator,
@@ -58,19 +49,10 @@ def runMaterialMapping(
     }
     if accumulator not in accumulators:
         raise ValueError("accumulator must be 'binned' or 'grid'")
-    if outputMapFormats is None:
-        outputMapFormats = ["json"] if accumulator == "grid" else ["json", "root"]
-    if accumulator == "grid" and "root" in outputMapFormats:
-        raise ValueError("Grid material maps require JSON or CBOR output")
     accumulatorClass = accumulators[accumulator]
 
-    # Create a sequencer
-    print("Creating the sequencer with 1 thread (inter event information needed)")
-
-    s = Sequencer(numThreads=1, events=events)
-
-    # IO for material tracks reading
-    wb = WhiteBoard(acts.logging.INFO)
+    if s is None:
+        s = Sequencer(numThreads=1)
 
     # Read material step information from a ROOT TTRee
     s.addReader(
@@ -99,48 +81,12 @@ def runMaterialMapping(
     materialMapperConfig.surfaceMaterialAccumulator = materialAccumulator
     materialMapper = MaterialMapper(materialMapperConfig, loglevel)
 
-    # Add the map writer(s)
-    materialMapWriters = []
-    # json map writer
-    jsonOutputMapFormatsDict = {"json": JsonFormat.Json, "cbor": JsonFormat.Cbor}
-    jsonOutputMapFormats = [
-        jsonOutputMapFormatsDict[f]
-        for f in outputMapFormats
-        if f in jsonOutputMapFormatsDict
-    ]
-    if jsonOutputMapFormats:
-        jmConverterCfg = MaterialMapJsonConverter.Config(
-            processSensitives=True,
-            processApproaches=True,
-            processRepresenting=True,
-            processBoundaries=True,
-            processVolumes=False,
-        )
-        # Suffix for the map file is added in the writer depending on the format
-        for writeFormat in jsonOutputMapFormats:
-            materialMapWriters.append(
-                JsonMaterialWriter(
-                    level=loglevel,
-                    converterCfg=jmConverterCfg,
-                    fileName=outputFileBase + "_map",
-                    writeFormat=writeFormat,
-                )
-            )
-    if "root" in outputMapFormats:
-        materialMapWriters.append(
-            RootMaterialWriter(
-                level=loglevel,
-                filePath=outputFileBase + "_map.root",
-            )
-        )
-
     # Mapping Algorithm
     materialMappingConfig = MaterialMapping.Config()
     materialMappingConfig.materialMapper = materialMapper
     materialMappingConfig.inputMaterialTracks = outputMaterialTracks
     materialMappingConfig.mappedMaterialTracks = outputMaterialTracks + "_mapped"
     materialMappingConfig.unmappedMaterialTracks = outputMaterialTracks + "_unmapped"
-    materialMappingConfig.materialWriters = materialMapWriters
     materialMapping = MaterialMapping(materialMappingConfig, loglevel)
     s.addAlgorithm(materialMapping)
 
@@ -166,7 +112,7 @@ def runMaterialMapping(
         )
     )
 
-    return s
+    return s, materialMapping
 
 
 def main():
@@ -219,6 +165,11 @@ def main():
 
     args = p.parse_args()
     logLevel = logging.INFO
+    outputMapFormats = args.output_map_formats
+    if outputMapFormats is None:
+        outputMapFormats = ["json"] if args.accumulator == "grid" else ["json", "root"]
+    if args.accumulator == "grid" and "root" in outputMapFormats:
+        p.error("Grid material maps require JSON or CBOR output")
 
     matconfig = args.matconfig
     if matconfig == "" and args.accumulator == "grid":
@@ -238,17 +189,26 @@ def main():
 
     materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 
-    runMaterialMapping(
+    s, mapping = runMaterialMapping(
         materialSurfaces,
         inputFile=Path(args.input),
         outputFileBase=args.output,
-        outputMapFormats=args.output_map_formats,
         loglevel=logLevel,
         outputMaterialTracks=args.material_tracks_name,
         treeName=args.tree_name,
+        s=Sequencer(events=args.events, numThreads=1),
         accumulator=args.accumulator,
-        events=args.events,
-    ).run()
+    )
+    s.run()
+    for outputFormat in outputMapFormats:
+        if outputFormat == "root":
+            RootMaterialWriter(
+                level=logLevel, filePath=args.output + "_map.root"
+            ).writeMaterial(mapping.material)
+        else:
+            TrackingGeometryMaterialJsonConverter().toFile(
+                mapping.material, args.output + "_map." + outputFormat
+            )
 
 
 if "__main__" == __name__:
