@@ -23,10 +23,12 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <memory>
 #include <numbers>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <G4Box.hh>
@@ -186,6 +188,44 @@ BOOST_DATA_TEST_CASE(CenterMatchingTolerance,
     BOOST_CHECK_EQUAL(result.surfaceOf(outside[i]), nullptr);
   }
   BOOST_CHECK_EQUAL(result.state.missingVolumes.size(), centers.size());
+}
+
+BOOST_DATA_TEST_CASE(FarAndNonFiniteCenters,
+                     boost::unit_test::data::make({false, true}) *
+                         boost::unit_test::data::make({0., 10_um, 1_mm, 1_m}),
+                     cacheByRegion, cellSize) {
+  // Centers far apart, which for small cells span more cells than the grid
+  // has bins per axis, a center too far away to be binned, and a center with
+  // a NaN component, which compares equal to everything in that component
+  World world;
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  const std::vector<Acts::Vector3> centers = {
+      {0., 0., 0.}, {800_m, -800_m, 800_m}, {1e20, 0., 0.}, {nan, 5., 5.}};
+  std::vector<std::shared_ptr<Acts::Surface>> planes;
+  std::vector<const Acts::Surface*> surfaces;
+  for (const auto& center : centers) {
+    planes.push_back(makePlane(center));
+    surfaces.push_back(planes.back().get());
+  }
+
+  // Positions next to the bounding box of the binned centers and far outside
+  // of it, with the surface they are expected to be mapped to
+  const std::vector<std::pair<Acts::Vector3, const Acts::Surface*>> expected = {
+      {Acts::Vector3(-0.9, 0.5, -0.5) * kTolerance, surfaces[0]},
+      {centers[1] + Acts::Vector3(0.9, -0.9, 0.9) * kTolerance, surfaces[1]},
+      {centers[1] + Acts::Vector3(2., 0., 0.) * kTolerance, nullptr},
+      {centers[2], surfaces[2]},
+      {{-30_m, 5., 5. + 0.5 * kTolerance}, surfaces[3]},
+      {{-30_m, 5., 5. + 2. * kTolerance}, nullptr}};
+  std::vector<const G4VPhysicalVolume*> boxes;
+  for (const auto& entry : expected) {
+    boxes.push_back(world.placeBox("Sensor", entry.first));
+  }
+
+  const auto result = runMapper(world, surfaces, cacheByRegion, cellSize);
+  for (std::size_t i = 0; i < expected.size(); ++i) {
+    BOOST_CHECK_EQUAL(result.surfaceOf(boxes[i]), expected[i].second);
+  }
 }
 
 BOOST_DATA_TEST_CASE(SharedCenterConcentricCylinders,

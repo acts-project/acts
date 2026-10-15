@@ -13,19 +13,20 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/HashCombine.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MultiAxis.hpp"
 #include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsExamples/Geant4/AlgebraConverters.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cmath>
-#include <cstdint>
 #include <limits>
+#include <optional>
 #include <ostream>
 #include <type_traits>
 #include <utility>
@@ -201,12 +202,37 @@ class SensitiveSurfaceMapper::CandidateIndex {
     if (!m_useGrid) {
       return;
     }
+    std::vector<std::pair<std::size_t, Acts::Vector3>> binned;
+    Acts::Vector3 lower =
+        Acts::Vector3::Constant(std::numeric_limits<double>::infinity());
+    Acts::Vector3 upper = -lower;
     for (const auto [i, center] : Acts::enumerate(m_centers)) {
-      if (const auto cell = cellOf(center); cell.has_value()) {
-        m_grid[*cell].push_back(i);
+      if (const auto cell = cellCoordinates(center); cell.has_value()) {
+        binned.emplace_back(i, *cell);
+        lower = lower.cwiseMin(*cell);
+        upper = upper.cwiseMax(*cell);
       } else {
         m_unbinned.push_back(i);
       }
+    }
+    if (binned.empty()) {
+      return;
+    }
+    // Unit bins over the binned centers, or wider bins if they span more than
+    // `s_maxBins` cells, so that the global bin index can not overflow
+    const auto makeAxis = [&](std::size_t i) {
+      const double nCells = std::floor(upper[i] - lower[i]) + 1.;
+      if (nCells <= static_cast<double>(s_maxBins)) {
+        return CellAxis(lower[i], lower[i] + nCells,
+                        static_cast<std::size_t>(nCells));
+      }
+      return CellAxis(lower[i], upper[i], s_maxBins);
+    };
+    m_cellGrid.emplace(makeAxis(0), makeAxis(1), makeAxis(2));
+    m_cellGridMin = lower.array() - 1.;
+    m_cellGridMax = upper.array() + 1.;
+    for (const auto& [i, cell] : binned) {
+      m_grid[m_cellGrid->getGlobalBinFromPoint(cell)].push_back(i);
     }
   }
 
@@ -232,7 +258,7 @@ class SensitiveSurfaceMapper::CandidateIndex {
         }
       }
     };
-    const auto cell = m_useGrid ? cellOf(position) : std::nullopt;
+    const auto cell = m_useGrid ? cellCoordinates(position) : std::nullopt;
     if (!cell.has_value()) {
       for (std::size_t i = 0; i < m_centers.size(); ++i) {
         if (m_comparator.compare<3>(m_centers[i], position) == 0) {
@@ -242,13 +268,15 @@ class SensitiveSurfaceMapper::CandidateIndex {
       return result;
     }
     check(m_unbinned);
-    for (std::int64_t dx = -1; dx <= 1; ++dx) {
-      for (std::int64_t dy = -1; dy <= 1; ++dy) {
-        for (std::int64_t dz = -1; dz <= 1; ++dz) {
-          const CellKey key{(*cell)[0] + dx, (*cell)[1] + dy, (*cell)[2] + dz};
-          if (const auto it = m_grid.find(key); it != m_grid.end()) {
-            check(it->second);
-          }
+    // A position more than one cell away from all binned centers can not
+    // match them
+    if (m_cellGrid.has_value() &&
+        (cell->array() >= m_cellGridMin.array()).all() &&
+        (cell->array() <= m_cellGridMax.array()).all()) {
+      for (const std::size_t bin : m_cellGrid->getNeighborHoodIndices(
+               m_cellGrid->getLocalBinsFromPoint(*cell))) {
+        if (const auto it = m_grid.find(bin); it != m_grid.end()) {
+          check(it->second);
         }
       }
     }
@@ -257,28 +285,26 @@ class SensitiveSurfaceMapper::CandidateIndex {
   }
 
  private:
-  using CellKey = std::array<std::int64_t, 3>;
-  struct CellHash {
-    std::size_t operator()(const CellKey& key) const {
-      return Acts::hashMixAndCombine(key[0], key[1], key[2]);
-    }
-  };
+  using CellAxis =
+      Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Open>;
+  using CellGrid = Acts::MultiAxis<CellAxis, CellAxis, CellAxis>;
 
-  /// Grid cell of a position, std::nullopt if it is not finite or too large
-  /// to be binned. Such centers are always compared, such positions use the
-  /// linear scan.
-  std::optional<CellKey> cellOf(const Acts::Vector3& position) const {
-    constexpr double maxCell = 1e15;
-    CellKey key{};
-    for (std::size_t i = 0; i < 3; ++i) {
-      const double cell = std::floor(position[i] / m_cellSize);
-      // Also false for NaN
-      if (!(std::abs(cell) < maxCell)) {
-        return std::nullopt;
-      }
-      key[i] = static_cast<std::int64_t>(cell);
+  /// Positions further than this many cells from the origin are not binned
+  static constexpr double s_maxCells = 1e15;
+  /// Maximum number of bins per axis
+  static constexpr std::size_t s_maxBins = std::size_t{1} << 20;
+
+  /// Position in units of the cell size, std::nullopt if it is not finite or
+  /// too far away to be binned. Such centers are always compared, such
+  /// positions use the linear scan.
+  std::optional<Acts::Vector3> cellCoordinates(
+      const Acts::Vector3& position) const {
+    Acts::Vector3 cell = position / m_cellSize;
+    // Also false for NaN
+    if (!(cell.array().abs() < s_maxCells).all()) {
+      return std::nullopt;
     }
-    return key;
+    return cell;
   }
 
   std::vector<const Acts::Surface*> m_surfaces;
@@ -287,7 +313,14 @@ class SensitiveSurfaceMapper::CandidateIndex {
   Acts::detail::TransformComparator m_comparator{};
   double m_cellSize{0.};
   bool m_useGrid{false};
-  std::unordered_map<CellKey, std::vector<std::size_t>, CellHash> m_grid;
+  /// Binning of the centers in cell coordinates, which keeps the bin indices
+  /// in range for any cell size
+  std::optional<CellGrid> m_cellGrid;
+  /// Cell coordinates within one cell of the binned centers
+  Acts::Vector3 m_cellGridMin = Acts::Vector3::Zero();
+  Acts::Vector3 m_cellGridMax = Acts::Vector3::Zero();
+  /// Binned centers by global bin of `m_cellGrid`
+  std::unordered_map<std::size_t, std::vector<std::size_t>> m_grid;
   std::vector<std::size_t> m_unbinned;
 };
 
