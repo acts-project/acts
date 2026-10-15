@@ -14,10 +14,10 @@
 /// connection table, is built here.
 ///
 /// Two timings are reported. The one-shot `createSeeds` is what an experiment
-/// calls, and it includes building the graph nodes, which allocates a node
-/// vector per layer inside the timed region. The second hoists the node
-/// building out, so that a change to the graph stage cannot hide behind that
-/// allocation.
+/// calls, and it includes filling the node storage. The second times that fill
+/// alone, so that the graph stage is the difference between the two. A filled
+/// storage cannot be reused instead: the graph builder writes its edge state
+/// into the storage and only partly resets it.
 ///
 /// The cuts are the ACTS defaults, which are what ATLAS runs on the ITk pixel
 /// detector. The layer connection table below is not: it is written for these
@@ -39,7 +39,9 @@
 #include "Acts/EventData/SeedContainer.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GbtsLayerConnection.hpp"
+#include "Acts/Seeding/GbtsNodeStorage.hpp"
 #include "Acts/Seeding/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding/GraphBasedTrackSeeder.hpp"
@@ -53,7 +55,6 @@
 #include <iostream>
 #include <memory>
 #include <numbers>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -87,20 +88,21 @@ constexpr int kDiscReach = 9;
 /// run out of the nineties and collide with the barrel. Each endcap is instead
 /// one group, 90 and 70, with the disc and the ring packed into the sub-index
 /// together.
-std::int32_t gbtsLayerId(const DetectorLayer& layer) {
-  const auto layerIdx = static_cast<std::int32_t>(layer.layer);
-  const auto moduleIdx = static_cast<std::int32_t>(layer.moduleIndex);
+Exp::GbtsExperimentLayerId gbtsLayerId(const DetectorLayer& layer) {
+  const Exp::GbtsExperimentLayerId layerIdx = layer.layer;
+  const Exp::GbtsExperimentLayerId moduleIdx = layer.moduleIndex;
   if (layer.shape == SurfaceShape::Cylinder) {
     return (80 + layerIdx) * 1000 + moduleIdx;
   }
-  const std::int32_t group = layer.side == SurfaceSide::Positive ? 90 : 70;
+  const Exp::GbtsExperimentLayerId group =
+      layer.side == SurfaceSide::Positive ? 90 : 70;
   return group * 1000 + layerIdx * kRingsPerDisc + moduleIdx;
 }
 
 /// The `gbtsLayerId` encoding above only holds within limits: the barrel group
 /// numbers have to stay in the eighties for `layerId / 10000 == 8` to mean
 /// barrel, and both sub-indices have to fit below the thousands digit.
-/// `GbtsNode::layer` is also 16 bits, which bounds the number of layers.
+/// `GbtsLayerIndex` is also 16 bits, which bounds the number of layers.
 /// @param layout the layout to check
 void checkEncodingFits(const DetectorLayout& layout) {
   int numBarrel = 0;
@@ -136,7 +138,7 @@ void checkEncodingFits(const DetectorLayout& layout) {
         "discs per side");
   }
   if (layout.layers.size() > 65535) {
-    throw std::invalid_argument("GbtsNode::layer is 16 bits wide");
+    throw std::invalid_argument("GbtsLayerIndex is 16 bits wide");
   }
 }
 
@@ -162,11 +164,11 @@ std::vector<Exp::GbtsLayerDescription> makeLayerDescriptions(
 /// layer of a doublet, `dst` the inner one. The per-eta-bin compatibility is
 /// worked out by GbtsGeometry from the beam spot constraint, so listing a
 /// layer pair here only says that the pair is allowed at all.
-std::string makeConnectionTable(const DetectorLayout& layout,
-                                float etaBinWidth) {
+std::vector<Exp::GbtsLayerConnection> makeConnections(
+    const DetectorLayout& layout) {
   // group layers by (side, layer) so that all modules of a surface are linked
   auto modulesOf = [&](SurfaceSide side, int layerIdx) {
-    std::vector<std::int32_t> ids;
+    std::vector<Exp::GbtsExperimentLayerId> ids;
     for (const DetectorLayer& layer : layout.layers) {
       if (layer.side == side &&
           layer.layer == static_cast<std::uint32_t>(layerIdx)) {
@@ -176,12 +178,14 @@ std::string makeConnectionTable(const DetectorLayout& layout,
     return ids;
   };
 
-  std::vector<std::pair<std::int32_t, std::int32_t>> connections;
+  std::vector<Exp::GbtsLayerConnection> connections;
   auto connect = [&](SurfaceSide outerSide, int outerLayer,
                      SurfaceSide innerSide, int innerLayer) {
-    for (const std::int32_t src : modulesOf(outerSide, outerLayer)) {
-      for (const std::int32_t dst : modulesOf(innerSide, innerLayer)) {
-        connections.emplace_back(src, dst);
+    for (const Exp::GbtsExperimentLayerId src :
+         modulesOf(outerSide, outerLayer)) {
+      for (const Exp::GbtsExperimentLayerId dst :
+           modulesOf(innerSide, innerLayer)) {
+        connections.push_back({src, dst});
       }
     }
   };
@@ -226,14 +230,21 @@ std::string makeConnectionTable(const DetectorLayout& layout,
     }
   }
 
-  std::ostringstream os;
-  os << connections.size() << " " << etaBinWidth << "\n";
-  for (std::size_t k = 0; k < connections.size(); ++k) {
-    // index stage src dst height width entries
-    os << k << " " << k << " " << connections[k].first << " "
-       << connections[k].second << " 0 0 0\n";
+  return connections;
+}
+
+/// GBTS reads the layer of a space point from a 16 bit column of its own name,
+/// while the generator writes a 32 bit one. Copy it over once per event,
+/// outside the timed region; `checkEncodingFits` makes sure that nothing is cut
+/// off.
+/// @param spacePoints the space points of the event
+void addGbtsLayerIndex(Acts::SpacePointContainer& spacePoints) {
+  auto layerIds = spacePoints.column<std::uint32_t>("layerId");
+  auto gbtsLayers =
+      spacePoints.createColumn<Exp::GbtsLayerIndex>("gbtsLayerIndex");
+  for (auto sp : spacePoints) {
+    sp.extra(gbtsLayers) = static_cast<Exp::GbtsLayerIndex>(sp.extra(layerIds));
   }
-  return os.str();
 }
 
 }  // namespace
@@ -246,12 +257,12 @@ int main(int argc, char* argv[]) {
   // that the turn-on stays out of it.
   float truthPt = 1000.f;
   bool verbose = false;
-  // The synthetic event is noise free, so more geometric doublet candidates
-  // survive the cuts than in a real event and the graph outgrows the 2000000
-  // edges allowed by default. Benchmarking against a saturated ceiling would
-  // hide any work done past it; pass the production value to measure the
-  // truncated regime instead.
-  std::uint32_t maxEdges = 6000000;
+  // The graph is capped at this many edges per space point. The synthetic event
+  // is noise free, so more geometric doublet candidates survive the cuts than
+  // in a real event; the default still leaves room for all of them on the ITk
+  // at pile-up 200. Benchmarking against a saturated ceiling would hide any
+  // work done past it, so lower it only to measure the truncated regime.
+  float maxEdgesPerSP = Exp::GbtsGraphBuilder::Config{}.maxEdgesPerSP;
 
   try {
     po::options_description desc("Allowed options");
@@ -265,9 +276,9 @@ int main(int argc, char* argv[]) {
         "truth-pt", po::value<float>(&truthPt)->default_value(truthPt),
         "momentum in MeV a primary has to reach to be counted in the "
         "efficiency")(
-        "max-edges",
-        po::value<std::uint32_t>(&maxEdges)->default_value(maxEdges),
-        "ceiling on the number of graph edges")(
+        "max-edges-per-sp",
+        po::value<float>(&maxEdgesPerSP)->default_value(maxEdgesPerSP),
+        "ceiling on the number of graph edges per space point")(
         "verbose", po::bool_switch(&verbose),
         "log the seeder's own statistics");
 
@@ -293,47 +304,54 @@ int main(int argc, char* argv[]) {
     std::cerr << "error: " << e.what() << std::endl;
     return 1;
   }
-  const Event event = generateEvent(layout, eventConfig);
+  Event event = generateEvent(layout, eventConfig);
+  addGbtsLayerIndex(event.spacePoints);
   const Acts::SpacePointContainer& spacePoints = event.spacePoints;
 
   constexpr float etaBinWidth = 0.2f;
-  const std::string table = makeConnectionTable(layout, etaBinWidth);
-  std::istringstream tableStream(table);
-  const Exp::GbtsLayerConnectionMap connections =
-      Exp::GbtsLayerConnectionMap::fromStream(tableStream, false);
-  const auto geometry = std::make_shared<Exp::GbtsGeometry>(
-      makeLayerDescriptions(layout), connections);
+  const std::vector<Exp::GbtsLayerDescription> layers =
+      makeLayerDescriptions(layout);
+  const std::vector<Exp::GbtsLayerConnection> connections =
+      makeConnections(layout);
+  const auto geometry =
+      std::make_shared<Exp::GbtsGeometry>(layers, connections, etaBinWidth);
+
+  const auto makeLogger = [&](const std::string& name) {
+    // Warnings are let through even when quiet: the graph builder stops once
+    // `maxEdgesPerSP` is reached and says so at that level, and a truncated
+    // graph costs efficiency without failing.
+    return Acts::getDefaultLogger(name, verbose
+                                            ? Acts::Logging::Level::DEBUG
+                                            : Acts::Logging::Level::WARNING);
+  };
 
   // The cuts are the ACTS defaults, which ATLAS runs the ITk pixel detector
   // with: `ActsTrk::GbtsSeedingTool` overrides only the connector file, the ML
-  // lookup table and minPt. Two of its defaults differ and are set below; the
-  // third, beamSpotCorrection, is read by nothing in the ACTS seeder.
+  // lookup table and minPt. Two of its defaults differ and are set below.
   Exp::GraphBasedTrackSeeder::Config cfg;
-  cfg.minPt = minPt * 1_MeV;
-  cfg.minZ0 = -200.f;
-  cfg.maxZ0 = 200.f;
-  cfg.maxOuterRadius = 550.f;
   // ATLAS runs with the cluster width and its trained lookup table, which the
   // synthetic event has no cluster shapes to offer. It only adjusts the barrel
   // cot(theta) cuts, which is not where this event loses anything.
-  cfg.useMl = false;
-  cfg.matchBeforeCreate = true;
-  cfg.nMaxEdges = maxEdges;
+  cfg.useClusterWidthCuts = false;
 
-  const Exp::GraphBasedTrackSeeder::DerivedConfig derived(cfg);
-  // Warnings are let through even when quiet: the seeder stops building the
-  // graph once `nMaxEdges` is reached and says so at that level, and a
-  // truncated graph costs efficiency without failing.
+  Exp::GbtsGraphBuilder::Config graphCfg;
+  graphCfg.minPt = minPt * 1_MeV;
+  graphCfg.minZ0 = -200.f;
+  graphCfg.maxZ0 = 200.f;
+  graphCfg.maxOuterRadius = 550.f;
+  graphCfg.matchBeforeCreate = true;
+  graphCfg.maxEdgesPerSP = maxEdgesPerSP;
+
   const Exp::GraphBasedTrackSeeder seeder(
-      derived, geometry,
-      Acts::getDefaultLogger("Gbts", verbose ? Acts::Logging::Level::DEBUG
-                                             : Acts::Logging::Level::WARNING));
+      Exp::GraphBasedTrackSeeder::DerivedConfig(cfg), geometry,
+      makeLogger("Gbts"));
+  const Exp::GbtsGraphBuilder graphBuilder(graphCfg, geometry,
+                                           makeLogger("GbtsGraphBuilder"));
   const Exp::GbtsTrackingFilter filter(Exp::GbtsTrackingFilter::Config{},
-                                       geometry);
-  const Exp::GbtsRoiDescriptor roi(0, -5., 5., 0, -std::numbers::pi,
-                                   std::numbers::pi, 0, cfg.minZ0, cfg.maxZ0);
-  const Exp::GraphBasedTrackSeeder::Options options(eventConfig.bFieldZ);
-  const std::vector<bool> isPixelLayer(layout.layers.size(), true);
+                                       geometry, makeLogger("GbtsFilter"));
+  const Exp::GbtsRoiDescriptor roi(-5., 5., graphCfg.minZ0, graphCfg.maxZ0);
+  const Exp::GraphBasedTrackSeeder::Options options{.bFieldInZ =
+                                                        eventConfig.bFieldZ};
 
   const EventSummary summary = summarize(event, truthPt * 1_MeV / 1_GeV);
   std::cout << "layers=" << layout.layers.size()
@@ -346,14 +364,11 @@ int main(int argc, char* argv[]) {
             << " secondaries=" << summary.secondaries
             << " seedable=" << summary.seedablePrimaries << std::endl;
 
-  const std::uint32_t maxLayers =
-      static_cast<std::uint32_t>(layout.layers.size());
-
   // matched outside the timed region, so that the truth lookup does not show
   // up in the measurement
   Acts::SeedContainer reference;
   reference.assignSpacePointContainer(spacePoints);
-  seeder.createSeeds(spacePoints, roi, isPixelLayer, maxLayers, filter, options,
+  seeder.createSeeds(spacePoints, roi, graphBuilder, filter, options,
                      reference);
   const SeedingSummary seedSummary =
       evaluateSeeds(event, reference, truthPt * 1_MeV / 1_GeV);
@@ -370,27 +385,29 @@ int main(int argc, char* argv[]) {
       [&] {
         Acts::SeedContainer seeds;
         seeds.assignSpacePointContainer(spacePoints);
-        seeder.createSeeds(spacePoints, roi, isPixelLayer, maxLayers, filter,
-                           options, seeds);
+        seeder.createSeeds(spacePoints, roi, graphBuilder, filter, options,
+                           seeds);
         assumeRead(seeds);
       },
       1, numRuns);
   std::cout << "full: " << full << std::endl;
 
-  // The same without the node building, which allocates a reserved vector per
-  // layer and copies every space point into it. Hoisting it out is what makes a
-  // change to the graph stage visible.
-  const std::vector<std::vector<Exp::GbtsNode>> nodes =
-      seeder.createNodes(spacePoints, maxLayers);
-  const auto graph = microBenchmark(
+  // The node storage fill alone, which copies every space point into the
+  // storage and bins it. The graph stage is what the full call adds to it.
+  const auto layerColumn =
+      spacePoints.column<Exp::GbtsLayerIndex>("gbtsLayerIndex");
+  const auto clusterWidthColumn = spacePoints.column<float>("clusterWidth");
+  const auto localPositionColumn = spacePoints.column<float>("localPositionY");
+  const auto nodes = microBenchmark(
       [&] {
-        Acts::SeedContainer seeds;
-        seeds.assignSpacePointContainer(spacePoints);
-        seeder.createSeeds(nodes, isPixelLayer, roi, filter, options, seeds);
-        assumeRead(seeds);
+        Exp::GbtsNodeStorage nodeStorage = seeder.makeNodeStorage();
+        nodeStorage.extend(spacePoints, layerColumn, clusterWidthColumn,
+                           localPositionColumn);
+        nodeStorage.finalize();
+        assumeRead(nodeStorage.numberOfNodes());
       },
       1, numRuns);
-  std::cout << "graph only: " << graph << std::endl;
+  std::cout << "nodes only: " << nodes << std::endl;
 
   return 0;
 }

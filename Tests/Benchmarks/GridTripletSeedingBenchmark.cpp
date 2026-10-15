@@ -51,6 +51,7 @@
 #include "Acts/Seeding/SphericalSpacePointGrid.hpp"
 #include "Acts/Seeding/TripletSeedFinder.hpp"
 #include "Acts/Seeding/TripletSeeder.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "ActsFatras/Synthetic/DetectorLayout.hpp"
@@ -187,10 +188,10 @@ Acts::CylindricalSpacePointGrid::Config makeCylindricalGridConfig(
   gridCfg.zBinEdges = cfg.zBinEdges;
   gridCfg.rBinEdges = cfg.rBinEdges;
   gridCfg.bFieldInZ = cfg.bFieldInZ;
-  gridCfg.bottomBinFinder.emplace(cfg.numPhiNeighbors, cfg.zBinNeighborsBottom,
-                                  cfg.rBinNeighborsBottom);
-  gridCfg.topBinFinder.emplace(cfg.numPhiNeighbors, cfg.zBinNeighborsTop,
-                               cfg.rBinNeighborsTop);
+  gridCfg.bottomBinFinder = Acts::GridBinFinder<3>(
+      cfg.numPhiNeighbors, cfg.zBinNeighborsBottom, cfg.rBinNeighborsBottom);
+  gridCfg.topBinFinder = Acts::GridBinFinder<3>(
+      cfg.numPhiNeighbors, cfg.zBinNeighborsTop, cfg.rBinNeighborsTop);
   gridCfg.navigation[0ul] = {};
   gridCfg.navigation[1ul] = cfg.zBinsCustomLooping;
   gridCfg.navigation[2ul] = cfg.rBinsCustomLooping;
@@ -260,11 +261,11 @@ Exp::SphericalSpacePointGrid::Config makeSphericalGridConfig(
   // radial one from how far the doublet finders go, the middle one from how far
   // the beam spot can move a space point along it
   const std::vector<float> cotThetaEdges = makeCotThetaBinEdges(sph);
-  gridCfg.bottomBinFinder.emplace(
+  gridCfg.bottomBinFinder = Acts::GridBinFinder<3>(
       cfg.numPhiNeighbors,
       makeNeighbors(cotThetaEdges, sph.cotSpreadBottom, sph.cotSpreadBottom),
       makeNeighbors(sph.rBinEdges, cfg.deltaRMaxBottomSP, 0.f));
-  gridCfg.topBinFinder.emplace(
+  gridCfg.topBinFinder = Acts::GridBinFinder<3>(
       cfg.numPhiNeighbors,
       makeNeighbors(cotThetaEdges, sph.cotSpreadTop, sph.cotSpreadTop),
       makeNeighbors(sph.rBinEdges, 0.f, cfg.deltaRMaxTopSP));
