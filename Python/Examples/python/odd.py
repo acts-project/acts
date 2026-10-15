@@ -128,20 +128,11 @@ def getOpenDataDetector(
         if misaligned:
             raise ValueError("Gen3 ODD currently does not support misalignment")
 
-        # No default material map for Gen3: the shipped ODD map is keyed by
-        # Gen1 geometry identifiers. Only an explicitly given decorator is applied.
-        # OpenDataDetector::Config takes the raw material maps rather than a
-        # decorator, applying them via Acts::TrackingGeometryMaterial::apply()
-        # instead of the (Gen1-oriented) IMaterialDecorator::decorate() path.
-        materialMaps = (
-            materialDecorator.materialMaps if materialDecorator is not None else None
-        )
         oddConfig = acts.examples.dd4hep.OpenDataDetector.Config(
             xmlFileNames=xml_files,
             name="OpenDataDetector",
             logLevel=customLogLevel(),
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
-            materialMaps=materialMaps,
         )
         if constructionMethod is not None:
             oddConfig.constructionMethod = constructionMethod
@@ -152,6 +143,16 @@ def getOpenDataDetector(
             detector = acts.examples.dd4hep.OpenDataDetector(
                 config=oddConfig, gctx=gctx
             )
+
+        # No default material map for Gen3: the shipped ODD map is keyed by
+        # Gen1 geometry identifiers. Only an explicitly given decorator is
+        # applied, via Acts::TrackingGeometryMaterial::apply() rather than the
+        # (Gen1-oriented) IMaterialDecorator::decorate() path, once geometry
+        # identifiers are assigned. The geometry is const on the C++ side, but
+        # it has not been handed out yet, so filling in its material here is
+        # safe.
+        if materialDecorator is not None:
+            materialDecorator.materialMaps.apply(detector.trackingGeometry())
 
         return detector
     else:

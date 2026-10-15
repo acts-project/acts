@@ -414,15 +414,12 @@ picks up `data/odd-material-maps.root` by default.
 
 For the Gen3 ODD, loading works slightly differently from the generic snippet
 above. `getOpenDataDetector(gen3=True, materialDecorator=...)`
-(`Python/Examples/python/odd.py`) pulls `materialDecorator.materialMaps` out of
-the given decorator and passes it through as
-`OpenDataDetector::Config::materialMaps`
-(`Examples/Detectors/DD4hepDetector/include/ActsExamples/DD4hepDetector/OpenDataDetector.hpp`).
-The `OpenDataDetector` constructor applies it with
-@ref Acts::TrackingGeometryMaterial::apply "TrackingGeometryMaterial::apply()"
-once construction has finished and geometry identifiers are assigned
-(`Examples/Detectors/DD4hepDetector/src/OpenDataDetector.cpp`), replacing the
-designated proto material in place. Unlike Gen1, there is no default material
+(`Python/Examples/python/odd.py`) first builds the detector without material,
+then pulls `materialDecorator.materialMaps` out of the given decorator and
+applies it to the constructed geometry with
+@ref Acts::TrackingGeometryMaterial::apply "TrackingGeometryMaterial::apply()",
+now that geometry identifiers are assigned. This replaces the designated proto
+material in place. Unlike Gen1, there is no default material
 map for the Gen3 ODD — it is only applied when a decorator is explicitly passed
 in. The shipped `data/odd-material-maps.root` cannot be used for this: it is an
 *unkeyed* map, indexed by the Gen1 geometry's own identifiers, while Gen3
