@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/PointBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
+#include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/OstreamStateGuard.hpp"
@@ -203,15 +204,15 @@ FreeToPathMatrix PointSurface::freeToPathDerivative(
 AlignmentToPathMatrix PointSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  static_cast<void>(gctx);
   static_cast<void>(position);
 
   assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // u = (c - position) . direction, so d u / d center = direction. A point has
   // no orientation, hence the rotation block is zero.
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
   AlignmentToPathMatrix alignToPath = AlignmentToPathMatrix::Zero();
-  alignToPath.segment<3>(eAlignmentCenter0) = direction.transpose();
+  detail::setAlignToPathLocalCenterDerivative(alignToPath, direction, rotation);
 
   return alignToPath;
 }

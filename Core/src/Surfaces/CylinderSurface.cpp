@@ -321,8 +321,10 @@ AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
   AlignmentToPathMatrix alignToPath = AlignmentToPathMatrix::Zero();
-  alignToPath.segment<3>(eAlignmentCenter0) =
-      2 * norm * (dx * localXAxis.transpose() + dy * localYAxis.transpose());
+  const Vector3 globalCenterDerivative =
+      2 * norm * (dx * localXAxis + dy * localYAxis);
+  detail::setAlignToPathLocalCenterDerivative(alignToPath,
+                                              globalCenterDerivative, rotation);
   alignToPath.segment<3>(eAlignmentRotation0) =
       localXAxisToPath * rotToLocalXAxis + localYAxisToPath * rotToLocalYAxis +
       localZAxisToPath * rotToLocalZAxis;

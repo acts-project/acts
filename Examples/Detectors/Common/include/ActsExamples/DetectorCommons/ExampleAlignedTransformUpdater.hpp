@@ -12,11 +12,18 @@
 #include "ActsExamples/DetectorCommons/Aligned.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentContext.hpp"
 
+#include <stdexcept>
+
 namespace ActsExamples {
 
 /// @brief Create an aligned transform updater with an alignment store
 /// @param store An alignment store to update with aligned transforms
 /// @return An AlignedTransformUpdater that updates the provided store
+///
+/// @warning Single-threaded only. The updater writes the shared store from
+/// execute(), and other events read it through contextualTransform. The source
+/// cannot force Sequencer to one thread, so the alignment job must be run with
+/// numThreads = 1. A later change should make this write safe for more threads.
 ///
 /// Usage example:
 /// @code
@@ -41,42 +48,22 @@ namespace ActsExamples {
 /// @endcode
 inline ActsAlignment::AlignedTransformUpdater makeAlignedTransformUpdater(
     const std::shared_ptr<GeoIdAlignmentStore>& store) {
+  if (store == nullptr) {
+    throw std::invalid_argument(
+        "makeAlignedTransformUpdater: alignment store is null");
+  }
+
   return ActsAlignment::AlignedTransformUpdater(
       [store](Acts::SurfacePlacementBase* placement,
               const Acts::GeometryContext& /*gctx*/,
               const Acts::Transform3& aTransform) -> bool {
-        if (store == nullptr || placement == nullptr) {
+        if (placement == nullptr) {
           return false;
         }
 
         const Acts::Surface& surface = placement->surface();
         Acts::GeometryIdentifier geoId = surface.geometryId();
         store->setTransform(geoId, aTransform);
-
-        return true;
-      });
-}
-
-/// @brief Create an aligned transform updater that captures transforms to a map
-/// @param transformMap A map to store the aligned transforms
-/// @return An AlignedTransformUpdater that populates the provided map
-///
-/// This is useful when you want to collect the alignment results
-/// without creating a full alignment store
-inline ActsAlignment::AlignedTransformUpdater makeAlignedTransformUpdater(
-    const std::shared_ptr<std::unordered_map<Acts::GeometryIdentifier,
-                                             Acts::Transform3>>& transformMap) {
-  return ActsAlignment::AlignedTransformUpdater(
-      [transformMap](Acts::SurfacePlacementBase* placement,
-                     const Acts::GeometryContext& /*gctx*/,
-                     const Acts::Transform3& aTransform) -> bool {
-        if (transformMap == nullptr || placement == nullptr) {
-          return false;
-        }
-
-        const Acts::Surface& surface = placement->surface();
-        Acts::GeometryIdentifier geoId = surface.geometryId();
-        (*transformMap)[geoId] = aTransform;
 
         return true;
       });
