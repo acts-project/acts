@@ -38,29 +38,6 @@ void advanceGroup(SpacePointGroup& group, Predicate isInRange) {
   group = group.subrange(offset);
 }
 
-template <typename DoubletCollections>
-void createAndFilterTriplets(TripletSeeder::Cache& cache,
-                             const TripletSeedFinder& tripletFinder,
-                             const ITripletSeedFilter& filter,
-                             const SpacePointContainer& spacePoints,
-                             DoubletCollections bottomDoublets,
-                             const ConstSpacePointProxy& spM,
-                             DoubletCollections topDoublets) {
-  for (auto bottomDoublet : bottomDoublets) {
-    if (topDoublets.empty()) {
-      break;
-    }
-
-    cache.tripletTopCandidates.clear();
-    topDoublets = tripletFinder.createTripletTopCandidates(
-        spacePoints, spM, bottomDoublet, topDoublets,
-        cache.tripletTopCandidates);
-
-    filter.filterTripletTopCandidates(spacePoints, spM, bottomDoublet,
-                                      cache.tripletTopCandidates);
-  }
-}
-
 template <typename SpacePointCollections>
 void createSeedsFromGroupsImpl(
     const Logger& logger, TripletSeeder::Cache& cache,
@@ -120,6 +97,16 @@ void createSeedsFromGroupsImpl(
                               << " tops for middle candidate indexed "
                               << middleSp.index());
 
+  // the triplet top candidates of each bottom doublet go to the filter
+  const auto filterCandidates =
+      [&](const DoubletsForMiddleSp::Proxy& bottomDoublet,
+          const TripletTopCandidates& candidates) {
+        filter.filterTripletTopCandidates(spacePoints, middleSp, bottomDoublet,
+                                          candidates);
+      };
+  TripletSeedFinder::CandidatesSink sink;
+  sink.connect(filterCandidates);
+
   // combine doublets to triplets
   if (tripletFinder.config().sortedByCotTheta) {
     cache.bottomDoublets.sortByCotTheta({0, cache.bottomDoublets.size()},
@@ -127,14 +114,14 @@ void createSeedsFromGroupsImpl(
     cache.topDoublets.sortByCotTheta({0, cache.topDoublets.size()},
                                      cache.sortedTops);
 
-    createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
-                            cache.bottomDoublets.subset(cache.sortedBottoms),
-                            middleSp,
-                            cache.topDoublets.subset(cache.sortedTops));
+    tripletFinder.createTripletTopCandidates(
+        spacePoints, middleSp, cache.bottomDoublets.subset(cache.sortedBottoms),
+        cache.topDoublets.subset(cache.sortedTops), cache.tripletTopCandidates,
+        sink);
   } else {
-    createAndFilterTriplets(cache, tripletFinder, filter, spacePoints,
-                            cache.bottomDoublets.range(), middleSp,
-                            cache.topDoublets.range());
+    tripletFinder.createTripletTopCandidates(
+        spacePoints, middleSp, cache.bottomDoublets.range(),
+        cache.topDoublets.range(), cache.tripletTopCandidates, sink);
   }
 
   filter.filterTripletsMiddleFixed(spacePoints, outputSeeds);
