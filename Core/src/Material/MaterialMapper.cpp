@@ -113,7 +113,7 @@ Acts::MaterialMapper::mapMaterial(
     accumulations.push_back({&assignment.mapped.second.materialInteractions,
                              &assignment.surfacesWithoutAssignment});
   }
-  m_cfg.surfaceMaterialAccumulator->accumulate(
+  m_cfg.surfaceMaterialAccumulator->accumulateTracks(
       *state.surfaceMaterialAccumulatorState, gctx, accumulations,
       m_pool.get());
 

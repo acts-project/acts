@@ -154,7 +154,7 @@ void Acts::BinnedSurfaceMaterialAccumulator::accumulate(
   }
 }
 
-void Acts::BinnedSurfaceMaterialAccumulator::accumulate(
+void Acts::BinnedSurfaceMaterialAccumulator::accumulateTracks(
     ISurfaceMaterialAccumulator::State& state, const GeometryContext& gctx,
     std::span<const TrackAccumulation> tracks, detail::WorkerPool* pool) const {
   if (pool == nullptr || pool->size() <= 1) {

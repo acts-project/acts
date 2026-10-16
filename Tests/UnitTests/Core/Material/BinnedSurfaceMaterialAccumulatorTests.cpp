@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(BatchAccumulationMatchesSerial) {
              ++t) {
           batch.push_back({&tracks[t].interactions, &tracks[t].empty});
         }
-        bsma.accumulate(*batched, tContext, batch, &pool);
+        bsma.accumulateTracks(*batched, tContext, batch, &pool);
       }
       checkEqual(reference, bsma.finalizeMaterial(*batched, tContext));
     }
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(BatchAccumulationMatchesSerial) {
   detail::WorkerPool pool(4);
   std::vector<ISurfaceMaterialAccumulator::TrackAccumulation> batch(
       8, {&interactions, &none});
-  BOOST_CHECK_THROW(bsma.accumulate(*state, tContext, batch, &pool),
+  BOOST_CHECK_THROW(bsma.accumulateTracks(*state, tContext, batch, &pool),
                     std::invalid_argument);
 }
 

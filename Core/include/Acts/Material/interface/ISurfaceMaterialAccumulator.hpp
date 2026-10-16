@@ -82,9 +82,9 @@ class ISurfaceMaterialAccumulator {
   /// @param gctx the geometry context
   /// @param tracks the per-track accumulation inputs, in mapping order
   /// @param pool optional worker pool, nullptr means serial execution
-  virtual void accumulate(State& state, const GeometryContext& gctx,
-                          std::span<const TrackAccumulation> tracks,
-                          detail::WorkerPool* pool) const {
+  virtual void accumulateTracks(State& state, const GeometryContext& gctx,
+                                std::span<const TrackAccumulation> tracks,
+                                detail::WorkerPool* pool) const {
     static_cast<void>(pool);
     for (const auto& track : tracks) {
       accumulate(state, gctx, *track.interactions,
