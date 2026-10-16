@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/TransformHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -274,10 +275,14 @@ BOOST_AUTO_TEST_CASE(PointSurfaceFreeToPathDerivative) {
   }
 }
 
-/// alignmentToPathDerivative: only the center contributes (= direction)
+/// alignmentToPathDerivative: center block is the direction in the local frame
 BOOST_AUTO_TEST_CASE(PointSurfaceAlignmentToPathDerivative) {
   Vector3 center{1., -2., 0.5};
-  auto surface = Surface::makeShared<PointSurface>(center);
+  // A non-trivial rotation, so the center columns are not the global direction.
+  const AngleAxis3 rotationAngle(std::numbers::pi / 2., Vector3::UnitZ());
+  Transform3 transform =
+      makeTransform3(rotationAngle.toRotationMatrix(), center);
+  auto surface = Surface::makeShared<PointSurface>(transform);
   Vector3 dir = Vector3(0.3, -0.5, 0.8).normalized();
   Vector3 pos = center + Vector3(0.4, 0.1, -0.2);
   pos -= (pos - center).dot(dir) * dir;
@@ -285,9 +290,10 @@ BOOST_AUTO_TEST_CASE(PointSurfaceAlignmentToPathDerivative) {
   AlignmentToPathMatrix analytic =
       surface->alignmentToPathDerivative(tgContext, pos, dir);
 
-  // center block equals the direction
-  CHECK_CLOSE_ABS(analytic.segment<3>(eAlignmentCenter0).transpose(), dir,
-                  1e-10);
+  // Local translations: e_i · direction
+  const Vector3 expectedCenter = transform.rotation().transpose() * dir;
+  CHECK_CLOSE_ABS(analytic.segment<3>(eAlignmentCenter0).transpose(),
+                  expectedCenter, 1e-10);
   // rotation block is zero
   CHECK_CLOSE_ABS(analytic.segment<3>(eAlignmentRotation0).norm(), 0., 1e-12);
 }

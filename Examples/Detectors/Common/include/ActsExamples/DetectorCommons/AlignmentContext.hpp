@@ -104,7 +104,7 @@ class GeoIdAlignmentStore : public IAlignmentStore {
     }
   }
 
- protected:
+ private:
   /// The geometry id map
   std::unordered_map<Acts::GeometryIdentifier, Acts::Transform3> m_transformMap;
 };

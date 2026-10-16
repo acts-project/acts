@@ -127,9 +127,6 @@ class AlignmentAlgorithm final : public IAlgorithm {
   /// @return a process code to steer the algorithm flow
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
-  // TODO: Collect tracks across events and run one iterative alignment in
-  // finalize(), instead of aligning on a single event in execute().
-
  private:
   Config m_cfg;
 

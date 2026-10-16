@@ -18,9 +18,6 @@
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-#ifdef ACTS_PLUGIN_DD4HEP
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#endif
 
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
@@ -36,15 +33,14 @@ using namespace ActsPython;
 PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
   // Bind AlignmentMask enum
   py::enum_<ActsAlignment::AlignmentMask>(m, "AlignmentMask", py::arithmetic())
-      .value("None", ActsAlignment::AlignmentMask::None)
+      .value("eNone", ActsAlignment::AlignmentMask::None)
       .value("Center0", ActsAlignment::AlignmentMask::Center0)
       .value("Center1", ActsAlignment::AlignmentMask::Center1)
       .value("Center2", ActsAlignment::AlignmentMask::Center2)
       .value("Rotation0", ActsAlignment::AlignmentMask::Rotation0)
       .value("Rotation1", ActsAlignment::AlignmentMask::Rotation1)
       .value("Rotation2", ActsAlignment::AlignmentMask::Rotation2)
-      .value("All", ActsAlignment::AlignmentMask::All)
-      .export_values();
+      .value("All", ActsAlignment::AlignmentMask::All);
 
   {
     auto ad =
@@ -141,7 +137,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
                      inputInitialTrackParameters, outputAlignmentParameters,
                      alignedDetElements, chi2ONdfCutOff, align,
                      alignedTransformUpdater, deltaChi2ONdfCutOff,
-                     maxNumIterations, maxNumTracks, groups);
+                     maxNumIterations, maxNumTracks);
 
   c.def_property(
       "iterationState",
@@ -179,9 +175,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
   m.def("makeAlignmentFunction", &AA::makeAlignmentFunction,
         py::arg("trackingGeometry"), py::arg("magneticField"));
 
-  m.def("makeAlignedTransformUpdater",
-        py::overload_cast<const std::shared_ptr<GeoIdAlignmentStore>&>(
-            &makeAlignedTransformUpdater),
+  m.def("makeAlignedTransformUpdater", &makeAlignedTransformUpdater,
         py::arg("store"),
         "Create an aligned transform updater with an alignment store");
 
@@ -192,15 +186,4 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
                  std::move(cfg), getDefaultLogger("AlignmentAlgorithm", level));
            }),
            py::arg("config"), py::arg("level") = Acts::Logging::INFO);
-
-  m.def(
-      "surfacePlacement",
-      [](const Acts::Surface& s) { return s.surfacePlacement(); },
-      py::arg("surface"), py::return_value_policy::reference);
-
-  // Deprecated: kept for backward compatibility; returns SurfacePlacementBase
-  m.def(
-      "associatedDetectorElement",
-      [](const Acts::Surface& s) { return s.surfacePlacement(); },
-      py::arg("surface"), py::return_value_policy::reference);
 }

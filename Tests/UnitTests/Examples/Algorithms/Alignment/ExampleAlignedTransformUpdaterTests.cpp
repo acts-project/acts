@@ -17,6 +17,7 @@
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
 #include <memory>
+#include <stdexcept>
 #include <unordered_map>
 
 using namespace Acts;
@@ -82,41 +83,16 @@ BOOST_AUTO_TEST_CASE(StoreUpdaterWritesAndReadsBack) {
 
 BOOST_AUTO_TEST_CASE(StoreUpdaterRejectsNullInputs) {
   GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
-  auto element = makeElement(GeometryIdentifier().withSensitive(1));
   Transform3 aligned = placed(1., 0., 0., 0.2);
 
   std::shared_ptr<GeoIdAlignmentStore> nullStore;
-  auto nullStoreUpdater = makeAlignedTransformUpdater(nullStore);
-  BOOST_CHECK(!nullStoreUpdater(element.get(), gctx, aligned));
+  BOOST_CHECK_THROW(makeAlignedTransformUpdater(nullStore),
+                    std::invalid_argument);
 
   auto store = makeStore();
   auto updater = makeAlignedTransformUpdater(store);
   BOOST_CHECK(!updater(nullptr, gctx, aligned));
   BOOST_CHECK(store->getTransformMap().empty());
-}
-
-BOOST_AUTO_TEST_CASE(MapUpdaterWritesByGeometryId) {
-  GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
-  auto geoIdA = GeometryIdentifier().withSensitive(1);
-  auto geoIdB = GeometryIdentifier().withSensitive(2);
-  auto elementA = makeElement(geoIdA);
-  auto elementB = makeElement(geoIdB);
-  auto transformMap =
-      std::make_shared<std::unordered_map<GeometryIdentifier, Transform3>>();
-  auto updater = makeAlignedTransformUpdater(transformMap);
-
-  Transform3 alignedA = placed(1., 0., 0., 0.5);
-  Transform3 alignedB = placed(0., 2., 0., -0.7);
-  BOOST_CHECK(updater(elementA.get(), gctx, alignedA));
-  BOOST_CHECK(updater(elementB.get(), gctx, alignedB));
-  BOOST_CHECK(sameTransform(transformMap->at(geoIdA), alignedA));
-  BOOST_CHECK(sameTransform(transformMap->at(geoIdB), alignedB));
-
-  std::shared_ptr<std::unordered_map<GeometryIdentifier, Transform3>> nullMap;
-  auto nullUpdater = makeAlignedTransformUpdater(nullMap);
-  BOOST_CHECK(!nullUpdater(elementA.get(), gctx, alignedA));
-  BOOST_CHECK(!updater(nullptr, gctx, alignedA));
-  BOOST_CHECK_EQUAL(transformMap->size(), 2u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
