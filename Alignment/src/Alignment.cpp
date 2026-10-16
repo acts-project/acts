@@ -8,9 +8,16 @@
 
 #include "ActsAlignment/Kernel/Alignment.hpp"
 
+#include "Acts/Utilities/detail/OstreamStateGuard.hpp"
+
+#include <fstream>
+#include <stdexcept>
+
 namespace ActsAlignment {
-void dumpResult(const ActsAlignment::AlignmentResult& result,
-                std::ostream& out) {
+void dumpResultAsMP2(const ActsAlignment::AlignmentResult& result,
+                     std::ostream& out) {
+  // protect stream from leaking modifiers
+  Acts::detail::OstreamStateGuard g(out);
   for (auto [surface, index] : result.idxedAlignSurfaces) {
     for (std::size_t i = 0; i < Acts::eAlignmentSize; ++i) {
       std::size_t row = Acts::eAlignmentSize * index + i;
@@ -33,5 +40,13 @@ void dumpResult(const ActsAlignment::AlignmentResult& result,
           << "    99 " << std::endl;
     }
   }
+}
+void dumpResultAsMP2(const ActsAlignment::AlignmentResult& result,
+                     const std::filesystem::path& fname) {
+  std::ofstream of(fname);
+  if (!of.is_open()) {
+    throw std::runtime_error("Unable to open the output file");
+  }
+  dumpResultAsMP2(result, of);
 }
 }  // namespace ActsAlignment

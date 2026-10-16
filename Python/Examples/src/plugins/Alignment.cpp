@@ -50,9 +50,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignment, m) {
     py::class_<IAlignmentStore, std::shared_ptr<IAlignmentStore>>(
         m, "IAlignmentStore");
   }
-  {
-    m.def("dumpResult", &ActsAlignment::dumpResult);
-  }
 
   {
     py::class_<GeoIdAlignmentStore, IAlignmentStore,
