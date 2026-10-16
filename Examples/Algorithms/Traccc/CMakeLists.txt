@@ -3,6 +3,7 @@
 # the backend libraries below.
 acts_add_library(
     ExamplesTraccc
+    src/ActsMeasToTracccAlg.cpp
     src/TracccDetector.cpp
     src/TracccMagneticField.cpp
     src/TracccDeviceMeasurementSortingAlg.cpp
@@ -10,6 +11,7 @@ acts_add_library(
     src/TracccDeviceTripletSeedingAlg.cpp
     src/TracccDeviceTrackParamEstimationAlg.cpp
     src/TracccDeviceTrackFindingAlg.cpp
+    src/TracccTrackToActsAlg.cpp
 )
 
 target_include_directories(
@@ -23,6 +25,7 @@ target_link_libraries(
         Acts::Core
         Acts::ExamplesFramework
         Acts::PluginDetray
+        Acts::PluginTraccc
         traccc::core
         traccc::device_common
         vecmem::core

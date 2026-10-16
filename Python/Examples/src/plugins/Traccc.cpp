@@ -9,6 +9,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Traccc/ActsMeasToTracccAlg.hpp"
 #include "ActsExamples/Traccc/TracccBackend.hpp"
 #include "ActsExamples/Traccc/TracccCopyAlgs.hpp"
 #include "ActsExamples/Traccc/TracccCopyTool.hpp"
@@ -20,6 +21,7 @@
 #include "ActsExamples/Traccc/TracccDeviceTripletSeedingAlg.hpp"
 #include "ActsExamples/Traccc/TracccEventData.hpp"
 #include "ActsExamples/Traccc/TracccMagneticField.hpp"
+#include "ActsExamples/Traccc/TracccTrackToActsAlg.hpp"
 #include "ActsPlugins/Covfie/FieldConversion.hpp"
 #include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
 #include "ActsPlugins/Detray/DetraySurfaceIdMap.hpp"
@@ -215,6 +217,10 @@ void addCopyTool(py::module_& m) {
 }
 
 void addAlgorithms(py::module_& m) {
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsMeasToTracccAlg, m, "ActsMeasToTracccAlg",
+                                detector, inputMeasurements,
+                                outputMeasurements);
+
   // Host <-> device copies, one instance per traccc collection
   {
     using Alg = TracccHostToDeviceCopyAlg<traccc::edm::measurement_collection>;
@@ -274,6 +280,9 @@ void addAlgorithms(py::module_& m) {
                                 magneticField, inputMeasurements, inputTrackParameters,
                                 outputTracks, finding);
 
+  ACTS_PYTHON_DECLARE_ALGORITHM(TracccTrackToActsAlg, m, "TracccTrackToActsAlg",
+                                detector, inputTracks, inputMeasurements,
+                                outputTracks);
 }
 
 }  // namespace
