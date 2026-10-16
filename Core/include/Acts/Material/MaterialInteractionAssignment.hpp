@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Material/IAssignmentFinder.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Material/interface/IAssignmentFinder.hpp"
 
 #include <array>
 #include <functional>

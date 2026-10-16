@@ -10,11 +10,11 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Material/IAssignmentFinder.hpp"
+#include "Acts/Material/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialInteractionAssignment.hpp"
 #include "Acts/Material/TrackingGeometryMaterial.hpp"
-#include "Acts/Material/interface/IAssignmentFinder.hpp"
-#include "Acts/Material/interface/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstddef>
