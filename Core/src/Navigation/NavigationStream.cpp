@@ -112,14 +112,13 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   std::ranges::sort(m_candidates, NavigationTarget::pathLengthOrder);
   ACTS_VERBOSE("Sorted candidates:" << m_candidates);
 
-  // If we have duplicates, we expect them to be close by in path length, so we
-  // don't need to re-sort Remove duplicates on basis of the surface pointer
-
-  /// But but but... What about the surfaces with multiple intersections?
+  // Remove duplicate intersections, preserving distinct crossings of the same
+  // surface. In particular, an on-surface entry must not discard a later exit.
   auto nonUniqueRange = std::ranges::unique(
       m_candidates.begin(), m_candidates.end(),
       [](const NavigationTarget& a, const NavigationTarget& b) {
-        return &a.surface() == &b.surface();
+        return &a.surface() == &b.surface() &&
+               a.intersectionIndex() == b.intersectionIndex();
       });
   m_candidates.erase(nonUniqueRange.begin(), nonUniqueRange.end());
 

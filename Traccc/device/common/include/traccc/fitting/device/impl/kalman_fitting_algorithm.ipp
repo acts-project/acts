@@ -46,7 +46,7 @@ auto kalman_fitting_algorithm::prepare_fit_payload_helper(
         vecmem::data::jagged_vector_buffer<surface_t> surfaces{
             n_surfaces, mr().main, mr().host,
             vecmem::data::buffer_type::resizable};
-        copy().setup(surfaces)->ignore();
+        copy().setup(vecmem::ignore_event, surfaces);
 
         // Create the (templated) host payload.
         device::fit_tpayload<detector_view_t, bfield_view_t, surface_t>
@@ -58,7 +58,7 @@ auto kalman_fitting_algorithm::prepare_fit_payload_helper(
         vecmem::data::vector_buffer<
             device::fit_tpayload<detector_view_t, bfield_view_t, surface_t>>
             device_tpayload{1u, mr().main};
-        copy().setup(device_tpayload)->ignore();
+        copy().setup(vecmem::ignore_event, device_tpayload);
         copy()(
             vecmem::data::vector_view<device::fit_tpayload<
                 detector_view_t, bfield_view_t, surface_t>>(1u, &host_tpayload),

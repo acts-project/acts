@@ -120,7 +120,7 @@ struct brute_force_scan {
     intersection_t start_intersection{};
     // Must not be invalid, since it will otherwise throw the navigation
     // validation off
-    start_intersection.set_surface(first_record.intersection.surface());
+    start_intersection.set_surface(first_record.intersection().surface());
     start_intersection.surface().set_id(surface_id::e_passive);
     start_intersection.surface().set_index(0);
     start_intersection.surface()
@@ -130,10 +130,11 @@ struct brute_force_scan {
     start_intersection.set_path(0.f);
     start_intersection.set_local({0.f, 0.f, 0.f});
     start_intersection.set_volume_link(
-        static_cast<nav_link_t>(first_record.vol_idx));
+        static_cast<nav_link_t>(first_record.volume()));
 
     intersection_record<detector_t> start_record{
-        traj.pos(), traj.dir(), start_intersection, q, p, first_record.vol_idx};
+        traj.pos(), traj.dir(), start_intersection,
+        q,          p,          first_record.volume()};
 
     intersection_trace.insert(intersection_trace.begin(), start_record);
 
@@ -169,14 +170,14 @@ inline auto run(const typename detector_t::geometry_context gctx,
   // aligned types like the ones in Eigen and Fastor, so we have to sort
   // by indices and then reconstruct the sorted intersection record.
   auto sort_path = [&](const record_t &a, const record_t &b) -> bool {
-    return (a.intersection < b.intersection);
+    return (a.intersection() < b.intersection());
   };
 
   std::ranges::stable_sort(intersection_trace, sort_path);
 
   // Make sure the intersection record terminates at world portals
   auto is_world_exit = [](const record_t &r) {
-    return r.intersection.volume_link() ==
+    return r.intersection().volume_link() ==
            detray::detail::invalid_value<nav_link_t>();
   };
 
@@ -206,7 +207,7 @@ inline auto write_intersections(
     intrs.reserve(trace.size());
 
     for (const auto &record : trace) {
-      intrs.push_back(record.intersection);
+      intrs.push_back(record.intersection());
     }
   }
 
@@ -220,6 +221,7 @@ inline auto write_tracks(
     const std::string &track_param_file_name,
     const std::vector<dvector<intersection_record<detector_t>>, allocator_t>
         &intersection_traces) {
+  using value_t = dvalue<typename detector_t::algebra_type>;
   using scalar_t = dscalar<typename detector_t::algebra_type>;
   using track_param_t =
       free_track_parameters<typename detector_t::algebra_type>;
@@ -232,7 +234,8 @@ inline auto write_tracks(
     track_params.back().reserve(trace.size());
 
     for (const auto &record : trace) {
-      track_params.back().emplace_back(record.charge, record.track_param());
+      track_params.back().emplace_back(record.template charge<value_t>(),
+                                       record.track_param());
     }
   }
 
