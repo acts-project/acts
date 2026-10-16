@@ -39,9 +39,11 @@ MaterialMapping::MaterialMapping(const MaterialMapping::Config& cfg,
 ProcessCode MaterialMapping::finalize() {
   m_material =
       m_cfg.materialMapper->finalizeMaps(*m_mappingState, m_cfg.geoContext);
+  ACTS_PUSH_IGNORE_DEPRECATED()
   for (auto& writer : m_cfg.materialWriters) {
     writer->writeMaterial(*m_material);
   }
+  ACTS_POP_IGNORE_DEPRECATED()
   return ProcessCode::SUCCESS;
 }
 

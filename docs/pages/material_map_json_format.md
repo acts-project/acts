@@ -1,4 +1,8 @@
-@page material_map_json_format Material map JSON format
+@page material_map_json_format Legacy material map JSON format
+
+The API documented here is deprecated and retains its legacy behavior. New code
+should use `Acts::TrackingGeometryMaterialJsonConverter` and the separate
+@ref material_map_json_schema format.
 
 A material map is the file the material mapping writes and the
 @ref Acts::JsonMaterialDecorator "JsonMaterialDecorator" reads back to attach

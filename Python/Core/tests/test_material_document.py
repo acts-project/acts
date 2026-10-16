@@ -25,18 +25,35 @@ def test_material_document(tmp_path):
         path = tmp_path / ("material" + suffix)
         converter.toFile(material, path, options)
         assert converter.fromFile(path).description == "Python round trip"
-        assert isinstance(acts.IMaterialDecorator.fromFile(path), MaterialMapDecorator)
+        with pytest.warns(
+            DeprecationWarning, match="IMaterialDecorator.fromFile is deprecated"
+        ):
+            assert isinstance(
+                acts.IMaterialDecorator.fromFile(path), MaterialMapDecorator
+            )
     encoded = json.loads((tmp_path / "material.json").read_text())
     assert encoded["header"]["version"] == 1
     assert encoded["header"]["description"] == "Python round trip"
 
 
-def test_legacy_material_error():
+def test_legacy_material_warning_and_error():
+    from acts.json import JsonMaterialDecorator, MaterialMapJsonConverter
+
     path = FIXTURES / "material_map_example.json"
     with pytest.raises(
         ValueError, match="Legacy material format.*ActsMaterialMapMigrate"
     ):
         TrackingGeometryMaterialJsonConverter().fromFile(path)
+    config = MaterialMapJsonConverter.Config()
+    with pytest.warns(DeprecationWarning, match="Legacy JSON material APIs"):
+        MaterialMapJsonConverter(config, acts.logging.WARNING)
+    with pytest.warns(DeprecationWarning, match="Legacy JSON material APIs"):
+        JsonMaterialDecorator(config, str(path), acts.logging.WARNING)
+    with pytest.warns(DeprecationWarning) as caught:
+        acts.IMaterialDecorator.fromFile(path)
+    assert any(
+        "IMaterialDecorator.fromFile is deprecated" in str(w.message) for w in caught
+    )
 
 
 @pytest.fixture

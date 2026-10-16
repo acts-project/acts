@@ -9,6 +9,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Json/JsonMaterialDecorator.hpp"
 #include "ActsPlugins/Json/JsonSurfacesReader.hpp"
@@ -55,6 +56,15 @@ class MaterialMapDecorator final : public IMaterialDecorator {
   TrackingGeometryMaterial m_material;
 };
 
+void warnLegacyMaterial() {
+  if (PyErr_WarnEx(
+          PyExc_DeprecationWarning,
+          "Legacy JSON material APIs are deprecated; use "
+          "TrackingGeometryMaterialJsonConverter and ActsMaterialMapMigrate.",
+          1) < 0) {
+    throw py::error_already_set();
+  }
+}
 }  // namespace
 
 PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
@@ -76,23 +86,35 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
         .def(py::init<TrackingGeometryMaterial>(), py::arg("material"));
   }
 
+  // Keep the deprecated Python bindings available during migration.
   {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     py::class_<JsonMaterialDecorator, IMaterialDecorator,
                std::shared_ptr<JsonMaterialDecorator>>(json,
                                                        "JsonMaterialDecorator")
-        .def(py::init<const MaterialMapJsonConverter::Config&,
-                      const std::string&, Logging::Level>(),
+        .def(py::init([](const MaterialMapJsonConverter::Config& config,
+                         const std::string& file, Logging::Level level) {
+               warnLegacyMaterial();
+               return std::make_shared<JsonMaterialDecorator>(config, file,
+                                                              level);
+             }),
              py::arg("rConfig"), py::arg("jFileName"), py::arg("level"))
         .def_property_readonly("materialMaps",
                                &JsonMaterialDecorator::materialMaps,
                                py::return_value_policy::reference_internal);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 
   {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     auto cls =
         py::class_<MaterialMapJsonConverter>(json, "MaterialMapJsonConverter")
-            .def(py::init<const MaterialMapJsonConverter::Config&,
-                          Logging::Level>(),
+            .def(py::init([](const MaterialMapJsonConverter::Config& config,
+                             Logging::Level level) {
+                   warnLegacyMaterial();
+                   return std::make_unique<MaterialMapJsonConverter>(config,
+                                                                     level);
+                 }),
                  py::arg("config"), py::arg("level"));
 
     auto c = py::class_<MaterialMapJsonConverter::Config>(cls, "Config")
@@ -100,6 +122,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
     ACTS_PYTHON_STRUCT(c, context, processSensitives, processApproaches,
                        processRepresenting, processBoundaries, processVolumes,
                        processDenseVolumes, processNonMaterial);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 
   {

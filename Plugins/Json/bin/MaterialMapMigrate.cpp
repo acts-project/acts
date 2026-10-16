@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
 #include "ActsPlugins/Json/TrackingGeometryMaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/detail/JsonIo.hpp"
@@ -24,7 +25,7 @@
 namespace {
 constexpr std::string_view usage =
     "Usage: ActsMaterialMapMigrate INPUT OUTPUT [OPTIONS]\n"
-    "Migrate legacy surface material maps to the version 1 format.\n"
+    "Migrate deprecated surface material maps to the version 1 format.\n"
     "ROOT input (.root) requires ACTS_BUILD_PLUGIN_ROOT=ON.\n"
     "Input: JSON or CBOR, optionally zstd compressed (detected from content).\n"
     "Output: .json, .cbor, .json.zst or .cbor.zst.\n"
@@ -71,8 +72,11 @@ Acts::TrackingGeometryMaterial readMaterial(
     throw std::invalid_argument(
         "Expected a legacy material map with Surfaces and Volumes");
   }
+  // Migration intentionally reads the deprecated format.
+  ACTS_PUSH_IGNORE_DEPRECATED()
   Acts::MaterialMapJsonConverter legacy({}, Acts::Logging::WARNING);
   return legacy.jsonToMaterialMaps(document);
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 }  // namespace
