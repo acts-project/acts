@@ -145,13 +145,7 @@ void addMaterial(py::module_& m) {
                     }),
                 py::arg("config"), py::arg("level"))
             .def("createState", &BinnedSurfaceMaterialAccumulator::createState)
-            .def(
-                "accumulate",
-                py::overload_cast<
-                    ISurfaceMaterialAccumulator::State&, const GeometryContext&,
-                    const std::vector<MaterialInteraction>&,
-                    const std::vector<IAssignmentFinder::SurfaceAssignment>&>(
-                    &BinnedSurfaceMaterialAccumulator::accumulate, py::const_))
+            .def("accumulate", &BinnedSurfaceMaterialAccumulator::accumulate)
             .def("finalizeMaterial",
                  &BinnedSurfaceMaterialAccumulator::finalizeMaterial)
             .def("finalizeMaps",
