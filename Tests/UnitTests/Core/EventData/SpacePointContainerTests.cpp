@@ -101,6 +101,39 @@ BOOST_AUTO_TEST_CASE(CopyAndMove) {
   BOOST_CHECK_EQUAL(containerCopy.size(), 1u);
 }
 
+BOOST_AUTO_TEST_CASE(AssignmentReplacesColumns) {
+  for (bool move : {false, true}) {
+    SpacePointContainer source(SpacePointColumns::X);
+    source.createColumn<int>("shared");
+    source.createSpacePoint().x() = 42;
+    source.column<int>("shared")[0] = 17;
+
+    SpacePointContainer destination(SpacePointColumns::Y);
+    destination.createColumn<int>("shared");
+    destination.createColumn<int>("old");
+    destination.createSpacePoint().y() = 3;
+    destination.column<int>("shared")[0] = -1;
+
+    if (move) {
+      destination = std::move(source);
+    } else {
+      destination = source;
+      source.column<int>("shared")[0] = 99;
+    }
+    BOOST_CHECK_EQUAL(destination.size(), 1u);
+    BOOST_CHECK(destination.hasColumns(SpacePointColumns::X));
+    BOOST_CHECK(!destination.hasColumns(SpacePointColumns::Y));
+    BOOST_CHECK(!destination.hasColumn("y"));
+    BOOST_CHECK(!destination.hasColumn("old"));
+    BOOST_CHECK_EQUAL(destination.at(0).x(), 42);
+    BOOST_CHECK_EQUAL(destination.column<int>("shared")[0], 17);
+    // This also accesses the rebuilt lookup table, including dynamic columns.
+    destination.reserve(4);
+    destination.createSpacePoint().x() = 24;
+    BOOST_CHECK_EQUAL(destination.column<int>("shared").size(), 2u);
+  }
+}
+
 BOOST_AUTO_TEST_CASE(Clear) {
   SpacePointContainer container;
   container.reserve(1);
