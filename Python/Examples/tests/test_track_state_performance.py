@@ -69,7 +69,9 @@ class SyntheticStates(ex.IAlgorithm):
             state.smoothedCovariance = acts.BoundMatrix.Identity()
             state.filteredCovariance = acts.BoundMatrix.Identity()
             state.allocateCalibrated(1)
-            state.setProjectorSubspaceIndices([acts.eBoundLoc0])
+            state.setProjectorSubspaceIndices(
+                [0]
+            )  # loc0; the binding takes integer indices.
             state.effectiveCalibrated = [0.025]
             state.effectiveCalibratedCovariance = [[2.0]]
             momentum = acts.Vector4(1, 0, 1, 2)
