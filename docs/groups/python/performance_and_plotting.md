@@ -40,12 +40,43 @@ for ROOT output.
 The track-parameter writers fit residual and pull distributions to extract mean and width
 profiles. The ROOT writer uses the ROOT fit backend. For the Python writer, set
 `cfg.fitFunction = acts.examples.scipy.makeScipyHistogramFitFunction()` to use SciPy instead;
-install `scipy` and `numpy` separately. The ROOT track-parameter writer also supports evaluation
-at individual track states and against calibrated measurements. The Python writer currently
-evaluates track reference parameters against truth particles.
+install `scipy` and `numpy` separately. Both track-parameter writers support evaluation at
+individual track states and against calibrated measurements.
 
 `TrackTruthMatcher(doubleMatching=True)` is the standard way to produce the
 `inputTrackParticleMatching`/`inputParticleTrackMatching` collections these writers need.
+
+## Track-state residuals
+
+By default, track reference parameters are compared with truth particles. To evaluate
+smoothed parameters at individual measurement surfaces instead, configure the Python writer:
+
+```python
+cfg = acts.examples.PythonTrackParameterPerformanceWriter.Config(
+    inputTracks="tracks",
+    inputParticles="particles",
+    inputTrackParticleMatching="track_particle_matching",
+    parameterSource=acts.examples.TrackParameterSource.TrackState,
+    parameterType=acts.examples.TrackParameterType.Smoothed,
+    inputSimHits="simhits",
+    inputMeasurementSimHitsMap="measurement_simhits_map",
+    fitFunction=acts.examples.scipy.makeScipyHistogramFitFunction(),
+)
+writer = acts.examples.PythonTrackParameterPerformanceWriter(cfg, acts.logging.INFO)
+s.addWriter(writer)
+```
+
+The residual is reconstructed minus truth on the state's surface. The first two
+parameters are named `loc0` and `loc1`, so `writer.histograms()["res_loc0"]` returns
+the local-0 residual distribution. Set `geometrySelection` to a list of
+`acts.GeometryIdentifier` regions to restrict which states contribute. States
+without the requested parameter type are skipped; leaving `parameterType` unset
+uses the best available parameters (smoothed, filtered, then predicted).
+
+For residuals against calibrated measurements, set
+`reference=acts.examples.TrackParameterReference.Measurement` and explicitly choose
+`parameterType`. In that mode none of the truth input collections are required;
+only measured coordinates contribute, and efficiency/track-summary plots remain empty.
 
 ## Available histograms
 
