@@ -21,6 +21,7 @@ from helpers import (
     gnnEnabled,
     onnxEnabled,
     hashingSeedingEnabled,
+    tracccCudaEnabled,
     assert_entries,
     AssertCollectionExistsAlg,
 )
@@ -893,6 +894,45 @@ def test_full_chain_odd_example(tmp_path):
         if e.output is not None:
             print(e.output.decode("utf-8"))
         raise
+
+
+@pytest.mark.skipif(
+    not dd4hepEnabled or not tracccCudaEnabled,
+    reason="DD4hep and/or traccc CUDA backend / CUDA device not available",
+)
+@pytest.mark.odd
+@pytest.mark.slow
+def test_full_chain_odd_traccc_example(tmp_path):
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "full_chain_odd_traccc.py"
+    )
+    assert script.exists()
+    env = os.environ.copy()
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
+    try:
+        subprocess.check_call(
+            [
+                sys.executable,
+                str(script),
+                "-n1",
+                "--gun-multiplicity=10",
+                f"--output={tmp_path}",
+            ],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        if e.output is not None:
+            print(e.output.decode("utf-8"))
+        raise
+
+    for name in ["tracksummary_traccc.root", "performance_finding_traccc.root"]:
+        assert (tmp_path / name).exists()
 
 
 @pytest.mark.skipif(

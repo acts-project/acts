@@ -98,6 +98,16 @@ with warnings.catch_warnings():
     except ModuleNotFoundError:
         hashingSeedingEnabled = False
 
+    try:
+        import acts.examples.traccc
+
+        tracccCudaEnabled = (
+            hasattr(acts.examples.traccc, "CudaTracccBackend")
+            and shutil.which("nvidia-smi") is not None
+        )
+    except ModuleNotFoundError:
+        tracccCudaEnabled = False
+
     gnnEnabled = shutil.which("nvidia-smi") is not None
     if gnnEnabled:
         try:
