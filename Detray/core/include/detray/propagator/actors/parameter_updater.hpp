@@ -178,11 +178,8 @@ struct parameter_updater_state {
   }
 
  private:
-  /// Bound track parameters and covariance. The dummy identity covariance
-  /// keeps the parameters valid until a real one is transported or set.
-  bound_track_parameters<algebra_t> m_bound_params{
-      geometry::identifier{}, bound_parameters_vector<algebra_t>{},
-      matrix::identity<bound_matrix<algebra_t>>()};
+  /// Bound track parameters and covariance
+  bound_track_parameters<algebra_t> m_bound_params{};
   /// Full jacobian for up to the current destination surface
   bound_matrix<algebra_t>* m_full_jacobian{nullptr};
   /// Configuration for the noise estimation
