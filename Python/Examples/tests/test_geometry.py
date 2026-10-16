@@ -129,8 +129,8 @@ def test_geometry_visitor(trk_geo):
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.odd
-def test_odd_gen1(odd_detector):
-    trackingGeometry = odd_detector.trackingGeometry()
+def test_odd_gen1(odd_detector_gen1):
+    trackingGeometry = odd_detector_gen1.trackingGeometry()
 
     visitor = CountingVisitor()
     trackingGeometry.apply(visitor)
@@ -176,9 +176,19 @@ def test_odd_gen3(constructionMethod):
         assert visitor.num_surfaces > 0
         assert visitor.num_volumes > 0
 
-        assert visitor.num_surfaces == 19261
-        assert visitor.num_volumes == 109
-        assert visitor.num_portals == 437
+        # TGeo does not have material designation yet (no addMaterial /
+        # makePassiveElement / makeMaterialCollector calls for that
+        # construction method),
+        # so it is still missing the extra portals/volumes the other
+        # construction methods now carry.
+        if constructionMethod == "TGeo":
+            assert visitor.num_surfaces == 19261
+            assert visitor.num_volumes == 109
+            assert visitor.num_portals == 437
+        else:
+            assert visitor.num_surfaces == 19325
+            assert visitor.num_volumes == 125
+            assert visitor.num_portals == 501
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
