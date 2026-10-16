@@ -218,7 +218,10 @@ struct seed_generator {
   void generate_initial_covariance(
       bound_track_parameters<algebra_type>& bound_param,
       const traccc::pdg_particle<scalar>& ptc_type) {
-    const scalar q{ptc_type.charge()};
+    // Smearing q/p can flip its sign: match the charge to it, as the CKF does
+    const scalar q{ptc_type.charge() * bound_param.qop() > 0.f
+                       ? ptc_type.charge()
+                       : -ptc_type.charge()};
 
     // Build the track covariance matrix using the smearing sigmas
     const auto sigmas = generate_smearing_sigmas(
