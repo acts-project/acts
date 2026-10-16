@@ -40,6 +40,30 @@ class CudaTracccBackend final : public TracccBackend {
   traccc::magnetic_field makeMagneticField(
       const traccc::magnetic_field& hostField) const override;
 
+  TracccDeviceAlgorithm<MeasurementSortingAlgorithm> makeMeasurementSorting(
+      std::unique_ptr<const Acts::Logger> logger) const override;
+
+  TracccDeviceAlgorithm<
+      traccc::device::silicon_pixel_spacepoint_formation_algorithm>
+  makeSpacepointFormation(
+      std::unique_ptr<const Acts::Logger> logger) const override;
+
+  TracccDeviceAlgorithm<traccc::device::triplet_seeding_algorithm>
+  makeTripletSeeding(const traccc::seedfinder_config& finderConfig,
+                     const traccc::spacepoint_grid_config& gridConfig,
+                     const traccc::seedfilter_config& filterConfig,
+                     std::unique_ptr<const Acts::Logger> logger) const override;
+
+  TracccDeviceAlgorithm<traccc::device::seed_parameter_estimation_algorithm>
+  makeSeedParameterEstimation(
+      const traccc::track_params_estimation_config& config,
+      std::unique_ptr<const Acts::Logger> logger) const override;
+
+  TracccDeviceAlgorithm<traccc::device::combinatorial_kalman_filter_algorithm>
+  makeCombinatorialKalmanFilter(
+      const traccc::finding_config& config,
+      std::unique_ptr<const Acts::Logger> logger) const override;
+
  private:
   const Acts::Logger& logger() const { return *m_logger; }
 

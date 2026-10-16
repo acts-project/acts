@@ -13,6 +13,11 @@
 #include "ActsExamples/Traccc/TracccCopyAlgs.hpp"
 #include "ActsExamples/Traccc/TracccCopyTool.hpp"
 #include "ActsExamples/Traccc/TracccDetector.hpp"
+#include "ActsExamples/Traccc/TracccDeviceMeasurementSortingAlg.hpp"
+#include "ActsExamples/Traccc/TracccDeviceSpacepointFormationAlg.hpp"
+#include "ActsExamples/Traccc/TracccDeviceTrackFindingAlg.hpp"
+#include "ActsExamples/Traccc/TracccDeviceTrackParamEstimationAlg.hpp"
+#include "ActsExamples/Traccc/TracccDeviceTripletSeedingAlg.hpp"
 #include "ActsExamples/Traccc/TracccEventData.hpp"
 #include "ActsExamples/Traccc/TracccMagneticField.hpp"
 #include "ActsPlugins/Covfie/FieldConversion.hpp"
@@ -25,6 +30,7 @@
 #include "ActsExamples/Traccc/Cuda/CudaTracccBackend.hpp"
 #endif
 
+#include <array>
 #include <filesystem>
 #include <memory>
 #include <stdexcept>
@@ -46,6 +52,60 @@ using namespace ActsExamples;
 using namespace ActsPython;
 
 namespace {
+
+void addConfigs(py::module_& m) {
+  {
+    using C = traccc::seedfinder_config;
+    auto c = py::class_<C>(m, "SeedFinderConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, zMin, zMax, rMin, rMax, collisionRegionMin,
+                       collisionRegionMax, minPt, cotThetaMax, deltaRMin,
+                       deltaRMax, deltaZMax, impactMax, sigmaScattering,
+                       maxPtScattering, radLengthPerSeed, bFieldInZ);
+  }
+  {
+    using C = traccc::seedfilter_config;
+    auto c = py::class_<C>(m, "SeedFilterConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, deltaInvHelixDiameter, impactWeightFactor,
+                       compatSeedWeight, deltaRMin, compatSeedLimit,
+                       seed_min_weight, spB_min_radius);
+  }
+  {
+    using C = traccc::track_params_estimation_config;
+    auto c = py::class_<C>(m, "TrackParamsEstimationConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, initial_sigma, initial_sigma_qopt,
+                       initial_sigma_pt_rel, initial_inflation);
+  }
+  {
+    using C = traccc::finding_config;
+    auto c = py::class_<C>(m, "FindingConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT(
+        c, max_num_branches_per_seed, max_num_branches_per_surface,
+        min_track_candidates_per_track, max_track_candidates_per_track,
+        max_num_skipping_per_cand, max_num_consecutive_skipped,
+        max_num_tracks_per_measurement, min_measurement_voting_fraction,
+        min_step_length_for_next_surface, max_step_counts_for_next_surface,
+        chi2_max, min_p, min_pT, duplicate_removal_minimum_length,
+        initial_links_per_seed);
+    c.def_property(
+        "search_window",
+        [](const C& self) {
+          return std::array<unsigned int, 2>{
+              self.propagation.navigation.search_window[0],
+              self.propagation.navigation.search_window[1]};
+        },
+        [](C& self, const std::array<unsigned int, 2>& window) {
+          self.propagation.navigation.search_window = {window[0], window[1]};
+        });
+    c.def_property(
+        "overstep_tolerance",
+        [](const C& self) {
+          return self.propagation.navigation.intersection.overstep_tolerance;
+        },
+        [](C& self, float value) {
+          self.propagation.navigation.intersection.overstep_tolerance = value;
+        });
+  }
+}
 
 void addBackends(py::module_& m) {
   py::class_<TracccBackend, std::shared_ptr<TracccBackend>>(m, "TracccBackend")
@@ -190,11 +250,36 @@ void addAlgorithms(py::module_& m) {
     ACTS_PYTHON_DECLARE_ALGORITHM(Alg, m, "TracccDeviceToHostTrackCopyAlg",
                                   copyTool, input, output, inputMeasurements);
   }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(TracccDeviceMeasurementSortingAlg, m,
+                                "TracccDeviceMeasurementSortingAlg", detector,
+                                inputMeasurements, outputMeasurements);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(TracccDeviceSpacepointFormationAlg, m,
+                                "TracccDeviceSpacepointFormationAlg", detector,
+                                inputMeasurements, outputSpacepoints);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(TracccDeviceTripletSeedingAlg, m,
+                                "TracccDeviceTripletSeedingAlg", detector,
+                                inputSpacepoints, outputSeeds, seedFinder,
+                                seedFilter);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(TracccDeviceTrackParamEstimationAlg, m,
+                                "TracccDeviceTrackParamEstimationAlg", detector,
+                                magneticField, inputMeasurements, inputSpacepoints,
+                                inputSeeds, outputTrackParameters, estimation);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(TracccDeviceTrackFindingAlg, m,
+                                "TracccDeviceTrackFindingAlg", detector,
+                                magneticField, inputMeasurements, inputTrackParameters,
+                                outputTracks, finding);
+
 }
 
 }  // namespace
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsTraccc, traccc) {
+  addConfigs(traccc);
   addBackends(traccc);
   addDetector(traccc);
   addMagneticField(traccc);

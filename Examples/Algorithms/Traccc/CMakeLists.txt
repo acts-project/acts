@@ -1,9 +1,15 @@
-# Backend agnostic traccc example code. The backend specific implementations
-# are provided by the backend libraries below.
+# Backend agnostic traccc algorithms. They only use the traccc device
+# algorithm interfaces, the backend specific implementations are provided by
+# the backend libraries below.
 acts_add_library(
     ExamplesTraccc
     src/TracccDetector.cpp
     src/TracccMagneticField.cpp
+    src/TracccDeviceMeasurementSortingAlg.cpp
+    src/TracccDeviceSpacepointFormationAlg.cpp
+    src/TracccDeviceTripletSeedingAlg.cpp
+    src/TracccDeviceTrackParamEstimationAlg.cpp
+    src/TracccDeviceTrackFindingAlg.cpp
 )
 
 target_include_directories(
@@ -18,6 +24,7 @@ target_link_libraries(
         Acts::ExamplesFramework
         Acts::PluginDetray
         traccc::core
+        traccc::device_common
         vecmem::core
 )
 

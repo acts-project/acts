@@ -8,6 +8,11 @@
 
 #include "ActsExamples/Traccc/Cuda/CudaTracccBackend.hpp"
 
+#include <traccc/cuda/clusterization/measurement_sorting_algorithm.hpp>
+#include <traccc/cuda/finding/combinatorial_kalman_filter_algorithm.hpp>
+#include <traccc/cuda/seeding/seed_parameter_estimation_algorithm.hpp>
+#include <traccc/cuda/seeding/silicon_pixel_spacepoint_formation_algorithm.hpp>
+#include <traccc/cuda/seeding/triplet_seeding_algorithm.hpp>
 #include <traccc/cuda/utils/make_magnetic_field.hpp>
 #include <traccc/cuda/utils/stream_wrapper.hpp>
 #include <vecmem/memory/cuda/device_memory_resource.hpp>
@@ -61,6 +66,57 @@ void CudaTracccBackend::synchronize() const {
 traccc::magnetic_field CudaTracccBackend::makeMagneticField(
     const traccc::magnetic_field& hostField) const {
   return traccc::cuda::make_magnetic_field(hostField);
+}
+
+TracccDeviceAlgorithm<TracccBackend::MeasurementSortingAlgorithm>
+CudaTracccBackend::makeMeasurementSorting(
+    std::unique_ptr<const Acts::Logger> logger) const {
+  return {m_impl->copy,
+          std::make_shared<traccc::cuda::measurement_sorting_algorithm>(
+              m_impl->mr, m_impl->copy, m_impl->stream, std::move(logger))};
+}
+
+TracccDeviceAlgorithm<
+    traccc::device::silicon_pixel_spacepoint_formation_algorithm>
+CudaTracccBackend::makeSpacepointFormation(
+    std::unique_ptr<const Acts::Logger> logger) const {
+  return {m_impl->copy,
+          std::make_shared<
+              traccc::cuda::silicon_pixel_spacepoint_formation_algorithm>(
+              m_impl->mr, m_impl->copy, m_impl->stream, std::move(logger))};
+}
+
+TracccDeviceAlgorithm<traccc::device::triplet_seeding_algorithm>
+CudaTracccBackend::makeTripletSeeding(
+    const traccc::seedfinder_config& finderConfig,
+    const traccc::spacepoint_grid_config& gridConfig,
+    const traccc::seedfilter_config& filterConfig,
+    std::unique_ptr<const Acts::Logger> logger) const {
+  return {m_impl->copy,
+          std::make_shared<traccc::cuda::triplet_seeding_algorithm>(
+              finderConfig, gridConfig, filterConfig, m_impl->mr,
+              m_impl->copy, m_impl->stream, std::move(logger))};
+}
+
+TracccDeviceAlgorithm<traccc::device::seed_parameter_estimation_algorithm>
+CudaTracccBackend::makeSeedParameterEstimation(
+    const traccc::track_params_estimation_config& config,
+    std::unique_ptr<const Acts::Logger> logger) const {
+  return {m_impl->copy,
+          std::make_shared<traccc::cuda::seed_parameter_estimation_algorithm>(
+              config, m_impl->mr, m_impl->copy, m_impl->stream,
+              std::move(logger))};
+}
+
+TracccDeviceAlgorithm<traccc::device::combinatorial_kalman_filter_algorithm>
+CudaTracccBackend::makeCombinatorialKalmanFilter(
+    const traccc::finding_config& config,
+    std::unique_ptr<const Acts::Logger> logger) const {
+  return {
+      m_impl->copy,
+      std::make_shared<traccc::cuda::combinatorial_kalman_filter_algorithm>(
+          config, m_impl->mr, m_impl->copy, m_impl->stream,
+          std::move(logger))};
 }
 
 }  // namespace ActsExamples
