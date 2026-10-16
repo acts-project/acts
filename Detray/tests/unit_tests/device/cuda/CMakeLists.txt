@@ -17,6 +17,9 @@ enable_language(CUDA)
 # Set the CUDA build flags.
 include(detray-compiler-options-cuda)
 
+# Check that ACTS_FORCE_ASSERTIONS works for device code
+acts_add_assertion_tests(CUDA)
+
 # Independent of algebra-plugin
 detray_add_unit_test( cuda
    "container_cuda_kernel.hpp"
