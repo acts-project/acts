@@ -182,20 +182,12 @@ struct GbtsEdge final {
   /// @param p3_ Third fit parameter
   GbtsEdge(SpacePointIndex n1_, SpacePointIndex n2_,
            std::int32_t n2BarrelOrder_, float p1_, float p2_, float p3_)
-      : n1{n1_},
-        n2{n2_},
-        level{1},
-        next{1},
-        p{p1_, p2_, p3_},
-        n2BarrelOrder{n2BarrelOrder_} {}
+      : n1{n1_}, n2{n2_}, p{p1_, p2_, p3_}, n2BarrelOrder{n2BarrelOrder_} {}
 
   /// Inner node of the edge
   SpacePointIndex n1{kSpacePointIndexInvalid};
   /// Outer node of the edge
   SpacePointIndex n2{kSpacePointIndexInvalid};
-
-  std::int8_t level{-1};
-  std::int8_t next{-1};
 
   std::uint8_t nNei{0};
 
@@ -210,5 +202,14 @@ struct GbtsEdge final {
   std::array<std::uint32_t, kGbtsMaxEdgeNeighbours> vNei{};
 };
 //! [gbts edge]
+
+/// Result of `GbtsGraph::runCCA`.
+struct GbtsChainLevels final {
+  /// Length of the longest chain of edges going outwards from each edge.
+  std::vector<std::uint32_t> level;
+  /// Length to the root of the chain, the longest if there are several, zero
+  /// if there is none.
+  std::vector<std::uint32_t> innerLength;
+};
 
 }  // namespace Acts::Experimental::detail
