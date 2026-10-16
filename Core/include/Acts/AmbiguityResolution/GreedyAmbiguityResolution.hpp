@@ -55,6 +55,9 @@ class GreedyAmbiguityResolution {
     std::vector<float> trackChi2;
     /// Measurement indices for each track
     std::vector<std::vector<std::size_t>> measurementsPerTrack;
+    /// Set of split measurements for each track
+    std::vector<boost::container::flat_set<std::size_t>>
+        splitMeasurementsPerTrack;
 
     // TODO consider boost 1.81 unordered_flat_map
     /// Map from measurement index to set of track indices using it
