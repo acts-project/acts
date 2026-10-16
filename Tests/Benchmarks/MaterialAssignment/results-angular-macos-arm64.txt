@@ -1,0 +1,43 @@
+surfaces=107 rays=100000 repeats=7 seed=20261015
+octree build_us=284.708 fallback=0
+rz-tree build_us=18.542 fallback=0
+rz-linear build_us=8.209 fallback=0
+angular build_us=55.875 fallback=0
+brute-control build_us=7.083 fallback=0
+brute-fast-cylinder build_us=7.75 fallback=0
+angular-fast-cylinder build_us=45.083 fallback=0
+edge_checks=3514 passed
+ip equivalence=passed
+baseline us/ray=1.1681 min=1.15748 max=1.22689 exact_tests/ray=107
+octree us/ray=1.16454 min=1.16191 max=1.17554 exact_tests/ray=40.4276
+rz-tree us/ray=0.854278 min=0.845372 max=0.862608 exact_tests/ray=19.9658
+rz-linear us/ray=0.836639 min=0.832334 max=0.845685 exact_tests/ray=19.9658
+angular us/ray=0.621353 min=0.615117 max=0.630806 exact_tests/ray=19.9658
+brute-control us/ray=1.23585 min=1.22856 max=1.2661 exact_tests/ray=107
+brute-fast-cylinder us/ray=1.18012 min=1.17706 max=1.19475 exact_tests/ray=107
+angular-fast-cylinder us/ray=0.59806 min=0.595945 max=0.610565 exact_tests/ray=19.9658
+beamspot equivalence=passed
+baseline us/ray=1.18249 min=1.17125 max=1.1893 exact_tests/ray=107
+octree us/ray=1.1756 min=1.16784 max=1.17944 exact_tests/ray=40.4713
+rz-tree us/ray=0.907899 min=0.898218 max=0.921348 exact_tests/ray=19.961
+rz-linear us/ray=0.89745 min=0.885272 max=0.905327 exact_tests/ray=19.961
+angular us/ray=0.879731 min=0.870459 max=0.900504 exact_tests/ray=19.961
+brute-control us/ray=1.23463 min=1.23192 max=1.25421 exact_tests/ray=107
+brute-fast-cylinder us/ray=1.27715 min=1.26483 max=1.28761 exact_tests/ray=107
+angular-fast-cylinder us/ray=0.891006 min=0.886803 max=0.899509 exact_tests/ray=19.961
+displaced equivalence=passed
+baseline us/ray=0.98709 min=0.978739 max=0.992294 exact_tests/ray=107
+octree us/ray=0.68552 min=0.680031 max=0.688687 exact_tests/ray=14.0034
+rz-tree us/ray=0.4704 min=0.464738 max=0.472843 exact_tests/ray=7.27452
+rz-linear us/ray=0.53358 min=0.529651 max=0.53577 exact_tests/ray=7.27452
+angular us/ray=0.540682 min=0.524176 max=0.547012 exact_tests/ray=7.27452
+brute-control us/ray=1.03245 min=1.02102 max=1.03915 exact_tests/ray=107
+brute-fast-cylinder us/ray=1.06977 min=1.06154 max=1.0887 exact_tests/ray=107
+angular-fast-cylinder us/ray=0.534398 min=0.533237 max=0.552588 exact_tests/ray=7.27452
+cylinder_two_root_checks=passed
+cylinder on-axis baseline ns/intersect=10.2063 min=10.1192 max=10.2762
+cylinder on-axis fast ns/intersect=7.97709 min=7.88417 max=8.01958
+cylinder off-axis baseline ns/intersect=10.2017 min=10.1179 max=10.2837
+cylinder off-axis fast ns/intersect=13.3837 min=13.37 max=13.5412
+cylinder_checksum=4.69024e+08
+fallback_checks=passed checksum=301659264

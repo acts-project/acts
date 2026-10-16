@@ -37,3 +37,11 @@ add_benchmark(Stepper StepperBenchmark.cpp)
 add_benchmark(SourceLink SourceLinkBenchmark.cpp)
 add_benchmark(TrackEdm TrackEdmBenchmark.cpp)
 add_benchmark(GsfComponentReduction GsfComponentReductionBenchmark.cpp)
+
+# Standalone driver: accepts an exported gen1 ODD material-surface fixture.
+add_executable(
+    ActsBenchmarkMaterialAssignment
+    MaterialAssignmentBenchmark.cpp
+    MaterialAssignment/OnAxisCylinderIntersection.cpp
+)
+target_link_libraries(ActsBenchmarkMaterialAssignment PRIVATE Acts::Core)
