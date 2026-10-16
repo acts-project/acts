@@ -34,6 +34,8 @@ struct GbtsZ0Range final {
   float min = -168.0f * UnitConstants::mm;
   /// Maximum z0.
   float max = 168.0f * UnitConstants::mm;
+  /// Margin added to both ends of the range, for hits off the layer line.
+  float z0Tolerance = 5.0f * UnitConstants::mm;
 };
 
 /// Geometry helper built from layers and connectors.

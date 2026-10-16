@@ -55,7 +55,7 @@ concurrency:
 # Compiler caches use CERN S3 snapshots; only main publishes.
 env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 500M
+  CCACHE_MAXSIZE: 2G
 
 jobs:
   # Like Builds/changes, gate jobs rather than suppressing check reporting.
@@ -81,7 +81,7 @@ jobs:
 
   containers:
     env:
-      CCACHE_MAXSIZE: ${{ matrix.build == 'Release' && '500M' || '1G' }}
+      CCACHE_MAXSIZE: ${{ matrix.build == 'Release' && '2G' || '4G' }}
     environment:
       name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 's3-sccache' || '' }}
     needs: changes
@@ -242,6 +242,7 @@ jobs:
             -DCMAKE_CUDA_COMPILER_LAUNCHER=${{ matrix.build != 'Debug' && 'ccache' || '' }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.build }} \
             ${{ matrix.platform.options }} \
+            -DCMAKE_CXX_STANDARD=23 \
             -DACTS_USE_SYSTEM_NLOHMANN_JSON=ON \
             -DACTS_USE_SYSTEM_COVFIE=ON \
             -DACTS_USE_SYSTEM_VECMEM=ON \

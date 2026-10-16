@@ -149,7 +149,7 @@ class navigation_validation : public test::fixture_base<> {
 
     // Keep a record of track positions and material along the track
     std::vector<dvector<intersection_record<detector_t>>> recorded_traces{};
-    dvector<material_validator::track_material<scalar_t>> track_mat_vec{};
+    dvector<material_validator::track_material> track_mat_vec{};
     std::vector<std::pair<trajectory_type, std::vector<intersection_t>>>
         missed_intersections{};
 
@@ -167,7 +167,7 @@ class navigation_validation : public test::fixture_base<> {
       assert(!track.is_invalid());
       trajectory_type test_traj = get_parametrized_trajectory(track);
 
-      const scalar q = start.charge;
+      const scalar q = start.template charge<>();
       const scalar pT{q == 0.f ? 1.f * unit<scalar>::GeV : track.pT(q)};
       const scalar p{q == 0.f ? 1.f * unit<scalar>::GeV : track.p(q)};
 
@@ -198,12 +198,12 @@ class navigation_validation : public test::fixture_base<> {
         // add it as a dummy record
         obj_tracer.object_trace.insert(
             obj_tracer.object_trace.begin(),
-            {track.pos(), track.dir(), start.intersection});
+            {track.pos(), track.dir(), start.intersection()});
 
         // Adjust the track charge, which is unknown to the navigation
         for (auto &record : obj_tracer.object_trace) {
-          record.charge = q;
-          record.p_mag = p;
+          record.charge(q);
+          record.p(p);
         }
 
         auto [result, n_missed_nav, n_missed_truth, n_error, missed_inters] =
@@ -258,8 +258,9 @@ class navigation_validation : public test::fixture_base<> {
       navigation_validator::surface_stats n_truth{};
       navigation_validator::surface_stats n_nav{};
       for (std::size_t i = 0; i < truth_trace.size(); ++i) {
-        const auto truth_desc = truth_trace[i].intersection.surface();
-        const auto rec_desc = recorded_traces.back()[i].intersection.surface();
+        const auto truth_desc = truth_trace[i].intersection().surface();
+        const auto rec_desc =
+            recorded_traces.back()[i].intersection().surface();
 
         // Exclude dummy records for missing surfaces
         if (!truth_desc.identifier().is_invalid()) {

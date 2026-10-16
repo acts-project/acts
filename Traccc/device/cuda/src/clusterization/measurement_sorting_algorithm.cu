@@ -75,11 +75,11 @@ measurement_sorting_algorithm::operator()(
   // Create the output buffer.
   output_type result{measurements_view.capacity(), m_mr.main,
                      vecmem::data::buffer_type::resizable};
-  m_copy.get().setup(result)->ignore();
+  m_copy.get().setup(vecmem::ignore_event, result);
   if (n_measurements == 0) {
     return result;
   }
-  m_copy.get()(measurements_view.size(), result.size())->ignore();
+  m_copy.get()(vecmem::ignore_event, measurements_view.size(), result.size());
 
   // Get a convenience variable for the stream that we'll be using.
   cudaStream_t stream = details::get_stream(m_stream);
@@ -92,8 +92,8 @@ measurement_sorting_algorithm::operator()(
   vecmem::data::vector_buffer<device::measurement_sort_key_t> keys(
       n_measurements, m_mr.main);
   vecmem::data::vector_buffer<unsigned int> indices(n_measurements, m_mr.main);
-  m_copy.get().setup(keys)->ignore();
-  m_copy.get().setup(indices)->ignore();
+  m_copy.get().setup(vecmem::ignore_event, keys);
+  m_copy.get().setup(vecmem::ignore_event, indices);
 
   static constexpr unsigned int BLOCK_SIZE = 256;
   const unsigned int n_blocks = (n_measurements + BLOCK_SIZE - 1) / BLOCK_SIZE;
