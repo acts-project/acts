@@ -242,8 +242,10 @@ if "__main__" == __name__:
         s=Sequencer(events=args.events, numThreads=1),
     )
     s.run()
+    # zstd-compress the output (selected by the ".zst" suffix; precision is
+    # left at the lossless default of 23 retained mantissa bits).
     TrackingGeometryMaterialJsonConverter().toFile(
-        mapping.material, args.output + "_map.json"
+        mapping.material, args.output + "_map.json.zst"
     )
     # Gen3 faces carry stable material keys (see OpenDataDetectorBuilder.cpp);
     # the ROOT material-map writer rejects any map with keyed surfaces
