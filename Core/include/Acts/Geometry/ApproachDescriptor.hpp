@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -51,7 +52,8 @@ class ApproachDescriptor {
   virtual NavigationTarget approachSurface(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-      double nearLimit, double farLimit, double surfaceTolerance) const = 0;
+      double nearLimit, double farLimit,
+      double surfaceTolerance = s_onSurfaceTolerance) const = 0;
 
   /// Get all the contained surfaces
   /// @return all contained surfaces of this approach descriptor
