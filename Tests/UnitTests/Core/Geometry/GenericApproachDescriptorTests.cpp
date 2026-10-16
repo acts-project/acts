@@ -73,7 +73,8 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
   BOOST_CHECK_NO_THROW(approachDescriptor.registerLayer(aLayer));
   // approachSurface
   NavigationTarget navigationTarget = approachDescriptor.approachSurface(
-      tgContext, origin, zDir, boundaryTolerance, nearLimit, farLimit);
+      tgContext, origin, zDir, boundaryTolerance, nearLimit, farLimit,
+      s_onSurfaceTolerance);
   double expectedIntersection = 20.0;  // property of SurfaceStub
   CHECK_CLOSE_REL(navigationTarget.pathLength(), expectedIntersection, 1e-6);
   // containedSurfaces()
@@ -105,7 +106,7 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
 
   auto sfIntersection = gad.approachSurface(
       GeometryContext::dangerouslyDefaultConstruct(), origin, direction,
-      boundaryTolerance, nearLimit, farLimit);
+      boundaryTolerance, nearLimit, farLimit, s_onSurfaceTolerance);
 
   // No overstepping allowed, the preferred solution should be the forward one
   CHECK_CLOSE_ABS(sfIntersection.pathLength(), 10.5, s_epsilon);

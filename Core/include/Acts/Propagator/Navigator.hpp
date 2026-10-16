@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -61,6 +62,9 @@ struct NavigationOptions final {
   double nearLimit = 0;
   /// The maximum distance for a surface to be considered
   double farLimit = std::numeric_limits<double>::max();
+
+  /// The tolerance to decide if a position is on a surface
+  double surfaceTolerance = s_onSurfaceTolerance;
 };
 
 /// @brief Steers the propagation through the geometry by providing the next

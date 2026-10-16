@@ -899,6 +899,7 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
   navOpts.endObject = state.targetSurface;
   navOpts.nearLimit = state.options.nearLimit;
   navOpts.farLimit = state.options.farLimit;
+  navOpts.surfaceTolerance = state.options.surfaceTolerance;
 
   // The layer resolves the surface, so only its own extended surfaces apply
   const GeometryIdentifier layerId = layerSurface->geometryId();
@@ -997,6 +998,7 @@ void Navigator::resolveLayers(State& state, const Vector3& position,
   navOpts.startObject = state.currentLayer;
   navOpts.nearLimit = state.options.nearLimit;
   navOpts.farLimit = state.options.farLimit;
+  navOpts.surfaceTolerance = state.options.surfaceTolerance;
 
   // Request the compatible layers
   state.navLayers = state.currentVolume->compatibleLayers(
@@ -1021,6 +1023,7 @@ void Navigator::resolveBoundaries(State& state, const Vector3& position,
   navOpts.startObject = state.currentSurface;
   navOpts.nearLimit = state.options.nearLimit;
   navOpts.farLimit = state.options.farLimit;
+  navOpts.surfaceTolerance = state.options.surfaceTolerance;
 
   ACTS_VERBOSE(volInfo(state)
                << "Try to find boundaries, we are at: " << toString(position)

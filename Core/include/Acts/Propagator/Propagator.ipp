@@ -18,6 +18,8 @@
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
+#include <concepts>
+
 namespace Acts {
 
 template <StepperConcept S, NavigatorConcept N>
@@ -55,8 +57,15 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
                     m_stepper.updateSurfaceStatus(
                         state.stepping, target.intersection(),
                         ConstrainedStep::Type::Navigator, logger());
+                    {
+                      state.navigation.options.surfaceTolerance
+                    } -> std::convertible_to<double>;
                   }) {
-      if (target.isIntersectionCurrent()) {
+      // The navigator must use the same tolerance as the stepper, so that the
+      // intersection status is the same
+      if (target.isIntersectionCurrent() &&
+          state.navigation.options.surfaceTolerance ==
+              state.options.surfaceTolerance) {
         return m_stepper.updateSurfaceStatus(
             state.stepping, target.intersection(),
             ConstrainedStep::Type::Navigator, logger());
