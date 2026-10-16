@@ -276,7 +276,7 @@ struct gbts_seedfinder_config {
 
   // Edge buffer capacity per spacepoint.
   // edges beyond the capacity are dropped.
-  unsigned int max_edges_per_spacepoint = 8;
+  unsigned int max_edges_per_spacepoint = 16;
   // Capacity of the compacted graph per spacepoint
   // connected edges beyond it are dropped.
   unsigned int max_connected_edges_per_spacepoint = 2;

@@ -103,24 +103,32 @@ TRACCC_HOST_DEVICE inline void gbts_match_graph_edges(
       float deta_max =
           cut_deta_max + deta_inflation * (params2.second || params1.second);
       const float curv = 0.5f * math::fabs(curv2 + params2.first.y);
+			const float eta = 0.5f*math::fabs(eta2 + params2.first.x);
       const float corr = static_cast<float>((curv < less_scattering_curv) +
                                             (curv < much_less_scattering_curv));
-      deta_max *= 1.0f - high_pT_correction * corr;
+      const float high_pT_factor = 1.0f - high_pT_correction * corr;
+			deta_max *= high_pT_factor;
+			deta_max*=1-0.2f*(eta < 1.0f);
+			deta_max *= 1+0.2f*(eta > 2.7f);
       const float deta_cut_ratio =
           math::fabs(eta2 - params2.first.x) / deta_max;
       if (deta_cut_ratio > 1.0f) {  // bad match
         continue;
       }
-
+			float cut_dphi_max2 = cut_dphi_max;
+			cut_dphi_max2*=1-0.2f*(eta < 1.0f);
+			cut_dphi_max2*=1+0.2f*(eta > 2.7f);
       const float dPhi_cut_ratio =
           math::fabs(traccc::detail::wrap_phi(Phi2 - params2.first.w)) /
-          cut_dphi_max;
+          cut_dphi_max2;
       if (dPhi_cut_ratio > 1.0f) {
         continue;
       }
-
-      const float dcurv_cut_ratio =
-          math::fabs(curv2 - params2.first.y) / cut_dcurv_max;
+			float cut_dcurv_max2 = cut_dcurv_max;
+			cut_dcurv_max2*=1-0.2f*(eta2 < 1.0f);
+			cut_dcurv_max2*=1+0.2f*(eta2 > 2.7f);
+			const float dcurv_cut_ratio =
+          math::fabs(curv2 - params2.first.y) / cut_dcurv_max2;
       if (dcurv_cut_ratio > 1.0f) {
         continue;
       }
