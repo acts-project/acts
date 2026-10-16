@@ -10,8 +10,8 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
-#include "Acts/Material/interface/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <optional>
