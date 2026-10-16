@@ -80,9 +80,9 @@ struct LinearizedTrack {
   BoundMatrix covarianceAtPCA{BoundMatrix::Zero()};
   /// Weight matrix (inverse covariance) at PCA
   BoundMatrix weightAtPCA{BoundMatrix::Zero()};
-  /// Weight matrix of the bound parameters without time at PCA, i.e. the
-  /// inverse of the covariance of these parameters. This is not a block of
-  /// `weightAtPCA`: time is in general correlated with the other parameters.
+  /// Weight matrix of the bound parameters without time at PCA. 
+  /// This is not a block of `weightAtPCA`: time is in general 
+  /// correlated with the other parameters.
   WeightWithoutTime weightAtPCAWithoutTime{WeightWithoutTime::Zero()};
   /// 4D point where track was linearized for vertex fitting
   Vector4 linearizationPoint{Vector4::Zero()};
