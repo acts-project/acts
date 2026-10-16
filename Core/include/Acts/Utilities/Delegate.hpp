@@ -178,8 +178,7 @@ class Delegate<R(Args...), H, O> {
   /// @tparam Callable The compile-time free function pointer
   template <auto Callable>
   void connect()
-    requires(
-        Concepts::invocable_and_returns<Callable, return_type, Args && ...>)
+    requires(Concepts::invocable_and_returns<Callable, return_type, Args &&...>)
   {
     m_payload.payload = nullptr;
 
@@ -250,7 +249,7 @@ class Delegate<R(Args...), H, O> {
   void connect(const Type *instance)
     requires(kOwnership == DelegateType::NonOwning &&
              Concepts::invocable_and_returns<Callable, return_type, Type,
-                                             Args && ...>)
+                                             Args &&...>)
 
   {
     m_payload.payload = instance;
@@ -272,7 +271,7 @@ class Delegate<R(Args...), H, O> {
   void connect(std::unique_ptr<const Type> instance)
     requires(kOwnership == DelegateType::Owning &&
              Concepts::invocable_and_returns<Callable, return_type, Type,
-                                             Args && ...>)
+                                             Args &&...>)
   {
     m_payload.payload = std::unique_ptr<const holder_type, deleter_type>(
         instance.release(), [](const holder_type *payload) {
