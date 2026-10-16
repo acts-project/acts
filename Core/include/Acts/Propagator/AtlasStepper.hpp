@@ -474,6 +474,22 @@ class AtlasStepper {
         surfaceTolerance, stype, logger);
   }
 
+  /// Update surface status with an intersection that the caller computed at
+  /// the current position and direction of this stepper
+  ///
+  /// @param [in,out] state The stepping state (thread-local cache)
+  /// @param [in] intersection The intersection at the current stepper state
+  /// @param [in] stype The step size type to be set
+  /// @param [in] logger A @c Logger instance
+  /// @return Status of the intersection indicating whether surface was reached
+  IntersectionStatus updateSurfaceStatus(
+      State& state, const Intersection3D& intersection,
+      ConstrainedStep::Type stype,
+      const Logger& logger = getDummyLogger()) const {
+    return detail::updateSingleSurfaceStatus<AtlasStepper>(
+        *this, state, intersection, stype, logger);
+  }
+
   /// Update step size
   ///
   /// It checks the status to the reference surface & updates

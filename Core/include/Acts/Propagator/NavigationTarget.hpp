@@ -210,6 +210,19 @@ class NavigationTarget {
     return m_intersection.status();
   }
 
+  /// Returns whether the navigator computed the intersection at the current
+  /// position and direction of the propagation
+  /// @return true if the intersection is up to date
+  constexpr bool isIntersectionCurrent() const noexcept {
+    return m_intersectionCurrent;
+  }
+
+  /// Mark the intersection as computed at the current position and direction
+  /// @param current true if the intersection is up to date
+  constexpr void setIntersectionCurrent(bool current) noexcept {
+    m_intersectionCurrent = current;
+  }
+
   /// Returns whether this is a none target
   /// @return true if this is a none target
   constexpr bool isNone() const noexcept {
@@ -279,6 +292,8 @@ class NavigationTarget {
   const Surface* m_surfaceRepresentation = nullptr;
   /// The boundary tolerance used for this intersection
   BoundaryTolerance m_boundaryTolerance = BoundaryTolerance::None();
+  /// Whether the intersection is at the current position and direction
+  bool m_intersectionCurrent = false;
 
   /// Default constructor creating a none target
   constexpr NavigationTarget() = default;

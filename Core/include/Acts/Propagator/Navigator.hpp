@@ -206,6 +206,10 @@ class Navigator final {
     /// handed out once the additional surface is no longer the closer one.
     std::optional<NavigationTarget> pendingTarget;
 
+    /// Whether the navigator resolved candidates in the current call of
+    /// nextTarget, so the intersections are at the current position
+    bool candidatesResolved = false;
+
     /// Get reference to current navigation surface
     /// @return Reference to current navigation target
     NavigationTarget& navSurface() {

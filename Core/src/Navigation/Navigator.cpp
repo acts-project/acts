@@ -297,16 +297,25 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
     return NavigationTarget::None();
   }
 
+  // The resolve functions set this if they intersect at this position
+  state.candidatesResolved = false;
+
   if (state.additionalSurfaces.empty()) {
-    return nextStagedTarget(state, position, direction);
+    NavigationTarget staged = nextStagedTarget(state, position, direction);
+    staged.setIntersectionCurrent(state.candidatesResolved);
+    return staged;
   }
 
   // Hold the staged candidate back and hand out the closer one
   if (!state.pendingTarget.has_value()) {
     state.pendingTarget = nextStagedTarget(state, position, direction);
+    state.pendingTarget->setIntersectionCurrent(state.candidatesResolved);
+  } else {
+    // The navigator intersected the held-back target in an earlier call
+    state.pendingTarget->setIntersectionCurrent(false);
   }
 
-  if (const NavigationTarget additionalTarget =
+  if (NavigationTarget additionalTarget =
           nextAdditionalTarget(state, position, direction);
       !additionalTarget.isNone()) {
     NavigationTarget& staged = state.pendingTarget.value();
@@ -321,6 +330,9 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
       // Keep the stored one if the straight-line estimate lost the surface
       if (refreshed.isValid()) {
         staged.intersection() = refreshed;
+        staged.setIntersectionCurrent(true);
+      } else {
+        staged.setIntersectionCurrent(false);
       }
     }
     // A tie goes to the staged candidate
@@ -330,6 +342,7 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
                    << "Target set to additional surface "
                    << additionalTarget.surface().geometryId()
                    << " at path length " << additionalTarget.pathLength());
+      additionalTarget.setIntersectionCurrent(true);
       return additionalTarget;
     }
   }
@@ -799,6 +812,8 @@ void Navigator::createPolicyState(State& state, const TrackingVolume& volume,
 
 void Navigator::resolveCandidates(State& state, const Vector3& position,
                                   const Vector3& direction) const {
+  state.candidatesResolved = true;
+
   if (state.currentVolume == nullptr) {
     ACTS_VERBOSE(volInfo(state) << "No volume to resolve candidates.");
     return;
@@ -862,6 +877,8 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
 
 void Navigator::resolveSurfaces(State& state, const Vector3& position,
                                 const Vector3& direction) const {
+  state.candidatesResolved = true;
+
   // Gen-1 surface resolution
   ACTS_VERBOSE(volInfo(state) << "Searching for compatible surfaces.");
 
@@ -969,6 +986,8 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
 
 void Navigator::resolveLayers(State& state, const Vector3& position,
                               const Vector3& direction) const {
+  state.candidatesResolved = true;
+
   ACTS_VERBOSE(volInfo(state) << "Searching for compatible layers.");
 
   NavigationOptions<Layer> navOpts;
@@ -994,6 +1013,8 @@ void Navigator::resolveLayers(State& state, const Vector3& position,
 
 void Navigator::resolveBoundaries(State& state, const Vector3& position,
                                   const Vector3& direction) const {
+  state.candidatesResolved = true;
+
   ACTS_VERBOSE(volInfo(state) << "Searching for compatible boundaries.");
 
   NavigationOptions<Surface> navOpts;
