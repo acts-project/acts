@@ -169,7 +169,9 @@ boost::container::small_vector<NavigationTarget, 10> Layer::compatibleSurfaces(
     }
     // the surface intersection
     auto [intersection, intersectionIndex] =
-        surface.intersect(gctx, position, direction, boundaryTolerance)
+        surface
+            .intersect(gctx, position, direction, boundaryTolerance,
+                       options.surfaceTolerance)
             .closestWithIndex();
     NavigationTarget surfaceIntersection(intersection, intersectionIndex,
                                          surface, boundaryTolerance);
@@ -246,14 +248,15 @@ NavigationTarget Layer::surfaceOnApproach(
   if (m_approachDescriptor && (resolvePS || resolveMS)) {
     NavigationTarget aSurface = m_approachDescriptor->approachSurface(
         gctx, position, direction, options.boundaryTolerance, nearLimit,
-        farLimit);
+        farLimit, options.surfaceTolerance);
     return aSurface;
   }
 
   // Intersect and check the representing surface
   const Surface& layerSurface = surfaceRepresentation();
   const MultiIntersection3D multiIntersection = layerSurface.intersect(
-      gctx, position, direction, options.boundaryTolerance);
+      gctx, position, direction, options.boundaryTolerance,
+      options.surfaceTolerance);
   for (auto [intersectionIndex, intersection] :
        Acts::enumerate(multiIntersection)) {
     if (intersection.isValid() &&

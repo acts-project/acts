@@ -18,6 +18,8 @@
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
+#include <concepts>
+
 namespace Acts {
 
 template <StepperConcept S, NavigatorConcept N>
@@ -46,6 +48,36 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
     return state.options.actorList.act(state, m_stepper, m_navigator, logger());
   }
 
+  // Reuse the intersection of the navigator if it is at the current position.
+  // A multi stepper does not provide this overload, because it must intersect
+  // for each component.
+  auto updateTargetStatus =
+      [&](const NavigationTarget& target) -> IntersectionStatus {
+    if constexpr (requires {
+                    m_stepper.updateSurfaceStatus(
+                        state.stepping, target.intersection(),
+                        ConstrainedStep::Type::Navigator, logger());
+                    {
+                      state.navigation.options.surfaceTolerance
+                    } -> std::convertible_to<double>;
+                  }) {
+      // The navigator must use the same tolerance as the stepper, so that the
+      // intersection status is the same
+      if (target.isIntersectionCurrent() &&
+          state.navigation.options.surfaceTolerance ==
+              state.options.surfaceTolerance) {
+        return m_stepper.updateSurfaceStatus(
+            state.stepping, target.intersection(),
+            ConstrainedStep::Type::Navigator, logger());
+      }
+    }
+    return m_stepper.updateSurfaceStatus(
+        state.stepping, target.surface(), target.intersectionIndex(),
+        state.options.direction, target.boundaryTolerance(),
+        state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
+        logger());
+  };
+
   auto getNextTarget = [&]() -> Result<NavigationTarget> {
     for (unsigned int i = 0; i < state.options.maxTargetSkipping; ++i) {
       NavigationTarget nextTarget = m_navigator.nextTarget(
@@ -53,11 +85,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
       if (nextTarget.isNone()) {
         return NavigationTarget::None();
       }
-      IntersectionStatus preStepSurfaceStatus = m_stepper.updateSurfaceStatus(
-          state.stepping, nextTarget.surface(), nextTarget.intersectionIndex(),
-          state.options.direction, nextTarget.boundaryTolerance(),
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
+      IntersectionStatus preStepSurfaceStatus = updateTargetStatus(nextTarget);
       if (preStepSurfaceStatus == IntersectionStatus::onSurface) {
         // This indicates a geometry overlap which is not handled by the
         // navigator, so we skip this target.

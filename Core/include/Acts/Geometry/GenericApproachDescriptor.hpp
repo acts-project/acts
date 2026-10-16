@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
@@ -56,14 +57,15 @@ class GenericApproachDescriptor : public ApproachDescriptor {
   /// @param boundaryTolerance The boundary check prescription
   /// @param nearLimit The minimum distance for an intersection to be considered
   /// @param farLimit The maximum distance for an intersection to be considered
+  /// @param surfaceTolerance The tolerance to decide if a position is on a
+  ///        surface
   ///
   /// @return : a @c NavigationTarget
-  NavigationTarget approachSurface(const GeometryContext& gctx,
-                                   const Vector3& position,
-                                   const Vector3& direction,
-                                   const BoundaryTolerance& boundaryTolerance,
-                                   double nearLimit,
-                                   double farLimit) const override;
+  NavigationTarget approachSurface(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
+      double nearLimit, double farLimit,
+      double surfaceTolerance = s_onSurfaceTolerance) const override;
 
   /// return all contained surfaces of this approach descriptor
   /// @return Const reference to vector of contained surface pointers

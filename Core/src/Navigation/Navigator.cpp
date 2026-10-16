@@ -42,6 +42,12 @@ constexpr bool kSkipStatelessPolicyState = false;
 bool skipPolicyState(const TrackingVolume& volume) {
   return kSkipStatelessPolicyState && volume.navigationPolicy()->isStateless();
 }
+
+// A target is current only if the navigator resolved it at this position
+NavigationTarget markCurrent(NavigationTarget target, bool current) {
+  target.setIntersectionCurrent(current);
+  return target;
+}
 }  // namespace
 
 Navigator::Navigator(Config cfg, std::shared_ptr<const Logger> _logger)
@@ -304,9 +310,12 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
   // Hold the staged candidate back and hand out the closer one
   if (!state.pendingTarget.has_value()) {
     state.pendingTarget = nextStagedTarget(state, position, direction);
+  } else {
+    // The navigator intersected the held-back target in an earlier call
+    state.pendingTarget->setIntersectionCurrent(false);
   }
 
-  if (const NavigationTarget additionalTarget =
+  if (NavigationTarget additionalTarget =
           nextAdditionalTarget(state, position, direction);
       !additionalTarget.isNone()) {
     NavigationTarget& staged = state.pendingTarget.value();
@@ -321,6 +330,9 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
       // Keep the stored one if the straight-line estimate lost the surface
       if (refreshed.isValid()) {
         staged.intersection() = refreshed;
+        staged.setIntersectionCurrent(true);
+      } else {
+        staged.setIntersectionCurrent(false);
       }
     }
     // A tie goes to the staged candidate
@@ -330,6 +342,7 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
                    << "Target set to additional surface "
                    << additionalTarget.surface().geometryId()
                    << " at path length " << additionalTarget.pathLength());
+      additionalTarget.setIntersectionCurrent(true);
       return additionalTarget;
     }
   }
@@ -637,7 +650,8 @@ NavigationTarget Navigator::getNextTargetGen1(State& state,
                                               const Vector3& direction) const {
   // Try targeting the surfaces - then layers - then boundaries
   if (state.navigationStage == Stage::surfaceTarget) {
-    if (!state.navSurfaceIndex.has_value()) {
+    const bool resolved = !state.navSurfaceIndex.has_value();
+    if (resolved) {
       // First time, resolve the surfaces
       resolveSurfaces(state, position, direction);
       state.navSurfaceIndex = 0;
@@ -647,7 +661,7 @@ NavigationTarget Navigator::getNextTargetGen1(State& state,
     if (state.navSurfaceIndex.value() < state.navSurfaces.size()) {
       ACTS_VERBOSE(volInfo(state)
                    << "Target set to next surface. " << state.navSurface());
-      return state.navSurface();
+      return markCurrent(state.navSurface(), resolved);
     } else {
       // This was the last surface, switch to layers
       ACTS_VERBOSE(volInfo(state) << "Target layers.");
@@ -656,7 +670,8 @@ NavigationTarget Navigator::getNextTargetGen1(State& state,
   }
 
   if (state.navigationStage == Stage::layerTarget) {
-    if (!state.navLayerIndex.has_value()) {
+    const bool resolved = !state.navLayerIndex.has_value();
+    if (resolved) {
       // First time, resolve the layers
       resolveLayers(state, position, direction);
       state.navLayerIndex = 0;
@@ -666,7 +681,7 @@ NavigationTarget Navigator::getNextTargetGen1(State& state,
     if (state.navLayerIndex.value() < state.navLayers.size()) {
       ACTS_VERBOSE(volInfo(state)
                    << "Target set to next layer. " << state.navLayer());
-      return state.navLayer();
+      return markCurrent(state.navLayer(), resolved);
     } else {
       // This was the last layer, switch to boundaries
       ACTS_VERBOSE(volInfo(state) << "Target boundaries.");
@@ -675,7 +690,8 @@ NavigationTarget Navigator::getNextTargetGen1(State& state,
   }
 
   if (state.navigationStage == Stage::boundaryTarget) {
-    if (!state.navBoundaryIndex.has_value()) {
+    const bool resolved = !state.navBoundaryIndex.has_value();
+    if (resolved) {
       // First time, resolve the boundaries
       resolveBoundaries(state, position, direction);
       state.navBoundaryIndex = 0;
@@ -685,7 +701,7 @@ NavigationTarget Navigator::getNextTargetGen1(State& state,
     if (state.navBoundaryIndex.value() < state.navBoundaries.size()) {
       ACTS_VERBOSE(volInfo(state)
                    << "Target set to next boundary " << state.navBoundary());
-      return state.navBoundary();
+      return markCurrent(state.navBoundary(), resolved);
     } else {
       // This was the last boundary, we have to leave the volume somehow,
       // renavigate
@@ -721,7 +737,8 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
   ACTS_VERBOSE(volInfo(state) << "Current policy says navigation sequence is "
                               << (isValid ? "VALID" : "INVALID"));
 
-  if (!isValid || !state.stream.isValid()) {
+  const bool resolved = !isValid || !state.stream.isValid();
+  if (resolved) {
     // first time, resolve the candidates
     resolveCandidates(state, position, direction);
   } else {
@@ -746,7 +763,7 @@ NavigationTarget Navigator::getNextTargetGen3(State& state,
   if (state.stream.isValid()) {
     ACTS_VERBOSE(volInfo(state)
                  << "Target set to next candidate " << state.navCandidate());
-    return state.navCandidate();
+    return markCurrent(state.navCandidate(), resolved);
   } else {
     ACTS_VERBOSE(volInfo(state) << "Candidate targets exhausted. Renavigate.");
     return NavigationTarget::None();
@@ -882,6 +899,7 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
   navOpts.endObject = state.targetSurface;
   navOpts.nearLimit = state.options.nearLimit;
   navOpts.farLimit = state.options.farLimit;
+  navOpts.surfaceTolerance = state.options.surfaceTolerance;
 
   // The layer resolves the surface, so only its own extended surfaces apply
   const GeometryIdentifier layerId = layerSurface->geometryId();
@@ -978,6 +996,7 @@ void Navigator::resolveLayers(State& state, const Vector3& position,
   navOpts.startObject = state.currentLayer;
   navOpts.nearLimit = state.options.nearLimit;
   navOpts.farLimit = state.options.farLimit;
+  navOpts.surfaceTolerance = state.options.surfaceTolerance;
 
   // Request the compatible layers
   state.navLayers = state.currentVolume->compatibleLayers(
@@ -1000,6 +1019,7 @@ void Navigator::resolveBoundaries(State& state, const Vector3& position,
   navOpts.startObject = state.currentSurface;
   navOpts.nearLimit = state.options.nearLimit;
   navOpts.farLimit = state.options.farLimit;
+  navOpts.surfaceTolerance = state.options.surfaceTolerance;
 
   ACTS_VERBOSE(volInfo(state)
                << "Try to find boundaries, we are at: " << toString(position)

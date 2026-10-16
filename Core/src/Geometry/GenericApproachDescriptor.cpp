@@ -28,13 +28,13 @@ void GenericApproachDescriptor::registerLayer(const Layer& lay) {
 NavigationTarget GenericApproachDescriptor::approachSurface(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    double nearLimit, double farLimit) const {
+    double nearLimit, double farLimit, double surfaceTolerance) const {
   // almost always 2
   boost::container::small_vector<NavigationTarget, 4> targets;
   targets.reserve(m_surfaceCache.size());
   for (const Surface* surface : m_surfaceCache) {
-    auto multiIntersection =
-        surface->intersect(gctx, position, direction, boundaryTolerance);
+    auto multiIntersection = surface->intersect(
+        gctx, position, direction, boundaryTolerance, surfaceTolerance);
     for (auto [intersectionIndex, intersection] :
          Acts::enumerate(multiIntersection)) {
       if (intersection.isValid() &&
