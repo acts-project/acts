@@ -286,7 +286,8 @@ class DoubletSeedFinder {
   /// includes doublet cuts, steering switches, and assumptions about the space
   /// points.
   struct Config {
-    /// Whether the input space points are sorted by radius
+    /// Whether the candidate space points are sorted by ascending radius. If
+    /// true, the search stops at the first candidate outside the radial range.
     bool spacePointsSortedByRadius = false;
 
     /// Direction of the doublet candidate space points. Either forward, also
@@ -318,6 +319,7 @@ class DoubletSeedFinder {
     /// origin is within reasonable bounds
     float collisionRegionMin = -150 * UnitConstants::mm;
     /// Maximum collision region boundary in z-axis for doublet origin checks
+    /// Both bounds must be finite.
     float collisionRegionMax = +150 * UnitConstants::mm;
 
     /// Maximum allowed cotTheta between two space-points in doublet, used to
