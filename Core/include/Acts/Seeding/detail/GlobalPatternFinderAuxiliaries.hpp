@@ -94,6 +94,8 @@ concept PatternTopology =
     { T::sameLayer(hit1, hit2) } -> std::same_as<bool>;
     /// Return the group index of a hit.
     { T::groupIndex(hit1) } -> std::same_as<typename T::GroupIdx>;
+    /// Return whether two straw hits on the same layer are adjacent
+    //{ T::areAdjacentStraws(hit1, hit2) } -> std::same_as<bool>;
 };
 /** @brief Sectorization of the detector in the non-bending coordinate. 
  *  In this first implementation of GPF with toroidal azimuthal field,
@@ -267,7 +269,8 @@ struct PatternStateAux {
      *  @param gctx: geometry context
      *  @param beamSpot: position of the beam spot */
     void syncState(const GeometryContext& gctx,
-                   const BeamspotInfo& beamSpot);
+                   const BeamspotInfo& beamSpot,
+                   bool searchInNewGroup = false);
     /** @brief Book pattern state variables that need to be updated when syncState is called
      *  @param vars: list of variables to update */
     void setStateVars(const std::initializer_list<PatternStateVar>& vars);
@@ -385,6 +388,12 @@ struct PatternStateAux {
     /** @brief Print the pattern state with detailed information */
     static PatternPrintView detailed(const PatternStateAux& p);
 };
+
+/** Absolute difference of two layer indices, safe for any unsigned LayerIdx type */
+template <std::unsigned_integral T>
+constexpr T layerDistance(const T a, const T b) {
+    return a > b ? a - b : b - a;
+}
 
 }
 #include "Acts/Seeding/detail/GlobalPatternFinderAuxiliaries.ipp"
