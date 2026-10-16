@@ -116,6 +116,12 @@ if(PluginCovfie IN_LIST Acts_COMPONENTS)
     find_dependency(covfie @covfie_VERSION@ CONFIG EXACT)
 endif()
 
+if(PluginTraccc IN_LIST Acts_COMPONENTS)
+    find_dependency(vecmem @vecmem_VERSION@ CONFIG EXACT)
+    find_dependency(detray @detray_VERSION@ CONFIG EXACT)
+    find_dependency(traccc @traccc_VERSION@ CONFIG EXACT)
+endif()
+
 # load **all** available components. we can not just include the requested
 # components since there can be interdependencies between them.
 if(NOT Acts_FIND_QUIETLY)
