@@ -17,9 +17,7 @@
 namespace Acts::KalmanVertexUpdater::detail {
 
 /// Weight matrix G_k of the track parameters that enter the vertex fit, i.e.
-/// the inverse covariance of the bound parameters at the PCA: all of them if
-/// time is fitted, all but time otherwise. Both are computed once by the
-/// linearizer, so no matrix is inverted here.
+/// the inverse covariance of the bound parameters at the PCA.
 /// @tparam nBoundParams number of fitted bound parameters (5 or 6)
 /// @param linTrack the linearized track
 /// @return the weight matrix of the fitted bound parameters
