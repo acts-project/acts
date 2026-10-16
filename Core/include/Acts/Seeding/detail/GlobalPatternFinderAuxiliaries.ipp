@@ -35,7 +35,8 @@ template <GlobPatFinderHit Hit_t,
 void
 PatternStateAux<Hit_t, Sector_t, Topology_t>::syncState(
     const GeometryContext& gctx,
-    const BeamspotInfo& beamSpot)
+    const BeamspotInfo& beamSpot,
+    bool searchInNewGroup)
 {
     if (needUpdate[toUnderlying(PatternStateVar::eBendPlane)]) {
         updateBendPlane(gctx, beamSpot); 
@@ -46,6 +47,27 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::syncState(
         lineAnchorHit = prevLayerHit;
         needUpdate[toUnderlying(PatternStateVar::eLineAnchor)] = false;
         needUpdate[toUnderlying(PatternStateVar::eLine)] = true;
+    }
+    /** Searching in a group not yet reached: extrapolate with the line spanned by the
+     *  group of the last inserted hit (anchor = furthest hit from it). Once a hit in the
+     *  new group is accepted, addHit flags eLineAnchor and we return to the default anchor. */
+    const auto lastHitGroup {Topology_t::groupIndex(*lastInsertedHit)};
+    if (searchInNewGroup && lastHitGroup != Topology_t::groupIndex(*lineAnchorHit)) {
+        const auto& hits {hitsPerGroup[lastHitGroup]};
+        OrderedHit furthest {*std::ranges::max_element(hits, {},
+            [this](const OrderedHit& h) {
+                return layerDistance(h.globLayer, lastInsertedHit.globLayer); })};
+        if (furthest != lastInsertedHit && 
+                (projToPhiPlane(gctx, *furthest) - projToPhiPlane(gctx, *lastInsertedHit)).squaredNorm() 
+                    >= Acts::square(cfg->minHitDistance4Line)) {
+            lineAnchorHit = furthest;
+            needUpdate[toUnderlying(PatternStateVar::eLine)] = true;
+        } else if (lineAnchorHit.globLayer > lastInsertedHit.globLayer) {
+            // If the lever arm with the new anchor is too short, in case of 
+            // inward search we use the beamspot.
+            lineAnchorHit = lastInsertedHit;
+            needUpdate[toUnderlying(PatternStateVar::eLine)] = true;
+        }
     }
     if (needUpdate[toUnderlying(PatternStateVar::eLine)]) {
         updateLineParameters(gctx, beamSpot);
@@ -66,7 +88,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::moveLineAnchorHit(
         const auto& hits {*std::ranges::find_if(hitsPerGroup, [](const auto& h){ return !h.empty(); })};
         lineAnchorHit = *std::ranges::max_element(hits, std::ranges::less{},
             [&refHit](const OrderedHit& hit){
-                return std::abs(hit.globLayer - refHit.globLayer); });
+                return layerDistance(hit.globLayer, refHit.globLayer); });
         return;
     }
     const auto refGroup {Topology_t::groupIndex(*refHit)};
@@ -76,7 +98,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::moveLineAnchorHit(
             continue;
         }
         for (const auto& hit : hits) {
-            const unsigned dist = std::abs(hit.globLayer - refHit.globLayer);
+            const unsigned dist = layerDistance(hit.globLayer, refHit.globLayer);
             if (dist < bestDist) {
                 bestDist = dist;
                 lineAnchorHit = hit;
@@ -473,7 +495,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::defineLineAroundHit(
         lastInsertedHit = *std::ranges::max_element(groupHits, {},
             [&](const OrderedHit& c){ 
                 return (projToPhiPlane(gctx, *c) - 
-                        projToPhiPlane(gctx, *lineAnchorHit)).norm(); }); 
+                        projToPhiPlane(gctx, *lineAnchorHit)).squaredNorm(); }); 
         updateLineParameters(gctx, BeamspotInfo{});
     }
     if (useBeamspot) {

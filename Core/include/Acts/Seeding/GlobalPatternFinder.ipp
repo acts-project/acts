@@ -260,7 +260,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::extendPatterns(
     // Compute the minimum number of missed layer hits among the active patterns, 
     // to use as reference for pruning patterns with too many missed layers. 
     auto missedLayers = [&testHit](const PatternStateAux& pat) -> unsigned {
-        return std::abs(pat.lastInsertedHit.globLayer - testHit.globLayer);
+        return layerDistance(pat.lastInsertedHit.globLayer, testHit.globLayer);
     };
 
     unsigned minMissedLayers {std::numeric_limits<unsigned>::max()};
@@ -366,9 +366,12 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
     const OrderedHit& testHit,
     const BeamspotInfo& beamSpot) const
 {
-    const bool newLayer {testHit.globLayer != pat.lastInsertedHit.globLayer};
-    if (newLayer) {
-        pat.syncState(gctx, beamSpot);
+    const auto testHitGroup {Topology_t::groupIndex(*testHit)};
+    const bool searchInNewGroup {testHitGroup != Topology_t::groupIndex(*pat.lastInsertedHit)};
+    const bool searchInNewLayer {testHit.globLayer != pat.lastInsertedHit.globLayer};
+    assert(!searchInNewGroup || searchInNewLayer);
+    if (searchInNewLayer) {
+        pat.syncState(gctx, beamSpot, searchInNewGroup);
     }
     if (testHit->spacePoint()->measuresLoc0() && !isPhiCompatible(gctx, pat, *testHit)) {
         ACTS_VERBOSE(__func__<<"() Test hit phi "<<VectorHelpers::phi(testHit->globalPosition(gctx))
@@ -383,11 +386,9 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
         LineTestRes res {pat.computeLineResidual(gctx, testHit, beamSpot)};
         double accWindow {(res.nDof==1u ? m_cfg.nResidualSigma : m_cut2Dof) * res.sigma};
         /** Loosen the window when we use the beamspot or when we are looking for hits in a new group, as
-            *  the straight line approximation becomes less accurate on large distances. TO DO: investigate this further */
-        if (pat.useBeamspot || 
-            Topology_t::groupIndex(*testHit) != Topology_t::groupIndex(*pat.lastInsertedHit) ||
-            (Topology_t::groupIndex(*testHit) != Topology_t::groupIndex(*pat.prevLayerHit) 
-                && testHit.globLayer == pat.lastInsertedHit.globLayer)) {
+         *  the straight line approximation becomes less accurate on large distances. TO DO: investigate this further */
+        if (pat.useBeamspot || searchInNewGroup ||
+                (testHitGroup != Topology_t::groupIndex(*pat.prevLayerHit) && !searchInNewLayer)) {
             accWindow *= m_cfg.loosenAcceptanceFactor;
         }
         if (res.residual < accWindow) {
@@ -396,7 +397,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
         return std::make_pair(LineTestDecision::eRejectHit, res);
     };
 
-    if(newLayer) {
+    if(searchInNewLayer) {
         return makeResult(LineTestDecision::eAddHit);
     }
     if (testHit == pat.lastInsertedHit) {
@@ -547,30 +548,30 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::areOverlapping(
         }
     }
     /** If we reach here, the patterns can overlap geometrically, so check the hit content */
-    std::size_t nSharedHits{0}, nSharedGroups{0};
+    std::size_t nSharedHits{0}, nSharedGroups{0}, nCommonGroups{0};
     for (std::size_t st{0u}; st < Topology_t::nGroups; ++st) {
         const auto& hitsA {a.hitsPerGroup[st]};
         const auto& hitsB {b.hitsPerGroup[st]};
         if (hitsA.empty() || hitsB.empty()) {
             continue;
         }
+        ++nCommonGroups;
         const std::size_t nSharedInGroup = std::ranges::count_if(hitsA, [&](const OrderedHit& hitA){
             return std::ranges::any_of(hitsB, [&hitA](const OrderedHit& hitB) {
                 return hitA == hitB || hitA->overlaps(*hitB);
             });
         });
         nSharedHits += nSharedInGroup;
-        if (nSharedInGroup >= m_cfg.minGroupLayers) {
-            nSharedGroups++;
+        /** A group is shared if the majority of the smaller pattern's hits in it are shared */
+        if (2u * nSharedInGroup > std::min(hitsA.size(), hitsB.size())) {
+            ++nSharedGroups;
         }
     }
     /** Overlap if more than 50% of the hits of the smaller pattern are shared */
     const std::size_t minHits {std::min(a.nBendingLayers(), 
                                         b.nBendingLayers())};
-    const std::size_t minGroups {std::min(countGoodGroups(a), 
-                                            countGoodGroups(b))};
-    return nSharedHits >= 0.5 *minHits && 
-           nSharedGroups >= std::min(2ul, minGroups);
+    return 2u *nSharedHits >= minHits && 
+           nSharedGroups >= std::min<std::size_t>(m_cfg.minGroups, nCommonGroups);
 }
 
 template<GlobPatFinderHit Hit_t,
@@ -716,7 +717,6 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
     }
     std::swap(patterns, survivingPatterns);
 }
-
 
 template<GlobPatFinderHit Hit_t,
          SectorType Sector_t,
