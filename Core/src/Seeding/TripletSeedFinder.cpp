@@ -122,11 +122,17 @@ class Impl final : public TripletSeedFinder {
       // use geometric average
       const float cotThetaAvg2 = cotThetaB * cotThetaT;
 
-      // add errors of spB-spM and spM-spT pairs and add the correlation term
-      // for errors on spM
-      const float error2 = topDoublet.er() + erB +
-                           2 * (cotThetaAvg2 * varianceRM + varianceZM) *
-                               iDeltaRB * topDoublet.iDeltaR();
+      // squared error of the cotTheta difference: the errors of the spB-spM
+      // and spM-spT pairs and the correlation term for spM. Never negative:
+      // the middle space point's variances in the two pair errors and the
+      // correlation term add up to squares, and the outer space points' terms
+      // are not negative. So each cut below can only fire once deltaCotTheta2
+      // exceeds its scattering term alone, and the error is only computed then.
+      const auto error2 = [&, &top = topDoublet] {
+        return top.er() + erB +
+               2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
+                   top.iDeltaR();
+      };
 
       const float deltaCotTheta = cotThetaB - cotThetaT;
       const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
@@ -141,7 +147,8 @@ class Impl final : public TripletSeedFinder {
       // (scatteringInRegion2). This assumes gaussian error propagation which
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
-      if (deltaCotTheta2 > error2 + scatteringInRegion2) {
+      if (deltaCotTheta2 > scatteringInRegion2 &&
+          deltaCotTheta2 > error2() + scatteringInRegion2) {
         if constexpr (sortedByCotTheta) {
           // skip top SPs based on cotTheta sorting when producing triplets
           // break if cotTheta from bottom SP < cotTheta from top SP because
@@ -189,7 +196,8 @@ class Impl final : public TripletSeedFinder {
       // from rad to deltaCotTheta
       const float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
-      if (deltaCotTheta2 > error2 + p2scatterSigma) {
+      if (deltaCotTheta2 > p2scatterSigma &&
+          deltaCotTheta2 > error2() + p2scatterSigma) {
         if constexpr (sortedByCotTheta) {
           if (cotThetaB < cotThetaT) {
             break;
@@ -403,11 +411,16 @@ class Impl final : public TripletSeedFinder {
       const float averageCotTheta = 0.5f * (cotThetaB + cotThetaT);
       const float cotThetaAvg2 = averageCotTheta * averageCotTheta;
 
-      // add errors of spB-spM and spM-spT pairs and add the correlation term
-      // for errors on spM
-      const float error2 = topDoublet.er() + erB +
-                           2 * (cotThetaAvg2 * varianceRM + varianceZM) *
-                               iDeltaRB * topDoublet.iDeltaR();
+      // squared error of the cotTheta difference: the errors of the spB-spM
+      // and spM-spT pairs and the correlation term for spM. Never negative,
+      // since every term is not negative. So each cut below can only fire once
+      // deltaCotTheta2 exceeds its scattering term alone, and the error is
+      // only computed then.
+      const auto error2 = [&, &top = topDoublet] {
+        return top.er() + erB +
+               2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
+                   top.iDeltaR();
+      };
 
       const float deltaCotTheta = cotThetaB - cotThetaT;
       const float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
@@ -422,7 +435,8 @@ class Impl final : public TripletSeedFinder {
       // (scatteringInRegion2). This assumes gaussian error propagation which
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
-      if (deltaCotTheta2 > error2 + scatteringInRegion2) {
+      if (deltaCotTheta2 > scatteringInRegion2 &&
+          deltaCotTheta2 > error2() + scatteringInRegion2) {
         // skip top SPs based on cotTheta sorting when producing triplets
         continue;
       }
@@ -462,7 +476,8 @@ class Impl final : public TripletSeedFinder {
       // from rad to deltaCotTheta
       const float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
-      if (deltaCotTheta2 > error2 + p2scatterSigma) {
+      if (deltaCotTheta2 > p2scatterSigma &&
+          deltaCotTheta2 > error2() + p2scatterSigma) {
         continue;
       }
 
