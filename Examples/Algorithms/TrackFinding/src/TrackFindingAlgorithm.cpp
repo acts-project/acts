@@ -574,8 +574,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
             ACTS_WARNING("Second track finding failed for seed "
                          << iSeed << " with error" << secondResult.error());
           } else {
-            // store the original previous state to restore it later
+            // store the original previous state and jacobian to restore them
             auto originalFirstMeasurementPrevious = firstMeasurement.previous();
+            const Acts::BoundMatrix originalFirstMeasurementJacobian =
+                firstMeasurement.jacobian();
 
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
@@ -589,10 +591,15 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               // Note that this is only valid if there are no branches
               // We disallow this by breaking this look after a second track was
               // processed
-              secondTrackCopy.reverseTrackStates(true);
+              std::optional<Acts::BoundMatrix> stitchJacobian =
+                  secondTrackCopy.reverseTrackStates(true);
 
               firstMeasurement.previous() =
                   secondTrackCopy.outermostTrackState().index();
+              // transport from the second pass to the first measurement
+              if (stitchJacobian.has_value()) {
+                firstMeasurement.jacobian() = *stitchJacobian;
+              }
 
               // Retain tip and stem index of the first track
               auto tipIndex = trackCandidate.tipIndex();
@@ -650,8 +657,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               ++nSecond;
             }
 
-            // restore the original previous state
+            // restore the original previous state and jacobian
             firstMeasurement.previous() = originalFirstMeasurementPrevious;
+            firstMeasurement.jacobian() = originalFirstMeasurementJacobian;
           }
         }
       }
