@@ -24,14 +24,8 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
-#include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Surfaces/CylinderBounds.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsPlugins/Json/ITrackingGeometryJsonDecorator.hpp"
@@ -108,83 +102,11 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
   if (surface->surfaceMaterialSharedPtr() != nullptr) {
     return {surface, surface->surfaceMaterialSharedPtr(), context};
   }
-  Acts::BinUtility bUtility;
-  // Check which type of bounds is associated to the surface
-  const Acts::SurfaceBounds& surfaceBounds = surface->bounds();
-  const Acts::RadialBounds* radialBounds =
-      dynamic_cast<const Acts::RadialBounds*>(&surfaceBounds);
-  const Acts::CylinderBounds* cylinderBounds =
-      dynamic_cast<const Acts::CylinderBounds*>(&surfaceBounds);
-  const Acts::AnnulusBounds* annulusBounds =
-      dynamic_cast<const Acts::AnnulusBounds*>(&surfaceBounds);
-  const Acts::RectangleBounds* rectangleBounds =
-      dynamic_cast<const Acts::RectangleBounds*>(&surfaceBounds);
-  const Acts::TrapezoidBounds* trapezoidBounds =
-      dynamic_cast<const Acts::TrapezoidBounds*>(&surfaceBounds);
-
-  if (radialBounds != nullptr) {
-    bUtility += Acts::BinUtility(
-        1,
-        radialBounds->get(Acts::RadialBounds::eAveragePhi) -
-            radialBounds->get(Acts::RadialBounds::eHalfPhiSector),
-        radialBounds->get(Acts::RadialBounds::eAveragePhi) +
-            radialBounds->get(Acts::RadialBounds::eHalfPhiSector),
-        (radialBounds->get(Acts::RadialBounds::eHalfPhiSector) -
-         std::numbers::pi) < Acts::s_epsilon
-            ? Acts::closed
-            : Acts::open,
-        Acts::AxisDirection::AxisPhi);
-    bUtility += Acts::BinUtility(1, radialBounds->rMin(), radialBounds->rMax(),
-                                 Acts::open, Acts::AxisDirection::AxisR);
-  }
-  if (cylinderBounds != nullptr) {
-    bUtility += Acts::BinUtility(
-        1,
-        cylinderBounds->get(Acts::CylinderBounds::eAveragePhi) -
-            cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector),
-        cylinderBounds->get(Acts::CylinderBounds::eAveragePhi) +
-            cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector),
-        (cylinderBounds->get(Acts::CylinderBounds::eHalfPhiSector) -
-         std::numbers::pi) < Acts::s_epsilon
-            ? Acts::closed
-            : Acts::open,
-        Acts::AxisDirection::AxisPhi);
-    bUtility += Acts::BinUtility(
-        1, -1 * cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ),
-        cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ), Acts::open,
-        Acts::AxisDirection::AxisZ);
-  }
-  if (annulusBounds != nullptr) {
-    bUtility +=
-        Acts::BinUtility(1, annulusBounds->get(Acts::AnnulusBounds::eMinPhiRel),
-                         annulusBounds->get(Acts::AnnulusBounds::eMaxPhiRel),
-                         Acts::open, Acts::AxisDirection::AxisPhi);
-    bUtility += Acts::BinUtility(1, static_cast<float>(annulusBounds->rMin()),
-                                 static_cast<float>(annulusBounds->rMax()),
-                                 Acts::open, Acts::AxisDirection::AxisR);
-  }
-  if (rectangleBounds != nullptr) {
-    bUtility +=
-        Acts::BinUtility(1, rectangleBounds->get(Acts::RectangleBounds::eMinX),
-                         rectangleBounds->get(Acts::RectangleBounds::eMaxX),
-                         Acts::open, Acts::AxisDirection::AxisX);
-    bUtility +=
-        Acts::BinUtility(1, rectangleBounds->get(Acts::RectangleBounds::eMinY),
-                         rectangleBounds->get(Acts::RectangleBounds::eMaxY),
-                         Acts::open, Acts::AxisDirection::AxisY);
-  }
-  if (trapezoidBounds != nullptr) {
-    double halfLengthX =
-        std::max(trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXnegY),
-                 trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXposY));
-    bUtility += Acts::BinUtility(1, -1 * halfLengthX, halfLengthX, Acts::open,
-                                 Acts::AxisDirection::AxisX);
-    bUtility += Acts::BinUtility(
-        1, -1 * trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY),
-        trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY), Acts::open,
-        Acts::AxisDirection::AxisY);
-  }
-  return {surface, std::make_shared<Acts::ProtoSurfaceMaterial>(bUtility),
+  const auto directions = surface->localAxes();
+  return {surface,
+          std::make_shared<Acts::ProtoSurfaceMaterial>(Acts::MultiAxisSpec2D(
+              {Acts::AxisSpec::DeferredEquidistant(1, directions[0]),
+               Acts::AxisSpec::DeferredEquidistant(1, directions[1])})),
           context};
 }
 

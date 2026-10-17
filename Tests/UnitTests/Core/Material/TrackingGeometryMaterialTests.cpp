@@ -28,7 +28,9 @@ std::shared_ptr<CylinderSurface> keyedSurface(std::uint64_t id,
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20., 100.);
   surface->assignGeometryId(GeometryIdentifier().withSensitive(id));
   surface->assignSurfaceMaterial(std::make_shared<ProtoSurfaceMaterial>(
-      BinUtility{}, MappingType::Default, std::move(key)));
+      MultiAxisSpec2D(
+          {AxisSpec::DeferredEquidistant(1), AxisSpec::DeferredEquidistant(1)}),
+      MappingType::Default, std::move(key)));
   return surface;
 }
 

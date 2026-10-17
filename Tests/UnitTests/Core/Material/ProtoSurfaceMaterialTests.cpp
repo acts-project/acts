@@ -9,8 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <utility>
 
@@ -22,11 +20,24 @@ BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(ProtoSurfaceMaterial_construction_test) {
-  BinUtility smpBU(10, -10., 10., open, AxisDirection::AxisX);
-  smpBU += BinUtility(10, -10., 10., open, AxisDirection::AxisY);
-
-  // Constructor from arguments
-  ProtoSurfaceMaterial smp(smpBU);
+  using enum AxisDirection;
+  MultiAxisSpec2D binning({AxisSpec::DeferredEquidistant(10, AxisX),
+                           AxisSpec::DeferredEquidistant(20, AxisY)});
+  ProtoSurfaceMaterial smp(binning, MappingType::PreMapping, "test/material");
+  BOOST_CHECK(smp.binning() == binning);
+  BOOST_CHECK(smp.mappingType() == MappingType::PreMapping);
+  BOOST_REQUIRE(smp.materialKey());
+  BOOST_CHECK_EQUAL(*smp.materialKey(), "test/material");
+  BOOST_CHECK(&smp.scale(2.) == &smp);
+  BOOST_CHECK(smp.materialSlab(Vector2::Zero().eval()) ==
+              MaterialSlab::Nothing());
+  BOOST_CHECK_THROW(ProtoSurfaceMaterial(binning, MappingType::Default, ""),
+                    std::invalid_argument);
+  ProtoSurfaceMaterial homogeneous;
+  BOOST_CHECK(homogeneous.binning().isDeferred());
+  for (const auto& axis : homogeneous.binning().axisSpecs()) {
+    BOOST_CHECK_EQUAL(axis.nBins(), 1u);
+  }
   // Copy constructor
   ProtoSurfaceMaterial smpCopy(smp);
   // Copy move constructor
