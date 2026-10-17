@@ -16,7 +16,9 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Utilities/AxisSpec.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/Json/detail/JsonIo.hpp"
+#include "ActsPlugins/Json/detail/ProtoSurfaceMaterialConversion.hpp"
 
 #include <algorithm>
 #include <array>
@@ -553,7 +555,6 @@ void checkKey(const ISurfaceMaterial& material, const std::string& key) {
     }
   };
   checkProto(dynamic_cast<const ProtoSurfaceMaterial*>(&material));
-  checkProto(dynamic_cast<const ProtoGridSurfaceMaterial*>(&material));
 }
 
 nlohmann::json encodeHomogeneousSurface(const HomogeneousSurfaceMaterial& m,
@@ -603,26 +604,20 @@ std::unique_ptr<const ISurfaceMaterial> decodeBinned(
                                                  mapping);
 }
 
-nlohmann::json encodeProtoSurface(const ProtoSurfaceMaterial& m,
-                                  EncodeContext& /*context*/) {
-  nlohmann::json j{{"kind", "proto"},
-                   {"settings", settings(m)},
-                   {"binning", encodeBinning(m.binning())}};
-  if (const auto& key = m.materialKey(); key) {
-    j["material_key"] = *key;
-  }
-  return j;
-}
-
+// Keep the deprecated conversion available only for reading legacy payloads.
+ACTS_PUSH_IGNORE_DEPRECATED()
 std::unique_ptr<const ISurfaceMaterial> decodeProtoSurface(
     const nlohmann::json& j, const DecodeContext& context) {
   auto [split, mapping] = settings(j.at("settings"));
   check(split == 1, "proto surface split factor must be one");
   return std::make_unique<ProtoSurfaceMaterial>(
-      decodeBinning(j.at("binning"), 0, 2, context), mapping, materialKey(j));
+      detail::protoSurfaceMaterialBinning(
+          decodeBinning(j.at("binning"), 0, 2, context)),
+      mapping, materialKey(j));
 }
+ACTS_POP_IGNORE_DEPRECATED()
 
-nlohmann::json encodeProtoGrid(const ProtoGridSurfaceMaterial& m,
+nlohmann::json encodeProtoGrid(const ProtoSurfaceMaterial& m,
                                EncodeContext& /*context*/) {
   nlohmann::json j{{"kind", "proto-grid"},
                    {"settings", settings(m)},
@@ -644,8 +639,7 @@ std::unique_ptr<const ISurfaceMaterial> decodeProtoGrid(
   MultiAxisSpec2D axes(
       std::array<AxisSpec, 2>{decodeAxis(j.at("axes").at(0), true, context),
                               decodeAxis(j.at("axes").at(1), true, context)});
-  return std::make_unique<ProtoGridSurfaceMaterial>(axes, mapping,
-                                                    materialKey(j));
+  return std::make_unique<ProtoSurfaceMaterial>(axes, mapping, materialKey(j));
 }
 
 nlohmann::json encodeMarker(const MergedMaterialMarker& m,
@@ -868,7 +862,6 @@ TrackingGeometryMaterialJsonConverter::Config::defaultConfig() {
   c.encodeSurface.registerFunction(encodeHomogeneousSurface)
       .registerFunction(encodeBinned)
       .registerFunction(encodeGrid)
-      .registerFunction(encodeProtoSurface)
       .registerFunction(encodeProtoGrid)
       .registerFunction(encodeMarker);
   c.decodeSurface.registerKind("homogeneous", decodeHomogeneousSurface)
