@@ -14,7 +14,9 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -33,6 +35,17 @@
 #include <vector>
 
 namespace Acts {
+
+/// @brief Placement and bounds of a passive (non-sensitive) volume, as
+/// reported by a blueprint backend.
+///
+/// @see BlueprintBuilder::makePassiveElement
+struct PassiveVolumeShape {
+  /// Transform of the volume in the global frame.
+  Transform3 transform = Transform3::Identity();
+  /// Bounds of the volume.
+  std::shared_ptr<VolumeBounds> bounds;
+};
 
 namespace detail {
 
@@ -169,6 +182,19 @@ concept HasLayerNameMember =
                                        std::optional<std::string> layerName) {
       layerSpec.layerName = std::move(layerName);
       { layerSpec.layerName.has_value() } -> std::convertible_to<bool>;
+    };
+
+/// @brief Optional backend capability to describe a passive (non-sensitive)
+/// element as a volume.
+///
+/// Backends that satisfy this concept enable
+/// @ref BlueprintBuilder::makePassiveElement, which wraps the returned shape
+/// into a @ref StaticBlueprintNode. The backend only has to translate its
+/// native shape description; volume and node creation are generic.
+template <typename BackendT>
+concept HasPassiveVolumeShape =
+    requires(const BackendT& backend, const typename BackendT::Element& elem) {
+      { backend.passiveVolumeShape(elem) } -> std::same_as<PassiveVolumeShape>;
     };
 
 /// @brief Optional backend capability for barrel/endcap assembly discovery.
@@ -982,7 +1008,9 @@ class BarrelEndcapAssembler {
 /// - @ref BlueprintBuilder::layerFromSensors() returns a @ref SensorLayer for
 ///   building a single layer directly from sensor elements,
 /// - @ref BlueprintBuilder::barrelEndcap() returns a
-///   @ref BarrelEndcapAssembler for combined barrel+endcap sub-detectors.
+///   @ref BarrelEndcapAssembler for combined barrel+endcap sub-detectors,
+/// - @ref BlueprintBuilder::makePassiveElement() creates a plain volume for a
+///   passive (non-sensitive) element that carries material.
 ///
 /// It also exposes helpers for traversing and querying the detector element
 /// hierarchy, which are used internally by the assembler classes.
@@ -1164,6 +1192,22 @@ class BlueprintBuilder {
   /// @return Vector of endcap elements in depth-first order.
   std::vector<Element> findEndcapElements(const Element& assembly) const
     requires(detail::HasBarrelEndcapClassifier<Backend>);
+
+  /// @brief Create a @ref StaticBlueprintNode for a passive detector element.
+  ///
+  /// Use for elements that carry material but have no sensitive surfaces of
+  /// their own (e.g. support tubes or endplates). The backend describes the
+  /// element's shape via `passiveVolumeShape()`; this method turns it into a
+  /// plain volume, which can then be wrapped in
+  /// @ref BlueprintNode::addMaterial like any other node.
+  /// @param element    Passive detector element.
+  /// @param volumeName Name of the created volume. Defaults to the element's
+  ///                   own name; pass an explicit, unique name if the
+  ///                   element's name is shared by several instances.
+  /// @return Shared pointer to the created @ref StaticBlueprintNode.
+  std::shared_ptr<StaticBlueprintNode> makePassiveElement(
+      const Element& element, const std::string& volumeName = "") const
+    requires(detail::HasPassiveVolumeShape<Backend>);
 
   /// @brief Return the logger associated with this builder.
   /// @return Reference to the logger instance.

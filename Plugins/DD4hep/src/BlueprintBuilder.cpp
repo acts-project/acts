@@ -9,10 +9,12 @@
 #include "ActsPlugins/DD4hep/BlueprintBuilder.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 // Needed for explicit instantiation of template methods.
 #include "Acts/Geometry/detail/BlueprintBuilder_impl.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
@@ -185,6 +187,60 @@ std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makeBeampipe() const {
       bounds->get(Acts::CylinderBounds::eHalfLengthZ));
   auto volume = std::make_unique<Acts::TrackingVolume>(transform, volumeBounds,
                                                        beampipeElement->name());
+  return std::make_shared<Acts::StaticBlueprintNode>(std::move(volume));
+}
+
+Acts::PassiveVolumeShape DD4hepBackend::passiveVolumeShape(
+    const Element& element) const {
+  const auto tgTransform = element.nominal().worldTransformation();
+  const auto& shape = *element.placement().ptr()->GetVolume()->GetShape();
+  const auto* rotation = tgTransform.GetRotationMatrix();
+  const auto* translation = tgTransform.GetTranslation();
+
+  // Try a tube-shaped conversion first: cylinderComponents only succeeds
+  // when the shape's z half-length exceeds its radial thickness (i.e.
+  // actual tube-like shapes, e.g. a support tube), and returns null bounds
+  // otherwise -- no exception, so falling through to the disc case below is
+  // safe.
+  auto [cylBounds, cylTransform, cylThickness] =
+      ActsPlugins::TGeoSurfaceConverter::cylinderComponents(
+          shape, rotation, translation, "XYZ", m_cfg.lengthScale);
+  if (cylBounds != nullptr) {
+    const double medR = cylBounds->get(Acts::CylinderBounds::eR);
+    return {cylTransform,
+            std::make_shared<Acts::CylinderVolumeBounds>(
+                medR - cylThickness / 2.0, medR + cylThickness / 2.0,
+                cylBounds->get(Acts::CylinderBounds::eHalfLengthZ))};
+  }
+
+  // Not tube-shaped -- try the opposite aspect ratio (radial extent larger
+  // than z half-length, e.g. an endplate) via discComponents, which has no
+  // such aspect-ratio restriction.
+  auto [discBounds, discTransform, discThickness] =
+      ActsPlugins::TGeoSurfaceConverter::discComponents(
+          shape, rotation, translation, "XYZ", m_cfg.lengthScale);
+  if (discBounds == nullptr) {
+    ACTS_ERROR("Element '" << element.name()
+                           << "' shape could not be converted to either a "
+                              "cylinder or a disc.");
+    throw std::runtime_error(
+        "Passive element shape could not be converted to either a cylinder "
+        "or a disc.");
+  }
+
+  return {discTransform,
+          std::make_shared<Acts::CylinderVolumeBounds>(
+              discBounds->rMin(), discBounds->rMax(), discThickness / 2.0)};
+}
+
+std::shared_ptr<Acts::StaticBlueprintNode> DD4hepBackend::makeMaterialCollector(
+    double rMin, double rMax, double halfLengthZ, double zCenter,
+    const std::string& name) const {
+  auto volumeBounds =
+      std::make_shared<Acts::CylinderVolumeBounds>(rMin, rMax, halfLengthZ);
+  const Acts::Transform3 transform{Acts::Translation3(0., 0., zCenter)};
+  auto volume =
+      std::make_unique<Acts::TrackingVolume>(transform, volumeBounds, name);
   return std::make_shared<Acts::StaticBlueprintNode>(std::move(volume));
 }
 
