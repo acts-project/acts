@@ -266,15 +266,16 @@ AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
   double dz = localZAxis.dot(direction);
   double norm = 1 / (1 - dz * dz);
   // Calculate the derivative of local frame axes w.r.t its rotation
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
   auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      detail::rotationToLocalAxesDerivative(
-          localToGlobalTransform(gctx).rotation());
+      detail::rotationToLocalAxesDerivative(rotation);
 
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
   AlignmentToPathMatrix alignToPath = AlignmentToPathMatrix::Zero();
-  alignToPath.segment<3>(eAlignmentCenter0) =
-      norm * (direction.transpose() - dz * localZAxis.transpose());
+  const Vector3 globalCenterDerivative = norm * (direction - dz * localZAxis);
+  detail::setAlignToPathLocalCenterDerivative(alignToPath,
+                                              globalCenterDerivative, rotation);
   alignToPath.segment<3>(eAlignmentRotation0) =
       norm * (dz * pcRowVec.transpose() + pz * direction.transpose()) *
       rotToLocalZAxis;
