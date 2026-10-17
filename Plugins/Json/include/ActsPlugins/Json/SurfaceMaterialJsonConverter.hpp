@@ -30,9 +30,8 @@ class MaterialJsonDecodeContext;
 
 /// Static class performing the JSON conversion of surface material
 ///
-/// The encoding side is a @c TypeDispatcher registered on the concrete
-/// (or, for the grid family, the abstract templated) material types, the
-/// decoding side a @c JsonKindDispatcher keyed on the payload type tag.
+/// The encoding side is a @c TypeDispatcher registered on concrete material
+/// types, the decoding side a @c JsonKindDispatcher keyed on the payload type tag.
 class SurfaceMaterialJsonConverter {
  public:
   /// Context collecting the slab stores of the document being written
@@ -81,6 +80,8 @@ class SurfaceMaterialJsonConverter {
                                EncodeContext* context = nullptr);
 
   /// Convert a json payload back into surface material
+  /// Legacy proto payloads using BinUtility and the former proto-grid tag
+  /// are converted to ProtoSurfaceMaterial with MultiAxisSpec2D on input.
   ///
   /// @param jMaterial the json payload of the material
   /// @param config the converter configuration

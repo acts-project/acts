@@ -1,5 +1,7 @@
 import json
 
+from materialBinning import binning, binningDirection
+
 
 def dumper(obj):
     try:
@@ -488,8 +490,11 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                         entry["value"]["material"]["mapMaterial"] = True
 
                 if entry["value"]["material"]["mapMaterial"]:
-                    for val in entry["value"]["material"]["binUtility"]["binningdata"]:
-                        if val["value"] == "binZ" or val["value"] == "binR":
+                    for val in binning(entry["value"]["material"]):
+                        if (
+                            binningDirection(val) == "binZ"
+                            or binningDirection(val) == "binR"
+                        ):
                             val["bins"] = layer_data[index_to_names[vol - 1]][
                                 "activeBinningRorZ"
                             ]
@@ -518,8 +523,8 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                     " - Approach:",
                     approach_index,
                 )
-                for val in entry["value"]["material"]["binUtility"]["binningdata"]:
-                    print("-->", val["value"], ": ", val["bins"])
+                for val in binning(entry["value"]["material"]):
+                    print("-->", binningDirection(val), ": ", val["bins"])
 
         if "boundary" in entry:
             extends = []
@@ -531,9 +536,9 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                 in layer_data[index_to_names[vol - 1]]["boundaries"]
             ):
                 entry["value"]["material"]["mapMaterial"] = True
-                for val in entry["value"]["material"]["binUtility"]["binningdata"]:
+                for val in binning(entry["value"]["material"]):
                     if entry["value"]["type"] == "CylinderSurface":
-                        if val["value"] == "binZ":
+                        if binningDirection(val) == "binZ":
                             val["bins"] = layer_data[index_to_names[vol - 1]][
                                 "passiveCylinderBinningZ"
                             ]
@@ -542,7 +547,7 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                                 "passiveCylinderBinningPhi"
                             ]
                     elif entry["value"]["type"] == "DiscSurface":
-                        if val["value"] == "binR":
+                        if binningDirection(val) == "binR":
                             val["bins"] = layer_data[index_to_names[vol - 1]][
                                 "passiveDiscBinningR"
                             ]
@@ -570,8 +575,8 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                     " - Boundary:",
                     entry["boundary"],
                 )
-                for val in entry["value"]["material"]["binUtility"]["binningdata"]:
-                    print("-->", val["value"], ": ", val["bins"])
+                for val in binning(entry["value"]["material"]):
+                    print("-->", binningDirection(val), ": ", val["bins"])
 
     # Once you have all the data in hands, you make a few nice plots to show volumes and surfaces
 

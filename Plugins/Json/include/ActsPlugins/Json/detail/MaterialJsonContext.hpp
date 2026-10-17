@@ -9,9 +9,12 @@
 #pragma once
 
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
+#include <array>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -88,6 +91,18 @@ class MaterialJsonDecodeContext {
   /// Default construction, no store table is available
   MaterialJsonDecodeContext() = default;
 
+  /// Set the local axes of the owning surface to disambiguate legacy
+  /// one-dimensional proto binning at the I/O boundary.
+  /// @param axes the owning surface's local axes
+  void setSurfaceAxes(std::array<AxisDirection, 2> axes) {
+    m_surfaceAxes = axes;
+  }
+
+  /// @return the local axes of the owning surface, when known
+  const std::optional<std::array<AxisDirection, 2>>& surfaceAxes() const {
+    return m_surfaceAxes;
+  }
+
   /// Install the slab store table of the document
   ///
   /// @param stores the stores, indexed by their document id
@@ -123,6 +138,7 @@ class MaterialJsonDecodeContext {
   std::size_t size() const { return m_stores.size(); }
 
  private:
+  std::optional<std::array<AxisDirection, 2>> m_surfaceAxes;
   bool m_storeTable = false;
   std::vector<MaterialSlabStore> m_stores;
 };

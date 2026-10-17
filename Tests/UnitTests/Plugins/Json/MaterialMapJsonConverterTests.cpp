@@ -20,12 +20,14 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Json/IVolumeMaterialJsonDecorator.hpp"
 #include "ActsPlugins/Json/JsonMaterialDecorator.hpp"
 #include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
+#include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 #include "ActsTests/CommonHelpers/DataDirectory.hpp"
 
 #include <cstdio>
@@ -71,6 +73,28 @@ BOOST_AUTO_TEST_CASE(RoundtripFromFile) {
   BOOST_CHECK_EQUAL(refJson, encodedJson);
 }
 
+BOOST_AUTO_TEST_CASE(LegacyPhiOnlyGeometryDump) {
+  MaterialMapJsonConverter converter({}, Logging::INFO);
+  const auto id = GeometryIdentifier().withVolume(1).withBoundary(2);
+  TrackingGeometryMaterial maps;
+  maps.surfaceMaterials.emplace(id, std::make_shared<ProtoSurfaceMaterial>());
+  auto json = converter.materialMapsToJson(maps);
+  auto& entry = json["Surfaces"]["entries"][0]["value"];
+  entry["material"].erase("axis_specs");
+  entry["material"]["binUtility"] =
+      BinUtility(8, -1., 1., closed, AxisDirection::AxisPhi);
+  for (const auto* type : {"CylinderSurface", "DiscSurface"}) {
+    entry["type"] = type;
+    auto restored = converter.jsonToMaterialMaps(json);
+    auto* proto = dynamic_cast<const ProtoSurfaceMaterial*>(
+        restored.surfaceMaterials.at(id).get());
+    BOOST_REQUIRE(proto != nullptr);
+    const bool cylinder = std::string(type) == "CylinderSurface";
+    BOOST_CHECK_EQUAL(proto->binning().axisSpec(cylinder ? 0 : 1).nBins(), 8u);
+    BOOST_CHECK_EQUAL(proto->binning().axisSpec(cylinder ? 1 : 0).nBins(), 1u);
+  }
+}
+
 namespace {
 std::shared_ptr<CylinderSurface> keyedCylinder(std::uint64_t id,
                                                const std::string& key,
@@ -78,7 +102,7 @@ std::shared_ptr<CylinderSurface> keyedCylinder(std::uint64_t id,
   auto surface = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
                                                       radius, 100.);
   surface->assignGeometryId(GeometryIdentifier().withSensitive(id));
-  surface->assignSurfaceMaterial(std::make_shared<ProtoGridSurfaceMaterial>(
+  surface->assignSurfaceMaterial(std::make_shared<ProtoSurfaceMaterial>(
       MultiAxisSpec2D(
           {AxisSpec::DeferredEquidistant(2, AxisDirection::AxisRPhi),
            AxisSpec::DeferredEquidistant(2, AxisDirection::AxisZ)}),
@@ -166,8 +190,7 @@ BOOST_AUTO_TEST_CASE(KeyedMapValidationAndLegacyFallback) {
   BOOST_CHECK(resized->surfaceMaterialSharedPtr() == material);
 
   // Unkeyed targets retain ID-based assignment.
-  b->assignSurfaceMaterial(
-      std::make_shared<ProtoSurfaceMaterial>(BinUtility{}));
+  b->assignSurfaceMaterial(std::make_shared<ProtoSurfaceMaterial>());
   BOOST_CHECK_NO_THROW(loader.apply(*b));
   BOOST_CHECK(b->surfaceMaterialSharedPtr() == material);
 
@@ -188,8 +211,7 @@ BOOST_AUTO_TEST_CASE(KeysSurviveProtoAndSurfaceSerialization) {
   auto payload =
       SurfaceMaterialJsonConverter::toJson(*source->surfaceMaterial());
   auto restored = SurfaceMaterialJsonConverter::fromJson(payload);
-  const auto* proto =
-      dynamic_cast<const ProtoGridSurfaceMaterial*>(restored.get());
+  const auto* proto = dynamic_cast<const ProtoSurfaceMaterial*>(restored.get());
   BOOST_REQUIRE(proto != nullptr);
   BOOST_CHECK_EQUAL(*proto->materialKey(), "stable/key");
   const auto gctx = GeometryContext::dangerouslyDefaultConstruct();

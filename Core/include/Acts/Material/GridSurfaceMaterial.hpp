@@ -97,9 +97,9 @@ class GridSurfaceMaterial final : public ISurfaceMaterial {
   /// Create a @c GridSurfaceMaterial with direct storage by resolving a
   /// multi-axis spec against a surface
   ///
-  /// This follows the same pattern as @c ProtoGridSurfaceMaterial: the
+  /// This follows the same pattern as @c ProtoSurfaceMaterial: the
   /// (possibly deferred) axis specs are resolved against @p surface via
-  /// @c resolveMultiAxis, exactly as is done for a @c ProtoGridSurfaceMaterial
+  /// @c resolveMultiAxis, exactly as is done for a @c ProtoSurfaceMaterial
   /// in @c BinnedSurfaceMaterialAccumulator. Binning restricted to a single
   /// local direction is expressed by a single-bin spec in the other
   /// direction.

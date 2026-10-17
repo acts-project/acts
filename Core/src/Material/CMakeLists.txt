@@ -22,6 +22,7 @@ target_sources(
         MaterialSlab.cpp
         MaterialValidator.cpp
         MergedMaterialMarker.cpp
+        ProtoSurfaceMaterial.cpp
         ProtoVolumeMaterial.cpp
         TrackingGeometryMaterial.cpp
 )

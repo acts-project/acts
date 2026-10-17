@@ -13,7 +13,6 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/MultiAxisSpec.hpp"
 
@@ -39,31 +38,20 @@ Acts::BinnedSurfaceMaterialAccumulator::createState(
           "Surface material is not set, inconsistent configuration.");
     }
 
-    // First attempt from ProtoSurfaceMaterial
+    // Resolve the proto axes against the surface bounds.
     auto psm = dynamic_cast<const ProtoSurfaceMaterial*>(surfaceMaterial);
     if (psm != nullptr) {
-      auto binUtility = psm->binning();
+      if (psm->binning().axisSpec(0).nBins() == 1 &&
+          psm->binning().axisSpec(1).nBins() == 1) {
+        state->accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial();
+        continue;
+      }
       // Screen output for Binned Surface material
-      ACTS_DEBUG("       - (proto) binning from ProtoSurfaceMateria is "
-                 << binUtility);
-      // Now adjust to surface type
-      binUtility = adjustBinUtility(binUtility, *surface, gctx);
-      // Screen output for Binned Surface material
-      ACTS_DEBUG("       - adjusted binning is " << binUtility);
-      state->accumulatedMaterial[geoID] =
-          AccumulatedSurfaceMaterial(binUtility);
-      // Material accumulation  is created for this
-      continue;
-    }
-    // Second attempt from ProtoGridSurfaceMaterial
-    auto psgm = dynamic_cast<const ProtoGridSurfaceMaterial*>(surfaceMaterial);
-    if (psgm != nullptr) {
-      // Screen output for Binned Surface material
-      ACTS_DEBUG("       - (proto) binning from ProtoGridSurfaceMaterial is "
-                 << psgm->binning());
+      ACTS_DEBUG("       - (proto) binning from ProtoSurfaceMaterial is "
+                 << psm->binning());
       // Resolve the deferred binning against the surface bounds
       BinUtility binUtility(surface->localToGlobalTransform(gctx));
-      binUtility += BinUtility(*resolveMultiAxis(psgm->binning(), *surface));
+      binUtility += BinUtility(*resolveMultiAxis(psm->binning(), *surface));
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - resolved binning is " << binUtility);
       state->accumulatedMaterial[geoID] =
@@ -71,7 +59,7 @@ Acts::BinnedSurfaceMaterialAccumulator::createState(
       // Material accumulation  is created for this
       continue;
     }
-    // Third attempt: binned material
+    // Existing binned material (remapping)
     auto bmp = dynamic_cast<const BinnedSurfaceMaterial*>(surfaceMaterial);
     if (bmp != nullptr) {
       // Screen output for Binned Surface material

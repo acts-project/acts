@@ -42,8 +42,8 @@ payload is never guessed from the keys that happen to be present.
 |--------------------------|-------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------|
 | `homogeneous`            | @ref Acts::HomogeneousSurfaceMaterial                                                                        | `data`                                                    |
 | `binned`                 | @ref Acts::BinnedSurfaceMaterial                                                                             | `binUtility`, `data`                                      |
-| `proto`                  | @ref Acts::ProtoSurfaceMaterial                                                                              | `binUtility`                                              |
-| `proto-grid`             | @ref Acts::ProtoGridSurfaceMaterial                                                                          | `axis_specs`                                              |
+| `proto`                  | @ref Acts::ProtoSurfaceMaterial                                                                              | `axis_specs`                                              |
+| `proto-grid` (read only) | @ref Acts::ProtoSurfaceMaterial                                                                          | `axis_specs`                                              |
 | `grid`                   | @ref Acts::GridSurfaceMaterial                                                                               | `accessor`                                                |
 | `merged-material-marker` | @ref Acts::MergedMaterialMarker                                                                              | none                                                      |
 
@@ -76,14 +76,29 @@ which pairs a @ref Acts::BinUtility with the slabs it addresses. That matrix is
 indexed `[bin of the second binning][bin of the first binning]`, so the one
 dimensional binning of the example gives a single row of two slabs.
 
-### `proto` and `proto-grid`
+### `proto`
 
-Binning instructions for the material mapping that carry no material yet.
-`proto` expresses the binning as a @ref Acts::BinUtility, exactly as `binned`
-does but without the `data`. `proto-grid` expresses it as an `axis_specs` list
-of @ref Acts::AxisSpec, which is the representation the grid based material
-uses; each spec has a `type`, a `bins` count, a `range`, a `boundary_type` and
-a `direction`. Exactly two specs are required.
+Binning instructions for material mapping, without material content. The concrete
+@ref Acts::ProtoSurfaceMaterial carries a @ref Acts::MultiAxisSpec2D, serialized
+as exactly two `axis_specs`. Equidistant specs have a `bins` count; variable
+specs have `boundaries` or `normalized_boundaries`. Ranges, boundary types and
+directions may be deferred to the owning surface. A single bin in both axes
+requests homogeneous mapping and round-trips with `mapMaterial: true`.
+Placeholders generated for surfaces without material in a geometry dump remain
+opt-in (`mapMaterial: false`).
+
+For migration, the reader also accepts the old `proto-grid` tag and legacy
+`proto` payloads containing `binUtility`. Legacy bin counts become deferred
+specs: ranges, transforms and boundary conditions come from the surface.
+Cylinder `phi` becomes local `rphi`, missing dimensions get one bin, and
+variable edges are normalized. More than two dimensions, repeated/unsupported
+directions and nested sub-binning are rejected. Phi-only legacy binning needs
+the owning surface type to distinguish a disc from a cylinder; surface JSON
+and geometry dumps supply this context, while a standalone ambiguous payload
+must be migrated to explicit `axis_specs`.
+
+New output always uses `proto` with `axis_specs`; compatibility is confined to
+the JSON reader, with no legacy C++ proto type or constructor.
 
 ### `grid`
 
