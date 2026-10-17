@@ -12,6 +12,8 @@ acts_add_library(
 
 acts_compile_headers(PluginGnn GLOB include/**/*.hpp)
 
+target_link_libraries(ActsPluginGnn PUBLIC vecmem::core)
+
 if(ACTS_GNN_ENABLE_MODULEMAP)
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_WITH_MODULEMAP)
 
@@ -84,6 +86,8 @@ if(ACTS_ENABLE_CUDA)
         PROPERTIES CUDA_SEPARABLE_COMPILATION OFF
     )
     target_link_libraries(ActsPluginGnn PRIVATE CUDA::cudart CUDA::nvtx3)
+    # Only the pipeline sets up CUDA streams, resources and copy objects
+    target_link_libraries(ActsPluginGnn PRIVATE vecmem::cuda)
     target_sources(
         ActsPluginGnn
         PRIVATE
