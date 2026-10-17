@@ -18,6 +18,8 @@
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
+#include <unordered_map>
+
 namespace Acts {
 
 /// @brief Implements an iterative vertex finder
@@ -213,6 +215,8 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   }
 
  private:
+  using TrackZCache = std::unordered_map<InputTrack, double>;
+
   /// Configuration object
   Config m_cfg;
 
@@ -265,10 +269,11 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @param vtx The vertex candidate
   /// @param[out] fitProblem The vertex fitter state
   /// @param vertexingOptions Vertexing options
+  /// @param trackZCache Input track z positions, valid for this find call
   Result<void> addCompatibleTracksToVertex(
       const std::vector<InputTrack>& tracks, Vertex& vtx,
-      VertexFitProblem& fitProblem,
-      const VertexingOptions& vertexingOptions) const;
+      VertexFitProblem& fitProblem, const VertexingOptions& vertexingOptions,
+      TrackZCache& trackZCache) const;
 
   /// @brief Method that tries to recover from cases where no tracks
   /// were added to the vertex candidate after seeding
@@ -280,13 +285,14 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @param currentConstraint Vertex constraint
   /// @param[out] fitProblem The vertex fitter state
   /// @param vertexingOptions Vertexing options
+  /// @param trackZCache Input track z positions, valid for this find call
   ///
   /// return True if recovery was successful, false otherwise
   Result<bool> canRecoverFromNoCompatibleTracks(
       const std::vector<InputTrack>& allTracks,
       const std::vector<InputTrack>& seedTracks, Vertex& vtx,
       const Vertex& currentConstraint, VertexFitProblem& fitProblem,
-      const VertexingOptions& vertexingOptions) const;
+      const VertexingOptions& vertexingOptions, TrackZCache& trackZCache) const;
 
   /// @brief Method that tries to prepare the vertex for the fit
   ///
@@ -297,13 +303,16 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @param currentConstraint Vertex constraint
   /// @param[out] fitProblem The vertex fitter state
   /// @param vertexingOptions Vertexing options
+  /// @param trackZCache Input track z positions, valid for this find call
   ///
   /// @return True if preparation was successful, false otherwise
-  Result<bool> canPrepareVertexForFit(
-      const std::vector<InputTrack>& allTracks,
-      const std::vector<InputTrack>& seedTracks, Vertex& vtx,
-      const Vertex& currentConstraint, VertexFitProblem& fitProblem,
-      const VertexingOptions& vertexingOptions) const;
+  Result<bool> canPrepareVertexForFit(const std::vector<InputTrack>& allTracks,
+                                      const std::vector<InputTrack>& seedTracks,
+                                      Vertex& vtx,
+                                      const Vertex& currentConstraint,
+                                      VertexFitProblem& fitProblem,
+                                      const VertexingOptions& vertexingOptions,
+                                      TrackZCache& trackZCache) const;
 
   /// @brief Method that checks if vertex is a good vertex and if
   /// compatible tracks are available
