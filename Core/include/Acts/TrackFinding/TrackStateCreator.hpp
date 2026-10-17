@@ -214,9 +214,30 @@ struct TrackStateCreator {
           ResultTrackStateList::failure(selectorResult.error());
     } else {
       auto selectedTrackStateRange = *selectorResult;
-      resultTrackStateList = processSelectedTrackStates(
-          selectedTrackStateRange.first, selectedTrackStateRange.second,
-          trajectory, isOutlier, logger);
+      auto [begin, end] = selectedTrackStateRange;
+      // These candidates already belong to the output trajectory. Reuse them
+      // when they carry only the components copied by the original path and
+      // still share the prediction and jacobian created above.
+      bool canReuse = true;
+      for (auto it = begin; it != end; ++it) {
+        if (it->hasFiltered() || it->hasSmoothed() ||
+            it->predicted().data() != begin->predicted().data() ||
+            it->jacobian().data() != begin->jacobian().data()) {
+          canReuse = false;
+          break;
+        }
+      }
+      if (canReuse) {
+        auto& indices = *resultTrackStateList;
+        indices.reserve(end - begin);
+        for (auto it = begin; it != end; ++it) {
+          setSelectedFlags(*it, isOutlier, logger);
+          indices.push_back(it->index());
+        }
+      } else {
+        resultTrackStateList = processSelectedTrackStates(
+            begin, end, trajectory, isOutlier, logger);
+      }
     }
 
     return resultTrackStateList;
@@ -278,18 +299,7 @@ struct TrackStateCreator {
       // either copy ALL or everything except for predicted and jacobian
       trackState.copyFrom(candidateTrackState, mask, false);
 
-      auto typeFlags = trackState.typeFlags();
-      typeFlags.setHasParameters();
-      typeFlags.setHasMeasurement();
-      if (trackState.referenceSurface().hasMaterial()) {
-        typeFlags.setHasMaterial();
-      }
-      if (isOutlier) {
-        // propagate information that this is an outlier state
-        ACTS_VERBOSE(
-            "Creating outlier track state with tip = " << trackState.index());
-        typeFlags.setIsOutlier();
-      }
+      setSelectedFlags(trackState, isOutlier, logger);
 
       trackStateList.push_back(trackState.index());
     }
@@ -305,6 +315,22 @@ struct TrackStateCreator {
                           bool& /*isOutlier*/, const Logger& /*logger*/) {
     return std::pair{candidates.begin(), candidates.end()};
   };
+
+ private:
+  static void setSelectedFlags(TrackStateProxy trackState, bool isOutlier,
+                               const Logger& logger) {
+    auto typeFlags = trackState.typeFlags();
+    typeFlags.setHasParameters();
+    typeFlags.setHasMeasurement();
+    if (trackState.referenceSurface().hasMaterial()) {
+      typeFlags.setHasMaterial();
+    }
+    if (isOutlier) {
+      ACTS_VERBOSE(
+          "Creating outlier track state with tip = " << trackState.index());
+      typeFlags.setIsOutlier();
+    }
+  }
 };
 
 }  // namespace Acts
