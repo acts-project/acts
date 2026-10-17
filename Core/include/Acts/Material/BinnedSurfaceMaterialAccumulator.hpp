@@ -10,8 +10,8 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Material/detail/MaterialSurfaceRegistry.hpp"
-#include "Acts/Material/interface/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <optional>
@@ -74,6 +74,21 @@ class BinnedSurfaceMaterialAccumulator final
                   const std::vector<MaterialInteraction>& interactions,
                   const std::vector<IAssignmentFinder::SurfaceAssignment>&
                       surfacesWithoutAssignment) const override;
+
+  /// @brief Accumulate the material of a batch of tracks
+  ///
+  /// With a worker pool, the accumulation is sharded by surface: every
+  /// surface processes its share of the batch in track order, so the result
+  /// is bit-identical to the serial single-track accumulation.
+  ///
+  /// @param state is the state of the accumulator
+  /// @param gctx the geometry context
+  /// @param tracks the per-track accumulation inputs, in mapping order
+  /// @param pool optional worker pool, nullptr means serial execution
+  void accumulateTracks(ISurfaceMaterialAccumulator::State& state,
+                        const GeometryContext& gctx,
+                        std::span<const TrackAccumulation> tracks,
+                        detail::WorkerPool* pool) const override;
 
   /// Finalize the surface material maps
   ///

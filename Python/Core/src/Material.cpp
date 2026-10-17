@@ -168,7 +168,8 @@ void addMaterial(py::module_& m) {
                        py::arg("config"), py::arg("level"));
 
     auto c = py::class_<MaterialMapper::Config>(mm, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, assignmentFinder, surfaceMaterialAccumulator);
+    ACTS_PYTHON_STRUCT(c, assignmentFinder, surfaceMaterialAccumulator,
+                       numThreads);
   }
 
   {
