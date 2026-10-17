@@ -646,7 +646,13 @@ class MultiTrajectory {
     requires(!ReadOnly)
   {
     assert(checkOptional(key, istate));
-    return *std::any_cast<T*>(self().component_impl(key, istate));
+    if constexpr (requires {
+                    self().template componentTyped_impl<T>(key, istate);
+                  }) {
+      return self().template componentTyped_impl<T>(key, istate);
+    } else {
+      return *std::any_cast<T*>(self().component_impl(key, istate));
+    }
   }
 
   /// Retrieve a mutable reference to a component
@@ -659,7 +665,13 @@ class MultiTrajectory {
     requires(!ReadOnly)
   {
     assert(checkOptional(key, istate));
-    return *std::any_cast<T*>(self().component_impl(key, istate));
+    if constexpr (requires {
+                    self().template componentTyped_impl<T>(key, istate);
+                  }) {
+      return self().template componentTyped_impl<T>(key, istate);
+    } else {
+      return *std::any_cast<T*>(self().component_impl(key, istate));
+    }
   }
 
   /// Retrieve a const reference to a component
@@ -670,7 +682,13 @@ class MultiTrajectory {
   template <typename T, HashedString key>
   const T& component(IndexType istate) const {
     assert(checkOptional(key, istate));
-    return *std::any_cast<const T*>(self().component_impl(key, istate));
+    if constexpr (requires {
+                    self().template componentTyped_impl<T>(key, istate);
+                  }) {
+      return self().template componentTyped_impl<T>(key, istate);
+    } else {
+      return *std::any_cast<const T*>(self().component_impl(key, istate));
+    }
   }
 
   /// Retrieve a const reference to a component
@@ -681,7 +699,13 @@ class MultiTrajectory {
   template <typename T>
   const T& component(HashedString key, IndexType istate) const {
     assert(checkOptional(key, istate));
-    return *std::any_cast<const T*>(self().component_impl(key, istate));
+    if constexpr (requires {
+                    self().template componentTyped_impl<T>(key, istate);
+                  }) {
+      return self().template componentTyped_impl<T>(key, istate);
+    } else {
+      return *std::any_cast<const T*>(self().component_impl(key, istate));
+    }
   }
 
   /// Allocate storage for a calibrated measurement of specified dimension

@@ -556,6 +556,32 @@ BOOST_AUTO_TEST_CASE(ShallowCopy) {
   BOOST_CHECK_EQUAL(t2_ts3.index(), ts3.index());
 }
 
+BOOST_AUTO_TEST_CASE(TypedTrackComponentsPreserveReferencesAndErrors) {
+  TrackContainer tracks{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  tracks.addColumn<int>("custom");
+  auto track = tracks.makeTrack();
+  auto check = [&]<typename Value>(HashedString key) {
+    BOOST_CHECK((&track.component<Value>(key) ==
+                 std::any_cast<Value*>(
+                     tracks.container().component_impl(key, track.index()))));
+    const auto& readOnly = std::as_const(track);
+    BOOST_CHECK((&readOnly.component<Value>(key) ==
+                 std::any_cast<const Value*>(
+                     std::as_const(tracks).container().component_impl(
+                         key, track.index()))));
+  };
+  for (HashedString key :
+       {"tipIndex"_hash, "stemIndex"_hash, "nMeasurements"_hash, "nHoles"_hash,
+        "nOutliers"_hash, "nSharedHits"_hash, "nSplitHits"_hash, "ndf"_hash}) {
+    check.template operator()<unsigned int>(key);
+  }
+  check.template operator()<float>("chi2"_hash);
+  check.template operator()<int>("custom"_hash);
+  BOOST_CHECK_THROW(track.component<double>("chi2"_hash), std::bad_any_cast);
+  BOOST_CHECK_THROW(track.component<float>("custom"_hash), std::bad_any_cast);
+  BOOST_CHECK_THROW(track.component<int>("unknown"_hash), std::runtime_error);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests
