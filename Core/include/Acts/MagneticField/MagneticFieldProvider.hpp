@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldError.hpp"
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -70,6 +71,14 @@ class MagneticFieldProvider {
   /// The cache is always creaded through @ref makeCache.
   using Cache = Acts::AnyBase<sizeof(char) * 512>;
 
+  /// Magnetic field and its spatial gradient at one position
+  struct FieldAndGradient {
+    /// Magnetic field vector
+    Vector3 field = Vector3::Zero();
+    /// Spatial gradient of the field, with gradient(i, j) = dB_i / dx_j
+    SquareMatrix3 gradient = SquareMatrix3::Zero();
+  };
+
   /// Make an opaque cache for the magnetic field. Instructs the specific
   /// implementation to generate a @ref Acts::MagneticFieldProvider::Cache instance
   /// for magnetic field lookup.
@@ -88,7 +97,47 @@ class MagneticFieldProvider {
   virtual Result<Vector3> getField(const Vector3& position,
                                    Cache& cache) const = 0;
 
+  /// Check if @ref getFieldAndGradient is implemented by this provider.
+  ///
+  /// A caller checks this once. If it is false, the caller can use
+  /// @ref Acts::getFieldAndGradientNumerically instead.
+  ///
+  /// @return true if the provider implements the field gradient
+  virtual bool providesFieldGradient() const { return false; }
+
+  /// Retrieve the magnetic field and its spatial gradient at a given
+  /// location.
+  ///
+  /// @param [in] position global 3D position for the lookup
+  /// @param [in,out] cache Field provider specific cache object
+  ///
+  /// @return field and gradient at the given position, or
+  ///         @ref MagneticFieldError::NotImplemented if
+  ///         @ref providesFieldGradient is false
+  virtual Result<FieldAndGradient> getFieldAndGradient(const Vector3& position,
+                                                       Cache& cache) const;
+
   virtual ~MagneticFieldProvider() = default;
 };
+
+/// Compute the magnetic field gradient with central finite differences.
+///
+/// The function looks up the field at @p position and at the six positions
+/// that are @p epsilon away along each axis. The error of the gradient is
+/// proportional to @p epsilon squared for a smooth field. An interpolated
+/// field map is only continuous at its cell edges, so there the result is an
+/// average of the gradients of the neighbouring cells.
+///
+/// @param [in] provider The magnetic field provider
+/// @param [in] position global 3D position for the lookup
+/// @param [in,out] cache Field provider specific cache object
+/// @param [in] epsilon Distance of the lookups from @p position
+///
+/// @return field and gradient at the given position, or the error of the
+///         first lookup that failed
+/// @ingroup magnetic_field
+Result<MagneticFieldProvider::FieldAndGradient> getFieldAndGradientNumerically(
+    const MagneticFieldProvider& provider, const Vector3& position,
+    MagneticFieldProvider::Cache& cache, double epsilon);
 
 }  // namespace Acts

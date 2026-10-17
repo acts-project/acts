@@ -72,4 +72,14 @@ Result<Vector3> MultiRangeBField::getField(
   }
 }
 
+Result<MagneticFieldProvider::FieldAndGradient>
+MultiRangeBField::getFieldAndGradient(
+    const Vector3& position, MagneticFieldProvider::Cache& cache) const {
+  Result<Vector3> field = getField(position, cache);
+  if (!field.ok()) {
+    return Result<FieldAndGradient>::failure(field.error());
+  }
+  return Result<FieldAndGradient>::success({*field, SquareMatrix3::Zero()});
+}
+
 }  // namespace Acts
