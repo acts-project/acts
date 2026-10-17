@@ -40,6 +40,12 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   // initialise the space point, seed and cluster handles
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
+  m_outputFreeParameters.maybeInitialize(m_cfg.outputFreeParameters);
+  if (m_outputFreeParameters.isInitialized() &&
+      m_cfg.magneticField == nullptr) {
+    throw std::invalid_argument(
+        "The free parameters of the seeds need a magnetic field");
+  }
   m_inputClusters.initialize(m_cfg.inputClusters);
 
   // parse the mapping file and turn into map
@@ -153,8 +159,39 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
 
   // create the seeds
 
-  m_finder->createSeeds(nodeStorage, m_internalRoi.value(), *m_gbtsGraphBuilder,
-                        *m_filter, options, seeds);
+  std::vector<Acts::Experimental::GbtsSeedFit> fits;
+  m_finder->createSeeds(
+      nodeStorage, m_internalRoi.value(), *m_gbtsGraphBuilder, *m_filter,
+      options, seeds, m_outputFreeParameters.isInitialized() ? &fits : nullptr);
+
+  // free track parameters from the fit of the tracking filter
+  if (m_outputFreeParameters.isInitialized()) {
+    std::vector<Acts::FreeVector> freeParameters;
+    auto fieldCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
+    freeParameters.reserve(seeds.size());
+    for (std::size_t i = 0; i < seeds.size(); ++i) {
+      // the field halfway along the seed, where it runs along the chord from
+      // the innermost to the outermost space point
+      const auto outer = spacePoints[seeds.at(i).spacePointIndices().back()];
+      const Acts::Vector3 outerPosition(outer.x(), outer.y(), outer.z());
+      const Acts::Vector3 fieldPosition =
+          0.5 * (fits.at(i).position + outerPosition);
+      const Acts::Vector2 transverseDirection =
+          (outerPosition - fits.at(i).position).head<2>().normalized();
+      const auto field =
+          m_cfg.magneticField->getField(fieldPosition, fieldCache);
+      if (!field.ok()) {
+        ACTS_ERROR("Field lookup error: " << field.error());
+        return ProcessCode::ABORT;
+      }
+      // zeros for a seed without a fit
+      freeParameters.push_back(
+          Acts::Experimental::freeParametersFromGbtsSeedFit(fits.at(i), *field,
+                                                            transverseDirection)
+              .value_or(Acts::FreeVector::Zero()));
+    }
+    m_outputFreeParameters(ctx, std::move(freeParameters));
+  }
 
   m_outputSeeds(ctx, std::move(seeds));
 
