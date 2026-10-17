@@ -74,8 +74,6 @@ traccc_add_library( traccc_core core TYPE SHARED
   # Clusterization algorithmic code.
   "include/traccc/clusterization/details/sparse_ccl.hpp"
   "include/traccc/clusterization/impl/sparse_ccl.ipp"
-  "include/traccc/clusterization/details/measurement_creation.hpp"
-  "include/traccc/clusterization/impl/measurement_creation.ipp"
   # Finding algorithmic code
   "include/traccc/finding/actors/ckf_aborter.hpp"
   "include/traccc/finding/actors/measurement_kalman_updater.hpp"
