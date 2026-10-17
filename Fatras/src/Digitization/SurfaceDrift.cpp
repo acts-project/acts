@@ -9,6 +9,8 @@
 #include "ActsFatras/Digitization/SurfaceDrift.hpp"
 
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 
@@ -70,7 +72,8 @@ Acts::Result<std::tuple<SurfaceDrift::Segment2D, SurfaceDrift::Segment3D>>
 SurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
                         const Acts::Surface& surface, double thickness,
                         const Acts::Vector3& pos, const Acts::Vector3& dir,
-                        const Acts::Vector3& driftDir) const {
+                        const Acts::Vector3& driftDir,
+                        bool limitCylinderPathToChord) const {
   Acts::Vector3 pos3Local = Acts::Vector3::Zero();
   Acts::Vector3 seg3Local = Acts::Vector3::Zero();
   if (!toLocalFrame(gctx, surface, pos, dir, pos3Local, seg3Local)) {
@@ -87,6 +90,21 @@ SurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
   // Scale the unit vector to the thickness of the module
   const double scale = thickness / seg3Local.z();
   seg3Local *= scale;
+  // In the flat, unrolled frame of a cylinder the path grows without bound
+  // for (almost) tangential directions, while no straight line stays longer
+  // than 2 sqrt(2 R thickness) inside a curved layer of radius R
+  if (limitCylinderPathToChord &&
+      surface.type() == Acts::Surface::SurfaceType::Cylinder &&
+      thickness > 0.) {
+    const double radius =
+        static_cast<const Acts::CylinderSurface&>(surface).bounds().get(
+            Acts::CylinderBounds::eR);
+    const double maxPath = 2. * std::sqrt(2. * radius * thickness);
+    const double path = seg3Local.norm();
+    if (path > maxPath) {
+      seg3Local *= maxPath / path;
+    }
+  }
   // The drift direction is in the local frame, so we need to transform it
   const Acts::Vector3 entry = pos3Local - 0.5 * seg3Local;
   const Acts::Vector3 exit = pos3Local + 0.5 * seg3Local;

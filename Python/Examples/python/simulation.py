@@ -789,6 +789,7 @@ def addDigitization(
     doMerge: Optional[bool] = None,
     mergeCommonCorner: Optional[bool] = None,
     minEnergyDeposit: Optional[float] = None,
+    limitCylinderPathToChord: Optional[bool] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
     """This function steers the digitization step
@@ -807,6 +808,9 @@ def addDigitization(
         the output folder for the Root output, None triggers no output
     rnd : RandomNumbers, None
         random number generator
+    limitCylinderPathToChord : bool, None
+        on cylinder surfaces, limit the geometric path of a hit to the longest
+        chord through the curved layer (default: off)
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -830,6 +834,7 @@ def addDigitization(
         **acts.examples.defaultKWArgs(
             doMerge=doMerge,
             mergeCommonCorner=mergeCommonCorner,
+            limitCylinderPathToChord=limitCylinderPathToChord,
         ),
     )
 
