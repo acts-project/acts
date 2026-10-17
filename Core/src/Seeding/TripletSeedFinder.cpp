@@ -14,6 +14,10 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
+#include <algorithm>
+#include <array>
+#include <bit>
+#include <cstdint>
 #include <ranges>
 
 #include <Eigen/Dense>
@@ -224,15 +228,15 @@ class Impl final : public TripletSeedFinder {
       const SpacePointContainer& spacePoints, const ConstSpacePointProxy& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
+    // Reserve enough space, in case current capacity is too little
+    tripletTopCandidates.reserve(tripletTopCandidates.size() +
+                                 topDoublets.size());
+
     const float rM = spM.zr()[1];
     const float cosPhiM = spM.xy()[0] / rM;
     const float sinPhiM = spM.xy()[1] / rM;
     const float varianceZM = spM.varianceZ();
     const float varianceRM = spM.varianceR();
-
-    // Reserve enough space, in case current capacity is too little
-    tripletTopCandidates.reserve(tripletTopCandidates.size() +
-                                 topDoublets.size());
 
     const float cotThetaB0 = bottomDoublet.cotTheta();
     const float erB = bottomDoublet.er();
@@ -286,85 +290,57 @@ class Impl final : public TripletSeedFinder {
     const OuterStripSpacePointCalibrationDetailsDerived calB =
         detail::deriveOuterStripSpacePointCalibrationDetails(
             spB.outerStripCalibrationDetails());
+    const float xBottom = bottomDoublet.x();
+    const float yBottom = bottomDoublet.y();
 
-    std::size_t topDoubletOffset = 0;
-    for (auto [topDoublet, topDoubletIndex] :
-         zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
-                              0, topDoublets.size()))) {
-      // Pre-filter on the doublet stage cot(theta) difference before the
-      // expensive strip coordinate transformation. The doublet cot(theta)
-      // values are computed from SP centers and are approximate, so the
-      // cut is very loose.
-      //
-      // this pre-filter is only applied when `sortedByCotTheta` is enabled,
-      // mirroring the pixel path. Top doublets are sorted in ascending
-      // approximate cotTheta, which lets us kill looping over doublets once
-      // cotThetaT exceeds cotThetaB by more than the tolerance, and advance
-      // `topDoubletOffset` to discard tops that can never satisfy the cut
-      // for any subsequent (larger) bottom cotTheta.
-      if constexpr (sortedByCotTheta) {
-        const float cotThetaT = topDoublet.cotTheta();
-        const float deltaCotTheta = cotThetaB0 - cotThetaT;
-        const float cotThetaDiffMax2 =
-            m_cfg.cotThetaDiffMax * m_cfg.cotThetaDiffMax;
-        if (deltaCotTheta * deltaCotTheta > cotThetaDiffMax2) {
-          if (cotThetaB0 < cotThetaT) {
-            break;
-          }
-          topDoubletOffset = topDoubletIndex + 1;
-          continue;
-        }
-      }
+    // The tops of the cotTheta window go through the strip checks a chunk at
+    // a time, a lane per top, and the tops that pass them through the
+    // remaining checks, in their order.
+    constexpr std::size_t kLanes = 8;
+    const float cotThetaDiffMax2 =
+        m_cfg.cotThetaDiffMax * m_cfg.cotThetaDiffMax;
+    const auto beginTops = topDoublets.begin();
+    const std::size_t nTops = topDoublets.size();
 
+    // The checks of a top after its strip checks: the body of the original
+    // loop over the tops, each return a continue of that loop. Adds the
+    // triplet top candidate where the top passes them all. A0, B0 and
+    // zDirectionMiddle are the top's values from the strip checks, and scale
+    // and sOuter those of the middle (M) and bottom (B) strip checks.
+    // The values of a top from its strip checks
+    struct StripValues {
+      float A0;
+      float B0;
+      float zDirectionMiddle;
+      float scaleM;
+      float sOuterM;
+      float scaleB;
+      float sOuterB;
+    };
+    const auto addTopCandidate = [&](const auto& topDoublet,
+                                     const StripValues& values) {
+      const auto [A0, B0, zDirectionMiddle, scaleM, sOuterM, scaleB, sOuterB] =
+          values;
       // check the time compatibility of the three space points, before the
       // expensive strip coordinate transformation below
       if constexpr (useTime) {
         if (!passesTimeCut(spM, spacePoints[topDoublet.spacePointIndex()],
                            tBAtM, varianceTB, tM, varianceTM)) {
-          continue;
+          return;
         }
       }
 
-      // protects against division by 0
-      const float dU0 = topDoublet.u() - Ub0;
-      if (dU0 == 0) {
-        continue;
-      }
-      // A and B are evaluated as a function of the circumference parameters
-      // x_0 and y_0
-      const float A0 = (topDoublet.v() - Vb0) / dU0;
+      // the middle space point's position on its outer strip, as
+      // detail::calibrateOuterStripSpacePoint computes it; its strip checks
+      // have passed
+      const std::array<float, 3> rMTransf = detail::stdArrayAddScaled(
+          calM.outerCenter, calM.outerHalfVector, sOuterM / scaleM);
 
-      // The middle strip check is scale-invariant (ratios s1/bd1 and s0/bd1
-      // are unaffected by uniform scaling of direction), so we use cosTheta as
-      // the z-component instead of cosTheta * sqrt(1 + A0^2), deferring the
-      // sqrt.
-      const std::array<float, 3> directionMiddle = {
-          rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
-          rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1], cosTheta};
-
-      std::array<float, 3> rMTransf{};
-      if (!detail::calibrateOuterStripSpacePoint(
-              directionMiddle, calM, rMTransf, m_cfg.toleranceParam)) {
-        continue;
-      }
-
-      // sqrt only computed on the less-common path where middle check passed
-      const float zDirectionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
-
-      // coordinate transformation and checks for bottom space point
-      const float B0 = 2 * (Vb0 - A0 * Ub0);
-      const float Cb = 1 - B0 * bottomDoublet.y();
-      const float Sb = A0 + B0 * bottomDoublet.x();
-      const std::array<float, 3> directionBottom = {
-          rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
-          rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
-          zDirectionMiddle};
-
-      std::array<float, 3> rBTransf{};
-      if (!detail::calibrateOuterStripSpacePoint(
-              directionBottom, calB, rBTransf, m_cfg.toleranceParam)) {
-        continue;
-      }
+      // the bottom space point's position on its outer strip, as
+      // detail::calibrateOuterStripSpacePoint computes it; its strip checks
+      // have passed
+      const std::array<float, 3> rBTransf = detail::stdArrayAddScaled(
+          calB.outerCenter, calB.outerHalfVector, sOuterB / scaleB);
 
       // coordinate transformation and checks for top space point
       const float Ct = 1 - B0 * topDoublet.y();
@@ -382,7 +358,7 @@ class Impl final : public TripletSeedFinder {
       std::array<float, 3> rTTransf{};
       if (!detail::calibrateOuterStripSpacePoint(directionTop, calT, rTTransf,
                                                  m_cfg.toleranceParam)) {
-        continue;
+        return;
       }
 
       // bottom and top coordinates in the spM reference frame
@@ -403,8 +379,8 @@ class Impl final : public TripletSeedFinder {
       const float averageCotTheta = 0.5f * (cotThetaB + cotThetaT);
       const float cotThetaAvg2 = averageCotTheta * averageCotTheta;
 
-      // add errors of spB-spM and spM-spT pairs and add the correlation term
-      // for errors on spM
+      // add errors of spB-spM and spM-spT pairs and add the correlation
+      // term for errors on spM
       const float error2 = topDoublet.er() + erB +
                            2 * (cotThetaAvg2 * varianceRM + varianceZM) *
                                iDeltaRB * topDoublet.iDeltaR();
@@ -417,14 +393,14 @@ class Impl final : public TripletSeedFinder {
       // between slopes, and comparing to the squared uncertainty in this
       // difference - we keep a seed if the difference is compatible within
       // the assumed uncertainties. The uncertainties get contribution from
-      // the  space-point-related squared error (error2) and a scattering term
-      // calculated assuming the minimum pt we expect to reconstruct
-      // (scatteringInRegion2). This assumes gaussian error propagation which
-      // allows just adding the two errors if they are uncorrelated (which is
-      // fair for scattering and measurement uncertainties)
+      // the  space-point-related squared error (error2) and a scattering
+      // term calculated assuming the minimum pt we expect to reconstruct
+      // (scatteringInRegion2). This assumes gaussian error propagation
+      // which allows just adding the two errors if they are uncorrelated
+      // (which is fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > error2 + scatteringInRegion2) {
         // skip top SPs based on cotTheta sorting when producing triplets
-        continue;
+        return;
       }
 
       const float rMxy =
@@ -441,7 +417,7 @@ class Impl final : public TripletSeedFinder {
       const float dU = Ut - Ub;
       // protects against division by 0
       if (dU == 0) {
-        continue;
+        return;
       }
       const float A = (Vt - Vb) / dU;
       const float S2 = 1 + A * A;
@@ -451,19 +427,20 @@ class Impl final : public TripletSeedFinder {
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
       if (S2 < B2 * m_cfg.minHelixDiameter2) {
-        continue;
+        return;
       }
 
       // refinement of the cut on the compatibility between the r-z slope of
       // the two seed segments using a scattering term scaled by the actual
       // measured pT (p2scatterSigma)
       const float iHelixDiameter2 = B2 / S2;
-      // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
-      // from rad to deltaCotTheta
+      // convert p(T) to p scaling by sin^2(theta) AND scale by
+      // 1/sin^4(theta) from rad to deltaCotTheta
       const float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
-      // if deltaTheta larger than allowed scattering for calculated pT, skip
+      // if deltaTheta larger than allowed scattering for calculated pT,
+      // skip
       if (deltaCotTheta2 > error2 + p2scatterSigma) {
-        continue;
+        return;
       }
 
       // A and B allow calculation of impact params in U/V plane with linear
@@ -471,14 +448,159 @@ class Impl final : public TripletSeedFinder {
       // (in contrast to having to solve a quadratic function in x/y plane)
       const float im = std::abs((A - B * rMxy) * rMxy);
       if (im > m_cfg.impactMax) {
-        continue;
+        return;
       }
 
       // inverse diameter is signed depending on if the curvature is
       // positive/negative in phi
       tripletTopCandidates.emplace_back(topDoublet.spacePointIndex(),
                                         B / std::sqrt(S2), im);
-    }  // loop on tops
+    };
+
+    // 1. The tops inside the cotTheta window of this bottom. The doublet
+    // cotTheta values are computed from the space point centres and are
+    // approximate, so the window is loose. The tops are sorted by cotTheta,
+    // as are the bottoms: the tops below the window come first and are below
+    // the windows of the later bottoms too, so they are skipped from here on,
+    // and the window ends at the first top above it, found by bisection.
+    std::size_t topDoubletOffset = 0;
+    std::size_t topDoubletEnd = nTops;
+    if constexpr (sortedByCotTheta) {
+      const auto outside = [&](std::size_t k) {
+        const float deltaCotTheta = cotThetaB0 - beginTops[k].cotTheta();
+        return deltaCotTheta * deltaCotTheta > cotThetaDiffMax2;
+      };
+      while (topDoubletOffset < nTops && outside(topDoubletOffset) &&
+             !(cotThetaB0 < beginTops[topDoubletOffset].cotTheta())) {
+        ++topDoubletOffset;
+      }
+      std::size_t searchBegin = topDoubletOffset;
+      std::size_t searchEnd = nTops;
+      while (searchBegin < searchEnd) {
+        const std::size_t probe = searchBegin + (searchEnd - searchBegin) / 2;
+        if (outside(probe) && cotThetaB0 < beginTops[probe].cotTheta()) {
+          searchEnd = probe;
+        } else {
+          searchBegin = probe + 1;
+        }
+      }
+      topDoubletEnd = searchBegin;
+    }
+
+    // 2.-6. The window's tops a chunk at a time. Each step is a loop of its
+    // own over the lanes, the form compilers vectorise. Flags are 0 or 1.
+    for (std::size_t chunkBegin = topDoubletOffset; chunkBegin < topDoubletEnd;
+         chunkBegin += kLanes) {
+      // 2. the tops' conformal coordinates; the last chunk repeats its last
+      // top in the lanes past the end
+      std::array<float, kLanes> u{};
+      std::array<float, kLanes> v{};
+      for (std::size_t lane = 0; lane < kLanes; ++lane) {
+        const auto top =
+            beginTops[std::min(chunkBegin + lane, topDoubletEnd - 1)];
+        u[lane] = top.u();
+        v[lane] = top.v();
+      }
+
+      // 3. A0, divided by 1 where dU0 is 0; those tops fail the middle
+      // strip check below, as the original loop skipped them
+      std::array<float, kLanes> dU0{};
+      std::array<float, kLanes> divisor{};
+      std::array<float, kLanes> A0{};
+      for (std::size_t lane = 0; lane < kLanes; ++lane) {
+        dU0[lane] = u[lane] - Ub0;
+        divisor[lane] = dU0[lane] != 0 ? dU0[lane] : 1.f;
+      }
+      for (std::size_t lane = 0; lane < kLanes; ++lane) {
+        A0[lane] = (v[lane] - Vb0) / divisor[lane];
+      }
+
+      // 4. the middle strip check of detail::calibrateOuterStripSpacePoint.
+      // It is scale-invariant, so the direction's z component is cosTheta
+      // rather than cosTheta * sqrt(1 + A0^2). Its rejection conditions are
+      // negated, !(x > limit), so they are evaluated as it evaluates them.
+      const auto& ihvCrossOhvM = calM.innerCrossOuterHalfVector;
+      const auto& iosvCrossOhvM =
+          calM.innerToOuterSeparationCrossOuterHalfVector;
+      const auto& iosvCrossIhvM =
+          calM.innerToOuterSeparationCrossInnerHalfVector;
+      std::array<float, kLanes> scaleM{};
+      std::array<float, kLanes> sOuterM{};
+      std::array<std::uint32_t, kLanes> passes{};
+      for (std::size_t lane = 0; lane < kLanes; ++lane) {
+        const float d0 =
+            rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0[lane];
+        const float d1 =
+            rotationTermsUVtoXY[0] * A0[lane] + rotationTermsUVtoXY[1];
+        // summed in the order of detail::stdArrayDot
+        scaleM[lane] = 0.f + d0 * ihvCrossOhvM[0] + d1 * ihvCrossOhvM[1] +
+                       cosTheta * ihvCrossOhvM[2];
+        const float sInner = 0.f + d0 * iosvCrossOhvM[0] +
+                             d1 * iosvCrossOhvM[1] +
+                             cosTheta * iosvCrossOhvM[2];
+        sOuterM[lane] = 0.f + d0 * iosvCrossIhvM[0] + d1 * iosvCrossIhvM[1] +
+                        cosTheta * iosvCrossIhvM[2];
+        const float limit = std::abs(scaleM[lane]) * m_cfg.toleranceParam;
+        passes[lane] =
+            static_cast<std::uint32_t>(dU0[lane] != 0) &
+            static_cast<std::uint32_t>(!(std::abs(sInner) > limit)) &
+            static_cast<std::uint32_t>(!(std::abs(sOuterM[lane]) > limit));
+      }
+
+      // a chunk with no top passing the middle strip check is skipped; its
+      // lanes past the end repeat a top of the window
+      if (std::ranges::none_of(
+              passes, [](std::uint32_t passed) { return passed != 0; })) {
+        continue;
+      }
+
+      // 5. the bottom strip check of detail::calibrateOuterStripSpacePoint,
+      // with the direction's full z component
+      const auto& ihvCrossOhvB = calB.innerCrossOuterHalfVector;
+      const auto& iosvCrossOhvB =
+          calB.innerToOuterSeparationCrossOuterHalfVector;
+      const auto& iosvCrossIhvB =
+          calB.innerToOuterSeparationCrossInnerHalfVector;
+      std::array<float, kLanes> zDirectionMiddle{};
+      std::array<float, kLanes> B0{};
+      for (std::size_t lane = 0; lane < kLanes; ++lane) {
+        zDirectionMiddle[lane] = cosTheta * std::sqrt(1 + A0[lane] * A0[lane]);
+        B0[lane] = 2 * (Vb0 - A0[lane] * Ub0);
+      }
+      std::array<float, kLanes> scaleB{};
+      std::array<float, kLanes> sOuterB{};
+      for (std::size_t lane = 0; lane < kLanes; ++lane) {
+        const float Cb = 1 - B0[lane] * yBottom;
+        const float Sb = A0[lane] + B0[lane] * xBottom;
+        const float d0 =
+            rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb;
+        const float d1 =
+            rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb;
+        // summed in the order of detail::stdArrayDot
+        scaleB[lane] = 0.f + d0 * ihvCrossOhvB[0] + d1 * ihvCrossOhvB[1] +
+                       zDirectionMiddle[lane] * ihvCrossOhvB[2];
+        const float sInner = 0.f + d0 * iosvCrossOhvB[0] +
+                             d1 * iosvCrossOhvB[1] +
+                             zDirectionMiddle[lane] * iosvCrossOhvB[2];
+        sOuterB[lane] = 0.f + d0 * iosvCrossIhvB[0] + d1 * iosvCrossIhvB[1] +
+                        zDirectionMiddle[lane] * iosvCrossIhvB[2];
+        const float limit = std::abs(scaleB[lane]) * m_cfg.toleranceParam;
+        passes[lane] &=
+            static_cast<std::uint32_t>(!(std::abs(sInner) > limit)) &
+            static_cast<std::uint32_t>(!(std::abs(sOuterB[lane]) > limit));
+      }
+
+      // 6. the remaining checks of the tops that pass both, in their order
+      const std::size_t nLanes = std::min(kLanes, topDoubletEnd - chunkBegin);
+      for (std::size_t lane = 0; lane < nLanes; ++lane) {
+        if (passes[lane] != 0) {
+          addTopCandidate(
+              beginTops[chunkBegin + lane],
+              {A0[lane], B0[lane], zDirectionMiddle[lane], scaleM[lane],
+               sOuterM[lane], scaleB[lane], sOuterB[lane]});
+        }
+      }
+    }
 
     if constexpr (sortedByCotTheta) {
       // remove the top doublets that can no longer be compatible with any
