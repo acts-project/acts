@@ -190,6 +190,7 @@ CkfConfig = namedtuple(
         "useJosephFormulation",
         "constrainToVolumes",
         "endOfWorldVolumes",
+        "seedDeduplicatorConfig",
     ],
     defaults=[
         15.0,
@@ -205,6 +206,7 @@ CkfConfig = namedtuple(
         None,
         None,
         False,
+        None,
         None,
         None,
     ],
@@ -1971,6 +1973,7 @@ def addCKFTracks(
             twoWay=twoWay,
             reverseSearch=reverseSearch,
             seedDeduplication=ckfConfig.seedDeduplication,
+            seedDeduplicatorCfg=ckfConfig.seedDeduplicatorConfig,
             stayOnSeed=ckfConfig.stayOnSeed,
             pixelVolumeIds=ckfConfig.pixelVolumes,
             stripVolumeIds=ckfConfig.stripVolumes,
