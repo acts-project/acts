@@ -131,9 +131,17 @@ Tensor<T> torchToActsTensor(const at::Tensor &tensor,
     shape[1] = 1;
   }
   auto actsTensor = Tensor<T>::Create(shape, execContext);
-  // Create a non owning torch tensor and copy the data
-  auto tmpTensor =
-      torch::from_blob(actsTensor.data(), tensor.sizes(), tensor.options());
+  // Create a non owning torch tensor and copy the data. The options must
+  // describe where the Acts tensor lives, which is not necessarily where
+  // @p tensor lives: a stage can run its model on another device, e.g. on MPS
+  // with the pipeline tensors on the host. copy_ moves the data if needed.
+  const auto actsDevice =
+      execContext.device.isCuda()
+          ? torch::Device(torch::kCUDA, static_cast<c10::DeviceIndex>(
+                                            execContext.device.index))
+          : torch::Device(torch::kCPU);
+  auto tmpTensor = torch::from_blob(actsTensor.data(), tensor.sizes(),
+                                    tensor.options().device(actsDevice));
   tmpTensor.copy_(tensor);
 
   return actsTensor;

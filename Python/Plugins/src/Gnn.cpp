@@ -70,11 +70,12 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGnn, gnn) {
 #ifdef ACTS_GNN_TORCH_BACKEND
   ACTS_PYTHON_DECLARE_GNN_STAGE(TorchMetricLearning, GraphConstructionBase, gnn,
                                 modelPath, selectedFeatures, embeddingDim, rVal,
-                                knnVal, device);
+                                knnVal, device, modelDevice);
 
   ACTS_PYTHON_DECLARE_GNN_STAGE(TorchEdgeClassifier, EdgeClassificationBase,
                                 gnn, modelPath, selectedFeatures, cut, nChunks,
-                                undirected, device, useEdgeFeatures);
+                                undirected, device, modelDevice,
+                                useEdgeFeatures);
 #endif
 
 #ifdef ACTS_GNN_WITH_TENSORRT
@@ -127,7 +128,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGnn, gnn) {
   {
     auto cls = py::class_<Device>(gnn, "Device")
                    .def_static("Cpu", &Device::Cpu)
-                   .def_static("Cuda", &Device::Cuda, py::arg("index") = 0);
+                   .def_static("Cuda", &Device::Cuda, py::arg("index") = 0)
+                   .def_static("Mps", &Device::Mps);
   }
 
   {
