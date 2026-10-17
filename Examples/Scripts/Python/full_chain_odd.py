@@ -144,7 +144,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--gbts-connection-table",
-    help="GBTS layer connection table configuration file",
+    help="GBTS bin connection table configuration file, made by "
+    "gbts_layer_connection_training_odd.py",
     type=pathlib.Path,
 )
 parser.add_argument(
@@ -200,11 +201,15 @@ oddGbtsLayerMap = (
     if args.gbts_layer_map
     else actsDir / "Examples/Configs/odd-gbts-layer-map.json"
 )
-oddGbtsConnectionTable = (
-    args.gbts_connection_table
-    if args.gbts_connection_table
-    else actsDir / "Examples/Configs/odd-gbts-connection-table.json"
-)
+oddGbtsConnectionTable = args.gbts_connection_table
+if args.use_gbts and (
+    oddGbtsConnectionTable is None or not oddGbtsConnectionTable.is_file()
+):
+    parser.error(
+        "--use-gbts needs a connection table, make one with "
+        "Examples/Scripts/Python/gbts_layer_connection_training_odd.py and pass "
+        "it with --gbts-connection-table"
+    )
 
 oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)

@@ -186,8 +186,8 @@ using BinConnections =
 
 GbtsGeometry::GbtsGeometry(
     std::span<const GbtsLayerDescription> layerDescriptions,
-    std::span<const GbtsLayerConnection> layerConnections,
-    const float etaBinWidth, const GbtsZ0Range& z0Range, const Logger& logger)
+    std::span<const GbtsBinConnection> binConnections, const float etaBinWidth,
+    const GbtsZ0Range& z0Range, const Logger& logger)
     : m_etaBinWidth(etaBinWidth) {
   const float minZ0 = z0Range.min;
   const float maxZ0 = z0Range.max;
@@ -232,69 +232,48 @@ GbtsGeometry::GbtsGeometry(
 
   std::vector<const detail::GbtsLayer*> binLayerMap;
   binLayerMap.resize(m_nEtaBins);
-  std::optional<std::uint32_t> lastBin1;
 
-  for (const GbtsLayerConnection& connection : layerConnections) {
-    const detail::GbtsLayer* pL1 = layerById(connection.dst);  // n1
-    const detail::GbtsLayer* pL2 = layerById(connection.src);  // n2
+  // 1. create a map of bin-to-bin connections
+  BinConnections binMap;
+
+  for (const GbtsBinConnection& connection : binConnections) {
+    const detail::GbtsLayer* pL1 = layerById(connection.dst.layer);  // n1
+    const detail::GbtsLayer* pL2 = layerById(connection.src.layer);  // n2
     if (pL1 == nullptr) {
-      ACTS_WARNING("Skipping invalid dst layer " << connection.dst);
+      ACTS_WARNING("Skipping invalid dst layer " << connection.dst.layer);
       continue;
     }
     if (pL2 == nullptr) {
-      ACTS_WARNING("Skipping invalid src layer " << connection.src);
+      ACTS_WARNING("Skipping invalid src layer " << connection.src.layer);
       continue;
     }
 
-    const std::uint32_t nSrcBins = pL2->binning().numBins;
-    const std::uint32_t nDstBins = pL1->binning().numBins;
-
-    // loop over bins in Layer 1
-    for (std::uint32_t b1 = 0; b1 < nDstBins; ++b1) {
-      // loop over bins in Layer 2
-      for (std::uint32_t b2 = 0; b2 < nSrcBins; ++b2) {
-        if (!pL1->checkCompatibility(*pL2, b1, b2, minZ0, maxZ0,
-                                     z0Range.z0Tolerance)) {
-          continue;
-        }
-
-        const std::uint32_t bin1Idx = pL1->binning().firstBin + b1;
-        const std::uint32_t bin2Idx = pL2->binning().firstBin + b2;
-
-        binLayerMap[bin1Idx] = pL1;
-        binLayerMap[bin2Idx] = pL2;
-
-        if (bin1Idx != lastBin1) {
-          // adding a new group
-          m_binGroups.push_back({bin1Idx, {bin2Idx}});
-          lastBin1 = bin1Idx;
-        } else {
-          // extend the last group
-          m_binGroups.back().links.push_back(bin2Idx);
-        }
-      }
+    const std::uint32_t b1 = connection.dst.bin;
+    const std::uint32_t b2 = connection.src.bin;
+    if (b1 >= pL1->binning().numBins || b2 >= pL2->binning().numBins) {
+      ACTS_WARNING("Skipping connection of bin "
+                   << b2 << " of layer " << connection.src.layer << " to bin "
+                   << b1 << " of layer " << connection.dst.layer
+                   << ", which the layers do not have");
+      continue;
     }
+
+    if (!pL1->checkCompatibility(*pL2, b1, b2, minZ0, maxZ0,
+                                 z0Range.z0Tolerance)) {
+      continue;
+    }
+
+    const std::uint32_t bin1Idx = pL1->binning().firstBin + b1;
+    const std::uint32_t bin2Idx = pL2->binning().firstBin + b2;
+
+    binLayerMap[bin1Idx] = pL1;
+    binLayerMap[bin2Idx] = pL2;
+
+    binMap[bin1Idx].second.push_back(bin2Idx);  // incoming link bin1 <- bin2
+    binMap[bin2Idx].first.push_back(bin1Idx);   // outgoing link bin2 -> bin1
   }
+
   // find stages of eta-bin pairs using the graph ablation algorithm
-
-  BinConnections binMap;
-
-  // 1. create a map of bin-to-bin connections
-
-  // initialize with empty links
-
-  for (const auto& [bin1, bin2s] : m_binGroups) {
-    // add to the map
-
-    auto& bin1Links = binMap[bin1];
-
-    for (const auto& bin2 : bin2s) {
-      auto& bin2Links = binMap[bin2];
-
-      bin1Links.second.push_back(bin2);  // incoming link bin1 <- bin2
-      bin2Links.first.push_back(bin1);   // outgoing link bin2 -> bin1
-    }
-  }
 
   // copy bin map as original is still needed
   const BinConnections originalBinMap = binMap;
@@ -380,9 +359,7 @@ GbtsGeometry::GbtsGeometry(
     }
   }
 
-  // 3. Refill binGroups with staged bin pair collections.
-
-  m_binGroups.clear();
+  // 3. Fill the bin pairs stage by stage.
 
   // number of stages:
   const std::size_t nStages = stageOffsets.size() - 1;
@@ -400,13 +377,18 @@ GbtsGeometry::GbtsGeometry(
         continue;
       }
 
-      const auto& binLists = p->second;
-      const std::vector<std::uint32_t>& bin2List = binLists.second;
-
-      // store the group
-      m_binGroups.push_back({bin1Idx, bin2List});
+      // the pairs of one inner bin stay adjacent
+      for (const std::uint32_t bin2Idx : p->second.second) {
+        m_binPairs.push_back({bin1Idx, bin2Idx});
+      }
     }
   }
+}
+
+std::uint32_t GbtsGeometry::etaBin(const GbtsLayerIndex idx, const float z,
+                                   const float r) const {
+  const detail::GbtsLayer& layer = layerByIndex(idx);
+  return layer.getEtaBin(z, r) - layer.binning().firstBin;
 }
 
 std::optional<GbtsLayerIndex> GbtsGeometry::layerIndex(

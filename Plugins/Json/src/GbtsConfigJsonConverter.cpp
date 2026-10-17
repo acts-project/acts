@@ -10,16 +10,26 @@
 
 #include "ActsPlugins/Json/detail/JsonIo.hpp"
 
+void Acts::Experimental::to_json(nlohmann::json& j, const GbtsLayerBin& bin) {
+  j["layerId"] = bin.layer;
+  j["bin"] = bin.bin;
+}
+
+void Acts::Experimental::from_json(const nlohmann::json& j, GbtsLayerBin& bin) {
+  bin.layer = j.at("layerId").get<GbtsExperimentLayerId>();
+  bin.bin = j.at("bin").get<std::uint32_t>();
+}
+
 void Acts::Experimental::to_json(nlohmann::json& j,
-                                 const GbtsLayerConnection& connection) {
+                                 const GbtsBinConnection& connection) {
   j["outer"] = connection.src;
   j["inner"] = connection.dst;
 }
 
 void Acts::Experimental::from_json(const nlohmann::json& j,
-                                   GbtsLayerConnection& connection) {
-  connection.src = j.at("outer").get<GbtsExperimentLayerId>();
-  connection.dst = j.at("inner").get<GbtsExperimentLayerId>();
+                                   GbtsBinConnection& connection) {
+  connection.src = j.at("outer").get<GbtsLayerBin>();
+  connection.dst = j.at("inner").get<GbtsLayerBin>();
 }
 
 void Acts::Experimental::to_json(nlohmann::json& j,
@@ -61,16 +71,16 @@ Acts::Experimental::readGbtsLayers(const std::filesystem::path& path) {
       .get<std::vector<GbtsLayerConfig>>();
 }
 
-std::vector<Acts::Experimental::GbtsLayerConnection>
+std::vector<Acts::Experimental::GbtsBinConnection>
 Acts::Experimental::readGbtsConnections(const std::filesystem::path& path) {
   return Acts::detail::readJsonFile(path)
       .at("connections")
-      .get<std::vector<GbtsLayerConnection>>();
+      .get<std::vector<GbtsBinConnection>>();
 }
 
 void Acts::Experimental::writeGbtsConnections(
     const std::filesystem::path& path,
-    const std::vector<GbtsLayerConnection>& connections) {
+    const std::vector<GbtsBinConnection>& connections) {
   Acts::detail::writeJsonFile(
       path, nlohmann::json{{"connections", connections}}, 4, 0);
 }

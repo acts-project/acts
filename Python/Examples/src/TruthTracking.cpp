@@ -40,9 +40,9 @@ void addTruthTracking(py::module& mex) {
                                 inputMeasurements, inputSimHits,
                                 inputMeasurementSimHitsMap, outputProtoTracks);
   {
-    using Config = Acts::Experimental::GbtsLayerConnectionTool::Config;
+    using Config = Acts::Experimental::GbtsBinConnectionTool::Config;
 
-    auto c = py::class_<Config>(mex, "GbtsLayerConnectionToolConfig")
+    auto c = py::class_<Config>(mex, "GbtsBinConnectionToolConfig")
                  .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, doSymmetrization, probThreshold);
@@ -53,8 +53,8 @@ void addTruthTracking(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       GbtsTrainingAlgorithm, mex, "GbtsTrainingAlgorithm", inputParticles,
       inputParticleMeasurementsMap, inputMeasurements, inputSimHits,
-      inputMeasurementSimHitsMap, gbtsLayerConnectionToolConfig,
-      geometryFileDir, trackingGeometry, outputFileDir);
+      inputMeasurementSimHitsMap, gbtsBinConnectionToolConfig, geometryFileDir,
+      trackingGeometry, outputFileDir, useLayerTilt);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ParticleTrackParamExtractor, mex,
                                 "ParticleTrackParamExtractor", inputParticles,

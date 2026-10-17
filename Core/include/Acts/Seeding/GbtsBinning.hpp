@@ -9,7 +9,6 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 
 namespace Acts::Experimental {
 
@@ -29,13 +28,13 @@ struct GbtsLayerBinning final {
   float etaBinWidth{};
 };
 
-/// The outer eta bins reachable from one inner eta bin. Groups come in the
-/// order the graph is built, outside-in.
-struct GbtsBinGroup final {
+/// A pair of eta bins the graph builds edges between. Pairs come in the order
+/// the graph is built, outside-in, and the pairs of one inner bin are adjacent.
+struct GbtsBinPair final {
   /// The inner eta bin.
-  std::uint32_t bin{};
-  /// The outer bins it links to.
-  std::vector<std::uint32_t> links;
+  std::uint32_t inner{};
+  /// The outer eta bin.
+  std::uint32_t outer{};
 };
 
 }  // namespace Acts::Experimental

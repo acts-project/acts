@@ -11,7 +11,6 @@
 #pragma once
 
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
@@ -23,6 +22,7 @@
 #include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/GbtsLayerDescriptions.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -34,16 +34,6 @@ namespace ActsExamples {
 
 class GraphBasedSeedingAlgorithm final : public IAlgorithm {
  public:
-  /// One module's entry in the layer mapping file.
-  struct GbtsLayerInfo {
-    /// GBTS layer id
-    Acts::Experimental::GbtsExperimentLayerId layerId{};
-    /// whether the layer is a barrel or an endcap layer
-    Acts::Experimental::GbtsLayerType type{};
-    /// sensor technology of the layer
-    Acts::Experimental::GbtsLayerTechnology technology{};
-  };
-
   struct Config {
     /// this is used to initialise the handle that points to the container of
     /// space points
@@ -140,9 +130,8 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   std::optional<Acts::Experimental::GbtsTrackingFilter> m_filter;
 
   /// conversion between ACTS labelling of volume, layer and modules to that
-  /// used by GBTS: the entry of a surface is the one of its module or, without
-  /// one, the one of its whole layer
-  Acts::GeometryHierarchyMap<GbtsLayerInfo> m_actsGbtsMap;
+  /// used by GBTS
+  GbtsLayerMap m_actsGbtsMap;
 
   /// used to define region of interest
   std::optional<Acts::Experimental::GbtsRoiDescriptor> m_internalRoi;
@@ -157,29 +146,10 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// handle that points to container of output seeds
   WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
-  /// make the map between ACTS geometry ID's and GBTS geometry ID's
-  Acts::GeometryHierarchyMap<GbtsLayerInfo> makeActsGbtsMap() const;
-
   /// Resolve the GBTS layer index for a space point, or nullopt if it is not
   /// part of the GBTS geometry.
   std::optional<Acts::Experimental::GbtsLayerIndex> gbtsLayerIndex(
       const ConstSpacePointProxy &spacePoint) const;
-
-  /// Add a surface of the tracking geometry to the description of its GBTS
-  /// layer: the reference coordinates are summed and the bounds extended.
-  /// @param surface The surface to add
-  /// @param gctx The geometry context
-  /// @param inputVector The layer descriptions, one per GBTS layer seen so far
-  /// @param countVector The number of surfaces added to each layer description
-  void addSurfaceToGbtsLayers(
-      const Acts::Surface &surface, const Acts::GeometryContext &gctx,
-      std::vector<Acts::Experimental::GbtsLayerDescription> &inputVector,
-      std::vector<std::size_t> &countVector) const;
-
-  /// makes the geometry objects used by GBTS that correspond to the objects in
-  /// the connection table for ease these are sometimes called "logical layers"
-  std::vector<Acts::Experimental::GbtsLayerDescription> layerNumbering(
-      const Acts::GeometryContext &gctx) const;
 
   void printConfig() const;
 };

@@ -250,7 +250,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
   const std::span<detail::GbtsNodeEdgeInfo> edgeInfo =
       nodeStorage.nodeEdgeInfo();
 
-  // reused across bin groups so that the windows are allocated once
+  // reused across inner bins so that the windows are allocated once
   std::vector<SlidingWindow> phiSlidingWindow;
 
   const bool calibrate = m_cfg.calibrateStrips && nodeStorage.hasStrips();
@@ -272,9 +272,17 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
     return true;
   };
 
-  // loop over bin groups
-  for (const auto& bg : m_geometry->binGroups()) {
-    const detail::GbtsEtaBinInfo& B1 = nodeStorage.etaBin(bg.bin);
+  const std::span<const GbtsBinPair> binPairs = m_geometry->binPairs();
+
+  // loop over inner bins, each with the adjacent bin pairs that start from it
+  for (std::size_t first = 0, last = 0; first < binPairs.size(); first = last) {
+    const std::uint32_t b1Idx = binPairs[first].inner;
+    last = first + 1;
+    while (last < binPairs.size() && binPairs[last].inner == b1Idx) {
+      ++last;
+    }
+
+    const detail::GbtsEtaBinInfo& B1 = nodeStorage.etaBin(b1Idx);
 
     if (B1.empty()) {
       continue;
@@ -293,13 +301,13 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
         m_cfg.matchBeforeCreate && barrelOrder1 >= 0 &&
         barrelOrder1 <= m_cfg.matchBeforeCreateMaxBarrelOrder;
 
-    // prepare a sliding window for each non-empty bin2 in the group
+    // prepare a sliding window for each non-empty bin2 of the inner bin
 
     phiSlidingWindow.clear();
 
     // loop over n2 eta-bins in L2 layers
-    for (const std::uint32_t b2Idx : bg.links) {
-      const detail::GbtsEtaBinInfo& B2 = nodeStorage.etaBin(b2Idx);
+    for (const GbtsBinPair& pair : binPairs.subspan(first, last - first)) {
+      const detail::GbtsEtaBinInfo& B2 = nodeStorage.etaBin(pair.outer);
 
       if (B2.empty()) {
         continue;
@@ -678,7 +686,7 @@ GbtsGraph GbtsGraphBuilder::buildTheGraph(const GbtsRoiDescriptor& roi,
       }
 
     }  // loop over n1 (inner) nodes
-  }  // loop over bin groups: a single n1 bin and multiple n2 bins
+  }  // loop over inner bins: a single n1 bin and multiple n2 bins
 
   if (edgeStorage.size() >= maxEdges) {
     ACTS_WARNING(

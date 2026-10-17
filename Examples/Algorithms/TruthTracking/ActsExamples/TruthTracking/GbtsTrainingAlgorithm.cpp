@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsPlugins/Json/GbtsConfigJsonConverter.hpp"
@@ -19,6 +20,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <map>
+#include <span>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -53,7 +55,7 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
 
-  ACTS_INFO("LayerConnectionTool chosen");
+  ACTS_INFO("BinConnectionTool chosen");
 
   if (m_cfg.trackingGeometry == nullptr) {
     throw std::invalid_argument("Missing tracking geometry");
@@ -61,17 +63,16 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
 
   // the layers and the surfaces they are made of
   const auto layers = Acts::Experimental::readGbtsLayers(m_cfg.geometryFileDir);
-  std::vector<Acts::GeometryHierarchyMap<
-      Acts::Experimental::GbtsExperimentLayerId>::InputElement>
-      surfaceLayers;
-  for (const auto& layer : layers) {
-    for (const Acts::GeometryIdentifier& surface : layer.surfaces) {
-      surfaceLayers.emplace_back(surface, layer.id);
-    }
-  }
-  m_surfaceLayers =
-      Acts::GeometryHierarchyMap<Acts::Experimental::GbtsExperimentLayerId>(
-          std::move(surfaceLayers));
+  m_surfaceLayers = makeGbtsLayerMap(m_cfg.geometryFileDir);
+
+  // the layers and their eta bins as the seeding makes them, which the bins of
+  // the connection table refer to
+  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
+  m_geometry = std::make_shared<const Acts::Experimental::GbtsGeometry>(
+      makeGbtsLayerDescriptions(*m_cfg.trackingGeometry, m_surfaceLayers, gctx,
+                                m_cfg.useLayerTilt, false, logger()),
+      std::span<const Acts::Experimental::GbtsBinConnection>{},
+      m_cfg.etaBinWidth, Acts::Experimental::GbtsZ0Range{}, logger());
 
   // the sensitive surfaces of every layer
   std::map<Acts::Experimental::GbtsExperimentLayerId,
@@ -89,15 +90,14 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
       return;
     }
 
-    layerSurfaces[*layer].push_back(surface);
+    layerSurfaces[layer->layerId].push_back(surface);
   });
 
   // the symmetrization finds the mirrored layer through the r and z extent of
   // every layer, measured by a proto layer of its surfaces, which takes the
   // closest approach of a surface to the beam line and the thickness of a
   // sensitive surface into account
-  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
-  auto& detectorGeometry = m_cfg.gbtsLayerConnectionToolConfig.detectorGeometry;
+  auto& detectorGeometry = m_cfg.gbtsBinConnectionToolConfig.detectorGeometry;
   detectorGeometry.clear();
   for (const auto& layer : layers) {
     const auto surfaces = layerSurfaces.find(layer.id);
@@ -117,20 +117,14 @@ GbtsTrainingAlgorithm::GbtsTrainingAlgorithm(
     ACTS_DEBUG("GBTS layer " << layer.id << ": " << protoLayer.extent);
   }
 
-  m_layerConnectionTool.emplace(
-      m_cfg.gbtsLayerConnectionToolConfig,
-      this->logger().cloneWithSuffix("GbtsLayerConnectionTool"));
+  m_binConnectionTool.emplace(
+      m_cfg.gbtsBinConnectionToolConfig, m_geometry,
+      this->logger().cloneWithSuffix("GbtsBinConnectionTool"));
 }
 
 ProcessCode GbtsTrainingAlgorithm::finalize() {
-  const auto layerTable = m_layerConnectionTool->createConnectionTable();
-
-  std::vector<Acts::Experimental::GbtsLayerConnection> connections;
-  for (const auto& layerPair : layerTable) {
-    // swap order as we want outward -> inward ordering
-    connections.push_back({.src = layerPair.second, .dst = layerPair.first});
-  }
-  Acts::Experimental::writeGbtsConnections(m_cfg.outputFileDir, connections);
+  Acts::Experimental::writeGbtsConnections(
+      m_cfg.outputFileDir, m_binConnectionTool->createConnectionTable());
 
   return ProcessCode::SUCCESS;
 }
@@ -153,9 +147,8 @@ ProcessCode GbtsTrainingAlgorithm::execute(const AlgorithmContext& ctx) const {
     ACTS_VERBOSE(measurements.size()
                  << " measurements for particle " << particle);
 
-    // the time and the GBTS layer of every hit on one of the layers
-    std::vector<std::pair<double, Acts::Experimental::GbtsExperimentLayerId>>
-        hits;
+    // the time and the GBTS bin of every hit on one of the layers
+    std::vector<std::pair<double, Acts::Experimental::GbtsLayerBin>> hits;
 
     hits.reserve(measurements.size());
 
@@ -190,23 +183,38 @@ ProcessCode GbtsTrainingAlgorithm::execute(const AlgorithmContext& ctx) const {
         continue;
       }
 
-      hits.emplace_back(simHitIt->time(), *layer);
+      const auto layerIndex = m_geometry->layerIndex(layer->layerId);
+      if (!layerIndex.has_value()) {
+        ACTS_DEBUG("GBTS layer " << layer->layerId
+                                 << " has no surface in the geometry");
+        continue;
+      }
+
+      // the eta bin of the hit, as the seeding bins its space point
+      const Acts::Vector3 position = simHitIt->position();
+      const auto z = static_cast<float>(position.z());
+      const auto r =
+          static_cast<float>(Acts::fastHypot(position.x(), position.y()));
+      hits.emplace_back(simHitIt->time(),
+                        Acts::Experimental::GbtsLayerBin{
+                            .layer = layer->layerId,
+                            .bin = m_geometry->etaBin(*layerIndex, z, r)});
     }
 
-    // the layers in the order the particle passed them
+    // the bins in the order the particle passed them
     std::ranges::sort(hits, {}, [](const auto& hit) { return hit.first; });
 
-    std::vector<Acts::Experimental::GbtsExperimentLayerId> layers;
+    std::vector<Acts::Experimental::GbtsLayerBin> bins;
 
-    layers.reserve(hits.size());
+    bins.reserve(hits.size());
 
-    for (const auto& [time, layer] : hits) {
-      layers.push_back(layer);
+    for (const auto& [time, bin] : hits) {
+      bins.push_back(bin);
     }
 
     {
-      std::lock_guard<std::mutex> lock(m_gbtsLayerConnectionToolMutex);
-      m_layerConnectionTool->addTrack(layers);
+      std::lock_guard<std::mutex> lock(m_gbtsBinConnectionToolMutex);
+      m_binConnectionTool->addTrack(bins);
     }
   }
 
