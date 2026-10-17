@@ -45,6 +45,11 @@ description: a flat list of `GbtsLayer` logical layers, each subdivided into
 other way round. The ID is the caller's own numbering, and the algorithm never
 decodes it.
 
+A ring of inclined modules is described by its `slope` in @f$r@f$-@f$z@f$,
+along which its eta bins are cut. `ActsExamples::GraphBasedSeedingAlgorithm`
+takes the slope from the module planes of the tracking geometry when
+`useLayerTilt` is set.
+
 A pixel barrel layer carries one more field, `barrelOrder`: the position of the
 layer in the inside-out ordering of the pixel barrel. Every other layer keeps
 the default `-1`, so the sign of the field also says whether a layer is a pixel
@@ -66,7 +71,8 @@ connected layers, which *eta bin* pairs are geometrically compatible with the
 allowed @f$z_0@f$ range. The result is a **bin group** list — one inner bin
 together with all outer bins it may connect to — which serves as the graph
 builder's iteration schedule, ordered so that outer bins are processed before
-the inner bins that depend on them.
+the inner bins that depend on them. The @f$z_0@f$ range is widened on both ends
+by `GbtsZ0Range::z0Tolerance`.
 
 The binning it worked out is readable back off the geometry, so a consumer that
 runs the same algorithm elsewhere does not have to recompute or pre-generate it:

@@ -259,7 +259,7 @@ class dynamic_array
   template <typename E = entry_type>
   DETRAY_HOST_DEVICE constexpr void push_back(E&& entry) {
     assert(m_capacity > 0);
-    assert(m_data->size < m_capacity);
+    assert(m_data->size <= m_capacity);
     assert(m_global_storage);
 
     if (m_data->size < m_capacity) {
