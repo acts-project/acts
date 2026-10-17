@@ -10,6 +10,7 @@
 
 // Project include(s)
 #include "detray/builders/detector_builder.hpp"
+#include "detray/core/concepts.hpp"
 
 // System include(s)
 #include <filesystem>
@@ -20,7 +21,7 @@
 namespace detray::io {
 
 /// @brief Abstract base class for detray detector component writers
-template <class detector_t>
+template <detray::concepts::detector detector_t>
 class writer_interface {
  public:
   /// All writers must define a file extension
@@ -40,7 +41,7 @@ class writer_interface {
   /// @note The existence of the file path has to be guaranteed by the caller
   virtual std::string write(const detector_t&,
                             const typename detector_t::name_map&,
-                            const std::ios_base::openmode,
+                            const std::string&, const std::ios_base::openmode,
                             const std::filesystem::path&) = 0;
 
  private:
