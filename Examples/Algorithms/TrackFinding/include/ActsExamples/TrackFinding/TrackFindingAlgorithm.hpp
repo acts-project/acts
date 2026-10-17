@@ -15,12 +15,15 @@
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
+#include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -77,6 +80,73 @@ class TrackFindingAlgorithm final : public IAlgorithm {
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
       const Acts::Logger& logger);
 
+  /// CKF extensions the track state creator is connected to
+  using Extensions = Acts::CombinatorialKalmanFilterExtensions<TrackContainer>;
+  /// Track state creator used by the default factory. Its calibrator and
+  /// measurement selector delegate types do not depend on the source link
+  /// iterator, so they are shared by all creators.
+  using DefaultTrackStateCreator =
+      Acts::TrackStateCreator<IndexSourceLinkAccessor::Iterator,
+                              TrackContainer>;
+
+  /// Factory for the track state creator, i.e. the CKF extension that turns
+  /// the measurements on a surface into track state candidates for a branch.
+  ///
+  /// The algorithm calls it once per event and keeps the returned object alive
+  /// for the whole track finding of that event. The object owns whatever event
+  /// data it needs and is connected to `Extensions::createTrackStates`
+  /// Experiments can provide their own creator without modifying the algorithm
+  class TrackStateCreatorFactory {
+   public:
+    /// Event data and algorithm pieces a creator is built from
+    struct EventInput {
+      /// The context of the event being processed
+      const AlgorithmContext& ctx;
+      /// The measurements of the event
+      const MeasurementSubset& measurements;
+      /// The CKF measurement selector config, e.g. for the chi2 cuts
+      const Acts::MeasurementSelector::Config& measurementSelectorCfg;
+      /// Calibrator to be used for the measurements
+      DefaultTrackStateCreator::Calibrator calibrator;
+      /// Measurement selector to be used on the calibrated candidates. It
+      /// carries the algorithm specific selection, e.g. staying on the seed.
+      DefaultTrackStateCreator::MeasurementSelector measurementSelector;
+    };
+
+    /// Per-event track state creator
+    class EventTrackStateCreator {
+     public:
+      virtual ~EventTrackStateCreator() = default;
+
+      /// Create the track states for the measurements on a surface, see
+      /// `Extensions::createTrackStates`
+      virtual DefaultTrackStateCreator::TrackStatesResult createTrackStates(
+          const Acts::GeometryContext& gctx,
+          const Acts::CalibrationContext& calibrationContext,
+          const Acts::Surface& surface,
+          const DefaultTrackStateCreator::BoundState& boundState,
+          Acts::TrackIndexType prevTip,
+          std::vector<DefaultTrackStateCreator::TrackStateProxy>&
+              trackStateCandidates,
+          DefaultTrackStateCreator::TrackStateContainerBackend& trajectory,
+          const Acts::Logger& logger) const = 0;
+    };
+
+    virtual ~TrackStateCreatorFactory() = default;
+
+    /// Create the creator for one event
+    ///
+    /// @param input The event data and algorithm pieces
+    /// @return The creator
+    virtual std::unique_ptr<EventTrackStateCreator> makeEventTrackStateCreator(
+        const EventInput& input) const = 0;
+  };
+
+  /// Create the default track state creator factory, which considers all
+  /// measurements on a surface as candidates.
+  static std::shared_ptr<TrackStateCreatorFactory>
+  makeDefaultTrackStateCreatorFactory();
+
   struct Config {
     /// Input measurements collection.
     std::string inputMeasurements;
@@ -97,6 +167,9 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     std::shared_ptr<TrackFinderFunction> findTracks;
     /// Type erased track finder with brem recovery function.
     std::shared_ptr<TrackFinderFunction> findTracksBrem;
+    /// Type erased track state creator factory.
+    std::shared_ptr<TrackStateCreatorFactory> trackStateCreatorFactory =
+        makeDefaultTrackStateCreatorFactory();
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
     /// Track selector config
