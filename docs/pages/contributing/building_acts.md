@@ -353,6 +353,16 @@ list of presets contains:
   necessary for running the ODD full chain examples with Fatras. It
   sets the cpp standard to 20, the generator to ninja and enables ccache.
 - `perf` is similar to `dev` but tweaked for performance measurements.
+- `github-ci` reproduces the GitHub CI configuration and enables ccache.
+- `github-ci-no-ccache` inherits the same configuration but clears the C++
+  compiler launcher, so it can be used locally without installing ccache:
+
+  ```console
+  cmake --preset github-ci-no-ccache -B build
+  ```
+
+  All other CI dependencies are still required. The `dev`, `perf`,
+  `devcontainer`, and `github-ci` presets continue to enable ccache by default.
 
 In addition to the ACTS-specific options, many generic options are available
 that modify various aspects of the build. The following options are some of the
