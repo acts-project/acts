@@ -64,7 +64,7 @@ concept GlobPatFinderHit = requires(const Hit_t hit,
 };
 /** @brief Equality operator for hits. */
 template <GlobPatFinderHit Hit_t>
-bool operator==(const Hit_t& lhs, const Hit_t& rhs) {
+static bool operator==(const Hit_t& lhs, const Hit_t& rhs) {
     return lhs.spacePoint() == rhs.spacePoint();
 }
 
@@ -269,8 +269,7 @@ struct PatternStateAux {
      *  @param gctx: geometry context
      *  @param beamSpot: position of the beam spot */
     void syncState(const GeometryContext& gctx,
-                   const BeamspotInfo& beamSpot,
-                   bool searchInNewGroup = false);
+                   const BeamspotInfo& beamSpot);
     /** @brief Book pattern state variables that need to be updated when syncState is called
      *  @param vars: list of variables to update */
     void setStateVars(const std::initializer_list<PatternStateVar>& vars);

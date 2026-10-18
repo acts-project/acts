@@ -24,7 +24,7 @@ namespace Acts::Experimental::detail {
 template<GlobPatFinderHit Hit_t,
          SectorType Sector_t,
          PatternTopology<Hit_t> Topology_t>
-template<PatternSeedSelector<Hit_t> SeedSelector_t,
+template<PatternSeedSelector<Hit_t, Topology_t> SeedSelector_t,
          OnlyPhiHitsProvider<Hit_t, Topology_t, Sector_t> OnlyPhiProvider_t>
 std::vector<typename GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::OutputPattern> 
 GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatterns(
@@ -44,7 +44,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatterns(
 template<GlobPatFinderHit Hit_t,
          SectorType Sector_t,
          PatternTopology<Hit_t> Topology_t>
-template<PatternSeedSelector<Hit_t> SeedSelector_t>
+template<PatternSeedSelector<Hit_t, Topology_t> SeedSelector_t>
 std::vector<typename GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::PatternStateAux> 
 GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
     const GeometryContext& gctx,
@@ -66,22 +66,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
     
     PatternStateAuxVec outPatterns{};
     outPatterns.reserve(10);
-    /** @brief Helper function to count existing patterns containing a hit
-     *  @param hit The hit to check
-     *  @param coords The coordinates of the hit
-     *  @return The number of existing patterns containing the hit TO DO remove window from config */
-    auto countPatterns = [&](const PatternStateAuxVec& patterns,
-                             const Hit_t& seed,
-                             const SearchTree_t::coordinate_t& coords) -> unsigned {
-        return std::ranges::count_if(patterns, [&](const PatternStateAux& pattern){
-            if (std::abs(pattern.patTheta - coords[thetaIdx]) > 2 * seedSelector.thetaSearchWindow(seed) ||
-                !pattern.sector.isNeighbour(
-                    Sector_t{static_cast<typename Sector_t::Index_t>(coords[sectorIdx])})) {
-                return false;
-            }
-            return pattern.isInPattern(seed);
-        });
-    };
+
     /** We try to build a pattern in eta starting from every hit in the three */
     for (const auto& [seedCoords, seedPtr] : orderedSpacepoints) {
         /** Get the seed hit */
@@ -101,15 +86,21 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
             continue; 
         }
         /** Define the search range. */
+        const auto& windowPerGroup {seedSelector.thetaSearchWindow(seed)};
+        const double thetaHalfWindow {std::ranges::max(windowPerGroup)};
+
         typename SearchTree_t::range_t selectRange{};
         selectRange[sectorIdx].shrink(seedCoords[sectorIdx] - 0.1, seedCoords[sectorIdx] + 0.1);
-        const double thetaHalfWindow {seedSelector.thetaSearchWindow(seed)/2.};
         selectRange[thetaIdx].shrink(seedCoords[thetaIdx] - thetaHalfWindow, seedCoords[thetaIdx] + thetaHalfWindow);
 
         /** Search for compatible spacepoints with the seed and check if there are enough to build a pattern */
         OrderedHits.clear();
-        orderedSpacepoints.rangeSearchMapDiscard(selectRange, [&](const SearchTree_t::coordinate_t& /*coords*/,
+        orderedSpacepoints.rangeSearchMapDiscard(selectRange, [&](const SearchTree_t::coordinate_t& coords,
                                                                        const Hit_t* hit) {
+            if (std::abs(coords[thetaIdx] - seedCoords[thetaIdx]) > 
+                    windowPerGroup[Topology_t::groupIndex(*hit)]) {
+                return; // skip hits outside the theta search window
+            }
             OrderedHits.emplace_back(hit, 0u);
         });
         if (OrderedHits.size() < m_cfg.minStripEtaLayers + m_cfg.minPrecisionLayers) {
@@ -305,6 +296,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::extendPatterns(
             continue;
         }
         /** Check angular compatibility of the test hit and the pattern */
+        ACTS_VERBOSE(__func__<<"() "<<PatternStateAux::brief(pat));
         const auto [decision, testRes] {checkLineCompatibility(gctx, pat, testHit, beamSpot)};
         switch (decision) {
             case LineTestDecision::eAddHit: {
@@ -312,7 +304,6 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::extendPatterns(
                 const bool lowConfidenceRes {testRes.sigma > m_cfg.lowConfidenceResSigma && 
                                              testRes.residual / testRes.sigma > 2.};
                 if (lowConfidenceRes) {
-                    ACTS_VERBOSE(__func__<<"() Low-confidence hit: residual pull "<<testRes.residual / testRes.sigma);
                     /** If hit is compatible but with poor confidence, we create both a pattern with the hit and a pattern without the hit,
                      *  to keep also the possibility of rejecting this hit in the next iterations. First we make sure that the low-confidence
                      *  pattern is original, i.e. accumulating not seen hits */
@@ -320,15 +311,16 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::extendPatterns(
                             return p.lastInsertedHit == testHit && 
                                    (p.prevLayerHit == pat.lastInsertedHit || 
                                         p.nBendingLayers() > (pat.nBendingLayers() + 1u)); })) {
-                        ACTS_VERBOSE(__func__<<"() Forking leads to existing pattern - reject.");
+                        ACTS_VERBOSE(__func__<<"() Low-confidence hit: Forking leads to existing pattern - reject.");
                         break;
                     }
                     /** Add the new pattern to the list of next patterns */
+                    ACTS_VERBOSE(__func__<<"() Low-confidence hit - forking the pattern.");
                     endPatterns.push_back(pat);
                     endPatterns.back().addHit(testHit, testRes);
                     break;
                 }
-                ACTS_VERBOSE(__func__<<"() Hit compatible - add to pattern. Residual pull "<<testRes.residual / testRes.sigma);
+                ACTS_VERBOSE(__func__<<"() Hit compatible - add to pattern.");
                 pat.addHit(testHit, testRes);
                 break;
             }
@@ -336,18 +328,22 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::extendPatterns(
                 /* Check first if the branched pattern already exists*/
                 if (std::ranges::any_of(endPatterns, [&testHit, &pat](const PatternStateAux& p) {
                         return p.lastInsertedHit == testHit && p.prevLayerHit == pat.prevLayerHit; })) {
-                    ACTS_VERBOSE(__func__<<"() Hit compatible & on same layer of last added hit - branched pattern already exists.");
+                    ACTS_VERBOSE(__func__<<"() Hit compatible & on same layer - branched pattern already exists.");
                     break;
                 }
                 /** Branch the pattern: we clone it and overwrite the existing hit with the test hit */
-                ACTS_VERBOSE(__func__<<"() Hit compatible & on same layer of last added hit - branch pattern.");
+                ACTS_VERBOSE(__func__<<"() Hit compatible & on same layer - branch pattern.");
                 endPatterns.push_back(pat);
                 endPatterns.back().overWriteHit(testHit, testRes);
                 break;
             }
+            case LineTestDecision::eReplaceHit: {
+                ACTS_VERBOSE(__func__<<"() Hit compatible & on same layer - replace existing hit.");
+                pat.overWriteHit(testHit, testRes);
+                break;
+            }
             case LineTestDecision::eRejectHit: {
-                ACTS_VERBOSE(__func__<<"() Hit is not compatible with the pattern - reject hit. Residual pull "
-                    <<(testRes.sigma > Acts::s_epsilon ? testRes.residual / testRes.sigma : 0.0));
+                ACTS_VERBOSE(__func__<<"() Hit is not compatible - reject hit.");
                 break;
             }
         }
@@ -366,19 +362,15 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
     const OrderedHit& testHit,
     const BeamspotInfo& beamSpot) const
 {
-    const auto testHitGroup {Topology_t::groupIndex(*testHit)};
-    const bool searchInNewGroup {testHitGroup != Topology_t::groupIndex(*pat.lastInsertedHit)};
     const bool searchInNewLayer {testHit.globLayer != pat.lastInsertedHit.globLayer};
-    assert(!searchInNewGroup || searchInNewLayer);
     if (searchInNewLayer) {
-        pat.syncState(gctx, beamSpot, searchInNewGroup);
+        pat.syncState(gctx, beamSpot);
     }
-    if (testHit->spacePoint()->measuresLoc0() && !isPhiCompatible(gctx, pat, *testHit)) {
-        ACTS_VERBOSE(__func__<<"() Test hit phi "<<VectorHelpers::phi(testHit->globalPosition(gctx))
-            <<" not compatible with "<<PatternStateAux::brief(pat));
+    if (testHit->spacePoint()->measuresLoc0() && 
+            !isPhiCompatible(gctx, pat, *testHit)) {
         return std::make_pair(LineTestDecision::eRejectHit,LineTestRes{});
     }
-    
+
     /** @brief Helper function to make the result
      *  @param decision The decision for the test result if the residual is within the acceptance window 
      *  @return The test result */
@@ -387,6 +379,8 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
         double accWindow {(res.nDof==1u ? m_cfg.nResidualSigma : m_cut2Dof) * res.sigma};
         /** Loosen the window when we use the beamspot or when we are looking for hits in a new group, as
          *  the straight line approximation becomes less accurate on large distances. TO DO: investigate this further */
+        const auto testHitGroup {Topology_t::groupIndex(*testHit)};
+        const bool searchInNewGroup {testHitGroup != Topology_t::groupIndex(*pat.lastInsertedHit)};
         if (pat.useBeamspot || searchInNewGroup ||
                 (testHitGroup != Topology_t::groupIndex(*pat.prevLayerHit) && !searchInNewLayer)) {
             accWindow *= m_cfg.loosenAcceptanceFactor;
@@ -404,9 +398,38 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
         ACTS_VERBOSE(__func__<<"() Test hit is the same as last inserted hit - reject.");
         return std::make_pair(LineTestDecision::eRejectHit, LineTestRes{});
     }
-    if (pat.lineAnchorHit.globLayer == pat.lastInsertedHit.globLayer) {
+    if (pat.nBendingLayers() < 2u) {
         ACTS_VERBOSE(__func__<<"() Test hit on same layer as seed with no prior hits - reject.");
         return std::make_pair(LineTestDecision::eRejectHit, LineTestRes{});
+    }
+    /** Same layer, one precision and one non-precision hit: decide whether they are the same crossing
+     *  (keep only the precision hit) or whether both hypotheses must be kept (branch). */
+    const bool testPrec {testHit->isPrecision()};
+    const bool lastPrec {pat.lastInsertedHit->isPrecision()};
+    if (testPrec != lastPrec) {
+        ACTS_VERBOSE(__func__<<"() Test hit on same layer as last inserted hit with different precision - check compatibility.");
+        LineTestResult_t result {makeResult(LineTestDecision::eBranchPattern)};
+        // If the test hit is not compatible, reject it
+        if (result.first == LineTestDecision::eRejectHit) {
+            return result;
+        }
+        /** Both precision and non-precision hits were tested against the same line (no sync within a layer):
+         *      sigma^2(non-precision test) = sigma^2(line) + sigma^2(non-precision hit)
+         *      sigma^2(precision test)     ~ sigma^2(line)  (precision hit error neglected)
+         *  If the line is more precise than the non-precision hit
+         *      sigma(line) < sigma(non-precision hit)  <=>  2 sigma^2(precision test) < sigma^2(non-precision test)
+         *  compatibility of both hits with the line implies they belong to the same crossing: only the precision
+         *  hit is kept (replacing the non-precision one) without branching. Otherwise the line cannot tell a wrong
+         *  precision hit from the right one within the non-precision hit's extent: keep both hypotheses. */
+        const double precSigma    {testPrec ? result.second.sigma      : pat.lastHitTestRes.sigma};
+        const double nonPrecSigma {testPrec ? pat.lastHitTestRes.sigma : result.second.sigma};
+        if (2. * square(precSigma) < square(nonPrecSigma)) {
+            ACTS_VERBOSE(__func__<<"() The line is more precise than the non-precision hit - keep the precision hit.");
+            result.first = testPrec ? LineTestDecision::eReplaceHit : LineTestDecision::eRejectHit;
+        } else {
+            ACTS_VERBOSE(__func__<<"() The line is not more precise than the non-precision hit - branch pattern.");
+        }
+        return result;
     }
     return makeResult(LineTestDecision::eBranchPattern);
 }
@@ -594,13 +617,34 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::isBetter(
      *  unless the extra layers are genuinely comparable. For a ≥3-layer difference,  
      *  the multiplicity advantage is strong enough to dominate. */
     if ((nLayerDiff == 0 && nPrecLayDiff == 0) ||
-        (std::abs(nLayerDiff) < 3 && resDiff > 0.1 && std::min(resA, resB) > 1.)) {
+        (std::abs(nLayerDiff) < 2 && resDiff > 0.1 && std::min(resA, resB) > 1.)) {
         return resA < resB;
     }
     if (nLayerDiff == 0) {
         return nPrecLayDiff > 0;
     }
     return nLayerDiff > 0;
+}
+
+template<GlobPatFinderHit Hit_t,
+         SectorType Sector_t,
+         PatternTopology<Hit_t> Topology_t>
+unsigned 
+GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::countPatterns(
+    const PatternStateAuxVec& patterns,
+    const Hit_t& seed,
+    const SearchTree_t::coordinate_t& seedCoords) const
+{
+    constexpr auto thetaIdx {Acts::toUnderlying(HitCoords::eTheta)};
+    constexpr auto sectorIdx {Acts::toUnderlying(HitCoords::eSector)};
+    return std::ranges::count_if(patterns, [&](const PatternStateAux& pattern){
+        if (std::abs(pattern.patTheta - seedCoords[thetaIdx]) > m_cfg.maxThetaSizeOverlap ||
+            !pattern.sector.isNeighbour(
+                Sector_t{static_cast<typename Sector_t::Index_t>(seedCoords[sectorIdx])})) {
+            return false;
+        }
+        return pattern.isInPattern(seed);
+    });
 }
 
 template<GlobPatFinderHit Hit_t,

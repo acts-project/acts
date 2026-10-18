@@ -35,8 +35,7 @@ template <GlobPatFinderHit Hit_t,
 void
 PatternStateAux<Hit_t, Sector_t, Topology_t>::syncState(
     const GeometryContext& gctx,
-    const BeamspotInfo& beamSpot,
-    bool searchInNewGroup)
+    const BeamspotInfo& beamSpot)
 {
     if (needUpdate[toUnderlying(PatternStateVar::eBendPlane)]) {
         updateBendPlane(gctx, beamSpot); 
@@ -52,20 +51,14 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::syncState(
      *  group of the last inserted hit (anchor = furthest hit from it). Once a hit in the
      *  new group is accepted, addHit flags eLineAnchor and we return to the default anchor. */
     const auto lastHitGroup {Topology_t::groupIndex(*lastInsertedHit)};
-    if (searchInNewGroup && lastHitGroup != Topology_t::groupIndex(*lineAnchorHit)) {
-        const auto& hits {hitsPerGroup[lastHitGroup]};
-        OrderedHit furthest {*std::ranges::max_element(hits, {},
+    if (lastHitGroup != Topology_t::groupIndex(*lineAnchorHit)) {
+        OrderedHit furthest {*std::ranges::max_element(hitsPerGroup[lastHitGroup], {},
             [this](const OrderedHit& h) {
                 return layerDistance(h.globLayer, lastInsertedHit.globLayer); })};
-        if (furthest != lastInsertedHit && 
-                (projToPhiPlane(gctx, *furthest) - projToPhiPlane(gctx, *lastInsertedHit)).squaredNorm() 
-                    >= Acts::square(cfg->minHitDistance4Line)) {
+        if (lastInsertedHit != furthest && 
+                (projToPhiPlane(gctx, *lastInsertedHit) - projToPhiPlane(gctx, *furthest)).squaredNorm() 
+                    >= square(cfg->minHitDistance4Line)) {
             lineAnchorHit = furthest;
-            needUpdate[toUnderlying(PatternStateVar::eLine)] = true;
-        } else if (lineAnchorHit.globLayer > lastInsertedHit.globLayer) {
-            // If the lever arm with the new anchor is too short, in case of 
-            // inward search we use the beamspot.
-            lineAnchorHit = lastInsertedHit;
             needUpdate[toUnderlying(PatternStateVar::eLine)] = true;
         }
     }
@@ -285,9 +278,10 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::computeLineResidual(
     res.sigma = std::sqrt(residualCovAcc + projSigmaTerm);
     res.nDof = projectTestHit ? 1u : 2u;
 
-    ACTS_VERBOSE(__func__<<"() "<< brief(*this)<<"\nUse beamspot: "<<useBeamspot
+    ACTS_VERBOSE(__func__<<"() Use beamspot: "<<useBeamspot
         <<", alpha: "<<alpha<<", Residual: "<<res.residual<<" +- "<<res.sigma
-        <<", linePos: "<<toString(linePos)<<", lineDir: "<<toString(lineDir)
+        <<", nDof: "<<static_cast<int>(res.nDof)<<", pull: "<<res.residual / res.sigma<<std::endl
+        <<"linePos: "<<toString(linePos)<<", lineDir: "<<toString(lineDir)
         <<", testPos: "<<toString(testPos)<<", resDir: "<<toString(resDir)
         <<", hit pos sigma: "<<std::sqrt(residualCovAcc)
         <<", phi plane sigma: "<<std::sqrt(projSigmaTerm));
@@ -744,11 +738,12 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::print(
     using namespace Acts::UnitLiterals;
     auto inDeg = [](double angle) { return angle / 1._degree; };
     ostr<<"PatternStateAux Exp Sector: "<<static_cast<int>(sector.sector())
-        <<", Theta: "<<inDeg(patTheta) << ", BendPlane Phi "<<inDeg(patPhi)
-        <<", displ "<<patPhiOffset<<", cov: "<<print(bendPlaneCov);
-    ostr<<", nPrec: "<<static_cast<int>(nPrecisionLayers)<<", nEtaNonPrec: "
+        <<", Theta: "<<inDeg(patTheta) << ", Phi "<<inDeg(patPhi)
+        <<", phiOffset: "<<patPhiOffset;
+    ostr<<", nPrec: "<<static_cast<int>(nPrecisionLayers)<<", nEtaTrig: "
         <<static_cast<int>(nTriggerLayers)<<", nPhi: "<<static_cast<int>(nPhiLayers);
-    ostr<<", mean norma res sq: "<<getMeanResidual2()<<", dir: "<<toString(lineDir);
+    ostr<<", mean norma res sq: "<<getMeanResidual2()
+        <<", nDof: "<<static_cast<int>(nDoF)<<", BendPlane Cov: "<<print(bendPlaneCov);
     ostr<<", Hit per group: \n";
     for (typename Topology_t::GroupIdx g = 0u; g < Topology_t::nGroups; ++g) {
         const auto& hits {hitsPerGroup[g]};

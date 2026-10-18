@@ -46,15 +46,18 @@
  */
 namespace Acts::Experimental::detail {
 /** @brief Concept for a pattern seed selector */
-template<typename Selector_t, typename Hit_t>
+template<typename Selector_t, typename Hit_t, typename Topology_t>
 concept PatternSeedSelector = 
     GlobPatFinderHit<Hit_t> &&
+    PatternTopology<Topology_t, Hit_t> &&
     requires(const Selector_t& selector, 
              const Hit_t& hit) {
     /// Whether the hit is good for seeding a pattern
     { selector.goodForSeeding(hit) } -> std::same_as<bool>;
-    /// The search window in the theta coordinate for compatible hits with a pattern
-    { selector.thetaSearchWindow(hit) } -> std::same_as<double>;
+    /// The (half) search window in the theta coordinate for compatible hits with a pattern for  
+    /// a given seed hit. The search window is defined per group of the pattern topology.
+    { selector.thetaSearchWindow(hit) } -> 
+        std::convertible_to<std::array<double, Topology_t::nGroups>>;
 };
 
 /** @brief Concept for a provider of phi-only hits given a pattern state */
@@ -162,7 +165,7 @@ class GlobalPatternFinder {
      *  @param onlyPhiProvider: Provider for only-phi hits
      *  @param beamspotInfo: Beamspot information
      *  @return: Vector of found patterns */
-    template<PatternSeedSelector<Hit_t> SeedSelector_t,
+    template<PatternSeedSelector<Hit_t, Topology_t> SeedSelector_t,
              OnlyPhiHitsProvider<Hit_t, Topology_t, Sector_t> OnlyPhiProvider_t>
     std::vector<OutputPattern> 
     findPatterns(const GeometryContext& gctx,
@@ -182,6 +185,8 @@ class GlobalPatternFinder {
         eAddHit,
         /** @brief Test successfull with multiple pattern hits on same layer, branch the pattern */
         eBranchPattern,
+        /** @brief Test successfull and the new hit replaces the last inserted hit */
+        eReplaceHit,
         /** @brief Test failed, discard the hit */
         eRejectHit
     };
@@ -193,7 +198,7 @@ class GlobalPatternFinder {
      *  @param seedSelector: The seed selector to use for selecting the initial seed
      *  @param beamspotInfo: Information about the beam spot
      *  @return: resulting vector of PatternStateAuxs successfully built */
-    template<PatternSeedSelector<Hit_t> SeedSelector_t>
+    template<PatternSeedSelector<Hit_t, Topology_t> SeedSelector_t>
     PatternStateAuxVec
     findPatternsInEta(const GeometryContext& gctx,
                       const SearchTree_t& orderedSpacepoints,
@@ -266,6 +271,14 @@ class GlobalPatternFinder {
                         const BeamspotInfo& beamSpot,
                         const OnlyPhiProvider_t& onlyPhiProvider,
                         PatternStateAuxVec& patterns) const;
+    /** @brief Count the number of patterns that contain a specific hit
+     *  @param patterns: Vector of pattern states to check
+     *  @param seed: The seed hit to check
+     *  @param seedCoords: The coordinates of the seed hit
+     *  @return: The number of patterns that contain the hit */
+    unsigned countPatterns(const PatternStateAuxVec& patterns,
+                           const Hit_t& seed,
+                           const SearchTree_t::coordinate_t& seedCoords) const;
     /** @brief Convert a PatternStateAux into a GlobalPattern object
      *  @param candidate: PatternStateAux to be converted
      *  @return: Converted GlobalPattern */
