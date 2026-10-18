@@ -17,6 +17,7 @@
 #include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/seeding/detail/strip_pair.hpp"
+#include "traccc/seeding/strip_spacepoint_shape.hpp"
 #include "traccc/utils/algorithm.hpp"
 #include "traccc/utils/memory_resource.hpp"
 #include "traccc/utils/messaging.hpp"
@@ -27,6 +28,8 @@ namespace traccc::device {
 struct strip_spacepoint_formation_output {
   edm::spacepoint_collection::buffer spacepoints;
   edm::spacepoint_collection::buffer overlap_spacepoints;
+  strip_spacepoint_shape_collection_types::buffer shapes;
+  strip_spacepoint_shape_collection_types::buffer overlap_shapes;
 };
 
 /// Algorithm forming space points out of measurements
@@ -69,6 +72,15 @@ class silicon_strip_spacepoint_formation_algorithm
           surface_infos,
       const strip_pairing_rule_collection_types::const_view& pairing_rules,
       const point3& beam_spot) const override;
+
+  /// Optionally retain the geometry already computed during formation.
+  /// With retain_shapes=false, no shape buffers are allocated or transferred.
+  output_type operator()(
+      const edm::measurement_collection::const_view& measurements,
+      const strip_measurement_surface_info_collection_types::const_view&
+          surface_infos,
+      const strip_pairing_rule_collection_types::const_view& pairing_rules,
+      const point3& beam_spot, bool retain_shapes) const;
 
  protected:
   /// @name Function(s) to be implemented by derived classes
@@ -134,6 +146,7 @@ class silicon_strip_spacepoint_formation_algorithm
     /// One acceptance flag and candidate slot per pair.
     vecmem::data::vector_view<unsigned int> accepted;
     edm::spacepoint_collection::view& spacepoints;
+    strip_spacepoint_shape_collection_types::view shapes{};
   };
 
   /// Launch the spacepoint formation kernel
@@ -156,6 +169,8 @@ class silicon_strip_spacepoint_formation_algorithm
     const edm::spacepoint_collection::const_view& candidates;
     vecmem::data::vector_view<const unsigned int> offsets;
     edm::spacepoint_collection::view& spacepoints;
+    strip_spacepoint_shape_collection_types::const_view candidate_shapes{};
+    strip_spacepoint_shape_collection_types::view shapes{};
   };
 
   virtual void gather_spacepoints_kernel(

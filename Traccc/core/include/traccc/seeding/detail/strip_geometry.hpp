@@ -218,12 +218,6 @@ TRACCC_HOST_DEVICE inline strip_material make_strip_material(
   const scalar trajectory_x = 2.f * (center_x - beam_spot[0]);
   const scalar trajectory_y = 2.f * (center_y - beam_spot[1]);
   const scalar trajectory_z = 2.f * (center_z - beam_spot[2]);
-  const scalar normal_x =
-      direction_y * trajectory_z - direction_z * trajectory_y;
-  const scalar normal_y =
-      direction_z * trajectory_x - direction_x * trajectory_z;
-  const scalar normal_z =
-      direction_x * trajectory_y - direction_y * trajectory_x;
   const scalar length =
       std::sqrt(direction_x * direction_x + direction_y * direction_y +
                 direction_z * direction_z);
@@ -231,7 +225,9 @@ TRACCC_HOST_DEVICE inline strip_material make_strip_material(
   result.center = {center_x, center_y, center_z};
   result.direction = {direction_x, direction_y, direction_z};
   result.trajectory = {trajectory_x, trajectory_y, trajectory_z};
-  result.normal = {normal_x, normal_y, normal_z};
+  result.normal = {direction_y * trajectory_z - direction_z * trajectory_y,
+                   direction_z * trajectory_x - direction_x * trajectory_z,
+                   direction_x * trajectory_y - direction_y * trajectory_x};
   result.half_length = 0.5f * length;
   result.valid = length > 0.f ? 1u : 0u;
   return result;

@@ -15,6 +15,7 @@
 
 // System include(s).
 #include <cassert>
+#include <utility>
 
 namespace traccc::device {
 
@@ -30,6 +31,15 @@ auto silicon_strip_spacepoint_formation_algorithm::operator()(
         surface_infos,
     const strip_pairing_rule_collection_types::const_view& pairing_rules,
     const point3& beam_spot) const -> output_type {
+  return (*this)(measurements, surface_infos, pairing_rules, beam_spot, false);
+}
+
+auto silicon_strip_spacepoint_formation_algorithm::operator()(
+    const edm::measurement_collection::const_view& measurements,
+    const strip_measurement_surface_info_collection_types::const_view&
+        surface_infos,
+    const strip_pairing_rule_collection_types::const_view& pairing_rules,
+    const point3& beam_spot, bool retain_shapes) const -> output_type {
   edm::measurement_collection::const_view::size_type n_measurements = 0u;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(measurements, *(mr().host));
@@ -98,37 +108,51 @@ auto silicon_strip_spacepoint_formation_algorithm::operator()(
   const auto form_and_gather =
       [&](unsigned int n_pairs,
           const strip_pair_collection_types::const_view& pairs) {
+        using result_type =
+            std::pair<edm::spacepoint_collection::buffer,
+                      strip_spacepoint_shape_collection_types::buffer>;
         if (n_pairs == 0u) {
-          return edm::spacepoint_collection::buffer{};
+          return result_type{};
         }
         // Formation writes to the pair's own slot. Scan its acceptance flag and
         // gather surviving candidates into a fixed-size, ordered output buffer.
         edm::spacepoint_collection::buffer candidates(n_pairs, mr().main);
         vecmem::data::vector_buffer<unsigned int> accepted_buffer(n_pairs,
                                                                   mr().main);
+        strip_spacepoint_shape_collection_types::buffer candidate_shapes(
+            retain_shapes ? n_pairs : 0u, mr().main);
+        copy().setup(candidate_shapes)->ignore();
         copy().setup(candidates)->ignore();
         copy().setup(accepted_buffer)->ignore();
         vecmem::data::vector_view<unsigned int> accepted(accepted_buffer);
         form_spacepoints_kernel({n_pairs, measurements, pairs, surface_infos,
-                                 beam_spot, accepted, candidates});
+                                 beam_spot, accepted, candidates,
+                                 candidate_shapes});
         scan_offsets(accepted);
         const unsigned int n_spacepoints = read_total(accepted);
         if (n_spacepoints == 0u) {
-          return edm::spacepoint_collection::buffer{};
+          return result_type{};
         }
         edm::spacepoint_collection::buffer result(n_spacepoints, mr().main);
+        strip_spacepoint_shape_collection_types::buffer shapes(
+            retain_shapes ? n_spacepoints : 0u, mr().main);
+        copy().setup(shapes)->ignore();
         copy().setup(result)->ignore();
         const edm::spacepoint_collection::const_view candidates_view(
             candidates);
-        gather_spacepoints_kernel({n_pairs, candidates_view, accepted, result});
-        return result;
+        gather_spacepoints_kernel({n_pairs, candidates_view, accepted, result,
+                                   candidate_shapes, shapes});
+        return result_type{std::move(result), std::move(shapes)};
       };
   auto opposite_spacepoints =
       form_and_gather(n_opposite_pairs, opposite_pairs_buffer);
   auto overlap_spacepoints =
       form_and_gather(n_overlap_pairs, overlap_pairs_buffer);
 
-  return {std::move(opposite_spacepoints), std::move(overlap_spacepoints)};
+  return {std::move(opposite_spacepoints.first),
+          std::move(overlap_spacepoints.first),
+          std::move(opposite_spacepoints.second),
+          std::move(overlap_spacepoints.second)};
 }
 
 }  // namespace traccc::device

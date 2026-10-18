@@ -16,6 +16,7 @@
 #include <vecmem/utils/cuda/stream_wrapper.hpp>
 
 #include "traccc/cuda/seeding/silicon_strip_spacepoint_formation_algorithm.hpp"
+#include "traccc/seeding/detail/strip_geometry.hpp"
 
 namespace {
 using namespace traccc;
@@ -39,6 +40,7 @@ class CUDAStripSpacepointFormation : public ::testing::Test {
   };
   struct result {
     std::vector<point> standard, overlap;
+    std::vector<strip_spacepoint_shape> shapes, overlap_shapes;
   };
 
   void SetUp() override {
@@ -72,7 +74,7 @@ class CUDAStripSpacepointFormation : public ::testing::Test {
     }
   }
 
-  result run(const point3& beam_spot = {}) {
+  result run(const point3& beam_spot = {}, bool retain_shapes = true) {
     auto device_measurements =
         copy.to(vecmem::get_data(measurements), device_mr, &host_mr,
                 vecmem::copy::type::host_to_device);
@@ -82,8 +84,11 @@ class CUDAStripSpacepointFormation : public ::testing::Test {
                                 vecmem::copy::type::host_to_device);
     cuda::silicon_strip_spacepoint_formation_algorithm algorithm{mr, copy,
                                                                  stream};
-    auto output = algorithm(device_measurements, device_surfaces, device_rules,
-                            beam_spot);
+    auto output = retain_shapes
+                      ? algorithm(device_measurements, device_surfaces,
+                                  device_rules, beam_spot, true)
+                      : algorithm(device_measurements, device_surfaces,
+                                  device_rules, beam_spot);
     auto read = [&](const auto& buffer) {
       std::vector<point> points;
       const auto size = copy.get_size(buffer);
@@ -101,7 +106,55 @@ class CUDAStripSpacepointFormation : public ::testing::Test {
       }
       return points;
     };
-    result answer{read(output.spacepoints), read(output.overlap_spacepoints)};
+    result answer{};
+    answer.standard = read(output.spacepoints);
+    answer.overlap = read(output.overlap_spacepoints);
+    const auto read_shapes = [&](const auto& buffer) {
+      std::vector<strip_spacepoint_shape> shapes;
+      const auto size = copy.get_size(buffer);
+      if (size != 0u) {
+        auto host =
+            copy.to(buffer, host_mr, vecmem::copy::type::device_to_host);
+        stream.synchronize();
+        const strip_spacepoint_shape_collection_types::const_device values(
+            host);
+        for (unsigned int i = 0; i < size; ++i)
+          shapes.push_back(values.at(i));
+      }
+      return shapes;
+    };
+    answer.shapes = read_shapes(output.shapes);
+    answer.overlap_shapes = read_shapes(output.overlap_shapes);
+    EXPECT_EQ(answer.shapes.size(),
+              retain_shapes ? answer.standard.size() : 0u);
+    EXPECT_EQ(answer.overlap_shapes.size(),
+              retain_shapes ? answer.overlap.size() : 0u);
+    const auto check_shapes = [&](const auto& points, const auto& shapes) {
+      for (std::size_t i = 0; i < shapes.size(); ++i) {
+        const auto first = measurements.at(points[i].first);
+        const auto second = measurements.at(points[i].second);
+        strip_measurement_surface_info a{}, b{};
+        ASSERT_TRUE(details::find_strip_surface_info(
+            surfaces, first.surface_link().value(), a));
+        ASSERT_TRUE(details::find_strip_surface_info(
+            surfaces, second.surface_link().value(), b));
+        const auto top = details::make_strip_material(first, a, beam_spot);
+        const auto bottom = details::make_strip_material(second, b, beam_spot);
+        EXPECT_NEAR(shapes[i].top_half_length, top.half_length, 1e-5);
+        EXPECT_NEAR(shapes[i].bottom_half_length, bottom.half_length, 1e-5);
+        for (unsigned int k = 0; k < 3u; ++k) {
+          EXPECT_NEAR(shapes[i].top_direction[k],
+                      -top.direction[k] / (2 * top.half_length), 1e-5);
+          EXPECT_NEAR(shapes[i].bottom_direction[k],
+                      -bottom.direction[k] / (2 * bottom.half_length), 1e-5);
+          EXPECT_NEAR(shapes[i].top_center[k], top.center[k], 1e-5);
+          EXPECT_NEAR(shapes[i].center_distance[k],
+                      top.center[k] - bottom.center[k], 1e-5);
+        }
+      }
+    };
+    check_shapes(answer.standard, answer.shapes);
+    check_shapes(answer.overlap, answer.overlap_shapes);
     stream.synchronize();
     return answer;
   }
@@ -123,6 +176,43 @@ TEST_F(CUDAStripSpacepointFormation, standard_and_overlap) {
   ASSERT_EQ(output.overlap.size(), 1u);
   check_point(output.standard[0], 0u, 1u);
   check_point(output.overlap[0], 0u, 2u);
+}
+
+TEST_F(CUDAStripSpacepointFormation, optional_shapes_preserve_spacepoints) {
+  const auto legacy = run({}, false);
+  const auto retained = run({}, true);
+  ASSERT_EQ(legacy.standard.size(), retained.standard.size());
+  ASSERT_EQ(legacy.overlap.size(), retained.overlap.size());
+  EXPECT_TRUE(legacy.shapes.empty());
+  EXPECT_TRUE(legacy.overlap_shapes.empty());
+  for (const auto& values : {std::pair{&legacy.standard, &retained.standard},
+                             std::pair{&legacy.overlap, &retained.overlap}}) {
+    for (std::size_t i = 0; i < values.first->size(); ++i) {
+      EXPECT_EQ(values.first->at(i).position, values.second->at(i).position);
+      EXPECT_EQ(values.first->at(i).first, values.second->at(i).first);
+      EXPECT_EQ(values.first->at(i).second, values.second->at(i).second);
+    }
+  }
+}
+
+TEST_F(CUDAStripSpacepointFormation, radial_shapes_follow_endpoint_convention) {
+  for (auto& surface : surfaces) {
+    surface.geometry_model = strip_geometry_model::radial;
+    surface.radial.n_strips = 1u;
+    surface.radial.angular_pitch = 0.01f;
+    surface.radial.min_radius = 10.f;
+    surface.radial.max_radius = 20.f;
+    for (unsigned int k = 0; k < 3u; ++k)
+      surface.origin[k] = (k == 0u ? 100.f : 0.f) - 15.f * surface.local_u[k];
+  }
+  const auto output = run();
+  ASSERT_EQ(output.standard.size(), 1u);
+  ASSERT_EQ(output.overlap.size(), 1u);
+  check_point(output.standard[0], 0u, 1u);
+  EXPECT_NEAR(output.shapes[0].top_half_length, 5.f, 1e-5);
+  EXPECT_NEAR(output.shapes[0].bottom_half_length, 5.f, 1e-5);
+  EXPECT_NEAR(output.shapes[0].top_direction[2], 1.f, 1e-5);
+  EXPECT_NEAR(output.shapes[0].bottom_direction[1], 1.f, 1e-5);
 }
 
 TEST_F(CUDAStripSpacepointFormation, standard_only) {

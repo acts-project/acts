@@ -56,18 +56,22 @@ __global__ void form_strip_spacepoints_from_pairs_kernel(
     strip_pair_collection_types::const_view pairs,
     strip_measurement_surface_info_collection_types::const_view surface_infos,
     point3 beam_spot, vecmem::data::vector_view<unsigned int> accepted,
-    edm::spacepoint_collection::view spacepoints) {
-  device::form_strip_spacepoints_from_pairs(details::global_index1(),
-                                            measurements, pairs, surface_infos,
-                                            beam_spot, accepted, spacepoints);
+    edm::spacepoint_collection::view spacepoints,
+    strip_spacepoint_shape_collection_types::view shapes) {
+  device::form_strip_spacepoints_from_pairs(
+      details::global_index1(), measurements, pairs, surface_infos, beam_spot,
+      accepted, spacepoints, shapes);
 }
 
 __global__ void gather_strip_spacepoints_kernel(
     edm::spacepoint_collection::const_view candidates,
     vecmem::data::vector_view<const unsigned int> offsets,
-    edm::spacepoint_collection::view spacepoints) {
+    edm::spacepoint_collection::view spacepoints,
+    strip_spacepoint_shape_collection_types::const_view candidate_shapes,
+    strip_spacepoint_shape_collection_types::view shapes) {
   device::gather_strip_spacepoints(details::global_index1(), candidates,
-                                   offsets, spacepoints);
+                                   offsets, spacepoints, candidate_shapes,
+                                   shapes);
 }
 
 struct measurement_surface_order {
@@ -120,7 +124,7 @@ void silicon_strip_spacepoint_formation_algorithm::form_spacepoints_kernel(
   kernels::form_strip_spacepoints_from_pairs_kernel<<<
       n_blocks, n_threads, 0, details::get_stream(stream())>>>(
       payload.measurements, payload.pairs, payload.surface_infos,
-      payload.beam_spot, payload.accepted, payload.spacepoints);
+      payload.beam_spot, payload.accepted, payload.spacepoints, payload.shapes);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
   stream().synchronize();
 }
@@ -148,7 +152,8 @@ void silicon_strip_spacepoint_formation_algorithm::gather_spacepoints_kernel(
   const unsigned int n_blocks = (payload.n_pairs + n_threads - 1u) / n_threads;
   kernels::gather_strip_spacepoints_kernel<<<n_blocks, n_threads, 0,
                                              details::get_stream(stream())>>>(
-      payload.candidates, payload.offsets, payload.spacepoints);
+      payload.candidates, payload.offsets, payload.spacepoints,
+      payload.candidate_shapes, payload.shapes);
   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
   // The base class destroys candidate and flag buffers after this call.
   stream().synchronize();

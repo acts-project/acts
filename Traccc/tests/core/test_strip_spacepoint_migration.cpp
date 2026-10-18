@@ -135,4 +135,32 @@ TEST(strip_spacepoint_migration, count_fill_and_form_standard_and_overlap) {
     EXPECT_EQ(sp.measurement_index_2(), pairs->at(0).measurement_index_2);
   }
 }
+TEST(strip_spacepoint_migration, shape_compaction_preserves_pair_alignment) {
+  vecmem::host_memory_resource mr;
+  edm::spacepoint_collection::host candidates{mr}, output{mr};
+  candidates.resize(4);
+  output.resize(2);
+  strip_spacepoint_shape_collection_types::host shapes{&mr}, result{&mr};
+  shapes.resize(4);
+  result.resize(2);
+  for (unsigned int i = 0; i < 4u; ++i) {
+    candidates.at(i).x() = static_cast<float>(i);
+    shapes[i].top_half_length = static_cast<scalar>(10u + i);
+    shapes[i].top_center = {static_cast<scalar>(i), 2.f, 3.f};
+  }
+  vecmem::vector<unsigned int> offsets({0u, 1u, 1u, 2u}, &mr);
+  for (unsigned int i = 0; i < 5u; ++i) {
+    device::gather_strip_spacepoints(
+        i, vecmem::get_data(candidates), vecmem::get_data(offsets),
+        vecmem::get_data(output), vecmem::get_data(shapes),
+        vecmem::get_data(result));
+  }
+  EXPECT_FLOAT_EQ(output.at(0).x(), 1.f);
+  EXPECT_FLOAT_EQ(output.at(1).x(), 3.f);
+  EXPECT_EQ(result[0].top_half_length, 11.f);
+  EXPECT_EQ(result[1].top_half_length, 13.f);
+  EXPECT_EQ(result[0].top_center[0], 1.f);
+  EXPECT_EQ(result[1].top_center[0], 3.f);
+}
+
 }  // namespace

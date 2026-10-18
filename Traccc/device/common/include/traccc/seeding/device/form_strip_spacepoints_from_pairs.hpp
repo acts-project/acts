@@ -15,6 +15,7 @@
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/seeding/detail/strip_pair.hpp"
 #include "traccc/seeding/strip_spacepoint_formation_data.hpp"
+#include "traccc/seeding/strip_spacepoint_shape.hpp"
 
 namespace traccc::device {
 
@@ -28,7 +29,8 @@ TRACCC_HOST_DEVICE inline void form_strip_spacepoints_from_pairs(
         surface_infos_view,
     const point3& beam_spot,
     vecmem::data::vector_view<unsigned int> accepted_view,
-    edm::spacepoint_collection::view spacepoints_view);
+    edm::spacepoint_collection::view spacepoints_view,
+    strip_spacepoint_shape_collection_types::view shapes_view = {});
 
 }  // namespace traccc::device
 

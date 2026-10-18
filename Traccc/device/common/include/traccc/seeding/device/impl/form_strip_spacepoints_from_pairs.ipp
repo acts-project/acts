@@ -25,7 +25,8 @@ TRACCC_HOST_DEVICE inline void form_strip_spacepoints_from_pairs(
         surface_infos_view,
     const point3& beam_spot,
     vecmem::data::vector_view<unsigned int> accepted_view,
-    edm::spacepoint_collection::view spacepoints_view) {
+    edm::spacepoint_collection::view spacepoints_view,
+    strip_spacepoint_shape_collection_types::view shapes_view) {
   const edm::measurement_collection::const_device measurements(
       measurements_view);
   const strip_pair_collection_types::const_device pairs(pairs_view);
@@ -88,6 +89,22 @@ TRACCC_HOST_DEVICE inline void form_strip_spacepoints_from_pairs(
   sp.z_variance() = static_cast<float>(first_info.spacepoint_variance_z);
   sp.measurement_index_1() = pair.measurement_index_1;
   sp.measurement_index_2() = pair.measurement_index_2;
+  if (shapes_view.capacity() != 0u) {
+    strip_spacepoint_shape shape{};
+    shape.top_half_length = first_material.half_length;
+    shape.bottom_half_length = second_material.half_length;
+    for (unsigned int k = 0; k < 3u; ++k) {
+      shape.top_direction[k] = -first_material.direction[k] /
+                               (scalar{2} * first_material.half_length);
+      shape.bottom_direction[k] = -second_material.direction[k] /
+                                  (scalar{2} * second_material.half_length);
+      shape.top_center[k] = first_material.center[k];
+      shape.center_distance[k] =
+          first_material.center[k] - second_material.center[k];
+    }
+    strip_spacepoint_shape_collection_types::device shapes(shapes_view);
+    shapes.at(globalIndex) = shape;
+  }
   accepted_flags.at(globalIndex) = 1u;
 }
 
@@ -96,7 +113,10 @@ TRACCC_HOST_DEVICE inline void gather_strip_spacepoints(
     const global_index_t globalIndex,
     const edm::spacepoint_collection::const_view& candidates_view,
     vecmem::data::vector_view<const unsigned int> offsets_view,
-    edm::spacepoint_collection::view output_view) {
+    edm::spacepoint_collection::view output_view,
+    strip_spacepoint_shape_collection_types::const_view candidate_shapes_view =
+        {},
+    strip_spacepoint_shape_collection_types::view output_shapes_view = {}) {
   const edm::spacepoint_collection::const_device candidates(candidates_view);
   if (globalIndex >= candidates.size()) {
     return;
@@ -118,6 +138,13 @@ TRACCC_HOST_DEVICE inline void gather_strip_spacepoints(
   destination.z_variance() = source.z_variance();
   destination.measurement_index_1() = source.measurement_index_1();
   destination.measurement_index_2() = source.measurement_index_2();
+  if (output_shapes_view.capacity() != 0u) {
+    const strip_spacepoint_shape_collection_types::const_device shapes(
+        candidate_shapes_view);
+    strip_spacepoint_shape_collection_types::device output_shapes(
+        output_shapes_view);
+    output_shapes.at(end - 1u) = shapes.at(globalIndex);
+  }
 }
 
 }  // namespace traccc::device
