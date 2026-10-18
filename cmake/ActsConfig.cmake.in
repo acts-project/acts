@@ -16,7 +16,7 @@
 # project, so a client with an older cmake_minimum_required would otherwise fail
 # here. The upper bound keeps the policy version at the CMake that generated the
 # config, matching the Acts*Targets.cmake files included below.
-cmake_minimum_required(VERSION 3.10...@CMAKE_VERSION@)
+cmake_policy(VERSION 3.10...@CMAKE_MAJOR_VERSION@.@CMAKE_MINOR_VERSION@)
 
 @PACKAGE_INIT@
 
