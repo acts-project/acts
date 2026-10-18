@@ -3,10 +3,7 @@ import argparse
 
 import acts
 import acts.examples
-from acts.examples.root import (
-    RootMuonSpacePointReader,
-    RootMuonGlobalPatternWriter,
-)
+from acts.examples.root import RootMuonSpacePointReader
 from acts.json import TrackingGeometryJsonConverter
 
 
@@ -15,7 +12,6 @@ def runGlobalPatternFinder(
     geoFile: str,
     nEvents: int,
     logLevel: acts.logging.Level,
-    outFile: str = "",
     numThreads: int = 1,
     skip: int = 0,
     timingDir: str = "",
@@ -34,8 +30,7 @@ def runGlobalPatternFinder(
     # It writes the per algorithm wall time to timingFile on its own. That
     # measurement only means anything on a single thread, which is why one
     # thread is the default: more of them measure the throughput of the machine
-    # instead of the cost of the algorithm. Events then also finish out of
-    # order, so the entries of the pattern file are no longer in event order.
+    # instead of the cost of the algorithm.
     s = acts.examples.Sequencer(
         events=nEvents if nEvents > 0 else None,
         skip=skip,
@@ -68,19 +63,6 @@ def runGlobalPatternFinder(
     )
     s.addAlgorithm(patternFinder)
 
-    # Writes one entry per event holding the parameters of every pattern and,
-    # for each of its hits, the identifiers needed to match it against the truth
-    # or against another run of the pattern recognition.
-    if outFile:
-        s.addWriter(
-            RootMuonGlobalPatternWriter(
-                inputPatterns=patternFinder.config.outPatterns,
-                inputSpacePoints=spReader.config.outputSpacePoints,
-                filePath=outFile,
-                level=logLevel,
-            )
-        )
-
     s.run()
 
 
@@ -97,11 +79,6 @@ if "__main__" == __name__:
         "--geometry",
         required=True,
         help="Path to the tracking geometry JSON matching the n-tuple",
-    )
-    p.add_argument(
-        "--output",
-        default="",
-        help="Path of the ROOT file the found patterns are written to",
     )
     p.add_argument(
         "--nEvents",
@@ -142,7 +119,6 @@ if "__main__" == __name__:
         geoFile=args.geometry,
         nEvents=args.nEvents,
         logLevel=getattr(acts.logging, args.logLevel),
-        outFile=args.output,
         numThreads=args.threads,
         skip=args.skip,
         timingDir=args.timingDir,
