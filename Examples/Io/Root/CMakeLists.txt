@@ -29,6 +29,7 @@ acts_add_library(
     src/RootTrackParameterPerformanceWriter.cpp
     src/RootVertexNTupleWriter.cpp
     src/RootMuonSpacePointWriter.cpp
+    src/RootMuonGlobalPatternWriter.cpp
     src/RootMuonSpacePointReader.cpp
     src/RootMeasurementPerformanceWriter.cpp
     src/RootFileHasher.cpp
@@ -42,6 +43,7 @@ target_link_libraries(
     PUBLIC
         Acts::PluginRoot
         Acts::ExamplesDigitization
+        Acts::ExamplesTrackFinding
         Acts::ExamplesFramework
         Acts::ExamplesPropagation
         Acts::ExamplesTruthTracking

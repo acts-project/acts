@@ -18,6 +18,7 @@
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
+#include "ActsExamples/Io/Root/RootMuonGlobalPatternWriter.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
@@ -124,6 +125,10 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                "RootMuonSpacePointWriter", inputSpacePoints,
                                filePath, fileMode, treeName, trackingGeometry,
                                writeGlobal);
+
+    ACTS_PYTHON_DECLARE_WRITER(RootMuonGlobalPatternWriter, root,
+                               "RootMuonGlobalPatternWriter", inputPatterns,
+                               inputSpacePoints, filePath, fileMode, treeName);
 
     ACTS_PYTHON_DECLARE_WRITER(RootTrackFinderNTupleWriter, root,
                                "RootTrackFinderNTupleWriter", inputTracks,
