@@ -20,6 +20,7 @@
 #include <numeric>
 #include <ostream>
 #include <stdexcept>
+#include <fstream>
 
 namespace ActsExamples {
 
@@ -59,6 +60,7 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     const AlgorithmContext &ctx) const {
   const SpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
+  ACTS_VERBOSE("Starting maxDivision value: " << m_cfg.maxDivision);
   // get inputs
   std::vector<PreprocessedMeasurement> measurements;
   preparePreprocessedMeasurements(spacePoints, measurements);
@@ -97,6 +99,7 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     section.updateDimensions(
         section.history(phiSplitWidthIndex), 2.0f * m_cfg.qOverPtMin,
         section.history(phiSplitMinIndex), -m_cfg.qOverPtMin);
+        section.setDivisionLevel(0);
   }
   {
     Acts::ScopedTimer st("processQOverPtPhi", logger());
@@ -111,6 +114,9 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     ACTS_DEBUG("past deduplication " << stack1.size());
   }
 
+  // additional stack for smaller structer as HoughAccumulatorSection is no longer needed
+  std::vector<SeedCandidate> stack3;
+
   // do scan in z_vertex - cot theta
   if (m_cfg.doSecondPhase) {
     Acts::ScopedTimer st("secondPhase", logger());
@@ -121,28 +127,33 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
                                section.history(zSplitMinIndex),
                                section.history(cotThetaSplitMinIndex));
     }
-    processStackZCotTheta(stack1, stack2, measurements);
+    processStackZCotTheta(stack1, stack3, measurements);
     ACTS_DEBUG("past StackZCotTheta stack1 size "
-               << stack1.size() << " stack2 size " << stack2.size());
+               << stack1.size() << " stack3 size " << stack3.size());
+  }
 
-    if (m_cfg.deduplicate) {
-      Acts::ScopedTimer st2("deduplication", logger());
-      deduplicate(stack2);
-      ACTS_DEBUG("past second deduplication " << stack2.size());
+  // vector for final solutions with or without second phase
+  std::vector<SeedCandidate> finalSolutions;
+
+  if (m_cfg.doSecondPhase){
+    finalSolutions = std::move(stack3);
+  }
+  else{
+    finalSolutions.reserve(stack1.size());
+    for (auto& section : stack1){
+      finalSolutions.push_back({std::move(section.indices())});
     }
   }
 
-  const std::vector<Acts::Experimental::HoughAccumulatorSection> &solutions =
-      m_cfg.doSecondPhase ? stack2 : stack1;
   Acts::ScopedTimer st("seedsMaking", logger());
 
   // post solutions
   SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
-  seeds.reserve(solutions.size());
+  seeds.reserve(finalSolutions.size());
 
-  ACTS_VERBOSE("Number of solutions " << solutions.size());
-  makeSeeds(seeds, solutions, measurements);
+  ACTS_VERBOSE("Number of solutions " << finalSolutions.size());
+  makeSeeds(seeds, finalSolutions, measurements);
 
   m_outputSeeds(ctx, std::move(seeds));
 
@@ -210,9 +221,12 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
     std::vector<Acts::Experimental::HoughAccumulatorSection> &output,
     const std::vector<PreprocessedMeasurement> &measurements) const {
   struct Stats {
-    double area{};
-    int nSections{};
-    int nLines{};
+    double drilledArea{};
+    double acceptedArea{};
+    int nDrilledSections_standard{};
+    int nDrilledSections_extra{};
+    int nAcceptedLines{};
+    int nAcceptedSections{};
     int discardedByThresholdCut{};
     int discardedByCrossingCut{};
   };
@@ -222,36 +236,40 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
   opt.yMinBinSize = m_cfg.qOverPtMinBinSize;
   opt.lineFunctor = m_qOverPtPhiLineParams;
   opt.decisionFunctor =
-      [&sStat, &cfg = m_cfg, &opt, this](
+      [&sStat, &cfg = m_cfg, &opt,this](
           const Acts::Experimental::HoughAccumulatorSection &section,
           const std::vector<PreprocessedMeasurement> &mes) {
         using enum HoughAccumulatorSection::Decision;
-
-        if (section.divisionLevel() <= 8) {
-          return Drill;
-        }
 
         if (section.count() < cfg.threshold) {
           sStat[section.divisionLevel()].discardedByThresholdCut += 1;
           return Discard;
         }
-        if (section.count() < 3 * cfg.threshold &&
+
+        if (section.count() < (m_cfg.noiseThreshold) &&
             !passIntersectionsCheck(section, mes, opt.lineFunctor,
-                                    cfg.threshold * (cfg.threshold - 1))) {
-          sStat[section.divisionLevel()].discardedByCrossingCut += 1;
+                                    cfg.threshold * (cfg.threshold - 1)/2)) {
+          sStat[section.divisionLevel()].discardedByCrossingCut ++;
           return Discard;
         }
 
+        if (section.divisionLevel() <= cfg.maxDivision-1) {
+          sStat[section.divisionLevel()].nDrilledSections_standard++;
+          sStat[section.divisionLevel()].drilledArea += section.xSize() * section.ySize();
+          return Drill;
+        }
+
         if (section.count() >= cfg.threshold &&
-            section.count() <= cfg.noiseThreshold &&
             section.xSize() <= cfg.phiMinBinSize &&
             section.ySize() <= cfg.qOverPtMinBinSize) {
+          sStat[section.divisionLevel()].nAcceptedSections++;
+          sStat[section.divisionLevel()].nAcceptedLines+=section.count(); 
+          sStat[section.divisionLevel()].acceptedArea += section.xSize() * section.ySize();
           return Accept;
         }
-        sStat[section.divisionLevel()].area +=
+        sStat[section.divisionLevel()].drilledArea +=
             section.xSize() * section.ySize();
-        sStat[section.divisionLevel()].nSections += 1;
-        sStat[section.divisionLevel()].nLines += section.count();
+        sStat[section.divisionLevel()].nDrilledSections_extra ++;
         return Drill;
       };
 
@@ -261,50 +279,111 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
       [](unsigned sum, const Acts::Experimental::HoughAccumulatorSection &s) {
         return sum + s.count();
       });
-  ACTS_DEBUG("size " << sStat.size());
-  for (const auto &[div, stats] : sStat) {
-    ACTS_DEBUG("Area in used by div: "
-               << div << " area: " << stats.area << " avglines: "
-               << (stats.nSections > 0 ? stats.nLines / stats.nSections : 0)
-               << " n sections: " << stats.nSections
-               << " thresholdCut: " << stats.discardedByThresholdCut
-               << " crossingCut: " << stats.discardedByCrossingCut);
-  }
   ACTS_DEBUG("Phi - qOverPt scan finds "
              << output.size() << " solutions, included measurements " << nl);
+  ACTS_DEBUG("size " << sStat.size());
+  ACTS_DEBUG("===========================================================");
+  ACTS_DEBUG(" [Q/pT - Phi] process stats ");
+  ACTS_DEBUG("===========================================================");
+  for (const auto &[div, stats] : sStat) {
+    ACTS_DEBUG("Lvl: " << div 
+              << " | Cut(Thresh): " << stats.discardedByThresholdCut  
+              << " | Cut(Cross): " << stats.discardedByCrossingCut 
+              << " | Area(Drill): " << stats.drilledArea
+              << " | nSections(Drill_standard): " << stats.nDrilledSections_standard
+              << " | nSections(Drill_extra): " << stats.nDrilledSections_extra
+              << " | Area(Accept): " << stats.acceptedArea
+              << " | nSections(Accept): " << stats.nAcceptedSections
+              << " | nLines(Accept): " << stats.nAcceptedLines);
+  }
+  ACTS_DEBUG("===========================================================");
 }
 
 void AdaptiveHoughTransformSeeder::processStackZCotTheta(
     std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
-    std::vector<Acts::Experimental::HoughAccumulatorSection> &output,
+    std::vector<SeedCandidate> &output,
     const std::vector<PreprocessedMeasurement> &measurements) const {
-  ExplorationOptions opt;
-  opt.xMinBinSize = m_cfg.zMinBinSize;
-  opt.yMinBinSize = m_cfg.cotThetaMinBinSize;
-  opt.lineFunctor = m_zCotThetaLineParams;
-  opt.decisionFunctor =
-      [&cfg = m_cfg](const Acts::Experimental::HoughAccumulatorSection &section,
-                     const std::vector<PreprocessedMeasurement> &) {
-        using enum HoughAccumulatorSection::Decision;
-        if (section.count() < cfg.threshold) {
-          return Discard;
-        }
-        if (section.count() >= cfg.threshold &&
-            section.xSize() <= cfg.zMinBinSize &&
-            section.ySize() <= cfg.cotThetaMinBinSize) {
-          return Accept;
-        }
-        return Drill;
-      };
+    
+    Acts::ScopedTimer st("processStackZCotTheta", logger());
 
-  exploreHoughParametersSpace(input, measurements, opt, output);
-  const unsigned nl = std::accumulate(
-      output.begin(), output.end(), 0,
-      [](unsigned sum, const Acts::Experimental::HoughAccumulatorSection &s) {
-        return sum + s.count();
-      });
-  ACTS_DEBUG("Z - cotTheta scan finds " << output.size()
-                                        << " included measurements " << nl);
+    // set created to root out the duplication
+    std::unordered_set<std::vector<unsigned>, VectorHash> unique_clusters;
+
+    const float max_y_spread = m_cfg.cotThetaMinBinSize * 2.5f;
+    const unsigned req_lines = m_cfg.threshold;
+    struct LinePoint {
+        float y;
+        unsigned idx;
+        bool operator<(const LinePoint& other) const {
+            return y < other.y;
+        }
+    };
+
+    for (const auto &section : input) {
+        const unsigned cnt = section.count();
+        
+        if (cnt < req_lines) {
+            continue;
+        }
+
+        const float xLeft = section.xBegin();
+        const float xRight = xLeft + section.xSize();
+
+        // 7 x point option
+        const float xM1 = xLeft+(xRight-xLeft)/6*1;
+        const float xM2 = xLeft+(xRight-xLeft)/6*2;
+        const float xM3 = xLeft+(xRight-xLeft)/6*3;
+        const float xM4 = xLeft+(xRight-xLeft)/6*4;
+        const float xM5 = xLeft+(xRight-xLeft)/6*5;
+        const float check_points[7] = {xLeft,xM1, xM2,xM3, xM4, xM5, xRight};
+
+        std::vector<LinePoint> yVals(cnt);
+
+        // loop calculating yValue for each line in selected x points
+        // then it checks if section contains clusters which we take as solutions
+        for (float x_check : check_points) {
+            for (unsigned i = 0; i < cnt; ++i) {
+                unsigned meas_idx = section.indices()[i];
+                const auto &m = measurements[meas_idx];
+                
+                yVals[i].y = -m.invr * x_check + m.z * m.invr;
+                yVals[i].idx = meas_idx;
+            }
+
+            std::sort(yVals.begin(), yVals.end());
+
+            for (unsigned i = 0; i <= cnt - req_lines; ++i) {
+              if (yVals[i + req_lines - 1].y - yVals[i].y <= max_y_spread) {
+                std::vector<unsigned> clustered_indices;
+                clustered_indices.reserve(cnt);
+                float base_y = yVals[i].y;
+                for(unsigned j = i; j < cnt; ++j) {
+                    if (yVals[j].y - base_y <= max_y_spread) {
+                        clustered_indices.push_back(yVals[j].idx);
+                    } else {
+                        break;
+                    }
+                }
+
+                std::sort(clustered_indices.begin(), clustered_indices.end());
+
+                // hashing is added in order to prevent duplication of solutions
+                if (unique_clusters.insert(clustered_indices).second) {
+                  SeedCandidate candidate;
+                  candidate.indices = std::move(clustered_indices);
+                  output.push_back(std::move(candidate));
+                }
+              }
+            }
+        }
+    }
+
+    ACTS_DEBUG("===========================================================");
+    ACTS_DEBUG(" [Z - CotTheta] process stats ");
+    ACTS_DEBUG("===========================================================");
+    ACTS_DEBUG("Input sections from Phase 1: " << input.size());
+    ACTS_DEBUG("Valid physical clusters found: " << output.size());
+    ACTS_DEBUG("===========================================================");
 }
 
 void AdaptiveHoughTransformSeeder::processStackZCotThetaSplit(
@@ -343,13 +422,15 @@ void AdaptiveHoughTransformSeeder::processStackZCotThetaSplit(
 
 void AdaptiveHoughTransformSeeder::makeSeeds(
     SeedContainer &seeds,
-    const std::vector<Acts::Experimental::HoughAccumulatorSection> &solutions,
+    const std::vector<SeedCandidate> &solutions,
     const std::vector<PreprocessedMeasurement> &measurements) const {
   const SpacePointContainer &spacePoints = seeds.spacePointContainer();
 
+  unsigned skippedCandidatesCounter = 0;
+
   std::size_t seedIndex = 0;
-  for (const Acts::Experimental::HoughAccumulatorSection &s : solutions) {
-    std::vector<unsigned> sortedIndices = s.indices();
+  for (const SeedCandidate &s : solutions) {
+    std::vector<unsigned> sortedIndices = s.indices;
     std::ranges::sort(sortedIndices, [&measurements](unsigned i1, unsigned i2) {
       const auto &m1 = measurements[i1];
       const auto &m2 = measurements[i2];
@@ -376,6 +457,11 @@ void AdaptiveHoughTransformSeeder::makeSeeds(
       }
     }
 
+    if (spIndex<3){
+      skippedCandidatesCounter++;
+      continue;
+    }
+
     auto cotThetaEstimate = static_cast<float>((sp[2]->z() - sp[0]->z()) /
                                                (sp[2]->r() - sp[0]->r()));
     auto cotThetaEstimate01 = static_cast<float>((sp[1]->z() - sp[0]->z()) /
@@ -400,15 +486,12 @@ void AdaptiveHoughTransformSeeder::makeSeeds(
         static_cast<float>(sp[1]->z() - sp[1]->r() * cotThetaEstimate);
     seed.vertexZ() = z;
 
-    ACTS_VERBOSE(seedIndex << ": solution x: " << s.xBegin() << " " << s.xSize()
-                           << " y: " << s.yBegin() << " " << s.ySize()
-                           << " nlines: " << s.count() << " vertex z: " << z
-                           << " r0,1,2: " << sp[0]->r() << " " << sp[1]->r()
-                           << " " << sp[2]->r() << " cot,01,12 "
-                           << cotThetaEstimate << " " << cotThetaEstimate01
-                           << " " << cotThetaEstimate12);
-
     seedIndex++;
+  }
+  if (skippedCandidatesCounter > 0) {
+    ACTS_VERBOSE("Diagnostic: Skipped " << skippedCandidatesCounter 
+              << " invalid seed candidates (insufficient points) out of " 
+              << solutions.size() << " total sections.");
   }
 }
 

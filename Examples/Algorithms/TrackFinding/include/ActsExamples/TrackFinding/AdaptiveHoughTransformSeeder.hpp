@@ -27,6 +27,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <unordered_set>
 
 namespace ActsExamples {
 
@@ -42,7 +43,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     float phiWrap =
         0.1f;  // wrap size around angle domain limits (min pT dependent)
-    float qOverPtMin = 0.9f;  // min q/pt, -1/1 GeV
+    float qOverPtMin = 1.1f;  // min q/pt, -1/1 GeV
 
     float qOverPtMinBinSize = 0.01f;  // minimal size of pT bin that the
                                       // algorithm should not go beyond (in GeV)
@@ -57,7 +58,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     float cotThetaMinBinSize = 0.1f;  // minimal size of cot(theta) bin that
                                       // the algorithm should not go beyond
     unsigned threshold =
-        4;  // number of lines passing section for it to be still considered
+        3;  // number of lines passing section for it to be still considered
     unsigned noiseThreshold = 12;  // number of lines passing section at the
                                    // final split to consider it noise
 
@@ -65,11 +66,31 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                                 // find less solutions
     bool deduplicate = true;    // when adding solutions try avoiding duplicates
 
+    unsigned maxDivision = 6;    // Level of maximal standard section division
+
     double inverseA =
         1.0 / 3.0e-4;  // Assume B = 2T constant. Can apply corrections to
                        // this with fieldCorrection function
                        // This 3e-4 comes from the 2T field when converted to
                        // units of GeV / (c*mm*e)
+  };
+
+  // TODO: This intermediate SeedCandidate structure and the accompanying VectorHash 
+  // currently use std::vector for transitioning away from the heavy HoughAccumulatorSection.
+  // In a follow-up PR implementing the 1D sliding window to phase 1, this will be strictly flattened 
+  // to a 3-element std::array with O(1) deduplication to prevent heap allocations.
+  struct SeedCandidate{
+    std::vector<unsigned> indices;
+  };
+
+  struct VectorHash {
+    std::size_t operator()(const std::vector<unsigned>& v) const {
+      std::size_t seed = v.size();
+      for(auto& i : v) {
+        seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      }
+      return seed;
+    }
   };
 
   // information that is needed for each measurement
@@ -168,7 +189,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param measurements are input measurements
   void processStackZCotTheta(
       std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
-      std::vector<Acts::Experimental::HoughAccumulatorSection> &output,
+      std::vector<SeedCandidate> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   void processStackZCotThetaSplit(
@@ -182,7 +203,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param measurements are input measurements
   void makeSeeds(
       SeedContainer &seeds,
-      const std::vector<Acts::Experimental::HoughAccumulatorSection> &solutions,
+      const std::vector<SeedCandidate> &solutions,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   LineFunctor m_qOverPtPhiLineParams = [this](const PreprocessedMeasurement &m,
