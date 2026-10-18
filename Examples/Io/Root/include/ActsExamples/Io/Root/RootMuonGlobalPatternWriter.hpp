@@ -31,6 +31,7 @@ namespace ActsExamples {
 ///        the pattern recognition.
 class RootMuonGlobalPatternWriter : public WriterT<MuonGlobalPatternContainer> {
  public:
+  /// Configuration of the writer
   struct Config {
     /// Input global pattern collection to write.
     std::string inputPatterns{};

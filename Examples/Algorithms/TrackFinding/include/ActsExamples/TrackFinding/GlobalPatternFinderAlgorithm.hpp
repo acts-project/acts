@@ -216,6 +216,9 @@ struct HitPayload {
 };
 static_assert(Acts::Experimental::detail::GlobPatFinderHit<HitPayload>);
 
+/// @brief Layer order and grouping of the muon spectrometer hits for the
+///        global pattern finder. A group is a station index (BI, BM, ...);
+///        the layers are ordered from the inside of the spectrometer outwards.
 class PatternTopology {
  public:
   /// @brief Type of the index of the station layer
@@ -225,11 +228,26 @@ class PatternTopology {
   /// @brief Number of groups in a pattern
   static constexpr GroupIdx nGroups{
       static_cast<GroupIdx>(Acts::toUnderlying(StIndex::StIndexMax))};
-  /// @brief Layer sorter
+  /// @brief Whether the first hit comes before the second one, going from the
+  ///        inside of the spectrometer outwards. Hits of one station are
+  ///        ordered by their layer, hits of different stations by their
+  ///        station layer (inner, extended, middle, outer)
+  /// @param hit1: First hit
+  /// @param hit2: Second hit
+  /// @return True if hit1 is ordered before hit2
+  /// @throws std::runtime_error for one hit in BO and the other in EO, which a
+  ///         pattern cannot hold
   static bool layerSorter(const HitPayload& hit1, const HitPayload& hit2);
-  /// @brief Return the station index
+  /// @brief Group of a hit, its station index
+  /// @param hit: Hit of interest
+  /// @return The group index of the hit
   static GroupIdx groupIndex(const HitPayload& hit);
-  /// @brief Check if two hits are in the same layer
+  /// @brief Whether two hits are on the same detector layer: the same layer of
+  ///        the same station, or the same radius (barrel) or |z| (endcap) in
+  ///        the same station index
+  /// @param hit1: First hit
+  /// @param hit2: Second hit
+  /// @return True if both hits are on one layer
   static bool sameLayer(const HitPayload& hit1, const HitPayload& hit2);
 };
 static_assert(
@@ -249,18 +267,34 @@ struct SearchTreeData {
   SearchTree_t tree;
 };
 
+/// @brief Chooses the hits the global pattern finder starts patterns from and
+///        the theta window it searches around each of them
 struct SeedSelector {
+  /// @brief Configuration of the seed selection
   struct Config {
+    /// @brief Whether MDT hits may seed patterns
     bool seedFromMdt{false};
+    /// @brief Theta window [rad] around a seed in the inner or outer station
+    ///        layer; seeds in the other layers use half of it
     double thetaSearchWindow{0.05};
+    /// @brief Whether hits in the inner station layer may seed patterns
     bool seedFromInner{false};
   };
   /// @brief Constructor
+  /// @param config: Configuration of the seed selection
   explicit SeedSelector(Config&& config);
-  /// @brief Select a good seed
+  /// @brief Whether a hit may seed a pattern: it lies in one of the seeding
+  ///        station layers and is not an MDT hit, unless seedFromMdt is set
+  /// @param hit: Hit of interest
+  /// @return True if the hit may seed a pattern
   bool goodForSeeding(const HitPayload& hit) const;
-  /// @brief Theta search window
+  /// @brief Theta window [rad] to search for hits compatible with a seed
+  /// @param hit1: Seed hit
+  /// @return The configured window for a seed in the inner or outer station
+  ///         layer, half of it otherwise
   double thetaSearchWindow(const HitPayload& hit1) const;
+  /// @brief Station layers of the seeds: middle and outer, and inner if
+  ///        seedFromInner is set
   std::vector<LayerIndex> m_seedinglayers{LayerIndex::Middle,
                                           LayerIndex::Outer};
   /// @brief Config
@@ -269,11 +303,19 @@ struct SeedSelector {
 static_assert(
     Acts::Experimental::detail::PatternSeedSelector<SeedSelector, HitPayload>);
 
+/// @brief Provides the hits that measure only phi, which the global pattern
+///        finder adds to its patterns after building them in eta
 struct OnlyPhiHitsProvider {
+  /// @brief Pattern state of the global pattern finder
   using PatternStateAux = GlobalPatternFinder_t::PatternStateAux;
+  /// @brief Phi-only hits, per group
   using PhiHitsPerGroup =
       std::array<std::vector<HitPayload>, PatternTopology::nGroups>;
-  /// @brief Get the phi-only hits compatible with the pattern
+  /// @brief Phi-only hits that may belong to a pattern: those in the space
+  ///        point buckets that hold the pattern's hits, per group
+  /// @param pattern: Pattern of interest
+  /// @param gctx: Geometry context
+  /// @return The phi-only hits, per group
   PhiHitsPerGroup getPhiOnlyHits(const PatternStateAux& pattern,
                                  const Acts::GeometryContext& gctx) const;
   /// @brief Tracking geometry to look up the measurement surfaces of the
@@ -350,6 +392,7 @@ using MuonGlobalPatternContainer = std::vector<MuonGlobalPattern>;
 /// written into the event store.
 class GlobalPatternFinderAlgorithm final : public IAlgorithm {
  public:
+  /// @brief Configuration of the algorithm
   struct Config {
     /// @brief Keys of SpacePoint containers to read
     std::string inSpacePoints{};
@@ -395,9 +438,17 @@ class GlobalPatternFinderAlgorithm final : public IAlgorithm {
     double beamSpotLength{2. * Acts::UnitConstants::m};
   };
 
+  /// @brief Constructor
+  /// @param cfg: Configuration of the algorithm
+  /// @param logger: Logger of the algorithm; a default one if null
+  /// @throws std::invalid_argument if a collection key or the tracking
+  ///         geometry is missing
   explicit GlobalPatternFinderAlgorithm(
       const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
+  /// @brief Finds the global patterns of an event
+  /// @param ctx: Context of the event
+  /// @return SUCCESS, with the patterns written to the event store
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// @brief Const access to the config
@@ -406,6 +457,10 @@ class GlobalPatternFinderAlgorithm final : public IAlgorithm {
  private:
   using PatternResult = GlobalPatternFinder_t::OutputPattern;
 
+  /// @brief Builds the hit payloads of an event and the search tree over them
+  /// @param gctx: Geometry context
+  /// @param spacepoints: Space point buckets of the event
+  /// @return The hit payloads and the tree that points to them
   SearchTreeData constructTree(
       const Acts::GeometryContext& gctx,
       const MuonSpacePointContainer& spacepoints) const;
