@@ -66,7 +66,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                                 // find less solutions
     bool deduplicate = true;    // when adding solutions try avoiding duplicates
 
-    unsigned maxDivision = 6;    // Level of maximal standard section division
+    unsigned maxDivision = 6;  // Level of maximal standard section division
 
     double inverseA =
         1.0 / 3.0e-4;  // Assume B = 2T constant. Can apply corrections to
@@ -79,14 +79,16 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   // currently use std::vector for transitioning away from the heavy HoughAccumulatorSection.
   // In a follow-up PR implementing the 1D sliding window to phase 1, this will be strictly flattened 
   // to a 3-element std::array with O(1) deduplication to prevent heap allocations.
-  struct SeedCandidate{
+  /// @brief Lightweight representation of a seed candidate holding measurement indices
+  struct SeedCandidate {
     std::vector<unsigned> indices;
   };
 
+  /// @brief Hash functor for std::vector<unsigned> to enable O(1) cluster deduplication
   struct VectorHash {
-    std::size_t operator()(const std::vector<unsigned>& v) const {
+    std::size_t operator()(const std::vector<unsigned> &v) const {
       std::size_t seed = v.size();
-      for(auto& i : v) {
+      for (auto &i : v) {
         seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
       }
       return seed;
@@ -180,17 +182,31 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       std::vector<Acts::Experimental::HoughAccumulatorSection> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
-  /// @brief process sections on the stack
-  /// and qualifying them for further division, discarding them or moving to
-  /// solutions vector
-  /// the search happens in q/pt - phi space
-  /// @param sections is the stack of sectoins to consider
-  /// @param solutions is the output set of sections
+  /// @brief process sections on the stack in z - cot(theta) space
+  /// @param input is the stack of sections to consider
+  /// @param output is the output set of seed candidates
   /// @param measurements are input measurements
   void processStackZCotTheta(
       std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
       std::vector<SeedCandidate> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
+
+  /// @brief Evaluates lines at discrete check points and extracts 1D clusters
+  /// using a sliding window approach.
+  /// @param indices measurement indices present in the current section
+  /// @param checkPoints discrete coordinates along the primary axis to evaluate
+  /// @param measurements global collection of preprocessed measurements
+  /// @param lineFunctor functor evaluating the secondary coordinate for a given primary coordinate
+  /// @param maxSpread maximum allowed spread along the secondary axis to form a cluster
+  /// @param uniqueClusters hash set tracking already discovered index combinations
+  /// @param output output vector of unique seed candidates
+  void findClusters1D(
+      const std::vector<unsigned> &indices,
+      std::span<const float> checkPoints,
+      const std::vector<PreprocessedMeasurement> &measurements,
+      const LineFunctor &lineFunctor, float maxSpread,
+      std::unordered_set<std::vector<unsigned>, VectorHash> &uniqueClusters,
+      std::vector<SeedCandidate> &output) const;
 
   void processStackZCotThetaSplit(
       std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
