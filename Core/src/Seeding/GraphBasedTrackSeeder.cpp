@@ -267,7 +267,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     if (withFits) {
       // filter state at the innermost node, x' along the first edge (inwards)
-      const double slope2 = 1. + double{rs.x[1]} * rs.x[1];
+      const double slope2 = 1. + static_cast<double>(rs.x[1]) * rs.x[1];
       vSeedCandidates.back().fit = {
           .valid = true,
           .position = Vector3(rs.refX * rs.c - rs.x[0] * rs.s,
