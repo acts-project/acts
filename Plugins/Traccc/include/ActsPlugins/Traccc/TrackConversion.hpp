@@ -142,8 +142,8 @@ TrackConversionStatistics convertTracks(
       continue;
     }
 
-    const Acts::Surface* referenceSurface = findSurface(
-        detector, trackingGeometry, track.params().surface_link());
+    const Acts::Surface* referenceSurface =
+        findSurface(detector, trackingGeometry, track.params().surface_link());
     if (referenceSurface == nullptr) {
       ++stats.nMissingSurface;
       continue;
@@ -163,8 +163,8 @@ TrackConversionStatistics convertTracks(
       }
       const auto state = input.states.at(link.index);
       const auto& smoothed = state.smoothed_params();
-      const Acts::Surface* surface = findSurface(
-          detector, trackingGeometry, smoothed.surface_link());
+      const Acts::Surface* surface =
+          findSurface(detector, trackingGeometry, smoothed.surface_link());
       if (surface == nullptr) {
         missingSurface = true;
         break;
