@@ -82,7 +82,7 @@ struct RzLookupChild {
 // assignments, prefix-sum the counts, then fill slices in hierarchy order.
 // Queries use two binary searches and scan one slice; the lookup performs exact
 // containment.
-struct Partition {
+struct RzGrid {
   using Config = RzGridVolumeLookup::Config;
   using RzAxis = Axis<AxisType::Variable, AxisBoundaryType::Bound>;
   using RzAxes = MultiAxis<RzAxis, RzAxis>;
@@ -175,7 +175,7 @@ struct RzGridVolumeLookup::Impl {
   std::vector<RzLookupChild> m_children;
   std::vector<std::size_t> m_fallbackCandidates;
   // One grid for this lookup's entire collected subtree, not one per volume.
-  Partition m_partition;
+  RzGrid m_grid;
 
   Impl(const GeometryContext& gctx, const TrackingVolume& root,
        const Config& cfg)
@@ -192,7 +192,7 @@ struct RzGridVolumeLookup::Impl {
     };
     requireGen3(root);
     std::vector<const TrackingVolume*> ancestors;
-    // Collect geometry independently of the spatial partition. Postorder IDs
+    // Collect geometry independently of the spatial grid. Postorder IDs
     // encode recursive-scan priority; build() below indexes their RZ envelopes.
     auto collect = [&](auto&& self, const TrackingVolume& volume) -> void {
       requireGen3(volume);
@@ -223,10 +223,10 @@ struct RzGridVolumeLookup::Impl {
       collect(collect, child);
     }
     // The only grid build: collect all candidates first, then fill the single
-    // partition once. Explicit descendant lookups own their separate indices.
+    // grid once. Explicit descendant lookups own their separate indices.
     // With no indexable candidates, queries use only m_fallbackCandidates.
     if (m_hasIndex) {
-      m_gridLimit = !m_partition.build(m_children, cfg);
+      m_gridLimit = !m_grid.build(m_children, cfg);
     }
   }
 
@@ -307,7 +307,7 @@ struct RzGridVolumeLookup::Impl {
       }
     }
     if (m_hasIndex && m_domain.contains(key)) {
-      for (auto id : m_partition.candidates(key)) {
+      for (auto id : m_grid.candidates(key)) {
         if (!consider(id)) {
           break;
         }
