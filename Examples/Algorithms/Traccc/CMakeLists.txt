@@ -9,11 +9,7 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesTraccc
-    PUBLIC
-        Acts::Core
-        Acts::ExamplesFramework
-        traccc::core
-        vecmem::core
+    PUBLIC Acts::Core Acts::ExamplesFramework traccc::core vecmem::core
     PRIVATE traccc::io
 )
 

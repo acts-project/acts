@@ -40,7 +40,6 @@ class CudaTracccBackend final : public TracccBackend {
   traccc::magnetic_field makeMagneticField(
       const traccc::magnetic_field& hostField) const override;
 
-
  private:
   const Acts::Logger& logger() const { return *m_logger; }
 

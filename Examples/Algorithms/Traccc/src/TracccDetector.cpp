@@ -18,10 +18,10 @@ namespace ActsExamples {
 TracccDetector::TracccDetector(const Config& cfg,
                                std::unique_ptr<const Acts::Logger> _logger)
     : m_cfg(cfg),
-      m_logger(_logger != nullptr
-                   ? std::move(_logger)
-                   : Acts::getDefaultLogger("TracccDetector",
-                                            Acts::Logging::INFO)) {
+      m_logger(
+          _logger != nullptr
+              ? std::move(_logger)
+              : Acts::getDefaultLogger("TracccDetector", Acts::Logging::INFO)) {
   if (m_cfg.backend == nullptr) {
     throw std::invalid_argument("TracccDetector: backend is not set");
   }
