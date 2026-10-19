@@ -85,7 +85,7 @@ void GraphBasedTrackSeeder::createSeeds(
     GbtsNodeStorage& nodeStorage, const GbtsRoiDescriptor& roi,
     const GbtsGraphBuilder& graphBuilder, const GbtsTrackingFilter& filter,
     const Options& options, SeedContainer& outputSeeds,
-    std::vector<GbtsSeedFit>* outputFits) const {
+    std::vector<std::optional<GbtsSeedFit>>* outputFits) const {
   ACTS_DEBUG("Loaded " << nodeStorage.numberOfNodes() << " graph nodes");
 
   GbtsGraph graph =
@@ -268,8 +268,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     if (withFits) {
       // filter state at the innermost node, x' along the first edge (inwards)
       const double slope2 = 1. + static_cast<double>(rs.x[1]) * rs.x[1];
-      vSeedCandidates.back().fit = {
-          .valid = true,
+      vSeedCandidates.back().fit = GbtsSeedFit{
           .position = Vector3(rs.refX * rs.c - rs.x[0] * rs.s,
                               rs.refX * rs.s + rs.x[0] * rs.c, rs.y[0]),
           // outwards: along -x', with the slope of the state
@@ -364,9 +363,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       }
 
       vOutputSeeds.emplace_back(seed.seedQuality, vSpIdx);
-      if (withFits) {
-        vOutputSeeds.back().fit = seed.fit;
-      }
+      vOutputSeeds.back().fit = seed.fit;
 
       continue;
     }

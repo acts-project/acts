@@ -159,7 +159,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
 
   // create the seeds
 
-  std::vector<Acts::Experimental::GbtsSeedFit> fits;
+  std::vector<std::optional<Acts::Experimental::GbtsSeedFit>> fits;
   m_finder->createSeeds(
       nodeStorage, m_internalRoi.value(), *m_gbtsGraphBuilder, *m_filter,
       options, seeds, m_outputFreeParameters.isInitialized() ? &fits : nullptr);
@@ -170,24 +170,24 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
     auto fieldCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
     freeParameters.reserve(seeds.size());
     for (std::size_t i = 0; i < seeds.size(); ++i) {
-      // the field halfway along the seed, where it runs along the chord from
-      // the innermost to the outermost space point
+      // zeros for a seed without a fit
+      if (!fits.at(i).has_value()) {
+        freeParameters.push_back(Acts::FreeVector::Zero());
+        continue;
+      }
+      const Acts::Experimental::GbtsSeedFit &fit = fits.at(i).value();
+      // the field halfway between the innermost and outermost space point
       const auto outer = spacePoints[seeds.at(i).spacePointIndices().back()];
       const Acts::Vector3 outerPosition(outer.x(), outer.y(), outer.z());
-      const Acts::Vector3 fieldPosition =
-          0.5 * (fits.at(i).position + outerPosition);
-      const Acts::Vector2 transverseDirection =
-          (outerPosition - fits.at(i).position).head<2>().normalized();
+      const Acts::Vector3 fieldPosition = 0.5 * (fit.position + outerPosition);
       const auto field =
           m_cfg.magneticField->getField(fieldPosition, fieldCache);
       if (!field.ok()) {
         ACTS_ERROR("Field lookup error: " << field.error());
         return ProcessCode::ABORT;
       }
-      // zeros for a seed without a fit
       freeParameters.push_back(
-          Acts::Experimental::freeParametersFromGbtsSeedFit(fits.at(i), *field,
-                                                            transverseDirection)
+          Acts::Experimental::freeParametersFromGbtsSeedFit(fit, *field)
               .value_or(Acts::FreeVector::Zero()));
     }
     m_outputFreeParameters(ctx, std::move(freeParameters));

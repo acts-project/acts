@@ -14,13 +14,9 @@
 
 namespace Acts::Experimental {
 
-std::optional<FreeVector> freeParametersFromGbtsSeedFit(
-    const GbtsSeedFit& fit, const Vector3& bField,
-    const Vector2& transverseDirection) {
-  if (!fit.valid) {
-    return std::nullopt;
-  }
-
+std::optional<FreeVector> freeParametersFromGbtsSeedFit(const GbtsSeedFit& fit,
+                                                        const Vector3& bField) {
+  const Vector2 transverseDirection(std::cos(fit.phi), std::sin(fit.phi));
   const double transverseField = bField.head<2>().dot(transverseDirection);
   const double bendingField = bField.z() - fit.cotTheta * transverseField;
   if (bendingField == 0) {
@@ -28,7 +24,8 @@ std::optional<FreeVector> freeParametersFromGbtsSeedFit(
   }
 
   const Vector3 direction =
-      Vector3(std::cos(fit.phi), std::sin(fit.phi), fit.cotTheta).normalized();
+      Vector3(transverseDirection.x(), transverseDirection.y(), fit.cotTheta)
+          .normalized();
   const double qOverPt = fit.curvature / bendingField;
 
   FreeVector params = FreeVector::Zero();

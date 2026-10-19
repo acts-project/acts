@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -152,11 +153,11 @@ class GraphBasedTrackSeeder {
   /// @param options Event based options such as magnetic field strength
   /// @param outputSeeds Container with generated seeds
   /// @param outputFits Fit of the tracking filter to each generated seed
-  void createSeeds(GbtsNodeStorage& nodeStorage, const GbtsRoiDescriptor& roi,
-                   const GbtsGraphBuilder& graphBuilder,
-                   const GbtsTrackingFilter& filter, const Options& options,
-                   SeedContainer& outputSeeds,
-                   std::vector<GbtsSeedFit>* outputFits = nullptr) const;
+  void createSeeds(
+      GbtsNodeStorage& nodeStorage, const GbtsRoiDescriptor& roi,
+      const GbtsGraphBuilder& graphBuilder, const GbtsTrackingFilter& filter,
+      const Options& options, SeedContainer& outputSeeds,
+      std::vector<std::optional<GbtsSeedFit>>* outputFits = nullptr) const;
 
  private:
   /// candidate seed metadata produced by the GBTS algorithm.
@@ -181,7 +182,7 @@ class GraphBasedTrackSeeder {
     /// Flag for seed splitting.
     bool forSeedSplitting{};
     /// Fit of the tracking filter.
-    GbtsSeedFit fit;
+    std::optional<GbtsSeedFit> fit;
   };
 
   /// Output seed metadata
@@ -196,7 +197,7 @@ class GraphBasedTrackSeeder {
     /// Index of spacepoints in seed.
     std::vector<std::uint32_t> spacePoints;
     /// Fit of the tracking filter.
-    GbtsSeedFit fit;
+    std::optional<GbtsSeedFit> fit;
   };
 
   DerivedConfig m_cfg;

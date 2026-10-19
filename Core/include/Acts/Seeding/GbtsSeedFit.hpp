@@ -17,8 +17,6 @@ namespace Acts::Experimental {
 
 /// Fit of the GBTS tracking filter to a seed, at its innermost space point.
 struct GbtsSeedFit final {
-  /// Whether the seed has a fit of its own.
-  bool valid{false};
   /// Position at the innermost space point.
   Vector3 position{Vector3::Zero()};
   /// Azimuthal angle of the direction.
@@ -36,10 +34,8 @@ struct GbtsSeedFit final {
 ///
 /// @param fit Fit of the tracking filter
 /// @param bField Magnetic field at a point along the seed
-/// @param transverseDirection Unit transverse direction of the seed there
-/// @return Free track parameters, or nothing without a fit
-std::optional<FreeVector> freeParametersFromGbtsSeedFit(
-    const GbtsSeedFit& fit, const Vector3& bField,
-    const Vector2& transverseDirection);
+/// @return Free track parameters, or nothing without a bending field
+std::optional<FreeVector> freeParametersFromGbtsSeedFit(const GbtsSeedFit& fit,
+                                                        const Vector3& bField);
 
 }  // namespace Acts::Experimental
