@@ -3,6 +3,8 @@
 import os
 import argparse
 import pathlib
+import tempfile
+import urllib.request
 
 import acts
 import acts.examples
@@ -41,6 +43,32 @@ from acts.examples.reconstruction import (
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
+
+# Provisional Gen3 map, produced locally and hosted as a release asset on a
+# personal fork; not yet the ODD repo's official map (which is still
+# Gen1-keyed and incompatible with Gen3 surfaces).
+PROVISIONAL_GEN3_MATERIAL_MAP_URL = (
+    "https://github.com/LeaBaumann/acts/releases/download/"
+    "gen3-material-map-provisional-v1/odd_gen3_map.json.zst"
+)
+
+
+def volumeIdsWhere(trackingGeometry, predicate):
+    """Collect geometryId.volume for every TrackingVolume whose name matches
+    predicate(name). Used to derive CKF volume lists (pixelVolumes,
+    stripVolumes, constrainToVolumes) by name instead of hardcoding numeric
+    GeometryIdentifiers, which shift whenever the blueprint gains or loses
+    volumes (e.g. passive elements, material collectors, gap fillers)."""
+    ids = set()
+
+    class _Visitor(acts.TrackingGeometryMutableVisitor):
+        def visitVolume(self, volume: acts.Volume):
+            name = volume.volumeName if isinstance(volume, acts.TrackingVolume) else ""
+            if predicate(name):
+                ids.add(volume.geometryId.volume)
+
+    trackingGeometry.apply(_Visitor())
+    return sorted(ids)
 
 
 parser = argparse.ArgumentParser(description="Full chain with the OpenDataDetector")
@@ -106,6 +134,11 @@ parser.add_argument(
 )
 parser.add_argument(
     "--material-config", help="Material map configuration file", type=pathlib.Path
+)
+parser.add_argument(
+    "--gen1",
+    help="Run on the Gen1 (Layer-based) geometry instead of Gen3 (default).",
+    action="store_true",
 )
 parser.add_argument(
     "--ambi-solver",
@@ -179,15 +212,24 @@ ambi_ML = args.ambi_solver == "ML"
 ambi_scoring = args.ambi_solver == "scoring"
 ambi_config = args.ambi_config
 seedFilter_ML = args.MLSeedFilter
+gen3 = not args.gen1
 geoDir = getOpenDataDetectorDirectory()
 actsDir = pathlib.Path(__file__).parent.parent.parent.parent
 # acts.examples.dump_args_calls()  # show python binding calls
 
-oddMaterialMap = (
-    args.material_config
-    if args.material_config
-    else geoDir / "data/odd-material-maps.root"
-)
+if args.material_config:
+    oddMaterialMap = args.material_config
+elif gen3:
+    # Gen3's default: the shipped ODD map (data/odd-material-maps.root) is
+    # Gen1-keyed and incompatible with Gen3 surfaces, so fall back to the
+    # provisional Gen3 map instead (same one physmon uses).
+    oddMaterialMap = (
+        pathlib.Path(tempfile.gettempdir())
+        / "odd-material-maps-gen3-provisional.json.zst"
+    )
+    urllib.request.urlretrieve(PROVISIONAL_GEN3_MATERIAL_MAP_URL, oddMaterialMap)
+else:
+    oddMaterialMap = geoDir / "data/odd-material-maps.root"
 
 oddDigiConfig = (
     args.digi_config
@@ -209,7 +251,9 @@ oddGbtsConnectionTable = (
 oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
+detector = getOpenDataDetector(
+    odd_dir=geoDir, materialDecorator=oddMaterialDeco, gen3=gen3
+)
 trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
@@ -413,6 +457,45 @@ if args.reco:
             outputDirCsv=outputDir if args.output_csv else None,
         )
 
+    if gen3:
+        # Derived by name rather than hardcoded: Gen3's numeric volume IDs
+        # shift whenever the blueprint gains or loses volumes (e.g. passive
+        # elements and material collectors), so literal IDs silently go
+        # stale -- CKF then constrains itself to the wrong (or no) volumes
+        # and finds zero tracks without raising an error. Name-based lookup
+        # survives future geometry changes.
+        pixelVolumes = volumeIdsWhere(trackingGeometry, lambda n: "Pixel" in n)
+        stripVolumes = volumeIdsWhere(trackingGeometry, lambda n: "Strip" in n)
+        constrainToVolumes = volumeIdsWhere(
+            trackingGeometry,
+            lambda n: n != "World" and not n.startswith("CaloMaterialCollector"),
+        )
+    else:
+        # Gen1's composite (auto-generated, recursively grouped) volume
+        # names also contain "Pixel"/"Strip" as substrings, so the name-based
+        # lookup above would over-match container volumes -- these literal
+        # IDs are the only reliable option here, which is fine since Gen1 is
+        # being phased out rather than evolving further.
+        pixelVolumes = [16, 17, 18]
+        stripVolumes = [23, 24, 25]
+        constrainToVolumes = [
+            2,  # beam pipe
+            32,
+            4,  # beam pipe gap
+            16,
+            17,
+            18,  # pixel
+            20,  # PST
+            23,
+            24,
+            25,  # short strip
+            26,
+            8,  # long strip gap
+            28,
+            29,
+            30,  # long strip
+        ]
+
     addCKFTracks(
         s,
         trackingGeometry,
@@ -431,27 +514,11 @@ if args.reco:
             numMeasurementsCutOff=2,
             seedDeduplication=True,
             stayOnSeed=True,
-            pixelVolumes=[16, 17, 18],
-            stripVolumes=[23, 24, 25],
+            pixelVolumes=pixelVolumes,
+            stripVolumes=stripVolumes,
             maxPixelHoles=1,
             maxStripHoles=2,
-            constrainToVolumes=[
-                2,  # beam pipe
-                32,
-                4,  # beam pip gap
-                16,
-                17,
-                18,  # pixel
-                20,  # PST
-                23,
-                24,
-                25,  # short strip
-                26,
-                8,  # long strip gap
-                28,
-                29,
-                30,  # long strip
-            ],
+            constrainToVolumes=constrainToVolumes,
         ),
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
