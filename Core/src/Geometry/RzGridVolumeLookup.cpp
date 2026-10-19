@@ -52,6 +52,9 @@ struct RzLookupChild {
     const auto* cylinder =
         dynamic_cast<const CylinderVolumeBounds*>(&v.volumeBounds());
     const auto& trf = v.localToGlobalTransform(gctx);
+    // Only fixed, unrotated full cylinders have the RZ envelope used below.
+    // Alignable volumes must be checked directly in the query's context;
+    // partial cylinders and other orientations/shapes use the same fallback.
     if (!v.isAlignable() && cylinder != nullptr && trf.linear().isIdentity(0) &&
         cylinder->get(CylinderVolumeBounds::eHalfPhiSector) ==
             std::numbers::pi) {
@@ -102,13 +105,18 @@ struct Partition {
       e.erase(std::unique(e.begin(), e.end()), e.end());
     }
     // MultiAxis global indices reserve under-/overflow slots on each axis,
-    // even with bounded axes. Include these slots in the allocation limit.
+    // even with bounded axes. N edges give N-1 regular bins, plus two reserved
+    // slots, hence N+1 allocated slots. Include these in the allocation limit.
     const auto nr = edges[0].size() + 1;
     const auto nz = edges[1].size() + 1;
+    // Equivalent to nr * nz > maxGridCells, without risking overflow in the
+    // multiplication. nz is positive. Returning false makes the whole lookup
+    // use linear selection rather than allocating an oversized grid.
     if (nr > config.maxGridCells / nz) {
       return false;
     }
     m_axes.emplace(RzAxis(std::move(edges[0])), RzAxis(std::move(edges[1])));
+    // One extra offset marks the end of the last cell's candidate slice.
     m_offsets.resize(m_axes->getNTotalBins(true) + 1);
     auto cells = [&](const Eigen::AlignedBox2d& b, auto&& visit) {
       const auto lower = m_axes->getLocalBinsFromPoint(b.min());
@@ -121,8 +129,10 @@ struct Partition {
         }
       }
     };
-    // Count, prefix sum, fill: contiguous candidate lists without per-bin
-    // heaps.
+    // Count into cell+1 so the prefix sum leaves offsets[0] == 0 and turns
+    // offsets[cell] into the start of that cell's slice. The final offset is
+    // the total number of candidate references, including duplicates across
+    // cells. Fill with separate cursors to preserve these slice boundaries.
     for (const auto& child : children) {
       if (!child.m_indexable) {
         continue;
@@ -164,6 +174,7 @@ struct RzGridVolumeLookup::Impl {
   Eigen::AlignedBox2d m_domain;
   std::vector<RzLookupChild> m_children;
   std::vector<std::size_t> m_fallbackCandidates;
+  // One grid for this lookup's entire collected subtree, not one per volume.
   Partition m_partition;
 
   Impl(const GeometryContext& gctx, const TrackingVolume& root,
@@ -211,6 +222,9 @@ struct RzGridVolumeLookup::Impl {
     for (const auto& child : root.volumes()) {
       collect(collect, child);
     }
+    // The only grid build: collect all candidates first, then fill the single
+    // partition once. Explicit descendant lookups own their separate indices.
+    // With no indexable candidates, queries use only m_fallbackCandidates.
     if (m_hasIndex) {
       m_gridLimit = !m_partition.build(m_children, cfg);
     }
@@ -218,11 +232,15 @@ struct RzGridVolumeLookup::Impl {
 
   void warnAboutFallback(const TrackingVolume& volume, double fraction,
                          const Logger& logger) const {
+    // A threshold of 1 explicitly suppresses this warning; a logger that
+    // filters WARNING also avoids the diagnostic work below.
     if (fraction == 1 || !logger.doPrint(Logging::WARNING)) {
       return;
     }
     const auto total = m_children.size();
     const auto affected = m_gridLimit ? total : m_fallbackCandidates.size();
+    // Warn only strictly above the configured fraction. Short-circuit the
+    // empty scope before dividing by total.
     if (total == 0 ||
         static_cast<double>(affected) / static_cast<double>(total) <=
             fraction) {
@@ -243,6 +261,10 @@ struct RzGridVolumeLookup::Impl {
   const TrackingVolume* find(const TrackingVolume& root,
                              const GeometryContext& gctx, const Vector3& p,
                              const Vector2& key, double tolerance) const {
+    // Precondition: root is the volume this lookup was constructed for.
+    // TrackingVolume passes itself when dispatching its installed policy;
+    // construction/installation must use that same volume. This identity is
+    // not checked here, and passing another root would not rebuild the index.
     if (m_gridLimit) {
       return detail::linearVolumeScan(root, gctx, p, tolerance);
     }
@@ -252,11 +274,20 @@ struct RzGridVolumeLookup::Impl {
     // IDs encode hierarchy priority. Each ordered candidate list can stop
     // at its first exact match; choose the earlier match across both lists.
     std::size_t best = noRzNode;
+    // Return true to keep scanning this ordered list, false to stop it.
     auto consider = [&](std::size_t id) {
+      // Later IDs cannot beat a match already found in either list.
       if (id >= best) {
         return false;
       }
       const auto& entry = m_children[id];
+      // Reject on any of three conditions, in increasing cost order:
+      //  - an indexed candidate's conservative RZ box misses the query;
+      //    fallback candidates have no usable box, so skip that test;
+      //  - the actual volume does not contain the point at this tolerance;
+      //  - any ancestor does not contain it. A protruding child must not be
+      //    reachable when the recursive scan would stop outside its parent.
+      // A rejected candidate means continue, not terminate the search.
       if ((entry.m_indexable && !entry.m_box.contains(key)) ||
           !entry.m_volume->inside(gctx, p, tolerance) ||
           !std::ranges::all_of(entry.m_ancestors,
@@ -266,6 +297,8 @@ struct RzGridVolumeLookup::Impl {
         return true;
       }
       best = id;
+      // This is the first match in this list. The other list may still contain
+      // a smaller ID and therefore a higher-priority match.
       return false;
     };
     for (auto id : m_fallbackCandidates) {

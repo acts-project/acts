@@ -30,6 +30,7 @@ class IVolumeLookup {
   /// Find the deepest containing volume, or nullptr outside the supplied
   /// volume. Respect explicit descendant lookups as delegation boundaries.
   /// @param root Root of the subtree covered by this policy
+  /// Must match the construction root for policies with a precomputed index.
   /// @param gctx Geometry context for containment checks
   /// @param position Global query position
   /// @param tolerance Containment tolerance
