@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(FinalizedMaterialIsAvailableBeforeDestruction) {
   auto surface =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30., 100.);
   surface->assignGeometryId(GeometryIdentifier().withSensitive(1));
-  surface->assignSurfaceMaterial(std::make_shared<ProtoGridSurfaceMaterial>(
+  surface->assignSurfaceMaterial(std::make_shared<ProtoSurfaceMaterial>(
       MultiAxisSpec2D(
           {AxisSpec::DeferredEquidistant(1), AxisSpec::DeferredEquidistant(1)}),
       MappingType::Default, "cylinder"));

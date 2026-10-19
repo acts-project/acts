@@ -68,7 +68,7 @@ TrackingGeometryMaterial TrackingGeometryMaterial::fromGeometry(
       [&](const Surface* surface) {
         auto payload = surface->surfaceMaterialSharedPtr();
         if (!payload && includeNonMaterial) {
-          payload = std::make_shared<ProtoGridSurfaceMaterial>(
+          payload = std::make_shared<ProtoSurfaceMaterial>(
               MultiAxisSpec2D({AxisSpec::DeferredEquidistant(1),
                                AxisSpec::DeferredEquidistant(1)}));
         }

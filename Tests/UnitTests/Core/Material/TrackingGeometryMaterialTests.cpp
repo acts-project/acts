@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(ExtractPreservesMaterialAndDeferredBinning) {
   auto surface =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30., 100.);
   surface->assignGeometryId(GeometryIdentifier().withSensitive(1));
-  auto proto = std::make_shared<ProtoGridSurfaceMaterial>(
+  auto proto = std::make_shared<ProtoSurfaceMaterial>(
       MultiAxisSpec2D(
           {AxisSpec::DeferredEquidistant(8, AxisDirection::AxisRPhi),
            AxisSpec::DeferredEquidistant(3, AxisDirection::AxisZ)}),
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(ExtractPreservesMaterialAndDeferredBinning) {
 
   const auto all = TrackingGeometryMaterial::fromGeometry(geometry, true);
   BOOST_CHECK(all.keyedSurfaces.at("cylinder").material == proto);
-  const auto* placeholder = dynamic_cast<const ProtoGridSurfaceMaterial*>(
+  const auto* placeholder = dynamic_cast<const ProtoSurfaceMaterial*>(
       all.surfaceMaterials.at(bare->geometryId()).get());
   BOOST_REQUIRE(placeholder != nullptr);
   BOOST_CHECK(placeholder->binning().isDeferred());
