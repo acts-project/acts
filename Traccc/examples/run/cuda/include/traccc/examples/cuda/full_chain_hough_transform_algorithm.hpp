@@ -103,6 +103,7 @@ class full_chain_hough_transform_algorithm
   ///
   full_chain_hough_transform_algorithm(vecmem::memory_resource& host_mr,
 				       const clustering_config& clustering_config,
+				       const hough_seeding_config& seeding_config,
 				       const shared_data& data,
 				       std::unique_ptr<const traccc::Logger> logger,
 				       await_strategy = await_strategy::sync_event);

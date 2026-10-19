@@ -142,6 +142,8 @@ int hough_transform_seeding_cuda(std::string_view description, int argc, char* a
   typename FULL_CHAIN_ALG::clustering_algorithm::config_type clustering_cfg(
       clusterization_opts);
 
+  typename FULL_CHAIN_ALG::seeding_algorithm::config_type seeding_cfg;
+
   // Determine the await strategy to use.
   await_strategy await_mode = await_strategy::sync_event;
   if (threading_opts.await_mode == opts::threading::await_strategy::callback) {
@@ -157,6 +159,7 @@ int hough_transform_seeding_cuda(std::string_view description, int argc, char* a
   for (std::size_t i = 0; i < threading_opts.concurrent_slots; ++i) {
     algs.emplace_back(std::make_unique<FULL_CHAIN_ALG>(unpinned_host_mr,
 						       clustering_cfg,
+						       seeding_cfg,
 						       shared_data,
 						       logger().clone(),
 						       await_mode));

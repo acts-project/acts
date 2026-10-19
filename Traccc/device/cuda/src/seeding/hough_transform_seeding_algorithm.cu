@@ -12,40 +12,35 @@
 #include "../utils/utils.hpp"
 #include "traccc/cuda/seeding/hough_transform_seeding_algorithm.hpp"
 
-// Project include(s).
-#include "traccc/seeding/detail/spacepoint_grid.hpp"
-#include "traccc/seeding/device/count_doublets.hpp"
-#include "traccc/seeding/device/count_grid_capacities.hpp"
-#include "traccc/seeding/device/count_triplets.hpp"
-#include "traccc/seeding/device/find_doublets.hpp"
-#include "traccc/seeding/device/find_triplets.hpp"
-#include "traccc/seeding/device/populate_grid.hpp"
-#include "traccc/seeding/device/reduce_triplet_counts.hpp"
-#include "traccc/seeding/device/select_seeds.hpp"
-#include "traccc/seeding/device/update_triplet_weights.hpp"
-
 namespace traccc::cuda {
 namespace kernels {
    __global__ 
-   void define_plane_edges(edm::houghplane_collection<device::N_COLS, device::N_ROWS>::view houghplanes) {
-      // we need a config actually
-      float minQoptRange = -1.1f;
-      float maxQoptRange = 1.1f;
-      float minPhi = -std::numbers::pi_v<float>;
-      float maxPhi = std::numbers::pi_v<float>;
-      float stepQopt = (maxQoptRange - minQoptRange) / device::N_COLS;
-      float stepPhi = (maxPhi - minPhi) / device::N_ROWS;
-      device::define_plane_edges(details::global_index1(), houghplanes, 
-		      stepQopt, minQoptRange,
-		      stepPhi, minPhi);
+   void define_plane_edges(const traccc::hough_seeding_config config,
+		   edm::houghplane_collection<device::N_COLS, device::N_ROWS>::view houghplanes) {
+      float steps_x = (config.max_range_x - config.min_range_x) / device::N_COLS;
+      float steps_y = (config.max_range_y - config.min_range_y) / device::N_ROWS;
+      device::define_plane_edges(details::global_index1(), houghplanes,
+		     steps_x, config.min_range_x,
+		     steps_y, config.min_range_y); 
+   }
+      
+   __global__
+   void fill_hough_plane(const traccc::hough_seeding_config config,
+		   edm::spacepoint_collection::const_view::size_type n_spacepoints,
+		   const edm::spacepoint_collection::const_view& spacepoints,
+		   edm::houghplane_collection<device::N_COLS, device::N_ROWS>::view& houghplanes) {
+      device::fill_hough_plane(details::global_index1(), n_spacepoints, spacepoints, 
+		      config.interaction_center, config.interaction_window,
+		      houghplanes);
    }
 } // namespace kernels
 
 hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
     const traccc::memory_resource& mr,
     const vecmem::copy& copy, const stream_wrapper& str,
+    const hough_seeding_config& seeding_config,
     std::unique_ptr<const Logger> logger, await_function_type await_func)
-    : device::hough_transform_seeding_algorithm(mr, copy,
+    : device::hough_transform_seeding_algorithm(mr, copy, seeding_config,
                                         std::move(logger)),
       cuda::algorithm_base{str, std::move(await_func)} {}
 
@@ -53,10 +48,14 @@ void hough_transform_seeding_algorithm::define_plane_edges_kernel(const define_p
    unsigned int maxValues = std::max(device::N_COLS, device::N_ROWS);
    const unsigned int n_threads = warp_size() * 4;
    const unsigned int n_blocks = (maxValues  + n_threads - 1) / n_threads;
-   kernels::define_plane_edges<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes);
+   kernels::define_plane_edges<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, payload.houghplanes);
 }
 
-void hough_transform_seeding_algorithm::fill_hough_planes_kernel(const fill_hough_planes_kernel_payload& payload) const {}
+void hough_transform_seeding_algorithm::fill_hough_plane_kernel(const fill_hough_planes_kernel_payload& payload) const {
+  const unsigned int n_threads = warp_size() * 4;
+  const unsigned int n_blocks = (payload.n_spacepoints + n_threads - 1) / n_threads;
+  kernels::fill_hough_plane<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, payload.n_spacepoints, payload.spacepoints, payload.houghplanes);
+}
 
 void hough_transform_seeding_algorithm::synchronize() const {
   stream().synchronize();

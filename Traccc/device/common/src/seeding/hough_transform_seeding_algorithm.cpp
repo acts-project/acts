@@ -14,9 +14,11 @@ namespace traccc::device {
 
 hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
     const traccc::memory_resource& mr, const vecmem::copy& copy,
+    const traccc::hough_seeding_config& config,
     std::unique_ptr<const Logger> logger)
     : messaging(std::move(logger)),
-      algorithm_base{mr, copy} {}
+      algorithm_base{mr, copy},
+      m_config(config) {}
 
 auto hough_transform_seeding_algorithm::operator()(
     const edm::spacepoint_collection::const_view& spacepoints) const -> output_type {
@@ -43,7 +45,7 @@ auto hough_transform_seeding_algorithm::operator()(
 
   // Fill plane edges
   // we will move to a config at a certain point and template the algorithm
-  define_plane_edges_kernel({device::N_COLS, device::N_ROWS, result});
+  define_plane_edges_kernel({m_config, result});
 
   /*
   edm::houghplane_collection<N_COLS, N_ROWS>::const_view host_view;
@@ -64,8 +66,7 @@ auto hough_transform_seeding_algorithm::operator()(
   */
 
   // Fill the planes with space points
-  //
-  //
+  fill_hough_plane_kernel({m_config, n_spacepoints, spacepoints, result});
 
   synchronize();
 

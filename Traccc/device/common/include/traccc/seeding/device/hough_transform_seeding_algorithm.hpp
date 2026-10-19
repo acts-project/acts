@@ -11,6 +11,7 @@
 // Local include(s).
 #include "traccc/device/abstract_awaitable.hpp"
 #include "traccc/device/algorithm_base.hpp"
+#include "traccc/seeding/detail/hough_seeding_config.hpp"
 
 // Project include(s).
 #include "traccc/edm/spacepoint_collection.hpp"
@@ -36,8 +37,11 @@ class hough_transform_seeding_algorithm
       public algorithm_base,
       public virtual abstract_awaitable {
  public:
-  hough_transform_seeding_algorithm(
+   using config_type = traccc::hough_seeding_config;
+	 
+   hough_transform_seeding_algorithm(
       const traccc::memory_resource& mr, const vecmem::copy& copy,
+      const traccc::hough_seeding_config& config,
       std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
   output_type operator()(const edm::spacepoint_collection::const_view&
@@ -45,8 +49,7 @@ class hough_transform_seeding_algorithm
 
  protected:
   struct fill_hough_planes_kernel_payload {
-    unsigned int n_cols = N_COLS;
-    unsigned int n_rows = N_ROWS;
+    const hough_seeding_config& config;
     /// The number of spacepoints in the event
     edm::spacepoint_collection::const_view::size_type n_spacepoints;
     /// The input spacepoints
@@ -56,18 +59,20 @@ class hough_transform_seeding_algorithm
   };
 
   struct define_plane_edges_kernel_payload {
-    unsigned int n_cols = N_COLS;
-    unsigned int n_rows = N_ROWS;
+    const hough_seeding_config& config;
     edm::houghplane_collection<N_COLS, N_ROWS>::view& houghplanes;
   };
 
   virtual void define_plane_edges_kernel(const define_plane_edges_kernel_payload& payload) const = 0;
-  virtual void fill_hough_planes_kernel(const fill_hough_planes_kernel_payload& payload) const = 0;
+  virtual void fill_hough_plane_kernel(const fill_hough_planes_kernel_payload& payload) const = 0;
 
   virtual void synchronize() const = 0;
+  
+  config_type m_config;    
   };
 
 }  // namespace traccc::device
 
 #include "traccc/seeding/device/impl/define_plane_edges.ipp"
+#include "traccc/seeding/device/impl/fill_hough_plane.ipp"
 

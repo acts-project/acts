@@ -8,7 +8,6 @@
 
 // Local include(s).
 #include "traccc/examples/cuda/full_chain_hough_transform_algorithm.hpp"
-
 #include "cuda_error_check.hpp"
 #include "traccc/examples/cuda/tbb_await.hpp"
 
@@ -80,6 +79,7 @@ full_chain_hough_transform_algorithm::shared_data::shared_data(
 
 full_chain_hough_transform_algorithm::full_chain_hough_transform_algorithm(vecmem::memory_resource& host_mr,
 									   const clustering_config& clustering_config,
+									   const hough_seeding_config& seeding_config,
 									   const shared_data& data,
 									   std::unique_ptr<const traccc::Logger> logger,
 									   await_strategy await_mode)
@@ -109,7 +109,8 @@ full_chain_hough_transform_algorithm::full_chain_hough_transform_algorithm(vecme
           {m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy, m_stream,
           logger->cloneWithSuffix("SpFormationAlg"), m_await_function),
       m_seeding({m_cached_device_mr, &m_cached_pinned_host_mr}, m_copy,
-                m_stream, logger->cloneWithSuffix("SeedingAlg"),
+                m_stream, seeding_config,
+		logger->cloneWithSuffix("SeedingAlg"),
                 m_await_function) {
   // Tell the user what device is being used.
   int device = 0;
