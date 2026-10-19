@@ -80,20 +80,27 @@ BOOST_DATA_TEST_CASE(BoundaryVolumeResolutionGen3,
 
   BlueprintOptions options;
   if (mode != 0) {
+    // Cuboids intentionally use fallback; this test checks boundary resolution,
+    // while warning diagnostics are exercised separately in VolumeLookupTests.
     root.setVolumeLookupFactory(
         [mode](const GeometryContext& context, const TrackingVolume& volume,
                const Logger& factoryLogger) -> std::unique_ptr<IVolumeLookup> {
           if (mode == 3) {
             return std::make_unique<RzKdTree4VolumeLookup>(
-                context, volume, RzKdTree4VolumeLookup::Config{},
+                context, volume,
+                RzKdTree4VolumeLookup::Config{.fallbackWarningFraction = 1.},
                 factoryLogger);
           }
           if (mode == 1) {
             return std::make_unique<RzKdTreeVolumeLookup>(
-                context, volume, RzKdTreeVolumeLookup::Config{}, factoryLogger);
+                context, volume,
+                RzKdTreeVolumeLookup::Config{.fallbackWarningFraction = 1.},
+                factoryLogger);
           }
           return std::make_unique<RzGridVolumeLookup>(
-              context, volume, RzGridVolumeLookup::Config{}, factoryLogger);
+              context, volume,
+              RzGridVolumeLookup::Config{.fallbackWarningFraction = 1.},
+              factoryLogger);
         });
   }
   std::unique_ptr<TrackingGeometry> trackingGeometry =

@@ -25,7 +25,7 @@ struct Partition {
   std::unique_ptr<Tree> tree;
 
   template <typename Children>
-  bool build(const Children& children, const Config&) {
+  bool build(const Children& children, const Config& /*config*/) {
     Tree::vector_t points;
     for (std::size_t i = 0; i < children.size(); ++i) {
       if (children[i].indexable) {

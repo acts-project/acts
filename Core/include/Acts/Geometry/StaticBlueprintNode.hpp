@@ -74,6 +74,7 @@ class StaticBlueprintNode : public BlueprintNode {
  protected:
   void addToGraphviz(std::ostream& os) const override;
 
+  /// Optional factory for the lookup installed after descendant finalization.
   VolumeLookupFactory m_volumeLookupFactory;
 
   /// The wrapped tracking volume managed by this blueprint node

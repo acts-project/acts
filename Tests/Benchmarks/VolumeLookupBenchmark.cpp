@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2026 CERN for the benefit of the ACTS project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -56,6 +56,11 @@ struct Lookup {
   std::vector<Lookup> children;
   std::vector<std::size_t> order;
   std::vector<Node> nodes;
+
+  Lookup(const Lookup&) = delete;
+  Lookup& operator=(const Lookup&) = delete;
+  Lookup(Lookup&&) = default;
+  Lookup& operator=(Lookup&&) = default;
 
   Lookup(const Acts::GeometryContext& gctx, const Volume& v, bool rz,
          bool oct = false)
@@ -273,8 +278,12 @@ struct RzPartition {
         std::size_t nl = 0, nr = 0;
         for (auto i : ids) {
           const auto& b = source.children[i].box;
-          nl += b.min()[a] < cut;
-          nr += b.max()[a] >= cut;
+          if (b.min()[a] < cut) {
+            ++nl;
+          }
+          if (b.max()[a] >= cut) {
+            ++nr;
+          }
         }
         // Both branches must reduce the candidate set; bound duplication and
         // stop degeneracy for coincident or strongly overlapping rectangles.
@@ -317,7 +326,8 @@ struct RzPartition {
       return nullptr;
     }
     if (!children.empty() && domain.contains(key)) {
-      std::size_t begin, end;
+      std::size_t begin = 0;
+      std::size_t end = 0;
       if (grid) {
         const auto cell =
             bin(0, key[0]) * (edges[1].size() - 1) + bin(1, key[1]);
@@ -641,7 +651,9 @@ int main(int argc, char** argv) try {
     std::size_t misses = 0;
     for (const auto& p : points) {
       const auto* expected = baseline(p);
-      misses += expected == nullptr;
+      if (expected == nullptr) {
+        ++misses;
+      }
       if (cartesian(p) != expected || cylindrical(p) != expected ||
           octree(p) != expected || kdLookup(p) != expected ||
           gridLookup(p) != expected ||

@@ -59,15 +59,16 @@ class MovingPlacement : public VolumePlacementBase {
   Transform3 transform = Transform3::Identity();
   Transform3 inverse = Transform3::Identity();
   const Transform3& localToGlobalTransform(
-      const GeometryContext&) const override {
+      const GeometryContext& /*gctx*/) const override {
     return transform;
   }
-  const Transform3& portalLocalToGlobal(const GeometryContext&,
-                                        std::size_t) const override {
+  const Transform3& portalLocalToGlobal(
+      const GeometryContext& /*gctx*/,
+      std::size_t /*portalIdx*/) const override {
     return transform;
   }
   const Transform3& globalToLocalTransform(
-      const GeometryContext&) const override {
+      const GeometryContext& /*gctx*/) const override {
     return inverse;
   }
 };
@@ -213,6 +214,10 @@ BOOST_AUTO_TEST_CASE(InvalidGridConfig) {
 }
 
 BOOST_AUTO_TEST_CASE(LinearLookupWarnings) {
+  // These assertions deliberately exercise warning diagnostics.
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  Logging::ScopedFailureThreshold threshold{Logging::ERROR};
+#endif
   auto world = makeWorld();
   std::ostringstream output;
   auto logger = getDefaultLogger("LookupTest", Logging::WARNING, &output);
@@ -251,6 +256,10 @@ BOOST_AUTO_TEST_CASE(LinearLookupWarnings) {
 }
 
 BOOST_AUTO_TEST_CASE(AcceleratorFallbackWarnings) {
+  // These assertions deliberately exercise warning diagnostics.
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  Logging::ScopedFailureThreshold threshold{Logging::ERROR};
+#endif
   auto check = [&]<typename Lookup>() {
     std::ostringstream output;
     auto logger = getDefaultLogger("LookupTest", Logging::WARNING, &output);
@@ -313,6 +322,10 @@ BOOST_AUTO_TEST_CASE(AcceleratorFallbackWarnings) {
 }
 
 BOOST_AUTO_TEST_CASE(BlueprintLookupWarningSettings) {
+  // These assertions deliberately exercise warning diagnostics.
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  Logging::ScopedFailureThreshold threshold{Logging::ERROR};
+#endif
   std::ostringstream output;
   auto logger = getDefaultLogger("BlueprintTest", Logging::WARNING, &output);
   for (int type : {0, 1, 2}) {
@@ -420,7 +433,10 @@ BOOST_AUTO_TEST_CASE(MovingVolumeKeepsLookupRootValid) {
 }
 
 BOOST_AUTO_TEST_CASE(BlueprintLocalLookupFactories) {
-  Blueprint blueprint{Blueprint::Config{}};
+  Blueprint::Config config;
+  config.envelope[AxisDirection::AxisR] = {1., 1.};
+  config.envelope[AxisDirection::AxisZ] = {1., 1.};
+  Blueprint blueprint{config};
   auto region =
       std::make_shared<StaticBlueprintNode>(std::make_unique<TrackingVolume>(
           Transform3::Identity(),
@@ -431,7 +447,7 @@ BOOST_AUTO_TEST_CASE(BlueprintLocalLookupFactories) {
           std::make_shared<CylinderVolumeBounds>(0., 10., 10.), "child")));
   blueprint.addChild(region);
   std::vector<std::string> calls;
-  auto logger = getDefaultLogger("FactoryTest", Logging::ERROR);
+  auto logger = getDefaultLogger("FactoryTest", Logging::WARNING);
   region->setVolumeLookupFactory([&](const GeometryContext& context,
                                      const TrackingVolume& volume,
                                      const Logger& passedLogger) {
@@ -631,6 +647,10 @@ BOOST_AUTO_TEST_CASE(StaticNodeCanAccelerateWithoutWorldPolicy) {
 }
 
 BOOST_AUTO_TEST_CASE(LinearDiagnosticsRespectSubtreeBoundaries) {
+  // These assertions deliberately exercise warning diagnostics.
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+  Logging::ScopedFailureThreshold threshold{Logging::ERROR};
+#endif
   auto world = std::make_unique<TrackingVolume>(
       Transform3::Identity(),
       std::make_shared<CylinderVolumeBounds>(0., 100., 100.));
