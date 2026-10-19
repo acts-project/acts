@@ -117,8 +117,8 @@ if(PluginCovfie IN_LIST Acts_COMPONENTS)
 endif()
 
 # PluginTraccc: traccc is not looked up here. Its package configuration
-# itself depends on Acts (and on Thrust), so users of the plugin have to call
-# find_package(traccc) themselves, before linking Acts::PluginTraccc.
+# itself depends on Acts (and on Thrust), so the plugin links traccc privately
+# and users of the plugin have to find and link traccc themselves.
 if(PluginTraccc IN_LIST Acts_COMPONENTS)
     find_dependency(vecmem @vecmem_VERSION@ CONFIG EXACT)
     find_dependency(detray @detray_VERSION@ CONFIG EXACT)
