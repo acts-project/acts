@@ -33,8 +33,8 @@ struct CudaTracccBackend::Impl {
   mutable vecmem::cuda::async_copy copy;
 };
 
-CudaTracccBackend::CudaTracccBackend(const Config& cfg,
-                                     std::unique_ptr<const Acts::Logger> _logger)
+CudaTracccBackend::CudaTracccBackend(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> _logger)
     : m_cfg(cfg),
       m_logger(_logger != nullptr
                    ? std::move(_logger)

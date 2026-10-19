@@ -52,8 +52,7 @@ class TracccHostToDeviceCopyAlg final : public IAlgorithm {
 
   explicit TracccHostToDeviceCopyAlg(
       const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr)
-      : IAlgorithm("TracccHostToDeviceCopyAlg", std::move(logger)),
-        m_cfg(cfg) {
+      : IAlgorithm("TracccHostToDeviceCopyAlg", std::move(logger)), m_cfg(cfg) {
     if (m_cfg.copyTool == nullptr) {
       throw std::invalid_argument(
           "TracccHostToDeviceCopyAlg: copyTool is not set");
@@ -64,7 +63,8 @@ class TracccHostToDeviceCopyAlg final : public IAlgorithm {
 
   ProcessCode execute(const AlgorithmContext& ctx) const override {
     const HostCollection& host = m_input(ctx);
-    DeviceCollection device = m_cfg.copyTool->template toDevice<collection_t>(host);
+    DeviceCollection device =
+        m_cfg.copyTool->template toDevice<collection_t>(host);
     ACTS_DEBUG("Copied " << host.size() << " elements from '" << m_cfg.input
                          << "' to the " << m_cfg.copyTool->backend().name()
                          << " device");
@@ -108,8 +108,7 @@ class TracccDeviceToHostCopyAlg final : public IAlgorithm {
 
   explicit TracccDeviceToHostCopyAlg(
       const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr)
-      : IAlgorithm("TracccDeviceToHostCopyAlg", std::move(logger)),
-        m_cfg(cfg) {
+      : IAlgorithm("TracccDeviceToHostCopyAlg", std::move(logger)), m_cfg(cfg) {
     if (m_cfg.copyTool == nullptr) {
       throw std::invalid_argument(
           "TracccDeviceToHostCopyAlg: copyTool is not set");
@@ -153,8 +152,8 @@ class TracccDeviceToHostCopyAlg final : public IAlgorithm {
   Config m_cfg;
 
   ReadDataHandle<DeviceCollection> m_input{this, "Input"};
-  ReadDataHandle<traccc::edm::measurement_collection::host>
-      m_inputMeasurements{this, "InputMeasurements"};
+  ReadDataHandle<traccc::edm::measurement_collection::host> m_inputMeasurements{
+      this, "InputMeasurements"};
   WriteDataHandle<HostCollection> m_output{this, "Output"};
 };
 
