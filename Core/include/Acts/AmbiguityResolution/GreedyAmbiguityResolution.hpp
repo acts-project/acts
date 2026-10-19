@@ -36,7 +36,7 @@ class GreedyAmbiguityResolution {
   /// Configuration parameters for greedy ambiguity resolution.
   struct Config {
     /// Maximum amount of shared hits per track.
-    std::uint32_t maximumSharedHits = 1;
+    std::uint32_t maximumSharedHits = 0;
     /// Maximum number of iterations
     std::uint32_t maximumIterations = 1000;
 

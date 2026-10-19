@@ -86,7 +86,7 @@ void GreedyAmbiguityResolution::resolve(State& state) const {
     ACTS_VERBOSE(
         "maximum shared measurements "
         << state.sharedMeasurementsPerTrack[maximumSharedMeasurements]);
-    if (state.sharedMeasurementsPerTrack[maximumSharedMeasurements] <
+    if (state.sharedMeasurementsPerTrack[maximumSharedMeasurements] <=
         m_cfg.maximumSharedHits) {
       break;
     }
