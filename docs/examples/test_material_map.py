@@ -9,7 +9,7 @@ def test_load_material_map():
     decorator = acts.root.RootMaterialDecorator(
         fileName=str(material_map), level=acts.logging.INFO
     )
-    detector = getOpenDataDetector(materialDecorator=decorator)
+    detector = getOpenDataDetector(materialDecorator=decorator, gen3=False)
     trackingGeometry = detector.trackingGeometry()
     #! [Load Material Map]
 
