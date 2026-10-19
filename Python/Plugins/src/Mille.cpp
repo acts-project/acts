@@ -45,7 +45,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
     ACTS_PYTHON_STRUCT(sc, steeringFile, workDir, extraOpts, resFileName,
                        redirectStdout, logFileName, histoFileName, evFileName);
     // unwrap Acts::Result - will throw in case of an error-result
-    mille.def("runMilleSolver",
+    mille.def("runMillePedeSolver",
               [](const MillePedeSolverConfig& cfg, const Acts::Logger& logger) {
                 return ActsPlugins::runMillePedeSolver(cfg, logger).value();
               });
