@@ -434,6 +434,47 @@ BOOST_AUTO_TEST_CASE(SurfaceArrayToStreamPreservesStreamState) {
   BOOST_CHECK_EQUAL(stream.fill(), fill);
 }
 
+BOOST_AUTO_TEST_CASE(SurfaceArray_fineGridFootprint) {
+  const double rMin = 122.40919083139775;
+  const double binWidth = (679.50055923450782 - rMin) / 1255;
+  const auto disc = Surface::makeShared<DiscSurface>(Transform3::Identity(),
+                                                     rMin, 679.50055923450782);
+  const auto bounds = std::make_shared<RectangleBounds>(9.75, 19.5);
+  // The HGTD rectangle, also rotated across the phi seam.
+  for (const double angle : {0., std::numbers::pi + 0.1}) {
+    Transform3 transform = Transform3::Identity();
+    transform.rotate(AngleAxis3(angle, Vector3::UnitZ()));
+    transform.translate(Vector3(183.35, -21., 0.));
+    const auto module = Surface::makeShared<PlaneSurface>(transform, bounds);
+    for (const std::size_t factor : {1u, 5u}) {
+      const Axis<AxisType::Equidistant, AxisBoundaryType::Bound> rAxis(
+          rMin + 100 * binWidth, rMin + 180 * binWidth, 16 * factor);
+      const Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
+          -3.1392966221122882, 3.1392352793617158, 240 * factor);
+      const SurfaceArray array(tgContext, {module}, disc, 0., {rAxis, phiAxis},
+                               {{0, 0}, {0, 0}}, 0);
+      const auto check = [&](const Vector2& local) {
+        const Vector3 hit = module->localToGlobal(tgContext, local);
+        const auto exact =
+            module
+                ->intersect(tgContext, hit + Vector3::UnitZ(),
+                            -Vector3::UnitZ(), BoundaryTolerance::None())
+                .closest();
+        BOOST_REQUIRE(exact.isValid());
+        const auto found = array.at(tgContext, hit, Vector3::UnitZ());
+        BOOST_CHECK(std::ranges::find(found, module.get()) != found.end());
+      };
+      check(Vector2(-1.93771846548726, -5.690622767240292));
+      // Interior and near-edge points must be covered without neighbor padding.
+      for (int x = -15; x <= 15; ++x) {
+        for (int y = -31; y <= 31; ++y) {
+          check(Vector2(x * 0.649, y * 0.628));
+        }
+      }
+    }
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

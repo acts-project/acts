@@ -529,8 +529,8 @@ class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
 
  private:
   /// Register a surface in every bin its projection onto the representative
-  /// surface overlaps. The projected outline gives the bins it passes through,
-  /// the interior is filled per column, which is exact for a convex outline.
+  /// surface overlaps. Cover each projected outline segment conservatively,
+  /// then fill the interior between the extremes in each column.
   void fillSurfaceFootprint(const GeometryContext& gctx, const Surface& surface,
                             FillingGrid& fillingGrid) const {
     // the surface has to sit within the layer this grid represents
@@ -559,20 +559,64 @@ class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
 
     // column bin -> [min, max] bin along the other axis
     std::map<std::size_t, std::pair<std::size_t, std::size_t>> columns;
-    const auto addSample = [&](const Vector3& point) {
-      const std::optional<GridPoint> gridLocal = projectToGrid(gctx, point);
-      if (!gridLocal.has_value()) {
+    const Transform3 toLocal =
+        m_representative->localToGlobalTransform(gctx).inverse();
+    const auto addSegment = [&](const Vector3& from, const Vector3& to) {
+      const auto start = projectToGrid(gctx, from);
+      const auto end = projectToGrid(gctx, to);
+      if (!start.has_value() || !end.has_value()) {
         return;
       }
-      const GridIndex indices = localBinsFromPosition2D(*gridLocal);
-      if (!isValidBin(indices)) {
-        return;
+      const GridIndex first = localBinsFromPosition2D(*start);
+      const GridIndex last = localBinsFromPosition2D(*end);
+      std::size_t spanMin = std::min(first[iSpan], last[iSpan]);
+      const std::size_t spanMax = std::max(first[iSpan], last[iSpan]);
+
+      // Radius can have an interior minimum along a straight edge.
+      // Phi is monotonic unless the edge passes through the polar origin.
+      bool throughOrigin = false;
+      if (m_representative->type() == Surface::Disc ||
+          m_representative->type() == Surface::Cylinder) {
+        const Vector2 a = (toLocal * from).head<2>();
+        const Vector2 delta = (toLocal * to).head<2>() - a;
+        const double length2 = delta.squaredNorm();
+        const double t =
+            length2 == 0. ? 0. : std::clamp(-a.dot(delta) / length2, 0., 1.);
+        const double minR = (a + t * delta).norm();
+        throughOrigin = minR == 0.;
+        if (m_representative->type() == Surface::Disc && iSpan == 0) {
+          spanMin = std::min(spanMin, m_iAxes[0]->getBin(minR));
+        }
       }
-      const auto [it, inserted] =
-          columns.try_emplace(indices[iColumn], indices[iSpan], indices[iSpan]);
-      if (!inserted) {
-        it->second.first = std::min(it->second.first, indices[iSpan]);
-        it->second.second = std::max(it->second.second, indices[iSpan]);
+
+      const IAxis& columnAxis = *m_iAxes[iColumn];
+      const std::size_t nColumns = columnAxis.getNBins();
+      NeighborHoodIndices coveredColumns(
+          std::max<std::size_t>(1, std::min(first[iColumn], last[iColumn])),
+          std::min(nColumns, std::max(first[iColumn], last[iColumn])) + 1);
+      if (columnAxis.getBoundaryType() == AxisBoundaryType::Closed) {
+        const double step =
+            std::remainder((*end)[iColumn] - (*start)[iColumn],
+                           columnAxis.getMax() - columnAxis.getMin());
+        const std::size_t a = first[iColumn];
+        const std::size_t b = last[iColumn];
+        const int distance =
+            static_cast<int>(step >= 0. ? (b + nColumns - a) % nColumns
+                                        : (a + nColumns - b) % nColumns);
+        coveredColumns =
+            throughOrigin
+                ? NeighborHoodIndices(1, nColumns + 1)
+                : neighborHoodIndices(columnAxis, a,
+                                      step >= 0. ? std::pair{0, distance}
+                                                 : std::pair{-distance, 0});
+      }
+      for (const std::size_t column : coveredColumns) {
+        const auto [it, inserted] =
+            columns.try_emplace(column, spanMin, spanMax);
+        if (!inserted) {
+          it->second.first = std::min(it->second.first, spanMin);
+          it->second.second = std::max(it->second.second, spanMax);
+        }
       }
     };
 
@@ -582,14 +626,16 @@ class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
         const Vector3& to =
             polyhedron.vertices.at(face.at((i + 1) % face.size()));
         for (std::size_t k = 0; k < nSamples; ++k) {
-          const double t = static_cast<double>(k) / nSamples;
-          addSample(from + t * (to - from));
+          const double t0 = static_cast<double>(k) / nSamples;
+          const double t1 = static_cast<double>(k + 1) / nSamples;
+          addSegment(from + t0 * (to - from), from + t1 * (to - from));
         }
       }
     }
 
     for (const auto& [column, span] : columns) {
-      for (std::size_t i = span.first; i <= span.second; ++i) {
+      for (std::size_t i = std::max<std::size_t>(1, span.first);
+           i <= std::min(m_numLocalBins[iSpan], span.second); ++i) {
         GridIndex indices{};
         indices[iColumn] = column;
         indices[iSpan] = i;
