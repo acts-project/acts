@@ -108,7 +108,6 @@ void addAlgorithms(py::module_& m) {
     ACTS_PYTHON_DECLARE_ALGORITHM(Alg, m, "TracccDeviceToHostTrackCopyAlg",
                                   copyTool, input, output, inputMeasurements);
   }
-
 }
 
 }  // namespace

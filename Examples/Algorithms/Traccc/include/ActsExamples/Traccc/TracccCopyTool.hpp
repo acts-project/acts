@@ -66,9 +66,9 @@ class TracccCopyTool {
       vecmem::data::buffer_type type =
           vecmem::data::buffer_type::resizable) const {
     vecmem::copy& copy = m_backend->copy();
-    typename collection_t::buffer buffer(
-        static_cast<unsigned int>(host.size()),
-        m_backend->memoryResource().main, type);
+    typename collection_t::buffer buffer(static_cast<unsigned int>(host.size()),
+                                         m_backend->memoryResource().main,
+                                         type);
     copy.setup(buffer)->wait();
     copy(vecmem::get_data(host), buffer, vecmem::copy::type::host_to_device)
         ->wait();
@@ -92,8 +92,7 @@ class TracccCopyTool {
       }
     };
     host_t host = makeHost();
-    m_backend->copy()(buffer, host, vecmem::copy::type::device_to_host)
-        ->wait();
+    m_backend->copy()(buffer, host, vecmem::copy::type::device_to_host)->wait();
     return host;
   }
 
@@ -107,8 +106,8 @@ class TracccCopyTool {
   template <typename algebra_t = traccc::default_algebra>
   typename traccc::edm::track_container<algebra_t>::host tracksToHost(
       const typename traccc::edm::track_container<algebra_t>::buffer& buffer,
-      const traccc::edm::measurement_collection::const_view& measurements =
-          {}) const {
+      const traccc::edm::measurement_collection::const_view& measurements = {})
+      const {
     typename traccc::edm::track_container<algebra_t>::host host{
         hostMemoryResource(), measurements};
     vecmem::copy& copy = m_backend->copy();
