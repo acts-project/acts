@@ -178,7 +178,7 @@ def main():
     args = parser.parse_args()
 
     print("Building ODD Gen1 geometry ...")
-    detector_a = getOpenDataDetector()
+    detector_a = getOpenDataDetector(gen3=False)
     geo_a = detector_a.trackingGeometry()
 
     print("Building ODD Gen3 geometry ...")
