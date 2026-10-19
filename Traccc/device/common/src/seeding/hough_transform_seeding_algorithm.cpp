@@ -20,7 +20,6 @@ hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
 
 auto hough_transform_seeding_algorithm::operator()(
     const edm::spacepoint_collection::const_view& spacepoints) const -> output_type {
-  std::cout << "We are inside the hough_transform_seeding_algorithm::operator()" << std::endl;
       	// Get the number of space points. In an asynchronous way if possible.
   edm::spacepoint_collection::const_view::size_type n_spacepoints = 0u;
   if (mr().host) {
@@ -32,10 +31,8 @@ auto hough_transform_seeding_algorithm::operator()(
     n_spacepoints = copy().get_size(spacepoints);
   }
 
-  std::cout << "Hough Transform will run on a total of " << n_spacepoints << " input space points" << std::endl;
   // If there are no spacepoints, return right away.
   if (n_spacepoints == 0) {
-    std::cout << "well, not really ..." << std::endl;
     return {};
   }
 
@@ -45,7 +42,8 @@ auto hough_transform_seeding_algorithm::operator()(
   copy().setup(result)->ignore();
 
   // Fill plane edges
-  
+  // we will move to a config at a certain point and template the algorithm
+  define_plane_edges_kernel({device::N_COLS, device::N_ROWS, result});
 
   // Fill the planes with space points
   //
@@ -55,6 +53,7 @@ auto hough_transform_seeding_algorithm::operator()(
   // estimate_seed_params_kernel({n_seeds, m_data->m_config, bfield, measurements,
   //                             spacepoints, seeds, result});
 
+  synchronize();
   // Return the result.
   return result;
 }
