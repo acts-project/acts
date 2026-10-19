@@ -11,11 +11,13 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <numbers>
+#include <stdexcept>
 #include <vector>
 
 #include <Eigen/Geometry>
@@ -37,8 +39,10 @@ struct RzLookupChild {
   const TrackingVolume* volume;
   Eigen::AlignedBox2d box;
   bool indexable = false;
+  // Stop indexing here and dispatch to this volume's explicitly set lookup.
   bool delegate = false;
-  bool legacy = false;
+  // Parents between this candidate and the lookup root, excluding both ends.
+  // Flattening the hierarchy must not bypass their exact containment checks.
   std::vector<const TrackingVolume*> ancestors;
 
   RzLookupChild(const GeometryContext& gctx, const TrackingVolume& v,
@@ -50,7 +54,7 @@ struct RzLookupChild {
     if (!v.isAlignable() && cylinder != nullptr && trf.linear().isIdentity(0) &&
         cylinder->get(CylinderVolumeBounds::eHalfPhiSector) ==
             std::numbers::pi) {
-      const double offset = trf.translation().head<2>().norm();
+      const double offset = VectorHelpers::perp(trf.translation());
       const double margin = maxTolerance + 1e-9;
       const double hz = cylinder->get(CylinderVolumeBounds::eHalfLengthZ);
       box.min() =
@@ -70,12 +74,10 @@ struct RzLookupChild {
 // recursive scan even when child bounds extend outside their parents.
 template <typename Partition>
 struct RzLookupIndex {
-  bool gen1 = false;
   bool gridLimit = false;
   bool hasIndex = false;
   std::size_t alignable = 0;
   std::size_t unsupported = 0;
-  std::size_t legacy = 0;
   Eigen::AlignedBox2d domain;
   std::vector<RzLookupChild> children;
   std::vector<std::size_t> fallbackCandidates;
@@ -83,18 +85,25 @@ struct RzLookupIndex {
 
   RzLookupIndex(const GeometryContext& gctx, const TrackingVolume& root,
                 const typename Partition::Config& cfg) {
-    if (root.confinedVolumes() || !root.denseVolumes().empty()) {
-      gen1 = true;
-      return;
-    }
+    // A bare TrackingVolume has no generation flag. Reject Gen1-only storage
+    // wherever it is encountered in this index's scope, including the root.
+    auto requireGen3 = [](const TrackingVolume& volume) {
+      if (volume.confinedVolumes() || volume.confinedLayers() != nullptr ||
+          !volume.denseVolumes().empty()) {
+        throw std::invalid_argument(
+            "RZ volume lookup does not support Gen1 storage in volume '" +
+            volume.volumeName() + "'");
+      }
+    };
+    requireGen3(root);
     std::vector<const TrackingVolume*> ancestors;
+    // Collect geometry independently of the spatial partition. Postorder IDs
+    // encode recursive-scan priority; build() below indexes their RZ envelopes.
     auto collect = [&](auto&& self, const TrackingVolume& volume) -> void {
+      requireGen3(volume);
       RzLookupChild entry(gctx, volume, cfg.maxTolerance);
       entry.ancestors = ancestors;
-      entry.legacy =
-          volume.volumeLookup() == nullptr &&
-          (volume.confinedVolumes() || !volume.denseVolumes().empty());
-      entry.delegate = volume.volumeLookup() != nullptr || entry.legacy;
+      entry.delegate = volume.volumeLookup() != nullptr;
       if (!entry.delegate) {
         ancestors.push_back(&volume);
         for (const auto& child : volume.volumes()) {
@@ -107,10 +116,12 @@ struct RzLookupIndex {
         hasIndex = true;
       } else {
         fallbackCandidates.push_back(children.size());
-        alignable += volume.isAlignable();
-        unsupported += !volume.isAlignable();
+        if (volume.isAlignable()) {
+          ++alignable;
+        } else {
+          ++unsupported;
+        }
       }
-      legacy += entry.legacy;
       children.push_back(std::move(entry));
     };
     for (const auto& child : root.volumes()) {
@@ -127,25 +138,21 @@ struct RzLookupIndex {
     if (fraction == 1 || !logger().doPrint(Logging::WARNING)) {
       return;
     }
-    const auto total = gen1 ? std::size_t{1} : children.size();
-    std::size_t affected = fallbackCandidates.size();
-    // Indexed Gen1 boundaries still delegate to the legacy scan.
-    for (const auto& child : children) {
-      affected += child.indexable && child.legacy;
-    }
-    if (gen1 || gridLimit) {
-      affected = total;
-    }
-    if (total == 0 || static_cast<double>(affected) / total <= fraction) {
+    const auto total = children.size();
+    const auto affected = gridLimit ? total : fallbackCandidates.size();
+    if (total == 0 ||
+        static_cast<double>(affected) / static_cast<double>(total) <=
+            fraction) {
       return;
     }
     ACTS_WARNING("RZ volume lookup for '"
                  << volume.volumeName() << "': " << affected << "/" << total
                  << " volumes in the indexed scope require linear fallback ("
-                 << 100. * affected / total << "%, warning threshold "
-                 << 100. * fraction << "%). Reasons: alignable=" << alignable
+                 << 100. * static_cast<double>(affected) /
+                        static_cast<double>(total)
+                 << "%, warning threshold " << 100. * fraction
+                 << "%). Reasons: alignable=" << alignable
                  << ", unsupported shape/orientation=" << unsupported
-                 << ", Gen1=" << (legacy + gen1)
                  << ", grid cell limit=" << gridLimit
                  << ". Explicit descendant lookup boundaries remain active.");
   }
@@ -153,7 +160,7 @@ struct RzLookupIndex {
   const TrackingVolume* find(const TrackingVolume& root,
                              const GeometryContext& gctx, const Vector3& p,
                              const Vector2& key, double tolerance) const {
-    if (gen1 || gridLimit) {
+    if (gridLimit) {
       return linearVolumeScan(root, gctx, p, tolerance);
     }
     if (!root.inside(gctx, p, tolerance)) {

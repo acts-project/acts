@@ -39,6 +39,9 @@ class RzGridVolumeLookup final : public IVolumeLookup {
   /// @param world Root of the indexed subtree
   /// @param config Construction settings
   /// @param logger Construction diagnostics
+  /// @throws std::invalid_argument For invalid configuration or Gen1 storage
+  /// (confined layers/volumes or dense volumes) encountered in the indexed
+  /// scope.
   RzGridVolumeLookup(const GeometryContext& gctx, const TrackingVolume& world,
                      const Config& config,
                      const Logger& logger = getDummyLogger());

@@ -677,3 +677,39 @@ BOOST_AUTO_TEST_CASE(RzLookupCoincidentBounds) {
   check.template operator()<RzKdTreeVolumeLookup>();
   check.template operator()<RzKdTree4VolumeLookup>();
 }
+
+BOOST_AUTO_TEST_CASE(RzLookupsRejectGen1Storage) {
+  auto makeGen1 = [] {
+    auto dense = std::make_shared<TrackingVolume>(
+        Transform3::Identity(),
+        std::make_shared<CylinderVolumeBounds>(0., 5., 5.));
+    return std::make_unique<TrackingVolume>(
+        Transform3::Identity(),
+        std::make_shared<CylinderVolumeBounds>(0., 20., 20.), nullptr, nullptr,
+        nullptr, MutableTrackingVolumeVector{dense}, "gen1");
+  };
+  auto check = [&]<typename Lookup>() {
+    auto gen1 = makeGen1();
+    BOOST_CHECK_THROW((Lookup(gctx, *gen1, typename Lookup::Config{})),
+                      std::invalid_argument);
+    // Implicit and explicit linear lookup still retain Gen1 semantics.
+    const Vector3 point(2., 0., 0.);
+    const auto* dense = gen1->denseVolumes().front().get();
+    BOOST_CHECK(gen1->lowestTrackingVolume(gctx, point) == dense);
+    gen1->setVolumeLookup(std::make_unique<LinearVolumeLookup>());
+    BOOST_CHECK(gen1->lowestTrackingVolume(gctx, point) == dense);
+
+    auto world = makeWorld();
+    auto* gen1Ptr = gen1.get();
+    world->addVolume(std::move(gen1));
+    // Also reject Gen1 storage at a descendant, even at a lookup boundary.
+    BOOST_CHECK_THROW((Lookup(gctx, *world, typename Lookup::Config{})),
+                      std::invalid_argument);
+    gen1Ptr->setVolumeLookup(nullptr);
+    BOOST_CHECK_THROW((Lookup(gctx, *world, typename Lookup::Config{})),
+                      std::invalid_argument);
+  };
+  check.template operator()<RzKdTreeVolumeLookup>();
+  check.template operator()<RzKdTree4VolumeLookup>();
+  check.template operator()<RzGridVolumeLookup>();
+}

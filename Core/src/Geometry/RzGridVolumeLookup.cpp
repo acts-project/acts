@@ -8,6 +8,8 @@
 
 #include "Acts/Geometry/RzGridVolumeLookup.hpp"
 
+#include "Acts/Utilities/VectorHelpers.hpp"
+
 #include <algorithm>
 #include <array>
 #include <numeric>
@@ -18,6 +20,15 @@
 
 namespace Acts {
 namespace {
+// Nonuniform grid: collect all rectangle edges separately in r and z, sort
+// and deduplicate them, then form their Cartesian product. A rectangle is
+// assigned to every bin it overlaps, including the bin at its upper edge so
+// a query exactly on that edge still finds it.
+//
+// Candidate lists use compressed sparse row storage: offsets[cell] and
+// offsets[cell + 1] delimit a cell's slice of m_candidates. Count assignments,
+// prefix-sum the counts, then fill slices in hierarchy order. Queries use two
+// binary searches and scan one slice; shared code performs exact containment.
 struct Partition {
   using Config = RzGridVolumeLookup::Config;
   std::array<std::vector<double>, 2> edges;
@@ -48,6 +59,7 @@ struct Partition {
     }
     const auto nr = edges[0].size() - 1;
     const auto nz = edges[1].size() - 1;
+    // Check the cell limit before multiplying, avoiding overflow/allocation.
     if (nr > config.maxGridCells / nz) {
       return false;
     }
@@ -132,7 +144,7 @@ const TrackingVolume* RzGridVolumeLookup::lowestTrackingVolume(
     return detail::linearVolumeScan(root, gctx, position, tolerance);
   }
   return m_impl->find(root, gctx, position,
-                      Vector2(position.head<2>().norm(), position.z()),
+                      Vector2(VectorHelpers::perp(position), position.z()),
                       tolerance);
 }
 }  // namespace Acts

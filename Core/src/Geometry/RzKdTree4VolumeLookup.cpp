@@ -9,6 +9,7 @@
 #include "Acts/Geometry/RzKdTree4VolumeLookup.hpp"
 
 #include "Acts/Utilities/KDTree.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <limits>
 #include <stdexcept>
@@ -86,7 +87,7 @@ const TrackingVolume* RzKdTree4VolumeLookup::lowestTrackingVolume(
     return detail::linearVolumeScan(root, gctx, position, tolerance);
   }
   return m_impl->find(root, gctx, position,
-                      Vector2(position.head<2>().norm(), position.z()),
+                      Vector2(VectorHelpers::perp(position), position.z()),
                       tolerance);
 }
 }  // namespace Acts

@@ -8,6 +8,8 @@
 
 #include "Acts/Geometry/RzKdTreeVolumeLookup.hpp"
 
+#include "Acts/Utilities/VectorHelpers.hpp"
+
 #include <algorithm>
 #include <array>
 #include <numeric>
@@ -21,6 +23,15 @@ namespace {
 // Acts::KDTree stores points and supports point range searches. This partition
 // instead stores overlapping rectangles in every intersected branch, so a point
 // query follows one branch and returns candidates in hierarchy priority order.
+// Build: start with all indexable candidate IDs in hierarchy order. For each
+// axis, try a split at the median rectangle centre and count rectangle/child
+// assignments. Choose the axis with the fewest assignments, requiring both
+// child lists to shrink and limiting duplication to 50%. A crossing rectangle
+// goes into both lists. Stop at leafSize, maxDepth, or an unhelpful split.
+//
+// Query: follow one branch (< split goes left, equality goes right). Its leaf
+// contains every rectangle that could cover the point, in hierarchy order.
+// Shared lookup code then checks exact bounds and ancestor containment.
 struct Partition {
   using Config = RzKdTreeVolumeLookup::Config;
   struct Node {
@@ -66,8 +77,14 @@ struct Partition {
         std::size_t nr = 0;
         for (auto i : ids) {
           const auto& b = children[i].box;
-          nl += b.min()[a] < cut;
-          nr += b.max()[a] >= cut;
+          // Equality belongs to the right query branch. A rectangle whose
+          // upper edge equals the cut must therefore also appear there.
+          if (b.min()[a] < cut) {
+            ++nl;
+          }
+          if (b.max()[a] >= cut) {
+            ++nr;
+          }
         }
         // Both branches must reduce the candidate set; bound duplication and
         // stop degeneracy for coincident or strongly overlapping rectangles.
@@ -80,10 +97,13 @@ struct Partition {
       }
     }
     if (axis < 0) {
+      // Keep the incoming order; the first exact match has highest priority.
       nodes[index].begin = m_candidates.size();
       m_candidates.insert(m_candidates.end(), ids.begin(), ids.end());
       nodes[index].end = m_candidates.size();
     } else {
+      // Stable filtering preserves priority in each branch; duplication is
+      // intentional for rectangles crossing the split plane.
       std::vector<std::size_t> left;
       std::vector<std::size_t> right;
       for (auto i : ids) {
@@ -161,7 +181,7 @@ const TrackingVolume* RzKdTreeVolumeLookup::lowestTrackingVolume(
     return detail::linearVolumeScan(root, gctx, position, tolerance);
   }
   return m_impl->find(root, gctx, position,
-                      Vector2(position.head<2>().norm(), position.z()),
+                      Vector2(VectorHelpers::perp(position), position.z()),
                       tolerance);
 }
 }  // namespace Acts
