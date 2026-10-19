@@ -489,10 +489,6 @@ class GlobalPatternFinderAlgorithm final : public IAlgorithm {
 
     /// @brief Toggle the utilization of MDT hits to build patterns
     bool useMdtHits{true};
-    /// @brief Toggle the seeding from MDT hits
-    bool seedFromMdt{false};
-    /// @brief Activate the seeding from Inner station
-    bool seedFromInner{false};
     /// @brief Number of standard deviations to consider for residual acceptance
     double nResidualSigma{3.};
     /// @brief Residual uncertainty [mm] above which a hit has low confidence

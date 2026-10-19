@@ -130,11 +130,11 @@ void addTrackFinding(py::module& mex) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       GlobalPatternFinderAlgorithm, mex, "GlobalPatternFinderAlgorithm",
-      inSpacePoints, outPatterns, trackingGeometry, useMdtHits, seedFromMdt,
-      seedFromInner, nResidualSigma, lowConfidenceResSigma, phiTolerance,
-      minTriggerLayers, minPrecisionLayers, minPhiLayers, minStationLayers,
-      meanNormRes2Cut, maxSeedAttempts, maxMissLayersInStation,
-      minHitDistance4Line, beamSpotRadius, beamSpotLength);
+      inSpacePoints, outPatterns, trackingGeometry, useMdtHits, nResidualSigma,
+      lowConfidenceResSigma, phiTolerance, minTriggerLayers, minPrecisionLayers,
+      minPhiLayers, minStationLayers, meanNormRes2Cut, maxSeedAttempts,
+      maxMissLayersInStation, minHitDistance4Line, beamSpotRadius,
+      beamSpotLength);
 
   {
     using Alg = TrackParamsEstimationAlgorithm;

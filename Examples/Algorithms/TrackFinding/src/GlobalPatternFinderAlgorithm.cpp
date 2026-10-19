@@ -694,10 +694,7 @@ GlobalPatternFinderAlgorithm::GlobalPatternFinderAlgorithm(
   m_inSpacePoints.initialize(m_cfg.inSpacePoints);
   m_outPatterns.initialize(m_cfg.outPatterns);
 
-  SeedSelector::Config selectorCfg{};
-  selectorCfg.seedFromMdt = m_cfg.seedFromMdt;
-  selectorCfg.seedFromInner = m_cfg.seedFromInner;
-  m_seedSelector = std::make_unique<SeedSelector>(selectorCfg);
+  m_seedSelector = std::make_unique<SeedSelector>(SeedSelector::Config{});
 
   GlobalPatternFinder_t::Config patCfg{};
   patCfg.nResidualSigma = m_cfg.nResidualSigma;
@@ -740,9 +737,7 @@ GlobalPatternFinderAlgorithm::GlobalPatternFinderAlgorithm(
           << " Min phi layers: " << m_cfg.minPhiLayers << "\n"
           << " Min station layers: " << m_cfg.minStationLayers << "\n"
           << " Mean norm residual^2 cut: " << m_cfg.meanNormRes2Cut << "\n"
-          << " Seed from inner: " << m_cfg.seedFromInner << "\n"
           << " Use MDT hits: " << m_cfg.useMdtHits << "\n"
-          << " Seed from MDT: " << m_cfg.seedFromMdt << "\n"
           << " Max seed attempts: " << m_cfg.maxSeedAttempts << "\n"
           << " Beam spot radius: " << m_cfg.beamSpotRadius << "\n"
           << " Beam spot length: " << m_cfg.beamSpotLength << "\n");
