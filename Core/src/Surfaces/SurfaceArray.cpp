@@ -567,6 +567,8 @@ class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
       if (!start.has_value() || !end.has_value()) {
         return;
       }
+      // Bound the segment along the span axis, starting with its endpoints.
+      // Every column it crosses will receive this entire interval.
       const GridIndex first = localBinsFromPosition2D(*start);
       const GridIndex last = localBinsFromPosition2D(*end);
       std::size_t spanMin = std::min(first[iSpan], last[iSpan]);
@@ -580,6 +582,8 @@ class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
         const Vector2 a = (toLocal * from).head<2>();
         const Vector2 delta = (toLocal * to).head<2>() - a;
         const double length2 = delta.squaredNorm();
+        // Find the closest point to the polar origin on the finite segment;
+        // clamping keeps the minimum on the edge rather than its extension.
         const double t =
             length2 == 0. ? 0. : std::clamp(-a.dot(delta) / length2, 0., 1.);
         const double minR = (a + t * delta).norm();
@@ -591,18 +595,27 @@ class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
 
       const IAxis& columnAxis = *m_iAxes[iColumn];
       const std::size_t nColumns = columnAxis.getNBins();
+      // Include both endpoint columns and everything between them. Clip away
+      // under/overflow bins; NeighborHoodIndices uses an exclusive upper bound.
       NeighborHoodIndices coveredColumns(
           std::max<std::size_t>(1, std::min(first[iColumn], last[iColumn])),
           std::min(nColumns, std::max(first[iColumn], last[iColumn])) + 1);
       if (columnAxis.getBoundaryType() == AxisBoundaryType::Closed) {
+        // Unwrap the coordinate difference so an edge crossing the phi seam
+        // follows the short arc, rather than filling almost the whole grid.
         const double step =
             std::remainder((*end)[iColumn] - (*start)[iColumn],
                            columnAxis.getMax() - columnAxis.getMin());
         const std::size_t a = first[iColumn];
         const std::size_t b = last[iColumn];
+        // Count bins in that direction, wrapping at the seam. Using the
+        // coordinate difference for direction also supports variable bin
+        // widths.
         const int distance =
             static_cast<int>(step >= 0. ? (b + nColumns - a) % nColumns
                                         : (a + nColumns - b) % nColumns);
+        // Phi is undefined at the origin: conservatively cover all columns
+        // when the segment passes through it.
         coveredColumns =
             throughOrigin
                 ? NeighborHoodIndices(1, nColumns + 1)
@@ -610,6 +623,9 @@ class SurfaceGridLookupBase : public SurfaceArray::ISurfaceGridLookup {
                                       step >= 0. ? std::pair{0, distance}
                                                  : std::pair{-distance, 0});
       }
+      // Accumulate both sides of the outline in each crossed column. The
+      // subsequent span fill covers their interior even if no sample landed
+      // in this column on one of the edges.
       for (const std::size_t column : coveredColumns) {
         const auto [it, inserted] =
             columns.try_emplace(column, spanMin, spanMax);
