@@ -595,9 +595,10 @@ BOOST_AUTO_TEST_CASE(SubtreeLookupDelegatesThroughLinearToAnotherIndex) {
     auto logger = getDefaultLogger("DelegationTest", Logging::WARNING, &output);
     typename Lookup::Config config;
     if constexpr (std::is_same_v<Lookup, RzGridVolumeLookup>) {
-      // One boundary entry fits in one cell. Indexing through it would exceed
+      // One boundary entry fits in one regular cell (nine with reserved
+      // under-/overflow slots). Indexing through it would exceed
       // this cap and warn, even if fallback happened to return the same result.
-      config.maxGridCells = 1;
+      config.maxGridCells = 9;
     }
     world->setVolumeLookup(
         std::make_unique<Lookup>(gctx, *world, config, *logger));

@@ -30,7 +30,8 @@ class RzGridVolumeLookup final : public IVolumeLookup {
     /// requires linear fallback. Explicit descendant policies remain active.
     /// Range [0, 1]; 1 disables the warning. Not a query-frequency metric.
     double fallbackWarningFraction = 0.1;
-    /// Limit grid cells for the indexed subtree; larger grids use linear lookup
+    /// Limit allocated grid cells, including reserved under-/overflow slots;
+    /// larger grids use linear lookup
     std::size_t maxGridCells = 1000000;
   };
 

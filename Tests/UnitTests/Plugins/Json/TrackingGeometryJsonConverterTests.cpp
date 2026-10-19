@@ -1018,7 +1018,7 @@ BOOST_AUTO_TEST_CASE(ExplicitDefaultLinearBoundaryRoundTrip) {
                                       const TrackingVolume& volume,
                                       const Logger& logger) {
     RzGridVolumeLookup::Config config;
-    config.maxGridCells = 1;
+    config.maxGridCells = 9;  // One regular cell plus under-/overflow slots.
     return std::make_unique<RzGridVolumeLookup>(context, volume, config,
                                                 logger);
   });

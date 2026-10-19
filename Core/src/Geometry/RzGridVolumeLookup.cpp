@@ -8,11 +8,14 @@
 
 #include "Acts/Geometry/RzGridVolumeLookup.hpp"
 
+#include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/MultiAxis.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <array>
 #include <numeric>
+#include <optional>
 #include <span>
 #include <stdexcept>
 
@@ -31,20 +34,15 @@ namespace {
 // binary searches and scan one slice; shared code performs exact containment.
 struct Partition {
   using Config = RzGridVolumeLookup::Config;
-  std::array<std::vector<double>, 2> edges;
+  using RzAxis = Axis<AxisType::Variable, AxisBoundaryType::Bound>;
+  using RzAxes = MultiAxis<RzAxis, RzAxis>;
+  std::optional<RzAxes> axes;
   std::vector<std::size_t> offsets;
   std::vector<std::size_t> m_candidates;
-  std::size_t bin(int axis, double x) const {
-    const auto& e = edges[axis];
-    // Caller checks the domain. Include the final upper edge in the last bin.
-    return std::min(
-        static_cast<std::size_t>(std::upper_bound(e.begin(), e.end(), x) -
-                                 e.begin() - 1),
-        e.size() - 2);
-  }
 
   template <typename Children>
   bool build(const Children& children, const Config& config) {
+    std::array<std::vector<double>, 2> edges;
     for (int axis = 0; axis < 2; ++axis) {
       auto& e = edges[axis];
       for (const auto& child : children) {
@@ -57,17 +55,23 @@ struct Partition {
       std::sort(e.begin(), e.end());
       e.erase(std::unique(e.begin(), e.end()), e.end());
     }
-    const auto nr = edges[0].size() - 1;
-    const auto nz = edges[1].size() - 1;
-    // Check the cell limit before multiplying, avoiding overflow/allocation.
+    // MultiAxis global indices reserve under-/overflow slots on each axis,
+    // even with bounded axes. Include these slots in the allocation limit.
+    const auto nr = edges[0].size() + 1;
+    const auto nz = edges[1].size() + 1;
     if (nr > config.maxGridCells / nz) {
       return false;
     }
-    offsets.resize(nr * nz + 1);
+    axes.emplace(RzAxis(std::move(edges[0])), RzAxis(std::move(edges[1])));
+    offsets.resize(axes->getNTotalBins(true) + 1);
     auto cells = [&](const Eigen::AlignedBox2d& b, auto&& visit) {
-      for (auto r = bin(0, b.min()[0]); r <= bin(0, b.max()[0]); ++r) {
-        for (auto z = bin(1, b.min()[1]); z <= bin(1, b.max()[1]); ++z) {
-          visit(r * nz + z);
+      const auto lower = axes->getLocalBinsFromPoint(b.min());
+      const auto upper = axes->getLocalBinsFromPoint(b.max());
+      // Include the bin at the upper edge. Bound axes clamp the final edge to
+      // the last regular bin, matching the inclusive rectangle containment.
+      for (auto r = lower[0]; r <= upper[0]; ++r) {
+        for (auto z = lower[1]; z <= upper[1]; ++z) {
+          visit(axes->getGlobalBinFromLocalBins({r, z}));
         }
       }
     };
@@ -102,7 +106,9 @@ struct Partition {
   }
 
   std::span<const std::size_t> candidates(const Vector2& key) const {
-    const auto cell = bin(0, key[0]) * (edges[1].size() - 1) + bin(1, key[1]);
+    // The caller checks the inclusive domain; MultiAxis::isInside() would
+    // exclude the upper edge, while Bound axes alone also clamp outside points.
+    const auto cell = axes->getGlobalBinFromPoint(key);
     return std::span{m_candidates}.subspan(offsets[cell],
                                            offsets[cell + 1] - offsets[cell]);
   }
