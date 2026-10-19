@@ -93,6 +93,9 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// z0 range the eta bin table is built against
     Acts::Experimental::GbtsZ0Range gbtsZ0Range;
 
+    /// Cut the eta bins along the module tilt of inclined layers.
+    bool useLayerTilt = false;
+
     /// the region of interest along the beam line. Overrides
     /// `seedFinderConfig.minZ0` and `maxZ0`.
     float collisionRegionMin = -150. * Acts::UnitConstants::mm;

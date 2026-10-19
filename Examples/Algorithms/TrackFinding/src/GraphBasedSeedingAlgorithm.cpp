@@ -263,6 +263,18 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
     throw std::runtime_error("Invalid barrel/endcap assignment for GbtsLayer");
   }
 
+  // tilt of a plane module in r-z, along which n_r dr + n_z dz = 0
+  float slope = 0.f;
+  if (surface.type() == Acts::Surface::Plane) {
+    const Acts::Vector3 normal =
+        surface.normal(gctx, center, Acts::Vector3::UnitZ());
+    const double nr = normal.head<2>().dot(center.head<2>().normalized());
+    const double nz = normal.z();
+    slope = static_cast<float>(
+        barrelEc == Acts::Experimental::GbtsLayerType::Barrel ? -nz / nr
+                                                              : -nr / nz);
+  }
+
   const auto currentIndex =
       find_if(inputVector.begin(), inputVector.end(),
               [gbtsId](auto n) { return n.id == gbtsId; });
@@ -274,6 +286,7 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
         std::min(inputVector[index].minBound, minBound);
     inputVector[index].maxBound =
         std::max(inputVector[index].maxBound, maxBound);
+    inputVector[index].slope += slope;
     countVector[index] += 1;  // increase count at the index
 
   } else {  // end so doesn't exists
@@ -284,7 +297,8 @@ void GraphBasedSeedingAlgorithm::addSurfaceToGbtsLayers(
                                                  .technology = find->technology,
                                                  .refCoord = rc,
                                                  .minBound = minBound,
-                                                 .maxBound = maxBound});
+                                                 .maxBound = maxBound,
+                                                 .slope = slope});
     // so the element exists and not divinding by 0
     countVector.push_back(1);
   }
@@ -318,6 +332,10 @@ GraphBasedSeedingAlgorithm::layerNumbering(
 
   for (std::size_t i = 0; i < inputVector.size(); i++) {
     inputVector[i].refCoord = inputVector[i].refCoord / countVector[i];
+    // mean module tilt; below 1e-3 it is rounding in the module placement
+    const float slope = inputVector[i].slope / countVector[i];
+    inputVector[i].slope =
+        m_cfg.useLayerTilt && std::abs(slope) >= 1e-3f ? slope : 0.f;
   }
 
   return inputVector;
