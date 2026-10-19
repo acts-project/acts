@@ -378,7 +378,66 @@ bool isPrecisionHit(const MuonSpacePoint& hit) {
           !hit.id().measuresPhi());
 }
 
-SeedSelector::SeedSelector(Config&& config) : m_cfg{config} {
+namespace {
+/// @brief The symmetric seed station x hit station windows of every |eta| bin
+SeedSelector::Windows_t buildThetaWindows(const SeedSelector::Config& cfg) {
+  struct PairWindow {
+    StIndex a;
+    StIndex b;
+    double halfWidth;
+  };
+  auto makeWindows = [](std::initializer_list<PairWindow> pairs) {
+    SeedSelector::Matrix_t m{};
+    for (const auto& [a, b, w] : pairs) {
+      m[Acts::toUnderlying(a)][Acts::toUnderlying(b)] = w;
+      m[Acts::toUnderlying(b)][Acts::toUnderlying(a)] = w;
+    }
+    return m;
+  };
+  using enum StIndex;
+  using EtaBin = SeedSelector::EtaBin;
+  SeedSelector::Windows_t windows{};
+  windows[Acts::toUnderlying(EtaBin::Barrel)] = makeWindows({
+      {BI, BI, cfg.barrelSameStation},
+      {BM, BM, cfg.barrelSameStation},
+      {BO, BO, cfg.barrelSameStation},
+      {BI, BM, cfg.barrelAdjacent},
+      {BM, BO, cfg.barrelAdjacent},
+      {BI, BO, cfg.barrelSkip},
+  });
+  windows[Acts::toUnderlying(EtaBin::Transition)] = makeWindows({
+      {BI, BI, cfg.transSameStation}, {BM, BM, cfg.transSameStation},
+      {BO, BO, cfg.transSameStation}, {BE, BE, cfg.transSameStation},
+      {EI, EI, cfg.transSameStation}, {EM, EM, cfg.transSameStation},
+      {EO, EO, cfg.transSameStation}, {EE, EE, cfg.transSameStation},
+      {BI, BM, cfg.transBarrelAdj},   {BM, BO, cfg.transBarrelAdj},
+      {BI, BO, cfg.transBarrelSkip},  {BI, BE, cfg.transBIToExt},
+      {BI, EE, cfg.transBIToExt},     {BI, EM, cfg.transBIToEM},
+      {BI, EI, cfg.transBIToEI},      {BM, BE, cfg.transBMToEndcap},
+      {BM, EE, cfg.transBMToEndcap},  {BM, EM, cfg.transBMToEndcap},
+      {BM, EI, cfg.transBMToEndcap},  {BO, BE, cfg.transBOToExt},
+      {BO, EE, cfg.transBOToExt},     {BO, EM, cfg.transBOToEM},
+      {BO, EI, cfg.transBOToEI},      {BE, EE, cfg.transBEToEE},
+      {BE, EI, cfg.transExtToEI},     {EE, EI, cfg.transExtToEI},
+      {BE, EM, cfg.transExtToEM},     {EE, EM, cfg.transExtToEM},
+      {BE, EO, cfg.transExtToEO},     {EE, EO, cfg.transExtToEO},
+      {EI, EM, cfg.transEndcapAdj},   {EM, EO, cfg.transEndcapAdj},
+      {EI, EO, cfg.transEndcapSkip},
+  });
+  windows[Acts::toUnderlying(EtaBin::Endcap)] = makeWindows({
+      {EI, EI, cfg.endcapSameInnerOuter},
+      {EO, EO, cfg.endcapSameInnerOuter},
+      {EM, EM, cfg.endcapSameMiddle},
+      {EI, EM, cfg.endcapAdjacent},
+      {EM, EO, cfg.endcapAdjacent},
+      {EI, EO, cfg.endcapSkip},
+  });
+  return windows;
+}
+}  // namespace
+
+SeedSelector::SeedSelector(Config&& config)
+    : m_thetaWindows{buildThetaWindows(config)}, m_cfg{std::move(config)} {
   if (m_cfg.seedFromInner) {
     m_seedinglayers.push_back(LayerIndex::Inner);
   }
@@ -392,11 +451,29 @@ bool SeedSelector::goodForSeeding(const HitPayload& hit) const {
   }
   return true;
 }
-double SeedSelector::thetaSearchWindow(const HitPayload& hit) const {
-  const LayerIndex hitLayer{toLayerIndex(hit.station)};
-  return (hitLayer == LayerIndex::Inner || hitLayer == LayerIndex::Outer)
-             ? m_cfg.thetaSearchWindow
-             : 0.5 * m_cfg.thetaSearchWindow;
+SeedSelector::EtaBin SeedSelector::etaBin(const HitPayload& seed) const {
+  const double eta{std::abs(Acts::VectorHelpers::eta(seed.position))};
+  return eta <= m_cfg.etaBarrelMax
+             ? EtaBin::Barrel
+             : (eta < m_cfg.etaEndcapMin ? EtaBin::Transition : EtaBin::Endcap);
+}
+const SeedSelector::Row_t& SeedSelector::thetaSearchWindow(
+    const HitPayload& seed) const {
+  if (seed.station == StIndex::StUnknown) {
+    throw std::runtime_error(
+        "SeedSelector: no theta window for a hit in an unknown station");
+  }
+  return m_thetaWindows[Acts::toUnderlying(etaBin(seed))]
+                       [Acts::toUnderlying(seed.station)];
+}
+double SeedSelector::maxThetaWindow() const {
+  double maxWindow{0.};
+  for (const Matrix_t& m : m_thetaWindows) {
+    for (const Row_t& row : m) {
+      maxWindow = std::max(maxWindow, std::ranges::max(row));
+    }
+  }
+  return maxWindow;
 }
 
 using MuonId = MuonSpacePoint::MuonId;
@@ -613,14 +690,14 @@ GlobalPatternFinderAlgorithm::GlobalPatternFinderAlgorithm(
 
   SeedSelector::Config selectorCfg{};
   selectorCfg.seedFromMdt = m_cfg.seedFromMdt;
-  selectorCfg.thetaSearchWindow = m_cfg.thetaSearchWindow;
   selectorCfg.seedFromInner = m_cfg.seedFromInner;
   m_seedSelector = std::make_unique<SeedSelector>(std::move(selectorCfg));
 
   GlobalPatternFinder_t::Config patCfg{};
   patCfg.nResidualSigma = m_cfg.nResidualSigma;
   patCfg.lowConfidenceResSigma = m_cfg.lowConfidenceResSigma;
-  patCfg.maxThetaSizeOverlap = 2. * m_cfg.thetaSearchWindow;
+  patCfg.maxThetaSizeOverlap =
+      2. * m_seedSelector->maxThetaWindow() + 0.5_degree;
   patCfg.phiTolerance = m_cfg.phiTolerance;
   patCfg.loosenAcceptanceFactor = 2.5;
   patCfg.minStripEtaLayers = m_cfg.minTriggerLayers;
@@ -639,7 +716,8 @@ GlobalPatternFinderAlgorithm::GlobalPatternFinderAlgorithm(
   ACTS_LOG_WITH_LOGGER(
       this->logger(), Acts::Logging::DEBUG,
       "Global Pattern Finder Configuration:\n"
-          << " Theta search window [rad]: " << m_cfg.thetaSearchWindow << "\n"
+          << " Max theta size overlap [rad]: "
+          << 2. * m_seedSelector->maxThetaWindow() + 0.5_degree << "\n"
           << " Number of residual standard deviations: " << m_cfg.nResidualSigma
           << "\n"
           << " Low confidence residual sigma [mm]: "

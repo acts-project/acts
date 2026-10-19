@@ -268,18 +268,79 @@ struct SearchTreeData {
 };
 
 /// @brief Chooses the hits the global pattern finder starts patterns from and
-///        the theta window it searches around each of them
+///        the theta windows it searches around each of them
 struct SeedSelector {
-  /// @brief Configuration of the seed selection
+  /// @brief Configuration of the seed selection. The theta half-windows [rad]
+  ///        are given per pair of seed station and hit station, for three bins
+  ///        of the seed's |eta|; pairs left out are 0, so the hits of that
+  ///        station are never candidates of the seed.
   struct Config {
     /// @brief Whether MDT hits may seed patterns
     bool seedFromMdt{false};
-    /// @brief Theta window [rad] around a seed in the inner or outer station
-    ///        layer; seeds in the other layers use half of it
-    double thetaSearchWindow{0.05};
     /// @brief Whether hits in the inner station layer may seed patterns
     bool seedFromInner{false};
+    /// @brief Upper |eta| edge of the barrel bin
+    double etaBarrelMax{0.9};
+    /// @brief Lower |eta| edge of the endcap bin; the transition bin lies between
+    double etaEndcapMin{1.45};
+
+    /// @brief Barrel bin: two hits in the same station
+    double barrelSameStation{0.9 * Acts::UnitConstants::degree};
+    /// @brief Barrel bin: BI-BM and BM-BO
+    double barrelAdjacent{1.29 * Acts::UnitConstants::degree};
+    /// @brief Barrel bin: BI-BO
+    double barrelSkip{1.861 * Acts::UnitConstants::degree};
+
+    /// @brief Transition bin: two hits in the same station
+    double transSameStation{0.888 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: BI-BM and BM-BO
+    double transBarrelAdj{1.186 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: BI-BO
+    double transBarrelSkip{1.401 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: BI-BE and BI-EE
+    double transBIToExt{2.3 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: BI-EM
+    double transBIToEM{1.828 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: BI-EI
+    double transBIToEI{1.5 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: BM-BE, BM-EE, BM-EM and BM-EI
+    double transBMToEndcap{1.695 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: BO-BE and BO-EE
+    double transBOToExt{1.042 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: BO-EM
+    double transBOToEM{0.772 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: BO-EI
+    double transBOToEI{1.207 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: BE-EE
+    double transBEToEE{1.75 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: BE-EI and EE-EI
+    double transExtToEI{2.3 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: BE-EM and EE-EM
+    double transExtToEM{0.955 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: BE-EO and EE-EO
+    double transExtToEO{2.6 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: EI-EM and EM-EO
+    double transEndcapAdj{1.45 * Acts::UnitConstants::degree};
+    /// @brief Transition bin: EI-EO
+    double transEndcapSkip{2.6 * Acts::UnitConstants::degree};
+
+    /// @brief Endcap bin: two hits in EI, or two in EO
+    double endcapSameInnerOuter{0.9 * Acts::UnitConstants::degree};
+    /// @brief Endcap bin: two hits in EM
+    double endcapSameMiddle{0.67 * Acts::UnitConstants::degree};
+    /// @brief Endcap bin: EI-EM and EM-EO
+    double endcapAdjacent{0.607 * Acts::UnitConstants::degree};
+    /// @brief Endcap bin: EI-EO
+    double endcapSkip{2.6 * Acts::UnitConstants::degree};
   };
+  /// @brief Bins of the seed's |eta|, each with its own windows
+  enum class EtaBin : std::int8_t { Barrel, Transition, Endcap, nBins };
+  /// @brief Half-window per hit station
+  using Row_t = std::array<double, PatternTopology::nGroups>;
+  /// @brief Half-windows per seed station and hit station
+  using Matrix_t = std::array<Row_t, PatternTopology::nGroups>;
+  /// @brief Half-windows per |eta| bin, seed station and hit station
+  using Windows_t = std::array<Matrix_t, Acts::toUnderlying(EtaBin::nBins)>;
   /// @brief Constructor
   /// @param config: Configuration of the seed selection
   explicit SeedSelector(Config&& config);
@@ -288,20 +349,28 @@ struct SeedSelector {
   /// @param hit: Hit of interest
   /// @return True if the hit may seed a pattern
   bool goodForSeeding(const HitPayload& hit) const;
-  /// @brief Theta window [rad] to search for hits compatible with a seed
-  /// @param hit1: Seed hit
-  /// @return The configured window for a seed in the inner or outer station
-  ///         layer, half of it otherwise
-  double thetaSearchWindow(const HitPayload& hit1) const;
+  /// @brief Theta half-windows [rad] to search for hits compatible with a seed
+  /// @param seed: Seed hit
+  /// @return The half-window for the hits of each station, from the table of
+  ///         the seed's station and |eta| bin
+  const Row_t& thetaSearchWindow(const HitPayload& seed) const;
+  /// @brief Bin of a seed's |eta|
+  /// @param seed: Seed hit
+  /// @return The barrel, transition or endcap bin
+  EtaBin etaBin(const HitPayload& seed) const;
+  /// @brief Largest theta half-window of all seeds and stations
+  double maxThetaWindow() const;
   /// @brief Station layers of the seeds: middle and outer, and inner if
   ///        seedFromInner is set
   std::vector<LayerIndex> m_seedinglayers{LayerIndex::Middle,
                                           LayerIndex::Outer};
+  /// @brief Half-windows per |eta| bin, seed station and hit station
+  Windows_t m_thetaWindows{};
   /// @brief Config
   Config m_cfg;
 };
-static_assert(
-    Acts::Experimental::detail::PatternSeedSelector<SeedSelector, HitPayload>);
+static_assert(Acts::Experimental::detail::PatternSeedSelector<
+              SeedSelector, HitPayload, PatternTopology>);
 
 /// @brief Provides the hits that measure only phi, which the global pattern
 ///        finder adds to its patterns after building them in eta
@@ -407,15 +476,13 @@ class GlobalPatternFinderAlgorithm final : public IAlgorithm {
     bool seedFromMdt{false};
     /// @brief Activate the seeding from Inner station
     bool seedFromInner{false};
-    /// @brief Size of theta window [rad] to search for compatible hits with a seed, tailored to the target pt cutoff
-    double thetaSearchWindow{0.06};
     /// @brief Number of standard deviations to consider for residual acceptance
     double nResidualSigma{3.};
     /// @brief Residual uncertainty to consider the hit as low confidence
     double lowConfidenceResSigma{50.0};
     /// @brief Maximum angle [rad] of a hit to the pattern's bending plane for
     ///         the hit to be phi compatible with the pattern
-    double phiTolerance{3. * Acts::UnitConstants::degree};
+    double phiTolerance{3.5 * Acts::UnitConstants::degree};
     /// @brief Requirement on trigger layers in the bending direction to accept a pattern
     unsigned minTriggerLayers{2};
     /// @brief Requirement on precision layers in the bending direction to accept a pattern
@@ -433,9 +500,9 @@ class GlobalPatternFinderAlgorithm final : public IAlgorithm {
     /// @brief Minimum distance [mm] between two hits for being used to compute a reliable pattern line. Use the beamspot otherwise.
     double minHitDistance4Line{200};
     /// @brief Beam spot radius
-    double beamSpotRadius{30. * Acts::UnitConstants::cm};
+    double beamSpotRadius{20. * Acts::UnitConstants::cm};
     /// @brief Beam spot length
-    double beamSpotLength{2. * Acts::UnitConstants::m};
+    double beamSpotLength{1. * Acts::UnitConstants::m};
   };
 
   /// @brief Constructor

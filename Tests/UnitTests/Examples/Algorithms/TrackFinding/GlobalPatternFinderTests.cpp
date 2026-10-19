@@ -231,7 +231,6 @@ BOOST_AUTO_TEST_CASE(seed_selector) {
                               surface.get()};
 
   SeedSelector::Config cfg{};
-  cfg.thetaSearchWindow = 0.06;
   const SeedSelector selector{SeedSelector::Config{cfg}};
 
   // Seeds are taken from the middle & outer station, Mdt hits are excluded
@@ -240,9 +239,33 @@ BOOST_AUTO_TEST_CASE(seed_selector) {
   BOOST_CHECK(!selector.goodForSeeding(middleStraw));
   BOOST_CHECK(!selector.goodForSeeding(innerStrip));
 
-  // The window is halved for the middle station
-  BOOST_CHECK_CLOSE(selector.thetaSearchWindow(outerStrip), 0.06, 1.e-6);
-  BOOST_CHECK_CLOSE(selector.thetaSearchWindow(middleStrip), 0.03, 1.e-6);
+  // A seed's windows are the row of its station in the table of its |eta| bin
+  const auto row = [&](const HitPayload& seed) {
+    return selector.m_thetaWindows[Acts::toUnderlying(selector.etaBin(seed))]
+                                  [Acts::toUnderlying(seed.station)];
+  };
+  BOOST_CHECK(selector.thetaSearchWindow(middleStrip) == row(middleStrip));
+  BOOST_CHECK(selector.thetaSearchWindow(outerStrip) == row(outerStrip));
+
+  // The tables are symmetric, and a barrel middle seed sees the neighbouring
+  // barrel stations but not the endcap
+  using enum StIndex;
+  constexpr auto idx = [](StIndex st) { return Acts::toUnderlying(st); };
+  for (const SeedSelector::Matrix_t& m : selector.m_thetaWindows) {
+    for (std::size_t a = 0; a < m.size(); ++a) {
+      for (std::size_t b = 0; b < m.size(); ++b) {
+        BOOST_CHECK_EQUAL(m[a][b], m[b][a]);
+      }
+    }
+  }
+  const SeedSelector::Row_t& barrelMiddle{
+      selector.m_thetaWindows[Acts::toUnderlying(SeedSelector::EtaBin::Barrel)]
+                             [idx(BM)]};
+  BOOST_CHECK_EQUAL(barrelMiddle[idx(BM)], cfg.barrelSameStation);
+  BOOST_CHECK_EQUAL(barrelMiddle[idx(BI)], cfg.barrelAdjacent);
+  BOOST_CHECK_EQUAL(barrelMiddle[idx(BO)], cfg.barrelAdjacent);
+  BOOST_CHECK_EQUAL(barrelMiddle[idx(EM)], 0.);
+  BOOST_CHECK_CLOSE(selector.maxThetaWindow(), 2.6_degree, 1.e-6);
 
   // Both toggles open up the corresponding seeds
   SeedSelector::Config mdtCfg{cfg};
@@ -251,7 +274,9 @@ BOOST_AUTO_TEST_CASE(seed_selector) {
   const SeedSelector fromEverything{SeedSelector::Config{mdtCfg}};
   BOOST_CHECK(fromEverything.goodForSeeding(middleStraw));
   BOOST_CHECK(fromEverything.goodForSeeding(innerStrip));
-  BOOST_CHECK_CLOSE(fromEverything.thetaSearchWindow(innerStrip), 0.06, 1.e-6);
+  BOOST_CHECK(fromEverything.thetaSearchWindow(innerStrip) ==
+              fromEverything.m_thetaWindows[Acts::toUnderlying(
+                  fromEverything.etaBin(innerStrip))][idx(BI)]);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
