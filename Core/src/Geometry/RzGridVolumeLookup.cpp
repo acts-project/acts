@@ -35,16 +35,13 @@ constexpr std::size_t noRzNode = std::numeric_limits<std::size_t>::max();
 
 // Unlike Acts::AxisAlignedBoundingBox::intersect, Eigen's AlignedBox includes
 // the upper edges, as required for conservative RZ candidate selection.
-// Conservative envelope and hierarchy constraints for one subtree candidate.
+// Conservative envelope for one subtree candidate.
 struct RzLookupChild {
   const TrackingVolume* m_volume;
   Eigen::AlignedBox2d m_box;
   bool m_indexable = false;
   // Stop indexing here and dispatch to this volume's explicitly set lookup.
   bool m_delegate = false;
-  // Parents between this candidate and the lookup root, excluding both ends.
-  // Flattening the hierarchy must not bypass their exact containment checks.
-  std::vector<const TrackingVolume*> m_ancestors;
 
   RzLookupChild(const GeometryContext& gctx, const TrackingVolume& v,
                 double maxTolerance)
@@ -163,9 +160,10 @@ struct RzGrid {
 }  // namespace
 // One spatial index covers the subtree. Candidates are ordered in postorder:
 // descendants before their parent fallback, and an entire earlier sibling's
-// subtree before later siblings. Ancestor containment checks preserve the
-// recursive scan even when child bounds extend outside their parents.
+// subtree before later siblings. Geometry construction must ensure each child
+// is contained within its parent, so candidates need no ancestor checks.
 struct RzGridVolumeLookup::Impl {
+  const TrackingVolume& m_root;
   Config m_config;
   bool m_gridLimit = false;
   bool m_hasIndex = false;
@@ -179,7 +177,7 @@ struct RzGridVolumeLookup::Impl {
 
   Impl(const GeometryContext& gctx, const TrackingVolume& root,
        const Config& cfg)
-      : m_config(cfg) {
+      : m_root(root), m_config(cfg) {
     // A bare TrackingVolume has no generation flag. Reject Gen1-only storage
     // wherever it is encountered in this index's scope, including the root.
     auto requireGen3 = [](const TrackingVolume& volume) {
@@ -191,20 +189,16 @@ struct RzGridVolumeLookup::Impl {
       }
     };
     requireGen3(root);
-    std::vector<const TrackingVolume*> ancestors;
     // Collect geometry independently of the spatial grid. Postorder IDs
     // encode recursive-scan priority; build() below indexes their RZ envelopes.
     auto collect = [&](auto&& self, const TrackingVolume& volume) -> void {
       requireGen3(volume);
       RzLookupChild entry(gctx, volume, cfg.maxTolerance);
-      entry.m_ancestors = ancestors;
       entry.m_delegate = volume.volumeLookup() != nullptr;
       if (!entry.m_delegate) {
-        ancestors.push_back(&volume);
         for (const auto& child : volume.volumes()) {
           self(self, child);
         }
-        ancestors.pop_back();
       }
       if (entry.m_indexable) {
         m_domain.extend(entry.m_box);
@@ -258,17 +252,12 @@ struct RzGridVolumeLookup::Impl {
                  << ". Explicit descendant lookup boundaries remain active.");
   }
 
-  const TrackingVolume* find(const TrackingVolume& root,
-                             const GeometryContext& gctx, const Vector3& p,
+  const TrackingVolume* find(const GeometryContext& gctx, const Vector3& p,
                              const Vector2& key, double tolerance) const {
-    // Precondition: root is the volume this lookup was constructed for.
-    // TrackingVolume passes itself when dispatching its installed policy;
-    // construction/installation must use that same volume. This identity is
-    // not checked here, and passing another root would not rebuild the index.
     if (m_gridLimit) {
-      return detail::linearVolumeScan(root, gctx, p, tolerance);
+      return detail::linearVolumeScan(m_root, gctx, p, tolerance);
     }
-    if (!root.inside(gctx, p, tolerance)) {
+    if (!m_root.inside(gctx, p, tolerance)) {
       return nullptr;
     }
     // IDs encode hierarchy priority. Each ordered candidate list can stop
@@ -281,19 +270,13 @@ struct RzGridVolumeLookup::Impl {
         return false;
       }
       const auto& entry = m_children[id];
-      // Reject on any of three conditions, in increasing cost order:
+      // Reject on any of two conditions, in increasing cost order:
       //  - an indexed candidate's conservative RZ box misses the query;
       //    fallback candidates have no usable box, so skip that test;
-      //  - the actual volume does not contain the point at this tolerance;
-      //  - any ancestor does not contain it. A protruding child must not be
-      //    reachable when the recursive scan would stop outside its parent.
+      //  - the actual volume does not contain the point at this tolerance.
       // A rejected candidate means continue, not terminate the search.
       if ((entry.m_indexable && !entry.m_box.contains(key)) ||
-          !entry.m_volume->inside(gctx, p, tolerance) ||
-          !std::ranges::all_of(entry.m_ancestors,
-                               [&](const TrackingVolume* ancestor) {
-                                 return ancestor->inside(gctx, p, tolerance);
-                               })) {
+          !entry.m_volume->inside(gctx, p, tolerance)) {
         return true;
       }
       best = id;
@@ -314,7 +297,7 @@ struct RzGridVolumeLookup::Impl {
       }
     }
     if (best == noRzNode) {
-      return &root;
+      return &m_root;
     }
     const auto& entry = m_children[best];
     return entry.m_delegate
@@ -345,13 +328,13 @@ const RzGridVolumeLookup::Config& RzGridVolumeLookup::config() const {
 }
 
 const TrackingVolume* RzGridVolumeLookup::lowestTrackingVolume(
-    const TrackingVolume& root, const GeometryContext& gctx,
-    const Vector3& position, double tolerance) const {
+    const GeometryContext& gctx, const Vector3& position,
+    double tolerance) const {
   if (!std::isfinite(tolerance) || tolerance < 0 ||
       tolerance > m_impl->m_config.maxTolerance) {
-    return detail::linearVolumeScan(root, gctx, position, tolerance);
+    return detail::linearVolumeScan(m_impl->m_root, gctx, position, tolerance);
   }
-  return m_impl->find(root, gctx, position,
+  return m_impl->find(gctx, position,
                       Vector2(VectorHelpers::perp(position), position.z()),
                       tolerance);
 }

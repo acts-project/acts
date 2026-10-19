@@ -25,8 +25,6 @@ class LinearVolumeLookup final : public IVolumeLookup {
     std::size_t warningThreshold = 64;
   };
 
-  /// Construct a linear policy with default settings and no diagnostics.
-  LinearVolumeLookup();
   ~LinearVolumeLookup() override;
 
   /// Construct a lookup and diagnose a finalized subtree.
@@ -41,8 +39,7 @@ class LinearVolumeLookup final : public IVolumeLookup {
   const Config& config() const;
 
   /// @copydoc IVolumeLookup::lowestTrackingVolume
-  const TrackingVolume* lowestTrackingVolume(const TrackingVolume& root,
-                                             const GeometryContext& gctx,
+  const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
                                              const Vector3& position,
                                              double tolerance) const override;
 

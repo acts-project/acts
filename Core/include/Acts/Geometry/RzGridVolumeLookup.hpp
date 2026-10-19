@@ -18,6 +18,7 @@ namespace Acts {
 /// Built-in RZ grid spatial index. Rebuild after changing
 /// volume bounds, transforms, hierarchy or descendant lookup policies. Indexes
 /// the full subtree, stopping at explicitly configured descendant lookups.
+/// Child volumes must be contained within their parents.
 /// Unsupported bounds are checked linearly alongside indexed candidates.
 class RzGridVolumeLookup final : public IVolumeLookup {
  public:
@@ -49,8 +50,7 @@ class RzGridVolumeLookup final : public IVolumeLookup {
   ~RzGridVolumeLookup() override;
 
   /// @copydoc IVolumeLookup::lowestTrackingVolume
-  const TrackingVolume* lowestTrackingVolume(const TrackingVolume& root,
-                                             const GeometryContext& gctx,
+  const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
                                              const Vector3& position,
                                              double tolerance) const override;
 

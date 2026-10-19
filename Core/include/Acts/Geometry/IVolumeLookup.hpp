@@ -21,23 +21,21 @@ class TrackingVolume;
 /// Immutable point-to-volume lookup policy owned by a TrackingVolume.
 /// Implementations must preserve lowestTrackingVolume containment, tolerance,
 /// first-matching-sibling precedence and parent fallback semantics. Referenced
-/// volumes must outlive the policy. Queries must support concurrent readers;
-/// install policies before concurrent use.
+/// volumes must outlive the policy and retain their addresses. Queries must
+/// support concurrent readers; install policies before concurrent use.
 class IVolumeLookup {
  public:
   virtual ~IVolumeLookup() = default;
 
-  /// Find the deepest containing volume, or nullptr outside the supplied
+  /// Find the deepest containing volume, or nullptr outside the bound root
   /// volume. Respect explicit descendant lookups as delegation boundaries.
-  /// @param root Root of the subtree covered by this policy
-  /// Must match the construction root for policies with a precomputed index.
   /// @param gctx Geometry context for containment checks
   /// @param position Global query position
   /// @param tolerance Containment tolerance
   /// @return Containing tracking volume
   virtual const TrackingVolume* lowestTrackingVolume(
-      const TrackingVolume& root, const GeometryContext& gctx,
-      const Vector3& position, double tolerance) const = 0;
+      const GeometryContext& gctx, const Vector3& position,
+      double tolerance) const = 0;
 };
 /// Construct a non-null lookup for a volume after its descendants are
 /// finalized.

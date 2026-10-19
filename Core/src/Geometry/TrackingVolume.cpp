@@ -86,7 +86,7 @@ const TrackingVolume* TrackingVolume::lowestTrackingVolume(
     const GeometryContext& gctx, const Vector3& position,
     const double tol) const {
   return m_volumeLookup
-             ? m_volumeLookup->lowestTrackingVolume(*this, gctx, position, tol)
+             ? m_volumeLookup->lowestTrackingVolume(gctx, position, tol)
              : detail::linearVolumeScan(*this, gctx, position, tol);
 }
 

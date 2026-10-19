@@ -16,16 +16,16 @@
 
 namespace Acts {
 struct LinearVolumeLookup::Impl {
+  const TrackingVolume& m_root;
   Config m_config;
 };
 
-LinearVolumeLookup::LinearVolumeLookup() : m_impl(std::make_unique<Impl>()) {}
 LinearVolumeLookup::~LinearVolumeLookup() = default;
 
 LinearVolumeLookup::LinearVolumeLookup(const TrackingVolume& world,
                                        const Config& config,
                                        const Logger& logger)
-    : m_impl(std::make_unique<Impl>(Impl{config})) {
+    : m_impl(std::make_unique<Impl>(Impl{world, config})) {
   const auto warningThreshold = config.warningThreshold;
   if (warningThreshold == 0 || !logger.doPrint(Logging::WARNING)) {
     return;
@@ -64,9 +64,9 @@ const LinearVolumeLookup::Config& LinearVolumeLookup::config() const {
 }
 
 const TrackingVolume* LinearVolumeLookup::lowestTrackingVolume(
-    const TrackingVolume& root, const GeometryContext& gctx,
-    const Vector3& position, double tolerance) const {
-  return detail::linearVolumeScan(root, gctx, position, tolerance);
+    const GeometryContext& gctx, const Vector3& position,
+    double tolerance) const {
+  return detail::linearVolumeScan(m_impl->m_root, gctx, position, tolerance);
 }
 const TrackingVolume* detail::linearVolumeScan(const TrackingVolume& root,
                                                const GeometryContext& gctx,

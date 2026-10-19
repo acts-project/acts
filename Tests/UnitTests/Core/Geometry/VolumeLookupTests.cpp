@@ -74,6 +74,7 @@ class MovingPlacement : public VolumePlacementBase {
 
 BOOST_AUTO_TEST_CASE(RzLookupMatchesLinear) {
   auto world = makeWorld();
+  const LinearVolumeLookup linear(*world, {});
   TrackingGeometry geometry(world, nullptr, {}, getDummyLogger(), false);
   std::mt19937 rng(42);
   std::uniform_real_distribution<double> uniform(-110., 110.);
@@ -86,8 +87,7 @@ BOOST_AUTO_TEST_CASE(RzLookupMatchesLinear) {
         Vector3 p(uniform(rng), uniform(rng), uniform(rng));
         BOOST_CHECK(*geometry.resolveLowestTrackingVolume(gctx, p, std::nullopt,
                                                           nullptr, tolerance) ==
-                    LinearVolumeLookup{}.lowestTrackingVolume(*world, gctx, p,
-                                                              tolerance));
+                    linear.lowestTrackingVolume(gctx, p, tolerance));
       }
       for (int i = 0; i < 16; ++i) {
         for (double delta : {-2e-3, -1e-3, -1e-6, 0., 1e-6, 1e-3, 2e-3}) {
@@ -96,8 +96,7 @@ BOOST_AUTO_TEST_CASE(RzLookupMatchesLinear) {
                             Vector3(i * 4. + 2., 0., 20. + i + delta)}) {
             BOOST_CHECK(*geometry.resolveLowestTrackingVolume(
                             gctx, p, std::nullopt, nullptr, tolerance) ==
-                        LinearVolumeLookup{}.lowestTrackingVolume(
-                            *world, gctx, p, tolerance));
+                        linear.lowestTrackingVolume(gctx, p, tolerance));
           }
         }
       }
@@ -120,13 +119,13 @@ BOOST_AUTO_TEST_CASE(RzLookupFallbacks) {
       cfg.maxGridCells = 1;  // Force bounded-memory fallback.
     }
     RzGridVolumeLookup limited(gctx, *world, cfg);
-    BOOST_CHECK(limited.lowestTrackingVolume(*world, gctx, {40., 0., 0.}, 0.) ==
+    BOOST_CHECK(limited.lowestTrackingVolume(gctx, {40., 0., 0.}, 0.) ==
                 world->lowestTrackingVolume(gctx, {40., 0., 0.}, 0.));
     world->addVolume(std::make_unique<TrackingVolume>(
         Transform3::Identity(),
         std::make_shared<CuboidVolumeBounds>(80., 80., 80.), "box"));
     RzGridVolumeLookup mixed(gctx, *world, cfg);
-    BOOST_CHECK(mixed.lowestTrackingVolume(*world, gctx, {70., 0., 0.}, 0.) ==
+    BOOST_CHECK(mixed.lowestTrackingVolume(gctx, {70., 0., 0.}, 0.) ==
                 world->lowestTrackingVolume(gctx, {70., 0., 0.}, 0.));
 
     MovingPlacement placement;
@@ -138,9 +137,8 @@ BOOST_AUTO_TEST_CASE(RzLookupFallbacks) {
     RzGridVolumeLookup moving(gctx, *movingWorld, cfg);
     placement.transform.translation().x() = 50.;
     placement.inverse = placement.transform.inverse();
-    BOOST_CHECK(
-        moving.lowestTrackingVolume(*movingWorld, gctx, {50., 0., 0.}, 0.) ==
-        &movingWorld->volumes().at(0));
+    BOOST_CHECK(moving.lowestTrackingVolume(gctx, {50., 0., 0.}, 0.) ==
+                &movingWorld->volumes().at(0));
   }
 }
 
@@ -346,23 +344,24 @@ BOOST_AUTO_TEST_CASE(BlueprintLookupWarningSettings) {
 BOOST_AUTO_TEST_CASE(RecursiveLookupUsesEachVolumesPolicy) {
   class CountingLookup final : public IVolumeLookup {
    public:
-    explicit CountingLookup(unsigned& calls) : m_calls(calls) {}
+    CountingLookup(const TrackingVolume& root, unsigned& calls)
+        : m_calls(calls), m_linear(root, {}) {}
     const TrackingVolume* lowestTrackingVolume(
-        const TrackingVolume& root, const GeometryContext& context,
-        const Vector3& position, double tolerance) const override {
+        const GeometryContext& context, const Vector3& position,
+        double tolerance) const override {
       ++m_calls;
-      return LinearVolumeLookup{}.lowestTrackingVolume(root, context, position,
-                                                       tolerance);
+      return m_linear.lowestTrackingVolume(context, position, tolerance);
     }
 
    private:
     unsigned& m_calls;
+    LinearVolumeLookup m_linear;
   };
   {
     auto world = makeWorld();
     unsigned calls = 0;
     auto& child = world->volumes().at(1);
-    child.setVolumeLookup(std::make_unique<CountingLookup>(calls));
+    child.setVolumeLookup(std::make_unique<CountingLookup>(child, calls));
     TrackingGeometry geometry(world, nullptr, {}, getDummyLogger(), false);
     BOOST_CHECK(*geometry.resolveLowestTrackingVolume(gctx, {9.5, 0., 0.}) ==
                 &child);
@@ -392,11 +391,16 @@ BOOST_AUTO_TEST_CASE(RecursiveLookupUsesEachVolumesPolicy) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(MovingVolumeKeepsLookupRootValid) {
+BOOST_AUTO_TEST_CASE(LookupBindsToFinalVolumeAddress) {
   auto world = makeWorld();
-  world->setVolumeLookup(std::make_unique<RzGridVolumeLookup>(
-      gctx, *world, RzGridVolumeLookup::Config{}));
   TrackingVolume moved(std::move(*world));
+  moved.setVolumeLookup(std::make_unique<RzGridVolumeLookup>(
+      gctx, moved, RzGridVolumeLookup::Config{}));
+  BOOST_CHECK(moved.lowestTrackingVolume(gctx, {90., 0., 0.}) == &moved);
+  BOOST_CHECK(moved.lowestTrackingVolume(gctx, {9.5, 0., 0.}) ==
+              &moved.volumes().at(1));
+  moved.setVolumeLookup(std::make_unique<LinearVolumeLookup>(
+      moved, LinearVolumeLookup::Config{}));
   BOOST_CHECK(moved.lowestTrackingVolume(gctx, {90., 0., 0.}) == &moved);
   BOOST_CHECK(moved.lowestTrackingVolume(gctx, {9.5, 0., 0.}) ==
               &moved.volumes().at(1));
@@ -486,7 +490,7 @@ BOOST_AUTO_TEST_CASE(BlueprintDefaultLookupIsImplicit) {
               nullptr);
 }
 
-BOOST_AUTO_TEST_CASE(SubtreeLookupPreservesAncestorsAndSiblingPriority) {
+BOOST_AUTO_TEST_CASE(SubtreeLookupPreservesSiblingPriority) {
   auto makeVolume = [](double lo, double hi, const std::string& name) {
     return std::make_unique<TrackingVolume>(
         Transform3::Identity(),
@@ -496,8 +500,6 @@ BOOST_AUTO_TEST_CASE(SubtreeLookupPreservesAncestorsAndSiblingPriority) {
   auto first = makeVolume(0., 20., "first");
   auto inner = makeVolume(5., 15., "inner");
   inner->addVolume(makeVolume(5., 10., "leaf"));
-  // This child extends outside both ancestors and must never win at r=30.
-  inner->addVolume(makeVolume(25., 35., "protruding"));
   first->addVolume(std::move(inner));
   world->addVolume(std::move(first));
   auto second = makeVolume(0., 50., "second");
@@ -528,12 +530,13 @@ BOOST_AUTO_TEST_CASE(SubtreeLookupPreservesAncestorsAndSiblingPriority) {
 BOOST_AUTO_TEST_CASE(SubtreeLookupDelegatesThroughLinearToAnotherIndex) {
   class CountingLinear final : public IVolumeLookup {
    public:
-    explicit CountingLinear(unsigned& count) : m_count(count) {}
+    CountingLinear(const TrackingVolume& root, unsigned& count)
+        : m_count(count), m_linear(root, {}) {}
     const TrackingVolume* lowestTrackingVolume(
-        const TrackingVolume& root, const GeometryContext& context,
-        const Vector3& position, double tolerance) const override {
+        const GeometryContext& context, const Vector3& position,
+        double tolerance) const override {
       ++m_count;
-      return m_linear.lowestTrackingVolume(root, context, position, tolerance);
+      return m_linear.lowestTrackingVolume(context, position, tolerance);
     }
 
    private:
@@ -555,7 +558,7 @@ BOOST_AUTO_TEST_CASE(SubtreeLookupDelegatesThroughLinearToAnotherIndex) {
       gctx, *nested, RzGridVolumeLookup::Config{}));
   region->addVolume(std::move(nested));
   unsigned calls = 0;
-  region->setVolumeLookup(std::make_unique<CountingLinear>(calls));
+  region->setVolumeLookup(std::make_unique<CountingLinear>(*region, calls));
   world->addVolume(std::move(region));
   {
     std::ostringstream output;
@@ -653,9 +656,9 @@ BOOST_AUTO_TEST_CASE(RzLookupCoincidentBounds) {
   }
   {
     RzGridVolumeLookup lookup(gctx, *world, RzGridVolumeLookup::Config{});
-    BOOST_CHECK(lookup.lowestTrackingVolume(*world, gctx, {5., 0., 0.}, 0.) ==
+    BOOST_CHECK(lookup.lowestTrackingVolume(gctx, {5., 0., 0.}, 0.) ==
                 &world->volumes().at(0));
-    BOOST_CHECK(lookup.lowestTrackingVolume(*world, gctx, {15., 0., 0.}, 0.) ==
+    BOOST_CHECK(lookup.lowestTrackingVolume(gctx, {15., 0., 0.}, 0.) ==
                 world.get());
   }
 }
@@ -679,7 +682,8 @@ BOOST_AUTO_TEST_CASE(RzLookupsRejectGen1Storage) {
     const Vector3 point(2., 0., 0.);
     const auto* dense = gen1->denseVolumes().front().get();
     BOOST_CHECK(gen1->lowestTrackingVolume(gctx, point) == dense);
-    gen1->setVolumeLookup(std::make_unique<LinearVolumeLookup>());
+    gen1->setVolumeLookup(std::make_unique<LinearVolumeLookup>(
+        *gen1, LinearVolumeLookup::Config{}));
     BOOST_CHECK(gen1->lowestTrackingVolume(gctx, point) == dense);
 
     auto world = makeWorld();

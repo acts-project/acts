@@ -970,8 +970,8 @@ BOOST_AUTO_TEST_CASE(VolumeLookupRoundTrip) {
   BOOST_CHECK_EQUAL(linearPolicy->config().warningThreshold, 0);
   class CustomLookup : public IVolumeLookup {
     const TrackingVolume* lowestTrackingVolume(
-        const TrackingVolume& /*root*/, const GeometryContext& /*gctx*/,
-        const Vector3& /*position*/, double /*tolerance*/) const override {
+        const GeometryContext& /*gctx*/, const Vector3& /*position*/,
+        double /*tolerance*/) const override {
       return nullptr;
     }
   };

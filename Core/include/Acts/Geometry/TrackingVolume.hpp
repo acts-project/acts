@@ -183,6 +183,8 @@ class TrackingVolume : public Volume {
   /// before building enclosing indices. Rebuild those indices after changing
   /// local policies, volume bounds, transforms or hierarchy. Call before
   /// concurrent queries.
+  /// Construct the policy for this volume at its final address. Moving the
+  /// volume object requires rebuilding its policy before querying it again.
   /// @param lookup Policy owned by this volume, or nullptr for the default scan
   void setVolumeLookup(std::unique_ptr<const IVolumeLookup> lookup);
 
