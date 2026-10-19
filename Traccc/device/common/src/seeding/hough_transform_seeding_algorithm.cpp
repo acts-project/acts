@@ -20,7 +20,8 @@ hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
 
 auto hough_transform_seeding_algorithm::operator()(
     const edm::spacepoint_collection::const_view& spacepoints) const -> output_type {
-  // Get the number of space points. In an asynchronous way if possible.
+  std::cout << "We are inside the hough_transform_seeding_algorithm::operator()" << std::endl;
+      	// Get the number of space points. In an asynchronous way if possible.
   edm::spacepoint_collection::const_view::size_type n_spacepoints = 0u;
   if (mr().host) {
     vecmem::async_size size = copy().get_size(spacepoints, *(mr().host));

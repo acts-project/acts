@@ -125,12 +125,14 @@ full_chain_hough_transform_algorithm::~full_chain_hough_transform_algorithm() = 
 
 full_chain_hough_transform_algorithm::output_type full_chain_hough_transform_algorithm::operator()(
     const edm::silicon_cell_collection::host& cells) const {
+  std::cout << "Currently inside operator()" << std::endl;
   // Create device copy of input collections
   edm::silicon_cell_collection::buffer cells_buffer(
       static_cast<unsigned int>(cells.size()), m_cached_device_mr);
   m_copy(vecmem::get_data(cells), cells_buffer)->ignore();
 
   // Run the clusterization (asynchronously).
+  std::cout << "Running clusterization " << std::endl;
   const auto unsorted_measurements =
       m_clusterization(cells_buffer, m_device_det_descr, m_device_det_cond);
   const measurement_sorting_algorithm::output_type measurements =
@@ -139,13 +141,18 @@ full_chain_hough_transform_algorithm::output_type full_chain_hough_transform_alg
   // If we have a Detray detector, run the seeding, track finding and fitting.
   if (m_detector != nullptr) {
     // Run the seed-finding (asynchronously).
+    std::cout << "Running space point formation"  << std::endl;
     const spacepoint_formation_algorithm::output_type spacepoints =
         m_spacepoint_formation(m_device_detector, measurements);
-  	
+  
+    std::cout << "Running seeding with Hough Transform" << std::endl;
+    const seeding_algorithm::output_type seeds = 
+	    m_seeding(spacepoints); 
+
     // Copy the measurements back to the host.
     edm::measurement_collection::host measurements_host(m_host_mr);
     m_copy(measurements, measurements_host)->wait();
-  
+    std::cout << "- n space points: " << measurements_host.size() << std::endl;
     return output_type{m_host_mr};
   }
   // If not, copy the measurements back to the host, and return a dummy
@@ -162,12 +169,14 @@ full_chain_hough_transform_algorithm::output_type full_chain_hough_transform_alg
 
 bound_track_parameters_collection_types::host full_chain_hough_transform_algorithm::seeding(
     const edm::silicon_cell_collection::host& cells) const {
+  std::cout << "Currently inside seeding(...)" << std::endl;
   // Create device copy of input collections
   edm::silicon_cell_collection::buffer cells_buffer(
       static_cast<unsigned int>(cells.size()), m_cached_device_mr);
   m_copy(vecmem::get_data(cells), cells_buffer)->ignore();
 
   // Run the clusterization (asynchronously).
+  TRACCC_INFO("Running the clusterization ...");
   const auto unsorted_measurements =
       m_clusterization(cells_buffer, m_device_det_descr, m_device_det_cond);
   const measurement_sorting_algorithm::output_type measurements =
@@ -175,6 +184,7 @@ bound_track_parameters_collection_types::host full_chain_hough_transform_algorit
 
   // If we have a Detray detector, run the seeding, track finding and fitting.
   if (m_detector != nullptr) {
+    TRACCC_INFO("Running the space point formation ...");
     // Run the seed-finding (asynchronously).
     const spacepoint_formation_algorithm::output_type spacepoints =
         m_spacepoint_formation(m_device_detector, measurements);

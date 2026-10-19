@@ -87,6 +87,8 @@ int hough_transform_seeding_cuda(std::string_view description, int argc, char* a
   TRACCC_LOCAL_LOGGER(
       prelogger->clone(std::nullopt, traccc::Logging::Level(logging_opts)));
 
+  TRACCC_INFO("Starting execution of my full chain algorithm");
+
   // Set up the timing info holder.
   performance::timing_info times;
 
@@ -138,6 +140,7 @@ int hough_transform_seeding_cuda(std::string_view description, int argc, char* a
                       });
   }
 
+  TRACCC_INFO("Adding algorithm for scheduling");
   // Algorithm configuration(s).
   typename FULL_CHAIN_ALG::clustering_algorithm::config_type clustering_cfg(
       clusterization_opts);
@@ -176,12 +179,14 @@ int hough_transform_seeding_cuda(std::string_view description, int argc, char* a
                             const edm::silicon_cell_collection::host&)>
       process_event;
   if (throughput_opts.reco_stage == opts::throughput::stage::seeding) {
+    TRACCC_INFO("Reco stage is opts::throughput::stage::seeding"); 
     process_event =
         [&](std::size_t slot,
             const edm::silicon_cell_collection::host& cells) -> std::size_t {
       return algs.at(slot)->seeding(cells).size();
     };
   } else if (throughput_opts.reco_stage == opts::throughput::stage::full) {
+    TRACCC_INFO("Reco stage is opts::throughput::stage::full");
     process_event =
         [&](std::size_t slot,
             const edm::silicon_cell_collection::host& cells) -> std::size_t {
@@ -224,6 +229,7 @@ int hough_transform_seeding_cuda(std::string_view description, int argc, char* a
     performance::timer t{"Warm-up processing", times};
 
     // Process the requested number of events.
+    TRACCC_INFO("Starting execution ...");
     for (std::size_t i = 0; i < throughput_opts.cold_run_events; ++i) {
       // Choose which event to process.
       const std::size_t event = (throughput_opts.deterministic_event_order
@@ -247,7 +253,7 @@ int hough_transform_seeding_cuda(std::string_view description, int argc, char* a
     // Wait for all tasks to finish.
     group.wait();
   }
-
+  
   // Reset the dummy counter.
   rec_track_params = 0;
 
@@ -288,8 +294,10 @@ int hough_transform_seeding_cuda(std::string_view description, int argc, char* a
     group.wait();
   }
 
+  TRACCC_INFO("I thin we are done!");
   // Delete the algorithms explicitly before their parent object would go out
   // of scope.
+  TRACCC_INFO("Clearing algs ..."); 
   algs.clear();
 
   // Print some results.
