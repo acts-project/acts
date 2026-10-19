@@ -18,8 +18,6 @@
 #include "Acts/Geometry/PortalDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/RzGridVolumeLookup.hpp"
-#include "Acts/Geometry/RzKdTree4VolumeLookup.hpp"
-#include "Acts/Geometry/RzKdTreeVolumeLookup.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
@@ -330,33 +328,24 @@ void addGeometryGen3(py::module_& m) {
       .def_property_readonly("config", [](const LinearVolumeLookup& self) {
         return self.config();
       });
-  auto bindRzLookup = [&]<typename Lookup>(const char* name) {
-    auto lookup = py::class_<Lookup, IVolumeLookup, py::smart_holder>(m, name);
-    using Config = typename Lookup::Config;
-    auto config = py::class_<Config>(lookup, "Config")
-                      .def(py::init<>())
-                      .def_readwrite("maxTolerance", &Config::maxTolerance)
-                      .def_readwrite("fallbackWarningFraction",
-                                     &Config::fallbackWarningFraction);
-    if constexpr (std::is_same_v<Lookup, RzKdTreeVolumeLookup>) {
-      config.def_readwrite("leafSize", &Config::leafSize)
-          .def_readwrite("maxDepth", &Config::maxDepth);
-    } else if constexpr (std::is_same_v<Lookup, RzGridVolumeLookup>) {
-      config.def_readwrite("maxGridCells", &Config::maxGridCells);
-    }
-    lookup
-        .def(py::init<const GeometryContext&, const TrackingVolume&,
-                      const Config&, const Logger&>(),
-             py::arg("gctx"), py::arg("volume"), py::arg("config"),
-             py::arg("logger"))
-        .def_property_readonly(
-            "config", [](const Lookup& self) { return self.config(); });
-  };
-  bindRzLookup.template operator()<RzKdTreeVolumeLookup>(
-      "RzKdTreeVolumeLookup");
-  bindRzLookup.template operator()<RzKdTree4VolumeLookup>(
-      "RzKdTree4VolumeLookup");
-  bindRzLookup.template operator()<RzGridVolumeLookup>("RzGridVolumeLookup");
+  auto gridLookup =
+      py::class_<RzGridVolumeLookup, IVolumeLookup, py::smart_holder>(
+          m, "RzGridVolumeLookup");
+  using GridConfig = RzGridVolumeLookup::Config;
+  py::class_<GridConfig>(gridLookup, "Config")
+      .def(py::init<>())
+      .def_readwrite("maxTolerance", &GridConfig::maxTolerance)
+      .def_readwrite("fallbackWarningFraction",
+                     &GridConfig::fallbackWarningFraction)
+      .def_readwrite("maxGridCells", &GridConfig::maxGridCells);
+  gridLookup
+      .def(py::init<const GeometryContext&, const TrackingVolume&,
+                    const GridConfig&, const Logger&>(),
+           py::arg("gctx"), py::arg("volume"), py::arg("config"),
+           py::arg("logger"))
+      .def_property_readonly("config", [](const RzGridVolumeLookup& self) {
+        return self.config();
+      });
 
   py::class_<BlueprintOptions>(m, "BlueprintOptions")
       .def(py::init<>())

@@ -22,8 +22,6 @@
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/RzGridVolumeLookup.hpp"
-#include "Acts/Geometry/RzKdTree4VolumeLookup.hpp"
-#include "Acts/Geometry/RzKdTreeVolumeLookup.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
@@ -652,21 +650,7 @@ nlohmann::json encodeVolumeLookup(const Acts::IVolumeLookup* policy) {
   if (policy == nullptr) {
     return encoded;
   }
-  if (const auto* kd = dynamic_cast<const RzKdTreeVolumeLookup*>(policy)) {
-    const auto& config = kd->config();
-    encoded = {{"kind", "RzKdTree"},
-               {"max_tolerance", config.maxTolerance},
-               {"fallback_warning_fraction", config.fallbackWarningFraction},
-               {"leaf_size", config.leafSize},
-               {"max_depth", config.maxDepth}};
-  } else if (const auto* kd4 =
-                 dynamic_cast<const RzKdTree4VolumeLookup*>(policy)) {
-    const auto& config = kd4->config();
-    encoded = {{"kind", "RzKdTree4"},
-               {"max_tolerance", config.maxTolerance},
-               {"fallback_warning_fraction", config.fallbackWarningFraction}};
-  } else if (const auto* grid =
-                 dynamic_cast<const RzGridVolumeLookup*>(policy)) {
+  if (const auto* grid = dynamic_cast<const RzGridVolumeLookup*>(policy)) {
     const auto& config = grid->config();
     encoded = {{"kind", "RzGrid"},
                {"max_tolerance", config.maxTolerance},
@@ -700,23 +684,7 @@ std::unique_ptr<const Acts::IVolumeLookup> decodeVolumeLookup(
       }
       return static_cast<std::size_t>(value);
     };
-    if (kind == "RzKdTree") {
-      RzKdTreeVolumeLookup::Config config;
-      config.maxTolerance = lookup.at("max_tolerance").get<double>();
-      config.fallbackWarningFraction = lookup.value(
-          "fallback_warning_fraction", config.fallbackWarningFraction);
-      config.leafSize = positiveSize("leaf_size");
-      config.maxDepth = positiveSize("max_depth");
-      policy =
-          std::make_unique<RzKdTreeVolumeLookup>(gctx, volume, config, logger);
-    } else if (kind == "RzKdTree4") {
-      RzKdTree4VolumeLookup::Config config;
-      config.maxTolerance = lookup.at("max_tolerance").get<double>();
-      config.fallbackWarningFraction = lookup.value(
-          "fallback_warning_fraction", config.fallbackWarningFraction);
-      policy =
-          std::make_unique<RzKdTree4VolumeLookup>(gctx, volume, config, logger);
-    } else if (kind == "RzGrid") {
+    if (kind == "RzGrid") {
       RzGridVolumeLookup::Config config;
       config.maxTolerance = lookup.at("max_tolerance").get<double>();
       config.fallbackWarningFraction = lookup.value(

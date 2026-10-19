@@ -17,8 +17,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/RzGridVolumeLookup.hpp"
-#include "Acts/Geometry/RzKdTree4VolumeLookup.hpp"
-#include "Acts/Geometry/RzKdTreeVolumeLookup.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -60,7 +58,7 @@ BOOST_AUTO_TEST_SUITE(GeometrySuite)
 // position on the shared portal surface is ambiguous between the two
 // volumes; the direction resolves the ambiguity.
 BOOST_DATA_TEST_CASE(BoundaryVolumeResolutionGen3,
-                     boost::unit_test::data::make({0, 1, 2, 3}), mode) {
+                     boost::unit_test::data::make({0, 1}), mode) {
   Blueprint::Config cfg;
   cfg.envelope[AxisDirection::AxisX] = {20_mm, 20_mm};
   cfg.envelope[AxisDirection::AxisY] = {20_mm, 20_mm};
@@ -83,20 +81,8 @@ BOOST_DATA_TEST_CASE(BoundaryVolumeResolutionGen3,
     // Cuboids intentionally use fallback; this test checks boundary resolution,
     // while warning diagnostics are exercised separately in VolumeLookupTests.
     root.setVolumeLookupFactory(
-        [mode](const GeometryContext& context, const TrackingVolume& volume,
-               const Logger& factoryLogger) -> std::unique_ptr<IVolumeLookup> {
-          if (mode == 3) {
-            return std::make_unique<RzKdTree4VolumeLookup>(
-                context, volume,
-                RzKdTree4VolumeLookup::Config{.fallbackWarningFraction = 1.},
-                factoryLogger);
-          }
-          if (mode == 1) {
-            return std::make_unique<RzKdTreeVolumeLookup>(
-                context, volume,
-                RzKdTreeVolumeLookup::Config{.fallbackWarningFraction = 1.},
-                factoryLogger);
-          }
+        [](const GeometryContext& context, const TrackingVolume& volume,
+           const Logger& factoryLogger) -> std::unique_ptr<IVolumeLookup> {
           return std::make_unique<RzGridVolumeLookup>(
               context, volume,
               RzGridVolumeLookup::Config{.fallbackWarningFraction = 1.},

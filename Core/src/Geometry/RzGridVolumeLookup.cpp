@@ -8,49 +8,95 @@
 
 #include "Acts/Geometry/RzGridVolumeLookup.hpp"
 
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/MultiAxis.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <limits>
+#include <numbers>
 #include <numeric>
 #include <optional>
 #include <span>
 #include <stdexcept>
+#include <vector>
+
+#include <Eigen/Geometry>
 
 #include "VolumeLookupImpl.hpp"
 
 namespace Acts {
 namespace {
+constexpr std::size_t noRzNode = std::numeric_limits<std::size_t>::max();
+
+// Unlike Acts::AxisAlignedBoundingBox::intersect, Eigen's AlignedBox includes
+// the upper edges, as required for conservative RZ candidate selection.
+// Conservative envelope and hierarchy constraints for one subtree candidate.
+struct RzLookupChild {
+  const TrackingVolume* m_volume;
+  Eigen::AlignedBox2d m_box;
+  bool m_indexable = false;
+  // Stop indexing here and dispatch to this volume's explicitly set lookup.
+  bool m_delegate = false;
+  // Parents between this candidate and the lookup root, excluding both ends.
+  // Flattening the hierarchy must not bypass their exact containment checks.
+  std::vector<const TrackingVolume*> m_ancestors;
+
+  RzLookupChild(const GeometryContext& gctx, const TrackingVolume& v,
+                double maxTolerance)
+      : m_volume(&v) {
+    const auto* cylinder =
+        dynamic_cast<const CylinderVolumeBounds*>(&v.volumeBounds());
+    const auto& trf = v.localToGlobalTransform(gctx);
+    if (!v.isAlignable() && cylinder != nullptr && trf.linear().isIdentity(0) &&
+        cylinder->get(CylinderVolumeBounds::eHalfPhiSector) ==
+            std::numbers::pi) {
+      const double offset = VectorHelpers::perp(trf.translation());
+      const double margin = maxTolerance + 1e-9;
+      const double hz = cylinder->get(CylinderVolumeBounds::eHalfLengthZ);
+      m_box.min() =
+          Vector2(cylinder->get(CylinderVolumeBounds::eMinR) - offset - margin,
+                  trf.translation().z() - hz - margin);
+      m_box.max() =
+          Vector2(cylinder->get(CylinderVolumeBounds::eMaxR) + offset + margin,
+                  trf.translation().z() + hz + margin);
+      m_indexable = true;
+    }
+  }
+};
+
 // Nonuniform grid: collect all rectangle edges separately in r and z, sort
 // and deduplicate them, then form their Cartesian product. A rectangle is
 // assigned to every bin it overlaps, including the bin at its upper edge so
 // a query exactly on that edge still finds it.
 //
-// Candidate lists use compressed sparse row storage: offsets[cell] and
-// offsets[cell + 1] delimit a cell's slice of m_candidates. Count assignments,
-// prefix-sum the counts, then fill slices in hierarchy order. Queries use two
-// binary searches and scan one slice; shared code performs exact containment.
+// Candidate lists use compressed sparse row storage: m_offsets[cell] and
+// m_offsets[cell + 1] delimit a cell's slice of m_candidates. Count
+// assignments, prefix-sum the counts, then fill slices in hierarchy order.
+// Queries use two binary searches and scan one slice; the lookup performs exact
+// containment.
 struct Partition {
   using Config = RzGridVolumeLookup::Config;
   using RzAxis = Axis<AxisType::Variable, AxisBoundaryType::Bound>;
   using RzAxes = MultiAxis<RzAxis, RzAxis>;
-  std::optional<RzAxes> axes;
-  std::vector<std::size_t> offsets;
+  std::optional<RzAxes> m_axes;
+  std::vector<std::size_t> m_offsets;
   std::vector<std::size_t> m_candidates;
 
-  template <typename Children>
-  bool build(const Children& children, const Config& config) {
+  bool build(const std::vector<RzLookupChild>& children, const Config& config) {
     std::array<std::vector<double>, 2> edges;
     for (int axis = 0; axis < 2; ++axis) {
       auto& e = edges[axis];
       for (const auto& child : children) {
-        if (!child.indexable) {
+        if (!child.m_indexable) {
           continue;
         }
-        e.push_back(child.box.min()[axis]);
-        e.push_back(child.box.max()[axis]);
+        e.push_back(child.m_box.min()[axis]);
+        e.push_back(child.m_box.max()[axis]);
       }
       std::sort(e.begin(), e.end());
       e.erase(std::unique(e.begin(), e.end()), e.end());
@@ -62,63 +108,186 @@ struct Partition {
     if (nr > config.maxGridCells / nz) {
       return false;
     }
-    axes.emplace(RzAxis(std::move(edges[0])), RzAxis(std::move(edges[1])));
-    offsets.resize(axes->getNTotalBins(true) + 1);
+    m_axes.emplace(RzAxis(std::move(edges[0])), RzAxis(std::move(edges[1])));
+    m_offsets.resize(m_axes->getNTotalBins(true) + 1);
     auto cells = [&](const Eigen::AlignedBox2d& b, auto&& visit) {
-      const auto lower = axes->getLocalBinsFromPoint(b.min());
-      const auto upper = axes->getLocalBinsFromPoint(b.max());
+      const auto lower = m_axes->getLocalBinsFromPoint(b.min());
+      const auto upper = m_axes->getLocalBinsFromPoint(b.max());
       // Include the bin at the upper edge. Bound axes clamp the final edge to
       // the last regular bin, matching the inclusive rectangle containment.
       for (auto r = lower[0]; r <= upper[0]; ++r) {
         for (auto z = lower[1]; z <= upper[1]; ++z) {
-          visit(axes->getGlobalBinFromLocalBins({r, z}));
+          visit(m_axes->getGlobalBinFromLocalBins({r, z}));
         }
       }
     };
     // Count, prefix sum, fill: contiguous candidate lists without per-bin
     // heaps.
     for (const auto& child : children) {
-      if (!child.indexable) {
+      if (!child.m_indexable) {
         continue;
       }
-      cells(child.box, [&](auto cell) { ++offsets[cell + 1]; });
+      cells(child.m_box, [&](auto cell) { ++m_offsets[cell + 1]; });
     }
-    std::partial_sum(offsets.begin(), offsets.end(), offsets.begin());
-    m_candidates.resize(offsets.back());
-    auto cursor = offsets;
+    std::partial_sum(m_offsets.begin(), m_offsets.end(), m_offsets.begin());
+    m_candidates.resize(m_offsets.back());
+    auto cursor = m_offsets;
     for (std::size_t i = 0; i < children.size(); ++i) {
-      if (!children[i].indexable) {
+      if (!children[i].m_indexable) {
         continue;
       }
-      cells(children[i].box,
+      cells(children[i].m_box,
             [&](auto cell) { m_candidates[cursor[cell]++] = i; });
     }
     return true;
   }
 
-  template <typename Visitor>
-  void visitCandidates(const Vector2& key, Visitor&& visitor) const {
-    for (auto id : candidates(key)) {
-      if (!visitor(id)) {
-        break;
-      }
-    }
-  }
-
   std::span<const std::size_t> candidates(const Vector2& key) const {
     // The caller checks the inclusive domain; MultiAxis::isInside() would
     // exclude the upper edge, while Bound axes alone also clamp outside points.
-    const auto cell = axes->getGlobalBinFromPoint(key);
-    return std::span{m_candidates}.subspan(offsets[cell],
-                                           offsets[cell + 1] - offsets[cell]);
+    const auto cell = m_axes->getGlobalBinFromPoint(key);
+    return std::span{m_candidates}.subspan(
+        m_offsets[cell], m_offsets[cell + 1] - m_offsets[cell]);
   }
 };
 }  // namespace
-struct RzGridVolumeLookup::Impl : detail::RzLookupIndex<Partition> {
-  Config config;
-  Impl(const GeometryContext& gctx, const TrackingVolume& volume,
+// One spatial index covers the subtree. Candidates are ordered in postorder:
+// descendants before their parent fallback, and an entire earlier sibling's
+// subtree before later siblings. Ancestor containment checks preserve the
+// recursive scan even when child bounds extend outside their parents.
+struct RzGridVolumeLookup::Impl {
+  Config m_config;
+  bool m_gridLimit = false;
+  bool m_hasIndex = false;
+  std::size_t m_alignable = 0;
+  std::size_t m_unsupported = 0;
+  Eigen::AlignedBox2d m_domain;
+  std::vector<RzLookupChild> m_children;
+  std::vector<std::size_t> m_fallbackCandidates;
+  Partition m_partition;
+
+  Impl(const GeometryContext& gctx, const TrackingVolume& root,
        const Config& cfg)
-      : detail::RzLookupIndex<Partition>(gctx, volume, cfg), config(cfg) {}
+      : m_config(cfg) {
+    // A bare TrackingVolume has no generation flag. Reject Gen1-only storage
+    // wherever it is encountered in this index's scope, including the root.
+    auto requireGen3 = [](const TrackingVolume& volume) {
+      if (volume.confinedVolumes() || volume.confinedLayers() != nullptr ||
+          !volume.denseVolumes().empty()) {
+        throw std::invalid_argument(
+            "RZ volume lookup does not support Gen1 storage in volume '" +
+            volume.volumeName() + "'");
+      }
+    };
+    requireGen3(root);
+    std::vector<const TrackingVolume*> ancestors;
+    // Collect geometry independently of the spatial partition. Postorder IDs
+    // encode recursive-scan priority; build() below indexes their RZ envelopes.
+    auto collect = [&](auto&& self, const TrackingVolume& volume) -> void {
+      requireGen3(volume);
+      RzLookupChild entry(gctx, volume, cfg.maxTolerance);
+      entry.m_ancestors = ancestors;
+      entry.m_delegate = volume.volumeLookup() != nullptr;
+      if (!entry.m_delegate) {
+        ancestors.push_back(&volume);
+        for (const auto& child : volume.volumes()) {
+          self(self, child);
+        }
+        ancestors.pop_back();
+      }
+      if (entry.m_indexable) {
+        m_domain.extend(entry.m_box);
+        m_hasIndex = true;
+      } else {
+        m_fallbackCandidates.push_back(m_children.size());
+        if (volume.isAlignable()) {
+          ++m_alignable;
+        } else {
+          ++m_unsupported;
+        }
+      }
+      m_children.push_back(std::move(entry));
+    };
+    for (const auto& child : root.volumes()) {
+      collect(collect, child);
+    }
+    if (m_hasIndex) {
+      m_gridLimit = !m_partition.build(m_children, cfg);
+    }
+  }
+
+  void warnAboutFallback(const TrackingVolume& volume, double fraction,
+                         const Logger& logger) const {
+    if (fraction == 1 || !logger.doPrint(Logging::WARNING)) {
+      return;
+    }
+    const auto total = m_children.size();
+    const auto affected = m_gridLimit ? total : m_fallbackCandidates.size();
+    if (total == 0 ||
+        static_cast<double>(affected) / static_cast<double>(total) <=
+            fraction) {
+      return;
+    }
+    ACTS_WARNING("RZ volume lookup for '"
+                 << volume.volumeName() << "': " << affected << "/" << total
+                 << " volumes in the indexed scope require linear fallback ("
+                 << 100. * static_cast<double>(affected) /
+                        static_cast<double>(total)
+                 << "%, warning threshold " << 100. * fraction
+                 << "%). Reasons: alignable=" << m_alignable
+                 << ", unsupported shape/orientation=" << m_unsupported
+                 << ", grid cell limit=" << m_gridLimit
+                 << ". Explicit descendant lookup boundaries remain active.");
+  }
+
+  const TrackingVolume* find(const TrackingVolume& root,
+                             const GeometryContext& gctx, const Vector3& p,
+                             const Vector2& key, double tolerance) const {
+    if (m_gridLimit) {
+      return detail::linearVolumeScan(root, gctx, p, tolerance);
+    }
+    if (!root.inside(gctx, p, tolerance)) {
+      return nullptr;
+    }
+    // IDs encode hierarchy priority. Each ordered candidate list can stop
+    // at its first exact match; choose the earlier match across both lists.
+    std::size_t best = noRzNode;
+    auto consider = [&](std::size_t id) {
+      if (id >= best) {
+        return false;
+      }
+      const auto& entry = m_children[id];
+      if ((entry.m_indexable && !entry.m_box.contains(key)) ||
+          !entry.m_volume->inside(gctx, p, tolerance) ||
+          !std::ranges::all_of(entry.m_ancestors,
+                               [&](const TrackingVolume* ancestor) {
+                                 return ancestor->inside(gctx, p, tolerance);
+                               })) {
+        return true;
+      }
+      best = id;
+      return false;
+    };
+    for (auto id : m_fallbackCandidates) {
+      if (!consider(id)) {
+        break;
+      }
+    }
+    if (m_hasIndex && m_domain.contains(key)) {
+      for (auto id : m_partition.candidates(key)) {
+        if (!consider(id)) {
+          break;
+        }
+      }
+    }
+    if (best == noRzNode) {
+      return &root;
+    }
+    const auto& entry = m_children[best];
+    return entry.m_delegate
+               ? entry.m_volume->lowestTrackingVolume(gctx, p, tolerance)
+               : entry.m_volume;
+  }
 };
 
 RzGridVolumeLookup::RzGridVolumeLookup(const GeometryContext& gctx,
@@ -139,14 +308,14 @@ RzGridVolumeLookup::RzGridVolumeLookup(const GeometryContext& gctx,
 RzGridVolumeLookup::~RzGridVolumeLookup() = default;
 
 const RzGridVolumeLookup::Config& RzGridVolumeLookup::config() const {
-  return m_impl->config;
+  return m_impl->m_config;
 }
 
 const TrackingVolume* RzGridVolumeLookup::lowestTrackingVolume(
     const TrackingVolume& root, const GeometryContext& gctx,
     const Vector3& position, double tolerance) const {
   if (!std::isfinite(tolerance) || tolerance < 0 ||
-      tolerance > m_impl->config.maxTolerance) {
+      tolerance > m_impl->m_config.maxTolerance) {
     return detail::linearVolumeScan(root, gctx, position, tolerance);
   }
   return m_impl->find(root, gctx, position,

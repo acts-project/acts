@@ -13,8 +13,6 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/LinearVolumeLookup.hpp"
 #include "Acts/Geometry/RzGridVolumeLookup.hpp"
-#include "Acts/Geometry/RzKdTree4VolumeLookup.hpp"
-#include "Acts/Geometry/RzKdTreeVolumeLookup.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -79,10 +77,10 @@ BOOST_AUTO_TEST_CASE(RzLookupMatchesLinear) {
   TrackingGeometry geometry(world, nullptr, {}, getDummyLogger(), false);
   std::mt19937 rng(42);
   std::uniform_real_distribution<double> uniform(-110., 110.);
-  auto check = [&]<typename Lookup>() {
-    typename Lookup::Config cfg;
+  {
+    RzGridVolumeLookup::Config cfg;
     geometry.highestTrackingVolume()->setVolumeLookup(
-        std::make_unique<Lookup>(gctx, *world, cfg));
+        std::make_unique<RzGridVolumeLookup>(gctx, *world, cfg));
     for (double tolerance : {-1e-4, 0., 1e-6, cfg.maxTolerance, 0.5}) {
       for (int i = 0; i < 3000; ++i) {
         Vector3 p(uniform(rng), uniform(rng), uniform(rng));
@@ -111,26 +109,23 @@ BOOST_AUTO_TEST_CASE(RzLookupMatchesLinear) {
     BOOST_CHECK(*geometry.resolveLowestTrackingVolume(gctx, {9.5, 0., 0.}) ==
                 &world->volumes().at(1));
     BOOST_CHECK(geometry.highestTrackingVolume()->volumeLookup() == nullptr);
-  };
-  check.template operator()<RzKdTreeVolumeLookup>();
-  check.template operator()<RzKdTree4VolumeLookup>();
-  check.template operator()<RzGridVolumeLookup>();
+  }
 }
 
 BOOST_AUTO_TEST_CASE(RzLookupFallbacks) {
-  auto check = [&]<typename Lookup>() {
+  {
     auto world = makeWorld();
-    typename Lookup::Config cfg;
-    if constexpr (std::is_same_v<Lookup, RzGridVolumeLookup>) {
+    RzGridVolumeLookup::Config cfg;
+    {
       cfg.maxGridCells = 1;  // Force bounded-memory fallback.
     }
-    Lookup limited(gctx, *world, cfg);
+    RzGridVolumeLookup limited(gctx, *world, cfg);
     BOOST_CHECK(limited.lowestTrackingVolume(*world, gctx, {40., 0., 0.}, 0.) ==
                 world->lowestTrackingVolume(gctx, {40., 0., 0.}, 0.));
     world->addVolume(std::make_unique<TrackingVolume>(
         Transform3::Identity(),
         std::make_shared<CuboidVolumeBounds>(80., 80., 80.), "box"));
-    Lookup mixed(gctx, *world, cfg);
+    RzGridVolumeLookup mixed(gctx, *world, cfg);
     BOOST_CHECK(mixed.lowestTrackingVolume(*world, gctx, {70., 0., 0.}, 0.) ==
                 world->lowestTrackingVolume(gctx, {70., 0., 0.}, 0.));
 
@@ -140,20 +135,17 @@ BOOST_AUTO_TEST_CASE(RzLookupFallbacks) {
         std::make_shared<CylinderVolumeBounds>(0., 100., 100.));
     movingWorld->addVolume(std::make_unique<TrackingVolume>(
         placement, std::make_shared<CylinderVolumeBounds>(0., 5., 5.)));
-    Lookup moving(gctx, *movingWorld, cfg);
+    RzGridVolumeLookup moving(gctx, *movingWorld, cfg);
     placement.transform.translation().x() = 50.;
     placement.inverse = placement.transform.inverse();
     BOOST_CHECK(
         moving.lowestTrackingVolume(*movingWorld, gctx, {50., 0., 0.}, 0.) ==
         &movingWorld->volumes().at(0));
-  };
-  check.template operator()<RzKdTreeVolumeLookup>();
-  check.template operator()<RzKdTree4VolumeLookup>();
-  check.template operator()<RzGridVolumeLookup>();
+  }
 }
 
 BOOST_AUTO_TEST_CASE(BlueprintSelectsVolumeLookup) {
-  for (int type : {0, 1, 2}) {
+  for (int type : {0, 1}) {
     Blueprint blueprint{Blueprint::Config{}};
     blueprint.addChild(
         std::make_shared<StaticBlueprintNode>(std::make_unique<TrackingVolume>(
@@ -167,10 +159,6 @@ BOOST_AUTO_TEST_CASE(BlueprintSelectsVolumeLookup) {
             return std::make_unique<LinearVolumeLookup>(
                 volume, LinearVolumeLookup::Config{}, logger);
           }
-          if (type == 1) {
-            return std::make_unique<RzKdTreeVolumeLookup>(
-                context, volume, RzKdTreeVolumeLookup::Config{}, logger);
-          }
           return std::make_unique<RzGridVolumeLookup>(
               context, volume, RzGridVolumeLookup::Config{}, logger);
         });
@@ -183,10 +171,8 @@ BOOST_AUTO_TEST_CASE(BlueprintSelectsVolumeLookup) {
       BOOST_REQUIRE(volume.volumeLookup() != nullptr);
       BOOST_CHECK((dynamic_cast<const LinearVolumeLookup*>(
                        volume.volumeLookup()) != nullptr) == (type == 0));
-      BOOST_CHECK((dynamic_cast<const RzKdTreeVolumeLookup*>(
-                       volume.volumeLookup()) != nullptr) == (type == 1));
       BOOST_CHECK((dynamic_cast<const RzGridVolumeLookup*>(
-                       volume.volumeLookup()) != nullptr) == (type == 2));
+                       volume.volumeLookup()) != nullptr) == (type == 1));
     });
     BOOST_CHECK(*geometry->resolveLowestTrackingVolume(gctx, {5., 0., 0.}) !=
                 nullptr);
@@ -195,13 +181,13 @@ BOOST_AUTO_TEST_CASE(BlueprintSelectsVolumeLookup) {
 
 BOOST_AUTO_TEST_CASE(InvalidVolumeLookupConfig) {
   auto world = makeWorld();
-  RzKdTreeVolumeLookup::Config cfg;
+  RzGridVolumeLookup::Config cfg;
   cfg.maxTolerance = -1;
-  BOOST_CHECK_THROW(RzKdTreeVolumeLookup(gctx, *world, cfg),
+  BOOST_CHECK_THROW(RzGridVolumeLookup(gctx, *world, cfg),
                     std::invalid_argument);
   cfg.maxTolerance = 0;
-  cfg.leafSize = 0;
-  BOOST_CHECK_THROW(RzKdTreeVolumeLookup(gctx, *world, cfg),
+  cfg.maxGridCells = 0;
+  BOOST_CHECK_THROW(RzGridVolumeLookup(gctx, *world, cfg),
                     std::invalid_argument);
 }
 
@@ -241,8 +227,8 @@ BOOST_AUTO_TEST_CASE(LinearLookupWarnings) {
     v.assignGeometryId(GeometryIdentifier{}.withVolume(++id));
   });
   // A configured accelerator does not emit a transient linear warning.
-  auto lookup = std::make_unique<RzKdTreeVolumeLookup>(
-      gctx, *world, RzKdTreeVolumeLookup::Config{}, *logger);
+  auto lookup = std::make_unique<RzGridVolumeLookup>(
+      gctx, *world, RzGridVolumeLookup::Config{}, *logger);
   world->setVolumeLookup(std::move(lookup));
   TrackingGeometry accelerated(world, nullptr, {}, *logger, false);
   BOOST_CHECK(output.str().empty());
@@ -260,7 +246,7 @@ BOOST_AUTO_TEST_CASE(AcceleratorFallbackWarnings) {
 #ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
   Logging::ScopedFailureThreshold threshold{Logging::ERROR};
 #endif
-  auto check = [&]<typename Lookup>() {
+  {
     std::ostringstream output;
     auto logger = getDefaultLogger("LookupTest", Logging::WARNING, &output);
     auto world = std::make_shared<TrackingVolume>(
@@ -276,19 +262,19 @@ BOOST_AUTO_TEST_CASE(AcceleratorFallbackWarnings) {
     world->addVolume(std::make_unique<TrackingVolume>(
         Transform3::Identity(),
         std::make_shared<CylinderVolumeBounds>(50., 90., 50.)));
-    typename Lookup::Config cfg;
+    RzGridVolumeLookup::Config cfg;
     cfg.fallbackWarningFraction = 0.3;
-    Lookup warns(gctx, *world, cfg, *logger);
+    RzGridVolumeLookup warns(gctx, *world, cfg, *logger);
     BOOST_CHECK(output.str().find("1/3 volumes in the indexed scope") !=
                 std::string::npos);
     BOOST_CHECK(output.str().find("unsupported shape/orientation=1") !=
                 std::string::npos);
     output.str("");
     cfg.fallbackWarningFraction = 1. / 3.;
-    Lookup equal(gctx, *world, cfg, *logger);
+    RzGridVolumeLookup equal(gctx, *world, cfg, *logger);
     BOOST_CHECK(output.str().empty());
     cfg.fallbackWarningFraction = 1.;
-    Lookup suppressed(gctx, world->volumes().at(0), cfg, *logger);
+    RzGridVolumeLookup suppressed(gctx, world->volumes().at(0), cfg, *logger);
     BOOST_CHECK(output.str().empty());
 
     MovingPlacement placement;
@@ -298,27 +284,24 @@ BOOST_AUTO_TEST_CASE(AcceleratorFallbackWarnings) {
     movingWorld->addVolume(std::make_unique<TrackingVolume>(
         placement, std::make_shared<CylinderVolumeBounds>(0., 10., 10.)));
     cfg.fallbackWarningFraction = 0.;
-    Lookup moving(gctx, *movingWorld, cfg, *logger);
+    RzGridVolumeLookup moving(gctx, *movingWorld, cfg, *logger);
     BOOST_CHECK(output.str().find("1/1 volumes in the indexed scope") !=
                 std::string::npos);
     BOOST_CHECK(output.str().find("alignable=1") != std::string::npos);
     output.str("");
-    if constexpr (std::is_same_v<Lookup, RzGridVolumeLookup>) {
+    {
       cfg.maxGridCells = 1;
       auto largeWorld = makeWorld();
-      Lookup limited(gctx, *largeWorld, cfg, *logger);
+      RzGridVolumeLookup limited(gctx, *largeWorld, cfg, *logger);
       BOOST_CHECK(output.str().find("grid cell limit=1") != std::string::npos);
     }
     for (double invalid :
          {-0.1, 1.1, std::numeric_limits<double>::quiet_NaN()}) {
       cfg.fallbackWarningFraction = invalid;
-      BOOST_CHECK_THROW(Lookup(gctx, *world, cfg, *logger),
+      BOOST_CHECK_THROW(RzGridVolumeLookup(gctx, *world, cfg, *logger),
                         std::invalid_argument);
     }
-  };
-  check.template operator()<RzKdTreeVolumeLookup>();
-  check.template operator()<RzKdTree4VolumeLookup>();
-  check.template operator()<RzGridVolumeLookup>();
+  }
 }
 
 BOOST_AUTO_TEST_CASE(BlueprintLookupWarningSettings) {
@@ -328,7 +311,7 @@ BOOST_AUTO_TEST_CASE(BlueprintLookupWarningSettings) {
 #endif
   std::ostringstream output;
   auto logger = getDefaultLogger("BlueprintTest", Logging::WARNING, &output);
-  for (int type : {0, 1, 2}) {
+  for (int type : {0, 1}) {
     Blueprint blueprint{Blueprint::Config{}};
     blueprint.addChild(
         std::make_shared<StaticBlueprintNode>(std::make_unique<TrackingVolume>(
@@ -342,12 +325,6 @@ BOOST_AUTO_TEST_CASE(BlueprintLookupWarningSettings) {
             return std::make_unique<LinearVolumeLookup>(
                 volume, LinearVolumeLookup::Config{0}, factoryLogger);
           }
-          if (type == 1) {
-            RzKdTreeVolumeLookup::Config config;
-            config.fallbackWarningFraction = 1;
-            return std::make_unique<RzKdTreeVolumeLookup>(
-                context, volume, config, factoryLogger);
-          }
           RzGridVolumeLookup::Config config;
           config.fallbackWarningFraction = 1;
           return std::make_unique<RzGridVolumeLookup>(context, volume, config,
@@ -358,10 +335,6 @@ BOOST_AUTO_TEST_CASE(BlueprintLookupWarningSettings) {
     if (auto* linear = dynamic_cast<const LinearVolumeLookup*>(
             geometry->highestTrackingVolume()->volumeLookup())) {
       BOOST_CHECK_EQUAL(linear->config().warningThreshold, 0);
-    }
-    if (auto* kd = dynamic_cast<const RzKdTreeVolumeLookup*>(
-            geometry->highestTrackingVolume()->volumeLookup())) {
-      BOOST_CHECK_EQUAL(kd->config().fallbackWarningFraction, 1);
     }
     if (auto* grid = dynamic_cast<const RzGridVolumeLookup*>(
             geometry->highestTrackingVolume()->volumeLookup())) {
@@ -385,7 +358,7 @@ BOOST_AUTO_TEST_CASE(RecursiveLookupUsesEachVolumesPolicy) {
    private:
     unsigned& m_calls;
   };
-  auto check = [&]<typename Lookup>() {
+  {
     auto world = makeWorld();
     unsigned calls = 0;
     auto& child = world->volumes().at(1);
@@ -396,8 +369,8 @@ BOOST_AUTO_TEST_CASE(RecursiveLookupUsesEachVolumesPolicy) {
     BOOST_CHECK_EQUAL(calls, 1);
     BOOST_CHECK(world->lowestTrackingVolume(gctx, {9.5, 0., 0.}) == &child);
     BOOST_CHECK_EQUAL(calls, 2);
-    world->setVolumeLookup(
-        std::make_unique<Lookup>(gctx, *world, typename Lookup::Config{}));
+    world->setVolumeLookup(std::make_unique<RzGridVolumeLookup>(
+        gctx, *world, RzGridVolumeLookup::Config{}));
     BOOST_CHECK(world->lowestTrackingVolume(gctx, {9.5, 0., 0.}) == &child);
     BOOST_CHECK_EQUAL(calls, 3);
     // An unsupported sibling is checked linearly alongside indexed candidates.
@@ -406,8 +379,8 @@ BOOST_AUTO_TEST_CASE(RecursiveLookupUsesEachVolumesPolicy) {
     world->addVolume(std::make_unique<TrackingVolume>(
         Transform3::Identity(),
         std::make_shared<CuboidVolumeBounds>(1., 1., 1.)));
-    world->setVolumeLookup(std::make_unique<Lookup>(
-        gctx, *world, typename Lookup::Config{}, getDummyLogger()));
+    world->setVolumeLookup(std::make_unique<RzGridVolumeLookup>(
+        gctx, *world, RzGridVolumeLookup::Config{}, getDummyLogger()));
     BOOST_CHECK(*geometry.resolveLowestTrackingVolume(gctx, {9.5, 0., 0.}) ==
                 &child);
     BOOST_CHECK_EQUAL(calls, 4);
@@ -416,10 +389,7 @@ BOOST_AUTO_TEST_CASE(RecursiveLookupUsesEachVolumesPolicy) {
     BOOST_CHECK_EQUAL(calls, 5);
     child.setVolumeLookup(nullptr);
     BOOST_CHECK(child.volumeLookup() == nullptr);
-  };
-  check.template operator()<RzKdTreeVolumeLookup>();
-  check.template operator()<RzKdTree4VolumeLookup>();
-  check.template operator()<RzGridVolumeLookup>();
+  }
 }
 
 BOOST_AUTO_TEST_CASE(MovingVolumeKeepsLookupRootValid) {
@@ -538,9 +508,9 @@ BOOST_AUTO_TEST_CASE(SubtreeLookupPreservesAncestorsAndSiblingPriority) {
                                                            {18., "first"},
                                                            {30., "second"},
                                                            {80., "world"}};
-  auto check = [&]<typename Lookup>() {
-    world->setVolumeLookup(
-        std::make_unique<Lookup>(gctx, *world, typename Lookup::Config{}));
+  {
+    world->setVolumeLookup(std::make_unique<RzGridVolumeLookup>(
+        gctx, *world, RzGridVolumeLookup::Config{}));
     world->visitVolumes([&](const TrackingVolume* volume) {
       if (volume != world.get()) {
         BOOST_CHECK(volume->volumeLookup() == nullptr);
@@ -552,10 +522,7 @@ BOOST_AUTO_TEST_CASE(SubtreeLookupPreservesAncestorsAndSiblingPriority) {
       BOOST_CHECK_EQUAL(found->volumeName(), name);
     }
     BOOST_CHECK(world->lowestTrackingVolume(gctx, {120., 0., 0.}) == nullptr);
-  };
-  check.template operator()<RzKdTreeVolumeLookup>();
-  check.template operator()<RzKdTree4VolumeLookup>();
-  check.template operator()<RzGridVolumeLookup>();
+  }
 }
 
 BOOST_AUTO_TEST_CASE(SubtreeLookupDelegatesThroughLinearToAnotherIndex) {
@@ -590,18 +557,18 @@ BOOST_AUTO_TEST_CASE(SubtreeLookupDelegatesThroughLinearToAnotherIndex) {
   unsigned calls = 0;
   region->setVolumeLookup(std::make_unique<CountingLinear>(calls));
   world->addVolume(std::move(region));
-  auto check = [&]<typename Lookup>() {
+  {
     std::ostringstream output;
     auto logger = getDefaultLogger("DelegationTest", Logging::WARNING, &output);
-    typename Lookup::Config config;
-    if constexpr (std::is_same_v<Lookup, RzGridVolumeLookup>) {
+    RzGridVolumeLookup::Config config;
+    {
       // One boundary entry fits in one regular cell (nine with reserved
       // under-/overflow slots). Indexing through it would exceed
       // this cap and warn, even if fallback happened to return the same result.
       config.maxGridCells = 9;
     }
     world->setVolumeLookup(
-        std::make_unique<Lookup>(gctx, *world, config, *logger));
+        std::make_unique<RzGridVolumeLookup>(gctx, *world, config, *logger));
     BOOST_CHECK(output.str().empty());
     const auto before = calls;
     BOOST_CHECK(world->lowestTrackingVolume(gctx, {15., 0., 0.}) == expected);
@@ -612,10 +579,7 @@ BOOST_AUTO_TEST_CASE(SubtreeLookupDelegatesThroughLinearToAnotherIndex) {
     BOOST_CHECK(world->lowestTrackingVolume(gctx, {70., 0., 0.}) ==
                 world.get());
     BOOST_CHECK_EQUAL(calls, before + 2);
-  };
-  check.template operator()<RzKdTreeVolumeLookup>();
-  check.template operator()<RzKdTree4VolumeLookup>();
-  check.template operator()<RzGridVolumeLookup>();
+  }
 }
 
 BOOST_AUTO_TEST_CASE(StaticNodeCanAccelerateWithoutWorldPolicy) {
@@ -631,14 +595,14 @@ BOOST_AUTO_TEST_CASE(StaticNodeCanAccelerateWithoutWorldPolicy) {
   region->setVolumeLookupFactory([](const GeometryContext& context,
                                     const TrackingVolume& volume,
                                     const Logger& logger) {
-    return std::make_unique<RzKdTreeVolumeLookup>(
-        context, volume, RzKdTreeVolumeLookup::Config{}, logger);
+    return std::make_unique<RzGridVolumeLookup>(
+        context, volume, RzGridVolumeLookup::Config{}, logger);
   });
   blueprint.addChild(region);
   auto geometry = blueprint.construct(BlueprintOptions{}, gctx);
   BOOST_CHECK(geometry->highestTrackingVolume()->volumeLookup() == nullptr);
   const auto& builtRegion = geometry->highestTrackingVolume()->volumes().at(0);
-  BOOST_CHECK(dynamic_cast<const RzKdTreeVolumeLookup*>(
+  BOOST_CHECK(dynamic_cast<const RzGridVolumeLookup*>(
                   builtRegion.volumeLookup()) != nullptr);
   BOOST_CHECK(builtRegion.volumes().at(0).volumeLookup() == nullptr);
   const auto* found =
@@ -671,8 +635,8 @@ BOOST_AUTO_TEST_CASE(LinearDiagnosticsRespectSubtreeBoundaries) {
   BOOST_CHECK(output.str().find("scans up to 65 siblings") !=
               std::string::npos);
   output.str("");
-  regionPtr->setVolumeLookup(std::make_unique<RzKdTreeVolumeLookup>(
-      gctx, *regionPtr, RzKdTreeVolumeLookup::Config{}));
+  regionPtr->setVolumeLookup(std::make_unique<RzGridVolumeLookup>(
+      gctx, *regionPtr, RzGridVolumeLookup::Config{}));
   LinearVolumeLookup delegated(*world, LinearVolumeLookup::Config{}, *logger);
   BOOST_CHECK(output.str().empty());
 }
@@ -681,22 +645,19 @@ BOOST_AUTO_TEST_CASE(RzLookupCoincidentBounds) {
   auto world = std::make_shared<TrackingVolume>(
       Transform3::Identity(),
       std::make_shared<CylinderVolumeBounds>(0., 100., 100.));
-  // More than the existing KDTree's median-selection threshold, with equal
-  // endpoint keys. Construction must terminate and retain sibling priority.
+  // Coincident rectangles share a cell and must retain sibling priority.
   for (int i = 0; i < 200; ++i) {
     world->addVolume(std::make_unique<TrackingVolume>(
         Transform3::Identity(),
         std::make_shared<CylinderVolumeBounds>(0., 10., 10.)));
   }
-  auto check = [&]<typename Lookup>() {
-    Lookup lookup(gctx, *world, typename Lookup::Config{});
+  {
+    RzGridVolumeLookup lookup(gctx, *world, RzGridVolumeLookup::Config{});
     BOOST_CHECK(lookup.lowestTrackingVolume(*world, gctx, {5., 0., 0.}, 0.) ==
                 &world->volumes().at(0));
     BOOST_CHECK(lookup.lowestTrackingVolume(*world, gctx, {15., 0., 0.}, 0.) ==
                 world.get());
-  };
-  check.template operator()<RzKdTreeVolumeLookup>();
-  check.template operator()<RzKdTree4VolumeLookup>();
+  }
 }
 
 BOOST_AUTO_TEST_CASE(RzLookupsRejectGen1Storage) {
@@ -709,10 +670,11 @@ BOOST_AUTO_TEST_CASE(RzLookupsRejectGen1Storage) {
         std::make_shared<CylinderVolumeBounds>(0., 20., 20.), nullptr, nullptr,
         nullptr, MutableTrackingVolumeVector{dense}, "gen1");
   };
-  auto check = [&]<typename Lookup>() {
+  {
     auto gen1 = makeGen1();
-    BOOST_CHECK_THROW((Lookup(gctx, *gen1, typename Lookup::Config{})),
-                      std::invalid_argument);
+    BOOST_CHECK_THROW(
+        (RzGridVolumeLookup(gctx, *gen1, RzGridVolumeLookup::Config{})),
+        std::invalid_argument);
     // Implicit and explicit linear lookup still retain Gen1 semantics.
     const Vector3 point(2., 0., 0.);
     const auto* dense = gen1->denseVolumes().front().get();
@@ -724,13 +686,12 @@ BOOST_AUTO_TEST_CASE(RzLookupsRejectGen1Storage) {
     auto* gen1Ptr = gen1.get();
     world->addVolume(std::move(gen1));
     // Also reject Gen1 storage at a descendant, even at a lookup boundary.
-    BOOST_CHECK_THROW((Lookup(gctx, *world, typename Lookup::Config{})),
-                      std::invalid_argument);
+    BOOST_CHECK_THROW(
+        (RzGridVolumeLookup(gctx, *world, RzGridVolumeLookup::Config{})),
+        std::invalid_argument);
     gen1Ptr->setVolumeLookup(nullptr);
-    BOOST_CHECK_THROW((Lookup(gctx, *world, typename Lookup::Config{})),
-                      std::invalid_argument);
-  };
-  check.template operator()<RzKdTreeVolumeLookup>();
-  check.template operator()<RzKdTree4VolumeLookup>();
-  check.template operator()<RzGridVolumeLookup>();
+    BOOST_CHECK_THROW(
+        (RzGridVolumeLookup(gctx, *world, RzGridVolumeLookup::Config{})),
+        std::invalid_argument);
+  }
 }

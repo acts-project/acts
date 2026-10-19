@@ -16,7 +16,7 @@
 
 namespace Acts {
 struct LinearVolumeLookup::Impl {
-  Config config;
+  Config m_config;
 };
 
 LinearVolumeLookup::LinearVolumeLookup() : m_impl(std::make_unique<Impl>()) {}
@@ -54,13 +54,13 @@ LinearVolumeLookup::LinearVolumeLookup(const TrackingVolume& world,
     ACTS_WARNING("Linear volume lookup scans up to "
                  << largest << " siblings (warning threshold "
                  << warningThreshold
-                 << "). Consider RzKdTree or RzGrid via "
+                 << "). Consider RzGrid via "
                     "setVolumeLookupFactory on a blueprint node.");
   }
 }
 
 const LinearVolumeLookup::Config& LinearVolumeLookup::config() const {
-  return m_impl->config;
+  return m_impl->m_config;
 }
 
 const TrackingVolume* LinearVolumeLookup::lowestTrackingVolume(
