@@ -51,12 +51,11 @@ LinearVolumeLookup::LinearVolumeLookup(const TrackingVolume& world,
   };
   inspect(inspect, world);
   if (largest > warningThreshold) {
-    ACTS_LOG_WITH_LOGGER(logger, Logging::WARNING,
-                         "Linear volume lookup scans up to "
-                             << largest << " siblings (warning threshold "
-                             << warningThreshold
-                             << "). Consider RzKdTree or RzGrid via "
-                                "setVolumeLookupFactory on a blueprint node.");
+    ACTS_WARNING("Linear volume lookup scans up to "
+                 << largest << " siblings (warning threshold "
+                 << warningThreshold
+                 << "). Consider RzKdTree or RzGrid via "
+                    "setVolumeLookupFactory on a blueprint node.");
   }
 }
 

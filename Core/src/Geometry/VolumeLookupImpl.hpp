@@ -133,9 +133,8 @@ struct RzLookupIndex {
   }
 
   void warnAboutFallback(const TrackingVolume& volume, double fraction,
-                         const Logger& constructionLogger) const {
-    const auto logger = [&]() -> const Logger& { return constructionLogger; };
-    if (fraction == 1 || !logger().doPrint(Logging::WARNING)) {
+                         const Logger& logger) const {
+    if (fraction == 1 || !logger.doPrint(Logging::WARNING)) {
       return;
     }
     const auto total = children.size();
