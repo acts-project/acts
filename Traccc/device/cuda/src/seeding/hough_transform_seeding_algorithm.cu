@@ -39,7 +39,7 @@ namespace kernels {
 		      stepQopt, minQoptRange,
 		      stepPhi, minPhi);
    }
-} // kernels
+} // namespace kernels
 
 hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
     const traccc::memory_resource& mr,

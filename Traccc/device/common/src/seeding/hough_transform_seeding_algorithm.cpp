@@ -45,15 +45,30 @@ auto hough_transform_seeding_algorithm::operator()(
   // we will move to a config at a certain point and template the algorithm
   define_plane_edges_kernel({device::N_COLS, device::N_ROWS, result});
 
+  /*
+  edm::houghplane_collection<N_COLS, N_ROWS>::const_view host_view;
+  edm::houghplane_collection<N_COLS, N_ROWS>::buffer host_buffer;
+  if (mr().host) {
+    host_buffer = copy().to(result, *(mr().host));
+    host_view = host_buffer;
+  } else {
+    host_view = result;
+  }
+
+  edm::houghplane_collection<N_COLS, N_ROWS>::const_device host_device{host_view};
+  for (unsigned int i = 0; i < host_device.size(); ++i) {
+    const edm::houghplane plane = host_device.at(i);
+    const auto& edges_x = plane.edges_x();
+    const auto& edges_y = plane.edges_y();
+  }
+  */
+
   // Fill the planes with space points
   //
   //
-  //
-  // Launch the seed parameter estimation kernel.
-  // estimate_seed_params_kernel({n_seeds, m_data->m_config, bfield, measurements,
-  //                             spacepoints, seeds, result});
 
   synchronize();
+
   // Return the result.
   return result;
 }
