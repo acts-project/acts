@@ -15,8 +15,7 @@ on:
 
 env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 500M
-  CCACHE_KEY_SUFFIX: r2
+  CCACHE_MAXSIZE: 2G
 
 permissions: {}
 
@@ -32,7 +31,7 @@ jobs:
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
         run: echo "dev$(date +%Y%m%d%H%M%S)" > build_version.txt
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
         with:
           name: build-version
@@ -47,16 +46,19 @@ jobs:
       - name: Package source as tarball
         run: tar czf acts-source.tar.gz acts/
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: acts-source
           path: acts-source.tar.gz
 
   build_wheels:
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.acts_ref == '')) && 's3-sccache' || '' }}
     needs: prepare
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    permissions: {}
+    permissions:
+      contents: read
     strategy:
       max-parallel: 1
       fail-fast: false
@@ -66,8 +68,18 @@ jobs:
          - macos-26
 
     steps:
+      # Cache/build tooling comes from the workflow revision, not a release tag.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: cache-tools
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            CI
+
       - name: Download source tarball
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: acts-source
 
@@ -76,7 +88,7 @@ jobs:
 
       - name: Download build version
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.acts_ref == ''
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: build-version
 
@@ -85,18 +97,37 @@ jobs:
         run: cat build_version.txt
 
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
 
       - name: Determine CIBW_BUILD
         id: cibw
         run: echo "build=$(acts/CI/supported_python_versions.py --cibw)" >> "$GITHUB_OUTPUT"
 
+      - name: Restore ccache snapshot
+        uses: ./cache-tools/.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
+        with:
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/pypi/build_wheels/${{ matrix.os }}-${{ runner.arch }}/v1/
+
       - name: Build wheels
-        uses: ./acts/.github/actions/cibuildwheel_wrapper
+        uses: ./cache-tools/.github/actions/cibuildwheel_wrapper
         with:
           package-dir: acts
           cibw-build: ${{ steps.cibw.outputs.build }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish ccache snapshot
+        if: ${{ !cancelled() && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.acts_ref == '')) }}
+        uses: ./cache-tools/.github/actions/ccache-s3
+        continue-on-error: true
+        timeout-minutes: 10
+        with:
+          operation: publish
+          key-prefix: acts-sccache/ccache-snapshots/${{ github.repository }}/pypi/build_wheels/${{ matrix.os }}-${{ runner.arch }}/v1/
+          access-key-id: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          allow-main-non-push: 'true'
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -108,13 +139,13 @@ jobs:
         run: |
           PATCHED_VERSION="$(cat acts/version_number).$(cat build_version.txt)"
           echo "Patch to version $PATCHED_VERSION"
-          python3 -m pip install change-wheel-version==0.6.0
+          uv tool install --python "$(command -v python3)" change-wheel-version==0.6.0
           cd wheelhouse
           for f in ./*.whl; do
             change_wheel_version $f --version $PATCHED_VERSION --delete-old-wheel
           done
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
@@ -131,7 +162,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Get wheels
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         pattern: cibw-*
         path: dist
@@ -156,7 +187,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Get wheels
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         pattern: cibw-*
         path: dist

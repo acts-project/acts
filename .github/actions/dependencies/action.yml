@@ -15,12 +15,12 @@ inputs:
     required: false
     default: 'false'
   cxx_std:
-    description: 'C++ standard for lockfile selection (e.g. 20, 23). Defaults to 20.'
+    description: 'C++ standard for lockfile selection (e.g. 20, 23). Defaults to 23.'
     required: false
-    default: '20'
-  # The flavors are published at cxx20 only, so pairing this with cxx_std 23
-  # falls back to the C++20 stack. No job does that today; the selection logs
-  # it if one starts to.
+    default: '23'
+  # v24.5.0 publishes accelerator flavors at cxx23 only. Requests for cxx_std
+  # 20 fall back to the C++23 stack within the requested compiler and flavor;
+  # the selection logs this fallback.
   flavor:
     description: 'Accelerator flavor for lockfile selection (e.g. cuda13, rocm7). Defaults to the plain CPU stack.'
     required: false
@@ -37,6 +37,29 @@ runs:
     # this action — benefits, not just the one inside opengl.sh late in setup.sh.
     - name: Apt mirror
       uses: ./.github/actions/apt_mirror
+
+    # The Ubuntu build images do not include jq, which validates the JSON
+    # emitted by CI/ccache_stats.sh. macOS installs it with Homebrew below.
+    - name: Install jq for ccache statistics
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        if command -v jq >/dev/null 2>&1; then
+          exit 0
+        fi
+        privilege=()
+        if [ "$(id -u)" != 0 ]; then
+          privilege=(sudo)
+        fi
+        if command -v apt-get >/dev/null 2>&1; then
+          "${privilege[@]}" apt-get update
+          "${privilege[@]}" apt-get install -y --no-install-recommends jq
+        elif command -v dnf >/dev/null 2>&1; then
+          "${privilege[@]}" dnf install -y jq
+        else
+          echo "::error::Cannot install jq: no supported package manager found"
+          exit 1
+        fi
 
     # Spack is a Python program, so every image we can possibly run on already
     # ships a usable python3 -- and nothing downstream uses the interpreter this
@@ -68,7 +91,7 @@ runs:
       if: startsWith(runner.os, 'macos')
       shell: bash
       run: |
-        brew install ninja ccache
+        brew install ninja ccache jq
 
     # Half of what is cached lives at ~/.spack, so an entry is only usable by a
     # runner with the same HOME. Container jobs get /github/home, ubuntu-latest

@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/fitting/device/kalman_fitting_algorithm.hpp"
@@ -79,8 +80,8 @@ kalman_fitting_algorithm::output_type kalman_fitting_algorithm::operator()(
        vecmem::data::buffer_type::resizable},
       {n_states, mr().main, vecmem::data::buffer_type::resizable},
       input_tracks.measurements};
-  copy().setup(output_tracks.tracks)->ignore();
-  copy().setup(output_tracks.states)->ignore();
+  copy().setup(vecmem::ignore_event, output_tracks.tracks);
+  copy().setup(vecmem::ignore_event, output_tracks.states);
 
   // Create the order to fit the tracks in.
   vecmem::data::vector_buffer<device::sort_key> track_sort_keys(n_tracks,

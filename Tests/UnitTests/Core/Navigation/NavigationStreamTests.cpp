@@ -17,10 +17,10 @@
 
 using namespace Acts;
 
-ACTS_LOCAL_LOGGER(getDefaultLogger("NavigationStreamTests",
-                                   Logging::Level::VERBOSE));
-
 namespace ActsTests {
+
+ACTS_LOCAL_LOGGER(getDefaultLogger("NavigationStreamTests",
+                                   Logging::Level::INFO));
 
 // This creates a set of plane surfaces along the z axis
 std::vector<std::shared_ptr<Surface>> createPlaneSurfaces() {
@@ -73,7 +73,8 @@ std::vector<std::shared_ptr<Surface>> createCylinders() {
   Transform3 cTransform = Transform3::Identity();
   auto surfaceC = Surface::makeShared<CylinderSurface>(cTransform, 40., 20);
   surfaceC->assignGeometryId(GeometryIdentifier{}.withSensitive(8));
-  // Surface C:
+
+  // Surface D:
   // A concentric, but shifted cylinder with a radius of 50 and a half length of
   // 5
   Transform3 dTransform = Transform3::Identity();
@@ -87,14 +88,15 @@ std::vector<std::shared_ptr<Surface>> createCylinders() {
 
 auto gContext = GeometryContext::dangerouslyDefaultConstruct();
 
-NavigationStream makeStream(const std::span<std::shared_ptr<Surface>> surfaces,
-                            const BoundaryTolerance tol) {
-  NavigationStream nStreamTemplate{};
+// The stream intersects each candidate with the tolerance it was added with
+NavigationStream makeStream(std::span<const std::shared_ptr<Surface>> surfaces,
+                            const BoundaryTolerance& tolerance) {
+  NavigationStream stream;
   for (const auto& surface : surfaces) {
-    nStreamTemplate.addSurfaceCandidate(*surface, tol);
+    stream.addSurfaceCandidate(*surface, tolerance);
   }
-  BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 4u);
-  return nStreamTemplate;
+  BOOST_CHECK_EQUAL(stream.remainingCandidates(), 4u);
+  return stream;
 }
 
 BOOST_AUTO_TEST_SUITE(Navigation)
@@ -259,13 +261,15 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinders) {
       gContext, {Vector3(0., 0., 0.), Vector3(1., 1., 0.).normalized()},
       logger()));
 
-  // We should have 4 candidates, as one cylinder is reachable twice
-  // Technically, the surface at 20,20,0 is hit twice, but we deduplicate them
-  BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
+  // Keep both crossings of the small cylinder at (20, 20, 0).
+  BOOST_REQUIRE_EQUAL(nStream.remainingCandidates(), 5u);
   // First one is inner candidate
   BOOST_CHECK_EQUAL(&nStream.candidates()[0u].surface(), surfaces.at(2).get());
   BOOST_CHECK_EQUAL(&nStream.candidates()[1u].surface(), surfaces.at(1).get());
-  BOOST_CHECK_EQUAL(&nStream.candidates()[2u].surface(), surfaces.at(0).get());
+  BOOST_CHECK_EQUAL(&nStream.candidates()[2u].surface(), surfaces.at(1).get());
+  BOOST_CHECK_NE(nStream.candidates()[1u].intersectionIndex(),
+                 nStream.candidates()[2u].intersectionIndex());
+  BOOST_CHECK_EQUAL(&nStream.candidates()[3u].surface(), surfaces.at(0).get());
 
   // (2) Run an initial update - from a position/direction where only
   // the concentric ones are reachable
@@ -293,6 +297,31 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinders) {
   // We should have 0 candidates
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 0u);
   BOOST_CHECK_THROW(nStream.currentCandidate(), std::out_of_range);
+}
+
+BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinderFromBoundaryInwards) {
+  // Reproduce https://github.com/acts-project/acts/issues/6267: entering an
+  // empty rMin = 0 volume must leave its far-side cylinder exit reachable.
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20., 100.);
+  NavigationStream stream;
+  stream.addSurfaceCandidate(*cylinder, BoundaryTolerance::None());
+  BOOST_REQUIRE(stream.initialize(
+      gContext, {Vector3(20., 0., 0.), Vector3(-1., 0., 0.)}, logger()));
+
+  // The navigator skips intersections at or behind its near limit. Permit
+  // the stream to retain the entry intersection, but require the exit to
+  // survive after that entry has been skipped.
+  while (stream.isValid() &&
+         stream.currentCandidate().pathLength() <= s_onSurfaceTolerance) {
+    stream.switchToNextCandidate();
+  }
+  BOOST_REQUIRE_MESSAGE(
+      stream.isValid(),
+      "Far-side cylinder exit was lost at the entry boundary");
+  BOOST_CHECK_EQUAL(&stream.currentCandidate().surface(), cylinder.get());
+  CHECK_CLOSE_ABS(stream.currentCandidate().pathLength(), 40.,
+                  s_onSurfaceTolerance);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

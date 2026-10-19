@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -77,8 +78,8 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
   const vecmem::device_vector<const char> d_seed_ambiguity(
       payload.seed_ambiguity);
   const vecmem::device_vector<const int2> d_path_store(payload.path_store);
-  const vecmem::device_vector<const unsigned int> d_output_graph(
-      payload.output_graph);
+  const vecmem::device_vector<const uint2> d_output_edge_nodes(
+      payload.output_edge_nodes);
   const vecmem::device_vector<const float4> d_sp_params(payload.reducedSP);
   vecmem::device_vector<unsigned long long int> d_hit_bids(payload.hit_bids);
 
@@ -89,11 +90,6 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
   const float tight_bid_cot_threshold =
       payload.gbts_convert_seeds_params.tight_bid_cot_threshold;
   const bool use_dropout = payload.gbts_convert_seeds_params.use_dropout;
-
-  // Row-major output graph: each edge owns a contiguous block of
-  // nei_start + max_num_neighbours ints ([node1, node2, nNei, nei0..]).
-  const unsigned int edge_size =
-      gbts_consts::nei_start + payload.max_num_neighbours;
 
   const unsigned int globalIdx = thread_id.getGlobalThreadIdX();
   const unsigned int blockDimX = thread_id.getBlockDimX();
@@ -119,14 +115,12 @@ TRACCC_HOST_DEVICE inline void gbts_convert_seeds(
     while (path.y >= 0) {
       path = d_path_store[static_cast<unsigned int>(path.y)];
       seed.nodes[seed.size++] =
-          d_output_graph[edge_size * static_cast<unsigned int>(path.x) +
-                         gbts_consts::node1];
+          d_output_edge_nodes[static_cast<unsigned int>(path.x)].x;
       best_for_hit +=
           (prop_idx == (d_hit_bids[seed.nodes[seed.size - 1]] & 0xFFFFFFFFLL));
     }
     seed.nodes[seed.size++] =
-        d_output_graph[edge_size * static_cast<unsigned int>(path.x) +
-                       gbts_consts::node2];
+        d_output_edge_nodes[static_cast<unsigned int>(path.x)].y;
     best_for_hit +=
         (prop_idx == (d_hit_bids[seed.nodes[seed.size - 1]] & 0xFFFFFFFFLL));
 

@@ -41,6 +41,11 @@ target_sources(
 )
 target_link_libraries(docs-examples PRIVATE Acts::Core)
 
+if(ACTS_BUILD_PLUGIN_JSON)
+    target_sources(docs-examples PRIVATE examples/material_map_json.cpp)
+    target_link_libraries(docs-examples PRIVATE Acts::PluginJson)
+endif()
+
 if(ACTS_BUILD_PLUGIN_DD4HEP)
     target_link_libraries(docs-examples PRIVATE Acts::PluginDD4hep)
     target_compile_definitions(docs-examples PRIVATE ACTS_BUILD_PLUGIN_DD4HEP)

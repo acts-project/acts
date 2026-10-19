@@ -2,8 +2,10 @@ target_sources(
     ActsCore
     PRIVATE
         EigenStepperError.cpp
+        HelixStepper.cpp
         MultiStepperError.cpp
         NavigatorError.cpp
+        NavigatorOptions.cpp
         SympyStepper.cpp
         detail/SympyStepVacuumJac.cpp
         detail/SympyStepVacuumNoJac.cpp

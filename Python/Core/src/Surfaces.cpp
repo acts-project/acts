@@ -327,6 +327,11 @@ void addSurfaces(py::module_& m) {
                                py::return_value_policy::reference_internal)
         .def_property_readonly("thickness", &Surface::thickness)
         .def_property_readonly("isSensitive", &Surface::isSensitive)
+        .def("assignIsSensitive", &Surface::assignIsSensitive,
+             py::arg("isSensitive"),
+             "Set sensitivity for a surface without a placement object. "
+             "Raises RuntimeError if the surface is alignable as the "
+             "sensitivity is redirected to the placement object.")
         .def_property_readonly("isAlignable", &Surface::isAlignable)
         .def("visualize", &Surface::visualize)
         .def_property_readonly("surfaceMaterial",

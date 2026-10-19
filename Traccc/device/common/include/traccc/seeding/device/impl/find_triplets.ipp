@@ -1,13 +1,16 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 // Project include(s).
+#include <limits>
+
 #include "traccc/seeding/triplet_finding_helper.hpp"
 
 // VecMem include(s).
@@ -86,12 +89,20 @@ inline void find_triplets(
   // The position in which these triplets should be filled is the sum of the
   // position for all triplets which share the same middle spacepoint
   // and the one for those which also share the same bottom spacepoint.
-  unsigned int posTriplets =
+  const unsigned int tripletOffset =
       mid_bot_counter.posTriplets + spM_counter.posTriplets;
+  const unsigned int tripletCount = mid_bot_counter.m_nTriplets;
+  unsigned int tripletIndex = 0;
 
   // iterate over mid-top doublets
   for (unsigned int i = mt_start_idx; i < mt_end_idx; ++i) {
     const sp_location spT_loc = mid_top_doublet_device[i].sp2;
+
+    // Sentinels should never be accessed, because m_nMidTop is updated to
+    // exclude them; this assert checks whether that assumption actually
+    // holds.
+    assert(spT_loc.bin_idx != std::numeric_limits<unsigned int>::max() &&
+           spT_loc.sp_idx != std::numeric_limits<unsigned int>::max());
 
     const unsigned int spT_idx = sp_grid.bin(spT_loc.bin_idx)[spT_loc.sp_idx];
     const edm::spacepoint_collection::const_device::const_proxy_type spT =
@@ -105,11 +116,29 @@ inline void find_triplets(
     if (triplet_finding_helper::isCompatible(spM, lb, lt, config, iSinTheta2,
                                              scatteringInRegion2, curvature,
                                              impact_parameter)) {
-      // Add triplet to jagged vector
-      triplets.at(posTriplets++) = device_triplet(
-          {spB_idx, spM_idx, spT_idx, globalIndex, curvature,
-           -impact_parameter * filter_config.impactWeightFactor, lb.Zo()});
+      // WARNING: We must imperatively check if the current index is
+      // within the limit the count kernel computed, because the count
+      // and find kernels may produce different floating point results
+      // and different triplet counts! This condition handles the case
+      // where the find kernel finds _more_ outputs.
+      if (tripletIndex < tripletCount) {
+        // Add triplet to jagged vector
+        triplets.at(tripletOffset + tripletIndex++) = device_triplet(
+            {spB_idx, spM_idx, spT_idx, globalIndex, curvature,
+             -impact_parameter * filter_config.impactWeightFactor, lb.Zo()});
+      }
     }
+  }
+
+  // See the warning above; here we handle the case where the find kernel
+  // finds _fewer_ results.
+  for (; tripletIndex < tripletCount; ++tripletIndex) {
+    // Add a sentinel triplet.
+    triplets.at(tripletOffset + tripletIndex) = device_triplet(
+        {std::numeric_limits<unsigned int>::max(),
+         std::numeric_limits<unsigned int>::max(),
+         std::numeric_limits<unsigned int>::max(),
+         std::numeric_limits<unsigned int>::max(), 0.f, 0.f, 0.f});
   }
 }
 

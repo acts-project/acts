@@ -131,7 +131,7 @@ struct BenchmarkStepper {
           }
           totalPathLength += r.pathLength;
           numSteps += r.steps;
-          numStepTrials += state.stepping.nStepTrials;
+          numStepTrials += r.statistics.stepping.nAttemptedSteps;
           ++numIters;
         },
         1, toys);

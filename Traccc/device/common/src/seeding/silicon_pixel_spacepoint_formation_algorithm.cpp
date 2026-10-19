@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/seeding/device/silicon_pixel_spacepoint_formation_algorithm.hpp"
@@ -47,7 +48,7 @@ auto silicon_pixel_spacepoint_formation_algorithm::operator()(
   // of its spacepoint, which makes the output independent of the thread order.
   vecmem::data::vector_buffer<unsigned int> spacepoint_flags(n_measurements,
                                                              mr().main);
-  copy().setup(spacepoint_flags)->ignore();
+  copy().setup(vecmem::ignore_event, spacepoint_flags);
   vecmem::data::vector_view<unsigned int> spacepoint_flags_view(
       spacepoint_flags);
   count_spacepoints_kernel(
@@ -73,7 +74,7 @@ auto silicon_pixel_spacepoint_formation_algorithm::operator()(
 
   // Create the result buffer.
   edm::spacepoint_collection::buffer spacepoints(n_spacepoints, mr().main);
-  copy().setup(spacepoints)->ignore();
+  copy().setup(vecmem::ignore_event, spacepoints);
 
   // Launch the spacepoint formation kernel.
   const vecmem::data::vector_view<const unsigned int> spacepoint_index_view(

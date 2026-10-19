@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/seeding/device/seed_parameter_estimation_algorithm.hpp"
@@ -50,7 +51,7 @@ auto seed_parameter_estimation_algorithm::operator()(
 
   // Set up the output buffer.
   bound_track_parameters_collection_types::buffer result(n_seeds, mr().main);
-  copy().setup(result)->ignore();
+  copy().setup(vecmem::ignore_event, result);
 
   // Launch the seed parameter estimation kernel.
   estimate_seed_params_kernel({n_seeds, m_data->m_config, bfield, measurements,

@@ -1,9 +1,13 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// Project include(s).
+#include "traccc/utils/stream_synchronizing_allocator.hpp"
 
 // Local include(s).
 #include "../utils/global_index.hpp"
@@ -22,7 +26,6 @@
 
 // System include(s).
 #include <cassert>
-#include <memory_resource>
 
 namespace traccc::hip {
 namespace kernels {
@@ -52,10 +55,11 @@ __global__ void __launch_bounds__(1024, 1) form_spacepoints(
 silicon_pixel_spacepoint_formation_algorithm::
     silicon_pixel_spacepoint_formation_algorithm(
         const traccc::memory_resource& mr, const vecmem::copy& copy,
-        const stream_wrapper& str, std::unique_ptr<const Logger> logger)
+        const stream_wrapper& str, std::unique_ptr<const Logger> logger,
+        await_function_type await_func)
     : device::silicon_pixel_spacepoint_formation_algorithm(mr, copy,
                                                            std::move(logger)),
-      hip::algorithm_base(str) {}
+      hip::algorithm_base(str, std::move(await_func)) {}
 
 void silicon_pixel_spacepoint_formation_algorithm::count_spacepoints_kernel(
     const count_spacepoints_kernel_payload& payload) const {
@@ -75,13 +79,13 @@ void silicon_pixel_spacepoint_formation_algorithm::scan_spacepoint_flags(
 // Set up the Thrust execution policy. Unfortunately this has to be done in
 // a backend specific way. :-(
 #if defined(__HIP_PLATFORM_AMD__)
-  auto policy =
-      thrust::hip::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream()));
+  auto policy = thrust::hip::par_nosync(
+                    stream_synchronizing_allocator(mr().main, stream()))
+                    .on(details::get_stream(stream()));
 #elif defined(__HIP_PLATFORM_NVIDIA__)
-  auto policy =
-      thrust::cuda::par_nosync(std::pmr::polymorphic_allocator(&(mr().main)))
-          .on(details::get_stream(stream()));
+  auto policy = thrust::cuda::par_nosync(
+                    stream_synchronizing_allocator(mr().main, stream()))
+                    .on(details::get_stream(stream()));
 #else
 #error "Unrecognised HIP platform."
 #endif

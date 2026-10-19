@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2022-2026 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Project include(s).
 include(traccc-compiler-options-cpp)
@@ -33,10 +35,12 @@ traccc_add_library( traccc_device_common device_common
    "include/traccc/clusterization/device/aggregate_cluster.hpp"
    "include/traccc/clusterization/device/impl/aggregate_cluster.ipp"
    "include/traccc/clusterization/device/measurement_sorting.hpp"
+   "include/traccc/clusterization/device/measurement_sorting_algorithm.hpp"
    "include/traccc/clusterization/device/ccl_kernel_definitions.hpp"
    "include/traccc/clusterization/device/ccl_kernel.hpp"
    "include/traccc/clusterization/device/clusterization_algorithm.hpp"
    "src/clusterization/clusterization_algorithm.cpp"
+   "src/clusterization/measurement_sorting_algorithm.cpp"
    # Spacepoint binning function(s).
    "include/traccc/seeding/device/count_grid_capacities.hpp"
    "include/traccc/seeding/device/impl/count_grid_capacities.ipp"

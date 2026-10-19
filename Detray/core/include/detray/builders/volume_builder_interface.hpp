@@ -25,6 +25,34 @@ class surface_factory_interface;
 template <concepts::detector detector_t>
 class volume_decorator;
 
+/// Options for the volume builder classes
+struct volume_builder_options {
+  /// Globally deduplicate identical data that is added by a builder to the
+  /// detector
+  bool m_deduplicate{true};
+  /// Globally sort data including the one that is added by a builder to the
+  /// detector
+  bool m_sort{true};
+
+  /// Getters
+  /// @{
+  constexpr bool deduplicate() const { return m_deduplicate; }
+  constexpr bool sort() const { return m_sort; }
+  /// @}
+
+  /// Setters
+  /// @{
+  constexpr volume_builder_options &deduplicate(bool toggle) {
+    m_deduplicate = toggle;
+    return *this;
+  }
+  constexpr volume_builder_options &sort(bool toggle) {
+    m_sort = toggle;
+    return *this;
+  }
+  /// @}
+};
+
 /// @brief Interface for volume builders (and volume builder decorators)
 template <concepts::detector detector_t>
 class volume_builder_interface {
@@ -67,7 +95,7 @@ class volume_builder_interface {
 
   /// @brief Adds a volume and all of its contents to a detector
   DETRAY_HOST
-  virtual auto build(detector_t &det,
+  virtual auto build(detector_t &det, const volume_builder_options &opt,
                      typename detector_t::geometry_context ctx = {}) ->
       typename detector_t::volume_type * = 0;
 
@@ -148,10 +176,10 @@ class volume_decorator : public volume_builder_interface<detector_t> {
   DETRAY_HOST std::string_view name() override { return m_builder->name(); }
 
   DETRAY_HOST
-  auto build(detector_t &det,
+  auto build(detector_t &det, const volume_builder_options &opt,
              typename detector_t::geometry_context /*ctx*/ = {}) ->
       typename detector_t::volume_type * override {
-    return m_builder->build(det);
+    return m_builder->build(det, opt);
   }
 
   DETRAY_HOST

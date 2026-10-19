@@ -1,10 +1,10 @@
-/**
- * traccc library, part of the ACTS project (R&D line)
- *
- * (c) 2024-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -123,7 +123,7 @@ bool is_contiguous_on(P&& projection, vecmem::memory_resource& mr,
   // Allocate memory for intermediate values and outputs, then set them up.
   vecmem::data::vector_buffer<projection_t> iout(
       n, mr, vecmem::data::buffer_type::resizable);
-  copy.setup(iout)->ignore();
+  copy.setup(vecmem::ignore_event, iout);
   vecmem::unique_alloc_ptr<bool> out = vecmem::make_unique_alloc<bool>(mr);
 
   bool initial_out = true;

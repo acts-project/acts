@@ -1,9 +1,11 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 // Project include(s).
@@ -35,6 +37,12 @@ inline void count_triplets(
 
   // Get current mid bottom doublet
   const device_doublet mid_bot = mid_bot_doublet_device.at(globalIndex);
+
+  // Guard against the sentinel value for middle-bot spacepoints.
+  if (mid_bot.counter_link ==
+      std::numeric_limits<device_doublet::link_type>::max()) {
+    return;
+  }
 
   // Create device copy of input parameters
   const edm::spacepoint_collection::const_device spacepoints{spacepoints_view};
@@ -68,8 +76,9 @@ inline void count_triplets(
   // Calculate some physical quantities required for triplet compatibility
   // check
   scalar iSinTheta2 = static_cast<scalar>(1.) + lb.cotTheta() * lb.cotTheta();
-  scalar scatteringInRegion2 = config.maxScatteringAngle2 * iSinTheta2;
-  scatteringInRegion2 *= config.sigmaScattering * config.sigmaScattering;
+  const scalar scatteringInRegion2 = config.maxScatteringAngle2 * iSinTheta2 *
+                                     config.sigmaScattering *
+                                     config.sigmaScattering;
 
   // These two quantities are used as output parameters in
   // triplet_finding_helper::isCompatible but their values are irrelevant
@@ -86,6 +95,12 @@ inline void count_triplets(
   // iterate over mid-top doublets
   for (unsigned int i = mt_start_idx; i < mt_end_idx; ++i) {
     const traccc::sp_location spT_loc = mid_top_doublet_device[i].sp2;
+
+    // Sentinels should never be accessed, because m_nMidTop is updated to
+    // exclude them; this assert checks whether that assumption actually
+    // holds.
+    assert(spT_loc.bin_idx != std::numeric_limits<unsigned int>::max() &&
+           spT_loc.sp_idx != std::numeric_limits<unsigned int>::max());
 
     const edm::spacepoint_collection::const_device::const_proxy_type spT =
         spacepoints.at(sp_device.bin(spT_loc.bin_idx)[spT_loc.sp_idx]);

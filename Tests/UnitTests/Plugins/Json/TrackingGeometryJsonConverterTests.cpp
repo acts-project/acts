@@ -26,6 +26,7 @@
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
+#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -33,6 +34,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -43,11 +45,13 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
 
+#include <cmath>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <functional>
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -700,6 +704,89 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryFileFormatUndecodable) {
   }
 
   BOOST_CHECK_THROW(converter.fromFile(gctx, path), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(SurfaceArrayNavigationPolicySuite)
+
+namespace {
+
+auto makeSurfaceArrayVolume() {
+  auto tVolume = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(20., 40., 100.), "BarrelVolume");
+
+  auto moduleBounds = std::make_shared<RectangleBounds>(8., 30.);
+  for (int iphi = 0; iphi < 12; ++iphi) {
+    const double phi = (iphi + 0.5) * 2 * std::numbers::pi / 12;
+    // The module normal points along r, the local y axis along z
+    RotationMatrix3 rotation;
+    rotation.col(0) = Vector3{-std::sin(phi), std::cos(phi), 0};
+    rotation.col(1) = Vector3::UnitZ();
+    rotation.col(2) = Vector3{std::cos(phi), std::sin(phi), 0};
+    for (int iz = -1; iz <= 1; ++iz) {
+      Transform3 trf = Transform3::Identity();
+      trf.linear() = rotation;
+      trf.translation() =
+          Vector3{30. * std::cos(phi), 30. * std::sin(phi), iz * 60.};
+      auto surface = Surface::makeShared<PlaneSurface>(trf, moduleBounds);
+      surface->assignIsSensitive(true);
+      tVolume->addSurface(surface);
+    }
+  }
+  return tVolume;
+}
+
+}  // namespace
+
+BOOST_AUTO_TEST_CASE(SurfaceArrayNavigationPolicyRoundTrip) {
+  auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+  auto tLogger =
+      Acts::getDefaultLogger("SurfaceArrayNavigationJsonTest", Logging::INFO);
+  auto tVolume = makeSurfaceArrayVolume();
+  TrackingGeometryJsonConverter conv;
+
+  using enum SurfaceArrayNavigationPolicy::LayerType;
+
+  // Without a configured window, the JSON has no window entry
+  SurfaceArrayNavigationPolicy defaultPolicy(
+      tContext, *tVolume, *tLogger,
+      SurfaceArrayNavigationPolicy::Config{.layerType = Cylinder,
+                                           .bins = {12, 3}});
+  nlohmann::json jDefault = conv.navigationPolicyToJson(defaultPolicy);
+  BOOST_CHECK(!jDefault.contains("neighborWindow"));
+  auto defaultPtr =
+      conv.navigationPolicyFromJson(tContext, jDefault, *tVolume, *tLogger);
+  auto& defaultRestored =
+      dynamic_cast<SurfaceArrayNavigationPolicy&>(*defaultPtr);
+  BOOST_CHECK(!defaultRestored.config().neighborWindow.has_value());
+  BOOST_CHECK_EQUAL(defaultRestored.config().overfill, 0);
+
+  // A configured window and overfill survive the round trip
+  SurfaceArrayNavigationPolicy policy(
+      tContext, *tVolume, *tLogger,
+      SurfaceArrayNavigationPolicy::Config{
+          .layerType = Cylinder,
+          .bins = {12, 3},
+          .neighborWindow = SurfaceArray::NeighborWindow{{0, 1}, {1, 8}},
+          .overfill = 2});
+  nlohmann::json j = conv.navigationPolicyToJson(policy);
+  BOOST_CHECK(j.contains("neighborWindow"));
+
+  auto policyPtr =
+      conv.navigationPolicyFromJson(tContext, j, *tVolume, *tLogger);
+  auto& restored = dynamic_cast<SurfaceArrayNavigationPolicy&>(*policyPtr);
+  BOOST_REQUIRE(restored.config().neighborWindow.has_value());
+  BOOST_CHECK(restored.config().neighborWindow->min ==
+              policy.config().neighborWindow->min);
+  BOOST_CHECK(restored.config().neighborWindow->max ==
+              policy.config().neighborWindow->max);
+  BOOST_CHECK_EQUAL(restored.config().overfill, 2);
+
+  const auto window = restored.surfaceArray().neighborWindow();
+  BOOST_CHECK_EQUAL(window.max[0], 1);
+  BOOST_CHECK_EQUAL(window.max[1], 8);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -18,7 +18,7 @@ if(PROJECT_IS_TOP_LEVEL)
 
     # Turn on the correct setting for the __cplusplus macro with MSVC.
     if("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
-        detray_add_flag( CMAKE_CUDA_FLAGS "-Xcompiler /Zc:__cplusplus" )
+        detray_add_flag(CMAKE_CUDA_FLAGS "-Xcompiler /Zc:__cplusplus")
     endif()
 
     # Set the CUDA architecture to build code for.
@@ -31,13 +31,13 @@ if(PROJECT_IS_TOP_LEVEL)
     if("${CMAKE_CUDA_COMPILER_ID}" MATCHES "NVIDIA")
         # Allow to use functions in device code that are constexpr, even if they are
         # not marked with __device__.
-        detray_add_flag( CMAKE_CUDA_FLAGS "--expt-relaxed-constexpr" )
+        detray_add_flag(CMAKE_CUDA_FLAGS "--expt-relaxed-constexpr")
     endif()
 
     # Make CUDA generate debug symbols for the device code as well in a debug
     # build.
-    detray_add_flag( CMAKE_CUDA_FLAGS_DEBUG "-G -src-in-ptx" )
-    detray_add_flag( CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-lineinfo -src-in-ptx" )
+    detray_add_flag(CMAKE_CUDA_FLAGS_DEBUG "-G -src-in-ptx")
+    detray_add_flag(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-lineinfo -src-in-ptx")
 
     # Fail on warnings, if asked for that behaviour.
     if(DETRAY_FAIL_ON_WARNINGS)
@@ -45,9 +45,9 @@ if(PROJECT_IS_TOP_LEVEL)
             ("${CUDAToolkit_VERSION}" VERSION_GREATER_EQUAL "10.2")
             AND ("${CMAKE_CUDA_COMPILER_ID}" MATCHES "NVIDIA")
         )
-            detray_add_flag( CMAKE_CUDA_FLAGS "-Werror all-warnings" )
+            detray_add_flag(CMAKE_CUDA_FLAGS "-Werror all-warnings")
         elseif("${CMAKE_CUDA_COMPILER_ID}" MATCHES "Clang")
-            detray_add_flag( CMAKE_CUDA_FLAGS "-Werror" )
+            detray_add_flag(CMAKE_CUDA_FLAGS "-Werror")
         endif()
     endif()
 endif()

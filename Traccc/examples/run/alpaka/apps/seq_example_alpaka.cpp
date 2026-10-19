@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2023-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Project include(s).
 #include "traccc/alpaka/clusterization/clusterization_algorithm.hpp"
@@ -99,10 +100,9 @@ int seq_run(const traccc::opts::detector& detector_opts,
       static_cast<traccc::detector_conditions_description::buffer::size_type>(
           host_det_cond.size()),
       device_mr};
-  copy.setup(device_det_cond)->ignore();
-  copy(vecmem::get_data(host_det_cond), device_det_cond,
-       vecmem::copy::type::host_to_device)
-      ->ignore();
+  copy.setup(vecmem::ignore_event, device_det_cond);
+  copy(vecmem::ignore_event, vecmem::get_data(host_det_cond), device_det_cond,
+       vecmem::copy::type::host_to_device);
 
   // Construct a Detray detector object, if supported by the configuration.
   traccc::host_detector host_det;

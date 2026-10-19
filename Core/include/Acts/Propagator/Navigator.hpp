@@ -52,8 +52,10 @@ struct NavigationOptions final {
   /// Hint for end object
   const object_t* endObject = nullptr;
 
-  /// External surface identifier for which the boundary check is ignored
-  std::vector<GeometryIdentifier> externalSurfaces = {};
+  /// Boundary tolerance to use instead of @c boundaryTolerance, for the
+  /// surfaces named by their identifier
+  std::vector<std::pair<GeometryIdentifier, BoundaryTolerance>>
+      extendedSurfaces = {};
 
   /// The minimum distance for a surface to be considered
   double nearLimit = 0;
@@ -113,7 +115,7 @@ class Navigator final {
     bool resolveMaterial = true;
     /// stop at every surface regardless what it is
     bool resolvePassive = false;
-    /// The amount of memory to be pre allocated for the navigation candidates
+    /// Number of candidates to reserve memory for in the navigation stream
     std::size_t candidatePreReserve = 50;
   };
 
@@ -172,15 +174,37 @@ class Navigator final {
     std::optional<std::size_t> navBoundaryIndex;
 
     /// far limit applied to the stream candidates, set during candidate
-    /// resolution (options.farLimit, or tightened to the last portal when
-    /// free candidates were appended without a selector)
+    /// resolution
     double navCandidatesFarLimit = std::numeric_limits<double>::max();
 
-    /// Free candidates not part of the tracking geometry.
-    //  They are stored as a pair of surface pointer
-    /// and a boolean indicating whether the surface has already been
-    /// reached during propagation
-    std::vector<std::pair<const Surface*, bool>> freeCandidates{};
+    /// An extended surface with its volume resolved
+    struct ResolvedExtendedSurface {
+      /// The surface
+      const Surface* surface{};
+      /// Tolerance used to intersect the surface
+      BoundaryTolerance boundaryTolerance = BoundaryTolerance::Infinite();
+      /// Volume that holds the surface. Null for Gen1, which scopes through
+      /// the layer.
+      const TrackingVolume* volume{};
+    };
+
+    /// Extended surfaces resolved once at initialization
+    std::vector<ResolvedExtendedSurface> extendedSurfaces{};
+
+    /// An additional surface of the options with its bookkeeping
+    struct AdditionalSurfaceState {
+      /// The entry of the options
+      const AdditionalSurface* entry{};
+      /// Whether the propagation reached the surface
+      bool reached{false};
+    };
+
+    /// Additional surfaces of the options, tracked over the propagation
+    std::vector<AdditionalSurfaceState> additionalSurfaces{};
+
+    /// The staged candidate an additional surface took precedence over. It is
+    /// handed out once the additional surface is no longer the closer one.
+    std::optional<NavigationTarget> pendingTarget;
 
     /// Get reference to current navigation surface
     /// @return Reference to current navigation target
@@ -228,9 +252,6 @@ class Navigator final {
     /// Stream for navigation debugging and monitoring
     NavigationStream stream;
 
-    /// Surfaces that are not part of the tracking geometry
-    std::vector<const Surface*> freeSurfaces;
-
     /// Reset navigation state after switching layers
     void resetAfterLayerSwitch() {
       navSurfaces.clear();
@@ -250,7 +271,8 @@ class Navigator final {
 
       policyStateManager.reset();
       policyStateIsDefault = true;
-      resetStream();
+
+      stream.reset();
     }
 
     /// Reset navigation state for renavigating within the same navigation run
@@ -265,17 +287,8 @@ class Navigator final {
 
       navigationBreak = false;
       navigationStage = Stage::initial;
-
-      // Set the surface reached switches back to false
-      std::ranges::for_each(freeCandidates,
-                            [](std::pair<const Surface*, bool>& freeSurface) {
-                              freeSurface.second = false;
-                            });
-
-      stream.reset(false);
+      pendingTarget.reset();
     }
-    /// Reset the navigation stream
-    void resetStream() { stream.reset(options.keepUnreachedExternal); }
 
     /// Completely reset navigation state for a new navigation run
     ///
@@ -389,6 +402,43 @@ class Navigator final {
                             const Surface& surface) const;
 
  private:
+  /// @brief Resolve the extended surfaces of the options
+  ///
+  /// Throws if the tracking geometry does not hold a surface.
+  ///
+  /// @param state The navigation state
+  void resolveExtendedSurfaces(State& state) const;
+
+  /// @brief Get the next target of the staged navigation, without the
+  ///        additional surfaces
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @return The next staged target
+  NavigationTarget nextStagedTarget(State& state, const Vector3& position,
+                                    const Vector3& direction) const;
+
+  /// @brief Get the closest additional surface from the current position
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @return The closest additional surface, or none
+  NavigationTarget nextAdditionalTarget(const State& state,
+                                        const Vector3& position,
+                                        const Vector3& direction) const;
+
+  /// @brief Whether the staged navigation targets the given surface
+  ///
+  /// Tells a surface reached through the tracking geometry apart from one
+  /// reached as an additional surface.
+  ///
+  /// @param state The navigation state
+  /// @param surface The surface the propagation reached
+  /// @return True if the current staged target is that surface
+  bool stagedTargetIs(const State& state, const Surface& surface) const;
+
   /// @brief NextTarget helper function for Gen1 geometry configuration
   ///
   /// @param state The navigation state

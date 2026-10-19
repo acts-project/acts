@@ -143,6 +143,52 @@ void testSelectCols(ExecutionContext execContext) {
 }
 
 template <typename T>
+void testGatherCols(ExecutionContext execContext) {
+  // 3 rows, 4 columns: [[0,1,2,3],[4,5,6,7],[8,9,10,11]]
+  // Gather cols {3, 0, 2, 0}: not ascending, and col 0 twice
+  std::vector<T> data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+  auto tensor = createCpuTensor(data, {3, 4});
+  auto tensorTarget = tensor.clone(execContext);
+
+  auto result = gatherCols(tensorTarget, {3, 0, 2, 0}, execContext);
+  auto resultHost = result.clone({Device::Cpu(), execContext.stream});
+
+  BOOST_CHECK_EQUAL(resultHost.shape()[0], 3u);
+  BOOST_CHECK_EQUAL(resultHost.shape()[1], 4u);
+
+  std::vector<T> expected = {3, 0, 2, 0, 7, 4, 6, 4, 11, 8, 10, 8};
+  BOOST_CHECK_EQUAL_COLLECTIONS(resultHost.data(),
+                                resultHost.data() + resultHost.size(),
+                                expected.begin(), expected.end());
+
+  BOOST_CHECK_THROW(gatherCols(tensorTarget, {1, 4}, execContext),
+                    std::invalid_argument);
+}
+
+/// Feature selection followed by scaling, as the ONNX edge classifier does it:
+/// the i-th scale must apply to the i-th selected feature.
+void testGatherColsThenScale(ExecutionContext execContext) {
+  // 2 nodes with features (r, phi, z) = (100, 1, 1000) and (200, 2, 2000)
+  std::vector<float> data = {100, 1, 1000, 200, 2, 2000};
+  auto tensor = createCpuTensor(data, {2, 3});
+  auto tensorTarget = tensor.clone(execContext);
+
+  // Model wants (z / 1000, r / 100)
+  auto selected = gatherCols(tensorTarget, {2, 0}, execContext);
+  auto result =
+      mulPerColumn(selected, {1.f / 1000.f, 1.f / 100.f}, execContext);
+  auto resultHost = result.clone({Device::Cpu(), execContext.stream});
+
+  BOOST_CHECK_EQUAL(resultHost.shape()[0], 2u);
+  BOOST_CHECK_EQUAL(resultHost.shape()[1], 2u);
+
+  std::vector<float> expected = {1, 1, 2, 2};
+  for (std::size_t i = 0; i < expected.size(); ++i) {
+    BOOST_CHECK_CLOSE(resultHost.data()[i], expected[i], 1e-4);
+  }
+}
+
+template <typename T>
 void testMulPerColumn(ExecutionContext execContext) {
   // 3 rows, 4 columns: [[0,1,2,3],[4,5,6,7],[8,9,10,11]]
   // Multiply each column with some scale {1,2,3,4}
@@ -311,6 +357,15 @@ BOOST_AUTO_TEST_CASE(tensor_select_cols_cpu) {
   testSelectCols<float>(execContextCpu);
 }
 
+BOOST_AUTO_TEST_CASE(tensor_gather_cols_cpu) {
+  testGatherCols<float>(execContextCpu);
+  testGatherCols<std::int64_t>(execContextCpu);
+}
+
+BOOST_AUTO_TEST_CASE(tensor_gather_cols_then_scale_cpu) {
+  testGatherColsThenScale(execContextCpu);
+}
+
 BOOST_AUTO_TEST_CASE(tensor_mul_per_column_cpu) {
   testMulPerColumn<float>(execContextCpu);
 }
@@ -371,6 +426,15 @@ BOOST_AUTO_TEST_CASE(tensor_select_rows_cuda) {
 
 BOOST_AUTO_TEST_CASE(tensor_select_cols_cuda) {
   testSelectCols<float>(execContextCuda);
+}
+
+BOOST_AUTO_TEST_CASE(tensor_gather_cols_cuda) {
+  testGatherCols<float>(execContextCuda);
+  testGatherCols<std::int64_t>(execContextCuda);
+}
+
+BOOST_AUTO_TEST_CASE(tensor_gather_cols_then_scale_cuda) {
+  testGatherColsThenScale(execContextCuda);
 }
 
 BOOST_AUTO_TEST_CASE(tensor_mul_per_column_cuda) {

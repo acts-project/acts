@@ -459,6 +459,7 @@ RootAthenaDumpReader::readMeasurements(
     ACTS_VERBOSE("Add measurement with index " << measIndex);
     imIdxMap.emplace(im, measIndex);
     createMeasurement(measurements, geoId, digiPars);
+    cluster.geometryId = geoId;
     clusters.push_back(cluster);
 
     if (!m_cfg.noTruth) {

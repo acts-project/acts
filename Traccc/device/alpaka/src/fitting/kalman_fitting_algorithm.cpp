@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Local include(s).
 #include "traccc/alpaka/fitting/kalman_fitting_algorithm.hpp"
@@ -116,8 +117,8 @@ void kalman_fitting_algorithm::prepare_track_fit_order(
   // Sort the key to get the sorted parameter ids
   vecmem::device_vector<device::sort_key> keys_device(track_sort_keys);
   vecmem::device_vector<unsigned int> track_indices_device(track_indices);
-  details::sort_by_key(details::get_queue(queue()), mr(), keys_device.begin(),
-                       keys_device.end(), track_indices_device.begin());
+  details::sort_by_key(queue(), mr(), keys_device.begin(), keys_device.end(),
+                       track_indices_device.begin());
 }
 
 void kalman_fitting_algorithm::fit_prelude_kernel(

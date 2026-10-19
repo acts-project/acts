@@ -50,8 +50,10 @@ jobs:
             ${{ env.PRE_COMMIT_HOME }}
           key: ${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
 
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+
       - name: Install pre-commit
-        run: pip install pre-commit
+        run: uv tool install --python "$(command -v python)" pre-commit
 
       - name: Run pre-commit
         run: pre-commit run --all-files --show-diff-on-failure
@@ -92,12 +94,15 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.14'
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
       - name: Install dependencies
         run: >
-          pip install -r CI/fpe_masks/requirements.txt
+          uv pip install --system --python "$(command -v python)" -r CI/fpe_masks/requirements.txt
       - name: Check
         run: >
-          CI/check_fpe_masks.py --token ${{ secrets.GITHUB_TOKEN }}
+          CI/check_fpe_masks.py --token "$GITHUB_TOKEN"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   unused_files:
     runs-on: ubuntu-slim
@@ -127,7 +132,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.14'
-      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           enable-cache: false
       - name: CI tooling self-tests
@@ -136,9 +141,12 @@ jobs:
           --with-requirements CI/self_tests/requirements.txt
           python -m pytest -q
           CI/dependencies/test_select_lockfile.py
+          CI/dependencies/test_python_environment.py
           CI/public_api/test_check_deprecated_docs.py
           CI/test_check_unused_files.py
-          CI/test_prune_ccache.py
+          CI/test_ccache_snapshot.py
+          CI/test_cibuildwheel.py
+          CI/check_material_schema.py
 
   codegen_prebuilt:
     # Pre-generates the code the build would otherwise generate, then checks
@@ -151,7 +159,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           enable-cache: true
       - name: Pre-generate code
@@ -249,7 +257,7 @@ jobs:
           CI/public_api/public_api_diff.py \
             --base base-surface.json --head api-surface.json \
             --json api-surface-diff.json --markdown /dev/null --summary --fail-on none
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: api-surface
           if-no-files-found: ignore

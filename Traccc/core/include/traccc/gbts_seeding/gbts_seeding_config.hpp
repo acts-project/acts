@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2025 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -60,13 +61,6 @@ struct gbts_consts {
   // Inner-bin nodes per graph-making work item. The count and fill kernels
   // run one thread per inner node, so this is also their block size.
   static constexpr unsigned int edge_chunk_size = 128;
-
-  // Per-edge offsets into the row-major output graph
-  // (each edge occupies edge_size = nei_start + max_num_neighbours ints).
-  static constexpr unsigned char node1 = 0;
-  static constexpr unsigned char node2 = 1;
-  static constexpr unsigned char nNei = 2;
-  static constexpr unsigned char nei_start = 3;
 };
 
 }  // namespace traccc::device

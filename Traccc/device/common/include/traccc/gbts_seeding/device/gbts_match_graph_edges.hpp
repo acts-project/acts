@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2021-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -33,7 +34,7 @@ struct gbts_match_graph_edges_payload {
   /// (outer, inner) node indices per edge
   vecmem::data::vector_view<const uint2> edge_nodes;
   /// Per node: [node] and [node + 1] are the begin and end of the bucket of
-  /// edges entering the node (nNodes + 1 entries).
+  /// edges entering the node (nSp + 1 entries).
   vecmem::data::vector_view<const unsigned int> num_outgoing_edges;
   /// Output: number of accepted neighbours per edge (0..nMaxNei)
   vecmem::data::vector_view<unsigned char> num_neighbours;

@@ -1,9 +1,10 @@
-/** TRACCC library, part of the ACTS project (R&D line)
- *
- * (c) 2022-2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -45,7 +46,7 @@ auto kalman_fitting_algorithm::prepare_fit_payload_helper(
         vecmem::data::jagged_vector_buffer<surface_t> surfaces{
             n_surfaces, mr().main, mr().host,
             vecmem::data::buffer_type::resizable};
-        copy().setup(surfaces)->ignore();
+        copy().setup(vecmem::ignore_event, surfaces);
 
         // Create the (templated) host payload.
         device::fit_tpayload<detector_view_t, bfield_view_t, surface_t>
@@ -57,7 +58,7 @@ auto kalman_fitting_algorithm::prepare_fit_payload_helper(
         vecmem::data::vector_buffer<
             device::fit_tpayload<detector_view_t, bfield_view_t, surface_t>>
             device_tpayload{1u, mr().main};
-        copy().setup(device_tpayload)->ignore();
+        copy().setup(vecmem::ignore_event, device_tpayload);
         copy()(
             vecmem::data::vector_view<device::fit_tpayload<
                 detector_view_t, bfield_view_t, surface_t>>(1u, &host_tpayload),

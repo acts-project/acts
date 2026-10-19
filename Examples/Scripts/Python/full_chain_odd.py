@@ -198,12 +198,12 @@ oddDigiConfig = (
 oddGbtsLayerMap = (
     args.gbts_layer_map
     if args.gbts_layer_map
-    else actsDir / "Examples/Configs/odd-gbts-layer-map.txt"
+    else actsDir / "Examples/Configs/odd-gbts-layer-map.json"
 )
 oddGbtsConnectionTable = (
     args.gbts_connection_table
     if args.gbts_connection_table
-    else actsDir / "Examples/Configs/odd-gbts-connection-table.txt"
+    else actsDir / "Examples/Configs/odd-gbts-connection-table.json"
 )
 
 oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"

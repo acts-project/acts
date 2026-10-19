@@ -1,8 +1,10 @@
-# TRACCC library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2021-2025 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Declare the core library test(s).
 traccc_add_test(core
@@ -10,6 +12,7 @@ traccc_add_test(core
    "test_axis.cpp"
    "test_copy.cpp"
    "test_grid2.cpp"
+   "test_kalman_filter_toy_detector.cpp"
    "test_populator.cpp"
    "test_pvalue.cpp"
    "test_ranges.cpp"
@@ -19,6 +22,8 @@ traccc_add_test(core
    "particle.cpp"
    LINK_LIBRARIES GTest::gtest_main vecmem::core traccc_tests_common
    traccc::core traccc::io traccc::performance traccc::simulation
+   detray::core detray::io detray::test_common detray::validation_utils
+   covfie::core
 )
 
 if(TRACCC_USE_ROOT)
