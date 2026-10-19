@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -15,6 +16,9 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/RzGridVolumeLookup.hpp"
+#include "Acts/Geometry/RzKdTree4VolumeLookup.hpp"
+#include "Acts/Geometry/RzKdTreeVolumeLookup.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -55,7 +59,8 @@ BOOST_AUTO_TEST_SUITE(GeometrySuite)
 // Two cuboid volumes stacked in x with a shared (fused) portal at x=0. A
 // position on the shared portal surface is ambiguous between the two
 // volumes; the direction resolves the ambiguity.
-BOOST_AUTO_TEST_CASE(BoundaryVolumeResolutionGen3) {
+BOOST_DATA_TEST_CASE(BoundaryVolumeResolutionGen3,
+                     boost::unit_test::data::make({0, 1, 2, 3}), mode) {
   Blueprint::Config cfg;
   cfg.envelope[AxisDirection::AxisX] = {20_mm, 20_mm};
   cfg.envelope[AxisDirection::AxisY] = {20_mm, 20_mm};
@@ -73,8 +78,26 @@ BOOST_AUTO_TEST_CASE(BoundaryVolumeResolutionGen3) {
         "VolumeB");
   });
 
+  BlueprintOptions options;
+  if (mode != 0) {
+    root.setVolumeLookupFactory(
+        [mode](const GeometryContext& context, const TrackingVolume& volume,
+               const Logger& factoryLogger) -> std::unique_ptr<IVolumeLookup> {
+          if (mode == 3) {
+            return std::make_unique<RzKdTree4VolumeLookup>(
+                context, volume, RzKdTree4VolumeLookup::Config{},
+                factoryLogger);
+          }
+          if (mode == 1) {
+            return std::make_unique<RzKdTreeVolumeLookup>(
+                context, volume, RzKdTreeVolumeLookup::Config{}, factoryLogger);
+          }
+          return std::make_unique<RzGridVolumeLookup>(
+              context, volume, RzGridVolumeLookup::Config{}, factoryLogger);
+        });
+  }
   std::unique_ptr<TrackingGeometry> trackingGeometry =
-      root.construct({}, gctx, *logger);
+      root.construct(options, gctx, *logger);
   BOOST_REQUIRE(trackingGeometry != nullptr);
   BOOST_CHECK(trackingGeometry->geometryVersion() ==
               TrackingGeometry::GeometryVersion::Gen3);

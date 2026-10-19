@@ -37,3 +37,8 @@ add_benchmark(Stepper StepperBenchmark.cpp)
 add_benchmark(SourceLink SourceLinkBenchmark.cpp)
 add_benchmark(TrackEdm TrackEdmBenchmark.cpp)
 add_benchmark(GsfComponentReduction GsfComponentReductionBenchmark.cpp)
+
+if(ACTS_BUILD_PLUGIN_JSON)
+    add_benchmark(VolumeLookup VolumeLookupBenchmark.cpp)
+    target_link_libraries(ActsBenchmarkVolumeLookup PRIVATE Acts::PluginJson)
+endif()

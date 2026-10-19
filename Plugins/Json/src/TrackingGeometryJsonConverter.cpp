@@ -18,8 +18,12 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
+#include "Acts/Geometry/LinearVolumeLookup.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
+#include "Acts/Geometry/RzGridVolumeLookup.hpp"
+#include "Acts/Geometry/RzKdTree4VolumeLookup.hpp"
+#include "Acts/Geometry/RzKdTreeVolumeLookup.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
@@ -642,6 +646,99 @@ std::unique_ptr<Acts::PortalLinkBase> decodeGridPortalLink(
 // -------------------------------------------------------------------
 // Records for temporary storage
 
+nlohmann::json encodeVolumeLookup(const Acts::IVolumeLookup* policy) {
+  using namespace Acts;
+  nlohmann::json encoded;
+  if (policy == nullptr) {
+    return encoded;
+  }
+  if (const auto* kd = dynamic_cast<const RzKdTreeVolumeLookup*>(policy)) {
+    const auto& config = kd->config();
+    encoded = {{"kind", "RzKdTree"},
+               {"max_tolerance", config.maxTolerance},
+               {"fallback_warning_fraction", config.fallbackWarningFraction},
+               {"leaf_size", config.leafSize},
+               {"max_depth", config.maxDepth}};
+  } else if (const auto* kd4 =
+                 dynamic_cast<const RzKdTree4VolumeLookup*>(policy)) {
+    const auto& config = kd4->config();
+    encoded = {{"kind", "RzKdTree4"},
+               {"max_tolerance", config.maxTolerance},
+               {"fallback_warning_fraction", config.fallbackWarningFraction}};
+  } else if (const auto* grid =
+                 dynamic_cast<const RzGridVolumeLookup*>(policy)) {
+    const auto& config = grid->config();
+    encoded = {{"kind", "RzGrid"},
+               {"max_tolerance", config.maxTolerance},
+               {"fallback_warning_fraction", config.fallbackWarningFraction},
+               {"max_grid_cells", config.maxGridCells}};
+  } else if (const auto* linear =
+                 dynamic_cast<const LinearVolumeLookup*>(policy)) {
+    encoded = {{"kind", "Linear"},
+               {"warning_threshold", linear->config().warningThreshold}};
+  } else {
+    throw std::invalid_argument(
+        "Unsupported volume lookup policy for JSON serialization");
+  }
+  return encoded;
+}
+
+std::unique_ptr<const Acts::IVolumeLookup> decodeVolumeLookup(
+    const Acts::GeometryContext& gctx, Acts::TrackingVolume& volume,
+    const nlohmann::json& lookup, const Acts::Logger& logger) {
+  using namespace Acts;
+  std::unique_ptr<const IVolumeLookup> policy;
+  if (!lookup.is_null()) {
+    const auto kind = lookup.at("kind").get<std::string>();
+    // Reject negative integers before conversion to unsigned configuration
+    // values.
+    auto positiveSize = [&](const char* key) {
+      const auto value = lookup.at(key).get<std::int64_t>();
+      if (value <= 0) {
+        throw std::invalid_argument(
+            std::string("Invalid volume lookup parameter: ") + key);
+      }
+      return static_cast<std::size_t>(value);
+    };
+    if (kind == "RzKdTree") {
+      RzKdTreeVolumeLookup::Config config;
+      config.maxTolerance = lookup.at("max_tolerance").get<double>();
+      config.fallbackWarningFraction = lookup.value(
+          "fallback_warning_fraction", config.fallbackWarningFraction);
+      config.leafSize = positiveSize("leaf_size");
+      config.maxDepth = positiveSize("max_depth");
+      policy =
+          std::make_unique<RzKdTreeVolumeLookup>(gctx, volume, config, logger);
+    } else if (kind == "RzKdTree4") {
+      RzKdTree4VolumeLookup::Config config;
+      config.maxTolerance = lookup.at("max_tolerance").get<double>();
+      config.fallbackWarningFraction = lookup.value(
+          "fallback_warning_fraction", config.fallbackWarningFraction);
+      policy =
+          std::make_unique<RzKdTree4VolumeLookup>(gctx, volume, config, logger);
+    } else if (kind == "RzGrid") {
+      RzGridVolumeLookup::Config config;
+      config.maxTolerance = lookup.at("max_tolerance").get<double>();
+      config.fallbackWarningFraction = lookup.value(
+          "fallback_warning_fraction", config.fallbackWarningFraction);
+      config.maxGridCells = positiveSize("max_grid_cells");
+      policy =
+          std::make_unique<RzGridVolumeLookup>(gctx, volume, config, logger);
+    } else if (kind == "Linear") {
+      const auto& threshold = lookup.at("warning_threshold");
+      if (!threshold.is_number_integer() || threshold.get<std::int64_t>() < 0) {
+        throw std::invalid_argument("Invalid linear lookup warning threshold");
+      }
+      policy = std::make_unique<LinearVolumeLookup>(
+          volume, LinearVolumeLookup::Config{threshold.get<std::size_t>()},
+          logger);
+    } else {
+      throw std::invalid_argument("Unknown volume lookup kind: " + kind);
+    }
+  }
+  return policy;
+}
+
 struct SurfaceRecord {
   std::size_t surfaceId = 0u;
   nlohmann::json payload;
@@ -662,6 +759,7 @@ struct VolumeRecord {
   std::vector<std::size_t> portalIds;
   std::vector<std::size_t> surfaceIds;
   nlohmann::json navigationPolicy;
+  nlohmann::json volumeLookup;
 };
 
 // -------------------------------------------------------------------
@@ -869,7 +967,9 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
         "geometries");
   }
   ACTS_DEBUG("Serializing TrackingGeometry to JSON");
-  return trackingVolumeToJson(gctx, *geometry.highestTrackingVolume(), options);
+  auto encoded =
+      trackingVolumeToJson(gctx, *geometry.highestTrackingVolume(), options);
+  return encoded;
 }
 
 nlohmann::json Acts::TrackingGeometryJsonConverter::portalLinkToJson(
@@ -976,6 +1076,11 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
         Transform3JsonConverter::toJson(volume->localToGlobalTransform(gctx));
     jVolume[kBoundsKey] = m_cfg.encodeVolumeBounds(volume->volumeBounds());
 
+    if (auto lookup = encodeVolumeLookup(volume->volumeLookup());
+        !lookup.is_null()) {
+      jVolume["volume_lookup"] = std::move(lookup);
+    }
+
     jVolume[kNavigationPolicyKey] =
         navigationPolicyToJson(*volume->navigationPolicy());
 
@@ -1052,6 +1157,12 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     record.surfaceIds =
         jVolume.value(kSurfaceIdKey, std::vector<std::size_t>{});
     record.navigationPolicy = jVolume.at(kNavigationPolicyKey);
+    record.volumeLookup = jVolume.value("volume_lookup", nlohmann::json{});
+    // Read the earlier geometry-wide recipe as a lookup on the root.
+    if (record.volumeLookup.is_null() && encoded.contains("volume_lookup") &&
+        record.volumeId == encoded.at(kRootVolumeIdKey).get<std::size_t>()) {
+      record.volumeLookup = encoded.at("volume_lookup");
+    }
 
     if (!jVolume["geometry_id"].is_null()) {
       GeometryIdentifier geoID =
@@ -1205,6 +1316,19 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
         gctx, record.navigationPolicy, *volume, logger()));
   }
 
+  // Install local policies first: enclosing subtree indices discover delegation
+  // boundaries from the explicit policies already present on their descendants.
+  auto installLookup = [&](auto&& self, std::size_t volumeId) -> void {
+    const auto& record = volumeRecords.at(volumeId);
+    for (const auto childId : record.children) {
+      self(self, childId);
+    }
+    auto* volume = volumePointers.find(volumeId);
+    volume->setVolumeLookup(
+        decodeVolumeLookup(gctx, *volume, record.volumeLookup, logger()));
+  };
+  installLookup(installLookup, rootVolumeId);
+
   auto root = std::move(volumeStorage.at(rootVolumeId));
   if (root == nullptr) {
     throw std::invalid_argument("Root volume reconstruction failed");
@@ -1249,5 +1373,5 @@ Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
   ACTS_DEBUG("TrackingGeometry reconstruction complete, root volume '"
              << world->volumeName() << "'");
   return std::make_shared<TrackingGeometry>(
-      world, nullptr, GeometryIdentifierHook{}, getDummyLogger(), false);
+      world, nullptr, GeometryIdentifierHook{}, logger(), false);
 }

@@ -34,6 +34,8 @@
 
 #include <boost/container/small_vector.hpp>
 
+#include "VolumeLookupImpl.hpp"
+
 namespace Acts {
 
 TrackingVolume::TrackingVolume(
@@ -83,36 +85,18 @@ TrackingVolume& TrackingVolume::operator=(TrackingVolume&&) noexcept = default;
 const TrackingVolume* TrackingVolume::lowestTrackingVolume(
     const GeometryContext& gctx, const Vector3& position,
     const double tol) const {
-  if (!inside(gctx, position, tol)) {
-    return nullptr;
-  }
+  return m_volumeLookup
+             ? m_volumeLookup->lowestTrackingVolume(*this, gctx, position, tol)
+             : detail::linearVolumeScan(*this, gctx, position, tol);
+}
 
-  // confined static volumes - highest hierarchy
-  if (m_confinedVolumes) {
-    const TrackingVolume* volume = m_confinedVolumes->object(position).get();
-    if (volume != nullptr) {
-      return volume->lowestTrackingVolume(gctx, position, tol);
-    }
-  }
+void TrackingVolume::setVolumeLookup(
+    std::unique_ptr<const IVolumeLookup> lookup) {
+  m_volumeLookup = std::move(lookup);
+}
 
-  // search for dense volumes
-  if (!m_confinedDenseVolumes.empty()) {
-    for (auto& denseVolume : m_confinedDenseVolumes) {
-      if (denseVolume->inside(gctx, position, tol)) {
-        return denseVolume.get();
-      }
-    }
-  }
-
-  // @TODO: Abstract this into an accelerateable structure
-  for (const auto& volume : volumes()) {
-    if (volume.inside(gctx, position, tol)) {
-      return volume.lowestTrackingVolume(gctx, position, tol);
-    }
-  }
-
-  // there is no lower sub structure
-  return this;
+const IVolumeLookup* TrackingVolume::volumeLookup() const {
+  return m_volumeLookup.get();
 }
 
 const TrackingVolumeBoundaries& TrackingVolume::boundarySurfaces() const {

@@ -13,6 +13,7 @@
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/IVolumeLookup.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
@@ -43,7 +44,6 @@
 #include <boost/container/container_fwd.hpp>
 
 namespace Acts {
-
 class GlueVolumesDescriptor;
 class VolumeBounds;
 template <typename object_t>
@@ -176,6 +176,19 @@ class TrackingVolume : public Volume {
   const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
                                              const Vector3& position,
                                              const double tol = 0.) const;
+
+  /// Install an explicit subtree lookup; nullptr restores the default scan.
+  /// An explicit lookup is a delegation boundary for enclosing indices,
+  /// including an explicitly installed linear lookup. Install local policies
+  /// before building enclosing indices. Rebuild those indices after changing
+  /// local policies, volume bounds, transforms or hierarchy. Call before
+  /// concurrent queries.
+  /// @param lookup Policy owned by this volume, or nullptr for the default scan
+  void setVolumeLookup(std::unique_ptr<const IVolumeLookup> lookup);
+
+  /// Return the explicitly installed lookup, or nullptr for the default scan.
+  /// @return Optional installed policy
+  const IVolumeLookup* volumeLookup() const;
 
   /// @brief Visit all reachable surfaces
   ///
@@ -635,6 +648,9 @@ class TrackingVolume : public Volume {
   std::vector<PlacementOwnPtr> m_placements;
 
   std::unique_ptr<INavigationPolicy> m_navigationPolicy;
+
+  // Destroy the lookup before the children it references.
+  std::unique_ptr<const IVolumeLookup> m_volumeLookup;
 
   NavigationDelegate m_navigationDelegate{};
 };

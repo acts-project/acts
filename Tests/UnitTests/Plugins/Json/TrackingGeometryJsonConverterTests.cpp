@@ -20,7 +20,12 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
+#include "Acts/Geometry/LinearVolumeLookup.hpp"
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/RzGridVolumeLookup.hpp"
+#include "Acts/Geometry/RzKdTree4VolumeLookup.hpp"
+#include "Acts/Geometry/RzKdTreeVolumeLookup.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
@@ -52,8 +57,10 @@
 #include <functional>
 #include <memory>
 #include <numbers>
+#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -435,8 +442,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   // -----------------------------------------------------
   // Compare propagation
   Navigator::Config sourceNavCfg;
-  sourceNavCfg.trackingGeometry =
-      std::make_shared<TrackingGeometry>(*sourceGeometry);
+  sourceNavCfg.trackingGeometry = sourceGeometry;
   sourceNavCfg.resolveSensitive = true;
   sourceNavCfg.resolveMaterial = true;
   sourceNavCfg.resolvePassive = false;
@@ -448,8 +454,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   auto sourceRes = sourcePropagator.propagate(start, options).value();
 
   Navigator::Config decodedNavCfg;
-  decodedNavCfg.trackingGeometry =
-      std::make_shared<TrackingGeometry>(*decodedGeometry);
+  decodedNavCfg.trackingGeometry = decodedGeometry;
   decodedNavCfg.resolveSensitive = true;
   decodedNavCfg.resolveMaterial = true;
   decodedNavCfg.resolvePassive = false;
@@ -834,6 +839,224 @@ BOOST_AUTO_TEST_CASE(SurfaceArrayNavigationPolicyAutoBinsRoundTrip) {
     BOOST_CHECK_EQUAL_COLLECTIONS(
         originalSurfaces.begin(), originalSurfaces.end(),
         restoredSurfaces.begin(), restoredSurfaces.end());
+  }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(VolumeLookupJsonSuite)
+
+BOOST_AUTO_TEST_CASE(VolumeLookupRoundTrip) {
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  auto world = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(0., 100., 100.), "world");
+  world->assignGeometryId(GeometryIdentifier{}.withVolume(1));
+  for (int i = 0; i < 12; ++i) {
+    auto child = std::make_unique<TrackingVolume>(
+        Transform3::Identity(),
+        std::make_shared<CylinderVolumeBounds>(i * 4., i * 4. + 6., 20.),
+        "shell");
+    child->assignGeometryId(GeometryIdentifier{}.withVolume(i + 2));
+    world->addVolume(std::move(child));
+  }
+  auto surface = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(), std::make_shared<RectangleBounds>(100., 100.));
+  surface->assignGeometryId(GeometryIdentifier{}.withVolume(1).withBoundary(1));
+  world->addPortal(std::make_shared<Portal>(
+      Direction::AlongNormal(),
+      std::make_unique<TrivialPortalLink>(surface, *world)));
+  world->apply([&](TrackingVolume& volume) {
+    volume.setNavigationPolicy(std::make_unique<TryAllNavigationPolicy>(
+        gctx, volume, getDummyLogger()));
+  });
+  TrackingGeometryJsonConverter converter;
+  auto geometry = std::make_shared<TrackingGeometry>(
+      world, nullptr, GeometryIdentifierHook{}, getDummyLogger(), false);
+  auto legacy = converter.toJson(gctx, *geometry);
+  BOOST_CHECK(!legacy.contains("volume_lookup"));
+  auto legacyGeometry = converter.fromJson(gctx, legacy);
+  BOOST_CHECK(legacyGeometry->highestTrackingVolume()->volumeLookup() ==
+              nullptr);
+  auto& mixedChild = world->volumes().at(0);
+  RzGridVolumeLookup::Config childConfig;
+  childConfig.maxGridCells = 23;
+  mixedChild.setVolumeLookup(
+      std::make_unique<RzGridVolumeLookup>(gctx, mixedChild, childConfig));
+  auto check = [&]<typename Lookup>() {
+    typename Lookup::Config cfg;
+    cfg.maxTolerance = 0.02;
+    cfg.fallbackWarningFraction = 0.75;
+    if constexpr (std::is_same_v<Lookup, RzKdTreeVolumeLookup>) {
+      cfg.leafSize = 2;
+      cfg.maxDepth = 12;
+    } else if constexpr (std::is_same_v<Lookup, RzGridVolumeLookup>) {
+      cfg.maxGridCells = 20000;
+    }
+    geometry->highestTrackingVolume()->setVolumeLookup(
+        std::make_unique<Lookup>(gctx, *world, cfg));
+    auto encoded = converter.toJson(gctx, *geometry);
+    auto decoded = converter.fromJson(gctx, encoded);
+    auto* childPolicy = dynamic_cast<const RzGridVolumeLookup*>(
+        decoded->highestTrackingVolume()->volumes().at(0).volumeLookup());
+    BOOST_REQUIRE(childPolicy != nullptr);
+    BOOST_CHECK_EQUAL(childPolicy->config().maxGridCells, 23);
+    auto volumeOnly = converter.trackingVolumeFromJson(gctx, encoded);
+    BOOST_CHECK(dynamic_cast<const RzGridVolumeLookup*>(
+                    volumeOnly->volumes().at(0).volumeLookup()) != nullptr);
+    auto* policy = dynamic_cast<const Lookup*>(
+        decoded->highestTrackingVolume()->volumeLookup());
+    BOOST_REQUIRE(policy != nullptr);
+    BOOST_CHECK_EQUAL(policy->config().maxTolerance, cfg.maxTolerance);
+    BOOST_CHECK_EQUAL(policy->config().fallbackWarningFraction,
+                      cfg.fallbackWarningFraction);
+    if constexpr (std::is_same_v<Lookup, RzKdTreeVolumeLookup>) {
+      BOOST_CHECK_EQUAL(policy->config().leafSize, cfg.leafSize);
+      BOOST_CHECK_EQUAL(policy->config().maxDepth, cfg.maxDepth);
+      BOOST_CHECK(
+          !encoded["volumes"][0]["volume_lookup"].contains("max_grid_cells"));
+    } else if constexpr (std::is_same_v<Lookup, RzGridVolumeLookup>) {
+      BOOST_CHECK_EQUAL(policy->config().maxGridCells, cfg.maxGridCells);
+      BOOST_CHECK(
+          !encoded["volumes"][0]["volume_lookup"].contains("leaf_size"));
+      BOOST_CHECK(
+          !encoded["volumes"][0]["volume_lookup"].contains("max_depth"));
+    }
+    // Reconstructed assignments must point to the newly loaded volumes.
+    geometry->highestTrackingVolume()->setVolumeLookup(nullptr);
+    BOOST_CHECK(!converter.toJson(gctx, *geometry)["volumes"][0].contains(
+        "volume_lookup"));
+    for (double r : {0., 4., 5., 9.5, 40., 60., 101.}) {
+      const Vector3 p(r, 0., 0.);
+      const auto* actual = *decoded->resolveLowestTrackingVolume(gctx, p);
+      const auto* expected =
+          *legacyGeometry->resolveLowestTrackingVolume(gctx, p);
+      if (expected == nullptr) {
+        BOOST_CHECK(actual == nullptr);
+      } else {
+        BOOST_REQUIRE(actual != nullptr);
+        BOOST_CHECK(actual->geometryId() == expected->geometryId());
+        BOOST_CHECK(actual != expected);
+      }
+    }
+    auto unknown = encoded;
+    unknown["volumes"][0]["volume_lookup"]["kind"] = "Unknown";
+    BOOST_CHECK_THROW(converter.fromJson(gctx, unknown), std::invalid_argument);
+    // Recipes from the earlier combined implementation may have extra settings.
+    auto oldRecipe = encoded;
+    oldRecipe["volume_lookup"] = oldRecipe["volumes"][0]["volume_lookup"];
+    oldRecipe["volumes"][0].erase("volume_lookup");
+    oldRecipe["volume_lookup"].erase("fallback_warning_fraction");
+    auto oldGeometry = converter.fromJson(gctx, oldRecipe);
+    BOOST_CHECK_EQUAL(dynamic_cast<const Lookup*>(
+                          oldGeometry->highestTrackingVolume()->volumeLookup())
+                          ->config()
+                          .fallbackWarningFraction,
+                      0.1);
+    auto combined = encoded;
+    combined["volumes"][0]["volume_lookup"]["leaf_size"] = 2;
+    combined["volumes"][0]["volume_lookup"]["max_depth"] = 12;
+    combined["volumes"][0]["volume_lookup"]["max_grid_cells"] = 20000;
+    BOOST_CHECK(dynamic_cast<const Lookup*>(converter.fromJson(gctx, combined)
+                                                ->highestTrackingVolume()
+                                                ->volumeLookup()) != nullptr);
+    if constexpr (std::is_same_v<Lookup, RzKdTreeVolumeLookup>) {
+      encoded["volumes"][0]["volume_lookup"]["leaf_size"] = -1;
+    } else if constexpr (std::is_same_v<Lookup, RzGridVolumeLookup>) {
+      encoded["volumes"][0]["volume_lookup"]["max_grid_cells"] = -1;
+    } else {
+      encoded["volumes"][0]["volume_lookup"]["max_tolerance"] = -1;
+    }
+    BOOST_CHECK_THROW(converter.fromJson(gctx, encoded), std::invalid_argument);
+  };
+  check.template operator()<RzKdTreeVolumeLookup>();
+  check.template operator()<RzKdTree4VolumeLookup>();
+  check.template operator()<RzGridVolumeLookup>();
+  geometry->highestTrackingVolume()->setVolumeLookup(
+      std::make_unique<LinearVolumeLookup>(
+          *world, LinearVolumeLookup::Config{0}, getDummyLogger()));
+  auto linearRecipe = converter.toJson(gctx, *geometry);
+  BOOST_CHECK_EQUAL(
+      linearRecipe["volumes"][0]["volume_lookup"]["kind"].get<std::string>(),
+      "Linear");
+  auto restoredLinear = converter.fromJson(gctx, linearRecipe);
+  auto* linearPolicy = dynamic_cast<const LinearVolumeLookup*>(
+      restoredLinear->highestTrackingVolume()->volumeLookup());
+  BOOST_REQUIRE(linearPolicy != nullptr);
+  BOOST_CHECK_EQUAL(linearPolicy->config().warningThreshold, 0);
+  class CustomLookup : public IVolumeLookup {
+    const TrackingVolume* lowestTrackingVolume(const TrackingVolume&,
+                                               const GeometryContext&,
+                                               const Vector3&,
+                                               double) const override {
+      return nullptr;
+    }
+  };
+  geometry->highestTrackingVolume()->setVolumeLookup(
+      std::make_unique<CustomLookup>());
+  BOOST_CHECK_THROW(converter.toJson(gctx, *geometry), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(ExplicitDefaultLinearBoundaryRoundTrip) {
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  Blueprint blueprint{Blueprint::Config{}};
+  auto region =
+      std::make_shared<StaticBlueprintNode>(std::make_unique<TrackingVolume>(
+          Transform3::Identity(),
+          std::make_shared<CylinderVolumeBounds>(0., 50., 50.), "region"));
+  region->addChild(
+      std::make_shared<StaticBlueprintNode>(std::make_unique<TrackingVolume>(
+          Transform3::Identity(),
+          std::make_shared<CylinderVolumeBounds>(10., 20., 20.), "leaf")));
+  region->setVolumeLookupFactory([](const GeometryContext&,
+                                    const TrackingVolume& volume,
+                                    const Logger& logger) {
+    return std::make_unique<LinearVolumeLookup>(
+        volume, LinearVolumeLookup::Config{}, logger);
+  });
+  blueprint.addChild(region);
+  blueprint.setVolumeLookupFactory([](const GeometryContext& context,
+                                      const TrackingVolume& volume,
+                                      const Logger& logger) {
+    RzGridVolumeLookup::Config config;
+    config.maxGridCells = 1;
+    return std::make_unique<RzGridVolumeLookup>(context, volume, config,
+                                                logger);
+  });
+  auto geometry = blueprint.construct(BlueprintOptions{}, gctx);
+  std::ostringstream output;
+  TrackingGeometryJsonConverter converter(
+      TrackingGeometryJsonConverter::Config::defaultConfig(),
+      getDefaultLogger("LookupJsonTest", Logging::WARNING, &output));
+  auto encoded = converter.toJson(gctx, *geometry);
+  bool linearRecorded = false;
+  for (const auto& volume : encoded.at("volumes")) {
+    if (volume.at("name") == "region") {
+      BOOST_CHECK_EQUAL(
+          volume.at("volume_lookup").at("kind").get<std::string>(), "Linear");
+      BOOST_CHECK_EQUAL(
+          volume.at("volume_lookup").at("warning_threshold").get<std::size_t>(),
+          64);
+      linearRecorded = true;
+    }
+  }
+  BOOST_CHECK(linearRecorded);
+  auto decoded = converter.fromJson(gctx, encoded);
+  // If the parent were built before the explicit linear boundary, it would
+  // index the leaf too and exceed the one-cell cap, producing a warning.
+  BOOST_CHECK(output.str().empty());
+  auto& decodedRegion = decoded->highestTrackingVolume()->volumes().at(0);
+  BOOST_CHECK(dynamic_cast<const LinearVolumeLookup*>(
+                  decodedRegion.volumeLookup()) != nullptr);
+  BOOST_CHECK(decodedRegion.volumes().at(0).volumeLookup() == nullptr);
+  BOOST_CHECK(*decoded->resolveLowestTrackingVolume(gctx, {15., 0., 0.}) ==
+              &decodedRegion.volumes().at(0));
+  decodedRegion.setVolumeLookup(nullptr);
+  auto reset = converter.toJson(gctx, *decoded);
+  for (const auto& volume : reset.at("volumes")) {
+    if (volume.at("name") == "region") {
+      BOOST_CHECK(!volume.contains("volume_lookup"));
+    }
   }
 }
 
