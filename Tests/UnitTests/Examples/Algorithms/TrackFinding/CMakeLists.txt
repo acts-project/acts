@@ -6,8 +6,8 @@ target_link_libraries(
     PRIVATE ActsExamplesTrackFinding ActsExamplesFramework
 )
 
-add_unittest(GlobalPatternFinder GlobalPatternFinderTests.cpp)
+add_unittest(GlobalPatternFinderAlgorithm GlobalPatternFinderAlgorithmTests.cpp)
 target_link_libraries(
-    ActsUnitTestGlobalPatternFinder
+    ActsUnitTestGlobalPatternFinderAlgorithm
     PRIVATE ActsExamplesTrackFinding ActsExamplesFramework
 )

@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <memory>
 #include <numbers>
+#include <stdexcept>
 
 using namespace Acts::UnitLiterals;
 
@@ -35,8 +36,8 @@ using ActsExamples::PatternTopology;
 using ActsExamples::SeedSelector;
 using ActsExamples::StIndex;
 
-/// @brief Surface every synthetic hit is placed on. The pattern finder takes the
-///        local measurement axes from it.
+/// @brief Surface every synthetic hit is placed on. The pattern finder takes
+///        the local measurement axes from it.
 std::shared_ptr<Acts::Surface> testSurface() {
   return Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Transform3::Identity(),
@@ -44,12 +45,12 @@ std::shared_ptr<Acts::Surface> testSurface() {
 }
 
 /// @brief Build a space point with the given chamber & measurement flags
-/// @param station: Station name of the chamber
-/// @param tech: Technology of the measurement
-/// @param layer: Layer number in the sector frame
-/// @param measEta: Whether the space point measures the precision coordinate
-/// @param measPhi: Whether the space point measures the non-precision coordinate
-/// @param pos: Position of the space point in the sector frame
+/// @param station Station name of the chamber
+/// @param tech Technology of the measurement
+/// @param layer Layer number in the sector frame
+/// @param measEta Whether the space point measures the precision coordinate
+/// @param measPhi Whether the space point measures the non-precision coordinate
+/// @param pos Position of the space point in the sector frame
 ActsExamples::MuonSpacePoint makeSpacePoint(MuonId::StationName station,
                                             MuonId::TechField tech,
                                             std::uint8_t layer, bool measEta,
@@ -203,23 +204,31 @@ BOOST_AUTO_TEST_CASE(hit_payload_and_topology) {
 }
 
 BOOST_AUTO_TEST_CASE(seed_selector) {
+  using EtaBin = SeedSelector::EtaBin;
+  using enum MuonId::StationName;
+  using Tech = MuonId::TechField;
+  using enum StIndex;
+  constexpr auto idx = [](StIndex st) { return Acts::toUnderlying(st); };
+
   const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
   const auto surface = testSurface();
   const Acts::Transform3 toGlobal{Acts::Transform3::Identity()};
 
+  // The unit transform keeps the positions, which place the hits at
+  // |eta| ~ 0.07 (barrel bin), 1.2 (transition bin) and 2.6 (endcap bin)
   ActsExamples::MuonSpacePointBucket bucket{};
-  bucket.push_back(makeSpacePoint(MuonId::StationName::BML,
-                                  MuonId::TechField::Rpc, 1u, true, false,
-                                  Acts::Vector3{0., 10., 100.}));
-  bucket.push_back(makeSpacePoint(MuonId::StationName::BML,
-                                  MuonId::TechField::Mdt, 2u, true, false,
-                                  Acts::Vector3{0., 20., 130.}));
-  bucket.push_back(makeSpacePoint(MuonId::StationName::BIL,
-                                  MuonId::TechField::Rpc, 3u, true, false,
-                                  Acts::Vector3{0., 30., 160.}));
-  bucket.push_back(makeSpacePoint(MuonId::StationName::BOL,
-                                  MuonId::TechField::Rpc, 4u, true, false,
-                                  Acts::Vector3{0., 40., 190.}));
+  bucket.push_back(makeSpacePoint(BML, Tech::Rpc, 1u, true, false,
+                                  Acts::Vector3{0., 7500., 500.}));
+  bucket.push_back(makeSpacePoint(BML, Tech::Mdt, 2u, true, false,
+                                  Acts::Vector3{0., 7500., 520.}));
+  bucket.push_back(makeSpacePoint(BIL, Tech::Rpc, 3u, true, false,
+                                  Acts::Vector3{0., 4500., 300.}));
+  bucket.push_back(makeSpacePoint(BOL, Tech::Rpc, 4u, true, false,
+                                  Acts::Vector3{0., 9500., 600.}));
+  bucket.push_back(makeSpacePoint(BML, Tech::Rpc, 5u, true, false,
+                                  Acts::Vector3{0., 7500., 11319.}));
+  bucket.push_back(makeSpacePoint(EML, Tech::Tgc, 6u, true, false,
+                                  Acts::Vector3{0., 2000., 14000.}));
 
   const HitPayload middleStrip{gctx, &bucket[0], &bucket, toGlobal,
                                surface.get()};
@@ -229,9 +238,13 @@ BOOST_AUTO_TEST_CASE(seed_selector) {
                               surface.get()};
   const HitPayload outerStrip{gctx, &bucket[3], &bucket, toGlobal,
                               surface.get()};
+  const HitPayload transitionMiddle{gctx, &bucket[4], &bucket, toGlobal,
+                                    surface.get()};
+  const HitPayload endcapMiddle{gctx, &bucket[5], &bucket, toGlobal,
+                                surface.get()};
 
-  SeedSelector::Config cfg{};
-  const SeedSelector selector{SeedSelector::Config{cfg}};
+  const SeedSelector::Config cfg{};
+  const SeedSelector selector{cfg};
 
   // Seeds are taken from the middle & outer station, Mdt hits are excluded
   BOOST_CHECK(selector.goodForSeeding(middleStrip));
@@ -239,44 +252,67 @@ BOOST_AUTO_TEST_CASE(seed_selector) {
   BOOST_CHECK(!selector.goodForSeeding(middleStraw));
   BOOST_CHECK(!selector.goodForSeeding(innerStrip));
 
-  // A seed's windows are the row of its station in the table of its |eta| bin
-  const auto row = [&](const HitPayload& seed) {
-    return selector.m_thetaWindows[Acts::toUnderlying(selector.etaBin(seed))]
-                                  [Acts::toUnderlying(seed.station)];
-  };
-  BOOST_CHECK(selector.thetaSearchWindow(middleStrip) == row(middleStrip));
-  BOOST_CHECK(selector.thetaSearchWindow(outerStrip) == row(outerStrip));
+  BOOST_CHECK(selector.etaBin(middleStrip) == EtaBin::Barrel);
+  BOOST_CHECK(selector.etaBin(transitionMiddle) == EtaBin::Transition);
+  BOOST_CHECK(selector.etaBin(endcapMiddle) == EtaBin::Endcap);
 
-  // The tables are symmetric, and a barrel middle seed sees the neighbouring
-  // barrel stations but not the endcap
-  using enum StIndex;
-  constexpr auto idx = [](StIndex st) { return Acts::toUnderlying(st); };
-  for (const SeedSelector::Matrix_t& m : selector.m_thetaWindows) {
-    for (std::size_t a = 0; a < m.size(); ++a) {
-      for (std::size_t b = 0; b < m.size(); ++b) {
-        BOOST_CHECK_EQUAL(m[a][b], m[b][a]);
-      }
-    }
-  }
+  // A barrel middle seed sees the neighbouring barrel stations but not the
+  // endcap
   const SeedSelector::Row_t& barrelMiddle{
-      selector.m_thetaWindows[Acts::toUnderlying(SeedSelector::EtaBin::Barrel)]
-                             [idx(BM)]};
+      selector.thetaSearchWindow(middleStrip)};
   BOOST_CHECK_EQUAL(barrelMiddle[idx(BM)], cfg.barrelSameStation);
   BOOST_CHECK_EQUAL(barrelMiddle[idx(BI)], cfg.barrelAdjacent);
   BOOST_CHECK_EQUAL(barrelMiddle[idx(BO)], cfg.barrelAdjacent);
   BOOST_CHECK_EQUAL(barrelMiddle[idx(EM)], 0.);
+
+  // The windows are symmetric in the seed and the hit station
+  const SeedSelector::Row_t& barrelOuter{
+      selector.thetaSearchWindow(outerStrip)};
+  BOOST_CHECK_EQUAL(barrelOuter[idx(BM)], barrelMiddle[idx(BO)]);
+  BOOST_CHECK_EQUAL(barrelOuter[idx(BI)], cfg.barrelSkip);
+
+  // In the transition bin a barrel seed also sees the endcap
+  const SeedSelector::Row_t& transition{
+      selector.thetaSearchWindow(transitionMiddle)};
+  BOOST_CHECK_EQUAL(transition[idx(BO)], cfg.transBarrelAdj);
+  BOOST_CHECK_EQUAL(transition[idx(EM)], cfg.transBMToEndcap);
+
+  // An endcap seed sees the endcap stations only
+  const SeedSelector::Row_t& endcap{selector.thetaSearchWindow(endcapMiddle)};
+  BOOST_CHECK_EQUAL(endcap[idx(EM)], cfg.endcapSameMiddle);
+  BOOST_CHECK_EQUAL(endcap[idx(EI)], cfg.endcapAdjacent);
+  BOOST_CHECK_EQUAL(endcap[idx(EO)], cfg.endcapAdjacent);
+  BOOST_CHECK_EQUAL(endcap[idx(BM)], 0.);
+
   BOOST_CHECK_CLOSE(selector.maxThetaWindow(), 2.6_degree, 1.e-6);
 
-  // Both toggles open up the corresponding seeds
+  // Both toggles open up the corresponding seeds, and the windows follow the
+  // configuration
   SeedSelector::Config mdtCfg{cfg};
   mdtCfg.seedFromMdt = true;
   mdtCfg.seedFromInner = true;
-  const SeedSelector fromEverything{SeedSelector::Config{mdtCfg}};
+  mdtCfg.barrelAdjacent = 2._degree;
+  const SeedSelector fromEverything{mdtCfg};
   BOOST_CHECK(fromEverything.goodForSeeding(middleStraw));
   BOOST_CHECK(fromEverything.goodForSeeding(innerStrip));
-  BOOST_CHECK(fromEverything.thetaSearchWindow(innerStrip) ==
-              fromEverything.m_thetaWindows[Acts::toUnderlying(
-                  fromEverything.etaBin(innerStrip))][idx(BI)]);
+  BOOST_CHECK_EQUAL(fromEverything.thetaSearchWindow(innerStrip)[idx(BM)],
+                    2._degree);
+  BOOST_CHECK_EQUAL(fromEverything.thetaSearchWindow(innerStrip)[idx(BO)],
+                    cfg.barrelSkip);
+}
+
+BOOST_AUTO_TEST_CASE(algorithm_config_validation) {
+  using Algorithm = ActsExamples::GlobalPatternFinderAlgorithm;
+  Algorithm::Config cfg{};
+
+  // The input & output keys and the tracking geometry are mandatory
+  cfg.outPatterns = "Patterns";
+  BOOST_CHECK_THROW(Algorithm{cfg}, std::invalid_argument);
+  cfg.inSpacePoints = "SpacePoints";
+  cfg.outPatterns = "";
+  BOOST_CHECK_THROW(Algorithm{cfg}, std::invalid_argument);
+  cfg.outPatterns = "Patterns";
+  BOOST_CHECK_THROW(Algorithm{cfg}, std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

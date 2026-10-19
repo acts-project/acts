@@ -29,57 +29,57 @@
 #include <string>
 #include <vector>
 
-/// @brief Types plugging the example muon EDM into the Acts GlobalPatternFinder:
-///        the hit wrapper, the sector & station description and the callbacks
-///        steering the pattern search.
 namespace ActsExamples {
 
-/// @brief Helper functions to describe the expanded sector concept. The expanded
-///         sectors are based on the 16 fold symmetry of the MS, but also take
-/// into account the overlap between 2 sectors.
-///
-///         The regular msSector is multiplied by 2 and then the sectorProjector
-/// is added which can be either -1 to indicate that the overlap between the
-/// current sector and the left sector is of interest, or 0 to indicate that the
-/// sector center is of interest and finally 1 to indicate that the sector to
-/// the right is of interest.
+/// @brief Sector of the muon spectrometer extended by the overlaps between
+///        adjacent sectors. The spectrometer has a 16-fold symmetry in phi;
+///        the expanded sector index is twice the spectrometer sector plus the
+///        projector, which is -1 for the overlap with the previous sector, 0
+///        for the sector centre and 1 for the overlap with the next sector.
 class ExpandedSector {
  public:
   /// @brief Type of the index of the expanded sector
   using Index_t = std::int8_t;
-  /// @brief Enumeration to select the sector projection of the
-  ///         regular MS sector
+  /// @brief Part of a spectrometer sector an expanded sector covers
   enum class SectorProjector : std::int8_t {
-    leftOverlap =
-        -1,  /// Project the segment onto the overlap with the previous sector
-    center = 0,  /// Project the segment onto the sector centre
-    rightOverlap =
-        1  /// Project the segment on the overlap with the next sector
+    /// Overlap with the previous sector
+    leftOverlap = -1,
+    /// Sector centre
+    center = 0,
+    /// Overlap with the next sector
+    rightOverlap = 1
   };
-  /// @brief Return the projector as a string
+  /// @brief Name of a projector
+  /// @param proj Projector of interest
+  /// @return The name of the enumerator
   static std::string toString(const SectorProjector proj);
-  /// @brief Define the ostream operator
+  /// @brief Print a projector
+  /// @param ostr Stream to print to
+  /// @param proj Projector to print
+  /// @return The stream
   friend std::ostream& operator<<(std::ostream& ostr,
                                   const SectorProjector proj) {
     return ostr << (toString(proj));
   }
+  /// @brief Print an expanded sector
+  /// @param ostr Stream to print to
+  /// @param sec Expanded sector to print
+  /// @return The stream
   friend std::ostream& operator<<(std::ostream& ostr,
                                   const ExpandedSector& sec) {
     return sec.toString(ostr);
   }
-  /// @brief Constructor of the expanded sector taking the
-  ///         regular MS sector number and the projector
-  /// @param msSector: Number of the ms reference sector [1-16]
-  /// @param proj: Splitting of the sector to the overlap with the
-  ///              left / right adjacent sector or the sector center
+  /// @brief Constructor from a spectrometer sector and a projector
+  /// @param msSector Number of the spectrometer sector [1-16]
+  /// @param proj Part of the sector: the centre or the overlap with the
+  ///             previous or the next sector
   explicit ExpandedSector(const unsigned msSector, const SectorProjector proj);
-  /// @brief Constructor from an arbitrary phi angle. The angle is
-  ///         assigned to the msSectors and then the expanded sector
-  ///         is deduced
-  /// @param phi: Angle from [-pi, pi]
+  /// @brief Constructor from a phi angle, which is assigned to the sector or
+  ///        the overlap it lies in
+  /// @param phi Angle in [-pi, pi]
   explicit ExpandedSector(const double phi);
-  /// @brief Constructor from a expanded sector number
-  /// @param expSector: Raw expanded sector number
+  /// @brief Constructor from an expanded sector index
+  /// @param expSector Expanded sector index
   explicit ExpandedSector(const Index_t expSector);
   /// @brief Define the ordering operator
   bool operator<(const ExpandedSector& other) const;
@@ -87,14 +87,12 @@ class ExpandedSector {
   bool operator==(const ExpandedSector& other) const;
   /// @brief Define the unequal operator
   bool operator!=(const ExpandedSector& other) const;
-  /// @brief Returns the ms sector corresponding to the
-  ///         expanded sector.
-  /// @note If the expanded sector is constructed with the
-  ///        left / right overlap. The msSector number might be
-  ///        the adjacent msSector
+  /// @brief Returns the spectrometer sector of the expanded sector
+  /// @note An overlap is stored as the right overlap of the lower sector,
+  ///       hence the left overlap of a sector returns the previous sector
   unsigned msSector() const;
-  /// @brief Returns the neighbouring msSector number constructed from
-  ///         the primary sector and the sector overlap projector
+  /// @brief Returns the spectrometer sector on the other side of the overlap,
+  ///        or msSector() for a sector centre
   unsigned adjacentMsSector() const;
   /// @brief Returns the projector in the corresponding MS sector
   SectorProjector projector() const;
@@ -113,15 +111,18 @@ class ExpandedSector {
   double sectorSize() const;
 
  private:
-  /// @brief Pipe the object to an ostream
+  /// @brief Print the expanded sector
+  /// @param ostr Stream to print to
+  /// @return The stream
   std::ostream& toString(std::ostream& ostr) const;
-  /// @brief the sector number stored
+  /// @brief Expanded sector index
   std::int8_t m_sector{0};
 };
 
 static_assert(Acts::Experimental::detail::SectorType<ExpandedSector>);
 
-/// enum to classify the different station layers in the muon spectrometer
+/// @brief Station index of the muon spectrometer: the inner, middle, outer and
+///        extended stations of the barrel (B) and of the endcap (E)
 enum class StIndex : std::int8_t {
   StUnknown = -1,
   BI,
@@ -135,41 +136,52 @@ enum class StIndex : std::int8_t {
   StIndexMax
 };
 
-/// enum to classify the different layers in the muon spectrometer
+/// @brief Station layer of the muon spectrometer, common to barrel and endcap
 enum class LayerIndex : std::int8_t {
   LayerUnknown = -1,
   Inner,
   Middle,
   Outer,
-  Extended,        /// EE
-  BarrelExtended,  /// BEE
+  /// Endcap extended station (EE)
+  Extended,
+  /// Barrel extended station (BEE)
+  BarrelExtended,
   LayerIndexMax
 };
 
-/// convert ChIndex into StIndex
+/// @brief Station index of a chamber
+/// @param index Station name of the chamber
+/// @return The station index, StUnknown for an undefined name
 StIndex toStationIndex(MuonSpacePoint::MuonId::StationName index);
 
-/// convert StIndex into LayerIndex
+/// @brief Station layer of a station index
+/// @param index Station index of interest
+/// @return The station layer, LayerIndexMax for an unknown station
 LayerIndex toLayerIndex(StIndex index);
 
 /// @brief Returns true if the station index points to a barrel chamber
+/// @param index Station index of interest
 bool isBarrel(const StIndex index);
 
-/// @brief Returns whether the uncalibrated spacepoint is a precision hit (Mdt, micromegas, stgc strips)
-/// @param hit: Reference to the uncalibrated space point
+/// @brief Returns whether a space point is a precision hit: an MDT, a
+///        micromegas or an sTGC strip measurement
+/// @param hit Space point of interest
 bool isPrecisionHit(const MuonSpacePoint& hit);
 
-/// @brief Base class for hit struct containing hit information.
+/// @brief Muon space point as a hit of the global pattern finder: the space
+///        point together with its global position, station and measurement
+///        surface
 struct HitPayload {
-  /// @brief Constructor with parameters
-  /// @param gctx The geometry context
-  /// @param sp The space point
-  /// @param bucket The space point bucket
-  /// @param localToGlobal The transformation from local to global coordinates
-  /// @param measSurface The measurement surface of the space point
+  /// @brief Constructor
+  /// @param gctx Geometry context
+  /// @param sp Space point
+  /// @param parentBucket Space point bucket holding the space point
+  /// @param localToGlobal Transformation from the sector frame of the space
+  ///                      point into the global frame
+  /// @param measSurface Measurement surface of the space point
   explicit HitPayload(const Acts::GeometryContext& gctx,
                       const MuonSpacePoint* sp,
-                      const MuonSpacePointBucket* bucket,
+                      const MuonSpacePointBucket* parentBucket,
                       const Acts::Transform3& localToGlobal,
                       const Acts::Surface* measSurface);
   /// @brief Retrieve the space point
@@ -232,31 +244,33 @@ class PatternTopology {
   ///        inside of the spectrometer outwards. Hits of one station are
   ///        ordered by their layer, hits of different stations by their
   ///        station layer (inner, extended, middle, outer)
-  /// @param hit1: First hit
-  /// @param hit2: Second hit
+  /// @param hit1 First hit
+  /// @param hit2 Second hit
   /// @return True if hit1 is ordered before hit2
   /// @throws std::runtime_error for one hit in BO and the other in EO, which a
   ///         pattern cannot hold
   static bool layerSorter(const HitPayload& hit1, const HitPayload& hit2);
   /// @brief Group of a hit, its station index
-  /// @param hit: Hit of interest
+  /// @param hit Hit of interest
   /// @return The group index of the hit
   static GroupIdx groupIndex(const HitPayload& hit);
   /// @brief Whether two hits are on the same detector layer: the same layer of
   ///        the same station, or the same radius (barrel) or |z| (endcap) in
   ///        the same station index
-  /// @param hit1: First hit
-  /// @param hit2: Second hit
+  /// @param hit1 First hit
+  /// @param hit2 Second hit
   /// @return True if both hits are on one layer
   static bool sameLayer(const HitPayload& hit1, const HitPayload& hit2);
 };
 static_assert(
     Acts::Experimental::detail::PatternTopology<PatternTopology, HitPayload>);
 
+/// @brief Global pattern finder on the muon space points
 using GlobalPatternFinder_t =
     Acts::Experimental::detail::GlobalPatternFinder<HitPayload, ExpandedSector,
                                                     PatternTopology>;
 
+/// @brief Search tree over the hits of an event, in theta and expanded sector
 using SearchTree_t = GlobalPatternFinder_t::SearchTree_t;
 
 /// @brief Structure to hold the search tree data
@@ -269,7 +283,8 @@ struct SearchTreeData {
 
 /// @brief Chooses the hits the global pattern finder starts patterns from and
 ///        the theta windows it searches around each of them
-struct SeedSelector {
+class SeedSelector {
+ public:
   /// @brief Configuration of the seed selection. The theta half-windows [rad]
   ///        are given per pair of seed station and hit station, for three bins
   ///        of the seed's |eta|; pairs left out are 0, so the hits of that
@@ -281,7 +296,8 @@ struct SeedSelector {
     bool seedFromInner{false};
     /// @brief Upper |eta| edge of the barrel bin
     double etaBarrelMax{0.9};
-    /// @brief Lower |eta| edge of the endcap bin; the transition bin lies between
+    /// @brief Lower |eta| edge of the endcap bin; the transition bin lies
+    ///        between
     double etaEndcapMin{1.45};
 
     /// @brief Barrel bin: two hits in the same station
@@ -342,31 +358,33 @@ struct SeedSelector {
   /// @brief Half-windows per |eta| bin, seed station and hit station
   using Windows_t = std::array<Matrix_t, Acts::toUnderlying(EtaBin::nBins)>;
   /// @brief Constructor
-  /// @param config: Configuration of the seed selection
-  explicit SeedSelector(Config&& config);
+  /// @param config Configuration of the seed selection
+  explicit SeedSelector(const Config& config);
   /// @brief Whether a hit may seed a pattern: it lies in one of the seeding
   ///        station layers and is not an MDT hit, unless seedFromMdt is set
-  /// @param hit: Hit of interest
+  /// @param hit Hit of interest
   /// @return True if the hit may seed a pattern
   bool goodForSeeding(const HitPayload& hit) const;
   /// @brief Theta half-windows [rad] to search for hits compatible with a seed
-  /// @param seed: Seed hit
+  /// @param seed Seed hit
   /// @return The half-window for the hits of each station, from the table of
   ///         the seed's station and |eta| bin
   const Row_t& thetaSearchWindow(const HitPayload& seed) const;
   /// @brief Bin of a seed's |eta|
-  /// @param seed: Seed hit
+  /// @param seed Seed hit
   /// @return The barrel, transition or endcap bin
   EtaBin etaBin(const HitPayload& seed) const;
   /// @brief Largest theta half-window of all seeds and stations
   double maxThetaWindow() const;
+
+ private:
   /// @brief Station layers of the seeds: middle and outer, and inner if
   ///        seedFromInner is set
-  std::vector<LayerIndex> m_seedinglayers{LayerIndex::Middle,
+  std::vector<LayerIndex> m_seedingLayers{LayerIndex::Middle,
                                           LayerIndex::Outer};
   /// @brief Half-windows per |eta| bin, seed station and hit station
   Windows_t m_thetaWindows{};
-  /// @brief Config
+  /// @brief Configuration of the seed selection
   Config m_cfg;
 };
 static_assert(Acts::Experimental::detail::PatternSeedSelector<
@@ -382,8 +400,8 @@ struct OnlyPhiHitsProvider {
       std::array<std::vector<HitPayload>, PatternTopology::nGroups>;
   /// @brief Phi-only hits that may belong to a pattern: those in the space
   ///        point buckets that hold the pattern's hits, per group
-  /// @param pattern: Pattern of interest
-  /// @param gctx: Geometry context
+  /// @param pattern Pattern of interest
+  /// @param gctx Geometry context
   /// @return The phi-only hits, per group
   PhiHitsPerGroup getPhiOnlyHits(const PatternStateAux& pattern,
                                  const Acts::GeometryContext& gctx) const;
@@ -399,73 +417,72 @@ static_assert(
 ///        expressed, into the global frame. The space point carries the
 ///        transform of its own measurement surface into the sector frame, hence
 ///        the global frame is reached as surfaceToGlobal * surfaceToSector^-1.
-/// @param gctx: Geometry context
-/// @param surface: Measurement surface of the space point
-/// @param sp: Space point of interest
+/// @param gctx Geometry context
+/// @param surface Measurement surface of the space point
+/// @param sp Space point of interest
 Acts::Transform3 localToGlobalTransform(const Acts::GeometryContext& gctx,
                                         const Acts::Surface& surface,
                                         const MuonSpacePoint& sp);
 
 /// @brief Measurement surface of a space point, looked up by its geometry
 ///        identifier. The surface defines the local axes of the hit
-/// @param trackingGeometry: Geometry holding the muon measurement surfaces
-/// @param sp: Space point of interest
+/// @param trackingGeometry Geometry holding the muon measurement surfaces
+/// @param sp Space point of interest
 const Acts::Surface& measurementSurface(
     const Acts::TrackingGeometry& trackingGeometry, const MuonSpacePoint& sp);
 
-/// @brief Transformation from the sector frame of a bucket into the global frame.
-///        The space points of a bucket are all expressed in the frame of the
-///        sector of the first one, hence the transform is determined once per
-///        bucket and shared by its hits.
-/// @param gctx: Geometry context
-/// @param trackingGeometry: Geometry holding the muon measurement surfaces
-/// @param bucket: Bucket of interest, which must not be empty
+/// @brief Transformation from the sector frame of a bucket into the global
+///        frame. The space points of a bucket are all expressed in the frame
+///        of the sector of the first one, hence the transform is determined
+///        once per bucket and shared by its hits.
+/// @param gctx Geometry context
+/// @param trackingGeometry Geometry holding the muon measurement surfaces
+/// @param bucket Bucket of interest, which must not be empty
 Acts::Transform3 bucketToGlobalTransform(
     const Acts::GeometryContext& gctx,
     const Acts::TrackingGeometry& trackingGeometry,
     const MuonSpacePointBucket& bucket);
 
-/// @brief Result of the global pattern recognition: the space points forming one
-///        pattern, grouped by station, together with the pattern's direction,
-///        sector and quality estimates
+/// @brief Result of the global pattern recognition: the space points forming
+///        one pattern, grouped by station, together with the pattern's
+///        direction, sector and quality estimates
 struct MuonGlobalPattern {
-  // Hits of the pattern organized per station
+  /// @brief Space points of the pattern per station index
   std::array<std::vector<const MuonSpacePoint*>, PatternTopology::nGroups>
       hitsPerStation{};
-  // average global theta of the pattern
+  /// @brief Average global theta of the pattern
   double theta{0.};
-  // average global phi of the pattern
+  /// @brief Average global phi of the pattern
   double phi{0.};
-  // Expanded sector of the pattern
+  /// @brief Expanded sector index of the pattern
   ExpandedSector::Index_t sector{0};
-  // Number of precision layers
+  /// @brief Number of precision layers
   unsigned nPrecisionLayers{0};
-  // Number of trigger layers
+  /// @brief Number of trigger layers
   unsigned nTriggerLayers{0};
-  // Number of phi layers
+  /// @brief Number of phi layers
   unsigned nPhiLayers{0};
-  // Mean over eta hits of the square of their residual divided by acceptance
-  // window from pattern finding
+  /// @brief Mean over the eta hits of their squared residual divided by the
+  ///        acceptance window of the pattern search
   double meanNormResidual2{0.};
 };
 /// @brief Container of MuonGlobalPattern
 using MuonGlobalPatternContainer = std::vector<MuonGlobalPattern>;
 
-/// @brief Algorithm performing global pattern recognition.
+/// @brief Algorithm performing global pattern recognition in the muon
+///        spectrometer.
 ///
-/// This algorithm performs global pattern recognition as the first step
-/// of the Phase-2 fast reconstruction stage. It builds global patterns
-/// of precision and non-precision hits using space-points created in
-/// upstream algorithms. It first builds patterns in eta and then adds
-/// compatible phi-only hits to the patterns. The resulting patterns are
+/// It builds global patterns of precision and non-precision hits from the
+/// muon space points of an event. It first builds patterns in eta and then
+/// adds compatible phi-only hits to the patterns. The resulting patterns are
 /// written into the event store.
 class GlobalPatternFinderAlgorithm final : public IAlgorithm {
  public:
   /// @brief Configuration of the algorithm
   struct Config {
-    /// @brief Keys of SpacePoint containers to read
+    /// @brief Key of the input space point container
     std::string inSpacePoints{};
-    /// @brief Write handle key for the output global patterns
+    /// @brief Key of the output pattern container
     std::string outPatterns{};
     /// @brief Tracking geometry holding the muon measurement surfaces
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry{};
@@ -478,27 +495,34 @@ class GlobalPatternFinderAlgorithm final : public IAlgorithm {
     bool seedFromInner{false};
     /// @brief Number of standard deviations to consider for residual acceptance
     double nResidualSigma{3.};
-    /// @brief Residual uncertainty to consider the hit as low confidence
-    double lowConfidenceResSigma{50.0};
+    /// @brief Residual uncertainty [mm] above which a hit has low confidence
+    double lowConfidenceResSigma{50. * Acts::UnitConstants::mm};
     /// @brief Maximum angle [rad] of a hit to the pattern's bending plane for
-    ///         the hit to be phi compatible with the pattern
+    ///        the hit to be phi compatible with the pattern
     double phiTolerance{3.5 * Acts::UnitConstants::degree};
-    /// @brief Requirement on trigger layers in the bending direction to accept a pattern
+    /// @brief Minimum number of trigger layers in the bending direction to
+    ///        accept a pattern
     unsigned minTriggerLayers{2};
-    /// @brief Requirement on precision layers in the bending direction to accept a pattern
+    /// @brief Minimum number of precision layers in the bending direction to
+    ///        accept a pattern
     unsigned minPrecisionLayers{8};
-    /// @brief Minimum number of phi layers required to accept a pattern
+    /// @brief Minimum number of phi layers to accept a pattern
     unsigned minPhiLayers{1};
-    /// @brief Minimum number of layers in a station to be considered a good station
+    /// @brief Minimum number of layers for a station to count as a good
+    ///        station
     unsigned minStationLayers{4};
-    /// @brief Quality cut on pattern'mean squared normalized residual. Set to a large value to disable the cut, e.g. 10.
+    /// @brief Upper cut on the pattern's mean squared normalized residual. A
+    ///        large value, e.g. 10, disables the cut
     double meanNormRes2Cut{3.5};
-    /// @brief Maximum number of attempts to build a pattern from hits already used in existing patterns
+    /// @brief Maximum number of attempts to build a pattern from hits already
+    ///        used in existing patterns
     unsigned maxSeedAttempts{3};
-    /// @brief Maximum number of missed candidate hits in different measurement layers during pattern building allowed for a pattern branch before it is discarded
+    /// @brief Maximum number of measurement layers of a station a pattern
+    ///        branch may miss before it is discarded
     unsigned maxMissLayersInStation{3};
-    /// @brief Minimum distance [mm] between two hits for being used to compute a reliable pattern line. Use the beamspot otherwise.
-    double minHitDistance4Line{200};
+    /// @brief Minimum distance [mm] between two hits to define the pattern line
+    ///        through them; closer hits use the beam spot instead
+    double minHitDistance4Line{200. * Acts::UnitConstants::mm};
     /// @brief Beam spot radius
     double beamSpotRadius{20. * Acts::UnitConstants::cm};
     /// @brief Beam spot length
@@ -506,15 +530,15 @@ class GlobalPatternFinderAlgorithm final : public IAlgorithm {
   };
 
   /// @brief Constructor
-  /// @param cfg: Configuration of the algorithm
-  /// @param logger: Logger of the algorithm; a default one if null
+  /// @param cfg Configuration of the algorithm
+  /// @param logger Logger of the algorithm; a default one if null
   /// @throws std::invalid_argument if a collection key or the tracking
   ///         geometry is missing
   explicit GlobalPatternFinderAlgorithm(
       const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// @brief Finds the global patterns of an event
-  /// @param ctx: Context of the event
+  /// @param ctx Context of the event
   /// @return SUCCESS, with the patterns written to the event store
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
@@ -522,38 +546,41 @@ class GlobalPatternFinderAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
+  /// @brief Pattern as returned by the global pattern finder
   using PatternResult = GlobalPatternFinder_t::OutputPattern;
 
   /// @brief Builds the hit payloads of an event and the search tree over them
-  /// @param gctx: Geometry context
-  /// @param spacepoints: Space point buckets of the event
+  /// @param gctx Geometry context
+  /// @param spacepoints Space point buckets of the event
   /// @return The hit payloads and the tree that points to them
   SearchTreeData constructTree(
       const Acts::GeometryContext& gctx,
       const MuonSpacePointContainer& spacepoints) const;
-  /// @brief Method to convert a PatternState into a GlobalPattern object
-  /// @param candidate: PatternState to be converted
-  /// @return: Converted GlobalPattern
+  /// @brief Convert a pattern of the finder into a MuonGlobalPattern
+  /// @param candidate Pattern to be converted
+  /// @return The converted pattern
   MuonGlobalPattern convertToPattern(const PatternResult& candidate) const;
-  /// @brief Method to convert a vector of PatternStates into GlobalPattern objects
-  /// @param candidates: PatternStates to be converted
-  /// @return: Vector of converted GlobalPatterns
+  /// @brief Convert the patterns of the finder into MuonGlobalPatterns
+  /// @param candidates Patterns to be converted
+  /// @return The converted patterns
   MuonGlobalPatternContainer convertToPattern(
       const std::vector<PatternResult>& candidates) const;
 
+  /// @brief Configuration of the algorithm
   Config m_cfg;
 
-  /// @brief Keys of SpacePoint containers to read
+  /// @brief Input space point container
   ReadDataHandle<MuonSpacePointContainer> m_inSpacePoints{this,
                                                           "InSpacePoints"};
-  /// @brief Write handle key for the output global patterns
+  /// @brief Output pattern container
   WriteDataHandle<MuonGlobalPatternContainer> m_outPatterns{this,
                                                             "OutPatterns"};
 
   /// @brief Seed selector
   std::unique_ptr<SeedSelector> m_seedSelector{};
+  /// @brief Provider of the phi-only hits
   OnlyPhiHitsProvider m_onlyPhiProvider{};
-  /// @brief Pointer to the actual global pattern finder
+  /// @brief Global pattern finder
   std::unique_ptr<GlobalPatternFinder_t> m_globPatFinder{};
 };
 

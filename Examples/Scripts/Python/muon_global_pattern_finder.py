@@ -17,20 +17,12 @@ def runGlobalPatternFinder(
     timingDir: str = "",
     timingFile: str = "timing.csv",
 ):
-    # The muon space points are stored in the frame of their spectrometer sector.
-    # Reaching the global frame needs the measurement surfaces, which are read
-    # from the tracking geometry JSON written alongside the n-tuple.
+    # The space points are expressed in their sector frame; the measurement
+    # surfaces of the tracking geometry transform them into the global frame
     gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
     trackingGeometry = TrackingGeometryJsonConverter().fromFile(gctx, geoFile)
 
-    # The sequencer drives the event loop: for every event it calls each
-    # reader, then each algorithm, in the order they were added. Data is
-    # passed between them through the event store under string keys.
-    #
-    # It writes the per algorithm wall time to timingFile on its own. That
-    # measurement only means anything on a single thread, which is why one
-    # thread is the default: more of them measure the throughput of the machine
-    # instead of the cost of the algorithm.
+    # The per-algorithm timing is only meaningful on a single thread
     s = acts.examples.Sequencer(
         events=nEvents if nEvents > 0 else None,
         skip=skip,
@@ -40,10 +32,6 @@ def runGlobalPatternFinder(
         logLevel=logLevel,
     )
 
-    # Reads the space points and writes them into the event store as a
-    # MuonSpacePointContainer under the key given by outputSpacePoints. The tree
-    # holding them is called "MuonSpacePoints", which differs from the reader's
-    # default.
     spReader = RootMuonSpacePointReader(
         filePath=inFile,
         treeName="MuonSpacePoints",
@@ -52,9 +40,6 @@ def runGlobalPatternFinder(
     )
     s.addReader(spReader)
 
-    # Reads the space points back via inSpacePoints and writes the found
-    # patterns under outPatterns. Every Config field not set here keeps its
-    # default from the C++ header.
     patternFinder = acts.examples.GlobalPatternFinderAlgorithm(
         inSpacePoints=spReader.config.outputSpacePoints,
         outPatterns="MuonGlobalPatterns",

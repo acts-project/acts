@@ -36,92 +36,96 @@ namespace {
 
 /// @brief Sector geometry of the muon spectrometer used by ExpandedSector:
 ///        sizes, central phi and overlaps of the 16 sectors
-namespace sectorMap {
+namespace SectorMap {
 
-constexpr double s_oneEightsOfPi{std::numbers::pi / 8.};         //  pi/8
-constexpr double s_inverseOneEightsOfPi{8. / std::numbers::pi};  // 8/pi
-constexpr std::array<double, 2> s_sectorSize{
-    0.4 * s_oneEightsOfPi,
-    0.6 * s_oneEightsOfPi};  // side of a sector in radiants
-constexpr double s_sectorOverlap{
-    0.1 *
-    s_oneEightsOfPi};  // size of the overlap between small and large sectors
+/// @brief One eighth of pi
+constexpr double kOneEighthOfPi{std::numbers::pi / 8.};
+/// @brief Inverse of one eighth of pi
+constexpr double kInverseOneEighthOfPi{8. / std::numbers::pi};
+/// @brief Half-size [rad] of the small (even) and the large (odd) sectors
+constexpr std::array<double, 2> kSectorSize{0.4 * kOneEighthOfPi,
+                                            0.6 * kOneEighthOfPi};
+/// @brief Size [rad] of the overlap between a small and a large sector
+constexpr double kSectorOverlap{0.1 * kOneEighthOfPi};
 
-/// sector size (exclusive) in radians
+/// @brief Sector half-size without the overlap [rad]
 double sectorSize(int sector) {
   const int idx = sector % 2;
-  return s_sectorSize[idx];
+  return kSectorSize[idx];
 }
 
-/// sector width (with overlap) in radians
+/// @brief Sector half-size including the overlap [rad]
 double sectorWidth(int sector) {
-  return sectorSize(sector) + s_sectorOverlap;
+  return sectorSize(sector) + kSectorOverlap;
 }
 
-/// returns the centeral phi position of a sector in radians
+/// @brief Central phi of a sector [rad]
 double sectorPhi(int sector) {
-  if (sector < 10)
+  if (sector < 10) {
     return std::numbers::pi * (sector - 1) / 8.;
+  }
   return -std::numbers::pi * (2 - (sector - 1) / 8.);
 }
 
-/// transforms a phi position from and to the sector coordinate system in
-/// radians
+/// @brief Transforms a phi position [rad] into or out of the frame of a sector
 double transformPhiToSector(double phi, int sector, bool toSector = true) {
   double sign = toSector ? -1 : 1;
   double dphi = phi + sign * sectorPhi(sector);
-  if (dphi > std::numbers::pi)
+  if (dphi > std::numbers::pi) {
     dphi -= 2 * std::numbers::pi;
-  if (dphi < -std::numbers::pi)
+  }
+  if (dphi < -std::numbers::pi) {
     dphi += 2 * std::numbers::pi;
+  }
   return dphi;
 }
 
-/// checks whether the phi position is consistent with sector
+/// @brief Whether a phi position lies within a sector, including its overlaps
 bool insideSector(int sector, double phi) {
-  double phiInSec = transformPhiToSector(phi, sector);
-  if (phiInSec < -sectorWidth(sector))
-    return false;
-  if (phiInSec > sectorWidth(sector))
-    return false;
-  return true;
+  const double phiInSec = transformPhiToSector(phi, sector);
+  return phiInSec >= -sectorWidth(sector) && phiInSec <= sectorWidth(sector);
 }
 
-/// returns the sector corresponding to the phi position
+/// @brief Sector a phi position belongs to
 int getSector(double phi) {
-  // remap phi onto sector structure
-  double val = (phi + sectorSize(1)) *
-               s_inverseOneEightsOfPi;  // convert to value between -8 and 8,
-                                        // shift by width first sector
-  if (val < 0)
+  // Map phi onto [0, 16), shifted by the half-size of the first sector
+  double val = (phi + sectorSize(1)) * kInverseOneEighthOfPi;
+  if (val < 0) {
     val += 16;
-  int sliceIndex = static_cast<int>(val / 2);  // large/small wedge
+  }
+  // Each slice holds one large and one small sector
+  int sliceIndex = static_cast<int>(val / 2);
   double valueInSlice = val - 2 * sliceIndex;
   int sector = 2 * sliceIndex + 1;
-  if (valueInSlice > 1.2)
+  if (valueInSlice > 1.2) {
     ++sector;
+  }
   return sector;
 }
 
-/// returns the main sector plus neighboring if the phi position is in an
-/// overlap region
+/// @brief Sector of a phi position plus the neighbours whose overlap it lies
+///        in, ordered by increasing phi
 void getSectors(double phi, std::vector<int>& sectors) {
   int sector = getSector(phi);
   int sectorNext = sector != 16 ? sector + 1 : 1;
   int sectorBefore = sector != 1 ? sector - 1 : 16;
-  if (insideSector(sectorBefore, phi))
+  if (insideSector(sectorBefore, phi)) {
     sectors.push_back(sectorBefore);
-  if (insideSector(sector, phi))
+  }
+  if (insideSector(sector, phi)) {
     sectors.push_back(sector);
-  if (insideSector(sectorNext, phi))
+  }
+  if (insideSector(sectorNext, phi)) {
     sectors.push_back(sectorNext);
+  }
 }
 
-/// returns the phi position of the overlap between the two sectors (which have
-/// to be neighboring) in radians
+/// @brief Phi [rad] of the overlap between two neighbouring sectors, or the
+///        central phi if both are the same sector
 double sectorOverlapPhi(int sector1, int sector2) {
-  if (sector1 == sector2)
+  if (sector1 == sector2) {
     return sectorPhi(sector1);
+  }
 
   int s1 = std::min(sector1, sector2);
   int s2 = std::max(sector1, sector2);
@@ -134,29 +138,29 @@ double sectorOverlapPhi(int sector1, int sector2) {
 
   double phi1 = sectorPhi(s1);
   double phio1 = phi1 + sectorSize(s1);
-  if (phio1 > std::numbers::pi)
+  if (phio1 > std::numbers::pi) {
     phio1 -= 2 * std::numbers::pi;
+  }
 
   return phio1;
 }
 
-}  // namespace sectorMap
+}  // namespace SectorMap
 
-/// @brief Number of sectors in the muon spectrometer (MuonStationIndex)
-constexpr unsigned numberOfSectors() {
-  return 16;
-}
+/// @brief Number of sectors in the muon spectrometer
+constexpr unsigned kNumberOfSectors{16};
 
 using SectorProjector = ActsExamples::ExpandedSector::SectorProjector;
-constexpr std::int8_t nExpanded = 2 * numberOfSectors();
+/// @brief Number of expanded sectors
+constexpr std::int8_t kNumberOfExpanded{2 * kNumberOfSectors};
 
 inline std::tuple<unsigned, SectorProjector> msSectorAndProj(
     const std::int8_t expandSector) {
-  assert(expandSector >= 0 && expandSector <= nExpanded);
+  assert(expandSector >= 0 && expandSector < kNumberOfExpanded);
   if (expandSector == 0) {
-    return std::make_tuple(numberOfSectors(), SectorProjector::center);
+    return std::make_tuple(kNumberOfSectors, SectorProjector::center);
   } else if (expandSector == 1) {
-    return std::make_tuple(numberOfSectors(), SectorProjector::rightOverlap);
+    return std::make_tuple(kNumberOfSectors, SectorProjector::rightOverlap);
   }
   const int regSector = expandSector / 2;
   const int backConv = expandSector - 2 * regSector;
@@ -210,19 +214,24 @@ ExpandedSector::ExpandedSector(const std::int8_t expSector)
     : m_sector{expSector} {}
 ExpandedSector::ExpandedSector(const unsigned msSector,
                                const SectorProjector proj) {
-  m_sector = (2 * msSector + Acts::toUnderlying(proj)) % nExpanded;
+  m_sector = (2 * msSector + Acts::toUnderlying(proj)) % kNumberOfExpanded;
 }
 
 ExpandedSector::ExpandedSector(const double phi) {
   std::vector<int> sectors{};
-  sectorMap::getSectors(phi, sectors);
+  SectorMap::getSectors(phi, sectors);
   assert(!sectors.empty());
   if (sectors.size() == 1) {
     (*this) = ExpandedSector{static_cast<unsigned>(sectors[0]),
                              SectorProjector::center};
   } else {
-    const int dS = (sectors[1] - sectors[0]) % numberOfSectors();
-    assert(std::abs(dS) == 1);
+    // The sectors are ordered by phi; across the 16 -> 1 boundary the
+    // difference wraps around
+    int dS{sectors[1] - sectors[0]};
+    if (dS < -1) {
+      dS += static_cast<int>(kNumberOfSectors);
+    }
+    assert(dS == 1);
     (*this) = ExpandedSector{static_cast<unsigned>(sectors[0]),
                              static_cast<SectorProjector>(dS)};
   }
@@ -240,8 +249,8 @@ std::int8_t ExpandedSector::sector() const {
 unsigned ExpandedSector::adjacentMsSector() const {
   const auto [msSec, proj] = msSectorAndProj(sector());
   if (msSec == 1 && proj == SectorProjector::leftOverlap) {
-    return numberOfSectors();
-  } else if (msSec == numberOfSectors() &&
+    return kNumberOfSectors;
+  } else if (msSec == kNumberOfSectors &&
              proj == SectorProjector::rightOverlap) {
     return 1;
   }
@@ -252,10 +261,10 @@ double ExpandedSector::sectorSize() const {
   unsigned sector2{adjacentMsSector()};
 
   if (sector1 == sector2) {
-    return sectorMap::sectorSize(sector1);
+    return SectorMap::sectorSize(sector1);
   }
   // The overlap size is the same for small and large sectors
-  return sectorMap::sectorWidth(sector1) - sectorMap::sectorSize(sector1);
+  return SectorMap::sectorWidth(sector1) - SectorMap::sectorSize(sector1);
 }
 bool ExpandedSector::operator<(const ExpandedSector& other) const {
   return sector() < other.sector();
@@ -267,21 +276,18 @@ bool ExpandedSector::operator!=(const ExpandedSector& other) const {
   return sector() != other.sector();
 }
 double ExpandedSector::phi() const {
-  return sectorMap::sectorOverlapPhi(msSector(), adjacentMsSector());
+  return SectorMap::sectorOverlapPhi(msSector(), adjacentMsSector());
 }
 Acts::Vector3 ExpandedSector::normalDir() const {
   return Acts::makeDirectionFromPhiTheta(phi() + 90._degree, 90._degree);
 }
 bool ExpandedSector::isNeighbour(const ExpandedSector& other) const {
   const int dS = std::abs(other.sector() - sector());
-  return std::min(dS, nExpanded - dS) <= 1;
+  return std::min(dS, kNumberOfExpanded - dS) <= 1;
 }
 bool ExpandedSector::insideSector(const double phi) const {
-  if (sectorMap::insideSector(msSector(), phi) &&
-      sectorMap::insideSector(adjacentMsSector(), phi)) {
-    return true;
-  }
-  return false;
+  return SectorMap::insideSector(msSector(), phi) &&
+         SectorMap::insideSector(adjacentMsSector(), phi);
 }
 
 std::string ExpandedSector::toString(const SectorProjector proj) {
@@ -436,16 +442,16 @@ SeedSelector::Windows_t buildThetaWindows(const SeedSelector::Config& cfg) {
 }
 }  // namespace
 
-SeedSelector::SeedSelector(Config&& config)
-    : m_thetaWindows{buildThetaWindows(config)}, m_cfg{std::move(config)} {
+SeedSelector::SeedSelector(const Config& config)
+    : m_thetaWindows{buildThetaWindows(config)}, m_cfg{config} {
   if (m_cfg.seedFromInner) {
-    m_seedinglayers.push_back(LayerIndex::Inner);
+    m_seedingLayers.push_back(LayerIndex::Inner);
   }
 }
 
 bool SeedSelector::goodForSeeding(const HitPayload& hit) const {
   const LayerIndex hitLayer{toLayerIndex(hit.station)};
-  if (std::ranges::find(m_seedinglayers, hitLayer) == m_seedinglayers.end() ||
+  if (std::ranges::find(m_seedingLayers, hitLayer) == m_seedingLayers.end() ||
       (hit.spacePoint()->isStraw() && !m_cfg.seedFromMdt)) {
     return false;
   }
@@ -691,13 +697,16 @@ GlobalPatternFinderAlgorithm::GlobalPatternFinderAlgorithm(
   SeedSelector::Config selectorCfg{};
   selectorCfg.seedFromMdt = m_cfg.seedFromMdt;
   selectorCfg.seedFromInner = m_cfg.seedFromInner;
-  m_seedSelector = std::make_unique<SeedSelector>(std::move(selectorCfg));
+  m_seedSelector = std::make_unique<SeedSelector>(selectorCfg);
 
   GlobalPatternFinder_t::Config patCfg{};
   patCfg.nResidualSigma = m_cfg.nResidualSigma;
   patCfg.lowConfidenceResSigma = m_cfg.lowConfidenceResSigma;
-  patCfg.maxThetaSizeOverlap =
-      2. * m_seedSelector->maxThetaWindow() + 0.5_degree;
+  // Two patterns are checked for an overlap if their theta differs by less
+  // than twice the widest seed window plus a margin
+  const double maxThetaSizeOverlap{2. * m_seedSelector->maxThetaWindow() +
+                                   0.5_degree};
+  patCfg.maxThetaSizeOverlap = maxThetaSizeOverlap;
   patCfg.phiTolerance = m_cfg.phiTolerance;
   patCfg.loosenAcceptanceFactor = 2.5;
   patCfg.minStripEtaLayers = m_cfg.minTriggerLayers;
@@ -716,8 +725,7 @@ GlobalPatternFinderAlgorithm::GlobalPatternFinderAlgorithm(
   ACTS_LOG_WITH_LOGGER(
       this->logger(), Acts::Logging::DEBUG,
       "Global Pattern Finder Configuration:\n"
-          << " Max theta size overlap [rad]: "
-          << 2. * m_seedSelector->maxThetaWindow() + 0.5_degree << "\n"
+          << " Max theta size overlap [rad]: " << maxThetaSizeOverlap << "\n"
           << " Number of residual standard deviations: " << m_cfg.nResidualSigma
           << "\n"
           << " Low confidence residual sigma [mm]: "
@@ -760,8 +768,7 @@ ProcessCode GlobalPatternFinderAlgorithm::execute(
       convertToPattern(m_globPatFinder->findPatterns(
           gctx, treeData.tree, *m_seedSelector, m_onlyPhiProvider, beamSpot))};
 
-  ACTS_DEBUG("Written " << patterns.size()
-                        << " GlobalPatterns into the event store.");
+  ACTS_DEBUG("Found " << patterns.size() << " global patterns.");
   if (logger().doPrint(Acts::Logging::DEBUG)) {
     for (const MuonGlobalPattern& pat : patterns) {
       std::ostringstream hitsPerStation{};
@@ -816,7 +823,7 @@ SearchTreeData GlobalPatternFinderAlgorithm::constructTree(
       if (logger().doPrint(Acts::Logging::VERBOSE)) {
         const HitPayload& newHit{hitPayloads.back()};
         std::ostringstream oss{};
-        oss << __func__ << "() Building hit from " << hit << std::endl
+        oss << __func__ << "() Building hit from " << hit << "\n"
             << "Pos: " << Acts::toString(newHit.position) << ", SensorDir: "
             << Acts::toString(newHit.globalSensorDirection(gctx));
         if (!newHit.spacePoint()->isStraw()) {
@@ -845,7 +852,7 @@ SearchTreeData GlobalPatternFinderAlgorithm::constructTree(
     coords[Acts::toUnderlying(HitCoords::eSector)] = expSect.sector();
     ACTS_VERBOSE(__func__ << "() Add hit with coordinates [" << coords[0]
                           << ", " << coords[1] << "] to search tree");
-    treeData.emplace_back(std::move(coords), &hit);
+    treeData.emplace_back(coords, &hit);
   };
   for (const HitPayload& hit : hitPayloads) {
     ACTS_VERBOSE(__func__ << "() Spacepoint: " << *hit.spacePoint());
@@ -889,8 +896,9 @@ MuonGlobalPattern GlobalPatternFinderAlgorithm::convertToPattern(
   // Add eta hits
   for (PatternTopology::GroupIdx g = 0u; g < PatternTopology::nGroups; ++g) {
     const auto& hits{candidate.hitsPerGroup[g]};
-    if (hits.empty())
+    if (hits.empty()) {
       continue;
+    }
 
     auto& outHits{pattern.hitsPerStation[g]};
     outHits.reserve(hits.size());
