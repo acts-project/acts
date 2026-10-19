@@ -44,6 +44,7 @@ class hough_transform_seeding_algorithm	: public device::hough_transform_seeding
 				    await_function_type await_func = await_sync_event);
 
  private:
+  void define_plane_edges_kernel(const define_plane_edges_kernel_payload& payload) const;
   void fill_hough_planes_kernel(const fill_hough_planes_kernel_payload& payload) const;
 
   /// Wait for outstanding work on the algorithm stream or queue.

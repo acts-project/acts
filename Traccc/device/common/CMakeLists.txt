@@ -71,6 +71,7 @@ traccc_add_library( traccc_device_common device_common
    "src/seeding/seed_parameter_estimation_algorithm.cpp"
    "include/traccc/seeding/device/hough_transform_seeding_algorithm.hpp"
    "src/seeding/hough_transform_seeding_algorithm.cpp"
+   "include/traccc/seeding/device/impl/define_plane_edges.ipp"
    # GBTS seed finding code.
    "include/traccc/gbts_seeding/device/gbts_bin_spacepoints.hpp"
    "include/traccc/gbts_seeding/device/impl/gbts_bin_spacepoints.ipp"

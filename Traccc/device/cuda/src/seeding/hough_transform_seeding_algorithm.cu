@@ -25,6 +25,21 @@
 #include "traccc/seeding/device/update_triplet_weights.hpp"
 
 namespace traccc::cuda {
+namespace kernels {
+   __global__ 
+   void define_plane_edges(edm::houghplane_collection<device::N_COLS, device::N_ROWS>::view houghplanes) {
+      // we need a config actually
+      float minQoptRange = -1.1f;
+      float maxQoptRange = 1.1f;
+      float minPhi = -std::numbers::pi_v<float>;
+      float maxPhi = std::numbers::pi_v<float>;
+      float stepQopt = (maxQoptRange - minQoptRange) / device::N_COLS;
+      float stepPhi = (maxPhi - minPhi) / device::N_ROWS;
+      device::define_plane_edges(details::global_index1(), houghplanes, 
+		      stepQopt, minQoptRange,
+		      stepPhi, minPhi);
+   }
+} // kernels
 
 hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
     const traccc::memory_resource& mr,
@@ -34,8 +49,14 @@ hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
                                         std::move(logger)),
       cuda::algorithm_base{str, std::move(await_func)} {}
 
-void hough_transform_seeding_algorithm::fill_hough_planes_kernel(const fill_hough_planes_kernel_payload& payload) const {
+void hough_transform_seeding_algorithm::define_plane_edges_kernel(const define_plane_edges_kernel_payload& payload) const {
+   unsigned int maxValues = std::max(device::N_COLS, device::N_ROWS);
+   const unsigned int n_threads = warp_size() * 4;
+   const unsigned int n_blocks = (maxValues  + n_threads - 1) / n_threads;
+   kernels::define_plane_edges<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.houghplanes);
 }
+
+void hough_transform_seeding_algorithm::fill_hough_planes_kernel(const fill_hough_planes_kernel_payload& payload) const {}
 
 void hough_transform_seeding_algorithm::synchronize() const {
   stream().synchronize();

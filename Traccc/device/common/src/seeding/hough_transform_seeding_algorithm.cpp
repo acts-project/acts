@@ -32,8 +32,10 @@ auto hough_transform_seeding_algorithm::operator()(
     n_spacepoints = copy().get_size(spacepoints);
   }
 
+  std::cout << "Hough Transform will run on a total of " << n_spacepoints << " input space points" << std::endl;
   // If there are no spacepoints, return right away.
   if (n_spacepoints == 0) {
+    std::cout << "well, not really ..." << std::endl;
     return {};
   }
 
@@ -42,6 +44,13 @@ auto hough_transform_seeding_algorithm::operator()(
   edm::houghplane_collection<N_COLS, N_ROWS>::buffer result(n_slices, mr().main);
   copy().setup(result)->ignore();
 
+  // Fill plane edges
+  
+
+  // Fill the planes with space points
+  //
+  //
+  //
   // Launch the seed parameter estimation kernel.
   // estimate_seed_params_kernel({n_seeds, m_data->m_config, bfield, measurements,
   //                             spacepoints, seeds, result});

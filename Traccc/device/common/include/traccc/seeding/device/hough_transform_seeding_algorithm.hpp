@@ -28,6 +28,7 @@ namespace traccc::device {
 static constexpr unsigned int N_COLS = 256u;
 static constexpr unsigned int N_ROWS = 7000u;
 
+// we need to template the class i guess
 class hough_transform_seeding_algorithm
     : public algorithm<edm::houghplane_collection<N_COLS, N_ROWS>::buffer(
           const edm::spacepoint_collection::const_view&)>,
@@ -44,6 +45,8 @@ class hough_transform_seeding_algorithm
 
  protected:
   struct fill_hough_planes_kernel_payload {
+    unsigned int n_cols = N_COLS;
+    unsigned int n_rows = N_ROWS;
     /// The number of spacepoints in the event
     edm::spacepoint_collection::const_view::size_type n_spacepoints;
     /// The input spacepoints
@@ -52,10 +55,19 @@ class hough_transform_seeding_algorithm
     edm::houghplane_collection<N_COLS, N_ROWS>::view& houghplanes;
   };
 
-  virtual void fill_hough_planes_kernel(
-      const fill_hough_planes_kernel_payload& payload) const = 0;
+  struct define_plane_edges_kernel_payload {
+    unsigned int n_cols = N_COLS;
+    unsigned int n_rows = N_ROWS;
+    edm::houghplane_collection<N_COLS, N_ROWS>::view& houghplanes;
+  };
+
+  virtual void define_plane_edges_kernel(const define_plane_edges_kernel_payload& payload) const = 0;
+  virtual void fill_hough_planes_kernel(const fill_hough_planes_kernel_payload& payload) const = 0;
 
   virtual void synchronize() const = 0;
   };
 
 }  // namespace traccc::device
+
+#include "traccc/seeding/device/impl/define_plane_edges.ipp"
+
