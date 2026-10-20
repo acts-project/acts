@@ -15,10 +15,10 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 
 #include <cstddef>
-#include <functional>
 #include <ostream>
 
 #include <detray/geometry/identifier.hpp>
@@ -52,7 +52,7 @@ bool isDegenerate(const BoundTrackParameters& params);
 /// @param measurementIndex index of the measurement in the traccc
 ///        measurement collection the tracks refer to
 /// @param surface the ACTS surface of the measurement
-using SourceLinkCreator = std::function<Acts::SourceLink(
+using SourceLinkCreator = Acts::Delegate<Acts::SourceLink(
     unsigned int measurementIndex, const Acts::Surface& surface)>;
 
 /// Options for the traccc to ACTS track conversion
