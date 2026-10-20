@@ -262,6 +262,48 @@ class VectorMultiTrajectoryBase {
     }
   }
 
+  // Built-in columns return their typed reference directly. Dynamic columns
+  // retain the any-cast path; wrong-type requests still throw bad_any_cast.
+  template <typename Value, bool EnsureConst, typename Instance>
+  static std::conditional_t<EnsureConst, const Value, Value>&
+  componentTyped_impl(Instance& instance, HashedString key, IndexType istate) {
+    using Return = std::conditional_t<EnsureConst, const Value, Value>;
+    const auto checked = []<typename Stored>(Stored& value) -> Return& {
+      if constexpr (std::is_same_v<Stored, Return>) {
+        return value;
+      } else {
+        throw std::bad_any_cast{};
+      }
+    };
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+      case "previous"_hash:
+        return checked(instance.m_previous[istate]);
+      case "next"_hash:
+        return checked(instance.m_next[istate]);
+      case "predicted"_hash:
+        return checked(instance.m_index[istate].ipredicted);
+      case "filtered"_hash:
+        return checked(instance.m_index[istate].ifiltered);
+      case "smoothed"_hash:
+        return checked(instance.m_index[istate].ismoothed);
+      case "projector"_hash:
+        return checked(
+            instance.m_projectors[instance.m_index[istate].iprojector]);
+      case "measdim"_hash:
+        return checked(instance.m_index[istate].measdim);
+      case "chi2"_hash:
+        return checked(instance.m_index[istate].chi2);
+      case "pathLength"_hash:
+        return checked(instance.m_index[istate].pathLength);
+      case "typeFlags"_hash:
+        return checked(instance.m_index[istate].typeFlags);
+      default:
+        return *std::any_cast<Return*>(
+            component_impl<EnsureConst>(instance, key, istate));
+    }
+  }
+
   template <bool EnsureConst, typename T>
   static std::any component_impl(T& instance, HashedString key,
                                  IndexType istate) {
@@ -493,8 +535,22 @@ class VectorMultiTrajectory final
         *this, key, istate);
   }
 
+  template <typename Value>
+  Value& componentTyped_impl(HashedString key, IndexType istate) {
+    return detail_vmt::VectorMultiTrajectoryBase::componentTyped_impl<Value,
+                                                                      false>(
+        *this, key, istate);
+  }
+
   std::any component_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::component_impl<true>(
+        *this, key, istate);
+  }
+
+  template <typename Value>
+  const Value& componentTyped_impl(HashedString key, IndexType istate) const {
+    return detail_vmt::VectorMultiTrajectoryBase::componentTyped_impl<Value,
+                                                                      true>(
         *this, key, istate);
   }
 
@@ -674,6 +730,18 @@ class ConstVectorMultiTrajectory final
   /// @return The component value
   std::any component_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::component_impl<true>(
+        *this, key, istate);
+  }
+
+  /// Retrieve a const reference to a built-in or dynamic component.
+  /// @tparam Value Type of the component
+  /// @param key Component key
+  /// @param istate Track-state index
+  /// @return Const reference to the component
+  template <typename Value>
+  const Value& componentTyped_impl(HashedString key, IndexType istate) const {
+    return detail_vmt::VectorMultiTrajectoryBase::componentTyped_impl<Value,
+                                                                      true>(
         *this, key, istate);
   }
 
