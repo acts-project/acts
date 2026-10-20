@@ -43,4 +43,4 @@ std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
-}  // namespace ActsPlugins::Traccc
+}  // namespace ActsPlugins::TracccBoundTrackParameters

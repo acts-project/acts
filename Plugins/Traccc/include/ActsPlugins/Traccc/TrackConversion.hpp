@@ -94,8 +94,7 @@ const Acts::Surface* findSurface(
     const detector_t& detector, const Acts::TrackingGeometry& trackingGeometry,
     const detray::geometry::identifier& surfaceLink) {
   if (surfaceLink.is_invalid()) {
-    throw std::runtime_error(
-          "find surface: could not find reference surface");
+    throw std::runtime_error("find surface: could not find reference surface");
     return nullptr;
   }
   const detray::tracking_surface surface{detector, surfaceLink};
@@ -149,7 +148,8 @@ TrackConversionStatistics convertTracks(
     if (referenceSurface == nullptr) {
       ++stats.nMissingSurface;
       throw std::runtime_error(
-          "TracccTrackToActsAlg: could not find reference surface for track parameters");
+          "TracccTrackToActsAlg: could not find reference surface for track "
+          "parameters");
     }
 
     auto actsTrack = output.makeTrack();
@@ -171,7 +171,8 @@ TrackConversionStatistics convertTracks(
       if (surface == nullptr) {
         missingSurface = true;
         throw std::runtime_error(
-          "TracccTrackToActsAlg: could not find reference surface for smoothed track parameters");
+            "TracccTrackToActsAlg: could not find reference surface for "
+            "smoothed track parameters");
       }
 
       if (state.is_hole()) {
@@ -215,4 +216,4 @@ TrackConversionStatistics convertTracks(
   return stats;
 }
 
-}  // namespace ActsPlugins::Traccc
+}  // namespace ActsPlugins::TracccBoundTrackParameters
