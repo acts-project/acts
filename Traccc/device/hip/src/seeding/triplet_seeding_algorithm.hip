@@ -76,15 +76,17 @@ __global__ void find_doublets(
 __global__ void count_triplets(
     seedfinder_config config,
     edm::spacepoint_collection::const_view spacepoints,
+    strip_spacepoint_calibration_collection_types::const_view
+        strip_calibrations,
     traccc::details::spacepoint_grid_types::const_view sp_grid,
     device::doublet_counter_collection_types::const_view doublet_counter,
     device::device_doublet_collection_types::const_view mb_doublets,
     device::device_doublet_collection_types::const_view mt_doublets,
     device::triplet_counter_spM_collection_types::view spM_counter,
     device::triplet_counter_collection_types::view midBot_counter) {
-  device::count_triplets(details::global_index1(), config, spacepoints, sp_grid,
-                         doublet_counter, mb_doublets, mt_doublets, spM_counter,
-                         midBot_counter);
+  device::count_triplets(details::global_index1(), config, spacepoints,
+                         strip_calibrations, sp_grid, doublet_counter,
+                         mb_doublets, mt_doublets, spM_counter, midBot_counter);
 }
 
 /// HIP kernel for running @c traccc::device::reduce_triplet_counts
@@ -100,6 +102,8 @@ __global__ void reduce_triplet_counts(
 __global__ void find_triplets(
     seedfinder_config config, seedfilter_config filter_config,
     edm::spacepoint_collection::const_view spacepoints,
+    strip_spacepoint_calibration_collection_types::const_view
+        strip_calibrations,
     traccc::details::spacepoint_grid_types::const_view sp_grid,
     device::doublet_counter_collection_types::const_view doublet_counter,
     device::device_doublet_collection_types::const_view mt_doublets,
@@ -107,8 +111,9 @@ __global__ void find_triplets(
     device::triplet_counter_collection_types::const_view midBot_tc,
     device::device_triplet_collection_types::view triplet_view) {
   device::find_triplets(details::global_index1(), config, filter_config,
-                        spacepoints, sp_grid, doublet_counter, mt_doublets,
-                        spM_tc, midBot_tc, triplet_view);
+                        spacepoints, strip_calibrations, sp_grid,
+                        doublet_counter, mt_doublets, spM_tc, midBot_tc,
+                        triplet_view);
 }
 
 /// HIP kernel for running @c traccc::device::update_triplet_weights
@@ -217,7 +222,8 @@ void triplet_seeding_algorithm::count_triplets_kernel(
   const unsigned int n_blocks = (payload.nMidBot + n_threads - 1) / n_threads;
   hipLaunchKernelGGL(kernels::count_triplets, n_blocks, n_threads, 0,
                      details::get_stream(stream()), payload.config,
-                     payload.spacepoints, payload.grid, payload.doublet_counter,
+                     payload.spacepoints, payload.strip_calibrations,
+                     payload.grid, payload.doublet_counter,
                      payload.mb_doublets, payload.mt_doublets,
                      payload.spM_counter, payload.midBot_counter);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());
@@ -240,7 +246,8 @@ void triplet_seeding_algorithm::find_triplets_kernel(
   const unsigned int n_blocks = (payload.nMidBot + n_threads - 1) / n_threads;
   hipLaunchKernelGGL(kernels::find_triplets, n_blocks, n_threads, 0,
                      details::get_stream(stream()), payload.finding_config,
-                     payload.filter_config, payload.spacepoints, payload.grid,
+                     payload.filter_config, payload.spacepoints,
+                     payload.strip_calibrations, payload.grid,
                      payload.doublet_counter, payload.mt_doublets,
                      payload.spM_tc, payload.midBot_tc, payload.triplets);
   TRACCC_HIP_ERROR_CHECK(hipGetLastError());

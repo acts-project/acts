@@ -153,14 +153,15 @@ void triplet_seeding_algorithm::count_triplets_kernel(
     h.parallel_for<kernels::count_triplets>(
         details::calculate1DimNdRange(payload.nMidBot, warp_size() * 2),
         [config = payload.config, spacepoints = payload.spacepoints,
+         strip_calibrations = payload.strip_calibrations,
          grid = payload.grid, doublet_counter = payload.doublet_counter,
          mb_doublets = payload.mb_doublets, mt_doublets = payload.mt_doublets,
          spM_counter = payload.spM_counter,
          midBot_counter = payload.midBot_counter](::sycl::nd_item<1> item) {
           device::count_triplets(details::global_index(item), config,
-                                 spacepoints, grid, doublet_counter,
-                                 mb_doublets, mt_doublets, spM_counter,
-                                 midBot_counter);
+                                 spacepoints, strip_calibrations, grid,
+                                 doublet_counter, mb_doublets, mt_doublets,
+                                 spM_counter, midBot_counter);
         });
   });
 }
@@ -191,15 +192,16 @@ void triplet_seeding_algorithm::find_triplets_kernel(
         details::calculate1DimNdRange(payload.nMidBot, warp_size() * 2),
         [finding_config = payload.finding_config,
          filter_config = payload.filter_config,
-         spacepoints = payload.spacepoints, grid = payload.grid,
+         spacepoints = payload.spacepoints,
+         strip_calibrations = payload.strip_calibrations, grid = payload.grid,
          doublet_counter = payload.doublet_counter,
          mt_doublets = payload.mt_doublets, spM_tc = payload.spM_tc,
          midBot_tc = payload.midBot_tc,
          triplets = payload.triplets](::sycl::nd_item<1> item) {
           device::find_triplets(details::global_index(item), finding_config,
-                                filter_config, spacepoints, grid,
-                                doublet_counter, mt_doublets, spM_tc, midBot_tc,
-                                triplets);
+                                filter_config, spacepoints, strip_calibrations,
+                                grid, doublet_counter, mt_doublets, spM_tc,
+                                midBot_tc, triplets);
         });
   });
 }

@@ -99,6 +99,8 @@ struct count_triplets {
   ALPAKA_FN_ACC void operator()(
       TAcc const& acc, seedfinder_config config,
       edm::spacepoint_collection::const_view spacepoints,
+      strip_spacepoint_calibration_collection_types::const_view
+          strip_calibrations,
       traccc::details::spacepoint_grid_types::const_view sp_grid,
       device::doublet_counter_collection_types::const_view doublet_counter,
       device::device_doublet_collection_types::const_view mb_doublets,
@@ -107,9 +109,10 @@ struct count_triplets {
       device::triplet_counter_collection_types::view midBot_counter) const {
     auto const globalThreadIdx =
         ::alpaka::getIdx<::alpaka::Grid, ::alpaka::Threads>(acc)[0u];
-    device::count_triplets(globalThreadIdx, config, spacepoints, sp_grid,
-                           doublet_counter, mb_doublets, mt_doublets,
-                           spM_counter, midBot_counter);
+    device::count_triplets(globalThreadIdx, config, spacepoints,
+                           strip_calibrations, sp_grid, doublet_counter,
+                           mb_doublets, mt_doublets, spM_counter,
+                           midBot_counter);
   }
 };
 
@@ -135,6 +138,8 @@ struct find_triplets {
       TAcc const& acc, seedfinder_config config,
       seedfilter_config filter_config,
       edm::spacepoint_collection::const_view spacepoints,
+      strip_spacepoint_calibration_collection_types::const_view
+          strip_calibrations,
       traccc::details::spacepoint_grid_types::const_view sp_grid,
       device::doublet_counter_collection_types::const_view doublet_counter,
       device::device_doublet_collection_types::const_view mt_doublets,
@@ -144,8 +149,8 @@ struct find_triplets {
     auto const globalThreadIdx =
         ::alpaka::getIdx<::alpaka::Grid, ::alpaka::Threads>(acc)[0u];
     device::find_triplets(globalThreadIdx, config, filter_config, spacepoints,
-                          sp_grid, doublet_counter, mt_doublets, spM_tc,
-                          midBot_tc, triplet_view);
+                          strip_calibrations, sp_grid, doublet_counter,
+                          mt_doublets, spM_tc, midBot_tc, triplet_view);
   }
 };
 
@@ -273,6 +278,7 @@ void triplet_seeding_algorithm::count_triplets_kernel(
   ::alpaka::exec<Acc>(
       details::get_queue(queue()), makeWorkDiv<Acc>(n_blocks, n_threads),
       kernels::count_triplets{}, payload.config, payload.spacepoints,
+      payload.strip_calibrations,
       payload.grid, payload.doublet_counter, payload.mb_doublets,
       payload.mt_doublets, payload.spM_counter, payload.midBot_counter);
 }
@@ -295,8 +301,9 @@ void triplet_seeding_algorithm::find_triplets_kernel(
   ::alpaka::exec<Acc>(
       details::get_queue(queue()), makeWorkDiv<Acc>(n_blocks, n_threads),
       kernels::find_triplets{}, payload.finding_config, payload.filter_config,
-      payload.spacepoints, payload.grid, payload.doublet_counter,
-      payload.mt_doublets, payload.spM_tc, payload.midBot_tc, payload.triplets);
+      payload.spacepoints, payload.strip_calibrations, payload.grid,
+      payload.doublet_counter, payload.mt_doublets, payload.spM_tc,
+      payload.midBot_tc, payload.triplets);
 }
 
 void triplet_seeding_algorithm::update_triplet_weights_kernel(

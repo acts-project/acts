@@ -23,6 +23,8 @@ inline void find_triplets(
     const global_index_t globalIndex, const seedfinder_config& config,
     const seedfilter_config& filter_config,
     const edm::spacepoint_collection::const_view& spacepoints_view,
+    const strip_spacepoint_calibration_collection_types::const_view&
+        strip_calibrations_view,
     const traccc::details::spacepoint_grid_types::const_view& sp_view,
     const doublet_counter_collection_types::const_view& dc_view,
     const device_doublet_collection_types::const_view& mid_top_doublet_view,
@@ -37,6 +39,8 @@ inline void find_triplets(
 
   // Get device copy of input parameters
   const edm::spacepoint_collection::const_device spacepoints{spacepoints_view};
+  const strip_spacepoint_calibration_collection_types::const_device
+      strip_calibrations{strip_calibrations_view};
   const doublet_counter_collection_types::const_device doublet_counts(dc_view);
   const device_doublet_collection_types::const_device mid_top_doublet_device(
       mid_top_doublet_view);
@@ -94,38 +98,85 @@ inline void find_triplets(
   const unsigned int tripletCount = mid_bot_counter.m_nTriplets;
   unsigned int tripletIndex = 0;
 
-  // iterate over mid-top doublets
-  for (unsigned int i = mt_start_idx; i < mt_end_idx; ++i) {
-    const sp_location spT_loc = mid_top_doublet_device[i].sp2;
+  // The two triplet compatibility checks run in separate loops, so that the
+  // doublet quantities of the strip aware one do not occupy registers of the
+  // default one. The branch is uniform across the grid.
+  if (config.useStripInfo) {
+    // Doublet quantities of the strip aware triplet finding
+    const strip_triplet_context strip_ctx(spM, lb, config, iSinTheta2,
+                                          scatteringInRegion2);
+    const strip_spacepoint_calibration& calM = strip_calibrations.at(spM_idx);
+    const strip_spacepoint_calibration& calB = strip_calibrations.at(spB_idx);
 
-    // Sentinels should never be accessed, because m_nMidTop is updated to
-    // exclude them; this assert checks whether that assumption actually
-    // holds.
-    assert(spT_loc.bin_idx != std::numeric_limits<unsigned int>::max() &&
-           spT_loc.sp_idx != std::numeric_limits<unsigned int>::max());
+    // iterate over mid-top doublets
+    for (unsigned int i = mt_start_idx; i < mt_end_idx; ++i) {
+      const sp_location spT_loc = mid_top_doublet_device[i].sp2;
 
-    const unsigned int spT_idx = sp_grid.bin(spT_loc.bin_idx)[spT_loc.sp_idx];
-    const edm::spacepoint_collection::const_device::const_proxy_type spT =
-        spacepoints.at(spT_idx);
+      // Sentinels should never be accessed, because m_nMidTop is updated to
+      // exclude them; this assert checks whether that assumption actually
+      // holds.
+      assert(spT_loc.bin_idx != std::numeric_limits<unsigned int>::max() &&
+             spT_loc.sp_idx != std::numeric_limits<unsigned int>::max());
 
-    // Apply the conformal transformation to middle-top doublet
-    const traccc::lin_circle lt = doublet_finding_helper::transform_coordinates<
-        traccc::details::spacepoint_type::top>(spM, spT);
+      const unsigned int spT_idx = sp_grid.bin(spT_loc.bin_idx)[spT_loc.sp_idx];
 
-    // Check if mid-bot and mid-top doublets can form a triplet
-    if (triplet_finding_helper::isCompatible(spM, lb, lt, config, iSinTheta2,
-                                             scatteringInRegion2, curvature,
-                                             impact_parameter)) {
-      // WARNING: We must imperatively check if the current index is
-      // within the limit the count kernel computed, because the count
-      // and find kernels may produce different floating point results
-      // and different triplet counts! This condition handles the case
-      // where the find kernel finds _more_ outputs.
-      if (tripletIndex < tripletCount) {
-        // Add triplet to jagged vector
-        triplets.at(tripletOffset + tripletIndex++) = device_triplet(
-            {spB_idx, spM_idx, spT_idx, globalIndex, curvature,
-             -impact_parameter * filter_config.impactWeightFactor, lb.Zo()});
+      // Apply the conformal transformation to middle-top doublet
+      const traccc::lin_circle lt =
+          doublet_finding_helper::transform_coordinates<
+              traccc::details::spacepoint_type::top>(spM,
+                                                     spacepoints.at(spT_idx));
+
+      // Check if mid-bot and mid-top doublets can form a triplet
+      if (triplet_finding_helper::isCompatibleStrip(
+              strip_ctx, calM, calB, strip_calibrations.at(spT_idx), lt, config,
+              curvature, impact_parameter)) {
+        // WARNING: We must imperatively check if the current index is
+        // within the limit the count kernel computed, because the count
+        // and find kernels may produce different floating point results
+        // and different triplet counts! This condition handles the case
+        // where the find kernel finds _more_ outputs.
+        if (tripletIndex < tripletCount) {
+          // Add triplet to jagged vector
+          triplets.at(tripletOffset + tripletIndex++) = device_triplet(
+              {spB_idx, spM_idx, spT_idx, globalIndex, curvature,
+               -impact_parameter * filter_config.impactWeightFactor, lb.Zo()});
+        }
+      }
+    }
+  } else {
+    // iterate over mid-top doublets
+    for (unsigned int i = mt_start_idx; i < mt_end_idx; ++i) {
+      const sp_location spT_loc = mid_top_doublet_device[i].sp2;
+
+      // Sentinels should never be accessed, because m_nMidTop is updated to
+      // exclude them; this assert checks whether that assumption actually
+      // holds.
+      assert(spT_loc.bin_idx != std::numeric_limits<unsigned int>::max() &&
+             spT_loc.sp_idx != std::numeric_limits<unsigned int>::max());
+
+      const unsigned int spT_idx = sp_grid.bin(spT_loc.bin_idx)[spT_loc.sp_idx];
+
+      // Apply the conformal transformation to middle-top doublet
+      const traccc::lin_circle lt =
+          doublet_finding_helper::transform_coordinates<
+              traccc::details::spacepoint_type::top>(spM,
+                                                     spacepoints.at(spT_idx));
+
+      // Check if mid-bot and mid-top doublets can form a triplet
+      if (triplet_finding_helper::isCompatible(spM, lb, lt, config, iSinTheta2,
+                                               scatteringInRegion2, curvature,
+                                               impact_parameter)) {
+        // WARNING: We must imperatively check if the current index is
+        // within the limit the count kernel computed, because the count
+        // and find kernels may produce different floating point results
+        // and different triplet counts! This condition handles the case
+        // where the find kernel finds _more_ outputs.
+        if (tripletIndex < tripletCount) {
+          // Add triplet to jagged vector
+          triplets.at(tripletOffset + tripletIndex++) = device_triplet(
+              {spB_idx, spM_idx, spT_idx, globalIndex, curvature,
+               -impact_parameter * filter_config.impactWeightFactor, lb.Zo()});
+        }
       }
     }
   }
