@@ -20,9 +20,13 @@ namespace Acts {
 /// @brief Flags seeds whose measurements one accepted track already holds
 ///
 /// Measurements are dense keys in `[0, nKeys)`. The caller chooses which keys
-/// a seed contributes. Each key has a weight, 1 by default. A seed with the
-/// summed weight `seedScore` is a duplicate if one track holds keys of the
-/// summed weight
+/// a seed contributes. The keys are plain indices and not `SourceLink`s,
+/// because a `SourceLink` has no hash and no equality comparison.
+///
+/// Each key has a weight, 1 by default. The weight can for example be the
+/// number of measured local coordinates, so that a pixel measurement counts 2
+/// and a strip measurement counts 1. A seed with the summed weight `seedScore`
+/// is a duplicate if one track holds keys of the summed weight
 ///
 ///   `min(seedScore, max(1, minScore, seedScore - maxMissingScore))`.
 ///
@@ -105,7 +109,7 @@ class SeedDeduplicator {
   Config m_cfg;
 
   /// The latest node for each key, or `kNone`
-  std::vector<std::uint32_t> m_heads;
+  std::vector<std::uint32_t> m_trackHeads;
   std::vector<Weight> m_weights;
   std::vector<Node> m_nodes;
   std::size_t m_nTracks = 0;

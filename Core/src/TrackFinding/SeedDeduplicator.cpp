@@ -21,7 +21,7 @@ void SeedDeduplicator::reset(std::size_t nKeys) {
   if (nKeys >= kNone) {
     throw std::invalid_argument("SeedDeduplicator: too many keys");
   }
-  m_heads.assign(nKeys, kNone);
+  m_trackHeads.assign(nKeys, kNone);
   m_weights.assign(nKeys, 1);
   m_nodes.clear();
   m_nTracks = 0;
@@ -37,13 +37,13 @@ SeedDeduplicator::Score SeedDeduplicator::duplicateThreshold(
 void SeedDeduplicator::addTrack(std::span<const Key> keys) {
   const auto track = static_cast<std::uint32_t>(m_nTracks);
   for (const Key key : keys) {
-    assert(key < m_heads.size() && "Key out of range");
-    const std::uint32_t head = m_heads[key];
+    assert(key < m_trackHeads.size() && "Key out of range");
+    const std::uint32_t head = m_trackHeads[key];
     // a key that occurs twice on a track counts once
     if (head != kNone && m_nodes[head].track == track) {
       continue;
     }
-    m_heads[key] = static_cast<std::uint32_t>(m_nodes.size());
+    m_trackHeads[key] = static_cast<std::uint32_t>(m_nodes.size());
     m_nodes.push_back({track, head});
   }
   ++m_nTracks;
@@ -59,30 +59,33 @@ bool SeedDeduplicator::isDuplicate(std::span<const Key> keys) const {
   }
   const Score threshold = duplicateThreshold(remaining);
 
-  // the score of each track which holds at least one seed key
+  // the score that each track shares with the seed, for each track which holds
+  // at least one seed key
   struct TrackScore {
     std::uint32_t track;
-    Score score;
+    Score sharedScore;
   };
   boost::container::small_vector<TrackScore, kInlineTracks> scores;
   Score best = 0;
   for (const Key key : keys) {
     const Weight w = m_weights[key];
-    for (std::uint32_t node = m_heads[key]; node != kNone;
+    for (std::uint32_t node = m_trackHeads[key]; node != kNone;
          node = m_nodes[node].next) {
       const std::uint32_t track = m_nodes[node].track;
       auto it = std::ranges::find(scores, track, &TrackScore::track);
       if (it == scores.end()) {
         it = scores.insert(scores.end(), {track, 0});
       }
-      it->score += w;
-      if (it->score >= threshold) {
+      it->sharedScore += w;
+      if (it->sharedScore >= threshold) {
         return true;
       }
-      best = std::max(best, it->score);
+      best = std::max(best, it->sharedScore);
     }
     remaining -= w;
-    // no track can reach the threshold with the keys that are left
+    // no track can reach the threshold with the keys that are left. This
+    // check runs after each seed key, so it also stops the loop early for a
+    // seed whose first keys no track holds.
     if (best + remaining < threshold) {
       return false;
     }
