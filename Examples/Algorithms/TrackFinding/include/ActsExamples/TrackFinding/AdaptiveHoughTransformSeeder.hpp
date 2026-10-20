@@ -15,6 +15,7 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Seeding/HoughAccumulatorSection.hpp"
+#include "Acts/Utilities/HashCombine.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
@@ -80,14 +81,14 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     std::vector<unsigned> indices;
   };
 
-  /// @brief Hash functor for std::vector<unsigned> to enable O(1) cluster deduplication
+  /// @brief Hash functor using hashMixAndCombine utility to enable O(1) deduplication
   struct VectorHash {
     std::size_t operator()(const std::vector<unsigned> &v) const {
       std::size_t seed = v.size();
-      for (auto &i : v) {
-        seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      for (unsigned idx : v) {
+        seed = Acts::hashMixAndCombine(seed, idx);
       }
-      return seed;
+      return static_cast<std::size_t>(seed);
     }
   };
 
