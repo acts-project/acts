@@ -443,7 +443,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       const ConstSeedProxy seed = seeds->at(iSeed);
 
       if (m_cfg.seedDeduplication) {
-        // check if an already found track covers the seed
+        // skip the seed if one accepted track holds enough of its
+        // measurements
         collectSeedKeys(seed, measKeys);
         if (seedDeduplicator.isDuplicate(measKeys)) {
           m_nDeduplicatedSeeds++;

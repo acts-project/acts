@@ -51,14 +51,14 @@ void SeedDeduplicator::addTrack(std::span<const MeasurementKey> measKeys) {
 
 bool SeedDeduplicator::isDuplicate(
     std::span<const MeasurementKey> measKeys) const {
-  Score remaining = 0;
+  Score seedScore = 0;
   for (const MeasurementKey measKey : measKeys) {
-    remaining += weight(measKey);
+    seedScore += weight(measKey);
   }
-  if (remaining == 0) {
+  if (seedScore == 0) {
     return false;
   }
-  const Score threshold = duplicateThreshold(remaining);
+  const Score threshold = duplicateThreshold(seedScore);
 
   // the score that each track shares with the seed, for each track which holds
   // at least one seed key
@@ -67,9 +67,10 @@ bool SeedDeduplicator::isDuplicate(
     Score sharedScore;
   };
   boost::container::small_vector<TrackScore, kInlineTracks> scores;
-  Score best = 0;
+  Score bestSharedScore = 0;
+  Score remaining = seedScore;
   for (const MeasurementKey measKey : measKeys) {
-    const Weight w = m_weights[measKey];
+    const Weight w = weight(measKey);
     for (std::uint32_t node = m_trackHeads[measKey]; node != kNone;
          node = m_nodes[node].next) {
       const std::uint32_t track = m_nodes[node].track;
@@ -81,13 +82,13 @@ bool SeedDeduplicator::isDuplicate(
       if (it->sharedScore >= threshold) {
         return true;
       }
-      best = std::max(best, it->sharedScore);
+      bestSharedScore = std::max(bestSharedScore, it->sharedScore);
     }
     remaining -= w;
     // no track can reach the threshold with the keys that are left. This
     // check runs after each seed key, so it also stops the loop early for a
     // seed whose first keys no track holds.
-    if (best + remaining < threshold) {
+    if (bestSharedScore + remaining < threshold) {
       return false;
     }
   }
