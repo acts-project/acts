@@ -265,6 +265,44 @@ This step is independent of your surface choices — you only need to redo it if
 the detailed geometry changes, not when you retune binning. It is by far the
 slowest step, so record generously once and reuse the file.
 
+### Recording a DD4hep detector with ddsim
+
+For a DD4hep detector, the recording can also run directly in `ddsim`, on the
+same Geant4 geometry DDG4 builds for the full simulation. Two DDG4 actions in
+the `ActsPluginDD4hepGeant4` library do this: the `ActsMaterialRecorder`
+stepping action collects the material tracks, and the `ActsMaterialTrackWriter`
+event action writes them in the same file format as above. The library is built
+when both the DD4hep and the Geant4 plugins are enabled and DD4hep comes with
+DDG4. With it on `LD_LIBRARY_PATH`, e.g. after sourcing `this_acts.sh`:
+
+```console
+ddsim --steeringFile Examples/Scripts/Python/material_recording_ddsim.py \
+      --compactFile mydet.xml -N 1000 --outputFile mydet_geant4.root
+```
+
+The steering file shoots 1000 geantinos per event, uniform in
+\f$|\eta| < 4\f$; the gun can be adjusted on the command line, e.g. with
+`--gun.multiplicity`, `--gun.etaMin` and `--gun.etaMax`. With
+`--numberOfThreads`, which `ddsim` offers from DD4hep 1.38, all threads write
+into the single output file. Every simulated track gets an entry, also if it
+crosses no recorded material.
+
+The mapping assigns every recorded step to a surface, so material beyond the
+outermost material surfaces, e.g. in the calorimeters, ends up on them. To
+avoid this, limit the recording to a cylinder around the beam axis, e.g. at the
+calorimeter face, with `--outputConfig.recordingMaxR`,
+`--outputConfig.recordingMinZ` and `--outputConfig.recordingMaxZ` in mm. The z
+range does not need to be symmetric, and a bound that is not given does not
+limit the recording. Tracks are stopped where they leave the cylinder, and the
+step that crosses its boundary is cut there, which also makes the recording
+faster.
+
+To compare two recordings track by track, they need the same geantinos. For
+example, add a `HepMC3Writer` for the generated event to
+`material_recording.py`, and replay the resulting HepMC3 file in `ddsim` with
+`--inputFiles` instead of the particle gun, by setting `SIM.enableGun = False`
+in a copy of the steering file.
+
 ## Step 3: run the mapping
 
 ```console
