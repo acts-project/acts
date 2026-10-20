@@ -22,7 +22,8 @@ hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
 
 auto hough_transform_seeding_algorithm::operator()(
 		const detector_buffer& det,
-	    	const edm::spacepoint_collection::const_view& spacepoints) const -> output_type {
+		const edm::measurement_collection::const_view& measurements,
+		const edm::spacepoint_collection::const_view& spacepoints) const -> output_type {
       	// Get the number of space points. In an asynchronous way if possible.
   edm::spacepoint_collection::const_view::size_type n_spacepoints = 0u;
   if (mr().host) {
@@ -67,7 +68,10 @@ auto hough_transform_seeding_algorithm::operator()(
   */
 
   // Fill the planes with space points
-  fill_hough_plane_kernel({m_config, det, n_spacepoints, spacepoints, result});
+  fill_hough_plane_kernel({m_config, det, 
+		  measurements,
+		  n_spacepoints, spacepoints, 
+		  result});
 
   synchronize();
 

@@ -23,7 +23,7 @@ struct hough_seeding_config {
   scalar max_range_y = std::numbers::pi_v<scalar>;
   scalar interaction_center = 0.f;
   scalar interaction_window = 150.f;
-  scalar etaWidth = 0.12f;
+  scalar eta_width = 0.12f;
   std::array<scalar, 25> wedges = {
   	-2.88f, -2.64f, -2.40f, -2.16f, -1.92f, -1.68f, 
     	-1.44f, -1.20f, -0.96f, -0.72f, -0.48f, -0.24f, 0.00f,

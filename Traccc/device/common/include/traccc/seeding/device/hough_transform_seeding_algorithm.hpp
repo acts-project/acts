@@ -14,6 +14,7 @@
 #include "traccc/seeding/detail/hough_seeding_config.hpp"
 
 // Project include(s).
+#include "traccc/edm/measurement_collection.hpp"
 #include "traccc/edm/spacepoint_collection.hpp"
 #include "traccc/edm/houghplane_collection.hpp"
 #include "traccc/geometry/detector_buffer.hpp"
@@ -33,7 +34,8 @@ static constexpr unsigned int N_ROWS = 7000u;
 class hough_transform_seeding_algorithm
     : public algorithm<edm::houghplane_collection<N_COLS, N_ROWS>::buffer(
 	  const detector_buffer&,
-          const edm::spacepoint_collection::const_view&)>,
+	  const edm::measurement_collection::const_view&,
+	  const edm::spacepoint_collection::const_view&)>,
       public messaging,
       public algorithm_base,
       public virtual abstract_awaitable {
@@ -47,6 +49,7 @@ class hough_transform_seeding_algorithm
 
   output_type operator()(
 		  const detector_buffer& det,
+		  const edm::measurement_collection::const_view& measurements,
 		  const edm::spacepoint_collection::const_view& spacepoints) const override;
 
  protected:
@@ -59,6 +62,8 @@ class hough_transform_seeding_algorithm
     const hough_seeding_config& config;
     /// The detector object
     const detector_buffer& detector;
+    /// The input measurements
+    const edm::measurement_collection::const_view& measurements;
     /// The number of spacepoints in the event
     edm::spacepoint_collection::const_view::size_type n_spacepoints;
     /// The input spacepoints
