@@ -1051,6 +1051,9 @@ jobs:
       - name: Python level tests
         if: matrix.tests
         shell: bash
+        env:
+          # Per-test peak memory summary, see Python/Examples/tests/conftest.py
+          ACTS_PYTEST_MEMORY_REPORT: 1
         run: |
           source "${LCG_VIEW}/setup.sh"
           source build/this_acts_withdeps.sh
@@ -1060,7 +1063,13 @@ jobs:
           uv pip install --no-build --require-hashes --python .venv/bin/python -r Python/Examples/tests/requirements.txt
           # plotting tests with mplhep fail because an ancient mplhep version in
           # LCG overrides the mplhep version in our venv
-          .venv/bin/python -m pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
+          nproc; grep -E 'MemTotal|MemAvailable|SwapTotal' /proc/meminfo
+          # Sample used memory (MiB) to measure the effect of parallel workers
+          (while sleep 10; do awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{print int((t-a)/1024)}' /proc/meminfo; done > mem.log) &
+          trap 'echo "Peak used memory: $(sort -n mem.log | tail -1) MiB"' EXIT
+          # loadgroup keeps the xdist_group("heavy") tests on one worker so the
+          # memory-hungry ones never run at the same time
+          .venv/bin/python -m pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n 3 --dist loadgroup
 
   # This moving nightly view is independent of PR changes. Keep it separate
   # from the release-view matrix so it can run only on main without referring
