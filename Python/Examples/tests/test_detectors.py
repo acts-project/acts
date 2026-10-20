@@ -198,12 +198,12 @@ def test_odd_tracker(gen3):
         field = detector.field
         cache = field.makeCache(acts.MagneticFieldContext())
         # ODD v6 defines a 3 T solenoid, not a globally constant field.
-        assert field.getField(acts.Vector3(0, 0, 0), cache) == pytest.approx(
-            (0, 0, 3 * acts.UnitConstants.T)
-        )
-        assert field.getField(
-            acts.Vector3(0, 0, 100 * acts.UnitConstants.m), cache
-        ) == pytest.approx((0, 0, 0))
+        for position, expected in (
+            (acts.Vector3(0, 0, 0), (0, 0, 3 * acts.UnitConstants.T)),
+            (acts.Vector3(0, 0, 100 * acts.UnitConstants.m), (0, 0, 0)),
+        ):
+            actual = field.getField(position, cache)
+            assert [actual[i] for i in range(3)] == pytest.approx(expected)
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
