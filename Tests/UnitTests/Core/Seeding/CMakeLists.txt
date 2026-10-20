@@ -6,7 +6,7 @@ add_unittest(StrawLineResiduals StrawLineResidualTest.cpp)
 add_unittest(SphericalSpacePointGrid SphericalSpacePointGridTests.cpp)
 add_unittest(GbtsSeeding GbtsSeedingTests.cpp)
 add_unittest(SpacePointGridPhiBinning SpacePointGridPhiBinningTests.cpp)
-add_unittest(SortByFloat SortByFloatTests.cpp)
+add_unittest(SortByCotTheta SortByCotThetaTests.cpp)
 
 if(ACTS_BUILD_PLUGIN_ROOT)
     add_unittest(FastStrawLineFitTests FastStrawLineFitTests.cpp)

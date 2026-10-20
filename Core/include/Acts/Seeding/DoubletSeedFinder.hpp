@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Seeding/detail/SortByFloat.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
@@ -90,39 +89,30 @@ class DoubletsForMiddleSp {
   /// Type alias for subset of index and cotTheta pairs
   using IndexAndCotThetaSubset = std::span<const IndexAndCotTheta>;
 
-  /// Sort doublets by cotTheta within given range. Allocates the sort's
-  /// storage on every call; the overload taking it does not.
+  /// Storage for sortByCotTheta, kept by the caller so that sorting does not
+  /// allocate
+  struct SortStorage {
+    /// Doublets being sorted
+    std::vector<IndexAndCotTheta> scratch;
+    /// Bucket counts and indices
+    std::vector<std::uint32_t> buckets;
+  };
+
+  /// Sort doublets by cotTheta within given range. Doublets with equal
+  /// cotTheta keep their index order.
   /// @param range Index range to sort within
   /// @param indexAndCotTheta Output vector containing sorted index and cotTheta pairs
   void sortByCotTheta(const IndexRange& range,
-                      std::vector<IndexAndCotTheta>& indexAndCotTheta) const {
-    std::vector<IndexAndCotTheta> scratch;
-    sortByCotTheta(range, indexAndCotTheta, scratch);
-  }
+                      std::vector<IndexAndCotTheta>& indexAndCotTheta) const;
 
-  /// Sort doublets by cotTheta within given range, with storage for the sort
-  /// that the caller keeps between calls, so that sorting does not allocate
+  /// Sort doublets by cotTheta within given range, with storage the caller
+  /// keeps between calls. Doublets with equal cotTheta keep their index order.
   /// @param range Index range to sort within
   /// @param indexAndCotTheta Output vector containing sorted index and cotTheta pairs
-  /// @param scratch Storage for the sort, of any content, reused between calls
+  /// @param storage Storage for the sort, of any content
   void sortByCotTheta(const IndexRange& range,
                       std::vector<IndexAndCotTheta>& indexAndCotTheta,
-                      std::vector<IndexAndCotTheta>& scratch) const {
-    // The doublet at position k of the range, with its cotTheta
-    const auto doubletAt = [&](std::size_t k) {
-      const Index i = range.first + static_cast<Index>(k);
-      return IndexAndCotTheta{i, m_cotTheta[i]};
-    };
-
-    // The key the doublets are sorted by
-    const auto cotThetaOf = [](const IndexAndCotTheta& item) {
-      return item.cotTheta;
-    };
-
-    const std::size_t nDoublets = range.second - range.first;
-    detail::fillAndSortByFloat(indexAndCotTheta, scratch, nDoublets, doubletAt,
-                               cotThetaOf);
-  }
+                      SortStorage& storage) const;
 
   /// Proxy accessor for a single doublet entry.
   class Proxy {
