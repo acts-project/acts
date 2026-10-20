@@ -50,18 +50,20 @@ class hough_transform_seeding_algorithm
 		  const edm::spacepoint_collection::const_view& spacepoints) const override;
 
  protected:
+  struct define_plane_edges_kernel_payload {
+    const hough_seeding_config& config;
+    edm::houghplane_collection<N_COLS, N_ROWS>::view& houghplanes;
+  };
+
   struct fill_hough_planes_kernel_payload {
     const hough_seeding_config& config;
+    /// The detector object
+    const detector_buffer& detector;
     /// The number of spacepoints in the event
     edm::spacepoint_collection::const_view::size_type n_spacepoints;
     /// The input spacepoints
     const edm::spacepoint_collection::const_view& spacepoints;
     /// The output hough planes
-    edm::houghplane_collection<N_COLS, N_ROWS>::view& houghplanes;
-  };
-
-  struct define_plane_edges_kernel_payload {
-    const hough_seeding_config& config;
     edm::houghplane_collection<N_COLS, N_ROWS>::view& houghplanes;
   };
 

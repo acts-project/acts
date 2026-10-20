@@ -67,7 +67,7 @@ auto hough_transform_seeding_algorithm::operator()(
   */
 
   // Fill the planes with space points
-  fill_hough_plane_kernel({m_config, n_spacepoints, spacepoints, result});
+  fill_hough_plane_kernel({m_config, det, n_spacepoints, spacepoints, result});
 
   synchronize();
 

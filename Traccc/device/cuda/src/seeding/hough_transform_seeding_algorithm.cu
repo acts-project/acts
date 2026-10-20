@@ -23,13 +23,15 @@ namespace kernels {
 		     steps_x, config.min_range_x,
 		     steps_y, config.min_range_y); 
    }
-      
-   __global__
-   void fill_hough_plane(const traccc::hough_seeding_config config,
+   
+   template <detray::concepts::detector detector_t>   
+   __global__ void __launch_bounds__(1024, 1)
+   fill_hough_plane(const traccc::hough_seeding_config config,
+		   detray::detector_view_t<detector_t> detector,
 		   edm::spacepoint_collection::const_view::size_type n_spacepoints,
 		   const edm::spacepoint_collection::const_view& spacepoints,
 		   edm::houghplane_collection<device::N_COLS, device::N_ROWS>::view& houghplanes) {
-      device::fill_hough_plane(details::global_index1(), n_spacepoints, spacepoints, 
+      device::fill_hough_plane<detector_t>(details::global_index1(), detector, n_spacepoints, spacepoints, 
 		      config.interaction_center, config.interaction_window,
 		      houghplanes);
    }
@@ -49,12 +51,18 @@ void hough_transform_seeding_algorithm::define_plane_edges_kernel(const define_p
    const unsigned int n_threads = warp_size() * 4;
    const unsigned int n_blocks = (maxValues  + n_threads - 1) / n_threads;
    kernels::define_plane_edges<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, payload.houghplanes);
+   TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
 void hough_transform_seeding_algorithm::fill_hough_plane_kernel(const fill_hough_planes_kernel_payload& payload) const {
   const unsigned int n_threads = warp_size() * 4;
   const unsigned int n_blocks = (payload.n_spacepoints + n_threads - 1) / n_threads;
-  kernels::fill_hough_plane<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, payload.n_spacepoints, payload.spacepoints, payload.houghplanes);
+  detector_buffer_visitor<detector_type_list>(payload.detector, 
+		  [&]<detray::concepts::detector detector_t>(const detray::detector_view_t<detector_t>& det) {
+      kernels::fill_hough_plane<detector_t>
+      		<<<n_blocks, n_threads, 0, details::get_stream(stream())>>>(payload.config, det, payload.n_spacepoints, payload.spacepoints, payload.houghplanes);
+  });
+  TRACCC_CUDA_ERROR_CHECK(cudaGetLastError());
 }
 
 void hough_transform_seeding_algorithm::synchronize() const {
