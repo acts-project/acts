@@ -264,7 +264,62 @@ class BranchStopper {
   const TrackFindingAlgorithm::Config& m_cfg;
 };
 
+/// Considers all measurements on a surface as candidates.
+class DefaultEventTrackStateCreator final
+    : public TrackFindingAlgorithm::TrackStateCreatorFactory::
+          EventTrackStateCreator {
+ public:
+  using Factory = TrackFindingAlgorithm::TrackStateCreatorFactory;
+  using Creator = TrackFindingAlgorithm::DefaultTrackStateCreator;
+
+  explicit DefaultEventTrackStateCreator(const Factory::EventInput& input) {
+    m_slAccessor.container = &input.measurements.orderedIndices();
+
+    m_creator.sourceLinkAccessor
+        .template connect<&IndexSourceLinkAccessor::range>(&m_slAccessor);
+    m_creator.calibrator = input.calibrator;
+    m_creator.measurementSelector = input.measurementSelector;
+  }
+
+  // the source link accessor points into this object, so it must not be
+  // copied or moved
+  DefaultEventTrackStateCreator(const DefaultEventTrackStateCreator&) = delete;
+  DefaultEventTrackStateCreator& operator=(
+      const DefaultEventTrackStateCreator&) = delete;
+
+  Creator::TrackStatesResult createTrackStates(
+      const Acts::GeometryContext& gctx,
+      const Acts::CalibrationContext& calibrationContext,
+      const Acts::Surface& surface, const Creator::BoundState& boundState,
+      Acts::TrackIndexType prevTip,
+      std::vector<Creator::TrackStateProxy>& trackStateCandidates,
+      Creator::TrackStateContainerBackend& trajectory,
+      const Acts::Logger& logger) const override {
+    return m_creator.createTrackStates(
+        gctx, calibrationContext, surface, boundState, prevTip,
+        trackStateCandidates, trajectory, logger);
+  }
+
+ private:
+  IndexSourceLinkAccessor m_slAccessor;
+  Creator m_creator;
+};
+
+class DefaultTrackStateCreatorFactory final
+    : public TrackFindingAlgorithm::TrackStateCreatorFactory {
+ public:
+  std::unique_ptr<EventTrackStateCreator> makeEventTrackStateCreator(
+      const EventInput& input) const override {
+    return std::make_unique<DefaultEventTrackStateCreator>(input);
+  }
+};
+
 }  // namespace
+
+std::shared_ptr<TrackFindingAlgorithm::TrackStateCreatorFactory>
+TrackFindingAlgorithm::makeDefaultTrackStateCreatorFactory() {
+  return std::make_shared<DefaultTrackStateCreatorFactory>();
+}
 
 TrackFindingAlgorithm::TrackFindingAlgorithm(
     Config config, std::unique_ptr<const Acts::Logger> logger)
@@ -279,6 +334,9 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(
   }
   if (m_cfg.outputTracks.empty()) {
     throw std::invalid_argument("Missing tracks output collection");
+  }
+  if (m_cfg.trackStateCreatorFactory == nullptr) {
+    throw std::invalid_argument("Missing track state creator factory");
   }
 
   if (m_cfg.seedDeduplication && m_cfg.inputSeeds.empty()) {
@@ -330,33 +388,37 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                           measurements.container());
   Acts::GainMatrixUpdater kfUpdater(m_cfg.useJosephFormulation);
 
-  using Extensions = Acts::CombinatorialKalmanFilterExtensions<TrackContainer>;
-
   BranchStopper branchStopper(m_cfg);
   MeasurementSelector measSel{
       Acts::MeasurementSelector(m_cfg.measurementSelectorCfg)};
 
-  IndexSourceLinkAccessor slAccessor;
-  slAccessor.container = &measurements.orderedIndices();
-
-  using TrackStateCreatorType =
-      Acts::TrackStateCreator<IndexSourceLinkAccessor::Iterator,
-                              TrackContainer>;
-  TrackStateCreatorType trackStateCreator;
-  trackStateCreator.sourceLinkAccessor
-      .template connect<&IndexSourceLinkAccessor::range>(&slAccessor);
-  trackStateCreator.calibrator
+  TrackStateCreatorFactory::EventInput creatorInput{
+      .ctx = ctx,
+      .measurements = measurements,
+      .measurementSelectorCfg = m_cfg.measurementSelectorCfg,
+      .calibrator = {},
+      .measurementSelector = {}};
+  creatorInput.calibrator
       .template connect<&MeasurementCalibratorAdapter::calibrate>(&calibrator);
-  trackStateCreator.measurementSelector
+  creatorInput.measurementSelector
       .template connect<&MeasurementSelector::select>(&measSel);
+
+  const std::unique_ptr<TrackStateCreatorFactory::EventTrackStateCreator>
+      trackStateCreator =
+          m_cfg.trackStateCreatorFactory->makeEventTrackStateCreator(
+              creatorInput);
+  if (trackStateCreator == nullptr) {
+    ACTS_ERROR("Track state creator factory did not provide a creator");
+    return ProcessCode::ABORT;
+  }
 
   Extensions extensions;
   extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
       typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
   extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
-  extensions.createTrackStates
-      .template connect<&TrackStateCreatorType ::createTrackStates>(
-          &trackStateCreator);
+  extensions.createTrackStates.template connect<
+      &TrackStateCreatorFactory::EventTrackStateCreator::createTrackStates>(
+      trackStateCreator.get());
   extensions.mixtureReducer.connect<&Acts::reduceMixtureWithKLDistance>();
 
   Acts::PropagatorPlainOptions firstPropOptions(ctx.recoGeoContext,
