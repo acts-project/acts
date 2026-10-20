@@ -132,14 +132,14 @@ template <GlobPatFinderHit Hit_t, SectorType Sector_t,
 double PatternStateAux<Hit_t, Sector_t, Topology_t>::intrinsicVariance(
     const GeometryContext& gctx, const Hit_t& hit,
     const Vector3& contractionVector, bool isProjected) {
-  const auto* sp = hit.spacePoint();
+  const auto& sp = hit.spacePoint();
   using CovIdx =
       Acts::Experimental::detail::CompSpacePointAuxiliaries::ResidualIdx;
-  if (sp->isStraw()) {
+  if (sp.isStraw()) {
     /// For straw hits, the math simplifies according to whether the hit is
     /// projected or not.
-    const double discVar{Acts::square(sp->driftRadius()) +
-                         sp->covariance()[Acts::toUnderlying(CovIdx::bending)]};
+    const double discVar{Acts::square(sp.driftRadius()) +
+                         sp.covariance()[Acts::toUnderlying(CovIdx::bending)]};
     if (isProjected) {
       /// If the hit is projected, the contraction vector is J^T *
       /// residualDirection, where J is the Jacobian of the projection. The phi
@@ -149,14 +149,14 @@ double PatternStateAux<Hit_t, Sector_t, Topology_t>::intrinsicVariance(
     const double vDotRsq{
         Acts::square(hit.globalSensorDirection(gctx).dot(contractionVector))};
     return discVar * (contractionVector.squaredNorm() - vDotRsq) +
-           vDotRsq * sp->covariance()[Acts::toUnderlying(CovIdx::nonBending)];
+           vDotRsq * sp.covariance()[Acts::toUnderlying(CovIdx::nonBending)];
   }
   /// Strip measurements
   StripMeasurementDirections stripDirs{hit.stripMeasurementDirections(gctx)};
   /// Helper method to compute the contribution of a 1D measurement to the
   /// residual variance
   auto oneDimContribution = [&](CovIdx idx, const Vector3& measDir) -> double {
-    return hit.spacePoint()->covariance()[Acts::toUnderlying(idx)] *
+    return hit.spacePoint().covariance()[Acts::toUnderlying(idx)] *
            Acts::square(measDir.dot(contractionVector));
   };
   const double bendTerm = oneDimContribution(CovIdx::bending, stripDirs.first);
@@ -184,7 +184,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::computeLineResidual(
   /// We project the test hit onto the phi plane only when the test hit does
   ///  not measure phi or when we have no phi layers, otherwise we do not
   ///  project so the residual includes the error in the phi direction.
-  const bool projectTestHit{!testHit->spacePoint()->measuresLoc0() ||
+  const bool projectTestHit{!testHit->spacePoint().measuresLoc0() ||
                             nPhiLayers == 0u};
   const Vector3 testPos{projectTestHit ? projToPhiPlane(gctx, *testHit)
                                        : testHit->globalPosition(gctx)};
@@ -332,7 +332,7 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::updateBendPlane(
   Vector2 centroid{Vector2::Zero()};  // Sx, Sy
 
   auto accumulate = [&](const Hit_t& hit) -> void {
-    if (!hit.spacePoint()->measuresLoc0()) {
+    if (!hit.spacePoint().measuresLoc0()) {
       return;
     }
     nPhiLayers++;
@@ -341,7 +341,7 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::updateBendPlane(
     if (variance < Acts::s_epsilon) {
       ACTS_ERROR("updateBendPlane() Phi hit with zero variance, hit:"
                  << std::endl
-                 << *hit.spacePoint());
+                 << hit.spacePoint());
       return;
     }
     double weight{1. / variance};
@@ -533,7 +533,7 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::addHit(
   } else {
     nTriggerLayers++;
   }
-  if (hit->spacePoint()->measuresLoc0()) {
+  if (hit->spacePoint().measuresLoc0()) {
     setStateVars({PatternStateVar::eBendPlane});
   }
 
@@ -580,8 +580,8 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::overWriteHit(
     }
   }
   /// Update the phi counts
-  if (lastInsertedHit->spacePoint()->measuresLoc0() ||
-      newHit->spacePoint()->measuresLoc0()) {
+  if (lastInsertedHit->spacePoint().measuresLoc0() ||
+      newHit->spacePoint().measuresLoc0()) {
     setStateVars({PatternStateVar::eBendPlane});
   }
   /// Update the residual
@@ -597,8 +597,8 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::overWriteHit(
     ss << "Trying to overwrite a hit that is not the last inserted hit in "
           "group/layer "
        << static_cast<int>(group) << "/" << lastInsertedHit.globLayer << "\n";
-    ss << "Last inserted hit: " << *lastInsertedHit->spacePoint() << "\n";
-    ss << "Last hit in group: " << *stHits.back()->spacePoint();
+    ss << "Last inserted hit: " << lastInsertedHit->spacePoint() << "\n";
+    ss << "Last hit in group: " << stHits.back()->spacePoint();
     throw std::runtime_error(ss.str());
   }
   stHits.pop_back();
@@ -697,7 +697,7 @@ PatternStateAux<Hit_t, Sector_t, Topology_t>::PatternStateAux(
   } else {
     nTriggerLayers++;
   }
-  if (seed->spacePoint()->measuresLoc0()) {
+  if (seed->spacePoint().measuresLoc0()) {
     setStateVars({PatternStateVar::eBendPlane});
   }
   setStateVars({PatternStateVar::eLine});
@@ -730,7 +730,7 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::print(std::ostream& ostr,
     if (detailed) {
       ostr << "\n";
       for (const auto& hit : hits) {
-        ostr << "    " << *hit->spacePoint()
+        ostr << "    " << hit->spacePoint()
              << ", globLay: " << static_cast<int>(hit.globLayer) << "\n";
       }
     }
@@ -747,7 +747,7 @@ template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
 void PatternStateAux<Hit_t, Sector_t, Topology_t>::OrderedHit::print(
     std::ostream& ostr) const {
-  ostr << *hitPtr->spacePoint()
+  ostr << hitPtr->spacePoint()
        << ", group: " << static_cast<int>(Topology_t::groupIndex(*hitPtr))
        << ", globLay: " << static_cast<int>(globLayer);
 }

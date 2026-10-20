@@ -70,7 +70,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
       continue;
     }
     ACTS_VERBOSE(__func__ << "() New seed hit "
-                          << Acts::toString(*seed.spacePoint())
+                          << Acts::toString(seed.spacePoint())
                           << " , coordinates [" << seedCoords[sectorIdx] << ", "
                           << seedCoords[thetaIdx] << "]");
 
@@ -423,7 +423,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::checkLineCompatibility(
   if (searchInNewLayer) {
     pat.syncState(gctx, beamSpot);
   }
-  if (testHit->spacePoint()->measuresLoc0() &&
+  if (testHit->spacePoint().measuresLoc0() &&
       !isPhiCompatible(gctx, pat, *testHit)) {
     return std::make_pair(LineTestDecision::eRejectHit, LineTestRes{});
   }
@@ -748,13 +748,13 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
     for (auto [group, bucket] : Acts::enumerate(phiHitsPerGroup)) {
       for (Hit_t& newHit : bucket) {
         ACTS_VERBOSE(__func__ << "() *** Test phi-only hit "
-                              << Acts::toString(*newHit.spacePoint())
+                              << Acts::toString(newHit.spacePoint())
                               << " in group " << static_cast<int>(group));
 
         /// Reject hits on a layer where an eta hit already measures phi
         const auto& groupHits{pat.hitsPerGroup[group]};
         if (std::ranges::any_of(groupHits, [&](const OrderedHit& h) {
-              return h->spacePoint()->measuresLoc0() &&
+              return h->spacePoint().measuresLoc0() &&
                      Topology_t::sameLayer(*h, newHit);
             })) {
           ACTS_VERBOSE(__func__ << "() Found eta hit measuring also phi on "
@@ -779,7 +779,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
         using SeedingAux =
             Acts::Experimental::detail::CompSpacePointAuxiliaries;
         const double stripHalfLength{
-            std::sqrt(newHit.spacePoint()->covariance()[Acts::toUnderlying(
+            std::sqrt(newHit.spacePoint().covariance()[Acts::toUnderlying(
                 SeedingAux::ResidualIdx::bending)])};
         const Vector3 sensorDir{newHit.globalSensorDirection(gctx)};
         const Vector3 stripLow{

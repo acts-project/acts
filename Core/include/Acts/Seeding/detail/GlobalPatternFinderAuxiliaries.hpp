@@ -14,6 +14,9 @@
 #include "Acts/Utilities/ArrayHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <memory>
+#include <type_traits>
+
 /// Auxiliary concepts and data structures used by the Global Pattern Finder.
 ///
 /// This file defines the concepts used to abstract the detector-specific hit
@@ -38,10 +41,12 @@ template <typename Hit_t>
 concept GlobPatFinderHit =
     requires(const Hit_t hit, const GeometryContext& gctx,
              const Vector3& contractionVector, const Hit_t& otherHit) {
-      /// Retrieve the underlying composite space point. This is a proxy to all
-      /// the properties of the composite space point.
+      /// Retrieve a reference to the underlying composite space point. This is
+      /// a proxy to all the properties of the composite space point.
       { hit.spacePoint() };
-      requires CompositeSpacePointPtr<decltype(hit.spacePoint())>;
+      requires std::is_lvalue_reference_v<decltype(hit.spacePoint())> &&
+                   CompositeSpacePoint<
+                       std::remove_cvref_t<decltype(hit.spacePoint())>>;
       /// Cached global position of the space point measurement. It's the
       /// position of the space point in global coordinates.
       { hit.globalPosition(gctx) } -> std::convertible_to<Vector3>;
@@ -54,7 +59,7 @@ concept GlobPatFinderHit =
       /// Return the measured directions for strip measurements. The first,
       /// always present, is orthogonal to the sensor direction. The second
       /// is provided only for combined strip space points with non-orthogonal
-      /// strips, and corresponds to the measured direction of the second strip, 
+      /// strips, and corresponds to the measured direction of the second strip,
       /// which differs from the first strip, i.e. the sensor direction.
       {
         hit.stripMeasurementDirections(gctx)
@@ -68,8 +73,8 @@ concept GlobPatFinderHit =
     };
 /// @brief Equality operator for hits.
 template <GlobPatFinderHit Hit_t>
-static bool operator==(const Hit_t& lhs, const Hit_t& rhs) {
-  return lhs.spacePoint() == rhs.spacePoint();
+inline bool operator==(const Hit_t& lhs, const Hit_t& rhs) {
+  return std::addressof(lhs.spacePoint()) == std::addressof(rhs.spacePoint());
 }
 
 /// @brief Concept defining the detector topology used by the pattern finder. The
