@@ -639,7 +639,7 @@ struct FitterTester {
     auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
-    options.referenceSurface = &start.referenceSurface();
+    options.referenceSurface = nullptr;
 
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                                 Acts::VectorMultiTrajectory{}};
@@ -648,6 +648,7 @@ struct FitterTester {
                           options, tracks);
     BOOST_REQUIRE(res.ok());
 
+    BOOST_CHECK_EQUAL(res->nMeasurements(), sourceLinks.size());
     BOOST_CHECK_EQUAL(res->particleHypothesis(), start.particleHypothesis());
   }
 };
