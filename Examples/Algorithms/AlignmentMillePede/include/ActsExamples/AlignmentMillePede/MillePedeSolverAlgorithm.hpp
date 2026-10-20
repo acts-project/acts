@@ -22,7 +22,7 @@ class MillePedeSolverAlgorithm final : public IAlgorithm {
  public:
   /// configuration
   struct Config {
-    ActsPlugins::MillePedeSolver::Config solverConfig;
+    ActsPlugins::MillePedeSolverConfig solverConfig;
     ActsPlugins::MillePedeSteeringConfig steeringConfig;
   };
 
