@@ -32,6 +32,7 @@ static constexpr unsigned int N_ROWS = 7000u;
 // we need to template the class i guess
 class hough_transform_seeding_algorithm
     : public algorithm<edm::houghplane_collection<N_COLS, N_ROWS>::buffer(
+	  const detector_buffer&,
           const edm::spacepoint_collection::const_view&)>,
       public messaging,
       public algorithm_base,
@@ -44,8 +45,9 @@ class hough_transform_seeding_algorithm
       const traccc::hough_seeding_config& config,
       std::unique_ptr<const Logger> logger = getDummyLogger().clone());
 
-  output_type operator()(const edm::spacepoint_collection::const_view&
-                             spacepoints) const override;
+  output_type operator()(
+		  const detector_buffer& det,
+		  const edm::spacepoint_collection::const_view& spacepoints) const override;
 
  protected:
   struct fill_hough_planes_kernel_payload {

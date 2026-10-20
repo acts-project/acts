@@ -66,9 +66,9 @@ using houghplane_collection =
                            // bins of the plane
                            vecmem::edm::type::vector<std::array<unsigned long long, N_COLS * N_ROWS>>,
                            // edges (x) of the planes
-                           vecmem::edm::type::scalar<std::array<float, N_COLS + 1>>,
+                           vecmem::edm::type::scalar<std::array<scalar, N_COLS + 1>>,
                            // edges (y) of the planes
-                           vecmem::edm::type::scalar<std::array<float, N_ROWS + 1>>>;
+                           vecmem::edm::type::scalar<std::array<scalar, N_ROWS + 1>>>;
 
 }  // namespace traccc::edm
 

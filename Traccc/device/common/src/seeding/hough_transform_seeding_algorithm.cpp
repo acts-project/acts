@@ -21,7 +21,8 @@ hough_transform_seeding_algorithm::hough_transform_seeding_algorithm(
       m_config(config) {}
 
 auto hough_transform_seeding_algorithm::operator()(
-    const edm::spacepoint_collection::const_view& spacepoints) const -> output_type {
+		const detector_buffer& det,
+	    	const edm::spacepoint_collection::const_view& spacepoints) const -> output_type {
       	// Get the number of space points. In an asynchronous way if possible.
   edm::spacepoint_collection::const_view::size_type n_spacepoints = 0u;
   if (mr().host) {
@@ -39,7 +40,7 @@ auto hough_transform_seeding_algorithm::operator()(
   }
 
   // Set up the output buffer.
-  edm::houghplane_collection<N_COLS, N_ROWS>::const_view::size_type n_slices = 25u;
+  edm::houghplane_collection<N_COLS, N_ROWS>::const_view::size_type n_slices = m_config.wedges.size();
   edm::houghplane_collection<N_COLS, N_ROWS>::buffer result(n_slices, mr().main);
   copy().setup(result)->ignore();
 
