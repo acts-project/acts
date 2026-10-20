@@ -9,8 +9,10 @@
 #include "Acts/Seeding/DoubletSeedFinder.hpp"
 
 #include "Acts/EventData/SpacePointContainer.hpp"
+#include "Acts/SpacePointFormation/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
+#include <array>
 #include <stdexcept>
 
 #include <boost/mp11.hpp>
@@ -51,7 +53,7 @@ void DoubletsForMiddleSp::sortByCotTheta(
 namespace {
 
 template <bool isBottomCandidate, bool interactionPointCut, bool sortedByR,
-          bool experimentCuts, bool useTime>
+          bool experimentCuts, bool useTime, bool stripCalibration>
 class Impl final : public DoubletSeedFinder {
  public:
   explicit Impl(const DerivedConfig& config) : m_cfg(config) {}
@@ -94,6 +96,16 @@ class Impl final : public DoubletSeedFinder {
     // equivalent to impactMax / (rM * rM);
     const float vIPAbs = impactMax * middleSpInfo.uIP2;
 
+    // only filled with the strip calibration
+    [[maybe_unused]] float calibrationTolerance = 0;
+    [[maybe_unused]] OuterStripSpacePointCalibrationDetailsDerived
+        calibrationM{};
+    if constexpr (stripCalibration) {
+      calibrationTolerance = *m_cfg.stripCalibrationTolerance;
+      calibrationM = detail::deriveOuterStripSpacePointCalibrationDetails(
+          middleSp.outerStripCalibrationDetails());
+    }
+
     const auto outsideRangeCheck = [](const float value, const float min,
                                       const float max) {
       // intentionally using `|` after profiling. faster due to better branch
@@ -112,9 +124,9 @@ class Impl final : public DoubletSeedFinder {
     for (auto [indexO, xyO, zrO, varianceZO, varianceRO] : candidateSps.zip(
              container.xyColumn(), container.zrColumn(),
              container.varianceZColumn(), container.varianceRColumn())) {
-      const float xO = xyO[0];
-      const float yO = xyO[1];
-      const float zO = zrO[0];
+      float xO = xyO[0];
+      float yO = xyO[1];
+      float zO = zrO[0];
       const float rO = zrO[1];
 
       float deltaR = 0;
@@ -187,6 +199,43 @@ class Impl final : public DoubletSeedFinder {
         }
       }
 
+      // middle space point of this doublet, calibrated if enabled
+      float xMd = xM;
+      float yMd = yM;
+      float rMd = rM;
+      float uIP = middleSpInfo.uIP;
+      float vIPAbsD = vIPAbs;
+
+      // calibrate both space points against their chord
+      if constexpr (stripCalibration) {
+        const std::array<float, 3> chord{xO - xM, yO - yM, zO - zM};
+        std::array<float, 3> calibratedM{};
+        std::array<float, 3> calibratedO{};
+        if (!detail::calibrateOuterStripSpacePoint(
+                chord, calibrationM, calibratedM, calibrationTolerance) ||
+            !detail::calibrateOuterStripSpacePoint(
+                chord,
+                detail::deriveOuterStripSpacePointCalibrationDetails(
+                    container[indexO].outerStripCalibrationDetails()),
+                calibratedO, calibrationTolerance)) {
+          continue;
+        }
+
+        xMd = calibratedM[0];
+        yMd = calibratedM[1];
+        rMd = fastHypot(xMd, yMd);
+        uIP = -1 / rMd;
+        vIPAbsD = impactMax * uIP * uIP;
+
+        xO = calibratedO[0];
+        yO = calibratedO[1];
+        zO = calibratedO[2];
+        const float rOd = fastHypot(xO, yO);
+
+        deltaR = isBottomCandidate ? rMd - rOd : rOd - rMd;
+        deltaZ = isBottomCandidate ? calibratedM[2] - zO : zO - calibratedM[2];
+      }
+
       // if interactionPointCut is false we apply z cuts before coordinate
       // transformation to avoid unnecessary calculations. If
       // interactionPointCut is true we apply the curvature cut first because it
@@ -201,8 +250,8 @@ class Impl final : public DoubletSeedFinder {
         }
 
         // transform SP coordinates to the u-v reference frame
-        const float deltaX = xO - xM;
-        const float deltaY = yO - yM;
+        const float deltaX = xO - xMd;
+        const float deltaY = yO - yMd;
 
         const float xNewFrame =
             deltaX * middleSpInfo.cosPhiM + deltaY * middleSpInfo.sinPhiM;
@@ -239,8 +288,8 @@ class Impl final : public DoubletSeedFinder {
       }
 
       // transform SP coordinates to the u-v reference frame
-      const float deltaX = xO - xM;
-      const float deltaY = yO - yM;
+      const float deltaX = xO - xMd;
+      const float deltaY = yO - yMd;
 
       const float xNewFrame =
           deltaX * middleSpInfo.cosPhiM + deltaY * middleSpInfo.sinPhiM;
@@ -262,16 +311,16 @@ class Impl final : public DoubletSeedFinder {
       // The correct computation would be:
       // yNewFrame * yNewFrame * rM * rM > config.impactMax *
       // config.impactMax * deltaR2
-      if (std::abs(rM * yNewFrame) > impactMax * xNewFrame) {
+      if (std::abs(rMd * yNewFrame) > impactMax * xNewFrame) {
         // in the rotated frame the interaction point is positioned at x = -rM
         // and y ~= impactParam
-        const float vIP = (yNewFrame > 0) ? -vIPAbs : vIPAbs;
+        const float vIP = (yNewFrame > 0) ? -vIPAbsD : vIPAbsD;
 
         // we can obtain aCoef as the slope dv/du of the linear function,
         // estimated using du and dv between the two SP bCoef is obtained by
         // inserting aCoef into the linear equation
-        const float aCoef = (vT - vIP) / (uT - middleSpInfo.uIP);
-        const float bCoef = vIP - aCoef * middleSpInfo.uIP;
+        const float aCoef = (vT - vIP) / (uT - uIP);
+        const float bCoef = vIP - aCoef * uIP;
         // the distance of the straight line from the origin (radius of the
         // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
         // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
@@ -340,11 +389,13 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
   using SortedByROptions = BooleanOptions;
   using ExperimentCutsOptions = BooleanOptions;
   using UseTimeOptions = BooleanOptions;
+  using StripCalibrationOptions = BooleanOptions;
 
   using DoubletOptions =
       boost::mp11::mp_product<boost::mp11::mp_list, IsBottomCandidateOptions,
                               InteractionPointCutOptions, SortedByROptions,
-                              ExperimentCutsOptions, UseTimeOptions>;
+                              ExperimentCutsOptions, UseTimeOptions,
+                              StripCalibrationOptions>;
 
   std::unique_ptr<DoubletSeedFinder> result;
   boost::mp11::mp_for_each<DoubletOptions>([&](auto option) {
@@ -355,6 +406,7 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     using SortedByR = boost::mp11::mp_at_c<OptionType, 2>;
     using ExperimentCuts = boost::mp11::mp_at_c<OptionType, 3>;
     using UseTime = boost::mp11::mp_at_c<OptionType, 4>;
+    using StripCalibration = boost::mp11::mp_at_c<OptionType, 5>;
 
     const bool configIsBottomCandidate =
         config.candidateDirection == Direction::Backward();
@@ -363,7 +415,9 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
         config.interactionPointCut != InteractionPointCut::value ||
         config.spacePointsSortedByRadius != SortedByR::value ||
         config.experimentCuts.connected() != ExperimentCuts::value ||
-        config.useTime != UseTime::value) {
+        config.useTime != UseTime::value ||
+        config.stripCalibrationTolerance.has_value() !=
+            StripCalibration::value) {
       return;  // skip if the configuration does not match
     }
 
@@ -375,9 +429,10 @@ std::unique_ptr<DoubletSeedFinder> DoubletSeedFinder::create(
     }
 
     // create the implementation for the given configuration
-    result = std::make_unique<
-        Impl<IsBottomCandidate::value, InteractionPointCut::value,
-             SortedByR::value, ExperimentCuts::value, UseTime::value>>(config);
+    result = std::make_unique<Impl<
+        IsBottomCandidate::value, InteractionPointCut::value, SortedByR::value,
+        ExperimentCuts::value, UseTime::value, StripCalibration::value>>(
+        config);
   });
   if (result == nullptr) {
     throw std::runtime_error(

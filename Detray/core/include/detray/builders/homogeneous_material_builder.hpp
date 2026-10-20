@@ -88,27 +88,16 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
   }
   /// @}
 
-  /// Toggles whether material that is identical to material already present
-  /// in the detector is shared instead of being copied
-  DETRAY_HOST
-  void deduplicate_material(bool toggle) override {
-    m_deduplicate = toggle;
-    volume_decorator<detector_t>::deduplicate_material(toggle);
-  }
-
-  /// @returns whether identical material is shared between surfaces
-  DETRAY_HOST
-  bool deduplicate_material() const { return m_deduplicate; }
-
   /// Add the volume and the material to the detector @param det
   DETRAY_HOST
-  auto build(detector_t &det, typename detector_t::geometry_context ctx = {}) ->
+  auto build(detector_t &det, const volume_builder_options &opt,
+             typename detector_t::geometry_context ctx = {}) ->
       typename detector_t::volume_type * override {
     DETRAY_VERBOSE_HOST("Build homogeneous material...");
 
     DETRAY_DEBUG_HOST("-> n_surfaces=" << this->surfaces().size());
 
-    if (m_deduplicate) {
+    if (opt.deduplicate()) {
       add_deduplicated_material(det);
     } else {
       add_material(det);
@@ -119,7 +108,7 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
 
     // Call the underlying volume builder(s) and give the volume to the
     // next decorator
-    return volume_decorator<detector_t>::build(det, ctx);
+    return volume_decorator<detector_t>::build(det, opt, ctx);
   }
 
  private:
@@ -222,8 +211,6 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
     local_coll.clear();
   }
 
-  /// Whether to share identical material between surfaces
-  bool m_deduplicate{false};
   // Material container for this volume
   typename detector_t::material_container m_materials{};
 };

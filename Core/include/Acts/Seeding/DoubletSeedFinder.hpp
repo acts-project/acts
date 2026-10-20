@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <vector>
 
 namespace Acts {
@@ -348,6 +349,12 @@ class DoubletSeedFinder {
     /// corrected for the time of flight between them, in units of their
     /// combined time resolution. Only used when `useTime` is enabled.
     float timeCutNSigma = 5;
+
+    /// If set, calibrate both strip space points against their chord after the
+    /// z origin cut, with this tolerance in strip half lengths. The following
+    /// cuts and the doublet use the calibrated positions.
+    /// Requires `SpacePointColumns::StripCalibrationDetails`.
+    std::optional<float> stripCalibrationTolerance;
 
     /// Type alias for delegate to apply experiment specific cuts during doublet
     /// finding

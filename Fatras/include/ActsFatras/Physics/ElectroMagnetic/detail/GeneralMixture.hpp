@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Interactions.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
@@ -87,10 +88,12 @@ struct GeneralMixture {
       const auto theta0 = Acts::computeMultipleScatteringTheta0(
           slab, particle.absolutePdg(), particle.mass(), particle.qOverP(),
           particle.absoluteCharge());
-      theta = std::normal_distribution<double>(0.0, theta0)(generator);
+      // scale from planar to 3d angle
+      theta = std::numbers::sqrt2 *
+              std::normal_distribution<double>(0.0, theta0)(generator);
     }
-    // scale from planar to 3d angle
-    return std::numbers::sqrt2 * theta;
+    // the mixture samplers already return the 3d angle
+    return theta;
   }
 
   // helper methods for getting parameters and simulating
@@ -99,7 +102,8 @@ struct GeneralMixture {
                                        double scale) const {
     std::array<double, 4> scatteringParams{};
     // Total standard deviation of mixture
-    scatteringParams[0] = 15. / beta / p * std::sqrt(tInX0) * scale;
+    scatteringParams[0] =
+        15. * Acts::UnitConstants::MeV / beta / p * std::sqrt(tInX0) * scale;
     // Variance of core
     scatteringParams[1] = 1.0;
     // Variance of tails
@@ -113,7 +117,8 @@ struct GeneralMixture {
                                        double Z, double scale) const {
     std::array<double, 4> scatteringParams{};
     // Total standard deviation of mixture
-    scatteringParams[0] = 15. / beta / p * std::sqrt(tInX0) * scale;
+    scatteringParams[0] =
+        15. * Acts::UnitConstants::MeV / beta / p * std::sqrt(tInX0) * scale;
     const double d1 = std::log(tInX0 / (beta * beta));
     const double d2 = std::log(std::pow(Z, 2.0 / 3.0) * tInX0 / (beta * beta));
     const double var1 = (-1.843e-3 * d1 + 3.347e-2) * d1 + 8.471e-1;
@@ -138,7 +143,8 @@ struct GeneralMixture {
     const double N = tInX0 * 1.587E7 * std::pow(Z, 1.0 / 3.0) / (beta * beta) /
                      (Z + 1) / std::log(287 / std::sqrt(Z));
     // Total standard deviation of mixture
-    scatteringParams[4] = 15. / beta / p * std::sqrt(tInX0) * scale;
+    scatteringParams[4] =
+        15. * Acts::UnitConstants::MeV / beta / p * std::sqrt(tInX0) * scale;
     const double rho = 41000 / std::pow(Z, 2.0 / 3.0);
     const double b = rho / std::sqrt(N * (std::log(rho) - 0.5));
     const double n = std::pow(Z, 0.1) * std::log(N);

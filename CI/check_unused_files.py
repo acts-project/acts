@@ -76,6 +76,10 @@ EXCLUDE_FILES = (
     "SNIPPETS.md",
     "tex-mml-chtml.js",
     "tgeo_aux.py.in",
+    # Pytest collects these examples; Doxygen includes the group by ID.
+    "docs/examples/test_generic.py",
+    "docs/examples/test_performance_and_plotting.py",
+    "docs/groups/python/performance_and_plotting.md",
     "todo.md",
     # Detray python tests for auto-generated code
     "Detray/codegen/detray-sympy/tests/test_assumptions_D.py",
@@ -89,6 +93,8 @@ EXCLUDE_FILES = (
     # Python uv files
     "Detray/codegen/detray-sympy/uv.lock",
     "Detray/python/detray/uv.lock",
+    # Generated PyPI readme, checked by Python/Examples/tests/test_pypi_readme.py
+    "CI/pypi_readme.md",
     # TODO: remove after file is gone
     "Core/include/Acts/Utilities/ProtoAxisHelpers.hpp",
 )

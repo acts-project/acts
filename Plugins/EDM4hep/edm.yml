@@ -30,6 +30,7 @@ components:
         - unsigned int ndf // number of degrees of freedom
         - unsigned int nOutliers // number of outliers
         - unsigned int nSharedHits // number of shared hits
+        - unsigned int nSplitHits // number of split hits
 
     ActsPodioEdm::TrackStateInfo:
       Members:

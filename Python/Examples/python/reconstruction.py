@@ -310,6 +310,7 @@ def addSeeding(
     paramEstimationSpacePoints: Optional[acts.examples.SeedSpacePointSelection] = None,
     paramEstimationRefineIterations: Optional[int] = None,
     paramEstimationWeight: Optional[Callable] = None,
+    gbtsSeedParameters: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     trackParameterPerformance: bool = False,
@@ -374,6 +375,9 @@ def addSeeding(
         relative weight of a space point in the fit, requires
         `SeedSpacePointSelection.All`, see
         `TrackParamsEstimationAlgorithm.inverseRadiusPowerWeight`
+    gbtsSeedParameters : bool
+        GBTS seeding: use the fit of the GBTS tracking filter as the track
+        parameter estimate, instead of a fit to the space points (default)
     outputDirRoot : Path|str, path, None
         the output folder for ROOT output, None triggers no output
     trackParameterPerformance : bool, False
@@ -476,6 +480,11 @@ def addSeeding(
                 layerMappingConfigFile,
                 connectorInputConfigFile,
                 lutInputConfigFile,
+                outputSeeds=f"{prefix}seeds",
+                outputFreeParameters=(
+                    f"{prefix}seedfreeparameters" if gbtsSeedParameters else None
+                ),
+                magneticField=field if gbtsSeedParameters else None,
             )
         elif seedingAlgorithm == SeedingAlgorithm.HashingPrototype:
             logger.info("Using Hashing seeding")
@@ -558,6 +567,11 @@ def addSeeding(
                 spacePointSelection=paramEstimationSpacePoints,
                 geometricRefineIterations=paramEstimationRefineIterations,
                 spacePointWeight=paramEstimationWeight,
+                inputFreeParameters=(
+                    f"{prefix}seedfreeparameters"
+                    if gbtsSeedParameters and seedingAlgorithm == SeedingAlgorithm.Gbts
+                    else None
+                ),
                 initialSigmas=initialSigmas,
                 initialSigmaQoverPt=initialSigmaQoverPt,
                 initialSigmaPtRel=initialSigmaPtRel,
@@ -1461,6 +1475,9 @@ def addGbtsSeeding(
     layerMappingConfigFile: Union[Path, str] = None,
     connectorInputConfigFile: Union[Path, str] = None,
     lutInputConfigFile: Optional[Union[Path, str]] = None,
+    outputSeeds: str = "seeds",
+    outputFreeParameters: Optional[str] = None,
+    magneticField: Optional[acts.MagneticFieldProvider] = None,
 ):
     """Gbts seeding"""
 
@@ -1468,7 +1485,9 @@ def addGbtsSeeding(
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
     connectorInputFileStr = str(connectorInputConfigFile)
     lutInputConfigFileStr = str(lutInputConfigFile)
-    seedFinderConfig = acts.examples.GraphBasedSeedingConfig(
+    seedFinderConfig = acts.examples.GraphBasedSeedingConfig()
+
+    graphConfig = acts.examples.GbtsGraphBuilderConfig(
         **acts.examples.defaultKWArgs(
             minPt=seedFinderConfigArg.minPt,
         ),
@@ -1477,8 +1496,9 @@ def addGbtsSeeding(
     seedingAlg = acts.examples.GraphBasedSeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=spacePoints,
-        outputSeeds="seeds",
+        outputSeeds=outputSeeds,
         seedFinderConfig=seedFinderConfig,
+        graphConfig=graphConfig,
         layerMappingFile=layerMappingFile,
         connectorInputFile=connectorInputFileStr,
         lutInputFile=lutInputConfigFileStr,
@@ -1487,6 +1507,8 @@ def addGbtsSeeding(
         inputClusters="clusters",
         **acts.examples.defaultKWArgs(
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+            outputFreeParameters=outputFreeParameters,
+            magneticField=magneticField,
         ),
     )
 
@@ -1709,6 +1731,7 @@ def addKalmanTracks(
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     linkForward: bool = False,
+    referenceSurface: acts.Surface = acts.Surface.createPerigee(acts.Vector3(0, 0, 0)),
     useJosephFormulation: bool = False,
     useReferenceTrajectory: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1752,6 +1775,7 @@ def addKalmanTracks(
         fit=fitFunction,
         calibrator=calibrator,
         linkForward=linkForward,
+        referenceSurface=referenceSurface,
     )
     s.addAlgorithm(fitAlg)
     s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)

@@ -20,12 +20,9 @@ __global__ void material_validation_kernel(
     vecmem::data::vector_view<
         free_track_parameters<typename detector_t::algebra_type>>
         tracks_view,
-    vecmem::data::vector_view<
-        material_validator::track_material<typename detector_t::scalar_type>>
+    vecmem::data::vector_view<material_validator::track_material>
         track_mat_view,
-    vecmem::data::jagged_vector_view<
-        material_record<typename detector_t::scalar_type>>
-        mat_steps_view) {
+    vecmem::data::jagged_vector_view<material_record> mat_steps_view) {
   using device_detector_t = device::detector<typename detector_t::metadata>;
   using algebra_t = typename device_detector_t::algebra_type;
   using scalar_t = dscalar<algebra_t>;
@@ -35,7 +32,7 @@ __global__ void material_validation_kernel(
   // Propagator with full covariance transport, pathlimit aborter and
   // material tracer
   using material_tracer_t =
-      material_validator::material_tracer<scalar_t, vecmem::device_vector>;
+      material_validator::material_tracer<vecmem::device_vector>;
   using pathlimit_aborter_t = actor::pathlimit_aborter<scalar_t>;
   using actor_chain_t = actor_chain<
       pathlimit_aborter_t,
@@ -86,11 +83,9 @@ void material_validation_device(
     typename detector_t::view_type det_view, const propagation::config &cfg,
     vecmem::data::vector_view<
         free_track_parameters<typename detector_t::algebra_type>> &tracks_view,
-    vecmem::data::vector_view<
-        material_validator::track_material<typename detector_t::scalar_type>>
+    vecmem::data::vector_view<material_validator::track_material>
         &track_mat_view,
-    vecmem::data::jagged_vector_view<
-        material_record<typename detector_t::scalar_type>> &mat_steps_view) {
+    vecmem::data::jagged_vector_view<material_record> &mat_steps_view) {
   constexpr int thread_dim = 2 * WARP_SIZE;
   int block_dim = tracks_view.size() / thread_dim + 1;
 
@@ -104,17 +99,15 @@ void material_validation_device(
 }
 
 /// Macro declaring the template instantiations for the different detector types
-#define DECLARE_MATERIAL_VALIDATION(METADATA)                         \
-                                                                      \
-  template void material_validation_device<host::detector<METADATA>>( \
-      typename host::detector<METADATA>::view_type,                   \
-      const propagation::config &,                                    \
-      vecmem::data::vector_view<                                      \
-          free_track_parameters<typename METADATA::algebra_type>> &,  \
-      vecmem::data::vector_view<material_validator::track_material<   \
-          typename host::detector<METADATA>::scalar_type>> &,         \
-      vecmem::data::jagged_vector_view<                               \
-          material_record<typename host::detector<METADATA>::scalar_type>> &);
+#define DECLARE_MATERIAL_VALIDATION(METADATA)                          \
+                                                                       \
+  template void material_validation_device<host::detector<METADATA>>(  \
+      typename host::detector<METADATA>::view_type,                    \
+      const propagation::config &,                                     \
+      vecmem::data::vector_view<                                       \
+          free_track_parameters<typename METADATA::algebra_type>> &,   \
+      vecmem::data::vector_view<material_validator::track_material> &, \
+      vecmem::data::jagged_vector_view<material_record> &);
 
 DECLARE_MATERIAL_VALIDATION(test::default_metadata)
 DECLARE_MATERIAL_VALIDATION(test::toy_metadata)

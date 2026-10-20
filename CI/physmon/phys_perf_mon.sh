@@ -25,7 +25,7 @@ if ! [[ $mode = @(all|kf|gsf|gx2f|refit_kf|refit_gsf|fullchains|simulation|gx2f_
 fi
 
 outdir=${2:-physmon}
-# number of histcmp worker processes per comparison
+# number of histcmp comparisons run concurrently
 num_jobs=${3:-1}
 mkdir -p $outdir
 mkdir -p $outdir/data
@@ -216,62 +216,131 @@ fi
 echo "::endgroup::"
 
 
-function run_histcmp() {
-    a=$1
-    b=$2
-    title=$3
-    html_path=$4
-    shift 4
+# The histcmp comparisons are independent of each other. run_histcmp only
+# queues them; finish_comparisons runs them $num_jobs at a time and then replays
+# their output in submission order, so the log, the results CSV and the exit
+# code look as if they had run one after the other.
+#
+# Each comparison runs single-process (--jobs 1). histcmp's own worker pool
+# starts every worker as a fresh interpreter that imports ROOT and matplotlib
+# again, which costs more than it saves once whole files run side by side.
+comparison_jobs_dir=$outdir/comparison_jobs
+rm -rf $comparison_jobs_dir
+mkdir -p $comparison_jobs_dir
+comparison_count=0
+comparison_cmds=()
 
-    echo "::group::Comparing $a vs. $b"
+function run_histcmp() {
+    comparison_cmds[$comparison_count]=$(printf '%q ' "$@")
+    comparison_count=$(($comparison_count + 1))
+}
+
+# Runs one queued comparison; its output goes to $jobdir/log by the caller
+function run_comparison() {
+    local jobdir=$1
+    local a=$2
+    local b=$3
+    local title=$4
+    local html_path=$5
+    shift 5
+
+    local this_ec=0
 
     if [ ! -f "$a" ]; then
         echo "::error::histcmp failed: File $a does not exist"
-        ec=1
+        this_ec=1
     fi
 
     if [ ! -f "$b" ]; then
         echo "::error::histcmp failed: File $b does not exist"
-        ec=1
+        this_ec=1
     fi
 
     # histcmp only creates this directory when a plot directory is configured
     mkdir -p $(dirname $outdir/html/$html_path)
 
-    start=$(date +%s)
+    local start=$(date +%s)
     # scatter renders 3D histograms much faster than the default voxel
     # renderer at every histogram size
+    local histcmp_ec=0
     run histcmp $a $b \
         --label-reference=reference \
         --label-monitored=monitored \
         --title="$title" \
-        --jobs $num_jobs \
+        --jobs 1 \
         --renderer-3d scatter \
         -o $outdir/html/$html_path \
-        "$@"
-
-    this_ec=$?
-    ec=$(($ec | $this_ec))
+        "$@" || histcmp_ec=$?
+    this_ec=$(($this_ec | $histcmp_ec))
     echo "histcmp took $(($(date +%s) - $start)) seconds"
 
-    if [ $this_ec -ne 0 ]; then
-        echo "::error::histcmp failed: ec=$this_ec"
-    fi
+    echo $this_ec > $jobdir/ec
+}
 
-    # Record which reference file this comparison covers, and which output would
-    # replace it, so `reference.py candidate` can turn a failure into a manifest
-    # entry. Comparisons between two monitored outputs have no reference and
-    # leave both fields empty.
-    ref_path=""
-    monitored_path=""
-    if [[ "$b" == "$refdir/"* ]]; then
-        ref_path="${b#$refdir/}"
-        monitored_path="${a#$outdir/data/}"
-    fi
+function finish_comparisons() {
+    local i
+    local order
 
-    echo "\"${title}\",html/${html_path},${this_ec},${ref_path},${monitored_path}" >> $histcmp_results
+    # Largest monitored file first: the cost of a comparison grows with the
+    # number of histograms in it, and starting the slow ones last would leave
+    # them running alone at the end.
+    order=$(
+        for ((i = 0; i < $comparison_count; i++)); do
+            eval "set -- ${comparison_cmds[$i]}"
+            size=0
+            if [ -f "$1" ]; then
+                size=$(wc -c < "$1")
+            fi
+            echo "$size $i"
+        done | sort -rn | awk '{print $2}'
+    )
 
-    echo "::endgroup::"
+    for i in $order; do
+        while [ "$(jobs -rp | wc -l)" -ge "$num_jobs" ]; do
+            sleep 0.2
+        done
+        local jobdir=$comparison_jobs_dir/$i
+        mkdir -p $jobdir
+        eval "run_comparison $jobdir ${comparison_cmds[$i]}" > $jobdir/log 2>&1 &
+    done
+    wait
+
+    for ((i = 0; i < $comparison_count; i++)); do
+        local jobdir=$comparison_jobs_dir/$i
+        eval "set -- ${comparison_cmds[$i]}"
+        local a=$1
+        local b=$2
+        local title=$3
+        local html_path=$4
+
+        echo "::group::Comparing $a vs. $b"
+        cat $jobdir/log
+
+        local this_ec
+        this_ec=$(cat $jobdir/ec 2> /dev/null || echo 1)
+        ec=$(($ec | $this_ec))
+
+        if [ $this_ec -ne 0 ]; then
+            echo "::error::histcmp failed: ec=$this_ec"
+        fi
+
+        # Record which reference file this comparison covers, and which output
+        # would replace it, so `reference.py candidate` can turn a failure into
+        # a manifest entry. Comparisons between two monitored outputs have no
+        # reference and leave both fields empty.
+        local ref_path=""
+        local monitored_path=""
+        if [[ "$b" == "$refdir/"* ]]; then
+            ref_path="${b#$refdir/}"
+            monitored_path="${a#$outdir/data/}"
+        fi
+
+        echo "\"${title}\",html/${html_path},${this_ec},${ref_path},${monitored_path}" >> $histcmp_results
+
+        echo "::endgroup::"
+    done
+
+    rm -rf $comparison_jobs_dir
 }
 
 function trackfinding() {
@@ -280,7 +349,7 @@ function trackfinding() {
 
     default_config="CI/physmon/config/default.yml"
 
-    if [ -f $refdir/$path/performance_seeding.root ]; then
+    if [ -f $outdir/data/$path/performance_seeding.root ] || [ -f $refdir/$path/performance_seeding.root ]; then
         run_histcmp \
             $outdir/data/$path/performance_seeding.root \
             $refdir/$path/performance_seeding.root \
@@ -514,6 +583,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     trackfinding "trackfinding | single muon | truth estimated seeding" trackfinding_1muon/truth_estimated
     trackfinding "trackfinding | single muon | default seeding" trackfinding_1muon/seeded
     trackfinding "trackfinding | single muon | orthogonal seeding" trackfinding_1muon/orthogonal
+    trackfinding "trackfinding | single muon | GBTS seeding" trackfinding_1muon/gbts
 
     trackfinding "trackfinding | 4 muon x 50 vertices | default seeding" trackfinding_4muon_50vertices
     vertexing "trackfinding | 4 muon x 50 vertices | default seeding" trackfinding_4muon_50vertices CI/physmon/config/vertexing_4muon_50vertices.yml
@@ -532,6 +602,8 @@ if [[ "$mode" == "all" || "$mode" == "gx2f_vs_kf" ]]; then
         --label-reference=KF \
         --label-monitored=GX2F
 fi
+
+finish_comparisons
 
 run python3 CI/physmon/summary.py $histcmp_results \
   --md $outdir/summary.md \
