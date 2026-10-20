@@ -145,7 +145,8 @@ void bucketSortByKey(std::span<item_t> items, storage_t& storage,
   auto& spread = storage.scratch;
   spread.resize(n);
   for (std::size_t i = 0; i < n; ++i) {
-    spread[starts[bucketOfItem[i]]++] = std::move(items[i]);
+    spread[starts[bucketOfItem[i]]] = std::move(items[i]);
+    ++bucketOfItem[i];
   }
 
   // A crowded bucket, as when one key is far from the others, is sorted on its
