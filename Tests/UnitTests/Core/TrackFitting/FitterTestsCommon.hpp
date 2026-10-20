@@ -624,6 +624,32 @@ struct FitterTester {
     BOOST_CHECK_EQUAL(stateRowIndices.at(track.tipIndex()),
                       Acts::eBoundSize * (nMeasurements - 1));
   }
+
+  // The output track must carry the particle hypothesis of the start
+  // parameters. Requires a non-pion start, since pion is the track container
+  // default.
+  template <typename fitter_t, typename fitter_options_t, typename parameters_t>
+  void test_ParticleHypothesis(const fitter_t& fitter, fitter_options_t options,
+                               const parameters_t& start, Rng& rng) const {
+    BOOST_REQUIRE_NE(start.particleHypothesis(),
+                     Acts::ParticleHypothesis::pion());
+
+    auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
+                                           resolutions, rng);
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+    BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
+
+    options.referenceSurface = &start.referenceSurface();
+
+    Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                                Acts::VectorMultiTrajectory{}};
+
+    auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                          options, tracks);
+    BOOST_REQUIRE(res.ok());
+
+    BOOST_CHECK_EQUAL(res->particleHypothesis(), start.particleHypothesis());
+  }
 };
 
 }  // namespace ActsTests
