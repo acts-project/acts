@@ -14,6 +14,7 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/Seeding/GbtsGraphBuilder.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
@@ -56,6 +57,13 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// this is used to initialise the handle that points to the container of
     /// seeds
     std::string outputSeeds;
+
+    /// Magnetic field, needed for `outputFreeParameters`.
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+
+    /// Output free track parameters of the seeds (optional), zero for a seed
+    /// without a fit of its own.
+    std::string outputFreeParameters;
 
     /// Magnetic field in z direction
     float bFieldInZ = 2 * Acts::UnitConstants::T;
@@ -156,6 +164,9 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
 
   /// handle that points to container of output seeds
   WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
+
+  WriteDataHandle<std::vector<Acts::FreeVector>> m_outputFreeParameters{
+      this, "OutputFreeParameters"};
 
   /// make the map between ACTS geometry ID's and GBTS geometry ID's
   Acts::GeometryHierarchyMap<GbtsLayerInfo> makeActsGbtsMap() const;

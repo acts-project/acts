@@ -22,6 +22,7 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <iterator>
+#include <optional>
 
 namespace Acts {
 
@@ -614,7 +615,10 @@ class TrackProxy
   /// @note This is dangerous with branching track state sequences, as it will break them
   /// @note This also automatically forward-links the track!
   /// @param invertJacobians Whether to invert the Jacobians of the track states
-  void reverseTrackStates(bool invertJacobians = false)
+  /// @return With @p invertJacobians, the inverse of the old first jacobian,
+  ///         which has no slot in the reversed sequence. Empty otherwise, for
+  ///         a track without states, or if that jacobian is zero.
+  std::optional<BoundMatrix> reverseTrackStates(bool invertJacobians = false)
     requires(!ReadOnly)
   {
     IndexType current = tipIndex();
@@ -645,6 +649,12 @@ class TrackProxy
       tipIndex() = current;
       current = prev;
     }
+
+    // `nextJacobian` holds the jacobian of the old first state
+    if (!invertJacobians || next == kInvalid || nextJacobian.isZero()) {
+      return std::nullopt;
+    }
+    return nextJacobian.inverse();
   }
 
   /// @}

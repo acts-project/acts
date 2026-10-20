@@ -251,9 +251,9 @@ option(
     ${DETRAY_USE_SYSTEM_LIBS}
 )
 if(DETRAY_SETUP_VECMEM)
-    set(DETRAY_VECMEM_VERSION 1.27.0)
+    set(DETRAY_VECMEM_VERSION 1.28.0)
     set(DETRAY_VECMEM_DIGEST
-        30ef85b2a9326c08d291f4fea949e097
+        054e3f8407fe710dae9f0c47d8089c0d
         CACHE STRING
         "MD5 digest of the downloaded zip"
     )
