@@ -17,12 +17,12 @@ namespace Acts {
 
 SeedDeduplicator::SeedDeduplicator(const Config& config) : m_cfg(config) {}
 
-void SeedDeduplicator::reset(std::size_t nKeys) {
-  if (nKeys >= kNone) {
+void SeedDeduplicator::reset(std::size_t nMeasKeys) {
+  if (nMeasKeys >= kNone) {
     throw std::invalid_argument("SeedDeduplicator: too many keys");
   }
-  m_trackHeads.assign(nKeys, kNone);
-  m_weights.assign(nKeys, 1);
+  m_trackHeads.assign(nMeasKeys, kNone);
+  m_weights.assign(nMeasKeys, 1);
   m_nodes.clear();
   m_nTracks = 0;
 }
@@ -34,25 +34,26 @@ SeedDeduplicator::Score SeedDeduplicator::duplicateThreshold(
   return std::min(seedScore, std::max({Score{1}, m_cfg.minScore, relative}));
 }
 
-void SeedDeduplicator::addTrack(std::span<const Key> keys) {
+void SeedDeduplicator::addTrack(std::span<const MeasurementKey> measKeys) {
   const auto track = static_cast<std::uint32_t>(m_nTracks);
-  for (const Key key : keys) {
-    assert(key < m_trackHeads.size() && "Key out of range");
-    const std::uint32_t head = m_trackHeads[key];
+  for (const MeasurementKey measKey : measKeys) {
+    assert(measKey < m_trackHeads.size() && "Key out of range");
+    const std::uint32_t head = m_trackHeads[measKey];
     // a key that occurs twice on a track counts once
     if (head != kNone && m_nodes[head].track == track) {
       continue;
     }
-    m_trackHeads[key] = static_cast<std::uint32_t>(m_nodes.size());
+    m_trackHeads[measKey] = static_cast<std::uint32_t>(m_nodes.size());
     m_nodes.push_back({track, head});
   }
   ++m_nTracks;
 }
 
-bool SeedDeduplicator::isDuplicate(std::span<const Key> keys) const {
+bool SeedDeduplicator::isDuplicate(
+    std::span<const MeasurementKey> measKeys) const {
   Score remaining = 0;
-  for (const Key key : keys) {
-    remaining += weight(key);
+  for (const MeasurementKey measKey : measKeys) {
+    remaining += weight(measKey);
   }
   if (remaining == 0) {
     return false;
@@ -67,9 +68,9 @@ bool SeedDeduplicator::isDuplicate(std::span<const Key> keys) const {
   };
   boost::container::small_vector<TrackScore, kInlineTracks> scores;
   Score best = 0;
-  for (const Key key : keys) {
-    const Weight w = m_weights[key];
-    for (std::uint32_t node = m_trackHeads[key]; node != kNone;
+  for (const MeasurementKey measKey : measKeys) {
+    const Weight w = m_weights[measKey];
+    for (std::uint32_t node = m_trackHeads[measKey]; node != kNone;
          node = m_nodes[node].next) {
       const std::uint32_t track = m_nodes[node].track;
       auto it = std::ranges::find(scores, track, &TrackScore::track);

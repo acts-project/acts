@@ -120,14 +120,15 @@ Acts::SeedDeduplicator::Weight localPositionDimension(
 }
 
 /// Collect the measurement keys of all space points of a seed.
-void collectSeedKeys(const ConstSeedProxy& seed,
-                     std::vector<Acts::SeedDeduplicator::Key>& keys) {
-  keys.clear();
+void collectSeedKeys(
+    const ConstSeedProxy& seed,
+    std::vector<Acts::SeedDeduplicator::MeasurementKey>& measKeys) {
+  measKeys.clear();
   for (const SpacePointIndex spIndex : seed.spacePointIndices()) {
     const ConstSpacePointProxy sp =
         seed.container().spacePointContainer().at(spIndex);
     for (const Acts::SourceLink& sourceLink : sp.sourceLinks()) {
-      keys.push_back(sourceLink.get<IndexSourceLink>().index());
+      measKeys.push_back(sourceLink.get<IndexSourceLink>().index());
     }
   }
 }
@@ -137,14 +138,15 @@ void collectSeedKeys(const ConstSeedProxy& seed,
 /// Outliers count as shared measurements. This is a choice: a seed
 /// measurement that the track rejected as an outlier can still make the seed a
 /// duplicate.
-void collectTrackKeys(const TrackProxy& track,
-                      std::vector<Acts::SeedDeduplicator::Key>& keys) {
-  keys.clear();
+void collectTrackKeys(
+    const TrackProxy& track,
+    std::vector<Acts::SeedDeduplicator::MeasurementKey>& measKeys) {
+  measKeys.clear();
   for (const auto& trackState : track.trackStatesReversed()) {
     if (!trackState.hasUncalibratedSourceLink()) {
       continue;
     }
-    keys.push_back(
+    measKeys.push_back(
         trackState.getUncalibratedSourceLink().get<IndexSourceLink>().index());
   }
 }
@@ -407,7 +409,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       seedDeduplicator.setWeight(i, localPositionDimension(measurements.at(i)));
     }
   }
-  std::vector<Acts::SeedDeduplicator::Key> keys;
+  std::vector<Acts::SeedDeduplicator::MeasurementKey> measKeys;
 
   auto addTrack = [&](const TrackProxy& track) {
     ++m_nFoundTracks;
@@ -423,8 +425,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
 
     if (m_cfg.seedDeduplication) {
-      collectTrackKeys(track, keys);
-      seedDeduplicator.addTrack(keys);
+      collectTrackKeys(track, measKeys);
+      seedDeduplicator.addTrack(measKeys);
     }
 
     ++m_nSelectedTracks;
@@ -442,8 +444,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
       if (m_cfg.seedDeduplication) {
         // check if an already found track covers the seed
-        collectSeedKeys(seed, keys);
-        if (seedDeduplicator.isDuplicate(keys)) {
+        collectSeedKeys(seed, measKeys);
+        if (seedDeduplicator.isDuplicate(measKeys)) {
           m_nDeduplicatedSeeds++;
           ACTS_VERBOSE("Skipping seed " << iSeed << " due to deduplication.");
           continue;

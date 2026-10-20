@@ -19,22 +19,23 @@ using namespace Acts;
 
 namespace ActsTests {
 
-using Key = SeedDeduplicator::Key;
+using MeasurementKey = SeedDeduplicator::MeasurementKey;
 
 /// Find the smallest number of seed keys that one track must hold to make a
 /// seed of `nKeys` keys a duplicate
-Key requiredSharedKeys(const SeedDeduplicator::Config& config, Key nKeys) {
-  std::vector<Key> seed(nKeys);
-  std::iota(seed.begin(), seed.end(), Key{0});
-  for (Key nShared = 1; nShared <= nKeys; ++nShared) {
+MeasurementKey requiredSharedKeys(const SeedDeduplicator::Config& config,
+                                  MeasurementKey nMeasKeys) {
+  std::vector<MeasurementKey> seed(nMeasKeys);
+  std::iota(seed.begin(), seed.end(), MeasurementKey{0});
+  for (MeasurementKey nShared = 1; nShared <= nMeasKeys; ++nShared) {
     SeedDeduplicator dedup(config);
-    dedup.reset(nKeys);
+    dedup.reset(nMeasKeys);
     dedup.addTrack(std::span(seed).first(nShared));
     if (dedup.isDuplicate(seed)) {
       return nShared;
     }
   }
-  return nKeys + 1;
+  return nMeasKeys + 1;
 }
 
 BOOST_AUTO_TEST_SUITE(TrackFindingSuite)
@@ -63,15 +64,15 @@ BOOST_AUTO_TEST_CASE(SeedDeduplicatorAllKeys) {
   SeedDeduplicator dedup({});
   dedup.reset(10);
 
-  BOOST_CHECK(!dedup.isDuplicate(std::vector<Key>{0, 1, 2}));
+  BOOST_CHECK(!dedup.isDuplicate(std::vector<MeasurementKey>{0, 1, 2}));
 
-  dedup.addTrack(std::vector<Key>{0, 1, 2, 3});
+  dedup.addTrack(std::vector<MeasurementKey>{0, 1, 2, 3});
   BOOST_CHECK_EQUAL(dedup.nTracks(), 1u);
 
-  BOOST_CHECK(dedup.isDuplicate(std::vector<Key>{0, 1, 2}));
-  BOOST_CHECK(dedup.isDuplicate(std::vector<Key>{3, 1, 0}));
-  BOOST_CHECK(!dedup.isDuplicate(std::vector<Key>{0, 1, 4}));
-  BOOST_CHECK(!dedup.isDuplicate(std::vector<Key>{}));
+  BOOST_CHECK(dedup.isDuplicate(std::vector<MeasurementKey>{0, 1, 2}));
+  BOOST_CHECK(dedup.isDuplicate(std::vector<MeasurementKey>{3, 1, 0}));
+  BOOST_CHECK(!dedup.isDuplicate(std::vector<MeasurementKey>{0, 1, 4}));
+  BOOST_CHECK(!dedup.isDuplicate(std::vector<MeasurementKey>{}));
 }
 
 BOOST_AUTO_TEST_CASE(SeedDeduplicatorTracksDoNotAdd) {
@@ -79,14 +80,14 @@ BOOST_AUTO_TEST_CASE(SeedDeduplicatorTracksDoNotAdd) {
   dedup.reset(10);
 
   // each track holds one key of the seed, the union holds all three
-  dedup.addTrack(std::vector<Key>{0, 5});
-  dedup.addTrack(std::vector<Key>{1, 6});
-  dedup.addTrack(std::vector<Key>{2, 7});
-  BOOST_CHECK(!dedup.isDuplicate(std::vector<Key>{0, 1, 2}));
+  dedup.addTrack(std::vector<MeasurementKey>{0, 5});
+  dedup.addTrack(std::vector<MeasurementKey>{1, 6});
+  dedup.addTrack(std::vector<MeasurementKey>{2, 7});
+  BOOST_CHECK(!dedup.isDuplicate(std::vector<MeasurementKey>{0, 1, 2}));
 
   // a track with two of the three keys
-  dedup.addTrack(std::vector<Key>{1, 2, 8});
-  BOOST_CHECK(dedup.isDuplicate(std::vector<Key>{0, 1, 2}));
+  dedup.addTrack(std::vector<MeasurementKey>{1, 2, 8});
+  BOOST_CHECK(dedup.isDuplicate(std::vector<MeasurementKey>{0, 1, 2}));
 }
 
 BOOST_AUTO_TEST_CASE(SeedDeduplicatorSharedKeys) {
@@ -94,11 +95,11 @@ BOOST_AUTO_TEST_CASE(SeedDeduplicatorSharedKeys) {
   dedup.reset(10);
 
   // both tracks hold key 1
-  dedup.addTrack(std::vector<Key>{0, 1, 2});
-  dedup.addTrack(std::vector<Key>{1, 3, 4});
-  BOOST_CHECK(dedup.isDuplicate(std::vector<Key>{0, 1, 2}));
-  BOOST_CHECK(dedup.isDuplicate(std::vector<Key>{1, 3, 4}));
-  BOOST_CHECK(!dedup.isDuplicate(std::vector<Key>{0, 1, 3}));
+  dedup.addTrack(std::vector<MeasurementKey>{0, 1, 2});
+  dedup.addTrack(std::vector<MeasurementKey>{1, 3, 4});
+  BOOST_CHECK(dedup.isDuplicate(std::vector<MeasurementKey>{0, 1, 2}));
+  BOOST_CHECK(dedup.isDuplicate(std::vector<MeasurementKey>{1, 3, 4}));
+  BOOST_CHECK(!dedup.isDuplicate(std::vector<MeasurementKey>{0, 1, 3}));
 }
 
 BOOST_AUTO_TEST_CASE(SeedDeduplicatorRepeatedTrackKey) {
@@ -106,9 +107,9 @@ BOOST_AUTO_TEST_CASE(SeedDeduplicatorRepeatedTrackKey) {
   dedup.reset(10);
 
   // a key that occurs twice on a track counts once
-  dedup.addTrack(std::vector<Key>{0, 0, 1});
-  BOOST_CHECK(!dedup.isDuplicate(std::vector<Key>{0, 1, 2}));
-  BOOST_CHECK(dedup.isDuplicate(std::vector<Key>{0, 1}));
+  dedup.addTrack(std::vector<MeasurementKey>{0, 0, 1});
+  BOOST_CHECK(!dedup.isDuplicate(std::vector<MeasurementKey>{0, 1, 2}));
+  BOOST_CHECK(dedup.isDuplicate(std::vector<MeasurementKey>{0, 1}));
 }
 
 BOOST_AUTO_TEST_CASE(SeedDeduplicatorWeights) {
@@ -117,41 +118,41 @@ BOOST_AUTO_TEST_CASE(SeedDeduplicatorWeights) {
       {.minScore = 5,
        .maxMissingScore = std::numeric_limits<SeedDeduplicator::Score>::max()});
   dedup.reset(10);
-  for (Key key : {0u, 1u, 2u}) {
-    dedup.setWeight(key, 2);
+  for (MeasurementKey measKey : {0u, 1u, 2u}) {
+    dedup.setWeight(measKey, 2);
   }
   BOOST_CHECK_EQUAL(dedup.weight(0), 2u);
   BOOST_CHECK_EQUAL(dedup.weight(3), 1u);
 
-  dedup.addTrack(std::vector<Key>{0, 1, 3, 4, 5});
+  dedup.addTrack(std::vector<MeasurementKey>{0, 1, 3, 4, 5});
 
   // pixel doublet on the track: score 4 of 6
-  BOOST_CHECK(!dedup.isDuplicate(std::vector<Key>{0, 1, 2}));
+  BOOST_CHECK(!dedup.isDuplicate(std::vector<MeasurementKey>{0, 1, 2}));
   // two pixels and one strip on the track: score 5 of 6
-  BOOST_CHECK(dedup.isDuplicate(std::vector<Key>{0, 1, 3, 9}));
+  BOOST_CHECK(dedup.isDuplicate(std::vector<MeasurementKey>{0, 1, 3, 9}));
   // strip seed, three of four strips on the track: score 3 of 4
-  BOOST_CHECK(!dedup.isDuplicate(std::vector<Key>{3, 4, 5, 9}));
+  BOOST_CHECK(!dedup.isDuplicate(std::vector<MeasurementKey>{3, 4, 5, 9}));
   // strip triplet, five of six strips on one track
-  dedup.addTrack(std::vector<Key>{3, 4, 5, 6, 7});
-  BOOST_CHECK(dedup.isDuplicate(std::vector<Key>{3, 4, 5, 6, 7, 9}));
+  dedup.addTrack(std::vector<MeasurementKey>{3, 4, 5, 6, 7});
+  BOOST_CHECK(dedup.isDuplicate(std::vector<MeasurementKey>{3, 4, 5, 6, 7, 9}));
 
   // a seed of zero weight is never a duplicate
   dedup.setWeight(8, 0);
-  dedup.addTrack(std::vector<Key>{8});
-  BOOST_CHECK(!dedup.isDuplicate(std::vector<Key>{8}));
+  dedup.addTrack(std::vector<MeasurementKey>{8});
+  BOOST_CHECK(!dedup.isDuplicate(std::vector<MeasurementKey>{8}));
 }
 
 BOOST_AUTO_TEST_CASE(SeedDeduplicatorReset) {
   SeedDeduplicator dedup({});
   dedup.reset(5);
   dedup.setWeight(0, 3);
-  dedup.addTrack(std::vector<Key>{0, 1});
-  BOOST_CHECK(dedup.isDuplicate(std::vector<Key>{0, 1}));
+  dedup.addTrack(std::vector<MeasurementKey>{0, 1});
+  BOOST_CHECK(dedup.isDuplicate(std::vector<MeasurementKey>{0, 1}));
 
   dedup.reset(5);
   BOOST_CHECK_EQUAL(dedup.nTracks(), 0u);
   BOOST_CHECK_EQUAL(dedup.weight(0), 1u);
-  BOOST_CHECK(!dedup.isDuplicate(std::vector<Key>{0, 1}));
+  BOOST_CHECK(!dedup.isDuplicate(std::vector<MeasurementKey>{0, 1}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
