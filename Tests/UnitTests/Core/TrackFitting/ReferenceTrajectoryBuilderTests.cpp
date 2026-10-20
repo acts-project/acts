@@ -44,7 +44,7 @@ using ReferenceTrajectoryBuilder =
 
 // Construct initial track parameters.
 BoundTrackParameters makeParameters(
-    const ParticleHypothesis& particleHypothesis) {
+    const ParticleHypothesis& particleHypothesis = ParticleHypothesis::pion()) {
   // create covariance matrix from reasonable standard deviations
   BoundVector stddev;
   stddev[eBoundLoc0] = 100_um;
@@ -65,9 +65,12 @@ const FitterTester tester;
 
 /// Adapter exposing the reference trajectory builder through the `fit`
 /// interface used by FitterTester: build, attach and calibrate measurements,
-/// filter and smooth.
+/// filter and smooth. Like the examples fitter function, the reference surface
+/// is not used as propagation target, but the smoothed track is extrapolated to
+/// it.
 struct ReferenceTrajectoryFitter {
   ReferenceTrajectoryBuilder builder;
+  ConstantFieldPropagator extrapolator;
   GainMatrixUpdater updater;
   MbfSmoother smoother;
 
@@ -77,7 +80,9 @@ struct ReferenceTrajectoryFitter {
       const BoundTrackParameters& start,
       const ReferenceTrajectoryBuilder::Options& options,
       track_container_t& tracks) const {
-    auto buildResult = builder.build(start, options, tracks);
+    auto buildOptions = options;
+    buildOptions.referenceSurface = nullptr;
+    auto buildResult = builder.build(start, buildOptions, tracks);
     if (!buildResult.ok()) {
       return buildResult.error();
     }
@@ -109,6 +114,17 @@ struct ReferenceTrajectoryFitter {
       return res.error();
     }
 
+    if (options.referenceSurface != nullptr) {
+      ConstantFieldPropagator::Options<> extrapolationOptions(
+          options.geoContext, options.magFieldContext);
+      if (auto res = extrapolateTrackToReferenceSurface(
+              track, *options.referenceSurface, extrapolator,
+              extrapolationOptions, TrackExtrapolationStrategy::firstOrLast);
+          !res.ok()) {
+        return res.error();
+      }
+    }
+
     calculateTrackQuantities(track);
 
     return track;
@@ -119,6 +135,7 @@ const ReferenceTrajectoryFitter rtFitter{
     ReferenceTrajectoryBuilder(
         makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry,
                                                           0_T)),
+    makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry, 0_T),
     {},
     {}};
 
@@ -130,7 +147,66 @@ ReferenceTrajectoryBuilder::Options makeDefaultOptions() {
       PropagatorPlainOptions(tester.geoCtx, tester.magCtx));
 }
 
+// The builder does not write the `reversed` and `smoothed` columns, so all
+// tests run without these diagnostics.
+constexpr bool doDiag = false;
+
 BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
+
+BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
+  auto start = makeParameters();
+  auto options = makeDefaultOptions();
+
+  tester.test_ZeroFieldNoSurfaceForward(rtFitter, options, start, rng, false,
+                                        true, doDiag);
+}
+
+BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
+  auto start = makeParameters();
+  auto options = makeDefaultOptions();
+
+  tester.test_ZeroFieldWithSurfaceForward(rtFitter, options, start, rng, false,
+                                          true, doDiag);
+}
+
+BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
+  auto start = makeParameters();
+  auto options = makeDefaultOptions();
+
+  tester.test_ZeroFieldWithSurfaceBackward(rtFitter, options, start, rng, false,
+                                           true, doDiag);
+}
+
+BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
+  auto start = makeParameters();
+  auto options = makeDefaultOptions();
+
+  tester.test_ZeroFieldWithSurfaceAtExit(rtFitter, options, start, rng, false,
+                                         true, doDiag);
+}
+
+BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
+  auto start = makeParameters();
+  auto options = makeDefaultOptions();
+
+  tester.test_ZeroFieldShuffled(rtFitter, options, start, rng, false, true,
+                                doDiag);
+}
+
+BOOST_AUTO_TEST_CASE(ZeroFieldWithHole) {
+  auto start = makeParameters();
+  auto options = makeDefaultOptions();
+
+  tester.test_ZeroFieldWithHole(rtFitter, options, start, rng, false, true,
+                                doDiag);
+}
+
+BOOST_AUTO_TEST_CASE(GlobalCovariance) {
+  auto start = makeParameters();
+  auto options = makeDefaultOptions();
+
+  tester.test_GlobalCovariance(rtFitter, options, start, rng);
+}
 
 BOOST_AUTO_TEST_CASE(OutputTrackParticleHypothesis) {
   auto start = makeParameters(ParticleHypothesis::muon());
