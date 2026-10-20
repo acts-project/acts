@@ -14,6 +14,7 @@
 #include "Acts/Utilities/ArrayHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <type_traits>
 
@@ -85,24 +86,17 @@ inline bool operator==(const Hit_t& lhs, const Hit_t& rhs) {
 template <typename T, typename Hit_t>
 concept PatternTopology =
     GlobPatFinderHit<Hit_t> && requires(const Hit_t& hit1, const Hit_t& hit2) {
-      /// Type definitions for the group and layer index types. These types
-      /// must be unsigned integral types. The layer index type is assumed
-      /// to be able to represent all the layers that can be crossed by a
-      /// particle.
-      typename T::GroupIdx;
-      typename T::LayerIdx;
-      requires std::unsigned_integral<typename T::GroupIdx>;
-      requires std::unsigned_integral<typename T::LayerIdx>;
-
-      /// Return the number of groups in the topology
-      { T::nGroups } -> std::same_as<const typename T::GroupIdx&>;
+      /// Number of groups in the topology. Group and layer indices
+      /// are represented as std::uint8_t, which is assumed to be able to
+      /// represent all the layers that can be crossed by a particle.
+      requires std::same_as<decltype(T::nGroups), const std::uint8_t>;
       /// Sort two hits by measurement layer and, if they are on
       /// the same layer, by their position along the bending coordinate.
       { T::layerSorter(hit1, hit2) } -> std::same_as<bool>;
       /// Check if two hits are on the same measurement layer.
       { T::sameLayer(hit1, hit2) } -> std::same_as<bool>;
       /// Return the group index of a hit.
-      { T::groupIndex(hit1) } -> std::same_as<typename T::GroupIdx>;
+      { T::groupIndex(hit1) } -> std::same_as<std::uint8_t>;
     };
 /// @brief Sectorization of the detector in the non-bending coordinate.
 ///  In this first implementation of GPF with toroidal azimuthal field,
@@ -154,7 +148,7 @@ struct PatternStateAux {
     /// @brief Pointer to the underlying hit
     const Hit_t* hitPtr{nullptr};
     /// @brief Global measurement layer number
-    typename Topology_t::LayerIdx globLayer{0u};
+    std::uint8_t globLayer{0u};
     /// Forward commonly used accessors for convenience
     const Hit_t* operator->() const { return hitPtr; }
     const Hit_t& operator*() const { return *hitPtr; }
@@ -293,10 +287,10 @@ struct PatternStateAux {
   double getMeanResidual2() const;
   /// @brief Method returning the number of groups
   ///  @return: number of groups in the pattern
-  typename Topology_t::GroupIdx countGroups() const;
+  std::uint8_t countGroups() const;
   /// @brief Return the number of layers in bending coordinate
   ///  @return: number of layers in the bending coordinate
-  typename Topology_t::LayerIdx nBendingLayers() const;
+  std::uint8_t nBendingLayers() const;
 
   /// @brief Return the logger
   const Logger& logger() const { return *m_logger; }
@@ -339,9 +333,9 @@ struct PatternStateAux {
   /// @brief Sector
   Sector_t sector{static_cast<typename Sector_t::Index_t>(0u)};
   /// @brief Counts of precision / non-precision / phi layers
-  typename Topology_t::LayerIdx nPrecisionLayers{0u};
-  typename Topology_t::LayerIdx nTriggerLayers{0u};
-  typename Topology_t::LayerIdx nPhiLayers{0u};
+  std::uint8_t nPrecisionLayers{0u};
+  std::uint8_t nTriggerLayers{0u};
+  std::uint8_t nPhiLayers{0u};
   /// @brief Flag to indicate if the pattern is overlapping with another one, used during overlap removal
   bool isOverlap{false};
   /// @brief Whether we used the beamspot to compute the line parameters
@@ -388,8 +382,7 @@ struct PatternStateAux {
   static PatternPrintView detailed(const PatternStateAux& p);
 };
 
-/// Absolute difference of two layer indices, safe for any unsigned LayerIdx
-/// type
+/// Absolute difference of two layer indices, safe for any unsigned type
 template <std::unsigned_integral T>
 constexpr T layerDistance(const T a, const T b) {
   return a > b ? a - b : b - a;

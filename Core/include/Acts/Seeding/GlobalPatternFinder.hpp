@@ -266,8 +266,7 @@ class GlobalPatternFinder {
   /// @brief Count the number of good groups in a pattern
   ///  @param pat: pattern to be checked
   ///  @return: number of good groups in the pattern
-  typename Topology_t::GroupIdx countGoodGroups(
-      const PatternStateAux& pat) const;
+  std::uint8_t countGoodGroups(const PatternStateAux& pat) const;
   /// @brief Method to add phi-only measurements to existing PatternStateAuxs. Patterns
   ///         with too few phi layers afterwards are removed.
   ///  @param gctx: Geometry context

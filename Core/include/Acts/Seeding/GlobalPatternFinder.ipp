@@ -116,11 +116,10 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
     }
     /// Check that at least minGroups groups contain minGroupLayers candidate
     /// hits each
-    using GroupIdx = typename Topology_t::GroupIdx;
-    std::array<GroupIdx, Topology_t::nGroups> groupCounts{};
-    GroupIdx nValidGroups{0u};
+    std::array<std::uint8_t, Topology_t::nGroups> groupCounts{};
+    std::uint8_t nValidGroups{0u};
     for (const OrderedHit& c : orderedHits) {
-      const GroupIdx groupIdx{Topology_t::groupIndex(*c)};
+      const std::uint8_t groupIdx{Topology_t::groupIndex(*c)};
       if (++groupCounts[groupIdx] == m_cfg.minGroupLayers) {
         ++nValidGroups;
       }
@@ -680,7 +679,7 @@ bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::isBetter(
   const int nPrecLayDiff{a.nPrecisionLayers - b.nPrecisionLayers};
 
   /// For patterns that differ by 1–2 layers, don't sacrifice fit quality
-  ///  unless the extra layers are genuinely comparable. For a ≥3-layer
+  /// unless the extra layers are genuinely comparable. For a ≥3-layer
   /// difference, the multiplicity advantage is strong enough to dominate.
   if ((nLayerDiff == 0 && nPrecLayDiff == 0) ||
       (std::abs(nLayerDiff) < 2 && resDiff > 0.1 &&
@@ -713,8 +712,7 @@ unsigned GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::countPatterns(
 
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
-typename Topology_t::GroupIdx
-GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::countGoodGroups(
+std::uint8_t GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::countGoodGroups(
     const PatternStateAux& pat) const {
   return std::ranges::count_if(pat.hitsPerGroup, [this](const auto& hits) {
     return hits.size() >= m_cfg.minGroupLayers;
@@ -735,7 +733,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
     ACTS_VERBOSE(__func__ << "() Search for phi-only hits for pattern: "
                           << PatternStateAux::brief(pat));
 
-    std::optional<typename Topology_t::GroupIdx> patternLineGroup{std::nullopt};
+    std::optional<std::uint8_t> patternLineGroup{std::nullopt};
 
     auto projOntoPhiPlane = [&pat](const Vector3& pos) -> Vector3 {
       return pos - (pos.dot(pat.bendPlaneNorm) - pat.patPhiOffset) *
@@ -861,7 +859,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::convertToPattern(
     PatternStateAux&& candidate) const {
   OutputPattern output{
       static_cast<typename Sector_t::Index_t>(candidate.sector.sector())};
-  for (typename Topology_t::GroupIdx g = 0u; g < Topology_t::nGroups; ++g) {
+  for (std::uint8_t g = 0u; g < Topology_t::nGroups; ++g) {
     output.hitsPerGroup[g].reserve(candidate.hitsPerGroup[g].size());
     std::ranges::transform(candidate.hitsPerGroup[g],
                            std::back_inserter(output.hitsPerGroup[g]),

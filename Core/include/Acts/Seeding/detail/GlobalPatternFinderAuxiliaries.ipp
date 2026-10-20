@@ -644,15 +644,14 @@ double PatternStateAux<Hit_t, Sector_t, Topology_t>::getMeanResidual2() const {
 
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
-typename Topology_t::LayerIdx
-PatternStateAux<Hit_t, Sector_t, Topology_t>::nBendingLayers() const {
+std::uint8_t PatternStateAux<Hit_t, Sector_t, Topology_t>::nBendingLayers()
+    const {
   return nPrecisionLayers + nTriggerLayers;
 }
 
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
-typename Topology_t::GroupIdx
-PatternStateAux<Hit_t, Sector_t, Topology_t>::countGroups() const {
+std::uint8_t PatternStateAux<Hit_t, Sector_t, Topology_t>::countGroups() const {
   return std::ranges::count_if(hitsPerGroup,
                                [](const auto& hits) { return !hits.empty(); });
 }
@@ -719,7 +718,7 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::print(std::ostream& ostr,
        << ", nDof: " << static_cast<int>(nDoF)
        << ", BendPlane Cov: " << print(bendPlaneCov);
   ostr << ", Hit per group: \n";
-  for (typename Topology_t::GroupIdx g = 0u; g < Topology_t::nGroups; ++g) {
+  for (std::uint8_t g = 0u; g < Topology_t::nGroups; ++g) {
     const auto& hits{hitsPerGroup[g]};
     if (hits.empty()) {
       continue;
