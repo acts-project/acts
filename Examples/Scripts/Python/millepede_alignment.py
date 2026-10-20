@@ -164,9 +164,9 @@ def addMisalignmentDeco(detector, trackingGeometry, seq):
     # Misalign the second tracking layer (ID = 4).
     layerToBump = acts.GeometryIdentifier(layer=4, volume=1, sensitive=1)
 
-    # shift this layer by 200 microns in the global Z direction
+    # shift this layer by 50 microns in the global Z direction
     leShift = AlignmentGeneratorGlobalShift()
-    leShift.shift = acts.Vector3(0, 0, 200.0e-3)
+    leShift.shift = acts.Vector3(0, 0, 50.0e-3)
 
     # now add some boilerplate code to make this happen
     alignDecoConfig = AlignmentDecorator.Config()
@@ -474,7 +474,9 @@ def main():
     res_MillepedeII = readMillePedeResult(str(millePedeSolution), logger)
 
     # visualise the outcome!
-    drawResult(res_actsInternal, res_actsViaMille, res_MillepedeII, {3: 0.20})
+    drawResult(
+        res_actsInternal, res_actsViaMille, res_MillepedeII, {3: 0.05}, xLim=(-0.2, 0.2)
+    )
 
 
 if __name__ == "__main__":

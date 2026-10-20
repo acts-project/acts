@@ -80,6 +80,11 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT(e, labelsAndWeights, constraint);
 
+    auto ps = py::class_<ActsPlugins::MillePedeParameterSeed>(
+                  mille, "MillePedeParameterSeed")
+                  .def(py::init<>());
+    ACTS_PYTHON_STRUCT(ps, label, start, fixed, preSigma);
+
     auto s = py::enum_<ActsPlugins::MillePedeSolutionStrategy>(
                  mille, "MillePedeSolutionStrategy")
                  .value("Inversion", Inversion)
@@ -100,6 +105,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsMille, mille) {
                        outlierDownweighting, downweightFractionCut, nOMPthreads,
                        nIOthreads, matIter, printCounts, chi2Cut,
                        monitorResiduals, monitorPulls, skipEmptyCons,
-                       countRecords, extraLines, constraints, inputFiles);
+                       countRecords, extraLines, constraints, seeds,
+                       inputFiles);
   }
 }

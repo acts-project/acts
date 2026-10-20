@@ -23,9 +23,10 @@ from acts.examples import (
 )
 from acts.mille import (
     readMillePedeResult,
-    runMilleSolver,
+    runMillePedeSolver,
     generateMillePedeSteeringFile,
     MillePedeEqualityConstraint,
+    MillePedeParameterSeed,
     MillePedeSolutionStrategy,
     MillePedeSteeringConfig,
     MillePedeSolverConfig,
@@ -118,24 +119,25 @@ def drawResult(
     title=None,
     xLim=None,
 ):
-
-    # translate the injected result
-    # into the sub-space permitted
-    # by the constraints
-    blindSpace = np.zeros(shape=(54, len(constraints)), dtype=float)
-    # build the matrix representing the blind
-    # directions (constraints as columns)
-    for i, constraint in enumerate(constraints):
-        for label, value in constraint.labelsAndWeights:
-            blindSpace[label - 1, i] = value
     # package our dictionary of injections to a vector
     injectedVals = np.zeros(54, dtype=float)
     for label, value in truthInjected.items():
         injectedVals[label - 1] = value
-    # and then perform the projection
-    truth_projected = injectedVals - blindSpace @ np.linalg.solve(
-        blindSpace.T @ blindSpace, blindSpace.T @ injectedVals
-    )
+
+    if len(constraints) > 0:
+        # translate the injected result
+        # into the sub-space permitted
+        # by the constraints
+        blindSpace = np.zeros(shape=(54, len(constraints)), dtype=float)
+        # build the matrix representing the blind
+        # directions (constraints as columns)
+        for i, constraint in enumerate(constraints):
+            for label, value in constraint.labelsAndWeights:
+                blindSpace[label - 1, i] = value
+        # and then perform the projection
+        injectedVals = injectedVals - blindSpace @ np.linalg.solve(
+            blindSpace.T @ blindSpace, blindSpace.T @ injectedVals
+        )
     # read the fit results into a 3D array
     mp2Info = np.array([[p.label, p.val, p.sigma] for p in paramsMP2], dtype=float)
     # sort ascending by labels
@@ -151,7 +153,7 @@ def drawResult(
 
     # fill column 1 with the injection
     if truthInjected is not None:
-        central[1, :] = truth_projected
+        central[1, :] = injectedVals
 
     # also update uncertainties, if we have any. Only for fit result
     sigmaToUpdate = np.where(np.isfinite(mp2Info[:, 2])) and np.where(mp2Info[:, 2] > 0)
@@ -160,13 +162,13 @@ def drawResult(
     # lazily hardcode an "okay-looking" format
     formatDict = [
         {
-            "label": "Millepede-II - constrained",
+            "label": "Millepede-II",
             "fmt": "o",
             "color": "black",
             "markersize": 5,
         },
         {
-            "label": "Injected - Projected",
+            "label": "Injected" + ", Projected" if len(constraints) > 0 else "",
             "marker": "s",
             "markeredgecolor": "#f31d1d",
             "markerfacecolor": "none",
@@ -182,7 +184,7 @@ def drawResult(
         central,
         sigma,
         formatDict,
-        fname="AlignmentWithConstraints",
+        fname=fname,
         title=title,
         xLim=xLim,
     )
@@ -215,6 +217,7 @@ def main():
     # Set file locations for results
     milleBinaryName = outputDir / "MilleBinary.root"
     millePedeSolution = outputDir / "MillePedeAlignment.txt"
+    millePedeSolutionSoftMode = outputDir / "MillePedeAlignment.SoftModeCut.txt"
     millePedeEigenvectors = outputDir / "MillePedeEV.txt"
     # More Boilerplate code - for setting up the sequence
 
@@ -308,7 +311,7 @@ def main():
         redirectStdout=str(outputDir / "MillepedeAlignmentStep1.log"),
     )
     # and run the first alignment fit
-    runMilleSolver(solverCfgStep1, logger)
+    runMillePedeSolver(solverCfgStep1, logger)
 
     # now read back the eigenvectors
     theEVset = readEvFile(millePedeEigenvectors)
@@ -351,7 +354,7 @@ def main():
 
     # Now we can run the second and final alignment fit.
 
-    print("\n=== Running final fit to perform the alignment === ")
+    print("\n=== Running second fit to perform the alignment with constraints === ")
     # New steering config - add the newly found extra constraints.
     # This time, we can use the standard "inversion" solver.
     steerCfgStep2 = MillePedeSteeringConfig(
@@ -359,7 +362,7 @@ def main():
         strategy=MillePedeSolutionStrategy.Inversion,
         constraints=constraints + constraintsStep1,
     )
-    # generate the sterring file
+    # generate the steering file
     fnameSteerStep2 = "steerStep2.txt"
     generateMillePedeSteeringFile(fnameSteerStep2, steerCfgStep2, logger)
 
@@ -371,15 +374,79 @@ def main():
         redirectStdout=str(outputDir / "MillepedeAlignmentStep2.log"),
     )
     # run the final fit
-    runMilleSolver(solverCfgStep2, logger)
+    runMillePedeSolver(solverCfgStep2, logger)
+
+    ###########
+    # Finally, let's try an alternative approach:
+    # We can effectively suppress singular / weak
+    # modes by adding a penalty term to the objective
+    # function that inhibits excessive movement.
+    # ATLAS calls this soft mode cut, Millepede
+    # has a "regularization"
+    # setting that is a close analogue.
+
+    print("\n=== Running alignment with soft mode cut === ")
+
+    # Seed all fit parameters with a small pre-sigma that will
+    # constrain them. Use different values for translations
+    # and rotations to account for their different units
+    preSigmas = []
+    for label in range(54):
+        s = MillePedeParameterSeed()
+        s.label = 1 + label
+        # 100 microns or 2 mrad
+        s.preSigma = 0.1 if label % 6 < 3 else 0.002
+        preSigmas.append(s)
+
+    # Third steering config - this time using pre-sigmas
+    # for regularisation.
+    # We again use the standard "inversion" solver.
+    steerCfgSoftModeCut = MillePedeSteeringConfig(
+        inputFiles=[str(milleBinaryName)],
+        strategy=MillePedeSolutionStrategy.Inversion,
+        # this enables regularisation.
+        # First parameter: Strength
+        # Second parameter: Default pre-sigma.
+        # The penalty term will take the form
+        # <strength> x sum (parameter^2)/pre_sigma^2
+        # Here, we use the per-parameter pre-sigmas
+        # from above rather than the default value.
+        extraLines=["regularisation 10  1."],
+        seeds=preSigmas,
+    )
+    # generate the steering file
+    fnameSteerSoftModeCut = "steerSoftModeCut.txt"
+    generateMillePedeSteeringFile(fnameSteerSoftModeCut, steerCfgSoftModeCut, logger)
+
+    # and configure the solver
+    solverCfgSoftMode = MillePedeSolverConfig(
+        steeringFile=fnameSteerSoftModeCut,
+        workDir="mpTmpConstraints/SoftModeCut",
+        resFileName=str(millePedeSolutionSoftMode),
+        redirectStdout=str(outputDir / "MillepedeAlignmentSoftMode.log"),
+    )
+    # run the final fit
+    runMillePedeSolver(solverCfgSoftMode, logger)
 
     # read the results - all solvers follow the Millepede convention,
     # so we can read them the same way
-    res_MillepedeII = readMillePedeResult(str(millePedeSolution), logger)
+    res_MPII_constraints = readMillePedeResult(str(millePedeSolution), logger)
+    res_MPII_softMode = readMillePedeResult(str(millePedeSolutionSoftMode), logger)
 
     # visualise the outcome!
     drawResult(
-        res_MillepedeII, constraints + constraintsStep1, {9: 0.20}, xLim=(-0.4, 0.4)
+        res_MPII_constraints,
+        constraints + constraintsStep1,
+        {9: 0.05},
+        xLim=(-0.2, 0.2),
+        fname="AlignmentWithConstraints",
+    )
+    drawResult(
+        res_MPII_softMode,
+        constraintsStep1,
+        {9: 0.05},
+        xLim=(-0.2, 0.2),
+        fname="AlignmentWithSoftMode",
     )
 
 
