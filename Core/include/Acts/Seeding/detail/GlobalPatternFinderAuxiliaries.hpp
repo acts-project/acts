@@ -23,7 +23,7 @@
 ///
 /// This file defines the concepts used to abstract the detector-specific hit
 /// type, pattern topology, and sectorization, together with the main
-/// PatternStateAux object used internally by the GPF.
+/// PatternStateAux object used internally by the Global Pattern Finder.
 
 namespace Acts::Experimental::detail {
 /// @brief Definition of the measured directions for strip measurements. The first
@@ -99,8 +99,8 @@ concept PatternTopology =
       { T::groupIndex(hit1) } -> std::same_as<std::uint8_t>;
     };
 /// @brief Sectorization of the detector in the non-bending coordinate.
-///  In this first implementation of GPF with toroidal azimuthal field,
-///  the sectors are defined along the phi direction.
+///  In this first implementation of Global Pattern Finder with toroidal 
+///  azimuthal field, the sectors are defined along the phi direction.
 template <typename Sector_t>
 concept SectorType =
     requires(const Sector_t& sector, const Sector_t& other, const double phi) {
@@ -231,8 +231,7 @@ struct PatternStateAux {
   ///  @param gctx: geometry context
   ///  @param testHit: test hit information
   ///  @param beamSpot: position of the beam spot
-  ///  @return: Test result holding the residual and acceptance window. The decision is
-  ///           set later from the GPF.
+  ///  @return: Test result holding the residual, its uncertainty, and number of degrees of freedom.
   LineTestRes computeLineResidual(const GeometryContext& gctx,
                                   const OrderedHit& testHit,
                                   const BeamspotInfo& beamSpot) const;
