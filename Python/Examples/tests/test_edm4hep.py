@@ -1,5 +1,6 @@
 import os
 import multiprocessing
+import sys
 from pathlib import Path
 import math
 import tempfile
@@ -465,15 +466,29 @@ def ddsim_input_session(tmp_path_factory):
 
             # explicitly ask for "spawn" as CI failures were observed with "fork"
             spawn_context = multiprocessing.get_context("spawn")
-            p = spawn_context.Process(
-                target=generate_input_test_edm4hep_simhit_reader,
-                args=(odd_xml_file, staging, particle_type),
-            )
-            p.start()
-            p.join()
-            if p.exitcode != 0:
+            # ddsim has been seen to abort with "free(): invalid pointer" when
+            # closing its output file after all events were simulated
+            # (podio::ROOTWriter::finish, LCG_109), so give it a second try.
+            attempts = 2
+            for attempt in range(1, attempts + 1):
+                p = spawn_context.Process(
+                    target=generate_input_test_edm4hep_simhit_reader,
+                    args=(odd_xml_file, staging, particle_type),
+                )
+                p.start()
+                p.join()
+                if p.exitcode == 0:
+                    break
                 staging.unlink(missing_ok=True)
-                raise RuntimeError("ddsim process failed")
+                if attempt == attempts:
+                    raise RuntimeError(
+                        f"ddsim process failed {attempts} times "
+                        f"(last exit code {p.exitcode})"
+                    )
+                print(
+                    f"ddsim process failed with exit code {p.exitcode}, retrying",
+                    file=sys.stderr,
+                )
 
             assert staging.exists()
             staging.rename(output_file)
