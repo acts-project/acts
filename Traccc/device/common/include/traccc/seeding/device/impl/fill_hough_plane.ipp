@@ -3,6 +3,7 @@
 #include "traccc/device/global_index.hpp"
 #include "detray/geometry/tracking_surface.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "vecmem/memory/device_atomic_ref.hpp"
 
 namespace traccc::device {
 
@@ -114,9 +115,7 @@ void fill_hough_plane(const global_index_t globalIndex,
 
     const detray::geometry::identifier& surface_link = meas.surface_link();
     const auto volume_id = meas.surface_link().volume();
-//    const std::uint32_t layer_id = meas.surface_link().layer();
-
-   // printf("* volume_id=%u\n", volume_id);  // layer_id=%d", volume_id, layer_id);
+    const auto identifier_id = volume_id; // we need to check if we need more ...
 
     // make hough transformation
     // result is the same for all planes
@@ -128,5 +127,36 @@ void fill_hough_plane(const global_index_t globalIndex,
     unsigned int max_ranges[device::N_COLS] {};
     ranges(houghplanes, r, phi, min_ranges, max_ranges);
 
+    // Fill the planes
+    const unsigned long long layer_bit = 1ULL << identifier_id;
+    for (unsigned int x_idx(0); x_idx < device::N_COLS; ++x_idx) {
+        const unsigned int first = min_ranges[x_idx];
+        const unsigned int last = max_ranges[x_idx];
+        if (last == first) continue;
+        assert(last > first);
+        const unsigned int diff_phi = last - first;
+
+        // loop on wedges
+        for (unsigned int wedge_idx(0); wedge_idx<houghplanes.size(); ++wedge_idx) {
+            if ((slice & (1ULL << wedge_idx)) == 0ULL) continue;
+            const unsigned long long offset = x_idx * device::N_ROWS;
+
+            if (diff_phi < device::N_ROWS / 2) {
+                for (unsigned int y_idx(first); y_idx < last; ++y_idx) {
+     		   vecmem::device_atomic_ref<unsigned long long> a2(houghplanes[wedge_idx].plane()[offset + y_idx]);
+		   a2.fetch_or(layer_bit);
+                }
+            } else {
+                for (unsigned int y_idx(0); y_idx < first; ++y_idx) {
+		   vecmem::device_atomic_ref<unsigned long long> a2(houghplanes[wedge_idx].plane()[offset + y_idx]);
+                   a2.fetch_or(layer_bit);
+                }
+                for (unsigned int y_idx(last); y_idx < device::N_ROWS; ++y_idx) {
+		   vecmem::device_atomic_ref<unsigned long long> a2(houghplanes[wedge_idx].plane()[offset + y_idx]);
+                   a2.fetch_or(layer_bit);
+                }
+            } // checks on diff_phi
+        } // loop on planes
+    } // loop on x bins
 }
 } // namespace
