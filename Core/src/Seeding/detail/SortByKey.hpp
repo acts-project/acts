@@ -134,8 +134,8 @@ void bucketSortByKey(std::span<item_t> items, storage_t& storage,
   std::uint32_t largest = 0;
   for (std::size_t i = 0; i < n; ++i) {
     bucketOfItem[i] = static_cast<std::uint32_t>(bucketOf(items[i]));
-    largest = std::max(largest, starts[bucketOfItem[i]]);
     ++starts[bucketOfItem[i]];
+    largest = std::max(largest, starts[bucketOfItem[i]]);
   }
 
   // Turn the counts into each bucket's first position
@@ -147,7 +147,7 @@ void bucketSortByKey(std::span<item_t> items, storage_t& storage,
   spread.resize(n);
   for (std::size_t i = 0; i < n; ++i) {
     spread[starts[bucketOfItem[i]]] = std::move(items[i]);
-    ++bucketOfItem[i];
+    ++starts[bucketOfItem[i]];
   }
 
   // A crowded bucket, as when one key is far from the others, is sorted on its
