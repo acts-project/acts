@@ -33,7 +33,7 @@ struct GbtsEdgeState final {
   /// Score for comparison
   float j{};
 
-  std::vector<GbtsEdge*> vs;
+  std::vector<const GbtsEdge*> vs;
 
   std::array<float, 3> x{};
   std::array<float, 2> y{};

@@ -121,7 +121,7 @@ void GraphBasedTrackSeeder::createSeeds(
 }
 
 void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
-    const GbtsNodeStorage& nodeStorage, GbtsGraph& graph,
+    const GbtsNodeStorage& nodeStorage, const GbtsGraph& graph,
     std::vector<OutputSeedProperties>& vOutputSeeds,
     const GbtsTrackingFilter& filter, const bool withFits) const {
   const detail::GbtsNodeView nodeView = nodeStorage.nodeView();
@@ -132,9 +132,10 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
   std::uint32_t seedCounter = 0;
 
-  // Turn the fitted path of a head edge into a seed candidate.
-  const auto addCandidate = [&](const detail::GbtsEdgeState& rs,
-                                const detail::GbtsEdge& head) {
+  // Turn the fitted path of every head edge into a seed candidate.
+  for (const detail::GbtsEdgeState& rs :
+       extractBestPathPerEdge(nodeView, graph, filter)) {
+    const detail::GbtsEdge& head = *rs.vs.front();
     const float seedAbsEta = std::abs(-std::log(head.p[0]));
 
     std::vector<SpacePointIndex> vN;
@@ -149,7 +150,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     // a triplet is accepted if it makes it up to this point
     if (vN.size() < 3) {
-      return;
+      continue;
     }
 
     const auto origSeedSize = static_cast<std::uint32_t>(vN.size());
@@ -225,9 +226,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     vArgSort.emplace_back(origSeedQuality, seedCounter);
 
     ++seedCounter;
-  };
-
-  extractBestPathPerEdge(nodeView, graph, filter, addCandidate);
+  }
 
   // clone removal code goes below ...
 
@@ -340,11 +339,11 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   }
 }
 
-template <typename add_candidate_t>
-void GraphBasedTrackSeeder::extractBestPathPerEdge(
-    const detail::GbtsNodeView& nodeView, GbtsGraph& graph,
-    const GbtsTrackingFilter& filter, add_candidate_t& addCandidate) const {
-  std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
+std::vector<detail::GbtsEdgeState>
+GraphBasedTrackSeeder::extractBestPathPerEdge(
+    const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
+    const GbtsTrackingFilter& filter) const {
+  const std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
   const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
   const auto maxLength = static_cast<std::uint32_t>(m_cfg.maxChainLength);
 
@@ -391,6 +390,7 @@ void GraphBasedTrackSeeder::extractBestPathPerEdge(
   // From every edge, search all paths inwards to a root, fitting on the way.
   // The complete path with the best score per space point is the candidate
   // of the edge.
+  std::vector<detail::GbtsEdgeState> candidates;
   std::uint32_t minLength = 0;
   std::vector<std::uint32_t> path;
   std::vector<std::uint32_t> bestPath;
@@ -429,7 +429,7 @@ void GraphBasedTrackSeeder::extractBestPathPerEdge(
   };
 
   for (std::uint32_t head = 0; head < nEdges; ++head) {
-    detail::GbtsEdge& headEdge = edgeStorage[head];
+    const detail::GbtsEdge& headEdge = edgeStorage[head];
 
     // `addTriplets` accepts a path one edge short at low eta
     minLength = m_cfg.minSeedLevel;
@@ -460,8 +460,10 @@ void GraphBasedTrackSeeder::extractBestPathPerEdge(
     for (const std::uint32_t e : bestPath) {
       bestState.vs.push_back(&edgeStorage[e]);
     }
-    addCandidate(bestState, headEdge);
+    candidates.push_back(bestState);
   }
+
+  return candidates;
 }
 
 float GraphBasedTrackSeeder::estimateCurvature(

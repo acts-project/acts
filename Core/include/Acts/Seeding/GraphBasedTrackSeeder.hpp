@@ -214,22 +214,19 @@ class GraphBasedTrackSeeder {
   /// @param filter Tracking filter to be applied
   /// @param withFits Whether the fit of the filter to each seed is kept
   void extractSeedsFromTheGraph(const GbtsNodeStorage& nodeStorage,
-                                GbtsGraph& graph,
+                                const GbtsGraph& graph,
                                 std::vector<OutputSeedProperties>& vOutputSeeds,
                                 const GbtsTrackingFilter& filter,
                                 bool withFits) const;
 
-  /// Extract the best fitted path from every edge inwards to a root edge
-  /// and hand it to @p addCandidate.
+  /// Extract the best fitted path from every edge inwards to a root edge.
   /// @param nodeView View of the node positions and layers
   /// @param graph The graph
   /// @param filter Tracking filter fitting the paths
-  /// @param addCandidate Called with the fitted path and its head edge
-  template <typename add_candidate_t>
-  void extractBestPathPerEdge(const detail::GbtsNodeView& nodeView,
-                              GbtsGraph& graph,
-                              const GbtsTrackingFilter& filter,
-                              add_candidate_t& addCandidate) const;
+  /// @return The fitted paths, each with its head edge first
+  std::vector<detail::GbtsEdgeState> extractBestPathPerEdge(
+      const detail::GbtsNodeView& nodeView, const GbtsGraph& graph,
+      const GbtsTrackingFilter& filter) const;
 
   /// Estimate the inverse radius of the circle through three nodes.
   /// @param nodeView View of the node positions and layers
