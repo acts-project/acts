@@ -195,7 +195,8 @@ interactive testing with one-off configuration specified by command-line options
     parser.add_argument(
         "--gbts-connection-table",
         type=pathlib.Path,
-        help="GBTS layer connection table file (default: the detector's shipped one)",
+        help="GBTS bin connection table file (default: the detector's shipped one, "
+        "the ODD ships none, train one with gbts_layer_connection_training_odd.py)",
     )
     parser.add_argument(
         "--ckf",
@@ -324,8 +325,6 @@ def full_chain(args):
         seedingConfigFile = actsDir / "Examples/Configs/odd-seeding-config.json"
         if args.gbts_layer_map is None:
             args.gbts_layer_map = actsDir / "Examples/Configs/odd-gbts-layer-map.json"
-        if args.gbts_connection_table is None:
-            args.gbts_connection_table = actsDir / "Examples/Configs/odd-gbts-connection-table.json"
         if args.material_config is None:
             args.material_config = geoDir / "data/odd-material-maps.root"
         args.bf_constant = True
@@ -587,6 +586,7 @@ def full_chain(args):
 
     if args.seeding_algorithm == SeedingAlgorithm.Gbts and (
         pathlib.Path(args.gbts_layer_map).is_file() == False
+        or args.gbts_connection_table is None
         or pathlib.Path(args.gbts_connection_table).is_file() == False
     ):
         logger.fatal(

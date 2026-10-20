@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Seeding/GbtsLayerConnection.hpp"
+#include "Acts/Seeding/GbtsBinConnection.hpp"
 #include "Acts/Seeding/GbtsLayerDescription.hpp"
 #include "Acts/Seeding/GbtsTauLookupTable.hpp"
 #include "ActsPlugins/Json/ActsJson.hpp"
@@ -33,15 +33,25 @@ NLOHMANN_JSON_SERIALIZE_ENUM(GbtsLayerTechnology,
                               {GbtsLayerTechnology::Strip, "strip"}})
 /// @endcond
 
-/// Convert GbtsLayerConnection to JSON
+/// Convert GbtsLayerBin to JSON
 /// @param j Destination JSON object
-/// @param connection Source GbtsLayerConnection to convert
-void to_json(nlohmann::json& j, const GbtsLayerConnection& connection);
+/// @param bin Source GbtsLayerBin to convert
+void to_json(nlohmann::json& j, const GbtsLayerBin& bin);
 
-/// Convert JSON to GbtsLayerConnection
+/// Convert JSON to GbtsLayerBin
 /// @param j Source JSON object
-/// @param connection Destination GbtsLayerConnection to populate
-void from_json(const nlohmann::json& j, GbtsLayerConnection& connection);
+/// @param bin Destination GbtsLayerBin to populate
+void from_json(const nlohmann::json& j, GbtsLayerBin& bin);
+
+/// Convert GbtsBinConnection to JSON
+/// @param j Destination JSON object
+/// @param connection Source GbtsBinConnection to convert
+void to_json(nlohmann::json& j, const GbtsBinConnection& connection);
+
+/// Convert JSON to GbtsBinConnection
+/// @param j Source JSON object
+/// @param connection Destination GbtsBinConnection to populate
+void from_json(const nlohmann::json& j, GbtsBinConnection& connection);
 
 /// Convert GbtsLayerConfig to JSON
 /// @param j Destination JSON object
@@ -68,17 +78,17 @@ void from_json(const nlohmann::json& j, GbtsTauBounds& bounds);
 /// @return The layers of the file's `layers` entry
 std::vector<GbtsLayerConfig> readGbtsLayers(const std::filesystem::path& path);
 
-/// Read the layer connections from a connection table file
+/// Read the eta bin connections from a connection table file
 /// @param path The file to read, any format the JSON plugin reads
 /// @return The connections of the file's `connections` entry
-std::vector<GbtsLayerConnection> readGbtsConnections(
+std::vector<GbtsBinConnection> readGbtsConnections(
     const std::filesystem::path& path);
 
-/// Write layer connections to a connection table file
+/// Write eta bin connections to a connection table file
 /// @param path The file to write, whose extension selects the format
 /// @param connections The connections to write as the `connections` entry
 void writeGbtsConnections(const std::filesystem::path& path,
-                          const std::vector<GbtsLayerConnection>& connections);
+                          const std::vector<GbtsBinConnection>& connections);
 
 /// Read the tau lookup table of the cluster width cuts
 /// @param path The file to read, any format the JSON plugin reads

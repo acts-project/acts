@@ -33,7 +33,7 @@ The workflow has four stages, each documented below:
 4. @ref gbts-extraction — follow the best chains through a Kalman-like filter
    and emit seeds.
 
-## Geometry and layer connections {#gbts-geometry}
+## Geometry and bin connections {#gbts-geometry}
 
 GBTS does not use the ACTS tracking geometry. It works on its own lightweight
 description: a flat list of `GbtsLayer` logical layers, each subdivided into
@@ -63,35 +63,51 @@ else. The adaptive @f$\tau@f$ correction of @ref gbts-graph asks whether three
 layers are radially consecutive, and the two innermost-layer cuts of the same
 section ask how deep a layer sits. GBTS therefore runs on any layer numbering.
 
-Which layer pairs may be joined by an edge is a list of
-@ref Acts::Experimental::GbtsLayerConnection, each naming a source (outer) and a
-destination (inner) layer. @ref Acts::Experimental::GbtsGeometry combines the
-layer descriptions with those connections and precomputes, for every pair of
-connected layers, which *eta bin* pairs are geometrically compatible with the
-allowed @f$z_0@f$ range. The result is a **bin group** list — one inner bin
-together with all outer bins it may connect to — which serves as the graph
+Which *eta bin* pairs may be joined by an edge is a list of
+@ref Acts::Experimental::GbtsBinConnection, each naming a source (outer) and a
+destination (inner) @ref Acts::Experimental::GbtsLayerBin: a layer ID together
+with the index of the bin inside that layer, counted from the layer's first bin
+rather than in the global numbering. @ref Acts::Experimental::GbtsGeometry
+cuts the layers into their eta bins, keeps the connected bin pairs that are
+geometrically compatible with the allowed @f$z_0@f$ range and drops the ones a
+layer does not have. The result is a flat **bin pair** list, the graph
 builder's iteration schedule, ordered so that outer bins are processed before
-the inner bins that depend on them. The @f$z_0@f$ range is widened on both ends
-by `GbtsZ0Range::z0Tolerance`.
+the inner bins that depend on them and with the pairs of one inner bin next to
+each other. The @f$z_0@f$ range is widened on both ends by
+`GbtsZ0Range::z0Tolerance`.
+
+The bins only mean something together with the layers, the eta bin width and
+the layer tilt they were cut with, so a connection table has to be used with the
+same ones it was trained on. @ref Acts::Experimental::GbtsGeometry::etaBin gives
+the bin a hit falls into, as an index inside its layer.
 
 The binning it worked out is readable back off the geometry, so a consumer that
 runs the same algorithm elsewhere does not have to recompute or pre-generate it:
 @ref Acts::Experimental::GbtsGeometry::layerBinning gives a layer's
 @ref Acts::Experimental::GbtsLayerBinning, the eta bins it owns in the global
-numbering, and @ref Acts::Experimental::GbtsGeometry::binGroups the schedule
+numbering, and @ref Acts::Experimental::GbtsGeometry::binPairs the schedule
 itself. Eta bins are numbered globally and a layer's are contiguous, so the
 layers tile the numbering in order. This is what the GPU implementation is
 configured from.
 
 > [!note]
 > The connections are trained offline rather than written by hand.
-> @ref Acts::Experimental::GbtsLayerConnectionTool accumulates layer-pair
+> @ref Acts::Experimental::GbtsBinConnectionTool accumulates bin-pair
 > statistics from simulated tracks; the
 > `Examples/Scripts/Python/gbts_layer_connection_training_itk.py` and
 > `gbts_layer_connection_training_odd.py` scripts drive it for the ITk and the
-> Open Data Detector. `ActsExamples::GraphBasedSeedingAlgorithm` reads the
-> resulting table, from a JSON file, and hands the pairs it
-> lists to the geometry.
+> Open Data Detector. The training cuts the layers into eta bins the way the
+> seeding does, so its `etaBinWidth` and `useLayerTilt` have to be the
+> seeding's.
+> `ActsExamples::GraphBasedSeedingAlgorithm` reads the resulting table, from a
+> JSON file, and hands the pairs it lists to the geometry.
+> No table is kept in the repository for the Open Data Detector. It is made
+> by running `gbts_layer_connection_training_odd.py` first, and
+> `full_chain_odd.py` loads it with `--gbts-connection-table`. The single muon
+> physics performance monitoring workflow trains it with the same script's
+> `runGbtsTrainingOdd` before its GBTS seeding. The fixed random seed of the
+> training gives the same table on every run and differs from the one of the
+> physmon samples, so the table is not trained on the events it is tested on.
 
 ## Graph nodes {#gbts-nodes}
 
@@ -144,7 +160,7 @@ wrap-around, so the window never has to handle wrapping:
 
 ## Building the graph {#gbts-graph}
 
-The builder walks the bin groups from @ref gbts-geometry. For each inner bin it
+The builder walks the bin pairs from @ref gbts-geometry. For each inner bin it
 prepares one **sliding window** in @f$\phi@f$ per connected outer bin, whose
 half-width grows with the radial separation of the two bins — the further apart
 they are, the more a low-@f$p_T@f$ track can bend between them. It then loops
@@ -271,6 +287,7 @@ The cuts that build and link the doublets live on
 
 | Option | Stage | Effect |
 | --- | --- | --- |
+| `useStripConnections` | @ref gbts-geometry | take the strip bin connections from the connector file instead of the pixel ones |
 | `minPt` | @ref gbts-graph | drives the curvature and @f$\phi@f$-window bounds |
 | `minDeltaRadius`, `maxAbsTau` | @ref gbts-graph | doublet acceptance |
 | `minZ0`, `maxZ0`, `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet |
@@ -315,12 +332,12 @@ separately controls the chain-following filter of @ref gbts-extraction "seed ext
   holds - `GbtsNodeParams`, `GbtsNodeEdgeInfo`, `GbtsEtaBinInfo`, `GbtsEdge` -
   is internal and lives in `Acts/Seeding/detail/GbtsGraphTypes.hpp`.
 - Geometry: @ref Acts::Experimental::GbtsGeometry,
-  @ref Acts::Experimental::GbtsLayerConnection, the binning it hands back in
+  @ref Acts::Experimental::GbtsBinConnection, the binning it hands back in
   `Acts/Seeding/GbtsBinning.hpp`, and the internal `GbtsLayer`.
 - Chain following: @ref Acts::Experimental::GbtsTrackingFilter and its internal
   `GbtsEdgeState`.
 - Region of interest: @ref Acts::Experimental::GbtsRoiDescriptor.
-- Connection-table training: @ref Acts::Experimental::GbtsLayerConnectionTool.
+- Connection-table training: @ref Acts::Experimental::GbtsBinConnectionTool.
 - Examples integration: `ActsExamples::GraphBasedSeedingAlgorithm`, driven from
   `Examples/Scripts/Python/full_chain_itk_Gbts.py`.
 
