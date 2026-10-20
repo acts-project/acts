@@ -27,8 +27,8 @@ namespace Acts::detail {
 /// before it.
 template <std::size_t kMaxSize, typename item_t, typename key_of_t>
 void rankSortByKey(std::span<item_t> items, const key_of_t& keyOf) {
-  // A smaller rank sort while the items fit in half
-  if constexpr (kMaxSize > 1) {
+  // A smaller rank sort while the items fit in half, down to two items
+  if constexpr (kMaxSize > 2) {
     if (items.size() <= kMaxSize / 2) {
       rankSortByKey<kMaxSize / 2>(items, keyOf);
       return;
@@ -80,9 +80,7 @@ void rankSortByKey(std::span<item_t> items, const key_of_t& keyOf) {
     sorted[places[i]] = std::move(items[i]);
   }
 
-  for (std::size_t i = 0; i < n; ++i) {
-    items[i] = std::move(sorted[i]);
-  }
+  std::ranges::move(std::span(sorted).first(n), items.begin());
 }
 
 /// Sorts @p items stably by key, given the smallest and the largest key: they
