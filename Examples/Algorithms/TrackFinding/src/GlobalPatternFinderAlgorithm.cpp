@@ -716,7 +716,8 @@ GlobalPatternFinderAlgorithm::GlobalPatternFinderAlgorithm(
   patCfg.minHitDistance4Line = m_cfg.minHitDistance4Line;
 
   m_globPatFinder = std::make_unique<GlobalPatternFinder_t>(
-      std::move(patCfg), this->logger().clone("GlobalPatternFinder"));
+      GlobalPatternFinder_t::Config{patCfg},
+      this->logger().clone("GlobalPatternFinder"));
 
   // Print Configuration
   ACTS_LOG_WITH_LOGGER(
