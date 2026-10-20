@@ -45,6 +45,11 @@ description: a flat list of `GbtsLayer` logical layers, each subdivided into
 other way round. The ID is the caller's own numbering, and the algorithm never
 decodes it.
 
+A ring of inclined modules is described by its `slope` in @f$r@f$-@f$z@f$,
+along which its eta bins are cut. `ActsExamples::GraphBasedSeedingAlgorithm`
+takes the slope from the module planes of the tracking geometry when
+`useLayerTilt` is set.
+
 A pixel barrel layer carries one more field, `barrelOrder`: the position of the
 layer in the inside-out ordering of the pixel barrel. Every other layer keeps
 the default `-1`, so the sign of the field also says whether a layer is a pixel
@@ -66,7 +71,8 @@ connected layers, which *eta bin* pairs are geometrically compatible with the
 allowed @f$z_0@f$ range. The result is a **bin group** list — one inner bin
 together with all outer bins it may connect to — which serves as the graph
 builder's iteration schedule, ordered so that outer bins are processed before
-the inner bins that depend on them.
+the inner bins that depend on them. The @f$z_0@f$ range is widened on both ends
+by `GbtsZ0Range::z0Tolerance`.
 
 The binning it worked out is readable back off the geometry, so a consumer that
 runs the same algorithm elsewhere does not have to recompute or pre-generate it:
@@ -258,13 +264,14 @@ the angle. Wide clusters in the pixel endcap are dropped entirely
 
 ## Configuration {#gbts-configuration}
 
-The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
+The cuts that build and link the doublets live on
+@ref Acts::Experimental::GbtsGraphBuilder "GbtsGraphBuilder::Config", which
+`GraphBasedSeedingAlgorithm` takes as `graphConfig` and exposes to Python as
+`GbtsGraphBuilderConfig`:
 
 | Option | Stage | Effect |
 | --- | --- | --- |
-| `useStripConnections` | @ref gbts-geometry | take the strip layer connections from the connector file instead of the pixel ones |
 | `minPt` | @ref gbts-graph | drives the curvature and @f$\phi@f$-window bounds |
-| `nMaxPhiSlice` | @ref gbts-graph | sets the base @f$\phi@f$ sliding-window width |
 | `minDeltaRadius`, `maxAbsTau` | @ref gbts-graph | doublet acceptance |
 | `minZ0`, `maxZ0`, `doubletFilterRZ` | @ref gbts-graph | luminous-region cuts on the doublet |
 | `tauRatioCut`, `cutDPhiMax`, `cutDCurvMax` | @ref gbts-graph | edge-to-edge linking tolerances |
@@ -273,11 +280,22 @@ The main knobs on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrac
 | `maxEdgesPerSP` | @ref gbts-graph | cap on the edge array per space point (30 by default); exceeding it costs efficiency |
 | `matchBeforeCreate`, `tauRatioPrecut`, `matchBeforeCreateMaxBarrelOrder` | @ref gbts-graph | require a compatible incoming edge before creating one, down to that depth in the pixel barrel |
 | `z0HistogramMaxBarrelOrder`, `z0Resolution` | @ref gbts-graph | @f$z_0@f$ histogram cut, down to that depth in the pixel barrel |
+The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackSeeder::Config":
+
+| Option | Stage | Effect |
+| --- | --- | --- |
+| `nMaxPhiSlice` | @ref gbts-nodes | sets the @f$\phi@f$ slice width, and with it the base sliding-window width the graph uses |
+| `ccaMaxIterations` | @ref gbts-graph | cap on the connected component iterations |
+| `minSeedLevel` | @ref gbts-extraction | chain length a candidate must reach |
+| `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |
 | `maxSeedSplitEta`, `maxInvRadDiff` | @ref gbts-extraction | seed splitting |
-| `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `useClusterWidthCuts`, `tauLookupTable` | @ref gbts-ml | cluster-width based @f$\tau@f$ windows |
 | `maxEndcapClusterWidth`, `moduleHalfLengthY`, `moduleEdgeTolerance` | @ref gbts-ml | cluster-width acceptance and module-edge handling |
+
+`useStripConnections`, which takes the strip layer connections from the
+connector file instead of the pixel ones, is read where the file is loaded and
+so sits on `GraphBasedSeedingAlgorithm::Config` itself.
 
 @ref Acts::Experimental::GbtsTrackingFilter "GbtsTrackingFilter::Config"
 separately controls the chain-following filter of @ref gbts-extraction "seed extraction":

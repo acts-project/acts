@@ -14,6 +14,9 @@ cmake -B <build> -S <source>
 cmake --build <build>
 ```
 
+The default C++ standard is C++23. To build in the supported C++20 mode,
+configure with `-DCMAKE_CXX_STANDARD=20` and use dependencies built for C++20.
+
 For a full list of dependencies, including specific versions, see the
 [Prerequisites](#prerequisites) section below. Build options to activate
 additional components are described in the [Build options](#build-options)
