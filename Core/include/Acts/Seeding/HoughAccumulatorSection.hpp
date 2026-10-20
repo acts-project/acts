@@ -67,7 +67,8 @@ class HoughAccumulatorSection {
   void updateDimensions(float xw, float yw, float xBegin, float yBegin);
 
   /// @brief Override the division level (e.g. when changing search space)
-  void setDivisionLevel(std::uint32_t divLvl){m_divisionLevel=divLvl;}
+  /// @param divLvl New division level to set
+  void setDivisionLevel(std::uint32_t divLvl) { m_divisionLevel = divLvl; }
 
   /// @brief keep indices and update parameters of the box by scalling
   /// @param xs - scale in x direction, if bigger than 1 the size increases
@@ -370,8 +371,9 @@ void exploreHoughParametersSpace(
       newSections.push_back(thisSection.right());
     }
 
-    if (newSections.empty())
+    if (newSections.empty()){
       continue;
+    }
 
     if (thisSection.decision() ==
         HoughAccumulatorSection::Decision::DrillAndExpand) {

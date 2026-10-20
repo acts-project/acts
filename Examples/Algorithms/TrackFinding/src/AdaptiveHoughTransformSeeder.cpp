@@ -112,7 +112,7 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     ACTS_DEBUG("past deduplication " << stack1.size());
   }
 
-  // additional stack for smaller structer as HoughAccumulatorSection is no longer needed
+  // additional stack for smaller structure as HoughAccumulatorSection is no longer needed
   std::vector<SeedCandidate> stack3;
 
   // do scan in z_vertex - cot theta
@@ -130,16 +130,16 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
                << stack1.size() << " stack3 size " << stack3.size());
   }
 
-  // vector for final solutions with or without second phase
-  std::vector<SeedCandidate> finalSolutions;
+  // vector for selected candidates with or without second phase
+  std::vector<SeedCandidate> selectedCandidates;
 
   if (m_cfg.doSecondPhase){
-    finalSolutions = std::move(stack3);
+    selectedCandidates = std::move(stack3);
     }
   else{
-    finalSolutions.reserve(stack1.size());
+    selectedCandidates.reserve(stack1.size());
     for (auto &section : stack1){
-      finalSolutions.push_back({std::move(section.indices())});
+      selectedCandidates.push_back({std::move(section.indices())});
     }
   }
 
@@ -148,10 +148,10 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
   // post solutions
   SeedContainer seeds;
   seeds.assignSpacePointContainer(spacePoints);
-  seeds.reserve(finalSolutions.size());
+  seeds.reserve(selectedCandidates.size());
 
-  ACTS_VERBOSE("Number of solutions " << finalSolutions.size());
-  makeSeeds(seeds, finalSolutions, measurements);
+  ACTS_VERBOSE("Number of solutions " << selectedCandidates.size());
+  makeSeeds(seeds, selectedCandidates, measurements);
 
   m_outputSeeds(ctx, std::move(seeds));
 
@@ -221,8 +221,8 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
   struct Stats {
     double drilledArea{};
     double acceptedArea{};
-    int nDrilledSections_standard{};
-    int nDrilledSections_extra{};
+    int nDrilledSectionsStandard{};
+    int nDrilledSectionsExtra{};
     int nAcceptedLines{};
     int nAcceptedSections{};
     int discardedByThresholdCut{};
@@ -252,7 +252,7 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
         }
 
         if (section.divisionLevel() <= cfg.maxDivision - 1) {
-          sStat[section.divisionLevel()].nDrilledSections_standard++;
+          sStat[section.divisionLevel()].nDrilledSectionsStandard++;
           sStat[section.divisionLevel()].drilledArea += section.xSize() * section.ySize();
           return Drill;
         }
@@ -267,7 +267,7 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
         }
         sStat[section.divisionLevel()].drilledArea +=
             section.xSize() * section.ySize();
-        sStat[section.divisionLevel()].nDrilledSections_extra++;
+        sStat[section.divisionLevel()].nDrilledSectionsExtra++;
         return Drill;
       };
 
@@ -288,8 +288,8 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
                        << " | Cut(Thresh): " << stats.discardedByThresholdCut
                        << " | Cut(Cross): " << stats.discardedByCrossingCut
                        << " | Area(Drill): " << stats.drilledArea
-                       << " | nSections(Drill_standard): " << stats.nDrilledSections_standard
-                       << " | nSections(Drill_extra): " << stats.nDrilledSections_extra
+                       << " | nSections(Drill_standard): " << stats.nDrilledSectionsStandard
+                       << " | nSections(Drill_extra): " << stats.nDrilledSectionsExtra
                        << " | Area(Accept): " << stats.acceptedArea
                        << " | nSections(Accept): " << stats.nAcceptedSections
                        << " | nLines(Accept): " << stats.nAcceptedLines);
@@ -444,7 +444,6 @@ void AdaptiveHoughTransformSeeder::makeSeeds(
 
   unsigned skippedCandidatesCounter = 0;
 
-  std::size_t seedIndex = 0;
   for (const SeedCandidate &s : solutions) {
     std::vector<unsigned> sortedIndices = s.indices;
     std::ranges::sort(sortedIndices, [&measurements](unsigned i1, unsigned i2) {
@@ -473,7 +472,7 @@ void AdaptiveHoughTransformSeeder::makeSeeds(
       }
     }
 
-    if (spIndex<3) {
+    if (spIndex < 3) {
       skippedCandidatesCounter++;
       continue;
     }
@@ -502,7 +501,6 @@ void AdaptiveHoughTransformSeeder::makeSeeds(
         static_cast<float>(sp[1]->z() - sp[1]->r() * cotThetaEstimate);
     seed.vertexZ() = z;
 
-    seedIndex++;
   }
   if (skippedCandidatesCounter > 0) {
     ACTS_VERBOSE("Diagnostic: Skipped " << skippedCandidatesCounter 

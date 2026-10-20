@@ -25,9 +25,9 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
-#include <unordered_set>
 
 namespace ActsExamples {
 
@@ -75,10 +75,6 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                        // units of GeV / (c*mm*e)
   };
 
-  // TODO: This intermediate SeedCandidate structure and the accompanying VectorHash 
-  // currently use std::vector for transitioning away from the heavy HoughAccumulatorSection.
-  // In a follow-up PR implementing the 1D sliding window to phase 1, this will be strictly flattened 
-  // to a 3-element std::array with O(1) deduplication to prevent heap allocations.
   /// @brief Lightweight representation of a seed candidate holding measurement indices
   struct SeedCandidate {
     std::vector<unsigned> indices;
