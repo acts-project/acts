@@ -134,17 +134,23 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
                    << " groups, below the minimum required - skip seed.");
       continue;
     }
-    /// Sort the compatible spacepoints by global logical layer
-    std::ranges::sort(orderedHits,
-                      [&](const OrderedHit& c1, const OrderedHit& c2) {
-                        return Topology_t::layerSorter(*c1, *c2);
-                      });
+    /// Sort the compatible spacepoints by global logical layer and, if they
+    /// are on the same layer, by their position along the bending coordinate
+    std::ranges::sort(orderedHits, [&](const OrderedHit& c1,
+                                       const OrderedHit& c2) {
+      const std::weak_ordering layerOrder{Topology_t::compareLayers(*c1, *c2)};
+      if (std::is_eq(layerOrder)) {
+        return c1->spacePoint().localPosition().y() <
+               c2->spacePoint().localPosition().y();
+      }
+      return std::is_lt(layerOrder);
+    });
     /// Assign global layer number. This will avoid re-computing it many times
     /// later
     for (std::size_t i = 1; i < orderedHits.size(); ++i) {
-      orderedHits[i].globLayer =
-          orderedHits[i - 1].globLayer +
-          !Topology_t::sameLayer(*orderedHits[i - 1], *orderedHits[i]);
+      orderedHits[i].globLayer = orderedHits[i - 1].globLayer +
+                                 std::is_neq(Topology_t::compareLayers(
+                                     *orderedHits[i - 1], *orderedHits[i]));
     }
     if (orderedHits.back().globLayer + 1u <
         (m_cfg.minStripEtaLayers + m_cfg.minPrecisionLayers)) {
@@ -753,7 +759,7 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
         const auto& groupHits{pat.hitsPerGroup[group]};
         if (std::ranges::any_of(groupHits, [&](const OrderedHit& h) {
               return h->spacePoint().measuresLoc0() &&
-                     Topology_t::sameLayer(*h, newHit);
+                     std::is_eq(Topology_t::compareLayers(*h, newHit));
             })) {
           ACTS_VERBOSE(__func__ << "() Found eta hit measuring also phi on "
                                    "same layer - skip hit.");
@@ -807,11 +813,11 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
 
         /// Keep only the phi-only hit closest to the bending plane on each
         /// layer
-        if (const auto it = std::ranges::find_if(pat.phiOnlyHits,
-                                                 [&](const Hit_t& h) {
-                                                   return Topology_t::sameLayer(
-                                                       h, newHit);
-                                                 });
+        if (const auto it = std::ranges::find_if(
+                pat.phiOnlyHits,
+                [&](const Hit_t& h) {
+                  return std::is_eq(Topology_t::compareLayers(h, newHit));
+                });
             it != pat.phiOnlyHits.end()) {
           if (std::abs(pat.angleToBendPlane(it->globalPosition(gctx))) <
               std::abs(pat.angleToBendPlane(newHitPos))) {

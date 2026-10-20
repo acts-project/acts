@@ -495,7 +495,7 @@ bool PatternStateAux<Hit_t, Sector_t, Topology_t>::defineLineAroundHit(
       if (hits.empty() || group == phiHitGroup) {
         continue;
       }
-      if (Topology_t::layerSorter(*hits.front(), refHit)) {
+      if (std::is_lt(Topology_t::compareLayers(*hits.front(), refHit))) {
         const OrderedHit& lowerInGroup{*std::ranges::max_element(
             hits, {}, [](const OrderedHit& c) { return c.globLayer; })};
         if (lowerHit == nullptr ||

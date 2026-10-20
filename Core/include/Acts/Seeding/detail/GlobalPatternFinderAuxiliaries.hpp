@@ -14,6 +14,7 @@
 #include "Acts/Utilities/ArrayHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <compare>
 #include <cstdint>
 #include <memory>
 #include <type_traits>
@@ -90,11 +91,10 @@ concept PatternTopology =
       /// are represented as std::uint8_t, which is assumed to be able to
       /// represent all the layers that can be crossed by a particle.
       requires std::same_as<decltype(T::nGroups), const std::uint8_t>;
-      /// Sort two hits by measurement layer and, if they are on
-      /// the same layer, by their position along the bending coordinate.
-      { T::layerSorter(hit1, hit2) } -> std::same_as<bool>;
-      /// Check if two hits are on the same measurement layer.
-      { T::sameLayer(hit1, hit2) } -> std::same_as<bool>;
+      /// Compare two hits by measurement layer. The result is less if hit1 is
+      /// on an inner layer w.r.t. hit2, greater if it is on an outer layer,
+      /// and equivalent if the two hits are on the same measurement layer.
+      { T::compareLayers(hit1, hit2) } -> std::same_as<std::weak_ordering>;
       /// Return the group index of a hit.
       { T::groupIndex(hit1) } -> std::same_as<std::uint8_t>;
     };
