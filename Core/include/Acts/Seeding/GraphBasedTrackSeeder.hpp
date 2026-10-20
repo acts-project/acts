@@ -51,7 +51,7 @@ class GraphBasedTrackSeeder {
 
     /// Longest chain of edges taken into account. Edges in longer chains take
     /// no part in the seed extraction.
-    std::uint32_t ccaMaxIterations = 15;
+    std::uint32_t maxChainLength = 15;
     /// Chain length a seed candidate must reach: a triplet plus one
     /// confirmation.
     std::uint8_t minSeedLevel = 3;

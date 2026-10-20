@@ -203,7 +203,7 @@ With the edge graph built, every edge gets a **level**: the length of the
 longest chain of linked edges going outwards from it, so an edge that nothing
 further out links to is at level 1. An edge only links to edges further in,
 which are always created after it, so a single pass over the edges in creation
-order settles every level. Chains longer than `ccaMaxIterations` edges are left
+order settles every level. Chains longer than `maxChainLength` edges are left
 unsettled and take no part in the extraction.
 
 An edge with no settled edge further in is a **root**, the innermost edge of a
@@ -289,7 +289,7 @@ The rest are on @ref Acts::Experimental::GraphBasedTrackSeeder "GraphBasedTrackS
 | Option | Stage | Effect |
 | --- | --- | --- |
 | `nMaxPhiSlice` | @ref gbts-nodes | sets the @f$\phi@f$ slice width, and with it the base sliding-window width the graph uses |
-| `ccaMaxIterations` | @ref gbts-levels | longest chain of edges taken into account |
+| `maxChainLength` | @ref gbts-levels | longest chain of edges taken into account |
 | `minSeedLevel` | @ref gbts-extraction | chain length a candidate must reach |
 | `addTriplets`, `maxAbsEtaAddTriplets` | @ref gbts-extraction | allow shorter chains within an @f$\eta@f$ range |
 | `hitShareThreshold` | @ref gbts-extraction | fraction of shared hits above which a candidate is a clone |

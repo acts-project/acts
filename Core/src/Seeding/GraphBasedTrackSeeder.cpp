@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -345,7 +346,7 @@ void GraphBasedTrackSeeder::extractBestPathPerEdge(
     const GbtsTrackingFilter& filter, add_candidate_t& addCandidate) const {
   std::vector<detail::GbtsEdge>& edgeStorage = graph.edgeStorage;
   const auto nEdges = static_cast<std::uint32_t>(edgeStorage.size());
-  const auto maxLength = static_cast<std::uint32_t>(m_cfg.ccaMaxIterations);
+  const auto maxLength = static_cast<std::uint32_t>(m_cfg.maxChainLength);
 
   // The level of an edge is the length of the longest chain of edges going
   // outwards from it. `vNei` only holds edges further in, which are created
@@ -364,7 +365,8 @@ void GraphBasedTrackSeeder::extractBestPathPerEdge(
   // The length of the longest path from an edge inwards to a root, stepping
   // one level up at a time: one for a root, which has no edge further in
   // that is not left out, and zero if there is no such path. The edges
-  // further in come later, so one pass backwards settles it.
+  // further in come later, so one pass backwards settles it. An edge whose
+  // settled inner edges all sit more than one level up has no path.
   std::vector<std::uint32_t> rootReach(nEdges, 0);
   for (std::uint32_t e = nEdges; e-- > 0;) {
     if (level[e] > maxLength) {
@@ -398,6 +400,8 @@ void GraphBasedTrackSeeder::extractBestPathPerEdge(
   const auto search = [&](const auto& self, const std::uint32_t e,
                           const detail::GbtsEdgeState& state) -> void {
     path.push_back(e);
+    // every step goes one level up, so the depth is bounded by `maxLength`
+    assert(path.size() <= maxLength);
 
     if (rootReach[e] == 1) {
       const float quality = -state.j / static_cast<float>(path.size() + 1);

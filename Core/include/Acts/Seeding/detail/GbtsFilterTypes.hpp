@@ -21,10 +21,6 @@ struct GbtsEdgeState final {
  public:
   GbtsEdgeState() = default;
 
-  /// Constructor with initialization flag
-  /// @param f Initialization flag
-  explicit GbtsEdgeState(bool f) : initialized(f) {}
-
   /// Initialize from edge
   /// @param pS Edge to initialize from
   /// @param nodeView View of the node positions and layers
@@ -33,8 +29,6 @@ struct GbtsEdgeState final {
   void initialize(const GbtsEdge& pS, const GbtsNodeView& nodeView,
                   const std::array<float, 3>& varianceX,
                   const std::array<float, 2>& varianceY);
-
-  bool initialized{false};
 
   /// Score for comparison
   float j{};
