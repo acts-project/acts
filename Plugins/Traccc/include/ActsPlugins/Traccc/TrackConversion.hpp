@@ -28,7 +28,7 @@
 #include <traccc/edm/track_fit_outcome.hpp>
 #include <traccc/edm/track_parameters.hpp>
 
-namespace ActsPlugins::Traccc {
+namespace ActsPlugins::TracccBoundTrackParameters {
 
 /// traccc bound track parameters with the default algebra
 using BoundTrackParameters =

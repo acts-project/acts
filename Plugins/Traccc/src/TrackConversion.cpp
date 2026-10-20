@@ -8,7 +8,7 @@
 
 #include "ActsPlugins/Traccc/TrackConversion.hpp"
 
-namespace ActsPlugins::Traccc {
+namespace ActsPlugins::TracccBoundTrackParameters {
 
 Acts::BoundVector convertBoundVector(const BoundTrackParameters& params) {
   Acts::BoundVector vector;
