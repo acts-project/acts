@@ -15,10 +15,12 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "ActsPlugins/Json/GridJsonConverter.hpp"
+#include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceMaterialJsonConverter.hpp"
 
 #include <memory>
 #include <numbers>
+#include <stdexcept>
 #include <variant>
 #include <vector>
 
@@ -155,6 +157,18 @@ BOOST_AUTO_TEST_CASE(MergedMaterialMarkerRoundTrip) {
   BOOST_REQUIRE(markerRead != nullptr);
   BOOST_CHECK(dynamic_cast<const MergedMaterialMarker*>(markerRead.get()) !=
               nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(RejectRemovedInterpolatedVolumeMaps) {
+  for (const auto* type : {"interpolated2D", "interpolated3D"}) {
+    nlohmann::json input = {{"material",
+                             {{"type", type},
+                              {"mapMaterial", true},
+                              {"data", nlohmann::json::array()}}}};
+    volumeMaterialPointer material = nullptr;
+    BOOST_CHECK_THROW(from_json(input, material), std::invalid_argument);
+    BOOST_CHECK(material == nullptr);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

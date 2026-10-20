@@ -3,7 +3,6 @@ target_sources(
     PRIVATE
         AccumulatedMaterialSlab.cpp
         AccumulatedSurfaceMaterial.cpp
-        AccumulatedVolumeMaterial.cpp
         AverageMaterials.cpp
         BinnedSurfaceMaterial.cpp
         BinnedSurfaceMaterialAccumulator.cpp
@@ -14,9 +13,7 @@ target_sources(
         IntersectionMaterialAssigner.cpp
         ISurfaceMaterial.cpp
         Material.cpp
-        MaterialGridHelper.cpp
         MaterialInteractionAssignment.cpp
-        MaterialMapUtils.cpp
         MaterialMapper.cpp
         MaterialSurfaceRegistry.cpp
         MaterialSlab.cpp
