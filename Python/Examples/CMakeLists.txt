@@ -128,6 +128,10 @@ target_sources(
     PRIVATE
         src/Framework.cpp
         src/EventData.cpp
+        src/EventDataMeasurements.cpp
+        src/EventDataTrackContainers.cpp
+        src/EventDataTracks.cpp
+        src/EventDataTrackStates.cpp
         src/ExampleAlgorithms.cpp
         src/Generators.cpp
         src/AmbiguityResolution.cpp
