@@ -103,6 +103,7 @@ traccc_add_library( traccc_core core TYPE SHARED
   "include/traccc/seeding/detail/seeding_config.hpp"
   "include/traccc/seeding/detail/spacepoint_grid.hpp"
   "include/traccc/seeding/seed_selecting_helper.hpp"
+  "include/traccc/seeding/seed_confirmation_helper.hpp"
   "include/traccc/seeding/detail/strip_spacepoint_calibration.hpp"
   "include/traccc/seeding/track_params_estimation_helper.hpp"
   "include/traccc/seeding/doublet_finding_helper.hpp"

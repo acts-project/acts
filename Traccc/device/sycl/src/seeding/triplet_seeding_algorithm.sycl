@@ -24,6 +24,7 @@
 #include "traccc/seeding/device/populate_grid.hpp"
 #include "traccc/seeding/device/reduce_triplet_counts.hpp"
 #include "traccc/seeding/device/select_seeds.hpp"
+#include "traccc/seeding/device/suppress_seeds.hpp"
 #include "traccc/seeding/device/update_triplet_weights.hpp"
 
 // VecMem include(s).
@@ -61,6 +62,12 @@ class update_triplet_weights;
 
 /// Class identifying the kernel running @c traccc::device::select_seeds
 class select_seeds;
+
+/// Class identifying the kernel running @c traccc::device::mark_seed_weights
+class mark_seed_weights;
+
+/// Class identifying the kernel running @c traccc::device::suppress_seeds
+class suppress_seeds;
 
 }  // namespace kernels
 
@@ -246,14 +253,20 @@ void triplet_seeding_algorithm::select_seeds_kernel(
   const unsigned int n_threads = warp_size() * 2;
 
   // Check if device is capable of allocating sufficient local memory
-  assert(sizeof(triplet) * payload.finder_config.maxSeedsPerSpM * n_threads <
+  assert(sizeof(triplet) *
+             payload.filter_config.seed_candidates_per_spM(
+                 payload.finder_config.maxSeedsPerSpM) *
+             n_threads <
          squeue.get_device().get_info<::sycl::info::device::local_mem_size>());
 
   squeue.submit([&](::sycl::handler& h) {
     // Array for temporary storage of triplets for comparing within
     // kernel
     vecmem::sycl::local_accessor<device::device_triplet> local_mem(
-        payload.finder_config.maxSeedsPerSpM * n_threads, h);
+        payload.filter_config.seed_candidates_per_spM(
+            payload.finder_config.maxSeedsPerSpM) *
+            n_threads,
+        h);
 
     h.parallel_for<kernels::select_seeds>(
         details::calculate1DimNdRange(payload.n_doublets, n_threads),
@@ -265,7 +278,9 @@ void triplet_seeding_algorithm::select_seeds_kernel(
          local_mem](::sycl::nd_item<1> item) {
           // Each thread uses compatSeedLimit elements of the array
           device::device_triplet* dataPos =
-              &local_mem[item.get_local_id() * finder_config.maxSeedsPerSpM];
+              &local_mem[item.get_local_id() *
+                         filter_config.seed_candidates_per_spM(
+                             finder_config.maxSeedsPerSpM)];
 
           device::select_seeds(details::global_index(item), finder_config,
                                filter_config, spacepoints, grid, spM_tc,
@@ -276,6 +291,36 @@ void triplet_seeding_algorithm::select_seeds_kernel(
 
 void triplet_seeding_algorithm::synchronize() const {
   details::get_queue(queue()).wait_and_throw();
+}
+
+void triplet_seeding_algorithm::mark_seed_weights_kernel(
+    const mark_seed_weights_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::mark_seed_weights>(
+        details::calculate1DimNdRange(payload.n_seeds, warp_size() * 2),
+        [seeds = payload.seeds,
+         best_weights = payload.best_weights](::sycl::nd_item<1> item) {
+          device::mark_seed_weights(details::global_index(item), seeds,
+                                    best_weights);
+        });
+  });
+}
+
+void triplet_seeding_algorithm::suppress_seeds_kernel(
+    const suppress_seeds_kernel_payload& payload) const {
+  ::sycl::queue& squeue = details::get_queue(queue());
+  squeue.throw_asynchronous();
+  squeue.submit([&](::sycl::handler& h) {
+    h.parallel_for<kernels::suppress_seeds>(
+        details::calculate1DimNdRange(payload.n_seeds, warp_size() * 2),
+        [seeds = payload.seeds, best_weights = payload.best_weights,
+         out = payload.out](::sycl::nd_item<1> item) {
+          device::suppress_seeds(details::global_index(item), seeds,
+                                 best_weights, out);
+        });
+  });
 }
 
 }  // namespace traccc::sycl

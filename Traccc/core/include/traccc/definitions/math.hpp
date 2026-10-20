@@ -24,6 +24,7 @@ namespace traccc::math {
 using ::sycl::abs;
 using ::sycl::acos;
 using ::sycl::asin;
+using ::sycl::asinh;
 using ::sycl::atan;
 using ::sycl::atan2;
 using ::sycl::cos;
@@ -42,6 +43,7 @@ using ::sycl::tan;
 using std::abs;
 using std::acos;
 using std::asin;
+using std::asinh;
 using std::atan;
 using std::atan2;
 using std::cos;

@@ -21,6 +21,7 @@
 #include "traccc/seeding/device/populate_grid.hpp"
 #include "traccc/seeding/device/reduce_triplet_counts.hpp"
 #include "traccc/seeding/device/select_seeds.hpp"
+#include "traccc/seeding/device/suppress_seeds.hpp"
 #include "traccc/seeding/device/update_triplet_weights.hpp"
 
 namespace traccc::alpaka {
@@ -204,11 +205,37 @@ struct select_seeds {
 
     // Each thread uses max_triplets_per_spM elements of the array
     device::device_triplet* dataPos =
-        &data[localThreadIdx * finder_config.maxSeedsPerSpM];
+        &data[localThreadIdx * filter_config.seed_candidates_per_spM(
+                                   finder_config.maxSeedsPerSpM)];
 
     device::select_seeds(globalThreadIdx, finder_config, filter_config,
                          spacepoints, sp_view, spM_tc, midBot_tc, triplet_view,
                          dataPos, seed_view);
+  }
+};
+
+/// Kernel running @c traccc::device::mark_seed_weights
+struct mark_seed_weights {
+  template <typename TAcc>
+  ALPAKA_FN_ACC void operator()(
+      TAcc const& acc, edm::seed_collection::const_view seeds,
+      vecmem::data::vector_view<unsigned int> best_weights) const {
+    auto const globalThreadIdx =
+        ::alpaka::getIdx<::alpaka::Grid, ::alpaka::Threads>(acc)[0u];
+    device::mark_seed_weights(globalThreadIdx, seeds, best_weights);
+  }
+};
+
+/// Kernel running @c traccc::device::suppress_seeds
+struct suppress_seeds {
+  template <typename TAcc>
+  ALPAKA_FN_ACC void operator()(
+      TAcc const& acc, edm::seed_collection::const_view seeds,
+      vecmem::data::vector_view<const unsigned int> best_weights,
+      edm::seed_collection::view out) const {
+    auto const globalThreadIdx =
+        ::alpaka::getIdx<::alpaka::Grid, ::alpaka::Threads>(acc)[0u];
+    device::suppress_seeds(globalThreadIdx, seeds, best_weights, out);
   }
 };
 
@@ -333,6 +360,25 @@ void triplet_seeding_algorithm::synchronize() const {
   queue().synchronize();
 }
 
+void triplet_seeding_algorithm::mark_seed_weights_kernel(
+    const mark_seed_weights_kernel_payload& payload) const {
+  const unsigned int n_threads = warp_size() * 2;
+  const unsigned int n_blocks = (payload.n_seeds + n_threads - 1) / n_threads;
+  ::alpaka::exec<Acc>(
+      details::get_queue(queue()), makeWorkDiv<Acc>(n_blocks, n_threads),
+      kernels::mark_seed_weights{}, payload.seeds, payload.best_weights);
+}
+
+void triplet_seeding_algorithm::suppress_seeds_kernel(
+    const suppress_seeds_kernel_payload& payload) const {
+  const unsigned int n_threads = warp_size() * 2;
+  const unsigned int n_blocks = (payload.n_seeds + n_threads - 1) / n_threads;
+  ::alpaka::exec<Acc>(details::get_queue(queue()),
+                      makeWorkDiv<Acc>(n_blocks, n_threads),
+                      kernels::suppress_seeds{}, payload.seeds,
+                      payload.best_weights, payload.out);
+}
+
 }  // namespace traccc::alpaka
 
 // Define the required trait needed for Dynamic shared memory allocation.
@@ -359,10 +405,12 @@ struct BlockSharedMemDynSizeBytes<traccc::alpaka::kernels::select_seeds, TAcc> {
   ALPAKA_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(
       traccc::alpaka::kernels::select_seeds const& /* kernel */,
       TVec const& blockThreadExtent, TVec const& /* threadElemExtent */,
-      traccc::seedfinder_config config, TArgs const&... /* args */
+      traccc::seedfinder_config config, traccc::seedfilter_config filter_config,
+      TArgs const&... /* args */
       ) -> std::size_t {
-    return static_cast<std::size_t>(config.maxSeedsPerSpM *
-                                    blockThreadExtent.prod()) *
+    return static_cast<std::size_t>(
+               filter_config.seed_candidates_per_spM(config.maxSeedsPerSpM) *
+               blockThreadExtent.prod()) *
            sizeof(traccc::device::device_triplet);
   }
 };

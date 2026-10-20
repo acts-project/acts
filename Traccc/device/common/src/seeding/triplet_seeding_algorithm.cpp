@@ -135,6 +135,10 @@ auto triplet_seeding_algorithm::execute(
   populate_grid_kernel({n_spacepoints, m_data->m_finder_config, spacepoints,
                         grid_buffer, grid_prefix_sum_buffer});
 
+  // The seeds refer to indices in the full spacepoint collection
+  const edm::spacepoint_collection::const_view::size_type n_all_spacepoints =
+      n_spacepoints;
+
   // Update the spacepoint counter. So that it would only count the "good"
   // spacepoints that ended up in the spacepoint grid.
   if (mr().host) {
@@ -283,8 +287,36 @@ auto triplet_seeding_algorithm::execute(
   // Complete seed selection before releasing its intermediate buffers.
   synchronize();
 
-  // Return the seed buffer.
-  return seed_buffer;
+  if (!m_data->m_filter_config.seedConfirmation) {
+    return seed_buffer;
+  }
+
+  // With seed confirmation, drop the seeds whose spacepoints all belong to
+  // seeds of a higher weight.
+  edm::seed_collection::buffer::size_type n_seeds = 0u;
+  if (mr().host) {
+    vecmem::async_size size = copy().get_size(seed_buffer, *(mr().host));
+    n_seeds = size.get();
+  } else {
+    n_seeds = copy().get_size(seed_buffer);
+  }
+  if (n_seeds == 0u) {
+    return seed_buffer;
+  }
+
+  vecmem::data::vector_buffer<unsigned int> best_weight_buffer{
+      n_all_spacepoints, mr().main};
+  copy().setup(best_weight_buffer)->ignore();
+  copy().memset(best_weight_buffer, 0)->ignore();
+  mark_seed_weights_kernel({n_seeds, seed_buffer, best_weight_buffer});
+
+  edm::seed_collection::buffer selected_seed_buffer(
+      n_seeds, mr().main, vecmem::data::buffer_type::resizable);
+  copy().setup(selected_seed_buffer)->ignore();
+  suppress_seeds_kernel(
+      {n_seeds, seed_buffer, best_weight_buffer, selected_seed_buffer});
+
+  return selected_seed_buffer;
 }
 
 }  // namespace traccc::device
