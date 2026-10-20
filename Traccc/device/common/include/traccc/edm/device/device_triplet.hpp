@@ -31,6 +31,14 @@ struct device_triplet {
   scalar weight;
   /// z origin of triplet
   scalar z_vertex;
+  /// transverse impact parameter of the triplet
+  scalar impact_parameter;
+  /// cot(theta) of the middle-bottom doublet
+  scalar cot_theta;
+  /// number of compatible top spacepoints
+  unsigned int n_compat;
+  /// quality seed flag of the seed confirmation
+  bool quality;
 };
 
 /// Declare all device triplet collection types
