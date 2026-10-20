@@ -105,9 +105,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
   unsigned int in_params_buffer_size = n_seeds;
   bound_track_parameters_collection_types::buffer in_params_buffer(
       in_params_buffer_size, mr().main);
-  copy().setup(in_params_buffer)->ignore();
-  copy()(seeds, in_params_buffer, vecmem::copy::type::device_to_device)
-      ->ignore();
+  copy().setup(vecmem::ignore_event, in_params_buffer);
+  copy()(vecmem::ignore_event, seeds, in_params_buffer,
+         vecmem::copy::type::device_to_device);
 
   // Create track buffer
   vecmem::vector<unsigned int> empty_vec{};
@@ -166,15 +166,15 @@ auto combinatorial_kalman_filter_algorithm::operator()(
              : n_seeds * cfg.max_track_candidates_per_track,
          mr().main, vecmem::data::buffer_type::resizable},
         measurements_view);
-    copy().setup(track_candidates_buffer.tracks)->ignore();
-    copy().setup(track_candidates_buffer.states)->ignore();
+    copy().setup(vecmem::ignore_event, track_candidates_buffer.tracks);
+    copy().setup(vecmem::ignore_event, track_candidates_buffer.states);
 
     smoothing_payload.payload.tracks = track_candidates_buffer;
 
     // Get output track statistics
     vecmem::data::vector_buffer<track_stats<scalar_t>> track_stats_buffer{
         n_seeds, mr().main};
-    copy().setup(track_stats_buffer)->ignore();
+    copy().setup(vecmem::ignore_event, track_stats_buffer);
 
     // Get the output track state data, depending on which data is
     // required
@@ -232,8 +232,8 @@ auto combinatorial_kalman_filter_algorithm::operator()(
     vecmem::data::vector_buffer<unsigned int> in_params_liveness_buffer =
         vecmem::data::vector_buffer<unsigned int>(in_params_buffer_size,
                                                   mr().main);
-    copy().setup(in_params_liveness_buffer)->ignore();
-    copy().memset(in_params_liveness_buffer, 1)->ignore();
+    copy().setup(vecmem::ignore_event, in_params_liveness_buffer);
+    copy().memset(vecmem::ignore_event, in_params_liveness_buffer, 1);
 
     // These buffers are (re)allocated inside the step loop as needed and
     // released explicitly once the loop has finished.
@@ -256,7 +256,7 @@ auto combinatorial_kalman_filter_algorithm::operator()(
     // Number of tracks per seed
     vecmem::data::vector_buffer<unsigned int> n_tracks_per_seed_buffer(
         n_seeds, mr().main);
-    copy().setup(n_tracks_per_seed_buffer)->ignore();
+    copy().setup(vecmem::ignore_event, n_tracks_per_seed_buffer);
 
     // Compute the effective number of initial links per seed. If the
     // branching factor (`max_num_branches_per_surface`) is arbitrary there
@@ -274,7 +274,7 @@ auto combinatorial_kalman_filter_algorithm::operator()(
         effective_initial_links_per_seed * n_seeds;
     vecmem::data::vector_buffer<candidate_link> links_buffer(
         link_buffer_capacity, mr().main, vecmem::data::buffer_type::resizable);
-    copy().setup(links_buffer)->ignore();
+    copy().setup(vecmem::ignore_event, links_buffer);
 
     // Buffers needed for MBF smoother (if enabled).
     unsigned int tmp_jacobian_buffer_size = 0;
@@ -300,10 +300,10 @@ auto combinatorial_kalman_filter_algorithm::operator()(
         cfg.max_num_branches_per_seed * n_seeds;
     vecmem::data::vector_buffer<unsigned int> tips_buffer{
         tips_buffer_capacity, mr().main, vecmem::data::buffer_type::resizable};
-    copy().setup(tips_buffer)->ignore();
+    copy().setup(vecmem::ignore_event, tips_buffer);
     vecmem::data::vector_buffer<unsigned int> tip_length_buffer{
         tips_buffer_capacity, mr().main};
-    copy().setup(tip_length_buffer)->ignore();
+    copy().setup(vecmem::ignore_event, tip_length_buffer);
 
     std::map<unsigned int, unsigned int> step_to_link_idx_map;
     step_to_link_idx_map[0u] = 0u;
@@ -328,15 +328,15 @@ auto combinatorial_kalman_filter_algorithm::operator()(
         updated_params_buffer_size = n_max_candidates;
         updated_params_buffer = bound_track_parameters_collection_types::buffer{
             updated_params_buffer_size, mr().main};
-        copy().setup(updated_params_buffer)->ignore();
+        copy().setup(vecmem::ignore_event, updated_params_buffer);
         updated_params_liveness_buffer =
             vecmem::data::vector_buffer<unsigned int>{
                 updated_params_buffer_size, mr().main};
-        copy().setup(updated_params_liveness_buffer)->ignore();
+        copy().setup(vecmem::ignore_event, updated_params_liveness_buffer);
       }
 
       // Reset the number of tracks per seed
-      copy().memset(n_tracks_per_seed_buffer, 0)->ignore();
+      copy().memset(vecmem::ignore_event, n_tracks_per_seed_buffer, 0);
 
       const unsigned int links_size = step_to_link_idx_map[step];
 
@@ -356,7 +356,7 @@ auto combinatorial_kalman_filter_algorithm::operator()(
         vecmem::data::vector_buffer<candidate_link> new_links_buffer(
             link_buffer_capacity, mr().main,
             vecmem::data::buffer_type::resizable);
-        copy().setup(new_links_buffer)->ignore();
+        copy().setup(vecmem::ignore_event, new_links_buffer);
         copy()(links_buffer, new_links_buffer)->wait();
 
         links_buffer = std::move(new_links_buffer);
@@ -372,10 +372,9 @@ auto combinatorial_kalman_filter_algorithm::operator()(
                                                  mr().main};
 
           // Copy old data to new buffers.
-          copy()(jacobian_buffer, new_jacobian_buffer)->ignore();
-          copy()(link_predicted_parameter_buffer,
-                 new_link_predicted_parameter_buffer)
-              ->ignore();
+          copy()(vecmem::ignore_event, jacobian_buffer, new_jacobian_buffer);
+          copy()(vecmem::ignore_event, link_predicted_parameter_buffer,
+                 new_link_predicted_parameter_buffer);
           copy()(link_filtered_parameter_buffer,
                  new_link_filtered_parameter_buffer)
               ->wait();
@@ -397,20 +396,20 @@ auto combinatorial_kalman_filter_algorithm::operator()(
           out_params_per_in_param_buffer =
               vecmem::data::vector_buffer<unsigned int>{
                   find_tracks_out_params_buffer_size, mr().main};
-          copy().setup(out_params_per_in_param_buffer)->ignore();
+          copy().setup(vecmem::ignore_event, out_params_per_in_param_buffer);
           out_params_index_buffer = vecmem::data::vector_buffer<unsigned int>{
               find_tracks_out_params_buffer_size, mr().main};
-          copy().setup(out_params_index_buffer)->ignore();
+          copy().setup(vecmem::ignore_event, out_params_index_buffer);
         }
 
         if (n_max_candidates > find_tracks_tmp_links_buffer_size) {
           find_tracks_tmp_links_buffer_size = n_max_candidates;
           tmp_links_buffer = vecmem::data::vector_buffer<candidate_link>{
               find_tracks_tmp_links_buffer_size, mr().main};
-          copy().setup(tmp_links_buffer)->ignore();
+          copy().setup(vecmem::ignore_event, tmp_links_buffer);
           tmp_params_buffer = bound_track_parameters_collection_types::buffer{
               find_tracks_tmp_links_buffer_size, mr().main};
-          copy().setup(tmp_params_buffer)->ignore();
+          copy().setup(vecmem::ignore_event, tmp_params_buffer);
         }
 
         auto in_params_view = get_sized_view(n_in_params, in_params_buffer);
@@ -499,7 +498,7 @@ auto combinatorial_kalman_filter_algorithm::operator()(
         param_ids_buffer_size = n_candidates;
         param_ids_buffer = vecmem::data::vector_buffer<unsigned int>{
             param_ids_buffer_size, mr().main};
-        copy().setup(param_ids_buffer)->ignore();
+        copy().setup(vecmem::ignore_event, param_ids_buffer);
       }
 
       auto param_ids_view = get_sized_view(n_candidates, param_ids_buffer);
@@ -516,7 +515,7 @@ auto combinatorial_kalman_filter_algorithm::operator()(
           link_last_measurement_buffer =
               vecmem::data::vector_buffer<unsigned int>{
                   link_last_measurement_buffer_size, mr().main};
-          copy().setup(link_last_measurement_buffer)->ignore();
+          copy().setup(vecmem::ignore_event, link_last_measurement_buffer);
         }
 
         auto link_last_measurement_view =
@@ -569,7 +568,7 @@ auto combinatorial_kalman_filter_algorithm::operator()(
             keys_buffer_size = n_candidates;
             keys_buffer = vecmem::data::vector_buffer<device::sort_key>{
                 keys_buffer_size, mr().main};
-            copy().setup(keys_buffer)->ignore();
+            copy().setup(vecmem::ignore_event, keys_buffer);
           }
 
           auto keys_view = get_sized_view(n_candidates, keys_buffer);
@@ -664,21 +663,23 @@ auto combinatorial_kalman_filter_algorithm::operator()(
       vecmem::data::vector_buffer<unsigned int>
           best_tips_per_measurement_index_buffer(
               cfg.max_num_tracks_per_measurement * n_measurements, mr().main);
-      copy().setup(best_tips_per_measurement_index_buffer)->ignore();
+      copy().setup(vecmem::ignore_event,
+                   best_tips_per_measurement_index_buffer);
 
       vecmem::data::vector_buffer<unsigned long long int>
           best_tips_per_measurement_insertion_mutex_buffer(n_measurements,
                                                            mr().main);
-      copy().setup(best_tips_per_measurement_insertion_mutex_buffer)->ignore();
-      copy()
-          .memset(best_tips_per_measurement_insertion_mutex_buffer, 0)
-          ->ignore();
+      copy().setup(vecmem::ignore_event,
+                   best_tips_per_measurement_insertion_mutex_buffer);
+      copy().memset(vecmem::ignore_event,
+                    best_tips_per_measurement_insertion_mutex_buffer, 0);
 
       {
         vecmem::data::vector_buffer<scalar>
             best_tips_per_measurement_pval_buffer(
                 cfg.max_num_tracks_per_measurement * n_measurements, mr().main);
-        copy().setup(best_tips_per_measurement_pval_buffer)->ignore();
+        copy().setup(vecmem::ignore_event,
+                     best_tips_per_measurement_pval_buffer);
 
         gather_best_tips_per_measurement_kernel(
             n_tips_total, {tips_buffer, links_buffer, measurements_view,
@@ -693,8 +694,8 @@ auto combinatorial_kalman_filter_algorithm::operator()(
 
       vecmem::data::vector_buffer<unsigned int> votes_per_tip_buffer(
           n_tips_total, mr().main);
-      copy().setup(votes_per_tip_buffer)->ignore();
-      copy().memset(votes_per_tip_buffer, 0)->ignore();
+      copy().setup(vecmem::ignore_event, votes_per_tip_buffer);
+      copy().memset(vecmem::ignore_event, votes_per_tip_buffer, 0);
 
       gather_measurement_votes_kernel(
           cfg.max_num_tracks_per_measurement * n_measurements,
@@ -706,11 +707,11 @@ auto combinatorial_kalman_filter_algorithm::operator()(
 
       tip_to_output_map =
           vecmem::data::vector_buffer<unsigned int>(n_tips_total, mr().main);
-      copy().setup(tip_to_output_map)->ignore();
+      copy().setup(vecmem::ignore_event, tip_to_output_map);
 
       vecmem::data::vector_buffer<unsigned int> new_tip_length_buffer{
           n_tips_total, mr().main, vecmem::data::buffer_type::resizable};
-      copy().setup(new_tip_length_buffer)->ignore();
+      copy().setup(vecmem::ignore_event, new_tip_length_buffer);
 
       update_tip_length_buffer_kernel(
           n_tips_total, {.old_tip_length = tip_length_buffer,
@@ -749,8 +750,8 @@ auto combinatorial_kalman_filter_algorithm::operator()(
             {tips_length_host, mr().main, mr().host},
             {n_states, mr().main, vecmem::data::buffer_type::resizable},
             measurements_view);
-    copy().setup(track_candidates_buffer.tracks)->ignore();
-    copy().setup(track_candidates_buffer.states)->ignore();
+    copy().setup(vecmem::ignore_event, track_candidates_buffer.tracks);
+    copy().setup(vecmem::ignore_event, track_candidates_buffer.states);
 
     smoothing_payload.payload.tracks = track_candidates_buffer;
 

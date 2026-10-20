@@ -775,6 +775,14 @@ BOOST_DATA_TEST_CASE(
   Vector3 target{r * std::cos(phiTarget), r * std::sin(phiTarget), zTarget};
   Vector3 direction = (target - position).normalized();
 
+  // At the inner boundary the chord points into the hole, outside this
+  // volume. Reflect its radial component so both boundaries test a ray
+  // entering the shell, where this volume's navigation policy applies.
+  if (r == cylBounds->get(CylinderVolumeBounds::eMinR)) {
+    Vector3 radial{std::cos(phiPos), std::sin(phiPos), 0.};
+    direction -= 2. * direction.dot(radial) * radial;
+  }
+
   auto exp =
       getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
