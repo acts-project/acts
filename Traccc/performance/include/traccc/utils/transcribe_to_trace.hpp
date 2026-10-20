@@ -83,7 +83,7 @@ auto transcribe_to_trace(const typename detector_t::geometry_context ctx,
   // Sort records by intersection distance to origin of the trajectory
   auto sort_by_path = [&](const candidate_type<detector_t>& a,
                           const candidate_type<detector_t>& b) -> bool {
-    return (a.intersection < b.intersection);
+    return (a.intersection() < b.intersection());
   };
 
   std::ranges::stable_sort(candidates, sort_by_path);
@@ -149,7 +149,7 @@ auto transcribe_to_trace(
   // Sort records by intersection distance to origin of the trajectory
   auto sort_by_path = [&](const candidate_type<detector_t>& a,
                           const candidate_type<detector_t>& b) -> bool {
-    return (a.intersection < b.intersection);
+    return (a.intersection() < b.intersection());
   };
 
   std::ranges::stable_sort(candidates, sort_by_path);

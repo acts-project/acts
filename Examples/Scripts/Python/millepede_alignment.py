@@ -32,12 +32,8 @@ from acts.examples.alignmentmillepede import (
     MillePedeSolverAlgorithm,
 )
 from acts.mille import (
-    MillePedeSolver,
+    MillePedeSolverConfig,
     readMillePedeResult,
-    MillePedeParameterResult,
-    generateMillePedeSteeringFile,
-    MillePedeEqualityConstraint,
-    MillePedeSolutionStrategy,
     MillePedeSteeringConfig,
 )
 from acts.examples.simulation import (
@@ -127,7 +123,7 @@ def addAlignmentSandbox(
 def addMillePedeSolver(
     s: Sequencer,
     steerCfg: MillePedeSteeringConfig,
-    solverCfg: MillePedeSolver.Config,
+    solverCfg: MillePedeSolverConfig,
     logLevel: acts.logging.Level = acts.logging.INFO,
 ):
     solver = MillePedeSolverAlgorithm(
@@ -294,7 +290,7 @@ def main():
     # configure the solver and steering file for Millepede.
     # For this example, we use the defaults for everything and
     # only touch the file names
-    solverCfg = MillePedeSolver.Config(
+    solverCfg = MillePedeSolverConfig(
         steeringFile="mpsteer.txt",
         workDir="mpTmp",
         resFileName=str(millePedeSolution),

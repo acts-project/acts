@@ -20,6 +20,7 @@ target_sources(
         GbtsNodeStorage.cpp
         GbtsGraphBuilder.cpp
         GbtsGeometry.cpp
+        GbtsSeedFit.cpp
         GbtsTrackingFilter.cpp
         GraphBasedTrackSeeder.cpp
         GbtsRoiDescriptor.cpp

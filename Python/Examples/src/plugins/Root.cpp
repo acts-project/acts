@@ -20,7 +20,6 @@
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointWriter.hpp"
-#include "ActsExamples/Io/Root/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootPatternRecognitionPerformanceWriter.hpp"
@@ -220,6 +219,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
               root, "RootMaterialWriter")
               .def(py::init<const Writer::Config&, Logging::Level>(),
                    py::arg("config"), py::arg("level"))
+              .def("writeMaterial", &Writer::writeMaterial, py::arg("material"))
               .def("write",
                    py::overload_cast<const TrackingGeometry&>(&Writer::write));
 
@@ -279,13 +279,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         effPlotToolConfig, fakePlotToolConfig, duplicationPlotToolConfig,
         trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
         subDetectorTrackSummaryVolumes, writeMatchingDetails);
-
-    ACTS_PYTHON_DECLARE_WRITER(RootNuclearInteractionParametersWriter, root,
-                               "RootNuclearInteractionParametersWriter",
-                               inputSimulationProcesses, filePath, fileMode,
-                               interactionProbabilityBins, momentumBins,
-                               invariantMassBins, multiplicityMax,
-                               writeOptionalHistograms, nSimulatedEvents);
   }
 
   // Calibration
