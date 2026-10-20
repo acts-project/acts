@@ -9,7 +9,6 @@
 #pragma once
 
 // Project include(s).
-#include "detray/builders/detail/material_deduplication.hpp"
 #include "detray/builders/homogeneous_material_factory.hpp"
 #include "detray/builders/homogeneous_material_generator.hpp"
 #include "detray/builders/volume_builder.hpp"
@@ -94,14 +93,16 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
              typename detector_t::geometry_context ctx = {}) ->
       typename detector_t::volume_type * override {
     DETRAY_VERBOSE_HOST("Build homogeneous material...");
-
     DETRAY_DEBUG_HOST("-> n_surfaces=" << this->surfaces().size());
 
-    if (opt.deduplicate()) {
-      add_deduplicated_material(det);
-    } else {
-      add_material(det);
+    if constexpr (concepts::has_material_slabs<detector_t>) {
+      add_material<material_id::e_material_slab>(det, opt);
     }
+    if constexpr (concepts::has_material_rods<detector_t>) {
+      add_material<material_id::e_material_rod>(det, opt);
+    }
+
+    m_materials.clear_all();
 
     DETRAY_VERBOSE_HOST(
         "Successfully built homogeneous material for volume: " << this->name());
@@ -112,103 +113,79 @@ class homogeneous_material_builder final : public volume_decorator<detector_t> {
   }
 
  private:
-  /// Append the material of the volume to the detector @param det and shift
-  /// the surface material links accordingly
-  DETRAY_HOST
-  void add_material(detector_t &det) {
-    const auto &material = det.material_store();
-
-    // Update the surface material links and shift them according to the
-    // number of material slabs/rods that were in the detector previously
-    for (auto &sf : this->surfaces()) {
-      DETRAY_DEBUG_HOST("-> sf=" << sf);
-      DETRAY_DEBUG_HOST("  -> material_id=" << sf.material().id());
-      if constexpr (concepts::has_material_slabs<detector_t>) {
-        if (sf.material().id() == material_id::e_material_slab) {
-          dindex offset =
-              material.template size<material_id::e_material_slab>();
-          DETRAY_DEBUG_HOST("-> update material slab offset: " << offset);
-          sf.update_material(offset);
-          DETRAY_DEBUG_HOST("-> material now: " << sf.material());
-        }
-
-        DETRAY_DEBUG_HOST(
-            "-> Appending "
-            << m_materials.template size<material_id::e_material_slab>()
-            << " slabs into detector materials");
-      }
-      if constexpr (concepts::has_material_rods<detector_t>) {
-        if (sf.material().id() == material_id::e_material_rod) {
-          DETRAY_DEBUG_HOST(
-              "-> update material rod offset: "
-              << material.template size<material_id::e_material_rod>());
-          sf.update_material(
-              material.template size<material_id::e_material_rod>());
-        }
-
-        DETRAY_DEBUG_HOST(
-            "-> Appending "
-            << m_materials.template size<material_id::e_material_rod>()
-            << " rods into detector materials");
-      }
-    }
-
-    // Add material to the detector
-    det._materials.append(std::move(m_materials));
-    m_materials.clear_all();
-  }
-
-  /// Add only the material of the volume to the detector @param det that is
-  /// not yet present there and link the surfaces to the existing entries
-  /// otherwise
-  DETRAY_HOST
-  void add_deduplicated_material(detector_t &det) {
-    DETRAY_VERBOSE_HOST("-> Deduplicate homogeneous material");
-
-    if constexpr (concepts::has_material_slabs<detector_t>) {
-      deduplicate<material_id::e_material_slab>(det);
-    }
-    if constexpr (concepts::has_material_rods<detector_t>) {
-      deduplicate<material_id::e_material_rod>(det);
-    }
-
-    // Add remaining material types, if any
-    det._materials.append(std::move(m_materials));
-    m_materials.clear_all();
-  }
-
   /// Deduplicate the material of type @tparam mat_id against the material in
   /// the detector @param det
   template <material_id mat_id>
-  DETRAY_HOST void deduplicate(detector_t &det) {
+  DETRAY_HOST void add_material(detector_t &det,
+                                const volume_builder_options &opt) {
     auto &local_coll = m_materials.template get<mat_id>();
     if (local_coll.empty()) {
       return;
     }
 
+    // non-const access
     auto &det_coll = det._materials.template get<mat_id>();
-    [[maybe_unused]] const std::size_t n_before{det_coll.size()};
+    const auto offset{static_cast<dindex>(det_coll.size())};
 
-    // Global index for every volume local material entry
-    detail::homogeneous_material_lookup lookup{det_coll};
+    // Conmpute the material indices
     std::vector<dindex> global_idx;
     global_idx.reserve(local_coll.size());
-    for (const auto &mat : local_coll) {
-      global_idx.push_back(lookup.insert(mat));
+
+    if (opt.deduplicate()) {
+      DETRAY_VERBOSE_HOST("-> Deduplicate homogeneous material");
+
+      // Global index for every volume local material entry
+      for (const auto &mat : local_coll) {
+        DETRAY_DEBUG_HOST("Building material " << mat);
+        // Insert into map
+        const auto coll_size{static_cast<dindex>(det_coll.size())};
+        dindex new_idx{coll_size};
+
+        // Test only against the material that is already in the detector
+        // Any duplication within the new data will be resolved the same way
+        for (dindex i = 0u; i < offset; ++i) {
+          if (mat == det_coll.at(i)) {
+            DETRAY_DEBUG_HOST("Found identical material grid at index "
+                              << i << ". Deduplicating...");
+            new_idx = i;
+            break;
+          }
+        }
+
+        // No duplicate was found, append new material
+        if (new_idx == coll_size) {
+          DETRAY_DEBUG_HOST("Adding to detector... ");
+          det_coll.push_back(mat);
+        }
+
+        // Save index
+        DETRAY_DEBUG_HOST(" -> Material index: " << new_idx);
+        global_idx.push_back(new_idx);
+      }
+    } else {  // Do not deduplicate
+      // Append all material
+      det._materials.insert(local_coll);
     }
 
+    // Update all surface links
     for (auto &sf : this->surfaces()) {
+      DETRAY_DEBUG_HOST("-> sf = " << sf);
+
       if (sf.material().id() == mat_id) {
-        sf.material().set_index(global_idx.at(sf.material().index()));
-        DETRAY_DEBUG_HOST("-> sf=" << sf
-                                   << ": material now: " << sf.material());
+        if (opt.deduplicate()) {
+          assert(!global_idx.empty());
+          sf.material().set_index(global_idx.at(sf.material().index()));
+        } else {
+          sf.update_material(offset);
+        }
+        DETRAY_DEBUG_HOST("-> material link now: " << sf.material());
       }
     }
 
-    DETRAY_DEBUG_HOST("-> Appended " << det_coll.size() - n_before << " of "
-                                     << local_coll.size() << " entries of type "
-                                     << mat_id << " to detector materials");
-    local_coll.clear();
+    DETRAY_VERBOSE_HOST("-> Appended " << det_coll.size() - offset << " of "
+                                       << local_coll.size()
+                                       << " entries of type " << mat_id
+                                       << " to detector materials");
   }
 
   // Material container for this volume

@@ -42,7 +42,8 @@ class spatial_grid_impl : public grid_t {
 
   /// Find the corresponding (non-)owning grid type
   template <bool is_owning>
-  using type = spatial_grid_impl<typename grid_t::template type<is_owning>>;
+  using owning_type =
+      spatial_grid_impl<typename grid_t::template owning_type<is_owning>>;
 
   using mask_type =
       detray::mask<concentric_cylinder2D, algebra_t, std::uint8_t>;
@@ -377,7 +378,8 @@ class grid_collection<spatial_grid_impl<grid_t>>
   /// @note this takes a data owning grid to transcribe the data from.
   template <concepts::spatial_grid other_grid_t>
     requires std::constructible_from<
-        typename spatial_grid_impl<grid_t>::template type<true>, other_grid_t>
+        typename spatial_grid_impl<grid_t>::template owning_type<true>,
+        other_grid_t>
   DETRAY_HOST constexpr auto push_back(const other_grid_t &gr) noexcept(false)
       -> void {
     // Copy over the base grid data

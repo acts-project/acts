@@ -15,7 +15,6 @@ set(CMAKE_CXX_STANDARD 20 CACHE STRING "The (host) C++ standard to use")
 set(CMAKE_CXX_EXTENSIONS FALSE CACHE BOOL "Disable (host) C++ extensions")
 set(CMAKE_CUDA_STANDARD 20 CACHE STRING "The (CUDA) C++ standard to use")
 set(CMAKE_CUDA_EXTENSIONS FALSE CACHE BOOL "Disable (CUDA) C++ extensions")
-set(CMAKE_SYCL_STANDARD 20 CACHE STRING "The (SYCL) C++ standard to use")
 set(CMAKE_HIP_STANDARD 20 CACHE STRING "The (HIP) C++ standard to use")
 set(CMAKE_HIP_EXTENSIONS FALSE CACHE BOOL "Disable (HIP) C++ extensions")
 
@@ -159,7 +158,7 @@ if(DETRAY_BUILD_CLI_TOOLS)
     set(DETRAY_BUILD_TEST_UTILS ON)
 endif()
 
-# Check CUDA and SYCL and HIP C++ standards
+# Check CUDA and HIP C++ standards
 if(${DETRAY_BUILD_CUDA} AND ${CMAKE_CUDA_STANDARD} LESS 20)
     message(
         SEND_ERROR
