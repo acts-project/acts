@@ -252,14 +252,15 @@ TEST_P(PropagatorWithRkStepper, rk4_propagator_const_bfield) {
     lim_state.stepping().template set_constraint<step::constraint::e_accuracy>(
         step_constr);
 
-    // No multiple scattering simulated in this test
+    // Set up the parameter transport
     using updater_state_t = actor::parameter_updater_state<test_algebra>;
-    detail::get<updater_state_t>(actor_states)
-        .noise_estimation_cfg()
-        .estimate_scattering_noise = false;
-    detail::get<updater_state_t>(actor_states_lim)
-        .noise_estimation_cfg()
-        .estimate_scattering_noise = false;
+    auto& updater_state = detail::get<updater_state_t>(actor_states);
+    auto& updater_state_lim = detail::get<updater_state_t>(actor_states_lim);
+    updater_state.init(track);
+    updater_state_lim.init(lim_track);
+    // No multiple scattering simulated in this test
+    updater_state.noise_estimation_cfg().estimate_scattering_noise = false;
+    updater_state_lim.noise_estimation_cfg().estimate_scattering_noise = false;
 
     // Propagate the entire detector
     ASSERT_TRUE(

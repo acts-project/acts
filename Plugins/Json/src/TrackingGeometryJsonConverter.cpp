@@ -435,24 +435,12 @@ std::unique_ptr<Acts::GridPortalLink> makeGridPortalLink(
     throw std::invalid_argument(
         "makeGridPortalLink() - Non regular surface was passed");
   }
+  // type-erased factories: dispatching here would instantiate every
+  // GridPortalLinkT axis combination in this translation unit
   if (axis1 == nullptr) {
-    axis0.visit([&](const auto& a0) {
-      using axis_t = std::remove_cvref_t<decltype(a0)>;
-      axis_t axisCopy = a0;
-      grid =
-          Acts::GridPortalLink::make(surface, direction, std::move(axisCopy));
-    });
+    grid = Acts::GridPortalLink::make(surface, direction, axis0);
   } else {
-    axis0.visit([&](const auto& a0) {
-      using axis0_t = std::remove_cvref_t<decltype(a0)>;
-      axis0_t axis0Copy = a0;
-      axis1->visit([&](const auto& a1) {
-        using axis1_t = std::remove_cvref_t<decltype(a1)>;
-        axis1_t axis1Copy = a1;
-        grid = Acts::GridPortalLink::make(surface, std::move(axis0Copy),
-                                          std::move(axis1Copy));
-      });
-    });
+    grid = Acts::GridPortalLink::make(surface, axis0, *axis1);
   }
 
   if (grid == nullptr) {

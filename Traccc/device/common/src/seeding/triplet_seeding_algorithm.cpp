@@ -81,8 +81,8 @@ auto triplet_seeding_algorithm::operator()(
       m_data->m_axes.first.n_bins * m_data->m_axes.second.n_bins;
   vecmem::data::vector_buffer<unsigned int> grid_capacities_buffer(grid_bins,
                                                                    mr().main);
-  copy().setup(grid_capacities_buffer)->ignore();
-  copy().memset(grid_capacities_buffer, 0)->ignore();
+  copy().setup(vecmem::ignore_event, grid_capacities_buffer);
+  copy().memset(vecmem::ignore_event, grid_capacities_buffer, 0);
 
   // Launch the grid capacity counting kernel.
   count_grid_capacities_kernel({n_spacepoints, m_data->m_finder_config,
@@ -101,10 +101,10 @@ auto triplet_seeding_algorithm::operator()(
       std::vector<unsigned int>(grid_capacities_host.begin(),
                                 grid_capacities_host.end()),
       mr().main, mr().host, vecmem::data::buffer_type::resizable);
-  copy().setup(grid_buffer._buffer)->ignore();
+  copy().setup(vecmem::ignore_event, grid_buffer._buffer);
   vecmem::data::vector_buffer<prefix_sum_element_t> grid_prefix_sum_buffer(
       n_spacepoints, mr().main, vecmem::data::buffer_type::resizable);
-  copy().setup(grid_prefix_sum_buffer)->ignore();
+  copy().setup(vecmem::ignore_event, grid_prefix_sum_buffer);
 
   // Launch the grid population kernel.
   populate_grid_kernel({n_spacepoints, m_data->m_finder_config, spacepoints,
@@ -125,17 +125,16 @@ auto triplet_seeding_algorithm::operator()(
   // Set up the doublet counter buffer.
   device::doublet_counter_collection_types::buffer doublet_counter_buffer{
       n_spacepoints, mr().main, vecmem::data::buffer_type::resizable};
-  copy().setup(doublet_counter_buffer)->ignore();
+  copy().setup(vecmem::ignore_event, doublet_counter_buffer);
 
   // Set up a global counter used in the seeding kernels.
   vecmem::unique_alloc_ptr<device::seeding_global_counter>
       globalCounter_device =
           vecmem::make_unique_alloc<device::seeding_global_counter>(mr().main);
-  copy()
-      .memset(vecmem::data::vector_view<device::seeding_global_counter>(
-                  1u, globalCounter_device.get()),
-              0)
-      ->ignore();
+  copy().memset(vecmem::ignore_event,
+                vecmem::data::vector_view<device::seeding_global_counter>(
+                    1u, globalCounter_device.get()),
+                0);
 
   // Launch the doublet counting kernel.
   count_doublets_kernel(
@@ -172,10 +171,10 @@ auto triplet_seeding_algorithm::operator()(
   // Set up the doublet buffers.
   device_doublet_collection_types::buffer doublet_buffer_mb{
       globalCounter_host->m_nMidBot, mr().main};
-  copy().setup(doublet_buffer_mb)->ignore();
+  copy().setup(vecmem::ignore_event, doublet_buffer_mb);
   device_doublet_collection_types::buffer doublet_buffer_mt{
       globalCounter_host->m_nMidTop, mr().main};
-  copy().setup(doublet_buffer_mt)->ignore();
+  copy().setup(vecmem::ignore_event, doublet_buffer_mt);
 
   // Launch the doublet finding kernel.
   find_doublets_kernel({n_doublets, m_data->m_finder_config, spacepoints,
@@ -185,12 +184,12 @@ auto triplet_seeding_algorithm::operator()(
   // Set up the triplet counter buffers
   triplet_counter_spM_collection_types::buffer triplet_counter_spM_buffer{
       n_doublets, mr().main};
-  copy().setup(triplet_counter_spM_buffer)->ignore();
-  copy().memset(triplet_counter_spM_buffer, 0)->ignore();
+  copy().setup(vecmem::ignore_event, triplet_counter_spM_buffer);
+  copy().memset(vecmem::ignore_event, triplet_counter_spM_buffer, 0);
   triplet_counter_collection_types::buffer triplet_counter_midBot_buffer{
       globalCounter_host->m_nMidBot, mr().main,
       vecmem::data::buffer_type::resizable};
-  copy().setup(triplet_counter_midBot_buffer)->ignore();
+  copy().setup(vecmem::ignore_event, triplet_counter_midBot_buffer);
 
   // Launch the triplet counting kernel.
   count_triplets_kernel({globalCounter_host->m_nMidBot, m_data->m_finder_config,
@@ -228,7 +227,7 @@ auto triplet_seeding_algorithm::operator()(
   // Set up the triplet buffer.
   device_triplet_collection_types::buffer triplet_buffer{
       globalCounter_host->m_nTriplets, mr().main};
-  copy().setup(triplet_buffer)->ignore();
+  copy().setup(vecmem::ignore_event, triplet_buffer);
 
   // Launch the triplet finding kernel.
   find_triplets_kernel({n_midBotTriplets, m_data->m_finder_config,
@@ -246,7 +245,7 @@ auto triplet_seeding_algorithm::operator()(
   edm::seed_collection::buffer seed_buffer(
       globalCounter_host->m_nTriplets, mr().main,
       vecmem::data::buffer_type::resizable);
-  copy().setup(seed_buffer)->ignore();
+  copy().setup(vecmem::ignore_event, seed_buffer);
 
   // Launch the seed selecting/filling kernel.
   select_seeds_kernel(
