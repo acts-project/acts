@@ -40,8 +40,8 @@ inline TRACCC_HOST_DEVICE vector2 uv_transform(const scalar& x,
   return uv;
 }
 
-/// helper functions (for both cpu and gpu) to estimate the direction and
-/// momentum of a seed from its three spacepoints
+/// helper function to estimate the direction and momentum of a seed from its
+/// three spacepoints
 ///
 /// @param [out] params the bound track parameter vector to be filled
 /// @param [in] spB is the bottom spacepoint
@@ -112,8 +112,8 @@ inline TRACCC_HOST_DEVICE void seed_direction_estimate(
   params.set_qop(qOverPt / vector::perp(vector2{1.f, invTanTheta}));
 }
 
-/// helper functions (for both cpu and gpu) to calculate bound track parameter
-/// at the bottom spacepoint
+/// helper function to calculate bound track parameter at the bottom
+/// spacepoint
 ///
 /// @param [out] params the bound track parameter vector to be filled
 /// @param [in] measurements is the measurement collection
@@ -149,8 +149,8 @@ inline TRACCC_HOST_DEVICE void seed_to_bound_param_vector(
   assert(std::isfinite(params.time()));
 }
 
-/// helper functions (for both cpu and gpu) to calculate bound track parameter
-/// at the bottom spacepoint, for spacepoints made of one or two measurements
+/// helper function to calculate bound track parameter at the bottom
+/// spacepoint, for spacepoints made of one or two measurements
 ///
 /// Spacepoints made of a single (2D) measurement are treated as in the
 /// overload without a detector. Spacepoints made of two (1D) measurements are
