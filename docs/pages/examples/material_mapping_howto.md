@@ -293,10 +293,12 @@ crosses no recorded material.
 The mapping assigns every recorded step to a surface, so material beyond the
 outermost material surfaces, e.g. in the calorimeters, ends up on them. To
 avoid this, limit the recording to a cylinder around the beam axis, e.g. at the
-calorimeter face, with `--outputConfig.recordingMaxR` and
-`--outputConfig.recordingMaxZ` in mm. Tracks are stopped where they leave the
-cylinder, and the step that crosses its boundary is cut there, which also makes
-the recording faster.
+calorimeter face, with `--outputConfig.recordingMaxR`,
+`--outputConfig.recordingMinZ` and `--outputConfig.recordingMaxZ` in mm. The z
+range does not need to be symmetric, and a bound that is not given does not
+limit the recording. Tracks are stopped where they leave the cylinder, and the
+step that crosses its boundary is cut there, which also makes the recording
+faster.
 
 To compare two recordings track by track, they need the same geantinos. For
 example, add a `HepMC3Writer` for the generated event to

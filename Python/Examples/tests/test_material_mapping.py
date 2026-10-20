@@ -42,11 +42,11 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
 @pytest.mark.slow
 @pytest.mark.odd
 @pytest.mark.parametrize(
-    "threads,maxR",
-    [(1, None), (2, None), (1, 500.0)],
+    "threads,region",
+    [(1, None), (2, None), (1, (500.0, -300.0, 800.0))],
     ids=["st", "mt", "region"],
 )
-def test_material_recording_ddsim(tmp_path, threads, maxR):
+def test_material_recording_ddsim(tmp_path, threads, region):
     if shutil.which("ddsim") is None:
         pytest.skip("ddsim not available")
     # ddsim finds the DDG4 actions through the .components file of their
@@ -96,8 +96,14 @@ def test_material_recording_ddsim(tmp_path, threads, maxR):
     ]
     if threads > 1:
         cmd += ["--numberOfThreads", str(threads)]
-    if maxR is not None:
-        cmd += ["--outputConfig.recordingMaxR", str(maxR)]
+    if region is not None:
+        # An asymmetric region in z
+        maxR, minZ, maxZ = region
+        cmd += [
+            f"--outputConfig.recordingMaxR={maxR}",
+            f"--outputConfig.recordingMinZ={minZ}",
+            f"--outputConfig.recordingMaxZ={maxZ}",
+        ]
     result = subprocess.run(
         cmd, cwd=tmp_path, capture_output=True, text=True, check=False
     )
@@ -105,7 +111,7 @@ def test_material_recording_ddsim(tmp_path, threads, maxR):
         result.returncode == 0
     ), f"ddsim failed:\n{result.stdout[-5000:]}\n{result.stderr[-5000:]}"
 
-    # One entry per geantino, each of them crosses at least the beam pipe
+    # One entry per geantino, also for those that cross no material
     assert output.exists()
     assert_entries(output, "material_tracks", events * tracks)
     import ROOT
@@ -113,14 +119,23 @@ def test_material_recording_ddsim(tmp_path, threads, maxR):
     rdf = ROOT.RDataFrame("material_tracks", str(output))
     data = rdf.AsNumpy(["event_id", "t_X0"])
     assert set(data["event_id"]) == set(range(events))
-    assert (data["t_X0"] > 0).all()
+    if region is None:
+        # Without a region, every geantino crosses at least the beam pipe
+        assert (data["t_X0"] > 0).all()
+    else:
+        # Forward geantinos can leave the region before the beam pipe
+        assert (data["t_X0"] > 0).mean() > 0.5
 
-    if maxR is not None:
+    if region is not None:
         # No recorded step ends outside the recording region
-        endR = rdf.Define(
+        ends = rdf.Define(
             "endR", "ROOT::VecOps::sqrt(mat_ex * mat_ex + mat_ey * mat_ey)"
-        ).AsNumpy(["endR"])["endR"]
-        assert max(r.max() for r in endR if len(r) > 0) <= maxR * (1 + 1e-6)
+        ).AsNumpy(["endR", "mat_ez"])
+        steps = [i for i, r in enumerate(ends["endR"]) if len(r) > 0]
+        tolerance = 1e-3
+        assert max(ends["endR"][i].max() for i in steps) <= maxR + tolerance
+        assert min(ends["mat_ez"][i].min() for i in steps) >= minZ - tolerance
+        assert max(ends["mat_ez"][i].max() for i in steps) <= maxZ + tolerance
 
     # Read back with the reader the material mapping uses
     s = Sequencer(numThreads=1)

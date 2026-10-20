@@ -32,30 +32,38 @@
 
 namespace {
 
-/// Cylinder around the beam axis that limits the recording, in Geant4 units
+constexpr double infinity = std::numeric_limits<double>::infinity();
+
+/// Cylinder around the beam axis that limits the recording, in Geant4 units.
+/// It does not need to be symmetric in z.
 struct RecordingRegion {
-  double maxR = std::numeric_limits<double>::infinity();
-  double maxZ = std::numeric_limits<double>::infinity();
+  double maxR = infinity;
+  double minZ = -infinity;
+  double maxZ = infinity;
+
+  bool isLimited() const {
+    return std::isfinite(maxR) || std::isfinite(minZ) || std::isfinite(maxZ);
+  }
 
   bool contains(const G4ThreeVector& position) const {
-    return position.perp() < maxR && std::abs(position.z()) < maxZ;
+    return position.perp() < maxR && position.z() > minZ && position.z() < maxZ;
   }
 
   /// Path length from @p position, inside the region, along the unit vector
   /// @p direction to the boundary
   double pathToBoundary(const G4ThreeVector& position,
                         const G4ThreeVector& direction) const {
-    double pathR = std::numeric_limits<double>::infinity();
+    double pathR = infinity;
     if (const double a = direction.perp2(); a > 0. && std::isfinite(maxR)) {
       const double b =
           position.x() * direction.x() + position.y() * direction.y();
       const double c = position.perp2() - maxR * maxR;
       pathR = (-b + std::sqrt(b * b - a * c)) / a;
     }
-    double pathZ = std::numeric_limits<double>::infinity();
-    if (direction.z() != 0. && std::isfinite(maxZ)) {
-      pathZ =
-          (std::copysign(maxZ, direction.z()) - position.z()) / direction.z();
+    double pathZ = infinity;
+    if (const double zEnd = direction.z() > 0. ? maxZ : minZ;
+        direction.z() != 0. && std::isfinite(zEnd)) {
+      pathZ = (zEnd - position.z()) / direction.z();
     }
     return std::min(pathR, pathZ);
   }
@@ -103,8 +111,9 @@ namespace ActsPlugins {
 ///   default `["Air", "Vacuum"]`
 /// - `RecordElementFractions`: whether to record the element composition of
 ///   the stepped materials, default `false`
-/// - `MaxR`, `MaxZ`: radius and half length of the recording region in Geant4
-///   units, default `-1`, i.e. no limit
+/// - `MaxR`, `MinZ`, `MaxZ`: radius and z range of the recording region in
+///   Geant4 units, by default infinite, i.e. no limit. The z range does not
+///   need to be symmetric.
 class ActsMaterialRecorder final : public dd4hep::sim::Geant4SteppingAction {
  public:
   /// Standard constructor of a DDG4 action
@@ -129,10 +138,8 @@ class ActsMaterialRecorder final : public dd4hep::sim::Geant4SteppingAction {
   /// Created at the start of the run, once the properties are set
   std::optional<ActsPlugins::Geant4MaterialStepConverter> m_stepConverter;
 
-  /// Radius of the recording region, no limit if not positive
-  double m_maxR = -1.;
-  /// Half length of the recording region, no limit if not positive
-  double m_maxZ = -1.;
+  /// The recording region, set through the properties
+  RecordingRegion m_regionCfg;
   /// The recording region, if limited
   std::optional<RecordingRegion> m_region;
 
@@ -146,8 +153,9 @@ ActsMaterialRecorder::ActsMaterialRecorder(dd4hep::sim::Geant4Context* context,
   declareProperty("ExcludeMaterials", m_stepConverterCfg.excludeMaterials);
   declareProperty("RecordElementFractions",
                   m_stepConverterCfg.recordElementFractions);
-  declareProperty("MaxR", m_maxR);
-  declareProperty("MaxZ", m_maxZ);
+  declareProperty("MaxR", m_regionCfg.maxR);
+  declareProperty("MinZ", m_regionCfg.minZ);
+  declareProperty("MaxZ", m_regionCfg.maxZ);
 
   runAction().callAtBegin(this, &ActsMaterialRecorder::beginRun);
   eventAction().callAtBegin(this, &ActsMaterialRecorder::beginEvent);
@@ -158,16 +166,16 @@ void ActsMaterialRecorder::beginRun(const G4Run* /*run*/) {
   m_stepConverter.emplace(m_stepConverterCfg);
 
   m_region.reset();
-  if (m_maxR > 0. || m_maxZ > 0.) {
-    m_region.emplace();
-    if (m_maxR > 0.) {
-      m_region->maxR = m_maxR;
+  if (m_regionCfg.isLimited()) {
+    if (!(m_regionCfg.maxR > 0.) || !(m_regionCfg.minZ < m_regionCfg.maxZ)) {
+      except(
+          "Invalid recording region: MaxR must be positive and MinZ smaller "
+          "than MaxZ.");
     }
-    if (m_maxZ > 0.) {
-      m_region->maxZ = m_maxZ;
-    }
-    info("Recording within r < %.1f mm, |z| < %.1f mm.",
-         m_region->maxR / CLHEP::mm, m_region->maxZ / CLHEP::mm);
+    m_region = m_regionCfg;
+    info("Recording within r < %.1f mm and %.1f mm < z < %.1f mm.",
+         m_region->maxR / CLHEP::mm, m_region->minZ / CLHEP::mm,
+         m_region->maxZ / CLHEP::mm);
   }
 }
 
