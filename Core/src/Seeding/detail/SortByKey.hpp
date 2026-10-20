@@ -90,7 +90,7 @@ void rankSortByKey(std::span<item_t> items, const key_of_t& keyOf) {
 /// instead, so that uneven keys cannot make it slow. The keys must lie well
 /// within float's range.
 template <std::size_t kQuadraticLinearCrossover, typename item_t,
-          typename key_of_t, typename key_t, typename storage_t>
+          typename storage_t, typename key_of_t, typename key_t>
 void bucketSortByKey(std::span<item_t> items, storage_t& storage,
                      const key_of_t& keyOf, const key_t minKey,
                      const key_t maxKey) {
