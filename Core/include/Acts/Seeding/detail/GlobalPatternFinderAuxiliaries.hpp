@@ -160,15 +160,16 @@ struct PatternStateAux {
     bool operator==(const OrderedHit& other) const {
       return hitPtr == other.hitPtr;
     }
-    /// @brief Print and stream operator
+    /// @brief Stream operator
     friend std::ostream& operator<<(std::ostream& ostr, const OrderedHit& c) {
       c.print(ostr);
       return ostr;
     }
+    /// @brief Print the OrderedHit information to a stream
     void print(std::ostream& ostr) const;
   };
   /// @brief Enum for the pattern state variables, needed when updating the pattern state
-  enum class PatternStateVar : std::int8_t {
+  enum class PatternState : std::int8_t {
     eBendPlane,   ///< Bending plane
     eLineAnchor,  ///< Line anchor
     eLine,        ///< Line parameters
@@ -185,20 +186,20 @@ struct PatternStateAux {
   };
   /// @brief Enum for the bending plane parameter covariance
   enum class BendPlaneCov : std::int8_t {
-    ePhiPhi,  ///< Variance of the phi parameter
-    eSS,      ///< Variance of the displacement parameter
-    ePhiS  ///< Covariance of the phi parameter with the displacement parameter
+    ePhiPhi,        ///< Variance of the plane azimuth phi
+    eOffsetOffset,  ///< Variance of the plane offset from the beam axis
+    ePhiOffset      ///< Covariance of the plane azimuth and offset
   };
   using BendPlaneCov_t = std::array<double, 3>;
   /// @brief Constructor taking the seed information
   ///  @param gctx: geometry context
   ///  @param seed: seed hit
   ///  @param sector: sector index of the seed hit
-  ///  @param cfg: pointer to configuration object
+  ///  @param cfg: configuration object
   ///  @param logger: pointer to messaging object
   explicit PatternStateAux(const GeometryContext& gctx, const OrderedHit& seed,
                            const typename Sector_t::Index_t sector,
-                           const Config* cfg, const Logger* logger);
+                           const Config& cfg, const Logger* logger);
   /// @brief Move constructor
   ///  @param other: other pattern state to move from
   PatternStateAux(PatternStateAux&& other) noexcept = default;
@@ -271,7 +272,7 @@ struct PatternStateAux {
   void syncState(const GeometryContext& gctx, const BeamspotInfo& beamSpot);
   /// @brief Book pattern state variables that need to be updated when syncState is called
   ///  @param vars: list of variables to update
-  void setStateVars(const std::initializer_list<PatternStateVar>& vars);
+  void setStateVars(const std::initializer_list<PatternState>& vars);
   /// @brief Signed angle under which the pattern sees a point, relative to its bending plane.
   ///  @param pos: position to check
   ///  @return: the angle between the position and the bending plane
@@ -298,8 +299,8 @@ struct PatternStateAux {
   /// @brief Return the logger
   const Logger& logger() const { return *m_logger; }
 
-  /// @brief Pointer to cfg option
-  const Config* cfg{nullptr};
+  /// @brief Configuration options
+  Config cfg{};
   /// @brief Logger
   const Logger* m_logger{nullptr};
   /// @brief Last inserted hit. Needed to speed-up lookup
@@ -344,8 +345,8 @@ struct PatternStateAux {
   /// @brief Whether we used the beamspot to compute the line parameters
   bool useBeamspot{false};
   /// @brief Bookkeeping of the pattern state variables that need to be updated
-  std::array<bool, toUnderlying(PatternStateVar::NVars)> needUpdate{
-      filledArray<bool, toUnderlying(PatternStateVar::NVars)>(false)};
+  std::array<bool, toUnderlying(PatternState::NVars)> needUpdate{
+      filledArray<bool, toUnderlying(PatternState::NVars)>(false)};
 
   /// @brief Collection of hits per group. A pattern is determined by the hits belonging to it.
   std::array<std::vector<OrderedHit>, Topology_t::nGroups> hitsPerGroup{};
@@ -356,8 +357,9 @@ struct PatternStateAux {
   static std::string print(const BendPlaneCov_t& cov) {
     std::ostringstream os;
     os << "[varPhi: " << cov[toUnderlying(BendPlaneCov::ePhiPhi)]
-       << ", varS: " << cov[toUnderlying(BendPlaneCov::eSS)]
-       << ", covPhiS: " << cov[toUnderlying(BendPlaneCov::ePhiS)] << "]";
+       << ", varOffset: " << cov[toUnderlying(BendPlaneCov::eOffsetOffset)]
+       << ", covPhiOffset: " << cov[toUnderlying(BendPlaneCov::ePhiOffset)]
+       << "]";
     return os.str();
   }
 

@@ -175,9 +175,11 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
     assert(seedItr != orderedHits.end());
     const OrderedHit& seedCand{*seedItr};
 
+    /// m_cfg is sliced on purpose: only the PatternStateAux::Config part
+    /// is copied into the pattern state
     PatternStateAux patternSeed{
         gctx, seedCand,
-        static_cast<typename Sector_t::Index_t>(seedCoords[sectorIdx]), &m_cfg,
+        static_cast<typename Sector_t::Index_t>(seedCoords[sectorIdx]), m_cfg,
         m_logger.get()};
 
     /// @brief Helper function to extend a given pattern with a set of hits. We can have pattern
