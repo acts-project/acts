@@ -14,8 +14,6 @@ def runGlobalPatternFinder(
     logLevel: acts.logging.Level,
     numThreads: int = 1,
     skip: int = 0,
-    timingDir: str = "",
-    timingFile: str = "timing.csv",
 ):
     # The space points are expressed in their sector frame; the measurement
     # surfaces of the tracking geometry transform them into the global frame
@@ -27,8 +25,6 @@ def runGlobalPatternFinder(
         events=nEvents if nEvents > 0 else None,
         skip=skip,
         numThreads=numThreads,
-        outputDir=timingDir,
-        outputTimingFile=timingFile,
         logLevel=logLevel,
     )
 
@@ -82,16 +78,6 @@ if "__main__" == __name__:
         "--skip", default=0, type=int, help="Events to skip before the first one"
     )
     p.add_argument(
-        "--timingDir",
-        default="",
-        help="Directory of the timing file, empty for the working directory",
-    )
-    p.add_argument(
-        "--timingFile",
-        default="timing.csv",
-        help="Name of the file the per algorithm wall time is written to",
-    )
-    p.add_argument(
         "--logLevel",
         default="INFO",
         choices=["VERBOSE", "DEBUG", "INFO", "WARNING", "ERROR"],
@@ -106,6 +92,4 @@ if "__main__" == __name__:
         logLevel=getattr(acts.logging, args.logLevel),
         numThreads=args.threads,
         skip=args.skip,
-        timingDir=args.timingDir,
-        timingFile=args.timingFile,
     )

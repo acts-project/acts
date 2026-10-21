@@ -66,14 +66,13 @@ ActsExamples::MuonSpacePoint makeSpacePoint(MuonId::StationName station,
   sp.setGeometryId(Acts::GeometryIdentifier{layer + 1u});
   sp.defineCoordinates(Acts::Vector3{pos}, Acts::Vector3::UnitX(),
                        Acts::Vector3::UnitY());
-  // The covariance is ordered as precision, non-precision & time
   sp.setCovariance(0.09, 0., 0.);
   return sp;
 }
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(GlobalPatternFinderSuite)
+BOOST_AUTO_TEST_SUITE(GlobalPatternFinderAlgorithmSuite)
 
 BOOST_AUTO_TEST_CASE(expanded_sector) {
   using SectorProjector = ExpandedSector::SectorProjector;
@@ -102,8 +101,8 @@ BOOST_AUTO_TEST_CASE(expanded_sector) {
       ExpandedSector{static_cast<ExpandedSector::Index_t>(3)}));
   BOOST_CHECK(!centreOfOne.isNeighbour(centreOfThree));
 
-  // The expanded-sector index wraps at nExpanded (= 32). Sectors 0 and 31
-  // meet at the MS boundary and must count as neighbours.
+  // The expanded-sector index wraps at 32. Sectors 0 and 31 meet at the
+  // boundary of the spectrometer sectors and must count as neighbours.
   const ExpandedSector wrapLo{static_cast<ExpandedSector::Index_t>(0)};
   const ExpandedSector wrapHi{static_cast<ExpandedSector::Index_t>(31)};
   BOOST_CHECK(wrapLo.isNeighbour(wrapHi));
@@ -214,8 +213,6 @@ BOOST_AUTO_TEST_CASE(seed_selector) {
   const auto surface = testSurface();
   const Acts::Transform3 toGlobal{Acts::Transform3::Identity()};
 
-  // The unit transform keeps the positions, which place the hits at
-  // |eta| ~ 0.07 (barrel bin), 1.2 (transition bin) and 2.6 (endcap bin)
   ActsExamples::MuonSpacePointBucket bucket{};
   bucket.push_back(makeSpacePoint(BML, Tech::Rpc, 1u, true, false,
                                   Acts::Vector3{0., 7500., 500.}));

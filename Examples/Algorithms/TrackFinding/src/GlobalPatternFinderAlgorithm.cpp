@@ -379,7 +379,7 @@ bool isPrecisionHit(const MuonSpacePoint& hit) {
   // Mdt & micromega measurements are precision hits. An sTgc space point is
   //  one if it stems from a strip, which can only be told apart from a pad if
   //  the space point measures the precision coordinate alone.
-  return hit.id().technology() == Mdt || hit.id().technology() == Mm ||
+  return hit.isStraw() || hit.id().technology() == Mm ||
          (hit.id().technology() == sTgc && hit.id().measuresEta() &&
           !hit.id().measuresPhi());
 }
@@ -532,19 +532,14 @@ Acts::Vector3 HitPayload::globalSensorDirection(
 Acts::Experimental::detail::StripMeasurementDirections
 HitPayload::stripMeasurementDirections(
     const Acts::GeometryContext& gctx) const {
+  assert(!spacePoint()->isStraw());
   const auto& surfLinearTrf = surface->localToGlobalTransform(gctx).linear();
-  // Phi-only strips measure along the surface y axis
-  if (!spacePoint()->id().measuresEta()) {
-    return {surfLinearTrf.col(Acts::eY), std::nullopt};
+  if (!nonOrthogonalStrips) {
+    return {surfLinearTrf.col(Acts::eX), std::nullopt};
   }
-  if (spacePoint()->id().measuresPhi()) {
-    const Acts::Vector3 etaMeasDir{
-        nonOrthogonalStrips ? Acts::Vector3{globalSensorDirection(gctx).cross(
-                                  surfLinearTrf.col(Acts::eZ))}
-                            : Acts::Vector3{surfLinearTrf.col(Acts::eX)}};
-    return {etaMeasDir, Acts::Vector3{surfLinearTrf.col(Acts::eY)}};
-  }
-  return {surfLinearTrf.col(Acts::eX), std::nullopt};
+  const Acts::Vector3 etaMeasDir{
+      globalSensorDirection(gctx).cross(surfLinearTrf.col(Acts::eZ))};
+  return {etaMeasDir, Acts::Vector3{surfLinearTrf.col(Acts::eY)}};
 }
 bool HitPayload::operator==(const HitPayload& other) const {
   return spacePoint() == other.spacePoint();

@@ -190,9 +190,9 @@ struct HitPayload {
   const Acts::Vector3& globalPosition(const Acts::GeometryContext& gctx) const;
   /// @brief Retrieve the sensor direction
   Acts::Vector3 globalSensorDirection(const Acts::GeometryContext& gctx) const;
-  /// @brief The measured directions of a strip: the primary one, orthogonal
-  ///         to the sensor direction, and the second one of a two-dimensional
-  ///         strip measurement
+  /// @brief Directions of the bending and the non-bending measurement of a
+  ///        strip hit. The non-bending direction is only given for tilted
+  ///        strips; otherwise it is the sensor direction
   Acts::Experimental::detail::StripMeasurementDirections
   stripMeasurementDirections(const Acts::GeometryContext& gctx) const;
   /// @brief Returns whether the hit is a precision hit
