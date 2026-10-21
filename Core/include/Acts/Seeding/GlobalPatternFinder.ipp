@@ -101,7 +101,7 @@ GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::findPatternsInEta(
     orderedSpacepoints.rangeSearchMapDiscard(
         selectRange,
         [&](const SearchTree_t::coordinate_t& coords, const Hit_t* hit) {
-          if (std::abs(coords[thetaIdx] - seedCoords[thetaIdx]) >
+          if (Acts::abs(coords[thetaIdx] - seedCoords[thetaIdx]) >
               windowPerGroup[Topology_t::groupIndex(*hit)]) {
             return;  // skip hits outside the theta search window
           }
@@ -525,7 +525,7 @@ bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::isPhiCompatible(
   /// pattern.
   const Vector3 pos{hit.globalPosition(gctx)};
   if (pat.nPhiLayers > 0) {
-    if (std::abs(pat.angleToBendPlane(pos)) > m_cfg.phiTolerance) {
+    if (Acts::abs(pat.angleToBendPlane(pos)) > m_cfg.phiTolerance) {
       ACTS_VERBOSE(__func__ << "() The pattern with phi = " << inDeg(pat.patPhi)
                             << " is not compatible with the test hit with phi "
                             << inDeg(VectorHelpers::phi(pos))
@@ -624,7 +624,7 @@ bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::areOverlapping(
     return false;
   }
   /// Check the angular difference between the seed hits
-  if (std::abs(a.patTheta - b.patTheta) > m_cfg.maxThetaSizeOverlap) {
+  if (Acts::abs(a.patTheta - b.patTheta) > m_cfg.maxThetaSizeOverlap) {
     return false;
   }
   /// Common reference radius: where the patterns actually live, e.g. the anchor
@@ -632,7 +632,7 @@ bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::areOverlapping(
   const double refR{
       a.lineAnchorHit->globalPosition(gctx).template head<2>().norm()};
   if (a.nPhiLayers > 1 && b.nPhiLayers > 1) {
-    if (std::abs(Acts::detail::difference_periodic(
+    if (Acts::abs(Acts::detail::difference_periodic(
             a.phiAtRadius(refR), b.phiAtRadius(refR), 2. * std::numbers::pi)) >
         2. * m_cfg.phiTolerance) {
       return false;
@@ -682,7 +682,7 @@ bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::isBetter(
     const PatternStateAux& a, const PatternStateAux& b) {
   const double resA{a.getMeanResidual2()};
   const double resB{b.getMeanResidual2()};
-  const double resDiff{std::abs(resA - resB) / std::max(resA, resB)};
+  const double resDiff{Acts::abs(resA - resB) / std::max(resA, resB)};
   const int nLayerDiff{a.nBendingLayers() - b.nBendingLayers()};
   const int nPrecLayDiff{a.nPrecisionLayers - b.nPrecisionLayers};
 
@@ -690,7 +690,7 @@ bool GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::isBetter(
   /// unless the extra layers are genuinely comparable. For a ≥3-layer
   /// difference, the multiplicity advantage is strong enough to dominate.
   if ((nLayerDiff == 0 && nPrecLayDiff == 0) ||
-      (std::abs(nLayerDiff) < 2 && resDiff > 0.1 &&
+      (Acts::abs(nLayerDiff) < 2 && resDiff > 0.1 &&
        std::min(resA, resB) > 1.)) {
     return resA < resB;
   }
@@ -708,7 +708,7 @@ unsigned GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::countPatterns(
   constexpr auto thetaIdx{Acts::toUnderlying(HitCoords::eTheta)};
   constexpr auto sectorIdx{Acts::toUnderlying(HitCoords::eSector)};
   return std::ranges::count_if(patterns, [&](const PatternStateAux& pattern) {
-    if (std::abs(pattern.patTheta - seedCoords[thetaIdx]) >
+    if (Acts::abs(pattern.patTheta - seedCoords[thetaIdx]) >
             m_cfg.maxThetaSizeOverlap ||
         !pattern.sector.isNeighbour(Sector_t{
             static_cast<typename Sector_t::Index_t>(seedCoords[sectorIdx])})) {
@@ -821,8 +821,8 @@ void GlobalPatternFinder<Hit_t, Sector_t, Topology_t>::addPhiOnlyHits(
                   return std::is_eq(Topology_t::compareLayers(h, newHit));
                 });
             it != pat.phiOnlyHits.end()) {
-          if (std::abs(pat.angleToBendPlane(it->globalPosition(gctx))) <
-              std::abs(pat.angleToBendPlane(newHitPos))) {
+          if (Acts::abs(pat.angleToBendPlane(it->globalPosition(gctx))) <
+              Acts::abs(pat.angleToBendPlane(newHitPos))) {
             ACTS_VERBOSE(__func__ << "() A phi hit with better pull exists on "
                                      "same layer - skip hit.");
             continue;

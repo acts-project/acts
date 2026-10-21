@@ -19,14 +19,12 @@
 
 #include <format>
 
-namespace {
-using namespace Acts::UnitLiterals;
+namespace Acts::Experimental::detail {
+
+/// Convert an angle to degrees (for printouts)
 constexpr double inDeg(double angle) {
   return angle / 1._degree;
 }
-}  // namespace
-
-namespace Acts::Experimental::detail {
 
 template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
@@ -39,8 +37,8 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::syncState(
     /// eLineAnchor is only set by addHit when a new group is opened: the
     /// closest hit in another group is the previously added one
     lineAnchorHit = prevLayerHit;
-    needUpdate[toUnderlying(PatternState::eLineAnchor)] = false;
-    needUpdate[toUnderlying(PatternState::eLine)] = true;
+    needUpdate.reset(toUnderlying(PatternState::eLineAnchor));
+    needUpdate.set(toUnderlying(PatternState::eLine));
   }
   /// Searching in a group not yet reached: extrapolate with the line spanned by
   /// the group of the last inserted hit (anchor = furthest hit from it). Once a
@@ -57,7 +55,7 @@ void PatternStateAux<Hit_t, Sector_t, Topology_t>::syncState(
          projToPhiPlane(gctx, *furthest))
                 .squaredNorm() >= square(cfg.minHitDistance4Line)) {
       lineAnchorHit = furthest;
-      needUpdate[toUnderlying(PatternState::eLine)] = true;
+      needUpdate.set(toUnderlying(PatternState::eLine));
     }
   }
   if (needUpdate[toUnderlying(PatternState::eLine)]) {
@@ -69,8 +67,8 @@ template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
 void PatternStateAux<Hit_t, Sector_t, Topology_t>::moveLineAnchorHit(
     const OrderedHit& refHit) {
-  needUpdate[toUnderlying(PatternState::eLineAnchor)] = false;
-  needUpdate[toUnderlying(PatternState::eLine)] = true;
+  needUpdate.reset(toUnderlying(PatternState::eLineAnchor));
+  needUpdate.set(toUnderlying(PatternState::eLine));
   /// Treat first the special case where we have only one group
   if (countGroups() < 2) {
     const auto& hits{*std::ranges::find_if(
@@ -104,7 +102,7 @@ template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
 void PatternStateAux<Hit_t, Sector_t, Topology_t>::updateLineParameters(
     const GeometryContext& gctx, const BeamspotInfo& beamSpot) {
-  needUpdate[toUnderlying(PatternState::eLine)] = false;
+  needUpdate.reset(toUnderlying(PatternState::eLine));
   lineEndHit = lastInsertedHit;
   Vector3 pos1{projToPhiPlane(gctx, *lineAnchorHit)};
   Vector3 pos2{projToPhiPlane(gctx, *lineEndHit)};
@@ -305,8 +303,8 @@ template <GlobPatFinderHit Hit_t, SectorType Sector_t,
           PatternTopology<Hit_t> Topology_t>
 void PatternStateAux<Hit_t, Sector_t, Topology_t>::updateBendPlane(
     const GeometryContext& gctx, const BeamspotInfo& beamSpot) {
-  needUpdate[toUnderlying(PatternState::eBendPlane)] = false;
-  needUpdate[toUnderlying(PatternState::eLine)] = true;
+  needUpdate.reset(toUnderlying(PatternState::eBendPlane));
+  needUpdate.set(toUnderlying(PatternState::eLine));
   /// Helper method to align the final solution with the previous one.
   auto alignPhiAndStore = [&](double newPatphi) -> void {
     const double refPhi{sector.phi()};
@@ -624,7 +622,7 @@ template <GlobPatFinderHit Hit_t, SectorType Sector_t,
 void PatternStateAux<Hit_t, Sector_t, Topology_t>::setStateVars(
     const std::initializer_list<PatternState>& vars) {
   for (const PatternState var : vars) {
-    needUpdate[toUnderlying(var)] = true;
+    needUpdate.set(toUnderlying(var));
   }
 }
 

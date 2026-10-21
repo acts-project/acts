@@ -11,10 +11,11 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/ArrayHelpers.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
+#include <bitset>
 #include <compare>
 #include <cstdint>
 #include <type_traits>
@@ -332,6 +333,10 @@ struct PatternStateAux {
   double patTheta{0.};
   /// @brief Total number of degrees of freedom of the pattern
   std::size_t nDoF{0u};
+  /// @brief Bookkeeping of the pattern state variables that need to be
+  ///        updated, one bit per PatternState. Placed among the 8-byte
+  ///        aligned members, as std::bitset occupies at least one word.
+  std::bitset<toUnderlying(PatternState::NVars)> needUpdate{};
   /// @brief Residual and its uncertainty of the last hit tested (needed when replacing a hit)
   LineTestRes lastHitTestRes{};
   /// @brief Sector
@@ -344,9 +349,6 @@ struct PatternStateAux {
   bool isOverlap{false};
   /// @brief Whether we used the beamspot to compute the line parameters
   bool useBeamspot{false};
-  /// @brief Bookkeeping of the pattern state variables that need to be updated
-  std::array<bool, toUnderlying(PatternState::NVars)> needUpdate{
-      filledArray<bool, toUnderlying(PatternState::NVars)>(false)};
 
   /// @brief Collection of hits per group. A pattern is determined by the hits belonging to it.
   std::array<std::vector<OrderedHit>, Topology_t::nGroups> hitsPerGroup{};
@@ -356,10 +358,10 @@ struct PatternStateAux {
   /// @brief Print the covariance matrix
   static std::string print(const BendPlaneCov_t& cov) {
     std::ostringstream os;
-    os << "[varPhi: " << cov[toUnderlying(BendPlaneCov::ePhiPhi)]
-       << ", varOffset: " << cov[toUnderlying(BendPlaneCov::eOffsetOffset)]
-       << ", covPhiOffset: " << cov[toUnderlying(BendPlaneCov::ePhiOffset)]
-       << "]";
+    os << std::format("[varPhi: {}, varOffset: {}, covPhiOffset: {}]",
+                     cov[toUnderlying(BendPlaneCov::ePhiPhi)],
+                     cov[toUnderlying(BendPlaneCov::eOffsetOffset)],
+                     cov[toUnderlying(BendPlaneCov::ePhiOffset)]);
     return os.str();
   }
 
@@ -387,10 +389,10 @@ struct PatternStateAux {
   static PatternPrintView detailed(const PatternStateAux& p);
 };
 
-/// Absolute difference of two layer indices, safe for any unsigned type
-template <std::unsigned_integral T>
-constexpr T layerDistance(const T a, const T b) {
-  return a > b ? a - b : b - a;
+/// Absolute difference of two layer indices
+constexpr unsigned layerDistance(const std::uint8_t a, const std::uint8_t b) {
+  return static_cast<unsigned>(
+      Acts::abs(static_cast<int>(a) - static_cast<int>(b)));
 }
 
 }  // namespace Acts::Experimental::detail
