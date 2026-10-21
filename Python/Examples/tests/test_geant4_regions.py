@@ -1,6 +1,4 @@
-import subprocess
-import sys
-import textwrap
+import multiprocessing
 
 import pytest
 
@@ -38,15 +36,10 @@ def test_region_creator_construction_options():
     assert options.regionCreators[1].config.volumes == ["Layer Logic"]
 
 
-# Geant4 keeps its regions in a process-wide store, so every simulation runs in
-# its own process
-_TELESCOPE_SIMULATION = textwrap.dedent("""
-    import sys
-    from pathlib import Path
-
+def _run_telescope_simulation(outputDir, layerCut):
     import acts
     import acts.examples
-    from acts.examples.geant4 import Geant4ConstructionOptions, RegionCreator
+    from acts.examples.geant4 import Geant4ConstructionOptions
     from acts.examples.simulation import (
         EtaConfig,
         ParticleConfig,
@@ -56,16 +49,6 @@ _TELESCOPE_SIMULATION = textwrap.dedent("""
     )
 
     u = acts.UnitConstants
-    outputDir = Path(sys.argv[1])
-    layerCut = float(sys.argv[2])
-
-    def regionCreator(name, cut, volumes):
-        cfg = RegionCreator.Config()
-        cfg.name = name
-        cfg.gammaCut = cfg.electronCut = cfg.positronCut = cut
-        cfg.protonCut = 0.7
-        cfg.volumes = volumes
-        return RegionCreator(cfg)
 
     detector = acts.examples.TelescopeDetector(
         acts.examples.TelescopeDetector.Config(
@@ -78,8 +61,8 @@ _TELESCOPE_SIMULATION = textwrap.dedent("""
 
     options = Geant4ConstructionOptions()
     options.regionCreators = [
-        regionCreator("telescope_envelope", 0.7, ["Envelope Logic"]),
-        regionCreator("telescope_layers", layerCut, ["Layer Logic"]),
+        _region_creator("telescope_envelope", 0.7, ["Envelope Logic"]),
+        _region_creator("telescope_layers", layerCut, ["Layer Logic"]),
     ]
 
     s = acts.examples.Sequencer(events=10, numThreads=1)
@@ -103,20 +86,20 @@ _TELESCOPE_SIMULATION = textwrap.dedent("""
         detectorConstructionOptions=options,
     )
     s.run()
-    """)
 
 
 def _count_simulated_particles(outputDir, layerCut):
     outputDir.mkdir()
-    subprocess.check_call(
-        [
-            sys.executable,
-            "-c",
-            _TELESCOPE_SIMULATION,
-            str(outputDir),
-            str(layerCut),
-        ]
+    # Geant4 keeps its regions in a process-wide store, so every simulation runs
+    # in its own process. Explicitly ask for "spawn" as CI failures were
+    # observed with "fork"
+    p = multiprocessing.get_context("spawn").Process(
+        target=_run_telescope_simulation, args=(outputDir, layerCut)
     )
+    p.start()
+    p.join()
+    assert p.exitcode == 0, "Geant4 telescope simulation failed"
+
     files = sorted(outputDir.glob("*particles_simulated.csv"))
     assert len(files) == 10
     return sum(len(f.read_text().splitlines()) - 1 for f in files)
